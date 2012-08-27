@@ -103,9 +103,11 @@ class UnitTesterTest(unittest.TestCase):
         """
         self.assertTrue(self.tester == "A test string")
 
+    #@unittest.expectedFailure # decorator can be used from python 2.7
     def test_daily_build_exists(self):
         """
         Performs a simple import to check if the daily is created
+        This sanity check only works on the CEP systems lhn001,2 and lce072. comment out on other systems
         """
         path = "/opt/cep/LofIm/daily/lofar/lofarinit.sh"
         self.assertTrue(os.path.exists(path), "Daily build has failed:"
@@ -160,9 +162,9 @@ if __name__ == "__main__":
     #decide on unit testrunner to use, run it and save the results
     if xml:
         import xmlrunner
-        result = xmlrunner.XMLTestRunner(output = xml).run(test.suite)
+        result = xmlrunner.XMLTestRunner(output=xml).run(test.suite)
     else:
-        result = unittest.TextTestRunner(verbosity = 2).run(test.suite)
+        result = unittest.TextTestRunner(verbosity=2).run(test.suite)
 
     #collect the numeric results using expressions
     FailedTestMatcher = re.compile(".*run=(\d+).*errors=(\d+).*failures=(\d+)")

@@ -230,7 +230,7 @@ if [ -e $DIR/load_OTDB_comps ]; then
     arguments=$arguments" -q "$QUAL 
   fi
   if [ $localUse = 0 ]; then
-    logfile="/opt/lofar/log/loadComponents.log"
+    logfile="/opt/lofar/var/log/loadComponents.log"
   else
     logfile="./loadComponents.log"
   fi

@@ -146,6 +146,7 @@ class Parset: public ParameterSet
     std::vector<unsigned>	phaseTwoPsets() const;
     std::vector<unsigned>	phaseThreePsets() const;
     std::vector<unsigned>	usedPsets() const; // union of phasePsets
+    unsigned	                totalNrPsets() const; // nr psets in the partition
     bool			phaseThreeDisjunct() const; // if phase 3 does not overlap with phase 1 or 2 in psets or cores
     std::vector<unsigned>	tabList() const;
     bool			conflictingResources(const Parset &otherParset, std::stringstream &error) const;
@@ -167,6 +168,7 @@ class Parset: public ParameterSet
 
     bool                        onlineFlagging() const;
     bool                        onlinePreCorrelationFlagging() const;
+    bool                        onlinePreCorrelationNoChannelsFlagging() const;
     bool                        onlinePostCorrelationFlagging() const;
     bool                        onlinePostCorrelationFlaggingDetectBrokenStations() const;
     unsigned                    onlinePreCorrelationFlaggingIntegration() const;
@@ -190,6 +192,10 @@ class Parset: public ParameterSet
     std::string			bandFilter() const;
     std::string			antennaSet() const;
 
+    unsigned			nrBeams() const;
+    std::string                 beamTarget(unsigned beam) const;
+    double                      beamDuration(unsigned beam) const;
+
     unsigned			nrPencilBeams(unsigned beam) const;
     std::vector<unsigned>	nrPencilBeams() const;
     unsigned			totalNrPencilBeams() const;
@@ -202,7 +208,6 @@ class Parset: public ParameterSet
     std::vector<unsigned>	subbandList() const;
     unsigned			nrSubbands() const;
     unsigned			nrSubbandsPerSAP(unsigned sap) const;
-    unsigned			nrBeams() const;
     unsigned			nyquistZone() const;
 
     std::vector<unsigned>	subbandToSAPmapping() const;
@@ -522,18 +527,17 @@ public:
   }
 
   // the part number of a subband with an absolute index
-  unsigned myPart( unsigned subband ) const {
+  unsigned myPart( unsigned subband, bool coherent ) const {
     for (unsigned i = 0; i < streamInfo.size(); i++) {
       const struct StreamInfo &info = streamInfo[i];
 
-      if ( info.subbands[0] <= subband
+      if ( info.coherent == coherent
+        && info.subbands[0] <= subband
         && info.subbands[info.subbands.size()-1] >= subband )
         return info.part;
     }
 
-    // shouldn't reach this point
-    ASSERTSTR(false, "Requested part for unused subband " << subband);
-
+    // we reach this point if there are no beams of this coherency
     return 0;
   }
 
@@ -778,6 +782,11 @@ inline bool Parset::onlinePreCorrelationFlagging() const
   return getBool("OLAP.CNProc.onlinePreCorrelationFlagging", false);
 }
 
+inline bool Parset::onlinePreCorrelationNoChannelsFlagging() const
+{
+  return getBool("OLAP.CNProc.onlinePreCorrelationNoChannelsFlagging", false);
+}
+
 inline bool Parset::onlinePostCorrelationFlagging() const
 {
   return getBool("OLAP.CNProc.onlinePostCorrelationFlagging", false);
@@ -982,6 +991,18 @@ inline vector<unsigned> Parset::phaseTwoPsets() const
 inline vector<unsigned> Parset::phaseThreePsets() const
 {
   return getUint32Vector("OLAP.CNProc.phaseThreePsets",true);
+}
+
+inline unsigned Parset::totalNrPsets() const
+{
+  const std::string key = "OLAP.IONProc.psetList";
+
+  if (isDefined(key)) {
+    return getStringVector(key,true).size();
+  } else {
+    LOG_WARN_STR( "Missing key " << key << ", using the used psets as a fallback");
+    return usedPsets().size();
+  }  
 }
 
 inline vector<unsigned> Parset::tabList() const

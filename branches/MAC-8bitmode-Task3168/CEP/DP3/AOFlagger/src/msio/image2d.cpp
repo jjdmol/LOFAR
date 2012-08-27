@@ -26,6 +26,8 @@
 
 #include <iostream>
 
+#include <xmmintrin.h>
+
 Image2D::Image2D(size_t width, size_t height) :
 	_width(width),
 	_height(height),
@@ -38,7 +40,8 @@ Image2D::Image2D(size_t width, size_t height) :
         // OS-X has no posix_memalign, but malloc always uses 16-byte alignment.
         _dataConsecutive = (num_t*)malloc(_stride * allocHeight * sizeof(num_t));
 #else
-	posix_memalign((void **) &_dataConsecutive, 16, _stride * allocHeight * sizeof(num_t));
+	if(posix_memalign((void **) &_dataConsecutive, 16, _stride * allocHeight * sizeof(num_t)) != 0)
+		throw std::bad_alloc();
 #endif	
 	_dataPtr = new num_t*[allocHeight];
 	for(size_t y=0;y<height;++y)
@@ -80,9 +83,8 @@ Image2D *Image2D::CreateFromSum(const Image2D &imageA, const Image2D &imageB)
 {
 	if(imageA.Width() != imageB.Width() || imageA.Height() != imageB.Height())
 		throw IOException("Images do not match in size");
-	const size_t width = imageA.Width(), height = imageA.Height();
-	Image2D *image = new Image2D(width, height);
-	const size_t total = imageA._stride * height;
+	Image2D *image = new Image2D(imageA.Width(), imageA.Height());
+	const size_t total = imageA._stride * imageA.Height();
 	for(size_t i=0;i<total;++i) {
 		image->_dataConsecutive[i] = imageA._dataConsecutive[i] + imageB._dataConsecutive[i];
 	}
@@ -93,11 +95,18 @@ Image2D *Image2D::CreateFromDiff(const Image2D &imageA, const Image2D &imageB)
 {
 	if(imageA.Width() != imageB.Width() || imageA.Height() != imageB.Height())
 		throw IOException("Images do not match in size");
-	const size_t width = imageA.Width(), height = imageA.Height();
-	Image2D *image = new Image2D(width, height);
-	const size_t total = imageA._stride * height;
-	for(size_t i=0;i<total;++i) {
-		image->_dataConsecutive[i] = imageA._dataConsecutive[i] - imageB._dataConsecutive[i];
+	Image2D *image = new Image2D(imageA.Width(), imageA.Height());
+	const float *lhsPtr = &(imageA._dataConsecutive[0]);
+	const float *rhsPtr = &(imageB._dataConsecutive[0]);
+	float *destPtr = &(image->_dataConsecutive[0]);
+	const float *end = lhsPtr + imageA._stride * imageA._height;
+	while(lhsPtr < end)
+	{
+		// (*destPtr) = (*lhsPtr) - (*rhsPtr);
+		_mm_store_ps(destPtr, _mm_sub_ps(_mm_load_ps(lhsPtr), _mm_load_ps(rhsPtr)));
+		lhsPtr += 4;
+		rhsPtr += 4;
+		destPtr += 4;
 	}
 	return image;
 }
@@ -115,6 +124,17 @@ void Image2D::SetValues(const Image2D &source)
 	const size_t size = _stride*_height;
 	for(size_t i=0;i<size;++i) {
 		_dataConsecutive[i] = source._dataConsecutive[i];
+	}
+}
+
+void Image2D::SetAll(num_t value)
+{
+	const __m128 value4 = _mm_set_ps(value, value, value, value);
+	float *ptr = &_dataConsecutive[0];
+	const float *end = ptr + _stride * _height;
+	while(ptr < end) {
+		_mm_store_ps(ptr, value4);
+		ptr += 4;
 	}
 }
 
@@ -375,6 +395,30 @@ void Image2D::MultiplyValues(num_t factor)
 	for(size_t i=0;i<size;++i)
 	{
 		_dataConsecutive[i] *= factor;
+	}
+}
+
+void Image2D::SubtractAsRHS(const Image2DCPtr &lhs)
+{
+	float *thisPtr = &_dataConsecutive[0];
+	const float *otherPtr = &(lhs->_dataConsecutive[0]);
+	float *end = thisPtr + _stride * _height;
+/* #ifdef __AVX__
+	while(thisPtr < end)
+	{
+		// (*thisPtr) = (*otherPtr) - (*thisPtr);
+		_mm_store256_ps(thisPtr, _mm_sub256_ps(_mm_load256_ps(otherPtr), _mm_load256_ps(thisPtr)));
+		thisPtr += 8;
+		otherPtr += 8;
+	}
+#else // Use slower SSE instructions
+*/
+	while(thisPtr < end)
+	{
+		// (*thisPtr) = (*otherPtr) - (*thisPtr);
+		_mm_store_ps(thisPtr, _mm_sub_ps(_mm_load_ps(otherPtr), _mm_load_ps(thisPtr)));
+		thisPtr += 4;
+		otherPtr += 4;
 	}
 }
 

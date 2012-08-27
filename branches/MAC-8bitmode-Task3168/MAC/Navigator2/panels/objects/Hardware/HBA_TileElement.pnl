@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 14 HBATileElement
-PANEL,-1 -1 114 101 N "_3DFace" 1
+PANEL,-1 -1 250 245 N "_3DFace" 1
 "$elementNr"
 "main()
 {
@@ -11,19 +11,18 @@ PANEL,-1 -1 114 101 N "_3DFace" 1
   // theElementNr in the database is from 0 to 15
   // The given elementNr is 1 to low for the text_ElementNr so increase this value by one
   // The PVSSdB element numbers is from 0..15 but the hardware elementnumbers are 1..16
-  theElementNr=$elementNr;
-  ElementNr_HardWare=theElementNr+1;
-  LOG_ERROR(\"HBA_TileElement.pnl:initialize|elementNr: \"+theElementNr);
-  LOG_ERROR(\"HBA_TileElement.pnl:initialize|elementNr_Hardware: \"+ElementNr_HardWare);
+  elementNr=$elementNr;
+  elementNr_HardWare=elementNr+1;
+  LOG_DEBUG(\"HBA_TileElement.pnl:initialize|elementNr: \"+elementNr);
+  LOG_DEBUG(\"HBA_TileElement.pnl:initialize|elementNr_Hardware: \"+elementNr_HardWare);
 
   string aS=\"\";
-  if (theElementNr < 10) aS+=\"0\";
-  baseDP+=\".element\"+aS+theElementNr;
+  if (elementNr < 10) aS+=\"0\";
+  baseDP+=\".element\"+aS+elementNr;
   LOG_DEBUG(\"HBA_TileElement.pnl:initialize| Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
 
   if (dpExists(baseDP) ) {
-     setValue(\"text_ElementNr\", \"text\", \"E-\" + aS + ElementNr_HardWare );
-     //setValue(\"text_ElementNr\", \"text\", \"E-\" + aS + theElementNr );
+     setValue(\"text_ElementNr\", \"text\", \"E-\" + aS + elementNr_HardWare );
      // pass baseDP to selfstate Object to work with
      setValue(\"selfState.light\",\"toolTipText\",baseDP);
      // connect for selfUpdates
@@ -34,7 +33,7 @@ PANEL,-1 -1 114 101 N "_3DFace" 1
                                    baseDP + \".Y.status.state:_online.._value\",
                                    baseDP + \".comm.status.state:_online.._value\",
                      	            baseDP + \".X.status.state:_online.._invalid\") == -1) {
-         LOG_ERROR(\"HBA_TileElement.pnl:Initialize|couldn't connect to \"+baseDP + \".X or .Y .status.state \" + getLastError());
+         LOG_ERROR(\"HBA_TileElement.pnl:Initialize|couldn't connect to \"+baseDP + \".X, .Y or .comm .status.state \" + getLastError());
        }      
      }
   }
@@ -89,12 +88,61 @@ void ColorObject(string anObject, int aValue) {
   setValue(anObject,\"backCol\",theBackGroundColor);
   
 }" 0
- E E E E 1 -1 -1 0  20 140
+ E "main()
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  20 140
 ""0  1
 E "#uses \"navPanel.ctl\"
 string baseDP = \"\";
-int theElementNr=-1;  
-int ElementNr_HardWare=0;" 0
+int elementNr=-1;  
+int elementNr_HardWare=0;
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  string  extra = \"\";
+  if (elementNr < 10) extra=\"0\";
+
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"element\"+extra+elementNr,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  string  extra = \"\";
+  if (hbaNr < 10) extra=\"0\";
+
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"HBATileElement.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"element\"+extra+elementNr,\"ChangePanel\"); 
+  }
+
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"element\"+extra+elementNr,\"EventRightClick\");
+}" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -104,10 +152,18 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 7
-"ElementHighLight"
+"elementHighLight"
 ""
 1 150 40 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 13 0 0 0 0 0
 E E E
 0
@@ -116,12 +172,42 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -21 -75 1 E 23 77 102 156
+"main()
+{
+  dpConnect( \"HBATileElementCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void HBATileElementCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"HBATileElement.pnl:HBATileElementCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  string extra = \"\";
+  if (elementNr < 10) extra = \"0\";
+  LOG_DEBUG(\"HBATileElement.pnl:HBATileElementCallback|Found highlight : \" + highlight + \" Looking for: element\" + extra +elementNr);
+  bool bHighlight=false;
+  if (dynContains(highlight,\"element\"+extra +elementNr)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"HBATileElement.pnl:HBATileElementCallback|Highlight request: \"+bHighlight);
+  elementHighLight.visible = bHighlight;  
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -23 -77 1 E 23 77 102 156
 6 2
 "elementBorder"
 ""
 1 40 110 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 3 0 0 0 0 0
 E E E
 0
@@ -130,7 +216,11 @@ LANG:1 23 Status of this element:
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E 1 0 1 -18 -72 1 E 25 79 94 148
+E "main()
+{
+  click();
+}" 0
+ 0 2 1 0 1 E 1 0 1 -18 -72 1 E 25 79 94 148
 6 9
 "XBox"
 ""
@@ -163,7 +253,15 @@ E E 0 1 1 2 1 E 1 0 1 -31 -83 1 E 62 115 83 136
 "XChar"
 ""
 1 10 32 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 18 0 0 0 0 0
 E E E
 0
@@ -172,7 +270,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 10 32 27 53
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  0 E 10 32 27 53
 0 2 2 "0s" 0 0 0 65 0 0  10 32 1
 1
 LANG:1 35 MS Shell Dlg 2,14,-1,5,75,0,0,0,0,0
@@ -182,7 +284,15 @@ LANG:1 1 X
 "YChar"
 ""
 1 33 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 19 0 0 0 0 0
 E E E
 0
@@ -191,7 +301,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 33 32 50 53
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  0 E 33 32 50 53
 0 2 2 "0s" 0 0 0 65 0 0  33 32 1
 1
 LANG:1 35 MS Shell Dlg 2,14,-1,5,75,0,0,0,0,0
@@ -201,7 +315,15 @@ LANG:1 1 Y
 "text_ElementNr"
 ""
 1 16 -1 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 4 0 0 0 0 0
 E E E
 0
@@ -210,7 +332,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 11 62 27
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 19 11 62 27
 0 2 0 "0s" 0 0 0 65 0 0  19 11 1
 1
 LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
@@ -236,7 +362,15 @@ E E 0 1 1 2 1 E 1 0 1 -8 -83 1 E 62 115 83 136
 "CChar"
 ""
 1 55 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 20 0 0 0 0 0
 E E E
 0
@@ -245,7 +379,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 55 32 72 53
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  0 E 55 32 72 53
 0 2 2 "0s" 0 0 0 65 0 0  55 32 1
 1
 LANG:1 35 MS Shell Dlg 2,14,-1,5,75,0,0,0,0,0

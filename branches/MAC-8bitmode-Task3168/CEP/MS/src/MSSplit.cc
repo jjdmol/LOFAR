@@ -21,6 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <MS/Exceptions.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobOBufStream.h>
 #include <Blob/BlobArray.h>
@@ -54,6 +55,9 @@ using namespace LOFAR;
 using namespace casa;
 using namespace std;
 
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
+
 void getFreq (MS& ms, int ddid, int& nrchan,
 	      double& startFreq, double& endFreq, double& stepFreq)
 {
@@ -68,7 +72,7 @@ void getFreq (MS& ms, int ddid, int& nrchan,
   Vector<double> chanWidth = mssubc.chanWidth()(spw);
   // So far, only equal frequency spacings are possible.
   if (! allEQ (chanWidth, chanWidth(0))) {
-    throw AipsError("Channels must have equal spacings");
+    THROW(MSException, "Channels must have equal spacings");
   }
   nrchan    = chanWidth.nelements();
   stepFreq  = chanWidth(0);
@@ -130,7 +134,7 @@ void doIt (const string& in, const string& out, const string& column)
   }
   // Check if they span the entire table.
   if (nt * a1.nelements() != tab.nrow()) {
-    throw AipsError("#rows in MS " + in + " mismatches #times * #baselines");
+    THROW(MSException, "#rows in MS " + in + " mismatches #times * #baselines");
   }
 
   // Open the data file.
@@ -198,8 +202,8 @@ int main(int argc, char** argv)
       column = argv[3];
     }
     doIt (argv[1], argv[2], column);
-  } catch (exception& x) {
-    cout << "Unexpected expection: " << x.what() << endl;
+  } catch (Exception& ex) {
+    cerr << "Unexpected exception: " << ex << endl;
     return 1;
   }
   return 0;

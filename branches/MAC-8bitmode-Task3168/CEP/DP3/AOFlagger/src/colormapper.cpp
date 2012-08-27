@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
 				"\t-d <fitsfile> subtract the file from the image\n"
 				"\t-fft perform fft before combining\n"
 				"\t-fi maximize each individual image before summing\n"
+				"\t-fits <file> store in fits file (does not preserve the headers)\n"
 				"\t-fm scale colors for maximum contrast, upper 0.02% of the data will be oversaturated (default)\n"
 				"\t-fv <value> scale so that <value> flux is full brightness\n"
 				"\t-m add colormap to image\n"
@@ -144,6 +145,7 @@ int main(int argc, char *argv[])
 	long double totalRed = 0.0, totalGreen = 0.0, totalBlue = 0.0;
 	unsigned addedCount = 0;
 	
+	size_t inputCount = argc-pindex;
 	for(unsigned inputIndex=pindex;inputIndex<(unsigned) argc;++inputIndex)
 	{
 		cout << "Opening " << argv[inputIndex] << "..." << endl;
@@ -218,10 +220,11 @@ int main(int argc, char *argv[])
 			}
 			if(!skip) {
 				long double wavelengthRatio;
-				if(images > 1)
-					wavelengthRatio = (1.0 - (long double) i / (images - 1.0));
+				if(images*inputCount > 1)
+					wavelengthRatio = (1.0 - (long double) (i+((int) inputIndex-(int) pindex)*images) / (images*inputCount-1.0));
 				else
 					wavelengthRatio = 0.5;
+				std::cout << "ratio=" << wavelengthRatio << '\n';
 				Image2D *image = Image2D::CreateFromFits(fitsfile, i);
 				if(subtract)
 				{
@@ -285,9 +288,12 @@ int main(int argc, char *argv[])
 					blue = Image2D::CreateUnsetImage(image->Width(), image->Height());
 					mono = Image2D::CreateUnsetImage(image->Width(), image->Height());
 				}
-				for(unsigned y=0;y<image->Height();++y)
+				size_t minY = image->Height(), minX = image->Width();
+				if(red->Height() < minY) minY = red->Height();
+				if(red->Width() < minX) minX = red->Width();
+				for(unsigned y=0;y<minY;++y)
 				{
-					for(unsigned x=0;x<image->Width();++x)	
+					for(unsigned x=0;x<minX;++x)	
 					{
 						long double value = image->Value(x, y);
 						mono->AddValue(x, y, value);

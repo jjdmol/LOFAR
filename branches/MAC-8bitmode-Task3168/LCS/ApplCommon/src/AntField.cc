@@ -34,14 +34,6 @@
 #include <ApplCommon/AntField.h>
 
 namespace LOFAR {
-
-  const int LBA_IDX    = 0;
-  const int HBA_IDX    = 1;
-  const int HBA0_IDX   = 2;
-  const int HBA1_IDX   = 3;
-  const int MAX_FIELDS = 4;
-
-
   // AntField(fileName)
   // The structure of the file is as follows:
   //

@@ -20,6 +20,8 @@
 
 #include <limits>
 
+#include <AOFlagger/msio/samplerow.h>
+
 #include <AOFlagger/gui/quality/grayscaleplotpage.h>
 
 #include <AOFlagger/gui/imagepropertieswindow.h>
@@ -55,6 +57,11 @@ GrayScalePlotPage::GrayScalePlotPage() :
 	_rangeWinsorizedButton("Winsorized"),
 	_rangeSpecified("Specified"),
 	_logarithmicScaleButton("Logarithmic"),
+	_normalizeXAxisButton("Normalize X"),
+	_normalizeYAxisButton("Normalize Y"),
+	_meanNormButton("Mean"),
+	_winsorNormButton("Winsor"),
+	_medianNormButton("Median"),
 	_plotPropertiesButton("Properties..."),
 	_selectStatisticKind(QualityTablesFormatter::VarianceStatistic),
 	_ready(false),
@@ -211,6 +218,24 @@ void GrayScalePlotPage::initPlotOptions()
 	_plotBox.pack_start(_logarithmicScaleButton, Gtk::PACK_SHRINK);
 	_logarithmicScaleButton.set_active(true);
 	
+	_normalizeXAxisButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onNormalizeAxesButtonClicked));
+	_plotBox.pack_start(_normalizeXAxisButton, Gtk::PACK_SHRINK);
+	
+	_normalizeYAxisButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onNormalizeAxesButtonClicked));
+	_plotBox.pack_start(_normalizeYAxisButton, Gtk::PACK_SHRINK);
+	
+	Gtk::RadioButtonGroup normMethodGroup;
+	_meanNormButton.set_group(normMethodGroup);
+	_meanNormButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onChangeNormMethod));
+	_plotBox.pack_start(_meanNormButton, Gtk::PACK_SHRINK);
+	
+	_winsorNormButton.set_group(normMethodGroup);
+	_winsorNormButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onChangeNormMethod));
+	_plotBox.pack_start(_winsorNormButton, Gtk::PACK_SHRINK);
+	
+	_medianNormButton.set_group(normMethodGroup);
+	_medianNormButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onChangeNormMethod));
+	_plotBox.pack_start(_medianNormButton, Gtk::PACK_SHRINK);
 	
 	_plotPropertiesButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onPropertiesClicked));
 	_plotBox.pack_start(_plotPropertiesButton, Gtk::PACK_SHRINK);
@@ -233,8 +258,14 @@ void GrayScalePlotPage::UpdateImage()
 			
 			setToSelectedPhase(data);
 			
+			Image2DCPtr image = data.GetSingleImage();
+			if(_normalizeXAxisButton.get_active())
+				image = normalizeXAxis(image);
+			if(_normalizeYAxisButton.get_active())
+				image = normalizeYAxis(image);
+			
 			_imageWidget.SetZAxisDescription(StatisticsDerivator::GetDescWithUnits(GetSelectedStatisticKind()));
-			_imageWidget.SetImage(data.GetSingleImage());
+			_imageWidget.SetImage(image);
 			_imageWidget.SetOriginalMask(data.GetSingleMask());
 			if(pair.second != 0)
 				_imageWidget.SetMetaData(pair.second);
@@ -245,26 +276,32 @@ void GrayScalePlotPage::UpdateImage()
 
 void GrayScalePlotPage::setToSelectedPolarization(TimeFrequencyData &data)
 {
-	TimeFrequencyData *newData = 0;
-	if(_polXXButton.get_active())
-		newData = data.CreateTFData(XXPolarisation);
-	else if(_polXYButton.get_active())
-		newData = data.CreateTFData(XYPolarisation);
-	else if(_polYXButton.get_active())
-		newData = data.CreateTFData(YXPolarisation);
-	else if(_polYYButton.get_active())
-		newData = data.CreateTFData(YYPolarisation);
-	else if(_polXXandYYButton.get_active())
+	try {
+		TimeFrequencyData *newData = 0;
+		if(_polXXButton.get_active())
+			newData = data.CreateTFData(XXPolarisation);
+		else if(_polXYButton.get_active())
+			newData = data.CreateTFData(XYPolarisation);
+		else if(_polYXButton.get_active())
+			newData = data.CreateTFData(YXPolarisation);
+		else if(_polYYButton.get_active())
+			newData = data.CreateTFData(YYPolarisation);
+		else if(_polXXandYYButton.get_active())
+		{
+			newData = data.CreateTFData(AutoDipolePolarisation);
+			newData->MultiplyImages(0.5);
+		}
+		else if(_polXYandYXButton.get_active())
+			newData = data.CreateTFData(CrossDipolePolarisation);
+		if(newData != 0)
+		{
+			data = *newData;
+			delete newData;
+		}
+	} catch(std::exception &e)
 	{
-		newData = data.CreateTFData(AutoDipolePolarisation);
-		newData->MultiplyImages(0.5);
-	}
-	else if(_polXYandYXButton.get_active())
-		newData = data.CreateTFData(CrossDipolePolarisation);
-	if(newData != 0)
-	{
-		data = *newData;
-		delete newData;
+		// probably a conversion error -- polarisation was not available.
+		// Best solution is probably to ignore.
 	}
 }
 
@@ -284,6 +321,44 @@ void GrayScalePlotPage::setToSelectedPhase(TimeFrequencyData &data)
 		data = *newData;
 		delete newData;
 	}
+}
+
+Image2DCPtr GrayScalePlotPage::normalizeXAxis(Image2DCPtr input)
+{
+	Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
+	for(size_t x=0;x<input->Width();++x)
+	{
+		SampleRowPtr row = SampleRow::CreateFromColumn(input, x);
+		num_t norm;
+		if(_meanNormButton.get_active())
+			norm = 1.0 / row->MeanWithMissings();
+		else if(_winsorNormButton.get_active())
+			norm = 1.0 / row->WinsorizedMeanWithMissings();
+		else // _medianNormButton
+			norm = 1.0 / row->MedianWithMissings();
+		for(size_t y=0;y<input->Height();++y)
+			output->SetValue(x, y, input->Value(x, y) * norm);
+	}
+	return output;
+}
+
+Image2DCPtr GrayScalePlotPage::normalizeYAxis(Image2DCPtr input)
+{
+	Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
+	for(size_t y=0;y<input->Height();++y)
+	{
+		SampleRowPtr row = SampleRow::CreateFromRow(input, y);
+		num_t norm;
+		if(_meanNormButton.get_active())
+			norm = 1.0 / row->MeanWithMissings();
+		else if(_winsorNormButton.get_active())
+			norm = 1.0 / row->WinsorizedMeanWithMissings();
+		else // _medianNormButton
+			norm = 1.0 / row->MedianWithMissings();
+		for(size_t x=0;x<input->Width();++x)
+			output->SetValue(x, y, input->Value(x, y) * norm);
+	}
+	return output;
 }
 
 void GrayScalePlotPage::onPropertiesClicked()

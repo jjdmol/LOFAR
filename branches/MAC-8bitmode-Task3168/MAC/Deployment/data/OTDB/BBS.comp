@@ -217,7 +217,7 @@ par  UseSVD                  I    bool   -      10    0    F                    
 #
 #    name             vers   qual        constr.           descr.
 #--------------------------------------------------------------------------------------------------------
-node Solve            4.0.0  development 'node constraint' 'Template BBS Step Solve Operation'
+node BBS:Solve        4.0.0  development 'node constraint' 'Template BBS Step Solve Operation'
 uses CellSize         4.0.0  development 1                 'Solve cell size attributes' 
 uses Log              4.0.0  development 1                 'Solver statistics logging configuration'
 uses OutlierRejection 4.0.0  development 1                 'Outlier rejections configuration'
@@ -243,7 +243,7 @@ par  UVRange                 I    vdbl   -      10    0    []                   
 node DefaultBBSStep  4.0.0  development 'node constraint' 'Template BBS Step'
 uses Model           4.0.0  development 1                 'BBS Step Model attributes'
 uses Output          4.0.0  development 1                 'BBS Step Output attributes'
-uses Solve           4.0.0  development 1                 'BBS Solve Step attributes'
+uses BBS:Solve       4.0.0  development 1                 'BBS Solve Step attributes'
 #    name                   dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 #par  Steps                  I    vtext   -      10   0    '[]'                 -        'OPTIONAL: The steps contained in this BBS Step'

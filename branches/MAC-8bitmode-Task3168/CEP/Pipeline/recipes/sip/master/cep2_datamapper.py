@@ -62,11 +62,13 @@ class cep2_datamapper(BaseRecipe):
         self.logger.debug("Reading data file locations from parset-file: %s" %
                           self.inputs['parset'])
         parset = parameterset(self.inputs['parset'])
-        filenames = parset.getStringVector(
-            'ObsSW.Observation.DataProducts.Input_Correlated.filenames')
-        locations = parset.getStringVector(
-            'ObsSW.Observation.DataProducts.Input_Correlated.locations')
-        return [os.path.join(*x).split(':') for x in zip(locations, filenames)]
+        dps = parset.makeSubset(parset.fullModuleName('DataProducts') + '.')
+        return [
+            tuple(os.path.join(location, filename).split(':'))
+                for location, filename in zip(
+                    dps.getStringVector('Input_Correlated.locations'),
+                    dps.getStringVector('Input_Correlated.filenames'))
+        ]
 
 
     def _search_files(self):

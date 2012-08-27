@@ -5,11 +5,14 @@ include(PythonInstall)
 python_install(
   helpers/__init__.py
   helpers/metadata.py
+  helpers/WritableParmDB.py
+  helpers/ComplexArray.py
   master/__init__.py
   master/bbs.py
   master/cep2_datamapper.py
   master/cimager.py
   master/compression_pipeline.py
+  master/copier.py
   master/count_timesteps.py
   master/datamapper.py
   master/demixing.py
@@ -24,17 +27,18 @@ python_install(
   master/get_metadata.py
   master/make_flaggable.py
   master/new_bbs.py
-  master/parmdb.py
-  master/parmexportcal.py
+  master/gainoutliercorrection.py
   master/rficonsole.py
+  master/setupparmdb.py
+  master/setupsourcedb.py
   master/skymodel.py
-  master/sourcedb.py
   master/storagemapper.py
   master/vdsmaker.py
   master/vdsreader.py
   nodes/__init__.py
   nodes/bbs.py
   nodes/cimager.py
+  nodes/copier.py
   nodes/count_timesteps.py
   nodes/demix/demixing.py
   nodes/demix/find_a_team.py
@@ -55,10 +59,10 @@ python_install(
   nodes/imager_finalize.py
   nodes/imager_prepare.py
   nodes/imager_source_finding.py
-  nodes/parmdb.py
-  nodes/parmexportcal.py
+  nodes/gainoutliercorrection.py
   nodes/rficonsole.py
-  nodes/sourcedb.py
+  nodes/setupparmdb.py
+  nodes/setupsourcedb.py
   nodes/vdsmaker.py
   DESTINATION lofarpipe/recipes)
 
@@ -70,11 +74,6 @@ install(PROGRAMS
   external/bad_station_detection/asciistats.py
   external/bad_station_detection/statsplot.py
   DESTINATION bin)
-
-install(FILES
-  pipeline.cfg
-  tasks.cfg
-  DESTINATION share/pipeline)
 
 install(FILES
   demixing/bbs_CasA.parset
@@ -96,4 +95,17 @@ install(FILES
   skymodels/3C48.skymodel
   skymodels/Ateam_LBA_CC.skymodel
   DESTINATION share/pipeline/skymodels)
+
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg
+  ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg
+  DESTINATION share/pipeline)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/pipeline.cfg.in
+  ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/tasks.cfg.in
+  ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg)
 

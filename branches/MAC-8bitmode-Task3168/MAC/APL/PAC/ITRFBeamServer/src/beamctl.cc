@@ -23,6 +23,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 #include <Common/ParameterSet.h>
 #include <Common/LofarBitModeInfo.h>
 #include <Common/lofar_string.h>
@@ -808,6 +809,9 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 using namespace LOFAR;
 using namespace BS;
 using namespace GCF::TM;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 //
 // main

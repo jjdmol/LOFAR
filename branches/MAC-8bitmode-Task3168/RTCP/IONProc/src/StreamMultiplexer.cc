@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 
 #include <StreamMultiplexer.h>
+#include <Scheduling.h>
 #include <Common/Thread/Cancellation.h>
 #include <Common/LofarLogger.h>
 
@@ -67,7 +68,7 @@ StreamMultiplexer::StreamMultiplexer(Stream &stream)
 
 void StreamMultiplexer::start()
 {
-  itsReceiveThread = new Thread(this, &StreamMultiplexer::receiveThread, "[StreamMultiplexer] ", 16384);
+  itsReceiveThread = new Thread(this, &StreamMultiplexer::receiveThread, "[StreamMultiplexer] ", 65536);
 }
 
 
@@ -113,6 +114,10 @@ void StreamMultiplexer::registerChannel(MultiplexedStream *stream, unsigned chan
 
 void StreamMultiplexer::receiveThread()
 {
+#if defined HAVE_BGP_ION
+  doNotRunOnCore0();
+#endif
+
   while (1) {
     RequestMsg msg;
 

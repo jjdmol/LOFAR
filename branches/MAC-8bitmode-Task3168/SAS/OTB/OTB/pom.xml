@@ -7,7 +7,7 @@
 	<groupId>nl.astron.lofar.sas</groupId>
 	<artifactId>OTB</artifactId>
 	<name>Object Tree Browser GUI</name>
-	<version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
 
 	<organization>
 		<name>Astron</name>
@@ -145,19 +145,19 @@
 		<dependency>
 			<groupId>nl.astron.lofar.sas</groupId>
 			<artifactId>jOTDB3</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+            <version>1.0.2</version>
 		</dependency>
 
 		<dependency>
 			<groupId>nl.astron.lofar.gui</groupId>
 			<artifactId>plotter</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+            <version>1.0.2</version>
 		</dependency>
 
 		<dependency>
 			<groupId>nl.astron.lofar.cep</groupId>
 			<artifactId>jParmFacade</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+            <version>1.0.2</version>
 		</dependency>
 
 		<dependency>
@@ -169,7 +169,7 @@
 		<dependency>
 			<groupId>org.netbeans.external</groupId>
 			<artifactId>AbsoluteLayout</artifactId>
-			<version>RELEASE711</version>
+            <version>RELEASE701</version>
 		</dependency>
 
 	</dependencies>

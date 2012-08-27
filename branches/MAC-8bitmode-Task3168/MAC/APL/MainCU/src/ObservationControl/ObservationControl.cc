@@ -26,6 +26,7 @@
 #include <Common/ParameterSet.h>
 #include <Common/SystemUtil.h>
 #include <ApplCommon/StationInfo.h>
+#include <ApplCommon/LofarDirs.h>
 
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
@@ -97,6 +98,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 											 getString("Observation.stopTime"));
 	itsClaimPeriod   = globalParameterSet()->getTime  ("Observation.claimPeriod");
 	itsPreparePeriod = globalParameterSet()->getTime  ("Observation.preparePeriod");
+	itsProcessType   = globalParameterSet()->getString("Observation.processType", "Observation");
 
 	// Values from my conf file
 	itsLateLimit     = globalParameterSet()->getTime   ("ObservationControl.lateLimit", 15);
@@ -463,6 +465,10 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
 		else if (timerEvent.id == itsStopTimer) {
+			if (itsState == CTState::QUIT) {
+				LOG_INFO("Re-entry of quit-phase, ignored.");
+				break;
+			}
 			setState(CTState::QUIT);
 			itsChildResult   = itsQuitReason;
 			itsChildsInError = 0;
@@ -747,8 +753,7 @@ void  ObservationControl::doHeartBeatTask()
 		uint32	nrStations = itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL);
 		time_t	now   = to_time_t(second_clock::universal_time());
 		time_t	stop  = to_time_t(itsStopTime);
-		// before stoptime && no stations left && not already quiting
-		if (now < stop && itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL)==0 && itsStopTimer) {
+		if (now < stop && itsProcessType == "Observation" && itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL)==0) {
 			LOG_FATAL("Too less stations left, FORCING QUIT OF OBSERVATION");
 			if (itsState < CTState::RESUME) {
 				itsQuitReason = CT_RESULT_LOST_CONNECTION;

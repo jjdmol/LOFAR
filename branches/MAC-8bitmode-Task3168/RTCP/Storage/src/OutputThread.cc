@@ -25,6 +25,7 @@
 
 #include <Common/StringUtil.h>
 #include <Storage/MSWriterFile.h>
+#include <Storage/MSWriterCorrelated.h>
 #include <Storage/MSWriterDAL.h>
 #include <Storage/MSWriterNull.h>
 #include <Storage/MeasurementSetFormat.h>
@@ -94,7 +95,7 @@ static void recursiveMakeDir(const string &dirname, const string &logPrefix)
 }
 
 
-OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian)
+OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory)
 :
   itsParset(parset),
   itsOutputType(outputType),
@@ -102,6 +103,7 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsIsBigEndian(isBigEndian),
   itsLogPrefix(logPrefix + "[OutputThread] "),
   itsCheckFakeData(parset.checkFakeInputData()),
+  itsTargetDirectory(targetDirectory),
   itsFreeQueue(freeQueue),
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),
@@ -123,7 +125,7 @@ void OutputThread::createMS()
   ScopedLock sl(casacoreMutex);
   ScopedDelayCancellation dc; // don't cancel casacore calls
 
-  std::string directoryName = itsParset.getDirectoryName(itsOutputType, itsStreamNr);
+  std::string directoryName = itsTargetDirectory == "" ? itsParset.getDirectoryName(itsOutputType, itsStreamNr) : itsTargetDirectory;
   std::string fileName	    = itsParset.getFileName(itsOutputType, itsStreamNr);
   std::string path	    = directoryName + "/" + fileName;
 
@@ -158,11 +160,16 @@ void OutputThread::createMS()
   try {
     // HDF5 writer requested
     switch (itsOutputType) {
+      case CORRELATED_DATA:
+        itsWriter = new MSWriterCorrelated(path, itsParset);
+        break;
+
       case BEAM_FORMED_DATA:
         itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
         break;
+
       default:
-        itsWriter = new MSWriterFile(path, itsOutputType == BEAM_FORMED_DATA);
+        itsWriter = new MSWriterFile(path);
         break;
     }
   } catch (SystemCallException &ex) {

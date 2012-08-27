@@ -183,10 +183,12 @@ public:
 	// the tree is exported: HTML, KeyValue List.
 	bool	exportTree (treeIDType			aTreeID,
 						nodeIDType			topItem,
-						const string&		filename,
-						const formatType	outputFormat = FtKVList,
-						bool				folded = false);
+						const string&		filename);
 
+	// Export a VIC (sub)tree with reported metadata to a file.
+	bool	exportResultTree (treeIDType		aTreeID,
+							  nodeIDType		topItem,
+							  const string&		filename);
 
 	//# --- Finally some general tree maintenance ---
 	// Delete a tree (of any kind) from the database.
@@ -217,8 +219,8 @@ public:
 
 	// Set the scheduling times of the tree
 	bool	setSchedule(treeIDType		aTreeID,
-				        const ptime&	aStartTime,
-				        const ptime& 	aStopTime);
+				        const string&	aStartTime,
+				        const string& 	aStopTime);
 
 	// Whenever an error occurs in one the OTDB functions the message can
 	// be retrieved with this function.

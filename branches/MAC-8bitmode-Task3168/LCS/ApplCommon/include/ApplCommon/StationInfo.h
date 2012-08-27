@@ -28,6 +28,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <ApplCommon/LofarDirs.h>
 
 //# Avoid 'using namespace' in headerfiles
 
@@ -35,12 +36,6 @@ namespace LOFAR {
 
 // \addtogroup ApplCommon
 // @{
-
-#define LOFAR_BASE_LOCATION		"/opt/lofar"
-#define LOFAR_BIN_LOCATION		"/opt/lofar/bin"
-#define LOFAR_CONFIG_LOCATION	"/opt/lofar/etc"
-#define LOFAR_SHARE_LOCATION	"/opt/lofar/share"
-#define LOFAR_LOG_LOCATION		"/opt/lofar/log"
 
 //
 // Nameconventions dictate that the hostname has the following syntax:

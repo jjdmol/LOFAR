@@ -91,9 +91,9 @@ size_t MeasurementSet::FrequencyCount()
 	return _maxFrequencyIndex;
 }
 
-size_t MeasurementSet::BandCount()
+size_t MeasurementSet::BandCount(const std::string &location)
 {
-	casa::MeasurementSet ms(_location);
+	casa::MeasurementSet ms(location);
 	casa::Table spwTable = ms.spectralWindow();
 	size_t count = spwTable.nrow();
 	return count;
@@ -207,15 +207,18 @@ BandInfo MeasurementSet::GetBandInfo(const std::string &filename, unsigned bandI
 	casa::ROArrayColumn<double> frequencyCol(spectralWindowTable, "CHAN_FREQ");
 
 	band.windowIndex = bandIndex;
-	band.channelCount = numChanCol(bandIndex);
+	size_t channelCount = numChanCol(bandIndex);
 
 	const casa::Array<double> &frequencies = frequencyCol(bandIndex);
 	casa::Array<double>::const_iterator frequencyIterator = frequencies.begin();
 
-	for(unsigned channel=0;channel<band.channelCount;++channel) {
+	for(unsigned channel=0;channel<channelCount;++channel) {
 		ChannelInfo channelInfo;
 		channelInfo.frequencyIndex = channel;
 		channelInfo.frequencyHz = frequencies(casa::IPosition(1, channel));
+		channelInfo.channelWidthHz = 0.0;
+		channelInfo.effectiveBandWidthHz = 0.0;
+		channelInfo.resolutionHz = 0.0;
 		band.channels.push_back(channelInfo);
 
 		++frequencyIterator;
@@ -459,7 +462,7 @@ bool MeasurementSet::ChannelZeroIsRubish()
 		if(station != "LOFAR") return false;
 		// This is of course a hack, but its the best estimate we can make :-/ (easily)
 		const BandInfo bandInfo = GetBandInfo(0);
-		return (bandInfo.channelCount == 256 || bandInfo.channelCount==64);
+		return (bandInfo.channels.size() == 256 || bandInfo.channels.size()==64);
 	} catch(std::exception &e)
 	{
 		return false;

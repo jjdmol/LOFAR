@@ -34,6 +34,22 @@ namespace LOFAR {
 namespace RTCP {
 
 #if defined FLAT_MEMORY
+/*
+ * Flat memory:
+ *   Total size: 1.6 GByte
+ *
+ * Input section:
+ *      4 * nrSlotsInFrame * nrSecondsOfBuffer * sampleRate * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE) (BeamletBuffer.cc)
+ *   <= 4 * 61             * 2.5               * 200e6/1024 * 2                * 2
+ *    = 476562500 bytes < 455 MByte
+ *
+ * Output section:
+ *    ~ 1.1 Gbyte left
+ *    IONProc can output at most 1.1 GByte/s if it handles input (limited by CPU power)
+ *    -> 1 second of buffer @ highest data rate
+ *
+ *    For lower data rates, we likely want to buffer more (f.e. CorrelatedData with an integration time of 1 second)
+ */
 static FixedArena  arena(reinterpret_cast<void *>(0x50000000), 0x60000000);
 SparseSetAllocator hugeMemoryAllocator(arena);
 #else

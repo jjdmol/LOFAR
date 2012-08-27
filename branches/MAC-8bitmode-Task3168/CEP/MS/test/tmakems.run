@@ -27,14 +27,12 @@ if test "$srcdir" = ""; then
   srcdir="../../../../../LOFAR/CEP/MS/test"
 fi
 
-# Add path of makemsdistr, combinevds/makems, getparsetvalue, startdistproc.
+# Add path of makemsdistr and combinevds/makems.
 # Make all of them absolute.
+# Note it also uses startdistproc, etc. For them symlinks are created by cmake.
 p1=`cd "$srcdir/../src" > /dev/null 2>&1  &&  pwd`
 p2=`cd "../src" > /dev/null 2>&1  &&  pwd`
-p3=`cd "../../../LCS/Common/src" > /dev/null 2>&1  &&  pwd`
-p4=`cd "$srcdir/../../LMWCommon/src" > /dev/null 2?&1  &&  pwd`
-p5=`cd "$srcdir/../../LMWCommxxon/src" > /dev/null 2>&1  &&  pwd`
-PATH=".:$p1:$p2:$p3:$p4:$p5:$PATH"
+PATH=".:$p1:$p2:$PATH"
 export PATH
 
 # Create ClusterDesc file using pwd.

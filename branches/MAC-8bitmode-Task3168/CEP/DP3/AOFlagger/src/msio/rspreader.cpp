@@ -110,7 +110,6 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadChannelBeam
 		channel.frequencyIndex = i;
 		band.channels.push_back(channel);
 	}
-	band.channelCount=256;
 	data.second->SetBand(band);
 	data.second->SetObservationTimes(observationTimes);
 	return data;
@@ -150,7 +149,6 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadSingleBeaml
 	BandInfo band = data.second->Band();
 	band.channels[0] = data.second->Band().channels[beamletIndex];
 	band.channels.resize(1);
-	band.channelCount=1;
 	data.second->SetBand(band);
 	return data;
 }
@@ -188,7 +186,6 @@ std::pair<TimeFrequencyData,TimeFrequencyMetaDataPtr> RSPReader::ReadAllBeamlets
 	
 	TimeFrequencyMetaDataPtr metaData = TimeFrequencyMetaDataPtr(new TimeFrequencyMetaData());
 	BandInfo band;
-	band.channelCount = beamletCount;
 	for(size_t i=0;i<beamletCount;++i)
 	{
 		ChannelInfo channel;

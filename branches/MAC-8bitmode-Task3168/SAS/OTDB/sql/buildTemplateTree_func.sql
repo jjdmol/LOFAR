@@ -52,7 +52,7 @@ CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
 		AND		name NOT like '#%'
 	  LOOP
 		IF vParam.par_type >= 300 THEN	-- popup parameter? leave limits fiels empty.
-		  dfltValue := substring(vParam.limits from '[a-zA-Z0-9_.,<>]+;([a-zA-Z0-9_.,<>]+)');
+		  dfltValue := substring(vParam.limits from '[a-zA-Z0-9+-/_.,<>]+;([a-zA-Z0-9+-/_.,<>]+)');
 		  IF dfltValue IS NULL THEN
 			dfltValue := '';
 		  END IF;

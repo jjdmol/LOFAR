@@ -632,41 +632,6 @@ def createiHBADeltasFile(resultDir, stationName, dataDir):
     command = "cp -f "+srcFile+ " " + destFile
     #print command
     os.system(command)
-
-def createCalTableFile(resultDir, stationName, dataDir):
-    """
-    Copies the right Caltables for this station
-    """
-    # Copy file CalTable_<stationnumber>_mode<x>.dat to
-    # /opt/lofar/etc/CalTable_mode<x>.dat
-    
-    # stationName is in lowercase!
-    srcFileRoot = dataDir + "/CalTable_" + stationName[2:5] + "_mode"
-    for mode in range(7):
-        srcFile = srcFileRoot + str(mode+1) + ".dat"
-        if (os.access(srcFile,os.F_OK) == False):
-            print "Cannot find or open file ",srcFile
-        else:
-            destFile = resultDir + "/CalTable_mode" + str(mode+1) + ".dat"
-            command = "cp -f "+srcFile+ " " + destFile
-            os.system(command)
-
-def createPPSFile(resultDir, stationName, dataDir):
-    """
-    Copies the right PPSdelays correction table for this station
-    """
-    # Copy file <stationname>-PPSdelays.conf to
-    # /opt/lofar/etc/PPSdelays.conf
-    
-    srcFile = dataDir + "/" + stationName.upper() + "-PPSdelays.conf"
-    if (os.access(srcFile,os.F_OK) == False):
-        print "Cannot find or open file ",srcFile," for creating PPSdelays.conf"
-    else:
-        destFile = resultDir + "/PPSdelays.conf"
-        command = "cp -f "+srcFile+ " " + destFile
-        #print command
-        os.system(command)
-
     
 def createHardwareMonitorFile(resultDir, stationName, dataDir):
     """
@@ -755,6 +720,9 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" ):
                 # CCU needs RSPConnections.dat for CEP in PVSS
                 print "Using BG/P partition " + partitionName + " for creating destination MAC addresses"
                 createRSPConnectionsFile(resultDir, dataDir, partitionName)
+                print stationName.upper()
+                if (stationName.upper() == "CCU09"):
+                    print "Adapt /opt/lofar/etc/RSPConnections.dat for test stations and used test BG/P nodes!!"
             else:
                 if (sys.argv[1] == "test"):
                     print "Setting up station "+stationName+" for TEST use"
@@ -775,8 +743,6 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" ):
                 createCableDelaysFile  (resultDir, stationName, dataDir)
                 createHBADeltasFile    (resultDir, stationName, dataDir)
                 createiHBADeltasFile   (resultDir, stationName, dataDir)
-    #            createPPSFile          (resultDir, stationName, dataDir)
-    #            createCalTableFile     (resultDir, stationName, dataDir)
                 createHardwareMonitorFile(resultDir, stationName, dataDir)
                 de601Exceptions        (resultDir, stationName, dataDir)
     else:
@@ -829,9 +795,7 @@ else:
         createCableDelaysFile  (resultDir, stationName, dataDir)
         createHBADeltasFile    (resultDir, stationName, dataDir)
         createiHBADeltasFile   (resultDir, stationName, dataDir)
-#        createPPSFile          (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
-#        createCalTableFile     (resultDir, stationName, dataDir)
         de601Exceptions        (resultDir, stationName, dataDir)
         
 if len(warnings) > 0:

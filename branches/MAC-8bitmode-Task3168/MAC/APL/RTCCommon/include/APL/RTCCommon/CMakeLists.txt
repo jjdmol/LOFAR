@@ -4,6 +4,7 @@
 set(inst_HEADERS
   gnuplot_i.h
   MarshallBlitz.h
+  NsTimestamp.h
   Observer.h
   PSAccess.h
   Subject.h

@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Version.h>
-
+#include <Common/Exception.h>
 #include <Common/ParameterSet.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
@@ -36,6 +36,9 @@ using namespace LOFAR;
 using namespace LOFAR::GCF;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::StationCU;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {

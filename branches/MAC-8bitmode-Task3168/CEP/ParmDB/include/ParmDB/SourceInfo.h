@@ -29,10 +29,17 @@
 
 //# Includes
 #include <Common/lofar_string.h>
+#include <Common/LofarTypes.h>
 #include <casa/Arrays/Array.h>
+#include <measures/Measures/MDirection.h>
 
 
 namespace LOFAR {
+
+  //# Forward Declaration.
+  class BlobIStream;
+  class BlobOStream;
+
 namespace BBS {
 
   // @ingroup ParmDB
@@ -47,23 +54,20 @@ namespace BBS {
     enum Type {POINT = 0,
                GAUSSIAN = 1,
                DISK = 2,
-               SHAPELET = 3,
-               SUN = 10,
-               MOON = 11,
-               JUPITER = 12,
-               MARS = 13,
-               VENUS = 14
+               SHAPELET = 3
     };
 
-
-    // Create from source name, type and other info.
+    // Create from source name, type, reference type and other info.
+    // <br>The 'type' argument tells the source type (point, gaussian, etc.).
+    // <br>The 'refType' argument tells the MDirection reference frame
+    // (J2000, SUN, etc.).
     // <br>A positive spectralIndexSize means that BBS will take
     // a spectral index with size terms into account when calculating
     // the flux. The values of the terms are in the associated ParmDB. It
     // uses the given reference frequency (in Hz).
     // <br> useRotationMeasure indicates that Q and U have to be calculated
     // using a rotation measure, polarization angle, and polarized fraction.
-    SourceInfo (const string& name, Type type,
+    SourceInfo (const string& name, Type type, const string& refType="J2000",
                 uint spectralIndexNTerms=0, double spectralIndexRefFreqHz=0.,
                 bool useRotationMeasure=false);
 
@@ -80,6 +84,10 @@ namespace BBS {
     // Get the source type.
     Type getType() const
       { return itsType; }
+
+    // Get the reference type.
+    const string& getRefType() const
+      { return itsRefType; }
 
     // Get the number of terms in the spectral index function.
     // A value 0 means that the spectral index is not used.
@@ -121,10 +129,17 @@ namespace BBS {
                            double scaleU, double scaleV);
     // </group>
 
+    // Write into a blob.
+    void write (BlobOStream&);
+
+    // Read from a blob.
+    void read (BlobIStream&);
+
   private:
     string itsName;           // source name
     Type   itsType;           // source type
-    uint   itsSpInxNTerms;    // nr of terms in the spectral index function
+    string itsRefType;        // reference type
+    uint32 itsSpInxNTerms;    // nr of terms in the spectral index function
     double itsSpInxRefFreq;   // reference frequency (Hz) for spectral index
     bool   itsUseRotMeas;     // true=use RM,PolFrac,PolAngle; false=use Q,U
     double itsShapeletScaleI; // shapelet scale for I-flux

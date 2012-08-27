@@ -22,7 +22,7 @@
 //# $Id: TBB_StaticMapping.h 2278 2012-03-12 20:01:54Z amesfoort $
 
 #ifndef TBB_STATIC_MAPPING_H
-#define TBB_STATIC_MAPPING_H	1
+#define TBB_STATIC_MAPPING_H 1
 
 #include <string>
 #include <vector>
@@ -51,8 +51,6 @@ private:
 
 	// Maps from node name to (station name, board name).
 	std::multimap<std::string, std::pair<std::string, std::string> > itsMapping;
-
-	std::vector<std::string> tokenizeString(const std::string& str, const std::string& delim);
 };
 
 

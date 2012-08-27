@@ -24,7 +24,7 @@
 #
 # $Id$
 #
-VERSION="v2.1 20100517"		# loading image 1 before starting RSPdriver
+VERSION="v2.2 20120710"		# waiting for initialize before going to level 3 and up
 
 if [ "$LOFARROOT" == "" ]; then
   # default value until all MAC controlled systems provide $LOFARROOT
@@ -79,19 +79,21 @@ selectImage()
 	let board=0
 	while [ $board -lt $nrRSPs ]
 	do
-		# get version of RSPboard
+		# get version number of RSPboard in var. rsu
 		boardHex=`echo $board | awk '{ printf "%02x", $1 }'`
 		rsu=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
-		if [ ${#rsu} -eq 1 ]; then
+		if [ ${rsu} -eq 1 ]; then
   		  let version=$rsu
  		  # if board has reset itself to image 0, load image 1 again
-		  #if [ $version -le 4 ]; then
-		  # AS-20100517: Always load new image!
-		     echo "Loading image $image on RSPboard $board ..."
-		     sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
+		  echo "Loading image $image on RSPboard $board ..."
+		  sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
 		  #fi
+                elif [ ${rsu} -eq 6 ]; then
+		  echo "No need to reload image for RSPboard $board"
+		elif [ ${#rsu} -ne 1 ]; then 
+                  echo "No RSPboard $board found"
                 else
-                  echo "No RSP board $board found"
+                  echo "Not a valid image found for RSPboard $board; perhaps an image is being loaded"
 		fi
 		let board+=1
 	done
@@ -319,8 +321,8 @@ goto_level()
           if [ ${curlevel} -ge 2 ]; then 
 	    /sbin/pidof RSPDriver 1>/dev/null 2>&1
 	    if [ $? -eq 0 ]; then
-	      status=`( rspctl --status | grep ERROR ) >& /dev/null; echo $?`
-              if [ $status -eq 1 ]; then 
+	      status=`( rspctl --version | grep "0.0" ) >& /dev/null; echo $?`
+              if [ $status == 1 ]; then 
        	        echo "set rcumode to 0 (power save)"
 	        rspctl --rcumode=0 1>/dev/null 2>&1
 	      else
@@ -348,8 +350,27 @@ goto_level()
 	# then power up to new level
 	for (( l=1 ; l<=newlevel ; l++ ))
 	do
-		cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | \
-		grep "^${l}:" | grep ":u:" |  while read line
+	  if [ $l == 3 ]; then 
+	     # First make sure RSP images are properly loaded
+             # Introduce a timeout of 60 sec for images to initialize
+	     echo "Waiting for images to be initialized"
+	     timeout=59
+	     sleep 1
+             for (( s=0 ; s<timeout; s++ ))
+	     do 
+	       rsu_ready=`( rspctl --version | grep "0.0" ) >& /dev/null; echo $?`
+	       if [ $rsu_ready == 1 ]; then
+		   echo "Images are loaded"
+		   break
+	       fi
+               sleep 1
+             done
+             if [ $s == $timeout ]; then 
+               echo "Could not load RSP images in time; Reset RSP boards"
+               exit 1
+             fi 
+          fi
+	  cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | grep "^${l}:" | grep ":u:" |  while read line
 		do
                         (
 			asroot=`echo $line | cut -d":" -f4`
@@ -358,7 +379,7 @@ goto_level()
 			start_prog $program x$asroot x$withmpi
                         ) <&- # cant have programs reading from stdin
                               # as that would mess up 'while read line'
-		done
+	       done
 	done
 }
 

@@ -25,14 +25,15 @@
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/Observation.h>
+#include <ApplCommon/StationInfo.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/PVSS/PVSSinfo.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-//#include <APL/RTDBCommon/RTDButilities.h>
-//#include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 #include <stdlib.h>
@@ -72,6 +73,21 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsBufferSize       (0)
 {
     LOG_TRACE_OBJ_STR (cntlrName << " construction");
+
+    // HACK: test environment uses 4-pset partitions, production environment 64 pset partition
+    // anything else will break this code.
+
+    string dbname = PVSSinfo::getMainDBName();
+
+    LOG_DEBUG_STR("Connected to database " << dbname);
+
+    if (dbname == "MCU099") {
+      LOG_WARN("Detected test environment -- assuming 4 psets");
+      itsNrPsets = 4;
+    } else {
+      LOG_WARN("Detected production environment -- assuming 64 psets");
+      itsNrPsets = 64;
+    }
 
     // need port for timers.
     itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -396,11 +412,13 @@ void CEPlogProcessor::processParset( const std::string &observationID )
       return;
     }
 
-    // parsets are in /opt/lofar/share
-    string filename(formatString("/opt/lofar/share/Observation%s", observationID.c_str()));
+    // parsets are in LOFAR_SHARE_LOCATION
+    string filename(formatString("%s/Observation%s", 
+                                 LOFAR_SHARE_LOCATION, observationID.c_str()));
 
     ParameterSet parset(filename);
-    Observation obs(&parset,false);
+
+    Observation obs(&parset, false, itsNrPsets);
 
     unsigned nrStreams = obs.streamsToStorage.size();
 
@@ -947,7 +965,17 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
 
 void CEPlogProcessor::_processCNProcLine(const struct logline &logline)
 { 
-  (void)logline;
+  char *result;
+
+  // CNProc@0000 13-02-12 12:13:44.823 WARN  [obs 1003431 phases 111] Station S17 subband 0 consists of only zeros.
+  if ((result = strstr(logline.msg, "consists of only zeros"))) {
+    int subband = 0;
+    vector<char> stationName(strlen(logline.msg));
+    if (sscanf(logline.msg, "Station %[^ ]s subband %d consists of only zeros", &stationName[0], &subband) == 2) {
+      LOG_DEBUG(formatString("[%s] Subband %d is zeros", &stationName[0], subband));
+    }
+    return;
+  }
 }
 
 void CEPlogProcessor::_processStorageLine(const struct logline &logline)

@@ -20,6 +20,8 @@ CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
 #  message(STATUS " This probably means your gcc is old ( < 4.2).")
 #endif(COMPILER_SUPPORTS_MARCH_NATIVE)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+
 include(CheckIncludeFileCXX)
 
 FIND_PATH(BOOST_ASIO_H_FOUND "boost/asio.hpp")
@@ -43,11 +45,7 @@ endif(GSL_FOUND)
 
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
-lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp util/rng.cpp msio/timestepaccessor.cpp util/aologger.cpp)
-
 lofar_add_bin_program(aorefscript aorefscript.cpp)
-
-lofar_add_bin_program(aosynchronisation aosynchronisation.cpp)
 
 set(GUI_PLOT_FILES
   gui/plot/colorscale.cpp
@@ -116,6 +114,7 @@ set(STRATEGY_ACTION_FILES
   strategy/actions/foreachmsaction.cpp
   strategy/actions/frequencyselectionaction.cpp
   strategy/actions/fringestopaction.cpp
+	strategy/actions/highpassfilteraction.cpp
   strategy/actions/imageraction.cpp
   strategy/actions/normalizevarianceaction.cpp
   strategy/actions/plotaction.cpp
@@ -124,6 +123,7 @@ set(STRATEGY_ACTION_FILES
   strategy/actions/statisticalflagaction.cpp
   strategy/actions/strategyaction.cpp
   strategy/actions/svdaction.cpp
+  strategy/actions/timeconvolutionaction.cpp
   strategy/actions/timeselectionaction.cpp
   strategy/actions/writeflagsaction.cpp)
 
@@ -132,6 +132,7 @@ set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/eigenvalue.cpp
   strategy/algorithms/fringestoppingfitter.cpp
   strategy/algorithms/fringetestcreater.cpp
+	strategy/algorithms/highpassfilter.cpp
   strategy/algorithms/localfitmethod.cpp
   strategy/algorithms/methoditerator.cpp
   strategy/algorithms/mitigationtester.cpp
@@ -237,9 +238,11 @@ if(GTKMM_FOUND)
 		gui/imagewidget.cpp
 		gui/imagepropertieswindow.cpp
 		)
-		lofar_add_bin_program(badstations badstations.cpp ${REMOTE_FILES})
 		target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
+		lofar_add_bin_program(badstations badstations.cpp ${REMOTE_FILES})
 		target_link_libraries(badstations ${GTKMM_LIBRARIES})
+		lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp ${REMOTE_FILES})
+		target_link_libraries(aofrequencyfilter ${GTKMM_LIBRARIES})
 	endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 else()
   message(WARNING " The graphical user interface library GTKMM was not found; rfigui and aoqplot will not be compiled.")

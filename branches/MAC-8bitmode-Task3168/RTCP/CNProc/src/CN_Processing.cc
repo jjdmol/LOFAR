@@ -25,6 +25,7 @@
 #include <CorrelatorAsm.h>
 #include <FIR_Asm.h>
 #include <BeamFormer.h>
+#include <ContainsOnlyZerosAsm.h>
 
 #include <Common/Timer.h>
 #include <Interface/CN_Mapping.h>
@@ -149,6 +150,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
+  itsStationNames            = parset.allStationNames();
   itsNrStations	             = parset.nrStations();
   unsigned nrMergedStations  = parset.nrMergedStations();
   itsNrSubbands              = parset.nrSubbands();
@@ -161,6 +163,8 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   itsNrChannels		     = parset.nrChannelsPerSubband();
   itsNrSamplesPerIntegration = parset.CNintegrationSteps();
   itsFakeInputData           = parset.fakeInputData();
+  itsNrSlotsInFrame          = parset.nrSlotsInFrame();
+  itsCNintegrationTime       = parset.CNintegrationTime();
 
   if (itsFakeInputData && LOG_CONDITION)
     LOG_WARN_STR(itsLogPrefix << "Generating fake input data -- any real input is discarded!");
@@ -206,6 +210,12 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsPreCorrelationFlagger = new PreCorrelationFlagger(parset, itsNrStations, itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Online PreCorrelation flagger enabled");
+    }
+
+    if (parset.onlineFlagging() && parset.onlinePreCorrelationNoChannelsFlagging()) {
+      itsPreCorrelationNoChannelsFlagger = new PreCorrelationNoChannelsFlagger(parset, itsNrStations, itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
+      if (LOG_CONDITION)
+        LOG_DEBUG_STR("Online PreCorrelation no channels flagger enabled");
     }
 
     if (parset.outputCorrelatedData()) {
@@ -523,7 +533,8 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
     unsigned sap = itsSubbandToSAPmapping[subband];
 
     unsigned nrBeams = itsNrPencilBeams[sap];
-    unsigned part = itsTranspose2Logic.myPart(subband);
+    unsigned coherentPart   = itsTranspose2Logic.myPart(subband, true);
+    unsigned incoherentPart = itsTranspose2Logic.myPart(subband, false);
 
     //LOG_DEBUG_STR("I process subband " << subband << " which belongs to sap " << sap << " part " << part);
 
@@ -533,8 +544,10 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
     for (unsigned beam = 0; beam < nrBeams;) { // beam is incremented in inner for-loop
       unsigned groupSize;
 
-      stream = itsTranspose2Logic.stream(sap, beam, 0, part, stream);
+      // go to part 0 first, to determine coherency (which determines the part #)
+      stream = itsTranspose2Logic.stream(sap, beam, 0, 0, stream);
       const StreamInfo &info = itsTranspose2Logic.streamInfo[stream];
+      const unsigned part = info.coherent ? coherentPart : incoherentPart;
 
       if (info.coherent) {
         // a coherent beam -- look BEST_NRBEAMS ahead to see if we can process them at the same time
@@ -544,7 +557,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
         // determine how many beams (up to groupSize) are coherent
         for (unsigned i = 1; i < groupSize; i++ ) {
-          stream2 = itsTranspose2Logic.stream(sap, beam+i, 0, part, stream2);
+          stream2 = itsTranspose2Logic.stream(sap, beam+i, 0, 0, stream2);
           const StreamInfo &info2 = itsTranspose2Logic.streamInfo[stream2];
 
           if (!info2.coherent) {
@@ -673,6 +686,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
     unsigned stat = itsAsyncTransposeInput->waitForAnyReceive();
     asyncReceiveTimer.stop();
 
+    checkInputForZeros(stat);
+
     computeTimer.start();
     itsPPF->doWork(stat, itsCenterFrequencies[*itsCurrentSubband], itsTransposedSubbandMetaData, itsTransposedInputData, itsFilteredData);
     computeTimer.stop();
@@ -688,7 +703,68 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 #endif
 
   if (itsFakeInputData)
-    FakeData(itsParset).fill(itsFilteredData);
+    FakeData(itsParset).fill(itsFilteredData, *itsCurrentSubband);
+}
+
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::checkInputForZeros(unsigned station)
+{
+#ifdef HAVE_MPI
+  if (LOG_CONDITION)
+    LOG_DEBUG_STR(itsLogPrefix << "Start checking for zeroes at " << MPI_Wtime());
+#endif
+
+  static NSTimer timer("input zero-check timer", true, true);
+
+  timer.start();
+
+  const unsigned nrSamplesToCNProc = itsNrSamplesPerIntegration * itsNrChannels;
+
+  const SparseSet<unsigned> &flags = itsTransposedSubbandMetaData->getFlags(station);
+  SparseSet<unsigned> validSamples = flags.invert(0, nrSamplesToCNProc);
+
+  bool allzeros = true;
+
+  // only consider non-flagged samples, as flagged samples aren't necessarily zero
+  for (SparseSet<unsigned>::const_iterator it = validSamples.getRanges().begin(); allzeros && it != validSamples.getRanges().end(); ++it) {
+
+#ifdef HAVE_BGP
+    unsigned first = it->begin;
+    unsigned nrSamples = it->end - it->begin;
+
+    ASSERT(NR_POLARIZATIONS == 2); // assumed by the assembly
+
+    allzeros = containsOnlyZeros<SAMPLE_TYPE>(itsTransposedInputData->samples[station][first].origin(), nrSamples);
+#else
+    for (unsigned t = it->begin; allzeros && t < it->end; t++) {
+      for (unsigned p = 0; p < NR_POLARIZATIONS; p++) {
+        const SAMPLE_TYPE &sample = itsTransposedInputData->samples[station][t][p];
+
+        if (real(sample) != 0.0 || imag(sample) != 0.0) {
+          allzeros = false;
+          break;
+        }
+      }
+    }
+#endif
+  }
+
+  if (allzeros && validSamples.count() > 0) {
+    // flag everything
+    SparseSet<unsigned> newflags;
+
+    newflags.include(0, nrSamplesToCNProc);
+    itsTransposedSubbandMetaData->setFlags(station, newflags);
+
+    // Rate limit this log line, to prevent 244 warnings/station/block
+    //
+    // Emit (at most) one message per 10 seconds, and only one per RSP board (TODO: this doesn't work as expected with DataSlots)
+    unsigned logInterval = static_cast<unsigned>(ceil(10.0 / itsCNintegrationTime));
+    if (itsBlock % logInterval == 0 && *itsCurrentSubband % itsNrSlotsInFrame == 0)
+      LOG_ERROR_STR(itsLogPrefix << "Station " << itsStationNames[station] << " subband " << *itsCurrentSubband << " consists of only zeros.");
+  }
+
+  timer.stop();
 }
 
 
@@ -721,6 +797,23 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preCorrelationF
   timer.start();
   computeTimer.start();
   itsPreCorrelationFlagger->flag(itsFilteredData, *itsCurrentSubband);
+  computeTimer.stop();
+  timer.stop();
+}
+
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preCorrelationNoChannelsFlagging()
+{
+#if defined HAVE_MPI
+  if (LOG_CONDITION)
+    LOG_DEBUG_STR(itsLogPrefix << "Start pre correlation no channels flagger at t = " << blockAge());
+#endif // HAVE_MPI
+
+  static NSTimer timer("pre correlation no channels flagger", true, true);
+
+  timer.start();
+  computeTimer.start();
+  itsPreCorrelationNoChannelsFlagger->flag(itsFilteredData, *itsCurrentSubband);
   computeTimer.stop();
   timer.stop();
 }
@@ -929,6 +1022,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
     if (itsPPF != 0)
       filter();
+
+    if (itsPreCorrelationNoChannelsFlagger != 0)
+      preCorrelationNoChannelsFlagging();
 
     if (itsPreCorrelationFlagger != 0)
       preCorrelationFlagging();

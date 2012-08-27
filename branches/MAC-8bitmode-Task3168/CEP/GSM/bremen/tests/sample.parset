@@ -2,7 +2,7 @@
 # Lofar GSM input parset.    #
 ##############################
 bbs_format = test
-source_lists = [ data/new_field.dat, data/field2.dat ]
+source_lists = [ data/new_field.dat, data/new_field_dup.dat ]
 image_id = TheUniqueImageID
 image_date = ???
 frequency = 150000000 # in Hz

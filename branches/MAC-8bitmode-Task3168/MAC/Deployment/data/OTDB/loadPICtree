@@ -99,7 +99,7 @@ if [[ -e $DIR/PVSS2SAS ]] && [[ -e $DIR/load_PICtree ]]; then
   arguments=$DATABASE
   arguments=$arguments" "$HOST
   if [ $localUse = 0 ]; then 
-    logfile="/opt/lofar/log/loadPICtree.log"
+    logfile="/opt/lofar/var/log/loadPICtree.log"
   else
     logfile="./loadPICtree.log"
   fi

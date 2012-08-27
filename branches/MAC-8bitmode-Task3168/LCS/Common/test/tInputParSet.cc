@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <Common/InputParSet.h>
 #include <Common/StreamUtil.h>
 
@@ -29,7 +30,7 @@ void testInput (int argc, char* argv[])
 {
   InputParSet inputs;
   // define the input structure
-  inputs.setVersion("2011Sep19-CT/SvdT/JvZ/GvD");
+  inputs.setVersion("2012Jun11-GvD");
   inputs.create ("ms", "",
                  "Name of input MeasurementSet",
                  "string");
@@ -81,6 +82,13 @@ void testInput (int argc, char* argv[])
 int main (int argc, char* argv[])
 {
   try {
+    // The file tInputParSet.in contains more than 1 parameter, so the
+    // tInputParSet.run in casacore style has more than 1 parameter. 
+#ifndef HAVE_AIPSPP
+    if (argc > 2) {
+      return 0;
+    }
+#endif
     testInput (argc, argv);
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;

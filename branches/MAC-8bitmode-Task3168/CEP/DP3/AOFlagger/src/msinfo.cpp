@@ -145,9 +145,9 @@ int main(int argc, char *argv[])
 		for(unsigned i=0;i<=set.MaxSpectralBandIndex();++i) {
 			cout << "== Spectral band index " << i << " ==" << endl;
 			BandInfo bandInfo = set.GetBandInfo(i);
-			cout << "Channel count: " << bandInfo.channelCount << std::endl;
+			cout << "Channel count: " << bandInfo.channels.size() << std::endl;
 			cout << "Channels: ";
-			for(unsigned j=0;j<bandInfo.channelCount;++j) {
+			for(unsigned j=0;j<bandInfo.channels.size();++j) {
 				if(j > 0) cout << ", ";
 				cout << round(bandInfo.channels[j].frequencyHz/1000000) << "MHz";
 			}

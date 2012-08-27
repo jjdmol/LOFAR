@@ -201,7 +201,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             if(config.useBeam())
             {
                 exprDDE[j] = compose(exprDDE[j],
-                    makeBeamExpr(itsScope, instrument->station(j), refFreq,
+                    makeBeamExpr(instrument->station(j), refFreq,
                     exprPatchPositionITRF, exprRefDelayITRF, exprRefTileITRF,
                     config.getBeamConfig()));
             }
@@ -232,7 +232,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
                     exprPatch->position());
 
                 exprDDE[j] = compose(exprDDE[j],
-                    makeIonosphereExpr(itsScope, instrument->station(j),
+                    makeIonosphereExpr(instrument->station(j),
                     instrument->position(), exprAzEl, exprIonosphere));
             }
         }
@@ -492,7 +492,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 if(config.useBeam())
                 {
                     stationExpr[i] = compose(stationExpr[i],
-                        makeBeamExpr(itsScope, instrument->station(i),
+                        makeBeamExpr(instrument->station(i),
                         buffer->getReferenceFreq(), exprRefPhaseITRF,
                         exprRefDelayITRF, exprRefTileITRF,
                         config.getBeamConfig()));
@@ -508,7 +508,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                         exprRefPhase);
 
                     stationExpr[i] = compose(stationExpr[i],
-                        makeIonosphereExpr(itsScope, instrument->station(i),
+                        makeIonosphereExpr(instrument->station(i),
                         instrument->position(), exprAzEl, exprIonosphere));
                 }
             }
@@ -540,7 +540,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 if(config.useBeam())
                 {
                     stationExpr[i] = compose(stationExpr[i],
-                        makeBeamExpr(itsScope, instrument->station(i),
+                        makeBeamExpr(instrument->station(i),
                         buffer->getReferenceFreq(), exprPatchPositionITRF,
                         exprRefDelayITRF, exprRefTileITRF,
                         config.getBeamConfig()));
@@ -572,7 +572,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                         exprPatch->position());
 
                     stationExpr[i] = compose(stationExpr[i],
-                        makeIonosphereExpr(itsScope, instrument->station(i),
+                        makeIonosphereExpr(instrument->station(i),
                         instrument->position(), exprAzEl, exprIonosphere));
                 }
             }

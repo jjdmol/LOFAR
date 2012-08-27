@@ -143,7 +143,7 @@ namespace LOFAR {
       virtual void finish();
 
       // Update the general info (by initializing it).
-      virtual void updateInfo (DPInfo&);
+      virtual void updateInfo (const DPInfo&);
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
@@ -173,34 +173,28 @@ namespace LOFAR {
       // Tell if the visibility data are to be read.
       virtual void setReadVisData (bool readVisData);
 
-      // Get the frequency information (used by the writer).
-      virtual void getFreqInfo (casa::Vector<double>& freq,
-                                casa::Vector<double>& width,
-                                casa::Vector<double>& effBW,
-                                casa::Vector<double>& resolution,
-                                double& refFreq) const;
-
     private:
       // Combine all cubes in the vector to a single one.
       void combineFullResFlags (const vector<casa::Cube<bool> >& vec,
                                 casa::Cube<bool>& flags) const;
 
       // Handle the info for all bands.
-      void handleBands (uint nmissing);
+      void handleBands();
 
       // Sort the bands (MSs) inorder of frequency.
       void sortBands();
 
       // Fill the band info where some MSs are missing.
-      void fillBands (uint nmissing);
+      void fillBands();
 
       //# Data members.
       bool                  itsOrderMS;   //# sort multi MS in order of freq?
-      int                   itsFirst;     //# First valid MSReader (<0 = none)
+      int                   itsFirst;     //# first valid MSReader (<0 = none)
+      int                   itsNMissing;  //# nr of missing MSs
       vector<string>        itsMSNames;
       vector<MSReader*>     itsReaders;   //# same as itsSteps
       vector<DPStep::ShPtr> itsSteps;     //# used for automatic destruction
-      uint                  itsFillNChan; //# Nr of chans for missing MSs
+      uint                  itsFillNChan; //# nr of chans for missing MSs
       casa::Cube<bool>      itsFullResCube;  //# FullResFlags for missing MSs
       FlagCounter           itsFlagCounter;
     };

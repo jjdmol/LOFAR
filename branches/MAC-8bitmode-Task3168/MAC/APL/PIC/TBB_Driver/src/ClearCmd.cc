@@ -89,7 +89,7 @@ void ClearCmd::saveTpAckEvent(GCFEvent& event)
 		} else {
 			// reset channel-information for selected board	
 			TS->clearRcuSettings(getBoardNr());
-			TS->setBoardState(getBoardNr(),boardCleared);	
+			TS->setBoardState(getBoardNr(), boardCleared);	
 		}
 	}
 	nextBoardNr();

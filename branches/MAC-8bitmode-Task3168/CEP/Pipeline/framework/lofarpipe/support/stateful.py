@@ -22,8 +22,6 @@ def stateful(run_task):
         except (AttributeError, IndexError):
             my_state = ('', '')
 
-        print my_state
-        print configblock
         if configblock == my_state[0]:
             # We have already run this task and stored its state, or...
             self.logger.info("Task %s already exists in saved state; skipping"

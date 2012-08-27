@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 #include <PLCClient.h>
+#include <Scheduling.h>
 #include <Common/DataConvert.h>
 #include <Common/DataFormat.h>
 #include <Interface/Exceptions.h>
@@ -303,7 +304,9 @@ PLCClient::~PLCClient()
     itsDone = true;
   }
 
-  // thread might have been deleted in waitForDone()
+  // Release the thread first! Use waitForDone() as the
+  // thread might have been deleted in an earlier waitForDone()
+  waitForDone();
 }
 
 void PLCClient::waitForDone()
@@ -353,7 +356,13 @@ void PLCClient::recvCmd( PCCmd &cmd, string &options ) const
 // inner control structure (PLC message handling):
 //   LCS/ACC/PLC/src/ProcControlServer.cc
 
-void PLCClient::mainLoop() {
+void PLCClient::mainLoop()
+{
+#if defined HAVE_BGP_ION
+  //doNotRunOnCore0();
+  runOnCore0();
+#endif
+
   bool running = false;
   bool pausing = false;
 

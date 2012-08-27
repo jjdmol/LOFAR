@@ -43,10 +43,12 @@
 // install a new handler to produce backtraces for bad_alloc
 LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
-
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 using namespace std;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 
 class ExitOnClosedStdin
@@ -131,7 +133,7 @@ int main(int argc, char *argv[])
 
     ExitOnClosedStdin			  stdinWatcher;
     setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
-    setvbuf(stderr, stdoutbuf, _IOLBF, sizeof stderrbuf);
+    setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 
     LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3]);
 
@@ -150,7 +152,7 @@ int main(int argc, char *argv[])
     PortBroker::ServerStream controlStream(resource);
 
     Parset parset(&controlStream);
-    Observation obs(&parset, false);
+    Observation obs(&parset, false, parset.totalNrPsets());
 
     vector<string> hostnames = parset.getStringVector("OLAP.Storage.hosts", true);
     ASSERT(myRank < hostnames.size());
@@ -191,13 +193,7 @@ int main(int argc, char *argv[])
     }
   } catch (Exception &ex) {
     LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
-    exit(1);
-  } catch (exception &ex) {
-    LOG_FATAL_STR("[obs unknown] Caught exception: " << ex.what());
-    exit(1);
-  } catch (...) {
-    LOG_FATAL_STR("[obs unknown] Caught non-exception");
-    exit(1);
+    return 1;
   }
 
   LOG_INFO_STR("[obs unknown] Program end");

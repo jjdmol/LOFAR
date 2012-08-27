@@ -441,8 +441,7 @@ vector<OTDBnode> TreeMaintenance::getVTitemList (treeIDType	aTreeID,
 	uint32				resultSize = 0;
 
 	// loop through the levels and construct the vector
-	for (uint32 queryDepth = 1; queryDepth <= depth && !nodeList.empty(); 
-															++queryDepth) {
+	for (uint32 queryDepth = 1; queryDepth <= depth && !nodeList.empty(); ++queryDepth) {
 		// construct a query that calls a stored procedure.
 		string	query("SELECT * from getVTchildren('" +
 					toString(aTreeID) + "','" +
@@ -927,18 +926,13 @@ bool	TreeMaintenance::pruneTree(treeIDType	TODO_aTreeID,
 }
 
 //
-// exportTree(treeID, nodeID, filename, formattype, folded): bool
+// exportTree(treeID, nodeID, filename): bool
 //
-// Export a VIC (sub)tree to a file. The user may choose in which format
-// the tree is exported: HTML, KeyValue List.
+// Export a VIC (sub)tree to a file.
 bool	TreeMaintenance::exportTree (treeIDType			aTreeID,
 									 nodeIDType			topItem,
-									 const string&		filename,
-									 const formatType	TODO_outputFormat,
-									 bool				TODO_folded)
+									 const string&		filename)
 {
-	// TODO: implement outputformat and folded parameters
-
 	// Check connection
 	if (!itsConn->connect()) {
 		itsError = itsConn->errorMsg();
@@ -947,9 +941,7 @@ bool	TreeMaintenance::exportTree (treeIDType			aTreeID,
 
 	LOG_TRACE_FLOW_STR("TM:exportTree(" << aTreeID << ","
 										<< topItem << ","
-										<< filename << ","
-										<< TODO_outputFormat << ","
-										<< toString(TODO_folded) << ")");
+										<< filename << ")");
 
 	work	xAction(*(itsConn->getConn()), "exportFile");
 	try {
@@ -973,6 +965,50 @@ bool	TreeMaintenance::exportTree (treeIDType			aTreeID,
 	}
 	catch (std::exception&	ex) {
 		itsError = string("Exception during exportTree:") + ex.what();
+		LOG_FATAL(itsError);
+		return (false);
+	}
+
+	return (false);
+}
+
+//
+// exportResultTree(treeID, nodeID, filename): bool
+//
+// Export a VIC (sub)tree to a file. 
+bool TreeMaintenance::exportResultTree (treeIDType			aTreeID,
+									    nodeIDType			topItem,
+									    const string&		filename)
+{
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (false);
+	}
+
+	LOG_TRACE_FLOW_STR("TM:exportResultTree(" << aTreeID << "," << topItem << "," << filename << ")");
+	work	xAction(*(itsConn->getConn()), "exportResultFile");
+	try {
+		ofstream	outFile;
+		outFile.open (filename.c_str());
+		if (!outFile) {
+			LOG_ERROR_STR ("Cannot open exportfile: " << filename);
+			return (false);
+		}
+
+		result	res = xAction.exec("SELECT * from exportResultTree(" +
+								    toString(itsConn->getAuthToken()) + "," +
+									toString(aTreeID) + "," +
+									toString(topItem) + ")");
+		// Get result
+		string		params;
+		res[0]["exportresulttree"].to(params);
+		outFile << params;
+		outFile.close();
+		return (true);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during exportResultTree:") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
 	}
@@ -1247,8 +1283,8 @@ bool	TreeMaintenance::setDescription(treeIDType	aTreeID,
 //
 // Set the Executiontime of a tree
 bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
-								     const ptime&	aStartTime,
-									 const ptime&	aStopTime)
+								     const string&	aStartTime,
+									 const string&	aStopTime)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -1256,9 +1292,7 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 		return (false);
 	}
 
-	LOG_TRACE_FLOW_STR("TM:setSchedule(" << aTreeID << ","
-										 << to_simple_string(aStartTime) << ","
-										 << to_simple_string(aStopTime) << ")");
+	LOG_TRACE_FLOW_STR("TM:setSchedule(" << aTreeID << "," << aStartTime << "," << aStopTime << ")");
 
 	work 	xAction(*(itsConn->getConn()), "setSchedule");
 	try {
@@ -1267,8 +1301,8 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 			formatString("SELECT setSchedule(%d,%d,'%s','%s')",
 				itsConn->getAuthToken(),
 				aTreeID,
-				to_simple_string(aStartTime).c_str(),
-				to_simple_string(aStopTime).c_str()));
+				aStartTime.c_str(),
+				aStopTime.c_str()));
 							
 		// Analyse result.
 		bool		succes;
@@ -1285,19 +1319,6 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 		LOG_FATAL(itsError);
 		return (false);
 	}
-#if 0
-	// update Observation.startTime field
-	vector<OTDBnode>	fieldList = getItemList(aTreeID, "%.Observation.startTime");
-	ASSERTSTR (fieldList.size() == 1, "No uniq Observation.startTime field in tree " << aTreeID);
-	fieldList[0].limits = to_simple_string(aStartTime);
-	saveNode(fieldList[0]);
-
-	// update Observation.stopTime field
-	fieldList = getItemList(aTreeID, "%.Observation.stopTime");
-	ASSERTSTR (fieldList.size() == 1, "No uniq Observation.stopTime field in tree " << aTreeID);
-	fieldList[0].limits = to_simple_string(aStopTime);
-	saveNode(fieldList[0]);
-#endif
 	return (true);
 }
 

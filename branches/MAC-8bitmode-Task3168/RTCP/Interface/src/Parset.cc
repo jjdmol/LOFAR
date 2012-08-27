@@ -435,6 +435,25 @@ std::vector<double> Parset::getPhaseCorrection(const string &name, char pol) con
 }
 */
 
+string Parset::beamTarget(unsigned beam) const
+{
+  string key = str(boost::format("Observation.Beam[%u].target") % beam);
+
+  return getString(key, "");
+}
+
+double Parset::beamDuration(unsigned beam) const
+{
+  string key = str(boost::format("Observation.Beam[%u].duration") % beam);
+  double val = getDouble(key, 0.0);
+
+  // a sane default
+  if (val == 0.0)
+    val = stopTime() - startTime();
+
+  return val;
+}
+
 
 std::vector<double> Parset::getPencilBeam(unsigned beam, unsigned pencil) const
 {

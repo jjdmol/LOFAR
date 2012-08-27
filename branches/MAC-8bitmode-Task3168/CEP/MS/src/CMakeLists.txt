@@ -31,6 +31,7 @@ install(PROGRAMS
   makemsdistr
   makemsdistr-part
   movemss
+  ls_nostderr
   expandcalps
   expandimageps
   expandtargetps

@@ -25,6 +25,7 @@
 #include <Common/StringUtil.h>
 
 #include "TrigInfoCmd.h"
+#include <APL/RTCCommon/NsTimestamp.h>
 
 
 using namespace LOFAR;
@@ -35,7 +36,7 @@ using	namespace TBB;
 
 //--Constructors for a TrigInfoCmd object.----------------------------------------
 TrigInfoCmd::TrigInfoCmd():
-	itsRcu(0), itsSequenceNr(0), itsTime(0), itsSampleNr(0), itsTriggerSum(0),
+	itsRcu(0), itsTime(0), itsSampleNr(0), itsTriggerSum(0),
 	itsTriggerSamples(0), itsPeakValue(0), itsPowerBefore(0), itsPowerAfter(0), itsMissed(0)
 {
 	TS = TbbSettings::instance();
@@ -91,7 +92,6 @@ void TrigInfoCmd::saveTpAckEvent(GCFEvent& event)
 		
 		if (tp_ack.status == 0) {
 			TS->convertCh2Rcu(getChannelNr(),&itsRcu);
-			itsSequenceNr     = tp_ack.trigger.sequence_nr;
 			itsTime           = tp_ack.trigger.time;
 			itsSampleNr       = tp_ack.trigger.sample_nr;
 			itsTriggerSum     = tp_ack.trigger.sum;
@@ -111,12 +111,10 @@ void TrigInfoCmd::saveTpAckEvent(GCFEvent& event)
 void TrigInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBTrigInfoAckEvent tbb_ack;
-	
+	RTC::NsTimestamp nsTimestamp(itsTime, (uint32)((double)itsSampleNr * TS->getSampleTime()));
 	tbb_ack.status_mask     = getStatus(0);
 	tbb_ack.rcu             = itsRcu;
-	tbb_ack.sequence_nr     = itsSequenceNr;
-	tbb_ack.time            = itsTime;
-	tbb_ack.sample_nr       = itsSampleNr;
+	tbb_ack.nstimestamp     = nsTimestamp;
 	tbb_ack.trigger_sum     = itsTriggerSum;
 	tbb_ack.trigger_samples = itsTriggerSamples;
 	tbb_ack.peak_value      = itsPeakValue;

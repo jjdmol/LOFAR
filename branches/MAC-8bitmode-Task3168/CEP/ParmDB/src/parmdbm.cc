@@ -37,6 +37,7 @@
 #include <Common/SystemUtil.h>
 #include <Common/ReadLine.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/MUString.h>
@@ -50,6 +51,9 @@
 using namespace casa;
 using namespace LOFAR;
 using namespace BBS;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 ParmDB* parmtab;
 
@@ -952,8 +956,8 @@ void doIt (bool noPrompt, ostream& ostr)
           }
         }
       }
-    } catch (std::exception& x) {
-      cerr << "Exception: " << x.what() << endl;
+    } catch (std::exception& ex) {
+      cerr << "Exception: " << ex.what() << endl;
     }
   }
   delete parmtab;
@@ -974,8 +978,8 @@ int main (int argc, char *argv[])
     }
     // Print an extra line to be sure the shell prompt is at a new line.
     cout << endl;
-  } catch (std::exception& x) {
-    cerr << "Caught exception: " << x.what() << endl;
+  } catch (Exception& ex) {
+    cerr << "Caught exception: " << ex << endl;
     return 1;
   }
   

@@ -30,7 +30,7 @@
  * Input must be in "half complex" format.
 
  This consists of the non-redundant half of the complex output for a 1d real-input DFT of size n,
- stored as a sequence of n  real numbers (double) in the format:
+ stored as a sequence of n real numbers (double) in the format:
 
  r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1
 
@@ -91,12 +91,19 @@
 #define fftw_imag(x)     (c_im(x))
 #endif
 
+#define ON_STATION_FILTER_SIZE 1024
+#define ON_STATION_FILTER_TAPS 16
+
+
+#define USE_FFT_HALF_COMPLEX 1
+
+
 namespace LOFAR {
 namespace RTCP {
 
 class InversePPF: boost::noncopyable {
 public:
-  InversePPF(std::vector<unsigned>& subbandList, unsigned nrSamplesPerIntegration, unsigned nrTaps, unsigned onStationFilterSize, bool verbose);
+  InversePPF(std::vector<unsigned>& subbandList, unsigned nrSamplesPerIntegration, bool verbose);
   ~InversePPF();
 
   void performInversePPF(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& inverseFilteredData);
@@ -105,7 +112,6 @@ private:
 
   void initFFT();
   void destroyFFT();
-  void performFilter(InverseFilteredData& invertedFilteredData, unsigned time, unsigned minorTime);
   void createFFTInput(const TransposedBeamFormedData& transposedBeamFormedData, unsigned time);
   void performInverseFFT();
   void performFiltering(InverseFilteredData& invertedFilteredData, unsigned time);
@@ -125,12 +131,10 @@ private:
 
   std::vector<unsigned>& itsSubbandList;
   unsigned itsNrSubbands;
-  unsigned itsNrTaps; // 16
   unsigned itsNrSamplesPerIntegration;
-  unsigned itsOnStationFilterSize; // 1204
 
   bool itsVerbose;
-
+  bool itsSubbandsAreContiguous;
 };
 
 } // namespace RTCP

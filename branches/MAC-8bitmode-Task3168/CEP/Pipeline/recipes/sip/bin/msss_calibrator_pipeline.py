@@ -2,7 +2,7 @@
 #                                                         LOFAR IMAGING PIPELINE
 #
 #                                                     Calibrator Pipeline recipe
-#                                                             Marcel Loose, 2011
+#                                                        Marcel Loose, 2011-2012
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
@@ -55,15 +55,23 @@ class msss_calibrator_pipeline(control):
         odp = self.parset.makeSubset(
             self.parset.fullModuleName('DataProducts') + '.'
         )
-        self.input_data = [tuple(''.join(x).split(':')) for x in zip(
-            odp.getStringVector('Input_Correlated.locations', []),
-            odp.getStringVector('Input_Correlated.filenames', []))
+        self.input_data = [
+            tuple(os.path.join(location, filename).split(':'))
+                for location, filename, skip in zip(
+                    odp.getStringVector('Input_Correlated.locations'),
+                    odp.getStringVector('Input_Correlated.filenames'),
+                    odp.getBoolVector('Input_Correlated.skip'))
+                if not skip
         ]
         self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data))
-        self.output_data = [tuple(''.join(x).split(':')) for x in zip(
-            odp.getStringVector('Output_InstrumentModel.locations', []),
-            odp.getStringVector('Output_InstrumentModel.filenames', []))
+        self.output_data = [
+            tuple(os.path.join(location, filename).split(':'))
+                for location, filename, skip in zip(
+                    odp.getStringVector('Output_InstrumentModel.locations'),
+                    odp.getStringVector('Output_InstrumentModel.filenames'),
+                    odp.getBoolVector('Output_InstrumentModel.skip'))
+                if not skip
         ]
         self.logger.debug("%d Output_InstrumentModel data products specified" %
                           len(self.output_data))
@@ -78,10 +86,10 @@ class msss_calibrator_pipeline(control):
         if not all(self.io_data_mask):
             self.logger.info("Updating input/output product specifications")
             self.input_data = [
-                f for (f,m) in zip(self.input_data, self.io_data_mask) if m
+                f for (f, m) in zip(self.input_data, self.io_data_mask) if m
             ]
             self.output_data = [
-                f for (f,m) in zip(self.output_data, self.io_data_mask) if m
+                f for (f, m) in zip(self.output_data, self.io_data_mask) if m
             ]
 
 
@@ -99,7 +107,7 @@ class msss_calibrator_pipeline(control):
             self.logger.warn(
                 "The following input data files were not found: %s" %
                 ', '.join(
-                    ':'.join(f) for (f,m) in zip(
+                    ':'.join(f) for (f, m) in zip(
                         self.input_data, self.io_data_mask
                     ) if not m
                 )
@@ -125,7 +133,7 @@ class msss_calibrator_pipeline(control):
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
         # Call the base-class's `go()` method.
-        super(msss_calibrator_pipeline, self).go()
+        return super(msss_calibrator_pipeline, self).go()
 
 
     def pipeline_logic(self):
@@ -149,7 +157,7 @@ class msss_calibrator_pipeline(control):
         # Create directories for temporary parset- and map files
         create_directory(parset_dir)
         create_directory(mapfile_dir)
-        
+
         # Write input- and output data map-files
         data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
         store_data_map(data_mapfile, self.input_data)
@@ -162,7 +170,7 @@ class msss_calibrator_pipeline(control):
             self.logger.warn("No input data files to process. Bailing out!")
             return 0
 
-        self.logger.debug("Processing: %s" % 
+        self.logger.debug("Processing: %s" %
             ', '.join(':'.join(f) for f in self.input_data)
         )
 
@@ -171,6 +179,26 @@ class msss_calibrator_pipeline(control):
 
         # Read metadata (start, end times, pointing direction) from GVDS.
         vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+
+        # Create an empty parmdb for DPPP
+        parmdb_mapfile = self.run_task(
+            "setupparmdb", data_mapfile,
+            mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
+            suffix='.dppp.parmdb'
+        )['mapfile']
+
+        # Create a sourcedb to be used by the demixing phase of DPPP
+        # The path to the A-team sky model is currently hard-coded.
+        sourcedb_mapfile = self.run_task(
+            "setupsourcedb", data_mapfile,
+            skymodel=os.path.join(
+                self.config.get('DEFAULT', 'lofarroot'),
+                'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
+            ),
+            mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
+            suffix='.dppp.sourcedb',
+            type='blob'
+        )['mapfile']
 
         # Create a parameter-subset for DPPP and write it to file.
         ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
@@ -181,27 +209,37 @@ class msss_calibrator_pipeline(control):
             data_mapfile,
             data_start_time=vdsinfo['start_time'],
             data_end_time=vdsinfo['end_time'],
-            parset=ndppp_parset
+            parset=ndppp_parset,
+            parmdb_mapfile=parmdb_mapfile,
+            sourcedb_mapfile=sourcedb_mapfile
         )['mapfile']
 
-        # Demix the relevant A-team sources
-        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
+        demix_mapfile = dppp_mapfile
+        
+#        # Demix the relevant A-team sources
+#        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
-        # Do a second run of flagging, this time using rficonsole
-        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
+#        # Do a second run of flagging, this time using rficonsole
+#        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
 
-        # Create an empty parmdb for DPPP
-        parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
+        # Create an empty parmdb for BBS
+        parmdb_mapfile = self.run_task(
+            "setupparmdb", data_mapfile,
+            mapfile=os.path.join(mapfile_dir, 'bbs.parmdb.mapfile'),
+            suffix='.bbs.parmdb'
+        )['mapfile']
 
         # Create a sourcedb based on sourcedb's input argument "skymodel"
         sourcedb_mapfile = self.run_task(
-            "sourcedb", data_mapfile,
+            "setupsourcedb", data_mapfile,
             skymodel=os.path.join(
                 self.config.get('DEFAULT', 'lofarroot'),
-                'share', 'pipeline', 'skymodels', 
+                'share', 'pipeline', 'skymodels',
                 py_parset.getString('Calibration.CalibratorSource') +
                     '.skymodel'
-            )
+            ),
+            mapfile=os.path.join(mapfile_dir, 'bbs.sourcedb.mapfile'),
+            suffix='.bbs.sourcedb'
         )['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
@@ -209,21 +247,23 @@ class msss_calibrator_pipeline(control):
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the calibrator source(s).
-        self.run_task("new_bbs", 
+        self.run_task("new_bbs",
             demix_mapfile,
             parset=bbs_parset,
             instrument_mapfile=parmdb_mapfile,
             sky_mapfile=sourcedb_mapfile)
 
-        # Export the calibration solutions using parmexportcal and store
+        # Export the calibration solutions using gainoutliercorrection and store
         # the results in the files specified in the instrument mapfile.
-        self.run_task("parmexportcal", (parmdb_mapfile, instrument_mapfile))
+        self.run_task("gainoutliercorrection",
+                      (parmdb_mapfile, instrument_mapfile),
+                      sigma=1.0)
 
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", instrument_mapfile,
             parset_file=self.parset_feedback_file,
             parset_prefix=(
-                self.parset.getString('prefix') + 
+                self.parset.getString('prefix') +
                 self.parset.fullModuleName('DataProducts')
             ),
             product_type="InstrumentModel")

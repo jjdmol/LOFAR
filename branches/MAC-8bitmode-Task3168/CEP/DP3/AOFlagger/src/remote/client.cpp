@@ -25,6 +25,8 @@
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 
+#include <ms/MeasurementSets/MSColumns.h>
+
 #include <AOFlagger/quality/histogramcollection.h>
 #include <AOFlagger/quality/histogramtablesformatter.h>
 #include <AOFlagger/quality/qualitytablesformatter.h>
@@ -91,6 +93,19 @@ void Client::Run(const std::string &serverHost)
 			case ReadAntennaTablesRequest:
 				handleReadAntennaTables(requestBlock.dataSize);
 				break;
+			case ReadBandTableRequest:
+				handleReadBandTable(requestBlock.dataSize);
+				break;
+			case ReadDataRowsRequest:
+				handleReadDataRows(requestBlock.dataSize);
+				break;
+			case WriteDataRowsRequest:
+				handleWriteDataRows(requestBlock.dataSize);
+				break;
+			default:
+				std::cout << "CLIENT: unknown command sent" << std::endl;
+				writeGenericReadException("Command not understood by client: server and client versions don't match?");
+				break;
 		}
 	}
 }
@@ -99,15 +114,19 @@ void Client::writeGenericReadException(const std::exception &e)
 {
 	std::stringstream s;
 	s << "Exception type " << typeid(e).name() << ": " << e.what();
-	
+	writeGenericReadException(s.str());
+}
+
+void Client::writeGenericReadException(const std::string &s)
+{
 	GenericReadResponseHeader header;
 	header.blockIdentifier = GenericReadResponseHeaderId;
 	header.blockSize = sizeof(header);
 	header.errorCode = UnexpectedExceptionOccured;
-	header.dataSize = s.str().size();
+	header.dataSize = s.size();
 	
 	boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
-	boost::asio::write(_socket, boost::asio::buffer(s.str()));
+	boost::asio::write(_socket, boost::asio::buffer(s));
 }
 
 void Client::writeGenericReadError(enum ErrorCode error)
@@ -118,6 +137,24 @@ void Client::writeGenericReadError(enum ErrorCode error)
 	header.errorCode = CouldNotOpenTableError;
 	header.dataSize = 0;
 	boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
+}
+
+void Client::writeDataResponse(std::ostringstream &buffer)
+{
+	try {
+		GenericReadResponseHeader header;
+		header.blockIdentifier = GenericReadResponseHeaderId;
+		header.blockSize = sizeof(header);
+		header.errorCode = NoError;
+		const std::string str = buffer.str();
+		header.dataSize = str.size();
+		
+		boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
+		if(str.size() != 0)
+			boost::asio::write(_socket, boost::asio::buffer(str));
+	} catch(std::exception &e) {
+		writeGenericReadException(e);
+	}
 }
 
 std::string Client::readStr(unsigned size)
@@ -155,19 +192,11 @@ void Client::handleReadQualityTables(unsigned dataSize)
 				histogramCollection.Load(histogramFormatter);
 			}
 			
-			GenericReadResponseHeader header;
-			header.blockIdentifier = GenericReadResponseHeaderId;
-			header.blockSize = sizeof(header);
-			header.errorCode = NoError;
 			std::ostringstream s;
 			collection.Serialize(s);
 			if(histogramsExist)
 				histogramCollection.Serialize(s);
-			const std::string str = s.str();
-			header.dataSize = str.size();
-			
-			boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
-			boost::asio::write(_socket, boost::asio::buffer(str));
+			writeDataResponse(s);
 		}
 	} catch(std::exception &e) {
 		writeGenericReadException(e);
@@ -187,7 +216,9 @@ void Client::handleReadAntennaTables(unsigned dataSize)
 		
 		// Serialize the antennae info
 		MeasurementSet ms(options.msFilename);
+		size_t polarizationCount = ms.GetPolarizationCount();
 		size_t antennas = ms.AntennaCount();
+		Serializable::SerializeToUInt32(buffer, polarizationCount);
 		Serializable::SerializeToUInt32(buffer, antennas);
 		for(unsigned aIndex = 0; aIndex<antennas; ++aIndex)
 		{
@@ -195,20 +226,180 @@ void Client::handleReadAntennaTables(unsigned dataSize)
 			antennaInfo.Serialize(buffer);
 		}
 		
-		GenericReadResponseHeader header;
-		header.blockIdentifier = GenericReadResponseHeaderId;
-		header.blockSize = sizeof(header);
-		header.errorCode = NoError;
-		const std::string str = buffer.str();
-		header.dataSize = str.size();
-		
-		boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
-		boost::asio::write(_socket, boost::asio::buffer(str));
+		writeDataResponse(buffer);
 	} catch(std::exception &e) {
 		writeGenericReadException(e);
 	}
 }
 
+void Client::handleReadBandTable(unsigned dataSize)
+{
+	try {
+		ReadBandTableRequestOptions options;
+		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));
+		
+		unsigned nameLength = dataSize - sizeof(options.flags);
+		options.msFilename = readStr(nameLength);
+		
+		std::ostringstream buffer;
+		
+		// Serialize the band info
+		MeasurementSet ms(options.msFilename);
+		if(ms.BandCount() != 1)
+			throw std::runtime_error("The number of bands in the measurement set was not 1");
+		BandInfo band = ms.GetBandInfo(0);
+		band.Serialize(buffer);
+		
+		writeDataResponse(buffer);
+	} catch(std::exception &e) {
+		writeGenericReadException(e);
+	}
+}
+
+void Client::handleReadDataRows(unsigned dataSize)
+{
+	try {
+		ReadDataRowsRequestOptions options;
+		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));
+		
+		unsigned nameLength = dataSize - sizeof(options.flags) - sizeof(options.startRow) - sizeof(options.rowCount);
+		options.msFilename = readStr(nameLength);
+		
+		boost::asio::read(_socket, boost::asio::buffer(&options.startRow, sizeof(options.startRow)));
+		boost::asio::read(_socket, boost::asio::buffer(&options.rowCount, sizeof(options.rowCount)));
+		
+		std::ostringstream buffer;
+		Serializable::SerializeToUInt64(buffer, options.rowCount);
+		
+		// Read meta data from the MS
+		casa::Table table(options.msFilename);
+		if(options.rowCount == 0)
+			Serializable::SerializeToUInt64(buffer, table.nrow());
+		else {
+			casa::ROArrayColumn<casa::Complex> dataCol(table, "DATA");
+			casa::ROArrayColumn<double> uvwColumn(table, "UVW");
+			casa::ROScalarColumn<int> a1Column(table, "ANTENNA1");
+			casa::ROScalarColumn<int> a2Column(table, "ANTENNA2");
+			casa::ROScalarColumn<double> timeColumn(table, "TIME");
+			const casa::IPosition &shape = dataCol.shape(0);
+			size_t channelCount, polarizationCount;
+			if(shape.nelements() > 1)
+			{
+				channelCount = shape[1];
+				polarizationCount = shape[0];
+			}
+			else
+				throw std::runtime_error("Unknown shape of DATA column");
+			const size_t samplesPerRow = polarizationCount * channelCount;
+			
+			// Read and serialize the rows
+			const size_t endRow = options.startRow + options.rowCount;
+			for(size_t rowIndex=options.startRow; rowIndex != endRow; ++rowIndex)
+			{
+				// DATA
+				const casa::Array<casa::Complex> cellData = dataCol(rowIndex);
+				casa::Array<casa::Complex>::const_iterator cellIter = cellData.begin();
+				
+				MSRowDataExt dataExt(polarizationCount, channelCount);
+				MSRowData &data = dataExt.Data();
+				num_t *realPtr = data.RealPtr();
+				num_t *imagPtr = data.ImagPtr();
+				for(size_t i=0;i<samplesPerRow;++i) {
+					*realPtr = cellIter->real();
+					*imagPtr = cellIter->imag();
+					++realPtr;
+					++imagPtr;
+					++cellIter;
+				}
+				
+				// UVW
+				casa::Array<double> uvwArr = uvwColumn(rowIndex);
+				casa::Array<double>::const_iterator uvwIter = uvwArr.begin();
+				dataExt.SetU(*uvwIter);
+				++uvwIter;
+				dataExt.SetV(*uvwIter);
+				++uvwIter;
+				dataExt.SetW(*uvwIter);
+				
+				// OTHER
+				dataExt.SetAntenna1(a1Column(rowIndex));
+				dataExt.SetAntenna2(a2Column(rowIndex));
+				dataExt.SetTime(timeColumn(rowIndex));
+				dataExt.SetTimeOffsetIndex(rowIndex);
+				
+				dataExt.Serialize(buffer);
+			}
+		}
+		
+		writeDataResponse(buffer);
+	} catch(std::exception &e) {
+		writeGenericReadException(e);
+	}
+}
+
+void Client::handleWriteDataRows(unsigned dataSize)
+{
+	try {
+		WriteDataRowsRequestOptions options;
+		
+		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));
+		unsigned nameLength = dataSize - sizeof(options.flags) - sizeof(options.startRow) - sizeof(options.rowCount) - sizeof(options.dataSize);
+		options.msFilename = readStr(nameLength);
+		boost::asio::read(_socket, boost::asio::buffer(&options.startRow, sizeof(options.startRow)));
+		boost::asio::read(_socket, boost::asio::buffer(&options.rowCount, sizeof(options.rowCount)));
+		boost::asio::read(_socket, boost::asio::buffer(&options.dataSize, sizeof(options.dataSize)));
+		
+		// Read the big data chunk
+		std::vector<char> dataBuffer(options.dataSize);
+		boost::asio::read(_socket, boost::asio::buffer(&dataBuffer[0], options.dataSize));
+		std::istringstream stream;
+		if(stream.rdbuf()->pubsetbuf(&dataBuffer[0], options.dataSize) == 0)
+			throw std::runtime_error("Could not set string buffer");
+		
+		// Write the received data to the MS
+		casa::Table table(options.msFilename, casa::Table::Update);
+		casa::ArrayColumn<casa::Complex> dataCol(table, "DATA");
+		//casa::ROScalarColumn<int> a1Column(table, "ANTENNA1");
+		//casa::ROScalarColumn<int> a2Column(table, "ANTENNA2");
+		const casa::IPosition shape = dataCol.shape(0);
+		size_t channelCount, polarizationCount;
+		if(shape.nelements() > 1)
+		{
+			channelCount = shape[1];
+			polarizationCount = shape[0];
+		}
+		else
+			throw std::runtime_error("Unknown shape of DATA column");
+		const size_t samplesPerRow = polarizationCount * channelCount;
+		
+		// Unserialize and write the rows
+		casa::Array<casa::Complex> cellData(shape);
+		const size_t endRow = options.startRow + options.rowCount;
+		for(size_t rowIndex=options.startRow; rowIndex != endRow; ++rowIndex)
+		{
+			MSRowDataExt dataExt;
+			dataExt.Unserialize(stream);
+			MSRowData &data = dataExt.Data();
+			
+			casa::Array<casa::Complex>::iterator cellIter = cellData.begin();
+			
+			num_t *realPtr = data.RealPtr();
+			num_t *imagPtr = data.ImagPtr();
+			for(size_t i=0;i<samplesPerRow;++i) {
+				*cellIter = casa::Complex(*realPtr, *imagPtr);
+				++realPtr;
+				++imagPtr;
+				++cellIter;
+			}
+			dataCol.put(rowIndex, cellData);
+		}
+		
+		std::ostringstream buffer;
+		writeDataResponse(buffer);
+	} catch(std::exception &e) {
+		writeGenericReadException(e);
+	}
+}
 
 } // namespace
 

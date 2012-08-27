@@ -1,6 +1,6 @@
-//#  PythonControl.cc: Implementation of the MAC Scheduler task
+//#  PythonControl.cc: Implementation of the PythonController task
 //#
-//#  Copyright (C) 2010
+//#  Copyright (C) 2010-2012
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -28,28 +28,35 @@
 //#include <Common/lofar_vector.h>
 //#include <Common/lofar_string.h>
 #include <Common/ParameterSet.h>
+#include <Common/ParameterRecord.h>
 #include <Common/Exceptions.h>
 #include <Common/SystemUtil.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/MACServiceInfo.h>
+#include <MACIO/KVTLogger.h>
+#include <MACIO/KVT_Protocol.ph>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/CTState.h>
+#include <OTDB/TreeValue.h>
 
 #include "PythonControl.h"
 #include "PVSSDatapointDefs.h"
 
-using namespace LOFAR::GCF::PVSS;
-using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
+	using namespace GCF::PVSS;
+	using namespace GCF::TM;
+	using namespace GCF::RTDB;
+	using namespace OTDB;
 	namespace CEPCU {
 	
 // static pointer to this object for signal handler
@@ -68,7 +75,9 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	itsListener			(0),
 	itsPythonPort		(0),
 	itsState			(CTState::NOSTATE),
-	itsTreePrefix       ("")
+	itsFeedbackFile     (""),
+	itsFeedbackWaittime (1.0),
+	itsKVTLoggerHost    ("")
 //	itsStopTimerID      (0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
@@ -77,8 +86,9 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
 	globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
 
-	// Readin some parameters from the ParameterSet.
-	itsTreePrefix = globalParameterSet()->getString("prefix");
+	// Readin some parameters from the conf-file.
+	itsFeedbackWaittime = globalParameterSet()->getFloat ("FeedbackWaittime", 1.0);
+	itsKVTLoggerHost    = globalParameterSet()->getString("KVTLoggerHost", "localhost");
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
@@ -92,6 +102,7 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 	registerProtocol (DP_PROTOCOL, 		   DP_PROTOCOL_STRINGS);
+	registerProtocol (KVT_PROTOCOL,		   KVT_PROTOCOL_STRINGS);
 }
 
 
@@ -196,6 +207,10 @@ bool PythonControl::_startPython(const string&	pythonProg,
 	int32	result = system (startCmd.c_str());
 	LOG_INFO_STR ("Result of start = " << result);
 
+	// Readin parameters from the obsercationfile.
+	itsFeedbackFile = observationParset(obsID)+"_feedback";
+	LOG_INFO_STR ("Expecting metadata in file " << itsFeedbackFile);
+
 	if (result == -1) {
 		return (false);
 	}
@@ -236,7 +251,7 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event,
 		break;
 
 	case DP_CREATED: {
-		// NOTE: thsi function may be called DURING the construction of the PropertySet.
+		// NOTE: this function may be called DURING the construction of the PropertySet.
 		// Always exit this event in a way that GCF can end the construction.
 		DPCreatedEvent  dpEvent(event);
 		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
@@ -321,6 +336,24 @@ GCFEvent::TResult PythonControl::waitForConnection_state(GCFEvent& event, GCFPor
   
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	switch (event.signal) {
+	case F_ENTRY:
+		itsTimerPort->cancelAllTimers();	// just to be sure.
+		itsTimerPort->setTimer(30.0);		// max waittime for Python framework to respond.
+		break;
+
+	case F_TIMER: {
+		LOG_FATAL("Python environment does not respond! QUITING!");
+		CONTROLConnectedEvent	answer;
+		answer.cntlrName = itsMyName;
+		answer.result    = CONTROL_LOST_CONN_ERR;
+		itsParentPort->send(answer);
+		TRAN(PythonControl::finishing_state);
+	}
+
+	case F_EXIT:
+		itsTimerPort->cancelAllTimers();
+		break;
+		
 	case F_ACCEPT_REQ: {
 		itsPythonPort = new GCFTCPPort();
 		itsPythonPort->init(*this, "client", GCFPortInterface::SPP, CONTROLLER_PROTOCOL);
@@ -506,7 +539,7 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 		}
 		else {
 			LOG_WARN("Sending FAKE Quit response and quiting application");
-			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
+//			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
 			TRAN(PythonControl::finishing_state);
 		}
 		break;
@@ -561,9 +594,9 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 	case CONTROL_QUITED: {
 		CONTROLQuitedEvent		msg(event);
 		LOG_DEBUG_STR("Received QUITED(" << msg.cntlrName << ")");
-		msg.cntlrName = itsMyName;
-		msg.result = CT_RESULT_NO_ERROR;
-		itsParentPort->send(msg);
+//		msg.cntlrName = itsMyName;
+//		msg.result = CT_RESULT_NO_ERROR;
+//		itsParentPort->send(msg);
 		LOG_INFO("Python environment has quited, quiting too.");
 		TRAN(PythonControl::finishing_state);
 		break;
@@ -581,6 +614,7 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 //
 // finishing_state(event, port)
 //
+// Pickup Metadata feedbackfile is any and pass it to SAS
 //
 GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
 {
@@ -596,13 +630,20 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 #endif
-		itsTimerPort->setTimer(3.0);
+		// Give python environment time to construct the file
+		itsTimerPort->setTimer(itsFeedbackFile.empty() ? 3.0 : itsFeedbackWaittime);
 		break;
 	}
 
-	case F_TIMER:
+	case F_TIMER: {
+		_passMetadatToOTDB();
+		CONTROLQuitedEvent		msg;
+		msg.cntlrName = itsMyName;
+		msg.result = CT_RESULT_NO_ERROR;
+		itsParentPort->send(msg);
 		GCFScheduler::instance()->stop();
 		break;
+	}
 
 	case F_DISCONNECTED:
 		port.close();
@@ -615,6 +656,89 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 	}
 
 	return (status);
+}
+
+//
+//		_passMetadatToOTDB();
+//
+void PythonControl::_passMetadatToOTDB()
+{
+	// No name specified?
+	if (itsFeedbackFile.empty()) {
+		return;
+	}
+
+	// Copy file form remote system to localsystem
+	ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
+	string  myPrefix  (thePS->locateModule("PythonControl")+"PythonControl.");
+	string	pythonHost(thePS->getString(myPrefix+"pythonHost","@pythonHost@"));
+	if (copyFromRemote(realHostname(pythonHost), itsFeedbackFile, itsFeedbackFile) != 0) {
+		LOG_ERROR_STR("Failed to copy metadatafile " << itsFeedbackFile << " from host " << realHostname(pythonHost));
+		return;
+	}
+
+	// read parameterset
+	ParameterSet	metadata;
+	metadata.adoptFile(itsFeedbackFile);
+
+	// Try to setup the connection with the database
+	string	confFile = globalParameterSet()->getString("OTDBconfFile", "SASGateway.conf");
+	ConfigLocator	CL;
+	string	filename = CL.locate(confFile);
+	LOG_DEBUG_STR("Trying to read database information from file " << filename);
+	ParameterSet	otdbconf;
+	otdbconf.adoptFile(filename);
+	string database = otdbconf.getString("SASGateway.OTDBdatabase");
+	string dbhost   = otdbconf.getString("SASGateway.OTDBhostname");
+	OTDBconnection  conn("paulus", "boskabouter", database, dbhost);
+	if (!conn.connect()) {
+		LOG_FATAL_STR("Cannot connect to database " << database << " on machine " << dbhost);
+		return;
+	}
+	LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
+
+	TreeValue   tv(&conn, getObservationNr(getName()));
+
+	// Loop over the parameterset and send the information to the KVTlogger.
+	// During the transition phase from parameter-based to record-based storage in OTDB the
+	// nodenames ending in '_' are implemented both as parameter and as record.
+	ParameterSet::iterator		iter = metadata.begin();
+	ParameterSet::iterator		end  = metadata.end();
+	while (iter != end) {
+		string	key(iter->first);	// make destoyable copy
+		rtrim(key, "[]0123456789");
+//		bool	doubleStorage(key[key.size()-1] == '_');
+		bool	isRecord(iter->second.isRecord());
+		//   isRecord  doubleStorage
+		// --------------------------------------------------------------
+		//      Y          Y           store as record and as parameters
+		//      Y          N           store as parameters
+		//      N          *           store parameter
+		if (!isRecord) {
+			LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
+			tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+		}
+		else {
+//			if (doubleStorage) {
+//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
+//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+//			}
+			// to store is a node/param values the last _ should be stipped of
+			key = iter->first;		// destroyable copy
+//			string::size_type pos = key.find_last_of('_');
+//			key.erase(pos,1);
+			ParameterRecord	pr(iter->second.getRecord());
+			ParameterRecord::const_iterator	prIter = pr.begin();
+			ParameterRecord::const_iterator	prEnd  = pr.end();
+			while (prIter != prEnd) {
+				LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
+				tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
+				prIter++;
+			}
+		}
+		iter++;
+	}
+	LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
 }
 
 }; // CEPCU

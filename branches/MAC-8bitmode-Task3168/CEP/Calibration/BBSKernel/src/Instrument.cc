@@ -86,23 +86,6 @@ Station::Station(const string &name, const casa::MPosition &position)
 {
 }
 
-Station::Station(const string &name, const casa::MPosition &position,
-    const AntennaField::Ptr &field0)
-    :   itsName(name),
-        itsPosition(position)
-{
-    itsFields.push_back(field0);
-}
-
-Station::Station(const string &name, const casa::MPosition &position,
-    const AntennaField::Ptr &field0, const AntennaField::Ptr &field1)
-    :   itsName(name),
-        itsPosition(position)
-{
-    itsFields.push_back(field0);
-    itsFields.push_back(field1);
-}
-
 const string &Station::name() const
 {
     return itsName;
@@ -116,11 +99,6 @@ const casa::MPosition &Station::position() const
 bool Station::isPhasedArray() const
 {
     return !itsFields.empty();
-}
-
-unsigned int Station::nField() const
-{
-    return itsFields.size();
 }
 
 size_t Station::nElement() const
@@ -143,9 +121,19 @@ size_t Station::nActiveElement() const
     return count;
 }
 
+unsigned int Station::nField() const
+{
+    return itsFields.size();
+}
+
 AntennaField::ConstPtr Station::field(unsigned int i) const
 {
     return itsFields[i];
+}
+
+void Station::append(const AntennaField::Ptr &field)
+{
+    itsFields.push_back(field);
 }
 
 Instrument::Instrument(const string &name, const casa::MPosition &position)

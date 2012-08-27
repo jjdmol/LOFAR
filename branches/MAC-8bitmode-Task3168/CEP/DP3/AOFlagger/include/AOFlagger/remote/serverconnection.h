@@ -32,6 +32,7 @@
 #include <AOFlagger/remote/format.h>
 
 #include <AOFlagger/msio/antennainfo.h>
+#include <AOFlagger/msio/msrowdataext.h>
 
 class StatisticsCollection;
 class HistogramCollection;
@@ -52,14 +53,19 @@ class ServerConnection : public boost::enable_shared_from_this<ServerConnection>
 		
 		void StopClient();
 		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection, HistogramCollection &histogramCollection);
-		void ReadAntennaTables(const std::string &msFilename, std::vector<AntennaInfo> &antennas);
+		void ReadAntennaTables(const std::string &msFilename, boost::shared_ptr<std::vector<AntennaInfo> > antennas);
+		void ReadBandTable(const std::string &msFilename, BandInfo &band);
+		void ReadDataRows(const std::string &msFilename, size_t rowStart, size_t rowCount, MSRowDataExt *destinationArray);
+		void WriteDataRows(const std::string &msFilename, size_t rowStart, size_t rowCount, const MSRowDataExt *rowArray);
 		void Start();
 		
 		boost::asio::ip::tcp::socket &Socket() { return _socket; }
 		
 		sigc::signal<void, ServerConnectionPtr> &SignalAwaitingCommand() { return _onAwaitingCommand; }
 		sigc::signal<void, ServerConnectionPtr, StatisticsCollection&, HistogramCollection&> &SignalFinishReadQualityTables() { return _onFinishReadQualityTables; }
-		sigc::signal<void, ServerConnectionPtr, std::vector<AntennaInfo>&> &SignalFinishReadAntennaTables() { return _onFinishReadAntennaTables; }
+		sigc::signal<void, ServerConnectionPtr, boost::shared_ptr<std::vector<AntennaInfo> >, size_t > &SignalFinishReadAntennaTables() { return _onFinishReadAntennaTables; }
+		sigc::signal<void, ServerConnectionPtr, BandInfo&> &SignalFinishReadBandTable() { return _onFinishReadBandTable; }
+		sigc::signal<void, ServerConnectionPtr, MSRowDataExt*, size_t> &SignalFinishReadDataRows() { return _onFinishReadDataRows; }
 		sigc::signal<void, ServerConnectionPtr, const std::string&> &SignalError() { return _onError; }
 		
 		const std::string &Hostname() const { return _hostname; }
@@ -70,7 +76,9 @@ class ServerConnection : public boost::enable_shared_from_this<ServerConnection>
 		
 		sigc::signal<void, ServerConnectionPtr> _onAwaitingCommand;
 		sigc::signal<void, ServerConnectionPtr, StatisticsCollection&, HistogramCollection&> _onFinishReadQualityTables;
-		sigc::signal<void, ServerConnectionPtr, std::vector<AntennaInfo>&> _onFinishReadAntennaTables;
+		sigc::signal<void, ServerConnectionPtr, boost::shared_ptr<std::vector<AntennaInfo> >, size_t > _onFinishReadAntennaTables;
+		sigc::signal<void, ServerConnectionPtr, BandInfo&> _onFinishReadBandTable;
+		sigc::signal<void, ServerConnectionPtr, MSRowDataExt*, size_t> _onFinishReadDataRows;
 		sigc::signal<void, ServerConnectionPtr, const std::string&> _onError;
 		
 		char *_buffer;
@@ -83,6 +91,14 @@ class ServerConnection : public boost::enable_shared_from_this<ServerConnection>
 		void onReceiveAntennaTablesResponseHeader();
 		void onReceiveAntennaTablesResponseData(size_t dataSize);
 		
+		void onReceiveBandTableResponseHeader();
+		void onReceiveBandTableResponseData(size_t dataSize);
+		
+		void onReceiveReadDataRowsResponseHeader();
+		void onReceiveReadDataRowsResponseData(size_t dataSize);
+		
+		void onReceiveWriteDataRowsResponseHeader();
+		
 		void prepareBuffer(size_t size)
 		{
 			if(_buffer != 0) delete[] _buffer;
@@ -93,7 +109,10 @@ class ServerConnection : public boost::enable_shared_from_this<ServerConnection>
 		
 		StatisticsCollection *_collection;
 		HistogramCollection *_histogramCollection;
-		std::vector<AntennaInfo> *_antennas;
+		boost::shared_ptr<std::vector<AntennaInfo> > _antennas;
+		BandInfo *_band;
+		MSRowDataExt *_readRowData;
+		const MSRowDataExt *_writeRowData;
 };
 	
 }

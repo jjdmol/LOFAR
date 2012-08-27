@@ -1076,9 +1076,9 @@ bool navFunct_hardware2Obs(string stationName, string observation,
       if (receiverBitmap != "" && (receiverBitmap[(intData*2)] == "1" || receiverBitmap[((intData*2)+1)] == "1")) {
         flag = true;
       } 
-    } else if (objectName == "Element") {  // needs to be done when element is added to the receiverbitmap
+    } else if (objectName == "element") {  // needs to be done when element is added to the receiverbitmap
 //      if (receiverBitmap != "" && (receiverBitmap[(intData*2)] == "1" || receiverBitmap[((intData*2)+1)] == "1")) {
-//        flag = true;
+        flag = true;
 //      }       
     } else if (objectName == "SPU") {
       flag = true;
@@ -1305,7 +1305,7 @@ void navFunct_fillObservationsList() {
         if (!found) {
           // check Element
           for (int c = 1; c<=dynlen(g_elementList); c++) {
-            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"Element","",g_elementList[c])) {
+            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"element","",g_elementList[c])) {
               // we found one involved Element, so obs can be included and we can skip the rest
               found = true;
             }
@@ -1521,22 +1521,24 @@ void navFunct_fillHardwareTree() {
       if (dynlen(g_HBAList) > 0) {
         for (int i = 1; i <= dynlen(g_HBAList); i++) {
           connectTo = station+":LOFAR";
-          dp = station+":LOFAR_PIC_HBA"+g_HBAList[i];
-          dynAppend(result,connectTo+",HBA"+g_HBAList[i]+","+dp);
-    }
-  }
-
-    // add Elements
-      // add HBAAntennas
+          string extrah = "";
+           if (g_HBAList[i] < 10) extrah = "0";          
+          dp = station+":LOFAR_PIC_HBA"+extrah+g_HBAList[i];
+          dynAppend(result,connectTo+",HBA"+extrah+g_HBAList[i]+","+dp);
+        }
+      }
+      
+      // add Elements
       if (dynlen(g_elementList) > 0) {
         for (int i = 1; i <= dynlen(g_HBAList); i++) {
-          connectTo = station+":LOFAR_PIC";
-          dp = station+":LOFAR_PIC_HBA"+g_HBAList[i];
-          dynAppend(result,connectTo+",HBA"+g_HBAList[i]+","+dp);
-          for (int j = 1; j <= dynlen(g_elementList); i++) {
-            connectTo = dp;
-            dpel = station+":LOFAR_PIC_HBA"+g_HBAList[i] + "_Element" + g_elementList[j];
-            dynAppend(result,connectTo+",Element"+g_elementList[j]+","+dp);
+         string extrah = "";
+         if (g_HBAList[i] < 10) extrah = "0";          
+          connectTo = station+":LOFAR_PIC_HBA"+extrah+g_HBAList[i];
+          for (int j = 1; j <= dynlen(g_elementList); j++) {
+            string extra = "";
+            if (g_elementList[j] < 10) extra = "0";
+            string dpel = station+":LOFAR_PIC_HBA"+extrah+g_HBAList[i] + ".element" + extra +g_elementList[j];
+            dynAppend(result,connectTo+",element"+extra+g_elementList[j]+","+dpel);
           }
         }
       }
@@ -1894,7 +1896,7 @@ string navFunct_DPName2CEPName(string DPName) {
   
   if (foundMidplane) {
     if (foundRack) name+="-";
-    midnr = midplane - (2*rack);
+    midnr = midplane;
     name += "M" + midnr;
   }
   
@@ -1922,8 +1924,8 @@ string navFunct_DPName2CEPName(string DPName) {
 // returns the CEPName 
 // ****************************************
 string navFunct_inputBuf2CEPName(int buf) {
-  int racknr = floor(buf/64);
-  buf=buf-(racknr*64);
+  int racknr = 0;
+  if (navFunct_isBGPSwitch()) racknr=1;
   int midnr = floor(buf/32);
   buf=buf-midnr*32;
   int nodenr = floor(buf/2);

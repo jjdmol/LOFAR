@@ -18,7 +18,8 @@ public class RemoteStationLayout extends javax.swing.JPanel {
     static Logger logger = Logger.getLogger(RemoteStationLayout.class);
     static String name="RemoteStationLayout";
     
-    private boolean HBALeftSquareSelected=false;
+    private boolean HBALeftInnerSquareSelected=false;
+    private boolean HBALeftOuterSquareSelected=false;
     private boolean LBAInnerCircleSelected=false;
     private boolean LBAOuterCircleSelected=false;
 
@@ -36,6 +37,13 @@ public class RemoteStationLayout extends javax.swing.JPanel {
     private void initComponents() {
 
         LBAOuterCircleText = new javax.swing.JLabel();
+        HBALeftInnerSquare = new nl.astron.lofar.sas.otbcomponents.SquareButton();
+        HBALeftInnerSquare.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ActionEvent event = new ActionEvent(this,-1,"HBALeftInnerSquare");
+                fireActionListenerActionPerformed(event);
+            }
+        });
         LBAInnerCircle = new nl.astron.lofar.sas.otbcomponents.RoundButton();
         LBAInnerCircle.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -49,20 +57,26 @@ public class RemoteStationLayout extends javax.swing.JPanel {
                 ActionEvent event = new ActionEvent(this,-1,"LBAOuterCircle");
                 fireActionListenerActionPerformed(event);  }
         });
-        HBALeftSquare = new nl.astron.lofar.sas.otbcomponents.SquareButton();
-        HBALeftSquare.addActionListener(new java.awt.event.ActionListener() {
+        HBALeftOuterSquareText = new javax.swing.JLabel();
+        HBALeftOuterSquare = new nl.astron.lofar.sas.otbcomponents.SquareButton();
+        HBALeftOuterSquare.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ActionEvent event = new ActionEvent(this,-1,"HBALeftSquare");
+                ActionEvent event = new ActionEvent(this,-1,"HBALeftOuterSquare");
                 fireActionListenerActionPerformed(event);
             }
         });
 
-        setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Remote", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 14)));
+        setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Remote", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 14))); // NOI18N
         setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         LBAOuterCircleText.setFont(new java.awt.Font("Dialog", 1, 12));
         LBAOuterCircleText.setText("48");
         add(LBAOuterCircleText, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 100, -1, 20));
+
+        HBALeftInnerSquare.setText("24");
+        HBALeftInnerSquare.setEnabled(false);
+        HBALeftInnerSquare.setFont(new java.awt.Font("Dialog", 1, 12));
+        add(HBALeftInnerSquare, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 80, 50, 50));
 
         LBAInnerCircle.setText("48");
         LBAInnerCircle.setFont(new java.awt.Font("Dialog", 1, 12));
@@ -70,10 +84,15 @@ public class RemoteStationLayout extends javax.swing.JPanel {
         add(LBAInnerCircle, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 80, 50, 50));
         add(LBAOuterCircle, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 110, 110));
 
-        HBALeftSquare.setText("48");
-        HBALeftSquare.setEnabled(false);
-        HBALeftSquare.setFont(new java.awt.Font("Dialog", 1, 12));
-        add(HBALeftSquare, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 70, 70, 70));
+        HBALeftOuterSquareText.setFont(new java.awt.Font("Tahoma", 1, 11));
+        HBALeftOuterSquareText.setText("24");
+        HBALeftOuterSquareText.setEnabled(false);
+        add(HBALeftOuterSquareText, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 100, -1, -1));
+
+        HBALeftOuterSquare.setText("24");
+        HBALeftOuterSquare.setEnabled(false);
+        HBALeftOuterSquare.setFont(new java.awt.Font("Dialog", 1, 12));
+        add(HBALeftOuterSquare, new org.netbeans.lib.awtextra.AbsoluteConstraints(155, 55, 100, 100));
     }// </editor-fold>//GEN-END:initComponents
 
     /**
@@ -83,7 +102,9 @@ public class RemoteStationLayout extends javax.swing.JPanel {
      */
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private nl.astron.lofar.sas.otbcomponents.SquareButton HBALeftSquare;
+    private nl.astron.lofar.sas.otbcomponents.SquareButton HBALeftInnerSquare;
+    private nl.astron.lofar.sas.otbcomponents.SquareButton HBALeftOuterSquare;
+    private javax.swing.JLabel HBALeftOuterSquareText;
     private nl.astron.lofar.sas.otbcomponents.RoundButton LBAInnerCircle;
     private nl.astron.lofar.sas.otbcomponents.RoundButton LBAOuterCircle;
     private javax.swing.JLabel LBAOuterCircleText;
@@ -128,17 +149,32 @@ public class RemoteStationLayout extends javax.swing.JPanel {
         }
     }
 
-    public boolean isHBALeftSquareEnabled() {
-        return HBALeftSquare.isEnabled();
+    public boolean isHBALeftOuterSquareEnabled() {
+        return HBALeftOuterSquare.isEnabled();
     }
 
-    public void setHBALeftSquareEnabled(boolean b) {
-        if (!b && HBALeftSquare.isSelected()) {
-            setHBALeftSquareSelected(false);
+    public void setHBALeftOuterSquareEnabled(boolean b) {
+        if (!b && HBALeftOuterSquare.isSelected()) {
+            setHBALeftOuterSquareSelected(false);
         }
-        HBALeftSquare.setEnabled(b);
-        HBALeftSquare.invalidate();
-        HBALeftSquare.repaint();
+        HBALeftOuterSquare.setEnabled(b);
+        HBALeftOuterSquareText.setEnabled(b);
+        HBALeftOuterSquare.invalidate();
+        HBALeftOuterSquare.repaint();
+        
+    }
+
+    public boolean isHBALeftInnerSquareEnabled() {
+        return HBALeftInnerSquare.isEnabled();
+    }
+
+    public void setHBALeftInnerSquareEnabled(boolean b) {
+        if (!b && HBALeftInnerSquare.isSelected()) {
+            setHBALeftInnerSquareSelected(false);
+        }
+        HBALeftInnerSquare.setEnabled(b);
+        HBALeftInnerSquare.invalidate();
+        HBALeftInnerSquare.repaint();
     }
 
     public boolean isLBAInnerCircleEnabled() {
@@ -168,19 +204,34 @@ public class RemoteStationLayout extends javax.swing.JPanel {
         LBAOuterCircle.repaint();
     }
 
-    public boolean isHBALeftSquareSelected() {
-        return HBALeftSquareSelected;
+    public boolean isHBALeftOuterSquareSelected() {
+        return HBALeftOuterSquareSelected;
     }
 
-    public void setHBALeftSquareSelected(boolean b) {
-        HBALeftSquareSelected=b;
+    public void setHBALeftOuterSquareSelected(boolean b) {
+        HBALeftOuterSquareSelected=b;
         if (b) {
-            HBALeftSquare.setBackground(Color.green);
+            HBALeftOuterSquare.setBackground(Color.green);
         } else {
-            HBALeftSquare.setBackground(getBackground());
+            HBALeftOuterSquare.setBackground(getBackground());
         }
-        HBALeftSquare.invalidate();
-        HBALeftSquare.repaint();
+        HBALeftOuterSquare.invalidate();
+        HBALeftOuterSquare.repaint();
+    }
+
+    public boolean isHBALeftInnerSquareSelected() {
+        return HBALeftInnerSquareSelected;
+    }
+
+    public void setHBALeftInnerSquareSelected(boolean b) {
+        HBALeftInnerSquareSelected=b;
+        if (b) {
+            HBALeftInnerSquare.setBackground(Color.green);
+        } else {
+            HBALeftInnerSquare.setBackground(getBackground());
+        }
+        HBALeftInnerSquare.invalidate();
+        HBALeftInnerSquare.repaint();
     }
 
     public boolean isLBAInnerCircleSelected() {

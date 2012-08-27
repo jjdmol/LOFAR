@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ALC/ACCmd.h>
 #include <PLC/ProcControlComm.h>
 #include <MACIO/MACServiceInfo.h>
@@ -36,7 +37,6 @@
 #include "PR_MPI.h"				// TODO: factory!
 #include "PR_BGL.h"				// TODO: factory!
 #include "ItemList.h"			// @@
-#include "lofarDirs.h"
 
 namespace LOFAR {
   using namespace MACIO;
