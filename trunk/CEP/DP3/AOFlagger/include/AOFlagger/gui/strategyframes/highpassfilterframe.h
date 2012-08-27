@@ -42,9 +42,21 @@ class HighPassFilterFrame : public Gtk::Frame {
 		_vWindowSizeLabel("Vertical sliding window size:", Gtk::ALIGN_LEFT),
 		_hKernelSigmaLabel("Horizontal kernel sigma:", Gtk::ALIGN_LEFT),
 		_vKernelSigmaLabel("Vertical kernel sigma:", Gtk::ALIGN_LEFT),
+		_modeContaminatedButton("Store in contaminated"),
+		_modeRevisedButton("Store in revised"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			initScales();
+			
+			_box.pack_start(_modeContaminatedButton);
+			_box.pack_start(_modeRevisedButton);
+			Gtk::RadioButtonGroup group;
+			_modeContaminatedButton.set_group(group);
+			_modeRevisedButton.set_group(group);
+			if(_action.Mode() == rfiStrategy::HighPassFilterAction::StoreContaminated)
+				_modeContaminatedButton.set_active(true);
+			else
+				_modeRevisedButton.set_active(true);
 		
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &HighPassFilterFrame::onApplyClicked));
 			_box.pack_start(_applyButton);
@@ -65,11 +77,11 @@ class HighPassFilterFrame : public Gtk::Frame {
 			_box.pack_start(_vWindowSizeScale);
 		
 			_box.pack_start(_hKernelSigmaLabel);
-			_hKernelSigmaScale.set_value(_action.HKernelSigma());
+			_hKernelSigmaScale.set_value(sqrt(_action.HKernelSigmaSq()));
 			_box.pack_start(_hKernelSigmaScale);
 		
 			_box.pack_start(_vKernelSigmaLabel);
-			_vKernelSigmaScale.set_value(_action.VKernelSigma());
+			_vKernelSigmaScale.set_value(sqrt(_action.VKernelSigmaSq()));
 			_box.pack_start(_vKernelSigmaScale);
 		}
 
@@ -83,14 +95,19 @@ class HighPassFilterFrame : public Gtk::Frame {
 		Gtk::Label
 			_hWindowSizeLabel, _vWindowSizeLabel,
 			_hKernelSigmaLabel, _vKernelSigmaLabel;
+		Gtk::RadioButton _modeContaminatedButton, _modeRevisedButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
 			_action.SetWindowWidth((unsigned) _hWindowSizeScale.get_value());
 			_action.SetWindowHeight((unsigned) _vWindowSizeScale.get_value());
-			_action.SetHKernelSigma(_hKernelSigmaScale.get_value());
-			_action.SetVKernelSigma(_vKernelSigmaScale.get_value());
+			_action.SetHKernelSigmaSq(_hKernelSigmaScale.get_value()*_hKernelSigmaScale.get_value());
+			_action.SetVKernelSigmaSq(_vKernelSigmaScale.get_value()*_vKernelSigmaScale.get_value());
+			if(_modeContaminatedButton.get_active())
+				_action.SetMode(rfiStrategy::HighPassFilterAction::StoreContaminated);
+			else
+				_action.SetMode(rfiStrategy::HighPassFilterAction::StoreRevised);
 
 			_editStrategyWindow.UpdateAction(&_action);
 		}

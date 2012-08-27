@@ -17,10 +17,10 @@ class HighPassFilter
 		HighPassFilter() :
 		_hKernel(0),
 		_hWindowSize(22),
-		_hKernelSigma(7.5),
+		_hKernelSigmaSq(7.5),
 		_vKernel(0),
 		_vWindowSize(45),
-		_vKernelSigma(15.0)
+		_vKernelSigmaSq(15.0)
 		{
 		}
 		
@@ -29,7 +29,7 @@ class HighPassFilter
 		/**
 		 * Apply a Gaussian high pass filter on the given image.
 		 */
-		Image2DPtr Apply(const Image2DCPtr &image)
+		Image2DPtr ApplyHighPass(const Image2DCPtr &image)
 		{
 			initializeKernel();
 			Image2DPtr temp = Image2D::CreateCopy(image);
@@ -40,7 +40,13 @@ class HighPassFilter
 		 * Apply a Gaussian high-pass filter on the given image, ignoring
 		 * flagged samples.
 		 */
-		Image2DPtr Apply(const Image2DCPtr &image, const Mask2DCPtr &mask);
+		Image2DPtr ApplyHighPass(const Image2DCPtr &image, const Mask2DCPtr &mask);
+		
+		/**
+		 * Apply a Gaussian low-pass filter on the given image, ignoring
+		 * flagged samples.
+		 */
+		Image2DPtr ApplyLowPass(const Image2DCPtr &image, const Mask2DCPtr &mask);
 		
 		/**
 		 * Set the horizontal size of the sliding window in samples. Must be odd: if the given
@@ -94,20 +100,20 @@ class HighPassFilter
 		 * @ref HSquareSize and @ref VSquareSize. Byond those values, the kernel is
 		 * truncated.
 		 */
-		double HKernelSigma() const
+		double HKernelSigmaSq() const
 		{
-			return _hKernelSigma;
+			return _hKernelSigmaSq;
 		}
 		
 		/**
 		 * Set the horizontal sigma parameter of the kernel.
 		 * @see HKernelSigma()
 		 */
-		void SetHKernelSigma(double newSigma)
+		void SetHKernelSigmaSq(double newSigmaSquared)
 		{
 			delete[] _hKernel;
 			_hKernel = 0;
-		_hKernelSigma = newSigma;
+		_hKernelSigmaSq = newSigmaSquared;
 		}
 		
 		/**
@@ -116,20 +122,20 @@ class HighPassFilter
 		 * @ref HSquareSize and @ref VSquareSize. Byond those values, the kernel is
 		 * truncated.
 		 */
-		double VKernelSigma() const
+		double VKernelSigmaSq() const
 		{
-			return _vKernelSigma;
+			return _vKernelSigmaSq;
 		}
 		
 		/**
 		 * Set the horizontal sigma parameter of the kernel.
 		 * @see VKernelSigma()
 		 */
-		void SetVKernelSigma(double newSigma)
+		void SetVKernelSigmaSq(double newSigmaSquared)
 		{
 			delete[] _vKernel;
 			_vKernel = 0;
-			_vKernelSigma = newSigma;
+			_vKernelSigmaSq = newSigmaSquared;
 		}
 	private:
 		/**
@@ -159,10 +165,10 @@ class HighPassFilter
 		
 		/**
 		 * Gaussian sigma parameter defining the horizontal shape of the convolution.
-		 * Given in units of samples. Note that the window has limited size as defined by
+		 * Given in units of samples (squared). Note that the window has limited size as defined by
 		 * @ref _hSquareSize and @ref _vSquareSize.
 		 */
-		double _hKernelSigma;
+		double _hKernelSigmaSq;
 		
 		/**
 		 * Vertical kernel values, see @ref _hKernel.
@@ -175,10 +181,10 @@ class HighPassFilter
 		unsigned _vWindowSize;
 				
 		/**
-		 * Gaussian sigma parameter defining the  vertical shape of the convolution, see
+		 * Gaussian sigma (squared) parameter defining the  vertical shape of the convolution, see
 		 * @ref _hKernelSize.
 		 */
-		double _vKernelSigma;
+		double _vKernelSigmaSq;
 };
 
 #endif // HIGHPASS_FILTER_H

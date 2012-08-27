@@ -31,11 +31,13 @@ namespace rfiStrategy {
 	*/
 	class HighPassFilterAction : public Action {
 		public:
+			enum Mode { StoreContaminated, StoreRevised };
 			HighPassFilterAction() :
 				_windowWidth(22),
 				_windowHeight(45),
-				_hKernelSigma(7.5),
-				_vKernelSigma(15.0)
+				_hKernelSigmaSq(7.5),
+				_vKernelSigmaSq(15.0),
+				_mode(StoreContaminated)
 			{
 			}
 			virtual ~HighPassFilterAction()
@@ -51,17 +53,20 @@ namespace rfiStrategy {
 			
 			unsigned WindowWidth() const { return _windowWidth; }
 			unsigned WindowHeight() const { return _windowHeight; }
-			double HKernelSigma() const { return _hKernelSigma; }
-			double VKernelSigma() const { return _vKernelSigma; }
+			double HKernelSigmaSq() const { return _hKernelSigmaSq; }
+			double VKernelSigmaSq() const { return _vKernelSigmaSq; }
+			enum Mode Mode() const { return _mode; }
 			
 			void SetWindowWidth(unsigned width) { _windowWidth = width; }
 			void SetWindowHeight(unsigned height) { _windowHeight = height; }
-			void SetHKernelSigma(double hSigma) { _hKernelSigma = hSigma; }
-			void SetVKernelSigma(double vSigma) { _vKernelSigma = vSigma; }
+			void SetHKernelSigmaSq(double hSigmaSquared) { _hKernelSigmaSq = hSigmaSquared; }
+			void SetVKernelSigmaSq(double vSigmaSquared) { _vKernelSigmaSq = vSigmaSquared; }
+			void SetMode(enum Mode mode) { _mode = mode; }
 
 		private:
 			unsigned _windowWidth, _windowHeight;
-			double _hKernelSigma, _vKernelSigma;
+			double _hKernelSigmaSq, _vKernelSigmaSq;
+			enum Mode _mode;
 	};
 
 }
