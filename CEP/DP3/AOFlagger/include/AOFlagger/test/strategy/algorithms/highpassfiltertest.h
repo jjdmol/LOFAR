@@ -66,9 +66,9 @@ inline void HighPassFilterTest::TestFilter::operator()()
 	Image2DPtr filterResult = Image2D::CreateCopy(testImage);
 	filter.SetHWindowSize(21);
 	filter.SetVWindowSize(41);
-	filter.SetHKernelSigma(2.5);
-	filter.SetVKernelSigma(5.0);
-	filterResult = filter.Apply(filterResult, Mask2D::CreateSetMaskPtr<false>(width, height));
+	filter.SetHKernelSigmaSq(2.5);
+	filter.SetVKernelSigmaSq(5.0);
+	filterResult = filter.ApplyHighPass(filterResult, Mask2D::CreateSetMaskPtr<false>(width, height));
 	
 	ImageAsserter::AssertEqual(filterResult, fitResult, "Simple convolution with three high values");
 }

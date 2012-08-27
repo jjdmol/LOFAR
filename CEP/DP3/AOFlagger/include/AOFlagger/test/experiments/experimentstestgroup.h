@@ -22,7 +22,7 @@
 
 #include <AOFlagger/test/testingtools/testgroup.h>
 
-//#include <AOFlagger/test/experiments/defaultstrategyspeedtest.h>
+#include <AOFlagger/test/experiments/defaultstrategyspeedtest.h>
 //#include <AOFlagger/test/experiments/filterresultstest.h>
 #include <AOFlagger/test/experiments/highpassfilterexperiment.h>
 //#include <AOFlagger/test/experiments/scaleinvariantdilationexperiment.h>
@@ -36,7 +36,7 @@ class ExperimentsTestGroup : public TestGroup {
 		{
 			Add(new HighPassFilterExperiment());
 			//Add(new RankOperatorROCExperiment());
-			//Add(new DefaultStrategySpeedTest());
+			Add(new DefaultStrategySpeedTest());
 			//Add(new FilterResultsTest());
 			//Add(new ScaleInvariantDilationExperiment());
 		}

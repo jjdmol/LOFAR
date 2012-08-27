@@ -114,7 +114,14 @@ void HighPassFilter::applyLowPassSSE(const Image2DPtr &image)
 	}
 }
 
-Image2DPtr HighPassFilter::Apply(const Image2DCPtr &image, const Mask2DCPtr &mask)
+Image2DPtr HighPassFilter::ApplyHighPass(const Image2DCPtr &image, const Mask2DCPtr &mask)
+{
+	Image2DPtr outputImage = ApplyLowPass(image, mask);
+	outputImage->SubtractAsRHS(image);
+	return outputImage;
+}
+
+Image2DPtr HighPassFilter::ApplyLowPass(const Image2DCPtr &image, const Mask2DCPtr &mask)
 {
 	initializeKernel();
 	Image2DPtr
@@ -125,7 +132,6 @@ Image2DPtr HighPassFilter::Apply(const Image2DCPtr &image, const Mask2DCPtr &mas
 	applyLowPassSSE(weights);
 	elementWiseDivideSSE(outputImage, weights);
 	weights.reset();
-	outputImage->SubtractAsRHS(image);
 	return outputImage;
 }
 
@@ -136,7 +142,7 @@ void HighPassFilter::initializeKernel()
 		_hKernel = new num_t[_hWindowSize];
 		const int midPointX = _hWindowSize/2;
 		for(int x = 0 ; x < (int) _hWindowSize ; ++x)
-			_hKernel[x] = RNG::EvaluateGaussian(x-midPointX, _hKernelSigma);
+			_hKernel[x] = RNG::EvaluateUnnormalizedGaussian(x-midPointX, _hKernelSigmaSq);
 	}
 	
 	if(_vKernel == 0)
@@ -144,7 +150,7 @@ void HighPassFilter::initializeKernel()
 		_vKernel = new num_t[_vWindowSize];
 		const	int midPointY = _vWindowSize/2;
 		for(int y = 0 ; y < (int) _vWindowSize ; ++y)
-			_vKernel[y] = RNG::EvaluateGaussian(y-midPointY, _vKernelSigma);
+			_vKernel[y] = RNG::EvaluateUnnormalizedGaussian(y-midPointY, _vKernelSigmaSq);
 	}
 }
 

@@ -10,16 +10,30 @@ void HighPassFilterAction::Perform(ArtifactSet &artifacts, ProgressListener &pro
 	if(data.PolarisationCount() != 1)
 		throw std::runtime_error("High-pass filtering needs single polarization");
 	HighPassFilter filter;
-	filter.SetHKernelSigma(_hKernelSigma);
+	filter.SetHKernelSigmaSq(_hKernelSigmaSq);
 	filter.SetHWindowSize(_windowWidth);
-	filter.SetVKernelSigma(_vKernelSigma);
+	filter.SetVKernelSigmaSq(_vKernelSigmaSq);
 	filter.SetVWindowSize(_windowHeight);
 	Mask2DCPtr mask = data.GetSingleMask();
 	size_t imageCount = data.ImageCount();
-	for(size_t i=0;i<imageCount;++i)
+	
+	switch(_mode)
 	{
-		Image2DCPtr image = data.GetImage(i);
-		data.SetImage(i, filter.Apply(image, mask));
+	case StoreContaminated:
+		for(size_t i=0;i<imageCount;++i)
+		{
+			data.SetImage(i, filter.ApplyHighPass(data.GetImage(i), mask));
+		}
+		break;
+		
+	case StoreRevised:
+		TimeFrequencyData revisedData = data;
+		for(size_t i=0;i<imageCount;++i)
+		{
+			revisedData.SetImage(i, filter.ApplyLowPass(revisedData.GetImage(i), mask));
+		}
+		artifacts.SetRevisedData(revisedData);
+		break;
 	}
 }
 
