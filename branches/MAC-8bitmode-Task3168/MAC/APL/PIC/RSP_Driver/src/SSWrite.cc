@@ -55,6 +55,7 @@ void SSWrite::sendrequest()
   itsActivePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
   if (getCurrentIndex() >= (itsActivePlanes*NR_BLPS_PER_RSPBOARD)) {
     setContinue(true);
+    return;
   }
   uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex()/itsActivePlanes);
   LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d",

@@ -38,7 +38,7 @@ namespace LOFAR {
       /**
        * Constructors for a BstRead object.
        */
-      BstRead(GCFPortInterface& board_port, int board_id);
+      BstRead(GCFPortInterface& board_port, int board_id, int lane_id);
 	  
       /* Destructor for BstRead. */
       virtual ~BstRead();
@@ -60,6 +60,7 @@ namespace LOFAR {
 
     private:
       EPA_Protocol::MEPHeader m_hdr;
+      int itsLaneId;
     };
   };
 };

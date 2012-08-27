@@ -218,8 +218,11 @@ void CacheBuffer::reset(void)
 
 	m_subbandstats().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_SUBBANDS);
 	m_subbandstats() = 0;
-
-	m_beamletstats().resize(StationSettings::instance()->nrRspBoards() * N_POL, MEPHeader::N_BEAMLETS);
+    
+    // Number of cep streams -> in normal mode 4, in splitmode 8.
+    int maxStreams = 8; 
+	m_beamletstats().resize((maxStreams/MEPHeader::N_SERDES_LANES) * N_POL,
+	                        (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE) * MEPHeader::N_BEAMLETS);
 	m_beamletstats() = 0;
 
 	m_xcstats().resize(N_POL, N_POL, StationSettings::instance()->nrBlps(), StationSettings::instance()->nrBlps());

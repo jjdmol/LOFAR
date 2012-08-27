@@ -76,7 +76,7 @@ void SSRead::sendrequest_status()
 
 GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_SS_SELECT != event.signal)
+  if ((event.signal < EPA_SS_SELECT) || (event.signal > (EPA_SS_SELECT+3)))
   {
     LOG_WARN("SSRead::handleack: unexpected ack");
     return GCFEvent::NOT_HANDLED;

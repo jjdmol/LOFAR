@@ -501,10 +501,26 @@ void RSPDriver::addAllSyncActions()
 		}
 
 		if (GET_CONFIG("RSPDriver.READ_BST", i)) {
-			BstRead* bstread = 0;
-			bstread = new BstRead(m_boardPorts[boardid], boardid);
-			ASSERT(bstread);
-			m_scheduler.addSyncAction(bstread);
+		    // check if board is used, and set lane
+		    for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+		        // read only BST from boards who output too CEP
+		        // for Ring-0
+		        if (boardid == GET_CONFIG(formatString("RSPDriver.LANE_%02d_BLET_OUT", lane).c_str(), i)) {
+		            LOG_DEBUG(formatString("add bstread for board %d, lane %d", boardid, lane));
+        			BstRead* bstread = 0;
+        			bstread = new BstRead(m_boardPorts[boardid], boardid, lane);
+        			ASSERT(bstread);
+        			m_scheduler.addSyncAction(bstread);
+		        }
+		        // for Ring-1
+		        if (boardid == GET_CONFIG(formatString("RSPDriver.LANE_%02d_BLET_OUT", (10+lane)).c_str(), i)) {
+		            LOG_DEBUG(formatString("add bstread for board %d, lane %d", boardid, (10+lane)));
+        			BstRead* bstread = 0;
+        			bstread = new BstRead(m_boardPorts[boardid], boardid, (10+lane));
+        			ASSERT(bstread);
+        			m_scheduler.addSyncAction(bstread);
+		        }
+		    }
 		}
 
 		if (GET_CONFIG("RSPDriver.READ_XST", i)) {

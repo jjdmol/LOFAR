@@ -60,15 +60,16 @@ void BWWrite::sendrequest()
     int activePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
     if (getCurrentIndex() >= (activePlanes*MEPHeader::BF_N_FRAGMENTS)) {
         setContinue(true);
+        return;
     }
     
     uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
-    itsPlane = getCurrentIndex() / MEPHeader::BF_N_FRAGMENTS;
+    itsPlane = (getCurrentIndex() / MEPHeader::BF_N_FRAGMENTS) ;
         
 	// no conditional, update every second
 
 	// reset m_offset and m_remaining for each register
-	if (0 == getCurrentIndex()) {
+	if (0 == (getCurrentIndex()%MEPHeader::BF_N_FRAGMENTS)) {
 		m_offset = MEPHeader::N_LOCAL_XLETS * MEPHeader::WEIGHT_SIZE;
 		m_remaining = MEPHeader::BF_XROUT_SIZE - m_offset; // representative for XR, XI, YR, YI size
 	}
@@ -79,7 +80,7 @@ void BWWrite::sendrequest()
 	}
 
 	LOG_DEBUG(formatString(">>>> BWWrite(%s) global_blp=%d, blp=%d, regid=%d, plane=%d, m_offset=%d, m_remaining=%d",
-					getBoardPort().getName().c_str(), global_blp, m_blp, m_regid, itsPlane, m_offset, m_remaining));
+					getBoardPort().getName().c_str(), global_blp, m_blp, m_regid, itsPlane,m_offset, m_remaining));
 
 	// send next BF configure message
 	EPABfCoefsWriteEvent bfcoefs;
@@ -95,7 +96,7 @@ void BWWrite::sendrequest()
 		bfcoefs.hdr.set( MEPHeader::WRITE, 
                          1 << m_blp,
                          MEPHeader::BF,
-                         MEPHeader::BF_XROUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                         MEPHeader::BF_XROUT+(itsPlane*4),
                          size,
                          m_offset);
 		break;
@@ -103,7 +104,7 @@ void BWWrite::sendrequest()
 	    bfcoefs.hdr.set( MEPHeader::WRITE, 
                          1 << m_blp,
                          MEPHeader::BF,
-                         MEPHeader::BF_XIOUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                         MEPHeader::BF_XIOUT+(itsPlane*4),
                          size,
                          m_offset);
 		break;
@@ -111,7 +112,7 @@ void BWWrite::sendrequest()
 	    bfcoefs.hdr.set( MEPHeader::WRITE, 
                          1 << m_blp,
                          MEPHeader::BF,
-                         MEPHeader::BF_YROUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                         MEPHeader::BF_YROUT+(itsPlane*4),
                          size,
                          m_offset);
 		break;
@@ -119,7 +120,7 @@ void BWWrite::sendrequest()
 	    bfcoefs.hdr.set( MEPHeader::WRITE, 
                          1 << m_blp,
                          MEPHeader::BF,
-                         MEPHeader::BF_YIOUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                         MEPHeader::BF_YIOUT+(itsPlane*4),
                          size,
                          m_offset);
 		break;
@@ -271,6 +272,7 @@ void BWWrite::sendrequest_status()
 GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	if (EPA_WRITEACK != event.signal) {
+		LOG_INFO_STR(formatString("event.signal=%d", event.signal)); 
 		LOG_WARN("BWWrite::handleack: unexpected ack");
 		return GCFEvent::NOT_HANDLED;
 	}

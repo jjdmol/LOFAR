@@ -44,8 +44,8 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 XWWrite::XWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid)
-  : SyncAction(board_port, board_id, 1),
-    m_blp(blp), m_regid(regid), m_remaining(0), m_offset(0)
+  : SyncAction(board_port, board_id, (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE)),
+    m_blp(blp), m_regid(regid), itsPlane(0), m_remaining(0), m_offset(0)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -56,7 +56,14 @@ XWWrite::~XWWrite()
 
 void XWWrite::sendrequest()
 {
+  int activePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
+  if (getCurrentIndex() >= activePlanes) {
+    setContinue(true);
+    return;
+  }
+    
   uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
+  itsPlane = getCurrentIndex();
 
   if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
@@ -76,20 +83,36 @@ void XWWrite::sendrequest()
   switch (m_regid)
   {
     case MEPHeader::BF_XROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, 1 << m_blp,
-		      MEPHeader::WRITE, size, m_offset);
+        bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_XROUT+(itsPlane*4),
+                         size,
+                         m_offset);
       break;
     case MEPHeader::BF_XIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, 1 << m_blp,
-		      MEPHeader::WRITE, size, m_offset);
+        bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_XIOUT+(itsPlane*4),
+                         size,
+                         m_offset);
       break;
     case MEPHeader::BF_YROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, 1 << m_blp,
-		      MEPHeader::WRITE, size, m_offset);
+        bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_YROUT+(itsPlane*4),
+                         size,
+                         m_offset);
       break;
     case MEPHeader::BF_YIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, 1 << m_blp,
-		      MEPHeader::WRITE, size, m_offset);
+        bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_YIOUT+(itsPlane*4),
+                         size,
+                         m_offset);
       break;
   }
 

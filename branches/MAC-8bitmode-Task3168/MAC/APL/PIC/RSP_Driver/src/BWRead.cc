@@ -129,7 +129,7 @@ void BWRead::sendrequest_status()
 
 GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_BF_COEFS_READ != event.signal)
+  if ((event.signal < EPA_BF_COEFS_READ) || (event.signal > (EPA_BF_COEFS_READ+15)))
   {
     LOG_WARN("BWRead::handleack: unexpected ack");
     return GCFEvent::NOT_HANDLED;

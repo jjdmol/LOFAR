@@ -2103,8 +2103,9 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 		}
 
 		LOG_DEBUG_STR("statistics update at " << timestamp);
-
+        
 		if (m_duration == 0) {
+			//cout << m_stats << endl; 
 			plot_statistics(m_stats, timestamp);
 		}
 		else {
@@ -2196,12 +2197,17 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	int count = 0;
 
 	startrcu = 0;
-	if (gSplitterOn) {
-		stoprcu = get_ndevices() / 2;
-	}
-	else {
-		stoprcu = get_ndevices();
-	}
+	if (m_type == Statistics::SUBBAND_POWER) {
+    	if (gSplitterOn) {
+    		stoprcu = get_ndevices() / 2;
+    	}
+    	else {
+    		stoprcu = get_ndevices();
+    	}
+    }
+    else {
+        stoprcu = get_ndevices() / 2;
+    }
 
 	for (int rcuout = startrcu; rcuout < stoprcu; rcuout++) {
 		if (mask[rcuout]) {
@@ -2215,8 +2221,8 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 					gSampleFrequency, x_range*2.0, rcuout);
 					break;
 				case Statistics::BEAMLET_POWER:
-					gnuplot_cmd(handle, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board %d, %c)\" with steps ",
-					(rcuout/2), (rcuout%2?'Y':'X'));
+					gnuplot_cmd(handle, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (%c)\" with steps ",
+					(rcuout%2?'Y':'X'));
 					break;
 				default:
 					logMessage(cerr,"Error: invalid m_type");
@@ -2225,14 +2231,9 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 			}
 		}
 	}
+	//stats = stats + 1; // too show zeros in log10()
 	gnuplot_cmd(handle, "\n");
-
-	if (gSplitterOn) {
-		gnuplot_write_matrix(handle, stats(Range(0,(n_firstIndex/2)-1), Range::all()));
-	}
-	else {
-		gnuplot_write_matrix(handle, stats);
-	}
+	gnuplot_write_matrix(handle, stats(Range(startrcu, stoprcu-1), Range::all()));
 
 	// if splitter is now OFF but the second screen is still shown, remove this window
 	if (handle2 && !gSplitterOn) {
@@ -2280,7 +2281,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 		gnuplot_cmd(handle2, "plot ");
 		// splot devices
 		int count = 0;
-
+        
 		startrcu = get_ndevices() / 2;
 		stoprcu = get_ndevices();
 
@@ -2296,8 +2297,8 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 						gSampleFrequency, x_range*2.0, rcuout);
 						break;
 					case Statistics::BEAMLET_POWER:
-						gnuplot_cmd(handle2, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board %d, %c)\" with steps ",
-						(rcuout/2), (rcuout%2?'Y':'X'));
+						gnuplot_cmd(handle2, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (%c)\" with steps ",
+						(rcuout%2?'Y':'X'));
 						break;
 					default:
 						logMessage(cerr,"Error: invalid m_type");
@@ -3732,14 +3733,16 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			command = statscommand;
 
 			command->set_ndevices(m_nrcus);
-
+            
+            itsNeedSplitter = true;
+            
 			if (optarg) {
 				if (!strcmp(optarg, "subband")) {
 					statscommand->setType(Statistics::SUBBAND_POWER);
 				} else if (!strcmp(optarg, "beamlet")) {
-					command->set_ndevices(m_nrspboards * N_POL);
+				    // 2 = number of cep streams, normal 1, in splitted mode 2
+					command->set_ndevices(2 * N_POL);
 					statscommand->setType(Statistics::BEAMLET_POWER);
-					itsNeedSplitter = true;
 					itsNeedBitmode  = true;
 				} else {
 					logMessage(cerr, formatString("Error: invalid statistics type %s", optarg));
