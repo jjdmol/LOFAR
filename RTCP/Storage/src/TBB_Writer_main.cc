@@ -57,7 +57,7 @@
 #include <Interface/Exceptions.h>
 #include <Storage/IOPriority.h>
 
-#include <dal/lofar/Station.h>
+#include <dal/lofar/StationNames.h>
 
 #define TBB_DEFAULT_BASE_PORT		0x7bb0	// i.e. tbb0
 #define TBB_DEFAULT_LAST_PORT		0x7bbb	// 0x7bbf for NL, 0x7bbb for int'l stations

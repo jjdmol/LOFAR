@@ -54,7 +54,7 @@
 #include <Interface/Exceptions.h>
 #include <Interface/Stream.h>
 
-#include <dal/lofar/Station.h>
+#include <dal/lofar/StationNames.h>
 
 namespace LOFAR {
 namespace RTCP {
