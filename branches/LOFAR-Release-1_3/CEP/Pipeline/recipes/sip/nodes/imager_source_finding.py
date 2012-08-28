@@ -5,7 +5,7 @@ import shutil
 
 from lofar.parameterset import parameterset
 from lofarpipe.support.lofarnode import LOFARnodeTCP
-import lofar.bdsm as bdsm#@UnresolvedImport
+
 
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
@@ -19,6 +19,8 @@ class imager_source_finding(LOFARnodeTCP):
     def run(self, input_image, bdsm_parameter_run1_path,
             bdsm_parameter_run2x_path, catalog_output_path, image_output_path,
             sourcedb_target_path, init_script, working_directory, executable):
+
+        import lofar.bdsm as bdsm#@UnresolvedImport
         self.logger.info("Starting imager_source_finding")
         # default frequency is None (read from image), save for later cycles
         frequency = None
@@ -54,7 +56,7 @@ class imager_source_finding(LOFARnodeTCP):
                                                         input_image_local))
             self.logger.debug(repr(bdsm_parameters))
             img = bdsm.process_image(bdsm_parameters,
-                        filename = input_image_local, frequency = frequency)
+                        filename=input_image_local, frequency=frequency)
 
 
             # If no more matching of sources with gausians is possible (nsrc==0)
@@ -70,14 +72,14 @@ class imager_source_finding(LOFARnodeTCP):
 
 
             #export the catalog and the image with gausians substracted
-            img.write_catalog(outfile = catalog_output_path + "_{0}".format(str(idx)),
-                              catalog_type = 'gaul', clobber = True, format = "bbs")
+            img.write_catalog(outfile=catalog_output_path + "_{0}".format(str(idx)),
+                              catalog_type='gaul', clobber=True, format="bbs")
 
             self.logger.debug("Wrote list of sources to file at: {0})".format(
                                                         catalog_output_path))
-            img.export_image(outfile = image_output_path_local,
-                             img_type = 'gaus_resid', clobber = True,
-                             img_format = "fits")
+            img.export_image(outfile=image_output_path_local,
+                             img_type='gaus_resid', clobber=True,
+                             img_format="fits")
             self.logger.debug("Wrote fits image with substracted sources"
                               " at: {0})".format(catalog_output_path))
             #img does not have close()
@@ -106,6 +108,9 @@ class imager_source_finding(LOFARnodeTCP):
         self._create_source_db(catalog_output_path, sourcedb_target_path,
                 init_script, working_directory, executable, False)
 
+        # Assign the outputs
+        self.outputs["catalog_output_path"] = catalog_output_path
+        self.outputs["source_db"] = sourcedb_target_path
         return 0
 
 
@@ -161,7 +166,7 @@ class imager_source_finding(LOFARnodeTCP):
 
 
     def _create_source_db(self, source_list, sourcedb_target_path, init_script,
-                          working_directory, executable, append = False):
+                          working_directory, executable, append=False):
         """
         _create_source_db consumes a skymap text file and produces a source db
         (pyraptable) 
@@ -186,7 +191,7 @@ class imager_source_finding(LOFARnodeTCP):
                  os.path.basename(executable)
             ) as logger:
                     catch_segfaults(cmd, working_directory, environment,
-                                            logger, cleanup = None)
+                                            logger, cleanup=None)
 
         except Exception, e:
             self.logger.error("Execution of external failed:")
@@ -199,5 +204,9 @@ class imager_source_finding(LOFARnodeTCP):
 
 if __name__ == "__main__":
     jobid, jobhost, jobport = sys.argv[1:4]
+    #Quickfix ofr matplotlib error. insert correct path to path :P
+    sys.path.insert(0, "/usr/lib/pymodules/python2.6")
+
     sys.exit(imager_source_finding(jobid, jobhost, jobport).run_with_stored_arguments())
+    del sys.path[0] # TODO: REMOVE FIRST ENTRY
 
