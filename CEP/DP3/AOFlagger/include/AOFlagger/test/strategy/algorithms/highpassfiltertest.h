@@ -36,6 +36,9 @@ class HighPassFilterTest : public UnitTest {
 		{
 			AddTest(TestSmallImageFilter(), "High-pass filter with small image");
 			AddTest(TestFilter(), "High-pass filter algorithm");
+			AddTest(TestFilterWithMask(), "Low-pass filter algorithm with mask");
+			AddTest(TestCompletelyMaskedImage(), "Low-pass filter algorithm with completely set mask");
+			AddTest(TestNaNImage(), "Low-pass filter algorithm with NaNs");
 		}
 		
 	private:
@@ -47,11 +50,24 @@ class HighPassFilterTest : public UnitTest {
 		{
 			void operator()();
 		};
+		struct TestFilterWithMask : public Asserter
+		{
+			void operator()();
+		};
+		struct TestCompletelyMaskedImage : public Asserter
+		{
+			void operator()();
+		};
+		struct TestNaNImage : public Asserter
+		{
+			void operator()();
+		};
+		
 };
 
 inline void HighPassFilterTest::TestFilter::operator()()
 {
-	const size_t width = 100, height = 100;
+	const size_t width = 99, height = 99;
 	Image2DPtr testImage = Image2D::CreateZeroImagePtr(width, height);
 	testImage->SetValue(10,10,1.0);
 	testImage->SetValue(15,15,2.0);
@@ -102,7 +118,63 @@ inline void HighPassFilterTest::TestSmallImageFilter::operator()()
 	filter.SetVKernelSigmaSq(5.0);
 	filterResult = filter.ApplyHighPass(filterResult, Mask2D::CreateSetMaskPtr<false>(width, height));
 	
-	ImageAsserter::AssertEqual(filterResult, fitResult, "Simple convolution with three high values");
+	ImageAsserter::AssertEqual(filterResult, fitResult, "Convolution with kernel that is larger than the image");
+}
+
+inline void HighPassFilterTest::TestFilterWithMask::operator()()
+{
+	const size_t width = 8, height = 8;
+	Image2DPtr image = Image2D::CreateZeroImagePtr(width, height);
+	image->SetValue(1, 1, 1.0);
+	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(width, height);
+	mask->SetValue(1, 1, true);
+	
+	// High-pass filter
+	HighPassFilter filter;
+	filter.SetHWindowSize(4);
+	filter.SetVWindowSize(4);
+	filter.SetHKernelSigmaSq(4.0);
+	filter.SetVKernelSigmaSq(4.0);
+	image = filter.ApplyLowPass(image, mask);
+	
+	ImageAsserter::AssertConstant(image, 0.0, "Low-pass convolution with one masked value");
+}
+
+inline void HighPassFilterTest::TestCompletelyMaskedImage::operator()()
+{
+	const size_t width = 9, height = 9;
+	Image2DPtr image = Image2D::CreateZeroImagePtr(width, height);
+	image->SetValue(1, 1, 1.0);
+	image->SetValue(8, 8, 10.0);
+	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<true>(width, height);
+	
+	// High-pass filter
+	HighPassFilter filter;
+	filter.SetHWindowSize(4);
+	filter.SetVWindowSize(4);
+	filter.SetHKernelSigmaSq(4.0);
+	filter.SetVKernelSigmaSq(4.0);
+	image = filter.ApplyLowPass(image, mask);
+	
+	ImageAsserter::AssertConstant(image, 0.0, "Low-pass convolution with fully masked image");
+}
+
+inline void HighPassFilterTest::TestNaNImage::operator()()
+{
+	const size_t width = 7, height = 7;
+	Image2DPtr image = Image2D::CreateZeroImagePtr(width, height);
+	image->SetValue(1, 1, std::numeric_limits<float>::quiet_NaN());
+	image->SetValue(7, 7, 10.0);
+	
+	// High-pass filter
+	HighPassFilter filter;
+	filter.SetHWindowSize(4);
+	filter.SetVWindowSize(4);
+	filter.SetHKernelSigmaSq(4.0);
+	filter.SetVKernelSigmaSq(4.0);
+	image = filter.ApplyLowPass(image, Mask2D::CreateSetMaskPtr<false>(width, height));
+	
+	ImageAsserter::AssertFinite(image, "Low-pass convolution with NaNs");
 }
 
 #endif
