@@ -50,10 +50,11 @@ void HighPassFilter::applyLowPassSSE(const Image2DPtr &image)
 		const num_t k = _hKernel[i];
 		const __m128 k4 = _mm_set_ps(k, k, k, k);
 		size_t
+			/* xStart is the first column to start writing to. Note that it might be larger
+			 * than the width. */
 			xStart = (i >= hKernelMid) ? 0 : (hKernelMid-i),
-			xEnd = (i <= hKernelMid) ? image->Width() : image->Width()-i+hKernelMid;
+			xEnd = (i <= hKernelMid) ? image->Width() : (image->Width()+hKernelMid > i ? (image->Width()-i+hKernelMid) : 0);
 		
-			
 		for(unsigned y=0;y<image->Height();++y) {
 			
 			float *tempPtr = temp->ValuePtr(xStart, y);
@@ -86,7 +87,7 @@ void HighPassFilter::applyLowPassSSE(const Image2DPtr &image)
 		const __m128 k4 = _mm_set_ps(k, k, k, k);
 		const size_t
 			yStart = (i >= vKernelMid) ? 0 : (vKernelMid-i),
-			yEnd = (i <= vKernelMid) ? image->Height() : image->Height()-i+vKernelMid;
+			yEnd = (i <= vKernelMid) ? image->Height() : ((image->Height()+vKernelMid>i) ? image->Height()-i+vKernelMid : 0);
 		for(unsigned y=yStart;y<yEnd;++y) {
 			
 			const float *tempPtr = temp->ValuePtr(0, y+i-vKernelMid);
