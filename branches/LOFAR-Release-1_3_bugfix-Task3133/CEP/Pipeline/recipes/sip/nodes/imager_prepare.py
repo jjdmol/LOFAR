@@ -34,12 +34,12 @@ class SubProcessGroup(object):
         A wrapper class for the subprocess module: allows fire and forget
         insertion of commands with a an optional sync/ barrier/ return
         """
-        def __init__(self, logger = None):
+        def __init__(self, logger=None):
             self.process_group = []
             self.logger = logger
 
 
-        def run(self, cmd_in, unsave = False):
+        def run(self, cmd_in, unsave=False):
             """
             Add the cmd as a subprocess to the current group: The process is
             started!
@@ -58,9 +58,9 @@ class SubProcessGroup(object):
             # Run subprocess
             process = subprocess.Popen(
                         cmd,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
             # save the process
             self.process_group.append((cmd, process))
 
@@ -155,7 +155,7 @@ class imager_prepare(LOFARnodeTCP):
             #Copy the input files (caching included for testing purpose)
             missing_files = self._cached_copy_input_files(
                             processed_ms_dir, input_map,
-                            skip_copy = False)
+                            skip_copy=False)
             if len(missing_files) != 0:
                 self.logger.warn("A number of measurement sets could not be"
                                  "copied: {0}".format(missing_files))
@@ -168,11 +168,6 @@ class imager_prepare(LOFARnodeTCP):
                     parset, ndppp_executable, init_script)
 
             self.logger.debug("Produced time slices: {0}".format(time_slices))
-            #***********************************************************
-            # run rfi_concole: flag datapoints which are corrupted
-            self._run_rficonsole(rficonsole_executable, time_slice_dir,
-                                 time_slices)
-
 
             #******************************************************************
             # Add imaging columns to each timeslice
@@ -180,6 +175,11 @@ class imager_prepare(LOFARnodeTCP):
             for ms in time_slices:
                 pt.addImagingColumns(ms)                                        #@UndefinedVariable
                 self.logger.debug("Added imaging columns to ms: {0}".format(ms))
+
+            #***********************************************************
+            # run rfi_concole: flag datapoints which are corrupted
+            self._run_rficonsole(rficonsole_executable, time_slice_dir,
+                                 time_slices)
 
             group_measurement_filtered = self._filter_bad_stations(
                 time_slices, asciistat_executable,
@@ -198,7 +198,7 @@ class imager_prepare(LOFARnodeTCP):
         return 0
 
     def _cached_copy_input_files(self, processed_ms_dir,
-                                 input_map, skip_copy = False):
+                                 input_map, skip_copy=False):
         """
         Perform a optionally skip_copy copy of the input ms:
         For testing purpose the output, the missing_files can be saved
@@ -245,9 +245,9 @@ class imager_prepare(LOFARnodeTCP):
             #Spawn a subprocess and connect the pipes
             copy_process = subprocess.Popen(
                         command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
 
             (stdoutdata, stderrdata) = copy_process.communicate()
 
@@ -325,7 +325,7 @@ class imager_prepare(LOFARnodeTCP):
                                     "." + os.path.basename("imager_prepare_ndppp"),
                                     os.path.basename(ndppp)) as logger:
                         catch_segfaults(cmd, working_dir, environment,
-                                        logger, cleanup = None)
+                                        logger, cleanup=None)
 
             except CalledProcessError, e:
                 self.logger.error(str(e))
@@ -344,7 +344,7 @@ class imager_prepare(LOFARnodeTCP):
         It is a virtual ms, a ms with symbolic links to actual data is created!                 
         """
         pt.msconcat(group_measurements_collected, #@UndefinedVariable
-                               output_file_path, concatTime = True)
+                               output_file_path, concatTime=True)
         self.logger.debug("Concatenated the files: {0} into the single measure"
             "mentset: {1}".format(
                 ", ".join(group_measurements_collected), output_file_path))
@@ -357,13 +357,16 @@ class imager_prepare(LOFARnodeTCP):
         """
 
         #loop all measurement sets
-        temp_dir_path = os.path.join(time_slice_dir, "rfi_temp_dir")
-        create_directory(temp_dir_path)
+        rfi_temp_dir = os.path.join(time_slice_dir, "rfi_temp_dir")
+        create_directory(rfi_temp_dir)
+
         try:
             processes = []
             for (idx, group_set) in enumerate(group_measurements_collected):
+                # Each rfi console needs own working space for temp files    
+                temp_dir_path = os.path.join(rfi_temp_dir, os.path.basename(group_set))
+                create_directory(temp_dir_path)
                 # construct copy command
-                self.logger.info(group_set)
                 command = [rficonsole_executable, "-indirect-read",
                             group_set]
                 self.logger.info("executing rficonsole command: {0}".format(
@@ -371,10 +374,10 @@ class imager_prepare(LOFARnodeTCP):
                 #Spawn a subprocess and connect the pipes
                 copy_process = subprocess.Popen(
                             command,
-                            cwd = temp_dir_path,
-                            stdin = subprocess.PIPE,
-                            stdout = subprocess.PIPE,
-                            stderr = subprocess.PIPE) #working dir == temp
+                            cwd=temp_dir_path,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE) #working dir == temp
                 processes.append(copy_process)
 
             # wait for the processes to finish. We need to wait for all
