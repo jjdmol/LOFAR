@@ -71,8 +71,8 @@ class imager_awimager(LOFARnodeTCP):
                                'wmax': str(w_max),
                                'wprojplanes':str(w_proj_planes),
                                'image':str(output_image),
-                               'maxsupport':str(npix),
-                               #'mask':str(mask_file_path),  #TODO REINTRODUCE MASK, excluded to speed up in this debug stage
+                               'maxsupport':str(npix)
+                               #'mask':str(mask_file_path), #TODO REINTRODUCE MASK, excluded to speed up in this debug stage
                                }
 
             # save the parset at the target dir for the image            
@@ -163,7 +163,7 @@ class imager_awimager(LOFARnodeTCP):
         self.logger.debug("Fished mask creation")
         return mask_file_path
 
-    def _msss_mask(self, mask_file_path, sourcedb_path, mask_patch_size = 1.0):
+    def _msss_mask(self, mask_file_path, sourcedb_path, mask_patch_size=1.0):
         """
         Fill a mask based on skymodel
         Usage: ./msss_mask.py mask-file skymodel
@@ -198,7 +198,7 @@ class imager_awimager(LOFARnodeTCP):
         pad = 500. # increment in maj/minor axes [arcsec]
 
         # open mask
-        mask = pim.image(mask_file_path, overwrite = True)
+        mask = pim.image(mask_file_path, overwrite=True)
         mask_data = mask.getdata()
         xlen, ylen = mask.shape()[2:]
         freq, stokes, null, null = mask.toworld([0, 0, 0, 0]) #@UnusedVariable
