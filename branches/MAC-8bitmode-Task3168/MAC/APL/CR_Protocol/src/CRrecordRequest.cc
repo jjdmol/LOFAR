@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <APL/CR_Protocol/CRrecordRequest.h>
-#include <MACIO/Marshalling.h>
+#include <MACIO/Marshalling.tcc>
 
 namespace LOFAR {
   namespace CR_Protocol {
@@ -40,24 +40,24 @@ ostream& CRrecordRequest::print (ostream& os) const
 
 
 // --- marshalling methods --- 
-unsigned int CRrecordRequest::getSize()
+size_t CRrecordRequest::getSize()
 {
-	return(MSH_STRING_SIZE(stationList) + MSH_STRING_SIZE(rcuList));
+	return(MSH_size(stationList) + MSH_size(rcuList));
 }
 
-unsigned int CRrecordRequest::pack  (void* buffer)
+size_t CRrecordRequest::pack  (char* buffer) const
 {
-	unsigned int	offset(0);
-	MSH_PACK_STRING(buffer, offset, stationList);	
-	MSH_PACK_STRING(buffer, offset, rcuList);	
+	size_t offset = 0;
+	MSH_pack(buffer, offset, stationList);	
+	MSH_pack(buffer, offset, rcuList);	
 	return (offset);
 }
 
-unsigned int CRrecordRequest::unpack(void *buffer)
+size_t CRrecordRequest::unpack(const char *buffer)
 {
-	unsigned int	offset(0);
-	MSH_UNPACK_STRING(buffer, offset, stationList);	
-	MSH_UNPACK_STRING(buffer, offset, rcuList);	
+	size_t offset = 0;
+	MSH_unpack(buffer, offset, stationList);	
+	MSH_unpack(buffer, offset, rcuList);	
 	return (offset);
 }
 

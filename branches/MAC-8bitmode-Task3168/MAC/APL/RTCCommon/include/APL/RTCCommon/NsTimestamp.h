@@ -96,9 +96,9 @@ public:
 
 	/*@{*/
 	// marshalling methods
-	unsigned int getSize();
-	unsigned int pack  (void* buffer);
-	unsigned int unpack(void *buffer);
+	size_t getSize();
+	size_t pack  (char* buffer) const;
+	size_t unpack(const char *buffer);
 	/*@}*/
 
 private:
@@ -194,24 +194,24 @@ inline bool NsTimestamp::operator!=(const NsTimestamp& rhs) const
 inline long NsTimestamp::sec()   const { return itsSec;  }
 inline long NsTimestamp::nsec() const { return itsNsec; }
 
-inline unsigned int NsTimestamp::getSize()
+inline size_t NsTimestamp::getSize()
 {
 	return (2 * sizeof(int64));
 }   
 
-inline unsigned int NsTimestamp::pack  (void* __buffer)
+inline size_t NsTimestamp::pack  (char* __buffer) const
 {   
-	uint32	__valSize(sizeof(int64));
+	size_t	__valSize(sizeof(int64));
 	memcpy(__buffer, &itsSec, __valSize);
 	memcpy((char*)__buffer+__valSize, &itsNsec, __valSize);
 	return (2*__valSize);
 }   
       
-inline unsigned int NsTimestamp::unpack(void *__buffer)
+inline size_t NsTimestamp::unpack(const char *__buffer)
 {   
-	uint32	__valSize(sizeof(int64));
+	size_t	__valSize(sizeof(int64));
 	memcpy(&itsSec, __buffer, __valSize);
-	memcpy(&itsNsec, (char*)__buffer+__valSize, __valSize);
+	memcpy(&itsNsec, __buffer + __valSize, __valSize);
 	return (2*__valSize);
 }   
 

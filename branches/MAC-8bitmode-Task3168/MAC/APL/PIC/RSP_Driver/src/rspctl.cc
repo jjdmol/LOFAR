@@ -2154,7 +2154,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 		gClockChanged = false;
 	}
 #endif
-
+    
 	if (!handle) {
 		handle = gnuplot_init();
 		if (!handle) return;
@@ -2237,7 +2237,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	}
 	//stats = stats + 1; // too show zeros in log10()
 	gnuplot_cmd(handle, "\n");
-	gnuplot_write_matrix(handle, stats(Range(startrcu, stoprcu-1), Range::all()));
+	gnuplot_write_matrix(handle, stats(Range(0, count-1), Range::all()));
 
 	// if splitter is now OFF but the second screen is still shown, remove this window
 	if (handle2 && !gSplitterOn) {
@@ -2247,73 +2247,82 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 
 	// if Splitter is active plot another graphics
 	if (gSplitterOn) {
-		if (!handle2) {
-			handle2 = gnuplot_init();
-			if (!handle2) return;
-
-			gnuplot_cmd(handle2, "set grid x y\n");
-			gnuplot_cmd(handle2, "set ylabel \"dB\"\n");
-			gnuplot_cmd(handle2, "set yrange [0:160]\n");
-
-			switch (m_type) {
-				case Statistics::SUBBAND_POWER:
-					gnuplot_cmd(handle2, "set xlabel \"Frequency (Hz)\"\n");
-					gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
-					break;
-				case Statistics::BEAMLET_POWER:
-					gnuplot_cmd(handle2, "set xlabel \"Beamlet index\"\n");
-					gnuplot_cmd(handle2, "set xrange [0:%d]\n", x_range);
-					break;
-			}
-		}
-
-		time_t seconds = timestamp.sec();
-		strftime(plotcmd, 255, "set title \"Ring 1 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
-
-		// Redefine xrange when clock changed.
-		if (gClockChanged && (m_type == Statistics::SUBBAND_POWER)) {
-			gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
-		}
-
-		// Redefine xrange when bitmode changed.
-		if (gBitmodeChanged && (m_type == Statistics::BEAMLET_POWER)) {
-			gnuplot_cmd(handle2, "set xrange [0:%d]\n", x_range);
-		}
-
-		gnuplot_cmd(handle2, plotcmd);
-
-		gnuplot_cmd(handle2, "plot ");
-		// splot devices
-		int count = 0;
-        
 		startrcu = get_ndevices() / 2;
 		stoprcu = get_ndevices();
-
+        int rcuCount = 0;
 		for (int rcuout = startrcu; rcuout < stoprcu; rcuout++) {
 			if (mask[rcuout]) {
-				if (count > 0)
-					gnuplot_cmd(handle2, ",");
-				count++;
-
-				switch (m_type) {
-					case Statistics::SUBBAND_POWER:
-						gnuplot_cmd(handle2, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
-						gSampleFrequency, x_range*2.0, rcuout);
-						break;
-					case Statistics::BEAMLET_POWER:
-						gnuplot_cmd(handle2, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (%c)\" with steps ",
-						(rcuout%2?'Y':'X'));
-						break;
-					default:
-						logMessage(cerr,"Error: invalid m_type");
-						exit(EXIT_FAILURE);
-						break;
-				}
+			    rcuCount++;
 			}
 		}
-		gnuplot_cmd(handle2, "\n");
-
-		gnuplot_write_matrix(handle2, stats(Range((n_firstIndex/2),n_firstIndex-1), Range::all()));
+		if (rcuCount > 0) {
+    		if (!handle2) {
+    			handle2 = gnuplot_init();
+    			if (!handle2) return;
+    
+    			gnuplot_cmd(handle2, "set grid x y\n");
+    			gnuplot_cmd(handle2, "set ylabel \"dB\"\n");
+    			gnuplot_cmd(handle2, "set yrange [0:160]\n");
+    
+    			switch (m_type) {
+    				case Statistics::SUBBAND_POWER:
+    					gnuplot_cmd(handle2, "set xlabel \"Frequency (Hz)\"\n");
+    					gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
+    					break;
+    				case Statistics::BEAMLET_POWER:
+    					gnuplot_cmd(handle2, "set xlabel \"Beamlet index\"\n");
+    					gnuplot_cmd(handle2, "set xrange [0:%d]\n", x_range);
+    					break;
+    			}
+    		}
+    
+    		time_t seconds = timestamp.sec();
+    		strftime(plotcmd, 255, "set title \"Ring 1 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
+    
+    		// Redefine xrange when clock changed.
+    		if (gClockChanged && (m_type == Statistics::SUBBAND_POWER)) {
+    			gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
+    		}
+    
+    		// Redefine xrange when bitmode changed.
+    		if (gBitmodeChanged && (m_type == Statistics::BEAMLET_POWER)) {
+    			gnuplot_cmd(handle2, "set xrange [0:%d]\n", x_range);
+    		}
+    
+    		gnuplot_cmd(handle2, plotcmd);
+    
+    		gnuplot_cmd(handle2, "plot ");
+    		// splot devices
+    		int count = 0;
+            
+    		startrcu = get_ndevices() / 2;
+    		stoprcu = get_ndevices();
+    
+    		for (int rcuout = startrcu; rcuout < stoprcu; rcuout++) {
+    			if (mask[rcuout]) {
+    				if (count > 0)
+    					gnuplot_cmd(handle2, ",");
+    				count++;
+    
+    				switch (m_type) {
+    					case Statistics::SUBBAND_POWER:
+    						gnuplot_cmd(handle2, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
+    						gSampleFrequency, x_range*2.0, rcuout);
+    						break;
+    					case Statistics::BEAMLET_POWER:
+    						gnuplot_cmd(handle2, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (%c)\" with steps ",
+    						(rcuout%2?'Y':'X'));
+    						break;
+    					default:
+    						logMessage(cerr,"Error: invalid m_type");
+    						exit(EXIT_FAILURE);
+    						break;
+    				}
+    			}
+    		}
+    		gnuplot_cmd(handle2, "\n");
+  		    gnuplot_write_matrix(handle2, stats(Range((n_firstIndex/2),(n_firstIndex/2)+count-1), Range::all()));
+    	}
 	}
 }
 

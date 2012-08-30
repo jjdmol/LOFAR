@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <APL/CR_Protocol/CRstopRequest.h>
-#include <MACIO/Marshalling.h>
+#include <MACIO/Marshalling.tcc>
 
 namespace LOFAR {
   namespace CR_Protocol {
@@ -40,26 +40,26 @@ ostream& CRstopRequest::print (ostream& os) const
 
 
 // --- marshalling methods --- 
-unsigned int CRstopRequest::getSize()
+size_t CRstopRequest::getSize()
 {
-	return(MSH_STRING_SIZE(stationList) + MSH_STRING_SIZE(rcuList) + stopTime.getSize());
+	return(MSH_size(stationList) + MSH_size(rcuList) + stopTime.getSize());
 }
 
-unsigned int CRstopRequest::pack  (void* buffer)
+size_t CRstopRequest::pack  (char* buffer) const
 {
-	unsigned int	offset(0);
-	MSH_PACK_STRING(buffer, offset, stationList);	
-	MSH_PACK_STRING(buffer, offset, rcuList);	
-	offset += stopTime.pack((char*)(buffer)+offset);
+	size_t offset = 0;
+	MSH_pack(buffer, offset, stationList);	
+	MSH_pack(buffer, offset, rcuList);	
+	offset += stopTime.pack(buffer + offset);
 	return (offset);
 }
-
-unsigned int CRstopRequest::unpack(void *buffer)
+ 
+size_t CRstopRequest::unpack(const char *buffer)
 {
-	unsigned int	offset(0);
-	MSH_UNPACK_STRING(buffer, offset, stationList);	
-	MSH_UNPACK_STRING(buffer, offset, rcuList);	
-	offset += stopTime.unpack((char*)(buffer)+offset);
+	size_t offset = 0;
+	MSH_unpack(buffer, offset, stationList);	
+	MSH_unpack(buffer, offset, rcuList);	
+	offset += stopTime.unpack(buffer + offset);
 	return (offset);
 }
 
