@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 #include <Delays.h>
+#include <Scheduling.h>
 #include <Common/LofarLogger.h>
 #include <Common/PrettyUnits.h>
 #include <Interface/Exceptions.h>
@@ -133,6 +134,10 @@ void Delays::init()
 void Delays::mainLoop()
 {
   LOG_DEBUG("Delay compensation thread running");
+
+#if defined HAVE_BGP_ION
+  runOnCore0();
+#endif
 
   init();
 

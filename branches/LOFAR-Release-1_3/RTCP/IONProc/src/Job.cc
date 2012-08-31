@@ -32,6 +32,7 @@
 #include <ION_Allocator.h>
 #include <GlobalVars.h>
 #include <Job.h>
+#include <Scheduling.h>
 #include <OutputSection.h>
 #include <StreamMultiplexer.h>
 #include <Stream/SocketStream.h>
@@ -379,6 +380,10 @@ void Job::claimResources()
 
 void Job::jobThread()
 {
+#if defined HAVE_BGP_ION
+  runOnCore0();
+#endif
+
   if (myPsetNumber == 0 || itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
     createCNstreams();
     createIONstreams();

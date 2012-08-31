@@ -44,7 +44,7 @@ class SubbandWriter
     SubbandWriter(const Parset &, OutputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix);
 
   private:
-    static const unsigned	     maxReceiveQueueSize = 5;
+    static const unsigned	     maxReceiveQueueSize = 30;
 
     Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
 
