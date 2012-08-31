@@ -43,6 +43,7 @@
 #include <AOFlagger/gui/strategyframes/foreachcomplexcomponentframe.h>
 #include <AOFlagger/gui/strategyframes/frequencyconvolutionframe.h>
 #include <AOFlagger/gui/strategyframes/fringestoppingframe.h>
+#include <AOFlagger/gui/strategyframes/highpassfilterframe.h>
 #include <AOFlagger/gui/strategyframes/iterationframe.h>
 #include <AOFlagger/gui/strategyframes/plotframe.h>
 #include <AOFlagger/gui/strategyframes/resamplingframe.h>
@@ -296,6 +297,9 @@ void EditStrategyWindow::onSelectionChanged()
 				break;
 			case FrequencyConvolutionActionType:
 				showRight(new FrequencyConvolutionFrame(*static_cast<rfiStrategy::FrequencyConvolutionAction*>(selectedAction), *this));
+				break;
+			case HighPassFilterActionType:
+				showRight(new HighPassFilterFrame(*static_cast<rfiStrategy::HighPassFilterAction*>(selectedAction), *this));
 				break;
 			case PlotActionType:
 				showRight(new StrategyPlotFrame(*static_cast<rfiStrategy::PlotAction*>(selectedAction), *this));

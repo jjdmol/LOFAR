@@ -233,6 +233,20 @@ class SampleRow {
 				mean += _values[i];
 			return mean / _size;
 		}
+		numl_t MeanWithMissings() const
+		{
+			numl_t mean = 0.0;
+			size_t count = 0;
+			for(size_t i = 0; i<_size;++i)
+			{
+				if(std::isfinite(_values[i]))
+				{
+					mean += _values[i];
+					++count;
+				}
+			}
+			return mean / count;
+		}
 		numl_t StdDev(double mean) const
 		{
 			numl_t stddev = 0.0;
@@ -277,6 +291,35 @@ class SampleRow {
 			for(unsigned i=0;i<_size;++i)
 				_values[i] -= source->_values[i];
 		}
+		num_t WinsorizedMean() const
+		{
+			num_t *data = new num_t[_size];
+			memcpy(data, _values, sizeof(num_t) * _size);
+			std::sort(data, data + _size, numLessThanOperator);
+			size_t lowIndex = (size_t) floor(0.1 * _size);
+			size_t highIndex = (size_t) ceil(0.9 * _size)-1;
+			num_t lowValue = data[lowIndex];
+			num_t highValue = data[highIndex];
+			delete[] data;
+
+			// Calculate mean
+			num_t mean = 0.0;
+			for(size_t x = 0;x < _size; ++x) {
+				const num_t value = data[x];
+				if(value < lowValue)
+					mean += lowValue;
+				else if(value > highValue)
+					mean += highValue;
+				else
+					mean += value;
+			}
+			return mean / (num_t) _size;
+		}
+		num_t WinsorizedMeanWithMissings() const
+		{
+			SampleRowPtr row = CreateWithoutMissings();
+			return row->WinsorizedMean();
+		}
 	private:
 		explicit SampleRow(size_t size) :
 			_size(size), _values(new num_t[_size])
@@ -294,6 +337,19 @@ class SampleRow {
 		}
 		size_t _size;
 		num_t *_values;
+		
+		// We need this less than operator, because the normal operator
+		// does not enforce a strictly ordered set, because a<b != !(b<a) in the case
+		// of nans/infs.
+		static bool numLessThanOperator(const num_t &a, const num_t &b) {
+			if(std::isfinite(a)) {
+				if(std::isfinite(b))
+					return a < b;
+				else
+					return true;
+			}
+			return false;
+		}
 };
 
 #endif

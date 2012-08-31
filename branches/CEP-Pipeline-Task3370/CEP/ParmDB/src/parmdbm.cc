@@ -37,6 +37,7 @@
 #include <Common/SystemUtil.h>
 #include <Common/ReadLine.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/MUString.h>
@@ -50,6 +51,9 @@
 using namespace casa;
 using namespace LOFAR;
 using namespace BBS;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 ParmDB* parmtab;
 
@@ -71,6 +75,7 @@ enum PTCommand {
   UPDDEF,
   DELDEF,
   EXPORT,
+  CHECKSHAPE,
   HELP,
   QUIT
 };
@@ -162,6 +167,7 @@ void showHelp()
   cerr << " names [parmname_pattern]" << endl;
   cerr << " add    parmname          domain=  valuespec" << endl;
   cerr << " remove parmname_pattern [domain=]" << endl;
+  cerr << " checkshape [parmname_pattern]  (check consistency of parm shapes)" << endl;
   cerr << endl;
   cerr << "  domain gives an N-dim domain (usually N is 2) as:" << endl;
   cerr << "       domain=[stx,endx,sty,endy,...]" << endl;
@@ -224,6 +230,8 @@ PTCommand getCommand (string& line)
     cmd = CREATE;
   } else if (sc == "set") {
     cmd = SET;
+  } else if (sc == "checkshape") {
+    cmd = CHECKSHAPE;
   } else if (sc == "help") {
     cmd = HELP;
   } else if (sc == "stop"  ||  sc == "quit"  || sc == "exit") {
@@ -574,10 +582,13 @@ void newParm (const string& parmName, const KeyValueMap& kvmap, ostream& ostr)
       mask.assign (Array<bool>(shape, bmask.storage(), SHARE));
     }
   } else {
-    if (nsize > 0  &&  type != ParmValue::Scalar) {
-      ASSERTSTR (shp.isEqual(shape),
-                 "Parameter has more domains; coeff shape cannot be changed");
-    }
+    /// Outcomment because old shape is always [1,1]
+    /// The columns NX and NY are not filled by ParmDBCasa.
+    ///    if (nsize > 0  &&  type != ParmValue::Scalar) {
+    ///      ASSERTSTR (shp.isEqual(shape),
+    ///                 "Parameter has more domains; new coeff shape " << shp
+    ///                 << " mismatches " << shape);
+    ///    }
     shape = shp;
     size = nsize;
   }
@@ -589,11 +600,11 @@ void newParm (const string& parmName, const KeyValueMap& kvmap, ostream& ostr)
   if (pvset.getType() != ParmValue::Scalar) {
     pval->setCoeff (vals);
   } else {
-      RegularAxis xaxis(domain.lowerX(), domain.upperX(), shape[0], true);
-      RegularAxis yaxis(domain.lowerY(), domain.upperY(), shape[1], true);
-      pval->setScalars (Grid(Axis::ShPtr(new RegularAxis(xaxis)),
-                             Axis::ShPtr(new RegularAxis(yaxis))),
-                        vals);
+    RegularAxis xaxis(domain.lowerX(), domain.upperX(), shape[0], true);
+    RegularAxis yaxis(domain.lowerY(), domain.upperY(), shape[1], true);
+    pval->setScalars (Grid(Axis::ShPtr(new RegularAxis(xaxis)),
+                           Axis::ShPtr(new RegularAxis(yaxis))),
+                      vals);
   }
   // Set the errors if given.
   if (kvmap.isDefined ("errors")) {
@@ -796,6 +807,41 @@ int exportParms (const ParmMap& parmset, ParmDB& newtab, ostream& ostr)
   return ncopy;
 }
 
+void checkShape (const ParmMap& parmset, ostream& ostr)
+{
+  vector<string> errNames;
+  for (ParmMap::const_iterator iter = parmset.begin();
+       iter != parmset.end(); ++iter) {
+    const string& name = iter->first;
+    const ParmValueSet& pset = iter->second;
+    // Only check if multiple polcs.
+    if (pset.size() > 1  &&  pset.getType() != ParmValue::Scalar) {
+      uint nx = pset.getParmValue(0).nx();
+      uint ny = pset.getParmValue(0).ny();
+      for (uint i=1; i<pset.size(); ++i) {
+        if (pset.getParmValue(i).nx() != nx  ||
+            pset.getParmValue(i).ny() != ny) {
+          errNames.push_back (name);
+          break;
+        }
+      }
+    }
+  }
+  if (errNames.empty()) {
+    ostr << "All parameters have consistent value shapes" << endl;
+  } else {
+    ostr << errNames.size() << " parameter";
+    if (errNames.size() == 1) {
+      ostr << " has";
+    } else {
+      ostr << "s have";
+    }
+    ostr << " non-scalar values with inconsistent shape:" << endl;
+    writeVector (ostr, errNames, ", ", "    ", "");
+    ostr << endl;
+  }
+}
+
 void doIt (bool noPrompt, ostream& ostr)
 {
   parmtab = 0;
@@ -872,7 +918,7 @@ void doIt (bool noPrompt, ostream& ostr)
             // For export and list functions the parmname defaults to *.
             // Otherwise a parmname or pattern must be given.
             if (cmd!=RANGE && cmd!=SHOW && cmd!=SHOWDEF &&
-                cmd!=NAMES && cmd!=NAMESDEF) {
+                cmd!=NAMES && cmd!=NAMESDEF && cmd!=CHECKSHAPE) {
               ASSERTSTR (!parmName.empty(), "No parameter name given");
             } else if (parmName.empty()) {
               parmName = "*";
@@ -918,6 +964,10 @@ void doIt (bool noPrompt, ostream& ostr)
                 ostr << "Deleted " << nrvalrec << " value records (of "
                      << nrparm << " parms)" << endl;
               }
+            } else if (cmd==CHECKSHAPE) {
+              ParmMap parmset;
+              parmtab->getValues (parmset, parmName, Box());
+              checkShape (parmset, ostr);
             } else if (cmd==EXPORT) {
               // Read the table type and name and append switch.
               KeyValueMap kvmap = KeyParser::parse (line);
@@ -952,8 +1002,8 @@ void doIt (bool noPrompt, ostream& ostr)
           }
         }
       }
-    } catch (std::exception& x) {
-      cerr << "Exception: " << x.what() << endl;
+    } catch (std::exception& ex) {
+      cerr << "Exception: " << ex.what() << endl;
     }
   }
   delete parmtab;
@@ -974,8 +1024,8 @@ int main (int argc, char *argv[])
     }
     // Print an extra line to be sure the shell prompt is at a new line.
     cout << endl;
-  } catch (std::exception& x) {
-    cerr << "Caught exception: " << x.what() << endl;
+  } catch (Exception& ex) {
+    cerr << "Caught exception: " << ex << endl;
     return 1;
   }
   

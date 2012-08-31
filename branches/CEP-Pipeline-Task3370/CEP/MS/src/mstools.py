@@ -1,22 +1,34 @@
 import os
 import os.path
 import re
+import numpy as np
 import lofar.parameterset
 
 """ Find files on nodes in a cluster matching the given pattern """
 def findFiles (msPattern, lsOption='', cluster=''):
+    # First find out where ls_nostderr is located.
+    pipe = os.popen ('sh -c "which ls_nostderr"')
+    lsloc = ''
+    # Note: sh returns nothing if which does not find the program.
+    for line in pipe:
+        lsloc = line[:-1]     # discard \n
+    pipe.close()
+    if lsloc == '':
+        lsloc = 'ls'
+    # Make regex for lines containing info and errors.
     hostline    = re.compile ('^-+ +[^ ]+ +-+$')
     hostline1   = re.compile ('^-+ +')
     hostline2   = re.compile (' +-+$')
-    nomatch     = ['ls: No match.',
-                   'ls: cannot access .*: No such file or directory',
+    nomatch     = [lsloc + ': No match.',
+                   lsloc + ': cannot access .*: No such file or directory',
                    'ssh: connect to host .*: ' +
                        '(No route to host|Connection refused)',
                    'Permission denied \(publickey,keyboard-interactive\).',
                    'Warning: No xauth data; .*',
                    '/usr/bin/xauth:  error in locking authority file.*'] 
     nomatchline = re.compile ('^(%s)$' % '|'.join(nomatch))
-    pipe = os.popen ('cexec ' + cluster + ' "ls ' + lsOption + ' ' + msPattern + '"')
+    # Find matching files on all nodes.
+    pipe = os.popen ('cexec ' + cluster + ' "' + lsloc + ' ' + lsOption + ' ' + msPattern + '"')
     files = []
     hosts = []
     host = ''
@@ -164,7 +176,61 @@ def addfileglob (filename, pattern):
         return filename
     return filename + '/' + pattern
 
-def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
+
+def getSBmap (names, nsubbands):
+    """ Get the map of subband number to file name index.
+        Missing subbands have -1.
+    """
+    patt1 = re.compile ('.*_SB')
+    patt2 = re.compile ('[^0-9].*')
+    sbnrs = np.array([int(patt2.sub ('', patt1.sub('',x))) for x in names])
+    firstSB = 0
+    if len(sbnrs) == 0:
+        print 'no subbands found'
+    else:
+        firstSB = sbnrs[0] / nsubbands * nsubbands
+        if len(sbnrs) != nsubbands:
+            print 'subbands are missing for', names[0]
+    sbs = [-1 for i in range(nsubbands)]
+    for i in range(len(sbnrs)):
+        sbs[sbnrs[i] % nsubbands] = i
+    if len(sbnrs) > 0:
+        for i in range(len(sbs)):
+            if sbs[i] < 0:
+                print '  subband', firstSB+i, 'seems to be missing'
+    return (sbs,firstSB)
+
+def getNamesSkip (locs, names, nsubbands):
+    """Get the names of all data products and fake missing ones"""
+    # Get the mapping of subband to index in the locs/names lists.
+    # Missing subbands are reported.
+    sbmaps=[getSBmap(nms, nsubbands) for nms in names]
+    # If a subband is missing for one data product, set to missing for all.
+    skip = [0 for i in range(len(sbmaps[0][0]))]
+    for (sbmap,firstSB) in sbmaps:
+        for i in range(len(sbmap)):
+            if sbmap[i] < 0:
+                skip[i] = 1
+    # Get location and name of all data products. Fake missing ones.
+    newlocnm = []
+    for i in range(len(sbmaps)):
+        newlocs  = []
+        newnames = []
+        j = 0
+        (sbmap,firstSB) = sbmaps[i]
+        for inx in sbmap:
+            if inx >= 0:
+                newlocs.append  (locs[i][inx])
+                newnames.append (names[i][inx])
+            else:
+                newlocs.append  ('')
+                newnames.append ('SB%03i-notfound' % (firstSB+j))
+            j += 1
+        newlocnm.append ((newlocs, newnames))
+    return (newlocnm,skip)
+
+
+def expandps (parsetin, parsetout, keymap, nsubbands, ngroups=0, nodeindex=0, nodes=[]):
     """ Expand dataset names in a parset file
 
     The names of the input and possible output datasets are expanded to create
@@ -202,14 +268,17 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
         | <SEQ> is a 3 digit sequence number (000, 001, ...) useful for the
                 imaging pipeline.
         | <OBSID> is the obsid part of <BN.> (till first _)
-        | <SAP> is the SAP part of <BN.> (till next _)
-        | <SB> is the obsid part of <BN.> (till next _)
-        | <TYPE> is the obsid part of <BN.> (after last _)
+        | <SAP> is the subarray pointing part of <BN.> (till next _)
+        | <SB> is the subband part of <BN.> (till next _)
+        | <TYPE> is the dataset type part of <BN.> (after last _)
         Instead of an input parameter name, it is possible to directly give
         the output location. by passing it as a list containing one element.
      nsubbands
-      If > 0, the number of subbands in a subband group
-      (i.e., the number of subbands to combine in an image).
+      The number of subbands in an observation.
+      It is used to match target and calibrator observations.
+     ngroups
+      If > 0, the number of subband groups (i.e. the number of images).
+      Thus nsubbands/ngroups subbands are combined in an image.
      nodeindex
       The index of the subband in a subband group whose node will be used
       to do the imaging on (default is 0).
@@ -245,9 +314,10 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
     in the 'in' keyword.
     For example::
       
-      keymap = {'in':  (('msin',  'Input_Correlated'),
-                        ('pbin',  'Input_InstrumentModel')),
-                'out': (('msout', 'Output_Correlated'))}
+      keymap = {'in':  [('msin',  'Input_Correlated'),
+                        ('pbin',  'Input_InstrumentModel')],
+                'out': [('msout', 'Output_Correlated')]}
+      nsubbands = 80
       msin = /data/scratch/pipeline/L32517/*_dppp.MS
       pbin = /data/scratch/pipeline/L32517/*.instrument
       msout = /data/scratch/pipeline/L32517/<BN.>_cal.MS
@@ -261,9 +331,10 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
     and which node should be used to do the imaging on/
     For example::
       
-      keymap = {'in':  (('msin',  'Input_Correlated'))}
-                'out': (('imgout', 'Output_Image'))}
-      nsubbands = 10
+      keymap = {'in':  [('msin',  'Input_Correlated')]}
+                'out': [('imgout', 'Output_Image')]}
+      nsubbands = 80
+      ngroups = 8
       nodeindex = 0
       msin = [/data/scratch/pipeline/L32517/*_dppp_cal.MS,
               /data/scratch/pipeline/L32519/*_dppp_cal.MS]
@@ -273,40 +344,41 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
     # Open parset and get all keywords.
     ps = lofar.parameterset.parameterset (parsetin)
     pskeys = ps.keys()
-    # See if nsubbands parameter is given; otherwise set to 1.
-    havesubbands = True
-    if nsubbands <= 0:
-        havesubbands = False
-        nsubbands = 1
-        # Check and initialize.
-    if nodeindex < 0  or  nodeindex >= nsubbands:
-        raise ValueError, "Argument nsubbands or nodeindex has an invalid value"
-    nfiles = -1
-    nslice = -1
-    locations=[]
-    filenames=[]
-    inputOK = True
+    # See if ngroups parameter is given.
+    havegroups = False
+    nsbpergroup = 1
+    if ngroups > 0:
+        nsbpergroup = nsubbands/ngroups
+        havegroups  = True
+    # Check and initialize.
+    if nodeindex < 0  or  nodeindex >= nsbpergroup:
+        raise ValueError, "Argument ngroups or nodeindex has an invalid value"
 
     # Process input keywords. They must be present.
     inkeys = keymap["in"]
     nrproc = 1
+    keylist   = []
+    locslist  = []
+    nameslist = []
+    skiplist  = []
     for (keyin,keyout) in inkeys:
+        keylist.append (keyout)
         # If a string, find keyin in the parset.
         # Otherwise it defines the glob patterns.
         if isinstance(keyin, str):
             if keyin not in pskeys:
                 raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
-            # Get the file name pattern
+            # Get the file name pattern(s)
             patterns = ps.getStringVector(keyin)
             ps.remove (keyin)
         else:
             patterns = keyin
-        locs  = []
-        names = []
         for patt in patterns:
-            # Get all nodes and file names
+            locs  = []
+            names = []
+            # Get all nodes and file names matching the pattern
             (fnodes,files) = findDirs(patt)
-            ##(fnodes,files) = (['locus1','locus2'], ['/data/L1/L1a.MS','/data/L1/L1b.MS'])
+            ##(fnodes,files) = (['locus1','locus2'], ['/data/L1/_SB9.MS','/data/L1/_SB12.MS'])
             # Turn into a list of pairs (instead of pair of lists) and sort
             filesnodes = [(os.path.basename(files[i]),
                            os.path.dirname(files[i]),
@@ -316,35 +388,47 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
             for (file,dir,node) in filesnodes:
                 locs.append  (node + ':' + dir + '/')
                 names.append (file)
-        nf = len(names)
-        if nfiles < 0:
-            # First input keyword
-            nfiles = nf
-            nslice = len(patterns)
-            locations = locs
-            filenames = names
-        elif nf != nfiles:
-            inputOK = False
-            print "Error: " + str(nf) + " of files found for " + str(patterns) + " differs from first pattern for which " + str(nfiles) + " files were found"
-        # Add prefix to output parameter name
-        # Add skip=0 for each product.
-        newkey = 'ObsSW.Observation.DataProducts.' + keyout
-        ps.replace (newkey + '.locations', str(locs));
-        ps.replace (newkey + '.filenames', str(names));
-        ps.replace (newkey + '.skip', str([0 for x in locs]));
+            if havegroups:
+                # Process if there are multiple patterns (i.e. slices).
+                newlocnm,skip = getNamesSkip ([locs], [names], nsubbands)
+                locslist.extend (newlocnm[0][0])
+                nameslist.extend (newlocnm[0][1])
+                skiplist.extend (skip)
+            else:
+                # Append to list if no slices, thus possibly multiple inputs.
+                locslist.append (locs)
+                nameslist.append (names)
 
-    # Write nsubbands if needed.
-    if havesubbands:
-        ps.replace ('subbands_per_image', str(nsubbands));
-        ps.replace ('slices_per_image', str(nslice));
+    # Get all dataset names and locations; fake missing ones.
+    nslice = 1
+    if not havegroups:
+        (newlocnm,skip) = getNamesSkip (locslist, nameslist, nsubbands)
+        locslist  = newlocnm[0][0]
+        nameslist = newlocnm[0][1]
+        skiplist  = skip
+        # Write all data products.
+        for i in range(len(keylist)):
+            newkey = 'ObsSW.Observation.DataProducts.' + keylist[i]
+            ps.replace (newkey + '.locations', str(newlocnm[i][0]))
+            ps.replace (newkey + '.filenames', str(newlocnm[i][1]))
+            ps.replace (newkey + '.skip', str(skip))
+    else:
+        nslice = len(nameslist)/nsubbands
+        newkey = 'ObsSW.Observation.DataProducts.' + keylist[0]
+        ps.replace (newkey + '.locations', str(locslist))
+        ps.replace (newkey + '.filenames', str(nameslist))
+        ps.replace (newkey + '.skip', str(skiplist))
+        # Write nsbpergroup and nslice.
+        ps.replace ('subbands_per_image', str(nsbpergroup))
+        ps.replace ('slices_per_image', str(nslice))
 
     # Process output keywords if they are present.
     if 'out' in keymap:
-        if len(filenames) == 0:
+        if len(nameslist) == 0:
             raise ValueError, "No input datasets have been defined"
-        inkeys = keymap["out"]
+        outkeys = keymap["out"]
         nrproc += 1
-        for (keyin,keyout) in inkeys:
+        for (keyin,keyout) in outkeys:
             if isinstance(keyin, str):
                 if keyin not in pskeys:
                     raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
@@ -356,6 +440,7 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
                 name = keyin[0]
             locs  = []
             names = []
+            skips = []
             # Create output for all input names replacing tags like <BN>.
             re0 = re.compile ('<DN>')
             re1 = re.compile ('<BN>')
@@ -366,11 +451,29 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
             re6 = re.compile ('<SAP>')
             re7 = re.compile ('<SB>')
             re8 = re.compile ('<TYPE>')
-            for i in range(len(filenames) / (nslice*nsubbands)):
-                inx = i*nslice*nsubbands + nodeindex
-                locparts = locations[inx].split(':', 1)
+            # Loop over all output products
+            for i in range(len(nameslist) / (nslice*nsbpergroup)):
+                # Try to use first input name for this output
+                inx = i*nsbpergroup + nodeindex
+                loc = locslist[inx]
+                fil = nameslist[inx]
+                # Determine if all inputs for this output have skip=1.
+                # Also determine first valid output name and location.
+                skip = skiplist[inx]
+                for j in range(nslice):
+                    if skip == 0:
+                        break
+                    inx = j*nsubbands + i*nsbpergroup;
+                    for k in range(nsbpergroup):
+                        if skiplist[inx+k] == 0:
+                            loc  = locslist[inx+k]
+                            fil  = nameslist[inx+k]
+                            skip = 0
+                            break
+                # Split location and name.
+                locparts = loc.split(':', 1)
                 locparts.append('')   # make sure at least 2 entries
-                filparts = filenames[inx].split('.', 1)
+                filparts = fil.split('.', 1)
                 filparts.append('')   # make sure at least 2 entries
                 # If given, use nodes to find the node to run on.
                 if len(nodes) > 0:
@@ -384,7 +487,7 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
                 bnparts.append('')
                 bnparts.append('')
                 nm = re0.sub(locparts[1], name) # <DN>  = directory name
-                nm = re1.sub(filenames[i], nm)  # <BN>  = basename
+                nm = re1.sub(nameslist[i], nm)  # <BN>  = basename
                 nm = re2.sub(filparts[0], nm)   # <BN.> = basename till first .
                 nm = re3.sub(filparts[1], nm)   # <.BN> = basename after first .
                 nm = re4.sub('%03i'%i, nm)      # <SEQ> = seqnr
@@ -394,10 +497,11 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
                 nm = re8.sub(bnparts[3], nm)    # <TYPE> = rest of basename
                 names.append (os.path.basename(nm))
                 locs.append (locparts[0] + ':' + os.path.dirname(nm) + '/')
+                skips.append (skip)   
             newkey = 'ObsSW.Observation.DataProducts.' + keyout
-            ps.replace (newkey + '.locations', str(locs));
-            ps.replace (newkey + '.filenames', str(names));
-            ps.replace (newkey + '.skip', str([0 for x in locs]));
+            ps.replace (newkey + '.locations', str(locs))
+            ps.replace (newkey + '.filenames', str(names))
+            ps.replace (newkey + '.skip', str(skips))
 
     # Check if all keymap keywords have been processed.
     if nrproc != len(keymap):
@@ -405,5 +509,3 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
     # Write the resulting parset.
     ps.writeFile (parsetout)
     print "Created output parset " + parsetout
-    if not inputOK:
-        raise ValueError, "Number of files found for input patterns mismatches"

@@ -123,8 +123,14 @@ void ForEachMSAction::writeHistory(const std::string &filename)
 				strategy = static_cast<const Strategy*>(root);
 		}
 		AOLogger::Debug << "Adding strategy to history table of MS...\n";
-		if(strategy != 0)
-			ms.AddAOFlaggerHistory(*strategy, _commandLineForHistory);
+		if(strategy != 0) {
+			try {
+				ms.AddAOFlaggerHistory(*strategy, _commandLineForHistory);
+			} catch(std::exception &e)
+			{
+				AOLogger::Warn << "Failed to write history to MS: " << e.what() << '\n';
+			}
+		}
 		else
 			AOLogger::Error << "Could not find root strategy to write to Measurement Set history table!\n";
 	}

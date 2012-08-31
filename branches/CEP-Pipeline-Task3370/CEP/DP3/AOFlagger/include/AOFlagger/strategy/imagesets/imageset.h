@@ -65,13 +65,18 @@ namespace rfiStrategy {
 			: _data(data), _metaData(metaData), _index(0)
 			{
 			}
+			BaselineData(TimeFrequencyMetaDataCPtr metaData)
+			: _data(), _metaData(metaData), _index(0)
+			{
+			}
 			BaselineData()
 			: _data(), _metaData(), _index(0)
 			{
 			}
 			BaselineData(const BaselineData &source)
-			: _data(source._data), _metaData(source._metaData), _index(source._index->Copy())
+			: _data(source._data), _metaData(source._metaData), _index(0)
 			{
+				if(source._index != 0) _index = source._index->Copy();
 			}
 			~BaselineData()
 			{
@@ -89,7 +94,7 @@ namespace rfiStrategy {
 			const TimeFrequencyData &Data() const { return _data; }
 			void SetData(const TimeFrequencyData &data) { _data = data; }
 			
-			TimeFrequencyMetaDataCPtr MetaData() { return _metaData; }
+			TimeFrequencyMetaDataCPtr MetaData() const { return _metaData; }
 			void SetMetaData(TimeFrequencyMetaDataCPtr metaData) { _metaData = metaData; }
 
 			const ImageSetIndex &Index() const { return *_index; }

@@ -501,6 +501,23 @@ class Opts(object):
                                  "3-, or 4-D cube. The detection image and the main"\
                                  "image must have the same size and be registered.",
                              group = "advanced_opts")
+    do_mc_errors = Bool(False,
+                             doc = "Estimate uncertainties for 'M'-type sources using Monte "\
+                                "Carlo method\n"\
+                                "If True, uncertainties on the sizes and "\
+                                "positions of 'M'-type sources "\
+                                "due to uncertainties in the constituent Gaussians are "\
+                                "estimated using a Monte Carlo technique. These "\
+                                "uncertainties are added in quadrature with those "\
+                                "calculated using Condon (1997). If False, "\
+                                "these uncertainties are ignored, and errors are "\
+                                "calculated using Condon (1997) only.\n"\
+                                "Enabling this option will result in longer run "\
+                                "times if many 'M'-type sources are present, but "\
+                                "should give better estimates of the uncertainites, "
+                                "particularly for complex sources composed of many "\
+                                "Gaussians.",
+                             group = "advanced_opts")
 
     #--------------------------------ADAPTIVE RMS_BOX OPTIONS--------------------------------
     rms_box_bright = Option(None, Tuple(Int(), Int()),
@@ -713,10 +730,6 @@ class Opts(object):
                              doc = 'Make separate plots of each island during '\
                                  'fitting (for large images, this may take '\
                                  'a long time and a lot of memory)',
-                             group = "output_opts")
-    plot_pyramid = Bool(False,
-                             doc = 'Make separate plots of each pyramid source '\
-                                 'during wavelet fitting',
                              group = "output_opts")
     plot_allgaus = Bool(False,
                              doc = 'Make a plot of all Gaussians at the end',
@@ -1115,9 +1128,6 @@ class Opts(object):
                              group = "hidden")
     pi_image = Bool(False,
                              doc = "Show the polarized intensity image",
-                             group = "hidden")
-    pyramid_srcs = Bool(False,
-                             doc = "Plot the wavelet pyramidal sources",
                              group = "hidden")
     source_seds = Bool(False,
                              doc = "Plot the source SEDs and best-fit spectral "\

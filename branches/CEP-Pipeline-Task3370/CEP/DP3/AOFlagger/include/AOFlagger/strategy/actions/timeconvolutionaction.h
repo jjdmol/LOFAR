@@ -33,13 +33,16 @@
 
 #include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/ffttools.h>
+#include <AOFlagger/util/progresslistener.h>
+
+#include <boost/concept_check.hpp>
 
 namespace rfiStrategy {
 
 	class TimeConvolutionAction : public Action
 	{
 		public:
-			enum Operation { SingleSincOperation, SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation };
+			enum Operation { SingleSincOperation, SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation, FFTSincOperation };
 			
 			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true), _isSincScaleInSamples(false), _alwaysRemove(false), _useHammingWindow(false), _iterations(1), _channelAveragingSize(4)
 			{
@@ -65,6 +68,9 @@ namespace rfiStrategy {
 						break;
 					case IterativeExtrapolatedSincOperation:
 						return "Iterative projected extrapolated sinc";
+						break;
+					case FFTSincOperation:
+						return "FFT sinc";
 						break;
 					default:
 						return "?";
@@ -104,6 +110,17 @@ namespace rfiStrategy {
 						newRevisedData = TimeFrequencyData(data.Polarisation(), real, imaginary);
 					}
 					break;
+					case FFTSincOperation:
+						TimeFrequencyData data = artifacts.ContaminatedData();
+						TimeFrequencyData *realData = data.CreateTFData(TimeFrequencyData::RealPart);
+						TimeFrequencyData *imagData = data.CreateTFData(TimeFrequencyData::ImaginaryPart);
+						Image2DPtr real = Image2D::CreateCopy(realData->GetSingleImage());
+						Image2DPtr imaginary = Image2D::CreateCopy(imagData->GetSingleImage());
+						delete realData;
+						delete imagData;
+						PerformFFTSincOperation(artifacts, real, imaginary);
+						newRevisedData = TimeFrequencyData(data.Polarisation(), real, imaginary);
+						break;
 				}
 				
 				if(_operation == SingleSincOperation || _operation == SincOperation || _operation == ProjectedSincOperation)
@@ -176,6 +193,16 @@ private:
 				numl_t
 					**fSinTable,
 					**fCosTable;
+					
+				IterationData() :
+					artifacts(0), width(0), fourierWidth(0), rangeStart(0), rangeEnd(0),
+					vZeroPos(0), startXf(0), endXf(0),
+					maxDist(0.0),
+					rowRValues(0), rowIValues(0), rowUPositions(0), rowVPositions(0),
+					fourierValuesReal(0), fourierValuesImag(0), channelMaxDist(0),
+					fSinTable(0), fCosTable(0)
+				{
+				}
 			};
 
 			Image2DPtr PerformSingleSincOperation(ArtifactSet &artifacts) const
@@ -213,6 +240,8 @@ private:
 				
 				return newImage;
 			}
+			
+			void PerformFFTSincOperation(ArtifactSet &artifacts, Image2DPtr real, Image2DPtr imag) const;
 			
 			Image2DPtr PerformSincOperation(ArtifactSet &artifacts) const
 			{

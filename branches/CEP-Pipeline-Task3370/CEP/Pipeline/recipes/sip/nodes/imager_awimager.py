@@ -68,7 +68,7 @@ class imager_awimager(LOFARnodeTCP):
             size_converter = 4.0 #TODO debugging tool scale the image and cellsize to allow quicker running of the awimager
             # Calculate awimager parameters that depend on measurement set                 
             cell_size, npix, w_max, w_proj_planes = \
-                self._calc_par_from_measurement(concatenated_measurement_set, parset, size_converter)
+                self._calc_par_from_measurement(concatenated_measurement_set, parset)
 
 
 
@@ -382,7 +382,7 @@ class imager_awimager(LOFARnodeTCP):
 
         return fov, station_diameter
 
-    def _calc_par_from_measurement(self, measurement_set, parset, size_converter):
+    def _calc_par_from_measurement(self, measurement_set, parset):
         """
         calculate and format some parameters that are determined runtime based
         on values in the measurement set:
@@ -392,7 +392,10 @@ class imager_awimager(LOFARnodeTCP):
         4. The number of projection planes (if > 512 the ask George heald 
         
         """
-        baseline_limit = get_parset(parset).getInt('maxbaseline')
+        parset_object = get_parset(parset)
+        baseline_limit = parset_object.getInt('maxbaseline')
+        # get parset but round up to nearest pow 2
+        parset_npix = self._nearest_ceiled_power2(parset_object.getInt('npix'))
 
         arc_sec_in_degree = 3600
         arc_sec_in_rad = (180.0 / math.pi) * arc_sec_in_degree
@@ -420,6 +423,7 @@ class imager_awimager(LOFARnodeTCP):
         self.logger.debug("Calculated fov and station diameter baseline:"
                           " {0} , {1}".format(fov, station_diameter))
 
+        # 'optimal' npix based on measurement set calculations
         npix = (arc_sec_in_degree * fov) / cell_size
         npix = self._nearest_ceiled_power2(npix)
 
@@ -439,13 +443,23 @@ class imager_awimager(LOFARnodeTCP):
         if w_proj_planes > 511:
             raise Exception("The number of projections planes for the current" +
                             "measurement set is to large.")  #FIXME: Ask george 
-        # Do debugging size conversion ( to decrease image size for fater testing)
-        if npix <= 256: #Do not make small images smaller
-            size_converter = 1
-        elif npix == 512: #only increase one size step for 512 npix
-            size_converter = min(2, size_converter)
+
+        # if the npix from the parset is different to the ms calculations,
+        # calculate a sizeconverter value  (to be applied to the cellsize)
+        size_converter = 1
+        if npix != parset_npix:
+            size_converter = npix / parset_npix
+            npix = parset_npix
+
+        if npix < 256:
+            self.logger.warn("Using a image size smaller then 256x256:"
+                " This leads to problematic imaging in some instances!!")
+
         cell_size_formatted = str(int(round(cell_size * size_converter))) + 'arcsec'
-        npix = int(float(npix) / size_converter)
+        npix = int(npix)
+        self.logger.info("Using the folowing calculated image"
+            " properties: npix: {0}, cell_size: {1}".format(
+              npix, cell_size_formatted))
         return cell_size_formatted, npix, str(w_max), str(w_proj_planes)
 
 

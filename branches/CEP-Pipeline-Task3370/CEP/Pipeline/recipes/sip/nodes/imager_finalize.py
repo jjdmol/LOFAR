@@ -115,6 +115,9 @@ class imager_finalize(LOFARnodeTCP):
 
                 return 1
 
+            self.outputs["hdf5"] = "succes"
+            self.outputs["image"] = output_image
+
         return 0
 
 

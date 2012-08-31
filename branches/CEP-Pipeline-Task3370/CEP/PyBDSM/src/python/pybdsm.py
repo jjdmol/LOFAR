@@ -388,9 +388,8 @@ def show_fit(**kwargs):
                            
     Parameters: ch0_image, rms_image, mean_image, ch0_islands,
                 gresid_image, sresid_image, gmodel_image,
-                smodel_image, pyramid_srcs, source_seds,
-                ch0_flagged, pi_image, psf_major, psf_minor,
-                psf_pa
+                smodel_image, source_seds, ch0_flagged, pi_image, 
+                psf_major, psf_minor, psf_pa
 
     For more information about a parameter, use help.  E.g.,
       > help 'ch0_image'
@@ -414,9 +413,8 @@ def show_fit(**kwargs):
         
 show_fit.arg_list = ['ch0_image', 'rms_image', 'mean_image', 'ch0_islands',
                      'gresid_image', 'sresid_image', 'gmodel_image',
-                     'smodel_image', 'pyramid_srcs', 'source_seds',
-                     'ch0_flagged', 'pi_image', 'psf_major', 'psf_minor',
-                     'psf_pa']
+                     'smodel_image', 'source_seds', 'ch0_flagged', 'pi_image', 
+                     'psf_major', 'psf_minor', 'psf_pa']
 show_fit.use_groups = False
 
     
@@ -664,20 +662,31 @@ def _opts_completer(self, event):
 # asking them to update.
 from lofar.bdsm._version import __version__, __revision__, changelog
 
-# Query the STRW FTP server. 
+# Query the STRW FTP server. Tar file must be named "PyBDSM-version#.tar.gz":
+#   e.g., "PyBDSM-1.3.1.tar.gz".
 # Check whether called from the LOFAR CEPI/II. If so, skip check.
 import os
 aps_local_val = os.environ.get('APS_LOCAL')
 if aps_local_val == None:
     try:
         import ftplib
+        from distutils.version import StrictVersion
         f = ftplib.FTP()
         f.connect("ftp.strw.leidenuniv.nl")
         f.login()
         file_list = []
         file_list = f.nlst('pub/rafferty/PyBDSM')
         f.close()
-        if 'pub/rafferty/PyBDSM/PyBDSM-' + __version__ + '.tar.gz' not in file_list:
+        ftp_version = ''
+        for file in file_list:
+            if 'PyBDSM' in file and '.tar.gz' in file:
+                ver_start_indx = file.find('-') + 1
+                ver_end_indx = file.find('.tar.gz')
+                ftp_version = file[ver_start_indx:ver_end_indx]
+        if ftp_version == '':
+            # No matching files found, continue without message
+            pass
+        elif StrictVersion(__version__) < StrictVersion(ftp_version):
             print '\n' + '*' * 72
             print "There appears to be a newer version of PyBDSM available at:"
             print "    ftp://ftp.strw.leidenuniv.nl/pub/rafferty/PyBDSM/"

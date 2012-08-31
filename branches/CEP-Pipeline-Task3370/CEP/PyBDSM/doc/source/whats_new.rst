@@ -4,6 +4,34 @@
 What's New
 **********
 
+Version 1.3.2 (2012/08/22):
+    
+    * Fixed a bug that could cause the user-specified ``rms_box`` value to be ignored. Added an option to enable the Monte Carlo error estimation for 'M'-type sources (the ``do_mc_errors`` option), which is now disabled by default.
+    
+Version 1.3.1 (2012/07/11):
+    
+    * Fixed a bug that caused images written when ``output_all = True`` to be transposed. Added frequency information to all output images. Improved fitting robustness to prevent rare cases in which no valid Gaussians could be fit to an island. Modified the island-finding routine to handle NaNs properly.
+
+Version 1.3.0 (2012/07/03):
+    
+    * Fixed a bug in the calculation of positional errors for Gaussians.
+    
+    * Adjusted ``rms_box`` algorithm to check for negative rms values (due to interpolation with cubic spline). If negative values are found, either the box size is increased or the interpolation is done with ``order=1`` (bilinear) instead.
+
+    * Output now includes the residual image produced using only wavelet Gaussians (if any) when ``atrous_do=True`` and ``output_all=True``. 
+    
+    * Improved organization of files when ``output_all=True``. 
+    
+    * Added logging of simple statistics (mean, std. dev, skew, and kurtosis) of the residual images.
+
+    * Included image rotation (if any) in beam definition. Rotation angle can vary across the image (defined by image WCS).
+
+    * Added Sagecal output format for Gaussian catalogs.
+
+    * Added check for newer versions of the PyBDSM software ``tar.gz`` file available on ftp.strw.leidenuniv.nl.
+
+    * Added total island flux (from sum of pixels) to ``gaul`` and ``srl`` catalogs.
+
 Version 1.2 (2012/06/06):
         
     * Added option to output flux densities for every channel found by the spectral index module. 
@@ -12,7 +40,7 @@ Version 1.2 (2012/06/06):
 
     * Implemented an adaptive scaling scheme for the ``rms_box`` parameter that shrinks the box size near bright sources and expands it far from them (enabled with the ``adaptive_rms_box`` option when ``rms_box`` is None). This scheme generally results in improved rms and mean maps when both strong artifacts and extended sources are present.
 
-    *  Improved speed of Gaussian fitting to wavelet images.
+    * Improved speed of Gaussian fitting to wavelet images.
 
     * Added option to calculate fluxes within a specified aperture radius in pixels (set with the ``aperture`` option). Aperture fluxes, if measured, are output in the ``srl`` format catalogs.
 

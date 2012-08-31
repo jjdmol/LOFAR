@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <ParmDB/SourceDBCasa.h>
+#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 #include <tables/Tables/TableRecord.h>
 #include <iostream>
@@ -111,9 +112,9 @@ void testSources()
   defValues.define ("PolAng",  ParmValueSet(ParmValue(0.3)));
   defValues.define ("PolFrac", ParmValueSet(ParmValue(0.5)));
   // Add to an existing patch.
-  pdb.addSource (SourceInfo("sun", SourceInfo::SUN),
+  pdb.addSource (SourceInfo("sun", SourceInfo::POINT, "SUN"),
                  "patch1", defValues);
-  pdb.addSource (SourceInfo("src1", SourceInfo::POINT, 1, 1e9, true),
+  pdb.addSource (SourceInfo("src1", SourceInfo::POINT, "J2000", 1, 1e9, true),
                  "patch2", defValues,
                  1., -1.);
   ASSERT (t1.nrow() == 2);
@@ -121,7 +122,7 @@ void testSources()
   // Try adding to an unknown patch.
   bool ok = false;
   try {
-    pdb.addSource (SourceInfo("src100", SourceInfo::POINT), "patch20",
+    pdb.addSource (SourceInfo("src100", SourceInfo::POINT, "J2000"), "patch20",
                    defValues);
   } catch (std::exception& x) {
     cout << "Expected exception: " << x.what() << endl;
@@ -182,13 +183,15 @@ void testSources()
   // Get some sources.
   SourceInfo info1 = pdb.getSource("sun");
   ASSERT (info1.getName() == "sun");
-  ASSERT (info1.getType() == SourceInfo::SUN);
+  ASSERT (info1.getType() == SourceInfo::POINT);
+  ASSERT (info1.getRefType() == "SUN");
   ASSERT (info1.getSpectralIndexNTerms() == 0);
   ASSERT (info1.getSpectralIndexRefFreq() == 0.);
   ASSERT (info1.getUseRotationMeasure() == false);
   vector<SourceInfo> vinfo1 = pdb.getSources("s*");
   ASSERT(vinfo1.size() == 3);
-  ASSERT(vinfo1[0].getName()=="sun" && vinfo1[0].getType()==SourceInfo::SUN);
+  ASSERT(vinfo1[0].getName()=="sun" && vinfo1[0].getType()==SourceInfo::POINT &&
+         vinfo1[0].getRefType()=="SUN");
   ASSERT(vinfo1[1].getName()=="src2" && vinfo1[1].getType()==SourceInfo::POINT);
   ASSERT(vinfo1[2].getName()=="src2a" && vinfo1[2].getType()==SourceInfo::DISK);
   vector<SourceInfo> vinfo2 = pdb.getPatchSources("src2");
@@ -243,6 +246,42 @@ void checkParms()
   ASSERT (v["PolFrac:src2a"].getFirstParmValue().getValues().data()[0] == 0.5);
 }
 
+void showData()
+{
+  SourceDB sdb(ParmDBMeta("", "tSourceDBCasa_tmp.tab"), false);
+  sdb.lock();
+  sdb.rewind();
+  SourceData sdata;
+  while (! sdb.atEnd()) {
+    sdb.getNextSource (sdata);
+    cout << endl;
+    cout << "Source name:    " << sdata.getInfo().getName() << endl;
+    cout << "Patch name:     " << sdata.getPatchName() << endl;
+    cout << "Source type:    " << sdata.getInfo().getType() << endl;
+    cout << "Reftype:        " << sdata.getInfo().getRefType() << endl;
+    cout << "RA:             " << sdata.getRa() << endl;
+    cout << "DEC:            " << sdata.getDec() << endl;
+    cout << "I:              " << sdata.getI() << endl;
+    cout << "Q:              " << sdata.getQ() << endl;
+    cout << "U:              " << sdata.getU() << endl;
+    cout << "V:              " << sdata.getV() << endl;
+    cout << "Major axis:     " << sdata.getMajorAxis() << endl;
+    cout << "Minor axis:     " << sdata.getMinorAxis() << endl;
+    cout << "Orientation:    " << sdata.getOrientation() << endl;
+    cout << "Spectral index: " << sdata.getInfo().getSpectralIndexNTerms()
+         << "  " << sdata.getSpectralIndex() << endl;
+    cout << "SpInx RefFreq:  " << sdata.getInfo().getSpectralIndexRefFreq() << endl;
+    cout << "Use RM:         " << sdata.getInfo().getUseRotationMeasure() << endl;
+    cout << "PolAngle:       " << sdata.getPolarizationAngle() << endl;
+    cout << "PolFrac:        " << sdata.getPolarizedFraction() << endl;
+    cout << "RM:             " << sdata.getRotationMeasure() << endl;
+    cout << "Shapelet I:     " << sdata.getInfo().getShapeletCoeffI() << endl;
+    cout << "Shapelet Q:     " << sdata.getInfo().getShapeletCoeffQ() << endl;
+    cout << "Shapelet U:     " << sdata.getInfo().getShapeletCoeffU() << endl;
+    cout << "Shapelet V:     " << sdata.getInfo().getShapeletCoeffV() << endl;
+  }
+}
+
 int main()
 {
   try {
@@ -251,6 +290,7 @@ int main()
     testPatches();
     testSources();
     checkParms();
+    showData();
   } catch (exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;

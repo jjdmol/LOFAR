@@ -34,6 +34,7 @@
 #include <Common/InputParSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/MUString.h>
@@ -286,8 +287,11 @@ int main (int argc, char *argv[])
     }
     // Do the export.
     doIt (nameIn, nameOut, append, skipLast, amplPerc, parmType);
-  } catch (std::exception& x) {
-    cerr << "Caught exception: " << x.what() << endl;
+  } catch (LOFAR::Exception& ex) {
+    cerr << "Caught LOFAR exception: " << ex << endl;
+    return 1;
+  } catch (casa::AipsError& ex) {
+    cerr << "Caught AIPS error: " << ex.what() << endl;
     return 1;
   }
   

@@ -9,10 +9,7 @@ from __future__ import with_statement
 import os.path
 import sys
 
-import lofarpipe.support.lofaringredient as ingredient
-
 from lofarpipe.support.control import control
-from lofarpipe.support.utilities import log_time
 from lofar.parameterset import parameterset
 
 class compression_pipeline(control):
@@ -37,7 +34,8 @@ class compression_pipeline(control):
 
         # Create a parameter-subset containing only python-control stuff.
         py_parset = self.parset.makeSubset(
-            'ObsSW.Observation.ObservationControl.PythonControl.')
+            self.parset.fullModuleName('PythonControl') + '.'
+        )
 
         # Generate a datamap-file, which is a parset-file containing
         # key/value pairs of hostname and list of MS-files.

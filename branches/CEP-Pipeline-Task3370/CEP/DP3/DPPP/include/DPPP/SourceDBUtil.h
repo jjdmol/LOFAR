@@ -29,6 +29,7 @@
 
 #include <DPPP/Patch.h>
 #include <Common/lofar_string.h>
+#include <Common/LofarTypes.h>
 
 namespace LOFAR
 {
@@ -42,7 +43,9 @@ namespace DPPP
 
 // \addtogroup NDPPP
 // @{
-Patch::Ptr makePatch(BBS::SourceDB &sourceDB, const string &name);
+  vector<Patch::ConstPtr> makePatches(BBS::SourceDB &sourceDB,
+                                      const vector<string> &patchNames,
+                                      uint nModel);
 // @}
 
 } //# namespace DPPP

@@ -153,13 +153,13 @@ void Plot::Close()
 			header << "\n";
 			Write(fd, header.str());
 			std::cout << "gnuplot" << std::endl;
-			system((std::string("gnuplot ") + tmpPlotFile).c_str());
+			ExecuteCmd((std::string("gnuplot ") + tmpPlotFile).c_str());
 			std::cout << "mv" << std::endl;
-			system((std::string("mv ") + _pdfFile + " " + _pdfFile + ".ps").c_str());
+			ExecuteCmd((std::string("mv ") + _pdfFile + " " + _pdfFile + ".ps").c_str());
 			std::cout << "ps2pdf" << std::endl;
-			system((std::string("ps2pdf ") + _pdfFile + ".ps " + _pdfFile).c_str());
+			ExecuteCmd((std::string("ps2pdf ") + _pdfFile + ".ps " + _pdfFile).c_str());
 			std::cout << "rm" << std::endl;
-			system((std::string("rm ") + _pdfFile + ".ps").c_str());
+			ExecuteCmd((std::string("rm ") + _pdfFile + ".ps").c_str());
 		}
 		_open = false;
 	}
@@ -167,7 +167,7 @@ void Plot::Close()
 
 void Plot::Show()
 {
-	system((std::string("./kpdf ") + _pdfFile).c_str());
+	ExecuteCmd((std::string("./kpdf ") + _pdfFile).c_str());
 }
 
 void Plot::CloseCurFd()
@@ -286,3 +286,10 @@ void Plot::AddRectangle(long double x1, double y1, double x2, double y2)
 		"rectangle from " << x1 << "," << y1 << " to " << x2 << "," << y2 << " front lw 0 fc rgb \"#FF00FF\" fillstyle solid 1.0 noborder";
 	_extraHeaders.push_back(s.str());
 }
+
+void Plot::ExecuteCmd(const std::string &cmd) const
+{
+	if(system(cmd.c_str()) != 0)
+		throw std::runtime_error("system() returned non-zero");
+}
+

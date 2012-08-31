@@ -1,276 +1,278 @@
 #include <iostream>
-#include <string>
-#include <deque>
 
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <fftw3.h>
 
-#include <AOFlagger/strategy/algorithms/convolutions.h>
+#include <AOFlagger/remote/clusteredobservation.h>
+#include <AOFlagger/remote/observationtimerange.h>
+#include <AOFlagger/remote/processcommander.h>
+
+#include <AOFlagger/msio/system.h>
+
+#include <AOFlagger/util/lane.h>
 
 #include <AOFlagger/imaging/uvimager.h>
 
-#include <AOFlagger/msio/system.h>
-#include <AOFlagger/msio/timestepaccessor.h>
+#include <AOFlagger/strategy/algorithms/convolutions.h>
 
 using namespace std;
+using namespace aoRemote;
 
-double uvDist(double u, double v, double firstFrequency, double lastFrequency)
+lane<ObservationTimerange*> *readLane;
+lane<ObservationTimerange*> *writeLane;
+
+boost::mutex commanderMutex;
+ProcessCommander *commander;
+
+fftw_plan fftPlanForward, fftPlanBackward;
+const size_t rowCountPerRequest = 128;
+
+// fringe size is given in units of wavelength / fringe. Fringes smaller than that will be filtered.
+double filterFringeSize;
+
+bool isFilterSizeInChannels;
+
+/**
+ * This function returns the distance between the u,v points of the highest and lowest frequencies.
+ * The returned distance is in wavelengths.
+ */
+double uvDist(double u, double v, double frequencyWidth)
 {
 	const double
-		lowU = u * firstFrequency,
-		lowV = v * firstFrequency,
-		highU = u * lastFrequency,
-		highV = v * lastFrequency,
-		ud = lowU - highU,
-		vd = lowV - highV;
+		ud = frequencyWidth * u,
+		vd = frequencyWidth * v;
 	return sqrt(ud * ud + vd * vd) / UVImager::SpeedOfLight();
 }
 
-// This represents the data that is specific for a single thread
-struct TaskInfo
+void workThread()
 {
-	TaskInfo() : length(0), convolutionSize(0.0), index(0), data() { }
-	TaskInfo(const TaskInfo &source) :
-	 length(source.length),
-	 convolutionSize(source.convolutionSize),
-	 index(source.index),
-	 data(source.data)
-	{
-	}
-	void operator=(const TaskInfo &source)
-	{
-		length = source.length;
-		convolutionSize = source.convolutionSize;
-		index = source.index;
-		data = source.data;
-	}
+	ObservationTimerange *timerange;
 	
-	unsigned length;
-	double convolutionSize;
-	TimestepAccessor::TimestepIndex *index;
-	TimestepAccessor::TimestepData data;
-};
-
-void performAndWriteConvolution(TimestepAccessor &accessor, TaskInfo task, boost::mutex &mutex)
-{
-	unsigned polarizationCount = accessor.PolarizationCount();
-	if(task.convolutionSize > 1.0)
+	// These are for diagnostic info
+	double maxFilterSizeInChannels = 0.0, minFilterSizeInChannels = 1e100;
+	
+	if(readLane->read(timerange))
 	{
-		// Convolve the data
-		for(unsigned p=0;p<polarizationCount;++p)
+		const size_t channelCount = timerange->ChannelCount();
+		const unsigned polarizationCount = timerange->PolarizationCount();
+		fftw_complex
+			*fftIn = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * channelCount),
+			*fftOut = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * channelCount);
+		do
 		{
-			Convolutions::OneDimensionalSincConvolution(task.data.realData[p], task.length, 1.0/task.convolutionSize);
-			Convolutions::OneDimensionalSincConvolution(task.data.imagData[p], task.length, 1.0/task.convolutionSize);
-		}
+			for(size_t t=0;t<timerange->TimestepCount();++t)
+			{
+				if(timerange->Antenna1(t) != timerange->Antenna2(t))
+				{
+					// Calculate the frequencies to filter
+					double u = timerange->U(t), v = timerange->V(t);
+					double limitFrequency = isFilterSizeInChannels ?
+						(channelCount / filterFringeSize) :
+						(uvDist(u, v, timerange->FrequencyWidth()) / filterFringeSize);
+					
+					if(limitFrequency*2 <= channelCount) // otherwise no frequencies had to be removed
+					{
+						if(limitFrequency > maxFilterSizeInChannels) maxFilterSizeInChannels = limitFrequency;
+						if(limitFrequency < minFilterSizeInChannels) minFilterSizeInChannels = limitFrequency;
+						for(unsigned p=0;p<polarizationCount;++p)
+						{
+							// Copy data in buffer
+							num_t *realPtr = timerange->RealData(t) + p;
+							num_t *imagPtr = timerange->ImagData(t) + p;
+							
+							for(size_t c=0;c<channelCount;++c)
+							{
+								fftIn[c][0] = *realPtr;
+								fftIn[c][1] = *imagPtr;
+								realPtr += polarizationCount;
+								imagPtr += polarizationCount;
+							}
+							
+							fftw_execute_dft(fftPlanForward, fftIn, fftOut);
+							size_t filterIndexSize = (limitFrequency > 1.0) ? (size_t) ceil(limitFrequency/2.0) : 1;
+							// Remove the high frequencies [filterIndexSize : n-filterIndexSize]
+							for(size_t f=filterIndexSize;f<channelCount - filterIndexSize;++f)
+							{
+								fftOut[f][0] = 0.0;
+								fftOut[f][1] = 0.0;
+							}
+							fftw_execute_dft(fftPlanBackward, fftOut, fftIn);
 
-		// Copy data back to tables
-		boost::mutex::scoped_lock lock(mutex);
-		accessor.Write(*task.index, task.data);
-		lock.unlock();
+							// Copy data back; fftw multiplies data with n, so divide by n.
+							double factor = 1.0 / (double) channelCount;
+							realPtr = timerange->RealData(t) + p;
+							imagPtr = timerange->ImagData(t) + p;
+							for(size_t c=0;c<channelCount;++c)
+							{
+								*realPtr = fftIn[c][0] * factor;
+								*imagPtr = fftIn[c][1] * factor;
+								realPtr += polarizationCount;
+								imagPtr += polarizationCount;
+							}
+						}
+					}
+				}
+			}
+			writeLane->write(timerange);
+		} while(readLane->read(timerange));
+		fftw_free(fftIn);
+		fftw_free(fftOut);
 	}
-
-	task.data.Free(polarizationCount);
-	delete task.index;
+	std::cout << "Worker finished. Filtersize range in channel: " << minFilterSizeInChannels << "-" << maxFilterSizeInChannels << '\n';
 }
 
-struct ThreadFunction
+void readThreadFunction(ObservationTimerange &timerange, const size_t &totalRows)
 {
-	void operator()();
-	class ThreadControl *threadControl;
-	int number;
-};
+	MSRowDataExt *rowBuffer[commander->Observation().Size()];
+	for(size_t i=0;i<commander->Observation().Size();++i)
+		rowBuffer[i] = new MSRowDataExt[rowCountPerRequest];
 
-class ThreadControl
-{
-	public:
-		ThreadControl(unsigned threadCount, TimestepAccessor &accessor)
-			: _accessor(accessor), _threadCount(threadCount), _isFinishing(false)
-		{
-			for(unsigned i=0;i<threadCount;++i)
-			{
-				ThreadFunction function;
-				function.number = i;
-				function.threadControl = this;
-				_threadGroup.create_thread(function);
-			}
-		}
-		void PushTask(const TaskInfo &taskInfo)
-		{
-			boost::mutex::scoped_lock lock(_mutex);
-			while(_tasks.size() > _threadCount * 10)
-			{
-				_queueFullCondition.wait(lock);
-			}
-
-			_tasks.push_back(taskInfo);
-			_dataAvailableCondition.notify_one();
-		}
-		bool WaitForTask(TaskInfo &taskInfo)
-		{
-			boost::mutex::scoped_lock lock(_mutex);
-			while(_tasks.empty() && !_isFinishing)
-			{
-				_dataAvailableCondition.wait(lock);
-			}
-			if(_isFinishing && _tasks.empty())
-				return false;
-			else
-			{
-				taskInfo = _tasks.front();
-				_tasks.pop_front();
-				_queueFullCondition.notify_one();
-				return true;
-			}
-		}
-		void Finish()
-		{
-			boost::mutex::scoped_lock lock(_mutex);
-			_isFinishing = true;
-			lock.unlock();
-			_dataAvailableCondition.notify_all();
-			_threadGroup.join_all();
-		}
-		boost::mutex &WriteMutex() { return _writeMutex; }
-		TimestepAccessor &Accessor() { return _accessor; }
-		unsigned QueueSize()
-		{
-			boost::mutex::scoped_lock lock(_mutex);
-			return _tasks.size();
-		}
-	private:
-		TimestepAccessor &_accessor;
-		boost::thread_group _threadGroup;
-		unsigned _threadCount;
-		bool _isFinishing;
-		boost::mutex _mutex;
-		boost::condition _dataAvailableCondition;
-		boost::condition _queueFullCondition;
-		std::deque<TaskInfo> _tasks;
-		boost::mutex _writeMutex;
-};
-
-void ThreadFunction::operator()()
-{
-	cout << "Thread " << number << " started\n";
-	TaskInfo task;
-	bool hasTask = threadControl->WaitForTask(task);
-	while(hasTask)
+	size_t currentRow = 0;
+	while(currentRow < totalRows)
 	{
-		performAndWriteConvolution(threadControl->Accessor(), task, threadControl->WriteMutex());
-		hasTask = threadControl->WaitForTask(task);
+		size_t currentRowCount = rowCountPerRequest;
+		if(currentRow + currentRowCount > totalRows)
+			currentRowCount = totalRows - currentRow;
+		timerange.SetZero();
+		
+		boost::mutex::scoped_lock lock(commanderMutex);
+		std::cout << "Reading... " << std::flush;
+		commander->PushReadDataRowsTask(timerange, currentRow, currentRowCount, rowBuffer);
+		commander->Run(false);
+		commander->CheckErrors();
+		std::cout << "Done.\n" << std::flush;
+		lock.unlock();
+		
+		currentRow += currentRowCount;
+		cout << "Read " << currentRow << '/' << totalRows << '\n';
+		readLane->write(new ObservationTimerange(timerange));
 	}
-	cout << "Thread " << number << " finished\n";
+	for(size_t i=0;i<commander->Observation().Size();++i)
+		delete[] rowBuffer[i];
+}
+
+void writeThreadFunction()
+{
+	const ClusteredObservation &obs = commander->Observation();
+	MSRowDataExt *rowBuffer[obs.Size()];
+	for(size_t i=0;i<obs.Size();++i)
+		rowBuffer[i] = new MSRowDataExt[rowCountPerRequest];
+		
+	ObservationTimerange *timerange;
+	if(writeLane->read(timerange))
+	{
+		for(size_t i=0;i<obs.Size();++i)
+		{
+			for(size_t row=0;row<rowCountPerRequest;++row)
+				rowBuffer[i][row] = MSRowDataExt(timerange->PolarizationCount(), timerange->Band(i).channels.size());
+		}
+		do {
+			boost::mutex::scoped_lock lock(commanderMutex);
+			std::cout << "Writing... " << std::flush;
+			commander->PushWriteDataRowsTask(*timerange, rowBuffer);
+			commander->Run(false);
+			commander->CheckErrors();
+			std::cout << "Done.\n" << std::flush;
+			lock.unlock();
+			
+			delete timerange;
+		} while(writeLane->read(timerange));
+	}
+	std::cout << "Writer thread finished.\n";
+}
+
+void initializeFFTW(size_t channelCount)
+{
+	fftw_complex *fftIn, *fftOut;
+	
+	fftIn = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * channelCount);
+	fftOut = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * channelCount);
+	fftPlanForward = fftw_plan_dft_1d(channelCount, fftIn, fftOut, FFTW_FORWARD, FFTW_MEASURE);
+	fftPlanBackward = fftw_plan_dft_1d(channelCount, fftIn, fftOut, FFTW_BACKWARD, FFTW_MEASURE);
+
+	fftw_free(fftIn);
+	fftw_free(fftOut);
+}
+
+void deinitializeFFTW()
+{
+	fftw_destroy_plan(fftPlanForward);
+	fftw_destroy_plan(fftPlanBackward);
 }
 
 int main(int argc, char *argv[])
 {
-	if(argc < 3)
+	if(argc != 4)
 	{
-		cerr << "Syntax: " << argv[0] << " <fringe size> <taskIndex> <taskCount> <column-name> <locking> <MS1> [<MS2> [..]]\n";
-		cerr << " fringe size is a double and should be given in units of wavelength / fringe.\n";
-	} else {
-		const double fringeSize = atof(argv[1]);
-		cout << "Fringe size: " << fringeSize << '\n';
-
-		const int taskIndex = atoi(argv[2]), taskCount = atoi(argv[3]);
-		cout << "Task index " << taskIndex << " out of " << taskCount << '\n';
-		const std::string columnName = argv[4];
-		const bool performLocking(atoi(argv[5])!=0);
-		if(performLocking)
-			cout << "Locking WILL be performed.\n";
-		else
-			cout << "NO locking will be performend.\n";
-
-		TimestepAccessor accessor(performLocking);
-		for(int i=6;i<argc;++i)
-			accessor.AddMS(argv[i]);
-
-		accessor.SetColumnName(columnName);
-		accessor.Open();
-
-		unsigned long rows = accessor.TotalRowCount();
-		unsigned long start = rows * taskIndex / taskCount;
-		unsigned long end = rows * (taskIndex+1) / taskCount;
-		cout << "Filtering rows " << start << '-' << end << ".\n";
-		accessor.SetStartRow(start);
-		accessor.SetEndRow(end);
-
-		cout << "Number of polarizations: " << accessor.PolarizationCount() << '\n';
-		cout
-			<< "Number of channels: " << accessor.TotalChannelCount()
-			<< " (" << round(accessor.LowestFrequency()/1e6) << " MHz - "
-			<< round(accessor.HighestFrequency()/1e6) << " MHz)\n";
-
-		const unsigned long totalIterations = end - start;
-		cout << "Total iterations: " << totalIterations << '\n';
+		cerr << "Usage: aofrequencyfilter <reffile> <mode> <filterfringesize>\n"
+		"\tmode can be 'inChannels' (CH) or in uv wavelengths (UV)\n";
+	}
+	else {
+		string modeStr(argv[2]);
+		if(modeStr == "CH")
+			isFilterSizeInChannels = true;
+		else if(modeStr == "UV")
+			isFilterSizeInChannels = false;
+		else throw std::runtime_error("Bad mode");
+		
+		filterFringeSize = atof(argv[3]);
+		ClusteredObservation *obs = ClusteredObservation::Load(argv[1]);
+		commander = new ProcessCommander(*obs);
+		commander->PushReadAntennaTablesTask();
+		commander->PushReadBandTablesTask();
+		commander->Run(false);
+		commander->CheckErrors();
+		
+		ObservationTimerange timerange(*obs);
+		const std::vector<BandInfo> &bands = commander->Bands();
+		for(size_t i=0; i!=bands.size(); ++i)
+			timerange.SetBandInfo(i, bands[i]);
 		
 		const unsigned processorCount = System::ProcessorCount();
 		cout << "CPUs: " << processorCount << '\n';
-		ThreadControl threads(processorCount, accessor);
-
-		double maxFringeChannels = 0.0, minFringeChannels = 1e100;
-		const unsigned totalChannels = accessor.TotalChannelCount();
-
-		TimestepAccessor::TimestepIndex *index = new TimestepAccessor::TimestepIndex();
-		TimestepAccessor::TimestepData data;
-
-		data.Allocate(accessor.PolarizationCount(), totalChannels);
+		unsigned polarizationCount = commander->PolarizationCount();
+		cout << "Polarization count: " << polarizationCount << '\n';
 		
-		unsigned iterSteps = 0;
-
-		boost::mutex::scoped_lock lock(threads.WriteMutex());
-		while(accessor.ReadNext(*index, data)) {
-			lock.unlock();
-
-			TaskInfo task;
-			task.index = index;
-			task.data = data;
-			
-			// Skip autocorrelations
-			if(data.antenna1 == data.antenna2)
-			{
-				data.Free(accessor.PolarizationCount());
-				delete index;
-			} else
-			{
-				// Calculate the convolution size
-				double u = data.u, v = data.v;
-				task.length = totalChannels;
-				task.convolutionSize = fringeSize * (double) totalChannels / uvDist(u, v, accessor.LowestFrequency(), accessor.HighestFrequency());
-				if(task.convolutionSize > maxFringeChannels) maxFringeChannels = task.convolutionSize;
-				if(task.convolutionSize < minFringeChannels) minFringeChannels = task.convolutionSize;
-				task.data = data;
-
-				// Add task
-				threads.PushTask(task);
-			}
-
-			index = new TimestepAccessor::TimestepIndex();
-			data.Allocate(accessor.PolarizationCount(), totalChannels);
-
-			lock.lock();
-			++iterSteps;
-
-			if(iterSteps%100==0)
-			{
-				cout << threads.QueueSize();
-				cout << '.' << flush;
-			}
+		timerange.Initialize(polarizationCount, rowCountPerRequest);
+		
+		cout << "Initializing FFTW..." << std::flush;
+		initializeFFTW(timerange.ChannelCount());
+		cout << " Done.\n";
+		
+		// We ask for "0" rows, which means we will ask for the total number of rows
+		commander->PushReadDataRowsTask(timerange, 0, 0, 0);
+		commander->Run(false);
+		commander->CheckErrors();
+		const size_t totalRows = commander->RowsTotal();
+		cout << "Total rows to filter: " << totalRows << '\n';
+		
+		readLane = new lane<ObservationTimerange*>(processorCount);
+		writeLane = new lane<ObservationTimerange*>(processorCount);
+		
+		// Start worker threads
+		boost::thread *threads[processorCount];
+		for(size_t i=0; i<processorCount; ++i)
+		{
+			threads[i] = new boost::thread(&workThread);
 		}
-		lock.unlock();
-
-		data.Free(accessor.PolarizationCount());
-		delete index;
-
-		cout << "\nWaiting for threads to finish..." << endl;
-		threads.Finish();
-		cout << "Closing time accessor..." << endl;
-		accessor.Close();
-		cout
-			<< "Done. " << iterSteps << " steps taken.\n"
-			<< "Write action count: " << accessor.WriteActionCount() << '\n'
-			<< "Maximum filtering fringe size = " << maxFringeChannels << " channels, "
-			   "minimum = " << minFringeChannels << " channels. \n";
+		boost::thread writeThread(&writeThreadFunction);
+		
+		readThreadFunction(timerange, totalRows);
+		
+		// Shut down read workers
+		readLane->write_end();
+		for(size_t i=0; i<processorCount; ++i)
+		{
+			threads[i]->join();
+		}
+		delete readLane;
+		
+		// Shut down write worker
+		writeLane->write_end();
+		writeThread.join();
+		delete writeLane;
+		
+		// Clean
+		delete commander;
+		delete obs;
 	}
 }

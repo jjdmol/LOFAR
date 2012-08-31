@@ -239,6 +239,22 @@ def g2param(g, adj=False):
 
     return params
 
+def g2param_err(g, adj=False):
+    """Convert errors on gaussian object g to param list [Eamp, Ecenx, Eceny, Esigx, Esigy, Etheta] """
+    from const import fwsig
+    from math import pi
+
+    A = g.peak_fluxE
+    if adj and hasattr(g, 'size_pix_adj'):
+        sigx, sigy, th = g.size_pix_adj
+    else:
+        sigx, sigy, th = g.size_pixE
+    cenx, ceny = g.centre_pixE
+    sigx = sigx/fwsig; sigy = sigy/fwsig
+    params = [A, cenx, ceny, sigx, sigy, th]
+
+    return params
+
 def corrected_size(size):
     """ convert major and minor axis from sigma to fwhm and angle from horizontal to P.A. """
 
@@ -510,7 +526,6 @@ def momanalmask_gaus(subim, mask, isrc, bmar_p, allpara=True):
         multiple gaussians. Compute only for gaussian with index (mask value) isrc.
         Returns normalised peak, centroid, fwhm and P.A. assuming North is top. 
     """
-
     from math import sqrt, atan, pi
     from const import fwsig
     import numpy as N
@@ -707,7 +722,7 @@ def get_errors(img, p, stdav, bm_pix=None):
     import mylogger
     import numpy as N
 
-    mylog = mylogger.logging.getLogger("PyBDSM.Compute   ")
+    mylog = mylogger.logging.getLogger("PyBDSM.Compute")
 
     if len(p) % 7 > 0: 
       mylog.error("Gaussian parameters passed have to have 7n numbers")
@@ -717,7 +732,7 @@ def get_errors(img, p, stdav, bm_pix=None):
       pp = p[i*7:i*7+7]
                                         ### Now do error analysis as in Condon (and fBDSM)
       size = pp[3:6]
-      size = corrected_size(size)
+      size = corrected_size(size) # angle is now degrees CCW from +y-axis
       sq2 = sqrt(2.0)
       if bm_pix == None:
           bm_pix = N.array([img.pixel_beam[0]*fwsig, img.pixel_beam[1]*fwsig, img.pixel_beam[2]])
@@ -729,10 +744,11 @@ def get_errors(img, p, stdav, bm_pix=None):
       d2 = (size[0]*size[0]-size[1]*size[1])/(size[0]*size[0])
       try:
           e_peak = pp[0]*sq2/(dumrr3*pow(dumrr1,0.75)*pow(dumrr2,0.75))
-          e_x0=size[0]/fwsig*sq2/(d1*dumrr3*pow(dumrr1,1.25)*pow(dumrr2,0.25))
-          e_y0=size[1]/fwsig*sq2/(d1*dumrr3*pow(dumrr1,0.25)*pow(dumrr2,1.25))
           e_maj=size[0]*sq2/(dumrr3*pow(dumrr1,1.25)*pow(dumrr2,0.25))
           e_min=size[1]*sq2/(dumrr3*pow(dumrr1,0.25)*pow(dumrr2,1.25))  # in fw
+          pa_rad = size[2]*pi/180.0
+          e_x0 = sqrt( (e_maj*N.sin(pa_rad))**2 + (e_min*N.cos(pa_rad))**2 ) / d1
+          e_y0 = sqrt( (e_maj*N.cos(pa_rad))**2 + (e_min*N.sin(pa_rad))**2 ) / d1
           e_pa=2.0/(d2*dumrr3*pow(dumrr1,0.25)*pow(dumrr2,1.25))
           e_pa=e_pa*180.0/pi
           e_tot=pp[0]*sqrt(e_peak*e_peak/(pp[0]*pp[0])+(0.25/dumr/dumr)*(e_maj*e_maj/(size[0]*size[0])+e_min*e_min/(size[1]*size[1])))
@@ -1197,18 +1213,19 @@ def write_image_to_file(use, filename, image, img, outdir=None,
     #  im.saveas(indir+filename)
 
 def make_fits_image(imagedata, wcsobj, beam, freq):
-    """Makes a simple FITS hdulist appropriate for images"""
+    """Makes a simple FITS hdulist appropriate for single-channel images"""
     import pyfits
-    hdu = pyfits.PrimaryHDU(imagedata)
+    shape_out = [1, imagedata.shape[0], imagedata.shape[1]]
+    hdu = pyfits.PrimaryHDU(imagedata.reshape(shape_out))
     hdulist = pyfits.HDUList([hdu])
     header = hdulist[0].header
     header.update('CTYPE1', wcsobj.ctype[0])
-    header.update('CTYPE2', wcsobj.ctype[1])
     header.update('CRVAL1', wcsobj.crval[0])
-    header.update('CRVAL2', wcsobj.crval[1])
     header.update('CDELT1', wcsobj.cdelt[0])
-    header.update('CDELT2', wcsobj.cdelt[1])
     header.update('CRPIX1', wcsobj.crpix[0])
+    header.update('CTYPE2', wcsobj.ctype[1])
+    header.update('CRVAL2', wcsobj.crval[1])
+    header.update('CDELT2', wcsobj.cdelt[1])
     header.update('CRPIX2', wcsobj.crpix[1])
     if hasattr(wcsobj, 'crota'):
         header.update('CROTA1', wcsobj.crota[0])
@@ -1216,6 +1233,7 @@ def make_fits_image(imagedata, wcsobj, beam, freq):
     header.update('BMAJ', beam[0])
     header.update('BMIN', beam[1])
     header.update('BPA', beam[2])
+    header.update('CTYPE3', 'FREQ')
     header.update('CRVAL3', freq[0])
     header.update('CDELT3', freq[1])
     header.update('CRPIX3', freq[2])
@@ -1506,6 +1524,40 @@ def isl_tosplit(isl, img):
     if index == 0: return [index, n_subisl5, labels5]
     else: return [index, n_subisl, labels]
 
+def isl_tosplit2(isl):
+    """ Splits an island and sends back parameters """
+    import numpy as N
+
+    size_extra5 = isl.opts.splitisl_size_extra5
+    frac_bigisl3 = isl.opts.splitisl_frac_bigisl3
+
+    connected, count = connect(isl.mask_active)
+    index = 0
+    n_subisl3, labels3, isl_pixs3 = open_isl(isl.mask_active, 3)
+    n_subisl5, labels5, isl_pixs5 = open_isl(isl.mask_active, 5)
+    isl_pixs3, isl_pixs5 = N.array(isl_pixs3), N.array(isl_pixs5)
+    
+                                # take open 3 or 5 
+    open3, open5 = False, False
+    if n_subisl3 > 0 and isl_pixs3 != None:                                 # open 3 breaks up island
+      max_sub3 = N.max(isl_pixs3)
+      if max_sub3 < frac_bigisl3 : open3 = True       # if biggest sub island isnt too big
+    if n_subisl5 > 0 and isl_pixs5 != None:                                 # open 5 breaks up island
+      max_sub5 = N.max(isl_pixs5)                     # if biggest subisl isnt too big OR smallest extra islands add upto 10 %
+      if (max_sub5 < 0.75*max_sub3) or (N.sum(N.sort(isl_pixs5)[:len(isl_pixs5)-n_subisl3]) > size_extra5):
+        open5 = True
+                                # index=0 => dont split
+    if open5: index = 5; n_subisl = n_subisl5; labels = labels5
+    else:
+      if open3: index = 3; n_subisl = n_subisl3; labels = labels3
+      else: index = 0
+    convex_def =  convexhull_deficiency(isl) 
+
+    if index == 0:
+        return [index, n_subisl5, labels5]
+    else:
+        return [index, n_subisl, labels]
+
 
 class NullDevice():
     """Null device to suppress stdout, etc."""
@@ -1596,5 +1648,4 @@ def getTerminalSize():
     except:
         pass
     # Give up. return 0.
-    return (0, 0)            
-
+    return (0, 0)                

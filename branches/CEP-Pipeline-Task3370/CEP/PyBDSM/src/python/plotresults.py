@@ -192,6 +192,8 @@ def plotresults(img, ch0_image=True, rms_image=True, mean_image=True,
         low = 1.1*abs(img.min_value)
     else:
         low = N.max([1.1*abs(img.min_value),1.1*abs(N.nanmin(img.resid_gaus))])
+    if low <= 0.0:
+        low = 1E-6
     vmin_est = im_mean - im_rms*5.0 + low
     if vmin_est <= 0.0:
         vmin = N.log10(low)
@@ -222,7 +224,10 @@ def plotresults(img, ch0_image=True, rms_image=True, mean_image=True,
             print '                       The SED plot will also show the chosen source.'
     print '_' * 72
 
-    numx = 2
+    if len(images) > 1:
+        numx = 2
+    else:
+        numx = 1
     numy = int(N.ceil(float(len(images))/float(numx)))
     fig = pl.figure(figsize=(max(15, 10.0*float(numy)/float(numx)), 10.0))
     fig.canvas.set_window_title('PyBDSM Fit Results for '+ img.filename)

@@ -263,6 +263,7 @@ source nrow = 3
 SOURCENAME = ['sun', 'cygnus', 'lena']
 PATCHID = [0 0 0]
 SOURCETYPE = [10  0  1]
+REFTYPE = ['SUN', 'POINT', 'POINT']
 SPINX_NTERMS = [2 2 2]
 SPINX_REFFREQ = [ 60000000.  60000000.  60000000.]
 USE_ROTMEAS = [False False  True]

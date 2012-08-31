@@ -129,7 +129,8 @@ class MeasurementSet {
 		static struct BandInfo GetBandInfo(const std::string &filename, unsigned bandIndex);
 		size_t AntennaCount();
 		size_t FieldCount();
-		size_t BandCount();
+		size_t BandCount() { return BandCount(_location); }
+		static size_t BandCount(const std::string &filename);
 		struct AntennaInfo GetAntennaInfo(unsigned antennaId);
 		struct BandInfo GetBandInfo(unsigned bandIndex) {return GetBandInfo(_location, bandIndex);}
 		struct FieldInfo GetFieldInfo(unsigned fieldIndex);

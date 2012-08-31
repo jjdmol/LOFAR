@@ -61,7 +61,9 @@ namespace rfiStrategy {
 		return
 		(file.size() > 4 && file.substr(file.size()- 4) == ".UVF")
 		||
-		(file.size() > 5 && file.substr(file.size() - 5) == ".fits" );
+		(file.size() > 5 && file.substr(file.size() - 5) == ".fits" )
+		||
+		(file.size() > 7 && file.substr(file.size() - 7) == ".sdfits" ); // Parkes raw files are named like this
 	}
 	
 	bool ImageSet::IsRCPRawFile(const std::string &file)

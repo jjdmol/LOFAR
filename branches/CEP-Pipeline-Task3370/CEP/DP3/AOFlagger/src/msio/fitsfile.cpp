@@ -42,9 +42,15 @@ FitsFile::~FitsFile()
 void FitsFile::CheckStatus(int status) const {
 	if(status) {
 		/* fits_get_errstatus returns at most 30 characters */
-		char err_text[31];		
+		char err_text[31];
 		fits_get_errstatus(status, err_text);
-		throw FitsIOException(err_text);
+		char err_msg[81];
+		std::stringstream errMsg;
+		errMsg << "CFITSIO reported error when performing IO on file '" << _filename << "':" << err_text << " (";
+		while(fits_read_errmsg(err_msg))
+			errMsg << err_msg;
+		errMsg << ')';
+		throw FitsIOException(errMsg.str());
 	}
 }
 
@@ -65,7 +71,7 @@ void FitsFile::Open(FitsFile::FileMode mode)
 			case ReadWriteMode: modeInt = READWRITE; break;
 			default: throw FitsIOException("Incorrect mode specified"); break;
 		}
-		fits_open_file(&_fptr, _filename.c_str(), modeInt, &status);
+		fits_open_diskfile(&_fptr, _filename.c_str(), modeInt, &status);
 		CheckStatus(status);
 		_isOpen = true;
 	}
@@ -90,6 +96,7 @@ void FitsFile::Close()
 		fits_close_file(_fptr, &status);
 		CheckStatus(status);
 		_isOpen = false;
+		_fptr = 0;
 	} else {
 		throw FitsIOException("Non-opened file was closed");
 	}
@@ -494,6 +501,64 @@ bool FitsFile::HasGroupParameter(const std::string &parameterName)
 	return false;
 }
 
+bool FitsFile::HasTableColumn(const std::string &columnName, int columnIndex)
+{
+	int colCount = GetColumnCount();
+	for(int i=1;i<=colCount;++i)
+	{
+		std::stringstream s;
+		s << "TTYPE" << i;
+		if(GetKeywordValue(s.str()) == columnName)
+		{
+			columnIndex = i;
+			return true;
+		}
+	}
+	return false;
+}
+
+int FitsFile::GetTableColumnIndex(const std::string &columnName)
+{
+	int colCount = GetColumnCount();
+	for(int i=1;i<=colCount;++i)
+	{
+		std::stringstream s;
+		s << "TTYPE" << i;
+		if(GetKeywordValue(s.str()) == columnName)
+			return i;
+	}
+	throw FitsIOException(std::string("Can not find column with name ") + columnName);
+}
+
+int FitsFile::GetTableColumnArraySize(int columnIndex)
+{
+	CheckOpen();
+	int typecode = 0, status = 0;
+	long repeat = 0, width = 0;
+	fits_get_coltype(_fptr, columnIndex, &typecode, &repeat, &width, &status);
+	CheckStatus(status);
+	return repeat;
+}
+
+long FitsFile::GetTableDimensionSize(int columnIndex, int dimension)
+{
+	CheckOpen();
+	int naxis = 0, status = 0, maxdim = 10;
+	long naxes[10];
+	for(size_t i=0;i!=10;++i) naxes[i] = 0;
+	fits_read_tdim(_fptr, columnIndex, maxdim, &naxis, naxes, &status);
+	CheckStatus(status);
+	return naxes[dimension];
+}
+
+void FitsFile::ReadTableCell(int row, int col, double *output, size_t size)
+{
+	int status = 0;
+	double nulValue = std::numeric_limits<double>::quiet_NaN();
+	int anynul = 0;
+	fits_read_col(_fptr, TDOUBLE, col, row, 1, size, &nulValue, output, &anynul, &status);
+}
+
 void FitsFile::ReadTableCell(int row, int col, long double *output, size_t size)
 {
 	double *data = new double[size];
@@ -506,6 +571,18 @@ void FitsFile::ReadTableCell(int row, int col, long double *output, size_t size)
 	delete[] data;
 }
 
+void FitsFile::ReadTableCell(int row, int col, bool *output, size_t size)
+{
+	char *data = new char[size];
+	int status = 0;
+	char nulValue = 0;
+	int anynul = 0;
+	fits_read_col(_fptr, TBIT, col, row, 1, size, &nulValue, data, &anynul, &status);
+	for(size_t i = 0;i<size;++i)
+		output[i] = data[i]!=0;
+	delete[] data;
+}
+
 void FitsFile::ReadTableCell(int row, int col, char *output)
 {
 	int status = 0;
@@ -514,3 +591,21 @@ void FitsFile::ReadTableCell(int row, int col, char *output)
 	fits_read_col(_fptr, TSTRING, col, row, 1, 1, &nulValue, &output, &anynul, &status);
 }
 
+void FitsFile::WriteTableCell(int row, int col, double *data, size_t size)
+{
+	int status = 0;
+	fits_write_col(_fptr, TDOUBLE, col, row, 1, size, data, &status);
+	CheckStatus(status);
+}
+
+void FitsFile::WriteTableCell(int row, int col, const bool *data, size_t size)
+{
+	char *dataChar = new char[size];
+	int status = 0;
+	for(size_t i = 0;i<size;++i)
+	{
+		dataChar[i] = data[i] ? 1 : 0;
+	}
+	fits_write_col(_fptr, TBIT, col, row, 1, size, dataChar, &status);
+	delete[] dataChar;
+}

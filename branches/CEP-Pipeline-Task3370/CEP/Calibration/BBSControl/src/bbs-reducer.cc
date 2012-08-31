@@ -37,6 +37,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 
 #ifdef HAVE_PQXX
 #include <BBSControl/CalSession.h>
@@ -155,11 +156,6 @@ int main(int argc, char *argv[])
   catch(Exception &ex)
   {
     LOG_FATAL_STR(progName << " terminated due to an exception: " << ex);
-    return 1;
-  }
-  catch(...)
-  {
-    LOG_FATAL_STR(progName << " terminated due to an unknown exception.");
     return 1;
   }
 

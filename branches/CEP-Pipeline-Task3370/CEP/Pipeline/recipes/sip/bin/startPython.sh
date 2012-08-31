@@ -7,7 +7,7 @@
 #
 # For example:
 #
-#   startPython.sh ./pythonProgram /opt/lofar/share/Observation6118 \
+#   startPython.sh ./pythonProgram /opt/lofar/var/run/Observation6118 \
 #                  MCU001T MCU001T:PythonControl[0]{6118}:listener  \
 #                  PythonServer{6118}@MCU001T 
 #
@@ -21,6 +21,9 @@ shopt -s expand_aliases
 
 # Enable debugging messages
 debug=on
+
+# Log-file used for logging output of this script
+logFile=/opt/lofar/var/log/startPython.log
 
 usage()
 {
@@ -42,18 +45,28 @@ programOptions=" \
  -d \
  -c ${LOFARROOT}/share/pipeline/pipeline.cfg \
  -t ${LOFARROOT}/share/pipeline/tasks.cfg \
- -r ${LOFARROOT}/share/pipeline \
+ -r ${LOFARROOT}/var/run/pipeline \
  -w /data/scratch/${USER}"
   
 # Print some debugging information if debugging is enabled.
 if [ -n "$debug" ]; then
-  echo "PATH=${PATH}"
-  echo "PYHONTPATH=${PYTHONPATH}"
-  echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
-  echo "${pythonProgram} ${programOptions} ${parsetFile}"
+  echo "**** $(date) ****" >> ${logFile}
+  echo "$0 $@" >> ${logFile}
+  echo "PATH=${PATH}" >> ${logFile}
+  echo "PYHONTPATH=${PYTHONPATH}" >> ${logFile}
+  echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> ${logFile}
+  echo "${pythonProgram} ${programOptions} ${parsetFile}" >> ${logFile}
 fi
 
-# Start the Python program in the background. This script should return ASAP
-# so that MAC can set the task to ACTIVE.
-${pythonProgram} ${programOptions} ${parsetFile} &
+# Start the Python program in the background. 
+# This script should return ASAP so that MAC can set the task to ACTIVE.
+# STDERR will be redirected to the log-file.
+${pythonProgram} ${programOptions} ${parsetFile} 2>> ${logFile} &
+
+# Check if the Python program died early. If so, this indicates an error.
+sleep 1
+if ! kill -0 $! 2> /dev/null; then
+  echo "$(date): FATAL ERROR: ${pythonProgram} died unexpectedly."
+  exit 1
+fi
 

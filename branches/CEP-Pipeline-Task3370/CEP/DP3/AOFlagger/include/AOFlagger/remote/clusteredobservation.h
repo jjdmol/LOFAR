@@ -32,23 +32,30 @@ class ClusteredObservationItem
 {
 	public:
 		ClusteredObservationItem() :
-			_localPath(), _hostName()
+			_index(0), _localPath(), _hostName()
 		{ }
-		ClusteredObservationItem(const std::string &localPath, const std::string &hostName) :
-			_localPath(localPath), _hostName(hostName)
+		ClusteredObservationItem(unsigned index, const std::string &localPath, const std::string &hostName) :
+			_index(index), _localPath(localPath), _hostName(hostName)
 		{ }
 		ClusteredObservationItem(const ClusteredObservationItem &source) :
-			_localPath(source._localPath), _hostName(source._hostName)
+			_index(source._index), _localPath(source._localPath), _hostName(source._hostName)
 		{ }
 		ClusteredObservationItem &operator=(const ClusteredObservationItem &source)
 		{
+			_index = source._index;
 			_localPath = source._localPath;
 			_hostName = source._hostName;
 			return *this;
 		}
+		bool operator<(const ClusteredObservationItem &rhs) const
+		{
+			return _index < rhs._index;
+		}
+		unsigned Index() const { return _index; }
 		const std::string &LocalPath() const { return _localPath; }
 		const std::string &HostName() const { return _hostName; }
 	private:
+		unsigned _index;
 		std::string _localPath;
 		std::string _hostName;
 };
@@ -85,7 +92,18 @@ class ClusteredObservation
 		
 		static bool IsRemoteModuleEnabled();
 		
+		size_t Size() const { return _items.size(); }
+		
 	private:
+		// disable copying
+		ClusteredObservation(const ClusteredObservation &source)
+		{
+		}
+		// disable assignment
+		void operator=(const ClusteredObservation &source)
+		{
+		}
+		
 		static void throwIfNotEnabled();
 		
 		std::vector<ClusteredObservationItem> _items;

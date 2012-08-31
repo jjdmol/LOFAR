@@ -183,6 +183,9 @@ class MSWindow : public Gtk::Window {
 		void onPlotDistPressed();
 		void onPlotLogLogDistPressed();
 		void onPlotComplexPlanePressed();
+		void onPlotMeanSpectrumPressed() { plotMeanSpectrumPressed<false>(); }
+		void onPlotSumSpectrumPressed() { plotMeanSpectrumPressed<true>(); }
+		template<bool Weigh> void plotMeanSpectrumPressed();
 		void onPlotPowerSpectrumPressed();
 		void onPlotPowerSpectrumComparisonPressed();
 		void onPlotPowerRMSPressed();

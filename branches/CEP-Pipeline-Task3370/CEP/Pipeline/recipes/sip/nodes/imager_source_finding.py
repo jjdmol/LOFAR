@@ -116,6 +116,9 @@ class imager_source_finding(LOFARnodeTCP):
         self._create_source_db(catalog_output_path, sourcedb_target_path,
                 init_script, working_directory, executable, False)
 
+        # Assign the outputs
+        self.outputs["catalog_output_path"] = catalog_output_path
+        self.outputs["source_db"] = sourcedb_target_path
         return 0
 
     @xml_node

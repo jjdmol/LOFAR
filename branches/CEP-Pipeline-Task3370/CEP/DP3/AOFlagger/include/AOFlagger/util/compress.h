@@ -51,6 +51,8 @@ class Compress
 			Bz2Size();
 		}
 	private:
+		void ExecuteCmd(const std::string &str);
+
 		const TimeFrequencyData _data;
 		bool _isInitialized;
 

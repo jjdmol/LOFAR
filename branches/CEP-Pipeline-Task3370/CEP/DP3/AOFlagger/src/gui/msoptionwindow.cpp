@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include <gtkmm/messagedialog.h>
+#include <gtkmm/stock.h>
 
 #include <AOFlagger/gui/msoptionwindow.h>
 
@@ -34,7 +35,7 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 	Gtk::Window(),
 	_msWindow(msWindow),
 	_filename(filename),
-	_openButton("Open"),
+	_openButton(Gtk::Stock::OPEN),
 	_dataKindFrame("Columns to read"),
 	_polarisationFrame("Polarisation to read"),
 	_partitioningFrame("Partitioning"),

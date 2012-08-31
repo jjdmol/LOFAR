@@ -114,7 +114,7 @@ def patch_parset(parset, data, output_dir=None):
     else:
         temp_parset = parset.makeSubset('')  # a sneaky way to copy the parset
     for key, value in data.iteritems():
-        temp_parset.replace(key, value)
+        temp_parset.replace(key, str(value))
     fd, output = mkstemp(dir=output_dir)
     temp_parset.writeFile(output)
     os.close(fd)

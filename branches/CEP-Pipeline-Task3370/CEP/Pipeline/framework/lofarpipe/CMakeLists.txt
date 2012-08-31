@@ -30,6 +30,7 @@ python_install(
   support/mac.py
   support/parset.py
   support/pipelinelogging.py
+  support/pipelinexml.py
   support/remotecommand.py
   support/stateful.py
   support/utilities.py

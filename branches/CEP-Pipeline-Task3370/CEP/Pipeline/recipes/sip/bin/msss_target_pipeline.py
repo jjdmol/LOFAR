@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #                                                         LOFAR IMAGING PIPELINE
 #
-#                                                     Calibrator Pipeline recipe
+#                                          Target Pre-Processing Pipeline recipe
 #                                                             Marcel Loose, 2011
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
@@ -11,7 +11,8 @@ import sys
 
 from lofarpipe.support.control import control
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.group_data import store_data_map, validate_data_maps
+from lofarpipe.support.group_data import store_data_map, validate_data_maps, \
+        load_data_map
 from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
@@ -145,51 +146,66 @@ class msss_target_pipeline(control):
         self.io_data_mask = [x and y for (x, y) in zip(data_mask, inst_mask)]
 
 
-    def _copy_instrument_files(self, instrument_map, input_data_map, mapfile_dir):
+    def _create_target_map_for_instruments(self, instrument_map,
+                                           input_data_map):
+        """
+        Create a mapfile with target locations: based on the host found in the 
+        input_data_map, the name of the instrument file and the working \
+        directory + job name
+        """
+        scratch_dir = os.path.join(
+            self.inputs['working_directory'], self.inputs['job_name'])
+
+        target_locations = []
+        for instrument_pair, data_pair in zip(instrument_map, input_data_map):
+            host_instr, path_instr = instrument_pair
+            host_data, path_data = data_pair
+            # target location == working dir instrument file name
+            target_path = os.path.join(scratch_dir, os.path.basename(path_instr))
+            target_locations.append((host_data, target_path))
+
+        return target_locations
+
+
+    def _copy_instrument_files(self, instrument_map, input_data_map,
+                                mapfile_dir):
         # For the copy recipe a target mapfile is needed
         # create target map based on the node and the dir in the input_data_map
         # with the filename based on the
         copier_map_path = os.path.join(mapfile_dir, "copier")
         create_directory(copier_map_path)
-        source_map, target_map, new_instrument_map = self._create_target_map_for_instruments(
-                                    instrument_map, input_data_map)
+        target_map = self._create_target_map_for_instruments(instrument_map,
+                                                     input_data_map)
+
         #Write the two needed maps to file
         source_path = os.path.join(copier_map_path, "source_instruments.map")
-        store_data_map(source_path, source_map)
+        store_data_map(source_path, instrument_map)
 
         target_path = os.path.join(copier_map_path, "target_instruments.map")
         store_data_map(target_path, target_map)
 
-        self.run_task("copier",
-                      mapfile_source = source_path,
-                      mapfile_target = target_path,
-                      mapfile_dir = copier_map_path)
+        copied_files_path = os.path.join(copier_map_path, "copied_instruments.map")
 
-        return new_instrument_map
+        # The output of the copier is a mapfile containing all the host, path
+        # of succesfull copied files.
+        copied_instruments_mapfile = self.run_task("copier",
+                      mapfile_source=source_path,
+                      mapfile_target=target_path,
+                      mapfiles_dir=copier_map_path,
+                      mapfile=copied_files_path)['mapfile_target_copied']
 
-
-    def _create_target_map_for_instruments(self, instrument_map, input_data_map):
-        target_map = []
-        source_map = []
+        # Some copy action might fail, these files need to be removed from
+        # both the data and the instrument file!!
+        copied_instruments_map = load_data_map(copied_instruments_mapfile)
         new_instrument_map = []
-        for instrument_pair, input_data_pair in zip(instrument_map, input_data_map):
-            instrument_node, instrument_path = instrument_pair
-            input_data_node, input_data_path = input_data_pair
+        new_input_data_map = []
+        for instrument_pair, input_data_pair in zip(target_map, input_data_map):
+            if instrument_pair in copied_instruments_map:
+                new_instrument_map.append(instrument_pair)
+                new_input_data_map.append(input_data_pair)
+            # else: Do not process further in the recipe
 
-            target_dir = os.path.dirname(input_data_path)
-            target_name = os.path.basename(instrument_path)
-            target_path = os.path.join(target_dir, target_name)
-            new_instrument_map.append((input_data_node, target_path))
-            #If the data is already on the correct node, skip this file
-            if instrument_node == input_data_node and instrument_path == input_data_path:
-                continue
-
-            source_map.append(instrument_pair)
-            target_map.append((input_data_node, target_path))
-
-        return source_map, target_map, new_instrument_map
-
-
+        return new_instrument_map, new_input_data_map
 
     def go(self):
         """
@@ -208,7 +224,7 @@ class msss_target_pipeline(control):
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
-        super(msss_target_pipeline, self).go()
+        return super(msss_target_pipeline, self).go()
 
 
     def pipeline_logic(self):
@@ -230,32 +246,28 @@ class msss_target_pipeline(control):
         job_dir = self.config.get("layout", "job_directory")
         mapfile_dir = os.path.join(job_dir, "mapfiles")
         create_directory(mapfile_dir)
-
-
-        self.input_data['instrument'] = self._copy_instrument_files(
-                                    self.input_data['instrument'],
-                                    self.input_data['data'], mapfile_dir)
-
-        self._validate_io_product_specs()
-
-
         parset_dir = os.path.join(job_dir, "parsets")
-
-
-        # Write input- and output data map-files.
         create_directory(parset_dir)
 
+        # Copy the instrument files to the corrent nodes: failures might happen
+        # update both intrument and datamap to contain only successes!
+        self.input_data['instrument'], self.input_data['data'] = \
+            self._copy_instrument_files(self.input_data['instrument'],
+                                    self.input_data['data'], mapfile_dir)
 
+        # File locations are not on the same node: skip check for same node
+        #self._validate_io_product_specs()
+
+        # Write input- and output data map-files.
         data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
         store_data_map(data_mapfile, self.input_data['data'])
+        copied_instrument_mapfile = os.path.join(mapfile_dir, "copied_instrument.mapfile")
+        store_data_map(copied_instrument_mapfile,
+                       self.input_data['instrument'])
         self.logger.debug(
             "Wrote input data mapfile: %s" % data_mapfile
         )
-        instrument_mapfile = os.path.join(mapfile_dir, "instrument.mapfile")
-        store_data_map(instrument_mapfile, self.input_data['instrument'])
-        self.logger.debug(
-            "Wrote input instrument mapfile: %s" % instrument_mapfile
-        )
+
         corrected_mapfile = os.path.join(mapfile_dir, "corrected_data.mapfile")
         store_data_map(corrected_mapfile, self.output_data['data'])
         self.logger.debug(
@@ -270,15 +282,24 @@ class msss_target_pipeline(control):
             ', '.join(':'.join(f) for f in self.input_data['data'])
         )
 
-        # Create a sourcedb based on sourcedb's input argument "skymodel"
-        # (see, e.g., tasks.cfg file).
-        sourcedb_mapfile = self.run_task("sourcedb", data_mapfile)['mapfile']
-
         # Produce a GVDS file describing the data on the compute nodes.
         gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
 
         # Read metadata (e.g., start- and end-time) from the GVDS file.
-        vdsinfo = self.run_task("vdsreader", gvds = gvds_file)
+        vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+
+        # Create an empty parmdb for DPPP
+        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
+
+        # Create a sourcedb to be used by the demixing phase of DPPP
+        # The path to the A-team sky model is currently hard-coded.
+        sourcedb_mapfile = self.run_task(
+            "setupsourcedb", data_mapfile,
+            skymodel=os.path.join(
+                self.config.get('DEFAULT', 'lofarroot'),
+                'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
+            )
+        )['mapfile']
 
         # Create a parameter-subset for DPPP and write it to file.
         ndppp_parset = os.path.join(parset_dir, "NDPPP[0].parset")
@@ -287,14 +308,23 @@ class msss_target_pipeline(control):
         # Run the Default Pre-Processing Pipeline (DPPP);
         dppp_mapfile = self.run_task("ndppp",
             data_mapfile,
-            data_start_time = vdsinfo['start_time'],
-            data_end_time = vdsinfo['end_time'],
-            parset = ndppp_parset,
-            mapfile = os.path.join(mapfile_dir, 'dppp[0].mapfile')
+            data_start_time=vdsinfo['start_time'],
+            data_end_time=vdsinfo['end_time'],
+            parset=ndppp_parset,
+            parmdb_mapfile=parmdb_mapfile,
+            sourcedb_mapfile=sourcedb_mapfile,
+            mapfile=os.path.join(mapfile_dir, 'dppp[0].mapfile')
         )['mapfile']
 
-        # Demix the relevant A-team sources
-        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
+        demix_mapfile = dppp_mapfile
+
+#        # Demix the relevant A-team sources
+#        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
+
+        # Create an empty sourcedb for BBS
+        sourcedb_mapfile = self.run_task(
+            "setupsourcedb", data_mapfile
+        )['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(parset_dir, "BBS.parset")
@@ -303,9 +333,9 @@ class msss_target_pipeline(control):
         # Run BBS to calibrate the target source(s).
         bbs_mapfile = self.run_task("new_bbs",
             demix_mapfile,
-            parset = bbs_parset,
-            instrument_mapfile = instrument_mapfile,
-            sky_mapfile = sourcedb_mapfile
+            parset=bbs_parset,
+            instrument_mapfile=copied_instrument_mapfile,
+            sky_mapfile=sourcedb_mapfile
         )['mapfile']
 
         # Create another parameter-subset for a second DPPP run.
@@ -318,20 +348,20 @@ class msss_target_pipeline(control):
         # CORRECTED_DATA column of the original MS.
         self.run_task("ndppp",
             (bbs_mapfile, corrected_mapfile),
-            clobber = False,
-            suffix = '',
-            parset = ndppp_parset,
-            mapfile = os.path.join(mapfile_dir, 'dppp[1].mapfile')
+            clobber=False,
+            suffix='',
+            parset=ndppp_parset,
+            mapfile=os.path.join(mapfile_dir, 'dppp[1].mapfile')
         )
 
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", corrected_mapfile,
-            parset_file = self.parset_feedback_file,
-            parset_prefix = (
+            parset_file=self.parset_feedback_file,
+            parset_prefix=(
                 self.parset.getString('prefix') +
                 self.parset.fullModuleName('DataProducts')
             ),
-            product_type = "Correlated")
+            product_type="Correlated")
 
 
 if __name__ == '__main__':
