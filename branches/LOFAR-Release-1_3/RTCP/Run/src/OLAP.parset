@@ -37,10 +37,10 @@ PIC.Core.CS007HBA0.clockCorrectionTime = 7.913020e-06
 PIC.Core.CS007HBA1.clockCorrectionTime = 7.913260e-06
 PIC.Core.CS007HBA.clockCorrectionTime  = 7.913140e-06 
 
-PIC.Core.CS401LBA.clockCorrectionTime  = 8.06397e-06
-PIC.Core.CS401HBA0.clockCorrectionTime = 8.069604e-06
-PIC.Core.CS401HBA1.clockCorrectionTime = 8.069870e-06
-PIC.Core.CS401HBA.clockCorrectionTime  = 8.069737e-06
+PIC.Core.CS401LBA.clockCorrectionTime  = 8.051870e-06
+PIC.Core.CS401HBA0.clockCorrectionTime = 8.057504e-06
+PIC.Core.CS401HBA1.clockCorrectionTime = 8.057770e-06
+PIC.Core.CS401HBA.clockCorrectionTime  = 8.057637e-06
 
 #
 # Stations outside of the superterp (no correction needed)
