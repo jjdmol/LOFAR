@@ -289,16 +289,12 @@ class imager_prepare(LOFARnodeTCP):
         """
 
         #loop all measurement sets
-        rfi_temp_dir = os.path.join(time_slice_dir, "rfi_temp_dir")
-        create_directory(rfi_temp_dir)
-
+        temp_dir_path = os.path.join(time_slice_dir, "rfi_temp_dir")
+        create_directory(temp_dir_path)
 
         try:
-            processes = []
-            for (idx, group_set) in enumerate(group_measurements_collected):
-                # Each rfi console needs own working space for temp files    
-                temp_dir_path = os.path.join(rfi_temp_dir, os.path.basename(group_set))
-                create_directory(temp_dir_path)
+            rfi_console_proc_group = SubProcessGroup(self.logger)
+            for group_set in group_measurements_collected:
                 # construct copy command
                 self.logger.info(group_set)
                 command = [rficonsole_executable, "-indirect-read",
