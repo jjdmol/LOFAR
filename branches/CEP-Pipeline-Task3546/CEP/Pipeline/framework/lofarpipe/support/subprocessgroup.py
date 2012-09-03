@@ -12,7 +12,7 @@ class SubProcessGroup(object):
             self.logger = logger
 
 
-        def run(self, cmd_in, unsave=False):
+        def run(self, cmd_in, unsave=False, cwd=None):
             """
             Add the cmd as a subprocess to the current group: The process is
             started!
@@ -31,6 +31,7 @@ class SubProcessGroup(object):
             # Run subprocess
             process = subprocess.Popen(
                         cmd,
+                        cdw=cwd,
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
