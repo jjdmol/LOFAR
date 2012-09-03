@@ -41,6 +41,11 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         super(BaseRecipe, self).__init__()
         self.error = Event()
         self.error.clear()
+        # Environment variables we like to pass on to the node script.
+        self.environment = dict(
+            (k,v) for (k,v) in os.environ.iteritems() 
+                if k.endswith('PATH') or k.endswith('ROOT')
+        )
 
     @property
     def __file__(self):
