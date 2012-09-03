@@ -292,6 +292,7 @@ class imager_prepare(LOFARnodeTCP):
         rfi_temp_dir = os.path.join(time_slice_dir, "rfi_temp_dir")
         create_directory(rfi_temp_dir)
 
+
         try:
             processes = []
             for (idx, group_set) in enumerate(group_measurements_collected):
