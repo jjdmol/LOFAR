@@ -197,9 +197,9 @@ static LOFAR::RTCP::StationMetaDataMap getExternalStationMetaData(const LOFAR::R
 			stMetaData.normalVector   = antField.normVector(fieldIdx).second;
 			stMetaData.rotationMatrix = antField.rotationMatrix(fieldIdx).second;
 
-			stMdMap.insert(make_pair(DAL::stationNameToID(stName), stMetaData));
+			stMdMap.insert(make_pair(dal::stationNameToID(stName), stMetaData));
 		}
-	} catch (exception& exc) { // LOFAR::AssertError or DAL::DALValueError (rare)
+	} catch (exception& exc) { // LOFAR::AssertError or dal::DALValueError (rare)
 		// AssertError already sends a message to the logger.
 		throw LOFAR::RTCP::StorageException(exc.what());
 	}

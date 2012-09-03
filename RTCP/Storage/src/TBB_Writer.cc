@@ -64,7 +64,7 @@ using namespace std;
 EXCEPTION_CLASS(TBB_MalformedFrameException, StorageException);
 
 /*
- * The output_format is without seconds. The output_size is including the '\0'.
+ * The output_format is without seconds. The output_size is including the terminating NUL char.
  * Helper for in filenames and for the FILEDATE attribute.
  */
 static string formatFilenameTimestamp(const struct timeval& tv, const char* output_format,
@@ -77,7 +77,7 @@ static string formatFilenameTimestamp(const struct timeval& tv, const char* outp
 
 	size_t nwritten = strftime(&date[0], output_size, output_format, &tm);
 	if (nwritten == 0) {
-		d.date[0] = '\0';
+		date[0] = '\0';
 	}
 	(void)snprintf(&date[0] + nwritten, output_size - nwritten, output_format_secs, secs);
 
@@ -125,18 +125,18 @@ TBB_Dipole::~TBB_Dipole() {
 		if (usesExternalDataFile()) {
 			try {
 				itsDataset->resize1D(itsDatasetLen);
-			} catch (DAL::DALException& exc) {
+			} catch (dal::DALException& exc) {
 				LOG_WARN_STR("TBB: failed to resize HDF5 dipole dataset to external data size: " << exc.what());
 			}
 		}
 		try {
 			itsDataset->dataLength().value = static_cast<unsigned long long>(itsDatasetLen);
-		} catch (DAL::DALException& exc) {
+		} catch (dal::DALException& exc) {
 			LOG_WARN_STR("TBB: failed to set dipole DATA_LENGTH attribute: " << exc.what());
 		}
 		try {
 			itsDataset->flagOffsets().value = itsFlagOffsets;
-		} catch (DAL::DALException& exc) {
+		} catch (dal::DALException& exc) {
 			LOG_WARN_STR("TBB: failed to set dipole FLAG_OFFSETS attribute: " << exc.what());
 		}
 
@@ -145,7 +145,7 @@ TBB_Dipole::~TBB_Dipole() {
 }
 
 void TBB_Dipole::initDipole(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-		const string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex) {
+		const string& rawFilename, dal::TBB_Station& station, Mutex& h5Mutex) {
 	if (header.sampleFreq == 200 || header.sampleFreq == 160) {
 		itsSampleFreq = static_cast<uint32_t>(header.sampleFreq) * 1000000;
 	} else { // might happen if header of first frame is corrupt
@@ -177,7 +177,7 @@ bool TBB_Dipole::usesExternalDataFile() const {
 void TBB_Dipole::addFlags(size_t offset, size_t len) {
 	// Add a new flag range or extend the last stored flag range. 'len' cannot be 0.
 	if (itsFlagOffsets.empty() || offset > itsFlagOffsets.back().end) {
-		itsFlagOffsets.push_back(DAL::Range(offset, offset + len));
+		itsFlagOffsets.push_back(dal::Range(offset, offset + len));
 	} else { // extend flag range
 		itsFlagOffsets.back().end += len;
 	}
@@ -250,8 +250,8 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 }
 
 void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-                                       const string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex) {
-	itsDataset = new DAL::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
+                                       const string& rawFilename, dal::TBB_Station& station, Mutex& h5Mutex) {
+	itsDataset = new dal::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
 
 	ScopedLock h5OutLock(h5Mutex);
 
@@ -369,7 +369,7 @@ bool TBB_Dipole::hasAllZeroDataSamples(const TBB_Frame& frame) const {
 
 TBB_Station::TBB_Station(const string& stationName, const Parset& parset, const StationMetaData& stationMetaData,
                          const string& h5Filename, bool dumpRaw)
-: itsH5File(DAL::TBB_File(h5Filename, DAL::TBB_File::CREATE))
+: itsH5File(dal::TBB_File(h5Filename, dal::TBB_File::CREATE))
 , itsStation(itsH5File.station(stationName))
 , itsDipoles(MAX_RSPBOARDS/* = per station*/ * NR_RCUS_PER_RSPBOARD) // = 192 for int'l stations
 , itsParset(parset)
@@ -385,7 +385,7 @@ TBB_Station::~TBB_Station() {
 	// Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
 	try {
 		itsStation.nofDipoles().value = itsStation.dipoles().size();
-	} catch (DAL::DALException& exc) {
+	} catch (dal::DALException& exc) {
 		LOG_WARN_STR("TBB: failed to set station NOF_DIPOLES attribute: " << exc.what());
 	}
 }
@@ -545,12 +545,12 @@ void TBB_Station::initTBB_RootAttributesAndGroups(const string& stName) {
 	initStationGroup(itsStation, stName, stPos);
 
 	// Trigger Group
-	DAL::TBB_Trigger tg(itsH5File.trigger());
+	dal::TBB_Trigger tg(itsH5File.trigger());
 	tg.create();
 	initTriggerGroup(tg);
 }
 
-void TBB_Station::initStationGroup(DAL::TBB_Station& st, const string& stName, const vector<double>& stPosition) {
+void TBB_Station::initStationGroup(dal::TBB_Station& st, const string& stName, const vector<double>& stPosition) {
 	st.groupType()  .value = "StationGroup";
 	st.stationName().value = stName;
 
@@ -574,7 +574,7 @@ void TBB_Station::initStationGroup(DAL::TBB_Station& st, const string& stName, c
 	//st.nofDipoles.value is set at the end (destr)
 }
 
-void TBB_Station::initTriggerGroup(DAL::TBB_Trigger& tg) {
+void TBB_Station::initTriggerGroup(dal::TBB_Trigger& tg) {
 	tg.groupType()     .value = "TriggerGroup";
 	tg.triggerType()   .value = "Unknown";
 	tg.triggerVersion().value = 0; // There is no trigger algorithm info available to us yet.
@@ -911,7 +911,7 @@ TBB_Station* TBB_Writer::getStation(const TBB_Header& header) {
 	}
 
 	// Create new station with HDF5 file and station HDF5 group.
-	string stationName(DAL::stationIDToName(header.stationID));
+	string stationName(dal::stationIDToName(header.stationID));
 	string h5Filename(createNewTBB_H5Filename(header, stationName));
 	StationMetaDataMap::const_iterator stMdIt(itsStationMetaDataMap.find(header.stationID));
 	// If not found, station is not participating in the observation. Should not happen, but don't panic.

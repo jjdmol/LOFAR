@@ -147,10 +147,10 @@ typedef std::map<unsigned, StationMetaData> StationMetaDataMap;
 
 
 class TBB_Dipole {
-	DAL::TBB_DipoleDataset* itsDataset;
+	dal::TBB_DipoleDataset* itsDataset;
 	std::ofstream itsRawOut; // if raw out requested
 
-	std::vector<DAL::Range> itsFlagOffsets;
+	std::vector<dal::Range> itsFlagOffsets;
 
 	ssize_t itsDatasetLen;
 
@@ -176,22 +176,22 @@ public:
 
 	// All TBB_Dipole objects are default constructed in a vector, so provide an init procedure.
 	void initDipole(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-                        const std::string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex);
+                        const std::string& rawFilename, dal::TBB_Station& station, Mutex& h5Mutex);
 
 	void processFrameData(const TBB_Frame& frame, Mutex& h5Mutex);
 
 private:
 	void addFlags(size_t offset, size_t len);
 	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-                                   const std::string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex);
+                                   const std::string& rawFilename, dal::TBB_Station& station, Mutex& h5Mutex);
 	bool hasAllZeroDataSamples(const TBB_Frame& frame) const;
 	bool crc32tbb(const TBB_Payload* payload, size_t nsamples);
 };
 
 class TBB_Station {
-	DAL::TBB_File itsH5File;
+	dal::TBB_File itsH5File;
 	Mutex itsH5Mutex;
-	DAL::TBB_Station itsStation;
+	dal::TBB_Station itsStation;
 	std::vector<TBB_Dipole> itsDipoles;
 	const Parset& itsParset;
 	const StationMetaData& itsStationMetaData;
@@ -219,9 +219,9 @@ private:
 
 	void initCommonLofarAttributes();
 	void initTBB_RootAttributesAndGroups(const std::string& stName);
-	void initStationGroup(DAL::TBB_Station& st, const std::string& stName,
+	void initStationGroup(dal::TBB_Station& st, const std::string& stName,
                               const std::vector<double>& stPosition);
-	void initTriggerGroup(DAL::TBB_Trigger& tg);
+	void initTriggerGroup(dal::TBB_Trigger& tg);
 };
 
 class TBB_Writer;
