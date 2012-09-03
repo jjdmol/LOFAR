@@ -26,6 +26,8 @@ from lofarpipe.recipes.helpers.ComplexArray import ComplexArray, RealImagArray, 
 class GainOutlierCorrection(LOFARnodeTCP):
     def run(self, infile, outfile, executable, environment, sigma):
 
+        self.environment.update(environment)
+        
         # Time execution of this job
         with log_time(self.logger):
             if os.path.exists(infile):
@@ -59,7 +61,7 @@ class GainOutlierCorrection(LOFARnodeTCP):
                 catch_segfaults(
                     [executable, '-in', infile, '-out', outfile],
                     temp_dir,
-                    environment,
+                    self.environment,
                     logger
                 )
         except Exception, excp:

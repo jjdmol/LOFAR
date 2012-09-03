@@ -58,6 +58,7 @@ class imager_create_dbs(LOFARnodeTCP):
             source_list_path_extern):
 
         self.logger.info("Starting imager_create_dbs Node")
+        self.environment.update(environment)
 
         # If a (local) sourcelist is received use it else
         # construct one
@@ -77,8 +78,7 @@ class imager_create_dbs(LOFARnodeTCP):
 
         # convert it to a sourcedb (casa table)
         if self._create_source_db(source_list, sourcedb_target_path,
-                                  environment, working_directory,
-                                  makesourcedb_path, append):
+                                  working_directory, makesourcedb_path, append):
             self.logger.error("failed creating sourcedb")
             return 1
 
@@ -92,7 +92,7 @@ class imager_create_dbs(LOFARnodeTCP):
 
         return 0
 
-    def _create_source_db(self, source_list, sourcedb_target_path, environment,
+    def _create_source_db(self, source_list, sourcedb_target_path,
                           working_directory, executable, append = False):
         """
         _create_source_db consumes a skymap text file and produces a source db
@@ -115,7 +115,7 @@ class imager_create_dbs(LOFARnodeTCP):
                  self.logger.name + "." + os.path.basename("makesourcedb"),
                  os.path.basename(executable)
             ) as logger:
-                    catch_segfaults(cmd, working_directory, environment,
+                    catch_segfaults(cmd, working_directory, self.environment,
                                             logger, cleanup = None)
 
         except Exception, e:

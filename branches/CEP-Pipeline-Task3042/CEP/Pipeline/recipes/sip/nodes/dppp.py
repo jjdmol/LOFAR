@@ -43,6 +43,8 @@ class dppp(LOFARnodeTCP):
         self.logger.debug("nthreads        = %s" % nthreads)
         self.logger.debug("clobber         = %s" % clobber)
 
+        self.environment.update(environment)
+        
         if not nthreads:
             nthreads = 1
         if not outfile:
@@ -92,7 +94,7 @@ class dppp(LOFARnodeTCP):
                 shutil.copytree(infile, tmpfile)
 
             # Limit number of threads used.
-            environment['OMP_NUM_THREADS'] = str(nthreads)
+            self.environment['OMP_NUM_THREADS'] = str(nthreads)
             self.logger.debug("Using %s threads for NDPPP" % nthreads)
 
             # Put arguments we need to pass to some private methods in a dict
@@ -127,7 +129,7 @@ class dppp(LOFARnodeTCP):
                     ) as logger:
                         # Catch NDPPP segfaults (a regular occurance), and retry
                         catch_segfaults(
-                            cmd, working_dir, environment, logger, 
+                            cmd, working_dir, self.environment, logger, 
                             cleanup = lambda : shutil.rmtree(tmpfile, ignore_errors=True)
                         )
                         # Replace outfile with the updated working copy

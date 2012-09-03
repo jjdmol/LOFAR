@@ -39,6 +39,8 @@ class imager_awimager(LOFARnodeTCP):
             output_image, concatenated_measurement_set, sourcedb_path, mask_patch_size):
         self.logger.info("Start imager_awimager  run: client")
         log4CPlusName = "imager_awimager"
+        self.environment.update(environment)
+        
         with log_time(self.logger):
             # Calculate awimager parameters that depend on measurement set                 
             cell_size, npix, w_max, w_proj_planes = \
@@ -55,7 +57,7 @@ class imager_awimager(LOFARnodeTCP):
                               " files: {0}".format(image_path_head))
 
             mask_file_path = self._create_mask(npix, cell_size, output_image,
-                         concatenated_measurement_set, environment, executable,
+                         concatenated_measurement_set, executable,
                          working_directory, log4CPlusName, sourcedb_path,
                           mask_patch_size, image_path_head)
             # The max support should always be a minimum of 1024 (Ger van Diepen)
@@ -88,7 +90,7 @@ class imager_awimager(LOFARnodeTCP):
                         self.logger.name + "." + os.path.basename(log4CPlusName),
                         os.path.basename(executable)
                 ) as logger:
-                    catch_segfaults(cmd, working_directory, environment,
+                    catch_segfaults(cmd, working_directory, self.environment,
                                             logger)
 
             # Thrown by catch_segfault
@@ -105,15 +107,14 @@ class imager_awimager(LOFARnodeTCP):
         return 0
 
     def _create_mask(self, npix, cell_size, output_image,
-                     concatenated_measurement_set, environment, executable,
+                     concatenated_measurement_set, executable,
                      working_directory, log4CPlusName, sourcedb_path,
                      mask_patch_size, image_path_image_cycle):
         """
         _create_mask creates a casa image containing an mask blocking out the
         sources in the provided sourcedb.
-        It expects the ms for which the mask will be created. enviroment 
-        parameters for running within the catchsegfault framework and
-        finaly the size of the mask_pach.
+        It expects the ms for which the mask will be created, and the size of
+        the mask_pach.
         To create a mask, first a empty measurement set is created using
         awimager: ready to be filled with mask data        
         """
@@ -142,7 +143,7 @@ class imager_awimager(LOFARnodeTCP):
                     self.logger.name + "." + os.path.basename(log4CPlusName),
                     os.path.basename(executable)
             ) as logger:
-                catch_segfaults(cmd, working_directory, environment,
+                catch_segfaults(cmd, working_directory, self.environment,
                                         logger)
         # Thrown by catch_segfault
         except CalledProcessError, e:

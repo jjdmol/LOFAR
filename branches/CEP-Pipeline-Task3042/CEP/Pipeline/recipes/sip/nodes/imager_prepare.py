@@ -132,6 +132,8 @@ class imager_prepare(LOFARnodeTCP):
             time_slices_per_image, subbands_per_group, raw_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
             rficonsole_executable):
+            
+        self.environment.update(environment)
         with log_time(self.logger):
             input_map = load_data_map(raw_ms_mapfile)
 
@@ -164,7 +166,7 @@ class imager_prepare(LOFARnodeTCP):
             time_slices = \
                 self._run_dppp(working_dir, time_slice_dir, time_slices_per_image,
                     input_map, subbands_per_group, processed_ms_dir,
-                    parset, ndppp_executable, environment)
+                    parset, ndppp_executable)
 
             self.logger.debug("Produced time slices: {0}".format(time_slices))
             #***********************************************************
@@ -265,7 +267,7 @@ class imager_prepare(LOFARnodeTCP):
 
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
                   input_map, subbands_per_image, collected_ms_dir_name, parset,
-                  ndppp, environment):
+                  ndppp):
         """
         Run NDPPP:  
         Create dir for grouped measurements, assure clean workspace
@@ -322,7 +324,7 @@ class imager_prepare(LOFARnodeTCP):
                 with CatchLog4CPlus(working_dir, self.logger.name +
                                     "." + os.path.basename("imager_prepare_ndppp"),
                                     os.path.basename(ndppp)) as logger:
-                        catch_segfaults(cmd, working_dir, environment,
+                        catch_segfaults(cmd, working_dir, self.environment,
                                         logger, cleanup = None)
 
             except CalledProcessError, e:

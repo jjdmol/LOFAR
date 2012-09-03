@@ -19,6 +19,7 @@ class imager_source_finding(LOFARnodeTCP):
             bdsm_parameter_run2x_path, catalog_output_path, image_output_path,
             sourcedb_target_path, environment, working_directory, executable):
         self.logger.info("Starting imager_source_finding")
+        self.environment.update(environment)
         # default frequency is None (read from image), save for later cycles
         frequency = None
         number_of_sourcefind_itterations = None
@@ -103,7 +104,7 @@ class imager_source_finding(LOFARnodeTCP):
         # ik denk van niet: als er een fout op treed eindigd deze script
 
         self._create_source_db(catalog_output_path, sourcedb_target_path,
-                environment, working_directory, executable, False)
+                working_directory, executable, False)
 
         return 0
 
@@ -159,7 +160,7 @@ class imager_source_finding(LOFARnodeTCP):
                                                 catalog_output_path))
 
 
-    def _create_source_db(self, source_list, sourcedb_target_path, environment,
+    def _create_source_db(self, source_list, sourcedb_target_path,
                           working_directory, executable, append = False):
         """
         _create_source_db consumes a skymap text file and produces a source db
@@ -183,7 +184,7 @@ class imager_source_finding(LOFARnodeTCP):
                  self.logger.name + "." + os.path.basename("makesourcedb"),
                  os.path.basename(executable)
             ) as logger:
-                    catch_segfaults(cmd, working_directory, environment,
+                    catch_segfaults(cmd, working_directory, self.environment,
                                             logger, cleanup = None)
 
         except Exception, e:
