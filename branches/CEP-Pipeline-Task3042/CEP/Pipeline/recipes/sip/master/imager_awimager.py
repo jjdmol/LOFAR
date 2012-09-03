@@ -4,7 +4,7 @@
 #                                                          Wouter Klijn, 2010
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
-# python imager_awimager.py ~/build/preparation/output.map --job imager_awimager --config ~/build/preparation/pipeline.cfg --initscript /opt/cep/LofIm/daily/lofar/lofarinit.sh --parset ~/build/preparation/parset.par --working-directory "/data/scratch/klijn" --executable /opt/cep/LofIm/daily/lofar/bin/awimager -d
+# python imager_awimager.py ~/build/preparation/output.map --job imager_awimager --config ~/build/preparation/pipeline.cfg --parset ~/build/preparation/parset.par --working-directory "/data/scratch/klijn" --executable /opt/cep/LofIm/daily/lofar/bin/awimager -d
 # the measurement set with input should be located in the working directory
 
 import os
@@ -27,11 +27,6 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         'executable': ingredient.ExecField(
             '--executable',
             help = "The full path to the  awimager executable"
-        ),
-        'initscript': ingredient.FileField(
-            '--initscript',
-            help = '''The full path to an (Bourne) shell script which will\
-             intialise the environment (ie, ``lofarinit.sh``)'''
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
@@ -72,7 +67,6 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         input_map = load_data_map(self.inputs['args'][0])
 
         executable = self.inputs['executable']
-        init_script = self.inputs['initscript']
         parset = self.inputs['parset']
         output_image = self.inputs['output_image']
         working_directory = self.inputs['working_directory']
@@ -99,7 +93,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
             #construct and save the output name
             outnames[host].append(measurement_set)
-            arguments = [executable, init_script, parset, working_directory, output_image,
+            arguments = [executable, self.environment, parset, working_directory, output_image,
                        measurement_set, sourcedb_path, mask_patch_size]
 
             jobs.append(ComputeJob(host, node_command, arguments))

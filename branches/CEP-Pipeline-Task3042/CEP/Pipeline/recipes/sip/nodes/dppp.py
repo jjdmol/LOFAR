@@ -16,7 +16,6 @@ import sys
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
 from lofarpipe.support.parset import patched_parset
-from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarnode import LOFARnodeTCP
@@ -26,7 +25,7 @@ class dppp(LOFARnodeTCP):
 
     def run(
         self, infile, outfile, parmdb, sourcedb,
-        parsetfile, executable, initscript, demix_always, demix_if_needed,
+        parsetfile, executable, environment, demix_always, demix_if_needed,
         start_time, end_time, nthreads, clobber
     ):
         # Debugging info
@@ -36,7 +35,7 @@ class dppp(LOFARnodeTCP):
         self.logger.debug("sourcedb        = %s" % sourcedb)
         self.logger.debug("parsetfile      = %s" % parsetfile)
         self.logger.debug("executable      = %s" % executable)
-        self.logger.debug("initscript      = %s" % initscript)
+        self.logger.debug("environment     = %s" % environment)
         self.logger.debug("demix_always    = %s" % demix_always)
         self.logger.debug("demix_if_needed = %s" % demix_if_needed)
         self.logger.debug("start_time      = %s" % start_time)
@@ -92,9 +91,8 @@ class dppp(LOFARnodeTCP):
                 )
                 shutil.copytree(infile, tmpfile)
 
-            # Initialise environment. Limit number of threads used.
-            env = read_initscript(self.logger, initscript)
-            env['OMP_NUM_THREADS'] = str(nthreads)
+            # Limit number of threads used.
+            environment['OMP_NUM_THREADS'] = str(nthreads)
             self.logger.debug("Using %s threads for NDPPP" % nthreads)
 
             # Put arguments we need to pass to some private methods in a dict
@@ -129,7 +127,7 @@ class dppp(LOFARnodeTCP):
                     ) as logger:
                         # Catch NDPPP segfaults (a regular occurance), and retry
                         catch_segfaults(
-                            cmd, working_dir, env, logger, 
+                            cmd, working_dir, environment, logger, 
                             cleanup = lambda : shutil.rmtree(tmpfile, ignore_errors=True)
                         )
                         # Replace outfile with the updated working copy

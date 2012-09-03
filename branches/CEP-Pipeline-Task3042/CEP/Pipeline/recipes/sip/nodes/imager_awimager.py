@@ -24,7 +24,6 @@ from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
 from lofarpipe.support.utilities import patch_parset
 from lofarpipe.support.utilities import get_parset
-from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarexceptions import PipelineException
 import pyrap.tables as pt                   #@UnresolvedImport
@@ -36,7 +35,7 @@ import lofar.parmdb                          #@UnresolvedImport
 import numpy as np
 
 class imager_awimager(LOFARnodeTCP):
-    def run(self, executable, init_script, parset, working_directory,
+    def run(self, executable, environment, parset, working_directory,
             output_image, concatenated_measurement_set, sourcedb_path, mask_patch_size):
         self.logger.info("Start imager_awimager  run: client")
         log4CPlusName = "imager_awimager"
@@ -56,7 +55,7 @@ class imager_awimager(LOFARnodeTCP):
                               " files: {0}".format(image_path_head))
 
             mask_file_path = self._create_mask(npix, cell_size, output_image,
-                         concatenated_measurement_set, init_script, executable,
+                         concatenated_measurement_set, environment, executable,
                          working_directory, log4CPlusName, sourcedb_path,
                           mask_patch_size, image_path_head)
             # The max support should always be a minimum of 1024 (Ger van Diepen)
@@ -85,7 +84,6 @@ class imager_awimager(LOFARnodeTCP):
             # The command and parameters to be run
             cmd = [executable, calculated_parset_path]
             try:
-                environment = read_initscript(self.logger, init_script)
                 with CatchLog4CPlus(working_directory,
                         self.logger.name + "." + os.path.basename(log4CPlusName),
                         os.path.basename(executable)
@@ -107,7 +105,7 @@ class imager_awimager(LOFARnodeTCP):
         return 0
 
     def _create_mask(self, npix, cell_size, output_image,
-                     concatenated_measurement_set, init_script, executable,
+                     concatenated_measurement_set, environment, executable,
                      working_directory, log4CPlusName, sourcedb_path,
                      mask_patch_size, image_path_image_cycle):
         """
@@ -140,7 +138,6 @@ class imager_awimager(LOFARnodeTCP):
         cmd = [executable, mask_parset_path]
         self.logger.info(" ".join(cmd))
         try:
-            environment = read_initscript(self.logger, init_script)
             with CatchLog4CPlus(working_directory,
                     self.logger.name + "." + os.path.basename(log4CPlusName),
                     os.path.basename(executable)

@@ -10,10 +10,6 @@ from lofarpipe.support.group_data import load_data_map, store_data_map
 
 class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
-        'initscript': ingredient.FileField(
-            '--initscript',
-            help = "Initscript to source (ie, lofarinit.sh)"
-        ),
         'bdsm_parset_file_run1': ingredient.FileField(
             '--bdsm-parset-file-run1',
             help = "Path to bdsm parameter set for the first sourcefinding run"
@@ -88,7 +84,7 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
                          catalog_output_path,
                          image_output_path,
                          self.inputs['sourcedb_target_path'],
-                         self.inputs['initscript'],
+                         self.environment,
                          self.inputs['working_directory'],
                          self.inputs['makesourcedb_path']
                         ]

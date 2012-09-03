@@ -24,10 +24,6 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
     **Arguments**
     """
     inputs = {
-        'initscript': ingredient.FileField(
-            '--initscript',
-            help = "Initscript to source (ie, lofarinit.sh)"
-        ),
         'parset': ingredient.FileField(
             '-p', '--parset',
             help = "BBS configuration parset"

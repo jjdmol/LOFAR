@@ -45,11 +45,6 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             '--ndppp-exec',
             help = "The full path to the ndppp executable"
         ),
-        'initscript': ingredient.FileField(
-            '--initscript',
-            help = '''The full path to an (Bourne) shell script which will\
-             intialise the environment (ie, ``lofarinit.sh``)'''
-        ),
         'parset': ingredient.FileField(
             '-p', '--parset',
             help = "The full path to a prepare parset (mainly ndppp)"
@@ -144,7 +139,6 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         processed_ms_dir = self.inputs['processed_ms_dir']
 
         # Environment parameters
-        init_script = self.inputs['initscript']
         parset = self.inputs['parset']
         working_directory = self.inputs['working_directory']
         ndppp_exec = self.inputs['ndppp_exec']
@@ -173,7 +167,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             inputs_for_image_mapfile_path_list.append((host,
                                             inputs_for_image_mapfile_path))
 
-            arguments = [init_script, parset, working_directory,
+            arguments = [self.environment, parset, working_directory,
                         processed_ms_dir,
                         ndppp_exec, output_measurement_set,
                         slices_per_image, subbands_per_image,

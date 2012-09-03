@@ -15,7 +15,6 @@ from subprocess import CalledProcessError
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
-from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 import monetdb.sql as db
 import lofar.gsm.gsmutils as gsm                                                #@UnresolvedImport
@@ -55,7 +54,7 @@ class imager_create_dbs(LOFARnodeTCP):
     def run(self, concatenated_measurement_set, sourcedb_target_path,
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
             monet_db_password, assoc_theta, parmdb_executable, slice_paths,
-            parmdb_suffix, init_script, working_directory, makesourcedb_path,
+            parmdb_suffix, environment, working_directory, makesourcedb_path,
             source_list_path_extern):
 
         self.logger.info("Starting imager_create_dbs Node")
@@ -78,7 +77,7 @@ class imager_create_dbs(LOFARnodeTCP):
 
         # convert it to a sourcedb (casa table)
         if self._create_source_db(source_list, sourcedb_target_path,
-                                  init_script, working_directory,
+                                  environment, working_directory,
                                   makesourcedb_path, append):
             self.logger.error("failed creating sourcedb")
             return 1
@@ -93,7 +92,7 @@ class imager_create_dbs(LOFARnodeTCP):
 
         return 0
 
-    def _create_source_db(self, source_list, sourcedb_target_path, init_script,
+    def _create_source_db(self, source_list, sourcedb_target_path, environment,
                           working_directory, executable, append = False):
         """
         _create_source_db consumes a skymap text file and produces a source db
@@ -112,7 +111,6 @@ class imager_create_dbs(LOFARnodeTCP):
                "append=true"] # Always set append flag: no effect on non exist db
 
         try:
-            environment = read_initscript(self.logger, init_script)
             with CatchLog4CPlus(working_directory,
                  self.logger.name + "." + os.path.basename("makesourcedb"),
                  os.path.basename(executable)

@@ -16,7 +16,7 @@ import errno
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
-from lofarpipe.support.utilities import read_initscript, create_directory, delete_directory
+from lofarpipe.support.utilities import create_directory, delete_directory
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarexceptions import PipelineRecipeFailed
 
@@ -24,7 +24,7 @@ from lofarpipe.recipes.helpers.WritableParmDB import WritableParmDB, list_statio
 from lofarpipe.recipes.helpers.ComplexArray import ComplexArray, RealImagArray, AmplPhaseArray
 
 class GainOutlierCorrection(LOFARnodeTCP):
-    def run(self, infile, outfile, executable, initscript, sigma):
+    def run(self, infile, outfile, executable, environment, sigma):
 
         # Time execution of this job
         with log_time(self.logger):
@@ -49,9 +49,6 @@ class GainOutlierCorrection(LOFARnodeTCP):
             self.logger.error("Executable %s not found" % executable)
             return 1
 
-        # Initialize environment
-        env = read_initscript(self.logger, initscript)
-
         try:
             temp_dir = tempfile.mkdtemp()
             with CatchLog4CPlus(
@@ -62,7 +59,7 @@ class GainOutlierCorrection(LOFARnodeTCP):
                 catch_segfaults(
                     [executable, '-in', infile, '-out', outfile],
                     temp_dir,
-                    env,
+                    environment,
                     logger
                 )
         except Exception, excp:
