@@ -1,18 +1,22 @@
-
 from __future__ import with_statement
 import sys
 
 import lofarpipe.support.lofaringredient as ingredient
-from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map, validate_data_maps, store_data_map
-from lofarpipe.support.pipelinelogging import log_process_output
+from lofarpipe.support.group_data import load_data_map, validate_data_maps, \
+    store_data_map
 
 class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-
+    The Imager_finalizer performs a number of steps needed for integrating the
+    msss_imager_pipeline in the LOFAR framework: It places the image on the
+    output location in the correcy image type (hdf5).
+    It also adds some meta data collected from the individual measurement sets
+    and the found data.
+   
+    This recipe does not have positional commandline arguments 
     """
     inputs = {
         'initscript': ingredient.FileField(
@@ -22,7 +26,7 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'awimager_output_map': ingredient.FileField(
             '--awimager-output-mapfile',
-            help=""""Mapfile containing (host, path) pairs of created sky
+            help="""Mapfile containing (host, path) pairs of created sky
                    images """
         ),
         'raw_ms_per_image_map': ingredient.FileField(
@@ -37,8 +41,8 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'target_mapfile': ingredient.FileField(
             '--target-mapfile',
-            help='''Mapfile containing (host, path) pairs to the concatenated and
-            combined measurement set, the source for the actual sky image'''
+            help="Mapfile containing (host, path) pairs to the concatenated and"
+            "combined measurement set, the source for the actual sky image"
         ),
         'minbaseline': ingredient.FloatField(
             '--minbaseline',
@@ -63,7 +67,8 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'placed_image_mapfile': ingredient.FileField(
             '--placed-image-mapfile',
-            help='''location of mapfile with proced and correctly placed, hdf5 images'''
+            help="location of mapfile with proced and correctly placed,"
+                " hdf5 images"
         )
     }
 
@@ -72,14 +77,28 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     def go(self):
+        """
+        Steps:
+        
+        1. Load and validate the input datamaps
+        2. Run the node parts of the recipe  
+        3. Validate node output and format the recipe output   
+        """
+        super(imager_finalize, self).go()
 
-        awimager_output_map = load_data_map(self.inputs["awimager_output_map"])
-        raw_ms_per_image_map = load_data_map(self.inputs["raw_ms_per_image_map"])
+        # *********************************************************************
+        # 1. Load the datamaps
+        awimager_output_map = load_data_map(
+                                self.inputs["awimager_output_map"])
+        raw_ms_per_image_map = load_data_map(
+                                    self.inputs["raw_ms_per_image_map"])
         sourcelist_map = load_data_map(self.inputs["sourcelist_map"])
         target_mapfile = load_data_map(self.inputs["target_mapfile"])
-        output_image_mapfile = load_data_map(self.inputs["output_image_mapfile"])
+        output_image_mapfile = load_data_map(
+                                    self.inputs["output_image_mapfile"])
         processed_ms_dir = self.inputs["processed_ms_dir"]
-        fillRootImageGroup_exec = self.inputs["fillrootimagegroup_exec"]
+        fillrootimagegroup_exec = self.inputs["fillrootimagegroup_exec"]
+
         # The input mapfiles might nog be of the same length:
         # host_source are unique and can be used to match the entries!
         # Final step is the source_finder: use this mapfile as 'source'
@@ -121,13 +140,16 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
                                                         output_image_map_new))
             return 1
 
-        nodeCommand = " python %s" % (self.__file__.replace("master", "nodes"))
+        # *********************************************************************
+        # 2. Run the node side of the recupe
+        command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
         for  (awimager_output_pair, raw_ms_per_image_pair, sourcelist_pair,
               target_pair, output_image_pair) in zip(
                 awimager_output_map_new, raw_ms_per_image_map_new, sourcelist_map,
                 target_map_new, output_image_map_new):
-            # collect the data
+            # collect the data for the current node from the indexes in the 
+            # mapfiles
             (host, awimager_output) = awimager_output_pair
             (host, raw_ms_per_image) = raw_ms_per_image_pair
             (host, sourcelist) = sourcelist_pair
@@ -137,12 +159,14 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
             arguments = [awimager_output, raw_ms_per_image, sourcelist,
                         target, output_image, self.inputs["minbaseline"],
                         self.inputs["maxbaseline"], processed_ms_dir,
-                        fillRootImageGroup_exec]
+                        fillrootimagegroup_exec]
             self.logger.info(arguments)
-            jobs.append(ComputeJob(host, nodeCommand, arguments))
+            jobs.append(ComputeJob(host, command, arguments))
         self._schedule_jobs(jobs)
 
-        placed_images = []
+        # *********************************************************************
+        # 3. Validate the performance of the node script and assign output
+        placed_image_ = []
         for job in  jobs:
             if job.results.has_key("hdf5"):
                 placed_images.append((job.host, job.results["image"]))
@@ -152,10 +176,11 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
             return 1
 
         store_data_map(self.inputs['placed_image_mapfile'], placed_images)
-        self.logger.debug("Wrote mapfile containing placed hdf5 images: {0}".format(
+        self.logger.debug(
+           "Wrote mapfile containing placed hdf5 images: {0}".format(
                            self.inputs['placed_image_mapfile']))
-        self.outputs["placed_image_mapfile"] = self.inputs['placed_image_mapfile']
-
+        self.outputs["placed_image_mapfile"] = self.inputs[
+                                                    'placed_image_mapfile']
         return 0
 
 
