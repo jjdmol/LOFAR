@@ -31,7 +31,7 @@
 #include <dal/lofar/BF_File.h>
 #include <dal/dal_version.h>
 
-using namespace DAL;
+using namespace dal;
 using namespace std;
 
 #include <Common/Thread/Mutex.h>
@@ -229,7 +229,7 @@ namespace LOFAR
 
       file.createOfflineOnline().value = "Online";
       file.BFFormat().value            = "TAB";
-      file.BFVersion().value           = str(format("RTCP/Storage %s r%s using DAL %s and HDF5 %s") % StorageVersion::getVersion() % StorageVersion::getRevision() % DAL::get_lib_version() % DAL::get_dal_hdf5_version());
+      file.BFVersion().value           = str(format("RTCP/Storage %s r%s using DAL %s and HDF5 %s") % StorageVersion::getVersion() % StorageVersion::getRevision() % dal::get_lib_version() % dal::get_dal_hdf5_version());
 
       file.totalIntegrationTime()    .value = nrBlocks * parset.CNintegrationTime();
       file.totalIntegrationTimeUnit().value = "s";
