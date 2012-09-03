@@ -35,7 +35,7 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         'skymodel': ingredient.StringField(
             '-s', '--skymodel',
             help="Input sky catalogue",
-            default=''
+            default='None'
         ),
         'type': ingredient.StringField(
             '--type',
@@ -103,7 +103,7 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
                 self.inputs['skymodel']
             )
             self.inputs['skymodel'] = ""
-        
+
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
         for host, outfile in outdata:
@@ -124,7 +124,7 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         if self.error.isSet():
             return 1
         else:
-            self.logger.debug("Writing sky map file: %s" % 
+            self.logger.debug("Writing sky map file: %s" %
                               self.inputs['mapfile'])
             store_data_map(self.inputs['mapfile'], outdata)
             self.outputs['mapfile'] = self.inputs['mapfile']
