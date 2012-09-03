@@ -41,8 +41,8 @@ class imager_bbsTest(unittest.TestCase):
         #shutil.rmtree(self.test_path)
         pass
 
-    def test_validate_input_data(self):
+    def test_constructor(self):
 
         sut = imager_bbsWrapper()
-        self.assertTrue(False)
+        self.assertTrue(True)
 

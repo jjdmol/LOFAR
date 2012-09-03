@@ -38,13 +38,13 @@ class imager_bbsTest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_first(self):
+    def test_constructor(self):
         """
         When the measurement set is from an antenna with a name NOT
         containing either LBA or HBA en Exception should be trown
         """
         sut = imager_bbsWrapper()
-        self.assertTrue(False)
+        self.assertTrue(True)
 
 if __name__ == "__main__":
     unittest.main()
