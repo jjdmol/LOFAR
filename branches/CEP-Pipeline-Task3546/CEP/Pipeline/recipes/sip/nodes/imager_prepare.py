@@ -281,10 +281,10 @@ class imager_prepare(LOFARnodeTCP):
                 ", ".join(group_measurements_collected), output_file_path))
 
     def _run_rficonsole(self, rficonsole_executable, time_slice_dir,
-                        group_measurements_collected):
+                        time_slices):
         """
         _run_rficonsole runs the rficonsole application on the supplied timeslices
-        in group_measurements_collected.
+        in time_slices.
         
         """
 
@@ -294,16 +294,19 @@ class imager_prepare(LOFARnodeTCP):
 
         try:
             rfi_console_proc_group = SubProcessGroup(self.logger)
-            for group_set in group_measurements_collected:
+            for time_slice in time_slices:
+                temp_slice_path = os.path.join(temp_dir_path,
+                    os.path.basename(time_slice))
+                create_directory(temp_slice_path)
                 # construct copy command
-                self.logger.info(group_set)
+                self.logger.info(time_slice)
                 command = [rficonsole_executable, "-indirect-read",
-                            group_set]
+                            time_slice]
                 self.logger.info("executing rficonsole command: {0}".format(
                             " ".join(command)))
 
                 # Add the command to the process group
-                rfi_console_proc_group.run(command, cwd=temp_dir_path)
+                rfi_console_proc_group.run(command, cwd=temp_slice_path)
 
             # wait for all to finish
             if rfi_console_proc_group.wait_for_finish() != None:
