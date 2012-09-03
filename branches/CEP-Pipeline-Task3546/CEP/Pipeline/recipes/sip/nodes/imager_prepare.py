@@ -303,7 +303,7 @@ class imager_prepare(LOFARnodeTCP):
                             " ".join(command)))
 
                 # Add the command to the process group
-                rfi_console_proc_group.run(command, cdw=temp_dir_path)
+                rfi_console_proc_group.run(command, cwd=temp_dir_path)
 
             # wait for all to finish
             if rfi_console_proc_group.wait_for_finish() != None:

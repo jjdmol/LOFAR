@@ -31,7 +31,7 @@ class SubProcessGroup(object):
             # Run subprocess
             process = subprocess.Popen(
                         cmd,
-                        cdw=cwd,
+                        cwd=cwd,
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
