@@ -26,7 +26,7 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'awimager_output_map': ingredient.FileField(
             '--awimager-output-mapfile',
-            help=""""Mapfile containing (host, path) pairs of created sky
+            help="""Mapfile containing (host, path) pairs of created sky
                    images """
         ),
         'raw_ms_per_image_map': ingredient.FileField(
