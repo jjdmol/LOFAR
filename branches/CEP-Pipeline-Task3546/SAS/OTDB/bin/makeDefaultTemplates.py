@@ -109,7 +109,9 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
             otdb.query("select * from updateVTnode(1, %s, %s, '%s', '%s')" % (newTmplID, nodeid, instances, value))
 
     # get a list with the removed items
-    parentNodes = {}
+	# -13 -> items uniq in Master --> removed in template OR different value
+	# -23 -> items uniq in template --> added to template OR different value
+	# comm -23 d1 d2 --> removed in template irt Mastertree.
     command = """comm -13 dfltTree%s MasterTree_%s | cut -d'=' -f1 | sort >diff1 ; 
                  comm -23 dfltTree%s MasterTree_%s | cut -d'=' -f1 | sort >diff2 ; 
                  comm -23 diff1 diff2 ; rm diff1 diff2
@@ -118,6 +120,32 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
     # remove the NODE in the new template otherwise remove the parameter only
     for key in os.popen(command).read().splitlines():
         removeElement(orgTmplID, newTmplID, key, True)
+
+    # Almost ready... when adding Indexed components we might have added to many nodes, 
+    # that is: the use might have removed subtrees in the index componenttree.
+    # make an parset of the new created tree and delete the nodes(subtrees) that are obsolete
+    topNodeID = otdb.query("select nodeid from getTopNode(%s)" % newTmplID).getresult()[0][0]
+    createParsetFile(newTmplID, topNodeID, "newTree%s" % newTmplID)
+    command = """comm -13 newTree%s dfltTree%s | cut -d'=' -f1 | sort >diff1 ; 
+                 comm -23 newTree%s dfltTree%s | cut -d'=' -f1 | sort >diff2 ; 
+                 comm -13 diff1 diff2 ; rm diff1 diff2
+              """ % (newTmplID, orgTmplID, newTmplID, orgTmplID)
+    # loop over the list of nodes that are in the newTree but not in the old tree.
+    for key in os.popen(command).read().splitlines():
+        print "Removing? ", key,
+        # if none indexed node exists in mastertree then it was removed by the user.
+        grepcmd = "grep `echo %s | sed 's/\[.*\]//g'` MasterTree_%s 1>/dev/null 2>/dev/null; echo $?" % (key, treeIdentification)
+        result = os.popen(grepcmd).read().splitlines()[0]
+        if result == "0":
+            print " Yes"
+            parentname = key.rsplit('.',1)[0]
+            nodeid = otdb.query("select nodeid from getVTitem(%s, '%s')" % (newTmplID, parentname)).getresult()[0][0]
+            if nodeid != None:
+                otdb.query ("select * from removeVTNode(1, %s, %s)" % (newTmplID, nodeid))
+                print "   %s: %-75s removed node deleted" % (newTmplID, parentname)
+        else:
+            print " No"
+	
        
 #
 # createParsetFile(treeID, nodeID, fileName)

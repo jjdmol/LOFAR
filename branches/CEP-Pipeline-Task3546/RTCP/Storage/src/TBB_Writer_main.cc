@@ -52,18 +52,12 @@
 #include <Storage/TBB_Writer.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-#include <Common/StreamUtil.h>
 #include <Common/NewHandler.h>
 #include <ApplCommon/AntField.h>
 #include <Interface/Exceptions.h>
 #include <Storage/IOPriority.h>
-#if defined HAVE_PKVERSION
-#include <Storage/Package__Version.h>
-#else
-#include <Common/Version.h>
-#endif
 
-#include <dal/lofar/Station.h>
+#include <dal/lofar/StationNames.h>
 
 #define TBB_DEFAULT_BASE_PORT		0x7bb0	// i.e. tbb0
 #define TBB_DEFAULT_LAST_PORT		0x7bbb	// 0x7bbf for NL, 0x7bbb for int'l stations
@@ -289,11 +283,10 @@ static int ensureOutputDirExists(string outputDir) {
 
 static void printUsage(const char* progname) {
 	cout << "LOFAR TBB_Writer version: ";
-#ifdef HAVE_PKVERSION
-	cout << StorageVersion::getVersion();
+#ifndef TBB_WRITER_VERSION
+	cout << LOFAR::StorageVersion::getVersion();
 #else
-#warning TBB_Writer version cannot be printed correctly with help and version program options
-	cout << "0.909";
+	cout << TBB_WRITER_VERSION;
 #endif
 	cout << endl;
 	cout << "Write incoming LOFAR TBB data with meta data to disk in HDF5 format." << endl;
