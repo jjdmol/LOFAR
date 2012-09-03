@@ -150,7 +150,9 @@ class imager_source_finding(LOFARnodeTCP):
         # 6. Convert sourcelist to sourcedb
         self._create_source_db(catalog_output_path, sourcedb_target_path,
                 init_script, working_directory, create_sourcdb_exec, False)
-        self.outputs['source_db'] = sourcedb_target_path
+        # Assign the outputs
+        self.outputs["catalog_output_path"] = catalog_output_path
+        self.outputs["source_db"] = sourcedb_target_path
         return 0
 
     def _combine_source_lists(self, n_itter_sourcefind, catalog_output_path):

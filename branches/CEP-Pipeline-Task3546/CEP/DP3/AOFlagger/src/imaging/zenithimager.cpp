@@ -47,7 +47,7 @@ void ZenithImager::Clear()
 
 void ZenithImager::Add(const BandInfo &band, const std::complex<float> *samples, const bool *isRFI, double u, double v, double w, double phaseRotation)
 {
-	size_t n = band.channelCount;
+	size_t n = band.channels.size();
 	for(size_t f=0;f<n;++f)
 	{
 		if(!isRFI[f])

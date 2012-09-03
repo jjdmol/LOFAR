@@ -77,17 +77,30 @@ class NumericTickSet : public TickSet
 			{
 				if(sizeRequest == 0)
 					return;
-				double tickWidth = roundUpToNiceNumber((_max - _min) / (double) sizeRequest);
+				double tickWidth = roundUpToNiceNumber(fabs(_max - _min) / (double) sizeRequest);
 				if(tickWidth == 0.0)
 					tickWidth = 1.0;
-				double pos = roundUpToNiceNumber(_min, tickWidth);
-				while(pos <= _max)
+				if(_min < _max)
 				{
-					if(fabs(pos) < tickWidth/100.0)
-						_ticks.push_back(0.0);
-					else
-						_ticks.push_back(pos);
-					pos += tickWidth;
+					double pos = roundUpToNiceNumber(_min, tickWidth);
+					while(pos <= _max)
+					{
+						if(fabs(pos) < tickWidth/100.0)
+							_ticks.push_back(0.0);
+						else
+							_ticks.push_back(pos);
+						pos += tickWidth;
+					}
+				} else {
+					double pos = -roundUpToNiceNumber(-_min, tickWidth);
+					while(pos >= _max)
+					{
+						if(fabs(pos) < tickWidth/100.0)
+							_ticks.push_back(0.0);
+						else
+							_ticks.push_back(pos);
+						pos -= tickWidth;
+					}
 				}
 				while(_ticks.size() > sizeRequest)
 					_ticks.pop_back();

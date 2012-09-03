@@ -8,15 +8,16 @@
 
 int main(int argc, char *argv[])
 {
+  unsigned successes = 0, failures = 0;
 	if(argc == 2 && std::string(argv[1])=="time")
 	{
-		DefaultStrategySpeedTest speedTest("sumthreshold");
-		speedTest.Run();
-		return 0;
+		ExperimentsTestGroup group;
+		group.Run();
+		successes += group.Successes();
+		failures += group.Failures();
 	}
 	
-  unsigned successes = 0, failures = 0;
-	if(argc == 1 || std::string(argv[1])!="only")
+	else if(argc == 1 || std::string(argv[1])!="only")
 	{
 		AlgorithmsTestGroup mainGroup;
 		mainGroup.Run();

@@ -117,9 +117,24 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # ********************************************************************
         # 3. Test for errors and return output
-        # TODO: sourcefinder has no partial run functionality.
         if self.error.isSet():
             self.logger.warn("Failed imager_source_finding run detected")
+
+        # Collect the nodes that succeeded
+        source_dbs_from_nodes = []
+        catalog_output_path_from_nodes = []
+        for job in jobs:
+            if "source_db"  in job.results:
+                source_dbs_from_nodes.append((
+                                        job.host, job.results["source_db"]))
+                # We now also have catalog path
+                catalog_output_path_from_nodes.append((
+                               job.host, job.results["catalog_output_path"]))
+
+        # Abort if none of the recipes succeeded
+        if len(source_dbs_from_nodes) == 0:
+            self.logger.error("None of the source finding recipes succeeded")
+            self.logger.error("Exiting with a failure status")
             return 1
 
         self.logger.info(created_sourcelists)

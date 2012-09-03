@@ -42,6 +42,7 @@
 #include <AOFlagger/strategy/actions/fringestopaction.h>
 #include <AOFlagger/strategy/actions/imageraction.h>
 #include <AOFlagger/strategy/actions/iterationaction.h>
+#include <AOFlagger/strategy/actions/highpassfilteraction.h>
 #include <AOFlagger/strategy/actions/normalizevarianceaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
@@ -84,6 +85,7 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Frequency convolution");
 	list.push_back("Frequency selection");
 	list.push_back("Fringe stopping recovery");
+	list.push_back("High-pass filter");
 	list.push_back("Image");
 	list.push_back("Iteration");
 	list.push_back("Normalize variance");
@@ -147,6 +149,8 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new FringeStopAction();
 	else if(action == "Fourier transformation")
 		return new FourierTransformAction();
+	else if(action == "High-pass filter")
+		return new HighPassFilterAction();
 	else if(action == "Image")
 		return new ImagerAction();
 	else if(action == "Iteration")
