@@ -149,7 +149,7 @@ void TBB_Dipole::initDipole(const TBB_Header& header, const Parset& parset, cons
 	if (header.sampleFreq == 200 || header.sampleFreq == 160) {
 		itsSampleFreq = static_cast<uint32_t>(header.sampleFreq) * 1000000;
 	} else { // might happen if header of first frame is corrupt
-		itsSampleFreq = parset.clockSpeed();
+		itsSampleFreq = parset.clockSpeed(); // Hz
 		LOG_WARN("TBB: Unknown sample rate in TBB frame header; using sample rate from the parset");
 	}
 
@@ -264,7 +264,7 @@ void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& p
 	itsDataset->rspID()    .value = header.rspID;
 	itsDataset->rcuID()    .value = header.rcuID;
 
-	itsDataset->sampleFrequency()    .value = itsSampleFreq;
+	itsDataset->sampleFrequency()    .value = itsSampleFreq / 1000000;
 	itsDataset->sampleFrequencyUnit().value = "MHz";
 
 	itsDataset->time().value = header.time; // in seconds. Note: may have been corrected in correctTransientSampleNr()
