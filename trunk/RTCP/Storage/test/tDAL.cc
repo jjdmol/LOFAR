@@ -29,7 +29,7 @@
 #include <string>
 
 using namespace std;
-using namespace DAL;
+using namespace dal;
 
 int main() {
   if (!check_hdf5_versions()) {
