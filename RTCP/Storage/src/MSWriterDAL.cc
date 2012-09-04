@@ -229,11 +229,10 @@ namespace LOFAR
 
       file.createOfflineOnline().value = "Online";
       file.BFFormat().value            = "TAB";
-      file.BFVersion().value           = str(format("RTCP/Storage %s r%s using DAL %s and HDF5 %s") % StorageVersion::getVersion() % StorageVersion::getRevision() % dal::get_lib_version() % dal::get_dal_hdf5_version());
+      file.BFVersion().value           = str(format("RTCP/Storage %s r%s using DAL %s and HDF5 %s") % StorageVersion::getVersion() % StorageVersion::getRevision() % dal::version().to_string() % dal::version_hdf5().to_string());
 
       file.totalIntegrationTime()    .value = nrBlocks * parset.CNintegrationTime();
       file.totalIntegrationTimeUnit().value = "s";
-      file.observationDataType()     .value = "";
 
       //file.subArrayPointingDiameter().value = 0.0;
       //file.subArrayPointingDiameterUnit().value = "arcmin";
@@ -279,13 +278,11 @@ namespace LOFAR
       sapHistory.create();
       sapHistory.groupType()   .value = "ProcessingHistory";
 
+      Attribute<string> observationParset(sapHistory, "OBSERVATION_PARSET");
       string parsetAsString;
       parset.writeBuffer(parsetAsString);
 
-      sapHistory.observationParset().value = parsetAsString;
-      sapHistory.observationLog()   .value = "";
-      sapHistory.prestoParset()     .value = "";
-      sapHistory.prestoLog()        .value = "";
+      observationParset.value = parsetAsString;
 
       // information about the pencil beam
 
