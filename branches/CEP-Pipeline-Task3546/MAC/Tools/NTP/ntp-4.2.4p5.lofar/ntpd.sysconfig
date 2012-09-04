@@ -1,3 +1,0 @@
-# Drop root to id 'ntp:ntp' by default.  Requires kernel >= 2.2.18.
-#OPTIONS="-u ntp:ntp -p /var/run/ntpd.pid"
-OPTIONS="-p /var/run/ntpd.pid"
