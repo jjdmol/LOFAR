@@ -278,11 +278,11 @@ namespace LOFAR
       sapHistory.create();
       sapHistory.groupType()   .value = "ProcessingHistory";
 
-      Attribute<string> observationParset(sapHistory, "OBSERVATION_PARSET");
+      Attribute<string> sapObservationParset(sapHistory, "OBSERVATION_PARSET");
       string parsetAsString;
       parset.writeBuffer(parsetAsString);
 
-      observationParset.value = parsetAsString;
+      sapObservationParset.value = parsetAsString;
 
       // information about the pencil beam
 
@@ -368,10 +368,9 @@ namespace LOFAR
       BF_ProcessingHistory beamHistory = beam.processHistory();
       beamHistory.create();
 
-      beamHistory.observationParset().value = parsetAsString;
-      beamHistory.observationLog()   .value = "";
-      beamHistory.prestoParset()     .value = "";
-      beamHistory.prestoLog()        .value = "";
+      Attribute<string> beamObservationParset(beamHistory, "OBSERVATION_PARSET");
+
+      beamObservationParset.value = parsetAsString;
 
       CoordinatesGroup coordinates = beam.coordinates();
       coordinates.create();
