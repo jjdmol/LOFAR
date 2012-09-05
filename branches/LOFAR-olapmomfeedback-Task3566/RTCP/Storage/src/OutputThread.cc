@@ -64,7 +64,7 @@ static void makeDir(const string &dirname, const string &logPrefix)
     }
   } else if (errno == ENOENT) {
     // create directory
-    LOG_INFO_STR(logPrefix << "Creating directory " << dirname);
+    LOG_DEBUG_STR(logPrefix << "Creating directory " << dirname);
 
     if (mkdir(dirname.c_str(), 0777) != 0 && errno != EEXIST) {
       unsigned savedErrno = errno; // first argument below clears errno
@@ -108,6 +108,7 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),
   itsBlocksDropped(0),
+  itsNrExpectedBlocks(0),
   itsNextSequenceNumber(0)
 {
 }
@@ -139,7 +140,7 @@ void OutputThread::createMS()
 
     myFormat.addSubband(path, itsStreamNr, itsIsBigEndian);
 
-    LOG_INFO_STR(itsLogPrefix << "MeasurementSet created");
+    LOG_DEBUG_STR(itsLogPrefix << "MeasurementSet created");
 #endif // defined HAVE_AIPSPP
 
     if (itsParset.getLofarStManVersion() > 1) {
@@ -175,6 +176,33 @@ void OutputThread::createMS()
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
     itsWriter = new MSWriterNull;
+  }
+
+  // log some core characteristics for CEPlogProcessor for feedback to MoM/LTA
+  switch (itsOutputType) {
+    case CORRELATED_DATA:
+      itsNrExpectedBlocks = parset.nrCorrelatedBlocks();
+
+      {
+        const vector<unsigned> subbands = itsParset.subbandList();
+        const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
+
+        LOG_INFO_STR(itsLogPrefix << "Characteristics:"
+            << " subband " << subbands[itsStreamNr]
+            << ", centralfreq " << frequencies[itsStreamNr]/1e6 << " MHz "
+            << ", duration " << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s "
+            << ", integration " << itsParset.IONintegrationTime() << " s "
+            << ", channels " << itsParset.nrChannelsPerSubband() 
+            << ", channelWidth " << itsParset.channelWidth()/1e3 << " kHz"
+        );
+      }
+      break;
+    case BEAM_FORMED_DATA:
+      itsNrExpectedBlocks = parset.nrBeamFormedBlocks();
+      break;
+
+    default:
+      break;
   }
 }
 
@@ -247,14 +275,16 @@ void OutputThread::doWork()
 
     time_t now = time(0L);
 
+    float percent_written = itsNrExpectedBlocks == 0 ? 0 : 100.0 * itsBlocksWritten / itsNrExpectedBlocks;
+
     if (now > prevlog + 5) {
       // print info every 5 seconds
-      LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped");
+      LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped");
 
       prevlog = now;
     } else {
       // print debug info for the other blocks
-      LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped");
+      LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped");
     }
   }
 }
@@ -264,8 +294,9 @@ void OutputThread::cleanUp()
   flushSequenceNumbers();
 
   float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
+  float percent_written = itsNrExpectedBlocks == 0 ? 0 : 100.0 * itsBlocksWritten / itsNrExpectedBlocks;
 
-  LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+  LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
 }
 
 
