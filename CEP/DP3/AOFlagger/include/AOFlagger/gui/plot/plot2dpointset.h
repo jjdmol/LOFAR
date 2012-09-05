@@ -103,6 +103,18 @@ class Plot2DPointSet{
 			}
 			return max;
 		}
+		double MaxPositiveY() const
+		{
+			double max = 0.0;
+			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
+			{
+				if((i->y > max) && std::isfinite(i->y)) max = i->y;
+			}
+			if(max == 0.0)
+				return std::numeric_limits<double>::quiet_NaN();
+			else
+				return max;
+		}
 		double MinY() const
 		{
 			if(_points.empty())
@@ -111,6 +123,26 @@ class Plot2DPointSet{
 			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
 			{
 				if((i->y < min || (!std::isfinite(min))) && std::isfinite(i->y) ) min = i->y;
+			}
+			return min;
+		}
+		double MinPositiveY() const
+		{
+			std::vector<Point2D>::const_iterator i;
+			double min = 0.0;
+			// Find first positive element
+			for(i = _points.begin();i!=_points.end();++i)
+			{
+				if((i->y > 0.0) && std::isfinite(i->y))
+				{
+					min = i->y;
+					break;
+				}
+			}
+			if(min == 0.0) return std::numeric_limits<double>::quiet_NaN();
+			for(;i!=_points.end();++i)
+			{
+				if((i->y > 0.0) && (i->y < min) && std::isfinite(i->y)) min = i->y;
 			}
 			return min;
 		}
@@ -136,9 +168,17 @@ class Plot2DPointSet{
 		{
 			return MinY();
 		}
+		double YRangePositiveMin() const
+		{
+			return MinPositiveY();
+		}
 		double YRangeMax() const
 		{
 			return MaxY();
+		}
+		double YRangePositiveMax() const
+		{
+			return MaxPositiveY();
 		}
 		void SetTickLabels(const std::vector<std::string> &tickLabels)
 		{
