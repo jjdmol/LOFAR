@@ -78,7 +78,7 @@ class msss_imager_pipeline(control):
        converted from casa to HDF5 and copied to the correct output location. 
     7. Export meta data: An outputfile with meta data is generated ready for
        consumption by the LTA and/or the LOFAR framework
-
+    |
     Per subband-group, the following output products will be delivered:      
     
     a. An image
