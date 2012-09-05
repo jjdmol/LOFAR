@@ -118,7 +118,7 @@ namespace LOFAR
 
       itsTransposeLogic.decompose( fileno, sapNr, beamNr, stokesNr, partNr );
 
-      unsigned nrBlocks = floor((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
+      unsigned nrBlocks = parset.nrBeamFormedBlocks();
       unsigned nrSubbands = itsInfo.subbands.size();
       const vector<unsigned> &subbandIndices = itsInfo.subbands;
       const vector<unsigned> allSubbands = parset.subbandList();
