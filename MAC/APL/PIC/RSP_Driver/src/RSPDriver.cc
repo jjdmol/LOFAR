@@ -204,6 +204,7 @@ RSPDriver::RSPDriver(string name) :
 	RCUCables*		cables = new RCUCables("Attenuation.conf", "CableDelays.conf");
 	CableSettings*	cableSet = new CableSettings(cables);
 	delete cables;
+	(void)cableSet; // prevent compiler warning
 
 	LOG_DEBUG("Trying to load delay settings for synchronising the PPS between the subracks");
     readPPSdelaySettings();

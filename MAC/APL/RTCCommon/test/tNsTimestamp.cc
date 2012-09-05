@@ -34,8 +34,10 @@
 using namespace LOFAR;
 using namespace RTC;
 
-int main (int	argc, char*	argv[])
+int main (int, char*	argv[])
 {
+	INIT_LOGGER(argv[0]);
+
 	cout << "\n--- Testing constructors ---" << endl;
 	NsTimestamp		TS1;
 	cout << "TS1: " << TS1 << endl;

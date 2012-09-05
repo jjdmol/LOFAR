@@ -32,9 +32,9 @@
 
 using namespace LOFAR;
 
-int main (int	argc, char*	argv[])
+int main (int, char*	argv[])
 {
-	INIT_LOGGER("tRCUCables");
+	INIT_LOGGER(argv[0]);
 
 	// good file
 	RCUCables	RC1("tRCUCables.in_CableAtts", "tRCUCables.in_1");
