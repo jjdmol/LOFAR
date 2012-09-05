@@ -75,6 +75,7 @@ class StrategyReader {
 		class Action *parseFrequencyConvolutionAction(xmlNode *node);
 		class Action *parseFrequencySelectionAction(xmlNode *node);
 		class Action *parseFringeStopAction(xmlNode *node);
+		class Action *parseHighPassFilterAction(xmlNode *node);
 		class Action *parseImagerAction(xmlNode *node);
 		class Action *parseIterationBlock(xmlNode *node);
 		class Action *parseNormalizeVarianceAction(xmlNode *node);

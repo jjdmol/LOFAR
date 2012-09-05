@@ -34,7 +34,7 @@ if(NOT DAL_FOUND)
 
   find_path(DAL_INCLUDE_DIR dal/dal_config.h
     HINTS ${DAL_ROOT_DIR} PATH_SUFFIXES include)
-  find_library(DAL_LIBRARY dal
+  find_library(DAL_LIBRARY lofardal
     HINTS ${DAL_ROOT_DIR} PATH_SUFFIXES lib)
   mark_as_advanced(DAL_INCLUDE_DIR DAL_LIBRARY)
 

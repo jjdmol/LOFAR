@@ -42,20 +42,19 @@
 #include <Storage/TBB_Writer.h>
 #include <Common/LofarConstants.h>
 #include <Common/LofarLogger.h>
+#ifdef basename // some glibc have this as a macro
+#undef basename
+#endif
 #include <Common/SystemUtil.h>
 #include <Common/SystemCallException.h>
 #include <Common/StringUtil.h>
+#include <Common/StreamUtil.h>
 #include <ApplCommon/AntField.h>
 #include <Stream/SocketStream.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Stream.h>
-#if defined HAVE_PKVERSION
-#include <Storage/Package__Version.h>
-#else
-#include <Common/Version.h>
-#endif
 
-#include <dal/lofar/Station.h>
+#include <dal/lofar/StationNames.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -65,32 +64,24 @@ using namespace std;
 EXCEPTION_CLASS(TBB_MalformedFrameException, StorageException);
 
 /*
- * The output_format is without seconds. The output_size is including the '\0'.
+ * The output_format is without seconds. The output_size is including the terminating NUL char.
  * Helper for in filenames and for the FILEDATE attribute.
  */
 static string formatFilenameTimestamp(const struct timeval& tv, const char* output_format,
                                       const char* output_format_secs, size_t output_size) {
-	struct tm tm = {0};
+	struct tm tm;
 	gmtime_r(&tv.tv_sec, &tm);
 	double secs = tm.tm_sec + tv.tv_usec / 1000000.0;
 
-	struct Date {
-		char* date;
-		Date(size_t size) : date(new char[size]) {
-		}
-		~Date() {
-			delete[] date;
-		}
-	} d(output_size); // ensure C string for strftime() is always deleted
+	vector<char> date(output_size);
 
-	size_t nwritten = strftime(d.date, output_size, output_format, &tm);
+	size_t nwritten = strftime(&date[0], output_size, output_format, &tm);
 	if (nwritten == 0) {
-		d.date[0] = '\0';
+		date[0] = '\0';
 	}
-	/*int nprinted = */snprintf(d.date + nwritten, output_size - nwritten, output_format_secs, secs);
+	(void)snprintf(&date[0] + nwritten, output_size - nwritten, output_format_secs, secs);
 
-	string dateStr(d.date);
-	return dateStr;
+	return string(&date[0]);
 }
 
 string TBB_Header::toString() const {
@@ -133,20 +124,19 @@ TBB_Dipole::~TBB_Dipole() {
 	if (itsDataset != NULL) {
 		if (usesExternalDataFile()) {
 			try {
-				vector<ssize_t> dims(1, itsDatasetLen); // TODO: get rid of this in DAL
-				itsDataset->resize(dims);
-			} catch (DAL::DALException& exc) {
+				itsDataset->resize1D(itsDatasetLen);
+			} catch (dal::DALException& exc) {
 				LOG_WARN_STR("TBB: failed to resize HDF5 dipole dataset to external data size: " << exc.what());
 			}
 		}
 		try {
-			itsDataset->dataLength().value = (uint64_t)itsDatasetLen;
-		} catch (DAL::DALException& exc) {
+			itsDataset->dataLength().value = static_cast<unsigned long long>(itsDatasetLen);
+		} catch (dal::DALException& exc) {
 			LOG_WARN_STR("TBB: failed to set dipole DATA_LENGTH attribute: " << exc.what());
 		}
 		try {
 			itsDataset->flagOffsets().value = itsFlagOffsets;
-		} catch (DAL::DALException& exc) {
+		} catch (dal::DALException& exc) {
 			LOG_WARN_STR("TBB: failed to set dipole FLAG_OFFSETS attribute: " << exc.what());
 		}
 
@@ -155,11 +145,11 @@ TBB_Dipole::~TBB_Dipole() {
 }
 
 void TBB_Dipole::initDipole(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-		const string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex) {
+		const string& rawFilename, dal::TBB_Station& station, Mutex& h5Mutex) {
 	if (header.sampleFreq == 200 || header.sampleFreq == 160) {
 		itsSampleFreq = static_cast<uint32_t>(header.sampleFreq) * 1000000;
 	} else { // might happen if header of first frame is corrupt
-		itsSampleFreq = parset.clockSpeed();
+		itsSampleFreq = parset.clockSpeed(); // Hz
 		LOG_WARN("TBB: Unknown sample rate in TBB frame header; using sample rate from the parset");
 	}
 
@@ -184,6 +174,15 @@ bool TBB_Dipole::usesExternalDataFile() const {
 	return itsRawOut.is_open();
 }
 
+void TBB_Dipole::addFlags(size_t offset, size_t len) {
+	// Add a new flag range or extend the last stored flag range. 'len' cannot be 0.
+	if (itsFlagOffsets.empty() || offset > itsFlagOffsets.back().end) {
+		itsFlagOffsets.push_back(dal::Range(offset, offset + len));
+	} else { // extend flag range
+		itsFlagOffsets.back().end += len;
+	}
+}
+
 void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 	off_t offset = (frame.header.time - itsTime0) * itsSampleFreq + frame.header.sampleNr - itsSampleNr0;
 
@@ -196,7 +195,7 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 			 * On a data checksum error 'flag' this offset, but still store the data.
 			 * Lost frame vs crc error can be seen from the data: a block of zeros indicates lost.
 			 */
-			itsFlagOffsets.push_back(offset);
+			addFlags(offset, frame.header.nOfSamplesPerFrame);
 
 			const uint32_t* crc32 = reinterpret_cast<const uint32_t*>(&frame.payload.data[frame.header.nOfSamplesPerFrame]);
 			LOG_INFO_STR("TBB: crc32: " << frame.header.toString() << " " << *crc32);
@@ -209,7 +208,7 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 			 * to be real data. Rather, such zero blocks are from RCUs that are disabled or broken.
 			 * Still store the zeros to be able to distinguish from lost frames.
 			 */
-			itsFlagOffsets.push_back(offset);
+			addFlags(offset, frame.header.nOfSamplesPerFrame);
 		}
 
 	} else { // spectral mode
@@ -228,48 +227,44 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 			}
 			itsRawOut.write(reinterpret_cast<const char*>(frame.payload.data), static_cast<size_t>(frame.header.nOfSamplesPerFrame) * sizeof(frame.payload.data[0]));
 		} else {
-			vector<size_t> pos(1, offset); // TODO: get rid of this vector stuff in DAL
-			vector<ssize_t> dsNewDims(1, offset + frame.header.nOfSamplesPerFrame);
-
 			ScopedLock h5Lock(h5Mutex);
-			itsDataset->resize(dsNewDims);
-			itsDataset->set1D(pos, frame.header.nOfSamplesPerFrame, frame.payload.data);
+			itsDataset->resize1D(offset + frame.header.nOfSamplesPerFrame);
+			itsDataset->set1D(offset, frame.payload.data, frame.header.nOfSamplesPerFrame);
 		}
 
 		/*
 		 * Flag lost frame(s) (assume no out-of-order, see below). Assumes all frames have the same nr of samples.
-		 * Note: this cannot detect lost frames at the end of a dataset. Also, this cannot re-flag a crc32 error.
+		 * Note: this cannot detect lost frames at the end of a dataset.
 		 */
-		for (unsigned lostOffset = itsDatasetLen; lostOffset < offset; lostOffset += frame.header.nOfSamplesPerFrame) {
-			itsFlagOffsets.push_back(static_cast<unsigned>(lostOffset));
+		size_t nflags = offset - itsDatasetLen;
+		if (nflags > 0) {
+			addFlags(itsDatasetLen, nflags);
 		}
 
 		itsDatasetLen = offset + frame.header.nOfSamplesPerFrame;
 	} else { // Out-of-order or duplicate frames are very unlikely in the LOFAR TBB setup.
-		// Let us know if it ever happens, then we will do something.
+		// Let us know if it ever happens, then we will do something. (here and in addFlags())
 		LOG_WARN_STR("TBB: Dropped out-of-order or duplicate TBB frame at " << frame.header.stationID <<
 				" " << frame.header.rspID << " " << frame.header.rcuID << " " << offset);
 	}
 }
 
 void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-                                       const string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex) {
-	itsDataset = new DAL::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
+                                       const string& rawFilename, dal::TBB_Station& station, Mutex& h5Mutex) {
+	itsDataset = new dal::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
 
 	ScopedLock h5OutLock(h5Mutex);
 
 	// Create 1-dim, unbounded (-1) dataset. 
 	// Override endianess. TBB data is always stored little endian and also received as such, so written as-is on any platform.
-	vector<ssize_t> dsDims(1, 0);
-	vector<ssize_t> dsMaxDims(1, -1);
-	itsDataset->create(dsDims, dsMaxDims, LOFAR::basename(rawFilename), itsDataset->LITTLE);
+	itsDataset->create1D(0, -1, LOFAR::basename(rawFilename), itsDataset->LITTLE);
 
 	itsDataset->groupType().value = "DipoleDataset";
 	itsDataset->stationID().value = header.stationID;
 	itsDataset->rspID()    .value = header.rspID;
 	itsDataset->rcuID()    .value = header.rcuID;
 
-	itsDataset->sampleFrequency()    .value = itsSampleFreq;
+	itsDataset->sampleFrequency()    .value = itsSampleFreq / 1000000;
 	itsDataset->sampleFrequencyUnit().value = "MHz";
 
 	itsDataset->time().value = header.time; // in seconds. Note: may have been corrected in correctTransientSampleNr()
@@ -374,7 +369,7 @@ bool TBB_Dipole::hasAllZeroDataSamples(const TBB_Frame& frame) const {
 
 TBB_Station::TBB_Station(const string& stationName, const Parset& parset, const StationMetaData& stationMetaData,
                          const string& h5Filename, bool dumpRaw)
-: itsH5File(DAL::TBB_File(h5Filename, DAL::TBB_File::CREATE))
+: itsH5File(dal::TBB_File(h5Filename, dal::TBB_File::CREATE))
 , itsStation(itsH5File.station(stationName))
 , itsDipoles(MAX_RSPBOARDS/* = per station*/ * NR_RCUS_PER_RSPBOARD) // = 192 for int'l stations
 , itsParset(parset)
@@ -382,7 +377,7 @@ TBB_Station::TBB_Station(const string& stationName, const Parset& parset, const 
 , itsH5Filename(h5Filename)
 , itsDumpRaw(dumpRaw)
 {
-	initCommonLofarAttributes(h5Filename);
+	initCommonLofarAttributes();
 	initTBB_RootAttributesAndGroups(stationName);
 }
 
@@ -390,7 +385,7 @@ TBB_Station::~TBB_Station() {
 	// Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
 	try {
 		itsStation.nofDipoles().value = itsStation.dipoles().size();
-	} catch (DAL::DALException& exc) {
+	} catch (dal::DALException& exc) {
 		LOG_WARN_STR("TBB: failed to set station NOF_DIPOLES attribute: " << exc.what());
 	}
 }
@@ -422,35 +417,13 @@ void TBB_Station::processPayload(const TBB_Frame& frame) {
 	dipole.processFrameData(frame, itsH5Mutex);
 }
 
-/*
- * Returns last mod date/time of filename, or current time of day if stat()ing fails,
- * in "YYYY-MM-DDThh:mm:ss.s" UTC format.
- * For FILEDATE attribute.
- */
-string TBB_Station::getFileModDate(const string& filename) const {
-	struct timeval tv;
-	struct stat st;
-
-	if (stat(filename.c_str(), &st) != 0) {
-		gettimeofday(&tv, NULL); // If stat() fails, this is close enough to file mod date.
-	} else {
-		tv.tv_sec = st.st_mtime;
-		tv.tv_usec = st.st_mtim.tv_nsec / 1000;
-	}
-
-	const char output_format[] = "%Y-%m-%dT%H:%M:";
-	const char output_format_secs[] = "%04.1f"; // _total_ width of 4 of "ss.s"
-	const char output_format_example[] = "YYYY-MM-DDThh:mm:ss.s";
-	return formatFilenameTimestamp(tv, output_format, output_format_secs, sizeof(output_format_example));
-}
-
 // For timestamp attributes in UTC.
 string TBB_Station::utcTimeStr(double time) const {
 	time_t timeSec = static_cast<time_t>(floor(time));
 	unsigned long timeNSec = static_cast<unsigned long>(round( (time-floor(time))*1e9 ));
 
 	char utc_str[50];
-	struct tm tm = {0};
+	struct tm tm;
 	gmtime_r(&timeSec, &tm);
 	if (strftime(utc_str, sizeof(utc_str), "%Y-%m-%dT%H:%M:%S", &tm) == 0) {
 		return "";
@@ -464,14 +437,13 @@ double TBB_Station::toMJD(double time) const {
 	return 40587.0 + time / (24*60*60);
 }
 
-void TBB_Station::initCommonLofarAttributes(const string& filename) {
-	itsH5File.groupType().value = "Root"; // TODO: set basic group fields that DAL checks automatically in DAL
-	const string baseFilename(LOFAR::basename(filename));
-	itsH5File.fileName() .value = baseFilename;
-	itsH5File.fileDate() .value = getFileModDate(baseFilename);
+void TBB_Station::initCommonLofarAttributes() {
+	itsH5File.groupType().value = "Root";
 
-	itsH5File.fileType() .value = "tbb";
-	itsH5File.telescope().value = "LOFAR";
+	//itsH5File.fileName() is set by DAL
+	//itsH5File.fileDate() is set by DAL
+	//itsH5File.fileType() is set by DAL
+	//itsH5File.telescope() is set by DAL
 
 	itsH5File.projectID()   .value = itsParset.getString("Observation.Campaign.name", "");
 	itsH5File.projectTitle().value = itsParset.getString("Observation.Scheduler.taskName", "");
@@ -527,15 +499,14 @@ void TBB_Station::initCommonLofarAttributes(const string& filename) {
 
 	itsH5File.targets().value = targets;
 
-#ifdef HAVE_PKVERSION
-	itsH5File.systemVersion().value = StorageVersion::getVersion();
+#ifndef TBB_WRITER_VERSION
+	itsH5File.systemVersion().value = LOFAR::StorageVersion::getVersion();
 #else
-#warning SYSTEM_VERSION attribute cannot be written correctly into HDF5 output file
-	itsH5File.systemVersion().value = "0.909";
+	itsH5File.systemVersion().value = TBB_WRITER_VERSION;
 #endif
 
-	itsH5File.docName()   .value = "ICD 1: TBB Time-Series Data";
-	itsH5File.docVersion().value = "2.02.26";
+	//itsH5File.docName() is set by DAL
+	//itsH5File.docVersion() is set by DAL
 
 	itsH5File.notes().value = "";
 }
@@ -574,12 +545,12 @@ void TBB_Station::initTBB_RootAttributesAndGroups(const string& stName) {
 	initStationGroup(itsStation, stName, stPos);
 
 	// Trigger Group
-	DAL::TBB_Trigger tg(itsH5File.trigger());
+	dal::TBB_Trigger tg(itsH5File.trigger());
 	tg.create();
 	initTriggerGroup(tg);
 }
 
-void TBB_Station::initStationGroup(DAL::TBB_Station& st, const string& stName, const vector<double>& stPosition) {
+void TBB_Station::initStationGroup(dal::TBB_Station& st, const string& stName, const vector<double>& stPosition) {
 	st.groupType()  .value = "StationGroup";
 	st.stationName().value = stName;
 
@@ -590,7 +561,7 @@ void TBB_Station::initStationGroup(DAL::TBB_Station& st, const string& stName, c
 	}
 
 	// digital beam(s)
-	if (itsParset.nrBeams() > 0) { // What if >1 station beams? For now, only write beam 0.
+	if (itsParset.nrBeams() > 0) { // TODO: What if >1 station beams? For now, only write beam 0.
 		st.beamDirection()     .value = itsParset.getBeamDirection(0);
 		st.beamDirectionFrame().value = itsParset.getBeamDirectionType(0);
 		st.beamDirectionUnit() .value = "m";
@@ -603,7 +574,7 @@ void TBB_Station::initStationGroup(DAL::TBB_Station& st, const string& stName, c
 	//st.nofDipoles.value is set at the end (destr)
 }
 
-void TBB_Station::initTriggerGroup(DAL::TBB_Trigger& tg) {
+void TBB_Station::initTriggerGroup(dal::TBB_Trigger& tg) {
 	tg.groupType()     .value = "TriggerGroup";
 	tg.triggerType()   .value = "Unknown";
 	tg.triggerVersion().value = 0; // There is no trigger algorithm info available to us yet.
@@ -940,12 +911,12 @@ TBB_Station* TBB_Writer::getStation(const TBB_Header& header) {
 	}
 
 	// Create new station with HDF5 file and station HDF5 group.
-	string stationName(DAL::stationIDToName(header.stationID));
+	string stationName(dal::stationIDToName(header.stationID));
 	string h5Filename(createNewTBB_H5Filename(header, stationName));
 	StationMetaDataMap::const_iterator stMdIt(itsStationMetaDataMap.find(header.stationID));
 	// If not found, station is not participating in the observation. Should not happen, but don't panic.
 	const StationMetaData& stMetaData = stMdIt == itsStationMetaDataMap.end() ? itsUnknownStationMetaData : stMdIt->second;
-	TBB_Station* station = new TBB_Station(stationName, itsParset, stMetaData, h5Filename, itsDumpRaw);
+	TBB_Station* station = new TBB_Station(stationName, itsParset, stMetaData, h5Filename, itsDumpRaw); // TODO: mem leak if insert() fails. Also, really need global h5lock: cannot create 2 different h5 files at once safely.
 	return itsStations.insert(make_pair(header.stationID, station)).first->second;
 }
 

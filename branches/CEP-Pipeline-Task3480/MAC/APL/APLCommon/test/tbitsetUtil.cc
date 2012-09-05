@@ -30,7 +30,7 @@
 using namespace LOFAR;
 using namespace LOFAR::APLCommon;
 
-int main (int	argc, char* argv[]) 
+int main (int, char* argv[]) 
 {
 	INIT_LOGGER(argv[0]);
 	

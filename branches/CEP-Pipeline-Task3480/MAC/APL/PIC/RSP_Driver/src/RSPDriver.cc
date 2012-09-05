@@ -198,12 +198,9 @@ RSPDriver::RSPDriver(string name) :
 	ssp->setSplitter      (sc.hasSplitters);
 	LOG_DEBUG_STR (*ssp);
 
-	// Note: CableSettings is not used here, but the class is automatically attached to the
-	//		 global instance of CableSettings. (Not very neat, I know).
 	LOG_DEBUG("Setting up cable characteristics from Attenuation.conf and CableDelays.conf");
-	RCUCables*		cables = new RCUCables("Attenuation.conf", "CableDelays.conf");
-	CableSettings*	cableSet = new CableSettings(cables);
-	delete cables;
+	RCUCables		cables("Attenuation.conf", "CableDelays.conf");
+	CableSettings::createInstance(cables);
 
 	LOG_DEBUG("Trying to load delay settings for synchronising the PPS between the subracks");
     readPPSdelaySettings();

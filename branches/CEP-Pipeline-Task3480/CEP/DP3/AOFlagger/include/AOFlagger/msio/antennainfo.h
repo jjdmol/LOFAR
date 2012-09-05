@@ -34,6 +34,8 @@
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 struct EarthPosition {
+	EarthPosition() : x(0.0), y(0.0), z(0.0) { }
+	
 	double x, y, z;
 	std::string ToString() {
 		std::stringstream s;
@@ -172,20 +174,17 @@ struct ChannelInfo {
 
 struct BandInfo {
 	unsigned windowIndex;
-	unsigned channelCount;
 	std::vector<ChannelInfo> channels;
 
-	BandInfo() : windowIndex(0), channelCount(0) { }
+	BandInfo() : windowIndex(0) { }
 	BandInfo(const BandInfo &source) :
 		windowIndex(source.windowIndex),
-		channelCount(source.channelCount),
 		channels(source.channels)
 	{
 	}
 	void operator=(const BandInfo &source)
 	{
 		windowIndex = source.windowIndex;
-		channelCount = source.channelCount;
 		channels = source.channels;
 	}
 	num_t CenterFrequencyHz() const
@@ -206,7 +205,7 @@ struct BandInfo {
 	void Unserialize(std::istream &stream)
 	{
 		windowIndex = Serializable::UnserializeUInt32(stream);
-		channelCount = Serializable::UnserializeUInt32(stream);
+		size_t channelCount = Serializable::UnserializeUInt32(stream);
 		channels.resize(channelCount);
 		for(size_t i=0;i<channelCount;++i)
 			channels[i].Unserialize(stream);
@@ -223,6 +222,8 @@ struct FieldInfo {
 
 struct Baseline {
 	EarthPosition antenna1, antenna2;
+	Baseline()
+		: antenna1(), antenna2() { }
 	Baseline(const AntennaInfo &_antenna1, const AntennaInfo &_antenna2)
 		: antenna1(_antenna1.position), antenna2(_antenna2.position) { }
 	Baseline(EarthPosition _antenna1, EarthPosition _antenna2)

@@ -173,7 +173,6 @@ namespace rfiStrategy {
 				metaData->SetObservationTimes(observationTimes);
 				
 				BandInfo bandInfo;
-				bandInfo.channelCount = totalChannels;
 				for(unsigned i=0;i<totalChannels;++i)
 				{
 					ChannelInfo channel;
