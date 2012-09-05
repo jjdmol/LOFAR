@@ -88,6 +88,10 @@ namespace rfiStrategy {
 			virtual ActionType Type() const { return StrategyType; }
 		protected:
 		private:
+			/** Copying prohibited */
+			Strategy(const Strategy &) { }
+			Strategy &operator=(const Strategy &) { return *this; }
+			
 			struct PerformFunc {
 				PerformFunc(class Strategy *strategy, class ArtifactSet *artifacts, class ProgressListener *progress)
 				: _strategy(strategy), _artifacts(artifacts), _progress(progress)

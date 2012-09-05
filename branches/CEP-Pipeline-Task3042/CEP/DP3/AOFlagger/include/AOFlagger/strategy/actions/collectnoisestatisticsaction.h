@@ -54,12 +54,13 @@ namespace rfiStrategy {
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &)
 			{
 				TimeFrequencyData data = artifacts.ContaminatedData();
-				if(data.PhaseRepresentation() != TimeFrequencyData::ComplexRepresentation)
-					throw std::runtime_error("The noise collector action needs complex data");
 				if(data.PolarisationCount() != 1)
 					throw std::runtime_error("The noise collector action needs a single polarization");
 				boost::mutex::scoped_lock lock(_mutex);
-				_statistics.Add(data.GetRealPart(), data.GetImaginaryPart(), artifacts.OriginalData().GetSingleMask(), artifacts.MetaData());
+				if(data.PhaseRepresentation() == TimeFrequencyData::ComplexRepresentation)
+					_statistics.Add(data.GetRealPart(), data.GetImaginaryPart(), artifacts.OriginalData().GetSingleMask(), artifacts.MetaData());
+				else
+					_statistics.Add(data.GetSingleImage(), data.GetSingleImage(), artifacts.OriginalData().GetSingleMask(), artifacts.MetaData());
 			}
 			virtual ActionType Type() const { return CollectNoiseStatisticsActionType; }
 			

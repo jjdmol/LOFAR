@@ -109,6 +109,15 @@ class Plot2D : public Plotable {
 			else
 				return _system.YRangeMax(**_pointSets.begin());
 		}
+		double MaxPositiveY() const
+		{
+			if(_vRangeDetermination == SpecifiedRange)
+				return _specifiedMaxY;
+			else if(_pointSets.empty())
+				return 1.0;
+			else
+				return _system.YRangePositiveMax(**_pointSets.begin());
+		}
 		void SetMinY(double minY)
 		{
 			_vRangeDetermination = SpecifiedRange;
@@ -116,10 +125,21 @@ class Plot2D : public Plotable {
 		}
 		double MinY() const
 		{
-			if(_pointSets.empty())
+			if(_vRangeDetermination == SpecifiedRange)
+				return _specifiedMinY;
+			else if(_pointSets.empty())
 				return -1.0;
 			else
 				return _system.YRangeMin(**_pointSets.begin());
+		}
+		double MinPositiveY() const
+		{
+			if(_vRangeDetermination == SpecifiedRange)
+				return _specifiedMinY;
+			else if(_pointSets.empty())
+				return 0.1;
+			else
+				return _system.YRangePositiveMin(**_pointSets.begin());
 		}
 		void SetShowAxes(bool showAxes) {
 			_showAxes = showAxes;

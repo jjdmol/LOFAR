@@ -37,9 +37,9 @@ using namespace RTC;
 using namespace BS;
 using namespace IBS_Protocol;
 
-int main(int	argc, char*	argv[]) 
+int main(int, char*	argv[]) 
 {
-	INIT_LOGGER("tAnaBeamMgr");
+	INIT_LOGGER(argv[0]);
 
 	// set up some rcuMask for the tests. Mask 1+2 or 2+3 can be scheduled at the same time.
 	// 1: 0000 0000 1111

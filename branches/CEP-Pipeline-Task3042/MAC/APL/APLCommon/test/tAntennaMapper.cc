@@ -38,8 +38,10 @@ void doTest(int	antNr, int antType, AntennaMapper&	AM)
 		 << AM.YRCU(antNr) << " using input " << AM.RCUinput(antNr, antType) << endl;
 }
 
-int main (int	argc, char* argv[]) 
+int main (int, char *argv[]) 
 {
+	INIT_LOGGER(argv[0]);
+
 	//						rcus, lbas, hbas
 	AntennaMapper	AMCore  (96, 96, 48);
 	AntennaMapper	AMRemote(96, 96, 0);

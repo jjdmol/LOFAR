@@ -40,7 +40,7 @@ RCUCables::RCUCables(const string&	attFilename, const string&	delayFilename) :
 	itsLargestHBAdelay(0.0),
 	itsLargestLBAlen  (0),
 	itsLargestHBAlen  (0),
-	itsCableAtts	   (new CableAttenuation(attFilename))
+	itsCableAtts	   (attFilename)
 {
 	#define EXPECTED_NR_COLUMNS	7
 
@@ -78,9 +78,9 @@ RCUCables::RCUCables(const string&	attFilename, const string&	delayFilename) :
 			ASSERTSTR(rcuNr >= 0 && rcuNr < MAX_RCUS, "RCUNumber " << rcuNr << " not in range [0.." << MAX_RCUS-1 << "]");
 			ASSERTSTR(nrArgs == EXPECTED_NR_COLUMNS, "Expected " << EXPECTED_NR_COLUMNS << " fields on line: " << line);
 
-			ASSERTSTR(itsCableAtts->isLegalLength(LBLlen), "LBL cablelength " << LBLlen << " is not allowed");
-			ASSERTSTR(itsCableAtts->isLegalLength(LBHlen), "LBH cablelength " << LBHlen << " is not allowed");
-			ASSERTSTR(itsCableAtts->isLegalLength(HBAlen), "HBA cablelength " << HBAlen << " is not allowed");
+			ASSERTSTR(itsCableAtts.isLegalLength(LBLlen), "LBL cablelength " << LBLlen << " is not allowed");
+			ASSERTSTR(itsCableAtts.isLegalLength(LBHlen), "LBH cablelength " << LBHlen << " is not allowed");
+			ASSERTSTR(itsCableAtts.isLegalLength(HBAlen), "HBA cablelength " << HBAlen << " is not allowed");
 
 			// copy values to internal arrays.
 			itsCableLengths(rcuNr, 0) = LBLlen;
@@ -121,14 +121,14 @@ float	RCUCables::getAtt  (int	rcuNr, int	rcuMode) const
 
 	switch (rcuMode) {
 		case 1:
-		case 2: return (itsCableAtts->getAttenuation(itsCableLengths(rcuNr, 0), rcuMode));
+		case 2: return (itsCableAtts.getAttenuation(itsCableLengths(rcuNr, 0), rcuMode));
 
 		case 3:
-		case 4: return (itsCableAtts->getAttenuation(itsCableLengths(rcuNr, 1), rcuMode));
+		case 4: return (itsCableAtts.getAttenuation(itsCableLengths(rcuNr, 1), rcuMode));
 
 		case 5:
 		case 6:
-		case 7: return (itsCableAtts->getAttenuation(itsCableLengths(rcuNr, 2), rcuMode));
+		case 7: return (itsCableAtts.getAttenuation(itsCableLengths(rcuNr, 2), rcuMode));
 	}
 	return (0.0);
 }
@@ -156,7 +156,7 @@ float	RCUCables::getDelay(int	rcuNr, int	rcuMode) const
 // Returns the largest attenuation in dB when operation in the given rcumode.
 float	RCUCables::getLargestAtt  (int	rcuMode) const
 {
-	return (itsCableAtts->getAttenuation((rcuMode < 5) ? itsLargestLBAlen : itsLargestHBAlen, rcuMode));
+	return (itsCableAtts.getAttenuation((rcuMode < 5) ? itsLargestLBAlen : itsLargestHBAlen, rcuMode));
 }
 
 // Returns the largest delay in ns when operation in the given rcumode.

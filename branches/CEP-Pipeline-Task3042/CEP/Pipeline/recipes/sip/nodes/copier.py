@@ -21,35 +21,11 @@ class copier(LOFARnodeTCP):
     """
     Node script for copying files between nodes. See master script for full public interface
     """
-    def run(self, source_mapfile, target_mapfile):
+    def run(self, source_node, source_path, target_path):
         # Time execution of this job
         with log_time(self.logger):
-            try:
-                source_map = load_data_map(source_mapfile)
-                target_map = load_data_map(target_mapfile)
-            except Exception, e:
-                self.logger.error("An error occured during loading of"
-                 "mapfiles")
-                raise e
-
-            return self._copy_all_sources_to_target(
-                         source_map, target_map)
-
-    def _copy_all_sources_to_target(self, source_map,
-                            target_map):
-        """
-        Read the mapfiles, construct the target dir if needed and call 
-        the actual copy function.
-        """
-        # combine the two lists to get the copy pairs
-        for source_pair, target_pair in zip(source_map, target_map):
-            source_node, source_path = source_pair
-            target_node, target_path = target_pair
-
-            self._copy_single_file_using_rsync(
-                                source_node, source_path, target_path)
-
-        return 0
+            return self._copy_single_file_using_rsync(
+                source_node, source_path, target_path)
 
     def _copy_single_file_using_rsync(self, source_node, source_path,
                                       target_path):
@@ -73,9 +49,9 @@ class copier(LOFARnodeTCP):
             raise IOError(message)
 
 
-        # construct copy command
+        # construct copy command: Copy to the dir
         command = ["rsync", "-r", "{0}:{1}".format(source_node, source_path),
-                               "{0}".format(target_path)]
+                               "{0}".format(os.path.dirname(target_path))]
 
         self.logger.debug("executing: " + " ".join(command))
         #Spawn a subprocess and connect the pipes
@@ -90,13 +66,16 @@ class copier(LOFARnodeTCP):
         #if copy failed log the missing file
         if  exit_status != 0:
             message = \
-            "Failed to (rsync) copy file: {0} on node: {1} \n to: {2}".format(
-                                        source_path, source_node, target_path)
+            "Failed to (rsync) copy file, command: \n {0}".format(" ".join(
+                                            command))
             self.logger.warn(message)
             self.logger.error(stderrdata)
-            raise PipelineException(message)
+            return 1
 
         self.logger.debug(stdoutdata)
+
+        # return the target path to signal success
+        self.outputs["target"] = target_path
         return 0
 
 if __name__ == "__main__":

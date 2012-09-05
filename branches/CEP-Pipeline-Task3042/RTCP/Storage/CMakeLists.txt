@@ -3,7 +3,7 @@
 lofar_package(Storage 1.0 DEPENDS Common ApplCommon Interface MSLofar LofarStMan)
 
 include(LofarFindPackage)
-lofar_find_package(Casacore COMPONENTS casa measures ms tables REQUIRED)
+lofar_find_package(Casacore COMPONENTS casa ms tables REQUIRED)
 lofar_find_package(DAL REQUIRED)
 lofar_find_package(HDF5 REQUIRED)
 

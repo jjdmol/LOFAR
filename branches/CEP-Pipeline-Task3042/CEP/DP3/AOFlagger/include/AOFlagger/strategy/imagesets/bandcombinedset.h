@@ -154,7 +154,6 @@ namespace rfiStrategy {
 				
 				BandInfo bandInfo;
 				bandInfo.windowIndex = 0;
-				bandInfo.channelCount = 0;
 				for(unsigned i=0; i<_sets.size(); ++i)
 				{
 					const ImageSetIndex &curIndex = *bcIndex.GetIndex(i);
@@ -164,7 +163,6 @@ namespace rfiStrategy {
 					for(std::vector<ChannelInfo>::const_iterator channelI=curBandInfo.channels.begin();
 						channelI!=curBandInfo.channels.end(); ++channelI)
 						bandInfo.channels.push_back(*channelI);
-					bandInfo.channelCount += curBandInfo.channelCount;
 				}
 				metaData->SetBand(bandInfo);
 				

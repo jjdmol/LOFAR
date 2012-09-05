@@ -71,6 +71,9 @@ double getClock()
 
 void RemoteStationCalibration::calibrate(const SubArray& subarray, ACC& acc, AntennaGains& gains)
 {
+  (void)subarray;
+  (void)acc;
+
 #if 0
   //
   // BIG WARNING: The order of the axes in the acc array have changed.
