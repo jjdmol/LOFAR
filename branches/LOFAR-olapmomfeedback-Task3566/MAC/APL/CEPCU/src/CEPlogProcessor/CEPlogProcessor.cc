@@ -24,7 +24,6 @@
 #include <Common/LofarConstants.h>
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
-#include <Common/ParameterSet.h>
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/Observation.h>
 #include <ApplCommon/StationInfo.h>
@@ -53,8 +52,54 @@ namespace LOFAR {
     
 // static pointer to this object for signal handler
 static CEPlogProcessor*     thisLogProcessor = 0;
-#define MPIProcs 16
 
+
+CEPFeedback::CEPFeedback()
+:
+  nrSubbands(0)
+{
+}
+
+
+void CEPFeedback::write(const std::string &filename)
+{
+  parset.replace(subbandSizeKey(), formatString("%u", nrSubbands));
+
+  parset.writeFile(filename);
+}
+
+
+void CEPFeedback::addSubband(unsigned index)
+{
+  setSubbandKey(index, "fileFormat",           "AIPS++/CASA");
+  setSubbandKey(index, "filename",             "");
+  setSubbandKey(index, "location",             "");
+  setSubbandKey(index, "percentageWritten",    "0");
+  setSubbandKey(index, "startTime",            "");
+  setSubbandKey(index, "duration",             "");
+  setSubbandKey(index, "integrationInterval",  "");
+  setSubbandKey(index, "centralFrequency",     "");
+  setSubbandKey(index, "channelWidth",         "");
+  setSubbandKey(index, "channelsPerSubband",   "");
+  setSubbandKey(index, "subband",              "");
+
+  ++nrSubbands;
+}
+
+void CEPFeedback::setSubbandKey(unsigned index, const std::string &key, const std::string &value)
+{
+  parset.replace(subbandPrefix(index) + key, value);
+}
+
+std::string CEPFeedback::subbandSizeKey() const
+{
+  return "LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_";
+}
+
+std::string CEPFeedback::subbandPrefix(unsigned index) const
+{
+  return formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", index);
+}
 
 //
 // CEPlogProcessor()
@@ -417,8 +462,10 @@ void CEPlogProcessor::processParset( const std::string &observationID )
                                  LOFAR_SHARE_LOCATION, observationID.c_str()));
 
     ParameterSet parset(filename);
-
     Observation obs(&parset, false, itsNrPsets);
+    string observationPrefix = parset.locateModule("Observation") + "Observation.";
+
+    CEPFeedback &feedback = itsCEPFeedback[obsID];
 
     unsigned nrStreams = obs.streamsToStorage.size();
 
@@ -468,8 +515,37 @@ void CEPlogProcessor::processParset( const std::string &observationID )
 
     if (parset.isDefined("_DPname")) {
       // register the temporary obs name
-      itsTempObsMapping.set( obsID, parset.getString("_DPname") );
+      registerObservation( obsID, parset.getString("_DPname") );
     }
+
+    // process feedback for correlated data
+    unsigned nrCorrelatedStreams;
+
+    for (unsigned i = 0; i < nrStreams; i++ ) {
+      Observation::StreamToStorage &s = obs.streamsToStorage[i];
+
+      if (s.dataProduct != "Correlated")
+        continue;
+
+      unsigned index = nrCorrelatedStreams;
+
+      feedback.addSubband(index);
+      feedback.setSubbandKey(index, "filename",             s.filename);
+      feedback.setSubbandKey(index, "location",             s.destStorageNode + ":" + s.destDirectory);
+      feedback.setSubbandKey(index, "startTime",            parset.getString("Observation.startTime"));
+
+      nrCorrelatedStreams++; 
+    }
+}
+
+
+void CEPlogProcessor::writeFeedback( int obsID )
+{
+    // feedback parsets are to be stored in in LOFAR_SHARE_LOCATION
+    string filename(formatString("%s/Observation%d_feedback", 
+                                 LOFAR_SHARE_LOCATION, obsID));
+
+    itsCEPFeedback.write(filename);
 }
 
 
@@ -736,20 +812,14 @@ string CEPlogProcessor::getTempObsName(int obsID, const char *msg)
   if (sscanf(msg,"PVSS name: %[^\n]", &tempObsName[0]) == 1) {
     LOG_DEBUG_STR("obs " << obsID << " is mapped to " << &tempObsName[0]);
 
-    if (!itsTempObsMapping.exists(obsID))
-      processParset(formatString("%d",obsID));
-
-    if (itsTempObsMapping.exists(obsID))
-      ASSERTSTR(itsTempObsMapping.lookup(obsID) == string(&tempObsName[0]), "Observation ID remapped from " << itsTempObsMapping.lookup(obsID) << " to " << string(&tempObsName[0]));
-    else  
-      itsTempObsMapping.set( obsID, string(&tempObsName[0]) );
+    registerObservation( obsID, string(&tempObsName[0]) );
   }
 
   if (!strcmp(msg,"----- Job finished succesfully")
    || !strcmp(msg,"----- Job cancelled succesfully")) {
     LOG_DEBUG_STR("obs " << obsID << " ended");
 
-    itsTempObsMapping.erase(obsID);
+    unregisterObservation(obsID);
   }
 
   // lookup the obsID in our list
@@ -759,6 +829,34 @@ string CEPlogProcessor::getTempObsName(int obsID, const char *msg)
   }
 
   return itsTempObsMapping.lookup(obsID);
+}
+
+void CEPlogProcessor::registerObservation(int obsID, const std::string &tempObsName)
+{
+  if (itsTempObsMapping.exists(obsID)) {
+    ASSERTSTR(itsTempObsMapping.lookup(obsID) == tempObsName, "Observation ID remapped from " << itsTempObsMapping.lookup(obsID) << " to " << tempObsName);
+    return;
+  }
+
+  itsTempObsMapping.set(obsID, tempObsName);
+
+  itsFeedback[obsID] = CEPFeedback();
+
+  processParset(formatString("%d",obsID));
+}
+
+void CEPlogProcessor::unregisterObservation(int obsID)
+{
+  if (!itsTempObsMapping.exists(obsID)) {
+    LOG_ERROR_STR("Observation ID " << obsID << " not registered. Cannot unregister.");
+    return;
+  }
+
+  writeFeedback(obsID);
+
+  itsFeedback.erase(obsID);
+
+  itsTempObsMapping.erase(obsID);
 }
 
 
@@ -1007,17 +1105,48 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
       RTDBPropertySet *writer = itsWriters[writerIndex];
 
       if (_recordLogMsg(logline)) {
-          writer->setValue("process.logMsg", GCFPVString(logline.fullmsg), logline.timestamp, true);
+        writer->setValue("process.logMsg", GCFPVString(logline.fullmsg), logline.timestamp, true);
+      }
+
+      CEPFeedback *feedback = 0;
+
+      if (logline.obsID >= 0 && observationRegistered(logline.obsID)) {
+        int streamNr = _getParam(logline.target, "stream ");
+
+        feedback = &itsCEPFeedback[logline.obsID];
+      }
+
+      if ((result = strstr(logline.msg, "Characteristics: "))) {
+        int subband = 0, channels = 0;
+        float centralfreq = 0.0, integration = 0.0, channelwidth = 0.0, duration = 0.0;
+        if (sscanf(result, "Characteristics: subband %d, centralfreq %f Mhz, duration %f s, integration %f s, channels %u, channelwidth %f kHz", &subband, &centralfreq, &duration, &integration, &channels, &channelwidth) == 5) {
+
+          if (feedback) {
+            feedback->setSubbandKey(streamNr, "subband",             formatString("%d", subband));
+            feedback->setSubbandKey(streamNr, "integrationInterval", formatString("%f", integration));
+            feedback->setSubbandKey(streamNr, "centralFrequency",    formatString("%f", centralfreq));
+            feedback->setSubbandKey(streamNr, "channelsPerSubband",  formatString("%d", channels));
+            feedback->setSubbandKey(streamNr, "channelWidth",        formatString("%f", channelwidth));
+            feedback->setSubbandKey(streamNr, "duration",            formatString("%f", duration));
+          }
+
+          LOG_DEBUG_STR("Observation " << obsID << " stream " << streamNr << " is subband " << subband << " at " << centralfreq << " MHz, with " << integration " s integration and " << channels << " channels of " << channelwidth << " kHz");
+        }
       }
 
       // Storage_main@locus088 10-02-12 13:20:01.056 INFO  [obs 45784 type 2 stream  12 writer   0] [OutputThread] Written block with seqno = 479, 480 blocks written, 0 blocks dropped
       if ((result = strstr(logline.msg, "Written block"))) {
         int seqno = 0, written = 0, dropped = 0;
-        if (sscanf(result, "Written block with seqno = %d, %d blocks written, %d blocks dropped", &seqno, &written, &dropped) == 3) {
+        float perc_written = 0.0;
+        if (sscanf(result, "Written block with seqno = %d, %d blocks written (%f%%), %d blocks dropped", &seqno, &written, &perc_written, &dropped) == 4) {
           LOG_DEBUG(formatString("[%d] Written %d, dropped %d", writerNr, written, dropped));
           writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
           writer->flush();
+
+          if (feedback) {
+            feedback->setSubbandKey(streamNr, "percentageWritten", formatString("%f", perc_written));
+          }
         }
         return;
       }
@@ -1025,11 +1154,16 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
       // Storage_main@locus088 10-02-12 13:20:01.057 INFO  [obs 45784 type 2 stream  12 writer   0] [OutputThread] Finished writing: 480 blocks written, 0 blocks dropped: 0% lost
       if ((result = strstr(logline.msg, "Finished writing"))) {
         int written = 0, dropped = 0;
-        if (sscanf(result, "Finished writing: %d blocks written, %d blocks dropped", &written, &dropped) == 2) {
+        float perc_written = 0.0;
+        if (sscanf(result, "Finished writing: %d blocks written (%f%%), %d blocks dropped", &written, &perc_written, &dropped) == 2) {
           LOG_DEBUG(formatString("[%d] Written %d, dropped %d", writerNr, written, dropped));
           writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
           writer->flush();
+
+          if (feedback) {
+            feedback->setSubbandKey(streamNr, "percentageWritten", formatString("%f", perc_written));
+          }
         }
         return;
       }
