@@ -25,7 +25,7 @@
 #include <casa/Inputs/Input.h>
 #include <casa/OS/DirectoryIterator.h>
 #include <casa/OS/File.h>
-#include <casa/OS/Symlink.h>
+#include <casa/OS/SymLink.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <iostream>
 
