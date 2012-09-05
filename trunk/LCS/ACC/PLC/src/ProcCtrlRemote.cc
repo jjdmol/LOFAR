@@ -86,7 +86,7 @@ int ProcCtrlRemote::operator()(const ParameterSet& arg)
 				quiting = true;
 			} 
 
-			if (err = err || !itsPCServer->handleMessage(newMsg)) {
+			if ((err = err || !itsPCServer->handleMessage(newMsg))) {
 				LOG_ERROR("ProcControlServer::handleMessage() failed");
 			}
 		} 
