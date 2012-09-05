@@ -545,7 +545,7 @@ void CEPlogProcessor::writeFeedback( int obsID )
     string filename(formatString("%s/Observation%d_feedback", 
                                  LOFAR_SHARE_LOCATION, obsID));
 
-    itsCEPFeedback.write(filename);
+    itsCEPFeedback[obsID].write(filename);
 }
 
 
@@ -840,7 +840,7 @@ void CEPlogProcessor::registerObservation(int obsID, const std::string &tempObsN
 
   itsTempObsMapping.set(obsID, tempObsName);
 
-  itsFeedback[obsID] = CEPFeedback();
+  itsCEPFeedback[obsID] = CEPFeedback();
 
   processParset(formatString("%d",obsID));
 }
@@ -854,7 +854,7 @@ void CEPlogProcessor::unregisterObservation(int obsID)
 
   writeFeedback(obsID);
 
-  itsFeedback.erase(obsID);
+  itsCEPFeedback.erase(obsID);
 
   itsTempObsMapping.erase(obsID);
 }
@@ -1109,11 +1109,11 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
       }
 
       CEPFeedback *feedback = 0;
+      int streamNr = -1;
 
       if (logline.obsID >= 0 && observationRegistered(logline.obsID)) {
-        int streamNr = _getParam(logline.target, "stream ");
-
         feedback = &itsCEPFeedback[logline.obsID];
+        streamNr = _getParam(logline.target, "stream ");
       }
 
       if ((result = strstr(logline.msg, "Characteristics: "))) {
@@ -1130,7 +1130,7 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
             feedback->setSubbandKey(streamNr, "duration",            formatString("%f", duration));
           }
 
-          LOG_DEBUG_STR("Observation " << obsID << " stream " << streamNr << " is subband " << subband << " at " << centralfreq << " MHz, with " << integration " s integration and " << channels << " channels of " << channelwidth << " kHz");
+          LOG_DEBUG_STR("Observation " << logline.obsID << " stream " << streamNr << " is subband " << subband << " at " << centralfreq << " MHz, with " << duration << " s duration, " << integration << " s integration and " << channels << " channels of " << channelwidth << " kHz");
         }
       }
 
