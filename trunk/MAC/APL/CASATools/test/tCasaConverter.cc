@@ -34,9 +34,9 @@ using namespace LOFAR;
 using namespace CASATools;
 using namespace RTC;
 
-int main(int	argc, char*	argv[]) 
+int main(int, char*	argv[]) 
 {
-	INIT_LOGGER("tCasaConverter");
+	INIT_LOGGER(argv[0]);
 
 	// prepare fake input data
 	blitz::Array<double,2>		fieldPos(2,3);

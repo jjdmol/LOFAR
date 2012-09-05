@@ -69,7 +69,7 @@ public:
 		{ _dpName = dpName; }
 
 protected:
-    // Answer on conenct
+    // Answer on connect
     void hotLinkCallBack (DpHLGroup& group)
 		{ _service.handleHotLink(group, *this); }
 
