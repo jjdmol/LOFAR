@@ -4,5 +4,5 @@
 DPPP
 ====
 
-.. autoclass:: dppp.dppp
+.. autoclass:: lofarpipe.recipes.master.dppp.dppp
    :show-inheritance:
