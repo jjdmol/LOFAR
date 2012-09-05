@@ -204,8 +204,8 @@ class ComputeJob(object):
                 self.host,
                 self.command,
                 {
-                    "PYTHONPATH": config.get('deploy', 'engine_ppath'),
-                    "LD_LIBRARY_PATH": config.get('deploy', 'engine_lpath')
+                    "PYTHONPATH": os.environ.get('PYTHONPATH'),
+                    "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH')
                 },
                 arguments = [id, jobhost, jobport]
             )

@@ -24,10 +24,6 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
     in.    
     """
     inputs = {
-        'initscript': ingredient.FileField(
-            '--initscript',
-            help="Initscript to source (ie, lofarinit.sh)"
-        ),
         'bdsm_parset_file_run1': ingredient.FileField(
             '--bdsm-parset-file-run1',
             help="Path to bdsm parameter set for the first sourcefinding run"
@@ -103,7 +99,7 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
                              self.inputs["working_directory"],
                              "bdsm_output.img"),
                          self.inputs['sourcedb_target_path'],
-                         self.inputs['initscript'],
+                         self.environment,
                          self.inputs['working_directory'],
                          self.inputs['makesourcedb_path']
                         ]

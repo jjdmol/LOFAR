@@ -36,11 +36,6 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
             help="Full path to the `parmexportcal` executable, not settings this"
             " results in edit_parmdb behaviour"
         ),
-        'initscript' : ingredient.FileField(
-            '--initscript',
-            help="The full path to an (Bourne) shell script which will "
-                 "intialise the environment (i.e., ``lofarinit.sh``)"
-        ),
         'suffix': ingredient.StringField(
             '--suffix',
             help="Suffix of the table name of the instrument model",
@@ -119,7 +114,7 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
                         infile,
                         outfile,
                         self.inputs['executable'],
-                        self.inputs['initscript'],
+                        self.environment,
                         self.inputs['sigma']
                      ]
                 )

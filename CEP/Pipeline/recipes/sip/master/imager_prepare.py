@@ -48,11 +48,6 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             '--ndppp-exec',
             help="The full path to the ndppp executable"
         ),
-        'initscript': ingredient.FileField(
-            '--initscript',
-            help='''The full path to a shell script which will\
-             intialise the environment (ie, ``lofarinit.sh``)'''
-        ),
         'parset': ingredient.FileField(
             '-p', '--parset',
             help="The full path to a prepare parset"
@@ -176,7 +171,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             paths_to_image_mapfiles.append((host,
                                             inputs_for_image_mapfile_path))
 
-            arguments = [self.inputs['initscript'],
+            arguments = [self.environment,
                          self.inputs['parset'],
                          self.inputs['working_directory'],
                          self.inputs['processed_ms_dir'],

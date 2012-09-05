@@ -7,7 +7,6 @@ from lofar.parameterset import parameterset
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 import lofar.bdsm as bdsm#@UnresolvedImport
 
-from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import catch_segfaults
 
@@ -35,7 +34,7 @@ class imager_source_finding(LOFARnodeTCP):
     """
     def run(self, input_image, bdsm_parameter_run1_path,
             bdsm_parameter_run2x_path, catalog_output_path, image_output_path,
-            sourcedb_target_path, init_script, working_directory,
+            sourcedb_target_path, environment, working_directory,
             create_sourcdb_exec):
         """
         :param input_image: image to look for sources in
@@ -47,7 +46,7 @@ class imager_source_finding(LOFARnodeTCP):
                substracted
         :param sourcedb_target_path: Path to store the sourcedb created from 
             containing all the found sources
-        :param init_script: Initscript for runwithlog4cplus
+        :param environment: environment for runwithlog4cplus
         :param working_directory: Working dir
         :param create_sourcdb_exec: Path to create sourcedb executable 
         
@@ -55,6 +54,7 @@ class imager_source_finding(LOFARnodeTCP):
         
         """
         self.logger.info("Starting imager_source_finding")
+        self.environment.update(environment)
         # default frequency is None (read from image), save for later cycles.
         # output of pybdsm forgets freq of source image
         frequency = None
@@ -149,7 +149,7 @@ class imager_source_finding(LOFARnodeTCP):
         # *********************************************************************
         # 6. Convert sourcelist to sourcedb
         self._create_source_db(catalog_output_path, sourcedb_target_path,
-                init_script, working_directory, create_sourcdb_exec, False)
+            working_directory, create_sourcdb_exec, False)
         # Assign the outputs
         self.outputs["catalog_output_path"] = catalog_output_path
         self.outputs["source_db"] = sourcedb_target_path
@@ -213,7 +213,7 @@ class imager_source_finding(LOFARnodeTCP):
                                                 catalog_output_path))
 
 
-    def _create_source_db(self, source_list, sourcedb_target_path, init_script,
+    def _create_source_db(self, source_list, sourcedb_target_path,
                           working_directory, create_sourcdb_exec, append=False):
         """
         Convert a sourcelist to a sourcedb:
@@ -238,13 +238,12 @@ class imager_source_finding(LOFARnodeTCP):
         self.logger.info(' '.join(cmd))
 
         try:
-            environment = read_initscript(self.logger, init_script)
             with CatchLog4CPlus(working_directory,
                  self.logger.name + "." + os.path.basename("makesourcedb"),
                  os.path.basename(create_sourcdb_exec)
             ) as logger:
-                catch_segfaults(cmd, working_directory, environment,
-                                            logger, cleanup=None)
+                catch_segfaults(cmd, working_directory, self.environment,
+                                            logger, cleanup = None)
 
         except Exception, exception:
             self.logger.error("Execution of external failed:")

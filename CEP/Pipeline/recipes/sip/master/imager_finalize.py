@@ -19,11 +19,6 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
     This recipe does not have positional commandline arguments 
     """
     inputs = {
-        'initscript': ingredient.FileField(
-            '--initscript',
-            help='''The full path to an (Bourne) shell script which will\
-             intialise the environment (ie, ``lofarinit.sh``)'''
-        ),
         'awimager_output_map': ingredient.FileField(
             '--awimager-output-mapfile',
             help="""Mapfile containing (host, path) pairs of created sky

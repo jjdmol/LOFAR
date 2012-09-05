@@ -13,7 +13,6 @@ import subprocess
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
 from lofarpipe.support.utilities import patch_parset
-from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarnode import  LOFARnodeTCP
 from lofarpipe.support.utilities import create_directory
@@ -41,7 +40,7 @@ class imager_prepare(LOFARnodeTCP):
  
     **Members:** 
     """
-    def run(self, init_script, parset, working_dir, processed_ms_dir,
+    def run(self, environment, parset, working_dir, processed_ms_dir,
              ndppp_executable, output_measurement_set,
             time_slices_per_image, subbands_per_group, raw_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
@@ -49,6 +48,7 @@ class imager_prepare(LOFARnodeTCP):
         """
         Entry point for the node recipe
         """
+        self.environment.update(environment)
         with log_time(self.logger):
             input_map = load_data_map(raw_ms_mapfile)
 
@@ -80,9 +80,9 @@ class imager_prepare(LOFARnodeTCP):
             #******************************************************************
             # 2. run dppp: collect frequencies into larger group
             time_slices = \
-                self._run_dppp(working_dir, time_slice_dir,
-                     time_slices_per_image, input_map, subbands_per_group,
-                     processed_ms_dir, parset, ndppp_executable, init_script)
+                self._run_dppp(working_dir, time_slice_dir, 
+                    time_slices_per_image, input_map, subbands_per_group, 
+                    processed_ms_dir, parset, ndppp_executable)
 
             self.logger.debug("Produced time slices: {0}".format(time_slices))
             #***********************************************************
@@ -198,7 +198,7 @@ class imager_prepare(LOFARnodeTCP):
 
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
                   input_map, subbands_per_image, collected_ms_dir_name, parset,
-                  ndppp, init_script):
+                  ndppp):
         """
         Run NDPPP:  
         Create dir for grouped measurements, assure clean workspace
@@ -254,10 +254,8 @@ class imager_prepare(LOFARnodeTCP):
             cmd = [ndppp, nddd_parset_path]
 
             try:
-                environment = read_initscript(self.logger, init_script)
-
                 # Actual dppp call to externals (allows mucking)
-                self._dppp_call(working_dir, ndppp, cmd, environment)
+                self._dppp_call(working_dir, ndppp, cmd, self.environment)
 
             except subprocess.CalledProcessError, exception:
                 self.logger.error(str(exception))

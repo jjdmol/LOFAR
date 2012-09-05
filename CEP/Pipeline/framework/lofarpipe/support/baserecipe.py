@@ -8,20 +8,16 @@
 from ConfigParser import NoOptionError, NoSectionError
 from ConfigParser import SafeConfigParser as ConfigParser
 from threading import Event
-from functools import partial
 
 import os
 import sys
-import inspect
 import logging
 import errno
 
 import lofarpipe.support.utilities as utilities
-import lofarpipe.support.lofaringredient as ingredient
-from lofarpipe.support.lofarexceptions import PipelineException
+from lofarpipe.support.lofarexceptions import PipelineException, PipelineRecipeFailed
 from lofarpipe.cuisine.WSRTrecipe import WSRTrecipe
 from lofarpipe.support.lofaringredient import RecipeIngredients, LOFARinput, LOFARoutput
-from lofarpipe.support.remotecommand import run_remote_command
 from lofarpipe.support.group_data import store_data_map
 
 class BaseRecipe(RecipeIngredients, WSRTrecipe):
@@ -42,6 +38,11 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         super(BaseRecipe, self).__init__()
         self.error = Event()
         self.error.clear()
+        # Environment variables we like to pass on to the node script.
+        self.environment = dict(
+            (k,v) for (k,v) in os.environ.iteritems() 
+                if k.endswith('PATH') or k.endswith('ROOT')
+        )
 
     @property
     def __file__(self):

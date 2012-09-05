@@ -24,7 +24,6 @@ from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
 from lofarpipe.support.utilities import patch_parset
 from lofarpipe.support.utilities import get_parset
-from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarexceptions import PipelineException
 import pyrap.tables as pt                   #@UnresolvedImport
@@ -36,27 +35,12 @@ import lofar.parmdb                          #@UnresolvedImport
 import numpy as np
 
 class imager_awimager(LOFARnodeTCP):
-    """
-    The imager_awimager creates from a measurement set and a sourcedb an image.
-    The sources in the database are use to create a mask which can be used in
-    the awimager to improve the clean function.
-    
-    1. Calculate / retrieve a number of parameters from the measurement set
-       Cell_size, npix, wmax and W projection planes
-    2. Create the needed directorys for the output image
-    3. Create a mask (casa image),
-    4. extend the parset with calculate parameters and the mask location
-    5. Run the Awimager with the extended parset
-    6. Return the created image to signal a successfull run
-    
-    | **Member functions:**
-    """
-    def run(self, executable, init_script, parset, working_directory,
+    def run(self, executable, environment, parset, working_directory,
             output_image, concatenated_measurement_set, sourcedb_path,
              mask_patch_size):
         """       
         :param executable: Path to awimager executable
-        :param init_script: initscript for catch_segfaults (executable runner)
+        :param environment: environment for catch_segfaults (executable runner)
         :param parset: parameters for the awimager, 
         :param working_directory: directory the place temporary files
         :param output_image: location and filesname to story the output images
@@ -71,6 +55,8 @@ class imager_awimager(LOFARnodeTCP):
         """
         self.logger.info("Start imager_awimager node run:")
         log4_cplus_name = "imager_awimager"
+        self.environment.update(environment)
+        
         with log_time(self.logger):
             # ****************************************************************
             # 1. Calculate awimager parameters that depend on measurement set
@@ -89,7 +75,7 @@ class imager_awimager(LOFARnodeTCP):
             # ****************************************************************
             # 3. Create the mask
             mask_file_path = self._create_mask(npix, cell_size, output_image,
-                         concatenated_measurement_set, init_script, executable,
+                         concatenated_measurement_set, executable,
                          working_directory, log4_cplus_name, sourcedb_path,
                           mask_patch_size, image_path_head)
 
@@ -120,13 +106,12 @@ class imager_awimager(LOFARnodeTCP):
             # 5. Run the awimager with the updated parameterset
             cmd = [executable, calculated_parset_path]
             try:
-                environment = read_initscript(self.logger, init_script)
                 with CatchLog4CPlus(working_directory,
                         self.logger.name + "." +
                         os.path.basename(log4_cplus_name),
                         os.path.basename(executable)
                 ) as logger:
-                    catch_segfaults(cmd, working_directory, environment,
+                    catch_segfaults(cmd, working_directory, self.environment,
                                             logger)
 
             # Thrown by catch_segfault
@@ -308,7 +293,7 @@ class imager_awimager(LOFARnodeTCP):
         return fov, station_diameter
 
     def _create_mask(self, npix, cell_size, output_image,
-                     concatenated_measurement_set, init_script, executable,
+                     concatenated_measurement_set, executable,
                      working_directory, log4_cplus_name, sourcedb_path,
                      mask_patch_size, image_path_directory):
         """
@@ -355,12 +340,11 @@ class imager_awimager(LOFARnodeTCP):
         cmd = [executable, mask_parset_path]
         self.logger.info(" ".join(cmd))
         try:
-            environment = read_initscript(self.logger, init_script)
             with CatchLog4CPlus(working_directory,
                     self.logger.name + "." + os.path.basename(log4_cplus_name),
                     os.path.basename(executable)
             ) as logger:
-                catch_segfaults(cmd, working_directory, environment,
+                catch_segfaults(cmd, working_directory, self.environment,
                                         logger)
         # Thrown by catch_segfault
         except CalledProcessError, exception:
