@@ -1,8 +1,8 @@
-.. _recipe-bbs:
+.. _recipe-new_bbs:
 
-===
-BBS
-===
+=========
+NEW_BBS
+=========
 
-.. autoclass:: bbs.bbs
+.. autoclass:: lofarpipe.recipes.master.new_bbs.new_bbs
    :show-inheritance:
