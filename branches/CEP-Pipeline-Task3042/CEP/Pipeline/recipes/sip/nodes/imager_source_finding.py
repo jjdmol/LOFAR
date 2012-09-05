@@ -46,7 +46,7 @@ class imager_source_finding(LOFARnodeTCP):
                substracted
         :param sourcedb_target_path: Path to store the sourcedb created from 
             containing all the found sources
-        :param init_script: Initscript for runwithlog4cplus
+        :param environment: environment for runwithlog4cplus
         :param working_directory: Working dir
         :param create_sourcdb_exec: Path to create sourcedb executable 
         

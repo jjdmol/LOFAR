@@ -73,8 +73,8 @@ class imager_create_dbs(LOFARnodeTCP):
         #*******************************************************************
         # 2convert it to a sourcedb (casa table)
         if self._create_source_db(source_list, sourcedb_target_path,
-                                  init_script, working_directory,
-                                  makesourcedb_path, append) == None:
+                                  working_directory, makesourcedb_path, 
+                                  append) == None:
             self.logger.error("failed creating sourcedb")
             return 1
 

@@ -40,7 +40,7 @@ class imager_awimager(LOFARnodeTCP):
              mask_patch_size):
         """       
         :param executable: Path to awimager executable
-        :param init_script: initscript for catch_segfaults (executable runner)
+        :param environment: environment for catch_segfaults (executable runner)
         :param parset: parameters for the awimager, 
         :param working_directory: directory the place temporary files
         :param output_image: location and filesname to story the output images
