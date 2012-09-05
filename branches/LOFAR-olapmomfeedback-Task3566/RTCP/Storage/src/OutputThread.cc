@@ -181,7 +181,7 @@ void OutputThread::createMS()
   // log some core characteristics for CEPlogProcessor for feedback to MoM/LTA
   switch (itsOutputType) {
     case CORRELATED_DATA:
-      itsNrExpectedBlocks = parset.nrCorrelatedBlocks();
+      itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
 
       {
         const vector<unsigned> subbands = itsParset.subbandList();
@@ -198,7 +198,7 @@ void OutputThread::createMS()
       }
       break;
     case BEAM_FORMED_DATA:
-      itsNrExpectedBlocks = parset.nrBeamFormedBlocks();
+      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
       break;
 
     default:
