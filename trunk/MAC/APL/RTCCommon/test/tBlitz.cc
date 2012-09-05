@@ -31,8 +31,10 @@
 using namespace LOFAR;
 using namespace blitz;
 
-int main (int	argc, char*	argv[])
+int main (int, char*	argv[])
 {
+	INIT_LOGGER(argv[0]);
+
 	// test empty blitz array
 	cout << "Testing 2 dimensional empty blitz array..." << endl;
 	Array<int,2>	emptyArr;	// two dimensional empty array.
