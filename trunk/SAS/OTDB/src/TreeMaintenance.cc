@@ -867,6 +867,8 @@ bool	checkTreeConstraints(treeIDType		TODO_aTreeID,
 							 nodeIDType		TODO_topNode = 0)
 {
 	// TODO: IMPLEMENT THIS FUNCTION
+	(void)TODO_aTreeID;
+	(void)TODO_topNode;
 
 	LOG_WARN("checkTreeConstraints not yet implemented");
 
@@ -919,6 +921,8 @@ bool	TreeMaintenance::pruneTree(treeIDType	TODO_aTreeID,
 								   int16		TODO_pruningLevel)
 {
 	// TODO: IMPLEMENT THIS FUNCTION
+	(void)TODO_aTreeID;
+	(void)TODO_pruningLevel;
 
 	LOG_WARN("pruneTree not yet implemented");
 
