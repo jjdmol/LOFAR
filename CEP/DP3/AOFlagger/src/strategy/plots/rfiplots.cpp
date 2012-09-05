@@ -97,6 +97,14 @@ void RFIPlots::MakeMeanSpectrumPlot(Plot2DPointSet &pointSet, const TimeFrequenc
 		pointSet.SetXDesc("Index");
 		pointSet.SetYDesc("Mean (undefined units)");
 	}
+	
+	TimeFrequencyData displayData = data;
+	if(displayData.PhaseRepresentation() == TimeFrequencyData::ComplexRepresentation)
+	{
+		TimeFrequencyData *newData = data.CreateTFData(TimeFrequencyData::AmplitudePart);
+		displayData = *newData;
+		delete newData;
+	}
 
 	long double min = 1e100, max = -1e100;
 	const size_t height = data.ImageHeight(), width = data.ImageWidth();
@@ -104,9 +112,9 @@ void RFIPlots::MakeMeanSpectrumPlot(Plot2DPointSet &pointSet, const TimeFrequenc
 	for(size_t y=0;y<height;++y) {
 		long double sum = 0.0L;
 		size_t count = 0;
-		for(size_t i=0;i<data.ImageCount();++i)
+		for(size_t i=0;i<displayData.ImageCount();++i)
 		{
-			Image2DCPtr image = data.GetImage(i);
+			Image2DCPtr image = displayData.GetImage(i);
 			for(size_t x=0;x<width;++x) {
 				if(!mask->Value(x, y) && std::isnormal(image->Value(x, y))) {
 					sum += image->Value(x, y);
