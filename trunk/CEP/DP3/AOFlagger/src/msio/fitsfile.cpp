@@ -488,8 +488,7 @@ int FitsFile::GetGroupParameterIndex(const std::string &parameterName, int numbe
 
 bool FitsFile::HasGroupParameter(const std::string &parameterName)
 {
-	if(!HasGroups())
-		return false;
+	if(!HasGroups()) return false;
 	int parameterCount = GetParameterCount();
 	for(int i=1;i<=parameterCount;++i)
 	{
@@ -497,6 +496,23 @@ bool FitsFile::HasGroupParameter(const std::string &parameterName)
 		s << "PTYPE" << i;
 		if(GetKeywordValue(s.str()) == parameterName)
 			return true;
+	}
+	return false;
+}
+
+bool FitsFile::HasGroupParameter(const std::string &parameterName, int number)
+{
+	if(!HasGroups()) return false;
+	int parameterCount = GetParameterCount();
+	for(int i=1;i<=parameterCount;++i)
+	{
+		std::stringstream s;
+		s << "PTYPE" << i;
+		if(GetKeywordValue(s.str()) == parameterName)
+		{
+			--number;
+			if(number == 0) return true;
+		}
 	}
 	return false;
 }
