@@ -38,11 +38,6 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
             '--executable',
             help="The full path to the relevant DPPP executable"
         ),
-        'initscript': ingredient.FileField(
-            '--initscript',
-            help="The full path to an (Bourne) shell script which will "
-                 "intialise the environment (ie, ``lofarinit.sh``)"
-        ),
         'suffix': ingredient.StringField(
             '--suffix',
             default=".dppp",
@@ -210,7 +205,7 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
                         sourcedb,
                         self.inputs['parset'],
                         self.inputs['executable'],
-                        self.inputs['initscript'],
+                        self.environment,
                         self.inputs['demix_always'],
                         self.inputs['demix_if_needed'],
                         self.inputs['data_start_time'],

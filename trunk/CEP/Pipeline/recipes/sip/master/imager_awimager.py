@@ -33,11 +33,6 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             '--executable',
             help="The full path to the  awimager executable"
         ),
-        'initscript': ingredient.FileField(
-            '--initscript',
-            help='''The full path to an (Bourne) shell script which will\
-             intialise the environment (ie, ``lofarinit.sh``)'''
-        ),
         'parset': ingredient.FileField(
             '-p', '--parset',
             help="The full path to a awimager configuration parset."
@@ -103,7 +98,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
             #construct and save the output name
             arguments = [self.inputs['executable'],
-                         self.inputs['initscript'],
+                         self.environment,
                          self.inputs['parset'],
                           self.inputs['working_directory'],
                          self.inputs['output_image'],

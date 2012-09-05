@@ -37,11 +37,6 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '-w', '--working-directory',
             help="Working directory used on nodes. Results location"
         ),
-         'initscript': ingredient.FileField(
-            '--initscript',
-            help='''The full path to an (Bourne) shell script which will\
-             initialise the environment (ie, ``lofarinit.sh``)'''
-        ),
         'sourcedb_suffix': ingredient.StringField(
             '--sourcedb-suffix',
             default=".sky",
@@ -195,7 +190,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs["parmdb_executable"],
                          slice_paths,
                          self.inputs["parmdb_suffix"],
-                         self.inputs["initscript"],
+                         self.environment,
                          self.inputs["working_directory"],
                          self.inputs["makesourcedb_path"],
                          self.inputs["source_list_path"]]
