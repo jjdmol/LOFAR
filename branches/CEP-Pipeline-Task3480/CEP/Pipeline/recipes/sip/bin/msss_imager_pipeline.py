@@ -43,7 +43,8 @@ class msss_imager_pipeline(control):
     processing load. The input- and output- files and locations are determined
     by the scheduler and specified in the parset-file.
     
-    *steps*
+    **steps:**
+    
     This pipeline performs the following operations:
     
     1. Prepare Phase: Copy the preprocessed MS's from the different compute
@@ -70,15 +71,16 @@ class msss_imager_pipeline(control):
        all sources are collectedin a sourcelist.       
     I. The sources found in step 5 are fed back into step 2. This allows the 
        Measurement sets to be calibrated with sources currently found in the
-       image. This loop will continue until convergence (3 times for the time
-        being).  
+       image. This loop will continue until convergence (3 times for the time 
+       being).  
     6. Finalize: Meta data with regards to the input, computations performed and
        results are collected an added to the casa image. The images created are
        converted from casa to HDF5 and copied to the correct output location. 
     7. Export meta data: An outputfile with meta data is generated ready for
        consumption by the LTA and/or the LOFAR framework
-    
+
     Per subband-group, the following output products will be delivered:      
+    
     a. An image
     b. A source list
     c. (Calibration solutions and corrected visibilities)

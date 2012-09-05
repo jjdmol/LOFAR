@@ -52,6 +52,8 @@ Imager Pipeline
 	3. imager_bbs <imager_bbs>
 	4. imager_awimager <imager_awimager>
 	5. imager_source_finding <imager_source_finding>
+	6. imager_finalize <imager_finalize>
+	7. get_metadata
 	
 	
 	
