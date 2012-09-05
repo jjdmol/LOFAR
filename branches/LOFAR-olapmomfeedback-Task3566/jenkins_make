@@ -1,12 +1,18 @@
 #!/bin/bash
-echo Hello from jenkins_make!
+
+echo PARSED BY $0
+
 make 2>&1 | perl -ne '
-if (m#(^[/.A-Za-z0-9]+)/([.A-Za-z0-9]+):([0-9]+): warning: (.*)$#) {
-  $file, $line, $warning = $1, $2, $3;
+
+if (m#^([/._ A-Za-z0-9]+):([0-9]+): warning: (.*)$#) {
+  $file = $1;
+  $line = $2;
+  $warning = $3;
 
   next if $file =~ m#^/opt/WinCC_OA/#;
 }
 
 print;
+
 '
 
