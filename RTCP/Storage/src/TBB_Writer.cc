@@ -117,6 +117,8 @@ TBB_Dipole::TBB_Dipole(const TBB_Dipole& rhs)
 
 TBB_Dipole::~TBB_Dipole() {
 	/*
+	 * Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
+	 *
 	 * Set dataset len (if ext raw) and DATA_LENGTH and FLAG_OFFSETS attributes at the end.
 	 * Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
 	 * Skip on uninitialized (default constructed) objects.
@@ -153,7 +155,10 @@ void TBB_Dipole::initDipole(const TBB_Header& header, const Parset& parset, cons
 		LOG_WARN("TBB: Unknown sample rate in TBB frame header; using sample rate from the parset");
 	}
 
-	initTBB_DipoleDataset(header, parset, stationMetaData, rawFilename, station, h5Mutex);
+	{
+		ScopedLock h5OutLock(h5Mutex);
+		initTBB_DipoleDataset(header, parset, stationMetaData, rawFilename, station);
+	}
 
 	if (!rawFilename.empty()) {
 		itsRawOut.open(rawFilename.c_str(), ios_base::out | ios_base::binary | ios_base::trunc);
@@ -250,10 +255,8 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 }
 
 void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-                                       const string& rawFilename, dal::TBB_Station& station, Mutex& h5Mutex) {
+                                       const string& rawFilename, dal::TBB_Station& station) {
 	itsDataset = new dal::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
-
-	ScopedLock h5OutLock(h5Mutex);
 
 	// Create 1-dim, unbounded (-1) dataset. 
 	// Override endianess. TBB data is always stored little endian and also received as such, so written as-is on any platform.
@@ -367,9 +370,11 @@ bool TBB_Dipole::hasAllZeroDataSamples(const TBB_Frame& frame) const {
 
 //////////////////////////////////////////////////////////////////////////////
 
-TBB_Station::TBB_Station(const string& stationName, const Parset& parset, const StationMetaData& stationMetaData,
-                         const string& h5Filename, bool dumpRaw)
+TBB_Station::TBB_Station(const string& stationName, Mutex& h5Mutex, const Parset& parset,
+                         const StationMetaData& stationMetaData, const string& h5Filename,
+                         bool dumpRaw)
 : itsH5File(dal::TBB_File(h5Filename, dal::TBB_File::CREATE))
+, itsH5Mutex(h5Mutex)
 , itsStation(itsH5File.station(stationName))
 , itsDipoles(MAX_RSPBOARDS/* = per station*/ * NR_RCUS_PER_RSPBOARD) // = 192 for int'l stations
 , itsParset(parset)
@@ -888,7 +893,7 @@ TBB_Writer::TBB_Writer(const vector<string>& inputStreamNames, const Parset& par
 	itsUnknownStationMetaData.available = false;
 
 	for (unsigned i = 0; i < inputStreamNames.size(); i++) {
-		itsStreamWriters.push_back(new TBB_StreamWriter(*this, inputStreamNames[i], logPrefix));
+		itsStreamWriters.push_back(new TBB_StreamWriter(*this, inputStreamNames[i], logPrefix)); // TODO: leaks just created obj if push_back() fails
 	}
 }
 
@@ -904,10 +909,10 @@ TBB_Writer::~TBB_Writer() {
 }
 
 TBB_Station* TBB_Writer::getStation(const TBB_Header& header) {
-	ScopedLock sl(itsStationsMutex);
+	ScopedLock sl(itsStationsMutex); // protect against insert below
 	map<unsigned, TBB_Station*>::iterator stIt(itsStations.find(header.stationID));
 	if (stIt != itsStations.end()) {
-		return stIt->second;
+		return stIt->second; // common case
 	}
 
 	// Create new station with HDF5 file and station HDF5 group.
@@ -916,7 +921,13 @@ TBB_Station* TBB_Writer::getStation(const TBB_Header& header) {
 	StationMetaDataMap::const_iterator stMdIt(itsStationMetaDataMap.find(header.stationID));
 	// If not found, station is not participating in the observation. Should not happen, but don't panic.
 	const StationMetaData& stMetaData = stMdIt == itsStationMetaDataMap.end() ? itsUnknownStationMetaData : stMdIt->second;
-	TBB_Station* station = new TBB_Station(stationName, itsParset, stMetaData, h5Filename, itsDumpRaw); // TODO: mem leak if insert() fails. Also, really need global h5lock: cannot create 2 different h5 files at once safely.
+
+	TBB_Station* station;
+	{
+		ScopedLock slH5(itsH5Mutex);
+		station = new TBB_Station(stationName, itsH5Mutex, itsParset, stMetaData, h5Filename, itsDumpRaw); // TODO: mem leak if insert() fails. Also, really need global h5lock: cannot create 2 different h5 files at once safely.
+	}
+
 	return itsStations.insert(make_pair(header.stationID, station)).first->second;
 }
 

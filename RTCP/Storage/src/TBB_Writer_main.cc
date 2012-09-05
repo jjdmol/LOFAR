@@ -293,7 +293,7 @@ static void printUsage(const char* progname) {
 	cout << "Usage: " << progname << " --parsetfile=parsets/L12345.parset [OPTION]..." << endl;
 	cout << endl;
 	cout << "Options:" << endl;
-	cout << "  -s, --parsetfile=L12345.parset      parset file (observation (s)ettings) (mandatory)" << endl;
+	cout << "  -s, --parsetfile=L12345.parset      parset file (observation settings) (mandatory)" << endl;
 	cout << endl;
 	cout << "  -a, --antfielddir=/d/AntennaFields  override $LOFARROOT and parset path for antenna field files (like CS001-AntennaField.conf)" << endl;
 	cout << "  -o, --outputdir=tbbout              output directory" << endl;
@@ -303,7 +303,8 @@ static void printUsage(const char* progname) {
 	cout << "  -b, --portbase=31665                start of range of 12 consecutive udp/tcp ports to receive from" << endl;
 	cout << "  -t, --timeout=10                    seconds of input inactivity until dump is considered completed" << endl;
 	cout << endl;
-	cout << "  -r, --rawdatafiles[=true|false]     output separate .raw data files (default: true, until false can work)" << endl;
+	cout << "  -r, --rawdatafiles[=true|false]     output separate .raw data files (default: true; do not set to false atm);" << endl;
+	cout << "                                      .raw files is strongly recommended, esp. when receiving from multiple stations" << endl;
 	cout << "  -k, --keeprunning[=true|false]      accept new input after a dump completed (default: true)" << endl;
 	cout << endl;
 	cout << "  -h, --help                          print program name, version number and this info, then exit" << endl;
