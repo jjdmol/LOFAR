@@ -247,6 +247,7 @@ class MSWindow : public Gtk::Window {
 		Glib::RefPtr<Gtk::ActionGroup> _actionGroup;
 		Gtk::Statusbar _statusbar;
 		PlotFrame _plotFrame;
+		std::string _imageSetName, _imageSetIndexDescription;
 
 		Glib::RefPtr<Gtk::ToggleAction>
 			_originalFlagsButton, _altFlagsButton,

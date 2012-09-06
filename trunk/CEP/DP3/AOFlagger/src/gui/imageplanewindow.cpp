@@ -392,7 +392,7 @@ void ImagePlaneWindow::printStats()
 
 void ImagePlaneWindow::onButtonReleased(size_t x, size_t y)
 {
-	if(_imageWidget.HasImage())
+	if(_imageWidget.HasImage() && _lastMetaData != 0)
 	{
 		int 
 			width = _imageWidget.Image()->Width(),
