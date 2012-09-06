@@ -24,6 +24,7 @@
 import os
 import pyrap.tables as pt
 import lofar.parmdb as pdb
+import lofar.get_rms_noise as grn
 
 """ Add a subtable of an MS to the image """
 def addSubTable (image, msName, subName, removeColumns=[]):
@@ -52,10 +53,18 @@ def addQualityTable (image):
     # Create the table using TaQL.
     tab = pt.taql ("create table '" + image.name() + "/LOFAR_QUALITY' " + 
                    "QUALITY_MEASURE string, VALUE string, FLAG_ROW bool")
+    # Get the rms noise of I,Q,U,V as list of tuples.
+    noises = grn.get_rms_noise (image.name())
+    for noise in noises:
+        row = tab.nrows()
+        tab.addrows (1)
+        tab.putcell ("QUALITY_MEASURE", row, "RMS_NOISE_"+noise[0])
+        tab.putcell ("VALUE", row, str(noise[1]))
+        tab.putcell ("FLAG_ROW", row, False)
     tab.flush()
     image.putkeyword ("ATTRGROUPS." + "LOFAR_QUALITY", tab)
+    print "Added subtable LOFAR_QUALITY containing", tab.nrows(), "rows"
     tab.close()
-    print "Added subtable LOFAR_QUALITY containing 0 rows"
 
 """ Create the LOFAR_ORIGIN subtable and fill from all MSs """
 def addOriginTable (image, msNames):

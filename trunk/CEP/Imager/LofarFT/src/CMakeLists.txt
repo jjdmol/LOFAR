@@ -33,4 +33,5 @@ install(PROGRAMS
 # Python modules.
 python_install(
   addImagingInfo.py 
+  get_rms_noise.py
   DESTINATION lofar)
