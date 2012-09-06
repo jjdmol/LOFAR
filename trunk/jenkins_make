@@ -2,7 +2,10 @@
 
 echo FILTERED BY $0
 
-make $@ 2>&1 | perl -ne '
+make $@ 2>&1 | perl -n <(cat <<'EOF'
+
+# Use a bash HEREDOC to provide the script. The delimiter EOF is quoted
+# to prevent $ and \ substitution.
 
 # ----- filter gcc warnings, for example:
 # /usr/include/boost/date_time/gregorian/conversion.hpp:44: warning: missing initializer ...
@@ -42,5 +45,7 @@ if (m#^([/._ A-Za-z0-9]+):\([+.A-Za-z0-9]+\): warning: (.*)$#) {
 
 # ----- print what was not filtered
 print;
-'
+
+EOF
+)
 
