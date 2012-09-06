@@ -114,7 +114,7 @@ class ImagerPrepareTest(unittest.TestCase):
         sut = ImagerPrepareTestWrapper()
         output = sut._run_dppp(working_dir, time_slice_dir_path, slices_per_image,
                   input_map, subbands_per_image, collected_ms_dir_name, parset,
-                  ndppp, init_script)
+                  ndppp)
 
         # The output should contain two timeslices ms prepended with the time_slice_dir_path
         expected_output = [os.path.join(time_slice_dir_path, "time_slice_0.dppp.ms"),
