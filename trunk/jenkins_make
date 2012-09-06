@@ -30,6 +30,13 @@ if (m#^([/._ A-Za-z0-9-]+):([0-9]+): warning: +(.*)$#) {
   next if $file =~ m#/boost/date_time/.*/conversion.hpp$# && $warning =~ /^missing initializer/;
   next if $file =~ m#/boost/date_time/time.hpp$#          && $warning =~ /^unused parameter/;
   next if $file =~ m#/boost/date_time/time_facet.hpp$#    && $warning =~ /^unused parameter/;
+
+  # Blitz warnings
+  next if $file =~ m#/blitz/compiler.h$#        && $warning =~ /^"restrict" redefined/;
+  next if $file =~ m#/casacore/casa/aipsdef.h$# && $warning =~ /^this is the location of the previous definition/;
+
+  # Dynamic parts of a static executable
+  next if $warning =~ /^Using '[^']+' in statically linked applications requires at runtime the shared libraries/;
 }
 
 # ------ filter ld warnings, for example:
