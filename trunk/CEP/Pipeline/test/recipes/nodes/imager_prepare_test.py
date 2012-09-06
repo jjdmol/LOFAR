@@ -24,6 +24,7 @@ class ImagerPrepareTestWrapper(imager_prepare_node):
         """
         self.logger = logger()
         self.dppp_call_vars = None
+        self.environment = None
 
     def _dppp_call(self, working_dir, ndppp, cmd, environment):
         self.dppp_call_vars = (working_dir, ndppp, cmd, environment)
