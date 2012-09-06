@@ -9,7 +9,7 @@ make $@ 2>&1 | perl -n <(cat <<'EOF'
 
 # ----- filter gcc warnings, for example:
 # /usr/include/boost/date_time/gregorian/conversion.hpp:44: warning: missing initializer ...
-if (m#^([/._ A-Za-z0-9]+):([0-9]+): warning: (.*)$#) {
+if (m#^([/._ A-Za-z0-9]+):([0-9]+): warning: +(.*)$#) {
   $file = $1;
   $line = $2;
   $warning = $3;
@@ -21,6 +21,7 @@ if (m#^([/._ A-Za-z0-9]+):([0-9]+): warning: (.*)$#) {
   next if $file =~ m#^/opt/WinCC_OA/# && $warning =~ /^base class '[^']+' should be explicitly initialized/;
   next if $file =~ m#^/opt/WinCC_OA/# && $warning =~ /^'[^']+' was hidden/;
   next if $file =~ m#^/opt/WinCC_OA/# && $warning =~ /^by '[^']+'/;
+  next if $file =~ m#^/opt/WinCC_OA/# && $warning =~ /^enumeral and non-enumeral type in conditional expression/;
 
   # OpenMPI warnings
   next if $file =~ m#/mpicxx.h$# && $warning =~ /^unused parameter/;
