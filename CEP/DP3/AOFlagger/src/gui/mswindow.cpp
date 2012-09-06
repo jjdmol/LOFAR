@@ -118,6 +118,7 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _histogramWindow(0), _optionWindow(
 
 MSWindow::~MSWindow()
 {
+	boost::mutex::scoped_lock lock(_ioMutex);
 	while(!_actionGroup->get_actions().empty())
 		_actionGroup->remove(*_actionGroup->get_actions().begin());
 	
@@ -138,6 +139,9 @@ MSWindow::~MSWindow()
 		delete _imagePropertiesWindow;
 	if(_antennaMapWindow != 0)
 		delete _antennaMapWindow;
+	
+	// The rfistrategy needs the lock to clean up
+	lock.unlock();
 	
 	delete _statistics;
 	delete _strategy;
@@ -182,8 +186,10 @@ void MSWindow::onActionDirectoryOpenForSpatial()
 
   if(result == Gtk::RESPONSE_OK)
 	{
+		boost::mutex::scoped_lock lock(_ioMutex);
 		rfiStrategy::SpatialMSImageSet *imageSet = new rfiStrategy::SpatialMSImageSet(dialog.get_filename());
 		imageSet->Initialize();
+		lock.unlock();
 		SetImageSet(imageSet);
 	}
 }
@@ -202,8 +208,10 @@ void MSWindow::onActionDirectoryOpenForST()
 
   if(result == Gtk::RESPONSE_OK)
 	{
+		boost::mutex::scoped_lock lock(_ioMutex);
 		rfiStrategy::SpatialTimeImageSet *imageSet = new rfiStrategy::SpatialTimeImageSet(dialog.get_filename());
 		imageSet->Initialize();
+		lock.unlock();
 		SetImageSet(imageSet);
 	}
 }
@@ -229,8 +237,10 @@ void MSWindow::onOpenBandCombined()
   while(result == Gtk::RESPONSE_OK);
 	if(names.size() > 0)
 	{
+		boost::mutex::scoped_lock lock(_ioMutex);
 		rfiStrategy::BandCombinedSet *imageSet = new rfiStrategy::BandCombinedSet(names);
 		imageSet->Initialize();
+		lock.unlock();
 		SetImageSet(imageSet);
 	}
 }
@@ -278,8 +288,10 @@ void MSWindow::OpenPath(const std::string &path)
 	}
 	else
 	{
+		boost::mutex::scoped_lock lock(_ioMutex);
 		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(path);
 		imageSet->Initialize();
+		lock.unlock();
 		SetImageSet(imageSet);
 	}
 }
@@ -295,9 +307,12 @@ void MSWindow::loadCurrentTFData()
 {
 	if(_imageSet != 0) {
 		try {
+			boost::mutex::scoped_lock lock(_ioMutex);
 			_imageSet->AddReadRequest(*_imageSetIndex);
 			_imageSet->PerformReadRequests();
 			rfiStrategy::BaselineData *baseline = _imageSet->GetNextRequested();
+			lock.unlock();
+			
 			_timeFrequencyWidget.SetNewData(baseline->Data(), baseline->MetaData());
 			delete baseline;
 			if(_spatialMetaData != 0)
@@ -322,15 +337,17 @@ void MSWindow::loadCurrentTFData()
 void MSWindow::setSetNameInStatusBar()
 {
   if(HasImageSet()) {
-	_statusbar.pop();
-	_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
+		_statusbar.pop();
+		_statusbar.push(_imageSetName + ": " + _imageSetIndexDescription);
   }
 }
 		
 void MSWindow::onLoadPrevious()
 {
 	if(_imageSet != 0) {
+		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->Previous();
+		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -338,7 +355,9 @@ void MSWindow::onLoadPrevious()
 void MSWindow::onLoadNext()
 {
 	if(_imageSet != 0) {
+		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->Next();
+		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -346,7 +365,9 @@ void MSWindow::onLoadNext()
 void MSWindow::onLoadLargeStepPrevious()
 {
 	if(_imageSet != 0) {
+		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->LargeStepPrevious();
+		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -354,7 +375,9 @@ void MSWindow::onLoadLargeStepPrevious()
 void MSWindow::onLoadLargeStepNext()
 {
 	if(_imageSet != 0) {
+		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->LargeStepNext();
+		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -481,7 +504,9 @@ void MSWindow::SetImageSet(rfiStrategy::ImageSet *newImageSet)
 		delete _imageSetIndex;
 	}
 	_imageSet = newImageSet;
+	_imageSetName = _imageSet->Name();
 	_imageSetIndex = _imageSet->StartIndex();
+	_imageSetIndexDescription = _imageSetIndex->Description();
 	
 	if(dynamic_cast<rfiStrategy::MSImageSet*>(newImageSet) != 0)
 	{
@@ -497,6 +522,7 @@ void MSWindow::SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex)
 	{
 		delete _imageSetIndex;
 		_imageSetIndex = newImageSetIndex;
+		_imageSetIndexDescription = _imageSetIndex->Description();
 		loadCurrentTFData();
 	} else {
 		delete newImageSetIndex;
