@@ -1,0 +1,5 @@
+data=CORRECTED_DATA
+operation=csclean
+select="sumsqr(UVW[0:1])<1e8"
+image=TestImage
+maxbaseline=10000
