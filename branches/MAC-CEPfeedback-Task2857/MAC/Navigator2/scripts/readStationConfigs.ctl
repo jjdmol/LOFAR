@@ -76,8 +76,8 @@ main()
   string strDataDir             = ""; 
   if (isdir("/opt/lofar/etc/") ) {
     strDataDir = "/opt/lofar/etc/";
-  } else if ( isdir ("d:/data/CS20_CS001/data/configs/") ) {
-    strDataDir = "d:/data/CS20_CS001/data/configs/";
+  } else if ( isdir ("d:/data/MAC-CEPfeedback2857-CS001/data/configs/") ) {
+    strDataDir = "d:/data/MAC-CEPfeedback2857-CS001/data/configs/";
   } else {
     DebugN("Could not find datadir to work with, leaving and no antenne data read.");
     return;
@@ -204,35 +204,35 @@ main()
     if (strpos(dynStr_fileContent[index],"RS.STATION_ID")>-1) {
       dyn_string value = strsplit(dynStr_fileContent[index],"=");
       if (dynlen(value) > 1) {
-        dpSet("remoteStation.stationID",value[2]);
+        dpSet("LOFAR_PIC_StationInfo.stationID",value[2]);
       }
     }
     
     if (strpos(dynStr_fileContent[index],"RS.N_RSPBOARDS")>-1) {
       dyn_string value = strsplit(dynStr_fileContent[index],"=");
       if (dynlen(value) > 1) {
-        dpSet("remoteStation.N_RSPBoards",value[2]);
+        dpSet("LOFAR_PIC_StationInfo.N_RSPBoards",value[2]);
       }
     }
     
     if (strpos(dynStr_fileContent[index],"RS.N_TBBOARDS")>-1) {
       dyn_string value = strsplit(dynStr_fileContent[index],"=");
       if (dynlen(value) > 1) {
-        dpSet("remoteStation.N_TBBoards",value[2]);
+        dpSet("LOFAR_PIC_StationInfo.N_TBBoards",value[2]);
       }
     }
 
     if (strpos(dynStr_fileContent[index],"RS.N_LBAS")>-1) {
       dyn_string value = strsplit(dynStr_fileContent[index],"=");
       if (dynlen(value) > 1) {
-        dpSet("remoteStation.N_LBAS",value[2]);
+        dpSet("LOFAR_PIC_StationInfo.N_LBAS",value[2]);
       }
     }
       
     if (strpos(dynStr_fileContent[index],"RS.N_HBAS")>-1) {
       dyn_string value = strsplit(dynStr_fileContent[index],"=");
       if (dynlen(value) > 1) {
-        dpSet("remoteStation.N_HBAS",value[2]);
+        dpSet("LOFAR_PIC_StationInfo.N_HBAS",value[2]);
       }
     }
   
@@ -243,9 +243,9 @@ main()
             substr(value[2],0,1) == "n" ||
             substr(value[2],0,1) == "F" ||
             substr(value[2],0,1) == "f") {
-          dpSet("remoteStation.HBA_Split",false);
+          dpSet("LOFAR_PIC_StationInfo.HBA_Split",false);
         } else {
-          dpSet("remoteStation.HBA_Split",true);
+          dpSet("LOFAR_PIC_StationInfo.HBA_Split",true);
         }
       }
     }
@@ -258,9 +258,9 @@ main()
             substr(value[2],0,1) == "n" ||
             substr(value[2],0,1) == "F" ||
             substr(value[2],0,1) == "f") {
-          dpSet("remoteStation.wide_LBAS",false);
+          dpSet("LOFAR_PIC_StationInfo.wide_LBAS",false);
         } else {
-          dpSet("remoteStation.wide_LBAS",true);
+          dpSet("LOFAR_PIC_StationInfo.wide_LBAS",true);
         }
       }
     }
@@ -306,24 +306,24 @@ void processNormalVector(string aS) {
   if (bDebug) DebugN("Reading NORMAL_VECTOR "+aS+" X,Y,Z :" + fX + " " + fY + " " + fZ);
   if (aS == "LBA" ) {
     norVecLBAFound=true;
-    dpSet("remoteStation.LBA.NormalVector.X",fX,
-          "remoteStation.LBA.NormalVector.Y",fY,
-          "remoteStation.LBA.NormalVector.Z",fZ);    
+    dpSet("LOFAR_PIC_StationInfo.LBA.NormalVector.X",fX,
+          "LOFAR_PIC_StationInfo.LBA.NormalVector.Y",fY,
+          "LOFAR_PIC_StationInfo.LBA.NormalVector.Z",fZ);    
   } else if (aS == "HBA0") {
     norVecHBA0Found=true;
-    dpSet("remoteStation.HBA.HBA0.NormalVector.X",fX,
-          "remoteStation.HBA.HBA0.NormalVector.Y",fY,
-          "remoteStation.HBA.HBA0.NormalVector.Z",fZ);    
+    dpSet("LOFAR_PIC_StationInfo.HBA.HBA0.NormalVector.X",fX,
+          "LOFAR_PIC_StationInfo.HBA.HBA0.NormalVector.Y",fY,
+          "LOFAR_PIC_StationInfo.HBA.HBA0.NormalVector.Z",fZ);    
   } else if (aS == "HBA1") {
     norVecHBA1Found=true;
-    dpSet("remoteStation.HBA.HBA1.NormalVector.X",fX,
-          "remoteStation.HBA.HBA1.NormalVector.Y",fY,
-          "remoteStation.HBA.HBA1.NormalVector.Z",fZ);    
+    dpSet("LOFAR_PIC_StationInfo.HBA.HBA1.NormalVector.X",fX,
+          "LOFAR_PIC_StationInfo.HBA.HBA1.NormalVector.Y",fY,
+          "LOFAR_PIC_StationInfo.HBA.HBA1.NormalVector.Z",fZ);    
   } else if (aS == "HBA") {      // use HBA0 for foreign stations (1 HBA field)
     norVecHBAFound=true;
-    dpSet("remoteStation.HBA.HBA0.NormalVector.X",fX,
-          "remoteStation.HBA.HBA0.NormalVector.Y",fY,
-          "remoteStation.HBA.HBA0.NormalVector.Z",fZ);    
+    dpSet("LOFAR_PIC_StationInfo.HBA.HBA0.NormalVector.X",fX,
+          "LOFAR_PIC_StationInfo.HBA.HBA0.NormalVector.Y",fY,
+          "LOFAR_PIC_StationInfo.HBA.HBA0.NormalVector.Z",fZ);    
   }
 } 
 
@@ -340,24 +340,24 @@ void processRotationMatrix(string aS) {
   index++;
   if (aS == "LBA" ) {
     rotMatLBAFound=true;
-    dpSet("remoteStation.LBA.RotationMatrix.X",fX,
-          "remoteStation.LBA.RotationMatrix.Y",fY,
-          "remoteStation.LBA.RotationMatrix.Z",fZ);    
+    dpSet("LOFAR_PIC_StationInfo.LBA.RotationMatrix.X",fX,
+          "LOFAR_PIC_StationInfo.LBA.RotationMatrix.Y",fY,
+          "LOFAR_PIC_StationInfo.LBA.RotationMatrix.Z",fZ);    
   } else if (aS == "HBA0") {
     rotMatHBA0Found=true;
-    dpSet("remoteStation.HBA.HBA0.RotationMatrix.X",fX,
-          "remoteStation.HBA.HBA0.RotationMatrix.Y",fY,
-          "remoteStation.HBA.HBA0.RotationMatrix.Z",fZ);    
+    dpSet("LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.X",fX,
+          "LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.Y",fY,
+          "LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.Z",fZ);    
   } else if (aS == "HBA1") {
     rotMatHBA1Found=true;
-    dpSet("remoteStation.HBA.HBA1.RotationMatrix.X",fX,
-          "remoteStation.HBA.HBA1.RotationMatrix.Y",fY,
-          "remoteStation.HBA.HBA1.RotationMatrix.Z",fZ);   
+    dpSet("LOFAR_PIC_StationInfo.HBA.HBA1.RotationMatrix.X",fX,
+          "LOFAR_PIC_StationInfo.HBA.HBA1.RotationMatrix.Y",fY,
+          "LOFAR_PIC_StationInfo.HBA.HBA1.RotationMatrix.Z",fZ);   
   } else if (aS == "HBA") {      // use HBA0 for foreign stations (1 HBA field)
     rotMatHBAFound=true;
-    dpSet("remoteStation.HBA.HBA0.RotationMatrix.X",fX,
-          "remoteStation.HBA.HBA0.RotationMatrix.Y",fY,
-          "remoteStation.HBA.HBA0.RotationMatrix.Z",fZ);   
+    dpSet("LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.X",fX,
+          "LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.Y",fY,
+          "LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.Z",fZ);   
   }
 
 
@@ -369,24 +369,24 @@ void processFieldCenter(string aS) {
   if (bDebug) DebugN("Reading  fieldcenter "+aS+"X,Y,Z:" + fX + " " + fY + " " + fZ);
   if (aS== "LBA") {
     centerLBAFound=true;
-    dpSet("remoteStation."+aS+".centerX",fX,
-        "remoteStation."+aS+".centerY",fY,
-        "remoteStation."+aS+".centerZ",fZ);
+    dpSet("LOFAR_PIC_StationInfo."+aS+".centerX",fX,
+        "LOFAR_PIC_StationInfo."+aS+".centerY",fY,
+        "LOFAR_PIC_StationInfo."+aS+".centerZ",fZ);
   } else if (aS == "HBA") {
     centerHBAFound=true;
-    dpSet("remoteStation."+aS+".centerX",fX,
-        "remoteStation."+aS+".centerY",fY,
-        "remoteStation."+aS+".centerZ",fZ);
+    dpSet("LOFAR_PIC_StationInfo."+aS+".centerX",fX,
+        "LOFAR_PIC_StationInfo."+aS+".centerY",fY,
+        "LOFAR_PIC_StationInfo."+aS+".centerZ",fZ);
   } else if (aS == "HBA0") {
     centerHBA0Found=true;
-    dpSet("remoteStation.HBA.HBA0.centerX",fX,
-          "remoteStation.HBA.HBA0.centerY",fY,
-          "remoteStation.HBA.HBA0.centerZ",fZ);
+    dpSet("LOFAR_PIC_StationInfo.HBA.HBA0.centerX",fX,
+          "LOFAR_PIC_StationInfo.HBA.HBA0.centerY",fY,
+          "LOFAR_PIC_StationInfo.HBA.HBA0.centerZ",fZ);
   } else if (aS == "HBA1") {
     centerHBA1Found=true;
-    dpSet("remoteStation.HBA.HBA1.centerX",fX,
-          "remoteStation.HBA.HBA1.centerY",fY,
-          "remoteStation.HBA.HBA1.centerZ",fZ);
+    dpSet("LOFAR_PIC_StationInfo.HBA.HBA1.centerX",fX,
+          "LOFAR_PIC_StationInfo.HBA.HBA1.centerY",fY,
+          "LOFAR_PIC_StationInfo.HBA.HBA1.centerZ",fZ);
   }
 }
 
@@ -429,11 +429,27 @@ void processFieldDeltas(string aS) {
   }
     
   int ix=nr_ofAnt;
-  for (int i=1; i<= ix;i++) {
-    string ant=(i-1);
-    dpSet(aS+ant+".deltaX",antConfFileX[i],
-          aS+ant+".deltaY",antConfFileY[i],
-          aS+ant+".deltaZ",antConfFileZ[i]);
+  for (int i=0; i< ix;i++) {
+    string ant=aS;
+    if (ant=="HBA") {
+      if (i < 10) {
+        ant+="0"+i;
+      } else if ( i >= 10) {
+        ant+=i;
+      }
+    } else if (aS=="LBA") {
+      if (i < 10) {
+        ant+="00"+i;
+      } else if ( i >= 10 && i < 100) {
+        ant+="0"+i;
+      } else if ( i >= 100) {
+        ant+=i;
+      }
+    }    
+    
+    dpSet("LOFAR_PIC_"+ant+".common.deltaX",antConfFileX[i+1],
+          "LOFAR_PIC_"+ant+".common.deltaY",antConfFileY[i+1],
+          "LOFAR_PIC_"+ant+".common.deltaZ",antConfFileZ[i+1]);
   }
   index +=nr_ofAnt+1;
     
@@ -447,34 +463,40 @@ void calcRotated(string aS) {
 
   
   if (aS=="LBA") {
-    dpGet("remoteStation.LBA.RotationMatrix.X",rotX,"remoteStation.LBA.RotationMatrix.Y",rotY,"remoteStation.LBA.RotationMatrix.Z",rotZ,
-          "remoteStation.LBA.centerX",centerX,"remoteStation.LBA.centerY",centerY,"remoteStation.LBA.centerZ",centerZ);
+    dpGet("LOFAR_PIC_StationInfo.LBA.RotationMatrix.X",rotX,"LOFAR_PIC_StationInfo.LBA.RotationMatrix.Y",rotY,"LOFAR_PIC_StationInfo.LBA.RotationMatrix.Z",rotZ,
+          "LOFAR_PIC_StationInfo.LBA.centerX",centerX,"LOFAR_PIC_StationInfo.LBA.centerY",centerY,"LOFAR_PIC_StationInfo.LBA.centerZ",centerZ);
     dyn_float result=rotate(centerX,centerY,centerZ,rotX,rotY,rotZ);
-    dpSet("remoteStation.LBA.centerX",result[1],"remoteStation.LBA.centerY",result[2],"remoteStation.LBA.centerZ",result[3]);
+    dpSet("LOFAR_PIC_StationInfo.LBA.centerX",result[1],"LOFAR_PIC_StationInfo.LBA.centerY",result[2],"LOFAR_PIC_StationInfo.LBA.centerZ",result[3]);
     
   } else if (aS=="HBA" ) {
-    dpGet("remoteStation.HBA.HBA0.RotationMatrix.X",rotX,"remoteStation.HBA.HBA0.RotationMatrix.Y",rotY,"remoteStation.HBA.HBA0.RotationMatrix.Z",rotZ,
-          "remoteStation.HBA.centerX",centerX,"remoteStation.HBA.centerY",centerY,"remoteStation.HBA.centerZ",centerZ);
+    dpGet("LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.X",rotX,"LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.Y",rotY,"LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.Z",rotZ,
+          "LOFAR_PIC_StationInfo.HBA.centerX",centerX,"LOFAR_PIC_StationInfo.HBA.centerY",centerY,"LOFAR_PIC_StationInfo.HBA.centerZ",centerZ);
     dyn_float result=rotate(centerX,centerY,centerZ,rotX,rotY,rotZ);
-    dpSet("remoteStation.HBA.centerX",result[1],"remoteStation.HBA.centerY",result[2],"remoteStation.HBA.centerZ",result[3]);
+    dpSet("LOFAR_PIC_StationInfo.HBA.centerX",result[1],"LOFAR_PIC_StationInfo.HBA.centerY",result[2],"LOFAR_PIC_StationInfo.HBA.centerZ",result[3]);
 
   } else if (aS == "HBA0") {
-    dpGet("remoteStation.HBA.HBA0.RotationMatrix.X",rotX,"remoteStation.HBA.HBA0.RotationMatrix.Y",rotY,"remoteStation.HBA.HBA0.RotationMatrix.Z",rotZ,
-          "remoteStation.HBA.HBA0.centerX",centerX,"remoteStation.HBA.HBA0.centerY",centerY,"remoteStation.HBA.HBA0.centerZ",centerZ);
+    dpGet("LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.X",rotX,"LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.Y",rotY,"LOFAR_PIC_StationInfo.HBA.HBA0.RotationMatrix.Z",rotZ,
+          "LOFAR_PIC_StationInfo.HBA.HBA0.centerX",centerX,"LOFAR_PIC_StationInfo.HBA.HBA0.centerY",centerY,"LOFAR_PIC_StationInfo.HBA.HBA0.centerZ",centerZ);
     dyn_float result=rotate(centerX,centerY,centerZ,rotX,rotY,rotZ);
-    dpSet("remoteStation.HBA.HBA0.centerX",result[1],"remoteStation.HBA.HBA0.centerY",result[2],"remoteStation.HBA.HBA0.centerZ",result[3]);
+    dpSet("LOFAR_PIC_StationInfo.HBA.HBA0.centerX",result[1],"LOFAR_PIC_StationInfo.HBA.HBA0.centerY",result[2],"LOFAR_PIC_StationInfo.HBA.HBA0.centerZ",result[3]);
 
   } else if (aS== "HBA1") {
-    dpGet("remoteStation.HBA.HBA1.RotationMatrix.X",rotX,"remoteStation.HBA.HBA1.RotationMatrix.Y",rotY,"remoteStation.HBA.HBA1.RotationMatrix.Z",rotZ,
-          "remoteStation.HBA.HBA1.centerX",centerX,"remoteStation.HBA.HBA1.centerY",centerY,"remoteStation.HBA.HBA1.centerZ",centerZ);
+    dpGet("LOFAR_PIC_StationInfo.HBA.HBA1.RotationMatrix.X",rotX,"LOFAR_PIC_StationInfo.HBA.HBA1.RotationMatrix.Y",rotY,"LOFAR_PIC_StationInfo.HBA.HBA1.RotationMatrix.Z",rotZ,
+          "LOFAR_PIC_StationInfo.HBA.HBA1.centerX",centerX,"LOFAR_PIC_StationInfo.HBA.HBA1.centerY",centerY,"LOFAR_PIC_StationInfo.HBA.HBA1.centerZ",centerZ);
     dyn_float result=rotate(centerX,centerY,centerZ,rotX,rotY,rotZ);
-    dpSet("remoteStation.HBA.HBA1.centerX",result[1],"remoteStation.HBA.HBA1.centerY",result[2],"remoteStation.HBA.HBA1.centerZ",result[3]);
+    dpSet("LOFAR_PIC_StationInfo.HBA.HBA1.centerX",result[1],"LOFAR_PIC_StationInfo.HBA.HBA1.centerY",result[2],"LOFAR_PIC_StationInfo.HBA.HBA1.centerZ",result[3]);
 
   }  
   
   if (aS == "HBA") {
     for (int i=0;i < nr_HBA; i++) {
-      dpGet("HBA"+i+".deltaX",X,"HBA"+i+".deltaY",Y,"HBA"+i+".deltaZ",Z);
+      string hba="HBA";
+      if (i < 10) {
+        hba+="0"+i;
+      } else if ( i >= 10) {
+        hba+=i;
+      }
+      dpGet("LOFAR_PIC_"+hba+".common.deltaX",X,"LOFAR_PIC_"+hba+".common.deltaY",Y,"LOFAR_PIC_"+hba+".common.deltaZ",Z);
       dyn_float result=rotate(X,Y,Z,rotX,rotY,rotZ);
        // keep x y from hba0 and hba1 for rotationcalculations hba0
        // keep x y from hba24 and hba25 for rotationcalculations hba1
@@ -492,7 +514,7 @@ void calcRotated(string aS) {
         y4=result[2];
       } 
 
-      dpSet("HBA"+i+".deltaX",result[1],"HBA"+i+".deltaY",result[2],"HBA"+i+".deltaZ",result[3]);
+      dpSet("LOFAR_PIC_"+hba+".common.deltaX",result[1],"LOFAR_PIC_"+hba+".common.deltaY",result[2],"LOFAR_PIC_"+hba+".common.deltaZ",result[3]);
     }
     // calculate rotationcorner of this field
     float dx1=x2-x1;
@@ -519,13 +541,22 @@ void calcRotated(string aS) {
       if (bDebug) DebugN("atan(dy2/dx2):" ,atan(dy2/dx2));
     }
     if (bDebug) DebugN("Angle for  HBA1 = ",angle2);
-    dpSet("remoteStation.HBA.HBA0.rotation",angle1,
-          "remoteStation.HBA.HBA1.rotation",angle2);
+    dpSet("LOFAR_PIC_StationInfo.HBA.HBA0.rotation",angle1,
+          "LOFAR_PIC_StationInfo.HBA.HBA1.rotation",angle2);
   } else if (aS == "LBA" )  {
     for (int i=0;i < nr_LBA; i++) {
-      dpGet("LBA"+i+".deltaX",X,"LBA"+i+".deltaY",Y,"LBA"+i+".deltaZ",Z);
+      string lba="LBA";
+      if (i < 10) {
+        lba+="00"+i;
+      } else if ( i >= 10 && i < 100) {
+        lba+="0"+i;
+      } else if ( i >= 100) {
+        lba+=i;
+      }
+                  
+      dpGet("LOFAR_PIC_"+lba+".common.deltaX",X,"LOFAR_PIC_"+lba+".common.deltaY",Y,"LOFAR_PIC_"+lba+".common.deltaZ",Z);
       dyn_float result=rotate(X,Y,Z,rotX,rotY,rotZ);
-      dpSet("LBA"+i+".deltaX",result[1],"LBA"+i+".deltaY",result[2],"LBA"+i+".deltaZ",result[3]);
+      dpSet("LOFAR_PIC_"+lba+".common.deltaX",result[1],"LOFAR_PIC_"+lba+".common.deltaY",result[2],"LOFAR_PIC_"+lba+".common.deltaZ",result[3]);
     }
   }
   
