@@ -2,7 +2,7 @@
 
 echo FILTERED BY $0
 
-make 2>&1 | perl -ne '
+make $@ 2>&1 | perl -ne '
 
 # ----- filter gcc warnings, for example:
 # /usr/include/boost/date_time/gregorian/conversion.hpp:44: warning: missing initializer ...
