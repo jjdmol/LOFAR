@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: TBB_Writer.h 10353 2012-03-14 15:41:22Z amesfoort $
+ * $Id: TBB_Writer.h 13275 2012-09-07 15:41:22Z amesfoort $
  */
 
 #ifndef LOFAR_STORAGE_TBB_WRITER_H
@@ -263,8 +263,9 @@ class TBB_StreamWriter {
 
 	boost::crc_optimal<16, 0x8005/*, 0, 0, false, false*/> itsCrc16gen; // instead of boost::crc_16_type
 
+	// Thread objects must be last in TBB_StreamWriter for safe destruction.
 	Thread* itsOutputThread;
-	Thread* itsInputThread; // last in TBB_StreamWriter
+	Thread* itsInputThread;
 
 	// do not use
 	TBB_StreamWriter();
@@ -309,7 +310,8 @@ class TBB_Writer {
 
 	unsigned itsRunNr;
 
-	std::vector<TBB_StreamWriter* > itsStreamWriters; // last in TBB_Writer
+	// Stream writers (threads) must be last in TBB_Writer for safe destruction.
+	std::vector<TBB_StreamWriter* > itsStreamWriters;
 
 	// do not use
 	TBB_Writer();

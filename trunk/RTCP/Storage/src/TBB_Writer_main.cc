@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * $Id: TBB_Writer_main.cc 14523 2012-03-14 18:58:53Z amesfoort $
+ * $Id: TBB_Writer_main.cc 17682 2012-09-07 18:58:53Z amesfoort $
  *
  * @author Alexander S. van Amesfoort
  * Parts derived from the BF writer written by Jan David Mol, and from

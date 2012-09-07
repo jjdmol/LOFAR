@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: TBB_Writer.cc 36610 2012-03-12 11:54:53Z amesfoort $
+ * $Id: TBB_Writer.cc 38741 2012-09-07 11:54:53Z amesfoort $
  */
 
 #include <lofar_config.h>
@@ -117,8 +117,6 @@ TBB_Dipole::TBB_Dipole(const TBB_Dipole& rhs)
 
 TBB_Dipole::~TBB_Dipole() {
 	/*
-	 * Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
-	 *
 	 * Set dataset len (if ext raw) and DATA_LENGTH and FLAG_OFFSETS attributes at the end.
 	 * Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
 	 * Skip on uninitialized (default constructed) objects.
@@ -150,7 +148,7 @@ void TBB_Dipole::initDipole(const TBB_Header& header, const Parset& parset, cons
 		const string& rawFilename, dal::TBB_Station& station, Mutex& h5Mutex) {
 	if (header.sampleFreq == 200 || header.sampleFreq == 160) {
 		itsSampleFreq = static_cast<uint32_t>(header.sampleFreq) * 1000000;
-	} else { // might happen if header of first frame is corrupt
+	} else { // might happen if header of first frame is corrupt (doesn't mean we (can) deal with that on any corruption)
 		itsSampleFreq = parset.clockSpeed(); // Hz
 		LOG_WARN("TBB: Unknown sample rate in TBB frame header; using sample rate from the parset");
 	}
@@ -211,7 +209,7 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 			/* Because of the crc32tbb variant, payloads with only zeros validate as correct.
 			 * Given the used frame size (1024 samples for transient), this is extremenly unlikely
 			 * to be real data. Rather, such zero blocks are from RCUs that are disabled or broken.
-			 * Still store the zeros to be able to distinguish from lost frames.
+			 * Flag it, but still store the zeros to be able to distinguish from lost frames.
 			 */
 			addFlags(offset, frame.header.nOfSamplesPerFrame);
 		}
@@ -228,7 +226,7 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 		 */
 		if (usesExternalDataFile()) {
 			if (offset > itsDatasetLen) {
-				itsRawOut.seekp(offset * sizeof(frame.payload.data[0])); // skip space of lost frame
+				itsRawOut.seekp(offset * sizeof(frame.payload.data[0])); // skip space of lost frame(s)
 			}
 			itsRawOut.write(reinterpret_cast<const char*>(frame.payload.data), static_cast<size_t>(frame.header.nOfSamplesPerFrame) * sizeof(frame.payload.data[0]));
 		} else {
@@ -572,7 +570,7 @@ void TBB_Station::initStationGroup(dal::TBB_Station& st, const string& stName, c
 		st.beamDirectionUnit() .value = "m";
 	}
 
-	// clockCorrectionTime() returns 0.0 if stName is unknown, while 0.0 is valid for some stations...
+	// clockCorrectionTime() returns 0.0 if stName is unknown, while 0.0 is valid for some stations... TODO: call underlying function
 	st.clockOffset()    .value = itsParset.clockCorrectionTime(stName);
 	st.clockOffsetUnit().value = "s";
 
@@ -605,7 +603,7 @@ void TBB_Station::initTriggerGroup(dal::TBB_Trigger& tg) {
 	 * specifying each attribute name presumed available.
 	 * Until it is clear what is needed and available, this cannot be standardized.
 	 *
-	 * If you add fields using getTYPE(), catch the possible APSException as above.
+	 * If you add fields using parset getTYPE(), catch the possible APSException as above.
 	 */
 }
 
@@ -653,7 +651,7 @@ TBB_StreamWriter::~TBB_StreamWriter() {
 }
 
 time_t TBB_StreamWriter::getTimeoutStampSec() const {
-	return itsTimeoutStamp.tv_sec; // racy read (and no access once guarantee)
+	return itsTimeoutStamp.tv_sec; // racy read (and no access once guarantee), but only to terminate after timeout
 }
 
 void TBB_StreamWriter::frameHeaderLittleToHost(TBB_Header& header) const {
@@ -668,14 +666,14 @@ void TBB_StreamWriter::frameHeaderLittleToHost(TBB_Header& header) const {
 
 void TBB_StreamWriter::correctTransientSampleNr(TBB_Header& header) const {
 	/*
-	 * We assume header.sampleFreq is either 200 or 160 MHz (another multiple of #samples per frame is also fine).
+	 * LOFAR antennas have a header.sampleFreq of either 200 or 160 MHz (another multiple of #samples per frame is also fine).
 	 * 
 	 * At 200 MHz sample rate with 1024 samples per frame, we have 195213.5 frames per second.
 	 * This means that every 2 seconds, a frame overlaps a seconds boundary; every odd frame needs its sampleNr corrected.
 	 * At 160 MHz sample rate, an integer number of frames fits in a second (156250), so no correction is needed.
 	 *
 	 * This fixup assumes no other sample freq than 200 MHz that needs a correction is used (checked in initDipole()),
-	 * and that the hw time nr starts even (it is 0) (cannot be checked, because dumps can start at any frame).
+	 * and that the hw time nr starts even (cannot be checked, because dumps can start at any frame, but it is 0, thus fine).
 	 */
 	if (header.sampleFreq == 200 && header.time & 1) {
 		header.sampleNr += DEFAULT_TRANSIENT_NSAMPLES / 2;
@@ -806,18 +804,18 @@ void TBB_StreamWriter::mainInputLoop() {
 			LOG_FATAL_STR(itsLogPrefix << exc.what());
 			break;
 		} catch (...) { // Cancellation exc happens at exit. Nothing to do, so disabled. Otherwise, must rethrow.
+			delete stream;
 			try {
 				itsReceiveQueue.append(NULL); // always notify output thread at exit of no more data
 			} catch (exception& exc) {
 				LOG_WARN_STR(itsLogPrefix << "may have failed to notify output thread to terminate: " << exc.what());
 			}
-			delete stream;
 			throw;
 		}
 	}
 
-	itsReceiveQueue.append(NULL);
 	delete stream;
+	itsReceiveQueue.append(NULL);
 }
 
 void TBB_StreamWriter::mainOutputLoop() {
@@ -925,7 +923,7 @@ TBB_Station* TBB_Writer::getStation(const TBB_Header& header) {
 	TBB_Station* station;
 	{
 		ScopedLock slH5(itsH5Mutex);
-		station = new TBB_Station(stationName, itsH5Mutex, itsParset, stMetaData, h5Filename, itsDumpRaw); // TODO: mem leak if insert() fails. Also, really need global h5lock: cannot create 2 different h5 files at once safely.
+		station = new TBB_Station(stationName, itsH5Mutex, itsParset, stMetaData, h5Filename, itsDumpRaw); // TODO: mem leak if insert() fails. (But if destr here, destructor is not thread-safe.)
 	}
 
 	return itsStations.insert(make_pair(header.stationID, station)).first->second;
