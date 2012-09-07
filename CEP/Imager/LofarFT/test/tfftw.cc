@@ -499,7 +499,7 @@ void timeFlip(int sz)
 }
 
 
-int main (int argc)
+int main (int argc, char* [])
 {
   ///  testvec();
   checkFlip(5);
