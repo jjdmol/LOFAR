@@ -98,6 +98,8 @@ void APAdminPool::remove(APAdmin*	anAPAdmin) throw(Exception)
 // TODO:rewrite for select call
 APAdmin*	APAdminPool::poll(time_t		waitTime)
 {
+  (void)waitTime;
+
 	for (int i = itsCurElement; i < itsReadMask.count(); ++i) {
 		LOG_TRACE_COND_STR("poll at " << i);
 		if (itsAPAPool.at(i)->read()) {
