@@ -43,11 +43,10 @@ if (m#^([/._ A-Za-z0-9-]+):([0-9]+):[0-9:]* warning: +(.*)$#) {
   next if $file =~ m#^/opt/cep/casarest/# && $warning =~ /^by '[^']+'/;
   next if $file =~ m#^/opt/cep/casarest/# && $warning =~ /^unused parameter/;
   next if $file =~ m#^/opt/cep/casarest/# && $warning =~ /^abstract virtual '[^']+' called from constructor/;
+  next if $file =~ m#^/opt/cep/casarest/#;
 
   # Dynamic parts of a static executable
   next if $warning =~ /^Using '[^']+' in statically linked applications requires at runtime the shared libraries/;
-
-  print "ALLOWING file $file line $line warning $warning\n";
 }
 
 # ------ filter ld warnings, for example:
