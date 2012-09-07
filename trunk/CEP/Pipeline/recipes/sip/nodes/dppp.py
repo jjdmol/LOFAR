@@ -207,25 +207,25 @@ class dppp(LOFARnodeTCP):
             patch_dictionary[stepname + '.instrumentmodel'] = kwargs['parmdb']
         if kwargs['sourcedb']:
             patch_dictionary[stepname + '.skymodel'] = kwargs['sourcedb']
+            
+        demix_always = set(kwargs['demix_always'])
+        demix_if_needed = set(kwargs['demix_if_needed'])
         
-        # Use heuristics to get a list of A-team sources that may need
-        # to be removed. 
-        ateam_list = getAteamList(
-            kwargs['infile'],
-            outerDistance=2.e4,
-            elLimit=5.,
-            verbose=self.logger.isEnabledFor(logging.DEBUG)
-        )
-        self.logger.debug("getAteamList returned: %s" % ateam_list)
         # If the user specified a list of candidate A-team sources to remove,
-        # then determine the intersection of both lists.
-        if kwargs['demix_if_needed']:
-            ateam_list = list(
-                set(kwargs['demix_if_needed']).intersection(ateam_list)
+        # then determine the intersection of that list and the list of sources
+        # that need demixing according to the heuristics of getAteamList().
+        if demix_if_needed:
+            ateam_list = getAteamList(
+                kwargs['infile'],
+                outerDistance=2.e4,
+                elLimit=5.,
+                verbose=self.logger.isEnabledFor(logging.DEBUG)
             )
+            self.logger.debug("getAteamList returned: %s" % ateam_list)
+            demix_if_needed.intersection_update(ateam_list)
 
         # Determine the complete set of sources to be demixed.
-        demix_sources = list(set(kwargs['demix_always']).union(ateam_list))
+        demix_sources = list(demix_always.union(demix_if_needed))
         self.logger.info("Removing %d target(s) from %s: %s" % (
                 len(demix_sources), kwargs['infile'], ', '.join(demix_sources)
             )
