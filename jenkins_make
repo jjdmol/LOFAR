@@ -46,6 +46,8 @@ if (m#^([/._ A-Za-z0-9-]+):([0-9]+):[0-9:]* warning: +(.*)$#) {
 
   # Dynamic parts of a static executable
   next if $warning =~ /^Using '[^']+' in statically linked applications requires at runtime the shared libraries/;
+
+  print "ALLOWING file $file line $line warning $warning\n";
 }
 
 # ------ filter ld warnings, for example:
