@@ -8,9 +8,9 @@ select max(imageid) from images;
 
 --#insert image
 insert into images (ds_id, tau, band, imagename, status,
-                    centr_ra, centr_decl, svn_version)
+                    centr_ra, centr_decl, fov_radius, svn_version)
 select 0, 1, {1}, '{0}' as imagename, 0,
-       0.0, 0.0, {2}
+       {2}, {3}, {4}, {5}
 
 
 --#insert_extractedsources
@@ -19,7 +19,7 @@ insert into extractedsources (image_id, zone, ra, decl, ra_err, decl_err,
                               f_peak, f_peak_err, f_int, f_int_err,
                               source_kind,
                               g_minor, g_minor_err, g_major, g_major_err,
-                              g_pa, g_pa_err)
+                              g_pa, g_pa_err, healpix_zone)
 select {0}, cast(floor(ldecl) as integer) as zone, lra, ldecl, lra_err, ldecl_err,
        cos(radians(ldecl))*cos(radians(lra)),
        cos(radians(ldecl))*sin(radians(lra)),
@@ -27,7 +27,7 @@ select {0}, cast(floor(ldecl) as integer) as zone, lra, ldecl, lra_err, ldecl_er
        case when g_major is null or ldecl_err > g_major or g_pa_err = 0.0 or g_major_err = 0.0 or g_minor_err = 0.0 then 0
             else 1 end,
        g_minor, g_minor_err, g_major, g_major_err,
-       g_pa, g_pa_err
+       g_pa, g_pa_err, healpix_zone
 from detections
 where lf_int_err > 0
   and lf_int > 0
@@ -40,13 +40,13 @@ insert into extractedsources (image_id, zone, ra, decl, ra_err, decl_err,
                               f_peak, f_peak_err, f_int, f_int_err,
                               source_kind,
                               g_minor, g_minor_err, g_major, g_major_err,
-                              g_pa, g_pa_err, xtrsrcid2)
+                              g_pa, g_pa_err, xtrsrcid2, healpix_zone)
 select image_id, zone, ra - 360.0, decl, ra_err, decl_err,
        x, y, z, det_sigma,
        f_peak, f_peak_err, f_int, f_int_err,
        source_kind,
        g_minor, g_minor_err, g_major, g_major_err,
-       g_pa, g_pa_err, xtrsrcid
+       g_pa, g_pa_err, xtrsrcid, healpix_zone
   from extractedsources
  where image_id = {0}
    and ra > 360 - 1/cos(radians(decl))
@@ -57,7 +57,7 @@ select image_id, zone, ra + 360.0, decl, ra_err, decl_err,
        f_peak, f_peak_err, f_int, f_int_err,
        source_kind,
        g_minor, g_minor_err, g_major, g_major_err,
-       g_pa, g_pa_err, xtrsrcid
+       g_pa, g_pa_err, xtrsrcid, healpix_zone
   from extractedsources
  where image_id = {0}
    and ra < 1/cos(radians(decl))
@@ -131,10 +131,10 @@ select ta.xtrsrc_id, r.parent_runcat_id, ta.distance_arcsec, ta.lr_method, ta.r
 --point sources
 insert into runningcatalog(first_xtrsrc_id, datapoints, decl_zone,
                            $$get_column_insert(['ra', 'decl'])$$,
-                           x, y, z, source_kind)
+                           x, y, z, source_kind, healpix_zone)
 select e.xtrsrcid, 1, zone,
        $$get_column_insert_values(['ra', 'decl'])$$,
-       x, y, z, source_kind
+       x, y, z, source_kind, healpix_zone
   from extractedsources e,
        temp_associations ta
  where ta.xtrsrc_id = e.xtrsrcid
@@ -150,11 +150,11 @@ select e.xtrsrcid, 1, zone,
 insert into runningcatalog(band, stokes, parent_runcat_id,
                            first_xtrsrc_id, datapoints, decl_zone,
                            $$get_column_insert(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-                           x, y, z, source_kind)
+                           x, y, z, source_kind, healpix_zone)
 select r.band, r.stokes, r.parent_runcat_id,
        e.xtrsrcid, 1, zone,
        $$get_column_insert_values(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-       e.x, e.y, e.z, e.source_kind
+       e.x, e.y, e.z, e.source_kind, e.healpix_zone
   from extractedsources e,
        temp_associations ta,
        runningcatalog r
@@ -172,11 +172,11 @@ select r.band, r.stokes, r.parent_runcat_id,
 insert into runningcatalog(band, stokes, parent_runcat_id,
                            first_xtrsrc_id, datapoints, decl_zone,
                            $$get_column_insert(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-                           x, y, z, source_kind)
+                           x, y, z, source_kind, healpix_zone)
 select i.band, i.stokes, ta.runcat_id,
        e.xtrsrcid, 1, zone,
        $$get_column_insert_values(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-       x, y, z, source_kind
+       x, y, z, source_kind, healpix_zone
   from extractedsources e,
        temp_associations ta,
        images i

@@ -5,14 +5,17 @@ from numpy.polynomial.polynomial import polyval
 from numpy.testing import assert_array_almost_equal
 from stress.generator import FREQUENCY
 from src.gsmconnectionmanager import GSMConnectionManager
-from tests.testlib import cleanup_db
+from src.pipeline import GSMPipeline
 from src.spectra import Spectra
+from tests.testlib import cleanup_db
+from tests.switchable import SwitchableTest
 
-class SpectraTest(unittest.TestCase):
+
+class SpectraTest(SwitchableTest):
     def setUp(self):
-        self.conn = GSMConnectionManager(use_console=False,
-                                         use_monet=False).get_connection(database='test')
-        cleanup_db(self.conn)
+        super(SpectraTest, self).setUp()
+        cleanup_db(self.cm.get_connection(database='test'))
+        self.conn = GSMPipeline(custom_cm=self.cm, database='test').conn
         self.sp = Spectra(self.conn)
 
     def tearDown(self):
@@ -21,8 +24,8 @@ class SpectraTest(unittest.TestCase):
     def insert_data(self, params, bands=8):
         self.conn.execute("""
 insert into runningcatalog (runcatid, first_xtrsrc_id, datapoints,
-wm_ra, wm_ra_err, wm_decl, wm_decl_err, x, y, z)
-values (100, 1, 1, 1, 0.1, 1, 0.1, 1, 1, 1);""")
+wm_ra, wm_ra_err, wm_decl, wm_decl_err, x, y, z, healpix_zone)
+values (100, 1, 1, 1, 0.1, 1, 0.1, 1, 1, 1, 0);""")
         for band in xrange(1, bands+1):
             flux = pow(10, polyval(log10(FREQUENCY[band]), params))
             self.conn.execute("""

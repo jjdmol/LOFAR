@@ -19,6 +19,7 @@ CREATE TABLE detections
   ,g_pa double null
   ,g_pa_err double null
   ,ldet_sigma double NOT NULL
+  ,healpix_zone int not null
   )
 ;
 

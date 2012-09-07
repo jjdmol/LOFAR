@@ -4,7 +4,9 @@ BBS-format file source object for GSM.
 Author: Alexey Mints (2012).
 """
 import os.path
+import healpy as hp
 from copy import copy
+from math import radians
 from src.errors import SourceException
 from src.gsmlogger import get_gsm_logger
 
@@ -131,7 +133,7 @@ class GSMBBSFileSource(object):
                      'ldecl_err, lf_peak, lf_peak_err, ' \
                      'lf_int, lf_int_err, ' \
                      'g_minor, g_minor_err, g_major, g_major_err,' \
-                     'g_pa, g_pa_err, ldet_sigma) values'
+                     'g_pa, g_pa_err, ldet_sigma, healpix_zone) values'
         while True:
             data_lines = datafile.readlines(self.BLOCK_SIZE)
             if not data_lines:
@@ -142,8 +144,10 @@ class GSMBBSFileSource(object):
                     continue
                 self.sources = self.sources + 1
                 dhash = self.process_line(data_line.split())
-                sql_data.append("('%s', %s)" %
-                                (self.file_id, ','.join(dhash)))
+                pix = hp.ang2pix(64, radians(90.-float(dhash[1])), 
+                                 radians(float(dhash[0])), nest=True)
+                sql_data.append("('%s', %s, %s )" %
+                                (self.file_id, ','.join(dhash), pix))
             sql = "%s %s;" % (sql_insert, ',\n'.join(sql_data))
             conn.execute(sql)
             self.log.info('%s sources loaded from %s' % (self.sources,

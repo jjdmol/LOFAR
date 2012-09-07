@@ -17,4 +17,4 @@ class SwitchableTest(unittest.TestCase):
             self.is_monet = bool(config['monetdb'] == 'True')
         else:
             self.cm = GSMConnectionManager(use_console=False, use_monet=True)
-            self.is_monet = False
+            self.is_monet = True

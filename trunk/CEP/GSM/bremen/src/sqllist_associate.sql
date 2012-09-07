@@ -8,15 +8,16 @@ $$get_assoc_r('rc', 'e')$$ as assoc_r,
        rc.group_head_id
   FROM runningcatalog rc
       ,extractedsources e
-      ,images im0
  WHERE e.image_id = {0}
-   AND e.image_id = im0.imageid
    and rc.x between e.x - {1} and e.x + {1}
    and rc.y between e.y - {1} and e.y + {1}
    and rc.z between e.z - {1} and e.z + {1}
    and e.source_kind = 0
    and rc.source_kind = 0
    and not rc.deleted
+   and rc.healpix_zone in ({3})
+   AND rc.decl_zone BETWEEN e.zone - cast(0.025 as integer)
+                    AND e.zone + cast(0.025 as integer)
  AND $$get_assoc_r('rc', 'e')$$ < {2};
 
 
@@ -32,18 +33,19 @@ $$get_assoc_r_extended('rc', 'e')$$  as assoc_r,
        rc.group_head_id
   FROM runningcatalog rc
       ,extractedsources e
-      ,images im0
  WHERE e.image_id = {0}
-   AND e.image_id = im0.imageid
    and rc.x between e.x - {1} and e.x + {1}
    and rc.y between e.y - {1} and e.y + {1}
    and rc.z between e.z - {1} and e.z + {1}
    and e.source_kind = 1
    and rc.source_kind = 1
-   and rc.band = im0.band
-   and rc.stokes = im0.stokes
+   and rc.band = {3}
+   and rc.stokes = '{4}'
+   and rc.healpix_zone in ({5})
    and not rc.deleted
    and e.xtrsrcid2 is null
+   AND rc.decl_zone BETWEEN e.zone - cast(0.025 as integer)
+                    AND e.zone + cast(0.025 as integer)
  AND $$get_assoc_r_extended('rc', 'e')$$ < {2};
 
 --if no match was found for this band, then use cross-band source.
@@ -56,9 +58,7 @@ $$get_assoc_r_extended('rc', 'e')$$  as assoc_r,
        rc.group_head_id
   FROM runningcatalog rc
       ,extractedsources e
-      ,images im0
  WHERE e.image_id = {0}
-   AND e.image_id = im0.imageid
    and rc.x between e.x - {1} and e.x + {1}
    and rc.y between e.y - {1} and e.y + {1}
    and rc.z between e.z - {1} and e.z + {1}
@@ -68,6 +68,9 @@ $$get_assoc_r_extended('rc', 'e')$$  as assoc_r,
    and rc.stokes is null
    and not rc.deleted
    and e.xtrsrcid2 is null
+   and rc.healpix_zone in ({5})
+   AND rc.decl_zone BETWEEN e.zone - cast(0.025 as integer)
+                    AND e.zone + cast(0.025 as integer)
    and not exists (select ta.runcat_id
                      from temp_associations ta
                     where ta.xtrsrc_id = e.xtrsrcid)
