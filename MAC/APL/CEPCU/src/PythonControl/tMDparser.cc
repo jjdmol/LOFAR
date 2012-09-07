@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 	while (iter != end) {
 		string	key(iter->first);	// make destoyable copy
 		rtrim(key, "[]0123456789");
-		bool	doubleStorage(key[key.size()-1] == '_');
+//		bool	doubleStorage(key[key.size()-1] == '_');
 		bool	isRecord(iter->second.isRecord());
 		//   isRecord  doubleStorage
 		// --------------------------------------------------------------
