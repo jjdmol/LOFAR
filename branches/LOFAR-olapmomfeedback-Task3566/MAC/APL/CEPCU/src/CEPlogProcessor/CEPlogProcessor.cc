@@ -63,6 +63,8 @@ CEPFeedback::CEPFeedback()
 
 void CEPFeedback::write(const std::string &filename)
 {
+  LOG_DEBUG_STR("Writing feedback file " << filename);
+
   parset.replace(subbandSizeKey(), formatString("%u", nrSubbands));
 
   parset.writeFile(filename);
@@ -88,6 +90,8 @@ void CEPFeedback::addSubband(unsigned index)
 
 void CEPFeedback::setSubbandKey(unsigned index, const std::string &key, const std::string &value)
 {
+  LOG_DEBUG_STR("setSubbandKey for index " << index << ": " << key << " = " << value);
+
   parset.replace(subbandPrefix(index) + key, value);
 }
 
@@ -461,6 +465,8 @@ void CEPlogProcessor::processParset( const std::string &observationID )
     string filename(formatString("%s/Observation%s", 
                                  LOFAR_SHARE_LOCATION, observationID.c_str()));
 
+    LOG_INFO_STR("Reading parset for observation " << observationID << " from " << filename);
+
     ParameterSet parset(filename);
     Observation obs(&parset, false, itsNrPsets);
     string observationPrefix = parset.locateModule("Observation") + "Observation.";
@@ -677,8 +683,11 @@ time_t CEPlogProcessor::_parseDateTime(const char *datestr, const char *timestr)
       tm.tm_year -= 1900;
     } else {
       // YY -- we won't see loglines pre 2000.
-      tm.tm_year += 110;
+      tm.tm_year += 100;
     }
+
+    // tm_mon starts counting from 0
+    tm.tm_mon--;
    }
 
   if (sscanf(timestr, "%u:%u:%u",  // ignore milliseconds
@@ -700,6 +709,8 @@ time_t CEPlogProcessor::_parseDateTime(const char *datestr, const char *timestr)
 
     ts = time(0L);
   }
+
+  LOG_DEBUG_STR("Timestamp: " << datestr << " " << timestr << " converted to " << ts);
 
   return ts;
 }
