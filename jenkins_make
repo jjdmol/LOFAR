@@ -2,6 +2,9 @@
 
 echo FILTERED BY $0
 
+# Print this script for debugging purposes, to see which filters are active
+cat $0
+
 # Create a temporary file that contains our script.
 SCRIPT=`mktemp`
 
