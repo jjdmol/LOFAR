@@ -2,10 +2,10 @@
 --point sources
 insert into runningcatalog(first_xtrsrc_id, datapoints, decl_zone,
                            $$get_column_insert(['ra', 'decl'])$$,
-                           x, y, z, source_kind)
+                           x, y, z, source_kind, healpix_zone)
 select e.xtrsrcid, 1, zone,
        $$get_column_insert_values(['ra', 'decl'])$$,
-       x, y, z, 0
+       x, y, z, 0, healpix_zone
   from extractedsources e
  where image_id = {0}
    and source_kind = 0
@@ -19,11 +19,11 @@ order by e.xtrsrcid;
 --insert new band for extended sources
 insert into runningcatalog(band, stokes, first_xtrsrc_id, datapoints, decl_zone,
                            $$get_column_insert(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-                           x, y, z, source_kind, parent_runcat_id
+                           x, y, z, source_kind, parent_runcat_id, healpix_zone
                            )
 select i.band, i.stokes, e.xtrsrcid, 1, zone,
        $$get_column_insert_values(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-       x, y, z, 1, ta.runcat_id
+       x, y, z, 1, ta.runcat_id, healpix_zone
   from extractedsources e,
        images i,
        temp_associations ta
@@ -39,11 +39,11 @@ order by e.xtrsrcid;
 --cross-band source.
 insert into runningcatalog(band, stokes, first_xtrsrc_id, datapoints, decl_zone,
                            $$get_column_insert(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-                           x, y, z, source_kind, parent_runcat_id
+                           x, y, z, source_kind, parent_runcat_id, healpix_zone
                            )
 select i.band, i.stokes, e.xtrsrcid, 1, zone,
        $$get_column_insert_values(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-       x, y, z, 1, ta.runcat_id
+       x, y, z, 1, ta.runcat_id, healpix_zone
   from extractedsources e,
        images i,
        temp_associations ta
@@ -64,11 +64,11 @@ order by e.xtrsrcid;
 --insert totally new extended sources
 insert into runningcatalog(first_xtrsrc_id, datapoints, decl_zone,
                            $$get_column_insert(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-                           x, y, z, source_kind, parent_runcat_id
+                           x, y, z, source_kind, parent_runcat_id, healpix_zone
                            )
 select e.xtrsrcid, 1, zone,
        $$get_column_insert_values(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-       x, y, z, 1, null
+       x, y, z, 1, null, healpix_zone
   from extractedsources e
  where image_id = {0}
    and source_kind = 1
@@ -80,11 +80,11 @@ order by e.xtrsrcid;
 
 insert into runningcatalog(band, stokes, first_xtrsrc_id, datapoints, decl_zone,
                            $$get_column_insert(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-                           x, y, z, source_kind, parent_runcat_id
+                           x, y, z, source_kind, parent_runcat_id, healpix_zone
                            )
 select i.band, i.stokes, e.xtrsrcid, 1, zone,
        $$get_column_insert(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$, --can copy from runningcatalog
-       e.x, e.y, e.z, 1, r.runcatid
+       e.x, e.y, e.z, 1, r.runcatid, e.healpix_zone
   from extractedsources e,
        images i,
        runningcatalog r

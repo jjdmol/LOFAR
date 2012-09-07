@@ -45,7 +45,7 @@ CREATE TABLE images
   ,svn_version int null
   ,PRIMARY KEY (imageid)
   --,FOREIGN KEY (ds_id) REFERENCES datasets (dsid)
-  ,FOREIGN KEY (band) REFERENCES frequencybands (freqbandid)
+  --,FOREIGN KEY (band) REFERENCES frequencybands (freqbandid)
   )
 ;
 

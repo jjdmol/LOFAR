@@ -4,11 +4,12 @@ import argparse
 import copy
 import re
 import sys
+from os import path
 import monetdb.sql as db
 import monetdb.monetdb_exceptions as me
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-
+import subprocess
 """
 Tool to recreate all tables/procedures in the database.
 """
@@ -18,7 +19,7 @@ class Recreator(object):
 
     PROCEDURES = ['fill_temp_assoc_kind'] # all procedures to be recreated
     VIEWS = ['v_catalog_info'] # list of views
-    TABLES = ['datasets', 'images', 'extractedsources',
+    TABLES = [ 'frequencybands', 'datasets', 'images', 'extractedsources',
               'assocxtrsources', 'detections',
               'runningcatalog', 'runningcatalog_fluxes',
               'temp_associations'] # list of tables to be recreated
@@ -30,6 +31,7 @@ class Recreator(object):
             db_autocommit = True
         db_host = "localhost"
         db_dbase = database
+        self.database = database
         db_user = "monetdb"
         db_passwd = "monetdb"
         if use_monet:
@@ -38,7 +40,7 @@ class Recreator(object):
                                    port=db_port, autocommit=db_autocommit)
         else:
             connect = psycopg2.connect(host=db_host, user=db_user,
-                                       dbname=db_dbase)
+                                       database=db_dbase)
             connect.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             self.conn = connect.cursor()
 
@@ -95,19 +97,19 @@ class Recreator(object):
         """
         Create a table with a given name.
         """
-        self.run_sql_file("create.table.%s.sql" % tab_name)
+        self.run_sql_file("sql/tables/create.table.%s.sql" % tab_name)
         print "Table %s recreated" % tab_name
 
     def create_view(self, view_name):
-        self.run_sql_file("../create.view.%s.sql" % view_name)
+        self.run_sql_file("sql/create.view.%s.sql" % view_name)
         print "View %s recreated" % view_name
 
 
     def create_procedure(self, tab_name):
         if self.monet:
-            sql_file = open("../create.procedure.%s.sql" % tab_name, 'r')
+            sql_file = open("sql/create.procedure.%s.sql" % tab_name, 'r')
         else:
-            sql_file = open("../pg/create.procedure.%s.sql" % tab_name, 'r')
+            sql_file = open("sql/pg/create.procedure.%s.sql" % tab_name, 'r')
         sql_lines = ''.join(sql_file.readlines())
         sql_lines = self.refactor_lines(sql_lines)
         #print sql_lines
@@ -119,6 +121,20 @@ class Recreator(object):
         sql_lines = ''.join(sql_file.readlines())
         sql_lines = self.refactor_lines(sql_lines)
         self.conn.execute(sql_lines)
+
+    def reload_frequencies(self):
+        if self.monet:
+            self.conn.execute("copy into frequencybands from '%s';" % path.realpath('sql/tables/freq.dat'))
+        else:
+            sp = subprocess.Popen(['psql', '-U', 'monetdb', 
+                               '-d', self.database, 
+                               '-c', "copy frequencybands from stdin delimiter '|' null 'null';"],
+                               stdout=subprocess.PIPE, 
+                               stdin=subprocess.PIPE)
+            for line in open('sql/tables/freq.dat', 'r').readlines():
+                sp.stdin.write(line)
+            sp.communicate()
+        print 'Frequencies loaded'
 
     def run(self):
         try:
@@ -145,13 +161,14 @@ class Recreator(object):
             for table in self.TABLES:
                 self.create_table(table)
             if not self.monet:
-                self.run_sql_file('../pg/indices.sql')
+                self.run_sql_file('sql/pg/indices.sql')
                 print 'Indices recreated'
             print '=' * 20
             for procedure in self.PROCEDURES:
                 self.create_procedure(procedure)
             for view in self.VIEWS:
                 self.create_view(view)
+            self.reload_frequencies()
         except db.Error, e:
             raise e
         self.conn.close()
@@ -168,7 +185,7 @@ if __name__ == '__main__':
     parser.add_argument('-D', '--database', type=str, default='test',
                         help='Database to recreate')
     parser.add_argument('-M', '--monetdb', action="store_true",
-                        default=(sys.argv[0] != './recreate_tables_pg.py'),
+                        default=False,
                         help='Use MonetDB instead of PostgreSQL')
     args = parser.parse_args()
     recr = Recreator(use_monet=args.monetdb, database=args.database)

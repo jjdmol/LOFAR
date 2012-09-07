@@ -26,7 +26,6 @@ FREQUENCY = {
     18: 8500000000
 }
 
-
 def generate_field(ra, decl, radius, size):
     for _ in xrange(size):
         rr = radius * math.sqrt(random.random())

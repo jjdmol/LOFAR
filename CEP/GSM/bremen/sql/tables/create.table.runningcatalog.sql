@@ -28,6 +28,7 @@ CREATE TABLE runningcatalog
   ,stokes CHAR(1) NULL  -- not null for group members ONLY
   ,datapoints INT NOT NULL
   ,decl_zone INT NULL
+  ,healpix_zone int not null
 
   ,wm_ra double NOT NULL
   ,wm_ra_err double NOT NULL

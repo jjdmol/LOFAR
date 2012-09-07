@@ -101,18 +101,23 @@ select case when last_update_date > last_spectra_update_date
         self.freq = []
         self.flux = []
         self.flux_err = []
+        if self.conn.is_monet():
+            func = "log10("
+        else:
+            func = "log("
         cursor = self.conn.get_cursor("""
-select log(f.freq_central), log(rf.wm_f_int), rf.avg_weight_f_int
+select %s f.freq_central), %s rf.wm_f_int), rf.avg_weight_f_int
   from frequencybands f,
        runningcatalog_fluxes rf
  where f.freqbandid = rf.band
    and rf.runcat_id = %s
-   and rf.stokes = 'I'""" % runcat_id)
+   and rf.stokes = 'I'""" % (func, func, runcat_id))
         for xdata in iter(cursor.fetchone, None):
             self.freq.append(xdata[0])
             self.flux.append(xdata[1])
             self.flux_err.append(xdata[2])
         cursor.close()
+        print self.freq, self.flux
         self.args, sp_power = self.best_fit()
         sp_update = ','.join(map(lambda x: 'spectral_index_%s = %s' %
                                        (x, self.args[x]), range(sp_power)))

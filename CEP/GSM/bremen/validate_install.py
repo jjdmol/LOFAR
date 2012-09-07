@@ -1,4 +1,7 @@
 #!/usr/bin/python
+"""
+Script to check if the required modules are installed.
+"""
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -43,4 +46,5 @@ print bcolors.HEADER, '='*10, 'API', '='*10, bcolors.ENDC
 testImport('texttable')
 
 print bcolors.HEADER, '='*10, 'Tests', '='*10, bcolors.ENDC
+testImport('nose')
 testImport('testconfig')
