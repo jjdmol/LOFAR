@@ -11,7 +11,7 @@ SCRIPT=`mktemp`
 
 # ----- filter gcc warnings, for example:
 # /usr/include/boost/date_time/gregorian/conversion.hpp:44: warning: missing initializer ...
-if (m#^([/._ A-Za-z0-9-]+):([0-9]+): warning: +(.*)$#) {
+if (m#^([/._ A-Za-z0-9-]+):([0-9]+):[0-9:]* warning: +(.*)$#) {
   $file = $1;
   $line = $2;
   $warning = $3;
@@ -43,7 +43,9 @@ if (m#^([/._ A-Za-z0-9-]+):([0-9]+): warning: +(.*)$#) {
 
 # ------ filter ld warnings, for example:
 # SocketStream.cc:(.text+0x482c): warning: Using 'getaddrinfo' in statically linked ...
-if (m#^([/._ A-Za-z0-9-]+):\([+.A-Za-z0-9]+\): warning: (.*)$#) {
+# (.text+0x2e9c): warning: Using 'endpwent' in statically linked ...
+if ( m#^([/._ A-Za-z0-9-]+):\([+.A-Za-z0-9]+\): warning: (.*)$#
+  || m#^()\([+.A-Za-z0-9]+\): warning: (.*)$#) {
   $file = $1;
   $warning = $2;
 
