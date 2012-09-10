@@ -94,6 +94,25 @@ static void recursiveMakeDir(const string &dirname, const string &logPrefix)
   }
 }
 
+/* Returns a percentage based on a current and a target value,
+ * with the following rounding:
+ *
+ * 0     -> current == 0
+ * 1..99 -> 0 < current < target
+ * 100   -> current == target
+ */
+
+static unsigned roundedPercentage(unsigned current, unsigned target)
+{
+  if (current == target)
+    return 100;
+
+  if (current == 0)
+    return 0;
+
+  return std::min(std::max( 100 * current / target, 1), 99);
+}
+
 
 OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory)
 :
@@ -275,7 +294,7 @@ void OutputThread::doWork()
 
     time_t now = time(0L);
 
-    float percent_written = itsNrExpectedBlocks == 0 ? 0 : 100.0 * itsBlocksWritten / itsNrExpectedBlocks;
+    unsigned percent_written = roundedPercentage(itsBlocksWritten, itsNrExpectedBlocks);
 
     if (now > prevlog + 5) {
       // print info every 5 seconds
@@ -294,7 +313,7 @@ void OutputThread::cleanUp()
   flushSequenceNumbers();
 
   float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
-  float percent_written = itsNrExpectedBlocks == 0 ? 0 : 100.0 * itsBlocksWritten / itsNrExpectedBlocks;
+  unsigned percent_written = roundedPercentage(itsBlocksWritten, itsNrExpectedBlocks);
 
   LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
 }
