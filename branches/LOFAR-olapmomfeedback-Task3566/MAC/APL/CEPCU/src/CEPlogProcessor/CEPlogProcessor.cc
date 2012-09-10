@@ -525,7 +525,7 @@ void CEPlogProcessor::processParset( const std::string &observationID )
     }
 
     // process feedback for correlated data
-    unsigned nrCorrelatedStreams;
+    unsigned nrCorrelatedStreams = 0;
 
     for (unsigned i = 0; i < nrStreams; i++ ) {
       Observation::StreamToStorage &s = obs.streamsToStorage[i];
@@ -826,11 +826,13 @@ string CEPlogProcessor::getTempObsName(int obsID, const char *msg)
     registerObservation( obsID, string(&tempObsName[0]) );
   }
 
-  if (!strcmp(msg,"----- Job finished succesfully")
-   || !strcmp(msg,"----- Job cancelled succesfully")) {
-    LOG_DEBUG_STR("obs " << obsID << " ended");
+  if (!strcmp(msg,"----- Job finished successfully")
+   || !strcmp(msg,"----- Job cancelled successfully")) {
+    LOG_INFO_STR("Observation " << obsID << " ended");
 
     unregisterObservation(obsID);
+
+    return "";
   }
 
   // lookup the obsID in our list
@@ -1130,7 +1132,7 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
       if ((result = strstr(logline.msg, "Characteristics: "))) {
         int subband = 0, channels = 0;
         float centralfreq = 0.0, integration = 0.0, channelwidth = 0.0, duration = 0.0;
-        if (sscanf(result, "Characteristics: subband %d, centralfreq %f Mhz, duration %f s, integration %f s, channels %u, channelwidth %f kHz", &subband, &centralfreq, &duration, &integration, &channels, &channelwidth) == 5) {
+        if (sscanf(result, "Characteristics: subband %d, centralfreq %f Mhz, duration %f s, integration %f s, channels %u, channelwidth %f kHz", &subband, &centralfreq, &duration, &integration, &channels, &channelwidth) == 6) {
 
           if (feedback) {
             feedback->setSubbandKey(streamNr, "subband",             formatString("%d", subband));
@@ -1166,7 +1168,7 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
       if ((result = strstr(logline.msg, "Finished writing"))) {
         int written = 0, dropped = 0;
         float perc_written = 0.0;
-        if (sscanf(result, "Finished writing: %d blocks written (%f%%), %d blocks dropped", &written, &perc_written, &dropped) == 2) {
+        if (sscanf(result, "Finished writing: %d blocks written (%f%%), %d blocks dropped", &written, &perc_written, &dropped) == 3) {
           LOG_DEBUG(formatString("[%d] Written %d, dropped %d", writerNr, written, dropped));
           writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
