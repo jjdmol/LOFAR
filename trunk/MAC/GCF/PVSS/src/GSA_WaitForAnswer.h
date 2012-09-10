@@ -55,6 +55,8 @@ class PVSSservice;
 
 class GSAWaitForAnswer : public HotLinkWaitForAnswer
 {
+    using HotLinkWaitForAnswer::hotLinkCallBack;
+
 public:
     GSAWaitForAnswer (PVSSservice& service) :
 		HotLinkWaitForAnswer(), _service(service) {}
