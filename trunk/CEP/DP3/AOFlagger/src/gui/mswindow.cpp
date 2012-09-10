@@ -349,6 +349,7 @@ void MSWindow::onLoadPrevious()
 		_imageSetIndex->Previous();
 		lock.unlock();
 		loadCurrentTFData();
+		updateSetName();
 	}
 }
 
@@ -359,6 +360,7 @@ void MSWindow::onLoadNext()
 		_imageSetIndex->Next();
 		lock.unlock();
 		loadCurrentTFData();
+		updateSetName();
 	}
 }
 
@@ -369,6 +371,7 @@ void MSWindow::onLoadLargeStepPrevious()
 		_imageSetIndex->LargeStepPrevious();
 		lock.unlock();
 		loadCurrentTFData();
+		updateSetName();
 	}
 }
 
@@ -379,6 +382,7 @@ void MSWindow::onLoadLargeStepNext()
 		_imageSetIndex->LargeStepNext();
 		lock.unlock();
 		loadCurrentTFData();
+		updateSetName();
 	}
 }
 
@@ -504,9 +508,7 @@ void MSWindow::SetImageSet(rfiStrategy::ImageSet *newImageSet)
 		delete _imageSetIndex;
 	}
 	_imageSet = newImageSet;
-	_imageSetName = _imageSet->Name();
 	_imageSetIndex = _imageSet->StartIndex();
-	_imageSetIndexDescription = _imageSetIndex->Description();
 	
 	if(dynamic_cast<rfiStrategy::MSImageSet*>(newImageSet) != 0)
 	{
@@ -514,6 +516,18 @@ void MSWindow::SetImageSet(rfiStrategy::ImageSet *newImageSet)
 	} else {
 		loadCurrentTFData();
 	}
+	updateSetName();
+}
+
+void MSWindow::updateSetName()
+{
+	// We store these seperate, as they might access the measurement set. This is
+	// not only faster (the names are used in the onMouse.. events) but also less dangerous,
+	// since the set is simultaneously accessed by another thread. (thus the io mutex should
+	// be locked before callin this method).
+	boost::mutex::scoped_lock lock(_ioMutex);
+	_imageSetName = _imageSet->Name();
+	_imageSetIndexDescription = _imageSetIndex->Description();
 }
 
 void MSWindow::SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex)
@@ -524,6 +538,7 @@ void MSWindow::SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex)
 		_imageSetIndex = newImageSetIndex;
 		_imageSetIndexDescription = _imageSetIndex->Description();
 		loadCurrentTFData();
+		updateSetName();
 	} else {
 		delete newImageSetIndex;
 	}

@@ -86,7 +86,7 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 		<< "Polarizations: " << polarizationCount << '\n'
 		<< "Bands: " << bandCount << '\n'
 		<< "Channels/band: " << (totalChannels / bandCount) << '\n'
-		<< "Name of obseratory: " << stationName << '\n';
+		<< "Name of observatory: " << stationName << '\n';
 	if(ignoreChannelZero)
 		std::cout << "Channel zero will be ignored, as this looks like a LOFAR data set with bad channel 0.\n";
 	else
