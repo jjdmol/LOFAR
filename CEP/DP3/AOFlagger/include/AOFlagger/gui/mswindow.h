@@ -111,7 +111,8 @@ class MSWindow : public Gtk::Window {
 	private:
 		void createToolbar();
 		void loadCurrentTFData();
-		
+		void updateSetName();
+
 		void onLoadPrevious();
 		void onLoadNext();
 		void onLoadLargeStepPrevious();
