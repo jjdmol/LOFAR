@@ -189,9 +189,9 @@ void OutputThread::createMS()
 
         LOG_INFO_STR(itsLogPrefix << "Characteristics:"
             << " subband " << subbands[itsStreamNr]
-            << ", centralfreq " << frequencies[itsStreamNr]/1e6 << " MHz "
-            << ", duration " << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s "
-            << ", integration " << itsParset.IONintegrationTime() << " s "
+            << ", centralfreq " << frequencies[itsStreamNr]/1e6 << " MHz"
+            << ", duration " << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
+            << ", integration " << itsParset.IONintegrationTime() << " s"
             << ", channels " << itsParset.nrChannelsPerSubband() 
             << ", channelWidth " << itsParset.channelWidth()/1e3 << " kHz"
         );
