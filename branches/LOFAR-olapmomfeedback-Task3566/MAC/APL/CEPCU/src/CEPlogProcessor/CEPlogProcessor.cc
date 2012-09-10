@@ -1149,16 +1149,15 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
 
       // Storage_main@locus088 10-02-12 13:20:01.056 INFO  [obs 45784 type 2 stream  12 writer   0] [OutputThread] Written block with seqno = 479, 480 blocks written, 0 blocks dropped
       if ((result = strstr(logline.msg, "Written block"))) {
-        int seqno = 0, written = 0, dropped = 0;
-        float perc_written = 0.0;
-        if (sscanf(result, "Written block with seqno = %d, %d blocks written (%f%%), %d blocks dropped", &seqno, &written, &perc_written, &dropped) == 4) {
+        int seqno = 0, written = 0, dropped = 0, perc_written = 0;
+        if (sscanf(result, "Written block with seqno = %d, %d blocks written (%d%%), %d blocks dropped", &seqno, &written, &perc_written, &dropped) == 4) {
           LOG_DEBUG(formatString("[%d] Written %d, dropped %d", writerNr, written, dropped));
           writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
           writer->flush();
 
           if (feedback) {
-            feedback->setSubbandKey(streamNr, "percentageWritten", formatString("%f", perc_written));
+            feedback->setSubbandKey(streamNr, "percentageWritten", formatString("%d", perc_written));
           }
         }
         return;
@@ -1166,16 +1165,15 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
 
       // Storage_main@locus088 10-02-12 13:20:01.057 INFO  [obs 45784 type 2 stream  12 writer   0] [OutputThread] Finished writing: 480 blocks written, 0 blocks dropped: 0% lost
       if ((result = strstr(logline.msg, "Finished writing"))) {
-        int written = 0, dropped = 0;
-        float perc_written = 0.0;
-        if (sscanf(result, "Finished writing: %d blocks written (%f%%), %d blocks dropped", &written, &perc_written, &dropped) == 3) {
+        int written = 0, dropped = 0, perc_written = 0;
+        if (sscanf(result, "Finished writing: %d blocks written (%d%%), %d blocks dropped", &written, &perc_written, &dropped) == 3) {
           LOG_DEBUG(formatString("[%d] Written %d, dropped %d", writerNr, written, dropped));
           writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
           writer->flush();
 
           if (feedback) {
-            feedback->setSubbandKey(streamNr, "percentageWritten", formatString("%f", perc_written));
+            feedback->setSubbandKey(streamNr, "percentageWritten", formatString("%d", perc_written));
           }
         }
         return;
