@@ -131,22 +131,31 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
         g_connections[ "UP" ][iPos]       = up[i];
         changed=true;
     }
+    if (dynlen(upTime) >= i) {
     g_connections[ "UPTIME" ][iPos]   = upTime[i];
+    } else {
+      time t;
+      g_connections[ "UPTIME" ][iPos]   = t;
+    }
+    if (dynlen(downTime) >= i) {
     g_connections[ "DOWNTIME" ][iPos] = downTime[i];
-    
+    } else {
+      time t;
+      g_connections[ "DOWNTIME" ][iPos] = t;        
+    }    
     // we need to reflect the status of the stations up/down also in the "MainDBName+LOFAR_PIC_[Ring].status.childState
     if (changed) {
       // changed to up, childstate is highest childstate of all stations.state and .childStates
       // else 
       // changed to down, childstate will be set to dpOffline
-      if (up[i] && name[i] != "CCU001:") {
+      if (up[i] && name[i] != CEPDBName) {
         if (dpExists(MainDBName+"__navObjectState.DPName")) {
             dpSet(MainDBName+"__navObjectState.DPName",MainDBName+"LOFAR_PIC_"+navFunct_getRingFromStation(name[i])+"_"+navFunct_bareDBName(name[i])+".status.state",
                   MainDBName+"__navObjectState.stateNr",OPERATIONAL,
                   MainDBName+"__navObjectState.message","System came online",
                   MainDBName+"__navObjectState.force",true);
         }        
-      } else if (name[i] != "CCU001:") {
+      } else if (name[i] != CEPDBName) {
         if (dpExists(MainDBName+"__navObjectState.DPName")) {
             dpSet(MainDBName+"__navObjectState.DPName",MainDBName+"LOFAR_PIC_"+navFunct_getRingFromStation(name[i])+"_"+navFunct_bareDBName(name[i])+".status.state",
                   MainDBName+"__navObjectState.stateNr",DPOFFLINE,

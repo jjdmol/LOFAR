@@ -130,8 +130,6 @@ void MainCU_Processes_UpdateMainControllers() {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","ObservationControlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
     // also connect to CCU Ctrls
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_StorageApplPanel",
-          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
   }
@@ -206,7 +204,7 @@ void MainCU_Processes_UpdateProcessesList() {
     } else {
       // if choosen observation gather all involved processes on chosen station and CEP
       // get the real name from the selected Observation
-      obsDP="MCU001:"+claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation); 
+      obsDP=MainDBName+claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation); 
       //select all Ctrl under LOFAR_PermSW_'selectedObservation'
       dpQuery("SELECT '_original.._value' FROM '"+obsDP+"_*.status.state' ", tab);
       LOG_TRACE("MainCU_Processes:updateProcessesList|MainCu controllers Found: "+ tab);
@@ -242,15 +240,16 @@ void MainCU_Processes_UpdateProcessesList() {
         }
       }
       //same for CCU
-      // strip system and add CCU001
-      string CEPObsDP="CCU001:"+dpSubStr(obsDP,DPSUB_DP);
+      // strip system and add CEPDBName
+      string CEPObsDP=CEPDBName+dpSubStr(obsDP,DPSUB_DP);
     
       if (dpExists(CEPObsDP) ){
     
         // add CCU to selected Observation
-        dynAppend(list,obsDP+",CCU001,"+CEPObsDP);
-        dpQuery("SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE 'CCU001:'", tab);
-        LOG_TRACE("MainCU_Processes:updateProcessesList|CCU001 controllers Found: "+ tab);
+        string aS = navFunct_bareDBName(CEPDBName);
+        dynAppend(list,obsDP+","+aS+","+CEPObsDP);
+        dpQuery("SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE '"+CEPDBName+"'", tab);
+        LOG_TRACE("MainCU_Processes:updateProcessesList|"+CEPDBName+" controllers Found: "+ tab);
     
         dyn_string aDS=navFunct_getDynString(tab, 2,1);
         dynSortAsc(aDS);

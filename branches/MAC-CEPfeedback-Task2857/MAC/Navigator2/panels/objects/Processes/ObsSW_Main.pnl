@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 994 515 N "_3DFace" 0
@@ -93,12 +93,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 370 0 430 21
+E E 0 1 1 2 1 E U  1 E 370 0 430 20
 0 2 2 "0s" 0 0 0 192 0 0  370 0 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
 LANG:1 5 ObsSW
 29 4
 "stationTree"
@@ -112,31 +111,25 @@ E E E
 LANG:1 19 Active Observations
 
 8
-"resizeMode" "enum 0"
-"hScrollBarMode" "enum 0"
-"vScrollBarMode" "enum 0"
-"frameShape" "enum 6"
-"defaultRenameAction" "enum 0"
-"backgroundOrigin" "enum 0"
-"selectionMode" "enum 0"
 "frameShadow" "enum 48"
- 820 20 990 376
+"selectionMode" "enum 0"
+"backgroundOrigin" "enum 0"
+"defaultRenameAction" "enum 0"
+"frameShape" "enum 6"
+"vScrollBarMode" "enum 0"
+"hScrollBarMode" "enum 0"
+"resizeMode" "enum 0"
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0  820 20 989 375
 10 TreeWidget
-7
-0 "expanded" "(string id)"
-""
-0 "collapsed" "(string id)"
-""
-0 "selectionChanged" "(string id)"
-""
+3
 0 "clicked" "(string id, int column)"
 "   click(\"stationTree\");"
 0 "doubleClicked" "(string id, int column)"
 "  dblClick(\"stationTree\");"
 0 "rightClicked" "(string id, int column)"
 "  rClick(\"stationTree\");"
-0 "itemRenamed" "(string id, int column, string text)"
-""
 "main()
 {
   stationTree.addColumn(\"Involved Stations\");
@@ -178,23 +171,17 @@ E E E
 LANG:1 19 Active Observations
 
 0
- 0 20 170 376
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0  0 20 169 375
 10 TreeWidget
-7
-0 "expanded" "(string id)"
-""
-0 "collapsed" "(string id)"
-""
-0 "selectionChanged" "(string id)"
-""
+3
 0 "clicked" "(string id, int column)"
 "   click(\"activeObs\");"
 0 "doubleClicked" "(string id, int column)"
 "  dblClick(\"activeObs\");"
 0 "rightClicked" "(string id, int column)"
 "  rClick(\"activeObs\");"
-0 "itemRenamed" "(string id, int column, string text)"
-""
 "main()
 {
   activeObs.addColumn(\"Active Observations\");
@@ -235,12 +222,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 297 22 318 36
+E E 0 1 1 2 1 E U  1 E 297 22 318 35
 0 2 2 "0s" 0 0 0 192 0 0  297 22 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 5 error
 2 47
 "PRIMITIVE_TEXT5"
@@ -255,12 +241,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 372 22 435 36
+E E 0 1 1 2 1 E U  1 E 372 22 435 35
 0 2 2 "0s" 0 0 0 192 0 0  372 22 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 13 currentAction
 2 48
 "PRIMITIVE_TEXT6"
@@ -275,12 +260,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 453 22 487 36
+E E 0 1 1 2 1 E U  1 E 453 22 487 35
 0 2 2 "0s" 0 0 0 192 0 0  453 22 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 6 logMsg
 1 146 14 "" 4
 0
@@ -288,9 +272,9 @@ LANG:1 6 logMsg
 0
 1 148 14 "0" 1
 0
-1 149 14 "" 2
-0
 1 150 14 "" 6
+0
+1 149 14 "" 2
 0
 1 151 15 "" 4
 0
@@ -298,19 +282,9 @@ LANG:1 6 logMsg
 0
 1 153 15 "0" 1
 0
-1 154 15 "" 2
-0
 1 155 15 "" 6
 0
-1 156 16 "" 4
-0
-1 157 16 "" 3
-0
-1 158 16 "0" 1
-0
-1 159 16 "" 2
-0
-1 160 16 "" 6
+1 154 15 "" 2
 0
 1 161 17 "" 4
 0
@@ -318,9 +292,9 @@ LANG:1 6 logMsg
 0
 1 163 17 "0" 1
 0
-1 164 17 "" 2
-0
 1 165 17 "" 6
+0
+1 164 17 "" 2
 0
 1 166 18 "" 4
 0
@@ -328,9 +302,9 @@ LANG:1 6 logMsg
 0
 1 168 18 "0" 1
 0
-1 169 18 "" 2
-0
 1 170 18 "" 6
+0
+1 169 18 "" 2
 0
 1 171 19 "" 4
 0
@@ -338,9 +312,9 @@ LANG:1 6 logMsg
 0
 1 173 19 "0" 1
 0
-1 174 19 "" 2
-0
 1 175 19 "" 6
+0
+1 174 19 "" 2
 0
 2 79
 "mainDBName"
@@ -355,17 +329,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 176 21 202 35
+E E 0 1 1 2 1 E U  1 E 176 21 202 34
 0 2 2 "0s" 0 0 0 192 0 0  176 21 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 4 main
 2 80
 "stationDBName"
 ""
-1 179 206 E E E 1 E 1 E N "Blue" E N "_Transparent" E E
+1 179 162 E E E 1 E 1 E N "Blue" E N "_Transparent" E E
  E E
 34 0 0 0 0 0
 E E E
@@ -375,17 +348,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 176 206 214 220
-0 2 2 "0s" 0 0 0 192 0 0  176 206 1
+E E 0 1 1 2 1 E U  1 E 176 162 214 175
+0 2 2 "0s" 0 0 0 192 0 0  176 162 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 7 station
 4 82
 "LINE1"
 ""
-1 287 214 E E E 1 E 1 E N "Blue" E N {255,255,255} E E
+1 290 170 E E E 1 E 1 E N "Blue" E N {255,255,255} E E
  E E
 36 0 0 0 0 0
 E E E
@@ -395,7 +367,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 2 1 E  287 214 807 214
+E E 0 2 1 2 1 E  290 170 810 170
 2 113
 "observationName"
 ""
@@ -409,12 +381,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 670 20 736 34
+E E 0 1 1 2 1 E U  1 E 670 20 736 33
 0 2 2 "0s" 0 0 0 192 0 0  670 20 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 11 observation
 2 144
 "PRIMITIVE_TEXT7"
@@ -429,12 +400,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 176 88 226 102
+E E 0 1 1 2 1 E U  1 E 176 88 226 101
 0 2 2 "0s" 0 0 0 192 0 0  176 88 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 7 CCU001:
 4 145
 "LINE2"
@@ -479,33 +449,28 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 14 "PANEL_REF15"
+3 14 "PANEL_REF15" -1
 "objects\\Processes\\interactive_controller_small.pnl" 180 40 T 26 1 0 1 -7 -5
 2
 "$databaselevel""main"
 "$name""ObservationControl"
-3 15 "PANEL_REF16"
-"objects\\Processes\\interactive_controller_small.pnl" 170 90 T 27 1 0 1 3 14
+3 15 "PANEL_REF16" -1
+"objects\\Processes\\interactive_controller_small.pnl" 170 90 T 27 1 0 1 0 10
 2
 "$databaselevel""ccu"
 "$name""OnlineControl_BGPAppl"
-3 16 "PANEL_REF17"
-"objects\\Processes\\interactive_controller_small.pnl" 180 140 T 28 1 0 1 -7 14
-2
-"$databaselevel""ccu"
-"$name""OnlineControl_StorageAppl"
-3 17 "PANEL_REF18"
-"objects\\Processes\\interactive_controller_small.pnl" 180 200 T 29 1 0 1 -7 23
+3 17 "PANEL_REF18" -1
+"objects\\Processes\\interactive_controller_small.pnl" 180 200 T 29 1 0 1 -10 -21
 2
 "$databaselevel""station"
 "$name""BeamControl"
-3 18 "PANEL_REF19"
-"objects\\Processes\\interactive_controller_small.pnl" 170 240 T 30 1 0 1 3 33
+3 18 "PANEL_REF19" -1
+"objects\\Processes\\interactive_controller_small.pnl" 170 240 T 30 1 0 1 0 -11
 2
 "$databaselevel""station"
 "$name""CalibrationControl"
-3 19 "PANEL_REF20"
-"objects\\Processes\\interactive_controller_small.pnl" 180 290 T 31 1 0 1 -7 33
+3 19 "PANEL_REF20" -1
+"objects\\Processes\\interactive_controller_small.pnl" 180 290 T 31 1 0 1 -10 -11
 2
 "$databaselevel""station"
 "$name""TBBControl"

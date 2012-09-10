@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 1013 750 N "_3DFace" 0
@@ -12,21 +12,33 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 
 
   
-    // determine if we have an observation name in the DP, if so strip it and  get the real name to be included in the toplabel
+  // determine if we have an observation name in the DP, if so strip it and  get the real name to be included in the toplabel
   string bareDP=dpSubStr(baseDP,DPSUB_DP);
  
 
-
+  //  The BGPappl belonging by an observation contains :
+  //      ioNodeList   (all IoNodes involved, each ionode  is connected to a station, obtainable via ionode#.usedStation)
+  //       and all of the next lists are contained per ionode in a [,,,] list
+  //      locusNodeList       [x,x,x] list all used locusNodes per ionode
+  //      adderList           [x,x,x] adders per ionode
+  //      writerList          [x,x,x] writers per ionode
+  //      dataProductList     [x,x,x] dataproducts per ionode
+  //      dataProductTypeList [x,x,x] dataproductTypes per ionode
+  
   // check if the requiered datapoint for this view are enabled and accessible
-  if (dpExists(baseDP + \".inputBufferList\")) {
-    if (dpConnect(\"updateBGPAppl\", baseDP + \".inputBufferList\",
+  if (dpExists(baseDP + \".ioNodeList\")) {
+    if (dpConnect(\"updateBGPAppl\", baseDP + \".ioNodeList\",
+                                   baseDP + \".locusNodeList\",
                                    baseDP + \".adderList\",
-                                   baseDP + \".stationList\",
-                                   baseDP + \".inputBufferList:_online.._invalid\") == -1) {
+                                   baseDP + \".writerList\",
+                                   baseDP + \".dataProductList\",
+                                   baseDP + \".dataProductTypeList\",                                   
+                                   baseDP + \".ioNodeList:_online.._invalid\") == -1) {
       LOG_ERROR(\"BGPAppl.pnl:main|Couldn'tconnect to: \"+baseDP);
     }
     if (!navFunct_dpReachable(baseDP)) {
-      updateBGPAppl(\"\",\"\",\"\",true);
+      updateBGPAppl(\"\",makeDynString(\"\"),\"\",makeDynString(\"\"),\"\",makeDynString(\"\"),\"\",makeDynString(\"\"),
+                    \"\",makeDynString(\"\"),\"\",makeDynString(\"\"),true);
     }
   } else {
     LOG_ERROR(\"BGPAppl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
@@ -36,10 +48,13 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   reload();   
 }
 
-updateBGPAppl(string dp1,dyn_string inputBufferList,
-              string dp2,dyn_string adderList,
-              string dp3,dyn_string stations,              
-              string dp4, bool invalid)
+updateBGPAppl(string dp1,dyn_string ioNodeList,
+              string dp2,dyn_string locusNodeList,
+              string dp3,dyn_string adderList,
+              string dp4,dyn_string writerList,              
+              string dp5,dyn_string dataProductList,
+              string dp6,dyn_string dataProductTypeList,
+              string dp7, bool invalid)
 {
   LOG_TRACE(\"BGPAppl.pnl:updateBGPAppl|entered\");
   string SymbolCol=\"_Window\";
@@ -49,20 +64,24 @@ updateBGPAppl(string dp1,dyn_string inputBufferList,
       SymbolCol=\"Lofar_dpOffline\";
     }
   }  
-  
-  stationList = stations;
-
+  dyn_string stations;
+      
   // clear stationtable
   stationTable.deleteAllLines();
   
-  // loop over nr of stations to fill table
-  for (int i = 1; i <= dynlen(stationList); i++) {
-    string station = stationList[i];
-  
-    // update stations based inputbuffers and adders
-    stationTable.appendLine(\"Station\",station,\"InputBuffers\",inputBufferList[i],\"Adders\",adderList[i]);
+  // loop over nr of ionodes to fill table
+  for (int i = 1; i <= dynlen(ioNodeList); i++) {
+    string station;
+
+    dpGet(\"CCU001:\"+navFunct_IONode2DPName(ioNodeList[i])+\".usedStation\",station);
+    dynAppend(stations,station); 
+    // update stationTable
+    stationTable.appendLine(\"Station\",station,\"IONode\",ioNodeList[i],\"LocusNodes\",locusNodeList[i],
+                            \"Adders\",adderList[i],\"Writers\",writerList[i],\"DPs\",dataProductList[i],
+                            \"DPTs\",dataProductTypeList[i]);
   }
   
+  stationList = stations;
   // set the observation selectable items
   prepareProcesses();
 
@@ -188,7 +207,7 @@ LANG:1 0
 25 42
 "stationTable"
 ""
-1 180 390 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 30 360 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 12 0 0 0 0 0
 E E E
@@ -198,33 +217,55 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 178 388 762 562
-EE 1 0 1 3 0 "Station" 8 1 0 "s" 1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  28 358 992 712
+EE 1 0 1 7 0 "Station" 8 1 0 "s" 1
 LANG:1 7 Station
 E
 1
 LANG:1 0 
 
-80 "InputBuffers" 26 1 0 "s" 1
-LANG:1 12 InputBuffers
+80 "IONode" 6 1 0 "[2d,False,False,ALIGNMENT_BEGINNING,False]" 1
+LANG:1 6 IONode
 E
 1
 LANG:1 0 
 
-250 "Adders" 26 1 0 "s" 1
+42 "LocusNodes" 6 1 0 "[0s,,,ALIGNMENT_BEGINNING]" 1
+LANG:1 10 LocusNodes
+E
+1
+LANG:1 0 
+
+140 "Adders" 26 1 0 "s" 1
 LANG:1 6 Adders
 E
 1
 LANG:1 0 
 
-250 
+140 "Writers" 6 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
+LANG:1 7 Writers
+E
+1
+LANG:1 0 
+
+140 "DPs" 6 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
+LANG:1 3 DPs
+E
+1
+LANG:1 0 
+
+205 "DPTs" 6 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
+LANG:1 4 DPTs
+E
+1
+LANG:1 0 
+
+205 
 14 14 10 10
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-0 1 0 1 7
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 0 1 0 1 7
 1 0
 0
 LAYER, 1 
@@ -255,7 +296,7 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 0 "PANEL_REF1"
+3 0 "PANEL_REF1" -1
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
 "$ctrlName""BGPAppl"

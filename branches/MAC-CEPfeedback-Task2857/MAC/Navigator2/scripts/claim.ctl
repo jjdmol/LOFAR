@@ -764,10 +764,6 @@ void checkAndCreateDPs() {
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc")) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc","BGPProc");
             }
-            //StorageAppl
-            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_StorageAppl")) {
-              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_StorageAppl","StorageAppl");
-            }
           } else {
             //StnObservation
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {

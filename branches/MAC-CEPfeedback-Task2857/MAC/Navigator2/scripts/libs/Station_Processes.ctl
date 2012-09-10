@@ -192,6 +192,10 @@ bool Station_Processes_UpdateProcessesList() {
   if(station_selectedObservation != "") {
     // get the real name from the selected Observation
     string obsDP=claimManager_nameToRealName("LOFAR_ObsSW_"+station_selectedObservation);
+
+    if (station_selectedStation == "" ||station_selectedStation == ":" ) {
+     station_selectedStation = dpSubStr(g_currentDatapoint,DPSUB_SYS);
+    }   
     
     if (strtok(station_selectedStation,":") < 0) { 
       station_selectedStation+=":";
@@ -205,6 +209,7 @@ bool Station_Processes_UpdateProcessesList() {
 
     //select all Ctrl under Station:LOFAR_PermSW_'station_selectedObservation'
     string query="SELECT '_original.._value' FROM '"+obsDP+"_*.status.state' REMOTE '"+station_selectedStation+"'";
+    
     LOG_DEBUG("Station_Processes.ctl:updateProcessesList|Query: "+ query);
     dpQuery(query, tab);
     LOG_TRACE("Station_Processes.ctl:updateProcessesList|Station Controllers Found: "+ tab);

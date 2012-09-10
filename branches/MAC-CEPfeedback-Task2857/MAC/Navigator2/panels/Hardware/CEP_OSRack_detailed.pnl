@@ -16,6 +16,17 @@ PANEL,-1 -1 1011 745 N "_3DFace" 0
     LOG_ERROR(\"CEP_OSRack_detailed.pnl:Initialize|No OSRack found in currentDatapoint.\");
   }
   
+  if (rNr == 4)  {
+    setValue(\"locus4\",\"visible\",\"false\");  
+    setValue(\"locus5\",\"visible\",\"false\");  
+    setValue(\"locus6\",\"visible\",\"false\");  
+    setValue(\"locus7\",\"visible\",\"false\");  
+    setValue(\"locus8\",\"visible\",\"false\");  
+    setValue(\"locus9\",\"visible\",\"false\");  
+    setValue(\"locus10\",\"visible\",\"false\");  
+    setValue(\"locus11\",\"visible\",\"false\");  
+  }
+  
   setValue(\"OSRack\", \"text\", \"OSRack: \" + rNr);
   
   // pass baseDP to selfstate Object to work with
@@ -34,10 +45,11 @@ void prepareHardwareList() {
   dyn_dyn_anytype tab;
   int z;
   
+    dynAppend(g_OSRackList,rNr);
   
   // For this panel midplanes should be selectable so we get them for the treelist
   
-  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"OSSubcluster\\\" \", tab);
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"LocusNode\\\" \", tab);
   LOG_TRACE(\"CEP_OSRack_detailed.pnl:prepareHardwareList|tab: \"+tab);
   
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
@@ -50,13 +62,17 @@ void prepareHardwareList() {
     // strip .status.state and systemname from result
     string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
 
-    // Remainder should be *OSRack?_OSSubcluster? combinations, split on _ 
+    // Remainder should be *OSRack?_LocusNode? combinations, split on _ 
     dyn_string spl=strsplit(aS,\"_\");
-    string subcluster = spl[dynlen(spl)];
-    strreplace(subcluster,\"OSSubcluster\",\"\");
-    int s= subcluster;
+    
 
-    dynAppend(g_OSSubclusterList,s);
+    
+    //get Locusnode
+    string locusnode = spl[dynlen(spl)];
+    strreplace(locusnode,\"LocusNode\",\"\");
+    int s= locusnode;
+
+    dynAppend(g_locusNodeList,s);
   }
   
 }
@@ -99,6 +115,7 @@ void reload() {
   
   navFunct_clearGlobalLists();
   
+
   // set the hardware selectable items for this screen
   prepareHardwareList();
   
@@ -116,7 +133,38 @@ void reload() {
 E "#uses \"navPanel.ctl\"
 string      baseDP         = \"\";
 int rNr=-1;
+bool   bDoubleClicked  = false;
 
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"OSRack\"+rNr,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"CEP_OSRack_detailed.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"OSRack\"+rNr,\"ChangePanel\");  
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"OSRack\"+rNr,\"EventRightClick\");
+}
 " 0
  2
 "CBRef" "1"
@@ -127,6 +175,48 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
+6 725
+"OSRackHighlight"
+""
+1 30 120 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+100 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"OSRackCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void OSRackCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"CEP_OSRack_detailed.pnl:OSRackCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"CEP_OSRack_detailed.pnl:OSRackCallback|Found highlight : \" + highlight + \" Looking for: OSRack\" + rNr);
+  bool bHighlight=false;
+  if (dynContains(highlight,\"OSRack\"+rNr)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"CEP_OSRack_detailed.pnl:OSRackCallback|Highlight request: \"+bHighlight);
+  OSRackHighlight.visible = bHighlight;  
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 13.07680671871574 -8.738749555891044e-019 -1.134232180288372e-017 2.015018457272063 189.8478992192638 45.92490771363968 1 E 15 5 37 287
 6 675
 "childStateBorder"
 ""
@@ -152,13 +242,13 @@ E "main()
 {
   click();
 }" 0
- 0 2 1 0 1 E 1 0 1 400 132 1 E 15 15 152 410
-1 676 70 "" 1
+ 0 2 1 0 1 E 1 0 1.417721518987342 0 -152.6582278481012 1 E 390 150 670 545
+1 726 70 "" 1
 0
 2 674
 "OSRack"
 ""
-1 442.5 150 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 425.166666666668 71.99999999999997 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 84 0 0 0 0 0
 E E E
@@ -168,76 +258,108 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 444.5 150 484 167
-0 2 0 "0s" 0 0 0 192 0 0  444.5 150 1
+E E 0 1 1 0 1 E U  0 E 427.166666666668 71.99999999999997 466 89
+0 2 0 "0s" 0 0 0 192 0 0  427.166666666668 71.99999999999997 1
 1
 LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
 LANG:1 5 aRack
-1 677 73 "" 0
+1 727 71 "" 1
 0
-1 678 73 "" 1
+1 728 71 "" 0
 0
-1 679 73 "1" 1
+1 729 71 "0" 1
 0
-1 680 73 "" 4
+1 730 71 "" 3
 0
-1 681 73 "" 18
+1 731 72 "" 1
 0
-1 682 73 "" 19
+1 732 72 "" 0
 0
-1 683 73 "" 20
+1 733 72 "0" 1
 0
-1 684 73 "" 21
+1 734 72 "" 3
 0
-1 685 73 "" 22
+1 735 73 "" 1
 0
-1 686 73 "" 23
+1 736 73 "" 0
 0
-1 687 73 "" 24
+1 737 73 "0" 1
 0
-1 688 73 "" 25
+1 738 73 "" 3
 0
-1 689 73 "" 26
+1 739 74 "" 1
 0
-1 690 73 "" 27
+1 740 74 "" 0
 0
-1 691 73 "" 28
+1 741 74 "0" 1
 0
-1 692 73 "" 29
+1 742 74 "" 3
 0
-1 693 74 "" 0
+1 743 75 "" 1
 0
-1 694 74 "" 1
+1 744 75 "" 0
 0
-1 695 74 "1" 1
+1 745 75 "0" 1
 0
-1 696 74 "" 4
+1 746 75 "" 3
 0
-1 697 74 "" 18
+1 747 76 "" 1
 0
-1 698 74 "" 19
+1 748 76 "" 0
 0
-1 699 74 "" 20
+1 749 76 "0" 1
 0
-1 700 74 "" 21
+1 750 76 "" 3
 0
-1 701 74 "" 22
+1 751 77 "" 1
 0
-1 702 74 "" 23
+1 752 77 "" 0
 0
-1 703 74 "" 24
+1 753 77 "0" 1
 0
-1 704 74 "" 25
+1 754 77 "" 3
 0
-1 705 74 "" 26
+1 755 78 "" 1
 0
-1 706 74 "" 27
+1 756 78 "" 0
 0
-1 707 74 "" 28
+1 757 78 "0" 1
 0
-1 708 74 "" 29
+1 758 78 "" 3
+0
+1 759 79 "" 1
+0
+1 760 79 "" 0
+0
+1 761 79 "0" 1
+0
+1 762 79 "" 3
+0
+1 763 80 "" 1
+0
+1 764 80 "" 0
+0
+1 765 80 "0" 1
+0
+1 766 80 "" 3
+0
+1 767 81 "" 1
+0
+1 768 81 "" 0
+0
+1 769 81 "0" 1
+0
+1 770 81 "" 3
+0
+1 771 82 "" 1
+0
+1 772 82 "" 0
+0
+1 773 82 "0" 1
+0
+1 774 82 "" 3
 0
 0
 LAYER, 1 
@@ -269,16 +391,54 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 70 "selfState"
-"objects\\lofar_self_state.pnl" 284 264 T 82 1.13333333333333 0 1 92.13333333333299 -116
+"objects\\lofar_self_state.pnl" 284 264 T 82 1.13333333333333 0 1 69.13333333333429 -196
 0
-3 73 "PANEL_REF74"
-"objects\\Hardware\\CEP_OSSubcluster_small.pnl" 408 350 T 89 1 0 1 5 0
-2
-"$OSRackNr""0"
-"$OSSubclusterNr""1"
-3 74 "PANEL_REF75"
-"objects\\Hardware\\CEP_OSSubcluster_small.pnl" 418 540 T 90 1 0 1 -5 -6
-2
-"$OSRackNr""0"
-"$OSSubclusterNr""0"
+3 71 "locus0"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 180 T 87 1 0 1 0 -70
+1
+"$locusNr""0"
+3 72 "locus1"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 210 T 88 1 0 1 0 -70
+1
+"$locusNr""1"
+3 73 "locus2"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 240 T 89 1 0 1 0 -50.00000000000003
+1
+"$locusNr""2"
+3 74 "locus3"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 270 T 90 1 0 1 0 -50.00000000000003
+1
+"$locusNr""3"
+3 75 "locus4"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 310 T 91 1 0 1 0 -40.00000000000003
+1
+"$locusNr""4"
+3 76 "locus5"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 330 T 92 1 0 1 0 -29.99999999999997
+1
+"$locusNr""5"
+3 77 "locus6"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 360 T 93 1 0 1 0 -10.00000000000003
+1
+"$locusNr""6"
+3 78 "locus7"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 390 T 94 1 0 1 0 -10.00000000000003
+1
+"$locusNr""7"
+3 79 "locus8"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 420 T 95 1 0 1 0 9.999999999999972
+1
+"$locusNr""8"
+3 80 "locus9"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 450 T 96 1 0 1 0 9.999999999999972
+1
+"$locusNr""9"
+3 81 "locus10"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 480 T 97 1 0 1 0 30.00000000000003
+1
+"$locusNr""10"
+3 82 "locus11"
+"objects\\Hardware\\CEP_LocusNode_small.pnl" 270 510 T 98 1 0 1 0 29.99999999999997
+1
+"$locusNr""11"
 0
