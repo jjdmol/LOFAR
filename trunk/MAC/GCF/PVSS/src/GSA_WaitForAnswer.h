@@ -60,7 +60,7 @@ public:
 		HotLinkWaitForAnswer(), _service(service) {}
     virtual ~GSAWaitForAnswer () {};
     
-    void hotLinkCallBack (DpMsgAnswer& answer)
+    virtual void hotLinkCallBack (DpMsgAnswer& answer)
 		{ _service.handleHotLink(answer, *this);   }
 
     const string&	getDpName () const 
@@ -70,7 +70,7 @@ public:
 
 protected:
     // Answer on connect
-    void hotLinkCallBack (DpHLGroup& group)
+    virtual void hotLinkCallBack (DpHLGroup& group)
 		{ _service.handleHotLink(group, *this); }
 
 private:
