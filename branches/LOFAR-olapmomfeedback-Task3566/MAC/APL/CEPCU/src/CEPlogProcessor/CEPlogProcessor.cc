@@ -1132,7 +1132,7 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
       if ((result = strstr(logline.msg, "Characteristics: "))) {
         int subband = 0, channels = 0;
         float centralfreq = 0.0, integration = 0.0, channelwidth = 0.0, duration = 0.0;
-        if (sscanf(result, "Characteristics: subband %d, centralfreq %f Mhz, duration %f s, integration %f s, channels %u, channelwidth %f kHz", &subband, &centralfreq, &duration, &integration, &channels, &channelwidth) == 6) {
+        if (sscanf(result, "Characteristics: subband %d, centralfreq %f MHz, duration %f s, integration %f s, channels %u, channelwidth %f kHz", &subband, &centralfreq, &duration, &integration, &channels, &channelwidth) == 6) {
 
           if (feedback) {
             feedback->setSubbandKey(streamNr, "subband",             formatString("%d", subband));
