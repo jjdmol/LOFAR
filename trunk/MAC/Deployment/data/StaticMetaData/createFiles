@@ -212,6 +212,15 @@ def findStationInfo(stationName, dataDir):
         raise "\nFatal error: Data of "+stationName+" is not complete in file 'StationInfo'"
     return info
 
+def createCCURSPConnectionsFile(resultDir, dataDir):
+   """
+   For now, copy the static file RSPConnections_CCU.dat from StaticMetaData to
+   the /opt/lofar/etc. Can be adapted later for more flexible behaviour
+   """
+   CCU_RSPFile = dataDir + "/RSPConnections_CCU.dat"
+   destFile = resultDir + "/RSPConnections_CCU.dat"
+   command = "cp -f "+ CCU_RSPFile + " " + destFile
+   os.system(command);
 
 def createRSPConnectionsFile(resultDir, dataDir, partitionName):
     """
@@ -718,11 +727,9 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" ):
                 partitionName = "R00";
             if (stationName[0:3].upper() == "CCU"):
                 # CCU needs RSPConnections.dat for CEP in PVSS
-                print "Using BG/P partition " + partitionName + " for creating destination MAC addresses"
-                createRSPConnectionsFile(resultDir, dataDir, partitionName)
-                print stationName.upper()
+                createCCURSPConnectionsFile(resultDir, dataDir)
                 if (stationName.upper() == "CCU09"):
-                    print "Adapt /opt/lofar/etc/RSPConnections.dat for test stations and used test BG/P nodes!!"
+                    print "Please manually adapt /opt/lofar/etc/RSPConnections_CCU.dat for test stations and used test BG/P nodes!!"
             else:
                 if (sys.argv[1] == "test"):
                     print "Setting up station "+stationName+" for TEST use"
