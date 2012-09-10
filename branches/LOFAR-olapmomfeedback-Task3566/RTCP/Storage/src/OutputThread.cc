@@ -193,7 +193,7 @@ void OutputThread::createMS()
             << ", duration " << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
             << ", integration " << itsParset.IONintegrationTime() << " s"
             << ", channels " << itsParset.nrChannelsPerSubband() 
-            << ", channelWidth " << itsParset.channelWidth()/1e3 << " kHz"
+            << ", channelwidth " << itsParset.channelWidth()/1e3 << " kHz"
         );
       }
       break;
