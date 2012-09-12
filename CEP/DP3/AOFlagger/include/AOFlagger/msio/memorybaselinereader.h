@@ -54,6 +54,9 @@ class MemoryBaselineReader : public BaselineReader {
 		}
 		
 		static bool IsEnoughMemoryAvailable(const std::string &msFile);
+		
+		virtual size_t GetMinRecommendedBufferSize(size_t /*threadCount*/) { return 1; }
+		virtual size_t GetMaxRecommendedBufferSize(size_t /*threadCount*/) { return 2; }
 	private:
 		void readSet();
 		void writeFlags();
