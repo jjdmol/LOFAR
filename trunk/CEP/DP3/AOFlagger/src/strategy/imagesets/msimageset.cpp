@@ -28,6 +28,7 @@
 
 #include <AOFlagger/msio/directbaselinereader.h>
 #include <AOFlagger/msio/indirectbaselinereader.h>
+#include <AOFlagger/msio/memorybaselinereader.h>
 
 #include <AOFlagger/util/aologger.h>
 
@@ -103,14 +104,26 @@ namespace rfiStrategy {
 	{
 		if(_reader == 0 )
 		{
-			if(_indirectReader)
+			switch(_ioMode)
 			{
-				IndirectBaselineReader *indirectReader = new IndirectBaselineReader(_msFile);
-				indirectReader->SetReadUVW(_readUVW);
-				_reader = BaselineReaderPtr(indirectReader);
+				case IndirectReadMode: {
+					IndirectBaselineReader *indirectReader = new IndirectBaselineReader(_msFile);
+					indirectReader->SetReadUVW(_readUVW);
+					_reader = BaselineReaderPtr(indirectReader);
+				} break;
+				case DirectReadMode:
+					_reader = BaselineReaderPtr(new DirectBaselineReader(_msFile));
+					break;
+				case MemoryReadMode:
+					_reader = BaselineReaderPtr(new MemoryBaselineReader(_msFile));
+					break;
+				case AutoReadMode:
+					if(MemoryBaselineReader::IsEnoughMemoryAvailable(_msFile))
+						_reader = BaselineReaderPtr(new MemoryBaselineReader(_msFile));
+					else
+						_reader = BaselineReaderPtr(new DirectBaselineReader(_msFile));
+					break;
 			}
-			else
-				_reader = BaselineReaderPtr(new DirectBaselineReader(_msFile));
 		}
 		_reader->SetDataColumnName(_dataColumnName);
 		_reader->SetSubtractModel(_subtractModel);
