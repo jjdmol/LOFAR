@@ -47,7 +47,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public: 
     LofarVisibilityResampler(): LofarVisibilityResamplerBase() {};
-    LofarVisibilityResampler(const CFStore& cfs): LofarVisibilityResamplerBase(cfs) {};
     LofarVisibilityResampler(const LofarVisibilityResampler& other):LofarVisibilityResamplerBase()
     {copy(other);}
 

@@ -54,7 +54,6 @@ using namespace casa;
 
 namespace LOFAR {
 
-class casa::UVWMachine;
 // <summary>  An FTMachine for Gridded Fourier transforms </summary>
 
 // <use visibility=export>
@@ -207,6 +206,7 @@ public:
   // Finalize transform to Sky plane: flushes the image
   // cache and shows statistics if it is being used. DOES NOT
   // DO THE FINAL TRANSFORM!
+  using casa::FTMachine::finalizeToSky;
   void finalizeToSky();
 
 
@@ -215,6 +215,7 @@ public:
 
 
   // Put coherence to grid by gridding.
+  using casa::FTMachine::put;
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
            FTMachine::Type type=FTMachine::OBSERVED);
 
@@ -222,6 +223,7 @@ public:
   Bool its_Use_Linear_Interp_Gridder;
 
   // Make the entire image
+  using casa::FTMachine::makeImage;
   void makeImage(FTMachine::Type type,
 		 VisSet& vs,
 		 ImageInterface<Complex>& image,
@@ -354,7 +356,7 @@ protected:
 
   //Sum Grids
   void SumGridsOMP(Array<Complex>& grid, const Array<Complex>& GridToAdd){
-    int y,ch,pol,dChan,dPol,dx;
+    int y,ch,pol;
     int GridSize(grid.shape()[0]);
     int NPol(grid.shape()[2]);
     int NChan(grid.shape()[3]);
@@ -382,7 +384,7 @@ protected:
 
     for(uInt vv=0; vv<GridToAdd0.size();vv++){
       Array<Complex> GridToAdd(GridToAdd0[vv]);
-      int y,ch,pol,dChan,dPol,dx;
+      int y,ch,pol;
       int GridSize(grid.shape()[0]);
       int NPol(grid.shape()[2]);
       int NChan(grid.shape()[3]);

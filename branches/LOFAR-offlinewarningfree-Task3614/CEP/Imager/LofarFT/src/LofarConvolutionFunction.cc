@@ -88,9 +88,9 @@ namespace LOFAR
   // ,
   //Int TaylorTerm,
     //Double RefFreq
-    : m_shape(shape),
+    : itsParameters(parameters),
+      m_shape(shape),
       m_coordinates(coordinates),
-      itsParameters(parameters),
       m_aTerm(ms, parameters),
       m_maxW(Wmax), //maximum W set by ft machine to flag the w>wmax
       m_nWPlanes(nW),
@@ -591,8 +591,8 @@ namespace LOFAR
     logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"FFT - Zero Pad - IFFT"<< LogIO::POST;//<<endl;
     //#pragma omp parallel
     {
-      Int ii;
-      Int jj;
+      uInt ii;
+      uInt jj;
 #pragma omp parallel for private(ii,jj)
       for(uInt iii=0;iii<16;++iii){
 	jj=floor(float(iii)/4.);
@@ -615,11 +615,11 @@ namespace LOFAR
     if(npol==4)
       {
 	logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Multiply element and data in the image plane"<< LogIO::POST;//<<endl;
-	int y=0;
+	uInt y=0;
 	uInt ii=0;
 	uInt jj=0;
 #pragma omp parallel for private(y,ii,jj)
-	for(int x=0 ; x<nx ; ++x){
+	for(uInt x=0 ; x<nx ; ++x){
 	  //cout<<"x="<<x<<endl;
 	  for(y=0 ; y<nx ; ++y){
 
@@ -638,11 +638,11 @@ namespace LOFAR
     if(npol==1)
       {
 	logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Multiply element and data in the image plane"<< LogIO::POST;//<<endl;
-	int y=0;
+	uInt y=0;
 	uInt ii=0;
 	uInt jj=0;
 #pragma omp parallel for private(y,ii,jj)
-	for(int x=0 ; x<nx ; ++x){
+	for(uInt x=0 ; x<nx ; ++x){
 	  //cout<<"x="<<x<<endl;
 	  for(y=0 ; y<nx ; ++y){
 
@@ -738,10 +738,10 @@ namespace LOFAR
 
     Cube<Complex> aTermA(aterm_element[0][spw].copy());
     Array<Complex> grid_out(input_grid.shape(),0.);
-    Int nx(input_grid.shape()[0]);
-    Int ny(input_grid.shape()[1]);
+    uInt nx(input_grid.shape()[0]);
+    uInt ny(input_grid.shape()[1]);
     UNUSED(ny);
-    Int npol(input_grid.shape()[2]);
+    uInt npol(input_grid.shape()[2]);
 
     vector< vector< Matrix<Complex> > > vec_plane_product;
     vec_plane_product.resize(4);
@@ -788,8 +788,8 @@ namespace LOFAR
 
     //logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Convolve..."<< LogIO::POST;//<<endl;
     {
-      Int ii;
-      Int jj;
+      uInt ii;
+      uInt jj;
 #pragma omp parallel for private(ii,jj)
       for(uInt iii=0;iii<16;++iii){
 	ii=floor(float(iii)/4.);
@@ -840,11 +840,11 @@ namespace LOFAR
     //    #pragma omp parallel
     if(npol==4)
       {
-	int y=0;
+	uInt y=0;
 	uInt ii=0;
 	uInt jj=0;
 	#pragma omp parallel for private(y,ii,jj)
-	for(int x=0 ; x<nx ; ++x){
+	for(uInt x=0 ; x<nx ; ++x){
 	  //cout<<"x="<<x<<endl;
 	  for(y=0 ; y<nx ; ++y){
 
@@ -863,10 +863,10 @@ namespace LOFAR
 
     if(npol==1)
       {
-    	int y=0;
+    	uInt y=0;
     	uInt ii=0;
     	#pragma omp parallel for private(y,ii)
-    	for(int x=0 ; x<nx ; ++x){
+    	for(uInt x=0 ; x<nx ; ++x){
     	  for(y=0 ; y<nx ; ++y){
     	    for(ii=0;ii<4;++ii){
     	      grid_out(IPosition(4,x,y,0,0)) += 0.5*(GridsMueller[0][ii](x,y) + GridsMueller[3][ii](x,y));///Spheroid_cut_im_element(x,y);
