@@ -31,7 +31,7 @@
 
 namespace rfiStrategy {
 
-	WriteFlagsAction::WriteFlagsAction() : _flusher(0), _isFinishing(false), _maxBufferItems(15), _minBufferItemsForWriting(12), _imageSet(0)
+	WriteFlagsAction::WriteFlagsAction() : _flusher(0), _isFinishing(false), _maxBufferItems(18), _minBufferItemsForWriting(12), _imageSet(0)
 	{
 	}
 	
