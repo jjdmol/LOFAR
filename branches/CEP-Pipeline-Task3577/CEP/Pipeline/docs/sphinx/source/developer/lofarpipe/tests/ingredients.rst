@@ -2,5 +2,5 @@
 The :mod:`lofarpipe.tests.lofaringredient` module
 *************************************************
 
-.. dsautomodule :: lofarpipe.tests.lofaringredient
+.. automodule :: lofarpipe.tests.lofaringredient
    :members:

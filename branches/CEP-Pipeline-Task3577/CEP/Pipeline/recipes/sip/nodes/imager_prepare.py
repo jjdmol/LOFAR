@@ -35,7 +35,7 @@ class imager_prepare(LOFARnodeTCP):
     3. Flag rfi.
     4. Add addImagingColumns to the casa ms.
     5. Concatenate the time slice measurment sets, to a single virtual ms.
-    6. Filter bad stations: Find station with repeated bad measurement and
+    6. Filter bad stations. Find station with repeated bad measurement and
        remove these completely from the dataset.
  
     **Members:** 
@@ -80,8 +80,8 @@ class imager_prepare(LOFARnodeTCP):
             #******************************************************************
             # 2. run dppp: collect frequencies into larger group
             time_slices = \
-                self._run_dppp(working_dir, time_slice_dir, 
-                    time_slices_per_image, input_map, subbands_per_group, 
+                self._run_dppp(working_dir, time_slice_dir,
+                    time_slices_per_image, input_map, subbands_per_group,
                     processed_ms_dir, parset, ndppp_executable)
 
             self.logger.debug("Produced time slices: {0}".format(time_slices))
@@ -324,6 +324,7 @@ class imager_prepare(LOFARnodeTCP):
            which produces a set of bad stations.
         3. In the final step the bad stations are removed from the dataset using
            ms select
+           
         REF: http://www.lofar.org/wiki/lib/exe/fetch.php?media=msss:pandeymartinez-week9-v1p2.pdf
         """
         # run asciistat to collect statistics about the ms

@@ -11,6 +11,12 @@ import shutil
 import sys
 
 class setupparmdb(LOFARnodeTCP):
+    """
+    Put the provided template parmdb at the target location:
+    
+    1. Remove a possible old parmdb at the target location.
+    2. Copy the template to the target location 
+    """
     def run(self, pdb_in, pdb_out):
         with log_time(self.logger):
             self.logger.debug("Copying parmdb: %s --> %s" % (pdb_in, pdb_out))

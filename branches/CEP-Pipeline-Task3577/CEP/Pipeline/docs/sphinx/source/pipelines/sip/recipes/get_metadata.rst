@@ -1,14 +1,14 @@
-.. _recipe-setupparmdb:
+.. _recipe-get_metadata:
 
 ============
-setupparmdb
+get_metadata
 ============
 
 ***Master Side of the recipe ***
 
-.. autoclass:: lofarpipe.recipes.master.setupparmdb.setupparmdb
+.. autoclass:: lofarpipe.recipes.master.get_metadata.get_metadata
 
 *** Node Side of the recipe ***
 
-.. autoclass:: lofarpipe.recipes.nodes.setupparmdb.setupparmdb
+.. autoclass:: lofarpipe.recipes.nodes.get_metadata.get_metadata
 

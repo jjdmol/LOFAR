@@ -25,6 +25,9 @@ class new_bbs(LOFARnodeTCP):
     #                      Handles running a single BBS kernel on a compute node
     # --------------------------------------------------------------------------
     def run(self, executable, infiles, db_key, db_name, db_user, db_host):
+        """
+        Depricated functionality
+        """
         # executable : path to KernelControl executable
         # infiles    : tuple of MS, instrument- and sky-model files
         # db_*       : database connection parameters
@@ -83,7 +86,7 @@ class new_bbs(LOFARnodeTCP):
                     os.path.basename(executable),
                 ):
                     bbs_kernel_process = Popen(
-                        cmd, stdout = PIPE, stderr = PIPE, cwd = working_dir
+                        cmd, stdout=PIPE, stderr=PIPE, cwd=working_dir
                     )
                     sout, serr = bbs_kernel_process.communicate()
                 log_process_output("BBS kernel", sout, serr, self.logger)

@@ -38,10 +38,16 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Create a distributed parameter database (ParmDB) for a distributed 
     Measurement set (MS).
+    
+    1. Create a parmdb template at the master side of the recipe
+    2. Call node side of recipe with template and possible targets
+    3. Validate performance, cleanup of temp files, construct output
 
-    **Arguments**
+    **Command line arguments**
 
-    A mapfile describing the data to be processed.
+    1. A mapfile describing the data to be processed.
+    2. A mapfile with output location (If provide input and output are validated)
+    
     """
     inputs = {
         'executable': ingredient.ExecField(
@@ -78,12 +84,17 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Starting setupparmdb run")
         super(setupparmdb, self).go()
 
+        # *********************************************************************
+        # 1. Create a temporary template parmdb at the master side of the recipe
         self.logger.info("Generating template parmdb")
+
+        # generate a temp dir
         pdbdir = tempfile.mkdtemp(
             dir=self.config.get("layout", "job_directory")
         )
         pdbfile = os.path.join(pdbdir, self.inputs['suffix'])
 
+        # Create a template use tempdir for location 
         try:
             parmdbm_process = subprocess.Popen(
                 [self.inputs['executable']],
@@ -97,8 +108,9 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.error("Failed to spawn parmdbm: %s" % str(err))
             return 1
 
-        #                     try-finally block to always remove temporary files
-        # ----------------------------------------------------------------------
+        # *********************************************************************
+        # 2. Call node side of recipe with template and possible targets
+        #    If output location are provided as input these are validated.
         try:
             #                       Load file <-> compute node mapping from disk
             # ------------------------------------------------------------------
@@ -106,6 +118,7 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.debug("Loading input-data mapfile: %s" % args[0])
             indata = load_data_map(args[0])
             if len(args) > 1:
+                # If output location provide validate the input and outputmap
                 self.logger.debug("Loading output-data mapfile: %s" % args[1])
                 outdata = load_data_map(args[1])
                 if not validate_data_maps(indata, outdata):
@@ -113,6 +126,7 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
                         "Validation of input/output data mapfiles failed"
                     )
                     return 1
+                # else output location is inputlocation+suffix
             else:
                 outdata = [
                     (host,
@@ -122,7 +136,7 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
                         os.path.basename(infile) + self.inputs['suffix'])
                     ) for host, infile in indata
                 ]
-                
+            #  Call the node side   
             command = "python %s" % (self.__file__.replace('master', 'nodes'))
             jobs = []
             for host, outfile in outdata:
@@ -138,6 +152,8 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
                 )
             self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
 
+        # *********************************************************************
+        # 3. validate performance, cleanup of temp files, construct output
         finally:
             self.logger.debug("Removing template parmdb")
             shutil.rmtree(pdbdir, ignore_errors=True)

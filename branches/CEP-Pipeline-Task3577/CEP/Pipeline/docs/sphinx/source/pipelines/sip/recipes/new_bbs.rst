@@ -1,8 +1,16 @@
 .. _recipe-new_bbs:
 
 =========
-NEW_BBS
+new_bbs
 =========
 
+
+***Master Side of the recipe ***
+
 .. autoclass:: lofarpipe.recipes.master.new_bbs.new_bbs
-   :show-inheritance:
+
+***node Side of the recipe ***
+
+.. autoclass:: lofarpipe.recipes.nodes.new_bbs.new_bbs
+	:members: run
+

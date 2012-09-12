@@ -20,14 +20,23 @@ from lofarpipe.support.group_data import validate_data_maps
 class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Recipe to correct outliers in the gain solutions of an parmdb,
-    using the program `parmexportcal` or an minimal implementation of the edit_parmdb
-    program.
+    using the program `parmexportcal`   
     The main purpose of this program is to strip off the time axis information
     from a instrument model (a.k.a ParmDB)
+    -or-
+    a minimal implementation of the edit_parmdb program. Search all gains for
+    outliers and swap these for the median
 
-    **Arguments**
+    1. Validate input
+    2. load mapfiles, validate if a target output location is provided
+    3. Call node side of the recipe
+    4. validate performance, return corrected files
 
-    A mapfile describing the data to be processed.
+    **Command line arguments**
+
+    1. A mapfile describing the data to be processed.
+    2. A mapfile with target location <mapfiles are validated if present>
+    
     """
     inputs = {
         'executable': ingredient.StringField(
@@ -59,13 +68,16 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     outputs = {
-        'mapfile': ingredient.FileField()
+        'mapfile': ingredient.FileField(help="mapfile with corrected parmdbs")
     }
 
 
     def go(self):
+        super(gainoutliercorrection, self).go()
         self.logger.info("Starting gainoutliercorrection run")
-        #if sigma is none use default behaviour and use executable: test if
+        # ********************************************************************
+        # 1. Validate input
+        # if sigma is none use default behaviour and use executable: test if
         # It excists
         executable = self.inputs['executable']
         if executable == "":
@@ -76,10 +88,8 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
                 "path: {0}".format(self.inputs['executable']))
             self.logger.warn("Defaulting to edit_parmdb behaviour")
 
-        super(gainoutliercorrection, self).go()
-
-        #                            Load file <-> output node mapping from disk
-        # ----------------------------------------------------------------------
+        # ********************************************************************
+        # 2. load mapfiles, validate if a target output location is provided
         args = self.inputs['args']
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
         indata = load_data_map(args[0])
@@ -102,6 +112,8 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
                  ) for host, infile in indata
             ]
 
+        # ********************************************************************
+        # 3. Call node side of the recipe
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
         for host, infile, outfile in (x + (y[1],)
@@ -121,6 +133,8 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
             )
         self._schedule_jobs(jobs)
 
+        # ********************************************************************
+        # 4. validate performance, return corrected files
         if self.error.isSet():
             self.logger.warn("Detected failed gainoutliercorrection job")
             return 1

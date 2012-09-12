@@ -1,8 +1,14 @@
-.. _recipe-parmdb:
+.. _recipe-setupparmdb:
 
-======
-parmdb
-======
+============
+setupparmdb
+============
+
+***Master Side of the recipe ***
 
 .. autoclass:: lofarpipe.recipes.master.setupparmdb.setupparmdb
-   :show-inheritance:
+
+*** Node Side of the recipe ***
+
+.. autoclass:: lofarpipe.recipes.nodes.setupparmdb.setupparmdb
+

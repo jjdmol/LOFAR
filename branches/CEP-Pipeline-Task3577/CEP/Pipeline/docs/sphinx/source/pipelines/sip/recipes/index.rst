@@ -13,20 +13,23 @@ Each of these steps will get more details in each of the chapters
 
 Calibrator Pipeline
 ------------------------------------	
+
+.. autoclass:: msss_calibrator_pipeline.msss_calibrator_pipeline
+
+**Recipes of the calibrator pipeline (step)**
+
 .. toctree::
     :maxdepth: 1
 	
-    sip
-    datamapper
-    storagemapper
-    dppp
-    rficonsole
-    bbs
-    sourcedb
-    parmdb
-    cimager
-    vdsmaker
-    vdsreader
+	vdsmaker (2) <vdsmaker>
+	vdsreader  (2)<vdsreader>
+	setupparmdb (2,4) <setupparmdb>
+	setupsourcedb (2,4) <setupsourcedb>
+	ndppp (3) <dppp>
+	new_bbs (4) <new_bbs>
+	gainoutliercorrection (5) <gainoutliercorrection>
+	get_metadata (6) <get_metadata>
+
 
 Target Pipeline
 ------------------------------------
@@ -34,7 +37,14 @@ Target Pipeline
     :maxdepth: 1
 	
     missing recipe<imager_bbs>
-
+    sip
+    datamapper
+    storagemapper
+    dppp
+    rficonsole
+    cimager
+    vdsmaker
+    vdsreader
 
 
 Imager Pipeline
@@ -53,7 +63,7 @@ Imager Pipeline
 	4. imager_awimager <imager_awimager>
 	5. imager_source_finding <imager_source_finding>
 	6. imager_finalize <imager_finalize>
-	7. get_metadata
+	7. get_metadata <get_metadata>
 	
 	
 	
