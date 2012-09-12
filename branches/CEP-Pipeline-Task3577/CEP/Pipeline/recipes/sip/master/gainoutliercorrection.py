@@ -4,7 +4,7 @@
 #                                                             Marcel Loose, 2011
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
-
+from __future__ import with_statement
 import os
 import sys
 
