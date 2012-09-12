@@ -131,7 +131,7 @@ namespace rfiStrategy {
 			{
 				throw std::runtime_error("Not implemented");
 			}
-			static class ImageSet *Create(const std::string &file, bool indirectReader=false, bool readUVW=false);
+			static class ImageSet *Create(const std::string &file, BaselineIOMode ioMode, bool readUVW=false);
 			static bool IsFitsFile(const std::string &file);
 			static bool IsRCPRawFile(const std::string &file);
 			static bool IsTKPRawFile(const std::string &file);

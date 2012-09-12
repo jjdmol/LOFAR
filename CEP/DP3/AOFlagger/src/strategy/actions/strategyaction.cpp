@@ -440,7 +440,7 @@ namespace rfiStrategy {
 		}
 	}
 
-	void Strategy::SetIndirectReader(Strategy &strategy, bool newValue)
+	/*void Strategy::SetIndirectReader(Strategy &strategy, bool newValue)
 	{
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
 		while(!i.PastEnd())
@@ -452,7 +452,7 @@ namespace rfiStrategy {
 			}
 			++i;
 		}
-	}
+	}*/
 
 	void Strategy::SyncAll(ActionContainer &root)
 	{
