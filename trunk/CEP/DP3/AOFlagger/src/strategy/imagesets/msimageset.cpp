@@ -281,8 +281,8 @@ namespace rfiStrategy {
 			startIndex = StartIndex(msIndex),
 			endIndex = EndIndex(msIndex);
 
-		double ratio = 0.0;
-		/*for(std::vector<Mask2DCPtr>::const_iterator i=flags.begin();i!=flags.end();++i)
+		/*double ratio = 0.0;
+		for(std::vector<Mask2DCPtr>::const_iterator i=flags.begin();i!=flags.end();++i)
 		{
 			ratio += ((double) (*i)->GetCount<true>() / ((*i)->Width() * (*i)->Height() * flags.size()));
 		}*/
