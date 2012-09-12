@@ -110,7 +110,7 @@ static unsigned roundedPercentage(unsigned current, unsigned target)
   if (current == 0)
     return 0;
 
-  return std::min(std::max( 100 * current / target, 1), 99);
+  return std::min(std::max(100 * current / target, 1u), 99u);
 }
 
 
