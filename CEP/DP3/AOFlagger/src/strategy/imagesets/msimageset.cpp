@@ -282,10 +282,10 @@ namespace rfiStrategy {
 			endIndex = EndIndex(msIndex);
 
 		double ratio = 0.0;
-		for(std::vector<Mask2DCPtr>::const_iterator i=flags.begin();i!=flags.end();++i)
+		/*for(std::vector<Mask2DCPtr>::const_iterator i=flags.begin();i!=flags.end();++i)
 		{
 			ratio += ((double) (*i)->GetCount<true>() / ((*i)->Width() * (*i)->Height() * flags.size()));
-		}
+		}*/
 			
 		std::vector<Mask2DCPtr> allFlags;
 		if(flags.size() > _reader->PolarizationCount())
@@ -300,10 +300,10 @@ namespace rfiStrategy {
 		}
 		else allFlags = flags;
 		
-		const AntennaInfo
-			a1Info = GetAntennaInfo(a1),
-			a2Info = GetAntennaInfo(a2);
-		AOLogger::Info << "Baseline " << a1Info.name << " x " << a2Info.name << " has " << TimeFrequencyStatistics::FormatRatio(ratio) << " of bad data.\n";
+		//const AntennaInfo
+		//	a1Info = GetAntennaInfo(a1),
+		//	a2Info = GetAntennaInfo(a2);
+		//AOLogger::Info << "Baseline " << a1Info.name << " x " << a2Info.name << " has " << TimeFrequencyStatistics::FormatRatio(ratio) << " of bad data.\n";
 	
 		_reader->AddWriteTask(allFlags, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
 	}
