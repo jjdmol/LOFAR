@@ -476,14 +476,14 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
   if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
     unsigned subband = *itsCurrentSubband;
 
-    ASSERTSTR((unsigned)itsTranspose2Logic.phaseThreePsetIndex == itsTranspose2Logic.sourcePset( subband, block ) && (unsigned)itsTranspose2Logic.phaseThreeCoreIndex == itsTranspose2Logic.sourceCore( subband, block ),
+    ASSERTSTR((unsigned)itsTranspose2Logic.phaseTwoPsetIndex == itsTranspose2Logic.sourcePset( subband, block ) && (unsigned)itsTranspose2Logic.phaseTwoCoreIndex == itsTranspose2Logic.sourceCore( subband, block ),
      "I'm (" << itsTranspose2Logic.phaseThreePsetIndex << ", " << itsTranspose2Logic.phaseThreeCoreIndex << ") . For block " << block << ", I have subband " << subband << ", but the logic expects that subband from (" << itsTranspose2Logic.sourcePset( subband, block ) << ", " << itsTranspose2Logic.sourceCore( subband, block ) << ")" );
   }
 
 #if defined HAVE_MPI
   if (streamToProcess) {
     ASSERTSTR((unsigned)itsTranspose2Logic.phaseThreePsetIndex == itsTranspose2Logic.destPset( myStream, block ) && (unsigned)itsTranspose2Logic.phaseThreeCoreIndex == itsTranspose2Logic.destCore( myStream, block ),
-     "I'm (" << itsTranspose2Logic.phaseThreePsetIndex << ", " << itsTranspose2Logic.phaseThreeCoreIndex << ") . According to the logic, for block " << block << ", I'm to handle stream " << myStream << ", yet that stream is to be handled by (" << itsTranspose2Logic.destPset( myStream, block ) << ", " << itsTranspose2Logic.destCore( myStream, block ) << ")" );
+     "I'm (" << itsTranspose2Logic.phaseTwoPsetIndex << ", " << itsTranspose2Logic.phaseTwoCoreIndex << ") . According to the logic, for block " << block << ", I'm to handle stream " << myStream << ", yet that stream is to be handled by (" << itsTranspose2Logic.destPset( myStream, block ) << ", " << itsTranspose2Logic.destCore( myStream, block ) << ")" );
 
     if (LOG_CONDITION)
       LOG_DEBUG_STR(itsLogPrefix << "Phase 3 starting at t = " << blockAge());
