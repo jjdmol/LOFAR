@@ -504,6 +504,8 @@ public:
     myPset( myPset ),
     myCore( myCore ),
 
+    phaseTwoPsetIndex( parset.phaseTwoPsetIndex(myPset) ),
+    phaseTwoCoreIndex( parset.phaseTwoCoreIndex(myCore) ),
     phaseThreePsetIndex( parset.phaseThreePsetIndex(myPset) ),
     phaseThreeCoreIndex( parset.phaseThreeCoreIndex(myCore) )
   {
@@ -544,6 +546,8 @@ public:
   const unsigned myPset;
   const unsigned myCore;
 
+  const int phaseTwoPsetIndex;
+  const int phaseTwoCoreIndex;
   const int phaseThreePsetIndex;
   const int phaseThreeCoreIndex;
 };
