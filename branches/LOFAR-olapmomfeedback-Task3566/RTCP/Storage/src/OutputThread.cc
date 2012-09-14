@@ -36,6 +36,7 @@
 #include <boost/format.hpp>
 
 #include <errno.h>
+#include <iomanip>
 #include <time.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -212,11 +213,11 @@ void OutputThread::createMS()
         LOG_INFO_STR(itsLogPrefix << "Characteristics: "
             << "SAP "            << SAPs[itsStreamNr]
             << ", subband "      << subbands[itsStreamNr]
-            << ", centralfreq "  << precision(8) << frequencies[itsStreamNr]/1e6 << " MHz"
-            << ", duration "     << precision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
-            << ", integration "  << precision(8) << itsParset.IONintegrationTime() << " s"
+            << ", centralfreq "  << setprecision(8) << frequencies[itsStreamNr]/1e6 << " MHz"
+            << ", duration "     << setprecision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
+            << ", integration "  << setprecision(8) << itsParset.IONintegrationTime() << " s"
             << ", channels "     << itsParset.nrChannelsPerSubband() 
-            << ", channelwidth " << precision(8) << itsParset.channelWidth()/1e3 << " kHz"
+            << ", channelwidth " << setprecision(8) << itsParset.channelWidth()/1e3 << " kHz"
         );
       }
       break;
