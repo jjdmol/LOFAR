@@ -88,6 +88,7 @@ set(MSIO_FILES
   msio/indirectbaselinereader.cpp
   msio/mask2d.cpp
   msio/measurementset.cpp
+  msio/memorybaselinereader.cpp
   msio/pngfile.cpp
   msio/rspreader.cpp
   msio/samplerow.cpp

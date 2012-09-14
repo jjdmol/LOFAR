@@ -105,4 +105,6 @@ enum PolarisationType { SinglePolarisation, DipolePolarisation, AutoDipolePolari
 
 class ParmTable;
 
+enum BaselineIOMode { DirectReadMode, IndirectReadMode, MemoryReadMode, AutoReadMode };
+
 #endif // MSIO_TYPES

@@ -161,7 +161,7 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # *********************************************************************
         # 3. Validate the performance of the node script and assign output
-        placed_image_ = []
+        placed_images = []
         for job in  jobs:
             if job.results.has_key("hdf5"):
                 placed_images.append((job.host, job.results["image"]))

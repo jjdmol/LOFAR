@@ -61,7 +61,7 @@ void ForEachMSAction::Perform(ArtifactSet &artifacts, ProgressListener &progress
 		
 		if(!skip)
 		{
-			ImageSet *imageSet = ImageSet::Create(filename, _indirectReader, _readUVW);
+			ImageSet *imageSet = ImageSet::Create(filename, _baselineIOMode, _readUVW);
 			if(dynamic_cast<MSImageSet*>(imageSet))
 			{ 
 				MSImageSet *msImageSet = static_cast<MSImageSet*>(imageSet);
