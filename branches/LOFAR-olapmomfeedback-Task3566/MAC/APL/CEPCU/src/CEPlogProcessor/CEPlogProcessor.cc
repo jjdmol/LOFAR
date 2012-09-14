@@ -84,6 +84,8 @@ void CEPFeedback::addSubband(unsigned index)
   setSubbandKey(index, "channelWidth",         "");
   setSubbandKey(index, "channelsPerSubband",   "");
   setSubbandKey(index, "subband",              "");
+  setSubbandKey(index, "stationSubband",       "");
+  setSubbandKey(index, "SAP",                  "");
 
   ++nrSubbands;
 }
@@ -1130,17 +1132,20 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
       }
 
       if ((result = strstr(logline.msg, "Characteristics: "))) {
-        int subband = 0, channels = 0;
-        float centralfreq = 0.0, integration = 0.0, channelwidth = 0.0, duration = 0.0;
-        if (sscanf(result, "Characteristics: subband %d, centralfreq %f MHz, duration %f s, integration %f s, channels %u, channelwidth %f kHz", &subband, &centralfreq, &duration, &integration, &channels, &channelwidth) == 6) {
+        int subband = 0, channels = 0, SAP = 0;
+        double centralfreq = 0.0, integration = 0.0, channelwidth = 0.0, duration = 0.0;
+        if (sscanf(result, "Characteristics: SAP %d, subband %d, centralfreq %lf MHz, duration %lf s, integration %lf s, channels %u, channelwidth %lf kHz", &SAP, &subband, &centralfreq, &duration, &integration, &channels, &channelwidth) == 7) {
 
           if (feedback) {
-            feedback->setSubbandKey(streamNr, "subband",             formatString("%d", subband));
-            feedback->setSubbandKey(streamNr, "integrationInterval", formatString("%f", integration));
-            feedback->setSubbandKey(streamNr, "centralFrequency",    formatString("%f", centralfreq));
+            feedback->setSubbandKey(streamNr, "subband",             formatString("%d", streamNr));
+
+            feedback->setSubbandKey(streamNr, "SAP",                 formatString("%d", SAP));
+            feedback->setSubbandKey(streamNr, "stationSubband",      formatString("%d", subband));
+            feedback->setSubbandKey(streamNr, "integrationInterval", formatString("%.4lf", integration));
+            feedback->setSubbandKey(streamNr, "centralFrequency",    formatString("%.4lf", centralfreq));
             feedback->setSubbandKey(streamNr, "channelsPerSubband",  formatString("%d", channels));
-            feedback->setSubbandKey(streamNr, "channelWidth",        formatString("%f", channelwidth));
-            feedback->setSubbandKey(streamNr, "duration",            formatString("%f", duration));
+            feedback->setSubbandKey(streamNr, "channelWidth",        formatString("%.4lf", channelwidth));
+            feedback->setSubbandKey(streamNr, "duration",            formatString("%.4lf", duration));
           }
 
           LOG_DEBUG_STR("Observation " << logline.obsID << " stream " << streamNr << " is subband " << subband << " at " << centralfreq << " MHz, with " << duration << " s duration, " << integration << " s integration and " << channels << " channels of " << channelwidth << " kHz");
