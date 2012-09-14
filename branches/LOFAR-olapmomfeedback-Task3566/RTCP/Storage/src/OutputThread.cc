@@ -52,6 +52,8 @@ namespace RTCP {
 static Mutex makeDirMutex;
 static Mutex casacoreMutex;
 
+using namespace std;
+
 static void makeDir(const string &dirname, const string &logPrefix)
 {
   ScopedLock  scopedLock(makeDirMutex);
@@ -203,16 +205,18 @@ void OutputThread::createMS()
       itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
 
       {
-        const vector<unsigned> subbands = itsParset.subbandList();
+        const vector<unsigned> subbands  = itsParset.subbandList();
+        const vector<unsigned> SAPs      = itsParset.subbandToSAPmapping();
         const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
 
-        LOG_INFO_STR(itsLogPrefix << "Characteristics:"
-            << " subband " << subbands[itsStreamNr]
-            << ", centralfreq " << frequencies[itsStreamNr]/1e6 << " MHz"
-            << ", duration " << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
-            << ", integration " << itsParset.IONintegrationTime() << " s"
-            << ", channels " << itsParset.nrChannelsPerSubband() 
-            << ", channelwidth " << itsParset.channelWidth()/1e3 << " kHz"
+        LOG_INFO_STR(itsLogPrefix << "Characteristics: "
+            << "SAP "            << SAPs[itsStreamNr]
+            << ", subband "      << subbands[itsStreamNr]
+            << ", centralfreq "  << precision(8) << frequencies[itsStreamNr]/1e6 << " MHz"
+            << ", duration "     << precision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
+            << ", integration "  << precision(8) << itsParset.IONintegrationTime() << " s"
+            << ", channels "     << itsParset.nrChannelsPerSubband() 
+            << ", channelwidth " << precision(8) << itsParset.channelWidth()/1e3 << " kHz"
         );
       }
       break;
