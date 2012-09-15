@@ -32,7 +32,7 @@
 #include <AOFlagger/gui/imagepropertieswindow.h>
 
 ImagePlaneWindow::ImagePlaneWindow()
-  : _imager(1536*2, 1536*2 /*1536, 1536*/), _clearButton("Clear"),
+  : _imager(512, 512), /*3x1024 */ _clearButton("Clear"),
 	_applyWeightsButton("Apply weights"),
 	_refreshCurrentButton("R"),
 	_memoryStoreButton("MS"),

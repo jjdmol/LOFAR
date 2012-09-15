@@ -100,6 +100,8 @@ class UVImager {
 		bool HasFFT() const { return _uvFTReal != 0; }
 		const class Image2D &FTReal() const { return *_uvFTReal; }
 		const class Image2D &FTImaginary() const { return *_uvFTImaginary; }
+		class Image2D &FTReal() { return *_uvFTReal; }
+		class Image2D &FTImaginary() { return *_uvFTImaginary; }
 		void SetUVScaling(num_t newScale)
 		{
 			_uvScaling = newScale;

@@ -20,6 +20,7 @@
 #include <AOFlagger/imaging/uvimager.h>
 
 #include <AOFlagger/strategy/actions/imageraction.h>
+#include <AOFlagger/strategy/algorithms/baselinetimeplaneimager.h>
 
 #include <boost/thread/mutex.hpp>
 
@@ -40,13 +41,41 @@ namespace rfiStrategy {
 			data = *tmp;
 			delete tmp;
 		}
-
-		progress.OnStartTask(*this, 0, 1, "Imaging baseline");
-		for(size_t y=0;y<data.ImageHeight();++y)
+		
+		bool btPlaneImager = true;
+		if(btPlaneImager)
 		{
-			imager->Image(data, metaData, y);
-			progress.OnProgress(*this, y, data.ImageHeight());
+			typedef float ImagerNumeric;
+			BaselineTimePlaneImager<ImagerNumeric> btImager;
+			BandInfo band = metaData->Band();
+			Image2DCPtr
+				inputReal = data.GetRealPart(),
+				inputImag = data.GetImaginaryPart();
+			Mask2DCPtr mask = data.GetSingleMask();
+			size_t width = inputReal->Width();
+			
+			for(size_t t=0;t!=width;++t)
+			{
+				UVW uvw = metaData->UVW()[t];
+				size_t channelCount = inputReal->Height();
+				std::complex<ImagerNumeric>data[channelCount];
+				for(size_t ch=0;ch!=channelCount;++ch) {
+					if(mask->Value(t, ch))
+						data[ch] = std::complex<ImagerNumeric>(0.0, 0.0);
+					else
+						data[ch] = std::complex<ImagerNumeric>(inputReal->Value(t, ch), inputImag->Value(t, ch));
+				}
+				
+				btImager.Image(uvw.u, uvw.v, uvw.w, band.channels[0].frequencyHz, band.channels[1].frequencyHz-band.channels[0].frequencyHz, channelCount, data, imager->FTReal());
+			}
+		} else {
+			progress.OnStartTask(*this, 0, 1, "Imaging baseline");
+			for(size_t y=0;y<data.ImageHeight();++y)
+			{
+				imager->Image(data, metaData, y);
+				progress.OnProgress(*this, y, data.ImageHeight());
+			}
+			progress.OnEndTask(*this);
 		}
-		progress.OnEndTask(*this);
 	}
 }

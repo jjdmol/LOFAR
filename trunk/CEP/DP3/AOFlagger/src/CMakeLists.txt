@@ -130,6 +130,7 @@ set(STRATEGY_ACTION_FILES
 
 set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/baselineselector.cpp
+	strategy/algorithms/baselinetimeplaneimager.cpp
   strategy/algorithms/eigenvalue.cpp
   strategy/algorithms/fringestoppingfitter.cpp
   strategy/algorithms/fringetestcreater.cpp
