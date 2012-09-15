@@ -42,7 +42,7 @@ namespace rfiStrategy {
 			delete tmp;
 		}
 		
-		bool btPlaneImager = true;
+		bool btPlaneImager = false;
 		if(btPlaneImager)
 		{
 			typedef float ImagerNumeric;
