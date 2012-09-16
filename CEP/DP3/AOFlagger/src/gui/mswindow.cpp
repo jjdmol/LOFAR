@@ -239,22 +239,22 @@ void MSWindow::OpenPath(const std::string &path)
 	if(rfiStrategy::ImageSet::IsRCPRawFile(path))
 	{
 		_optionWindow = new RawOptionWindow(*this, path);
-		_optionWindow->show();
+		_optionWindow->present();
 	}
 	else if(rfiStrategy::ImageSet::IsMSFile(path))
 	{
 		_optionWindow = new MSOptionWindow(*this, path);
-		_optionWindow->show();
+		_optionWindow->present();
 	}
 	else if(rfiStrategy::ImageSet::IsTimeFrequencyStatFile(path))
 	{
 		_optionWindow = new TFStatOptionWindow(*this, path);
-		_optionWindow->show();
+		_optionWindow->present();
 	}
 	else if(rfiStrategy::ImageSet::IsNoiseStatFile(path))
 	{
 		_optionWindow = new NoiseStatOptionWindow(*this, path);
-		_optionWindow->show();
+		_optionWindow->present();
 	}
 	else
 	{
