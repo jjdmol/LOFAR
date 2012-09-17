@@ -1,0 +1,734 @@
+V 11
+1
+LANG:1 7 Station
+PANEL,-1 -1 1009 698 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  
+  baseDP         = g_currentDatapoint; 
+  reload();
+  
+
+}
+
+void prepareProcesses() {
+  dyn_string result;
+  
+  dynAppend(result,\",BGPProc,\"+baseDP);    
+  dynAppend(g_processesList,baseDP);
+  
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG(\"BGPProc.pnl:prepareProcesses|processList found: \"+ result);    
+  
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"BGPProcr.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"BGPProc.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  string var = \"\";
+  // get the saved panelparams for this panel
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".panelParamList\")) {
+    dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".panelParamList\",var);
+    // empty the paramList
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".panelParamList\",\"\");
+  } else {
+    LOG_WARN(\"BGPProc.pnl:main| Error: no dp \" + DPNAME_NAVIGATOR + g_navigatorID+\".panelParamList\");
+  }
+
+  // get BGLAppl path to obtain the lists
+  BGLApplDP              = navFunct_getPathLessOne(baseDP);
+  
+  // if var is empty something went wrong (maybe back and fort between other panel, so the panelParamlist was emptied)
+  // in that case we jump back to the prior screen
+
+  if (var == \"\") {
+    g_currentDatapoint = BGLApplDP;
+     navPanel_setEvent(\"BGPProc\",\"ChangePanel\"); 
+   }   
+
+    ioNode = (int)var;
+                   
+  // get the name of the selcted station  
+  string nodeDP = navFunct_IONode2DPName(ioNode);
+  string dp = nodeDP+\".usedStation\"; 
+  if (dpExists(dp) ){
+    dpGet(dp,station);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|ERROR DP does not exist: \"+dp);
+    return;
+  }
+  
+ 
+  
+   
+ 
+  if ( dpExists(BGLApplDP+\".ioNodeList\") ) {
+    dpGet(BGLApplDP+\".ioNodeList\",ioNodeList);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|Error getting ioNodeList value\");
+  }
+  
+  if ( dpExists(BGLApplDP+\".locusNodeList\") ) {
+    dpGet(BGLApplDP+\".locusNodeList\",locusNodeList);
+  } else {
+    LOG_ERROR(\"BGPProcr.pnl:main|Error getting locusNodeList value\");
+  }
+  
+  if ( dpExists(BGLApplDP+\".adderList\") ) {
+    dpGet(BGLApplDP+\".adderList\",adderList);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|Error getting adderList value\");
+  }
+   
+  if ( dpExists(BGLApplDP+\".writerList\") ) {
+    dpGet(BGLApplDP+\".writerList\",writerList);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|Error getting writerList value\");
+  }
+
+  if ( dpExists(BGLApplDP+\".dataProductList\") ) {
+    dpGet(BGLApplDP+\".dataProductList\",dataProductList);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|Error getting dataProductList value\");
+  }
+
+  if ( dpExists(BGLApplDP+\".dataProductTypeList\") ) {
+    dpGet(BGLApplDP+\".dataProductTypeList\",dataProductTypeList);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|Error getting dataProductTypeList value\");
+  }
+  
+  LOG_DEBUG(\"BGPProc.pnl:main|selected ioNode: \"+ioNode);
+  LOG_DEBUG(\"BGPProc.pnl:main|station: \"+station);  
+  LOG_DEBUG(\"BGPProc.pnl:main|ioNodeList: \"+ioNodeList);
+  LOG_DEBUG(\"BGPProc.pnl:main|locusNodeList: \"+locusNodeList);
+  LOG_DEBUG(\"BGPProc.pnl:main|adderList: \"+adderList);
+  LOG_DEBUG(\"BGPProc.pnl:main|writerList: \"+writerList);
+  LOG_DEBUG(\"BGPProc.pnl:main|dataProductList: \"+dataProductList);
+  LOG_DEBUG(\"BGPProc.pnl:main|dataProductTypeList: \"+dataProductTypeList);
+
+  
+    // get position of ioNode in dynArray to see what writers and adders belong to this screen
+  int idx = dynContains(ioNodeList,ioNode);
+  if (idx > 0) { 
+    locusNodes=navFunct_listToDynString(locusNodeList[idx]);
+    adders=navFunct_listToDynString(adderList[idx]);
+    writers=navFunct_listToDynString(writerList[idx]);
+    dataProducts=navFunct_listToDynString(dataProductList[idx]);
+    dataProductTypes=navFunct_listToDynString(dataProductTypeList[idx]);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|ERROR: Station not in stationList !!!\");
+  }    
+  LOG_DEBUG(\"BGPProc.pnl:main|locusNodes: \"+locusNodes);
+  LOG_DEBUG(\"BGPProc.pnl:main|adders: \"+adders);
+  LOG_DEBUG(\"BGPProc.pnl:main|writers: \"+writers);
+  LOG_DEBUG(\"BGPProc.pnl:main|dataProducts: \"+dataProducts);
+  LOG_DEBUG(\"BGPProc.pnl:main|dataProductTypes: \"+dataProductTypes);
+
+  //  In the database we can find the IONode involved 
+  string nodeName = navFunct_DPName2CEPName(nodeDP);
+
+  LOG_DEBUG(\"BGPProc.pnl:main|nodeName working: \"+nodeName);
+  
+  // if no match found we have an error
+  if (nodeName == \"\" || station == \"\") {
+    LOG_ERROR(\"BGPProc.pnl:main| ERROR no station  or IONode-name found, can't view running processes\");
+  } else {
+    
+    // we have to set the stripped inputBuffer List and Adder List here.
+    // Since this is the Survey mode we only need one InputBuffer and one Adder
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\",\"CircularBuffer\",
+          DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.paramList\",makeDynString(ioNode));    
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\",\"Adder\",
+          DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.paramList\",makeDynString(adders));    
+    
+  
+    LOG_DEBUG(\"BGPProc.pnl:main|Station: \"+station);
+  
+    setValue(\"ionode\",\"text\",\"IONode: \"+nodeName);
+    setValue(\"stationLabel\",\"text\",station);
+  }
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
+  
+
+  // start the logging process
+  navPanel_showLogging(baseDP);
+  
+  // connect for selfUpdates
+  showSelfState(baseDP);
+
+
+
+
+
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareProcesses();
+  
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"BGPProc.pnl\",\"Update\");
+
+}
+
+      " 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string      baseDP         = \"\";
+string      BGLApplDP      = \"\";
+
+string station;
+int ioNode;
+
+dyn_string ioNodeList;
+dyn_string adderList;
+dyn_string writerList;
+dyn_string locusNodeList;
+dyn_string dataProductList;
+dyn_string dataProductTypeList;
+
+dyn_string locusNodes=\"\";
+dyn_string adders=\"\";
+dyn_string writers=\"\";
+dyn_string dataProducts=\"\";
+dyn_string dataProductTypes=\"\";
+
+
+
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"RECTANGLE1"
+""
+1 40 110 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1.629268292682927 90 -159.219512195122 1 E 40 110 660 520
+6 1
+"RECTANGLE2"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 60 -108 1 E 740 230 789 279
+2 2
+"PRIMITIVE_TEXT1"
+""
+1 874 102 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 874 102 959 115
+0 2 2 "0s" 0 0 0 192 0 0  874 102 1
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
+LANG:1 12 ComputeNodes
+2 3
+"ionode"
+""
+1 309 2 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 309 2 516 22
+0 2 2 "0s" 0 0 0 192 0 0  309 2 1
+1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
+LANG:1 22 IONode: R00-M0-N00-J00
+6 4
+"RECTANGLE18"
+""
+1 150 40 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 40 -150 2  1 0  "pictures/arrowRight.gif" 4294967295 E 30 240 104 314
+6 5
+"RECTANGLE19"
+""
+1 150 40 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 170 90 2  1 0  "pictures/arrowRight.gif" 4294967295 E 570 30 619 79
+6 6
+"RECTANGLE20"
+""
+1 150 40 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 170 250 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 570 30 619 79
+6 7
+"RECTANGLE21"
+""
+1 150 40 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 0.9999999999999999 40 50 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 30 240 104 314
+1 68 0 "" 1
+0
+6 9
+"RECTANGLE23"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 110 -108 1 E 740 230 789 279
+6 10
+"RECTANGLE24"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 160 -108 1 E 740 230 789 279
+6 11
+"RECTANGLE25"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 210 -108 1 E 740 230 789 279
+6 12
+"RECTANGLE26"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 60 -58 1 E 740 230 789 279
+6 13
+"RECTANGLE27"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 110 -58 1 E 740 230 789 279
+6 14
+"RECTANGLE28"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 160 -58 1 E 740 230 789 279
+6 15
+"RECTANGLE29"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 210 -58 1 E 740 230 789 279
+6 16
+"RECTANGLE30"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 60 -8 1 E 740 230 789 279
+6 17
+"RECTANGLE31"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 110 -8 1 E 740 230 789 279
+6 18
+"RECTANGLE32"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 160 -8 1 E 740 230 789 279
+6 19
+"RECTANGLE33"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 210 -8 1 E 740 230 789 279
+6 20
+"RECTANGLE34"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+22 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 60 42 1 E 740 230 789 279
+6 21
+"RECTANGLE35"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 110 42 1 E 740 230 789 279
+6 22
+"RECTANGLE36"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 160 42 1 E 740 230 789 279
+6 23
+"RECTANGLE37"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 210 42 1 E 740 230 789 279
+1 69 1 "" 226
+0
+1 70 1 "" 229
+0
+1 71 1 "" 234
+0
+1 72 1 "" 235
+0
+1 73 1 "" 236
+0
+1 74 1 "" 237
+0
+1 75 1 "" 238
+0
+1 76 1 "" 239
+0
+1 77 1 "" 240
+0
+1 78 1 "" 241
+0
+1 79 1 "" 242
+0
+1 80 1 "" 243
+0
+1 81 1 "" 244
+0
+1 82 1 "" 245
+0
+1 83 1 "" 246
+0
+1 84 1 "" 247
+0
+1 85 1 "51" 1
+0
+1 86 1 "" 249
+0
+1 87 1 "" 250
+0
+1 88 1 "" 251
+0
+1 89 1 "" 252
+0
+1 90 1 "" 253
+0
+1 91 1 "" 254
+0
+1 92 1 "" 255
+0
+1 93 1 "" 261
+0
+1 94 1 "" 262
+0
+1 95 1 "" 263
+0
+1 96 1 "" 264
+0
+1 97 1 "" 265
+0
+1 98 1 "" 279
+0
+1 99 1 "" 280
+0
+1 100 1 "" 281
+0
+1 101 1 "" 282
+0
+1 102 1 "" 283
+0
+1 103 2 "" 227
+0
+1 104 2 "51" 1
+0
+1 105 2 "" 256
+0
+1 106 2 "" 266
+0
+1 107 2 "" 267
+0
+1 108 2 "" 268
+0
+1 109 2 "" 269
+0
+1 110 2 "" 270
+0
+2 66
+"stationLabel"
+""
+1 0 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+26 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 0 120 48 140
+0 2 2 "0s" 0 0 0 192 0 0  0 120 1
+1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
+LANG:1 5 CSxxx
+2 67
+"storageLabel"
+""
+1 0 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 0 320 58 340
+0 2 2 "0s" 0 0 0 192 0 0  0 320 1
+1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
+LANG:1 7 Storxxx
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState" -1
+"objects\\lofar_self_state.pnl" 678 158 T 0 1 0 1 -547 -136
+0
+3 1 "PANEL_REF53" -1
+"objects\\Processes\\circularBuffer.pnl" 90 160 T 1 1 0 1 40 -137
+1
+"$objectNumber""0"
+3 2 "PANEL_REF54" -1
+"objects\\Processes\\adder.pnl" 90 360 T 2 1 0 1 40 -130
+1
+"$objectNumber""0"
+0

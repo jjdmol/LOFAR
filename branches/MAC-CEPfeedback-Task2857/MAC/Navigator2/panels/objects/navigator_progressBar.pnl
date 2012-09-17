@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 8 (NoName)
 PANEL,-1 -1 638 94 N "_3DFace" 1
@@ -15,6 +15,7 @@ PANEL,-1 -1 638 94 N "_3DFace" 1
       break;
     }
   }
+  
   // Check if Action point exists and connect to it if
   // it does. The action Point is the call back for this object
   itsActionDp      = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".action\";
@@ -40,7 +41,7 @@ void initialize() {
 
 // connect progressbar to value to act on
 setProgressBarDPE() {
-  if (dpExists(itsProgressBarDp)) {
+ if (dpExists(itsProgressBarDp)) {
     if (connected) {
       dpDisconnect(display,dpe);
       connected=false;
@@ -49,6 +50,7 @@ setProgressBarDPE() {
     dpConnect(\"display\",true,dpe);
     connected=true;
   }
+  
 }
 
 display(string dp1, int progress)
@@ -58,6 +60,7 @@ display(string dp1, int progress)
   		\"used31\",\"scale\",1-progress/100.0,1,
   		\"used32\",\"scale\",1-progress/100.0,1,
   		\"progressValue\",\"text\",progress);
+     
 }
 
 
@@ -192,10 +195,12 @@ LANG:0 0
 "dashclr"N "_Transparent"
 "main()
 {
+  
   float x,y;
   
   getValue(\"\",\"position\",x,y);
   addSymbol(myModuleName(), myPanelName(), \"objects/STD_INFOS/minitext_t_l.pnl\",\"mt1\",makeDynString(\"$s_txt:\"),x,y,0,1,1);
+  
 }" 0
  E 0 1 1 0 1 E U  1 E 4 10 10
 10 30
@@ -215,12 +220,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 130 10 131 24
+E E 0 1 1 2 1 E U  1 E 130 10 131 23
 0 2 2 "0s" 0 0 0 192 0 0  130 10 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 0 
 0
 LAYER, 1 

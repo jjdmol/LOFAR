@@ -14,11 +14,14 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   
   curLBA= $aNr;
   sysName=dpSubStr(baseDP,DPSUB_SYS);
-  string antennaDP=sysName+\"LBA\"+curLBA;
+  string aS=sysName+\"LOFAR_PIC_LBA\";
+  if (curLBA < 10) aS+=\"0\";
+  if (curLBA < 100) aS+=\"0\";
+  string antennaDP=aS+curLBA;
   string RCUX;
   string RCUY;
-  dpGet(antennaDP+\".RCUX\",RCUX);
-  dpGet(antennaDP+\".RCUY\",RCUY);
+  dpGet(antennaDP+\".common.RCUX\",RCUX);
+  dpGet(antennaDP+\".common.RCUY\",RCUY);
   
   if (RCUX != \"\" && RCUY != \"\") {
     RCUXDP=sysName+RCUX;

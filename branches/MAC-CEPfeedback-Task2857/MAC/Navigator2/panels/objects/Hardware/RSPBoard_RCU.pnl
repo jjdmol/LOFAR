@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 11 Subrack_RCU
 PANEL,-1 -1 429 479 N "_3DFace" 1
@@ -19,6 +19,7 @@ PANEL,-1 -1 429 479 N "_3DFace" 1
 
   // connect for selfUpdates
   showSelfState(baseDP);
+  showChildState(baseDP);
 }
 " 0
  E "main(int x, int y)
@@ -121,7 +122,7 @@ void RCUCallback(string dp1, bool aTrig) {
 }" 0
  0 1 1 2 1 E 1 0 1 -145 -35 1 E 150 40 210 110
 6 2
-"border1"
+"childStateBorder"
 ""
 1 40 110 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  "main()
@@ -145,7 +146,7 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 0 1 E 1 0 1 -30 -30 1 E 40 40 90 100
+ 0 2 1 0 1 E 1 0 1 -30 -30 1 E 40 40 90 100
 2 5
 "text_RCUNr"
 ""
@@ -174,9 +175,8 @@ E "main()
  0 1 1 0 1 E U  0 E 13 12 56 28
 0 2 0 "0s" 0 0 0 65 0 0  13 12 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 3 RCU
 1 8 1 "" 1
 0
@@ -209,7 +209,7 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 1 "selfState"
+3 1 "selfState" -1
 "objects\\lofar_self_state.pnl" 25 171 T 12 1 0 0.933333333333333 -11 -111.5999999999999
 0
 0

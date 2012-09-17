@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 8 (NoName)
 PANEL,-1 -1 652 291 N "_3DFace" 0
@@ -16,7 +16,7 @@ PANEL,-1 -1 652 291 N "_3DFace" 0
   
   setValue(\"rspText\",\"text\",\"RSPBoard\"+rspNr);
   
-    if(dpExists(baseDP + \".version:_online.._value\"))
+  if(dpExists(baseDP + \".version:_online.._value\"))
   {
     dpConnect(\"navPanel_showVersion\", baseDP + \".version:_online.._value\");
   }
@@ -28,7 +28,6 @@ PANEL,-1 -1 652 291 N "_3DFace" 0
     setValue(\"rect_voltage25\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"rect_voltage33\", \"backCol\", \"Lofar_dpdoesnotexist\");
 
-    return;
   } else {
     setValue(\"rect_voltage12\", \"backCol\", \"white\");
     setValue(\"rect_voltage25\", \"backCol\", \"white\");
@@ -41,6 +40,34 @@ PANEL,-1 -1 652 291 N "_3DFace" 0
     if (!navFunct_dpReachable(baseDP)) {
       boardETHDetails(\"\",0,\"\",0,\"\",0,\"\",true);
     }
+  }
+
+  if(!dpExists(baseDP + \".bitmode:_online.._value\") ||
+     !dpExists(baseDP + \".bitmodeCapability:_online.._value\")) {
+      rect_Bitmode.visible(false);
+      rect_BitmodeCapability.visible(false);
+      lblBitmode.visible(false);
+      lblBitmodeCapability.visible(false);
+      txt_Bitmode.visible(false);
+      txt_BitmodeCapability.visible(false);
+
+      return;
+  } else {
+      rect_Bitmode.visible(true);
+      rect_BitmodeCapability.visible(true);
+      lblBitmode.visible(true);
+      lblBitmodeCapability.visible(true);
+      txt_Bitmode.visible(true);
+      txt_BitmodeCapability.visible(true);
+    
+    dpConnect(\"boardBitmode\", baseDP + \".bitmode:_online.._value\",
+                 baseDP + \".bitmodeCapability:_online.._value\",
+                 baseDP + \".bitmode:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      boardBitmode(\"\",0,\"\",0,\"\",true);
+    }
+
+
   }
     
   // pass baseDP to selfstate Object to work with
@@ -116,6 +143,19 @@ void boardETHDetails(string dp1, float voltage12,
     setValue(\"txt_voltage12\"   , \"text\", voltage12);
     setValue(\"txt_voltage25\"   , \"text\", voltage25);
     setValue(\"txt_voltage33\"   , \"text\", voltage33);
+  }
+}
+
+void boardBitmode(string dp1, int bm,
+                  string dp2, int bmc,
+                  string dp3, bool invalid)
+{
+  if (invalid) {
+    setValue(\"txt_Bitmode\"   , \"text\", \"\");
+    setValue(\"txt_BitmodeCapability\"   , \"text\", \"\");
+  } else {
+    setValue(\"txt_Bitmode\"   , \"text\", bm);
+    setValue(\"txt_BitmodeCapability\"   , \"text\", bmc);
   }
 }" 0
  2
@@ -198,7 +238,7 @@ E "main()
 2 4
 "rspText"
 ""
-1 18 8 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 41 8 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -208,17 +248,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 20 10 103 30
-0 2 0 "0s" 0 0 0 192 0 0  20 10 1
+E E 0 1 1 0 1 E U  0 E 43 10 126 29
+0 2 0 "0s" 0 0 0 192 0 0  43 10 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,16,5,75,0,0,0,0,0
+0 1
 LANG:1 9 RSP board
 2 5
 "txt_version"
 ""
-1 381 198 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 371 203 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -228,12 +267,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 383 200 420 215
-0 2 0 "0s" 0 0 0 194 0 0  420 200 1
+E E 0 1 1 0 1 E U  0 E 373 205 410 219
+0 2 0 "0s" 0 0 0 194 0 0  410 205 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,11,5,40,0,0,0,0,0
+0 1
 LANG:1 8 ver: x.x
 2 12
 "label_voltage25"
@@ -251,9 +289,8 @@ LANG:1 0
 E E 0 1 1 0 1 E U  0 E 22 148 92 165
 0 2 0 "0s" 0 0 0 66 0 0  22 148 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,12,5,40,0,0,0,0,0
+0 1
 LANG:1 12 Voltage 2.5:
 2 13
 "label_voltage12"
@@ -271,9 +308,8 @@ LANG:1 0
 E E 0 1 1 0 1 E U  0 E 22 125 92 139
 0 2 0 "0s" 0 0 0 66 0 0  22 125 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,12,5,40,0,0,0,0,0
+0 1
 LANG:1 12 Voltage 1.2:
 6 14
 "rect_voltage12"
@@ -302,12 +338,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 126 123 151 140
+E E 0 1 1 0 1 E U  0 E 126 123 151 139
 0 2 0 "1.2f" 4 0 0 194 0 0  151 123 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 4 0.00
 6 16
 "rect_voltage25"
@@ -322,7 +357,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1 0 1 15 51 1 E 96 92 159 112
+E E 0 1 1 0 1 E 1 0 1 14 51 1 E 96 92 159 112
 2 21
 "txt_voltage25"
 ""
@@ -336,12 +371,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 126 146 151 163
+E E 0 1 1 0 1 E U  0 E 126 146 151 162
 0 2 0 "1.2f" 4 0 0 194 0 0  151 146 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 4 0.00
 2 22
 "txt_unitVoltage12"
@@ -356,12 +390,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 162 122 171 139
+E E 0 1 1 0 1 E U  0 E 162 122 172 138
 0 2 0 "0s" 0 0 0 192 0 0  162 122 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 1 V
 2 23
 "txt_unitVoltage25"
@@ -376,17 +409,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 162 145 171 162
+E E 0 1 1 0 1 E U  0 E 162 145 172 161
 0 2 0 "0s" 0 0 0 192 0 0  162 145 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 1 V
 2 26
 "label_voltage33"
 ""
-1 20 165 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 50 199.8091660405712 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 25 0 0 0 0 0
 E E E
@@ -396,12 +428,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1 0 1.181818181818182 10 -22.90909090909092 0 E 12 161 82 179
+E E 0 1 1 0 1 E 1 0 1.181818181818182 10 -20.2727272727273 0 E 12 161 82 179
 0 2 0 "0s" 0 0 0 66 0 0  12 161 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,12,5,40,0,0,0,0,0
+0 1
 LANG:1 12 Voltage 3.3:
 6 27
 "rect_voltage33"
@@ -416,7 +447,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1 0 1 15 51 1 E 96 115 159 135
+E E 0 1 1 0 1 E 1 0 1 14 51 1 E 96 115 159 135
 2 28
 "txt_voltage33"
 ""
@@ -430,12 +461,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 126 169 151 186
+E E 0 1 1 0 1 E U  0 E 126 169 151 185
 0 2 0 "1.2f" 4 0 0 194 0 0  151 169 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 4 0.00
 2 29
 "txt_unitVoltage33"
@@ -450,45 +480,148 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 162 167 171 184
+E E 0 1 1 0 1 E U  0 E 162 167 172 183
 0 2 0 "0s" 0 0 0 192 0 0  162 167 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 1 V
-1 40 0 "" 1
+1 65 0 "" 1
 0
-1 41 11 "" 0
+1 66 11 "" 0
 0
-1 42 11 "" 1
+1 67 11 "" 1
 0
-1 43 11 "" 2
+1 68 11 "" 2
 0
-1 44 11 "" 3
+1 69 11 "" 3
 0
-1 45 11 "0" 1
+1 70 11 "0" 1
 0
-1 46 11 "" 7
+1 71 11 "" 7
 0
-1 47 11 "" 8
+1 72 11 "" 8
 0
-1 48 11 "" 9
+1 73 11 "" 9
 0
-1 49 11 "" 11
+1 74 11 "" 11
 0
-1 50 13 "" 0
+1 75 13 "" 0
 0
-1 51 13 "" 7
+1 76 13 "" 7
 0
-1 52 13 "" 9
+1 77 13 "" 9
 0
-1 53 13 "" 11
+1 78 13 "" 11
 0
-1 54 13 "" 12
+1 79 13 "" 12
 0
-1 55 13 "" 13
+1 80 13 "" 13
 0
+2 56
+"lblBitmode"
+""
+1 28 191 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 30 193 100 207
+0 2 0 "0s" 0 0 0 64 0 0  30 193 1
+1
+LANG:1 26 Arial,-1,12,5,40,0,0,0,0,0
+0 1
+LANG:1 9 Bitmode :
+6 60
+"rect_Bitmode"
+""
+1 95 89 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+45 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 0.7936507936507936 0 1 22.6984126984127 0 1 E 110 190 173 210
+2 61
+"txt_Bitmode"
+""
+1 124 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 144 192 151 208
+0 2 0 "2d" 2 0 0 194 0 0  151 192 1
+1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
+LANG:1 1 0
+2 62
+"lblBitmodeCapability"
+""
+1 188 191 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+47 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 190 193 300 207
+0 2 0 "0s" 0 0 0 64 0 0  190 193 1
+1
+LANG:1 26 Arial,-1,12,5,40,0,0,0,0,0
+0 1
+LANG:1 20 Bitmode Capability :
+6 63
+"rect_BitmodeCapability"
+""
+1 95 89 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 0.7936507936507936 0 1 222.6984126984127 0 1 E 110 190 173 210
+2 64
+"txt_BitmodeCapability"
+""
+1 323 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+49 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 343 192 350 208
+0 2 0 "1d" 1 0 0 194 0 0  350 192 1
+1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
+LANG:1 1 0
 0
 LAYER, 1 
 1
@@ -518,13 +651,13 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 0 "selfState"
-"objects\\lofar_self_state.pnl" 42 91 T 28 1 0 1 -19 108
+3 0 "selfState" -1
+"objects\\lofar_self_state.pnl" 42 91 T 28 1 0 1 -30 -81
 0
-3 11 ""
+3 11 "" -1
 "objects\\Hardware\\RSPBoard_Ethernet.pnl" 320 208 T 38 1 0 1 -130 -18
 0
-3 13 "PANEL_REF14"
+3 13 "PANEL_REF14" -1
 "objects\\Hardware\\RSPBoard_MEP.pnl" 20 190 T 41 1 0 1 0 3.000000000000007
 0
 0

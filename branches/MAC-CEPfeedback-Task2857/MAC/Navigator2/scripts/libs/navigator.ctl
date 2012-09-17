@@ -129,7 +129,6 @@ void navigator_handleEventInitialize()
     DebugN("ERROR: Logsystem hasn't been found.");
   }
   
-  
   // Do a dpQueryConnectSingle() so that we get a permanent list of claims
   // we can use this to translate a claimed name into a real datapoint name
   claimManager_queryConnectClaims();
@@ -146,6 +145,7 @@ void navigator_handleEventInitialize()
   
   // Init the connection Watchdog
   GCFCWD_Init();
+
 
   // we need to wait until the connection watchdog has been initialised
   if (!waitInitProcess("GCFCWDFinished")) {
@@ -167,6 +167,7 @@ void navigator_handleEventInitialize()
   // Initilaize the alarm system
   initNavigatorAlarms();
 
+
   // we need to wait until the alarmSystem has been initialised
   if (!waitInitProcess("initNavigatorAlarmsFinished")) {
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish initNavigatorAlarmsFinished() , leaving");
@@ -180,6 +181,7 @@ void navigator_handleEventInitialize()
   if (!waitInitProcess("queryConnectObservationsFinished")) {
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish queryConnectObservationsFinished() , leaving");
   }
+
 
     // set initialized ready
   g_initializing = false;

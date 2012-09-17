@@ -1822,7 +1822,9 @@ string navFunct_CEPName2DPName(string CEPName) {
   int nodenr=0;
   int ionr=0;
   
+  
   if (foundRack) {
+    name += CEPDBName;
     name += "BGP";
   }
   if (foundRack && foundMidplane) {
@@ -1890,7 +1892,7 @@ string navFunct_DPName2CEPName(string DPName) {
   int nodenr=0;
   int ionr=0;
   
-  if (foundRack) {
+  if (foundRack){
     name += "R0" + rack;
   }
   
@@ -2070,7 +2072,7 @@ bool navFunct_isBGPSwitch() {
 string navFunct_IONode2DPName(int ionode) {
   string ext="";
   if (ionode < 10) ext = "0";
-  string dp = "LOFAR_PIC_BGP_Midplane"+navFunct_IONode2Midplane(ionode)+"_IONode"+ext+ionode;
+  string dp = CEPDBName+"LOFAR_PIC_BGP_Midplane"+navFunct_IONode2Midplane(ionode)+"_IONode"+ext+ionode;
 
   return dp;  
   

@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 120 400 N "_3DFace" 1
@@ -28,6 +28,7 @@ PANEL,-1 -1 120 400 N "_3DFace" 1
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".status.state\")) {
     dpConnect(\"updateRCU\",baseDP + \".status.state\",
+                          baseDP + \".status.childState\",
  	                  baseDP + \".status.state:_online.._invalid\");
     if (!navFunct_dpReachable(baseDP)) {
       updateRCU(\"\",0,\"\",true);
@@ -38,23 +39,28 @@ PANEL,-1 -1 120 400 N "_3DFace" 1
 }
 
 void updateRCU(string dp1, int state,
+               string dp2, int childState,
                string dp2, bool invalid)
 {
-  string SymbolCol;
+  string foreCol,backCol;
 
   string anRCU=\"RCU\"+rcuNr;
   string toolTip=\"RCU\"+rcuNr;
   
   if (invalid) {
     if (dp1 == \"\") {
-      SymbolCol=\"Lofar_dpOffline\";
+      foreCol=\"Lofar_dpOffline\";
+      backCol=\"Lofar_dpOffline\";
     } else {
-      SymbolCol=\"Lofar_invalid\";
+      foreCol=\"Lofar_invalid\";
+      backCol=\"Lofar_dpOffline\";
     }
   } else {
-    SymbolCol=getStateColor(state);	  
+    backCol=getStateColor(state);	  
+    foreCol=getStateColor(childState);
   }
-  setValue(\"RCUstr\", \"backCol\", SymbolCol);
+  setValue(\"RCUstr\", \"backCol\", backCol);
+  setValue(\"RCUstr\", \"foreCol\", foreCol);
   setValue(\"\",\"toolTipText\",toolTip);
 }
 " 0
@@ -184,7 +190,7 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 0 1 E 1 0 1 -2 -2 1 E 20 10 26 92
+ 0 2 1 0 1 E 1 0 1 -2 -2 1 E 20 10 26 92
 0
 LAYER, 1 
 1

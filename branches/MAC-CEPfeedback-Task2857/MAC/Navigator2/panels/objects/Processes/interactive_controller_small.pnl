@@ -48,7 +48,7 @@ void updateTrigger( string dp1, string objectName,
       }     
       reload(observation,station);
     } else if ( $databaselevel==\"ccu\") {
-      reload(observation,\"CCU001:\");
+      reload(observation,navFunct_bareDBName(CEPDBName)+\":\");
     } 
   }
 }" 0

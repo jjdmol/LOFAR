@@ -73,7 +73,7 @@ updateBGPAppl(string dp1,dyn_string ioNodeList,
   for (int i = 1; i <= dynlen(ioNodeList); i++) {
     string station;
 
-    dpGet(\"CCU001:\"+navFunct_IONode2DPName(ioNodeList[i])+\".usedStation\",station);
+    dpGet(navFunct_IONode2DPName(ioNodeList[i])+\".usedStation\",station);
     dynAppend(stations,station); 
     // update stationTable
     stationTable.appendLine(\"Station\",station,\"IONode\",ioNodeList[i],\"LocusNodes\",locusNodeList[i],
@@ -82,6 +82,7 @@ updateBGPAppl(string dp1,dyn_string ioNodeList,
   }
   
   stationList = stations;
+  nodeList = ioNodeList;
   // set the observation selectable items
   prepareProcesses();
 
@@ -96,7 +97,7 @@ void prepareProcesses() {
   dynAppend(g_processesList,baseDP);
   // append all involved stations
   for (int i=1; i <= dynlen(stationList); i++) {  
-    dynAppend(result,baseDP+\",BGLProc->\"+stationList[i]+\",\"+baseDP+\"_BGPProc#\"+stationList[i]);    
+    dynAppend(result,baseDP+\",BGLProc->\"+stationList[i]+\",\"+baseDP+\"_BGPProc#\"+nodeList[i]);    
   }
   dynAppend(g_processesList,baseDP+\"_BGPProc\");
   
@@ -161,7 +162,8 @@ string baseDP=\"\";
 string database=\"\";
 string observation=\"\";
 string observationName = \"\";
-dyn_string stationList=\"\";" 0
+dyn_string stationList=\"\";
+dyn_string nodeList=\"\";" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -225,37 +227,37 @@ E
 1
 LANG:1 0 
 
-80 "IONode" 6 1 0 "[2d,False,False,ALIGNMENT_BEGINNING,False]" 1
+80 "IONode" 3 1 0 "[2d,False,False,ALIGNMENT_BEGINNING,False]" 1
 LANG:1 6 IONode
 E
 1
 LANG:1 0 
 
-42 "LocusNodes" 6 1 0 "[0s,,,ALIGNMENT_BEGINNING]" 1
+42 "LocusNodes" 14 1 0 "[0s,,,ALIGNMENT_BEGINNING]" 1
 LANG:1 10 LocusNodes
 E
 1
 LANG:1 0 
 
-140 "Adders" 26 1 0 "s" 1
+140 "Adders" 14 1 0 "s" 1
 LANG:1 6 Adders
 E
 1
 LANG:1 0 
 
-140 "Writers" 6 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
+140 "Writers" 14 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
 LANG:1 7 Writers
 E
 1
 LANG:1 0 
 
-140 "DPs" 6 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
+140 "DPs" 21 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
 LANG:1 3 DPs
 E
 1
 LANG:1 0 
 
-205 "DPTs" 6 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
+205 "DPTs" 21 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
 LANG:1 4 DPTs
 E
 1
