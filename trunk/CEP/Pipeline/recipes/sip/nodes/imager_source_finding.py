@@ -5,7 +5,6 @@ import shutil
 
 from lofar.parameterset import parameterset
 from lofarpipe.support.lofarnode import LOFARnodeTCP
-import lofar.bdsm as bdsm#@UnresolvedImport
 
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import catch_segfaults
@@ -53,6 +52,8 @@ class imager_source_finding(LOFARnodeTCP):
         :rtype: self.outputs['source_db'] sourcedb_target_path
         
         """
+
+        import lofar.bdsm as bdsm#@UnresolvedImport
         self.logger.info("Starting imager_source_finding")
         self.environment.update(environment)
         # default frequency is None (read from image), save for later cycles.
@@ -255,7 +256,9 @@ class imager_source_finding(LOFARnodeTCP):
         return 0
 
 if __name__ == "__main__":
+    #sys.path.insert(0, "/usr/lib/pymodules/python2.6")  #matlib plot fix (might not be needed anymore)
     _JOBID, _JOBHOST, _JOBPORT = sys.argv[1:4]
     sys.exit(imager_source_finding(_JOBID, _JOBHOST,
                                    _JOBPORT).run_with_stored_arguments())
+    #del sys.path[0] # TODO: REMOVE FIRST ENTRY
 
