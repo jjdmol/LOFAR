@@ -9,4 +9,4 @@ distributed = 1
 ctrlMaxPendings = 7500 
 
 [dist]
-distPeer = "mcu001" 61
+distPeer = "mcu099" 231

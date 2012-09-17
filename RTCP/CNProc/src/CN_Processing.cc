@@ -176,6 +176,9 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     itsFirstInputSubband = new Ring(0, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
     itsInputData = new InputData<SAMPLE_TYPE>(itsPhaseTwoPsetSize, parset.nrSamplesToCNProc(), itsBigAllocator);
     itsInputSubbandMetaData = new SubbandMetaData(itsPhaseTwoPsetSize, itsMaxNrPencilBeams + 1);
+
+    // skip ahead to the first block
+    itsFirstInputSubband->skipFirstBlocks(itsBlock);
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree)
@@ -185,15 +188,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
 
     // skip ahead to the first block
-    for( unsigned b = 0, core = 0; b < itsBlock; b++ ) {
-      for (unsigned sb = 0; sb < itsNrSubbandsPerPset; sb++) {
-        if (core == phaseTwoCoreIndex)
-          itsCurrentSubband->next();
-        
-        if (++core == phaseOneTwoCores.size())
-          core = 0;
-      }
-    }
+    itsCurrentSubband->skipFirstBlocks(itsBlock);
 
     itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, itsTotalNrPencilBeams + 1);
     itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(itsNrStations, parset.nrSamplesToCNProc(), itsBigAllocator);
@@ -476,8 +471,8 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
   if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
     unsigned subband = *itsCurrentSubband;
 
-    ASSERTSTR((unsigned)itsTranspose2Logic.phaseThreePsetIndex == itsTranspose2Logic.sourcePset( subband, block ) && (unsigned)itsTranspose2Logic.phaseThreeCoreIndex == itsTranspose2Logic.sourceCore( subband, block ),
-     "I'm (" << itsTranspose2Logic.phaseThreePsetIndex << ", " << itsTranspose2Logic.phaseThreeCoreIndex << ") . For block " << block << ", I have subband " << subband << ", but the logic expects that subband from (" << itsTranspose2Logic.sourcePset( subband, block ) << ", " << itsTranspose2Logic.sourceCore( subband, block ) << ")" );
+    ASSERTSTR((unsigned)itsTranspose2Logic.phaseTwoPsetIndex == itsTranspose2Logic.sourcePset( subband, block ) && (unsigned)itsTranspose2Logic.phaseTwoCoreIndex == itsTranspose2Logic.sourceCore( subband, block ),
+     "I'm (" << itsTranspose2Logic.phaseTwoPsetIndex << ", " << itsTranspose2Logic.phaseTwoCoreIndex << ") . For block " << block << ", I have subband " << subband << ", but the logic expects that subband from (" << itsTranspose2Logic.sourcePset( subband, block ) << ", " << itsTranspose2Logic.sourceCore( subband, block ) << ")" );
   }
 
 #if defined HAVE_MPI
