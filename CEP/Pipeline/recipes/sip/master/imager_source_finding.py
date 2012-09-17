@@ -144,3 +144,4 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
 
 if __name__ == '__main__':
     sys.exit(imager_source_finding().main())
+
