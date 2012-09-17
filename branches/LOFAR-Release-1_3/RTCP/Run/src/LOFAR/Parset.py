@@ -922,6 +922,7 @@ if __name__ == "__main__":
 
   parset.postRead()
   parset.preWrite()
+  parset.check()
 
   if options.key:
     print parset[options.key]
