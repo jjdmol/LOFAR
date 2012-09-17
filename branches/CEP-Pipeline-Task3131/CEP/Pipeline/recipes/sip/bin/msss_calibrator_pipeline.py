@@ -214,14 +214,6 @@ class msss_calibrator_pipeline(control):
             sourcedb_mapfile=sourcedb_mapfile
         )['mapfile']
 
-        demix_mapfile = dppp_mapfile
-        
-#        # Demix the relevant A-team sources
-#        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
-
-#        # Do a second run of flagging, this time using rficonsole
-#        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
-
         # Create an empty parmdb for BBS
         parmdb_mapfile = self.run_task(
             "setupparmdb", data_mapfile,
@@ -247,8 +239,8 @@ class msss_calibrator_pipeline(control):
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the calibrator source(s).
-        self.run_task("new_bbs",
-            demix_mapfile,
+        self.run_task("bbs_reducer",
+            dppp_mapfile,
             parset=bbs_parset,
             instrument_mapfile=parmdb_mapfile,
             sky_mapfile=sourcedb_mapfile)

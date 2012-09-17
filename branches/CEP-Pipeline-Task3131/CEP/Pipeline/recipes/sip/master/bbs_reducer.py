@@ -25,7 +25,6 @@ class bbs_reducer(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'parset': ingredient.FileField(
             '-p', '--parset',
-            dest="parset",
             help="BBS configuration parset"
         ),
         'executable': ingredient.ExecField(
