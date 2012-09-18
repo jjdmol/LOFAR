@@ -1,7 +1,7 @@
-V 10
+V 11
 1
 LANG:1 5 Adder
-PANEL,-1 -1 631 221 N "_3DFace" 1
+PANEL,-1 -1 1270 70 N "_3DFace" 1
 "$objectNumber"
 "main()
 {
@@ -31,7 +31,7 @@ void updateTrigger( string dp1, string objectName,
    
     // determine adderNumber
     objectNr=$objectNumber;
-  
+    setValue(\"addernr_text\",\"text\",objectNr);
     int bufNr = -1;
     if (dynlen(paramList) <= 1+objectNr && paramList[1+objectNr] < 127) {
       bufNr=paramList[1+objectNr];;
@@ -43,6 +43,10 @@ void updateTrigger( string dp1, string objectName,
       if (dpExists(adderDP + \".dropping\")) {
         if (dpConnect(\"updateAdder\", adderDP + \".dropping\",
                                      adderDP + \".nrBlocksDropped\",
+                                     adderDP + \".process.error\",
+                                     adderDP + \".process.currentAction\",
+                                     adderDP + \".process.logMsg\",
+                                     adderDP + \".locusNode\",
                                      adderDP + \".dropping:_online.._invalid\") == -1) {
           LOG_ERROR(\"adder.pnl:main|Couldn't connect to: \"+adderDP+\" \"+getLastError());
         }
@@ -64,11 +68,25 @@ void updateTrigger( string dp1, string objectName,
 }
 
 updateAdder(string dp1, bool dropping, 
-             string dp2, int nrBlocksDropped,
-             string dp3, bool invalid)
+            string dp2, int nrBlocksDropped,
+            string dp3, string error,
+            string dp4, string currentAction,
+            string dp5, string logMsg,
+            string dp6, string locusNode,
+            string dp7, bool invalid)
 {
   LOG_DEBUG(\"adder.pnl:updateAdder|entered\");  
   if (!invalid) {
+    myTable.deleteAllLines();
+    // check if error == \"Not running\";
+    // if true then the name of the process is red, otherwise black
+    if (error == \"Not running\") {
+      name.foreCol() = \"Lofar_broken\";
+    } else {
+      name.foreCol() = \"_3DText\";
+    }
+    
+    myTable.appendLine(\"error\",error,\"currentAction\",currentAction,\"logMsg\",navFunct_getLogColor(logMsg,navFunct_getLogLevel(logMsg)));  
     if (dropping) {
       setValue(\"dropping\", \"backCol\", \"red\");
     } else {
@@ -115,29 +133,9 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 10 22 610 195
+E E 0 1 1 2 1 E 0.9775280898876404 0 1 3.146067415730345 0 1 E 140 20 1030 47
 1 271 51 "" 1
 0
-2 256
-"PRIMITIVE_TEXT14"
-""
-1 280 2 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-183 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 280 2 322 19
-0 2 2 "0s" 0 0 0 192 0 0  280 2 1
-1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 5 Adder
 7 266
 "dropping"
 ""
@@ -151,51 +149,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 0.8095238095238095 0 0.8095238095238095 41.52380952380952 -2.380952380952408 1 E 270 50 10 10
-2 267
-"PRIMITIVE_TEXT15"
-""
-1 182 32 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-195 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 182 32 244 49
-0 2 2 "0s" 0 0 0 192 0 0  182 32 1
-1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 8 dropping
-2 268
-"PRIMITIVE_TEXT16"
-""
-1 340 32 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-197 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 340 32 486 49
-0 2 2 "0s" 0 0 0 192 0 0  340 32 1
-1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 20 Nr of blocks dropped
+E E 0 1 1 2 1 E 1 0 1 60 5 1 E 120 30 7 7
 14 269
 "nrBlocksDropped"
 ""
-1 495 28 E E E 1 E 1 E N "_3DText" E N "_Window" E E
+1 200 24 E E E 1 E 1 E N "_3DText" E N "_Window" E E
  E E
 199 0 0 0 0 0
 E E E
@@ -205,16 +163,67 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 493 26 607 50
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  198 22 312 46
 2 "0s" 0 0 0 0 0 -1  E E E
-25 270
-"myLogTable"
+2 273
+"addernr_text"
 ""
-1 -60 -190 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 123 26 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-201 0 0 0 0 0
+203 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 123 26 131 42
+0 2 2 "0s" 0 0 0 192 0 0  123 26 1
+1
+LANG:1 35 MS Shell Dlg 2,10,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 1 0
+6 274
+"RECTANGLE21"
+""
+1 150 40 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+204 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 0.4054054054054054 0 0.4054054054054056 77.83783783783784 -77.29729729729735 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 30 240 104 314
+2 275
+"PRIMITIVE_TEXT18"
+""
+1 19 28 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+205 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 19 28 84 44
+0 2 2 "0s" 0 0 0 192 0 0  19 28 1
+1
+LANG:1 35 MS Shell Dlg 2,10,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 9 locusnode
+25 276
+"myTable"
+""
+1 249.8823099816354 -3 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+206 0 0 0 0 0
 E E E
 0
 1
@@ -222,47 +231,33 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 13 51 607 191
-EE 1 0 1 5 1 "time" 12 1 0 "s" 1
-LANG:1 4 time
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  318 22 1002 46
+EE 0 0 1 3 1 "error" 13 1 0 "s" 1
+LANG:1 5 error
 E
 1
 LANG:1 0 
 
-150 "level" 5 1 0 "s" 1
-LANG:1 5 level
+125 "currentAction" 13 1 0 "s" 1
+LANG:1 13 currentAction
 E
 1
 LANG:1 0 
 
-70 "source" 17 1 0 "s" 1
-LANG:1 6 source
+125 "logMsg" 63 1 0 "s" 1
+LANG:1 6 logMsg
 E
 1
 LANG:1 0 
 
-200 "message" 90 1 0 "s" 1
-LANG:1 7 message
-E
-1
-LANG:1 0 
-
-1000 "code" 17 1 0 "s" 1
-LANG:1 4 code
-E
-1
-LANG:1 0 
-
-200 
-14 14 "" 1 1
+579 
+19 19 "" 1 1
 LANG:1 2 #1
-10 30
+10 150
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-0 1 2 1 7
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 0 0 0 1 7
 1 0
 0
 LAYER, 1 
@@ -293,7 +288,7 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 51 "selfState"
-"objects\\lofar_self_state.pnl" 678 158 T 169 1 0 1 -668 -135
+3 51 "selfState" -1
+"objects\\lofar_self_state.pnl" 678 158 T 169 1 0 1 -538 -133
 0
 0

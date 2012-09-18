@@ -48,16 +48,17 @@ void updateTrigger( string dp1, string objectName,
         LOG_ERROR(\"circularBuffer.pnl:updateTrigger|invalid InputBufferDP\");
         return;
       }
+      
       LOG_DEBUG(\"circularBuffer.pnl:updateTrigger| found bufNr: \" + bufNr);
       string ext = \"\";
       if (bufNr < 10) ext=\"0\";
+      setValue(\"InputBuffer_text\",\"text\",\"PSIONode\"+ext+bufNr);
       inputBufferDP=database+\"LOFAR_PermSW_PSIONode\"+ext+bufNr+\"_InputBuffer\";
     
-      DebugN(\"Looking for DP: \",inputBufferDP);
       // connect to the inputBuffer values  
       // check if the requiered datapoint for this view are enabled and accessible
       if (dpExists(inputBufferDP + \".stationName\")) {
-        if (dpConnect(\"updateBuffer\", inputBufferDP + \".stationName\",
+        if (!dpConnect(\"updateBuffer\", inputBufferDP + \".stationName\",
 		                      inputBufferDP + \".late\",
 		                      inputBufferDP + \".IOTime\",
 		                      inputBufferDP + \".stream0.blocksIn\",
@@ -72,7 +73,7 @@ void updateTrigger( string dp1, string objectName,
 		                      inputBufferDP + \".stream3.blocksIn\",
 		                      inputBufferDP + \".stream3.percBad\",
 		                      inputBufferDP + \".stream3.rejected\", 
-                         inputBufferDP + \".stationName:_online.._invalid\") == -1) {
+                         inputBufferDP + \".status.state:_online.._invalid\") == -1) {
           LOG_ERROR(\"circularBuffer.pnl:updateTrigger|Couldn't connect to: \"+inputBufferDP+\" \"+getLastError());
         }
       } else {
@@ -122,7 +123,8 @@ updateBuffer(string dp1, string stationName,
              string dp15, string rejected3,
              string dp16, bool invalid)
 {
-  LOG_DEBUG(\"circularBuffer.pnl:updateBeffer|entered\");  
+
+  LOG_DEBUG(\"circularBuffer.pnl:updateBuffer|entered\");  
   if (!invalid) {
     setValue(\"Late\", \"text\", late);
     setValue(\"IOTime\", \"text\", IOTime);
@@ -557,7 +559,7 @@ LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
 0 1
 LANG:1 2 ms
 2 255
-"PRIMITIVE_TEXT13"
+"InputBuffer_text"
 ""
 1 250 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E

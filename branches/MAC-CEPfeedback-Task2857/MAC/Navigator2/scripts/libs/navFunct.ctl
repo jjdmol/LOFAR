@@ -1824,7 +1824,6 @@ string navFunct_CEPName2DPName(string CEPName) {
   
   
   if (foundRack) {
-    name += CEPDBName;
     name += "BGP";
   }
   if (foundRack && foundMidplane) {

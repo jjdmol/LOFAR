@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 7 Station
-PANEL,-1 -1 1009 698 N "_3DFace" 0
+PANEL,-1 -1 1020 698 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -248,7 +248,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1.629268292682927 90 -159.219512195122 1 E 40 110 660 520
+E E 0 1 1 2 1 E 1 0 0.6097560975609756 90 -47.07317073170732 1 E 40 110 660 520
 6 1
 "RECTANGLE2"
 ""
@@ -262,11 +262,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 60 -108 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 50 -208 1 E 740 230 789 279
 2 2
 "PRIMITIVE_TEXT1"
 ""
-1 874 102 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 864 2 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -276,8 +276,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 874 102 959 115
-0 2 2 "0s" 0 0 0 192 0 0  874 102 1
+E E 0 1 1 2 1 E U  1 E 864 2 949 15
+0 2 2 "0s" 0 0 0 192 0 0  864 2 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
@@ -340,24 +340,11 @@ E E E
 1
 LANG:1 0 
 
-1
+2
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 170 250 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 570 30 619 79
-6 7
-"RECTANGLE21"
-""
-1 150 40 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
- E E
-10 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 0.9999999999999999 40 50 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 30 240 104 314
-1 68 0 "" 1
+"rotatefill" "r"
+E E 0 1 1 2 1 E -0.01886456694761347 -0.9998220482235222 0.9998220482235222 -0.01886456694761347 770.758141713434 840.464504495836 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 570 30 619 79
+1 113 0 "" 1
 0
 6 9
 "RECTANGLE23"
@@ -372,7 +359,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 110 -108 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 100 -208 1 E 740 230 789 279
 6 10
 "RECTANGLE24"
 ""
@@ -386,7 +373,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 160 -108 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 150 -208 1 E 740 230 789 279
 6 11
 "RECTANGLE25"
 ""
@@ -400,7 +387,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 210 -108 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 200 -208 1 E 740 230 789 279
 6 12
 "RECTANGLE26"
 ""
@@ -414,7 +401,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 60 -58 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 50 -158 1 E 740 230 789 279
 6 13
 "RECTANGLE27"
 ""
@@ -428,7 +415,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 110 -58 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 100 -158 1 E 740 230 789 279
 6 14
 "RECTANGLE28"
 ""
@@ -442,7 +429,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 160 -58 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 150 -158 1 E 740 230 789 279
 6 15
 "RECTANGLE29"
 ""
@@ -456,7 +443,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 210 -58 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 200 -158 1 E 740 230 789 279
 6 16
 "RECTANGLE30"
 ""
@@ -470,7 +457,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 60 -8 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 50 -108 1 E 740 230 789 279
 6 17
 "RECTANGLE31"
 ""
@@ -484,7 +471,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 110 -8 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 100 -108 1 E 740 230 789 279
 6 18
 "RECTANGLE32"
 ""
@@ -498,7 +485,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 160 -8 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 150 -108 1 E 740 230 789 279
 6 19
 "RECTANGLE33"
 ""
@@ -512,7 +499,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 210 -8 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 200 -108 1 E 740 230 789 279
 6 20
 "RECTANGLE34"
 ""
@@ -526,7 +513,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 60 42 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 50 -58 1 E 740 230 789 279
 6 21
 "RECTANGLE35"
 ""
@@ -540,7 +527,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 110 42 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 100 -58 1 E 740 230 789 279
 6 22
 "RECTANGLE36"
 ""
@@ -554,7 +541,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 160 42 1 E 740 230 789 279
+E E 0 1 1 2 1 E 1 0 1 150 -58 1 E 740 230 789 279
 6 23
 "RECTANGLE37"
 ""
@@ -568,90 +555,90 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 210 42 1 E 740 230 789 279
-1 69 1 "" 226
+E E 0 1 1 2 1 E 1 0 1 200 -58 1 E 740 230 789 279
+1 114 1 "" 226
 0
-1 70 1 "" 229
+1 115 1 "" 229
 0
-1 71 1 "" 234
+1 116 1 "" 234
 0
-1 72 1 "" 235
+1 117 1 "" 235
 0
-1 73 1 "" 236
+1 118 1 "" 236
 0
-1 74 1 "" 237
+1 119 1 "" 237
 0
-1 75 1 "" 238
+1 120 1 "" 238
 0
-1 76 1 "" 239
+1 121 1 "" 239
 0
-1 77 1 "" 240
+1 122 1 "" 240
 0
-1 78 1 "" 241
+1 123 1 "" 241
 0
-1 79 1 "" 242
+1 124 1 "" 242
 0
-1 80 1 "" 243
+1 125 1 "" 243
 0
-1 81 1 "" 244
+1 126 1 "" 244
 0
-1 82 1 "" 245
+1 127 1 "" 245
 0
-1 83 1 "" 246
+1 128 1 "" 246
 0
-1 84 1 "" 247
+1 129 1 "" 247
 0
-1 85 1 "51" 1
+1 130 1 "51" 1
 0
-1 86 1 "" 249
+1 131 1 "" 249
 0
-1 87 1 "" 250
+1 132 1 "" 250
 0
-1 88 1 "" 251
+1 133 1 "" 251
 0
-1 89 1 "" 252
+1 134 1 "" 252
 0
-1 90 1 "" 253
+1 135 1 "" 253
 0
-1 91 1 "" 254
+1 136 1 "" 254
 0
-1 92 1 "" 255
+1 137 1 "" 255
 0
-1 93 1 "" 261
+1 138 1 "" 261
 0
-1 94 1 "" 262
+1 139 1 "" 262
 0
-1 95 1 "" 263
+1 140 1 "" 263
 0
-1 96 1 "" 264
+1 141 1 "" 264
 0
-1 97 1 "" 265
+1 142 1 "" 265
 0
-1 98 1 "" 279
+1 143 1 "" 279
 0
-1 99 1 "" 280
+1 144 1 "" 280
 0
-1 100 1 "" 281
+1 145 1 "" 281
 0
-1 101 1 "" 282
+1 146 1 "" 282
 0
-1 102 1 "" 283
+1 147 1 "" 283
 0
-1 103 2 "" 227
+1 148 2 "" 227
 0
-1 104 2 "51" 1
+1 149 2 "51" 1
 0
-1 105 2 "" 256
+1 150 2 "" 266
 0
-1 106 2 "" 266
+1 151 2 "" 269
 0
-1 107 2 "" 267
+1 152 2 "" 273
 0
-1 108 2 "" 268
+1 153 2 "" 274
 0
-1 109 2 "" 269
+1 154 2 "" 275
 0
-1 110 2 "" 270
+1 155 2 "" 276
 0
 2 66
 "stationLabel"
@@ -672,12 +659,12 @@ E E 0 1 1 2 1 E U  1 E 0 120 48 140
 LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
 0 1
 LANG:1 5 CSxxx
-2 67
-"storageLabel"
+6 112
+"RECTANGLE38"
 ""
-1 0 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 40 110 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
-27 0 0 0 0 0
+29 0 0 0 0 0
 E E E
 0
 1
@@ -685,12 +672,303 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 0 320 58 340
-0 2 2 "0s" 0 0 0 192 0 0  0 320 1
+E E 0 1 1 2 1 E 1.451612903225807 0 0.829268292682927 41.93548387096772 178.780487804878 1 E 40 110 660 520
+2 156
+"PRIMITIVE_TEXT19"
+""
+1 105 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
 1
-LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 105 280 117 293
+0 2 2 "0s" 0 0 0 192 0 0  105 280 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 7 Storxxx
+LANG:1 2 Nr
+2 157
+"PRIMITIVE_TEXT20"
+""
+1 120 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 120 280 144 293
+0 2 2 "0s" 0 0 0 192 0 0  120 280 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 Stat
+2 158
+"PRIMITIVE_TEXT21"
+""
+1 150 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 150 280 177 293
+0 2 2 "0s" 0 0 0 192 0 0  150 280 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 Drop
+2 159
+"PRIMITIVE_TEXT22"
+""
+1 200 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 200 280 248 293
+0 2 2 "0s" 0 0 0 192 0 0  200 280 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 Dropped
+2 160
+"PRIMITIVE_TEXT23"
+""
+1 308 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+34 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 308 280 336 293
+0 2 2 "0s" 0 0 0 192 0 0  308 280 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 5 Error
+2 161
+"PRIMITIVE_TEXT24"
+""
+1 430 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 430 280 509 293
+0 2 2 "0s" 0 0 0 192 0 0  430 280 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 13 CurrentAction
+2 162
+"PRIMITIVE_TEXT25"
+""
+1 560 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+36 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 560 280 627 293
+0 2 2 "0s" 0 0 0 192 0 0  560 280 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 10 logMessage
+1 163 3 "" 227
+0
+1 164 3 "51" 1
+0
+1 165 3 "" 266
+0
+1 166 3 "" 269
+0
+1 167 3 "" 273
+0
+1 168 3 "" 274
+0
+1 169 3 "" 275
+0
+1 170 3 "" 276
+0
+1 171 4 "" 227
+0
+1 172 4 "51" 1
+0
+1 173 4 "" 266
+0
+1 174 4 "" 269
+0
+1 175 4 "" 273
+0
+1 176 4 "" 274
+0
+1 177 4 "" 275
+0
+1 178 4 "" 276
+0
+1 179 5 "" 227
+0
+1 180 5 "51" 1
+0
+1 181 5 "" 266
+0
+1 182 5 "" 269
+0
+1 183 5 "" 273
+0
+1 184 5 "" 274
+0
+1 185 5 "" 275
+0
+1 186 5 "" 276
+0
+1 187 6 "" 227
+0
+1 188 6 "51" 1
+0
+1 189 6 "" 266
+0
+1 190 6 "" 269
+0
+1 191 6 "" 273
+0
+1 192 6 "" 274
+0
+1 193 6 "" 275
+0
+1 194 6 "" 276
+0
+1 195 7 "" 227
+0
+1 196 7 "51" 1
+0
+1 197 7 "" 266
+0
+1 198 7 "" 269
+0
+1 199 7 "" 273
+0
+1 200 7 "" 274
+0
+1 201 7 "" 275
+0
+1 202 7 "" 276
+0
+1 203 8 "" 227
+0
+1 204 8 "51" 1
+0
+1 205 8 "" 266
+0
+1 206 8 "" 269
+0
+1 207 8 "" 273
+0
+1 208 8 "" 274
+0
+1 209 8 "" 275
+0
+1 210 8 "" 276
+0
+1 211 9 "" 227
+0
+1 212 9 "51" 1
+0
+1 213 9 "" 266
+0
+1 214 9 "" 269
+0
+1 215 9 "" 273
+0
+1 216 9 "" 274
+0
+1 217 9 "" 275
+0
+1 218 9 "" 276
+0
+1 219 10 "" 227
+0
+1 220 10 "51" 1
+0
+1 221 10 "" 266
+0
+1 222 10 "" 269
+0
+1 223 10 "" 273
+0
+1 224 10 "" 274
+0
+1 225 10 "" 275
+0
+1 226 10 "" 276
+0
+1 227 11 "" 227
+0
+1 228 11 "51" 1
+0
+1 229 11 "" 266
+0
+1 230 11 "" 269
+0
+1 231 11 "" 273
+0
+1 232 11 "" 274
+0
+1 233 11 "" 275
+0
+1 234 11 "" 276
+0
+2 235
+"PRIMITIVE_TEXT26"
+""
+1 380 250 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 380 250 432 266
+0 2 2 "0s" 0 0 0 192 0 0  380 250 1
+1
+LANG:1 35 MS Shell Dlg 2,10,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 Adders:
 0
 LAYER, 1 
 1
@@ -728,7 +1006,43 @@ LANG:1 6 Layer8
 1
 "$objectNumber""0"
 3 2 "PANEL_REF54" -1
-"objects\\Processes\\adder.pnl" 90 360 T 2 1 0 1 40 -130
+"objects\\Processes\\adder.pnl" 90 360 T 2 1 0 1 -107 -80
 1
 "$objectNumber""0"
+3 3 "PANEL_REF3" -1
+"objects/Processes\\adder.pnl" -17 310 T 37 U 
+1
+"$objectNumber""1"
+3 4 "PANEL_REF4" -1
+"objects/Processes\\adder.pnl" -17 340 T 38 U 
+1
+"$objectNumber""2"
+3 5 "PANEL_REF5" -1
+"objects/Processes\\adder.pnl" -17 370 T 39 U 
+1
+"$objectNumber""3"
+3 6 "PANEL_REF6" -1
+"objects/Processes\\adder.pnl" -17 400 T 40 U 
+1
+"$objectNumber""4"
+3 7 "PANEL_REF7" -1
+"objects/Processes\\adder.pnl" -17 430 T 41 U 
+1
+"$objectNumber""5"
+3 8 "PANEL_REF8" -1
+"objects/Processes\\adder.pnl" -17 460 T 42 U 
+1
+"$objectNumber""6"
+3 9 "PANEL_REF9" -1
+"objects/Processes\\adder.pnl" -17 490 T 43 U 
+1
+"$objectNumber""7"
+3 10 "PANEL_REF10" -1
+"objects/Processes\\adder.pnl" -17 520 T 44 U 
+1
+"$objectNumber""8"
+3 11 "PANEL_REF11" -1
+"objects/Processes\\adder.pnl" -17 550 T 45 U 
+1
+"$objectNumber""9"
 0
