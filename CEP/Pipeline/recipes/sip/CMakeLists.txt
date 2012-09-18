@@ -9,6 +9,7 @@ python_install(
   helpers/ComplexArray.py
   master/__init__.py
   master/bbs.py
+  master/bbs_reducer.py
   master/cep2_datamapper.py
   master/cimager.py
   master/compression_pipeline.py
@@ -37,6 +38,7 @@ python_install(
   master/vdsreader.py
   nodes/__init__.py
   nodes/bbs.py
+  nodes/bbs_reducer.py
   nodes/cimager.py
   nodes/copier.py
   nodes/count_timesteps.py
