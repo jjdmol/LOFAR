@@ -93,7 +93,12 @@ install(FILES
   DESTINATION share/pipeline/demixing)
 
 install(FILES
+  skymodels/3C147.skymodel
   skymodels/3C196.skymodel
+  skymodels/3C286.skymodel
+  skymodels/3C287.skymodel
+  skymodels/3C295.skymodel
+  skymodels/3C380.skymodel
   skymodels/3C48.skymodel
   skymodels/Ateam_LBA_CC.skymodel
   DESTINATION share/pipeline/skymodels)

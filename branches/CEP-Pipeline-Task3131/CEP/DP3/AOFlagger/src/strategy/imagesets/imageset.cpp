@@ -31,7 +31,7 @@
 #include <AOFlagger/strategy/imagesets/timefrequencystatimageset.h>
 
 namespace rfiStrategy {
-	ImageSet *ImageSet::Create(const std::string &file, bool indirectReader, bool readUVW)
+	ImageSet *ImageSet::Create(const std::string &file, BaselineIOMode ioMode, bool readUVW)
 	{
 		if(IsFitsFile(file))
 			return new FitsImageSet(file);
@@ -50,7 +50,7 @@ namespace rfiStrategy {
 		else if(IsHarishFile(file))
 			return new HarishReader(file);
 		else {
-			MSImageSet *set = new MSImageSet(file, indirectReader);
+			MSImageSet *set = new MSImageSet(file, ioMode);
 			set->SetReadUVW(readUVW);
 			return set;
 		}

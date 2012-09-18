@@ -118,6 +118,30 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
                 if host_comp == host_source:
                     output_image_map_new.append((host_comp, path_comp))
 
+        # The input mapfiles might nog be of the same length:
+        # host_source are unique and can be used to match the entries!
+        # Final step is the source_finder: use this mapfile as 'source'
+        awimager_output_map_new = []
+        raw_ms_per_image_map_new = []
+        target_map_new = []
+        output_image_map_new = []
+        for host_source, path_source in sourcelist_map:
+            for host_comp, path_comp in awimager_output_map:
+                if host_comp == host_source:
+                    awimager_output_map_new.append((host_comp, path_comp))
+
+            for host_comp, path_comp in raw_ms_per_image_map:
+                if host_comp == host_source:
+                    raw_ms_per_image_map_new.append((host_comp, path_comp))
+
+            for host_comp, path_comp in target_mapfile:
+                if host_comp == host_source:
+                    target_map_new.append((host_comp, path_comp))
+
+            for host_comp, path_comp in output_image_mapfile:
+                if host_comp == host_source:
+                    output_image_map_new.append((host_comp, path_comp))
+
         # chech validity of the maps: all on same node with the same length
         if not validate_data_maps(awimager_output_map_new, raw_ms_per_image_map_new,
                 sourcelist_map, target_map_new, output_image_map_new):
@@ -161,7 +185,7 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # *********************************************************************
         # 3. Validate the performance of the node script and assign output
-        placed_image_ = []
+        placed_images = []
         for job in  jobs:
             if job.results.has_key("hdf5"):
                 placed_images.append((job.host, job.results["image"]))

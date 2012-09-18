@@ -202,6 +202,9 @@ void premult(Matrix<Complex>& rData)
 
 void moveInx(Complex* to, Complex* fr, Complex* p0, int size)
 {
+  (void)p0;
+  (void)size;
+
   *to = *fr;
   //  cout << "move "<<(fr-p0)/size << ','<< (fr-p0)%size << " to "
   //       <<(to-p0)/size << ','<< (to-p0)%size << "   "<<*fr<<endl;

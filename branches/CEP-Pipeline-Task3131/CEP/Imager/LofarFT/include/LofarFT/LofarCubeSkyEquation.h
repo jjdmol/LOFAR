@@ -52,6 +52,7 @@ class LofarCubeSkyEquation : public SkyEquation {
 
   virtual ~LofarCubeSkyEquation();
   virtual void predict(Bool incremental=False, MS::PredefinedColumns Type=MS::MODEL_DATA);
+  using SkyEquation::gradientsChiSquared;
   virtual void gradientsChiSquared(Bool incremental, Bool commitModel=False);
 
 //  virtual Matrix<Float> GiveAvgPB (Int taylor_order)
@@ -81,7 +82,8 @@ class LofarCubeSkyEquation : public SkyEquation {
   void isLargeCube(ImageInterface<Complex>& theIm, Int& nCubeSlice);
   //void makeApproxPSF(Int model, ImageInterface<Float>& psf);
   //virtual void makeApproxPSF(Int model, ImageInterface<Float>& psf);
-  void makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs);
+  using SkyEquation::makeApproxPSF;
+  virtual void makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs);
 
   //Get the flux scale that the ftmachines have if they have
   virtual void getCoverageImage(Int model, ImageInterface<Float>& im);

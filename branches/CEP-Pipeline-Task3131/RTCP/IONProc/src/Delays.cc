@@ -139,6 +139,10 @@ void Delays::mainLoop()
 
   LOG_DEBUG("Delay compensation thread running");
 
+#if defined HAVE_BGP_ION
+  runOnCore0();
+#endif
+
   init();
 
   // the current time, in samples

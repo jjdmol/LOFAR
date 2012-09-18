@@ -88,6 +88,7 @@ set(MSIO_FILES
   msio/indirectbaselinereader.cpp
   msio/mask2d.cpp
   msio/measurementset.cpp
+  msio/memorybaselinereader.cpp
   msio/pngfile.cpp
   msio/rspreader.cpp
   msio/samplerow.cpp
@@ -129,6 +130,7 @@ set(STRATEGY_ACTION_FILES
 
 set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/baselineselector.cpp
+	strategy/algorithms/baselinetimeplaneimager.cpp
   strategy/algorithms/eigenvalue.cpp
   strategy/algorithms/fringestoppingfitter.cpp
   strategy/algorithms/fringetestcreater.cpp
