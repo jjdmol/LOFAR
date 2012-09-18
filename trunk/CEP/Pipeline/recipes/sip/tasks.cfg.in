@@ -141,3 +141,11 @@ fillrootimagegroup_exec = %(lofarroot)s/bin/fillRootImageGroup
 recipe = copier
 mapfiles_dir = %(runtime_directory)s/jobs/%(job_name)s/mapfiles
 
+[bbs_reducer]
+recipe = bbs_reducer
+executable = %(lofarroot)s/bin/bbs-reducer
+parset = %(runtime_directory)s/jobs/%(job_name)s/parsets/bbs.parset
+instrument_mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/instrument.mapfile
+sky_mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/sky.mapfile
+data_mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/bbs.mapfile
+

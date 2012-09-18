@@ -316,11 +316,6 @@ class msss_target_pipeline(control):
             mapfile=os.path.join(mapfile_dir, 'dppp[0].mapfile')
         )['mapfile']
 
-        demix_mapfile = dppp_mapfile
-
-#        # Demix the relevant A-team sources
-#        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
-
         # Create an empty sourcedb for BBS
         sourcedb_mapfile = self.run_task(
             "setupsourcedb", data_mapfile
@@ -331,8 +326,8 @@ class msss_target_pipeline(control):
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the target source(s).
-        bbs_mapfile = self.run_task("new_bbs",
-            demix_mapfile,
+        bbs_mapfile = self.run_task("bbs_reducer",
+            dppp_mapfile,
             parset=bbs_parset,
             instrument_mapfile=copied_instrument_mapfile,
             sky_mapfile=sourcedb_mapfile
