@@ -48,7 +48,7 @@ repeat = tc.repeat
 tc.setResult('PASSED')   # self checking test, so start assuming it will run PASSED
 
 tc.appendLog(11,'')
-tc.appendLog(11,'>>> Read the SS map for RSP-%s, BLP-%s, BM banks-' % (rspId, blpId, bmBanks))
+tc.appendLog(11,'>>> Read the SS map for RSP-%s, BLP-%s, BM banks-%s' % (rspId, blpId, bmBanks))
 tc.appendLog(11,'')
   
 ################################################################################
@@ -64,7 +64,7 @@ for ri in rspId:
       ss_map = rsp.read_ss(tc, msg, c_ss_size, [bi], [ri], [bk])
       ss_rlet_map = ss_map[:c_ss_reflets_size]
       ss_blet_map = ss_map[c_ss_reflets_size:]
-      tc.appendLog(11,'>>> RSP-%s, BLP-%s, BM-%d SS reflets map (length %d).' % (ri, bi, bk, len(ss_rlet_map)))
+      tc.appendLog(11,'>>> RSP-%s, BLP-%s, BM bank-%d SS reflets map (length %d).' % (ri, bi, bk, len(ss_rlet_map)))
       tc.appendLog(21,'%s' % ss_rlet_map)
-      tc.appendLog(11,'>>> RSP-%s, BLP-%s, BM-%d SS beamlets map (length %d).' % (ri, bi, bk, len(ss_blet_map)))
+      tc.appendLog(11,'>>> RSP-%s, BLP-%s, BM bank-%d SS beamlets map (length %d).' % (ri, bi, bk, len(ss_blet_map)))
       tc.appendLog(21,'%s' % ss_blet_map)
