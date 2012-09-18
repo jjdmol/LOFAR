@@ -27,7 +27,7 @@ class GainOutlierCorrection(LOFARnodeTCP):
     def run(self, infile, outfile, executable, environment, sigma):
 
         self.environment.update(environment)
-        
+
         # Time execution of this job
         with log_time(self.logger):
             if os.path.exists(infile):
@@ -43,6 +43,8 @@ class GainOutlierCorrection(LOFARnodeTCP):
         if not os.access(executable, os.X_OK) and sigma != None:
             # If the executable is not accesable and we have a sigma:
             # use the 'local' functionality (edit parmdb)
+            self.logger.info(
+                    "Using the gainoutlier correction based on edit_parmdb")
             self._filter_stations_parmdb(infile, outfile, sigma)
             return 0
         # else we need an executable
@@ -51,6 +53,8 @@ class GainOutlierCorrection(LOFARnodeTCP):
             self.logger.error("Executable %s not found" % executable)
             return 1
 
+        self.logger.info(
+                    "Using the gainoutlier correction based on parmexportcal")
         try:
             temp_dir = tempfile.mkdtemp()
             with CatchLog4CPlus(
