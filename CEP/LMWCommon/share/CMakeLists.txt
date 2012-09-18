@@ -16,4 +16,5 @@ sub6.clusterdesc
 sub7.clusterdesc
 sub8.clusterdesc
 local.clusterdesc
+cep1_test.clusterdesc
 DESTINATION share)
