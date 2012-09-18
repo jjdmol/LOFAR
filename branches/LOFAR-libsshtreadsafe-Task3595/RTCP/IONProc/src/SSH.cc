@@ -52,7 +52,7 @@ namespace LOFAR {
 namespace RTCP {
 
 #ifdef HAVE_LIBSSH2
-  
+
 SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey)
 :
   itsLogPrefix(logPrefix),
@@ -325,6 +325,25 @@ void SSHconnection::commThread()
 }
 
 #endif
+
+bool SSH_Init() {
+
+#ifdef HAVE_LIBSSH2
+  int rc = libssh2_init(0);
+
+  if (rc)
+    return false;
+#endif
+
+  return true;
+}
+
+void SSH_Finalize() {
+#ifdef HAVE_LIBSSH2
+  libssh2_exit();
+#endif  
+}
+  
 
 static void exitwitherror( const char *errorstr )
 {
