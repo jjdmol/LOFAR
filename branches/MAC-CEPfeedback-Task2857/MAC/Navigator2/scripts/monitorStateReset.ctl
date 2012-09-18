@@ -29,7 +29,7 @@
 // 
 
 global bool isConnected=false;
-global bool bDebug = false;
+global bool bDebug = true;
 global dyn_string dpList;
 global dyn_int    dpStates;
 global dyn_string msgs;

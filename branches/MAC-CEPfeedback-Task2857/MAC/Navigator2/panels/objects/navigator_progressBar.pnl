@@ -42,7 +42,7 @@ void initialize() {
 // connect progressbar to value to act on
 setProgressBarDPE() {
  if (dpExists(itsProgressBarDp)) {
-    if (connected) {
+    if (connected && dpExists(dpe) && dpe != \"\") {
       dpDisconnect(display,dpe);
       connected=false;
     }
@@ -53,13 +53,14 @@ setProgressBarDPE() {
   
 }
 
-display(string dp1, int progress)
+display(string dp1, string progress)
 {
-  setMultiValue(\"avail31\",\"scale\",progress/100.0,1,
-	        \"avail32\",\"scale\",progress/100.0,1,
-  		\"used31\",\"scale\",1-progress/100.0,1,
-  		\"used32\",\"scale\",1-progress/100.0,1,
-  		\"progressValue\",\"text\",progress);
+  int number = progress;
+  setMultiValue(\"avail31\",\"scale\",number/100.0,1,
+	        \"avail32\",\"scale\",number/100.0,1,
+  		\"used31\",\"scale\",1-number/100.0,1,
+  		\"used32\",\"scale\",1-number/100.0,1,
+  		\"progressValue\",\"text\",number);
      
 }
 

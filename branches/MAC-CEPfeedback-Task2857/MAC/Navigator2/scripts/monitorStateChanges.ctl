@@ -90,6 +90,7 @@ void subscribeObjectStateChange() {
 //    StnObservation  --> Station --> MCU*:LOFAR_ObsSW_Observation*_*_CS010.status.state/childState
 //    StnPermSW       --> Station --> MCU*:LOFAR_PermSW_*_CS010.status.state/childState
 //    StnPic          --> Station --> MCU*:LOFAR_PIC_*_CS010.status.state/childState
+//    if an Antenna changes state or childstate, the rcu belonging to this antenna should trigger its childstate
 //
 // Added 26-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
@@ -337,6 +338,67 @@ void setStates(string datapoint,string element,int state,string message,bool for
 
   
   if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+datapoint);
+  
+  //  Since the antenna's are placed outside the regular path (LOFAR_PIC_HBA* and _LBA*)
+  // but in reality are connected to the RCU, we need to change the datapoint here to trigger the rcu's
+  if (strpos(datapoint,"_HBA") >= 0 || strpos(datapoint,"_LBA") >= 0 ) {
+    
+   
+    if (bDebug) DebugN("monitorStateChanges.ctl:setStates|Containing HBA or LBA: "+datapoint);
+    
+    if (bDebug) DebugN("monitorStateChanges.ctl:setStates|Containing pure: " + dpSubStr(datapoint,DPSUB_SYS_DP));
+
+    //Only take pure Antenna so skip HBA00.Element01 points)
+    if (dpSubStr(datapoint,DPSUB_SYS_DP) == datapoint)  {
+
+      if (bDebug) DebugN("monitorStateChanges.ctl:setStates|pure antenna point");
+
+      // get the rcuX and rcuY points
+      string rcuXDP,XDP;
+      string rcuYDP,YDP;
+      dpGet(datapoint+".common.RCUX",XDP);
+      dpGet(datapoint+".common.RCUY",YDP);
+      
+
+  
+      rcuXDP = dpSubStr(XDP,DPSUB_DP);
+      rcuYDP = dpSubStr(YDP,DPSUB_DP);
+      if (bDebug) DebugN("monitorStateChanges.ctl:setStates|datapoint to set for X: "+rcuXDP);
+      if (bDebug) DebugN("monitorStateChanges.ctl:setStates|datapoint to set for Y: "+rcuYDP);
+
+      // since we have two possible attachments (X and Y to different RCU)
+  // set childState if needed, if succeeded set childState for one level less also
+  // continue while true
+      
+      int oldstate;
+      dpGet(rcuXDP+".status.childState",oldstate);
+      if (state > oldstate) {
+        dpSet(rcuXDP+".status.childState",state);
+        dp = navFunct_getPathLessOne(rcuXDP);
+        rcuXDP = dp;        
+      }
+      dpGet(rcuYDP+".status.childState",oldstate);
+      if (state > oldstate) {
+        dpSet(rcuYDP+".status.childState",state);
+        dp = navFunct_getPathLessOne(rcuYDP);
+        rcuYDP = dp;        
+      }
+
+      
+      while ( setChildState(rcuXDP,state)) {
+        if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+rcuXDP);
+        dp = navFunct_getPathLessOne(rcuXDP);
+        rcuXDP=dp;
+      }
+
+      while ( setChildState(rcuYDP,state)) {
+        if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+rcuYDP);
+        dp = navFunct_getPathLessOne(rcuYDP);
+        rcuYDP=dp;
+      }
+    }
+  }
+  
   // set childState if needed, if succeeded set childState for one level less also
   // continue while true
   while ( setChildState(datapoint,state)) {
@@ -388,7 +450,7 @@ bool setChildState(string Dp,int state) {
 //    return true;
 //  }
 
-  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.status.childState,"+Dp+"_*.status.state}' SORT BY 1 DESC";
+  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.status.childState,"+Dp+"_*.status.state,"+Dp+".*.status.childState,"+Dp+".*.status.state}' SORT BY 1 DESC";
   if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|Query: ",query);
   int err = dpQuery(query, tab);
 
@@ -400,11 +462,11 @@ bool setChildState(string Dp,int state) {
     return false;
   }
  
+  if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|Found hits:  " + tab);
+ 
   dyn_string aS1=strsplit(Dp,"_");
   int maxElements= dynlen(aS1)+1; 
   int foundElements=0;
-
-  if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|max elements for DP  after _ split: "+maxElements);
 
   // first check if the last element still has . seperated elements
   dyn_string aS2=strsplit(aS1[dynlen(aS1)],".");
@@ -412,13 +474,11 @@ bool setChildState(string Dp,int state) {
     maxElements+=dynlen(aS2)-1; 
   }
 
-  if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|max elements for DP  after . split: "+maxElements);
-
   for(z=2;z<=dynlen(tab);z++) {
     dyn_string aStr1=strsplit((string)tab[z][1],"_");
     foundElements=dynlen(aStr1);
 
-    if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|Working with dp: " +(string)tab[z][1]+ " that has "+ foundElements +" elements");
+    if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|Working with dp: " +(string)tab[z][1]);
 
     // first check if the last element still has . seperated elements but skip the status.state status.childState
     dyn_string aStr2=strsplit(aStr1[dynlen(aStr1)],".");
@@ -426,8 +486,6 @@ bool setChildState(string Dp,int state) {
       foundElements+=dynlen(aStr2)-3; 
     }
     
-    if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|and after . check has " + foundElements +" elements");
-
     if(foundElements <= maxElements) {
       if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|Have to check DP: ",tab[z][1], " state: ", tab[z][2]);
 
@@ -438,6 +496,8 @@ bool setChildState(string Dp,int state) {
       // check if state != oldVal
       if (state != aVal && state > -1 ) {
         if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|state not equal oldstate(",aVal,") so set ",Dp+".status.childState to: ",state);
+        
+        
         dpSet(Dp+".status.childState",state);
         return true;
       }

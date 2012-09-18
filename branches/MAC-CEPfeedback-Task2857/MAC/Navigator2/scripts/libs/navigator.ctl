@@ -129,6 +129,7 @@ void navigator_handleEventInitialize()
     DebugN("ERROR: Logsystem hasn't been found.");
   }
   
+  
   // Do a dpQueryConnectSingle() so that we get a permanent list of claims
   // we can use this to translate a claimed name into a real datapoint name
   claimManager_queryConnectClaims();

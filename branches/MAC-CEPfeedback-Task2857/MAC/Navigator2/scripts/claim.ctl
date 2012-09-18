@@ -730,7 +730,6 @@ void checkAndCreateDPs() {
     //    OnlineControl:  LOFAR_ObsSW_TempObs0001-0100_OnlineControl
     //    BGLAppl:        LOFAR_ObsSW_TempObs0001-0100_OnlineControl_BGLAppl
     //    BGLProc:        LOFAR_ObsSW_TempObs0001-0100_OnlineControl_BGLAppl_BGLProc
-    //    StorageAppl:    LOFAR_ObsSW_TempObs0001-0100_OnlineControl_StorageAppl
     
 
     
