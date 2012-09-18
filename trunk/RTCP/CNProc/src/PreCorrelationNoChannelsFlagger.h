@@ -15,12 +15,17 @@
 namespace LOFAR {
 namespace RTCP {
 
+#define FLAG_IN_TIME_DIRECTION 1
+#define FLAG_IN_FREQUENCY_DIRECTION 1
+#define USE_HISTORY_FLAGGER 1
+
 // integrate in time untill we have itsFFTSize elements.
 // Flag on that in time direction.
 // Next, do FFT, flag in frequency direction, replace samples with median, inverseFFT
 class PreCorrelationNoChannelsFlagger : public Flagger {
   public:
-  PreCorrelationNoChannelsFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrSubbands, const unsigned nrChannels, const unsigned nrSamplesPerIntegration, float cutoffThreshold = 7.0f);
+  PreCorrelationNoChannelsFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrSubbands, const unsigned nrChannels, 
+				  const unsigned nrSamplesPerIntegration, float cutoffThreshold = 7.0f);
 
   void flag(FilteredData* filteredData, unsigned currentSubband);
 
@@ -33,11 +38,12 @@ class PreCorrelationNoChannelsFlagger : public Flagger {
   const unsigned itsNrSamplesPerIntegration;
   unsigned itsIntegrationFactor; 
 
-  void integrateAndCalculatePowers(unsigned station, unsigned pol, FilteredData* filteredData);
+  void calcIntegratedPowers(unsigned station, unsigned pol, FilteredData* filteredData, unsigned currentSubband);
+  void calcIntegratedChannelPowers(unsigned station, unsigned pol, FilteredData* filteredData, unsigned currentSubband);
+
   void initFlagsTime(unsigned station, FilteredData* filteredData);
   void applyFlagsTime(unsigned station, FilteredData* filteredData);
   void applyFlagsFrequency(unsigned station, FilteredData* filteredData);
-  fcomplex computeMedianSample(unsigned station, FilteredData* filteredData);
 
   void initFFT();
   void forwardFFT();
@@ -55,6 +61,9 @@ class PreCorrelationNoChannelsFlagger : public Flagger {
   fftw_plan  itsFFTWforwardPlan, itsFFTWbackwardPlan;
 #endif
 
+#if USE_HISTORY_FLAGGER
+  MultiDimArray<FlaggerHistory, 3> itsHistory;   // [nrSations][nrSubbands][NR_POLARIZATIONS]
+#endif
 };
 
 } // namespace RTCP
