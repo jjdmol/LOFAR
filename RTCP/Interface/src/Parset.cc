@@ -346,6 +346,9 @@ unsigned Parset::nrBeams() const
 {
   std::vector<unsigned> sapMapping = subbandToSAPmapping();
 
+  if (sapMapping.empty())
+    return 0;
+
   return *std::max_element(sapMapping.begin(), sapMapping.end()) + 1;
 }
 
