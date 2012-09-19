@@ -24,11 +24,22 @@ class msss_target_pipeline(control):
     the calibrator_pipeline.
 
     This pipeline will perform the following operations:
-    - DPPP: flagging, using standard parset
-    - Demix the relevant A-team sources (for now using python script, later
-      to use DPPP), using the A-team sourcedb.
-    - Run BBS to correct for instrumental effects using the instrument database
-      from an earlier calibrator_pipeline run.
+    
+    1. Prepare phase, collect data from parset and input mapfiles
+    2. Copy the instrument files to the correct node, create new file with
+       succesfull copied mss.
+    3. Create database needed for performing work: 
+       Vds, descibing data on the nodes sourcedb, For skymodel (A-team)
+       parmdb for outputtting solutions
+    4. Run NDPPP to demix the A-Team sources
+    5. Run bss using the instrument file from the target observation, to correct for instrumental effects
+    6. Second dppp run for  flaging NaN's in the MS. 
+    7. Create feedback file for further processing by the LOFAR framework (MAC)
+
+    **Per subband-group, the following output products will be delivered:**
+
+    1. A new MS with a DATA column containing calibrated data
+
     """
 
     def __init__(self):
@@ -41,6 +52,9 @@ class msss_target_pipeline(control):
 
 
     def usage(self):
+        """
+        Display usage information
+        """
         print >> sys.stderr, "Usage: %s [options] <parset-file>" % sys.argv[0]
         return 1
 
@@ -84,7 +98,9 @@ class msss_target_pipeline(control):
 
 
     def _validate_io_product_specs(self):
-        # Sanity checks on input- and output data product specifications
+        """
+        Sanity checks on input- and output data product specifications
+        """
         if not validate_data_maps(
             self.input_data['data'],
             self.input_data['instrument'],
@@ -232,7 +248,8 @@ class msss_target_pipeline(control):
         Define the individual tasks that comprise the current pipeline.
         This method will be invoked by the base-class's `go()` method.
         """
-
+        # *********************************************************************
+        # 1. Prepare phase, collect data from parset and input mapfiles
         # Create a parameter-subset containing only python-control stuff.
         py_parset = self.parset.makeSubset(
             'ObsSW.Observation.ObservationControl.PythonControl.')
@@ -240,14 +257,18 @@ class msss_target_pipeline(control):
         # Get input/output-data products specifications.
         self._get_io_product_specs()
 
-        # The instrument files are currently located on the wrong nodes
-        # Copy to correct nodes and assign the instrument table the now
-        # correct data
+        # Create some needed directories
         job_dir = self.config.get("layout", "job_directory")
         mapfile_dir = os.path.join(job_dir, "mapfiles")
         create_directory(mapfile_dir)
         parset_dir = os.path.join(job_dir, "parsets")
         create_directory(parset_dir)
+
+        # *********************************************************************
+        # 2. Copy the instrument files to the correct node
+        # The instrument files are currently located on the wrong nodes
+        # Copy to correct nodes and assign the instrument table the now
+        # correct data
 
         # Copy the instrument files to the corrent nodes: failures might happen
         # update both intrument and datamap to contain only successes!
@@ -255,8 +276,6 @@ class msss_target_pipeline(control):
             self._copy_instrument_files(self.input_data['instrument'],
                                     self.input_data['data'], mapfile_dir)
 
-        # File locations are not on the same node: skip check for same node
-        #self._validate_io_product_specs()
 
         # Write input- and output data map-files.
         data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
@@ -268,12 +287,14 @@ class msss_target_pipeline(control):
             "Wrote input data mapfile: %s" % data_mapfile
         )
 
+        # Save copied files to a new mapfile
         corrected_mapfile = os.path.join(mapfile_dir, "corrected_data.mapfile")
         store_data_map(corrected_mapfile, self.output_data['data'])
         self.logger.debug(
             "Wrote output corrected data mapfile: %s" % corrected_mapfile
         )
 
+        # Validate number of copied files, abort on zero files copied
         if len(self.input_data['data']) == 0:
             self.logger.warn("No input data files to process. Bailing out!")
             return 0
@@ -282,6 +303,11 @@ class msss_target_pipeline(control):
             ', '.join(':'.join(f) for f in self.input_data['data'])
         )
 
+        # *********************************************************************
+        # 3. Create database needed for performing work: 
+        #    Vds, descibing data on the nodes
+        #    sourcedb, For skymodel (A-team)
+        #    parmdb for outputtting solutions
         # Produce a GVDS file describing the data on the compute nodes.
         gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
 
@@ -301,6 +327,8 @@ class msss_target_pipeline(control):
             )
         )['mapfile']
 
+        # *********************************************************************
+        # 4. Run NDPPP to demix the A-Team sources
         # Create a parameter-subset for DPPP and write it to file.
         ndppp_parset = os.path.join(parset_dir, "NDPPP[0].parset")
         py_parset.makeSubset('DPPP[0].').writeFile(ndppp_parset)
@@ -318,9 +346,12 @@ class msss_target_pipeline(control):
 
         demix_mapfile = dppp_mapfile
 
+
 #        # Demix the relevant A-team sources
 #        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
+        # ********************************************************************
+        # 5. Run bss using the instrument file from the target observation
         # Create an empty sourcedb for BBS
         sourcedb_mapfile = self.run_task(
             "setupsourcedb", data_mapfile
@@ -338,6 +369,8 @@ class msss_target_pipeline(control):
             sky_mapfile=sourcedb_mapfile
         )['mapfile']
 
+        # *********************************************************************
+        # 6. Second dppp run for  flaging NaN's in the MS.  
         # Create another parameter-subset for a second DPPP run.
         ndppp_parset = os.path.join(parset_dir, "NDPPP[1].parset")
         py_parset.makeSubset('DPPP[1].').writeFile(ndppp_parset)
@@ -354,6 +387,8 @@ class msss_target_pipeline(control):
             mapfile=os.path.join(mapfile_dir, 'dppp[1].mapfile')
         )
 
+        # 7. Create feedback file for further processing by the LOFAR framework
+        # (MAC)
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", corrected_mapfile,
             parset_file=self.parset_feedback_file,
