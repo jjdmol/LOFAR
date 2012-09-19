@@ -1,7 +1,8 @@
+import os
 import math
 import sys
 import numpy
-
+import shutil
 
 from lofarpipe.recipes.helpers.WritableParmDB import WritableParmDB, list_stations
 from lofarpipe.recipes.helpers.ComplexArray import ComplexArray, RealImagArray, AmplPhaseArray
@@ -31,12 +32,17 @@ def compare_two_parmdb(infile_1, infile_2, max_delta):
 
         # Create a local WritableParmDB
         parmdb_1 = WritableParmDB(infile_1)
-        parmdb_2 = WritableParmDB(infile_1)
+        parmdb_2 = WritableParmDB(infile_2)
 
         #get all stations in the parmdb
         stations_1 = list_stations(parmdb_1)
-        stations_2 = list_stations(parmdb_1)
+        stations_2 = list_stations(parmdb_2)
+
         try:
+            if len(stations_1) != len(stations_2):
+                print "the number of stations found in the parmdb are different!!"
+                return False
+            print "Number of stations in the parmdb: {0}".format(len(stations_1))
             for station_1, station_2 in zip(stations_1, stations_2):
                 # compare the station names
                 if station_1 != station_2:
@@ -48,35 +54,37 @@ def compare_two_parmdb(infile_1, infile_2, max_delta):
 
                 # till here implemented
                 polarization_data_1, type_pair_1 = \
-                   _read_polarisation_data_and_type_from_db(parmdb, station_1)
+                   _read_polarisation_data_and_type_from_db(parmdb_1, station_1)
 
                 polarization_data_2, type_pair_2 = \
-                   _read_polarisation_data_and_type_from_db(parmdb, station_1)
+                   _read_polarisation_data_and_type_from_db(parmdb_2, station_1)
 
                 if type_pair_1 != type_pair_2:
                     print  "the types found in the parmdb for station {0}are not the same!\n".format(stations_1)
                     print "{0} != {1}".format(type_pair_1, type_pair_2)
                     return False
 
-                # Convert the raw data to the correct complex array type
-                complex_array_1 = _convert_data_to_ComplexArray(
-                            polarization_data_1, type_pair_1)
+                for (pol1, data1), (pol2, data2) in zip(polarization_data_1.iteritems(),
+                                     polarization_data_2.iteritems()):
+                    # Convert the raw data to the correct complex array type
+                    complex_array_1 = _convert_data_to_ComplexArray(
+                                data1, type_pair_1)
 
-                complex_array_2 = _convert_data_to_ComplexArray(
-                            polarization_data_2, type_pair_1)
+                    complex_array_2 = _convert_data_to_ComplexArray(
+                                data2, type_pair_1)
 
-                # convert to magnitudes
-                amplitudes_1 = complex_array_1.amp[:-1]
-                amplitudes_2 = complex_array_2.amp[:-1]
+                    # convert to magnitudes
+                    amplitudes_1 = complex_array_1.amp[:-1]
+                    amplitudes_2 = complex_array_2.amp[:-1]
 
-                for val_1, val_2 in zip(amplitudes_1, amplitudes_1):
-                    if numpy.abs(val_1 - val_2) > max_delta:
-                        print "Warning found different gains in the instrument table!"
-                        print "station: {0}".format(station_1)
-                        print "{0} != {1}".format(val_1, val_2)
-                        print amplitudes_1
-                        print amplitudes_2
-                        return False
+                    for val_1, val_2 in zip(amplitudes_1, amplitudes_1):
+                        if numpy.abs(val_1 - val_2) > max_delta:
+                            print "Warning found different gains in the instrument table!"
+                            print "station: {0}".format(station_1)
+                            print "{0} != {1}".format(val_1, val_2)
+                            print amplitudes_1
+                            print amplitudes_2
+                            return False
 
         finally:
             # remove create temp files
@@ -145,9 +153,11 @@ if __name__ == "__main__":
     parmdb_1, parmdb_2, max_delta = None, None, None
     # Parse parameters from command line
     error = False
+    print sys.argv
     try:
-        parmdb_1, parmdb_2, max_delta = sys.argv[1:3]
-    except:
+        parmdb_1, parmdb_2, max_delta = sys.argv[1:4]
+    except Exception, e:
+        print e
         print "usage: python {0} parmdb_1_path "\
             " parmdb_2_path [max_delta (type=float)]".format(sys.argv[0])
         sys.exit(1)
@@ -161,11 +171,12 @@ if __name__ == "__main__":
     print "using max delta: {0}".format(max_delta)
 
     if not error:
-        data_equality = compare_two_parmdb(infile_1, infile_2, max_delta)
+        print "regression test:"
+        data_equality = compare_two_parmdb(parmdb_1, parmdb_2, max_delta)
 
         if not data_equality:
             print "Regression test failed: exiting with exitstatus 1"
-            print " parmdb data equality = : {0}".format(image_equality)
+            print " parmdb data equality = : {0}".format(data_equality)
             sys.exit(1)
 
         print "Regression test Succeed!!"
