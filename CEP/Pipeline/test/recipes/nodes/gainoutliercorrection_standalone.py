@@ -29,7 +29,7 @@ class logger():
         return self._log[-1]
 
 
-class ParmExportCalWrapper(GainOutlierCorrection):
+class ParmExportCalWrapper(gainoutliercorrection):
     """
     Wrapper inserting logger functionality
     """
