@@ -44,7 +44,6 @@ rspId   = tc.rspId
 blpId   = tc.blpId
 bmBanks = tc.bmBanks
 
-repeat = tc.repeat
 tc.setResult('PASSED')   # self checking test, so start assuming it will run PASSED
 
 tc.appendLog(11,'')
