@@ -1737,12 +1737,12 @@ class SolverAppForm(QMainWindow):
 
         # Read keywords from TableKeywords
         keywords=self.solverQuery.solverTable.keywordnames()
-
         for key in keywords:                                    # loop over all the keywords found in the TableKeywords
-            for parmName in parmNames:                                    # loop over the list of all allowed parmNames
-                if parmName in key.lower():                               # if an allowed parmName is found in the key
-                    indices=self.solverQuery.solverTable.getkeyword(key)  # extract the indices
-                    parmMap[key]=indices                                  # and write them into the python map
+            for parmName in parmNames:                          # loop over the list of all allowed parmNames
+                if parmName in key.lower():                     # if an allowed parmName is found in the key
+		    index=keywords.index(key)			# better to use index for getkeyword to avoid . conflict
+                    indices=self.solverQuery.solverTable.getkeyword(index)  # extract the indices
+                    parmMap[key]=indices                                    # and write them into the python map
 
         return parmMap
 
@@ -1859,7 +1859,6 @@ class SolverAppForm(QMainWindow):
     # Compute amplitude for parameter
     #
     def computeAmplitude(self, parameter, solutions):
-        #print "computeAmplitude()"   # DEBUG
         #print "computeAmplitude(): parameter = ", parameter   # DEBUG
 
         parameter=str(parameter)
@@ -1869,8 +1868,9 @@ class SolverAppForm(QMainWindow):
         #print "computeAmplitude() parmMap = ", self.parmMap  # DEBUG
 
         # Insert REAL and Imag into parameter
-        parameterReal=parameter[:8] + ":Real" + parameter[8:]
-        parameterImag=parameter[:8] + ":Imag" + parameter[8:]
+	pos=parameter.find("Gain")	# this works for Gain: and DirectionalGain
+        parameterReal=parameter[:(pos+8)] + ":Real" + parameter[(pos+8):]
+        parameterImag=parameter[:(pos+8)] + ":Imag" + parameter[(pos+8):]
 
         #print "computeAmplitude() parameterReal =", parameterReal   # DEBUG
         #print "computeAmplitude() parameterImag = ", parameterImag  # DEBUG
@@ -1889,7 +1889,6 @@ class SolverAppForm(QMainWindow):
         # Decide on data type of solutions
         if isinstance(solutions, int):
             amplitude=math.sqrt(solutions[real_idx]^2 + solutions[imag_idx]^2)
-
         elif isinstance(solutions, np.ndarray) or isinstance(solutions, list):
             length=len(solutions)
 
@@ -1914,8 +1913,9 @@ class SolverAppForm(QMainWindow):
         self.parmMap=self.createParmMap()
 
         # Insert REAL and Imag into parameter
-        parameterReal=parameter[:8] + ":Real" + parameter[8:]
-        parameterImag=parameter[:8] + ":Imag" + parameter[8:]
+	pos=parameter.find("Gain")	# this works for Gain: and DirectionalGain
+        parameterReal=parameter[:(pos+8)] + ":Real" + parameter[(pos+8):]
+        parameterImag=parameter[:(pos+8)] + ":Imag" + parameter[(pos+8):]
 
         real_idx=self.parmMap[parameterReal][0]
         imag_idx=self.parmMap[parameterImag][0]
