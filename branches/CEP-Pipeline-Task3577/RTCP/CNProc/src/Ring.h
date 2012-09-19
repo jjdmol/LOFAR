@@ -44,6 +44,8 @@ class Ring
     const unsigned last;
     const unsigned increment;
 
+    void skipFirstBlocks(size_t n);
+
   private:
     unsigned current;
 };
@@ -96,6 +98,21 @@ inline std::vector<unsigned> Ring::list() const
 inline bool Ring::isLast() const
 {
   return current + increment >= last || numcores >= numperpset;
+}
+
+inline void Ring::skipFirstBlocks(size_t n)
+{
+  // TODO: extend towards skipping from any position
+
+  for( unsigned b = 0, activecore = 0; b < n; b++ ) {
+    for (unsigned sb = 0; sb < numperpset; sb++) {
+      if (activecore == core)
+        next();
+      
+      if (++activecore == numcores)
+        activecore = 0;
+    }
+  }
 }
 
 } // namespace RTCP

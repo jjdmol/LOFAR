@@ -40,8 +40,8 @@
   def read_cdo_settings(tc, msg, rspId=['rsp0'], applev=21)
   def read_cdo_transport(tc, msg, rspId=['rsp0'], applev=21)
     
-  def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'])
-  def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'])
+  def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'], bmBank=[0])
+  def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'], bmBank=[0])
 """
 
 ################################################################################
@@ -1517,7 +1517,7 @@ def read_cdo_transport(tc, msg, rspId=['rsp0'], applev=21):
   tc.appendLog(applev, '      UDP  : checksum        = 0x%X' % udp.checksum)
 
           
-def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0']):
+def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'], bmBank=[0]):
   """Write subband to beamlet mapping to SS register
   
   Input:
@@ -1526,12 +1526,14 @@ def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0']):
   - ss_map = List of words for subband to beamlet mapping
   - blpId  = List of 'blp#'
   - rspId  = List of 'rsp#'
+  - bmBank = List of regId(s) for beam mode banks 0, 1, 2 and/or 3
   Return: void
   """
-  write_mem(tc, msg, 'ss', 'settings', ss_map, blpId, rspId, 2)
+  regId = bmBank[0]
+  write_mem(tc, msg, 'ss', 'settings%d' % regId, ss_map, blpId, rspId, 2)
 
 
-def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0']):
+def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'], bmBank=[0]):
   """Read subband to beamlet mapping from SS register
   
   Input:
@@ -1540,11 +1542,13 @@ def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0']):
   - nof    = Nof words to read from the SS register
   - blpId  = List of one 'blp#'
   - rspId  = List of one 'rsp#'
+  - bmBank = List of one regId for beam mode bank 0, 1, 2 or 3
   Return:
   - Read SS register words
   """
   width = 2
-  return read_mem(tc, msg, 'ss', 'settings', width*nof, blpId, rspId, '+', width)
+  regId = bmBank[0]
+  return read_mem(tc, msg, 'ss', 'settings%d' % regId, width*nof, blpId, rspId, '+', width)
   
   
 ################################################################################

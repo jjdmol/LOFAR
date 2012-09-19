@@ -299,7 +299,7 @@ void PreCorrelationFlagger::initFlags(unsigned station, FilteredData* filteredDa
       itsIntegratedFlags[channel] = false;
     }
     // Use the original coarse flags to initialize the flags.
-    if(filteredData->flags[1][station].count() > 0) { // We are integrating, so if any sample in time is flagged, everything is flagged.
+    if(filteredData->flags[itsNrChannels == 1 ? 0 : 1][station].count() > 0) { // We are integrating, so if any sample in time is flagged, everything is flagged.
       for (unsigned channel = 0; channel < itsNrChannels; channel++) {
 	itsIntegratedFlags[channel] = true;
       }
@@ -319,7 +319,7 @@ void PreCorrelationFlagger::initFlags(unsigned station, FilteredData* filteredDa
 
       // Use the original coarse flags to initialize the flags.
       for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {
-	if(filteredData->flags[1][station].test(time)) {
+	if(filteredData->flags[itsNrChannels == 1 ? 0 : 1][station].test(time)) {
 	  for (unsigned channel = 0; channel < itsNrChannels; channel++) {
 	    itsIntegratedFlags2D[channel][time/itsIntegrationFactor] = true;
 	  }
