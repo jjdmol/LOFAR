@@ -41,6 +41,8 @@ def compare_two_parmdb(infile_1, infile_2, max_delta):
         try:
             if len(stations_1) != len(stations_2):
                 print "the number of stations found in the parmdb are different!!"
+                print "stations_1: {0}".format(stations_1)
+                print "stations_2: {0}".format(stations_2)
                 return False
             print "Number of stations in the parmdb: {0}".format(len(stations_1))
             for station_1, station_2 in zip(stations_1, stations_2):
@@ -48,6 +50,7 @@ def compare_two_parmdb(infile_1, infile_2, max_delta):
                 if station_1 != station_2:
                     print  "the station found in the parmdb are not the same!\n"
                     print "{0} != {1}".format(station_1, station_2)
+
                     return False
 
                 print "Processing station {0}".format(station_1)
@@ -181,6 +184,7 @@ if __name__ == "__main__":
 
         print "Regression test Succeed!!"
         sys.exit(0)
+
 
 
 
