@@ -1733,7 +1733,7 @@ class SolverAppForm(QMainWindow):
         #print "createParmMap()"   # DEBUG
         parmMap={}                 # Dictionary containing Parameter names mapped to indices
 
-        parmNames=['gain', 'mim']  # extend these as necessary
+        parmNames=['gain', 'directionalgain','mim']  # extend these as necessary
 
         # Read keywords from TableKeywords
         keywords=self.solverQuery.solverTable.keywordnames()
