@@ -63,7 +63,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   // print sizes of the cache
   LOG_DEBUG_STR("m_beamletweights().size()            =" << m_beamletweights().size()     * sizeof(complex<int16>));
   LOG_DEBUG_STR("m_subbandselection.crosslets().size()=" << m_subbandselection.crosslets().size()   * sizeof(uint16));
-  LOG_DEBUG_STR("m_subbandselection.bealets().size()  =" << m_subbandselection.beamlets().size()   * sizeof(uint16));
+  LOG_DEBUG_STR("m_subbandselection.beamlets().size() =" << m_subbandselection.beamlets().size()   * sizeof(uint16));
   LOG_DEBUG_STR("m_rcusettings().size()               =" << m_rcusettings().size()        * sizeof(uint8));
   LOG_DEBUG_STR("m_hbasettings().size()               =" << m_hbasettings().size()        * sizeof(uint8));
   LOG_DEBUG_STR("m_hbareadings().size()               =" << m_hbareadings().size()        * sizeof(uint8));
@@ -83,6 +83,9 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_SdsWriteBuffer.size()              =" << sizeof(itsSdsWriteBuffer));
   LOG_DEBUG_STR("m_SdsReadBuffer.size()               =" << sizeof(itsSdsReadBuffer));
   LOG_DEBUG_STR("m_latencys.size()                    =" << itsLatencys().size()    * sizeof(EPA_Protocol::RADLatency));
+  LOG_DEBUG_STR("itsSwappedXY.size()           =" << itsSwappedXY.size());
+  LOG_DEBUG_STR("itsBitsModeInfo.size()        =" << itsBitModeInfo().size()           * sizeof(EPA_Protocol::RSRBeamMode));
+  LOG_DEBUG_STR("itsBitsPerSample.size()       =" << sizeof(itsBitsPerSample));
 
   LOG_INFO_STR(formatString("CacheBuffer size = %d bytes",
 	         m_beamletweights().size()    	       
@@ -170,16 +173,16 @@ void CacheBuffer::reset(void)
 		//
 		int		firstSubband = GET_CONFIG("RSPDriver.FIRST_SUBBAND", i);
 		for (int rcu = 0; rcu < m_subbandselection.beamlets().extent(firstDim); rcu++) {
-    		for (int plane = 0; plane < (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE); plane++) {	
-    			for (int rsp = 0; rsp < MEPHeader::N_SERDES_LANES; rsp++) {
-    				int	start(rsp*(MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+    		for (int bank = 0; bank < (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE); bank++) {	
+    			for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+    				int	start(lane*(MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
     				int stop (start + maxBeamletsPerRSP(itsBitsPerSample));
     				if (rcu==0) LOG_DEBUG_STR("start=" << start << ", stop=" << stop);
     				for (int sb = start; sb < stop; sb++) {
-    					m_subbandselection.beamlets()(rcu, plane, sb) = (rcu%N_POL) + (sb*N_POL) + (firstSubband*2);
+    					m_subbandselection.beamlets()(rcu, bank, sb) = (rcu%N_POL) + (sb*N_POL) + (firstSubband*2);
     				} // for sb
-    			} // for rsp
-    		} // for plane
+    			} // for lane
+    		} // for bank
 		} // for rcu
 		LOG_DEBUG_STR("m_subbandsel(0): " << m_subbandselection.beamlets()(0, Range::all(), Range::all()));
 	} // if identity_weights
@@ -298,10 +301,9 @@ void CacheBuffer::reset(void)
 	
 	// BitMode
 	itsBitModeInfo().resize(StationSettings::instance()->nrRspBoards());
-	RSRNofbeam bitmodeinfo;
-	bitmodeinfo.select = 0;
-	bitmodeinfo.bitmode = 1;
-	bitmodeinfo.rounding = 0;
+	RSRBeamMode bitmodeinfo;
+	bitmodeinfo.bm_select = 0;
+	bitmodeinfo.bm_max = 0;
 	itsBitModeInfo() = bitmodeinfo;
 	
 }

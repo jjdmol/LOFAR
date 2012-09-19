@@ -37,6 +37,29 @@ using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 
+// BITMODE 16
+// bank 0:
+// lane 0    lane 1    lane 2    lane 3
+//	0,1      122,123   244,245   366,367
+//  2,3      124,125   246,247   368,369
+//   ..        ..        ..        ..
+// 120,121   242,243   364,365,  486,487
+//
+// BITMODE 8
+// bank 0:
+// lane 0    lane 1    lane 2    lane 3
+//	0,1      236,237   472,473   708,709
+//  2,3      238,239   474,475   710,711
+//   ..        ..        ..        ..
+// 116,117   352,353   588,589,  824,825
+//
+// bank 1:
+// lane 0    lane 1    lane 2    lane 3
+// 118,119   354,355   590,591   826,827
+// 120,121   356,357   592,593   828,829
+//   ..        ..        ..        ..
+// 234,235   470,471   706,707   942,943
+
 SetSubbandsCmd::SetSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
 	Command("SetSubbands", port, oper)
 {
@@ -65,7 +88,7 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 
 	Range	dst_range;
 	Range	src_range;
-	int nPlanes = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
+	int nBanks = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
 
 	switch (m_event->subbands.getType()) {
 
@@ -78,27 +101,34 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 				//       In other words: getSubbandSelection can contain more data than m_event->subbands
 				if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample())) {
 					cache.getSubbandSelection().beamlets()(cache_rcu, 0, dst_range) = 0;
-					cache.getSubbandSelection().beamlets()(cache_rcu, 0, dst_range) = m_event->subbands.beamlets()(0, 0, Range::all()) * (int)N_POL + (cache_rcu % N_POL);
+					cache.getSubbandSelection().beamlets()(cache_rcu, 0, dst_range) = 
+											m_event->subbands.beamlets()(0, 0, Range::all()) * (int)N_POL + (cache_rcu % N_POL);
 				}
 				else {
 					int nr_subbands = m_event->subbands.beamlets().extent(thirdDim);
-					for (int plane = 0; plane < nPlanes; plane++) {
-    					for (int rsp = 0; rsp < MEPHeader::N_SERDES_LANES; rsp++) {
-    						int	swstart(rsp * maxDataslotsPerRSP(cache.getBitsPerSample()));
-    						int hwstart(rsp * (MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
-    						int nrSubbands2move(MIN(nr_subbands-swstart, maxDataslotsPerRSP(cache.getBitsPerSample())));
-    						if (nrSubbands2move > 0) {
-    							dst_range = Range(hwstart, hwstart+nrSubbands2move-1);
-    							src_range = Range(swstart, swstart+nrSubbands2move-1);
-    							cache.getSubbandSelection().beamlets()(cache_rcu, plane, dst_range) = 0;
-    							cache.getSubbandSelection().beamlets()(cache_rcu, plane, dst_range) = m_event->subbands.beamlets()(0, plane, src_range) * (int)N_POL + (cache_rcu % N_POL);
-    							if (cache_rcu == 0) {
-    								LOG_DEBUG_STR("Setsubbands:move(" << swstart << ".." << swstart+nrSubbands2move << ") to (" 
-    																  << hwstart << ".." << hwstart+nrSubbands2move << ")");
-    							}
-    						} // subbands left
-    					} // for each rsp-slice
-    				}
+					int nrBlocks = MEPHeader::N_SERDES_LANES * nBanks;
+					for (int block = 0; block < nrBlocks; block++) {
+						int swbank = block / MEPHeader::N_SERDES_LANES;
+						int swlane = block % MEPHeader::N_SERDES_LANES;
+						int hwbank = block % nBanks;
+						int hwlane = block / nBanks;
+    					int	swstart(swlane * maxDataslotsPerRSP(cache.getBitsPerSample()));
+    					int hwstart(hwlane * (MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+    					int nrSubbands2move(MIN(nr_subbands-swstart, maxDataslotsPerRSP(cache.getBitsPerSample())));
+    					if (nrSubbands2move > 0) {
+    						dst_range = Range(hwstart, hwstart+nrSubbands2move-1);
+    						src_range = Range(swstart, swstart+nrSubbands2move-1);
+    						cache.getSubbandSelection().beamlets()(cache_rcu, hwbank, dst_range) = 0;
+    						cache.getSubbandSelection().beamlets()(cache_rcu, hwbank, dst_range) = 
+										m_event->subbands.beamlets()(0, swbank, src_range) * (int)N_POL + (cache_rcu % N_POL);
+    						if (cache_rcu == 0) {
+    							LOG_DEBUG_STR("Setsubbands:move(" << swstart << ".." << swstart+nrSubbands2move << ") to (" 
+    															  << hwstart << ".." << hwstart+nrSubbands2move << ")"
+																  << " swbank:" << swbank << " swlane:" << swlane 
+																  << " hwbank:" << hwbank << " hwlane:" << hwlane);
+    						}
+    					} // subbands left
+    				} // for each block
 				} // difference in max'en
 
 				if (cache_rcu == 0) {
@@ -114,9 +144,9 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 		dst_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
 		for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 			if (m_event->rcumask[cache_rcu]) {
-			    for (int plane = 0; plane < nPlanes; plane++) {
-				    cache.getSubbandSelection().crosslets()(cache_rcu, plane, dst_range) = 0;
-				    cache.getSubbandSelection().crosslets()(cache_rcu, plane, dst_range) = m_event->subbands.crosslets()(0,0,0) * N_POL + (cache_rcu % N_POL);
+			    for (int bank = 0; bank < nBanks; bank++) {
+				    cache.getSubbandSelection().crosslets()(cache_rcu, bank, dst_range) = 0;
+				    cache.getSubbandSelection().crosslets()(cache_rcu, bank, dst_range) = m_event->subbands.crosslets()(0,0,0) * N_POL + (cache_rcu % N_POL);
                 }
 				LOG_DEBUG_STR("m_event->subbands.crosslets() = " << m_event->subbands.crosslets());
 			}

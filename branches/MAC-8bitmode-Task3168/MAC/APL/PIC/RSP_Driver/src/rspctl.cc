@@ -660,13 +660,13 @@ GCFEvent::TResult BitmodeCommand::ack(GCFEvent& e)
 				if (getRSPMask().test(rsp)) {
 					// note: version: 1=16 bit, 2=16/8 bit and 4=16/8/4/ bit
 					switch (ack.bitmode_version[rsp]) {
-				    case 1:
+				    case 0:
 				        cout << formatString("RSP[%02u]: 16     : %2d\n", rsp, ack.bits_per_sample[rsp]);
 				        break;
-				    case 2:
+				    case 1:
 				        cout << formatString("RSP[%02u]: 16/8   : %2d\n", rsp, ack.bits_per_sample[rsp]);
 				        break;
-				    case 4:
+				    case 2:
 				        cout << formatString("RSP[%02u]: 16/8/4 : %2d\n", rsp, ack.bits_per_sample[rsp]);
 				        break;
 				    default: break;    
@@ -3731,7 +3731,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (optarg) {
 				bitmodecommand->setMode(false);
 				unsigned long bitmode = strtoul(optarg, 0, 0);
-				if (bitmode != 4 && bitmode != 8 && bitmode & 16) {
+				if (bitmode != 4 && bitmode != 8 && bitmode != 16) {
 					logMessage(cerr, formatString("Error: bitmode value can only be 4, 8 or 16, not %ld", bitmode));
 				}
 				bitmodecommand->bitmode(bitmode);

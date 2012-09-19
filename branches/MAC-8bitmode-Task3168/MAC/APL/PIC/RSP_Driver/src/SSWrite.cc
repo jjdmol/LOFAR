@@ -40,128 +40,103 @@ using namespace RSP;
 using namespace RTC;
 
 SSWrite::SSWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD)
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD * MAX_BITS_PER_SAMPLE / MIN_BITS_PER_SAMPLE)
 {
-  memset(&m_hdr, 0, sizeof(MEPHeader));
+	memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 SSWrite::~SSWrite()
 {
-  /* TODO: delete event? */
+	/* TODO: delete event? */
 }
 
 void SSWrite::sendrequest()
 {
-  itsActivePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
-  if (getCurrentIndex() >= (itsActivePlanes*NR_BLPS_PER_RSPBOARD)) {
-    setContinue(true);
-    return;
-  }
-  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex()/itsActivePlanes);
-  LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d",
-			 getBoardPort().getName().c_str(),
-			 global_blp));
+	itsActiveBanks = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
+	if (getCurrentIndex() >= (itsActiveBanks*NR_BLPS_PER_RSPBOARD)) {
+		setContinue(true);
+		return;
+	}
+	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex()/itsActiveBanks);
+	LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d", getBoardPort().getName().c_str(), global_blp));
 
-  // mark modified
-  //Cache::getInstance().getState().ss().write_now(global_blp);
-    
-  // send subband select message
-  EPASsSelectEvent ss;
-  
-  int dstid = 1 << (getCurrentIndex() / itsActivePlanes);
-  // used plane 
-  int plane = getCurrentIndex() % itsActivePlanes;
-  LOG_DEBUG_STR("plane=" << plane);
-    
-  ss.hdr.set( MEPHeader::WRITE, 
-              dstid,
-              MEPHeader::SS,
-              MEPHeader::SS_SELECT+plane,
-              MEPHeader::SS_SELECT_SIZE);
-  
-  // create array to contain the subband selection
-  Array<uint16, 2> subbands((uint16*)&ss.subbands,
-			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL),
-			    neverDeleteData);
+	// mark modified
+	//Cache::getInstance().getState().ss().write_now(global_blp);
 
-#if 0
-  Array<int, 2> index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL);
-  Array<int, 2> mapped_index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL);
+	// send subband select message
+	EPASsSelectEvent ss;
 
-  for (int beamlet = MEPHeader::N_LOCAL_XLETS; beamlet < MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS; beamlet++) {
-    for (int pol = 0; pol < N_POL; pol++) {
-      index(beamlet, pol) = beamlet * N_POL + pol;
-    }
-  }
-  mapped_index = 0;
-#endif
-  
+	int dstid = 1 << (getCurrentIndex() / itsActiveBanks);
+	// used bank 
+	int bank = getCurrentIndex() % itsActiveBanks;
+	LOG_INFO(formatString("SSWRITE:board: %d, index=%d, globalblp=%d, dstID=%d, bank=%d", 
+							getBoardId(), getCurrentIndex(), global_blp, dstid, bank));
 
-  
-  // copy crosslet selection
-  Range xlet_range(0, MEPHeader::N_LOCAL_XLETS-1);
-  subbands(xlet_range, 0) = Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2,     plane, xlet_range); // x
-  subbands(xlet_range, 1) = Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, plane, xlet_range); // y
+	ss.hdr.set( MEPHeader::WRITE, 
+				dstid,
+				MEPHeader::SS,
+				MEPHeader::SS_SELECT+bank,
+				MEPHeader::SS_SELECT_SIZE);
 
-  //
-  // copy the actual values from the cache
-  // Explain this in more detail
-  for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+	// create array to contain the subband selection
+	Array<uint16, 2> subbands((uint16*)&ss.subbands,
+							shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL),
+							neverDeleteData);
 
-    int hw_offset = lane + MEPHeader::N_LOCAL_XLETS;
-    int cache_offset = (lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES));
-    
-    // strided source range, stride = NR_BLPS_PER_RSPBOARD
-    Range hw_range(hw_offset, hw_offset + MEPHeader::N_BEAMLETS - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
-    Range cache_range(cache_offset, cache_offset + (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) - 1, 1);
+	// copy crosslet selection
+	Range xlet_range(0, MEPHeader::N_LOCAL_XLETS-1);
+	subbands(xlet_range, 0) = Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2,     bank, xlet_range); // x
+	subbands(xlet_range, 1) = Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, bank, xlet_range); // y
 
-    LOG_DEBUG_STR("lane=" << lane);
-    LOG_DEBUG_STR("hw_range=" << hw_range);
-    LOG_DEBUG_STR("cache_range=" << cache_range);
+	//
+	// copy the actual values from the cache
+	// Explain this in more detail
+	for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
 
-    subbands(hw_range, 0) = Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2,     plane, cache_range); // x
-    subbands(hw_range, 1) = Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, plane, cache_range); // y
+		int hw_offset = lane + MEPHeader::N_LOCAL_XLETS;
+		int cache_offset = (lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES));
 
-#if 0
-    mapped_index(hw_range, 0) = index(cache_range, 0);
-    mapped_index(hw_range, 1) = index(cache_range, 1);
-#endif
-  }
+		// strided source range, stride = NR_BLPS_PER_RSPBOARD
+		Range hw_range(hw_offset, hw_offset + MEPHeader::N_BEAMLETS - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
+		Range cache_range(cache_offset, cache_offset + (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) - 1, 1);
 
-#if 0
-  LOG_DEBUG_STR("mapped_index=" << mapped_index);
-#endif
+		LOG_DEBUG_STR("lane=" << lane);
+		LOG_DEBUG_STR("hw_range=" << hw_range);
+		LOG_DEBUG_STR("cache_range=" << cache_range);
 
-  m_hdr = ss.hdr;
-  getBoardPort().send(ss);
+		subbands(hw_range, 0) = Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2,     bank, cache_range); // x
+		subbands(hw_range, 1) = Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, bank, cache_range); // y
+	}
+
+	m_hdr = ss.hdr;
+//  LOG_INFO_STR("SUBBANDSELECT=" << subbands);
+	getBoardPort().send(ss);
 }
 
 void SSWrite::sendrequest_status()
 {
-  // intentionally left empty
+	// intentionally left empty
 }
 
 GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_WRITEACK != event.signal)
-  {
-    LOG_WARN("SSWrite::handleack: unexpected ack");
-    return GCFEvent::NOT_HANDLED;
-  }
+	if (EPA_WRITEACK != event.signal) {
+		LOG_WARN("SSWrite::handleack: unexpected ack");
+		return GCFEvent::NOT_HANDLED;
+	}
 
-  EPAWriteackEvent ack(event);
+	EPAWriteackEvent ack(event);
 
-  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex()/itsActivePlanes);
+	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex()/itsActiveBanks);
 
-  if (!ack.hdr.isValidAck(m_hdr))
-  {
-    Cache::getInstance().getState().ss().write_error(global_blp);
+	if (!ack.hdr.isValidAck(m_hdr)) {
+		Cache::getInstance().getState().ss().write_error(global_blp);
 
-    LOG_ERROR("SSWrite::handleack: invalid ack");
-    return GCFEvent::NOT_HANDLED;
-  }
+		LOG_ERROR("SSWrite::handleack: invalid ack");
+		return GCFEvent::NOT_HANDLED;
+	}
 
-  Cache::getInstance().getState().ss().write_ack(global_blp);
-  
-  return GCFEvent::HANDLED;
+	Cache::getInstance().getState().ss().write_ack(global_blp);
+
+	return GCFEvent::HANDLED;
 }

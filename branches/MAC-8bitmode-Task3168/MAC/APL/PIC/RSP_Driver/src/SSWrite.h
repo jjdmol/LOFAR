@@ -61,7 +61,7 @@ namespace LOFAR {
 
     private:
       EPA_Protocol::MEPHeader m_hdr;
-      int itsActivePlanes;
+      int itsActiveBanks;
     };
   };
 };

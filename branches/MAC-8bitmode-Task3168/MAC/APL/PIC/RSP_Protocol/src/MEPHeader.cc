@@ -37,7 +37,7 @@ using namespace std;
 const MEPHeader::FieldsType MEPHeader::RSR_STATUS_HDR        = { READ,  0, 0, { DST_RSP, RSR, RSR_STATUS    }, 0, RSR_STATUS_SIZE,    0, 0 };
 const MEPHeader::FieldsType MEPHeader::RSR_VERSION_HDR       = { READ,  0, 0, { DST_RSP, RSR, RSR_VERSION   }, 0, RSR_VERSION_SIZE,   0, 0 };
 const MEPHeader::FieldsType MEPHeader::RSR_TIMESTAMP_HDR     = { WRITE, 0, 0, { DST_RSP, RSR, RSR_TIMESTAMP }, 0, RSR_TIMESTAMP_SIZE, 0, 0 };
-const MEPHeader::FieldsType MEPHeader::RSR_NOFBEAM_HDR       = { WRITE, 0, 0, { DST_RSP, RSR, RSR_NOFBEAM   }, 0, RSR_NOFBEAM_SIZE,   0, 0 };
+const MEPHeader::FieldsType MEPHeader::RSR_BEAMMODE_HDR       = { WRITE, 0, 0, { DST_RSP, RSR, RSR_BEAMMODE   }, 0, RSR_BEAMMODE_SIZE,   0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::RSU_FLASHRW_HDR       = { WRITE, 0, 0, { DST_RSP, RSU, RSU_FLASHRW     }, 0, RSU_FLASHRW_SIZE,     0, 0 };
 const MEPHeader::FieldsType MEPHeader::RSU_FLASHERASE_HDR    = { WRITE, 0, 0, { DST_RSP, RSU, RSU_FLASHERASE  }, 0, RSU_FLASHERASE_SIZE,  0, 0 };

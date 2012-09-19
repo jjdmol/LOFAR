@@ -41,7 +41,7 @@ using namespace RTC;
 SSRead::SSRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD*(MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE))
 {
-  memset(&m_hdr, 0, sizeof(MEPHeader));
+	memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 SSRead::~SSRead()
@@ -50,98 +50,95 @@ SSRead::~SSRead()
 
 void SSRead::sendrequest()
 {
-  EPAReadEvent ssread;
-  itsActivePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
-  if (getCurrentIndex() >= (itsActivePlanes*NR_BLPS_PER_RSPBOARD)) {
-    setContinue(true);
-  }
-  
-  int dstid = 1 << (getCurrentIndex() / itsActivePlanes);
-  int plane = getCurrentIndex() % itsActivePlanes;
-  
-  ssread.hdr.set( MEPHeader::READ, 
-                  dstid,
-                  MEPHeader::SS,
-                  MEPHeader::SS_SELECT+plane,
-                  MEPHeader::SS_SELECT_SIZE);
-      
-  m_hdr = ssread.hdr;
-  getBoardPort().send(ssread);
+	EPAReadEvent ssread;
+	itsActivePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
+	if (getCurrentIndex() >= (itsActivePlanes*NR_BLPS_PER_RSPBOARD)) {
+		setContinue(true);
+	}
+
+	int dstid = 1 << (getCurrentIndex() / itsActivePlanes);
+	int plane = getCurrentIndex() % itsActivePlanes;
+
+	ssread.hdr.set(MEPHeader::READ, 
+					dstid,
+					MEPHeader::SS,
+					MEPHeader::SS_SELECT+plane,
+					MEPHeader::SS_SELECT_SIZE);
+
+	m_hdr = ssread.hdr;
+	getBoardPort().send(ssread);
 }
 
 void SSRead::sendrequest_status()
 {
-  /* intentionally left empty */
+	/* intentionally left empty */
 }
 
 GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if ((event.signal < EPA_SS_SELECT) || (event.signal > (EPA_SS_SELECT+3)))
-  {
-    LOG_WARN("SSRead::handleack: unexpected ack");
-    return GCFEvent::NOT_HANDLED;
-  }
+	if ((event.signal < EPA_SS_SELECT) || (event.signal > (EPA_SS_SELECT+3))) {
+		LOG_WARN("SSRead::handleack: unexpected ack");
+		return GCFEvent::NOT_HANDLED;
+	}
 
-  // unpack ss message
-  EPASsSelectEvent ss(event);
+	// unpack ss message
+	EPASsSelectEvent ss(event);
 
-  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex()/itsActivePlanes);
-  if (!ss.hdr.isValidAck(m_hdr))
-  {
-    Cache::getInstance().getState().ss().read_error(global_blp);
-    LOG_ERROR("SSRead::handleack: invalid ack");
-    return GCFEvent::NOT_HANDLED;
-  }
+	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex()/itsActivePlanes);
+	if (!ss.hdr.isValidAck(m_hdr)) {
+		Cache::getInstance().getState().ss().read_error(global_blp);
+		LOG_ERROR("SSRead::handleack: invalid ack");
+		return GCFEvent::NOT_HANDLED;
+	}
 
-  LOG_DEBUG("handleack");
+	LOG_DEBUG("handleack");
 
-  LOG_DEBUG(formatString(">>>> SSRead(%s) global_blp=%d",
-			 getBoardPort().getName().c_str(), global_blp));
-  
-  // create array point to data in the response event (format in 2 dims)
-  Array<uint16, 2> subbands((uint16*)&ss.subbands,
-			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL),
-			    neverDeleteData);
+	LOG_DEBUG(formatString(">>>> SSRead(%s) global_blp=%d",
+	getBoardPort().getName().c_str(), global_blp));
 
-  Range hw_range;
-  // used plane 
-  int plane = getCurrentIndex()%itsActivePlanes;
-  if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
-  {
-    
-    hw_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
-    subbands(hw_range, 0) -= Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2,     plane, Range::all());
-    subbands(hw_range, 1) -= Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, plane, Range::all());
-    
-    hw_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
-    subbands(hw_range, 0) -= Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2,     plane, Range::all());
-    subbands(hw_range, 1) -= Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, plane, Range::all());
-    
-    uint16 ssum = sum(subbands);
+	// create array point to data in the response event (format in 2 dims)
+	Array<uint16, 2> subbands((uint16*)&ss.subbands,
+							shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL),
+							neverDeleteData);
 
-    if (0 != ssum)
-    {
-      LOG_WARN(formatString("LOOPBACK CHECK FAILED: SSRead mismatch (blp=%d, error=%d)",
-			    global_blp, ssum));
-    }
-  }
-  else
-  {
-    // copy into the cache
-    hw_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
-    Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2, plane, Range::all())
-      = subbands(hw_range, 0); // x
-    Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, plane, Range::all())
-      = subbands(hw_range, 1); // y
-    
-    hw_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
-    Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2, plane, Range::all())
-      = subbands(hw_range, 0); // x
-    Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, plane, Range::all())
-      = subbands(hw_range, 1); // y  
-  }
+	Range hw_range;
+	// used plane 
+	int plane = getCurrentIndex()%itsActivePlanes;
+	if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i)) {
+		hw_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
+		subbands(hw_range, 0) -= 
+				Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2,     plane, Range::all());
+		subbands(hw_range, 1) -= 
+				Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, plane, Range::all());
 
-  Cache::getInstance().getState().ss().read_ack(global_blp);
+		hw_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
+		subbands(hw_range, 0) -= 
+				Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2,     plane, Range::all());
+		subbands(hw_range, 1) -= 
+				Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, plane, Range::all());
 
-  return GCFEvent::HANDLED;
+		uint16 ssum = sum(subbands);
+
+		if (0 != ssum) {
+			LOG_WARN(formatString("LOOPBACK CHECK FAILED: SSRead mismatch (blp=%d, error=%d)", global_blp, ssum));
+		}
+	}
+	else {
+		// copy into the cache
+		hw_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
+		Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2, plane, Range::all())
+				= subbands(hw_range, 0); // x
+		Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, plane, Range::all())
+				= subbands(hw_range, 1); // y
+
+		hw_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
+		Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2, plane, Range::all())
+				= subbands(hw_range, 0); // x
+		Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, plane, Range::all())
+				= subbands(hw_range, 1); // y  
+	}
+
+	Cache::getInstance().getState().ss().read_ack(global_blp);
+
+	return GCFEvent::HANDLED;
 }

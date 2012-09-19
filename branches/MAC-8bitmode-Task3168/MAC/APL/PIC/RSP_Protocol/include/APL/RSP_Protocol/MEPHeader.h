@@ -124,7 +124,7 @@ public:
 	static const uint8 RSR_STATUS       = 0x00;
 	static const uint8 RSR_VERSION      = 0x01;
 	static const uint8 RSR_TIMESTAMP    = 0x02;
-	static const uint8 RSR_NOFBEAM      = 0x03;
+	static const uint8 RSR_BEAMMODE     = 0x03;
 
 	static const uint8 RSU_FLASHRW      = 0x01;
 	static const uint8 RSU_FLASHERASE   = 0x02;
@@ -260,7 +260,7 @@ public:
 	static const uint16 RSR_STATUS_SIZE       = 252;
 	static const uint16 RSR_VERSION_SIZE      = 2;
 	static const uint16 RSR_TIMESTAMP_SIZE    = 4;
-	static const uint16 RSR_NOFBEAM_SIZE      = 1;
+	static const uint16 RSR_BEAMMODE_SIZE     = 2;
 
 	static const uint16 RSU_FLASHRW_SIZE      = 1024;
 	static const uint16 RSU_FLASHERASE_SIZE   = 1;
@@ -275,7 +275,7 @@ public:
 	static const uint16 DIAG_RESULTS_SIZE     = 4096; // also 8192 ?
 	static const uint16 DIAG_SELFTEST_SIZE    = 4;
 
-	static const uint16 SS_SELECT_SIZE        = (N_LOCAL_XLETS + N_BEAMLETS) * N_POL * sizeof(uint16); // = 960?
+	static const uint16 SS_SELECT_SIZE        = (N_LOCAL_XLETS + N_BEAMLETS) * N_POL * sizeof(uint16); // = 1008
 
 	static const uint16 BF_XROUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
 	static const uint16 BF_XIOUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
@@ -385,7 +385,7 @@ public:
 	static const FieldsType RSR_STATUS_HDR;
 	static const FieldsType RSR_VERSION_HDR;
 	static const FieldsType RSR_TIMESTAMP_HDR;
-	static const FieldsType RSR_NOFBEAM_HDR;
+	static const FieldsType RSR_BEAMMODE_HDR;
 
 	static const FieldsType RSU_FLASHRW_HDR;
 	static const FieldsType RSU_FLASHERASE_HDR;

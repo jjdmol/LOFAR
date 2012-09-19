@@ -51,7 +51,7 @@ namespace LOFAR {
       /**
        * Member accessor functions.
        */
-      blitz::Array<EPA_Protocol::RSRNofbeam, 1>& operator()();
+      blitz::Array<EPA_Protocol::RSRBeamMode, 1>& operator()();
       /*@}*/
 
     public:
@@ -71,10 +71,10 @@ namespace LOFAR {
        * Dimensions of the arrays are:
        *  - itsBitmodeInfo [N_RSPBOARDS]
        */
-      blitz::Array<EPA_Protocol::RSRNofbeam, 1> itsBitmodeInfo;
+      blitz::Array<EPA_Protocol::RSRBeamMode, 1> itsBitmodeInfo;
     };
 
-    inline blitz::Array<EPA_Protocol::RSRNofbeam, 1>& BitmodeInfo::operator()() { 
+    inline blitz::Array<EPA_Protocol::RSRBeamMode, 1>& BitmodeInfo::operator()() { 
     	return (itsBitmodeInfo);
     }
   };

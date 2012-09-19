@@ -72,13 +72,14 @@ void BMWrite::sendrequest()
       }
         
       // send subband select message
-      EPARsrNofbeamEvent bm;
-      bm.hdr.set(MEPHeader::RSR_NOFBEAM_HDR,
+      EPARsrBeammodeEvent bm;
+      bm.hdr.set(MEPHeader::RSR_BEAMMODE_HDR,
                  MEPHeader::DST_ALL);
         
-      bm.nofbeam.select = Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).select;
+      bm.beammode.bm_select = Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).bm_select;
       
       itsHdr = bm.hdr;
+LOG_INFO_STR(bm);
       getBoardPort().send(bm);
   }
 }

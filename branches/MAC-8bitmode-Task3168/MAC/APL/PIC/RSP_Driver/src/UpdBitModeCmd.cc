@@ -72,9 +72,9 @@ void UpdBitModeCmd::complete(CacheBuffer& cache)
     ack.handle = (memptr_t)this; // opaque pointer used to refer to the subscription
     
     for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
-        ack.bitmode_version[i] = cache.getBitModeInfo()()(i).bitmode;
+        ack.bitmode_version[i] = cache.getBitModeInfo()()(i).bm_max;
         
-        uint8 select = cache.getBitModeInfo()()(i).select;
+        uint8 select = cache.getBitModeInfo()()(i).bm_select;
         if (select == 0) { 
             ack.bits_per_sample[i] = 16;
         }

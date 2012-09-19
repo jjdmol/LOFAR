@@ -56,7 +56,7 @@ void BMRead::sendrequest()
   }
   else {
       EPAReadEvent bmread;
-      bmread.hdr.set(MEPHeader::RSR_NOFBEAM_HDR,
+      bmread.hdr.set(MEPHeader::RSR_BEAMMODE_HDR,
                      MEPHeader::DST_RSP,
                      MEPHeader::READ );
     
@@ -73,17 +73,17 @@ void BMRead::sendrequest_status()
 
 GCFEvent::TResult BMRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_RSR_NOFBEAM != event.signal)
+  if (EPA_RSR_BEAMMODE != event.signal)
   {
     LOG_WARN("BMRead::handleack: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
 
   // unpack bm message
-  EPARsrNofbeamEvent bm(event);
+  EPARsrBeammodeEvent bm(event);
 
-  LOG_DEBUG_STR(formatString("BM select  = %d", bm.nofbeam.select));
-  LOG_DEBUG_STR(formatString("BM bitmode = %d", bm.nofbeam.bitmode));
+  LOG_DEBUG_STR(formatString("BM supported = %d", bm.beammode.bm_max));
+  LOG_DEBUG_STR(formatString("BM selected  = %d", bm.beammode.bm_select));
 
   if (!bm.hdr.isValidAck(itsHdr))
   {
@@ -93,11 +93,10 @@ GCFEvent::TResult BMRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 
   LOG_DEBUG("handleack");
 
-  LOG_DEBUG(formatString(">>>> BMRead(%s)",
-			 getBoardPort().getName().c_str()));
+  LOG_DEBUG(formatString(">>>> BMRead(%s)", getBoardPort().getName().c_str()));
   
-  Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).select = bm.nofbeam.select;
-  Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).bitmode = bm.nofbeam.bitmode;
+  Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).bm_select = bm.beammode.bm_select;
+  Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).bm_max    = bm.beammode.bm_max;
   
   LOG_DEBUG_STR("BMRead::handleack() done");
   return GCFEvent::HANDLED;

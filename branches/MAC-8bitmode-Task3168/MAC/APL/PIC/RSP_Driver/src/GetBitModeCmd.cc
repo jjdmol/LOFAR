@@ -55,9 +55,9 @@ void GetBitModeCmd::ack(CacheBuffer& cache)
     ack.timestamp = getTimestamp();
     ack.status = RSP_SUCCESS;
     for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
-        ack.bitmode_version[i] = cache.getBitModeInfo()()(i).bitmode;
+        ack.bitmode_version[i] = cache.getBitModeInfo()()(i).bm_max;
         
-        uint8 select = cache.getBitModeInfo()()(i).select;
+        uint8 select = cache.getBitModeInfo()()(i).bm_select;
         if (select == 0) { 
             ack.bits_per_sample[i] = 16;
         }

@@ -84,7 +84,7 @@ void SetBitModeCmd::apply(CacheBuffer& cache, bool setModFlag)
         
     for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
         if (itsEvent->rspmask.test(i)) {
-            cache.getBitModeInfo()()(i).select = (uint8)select;
+            cache.getBitModeInfo()()(i).bm_select = (uint8)select;
             if (setModFlag) {
             	cache.getCache().getState().bmState().write(i);
             	cache.getCache().getState().cdo().write(2*i);
