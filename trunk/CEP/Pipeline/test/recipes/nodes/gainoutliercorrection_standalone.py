@@ -1,4 +1,4 @@
-from lofarpipe.recipes.nodes.gainoutliercorrection import GainOutlierCorrection
+from lofarpipe.recipes.nodes.gainoutliercorrection import gainoutliercorrection
 import sys
 ## export PYTHONPATH=/home/klijn/build/gnu_debug/lib/python2.6/dist-packages
 class logger():
