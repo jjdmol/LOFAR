@@ -42,6 +42,8 @@
     
   def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'], bmBank=[0])
   def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'], bmBank=[0])
+  
+  def read_bf(tc, msg, nof, ppId=['xr'], blpId=['blp0'], rspId=['rsp0'], bmBank=[0])
 """
 
 ################################################################################
@@ -1549,6 +1551,24 @@ def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'], bmBank=[0]):
   width = 2
   regId = bmBank[0]
   return read_mem(tc, msg, 'ss', 'settings%d' % regId, width*nof, blpId, rspId, '+', width)
+  
+  
+def read_bf(tc, msg, nof, ppId=['xr'], blpId=['blp0'], rspId=['rsp0'], bmBank=[0]):
+  """Read coefficients from BF register
+  
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - nof    = Nof words to read from the BF register
+  - ppId   = List of one BF coefficient pol-phase identifier xr, xi, yr, or yi
+  - blpId  = List of one 'blp#'
+  - rspId  = List of one 'rsp#'
+  - bmBank = List of one register bank identifier for beam mode bank 0, 1, 2 or 3
+  Return:
+  - Read BF register words
+  """
+  width = 2
+  return read_mem(tc, msg, 'bf', 'coef%s%d' % (ppId[0], bmBank[0]), width*nof, blpId, rspId, '-', width)
   
   
 ################################################################################
