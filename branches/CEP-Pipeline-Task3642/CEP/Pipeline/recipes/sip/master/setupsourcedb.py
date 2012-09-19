@@ -35,7 +35,7 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         'skymodel': ingredient.StringField(
             '-s', '--skymodel',
             help="Input sky catalogue",
-            default='None'
+            default=""
         ),
         'type': ingredient.StringField(
             '--type',
@@ -96,13 +96,12 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
                 ) for host, infile in indata
             ]
 
-        # Check if input skymodel file exists. If not, make filename empty.
-        if not os.path.isfile(self.inputs['skymodel']):
-            self.logger.warn(
-                "Source catalog %s does not exist. Using an empty one." %
-                self.inputs['skymodel']
+        # Check if input skymodel file exists, if a filename is given. 
+        if self.inputs['skymodel'] and not os.path.isfile(self.inputs['skymodel']):
+            self.logger.error(
+                "Source catalog %s does not exist" % self.inputs['skymodel']
             )
-            self.inputs['skymodel'] = ""
+            return 1
 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
