@@ -274,8 +274,8 @@ class msss_calibrator_pipeline(control):
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the calibrator source(s).
-        self.run_task("new_bbs",
-            demix_mapfile,
+        self.run_task("bbs_reducer",
+            dppp_mapfile,
             parset=bbs_parset,
             instrument_mapfile=parmdb_mapfile,
             sky_mapfile=sourcedb_mapfile)

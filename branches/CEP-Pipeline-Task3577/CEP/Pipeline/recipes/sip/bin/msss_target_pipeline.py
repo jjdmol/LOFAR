@@ -362,8 +362,8 @@ class msss_target_pipeline(control):
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the target source(s).
-        bbs_mapfile = self.run_task("new_bbs",
-            demix_mapfile,
+        bbs_mapfile = self.run_task("bbs_reducer",
+            dppp_mapfile,
             parset=bbs_parset,
             instrument_mapfile=copied_instrument_mapfile,
             sky_mapfile=sourcedb_mapfile

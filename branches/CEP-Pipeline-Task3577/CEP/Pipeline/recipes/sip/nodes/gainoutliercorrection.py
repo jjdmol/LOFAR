@@ -55,6 +55,8 @@ class gainoutliercorrection(LOFARnodeTCP):
         if not os.access(executable, os.X_OK) and sigma != None:
             # If the executable is not accesable and we have a sigma:
             # use the 'local' functionality (edit parmdb)
+            self.logger.info(
+                    "Using the gainoutlier correction based on edit_parmdb")
 
         # *********************************************************************
         # 3. use gainoutliercorrect from Swinbank
@@ -69,6 +71,8 @@ class gainoutliercorrection(LOFARnodeTCP):
 
         # ********************************************************************
         # 2. Call parmexportcal for gain correction
+        self.logger.info(
+                    "Using the gainoutlier correction based on parmexportcal")
         try:
             temp_dir = tempfile.mkdtemp()
             with CatchLog4CPlus(
