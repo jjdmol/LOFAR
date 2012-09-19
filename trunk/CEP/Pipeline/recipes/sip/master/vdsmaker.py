@@ -24,9 +24,13 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
     see the ``unlink`` input parameter) describing a collection of
     MeasurementSets.
 
-    **Arguments**
+    1. Load data from disk, create the output vds paths
+    2. Call the vdsmaker node script to generate the vds files
+    3. Combine the vds files in a gvds file (master side operation)
+    
+    **Command line arguments**
 
-    A mapfile describing the data to be processed.
+    A mapfile describing the measurementsets to be processed.
     """
     inputs = {
         'gvds': ingredient.StringField(
@@ -62,23 +66,28 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     def go(self):
+        """
+        Contains functionality of the vdsmaker
+        """
         super(vdsmaker, self).go()
-
-        #                           Load file <-> compute node mapping from disk
-        # ----------------------------------------------------------------------
+        # **********************************************************************
+        # 1. Load data from disk create output files
         args = self.inputs['args']
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
         data = load_data_map(args[0])
 
+        # Create output vds names
         vdsnames = [
             os.path.join(
                 self.inputs['directory'], os.path.basename(x[1]) + '.vds'
             ) for x in data
         ]
 
+        # *********************************************************************
+        # 2. Call vdsmaker 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
-        for host, infile, outfile in (x+(y,) for x, y in zip(data, vdsnames)):
+        for host, infile, outfile in (x + (y,) for x, y in zip(data, vdsnames)):
             jobs.append(
                 ComputeJob(
                     host, command,
@@ -96,14 +105,15 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.warn("Failed vdsmaker process detected")
             return 1
 
-        # Combine VDS files to produce GDS
+        # *********************************************************************
+        # 3. Combine VDS files to produce GDS
         failure = False
         self.logger.info("Combining VDS files")
         executable = self.inputs['combinevds']
         gvds_out = self.inputs['gvds']
         # Create the gvds directory for output files, needed for combine
         create_directory(os.path.dirname(gvds_out))
- 
+
         try:
             command = [executable, gvds_out] + vdsnames
             combineproc = subprocess.Popen(
@@ -134,8 +144,9 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
                 for name in vdsnames:
                     os.unlink(name)
             self.logger.info("vdsmaker done")
+
         if failure:
-            self.logger.info("Failure was set")
+            self.logger.info("Error was set, exit vds maker with error state")
             return 1
         elif not self.outputs.complete():
             self.logger.info("Outputs incomplete")
