@@ -19,67 +19,66 @@ from lofar.parameterset import parameterset
 
 
 class msss_imager_pipeline(control):
-    """    
+    """
     The Automatic MSSS imager pipeline is used to generate MSSS images and find
     sources in the generated images. Generated images and lists of found sources
     are complemented with meta data and thus ready for consumption by the 
     Long Term Storage (LTA)
-    
+
     *subband groups*
     The imager_pipeline is able to generate images on the frequency range of
     LOFAR in parallel. Combining the frequency subbands together in so called 
     subbandgroups. Each subband group will result in an image and sourcelist, 
     (typically 8, because ten subband groups are combined). 
-     
-    *Time Slices*  
+
+    *Time Slices*
     MSSS images are compiled from a number of so-called (time) slices. Each slice
     comprises a short (approx. 10 min) observation of a field (an area on the
     sky) containing typically 80 subbands. The number of slices will be
     different for LBA observations (typically 9) and HBA observations
     (typically 2), due to differences in sensitivity.
-    
+
     Each image will be compiled on a different cluster node to balance the
     processing load. The input- and output- files and locations are determined
     by the scheduler and specified in the parset-file.
-    
-    **steps:**
-    
-    This pipeline performs the following operations:
-    
-    1. Prepare Phase: Copy the preprocessed MS's from the different compute
+
+    **This pipeline performs the following operations:**
+
+    1. Prepare Phase. Copy the preprocessed MS's from the different compute
        nodes to the nodes where the images will be compiled (the prepare phase).
        Combine the subbands in subband groups, concattenate the timeslice in a
        single large measurement set and perform flagging, RFI and bad station
        exclusion.
-    2. Create db: Generate a local sky model (LSM) from the global sky model
+    2. Create db. Generate a local sky model (LSM) from the global sky model
        (GSM) for the sources that are in the field-of-view (FoV). The LSM
        is stored as sourcedb.
        In step 3 calibration of the measurement sets is performed on these 
        sources and in step 4 to create a mask for the awimager. The calibration 
        solution will be placed in an instrument table/db also created in this
        step.
-    3. BBS: Calibrate the measurement set with the sourcedb from the gsm.
+    3. BBS. Calibrate the measurement set with the sourcedb from the gsm.
        In later iterations sourced found in the created images will be added
        to this list. Resulting in a selfcalibration cycle.       
-    4. Awimager: The combined  measurement sets are now imaged. The imaging 
+    4. Awimager. The combined  measurement sets are now imaged. The imaging 
        is performed using a mask: The sources in the sourcedb are used to create
        an casa image masking known sources. Together with the measurement set
        an image is created. 
-    5. Sourcefinding: The images created in step 4 are fed to pyBDSM to find and
+    5. Sourcefinding. The images created in step 4 are fed to pyBDSM to find and
        describe sources. In multiple itterations substracting the found sources,
        all sources are collectedin a sourcelist.       
-    I. The sources found in step 5 are fed back into step 2. This allows the 
+       Step I. The sources found in step 5 are fed back into step 2. This allows the 
        Measurement sets to be calibrated with sources currently found in the
        image. This loop will continue until convergence (3 times for the time 
-       being).  
-    6. Finalize: Meta data with regards to the input, computations performed and
+       being). 
+    6. Finalize. Meta data with regards to the input, computations performed and
        results are collected an added to the casa image. The images created are
        converted from casa to HDF5 and copied to the correct output location. 
     7. Export meta data: An outputfile with meta data is generated ready for
-       consumption by the LTA and/or the LOFAR framework
-    |
-    Per subband-group, the following output products will be delivered:      
+       consumption by the LTA and/or the LOFAR framework.
+
     
+    **Per subband-group, the following output products will be delivered:**
+
     a. An image
     b. A source list
     c. (Calibration solutions and corrected visibilities)

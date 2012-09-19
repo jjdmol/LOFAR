@@ -32,6 +32,9 @@ import lofarpipe.support.lofaringredient as ingredient
 
 class new_bbs(BaseRecipe):
     """
+    **This bbs recipe still uses the oldstyle bbs with global control**
+    **New versions will have stand alone capability**
+    
     The bbs recipe coordinates running BBS on a group of MeasurementSets. It
     runs both GlobalControl and KernelControl; as yet, SolverControl has not
     been integrated.
@@ -93,7 +96,7 @@ class new_bbs(BaseRecipe):
         ),
         'gvds': ingredient.StringField(
             '-g', '--gvds',
-            help = "Path for output GVDS file"
+            help="Path for output GVDS file"
         )
     }
     outputs = {
@@ -160,7 +163,7 @@ class new_bbs(BaseRecipe):
             (dat[0], (dat[1], ins[1], sky[1]))
             for dat, ins, sky in zip(data_map, instrument_map, sky_map)
         ]
-        
+
         return True
 
 
@@ -208,7 +211,7 @@ class new_bbs(BaseRecipe):
         gvds_file = self.run_task(
             "vdsmaker",
             self.inputs['data_mapfile'],
-            gvds = self.inputs['gvds']
+            gvds=self.inputs['gvds']
         )['gvds']
 
         #      Construct a parset for BBS GlobalControl by patching the GVDS
