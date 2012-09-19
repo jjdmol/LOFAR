@@ -57,7 +57,7 @@ namespace rfiStrategy {
 			static void SetFittingKernelSize(Strategy &strategy, num_t kernelWidth, num_t kernelHeight);
 			static void SetFlagStokes(Strategy &strategy, bool newValue);
 			static void DisableOptimizations(Strategy &strategy);
-			static void SetIndirectReader(Strategy &strategy, bool newValue);
+			//static void SetIndirectReader(Strategy &strategy, bool newValue);
 			
 			void StartPerformThread(const class ArtifactSet &artifacts, class ProgressListener &progress);
 			ArtifactSet *JoinThread();

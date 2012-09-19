@@ -111,7 +111,6 @@ class MSWindow : public Gtk::Window {
 	private:
 		void createToolbar();
 		void loadCurrentTFData();
-		void updateSetName();
 
 		void onLoadPrevious();
 		void onLoadNext();
@@ -125,7 +124,6 @@ class MSWindow : public Gtk::Window {
 		void onActionDirectoryOpen();
 		void onActionDirectoryOpenForSpatial();
 		void onActionDirectoryOpenForST();
-		void onOpenBandCombined();
 		void onShowImagePlane();
 		void onSetAndShowImagePlane();
 		void onAddToImagePlane();

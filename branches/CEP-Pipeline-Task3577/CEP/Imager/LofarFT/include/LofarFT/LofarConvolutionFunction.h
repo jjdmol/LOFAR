@@ -292,9 +292,9 @@ namespace LOFAR
       }
 
     void Convolve(Matrix<Complex> gridin, Matrix<Complex> gridout, Matrix<Complex> ConvFunc){
-      Int Support(ConvFunc.shape()[0]);
-      Int GridSize(gridin.shape()[0]);
-      Int off(Support/2);
+      uInt Support(ConvFunc.shape()[0]);
+      uInt GridSize(gridin.shape()[0]);
+      uInt off(Support/2);
       for(uInt i=Support/2;i<GridSize-Support/2;++i){
 	for(uInt j=Support/2;j<GridSize-Support/2;++j){
 	  if((gridin(i,j))!=Complex(0.,0.)){
@@ -310,9 +310,9 @@ namespace LOFAR
     }
 
     void ConvolveOpt(Matrix<Complex> gridin, Matrix<Complex> gridout, Matrix<Complex> ConvFunc){
-      Int Support(ConvFunc.shape()[0]);
-      Int GridSize(gridin.shape()[0]);
-      Int off(Support/2);
+      uInt Support(ConvFunc.shape()[0]);
+      uInt GridSize(gridin.shape()[0]);
+      uInt off(Support/2);
 
       Complex* __restrict__ gridInPtr = gridin.data();
       Complex* __restrict__ gridOutPtr = gridout.data();
@@ -340,9 +340,9 @@ namespace LOFAR
     void ConvolveGer( const Matrix<Complex>& gridin, Matrix<Complex>& gridout,
 		      const Matrix<Complex>& ConvFunc)
     {
-      int Support(ConvFunc.shape()[0]);
-      int GridSize(gridin.shape()[0]);
-      int off(Support/2);
+      uInt Support(ConvFunc.shape()[0]);
+      uInt GridSize(gridin.shape()[0]);
+      uInt off(Support/2);
       const Complex* inPtr = gridin.data() + off*GridSize + off;
       for (uInt i=0; i<GridSize-Support; ++i) {
 	for (uInt j=0; j<GridSize-Support; ++j) {
@@ -364,9 +364,9 @@ namespace LOFAR
     void ConvolveGerArray( const Array<Complex>& gridin, Int ConvPol, Matrix<Complex>& gridout,
 			   const Matrix<Complex>& ConvFunc)
     {
-      int Support(ConvFunc.shape()[0]);
-      int GridSize(gridin.shape()[0]);
-      int off(Support/2);
+      uInt Support(ConvFunc.shape()[0]);
+      uInt GridSize(gridin.shape()[0]);
+      uInt off(Support/2);
 
       const Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
       for (uInt i=0; i<GridSize-Support; ++i) {
@@ -391,9 +391,9 @@ namespace LOFAR
     void ConvolveGerArrayMask( const Array<Complex>& gridin, Int ConvPol, Matrix<Complex>& gridout,
 			       const Matrix<Complex>& ConvFunc, Int UsedMask)
     {
-      int Support(ConvFunc.shape()[0]);
-      int GridSize(gridin.shape()[0]);
-      int off(Support/2);
+      uInt Support(ConvFunc.shape()[0]);
+      uInt GridSize(gridin.shape()[0]);
+      uInt off(Support/2);
 
       const Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
       const Bool* MaskPtr = itsVectorMasksDegridElement[UsedMask].data() + off*GridSize + off;

@@ -85,7 +85,6 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
   {
   public:
     LofarVisResamplerOld(): AWVisResampler()  {}
-    LofarVisResamplerOld(const CFStore& cfs): AWVisResampler(cfs)      {}
     virtual ~LofarVisResamplerOld()                                    {}
 
     virtual VisibilityResamplerBase* clone()

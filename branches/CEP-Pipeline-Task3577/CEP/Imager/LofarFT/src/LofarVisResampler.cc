@@ -1124,7 +1124,9 @@ namespace LOFAR {
 			     const Vector<Double>& offset,
 			     const Vector<Float>& sampling)
   {
-    Double phase;
+    (void)dphase;
+
+    //Double phase;
     Vector<Double> uvw_l(3,0); // This allows gridding of weights
 			       // centered on the uv-origin
     if (uvw.nelements() > 0) for(Int i=0;i<3;i++) uvw_l[i]=uvw(i,irow);
