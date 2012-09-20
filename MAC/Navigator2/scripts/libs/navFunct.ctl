@@ -79,7 +79,7 @@
 //navFunct_CEPName2inputBuf                   : returns ionr from CEPname
 //navFunct_stationNameToIONode                : returns the IONode belonging to a station
 //navFunct_isBGPSwitch                        : returns the BGPSwitch setting (True = BGPRack1, False=BGPRack0)
-
+//navFunct_IONode2DPName                      : returns the DP name based on the ionode number.
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
 
@@ -1822,6 +1822,7 @@ string navFunct_CEPName2DPName(string CEPName) {
   int nodenr=0;
   int ionr=0;
   
+  
   if (foundRack) {
     name += "BGP";
   }
@@ -1890,7 +1891,7 @@ string navFunct_DPName2CEPName(string DPName) {
   int nodenr=0;
   int ionr=0;
   
-  if (foundRack) {
+  if (foundRack){
     name += "R0" + rack;
   }
   
@@ -2046,11 +2047,11 @@ bool navFunct_isOnline(int syst) {
   }
 }
   
-
+// Searchs all ionodes.usedStation names for  match with the given name
 string navFunct_stationNameToIONode(string name) {
  
   dyn_dyn_anytype tab;
-  dpQuery("SELECT '_original.._value' FROM 'R0*-*.station' REMOTE '"+CEPDBName+"' WHERE _DPT =  \"BGPConnectionInfo\"",tab);
+  dpQuery("SELECT '_original.._value' FROM 'LOFAR_PIC_BGP_Midplane*_IONode*.usedStation' REMOTE '"+CEPDBName+"' WHERE _DPT =  \"IONode\"",tab);
   
   for(int z=2;z<=dynlen(tab);z++) {
     if (tab[z][2] == name) return dpSubStr(tab[z][1],DPSUB_DP);
@@ -2058,9 +2059,21 @@ string navFunct_stationNameToIONode(string name) {
   return "not found";
 }
 
+// returns if the 2nd rack is used (true) or not (false)
 bool navFunct_isBGPSwitch() {
   // get BGPSwitch to see if rack 0 or rack 1 in use
   bool BGPSwitch=false;
   dpGet(CEPDBName+"LOFAR_PIC_BGP.BGPSwitch",BGPSwitch);
   return BGPSwitch;
 }
+
+//returns the name of the DataPoint for a given ionr
+string navFunct_IONode2DPName(int ionode) {
+  string ext="";
+  if (ionode < 10) ext = "0";
+  string dp = CEPDBName+"LOFAR_PIC_BGP_Midplane"+navFunct_IONode2Midplane(ionode)+"_IONode"+ext+ionode;
+
+  return dp;  
+  
+}
+    
