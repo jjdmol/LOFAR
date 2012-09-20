@@ -20,29 +20,28 @@
 //#
 //#  $Id$
 #include <lofar_config.h>
-#include <Common/LofarLogger.h>
-
 #include <signal.h>
+#include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 #include <Common/StreamUtil.h>
-//#include <Common/lofar_vector.h>
-//#include <Common/lofar_string.h>
+#include <Common/SystemUtil.h>
 #include <Common/ParameterSet.h>
+#include <Common/ParameterRecord.h>
 #include <Common/Exceptions.h>
 #include <ApplCommon/StationInfo.h>
-#include <GCF/PVSS/GCF_PVTypes.h>
-#include <Common/SystemUtil.h>
 #include <ApplCommon/LofarDirs.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Protocols.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/CTState.h>
-#include <GCF/RTDB/DP_Protocol.ph>
 #include <PLC/PCCmd.h>
-
 #include "OnlineControl.h"
+#include <OTDB/TreeValue.h>			// << need to include this after OnlineControl! ???
 #include "PVSSDatapointDefs.h"
 
 using namespace LOFAR::GCF::PVSS;
@@ -53,6 +52,7 @@ using namespace std;
 namespace LOFAR {
 	using namespace APLCommon;
     using namespace ACC::ALC;
+	using namespace OTDB;
 	namespace CEPCU {
 	
 // static pointer to this object for signal handler
@@ -560,6 +560,7 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 	}
 
 	case F_TIMER:
+		_passMetadatToOTDB();
 		GCFScheduler::instance()->stop();
 		break;
 
@@ -695,6 +696,83 @@ void OnlineControl::_doQuit(void)
 	}
 }
 
+//
+// _passMetadatToOTDB();
+// THIS ROUTINE IS A MODIFIED COPY FROM PYTHONCONTROL.CC
+//
+void OnlineControl::_passMetadatToOTDB()
+{
+	// No name specified?
+	uint32	obsID(globalParameterSet()->getUint32("Observation.ObsID", 0));
+	string  feedbackFile = observationParset(obsID)+"_feedback";
+	LOG_INFO_STR ("Expecting metadata to be in file " << feedbackFile);
+	if (feedbackFile.empty()) {
+		return;
+	}
+
+	// read parameterset
+	ParameterSet	metadata;
+	metadata.adoptFile(feedbackFile);
+
+	// Try to setup the connection with the database
+	string	confFile = globalParameterSet()->getString("OTDBconfFile", "SASGateway.conf");
+	ConfigLocator	CL;
+	string	filename = CL.locate(confFile);
+	LOG_INFO_STR("Trying to read database information from file " << filename);
+	ParameterSet	otdbconf;
+	otdbconf.adoptFile(filename);
+	string database = otdbconf.getString("SASGateway.OTDBdatabase");
+	string dbhost   = otdbconf.getString("SASGateway.OTDBhostname");
+	OTDBconnection  conn("paulus", "boskabouter", database, dbhost);
+	if (!conn.connect()) {
+		LOG_FATAL_STR("Cannot connect to database " << database << " on machine " << dbhost);
+		return;
+	}
+	LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
+
+	TreeValue   tv(&conn, getObservationNr(getName()));
+
+	// Loop over the parameterset and send the information to the KVTlogger.
+	// During the transition phase from parameter-based to record-based storage in OTDB the
+	// nodenames ending in '_' are implemented both as parameter and as record.
+	ParameterSet::iterator		iter = metadata.begin();
+	ParameterSet::iterator		end  = metadata.end();
+	while (iter != end) {
+		string	key(iter->first);	// make destoyable copy
+		rtrim(key, "[]0123456789");
+//		bool	doubleStorage(key[key.size()-1] == '_');
+		bool	isRecord(iter->second.isRecord());
+		//   isRecord  doubleStorage
+		// --------------------------------------------------------------
+		//      Y          Y           store as record and as parameters
+		//      Y          N           store as parameters
+		//      N          *           store parameter
+		if (!isRecord) {
+			LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
+			tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+		}
+		else {
+//			if (doubleStorage) {
+//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
+//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+//			}
+			// to store is a node/param values the last _ should be stipped of
+			key = iter->first;		// destroyable copy
+//			string::size_type pos = key.find_last_of('_');
+//			key.erase(pos,1);
+			ParameterRecord	pr(iter->second.getRecord());
+			ParameterRecord::const_iterator	prIter = pr.begin();
+			ParameterRecord::const_iterator	prEnd  = pr.end();
+			while (prIter != prEnd) {
+				LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
+				tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
+				prIter++;
+			}
+		}
+		iter++;
+	}
+	LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
+}
 // -------------------- Application-order administration --------------------
 
 //

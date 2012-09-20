@@ -102,6 +102,7 @@ private:
    	void	_disconnectedHandler (GCFPortInterface& 	port);
 	void	_setState	  		 (CTState::CTstateNr	newState);
 	void	_databaseEventHandler(GCFEvent&				event);
+	void	_passMetadatToOTDB   ();
 
 	// Send a command to all (or the first) applications.
 	void	startNewState (CTState::CTstateNr		newState,
