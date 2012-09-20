@@ -19,7 +19,7 @@
 #
 ################################################################################
 
-"""Testcase for reading the SS map
+"""Testcase for reading the BF coefficients
 
   Note: No specific arguments, use general arguments -v, --brd, --fpga and --bm
 """
@@ -31,39 +31,38 @@ nof_reflets_ap  = rsp.c_nof_reflets_ap    # = 4
 nof_beamlets    = rsp.c_nof_beamlets      # = 248, maximum capable by RSP gateware
 nof_beamlets_ap = rsp.c_nof_beamlets_ap   # = 252, including reflets
 
-# - SS output size
-c_ss_reflets_size = rsp.c_pol * nof_reflets_ap
-c_ss_size         = rsp.c_pol * nof_beamlets_ap
-
-c_ss_gap          = rsp.c_slice_size - rsp.c_cpx * rsp.c_pol * nof_beamlets_ap
+# - BF output size
+c_bf_reflets_size = rsp.c_pol_phs * nof_reflets_ap
+c_bf_size         = rsp.c_pol_phs * nof_beamlets_ap
 
 
 ################################################################################
 # - Verify options
 rspId   = tc.rspId
 blpId   = tc.blpId
+ppId    = tc.ppId
 bmBanks = tc.bmBanks
 
 tc.setResult('PASSED')   # self checking test, so start assuming it will run PASSED
 
 tc.appendLog(11,'')
-tc.appendLog(11,'>>> Read the SS map for RSP-%s, BLP-%s, BM banks-%s' % (rspId, blpId, bmBanks))
+tc.appendLog(11,'>>> Read the BF coefficients for RSP-%s, BLP-%s, coeff-%s, BM banks-%s' % (rspId, blpId, ppId, bmBanks))
 tc.appendLog(11,'')
   
 ################################################################################
 # - Testcase initializations
 
-# Apparently rspctl updates the SS every pps, so overwriting it does not work.
-# Disabling SS update in RSPDriver.conf may be an option.
+# Typically the rspctl updates the BF every pps, so overwriting it does not work.
 
-# Read the SS mapping from the APs
+# Read the BF coefficient from the APs
 for ri in rspId:
   for bi in blpId:
-    for bk in bmBanks:
-      ss_map = rsp.read_ss(tc, msg, c_ss_size, [bi], [ri], [bk])
-      ss_rlet_map = ss_map[:c_ss_reflets_size]
-      ss_blet_map = ss_map[c_ss_reflets_size:]
-      tc.appendLog(11,'>>> RSP-%s, BLP-%s, BM bank-%d SS reflets map (length %d).' % (ri, bi, bk, len(ss_rlet_map)))
-      tc.appendLog(21,'%s' % ss_rlet_map)
-      tc.appendLog(11,'>>> RSP-%s, BLP-%s, BM bank-%d SS beamlets map (length %d).' % (ri, bi, bk, len(ss_blet_map)))
-      tc.appendLog(21,'%s' % ss_blet_map)
+    for pp in ppId:
+      for bk in bmBanks:
+        bf_coef = rsp.read_bf(tc, msg, c_bf_size, [pp], [bi], [ri], [bk])
+        bf_rlet_coef = bf_coef[:c_bf_reflets_size]
+        bf_blet_coef = bf_coef[c_bf_reflets_size:]
+        tc.appendLog(11,'>>> RSP-%s, BLP-%s BF reflets coefficients-%s, BM bank-%d (length %d).' % (ri, bi, pp, bk, len(bf_rlet_coef)))
+        tc.appendLog(21,'%s' % bf_rlet_coef)
+        tc.appendLog(11,'>>> RSP-%s, BLP-%s, BF beamlets coefficients-%s, BM bank-%d (length %d).' % (ri, bi, pp, bk, len(bf_blet_coef)))
+        tc.appendLog(21,'%s' % bf_blet_coef)

@@ -25,9 +25,9 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
     
     1. Validate input
     2. Create mapfiles with input for work to be perform on the individual nodes
-       based on the structured input mapfile: The input mapfile contains a list 
+       based on the structured input mapfile. The input mapfile contains a list 
        of measurement sets. 
-       Each node computes a single subband group but needs this for all 
+       Each node computes a single subband group but needs this for all
        timeslices. 
     3. Call the node scripts with correct input
     4. validate performance
@@ -37,7 +37,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
 
     The only command line argument is the a to a mapfile containing "all"
     the measurement sets needed for creating the sky images. First ordered on 
-    timeslice then on subband group and finaly on index in the frequency 
+    timeslice then on subband group and finaly on index in the frequency
     range.
 
     **Arguments:**
@@ -269,9 +269,9 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         Return 1 if the inputs supplied are incorrect, the number if inputs and 
         output does not match. Return 0 if correct.
-        The number of inputs is correct iff:
-            len(input_map) == 
-            len(output_map) * slices_per_image * subbands_per_image
+        The number of inputs is correct iff.
+        len(input_map) == 
+        len(output_map) * slices_per_image * subbands_per_image
         """
         # The output_map contains a number of path/node pairs. The final data 
         # dataproduct of the prepare phase: The 'input' for each of these pairs
