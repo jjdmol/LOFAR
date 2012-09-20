@@ -131,8 +131,6 @@ bool CEP_Processes_UpdateCEPControllers() {
     
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
         DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_StorageApplPanel",
-        DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
   
   }
   

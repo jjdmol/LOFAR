@@ -147,6 +147,7 @@ void navigator_handleEventInitialize()
   // Init the connection Watchdog
   GCFCWD_Init();
 
+
   // we need to wait until the connection watchdog has been initialised
   if (!waitInitProcess("GCFCWDFinished")) {
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish GCFCWD_Init() , leaving");
@@ -167,6 +168,7 @@ void navigator_handleEventInitialize()
   // Initilaize the alarm system
   initNavigatorAlarms();
 
+
   // we need to wait until the alarmSystem has been initialised
   if (!waitInitProcess("initNavigatorAlarmsFinished")) {
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish initNavigatorAlarmsFinished() , leaving");
@@ -180,6 +182,7 @@ void navigator_handleEventInitialize()
   if (!waitInitProcess("queryConnectObservationsFinished")) {
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish queryConnectObservationsFinished() , leaving");
   }
+
 
     // set initialized ready
   g_initializing = false;

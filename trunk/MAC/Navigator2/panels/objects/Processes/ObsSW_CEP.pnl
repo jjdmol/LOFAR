@@ -5,7 +5,6 @@ PANEL,-1 -1 994 293 N "_3DFace" 0
 "main()
 {
   baseDP=g_currentDatapoint;
-  setValue(\"CEPDBNAME\",\"text\",navFunct_bareDBName(CEPDBName)+\":\");
 }" 0
  E E E E 1 -1 -1 0  0 0
 ""0  1
@@ -196,16 +195,6 @@ LANG:1 6 logMsg
 0
 1 170 15 "" 2
 0
-1 172 16 "" 4
-0
-1 173 16 "" 3
-0
-1 174 16 "0" 1
-0
-1 176 16 "" 6
-0
-1 175 16 "" 2
-0
 2 113
 "observationName"
 ""
@@ -226,7 +215,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
 LANG:1 11 observation
 2 144
-"CEPDBNAME"
+"PRIMITIVE_TEXT7"
 ""
 1 176 20 E E E 1 E 1 E N "Blue" E N "_Transparent" E E
  E E
@@ -330,9 +319,4 @@ LANG:1 0
 2
 "$databaselevel""ccu"
 "$name""OnlineControl_BGPAppl"
-3 16 "PANEL_REF17" -1
-"objects\\Processes\\interactive_controller_small.pnl" 180 140 T 28 1 0 1 -10 -50
-2
-"$databaselevel""ccu"
-"$name""OnlineControl_StorageAppl"
 0
