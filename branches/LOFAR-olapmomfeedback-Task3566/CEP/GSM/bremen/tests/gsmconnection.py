@@ -31,6 +31,7 @@ class ConnectionTest(SwitchableTest):
         with self.assertRaises((MonetDatabaseError,
                                psycopg2.DatabaseError)):
             conn.execute('select abracadabra from xxxtable;')
+        conn.rollback()
         bad_sql = """update assocxtrsources
    set weight = weight*(select ta.flux_fraction
                    from temp_associations ta

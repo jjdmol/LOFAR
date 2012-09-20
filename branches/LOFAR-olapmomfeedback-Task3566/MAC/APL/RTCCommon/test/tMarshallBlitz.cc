@@ -32,8 +32,10 @@
 
 using namespace LOFAR;
 
-int main (int	argc, char*	argv[])
+int main (int, char*	argv[])
 {
+	INIT_LOGGER(argv[0]);
+
 	char	buf[4096];
 	int		offset(0);
 

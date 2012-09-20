@@ -47,10 +47,10 @@ namespace LOFAR {
 class CableSettings
 {
 public:
-	CableSettings (const RCUCables*	CableObject);
 	~CableSettings() ;
 
 	static CableSettings* instance();
+	static void createInstance(const RCUCables &CableObject);
 
 	// Returns the attenuation array
 	inline blitz::Array<float, 2>&	getAtts()	{ return itsAtts; }
@@ -65,6 +65,9 @@ private:
 	CableSettings();
 	CableSettings(const CableSettings&	that);
 	CableSettings& operator=(const CableSettings& that);
+
+	// Only createInstance can instantiate
+	CableSettings (const RCUCables &CableObject);
 
 	//# --- Datamembers ---
 	blitz::Array<float,	2>	itsAtts;

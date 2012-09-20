@@ -206,6 +206,8 @@ void correctImages (const String& restoName, const String& modelName,
                     const String& residName, const String& imgName,
                     LOFAR::LofarImager& imager, Bool CorrectElement)
 {
+  (void)imager;
+
   // Copy the images to .corr ones.
   {
     Directory restoredIn(restoName);
@@ -904,7 +906,7 @@ int main(int argc, char *argv[])
 
 	  
 	  Vector<String> modelNames(nterms);
-	  for(uInt i=0;i<nterms;++i){
+	  for(Int i=0;i<nterms;++i){
 	    modelNames(i)="test.img.model.tt"+String::toString(i);
 	    
 	    Directory filee0(modelNames(i));

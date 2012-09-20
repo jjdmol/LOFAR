@@ -597,7 +597,7 @@ GCFEvent::TResult TBBMonitor::askFlashInfo(GCFEvent& event, GCFPortInterface& po
 			vector<GCFPValue*>		TPfilenames;
 			vector<GCFPValue*>		MPfilenames;
 			for (int32	image = 0; image < MAX_N_IMAGES; image++) {
-				if (ack.write_date[image] != -1L) {
+				if (~ack.write_date[image] != 0) {
 LOG_DEBUG(formatString("%d:%d:%d:%16.16s", image, ack.image_version[image], ack.write_date[image], ack.tp_file_name[image]));
 					imageVersions.push_back(new GCFPVString(formatString("%d.%d", ack.image_version[image]/10, ack.image_version[image]%10)));
 					ptime		theTime(from_time_t(ack.write_date[image]));

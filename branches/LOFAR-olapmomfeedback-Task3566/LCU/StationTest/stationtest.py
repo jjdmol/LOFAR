@@ -31,6 +31,7 @@
 # 27 jan 2012: Store logfiles in /localhome/stationtest/data in "local mode"
 # 17 feb 2012: Added detection of oscillating tiles.
 # 9 mar 2012: Devide by 0 error solved in HBAtest
+# 13 sept 2012: Added for user0..9 sys.path.append("/opt/stationtest/modules")
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
@@ -43,6 +44,7 @@
 
 
 import sys
+sys.path.append("/opt/stationtest/modules")
 from optparse import OptionParser
 import cli
 import testlog

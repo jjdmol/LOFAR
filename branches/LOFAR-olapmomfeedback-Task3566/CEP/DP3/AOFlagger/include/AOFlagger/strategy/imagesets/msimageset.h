@@ -69,7 +69,7 @@ namespace rfiStrategy {
 	
 	class MSImageSet : public ImageSet {
 		public:
-			MSImageSet(const std::string &location, bool indirectReader=false) :
+			MSImageSet(const std::string &location, BaselineIOMode ioMode) :
 				_msFile(location),
 				_set(location),
 				_reader(),
@@ -80,19 +80,18 @@ namespace rfiStrategy {
 				_maxScanCounts(0),
 				_scanCountPartOverlap(100),
 				_readFlags(true),
-				_indirectReader(indirectReader),
-				_readUVW(false)
+				_readUVW(false),
+				_ioMode(ioMode)
 			{
-				if(_indirectReader)
-					AOLogger::Debug << "INDIRECT baseline reader created.\n";
 			}
+			
 			~MSImageSet()
 			{
 			}
 
 			virtual MSImageSet *Copy()
 			{
-				MSImageSet *newSet = new MSImageSet(_set.Location());
+				MSImageSet *newSet = new MSImageSet(_set.Location(), _ioMode);
 				newSet->_reader = _reader;
 				newSet->_dataColumnName = _dataColumnName;
 				newSet->_subtractModel = _subtractModel;
@@ -106,7 +105,7 @@ namespace rfiStrategy {
 				newSet->_partCount = _partCount;
 				newSet->_timeScanCount = _timeScanCount;
 				newSet->_scanCountPartOverlap = _scanCountPartOverlap;
-				newSet->_indirectReader = _indirectReader;
+				newSet->_ioMode = _ioMode;
 				newSet->_readUVW = _readUVW;
 				return newSet;
 			}
@@ -232,8 +231,8 @@ namespace rfiStrategy {
 				_maxScanCounts(0),
 				_scanCountPartOverlap(100),
 				_readFlags(true),
-				_indirectReader(false),
-				_readUVW(false)
+				_readUVW(false),
+				_ioMode(AutoReadMode)
 			{ }
 			size_t StartIndex(const MSImageSetIndex &index);
 			size_t EndIndex(const MSImageSetIndex &index);
@@ -254,7 +253,8 @@ namespace rfiStrategy {
 			size_t _maxScanCounts;
 			size_t _partCount, _timeScanCount;
 			size_t _scanCountPartOverlap;
-			bool _readFlags, _indirectReader, _readUVW;
+			bool _readFlags, _readUVW;
+			BaselineIOMode _ioMode;
 			std::vector<BaselineData> _baselineData;
 	};
 

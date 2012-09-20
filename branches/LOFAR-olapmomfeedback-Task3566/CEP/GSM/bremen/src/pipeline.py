@@ -8,6 +8,7 @@ from src.grouper import Grouper
 from src.updater import run_update
 import logging
 import math
+import healpy
 
 
 class GSMPipeline(object):
@@ -39,7 +40,7 @@ class GSMPipeline(object):
             raise exc
         self.log.info('Pipeline started.')
 
-    def reopen_connection(self):
+    def reopen_connection(self, **params):
         """
         Reopen connection in case it was closed.
         """
@@ -64,10 +65,12 @@ class GSMPipeline(object):
         """
         Process single parset file.
         """
+        self.conn.start()
         self.conn.execute("delete from detections;")
         parset.process(self.conn)
         self.process_image(parset.image_id)
         self.log.info('Parset %s done.' % parset.filename)
+        return parset.image_id
 
     def run_grouper(self):
         """
@@ -83,6 +86,16 @@ class GSMPipeline(object):
             grouper.cleanup()
         self.conn.execute(get_sql("GroupFill"))
 
+    def get_pixels(self, centr_ra, centr_decl, fov_radius):
+        """
+        Get a list of HEALPIX zones that contain a given image.
+        """
+        vector = healpy.ang2vec(math.radians(90.0 - centr_decl),
+                                math.radians(centr_ra))
+        pixels = healpy.query_disc(64, vector, math.radians(fov_radius),
+                                   inclusive=True, nest=True)
+        return str(pixels.tolist())[1:-1]
+
     def process_image(self, image_id, sources_loaded=False):
         """
         Process single image.
@@ -90,21 +103,24 @@ class GSMPipeline(object):
         already.
         """
         self.conn.start()
-        status, band, stokes = self.conn.exec_return("""
-        select status, band, stokes
+        status, band, stokes, fov_radius, centr_ra, centr_decl = \
+        self.conn.exec_return("""
+        select status, band, stokes, fov_radius, centr_ra, centr_decl
           from images
          where imageid = %s;""" % image_id, single_column=False)
         if status == 1:
             raise ImageStateError('Image %s in state 1 (Ok). Cannot process' %
                                   image_id)
         self.conn.execute("delete from temp_associations;")
+        pix = self.get_pixels(centr_ra, centr_decl, fov_radius)
         if not sources_loaded:
             self.conn.execute(get_sql('insert_extractedsources', image_id))
             self.conn.execute(get_sql('insert dummysources', image_id))
         self.conn.execute(get_sql('Associate point',
-                                      image_id, math.sin(0.025), 1.0))
+                                  image_id, math.sin(0.025), 1.0, pix))
         self.conn.execute_set(get_sql('Associate extended',
-                                      image_id, math.sin(0.025), 0.5))
+                                      image_id, math.sin(0.025), 0.5,
+                                      band, stokes, pix))
         self.conn.call_procedure("fill_temp_assoc_kind();")
         # Process one-to-one associations;
         self.conn.execute(get_sql('add 1 to 1'))

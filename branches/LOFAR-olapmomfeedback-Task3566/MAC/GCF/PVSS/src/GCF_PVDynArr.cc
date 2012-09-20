@@ -169,6 +169,8 @@ void GCFPVDynArr::setValue(const GCFPValueArray& newVal)
 //
 string GCFPVDynArr::getValueAsString(const string& format) const
 {
+	(void)format;
+
 	return ("Not yet implemented!");
 }
 

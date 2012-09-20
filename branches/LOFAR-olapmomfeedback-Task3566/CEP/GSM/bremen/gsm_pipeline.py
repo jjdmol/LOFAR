@@ -16,7 +16,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -D DATABASE, --database DATABASE
                         database name to load data into
-  -M, --monetdb         database name to load data into
+  -M, --monetdb         use MonetDB instead of PostgreSQL
   -p, --profile         add SQL timing output to log
   -q, --quiet           switch console logging off
 """
@@ -64,7 +64,7 @@ formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('-D', '--database', type=str, default='test',
                     help='database name to load data into')
 parser.add_argument('-M', '--monetdb', action="store_true", default=False,
-                    help='database name to load data into')
+                    help='use MonetDB instead of PostgreSQL')
 parser.add_argument('-p', '--profile', action="store_true", default=False,
                     help='add SQL timing output to log')
 parser.add_argument('-q', '--quiet', action="store_true", default=False,
@@ -79,5 +79,5 @@ try:
                  profile=args.profile,
                  quiet=args.quiet,
                  filenames=args.filename)
-except Error as e:
+except Exception as e:
     print 'Unexpected error: %s' % e

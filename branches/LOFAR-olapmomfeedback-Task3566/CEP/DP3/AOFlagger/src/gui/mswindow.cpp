@@ -40,7 +40,6 @@
 
 #include <AOFlagger/strategy/imagesets/msimageset.h>
 #include <AOFlagger/strategy/imagesets/noisestatimageset.h>
-#include <AOFlagger/strategy/imagesets/bandcombinedset.h>
 #include <AOFlagger/strategy/imagesets/spatialmsimageset.h>
 #include <AOFlagger/strategy/imagesets/spatialtimeimageset.h>
 
@@ -118,6 +117,7 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _histogramWindow(0), _optionWindow(
 
 MSWindow::~MSWindow()
 {
+	boost::mutex::scoped_lock lock(_ioMutex);
 	while(!_actionGroup->get_actions().empty())
 		_actionGroup->remove(*_actionGroup->get_actions().begin());
 	
@@ -138,6 +138,9 @@ MSWindow::~MSWindow()
 		delete _imagePropertiesWindow;
 	if(_antennaMapWindow != 0)
 		delete _antennaMapWindow;
+	
+	// The rfistrategy needs the lock to clean up
+	lock.unlock();
 	
 	delete _statistics;
 	delete _strategy;
@@ -182,8 +185,10 @@ void MSWindow::onActionDirectoryOpenForSpatial()
 
   if(result == Gtk::RESPONSE_OK)
 	{
+		boost::mutex::scoped_lock lock(_ioMutex);
 		rfiStrategy::SpatialMSImageSet *imageSet = new rfiStrategy::SpatialMSImageSet(dialog.get_filename());
 		imageSet->Initialize();
+		lock.unlock();
 		SetImageSet(imageSet);
 	}
 }
@@ -202,35 +207,10 @@ void MSWindow::onActionDirectoryOpenForST()
 
   if(result == Gtk::RESPONSE_OK)
 	{
+		boost::mutex::scoped_lock lock(_ioMutex);
 		rfiStrategy::SpatialTimeImageSet *imageSet = new rfiStrategy::SpatialTimeImageSet(dialog.get_filename());
 		imageSet->Initialize();
-		SetImageSet(imageSet);
-	}
-}
-
-void MSWindow::onOpenBandCombined()
-{
-	std::vector<std::string> names;
-	int result;
-	do
-	{
-		Gtk::FileChooserDialog dialog("Select a measurement set",
-						Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
-		dialog.set_transient_for(*this);
-	
-		//Add response buttons the the dialog:
-		dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-		dialog.add_button("Open", Gtk::RESPONSE_OK);
-	
-		result = dialog.run();
-		if(result == Gtk::RESPONSE_OK)
-			names.push_back(dialog.get_filename());
-	}
-  while(result == Gtk::RESPONSE_OK);
-	if(names.size() > 0)
-	{
-		rfiStrategy::BandCombinedSet *imageSet = new rfiStrategy::BandCombinedSet(names);
-		imageSet->Initialize();
+		lock.unlock();
 		SetImageSet(imageSet);
 	}
 }
@@ -259,27 +239,29 @@ void MSWindow::OpenPath(const std::string &path)
 	if(rfiStrategy::ImageSet::IsRCPRawFile(path))
 	{
 		_optionWindow = new RawOptionWindow(*this, path);
-		_optionWindow->show();
+		_optionWindow->present();
 	}
 	else if(rfiStrategy::ImageSet::IsMSFile(path))
 	{
 		_optionWindow = new MSOptionWindow(*this, path);
-		_optionWindow->show();
+		_optionWindow->present();
 	}
 	else if(rfiStrategy::ImageSet::IsTimeFrequencyStatFile(path))
 	{
 		_optionWindow = new TFStatOptionWindow(*this, path);
-		_optionWindow->show();
+		_optionWindow->present();
 	}
 	else if(rfiStrategy::ImageSet::IsNoiseStatFile(path))
 	{
 		_optionWindow = new NoiseStatOptionWindow(*this, path);
-		_optionWindow->show();
+		_optionWindow->present();
 	}
 	else
 	{
-		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(path);
+		boost::mutex::scoped_lock lock(_ioMutex);
+		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(path, DirectReadMode);
 		imageSet->Initialize();
+		lock.unlock();
 		SetImageSet(imageSet);
 	}
 }
@@ -295,9 +277,12 @@ void MSWindow::loadCurrentTFData()
 {
 	if(_imageSet != 0) {
 		try {
+			boost::mutex::scoped_lock lock(_ioMutex);
 			_imageSet->AddReadRequest(*_imageSetIndex);
 			_imageSet->PerformReadRequests();
 			rfiStrategy::BaselineData *baseline = _imageSet->GetNextRequested();
+			lock.unlock();
+			
 			_timeFrequencyWidget.SetNewData(baseline->Data(), baseline->MetaData());
 			delete baseline;
 			if(_spatialMetaData != 0)
@@ -310,6 +295,12 @@ void MSWindow::loadCurrentTFData()
 				_spatialMetaData = new SpatialMatrixMetaData(static_cast<rfiStrategy::SpatialMSImageSet*>(_imageSet)->SpatialMetaData(*_imageSetIndex));
 			}
 			_timeFrequencyWidget.Update();
+			// We store these seperate, as they might access the measurement set. This is
+			// not only faster (the names are used in the onMouse.. events) but also less dangerous,
+			// since the set can be simultaneously accessed by another thread. (thus the io mutex should
+			// be locked before calling below statements).
+			_imageSetName = _imageSet->Name();
+			_imageSetIndexDescription = _imageSetIndex->Description();
 			setSetNameInStatusBar();
 		} catch(std::exception &e)
 		{
@@ -322,15 +313,17 @@ void MSWindow::loadCurrentTFData()
 void MSWindow::setSetNameInStatusBar()
 {
   if(HasImageSet()) {
-	_statusbar.pop();
-	_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
+		_statusbar.pop();
+		_statusbar.push(_imageSetName + ": " + _imageSetIndexDescription);
   }
 }
 		
 void MSWindow::onLoadPrevious()
 {
 	if(_imageSet != 0) {
+		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->Previous();
+		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -338,7 +331,9 @@ void MSWindow::onLoadPrevious()
 void MSWindow::onLoadNext()
 {
 	if(_imageSet != 0) {
+		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->Next();
+		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -346,7 +341,9 @@ void MSWindow::onLoadNext()
 void MSWindow::onLoadLargeStepPrevious()
 {
 	if(_imageSet != 0) {
+		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->LargeStepPrevious();
+		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -354,7 +351,9 @@ void MSWindow::onLoadLargeStepPrevious()
 void MSWindow::onLoadLargeStepNext()
 {
 	if(_imageSet != 0) {
+		boost::mutex::scoped_lock lock(_ioMutex);
 		_imageSetIndex->LargeStepNext();
+		lock.unlock();
 		loadCurrentTFData();
 	}
 }
@@ -497,6 +496,7 @@ void MSWindow::SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex)
 	{
 		delete _imageSetIndex;
 		_imageSetIndex = newImageSetIndex;
+		_imageSetIndexDescription = _imageSetIndex->Description();
 		loadCurrentTFData();
 	} else {
 		delete newImageSetIndex;
@@ -540,8 +540,6 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpenForSpatial) );
 	_actionGroup->add( Gtk::Action::create("OpenDirectoryST", Gtk::Stock::OPEN, "Open _directory as spatial/time"),
   sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpenForST) );
-	_actionGroup->add( Gtk::Action::create("OpenBandCombined", Gtk::Stock::OPEN, "Open/combine bands"),
-  sigc::mem_fun(*this, &MSWindow::onOpenBandCombined) );
 	_actionGroup->add( Gtk::Action::create("OpenTestSet", "Open _testset") );
 
 	Gtk::RadioButtonGroup testSetGroup;
@@ -817,7 +815,6 @@ void MSWindow::createToolbar()
     "      <menuitem action='OpenDirectory'/>"
     "      <menuitem action='OpenDirectorySpatial'/>"
     "      <menuitem action='OpenDirectoryST'/>"
-    "      <menuitem action='OpenBandCombined'/>"
     "      <menu action='OpenTestSet'>"
 		"        <menuitem action='GaussianTestSets'/>"
 		"        <menuitem action='RayleighTestSets'/>"

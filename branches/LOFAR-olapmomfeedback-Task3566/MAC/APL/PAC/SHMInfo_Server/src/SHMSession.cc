@@ -369,6 +369,8 @@ GCFEvent::TResult SHMSession::getPICStructure_state(GCFEvent& e, GCFPortInterfac
 
 void SHMSession::subscribe(GCFEvent& e)
 {
+  (void)e;
+
 #if 0
   SHMPvssDpSubscriptionRequestEvent in(e);
   LOGMSGHDR(in);
@@ -1281,6 +1283,8 @@ void SHMSession::valueChanged(SHMPvssDpSubscriptionValueChangedAsyncEvent& e)
 
 void SHMSession::mayDelete(const string& propName)
 {
+  (void)propName;
+
 #if 0
   TSubscriptions::iterator iter = _subscriptions.find(propName);
   ASSERTSTR(iter != _subscriptions.end(), "Subscription should still exist here!");

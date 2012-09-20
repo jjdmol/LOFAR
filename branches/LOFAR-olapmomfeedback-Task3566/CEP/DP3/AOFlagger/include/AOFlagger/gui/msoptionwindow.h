@@ -58,7 +58,8 @@ class MSOptionWindow : public Gtk::Window {
 		Gtk::RadioButton _allDipolePolarisationButton, _autoDipolePolarisationButton, _stokesIPolarisationButton;
 		Gtk::RadioButton _noPartitioningButton, _max2500ScansButton, _max10000ScansButton, _max25000ScansButton,
 			_max100000ScansButton;
-		Gtk::CheckButton _indirectReadButton, _readUVWButton;
+		Gtk::RadioButton _directReadButton, _indirectReadButton, _memoryReadButton;
+		Gtk::CheckButton _readUVWButton;
 };
 
 #endif

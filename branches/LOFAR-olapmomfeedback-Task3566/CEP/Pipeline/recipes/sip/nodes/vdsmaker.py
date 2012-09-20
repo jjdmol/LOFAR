@@ -18,6 +18,9 @@ from lofarpipe.support.lofarnode import LOFARnodeTCP
 class vdsmaker(LOFARnodeTCP):
     """
     Make a VDS file for the input MS in a specificed location.
+    
+    1. Call the vdsmake executable with supplied arguments
+    2. Perform some error checking and validation
     """
     def run(self, infile, clusterdesc, outfile, executable):
         with log_time(self.logger):

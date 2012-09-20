@@ -138,9 +138,9 @@ CTState::CTstateNr getNextState(CTState::CTstateNr		theCurrentState,
 	}
 }
 
-int main (int	argc, char*		argv[]) {
+int main (int, char*		argv[]) {
 
-	INIT_LOGGER(basename(argv[0]));
+	INIT_LOGGER(argv[0]);
 
 	CTState		cts;
 

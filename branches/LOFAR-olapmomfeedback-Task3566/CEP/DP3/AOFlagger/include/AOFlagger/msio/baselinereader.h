@@ -112,7 +112,7 @@ class BaselineReader {
 		virtual void PerformFlagWriteRequests() = 0;
 		virtual void PerformDataWriteTask(std::vector<Image2DCPtr> _realImages, std::vector<Image2DCPtr> _imaginaryImages, int antenna1, int antenna2, int spectralWindow) = 0;
 		
-		virtual class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
+		class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
 		void PartInfo(size_t maxTimeScans, size_t &timeScanCount, size_t &partCount);
 
 		virtual size_t GetMinRecommendedBufferSize(size_t threadCount) { return threadCount; }
@@ -203,10 +203,6 @@ class BaselineReader {
 			request.endIndex = endIndex;
 			_readRequests.push_back(request);
 		}
-
-		void readTimeData(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> data, const casa::Array<casa::Complex> *model);
-		void readTimeFlags(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<bool> flag);
-		void readWeights(size_t requestIndex, size_t xOffset, int frequencyCount, const casa::Array<float> weight);
 
 		MeasurementSet _measurementSet;
 		class casa::Table *_table;

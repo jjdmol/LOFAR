@@ -28,6 +28,7 @@
 
 #include <AOFlagger/msio/directbaselinereader.h>
 #include <AOFlagger/msio/indirectbaselinereader.h>
+#include <AOFlagger/msio/memorybaselinereader.h>
 
 #include <AOFlagger/util/aologger.h>
 
@@ -103,14 +104,26 @@ namespace rfiStrategy {
 	{
 		if(_reader == 0 )
 		{
-			if(_indirectReader)
+			switch(_ioMode)
 			{
-				IndirectBaselineReader *indirectReader = new IndirectBaselineReader(_msFile);
-				indirectReader->SetReadUVW(_readUVW);
-				_reader = BaselineReaderPtr(indirectReader);
+				case IndirectReadMode: {
+					IndirectBaselineReader *indirectReader = new IndirectBaselineReader(_msFile);
+					indirectReader->SetReadUVW(_readUVW);
+					_reader = BaselineReaderPtr(indirectReader);
+				} break;
+				case DirectReadMode:
+					_reader = BaselineReaderPtr(new DirectBaselineReader(_msFile));
+					break;
+				case MemoryReadMode:
+					_reader = BaselineReaderPtr(new MemoryBaselineReader(_msFile));
+					break;
+				case AutoReadMode:
+					if(MemoryBaselineReader::IsEnoughMemoryAvailable(_msFile))
+						_reader = BaselineReaderPtr(new MemoryBaselineReader(_msFile));
+					else
+						_reader = BaselineReaderPtr(new DirectBaselineReader(_msFile));
+					break;
 			}
-			else
-				_reader = BaselineReaderPtr(new DirectBaselineReader(_msFile));
 		}
 		_reader->SetDataColumnName(_dataColumnName);
 		_reader->SetSubtractModel(_subtractModel);
@@ -268,11 +281,11 @@ namespace rfiStrategy {
 			startIndex = StartIndex(msIndex),
 			endIndex = EndIndex(msIndex);
 
-		double ratio = 0.0;
+		/*double ratio = 0.0;
 		for(std::vector<Mask2DCPtr>::const_iterator i=flags.begin();i!=flags.end();++i)
 		{
 			ratio += ((double) (*i)->GetCount<true>() / ((*i)->Width() * (*i)->Height() * flags.size()));
-		}
+		}*/
 			
 		std::vector<Mask2DCPtr> allFlags;
 		if(flags.size() > _reader->PolarizationCount())
@@ -287,10 +300,10 @@ namespace rfiStrategy {
 		}
 		else allFlags = flags;
 		
-		const AntennaInfo
-			a1Info = GetAntennaInfo(a1),
-			a2Info = GetAntennaInfo(a2);
-		AOLogger::Info << "Baseline " << a1Info.name << " x " << a2Info.name << " has " << TimeFrequencyStatistics::FormatRatio(ratio) << " of bad data.\n";
+		//const AntennaInfo
+		//	a1Info = GetAntennaInfo(a1),
+		//	a2Info = GetAntennaInfo(a2);
+		//AOLogger::Info << "Baseline " << a1Info.name << " x " << a2Info.name << " has " << TimeFrequencyStatistics::FormatRatio(ratio) << " of bad data.\n";
 	
 		_reader->AddWriteTask(allFlags, a1, a2, b, startIndex, endIndex, LeftBorder(msIndex), RightBorder(msIndex));
 	}

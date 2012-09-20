@@ -167,8 +167,12 @@ namespace rfiStrategy {
 		std::vector<long double> valuesI[frequencyCount];
 		std::vector<long double> data(_file->GetImageSize());
 		size_t groupCount = _file->GetGroupCount();
-		int date1Index = _file->GetGroupParameterIndex("DATE");
-		int date2Index = _file->GetGroupParameterIndex("DATE", 2);
+		bool hasDate2 = _file->HasGroupParameter("DATE", 2);
+		int date2Index = 0, date1Index = _file->GetGroupParameterIndex("DATE");
+		if(hasDate2)
+		{
+			date2Index = _file->GetGroupParameterIndex("DATE", 2);
+		}
 		int uuIndex, vvIndex, wwIndex;
 		if(_file->HasGroupParameter("UU"))
 		{
@@ -189,7 +193,11 @@ namespace rfiStrategy {
 			_file->ReadGroupParameters(g, &parameters[0]);
 			if(parameters[baselineColumn] == baseline)
 			{
-				double date = parameters[date1Index] + parameters[date2Index];
+				double date;
+				if(hasDate2)
+					date = parameters[date1Index] + parameters[date2Index];
+				else
+					date = parameters[date1Index];
 				UVW uvw;
 				uvw.u = parameters[uuIndex] * frequencyFactor;
 				uvw.v = parameters[vvIndex] * frequencyFactor;

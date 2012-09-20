@@ -111,7 +111,7 @@ class MSWindow : public Gtk::Window {
 	private:
 		void createToolbar();
 		void loadCurrentTFData();
-		
+
 		void onLoadPrevious();
 		void onLoadNext();
 		void onLoadLargeStepPrevious();
@@ -124,7 +124,6 @@ class MSWindow : public Gtk::Window {
 		void onActionDirectoryOpen();
 		void onActionDirectoryOpenForSpatial();
 		void onActionDirectoryOpenForST();
-		void onOpenBandCombined();
 		void onShowImagePlane();
 		void onSetAndShowImagePlane();
 		void onAddToImagePlane();
@@ -247,6 +246,7 @@ class MSWindow : public Gtk::Window {
 		Glib::RefPtr<Gtk::ActionGroup> _actionGroup;
 		Gtk::Statusbar _statusbar;
 		PlotFrame _plotFrame;
+		std::string _imageSetName, _imageSetIndexDescription;
 
 		Glib::RefPtr<Gtk::ToggleAction>
 			_originalFlagsButton, _altFlagsButton,

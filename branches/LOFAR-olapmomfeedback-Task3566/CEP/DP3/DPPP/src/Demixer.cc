@@ -77,6 +77,7 @@ namespace LOFAR {
         itsInstrumentName (parset.getString(prefix+"instrumentmodel",
                                            "instrument")),
         itsAvgResultSubtr (0),
+        itsIgnoreTarget   (parset.getBool  (prefix+"ignoretarget", false)),
         itsTargetSource   (parset.getString(prefix+"targetsource", string())),
         itsSubtrSources   (parset.getStringVector (prefix+"subtractsources")),
         itsModelSources   (parset.getStringVector (prefix+"modelsources",
@@ -86,6 +87,8 @@ namespace LOFAR {
 //        itsCutOffs        (parset.getDoubleVector (prefix+"elevationcutoffs",
 //                                                   vector<double>())),
 //        itsJointSolve     (parset.getBool  (prefix+"jointsolve", true)),
+        itsPropagateSolutions(parset.getBool (prefix+"propagatesolutions",
+                                              false)),
         itsNDir           (0),
         itsNModel         (0),
         itsNStation       (0),
@@ -126,8 +129,14 @@ namespace LOFAR {
 //      itsSolveOpt.useSVD  =
 //        parset.getBool  (prefix+"Solve.Options.UseSVD", true);
 
+      // Note:
+      // Directions of unknown sources can be given in the PhaseShift step like
+      //       demixstepname.sourcename.phasecenter
+
       ASSERTSTR (!(itsSkyName.empty() || itsInstrumentName.empty()),
                  "An empty name is given for the sky and/or instrument model");
+      ASSERTSTR (!itsIgnoreTarget || itsTargetSource.empty(),
+                 "Target source name cannot be given if ignoretarget=true");
       // Default nr of time chunks is maximum number of threads.
       if (itsNTimeChunk == 0) {
         itsNTimeChunk = OpenMP::maxThreads();
@@ -168,7 +177,7 @@ namespace LOFAR {
       // Size buffers.
       itsFactors.resize      (itsNTimeChunk);
       itsFactorsSubtr.resize (itsNTimeChunkSubtr);
-      itsPhaseShifts.reserve (itsNDir-1);
+      itsPhaseShifts.reserve (itsNDir-1);   // not needed for target direction
       itsFirstSteps.reserve  (itsNDir+1);   // one extra for itsAvgSubtr
       itsAvgResults.reserve  (itsNDir);
 
@@ -306,19 +315,21 @@ namespace LOFAR {
     void Demixer::show (std::ostream& os) const
     {
       os << "Demixer " << itsName << std::endl;
-      os << "  skymodel:         " << itsSkyName << std::endl;
-      os << "  instrumentmodel:  " << itsInstrumentName << std::endl;
-      os << "  targetsource:     " << itsTargetSource << std::endl;
-      os << "  subtractsources:  " << itsSubtrSources << std::endl;
-      os << "  modelsources:     " << itsModelSources << std::endl;
-      os << "  extrasources:     " << itsExtraSources << std::endl;
+      os << "  skymodel:           " << itsSkyName << std::endl;
+      os << "  instrumentmodel:    " << itsInstrumentName << std::endl;
+      os << "  targetsource:       " << itsTargetSource << std::endl;
+      os << "  subtractsources:    " << itsSubtrSources << std::endl;
+      os << "  modelsources:       " << itsModelSources << std::endl;
+      os << "  extrasources:       " << itsExtraSources << std::endl;
 //      os << "  elevationcutoffs: " << itsCutOffs << std::endl;
 //      os << "  jointsolve:     " << itsJointSolve << std::endl;
-      os << "  freqstep:         " << itsNChanAvgSubtr << std::endl;
-      os << "  timestep:         " << itsNTimeAvgSubtr << std::endl;
-      os << "  demixfreqstep:    " << itsNChanAvg << std::endl;
-      os << "  demixtimestep:    " << itsNTimeAvg << std::endl;
-      os << "  ntimechunk:       " << itsNTimeChunk << std::endl;
+      os << "  propagatesolutions: " << std::boolalpha << itsPropagateSolutions
+                                     << std::noboolalpha << std::endl;
+      os << "  freqstep:           " << itsNChanAvgSubtr << std::endl;
+      os << "  timestep:           " << itsNTimeAvgSubtr << std::endl;
+      os << "  demixfreqstep:      " << itsNChanAvg << std::endl;
+      os << "  demixtimestep:      " << itsNTimeAvg << std::endl;
+      os << "  ntimechunk:         " << itsNTimeChunk << std::endl;
 //      os << "  Solve.Options.MaxIter:       " << itsSolveOpt.maxIter << endl;
 //      os << "  Solve.Options.EpsValue:      " << itsSolveOpt.epsValue << endl;
 //      os << "  Solve.Options.EpsDerivative: " << itsSolveOpt.epsDerivative << endl;
@@ -644,15 +655,19 @@ namespace LOFAR {
                              vector<MultiResultStep*> avgResults,
                              uint resultIndex)
     {
-      // Nothing to do if only target direction or if all sources are modeled.
-      if (itsNDir <= 1 || itsNDir == itsNModel) return;
+      // Sources without a model have to be deprojected.
+      // Optionally no deprojection of target direction.
+      uint nrDeproject = itsNDir - itsNModel;
+      if (itsIgnoreTarget) {
+        nrDeproject--;
+      }
+      // Nothing to do if only target direction or nothing to deproject.
+      if (itsNDir <= 1  ||  nrDeproject == 0) return;
       // Get pointers to the data for the various directions.
       vector<Complex*> resultPtr(itsNDir);
       for (uint j=0; j<itsNDir; ++j) {
         resultPtr[j] = avgResults[j]->get()[resultIndex].getData().data();
       }
-      // Sources without a model have to be deprojected.
-      uint nrDeproject = itsNDir - itsNModel;
       // The projection matrix is given by
       //     P = I - A * inv(A.T.conj * A) * A.T.conj
       // where A is the last column of the demixing matrix M.
@@ -927,7 +942,7 @@ namespace LOFAR {
       }
 
       // Store last known solutions.
-      if(nTime > 0)
+      if(itsPropagateSolutions && nTime > 0)
       {
         copy(&(itsUnknowns[(itsTimeIndex + nTime - 1) * nDr * nSt * 8]),
           &(itsUnknowns[(itsTimeIndex + nTime) * nDr * nSt * 8]),

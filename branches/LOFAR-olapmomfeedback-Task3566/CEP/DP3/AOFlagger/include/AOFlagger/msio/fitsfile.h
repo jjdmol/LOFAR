@@ -272,6 +272,7 @@ class FitsFile {
 		int GetGroupParameterIndex(const std::string &parameterName);
 		int GetGroupParameterIndex(const std::string &parameterName, int number);
 		bool HasGroupParameter(const std::string &parameterName);
+		bool HasGroupParameter(const std::string &parameterName, int number);
 		const std::string &Filename() const { return _filename; }
 	private:
 		const std::string _filename;

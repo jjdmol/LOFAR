@@ -15,7 +15,7 @@ log4cplus.appender.STDERR.layout.ConversionPattern=%D{%d-%m %H:%M:%S.%q} %-5p %c
 log4cplus.appender.STDERR.logToStdErr=true
 
 log4cplus.appender.FILE=log4cplus::RollingFileAppender
-log4cplus.appender.FILE.File=../log/${LOG4CPLUS_LOGFILENAME}.log
+log4cplus.appender.FILE.File=/opt/lofar/var/log/${LOG4CPLUS_LOGFILENAME}.log
 log4cplus.appender.FILE.MaxFileSize=10MB
 log4cplus.appender.FILE.MaxBackupIndex=2
 log4cplus.appender.FILE.layout=log4cplus::PatternLayout

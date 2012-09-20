@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: TBB_Writer.cc 36610 2012-03-12 11:54:53Z amesfoort $
+ * $Id: TBB_Writer.cc 38741 2012-09-07 11:54:53Z amesfoort $
  */
 
 #include <lofar_config.h>
@@ -54,7 +54,7 @@
 #include <Interface/Exceptions.h>
 #include <Interface/Stream.h>
 
-#include <dal/lofar/Station.h>
+#include <dal/lofar/StationNames.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -64,7 +64,7 @@ using namespace std;
 EXCEPTION_CLASS(TBB_MalformedFrameException, StorageException);
 
 /*
- * The output_format is without seconds. The output_size is including the '\0'.
+ * The output_format is without seconds. The output_size is including the terminating NUL char.
  * Helper for in filenames and for the FILEDATE attribute.
  */
 static string formatFilenameTimestamp(const struct timeval& tv, const char* output_format,
@@ -73,23 +73,15 @@ static string formatFilenameTimestamp(const struct timeval& tv, const char* outp
 	gmtime_r(&tv.tv_sec, &tm);
 	double secs = tm.tm_sec + tv.tv_usec / 1000000.0;
 
-	struct Date {
-		char* date;
-		Date(size_t size) : date(new char[size]) {
-		}
-		~Date() {
-			delete[] date;
-		}
-	} d(output_size); // ensure C string for strftime() is always deleted
+	vector<char> date(output_size);
 
-	size_t nwritten = strftime(d.date, output_size, output_format, &tm);
+	size_t nwritten = strftime(&date[0], output_size, output_format, &tm);
 	if (nwritten == 0) {
-		d.date[0] = '\0';
+		date[0] = '\0';
 	}
-	/*int nprinted = */snprintf(d.date + nwritten, output_size - nwritten, output_format_secs, secs);
+	(void)snprintf(&date[0] + nwritten, output_size - nwritten, output_format_secs, secs);
 
-	string dateStr(d.date);
-	return dateStr;
+	return string(&date[0]);
 }
 
 string TBB_Header::toString() const {
@@ -133,18 +125,18 @@ TBB_Dipole::~TBB_Dipole() {
 		if (usesExternalDataFile()) {
 			try {
 				itsDataset->resize1D(itsDatasetLen);
-			} catch (DAL::DALException& exc) {
+			} catch (dal::DALException& exc) {
 				LOG_WARN_STR("TBB: failed to resize HDF5 dipole dataset to external data size: " << exc.what());
 			}
 		}
 		try {
 			itsDataset->dataLength().value = static_cast<unsigned long long>(itsDatasetLen);
-		} catch (DAL::DALException& exc) {
+		} catch (dal::DALException& exc) {
 			LOG_WARN_STR("TBB: failed to set dipole DATA_LENGTH attribute: " << exc.what());
 		}
 		try {
 			itsDataset->flagOffsets().value = itsFlagOffsets;
-		} catch (DAL::DALException& exc) {
+		} catch (dal::DALException& exc) {
 			LOG_WARN_STR("TBB: failed to set dipole FLAG_OFFSETS attribute: " << exc.what());
 		}
 
@@ -153,15 +145,18 @@ TBB_Dipole::~TBB_Dipole() {
 }
 
 void TBB_Dipole::initDipole(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-		const string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex) {
+		const string& rawFilename, dal::TBB_Station& station, Mutex& h5Mutex) {
 	if (header.sampleFreq == 200 || header.sampleFreq == 160) {
 		itsSampleFreq = static_cast<uint32_t>(header.sampleFreq) * 1000000;
-	} else { // might happen if header of first frame is corrupt
-		itsSampleFreq = parset.clockSpeed();
+	} else { // might happen if header of first frame is corrupt (doesn't mean we (can) deal with that on any corruption)
+		itsSampleFreq = parset.clockSpeed(); // Hz
 		LOG_WARN("TBB: Unknown sample rate in TBB frame header; using sample rate from the parset");
 	}
 
-	initTBB_DipoleDataset(header, parset, stationMetaData, rawFilename, station, h5Mutex);
+	{
+		ScopedLock h5OutLock(h5Mutex);
+		initTBB_DipoleDataset(header, parset, stationMetaData, rawFilename, station);
+	}
 
 	if (!rawFilename.empty()) {
 		itsRawOut.open(rawFilename.c_str(), ios_base::out | ios_base::binary | ios_base::trunc);
@@ -185,7 +180,7 @@ bool TBB_Dipole::usesExternalDataFile() const {
 void TBB_Dipole::addFlags(size_t offset, size_t len) {
 	// Add a new flag range or extend the last stored flag range. 'len' cannot be 0.
 	if (itsFlagOffsets.empty() || offset > itsFlagOffsets.back().end) {
-		itsFlagOffsets.push_back(DAL::Range(offset, offset + len));
+		itsFlagOffsets.push_back(dal::Range(offset, offset + len));
 	} else { // extend flag range
 		itsFlagOffsets.back().end += len;
 	}
@@ -214,7 +209,7 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 			/* Because of the crc32tbb variant, payloads with only zeros validate as correct.
 			 * Given the used frame size (1024 samples for transient), this is extremenly unlikely
 			 * to be real data. Rather, such zero blocks are from RCUs that are disabled or broken.
-			 * Still store the zeros to be able to distinguish from lost frames.
+			 * Flag it, but still store the zeros to be able to distinguish from lost frames.
 			 */
 			addFlags(offset, frame.header.nOfSamplesPerFrame);
 		}
@@ -231,7 +226,7 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 		 */
 		if (usesExternalDataFile()) {
 			if (offset > itsDatasetLen) {
-				itsRawOut.seekp(offset * sizeof(frame.payload.data[0])); // skip space of lost frame
+				itsRawOut.seekp(offset * sizeof(frame.payload.data[0])); // skip space of lost frame(s)
 			}
 			itsRawOut.write(reinterpret_cast<const char*>(frame.payload.data), static_cast<size_t>(frame.header.nOfSamplesPerFrame) * sizeof(frame.payload.data[0]));
 		} else {
@@ -258,10 +253,8 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 }
 
 void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-                                       const string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex) {
-	itsDataset = new DAL::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
-
-	ScopedLock h5OutLock(h5Mutex);
+                                       const string& rawFilename, dal::TBB_Station& station) {
+	itsDataset = new dal::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
 
 	// Create 1-dim, unbounded (-1) dataset. 
 	// Override endianess. TBB data is always stored little endian and also received as such, so written as-is on any platform.
@@ -272,7 +265,7 @@ void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& p
 	itsDataset->rspID()    .value = header.rspID;
 	itsDataset->rcuID()    .value = header.rcuID;
 
-	itsDataset->sampleFrequency()    .value = itsSampleFreq;
+	itsDataset->sampleFrequency()    .value = itsSampleFreq / 1000000;
 	itsDataset->sampleFrequencyUnit().value = "MHz";
 
 	itsDataset->time().value = header.time; // in seconds. Note: may have been corrected in correctTransientSampleNr()
@@ -375,9 +368,11 @@ bool TBB_Dipole::hasAllZeroDataSamples(const TBB_Frame& frame) const {
 
 //////////////////////////////////////////////////////////////////////////////
 
-TBB_Station::TBB_Station(const string& stationName, const Parset& parset, const StationMetaData& stationMetaData,
-                         const string& h5Filename, bool dumpRaw)
-: itsH5File(DAL::TBB_File(h5Filename, DAL::TBB_File::CREATE))
+TBB_Station::TBB_Station(const string& stationName, Mutex& h5Mutex, const Parset& parset,
+                         const StationMetaData& stationMetaData, const string& h5Filename,
+                         bool dumpRaw)
+: itsH5File(dal::TBB_File(h5Filename, dal::TBB_File::CREATE))
+, itsH5Mutex(h5Mutex)
 , itsStation(itsH5File.station(stationName))
 , itsDipoles(MAX_RSPBOARDS/* = per station*/ * NR_RCUS_PER_RSPBOARD) // = 192 for int'l stations
 , itsParset(parset)
@@ -393,7 +388,7 @@ TBB_Station::~TBB_Station() {
 	// Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
 	try {
 		itsStation.nofDipoles().value = itsStation.dipoles().size();
-	} catch (DAL::DALException& exc) {
+	} catch (dal::DALException& exc) {
 		LOG_WARN_STR("TBB: failed to set station NOF_DIPOLES attribute: " << exc.what());
 	}
 }
@@ -553,12 +548,12 @@ void TBB_Station::initTBB_RootAttributesAndGroups(const string& stName) {
 	initStationGroup(itsStation, stName, stPos);
 
 	// Trigger Group
-	DAL::TBB_Trigger tg(itsH5File.trigger());
+	dal::TBB_Trigger tg(itsH5File.trigger());
 	tg.create();
 	initTriggerGroup(tg);
 }
 
-void TBB_Station::initStationGroup(DAL::TBB_Station& st, const string& stName, const vector<double>& stPosition) {
+void TBB_Station::initStationGroup(dal::TBB_Station& st, const string& stName, const vector<double>& stPosition) {
 	st.groupType()  .value = "StationGroup";
 	st.stationName().value = stName;
 
@@ -575,14 +570,14 @@ void TBB_Station::initStationGroup(DAL::TBB_Station& st, const string& stName, c
 		st.beamDirectionUnit() .value = "m";
 	}
 
-	// clockCorrectionTime() returns 0.0 if stName is unknown, while 0.0 is valid for some stations...
+	// clockCorrectionTime() returns 0.0 if stName is unknown, while 0.0 is valid for some stations... TODO: call underlying function
 	st.clockOffset()    .value = itsParset.clockCorrectionTime(stName);
 	st.clockOffsetUnit().value = "s";
 
 	//st.nofDipoles.value is set at the end (destr)
 }
 
-void TBB_Station::initTriggerGroup(DAL::TBB_Trigger& tg) {
+void TBB_Station::initTriggerGroup(dal::TBB_Trigger& tg) {
 	tg.groupType()     .value = "TriggerGroup";
 	tg.triggerType()   .value = "Unknown";
 	tg.triggerVersion().value = 0; // There is no trigger algorithm info available to us yet.
@@ -608,7 +603,7 @@ void TBB_Station::initTriggerGroup(DAL::TBB_Trigger& tg) {
 	 * specifying each attribute name presumed available.
 	 * Until it is clear what is needed and available, this cannot be standardized.
 	 *
-	 * If you add fields using getTYPE(), catch the possible APSException as above.
+	 * If you add fields using parset getTYPE(), catch the possible APSException as above.
 	 */
 }
 
@@ -656,7 +651,7 @@ TBB_StreamWriter::~TBB_StreamWriter() {
 }
 
 time_t TBB_StreamWriter::getTimeoutStampSec() const {
-	return itsTimeoutStamp.tv_sec; // racy read (and no access once guarantee)
+	return itsTimeoutStamp.tv_sec; // racy read (and no access once guarantee), but only to terminate after timeout
 }
 
 void TBB_StreamWriter::frameHeaderLittleToHost(TBB_Header& header) const {
@@ -671,14 +666,14 @@ void TBB_StreamWriter::frameHeaderLittleToHost(TBB_Header& header) const {
 
 void TBB_StreamWriter::correctTransientSampleNr(TBB_Header& header) const {
 	/*
-	 * We assume header.sampleFreq is either 200 or 160 MHz (another multiple of #samples per frame is also fine).
+	 * LOFAR antennas have a header.sampleFreq of either 200 or 160 MHz (another multiple of #samples per frame is also fine).
 	 * 
 	 * At 200 MHz sample rate with 1024 samples per frame, we have 195213.5 frames per second.
 	 * This means that every 2 seconds, a frame overlaps a seconds boundary; every odd frame needs its sampleNr corrected.
 	 * At 160 MHz sample rate, an integer number of frames fits in a second (156250), so no correction is needed.
 	 *
 	 * This fixup assumes no other sample freq than 200 MHz that needs a correction is used (checked in initDipole()),
-	 * and that the hw time nr starts even (it is 0) (cannot be checked, because dumps can start at any frame).
+	 * and that the hw time nr starts even (cannot be checked, because dumps can start at any frame, but it is 0, thus fine).
 	 */
 	if (header.sampleFreq == 200 && header.time & 1) {
 		header.sampleNr += DEFAULT_TRANSIENT_NSAMPLES / 2;
@@ -809,18 +804,18 @@ void TBB_StreamWriter::mainInputLoop() {
 			LOG_FATAL_STR(itsLogPrefix << exc.what());
 			break;
 		} catch (...) { // Cancellation exc happens at exit. Nothing to do, so disabled. Otherwise, must rethrow.
+			delete stream;
 			try {
 				itsReceiveQueue.append(NULL); // always notify output thread at exit of no more data
 			} catch (exception& exc) {
 				LOG_WARN_STR(itsLogPrefix << "may have failed to notify output thread to terminate: " << exc.what());
 			}
-			delete stream;
 			throw;
 		}
 	}
 
-	itsReceiveQueue.append(NULL);
 	delete stream;
+	itsReceiveQueue.append(NULL);
 }
 
 void TBB_StreamWriter::mainOutputLoop() {
@@ -896,7 +891,7 @@ TBB_Writer::TBB_Writer(const vector<string>& inputStreamNames, const Parset& par
 	itsUnknownStationMetaData.available = false;
 
 	for (unsigned i = 0; i < inputStreamNames.size(); i++) {
-		itsStreamWriters.push_back(new TBB_StreamWriter(*this, inputStreamNames[i], logPrefix));
+		itsStreamWriters.push_back(new TBB_StreamWriter(*this, inputStreamNames[i], logPrefix)); // TODO: leaks just created obj if push_back() fails
 	}
 }
 
@@ -912,19 +907,25 @@ TBB_Writer::~TBB_Writer() {
 }
 
 TBB_Station* TBB_Writer::getStation(const TBB_Header& header) {
-	ScopedLock sl(itsStationsMutex);
+	ScopedLock sl(itsStationsMutex); // protect against insert below
 	map<unsigned, TBB_Station*>::iterator stIt(itsStations.find(header.stationID));
 	if (stIt != itsStations.end()) {
-		return stIt->second;
+		return stIt->second; // common case
 	}
 
 	// Create new station with HDF5 file and station HDF5 group.
-	string stationName(DAL::stationIDToName(header.stationID));
+	string stationName(dal::stationIDToName(header.stationID));
 	string h5Filename(createNewTBB_H5Filename(header, stationName));
 	StationMetaDataMap::const_iterator stMdIt(itsStationMetaDataMap.find(header.stationID));
 	// If not found, station is not participating in the observation. Should not happen, but don't panic.
 	const StationMetaData& stMetaData = stMdIt == itsStationMetaDataMap.end() ? itsUnknownStationMetaData : stMdIt->second;
-	TBB_Station* station = new TBB_Station(stationName, itsParset, stMetaData, h5Filename, itsDumpRaw); // TODO: mem leak if insert() fails. Also, really need global h5lock: cannot create 2 different h5 files at once safely.
+
+	TBB_Station* station;
+	{
+		ScopedLock slH5(itsH5Mutex);
+		station = new TBB_Station(stationName, itsH5Mutex, itsParset, stMetaData, h5Filename, itsDumpRaw); // TODO: mem leak if insert() fails. (But if destr here, destructor is not thread-safe.)
+	}
+
 	return itsStations.insert(make_pair(header.stationID, station)).first->second;
 }
 

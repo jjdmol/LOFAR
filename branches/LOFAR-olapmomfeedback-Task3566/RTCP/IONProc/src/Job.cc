@@ -33,6 +33,7 @@
 #include <Scheduling.h>
 #include <GlobalVars.h>
 #include <Job.h>
+#include <Scheduling.h>
 #include <OutputSection.h>
 #include <StreamMultiplexer.h>
 #include <Stream/SocketStream.h>
