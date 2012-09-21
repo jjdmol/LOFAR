@@ -219,13 +219,14 @@ void WeightsCommand::send()
 					if (beamlet_mask.test(beamlet)) {
 					    int plane = beamlet / maxBeamletsPerPlane(itsBitsPerSample);
 						int beamletnr = beamlet % maxBeamletsPerPlane(itsBitsPerSample);
-						setweights.weights()(0,rcunr,plane,beamletnr) = complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
+						setweights.weights()(0,rcunr,plane,beamletnr) = complex<int16>(10+plane, beamletnr);
+// TODO
+// complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
 					}
-				}
+				} // beamlet
 				rcunr++;
 			}
-
-		}
+		} // rcu
 		m_rspport.send(setweights);
 	} break;
 

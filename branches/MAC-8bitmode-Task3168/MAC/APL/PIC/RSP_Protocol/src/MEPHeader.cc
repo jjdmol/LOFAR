@@ -219,7 +219,7 @@ bool MEPHeader::isValidAck(const MEPHeader& reqhdr)
     ) {
 		return (true);
 	}
-	LOG_DEBUG_STR("this:" << *this << "\nthat:" << reqhdr);
+	LOG_ERROR_STR("this:" << *this << "\nthat:" << reqhdr);
 	return (false);
 }
 
@@ -228,8 +228,8 @@ bool MEPHeader::isValidAck(const MEPHeader& reqhdr)
 //
 ostream& MEPHeader::print(ostream& os) const
 {
-	os << "hdr[type=" << m_fields.type << ",status=" << m_fields.status << ",framelen=" << m_fields.frame_length;
-	os << ",dstid=" << m_fields.addr.dstid << ",pid=" << m_fields.addr.pid << ",regid=" << m_fields.addr.regid;
+	os << "hdr[type=" << (int)m_fields.type << ",status=" << (int)m_fields.status << ",framelen=" << m_fields.frame_length;
+	os << ",dstid=" << m_fields.addr.dstid << ",pid=" << (int)m_fields.addr.pid << ",regid=" << (int)m_fields.addr.regid;
 	os << ",offset=" << m_fields.offset << ",payloadlen=" << m_fields.payload_length << ",seqnr=" << m_fields.seqnr << "]";
 	return (os);
 }

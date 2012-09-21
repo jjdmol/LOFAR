@@ -46,7 +46,7 @@ using namespace EPA_Protocol;
 
 BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid)
 	: SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS*(MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE)),
-	  m_blp(blp), m_regid(regid), itsPlane(0), m_remaining(0), m_offset(0)
+	  m_blp(blp), m_regid(regid), itsBank(0), m_remaining(0), m_offset(0)
 {
 	memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -57,14 +57,14 @@ BWWrite::~BWWrite()
 
 void BWWrite::sendrequest()
 {
-    int activePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
-    if (getCurrentIndex() >= (activePlanes*MEPHeader::BF_N_FRAGMENTS)) {
+    int activeBanks = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
+    if (getCurrentIndex() >= (activeBanks*MEPHeader::BF_N_FRAGMENTS)) {
         setContinue(true);
         return;
     }
     
     uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
-    itsPlane = (getCurrentIndex() / MEPHeader::BF_N_FRAGMENTS) ;
+    itsBank = (getCurrentIndex() / MEPHeader::BF_N_FRAGMENTS) ;
         
 	// no conditional, update every second
 
@@ -78,9 +78,6 @@ void BWWrite::sendrequest()
 		LOG_FATAL("invalid regid");
 		exit(EXIT_FAILURE);
 	}
-
-	LOG_DEBUG(formatString(">>>> BWWrite(%s) global_blp=%d, blp=%d, regid=%d, plane=%d, m_offset=%d, m_remaining=%d",
-					getBoardPort().getName().c_str(), global_blp, m_blp, m_regid, itsPlane,m_offset, m_remaining));
 
 	// send next BF configure message
 	EPABfCoefsWriteEvent bfcoefs;
@@ -96,7 +93,7 @@ void BWWrite::sendrequest()
 		bfcoefs.hdr.set( MEPHeader::WRITE, 
                          1 << m_blp,
                          MEPHeader::BF,
-                         MEPHeader::BF_XROUT+(itsPlane*4),
+                         MEPHeader::BF_XROUT+(itsBank*4),
                          size,
                          m_offset);
 		break;
@@ -104,7 +101,7 @@ void BWWrite::sendrequest()
 	    bfcoefs.hdr.set( MEPHeader::WRITE, 
                          1 << m_blp,
                          MEPHeader::BF,
-                         MEPHeader::BF_XIOUT+(itsPlane*4),
+                         MEPHeader::BF_XIOUT+(itsBank*4),
                          size,
                          m_offset);
 		break;
@@ -112,7 +109,7 @@ void BWWrite::sendrequest()
 	    bfcoefs.hdr.set( MEPHeader::WRITE, 
                          1 << m_blp,
                          MEPHeader::BF,
-                         MEPHeader::BF_YROUT+(itsPlane*4),
+                         MEPHeader::BF_YROUT+(itsBank*4),
                          size,
                          m_offset);
 		break;
@@ -120,12 +117,17 @@ void BWWrite::sendrequest()
 	    bfcoefs.hdr.set( MEPHeader::WRITE, 
                          1 << m_blp,
                          MEPHeader::BF,
-                         MEPHeader::BF_YIOUT+(itsPlane*4),
+                         MEPHeader::BF_YIOUT+(itsBank*4),
                          size,
                          m_offset);
 		break;
 	}
 	
+	if (getBoardId() == 11) {
+		LOG_INFO_STR("BWWrite:board:" << getBoardId() << ",global_blp=" << (int)global_blp << ",bank=" << itsBank 
+			<< "," << bfcoefs.hdr);
+	}
+
 	// create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
 	int nbeamlets_per_fragment = MEPHeader::N_BEAMLETS / MEPHeader::BF_N_FRAGMENTS;
 	Array<complex<int16>, 2> weights(nbeamlets_per_fragment, N_POL);
@@ -147,22 +149,25 @@ void BWWrite::sendrequest()
 
 	ASSERT(MEPHeader::N_BEAMLETS % MEPHeader::BF_N_FRAGMENTS == 0);
 	for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
-
 		int hw_offset = lane;
 		int cache_offset = lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) + (getCurrentIndex() * nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES);
 
 		Range hw_range(hw_offset, hw_offset + nbeamlets_per_fragment - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
 		Range cache_range(cache_offset, cache_offset + (nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES) - 1, 1);
-
-		LOG_DEBUG_STR("lane=" << lane);
-		LOG_DEBUG_STR("hw_range=" << hw_range);
-		LOG_DEBUG_STR("cache_range=" << cache_range);
+		if (getBoardId() == 11) {
+			LOG_INFO_STR("board=" << getBoardId() << ",bank=" << itsBank << ",lane=" << lane 
+					<< (m_regid / 2 ? ",X" : ",Y") << (m_regid % 2 ? "R" : "I")
+					<< ", hw_range=" << hw_range << ", cache_range=" << cache_range);
+		}
 
 		// X = normal 0
-		weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, itsPlane, cache_range);
+		weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, itsBank, cache_range);
+// TODO
+//		weights(hw_range, 0) = complex<int16>(10+lane, 50+itsBank);
 
 		// Y = normal 1
-		weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, itsPlane, cache_range);
+		weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, itsBank, cache_range);
+//		weights(hw_range, 1) = complex<int16>(20+lane, 40+itsBank);
 
 #if 0
 			mapped_index(hw_range, 0) = index(cache_range, 0);
@@ -209,7 +214,8 @@ void BWWrite::sendrequest()
 		LOG_DEBUG_STR("XY= swapped");
 	}
     
-	weights = conj(weights);
+// TODO uncomment next line!!!!
+//	weights = conj(weights);
 
 	switch (m_regid) {
 		case MEPHeader::BF_XROUT: {

@@ -69,8 +69,8 @@ void SSWrite::sendrequest()
 	int dstid = 1 << (getCurrentIndex() / itsActiveBanks);
 	// used bank 
 	int bank = getCurrentIndex() % itsActiveBanks;
-	LOG_INFO(formatString("SSWRITE:board: %d, index=%d, globalblp=%d, dstID=%d, bank=%d", 
-							getBoardId(), getCurrentIndex(), global_blp, dstid, bank));
+	LOG_INFO(formatString("SSWRITE:board=%d, index=%d, globalblp=%d, dstID=%d, bank=%d, regid=%d", 
+							getBoardId(), getCurrentIndex(), global_blp, dstid, bank, MEPHeader::SS_SELECT+bank));
 
 	ss.hdr.set( MEPHeader::WRITE, 
 				dstid,
@@ -100,9 +100,7 @@ void SSWrite::sendrequest()
 		Range hw_range(hw_offset, hw_offset + MEPHeader::N_BEAMLETS - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
 		Range cache_range(cache_offset, cache_offset + (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) - 1, 1);
 
-		LOG_DEBUG_STR("lane=" << lane);
-		LOG_DEBUG_STR("hw_range=" << hw_range);
-		LOG_DEBUG_STR("cache_range=" << cache_range);
+		LOG_DEBUG_STR("lane=" << lane << ",hw_range=" << hw_range << ",cache_range=" << cache_range);
 
 		subbands(hw_range, 0) = Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2,     bank, cache_range); // x
 		subbands(hw_range, 1) = Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, bank, cache_range); // y

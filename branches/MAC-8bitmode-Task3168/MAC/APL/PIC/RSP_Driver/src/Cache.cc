@@ -152,7 +152,17 @@ void CacheBuffer::reset(void)
 	                           StationSettings::instance()->nrRcus(),
 	                           (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE), 
 	                           MEPHeader::N_BEAMLETS);
-	m_beamletweights() = complex<int16>(0,0);
+	m_beamletweights() = complex<int16>(25,36);
+// TODO remove this code!!!
+	for (int rcu = 0 ; rcu < StationSettings::instance()->nrRcus(); rcu++) {
+		int16	value=0;
+		for (int bank = 0; bank < (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE); bank++) {
+			for (int beamlet = 0; beamlet < MEPHeader::N_BEAMLETS; beamlet++) {
+				m_beamletweights()(0,rcu,bank,beamlet)=complex<int16>(value++,bank+10);
+			}
+		}
+	}
+//TODO
 
 	m_subbandselection.crosslets().resize(StationSettings::instance()->nrRcus(),
 	                                      (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE),

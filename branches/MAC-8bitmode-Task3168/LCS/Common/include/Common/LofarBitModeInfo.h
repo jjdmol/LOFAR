@@ -31,6 +31,9 @@ namespace LOFAR {
     
     inline static int maxDataslotsPerRSP(int bitsPerSample) {
 		assert(bitsPerSample >= MIN_BITS_PER_SAMPLE && bitsPerSample <= MAX_BITS_PER_SAMPLE && bitsPerSample%2==0);
+#if 1
+		return(61);
+#else
         switch (bitsPerSample) {
           case 4:
               return(59);
@@ -40,6 +43,7 @@ namespace LOFAR {
               //return(59);
               return(61);
 		}
+#endif
 	}
 
     inline static int maxBeamletsPerRSP(int bitsPerSample) {

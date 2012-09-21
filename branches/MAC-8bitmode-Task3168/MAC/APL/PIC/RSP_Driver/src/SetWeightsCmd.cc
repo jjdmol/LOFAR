@@ -74,7 +74,10 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
 void SetWeightsCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
 	int input_rcu = 0;
-	int nPlanes = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
+	int nBanks = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
+
+	Range	src_range;
+	Range	dst_range;
 	
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask[cache_rcu]) {
@@ -84,14 +87,27 @@ void SetWeightsCmd::apply(CacheBuffer& cache, bool setModFlag)
 				cache.getBeamletWeights()()(0, cache_rcu, Range::all(), Range::all()) = m_event->weights()(0, input_rcu, Range::all(), Range::all());
 			}
 			else {
-			    for (int plane = 0; plane < nPlanes; plane++) {
-    				for (int rsp = 0; rsp < MEPHeader::N_SERDES_LANES; rsp++) {
-    					int	swstart(rsp * maxDataslotsPerRSP(cache.getBitsPerSample()));
-    					int hwstart(rsp*MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES);
-    					cache.getBeamletWeights()()(0, cache_rcu, plane, Range(hwstart, hwstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1)) = 
-    									m_event->weights()(0, input_rcu, plane, Range(swstart,swstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1));
-    				}
-    			}
+				int nrBlocks = MEPHeader::N_SERDES_LANES * nBanks;
+				int dataslotsPerRSP = maxDataslotsPerRSP(cache.getBitsPerSample());
+				for (int block = 0; block < nrBlocks; block++) {
+					int swbank = block / MEPHeader::N_SERDES_LANES;
+					int swlane = block % MEPHeader::N_SERDES_LANES;
+					int hwbank = block % nBanks;
+					int hwlane = block / nBanks;
+   					int	swstart(swlane * dataslotsPerRSP);
+   					int hwstart(hwlane * (MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+   					dst_range = Range(hwstart, hwstart+dataslotsPerRSP-1);
+   					src_range = Range(swstart, swstart+dataslotsPerRSP-1);
+					for (int rsp = 0; rsp < MEPHeader::N_SERDES_LANES; rsp++) {
+						cache.getBeamletWeights()()(0, cache_rcu, hwbank, dst_range) = 
+   									m_event->weights()(0, input_rcu, swbank, src_range);
+						if (rsp == 0) {
+							LOG_INFO_STR("BW:block=" << block << " move(" << src_range << ") to (" << dst_range << ")"
+										<< " swbank=" << swbank << " swlane=" << swlane
+										<< " hwbank=" << hwbank << " hwlane=" << hwlane);
+						}
+					} // rsp
+   				} // blocks
 			}
 
 			if (setModFlag) {

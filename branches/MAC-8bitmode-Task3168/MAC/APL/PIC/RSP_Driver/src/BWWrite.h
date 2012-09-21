@@ -62,7 +62,7 @@ public:
 private:
 	int    m_blp;
 	int    m_regid;
-	int    itsPlane;
+	int    itsBank;
 
 	size_t m_remaining; // how much to write
 	size_t m_offset;    // where to write
