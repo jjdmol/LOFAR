@@ -183,7 +183,7 @@ class eor_averaging_pipeline(control):
 
         # Run the Default Pre-Processing Pipeline (DPPP);
         self.run_task("ndppp",
-            input_data_mapfile,
+            (input_data_mapfile, output_data_mapfile),
             data_start_time=vdsinfo['start_time'],
             data_end_time=vdsinfo['end_time'],
             parset=ndppp_parset)

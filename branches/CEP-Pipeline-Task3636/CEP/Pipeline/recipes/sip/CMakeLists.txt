@@ -69,6 +69,7 @@ python_install(
   DESTINATION lofarpipe/recipes)
 
 install(PROGRAMS
+  bin/eor_averaging_pipeline.py
   bin/msss_calibrator_pipeline.py
   bin/msss_imager_pipeline.py
   bin/msss_target_pipeline.py
