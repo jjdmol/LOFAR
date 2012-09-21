@@ -150,8 +150,8 @@ class Correlated(DataProduct):
         """
         super(Correlated, self).collect(filename)
         try:
-            main = pyrap.tables.table(filename)
-            spw = pyrap.tables.table(main.getkeyword('SPECTRAL_WINDOW'))
+            main = pyrap.tables.table(filename, ack=False)
+            spw = pyrap.tables.table(main.getkeyword('SPECTRAL_WINDOW'), ack=False)
             exposure = main.getcell('EXPOSURE', 0)
             startTime = main.getcell('TIME', 0) - 0.5 * exposure
             endTime = main.getcell('TIME', main.nrows() - 1) + 0.5 * exposure
@@ -174,9 +174,10 @@ class Correlated(DataProduct):
                 'subband' : int(spw.getcell('NAME', 0)[3:]),
                 'stationSubband' : 0         ### NOT CORRECT! ###
             })
-        except RuntimeError, error:
+        except Exception, error:
             print >> sys.stderr, (
-                "Exception: %s\n\twhile processing file %s" % (error, filename)
+                "%s: %s\n\twhile processing file %s" % 
+                (type(error).__name__, error, filename)
             )
 
 
@@ -200,7 +201,8 @@ class InstrumentModel(DataProduct):
         Collect instrument model metadata from the Measurement Set `filename`.
         """
         super(InstrumentModel, self).collect(filename)
-        self._data['percentageWritten'] = 100
+        if self._data['size'] > 0:
+            self._data['percentageWritten'] = 100
 
 
 
@@ -225,7 +227,9 @@ class SkyImage(DataProduct):
             'restoringBeamMajorUnit' : "arcsec",
             'restoringBeamMajorValue' : 0,
             'restoringBeamMinorUnit' : "arcsec",
-            'restoringBeamMinorValue' : 0
+            'restoringBeamMinorValue' : 0,
+            'rmsNoiseValue' : 0,
+            'rmsNoiseUnit' : ""
         })
         if filename: 
             self.collect(filename)
@@ -247,7 +251,11 @@ class SkyImage(DataProduct):
                 'restoringBeamMajorUnit' : beaminfo['major']['unit'],
                 'restoringBeamMajorValue' : beaminfo['major']['value'],
                 'restoringBeamMinorUnit' : beaminfo['minor']['unit'],
-                'restoringBeamMinorValue' : beaminfo['minor']['value']
+                'restoringBeamMinorValue' : beaminfo['minor']['value'],
+                'rmsNoiseValue' : image.attrgetrow(
+                    'LOFAR_QUALITY', 'QUALITY_MEASURE', 'RMS_NOISE_I'
+                )['VALUE'],
+                'rmsNoiseUnit' : image.unit()
             })
             if 'direction' in coord._names:
                 direction = coord.get_coordinate('direction')
@@ -272,9 +280,10 @@ class SkyImage(DataProduct):
                 'Pointing' : self._get_pointing(image),
                 'percentageWritten' : 100
             })
-        except RuntimeError, error:
+        except Exception, error:
             print >> sys.stderr, (
-                "Exception: %s\n\twhile processing file %s" % (error, filename)
+                "%s: %s\n\twhile processing file %s" % 
+                (type(error).__name__, error, filename)
             )
 
 
@@ -366,5 +375,6 @@ class SkyImage(DataProduct):
 if __name__ == "__main__":
     Correlated('sample_uv.MS').as_parameterset().writeFile('Correlated.parset')
     InstrumentModel('sample_inst.INST').as_parameterset().writeFile('InstrumentModel.parset')
-    SkyImage('sample_sky.IM').as_parameterset().writeFile('SkyImage.parset')
+    SkyImage('sample_sky.IM').as_parameterset().writeFile('SkyImage_IM.parset')
+    SkyImage('sample_sky.h5').as_parameterset().writeFile('SkyImage_h5.parset')
 
