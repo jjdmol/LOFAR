@@ -297,9 +297,6 @@ class imager_prepare(LOFARnodeTCP):
                 temp_slice_path = os.path.join(rfi_temp_dir,
                     os.path.basename(time_slice))
                 create_directory(temp_slice_path)
-                # Each rfi console needs own working space for temp files    
-                temp_dir_path = os.path.join(rfi_temp_dir, os.path.basename(group_set))
-                create_directory(temp_dir_path)
                 # construct copy command
                 self.logger.info(time_slice)
                 command = [rficonsole_executable, "-indirect-read",
@@ -315,7 +312,7 @@ class imager_prepare(LOFARnodeTCP):
                 raise Exception("an rfi_console_proc_group run failed!")
 
         finally:
-            shutil.rmtree(temp_dir_path)
+            shutil.rmtree(rfi_temp_dir)
 
     def _filter_bad_stations(self, group_measurements_collected,
             asciistat_executable, statplot_executable, msselect_executable):
