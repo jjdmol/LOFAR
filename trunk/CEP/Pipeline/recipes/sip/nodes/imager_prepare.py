@@ -290,7 +290,6 @@ class imager_prepare(LOFARnodeTCP):
         rfi_temp_dir = os.path.join(time_slice_dir, "rfi_temp_dir")
         create_directory(rfi_temp_dir)
 
-
         try:
             rfi_console_proc_group = SubProcessGroup(self.logger)
             for time_slice in time_slices:
@@ -315,7 +314,7 @@ class imager_prepare(LOFARnodeTCP):
                 raise Exception("an rfi_console_proc_group run failed!")
 
         finally:
-            shutil.rmtree(temp_dir_path)
+            shutil.rmtree(rfi_temp_dir)
 
     def _filter_bad_stations(self, group_measurements_collected,
             asciistat_executable, statplot_executable, msselect_executable):
