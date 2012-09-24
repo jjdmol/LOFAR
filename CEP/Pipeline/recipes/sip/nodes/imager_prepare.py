@@ -293,12 +293,11 @@ class imager_prepare(LOFARnodeTCP):
         try:
             rfi_console_proc_group = SubProcessGroup(self.logger)
             for time_slice in time_slices:
+                # Each rfi console needs own working space for temp files    
                 temp_slice_path = os.path.join(rfi_temp_dir,
                     os.path.basename(time_slice))
                 create_directory(temp_slice_path)
-                # Each rfi console needs own working space for temp files    
-                temp_dir_path = os.path.join(rfi_temp_dir, os.path.basename(group_set))
-                create_directory(temp_dir_path)
+
                 # construct copy command
                 self.logger.info(time_slice)
                 command = [rficonsole_executable, "-indirect-read",
