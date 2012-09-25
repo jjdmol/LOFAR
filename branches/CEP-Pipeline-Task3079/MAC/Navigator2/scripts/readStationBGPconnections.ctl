@@ -41,7 +41,7 @@ main()
   string strDataDir     = "";
   string strDataDir             = ""; 
   if (isdir("/opt/lofar/etc/") ) {
-    strDataDir = "/opt/lofar/etc/StaticMetaData/";
+    strDataDir = "/opt/lofar/etc/";
   } else if ( isdir ("d:/data/TRUNK-CCU001/data/configs/") ) {
     strDataDir = "d:/data/TRUNK-CCU001/data/configs/";
   } else {

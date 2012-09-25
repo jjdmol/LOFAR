@@ -188,7 +188,7 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList&)
       session.postResult(command.first, result);
 
       // If an error occurred, log a descriptive message and exit.
-      if(result.is(CommandResult::ERROR))
+      if(!result)
       {
         LOG_ERROR_STR("Error executing " << command.second->type()
           << " command: " << result.message());

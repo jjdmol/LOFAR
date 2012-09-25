@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 14 CircularBuffer
-PANEL,-1 -1 640 211 N "_3DFace" 1
+PANEL,-1 -1 694 280 N "_3DFace" 1
 "$objectNumber"
 "main()
 {
@@ -50,10 +50,8 @@ void updateTrigger( string dp1, string objectName,
       }
       
       LOG_DEBUG(\"circularBuffer.pnl:updateTrigger| found bufNr: \" + bufNr);
-      string ext = \"\";
-      if (bufNr < 10) ext=\"0\";
-      setValue(\"InputBuffer_text\",\"text\",\"PSIONode\"+ext+bufNr);
-      inputBufferDP=database+\"LOFAR_PermSW_PSIONode\"+ext+bufNr+\"_InputBuffer\";
+      setValue(\"InputBuffer_text\",\"text\",\"PSIONode\"+navFunct_formatInt(bufNr,99));
+      inputBufferDP=database+\"LOFAR_PermSW_PSIONode\"+navFunct_formatInt(bufNr,99)+\"_InputBuffer\";
     
       // connect to the inputBuffer values  
       // check if the requiered datapoint for this view are enabled and accessible
@@ -158,7 +156,19 @@ updateBuffer(string dp1, string stationName,
   }
 }
 " 0
- E E E E 1 0 0 0  0 0
+ E "main()
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+ 1 0 0 0  0 0
 ""0  1
 E "#uses \"navPanel.ctl\"
 
@@ -169,7 +179,38 @@ string panelName=\"\";
 
 string baseDP = \"\";
 string inputBufferDP=\"\";
-int objectNr=0;" 0
+int objectNr=0;
+
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"InputBuffer\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+
+  if (dpExists(inputBufferDP) ) {
+    LOG_DEBUG(\"CircularBuffer.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+inputBufferDP);
+    g_currentDatapoint=inputBufferDP;
+    navPanel_setEvent(\"CircularBuffer.pnl\",\"ChangePanel\");  
+  }
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"CircularBuffer.pnl\",\"EventRightClick\");
+}" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -178,11 +219,64 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
+6 285
+"InputBuffer_highLight"
+""
+1 240 10 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+223 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"InputBufferCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void InputBufferCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"circularBuffer.pnl:InputBufferCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"circularBuffer.pnl:InputBufferCallback|Found highlight : \" + highlight + \" Looking for InputBuffer\");
+  bool bHighlight=false;
+  if (dynContains(highlight,\"InputBuffer\")) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"circularBuffer.pnl:InputBufferCallback|Highlight request: \"+bHighlight);
+  InputBuffer_highLight.visible = bHighlight;
+  
+}
+
+" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -5 7 1 E 10 20 620 199
 6 226
 "RECTANGLE15"
 ""
 1 120 180 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 132 0 0 0 0 0
 E E E
 0
@@ -191,12 +285,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -90 -148 1 E 100 180 700 349
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -90 -148 1 E 100 180 700 349
 6 229
 "RECTANGLE17"
 ""
 1 120 20 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 136 0 0 0 0 0
 E E E
 0
@@ -205,12 +311,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 196 45 2  1 0  "pictures/circleAni.gif" 4294967295 E 120 20 219 119
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 196 45 2  1 0  "pictures/circleAni.gif" 4294967295 E 120 20 219 119
 14 234
 "In0"
 ""
 1 42 62 E E E 1 E 1 E N "_3DText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 144 0 0 0 0 0
 E E E
 0
@@ -221,12 +339,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  40 60 108 84
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 14 235
 "Bad0"
 ""
 1 114 62 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 146 0 0 0 0 0
 E E E
 0
@@ -237,12 +367,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  112 60 180 84
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 2 236
 "PRIMITIVE_TEXT3"
 ""
 1 22 67 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 147 0 0 0 0 0
 E E E
 0
@@ -251,7 +393,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 22 67 29 80
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 22 67 29 80
 0 2 2 "0s" 0 0 0 192 0 0  22 67 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
@@ -261,7 +407,15 @@ LANG:1 1 0
 "In1"
 ""
 1 42 92 E E E 1 E 1 E N "_3DText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 149 0 0 0 0 0
 E E E
 0
@@ -272,12 +426,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  40 90 108 114
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 14 238
 "Bad1"
 ""
 1 114 92 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 151 0 0 0 0 0
 E E E
 0
@@ -288,12 +454,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  112 90 180 114
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 2 239
 "PRIMITIVE_TEXT4"
 ""
 1 22 97 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 153 0 0 0 0 0
 E E E
 0
@@ -302,7 +480,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 22 97 29 110
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 22 97 29 110
 0 2 2 "0s" 0 0 0 192 0 0  22 97 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
@@ -312,7 +494,15 @@ LANG:1 1 1
 "In2"
 ""
 1 42 122 E E E 1 E 1 E N "_3DText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 155 0 0 0 0 0
 E E E
 0
@@ -323,12 +513,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  40 120 108 144
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 14 241
 "Bad2"
 ""
 1 114 122 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 157 0 0 0 0 0
 E E E
 0
@@ -339,12 +541,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  112 120 180 144
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 2 242
 "PRIMITIVE_TEXT5"
 ""
 1 22 127 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 159 0 0 0 0 0
 E E E
 0
@@ -353,7 +567,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 22 127 29 140
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 22 127 29 140
 0 2 2 "0s" 0 0 0 192 0 0  22 127 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
@@ -363,7 +581,15 @@ LANG:1 1 2
 "In3"
 ""
 1 42 152 E E E 1 E 1 E N "_3DText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 161 0 0 0 0 0
 E E E
 0
@@ -374,12 +600,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  40 150 108 174
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 14 244
 "Bad3"
 ""
 1 116 152 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 163 0 0 0 0 0
 E E E
 0
@@ -390,12 +628,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  112 150 180 174
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 2 245
 "PRIMITIVE_TEXT6"
 ""
 1 22 157 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 165 0 0 0 0 0
 E E E
 0
@@ -404,7 +654,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 22 157 29 170
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 22 157 29 170
 0 2 2 "0s" 0 0 0 192 0 0  22 157 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
@@ -413,8 +667,16 @@ LANG:1 1 3
 2 246
 "PRIMITIVE_TEXT7"
 ""
-1 42 47 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+1 41 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 166 0 0 0 0 0
 E E E
 0
@@ -423,8 +685,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 41 47 53 63
-0 2 2 "0s" 0 0 0 192 0 0  41 47 1
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 40 50 52 66
+0 2 2 "0s" 0 0 0 192 0 0  40 50 1
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
 0 1
@@ -448,13 +714,21 @@ E E 0 1 1 2 1 E U  1 E 114 47 155 63
 LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
 0 1
 LANG:1 4 %Bad
-1 284 51 "" 1
+1 286 51 "" 1
 0
 14 249
 "Late"
 ""
 1 510 82 E E E 1 E 1 E N "_3DText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 171 0 0 0 0 0
 E E E
 0
@@ -465,12 +739,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  508 80 574 104
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 2 250
 "PRIMITIVE_TEXT9"
 ""
 1 446 85 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 172 0 0 0 0 0
 E E E
 0
@@ -479,7 +765,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 446 85 476 101
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 446 85 476 101
 0 2 2 "0s" 0 0 0 192 0 0  446 85 1
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
@@ -489,7 +779,15 @@ LANG:1 4 Late
 "PRIMITIVE_TEXT10"
 ""
 1 577 84 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 174 0 0 0 0 0
 E E E
 0
@@ -498,7 +796,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 577 84 597 100
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 577 84 597 100
 0 2 2 "0s" 0 0 0 192 0 0  577 84 1
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
@@ -508,7 +810,15 @@ LANG:1 2 ms
 "IOTime"
 ""
 1 510 122 E E E 1 E 1 E N "_3DText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 176 0 0 0 0 0
 E E E
 0
@@ -519,12 +829,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  508 120 574 144
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 2 253
 "PRIMITIVE_TEXT11"
 ""
 1 446 125 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 178 0 0 0 0 0
 E E E
 0
@@ -533,7 +855,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 446 125 496 141
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 446 125 496 141
 0 2 2 "0s" 0 0 0 192 0 0  446 125 1
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
@@ -543,7 +869,15 @@ LANG:1 6 IOTime
 "PRIMITIVE_TEXT12"
 ""
 1 577 124 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 180 0 0 0 0 0
 E E E
 0
@@ -552,7 +886,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 577 124 597 140
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 577 124 597 140
 0 2 2 "0s" 0 0 0 192 0 0  577 124 1
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
@@ -562,7 +900,15 @@ LANG:1 2 ms
 "InputBuffer_text"
 ""
 1 250 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 181 0 0 0 0 0
 E E E
 0
@@ -571,7 +917,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 250 10 323 26
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 250 10 323 26
 0 2 2 "0s" 0 0 0 192 0 0  250 10 1
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
@@ -581,7 +931,15 @@ LANG:1 11 InputBuffer
 "LINE5"
 ""
 1 270 102 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 188 0 0 0 0 0
 E E E
 0
@@ -590,12 +948,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 2 1 E  270 102 310 112
+E "main()
+{
+  click();
+}" 0
+ 0 2 1 2 1 E  270 102 310 112
 4 262
 "LINE6"
 ""
 1 270 72 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 189 0 0 0 0 0
 E E E
 0
@@ -604,12 +974,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 2 1 E  270 72 310 102
+E "main()
+{
+  click();
+}" 0
+ 0 2 1 2 1 E  270 72 310 102
 4 263
 "LINE7"
 ""
 1 270 132 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 190 0 0 0 0 0
 E E E
 0
@@ -618,12 +1000,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 2 1 E  270 132 310 122
+E "main()
+{
+  click();
+}" 0
+ 0 2 1 2 1 E  270 132 310 122
 4 264
 "LINE8"
 ""
 1 270 162 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 191 0 0 0 0 0
 E E E
 0
@@ -632,12 +1026,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 2 1 E  270 162 310 132
+E "main()
+{
+  click();
+}" 0
+ 0 2 1 2 1 E  270 162 310 132
 6 265
 "RECTANGLE22"
 ""
 1 150 40 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 193 0 0 0 0 0
 E E E
 0
@@ -646,12 +1052,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -35 49 2  1 0  "pictures/arrowRight.gif" 4294967295 E 450 50 474 74
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -35 49 2  1 0  "pictures/arrowRight.gif" 4294967295 E 450 50 474 74
 14 279
 "Rejected0"
 ""
 1 185 62 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 214 0 0 0 0 0
 E E E
 0
@@ -662,12 +1080,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  183 60 251 84
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 14 280
 "Rejected1"
 ""
 1 185 92 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 216 0 0 0 0 0
 E E E
 0
@@ -678,12 +1108,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  183 90 251 114
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 14 281
 "Rejected2"
 ""
 1 185 122 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 218 0 0 0 0 0
 E E E
 0
@@ -694,12 +1136,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  183 120 251 144
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 14 282
 "Rejected3"
 ""
 1 187 152 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 220 0 0 0 0 0
 E E E
 0
@@ -710,12 +1164,24 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  183 150 251 174
-2 "0s" 0 0 0 0 0 -1  E E E
+2 "0s" 0 0 0 0 0 -1  "main()
+{
+  click();
+}" 0
+ E E
 2 283
 "PRIMITIVE_TEXT17"
 ""
 1 185 47 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 222 0 0 0 0 0
 E E E
 0
@@ -724,7 +1190,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 185 47 243 63
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 185 47 243 63
 0 2 2 "0s" 0 0 0 192 0 0  185 47 1
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0

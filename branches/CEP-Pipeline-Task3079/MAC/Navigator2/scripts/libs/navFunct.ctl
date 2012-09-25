@@ -80,6 +80,7 @@
 //navFunct_stationNameToIONode                : returns the IONode belonging to a station
 //navFunct_isBGPSwitch                        : returns the BGPSwitch setting (True = BGPRack1, False=BGPRack0)
 //navFunct_IONode2DPName                      : returns the DP name based on the ionode number.
+//navFunct_formatInt                          : returns a string with the int preceeded by zeros
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
 
@@ -1174,7 +1175,7 @@ void navFunct_fillObservationsList() {
     for (int i=1; i <= dynlen(g_processesList);i++) {
       // check if the dptype is of type (Stn)Observation
       string process = navFunct_getPathLessOne(g_processesList[i]);
-      if (dpTypeName(process) == "Observation" || dpTypeName(process) == "StnObservation") {
+      if (dpTypeName(process) == "Observation" || dpTypeName(process) == "StnObservation" || dpTypeName(process) == "CEPObservation") {
         // get the real observation name
         int iPos = dynContains(g_observations["DP"],dpSubStr(process,DPSUB_DP));
         if (iPos > 0) {
@@ -2075,5 +2076,33 @@ string navFunct_IONode2DPName(int ionode) {
 
   return dp;  
   
+}
+
+// ****************************************
+// Name: navFunct_formatInt
+// ****************************************
+// val = the value to be formatted
+// maxval = the maximum value to determine the format
+//  so a val of 1 will be formatted"
+//  maxval 9   -  1
+//  maxval 99  -  01
+//  maxval 999 -  001
+// Returns:
+//     the intval as string preceeded with zeros 
+// or "" if error
+// ****************************************
+string navFunct_formatInt(int val,int maxval) {
+  if (val > maxval) 
+    return "";
+
+  int nr = val;  
+  string ret="";
+  while (nr < maxval) {
+    if (nr*10 > maxval) break;
+    nr*=10;
+    ret+="0";
+  }
+  ret+=val;
+  return ret;
 }
     
