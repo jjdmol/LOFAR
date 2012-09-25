@@ -3,6 +3,8 @@
 #                                                               Utility routines
 #                                                         John Swinbank, 2009-10
 #                                                      swinbank@transientskp.org
+#                                                          Marcel Loose, 2011-12
+#                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
 from __future__ import with_statement
@@ -12,6 +14,7 @@ from itertools import islice, repeat, chain, izip
 from contextlib import closing, contextmanager
 from time import sleep
 from random import randint
+import warnings
 
 import os
 import errno
@@ -19,6 +22,22 @@ import shutil
 import subprocess
 
 from lofarpipe.support.pipelinelogging import log_process_output
+
+def deprecated(func):
+    """
+    This is a decorator which can be used to mark functions as deprecated.
+    It will result in a warning being emmitted when the function is used.
+    Ref.: http://code.activestate.com/recipes/391367-deprecated/
+    """
+    def newFunc(*args, **kwargs):
+        warnings.warn("Call to deprecated function %s." % func.__name__,
+                      category=DeprecationWarning,
+                      stacklevel=2)
+        return func(*args, **kwargs)
+    newFunc.__name__ = func.__name__
+    newFunc.__doc__ = func.__doc__
+    newFunc.__dict__.update(func.__dict__)
+    return newFunc
 
 #                                                                  Compatibility
 #                               The following used to be defined in this module;
