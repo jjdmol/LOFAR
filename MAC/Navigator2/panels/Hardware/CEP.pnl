@@ -19,7 +19,6 @@ void prepareHardwareList() {
   
   // For this panel CEP should be selectable so we get them for the treelist
   dynAppend(g_stationList,navFunct_bareDBName(sysName));
-  DebugN(\"g_stat: \"+g_stationList);
   
   // For this panel BGPRacks and BGPMidplanes should be selectable so we get them for the treelist
   // BGPRacks first
@@ -49,8 +48,6 @@ void prepareHardwareList() {
       dynAppend(g_BGPRackList,b);
     }
   }
-  DebugN(\"bgp: \"+g_BGPRackList);
-  DebugN(\"mid: \"+g_BGPMidplaneList);
   
   // For this panel OSRacks and OSSubclusters should be selectable so we get them for the treelist
   // OSRacks first
