@@ -29,15 +29,15 @@ def deprecated(func):
     It will result in a warning being emmitted when the function is used.
     Ref.: http://code.activestate.com/recipes/391367-deprecated/
     """
-    def newFunc(*args, **kwargs):
+    def new_func(*args, **kwargs):
         warnings.warn("Call to deprecated function %s." % func.__name__,
                       category=DeprecationWarning,
                       stacklevel=2)
         return func(*args, **kwargs)
-    newFunc.__name__ = func.__name__
-    newFunc.__doc__ = func.__doc__
-    newFunc.__dict__.update(func.__dict__)
-    return newFunc
+    new_func.__name__ = func.__name__
+    new_func.__doc__ = func.__doc__
+    new_func.__dict__.update(func.__dict__)
+    return new_func
 
 #                                                                  Compatibility
 #                               The following used to be defined in this module;
