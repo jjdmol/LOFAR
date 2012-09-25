@@ -1,0 +1,1056 @@
+V 11
+1
+LANG:1 7 Station
+PANEL,-1 -1 1020 698 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  strModuleName   = myModuleName();
+  baseDP         = g_currentDatapoint; 
+  reload();
+  
+
+}
+
+void prepareProcesses() {
+  dyn_string result;
+  // here we need to add the Inputbuffer, adders and the writers that are part of this screen
+  // so we need to determine all the databasePoints for these processes
+
+  inputBufferDP = sysName+\"LOFAR_PermSW_PSIONode\"+navFunct_formatInt(ioNode,99)+\"_InputBuffer\";
+  adderDP       = sysName+\"LOFAR_ObsSW_OSIONode\"+navFunct_formatInt(ioNode,99)+\"_Adder\";
+  dynAppend(result,\",InputBuffer,\"+inputBufferDP);    
+  dynAppend(g_processesList,inputBufferDP);
+  for (int i = 1; i <= dynlen(adders); i++ ) {
+    dynAppend(result,\",Adder\"+adders[i]+\",\"+adderDP+adders[i]);    
+    dynAppend(g_processesList,adderDP+adders[i]);
+  }
+  for (int i = 1; i <= dynlen(writers); i++ ) {
+    writerDP=sysName+\"LOFAR_ObsSW_OSLocusNode\"+navFunct_formatInt(locusNodes[i],999)+\"_Writer\"+navFunct_formatInt(writers[i],99);
+    dynAppend(result,\",Writer\"+navFunct_formatInt(writers[i],99)+\",\"+writerDP);    
+    dynAppend(g_processesList,writerDP);
+  }
+  
+  
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG(\"BGPProc.pnl:prepareProcesses|processList found: \"+ result);    
+  
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"BGPProcr.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"BGPProc.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  string var = \"\";
+  // get the saved panelparams for this panel
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".panelParamList\")) {
+    dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".panelParamList\",var);
+    // empty the paramList
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".panelParamList\",\"\");
+  } else {
+    LOG_WARN(\"BGPProc.pnl:main| Error: no dp \" + DPNAME_NAVIGATOR + g_navigatorID+\".panelParamList\");
+  }
+
+  // get BGLAppl path to obtain the lists
+  BGLApplDP              = navFunct_getPathLessOne(baseDP);
+  
+  // if var is empty something went wrong (maybe back and fort between other panel, so the panelParamlist was emptied)
+  // in that case we jump back to the prior screen
+
+  if (var == \"\") {
+    g_currentDatapoint = BGLApplDP;
+     navPanel_setEvent(\"BGPProc\",\"ChangePanel\"); 
+   }   
+
+    ioNode = (int)var;
+                   
+  // get the name of the selected station  
+  nodeDP = navFunct_IONode2DPName(ioNode);
+  string dp = nodeDP+\".usedStation\"; 
+  if (dpExists(dp) ){
+    dpGet(dp,station);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|ERROR DP does not exist: \"+dp);
+    return;
+  }
+  
+   stationDP=station+\":\";
+  
+   
+ 
+  if ( dpExists(BGLApplDP+\".ioNodeList\") ) {
+    dpGet(BGLApplDP+\".ioNodeList\",ioNodeList);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|Error getting ioNodeList value\");
+  }
+  
+  if ( dpExists(BGLApplDP+\".locusNodeList\") ) {
+    dpGet(BGLApplDP+\".locusNodeList\",locusNodeList);
+  } else {
+    LOG_ERROR(\"BGPProcr.pnl:main|Error getting locusNodeList value\");
+  }
+  
+  if ( dpExists(BGLApplDP+\".adderList\") ) {
+    dpGet(BGLApplDP+\".adderList\",adderList);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|Error getting adderList value\");
+  }
+   
+  if ( dpExists(BGLApplDP+\".writerList\") ) {
+    dpGet(BGLApplDP+\".writerList\",writerList);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|Error getting writerList value\");
+  }
+
+  if ( dpExists(BGLApplDP+\".dataProductList\") ) {
+    dpGet(BGLApplDP+\".dataProductList\",dataProductList);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|Error getting dataProductList value\");
+  }
+
+  if ( dpExists(BGLApplDP+\".dataProductTypeList\") ) {
+    dpGet(BGLApplDP+\".dataProductTypeList\",dataProductTypeList);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|Error getting dataProductTypeList value\");
+  }
+  
+  LOG_DEBUG(\"BGPProc.pnl:main|selected ioNode: \"+ioNode);
+  LOG_DEBUG(\"BGPProc.pnl:main|station: \"+station);  
+  LOG_DEBUG(\"BGPProc.pnl:main|ioNodeList: \"+ioNodeList);
+  LOG_DEBUG(\"BGPProc.pnl:main|locusNodeList: \"+locusNodeList);
+  LOG_DEBUG(\"BGPProc.pnl:main|adderList: \"+adderList);
+  LOG_DEBUG(\"BGPProc.pnl:main|writerList: \"+writerList);
+  LOG_DEBUG(\"BGPProc.pnl:main|dataProductList: \"+dataProductList);
+  LOG_DEBUG(\"BGPProc.pnl:main|dataProductTypeList: \"+dataProductTypeList);
+
+  
+    // get position of ioNode in dynArray to see what writers and adders belong to this screen
+  int idx = dynContains(ioNodeList,ioNode);
+  if (idx > 0) { 
+    locusNodes=navFunct_listToDynString(locusNodeList[idx]);
+    adders=navFunct_listToDynString(adderList[idx]);
+    writers=navFunct_listToDynString(writerList[idx]);
+    dataProducts=navFunct_listToDynString(dataProductList[idx]);
+    dataProductTypes=navFunct_listToDynString(dataProductTypeList[idx]);
+  } else {
+    LOG_ERROR(\"BGPProc.pnl:main|ERROR: Station not in stationList !!!\");
+  }    
+  LOG_DEBUG(\"BGPProc.pnl:main|locusNodes: \"+locusNodes);
+  LOG_DEBUG(\"BGPProc.pnl:main|adders: \"+adders);
+  LOG_DEBUG(\"BGPProc.pnl:main|writers: \"+writers);
+  LOG_DEBUG(\"BGPProc.pnl:main|dataProducts: \"+dataProducts);
+  LOG_DEBUG(\"BGPProc.pnl:main|dataProductTypes: \"+dataProductTypes);
+
+  //  In the database we can find the IONode involved 
+  string nodeName = navFunct_DPName2CEPName(nodeDP);
+
+  LOG_DEBUG(\"BGPProc.pnl:main|nodeName working: \"+nodeName);
+
+  redraw();
+  
+  // if no match found we have an error
+  if (nodeName == \"\" || station == \"\") {
+    LOG_ERROR(\"BGPProc.pnl:main| ERROR no station  or IONode-name found, can't view running processes\");
+  } else {
+    
+    // we have to set the stripped inputBuffer List and Adder List here.
+    // Since this is the Survey mode we only need one InputBuffer and one Adder
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\",\"CircularBuffer\",
+          DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.paramList\",makeDynString(ioNode));    
+    
+  
+    LOG_DEBUG(\"BGPProc.pnl:main|Station: \"+station);
+  
+    setValue(\"ionodeLabel\",\"text\",\"IONode: \"+nodeName);
+    setValue(\"stationLabel\",\"text\",station);
+    setValue(\"ionodeLabel\",\"toolTipText\",nodeDP);
+    setValue(\"stationLabel\",\"toolTipText\",stationDP);
+
+  }
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
+
+  // start the logging process
+ // navPanel_showLogging(baseDP);
+  
+  // connect for selfUpdates
+  showSelfState(baseDP);
+
+
+
+
+
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareProcesses();
+  
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"BGPProc.pnl\",\"Update\");
+
+}
+
+      " 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string      baseDP         = \"\";
+string      BGLApplDP      = \"\";
+
+string station;
+int ioNode;
+string nodeDP=\"\";
+string inputBufferDP=\"\";
+string adderDP=\"\";
+string writerDP=\"\";
+string stationDP=\"\";
+
+dyn_string ioNodeList;
+dyn_string adderList;
+dyn_string writerList;
+dyn_string locusNodeList;
+dyn_string dataProductList;
+dyn_string dataProductTypeList;
+
+dyn_string locusNodes=\"\";
+dyn_string adders=\"\";
+dyn_string writers=\"\";
+dyn_string dataProducts=\"\";
+dyn_string dataProductTypes=\"\";
+
+dyn_string refNames;
+string strModuleName;
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click(string dp) {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"BGPProc.pnl\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick(string dp) {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+
+  if (dpExists(dp) ) {
+    LOG_DEBUG(\"BGPProc.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+dp);
+    g_currentDatapoint=dp;
+    navPanel_setEvent(\"BGPProc.pnl\",\"ChangePanel\");  
+  }
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;
+}
+
+// routine for right mouse click
+void rClick(string dp) {
+  navPanel_setEvent(\"BGPProc.pnl\",\"EventRightClick\");
+}
+void clearRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(refNames); i++) {
+    removeSymbol(strModuleName,\"\",refNames[i]);
+  }
+  dynClear(refNames);
+}
+
+
+void redraw() {
+   LOG_TRACE(\"BGPProc.pnl:redraw\");
+   string addPanelName = \"objects/Processes/adder.pnl\";
+   
+  // clear old refNames if available
+  if (dynlen(refNames) > 0) {
+    clearRefNames();
+  }
+  
+  //  now start adding adders to panel
+  int ref =   1;
+  for (int i = 1; i <= dynlen(adders); i++ ) {
+    LOG_TRACE(\"BGPProc.pnl:redraw|Adding adder: \" + adders[i]);
+    refNames[ref]=\"ant\"+(ref);
+
+    if (  addSymbol(  strModuleName,       // Stay in this modul
+                      \"\",                  // Name of this panel
+		                   addPanelName,        // Panel to add
+		                   refNames[ref],       // Ref of the addedPanel
+		      makeDynString( \"$adderNumber:\" + adders[i] ,     // Define all $values
+                        \"$nodeDP:\" + nodeDP,              //
+                        \"$writerNumber:\" + writers[i],    //
+		                     \"$locusNumber:\" + locusNodes[i]), // of particular addedpanel
+		                   -17,                 // Xpos of the AddedSymbol
+		                   350+((i-1)*30),      // Ypos of the AddedSymbol
+		                   0,                   // angle
+		                   1    ,1              // zoomX , zoomY
+                       ) < 0 ) {
+	            LOG_ERROR(\"BGPProc.pnl:redraw|Error Appending adder : \" + i + \" in this panel.\");
+            }
+    ref++;
+  }
+}
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 273
+"ionode_highLight"
+""
+1 240 10 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick(nodeDP);
+}" 0
+ "main()
+{
+  dblClick(nodeDP);
+}" 0
+
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"ionodeCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void ionodeCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"BGPProc.pnl:ionodeCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"BGPProc.pnl:ionodeCallback|Found highlight : \" + highlight + \" Looking for ionode: \"+nodeDP);
+  bool bHighlight=false;
+  if (dynContains(highlight,nodeDP)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"BGPProc.pnl:ionodeCallback|Highlight request: \"+bHighlight);
+  ionode_highLight.visible = bHighlight;
+  
+}
+
+" 0
+ "main()
+{
+  click(nodeDP);
+}" 0
+ 0 1 1 2 1 E 1 0 1 144 -228 1 E 30 230 251 264
+6 272
+"station_highLight"
+""
+1 240 10 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick(stationDP);
+}" 0
+ "main()
+{
+  dblClick(stationDP);
+}" 0
+
+47 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"stationCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void stationCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"BGPProc.pnl:stationCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"BGPProc.pnl:stationCallback|Found highlight : \" + highlight + \" Looking for station: \"+stationDP);
+  bool bHighlight=false;
+  if (dynContains(highlight,stationDP)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"BGPProc.pnl:stationCallback|Highlight request: \"+bHighlight);
+  station_highLight.visible = bHighlight; 
+}
+
+" 0
+ "main()
+{
+  click(stationDP);
+}" 0
+ 0 1 1 2 1 E U  1 E 0 132 64 166
+6 0
+"RECTANGLE1"
+""
+1 40 110 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 0.5609756097560976 90 -21.70731707317073 1 E 40 110 660 520
+6 1
+"RECTANGLE2"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 50 -208 1 E 740 230 789 279
+2 2
+"PRIMITIVE_TEXT1"
+""
+1 864 2 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 864 2 949 15
+0 2 2 "0s" 0 0 0 192 0 0  864 2 1
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
+LANG:1 12 ComputeNodes
+2 3
+"ionodeLabel"
+""
+1 180 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick(nodeDP);
+}" 0
+ "main()
+{
+  dblClick(nodeDP);
+}" 0
+
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click(nodeDP);
+}" 0
+ 0 1 1 2 1 E U  1 E 180 10 387 30
+0 2 2 "0s" 0 0 0 192 0 0  180 10 1
+1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
+LANG:1 22 IONode: R00-M0-N00-J00
+6 4
+"RECTANGLE18"
+""
+1 150 40 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 42 -130 2  1 0  "pictures/arrowRight.gif" 4294967295 E 30 240 104 314
+6 5
+"RECTANGLE19"
+""
+1 150 40 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 170 90 2  1 0  "pictures/arrowRight.gif" 4294967295 E 570 30 619 79
+6 6
+"RECTANGLE20"
+""
+1 150 40 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"rotatefill" "r"
+E E 0 1 1 2 1 E -0.01886456694761347 -0.9998220482235222 0.9998220482235222 -0.01886456694761347 770.758141713434 840.464504495836 2  1 0  "pictures/arrowLeft.gif" 4294967295 E 570 30 619 79
+1 236 0 "" 1
+0
+6 9
+"RECTANGLE23"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 100 -208 1 E 740 230 789 279
+6 10
+"RECTANGLE24"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 150 -208 1 E 740 230 789 279
+6 11
+"RECTANGLE25"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 200 -208 1 E 740 230 789 279
+6 12
+"RECTANGLE26"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 50 -158 1 E 740 230 789 279
+6 13
+"RECTANGLE27"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 100 -158 1 E 740 230 789 279
+6 14
+"RECTANGLE28"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 150 -158 1 E 740 230 789 279
+6 15
+"RECTANGLE29"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 200 -158 1 E 740 230 789 279
+6 16
+"RECTANGLE30"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 50 -108 1 E 740 230 789 279
+6 17
+"RECTANGLE31"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 100 -108 1 E 740 230 789 279
+6 18
+"RECTANGLE32"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 150 -108 1 E 740 230 789 279
+6 19
+"RECTANGLE33"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 200 -108 1 E 740 230 789 279
+6 20
+"RECTANGLE34"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+22 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 50 -58 1 E 740 230 789 279
+6 21
+"RECTANGLE35"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 100 -58 1 E 740 230 789 279
+6 22
+"RECTANGLE36"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 150 -58 1 E 740 230 789 279
+6 23
+"RECTANGLE37"
+""
+1 760 220 E E E 1 E 1 E N {0,0,0} E N "STD_object_background" E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 200 -58 1 E 740 230 789 279
+1 237 1 "" 285
+0
+1 238 1 "" 226
+0
+1 239 1 "" 229
+0
+1 240 1 "" 234
+0
+1 241 1 "" 235
+0
+1 242 1 "" 236
+0
+1 243 1 "" 237
+0
+1 244 1 "" 238
+0
+1 245 1 "" 239
+0
+1 246 1 "" 240
+0
+1 247 1 "" 241
+0
+1 248 1 "" 242
+0
+1 249 1 "" 243
+0
+1 250 1 "" 244
+0
+1 251 1 "" 245
+0
+1 252 1 "" 246
+0
+1 253 1 "" 247
+0
+1 254 1 "51" 1
+0
+1 255 1 "" 249
+0
+1 256 1 "" 250
+0
+1 257 1 "" 251
+0
+1 258 1 "" 252
+0
+1 259 1 "" 253
+0
+1 260 1 "" 254
+0
+1 261 1 "" 255
+0
+1 262 1 "" 261
+0
+1 263 1 "" 262
+0
+1 264 1 "" 263
+0
+1 265 1 "" 264
+0
+1 266 1 "" 265
+0
+1 267 1 "" 279
+0
+1 268 1 "" 280
+0
+1 269 1 "" 281
+0
+1 270 1 "" 282
+0
+1 271 1 "" 283
+0
+2 66
+"stationLabel"
+""
+1 5 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick(stationDP);
+}" 0
+ "main()
+{
+  dblClick(stationDP);
+}" 0
+
+26 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click(stationDP);
+}" 0
+ 0 1 1 2 1 E U  1 E 5 140 53 160
+0 2 2 "0s" 0 0 0 192 0 0  5 140 1
+1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
+LANG:1 5 CSxxx
+6 112
+"RECTANGLE38"
+""
+1 40 110 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1.451612903225807 0 1 41.93548387096772 160 1 E 40 110 660 520
+2 156
+"PRIMITIVE_TEXT19"
+""
+1 105 350.0000000000001 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 105 350.0000000000001 117 363
+0 2 2 "0s" 0 0 0 192 0 0  105 350.0000000000001 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 2 Nr
+2 157
+"PRIMITIVE_TEXT20"
+""
+1 120 350.0000000000001 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 120 350.0000000000001 144 363
+0 2 2 "0s" 0 0 0 192 0 0  120 350.0000000000001 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 Stat
+2 158
+"PRIMITIVE_TEXT21"
+""
+1 150 350.0000000000001 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 150 350.0000000000001 177 363
+0 2 2 "0s" 0 0 0 192 0 0  150 350.0000000000001 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 Drop
+2 159
+"PRIMITIVE_TEXT22"
+""
+1 200 350.0000000000001 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 200 350.0000000000001 248 363
+0 2 2 "0s" 0 0 0 192 0 0  200 350.0000000000001 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 Dropped
+2 160
+"PRIMITIVE_TEXT23"
+""
+1 308 350.0000000000001 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+34 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 308 350.0000000000001 336 363
+0 2 2 "0s" 0 0 0 192 0 0  308 350.0000000000001 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 5 Error
+2 161
+"PRIMITIVE_TEXT24"
+""
+1 430 350.0000000000001 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 430 350.0000000000001 509 363
+0 2 2 "0s" 0 0 0 192 0 0  430 350.0000000000001 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 13 CurrentAction
+2 162
+"PRIMITIVE_TEXT25"
+""
+1 560 350.0000000000001 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+36 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 560 350.0000000000001 627 363
+0 2 2 "0s" 0 0 0 192 0 0  560 350.0000000000001 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 10 logMessage
+2 235
+"PRIMITIVE_TEXT26"
+""
+1 110 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 110 310 162 326
+0 2 2 "0s" 0 0 0 192 0 0  110 310 1
+1
+LANG:1 35 MS Shell Dlg 2,10,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 Adders:
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState" -1
+"objects\\lofar_self_state.pnl" 678 158 T 0 1 0 1 -540 -150
+0
+3 1 "PANEL_REF53" -1
+"objects\\Processes\\circularBuffer.pnl" 90 160 T 1 1 0 1 40 -118
+1
+"$objectNumber""0"
+0
