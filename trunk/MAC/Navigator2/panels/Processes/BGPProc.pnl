@@ -6,7 +6,7 @@ PANEL,-1 -1 1020 698 N "_3DFace" 0
 {
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
-  
+  strModuleName   = myModuleName();
   baseDP         = g_currentDatapoint; 
   reload();
   
@@ -15,9 +15,23 @@ PANEL,-1 -1 1020 698 N "_3DFace" 0
 
 void prepareProcesses() {
   dyn_string result;
+  // here we need to add the Inputbuffer, adders and the writers that are part of this screen
+  // so we need to determine all the databasePoints for these processes
+
+  inputBufferDP = sysName+\"LOFAR_PermSW_PSIONode\"+navFunct_formatInt(ioNode,99)+\"_InputBuffer\";
+  adderDP       = sysName+\"LOFAR_ObsSW_OSIONode\"+navFunct_formatInt(ioNode,99)+\"_Adder\";
+  dynAppend(result,\",InputBuffer,\"+inputBufferDP);    
+  dynAppend(g_processesList,inputBufferDP);
+  for (int i = 1; i <= dynlen(adders); i++ ) {
+    dynAppend(result,\",Adder\"+adders[i]+\",\"+adderDP+adders[i]);    
+    dynAppend(g_processesList,adderDP+adders[i]);
+  }
+  for (int i = 1; i <= dynlen(writers); i++ ) {
+    writerDP=sysName+\"LOFAR_ObsSW_OSLocusNode\"+navFunct_formatInt(locusNodes[i],999)+\"_Writer\"+navFunct_formatInt(writers[i],99);
+    dynAppend(result,\",Writer\"+navFunct_formatInt(writers[i],99)+\",\"+writerDP);    
+    dynAppend(g_processesList,writerDP);
+  }
   
-  dynAppend(result,\",BGPProc,\"+baseDP);    
-  dynAppend(g_processesList,baseDP);
   
   
   // write result to the db so various panels can reset themselves  
@@ -72,8 +86,8 @@ void reload() {
 
     ioNode = (int)var;
                    
-  // get the name of the selcted station  
-  string nodeDP = navFunct_IONode2DPName(ioNode);
+  // get the name of the selected station  
+  nodeDP = navFunct_IONode2DPName(ioNode);
   string dp = nodeDP+\".usedStation\"; 
   if (dpExists(dp) ){
     dpGet(dp,station);
@@ -82,7 +96,7 @@ void reload() {
     return;
   }
   
- 
+   stationDP=station+\":\";
   
    
  
@@ -153,6 +167,8 @@ void reload() {
   string nodeName = navFunct_DPName2CEPName(nodeDP);
 
   LOG_DEBUG(\"BGPProc.pnl:main|nodeName working: \"+nodeName);
+
+  redraw();
   
   // if no match found we have an error
   if (nodeName == \"\" || station == \"\") {
@@ -163,22 +179,22 @@ void reload() {
     // Since this is the Survey mode we only need one InputBuffer and one Adder
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\",\"CircularBuffer\",
           DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.paramList\",makeDynString(ioNode));    
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\",\"Adder\",
-          DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.paramList\",makeDynString(adders));    
     
   
     LOG_DEBUG(\"BGPProc.pnl:main|Station: \"+station);
   
-    setValue(\"ionode\",\"text\",\"IONode: \"+nodeName);
+    setValue(\"ionodeLabel\",\"text\",\"IONode: \"+nodeName);
     setValue(\"stationLabel\",\"text\",station);
+    setValue(\"ionodeLabel\",\"toolTipText\",nodeDP);
+    setValue(\"stationLabel\",\"toolTipText\",stationDP);
+
   }
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
   
-  
 
   // start the logging process
-  navPanel_showLogging(baseDP);
+ // navPanel_showLogging(baseDP);
   
   // connect for selfUpdates
   showSelfState(baseDP);
@@ -209,6 +225,11 @@ string      BGLApplDP      = \"\";
 
 string station;
 int ioNode;
+string nodeDP=\"\";
+string inputBufferDP=\"\";
+string adderDP=\"\";
+string writerDP=\"\";
+string stationDP=\"\";
 
 dyn_string ioNodeList;
 dyn_string adderList;
@@ -223,8 +244,80 @@ dyn_string writers=\"\";
 dyn_string dataProducts=\"\";
 dyn_string dataProductTypes=\"\";
 
+dyn_string refNames;
+string strModuleName;
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click(string dp) {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"BGPProc.pnl\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick(string dp) {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+
+  if (dpExists(dp) ) {
+    LOG_DEBUG(\"BGPProc.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+dp);
+    g_currentDatapoint=dp;
+    navPanel_setEvent(\"BGPProc.pnl\",\"ChangePanel\");  
+  }
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;
+}
+
+// routine for right mouse click
+void rClick(string dp) {
+  navPanel_setEvent(\"BGPProc.pnl\",\"EventRightClick\");
+}
+void clearRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(refNames); i++) {
+    removeSymbol(strModuleName,\"\",refNames[i]);
+  }
+  dynClear(refNames);
+}
 
 
+void redraw() {
+   LOG_TRACE(\"BGPProc.pnl:redraw\");
+   string addPanelName = \"objects/Processes/adder.pnl\";
+   
+  // clear old refNames if available
+  if (dynlen(refNames) > 0) {
+    clearRefNames();
+  }
+  
+  //  now start adding adders to panel
+  int ref =   1;
+  for (int i = 1; i <= dynlen(adders); i++ ) {
+    LOG_TRACE(\"BGPProc.pnl:redraw|Adding adder: \" + adders[i]);
+    refNames[ref]=\"ant\"+(ref);
+
+    if (  addSymbol(  strModuleName,       // Stay in this modul
+                      \"\",                  // Name of this panel
+		                   addPanelName,        // Panel to add
+		                   refNames[ref],       // Ref of the addedPanel
+		      makeDynString( \"$adderNumber:\" + adders[i] ,     // Define all $values
+                        \"$nodeDP:\" + nodeDP,              //
+                        \"$writerNumber:\" + writers[i],    //
+		                     \"$locusNumber:\" + locusNodes[i]), // of particular addedpanel
+		                   -17,                 // Xpos of the AddedSymbol
+		                   350+((i-1)*30),      // Ypos of the AddedSymbol
+		                   0,                   // angle
+		                   1    ,1              // zoomX , zoomY
+                       ) < 0 ) {
+	            LOG_ERROR(\"BGPProc.pnl:redraw|Error Appending adder : \" + i + \" in this panel.\");
+            }
+    ref++;
+  }
+}
 " 0
  2
 "CBRef" "1"
@@ -235,6 +328,95 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
+6 273
+"ionode_highLight"
+""
+1 240 10 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick(nodeDP);
+}" 0
+ "main()
+{
+  dblClick(nodeDP);
+}" 0
+
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"ionodeCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void ionodeCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"BGPProc.pnl:ionodeCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"BGPProc.pnl:ionodeCallback|Found highlight : \" + highlight + \" Looking for ionode: \"+nodeDP);
+  bool bHighlight=false;
+  if (dynContains(highlight,nodeDP)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"BGPProc.pnl:ionodeCallback|Highlight request: \"+bHighlight);
+  ionode_highLight.visible = bHighlight;
+  
+}
+
+" 0
+ "main()
+{
+  click(nodeDP);
+}" 0
+ 0 1 1 2 1 E 1 0 1 144 -228 1 E 30 230 251 264
+6 272
+"station_highLight"
+""
+1 240 10 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick(stationDP);
+}" 0
+ "main()
+{
+  dblClick(stationDP);
+}" 0
+
+47 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"stationCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void stationCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"BGPProc.pnl:stationCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"BGPProc.pnl:stationCallback|Found highlight : \" + highlight + \" Looking for station: \"+stationDP);
+  bool bHighlight=false;
+  if (dynContains(highlight,stationDP)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"BGPProc.pnl:stationCallback|Highlight request: \"+bHighlight);
+  station_highLight.visible = bHighlight; 
+}
+
+" 0
+ "main()
+{
+  click(stationDP);
+}" 0
+ 0 1 1 2 1 E U  1 E 0 132 64 166
 6 0
 "RECTANGLE1"
 ""
@@ -248,7 +430,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 0.6097560975609756 90 -47.07317073170732 1 E 40 110 660 520
+E E 0 1 1 2 1 E 1 0 0.5609756097560976 90 -21.70731707317073 1 E 40 110 660 520
 6 1
 "RECTANGLE2"
 ""
@@ -283,10 +465,18 @@ LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
 LANG:1 12 ComputeNodes
 2 3
-"ionode"
+"ionodeLabel"
 ""
-1 309 2 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+1 180 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick(nodeDP);
+}" 0
+ "main()
+{
+  dblClick(nodeDP);
+}" 0
+
 6 0 0 0 0 0
 E E E
 0
@@ -295,8 +485,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 309 2 516 22
-0 2 2 "0s" 0 0 0 192 0 0  309 2 1
+E "main()
+{
+  click(nodeDP);
+}" 0
+ 0 1 1 2 1 E U  1 E 180 10 387 30
+0 2 2 "0s" 0 0 0 192 0 0  180 10 1
 1
 LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
 0 1
@@ -314,7 +508,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 40 -150 2  1 0  "pictures/arrowRight.gif" 4294967295 E 30 240 104 314
+E E 0 1 1 2 1 E 1 0 1 42 -130 2  1 0  "pictures/arrowRight.gif" 4294967295 E 30 240 104 314
 6 5
 "RECTANGLE19"
 ""
@@ -556,95 +750,89 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 2 1 E 1 0 1 200 -58 1 E 740 230 789 279
-1 237 1 "" 226
+1 237 1 "" 285
 0
-1 238 1 "" 229
+1 238 1 "" 226
 0
-1 239 1 "" 234
+1 239 1 "" 229
 0
-1 240 1 "" 235
+1 240 1 "" 234
 0
-1 241 1 "" 236
+1 241 1 "" 235
 0
-1 242 1 "" 237
+1 242 1 "" 236
 0
-1 243 1 "" 238
+1 243 1 "" 237
 0
-1 244 1 "" 239
+1 244 1 "" 238
 0
-1 245 1 "" 240
+1 245 1 "" 239
 0
-1 246 1 "" 241
+1 246 1 "" 240
 0
-1 247 1 "" 242
+1 247 1 "" 241
 0
-1 248 1 "" 243
+1 248 1 "" 242
 0
-1 249 1 "" 244
+1 249 1 "" 243
 0
-1 250 1 "" 245
+1 250 1 "" 244
 0
-1 251 1 "" 246
+1 251 1 "" 245
 0
-1 252 1 "" 247
+1 252 1 "" 246
 0
-1 253 1 "51" 1
+1 253 1 "" 247
 0
-1 254 1 "" 249
+1 254 1 "51" 1
 0
-1 255 1 "" 250
+1 255 1 "" 249
 0
-1 256 1 "" 251
+1 256 1 "" 250
 0
-1 257 1 "" 252
+1 257 1 "" 251
 0
-1 258 1 "" 253
+1 258 1 "" 252
 0
-1 259 1 "" 254
+1 259 1 "" 253
 0
-1 260 1 "" 255
+1 260 1 "" 254
 0
-1 261 1 "" 261
+1 261 1 "" 255
 0
-1 262 1 "" 262
+1 262 1 "" 261
 0
-1 263 1 "" 263
+1 263 1 "" 262
 0
-1 264 1 "" 264
+1 264 1 "" 263
 0
-1 265 1 "" 265
+1 265 1 "" 264
 0
-1 266 1 "" 279
+1 266 1 "" 265
 0
-1 267 1 "" 280
+1 267 1 "" 279
 0
-1 268 1 "" 281
+1 268 1 "" 280
 0
-1 269 1 "" 282
+1 269 1 "" 281
 0
-1 270 1 "" 283
+1 270 1 "" 282
 0
-1 271 2 "" 227
-0
-1 272 2 "51" 1
-0
-1 273 2 "" 266
-0
-1 274 2 "" 269
-0
-1 275 2 "" 273
-0
-1 276 2 "" 274
-0
-1 277 2 "" 275
-0
-1 278 2 "" 276
+1 271 1 "" 283
 0
 2 66
 "stationLabel"
 ""
-1 0 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+1 5 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick(stationDP);
+}" 0
+ "main()
+{
+  dblClick(stationDP);
+}" 0
+
 26 0 0 0 0 0
 E E E
 0
@@ -653,8 +841,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 0 120 48 140
-0 2 2 "0s" 0 0 0 192 0 0  0 120 1
+E "main()
+{
+  click(stationDP);
+}" 0
+ 0 1 1 2 1 E U  1 E 5 140 53 160
+0 2 2 "0s" 0 0 0 192 0 0  5 140 1
 1
 LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
 0 1
@@ -686,7 +878,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 105 350.0000000000001 117 363.0000000000001
+E E 0 1 1 2 1 E U  0 E 105 350.0000000000001 117 363
 0 2 2 "0s" 0 0 0 192 0 0  105 350.0000000000001 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
@@ -705,7 +897,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 120 350.0000000000001 144 363.0000000000001
+E E 0 1 1 2 1 E U  0 E 120 350.0000000000001 144 363
 0 2 2 "0s" 0 0 0 192 0 0  120 350.0000000000001 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
@@ -724,7 +916,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 150 350.0000000000001 177 363.0000000000001
+E E 0 1 1 2 1 E U  0 E 150 350.0000000000001 177 363
 0 2 2 "0s" 0 0 0 192 0 0  150 350.0000000000001 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
@@ -743,7 +935,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 200 350.0000000000001 248 363.0000000000001
+E E 0 1 1 2 1 E U  0 E 200 350.0000000000001 248 363
 0 2 2 "0s" 0 0 0 192 0 0  200 350.0000000000001 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
@@ -762,7 +954,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 308 350.0000000000001 336 363.0000000000001
+E E 0 1 1 2 1 E U  0 E 308 350.0000000000001 336 363
 0 2 2 "0s" 0 0 0 192 0 0  308 350.0000000000001 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
@@ -781,7 +973,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 430 350.0000000000001 509 363.0000000000001
+E E 0 1 1 2 1 E U  0 E 430 350.0000000000001 509 363
 0 2 2 "0s" 0 0 0 192 0 0  430 350.0000000000001 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
@@ -800,156 +992,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 560 350.0000000000001 627 363.0000000000001
+E E 0 1 1 2 1 E U  0 E 560 350.0000000000001 627 363
 0 2 2 "0s" 0 0 0 192 0 0  560 350.0000000000001 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 10 logMessage
-1 279 3 "" 227
-0
-1 280 3 "51" 1
-0
-1 281 3 "" 266
-0
-1 282 3 "" 269
-0
-1 283 3 "" 273
-0
-1 284 3 "" 274
-0
-1 285 3 "" 275
-0
-1 286 3 "" 276
-0
-1 287 4 "" 227
-0
-1 288 4 "51" 1
-0
-1 289 4 "" 266
-0
-1 290 4 "" 269
-0
-1 291 4 "" 273
-0
-1 292 4 "" 274
-0
-1 293 4 "" 275
-0
-1 294 4 "" 276
-0
-1 295 5 "" 227
-0
-1 296 5 "51" 1
-0
-1 297 5 "" 266
-0
-1 298 5 "" 269
-0
-1 299 5 "" 273
-0
-1 300 5 "" 274
-0
-1 301 5 "" 275
-0
-1 302 5 "" 276
-0
-1 303 6 "" 227
-0
-1 304 6 "51" 1
-0
-1 305 6 "" 266
-0
-1 306 6 "" 269
-0
-1 307 6 "" 273
-0
-1 308 6 "" 274
-0
-1 309 6 "" 275
-0
-1 310 6 "" 276
-0
-1 311 7 "" 227
-0
-1 312 7 "51" 1
-0
-1 313 7 "" 266
-0
-1 314 7 "" 269
-0
-1 315 7 "" 273
-0
-1 316 7 "" 274
-0
-1 317 7 "" 275
-0
-1 318 7 "" 276
-0
-1 319 8 "" 227
-0
-1 320 8 "51" 1
-0
-1 321 8 "" 266
-0
-1 322 8 "" 269
-0
-1 323 8 "" 273
-0
-1 324 8 "" 274
-0
-1 325 8 "" 275
-0
-1 326 8 "" 276
-0
-1 327 9 "" 227
-0
-1 328 9 "51" 1
-0
-1 329 9 "" 266
-0
-1 330 9 "" 269
-0
-1 331 9 "" 273
-0
-1 332 9 "" 274
-0
-1 333 9 "" 275
-0
-1 334 9 "" 276
-0
-1 335 10 "" 227
-0
-1 336 10 "51" 1
-0
-1 337 10 "" 266
-0
-1 338 10 "" 269
-0
-1 339 10 "" 273
-0
-1 340 10 "" 274
-0
-1 341 10 "" 275
-0
-1 342 10 "" 276
-0
-1 343 11 "" 227
-0
-1 344 11 "51" 1
-0
-1 345 11 "" 266
-0
-1 346 11 "" 269
-0
-1 347 11 "" 273
-0
-1 348 11 "" 274
-0
-1 349 11 "" 275
-0
-1 350 11 "" 276
-0
 2 235
 "PRIMITIVE_TEXT26"
 ""
@@ -999,50 +1047,10 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 "selfState" -1
-"objects\\lofar_self_state.pnl" 678 158 T 0 1 0 1 -547 -136
+"objects\\lofar_self_state.pnl" 678 158 T 0 1 0 1 -540 -150
 0
 3 1 "PANEL_REF53" -1
-"objects\\Processes\\circularBuffer.pnl" 90 160 T 1 1 0 1 40 -137
+"objects\\Processes\\circularBuffer.pnl" 90 160 T 1 1 0 1 40 -118
 1
 "$objectNumber""0"
-3 2 "PANEL_REF54" -1
-"objects\\Processes\\adder.pnl" 90 360 T 2 1 0 1 -107 -9.999999999999943
-1
-"$objectNumber""0"
-3 3 "PANEL_REF3" -1
-"objects\\Processes\\adder.pnl" -17 310 T 37 1 0 1 0 70.00000000000006
-1
-"$objectNumber""1"
-3 4 "PANEL_REF4" -1
-"objects\\Processes\\adder.pnl" -17 340 T 38 1 0 1 0 70.00000000000006
-1
-"$objectNumber""2"
-3 5 "PANEL_REF5" -1
-"objects\\Processes\\adder.pnl" -17 370 T 39 1 0 1 0 70.00000000000006
-1
-"$objectNumber""3"
-3 6 "PANEL_REF6" -1
-"objects\\Processes\\adder.pnl" -17 400 T 40 1 0 1 0 70.00000000000006
-1
-"$objectNumber""4"
-3 7 "PANEL_REF7" -1
-"objects\\Processes\\adder.pnl" -17 430 T 41 1 0 1 0 70.00000000000006
-1
-"$objectNumber""5"
-3 8 "PANEL_REF8" -1
-"objects\\Processes\\adder.pnl" -17 460 T 42 1 0 1 0 70.00000000000006
-1
-"$objectNumber""6"
-3 9 "PANEL_REF9" -1
-"objects\\Processes\\adder.pnl" -17 490 T 43 1 0 1 0 70.00000000000006
-1
-"$objectNumber""7"
-3 10 "PANEL_REF10" -1
-"objects\\Processes\\adder.pnl" -17 520 T 44 1 0 1 0 70.00000000000006
-1
-"$objectNumber""8"
-3 11 "PANEL_REF11" -1
-"objects\\Processes\\adder.pnl" -17 550 T 45 1 0 1 0 70.00000000000006
-1
-"$objectNumber""9"
 0

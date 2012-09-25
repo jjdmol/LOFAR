@@ -285,6 +285,16 @@ void stationCallback(string dp1, bool aTrig) {
     }  
   }
 }   " 0
+1 172 16 "" 4
+0
+1 173 16 "" 3
+0
+1 174 16 "0" 1
+0
+1 176 16 "" 6
+0
+1 175 16 "" 2
+0
 0
 LAYER, 1 
 1
@@ -319,4 +329,9 @@ LANG:1 0
 2
 "$databaselevel""ccu"
 "$name""OnlineControl_BGPAppl"
+3 16 "PANEL_REF16" -1
+"objects\\Processes\\interactive_controller_small.pnl" 170 90 T 44 U 
+2
+"$databaselevel""ccu"
+"$name""PythonControl"
 0
