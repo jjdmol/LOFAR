@@ -94,7 +94,9 @@ GCFEvent::TResult tDPservice::createDPS(GCFEvent& e, GCFPortInterface& /*p*/)
 		gTestPassed = false;
 		gCreateCounter = 2;
 		itsPVSSservice->dpCreate("test_int", "TestInt");	// NOTE: direct with PVSSservice!
+		LOG_INFO_STR("gCreateCounter=" << gCreateCounter);
 		itsPVSSservice->dpCreate("test_PS",  "TestPS");
+		LOG_INFO_STR("gCreateCounter=" << gCreateCounter);
 		itsTimerPort->setTimer(3.0); // max time for this test.
 	}
 	break;
@@ -104,7 +106,7 @@ GCFEvent::TResult tDPservice::createDPS(GCFEvent& e, GCFPortInterface& /*p*/)
 			LOG_DEBUG("Allocation of DPservice was successful");
 		}
 		else {
-			ASSERTSTR(false, "Not all DP were created.");
+			ASSERTSTR(false, "Not all DP were created, gCreateCounter=" << gCreateCounter);
 		}
 		TRAN(tDPservice::WriteTest);
 	break;

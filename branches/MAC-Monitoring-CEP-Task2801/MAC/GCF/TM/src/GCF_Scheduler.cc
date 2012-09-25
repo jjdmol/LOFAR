@@ -462,6 +462,24 @@ void GCFScheduler::handleEventQueue()
 				LOG_TRACE_COND_STR("Event " << eventName(*(theQueueEntry->event)) << " in task " << taskName << 
 							 " NOT HANDLED, deleting it");
 			}
+			// when this command was an entry in a new state, inject the task queue into the current queue
+			if (theQueueEntry->event->signal == F_ENTRY) {
+				// inject port-events first (so that they are handled after the inserted task events).
+				_injectParkedEvents();		
+				GCFFsm*				task(theQueueEntry->task);
+				GCFEvent*			eventPtr;
+				GCFPortInterface*	portPtr;
+				while (task->unqueueTaskEvent(&eventPtr, &portPtr)) {
+					if ((eventPtr->signal == F_DATAIN || eventPtr->signal == F_DISCONNECTED) && 
+							_isInEventQueue(eventPtr, portPtr)) {
+						LOG_DEBUG_STR("Skipping injection of double deferred taskEvent "<< eventName(*eventPtr));
+					}
+					else {
+						LOG_DEBUG_STR("Injecting deferred taskEvent " << eventName(*eventPtr) << "into the event queue");
+						_injectEvent(task, *eventPtr, portPtr, false);	// false=don't copy event(it's already cloned)
+					}
+				}
+			}
 		}
 		else { // all other protocols
 			switch (status) {

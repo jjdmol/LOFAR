@@ -84,7 +84,8 @@ GCFEvent::TResult tPVSSinfo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 			cout << "getSystemName(Id) : " << PVSSinfo::getSystemName(PVSSinfo::getLocalSystemId()) << endl;
 			cout << "getSystemId(Name) : " << (int)PVSSinfo::getSysId(PVSSinfo::getLocalSystemName()) << endl;
 			cout << "getProjectName    : " << PVSSinfo::getProjectName() << endl;
-			cout << "getOwnManNum      : " << (int)PVSSinfo::getOwnManNum() << endl << endl;
+			cout << "getOwnManNum      : " << (int)PVSSinfo::getOwnManNum() << endl;
+			cout << "getMainDBName     : " << PVSSinfo::getMainDBName() << endl << endl;
 			TEST_PROP_NAME("MCU001:LOFAR_XYZ.abc");
 			TEST_PROP_NAME("LOFAR_XYZ.abc");
 			TEST_PROP_NAME("LOFAR_XYZ.__abc");

@@ -90,6 +90,11 @@ private:
 			}
 			return (*this);
 		}      
+		string print() const {
+			stringstream	oss;
+			oss << "Action[" << seqnr << ": " << type << ", " << servicename << "@" << hostname << "]";
+			return (oss.str());
+		}
     } Action;
 	typedef struct service_t {
 		string		servicename;

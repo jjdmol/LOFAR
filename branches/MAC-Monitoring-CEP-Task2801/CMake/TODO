@@ -3,8 +3,11 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
+* Python byte-code compilation fails during install when using DESTDIR option
+  to specify a different install directory.
+
 * Add option DEPENDS to lofar_add_library() and lofar_add_executable(), which
-  can be used that add additional dependencies. This is mainly useful for
+  can be used to add additional dependencies. This is mainly useful for
   custom targets, because "normal" target dependencies are already handled by
   target_link_libraries().
 

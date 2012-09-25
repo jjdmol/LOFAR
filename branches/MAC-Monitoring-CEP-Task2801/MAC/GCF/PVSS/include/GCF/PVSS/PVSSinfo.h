@@ -52,6 +52,7 @@ public:
     static uint getSysId(const string& name);
     static uint getLastEventSysId();
 
+	static string getMainDBName();
     static const string& getProjectName();
 
     static timeval getLastEventTimestamp();
