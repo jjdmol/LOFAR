@@ -1,0 +1,6 @@
+for ((idx = 0; idx < 512; idx++)) do
+   echo $idx
+   eval "rspctl --xcsubband=$idx"
+   eval "rspctl --xcstatistics --integration=4 --duration=4 --directory=common4s"
+done
+

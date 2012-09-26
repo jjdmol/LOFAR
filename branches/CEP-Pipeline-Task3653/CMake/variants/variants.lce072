@@ -1,0 +1,18 @@
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+
+set(CASACORE_ROOT_DIR /opt/cep/LofIm/daily/casacore)
+set(CASAREST_ROOT_DIR /opt/cep/LofIm/daily/casarest)
+set(LDA_ROOT_DIR /opt/cep/lda)
+set(ENV{HDF5_ROOT} /opt/cep/hdf5)
+
+set(PYRAP_ROOT_DIR /opt/cep/LofIm/daily/pyrap)
+
+set(WCSLIB_ROOT_DIR /opt/cep/wcslib)
+
+set(LOG4CXX_ROOT_DIR /opt/cep/lofar/external/log4cxx)
+set(LOG4CPLUS_ROOT_DIR /opt/cep/lofar/external/log4cplus)
+
+set(CTEST_CUSTOM_WARNING_EXCEPTION
+  "/log4cxx/helpers/objectptr.h:[0-9]+: warning: base class"
+  "/log4cxx/helpers/objectptr.h:[0-9]+: warning: dereferencing type-punned pointer"
+)
