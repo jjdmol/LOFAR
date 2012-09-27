@@ -151,8 +151,8 @@ class SolverQuery:
                 else:
                   starttimes = result.getcol('STARTTIME')
 
-                print "sq::starttimes =", starttimes                 # DEBUG
-                print "sq::starttimes.sort() =", starttimes.sort()   # DEBUG
+                #print "sq::starttimes =", starttimes                 # DEBUG
+                #print "sq::starttimes.sort() =", starttimes.sort()   # DEBUG
 
                 #print "readParameter(): len(parameter): ", len(parameter)  # DEBUG
                 #print "readParameter() result.nrows() = ", result.nrows()
