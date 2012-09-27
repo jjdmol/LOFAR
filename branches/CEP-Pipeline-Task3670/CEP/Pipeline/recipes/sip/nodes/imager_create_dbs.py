@@ -391,14 +391,17 @@ class imager_create_dbs(LOFARnodeTCP):
         fp.close()
 
         if sourcelist_corrected != None:
+            self.logger.debug("Found duplicates in the sourcelist!")
+            self.logger.debug("Creating a new sourcelist")
             #if a corrected sourcelist is created.
             # move original sourcelist
             shutil.move(sourcelist, sourcelist + "_with_duplicates")
             # write correcte sourcelist at that location
             fp = open(sourcelist, "w",)
             fp.write(sourcelist_corrected)
+            self.logger.debug("Moved sourcelist and create a new sourcelist")
             fp.close()
-
+        self.logger.debug("Sourcelist did not contain duplicates")
         return 0
 
     def _validate_and_correct_sourcelist(self, sourcelist):
@@ -462,3 +465,5 @@ if __name__ == "__main__":
     _jobid, _jobhost, _jobport = sys.argv[1:4]
     sys.exit(imager_create_dbs(
         _jobid, _jobhost, _jobport).run_with_stored_arguments())
+
+
