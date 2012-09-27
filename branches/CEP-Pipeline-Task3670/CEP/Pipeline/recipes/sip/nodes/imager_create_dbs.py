@@ -387,7 +387,7 @@ class imager_create_dbs(LOFARnodeTCP):
 
         # validate the retrieve sourcelist
         fp = open(sourcelist)
-        sourcelist_corrected = self._validate_and_correct_sourcelist(sourcelist)
+        sourcelist_corrected = self._validate_and_correct_sourcelist(fp.read())
         fp.close()
 
         if sourcelist_corrected != None:
