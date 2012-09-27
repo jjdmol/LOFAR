@@ -228,13 +228,13 @@ class PlotWindow(QFrame):
       self.show()           # show the plotWindow widget
       self.parent.setXLabel()
       self.parent.setYLabel()
-      
+      s
       # Matplotlib event connections
       #if self.showMarker==True:
       #  cid = self.fig.canvas.mpl_connect('motion_notify_event', self.update_marker)
       #  cid = self.fig.canvas.mpl_connect('button_press_event', onclick)
 
-      cid = self.fig.canvas.mpl_connect('motion_notify_event', self.on_solverMessage)
+      cid = self.fig.canvas.mpl_connect('motion_notify_event', self.on_solverMessage)  # TODO: this doesn work
       self.cursorId = self.fig.canvas.mpl_connect('button_press_event', self.on_click)
       self.plot()
 
@@ -400,10 +400,14 @@ class PlotWindow(QFrame):
         #self.solverMessageText.setText(self.messages[resultType][index])
       
         self.solverMessageText.setReadOnly(False)     # make it writable
+        
+        print "resultType =", resultType    # DEBUG
         if resultType=="last":
-            self.solverMessageText.setText(self.messages[resultType][index])    
+            #self.solverMessageText.setText(self.messages[resultType][index])    
+            self.solverMessageText.setText(self.messages[index])    
         elif resultType=="all":
-            self.solverMessageText.setText(self.messages[resultType][index])
+            #self.solverMessageText.setText(self.messages[resultType][index])
+            self.solverMessageText.setText(self.messages[index])
         elif resultType==None:
             print "on_solverMessage() None messages"
             return
