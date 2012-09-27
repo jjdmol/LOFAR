@@ -5,14 +5,16 @@
 # File:           solverdialog.py
 # Author:         Sven Duscha (duscha@astron.nl)
 # Date:           2010-08-05
-# Last change;    2011-12-11  
+# Last change;    2012-09-27  
 #
 #
 
 # Import
 import sys, os, random
-import lofar.bbs.solverquery as sq
+#import lofar.bbs.solverquery as sq
 import lofar.bbs.plotwindow
+import solverquery as sq  # DEBUG!!!
+#import plotwindow         # DEBUG!!!
 import lofar.parmdb as parmdb
 
 
@@ -870,7 +872,8 @@ class SolverAppForm(QMainWindow):
         self.getMessages()                             # get dictionary with solver messages
 
       	# TODO: get current PlotWindow
-        self.plots.append(lofar.bbs.plotwindow.PlotWindow(self))     # call PlotWindow class with this class as parent
+        self.plots.append(lofar.bbs.plotwindow.PlotWindow(self))  # call PlotWindow class with this class as parent
+        #self.plots.append(plotwindow.PlotWindow(self))  # DEBUG
         print "on_plot() finished drawing"
 
 
@@ -1127,7 +1130,6 @@ class SolverAppForm(QMainWindow):
 
                     # This solverQuery functions fetches the parameter along with the corresponding time stamps
                     y, x=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
-
                     return x, y["last"]
 
             # If we plot a single solution per iteration
@@ -1152,9 +1154,6 @@ class SolverAppForm(QMainWindow):
                 print "getSolutions() start_time = ", start_time, " end_time = ", end_time      # DEBUG
 
                 y, x=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq)
-
-                # This then calls Joris' plot function
-                #self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
                 return y, x
 
             elif parameter == "CORRMATRIX":
@@ -1171,7 +1170,9 @@ class SolverAppForm(QMainWindow):
                 #y=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
                 #x=self.solverQuery.getMidTimes(start_time, end_time)
 
-                #self.plot(self.fig, y['last'], x, sub=111, scatter=scatter, clf=self.clf)   # OLD
+                print "x=",x  # DEBUG
+                print "y=",y  # DEBUG
+
                 return x, y['last']
 
         else:
