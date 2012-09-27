@@ -288,6 +288,73 @@ class ImagerCreateDBsTest(unittest.TestCase):
         self.assertTrue(self.imager_create_dbs.logger.last()[1].count(error_message) > 0,
                         "The last logged message is incorrect")
 
+    def test_validate_and_correct_sourcelist_duplicate(self):
+        input_sourcelist = """# (Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6',  SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation) = format
+
+1409.2+7035, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.5251, -0.1572]
+1409.2+7035, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.51, -2.1572] # <-- duplicatie
+1410.6+7004, POINT, 14:10:37.39920000, +70.04.00.58800000, 0.6217, , , , , [-0.4707, -0.3064]
+1413.4+7122, POINT, 14:13:24.47040000, +71.22.08.18400000, 0.5473, , , , , [-0.8313, 0.0274]
+1414.8+6831, POINT, 14:14:49.54080000, +68.31.23.59200000, 1.627, , , , , [-0.5004, -0.1755]"""
+
+        target_sourcelist = """# (Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6',  SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation) = format
+
+1409.2+7035_duplicate_0, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.5251, -0.1572]
+1409.2+7035, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.51, -2.1572] # <-- duplicatie
+1410.6+7004, POINT, 14:10:37.39920000, +70.04.00.58800000, 0.6217, , , , , [-0.4707, -0.3064]
+1413.4+7122, POINT, 14:13:24.47040000, +71.22.08.18400000, 0.5473, , , , , [-0.8313, 0.0274]
+1414.8+6831, POINT, 14:14:49.54080000, +68.31.23.59200000, 1.627, , , , , [-0.5004, -0.1755]"""
+
+        output_sourcelist = self.imager_create_dbs._validate_and_correct_sourcelist(input_sourcelist)
+        self.assertTrue(output_sourcelist == target_sourcelist,
+                "The produced sourcelist was not correct: duplicate entry was not correctted properly: \n{0} \n{1}".format(output_sourcelist, target_sourcelist))
+
+    def test_validate_and_correct_sourcelist_2duplicate(self):
+        input_sourcelist = """# (Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6',  SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation) = format
+
+1409.2+7035, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.5251, -0.1572]
+1409.2+7035, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.51, -2.1572] # <-- duplicatie
+1409.2+7035, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.51, -2.1572] # <-- duplicatie
+1410.6+7004, POINT, 14:10:37.39920000, +70.04.00.58800000, 0.6217, , , , , [-0.4707, -0.3064]
+1413.4+7122, POINT, 14:13:24.47040000, +71.22.08.18400000, 0.5473, , , , , [-0.8313, 0.0274]
+1414.8+6831, POINT, 14:14:49.54080000, +68.31.23.59200000, 1.627, , , , , [-0.5004, -0.1755]"""
+
+        target_sourcelist = """# (Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6',  SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation) = format
+
+1409.2+7035_duplicate_0, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.5251, -0.1572]
+1409.2+7035_duplicate_1, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.51, -2.1572] # <-- duplicatie
+1409.2+7035, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.51, -2.1572] # <-- duplicatie
+1410.6+7004, POINT, 14:10:37.39920000, +70.04.00.58800000, 0.6217, , , , , [-0.4707, -0.3064]
+1413.4+7122, POINT, 14:13:24.47040000, +71.22.08.18400000, 0.5473, , , , , [-0.8313, 0.0274]
+1414.8+6831, POINT, 14:14:49.54080000, +68.31.23.59200000, 1.627, , , , , [-0.5004, -0.1755]"""
+
+        output_sourcelist = self.imager_create_dbs._validate_and_correct_sourcelist(input_sourcelist)
+        self.assertTrue(output_sourcelist == target_sourcelist,
+                "The produced sourcelist was not correct: duplicate entry was not correctted properly: \n{0} \n{1}".format(output_sourcelist, target_sourcelist))
+
+
+
+    def test_validate_and_correct_sourcelist_nonduplicate(self):
+        input_sourcelist = """# (Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6',  SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation) = format
+
+1409.2+7035, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.5251, -0.1572]
+1409.2+7036, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.51, -2.1572] # <-- nonduplicatie
+1410.6+7004, POINT, 14:10:37.39920000, +70.04.00.58800000, 0.6217, , , , , [-0.4707, -0.3064]
+1413.4+7122, POINT, 14:13:24.47040000, +71.22.08.18400000, 0.5473, , , , , [-0.8313, 0.0274]
+1414.8+6831, POINT, 14:14:49.54080000, +68.31.23.59200000, 1.627, , , , , [-0.5004, -0.1755]"""
+
+        target_sourcelist = """# (Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6',  SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation) = format
+
+1409.2+7035, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.5251, -0.1572]
+1409.2+7036, POINT, 14:09:16.30080000, +70.35.38.18400000, 1.4221, , , , , [-0.51, -2.1572] # <-- nonduplicatie
+1410.6+7004, POINT, 14:10:37.39920000, +70.04.00.58800000, 0.6217, , , , , [-0.4707, -0.3064]
+1413.4+7122, POINT, 14:13:24.47040000, +71.22.08.18400000, 0.5473, , , , , [-0.8313, 0.0274]
+1414.8+6831, POINT, 14:14:49.54080000, +68.31.23.59200000, 1.627, , , , , [-0.5004, -0.1755]"""
+
+        output_sourcelist = self.imager_create_dbs._validate_and_correct_sourcelist(input_sourcelist)
+        self.assertTrue(output_sourcelist == None,
+                "The produced sourcelist was not correct: the output for correct sourcelists was not correct!")
+
 
 if __name__ == "__main__":
     unittest.main()
