@@ -2096,6 +2096,8 @@ string navFunct_formatInt(int val,int maxval) {
     return "";
 
   int nr = val;  
+  // have to avoid loop when nr = 0
+  if (nr == 0) nr = 1;
   string ret="";
   while (nr < maxval) {
     if (nr*10 > maxval) break;
