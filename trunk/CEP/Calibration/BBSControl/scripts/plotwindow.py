@@ -401,7 +401,7 @@ class PlotWindow(QFrame):
       
         self.solverMessageText.setReadOnly(False)     # make it writable
         
-        print "resultType =", resultType    # DEBUG
+        #print "resultType =", resultType    # DEBUG
         if resultType=="last":
             #self.solverMessageText.setText(self.messages[resultType][index])    
             self.solverMessageText.setText(self.messages[index])    

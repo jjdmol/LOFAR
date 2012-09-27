@@ -11,9 +11,9 @@
 
 # Import
 import sys, os, random
-#import lofar.bbs.solverquery as sq
+import lofar.bbs.solverquery as sq
 import lofar.bbs.plotwindow
-import solverquery as sq  # DEBUG!!!
+#import solverquery as sq  # DEBUG!!!
 #import plotwindow         # DEBUG!!!
 import lofar.parmdb as parmdb
 
