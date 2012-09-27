@@ -73,7 +73,7 @@ class imager_create_dbs(LOFARnodeTCP):
         #*******************************************************************
         # 2convert it to a sourcedb (casa table)
         if self._create_source_db(source_list, sourcedb_target_path,
-                                  working_directory, makesourcedb_path, 
+                                  working_directory, makesourcedb_path,
                                   append) == None:
             self.logger.error("failed creating sourcedb")
             return 1
@@ -151,7 +151,7 @@ class imager_create_dbs(LOFARnodeTCP):
                  os.path.basename(executable)
             ) as logger:
                 catch_segfaults(cmd, working_directory, self.environment,
-                                            logger, cleanup = None)
+                                            logger, cleanup=None)
 
         except subprocess.CalledProcessError, called_proc_error:
             self.logger.error("Execution of external failed:")
@@ -372,6 +372,9 @@ class imager_create_dbs(LOFARnodeTCP):
             if ra_c < 0:  #gsm utils break when using negative ra_c ergo add 360
                 ra_c += 360.0
             decl_c = float(decl_c) * (180 / math.pi)
+            print "external call to gsm module:"
+            print "gsm.expected_fluxes_in_fov(conn, {0} , {1}, {2}, {3}, {4}, {5})".format(
+                ra_c, decl_c, float(fov_radius), float(assoc_theta), sourcelist, "storespectraplots=False")
 
             gsm.expected_fluxes_in_fov(conn, ra_c ,
                         decl_c, float(fov_radius),
@@ -382,7 +385,12 @@ class imager_create_dbs(LOFARnodeTCP):
                               str(exception))
             return 1
 
+        #validate the produces sourcelist
+
+
         return 0
+
+    #def _validate_and_correct_sourcelist(self, sourcelist):
 
 
 if __name__ == "__main__":
