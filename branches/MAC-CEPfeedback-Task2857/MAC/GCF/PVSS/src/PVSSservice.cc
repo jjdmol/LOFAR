@@ -21,16 +21,13 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/lofar_string.h>
-#include <Common/StringUtil.h>
-
+#include <Manager.hxx>
 #include <DpMsgAnswer.hxx>
 #include <DpMsgHotLink.hxx>
 #include <DpHLGroup.hxx>
 #include <DpVCItem.hxx>
 #include <ErrHdl.hxx>
 #include <ErrClass.hxx>
-#include <Manager.hxx>
 #include <FloatVar.hxx>
 #include <CharVar.hxx>
 #include <TextVar.hxx>
@@ -41,14 +38,17 @@
 #include <AnyTypeVar.hxx>
 #include <DpIdentifierVar.hxx>
 
+#include <Common/lofar_string.h>
+#include <Common/StringUtil.h>
+
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/PVSS/PVSSresponse.h>
 #include <GCF/PVSS/PVSSresult.h>
 #include <GCF/PVSS/PVSSinfo.h>
 
-#include "GSA_WaitForAnswer.h"
 #include "GSA_SCADAHandler.h"
+#include "GSA_WaitForAnswer.h"
 
 namespace LOFAR {
 	namespace GCF {
@@ -1181,7 +1181,7 @@ PVSSresult PVSSservice::dpQueryUnsubscribe(uint32 queryId)
 	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
 		LOG_FATAL (formatString("Unable to unsubscribe: '%d'", queryId));
 	}
-	else if (!Manager::dpQueryDisconnect(queryId, itsWFA, PVSS_FALSE)) {
+	else if (!Manager::dpQueryDisconnect(queryId, itsWFA)) {
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all

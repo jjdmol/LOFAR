@@ -11,7 +11,7 @@ TestPS.TestPS	1#1
 	intArr	5#8
 	floatArr	6#9
 	boolArr	7#10
-	stringArr	8#11
+	stringArr	9#11
 	level1	1#12
 		intVal	21#13
 		level2	1#14

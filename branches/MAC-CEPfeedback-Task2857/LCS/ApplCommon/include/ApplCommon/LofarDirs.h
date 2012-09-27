@@ -1,6 +1,6 @@
-//#  Thread.cc:
+//#  LofarDirs.h: Definitions of some directories of LOFAR.
 //#
-//#  Copyright (C) 2009
+//#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,42 +18,15 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: Thread.h 16592 2010-10-22 13:04:23Z mol $
+//#  $Id$
 
-#include <lofar_config.h>
-#include <Common/Thread/Thread.h>
-#include <Common/LofarLogger.h>
-#include <iostream>
-#include <sys/types.h>
-#include <unistd.h>
+#ifndef APPLCOMMON_LOFARDIRS_H
+#define APPLCOMMON_LOFARDIRS_H
 
-namespace LOFAR {
-
-#ifdef USE_THREADS
-
-ThreadMap &ThreadMap::instance() {
-  // this leaks, but we have no way of properly enforcing that all
-  // threads are destructed before the global map is.
-
-  static ThreadMap *globalThreadMap = new ThreadMap();
-
-  return *globalThreadMap;
-}
-
-void ThreadMap::report() {
-  ScopedLock sl(mutex);
-
-  LOG_INFO_STR("Thread list for pid " << getpid());
-
-  for(mapType::const_iterator i = map.begin(); i != map.end();  ++i) {
-    const pthread_t &id = (*i).first;
-    const std::string &desc = (*i).second;
-
-    LOG_INFO_STR("Thread 0x" << std::hex << id << " = " << desc);
-  }
-}
+#define LOFAR_BASE_LOCATION		"/opt/lofar"
+#define LOFAR_BIN_LOCATION		"/opt/lofar/bin"
+#define LOFAR_CONFIG_LOCATION	"/opt/lofar/etc"
+#define LOFAR_SHARE_LOCATION	"/opt/lofar/var/run"
+#define LOFAR_LOG_LOCATION		"/opt/lofar/var/log"
 
 #endif
-
-} // namespace LOFAR
-

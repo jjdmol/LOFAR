@@ -57,7 +57,7 @@ AntennaSets::AntennaSets(const string& filename) :
 	ifstream	inputStream;
 	inputStream.open(itsAntennaSetFile.c_str());
 
-	ASSERTSTR(inputStream.good(), "File " << itsAntennaSetFile << " cannot be opened succesfully.");
+	ASSERTSTR(inputStream.good(), "File " << filename << " cannot be opened succesfully.");
 
 	char		line      [2048];
 	char		setName   [1024];

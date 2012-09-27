@@ -21,15 +21,14 @@
 //#  $Id$
 
 #include <lofar_config.h>
-
-#include <GCF/PVSS/PVSSinfo.h>
-#include <GCF/PVSS/PVSSservice.h>
-#include <GCF/PVSS/PVSSresult.h>
 #include <Manager.hxx>
 #include <Datapoint.hxx>
 #include <DpContainer.hxx>
 #include <DpIdentification.hxx>
 #include <Common/StringUtil.h>
+#include <GCF/PVSS/PVSSinfo.h>
+#include <GCF/PVSS/PVSSservice.h>
+#include <GCF/PVSS/PVSSresult.h>
 
 namespace LOFAR {
  namespace GCF {
@@ -43,57 +42,57 @@ uint 	PVSSinfo::_lastManNum 	= 0;
 uint 	PVSSinfo::_lastManType 	= 0;
 
 TMACValueType macValueTypes[] = 
-{
-  NO_LPT,           // DPELEMENT_NOELEMENT,
-  NO_LPT,           // DPELEMENT_RECORD,
-  NO_LPT,           // DPELEMENT_ARRAY,
-  LPT_DYNCHAR,      // DPELEMENT_DYNCHAR,
-  LPT_DYNUNSIGNED,  // DPELEMENT_DYNUINT,
-  LPT_DYNINTEGER,   // DPELEMENT_DYNINT,
-  LPT_DYNDOUBLE,    // DPELEMENT_DYNFLOAT,
-  LPT_DYNBOOL,      // DPELEMENT_DYNBIT,
-  NO_LPT,           // DPELEMENT_DYN32BIT, not yet
-  LPT_DYNSTRING,    // DPELEMENT_DYNTEXT,
-  NO_LPT,           // DPELEMENT_DYNTIME, not yet
-  NO_LPT,           // DPELEMENT_CHARARRAY,
-  NO_LPT,           // DPELEMENT_UINTARRAY,
-  NO_LPT,           // DPELEMENT_INTARRAY,
-  NO_LPT,           // DPELEMENT_FLOATARRAY,
-  NO_LPT,           // DPELEMENT_BITARRAY,
-  NO_LPT,           // DPELEMENT_32BITARRAY,
-  NO_LPT,           // DPELEMENT_TEXTARRAY,
-  NO_LPT,           // DPELEMENT_TIMEARRAY,
-  LPT_CHAR,         // DPELEMENT_CHAR,
-  LPT_UNSIGNED,     // DPELEMENT_UINT,
-  LPT_INTEGER,      // DPELEMENT_INT,
-  LPT_DOUBLE,       // DPELEMENT_FLOAT,
-  LPT_BOOL,         // DPELEMENT_BIT,
-  NO_LPT,           // DPELEMENT_32BIT, not yet
-  LPT_STRING,       // DPELEMENT_TEXT,
-  NO_LPT,           // DPELEMENT_TIME, not yet
-  NO_LPT,           // DPELEMENT_DPID,
-  NO_LPT,           // DPELEMENT_NOVALUE,
-  NO_LPT,           // DPELEMENT_DYNDPID,
-  NO_LPT,           // DPELEMENT_DYNCHARARRAY,
-  NO_LPT,           // DPELEMENT_DYNUINTARRAY,
-  NO_LPT,           // DPELEMENT_DYNINTARRAY,
-  NO_LPT,           // DPELEMENT_DYNFLOATARRAY,
-  NO_LPT,           // DPELEMENT_DYNBITARRAY,
-  NO_LPT,           // DPELEMENT_DYN32BITARRAY,
-  NO_LPT,           // DPELEMENT_DYNTEXTARRAY,
-  NO_LPT,           // DPELEMENT_DYNTIMEARRAY,
-  NO_LPT,           // DPELEMENT_DYNDPIDARRAY,
-  NO_LPT,           // DPELEMENT_DPIDARRAY,
-  NO_LPT,           // DPELEMENT_NOVALUEARRAY,
-  NO_LPT,           // DPELEMENT_TYPEREFERENCE,
-  NO_LPT,           // DPELEMENT_LANGTEXT,
-  NO_LPT,           // DPELEMENT_LANGTEXTARRAY,
-  NO_LPT,           // DPELEMENT_DYNLANGTEXT,
-  NO_LPT,           // DPELEMENT_DYNLANGTEXTARRAY,
-  LPT_BLOB,         // DPELEMENT_BLOB,
-  NO_LPT,           // DPELEMENT_BLOBARRAY,
-  LPT_DYNBLOB,      // DPELEMENT_DYNBLOB,
-  NO_LPT,           // DPELEMENT_DYNBLOBARRAY,
+{// PVSS/GCF_Defines.h		// api/include/Basics/DpBasics/DpElementType.hxx
+  NO_LPT,           		// DPELEMENT_NOELEMENT,
+  NO_LPT,           		// DPELEMENT_RECORD,
+  NO_LPT,           		// DPELEMENT_ARRAY,
+  LPT_DYNCHAR,      		// DPELEMENT_DYNCHAR,
+  LPT_DYNUNSIGNED,  		// DPELEMENT_DYNUINT,
+  LPT_DYNINTEGER,   		// DPELEMENT_DYNINT,
+  LPT_DYNDOUBLE,    		// DPELEMENT_DYNFLOAT,
+  LPT_DYNBOOL,      		// DPELEMENT_DYNBIT,
+  NO_LPT,           		// DPELEMENT_DYN32BIT, not yet
+  LPT_DYNSTRING,    		// DPELEMENT_DYNTEXT,
+  NO_LPT,           		// DPELEMENT_DYNTIME, not yet
+  NO_LPT,           		// DPELEMENT_CHARARRAY,
+  NO_LPT,           		// DPELEMENT_UINTARRAY,
+  NO_LPT,           		// DPELEMENT_INTARRAY,
+  NO_LPT,           		// DPELEMENT_FLOATARRAY,
+  NO_LPT,           		// DPELEMENT_BITARRAY,
+  NO_LPT,           		// DPELEMENT_32BITARRAY,
+  NO_LPT,           		// DPELEMENT_TEXTARRAY,
+  NO_LPT,           		// DPELEMENT_TIMEARRAY,
+  LPT_CHAR,         		// DPELEMENT_CHAR,
+  LPT_UNSIGNED,     		// DPELEMENT_UINT,
+  LPT_INTEGER,      		// DPELEMENT_INT,
+  LPT_DOUBLE,       		// DPELEMENT_FLOAT,
+  LPT_BOOL,         		// DPELEMENT_BIT,
+  NO_LPT,           		// DPELEMENT_32BIT, not yet
+  LPT_STRING,       		// DPELEMENT_TEXT,
+  NO_LPT,           		// DPELEMENT_TIME, not yet
+  NO_LPT,           		// DPELEMENT_DPID,
+  NO_LPT,           		// DPELEMENT_NOVALUE,
+  NO_LPT,           		// DPELEMENT_DYNDPID,
+  NO_LPT,           		// DPELEMENT_DYNCHARARRAY,
+  NO_LPT,           		// DPELEMENT_DYNUINTARRAY,
+  NO_LPT,           		// DPELEMENT_DYNINTARRAY,
+  NO_LPT,           		// DPELEMENT_DYNFLOATARRAY,
+  NO_LPT,           		// DPELEMENT_DYNBITARRAY,
+  NO_LPT,           		// DPELEMENT_DYN32BITARRAY,
+  NO_LPT,           		// DPELEMENT_DYNTEXTARRAY,
+  NO_LPT,           		// DPELEMENT_DYNTIMEARRAY,
+  NO_LPT,           		// DPELEMENT_DYNDPIDARRAY,
+  NO_LPT,           		// DPELEMENT_DPIDARRAY,
+  NO_LPT,           		// DPELEMENT_NOVALUEARRAY,
+  NO_LPT,           		// DPELEMENT_TYPEREFERENCE,
+  NO_LPT,           		// DPELEMENT_LANGTEXT,
+  NO_LPT,           		// DPELEMENT_LANGTEXTARRAY,
+  NO_LPT,           		// DPELEMENT_DYNLANGTEXT,
+  NO_LPT,           		// DPELEMENT_DYNLANGTEXTARRAY,
+  LPT_BLOB,         		// DPELEMENT_BLOB,
+  NO_LPT,           		// DPELEMENT_BLOBARRAY,
+  LPT_DYNBLOB,      		// DPELEMENT_DYNBLOB,
+  NO_LPT,           		// DPELEMENT_DYNBLOBARRAY,
 };
 
 //
@@ -120,13 +119,13 @@ bool PVSSinfo::typeExists (const string& dpTypeName)
 {
 	CharString 	pvssTypeName(dpTypeName.c_str());
 	DpTypeId 	dpTypeId; 
-	if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_TRUE) {
+	if (Manager::getTypeId(pvssTypeName, dpTypeId) != PVSS_TRUE) {
 		LOG_TRACE_VAR_STR("typeExists(" << dpTypeName << "): FALSE");
-		return (false);
+		return (true);
 	}
 
 	LOG_TRACE_VAR_STR("typeExists(" << dpTypeName << "): OK");
-	return (true);
+	return (false);
 }
 
 //

@@ -58,7 +58,8 @@ Observation::Observation() :
 // Observation(ParameterSet*, [hasDualHBA]))
 //
 Observation::Observation(const ParameterSet*		aParSet,
-						 bool				hasDualHBA) :
+						 bool				hasDualHBA,
+						 unsigned			nrBGPIOnodes) :
 	name(),
 	obsID(0),
 	startTime(0),
@@ -113,9 +114,10 @@ Observation::Observation(const ParameterSet*		aParSet,
 	if (!antennaSet.empty()) {
 		antennaArray = antennaSet.substr(0,3);	// LBA or HBA
 	}
-	splitterOn = ((antennaSet == "HBA_ZERO") || (antennaSet == "HBA_ONE") || 
-				  (antennaSet == "HBA_DUAL") || (antennaSet == "HBA_DUAL_INNER"));
-	dualMode   = ((antennaSet == "HBA_DUAL") || (antennaSet == "HBA_DUAL_INNER"));
+	splitterOn = ((antennaSet.substr(0,8) == "HBA_ZERO") || (antennaSet.substr(0,7) == "HBA_ONE") || 
+				  (antennaSet.substr(0,8) == "HBA_DUAL"));
+	dualMode   =  (antennaSet.substr(0,8) == "HBA_DUAL");
+	bool innerMode = (antennaSet.find("_INNER") != string::npos);
 
 	// RCU information
 	RCUset.reset();							// clear RCUset by default.
@@ -180,7 +182,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 		newBeam.name = getBeamName(beamIdx);
 		newBeam.antennaSet = antennaSet;
 		if (dualMode) {
-			newBeam.antennaSet = "HBA_ZERO";
+			newBeam.antennaSet = string("HBA_ZERO") + (innerMode ? "_INNER" : "");
 			if (hasDualHBA) {
 				newBeam.name += "_0";
 			}
@@ -224,7 +226,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 		// Duplicate beam on second HBA subfield when in HBA_DUAL mode.
 		if (dualMode && hasDualHBA) {
 			newBeam.name	   = getBeamName(beamIdx) + "_1";
-			newBeam.antennaSet = "HBA_ONE";
+			newBeam.antennaSet = string("HBA_ONE") + (innerMode ? "_INNER" : "");
 			beams.push_back(newBeam);
 		}
 
@@ -265,7 +267,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 		newBeam.name 	   = getAnaBeamName();
 		newBeam.antennaSet = antennaSet;
 		if (dualMode) {
-			newBeam.antennaSet = "HBA_ZERO";
+			newBeam.antennaSet = string("HBA_ZERO") + (innerMode ? "_INNER" : "");
 			if (hasDualHBA) {
 				newBeam.name += "_0";
 			}
@@ -294,7 +296,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 		// Duplicate beam on second HBA subfield when in HBA_DUAL mode.
 		if (dualMode && hasDualHBA) {
 			newBeam.name	   = getBeamName(beamIdx) + "_1";
-			newBeam.antennaSet = "HBA_ONE";
+			newBeam.antennaSet = string("HBA_ONE") + (innerMode ? "_INNER" : "");
 			anaBeams.push_back(newBeam);
 		}
 	} // for all analogue beams
@@ -304,8 +306,10 @@ Observation::Observation(const ParameterSet*		aParSet,
 	if (!olapprefix.empty()) {		// offline Pipelines don't have OLAP in the parset.
 		const char *dataProductNames[] = { "Beamformed", "Correlated" };
 		unsigned dataProductPhases[]   = { 3,            2 };
-                unsigned dataProductNrs[]      = { 2,            1 };
+        unsigned dataProductNrs[]      = { 2,            1 };
 		size_t nrDataProducts = sizeof dataProductNames / sizeof dataProductNames[0];
+
+        const unsigned nrPsets = nrBGPIOnodes;
 
 		// by default, use all psets
 		vector<unsigned> phaseTwoPsets;
@@ -313,7 +317,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 			phaseTwoPsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseTwoPsets", true);
 		}
 		if (phaseTwoPsets.empty())  {
-			for (unsigned p = 0; p < 64; p++) {
+			for (unsigned p = 0; p < nrPsets; p++) {
 				phaseTwoPsets.push_back(p);
 			}
 		}
@@ -324,7 +328,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 			phaseThreePsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseThreePsets", true);
 		}
 		if (phaseThreePsets.empty())  {
-			for (unsigned p = 0; p < 64; p++) {
+			for (unsigned p = 0; p < nrPsets; p++) {
 				phaseThreePsets.push_back(p);
 			}
 		}
@@ -605,10 +609,10 @@ string Observation::getAntennaFieldName(bool hasSplitters, uint32	beamIdx) const
 	}
 
 	// station has splitters
-	if (result == "HBA_ZERO") 	return ("HBA0");
-	if (result == "HBA_ONE") 	return ("HBA1");
-	if (result == "HBA_JOINED")	return ("HBA");
-	if (result == "HBA_DUAL")	return (beamIdx % 2 == 0 ? "HBA0" : "HBA1");
+	if (result.substr(0,8) == "HBA_ZERO") 	return ("HBA0");
+	if (result.substr(0,7) == "HBA_ONE") 	return ("HBA1");
+	if (result.substr(0,10)== "HBA_JOINED")	return ("HBA");
+	if (result.substr(0,8) == "HBA_DUAL")	return (beamIdx % 2 == 0 ? "HBA0" : "HBA1");
 	return ("HBA");
 }	
 

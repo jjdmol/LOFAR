@@ -94,7 +94,7 @@ public:
 	// @param valBuf buffer data containing a MAC value, which is packet with <b>pack</b>
 	// @return pointer to created property value type object
 	// <b>IMPORTANT: must be deleted by "caller" of this method</b>
-	static GCFPValue* unpackValue (const char* valBuf);
+	static GCFPValue* unpackValue (const char* valBuf, unsigned int* offset);
 
 	// unpacks (copies) the data of the value into the object data space
 	// for now it only unpacks the type; later it also can unpack a timestamp or else
@@ -133,6 +133,7 @@ protected:
 	// Sets the type ID for each subclassed property value type class
 	// @param type MAC property type ID
 	explicit GCFPValue (TMACValueType type) : _type(type), _dataFormat(LOFAR::dataFormat()) {};
+	void setType(TMACValueType	type) { _type = type; }
 
 	// Pure virtual method
 	// the concrete unpack method of the concrete value object
@@ -161,7 +162,17 @@ private:
 
 };
 
+//
+// operator<<
+//
+inline ostream& operator<< (ostream& os, const GCFPValue& gv) 
+{
+	os << gv.getValueAsString();
+	return (os);
+}
+
   } // namespace Common
  } // namespace GCF
 } // namespace LOFAR
+
 #endif

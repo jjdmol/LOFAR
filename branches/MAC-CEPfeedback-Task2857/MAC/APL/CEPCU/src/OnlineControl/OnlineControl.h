@@ -65,15 +65,14 @@ public:
 	explicit OnlineControl(const string& cntlrName);
 	~OnlineControl();
 
-	// During the initial state all connections with the other programs are made.
-   	GCFEvent::TResult initial_state (GCFEvent& e, 
-									 GCFPortInterface& p);
+	// Connect to our own propertyset.
+   	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
+	// Connect to BGPAppl propset and start remaining tasks.
+   	GCFEvent::TResult propset_state (GCFEvent& e, GCFPortInterface& p);
 	// Normal control mode. 
-   	GCFEvent::TResult active_state  (GCFEvent& e, 
-									 GCFPortInterface& p);
+   	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
 	// Finishing mode. 
-	GCFEvent::TResult finishing_state(GCFEvent& event, 
-									  GCFPortInterface& port);
+	GCFEvent::TResult finishing_state(GCFEvent& event, GCFPortInterface& port);
 	
 	// Interrupthandler for switching to finisingstate when exiting the program
 	static void signalHandler (int	signum);
@@ -122,6 +121,7 @@ private:
 
 	// ----- datamembers -----
    	RTDBPropertySet*           	itsPropertySet;
+   	RTDBPropertySet*           	itsBGPApplPropSet;
 	bool					  	itsPropertySetInitialized;
 
 	// pointer to parent control task

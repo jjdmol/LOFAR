@@ -1,4 +1,4 @@
-//# Exceptions.h: Declaration and definition of SINFONI specific exceptions.
+//# Exceptions.h: Declaration and definition of common LOFAR exceptions.
 //#
 //# Copyright (C) 2002-2006
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -31,7 +31,7 @@ namespace LOFAR
   //
   // This exception will be thrown when an assertion fails.
   //
-  EXCEPTION_CLASS(AssertError,Exception);
+  EXCEPTION_CLASS(AssertError, Exception);
 
   //
   // This exception will be thrown when an I/O error occurs.
@@ -55,6 +55,6 @@ namespace LOFAR
   //
   EXCEPTION_CLASS(APSException, Exception);
 
-} // namespace ASTRON
+} // namespace LOFAR
 
 #endif

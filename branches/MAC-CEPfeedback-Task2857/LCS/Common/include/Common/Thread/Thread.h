@@ -96,6 +96,8 @@ class ThreadMap {
 public:
   typedef std::map<pthread_t,std::string> mapType;
 
+  static ThreadMap &instance();
+
   void report();
 
   class ScopedRegistration {
@@ -120,8 +122,6 @@ private:
   mapType map;
   Mutex   mutex;
 };
-
-extern ThreadMap globalThreadMap;
 
 template <typename T> inline Thread::Thread(T *object, void (T::*method)(), const std::string &logPrefix, size_t stackSize)
 :
@@ -199,7 +199,7 @@ template <typename T> inline void Thread::stub(Args<T> *args)
 
   LOG_DEBUG_STR(logPrefix << "Thread started");
 
-  ThreadMap::ScopedRegistration sr(globalThreadMap, logPrefix);
+  ThreadMap::ScopedRegistration sr(ThreadMap::instance(), logPrefix);
 
   try {
     (args->object->*args->method)();

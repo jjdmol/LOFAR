@@ -4,6 +4,7 @@
 set(inst_HEADERS
   AntField.h
   AntennaSets.h
+  LofarDirs.h
   Observation.h
   StationConfig.h
   StationDatatypes.h

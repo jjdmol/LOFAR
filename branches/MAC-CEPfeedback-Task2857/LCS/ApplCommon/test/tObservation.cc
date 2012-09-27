@@ -31,7 +31,7 @@
 
 using namespace LOFAR;
 
-void showSTS(Observation::StreamToStorage   sts)
+void showSTS(Observation::StreamToStorage	sts)
 {
 	cout << formatString("DP[%d]:%s, Str[%d]:%s, Pset:%d, Node:%s, Dir: %s, Adder:%d, writer:%d\n", sts.dataProductNr, sts.dataProduct.c_str(), sts.streamNr, sts.filename.c_str(), sts.sourcePset, sts.destStorageNode.c_str(), sts.destDirectory.c_str(), sts.adderNr, sts.writerNr);
 }
@@ -52,7 +52,7 @@ int main (int argc, char* argv[])
 			cout << "getRCUbitset(96,96,HBA_XXX) = " << someObs.getRCUbitset(96,96,"HBA_XXX") << endl;	// Core
 			vector<int>	b2b = someObs.getBeamAllocation("CS002");
 			cout << "BeamAlloc for CS002 : " << b2b << endl;
-			int nrStreams = someObs.streamsToStorage.size();
+			int	nrStreams = someObs.streamsToStorage.size();
 			for (int i = 0; i < nrStreams; i++) {
 				showSTS(someObs.streamsToStorage[i]);
 			}
