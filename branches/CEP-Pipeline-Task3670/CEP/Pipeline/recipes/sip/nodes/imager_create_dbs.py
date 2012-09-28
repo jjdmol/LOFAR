@@ -389,7 +389,6 @@ class imager_create_dbs(LOFARnodeTCP):
                               str(exception))
             return 1
 
-        raise Exception("Blaaaa")
         # validate the retrieve sourcelist
         fp = open(sourcelist)
         sourcelist_corrected = self._validate_and_correct_sourcelist(fp.read())
