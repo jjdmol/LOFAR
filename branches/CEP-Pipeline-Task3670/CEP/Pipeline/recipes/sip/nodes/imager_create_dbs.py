@@ -372,19 +372,30 @@ class imager_create_dbs(LOFARnodeTCP):
             if ra_c < 0:  #gsm utils break when using negative ra_c ergo add 360
                 ra_c += 360.0
             decl_c = float(decl_c) * (180 / math.pi)
+            import sys
+            self.logger.error("*"*30)
+            self.logger.error((measurement_set,
+                    sourcelist, monet_db_host, monet_db_port, monet_db_name,
+                    monet_db_user, monet_db_password, assoc_theta))
+            self.logger.error(sys.path)
+
             self.logger.error("external call to gsm module:")
             self.logger.error("gsm.expected_fluxes_in_fov(conn, {0} , {1}, {2}, {3}, {4}, {5})".format(
                 ra_c, decl_c, float(fov_radius), float(assoc_theta), sourcelist, "storespectraplots=False"))
-
+            self.logger.error("*"*30)
+            return 1
             gsm.expected_fluxes_in_fov(conn, ra_c ,
                         decl_c, float(fov_radius),
                         float(assoc_theta), sourcelist,
                         storespectraplots=False)
+            self.logger.error(gsm.__file__)
+
         except Exception, exception:
             self.logger.error("expected_fluxes_in_fov raise exception: " +
                               str(exception))
             return 1
 
+        raise Exception("Blaaaa")
         # validate the retrieve sourcelist
         fp = open(sourcelist)
         sourcelist_corrected = self._validate_and_correct_sourcelist(fp.read())
@@ -401,7 +412,8 @@ class imager_create_dbs(LOFARnodeTCP):
             fp.write(sourcelist_corrected)
             self.logger.debug("Moved sourcelist and create a new sourcelist")
             fp.close()
-        self.logger.debug("Sourcelist did not contain duplicates")
+        else:
+            self.logger.debug("Sourcelist did not contain duplicates")
         return 0
 
     def _validate_and_correct_sourcelist(self, sourcelist):
