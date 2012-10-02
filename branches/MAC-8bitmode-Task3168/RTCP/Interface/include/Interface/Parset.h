@@ -693,7 +693,14 @@ inline unsigned Parset::dedispersionFFTsize() const
 
 inline unsigned Parset::nrBitsPerSample() const
 {
-  return getUint32("Observation.nrBitsPerSample");
+  const std::string key = "Observation.nrBitsPerSample";
+
+  if (isDefined(key)) {
+    return getUint32(key);
+  } else {
+    LOG_WARN_STR( "Missing key " << key << ", using the depricated key OLAP.nrBitsPerSample");
+    return getUint32("OLAP.nrBitsPerSample", 16);
+  }  
 }
 
 inline unsigned Parset::CNintegrationSteps() const
