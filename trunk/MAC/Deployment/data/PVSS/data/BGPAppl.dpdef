@@ -1,6 +1,2 @@
-ioNodeList				intArr
-locusNodeList			stringArr
+ioNodeList		intArr
 adderList		stringArr
-writerList				stringArr
-dataProductList			stringArr
-dataProductTypeList		stringArr
