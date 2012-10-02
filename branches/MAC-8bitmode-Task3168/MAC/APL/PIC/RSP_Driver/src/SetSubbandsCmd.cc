@@ -48,17 +48,17 @@ using namespace RTC;
 // BITMODE 8
 // bank 0:
 // lane 0    lane 1    lane 2    lane 3
-//	0,1      236,237   472,473   708,709
-//  2,3      238,239   474,475   710,711
+//	0,1      244,245   488,489   732,733
+//  2,3      246,247   490,491   734,735
 //   ..        ..        ..        ..
-// 116,117   352,353   588,589,  824,825
+// 120,121   364,365   608,609,  852,853
 //
 // bank 1:
 // lane 0    lane 1    lane 2    lane 3
-// 118,119   354,355   590,591   826,827
-// 120,121   356,357   592,593   828,829
+// 122,123   366,367   610,611   854,855
+// 124,125   368,369   612,613   856,857
 //   ..        ..        ..        ..
-// 234,235   470,471   706,707   942,943
+// 242,243   486,487   730,731   974,975
 
 SetSubbandsCmd::SetSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
 	Command("SetSubbands", port, oper)
@@ -99,37 +99,31 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 			if (m_event->rcumask[cache_rcu]) {
 				// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 				//       In other words: getSubbandSelection can contain more data than m_event->subbands
-				if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample())) {
-					cache.getSubbandSelection().beamlets()(cache_rcu, 0, dst_range) = 0;
-					cache.getSubbandSelection().beamlets()(cache_rcu, 0, dst_range) = 
-											m_event->subbands.beamlets()(0, 0, Range::all()) * (int)N_POL + (cache_rcu % N_POL);
-				}
-				else {
-					int nr_subbands = m_event->subbands.beamlets().extent(thirdDim);
-					int nrBlocks = MEPHeader::N_SERDES_LANES * nBanks;
-					for (int block = 0; block < nrBlocks; block++) {
-						int swbank = block / MEPHeader::N_SERDES_LANES;
-						int swlane = block % MEPHeader::N_SERDES_LANES;
-						int hwbank = block % nBanks;
-						int hwlane = block / nBanks;
-    					int	swstart(swlane * maxDataslotsPerRSP(cache.getBitsPerSample()));
-    					int hwstart(hwlane * (MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
-    					int nrSubbands2move(MIN(nr_subbands-swstart, maxDataslotsPerRSP(cache.getBitsPerSample())));
-    					if (nrSubbands2move > 0) {
-    						dst_range = Range(hwstart, hwstart+nrSubbands2move-1);
-    						src_range = Range(swstart, swstart+nrSubbands2move-1);
-    						cache.getSubbandSelection().beamlets()(cache_rcu, hwbank, dst_range) = 0;
-    						cache.getSubbandSelection().beamlets()(cache_rcu, hwbank, dst_range) = 
-										m_event->subbands.beamlets()(0, swbank, src_range) * (int)N_POL + (cache_rcu % N_POL);
-    						if (cache_rcu == 0) {
-    							LOG_DEBUG_STR("Setsubbands:move(" << swstart << ".." << swstart+nrSubbands2move << ") to (" 
-    															  << hwstart << ".." << hwstart+nrSubbands2move << ")"
-																  << " swbank:" << swbank << " swlane:" << swlane 
-																  << " hwbank:" << hwbank << " hwlane:" << hwlane);
-    						}
-    					} // subbands left
-    				} // for each block
-				} // difference in max'en
+
+				int nrSubbands = m_event->subbands.beamlets().extent(thirdDim);
+				int nrBlocks = MEPHeader::N_SERDES_LANES * nBanks;
+				for (int block = 0; block < nrBlocks; block++) {
+					int swbank = block / MEPHeader::N_SERDES_LANES;
+					int swlane = block % MEPHeader::N_SERDES_LANES;
+					int hwbank = block % nBanks;
+					int hwlane = block / nBanks;
+					int	swstart(swlane * maxDataslotsPerRSP(cache.getBitsPerSample()));
+					int hwstart(hwlane * (MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+					int nrSubbands2move(MIN(nrSubbands-swstart, maxDataslotsPerRSP(cache.getBitsPerSample())));
+					if (nrSubbands2move > 0) {
+						dst_range = Range(hwstart, hwstart+nrSubbands2move-1);
+						src_range = Range(swstart, swstart+nrSubbands2move-1);
+						cache.getSubbandSelection().beamlets()(cache_rcu, hwbank, dst_range) = 0;
+						cache.getSubbandSelection().beamlets()(cache_rcu, hwbank, dst_range) = 
+									m_event->subbands.beamlets()(0, swbank, src_range) * (int)N_POL + (cache_rcu % N_POL);
+						if (cache_rcu == 0) {
+							LOG_DEBUG_STR("SS:block=" << block << " move(" << swstart << ".." << swstart+nrSubbands2move << ") to (" 
+															  << hwstart << ".." << hwstart+nrSubbands2move << ")"
+															  << " swbank:" << swbank << " swlane:" << swlane 
+															  << " hwbank:" << hwbank << " hwlane:" << hwlane);
+						}
+					} // subbands left
+				} // for each block
 
 				if (cache_rcu == 0) {
 					LOG_DEBUG_STR("m_event->subbands.beamlets() = " << m_event->subbands.beamlets());

@@ -147,10 +147,10 @@ void CacheBuffer::reset(void)
 	m_timestamp.set(tv);
 
     itsBitsPerSample = MAX_BITS_PER_SAMPLE;
-	
+    
 	m_beamletweights().resize( BeamletWeights::SINGLE_TIMESTEP, 
 	                           StationSettings::instance()->nrRcus(),
-	                           (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE), 
+	                           MAX_NR_BM_BANKS, 
 	                           MEPHeader::N_BEAMLETS);
 	m_beamletweights() = complex<int16>(25,36);
 // TODO remove this code!!!

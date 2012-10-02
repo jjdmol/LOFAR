@@ -31,20 +31,9 @@ namespace LOFAR {
     
     inline static int maxDataslotsPerRSP(int bitsPerSample) {
 		assert(bitsPerSample >= MIN_BITS_PER_SAMPLE && bitsPerSample <= MAX_BITS_PER_SAMPLE && bitsPerSample%2==0);
-#if 1
 		return(61);
-#else
-        switch (bitsPerSample) {
-          case 4:
-              return(59);
-          case 8: 
-              return(59);
-          default: 
-              //return(59);
-              return(61);
-		}
-#endif
 	}
+
 
     inline static int maxBeamletsPerRSP(int bitsPerSample) {
 		assert(bitsPerSample >= MIN_BITS_PER_SAMPLE && bitsPerSample <= MAX_BITS_PER_SAMPLE && bitsPerSample%2==0);
@@ -58,10 +47,15 @@ namespace LOFAR {
 		}
     }
     
-    inline static int maxBeamletsPerPlane(int bitsPerSample) {
+    inline static int maxBeamletsPerBank(int bitsPerSample) {
         // 4 output lanes on one station
         return(4 * maxDataslotsPerRSP(bitsPerSample));
     }
+    
+    inline static int maxBeamletsPerPlane(int bitsPerSample) {
+        return(maxBeamletsPerBank(bitsPerSample));
+    }
+    
     
     inline static int maxBeamlets(int bitsPerSample) {
         // 4 output lanes on one station

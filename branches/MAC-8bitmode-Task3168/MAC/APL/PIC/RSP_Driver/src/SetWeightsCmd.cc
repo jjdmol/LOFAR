@@ -83,32 +83,27 @@ void SetWeightsCmd::apply(CacheBuffer& cache, bool setModFlag)
 		if (m_event->rcumask[cache_rcu]) {
 			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 			//       In other words: getBeamletWeights can contain more data than ack.weights
-			if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample())) {
-				cache.getBeamletWeights()()(0, cache_rcu, Range::all(), Range::all()) = m_event->weights()(0, input_rcu, Range::all(), Range::all());
-			}
-			else {
-				int nrBlocks = MEPHeader::N_SERDES_LANES * nBanks;
-				int dataslotsPerRSP = maxDataslotsPerRSP(cache.getBitsPerSample());
-				for (int block = 0; block < nrBlocks; block++) {
-					int swbank = block / MEPHeader::N_SERDES_LANES;
-					int swlane = block % MEPHeader::N_SERDES_LANES;
-					int hwbank = block % nBanks;
-					int hwlane = block / nBanks;
-   					int	swstart(swlane * dataslotsPerRSP);
-   					int hwstart(hwlane * (MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
-   					dst_range = Range(hwstart, hwstart+dataslotsPerRSP-1);
-   					src_range = Range(swstart, swstart+dataslotsPerRSP-1);
-					for (int rsp = 0; rsp < MEPHeader::N_SERDES_LANES; rsp++) {
-						cache.getBeamletWeights()()(0, cache_rcu, hwbank, dst_range) = 
-   									m_event->weights()(0, input_rcu, swbank, src_range);
-						if (rsp == 0) {
-							LOG_INFO_STR("BW:block=" << block << " move(" << src_range << ") to (" << dst_range << ")"
-										<< " swbank=" << swbank << " swlane=" << swlane
-										<< " hwbank=" << hwbank << " hwlane=" << hwlane);
-						}
-					} // rsp
-   				} // blocks
-			}
+			int nrBlocks = MEPHeader::N_SERDES_LANES * nBanks;
+			int dataslotsPerRSP = maxDataslotsPerRSP(cache.getBitsPerSample());
+			for (int block = 0; block < nrBlocks; block++) {
+				int swbank = block / MEPHeader::N_SERDES_LANES;
+				int swlane = block % MEPHeader::N_SERDES_LANES;
+				int hwbank = block % nBanks;
+				int hwlane = block / nBanks;
+				int	swstart(swlane * dataslotsPerRSP);
+				int hwstart(hwlane * (MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+				dst_range = Range(hwstart, hwstart+dataslotsPerRSP-1);
+				src_range = Range(swstart, swstart+dataslotsPerRSP-1);
+				for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+					cache.getBeamletWeights()()(0, cache_rcu, hwbank, dst_range) = 
+								m_event->weights()(0, input_rcu, swbank, src_range);
+					if (lane == 0) {
+						LOG_DEBUG_STR("BF:block=" << block << " move(" << src_range << ") to (" << dst_range << ")"
+									<< " swbank=" << swbank << " swlane=" << swlane
+									<< " hwbank=" << hwbank << " hwlane=" << hwlane);
+					}
+				} // lanes
+			} // blocks
 
 			if (setModFlag) {
 				cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE);

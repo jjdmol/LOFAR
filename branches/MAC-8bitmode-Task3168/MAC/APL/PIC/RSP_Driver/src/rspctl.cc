@@ -201,8 +201,8 @@ void WeightsCommand::send()
 		setweights.rcumask   = getRCUMask();
 		logMessage(cerr,formatString("rcumask.count()=%d",setweights.rcumask.count()));
         
-        int nPlanes = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
-		setweights.weights().resize(1, setweights.rcumask.count(), nPlanes, maxBeamletsPerPlane(itsBitsPerSample));
+        int nBanks = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
+		setweights.weights().resize(1, setweights.rcumask.count(), nBanks, maxBeamletsPerBank(itsBitsPerSample));
 
 		//bitset<maxBeamlets(bitsPerSample)> beamlet_mask = getBEAMLETSMask();
 		boost::dynamic_bitset<> beamlet_mask = getBEAMLETSMask(itsBitsPerSample);
@@ -217,11 +217,10 @@ void WeightsCommand::send()
 			if (setweights.rcumask.test(rcu)) {
 				for (int beamlet = 0; beamlet < max_beamlets; beamlet++) {
 					if (beamlet_mask.test(beamlet)) {
-					    int plane = beamlet / maxBeamletsPerPlane(itsBitsPerSample);
-						int beamletnr = beamlet % maxBeamletsPerPlane(itsBitsPerSample);
-						setweights.weights()(0,rcunr,plane,beamletnr) = complex<int16>(10+plane, beamletnr);
-// TODO
-// complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
+					    int plane = beamlet / maxBeamletsPerBank(itsBitsPerSample);
+						int beamletnr = beamlet % maxBeamletsPerBank(itsBitsPerSample);
+						setweights.weights()(0,rcunr,plane,beamletnr) = complex<int16>((int16)value.real(), (int16)value.imag()); 
+						//setweights.weights()(0,rcunr,plane,beamletnr) = complex<int16>(10+plane, beamletnr); // for testing
 					}
 				} // beamlet
 				rcunr++;
@@ -244,7 +243,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 			RSPGetweightsackEvent ack(e);
 			bitset<MAX_RCUS> mask = getRCUMask();
 			int nPlanes = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
-			itsWeights.resize(1, mask.count(), nPlanes, maxBeamletsPerPlane(itsBitsPerSample));
+			itsWeights.resize(1, mask.count(), nPlanes, maxBeamletsPerBank(itsBitsPerSample));
 			itsWeights = complex<int16>(0,0);
 			itsWeights = ack.weights();
 
@@ -351,11 +350,11 @@ void SubbandsCommand::send()
 		switch (m_type) {
 			case SubbandSelection::BEAMLET: {
 				if (1 == m_subbandlist.size()) {
-					setsubbands.subbands.beamlets().resize(1, nPlanes, maxBeamletsPerPlane(itsBitsPerSample));
+					setsubbands.subbands.beamlets().resize(1, nPlanes, maxBeamletsPerBank(itsBitsPerSample));
 					std::list<int>::iterator it = m_subbandlist.begin();
 					setsubbands.subbands.beamlets() = (*it);
 				} else {
-					setsubbands.subbands.beamlets().resize(1, nPlanes, maxBeamletsPerPlane(itsBitsPerSample));
+					setsubbands.subbands.beamlets().resize(1, nPlanes, maxBeamletsPerBank(itsBitsPerSample));
                     setsubbands.subbands.beamlets() = 0;
 					int i = 0;
 					int max_beamlets = maxBeamlets(itsBitsPerSample);
@@ -364,8 +363,8 @@ void SubbandsCommand::send()
 						if (i >= max_beamlets) {
 							break;
 						}
-						int plane = i / maxBeamletsPerPlane(itsBitsPerSample);
-						int subbandnr = i % maxBeamletsPerPlane(itsBitsPerSample);
+						int plane = i / maxBeamletsPerBank(itsBitsPerSample);
+						int subbandnr = i % maxBeamletsPerBank(itsBitsPerSample);
 						setsubbands.subbands.beamlets()(0, plane, subbandnr) = (*it);
 					}
 #if 0

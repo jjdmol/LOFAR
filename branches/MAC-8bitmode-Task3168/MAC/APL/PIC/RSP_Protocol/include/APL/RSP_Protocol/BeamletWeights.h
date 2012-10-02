@@ -69,7 +69,7 @@ namespace LOFAR {
        * The beamlet weights.
        * Dimension 1: nr_timesteps (>1)
        * Dimension 2: count(rcumask)
-       * Dimension 3: number of planes
+       * Dimension 3: number of banks
        * Dimension 4: N_BEAMLETS
        */
       blitz::Array<std::complex<int16>, NDIM> m_weights;

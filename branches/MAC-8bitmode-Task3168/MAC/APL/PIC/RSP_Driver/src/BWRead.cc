@@ -43,7 +43,7 @@ using namespace EPA_Protocol;
 
 BWRead::BWRead(GCFPortInterface& board_port, int board_id, int blp, int regid)
   : SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS*(MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE)),
-    m_blp(blp), m_regid(regid), itsPlane(0), m_remaining(0), m_offset(0)
+    m_blp(blp), m_regid(regid), itsBank(0), m_remaining(0), m_offset(0)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -54,12 +54,12 @@ BWRead::~BWRead()
 
 void BWRead::sendrequest()
 {
-  int activePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
-  if (getCurrentIndex() >= (activePlanes*MEPHeader::BF_N_FRAGMENTS)) {
+  int activeBanks = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
+  if (getCurrentIndex() >= (activeBanks*MEPHeader::BF_N_FRAGMENTS)) {
       setContinue(true);
   }
   uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
-  itsPlane = getCurrentIndex() / MEPHeader::BF_N_FRAGMENTS;
+  itsBank = (getCurrentIndex() / MEPHeader::BF_N_FRAGMENTS) ;
   
   if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
@@ -77,7 +77,7 @@ void BWRead::sendrequest()
 			 getBoardPort().getName().c_str(),
 			 global_blp,
 			 m_regid,
-			 itsPlane));
+			 itsBank));
   
   // send next BF configure message
   EPAReadEvent bfcoefs;
@@ -88,7 +88,7 @@ void BWRead::sendrequest()
       bfcoefs.hdr.set( MEPHeader::READ, 
                        1 << m_blp,
                        MEPHeader::BF,
-                       MEPHeader::BF_XROUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                       MEPHeader::BF_XROUT+(itsBank*4),
                        size,
                        m_offset);
       break;
@@ -96,7 +96,7 @@ void BWRead::sendrequest()
       bfcoefs.hdr.set( MEPHeader::READ, 
                        1 << m_blp,
                        MEPHeader::BF,
-                       MEPHeader::BF_XIOUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                       MEPHeader::BF_XIOUT+(itsBank*4),
                        size,
                        m_offset);  
       break;
@@ -104,7 +104,7 @@ void BWRead::sendrequest()
       bfcoefs.hdr.set( MEPHeader::READ, 
                        1 << m_blp,
                        MEPHeader::BF,
-                       MEPHeader::BF_YROUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                       MEPHeader::BF_YROUT+(itsBank*4),
                        size,
                        m_offset);
       break;
@@ -112,7 +112,7 @@ void BWRead::sendrequest()
       bfcoefs.hdr.set( MEPHeader::READ, 
                        1 << m_blp,
                        MEPHeader::BF,
-                       MEPHeader::BF_YIOUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                       MEPHeader::BF_YIOUT+(itsBank*4),
                        size,
                        m_offset);
       break;
@@ -165,7 +165,7 @@ GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
     // substract cache contents from weights
     // if there is a difference, log a warning
     //
-    weights -= Cache::getInstance().getBack().getBeamletWeights()()(0, Range(global_blp * 2, global_blp * 2 + 1), itsPlane, target_range);
+    weights -= Cache::getInstance().getBack().getBeamletWeights()()(0, Range(global_blp * 2, global_blp * 2 + 1), itsBank, target_range);
 
     complex<int16> errorsum(sum(weights));
     if (complex<int16>(0) != errorsum)
@@ -177,11 +177,11 @@ GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   else
   {
     // X
-    Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, itsPlane, target_range)
+    Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, itsBank, target_range)
       = weights(Range::all(), 0);
 
     // Y
-    Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, itsPlane, target_range)
+    Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, itsBank, target_range)
       = weights(Range::all(), 1);
   }
   

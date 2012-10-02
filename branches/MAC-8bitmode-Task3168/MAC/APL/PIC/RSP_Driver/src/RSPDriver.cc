@@ -1257,7 +1257,7 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 		|| (sw_event->weights().extent(firstDim) < 1)
 		|| (sw_event->weights().extent(secondDim) > StationSettings::instance()->nrRcus())
 		|| (sw_event->weights().extent(thirdDim) > (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE))
-		|| (sw_event->weights().extent(fourthDim) != maxBeamletsPerPlane(Cache::getInstance().getBack().getBitsPerSample()))) {
+		|| (sw_event->weights().extent(fourthDim) != maxBeamletsPerBank(Cache::getInstance().getBack().getBitsPerSample()))) {
 		LOG_ERROR(formatString("SETWEIGHTS: invalid parameter,weighs-size=(%d,%d,%d,%d)", 
 			sw_event->weights().extent(firstDim), 
 			sw_event->weights().extent(secondDim), 

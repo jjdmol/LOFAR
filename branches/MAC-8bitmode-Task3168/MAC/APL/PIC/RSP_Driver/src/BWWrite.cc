@@ -45,7 +45,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid)
-	: SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS*(MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE)),
+	: SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS*MAX_NR_BM_BANKS),
 	  m_blp(blp), m_regid(regid), itsBank(0), m_remaining(0), m_offset(0)
 {
 	memset(&m_hdr, 0, sizeof(MEPHeader));
@@ -150,24 +150,22 @@ void BWWrite::sendrequest()
 	ASSERT(MEPHeader::N_BEAMLETS % MEPHeader::BF_N_FRAGMENTS == 0);
 	for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
 		int hw_offset = lane;
-		int cache_offset = lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) + (getCurrentIndex() * nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES);
+		int cache_offset = lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) + ((getCurrentIndex() % MEPHeader::BF_N_FRAGMENTS) * nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES);
 
 		Range hw_range(hw_offset, hw_offset + nbeamlets_per_fragment - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
 		Range cache_range(cache_offset, cache_offset + (nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES) - 1, 1);
+		
 		if (getBoardId() == 11) {
 			LOG_INFO_STR("board=" << getBoardId() << ",bank=" << itsBank << ",lane=" << lane 
-					<< (m_regid / 2 ? ",X" : ",Y") << (m_regid % 2 ? "R" : "I")
+					<< (m_regid / 2 ? ",Y" : ",X") << (m_regid % 2 ? "I" : "R")
 					<< ", hw_range=" << hw_range << ", cache_range=" << cache_range);
 		}
 
 		// X = normal 0
 		weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, itsBank, cache_range);
-// TODO
-//		weights(hw_range, 0) = complex<int16>(10+lane, 50+itsBank);
 
 		// Y = normal 1
 		weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, itsBank, cache_range);
-//		weights(hw_range, 1) = complex<int16>(20+lane, 40+itsBank);
 
 #if 0
 			mapped_index(hw_range, 0) = index(cache_range, 0);
@@ -214,8 +212,7 @@ void BWWrite::sendrequest()
 		LOG_DEBUG_STR("XY= swapped");
 	}
     
-// TODO uncomment next line!!!!
-//	weights = conj(weights);
+	weights = conj(weights);
 
 	switch (m_regid) {
 		case MEPHeader::BF_XROUT: {

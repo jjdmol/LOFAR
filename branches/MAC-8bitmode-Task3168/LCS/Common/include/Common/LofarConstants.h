@@ -52,6 +52,7 @@ namespace LOFAR {
 
 	static const int MAX_BITS_PER_SAMPLE	  = 16;
 	static const int MIN_BITS_PER_SAMPLE	  = 4;
+	static const int MAX_NR_BM_BANKS	      = (MAX_BITS_PER_SAMPLE / MIN_BITS_PER_SAMPLE);
 }
 
 #endif
