@@ -38,9 +38,9 @@ int main(int, char*[]) {
   std::cout << "bits_per_block:" << y.bits_per_block << "\n";
   std::cout << "sizeof:" << sizeof(y) << "\n";
 
-  string	abc;
-  abc.resize(x.bits_per_block / 8 * x.num_blocks());
-  string::iterator	sIter(abc.begin());
+  vector<boost::dynamic_bitset<>::block_type>	abc;
+  abc.resize(x.num_blocks());
+  vector<boost::dynamic_bitset<>::block_type>::iterator	sIter(abc.begin());
   boost::to_block_range(x, sIter);
   cout << "AFTER to_block_range" << endl;
 
