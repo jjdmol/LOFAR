@@ -25,7 +25,10 @@
 
 #include <fftw3.h>
 #include <Common/LofarTypes.h>
+#include <Common/lofar_vector.h>
+#include <Common/Timer.h>
 #include <complex>
+#include <ostream>
 
 
 namespace LOFAR {
@@ -116,8 +119,9 @@ namespace LOFAR {
     //  <li> FFTW_MEASURE will do some actual FFTs to find the best plan.
     //  <li> FFTW_PATIENT will do more FFTs to find the best plan.
     //  <li> FFTW_EXHAUSTIVE will do even more FFTs (and take a lot of time).
-    //  <li> 
-    void plan (size_t size, bool forward, unsigned flags=FFTW_ESTIMATE);
+    // </ul> 
+    void plan (size_t size, bool forward, int nthreads=1,
+               unsigned flags=FFTW_ESTIMATE);
 
     // Do the FFT.
     // The output is scaled (with 1/size^2) if done in the backward direction.
@@ -131,10 +135,14 @@ namespace LOFAR {
     // It first makes the plan, thereafter does the FFT.
     // These function are similar to fft and normalized_fft but use the
     // given data array.
-    void forward (size_t size, std::complex<float>* data);
-    void backward (size_t size, std::complex<float>* data);
-    void normalized_forward (size_t size, std::complex<float>* data);
-    void normalized_backward (size_t size, std::complex<float>* data);
+    void forward (size_t size, std::complex<float>* data,
+                  int nthreads=1, unsigned flags=FFTW_ESTIMATE);
+    void backward (size_t size, std::complex<float>* data,
+                   int nthreads=1, unsigned flags=FFTW_ESTIMATE);
+    void normalized_forward (size_t size, std::complex<float>* data,
+                             int nthreads=1, unsigned flags=FFTW_ESTIMATE);
+    void normalized_backward (size_t size, std::complex<float>* data,
+                              int nthreads=1, unsigned flags=FFTW_ESTIMATE);
 
     ///  private:
     // Flip the quadrants as needed for the FFT.
@@ -170,7 +178,29 @@ namespace LOFAR {
     // Get number of optimal odd FFTW sizes.
     static int nOptimalOddFFTSizes();
 
+    // Show how often FFT sizes and threads are used.
+    void showUsed (std::ostream&) const;
+
+    // Get the timer information.
+    const NSTimer& timerPlan() const
+      { return itsTimerPlan; }
+    const NSTimer& timerFFT() const
+      { return itsTimerFFT; }
+    const NSTimer& timerFlip() const
+      { return itsTimerFlip; }
+
+    // Show the timer percentages.
+    void showTimerPerc (std::ostream&) const;
+
   private:
+    // Execute the plan and time it.
+    void executePlan()
+    {
+      itsTimerFFT.start();
+      fftwf_execute (itsPlan);
+      itsTimerFFT.stop();
+    }
+
     // Helper functions for flip and scaledFlip.
     void flipOdd (bool toZero);
     void scaledFlipOdd (bool toZero, float factor);
@@ -180,8 +210,14 @@ namespace LOFAR {
     fftwf_plan           itsPlan;
     size_t               itsSize;
     size_t               itsReserved;
+    int                  itsNThreads;
     bool                 itsIsForward;
-    static bool          theirWisdomRead;
+    vector<int>          itsNUsedVec;     //# count how often FFT size is used
+    vector<int>          itsNThreadVec;   //# Count how often nthreads is used
+    NSTimer              itsTimerPlan;
+    NSTimer              itsTimerFFT;
+    NSTimer              itsTimerFlip;
+    static bool          theirInitDone;
   };
 
 }   //# end namespace

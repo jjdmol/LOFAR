@@ -24,47 +24,55 @@
 #include <Common/LofarLogger.h>
 #include <casa/Utilities/Copy.h>
 #include <casa/OS/Path.h>
-#include <vector>
+#include <casa/BasicSL/Constants.h>
 #include <algorithm>
 #include <stdio.h>
 
 namespace LOFAR {
 
-  bool FFTCMatrix::theirWisdomRead = false;
+  bool FFTCMatrix::theirInitDone = false;
 
   FFTCMatrix::FFTCMatrix()
     : itsData      (0),
       itsPlan      (0),
       itsSize      (0),
       itsReserved  (0),
-      itsIsForward (false)
+      itsNThreads  (0),
+      itsIsForward (false),
+      itsNUsedVec  (10000, 0),
+      itsNThreadVec(1, 0)
   {
-    // If the first time, read the wisdom from the system file.
-    if (!theirWisdomRead) {
+    // If the first time, set to multi-threading and
+    // read the wisdom from the system file.
+    if (!theirInitDone) {
 #pragma omp critical(fftcmatrix_init)
       {
-        if (!theirWisdomRead) {
-          FILE* file = fopen (casa::Path("$HOME/fftwisdom2d.txt").
-                              expandedName().c_str(), "r");
+        if (!theirInitDone) {
+          // We'll use multi-threaded FFTW, although often with 1 thread.
+          fftwf_init_threads();
+          // Try to find the wisdom file at several locations.
+          casa::String name;
+          name = casa::Path("$HOME/awimager_wisdom_float.txt").expandedName();
+          FILE* file = fopen (name.c_str(), "r");
           if (!file) {
-            file = fopen (casa::Path("$LOFARLOCALROOT/fftwisdom2d.txt").
-                          expandedName().c_str(), "r");
+            name = casa::Path("$LOFARROOT/awimager_wisdom_float.txt").expandedName();
+            file = fopen (name.c_str(), "r");
           }
           if (!file) {
-            file = fopen (casa::Path("$LOFARROOT/fftwisdom2d.txt").
-                          expandedName().c_str(), "r");
+            name = "/etc/fftw/awimager_wisdom_float.txt";
+            file = fopen (name.c_str(), "r");
           }
           if (!file) {
-            file = fopen ("/opt/lofar/fftwisdom2d.txt", "r");
-          }
-          if (!file) {
-            file = fopen ("/etc/fftw/fftwisdom2d.txt", "r");
+            name = "/opt/lofar/awimager_wisdom_float.txt";
+            file = fopen (name.c_str(), "r");
           }
           if (file) {
-            fftw_import_wisdom_from_file (file);
+            fftwf_import_wisdom_from_file (file);
             fclose (file);
+            cout << "FFTCMatrix: FFTW wisdom read from " + name << endl;
+            LOG_INFO ("FFTCMatrix: FFTW wisdom read from " + name);
           }
-          theirWisdomRead = true;
+          theirInitDone = true;
         }
       } // end omp critical
     }
@@ -75,7 +83,10 @@ namespace LOFAR {
       itsPlan      (0),
       itsSize      (0),
       itsReserved  (0),
-      itsIsForward (false)
+      itsNThreads  (0),
+      itsIsForward (false),
+      itsNUsedVec  (10000, 0),
+      itsNThreadVec(1, 0)
   {
     reserve (that.itsReserved);
   }
@@ -114,30 +125,50 @@ namespace LOFAR {
     }
   }
 
-  void FFTCMatrix::plan (size_t size, bool forward, unsigned flags)
+  void FFTCMatrix::plan (size_t size, bool forward, int nthreads,
+                         unsigned flags)
   {
     ASSERTSTR (size > 0, "FFTCMatrix size must be positive");
     // Only make a new plan when different from previous one.
     // FFTW's plan function is not thread-safe, so guard it.
-    if (itsPlan == 0  ||  size != itsSize  ||  forward != itsIsForward) {
+    if (itsPlan == 0  ||  size != itsSize  ||
+        nthreads != itsNThreads  ||  forward != itsIsForward) {
+      itsTimerPlan.start();
+      if (size > itsReserved) {
+        reserve (size);
+      }
+      itsSize = size;
+      itsNThreads = nthreads;
+      itsIsForward = forward;
+      int direction = (forward  ?  FFTW_FORWARD : FFTW_BACKWARD);
 #pragma omp critical(fftcmatrix_plan)
       {
-        if (size > itsReserved) {
-          reserve (size);
-        }
-        itsSize = size;
-        itsIsForward = forward;
-        int direction = (forward  ?  FFTW_FORWARD : FFTW_BACKWARD);
         if (itsPlan) {
           fftwf_destroy_plan (itsPlan);
           itsPlan = 0;
         }
+        fftwf_plan_with_nthreads (nthreads);
         itsPlan = fftwf_plan_dft_2d(itsSize, itsSize,
                                     reinterpret_cast<fftwf_complex*>(itsData),
                                     reinterpret_cast<fftwf_complex*>(itsData),
                                     direction, flags);
       }
+      // Resize count vectors if needed.
+      if (size >= itsNUsedVec.size()) {
+        size_t oldSize = itsNUsedVec.size();
+        itsNUsedVec.resize (size+1);
+        std::fill (itsNUsedVec.begin()+oldSize, itsNUsedVec.end(), 0);
+      }
+      if (nthreads >= itsNThreadVec.size()) {
+        size_t oldSize = itsNThreadVec.size();
+        itsNThreadVec.resize (nthreads+1);
+        std::fill (itsNThreadVec.begin()+oldSize, itsNThreadVec.end(), 0);
+      }
+      itsTimerPlan.stop();
     }
+    // Count nr of times used.
+    itsNUsedVec[size]++;
+    itsNThreadVec[nthreads]++;
   }
 
   void FFTCMatrix::fft()
@@ -145,15 +176,15 @@ namespace LOFAR {
     if (itsIsForward) {
       if (itsSize%4 == 0) {
         negatedFlip();
-        fftwf_execute (itsPlan);
+        executePlan();
       } else {
         flip (true);
-        fftwf_execute (itsPlan);
+        executePlan();
         flip (false);
       }
     } else {
       flip (true);
-      fftwf_execute (itsPlan);
+      executePlan();
       scaledFlip (false, 1./(itsSize*itsSize));
     }
   }
@@ -162,49 +193,53 @@ namespace LOFAR {
   {
     if (itsIsForward) {
       flip (true);
-      fftwf_execute (itsPlan);
+      executePlan();
       scaledFlip (false, 1./(itsSize*itsSize));
     } else {
       if (itsSize%4 == 0) {
         negatedFlip();
-        fftwf_execute (itsPlan);
+        executePlan();
       } else {
         flip (true);
-        fftwf_execute (itsPlan);
+        executePlan();
         flip (false);
       }
     }
   }
 
-  void FFTCMatrix::forward (size_t size, std::complex<float>* data)
+  void FFTCMatrix::forward (size_t size, std::complex<float>* data,
+                            int nthreads, unsigned flags)
   {
-    plan (size, true);
+    plan (size, true, nthreads, flags);
     flip (data, itsData, true);
-    fftwf_execute (itsPlan);
+    executePlan();
     flip (itsData, data, false);
   }
 
-  void FFTCMatrix::backward (size_t size, std::complex<float>* data)
+  void FFTCMatrix::backward (size_t size, std::complex<float>* data,
+                             int nthreads, unsigned flags)
   {
-    plan (size, false);
+    plan (size, false, nthreads, flags);
     flip (data, itsData, true);
-    fftwf_execute (itsPlan);
+    executePlan();
     scaledFlip (itsData, data, false, 1./(size*size));
   }
 
-  void FFTCMatrix::normalized_forward (size_t size, std::complex<float>* data)
+  void FFTCMatrix::normalized_forward (size_t size, std::complex<float>* data,
+                                       int nthreads, unsigned flags)
   {
-    plan (size, true);
+    plan (size, true, nthreads, flags);
     flip (data, itsData, true);
-    fftwf_execute (itsPlan);
+    executePlan();
     scaledFlip (itsData, data, false, 1./(size*size));
   }
 
-  void FFTCMatrix::normalized_backward (size_t size, std::complex<float>* data)
+void FFTCMatrix::normalized_backward (size_t size, std::complex<float>* data,
+                                      int nthreads, unsigned flags)
   {
-    plan (size, false);
+    plan (size, false, nthreads, flags);
     flip (data, itsData, true);
-    fftwf_execute (itsPlan);
+    executePlan();
     flip (itsData, data, false);
   }
 
@@ -213,6 +248,7 @@ namespace LOFAR {
   //  q3 q4           q2 q1
   void FFTCMatrix::flip (bool toZero)
   {
+    itsTimerFlip.start();
     size_t hsz = itsSize/2;
     if (2*hsz != itsSize) {
       flipOdd (toZero);
@@ -236,6 +272,7 @@ namespace LOFAR {
         p2 = itsData + hsz*itsSize;
       }
     }
+    itsTimerFlip.stop();
   }
 
   // The output flip can be avoided by negating every other input element.
@@ -243,6 +280,7 @@ namespace LOFAR {
   void  FFTCMatrix::negatedFlip()
   {
     DBGASSERT (itsSize%4==0);
+    itsTimerFlip.start();
     size_t hsz = itsSize/2;
     size_t hhsz = hsz/2;
     // Even elements do not need to be negated.
@@ -278,10 +316,12 @@ namespace LOFAR {
       p1 = itsData + hsz;
       p2 = itsData + hsz*itsSize;
     }
+    itsTimerFlip.stop();
   }
 
   void FFTCMatrix::scaledFlip (bool toZero, float factor)
   {
+    itsTimerFlip.start();
     size_t hsz = itsSize/2;
     if (2*hsz != itsSize) {
       // It would be faster to make a flipScaledOdd, but this will do.
@@ -309,10 +349,12 @@ namespace LOFAR {
         p2 = itsData + hsz*itsSize;
       }
     }
+    itsTimerFlip.stop();
   }
 
   void FFTCMatrix::flipOdd (bool toZero)
   {
+    itsTimerFlip.start();
     int hsz = itsSize/2;
     int lhsz = hsz;
     int rhsz = hsz;
@@ -389,13 +431,14 @@ namespace LOFAR {
     casa::objcopy (itsData + outm*itsSize, tmprowPtr + lhsz, rhsz);
     casa::objcopy (itsData + outm + rhsz*itsSize, tmpcolPtr, lhsz, itsSize, 1);
     casa::objcopy (itsData + outm, tmpcolPtr + lhsz, rhsz, itsSize, 1);
-    return;
+    itsTimerFlip.stop();
   }
 
   void FFTCMatrix::flip (const std::complex<float>* __restrict__ in,
                          std::complex<float>* __restrict__ out,
                          bool toZero)
   {
+    itsTimerFlip.start();
     size_t hsz0 = itsSize/2;
     size_t hsz1 = hsz0;
     if (2*hsz0 != itsSize) {
@@ -446,6 +489,7 @@ namespace LOFAR {
       fr += itsSize;
       to += itsSize;
     }
+    itsTimerFlip.stop();
   }
 
   void FFTCMatrix::scaledFlip (const std::complex<float>* __restrict__ in,
@@ -453,6 +497,7 @@ namespace LOFAR {
                                bool toZero,
                                float factor)
   {
+    itsTimerFlip.start();
     size_t hsz0 = itsSize/2;
     size_t hsz1 = hsz0;
     if (2*hsz0 != itsSize) {
@@ -503,6 +548,7 @@ namespace LOFAR {
       fr += itsSize;
       to += itsSize;
     }
+    itsTimerFlip.stop();
   }
 
   static int fftsizes[] =
@@ -584,6 +630,34 @@ namespace LOFAR {
                                    size);
     return *bound;
   }
-    
-} //# end namespace
 
+  void FFTCMatrix::showUsed (std::ostream& os) const
+  {
+    os << "Nr of times FFT sizes are used: ";
+    for (size_t i=0; i<itsNUsedVec.size(); ++i) {
+      if (itsNUsedVec[i] != 0) {
+        os << itsNUsedVec[i] << 'x' << i << ' ';
+      }
+    }
+    os << endl;
+    os << "Nr of times number of threads are used: ";
+    for (size_t i=0; i<itsNThreadVec.size(); ++i) {
+      if (itsNThreadVec[i] != 0) {
+        os << itsNThreadVec[i] << 'x' << i << ' ';
+      }
+    }
+    os << endl;
+  }
+
+  void FFTCMatrix::showTimerPerc (std::ostream& os) const
+  {
+    double tot = (itsTimerPlan.getElapsed() + itsTimerFFT.getElapsed() +
+                  itsTimerFlip.getElapsed());
+    if (tot == 0) tot = 1;
+    os << "Total elapsed FFT time spent as:   "
+       << int(100*itsTimerPlan.getElapsed()/tot + 0.5) << "% plan   "
+       << int(100*itsTimerFFT.getElapsed()/tot + 0.5) << "% fft   "
+       << int(100*itsTimerFlip.getElapsed()/tot + 0.5) << "% flip" << endl;
+  }
+
+} //# end namespace
