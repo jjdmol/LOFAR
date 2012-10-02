@@ -109,7 +109,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 	sampleClock   = aParSet->getUint32(prefix+"sampleClock",  0);
 	filter 		  = aParSet->getString(prefix+"bandFilter",   "");
 	antennaArray  = aParSet->getString(prefix+"antennaArray", "");
-    bitsPerSample = aParSet->getUint32(olapprefix+"nrBitsPerSample", 16);
+    bitsPerSample = aParSet->getUint32(prefix+"nrBitsPerSample", 16);
 	nyquistZone = nyquistzoneFromFilter(filter);
 
 	// new way of specifying the receivers and choosing the antenna array.

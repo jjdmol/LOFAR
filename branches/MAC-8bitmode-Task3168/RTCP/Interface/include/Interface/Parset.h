@@ -689,7 +689,7 @@ inline unsigned Parset::dedispersionFFTsize() const
 
 inline unsigned Parset::nrBitsPerSample() const
 {
-  return getUint32("OLAP.nrBitsPerSample");
+  return getUint32("Observation.nrBitsPerSample");
 }
 
 inline unsigned Parset::CNintegrationSteps() const
