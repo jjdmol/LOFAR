@@ -24,9 +24,18 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
     ``IDPPP``) on a number of MeasurementSets. This is used for compressing
     and/or flagging data
 
-    **Arguments**
+    1. Load input data files
+    2. Load parmdb and sourcedb
+    3. Call the node side of the recipe
+    4. Parse logfile for fully flagged baselines
+    5. Create mapfile with successful noderecipe runs
 
-    A mapfile describing the data to be processed.
+    **Command line arguments**
+
+    1. A mapfile describing the data to be processed.
+    2. Mapfile with target output locations <if procided input and output
+       mapfiles are validated>
+
     """
     inputs = {
         'parset': ingredient.FileField(
@@ -37,11 +46,6 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
         'executable': ingredient.ExecField(
             '--executable',
             help="The full path to the relevant DPPP executable"
-        ),
-        'initscript': ingredient.FileField(
-            '--initscript',
-            help="The full path to an (Bourne) shell script which will "
-                 "intialise the environment (ie, ``lofarinit.sh``)"
         ),
         'suffix': ingredient.StringField(
             '--suffix',
@@ -154,8 +158,9 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
         # ----------------------------------------------------------------------
         self.logger.searchpatterns["fullyflagged"] = "Fully flagged baselines"
 
-        #                            Load file <-> output node mapping from disk
-        # ----------------------------------------------------------------------
+        # *********************************************************************
+        # 1. load input data file, validate output vs the input location if
+        #    output locations are provided
         args = self.inputs['args']
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
         indata = load_data_map(args[0])
@@ -177,6 +182,8 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
                 ) for host, infile in indata
             ]
 
+        # ********************************************************************
+        # 2. Load parmdb and sourcedb
         # Load parmdb-mapfile, if one was given.         
         if self.inputs.has_key('parmdb_mapfile'):
             self.logger.debug(
@@ -185,7 +192,7 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
             parmdbdata = load_data_map(self.inputs['parmdb_mapfile'])
         else:
             parmdbdata = [(None, None)] * len(indata)
-            
+
         # Load sourcedb-mapfile, if one was given.         
         if self.inputs.has_key('sourcedb_mapfile'):
             self.logger.debug(
@@ -195,10 +202,12 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
         else:
             sourcedbdata = [(None, None)] * len(indata)
 
+        # ********************************************************************
+        # 3. Call the node side of the recipe
         # Create and schedule the compute jobs
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
-        for host, infile, outfile, parmdb, sourcedb in (w + (x[1], y[1], z[1]) 
+        for host, infile, outfile, parmdb, sourcedb in (w + (x[1], y[1], z[1])
             for w, x, y, z in zip(indata, outdata, parmdbdata, sourcedbdata)):
             jobs.append(
                 ComputeJob(
@@ -210,7 +219,7 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
                         sourcedb,
                         self.inputs['parset'],
                         self.inputs['executable'],
-                        self.inputs['initscript'],
+                        self.environment,
                         self.inputs['demix_always'],
                         self.inputs['demix_if_needed'],
                         self.inputs['data_start_time'],
@@ -222,8 +231,8 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
             )
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
 
-        #                                  Log number of fully flagged baselines
-        # ----------------------------------------------------------------------
+        # *********************************************************************
+        # 4. parse logfile for fully flagged baselines
         matches = self.logger.searchpatterns["fullyflagged"].results
         self.logger.searchpatterns.clear() # finished searching
         stripchars = "".join(set("Fully flagged baselines: "))
@@ -235,6 +244,9 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
                 baselinecounter[pair] += 1
         self.outputs['fullyflagged'] = baselinecounter.keys()
 
+        # *********************************************************************
+        # 5. Create mapfile with successful noderecipe runs
+        #    fail if no runs succeeded
         if self.error.isSet():
             # dppp needs to continue on partial succes.
             # Get the status of the jobs

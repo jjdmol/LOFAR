@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * $Id: TBB_Writer_main.cc 14523 2012-03-14 18:58:53Z amesfoort $
+ * $Id: TBB_Writer_main.cc 17682 2012-09-07 18:58:53Z amesfoort $
  *
  * @author Alexander S. van Amesfoort
  * Parts derived from the BF writer written by Jan David Mol, and from
@@ -57,7 +57,7 @@
 #include <Interface/Exceptions.h>
 #include <Storage/IOPriority.h>
 
-#include <dal/lofar/Station.h>
+#include <dal/lofar/StationNames.h>
 
 #define TBB_DEFAULT_BASE_PORT		0x7bb0	// i.e. tbb0
 #define TBB_DEFAULT_LAST_PORT		0x7bbb	// 0x7bbf for NL, 0x7bbb for int'l stations
@@ -197,9 +197,9 @@ static LOFAR::RTCP::StationMetaDataMap getExternalStationMetaData(const LOFAR::R
 			stMetaData.normalVector   = antField.normVector(fieldIdx).second;
 			stMetaData.rotationMatrix = antField.rotationMatrix(fieldIdx).second;
 
-			stMdMap.insert(make_pair(DAL::stationNameToID(stName), stMetaData));
+			stMdMap.insert(make_pair(dal::stationNameToID(stName), stMetaData));
 		}
-	} catch (exception& exc) { // LOFAR::AssertError or DAL::DALValueError (rare)
+	} catch (exception& exc) { // LOFAR::AssertError or dal::DALValueError (rare)
 		// AssertError already sends a message to the logger.
 		throw LOFAR::RTCP::StorageException(exc.what());
 	}
@@ -293,7 +293,7 @@ static void printUsage(const char* progname) {
 	cout << "Usage: " << progname << " --parsetfile=parsets/L12345.parset [OPTION]..." << endl;
 	cout << endl;
 	cout << "Options:" << endl;
-	cout << "  -s, --parsetfile=L12345.parset      parset file (observation (s)ettings) (mandatory)" << endl;
+	cout << "  -s, --parsetfile=L12345.parset      parset file (observation settings) (mandatory)" << endl;
 	cout << endl;
 	cout << "  -a, --antfielddir=/d/AntennaFields  override $LOFARROOT and parset path for antenna field files (like CS001-AntennaField.conf)" << endl;
 	cout << "  -o, --outputdir=tbbout              output directory" << endl;
@@ -303,7 +303,8 @@ static void printUsage(const char* progname) {
 	cout << "  -b, --portbase=31665                start of range of 12 consecutive udp/tcp ports to receive from" << endl;
 	cout << "  -t, --timeout=10                    seconds of input inactivity until dump is considered completed" << endl;
 	cout << endl;
-	cout << "  -r, --rawdatafiles[=true|false]     output separate .raw data files (default: true, until false can work)" << endl;
+	cout << "  -r, --rawdatafiles[=true|false]     output separate .raw data files (default: true; do not set to false atm);" << endl;
+	cout << "                                      .raw files is strongly recommended, esp. when receiving from multiple stations" << endl;
 	cout << "  -k, --keeprunning[=true|false]      accept new input after a dump completed (default: true)" << endl;
 	cout << endl;
 	cout << "  -h, --help                          print program name, version number and this info, then exit" << endl;

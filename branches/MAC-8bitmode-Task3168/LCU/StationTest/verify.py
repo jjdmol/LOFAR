@@ -45,6 +45,10 @@ verify.add_option('--fpga', type='string', dest='fpId',
   # On RSP and BLP is equivalent to an AP, but generaly an AP could implement multiple BLP
 verify.add_option('--pol', type='string', dest='polId',
   help='Polarization id: x, y or x,y', default='x,y')
+verify.add_option('--pp', type='string', dest='ppId',
+  help='Polarization-phase id: xr, xi, yr or yi', default='xr')
+verify.add_option('--bm', type='int', dest='beamMode',
+  help='Beam mode', default=0)
   
 # - Testcase specific options
 #   Define the testcase specific options here, rather than passing an --args
@@ -127,6 +131,7 @@ for fp in v.strId:
     verify.error('Option --fp has invalid FPGA id %s' % fp)
 
 v.polId = v.opts.polId.split(',')
+v.ppId = v.opts.ppId.split(',')
 
 # Pass the testcase specific options on directly, to avoid having to edit
 # testcase.py for every new option. Rename with prefix arg_ so it is easier
@@ -182,6 +187,7 @@ for te in v.testname:
   tc = testcase.Testcase(v.opts.verbosity,
                          te,
                          v.opts.repeat,
+                         v.opts.beamMode,
                          v.rspId, v.bpId, v.blpId,
                          v.tbbId, v.tpId, v.mpId,
                          v.polId)

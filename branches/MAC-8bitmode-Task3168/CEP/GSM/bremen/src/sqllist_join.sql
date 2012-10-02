@@ -1,4 +1,5 @@
 --#Join extended
+--Kk1,l2 + Lm3,n4 + X5 = (KLX)k1,l2,m3,n4,o5
 --switch all bound pieces to 1
 update runningcatalog
    set parent_runcat_id = (select min(tt.runcat_id)
@@ -52,11 +53,11 @@ update runningcatalog
 
 insert into runningcatalog(band, stokes, first_xtrsrc_id, datapoints, decl_zone,
                            $$get_column_insert(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-                           x, y, z, source_kind, parent_runcat_id
+                           x, y, z, source_kind, parent_runcat_id, healpix_zone
                            )
 select i.band, i.stokes, e.xtrsrcid, 1, zone,
        $$get_column_insert_values(['ra', 'decl', 'g_minor', 'g_major','g_pa'])$$,
-       e.x, e.y, e.z, 1, ta.runcat_id
+       e.x, e.y, e.z, 1, ta.runcat_id, e.healpix_zone
   from extractedsources e,
        images i,
        temp_associations ta,

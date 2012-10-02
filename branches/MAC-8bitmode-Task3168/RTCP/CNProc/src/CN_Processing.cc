@@ -176,6 +176,9 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     itsFirstInputSubband = new Ring(0, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
     itsInputData = new InputData<SAMPLE_TYPE>(itsPhaseTwoPsetSize, parset.nrSamplesToCNProc(), itsBigAllocator);
     itsInputSubbandMetaData = new SubbandMetaData(itsPhaseTwoPsetSize, itsMaxNrPencilBeams + 1);
+
+    // skip ahead to the first block
+    itsFirstInputSubband->skipFirstBlocks(itsBlock);
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree)
@@ -185,15 +188,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
 
     // skip ahead to the first block
-    for( unsigned b = 0, core = 0; b < itsBlock; b++ ) {
-      for (unsigned sb = 0; sb < itsNrSubbandsPerPset; sb++) {
-        if (core == phaseTwoCoreIndex)
-          itsCurrentSubband->next();
-        
-        if (++core == phaseOneTwoCores.size())
-          core = 0;
-      }
-    }
+    itsCurrentSubband->skipFirstBlocks(itsBlock);
 
     itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, itsTotalNrPencilBeams + 1);
     itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(itsNrStations, parset.nrSamplesToCNProc(), itsBigAllocator);
@@ -210,12 +205,16 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsPreCorrelationFlagger = new PreCorrelationFlagger(parset, itsNrStations, itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Online PreCorrelation flagger enabled");
+    } else {
+      itsPreCorrelationFlagger = NULL;
     }
 
     if (parset.onlineFlagging() && parset.onlinePreCorrelationNoChannelsFlagging()) {
       itsPreCorrelationNoChannelsFlagger = new PreCorrelationNoChannelsFlagger(parset, itsNrStations, itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Online PreCorrelation no channels flagger enabled");
+    } else {
+      itsPreCorrelationNoChannelsFlagger = NULL;
     }
 
     if (parset.outputCorrelatedData()) {
@@ -228,7 +227,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsPostCorrelationFlagger = new PostCorrelationFlagger(parset, nrMergedStations, itsNrSubbands, itsNrChannels);
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Online PostCorrelation flagger enabled");
+    } else {
+      itsPostCorrelationFlagger = NULL;
     }
+
 
     if (parset.onlineFlagging() && parset.onlinePostCorrelationFlagging() && parset.onlinePostCorrelationFlaggingDetectBrokenStations()) {
       if (LOG_CONDITION)
@@ -476,8 +478,8 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
   if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
     unsigned subband = *itsCurrentSubband;
 
-    ASSERTSTR((unsigned)itsTranspose2Logic.phaseThreePsetIndex == itsTranspose2Logic.sourcePset( subband, block ) && (unsigned)itsTranspose2Logic.phaseThreeCoreIndex == itsTranspose2Logic.sourceCore( subband, block ),
-     "I'm (" << itsTranspose2Logic.phaseThreePsetIndex << ", " << itsTranspose2Logic.phaseThreeCoreIndex << ") . For block " << block << ", I have subband " << subband << ", but the logic expects that subband from (" << itsTranspose2Logic.sourcePset( subband, block ) << ", " << itsTranspose2Logic.sourceCore( subband, block ) << ")" );
+    ASSERTSTR((unsigned)itsTranspose2Logic.phaseTwoPsetIndex == itsTranspose2Logic.sourcePset( subband, block ) && (unsigned)itsTranspose2Logic.phaseTwoCoreIndex == itsTranspose2Logic.sourceCore( subband, block ),
+     "I'm (" << itsTranspose2Logic.phaseTwoPsetIndex << ", " << itsTranspose2Logic.phaseTwoCoreIndex << ") . For block " << block << ", I have subband " << subband << ", but the logic expects that subband from (" << itsTranspose2Logic.sourcePset( subband, block ) << ", " << itsTranspose2Logic.sourceCore( subband, block ) << ")" );
   }
 
 #if defined HAVE_MPI
@@ -1023,10 +1025,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
     if (itsPPF != 0)
       filter();
 
-    if (itsPreCorrelationNoChannelsFlagger != 0)
+    if (itsPreCorrelationNoChannelsFlagger != NULL)
       preCorrelationNoChannelsFlagging();
 
-    if (itsPreCorrelationFlagger != 0)
+    if (itsPreCorrelationFlagger != NULL)
       preCorrelationFlagging();
 
     mergeStations(); // create superstations
@@ -1046,7 +1048,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
     if (itsCorrelator != 0)
       correlate();
 
-    if (itsPostCorrelationFlagger != 0)
+    if (itsPostCorrelationFlagger != NULL)
       postCorrelationFlagging();
 
     if (itsCorrelatedDataStream != 0)

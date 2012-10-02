@@ -123,10 +123,10 @@ namespace rfiStrategy {
 			hpAction->SetWindowWidth(1);
 		} else {
 			hpAction->SetHKernelSigmaSq(2.5);
-			hpAction->SetWindowWidth(10);
+			hpAction->SetWindowWidth(21);
 		}
 		hpAction->SetVKernelSigmaSq(5.0);
-		hpAction->SetWindowWidth(15);
+		hpAction->SetWindowHeight(31);
 		hpAction->SetMode(HighPassFilterAction::StoreRevised);
 		changeResAction->Add(hpAction);
 
@@ -440,7 +440,7 @@ namespace rfiStrategy {
 		}
 	}
 
-	void Strategy::SetIndirectReader(Strategy &strategy, bool newValue)
+	/*void Strategy::SetIndirectReader(Strategy &strategy, bool newValue)
 	{
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
 		while(!i.PastEnd())
@@ -452,7 +452,7 @@ namespace rfiStrategy {
 			}
 			++i;
 		}
-	}
+	}*/
 
 	void Strategy::SyncAll(ActionContainer &root)
 	{

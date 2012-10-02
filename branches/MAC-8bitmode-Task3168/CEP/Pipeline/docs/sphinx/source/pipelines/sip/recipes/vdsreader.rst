@@ -4,5 +4,6 @@
 vdsreader
 =========
 
-.. autoclass:: vdsreader.vdsreader
-   :show-inheritance:
+***Master Side of the recipe ***
+
+.. autoclass:: lofarpipe.recipes.master.vdsreader.vdsreader

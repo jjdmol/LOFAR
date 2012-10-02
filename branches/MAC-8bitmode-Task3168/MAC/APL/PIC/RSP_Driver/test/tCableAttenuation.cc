@@ -32,9 +32,9 @@
 
 using namespace LOFAR;
 
-int main (int	argc, char*	argv[])
+int main (int, char*	argv[])
 {
-	INIT_LOGGER("tCableAttenuation");
+	INIT_LOGGER(argv[0]);
 
 	// good file
 	CableAttenuation	CA1("tCableAttenuation.in_1");	

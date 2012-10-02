@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from os import path
+from math import cos
 try:
     # Try loading LOFAR parset support, fallback to ConfigObj.
     from lofar.parameterset import parameterset
@@ -52,7 +53,6 @@ class GSMParset(object):
         if not self.parset_id:
             raise ParsetContentError('"image_id" missing')
         conn.start()
-        self.image_id = self.save_image_info(conn)
         for source in sources:
             if self.data.get('bbs_format'):
                 bbsfile = GSMBBSFileSource(self.parset_id,
@@ -63,12 +63,37 @@ class GSMParset(object):
                                            "%s/%s" % (self.path, source))
             bbsfile.read_and_store_data(conn)
             loaded_sources = loaded_sources + bbsfile.sources
+        self.image_id = self.save_image_info(conn)
         conn.commit()
         self.log.info('%s sources loaded from parset %s' % (loaded_sources,
                                                             self.filename))
 
         self.source_count = loaded_sources
         return loaded_sources
+    
+    def get_image_size(self, min_decl, max_decl, min_ra, max_ra, 
+                       avg_decl, avg_ra):
+        """
+        >>> t = GSMParset('tests/image1.parset')
+        >>> t.get_image_size(1.0, 3.0, 1.0, 3.0, 2.0, 2.0)
+        (1.0, 2.0, 2.0)
+        >>> t.get_image_size(-4.0, 4.0, 1.0, 359.0, 0.0, 359.8)
+        (4.0, 0.0, -0.19999999999998863)
+        """
+        if max_ra - min_ra > 250.0:
+            # Field across zero-ra. Has to be shifted.
+            # E.g. min = 0.1 max = 359.7 avg = 359.9
+            # transfers to:
+            # min = -0.3 max = 0.1 avg = -0.1
+            min_ra, max_ra  = max_ra - 360.0, min_ra
+            if avg_ra > 250:
+                avg_ra = avg_ra - 360.0
+        min_ra = min_ra * cos(avg_decl)
+        max_ra = max_ra * cos(avg_decl)
+        return max( [ avg_decl - min_decl, max_decl - avg_decl,
+                      avg_ra * cos(avg_decl) - min_ra, 
+                      max_ra - avg_ra * cos(avg_decl) ]), \
+                      avg_decl, avg_ra
 
     def save_image_info(self, conn):
         """
@@ -83,7 +108,23 @@ class GSMParset(object):
             raise SourceException(
                         'No matching frequency band found for frequency %s' %
                             self.data.get('frequency'))
+        
+        if not self.data.has_key('pointing_ra') or \
+           not self.data.has_key('pointing_decl') or \
+           not self.data.has_key('beam_size'):
+            data = conn.exec_return(
+            """select min(ldecl), max(ldecl), 
+                      min(lra), max(lra), 
+                      avg(ldecl), avg(lra) 
+                 from detections;""", single_column=False)        
+            size, avg_decl, avg_ra = self.get_image_size(*data)
+        else:
+            size = self.data.get('beam_size')
+            avg_decl = self.data.get('pointing_decl')
+            avg_ra = self.data.get('pointing_ra')
+        
         conn.execute(get_sql('insert image', self.parset_id, band,
+                             avg_ra, avg_decl, size, 
                              get_svn_version()))
         image_id = conn.exec_return(get_sql('get last image_id'))
         self.log.info('Image %s created' % image_id)

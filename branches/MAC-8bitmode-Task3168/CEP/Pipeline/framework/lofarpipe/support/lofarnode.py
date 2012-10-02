@@ -45,6 +45,7 @@ class LOFARnode(object):
         self.loghost = loghost
         self.logport = int(logport)
         self.outputs = {}
+        self.environment = os.environ
 
     def run_with_logging(self, *args):
         """

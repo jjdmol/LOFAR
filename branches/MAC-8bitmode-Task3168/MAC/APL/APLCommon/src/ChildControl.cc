@@ -892,6 +892,8 @@ void ChildControl::_startDaemonOffline(const string&	hostname)
 //
 void ChildControl::_printStartDaemonMap(const string& actionName)
 {
+	(void)actionName; // prevent compiler warning
+
 #if 0
 	LOG_DEBUG_STR("_printStartDaemonMap(" << actionName <<")");
 

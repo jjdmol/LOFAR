@@ -44,9 +44,10 @@ void idealStartTime (int now, int t1, int d1, int t2, int d2, int p2, int expAns
 
 }
 
-int main(int	argc, char*	argv[]) 
+int main(int, char*	argv[]) 
 {
-	INIT_LOGGER("tOverlap");
+	INIT_LOGGER(argv[0]);
+
 	//  n    t2 d2        t2`
 	// -o----+--->+-------+------
 	//  w

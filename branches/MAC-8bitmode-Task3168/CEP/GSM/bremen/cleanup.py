@@ -2,7 +2,7 @@
 """
 ***GSM package tool.
 ***Created by A. Mints (2012).
-    Clear all data from the database.
+Cleans all data from the database.
 """
 
 import argparse
@@ -12,7 +12,7 @@ from tests.testlib import cleanup_db
 parser = argparse.ArgumentParser(description="""
 ***GSM package tool.
 ***Created by A. Mints (2012).
-    Clear all data from the database.""",
+    Cleans all data from the database.""",
 formatter_class=argparse.RawDescriptionHelpFormatter)
 
 parser.add_argument('-D', '--database', type=str, default='test',

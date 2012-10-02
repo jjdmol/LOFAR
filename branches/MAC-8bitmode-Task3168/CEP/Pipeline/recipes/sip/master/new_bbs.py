@@ -32,6 +32,9 @@ import lofarpipe.support.lofaringredient as ingredient
 
 class new_bbs(BaseRecipe):
     """
+    **This bbs recipe still uses the oldstyle bbs with global control**
+    **New versions will have stand alone capability**
+    
     The bbs recipe coordinates running BBS on a group of MeasurementSets. It
     runs both GlobalControl and KernelControl; as yet, SolverControl has not
     been integrated.
@@ -50,11 +53,6 @@ class new_bbs(BaseRecipe):
             '--kernel-exec',
             dest="kernel_exec",
             help="BBS Kernel executable"
-        ),
-        'initscript': ingredient.FileField(
-            '--initscript',
-            dest="initscript",
-            help="Initscript to source (ie, lofarinit.sh)"
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
@@ -98,7 +96,7 @@ class new_bbs(BaseRecipe):
         ),
         'gvds': ingredient.StringField(
             '-g', '--gvds',
-            help = "Path for output GVDS file"
+            help="Path for output GVDS file"
         )
     }
     outputs = {
@@ -165,7 +163,7 @@ class new_bbs(BaseRecipe):
             (dat[0], (dat[1], ins[1], sky[1]))
             for dat, ins, sky in zip(data_map, instrument_map, sky_map)
         ]
-        
+
         return True
 
 
@@ -213,7 +211,7 @@ class new_bbs(BaseRecipe):
         gvds_file = self.run_task(
             "vdsmaker",
             self.inputs['data_mapfile'],
-            gvds = self.inputs['gvds']
+            gvds=self.inputs['gvds']
         )['gvds']
 
         #      Construct a parset for BBS GlobalControl by patching the GVDS
@@ -262,11 +260,6 @@ class new_bbs(BaseRecipe):
             #                                          with our own threads.
             # --------------------------------------------------------------
             command = "python %s" % (self.__file__.replace('master', 'nodes'))
-            env = {
-                "LOFARROOT": utilities.read_initscript(self.logger, self.inputs['initscript'])["LOFARROOT"],
-                "PYTHONPATH": self.config.get('deploy', 'engine_ppath'),
-                "LD_LIBRARY_PATH": self.config.get('deploy', 'engine_lpath')
-            }
             jobpool = {}
             bbs_kernels = []
             with job_server(self.logger, jobpool, self.error) as (jobhost, jobport):
@@ -277,7 +270,6 @@ class new_bbs(BaseRecipe):
                         host, command,
                         arguments=[
                             self.inputs['kernel_exec'],
-                            self.inputs['initscript'],
                             files,
                             self.inputs['db_key'],
                             self.inputs['db_name'],
@@ -288,9 +280,7 @@ class new_bbs(BaseRecipe):
                     bbs_kernels.append(
                         threading.Thread(
                             target=self._run_bbs_kernel,
-                            args=(host, command, env, job_id,
-                                jobhost, str(jobport)
-                            )
+                            args=(host, command, job_id, jobhost, str(jobport))
                         )
                     )
                 self.logger.info("Starting %d threads" % len(bbs_kernels))
@@ -314,7 +304,7 @@ class new_bbs(BaseRecipe):
         self.outputs['mapfile'] = self.inputs['data_mapfile']
         return 0
 
-    def _run_bbs_kernel(self, host, command, env, *arguments):
+    def _run_bbs_kernel(self, host, command, *arguments):
         """
         Run command with arguments on the specified host using ssh. Return its
         return code.
@@ -328,7 +318,7 @@ class new_bbs(BaseRecipe):
                 self.logger,
                 host,
                 command,
-                env,
+                self.environment,
                 arguments=arguments
             )
         except Exception, e:
@@ -346,7 +336,6 @@ class new_bbs(BaseRecipe):
         Run BBS Global Control and wait for it to finish. Return its return
         code.
         """
-        env = utilities.read_initscript(self.logger, self.inputs['initscript'])
         self.logger.info("Running BBS GlobalControl")
         working_dir = tempfile.mkdtemp()
         with CatchLog4CPlus(
@@ -364,7 +353,7 @@ class new_bbs(BaseRecipe):
                         ],
                         self.logger,
                         cwd=working_dir,
-                        env=env
+                        env=self.environment
                     )
                     # _monitor_process() needs a convenient kill() method.
                     bbs_control_process.kill = lambda : os.kill(bbs_control_process.pid, signal.SIGKILL)

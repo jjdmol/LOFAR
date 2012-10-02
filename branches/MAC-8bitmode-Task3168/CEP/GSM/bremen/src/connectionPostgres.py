@@ -30,7 +30,7 @@ class PgConnection(UnifiedConnection):
         mapper = {
             'hostname': 'host',
             'username': 'user',
-            'database': 'dbname',
+            #'database': 'dbname',
             'autocommit': None,
             'port': None
         }
@@ -56,6 +56,10 @@ class PgConnection(UnifiedConnection):
             self.conn.rollback()
             self.log.debug('BEGIN')
             self.conn.cursor().execute('BEGIN')
+
+    def rollback(self):
+        self.log.debug('ROLLBACK')
+        self.conn.rollback()
 
     def _get_lastcount(self, cursor):
         if cursor.statusmessage.split()[0] == 'SELECT':

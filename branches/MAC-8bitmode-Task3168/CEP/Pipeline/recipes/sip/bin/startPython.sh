@@ -53,7 +53,7 @@ if [ -n "$debug" ]; then
   echo "**** $(date) ****" >> ${logFile}
   echo "$0 $@" >> ${logFile}
   echo "PATH=${PATH}" >> ${logFile}
-  echo "PYHONTPATH=${PYTHONPATH}" >> ${logFile}
+  echo "PYTHONPATH=${PYTHONPATH}" >> ${logFile}
   echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> ${logFile}
   echo "${pythonProgram} ${programOptions} ${parsetFile}" >> ${logFile}
 fi
@@ -61,7 +61,7 @@ fi
 # Start the Python program in the background. 
 # This script should return ASAP so that MAC can set the task to ACTIVE.
 # STDERR will be redirected to the log-file.
-${pythonProgram} ${programOptions} ${parsetFile} 2>> ${logFile} &
+${pythonProgram} ${programOptions} ${parsetFile} 1> /dev/null 2>> ${logFile} &
 
 # Check if the Python program died early. If so, this indicates an error.
 sleep 1

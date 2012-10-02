@@ -48,8 +48,10 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 
 // main
-int main (int argc, char*	argv[])
+int main (int, char*	argv[])
 {
+	INIT_LOGGER(argv[0]);
+
 	RCUSettings		RS;
 	RS().resize(1);
 

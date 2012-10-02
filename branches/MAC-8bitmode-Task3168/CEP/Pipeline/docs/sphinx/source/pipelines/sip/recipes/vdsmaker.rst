@@ -1,6 +1,14 @@
+.. _vdsmaker:
+
 ========
 vdsmaker
 ========
 
-.. autoclass:: vdsmaker.vdsmaker
-   :show-inheritance:
+***Master Side of the recipe ***
+
+.. autoclass:: lofarpipe.recipes.master.vdsmaker.vdsmaker  
+	:members: go
+
+***Node Side of the recipe***
+
+.. autoclass:: lofarpipe.recipes.nodes.vdsmaker.vdsmaker  

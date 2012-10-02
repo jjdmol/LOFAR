@@ -44,16 +44,17 @@ void HighPassFilter::applyLowPass(const Image2DPtr &image)
 void HighPassFilter::applyLowPassSSE(const Image2DPtr &image)
 {
 	Image2DPtr temp = Image2D::CreateZeroImagePtr(image->Width(), image->Height());
-	size_t hKernelMid = _hWindowSize/2;
-	for(size_t i=0; i<_hWindowSize; ++i) {
+	unsigned hKernelMid = _hWindowSize/2;
+	for(unsigned i=0; i<_hWindowSize; ++i) {
 		
 		const num_t k = _hKernel[i];
 		const __m128 k4 = _mm_set_ps(k, k, k, k);
-		size_t
+		unsigned
+			/* xStart is the first column to start writing to. Note that it might be larger
+			 * than the width. */
 			xStart = (i >= hKernelMid) ? 0 : (hKernelMid-i),
-			xEnd = (i <= hKernelMid) ? image->Width() : image->Width()-i+hKernelMid;
+			xEnd = (i <= hKernelMid) ? image->Width() : (image->Width()+hKernelMid > i ? (image->Width()-i+hKernelMid) : 0);
 		
-			
 		for(unsigned y=0;y<image->Height();++y) {
 			
 			float *tempPtr = temp->ValuePtr(xStart, y);
@@ -80,13 +81,13 @@ void HighPassFilter::applyLowPassSSE(const Image2DPtr &image)
 	}
 	
 	image->SetAll(0.0);
-	size_t vKernelMid = _vWindowSize/2;
-	for(size_t i=0; i<_vWindowSize; ++i) {
+	unsigned vKernelMid = _vWindowSize/2;
+	for(unsigned i=0; i<_vWindowSize; ++i) {
 		const num_t k = _vKernel[i];
 		const __m128 k4 = _mm_set_ps(k, k, k, k);
-		const size_t
+		const unsigned
 			yStart = (i >= vKernelMid) ? 0 : (vKernelMid-i),
-			yEnd = (i <= vKernelMid) ? image->Height() : image->Height()-i+vKernelMid;
+			yEnd = (i <= vKernelMid) ? image->Height() : ((image->Height()+vKernelMid>i) ? (image->Height()-i+vKernelMid) : 0);
 		for(unsigned y=yStart;y<yEnd;++y) {
 			
 			const float *tempPtr = temp->ValuePtr(0, y+i-vKernelMid);
@@ -161,7 +162,7 @@ void HighPassFilter::setFlaggedValuesToZeroAndMakeWeights(const Image2DCPtr &inp
 	{
 		for(size_t x=0;x<width;++x)
 		{
-			if(inputMask->Value(x, y))
+			if(inputMask->Value(x, y) || !isfinite(inputImage->Value(x, y)))
 			{
 				outputImage->SetValue(x, y, 0.0);
 				weightsOutput->SetValue(x, y, 0.0);
@@ -192,7 +193,8 @@ void HighPassFilter::setFlaggedValuesToZeroAndMakeWeightsSSE(const Image2DCPtr &
 			// Assign each integer to one bool in the mask
 			// Convert false to 0xFFFFFFFF and true to 0
 			__m128 conditionMask = _mm_castsi128_ps(
-				_mm_cmpeq_epi32(_mm_set_epi32(rowPtr[3], rowPtr[2], rowPtr[1], rowPtr[0]),
+				_mm_cmpeq_epi32(_mm_set_epi32(rowPtr[3] || !isfinite(inputPtr[3]), rowPtr[2] || !isfinite(inputPtr[2]),
+																			rowPtr[1] || !isfinite(inputPtr[1]), rowPtr[0] || !isfinite(inputPtr[0])),
 												zero4i));
 			
 			_mm_store_ps(weightsPtr, _mm_or_ps(

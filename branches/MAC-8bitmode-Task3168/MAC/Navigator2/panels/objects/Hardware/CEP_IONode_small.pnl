@@ -22,25 +22,19 @@ PANEL,-1 -1 823 158 N "_3DFace" 1
   nodeNr = $nodeNr;
   
   IONodeNr=nodeNr+(32*midplaneNr);  //  Midplaneindex + (32* nodeNr);
-    
-  if (IONodeNr < 10) {    
-    baseDP+=\"_IONode0\"+IONodeNr;
-  } else {
-  baseDP+=\"_IONode\"+IONodeNr;
-  }      
-
+  baseDP+=\"_IONode\"+navFunct_formatInt(IONodeNr,99);
   string nodeName  = navFunct_DPName2CEPName(baseDP);
   setValue(\"nodeName\",\"text\",\"Node: \"+nodeName);
  
   if(dpExists(baseDP + \".usedStation\")) {
-    dpConnect(\"controlIOnode\", baseDP + \".usedStation:_online.._value\",
-                               baseDP + \".usedIP:_online.._value\",
-                               baseDP + \".usedMAC:_online.._value\",
-                               baseDP + \".usedStation:_online.._invalid\");
+    dpConnect(\"controlIOnodeSmall\", baseDP + \".usedStation:_online.._value\",
+                                    baseDP + \".usedIP:_online.._value\",
+                                    baseDP + \".usedMAC:_online.._value\",
+                                    baseDP + \".usedStation:_online.._invalid\");
     if (!navFunct_dpReachable(baseDP)) {
       controlIOnode(\"\",\"\",\"\",\"\",\"\",\"\",true);
     }
-  }
+  }        
   
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP); 
@@ -50,10 +44,10 @@ PANEL,-1 -1 823 158 N "_3DFace" 1
 } 
     
 
-void controlIOnode(string dp1, string  station,
-                   string dp2, string  ipAddress,
-                   string dp3, string  macAddress,
-                   string dp4, bool invalid) {
+void controlIOnodeSmall(string dp1, string  station,
+                        string dp2, string  ipAddress,
+                        string dp3, string  macAddress,
+                        string dp4, bool invalid) {
 
   if (!invalid) {  
     setValue(\"ipAddress\",\"text\",\"IP: \"+ipAddress);

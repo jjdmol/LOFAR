@@ -25,7 +25,8 @@ file(GLOB staticmeta_data
   HBADeltas/*.conf
   iHBADeltas/*.conf
   AntennaFields/*.conf
-  TBBConnections.dat)
+  TBBConnections.dat
+  RSPConnections_CCU.dat)
 install(FILES
   ${staticmeta_data}
   DESTINATION etc/StaticMetaData)

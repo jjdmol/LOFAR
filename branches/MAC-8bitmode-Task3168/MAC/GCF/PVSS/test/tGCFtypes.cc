@@ -28,7 +28,7 @@
 using namespace LOFAR;
 using namespace GCF::PVSS;
 
-int main(int argc, char* argv[]) {
+int main(int, char* argv[]) {
 	INIT_LOGGER(argv[0]);
 
 	// first try to create an object of every type

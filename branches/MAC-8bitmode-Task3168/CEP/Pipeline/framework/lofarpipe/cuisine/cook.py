@@ -31,7 +31,12 @@ class PipelineCook(WSRTCook):
                 # ...also support lower-cased file names.
                 module_details = imp.find_module(task.lower(), recipe_path)
             module = imp.load_module(task, *module_details)
-            self.recipe = getattr(module, task)()
+            self.recipe = None
+            try:
+                self.recipe = getattr(module, task)()
+            except AttributeError:
+                # Try with first letter capital (python type nameconvention)
+                self.recipe = getattr(module, task.capitalize())()
             self.recipe.logger = getSearchingLogger("%s.%s" % (self.logger.name, task))
             self.recipe.logger.setLevel(self.logger.level)
         except Exception, e:
@@ -88,7 +93,7 @@ class SystemCook(WSRTCook):
     def set_expect(self, expectlist):
         self._expect = expectlist
 
-    def spawn(self, env = None):
+    def spawn(self, env=None):
         """Try to start the task."""
         try:
             (self._pid, self._child_fd) = pty.fork()

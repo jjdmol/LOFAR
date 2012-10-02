@@ -8,20 +8,17 @@
 from ConfigParser import NoOptionError, NoSectionError
 from ConfigParser import SafeConfigParser as ConfigParser
 from threading import Event
-from functools import partial
 
 import os
 import sys
-import inspect
 import logging
 import errno
 
 import lofarpipe.support.utilities as utilities
-import lofarpipe.support.lofaringredient as ingredient
-from lofarpipe.support.lofarexceptions import PipelineException
+from lofarpipe.support.lofarexceptions import PipelineException, PipelineRecipeFailed
 from lofarpipe.cuisine.WSRTrecipe import WSRTrecipe
 from lofarpipe.support.lofaringredient import RecipeIngredients, LOFARinput, LOFARoutput
-from lofarpipe.support.remotecommand import run_remote_command
+from lofarpipe.support.group_data import store_data_map
 
 class BaseRecipe(RecipeIngredients, WSRTrecipe):
     """
@@ -41,6 +38,11 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         super(BaseRecipe, self).__init__()
         self.error = Event()
         self.error.clear()
+        # Environment variables we like to pass on to the node script.
+        self.environment = dict(
+            (k,v) for (k,v) in os.environ.iteritems() 
+                if k.endswith('PATH') or k.endswith('ROOT')
+        )
 
     @property
     def __file__(self):
@@ -71,12 +73,12 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             )
 
         try:
-            format = self.config.get("logging", "format", raw = True)
+            format = self.config.get("logging", "format", raw=True)
         except:
             format = "%(asctime)s %(levelname)-7s %(name)s: %(message)s"
 
         try:
-            datefmt = self.config.get("logging", "datefmt", raw = True)
+            datefmt = self.config.get("logging", "datefmt", raw=True)
         except:
             datefmt = "%Y-%m-%d %H:%M:%S"
 
@@ -96,7 +98,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         self.logger.addHandler(stream_handler)
         self.logger.addHandler(file_handler)
 
-    def run_task(self, configblock, datafiles = [], **kwargs):
+    def run_task(self, configblock, datafiles=[], **kwargs):
         """
         A task is a combination of a recipe and a set of parameters.
         Tasks can be prefedined in the task file set in the pipeline
@@ -181,7 +183,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
 
         if not self.inputs.has_key("start_time"):
             import datetime
-            self.inputs["start_time"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
+            self.inputs["start_time"] = datetime.datetime.utcnow().replace(microsecond=0).isoformat()
 
         # Config is passed in from spawning recipe. But if this is the start
         # of a pipeline, it won't have one.
@@ -218,7 +220,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             )
         else:
             self.config.set("DEFAULT", "working_directory", self.inputs['working_directory'])
-            
+
         try:
             self.recipe_path = [
                 os.path.join(root, 'master') for root in utilities.string_to_list(
@@ -242,4 +244,12 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             self._setup_logging()
 
         self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])
+
+    def _store_data_map(self, path, mapfile, message=""):
+        """
+        Write mapfile to path, display debug error message on the logger
+        """
+        store_data_map(path, mapfile)
+        self.logger.debug("Wrote mapfile <{0}>: {1}".format(
+                path, message))
 

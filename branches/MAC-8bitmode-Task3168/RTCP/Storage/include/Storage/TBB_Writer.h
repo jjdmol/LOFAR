@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: TBB_Writer.h 10353 2012-03-14 15:41:22Z amesfoort $
+ * $Id: TBB_Writer.h 13275 2012-09-07 15:41:22Z amesfoort $
  */
 
 #ifndef LOFAR_STORAGE_TBB_WRITER_H
@@ -147,10 +147,10 @@ typedef std::map<unsigned, StationMetaData> StationMetaDataMap;
 
 
 class TBB_Dipole {
-	DAL::TBB_DipoleDataset* itsDataset;
+	dal::TBB_DipoleDataset* itsDataset;
 	std::ofstream itsRawOut; // if raw out requested
 
-	std::vector<DAL::Range> itsFlagOffsets;
+	std::vector<dal::Range> itsFlagOffsets;
 
 	ssize_t itsDatasetLen;
 
@@ -176,22 +176,24 @@ public:
 
 	// All TBB_Dipole objects are default constructed in a vector, so provide an init procedure.
 	void initDipole(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-                        const std::string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex);
+                    const std::string& rawFilename, dal::TBB_Station& station, Mutex& h5Mutex);
 
 	void processFrameData(const TBB_Frame& frame, Mutex& h5Mutex);
 
 private:
 	void addFlags(size_t offset, size_t len);
-	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-                                   const std::string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex);
+	// initTBB_DipoleDataset() must be called with the global h5Mutex held.
+	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset,
+                               const StationMetaData& stationMetaData, const std::string& rawFilename,
+                               dal::TBB_Station& station);
 	bool hasAllZeroDataSamples(const TBB_Frame& frame) const;
 	bool crc32tbb(const TBB_Payload* payload, size_t nsamples);
 };
 
 class TBB_Station {
-	DAL::TBB_File itsH5File;
-	Mutex itsH5Mutex;
-	DAL::TBB_Station itsStation;
+	dal::TBB_File itsH5File;
+	Mutex& itsH5Mutex;
+	dal::TBB_Station itsStation;
 	std::vector<TBB_Dipole> itsDipoles;
 	const Parset& itsParset;
 	const StationMetaData& itsStationMetaData;
@@ -206,8 +208,11 @@ class TBB_Station {
 	TBB_Station& operator=(const TBB_Station& rhs);
 
 public:
-	TBB_Station(const string& stationName, const Parset& parset, const StationMetaData& stationMetaData,
-                    const std::string& h5Filename, bool dumpRaw);
+	// This constructor must be called with the h5Mutex already held.
+	// The caller must still unlock, even though a ref to the same mutex is passed.
+	TBB_Station(const string& stationName, Mutex& h5Mutex, const Parset& parset,
+                const StationMetaData& stationMetaData, const std::string& h5Filename,
+                bool dumpRaw);
 	~TBB_Station();
 
 	// Output threads
@@ -219,9 +224,9 @@ private:
 
 	void initCommonLofarAttributes();
 	void initTBB_RootAttributesAndGroups(const std::string& stName);
-	void initStationGroup(DAL::TBB_Station& st, const std::string& stName,
+	void initStationGroup(dal::TBB_Station& st, const std::string& stName,
                               const std::vector<double>& stPosition);
-	void initTriggerGroup(DAL::TBB_Trigger& tg);
+	void initTriggerGroup(dal::TBB_Trigger& tg);
 };
 
 class TBB_Writer;
@@ -258,8 +263,9 @@ class TBB_StreamWriter {
 
 	boost::crc_optimal<16, 0x8005/*, 0, 0, false, false*/> itsCrc16gen; // instead of boost::crc_16_type
 
+	// Thread objects must be last in TBB_StreamWriter for safe destruction.
 	Thread* itsOutputThread;
-	Thread* itsInputThread; // last in TBB_StreamWriter
+	Thread* itsInputThread;
 
 	// do not use
 	TBB_StreamWriter();
@@ -267,7 +273,8 @@ class TBB_StreamWriter {
 	TBB_StreamWriter& operator=(const TBB_StreamWriter& rhs);
 
 public:
-	TBB_StreamWriter(TBB_Writer& writer, const std::string& inputStreamName, const std::string& logPrefix);
+	TBB_StreamWriter(TBB_Writer& writer, const std::string& inputStreamName,
+                     const std::string& logPrefix);
 	~TBB_StreamWriter();
 
 	// Main thread
@@ -291,6 +298,10 @@ class TBB_Writer {
 	std::map<unsigned, TBB_Station* > itsStations;
 	Mutex itsStationsMutex;
 
+	// Global H5 mutex. All HDF5 operations go under a single mutex, incl file creation:
+	// don't depend on the HDF5 lib being compiled with --thread-safe.
+	Mutex itsH5Mutex;
+
 	const Parset& itsParset;
 	const StationMetaDataMap& itsStationMetaDataMap;
 	StationMetaData itsUnknownStationMetaData; // referred to for data from unknown stations
@@ -299,7 +310,8 @@ class TBB_Writer {
 
 	unsigned itsRunNr;
 
-	std::vector<TBB_StreamWriter* > itsStreamWriters; // last in TBB_Writer
+	// Stream writers (threads) must be last in TBB_Writer for safe destruction.
+	std::vector<TBB_StreamWriter* > itsStreamWriters;
 
 	// do not use
 	TBB_Writer();

@@ -76,7 +76,7 @@ Iterators and generators
 
 .. autofunction:: lofarpipe.support.utilities.is_iterable
 
-.. autofunction:: lofarpipe.support.utilities.izip_longest
+     #.. autofunction:: lofarpipe.support.utilities.izip_longest  #TODO: problem with this function.. dunno what
 
 .. autofunction:: lofarpipe.support.utilities.group_iterable
 

@@ -241,6 +241,8 @@ vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
 //
 vector<OTDBvalue> TreeValue::getSchedulableItems (nodeIDType	TODO_topNode)
 {
+	(void)TODO_topNode;
+
 	LOG_INFO("TreeValue::getSchedulableItems is not yet implemented");
 
 	vector<OTDBvalue>	empty;

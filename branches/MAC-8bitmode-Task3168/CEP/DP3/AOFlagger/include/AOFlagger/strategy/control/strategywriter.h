@@ -90,6 +90,7 @@ namespace rfiStrategy {
 			void writeFrequencyConvolutionAction(const class FrequencyConvolutionAction &action);
 			void writeFrequencySelectionAction(const class FrequencySelectionAction &action);
 			void writeFringeStopAction(const class FringeStopAction &action);
+			void writeHighPassFilterAction(const class HighPassFilterAction &action);
 			void writeImagerAction(const class ImagerAction &action);
 			void writeIterationBlock(const class IterationBlock &action);
 			void writeNormalizeVarianceAction(const class NormalizeVarianceAction &action);
