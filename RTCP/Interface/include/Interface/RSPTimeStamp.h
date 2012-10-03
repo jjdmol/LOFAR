@@ -42,6 +42,7 @@ namespace LOFAR {
       TimeStamp	    &setStamp(unsigned seqId, unsigned blockId);
       unsigned	    getSeqId() const;
       unsigned	    getBlockId() const;
+      unsigned	    getClock() const { return itsClockSpeed; }
 
       template <typename T> TimeStamp &operator += (T increment);
       template <typename T> TimeStamp &operator -= (T decrement);
