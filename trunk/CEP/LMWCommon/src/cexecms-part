@@ -11,6 +11,10 @@
 #   <BASENAME> or <BN>  by the basename part
 #   <DIRNAME>  or <DN>  by the directory part
 # The first two can be followed by a . meaning that the extension is ignored.
+#   <OBSID>  by the obsid part of <BN.> (till first _)
+#   <SAP>    by the subarray pointing part of <BN.> (till next _)
+#   <SB>     by the subband part of <BN.> (till next _)
+#   <TYPE>   by the dataset type part of <BN.> (after last _)
 # If no substitutions are done, the command is executed like
 #     command filename arg1 arg2 ...
 # otherwise like
@@ -125,10 +129,15 @@ command=`echo "$command" | sed \
 for fname in $names
 do
     # Form the various placeholder replacements.
-    dname=`dirname $fname`                          # directory
-    bname=`basename $fname`                         # basename
-    bnamed=`echo $bname | sed -e 's%\..*%%'`        # basename without extension
-    fnamed=$dname/$bnamed                           # full name without extension
+    dname=`dirname $fname`                        # directory
+    bname=`basename $fname`                       # basename
+    bnamed=`echo $bname | sed -e 's%\..*%%'`      # basename without extension
+    fnamed=$dname/$bnamed                         # full name without extension
+    ename=`echo $bname | sed -e "s%$bnamed\.%%"`  # extension
+    obsid=`echo $bnamed | awk -F_ '{print $1}'`
+    sap=`echo $bnamed | awk -F_ '{print $2}'`
+    sb=`echo $bnamed | awk -F_ '{print $3}'`
+    type=`echo $bnamed | awk -F_ '{print $4}'`
     # Replace the placeholders.
     commandnew=`echo "$command" | sed \
 	-e "s%<FN>%$fname%g" \
@@ -137,12 +146,18 @@ do
 	-e "s%<FN\.>%$fnamed%g" \
 	-e "s%<DN\.>%$dnamed%g" \
 	-e "s%<BN\.>%$bnamed%g" \
+	-e "s%<\.BN>%$ename%g" \
 	-e "s%<FILENAME>%$fname%g" \
 	-e "s%<DIRNAME>%$dname%g" \
 	-e "s%<BASENAME>%$bname%g" \
 	-e "s%<FILENAME\.>%$fnamed%g" \
 	-e "s%<DIRNAME\.>%$dnamed%g" \
-	-e "s%<BASENAME\.>%$bnamed%g"`
+	-e "s%<BASENAME\.>%$bnamed%g" \
+	-e "s%<\.BASENAME>%$ename%g" \
+	-e "s%<OBSID>%$obsid%g" \
+	-e "s%<SAP>%$sap%g" \
+	-e "s%<SB>%$sb%g" \
+	-e "s%<TYPE>%$type%g"`
     if test "$script" != ""; then
         # A script is given, replace placeholders in there as well.
         psname=$HOME/`basename $script`-$USER-$$
@@ -153,12 +168,18 @@ do
 	-e "s%<FN\.>%$fnamed%g" \
 	-e "s%<DN\.>%$dnamed%g" \
 	-e "s%<BN\.>%$bnamed%g" \
+	-e "s%<\.BN>%$ename%g" \
 	-e "s%<FILENAME>%$fname%g" \
 	-e "s%<DIRNAME>%$dname%g" \
 	-e "s%<BASENAME>%$bname%g" \
 	-e "s%<FILENAME\.>%$fnamed%g" \
 	-e "s%<DIRNAME\.>%$dnamed%g" \
 	-e "s%<BASENAME\.>%$bnamed%g" \
+	-e "s%<\.BASENAME>%$ename%g" \
+	-e "s%<OBSID>%$obsid%g" \
+	-e "s%<SAP>%$sap%g" \
+	-e "s%<SB>%$sb%g" \
+	-e "s%<TYPE>%$type%g" \
         $script > $psname
 	if test $dryrun = 1; then
 	    echo "Dryrun: " $commandnew $psname "$@"
