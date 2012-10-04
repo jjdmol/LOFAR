@@ -1,11 +1,3 @@
-[cep2_datamapper]
-recipe = cep2_datamapper
-mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/data.mapfile
-
-[datamapper]
-recipe = datamapper
-mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/data.mapfile
-
 [ndppp]
 recipe = dppp
 executable = %(lofarroot)s/bin/NDPPP
@@ -17,20 +9,6 @@ parset = %(runtime_directory)s/jobs/%(job_name)s/parsets/NDPPP.parset
 nproc = 1
 nthreads = 8
 clobber = False
-
-[bbs]
-recipe = bbs
-control_exec = %(lofarroot)s/bin/GlobalControl
-kernel_exec = %(lofarroot)s/bin/KernelControl
-parset = %(runtime_directory)s/jobs/%(job_name)s/parsets/bbs.parset
-key = bbs_%(job_name)s
-db_host = ldb001
-db_name = $ENV{USER}
-db_user = postgres
-makevds = %(lofarroot)s/bin/makevds
-combinevds = %(lofarroot)s/bin/combinevds
-makesourcedb = %(lofarroot)s/bin/makesourcedb
-parmdbm = %(lofarroot)s/bin/parmdbm
 
 [vdsreader]
 recipe = vdsreader
@@ -46,36 +24,12 @@ recipe = setupsourcedb
 executable = %(lofarroot)s/bin/makesourcedb
 mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/sky.mapfile
 
-[skymodel]
-recipe = skymodel
-min_flux = 0.5
-skymodel_file = %(runtime_directory)s/jobs/%(job_name)s/parsets/bbs.skymodel
-
 [vdsmaker]
 recipe = vdsmaker
 directory = %(runtime_directory)s/jobs/%(job_name)s/vds
 gvds = %(runtime_directory)s/jobs/%(job_name)s/vds/%(job_name)s.gvds
 makevds = %(lofarroot)s/bin/makevds
 combinevds = %(lofarroot)s/bin/combinevds
-
-[cimager]
-recipe = cimager
-imager_exec = /opt/LofIm/daily/askapsoft/bin/cimager.sh
-convert_exec = /opt/LofIm/daily/lofar/bin/convertimagerparset
-parset = %(runtime_directory)s/jobs/%(job_name)s/parsets/mwimager.parset
-results_dir = %(runtime_directory)s/jobs/%(job_name)s/results/%(start_time)s
-
-[flag_baseline]
-recipe = flag_baseline
-
-[demixing]
-recipe = demixing
-demix_parset_dir = %(lofarroot)s/share/pipeline/demixing
-db_host = ldb001
-skymodel = %(lofarroot)s/share/pipeline/skymodels/Ateam_LBA_CC.skymodel
-demix_sources = CasA,CygA
-mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/demix.mapfile
-nproc=1
 
 [new_bbs]
 recipe = new_bbs
@@ -93,12 +47,7 @@ data_mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/bbs.mapfile
 
 [gainoutliercorrection]
 recipe = gainoutliercorrection
-executable = %(lofarroot)s/bin/parmexportcal
-mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/instrument.mapfile
-
-[parmexportcal]
-recipe = parmexportcal
-executable = %(lofarroot)s/bin/parmexportcal
+executable = '' # Comment out the executable, for now use the  editparmdb behaviour. #%(lofarroot)s/bin/parmexportcal
 mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/instrument.mapfile
 
 [rficonsole]

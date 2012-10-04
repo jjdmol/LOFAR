@@ -82,7 +82,7 @@ selectImage()
 		# get version number of RSPboard in var. rsu
 		boardHex=`echo $board | awk '{ printf "%02x", $1 }'`
 		rsu=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
-		if [ ${rsu} -eq 1 ]; then
+		if [ $imageForced ] || [ ${rsu} -eq 1 ]; then
   		  let version=$rsu
  		  # if board has reset itself to image 0, load image 1 again
 		  echo "Loading image $image on RSPboard $board ..."
@@ -442,6 +442,7 @@ handle_args()
     show_lofar_version $flag
     ;;
     i)
+    imageForced=true
     image=$OPTARG
     # This is needed to be able to retrieve the requested swlevel
     # when it is not provided with option -l
@@ -512,6 +513,7 @@ fi
 
 user=`id | cut -d'(' -f2 | cut -d')' -f1`
 group=`groups | awk '{print $1}'`
+imageForced=false
 
 handle_args $*
 

@@ -205,12 +205,16 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsPreCorrelationFlagger = new PreCorrelationFlagger(parset, itsNrStations, itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Online PreCorrelation flagger enabled");
+    } else {
+      itsPreCorrelationFlagger = NULL;
     }
 
     if (parset.onlineFlagging() && parset.onlinePreCorrelationNoChannelsFlagging()) {
       itsPreCorrelationNoChannelsFlagger = new PreCorrelationNoChannelsFlagger(parset, itsNrStations, itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Online PreCorrelation no channels flagger enabled");
+    } else {
+      itsPreCorrelationNoChannelsFlagger = NULL;
     }
 
     if (parset.outputCorrelatedData()) {
@@ -223,7 +227,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsPostCorrelationFlagger = new PostCorrelationFlagger(parset, nrMergedStations, itsNrSubbands, itsNrChannels);
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Online PostCorrelation flagger enabled");
+    } else {
+      itsPostCorrelationFlagger = NULL;
     }
+
 
     if (parset.onlineFlagging() && parset.onlinePostCorrelationFlagging() && parset.onlinePostCorrelationFlaggingDetectBrokenStations()) {
       if (LOG_CONDITION)
@@ -1018,10 +1025,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
     if (itsPPF != 0)
       filter();
 
-    if (itsPreCorrelationNoChannelsFlagger != 0)
+    if (itsPreCorrelationNoChannelsFlagger != NULL)
       preCorrelationNoChannelsFlagging();
 
-    if (itsPreCorrelationFlagger != 0)
+    if (itsPreCorrelationFlagger != NULL)
       preCorrelationFlagging();
 
     mergeStations(); // create superstations
@@ -1041,7 +1048,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
     if (itsCorrelator != 0)
       correlate();
 
-    if (itsPostCorrelationFlagger != 0)
+    if (itsPostCorrelationFlagger != NULL)
       postCorrelationFlagging();
 
     if (itsCorrelatedDataStream != 0)

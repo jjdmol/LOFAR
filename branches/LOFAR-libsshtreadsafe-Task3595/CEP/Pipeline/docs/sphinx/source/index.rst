@@ -30,7 +30,8 @@ pipeline itself.
 .. _section-overview:
 
 The pipeline system was developed by John Swinbank (University of Amsterdam)
-in 2009 & 2010. Since 2011, the primary maintainer is Marcel Loose (ASTRON).
+in 2009 & 2010, based on/extending the cuisine framework for WSRT by Adriaan renting.
+Since 2011, the primary maintainer are Marcel Loose and Wouter Klijn (ASTRON).
 
 Overview & Getting Started
 ==========================
@@ -38,8 +39,8 @@ Overview & Getting Started
 .. toctree::
    :maxdepth: 2
 
+   user/installation/index.rst
    overview/overview/index.rst
-   overview/dependencies/index.rst
 
 .. _section-user-guide:
 
@@ -53,6 +54,17 @@ User's Guide
    user/usage/index.rst
 
 .. _section-author-guide:
+
+.. _section-pipeline-specific:
+
+Pipeline Specific Documenation
+==============================
+
+.. toctree::
+   :maxdepth: 2
+
+   pipelines/sip/index.rst
+
 
 Recipe & Pipeline Author's Guide
 ================================
@@ -74,15 +86,6 @@ Developer's Reference
    developer/lofarpipe.rst
    developer/todo.rst
 
-.. _section-pipeline-specific:
-
-Pipeline Specific Documenation
-==============================
-
-.. toctree::
-   :maxdepth: 2
-
-   pipelines/sip/index.rst
 
 Indices and tables
 ==================

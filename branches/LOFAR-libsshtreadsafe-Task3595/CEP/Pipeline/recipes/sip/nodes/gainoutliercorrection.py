@@ -23,11 +23,22 @@ from lofarpipe.support.lofarexceptions import PipelineRecipeFailed
 from lofarpipe.recipes.helpers.WritableParmDB import WritableParmDB, list_stations
 from lofarpipe.recipes.helpers.ComplexArray import ComplexArray, RealImagArray, AmplPhaseArray
 
-class GainOutlierCorrection(LOFARnodeTCP):
-    def run(self, infile, outfile, executable, environment, sigma):
+class gainoutliercorrection(LOFARnodeTCP):
+    """
+    Perform a gain outlier correction on the provided parmdb.
+    The functionality is based on the edit_parmdb script of John Swinbank.
+    
+    Outliers in the gain are swapped with the median. resulting gains 
+    are written back to the supplied ms:
+    
+    1. Select correction correction method
+    2. Call parmexportcal for gain correction
+    3. use gainoutliercorrect from Swinbank
+       Step are summarized in the functions of this recipe
 
+    """
+    def run(self, infile, outfile, executable, environment, sigma):
         self.environment.update(environment)
-        
         # Time execution of this job
         with log_time(self.logger):
             if os.path.exists(infile):
@@ -39,18 +50,29 @@ class GainOutlierCorrection(LOFARnodeTCP):
                 return 1
         # Create output directory (if it doesn't already exist)
         create_directory(os.path.dirname(outfile))
-
+        # ********************************************************************
+        # 1. Select correction method
         if not os.access(executable, os.X_OK) and sigma != None:
             # If the executable is not accesable and we have a sigma:
             # use the 'local' functionality (edit parmdb)
+            self.logger.info(
+                    "Using the gainoutlier correction based on edit_parmdb")
+
+        # *********************************************************************
+        # 3. use gainoutliercorrect from Swinbank
             self._filter_stations_parmdb(infile, outfile, sigma)
             return 0
+
         # else we need an executable
         # Check if exists and is executable.
         if not os.access(executable, os.X_OK):
             self.logger.error("Executable %s not found" % executable)
             return 1
 
+        # ********************************************************************
+        # 2. Call parmexportcal for gain correction
+        self.logger.info(
+                    "Using the gainoutlier correction based on parmexportcal")
         try:
             temp_dir = tempfile.mkdtemp()
             with CatchLog4CPlus(
@@ -78,8 +100,8 @@ class GainOutlierCorrection(LOFARnodeTCP):
         the corrected parmdb written to outfile.
         Outliers in the gain with a distance of median of sigma times std
         are replaced with the mean. The last value of the complex array
-        is skipped (John Swinbank: "I found it was bad when I hacked"
-        " together some code to do this")
+        is skipped (John Swinbank: "I found it [the last value] was bad when 
+        I hacked together some code to do this")
         """
         sigma = float(sigma)
         # Create copy of the input file
@@ -122,10 +144,11 @@ class GainOutlierCorrection(LOFARnodeTCP):
         return parmdb, corected_data
 
     def _read_polarisation_data_and_type_from_db(self, parmdb, station):
-        all_matching_names = parmdb.getNames("Gain:*:*:*:{0}".format(station))
         """
         Read the polarisation data and type from the db.
         """
+        all_matching_names = parmdb.getNames("Gain:*:*:*:{0}".format(station))
+
         # get the polarisation_data eg: 1:1
         # This is based on the 1 trough 3th entry in the parmdb name entry
         pols = set(":".join(x[1:3]) for x in  (x.split(":") for x in all_matching_names))
@@ -237,4 +260,4 @@ if __name__ == "__main__":
     #                        and pass the rest to the run() method defined above
     # --------------------------------------------------------------------------
     jobid, jobhost, jobport = sys.argv[1:4]
-    sys.exit(GainOutlierCorrection(jobid, jobhost, jobport).run_with_stored_arguments())
+    sys.exit(gainoutliercorrection(jobid, jobhost, jobport).run_with_stored_arguments())

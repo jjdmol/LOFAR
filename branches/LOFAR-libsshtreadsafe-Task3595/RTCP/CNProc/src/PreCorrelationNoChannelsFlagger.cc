@@ -5,37 +5,43 @@
 
 #include <PreCorrelationNoChannelsFlagger.h>
 
-// history is kept per subband, as we can get different subbands over time on this compute node.
-// Always flag poth polarizations as a unit.
-
-// FFT followed by an inverse FFT multiplies all samples by N. Thus, we have to divide by N after we are done.
-
-
 /*
-   First, we flag in the time direction, while integrating to imrove signal-to-noise.
-   This was empirically verified to work much better than flagging on the raw data.
-   We can then replace flagged samples with 0s or mean/ median.
+  WE CANNOT INTEGRATE BY ADDING SAMPLES, AND THEN TAKING POWER. WE HAVE TO CALCULATE THE POWER FOR EACH SAMPLE, AND ADD THE POWERS.
+  Interleaved adding does not work: integrate samples modulo itsFFTSize.
+  The fast and slow version do not have the same result. The slow version does an FFT per block, takes the powers of the result, and integrates that.
+  The fast version integrates all samples to the block size, then does only 1 fft, and takes the power.
+  The sum of the powers is not the same as the sum of the samples, en then taking the power. The slow version works much better...
 
-   Two options for frequency flagging:
+  history is kept per subband, as we can get different subbands over time on this compute node.
+  Always flag poth polarizations as a unit.
 
-   - integrate until we have FFTSize samples, so we improve signal-to-noise
-   - do FFT
-   - flag, keep frequency ranges that are flagged.
-   - move over the raw data at full time resolution; FFT, replace with 0, mean or median; inverse FFT
+  FFT followed by an inverse FFT multiplies all samples by N. Thus, we have to divide by N after we are done.
+
+
+  First, we flag in the time direction, while integrating to imrove signal-to-noise.
+  This was empirically verified to work much better than flagging on the raw data.
+  We can then replace flagged samples with 0s or mean/ median.
+
+  Two options for frequency flagging:
+
+  - integrate until we have FFTSize samples, so we improve signal-to-noise
+  - do FFT
+  - flag, keep frequency ranges that are flagged.
+  - move over the raw data at full time resolution; FFT, replace with 0, mean or median; inverse FFT
  
-   or
+  or
 
-   - do not integrate, but move over raw data in full time resolution
-   - do fft
-   - flag on this data only
-   - replace with 0, mean or median
-   - inverse fft
+  - do not integrate, but move over raw data in full time resolution
+  - do fft
+  - flag on this data only
+  - replace with 0, mean or median
+  - inverse fft
 
-   In all these cases replacing with median would be best, but expensive.
-   Also, which median? compute it once on the raw data for all samples, or once per fft?
+  In all these cases replacing with median would be best, but expensive.
+  Also, which median? compute it once on the raw data for all samples, or once per fft?
 
-   Option 1 is cheaper, since we flag only once, instead of integrationFactor times.
-   It may also be better due to the improved signal-to-noise ratio.
+  Option 1 is cheaper, since we flag only once, instead of integrationFactor times.
+  It may also be better due to the improved signal-to-noise ratio.
 */
 
 namespace LOFAR {
@@ -44,7 +50,7 @@ namespace RTCP {
 PreCorrelationNoChannelsFlagger::PreCorrelationNoChannelsFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrSubbands, const unsigned nrChannels, 
 					     const unsigned nrSamplesPerIntegration, const float cutoffThreshold)
 :
-  Flagger(parset, nrStations, nrSubbands, nrChannels, cutoffThreshold, /*baseSentitivity*/ 1.0f, 
+  Flagger(parset, nrStations, nrSubbands, nrChannels, cutoffThreshold, /*baseSentitivity*/ 0.6f, // 0.6 was emperically found to be a good setting for LOFAR
 	  getFlaggerStatisticsType(parset.onlinePreCorrelationFlaggingStatisticsType(getFlaggerStatisticsTypeString(FLAGGER_STATISTICS_WINSORIZED)))),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration)
 {
@@ -58,6 +64,10 @@ PreCorrelationNoChannelsFlagger::PreCorrelationNoChannelsFlagger(const Parset& p
   itsFlagsTime.resize(itsFFTSize);
   itsFlagsFrequency.resize(itsFFTSize);
   itsFFTBuffer.resize(itsFFTSize);
+
+#if USE_HISTORY_FLAGGER
+  itsHistory.resize(boost::extents[itsNrStations][nrSubbands][NR_POLARIZATIONS]);
+#endif
 
   initFFT();
 }
@@ -98,7 +108,6 @@ void PreCorrelationNoChannelsFlagger::backwardFFT()
 
 void PreCorrelationNoChannelsFlagger::flag(FilteredData* filteredData, unsigned currentSubband)
 {
-  (void) currentSubband; // removes compiler warning
   NSTimer flaggerTimer("RFI noChannels flagger total", true, true);
   NSTimer flaggerTimeTimer("RFI noChannels time flagger", true, true);
   NSTimer flaggerFrequencyTimer("RFI noChannels frequency flagger", true, true);
@@ -115,23 +124,36 @@ void PreCorrelationNoChannelsFlagger::flag(FilteredData* filteredData, unsigned 
     }
 
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-      integrateAndCalculatePowers(station, pol, filteredData);
-
+#if FLAG_IN_TIME_DIRECTION
       flaggerTimeTimer.start();
+      calcIntegratedPowers(station, pol, filteredData, currentSubband);
       sumThresholdFlagger1D(itsPowers, itsFlagsTime, itsBaseSensitivity); // flag in time direction
       flaggerTimeTimer.stop();
-
+#endif
+#if FLAG_IN_FREQUENCY_DIRECTION
       flaggerFrequencyTimer.start();
-      forwardFFT();
+      calcIntegratedChannelPowers(station, pol, filteredData, currentSubband);
 
-      for (unsigned i = 0; i < itsFFTSize; i++) { // compute powers from FFT-ed data
-	fcomplex sample = itsFFTBuffer[i];
-	float power = real(sample) * real(sample) + imag(sample) * imag(sample);
-	itsPowers[i] = power;
-      }
-
+#if USE_HISTORY_FLAGGER
+      sumThresholdFlagger1DWithHistory(itsPowers, itsFlagsFrequency, itsBaseSensitivity, itsHistory[station][currentSubband][pol]);
+#else
       sumThresholdFlagger1D(itsPowers, itsFlagsFrequency, itsBaseSensitivity); // flag in freq direction
+#endif
+
       flaggerFrequencyTimer.stop();
+
+#if 0
+  if(station == 0 && pol == 0) {
+    cout << "INTEGRATED DATA AA AA AA for subband " << currentSubband << " ";
+    for (unsigned i = 0; i < itsFFTSize; i++) {
+      float val = itsFlagsFrequency[i] ? 0.0f : itsPowers[i];
+      cout << " " << val;
+    }
+    cout << endl;
+  }
+#endif // PRINT
+
+#endif // FLAG_IN_FREQUENCY_DIRECTION
     }
 
     flaggerTimeTimer.start();
@@ -147,21 +169,50 @@ void PreCorrelationNoChannelsFlagger::flag(FilteredData* filteredData, unsigned 
 }
 
 
-void PreCorrelationNoChannelsFlagger::integrateAndCalculatePowers(unsigned station, unsigned pol, FilteredData* filteredData)
+void PreCorrelationNoChannelsFlagger::calcIntegratedPowers(unsigned station, unsigned pol, FilteredData* filteredData, unsigned currentSubband)
 {
-  for(unsigned i=0; i<itsFFTSize; i++) {
-    itsSamples[i] = makefcomplex(0, 0);
-  }
+  (void) currentSubband; // avoids compiler warning
+
+  memset(itsPowers.data(), 0, itsFFTSize * sizeof(float));
  
   for(unsigned t=0; t<itsNrSamplesPerIntegration; t++) {
-    itsSamples[t/itsIntegrationFactor] += filteredData->samples[0][station][t][pol];
+    fcomplex sample = filteredData->samples[0][station][t][pol];
+    itsPowers[t/itsIntegrationFactor] += real(sample) * real(sample) + imag(sample) * imag(sample);
+  }
+}
+
+
+void PreCorrelationNoChannelsFlagger::calcIntegratedChannelPowers(unsigned station, unsigned pol, FilteredData* filteredData, unsigned currentSubband)
+{
+  memset(itsPowers.data(), 0, itsFFTSize * sizeof(float));
+
+  for(unsigned block=0; block<itsIntegrationFactor; block++) {
+    unsigned startIndex = block * itsFFTSize;
+
+    for(unsigned minorTime=0; minorTime<itsFFTSize; minorTime++) {
+      itsSamples[minorTime] = filteredData->samples[0][station][startIndex + minorTime][pol];
+    } 
+
+    forwardFFT();
+
+    for (unsigned i = 0; i < itsFFTSize; i++) { // compute powers from FFT-ed data
+      fcomplex sample = itsFFTBuffer[i];
+      float power = real(sample) * real(sample) + imag(sample) * imag(sample);
+      itsPowers[i] += power;
+    }
   }
 
-  for (unsigned i = 0; i < itsFFTSize; i++) {
-    fcomplex sample = itsSamples[i];
-    float power = real(sample) * real(sample) + imag(sample) * imag(sample);
-    itsPowers[i] = power;
+#if 0
+  if(station == 0 && pol == 0) {
+    cout << "INTEGRATED DATA AA AA AA for subband " << currentSubband << " ";
+    for (unsigned i = 0; i < itsFFTSize; i++) {
+      cout << " " << itsPowers[i];
+    }
+    cout << endl;
   }
+#else
+  (void) currentSubband; // avoids compiler warning
+#endif
 }
 
 
@@ -188,23 +239,29 @@ void PreCorrelationNoChannelsFlagger::applyFlagsTime(unsigned station, FilteredD
   for (unsigned i = 0; i < itsFFTSize; i++) {
     if(itsFlagsTime[i]) {
       unsigned startIndex = i * itsIntegrationFactor;
-	
       filteredData->flags[0][station].include(startIndex, startIndex+itsIntegrationFactor);
-
-      for (unsigned time = 0; time < itsIntegrationFactor; time++) {
-	unsigned globalIndex = i * itsIntegrationFactor + time;
-	for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-	  filteredData->samples[0][station][globalIndex][pol] = zero;
-	}
-      }
+      memset(&filteredData->samples[0][station][startIndex][0], 0, itsIntegrationFactor * NR_POLARIZATIONS * sizeof(fcomplex));
     }
   }
 }
+
 
 // Do forward FFT; fix samples; backward FFT on the original samples in full resolution. Flags are already set in itsFlagsFrequency.
 // FFT followed by an inverse FFT multiplies all samples by N. Thus, we have to divide by N after we are done.
 void PreCorrelationNoChannelsFlagger::applyFlagsFrequency(unsigned station, FilteredData* filteredData)
 {
+  unsigned count = 0;
+  for(unsigned minorTime=0; minorTime < itsFFTSize; minorTime++) {
+    if(itsFlagsFrequency[minorTime]) {
+      count++;
+    }
+  }
+//    cerr << "samples flagged in frequency: " << count << endl;
+
+  if(count == 0) {
+    return;
+  }
+
   const fcomplex zero = makefcomplex(0, 0);
 
   for (unsigned time = 0; time < itsIntegrationFactor; time++) {
@@ -225,33 +282,6 @@ void PreCorrelationNoChannelsFlagger::applyFlagsFrequency(unsigned station, Filt
       }
     }
   }
-}
-
-fcomplex PreCorrelationNoChannelsFlagger::computeMedianSample(unsigned station, FilteredData* filteredData)
-{
-  // we have to copy the vector, nth_element changes the ordering, also, we want the median of both polarizations
-  std::vector<fcomplex> copy(itsNrSamplesPerIntegration * NR_POLARIZATIONS);
-  memcpy(copy.data(), &filteredData->samples[0][station][0][0], itsNrSamplesPerIntegration * NR_POLARIZATIONS * sizeof(fcomplex));
-
-  std::vector<float> powers(itsNrSamplesPerIntegration * NR_POLARIZATIONS);
-  for(unsigned i=0; i<itsNrSamplesPerIntegration * NR_POLARIZATIONS; i++) {
-    fcomplex sample = copy[i];
-    powers[i] = real(sample) * real(sample) + imag(sample) * imag(sample);
-  }
-
-  // calculate median, expensive, but nth_element is guaranteed to be O(n)
-  std::vector<float>::iterator it = powers.begin() + (powers.size() / 2);
-  std::nth_element(powers.begin(), it, powers.end());
-
-  float median = *it;
-  
-  for(unsigned i=0; i<itsNrSamplesPerIntegration * NR_POLARIZATIONS; i++) {
-    if(powers[i] == median) {
-      return filteredData->samples[0][station][i/NR_POLARIZATIONS][i%NR_POLARIZATIONS];
-    }
-  }
-
-  return makefcomplex(0, 0);
 }
 
 

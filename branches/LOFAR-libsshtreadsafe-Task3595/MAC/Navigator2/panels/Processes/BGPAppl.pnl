@@ -12,11 +12,19 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 
 
   
-    // determine if we have an observation name in the DP, if so strip it and  get the real name to be included in the toplabel
+  // determine if we have an observation name in the DP, if so strip it and  get the real name to be included in the toplabel
   string bareDP=dpSubStr(baseDP,DPSUB_DP);
  
 
-
+  //  The BGPappl belonging by an observation contains :
+  //      ioNodeList   (all IoNodes involved, each ionode  is connected to a station, obtainable via ionode#.usedStation)
+  //       and all of the next lists are contained per ionode in a [,,,] list
+  //      locusNodeList       [x,x,x] list all used locusNodes per ionode
+  //      adderList           [x,x,x] adders per ionode
+  //      writerList          [x,x,x] writers per ionode
+  //      dataProductList     [x,x,x] dataproducts per ionode
+  //      dataProductTypeList [x,x,x] dataproductTypes per ionode
+  
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".ioNodeList\")) {
     if (dpConnect(\"updateBGPAppl\", baseDP + \".ioNodeList\",
@@ -24,12 +32,13 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
                                    baseDP + \".adderList\",
                                    baseDP + \".writerList\",
                                    baseDP + \".dataProductList\",
-                                   baseDP + \".dataProductTypeList\",
+                                   baseDP + \".dataProductTypeList\",                                   
                                    baseDP + \".ioNodeList:_online.._invalid\") == -1) {
       LOG_ERROR(\"BGPAppl.pnl:main|Couldn'tconnect to: \"+baseDP);
     }
     if (!navFunct_dpReachable(baseDP)) {
-      updateBGPAppl(\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",true);
+      updateBGPAppl(\"\",makeDynString(\"\"),\"\",makeDynString(\"\"),\"\",makeDynString(\"\"),\"\",makeDynString(\"\"),
+                    \"\",makeDynString(\"\"),\"\",makeDynString(\"\"),true);
     }
   } else {
     LOG_ERROR(\"BGPAppl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
@@ -39,12 +48,12 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   reload();   
 }
 
-updateBGPAppl(string dp1,dyn_int ionodeList,
+updateBGPAppl(string dp1,dyn_string ioNodeList,
               string dp2,dyn_string locusNodeList,
-              string dp3,dyn_string adderList,              
+              string dp3,dyn_string adderList,
               string dp4,dyn_string writerList,              
-              string dp5,dyn_string dataProductList,              
-              string dp6,dyn_string dataProductTypeList,              
+              string dp5,dyn_string dataProductList,
+              string dp6,dyn_string dataProductTypeList,
               string dp7, bool invalid)
 {
   LOG_TRACE(\"BGPAppl.pnl:updateBGPAppl|entered\");
@@ -55,25 +64,25 @@ updateBGPAppl(string dp1,dyn_int ionodeList,
       SymbolCol=\"Lofar_dpOffline\";
     }
   }  
-  
-
+  dyn_string stations;
+      
   // clear stationtable
   stationTable.deleteAllLines();
-  dynClear(stationList);
   
-  
-  // loop over nr of stations to fill table
-  for (int i = 1; i <= dynlen(ionodeList); i++) {
-  
-    // update stations based inputbuffers and adders
-    stationTable.appendLine(\"ioNode\",ionodeList[i],
-                            \"adders\",adderList[i],
-                            \"writers\",writerList[i],
-                            \"locusNodes\",locusNodeList[i],
-                            \"dataProducts\",dataProductList[i],
-                            \"type\",dataProductTypeList[i]);
+  // loop over nr of ionodes to fill table
+  for (int i = 1; i <= dynlen(ioNodeList); i++) {
+    string station;
+
+    dpGet(navFunct_IONode2DPName(ioNodeList[i])+\".usedStation\",station);
+    dynAppend(stations,station); 
+    // update stationTable
+    stationTable.appendLine(\"Station\",station,\"IONode\",ioNodeList[i],\"LocusNodes\",locusNodeList[i],
+                            \"Adders\",adderList[i],\"Writers\",writerList[i],\"DPs\",dataProductList[i],
+                            \"DPTs\",dataProductTypeList[i]);
   }
   
+  stationList = stations;
+  nodeList = ioNodeList;
   // set the observation selectable items
   prepareProcesses();
 
@@ -88,7 +97,7 @@ void prepareProcesses() {
   dynAppend(g_processesList,baseDP);
   // append all involved stations
   for (int i=1; i <= dynlen(stationList); i++) {  
-    dynAppend(result,baseDP+\",BGLProc->\"+stationList[i]+\",\"+baseDP+\"_BGPProc#\"+stationList[i]);    
+    dynAppend(result,baseDP+\",BGLProc->\"+stationList[i]+\",\"+baseDP+\"_BGPProc#\"+nodeList[i]);    
   }
   dynAppend(g_processesList,baseDP+\"_BGPProc\");
   
@@ -153,8 +162,8 @@ string baseDP=\"\";
 string database=\"\";
 string observation=\"\";
 string observationName = \"\";
-dyn_string stationList;
-" 0
+dyn_string stationList=\"\";
+dyn_string nodeList=\"\";" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -200,7 +209,7 @@ LANG:1 0
 25 42
 "stationTable"
 ""
-1 20 320 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 30 360 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 12 0 0 0 0 0
 E E E
@@ -211,48 +220,54 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  18 318 1002 622
-EE 1 0 1 6 0 "ioNode" 4 1 0 "s" 1
-LANG:1 6 ioNode
+0  28 358 992 712
+EE 1 0 1 7 0 "Station" 8 1 0 "s" 1
+LANG:1 7 Station
 E
 1
 LANG:1 0 
 
-45 "adders" 10 1 0 "s" 1
-LANG:1 6 adders
+80 "IONode" 3 1 0 "[2d,False,False,ALIGNMENT_BEGINNING,False]" 1
+LANG:1 6 IONode
 E
 1
 LANG:1 0 
 
-100 "writers" 10 1 0 "s" 1
-LANG:1 7 writers
+42 "LocusNodes" 14 1 0 "[0s,,,ALIGNMENT_BEGINNING]" 1
+LANG:1 10 LocusNodes
 E
 1
 LANG:1 0 
 
-100 "locusNodes" 27 1 0 "s" 1
-LANG:1 10 locusNodes
+140 "Adders" 14 1 0 "s" 1
+LANG:1 6 Adders
 E
 1
 LANG:1 0 
 
-255 "dataProducts" 33 1 0 "s" 1
-LANG:1 12 dataProducts
+140 "Writers" 14 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
+LANG:1 7 Writers
 E
 1
 LANG:1 0 
 
-305 "type" 10 1 0 "s" 1
-LANG:1 4 type
+140 "DPs" 21 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
+LANG:1 3 DPs
 E
 1
 LANG:1 0 
 
-98 
+205 "DPTs" 21 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
+LANG:1 4 DPTs
+E
+1
+LANG:1 0 
+
+205 
 14 14 10 10
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0 0 1 1 1 7
+0 0 1 0 1 7
 1 0
 0
 LAYER, 1 

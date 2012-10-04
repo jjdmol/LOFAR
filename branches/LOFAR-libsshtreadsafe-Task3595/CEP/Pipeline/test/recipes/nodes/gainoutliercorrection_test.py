@@ -10,13 +10,13 @@ from argparse import ArgumentTypeError
 
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
 from lofarpipe.support.lofarexceptions import PipelineRecipeFailed
-from lofarpipe.recipes.nodes.gainoutliercorrection import GainOutlierCorrection
+from lofarpipe.recipes.nodes.gainoutliercorrection import gainoutliercorrection
 from lofarpipe.recipes.helpers.ComplexArray import ComplexArray, RealImagArray, AmplPhaseArray
 from lofarpipe.recipes.helpers.WritableParmDB import WritableParmDB
 #import from fixtures:
 from logger import logger
 
-class GainOutlierCorrectionWrapper(GainOutlierCorrection):
+class GainOutlierCorrectionWrapper(gainoutliercorrection):
     """
     The test wrapper allows overwriting of function with muck functionality
     """

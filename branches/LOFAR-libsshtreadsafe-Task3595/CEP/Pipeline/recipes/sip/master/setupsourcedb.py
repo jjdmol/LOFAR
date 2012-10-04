@@ -22,20 +22,27 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Create a distributed Sky Model database (SourceDB) for a distributed
     Measurement Set (MS).
-    
-    **Arguments**
 
-    A mapfile describing the data to be processed.
+    1. Load input and output mapfiles. Validate 
+    2. Check if input skymodel file exists. If not, make filename empty.
+    3. Call node side of recipe
+    4. Validate performance and create output
+
+    **Command line arguments**
+
+    1. A mapfile describing the input data to be processed. 
+    2. A mapfile with target location <if provided it will be validated against
+       The input data>
     """
     inputs = {
         'executable': ingredient.ExecField(
             '--executable',
             help="Full path to makesourcedb executable",
         ),
-        'skymodel': ingredient.StringField(
+        'skymodel': ingredient.FileField(
             '-s', '--skymodel',
             help="Input sky catalogue",
-            default='None'
+            optional=True
         ),
         'type': ingredient.StringField(
             '--type',
@@ -65,7 +72,8 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     outputs = {
-        'mapfile': ingredient.FileField()
+        'mapfile': ingredient.FileField(help="mapfile with created sourcedb"
+         "paths")
     }
 
 
@@ -73,8 +81,9 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Starting setupsourcedb run")
         super(setupsourcedb, self).go()
 
-        #                           Load file <-> compute node mapping from disk
-        # ----------------------------------------------------------------------
+        # *********************************************************************
+        # 1. Load input and output mapfiles. Validate
+
         args = self.inputs['args']
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
         indata = load_data_map(args[0])
@@ -96,14 +105,16 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
                 ) for host, infile in indata
             ]
 
-        # Check if input skymodel file exists. If not, make filename empty.
-        if not os.path.isfile(self.inputs['skymodel']):
-            self.logger.warn(
-                "Source catalog %s does not exist. Using an empty one." %
-                self.inputs['skymodel']
-            )
-            self.inputs['skymodel'] = ""
+        # *********************************************************************
+        # 2. Check if input skymodel file exists. If not, make filename empty.
+        try:
+            skymodel = self.inputs['skymodel']
+        except KeyError:
+            skymodel = ""
+            self.logger.info("No skymodel specified. Using an empty one")
 
+        # ********************************************************************
+        # 3. Call node side of script
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
         for host, outfile in outdata:
@@ -113,7 +124,7 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
                     command,
                     arguments=[
                         self.inputs['executable'],
-                        self.inputs['skymodel'],
+                        skymodel,
                         outfile,
                         self.inputs['type']
                     ]
@@ -121,6 +132,8 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
             )
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
 
+        # *********************************************************************
+        # 4. check performance and create output data
         if self.error.isSet():
             return 1
         else:

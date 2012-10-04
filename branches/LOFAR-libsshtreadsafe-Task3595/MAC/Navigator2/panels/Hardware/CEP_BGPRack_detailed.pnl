@@ -16,8 +16,8 @@ PANEL,-1 -1 1011 662 N "_3DFace" 0
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
 
   if(dpExists(baseDP + \".BGPSwitch\")) {
-    dpConnect(\"controlBGP\", baseDP + \".bgpSwitch:_online.._value\",
-                               baseDP + \".bgpSwitch:_online.._invalid\");
+    dpConnect(\"controlBGP\", baseDP + \".BGPSwitch:_online.._value\",
+                               baseDP + \".BGPSwitch:_online.._invalid\");
     if (!navFunct_dpReachable(baseDP)) {
       controlIOnode(\"\",false,\"\",true);
     }

@@ -1,155 +1,112 @@
 .. _framework-quickstart:
 
-CEP quickstart
-==============
+CEP quick-start (including example run)
+==========================================
 
-.. todo::
 
-   Bring this quickstart guide in-line with the current situation.
+This section provides some quick notes on getting started with the pipeline system. More details are available in subsequent sections of this chapter. The first chapter detail all the steps needed to start an imaging pipeline from scratch until checking the output meta-data. (test data INCLUDED!!)
 
-This section provides some quick notes on getting started with the pipeline
-system. More details are available in subsequent sections of this chapter.
 
-This section describes the basic requirements for setting up the pipeline
-framework. You may also need further configuration to run specific tools in
-your pipeline: see, for example, the Standard Imaging Pipeline
-:ref:`sip-quickstart` section.
 
-Locate the pipeline dependencies
---------------------------------
+Setting up the environment and directories
+-------------------------------------------
+The pipelines and framework you will be using are exactly the same
+as the automated central processing system. To allow usage on your 
+own data some configuration has to be done. Keep in mind most of these steps have to be performed only a single time
 
-There are a number of Python packages which are required for the framework to
-operate: see :ref:`framework-dependencies`. On the LOFAR cluster, these are
-available under ``/opt/pipeline/dependencies``. Ensure the appropriate
-directories are available in the environment variables ``$PATH`` (should
-contain ``/opt/pipeline/dependencies/bin``)
-and ``$PYTHONPATH``
-(``/opt/pipeline/dependencies/lib/python2.5/site-packages``). To avoid any
-possible conflicts with system installations, it is best to list these paths
-early in the relevant variables.
+*Step by Step:*
 
-Ensure the framework modules are available
-------------------------------------------
+1. Log in on lfe001, the head-node of the cep1 cluster. 
+   The pipelines should only be started on this cluster: The resource usage can be large and might interfere with observation!.
+   
+2. Load an environment: 
 
-There are two Python packages which comprise the pipeline framework: :mod:`ep`
-and :mod:`lofarpipe`. These must both be available on your ``$PYTHONPATH``.
-The easiest way to achieve this is to use the system installations in
-``/opt/pipeline/framework``: add
-``/opt/pipeline/framework/lib/python2.5/site-packages`` to your
-``$PYTHONPATH``. Alternatively, you may wish to build and install your own
-copies for development purposes: see :ref:`building-modules` for details.
+	a. ``use LofIm`` for the latest development version
+   
+3. Create directories:
 
-Decide on a basic layout
-------------------------
+	a. ``cexec lce: "mkdir /data/scratch/USERNAME`` Create a personal directory on the computation nodes.
+			**Fill in your own user-name.**
+	b. ``mkdir -p /home/USERNAME/pipeline/runtime_directory`` Create in your home a directory for runtime files.
+	c. ``mkdir /home/USERNAME/pipeline/config_files`` Create a directory for the config files.
+	d. ``mkdir /home/USERNAME/pipeline/parset_files`` Create a directory for the parset files.
+      
 
-The pipeline will store all its logs, results, configuration data, etc in a
-centralised location or "runtime directory". This should be accessible from
-all nodes you will be using -- both the head node, and any compute nodes --
-and should be writable (at least) by the userid under which the pipeline will
-run. You should create this directory now.
+4. Copy the configuration files to your own config dir:
 
-If you will be using the compute nodes to store data on their local disks, you
-will also need to create a "working directory" in a standard location on each
-of them. On the LOFAR cluster, ``/data/scratch/[username]`` is a good choice.
-This can be easily achieved using ``cexec``; for instance:
+	a. Because you are using the use command to set your environment you need to find out the location of these files. They might be create new each day. ``which msss_calibrator_pipeline.py`` Results for instance in. 		``/opt/cep/LofIm/daily/Fri/lofar_build/install/gnu_opt/bin/msss_calibrator_pipeline.py`` The config files are located relative from the ``install`` directory in ``gnu_opt/share/pipeline``
+	b. Copy the ``pipeline.cfg`` and ``tasks.cfg`` files to your own configuration directory.
+		``cp /opt/cep/lofar/lofar_versions/LOFAR-Release-1_3-latest/lofar_build/install/gnu_opt/share/pipeline/*.cfg /home/USERNAME/pipeline/config_files``
+	c. ``cp /home/klijn/cep1.clusterdesc /home/USERNAME/pipeline/config_files/cep1.clusterdesc`` Copy the cluster description file to your config dir. It is currently located in a home directory
+	d. This copy action will change the dynamic nature of the files. If you want to be sure that you have the bleeding edge software perform this copy step and the next adaptation step again. 
+	
+5. Adapt the configuration files so they point to your own directories:
 
-.. code-block:: bash
+	a. Open your own version pipeline.cfg with your editor of choice.
+	b. Observe that the first entry lofarroot points to a daily build -or- a release version. This is the reasoning behind the dynamic nature of the configuration files. And a possible copy if you want to use the latest version.
+	c. Change the runtime_directory entry to ``/home/USERNAME/pipeline/runtime_directory/``
+		**THIS RUNTIME_DIRECTORY MUST BE ACCESSIBLE FROM ALL NODES**
+	d. Change the working_directory entry to ``/data/scratch/USERNAME``
+		**THIS WORKING_DIRECTORY CAN --NOT-- EVER, FOR ANY REASON, BE ON A GLOBAL SHARE. EVER**
+	e. Change the clusterdesc entry to ``/home/USERNAME/pipeline/config/cep1.clusterdesc``
+	f. Change to task_files entry to ``[/home/USERNAME/pipeline/config/tasks.cfg]``
 
-   $ cexec sub3:0-8 mkdir -p /data/scratch/swinbank
+.. code-block::	none 
 
-Produce a ``clusterdesc`` file
-------------------------------
+	#Example pipeline.cfg	
+	[DEFAULT]
+	lofarroot = /opt/cep/LofIm/daily/Fri/lofar_build/install/gnu_opt
+	casaroot = /opt/cep/LofIm/daily/Fri/casacore
+	pyraproot = /opt/cep/LofIm/daily/Fri/pyrap
+	hdf5root = /opt/cep/hdf5
+	wcsroot = /opt/cep/wcslib
+	pythonpath = /opt/cep/LofIm/daily/Fri/lofar_build/install/gnu_opt/lib/python2.6/dist-packages
+	runtime_directory = /home/klijn/pipeline/runtime_directory
+	recipe_directories = [%(pythonpath)s/lofarpipe/recipes]
+	working_directory = /data/scratch/klijn
+	task_files = [/home/klijn/pipeline/config/tasks.cfg]
 
-The ``clusterdesc`` file describes the layout of the cluster -- the names of
-the various nodes, what disks they have access to, and so on. Some are already
-available in LOFAR Subversion. A minimal file for subcluster three could be:
+	[layout]
+	job_directory = %(runtime_directory)s/jobs/%(job_name)s
 
-.. code-block:: bash
+	[cluster]
+	clusterdesc = /home/klijn/pipeline/config/cep1.clusterdesc
 
-   Head.Nodes = [ lfe001..2 ]
-   Compute.Nodes = [ lce019..027 ]
+	[deploy]
+	engine_ppath = %(pythonpath)s:%(pyraproot)s/lib:/opt/cep/pythonlibs/lib/python/site-packages
+	engine_lpath = %(lofarroot)s/lib:%(casaroot)s/lib:%(pyraproot)s/lib:%(hdf5root)s/lib:%(wcsroot)s/lib
 
-It doesn't matter where you save this, but you might find it convenient to
-leave it in the runtime directory.
+	[logging]
+	log_file = %(runtime_directory)s/jobs/%(job_name)s/logs/%(start_time)s/pipeline.log
 
-.. _pipeline-config:
+6. Run a short template run of the imaging pipeline:
 
-Produce a pipeline configuration file
--------------------------------------
+	1. use LofIm
+	2. ``cp /data/scratch/klijn/*.parset /home/USERNAME/pipeline/parset_files/out.parset`` copy the test parametersets file to your own parset directory.
+	3. `` msss_imager_pipeline.py /data/scratch/klijn/out.parset --config ~/pipeline/config_files/pipeline.cfg --job test1 -d`` details: 
 
-This file will contain all the standard information the pipeline framework
-needs to get going. For a basic pipeline, running only on the head node, you
-should have something like:
+		a. ``msss_imager_pipeline.py`` the imaging pipeline executable
+		b. ``/home/USERNAME/pipeline/parset_files/out.parset`` the settings for the pipeline
+		c. ``--config ~/pipeline/config_files/pipeline.cfg`` the configuration to use
+		d. ``--job test1`` a self chosen name allows distinguishing between runs
+		e. ``-d`` turn on debugging information prints. The default settings of the pipeline is almost silent. This settings allows some sense of progress. 
+		f. The pipeline should now perform a simple imaging run of a msss like observation.
+		
+	4. The resulting image can be found at lce001:/data/scratch/USERNAME/test1/awimage_cycle_0
 
-.. literalinclude:: ../../../../../docs/examples/definition/dummy/pipeline.cfg
+7. Additional information:
 
-Ensure that the ``runtime_directory`` and ``default_working_directory``
-directives match the directories you created above. The others can mostly be
-ignored for now, unless you know you need to change them.
+	1. The pipeline remembers progress: And will not redo work already done. 
+	2. ``cd /home/USERNAME/pipeline/runtime_directory/jobs/test1`` Go to the runtime_directory for the started/finished run. At this location you can find the logs, partial parset, mapfiles (internal datamember) and the statefile.
+	3. deleting this state file will reset the pipeline and allows running from the start. (You could also rename your job)
+	4. In the parset directory additional parsets will become available. Currently a full mom_parset.parset is provided. It contains ALL settings that are set from outside the pipeline framework.
+	
+8. TODO:
 
-If you also want to use the cluster, you need to add another two stanzas:
+	1. A description of parameter set entries
+	2. How-to use your own data
+	3. How-to change the executables (task.cfg file changes)
+	4. How-to use your own build of the offline processing framework 
+	
 
-.. code-block:: none
-
-  [cluster]
-  clusterdesc = %(runtime_directory)s/sub3.clusterdesc
-  task_furl = %(runtime_directory)s/task.furl
-  multiengine_furl = %(runtime_directory)s/multiengine.furl
-
-  [deploy]
-  script_path = /opt/pipeline/framework/bin
-  controller_ppath = /opt/pipeline/dependencies/lib/python2.5/site-packages:/opt/pipeline/framework/lib/python2.5/site-packages
-  engine_ppath = /opt/pipeline/dependencies/lib/python2.5/site-packages/:/opt/pipeline/framework/lib/python2.5/site-packages
-  engine_lpath = /opt/pipeline/dependencies/lib
-
-You should ensure the ``clusterdesc`` directive points at the clusterdesc
-file you are using. Note that ``%(runtime_directory)s`` will be expanded to
-the path you've specified for the runtime directory.
-
-``engine_lpath`` and ``engine_ppath`` specify (respectively) the
-``$LD_LIBRARY_PATH`` and ``$PYTHONPATH`` that will be set for jobs on the
-compute nodes. These should (at least) point to the dependencies and the
-framework, as above, but should also include any necessary paths for code
-which you will be running on the engines (imaging tools, data processing,
-etc).
-
-The other variables can be left at the default settings for now, unless you
-know they need to be changed.
-
-When looking for a configuration file, the framework will look first in its
-current working directory for ``pipeline.cfg`` and, if nothing is there, look
-under ``~/.pipeline.cfg``. Save yours somewhere appropriate.
-
-At this point, the framework should be ready to run on the head node. If
-required, continue to :ref:`launch-cluster`.
-
-.. _launch-cluster:
-
-Setting up the IPython cluster
-------------------------------
-
-The IPython system consists of a controller, which runs on the head node, and
-engines, which run on the compute nodes. See the sections on :ref:`IPython
-<ipython-blurb>` and the :ref:`cluster layout <cluster-layout>` for details.
-Simple Python scripts make it easy to start and stop the cluster. This can be
-done independently of an individual pipeline run: one can start the engines
-once, run multiple piplines using the same engines, and then shut it down.
-
-The relevant scripts are available in ``/opt/pipeline/framework/bin``, named
-``start_cluster.py`` and ``stop_cluster.py``. Each accepts the name of a
-pipeline configuration file as an optional argument: if one is not provided,
-it defaults to ``~/.pipeline.cfg``.
-
-Usage is very straightforward:
-
-.. code-block:: bash
-
-  $ /opt/pipeline/framework/bin/start_cluster.py --config /path/to/pipeline.cfg
-
-After the script has finished executing, you can continue to set up and run
-your pipeline. When finished, shut down the cluster:
-
-.. code-block:: bash
-
-  $ /opt/pipeline/framework/bin/stop_cluster.py --config /path/to/pipeline.cfg
 

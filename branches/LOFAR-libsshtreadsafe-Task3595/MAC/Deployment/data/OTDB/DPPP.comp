@@ -128,6 +128,9 @@ uses Options         4.0.0  development 1                 'Solver configuration'
 
 node	demixer		4.0.0	development	'node constraint'	"Demix"
 par	type		I		text	-	10		0	"demixer"		-	"Type of the demixer, do not change"
+par	baseline        	I		text	-	10            0	""              -		"Baselines to be demixed"
+par	blrange        	I		vdbl	-	10            0	""              -		"Vector of ranges of baseline lengths (in m) to be demixed"
+par	corrtype          	I		ptext	-	10		0	"auto|cross;cross"	-	"correlation type to demix? Must be auto, cross, or an empty string."
 par	freqstep	I		int	-	10		0	1				-	"Number of channels to average in result."
 par	timestep	I		int	-	10		0	1				-	"Number of time slots to average in result."
 par	demixfreqstep	I	int	-	10		0	1				-	"Number of channels to average in demixing."

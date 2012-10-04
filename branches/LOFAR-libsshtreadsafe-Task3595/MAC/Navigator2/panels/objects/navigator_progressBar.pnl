@@ -15,6 +15,7 @@ PANEL,-1 -1 638 94 N "_3DFace" 1
       break;
     }
   }
+  
   // Check if Action point exists and connect to it if
   // it does. The action Point is the call back for this object
   itsActionDp      = DPNAME_NAVIGATOR + g_navigatorID + \".\"+$name+\".action\";
@@ -40,7 +41,7 @@ void initialize() {
 
 // connect progressbar to value to act on
 setProgressBarDPE() {
-  if (dpExists(itsProgressBarDp)) {
+ if (dpExists(itsProgressBarDp)) {
     if (connected && dpExists(dpe) && dpe != \"\") {
       dpDisconnect(display,dpe);
       connected=false;
@@ -49,6 +50,7 @@ setProgressBarDPE() {
     dpConnect(\"display\",true,dpe);
     connected=true;
   }
+  
 }
 
 display(string dp1, string progress)
@@ -59,6 +61,7 @@ display(string dp1, string progress)
   		\"used31\",\"scale\",1-number/100.0,1,
   		\"used32\",\"scale\",1-number/100.0,1,
   		\"progressValue\",\"text\",number);
+     
 }
 
 
@@ -193,10 +196,12 @@ LANG:0 0
 "dashclr"N "_Transparent"
 "main()
 {
+  
   float x,y;
   
   getValue(\"\",\"position\",x,y);
   addSymbol(myModuleName(), myPanelName(), \"objects/STD_INFOS/minitext_t_l.pnl\",\"mt1\",makeDynString(\"$s_txt:\"),x,y,0,1,1);
+  
 }" 0
  E 0 1 1 0 1 E U  1 E 4 10 10
 10 30

@@ -7,7 +7,7 @@ OLAP.CNProc.phaseThreeCores		 = [0..31]
 OLAP.CNProc.partition			 = PartitionName
 OLAP.CNProc.tabList			 = []
 
-OLAP.CNProc.onlineFlagging               = F # enable or disable all online flagging
+OLAP.CNProc.onlineFlagging               = T # enable or disable all online flagging
 
 OLAP.CNProc.onlinePreCorrelationNoChannelsFlagging = T
 
@@ -47,8 +47,8 @@ Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure = 0
 OLAP.IONProc.integrationSteps		 = 1
 OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1
 OLAP.CNProc_IncoherentStokes.timeIntegrationFactor = 1
-OLAP.CNProc_CoherentStokes.channelsPerSubband = 32
-OLAP.CNProc_IncoherentStokes.channelsPerSubband = 32
+OLAP.CNProc_CoherentStokes.channelsPerSubband = 1
+OLAP.CNProc_IncoherentStokes.channelsPerSubband = 1
 #OLAP.CNProc_CoherentStokes.which	 = IQUV
 #OLAP.CNProc_IncoherentStokes.which	 = IQUV
 OLAP.CNProc_CoherentStokes.which	 = I
@@ -75,14 +75,14 @@ Observation.subbandList			 = [200..231]
 Observation.beamList			 = [32*0]
 Observation.rspBoardList		 = [32*0]
 Observation.rspSlotList		 	 = [0..31]
-Observation.channelsPerSubband		 = 32
+Observation.channelsPerSubband		 = 1
 Observation.sampleClock			 = 200
 Observation.nrSlotsInFrame		 = 32
 Observation.ObsID			 = 1000000
 Observation.startTime			 = '2011-11-01 15:06:56'
 #Observation.stopTime			 = '2011-11-01 15:45:00'
-Observation.stopTime			 = '2011-11-01 15:11:56'
-#Observation.stopTime			 = '2011-11-01 15:07:06'
+Observation.stopTime			 = '2011-11-01 15:16:56'
+#Observation.stopTime			 = '2011-11-01 15:07:56'
 Observation.nrBeams			 = 1
 Observation.AnaBeam[0].directionType	 = J2000
 Observation.AnaBeam[0].angle1		 = 5.069077189772498

@@ -84,6 +84,8 @@ void TH_Mem::initConditionVariables(int tag)
     dataReceived[tag] = condRecv;
   }
 #else
+  (void)tag;
+
   LOG_WARN("initConditionVariables not executed since compiled without USE_THREADS");
 #endif
 }
@@ -122,6 +124,11 @@ bool TH_Mem::sendNonBlocking(void*, int, int tag, DataHolder* dh)
 bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag, int nrBytesRead, DataHolder*)
 { 
 #ifndef USE_THREADS
+  (void)buf;
+  (void)nbytes;
+  (void)tag;
+  (void)nrBytesRead;
+
   LOG_ERROR("recvBlocking not available without USE_THREADS");
   return false;
 #else
@@ -160,6 +167,9 @@ bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag, int nrBytesRead, DataH
 bool TH_Mem::sendBlocking(void*, int, int tag, DataHolder* dh)
 {
 #ifndef USE_THREADS
+  (void)tag;
+  (void)dh;
+
   LOG_ERROR("sendBlocking not available without USE_THREADS");
   return false;
 #else
@@ -185,6 +195,9 @@ bool TH_Mem::sendBlocking(void*, int, int tag, DataHolder* dh)
 void TH_Mem::readTotalMsgLengthBlocking(int tag, int& nrBytes)
 {
 #ifndef USE_THREADS
+  (void)tag;
+  (void)nrBytes;
+
   LOG_ERROR("readTotalMsgLengthBlocking not available without USE_THREADS");
 #else
   LOG_TRACE_RTTI("TH_Mem readTotalMsgLengthBlocking()");  
