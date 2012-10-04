@@ -1085,13 +1085,18 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		if (request.bits_per_sample != 16 && request.bits_per_sample != 8 && request.bits_per_sample != 4) {
 			LOG_ERROR_STR("Received request to change the bitmode to invalid value " << request.bits_per_sample);
 			response.status = CLKCTRL_INVALIDBITMODE_ERR;
-		} else {
+        } else {
 		    LOG_INFO_STR("Received request to change the bitmode to " << request.bits_per_sample << " bit.");
 		    response.status = CLKCTRL_NO_ERR;
 
 		    itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.bits_per_sample));
-		    itsBitmode = request.bits_per_sample;
-		    TRAN(ClockControl::setBitmode_state);
+
+            if (itsBitmode == request.bits_per_sample) {
+		       LOG_INFO_STR("Bitmode is already set to " << itsBitmode << ".");
+            } else {
+		      itsBitmode = request.bits_per_sample;
+		      TRAN(ClockControl::setBitmode_state);
+            }
         }
 
 		port.send(response);
