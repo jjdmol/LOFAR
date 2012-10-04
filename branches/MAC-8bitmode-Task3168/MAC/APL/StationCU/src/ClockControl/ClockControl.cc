@@ -1063,8 +1063,13 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		    response.status = CLKCTRL_NO_ERR;
 
 		    itsOwnPropertySet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(request.clock));
-		    itsClock = request.clock;
-		    TRAN(ClockControl::setClock_state);
+
+            if (itsClock == request.clock) {
+		        LOG_INFO_STR("Clock was already set to " << itsClock << ".");
+            } else {
+		        itsClock = request.clock;
+		        TRAN(ClockControl::setClock_state);
+            }
         }
 
 		port.send(response);
@@ -1092,10 +1097,10 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		    itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.bits_per_sample));
 
             if (itsBitmode == request.bits_per_sample) {
-		       LOG_INFO_STR("Bitmode is already set to " << itsBitmode << ".");
+		        LOG_INFO_STR("Bitmode was already set to " << itsBitmode << ".");
             } else {
-		      itsBitmode = request.bits_per_sample;
-		      TRAN(ClockControl::setBitmode_state);
+		        itsBitmode = request.bits_per_sample;
+		        TRAN(ClockControl::setBitmode_state);
             }
         }
 
