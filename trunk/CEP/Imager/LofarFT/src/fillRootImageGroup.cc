@@ -25,6 +25,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <casa/Containers/Record.h>
 #include <casa/HDF5/HDF5File.h>
 #include <casa/HDF5/HDF5Group.h>
