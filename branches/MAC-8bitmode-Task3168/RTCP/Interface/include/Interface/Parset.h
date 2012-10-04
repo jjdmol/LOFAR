@@ -30,6 +30,7 @@
 
 //# Includes
 #include <Common/ParameterSet.h>
+#include <Common/LofarBitModeInfo.h>
 #include <Common/StreamUtil.h>
 #include <Common/StringUtil.h>
 #include <Common/lofar_datetime.h>
@@ -1053,7 +1054,14 @@ inline int Parset::phaseThreeCoreIndex(unsigned core) const
 
 inline unsigned Parset::nrSlotsInFrame() const
 {
-  return getUint32("Observation.nrSlotsInFrame");
+  unsigned nrSlots = 0;
+
+  nrSlots = getUint32("Observation.nrSlotsInFrame", 0);
+
+  if (nrSlots == 0) {
+    // return default
+    return maxBeamletsPerRSP(nrBitsPerSample());
+  }
 }
 
 inline string Parset::partitionName() const
