@@ -109,7 +109,15 @@ Observation::Observation(const ParameterSet*		aParSet,
 	sampleClock   = aParSet->getUint32(prefix+"sampleClock",  0);
 	filter 		  = aParSet->getString(prefix+"bandFilter",   "");
 	antennaArray  = aParSet->getString(prefix+"antennaArray", "");
-    bitsPerSample = aParSet->getUint32(prefix+"nrBitsPerSample", 16);
+
+    if (aParSet->isDefined(prefix+"nrBitsPerSample")) {
+      bitsPerSample = aParSet->getUint32(prefix+"nrBitsPerSample", 16);
+    } else {
+      // backward compatibility
+      LOG_WARN("Could not find Observation.nrBitsPerSample, using depricated OLAP.nrBitsPerSample");
+      bitsPerSample = aParSet->getUint32(olapprefix+"nrBitsPerSample", 16);
+    }
+
 	nyquistZone = nyquistzoneFromFilter(filter);
 
 	// new way of specifying the receivers and choosing the antenna array.
