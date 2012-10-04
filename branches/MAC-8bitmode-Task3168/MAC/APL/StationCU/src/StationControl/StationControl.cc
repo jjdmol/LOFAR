@@ -238,25 +238,49 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 			itsClockPSinitialized = true;
 			LOG_DEBUG ("Attached to external propertySets");
 
+      // Obtain initial clock value
 			GCFPVInteger	clockVal;
 			itsClockPropSet->getValue(PN_CLC_REQUESTED_CLOCK, clockVal);
 			if (clockVal.getValue() != 0) {
 				itsClock = clockVal.getValue();
-				LOG_DEBUG_STR("Clock in PVSS has value: " << itsClock);
+				LOG_INFO_STR("Clock in PVSS has value: " << itsClock);
 			}
 			else {
 				// try actual clock
 				itsClockPropSet->getValue(PN_CLC_ACTUAL_CLOCK, clockVal);
 				if (clockVal.getValue() == 0) {
-					// both DB values are 0, fall back to 160
-					LOG_DEBUG("Clock settings in the database are all 0, setting 160 as default");
-					itsClock = 160;
+					// both DB values are 0, fall back to 200
+					LOG_WARN("Clock settings in the database are all 0, setting 200 as default");
+					itsClock = 200;
 					itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK, GCFPVInteger(itsClock));
 				}
 				else {
 					itsClock = clockVal.getValue();
-					LOG_DEBUG_STR("Actual clock in PVSS has value: " << itsClock << " applying that value");
+					LOG_INFO_STR("Actual clock in PVSS has value: " << itsClock << " applying that value");
 					itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK, clockVal);
+				}
+			}
+
+      // Obtain initial bitmode value
+			GCFPVInteger	bitmodeVal;
+			itsClockPropSet->getValue(PN_CLC_REQUESTED_BITMODE, bitmodeVal);
+			if (bitmodeVal.getValue() != 0) {
+				itsBitmode = bitmodeVal.getValue();
+				LOG_INFO_STR("Bitmode in PVSS has value: " << itsBitmode);
+			}
+			else {
+				// try actual bitmode
+				itsClockPropSet->getValue(PN_CLC_ACTUAL_BITMODE, bitmodeVal);
+				if (bitmodeVal.getValue() == 0) {
+					// both DB values are 0, fall back to 16
+					LOG_WARN("Bitmode settings in the database are all 0, setting 16 as default");
+					itsBitmode = 16;
+					itsClockPropSet->setValue(PN_CLC_REQUESTED_BITMODE, GCFPVInteger(itsBitmode));
+				}
+				else {
+					itsBitmode = bitmodeVal.getValue();
+					LOG_INFO_STR("Actual bitmode in PVSS has value: " << itsBitmode << " applying that value");
+					itsClockPropSet->setValue(PN_CLC_REQUESTED_BITMODE, bitmodeVal);
 				}
 			}
 			
