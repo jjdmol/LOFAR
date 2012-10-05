@@ -126,10 +126,11 @@ private:
     unsigned                itsNrRSPs;
 
 	void*					itsClockSubscription;
-	uint32					itsClock;
+	uint32					itsClock; // 200 or 160
 
 	void*					itsBitmodeSubscription;
-	uint16					itsBitmode;
+	uint16					itsBitmode; // 16 or 8 or 4
+	uint16					itsBitmodeVersion; // supported bitmode: 0 = 16, 1 = 16/8, 2 = 16/8/4
 
 	bool					itsSplitterRequest;
 	bitset<MAX_RSPBOARDS>	itsSplitters;

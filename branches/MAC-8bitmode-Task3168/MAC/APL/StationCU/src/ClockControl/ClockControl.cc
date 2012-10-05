@@ -45,6 +45,30 @@ using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
+static string bitmodeVersionString(uint16 version)
+{
+  switch(version) {
+    case 0:  return "16";
+    case 1:  return "16/8";
+    case 2:  return "16/8/4";
+    default: return "??";
+  }
+}
+
+static bool bitmodeSupported(unsigned bitmode, uint16 version)
+{
+  if (bitmode == 16)
+    return true;
+
+  if (bitmode == 8)
+    return version >= 1;
+
+  if (bitmode == 4)
+    return version >= 2;
+
+  return false;
+}
+
 namespace LOFAR {
 	using namespace APLCommon;
 	namespace StationCU {
@@ -67,7 +91,8 @@ ClockControl::ClockControl(const string&	cntlrName) :
 
     // we need default values to push in case the boards are set to 0
 	itsClock			(200),
-	itsBitmode			(16)
+	itsBitmode			(16),
+	itsBitmodeVersion	(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 	LOG_INFO(Version::getInfo<StationCUVersion>("ClockControl"));
@@ -373,12 +398,19 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
                 success = false;
                 break;
               } 
+
+              if (ack.bitmode_version[i] != ack.bitmode_version[0]) {
+                LOG_ERROR_STR("Mixed bit mode support not supported: RSP board " << i << " supports modes " << bitmodeVersionString(ack.bitmode_version[i]) << ", but board 0 supports modes " << bitmodeVersionString(ack.bitmode_version[0]));
+                success = false;
+                break;
+              } 
             }
 
             if (success) {
 			    itsBitmode = ack.bits_per_sample[0];
+				itsBitmodeVersion = ack.bitmode_version[0];
 
-			    LOG_INFO_STR("RSP says bitmode is " << itsBitmode << " bits. Adopting that value.");
+			    LOG_INFO_STR("RSP says bitmode is " << itsBitmode << " bits, and supports modes " << bitmodeVersionString(itsBitmodeVersion) << ". Adopting those values.");
 			    itsOwnPropertySet->setValue(PN_CLC_ACTUAL_BITMODE,GCFPVInteger(itsBitmode));
 			    // Note: only here I am allowed to change the value of the requested bitmode. Normally
 			    //       the stationController is the owner of this value.
@@ -1089,6 +1121,9 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 
 		if (request.bits_per_sample != 16 && request.bits_per_sample != 8 && request.bits_per_sample != 4) {
 			LOG_ERROR_STR("Received request to change the bitmode to invalid value " << request.bits_per_sample);
+			response.status = CLKCTRL_INVALIDBITMODE_ERR;
+		if (!bitmodeSupported(request.bits_per_sample, itsBitmodeVersion)) {
+			LOG_ERROR_STR("Received request to change the bitmode to unsupported value " << request.bits_per_sample << " (supported is " << bitmodeVersionString(itsBitmodeVersion) << ")");
 			response.status = CLKCTRL_INVALIDBITMODE_ERR;
         } else {
 		    LOG_INFO_STR("Received request to change the bitmode to " << request.bits_per_sample << " bit.");
