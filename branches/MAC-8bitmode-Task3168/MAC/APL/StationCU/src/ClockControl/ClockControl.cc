@@ -1123,7 +1123,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		if (request.bits_per_sample != 16 && request.bits_per_sample != 8 && request.bits_per_sample != 4) {
 			LOG_ERROR_STR("Received request to change the bitmode to invalid value " << request.bits_per_sample);
 			response.status = CLKCTRL_INVALIDBITMODE_ERR;
-		if (!bitmodeSupported(request.bits_per_sample, itsBitmodeVersion)) {
+		} else if (!bitmodeSupported(request.bits_per_sample, itsBitmodeVersion)) {
 			LOG_ERROR_STR("Received request to change the bitmode to unsupported value " << request.bits_per_sample << " (supported is " << bitmodeVersionString(itsBitmodeVersion) << ")");
 			response.status = CLKCTRL_INVALIDBITMODE_ERR;
         } else {
