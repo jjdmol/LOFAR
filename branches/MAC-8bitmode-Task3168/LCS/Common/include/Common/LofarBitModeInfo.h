@@ -24,6 +24,7 @@
 #define LOFAR_COMMON_BITMODEINFO_H_
 
 #include <Common/LofarConstants.h>
+#include <cassert>
 
 namespace LOFAR {
     //int maxBeamletsPerRSP(int bitsPerSample);
