@@ -658,7 +658,6 @@ GCFEvent::TResult BitmodeCommand::ack(GCFEvent& e)
 			cout << "board  :version :mode\n";
 			for (int rsp = 0; rsp < get_ndevices(); rsp++) {
 				if (getRSPMask().test(rsp)) {
-					// note: version: 1=16 bit, 2=16/8 bit and 4=16/8/4/ bit
 					switch (ack.bitmode_version[rsp]) {
 				    case 0:
 				        cout << formatString("RSP[%02u]: 16     : %2d\n", rsp, ack.bits_per_sample[rsp]);
