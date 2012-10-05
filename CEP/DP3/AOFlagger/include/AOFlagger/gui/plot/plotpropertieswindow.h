@@ -27,6 +27,7 @@
 #include <gtkmm/buttonbox.h>
 #include <gtkmm/checkbutton.h>
 #include <gtkmm/entry.h>
+#include <gtkmm/image.h>
 #include <gtkmm/label.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/radiobutton.h>
