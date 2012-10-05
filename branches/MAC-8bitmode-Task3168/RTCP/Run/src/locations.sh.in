@@ -42,12 +42,12 @@ then
   STORAGE=$STORAGE_HOME/production/lofar/bin/Storage_main
 
   LOGDIR=/localhome/log
-  RUNDIR=/globalhome/lofarsystem
-  LOGBACKUPDIR=/globalhome/lofarsystem/log-archive
+  RUNDIR=$HOME
+  LOGBACKUPDIR=$HOME/log-archive
 
   EXTRA_KEYS="
 OLAP.Storage.userName = lofarsys
-OLAP.Storage.sshIdentityFile = /globalhome/lofarsystem/.ssh/id_rsa
+OLAP.Storage.sshIdentityFile = /root/.ssh/id_rsa.lofarsys
 OLAP.Storage.msWriter=$STORAGE
 OLAP.Storage.AntennaSetsConf = $STORAGE_HOME/production/lofar/etc/AntennaSets.conf
 OLAP.Storage.AntennaFieldsDir = $STORAGE_HOME/production/lofar/etc/StaticMetaData

@@ -1,8 +1,10 @@
 # Adder
-dropping			bool
+dropping		bool
 dropped			int
 dataProductType		string
+dataProduct		string
 fileName		string
-locusNode		string
+locusNode		int
+writer			int
 directory		string
 observationName		string
