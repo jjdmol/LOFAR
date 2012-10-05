@@ -6,6 +6,7 @@
 # ------------------------------------------------------------------------------
 
 from lofarpipe.support.lofarexceptions import DataMapError
+from lofarpipe.support.utilities import deprecated
 
 """
 This module contains methods to load and store so-called data-map files and
@@ -34,8 +35,11 @@ class DataProduct(object):
         "Create a DataProduct from a dict"
         try:
             return cls(item['host'], item['file'], item['skip'])
-        except KeyError, err:
-            raise DataMapError("Missing key %s in dict: %s" % (err, item))
+        except (TypeError, KeyError), err:
+            raise DataMapError(
+                "Failed to create DataProduct from dict '%s'\n  %s: %s" %
+                (item, err.__class__.__name__, err)
+            )
 
 
 class DataMap(object):
@@ -124,18 +128,28 @@ class DataMap(object):
         self._data = data
         
 
+@deprecated
 def load_data_map(filename):
     """
     Load a list of dict -- containing items host, file, and skip --
     from map-file `filename` and return it as a DataMap object.
+    This method is for backward compatibility. New code should use
+    `DataMap.load` instead. The iterator of the returned DataMap object is set
+    to TupleIterator, so that existing code that expects tuples of (host,file)
+    when iterating over a data map's contents won't break.
     """
-    return DataMap.load(filename)
+    data_map = DataMap.load(filename)
+    data_map.iterator = DataMap.TupleIterator
+    return data_map
 
 
+@deprecated
 def store_data_map(filename, data):
     """
     Store a list of dict -- containing items host, file, and skip --
     in map-file `filename`.
+    This method is for backward compatibility. New code should use the method
+    `DataMap.save` instead.
     """
     DataMap(data).save(filename)
 
@@ -240,7 +254,8 @@ if __name__ == '__main__':
     print "\nLoading bar"
     data_map = DataMap.load("bar")
     print "Default iterator"
-    print data_map.data
+    for item in data_map:
+        print item
 
     print "TupleIterator"
     data_map.iterator = DataMap.TupleIterator
