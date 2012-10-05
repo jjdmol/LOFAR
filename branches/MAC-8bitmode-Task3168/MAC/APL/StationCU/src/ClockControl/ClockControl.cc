@@ -45,6 +45,11 @@ using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
+namespace LOFAR {
+	using namespace APLCommon;
+	namespace StationCU {
+	
+
 static string bitmodeVersionString(uint16 version)
 {
   switch(version) {
@@ -69,10 +74,6 @@ static bool bitmodeSupported(unsigned bitmode, uint16 version)
   return false;
 }
 
-namespace LOFAR {
-	using namespace APLCommon;
-	namespace StationCU {
-	
 // static pointer to this object for signal handler
 static ClockControl*	thisClockControl = 0;
 
