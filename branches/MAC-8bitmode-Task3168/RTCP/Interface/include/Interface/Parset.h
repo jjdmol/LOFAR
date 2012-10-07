@@ -1062,6 +1062,8 @@ inline unsigned Parset::nrSlotsInFrame() const
     // return default
     return maxBeamletsPerRSP(nrBitsPerSample());
   }
+
+  return nrSlots;
 }
 
 inline string Parset::partitionName() const
