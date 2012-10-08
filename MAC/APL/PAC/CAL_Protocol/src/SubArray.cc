@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/hexdump.h>
-#include <MACIO/Marshalling.h>
+#include <MACIO/Marshalling.tcc>
 #include <APL/RTCCommon/MarshallBlitz.h>
 
 using namespace std;
@@ -197,65 +197,63 @@ void SubArray::clearDone()
 	m_result[FRONT]->setDone(false);
 }
 
-unsigned int SubArray::getSize()
+size_t SubArray::getSize() const
 {
   return
-      MSH_STRING_SIZE(m_name)
-    + MSH_ARRAY_SIZE (m_geoloc,   double)
-    + MSH_ARRAY_SIZE (m_pos,      double)
-    + MSH_ARRAY_SIZE (m_rcuindex, int16)
-    + MSH_BITSET_SIZE(itsRCUmask)
+      MSH_size(m_name)
+    + MSH_size(m_geoloc)
+    + MSH_size(m_pos)
+    + MSH_size(m_rcuindex)
+    + MSH_size(itsRCUmask)
     + m_spw.getSize();
 }
 
-unsigned int SubArray::pack(void* buffer)
+size_t SubArray::pack(char* buffer) const
 {
-	unsigned int offset = 0;
+	size_t offset = 0;
 
-	MSH_PACK_STRING(buffer, offset, m_name);
-	MSH_PACK_ARRAY(buffer,  offset, m_geoloc,   double);
-	MSH_PACK_ARRAY(buffer,  offset, m_pos,      double);
-	MSH_PACK_ARRAY(buffer,  offset, m_rcuindex, int16);
-	MSH_PACK_BITSET(buffer, offset, itsRCUmask);
-	offset += m_spw.pack(((char*)buffer) + offset);
+	MSH_pack(buffer, offset, m_name);
+	MSH_pack(buffer, offset, m_geoloc);
+	MSH_pack(buffer, offset, m_pos);
+	MSH_pack(buffer, offset, m_rcuindex);
+	MSH_pack(buffer, offset, itsRCUmask);
+	offset += m_spw.pack(buffer + offset);
 
 	return offset;
 }
 
-unsigned int SubArray::unpack(void* buffer)
+size_t SubArray::unpack(const char* buffer)
 {
-	unsigned int offset = 0;
+	size_t offset = 0;
 
-	MSH_UNPACK_STRING(buffer, offset, m_name);
-	MSH_UNPACK_ARRAY(buffer,  offset, m_geoloc,   double, 1);
-	MSH_UNPACK_ARRAY(buffer,  offset, m_pos,      double, 3);
-	MSH_UNPACK_ARRAY(buffer,  offset, m_rcuindex, int16,  2);
-	MSH_UNPACK_BITSET(buffer, offset, itsRCUmask);
-	offset += m_spw.unpack(((char*)buffer) + offset);
+	MSH_unpack(buffer, offset, m_name);
+	MSH_unpack(buffer, offset, m_geoloc);
+	MSH_unpack(buffer, offset, m_pos);
+	MSH_unpack(buffer, offset, m_rcuindex);
+	MSH_unpack(buffer, offset, itsRCUmask);
+	offset += m_spw.unpack(buffer + offset);
 
 	return offset;
 }
 
 // -------------------- SubArrayMap --------------------
 
-unsigned int SubArrayMap::getSize()
+size_t SubArrayMap::getSize() const
 {
-	unsigned int	offset = 0;
-	MSH_SIZE_MAP_STRING_CLASSPTR(offset, (*this), SubArray);
+	return (MSH_size(*this));
+}
+
+size_t SubArrayMap::pack(char* buffer) const
+{
+	size_t	offset = 0;
+	MSH_pack(buffer, offset, (*this));
 	return (offset);
 }
 
-unsigned int SubArrayMap::pack(void* buffer)
+size_t SubArrayMap::unpack(const char* buffer)
 {
-	unsigned int	offset = 0;
-	MSH_PACK_MAP_STRING_CLASSPTR(buffer, offset, (*this), SubArray);
-	return (offset);
-}
-
-unsigned int SubArrayMap::unpack(void* buffer)
-{
-	unsigned int offset = 0;
-	MSH_UNPACK_MAP_STRING_CLASSPTR(buffer, offset, (*this), SubArray);
+	size_t offset = 0;
+	MSH_unpack(buffer, offset, (*this));
 	return (offset);
 }
 

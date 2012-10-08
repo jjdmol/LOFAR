@@ -31,6 +31,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/StreamUtil.h>
 #include <Common/SystemUtil.h>
+#include <Common/LofarBitModeInfo.h>
 #include <ApplCommon/Observation.h>
 
 #include <Common/lofar_map.h>
@@ -66,12 +67,16 @@ Observation::Observation(const ParameterSet*		aParSet,
 	stopTime(0),
 	nyquistZone(0),
 	sampleClock(0),
+    bitsPerSample(0),
 	splitterOn(false),
 	itsStnHasDualHBA(hasDualHBA)
 {
 	// analyse ParameterSet.
 	string prefix = aParSet->locateModule("Observation") + "Observation.";
 	LOG_TRACE_VAR_STR("'Observation' located at: " << prefix);
+
+	string olapprefix = aParSet->locateModule("OLAP") + "OLAP.";
+	LOG_TRACE_VAR_STR("'OLAP' located at: " << olapprefix);
 
 	name  = aParSet->getString(prefix+"name", "");
 	obsID = aParSet->getInt32("_treeID", 0);
@@ -101,9 +106,18 @@ Observation::Observation(const ParameterSet*		aParSet,
 	}
 
 	// miscellaneous
-	sampleClock = aParSet->getUint32(prefix+"sampleClock",  0);
-	filter 		= aParSet->getString(prefix+"bandFilter",   "");
-	antennaArray= aParSet->getString(prefix+"antennaArray", "");
+	sampleClock   = aParSet->getUint32(prefix+"sampleClock",  0);
+	filter 		  = aParSet->getString(prefix+"bandFilter",   "");
+	antennaArray  = aParSet->getString(prefix+"antennaArray", "");
+
+    if (aParSet->isDefined(prefix+"nrBitsPerSample")) {
+      bitsPerSample = aParSet->getUint32(prefix+"nrBitsPerSample", 16);
+    } else {
+      // backward compatibility
+      LOG_WARN("Could not find Observation.nrBitsPerSample, using depricated OLAP.nrBitsPerSample");
+      bitsPerSample = aParSet->getUint32(olapprefix+"nrBitsPerSample", 16);
+    }
+
 	nyquistZone = nyquistzoneFromFilter(filter);
 
 	// new way of specifying the receivers and choosing the antenna array.
@@ -133,16 +147,14 @@ Observation::Observation(const ParameterSet*		aParSet,
 	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
 
 	// construct array with usable (-1) slots and unusable(999) slots. Unusable slots arise
-	// when nrSlotsInFrame differs from MAX_BEAMLETS_PER_RSP.
-	itsSlotTemplate.resize (MAX_BEAMLETS, -1);	// assume all are usable.
-	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame",MAX_BEAMLETS_PER_RSP);
-	if (nrSlotsInFrame != MAX_BEAMLETS_PER_RSP) {
-		for (int rsp = 0; rsp < 4; rsp++) {
-			for (int bl = nrSlotsInFrame; bl < MAX_BEAMLETS_PER_RSP; bl++) {
-				itsSlotTemplate[rsp*MAX_BEAMLETS_PER_RSP + bl] = 999;
-			}
-		}
-	}
+	// when nrSlotsInFrame differs from maxBeamletsPerRSP.
+	itsSlotTemplate.resize (maxBeamlets(bitsPerSample), -1);	// assume all are usable.
+	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame", maxBeamletsPerRSP(bitsPerSample));
+    for (int rsp = 0; rsp < 4; rsp++) {
+        for (int bl = nrSlotsInFrame; bl < maxBeamletsPerRSP(bitsPerSample); bl++) {
+            itsSlotTemplate[rsp * maxBeamletsPerRSP(bitsPerSample) + bl] = 999;
+        }
+    }
 
 	// determine if DataslotLists are available in this parset
 	itsHasDataslots = _hasDataSlots(aParSet);
@@ -302,7 +314,6 @@ Observation::Observation(const ParameterSet*		aParSet,
 	} // for all analogue beams
 
         // loop over all data products and generate all data flows
-	string olapprefix = aParSet->locateModule("OLAP") + "OLAP.";
 	if (!olapprefix.empty()) {		// offline Pipelines don't have OLAP in the parset.
 		const char *dataProductNames[] = { "Beamformed", "Correlated" };
 		unsigned dataProductPhases[]   = { 3,            2 };
@@ -409,6 +420,12 @@ bool	Observation::conflicts(const	Observation&	other) const
 	// Observation overlap, check clock
 	if (other.sampleClock != sampleClock) {
 		LOG_INFO_STR("Clock of observation " << obsID << " and " << other.obsID << " conflict");
+		return (true);
+	}
+
+	// Observation overlap, check bit mode
+	if (other.bitsPerSample != bitsPerSample) {
+		LOG_INFO_STR("Bit mode of observation " << obsID << " and " << other.obsID << " conflict");
 		return (true);
 	}
 
@@ -526,7 +543,7 @@ vector<int> Observation::getBeamAllocation(const string& stationName) const
 
 	// fill with required information
 	for (int i = RSPboardList.size()-1; i >= 0; --i) {
-		int	idx = RSPboardList[i] * MAX_BEAMLETS_PER_RSP + DataslotList[i];
+		int	idx = RSPboardList[i] * maxBeamletsPerRSP(bitsPerSample) + DataslotList[i];
 		if (b2b[idx] != -1) {
 			THROW (Exception, "beamlet " << i << " of beam " << itsBeamSlotList[i] << " clashes with beamlet of other beam(" << b2b[idx] << ")"); 
 		}
@@ -578,7 +595,7 @@ vector<int>	Observation::getBeamlets (uint beamIdx, const string&	stationName) c
 	uint	nrEntries = itsBeamSlotList.size();
 	for (uint i = 0; i < nrEntries; ++i) {
 		if (itsBeamSlotList[i] == parsetIdx) {
-			result.push_back(RSPboardList[i] * MAX_BEAMLETS_PER_RSP + DataslotList[i]);
+			result.push_back(RSPboardList[i] * maxBeamletsPerRSP(bitsPerSample) + DataslotList[i]);
 		}
 	}
 	return (result);
@@ -709,6 +726,7 @@ ostream& Observation::print (ostream&	os) const
     os << "antenna set  : " << antennaSet << endl;
     os << "receiver set : " << RCUset << endl;
     os << "sampleClock  : " << sampleClock << endl;
+    os << "bits/sample  : " << bitsPerSample << endl;
     os << "filter       : " << filter << endl;
     os << "splitter     : " << (splitterOn ? "ON" : "OFF") << endl;
     os << "nyquistZone  : " << nyquistZone << endl << endl;

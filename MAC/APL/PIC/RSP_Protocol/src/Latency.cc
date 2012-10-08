@@ -36,25 +36,25 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace EPA_Protocol;
 
-unsigned int Latency::getSize()
+size_t Latency::getSize() const
 {
-  return MSH_ARRAY_SIZE(itsLatency, EPA_Protocol::RADLatency);
+  return MSH_size(itsLatency);
 }
 
-unsigned int Latency::pack  (void* buffer)
+size_t Latency::pack  (char* buffer) const
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, itsLatency, EPA_Protocol::RADLatency);
+  MSH_pack(buffer, offset, itsLatency);
 
   return offset;
 }
 
-unsigned int Latency::unpack(void *buffer)
+size_t Latency::unpack(const char *buffer)
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
   
-  MSH_UNPACK_ARRAY(buffer, offset, itsLatency, EPA_Protocol::RADLatency, 1);
+  MSH_unpack(buffer, offset, itsLatency);
 
   return offset;
 }

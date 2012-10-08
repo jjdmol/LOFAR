@@ -131,9 +131,9 @@ public:
 	  /**
 	   * marshalling methods
 	   */
-	  unsigned int getSize();
-	  unsigned int pack  (void* buffer);
-	  unsigned int unpack(void *buffer);
+	  size_t getSize() const;
+	  size_t pack  (char* buffer) const;
+	  size_t unpack(const char *buffer);
 	  /*@}*/
 
 private:
@@ -156,18 +156,18 @@ private:
   }
   inline void Timestamp::get(struct timeval *tv) const { if (tv) *tv = m_tv; }
 
-  inline unsigned int Timestamp::getSize()
+  inline size_t Timestamp::getSize() const
   {
     return sizeof(struct timeval);
   }
 
-  inline unsigned int Timestamp::pack  (void* buffer)
+  inline size_t Timestamp::pack  (char* buffer) const
   {
     memcpy(buffer, &m_tv, sizeof(struct timeval));
     return sizeof(struct timeval);
   }
 
-  inline unsigned int Timestamp::unpack(void *buffer)
+  inline size_t Timestamp::unpack(const char *buffer)
   {
     memcpy(&m_tv, buffer, sizeof(struct timeval));
     return sizeof(struct timeval);

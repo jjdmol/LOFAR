@@ -129,19 +129,19 @@ public:
 	RegisterState& operator=(const RegisterState& state);
 
 	/* marshalling methods */
-	unsigned int getSize() {
-		return MSH_ARRAY_SIZE(m_state, State);
+	size_t getSize() const {
+		return MSH_size(m_state);
 	}
 
-	unsigned int pack(void* buffer) {
-		unsigned int offset = 0;
-		MSH_PACK_ARRAY(buffer, offset, m_state, State);
+	size_t pack(char* buffer) const {
+		size_t offset = 0;
+		MSH_pack(buffer, offset, m_state);
 		return offset;
 	}
 
-	unsigned int unpack(void* buffer) {
-		unsigned int offset = 0;
-		MSH_UNPACK_ARRAY(buffer, offset, m_state, State, 1);
+	size_t unpack(const char* buffer) {
+		size_t offset = 0;
+		MSH_unpack(buffer, offset, m_state);
 		return offset;
 	}
 

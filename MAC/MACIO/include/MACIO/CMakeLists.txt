@@ -6,7 +6,7 @@ set(inst_HEADERS
   GCF_Event.h
   KVTLogger.h
   MACServiceInfo.h
-  Marshalling.h
+  Marshalling.tcc
   ProtocolDefs.h
   StringVector.h
   DoubleVector.h

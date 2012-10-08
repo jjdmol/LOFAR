@@ -101,6 +101,7 @@ private:
 	uint16	_addObservation		 (const string&   	name);
 	void	_abortObservation	 (ObsIter			theObs);
 	void	_abortObsWithWrongClock();
+	void	_abortObsWithWrongBitmode();
    	void	_disconnectedHandler (GCFPortInterface&	port);
    	void	_databaseEventHandler(GCFEvent& 		event);
 	void	_handleQueryEvent	 (GCFEvent&			event);
@@ -137,6 +138,7 @@ private:
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;		// timestamp the controller was started
 	int32					itsClock;
+	int32					itsBitmode;
 
 	map<string, ActiveObs*>	itsObsMap;			// current running observations
 	ObsIter					itsStartingObs;		// the Obs that is being started is this moment.
@@ -152,6 +154,8 @@ private:
 	uint32									itsNrRSPboards;
 	bool									itsHasSplitters;
 	bitset<MAX_RSPBOARDS>					itsSplitters;	// On or Off.
+
+    unsigned                                itsSetupSequence;
 };
 
   };//StationCU

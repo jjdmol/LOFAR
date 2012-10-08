@@ -28,6 +28,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/LofarConstants.h>
 #include <Common/lofar_bitset.h>
+
 #include <blitz/array.h>
 #include <APL/RSP_Protocol/AllRegisterState.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
@@ -89,6 +90,7 @@ public:
 	SerdesBuffer&			getSdsWriteBuffer() 	{ return (itsSdsWriteBuffer); }
 	SerdesBuffer&			getSdsReadBuffer(int rspBoardNr);
 	Latency&				getLatencys()			{ return (itsLatencys); }
+	BitmodeInfo&            getBitModeInfo()        { return (itsBitModeInfo); }
 		
 	bool isSplitterActive() { return(itsSplitterActive); }
 	void setSplitterActive(bool active) { itsSplitterActive = active; }
@@ -99,11 +101,15 @@ public:
     bool isSwappedXY(int antenna){ return (itsSwappedXY.test(antenna)); }
     void setSwappedXY(bitset<MAX_ANTENNAS> antennamask) { itsSwappedXY = antennamask; }
     bitset<MAX_ANTENNAS> getSwappedXY() { return(itsSwappedXY); }
-
+    
 	I2Cuser getI2Cuser() { return (itsI2Cuser); }
 	void setI2Cuser(I2Cuser user) { itsI2Cuser = user; }
+	
+	int getBitsPerSample() { return itsBitsPerSample; }
+	void setBitsPerSample(int bits) { itsBitsPerSample = bits; }
 	/*@}*/
-
+    
+    
 	// update timestamp
 	void setTimestamp(const RTC::Timestamp& timestamp);
 
@@ -152,7 +158,9 @@ private:
 	bool							itsCepEnabled1;
 	RSP_Protocol::Latency			itsLatencys;
 	bitset<MAX_ANTENNAS>            itsSwappedXY;
-	
+	RSP_Protocol::BitmodeInfo       itsBitModeInfo;
+	int                             itsBitsPerSample;
+	 
 	Cache* m_cache;		// pointer to container
 };
 

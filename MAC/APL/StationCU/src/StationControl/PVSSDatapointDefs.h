@@ -282,6 +282,8 @@
 #define PN_CLC_CONNECTED	"connected"
 #define PN_CLC_REQUESTED_CLOCK	"requestedClock"
 #define PN_CLC_ACTUAL_CLOCK	"actualClock"
+#define PN_CLC_REQUESTED_BITMODE	"requestedBitmode"
+#define PN_CLC_ACTUAL_BITMODE	"actualBitmode"
 
 // Antenna
 #define PSN_ANTENNA	"@antenna@"

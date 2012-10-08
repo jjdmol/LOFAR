@@ -37,6 +37,7 @@ using namespace std;
 const MEPHeader::FieldsType MEPHeader::RSR_STATUS_HDR        = { READ,  0, 0, { DST_RSP, RSR, RSR_STATUS    }, 0, RSR_STATUS_SIZE,    0, 0 };
 const MEPHeader::FieldsType MEPHeader::RSR_VERSION_HDR       = { READ,  0, 0, { DST_RSP, RSR, RSR_VERSION   }, 0, RSR_VERSION_SIZE,   0, 0 };
 const MEPHeader::FieldsType MEPHeader::RSR_TIMESTAMP_HDR     = { WRITE, 0, 0, { DST_RSP, RSR, RSR_TIMESTAMP }, 0, RSR_TIMESTAMP_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::RSR_BEAMMODE_HDR       = { WRITE, 0, 0, { DST_RSP, RSR, RSR_BEAMMODE   }, 0, RSR_BEAMMODE_SIZE,   0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::RSU_FLASHRW_HDR       = { WRITE, 0, 0, { DST_RSP, RSU, RSU_FLASHRW     }, 0, RSU_FLASHRW_SIZE,     0, 0 };
 const MEPHeader::FieldsType MEPHeader::RSU_FLASHERASE_HDR    = { WRITE, 0, 0, { DST_RSP, RSU, RSU_FLASHERASE  }, 0, RSU_FLASHERASE_SIZE,  0, 0 };
@@ -51,12 +52,32 @@ const MEPHeader::FieldsType MEPHeader::DIAG_BYPASS_HDR       = { WRITE, 0, 0, { 
 const MEPHeader::FieldsType MEPHeader::DIAG_RESULTS_HDR      = { READ,  0, 0, { DST_BLP0, DIAG, DIAG_RESULTS  }, 0, DIAG_RESULTS_SIZE,  0, 0 };
 const MEPHeader::FieldsType MEPHeader::DIAG_SELFTEST_HDR     = { WRITE, 0, 0, { DST_RSP , DIAG, DIAG_SELFTEST }, 0, DIAG_SELFTEST_SIZE, 0, 0 };
 
-const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR         = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT }, 0, SS_SELECT_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR         = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT }  , 0, SS_SELECT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR_0       = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT_0 }, 0, SS_SELECT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR_1       = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT_1 }, 0, SS_SELECT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR_2       = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT_2 }, 0, SS_SELECT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR_3       = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT_3 }, 0, SS_SELECT_SIZE, 0, 0 };
 
-const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_XROUT }, 0, BF_XROUT_SIZE, 0, 0 };
-const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_XIOUT }, 0, BF_XIOUT_SIZE, 0, 0 };
-const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT }, 0, BF_YROUT_SIZE, 0, 0 };
-const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT }, 0, BF_YIOUT_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_XROUT   }, 0, BF_XROUT_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_XIOUT   }, 0, BF_XIOUT_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT   }, 0, BF_YROUT_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT   }, 0, BF_YIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR_0        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XROUT_0 }, 0, BF_XROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR_0        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XIOUT_0 }, 0, BF_XIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR_0        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT_0 }, 0, BF_YROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR_0        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT_0 }, 0, BF_YIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR_1        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XROUT_1 }, 0, BF_XROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR_1        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XIOUT_1 }, 0, BF_XIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR_1        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT_1 }, 0, BF_YROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR_1        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT_1 }, 0, BF_YIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR_2        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XROUT_2 }, 0, BF_XROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR_2        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XIOUT_2 }, 0, BF_XIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR_2        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT_2 }, 0, BF_YROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR_2        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT_2 }, 0, BF_YIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR_3        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XROUT_3 }, 0, BF_XROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR_3        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XIOUT_3 }, 0, BF_XIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR_3        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT_3 }, 0, BF_YROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR_3        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT_3 }, 0, BF_YIOUT_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::BST_POWER_HDR         = { READ,  0, 0, { DST_RSP, BST, BST_POWER_LANE_0 }, 0, BST_POWER_SIZE, 0, 0 };
 
@@ -97,18 +118,18 @@ const MEPHeader::FieldsType MEPHeader::RAD_LATENCY_HDR       = { READ , 0, 0, { 
 const MEPHeader::FieldsType MEPHeader::RSP_RAWDATA_WRITE     = { WRITE, 0, 0, { 0xABBA, 0xBB, 0xAA }, 0xEFFE, 0xEBBE, 0x3412, 0 };
 const MEPHeader::FieldsType MEPHeader::RSP_RAWDATA_READ      = { READ , 0, 0, { 0xABBA, 0xBB, 0xAA }, 0xEFFE, 0xEBBE, 0x3412, 0 };
 
-unsigned int MEPHeader::getSize()
+size_t MEPHeader::getSize() const
 {
   return MEPHeader::SIZE;
 }
 
-unsigned int MEPHeader::pack  (void* buffer)
+size_t MEPHeader::pack  (char* buffer) const
 {
   memcpy(buffer, &(this->m_fields), MEPHeader::SIZE);
   return MEPHeader::SIZE;
 }
 
-unsigned int MEPHeader::unpack(void *buffer)
+size_t MEPHeader::unpack(const char *buffer)
 {
   memcpy(&(this->m_fields), buffer, MEPHeader::SIZE);
   return MEPHeader::SIZE;
@@ -183,7 +204,7 @@ bool MEPHeader::isValidAck(const MEPHeader& reqhdr)
    * if it is a WRITEACK, or SIZE + payload_length if it is a
    * READACK.
    */
-  return (
+  if (
     ( (READACK == this->m_fields.type && reqhdr.m_fields.type == READ) ||
       (WRITEACK == this->m_fields.type && reqhdr.m_fields.type == WRITE) ) &&
     (0 == this->m_fields.status) &&
@@ -195,6 +216,20 @@ bool MEPHeader::isValidAck(const MEPHeader& reqhdr)
     (this->m_fields.addr.regid     == reqhdr.m_fields.addr.regid) &&
     (this->m_fields.offset         == reqhdr.m_fields.offset)     &&
     (this->m_fields.payload_length == reqhdr.m_fields.payload_length)
-    );
+    ) {
+		return (true);
+	}
+	LOG_ERROR_STR("this:" << *this << "\nthat:" << reqhdr);
+	return (false);
 }
 
+//
+// print (os)
+//
+ostream& MEPHeader::print(ostream& os) const
+{
+	os << "hdr[type=" << (int)m_fields.type << ",status=" << (int)m_fields.status << ",framelen=" << m_fields.frame_length;
+	os << ",dstid=" << m_fields.addr.dstid << ",pid=" << (int)m_fields.addr.pid << ",regid=" << (int)m_fields.addr.regid;
+	os << ",offset=" << m_fields.offset << ",payloadlen=" << m_fields.payload_length << ",seqnr=" << m_fields.seqnr << "]";
+	return (os);
+}

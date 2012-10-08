@@ -95,6 +95,8 @@ private:
 	RTDBPropertySet*			itsPropertySet;
 	GCFTimerPort*				itsPropSetTimer;
 
+	GCFTimerPort*				itsGuardTimer;
+
 	string						itsName;
 	GCFTask*					itsTask;
 	int32						itsInstanceNr;
