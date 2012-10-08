@@ -28,17 +28,12 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".ioNodeList\")) {
     if (dpConnect(\"updateBGPAppl\", baseDP + \".ioNodeList\",
-                                   baseDP + \".locusNodeList\",
                                    baseDP + \".adderList\",
-                                   baseDP + \".writerList\",
-                                   baseDP + \".dataProductList\",
-                                   baseDP + \".dataProductTypeList\",                                   
                                    baseDP + \".ioNodeList:_online.._invalid\") == -1) {
       LOG_ERROR(\"BGPAppl.pnl:main|Couldn'tconnect to: \"+baseDP);
     }
     if (!navFunct_dpReachable(baseDP)) {
-      updateBGPAppl(\"\",makeDynString(\"\"),\"\",makeDynString(\"\"),\"\",makeDynString(\"\"),\"\",makeDynString(\"\"),
-                    \"\",makeDynString(\"\"),\"\",makeDynString(\"\"),true);
+      updateBGPAppl(\"\",makeDynString(\"\"),\"\",makeDynString(\"\"),true);
     }
   } else {
     LOG_ERROR(\"BGPAppl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
@@ -49,12 +44,8 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 }
 
 updateBGPAppl(string dp1,dyn_string ioNodeList,
-              string dp2,dyn_string locusNodeList,
-              string dp3,dyn_string adderList,
-              string dp4,dyn_string writerList,              
-              string dp5,dyn_string dataProductList,
-              string dp6,dyn_string dataProductTypeList,
-              string dp7, bool invalid)
+              string dp2,dyn_string adderList,
+              string dp3, bool invalid)
 {
   LOG_TRACE(\"BGPAppl.pnl:updateBGPAppl|entered\");
   string SymbolCol=\"_Window\";
@@ -76,9 +67,7 @@ updateBGPAppl(string dp1,dyn_string ioNodeList,
     dpGet(navFunct_IONode2DPName(ioNodeList[i])+\".usedStation\",station);
     dynAppend(stations,station); 
     // update stationTable
-    stationTable.appendLine(\"Station\",station,\"IONode\",ioNodeList[i],\"LocusNodes\",locusNodeList[i],
-                            \"Adders\",adderList[i],\"Writers\",writerList[i],\"DPs\",dataProductList[i],
-                            \"DPTs\",dataProductTypeList[i]);
+    stationTable.appendLine(\"Station\",station,\"IONode\",ioNodeList[i],\"Adders\",adderList[i]);
   }
   
   stationList = stations;
@@ -163,7 +152,39 @@ string database=\"\";
 string observation=\"\";
 string observationName = \"\";
 dyn_string stationList=\"\";
-dyn_string nodeList=\"\";" 0
+dyn_string nodeList=\"\";
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click(int row) {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    string station = stationTable.cellValueRC(row,\"Station\");
+    navPanel_setEvent(station,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick(int row) {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+
+  string IONode = stationTable.cellValueRC(row,\"IONode\");
+  if (IONode != \"\") {
+    string selection = baseDP+\"_BGPProc#\"+IONode;
+    navPanel_setEvent(selection,\"ChangePanel\");  
+  }
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;
+}
+
+// routine for right mouse click
+void rClick(int row) {
+  navPanel_setEvent(\"BGPAppl\",\"EventRightClick\");
+}
+" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -210,7 +231,15 @@ LANG:1 0
 "stationTable"
 ""
 1 30 360 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main(int row, string column)
+{
+  rClick(row);
+}" 0
+ "main(int row, string column)
+{
+  dblClick(row);
+}" 0
+
 12 0 0 0 0 0
 E E E
 0
@@ -220,50 +249,53 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  28 358 992 712
-EE 1 0 1 7 0 "Station" 8 1 0 "s" 1
+0  28 358 422 712
+"main()
+{
+  stationTable.tableMode(TABLE_SELECT_BROWSE);
+  
+  // connect for highlight mechanism
+  dpConnect( \"bgpapplCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void bgpapplCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"Observation_small.pnl:bgpapplCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"Observation_small.pnl:bgpapplCallback|Found highlight : \" + highlight + \" BGPAppl\");
+  int lineNr=-1;
+  for (int i=0; i< stationTable.lineCount(); i++) {
+    stationTable.currentCell(i,0);
+    if (dynContains(highlight,stationTable.cellValueRC(i,\"Station\"))) {
+      stationTable.cellBackCol(\"Lofar_highLight\");
+      lineNr=i;
+    } else {
+      stationTable.cellBackCol(\"white\");
+    }      
+  }
+}" 0
+"main(int row, string column, string value)
+{
+  click(row);
+}" 0
+ 1 0 1 3 0 "Station" 10 1 0 "s" 1
 LANG:1 7 Station
 E
 1
 LANG:1 0 
 
-80 "IONode" 3 1 0 "[2d,False,False,ALIGNMENT_BEGINNING,False]" 1
+100 "IONode" 7 1 0 "[2d,False,False,ALIGNMENT_BEGINNING,False]" 1
 LANG:1 6 IONode
 E
 1
 LANG:1 0 
 
-42 "LocusNodes" 14 1 0 "[0s,,,ALIGNMENT_BEGINNING]" 1
-LANG:1 10 LocusNodes
-E
-1
-LANG:1 0 
-
-140 "Adders" 14 1 0 "s" 1
+75 "Adders" 21 1 0 "s" 1
 LANG:1 6 Adders
 E
 1
 LANG:1 0 
 
-140 "Writers" 14 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
-LANG:1 7 Writers
-E
-1
-LANG:1 0 
-
-140 "DPs" 21 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
-LANG:1 3 DPs
-E
-1
-LANG:1 0 
-
-205 "DPTs" 21 1 0 "[20s,,,ALIGNMENT_BEGINNING]" 1
-LANG:1 4 DPTs
-E
-1
-LANG:1 0 
-
-205 
+200 
 14 14 10 10
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
