@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 1013 750 N "_3DFace" 0
@@ -21,7 +21,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
                                    baseDP + \".connected:_online.._invalid\") == -1) {
     }
     if (!navFunct_dpReachable(baseDP)) {
-      updateCalibrationControl(\"\",false,\"\",\"\",\"\",\"\",\"\",\"\",\"\",0,\"\".makeDynString(),\"\",true);
+      updateCalibrationControl(\"\",false,\"\",\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",makeDynString(),\"\",true);
     }
   } else {
     LOG_ERROR(\"CalibrationControl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
@@ -202,12 +202,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 320 95 334
+E E 0 1 1 2 1 E U  1 E 30 320 95 333
 0 2 2 "0s" 0 0 0 192 0 0  30 320 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 10 Connected:
 6 51
 "connectedText"
@@ -236,12 +235,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 344 109 358
+E E 0 1 1 2 1 E U  1 E 30 344 109 357
 0 2 2 "0s" 0 0 0 192 0 0  30 344 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 13 antennaArray:
 14 66
 "antennaArrayText"
@@ -256,9 +254,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 113 338 992 359
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  113 338 992 359
 2 "0s" 0 0 0 0 0 -1  E E E
 25 82
 "beamTable"
@@ -273,9 +270,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 113 422 367 597
+LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
+0  113 422 367 597
 EE 1 0 1 1 8 "Name" 22 1 0 "s" 1
 LANG:1 4 Name
 E
@@ -301,9 +297,8 @@ LANG:1 2 #2
 LANG:1 2 #1
 10 8
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-0 1 0 1 7
+LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
+0 0 1 0 1 7
 1 0
 2 83
 "PRIMITIVE_TEXT10"
@@ -318,12 +313,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 428 103 442
+E E 0 1 1 2 1 E U  1 E 30 428 103 441
 0 2 2 "0s" 0 0 0 192 0 0  30 428 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 10 BeamNames:
 2 84
 "PRIMITIVE_TEXT11"
@@ -338,12 +332,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 365 61 379
+E E 0 1 1 2 1 E U  1 E 30 365 61 378
 0 2 2 "0s" 0 0 0 192 0 0  30 365 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 6 rcu's:
 14 85
 "rcusText"
@@ -358,9 +351,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 113 359 992 380
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  113 359 992 380
 2 "0s" 0 0 0 0 0 -1  E E E
 2 86
 "PRIMITIVE_TEXT12"
@@ -375,12 +367,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 386 59 400
+E E 0 1 1 2 1 E U  1 E 30 386 59 399
 0 2 2 "0s" 0 0 0 192 0 0  30 386 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 7 filter:
 14 87
 "filterText"
@@ -395,9 +386,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 113 380 332 401
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  113 380 332 401
 2 "0s" 0 0 0 0 0 -1  E E E
 2 88
 "PRIMITIVE_TEXT13"
@@ -412,12 +402,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 407 101 421
+E E 0 1 1 2 1 E U  1 E 30 407 101 420
 0 2 2 "0s" 0 0 0 192 0 0  30 407 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 12 nyquistzone:
 14 89
 "nyquistzoneText"
@@ -432,9 +421,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 113 401 162 422
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  113 401 162 422
 2 "0s" 0 0 0 0 0 -1  E E E
 0
 LAYER, 1 
@@ -465,7 +453,7 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 0 "PANEL_REF1"
+3 0 "PANEL_REF1" -1
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
 "$ctrlName""CalibrationControl"

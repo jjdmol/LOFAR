@@ -112,14 +112,14 @@ E E E
 LANG:1 19 Active Observations
 
 8
-"frameShadow" "enum 48"
-"selectionMode" "enum 0"
-"backgroundOrigin" "enum 0"
-"defaultRenameAction" "enum 0"
-"frameShape" "enum 6"
-"vScrollBarMode" "enum 0"
-"hScrollBarMode" "enum 0"
 "resizeMode" "enum 0"
+"hScrollBarMode" "enum 0"
+"vScrollBarMode" "enum 0"
+"frameShape" "enum 6"
+"defaultRenameAction" "enum 0"
+"backgroundOrigin" "enum 0"
+"selectionMode" "enum 0"
+"frameShadow" "enum 48"
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
 0  820 20 989 375
@@ -427,9 +427,9 @@ E E 0 2 1 2 1 E  290 96 810 96
 0
 1 173 20 "0" 1
 0
-1 174 20 "" 6
+1 175 20 "" 6
 0
-1 175 20 "" 2
+1 174 20 "" 2
 0
 0
 LAYER, 1 
@@ -486,7 +486,7 @@ LANG:1 0
 "$databaselevel""station"
 "$name""TBBControl"
 3 20 "PANEL_REF20" -1
-"objects\\Processes\\interactive_controller_small.pnl" 170 90 T 43 1 0 1 3 62
+"objects\\Processes\\interactive_controller_small.pnl" 170 90 T 43 1 0 1 3 63
 2
 "$databaselevel""ccu"
 "$name""PythonControl"
