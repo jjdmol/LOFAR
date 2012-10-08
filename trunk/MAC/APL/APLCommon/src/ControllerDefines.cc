@@ -29,7 +29,6 @@
 #include <Common/SystemUtil.h>
 #include <Common/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
-#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include "Controller_Protocol.ph"
 
@@ -312,7 +311,10 @@ string	createPropertySetName(const string&		propSetMask,
 		psName.replace(pos, 10, string("Midplane%d"));
 	}
 	if ((pos = psName.find("@ionode@")) != string::npos) {
-		psName.replace(pos, 8, string("IONode%d"));
+		psName.replace(pos, 8, string("IONode%02d"));
+	}
+	if ((pos = psName.find("@locusnode@")) != string::npos) {
+		psName.replace(pos, 11, string("LocusNode%03d"));
 	}
 	if ((pos = psName.find("@osrack@")) != string::npos) {
 		psName.replace(pos, 8, string("OSRack%d"));
