@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 1000 735 N "_3DFace" 0
@@ -73,12 +73,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 370 2 446 23
+E E 0 1 1 2 1 E U  1 E 370 2 446 22
 0 2 2 "0s" 0 0 0 192 0 0  370 2 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
 LANG:1 7 Daemons
 2 37
 "PRIMITIVE_TEXT2"
@@ -93,12 +92,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 370 186 439 207
+E E 0 1 1 2 1 E U  1 E 370 186 439 206
 0 2 2 "0s" 0 0 0 192 0 0  370 186 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
 LANG:1 6 PermSW
 1 137 12 "" 1
 0
@@ -118,9 +116,9 @@ LANG:1 6 PermSW
 0
 1 145 12 "14.0" 1
 0
-1 146 12 "14" 2
+1 146 12 "14" 6
 0
-1 147 12 "14" 6
+1 147 12 "14" 2
 0
 1 148 12 "15" 4
 0
@@ -128,61 +126,61 @@ LANG:1 6 PermSW
 0
 1 150 12 "15.0" 1
 0
-1 151 12 "15" 2
+1 151 12 "15" 6
 0
-1 152 12 "15" 6
+1 152 12 "15" 2
 0
-1 153 12 "16" 4
+1 153 12 "17" 4
 0
-1 154 12 "16" 3
+1 154 12 "17" 3
 0
-1 155 12 "16.0" 1
+1 155 12 "17.0" 1
 0
-1 156 12 "16" 2
+1 156 12 "17" 6
 0
-1 157 12 "16" 6
+1 157 12 "17" 2
 0
-1 158 12 "17" 4
+1 158 12 "18" 4
 0
-1 159 12 "17" 3
+1 159 12 "18" 3
 0
-1 160 12 "17.0" 1
+1 160 12 "18.0" 1
 0
-1 161 12 "17" 2
+1 161 12 "18" 6
 0
-1 162 12 "17" 6
+1 162 12 "18" 2
 0
-1 163 12 "18" 4
+1 163 12 "19" 4
 0
-1 164 12 "18" 3
+1 164 12 "19" 3
 0
-1 165 12 "18.0" 1
+1 165 12 "19.0" 1
 0
-1 166 12 "18" 2
+1 166 12 "19" 6
 0
-1 167 12 "18" 6
+1 167 12 "19" 2
 0
-1 168 12 "19" 4
+1 168 12 "" 79
 0
-1 169 12 "19" 3
+1 169 12 "" 80
 0
-1 170 12 "19.0" 1
+1 170 12 "" 82
 0
-1 171 12 "19" 2
+1 171 12 "" 113
 0
-1 172 12 "19" 6
+1 172 12 "" 144
 0
-1 173 12 "" 79
+1 173 12 "" 145
 0
-1 174 12 "" 80
+1 174 12 "20" 4
 0
-1 175 12 "" 82
+1 175 12 "20" 3
 0
-1 176 12 "" 113
+1 176 12 "20.0" 1
 0
-1 177 12 "" 144
+1 177 12 "20" 6
 0
-1 178 12 "" 145
+1 178 12 "20" 2
 0
 1 179 13 "" 4
 0
@@ -207,12 +205,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 199 18 206 32
+E E 0 1 1 2 1 E U  1 E 199 18 206 31
 0 2 2 "0s" 0 0 0 192 0 0  199 18 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 1 A
 2 112
 "PRIMITIVE_TEXT10"
@@ -227,12 +224,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 220 18 254 32
+E E 0 1 1 2 1 E U  1 E 220 18 254 31
 0 2 2 "0s" 0 0 0 192 0 0  220 18 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 6 logMsg
 1 184 14 "" 4
 0
@@ -287,12 +283,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 163 205 184 219
+E E 0 1 1 2 1 E U  1 E 163 205 184 218
 0 2 2 "0s" 0 0 0 192 0 0  163 205 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 5 error
 2 135
 "PRIMITIVE_TEXT13"
@@ -307,12 +302,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 288 205 351 219
+E E 0 1 1 2 1 E U  1 E 288 205 351 218
 0 2 2 "0s" 0 0 0 192 0 0  288 205 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 13 currentAction
 2 136
 "PRIMITIVE_TEXT14"
@@ -327,12 +321,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 413 205 447 219
+E E 0 1 1 2 1 E U  1 E 413 205 447 218
 0 2 2 "0s" 0 0 0 192 0 0  413 205 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 6 logMsg
 1 204 20 "" 4
 0
@@ -383,34 +376,34 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 12 "PANEL_REF13"
-"objects\\Processes\\ObsSW_Main.pnl" 75 402 T 15 1 0 1 -69 -110
+3 12 "PANEL_REF13" -1
+"objects\\Processes\\ObsSW_Main.pnl" 75 402 T 15 1 0 1 -65 -110
 0
-3 13 "PANEL_REF14"
+3 13 "PANEL_REF14" -1
 "objects\\Processes\\daemon_small.pnl" 0 40 T 16 1 0 1 0 -8
 1
 "$name""LogProcessor"
-3 14 "PANEL_REF15"
+3 14 "PANEL_REF15" -1
 "objects\\Processes\\daemon_small.pnl" 0 80 T 24 1 0 1 0 -18
 1
 "$name""ServiceBroker"
-3 15 "PANEL_REF16"
+3 15 "PANEL_REF16" -1
 "objects\\Processes\\daemon_small.pnl" 0 110 T 25 1 0 1 0 -18
 1
 "$name""CTStartDaemon"
-3 16 "PANEL_REF17"
+3 16 "PANEL_REF17" -1
 "objects\\Processes\\daemon_small.pnl" 0 140 T 26 1 0 1 0 -18
 1
 "$name""SASGateway"
-3 19 "PANEL_REF20"
+3 19 "PANEL_REF20" -1
 "objects\\Processes\\controller_small.pnl" 0 220 T 27 U 
 1
 "$name""MACScheduler"
-3 20 "PANEL_REF21"
+3 20 "PANEL_REF21" -1
 "objects\\Processes\\controller_small.pnl" 0 280 T 35 1 0 1 0 -32
 1
 "$name""SoftwareMonitor"
-3 21 "PANEL_REF22"
+3 21 "PANEL_REF22" -1
 "objects\\Processes\\daemon_small.pnl" 0 140 T 35 1 0 1 0 12
 1
 "$name""KeyValueLogger"

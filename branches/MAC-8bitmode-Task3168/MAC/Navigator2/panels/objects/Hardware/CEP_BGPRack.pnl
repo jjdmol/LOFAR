@@ -19,7 +19,7 @@ PANEL,-1 -1 669 432 N "_3DFace" 0
     dpConnect(\"controlBGP\", baseDP + \".BGPSwitch:_online.._value\",
                                baseDP + \".BGPSwitch:_online.._invalid\");
     if (!navFunct_dpReachable(baseDP)) {
-      controlIOnode(\"\",false,\"\",true);
+      controlBGP(\"\",false,\"\",true);
     }
   }
 
