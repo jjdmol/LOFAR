@@ -692,7 +692,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 		// check if all actions for this event are finished.
 		vector<ChildControl::StateInfo>	cntlrStates = itsChildControl->getPendingRequest("", treeID);
-LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
+		LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 		if (cntlrStates.empty()) {	// no pending requests? Ready.
 			if (event.signal != CONTROL_QUITED) {
 				sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_NO_ERROR);

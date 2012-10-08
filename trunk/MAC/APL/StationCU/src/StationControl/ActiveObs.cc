@@ -153,7 +153,7 @@ GCFEvent::TResult ActiveObs::initial(GCFEvent& event,
 		break;
 	
 	default:
-		LOG_DEBUG_STR ("initial, default");
+		LOG_DEBUG_STR(itsName << ":inital default: " << eventName(event));
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
@@ -167,7 +167,6 @@ GCFEvent::TResult ActiveObs::initial(GCFEvent& event,
 //
 GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 {
-//	LOG_DEBUG(formatString("%s:starting - %04X", itsName.c_str(), event.signal));
 	LOG_DEBUG(formatString("%s:starting - %s", itsName.c_str(), eventName(event).c_str()));
 
 	switch (event.signal) {
@@ -269,7 +268,7 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 		break;
 
 	default:
-		LOG_DEBUG_STR(itsName << ":default(" << eventName(event) << ")");
+		LOG_DEBUG_STR(itsName << ":starting default: " << eventName(event) << "@" << port.getName());
 		return(GCFEvent::NOT_HANDLED);
 		break;
 	}
@@ -283,7 +282,7 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 //
 GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 {
-	LOG_DEBUG_STR(itsName << ":connected");
+	LOG_DEBUG_STR(itsName << ":connected - " << eventName(event) << "@" << port.getName());
 
 	switch (event.signal) {
 	case F_ENTRY: 
@@ -369,7 +368,7 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 		break;
 
 	default:
-		LOG_DEBUG_STR(itsName << ":default(" << eventName(event) << ")");
+		LOG_DEBUG_STR(itsName << ":connected default: " << eventName(event) << "@" << port.getName());
 		return(GCFEvent::NOT_HANDLED);
 		break;
 	}
@@ -383,7 +382,7 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 //
 GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 {
-	LOG_DEBUG_STR(itsName << ":standby");
+	LOG_DEBUG_STR(itsName << ":standby - " << eventName(event) << "@" << port.getName());
 
 	switch (event.signal) {
 	case F_ENTRY: 
@@ -432,10 +431,11 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 				LOG_ERROR_STR("Start of TBB failed with error, " << msg.result << 
 								". CONTINUING OBSERVATION WITHOUT TBB.");	
 				itsUsesTBB = false;
-				break;
 			}
-			LOG_INFO_STR("TBBController has started the beam");
-			itsTBBCntlrReady = true;
+			else {
+				LOG_INFO_STR("TBBController has started the beam");
+				itsTBBCntlrReady = true;
+			}
 		}
 		else {
 			ASSERTSTR(false, "Received claimed event of unknown controller: " << msg.cntlrName);
@@ -472,7 +472,7 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 		break;
 
 	default:
-		LOG_DEBUG_STR(itsName << ":default(" << eventName(event) << ")");
+		LOG_DEBUG_STR(itsName << ":standby default: " << eventName(event) << "@" << port.getName());
 		return(GCFEvent::NOT_HANDLED);
 		break;
 	}
@@ -486,8 +486,7 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 //
 GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port)
 {
-//	LOG_DEBUG_STR(itsName << ":operational");
-	LOG_DEBUG(formatString("%s:operational - %s", itsName.c_str(), eventName(event).c_str()));
+	LOG_DEBUG_STR(itsName << ":operational - " << eventName(event) << "@" << port.getName());
 
 	switch (event.signal) {
 	case F_ENTRY: 
@@ -598,7 +597,7 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port
 	break;
 
 	default:
-		LOG_DEBUG_STR(itsName << ":default(" << eventName(event) << ")");
+		LOG_DEBUG_STR(itsName << ":operational default: " << eventName(event) << "@" << port.getName());
 		return(GCFEvent::NOT_HANDLED);
 		break;
 	}
@@ -674,7 +673,7 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 	break;
 
 	default:
-		LOG_DEBUG_STR(itsName << ":default(" << eventName(event) << ")");
+		LOG_DEBUG_STR(itsName << ":stopping default: " << eventName(event));
 		return(GCFEvent::NOT_HANDLED);
 		break;
 	}
