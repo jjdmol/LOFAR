@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-#                                                       LOFAR AVERAGING PIPELINE
+#                                                  LOFAR PRE-PROCESSING PIPELINE
 #
-#                                                  EoR Averaging Pipeline recipe
+#                                                 Pre-Processing Pipeline recipe
 #                                                             Marcel Loose, 2012
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
@@ -15,21 +15,20 @@ from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 
-class eor_averaging_pipeline(control):
+class preprocessing_pipeline(control):
     """
-    The EoR averaging pipeline can be used to average raw UV-data in time
-    and frequency, and to flag RFI.
+    The pre-processing pipeline can be used to average raw UV-data in time
+    and frequency, to flag RFI, and to demix strong A-team sources.
     
     This pipeline will perform the following operations:
     
     1. Prepare phase, collect data from parset and input mapfiles.
     2. Create VDS-file; it will contain important input-data for NDPPP
-    3. Average and flag data, using NDPPP.
-
+    3. Average and flag data, and demix A-team sources using NDPPP.
     """
     
     def __init__(self):
-        super(eor_averaging_pipeline, self).__init__()
+        super(preprocessing_pipeline, self).__init__()
         self.parset = parameterset()
         self.input_data = []
         self.output_data = []
@@ -132,7 +131,7 @@ class eor_averaging_pipeline(control):
                 os.path.splitext(os.path.basename(parset_file))[0])
 
         # Call the base-class's `go()` method.
-        return super(eor_averaging_pipeline, self).go()
+        return super(preprocessing_pipeline, self).go()
 
 
     def pipeline_logic(self):
@@ -190,4 +189,4 @@ class eor_averaging_pipeline(control):
 
 
 if __name__ == '__main__':
-    sys.exit(eor_averaging_pipeline().main())
+    sys.exit(preprocessing_pipeline().main())
