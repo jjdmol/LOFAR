@@ -100,12 +100,12 @@ class msss_calibrator_pipeline(control):
         # Update input- and output-data product specifications if needed
         if not all(self.io_data_mask):
             self.logger.info("Updating input/output product specifications")
-            self.input_data = [
+            self.input_data = DataMap([
                 f for (f, m) in zip(self.input_data, self.io_data_mask) if m
-            ]
-            self.output_data = [
+            ])
+            self.output_data = DataMap([
                 f for (f, m) in zip(self.output_data, self.io_data_mask) if m
-            ]
+            ])
 
 
     def _validate_input_data(self):
@@ -122,7 +122,7 @@ class msss_calibrator_pipeline(control):
             self.logger.warn(
                 "The following input data files were not found: %s" %
                 ', '.join(
-                    ':'.join(f) for (f, m) in zip(
+                    str(f) for (f, m) in zip(
                         self.input_data, self.io_data_mask
                     ) if not m
                 )
