@@ -153,6 +153,7 @@ private:
 	ptime					itsStopTime;
 	uint16					itsStopTimerID;
 	uint16					itsFinishTimerID;
+	bool					itsInFinishState;
 };
 
   };//CEPCU

@@ -54,13 +54,14 @@ namespace LOFAR {
 class CEPlogProcessor : public GCFTask
 {
 public:
-    explicit CEPlogProcessor(const string&  cntlrName);
+    explicit CEPlogProcessor(const std::string&  cntlrName);
     ~CEPlogProcessor();
 
     // its processing states
     GCFEvent::TResult initial_state     (GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult createPropertySets(GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult startListener     (GCFEvent& event, GCFPortInterface& port);
+    GCFEvent::TResult startControlPort  (GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult operational       (GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult finish_state      (GCFEvent& event, GCFPortInterface& port);
 
@@ -83,7 +84,12 @@ private:
     time_t   _parseDateTime     (const char *datestr, const char *timestr) const;
     void     _processLogLine    (const char *cString);
 
+    void     processParset      (const std::string &observationID);
+
     struct logline {
+      // original log line
+      const char *fullmsg;
+
       // info straight from splitting log line
       const char *process;
       const char *host;
@@ -106,6 +112,8 @@ private:
     // Return the observation ID, or -1 if none can be found
     int _getParam(const char *msg,const char *param) const;
 
+    bool _recordLogMsg(const struct logline &logline) const;
+
     // Return the temporary obs name to use in PVSS. Also registers the temporary obs name
     // if the provided log line announces it.
     string getTempObsName(int obsID, const char *msg);
@@ -117,6 +125,7 @@ private:
     //# --- Datamembers --- 
     // The listener socket to receive the requests on.
     GCFTCPPort*     itsListener;
+    GCFTCPPort*     itsControlPort;
 
     RTDBPropertySet*    itsOwnPropertySet;
     GCFTimerPort*       itsTimerPort;
@@ -127,30 +136,23 @@ private:
         CircularBuffer* buffer;
     } streamBuffer_t;
 
-    // internal structure for locus based logging
-    typedef struct {
-        vector<string>              timeStr;
-        vector<int>                 count;
-        vector<string>              dropped;
-    } logBuffer_t;
-   
-
     // Map containing all the streambuffers.
     map<GCFPortInterface*, streamBuffer_t>  itsLogStreams;
     vector<GCFPortInterface*>               itsLogStreamsGarbage;
 
     vector<RTDBPropertySet*>    itsInputBuffers;
     vector<RTDBPropertySet*>    itsAdders;
-    vector<RTDBPropertySet*>    itsStorage;
-    vector<int>                 itsDroppingCount;
-    vector<logBuffer_t>         itsStorageBuf;
-
+    vector<RTDBPropertySet*>    itsWriters;
 
     // values read from the conf file.
     unsigned        itsNrInputBuffers;
+    unsigned        itsNrIONodes;
     unsigned        itsNrAdders;
     unsigned        itsNrStorage;
+    unsigned        itsNrWriters;
     unsigned        itsBufferSize;
+
+    unsigned        itsNrPsets;
 
     template<typename T, typename U> class BiMap {
     public:
@@ -193,7 +195,7 @@ private:
 
     // a BiMap is needed to automatically remove obsIDs that point to
     // reused tempObsNames.
-    BiMap<int,string> itsTempObsMapping;
+    BiMap<int, std::string> itsTempObsMapping;
 };
 
 // @} addgroup

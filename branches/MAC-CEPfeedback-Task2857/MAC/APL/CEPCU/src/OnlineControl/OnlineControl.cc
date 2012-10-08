@@ -31,6 +31,7 @@
 #include <Common/SystemUtil.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/Observation.h>
+#include <ApplCommon/LofarDirs.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -84,7 +85,8 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsStartTime        (),
 	itsStopTime         (),
 	itsStopTimerID      (0),
-	itsFinishTimerID 	(0)
+	itsFinishTimerID 	(0),
+	itsInFinishState	(false)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -584,6 +586,11 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 
 	switch (event.signal) {
 	case F_ENTRY: {
+		if (itsInFinishState) {
+			return (status);
+		}
+		itsInFinishState = true;
+
 		// update PVSS
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));

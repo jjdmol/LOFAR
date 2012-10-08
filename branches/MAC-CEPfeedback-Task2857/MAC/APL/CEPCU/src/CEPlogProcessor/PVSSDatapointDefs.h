@@ -75,7 +75,7 @@
 #define PST_ADDER	"Adder"
 #define PN_ADD_DROPPING	"dropping"
 #define PN_ADD_NR_BLOCKS_DROPPED	"nrBlocksDropped"
-#define PN_ADD_LOG_LINE	"logLine"
+#define PN_ADD_LOG_LINE	"process.logMsg"
 
 // InputBuffer
 #define PSN_INPUT_BUFFER	"@inputbuffer@"
