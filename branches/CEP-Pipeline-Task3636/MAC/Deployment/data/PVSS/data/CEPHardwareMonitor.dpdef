@@ -1,0 +1,6 @@
+# CEPHardwareMonitor
+#
+BGP.connected		bool
+
+Cluster.connected		bool
+

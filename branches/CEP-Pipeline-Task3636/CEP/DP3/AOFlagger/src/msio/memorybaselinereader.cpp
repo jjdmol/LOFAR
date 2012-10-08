@@ -91,20 +91,8 @@ void MemoryBaselineReader::readSet()
 		for(size_t a1=0;a1!=antennaCount;++a1)
 		{
 			matrix[a1].resize(antennaCount);
-			for(size_t a2=0;a2!=a1;++a2)
+			for(size_t a2=0;a2!=antennaCount;++a2)
 				matrix[a1][a2] = 0;
-			for(size_t a2=a1;a2!=antennaCount;++a2)
-			{
-				Result *result = new Result();
-				for(size_t p=0;p!=polarizationCount;++p) {
-					result->_realImages.push_back(Image2D::CreateZeroImagePtr(timeStepCount, frequencyCount));
-					result->_imaginaryImages.push_back(Image2D::CreateZeroImagePtr(timeStepCount, frequencyCount));
-					result->_flags.push_back(Mask2D::CreateSetMaskPtr<true>(timeStepCount, frequencyCount));
-				}
-				result->_bandInfo = band;
-				result->_uvw.resize(timeStepCount);
-				matrix[a1][a2] = result;
-			}
 		}
 		
 		// The actual reading of the data
@@ -141,6 +129,18 @@ void MemoryBaselineReader::readSet()
 			if(ant1 > ant2) std::swap(ant1, ant2);
 			
 			Result *result = matrix[ant1][ant2];
+			if(result == 0)
+			{
+				result = new Result();
+				for(size_t p=0;p!=polarizationCount;++p) {
+					result->_realImages.push_back(Image2D::CreateZeroImagePtr(timeStepCount, frequencyCount));
+					result->_imaginaryImages.push_back(Image2D::CreateZeroImagePtr(timeStepCount, frequencyCount));
+					result->_flags.push_back(Mask2D::CreateSetMaskPtr<true>(timeStepCount, frequencyCount));
+				}
+				result->_bandInfo = band;
+				result->_uvw.resize(timeStepCount);
+				matrix[ant1][ant2] = result;
+			}
 			
 			dataColumn.get(rowIndex, dataArray);
 			flagColumn.get(rowIndex, flagArray);
@@ -195,12 +195,15 @@ void MemoryBaselineReader::readSet()
 		{
 			for(size_t a2=a1;a2!=antennaCount;++a2)
 			{
-				BaselineID id;
-				id.antenna1 = a1;
-				id.antenna2 = a2;
-				id.spw = 0;
-				_baselines.insert(std::pair<BaselineID, Result>(id, *matrix[a1][a2]));
-				delete matrix[a1][a2];
+				if(matrix[a1][a2] != 0)
+				{
+					BaselineID id;
+					id.antenna1 = a1;
+					id.antenna2 = a2;
+					id.spw = 0;
+					_baselines.insert(std::pair<BaselineID, Result>(id, *matrix[a1][a2]));
+					delete matrix[a1][a2];
+				}
 			}
 		}
 		_areFlagsChanged = false;

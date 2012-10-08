@@ -62,7 +62,7 @@ IONode				ION		C	Y	LOFAR_PIC_BGP_@midplane@_@ionode@
 OSRack				-		C	N	LOFAR_PIC_@osrack@
 LocusNode			LCN		C	Y	LOFAR_PIC_@osrack@_@locusnode@
 CEPPermSW			-		C	N	LOFAR_PermSW
-CEPHardwareMonitor		CHM		C	Y	LOFAR_PermSW_HardwareMonitor
+CEPHardwareMonitor		CHM		C	Y	LOFAR_PermSW_CEPHardwareMonitor
 SoftwareMonitor			-		C	Y	LOFAR_PermSW_SoftwareMonitor
 Daemons				-		C	N	LOFAR_PermSW_Daemons
 PVSS00pmon			-		C	Y	LOFAR_PermSW_Daemons_PVSS00pmon

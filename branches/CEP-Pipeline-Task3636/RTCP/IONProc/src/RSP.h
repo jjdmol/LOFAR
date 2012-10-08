@@ -23,6 +23,7 @@
 #ifndef LOFAR_IONPROC_RSP_H
 #define LOFAR_IONPROC_RSP_H
 
+#include <Common/LofarTypes.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -34,14 +35,14 @@ namespace RTCP {
 
 struct RSP {
   struct Header {
-    uint8_t  version;
-    uint8_t  sourceInfo;
-    uint16_t configuration;
-    uint16_t station;
-    uint8_t  nrBeamlets;
-    uint8_t  nrBlocks;
-    uint32_t timestamp;
-    uint32_t blockSequenceNumber;
+    uint8  version;
+    uint8  sourceInfo;
+    uint16 configuration;
+    uint16 station;
+    uint8  nrBeamlets;
+    uint8  nrBlocks;
+    uint32 timestamp;
+    uint32 blockSequenceNumber;
   } header;
 
   char       data[8130];
