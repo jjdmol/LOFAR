@@ -49,10 +49,10 @@ public:
 	// Currently the tv_usec part is always set to 0 irrespective
 	// of the value passed in.
 	Command() : 
-		m_period(0), m_port(0), m_operation(READ), itsIsDelayed(false), itsIsPostponed(false), itsName("???")  { }
+		m_period(0), m_port(0), m_operation(READ), itsIsDelayed(false), itsIsPostponed(false), itsName("???"), itsOrder(0)  { }
 
 	Command(const string&	name, GCFPortInterface&	port, Operation	oper) : 
-		m_period(0), m_port(&port), m_operation(oper), itsIsDelayed(false), itsIsPostponed(false), itsName(name) { }
+		m_period(0), m_port(&port), m_operation(oper), itsIsDelayed(false), itsIsPostponed(false), itsName(name), itsOrder(0) { }
 
 	// Destructor for Command.
 	virtual ~Command() { }
@@ -124,6 +124,12 @@ public:
 	const string& name() const	 			{ return (itsName);  }
 	/*@}*/
 
+	/*@{*/
+	// Accessor methods order
+	int   order() const			{ return (itsOrder);  }
+	void  order(int anOrder)	{ itsOrder = anOrder; }
+	/*@}*/
+
 private:
 	uint16				m_period;
 	GCFEvent*			m_event;
@@ -132,6 +138,7 @@ private:
 	bool				itsIsDelayed;
 	bool				itsIsPostponed;
 	string				itsName;
+	int					itsOrder;
 };
 
 // Comparison function to order a priority_queue of Ptr<Command>* pointers
@@ -139,6 +146,13 @@ private:
 struct Command_greater { 
 	bool operator() (Ptr<Command>& x, Ptr<Command>& y) const 
 	{ return x->getTimestamp() > y->getTimestamp(); }
+};
+
+// Comparison function to order a priority_queue of Ptr<Command>* pointers
+// as it is used in the Scheduler class.
+struct Command_order { 
+	bool operator() (Ptr<Command>& x, Ptr<Command>& y) const 
+	{ return x->order() > y->order(); }
 };
 
   }; // namespace RSP

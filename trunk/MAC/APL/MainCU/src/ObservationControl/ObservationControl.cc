@@ -479,6 +479,10 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			// reschedule forced-quit timer for safety.
 			itsTimerPort->cancelTimer(itsForcedQuitTimer);
 			itsForcedQuitTimer = itsTimerPort->setTimer(1.0 * itsForcedQuitDelay);
+			// cancel all other timers in case premature quit was requested.
+			itsTimerPort->cancelTimer(itsStartTimer);
+			itsTimerPort->cancelTimer(itsPrepareTimer);
+			itsTimerPort->cancelTimer(itsClaimTimer);
 		}
 		else if (timerEvent.id == itsForcedQuitTimer) {
 			LOG_WARN("QUITING BEFORE ALL CHILDREN DIED.");
@@ -596,6 +600,8 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		// first turn off 'old' timers
 		itsTimerPort->cancelTimer(itsForcedQuitTimer);
 		itsTimerPort->cancelTimer(itsStopTimer);
+		itsStopTimer = 0;
+		itsForcedQuitTimer = 0;
 
 		// tell Parent task we like to go down.
 		itsParentControl->nowInState(getName(), CTState::QUIT);
@@ -647,8 +653,7 @@ void ObservationControl::setObservationTimers(double	minimalDelay)
 	itsTimerPort->cancelTimer(itsStartTimer);
 	itsTimerPort->cancelTimer(itsStopTimer);
 	itsTimerPort->cancelTimer(itsForcedQuitTimer);
-	itsClaimTimer = itsPrepareTimer = itsStartTimer = 
-					itsStopTimer = itsForcedQuitTimer = 0;
+	itsClaimTimer = itsPrepareTimer = itsStartTimer = itsStopTimer = itsForcedQuitTimer = 0;
 
 	// recalc new intervals
 	int32	sec2claim   = start - now - itsPreparePeriod - itsClaimPeriod;
@@ -745,6 +750,7 @@ void  ObservationControl::doHeartBeatTask()
 	if (nrChilds != itsNrControllers) {
 		LOG_WARN_STR("Only " << nrChilds << " out of " << itsNrControllers << " controllers still available.");
 		// if no more children left while we are not in the quit-phase
+		uint32	nrStations = itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL);
 		time_t	now   = to_time_t(second_clock::universal_time());
 		time_t	stop  = to_time_t(itsStopTime);
 		if (now < stop && itsProcessType == "Observation" && itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL)==0) {

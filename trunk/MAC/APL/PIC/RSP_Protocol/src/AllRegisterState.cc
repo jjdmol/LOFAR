@@ -31,7 +31,7 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-unsigned int AllRegisterState::getSize()
+size_t AllRegisterState::getSize() const
 {
   return
       sys_state.getSize()
@@ -62,79 +62,82 @@ unsigned int AllRegisterState::getSize()
 	+ rawdatawrite_state.getSize()
 	+ rawdataread_state.getSize()
 	+ itsSerdesWriteState.getSize()
-	+ itsSerdesReadState.getSize();
+	+ itsSerdesReadState.getSize()
+	+ itsBitModeWriteState.getSize();
 }
 
-unsigned int AllRegisterState::pack  (void* buffer)
+size_t AllRegisterState::pack  (char* buffer) const
 {
-	unsigned int offset = 0;
+	size_t offset = 0;
 
-	offset += sys_state.pack((char*)buffer + offset);
-	offset += bf_state.pack((char*)buffer + offset);
-	offset += ss_state.pack((char*)buffer + offset);
-	offset += rcusettings_state.pack((char*)buffer + offset);
-	offset += rcuprotocol_state.pack((char*)buffer + offset);
-	offset += itsRcuReadState.pack((char*)buffer + offset);
-	offset += hbaprotocol_state.pack((char*)buffer + offset);
-	offset += rsuclear_state.pack((char*)buffer + offset);
-	offset += diagwgsettings_state.pack((char*)buffer + offset);
-	offset += sst_state.pack((char*)buffer + offset);
-	offset += bst_state.pack((char*)buffer + offset);
-	offset += xst_state.pack((char*)buffer + offset);
-	offset += cdo_state.pack((char*)buffer + offset);
-	offset += bs_state.pack((char*)buffer + offset);
-	offset += tdclear_state.pack((char*)buffer + offset);
-	offset += tdwrite_state.pack((char*)buffer + offset);
-	offset += tdread_state.pack((char*)buffer + offset);
-	offset += rad_state.pack((char*)buffer + offset);
-	offset += itsCRstate.pack((char*)buffer + offset);
-	offset += ts_state.pack((char*)buffer + offset);
-	offset += tdstatuswrite_state.pack((char*)buffer + offset);
-	offset += tdstatusread_state.pack((char*)buffer + offset);
-	offset += tbbsettings_state.pack((char*)buffer + offset);
-	offset += tbbbandsel_state.pack((char*)buffer + offset);
-	offset += bypasssettings_state.pack((char*)buffer + offset);
-	offset += rawdatawrite_state.pack((char*)buffer + offset);
-	offset += rawdataread_state.pack((char*)buffer + offset);
-	offset += itsSerdesWriteState.pack((char*)buffer + offset);
-	offset += itsSerdesReadState.pack((char*)buffer + offset);
+	offset += sys_state.pack(buffer + offset);
+	offset += bf_state.pack(buffer + offset);
+	offset += ss_state.pack(buffer + offset);
+	offset += rcusettings_state.pack(buffer + offset);
+	offset += rcuprotocol_state.pack(buffer + offset);
+	offset += itsRcuReadState.pack(buffer + offset);
+	offset += hbaprotocol_state.pack(buffer + offset);
+	offset += rsuclear_state.pack(buffer + offset);
+	offset += diagwgsettings_state.pack(buffer + offset);
+	offset += sst_state.pack(buffer + offset);
+	offset += bst_state.pack(buffer + offset);
+	offset += xst_state.pack(buffer + offset);
+	offset += cdo_state.pack(buffer + offset);
+	offset += bs_state.pack(buffer + offset);
+	offset += tdclear_state.pack(buffer + offset);
+	offset += tdwrite_state.pack(buffer + offset);
+	offset += tdread_state.pack(buffer + offset);
+	offset += rad_state.pack(buffer + offset);
+	offset += itsCRstate.pack(buffer + offset);
+	offset += ts_state.pack(buffer + offset);
+	offset += tdstatuswrite_state.pack(buffer + offset);
+	offset += tdstatusread_state.pack(buffer + offset);
+	offset += tbbsettings_state.pack(buffer + offset);
+	offset += tbbbandsel_state.pack(buffer + offset);
+	offset += bypasssettings_state.pack(buffer + offset);
+	offset += rawdatawrite_state.pack(buffer + offset);
+	offset += rawdataread_state.pack(buffer + offset);
+	offset += itsSerdesWriteState.pack(buffer + offset);
+	offset += itsSerdesReadState.pack(buffer + offset);
+	offset += itsBitModeWriteState.pack(buffer + offset);
 
 	return (offset);
 }
 
-unsigned int AllRegisterState::unpack(void *buffer)
+size_t AllRegisterState::unpack(const char *buffer)
 {
-	unsigned int offset = 0;
+	size_t offset = 0;
 
-	offset += sys_state.unpack((char*)buffer + offset);
-	offset += bf_state.unpack((char*)buffer + offset);
-	offset += ss_state.unpack((char*)buffer + offset);
-	offset += rcusettings_state.unpack((char*)buffer + offset);
-	offset += rcuprotocol_state.unpack((char*)buffer + offset);
-	offset += itsRcuReadState.unpack((char*)buffer + offset);
-	offset += hbaprotocol_state.unpack((char*)buffer + offset);
-	offset += rsuclear_state.unpack((char*)buffer + offset);
-	offset += diagwgsettings_state.unpack((char*)buffer + offset);
-	offset += sst_state.unpack((char*)buffer + offset);
-	offset += bst_state.unpack((char*)buffer + offset);
-	offset += xst_state.unpack((char*)buffer + offset);
-	offset += cdo_state.unpack((char*)buffer + offset);
-	offset += bs_state.unpack((char*)buffer + offset);
-	offset += tdclear_state.unpack((char*)buffer + offset);
-	offset += tdwrite_state.unpack((char*)buffer + offset);
-	offset += tdread_state.unpack((char*)buffer + offset);
-	offset += rad_state.unpack((char*)buffer + offset);
-	offset += itsCRstate.unpack((char*)buffer + offset);
-	offset += ts_state.unpack((char*)buffer + offset);
-	offset += tdstatuswrite_state.unpack((char*)buffer + offset);
-	offset += tdstatusread_state.unpack((char*)buffer + offset);
-	offset += tbbsettings_state.unpack((char*)buffer + offset);
-	offset += tbbbandsel_state.unpack((char*)buffer + offset);
-	offset += bypasssettings_state.unpack((char*)buffer + offset);
-	offset += rawdatawrite_state.unpack((char*)buffer + offset);
-	offset += rawdataread_state.unpack((char*)buffer + offset);
-	offset += itsSerdesWriteState.unpack((char*)buffer + offset);
-	offset += itsSerdesReadState.unpack((char*)buffer + offset);
+	offset += sys_state.unpack(buffer + offset);
+	offset += bf_state.unpack(buffer + offset);
+	offset += ss_state.unpack(buffer + offset);
+	offset += rcusettings_state.unpack(buffer + offset);
+	offset += rcuprotocol_state.unpack(buffer + offset);
+	offset += itsRcuReadState.unpack(buffer + offset);
+	offset += hbaprotocol_state.unpack(buffer + offset);
+	offset += rsuclear_state.unpack(buffer + offset);
+	offset += diagwgsettings_state.unpack(buffer + offset);
+	offset += sst_state.unpack(buffer + offset);
+	offset += bst_state.unpack(buffer + offset);
+	offset += xst_state.unpack(buffer + offset);
+	offset += cdo_state.unpack(buffer + offset);
+	offset += bs_state.unpack(buffer + offset);
+	offset += tdclear_state.unpack(buffer + offset);
+	offset += tdwrite_state.unpack(buffer + offset);
+	offset += tdread_state.unpack(buffer + offset);
+	offset += rad_state.unpack(buffer + offset);
+	offset += itsCRstate.unpack(buffer + offset);
+	offset += ts_state.unpack(buffer + offset);
+	offset += tdstatuswrite_state.unpack(buffer + offset);
+	offset += tdstatusread_state.unpack(buffer + offset);
+	offset += tbbsettings_state.unpack(buffer + offset);
+	offset += tbbbandsel_state.unpack(buffer + offset);
+	offset += bypasssettings_state.unpack(buffer + offset);
+	offset += rawdatawrite_state.unpack(buffer + offset);
+	offset += rawdataread_state.unpack(buffer + offset);
+	offset += itsSerdesWriteState.unpack(buffer + offset);
+	offset += itsSerdesReadState.unpack(buffer + offset);
+	offset += itsBitModeWriteState.unpack(buffer + offset);
 
 	return (offset);
 }

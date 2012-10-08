@@ -43,35 +43,35 @@ ostream& CRrecordVector::print (ostream& os) const
 
 
 // --- marshalling methods --- 
-unsigned int CRrecordVector::getSize()
+size_t CRrecordVector::getSize()
 {
-	uint	offset(sizeof(uint32));
-	uint32	nrElems(requests.size());
+	size_t offset(sizeof(uint32));
+	uint32 nrElems(requests.size());
 	for (size_t i = 0; i < nrElems; i++) {
 		offset +=  requests[i].getSize();
 	}
 	return (offset);
 }
 
-unsigned int CRrecordVector::pack  (void* buffer)
+size_t CRrecordVector::pack  (char* buffer) const
 {
-	unsigned int	offset(sizeof(uint32));
-	uint32			nrElems(requests.size());
+	size_t offset(sizeof(uint32));
+	uint32 nrElems(requests.size());
 	memcpy(buffer, &nrElems, sizeof(uint32));
 	for (size_t i = 0; i < nrElems; i++) {
-		offset +=  requests[i].pack((char*)(buffer)+offset);
+		offset +=  requests[i].pack(buffer + offset);
 	}
 	return (offset);
 }
 
-unsigned int CRrecordVector::unpack(void *buffer)
+size_t CRrecordVector::unpack(const char *buffer)
 {
-	unsigned int	offset(sizeof(uint32));
-	uint32			nrElems;
+	size_t offset(sizeof(uint32));
+	uint32 nrElems;
 	memcpy(&nrElems, buffer, sizeof(uint32));
 	requests.resize(nrElems);
 	for (size_t i = 0; i < nrElems; i++) {
-		offset +=  requests[i].unpack((char*)(buffer)+offset);
+		offset +=  requests[i].unpack(buffer + offset);
 	}
 	return (offset);
 }

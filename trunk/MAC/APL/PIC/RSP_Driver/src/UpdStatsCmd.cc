@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RTCCommon/PSAccess.h>
@@ -40,8 +41,12 @@ UpdStatsCmd::UpdStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper
 	Command("SubStats", port, oper)
 {
   m_event = new RSPSubstatsEvent(event);
-  m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER) ? NR_BLPS_PER_RSPBOARD : 1)
-										* StationSettings::instance()->nrRspBoards() * N_POL;
+  if (m_event->type == Statistics::SUBBAND_POWER) {
+    m_n_devices = NR_BLPS_PER_RSPBOARD * StationSettings::instance()->nrRspBoards() * N_POL;
+  }
+  else {
+    m_n_devices = 2 * N_POL;
+  }
   setPeriod(m_event->period);
 }
 
@@ -74,12 +79,14 @@ void UpdStatsCmd::complete(CacheBuffer& cache)
 		ack.stats().resize(m_event->rcumask.count(), cache.getSubbandStats()().extent(secondDim));
 	}
 	else {
-		ack.stats().resize(m_event->rcumask.count(), MAX_BEAMLETS);
+		ack.stats().resize(m_event->rcumask.count(), maxBeamlets(cache.getBitsPerSample()));
 	}
-
+	
+    int activePlanes = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
+	
 	unsigned int result_device = 0;
 	for (unsigned int cache_device = 0; cache_device < m_n_devices; cache_device++) {
-		if (m_event->rcumask[cache_device]) {
+		if (m_event->rcumask.test(cache_device)) {
 			switch (m_event->type) {
 			case Statistics::SUBBAND_POWER:
 				ack.stats()(result_device, Range::all()) = cache.getSubbandStats()()(cache_device, Range::all());
@@ -88,22 +95,26 @@ void UpdStatsCmd::complete(CacheBuffer& cache)
 			case Statistics::BEAMLET_POWER:
 				// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 				//       In other words: getBeamletWeights can contain more data than ack.weights
-				if (MEPHeader::N_BEAMLETS == MAX_BEAMLETS) {
+				if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample())) {
 					ack.stats()(result_device, Range::all()) = cache.getBeamletStats()()(cache_device, Range::all());
 				}
 				else {
-					for (int rsp = 0; rsp < 4; rsp++) {
-						int	swstart(rsp*MAX_BEAMLETS_PER_RSP);
-						int hwstart(rsp*MEPHeader::N_BEAMLETS/4);
-						ack.stats()(result_device, Range(swstart,swstart+MAX_BEAMLETS_PER_RSP-1)) = 
-							cache.getBeamletStats()()(cache_device, Range(hwstart, hwstart+MAX_BEAMLETS_PER_RSP-1));
-						if (cache_device == 0) {
-							LOG_DEBUG_STR("Getstats:move(" << hwstart << ".." << hwstart+MAX_BEAMLETS_PER_RSP << ") to (" 
-														   << swstart << ".." << swstart+MAX_BEAMLETS_PER_RSP << ")");
-						}
-					}
+				    for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+    					for (int plane = 0; plane < activePlanes; plane++) {
+    						int	swstart((lane*maxBeamletsPerRSP(cache.getBitsPerSample())) + (plane*maxDataslotsPerRSP(cache.getBitsPerSample())));
+    						int hwstart((lane*MEPHeader::N_BEAMLETS) + (plane*MEPHeader::N_BEAMLETS/4));
+    						ack.stats()(result_device, Range(swstart,swstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1)) = 
+    							cache.getBeamletStats()()(cache_device, Range(hwstart, hwstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1));
+    						if (cache_device == 0) {
+    							LOG_DEBUG_STR("Getstats:move(" << hwstart << ".." << hwstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1 << ") to (" 
+    														   << swstart << ".." << swstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1 << ")");
+    						}
+    					}
+    				}
 				}
-				LOG_DEBUG_STR("GetStats(cache[0]): " << cache.getBeamletStats()()(0,Range::all()));
+				if (cache_device == 0) {
+				    LOG_DEBUG_STR("GetStats(cache[0]): " << cache.getBeamletStats()()(0,Range::all()));
+				}
 				
 			break;
 

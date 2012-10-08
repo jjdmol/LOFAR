@@ -31,25 +31,25 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-unsigned int TBBSettings::getSize()
+size_t TBBSettings::getSize() const
 {
-  return MSH_ARRAY_SIZE(m_bandsel, bitset<MEPHeader::N_SUBBANDS>);
+  return MSH_size(m_bandsel);
 }
 
-unsigned int TBBSettings::pack  (void* buffer)
+size_t TBBSettings::pack  (char* buffer) const
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_bandsel, bitset<MEPHeader::N_SUBBANDS>);
+  MSH_pack(buffer, offset, m_bandsel);
 
   return offset;
 }
 
-unsigned int TBBSettings::unpack(void *buffer)
+size_t TBBSettings::unpack(const char *buffer)
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_bandsel, bitset<MEPHeader::N_SUBBANDS>, 1);
+  MSH_unpack(buffer, offset, m_bandsel);
 
   return offset;
 }

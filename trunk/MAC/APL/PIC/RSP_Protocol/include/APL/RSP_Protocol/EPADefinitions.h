@@ -158,6 +158,16 @@ typedef struct RSRVersion // total size 2 bytes
 };
 
 //
+// RSR(0x01) 0x03: get nofbeam
+//
+typedef struct RSRNofbeam // total size 1 byte
+{
+	uint8 select   :4; // select mode, 0=16bit 1=8bit 2=4bit              
+	uint8 bitmode  :3; // firmware version, 1=16bit 2=16/8bit 4=16/8/4bit 
+	uint8 rounding :1; // rounding(not used yet)                          
+};
+
+//
 // RSU(0x02) 0x01: read/write flash
 //
 typedef struct RSUFlashRW	// total size 1024 bytes
@@ -260,7 +270,7 @@ typedef struct DIAGSelftest	// total size 1 byte
 };
 
 //
-// SS(0x04) 0x00: Subband selection
+// SS(0x04) 0x00(0x01-0x03): Subband selection
 //
 typedef struct SubbandSelect // total size (4+54) * 4 for FTS2 test (232)
 							 // total size (4+210) * 4 final (856)
@@ -274,7 +284,7 @@ typedef struct SubbandSelect // total size (4+54) * 4 for FTS2 test (232)
 };
 
 //
-// BF(0x05) 0x00-0x03: Coefficients for XR,XI,YR,YI output
+// BF(0x05) 0x00-0x03(0x04-0x0f): Coefficients for XR,XI,YR,YI output
 //
 typedef struct BeamletWeights // total size 8 x 128 - 1024
 {

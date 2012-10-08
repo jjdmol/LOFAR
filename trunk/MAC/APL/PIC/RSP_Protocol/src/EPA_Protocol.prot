@@ -188,6 +188,12 @@ prelude = << PRELUDE_END
     uint8 fpga_maj :4; // FPGA firmware version (major)
   };
 
+  struct RSRBeamMode
+  {
+	uint8 bm_max;     // bitmode supported by hardware 0=16bit 1=8bit 2=4bit (read only!)
+    uint8 bm_select;  // select bitmode, 0=16bit 1=8bit 2=4bit
+  };
+
   struct RSUReconfig
   {
     uint8 page      :3;       // page selection
@@ -500,6 +506,22 @@ event = {
     type = "uint32";
   };
 };
+
+event = {
+  noheader;
+  signal = RSR_BEAMMODE;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "beammode";
+    type = "struct RSRBeamMode";
+  };
+};
+
 
 event = {
   noheader;

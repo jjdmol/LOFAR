@@ -28,6 +28,7 @@
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
 #include <Common/LofarConstants.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
@@ -39,6 +40,7 @@
 
 #include <complex>
 #include <blitz/array.h>
+#include <boost/dynamic_bitset.hpp>
 
 namespace LOFAR {
 	using GCF::TM::GCFTask;
@@ -106,14 +108,15 @@ public:
 	}
 
 	// Get the mask (N_BEAMLETS bits).
-	bitset<MAX_BEAMLETS> getBEAMLETSMask() const {
-		bitset<MAX_BEAMLETS> mask;
-
+	boost::dynamic_bitset<> getBEAMLETSMask(int bitsPerSample) const {
+		int	max_beamlets = maxBeamlets(bitsPerSample);
+        boost::dynamic_bitset<> mask(max_beamlets);
 		mask.reset();
 		std::list<int>::const_iterator it;
 		for (it = m_beamlets.begin(); it != m_beamlets.end(); ++it) {
-			if (*it < MAX_BEAMLETS)
+			if (*it < max_beamlets) {
 				mask.set(*it);
+			}
 		}
 		return mask;
 	}
@@ -207,7 +210,7 @@ public:
 		COMPLEX = 1,
 		ANGLE,
 	};
-	WeightsCommand(GCFPortInterface& port);
+	WeightsCommand(GCFPortInterface& port, int bitsPerSample);
 	virtual ~WeightsCommand() {}
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
@@ -219,7 +222,8 @@ private:
 	std::complex<double>                    m_value;
 	int                                     m_type;
 	int                                     itsStage;
-	blitz::Array<std::complex<int16>, 3>    itsWeights;
+	blitz::Array<std::complex<int16>, 4>    itsWeights;
+	int										itsBitsPerSample;
 };
 
 //
@@ -228,7 +232,7 @@ private:
 class SubbandsCommand : public Command
 {
 public:
-	SubbandsCommand(GCFPortInterface& port);
+	SubbandsCommand(GCFPortInterface& port, int bitsPerSample);
 	virtual ~SubbandsCommand() {}
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
@@ -241,6 +245,7 @@ public:
 private:
 	std::list<int>      m_subbandlist;
 	int                 m_type;
+	int					itsBitsPerSample;
 };
 
 //
@@ -303,8 +308,6 @@ public:
 private:
 	bool    itsSwapXY;
 };
-
-
 
 
 //
@@ -441,7 +444,7 @@ protected:
 class StatisticsCommand : public StatisticsBaseCommand
 {
 public:
-	StatisticsCommand(GCFPortInterface& port);
+	StatisticsCommand(GCFPortInterface& port, const int bitsPerSample);
 	virtual ~StatisticsCommand() {}
 	virtual void send();
 	virtual void stop();
@@ -456,6 +459,7 @@ public:
 private:
 	uint8                   m_type;
 	blitz::Array<double, 2> m_stats;
+	int						itsBitsPerSample;
 };
 
 //
@@ -612,6 +616,27 @@ private:
 };
 
 //
+// class BitmodeCommand
+//
+class BitmodeCommand : public Command
+{
+public:
+	BitmodeCommand(GCFPortInterface& port);
+	virtual ~BitmodeCommand() {}
+	virtual void send();
+	virtual GCFEvent::TResult ack(GCFEvent& e);
+	void bitmode(const int	bitmode) { itsBitmode = bitmode; }
+	uint bitmode() const 			 { return itsBitmode; }
+	vector<uint> getBitmode() const    { return(itsBitmodeArray); }
+	vector<uint> getBitVersion() const { return(itsBitVersionArray); }
+private:
+	uint    		itsBitmode;
+	vector<uint>    itsBitmodeArray;
+	vector<uint>    itsBitVersionArray;
+};
+
+
+//
 // class RegisterStateCommand
 //
 class RegisterStateCommand : public Command
@@ -734,6 +759,9 @@ public:
 	// Get a subscription on the splitter state.
 	GCFEvent::TResult sub2Splitter(GCFEvent& e, GCFPortInterface &p);
 
+	// Get a subscription on the bitmode state.
+	GCFEvent::TResult sub2Bitmode(GCFEvent& e, GCFPortInterface &p);
+
 	// In this state the command is sent and the acknowledge handled. Any relevant output is printed.
 	GCFEvent::TResult doCommand(GCFEvent& e, GCFPortInterface &p);
 
@@ -757,6 +785,7 @@ private:
 	int             m_nrspboards;
 	int             m_maxrspboards;
 	int             itsNantennas;
+	int             itsNbitsPerSample;
 
 	// commandline parameters
 	int             m_argc;
@@ -768,6 +797,7 @@ private:
 	bool            itsNeedClockOnce;       // getClock
 	bool            itsNeedClock;           // subClock
 	bool            itsNeedSplitter;        // subSplitter
+	bool            itsNeedBitmode;         // subBitmode
 
 	SubClockCommand m_subclock; // always subscribe to clock updates
 };

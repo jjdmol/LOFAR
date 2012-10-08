@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 #include <Common/ParameterSet.h>
-#include <Common/lofar_bitset.h>
+#include <Common/LofarBitModeInfo.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_list.h>
 #include <ApplCommon/AntennaSets.h>
@@ -50,6 +50,7 @@
 #define	BEAMLET_RING_OFFSET		1000
 
 using namespace blitz;
+using namespace std;
 namespace LOFAR {
   using namespace RTC;
   using namespace CAL_Protocol;
@@ -767,13 +768,14 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 		break;
 
 		case 's': {
-			itsSubbands = strtolist(optarg, LOFAR::MAX_SUBBANDS);
+			itsSubbands = strtolist(optarg, MAX_SUBBANDS);
 			cout << "subbands : "; printList(itsSubbands);
 		}
 		break;
 
 		case 'b': {
-			itsBeamlets = strtolist(optarg, BEAMLET_RING_OFFSET + LOFAR::MAX_BEAMLETS);
+			// assume lowest bitmode, if this is not the case the BeamServer will complain...
+			itsBeamlets = strtolist(optarg, BEAMLET_RING_OFFSET + maxBeamlets(MIN_BITS_PER_SAMPLE));
 			cout << "beamlets : "; printList(itsBeamlets);
 		}
 		break;
@@ -817,6 +819,10 @@ Exception::TerminateHandler t(Exception::terminate);
 int main(int argc, char** argv)
 {
 	GCFScheduler::instance()->init(argc, argv, "beamctl");
+
+	ASSERTSTR(BEAMLET_RING_OFFSET > maxBeamlets(MIN_BITS_PER_SAMPLE), 
+				formatString("(%d>%d) beamctl is not suitable for handling %d bit mode. Revise program.", 
+				BEAMLET_RING_OFFSET, maxBeamlets(MIN_BITS_PER_SAMPLE), MIN_BITS_PER_SAMPLE));
 
 	try {
 		beamctl beamctlTask("beamctl");
