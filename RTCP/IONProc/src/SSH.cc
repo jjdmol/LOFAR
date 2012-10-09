@@ -210,8 +210,8 @@ bool SSHconnection::waitsocket( FileDescriptorBasedStream &sock )
 void SSHconnection::commThread()
 {
 #if defined HAVE_BGP_ION
-  //doNotRunOnCore0();
-  runOnCore0();
+  doNotRunOnCore0();
+  //runOnCore0();
   //nice(19);
 #endif
 
