@@ -199,6 +199,11 @@ public:
 
     vector<StreamToStorage> streamsToStorage; 
 
+	// type of observation
+	string			processType;
+	string			processSubtype;
+	string			strategy;
+
 	// couple of values of the virtual instrument as compacted strings
 	string			receiverList;
 	string			stationList;
