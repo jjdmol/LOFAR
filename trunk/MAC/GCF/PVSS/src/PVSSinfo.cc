@@ -105,11 +105,11 @@ bool PVSSinfo::propExists(const string& dpeName)
 
 	if (Manager::getId(dpePvssName, dpId) == PVSS_FALSE) {
 		LOG_TRACE_VAR_STR("propExists(" << dpeName << "): FALSE");
-		return false;
+		return (false);
 	}
 
 	LOG_TRACE_VAR_STR("propExists(" << dpeName << "): OK");
-	return true;
+	return (true);
 }
 
 //
@@ -121,11 +121,11 @@ bool PVSSinfo::typeExists (const string& dpTypeName)
 	DpTypeId 	dpTypeId; 
 	if (Manager::getTypeId(pvssTypeName, dpTypeId) != PVSS_TRUE) {
 		LOG_TRACE_VAR_STR("typeExists(" << dpTypeName << "): FALSE");
-		return (true);
+		return (false);
 	}
 
 	LOG_TRACE_VAR_STR("typeExists(" << dpTypeName << "): OK");
-	return (false);
+	return (true);
 }
 
 //
