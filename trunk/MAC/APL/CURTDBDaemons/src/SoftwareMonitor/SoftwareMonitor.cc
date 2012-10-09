@@ -286,6 +286,7 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 		int curLevel = system("swlevel >>/dev/null") >> 8;
 		ASSERTSTR(curLevel >= 0, "Program 'swlevel' not in my execution path");
 		LOG_DEBUG_STR("Current level is " << curLevel);
+		itsOwnPropertySet->setValue(PN_SWM_SW_LEVEL, GCFPVInteger(curLevel));
 
 		// loop over the permanent processes and update their status in PVSS
 		vector<Process>::iterator	iter = itsPermProcs.begin();
