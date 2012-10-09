@@ -32,6 +32,9 @@ PANEL,-1 -1 995 747 N "_3DFace" 0
                                    baseDP + \".inputNodeList\",
                                    baseDP + \".BGLNodeList\",
                                    baseDP + \".storageNodeList\",
+                                   baseDP + \".processType\",
+                                   baseDP + \".processSubtype\",
+                                   baseDP + \".strategy\",
                                    baseDP + \".Beams.directionType\",
                                    baseDP + \".Beams.angle1\",
                                    baseDP + \".Beams.angle2\",
@@ -41,7 +44,7 @@ PANEL,-1 -1 995 747 N "_3DFace" 0
       LOG_ERROR(\"Observation_overview.pnl:main|Couldn't connect to : \"+baseDP);
     } 
     if (!navFunct_dpReachable(baseDP)) {
-      updateObservationControl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
+      updateObservationControl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
                     \"\",makeDynFloat(),\"\",makeDynString(),\"\",true);
     }
   } else {
@@ -60,6 +63,9 @@ PANEL,-1 -1 995 747 N "_3DFace" 0
     setValue(\"inputNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"BGLNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"runStateText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processTypeText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processSubTypeText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"strategy\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"storageNodeListText\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }
   
@@ -80,12 +86,15 @@ updateObservationControl(string dp1, int claimPeriod,
               string dp12,string inputNodeList,
               string dp13,string BGLNodeList,
               string dp14,string storageNodeList,
-              string dp15,dyn_string directionType,
-              string dp16,dyn_float angle1,
-              string dp17,dyn_float angle2,
-              string dp18,dyn_string subbandList,
-              string dp19,string runState,
-              string dp20, bool invalid)
+              string dp15,string processType,
+              string dp16,string processSubtype,
+              string dp17,string strategy,
+              string dp18,dyn_string directionType,
+              string dp19,dyn_float angle1,
+              string dp20,dyn_float angle2,
+              string dp21,dyn_string subbandList,
+              string dp22,string runState,
+              string dp23, bool invalid)
 {
   LOG_TRACE(\"Observation_overview.pnl:updateObservationControl|entered\");
   beamTable.deleteAllLines();
@@ -115,6 +124,9 @@ updateObservationControl(string dp1, int claimPeriod,
     setValue(\"inputNodeListText\", \"text\", inputNodeList);
     setValue(\"BGLNodeListText\", \"text\", BGLNodeList);
     setValue(\"storageNodeListText\", \"text\", storageNodeList);
+    setValue(\"processTypeText\", \"text\", processType);
+    setValue(\"processSubtypeText\", \"text\", processSubtype);
+    setValue(\"strategyText\", \"text\", strategy);
     setValue(\"runStateText\", \"text\", runState);
    
     for (int i=1; i<= dynlen(directionType); i++) {
@@ -145,6 +157,9 @@ updateObservationControl(string dp1, int claimPeriod,
   setValue(\"inputNodeListText\", \"backCol\", SymbolCol);
   setValue(\"BGLNodeListText\", \"backCol\", SymbolCol);
   setValue(\"storageNodeListText\", \"backCol\", SymbolCol);
+  setValue(\"processTypeText\", \"backCol\", SymbolCol);
+  setValue(\"processSubtypeText\", \"backCol\", SymbolCol);
+  setValue(\"strategyText\", \"backCol\", SymbolCol);
   setValue(\"runStateText\", \"backCol\", SymbolCol);
   
 }
@@ -531,7 +546,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 16
 "PRIMITIVE_TEXT16"
 ""
-1 -5376.603581306423 -1526 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -7378.867681650218 -1812 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 33 0 0 0 0 0
 E E E
@@ -908,7 +923,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 36
 "PRIMITIVE_TEXT25"
 ""
-1 -5376.603581306423 -1504 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -7378.867681650218 -1768 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 68 0 0 0 0 0
 E E E
@@ -943,7 +958,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 40
 "PRIMITIVE_TEXT27"
 ""
-1 -5376.603581306423 -1480 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -7378.867681650218 -1720 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 72 0 0 0 0 0
 E E E
