@@ -231,7 +231,7 @@ if __name__ == '__main__':
             elif record[1] == 'HBA' or record[1] == 'HBA0' or record[1] == 'HBA1':
                 aPosH = np.concatenate((aPosH, [[even,odd]]), axis=0)
 
-    if int(np.shape(aPosL)[0]) == 0 and int(np.shape(aPosH)[0]) == 0:
+    if int(np.shape(aPosL)[0]) == 0 or int(np.shape(aPosH)[0]) == 0:
         print 'ERR, no data found for %s' %(station)
         exit(1)
          
