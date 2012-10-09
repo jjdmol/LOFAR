@@ -109,6 +109,9 @@ Observation::Observation(const ParameterSet*		aParSet,
 	sampleClock   = aParSet->getUint32(prefix+"sampleClock",  0);
 	filter 		  = aParSet->getString(prefix+"bandFilter",   "");
 	antennaArray  = aParSet->getString(prefix+"antennaArray", "");
+	processType   = aParSet->getString(prefix+"processType", "");
+	processSubtype= aParSet->getString(prefix+"processSubtype", "");
+	strategy	  = aParSet->getString(prefix+"strategy", "");
 
     if (aParSet->isDefined(prefix+"nrBitsPerSample")) {
       bitsPerSample = aParSet->getUint32(prefix+"nrBitsPerSample", 16);
