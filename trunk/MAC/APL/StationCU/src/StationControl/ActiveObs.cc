@@ -55,6 +55,8 @@ namespace LOFAR {
 ActiveObs::ActiveObs(const string&		name,
 					 State				initial,
 					 ParameterSet*		thePS,
+					 const string&		LBAbitmapString,
+					 const string&		HBAbitmapString,
 					 bool				hasSplitters,
 					 GCFTask&			task) :
 	GCFTask				(initial, string("ActiveObs:") + name),
@@ -77,7 +79,9 @@ ActiveObs::ActiveObs(const string&		name,
 						 itsInstanceNr, itsObsPar.obsID)),
 	itsReadyFlag		(false),
 	itsReqState			(CTState::NOSTATE),
-	itsCurState			(CTState::NOSTATE)
+	itsCurState			(CTState::NOSTATE),
+	itsLBAs				(LBAbitmapString),
+	itsHBAs				(HBAbitmapString)
 {
 	if (thePS->isDefined("Observation.TBB.TBBsetting[0].filter0_coeff0")) {
 		LOG_INFO("Observation also uses the TB boards");
@@ -171,12 +175,12 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 
 	switch (event.signal) {
 	case F_ENTRY:  {
-		// first make a mapping of the receivers that are used.
-		// the StationController already modified the set to reflect the available receivers
-		// So askfor this 'core' set by passed zeros.
-		// the receiver bitmap can be derived from the RCUset.
+		// First make a mapping of the receivers that are used.
+		// The StationController already modified the set to reflect the available receivers
+		// So askfor this 'core' set by passing zeros in the getRCUbitset function.
 		StationConfig		config;
 		bitset<MAX_RCUS>	theRCUs(itsObsPar.getRCUbitset(0, 0, ""));
+		// The receiver bitmap can be derived from the RCUset.
 		string	rbm;
 		rbm.resize(MAX_RCUS, '0');
 		for (int i = 0; i < MAX_RCUS; i++) {
@@ -186,6 +190,8 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 		}
 		LOG_INFO_STR("Setting receiverBitMap of DP:" << itsObsPar.realPVSSdatapoint << "." << PN_OBS_RECEIVER_BITMAP << "to " << theRCUs);
 		itsPropertySet->setValue(PN_OBS_RECEIVER_BITMAP,GCFPVString (rbm));
+		itsPropertySet->setValue(PN_OBS_LBA_BITMAP,GCFPVString (itsLBAs));
+		itsPropertySet->setValue(PN_OBS_HBA_BITMAP,GCFPVString (itsHBAs));
 		itsPropertySet->setValue(PN_OBS_CLAIM_NAME, 
 								 GCFPVString(formatString("LOFAR_ObsSW_Observation%d", itsObsPar.obsID)));
 
