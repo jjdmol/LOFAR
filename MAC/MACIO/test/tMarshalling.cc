@@ -43,11 +43,11 @@ SubArray::SubArray(int i, double d, string s) :
 {
 }
 
-unsigned int SubArray::getSize() const {
+size_t SubArray::getSize() const {
 	return (sizeof(int) + sizeof(double) + MSH_size(someString));
 }
 
-unsigned int SubArray::pack(char*	buffer) const {
+size_t SubArray::pack(char*	buffer) const {
 	size_t	offset = 0;
 	memcpy(buffer+offset, &someInt, sizeof(int));
 	offset += sizeof (int);
