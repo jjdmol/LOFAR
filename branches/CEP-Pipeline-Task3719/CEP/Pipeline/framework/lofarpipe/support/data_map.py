@@ -33,6 +33,10 @@ class DataProduct(object):
             "{'host': '%s', 'file': '%s', 'skip': %s}" %
             (self.host, self.file, self.skip)
         )
+        
+    def __str__(self):
+        "Print an instance as 'host:file'"
+        return ':'.join((self.host, self.file))
 
     @classmethod
     def fromDict(cls, item):
