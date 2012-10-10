@@ -5,6 +5,10 @@
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
+import os
+
+from lofar.mstools import findFiles
+
 from lofarpipe.support.lofarexceptions import DataMapError
 from lofarpipe.support.utilities import deprecated
 
@@ -90,10 +94,9 @@ class DataMap(object):
                     return value
 
     def __init__(self, data=list(), iterator=iter):
+        self._data = list()
         self.data = data
         self.iterator = iterator
-        print "type(self.data) =", type(self.data)
-        print "self.data =", self.data
 
     def __iter__(self):
         return self.iterator(self.data)
@@ -101,24 +104,30 @@ class DataMap(object):
     def __repr__(self):
         return repr(self.data)
 
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        return self.data[index]
+        
     @classmethod   
     def load(cls, filename):
-        """
-        Load a data map from file `filename`. Return a DataMap instance.
-        """
+        """Load a data map from file `filename`. Return a DataMap instance."""
         with open(filename) as f:
             data = eval(f.read())
         return cls([DataProduct.fromDict(item) for item in data])
 
     def save(self, filename):
-        """
-        Save a data map to file `filename` in human-readable form.
-        """
+        """Save a data map to file `filename` in human-readable form."""
         with open(filename, 'w') as f:
             f.write(repr(self.data))
 
     @property
     def data(self):
+        """
+        Use property to get/set self.data, so that we can do input validation
+        before setting a value.
+        """
         return self._data
         
     @data.setter
@@ -146,41 +155,34 @@ def load_data_map(filename):
 @deprecated
 def store_data_map(filename, data):
     """
-    Store a list of dict -- containing items host, file, and skip --
-    in map-file `filename`.
+    Store a data map in map-file `filename`. Assume the argument is a new-style
+    DataMap object. If that fails, assume data is old-style list of tuples of
+    (host, filepath). In either case, the data is written in the new format:
+    a list of dict containing items host, file, and skip.
     This method is for backward compatibility. New code should use the method
     `DataMap.save` instead.
     """
-    DataMap(data).save(filename)
+    try:
+        data.save(filename)
+    except AttributeError:
+        # Assume data is in the "old-style" list of tuple (host, file) format.
+        data_map = DataMap(
+            [DataProduct(host, file, False) for (host, file) in data]
+        )
+        data_map.save(filename)
 
 
 def validate_data_maps(*args):
     """
-    Validate the IO product specifications in the data maps `args`. Each data
-    map must be a list of dict containing items host, file and skip.
-    
+    Validate the IO product specifications in the data maps `args`. 
+        
     Requirements imposed on product specifications:
     - Length of all product lists must be equal.
     - All data-products must reside on the same host.
     
     Return True if all requirements are met, otherwise return False.
     """
-    # Precondition check on `args`. All arguments must be lists; and all
-    # lists must contains dicts of length 3, containing keys 'host', 'file',
-    # and 'skip'.
-    for arg in args:
-        assert(
-            isinstance(arg, list) and
-            all(isinstance(item, dict) and 
-                len(item) == 3 and 
-                item.has_key('host') and 
-                item.has_key('file') and 
-                item.has_key('skip')
-                for item in arg
-            )
-        ), "Precondition check failed for data map: %s" % arg
-
-    # Check if all lists have equal length. We do this by creating a set
+    # Check if all data maps have equal length. We do this by creating a set
     # from a tuple of lenghts of `args`. The set must have length 1.
     if len(set(len(arg) for arg in args)) != 1:
         return False
@@ -189,25 +191,25 @@ def validate_data_maps(*args):
     # reside on the same host. We can use the same trick as before, by
     # checking the size of a set created from a tuple of hostnames.
     for i in xrange(len(args[0])):
-        if len(set(arg[i]['host'] for arg in args)) != 1:
+        if len(set(arg[i].host for arg in args)) != 1:
             return False
     
     return True
     
 
+@deprecated
 def tally_data_map(data, glob, logger=None):
     """
     Verify that the files specified in the data map `data` exist on the cluster.
     The glob pattern `glob` should contain the pattern to be used in the search.
     This function will return a list of booleans: True for each item in `data`
     that is present on the cluster; False otherwise.
+    This method is deprecated, because the new data-map files keep track of the
+    `skip` attribute of each data product in the data-map.
     """
-    # Check that `data` is in the correct format
-    validate_data_maps(data)
-    
     # Determine the directories to search. Get unique directory names from
     # `data` by creating a set first.
-    dirs = list(set(os.path.dirname(d['file']) for d in data))
+    dirs = list(set(os.path.dirname(d.file) for d in data))
 
     # Compose the filename glob-pattern.
     glob = ' '.join(os.path.join(d, glob) for d in dirs)
@@ -219,7 +221,7 @@ def tally_data_map(data, glob, logger=None):
     found = zip(*findFiles(glob, '-1d'))
     
     # Return a mask containing True if file exists, False otherwise
-    return [f in found for f in data]
+    return [(f.host, f.file) in found for f in data]
 
 
 # Self test.
