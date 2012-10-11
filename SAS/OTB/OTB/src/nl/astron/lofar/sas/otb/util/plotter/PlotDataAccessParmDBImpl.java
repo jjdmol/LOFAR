@@ -33,10 +33,11 @@ import java.util.TimeZone;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
 import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
 import nl.astron.lofar.java.gui.plotter.PlotConstants;
 import nl.astron.lofar.java.gui.plotter.exceptions.PlotterDataAccessException;
+import nl.astron.lofar.sas.otb.jparmfacade.jParmFacadeInterface;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -44,7 +45,7 @@ import org.apache.log4j.Logger;
  * jParmFacade interface. It manages connections to that interface, and allows
  * the plotter framework to generate plots of data present in the ParmDB.
  *
- * @see nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface
+ * @see nl.astron.lofar.sas.otb.jparmfacade.jParmFacadeInterface
  * @created 19-04-2006, 11:00
  * @author pompert
  * @version $Id$
@@ -98,7 +99,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * ----+constraints[6]= the numy variable (for example 5) (int)<br>
      * ----+constraints[7]= A string that will be put in front of every value. Empty string or null at least!<br>
      * @return the data set generated
-     * @see nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface
+     * @see nl.astron.lofar.sas.otb.jparmfacade.jParmFacadeInterface
      * @see nl.astron.lofar.java.gui.plotter.PlotConstants
      * @throws PlotterDataAccessException will be thrown if anything goes wrong
      * with the ParmDB interface and calls to it.
@@ -207,7 +208,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      * ----+offset[0]= the offset value which you would like to remove from all values(String representation of double)<br>
      * <br>
      * @return the data set generated
-     * @see nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface
+     * @see nl.astron.lofar.sas.otb.jparmfacade.jParmFacadeInterface
      * @see nl.astron.lofar.java.gui.plotter.PlotConstants
      * @throws PlotterDataAccessException will be thrown if anything goes wrong
      * with the ParmDB interface and calls to it.

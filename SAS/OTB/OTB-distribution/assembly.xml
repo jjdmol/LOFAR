@@ -12,7 +12,7 @@
 	<fileSets>
 	
 		<fileSet>
-			<directory>${project.build.directory}/dependency/jOTDB3-1.0.1-SNAPSHOT</directory>
+			<directory>${project.build.directory}/dependency/jOTDB3-${project.version}</directory>
 			<outputDirectory>server</outputDirectory>
 			<includes>
 				<include>**/*</include>
@@ -20,7 +20,7 @@
 		</fileSet>
 		
 		<fileSet>
-			<directory>${project.build.directory}/dependency/OTB-1.0.1-SNAPSHOT</directory>
+			<directory>${project.build.directory}/dependency/OTB-${project.version}</directory>
 			<outputDirectory>client</outputDirectory>
 			<includes>
 				<include>**/*</include>
