@@ -27,8 +27,8 @@ _copy_pkt_to_bbuffer_32_bytes:
 	cmpwi	1,7,1
 	subi	7,7,1
 
-	sub	3,3,4
 	subi	4,4,1*16
+	sub	3,3,4
 	subi	5,5,16
 	li	8,16
 

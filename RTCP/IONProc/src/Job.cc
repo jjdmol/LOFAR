@@ -225,7 +225,7 @@ void Job::StorageProcess::start()
     throw SystemCallException("getcwd", errno, THROW_ARGS);
 
 #ifdef HAVE_LIBSSH2
-  std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u")
+  std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u 2>&1")
     % cwd
 #if defined USE_VALGRIND
     % "valgrind --leak-check=full "
