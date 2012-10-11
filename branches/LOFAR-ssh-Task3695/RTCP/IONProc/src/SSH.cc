@@ -234,6 +234,8 @@ void SSHconnection::commThread()
   if (!open_channel(sock))
     return;
 
+  LOG_DEBUG_STR( itsLogPrefix << "Starting remote command: " << itsCommandLine);
+
   while( (rc = libssh2_channel_exec(channel, itsCommandLine.c_str())) ==
          LIBSSH2_ERROR_EAGAIN )
   {
@@ -277,6 +279,11 @@ void SSHconnection::commThread()
 
           if (!buffer.good()) {
             // 'line' now holds the remnant
+
+            if (line.size() > 1024) {
+              LOG_ERROR_STR( itsLogPrefix << "Line too long (" << line.size() << "); truncated: " << line );
+              line = "";
+            }
             break;
           }
 
