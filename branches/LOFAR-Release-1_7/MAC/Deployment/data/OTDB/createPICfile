@@ -78,11 +78,11 @@ parser.add_option("-l", "--local", action="store_true", dest="isLocal", default=
 (options, args) = parser.parse_args()
 
 if (options.isLocal):
-    PVSSbasefile= "../PVSS/PVSSDataPoints.base"
+    PVSSbasefile= "../PVSS/data/PVSSDataPoints.base"
     StationFile = "../StaticMetaData/StationInfo.dat"
     ControlFile = "../StaticMetaData/ControlInfo.dat"
-    RingFile    = "../PVSS/Rings.list"
-    ClusterFile = "../PVSS/Clusters.list"
+    RingFile    = "../PVSS/data/Rings.list"
+    ClusterFile = "../PVSS/data/Clusters.list"
 else:
     PVSSbasefile= "/opt/lofar/pvss/dpdef/PVSSDataPoints.base"
     StationFile = "/opt/lofar/etc/StationInfo.dat"
