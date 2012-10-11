@@ -21,9 +21,9 @@ using namespace LOFAR;
 using namespace RTCP;
 
 
-void test_SSHconnection() {
+void test_SSHconnection( const char *cmd ) {
 #ifdef HAVE_LIBSSH2
-  SSHconnection ssh("", "localhost", "echo SSHconnection success", USER, privkey);
+  SSHconnection ssh("", "localhost", cmd, USER, privkey);
 
   ssh.start();
 
@@ -69,7 +69,8 @@ int main() {
 
   SSH_Init();
 
-  test_SSHconnection();
+  test_SSHconnection( "echo SSHconnection success [stdout]" );
+  test_SSHconnection( "echo SSHconnection success [stderr] 1>&2" );
   test_forkExec();
 
   SSH_Finalize();
