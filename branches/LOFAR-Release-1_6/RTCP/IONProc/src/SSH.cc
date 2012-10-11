@@ -210,8 +210,8 @@ bool SSHconnection::waitsocket( FileDescriptorBasedStream &sock )
 void SSHconnection::commThread()
 {
 #if defined HAVE_BGP_ION
-  //doNotRunOnCore0();
-  runOnCore0();
+  doNotRunOnCore0();
+  //runOnCore0();
   //nice(19);
 #endif
 
@@ -233,6 +233,8 @@ void SSHconnection::commThread()
 
   if (!open_channel(sock))
     return;
+
+  LOG_DEBUG_STR( itsLogPrefix << "Starting remote command: " << itsCommandLine);
 
   while( (rc = libssh2_channel_exec(channel, itsCommandLine.c_str())) ==
          LIBSSH2_ERROR_EAGAIN )
@@ -277,6 +279,11 @@ void SSHconnection::commThread()
 
           if (!buffer.good()) {
             // 'line' now holds the remnant
+
+            if (line.size() > 1024) {
+              LOG_ERROR_STR( itsLogPrefix << "Line too long (" << line.size() << "): " << line );
+              line = "";
+            }
             break;
           }
 

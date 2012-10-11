@@ -22,6 +22,8 @@
 #include <BeamletBufferToComputeNode.h>
 #include <ControlPhase3Cores.h>
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
+#include <Common/PrettyUnits.h>
 #include <Stream/PortBroker.h>
 #include <Interface/Stream.h>
 #include <Interface/CN_Command.h>
@@ -151,6 +153,10 @@ void Job::createIONstreams()
 
 void Job::barrier()
 {
+  NSTimer timer;
+
+  timer.start();
+
   char byte = 0;
 
   if (myPsetNumber == 0) {
@@ -162,12 +168,20 @@ void Job::barrier()
     itsIONstreams[0]->write(&byte, sizeof byte);
     itsIONstreams[0]->read(&byte, sizeof byte);
   }
+
+  timer.stop();
+
+  LOG_DEBUG_STR(itsLogPrefix << "barrier(): " << PrettyTime(timer.getElapsed()));
 }
 
 
 // returns true iff all psets supply true
 bool Job::agree(bool iAgree)
 {
+  NSTimer timer;
+
+  timer.start();
+
   bool allAgree = iAgree; // pset 0 needs to start with its own decision, for other psets this value is ignored
 
   if (myPsetNumber == 0)
@@ -182,17 +196,29 @@ bool Job::agree(bool iAgree)
 
   broadcast(allAgree);  
 
+  timer.stop();
+
+  LOG_DEBUG_STR(itsLogPrefix << "agree(): " << PrettyTime(timer.getElapsed()));
+
   return allAgree;
 }
 
 
 template <typename T> void Job::broadcast(T &value)
 {
+  NSTimer timer;
+
+  timer.start();
+
   if (myPsetNumber == 0)
     for (unsigned i = 0; i < itsIONstreams.size(); i ++)
       itsIONstreams[i]->write(&value, sizeof value);
   else
     itsIONstreams[0]->read(&value, sizeof value);
+
+  timer.stop();
+
+  LOG_DEBUG_STR(itsLogPrefix << "broadcast(): " << PrettyTime(timer.getElapsed()));
 }
 
 
@@ -225,7 +251,7 @@ void Job::StorageProcess::start()
     throw SystemCallException("getcwd", errno, THROW_ARGS);
 
 #ifdef HAVE_LIBSSH2
-  std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u")
+  std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u 2>&1")
     % cwd
 #if defined USE_VALGRIND
     % "valgrind --leak-check=full "
