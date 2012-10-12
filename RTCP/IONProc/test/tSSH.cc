@@ -21,9 +21,9 @@ using namespace LOFAR;
 using namespace RTCP;
 
 
-void test_SSHconnection() {
+void test_SSHconnection( const char *cmd ) {
 #ifdef HAVE_LIBSSH2
-  SSHconnection ssh("", "localhost", "echo SSHconnection success", USER, privkey);
+  SSHconnection ssh("", "localhost", cmd, USER, privkey);
 
   ssh.start();
 
@@ -60,7 +60,7 @@ int main() {
 
   // can we even ssh to localhost?
   char sshcmd[1024];
-  snprintf(sshcmd, sizeof sshcmd, "ssh %s@localhost -o PasswordAuthentication=no -o KeyboardInteractiveAuthentication=no -o NoHostAuthenticationForLocalhost=yes -i %s echo system success", USER, privkey);
+  snprintf(sshcmd, sizeof sshcmd, "ssh %s@localhost -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o NoHostAuthenticationForLocalhost=yes -i %s echo system success", USER, privkey);
   int ret = system(sshcmd);
   if (ret < 0 || WEXITSTATUS(ret) != 0) {
     // no -- mark this test as unrunnable and don't attempt to try with libssh then
@@ -69,7 +69,10 @@ int main() {
 
   SSH_Init();
 
-  test_SSHconnection();
+  test_SSHconnection( "echo SSHconnection success [stdout]" );
+  test_SSHconnection( "echo SSHconnection success [stderr] 1>&2" );
+  test_SSHconnection( "echo SSHconnection success [stderr] 1>&2; echo SSHconnection success [stdout]" );
+  test_SSHconnection( "echo SSHconnection success [stdout]; echo SSHconnection success [stderr] 1>&2" );
   test_forkExec();
 
   SSH_Finalize();
