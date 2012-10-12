@@ -110,8 +110,7 @@
   <dependencyManagement>
     <dependencies>
 
-      <!-- Child dependencies, childs use the same group-ID and version by 
-        default. -->
+      <!-- Child dependencies, childs use the same group-ID and version by default. -->
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>jRSP</artifactId>
@@ -148,26 +147,14 @@
         <version>${project.version}</version>
       </dependency>
 
-
-      <!-- Internal dependencies -->
+      <!-- Import the group 'nl.astron.lofar.lib' -->
       <dependency>
         <groupId>nl.astron.lofar.lib</groupId>
-        <artifactId>plotter</artifactId>
+        <artifactId>parent</artifactId>
         <version>${lofar.lib.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
-
-      <dependency>
-        <groupId>nl.astron.lofar.lib</groupId>
-        <artifactId>jParmFacade</artifactId>
-        <version>${lofar.lib.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>nl.astron.lofar.lib</groupId>
-        <artifactId>lofarutils</artifactId>
-        <version>${lofar.lib.version}</version>
-      </dependency>
-
 
       <!-- External dependencies -->
       <dependency>
