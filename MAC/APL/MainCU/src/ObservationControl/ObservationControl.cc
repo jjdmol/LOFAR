@@ -165,7 +165,7 @@ ObservationControl::~ObservationControl()
 //
 void ObservationControl::sigintHandler(int signum)
 {
-	LOG_DEBUG (formatString("SIGINT signal detected (%d)",signum));
+	LOG_WARN (formatString("SIGINT signal detected (%d)",signum));
 
 	// Note we can't call TRAN here because the siginthandler does not know our object.
 	if (thisObservationControl) {
