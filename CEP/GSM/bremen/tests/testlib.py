@@ -54,6 +54,8 @@ def cleanup_db(conn):
                 'runningcatalog',
                 'temp_associations',
                 'images',
+                'image_stats',
+                'runs',
                 'extractedsources',
                 'detections']:
         if isinstance(conn, MonetConnection):
@@ -63,6 +65,7 @@ def cleanup_db(conn):
 
     for seq in ['seq_datasets',
                 'seq_images',
+                'seq_runs',
                 'seq_runningcatalog']:
         conn._execute_with_cursor('alter sequence %s restart with 1;' % seq, cursor)
     conn._execute_with_cursor('alter sequence seq_extractedsources restart with 1001;', cursor)

@@ -3,7 +3,8 @@
  * the detections from the sources extraction.
  */
 CREATE TABLE detections
-  (image_id VARCHAR(64) NOT NULL
+  (run_id int NULL
+  ,image_name CHAR(64) NOT NULL
   ,lra double NOT NULL
   ,ldecl double NOT NULL
   ,lra_err double NOT NULL

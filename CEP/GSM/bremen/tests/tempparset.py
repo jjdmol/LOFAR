@@ -6,7 +6,7 @@ from src.gsmparset import GSMParset
 class TempParset(GSMParset):
     """
     """
-    def __init__(self, datafilename, freq):
+    def __init__(self, datafilename, freq, **extras):
         """
         """
         self.filename = datafilename
@@ -14,7 +14,9 @@ class TempParset(GSMParset):
         self.data = {'image_id': datafilename,
                      'source_lists': datafilename,
                      'frequency': freq}
+        self.data.update(extras)
         self.parset_id = self.data.get('image_id')
         self.image_id = None # Not yet known.
         self.source_count = None
         self.log = get_gsm_logger('parsets', 'test.log')
+        self.recalculate_pointing = False
