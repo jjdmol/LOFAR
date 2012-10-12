@@ -166,7 +166,7 @@ class UnifiedConnection(object):
         """
         Proper procedure call (for Monet/Postgres compatibility.)
         """
-        self.conn.execute('call %s' % procname)
+        self.execute('call %s' % procname)
 
     def cursor(self):
         """

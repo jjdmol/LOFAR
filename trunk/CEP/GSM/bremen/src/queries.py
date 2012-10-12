@@ -4,6 +4,7 @@ General query generator for GSM.
 """
 import math
 import os
+import pwd
 try:
     import pysvn
 
@@ -25,6 +26,16 @@ def get_svn_version():
             return -1
     else:
         return -1
+
+
+def sql_insert_run():
+    """
+    Returns a query to insert a new run.
+    """
+    return """
+insert into runs(status, user_id, process_id) values (0, '%s', '%s');
+""" % (pwd.getpwuid(os.getuid())[0], os.getpid())
+
 
 def makelistable(fn):
     """
@@ -84,6 +95,7 @@ DEGREES(2.0 * ASIN(0.5*SQRT(({0}.x - {1}.x) * ({0}.x - {1}.x)
 ({0}.wm_g_major*{0}.wm_g_major + {1}.g_major*{1}.g_major)
 """.format(runcat_alias, extract_alias)
 
+
 @makelistable
 def get_column_insert(column_alias, prefix=None):
     """
@@ -97,6 +109,7 @@ def get_column_insert(column_alias, prefix=None):
 {1}wm_{0}, {1}wm_{0}_err, {1}avg_w{0},{1}avg_weight_{0}""".format(column_alias,
                                                                    prefix)
 
+
 @makelistable
 def get_column_insert_values(column_alias):
     """
@@ -104,6 +117,7 @@ def get_column_insert_values(column_alias):
     """
     return """
 {0},{0}_err, {0}/({0}_err*{0}_err), 1/({0}_err*{0}_err)""".format(column_alias)
+
 
 @makelistable
 def get_column_update_total(column_alias, fluxes=False):
@@ -127,6 +141,7 @@ def get_column_update_total(column_alias, fluxes=False):
                            where e.xtrsrcid = a.xtrsrc_id
                              and a.runcat_id = {1})
 """.format(column_alias, suffix)
+
 
 @makelistable
 def get_column_update_second(column_alias):
@@ -152,6 +167,7 @@ avg_w{0} = avg_w{0} + {1}/({2}*{2}),
 avg_weight_{0} = avg_weight_{0} + 1/({2}*{2})""".format(column_alias,
                                                         new_value, new_weight)
 
+
 def get_column_deduct(column_alias, new_value, new_weight):
     """
     Updater for error-columns for single item ipdate.
@@ -160,6 +176,7 @@ def get_column_deduct(column_alias, new_value, new_weight):
 avg_w{0} = avg_w{0} - {1}/({2}*{2}),
 avg_weight_{0} = avg_weight_{0} - 1/({2}*{2})""".format(column_alias,
                                                         new_value, new_weight)
+
 
 def get_column_deduct_nonzero(column_alias, new_value, new_weight):
     """
@@ -207,18 +224,22 @@ def get_column_from(column_alias):
     """
     Fills "SELECT" in the subquery for multiple update.
     """
-    return """sum({0}/({0}_err*{0}_err)) as {0}_value, sum(1/({0}_err*{0}_err)) as {0}_weight""".format(column_alias)
+    return """
+sum({0}/({0}_err*{0}_err)) as {0}_value,
+sum(1/({0}_err*{0}_err)) as {0}_weight""".format(column_alias)
 
 
-def get_field(ra, decl, radius, band, stokes='I', min_flux=None):
+def get_field(ra, decl, radius, band, stokes='I', min_flux=None,
+              min_datapoints=None):
     """
     Create a query to get sources for a given fov in a given band.
     """
-    def get_field_conditions(x, y, z, r, min_flux):
+    def get_field_conditions(x, y, z, r, min_flux, min_datapoints):
+        sql = ''
         if min_flux:
             sql = "\n and f.wm_f_peak > %s" % min_flux
-        else:
-            sql = ''
+        if min_datapoints:
+            sql = '%s\n and f.datapoints > %s' % (sql, min_datapoints)
         return """r.x * {0} + r.y * {1} + r.z * {2} > {3}
    and r.x between {0} - {3} and {0} + {3}
    and r.y between {1} - {3} and {1} + {3}
@@ -251,7 +272,8 @@ select r.wm_ra as ra, r.wm_decl as decl, f.wm_f_peak
    and f.runcat_id = r.runcatid
    and f.stokes = '{1}'
    and f.band = {2}
-""".format(get_field_conditions(x, y, z, r, min_flux), stokes, band)
+""".format(get_field_conditions(x, y, z, r, min_flux, min_datapoints),
+           stokes, band)
     return sql
 
 

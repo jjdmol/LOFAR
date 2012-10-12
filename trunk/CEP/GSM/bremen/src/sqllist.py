@@ -13,6 +13,8 @@ from src.queries import *
 
 SQL_LIST = {}
 
+GLOBALS = {}
+
 
 def _expand_value(value):
     """
@@ -49,6 +51,15 @@ def _load_from_sql_list(filename):
     sqls.close()
 
 
+def _substitute_globals(sql):
+    def _substitute_global(matchvalue):
+        if matchvalue.group(0)[1:-1] in GLOBALS:
+            return str(GLOBALS[matchvalue.group(0)[1:-1]])
+        else:
+            return ''
+    return re.sub(r'\[(.?)\]', _substitute_global, sql, count=0)
+
+
 def get_sql(name, *params):
     """
     Returns an sql from the list by it's name with parameter substitution.
@@ -56,9 +67,10 @@ def get_sql(name, *params):
     if not name in SQL_LIST:
         raise IndexError('Name %s not in sqllist.sql' % name)
     if (SQL_LIST[name].find('%') >= 0):
-        return SQL_LIST[name] % (params)
+        return_sql = SQL_LIST[name] % (params)
     else:
-        return SQL_LIST[name].format(*params)
+        return_sql = SQL_LIST[name].format(*params)
+    return _substitute_globals(return_sql)
 
 
 for sqlfile in ['sqllist.sql',

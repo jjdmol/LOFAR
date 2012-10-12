@@ -1,28 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Tool to recreate all tables/procedures in the database.
+"""
 import argparse
 import copy
 import re
-import sys
 from os import path
 import monetdb.sql as db
 import monetdb.monetdb_exceptions as me
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import subprocess
-"""
-Tool to recreate all tables/procedures in the database.
-"""
 
 
 class Recreator(object):
+    """
+    Tool to recreate all tables/procedures in the database.
+    """
 
-    PROCEDURES = ['fill_temp_assoc_kind'] # all procedures to be recreated
-    VIEWS = ['v_catalog_info'] # list of views
-    TABLES = [ 'frequencybands', 'datasets', 'images', 'extractedsources',
-              'assocxtrsources', 'detections',
+    # all procedures to be recreated
+    PROCEDURES = ['fill_temp_assoc_kind']
+
+    # list of views to be recreated
+    VIEWS = ['v_catalog_info']
+
+    # list of tables to be recreated
+    TABLES = ['frequencybands', 'datasets', 'runs', 'images',
+              'extractedsources', 'assocxtrsources', 'detections',
               'runningcatalog', 'runningcatalog_fluxes',
-              'temp_associations'] # list of tables to be recreated
+              'temp_associations', 'image_stats']
 
     def __init__(self, database="test", use_monet=True):
         self.monet = use_monet
@@ -37,7 +44,8 @@ class Recreator(object):
         if use_monet:
             self.conn = db.connect(hostname=db_host, database=db_dbase,
                                    username=db_user, password=db_passwd,
-                                   port=db_port, autocommit=db_autocommit)
+                                   port=db_port,
+                                   autocommit=db_autocommit)
         else:
             connect = psycopg2.connect(host=db_host, user=db_user,
                                        database=db_dbase)
@@ -50,11 +58,13 @@ class Recreator(object):
         """
         if self.monet:
             cur = self.conn.cursor()
-            cur.execute("select count(*) from sys.tables where name = '%s';"
+            cur.execute(
+                "select count(*) from sys.tables where name = '%s';"
                         % tab_name)
         else:
             cur = self.conn
-            cur.execute("select count(*) from pg_tables where tablename ='%s';"
+            cur.execute(
+                "select count(*) from pg_tables where tablename ='%s';"
                         % tab_name)
         data = cur.fetchone()
         return data[0] == 1
@@ -68,12 +78,14 @@ class Recreator(object):
                 self.conn.execute("drop table %s;" % tab_name)
             else:
                 self.conn.execute("drop table %s cascade;" % tab_name)
+                self.conn.execute(
+                 "drop sequence if exists seq_%s cascade;" % tab_name)
             print 'Table %s dropped' % tab_name
 
     # For MonetDB-PostgreSQL convertion.
     PG_SUBSTITUTOR = [
     (r'next value for "(.*?)"', r"nextval('\1'::regclass)"),
-    (r'^create sequence .*?$', ''),
+    #(r'^create sequence (.*?)$', ''),
     (r'as integer', ''),
     (r' double ', ' double precision '),
     (r'current_timestamp\(\)', 'current_timestamp'),
@@ -101,11 +113,19 @@ class Recreator(object):
         print "Table %s recreated" % tab_name
 
     def create_view(self, view_name):
+        """
+        Create a view with a given name.
+        """
         self.run_sql_file("sql/create.view.%s.sql" % view_name)
         print "View %s recreated" % view_name
 
-
     def create_procedure(self, tab_name):
+        """
+        Create a procedure with a given name.
+        Procedure SQL is located in the project files:
+        sql/pg/create.procedure.NAME.sql (PostrgeSQL) or
+        sql/create.procedure.NAME.sql (MonetDB).
+        """
         if self.monet:
             sql_file = open("sql/create.procedure.%s.sql" % tab_name, 'r')
         else:
@@ -117,6 +137,9 @@ class Recreator(object):
         print "Procedure %s recreated" % tab_name
 
     def run_sql_file(self, filename):
+        """
+        Execute SQL from file (with proper substitutions for psql.
+        """
         sql_file = open(filename, 'r')
         sql_lines = ''.join(sql_file.readlines())
         sql_lines = self.refactor_lines(sql_lines)
@@ -124,13 +147,16 @@ class Recreator(object):
 
     def reload_frequencies(self):
         if self.monet:
-            self.conn.execute("copy into frequencybands from '%s';" % path.realpath('sql/tables/freq.dat'))
+            self.conn.execute("copy into frequencybands from '%s';" %
+                              path.realpath('sql/tables/freq.dat'))
         else:
-            sp = subprocess.Popen(['psql', '-U', 'monetdb', 
-                               '-d', self.database, 
-                               '-c', "copy frequencybands from stdin delimiter '|' null 'null';"],
-                               stdout=subprocess.PIPE, 
-                               stdin=subprocess.PIPE)
+            sp = subprocess.Popen(['psql', '-U', 'monetdb',
+                                   '-d', self.database, '-c',
+                                   "copy frequencybands " \
+                                   "from stdin delimiter '|'" \
+                                   " null 'null';"],
+               stdout=subprocess.PIPE,
+               stdin=subprocess.PIPE)
             for line in open('sql/tables/freq.dat', 'r').readlines():
                 sp.stdin.write(line)
             sp.communicate()
@@ -141,9 +167,11 @@ class Recreator(object):
             for procedure in self.PROCEDURES:
                 if self.monet:
                     try:
-                        self.conn.execute("drop procedure %s;" % procedure)
+                        self.conn.execute("drop procedure %s;" %
+                                          procedure)
                         print "drop procedure %s;" % procedure
-                    except (psycopg2.ProgrammingError, me.OperationalError):
+                    except (psycopg2.ProgrammingError,
+                            me.OperationalError):
                         pass
             for view in self.VIEWS:
                 try:
