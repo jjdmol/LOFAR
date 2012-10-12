@@ -16,21 +16,21 @@
   <artifactId>jRSP</artifactId>
 
 
-	<build>
-	
-		<sourceDirectory>src</sourceDirectory>
+  <build>
 
-		<resources>
-			<resource>
-				<directory>src</directory>
-				<excludes>
-					<exclude>**/*.java</exclude>
-					<exclude>**/*.cc</exclude>
-				</excludes>
-			</resource>
-		</resources>
-		
-		<plugins>
+    <sourceDirectory>src</sourceDirectory>
+
+    <resources>
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+          <exclude>**/*.cc</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
+    <plugins>
 
       <!-- Generate HEADER files from JNI Java classes -->
       <plugin>
@@ -52,18 +52,18 @@
           </execution>
         </executions>
       </plugin>
-      
+
     </plugins>
 
-	</build>
+  </build>
 
-	<dependencies>
+  <dependencies>
 
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-		</dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
 
-	</dependencies>
+  </dependencies>
 
 </project>
