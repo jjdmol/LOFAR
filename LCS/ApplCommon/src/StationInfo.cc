@@ -147,32 +147,34 @@ string	realHostname(const string&	someName)
 //
 // SAS :  LOFAR.PIC.<RING>.<SYSTEM>.xxx
 // PVSS:  <SYSTEM>:LOFAR_PIC_xxx
-//        ^       ^      ^
-//        |       |      +-- locationPos + locationLen
-//        |       +-- colon
-//        +-- systemLen
 //
 // NOTE: instead of PIC the DPname may contain PermSW or ObsSW_Observation<n>
 //
 string PVSS2SASname(const string&	PVSSname)
 {
 	const char*		structure_match = "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_(PIC|PermSW)_)|"		// 1,2,3
-									  "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_(PIC|PermSW)\\.)";	// 4,5,6
+									  "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_(PIC|PermSW)\\.)";		// 4,5,6
+									  "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_PIC_(LBA|HBA)\\.)";	// 7,8,9
 	const char*		location_match  = "(RCU[0-9]{3})|"									// 1
-									  "_(CS[0-9]{3}[A-Z]?)_|" 							// 2 CS999
-									  "_(RS[0-9]{3}[A-Z]?)_|"							// 3 RS999
-									  "_([ABD-QS-Z][A-Z][0-9]{3}[A-Z]?)_|"				// 4 XX999
-									  "_([A-Z]{3}[0-9]{3}[A-Z]?)_";						// 5 XXX999
+									  "(LBA[0-9]{3})|"									// 2 LBA999
+									  "(HBA[0-9]{2})|"									// 3 HBA99
+									  "_(CS[0-9]{3}[A-Z]?)_|" 							// 4 CS999
+									  "_(RS[0-9]{3}[A-Z]?)_|"							// 5 RS999
+									  "_([ABD-QS-Z][A-Z][0-9]{3}[A-Z]?)_|"				// 6 XX999
+									  "_([A-Z]{3}[0-9]{3}[A-Z]?)_";						// 7 XXX999
 	const char*		separator_match = "(_)|(\\.)";
 	const char*		boundary_match  = "(^([^_]+)_)";
 
 	const char*		structure_repl  = "(?1LOFAR_$3_$2_)"	// LOFAR_PIC_RS002
 									  "(?4LOFAR_$6.)";		// LOFAR_PIC
+									  "(?7LOFAR_PIC_$6.)";	// LOFAR_PIC_[HL]BA
 	const char*		location_repl	= "(?1$&)"				// ignore RCU999
-									  "(?2_Core$&)"			 
-									  "(?3_Remote$&)"
-									  "(?4_Europe$&)"
-									  "(?5_Control$&)";
+									  "(?2$&)"
+									  "(?3$&)"
+									  "(?4_Core$&)"			 
+									  "(?5_Remote$&)"
+									  "(?6_Europe$&)"
+									  "(?7_Control$&)";
 	const char*		separator_repl  = "(?1.)(?2_)";			// swap separators
 	const char*		boundary_repl   = "$2.";				// reverse separator on object-field edge
 
