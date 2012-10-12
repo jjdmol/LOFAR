@@ -71,6 +71,8 @@ int main() {
 
   test_SSHconnection( "echo SSHconnection success [stdout]" );
   test_SSHconnection( "echo SSHconnection success [stderr] 1>&2" );
+  test_SSHconnection( "echo SSHconnection success [stderr] 1>&2; echo SSHconnection success [stdout]" );
+  test_SSHconnection( "echo SSHconnection success [stdout]; echo SSHconnection success [stderr] 1>&2" );
   test_forkExec();
 
   SSH_Finalize();
