@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -17,78 +17,78 @@
   <artifactId>OTB-distribution</artifactId>
   <packaging>pom</packaging>
 
-	<build>
-		<plugins>
-		
-			<!-- Resolve client and server artifacts and extract them -->
-			<plugin>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>unpack</id>
-						<phase>package</phase>
-						<goals>
-							<goal>unpack</goal>
-						</goals>
+  <build>
+    <plugins>
 
-						<configuration>
-							<artifactItems>
-								<artifactItem>
-									<groupId>${project.groupId}</groupId>
-									<artifactId>jOTDB3</artifactId>
-									<type>tar.gz</type>
-								</artifactItem>
+      <!-- Resolve client and server artifacts and extract them -->
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>package</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
 
-								<artifactItem>
-									<groupId>${project.groupId}</groupId>
-									<artifactId>OTB</artifactId>
-									<type>tar.gz</type>
-								</artifactItem>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>jOTDB3</artifactId>
+                  <type>tar.gz</type>
+                </artifactItem>
 
-							</artifactItems>
-						</configuration>
+                <artifactItem>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>OTB</artifactId>
+                  <type>tar.gz</type>
+                </artifactItem>
 
-					</execution>
-				</executions>
-			</plugin>
-			
-			<!-- Create an TAR.GZ file -->
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<descriptor>assembly.xml</descriptor>
-					<appendAssemblyId>false</appendAssemblyId>
-				</configuration>
+              </artifactItems>
+            </configuration>
 
-				<executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			
-		</plugins>
-	</build>
-	
-	<dependencies>
-	
-	    <!-- Sibling dependencies -->
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>OTB</artifactId>
-      </dependency>
-      
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>jOTDB3</artifactId>
-      </dependency>
-	
-	</dependencies>
-	
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Create an TAR.GZ file -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptor>assembly.xml</descriptor>
+          <appendAssemblyId>false</appendAssemblyId>
+        </configuration>
+
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <dependencies>
+
+    <!-- Sibling dependencies -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>OTB</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>jOTDB3</artifactId>
+    </dependency>
+
+  </dependencies>
+
 </project>
 
 
