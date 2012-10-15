@@ -63,6 +63,10 @@ int main (int/*argc*/, char* argv[])
 				PVSS2SASname("RS005:LOFAR_PIC_HBA05.status.state"));
 	LOG_INFO_STR("PVSS==>SAS(DE603:LOFAR_PIC_LBA005.status.state)         = " << 
 				PVSS2SASname("DE603:LOFAR_PIC_LBA005.status.state"));
+	LOG_INFO_STR("PVSS==>SAS(CS101:LOFAR_PIC_HBA01.element00.status.state)         = " << 
+				PVSS2SASname("CS101:LOFAR_PIC_HBA01.element00.status.state"));
+	LOG_INFO_STR("PVSS==>SAS(CS101:LOFAR_PIC_HBA02.element12.X.status.state)         = " << 
+				PVSS2SASname("CS101:LOFAR_PIC_HBA02.element12.X.status.state"));
 
 	LOG_INFO_STR("SAS==>PVSS(LOFAR.PIC.Remote.RS002.Cabinet0.Subrack0.status_state)        = " << 
 				SAS2PVSSname("LOFAR.PIC.Remote.RS002.Cabinet0.Subrack0.status_state"));
