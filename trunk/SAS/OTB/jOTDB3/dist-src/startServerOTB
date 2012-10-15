@@ -12,7 +12,7 @@ export CLASSPATH=$OTB_APP
 
 for JAR_DEPENDENCY in $OTB_DIR/lib/*.jar
 do
-	echo -- Adding `basename $JAR_DEPENDENCY` dependency to Java Classpath
+	echo -- Adding dependency to CLASSPATH: `basename $JAR_DEPENDENCY`
 	export CLASSPATH=$CLASSPATH:$JAR_DEPENDENCY
 done
 
