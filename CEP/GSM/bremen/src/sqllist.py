@@ -15,6 +15,9 @@ SQL_LIST = {}
 
 GLOBALS = {}
 
+def re_sub(regexp, sub_to, sub_from, count, flags=0):
+    prog = re.compile(regexp, flags)
+    return prog.sub(sub_to, sub_from, count=count)
 
 def _expand_value(value):
     """
@@ -25,7 +28,7 @@ def _expand_value(value):
         Expand $$..$$ by calculating value in $s.
         """
         return str(eval(matchvalues.group(0)[2:-2]))
-    return re.sub(r'\$\$(.*?)\$\$', _expand_formula, value, count=0)
+    return re_sub(r'\$\$(.*?)\$\$', _expand_formula, value, count=0)
 
 
 def _load_from_sql_list(filename):
@@ -57,7 +60,7 @@ def _substitute_globals(sql):
             return str(GLOBALS[matchvalue.group(0)[1:-1]])
         else:
             return ''
-    return re.sub(r'\[(.?)\]', _substitute_global, sql, count=0)
+    return re_sub(r'\[(.?)\]', _substitute_global, sql, count=0)
 
 
 def get_sql(name, *params):
