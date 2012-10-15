@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export OTB_DIR=/opt/sas/otb
+export OTB_DIR=/opt/sas/otb/server
 export JAVA_HOME=/usr/java/jdk1.7.0_02
 
 echo
