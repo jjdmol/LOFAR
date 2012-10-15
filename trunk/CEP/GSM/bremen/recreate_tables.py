@@ -7,12 +7,24 @@ import argparse
 import copy
 import re
 from os import path
-import monetdb.sql as db
-import monetdb.monetdb_exceptions as me
-import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+try:
+    import monetdb.sql as db
+    import monetdb.monetdb_exceptions as me
+    HAS_MONET = True
+except ImportError:
+    HAS_MONET =False
+
+try:
+    import psycopg2
+    from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+    HAS_POSTGRESQL = True
+except ImportError:
+    HAS_POSTGRESQL = False
 import subprocess
 
+def re_sub(regexp, sub_to, sub_from, flags=0):
+    prog = re.compile(regexp, flags)
+    return prog.sub(sub_to, sub_from)
 
 class Recreator(object):
     """
@@ -96,12 +108,12 @@ class Recreator(object):
         Prepare SQL code for MonetDB/PostgreSQL.
         Remove all comments, make necessary substitutions.
         """
-        sql_lines = re.sub(r'/\*.*?\*/', '', sql_lines, flags=re.DOTALL)
-        sql_lines = re.sub(r'--.*$', '', sql_lines, flags=re.MULTILINE)
+        sql_lines = re_sub(r'/\*.*?\*/', '', sql_lines, flags=re.DOTALL)
+        sql_lines = re_sub(r'--.*$', '', sql_lines, flags=re.MULTILINE)
         if not self.monet:
             # Has to apply substitutions for PostgreSQL.
             for from_, to_ in self.PG_SUBSTITUTOR:
-                sql_lines = re.sub(from_, to_, sql_lines,
+                sql_lines = re_sub(from_, to_, sql_lines,
                                    flags=re.MULTILINE | re.IGNORECASE)
         return sql_lines
 
@@ -163,6 +175,12 @@ class Recreator(object):
         print 'Frequencies loaded'
 
     def run(self):
+        error_set = []
+        if HAS_MONET:
+            error_set.append(me.OperationalError)
+        if HAS_POSTGRESQL:
+            error_set.append(psycopg2.ProgrammingError)
+        error_set = tuple(error_set)
         try:
             for procedure in self.PROCEDURES:
                 if self.monet:
@@ -170,13 +188,12 @@ class Recreator(object):
                         self.conn.execute("drop procedure %s;" %
                                           procedure)
                         print "drop procedure %s;" % procedure
-                    except (psycopg2.ProgrammingError,
-                            me.OperationalError):
+                    except error_set:
                         pass
             for view in self.VIEWS:
                 try:
                     self.conn.execute("drop view %s;" % view)
-                except (psycopg2.ProgrammingError, me.OperationalError):
+                except error_set:
                     pass
                 print "drop view %s;" % view
 
