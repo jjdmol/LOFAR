@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
   Context::initialize();
   setLevel("Global",8);
 #else
-  INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 1 ? atoi(argv[1]) : -1)));
+  INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 2 ? atoi(argv[2]) : -1)));
 #endif
 
   CasaLogSink::attach();
