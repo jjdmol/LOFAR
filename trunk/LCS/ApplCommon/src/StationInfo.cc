@@ -154,7 +154,6 @@ string PVSS2SASname(const string&	PVSSname)
 {
 	const char*		structure_match = "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_(PIC|PermSW)_)|"		// 1,2,3
 									  "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_(PIC|PermSW)\\.)";		// 4,5,6
-									  "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_PIC_(LBA|HBA)\\.)";	// 7,8,9
 	const char*		location_match  = "(RCU[0-9]{3})|"									// 1
 									  "(LBA[0-9]{3})|"									// 2 LBA999
 									  "(HBA[0-9]{2})|"									// 3 HBA99
@@ -167,7 +166,6 @@ string PVSS2SASname(const string&	PVSSname)
 
 	const char*		structure_repl  = "(?1LOFAR_$3_$2_)"	// LOFAR_PIC_RS002
 									  "(?4LOFAR_$6.)";		// LOFAR_PIC
-									  "(?7LOFAR_PIC_$6.)";	// LOFAR_PIC_[HL]BA
 	const char*		location_repl	= "(?1$&)"				// ignore RCU999
 									  "(?2$&)"
 									  "(?3$&)"
