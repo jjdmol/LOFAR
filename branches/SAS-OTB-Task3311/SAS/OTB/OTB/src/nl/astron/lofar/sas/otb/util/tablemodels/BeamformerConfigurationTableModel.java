@@ -34,7 +34,6 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.util.ArrayList;
-import java.util.Vector;
 import org.apache.log4j.Logger;
 
 /**

@@ -24,10 +24,14 @@
 
 package nl.astron.lofar.sas.otb;
 
+import java.net.MalformedURLException;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.HashMap;
-import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
+
+import nl.astron.lofar.sas.otb.jparmfacade.jParmFacadeInterface;
+import nl.astron.lofar.sas.otb.exceptions.ParmDBConfigurationException;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.ParmDBConfigurationHelper;
 import nl.astron.lofar.sas.otbcomponents.OTBInputFieldBuilder;
@@ -146,7 +150,7 @@ public class SharedVars {
                 
                 itsjParmFacade = (jParmFacadeInterface) Naming.lookup(aRC);
                 
-            } catch (Throwable e) {
+            } catch (ParmDBConfigurationException | NotBoundException | MalformedURLException | RemoteException e) {
                 logger.error("jParmFacade could not be loaded : "+e.getMessage());
             }
         }

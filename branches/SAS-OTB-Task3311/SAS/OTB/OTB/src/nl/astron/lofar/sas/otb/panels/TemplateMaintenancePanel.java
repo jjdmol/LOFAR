@@ -22,9 +22,9 @@
 package nl.astron.lofar.sas.otb.panels;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -231,80 +231,82 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         logger.debug("actionPerformed: " + evt);
         logger.debug("Trigger: " + evt.getActionCommand());
-        if (evt.getActionCommand().equals("Delete")) {
+        switch (evt.getActionCommand()) {
+            case "Delete":
+                //Check  if the selected node isn't a leaf
+                if (itsSelectedNode != null && !itsSelectedNode.leaf && itsSelectedNode.instances <= 1 ) {
+                    if (JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this node ?", "Delete Tree", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
+                        try {
+                            if (OtdbRmi.getRemoteMaintenance().deleteNode(itsSelectedNode)) {
+                                logger.debug("Node + children deleted");
 
-            //Check  if the selected node isn't a leaf
-            if (itsSelectedNode != null && !itsSelectedNode.leaf && itsSelectedNode.instances <= 1 ) {
-                if (JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this node ?", "Delete Tree", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
-                    try {
-                        if (OtdbRmi.getRemoteMaintenance().deleteNode(itsSelectedNode)) {
-                            logger.debug("Node + children deleted");
-
-                          
-                            // We have to find the defaultNode for this deleted node and decrease the number of instances
-                            Vector<jOTDBnode> aList = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, itsSelectedNode.name);
-                            Iterator<jOTDBnode> it = aList.iterator ();
-                            jOTDBnode aDefaultNode=null;
-                            short maxIdx=0;
-                            while (it.hasNext ()) {
-                                jOTDBnode aN = it.next ();
-                                if (aN.index > maxIdx) maxIdx=aN.index;
-                                if (aN.index == -1) {
-                                   aDefaultNode=aN;
+                              
+                                // We have to find the defaultNode for this deleted node and decrease the number of instances
+                                ArrayList<jOTDBnode> aList = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, itsSelectedNode.name));
+                                Iterator<jOTDBnode> it = aList.iterator ();
+                                jOTDBnode aDefaultNode=null;
+                                short maxIdx=0;
+                                while (it.hasNext ()) {
+                                    jOTDBnode aN = it.next ();
+                                    if (aN.index > maxIdx) maxIdx=aN.index;
+                                    if (aN.index == -1) {
+                                       aDefaultNode=aN;
+                                    }
                                 }
+                                if (aDefaultNode != null) {
+                                    maxIdx+=1;
+                                    // Grootste index of totaal aantal
+                                    aDefaultNode.instances=maxIdx;
+                                    OtdbRmi.getRemoteMaintenance().saveNode(aDefaultNode);
+                                }
+                                setNewRootNode();
                             }
-                            if (aDefaultNode != null) {
-                                maxIdx+=1;
-                                // Grootste index of totaal aantal
-                                aDefaultNode.instances=maxIdx;
-                                OtdbRmi.getRemoteMaintenance().saveNode(aDefaultNode);
-                            }
-                            setNewRootNode();
-                        }
-                    } catch (RemoteException ex) {
-                        String aS="Error during deletion of Node: " + ex;
-                        logger.error(aS);
-                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                    }
-                }
-            }
-        } else if (evt.getActionCommand().equals("Duplicate")) {
-
-            //Check  if the selected node isn't a leaf and it is a default node (index = -1)
-            if (itsSelectedNode != null && !itsSelectedNode.leaf && itsSelectedNode.index==-1) {
-                String answer = JOptionPane.showInputDialog(this, "What is the index for the new subtree?", "Enter indexNumber", JOptionPane.QUESTION_MESSAGE);
-                if (answer != null || !answer.equals("")) {
-                    short idx = Integer.valueOf(answer).shortValue();
-                    if (idx < 0) {
-                        logger.warn("Index value smaller then 1 not allowed");
-                        return;
-                    }
-                    try {
-                        int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsTreeID, itsSelectedNode.nodeID(), idx);
-                        if (aN > 0) {
-                            logger.debug("Node duplicated");
-                            // defaultNode.instances needs 2b set to highest instance
-                           if (idx+1 > itsSelectedNode.instances) {
-                               Integer newInst=idx+1;
-                               itsSelectedNode.instances=newInst.shortValue();
-                               OtdbRmi.getRemoteMaintenance().saveNode(itsSelectedNode);
-                               setNewRootNode();
-                           }
-                        } else {
-                            String aS="Node duplication failed";
+                        } catch (RemoteException ex) {
+                            String aS="Error during deletion of Node: " + ex;
                             logger.error(aS);
                             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         }
-                    } catch (RemoteException ex) {
-                        String aS="Error during duplication of Node: " + ex;
-                        logger.error(aS);
-                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     }
                 }
-            }
-        } else if (evt.getActionCommand().equals("Exit")) {
-            itsMainFrame.unregisterPlugin(this.getFriendlyName());
-            itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
+                break;
+            case "Duplicate":
+                //Check  if the selected node isn't a leaf and it is a default node (index = -1)
+                if (itsSelectedNode != null && !itsSelectedNode.leaf && itsSelectedNode.index==-1) {
+                    String answer = JOptionPane.showInputDialog(this, "What is the index for the new subtree?", "Enter indexNumber", JOptionPane.QUESTION_MESSAGE);
+                    if (answer != null || !answer.equals("")) {
+                        short idx = Integer.valueOf(answer).shortValue();
+                        if (idx < 0) {
+                            logger.warn("Index value smaller then 1 not allowed");
+                            return;
+                        }
+                        try {
+                            int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsTreeID, itsSelectedNode.nodeID(), idx);
+                            if (aN > 0) {
+                                logger.debug("Node duplicated");
+                                // defaultNode.instances needs 2b set to highest instance
+                               if (idx+1 > itsSelectedNode.instances) {
+                                   Integer newInst=idx+1;
+                                   itsSelectedNode.instances=newInst.shortValue();
+                                   OtdbRmi.getRemoteMaintenance().saveNode(itsSelectedNode);
+                                   setNewRootNode();
+                               }
+                            } else {
+                                String aS="Node duplication failed";
+                                logger.error(aS);
+                                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                            }
+                        } catch (RemoteException ex) {
+                            String aS="Error during duplication of Node: " + ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                    }
+                }
+                break;
+            case "Exit":
+                itsMainFrame.unregisterPlugin(this.getFriendlyName());
+                itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
+                break;
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
 
@@ -312,11 +314,11 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         logger.debug("actionPerformed: " + evt);
         logger.debug("Trigger: " + evt.getActionCommand());
         try {
-            Vector aL = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, evt.getActionCommand());
+            ArrayList<jOTDBnode> aL = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, evt.getActionCommand()));
             logger.debug("nr nodes found: " + aL.size());
             logger.debug("nodes: " + aL);
             if (aL.size() > 0) {
-                changeSelection((jOTDBnode) aL.elementAt(0));
+                changeSelection(aL.get(0));
             } else {
                 logger.warn("No panels for this choice");
             }
@@ -359,7 +361,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         jTabbedPane1.removeAll();
 
         // Check if the nodename uses specific panels and create them
-        Vector aPanelList = null;
+        ArrayList<String> aPanelList = null;
         if (itsPanelHelper.isKey(LofarUtils.keyName(aNode.name))) {
             aPanelList = itsPanelHelper.getPanels(LofarUtils.keyName(aNode.name));
         } else {
@@ -386,19 +388,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 logger.debug("Getting panel for: " + aPanelName);
                 try {
                     p = (JPanel) Class.forName(aPanelName).newInstance();
-                } catch (ClassNotFoundException ex) {
-                    String aS="Error during getPanel: " + ex;
-                    logger.error(aS);
-                    itsMainFrame.setNormalCursor();
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                    return;
-                } catch (InstantiationException ex) {
-                    String aS="Error during getPanel: " + ex;
-                    logger.error(aS);
-                    itsMainFrame.setNormalCursor();
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                    return;
-                } catch (IllegalAccessException ex) {
+                } catch (        ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
                     String aS="Error during getPanel: " + ex;
                     logger.error(aS);
                     itsMainFrame.setNormalCursor();
@@ -457,12 +447,12 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 }
                 try {
                     // only deletion possible when no instances left
-                    Vector<jOTDBnode> aList = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, itsSelectedNode.name);
+                    ArrayList<jOTDBnode> aList = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, itsSelectedNode.name));
                     
                     // count all found nodes with then same parentid as the selected node
                     int cnt=0;
-                    for ( int i=0; i < aList.size(); i++ ) {
-                        if (itsSelectedNode.parentID() == aList.elementAt(i).parentID()) cnt++;
+                    for ( jOTDBnode anElement: aList) {
+                        if (itsSelectedNode.parentID() == anElement.parentID()) cnt++;
                     }
 
                     if (aNode.index == -1 && cnt <= 1) {

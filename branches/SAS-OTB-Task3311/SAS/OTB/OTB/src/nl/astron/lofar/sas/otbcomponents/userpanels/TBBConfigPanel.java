@@ -33,7 +33,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Enumeration;
-import java.util.Vector;
+import java.util.ArrayList;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -455,7 +455,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     }
     
     /**
-     * Fills the StringVectors with the values from the Database
+     * Fills the StringArrayLists with the values from the Database
      * Also does some base GUI settings on the Input fields
      * @param parent the parent node of the node to be displayed
      * @param aParam the parameter of the node to be displayed if applicable
@@ -1656,25 +1656,25 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
     
     // TBBsettings
-    private Vector<jOTDBnode> itsTBBsettings = new Vector<>();
+    private ArrayList<jOTDBnode> itsTBBsettings = new ArrayList<>();
     // All TBBsetting nodes
-    private Vector<String>    itsOperatingModes = new Vector<>();
-    private Vector<String>    itsTriggerModes = new Vector<>();
-    private Vector<String>    itsBaselevels= new Vector<>();
-    private Vector<String>    itsStartlevels= new Vector<>();
-    private Vector<String>    itsStoplevels= new Vector<>();
-    private Vector<String>    itsFilters= new Vector<>();
-    private Vector<String>    itsWindows= new Vector<>();
-    private Vector<String>    itsFilter0Coeff0s= new Vector<>();
-    private Vector<String>    itsFilter0Coeff1s= new Vector<>();
-    private Vector<String>    itsFilter0Coeff2s= new Vector<>();
-    private Vector<String>    itsFilter0Coeff3s= new Vector<>();
-    private Vector<String>    itsFilter1Coeff0s= new Vector<>();
-    private Vector<String>    itsFilter1Coeff1s= new Vector<>();
-    private Vector<String>    itsFilter1Coeff2s= new Vector<>();
-    private Vector<String>    itsFilter1Coeff3s= new Vector<>();
-    private Vector<String>    itsRCUs= new Vector<>();
-    private Vector<String>    itsSubbandList= new Vector<>();
+    private ArrayList<String>    itsOperatingModes = new ArrayList<>();
+    private ArrayList<String>    itsTriggerModes = new ArrayList<>();
+    private ArrayList<String>    itsBaselevels= new ArrayList<>();
+    private ArrayList<String>    itsStartlevels= new ArrayList<>();
+    private ArrayList<String>    itsStoplevels= new ArrayList<>();
+    private ArrayList<String>    itsFilters= new ArrayList<>();
+    private ArrayList<String>    itsWindows= new ArrayList<>();
+    private ArrayList<String>    itsFilter0Coeff0s= new ArrayList<>();
+    private ArrayList<String>    itsFilter0Coeff1s= new ArrayList<>();
+    private ArrayList<String>    itsFilter0Coeff2s= new ArrayList<>();
+    private ArrayList<String>    itsFilter0Coeff3s= new ArrayList<>();
+    private ArrayList<String>    itsFilter1Coeff0s= new ArrayList<>();
+    private ArrayList<String>    itsFilter1Coeff1s= new ArrayList<>();
+    private ArrayList<String>    itsFilter1Coeff2s= new ArrayList<>();
+    private ArrayList<String>    itsFilter1Coeff3s= new ArrayList<>();
+    private ArrayList<String>    itsRCUs= new ArrayList<>();
+    private ArrayList<String>    itsSubbandList= new ArrayList<>();
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

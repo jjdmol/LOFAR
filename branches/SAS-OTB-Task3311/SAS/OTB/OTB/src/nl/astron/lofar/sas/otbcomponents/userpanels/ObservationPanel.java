@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.Vector;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
@@ -189,7 +188,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     // AnaBeam childs finished, add to AnaBeamArrayList
                     itsAnaBeamList.add(itsActiveAnaBeam);
                 }else if (LofarUtils.keyName(aNode.name).contains("Beamformer")) {
-                    itsBeamformers.addElement(aNode);
+                    itsBeamformers.add(aNode);
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("VirtualInstrument")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
@@ -1336,7 +1335,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
 
 
-        jOTDBnode aDefaultBFNode= itsBeamformers.elementAt(0);
+        jOTDBnode aDefaultBFNode= itsBeamformers.get(0);
         // validate table
         // same for beamformer
         if (itsBeamformerConfigurationTableModel.changed()) {
@@ -1346,7 +1345,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             // Keep the 1st one, it's the default Beam
             try {
                 for (i=1; i< itsBeamformers.size(); i++) {
-                    OtdbRmi.getRemoteMaintenance().deleteNode(itsBeamformers.elementAt(i));
+                    OtdbRmi.getRemoteMaintenance().deleteNode(itsBeamformers.get(i));
                 }
             } catch (RemoteException ex) {
                 String aS="Error during deletion of defaultNode: "+ex;
@@ -2797,7 +2796,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private TiedArrayBeam       itsActiveTAB;
     
     // Beamformers
-    private Vector<jOTDBnode> itsBeamformers    = new Vector<>();
+    private ArrayList<jOTDBnode> itsBeamformers    = new ArrayList<>();
     private ArrayList<String>    itsStations       = new ArrayList<>();
    
     // Observation Virtual Instrument parameters

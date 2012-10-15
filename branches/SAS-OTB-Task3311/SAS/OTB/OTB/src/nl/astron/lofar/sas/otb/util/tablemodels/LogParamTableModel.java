@@ -23,7 +23,7 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.rmi.RemoteException;
-import java.util.Vector;
+import java.util.ArrayList;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBvalue;
@@ -64,20 +64,22 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
         }            
         try {
             OtdbRmi.getRemoteValue().setTreeID(aMainFrame.getSharedVars().getTreeID());
-            Vector aLogList=OtdbRmi.getRemoteValue().searchInPeriod(aNodeID,
+            ArrayList<jOTDBvalue> aLogList=new ArrayList<>(OtdbRmi.getRemoteValue().searchInPeriod(aNodeID,
                     aMainFrame.getSharedVars().getLogParamLevel(),
                     aMainFrame.getSharedVars().getLogParamStartTime(),
                     aMainFrame.getSharedVars().getLogParamEndTime(),
-                    aMainFrame.getSharedVars().getLogParamMostRecent());
+                    aMainFrame.getSharedVars().getLogParamMostRecent()));
             if (aLogList==null || aLogList.size()<1 ) {
                 logger.warn("No matches for this searchInPeriod");
                 return true;
             }
             data = new Object[aLogList.size()][headers.length];
-            for (int k=0; k< aLogList.size();k++) {
-               data[k][0]=((jOTDBvalue)aLogList.elementAt(k)).name;
-               data[k][1]=((jOTDBvalue)aLogList.elementAt(k)).value;
-               data[k][2]=((jOTDBvalue)aLogList.elementAt(k)).time;
+            int k=0;
+            for (jOTDBvalue log:aLogList) {
+               data[k][0]=log.name;
+               data[k][1]=log.value;
+               data[k][2]=log.time;
+               k++;
             }
             fireTableDataChanged();
         } catch (RemoteException e) {

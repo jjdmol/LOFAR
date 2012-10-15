@@ -25,8 +25,8 @@ package nl.astron.lofar.sas.otbcomponents;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Vector;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -203,8 +203,8 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
      * @return HashMap<String,Object> object that can be passed on to PlotDataAccessParmDBImpl.
      */
     private Object constructPlotterConstraints(String aParamName,String itsParamTableName){
-        HashMap<String,Object> parameterConstraints = new HashMap<String,Object>();
-            parameterConstraints.put(new String("PARMDBINTERFACE"), SharedVars.getJParmFacade());
+        HashMap<String,Object> parameterConstraints = new HashMap<>();
+            parameterConstraints.put("PARMDBINTERFACE", SharedVars.getJParmFacade());
 
         
         String[] passToDataAccess = null;
@@ -224,7 +224,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
             try{
                 passToDataAccess = new String[8];
                 
-                Vector paramValues;
+                ArrayList<Double> paramValues;
                 paramValues = SharedVars.getJParmFacade().getRange(cloneParamName);
                 //paramValues = SharedVars.getJParmFacade().getRange("*");
                 
@@ -252,7 +252,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
                 passToDataAccess[5] = ""+endy;
                 passToDataAccess[6] = ""+numy;
                 passToDataAccess[7] = itsParamTableName;
-            }catch(Exception ex){
+            }catch(RemoteException | NumberFormatException ex){
                 JOptionPane.showMessageDialog(itsMainFrame, ex.getMessage(),
                         "Error detected",
                         JOptionPane.ERROR_MESSAGE);
@@ -479,7 +479,7 @@ public class ParmDBPlotPanel extends javax.swing.JPanel implements IViewPanel{
                 }else{
                     double squareRoot = Math.sqrt(Double.parseDouble(""+successfulNumberOfSlots));
                     int wishedIndex = (Integer.parseInt(""+(int)squareRoot))-1;
-                    cSlotsAmount.setSelectedItem(new String(""+successfulNumberOfSlots));
+                    cSlotsAmount.setSelectedItem((""+successfulNumberOfSlots));
                 }
             }
             
