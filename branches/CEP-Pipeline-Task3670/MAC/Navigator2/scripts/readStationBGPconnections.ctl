@@ -63,26 +63,22 @@ main()
       dyn_string linesplitted=strsplit(dynStr_RSPfile[index]," \t");
       if (showDebug) DebugN(index+" :"+linesplitted);
 
-      string station= linesplitted[1];
-      string rspstr = linesplitted[2];
-      string ionode = linesplitted[3];
-      string ip     = linesplitted[4];
-      string mac    = linesplitted[5];
-      // if rack = 1 but rack 1 is not in use, then skip line
-      if (strpos(ionode,"R01") >= 0 && !navFunct_isBGPSwitch()) {
-        continue;
-      } else if (strpos(ionode,"R00") >= 0 && navFunct_isBGPSwitch()) {
-        continue;
-      }
+      string station    = linesplitted[1];
+      string rspstr     = linesplitted[2];
+      string ionode     = linesplitted[3];
+      string ip         = linesplitted[4];
+      string mac        = linesplitted[5];
+      string macForeign = "";
       // the station/mac/ip places are for the cases were rsp1 can be the 2nd ear or a foreign station
       // if a foreign station is used they will be in the list as R(00-01)_BG(1-3)_(DE,FR,SE,UK)(601-608)
       // and the real ionode can be found based on the shared ipnr
       // then the info will go to the 2nd station in the database
         
       int stationPlace=1;
-      if (strpos(ionode,"BG") < 0) {
-        stationPlace = 0;
-      } else {
+      if (strpos(ionode,"R00") >= 0) {
+        stationPlace=0;
+      }
+      if (strpos(ionode,"BG") >= 0) {
         if (showDebug) DebugN(" ionode contains BG router name, trying to find real ionode for connection based on ip: "+ip);
         ionode="";
         // check list based on ipnr and find the real ionode
@@ -91,6 +87,7 @@ main()
             if (showDebug) DebugN(" found match for ip in: " + dynStr_RSPfile[idx]);
             dyn_string  sp = strsplit(dynStr_RSPfile[idx]," \t"); 
             ionode= sp[3];
+            macForeign= mac;
             break;
           }
         }
@@ -112,10 +109,14 @@ main()
       if (showDebug) DebugN( "node: "+ionode+ "  rspfull: " + rspstr+ "  rsp[2]" + rsp[2]+ " nr: "+nr
                              + " ip: "+ip+ " mac: "+mac);
       if (dpExists(ioname)) {
-        dpSet(ioname+".station"+stationPlace,station);
         dpSet(ioname+".IP"+stationPlace,ip);
-        dpSet(ioname+".MAC"+stationPlace,mac);
-        
+        if (macForeign != "") {
+          dpSet(ioname+".MACForeign",macForeign);
+          dpSet(ioname+".station1",station);          
+        } else {
+          dpSet(ioname+".MAC"+stationPlace,mac);
+          dpSet(ioname+".station0",station);
+        }
       } else {
           DebugN(ionode+" gives wrong dp: " , ioname);
       }
@@ -169,6 +170,7 @@ void emptyIONodes() {
       dpSet(dp+".station1","");
       dpSet(dp+".IP1","");
       dpSet(dp+".MAC1","");
+      dpSet(dp+".MACForeign","");
     } else {
       DebugN("wrong dp found: "+dp+".station0");
     }

@@ -27,6 +27,7 @@
 #include <Common/ParameterSet.h>
 #include <Common/Exception.h>
 #include <Common/Version.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <ApplCommon/StationConfig.h>
 
@@ -96,6 +97,9 @@
 #include "GetDatastreamCmd.h"
 #include "SetSwapxyCmd.h"
 #include "GetSwapxyCmd.h"
+#include "SetBitModeCmd.h"
+#include "GetBitModeCmd.h"
+#include "UpdBitModeCmd.h"
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -137,9 +141,12 @@
 #include "RawBlockWrite.h"
 #include "LatencyRead.h"
 #include "TimestampWrite.h"
+#include "BMWrite.h"
+#include "BMRead.h"
 
 #include "RawEvent.h"
 #include "Sequencer.h"
+#include "Cache.h"
 #include <RSP_Driver/Package__Version.h>
 
 #ifdef HAVE_UNISTD_H
@@ -369,6 +376,7 @@ bool RSPDriver::isBoardPort(GCFPortInterface& port)
  * Order is:
  * - STATUS  (RSP Status): read RSP status info   // StatusRead
  * - VERSION (RSP Status): read RSP version info  // VersionRead
+ * - BITMODE (RSP Status): read RSP nofbeam info  // BMRead
  * - TDS:     write TDS control settings          // TDSResultWrite/TDSProtocolWrite
  * - TDSSTATUS: read TDS status                   // TDSStatusWrite/TDSStatusRead
  * - RSU:     write RSU settings                  // RSUWrite
@@ -407,6 +415,14 @@ void RSPDriver::addAllSyncActions()
 			VersionsRead* versionread = new VersionsRead(m_boardPorts[boardid], boardid);
 			ASSERT(versionread);
 			m_scheduler.addSyncAction(versionread);
+		}
+		if (GET_CONFIG("RSPDriver.READ_BITMODE", i)) {
+			BMWrite* bitmodewrite = new BMWrite(m_boardPorts[boardid], boardid);
+			ASSERT(bitmodewrite);
+			m_scheduler.addSyncAction(bitmodewrite);
+			BMRead* bitmoderead = new BMRead(m_boardPorts[boardid], boardid);
+			ASSERT(bitmoderead);
+			m_scheduler.addSyncAction(bitmoderead);
 		}
 
 		// Schedule register writes for soft PPS if configured.
@@ -483,10 +499,26 @@ void RSPDriver::addAllSyncActions()
 		}
 
 		if (GET_CONFIG("RSPDriver.READ_BST", i)) {
-			BstRead* bstread = 0;
-			bstread = new BstRead(m_boardPorts[boardid], boardid);
-			ASSERT(bstread);
-			m_scheduler.addSyncAction(bstread);
+		    // check if board is used, and set lane
+		    for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+		        // read only BST from boards who output too CEP
+		        // for Ring-0
+		        if (boardid == GET_CONFIG(formatString("RSPDriver.LANE_%02d_BLET_OUT", lane).c_str(), i)) {
+		            LOG_DEBUG(formatString("add bstread for board %d, lane %d", boardid, lane));
+        			BstRead* bstread = 0;
+        			bstread = new BstRead(m_boardPorts[boardid], boardid, lane);
+        			ASSERT(bstread);
+        			m_scheduler.addSyncAction(bstread);
+		        }
+		        // for Ring-1
+		        if (boardid == GET_CONFIG(formatString("RSPDriver.LANE_%02d_BLET_OUT", (10+lane)).c_str(), i)) {
+		            LOG_DEBUG(formatString("add bstread for board %d, lane %d", boardid, (10+lane)));
+        			BstRead* bstread = 0;
+        			bstread = new BstRead(m_boardPorts[boardid], boardid, (10+lane));
+        			ASSERT(bstread);
+        			m_scheduler.addSyncAction(bstread);
+		        }
+		    }
 		}
 
 		if (GET_CONFIG("RSPDriver.READ_XST", i)) {
@@ -1036,6 +1068,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 		case RSP_GETDATASTREAM:         rsp_getDatastream(event,port);      break;
 		case RSP_SETSWAPXY:             rsp_setswapxy(event,port);          break;
 		case RSP_GETSWAPXY:             rsp_getswapxy(event,port);          break;
+		case RSP_SETBITMODE:			rsp_setBitMode(event,port);         break;
+		case RSP_GETBITMODE:			rsp_getBitMode(event,port);         break;
+		case RSP_SUBBITMODE:			rsp_subBitMode(event,port);         break;
+		case RSP_UNSUBBITMODE:			rsp_unsubBitMode(event,port);       break;
 
 		case F_TIMER: {
 		if (&port == &m_boardPorts[0]) {
@@ -1217,11 +1253,13 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 	if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
 		|| (sw_event->weights().extent(firstDim) < 1)
 		|| (sw_event->weights().extent(secondDim) > StationSettings::instance()->nrRcus())
-		|| (sw_event->weights().extent(thirdDim) != MAX_BEAMLETS)) {
-		LOG_ERROR(formatString("SETWEIGHTS: invalid parameter,weighs-size=(%d,%d,%d)", 
+		|| (sw_event->weights().extent(thirdDim) > (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE))
+		|| (sw_event->weights().extent(fourthDim) != maxBeamletsPerBank(Cache::getInstance().getBack().getBitsPerSample()))) {
+		LOG_ERROR(formatString("SETWEIGHTS: invalid parameter,weighs-size=(%d,%d,%d,%d)", 
 			sw_event->weights().extent(firstDim), 
 			sw_event->weights().extent(secondDim), 
-			sw_event->weights().extent(thirdDim)));
+			sw_event->weights().extent(thirdDim),
+			sw_event->weights().extent(fourthDim)));
 
 		delete sw_event;
 
@@ -1236,7 +1274,7 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 		Ptr<SetWeightsCmd> command = new SetWeightsCmd(*sw_event, port, Command::WRITE, timestep);
 
 		//PD add base correction here
-		command->setWeights(sw_event->weights()(Range(timestep, timestep), Range::all(), Range::all()));
+		command->setWeights(sw_event->weights()(Range(timestep, timestep), Range::all(), Range::all(), Range::all()));
 
 		// if weights for only one timestep are given (and the timestamp == Timestamp(0,0))
 		 // then the weights may be applied immediately
@@ -1301,8 +1339,10 @@ void RSPDriver::rsp_getsubbands(GCFEvent& event, GCFPortInterface& port)
 		LOG_ERROR("GETSUBBANDS: invalid parameter");
 
 		RSPGetsubbandsackEvent ack;
-		ack.subbands().resize(1,1);
-		ack.subbands() = 0;
+		ack.subbands.crosslets().resize(1,1);
+		ack.subbands.crosslets() = 0;
+		ack.subbands.beamlets().resize(1,1);
+		ack.subbands.beamlets() = 0;
 		ack.timestamp = Timestamp(0,0);
 		ack.status = RSP_FAILURE;
 		port.send(ack);
@@ -1456,8 +1496,7 @@ void RSPDriver::rsp_subrcu(GCFEvent& event, GCFPortInterface& port)
 	ack.handle = (memptr_t)&(*command);
 	port.send(ack);
 
-	m_scheduler.enter(Ptr<Command>(&(*command)),
-													Scheduler::PERIODIC);
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
@@ -2481,6 +2520,98 @@ void RSPDriver::rsp_getDatastream(GCFEvent& event, GCFPortInterface& port)
 	// command is ok, schedule it.
 	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
+
+//
+// rsp_setBitMode(event, port)
+//
+void RSPDriver::rsp_setBitMode(GCFEvent& event, GCFPortInterface& port)
+{
+	Ptr<SetBitModeCmd> command = new SetBitModeCmd(event, port, Command::WRITE);
+
+	if (!command->validate()) {
+		LOG_ERROR("SetBitMode: invalid parameter");
+
+		RSPSetbitmodeackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+	// command is ok, schedule it.
+	m_scheduler.enter(Ptr<Command>(&(*command)));
+}
+
+//
+// rsp_getDatastream(event, port)
+//
+void RSPDriver::rsp_getBitMode(GCFEvent& event, GCFPortInterface& port)
+{
+	Ptr<GetBitModeCmd> command = new GetBitModeCmd(event, port, Command::READ);
+
+	if (!command->validate()) {
+		LOG_ERROR("GetBitMode: invalid parameter");
+
+		RSPGetbitmodeackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+	// command is ok, schedule it.
+	m_scheduler.enter(Ptr<Command>(&(*command)));
+}
+
+//
+// rsp_subBitMode(event, port)
+//
+void RSPDriver::rsp_subBitMode(GCFEvent& event, GCFPortInterface& port)
+{
+	// subscription is done by entering a UpdSplitterCmd in the periodic queue
+	Ptr<UpdBitModeCmd> command = new UpdBitModeCmd(event, port, Command::READ);
+	RSPSubbitmodeackEvent ack;
+
+	if (!command->validate()) {
+		LOG_ERROR("SUBBITMODE: invalid parameter");
+
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_FAILURE;
+		ack.handle = 0;
+
+		port.send(ack);
+		return;
+	}
+	else {
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_SUCCESS;
+		ack.handle = (memptr_t)&(*command);
+		port.send(ack);
+	}
+
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
+}
+
+//
+// rsp_unsubBitMode(event, port)
+//
+void RSPDriver::rsp_unsubBitMode(GCFEvent& event, GCFPortInterface& port)
+{
+	RSPUnsubbitmodeEvent unsub(event);
+
+	RSPUnsubbitmodeackEvent ack;
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_FAILURE;
+	ack.handle = unsub.handle;
+
+	if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
+		ack.status = RSP_SUCCESS;
+	}
+	else {
+		LOG_ERROR("UNSUBBITMODE: failed to remove subscription");
+	}
+
+	port.send(ack);
+}
+
 
 	} // namespace RSP
 } // namespace LOFAR

@@ -33,6 +33,7 @@ include = '<APL/RSP_Protocol/Versions.h>';
 include = '<APL/RSP_Protocol/WGSettings.h>';
 include = '<APL/RSP_Protocol/XCStatistics.h>';
 include = '<APL/RSP_Protocol/Latency.h>';
+include = '<APL/RSP_Protocol/Bitmode.h>';
 
 prelude = << PRELUDE_END
 
@@ -187,7 +188,17 @@ static const int RSP_RAW_BLOCK_SIZE = 1480;
 // GETDATASTREAM		(timestamp, cache)
 // GETDATASTREAMACK		(timestamp, status, switch_on)
 
-// 120 commands
+// SETBITMODE			(timestamp, bitmode);
+// SETBITMODEACK		(timestamp, status);
+// GETBITMODE			(timestamp);
+// GETBITMODEACK		(timestamp, status, bitmode);
+// SUBBITMODE			(timestamp,	period)
+// SUBBITMODEACK		(timestamp,	status,	handle)
+// UPDBITMODE			(timestamp,	status,	handle,	bitmode)
+// UNSUBBITMODE 		(handle)
+// UNSUBBITMODEACK		(timestamp,	status,	handle)
+
+// 129 commands
 
 PRELUDE_END;
 
@@ -2089,7 +2100,7 @@ event = {
 	};
 };
 
-// GETSPLITTER(timestamp, rspmask, cache);
+// GETSPLITTER(timestamp, cache);
 event = {
 	signal = GETSPLITTER;
 	dir = IN;
@@ -2104,7 +2115,7 @@ event = {
 	};
 };
 
-// GETSPLITTERACK(timestamp, status, splitters)
+// GETSPLITTERACK(timestamp, status, splitter)
 event = {
 	signal = GETSPLITTERACK;
 	dir = OUT;
@@ -2310,4 +2321,172 @@ event = {
     type = "bool";
   };
 };
+
+
+// bitmode info
+// 16 = 16bit
+// 8 = 8bit
+// 4 = 4bit
+// SETBITMODE (timestamp, bits_per_sample);
+event = {
+	signal = SETBITMODE;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+    	name = "rspmask";
+    	type = "bitset<MAX_N_RSPBOARDS>";
+	};
+	param = {
+		name = "bits_per_sample";
+		type = "uint16";
+	};
+};
+
+// SETBITMODEACK(timestamp, status);
+event = {
+	signal = SETBITMODEACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+};
+
+// GETBITMODE(timestamp, cache);
+event = {
+	signal = GETBITMODE;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "cache";
+		type = "uint8";
+	};
+};
+
+// GETBITMODEACK(timestamp, status, bitmode_version, bits_per_sample)
+event = {
+	signal = GETBITMODEACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "bitmode_version";
+		type = "uint16[MAX_N_RSPBOARDS]";
+	};
+	param = {
+		name = "bits_per_sample";
+		type = "uint16[MAX_N_RSPBOARDS]";
+	};
+};
+
+// SUBBITMODE(timestamp, period)
+event = {
+	signal = SUBBITMODE;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "period";
+		type = "uint16";
+	};
+};
+
+// SUBBITMODEACK(timestamp, status, handle)
+event = {
+	signal = SUBBITMODEACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "handle";
+		type = "memptr_t";
+	};
+};
+
+// UPDBITMODE(timestamp, status, handle, bitmode_version, bits_per_sample)
+event = {
+	signal = UPDBITMODE;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "handle";
+		type = "memptr_t";
+	};
+	param = {
+		name = "bitmode_version";
+		type = "uint16[MAX_N_RSPBOARDS]";
+	};
+	param = {
+		name = "bits_per_sample";
+		type = "uint16[MAX_N_RSPBOARDS]";
+	};
+};
+
+// UNSUBBITMODE(handle)
+event = {
+	signal = UNSUBBITMODE;
+	dir = IN;
+	param = {
+		name = "handle";
+		type = "memptr_t";
+	};
+};
+
+// UNSUBBITMODEACK (timestamp, status, handle)
+event = {
+	signal = UNSUBBITMODEACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "handle";
+		type = "memptr_t";
+	};
+};
+
 

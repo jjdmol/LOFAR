@@ -35,7 +35,7 @@ OLAP.nrTimesInFrame = 16
 #     [ 2*(5*0)      ] --> [ 0,0,0,0,0,0,0,0,0,0 ]       
 Observation.subbandList  = [100..159]
 Observation.sampleClock  = 200
-OLAP.nrBitsPerSample     = 16
+Observation.nrBitsPerSample = 16
 
 # Observation.{beamList,rspBoardList,rspSlotList} are automatically derived from Observation.subbandList
 #Observation.beamList     = [244*0]

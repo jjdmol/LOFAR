@@ -300,7 +300,7 @@ def plotresults(img, ch0_image=True, rms_image=True, mean_image=True,
                                     valid = g.valid
                                 else:
                                     valid = True
-                                if g.jlevel == 0 and valid:
+                                if g.jlevel == 0 and valid and g.gaus_num >= 0:
                                     gidx = g.gaus_num
                                     e = Ellipse(xy=g.centre_pix, width=g.size_pix[0],
                                                 height=g.size_pix[1], angle=g.size_pix[2]+90.0)
@@ -324,7 +324,7 @@ def plotresults(img, ch0_image=True, rms_image=True, mean_image=True,
 
                 if hasattr(img, 'gaussians'):
                     for atrg in img.gaussians:
-                        if atrg.jlevel > 0:
+                        if atrg.jlevel > 0 and atrg.gaus_num >= 0:
                             col = 'r'
                             style = '-'
                             gidx = atrg.gaus_num
@@ -667,14 +667,14 @@ def format_coord_psf_maj(x, y):
     """Custom coordinate format for PSF major image"""
     global img_psf_maj
     im = img_psf_maj
-    coord_str = make_coord_str(x, y, im, unit='pixels')
+    coord_str = make_coord_str(x, y, im, unit='arcsec')
     return coord_str
 
 def format_coord_psf_min(x, y):
     """Custom coordinate format for PSF minor image"""
     global img_psf_min
     im = img_psf_min
-    coord_str = make_coord_str(x, y, im, unit='pixels')
+    coord_str = make_coord_str(x, y, im, unit='arcsec')
     return coord_str
 
 def format_coord_psf_pa(x, y):

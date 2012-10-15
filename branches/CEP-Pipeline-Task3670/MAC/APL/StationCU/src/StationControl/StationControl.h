@@ -31,6 +31,7 @@
 #include <Common/LofarConstants.h>
 #include <ApplCommon/Observation.h>
 #include <ApplCommon/AntennaSets.h>
+#include <ApplCommon/StationDatatypes.h>
 
 //# ACC Includes
 #include <Common/ParameterSet.h>
@@ -96,11 +97,11 @@ private:
 
 	// helper methods
 	void	_initAntennaMasks	 ();
-	void	_updateAntennaMasks  ();
 	void	_updateObsListInPVSS ();
 	uint16	_addObservation		 (const string&   	name);
 	void	_abortObservation	 (ObsIter			theObs);
 	void	_abortObsWithWrongClock();
+	void	_abortObsWithWrongBitmode();
    	void	_disconnectedHandler (GCFPortInterface&	port);
    	void	_databaseEventHandler(GCFEvent& 		event);
 	void	_handleQueryEvent	 (GCFEvent&			event);
@@ -137,21 +138,27 @@ private:
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;		// timestamp the controller was started
 	int32					itsClock;
+	int32					itsBitmode;
 
 	map<string, ActiveObs*>	itsObsMap;			// current running observations
 	ObsIter					itsStartingObs;		// the Obs that is being started is this moment.
 
 	// Availability information of Antenna's and circuit boards.
 	bool									itsUseHWinfo;
-	bitset<MAX_RCUS>						itsLBArcumask;
-	bitset<MAX_RCUS>						itsHBArcumask;
-	bitset<MAX_RCUS>						itsRCUmask;
+	RCUmask_t								itsRCUmask;
+	AntennaMask_t							itsLBAmask;
+	AntennaMask_t							itsHBAmask;
 	bitset<MAX_RCUS / NR_RCUS_PER_TBBOARD>	itsTBmask;
 	uint32									itsNrLBAs;
 	uint32									itsNrHBAs;
-	uint32									itsNrRSPboards;
+	uint32									itsNrRCUs;
+	uint32									itsNrRSPs;
+	uint32									itsNrTBBs;
 	bool									itsHasSplitters;
 	bitset<MAX_RSPBOARDS>					itsSplitters;	// On or Off.
+	vector<int>								itsLBAmapping;
+	vector<int>								itsHBAmapping;
+    unsigned                                itsSetupSequence;
 };
 
   };//StationCU

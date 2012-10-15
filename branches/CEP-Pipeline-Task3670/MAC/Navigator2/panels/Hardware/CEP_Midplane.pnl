@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 7 Station
 PANEL,-1 -1 1011 745 N "_3DFace" 0
@@ -679,135 +679,135 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 3 "PANEL_REF4"
+3 3 "PANEL_REF4" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 30 T 13 1 0 1 61 6.00000000000016
 1
 "$nodeNr""31"
-3 4 "PANEL_REF5"
+3 4 "PANEL_REF5" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 50 T 14 1 0 1 61 7.00000000000016
 1
 "$nodeNr""30"
-3 5 "PANEL_REF6"
+3 5 "PANEL_REF6" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 70 T 15 1 0 1 61 8.00000000000016
 1
 "$nodeNr""29"
-3 6 "PANEL_REF7"
+3 6 "PANEL_REF7" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 90 T 16 1 0 1 61 9.00000000000016
 1
 "$nodeNr""28"
-3 7 "PANEL_REF8"
+3 7 "PANEL_REF8" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 110 T 17 1 0 1 61 10.00000000000016
 1
 "$nodeNr""27"
-3 8 "PANEL_REF9"
+3 8 "PANEL_REF9" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 140 T 18 1 0 1 61 1.00000000000016
 1
 "$nodeNr""26"
-3 9 "PANEL_REF10"
+3 9 "PANEL_REF10" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 160 T 19 1 0 1 61 2.00000000000016
 1
 "$nodeNr""25"
-3 10 "PANEL_REF11"
+3 10 "PANEL_REF11" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 180 T 20 1 0 1 61 3.00000000000016
 1
 "$nodeNr""24"
-3 11 "PANEL_REF12"
+3 11 "PANEL_REF12" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 200 T 21 1 0 1 61 4.00000000000016
 1
 "$nodeNr""23"
-3 12 "PANEL_REF13"
+3 12 "PANEL_REF13" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 220 T 22 1 0 1 61 5.00000000000016
 1
 "$nodeNr""22"
-3 13 "PANEL_REF14"
+3 13 "PANEL_REF14" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 30 T 23 1 0 1 61 216.0000000000001
 1
 "$nodeNr""21"
-3 14 "PANEL_REF15"
+3 14 "PANEL_REF15" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 220 T 24 1.003584229390681 0 1 60.67741935483869 47.00000000000016
 1
 "$nodeNr""20"
-3 15 "PANEL_REF16"
+3 15 "PANEL_REF16" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 70 T 25 1 0 1 61 218.0000000000001
 1
 "$nodeNr""19"
-3 16 "PANEL_REF17"
+3 16 "PANEL_REF17" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 90 T 26 1 0 1 61 219.0000000000001
 1
 "$nodeNr""18"
-3 17 "PANEL_REF18"
+3 17 "PANEL_REF18" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 110 T 27 1 0 1 61 220.0000000000001
 1
 "$nodeNr""17"
-3 18 "PANEL_REF19"
+3 18 "PANEL_REF19" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 140 T 28 1 0 1 61 211.0000000000001
 1
 "$nodeNr""16"
-3 19 "PANEL_REF20"
+3 19 "PANEL_REF20" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 160 T 29 1 0 1 61 212.0000000000001
 1
 "$nodeNr""15"
-3 20 "PANEL_REF21"
+3 20 "PANEL_REF21" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 180 T 30 1 0 1 61 213.0000000000001
 1
 "$nodeNr""14"
-3 21 "PANEL_REF22"
+3 21 "PANEL_REF22" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 200 T 31 1 0 1 61 214.0000000000001
 1
 "$nodeNr""13"
-3 22 "PANEL_REF23"
+3 22 "PANEL_REF23" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 220 T 32 1 0 1 61 215.0000000000001
 1
 "$nodeNr""12"
-3 23 "PANEL_REF24"
+3 23 "PANEL_REF24" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 220 T 33 1 0 1 61 257.0000000000002
 1
 "$nodeNr""10"
-3 24 "PANEL_REF25"
+3 24 "PANEL_REF25" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 30 T 34 1 0 1 61 426.0000000000002
 1
 "$nodeNr""11"
-3 25 "PANEL_REF26"
+3 25 "PANEL_REF26" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 70 T 35 1 0 1 61 428.0000000000002
 1
 "$nodeNr""9"
-3 26 "PANEL_REF27"
+3 26 "PANEL_REF27" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 90 T 36 1 0 1 61 429.0000000000002
 1
 "$nodeNr""8"
-3 27 "PANEL_REF28"
+3 27 "PANEL_REF28" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 110 T 37 1 0 1 61 430.0000000000002
 1
 "$nodeNr""7"
-3 28 "PANEL_REF29"
+3 28 "PANEL_REF29" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 140 T 38 1 0 1 61 421.0000000000002
 1
 "$nodeNr""6"
-3 29 "PANEL_REF30"
+3 29 "PANEL_REF30" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 160 T 39 1 0 1 61 422.0000000000002
 1
 "$nodeNr""5"
-3 30 "PANEL_REF31"
+3 30 "PANEL_REF31" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 180 T 40 1 0 1 61 423.0000000000002
 1
 "$nodeNr""4"
-3 31 "PANEL_REF32"
+3 31 "PANEL_REF32" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 200 T 41 1 0 1 61 424.0000000000002
 1
 "$nodeNr""3"
-3 32 "PANEL_REF33"
+3 32 "PANEL_REF33" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 220 T 42 1 0 1 61 425.0000000000002
 1
 "$nodeNr""2"
-3 33 "PANEL_REF34"
+3 33 "PANEL_REF34" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 220 T 43 1 0 1 61 467.0000000000002
 1
 "$nodeNr""0"
-3 34 "PANEL_REF35"
+3 34 "PANEL_REF35" -1
 "objects\\Hardware\\CEP_IONode_small.pnl" 90 30 T 44 1 0 1 61 636.0000000000001
 1
 "$nodeNr""1"
-3 69 "PANEL_REF70"
+3 69 "PANEL_REF70" -1
 "objects\\Hardware\\midplane_small.pnl" 360 20 T 78 1 0 1 -98 -8.000000000000043
 0
 0

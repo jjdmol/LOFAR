@@ -24,8 +24,8 @@
 #define CEPAPPLMGR_H
 
 //# Includes
-#include <ALC/ACAsyncClient.h>
 #include <GCF/TM/GCF_Handler.h>
+#include <ALC/ACAsyncClient.h>
 #include <APL/APLCommon/CTState.h>
 
 //# local includes

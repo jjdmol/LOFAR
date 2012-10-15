@@ -43,20 +43,20 @@ ostream& CRstopVector::print (ostream& os) const
 
 
 // --- marshalling methods --- 
-unsigned int CRstopVector::getSize()
+size_t CRstopVector::getSize()
 {
-	uint	offset(sizeof(uint32));
-	uint32	nrElems(requests.size());
+	size_t offset(sizeof(uint32));
+	uint32 nrElems(requests.size());
 	for (size_t i = 0; i < nrElems; i++) {
 		offset +=  requests[i].getSize();
 	}
 	return (offset);
 }
 
-unsigned int CRstopVector::pack  (void* buffer)
+size_t CRstopVector::pack  (void* buffer)
 {
-	unsigned int	offset(sizeof(uint32));
-	uint32			nrElems(requests.size());
+	size_t offset(sizeof(uint32));
+	uint32 nrElems(requests.size());
 	memcpy(buffer, &nrElems, sizeof(uint32));
 	for (size_t i = 0; i < nrElems; i++) {
 		offset +=  requests[i].pack((char*)(buffer)+offset);
@@ -64,10 +64,10 @@ unsigned int CRstopVector::pack  (void* buffer)
 	return (offset);
 }
 
-unsigned int CRstopVector::unpack(void *buffer)
+size_t CRstopVector::unpack(void *buffer)
 {
-	unsigned int	offset(sizeof(uint32));
-	uint32			nrElems;
+	size_t offset(sizeof(uint32));
+	uint32 nrElems;
 	memcpy(&nrElems, buffer, sizeof(uint32));
 	requests.resize(nrElems);
 	for (size_t i = 0; i < nrElems; i++) {

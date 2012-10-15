@@ -12,6 +12,7 @@ create table temp_associations(
   ,kind int null -- 1: 1-1, 2: 1-n; 3: n-1; 4: n-n; 5: merge extended
   ,group_head_id int null
   ,flux_fraction double null
+  ,image_id int not null
 
   ,PRIMARY KEY (xtrsrc_id, runcat_id)
 

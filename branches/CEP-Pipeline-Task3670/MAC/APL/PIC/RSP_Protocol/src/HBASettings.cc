@@ -31,25 +31,25 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-unsigned int HBASettings::getSize()
+size_t HBASettings::getSize() const
 {
-  return MSH_ARRAY_SIZE(m_delay, uint8);
+  return MSH_size(m_delay);
 }
 
-unsigned int HBASettings::pack  (void* buffer)
+size_t HBASettings::pack  (char* buffer) const
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_delay, uint8);
+  MSH_pack(buffer, offset, m_delay);
 
   return offset;
 }
 
-unsigned int HBASettings::unpack(void *buffer)
+size_t HBASettings::unpack(const char *buffer)
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_delay, uint8, 2);
+  MSH_unpack(buffer, offset, m_delay);
 
   return offset;
 }

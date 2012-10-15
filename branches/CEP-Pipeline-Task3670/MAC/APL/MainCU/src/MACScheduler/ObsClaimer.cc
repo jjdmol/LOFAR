@@ -244,6 +244,11 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				theObsPS->setValue(PN_OBS_ANTENNA_ARRAY,	GCFPVString (theObs.antennaArray), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_RECEIVER_LIST, 	GCFPVString (theObs.receiverList), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_SAMPLE_CLOCK, 	GCFPVInteger(theObs.sampleClock), 	  0.0, false);
+
+				theObsPS->setValue(PN_OBS_PROCESS_TYPE, 	GCFPVString(theObs.processType), 	  0.0, false);
+				theObsPS->setValue(PN_OBS_PROCESS_SUBTYPE, 	GCFPVString(theObs.processSubtype),	  0.0, false);
+				theObsPS->setValue(PN_OBS_STRATEGY,     	GCFPVString(theObs.strategy),	 	  0.0, false);
+
 				stringstream	osl;
 				writeVector(osl, theObs.stations);
 				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (osl.str()),		 	  0.0, false);

@@ -1,4 +1,5 @@
 # everything conflicts except for the observation period
+OLAP.nrBitsPerSample=8
 Clock160.channelWidth=610.3515625
 Clock160.samplesPerSecond=155648
 Clock160.subbandWidth=156.250
