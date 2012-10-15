@@ -5,6 +5,12 @@
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
+"""
+This module contains methods to load and store so-called data-map files and
+to iterate over these maps. Data-map files contain a description of the
+different input- and output- data products in a human readable form.
+"""
+
 import os
 
 from lofar.mstools import findFiles
@@ -12,20 +18,14 @@ from lofar.mstools import findFiles
 from lofarpipe.support.lofarexceptions import DataMapError
 from lofarpipe.support.utilities import deprecated
 
-"""
-This module contains methods to load and store so-called data-map files and
-to iterate over these maps. Data-map files contain a description of the
-different input- and output- data products in a human readable form.
-"""
-
 class DataProduct(object):
     """
     Class representing a single data product.
     """
-    def __init__(self, host, file, skip):
-        self.host = host
-        self.file = file
-        self.skip = skip
+    def __init__(self, host, file, skip=True):
+        self.host = str(host)
+        self.file = str(file)
+        self.skip = bool(skip)
 
     def __repr__(self):
         "Represent an instance as a Python dict"
@@ -37,17 +37,6 @@ class DataProduct(object):
     def __str__(self):
         "Print an instance as 'host:file'"
         return ':'.join((self.host, self.file))
-
-    @classmethod
-    def fromDict(cls, item):
-        "Create a DataProduct from a dict"
-        try:
-            return cls(item['host'], item['file'], item['skip'])
-        except (TypeError, KeyError), err:
-            raise DataMapError(
-                "Failed to create DataProduct from dict '%s'\n  %s: %s" %
-                (item, err.__class__.__name__, err)
-            )
 
 
 class DataMap(object):
@@ -118,8 +107,7 @@ class DataMap(object):
     def load(cls, filename):
         """Load a data map from file `filename`. Return a DataMap instance."""
         with open(filename) as f:
-            data = eval(f.read())
-        return cls([DataProduct.fromDict(item) for item in data])
+            return cls(eval(f.read()))
 
     def save(self, filename):
         """Save a data map to file `filename` in human-readable form."""
@@ -136,17 +124,27 @@ class DataMap(object):
         
     @data.setter
     def data(self, data):
-        if not(all(isinstance(item, DataProduct) for item in data)): 
-            raise DataMapError("Validation failed for data map: %s" % data)
-        self._data = data
+        try:
+            if all(isinstance(item, DataProduct) for item in data):
+                self._data = data
+            elif all(isinstance(item, dict) for item in data):
+                self._data = [DataProduct(**item) for item in data]
+            elif all(isinstance(item, tuple) for item in data):
+                self._data = [DataProduct(*item) for item in data]
+            else:
+                raise TypeError
+        except TypeError:
+            raise DataMapError("Failed to validate data map: %s" % repr(data))
         
 
 @deprecated
 def load_data_map(filename):
     """
-    Load a list of dict -- containing items host, file, and skip --
-    from map-file `filename` and return it as a DataMap object.
-    This method is for backward compatibility. New code should use
+    Load a data map from file `filename` and return it as a DataMap object.
+    The file should either contain a list of dict (new-style), containing items
+    host, file, and skip; or a list of tuple (old-style), containing host and
+    file.
+    This method is for backward compatibility. New code should use 
     `DataMap.load` instead. The iterator of the returned DataMap object is set
     to TupleIterator, so that existing code that expects tuples of (host,file)
     when iterating over a data map's contents won't break.
@@ -170,10 +168,13 @@ def store_data_map(filename, data):
         data.save(filename)
     except AttributeError:
         # Assume data is in the "old-style" list of tuple (host, file) format.
-        data_map = DataMap(
-            [DataProduct(host, file, False) for (host, file) in data]
-        )
-        data_map.save(filename)
+        try:
+            if not all(isinstance(item, tuple) for item in data):
+                raise TypeError
+            data_map = DataMap([DataProduct(*item) for item in data])
+            data_map.save(filename)
+        except TypeError:
+            raise DataMapError("Failed to validate data map: %s" % repr(data))
 
 
 def validate_data_maps(*args):
