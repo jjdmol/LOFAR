@@ -365,7 +365,7 @@ class imager_create_dbs(LOFARnodeTCP):
         # !!magic constant!! This value is calculated based on        
         # communications with Bart Sheers
         if assoc_theta == None:
-            assoc_theta = 90.0 / 3600
+            assoc_theta = 100.0 / 3600
         try:
             # Transform the ra and decl to rad
             ra_c = float(ra_c) * (180 / math.pi)
