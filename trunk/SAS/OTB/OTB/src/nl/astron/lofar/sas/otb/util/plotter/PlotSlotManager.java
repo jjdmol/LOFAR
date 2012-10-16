@@ -361,9 +361,9 @@ public class PlotSlotManager{
         Object[] listeners = myListenerList.getListenerList();
         ActionEvent action = null;
         if(id == -1){
-            action = new ActionEvent(this,id,this.REFRESH_FULL);
+            action = new ActionEvent(this,id,PlotSlotManager.REFRESH_FULL);
         }else{
-            action = new ActionEvent(this,id,this.REFRESH_SINGLE);
+            action = new ActionEvent(this,id,PlotSlotManager.REFRESH_SINGLE);
         }
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {

@@ -21,9 +21,9 @@
   
 package nl.astron.lofar.sas.otb.jparmfacade;
 
-import java.util.Vector;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class jParmFacadeAdapter extends UnicastRemoteObject implements jParmFacadeInterface
@@ -34,6 +34,7 @@ public class jParmFacadeAdapter extends UnicastRemoteObject implements jParmFaca
 	this.adaptee = adaptee;
      }
    
+    @Override
     public void setParmFacadeDB(String tableName) throws RemoteException {
         adaptee.setParmFacadeDB(tableName);
     }
@@ -42,28 +43,26 @@ public class jParmFacadeAdapter extends UnicastRemoteObject implements jParmFaca
     // parameters in the table.
     // This is the minimum start value and maximum end value for all parameters.
     // An empty name pattern is the same as * (all parm names).
-    public Vector<Double> getRange(String parmNamePattern) throws RemoteException {
-        Vector<Double> aV=null;
+    @Override
+    public ArrayList<Double> getRange(String parmNamePattern) throws RemoteException {
+        ArrayList<Double> aV=null;
         try {
             aV=adaptee.getRange(parmNamePattern);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getRange error");
-            anEx.initCause(ex);
-            throw anEx;            
+            throw new RemoteException("JNI getRange error", ex);            
         }
         return aV;
     }
     
     // Get parameter names in the table matching the pattern.
     // An empty name pattern is the same as * (all parm names).
-    public Vector<String> getNames(String parmNamePattern) throws RemoteException {
-        Vector<String> aV=null;
+    @Override
+    public ArrayList<String> getNames(String parmNamePattern) throws RemoteException {
+        ArrayList<String> aV=null;
         try {        
             aV= adaptee.getNames(parmNamePattern);
         } catch (Exception ex) {
-            RemoteException anEx=new RemoteException("JNI getNames error");
-            anEx.initCause(ex);
-            throw anEx;            
+            throw new RemoteException("JNI getNames error", ex);            
         }
         return aV;            
     }
@@ -72,10 +71,11 @@ public class jParmFacadeAdapter extends UnicastRemoteObject implements jParmFaca
     // Get the parameter values for the given parameters and domain.
     // The domain is given by the start and end values, while the grid is
     // given by nx and ny.
-    public HashMap<String,Vector<Double>> getValues(String parmNamePattern,
+    @Override
+    public HashMap<String,ArrayList<Double>> getValues(String parmNamePattern,
             double startx, double endx, int nx,
             double starty, double endy, int ny) throws RemoteException {
-        HashMap<String,Vector<Double>> aM=null;
+        HashMap<String,ArrayList<Double>> aM=null;
         try {            
             aM=adaptee.getValues(parmNamePattern,startx,endx,nx,starty,endy,ny);
         } catch (Exception ex) {
@@ -89,10 +89,11 @@ public class jParmFacadeAdapter extends UnicastRemoteObject implements jParmFaca
     // Get the parameter values for the given parameters and timeframe.
     // The domain is given by the start and end values, while the time is
     // given by startSolvTime and endSolveTime.
-    public HashMap<String,Vector<Double>> getHistory(String parmNamePattern,
+    @Override
+    public HashMap<String,ArrayList<Double>> getHistory(String parmNamePattern,
             double startx, double endx, double starty, 
             double endy, double startSolveTime, double endSolveTime) throws RemoteException {
-        HashMap<String,Vector<Double>> aM=null;
+        HashMap<String,ArrayList<Double>> aM=null;
         try {            
             aM=adaptee.getHistory(parmNamePattern,startx,endx,starty,endy,startSolveTime,endSolveTime);
         } catch (Exception ex) {
@@ -102,5 +103,7 @@ public class jParmFacadeAdapter extends UnicastRemoteObject implements jParmFaca
         }
         return aM;            
     }
-   protected jParmFacade adaptee;   
+   protected jParmFacade adaptee;
+
+
 }

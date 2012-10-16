@@ -23,8 +23,8 @@
 package nl.astron.lofar.sas.otb.util.treemanagers;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.util.UserAccount;
@@ -96,18 +96,16 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
             // once for the root node and never thereafter.
             if(userNode.isRootNode()){
                 logger.trace("ParmDBtreeNode calling getNames("+userNode.getNodeID().substring(userNode.getParmDBIdentifier().length())+"*)");
-                Vector children = SharedVars.getJParmFacade().getNames("*");
+                ArrayList<String> children = SharedVars.getJParmFacade().getNames("*");
                 logger.trace("ParmDBtreeNode gets "+children.size()+" names");
 
-                if(children.size() == 0)
+                if(children.isEmpty())
                 {
                     userNode.setLeaf(true);
                 }
                 else
                 {
-                    Enumeration e = children.elements();
-                    while( e.hasMoreElements() ) {
-                        String pathString = (String) e.nextElement();
+                    for (String pathString:children) {
                         logger.trace("definePath: " + pathString);
                         definePath(aNode, pathString.split(PARMDB_TREENODE_SEPARATOR_CHAR), 0);
                     }

@@ -23,7 +23,7 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.rmi.RemoteException;
-import java.util.Vector;
+import java.util.ArrayList;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
@@ -39,7 +39,7 @@ import org.apache.log4j.Logger;
  *
  * @updated
  */
-public class PICtableModel extends javax.swing.table.AbstractTableModel {
+public final class PICtableModel extends javax.swing.table.AbstractTableModel {
     
     private String headers[] = {"ID","Status","Classification","Creator","CreationTime","ObsoleteTime","Description"};
     private OtdbRmi otdbRmi;
@@ -77,12 +77,12 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
                 return false;
             }
             data[row][0]=new Integer(tInfo.treeID());	   
-            data[row][1]=new String(OtdbRmi.getTreeState().get(tInfo.state));
-            data[row][2]=new String(OtdbRmi.getClassif().get(tInfo.classification));
-	    data[row][3]=new String(tInfo.creator);
-	    data[row][4]=new String(tInfo.starttime.replace("T", " "));
-	    data[row][5]=new String(tInfo.stoptime.replace("T", " "));
-	    data[row][6]=new String(tInfo.description);
+            data[row][1]=OtdbRmi.getTreeState().get(tInfo.state);
+            data[row][2]=OtdbRmi.getClassif().get(tInfo.classification);
+	    data[row][3]=tInfo.creator;
+	    data[row][4]=tInfo.starttime.replace("T", " ");
+	    data[row][5]=tInfo.stoptime.replace("T", " ");
+	    data[row][6]=tInfo.description;
             fireTableDataChanged();
         } catch (RemoteException e) {
             logger.error("Remote OTDB getTreeInfo failed: " + e);
@@ -103,23 +103,23 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
                 return false;
             }
             // Get a Treelist of all available PIC's
-            Vector aTreeList=OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("hardware"),(short)0);
+            ArrayList<jOTDBtree> aTreeList=new ArrayList<>(OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("hardware"),(short)0));
             data = new Object[aTreeList.size()][headers.length];
             logger.debug("Treelist downloaded. Size: "+aTreeList.size());
-           
-            for (int k=0; k< aTreeList.size();k++) {
-                jOTDBtree tInfo = (jOTDBtree)aTreeList.elementAt(k);
+            int k=0;
+            for (jOTDBtree tInfo:aTreeList) {
                 if (tInfo == null) {
                     logger.warn("No such tree found!");
                 } else {
                     logger.debug("Gathered info for ID: "+tInfo.treeID());
                     data[k][0]=new Integer(tInfo.treeID());	   
-	            data[k][1]=new String(OtdbRmi.getTreeState().get(tInfo.state));
-                    data[k][2]=new String(OtdbRmi.getClassif().get(tInfo.classification));
-	            data[k][3]=new String(tInfo.creator);
-	            data[k][4]=new String(tInfo.starttime.replace("T", " "));
-	            data[k][5]=new String(tInfo.stoptime.replace("T", " "));
-	            data[k][6]=new String(tInfo.description);
+	            data[k][1]=OtdbRmi.getTreeState().get(tInfo.state);
+                    data[k][2]=OtdbRmi.getClassif().get(tInfo.classification);
+	            data[k][3]=tInfo.creator;
+	            data[k][4]=tInfo.starttime.replace("T", " ");
+	            data[k][5]=tInfo.stoptime.replace("T", " ");
+	            data[k][6]=tInfo.description;
+                    k++;
                 }
             }
             fireTableDataChanged();

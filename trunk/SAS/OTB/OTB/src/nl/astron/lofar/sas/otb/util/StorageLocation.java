@@ -46,7 +46,7 @@ public class StorageLocation {
     }
     
     public String getMACInteractionMonitorPath() {
-        String path = new String("/tmp/OTB/MAC2OTB/");
+        String path = "/tmp/OTB/MAC2OTB/";
         if(itsOtdbRmi == null) {
             logger.info("Not using OTDB to get storage location");
         }
@@ -54,7 +54,7 @@ public class StorageLocation {
     }
     
     public String getMACInteractionWritePath() {
-        String path = new String("/tmp/OTB/OTB2MAC/");
+        String path = "/tmp/OTB/OTB2MAC/";
         if(itsOtdbRmi == null) {
             logger.info("Not using OTDB to get storage location");
         }

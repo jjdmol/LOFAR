@@ -22,10 +22,11 @@
 
 package nl.astron.lofar.sas.otb.util;
 
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.TreeMap;
-import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.lofarutils.remoteFileInterface;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.exceptions.ConnectionFailedException;
@@ -55,7 +56,7 @@ import org.apache.log4j.Logger;
  * @updated coolen 27-02-2007,  added support for server/port setting
  * @updated coolen 01-05-2010,  added support for jotdb3 (multi user)
  */
-public class OtdbRmi {
+public final class OtdbRmi {
     
     static Logger logger = Logger.getLogger(OtdbRmi.class);
     static String name = "OtdbRmi";
@@ -301,7 +302,7 @@ public class OtdbRmi {
 	    logger.debug("Connection to RemoteAccess succesful!");
             return true;
           }
-        catch (Exception e)
+        catch (NumberFormatException | RemoteException | NotBoundException e)
 	  {
 	     String aS="Open Remote Access via RMI and JNI failed: " + e;
              logger.error(aS);
@@ -335,7 +336,7 @@ public class OtdbRmi {
 	    logger.debug("Connection succesful!");   
             return true;
           }
-        catch (Exception e)
+        catch (RemoteException | NotBoundException e)
 	  {
 	     logger.error("Open Remote Connection via RMI and JNI failed: " + e);
 	  }
@@ -361,7 +362,7 @@ public class OtdbRmi {
      	    logger.debug("Connection succesful!");
             return true;
           }
-        catch (Exception e)
+        catch (RemoteException | NotBoundException e)
 	  {
 	     logger.error("Getting Remote Maintenance via RMI and JNI failed: " + e);
 	  }
@@ -388,7 +389,7 @@ public class OtdbRmi {
      	    logger.debug("Connection succesful!");
             return true;
           }
-        catch (Exception e)
+        catch (RemoteException | NotBoundException e)
 	  {
 	     logger.error("Getting Remote Campaign via RMI and JNI failed: " + e);
 	  }
@@ -417,7 +418,7 @@ public class OtdbRmi {
      	    logger.debug("Connection succesful!");   
             return true;
           }
-        catch (Exception e)
+        catch (RemoteException | NotBoundException e)
 	  {
 	     logger.error("Getting Remote Value via RMI and JNI failed: " + e);
 	  }
@@ -446,7 +447,7 @@ public class OtdbRmi {
                 return true;
             }
           }
-        catch (Exception e)
+        catch (RemoteException | NotBoundException e)
 	  {
 	   logger.error("Getting remote Converter via RMI and JNI failed: " + e);
 	  }
@@ -474,7 +475,7 @@ public class OtdbRmi {
      	    logger.debug("Connection succesful!");   
             return true;
           }
-        catch (Exception e)
+        catch (RemoteException | NotBoundException e)
 	  {
 	     logger.error("Getting RemoteFileTransfer via RMI and JNI failed: " + e);
 	  }
@@ -484,11 +485,11 @@ public class OtdbRmi {
     private static boolean loadConversionTypes() {
         try {
             logger.debug("Get ConversionTypes");
-            itsClassifs   =new TreeMap<Short,String>(OtdbRmi.remoteTypes.getClassif());
-            itsParamTypes =new TreeMap<Short,String>(OtdbRmi.remoteTypes.getParamType());
-            itsTreeStates =new TreeMap<Short,String>(OtdbRmi.remoteTypes.getTreeState());
-            itsTreeTypes  =new TreeMap<Short,String>(OtdbRmi.remoteTypes.getTreeType());
-            itsUnits      =new TreeMap<Short,String>(OtdbRmi.remoteTypes.getUnit());
+            itsClassifs   =new TreeMap<>(OtdbRmi.remoteTypes.getClassif());
+            itsParamTypes =new TreeMap<>(OtdbRmi.remoteTypes.getParamType());
+            itsTreeStates =new TreeMap<>(OtdbRmi.remoteTypes.getTreeState());
+            itsTreeTypes  =new TreeMap<>(OtdbRmi.remoteTypes.getTreeType());
+            itsUnits      =new TreeMap<>(OtdbRmi.remoteTypes.getUnit());
             logger.debug("Got all conversiontypes");
             return true;
         } catch (Exception e) {

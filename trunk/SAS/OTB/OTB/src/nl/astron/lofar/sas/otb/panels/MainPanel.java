@@ -78,7 +78,7 @@ public class MainPanel extends javax.swing.JPanel
     /** 
      * Initializes the buttonpanel. Every tab has different buttons 
      */
-    public void initializeButtons() {
+    public final void initializeButtons() {
         buttonPanel1.removeAllButtons();
         switch (itsTabFocus) {
             case "PIC":

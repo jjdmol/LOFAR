@@ -23,7 +23,7 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.rmi.RemoteException;
-import java.util.Vector;
+import java.util.ArrayList;
 import nl.astron.lofar.sas.otb.jotdb3.jVICnodeDef;
 import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
@@ -73,11 +73,11 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
                 return false;
             }
             data[row][0]=new Integer(tInfo.nodeID());	   
-            data[row][1]=new String(tInfo.name);
+            data[row][1]=tInfo.name;
 	    data[row][2]=new Integer(tInfo.version);
-            data[row][3]=new String(OtdbRmi.getClassif().get(tInfo.classif));
-	    data[row][4]=new String(tInfo.constraints);
-	    data[row][5]=new String(tInfo.description);
+            data[row][3]=OtdbRmi.getClassif().get(tInfo.classif);
+	    data[row][4]=tInfo.constraints;
+	    data[row][5]=tInfo.description;
             fireTableDataChanged();
         } catch (RemoteException e) {
             logger.error("Remote OTDB via RMI and JNI failed: " + e);
@@ -98,24 +98,25 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
                 return false;
             }
             // Get a list of all available Components (topnode)
-            Vector aComponentList=OtdbRmi.getRemoteMaintenance().getComponentList("%",false);
+            ArrayList<jVICnodeDef> aComponentList=new ArrayList<>(OtdbRmi.getRemoteMaintenance().getComponentList("%",false));
             data = new Object[aComponentList.size()][headers.length];
             logger.debug("Componentlist downloaded. Size: "+aComponentList.size());
            
-            for (int k=0; k< aComponentList.size();k++) {
-                jVICnodeDef tInfo = (jVICnodeDef)aComponentList.elementAt(k);
+            int k=0;
+            for (jVICnodeDef tInfo:aComponentList) {
                 if (tInfo == null) {
                     logger.error("No such component found!");
                 } else {
 
                     logger.debug("Gathered info for ID: "+tInfo.nodeID());
+                    
                     data[k][0]=new Integer(tInfo.nodeID());	   
-	            data[k][1]=new String(tInfo.name);
+	            data[k][1]=tInfo.name;
 	            data[k][2]=new Integer(tInfo.version);
-                    data[k][3]=new String(OtdbRmi.getClassif().get(tInfo.classif));
-	            data[k][4]=new String(tInfo.constraints);
-	            data[k][5]=new String(tInfo.description);
-
+                    data[k][3]=OtdbRmi.getClassif().get(tInfo.classif);
+	            data[k][4]=tInfo.constraints;
+	            data[k][5]=tInfo.description;
+                    k++;
                     /// ToDo Check if topcomponents can be marked or something
 //                    try {
 //                        if (OtdbRmi.getRemoteMaintenance().isTopComponent(tInfo.nodeID())) {
