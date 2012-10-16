@@ -89,47 +89,6 @@
 
   </dependencies>
 
-          </execution>
-        </executions>
-      </plugin>
-
-      <!-- Create an TAR.GZ file -->
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <configuration>
-          <descriptor>assembly.xml</descriptor>
-          <appendAssemblyId>false</appendAssemblyId>
-        </configuration>
-
-        <executions>
-          <execution>
-            <id>make-assembly</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-    </plugins>
-  </build>
-
-  <dependencies>
-
-    <!-- Sibling dependencies -->
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>OTB</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>jOTDB3</artifactId>
-    </dependency>
-
-  </dependencies>
-
 </project>
 
 

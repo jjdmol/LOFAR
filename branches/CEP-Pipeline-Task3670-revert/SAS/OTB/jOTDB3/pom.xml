@@ -70,7 +70,6 @@
         </executions>
       </plugin>
 
-    <plugins>
 
       <!-- Set the main class in the manifest file -->
       <plugin>
