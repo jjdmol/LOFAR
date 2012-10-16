@@ -23,8 +23,8 @@
 
 package nl.astron.lofar.sas.otb.jparmfacade;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Vector;
 
 /**
  * @created 18-04-2006, 9:54
@@ -33,7 +33,7 @@ import java.util.Vector;
  */
 public class jParmFacade {
     private String itsParmFacadeDB="";
-    
+
     /** Creates a new instance of jParmFacade */
     public jParmFacade() {
         itsParmFacadeDB="";
@@ -41,31 +41,31 @@ public class jParmFacade {
     public void setParmFacadeDB(String tableName) {
         itsParmFacadeDB=tableName;
     }
-    
-    
+
+
     // Get the domain range (as startx,endx,starty,endy) of the given
     // parameters in the table.
     // This is the minimum start value and maximum end value for all parameters.
     // An empty name pattern is the same as * (all parm names).
-    public native Vector<Double> getRange(String parmNamePattern) throws Exception;
-    
+    public native ArrayList<Double> getRange(String parmNamePattern) throws Exception;
+
     // Get parameter names in the table matching the pattern.
     // An empty name pattern is the same as * (all parm names).
-    public native Vector<String> getNames(String parmNamePattern) throws Exception;
-    
+    public native ArrayList<String> getNames(String parmNamePattern) throws Exception;
+
 
     // Get the parameter values for the given parameters and domain.
     // The domain is given by the start and end values, while the grid is
     // given by nx and ny.
-    public native HashMap<String,Vector<Double>> getValues(String parmNamePattern,
+    public native HashMap<String,ArrayList<Double>> getValues(String parmNamePattern,
             double startx, double endx, int nx,
             double starty, double endy, int ny) throws Exception;
-    
+
     // Get the parameter values for the given parameters and timeframe.
     // The domain is given by the start and end values, while the time is
     // given by startSolvTime and endSolveTime.
-    public native HashMap<String,Vector<Double>> getHistory(String parmNamePattern,
-            double startx, double endx, double starty, 
+    public native HashMap<String,ArrayList<Double>> getHistory(String parmNamePattern,
+            double startx, double endx, double starty,
             double endy, double startSolveTime, double endSolveTime) throws Exception;
-    
+
 }

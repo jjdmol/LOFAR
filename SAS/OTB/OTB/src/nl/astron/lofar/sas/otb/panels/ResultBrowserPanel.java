@@ -26,10 +26,9 @@ package nl.astron.lofar.sas.otb.panels;
 
 import java.awt.event.ActionEvent;
 import java.rmi.RemoteException;
-import java.util.Enumeration;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
@@ -150,12 +149,10 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                         item.removeAllChildren();
                         
                         //add the parmdb nodes
-                        Vector childs =
-                                OtdbRmi.getRemoteMaintenance().getItemList(((jOTDBnode)item.getUserObject()).treeID(), ((jOTDBnode)item.getUserObject()).nodeID(), 1);
+                        ArrayList <jOTDBnode> childs =
+                                new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(((jOTDBnode)item.getUserObject()).treeID(), ((jOTDBnode)item.getUserObject()).nodeID(), 1));
                         
-                        Enumeration parmdbparms = childs.elements();
-                        while( parmdbparms.hasMoreElements()  ) {
-                            jOTDBnode parmdbparmitem = (jOTDBnode)parmdbparms.nextElement();
+                        for (jOTDBnode parmdbparmitem : childs ) {
                             //only add values that mean something
                             if(parmdbparmitem.limits != null && !parmdbparmitem.limits.equalsIgnoreCase("")){
                                 String[] args = new String[3];
@@ -287,11 +284,11 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         logger.debug("actionPerformed: " + evt);
         logger.debug("Trigger: "+evt.getActionCommand());
         try {
-            Vector aL = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, "%"+evt.getActionCommand());
+            ArrayList<jOTDBnode> aL = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, "%"+evt.getActionCommand()));
             logger.debug("nr nodes found: " + aL.size());
             logger.debug("nodes: " + aL);
             if (aL.size()> 0) {
-              changeSelection((jOTDBnode)aL.elementAt(0));
+              changeSelection(aL.get(0));
             } else {
                 logger.warn("No panels for this choice");
             }
@@ -307,7 +304,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         jTabbedPane1.removeAll();
 
         // Check if the nodename uses specific panels and create them
-        Vector aPanelList=null;
+        ArrayList<String> aPanelList=null;
 
         if(aNode.getUserObject() instanceof jOTDBnode){
             if (itsPanelHelper.isKey(LofarUtils.keyName(aNode.getName()))) {
@@ -343,19 +340,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 logger.debug("Getting panel for: "+aPanelName);
                 try {
                     p = (JPanel) Class.forName(aPanelName).newInstance();
-                } catch (ClassNotFoundException ex) {
-                    String aS="Error during getPanel: "+ ex;
-                    logger.error(aS);
-                    itsMainFrame.setNormalCursor();
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                    return;
-                } catch (InstantiationException ex) {
-                    String aS="Error during getPanel: "+ ex;
-                    logger.error(aS);
-                    itsMainFrame.setNormalCursor();
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                    return;
-                } catch (IllegalAccessException ex) {
+                } catch (        ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
                     String aS="Error during getPanel: "+ ex;
                     logger.error(aS);
                     itsMainFrame.setNormalCursor();
@@ -389,7 +374,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         jTabbedPane1.removeAll();
 
         // Check if the nodename uses specific panels and create them
-        Vector aPanelList=null;
+        ArrayList<String> aPanelList=null;
 
         if (itsPanelHelper.isKey(LofarUtils.keyName(aNode.name))) {
             aPanelList=itsPanelHelper.getPanels(LofarUtils.keyName(aNode.name));
@@ -418,19 +403,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                 logger.debug("Getting panel for: "+aPanelName);
                 try {
                     p = (JPanel) Class.forName(aPanelName).newInstance();
-                } catch (ClassNotFoundException ex) {
-                    String aS="Error during getPanel: "+ ex;
-                    logger.error(aS);
-                    itsMainFrame.setNormalCursor();
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                    return;
-                } catch (InstantiationException ex) {
-                    String aS="Error during getPanel: "+ ex;
-                    logger.error(aS);
-                    itsMainFrame.setNormalCursor();
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                    return;
-                } catch (IllegalAccessException ex) {
+                } catch (        ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
                     String aS="Error during getPanel: "+ ex;
                     logger.error(aS);
                     itsMainFrame.setNormalCursor();
@@ -539,10 +512,10 @@ public class ResultBrowserPanel extends javax.swing.JPanel
             
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         logger.debug("actionPerformed: " + evt);
-        
-        if(evt.getActionCommand().equals("Query Panel")) {
-            // ToDo
-        } else if(evt.getActionCommand().equals("Schedule")) {
+        switch (evt.getActionCommand()) {
+            case "Query Panel":
+                break;
+            case "Schedule":
             if (itsTreeID > 0) {
                 if (viewInfo() ) {
                     logger.debug("Tree has been changed, reloading table line");
@@ -550,14 +523,15 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                     itsMainFrame.setChanged(this.getFriendlyName(),true);
                 }
             }
-        } else if(evt.getActionCommand().equals("Exit")) {
+                break;
+            case "Exit":
             if (!userAccount.isObserver() || itsTreeType.equalsIgnoreCase("hardware")){
                 ResultTreeManager treeManager = ResultTreeManager.getInstance(itsMainFrame.getUserAccount());
                 treeManager.removeTreeModelListener(parmDBTreelistener);
             }
             itsMainFrame.unregisterPlugin(this.getFriendlyName());
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
-            
+                break;
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     

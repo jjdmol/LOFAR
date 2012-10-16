@@ -13,8 +13,7 @@ package nl.astron.lofar.sas.otbcomponents;
 
 import java.awt.Component;
 import java.rmi.RemoteException;
-import java.util.Enumeration;
-import java.util.Vector;
+import java.util.ArrayList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
@@ -109,7 +108,7 @@ public class TBBControlPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             //we need to get all the childs from this node.
             // So we get the node itself and look for its childs
-            Vector<jOTDBnode> TBBnode = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), "%TBBControl");
+            ArrayList<jOTDBnode> TBBnode = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), "%TBBControl");
 
             if (TBBnode.isEmpty() ) {
                 logger.error("TBBControl not found, no content");
@@ -118,12 +117,10 @@ public class TBBControlPanel extends javax.swing.JPanel implements IViewPanel{
 
 
             itsNode=TBBnode.get(0);
-            Vector <jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(),1);
+            ArrayList <jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(),1);
             // get all the params per child
-            Enumeration<jOTDBnode> e = childs.elements();
-            while( e.hasMoreElements()  ) {
+            for (jOTDBnode aNode:childs) {
                 aParam=null;
-                jOTDBnode aNode = e.nextElement();
 
                 // We need to keep all the nodes needed by this panel
                 // if the node is a leaf we need to get the pointed to value via Param.
@@ -386,29 +383,36 @@ public class TBBControlPanel extends javax.swing.JPanel implements IViewPanel{
         }
 
         if(parentName.equals("TBBControl")){
-        // TBBControl parameters
-            if (aKeyName.equals("NoCoincChann")) {
-                noCoincChann.setToolTipText(aParam.description);
-                itsNoCoincChann=aNode;
-            } else if (aKeyName.equals("CoincidenceTime")) {
-                coincidenceTime.setToolTipText(aParam.description);
-                itsCoincidenceTime=aNode;
-            } else if (aKeyName.equals("DoDirectionFit")) {
-                doDirectionFit.setToolTipText(aParam.description);
-                LofarUtils.setPopupComboChoices(doDirectionFit,aParam.limits);
-                itsDoDirectionFit=aNode;
-                if (!aNode.limits.equals("")) {
-                    doDirectionFit.setSelectedItem(aNode.limits);
-                }
-            } else if (aKeyName.equals("MinElevation")) {
-                minElevation.setToolTipText(aParam.description);
-                itsMinElevation=aNode;
-            } else if (aKeyName.equals("MaxFitVariance")) {
-                maxFitVariance.setToolTipText(aParam.description);
-                itsMaxFitVariance=aNode;
-            } else if (aKeyName.equals("ParamExtension")) {
-                paramExtensionTable.setToolTipText(aParam.description);
-                itsParamExtension=aNode;
+            // TBBControl parameters
+            switch (aKeyName) {
+                case "NoCoincChann":
+                    noCoincChann.setToolTipText(aParam.description);
+                    itsNoCoincChann=aNode;
+                    break;
+                case "CoincidenceTime":
+                    coincidenceTime.setToolTipText(aParam.description);
+                    itsCoincidenceTime=aNode;
+                    break;
+                case "DoDirectionFit":
+                    doDirectionFit.setToolTipText(aParam.description);
+                    LofarUtils.setPopupComboChoices(doDirectionFit,aParam.limits);
+                    itsDoDirectionFit=aNode;
+                    if (!aNode.limits.equals("")) {
+                        doDirectionFit.setSelectedItem(aNode.limits);
+                    }
+                    break;
+                case "MinElevation":
+                    minElevation.setToolTipText(aParam.description);
+                    itsMinElevation=aNode;
+                    break;
+                case "MaxFitVariance":
+                    maxFitVariance.setToolTipText(aParam.description);
+                    itsMaxFitVariance=aNode;
+                    break;
+                case "ParamExtension":
+                    paramExtensionTable.setToolTipText(aParam.description);
+                    itsParamExtension=aNode;
+                    break;
             }
         }
     }

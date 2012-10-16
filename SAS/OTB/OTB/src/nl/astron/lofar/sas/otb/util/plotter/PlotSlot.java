@@ -49,7 +49,7 @@ import org.apache.log4j.Logger;
  * @author pompert
  * @see nl.astron.lofar.java.gui.plotter.*
  */
-public class PlotSlot extends JPanel{
+public final class PlotSlot extends JPanel{
     
     public static final String EMPTY_SLOT = "Empty Slot";
     private static Logger logger = Logger.getLogger(PlotSlot.class);

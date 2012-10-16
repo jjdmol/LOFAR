@@ -24,12 +24,11 @@ package nl.astron.lofar.sas.otb.jparmfacade.test;
  *
  */
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Vector;
 
 import nl.astron.lofar.sas.otb.jparmfacade.jParmFacade;
-
 /**
  *
  * @author coolen
@@ -69,13 +68,13 @@ public class tParmFacade {
                 return;
             }
         
-            Vector<String> names = aPF.getNames("");
+            ArrayList<String> names = aPF.getNames("");
             System.out.println("Names: " + names);
-            Vector<Double> range = aPF.getRange("");
+            ArrayList<Double> range = aPF.getRange("");
             System.out.println("Range: " + range);
-            HashMap<String,Vector<Double> > values = aPF.getValues ("*",
-							range.elementAt(0), range.elementAt(1), 4,
-							range.elementAt(2), range.elementAt(3), 2);
+            HashMap<String,ArrayList<Double> > values = aPF.getValues ("*",
+							range.get(0), range.get(1), 4,
+							range.get(2), range.get(3), 2);
 
          
             Iterator it = values.keySet().iterator();

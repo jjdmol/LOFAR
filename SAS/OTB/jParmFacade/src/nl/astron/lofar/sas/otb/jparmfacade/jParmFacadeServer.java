@@ -61,7 +61,7 @@ public class jParmFacadeServer {
             }
             
             
-            String aHostName = new String(args[0]);
+            String aHostName = args[0];
             
             logger.info("Running on: "+aHostName);
             System.setProperty("java.rmi.server.hostname", aHostName);

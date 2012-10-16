@@ -24,7 +24,7 @@
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
 import java.util.HashMap;
-import java.util.Vector;
+import java.util.ArrayList;
 
 /**
  * BBS Step Data object, which serves as a data structure for a given BBS Step with a unique name.
@@ -39,19 +39,19 @@ import java.util.Vector;
 public class BBSStepData{
     
     //Step Baseline Selection
-    private Vector<String> station1Selection = null;
-    private Vector<String> station2Selection = null;
+    private ArrayList<String> station1Selection = null;
+    private ArrayList<String> station2Selection = null;
     //Step Sources
-    private Vector<String> sources = null;
-    private Vector<String> extraSources = null;
+    private ArrayList<String> sources = null;
+    private ArrayList<String> extraSources = null;
     //Step Instrument Model
-    private Vector<String> instrumentModel = null;
+    private ArrayList<String> instrumentModel = null;
     //Step Integration
     private double integrationFrequency = -1.0;
     private double integrationTime = -1.0;
     //Step Correlation
     private String correlationSelection = null;
-    private Vector<String> correlationType = null;
+    private ArrayList<String> correlationType = null;
     //Step Output Data Column
     private String outputDataColumn = null;
     //Step Operation name
@@ -65,41 +65,41 @@ public class BBSStepData{
     public BBSStepData() {
     }
    
-    public Vector<String> getStation1Selection(){
+    public ArrayList<String> getStation1Selection(){
         return station1Selection;
     }
     
-    public void setStation1Selection(Vector<String> station1Selection){
+    public void setStation1Selection(ArrayList<String> station1Selection){
         this.station1Selection = station1Selection;
     }
-    public Vector<String> getStation2Selection(){
+    public ArrayList<String> getStation2Selection(){
         return station2Selection;
     }
     
-    public void setStation2Selection(Vector<String> station2Selection){
+    public void setStation2Selection(ArrayList<String> station2Selection){
         this.station2Selection = station2Selection;
     }
-    public Vector<String> getSources(){
+    public ArrayList<String> getSources(){
         return sources;
     }
     
-    public void setSources(Vector<String> sources){
+    public void setSources(ArrayList<String> sources){
         this.sources = sources;
     }
     
-    public Vector<String> getExtraSources(){
+    public ArrayList<String> getExtraSources(){
         return extraSources;
     }
     
-    public void setExtraSources(Vector<String> extraSources){
+    public void setExtraSources(ArrayList<String> extraSources){
         this.extraSources = extraSources;
     }
     
-    public Vector<String> getInstrumentModel(){
+    public ArrayList<String> getInstrumentModel(){
         return instrumentModel;
     }
     
-    public void setInstrumentModel(Vector<String> instrumentModel){
+    public void setInstrumentModel(ArrayList<String> instrumentModel){
         this.instrumentModel = instrumentModel;
     }
     
@@ -127,11 +127,11 @@ public class BBSStepData{
         this.correlationSelection = correlationSelection;
     }
     
-    public Vector<String> getCorrelationType(){
+    public ArrayList<String> getCorrelationType(){
         return correlationType;
     }
     
-    public void setCorrelationType(Vector<String> correlationType){
+    public void setCorrelationType(ArrayList<String> correlationType){
         this.correlationType = correlationType;
     }
     
@@ -169,7 +169,7 @@ public class BBSStepData{
     
     public synchronized void addOperationAttribute(String key, String value){
         if(operationAttributes==null){
-            operationAttributes=new HashMap<String,String>();
+            operationAttributes=new HashMap<>();
         }
         this.operationAttributes.put(key,value);
     }
