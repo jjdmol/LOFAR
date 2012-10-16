@@ -58,7 +58,7 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
 
       // TODO: Not sure how to handle an exception raised by the constructor of T. The placement
       // delete[] will be called, but that's an empty stub.
-      SuperType(allocate(nrElements(extents), alignment, allocator, padToAlignment, construct), extents),
+      SuperType(allocate(extents, alignment, allocator, padToAlignment, construct), extents),
       allocator(&allocator),
       allocated_num_elements(nrElements(extents)),
       alignment(alignment),
@@ -69,7 +69,7 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
 
     MultiDimArray(const MultiDimArray<T,DIM> &other)
     :
-      SuperType(other.num_elements_ ? allocate(other.num_elements_, other.alignment, *other.allocator, other.padToAlignment, other.construct) : 0, other.extent_list_),
+      SuperType(other.num_elements_ ? allocate(other.extent_list_, other.alignment, *other.allocator, other.padToAlignment, other.construct) : 0, other.extent_list_),
 //new(other.allocator->allocate(padToAlignment ? align(other.num_elements_ * sizeof(T), other.alignment) : other.num_elements_ * sizeof(T), other.alignment))T[other.num_elements_] : 0, other.extent_list_),
       allocator(other.allocator),
       allocated_num_elements(other.num_elements_),
@@ -196,14 +196,14 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
     bool      padToAlignment;
     bool      construct;
 
-    T *allocate(size_t nrElements, size_t alignment, Allocator &allocator, bool padToAlignment, bool construct) const {
+    T *allocate(const ExtentList &extents, size_t alignment, Allocator &allocator, bool padToAlignment, bool construct) const {
       size_t dataSize = padToAlignment
-                        ? align(nrElements * sizeof(T), alignment)
-                        : nrElements * sizeof(T);
+                        ? align(nrElements(extents) * sizeof(T), alignment)
+                        : nrElements(extents) * sizeof(T);
 
       T *ptr = static_cast<T*>(allocator.allocate(dataSize, alignment));
 
-      return construct ? new(ptr)T[nrElements] : ptr;
+      return construct ? new(ptr)T[nrElements(extents)] : ptr;
     }
 
     // a MultiDimArray made to replace another, using a different shape. Assumes
