@@ -90,7 +90,7 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
                 return false;
             }
             // Get a Treelist of all available VHtree's
-            ArrayList aTreeList=OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("VHtree"),(short)0);
+            ArrayList aTreeList=new ArrayList(OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("VHtree"),(short)0));
             data = new Object[aTreeList.size()][headers.length];
             logger.debug("Treelist downloaded. Size: "+aTreeList.size());
            

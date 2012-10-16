@@ -372,7 +372,7 @@ public final class PlotSlot extends JPanel{
     public void addSlotListener(PlotSlotListener listener) {
         
         if (myListenerList == null ) {
-            myListenerList = new LinkedList<PlotSlotListener>();
+            myListenerList = new LinkedList<>();
         }
         myListenerList.add(listener);
     }

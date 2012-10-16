@@ -43,7 +43,7 @@ import org.apache.log4j.Logger;
  *
  * @version $Id$
  */
-public class StorageSelectionPanel extends javax.swing.JPanel {
+public final class StorageSelectionPanel extends javax.swing.JPanel {
     
     
     static Logger logger = Logger.getLogger(StorageSelectionPanel.class);
@@ -99,8 +99,8 @@ public class StorageSelectionPanel extends javax.swing.JPanel {
         AvailableStorageNodeList.setModel(itsAvailableModel);
         UsedStorageNodeList.setModel(itsUsedModel);
         try {
-            ArrayList<jOTDBtree> aTreeList = OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("hardware"),
-                    OtdbRmi.getRemoteTypes().getClassif("operational"));
+            ArrayList<jOTDBtree> aTreeList = new ArrayList(OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("hardware"),
+                    OtdbRmi.getRemoteTypes().getClassif("operational")));
            for (int k = 0; k < aTreeList.size(); k++) {
                 jOTDBtree tInfo = aTreeList.get(k);
                 if (OtdbRmi.getTreeState().get(tInfo.state).equals("active")) {
@@ -116,9 +116,9 @@ public class StorageSelectionPanel extends javax.swing.JPanel {
             }
 
             // Now we have the operational PIC tree, we need to search for the available StorageNodes
-            ArrayList<jOTDBnode> storagenodes = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "LOFAR_PermSW_Storage");
+            ArrayList<jOTDBnode> storagenodes = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "LOFAR_PermSW_Storage"));
             for (jOTDBnode aRingNode:storagenodes) {
-                ArrayList<jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID() ,aRingNode.nodeID(), 1);
+                ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID() ,aRingNode.nodeID(), 1));
 
                 for (jOTDBnode aNode:childs) { 
                  

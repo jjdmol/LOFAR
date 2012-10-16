@@ -33,6 +33,7 @@
 
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
+import java.util.ArrayList;
 import java.util.Vector;
 import org.apache.log4j.Logger;
 
@@ -47,9 +48,9 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
 
     private String itsTreeType = null;
 
-    private Vector<String> itsAngles1    = new Vector<String>();
-    private Vector<String> itsAngles2    = new Vector<String>();
-    private Vector<String> itsCoordTypes = new Vector<String>();
+    private ArrayList<String> itsAngles1    = new ArrayList<>();
+    private ArrayList<String> itsAngles2    = new ArrayList<>();
+    private ArrayList<String> itsCoordTypes = new ArrayList<>();
 
     private int offset=1;
 
@@ -70,7 +71,7 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
      *
      * @return True if succes else False
      */
-     public boolean fillTable(String treeType, Vector<String> anAngles1,Vector<String> anAngles2,Vector<String> aCoordType,boolean refill){
+     public boolean fillTable(String treeType, ArrayList<String> anAngles1,ArrayList<String> anAngles2,ArrayList<String> aCoordType,boolean refill){
         // "clear" the table
         setRowCount(0);
 
@@ -98,9 +99,9 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
 
         // need to skip first entry because it is the default (dummy) TBBsetting
         for (int i=0; i<length-offset; i++) {
-            String[]  newRow = { itsAngles1.elementAt(i+offset),
-                                 itsAngles2.elementAt(i+offset),
-                                 itsCoordTypes.elementAt(i+offset),
+            String[]  newRow = { itsAngles1.get(i+offset),
+                                 itsAngles2.get(i+offset),
+                                 itsCoordTypes.get(i+offset),
  };
 
             this.addRow(newRow);
@@ -118,18 +119,27 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
      *
      * @return True if succes else False
      */
-     public boolean getTable(Vector<String> anAngles1,Vector<String> anAngles2,Vector<String> aCoordType) {
+     public boolean getTable(ArrayList<String> anAngles1,ArrayList<String> anAngles2,ArrayList<String> aCoordType) {
 
         // need to skip first entry because it is the default (dummy) TBBsetting
         // empty all elements except the default
-        anAngles1.setSize(1);
-        anAngles2.setSize(1);
-        aCoordType.setSize(1);
+        String def="";
+        def = anAngles1.get(0);
+        anAngles1.clear();
+        anAngles1.add(def);
+        
+        def = anAngles2.get(0);
+        anAngles2.clear();
+        anAngles2.add(def);
+        
+        def = aCoordType.get(0);
+        aCoordType.clear();
+        aCoordType.add(def);
 
         for (int i=0; i<getRowCount(); i++) {
-            anAngles1.addElement((String)getValueAt(i,0));
-            anAngles2.addElement((String)getValueAt(i,1));
-            aCoordType.addElement((String)getValueAt(i,2));
+            anAngles1.add((String)getValueAt(i,0));
+            anAngles2.add((String)getValueAt(i,1));
+            aCoordType.add((String)getValueAt(i,2));
         }
         return true;
     }
@@ -169,13 +179,13 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
         if (row < this.getRowCount() && row >= 0) {
             //Angle1
             this.setValueAt(newRow[0],row,0);
-            itsAngles1.setElementAt(newRow[0], row+offset);
+            itsAngles1.set(row+offset,newRow[0]);
             //Angle2
             this.setValueAt(newRow[1],row,1);
-            itsAngles2.setElementAt(newRow[1], row+offset);
+            itsAngles2.set(row+offset,newRow[1]);
             //CoordType
             this.setValueAt(newRow[2],row,2);
-            itsCoordTypes.setElementAt(newRow[2], row+offset);
+            itsCoordTypes.set( row+offset,newRow[2]);
 
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
@@ -210,9 +220,9 @@ public class PencilConfigurationTableModel extends javax.swing.table.DefaultTabl
 
     public void removeAllRows() {
         this.setRowCount(0);
-        itsAngles1.removeAllElements();
-        itsAngles2.removeAllElements();
-        itsCoordTypes.removeAllElements();
+        itsAngles1.clear();
+        itsAngles2.clear();
+        itsCoordTypes.clear();
 
         isChanged=true;
     }

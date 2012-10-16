@@ -34,10 +34,10 @@
               <Component id="jScrollPane1" min="-2" pref="76" max="-2" attributes="1"/>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="AddAllButton" pref="105" max="32767" attributes="1"/>
-                  <Component id="RemoveButton" pref="105" max="32767" attributes="1"/>
+                  <Component id="AddAllButton" pref="130" max="32767" attributes="1"/>
+                  <Component id="RemoveButton" pref="130" max="32767" attributes="1"/>
                   <Component id="RemoveAllButton" max="32767" attributes="1"/>
-                  <Component id="AddButton" alignment="0" pref="105" max="32767" attributes="1"/>
+                  <Component id="AddButton" alignment="0" pref="130" max="32767" attributes="1"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>

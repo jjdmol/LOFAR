@@ -122,7 +122,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         jOTDBparam aParam=null;
         try {
             //we need to get all the childs from this node.
-            ArrayList<jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
+            ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1));
             
             for (jOTDBnode aNode:childs) {
                 aParam=null;
@@ -203,7 +203,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
     private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
         jOTDBparam aParam=null;
         try {
-            ArrayList<jOTDBnode> HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            ArrayList<jOTDBnode> HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
             // get all the params per child
             for (jOTDBnode aHWNode:HWchilds) {
                 aParam=null;

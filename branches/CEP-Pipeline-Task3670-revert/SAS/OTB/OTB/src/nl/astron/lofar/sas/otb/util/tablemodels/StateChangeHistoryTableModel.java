@@ -39,7 +39,7 @@ import org.apache.log4j.Logger;
  *
  * @updated
  */
-public class StateChangeHistoryTableModel extends javax.swing.table.DefaultTableModel {
+public final class StateChangeHistoryTableModel extends javax.swing.table.DefaultTableModel {
     
     private String  headers[] = {"ID","MomID","New State","UserName","TimeStamp"};
     private OtdbRmi otdbRmi;
@@ -79,7 +79,7 @@ public class StateChangeHistoryTableModel extends javax.swing.table.DefaultTable
             this.setRowCount(0);
 
             // Get a stateList of all available changes
-            ArrayList<jTreeState> aStateList=OtdbRmi.getRemoteOTDB().getStateList(itsTreeID, false);
+            ArrayList<jTreeState> aStateList=new ArrayList(OtdbRmi.getRemoteOTDB().getStateList(itsTreeID, false));
             data = new Object[aStateList.size()][headers.length];
             logger.debug("Statelist downloaded. Size: "+aStateList.size());
            

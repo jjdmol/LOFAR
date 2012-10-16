@@ -104,7 +104,7 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
         try {
             
             
-            ArrayList<jVICnodeDef> nodes = OtdbRmi.getRemoteMaintenance().getComponentList(aNodeName,false);
+            ArrayList<jVICnodeDef> nodes = new ArrayList(OtdbRmi.getRemoteMaintenance().getComponentList(aNodeName,false));
             if (nodes.size() > 0) {
                 logger.debug("Found "+ nodes.size()+ " nr of matches for node "+aNodeName);
             } else {
@@ -112,7 +112,7 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
                 return;
             }
             
-            ArrayList<jOTDBparam> params = OtdbRmi.getRemoteMaintenance().getComponentParams(((jVICnodeDef)nodes.get(0)).nodeID());
+            ArrayList<jOTDBparam> params = new ArrayList(OtdbRmi.getRemoteMaintenance().getComponentParams(((jVICnodeDef)nodes.get(0)).nodeID()));
             for (jOTDBparam item:params) {    
                 TreeNode newNode = new TreeNode(OTDBParamTreeManager.instance,item,item.name);
                 aNode.add(newNode);

@@ -41,7 +41,7 @@ import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
  * @version $Id$
  * @updated
  */
-public class SamplePanel extends javax.swing.JPanel 
+public final class SamplePanel extends javax.swing.JPanel 
                        implements IPluginPanel {
 
     static Logger logger = Logger.getLogger(SamplePanel.class);

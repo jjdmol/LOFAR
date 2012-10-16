@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.Vector;
 
 /**
  * This (singleton) class maintains a list of available panels that can be shown on a given name in the TemplateMaintenanceBrowser.
