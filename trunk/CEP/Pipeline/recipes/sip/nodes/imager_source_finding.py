@@ -132,7 +132,7 @@ class imager_source_finding(LOFARnodeTCP):
 
             # Save the frequency from image header of the original input file,
             # This information is not written by pybdsm to the exported image
-            frequency = img.cfreq
+            frequency = img.frequency
 
         # if not set the maximum number of itteration us performed
         if n_itter_sourcefind == None:
@@ -244,7 +244,7 @@ class imager_source_finding(LOFARnodeTCP):
                  os.path.basename(create_sourcdb_exec)
             ) as logger:
                 catch_segfaults(cmd, working_directory, self.environment,
-                                            logger, cleanup = None)
+                                            logger, cleanup=None)
 
         except Exception, exception:
             self.logger.error("Execution of external failed:")
