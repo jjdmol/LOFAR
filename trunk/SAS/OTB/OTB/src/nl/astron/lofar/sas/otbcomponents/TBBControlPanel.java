@@ -108,7 +108,7 @@ public class TBBControlPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             //we need to get all the childs from this node.
             // So we get the node itself and look for its childs
-            ArrayList<jOTDBnode> TBBnode = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), "%TBBControl");
+            ArrayList<jOTDBnode> TBBnode = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), "%TBBControl"));
 
             if (TBBnode.isEmpty() ) {
                 logger.error("TBBControl not found, no content");
@@ -117,7 +117,7 @@ public class TBBControlPanel extends javax.swing.JPanel implements IViewPanel{
 
 
             itsNode=TBBnode.get(0);
-            ArrayList <jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(),1);
+            ArrayList <jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(),1));
             // get all the params per child
             for (jOTDBnode aNode:childs) {
                 aParam=null;

@@ -157,7 +157,7 @@ public class LoginDialog extends javax.swing.JDialog {
      * @return Value of property userName.
      */
     public String getUserName() {
-        return new String(jUserNameField.getText());
+        return jUserNameField.getText();
     }
 
     /**
@@ -173,6 +173,6 @@ public class LoginDialog extends javax.swing.JDialog {
      * @return Value of property databaseName.
      */
     public String getDBName() {
-        return new String(jDatabaseField.getText());
+        return jDatabaseField.getText();
     }
 }

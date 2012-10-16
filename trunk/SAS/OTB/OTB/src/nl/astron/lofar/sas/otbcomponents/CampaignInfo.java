@@ -106,7 +106,7 @@ public class CampaignInfo extends javax.swing.JPanel {
                 // get all existing campaigns to fill the combobox, set default to original CampainName
                 // only possible for Campaigns that have NoCampaign
                 if (isEditable) {
-                    itsCampaignList=OtdbRmi.getRemoteCampaign().getCampaignList();
+                    itsCampaignList=new ArrayList(OtdbRmi.getRemoteCampaign().getCampaignList());
                     if (itsCampaignList.size() > 0) {
                         Iterator itr = itsCampaignList.iterator();
                         while (itr.hasNext()){

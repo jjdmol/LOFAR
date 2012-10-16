@@ -225,7 +225,7 @@ public class BBSStepDataManager{
             if(strategySteps.size()>0){
                 ArrayList<jOTDBnode> stepsArrayList;
                 try {
-                    stepsArrayList = OtdbRmi.getRemoteMaintenance().getItemList(rootNode.treeID(), rootNode.nodeID(), 1);
+                    stepsArrayList = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(rootNode.treeID(), rootNode.nodeID(), 1));
                     //loop through steps
                     for(String aStep : strategySteps){
                         for(jOTDBnode aHWNode:stepsArrayList) {
@@ -263,7 +263,7 @@ public class BBSStepDataManager{
         jOTDBnode parentStepsNode = this.getStrategyStepsNode(this.getStepContainerNode());
         
         //determine the Parent children as defined by the BBS Step Parent object
-        ArrayList<BBSStep> currentParentChildren = theStrategy.getChildSteps();
+        ArrayList<BBSStep> currentParentChildren = new ArrayList(theStrategy.getChildSteps());
         
         ArrayList<String> currentParentChildrenList = new ArrayList<>();
         for(BBSStep someStep : currentParentChildren){
@@ -292,7 +292,7 @@ public class BBSStepDataManager{
         jOTDBnode strategyStepsParameter=null;
         //retrieve 1 levels of parameters to locate Step.XXX.Steps
         
-        ArrayList<jOTDBnode> HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1);
+        ArrayList<jOTDBnode> HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1));
         // get all the params per child
         for(jOTDBnode aHWNode:HWchilds) {
             strategyStepsParameter=null;
@@ -378,7 +378,7 @@ public class BBSStepDataManager{
             
             if(strategySteps.size()>0){
                 //Get all the steps present in the BBS Step Container
-                ArrayList<jOTDBnode> stepsArrayList = OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.parentID(), 1);
+                ArrayList<jOTDBnode> stepsArrayList = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.parentID(), 1));
                 
                 for(String aStep : strategySteps){
                     for (jOTDBnode aHWNode:stepsArrayList) {
@@ -399,7 +399,7 @@ public class BBSStepDataManager{
         //another iteration to collect operation type attributes
         if(stepDataObject.getOperationName() !=null){
             
-            ArrayList<jOTDBnode> HWchilds2 = OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1);
+            ArrayList<jOTDBnode> HWchilds2 = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1));
             // get all the params per child
             for (jOTDBnode aHWNode:HWchilds2) {
                 /*
@@ -936,7 +936,7 @@ public class BBSStepDataManager{
     private ArrayList retrieveChildDataForNode(jOTDBnode aNode){
         ArrayList HWchilds = new ArrayList();
         try {
-            HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
             // get all the params per child
         } catch (RemoteException ex) {
             logger.error("Error during retrieveChildDataForNode!", ex);
@@ -953,7 +953,7 @@ public class BBSStepDataManager{
         jOTDBnode strategyStepsParameter=null;
         try {
             ArrayList<jOTDBnode> HWchilds = null;
-            HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(stepContainerNode.treeID(), stepContainerNode.parentID(), 2);
+            HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(stepContainerNode.treeID(), stepContainerNode.parentID(), 2));
             // get all the params per child
             for (jOTDBnode aHWNode: HWchilds) {
                 strategyStepsParameter=null;
@@ -980,7 +980,7 @@ public class BBSStepDataManager{
         int returnId = 0;
         try {
             if(BBSStepDataManager.OTDBcomponentCache==null){
-                OTDBcomponentCache = OtdbRmi.getRemoteMaintenance().getComponentList("%",false);
+                OTDBcomponentCache = new ArrayList(OtdbRmi.getRemoteMaintenance().getComponentList("%",false));
             }
             for (jVICnodeDef aDef:OTDBcomponentCache) {
                 if(aDef.name.equals(nodeName)){

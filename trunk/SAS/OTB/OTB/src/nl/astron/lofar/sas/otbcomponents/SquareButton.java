@@ -24,7 +24,7 @@ import javax.swing.JButton;
  * you can see the background of the container behind these areas.
  *
  */
-public class SquareButton extends JButton {
+public final class SquareButton extends JButton {
 
 
   Shape shape;

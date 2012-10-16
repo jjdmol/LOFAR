@@ -55,8 +55,8 @@ public class FileMonitor
    */
   public FileMonitor (long pollingInterval)
   {
-    files_     = new HashMap<File,Long>();
-    listeners_ = new ArrayList<WeakReference>();
+    files_     = new HashMap<>();
+    listeners_ = new ArrayList<>();
 
     timer_ = new Timer (true);
     timer_.schedule (new FileMonitorNotifier(), 0, pollingInterval);
@@ -119,10 +119,9 @@ public class FileMonitor
       if (listener == fileListener)
         return;
     }
-
-    // Use WeakReference to avoid memory leak if this becomes the
-    // sole reference to the object.
-    listeners_.add (new WeakReference<FileListener> (fileListener));
+        // Use WeakReference to avoid memory leak if this becomes the
+        // sole reference to the object.
+        boolean add = listeners_.add (new WeakReference<> (fileListener));
   }
 
 
@@ -158,7 +157,7 @@ public class FileMonitor
       // Loop over the registered files and see which have changed.
       // Use a copy of the list in case listener wants to alter the
       // list within its fileChanged method.
-      Collection files = new ArrayList<File> (files_.keySet());
+      Collection files = new ArrayList<> (files_.keySet());
       
       for (Iterator i = files.iterator(); i.hasNext(); ) {
         File file = (File) i.next();

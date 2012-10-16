@@ -856,7 +856,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
                 ArrayList<String> newRow = new ArrayList<>();
                 newRow.add(station1.get(i));
                 newRow.add(station2.get(i));
-                bsltm.addRow(newRow);
+                bsltm.addRow(newRow.toArray());
             }
         }
     }
@@ -1544,7 +1544,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             selectedIndices = stepExplorerInstrumentModelList.getSelectedIndices();
             stepExplorerInstrumentModel.setBackground(NOT_INHERITED_FROM_PARENT);
         }
-        if(theInstrumentModel.size()==0){
+        if(theInstrumentModel.isEmpty()){
             this.deleteInstrumentButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteInstrumentButtonActionPerformed
@@ -1685,10 +1685,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         DefaultTableModel bsltm = (DefaultTableModel)this.baselineStationsTable.getModel();
         String typedText=baselineStation1Text.getText();
         String typedText2=baselineStation2Text.getText();
-        ArrayList<String> baselinePair = new ArrayList<String>();
+        ArrayList<String> baselinePair = new ArrayList<>();
         baselinePair.add(typedText);
         baselinePair.add(typedText2);
-        bsltm.addRow(baselinePair);
+        bsltm.addRow(baselinePair.toArray());
         this.BaselineSelectionPanel.setBackground(NOT_INHERITED_FROM_PARENT);
     }//GEN-LAST:event_addBaseLineButtonActionPerformed
     
@@ -1769,7 +1769,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             selectedIndices = stepExplorerNSourcesList.getSelectedIndices();
             stepExplorerNSources.setBackground(NOT_INHERITED_FROM_PARENT);
         }
-        if(theSourceModel.size()==0){
+        if(theSourceModel.isEmpty()){
             this.deleteNSourceButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteNSourceButtonActionPerformed

@@ -23,7 +23,7 @@
 
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 /**
  * Representation of the BBS Strategy to contain all BBS Strategy steps.
@@ -35,13 +35,13 @@ import java.util.Vector;
 public class BBSStrategy{
     
     //Contained substeps
-    private Vector<BBSStep> childSteps;
+    private ArrayList<BBSStep> childSteps;
     
     /** 
      * Creates a new instance of BBSStrategy 
      */
     public BBSStrategy() {
-        childSteps = new Vector<BBSStep>();
+        childSteps = new ArrayList<>();
     }
     
     /**
@@ -51,7 +51,7 @@ public class BBSStrategy{
      *
      * @return Vector of BBSStep objects that are children of this BBSStep
      */
-    public Vector<BBSStep> getChildSteps(){
+    public ArrayList<BBSStep> getChildSteps(){
         return childSteps;
     }    
     
@@ -122,7 +122,7 @@ public class BBSStrategy{
             if(indexOfChild >= 0 && indexOfChild < childSteps.size()){
                 BBSStep currentStepInIndex = childSteps.get(indexOfChild);
                 if(child.getName().equals(currentStepInIndex.getName())){
-                    this.childSteps.removeElementAt(indexOfChild);
+                    this.childSteps.remove(indexOfChild);
                     childSteps.trimToSize();
                 }
             }
@@ -149,7 +149,7 @@ public class BBSStrategy{
             if(oldIndexOfChild >= 0 && oldIndexOfChild < childSteps.size()){
                 BBSStep currentStepInIndex = childSteps.get(oldIndexOfChild);
                 if(child.getName().equals(currentStepInIndex.getName())){
-                    this.childSteps.removeElementAt(oldIndexOfChild);
+                    this.childSteps.remove(oldIndexOfChild);
                     this.childSteps.add(newIndexOfChild,currentStepInIndex);
                     childSteps.trimToSize();
                 }

@@ -24,7 +24,7 @@ import javax.swing.JButton;
  * you can see the backgtest of the container behind these areas.
  *
  */
-public class RoundButton extends JButton {
+public final class RoundButton extends JButton {
 
   Shape shape;
 

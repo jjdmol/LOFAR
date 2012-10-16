@@ -107,8 +107,8 @@ public class ResultTreeManager extends GenericTreeManager implements ITreeManage
         aNode.areChildrenDefined = true;
         
         try {
-            ArrayList<jOTDBnode> childs =
-                    OtdbRmi.getRemoteMaintenance().getItemList(((jOTDBnode)aNode.getUserObject()).treeID(), ((jOTDBnode)aNode.getUserObject()).nodeID(), 1);
+            ArrayList<jOTDBnode> childs = new ArrayList(
+                    OtdbRmi.getRemoteMaintenance().getItemList(((jOTDBnode)aNode.getUserObject()).treeID(), ((jOTDBnode)aNode.getUserObject()).nodeID(), 1));
             
             for (jOTDBnode item:childs) {
                 logger.trace("Node name selected :"+item.name);
