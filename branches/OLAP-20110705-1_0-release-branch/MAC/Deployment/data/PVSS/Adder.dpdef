@@ -1,5 +1,0 @@
-# Adder
-dropping			bool
-nrBlocksDropped		int
-logLine				string
-
