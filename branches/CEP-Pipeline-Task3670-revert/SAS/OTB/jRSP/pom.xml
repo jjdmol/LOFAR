@@ -16,21 +16,24 @@
   <artifactId>jRSP</artifactId>
 
 
-  <build>
+	<build>
+  <parent>
+    <groupId>nl.astron.lofar.sas.otb</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.8.0-SNAPSHOT</version>
+  </parent>
 
-    <sourceDirectory>src</sourceDirectory>
-
-    <resources>
-      <resource>
-        <directory>src</directory>
-        <excludes>
-          <exclude>**/*.java</exclude>
-          <exclude>**/*.cc</exclude>
-        </excludes>
-      </resource>
-    </resources>
-
-    <plugins>
+		<resources>
+			<resource>
+				<directory>src</directory>
+				<excludes>
+					<exclude>**/*.java</exclude>
+					<exclude>**/*.cc</exclude>
+				</excludes>
+			</resource>
+		</resources>
+		
+		<plugins>
 
       <!-- Generate HEADER files from JNI Java classes -->
       <plugin>
@@ -52,18 +55,18 @@
           </execution>
         </executions>
       </plugin>
-
+      
     </plugins>
 
-  </build>
+	</build>
 
-  <dependencies>
+    <sourceDirectory>src</sourceDirectory>
 
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-    </dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+		</dependency>
 
-  </dependencies>
+    <plugins>
 
 </project>
