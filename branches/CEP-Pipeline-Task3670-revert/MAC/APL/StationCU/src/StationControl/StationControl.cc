@@ -27,11 +27,13 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
+#include <Common/StreamUtil.h>
 #include <Common/SystemUtil.h>
 #include <Common/Version.h>
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationInfo.h>
+#include <ApplCommon/AntennaSets.h>
 
 #include <Common/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -124,8 +126,8 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsRCUmask.reset();
 	itsTBmask.reset();
 
-	LOG_DEBUG_STR("sizeof itsLBArcumask: " << itsLBArcumask.size());
-	LOG_DEBUG_STR("sizeof itsHBArcumask: " << itsHBArcumask.size());
+	LOG_DEBUG_STR("sizeof itsLBAmask: " << itsLBAmask.size());
+	LOG_DEBUG_STR("sizeof itsHBAmask: " << itsHBAmask.size());
 	LOG_DEBUG_STR("sizeof itsRCUmask: " << itsRCUmask.size());
 	LOG_DEBUG_STR("sizeof itsTBmask: "  << itsTBmask.size());
 }
@@ -238,25 +240,49 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 			itsClockPSinitialized = true;
 			LOG_DEBUG ("Attached to external propertySets");
 
+      // Obtain initial clock value
 			GCFPVInteger	clockVal;
 			itsClockPropSet->getValue(PN_CLC_REQUESTED_CLOCK, clockVal);
 			if (clockVal.getValue() != 0) {
 				itsClock = clockVal.getValue();
-				LOG_DEBUG_STR("Clock in PVSS has value: " << itsClock);
+				LOG_INFO_STR("Clock in PVSS has value: " << itsClock);
 			}
 			else {
 				// try actual clock
 				itsClockPropSet->getValue(PN_CLC_ACTUAL_CLOCK, clockVal);
 				if (clockVal.getValue() == 0) {
-					// both DB values are 0, fall back to 160
-					LOG_DEBUG("Clock settings in the database are all 0, setting 160 as default");
-					itsClock = 160;
+					// both DB values are 0, fall back to 200
+					LOG_WARN("Clock settings in the database are all 0, setting 200 as default");
+					itsClock = 200;
 					itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK, GCFPVInteger(itsClock));
 				}
 				else {
 					itsClock = clockVal.getValue();
-					LOG_DEBUG_STR("Actual clock in PVSS has value: " << itsClock << " applying that value");
+					LOG_INFO_STR("Actual clock in PVSS has value: " << itsClock << " applying that value");
 					itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK, clockVal);
+				}
+			}
+
+      // Obtain initial bitmode value
+			GCFPVInteger	bitmodeVal;
+			itsClockPropSet->getValue(PN_CLC_REQUESTED_BITMODE, bitmodeVal);
+			if (bitmodeVal.getValue() != 0) {
+				itsBitmode = bitmodeVal.getValue();
+				LOG_INFO_STR("Bitmode in PVSS has value: " << itsBitmode);
+			}
+			else {
+				// try actual bitmode
+				itsClockPropSet->getValue(PN_CLC_ACTUAL_BITMODE, bitmodeVal);
+				if (bitmodeVal.getValue() == 0) {
+					// both DB values are 0, fall back to 16
+					LOG_WARN("Bitmode settings in the database are all 0, setting 16 as default");
+					itsBitmode = 16;
+					itsClockPropSet->setValue(PN_CLC_REQUESTED_BITMODE, GCFPVInteger(itsBitmode));
+				}
+				else {
+					itsBitmode = bitmodeVal.getValue();
+					LOG_INFO_STR("Actual bitmode in PVSS has value: " << itsBitmode << " applying that value");
+					itsClockPropSet->setValue(PN_CLC_REQUESTED_BITMODE, bitmodeVal);
 				}
 			}
 			
@@ -573,6 +599,14 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		LOG_TRACE_FLOW("Dispatch to observation FSM's");
 		theObs->second->doEvent(event, port);
 		LOG_TRACE_FLOW("Back from dispatch");
+
+		// check if observation is still running after this timer.
+		if (theObs->second->curState() == CTState::QUITED && theObs->second->isReady()) {
+			sendControlResult(*itsParentPort, CONTROL_QUIT, theObs->second->getName(), CT_RESULT_LOST_CONNECTION);
+			LOG_DEBUG_STR("Removing " << theObs->second->getName() << " from the administration due to premature quit");
+			delete theObs->second;
+			itsObsMap.erase(theObs);
+		}
 	}
 	break;
 
@@ -660,7 +694,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 		// check if all actions for this event are finished.
 		vector<ChildControl::StateInfo>	cntlrStates = itsChildControl->getPendingRequest("", treeID);
-LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
+		LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 		if (cntlrStates.empty()) {	// no pending requests? Ready.
 			if (event.signal != CONTROL_QUITED) {
 				sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_NO_ERROR);
@@ -704,7 +738,6 @@ LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 	return (status);
 }
 
-
 //
 // startObservation_state(event,port)
 //
@@ -714,36 +747,20 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 {
 	LOG_DEBUG_STR("startObservation: " << eventName(event) << "@" << port.getName());
 
+    /*
+     * Several parts of the station (clock, splitters, bitmode..) need to be configured in sequence, and can take
+     * a while to stabilise. This is implemented by sequencing the station configuration in using F_TIMER. Every time
+     * the timer is triggered, the next configuration step is performed, after which an ACK event defers back to the
+     * timer to perform the next step.
+     */
+
 	switch (event.signal) {
 	case CONTROL_CLAIM: {
-		// Clock changes are done in the claim state and require an extra action
-		if (itsClock != itsStartingObs->second->obsPar()->sampleClock) {
-			// Check if all others obs are down otherwise we may not switch the clock
-			CONTROLCommonEvent	ObsEvent(event);		// we just need the name
-			uint16			 instanceNr = getInstanceNr(ObsEvent.cntlrName);
-			OTDBtreeIDType	 treeID	    = getObservationNr(ObsEvent.cntlrName);
-			string			 cntlrName  = controllerName(CNTLRTYPE_STATIONCTRL, instanceNr, treeID);
-			if (itsObsMap.size() != 1) {
-				LOG_FATAL_STR("Need to switch the clock to " <<  itsStartingObs->second->obsPar()->sampleClock << 
-						" for observation " << treeID << " but there are still " << itsObsMap.size()-1 << 
-						" other observations running at clockspeed" << itsClock << ".");
-				_abortObservation(itsStartingObs);
-				itsStartingObs = itsObsMap.end();
-				TRAN(StationControl::operational_state);
-				break;
-			}
-			// its OK to switch te clock
-			itsClock = itsStartingObs->second->obsPar()->sampleClock;
-			LOG_DEBUG_STR ("Changing clock to " << itsClock);
-			CLKCTRLSetClockEvent	setClock;
-			setClock.clock = itsClock;
-			itsClkCtrlPort->send(setClock);		// results in CLKCTRL_SET_CLOCK_ACK
-			itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(itsClock));
-		}
-		else {
-			LOG_INFO_STR("new observation also uses clock " << itsClock);
-			itsTimerPort->setTimer(0.0);	// goto set splitter section
-		}
+        // defer the setup to the timer event
+        itsSetupSequence = 0;
+
+		itsTimerPort->setTimer(0.0);
+        break;
 	}
 	break;
 
@@ -758,31 +775,24 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		}
 		// clock was set succesfully, give clock 5 seconds to stabilize
 		LOG_INFO("Stationclock is changed, waiting 5 seconds to let the clock stabilize");
+
 		itsTimerPort->setTimer(5.0);
 	}
 	break;
 
-	case F_TIMER: {
-		StationConfig	sc;
-		if (!sc.hasSplitters) {
-			LOG_INFO_STR("Ignoring splitter settings because we don't have splitters");
-			// finally send a CLAIM event to the observation
-			LOG_TRACE_FLOW("Dispatch CLAIM event to observation FSM's.");
-			CONTROLClaimEvent		claimEvent;
-			itsStartingObs->second->doEvent(claimEvent, port);
-
-			LOG_INFO("Going back to operational state.");
+	case CLKCTRL_SET_BITMODE_ACK: {
+		CLKCTRLSetBitmodeAckEvent		ack(event);
+		if (ack.status != CLKCTRL_NO_ERR) {
+			LOG_FATAL_STR("Unable to set the bitmode to " << itsBitmode << ".");
+			_abortObservation(itsStartingObs);
 			itsStartingObs = itsObsMap.end();
 			TRAN(StationControl::operational_state);
 			break;
 		}
+		// bitmode was set succesfully
+		LOG_INFO("Stationbitmode is changed");
 
-		// set the splitters in the right state.
-		bool	splitterState = itsStartingObs->second->obsPar()->splitterOn;
-		LOG_DEBUG_STR ("Setting the splitters to " << (splitterState ? "ON" : "OFF"));
-		CLKCTRLSetSplittersEvent	setEvent;
-		setEvent.splittersOn = splitterState;
-		itsClkCtrlPort->send(setEvent);		// will result in CLKCTRL_SET_SPLITTERS_ACK
+		itsTimerPort->setTimer(0.0);
 	}
 	break;
 
@@ -791,23 +801,107 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		bool	splitterState = itsStartingObs->second->obsPar()->splitterOn;
 		if (ack.status != CLKCTRL_NO_ERR) {
 			LOG_FATAL_STR("Unable to set the splittters to " << (splitterState ? "ON" : "OFF"));
-			_abortObservation(itsStartingObs);
-			itsStartingObs = itsObsMap.end();
-			TRAN(StationControl::operational_state);
-			break;
-		}
-		
-		itsSplitters = splitterState;
-		sleep (2);			// give splitters time to stabilize.
+		} else {
+	    	itsSplitters = splitterState;
+        }
 
-		// finally send a CLAIM event to the observation
-		LOG_TRACE_FLOW("Dispatch CLAIM event to observation FSM's");
-		CONTROLClaimEvent		claimEvent;
-		itsStartingObs->second->doEvent(claimEvent, port);
+		// give splitters time to stabilize.
+		itsTimerPort->setTimer(2.0);
+	}
+	break;
 
-		LOG_INFO("Going back to operational state");
-		itsStartingObs = itsObsMap.end();
-		TRAN(StationControl::operational_state);
+	case F_TIMER: {
+        switch (itsSetupSequence++) {
+            case 0: {
+                // Set the clock
+                if (itsClock != itsStartingObs->second->obsPar()->sampleClock) {
+                    // Check if all others obs are down otherwise we may not switch the clock
+                    if (itsObsMap.size() != 1) {
+                        CONTROLCommonEvent	ObsEvent(event);		// we just need the name
+                        OTDBtreeIDType	 treeID	= getObservationNr(ObsEvent.cntlrName);
+
+                        LOG_FATAL_STR("Need to switch the clock to " <<  itsStartingObs->second->obsPar()->sampleClock << 
+                                " for observation " << treeID << " but there are still " << itsObsMap.size()-1 << 
+                                " other observations running at clockspeed" << itsClock << ".");
+                        _abortObservation(itsStartingObs);
+                        itsStartingObs = itsObsMap.end();
+                        TRAN(StationControl::operational_state);
+                        break;
+                    }
+                    // its OK to switch te clock
+                    itsClock = itsStartingObs->second->obsPar()->sampleClock;
+                    LOG_DEBUG_STR ("Changing clock to " << itsClock);
+                    CLKCTRLSetClockEvent	setClock;
+                    setClock.clock = itsClock;
+                    itsClkCtrlPort->send(setClock);		// results in CLKCTRL_SET_CLOCK_ACK
+                    itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(itsClock));
+                }
+                else {
+                    LOG_INFO_STR("new observation also uses clock " << itsClock);
+		            itsTimerPort->setTimer(0.0);
+                }
+            }
+
+            case 1: {
+                // Set the splitters
+                StationConfig	sc;
+                if (!sc.hasSplitters) {
+                    LOG_INFO_STR("Ignoring splitter settings because we don't have splitters");
+
+		            itsTimerPort->setTimer(0.0);
+                    break;
+                }
+
+                // set the splitters in the right state.
+                bool	splitterState = itsStartingObs->second->obsPar()->splitterOn;
+                LOG_DEBUG_STR ("Setting the splitters to " << (splitterState ? "ON" : "OFF"));
+                CLKCTRLSetSplittersEvent	setEvent;
+                setEvent.splittersOn = splitterState;
+                itsClkCtrlPort->send(setEvent);		// will result in CLKCTRL_SET_SPLITTERS_ACK
+            } 
+
+            case 2: {
+                // Set the bit mode
+                if (itsBitmode != itsStartingObs->second->obsPar()->bitsPerSample) {
+                    // Check if all others obs are down otherwise we may not switch the bitmode
+                    if (itsObsMap.size() != 1) {
+                        CONTROLCommonEvent	ObsEvent(event);		// we just need the name
+                        OTDBtreeIDType	 treeID	= getObservationNr(ObsEvent.cntlrName);
+
+                        LOG_FATAL_STR("Need to switch the bitmode to " <<  itsStartingObs->second->obsPar()->bitsPerSample << 
+                                " for observation " << treeID << " but there are still " << itsObsMap.size()-1 << 
+                                " other observations running at bitmodespeed" << itsBitmode << ".");
+                        _abortObservation(itsStartingObs);
+                        itsStartingObs = itsObsMap.end();
+                        TRAN(StationControl::operational_state);
+                        break;
+                    }
+
+                    // its OK to switch the bitmode
+                    itsBitmode = itsStartingObs->second->obsPar()->bitsPerSample;
+                    LOG_DEBUG_STR ("Changing bitmode to " << itsBitmode);
+                    CLKCTRLSetBitmodeEvent	setBitmode;
+                    setBitmode.bits_per_sample = itsBitmode;
+                    itsClkCtrlPort->send(setBitmode);		// results in CLKCTRL_SET_BITMODE_ACK
+                    itsClockPropSet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(itsBitmode));
+                }
+                else {
+                    LOG_INFO_STR("new observation also uses bitmode " << itsBitmode);
+		            itsTimerPort->setTimer(0.0);
+                }
+            }
+
+            default: {
+                // finally send a CLAIM event to the observation
+                LOG_TRACE_FLOW("Dispatch CLAIM event to observation FSM's");
+                CONTROLClaimEvent		claimEvent;
+                itsStartingObs->second->doEvent(claimEvent, port);
+
+                LOG_INFO("Going back to operational state");
+                itsStartingObs = itsObsMap.end();
+                TRAN(StationControl::operational_state);
+            }
+        }  
 	}
 	break;
 
@@ -897,11 +991,25 @@ void StationControl::_databaseEventHandler(GCFEvent& event)
 			break;
 		}
 
-		// during startup we adopt the value set by the Clockcontroller.
+		// during startup we adopt the value set by the ClockController.
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_CLOCK) != 0) {
 			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received (actual)clock change from PVSS, clock is now " << itsClock);
+			LOG_DEBUG_STR("Received (actual)clock change from PVSS, bitmode is now " << itsClock);
 			_abortObsWithWrongClock();
+			break;
+		}
+
+		if (strstr(dpEvent.DPname.c_str(), PN_CLC_REQUESTED_BITMODE) != 0) {
+			itsBitmode = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
+			LOG_DEBUG_STR("Received (requested)bitmode change from PVSS, bitmode is now " << itsBitmode);
+			break;
+		}
+
+		// during startup we adopt the value set by the ClockController.
+		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_BITMODE) != 0) {
+			itsBitmode = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
+			LOG_DEBUG_STR("Received (actual)bitmode change from PVSS, bitmode is now " << itsBitmode);
+			_abortObsWithWrongBitmode();
 			break;
 		}
 
@@ -927,6 +1035,7 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 {
 	LOG_TRACE_FLOW_STR ("_handleQueryEvent:" << eventName(event));
 	
+	// Check for errors
 	DPQueryChangedEvent		DPevent(event);
 	if (DPevent.result != SA_NO_ERROR) {
 		LOG_ERROR_STR("PVSS reported error " << DPevent.result << " for a query " << 
@@ -934,6 +1043,7 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 		return;
 	}
 
+	// Remember Query ID if not done before.
 	if (!itsStateQryID) {
 		itsStateQryID = DPevent.QryID;
 	}
@@ -941,6 +1051,7 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 	// The selected datapoints are delivered with full PVSS names, like:
 	// CS001:LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU5.status.state
 	// CS001:LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0.splitterOn
+	// CS001:LOFAR_PIC_LBA000.status.state
 	// Each event may contain more than one DP.
 	int     nrDPs = ((GCFPVDynArr*)(DPevent.DPnames._pValue))->getValue().size();
 	GCFPVDynArr*    DPnames  = (GCFPVDynArr*)(DPevent.DPnames._pValue);
@@ -957,14 +1068,65 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 
 		LOG_DEBUG_STR("QryUpdate: DP=" << nameStr << ", value=" << newState);
 
-		// test for RCU
-		if ((pos = nameStr.find("_RCU")) != string::npos) {
-			int		rcu;
-			if (sscanf(nameStr.substr(pos).c_str(), "_RCU%d.status.state", &rcu) != 1) {
+		// test for LBA
+		if ((pos = nameStr.find("PIC_LBA")) != string::npos) {
+			uint		antNr;
+			if (sscanf(nameStr.substr(pos).c_str(), "PIC_LBA%u.status.state", &antNr) != 1) {
 				LOG_ERROR_STR("Cannot determine address of " << nameStr << 
 								". AVAILABILITY OF ANTENNA'S MIGHT NOT BE UP TO DATE ANYMORE");
 				continue;
 			}
+			if (antNr >= itsNrLBAs) {
+				LOG_ERROR_STR("LBA antenna number " << antNr << " is out of range!!!");
+				continue;
+			}
+
+			LOG_INFO_STR("New state of LBA " << antNr << " is " << newState);
+			// LBA's in de mode OFF and OPERATIONAL may be used in observations.
+			if (newState == modeOff || newState == modeOperational) {
+				itsLBAmask.set(antNr);
+			}
+			else {	// all other modes
+				itsLBAmask.reset(antNr);
+			}
+		} // PIC_LBA
+
+		// test for HBA
+		if ((pos = nameStr.find("PIC_HBA")) != string::npos) {
+			uint		antNr;
+			if (sscanf(nameStr.substr(pos).c_str(), "PIC_HBA%u.status.state", &antNr) != 1) {
+				LOG_ERROR_STR("Cannot determine address of " << nameStr << 
+								". AVAILABILITY OF ANTENNA'S MIGHT NOT BE UP TO DATE ANYMORE");
+				continue;
+			}
+			if (antNr >= itsNrHBAs) {
+				LOG_ERROR_STR("HBA antenna number " << antNr << " is out of range!!!");
+				continue;
+			}
+
+			LOG_INFO_STR("New state of HBA " << antNr << " is " << newState);
+			// HBA's in de mode OFF and OPERATIONAL may be used in observations.
+			if (newState == modeOff || newState == modeOperational) {
+				itsHBAmask.set(antNr);
+			}
+			else {	// all other modes
+				itsHBAmask.reset(antNr);
+			}
+		} // PIC_HBA
+
+		// test for RCU
+		if ((pos = nameStr.find("_RCU")) != string::npos) {
+			uint		rcu;
+			if (sscanf(nameStr.substr(pos).c_str(), "_RCU%u.status.state", &rcu) != 1) {
+				LOG_ERROR_STR("Cannot determine address of " << nameStr << 
+								". AVAILABILITY OF ANTENNA'S MIGHT NOT BE UP TO DATE ANYMORE");
+				continue;
+			}
+			if (rcu >= itsNrRCUs) {
+				LOG_ERROR_STR("RCU number " << rcu << " is out of range!!!");
+				continue;
+			}
+
 			LOG_INFO_STR("New state of RCU " << rcu << " is " << newState);
 			// RCU's in de mode OFF and OPERATIONAL may be used in observations.
 			if (newState == modeOff || newState == modeOperational) {
@@ -973,13 +1135,17 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 			else {	// all other modes
 				itsRCUmask.reset(rcu);
 			}
-		}
+		} // _RCU
 
 		// test for RSPBoard
 		else if ((pos = nameStr.find("_RSPBoard")) != string::npos) {
-			int		rsp;
+			uint		rsp;
 			if (nameStr.find(".status.state") != string::npos) {
-				if (sscanf(nameStr.substr(pos).c_str(), "_RSPBoard%d.status.state", &rsp) == 1) {
+				if (sscanf(nameStr.substr(pos).c_str(), "_RSPBoard%u.status.state", &rsp) == 1) {
+					if (rsp >= itsNrRSPs) {
+						LOG_ERROR_STR("RSP board number " << rsp << " is out of range!!!");
+						continue;
+					}
 					LOG_INFO_STR("New state of RSPBoard " << rsp << " is " << newState);
 					int rcubase = rsp * NR_RCUS_PER_RSPBOARD;
 					for (int i = 0; i < NR_RCUS_PER_RSPBOARD; i++) {
@@ -998,7 +1164,11 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 					itsSplitterQryID = DPevent.QryID;
 				}
 
-				if (sscanf(nameStr.substr(pos).c_str(), "_RSPBoard%d.splitterOn", &rsp) == 1) {
+				if (sscanf(nameStr.substr(pos).c_str(), "_RSPBoard%u.splitterOn", &rsp) == 1) {
+					if (rsp >= itsNrRSPs) {
+						LOG_ERROR_STR("RSP boardnumber " << rsp << " is out of range!!!");
+						continue;
+					}
 					if (itsSplitters[rsp] != (newState ? true : false)) {
 						LOG_INFO_STR("New setting of splitter " << rsp << " is " << (newState ? "on" : "off"));
 						if (newState) {
@@ -1015,14 +1185,18 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 								". STATE OF ANTENNA'S OR SPLITTERS MIGHT NOT BE UP TO DATE ANYMORE");
 				continue;
 			}
-		}
+		} // _RSPBoard
 
 		// test for TBBoard
 		else if ((pos = nameStr.find("_TBBoard")) != string::npos) {
-			int		tbb;
-			if (sscanf(nameStr.substr(pos).c_str(), "_TBBoard%d.status.state", &tbb) != 1) {
+			uint		tbb;
+			if (sscanf(nameStr.substr(pos).c_str(), "_TBBoard%u.status.state", &tbb) != 1) {
 				LOG_ERROR_STR("Cannot determine address of " << nameStr << 
 								". AVAILABILITY OF TBBOARD'S MIGHT NOT BE UP TO DATE ANYMORE");
+				continue;
+			}
+			if (tbb >= itsNrTBBs) {
+				LOG_ERROR_STR("TB boardnumber " << tbb << " is out of range!!!");
 				continue;
 			}
 			LOG_INFO_STR("New state of TBBoard " << tbb << " is " << newState);
@@ -1032,14 +1206,17 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 			else {
 				itsTBmask.set(tbb);
 			}
-		}
+		} // _TBBoard
 
 		else {
 			LOG_DEBUG_STR("State of unknown component received: " << nameStr);
 		}
 	} // for
 
-	_updateAntennaMasks();	// translate new RCU mask to the LBA and HBA masks.
+	if (itsHasSplitters && itsSplitters.count() != 0 && itsSplitters.count() != itsNrRSPs) {
+		LOG_WARN_STR("Not all splitters have the same state! " << itsSplitters);
+		// TODO: ring some bells in the Navigator?
+	}
 }
 
 
@@ -1085,16 +1262,49 @@ uint16 StationControl::_addObservation(const string&	name)
 	// As base we use the definition of the AntennaSetsfile which we limit to the
 	// receivers specified by the user (if any). Finally we can optionally correct
 	// this set with the 'realtime' availability of the receivers.
-	StationConfig			config;
-	Observation::RCUset_t	definedReceivers = itsAntSet->RCUallocation(theObs.antennaSet);
-	Observation::RCUset_t	userReceivers    = theObs.getRCUbitset(config.nrLBAs, config.nrHBAs, theObs.antennaSet);
-	Observation::RCUset_t	realReceivers    = definedReceivers & userReceivers;
+	StationConfig	config;
+	bool			onLBAField(itsAntSet->usesLBAfield(theObs.antennaSet));
+	RCUmask_t		definedReceivers = (onLBAField ? itsAntSet->LBAallocation(theObs.antennaSet) 
+									 			   : itsAntSet->HBAallocation(theObs.antennaSet));
+	RCUmask_t		userReceivers    = theObs.getRCUbitset(config.nrLBAs, config.nrHBAs, theObs.antennaSet);
+	RCUmask_t		realReceivers    = definedReceivers & userReceivers;
 LOG_DEBUG_STR("definedReceivers =" << definedReceivers);
 LOG_DEBUG_STR("userReceivers    =" << userReceivers);
 LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
+	// Before optionally applying the current hardware status make bitmap strings for PVSS.
+	string		LBAbitmap;
+	string		HBAbitmap;
+	LBAbitmap.resize(config.nrLBAs,'0');
+	HBAbitmap.resize(config.nrHBAs,'0');
+	if (onLBAField) {
+		for (int i(0); i < config.nrLBAs; i++) {
+			if (realReceivers[2*i] || realReceivers[2*i+1]) {
+				LBAbitmap[i] ='1';
+			}
+		}
+	} 
+	else  {
+		for (int i(0); i < config.nrHBAs; i++) {
+			if (realReceivers[2*i] || realReceivers[2*i+1]) {
+				HBAbitmap[i] ='1';
+			}
+		}
+	}
+
 	// apply the current state of the hardware to the desired selection when user likes that.
 	if (itsUseHWinfo) {
-		realReceivers &= itsRCUmask;
+		vector<int>		*mappingPtr = onLBAField ? &itsLBAmapping : &itsHBAmapping;
+		AntennaMask_t	antBitSet   = onLBAField ? itsLBAmask     : itsHBAmask;
+		for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
+			int		idx((*mappingPtr)[rcu]);
+			if (!realReceivers[rcu] || idx<0 || !antBitSet[idx]) {
+				realReceivers.reset(rcu);
+				if (idx >= 0 && !antBitSet[idx]) {
+					LOG_INFO_STR("Rejecting RCU " << rcu << " because Antenna is out of order");
+				}
+			}
+		}
+LOG_DEBUG_STR("final receivers   =" << realReceivers);
 		// Write the corrected set back into the ParameterSetfile.
 		string prefix = theObsPS.locateModule("Observation") + "Observation.";
 		// save original under different name (using 'replace' is 'add' w. simplified testing)
@@ -1110,7 +1320,7 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 
 
 	// create an activeObservation object that will manage the child controllers.
-	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, itsHasSplitters, *this);
+	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, LBAbitmap, HBAbitmap, itsHasSplitters, *this);
 	if (!theNewObs) {
 		LOG_FATAL_STR("Unable to create the Observation '" << name << "'");
 		return (CT_RESULT_UNSPECIFIED);
@@ -1167,6 +1377,25 @@ void StationControl::_abortObsWithWrongClock()
 	}
 }
 
+//
+// _abortObsWithWrongBitmode()
+//
+void StationControl::_abortObsWithWrongBitmode()
+{
+	LOG_DEBUG_STR("Checking if all observations use bitmode " << itsBitmode);
+
+	ObsIter		iter = itsObsMap.begin();
+	ObsIter		end  = itsObsMap.end();
+	while (iter != end) {
+		if (iter->second->obsPar()->bitsPerSample != itsBitmode) {
+			LOG_FATAL_STR("Aborting observation " << getObservationNr(iter->second->getName()) <<
+							" because the bitmode was (manually?) changed!");
+			_abortObservation(iter);
+		}
+		++iter;
+	}
+}
+
 //      
 // _initAntennaMasks
 //      
@@ -1175,27 +1404,48 @@ void StationControl::_abortObsWithWrongClock()
 void StationControl::_initAntennaMasks()
 {
 	// reset all variables
-	itsLBArcumask.reset();
-	itsHBArcumask.reset();
+	itsLBAmask.reset();
+	itsHBAmask.reset();
 
 	// Adopt values from RemoteStation.conf
 	StationConfig	SC;
-	itsNrRSPboards = SC.nrRSPs;
-	itsNrLBAs 	   = SC.nrLBAs;
-	itsNrHBAs 	   = SC.nrHBAs;
+	itsNrRSPs = SC.nrRSPs;
+	itsNrTBBs = SC.nrRSPs;
+	itsNrLBAs = SC.nrLBAs;
+	itsNrHBAs = SC.nrHBAs;
+	itsNrRCUs = SC.nrRSPs * NR_RCUS_PER_RSPBOARD;
 	itsHasSplitters= SC.hasSplitters;
 
-	ASSERTSTR (2*itsNrLBAs <= itsLBArcumask.size() && 
-			   2*itsNrHBAs <= itsHBArcumask.size(), "Number of antennas exceed expected count");
+	ASSERTSTR (itsNrLBAs <= itsLBAmask.size() && 
+			   itsNrHBAs <= itsHBAmask.size(), "Number of antennas exceed expected count");
 
-	// set the right bits.
-	for (uint i = 0; i < itsNrLBAs; i++) {
-		itsLBArcumask.set(2*i);
-		itsLBArcumask.set(2*i+1);
-	}   
-	for (uint i = 0; i < itsNrHBAs; i++) {
-		itsHBArcumask.set(2*i);
-		itsHBArcumask.set(2*i+1);
+	// Setup mapping from LBA antennas and HBA antennas to RCU numbers.
+	// itsxBAmapping(antNr,*) contains the
+	itsLBAmapping.resize(MAX_RCUS, -1);		// 192
+	itsHBAmapping.resize(MAX_RCUS, -1);
+	for (int ant  = 0; ant < (int)MAX_ANTENNAS; ant++) {
+		if (ant < (int)itsNrHBAs) {
+			itsHBAmapping[N_POL*ant]   = ant;
+			itsHBAmapping[N_POL*ant+1] = ant;
+		}
+		if (ant < (int)itsNrLBAs) {
+			if (ant > (int)itsNrRSPs * (int)NR_ANTENNAS_PER_RSPBOARD) {
+				itsLBAmapping[N_POL*ant+1 - (NR_RCUS_PER_RSPBOARD*itsNrRSPs)] = ant;
+				itsLBAmapping[N_POL*ant   - (NR_RCUS_PER_RSPBOARD*itsNrRSPs)] = ant;
+			}
+			else {
+				itsLBAmapping[N_POL*ant]   = ant;
+				itsLBAmapping[N_POL*ant+1] = ant;
+			}
+		}
+	}
+	 {	stringstream	oss;
+		writeVector(oss, itsLBAmapping);
+		LOG_DEBUG_STR("LBAmap: " << oss.str());
+	}
+	{	stringstream	oss;
+		writeVector(oss, itsHBAmapping);
+		LOG_DEBUG_STR("HBAmap: " << oss.str());
 	}
 
 	// The masks are now initialized with the static information. The _handleQueryEvent routine
@@ -1203,51 +1453,6 @@ void StationControl::_initAntennaMasks()
 	// correct and latest state.
 }       
 
-//
-// _updateAntennaMasks()
-//
-// Translates the RCU mask to the LBA and HBA masks.
-// This routine is familiar with mapping of the antennas on the RCU's.
-//
-void StationControl::_updateAntennaMasks()
-{
-	// setup constants
-	bool	doubleMappedLBA    (itsNrLBAs > (itsNrRSPboards * NR_ANTENNAS_PER_RSPBOARD));
-	int		doubleMapRCUoffset (itsNrRSPboards * NR_RCUS_PER_RSPBOARD);
-
-	// Note: the definition in StationControl.h and the ASSERT in _initAntennaMasks assure
-	//		 that we never exceed the boundaries of the bitmaps here.
-	for (int rcu = 0; rcu < MAX_RCUS/2 ; rcu+=2) {
-		if (itsRCUmask[rcu] && itsRCUmask[rcu+1]) {		// X and Y
-			itsLBArcumask.set(rcu);
-			itsLBArcumask.set(rcu+1);
-			if (doubleMappedLBA) {
-				itsLBArcumask.set(doubleMapRCUoffset+rcu);
-				itsLBArcumask.set(doubleMapRCUoffset+rcu+1);
-			}
-			itsHBArcumask.set(rcu);
-			itsHBArcumask.set(rcu+1);
-		}
-		else {
-			itsLBArcumask.reset(rcu);
-			itsLBArcumask.reset(rcu+1);
-			if (doubleMappedLBA) {
-				itsLBArcumask.reset(doubleMapRCUoffset+rcu);
-				itsLBArcumask.reset(doubleMapRCUoffset+rcu+1);
-			}
-			itsHBArcumask.reset(rcu);
-			itsHBArcumask.reset(rcu+1);
-		}
-	}
-	LOG_DEBUG_STR("itsRCU:" << string(itsRCUmask.to_string<char,char_traits<char>,allocator<char> >()));
-	LOG_DEBUG_STR("itsLBA:" << string(itsLBArcumask.to_string<char,char_traits<char>,allocator<char> >()));
-	LOG_DEBUG_STR("itsHBA:" << string(itsHBArcumask.to_string<char,char_traits<char>,allocator<char> >()));
-
-	if (itsHasSplitters && itsSplitters.count() != 0 && itsSplitters.count() != itsNrRSPboards) {
-		LOG_WARN_STR("Not all splitters have the same state! " << itsSplitters);
-		// TODO: ring some bells in the Navigator?
-	}
-}
 
 //
 // _searchObsByTimerID(timerID)

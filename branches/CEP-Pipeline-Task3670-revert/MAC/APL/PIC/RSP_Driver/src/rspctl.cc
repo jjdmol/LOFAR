@@ -104,9 +104,11 @@ do { \
 #define DEFAULT_SAMPLE_FREQUENCY 160.0e6
 double  gSampleFrequency = DEFAULT_SAMPLE_FREQUENCY;
 bool    g_getclock       = false;
-bool    gSplitterOn        = false;
+bool    gSplitterOn      = false;
 bool    gHasSplitter     = false;
 bool    gClockChanged    = false;
+bool    gBitmodeChanged  = false;
+bool    gSplitterChanged = false;
 
 #define PAIR 2
 
@@ -167,8 +169,11 @@ inline double blitz_angle(complex<double> val)
 	return atan(val.imag() / val.real()) * 180.0 / M_PI;
 }
 
-WeightsCommand::WeightsCommand(GCFPortInterface& port) : Command(port), m_type(WeightsCommand::COMPLEX),
-	itsStage(0)
+WeightsCommand::WeightsCommand(GCFPortInterface& port, const int bitsPerSample) : 
+	Command			(port), 
+	m_type		    (WeightsCommand::COMPLEX),
+	itsStage		(0),
+	itsBitsPerSample(bitsPerSample)
 {
 }
 
@@ -194,28 +199,33 @@ void WeightsCommand::send()
 		RSPSetweightsEvent   setweights;
 		setweights.timestamp = Timestamp(0,0);
 		setweights.rcumask   = getRCUMask();
-
 		logMessage(cerr,formatString("rcumask.count()=%d",setweights.rcumask.count()));
-		setweights.weights().resize(1, setweights.rcumask.count(), MAX_BEAMLETS);
+        
+        int nBanks = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
+		setweights.weights().resize(1, setweights.rcumask.count(), nBanks, maxBeamletsPerBank(itsBitsPerSample));
 
-		bitset<MAX_BEAMLETS> beamlet_mask = getBEAMLETSMask();
+		//bitset<maxBeamlets(bitsPerSample)> beamlet_mask = getBEAMLETSMask();
+		boost::dynamic_bitset<> beamlet_mask = getBEAMLETSMask(itsBitsPerSample);
 
 		// -1 < m_value <= 1
 		complex<double> value = m_value;
 		value *= (1<<14); // -.99999 should become -16383 and 1 should become 16384
 		setweights.weights() = itsWeights;
 		int rcunr = 0;
+		int max_beamlets = maxBeamlets(itsBitsPerSample);
 		for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 			if (setweights.rcumask.test(rcu)) {
-				for (int beamlet = 0; beamlet < MAX_BEAMLETS; beamlet++) {
+				for (int beamlet = 0; beamlet < max_beamlets; beamlet++) {
 					if (beamlet_mask.test(beamlet)) {
-						setweights.weights()(0,rcunr,beamlet) = complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
+					    int plane = beamlet / maxBeamletsPerBank(itsBitsPerSample);
+						int beamletnr = beamlet % maxBeamletsPerBank(itsBitsPerSample);
+						setweights.weights()(0,rcunr,plane,beamletnr) = complex<int16>((int16)value.real(), (int16)value.imag()); 
+						//setweights.weights()(0,rcunr,plane,beamletnr) = complex<int16>(10+plane, beamletnr); // for testing
 					}
-				}
+				} // beamlet
 				rcunr++;
 			}
-
-		}
+		} // rcu
 		m_rspport.send(setweights);
 	} break;
 
@@ -232,7 +242,8 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 		case RSP_GETWEIGHTSACK: {
 			RSPGetweightsackEvent ack(e);
 			bitset<MAX_RCUS> mask = getRCUMask();
-			itsWeights.resize(1, mask.count(), MAX_BEAMLETS);
+			int nPlanes = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
+			itsWeights.resize(1, mask.count(), nPlanes, maxBeamletsPerBank(itsBitsPerSample));
 			itsWeights = complex<int16>(0,0);
 			itsWeights = ack.weights();
 
@@ -249,12 +260,12 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 					for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
 						if (mask[rcuout]) {
 							std::ostringstream logStream;
-							logStream << ack.weights()(0, rcuin++, Range::all());
+							logStream << ack.weights()(0, rcuin++, Range::all(), Range::all());
 							logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
 						}
 					}
 				} else {
-					blitz::Array<complex<double>, 3> ackweights;
+					blitz::Array<complex<double>, 4> ackweights;
 					ackweights.resize(ack.weights().shape());
 
 					// convert to amplitude and angle
@@ -264,7 +275,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 					for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
 						if (mask[rcuout]) {
 							std::ostringstream logStream;
-							logStream << ackweights(0, rcuin++, Range::all());
+							logStream << ackweights(0, rcuin++, Range::all(), Range::all());
 							logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
 						}
 					}
@@ -299,7 +310,10 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 
 }
 
-SubbandsCommand::SubbandsCommand(GCFPortInterface& port) : Command(port), m_type(0)
+SubbandsCommand::SubbandsCommand(GCFPortInterface& port, const int bitsPerSample) : 
+	Command		    (port), 
+	m_type		    (0),
+	itsBitsPerSample(bitsPerSample)
 {
 }
 
@@ -323,40 +337,49 @@ void SubbandsCommand::send()
 		setsubbands.rcumask   = getRCUMask();
 		setsubbands.subbands.setType(m_type);
 
-		logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
-
+	    logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
+        
+        if (m_subbandlist.size() > maxBeamlets(itsBitsPerSample)) {
+            logMessage(cerr,"Error: too many subbands selected");
+			exit(EXIT_FAILURE);
+		}
+		
+        int nPlanes = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
+		
 		// if only 1 subband selected, apply selection to all
 		switch (m_type) {
-
-		case SubbandSelection::BEAMLET:
-			{
-	if (1 == m_subbandlist.size()) {
-		setsubbands.subbands().resize(1, MAX_BEAMLETS);
-		std::list<int>::iterator it = m_subbandlist.begin();
-		setsubbands.subbands() = (*it);
-	} else {
-		setsubbands.subbands().resize(1, m_subbandlist.size());
-
-		int i = 0;
-		std::list<int>::iterator it;
-		for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++)
-			{
-				if (i >= MAX_BEAMLETS) break;
-				setsubbands.subbands()(0, i) = (*it);
-			}
+			case SubbandSelection::BEAMLET: {
+				if (1 == m_subbandlist.size()) {
+					setsubbands.subbands.beamlets().resize(1, nPlanes, maxBeamletsPerBank(itsBitsPerSample));
+					std::list<int>::iterator it = m_subbandlist.begin();
+					setsubbands.subbands.beamlets() = (*it);
+				} else {
+					setsubbands.subbands.beamlets().resize(1, nPlanes, maxBeamletsPerBank(itsBitsPerSample));
+                    setsubbands.subbands.beamlets() = 0;
+					int i = 0;
+					int max_beamlets = maxBeamlets(itsBitsPerSample);
+					std::list<int>::iterator it;
+					for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++) {
+						if (i >= max_beamlets) {
+							break;
+						}
+						int plane = i / maxBeamletsPerBank(itsBitsPerSample);
+						int subbandnr = i % maxBeamletsPerBank(itsBitsPerSample);
+						setsubbands.subbands.beamlets()(0, plane, subbandnr) = (*it);
+					}
 #if 0
-		for (; i < MAX_BEAMLETS; i++) {
-			setsubbands.subbands()(0, i) = 0;
+		for (; i < maxBeamlets(bitsPerSample); i++) {
+			setsubbands.subbands.beamlets()(0, Range::all(), i) = 0;
 		}
 #endif
-	}
+				}
 			}
 			break;
 
-		case SubbandSelection::XLET: {
-	setsubbands.subbands().resize(1,1);
-	std::list<int>::iterator it = m_subbandlist.begin();
-	setsubbands.subbands() = (*it);
+    		case SubbandSelection::XLET: {
+    			setsubbands.subbands.crosslets().resize(1, 1, 1);
+    			std::list<int>::iterator it = m_subbandlist.begin();
+    			setsubbands.subbands.crosslets() = (*it);
 			}
 			break;
 
@@ -386,15 +409,15 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 			if (RSP_SUCCESS == ack.status) {
 				int rcuin = 0;
 				for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-
 					if (mask[rcuout]) {
 						std::ostringstream logStream;
-						logStream << ack.subbands()(rcuin++, Range::all());
-			if (SubbandSelection::BEAMLET == m_type) {
-				logMessage(cout,formatString("RCU[%2d].subbands=%s", rcuout,logStream.str().c_str()));
-			} else {
-				logMessage(cout,formatString("RCU[%2d].xcsubbands=%s", rcuout,logStream.str().c_str()));
-			}
+						if (SubbandSelection::BEAMLET == m_type) {
+							logStream << ack.subbands.beamlets()(rcuin++, Range::all(), Range::all());
+							logMessage(cout,formatString("RCU[%2d].subbands=%s", rcuout,logStream.str().c_str()));
+						} else {
+						    logStream << ack.subbands.crosslets()(rcuin++, Range::all(), Range::all());
+							logMessage(cout,formatString("RCU[%2d].xcsubbands=%s", rcuout,logStream.str().c_str()));
+						}
 					}
 				}
 			}
@@ -504,7 +527,6 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 
 
 // Swap X Y on RCU
-
 SWAPXYCommand::SWAPXYCommand(GCFPortInterface& port) : Command(port)
 {
 }
@@ -575,6 +597,93 @@ GCFEvent::TResult SWAPXYCommand::ack(GCFEvent& e)
 
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr, "Error: RSP_SETSWAPXY command failed.");
+			}
+		}
+		break;
+
+		default:
+			status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	GCFScheduler::instance()->stop();
+
+	return status;
+}
+
+// Swap X Y on RCU
+BitmodeCommand::BitmodeCommand(GCFPortInterface& port) : Command(port)
+{
+}
+
+void BitmodeCommand::send()
+{
+	if (getMode()) {
+		// GET
+		RSPGetbitmodeEvent   getbitmode;
+		getbitmode.timestamp = Timestamp(0,0);
+		getbitmode.cache     = true;
+
+		m_rspport.send(getbitmode);
+	}
+	else {
+		// SET
+		RSPSetbitmodeEvent   setbitmode;
+		setbitmode.timestamp       = Timestamp(0,0);
+		setbitmode.rspmask         = getRSPMask();
+		setbitmode.bits_per_sample = bitmode();
+		m_rspport.send(setbitmode);
+	}
+}
+
+GCFEvent::TResult BitmodeCommand::ack(GCFEvent& e)
+{
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+		case RSP_GETBITMODEACK: {
+			RSPGetbitmodeackEvent ack(e);
+
+			std::ostringstream msg;
+			msg << "setbitmodeack.timestamp=" << ack.timestamp;
+			logMessage(cout, msg.str());
+			msg.seekp(0);
+
+			if (ack.status != RSP_SUCCESS) {
+				logMessage(cerr, "Error: RSP_GETBitMode command failed.");
+				break;
+			}
+
+			// print bitmode settings
+			cout << "board  :version :mode\n";
+			for (int rsp = 0; rsp < get_ndevices(); rsp++) {
+				if (getRSPMask().test(rsp)) {
+					switch (ack.bitmode_version[rsp]) {
+				    case 0:
+				        cout << formatString("RSP[%02u]: 16     : %2d\n", rsp, ack.bits_per_sample[rsp]);
+				        break;
+				    case 1:
+				        cout << formatString("RSP[%02u]: 16/8   : %2d\n", rsp, ack.bits_per_sample[rsp]);
+				        break;
+				    case 2:
+				        cout << formatString("RSP[%02u]: 16/8/4 : %2d\n", rsp, ack.bits_per_sample[rsp]);
+				        break;
+				    default: break;    
+					}
+				}
+			}
+		}
+		break;
+
+		case RSP_SETBITMODEACK: {
+			RSPSetbitmodeackEvent ack(e);
+
+			std::ostringstream msg;
+			msg << "setbitmodeack.timestamp=" << ack.timestamp;
+			logMessage(cout, msg.str());
+
+			if (RSP_SUCCESS != ack.status) {
+				logMessage(cerr, "Error: RSP_SETBitMode command failed.");
 			}
 		}
 		break;
@@ -1917,9 +2026,10 @@ StatisticsBaseCommand::StatisticsBaseCommand(GCFPortInterface& port) : Command(p
 {
 }
 
-StatisticsCommand::StatisticsCommand(GCFPortInterface& port) : StatisticsBaseCommand(port),
-	m_type(Statistics::SUBBAND_POWER),
-	m_stats()
+StatisticsCommand::StatisticsCommand(GCFPortInterface& port, const int bitsPerSample) : StatisticsBaseCommand(port),
+	m_type			(Statistics::SUBBAND_POWER),
+	m_stats			(),
+	itsBitsPerSample(bitsPerSample)
 {
 }
 
@@ -1963,7 +2073,15 @@ void StatisticsCommand::stop()
 
 void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timestamp& timestamp)
 {
-	if (0 == m_nseconds) {
+	if (sum(m_stats.shape()) != sum(stats.shape())) {
+		gBitmodeChanged = true;
+	}
+
+	if (gBitmodeChanged) {		// force start at new cycle
+		m_nseconds = 0;
+	}
+
+	if (m_nseconds == 0) {
 		// initialize values array
 		m_stats.resize(stats.shape());
 		m_stats = 0.0;
@@ -1988,8 +2106,9 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 		}
 
 		LOG_DEBUG_STR("statistics update at " << timestamp);
-
-		if(m_duration == 0) {
+        
+		if (m_duration == 0) {
+			//cout << m_stats << endl; 
 			plot_statistics(m_stats, timestamp);
 		}
 		else {
@@ -2013,10 +2132,9 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	static gnuplot_ctrl* handle = 0;
 	static gnuplot_ctrl* handle2 = 0;
 
-	int n_freqbands = stats.extent(secondDim);
+	int x_range      = stats.extent(secondDim);
 	int n_firstIndex = stats.extent(firstDim);
 	bitset<MAX_RCUS> mask = getRCUMask();
-
 	char plotcmd[256];
 	int startrcu;
 	int stoprcu;
@@ -2035,7 +2153,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 		gClockChanged = false;
 	}
 #endif
-
+    
 	if (!handle) {
 		handle = gnuplot_init();
 		if (!handle) return;
@@ -2051,7 +2169,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 				break;
 			case Statistics::BEAMLET_POWER:
 				gnuplot_cmd(handle, "set xlabel \"Beamlet index\"\n");
-				gnuplot_cmd(handle, "set xrange [0:%d]\n", MAX_BEAMLETS);
+				gnuplot_cmd(handle, "set xrange [0:%d]\n", x_range);
 				break;
 		}
 	}
@@ -2070,6 +2188,11 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 		gnuplot_cmd(handle, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
 	}
 
+	// Redefine xrange when bitmode changed.
+	if (gBitmodeChanged && (m_type == Statistics::BEAMLET_POWER)) {
+		gnuplot_cmd(handle, "set xrange [0:%d]\n", x_range);
+	}
+
 	gnuplot_cmd(handle, plotcmd);
 
 	gnuplot_cmd(handle, "plot ");
@@ -2077,12 +2200,17 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	int count = 0;
 
 	startrcu = 0;
-	if (gSplitterOn) {
-		stoprcu = get_ndevices() / 2;
-	}
-	else {
-		stoprcu = get_ndevices();
-	}
+	if (m_type == Statistics::SUBBAND_POWER) {
+    	if (gSplitterOn) {
+    		stoprcu = get_ndevices() / 2;
+    	}
+    	else {
+    		stoprcu = get_ndevices();
+    	}
+    }
+    else {
+        stoprcu = get_ndevices() / 2;
+    }
 
 	for (int rcuout = startrcu; rcuout < stoprcu; rcuout++) {
 		if (mask[rcuout]) {
@@ -2093,11 +2221,11 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 			switch (m_type) {
 				case Statistics::SUBBAND_POWER:
 					gnuplot_cmd(handle, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
-					gSampleFrequency, n_freqbands*2.0, rcuout);
+					gSampleFrequency, x_range*2.0, rcuout);
 					break;
 				case Statistics::BEAMLET_POWER:
-					gnuplot_cmd(handle, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board %d, %c)\" with steps ",
-					(rcuout/2), (rcuout%2?'Y':'X'));
+					gnuplot_cmd(handle, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (%c)\" with steps ",
+					(rcuout%2?'Y':'X'));
 					break;
 				default:
 					logMessage(cerr,"Error: invalid m_type");
@@ -2106,14 +2234,9 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 			}
 		}
 	}
+	//stats = stats + 1; // too show zeros in log10()
 	gnuplot_cmd(handle, "\n");
-
-	if (gSplitterOn) {
-		gnuplot_write_matrix(handle, stats(Range(0,(n_firstIndex/2)-1), Range::all()));
-	}
-	else {
-		gnuplot_write_matrix(handle, stats);
-	}
+	gnuplot_write_matrix(handle, stats(Range(0, count-1), Range::all()));
 
 	// if splitter is now OFF but the second screen is still shown, remove this window
 	if (handle2 && !gSplitterOn) {
@@ -2123,68 +2246,82 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 
 	// if Splitter is active plot another graphics
 	if (gSplitterOn) {
-		if (!handle2) {
-			handle2 = gnuplot_init();
-			if (!handle2) return;
-
-			gnuplot_cmd(handle2, "set grid x y\n");
-			gnuplot_cmd(handle2, "set ylabel \"dB\"\n");
-			gnuplot_cmd(handle2, "set yrange [0:160]\n");
-
-			switch (m_type) {
-				case Statistics::SUBBAND_POWER:
-					gnuplot_cmd(handle2, "set xlabel \"Frequency (Hz)\"\n");
-					gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
-					break;
-				case Statistics::BEAMLET_POWER:
-					gnuplot_cmd(handle2, "set xlabel \"Beamlet index\"\n");
-					gnuplot_cmd(handle2, "set xrange [0:%d]\n", MAX_BEAMLETS);
-					break;
-			}
-		}
-
-		time_t seconds = timestamp.sec();
-		strftime(plotcmd, 255, "set title \"Ring 1 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
-
-		// Redefine xrange when clock changed.
-		if (gClockChanged && (m_type == Statistics::SUBBAND_POWER)) {
-			gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
-		}
-
-		gnuplot_cmd(handle2, plotcmd);
-
-		gnuplot_cmd(handle2, "plot ");
-		// splot devices
-		int count = 0;
-
 		startrcu = get_ndevices() / 2;
 		stoprcu = get_ndevices();
-
+        int rcuCount = 0;
 		for (int rcuout = startrcu; rcuout < stoprcu; rcuout++) {
 			if (mask[rcuout]) {
-				if (count > 0)
-					gnuplot_cmd(handle2, ",");
-				count++;
-
-				switch (m_type) {
-					case Statistics::SUBBAND_POWER:
-						gnuplot_cmd(handle2, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
-						gSampleFrequency, n_freqbands*2.0, rcuout);
-						break;
-					case Statistics::BEAMLET_POWER:
-						gnuplot_cmd(handle2, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board %d, %c)\" with steps ",
-						(rcuout/2), (rcuout%2?'Y':'X'));
-						break;
-					default:
-						logMessage(cerr,"Error: invalid m_type");
-						exit(EXIT_FAILURE);
-						break;
-				}
+			    rcuCount++;
 			}
 		}
-		gnuplot_cmd(handle2, "\n");
-
-		gnuplot_write_matrix(handle2, stats(Range((n_firstIndex/2),n_firstIndex-1), Range::all()));
+		if (rcuCount > 0) {
+    		if (!handle2) {
+    			handle2 = gnuplot_init();
+    			if (!handle2) return;
+    
+    			gnuplot_cmd(handle2, "set grid x y\n");
+    			gnuplot_cmd(handle2, "set ylabel \"dB\"\n");
+    			gnuplot_cmd(handle2, "set yrange [0:160]\n");
+    
+    			switch (m_type) {
+    				case Statistics::SUBBAND_POWER:
+    					gnuplot_cmd(handle2, "set xlabel \"Frequency (Hz)\"\n");
+    					gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
+    					break;
+    				case Statistics::BEAMLET_POWER:
+    					gnuplot_cmd(handle2, "set xlabel \"Beamlet index\"\n");
+    					gnuplot_cmd(handle2, "set xrange [0:%d]\n", x_range);
+    					break;
+    			}
+    		}
+    
+    		time_t seconds = timestamp.sec();
+    		strftime(plotcmd, 255, "set title \"Ring 1 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
+    
+    		// Redefine xrange when clock changed.
+    		if (gClockChanged && (m_type == Statistics::SUBBAND_POWER)) {
+    			gnuplot_cmd(handle2, "set xrange [0:%f]\n", gSampleFrequency / 2.0);
+    		}
+    
+    		// Redefine xrange when bitmode changed.
+    		if (gBitmodeChanged && (m_type == Statistics::BEAMLET_POWER)) {
+    			gnuplot_cmd(handle2, "set xrange [0:%d]\n", x_range);
+    		}
+    
+    		gnuplot_cmd(handle2, plotcmd);
+    
+    		gnuplot_cmd(handle2, "plot ");
+    		// splot devices
+    		int count = 0;
+            
+    		startrcu = get_ndevices() / 2;
+    		stoprcu = get_ndevices();
+    
+    		for (int rcuout = startrcu; rcuout < stoprcu; rcuout++) {
+    			if (mask[rcuout]) {
+    				if (count > 0)
+    					gnuplot_cmd(handle2, ",");
+    				count++;
+    
+    				switch (m_type) {
+    					case Statistics::SUBBAND_POWER:
+    						gnuplot_cmd(handle2, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
+    						gSampleFrequency, x_range*2.0, rcuout);
+    						break;
+    					case Statistics::BEAMLET_POWER:
+    						gnuplot_cmd(handle2, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (%c)\" with steps ",
+    						(rcuout%2?'Y':'X'));
+    						break;
+    					default:
+    						logMessage(cerr,"Error: invalid m_type");
+    						exit(EXIT_FAILURE);
+    						break;
+    				}
+    			}
+    		}
+    		gnuplot_cmd(handle2, "\n");
+  		    gnuplot_write_matrix(handle2, stats(Range((n_firstIndex/2),(n_firstIndex/2)+count-1), Range::all()));
+    	}
 	}
 }
 
@@ -2552,17 +2689,18 @@ GCFEvent::TResult LatencyCommand::ack(GCFEvent& e)
 //
 RSPCtl::RSPCtl(string name, int argc, char** argv) :
 	GCFTask((State)&RSPCtl::initial, name),
-	itsCommand  (0),
-	m_nrcus   (0),
-	m_nrspboards (0),
-	itsNantennas (0),
-	m_argc   (argc),
-	m_argv   (argv),
-	m_instancenr (-1),
-	itsNeedClockOnce(false),
-	itsNeedClock (false),
-	itsNeedSplitter (false),
-	m_subclock  (*itsRSPDriver)
+	itsCommand       (0),
+	m_nrcus          (0),
+	m_nrspboards     (0),
+	itsNantennas     (0),
+	itsNbitsPerSample(MAX_BITS_PER_SAMPLE),
+	m_argc           (argc),
+	m_argv           (argv),
+	m_instancenr     (-1),
+	itsNeedClockOnce (false),
+	itsNeedClock     (false),
+	itsNeedSplitter  (false),
+	m_subclock       (*itsRSPDriver)
 {
 	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 
@@ -2585,13 +2723,17 @@ RSPCtl::~RSPCtl()
 GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("initial:" << eventName(e) << "@" << port.getName());
-	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch(e.signal) {
 	case F_INIT:
 	break;
 
 	case F_ENTRY: {
+		if (m_argc == 1) {
+			usage(false);
+			exit(EXIT_FAILURE);
+		}
+
 		// setup a connection with the RSPDriver
 		if (!itsRSPDriver->isConnected()) {
 			itsRSPDriver->autoOpen(3,0,1); // try 3 times at 1 second interval
@@ -2621,8 +2763,22 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 		m_nrspboards   = ack.n_rspboards;
 		m_maxrspboards = ack.max_rspboards;
 		gHasSplitter   = ack.hasSplitter;
-		LOG_DEBUG_STR(formatString("n_rcus    =%d",m_nrcus));
+		LOG_DEBUG_STR(formatString("n_rcus     =%d",m_nrcus));
 		LOG_DEBUG_STR(formatString("n_rspboards=%d of %d",  m_nrspboards, m_maxrspboards));
+		RSPGetbitmodeEvent	getBitmode;
+		itsRSPDriver->send(getBitmode);
+	}
+	break;
+
+	case RSP_GETBITMODEACK: {
+		RSPGetbitmodeackEvent	ack(e);
+		// bitmode can be configured per RSPboard (although never used). Use highest value of the boards
+		// because that is supported by all.
+		itsNbitsPerSample = MIN_BITS_PER_SAMPLE;
+		for (int i = 0; i < m_nrspboards; i++) {
+			itsNbitsPerSample = (ack.bits_per_sample[i] > itsNbitsPerSample) ? ack.bits_per_sample[i] : itsNbitsPerSample;
+		}
+		LOG_DEBUG_STR(formatString("bits/sample=%d",  itsNbitsPerSample));
 
 		// connected to RSPDriver, parse the arguments
 		if (!(itsCommand = parse_options(m_argc, m_argv))) {
@@ -2645,11 +2801,10 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	default:
-		status = GCFEvent::NOT_HANDLED;
-	break;
+		return(GCFEvent::NOT_HANDLED);
 	}
 
-	return status;
+	return (GCFEvent::HANDLED);
 }
 
 //
@@ -2681,6 +2836,9 @@ GCFEvent::TResult RSPCtl::getClock(GCFEvent& e, GCFPortInterface& port)
 
 		if (itsNeedSplitter) {
 			TRAN(RSPCtl::sub2Splitter);
+		}
+		else if (itsNeedBitmode) {
+			TRAN(RSPCtl::sub2Bitmode);
 		}
 		else {
 			TRAN(RSPCtl::doCommand);
@@ -2741,6 +2899,9 @@ GCFEvent::TResult RSPCtl::sub2Clock(GCFEvent& e, GCFPortInterface& port)
 		if (itsNeedSplitter) {
 			TRAN(RSPCtl::sub2Splitter);
 		}
+		else if (itsNeedBitmode) {
+			TRAN(RSPCtl::sub2Bitmode);
+		}
 		else {
 			TRAN(RSPCtl::doCommand);
 		}
@@ -2795,6 +2956,67 @@ GCFEvent::TResult RSPCtl::sub2Splitter(GCFEvent& e, GCFPortInterface& port)
 		RSPUpdsplitterEvent  updateEvent(e);
 		gSplitterOn = updateEvent.splitter[0];
 		logMessage(cerr, formatString("The splitter is currently %s", gSplitterOn ? "ON" : "OFF"));
+		if (itsNeedBitmode) {
+			TRAN(RSPCtl::sub2Bitmode);
+		}
+		else {
+			TRAN(RSPCtl::doCommand);
+		}
+	}
+	break;
+
+	case F_DISCONNECTED: {
+		port.close();
+		logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
+		exit(EXIT_FAILURE);
+	}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// sub2Bitmode(event, port)
+//
+GCFEvent::TResult RSPCtl::sub2Bitmode(GCFEvent& e, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("sub2Bitmode:" << eventName(e) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		logMessage(cerr, "Taking subscription on the bitmode");
+		RSPSubbitmodeEvent subEvent;
+		subEvent.timestamp = Timestamp(0,0);
+		subEvent.period = 1; // check for change every second
+		itsRSPDriver->send(subEvent);
+	}
+	break;
+
+	case RSP_SUBBITMODEACK: {
+		RSPSubbitmodeackEvent answer(e);
+		if (answer.status != RSP_SUCCESS) {
+			logMessage(cerr, "Subscription on the bitmode failed.");
+			exit(EXIT_FAILURE);
+		}
+		// wait for update event
+	}
+	break;
+
+	case RSP_UPDBITMODE: {
+		RSPUpdbitmodeEvent  update(e);
+		itsNbitsPerSample = MIN_BITS_PER_SAMPLE;
+		for (int i = 0; i < m_nrspboards; i++) {
+			itsNbitsPerSample = (update.bits_per_sample[i] > itsNbitsPerSample) ? 
+								 update.bits_per_sample[i] : itsNbitsPerSample;
+		}
+		logMessage(cerr, formatString("The bitmode is currently %d", itsNbitsPerSample));
 		TRAN(RSPCtl::doCommand);
 	}
 	break;
@@ -2874,9 +3096,13 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_GETDATASTREAMACK:
 	case RSP_SETSWAPXYACK:
 	case RSP_GETSWAPXYACK:
+	case RSP_SETBITMODEACK:
+	case RSP_GETBITMODEACK:
 
 		status = itsCommand->ack(e); // handle the acknowledgement
 		gClockChanged = false;
+		gBitmodeChanged = false;
+		gSplitterChanged = false;
 	break;
 
 	case RSP_UPDCLOCK: {
@@ -2890,7 +3116,20 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_UPDSPLITTER: {
 		RSPUpdsplitterEvent  updateEvent(e);
 		gSplitterOn = updateEvent.splitter[0];
+		gSplitterChanged = true;
 		logMessage(cerr, formatString("NOTE: The splitter switched to %s", gSplitterOn ? "ON" : "OFF"));
+	}
+	break;
+
+	case RSP_UPDBITMODE: {
+		RSPUpdbitmodeEvent  update(e);
+		itsNbitsPerSample = MIN_BITS_PER_SAMPLE;
+		for (int i = 0; i < m_nrspboards; i++) {
+			itsNbitsPerSample = (update.bits_per_sample[i] > itsNbitsPerSample) ? 
+								 update.bits_per_sample[i] : itsNbitsPerSample;
+		}
+		gBitmodeChanged = true;
+		logMessage(cerr, formatString("NOTE: The bitmode switched to %d", itsNbitsPerSample));
 	}
 	break;
 
@@ -3015,6 +3254,7 @@ static void usage(bool exportMode)
 	cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
 	cout << "rspctl --datastream[=0|1|2|3]                  # set or get the status of data stream to cep" << endl;
 	cout << "rspctl --swapxy[=0|1] [--select=<set>]         # set or get the status of xy swap, 0=normal, 1=swapped" << endl;
+	cout << "rspctl --bitmode[=4|8|16]                      # set or get the number of bits per sample" << endl;
 	if (exportMode) {
 	cout << endl;
 	cout << "--- Raw register control -------------------------------------------------------------------------------------" << endl;
@@ -3050,7 +3290,8 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		select.push_back(i);
 
 	beamlets.clear();
-	for (int i = 0; i < MAX_BEAMLETS; ++i)
+	int max_beamlets = maxBeamlets(itsNbitsPerSample);
+	for (int i = 0; i < max_beamlets; ++i)
 		beamlets.push_back(i);
 
 	optind = 0; // reset option parsing
@@ -3087,6 +3328,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "wgmode",         required_argument, 0, 'G' },
 		{ "hbadelays",      optional_argument, 0, 'H' },
 		{ "specinv",        optional_argument, 0, 'I' },
+		{ "bitmode",        optional_argument, 0, 'K' },
 		{ "latency",        no_argument,       0, 'L' },
 		{ "phase",          required_argument, 0, 'P' },
 		{ "tdstatus",       no_argument,       0, 'Q' },
@@ -3107,7 +3349,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	realDelays = false;
 	while (1) {
 		int option_index = 0;
-		int c = getopt_long(argc, argv, "a::b:c::d:e::f:g::hi:l:m:n:p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::LP:QR::ST::VX1:2:", long_options, &option_index);
+		int c = getopt_long(argc, argv, "a::b:c::d:e::g::hi:l:m:n:p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::K::LP:QR::ST::VXY::Z::1:2:", long_options, &option_index);
 
 		if (c == -1) // end of argument list reached?
 			break;
@@ -3136,7 +3378,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 					logMessage(cerr,"Error: 'command' argument should come before --beamlets argument");
 					exit(EXIT_FAILURE);
 				}
-				beamlets = strtolist(optarg, MAX_BEAMLETS);
+				beamlets = strtolist(optarg, maxBeamlets(itsNbitsPerSample));
 				if (beamlets.empty()) {
 					logMessage(cerr,"Error: invalid or missing '--beamlets' option");
 					exit(EXIT_FAILURE);
@@ -3151,7 +3393,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			WeightsCommand* weightscommand = new WeightsCommand(*itsRSPDriver);
+			WeightsCommand* weightscommand = new WeightsCommand(*itsRSPDriver, itsNbitsPerSample);
 			weightscommand->setType(WeightsCommand::COMPLEX);
 			command = weightscommand;
 
@@ -3175,7 +3417,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			WeightsCommand* weightscommand = new WeightsCommand(*itsRSPDriver);
+			WeightsCommand* weightscommand = new WeightsCommand(*itsRSPDriver, itsNbitsPerSample);
 			weightscommand->setType(WeightsCommand::ANGLE);
 			command = weightscommand;
 
@@ -3206,10 +3448,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			SubbandsCommand* subbandscommand = new SubbandsCommand(*itsRSPDriver);
+			SubbandsCommand* subbandscommand = new SubbandsCommand(*itsRSPDriver, itsNbitsPerSample);
 			subbandscommand->setType(SubbandSelection::BEAMLET);
-
 			command = subbandscommand;
+			
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
@@ -3472,22 +3714,48 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		}
 		break;
 
+		case 'K': // bitmode
+		{
+			if (command)
+				delete command;
+			BitmodeCommand* bitmodecommand = new BitmodeCommand(*itsRSPDriver);
+			command = bitmodecommand;
+
+			command->set_ndevices(m_nrspboards);
+			select.clear();
+			for (int i = 0; i < m_nrspboards; ++i) {
+				select.push_back(i);
+			}
+
+			if (optarg) {
+				bitmodecommand->setMode(false);
+				unsigned long bitmode = strtoul(optarg, 0, 0);
+				if (bitmode != 4 && bitmode != 8 && bitmode != 16) {
+					logMessage(cerr, formatString("Error: bitmode value can only be 4, 8 or 16, not %ld", bitmode));
+				}
+				bitmodecommand->bitmode(bitmode);
+			}
+		} break;
+
 		case 't': // --statistics
 		{
 			if (command)
 				delete command;
-			StatisticsCommand* statscommand = new StatisticsCommand(*itsRSPDriver);
+			StatisticsCommand* statscommand = new StatisticsCommand(*itsRSPDriver, itsNbitsPerSample);
 			command = statscommand;
 
 			command->set_ndevices(m_nrcus);
-
+            
+            itsNeedSplitter = true;
+            
 			if (optarg) {
 				if (!strcmp(optarg, "subband")) {
 					statscommand->setType(Statistics::SUBBAND_POWER);
 				} else if (!strcmp(optarg, "beamlet")) {
-					command->set_ndevices(m_nrspboards * N_POL);
+				    // 2 = number of cep streams, normal 1, in splitted mode 2
+					command->set_ndevices(2 * N_POL);
 					statscommand->setType(Statistics::BEAMLET_POWER);
-					itsNeedSplitter = true;
+					itsNeedBitmode  = true;
 				} else {
 					logMessage(cerr, formatString("Error: invalid statistics type %s", optarg));
 					exit(EXIT_FAILURE);
@@ -3518,7 +3786,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{
 			if (command)
 				delete command;
-			SubbandsCommand* subbandscommand = new SubbandsCommand(*itsRSPDriver);
+			SubbandsCommand* subbandscommand = new SubbandsCommand(*itsRSPDriver, itsNbitsPerSample);
 			subbandscommand->setType(SubbandSelection::XLET);
 			command = subbandscommand;
 

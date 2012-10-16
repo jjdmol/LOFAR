@@ -38,6 +38,9 @@
 namespace LOFAR {
 namespace RTCP {
 
+bool SSH_Init();
+void SSH_Finalize();
+
 #ifdef HAVE_LIBSSH2
 
 class SSHconnection {

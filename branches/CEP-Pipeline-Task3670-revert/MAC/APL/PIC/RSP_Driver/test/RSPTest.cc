@@ -365,12 +365,12 @@ GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
 
 	  ss.subbands.setType(SubbandSelection::BEAMLET);
       
-      ss.subbands().resize(1, 10); // 10 subbands selected
+      ss.subbands.beamlets().resize(1, 10); // 10 subbands selected
 
-      LOG_INFO_STR("dim subbands=" << ss.subbands().dimensions());
+      LOG_INFO_STR("dim subbands=" << ss.subbands.beamlets().dimensions());
       
       // set all values to 0x77
-      ss.subbands() = 0x77;
+      ss.subbands.beamlets() = 0x77;
       
       TESTC_ABORT(m_server.send(ss), RSPTest::final);
     }
@@ -495,7 +495,8 @@ GCFEvent::TResult RSPTest::test007(GCFEvent& e, GCFPortInterface& port)
       TESTC_ABORT(ack.status == RSP_SUCCESS, RSPTest::final);
       LOG_INFO_STR("ack.time=" << ack.timestamp);
 
-      LOG_INFO_STR("subbands=" << ack.subbands());
+      LOG_INFO_STR("subbands.crosslets=" << ack.subbands.crosslets());
+      LOG_INFO_STR("subbands.beamlets =" << ack.subbands.beamlets());
       
       TRAN(RSPTest::test008);
     }
@@ -1031,7 +1032,8 @@ GCFEvent::TResult RSPTest::test013(GCFEvent& e, GCFPortInterface& port)
       TESTC_ABORT(upd.status == RSP_SUCCESS, RSPTest::final);
       LOG_INFO_STR("upd.time=" << upd.timestamp);
       LOG_INFO_STR("upd.handle=" << upd.handle);
-      LOG_INFO_STR("upd.subbands=" << upd.subbands());
+      LOG_INFO_STR("upd.subbands.crosslets=" << upd.subbands.crosslets());
+      LOG_INFO_STR("upd.subbands.beamlets =" << upd.subbands.beamlets());
 
       if (updcount++ > 2) // two seconds
       {

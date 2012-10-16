@@ -7,3 +7,6 @@ include_directories(${PACKAGE_SOURCE_DIR}/src)
 
 lofar_add_test(tDelayCompensation tDelayCompensation.cc)
 lofar_add_test(tSSH tSSH.cc)
+#lofar_add_test(tRSPTimeStamp tRSPTimeStamp.cc)
+
+#add_subdirectory(newInputSection)

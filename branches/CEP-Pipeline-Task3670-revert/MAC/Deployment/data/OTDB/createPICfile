@@ -64,6 +64,21 @@ def expandCabinetMarker(dataPoint, nrRSP):
 		print "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet))+".status.state"
 
 
+def expandLBAMarker(dataPoint, nrLBA):
+	"""
+	Expands the lines that only contain the @lbaantenna@ marker with all cabinet numbers
+	"""
+	for lba in range(0, nrLBA):
+		print "21 "+dataPoint.replace("@lbaantenna@","LBA%03d"%lba)+".status.state"
+
+def expandHBAMarker(dataPoint, nrHBA):
+	"""
+	Expands the lines that only contain the @hbaantenna@ marker with all cabinet numbers
+	"""
+	for lba in range(0, nrHBA):
+		print "21 "+dataPoint.replace("@hbaantenna@","HBA%02d"%lba)+".status.state"
+
+
 
 # MAIN
 # all the files we are using
@@ -78,11 +93,11 @@ parser.add_option("-l", "--local", action="store_true", dest="isLocal", default=
 (options, args) = parser.parse_args()
 
 if (options.isLocal):
-    PVSSbasefile= "../PVSS/PVSSDataPoints.base"
+    PVSSbasefile= "../PVSS/data/PVSSDataPoints.base"
     StationFile = "../StaticMetaData/StationInfo.dat"
     ControlFile = "../StaticMetaData/ControlInfo.dat"
-    RingFile    = "../PVSS/Rings.list"
-    ClusterFile = "../PVSS/Clusters.list"
+    RingFile    = "../PVSS/data/Rings.list"
+    ClusterFile = "../PVSS/data/Clusters.list"
 else:
     PVSSbasefile= "/opt/lofar/pvss/dpdef/PVSSDataPoints.base"
     StationFile = "/opt/lofar/etc/StationInfo.dat"
@@ -205,6 +220,10 @@ for line in filledLine.findall(open(StationFile).read()):
                 expandSubrackMarker(prefix+line, int(nrRSP))
             elif line.find("@cabinet@") >= 0:
                 expandCabinetMarker(prefix+line, int(nrRSP))
+            elif line.find("@lbaantenna@") >= 0:
+                expandLBAMarker(prefix+line, int(nrLBA))
+            elif line.find("@hbaantenna@") >= 0:
+                expandHBAMarker(prefix+line, int(nrHBA))
         #   for all expandable lines
 
         # Permanent software on the stations

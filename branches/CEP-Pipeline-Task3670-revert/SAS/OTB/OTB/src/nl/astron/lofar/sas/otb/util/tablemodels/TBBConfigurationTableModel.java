@@ -33,7 +33,7 @@
 
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
-import java.util.Vector;
+import java.util.ArrayList;
 import org.apache.log4j.Logger;
 
 /**
@@ -44,6 +44,7 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
    
     static Logger logger = Logger.getLogger(TBBConfigurationTableModel.class);
     static String name = "TBBConfigurationTableModel";
+    
     
     private String itsTreeType;
 
@@ -74,31 +75,31 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
     
     /** fills the table with the initial settings
      *
-     * @param  aMode          Vector<String> of all OperatingModes
-     * @param  aTrigger       Vector<String> of all TriggerModes
-     * @param  aBase          Vector<String> of all Baselevels
-     * @param  aStart         Vector<String> of all Startlevels
-     * @param  aStop          Vector<String> of all Stoplevels
-     * @param  aFilter        Vector<String> of all Filters
-     * @param  aWindow        Vector<String> of all Windows
-     * @param  aF0C0            Vector<String> of all Filter0Coeff0s
-     * @param  aF0C1            Vector<String> of all Filter0Coeff1s
-     * @param  aF0C2            Vector<String> of all Filter0Coeff2s
-     * @param  aF0C3            Vector<String> of all Filter0Coeff3s
-     * @param  aF1C0            Vector<String> of all Filter1Coeff0s
-     * @param  aF1C1            Vector<String> of all Filter1Coeff1s
-     * @param  aF1C2            Vector<String> of all Filter1Coeff2s
-     * @param  aF1C3            Vector<String> of all Filter1Coeff3s
-     * @param  aRCUs          Vector<String> of all RCUs involved
-     * @param  aSubbandList   Vector<String> of all subbands involved
+     * @param  aMode          ArrayList<String> of all OperatingModes
+     * @param  aTrigger       ArrayList<String> of all TriggerModes
+     * @param  aBase          ArrayList<String> of all Baselevels
+     * @param  aStart         ArrayList<String> of all Startlevels
+     * @param  aStop          ArrayList<String> of all Stoplevels
+     * @param  aFilter        ArrayList<String> of all Filters
+     * @param  aWindow        ArrayList<String> of all Windows
+     * @param  aF0C0            ArrayList<String> of all Filter0Coeff0s
+     * @param  aF0C1            ArrayList<String> of all Filter0Coeff1s
+     * @param  aF0C2            ArrayList<String> of all Filter0Coeff2s
+     * @param  aF0C3            ArrayList<String> of all Filter0Coeff3s
+     * @param  aF1C0            ArrayList<String> of all Filter1Coeff0s
+     * @param  aF1C1            ArrayList<String> of all Filter1Coeff1s
+     * @param  aF1C2            ArrayList<String> of all Filter1Coeff2s
+     * @param  aF1C3            ArrayList<String> of all Filter1Coeff3s
+     * @param  aRCUs          ArrayList<String> of all RCUs involved
+     * @param  aSubbandList   ArrayList<String> of all subbands involved
      *
      * @return True if succes else False
      */
-     public boolean fillTable(String treeType,Vector<String> aMode,Vector<String> aTrigger,Vector<String> aBase,Vector<String> aStart,
-                             Vector<String> aStop, Vector<String> aFilter, Vector<String> aWindow, Vector<String> aF0C0,
-                             Vector<String> aF0C1, Vector<String> aF0C2, Vector<String> aF0C3, Vector<String> aF1C0,
-                             Vector<String> aF1C1, Vector<String> aF1C2, Vector<String> aF1C3, Vector<String> aRCUs,
-                             Vector<String> aSubbandList) {
+     public boolean fillTable(String treeType,ArrayList<String> aMode,ArrayList<String> aTrigger,ArrayList<String> aBase,ArrayList<String> aStart,
+                             ArrayList<String> aStop, ArrayList<String> aFilter, ArrayList<String> aWindow, ArrayList<String> aF0C0,
+                             ArrayList<String> aF0C1, ArrayList<String> aF0C2, ArrayList<String> aF0C3, ArrayList<String> aF1C0,
+                             ArrayList<String> aF1C1, ArrayList<String> aF1C2, ArrayList<String> aF1C3, ArrayList<String> aRCUs,
+                             ArrayList<String> aSubbandList) {
          
         itsTreeType=treeType;
         // "clear" the table
@@ -116,23 +117,23 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
             offset=0;
         }
         for (int i=0; i<length-offset; i++) {
-            String[]  newRow = { aMode.elementAt(i+offset),
-                                 aTrigger.elementAt(i+offset),
-                                 aBase.elementAt(i+offset),
-                                 aStart.elementAt(i+offset),
-                                 aStop.elementAt(i+offset),
-                                 aFilter.elementAt(i+offset),
-                                 aWindow.elementAt(i+offset),
-                                 aF0C0.elementAt(i+offset),
-                                 aF0C1.elementAt(i+offset),
-                                 aF0C2.elementAt(i+offset),
-                                 aF0C3.elementAt(i+offset),
-                                 aF1C0.elementAt(i+offset),
-                                 aF1C1.elementAt(i+offset),
-                                 aF1C2.elementAt(i+offset),
-                                 aF1C3.elementAt(i+offset),
-                                 aRCUs.elementAt(i+offset),
-                                 aSubbandList.elementAt(i+offset)};
+            String[]  newRow = { aMode.get(i+offset),
+                                 aTrigger.get(i+offset),
+                                 aBase.get(i+offset),
+                                 aStart.get(i+offset),
+                                 aStop.get(i+offset),
+                                 aFilter.get(i+offset),
+                                 aWindow.get(i+offset),
+                                 aF0C0.get(i+offset),
+                                 aF0C1.get(i+offset),
+                                 aF0C2.get(i+offset),
+                                 aF0C3.get(i+offset),
+                                 aF1C0.get(i+offset),
+                                 aF1C1.get(i+offset),
+                                 aF1C2.get(i+offset),
+                                 aF1C3.get(i+offset),
+                                 aRCUs.get(i+offset),
+                                 aSubbandList.get(i+offset)};
             this.addRow(newRow);
         }
         // only initial settings added
@@ -143,73 +144,129 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
  
     /** fills the table with the initial settings
      *
-     * @param  aMode          Vector<String> of all OperatingModes
-     * @param  aTrigger       Vector<String> of all triggerModes
-     * @param  aBase          Vector<String> of all Baselevels
-     * @param  aStart         Vector<String> of all Startlevels
-     * @param  aStop          Vector<String> of all Stoplevels
-     * @param  aFilter        Vector<String> of all Filters
-     * @param  aWindow        Vector<String> of all Windows
-     * @param  aF0C0            Vector<String> of all Filter0Coeff0s
-     * @param  aF0C1            Vector<String> of all Filter0Coeff1s
-     * @param  aF0C2            Vector<String> of all Filter0Coeff2s
-     * @param  aF0C3            Vector<String> of all Filter0Coeff3s
-     * @param  aF1C0            Vector<String> of all Filter1Coeff0s
-     * @param  aF1C1            Vector<String> of all Filter1Coeff1s
-     * @param  aF1C2            Vector<String> of all Filter1Coeff2s
-     * @param  aF1C3            Vector<String> of all Filter1Coeff3s
-     * @param  aRCUs          Vector<String> of all RCUs involved
-     * @param  aSubbandList   Vector<String> of all subbands involved
+     * @param  aMode          ArrayList<String> of all OperatingModes
+     * @param  aTrigger       ArrayList<String> of all triggerModes
+     * @param  aBase          ArrayList<String> of all Baselevels
+     * @param  aStart         ArrayList<String> of all Startlevels
+     * @param  aStop          ArrayList<String> of all Stoplevels
+     * @param  aFilter        ArrayList<String> of all Filters
+     * @param  aWindow        ArrayList<String> of all Windows
+     * @param  aF0C0            ArrayList<String> of all Filter0Coeff0s
+     * @param  aF0C1            ArrayList<String> of all Filter0Coeff1s
+     * @param  aF0C2            ArrayList<String> of all Filter0Coeff2s
+     * @param  aF0C3            ArrayList<String> of all Filter0Coeff3s
+     * @param  aF1C0            ArrayList<String> of all Filter1Coeff0s
+     * @param  aF1C1            ArrayList<String> of all Filter1Coeff1s
+     * @param  aF1C2            ArrayList<String> of all Filter1Coeff2s
+     * @param  aF1C3            ArrayList<String> of all Filter1Coeff3s
+     * @param  aRCUs          ArrayList<String> of all RCUs involved
+     * @param  aSubbandList   ArrayList<String> of all subbands involved
      *
      * @return True if succes else False
      */
-     public boolean getTable(Vector<String> aMode,Vector<String> aTrigger,Vector<String> aBase,Vector<String> aStart,
-                             Vector<String> aStop, Vector<String> aFilter, Vector<String> aWindow, Vector<String> aF0C0,
-                             Vector<String> aF0C1, Vector<String> aF0C2, Vector<String> aF0C3, Vector<String> aF1C0,
-                             Vector<String> aF1C1, Vector<String> aF1C2, Vector<String> aF1C3, Vector<String> aRCUs,
-                             Vector<String> aSubbandList) {
+     public boolean getTable(ArrayList<String> aMode,ArrayList<String> aTrigger,ArrayList<String> aBase,ArrayList<String> aStart,
+                             ArrayList<String> aStop, ArrayList<String> aFilter, ArrayList<String> aWindow, ArrayList<String> aF0C0,
+                             ArrayList<String> aF0C1, ArrayList<String> aF0C2, ArrayList<String> aF0C3, ArrayList<String> aF1C0,
+                             ArrayList<String> aF1C1, ArrayList<String> aF1C2, ArrayList<String> aF1C3, ArrayList<String> aRCUs,
+                             ArrayList<String> aSubbandList) {
          
         int length = aMode.size();
         
         // need to skip first entry because it is the default (dummy) TBBsetting
         // empty all elements except the default
-        aMode.setSize(1);
-        aTrigger.setSize(1);
-        aBase.setSize(1);
-        aStart.setSize(1);
-        aStop.setSize(1);
-        aFilter.setSize(1);
-        aWindow.setSize(1);
-        aF0C0.setSize(1);
-        aF0C1.setSize(1);
-        aF0C2.setSize(1);
-        aF0C3.setSize(1);
-        aF1C0.setSize(1);
-        aF1C1.setSize(1);
-        aF1C2.setSize(1);
-        aF1C3.setSize(1);
-        aRCUs.setSize(1);
-        aSubbandList.setSize(1);
         
+        String def ="";
+        if (!itsTreeType.equals("VHtree")) {
+       
+            def = aMode.get(0);
+            aMode.clear();
+            aMode.add(def);
+
+            def = aTrigger.get(0);
+            aTrigger.clear();
+            aTrigger.add(def);
+
+            def = aBase.get(0);
+            aBase.clear();
+            aBase.add(def);
+            
+            def = aStart.get(0);
+            aStart.clear();
+            aStart.add(def);
+            
+            def = aStop.get(0);
+            aStop.clear();
+            aStop.add(def);
+            
+            def = aFilter.get(0);
+            aFilter.clear();
+            aFilter.add(def);
+
+            def = aWindow.get(0);
+            aWindow.clear();
+            aWindow.add(def);
+            
+            def = aF0C0.get(0);
+            aF0C0.clear();
+            aF0C0.add(def);
+
+            def = aF0C1.get(0);
+            aF0C1.clear();
+            aF0C1.add(def);
+
+            def = aF0C2.get(0);
+            aF0C2.clear();
+            aF0C2.add(def);
+
+            def = aF0C3.get(0);
+            aF0C3.clear();
+            aF0C3.add(def);
+
+            def = aF1C0.get(0);
+            aF1C0.clear();
+            aF1C0.add(def);
+
+            def = aF1C1.get(0);
+            aF1C1.clear();
+            aF1C1.add(def);
+
+            def = aF1C2.get(0);
+            aF1C2.clear();
+            aF1C2.add(def);
+
+            def = aF1C3.get(0);
+            aF1C3.clear();
+            aF1C3.add(def);
+
+            def = aRCUs.get(0);
+            aRCUs.clear();
+            aRCUs.add(def);
+
+            def = aSubbandList.get(0);
+            aSubbandList.clear();
+            aSubbandList.add(def);
+
+        
+        }
         
         for (int i=0; i<getRowCount(); i++) {
-            aMode.addElement((String)getValueAt(i,0));
-            aTrigger.addElement((String)getValueAt(i,1));
-            aBase.addElement((String)getValueAt(i,2));
-            aStart.addElement((String)getValueAt(i,3));
-            aStop.addElement((String)getValueAt(i,4));
-            aFilter.addElement((String)getValueAt(i,5));
-            aWindow.addElement((String)getValueAt(i,6));
-            aF0C0.addElement((String)getValueAt(i,7));
-            aF0C1.addElement((String)getValueAt(i,8));
-            aF0C2.addElement((String)getValueAt(i,9));
-            aF0C3.addElement((String)getValueAt(i,10));
-            aF1C0.addElement((String)getValueAt(i,11));
-            aF1C1.addElement((String)getValueAt(i,12));
-            aF1C2.addElement((String)getValueAt(i,13));
-            aF1C3.addElement((String)getValueAt(i,14));
-            aRCUs.addElement((String)getValueAt(i,15));
-            aSubbandList.addElement((String)getValueAt(i,16));
+            aMode.add((String)getValueAt(i,0));
+            aTrigger.add((String)getValueAt(i,1));
+            aBase.add((String)getValueAt(i,2));
+            aStart.add((String)getValueAt(i,3));
+            aStop.add((String)getValueAt(i,4));
+            aFilter.add((String)getValueAt(i,5));
+            aWindow.add((String)getValueAt(i,6));
+            aF0C0.add((String)getValueAt(i,7));
+            aF0C1.add((String)getValueAt(i,8));
+            aF0C2.add((String)getValueAt(i,9));
+            aF0C3.add((String)getValueAt(i,10));
+            aF1C0.add((String)getValueAt(i,11));
+            aF1C1.add((String)getValueAt(i,12));
+            aF1C2.add((String)getValueAt(i,13));
+            aF1C3.add((String)getValueAt(i,14));
+            aRCUs.add((String)getValueAt(i,15));
+            aSubbandList.add((String)getValueAt(i,16));
         }
         return true;    
     }

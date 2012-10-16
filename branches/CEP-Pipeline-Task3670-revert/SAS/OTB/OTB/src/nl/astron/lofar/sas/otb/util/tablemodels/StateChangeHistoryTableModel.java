@@ -23,7 +23,7 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.rmi.RemoteException;
-import java.util.Vector;
+import java.util.ArrayList;
 import nl.astron.lofar.sas.otb.jotdb3.jTreeState;
 import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
@@ -54,7 +54,7 @@ public class StateChangeHistoryTableModel extends javax.swing.table.DefaultTable
 
         this.otdbRmi = otdbRmi;
         this.itsTreeID=treeID;
-        fillTable();
+        boolean fillTable = fillTable();
     }
 
     public void setTree(int treeID) {
@@ -79,21 +79,21 @@ public class StateChangeHistoryTableModel extends javax.swing.table.DefaultTable
             this.setRowCount(0);
 
             // Get a stateList of all available changes
-            Vector<jTreeState> aStateList=OtdbRmi.getRemoteOTDB().getStateList(itsTreeID, false);
+            ArrayList<jTreeState> aStateList=OtdbRmi.getRemoteOTDB().getStateList(itsTreeID, false);
             data = new Object[aStateList.size()][headers.length];
             logger.debug("Statelist downloaded. Size: "+aStateList.size());
            
             for (int k=0; k< aStateList.size();k++) {
-                jTreeState tState = aStateList.elementAt(k);
+                jTreeState tState = aStateList.get(k);
                 if (tState == null) {
                     logger.warn("No such treeState found!");
                 } else {
                     logger.debug("Gathered info for ID: "+tState.treeID);
                     data[k][0]=new Integer(tState.treeID);
                     data[k][1]=new Integer(tState.momID);
-	            data[k][2]=new String(OtdbRmi.getTreeState().get(tState.newState));
-	            data[k][3]=new String(tState.username);
-	            data[k][4]=new String(tState.timestamp.replace("T", " "));
+	            data[k][2]=OtdbRmi.getTreeState().get(tState.newState);
+	            data[k][3]=tState.username;
+	            data[k][4]=tState.timestamp.replace("T", " ");
                 }
             }
             fireTableDataChanged();

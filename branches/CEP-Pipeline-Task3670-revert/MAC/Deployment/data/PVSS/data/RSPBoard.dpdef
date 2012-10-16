@@ -2,6 +2,8 @@ voltage12			float
 voltage25			float
 voltage33			float
 version				string
+bitmode				int
+bitmodeCapability	int
 alert				int
 splitterOn			int
 Ethernet.status			:ObjectStatus

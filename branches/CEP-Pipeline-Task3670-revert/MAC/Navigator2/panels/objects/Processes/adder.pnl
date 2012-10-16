@@ -1,21 +1,15 @@
 V 11
 1
 LANG:1 5 Adder
-PANEL,-1 -1 1047 192 N "_3DFace" 4
+PANEL,-1 -1 1047 192 N "_3DFace" 2
 "$adderNumber"
-"$locusNumber"
 "$nodeDP"
-"$writerNumber"
 "main()
 {
   baseDP         = $nodeDP;
- 
-   
+  
   // determine adderNumber
-  adderNr=$adderNumber;
-  locusNr=$locusNumber;
-  writerNr=$writerNumber;
-    
+  adderNr=$adderNumber;    
 
   // baseDp is something like CCU001:LOFAR_PIC_BGP_Midplane[x]_IONode[xx]\"]
   // for the Adders it needs to point to: LOFAR_ObsSW_OSIOnode[xx]_Adder[xx]
@@ -28,17 +22,21 @@ PANEL,-1 -1 1047 192 N "_3DFace" 4
     string ioNr=substr(baseDP,pos+6,2);
     baseDP=sysName+\"LOFAR_ObsSW_OSIONode\"+ioNr;
   }
-        
-  
+
   adderDP  = baseDP+\"_Adder\"+adderNr;
-  writerDP = sysName+\"LOFAR_ObwSW_OSLocusNode\"+navFunct_formatInt(locusNr,999)+\"_Writer\"+navFunct_formatInt(writerNr,99);
+        
+  dpGet(adderDP+\".locusNode\",locusNr);
+  dpGet(adderDP+\".writer\",writerNr);
+  
   setValue(\"addernr_text\",\"text\",adderNr);
+  
+  writerDP = sysName+\"LOFAR_ObwSW_OSLocusNode\"+navFunct_formatInt(locusNr,999)+\"_Writer\"+navFunct_formatInt(writerNr,99);
   setValue(\"writerNr_text\",\"text\",\"Writer\"+navFunct_formatInt(writerNr,99));
   setValue(\"writerNr_text\",\"toolTipText\",writerDP);
     
   
   LOG_DEBUG(\"adder.pnl:main|adderDP: \"+adderDP);
-  LOG_DEBUG(\"adder.pnl:main|adderDP: \"+adderDP);
+  LOG_DEBUG(\"adder.pnl:main|writerDP: \"+writerDP);
   
   // connect to the adder values
   // check if the requiered datapoint for this view are enabled and accessible
@@ -48,7 +46,6 @@ PANEL,-1 -1 1047 192 N "_3DFace" 4
                                  adderDP + \".process.error\",
                                  adderDP + \".process.currentAction\",
                                  adderDP + \".process.logMsg\",
-                                 adderDP + \".locusNode\",
                                  adderDP + \".dropping:_online.._invalid\") == -1) {
       LOG_ERROR(\"adder.pnl:main|Couldn't connect to: \"+adderDP+\" \"+getLastError());
     }
@@ -70,8 +67,7 @@ updateAdder(string dp1, bool dropping,
             string dp3, string error,
             string dp4, string currentAction,
             string dp5, string logMsg,
-            string dp6, string locusNode,
-            string dp7, bool invalid)
+            string dp6, bool invalid)
 {
   LOG_DEBUG(\"adder.pnl:updateAdder|entered\");  
   if (!invalid) {
@@ -365,7 +361,7 @@ LANG:1 35 MS Shell Dlg 2,10,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 1 0
 6 274
-"RECTANGLE21"
+"arrow"
 ""
 1 150 40 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
  E E

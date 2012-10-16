@@ -32,6 +32,8 @@
 #include <unistd.h>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <libgen.h>
 
 #include <stdexcept>
 #include <string>
@@ -116,13 +118,17 @@ char stdoutbuf[1024], stderrbuf[1024];
 int main(int argc, char *argv[])
 {
 #if defined HAVE_LOG4CPLUS
-  INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/Storage_main.log_prop");
+  char *dirc = strdup(argv[0]);
+
+  INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/Storage_main.log_prop");
+
+  free(dirc);
 #elif defined HAVE_LOG4CXX
   #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
   Context::initialize();
   setLevel("Global",8);
 #else
-  INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 1 ? atoi(argv[1]) : -1)));
+  INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 2 ? atoi(argv[2]) : -1)));
 #endif
 
   CasaLogSink::attach();

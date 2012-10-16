@@ -255,12 +255,8 @@ GCFEvent::TResult ECMonitor::createPropertySets(GCFEvent& event, GCFPortInterfac
 		// resize vectors.
 		itsCabs.resize (itsNrCabs, 0);
 	
-		string	mainDB(PVSSinfo::getMainDBName()+":");
-		string  stationNameMask(mainDB+createPropertySetName(PSN_STATION, getName()));
-//		LOG_DEBUG_STR("stationNameMask=" << stationNameMask);
-		string  PSname(formatString(stationNameMask.c_str(), 0));
-//		LOG_DEBUG_STR("PSname=" << PSname);
-		itsStation = new RTDBPropertySet(PSname, PST_STATION, PSAT_WO | PSAT_CW, this);
+		string  PSname(createPropertySetName(PSN_STATION_INFO, getName()));
+		itsStation = new RTDBPropertySet(PSname, PST_STATION_INFO, PSAT_WO | PSAT_CW, this);
 		itsStation->setConfirmation(false);
 
 		string  cabNameMask(createPropertySetName(PSN_CABINET, getName()));
@@ -526,10 +522,10 @@ GCFEvent::TResult ECMonitor::askStatus(GCFEvent& event, GCFPortInterface& port)
 		}
 
 		bState = (sts_stat.power & STS_POWER48_ON);
-		itsStation->setValue(PN_STS_POWER48_ON, GCFPVBool(bState), 0.0, false);
+		itsStation->setValue(PN_STI_POWER48_ON, GCFPVBool(bState), 0.0, false);
 
 		bState = (sts_stat.power & STS_POWER220_ON);
-		itsStation->setValue(PN_STS_POWER220_ON, GCFPVBool(bState), 0.0, false);
+		itsStation->setValue(PN_STI_POWER220_ON, GCFPVBool(bState), 0.0, false);
 
 		//bState = (sts_stat.lightning & STS_LIGHTNING);
 		//itsStation->setValue(PN_STS_LIGHTNING, GCFPVBool(bState), 0.0, false);

@@ -126,6 +126,12 @@ int main (int argc, char* argv[])
 		Observation  conflictObs5(&conflictPS5, false);
 		ASSERTSTR(!obs2.conflicts(conflictObs5), "File 5 should NOT have had a conflict");
 		cout << "No conflict found in file 5 which is oke." << endl;
+
+		// test conflicts in bit mode
+		ParameterSet conflictPS6("tObservation.in_conflict6");
+		Observation  conflictObs6(&conflictPS6, false);
+		ASSERTSTR(obs2.conflicts(conflictObs6), "File 6 should have had a bit mode conflict");
+
 		cout << "<<<" << endl; // on
 
 		// basic test on RCU bitsets

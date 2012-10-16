@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
 #include <Common/lofar_bitset.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include "StationSettings.h"
 #include "Cache.h"
@@ -60,31 +61,36 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   m_clock = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
 
   // print sizes of the cache
-  LOG_DEBUG_STR("m_beamletweights().size()     =" << m_beamletweights().size()     * sizeof(complex<int16>));
-  LOG_DEBUG_STR("m_subbandselection().size()   =" << m_subbandselection().size()   * sizeof(uint16));
-  LOG_DEBUG_STR("m_rcusettings().size()        =" << m_rcusettings().size()        * sizeof(uint8));
-  LOG_DEBUG_STR("m_hbasettings().size()        =" << m_hbasettings().size()        * sizeof(uint8));
-  LOG_DEBUG_STR("m_hbareadings().size()        =" << m_hbareadings().size()        * sizeof(uint8));
-  LOG_DEBUG_STR("m_rsusettings().size()        =" << m_rsusettings().size()        * sizeof(uint8));
-  LOG_DEBUG_STR("m_wgsettings().size()         =" << m_wgsettings().size()         * sizeof(WGSettings::WGRegisterType));
-  LOG_DEBUG_STR("m_subbandstats().size()       =" << m_subbandstats().size()       * sizeof(uint16));
-  LOG_DEBUG_STR("m_beamletstats().size()       =" << m_beamletstats().size()       * sizeof(double));
-  LOG_DEBUG_STR("m_xcstats().size()            =" << m_xcstats().size()            * sizeof(complex<double>));
-  LOG_DEBUG_STR("m_systemstatus.board().size() =" << m_systemstatus.board().size() * sizeof(EPA_Protocol::BoardStatus));
-  LOG_DEBUG_STR("m_versions.bp().size()        =" << m_versions.bp().size()        * sizeof(EPA_Protocol::RSRVersion));
-  LOG_DEBUG_STR("m_versions.ap().size()        =" << m_versions.ap().size()        * sizeof(EPA_Protocol::RSRVersion));
-  LOG_DEBUG_STR("m_tdstatus.board().size()     =" << m_tdstatus.board().size()     * sizeof(EPA_Protocol::TDBoardStatus));
-  LOG_DEBUG_STR("m_spustatus.subrack().size()  =" << m_spustatus.subrack().size()  * sizeof(EPA_Protocol::SPUBoardStatus));
-  LOG_DEBUG_STR("m_tbbsettings().size()        =" << m_tbbsettings().size()        * sizeof(bitset<MEPHeader::N_SUBBANDS>));
-  LOG_DEBUG_STR("m_bypasssettings().size()     =" << m_bypasssettings().size()     * sizeof(EPA_Protocol::DIAGBypass));
-  LOG_DEBUG_STR("m_rawDataBlock.size()         =" << ETH_DATA_LEN + sizeof (uint16));
-  LOG_DEBUG_STR("m_SdsWriteBuffer.size()       =" << sizeof(itsSdsWriteBuffer));
-  LOG_DEBUG_STR("m_SdsReadBuffer.size()        =" << sizeof(itsSdsReadBuffer));
-  LOG_DEBUG_STR("m_latencys.size()             =" << itsLatencys().size()    * sizeof(EPA_Protocol::RADLatency));
+  LOG_DEBUG_STR("m_beamletweights().size()            =" << m_beamletweights().size()     * sizeof(complex<int16>));
+  LOG_DEBUG_STR("m_subbandselection.crosslets().size()=" << m_subbandselection.crosslets().size()   * sizeof(uint16));
+  LOG_DEBUG_STR("m_subbandselection.beamlets().size() =" << m_subbandselection.beamlets().size()   * sizeof(uint16));
+  LOG_DEBUG_STR("m_rcusettings().size()               =" << m_rcusettings().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_hbasettings().size()               =" << m_hbasettings().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_hbareadings().size()               =" << m_hbareadings().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_rsusettings().size()               =" << m_rsusettings().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_wgsettings().size()                =" << m_wgsettings().size()         * sizeof(WGSettings::WGRegisterType));
+  LOG_DEBUG_STR("m_subbandstats().size()              =" << m_subbandstats().size()       * sizeof(uint16));
+  LOG_DEBUG_STR("m_beamletstats().size()              =" << m_beamletstats().size()       * sizeof(double));
+  LOG_DEBUG_STR("m_xcstats().size()                   =" << m_xcstats().size()            * sizeof(complex<double>));
+  LOG_DEBUG_STR("m_systemstatus.board().size()        =" << m_systemstatus.board().size() * sizeof(EPA_Protocol::BoardStatus));
+  LOG_DEBUG_STR("m_versions.bp().size()               =" << m_versions.bp().size()        * sizeof(EPA_Protocol::RSRVersion));
+  LOG_DEBUG_STR("m_versions.ap().size()               =" << m_versions.ap().size()        * sizeof(EPA_Protocol::RSRVersion));
+  LOG_DEBUG_STR("m_tdstatus.board().size()            =" << m_tdstatus.board().size()     * sizeof(EPA_Protocol::TDBoardStatus));
+  LOG_DEBUG_STR("m_spustatus.subrack().size()         =" << m_spustatus.subrack().size()  * sizeof(EPA_Protocol::SPUBoardStatus));
+  LOG_DEBUG_STR("m_tbbsettings().size()               =" << m_tbbsettings().size()        * sizeof(bitset<MEPHeader::N_SUBBANDS>));
+  LOG_DEBUG_STR("m_bypasssettings().size()            =" << m_bypasssettings().size()     * sizeof(EPA_Protocol::DIAGBypass));
+  LOG_DEBUG_STR("m_rawDataBlock.size()                =" << ETH_DATA_LEN + sizeof (uint16));
+  LOG_DEBUG_STR("m_SdsWriteBuffer.size()              =" << sizeof(itsSdsWriteBuffer));
+  LOG_DEBUG_STR("m_SdsReadBuffer.size()               =" << sizeof(itsSdsReadBuffer));
+  LOG_DEBUG_STR("m_latencys.size()                    =" << itsLatencys().size()    * sizeof(EPA_Protocol::RADLatency));
+  LOG_DEBUG_STR("itsSwappedXY.size()           =" << itsSwappedXY.size());
+  LOG_DEBUG_STR("itsBitsModeInfo.size()        =" << itsBitModeInfo().size()           * sizeof(EPA_Protocol::RSRBeamMode));
+  LOG_DEBUG_STR("itsBitsPerSample.size()       =" << sizeof(itsBitsPerSample));
 
   LOG_INFO_STR(formatString("CacheBuffer size = %d bytes",
 	         m_beamletweights().size()    	       
-	       + m_subbandselection().size()  
+	       + m_subbandselection.crosslets().size()  
+	       + m_subbandselection.beamlets().size()  
 	       + m_rcusettings().size()       
 	       + m_hbasettings().size()       
 	       + m_hbareadings().size()       
@@ -109,7 +115,8 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 CacheBuffer::~CacheBuffer()
 {
   m_beamletweights().free();
-  m_subbandselection().free();
+  m_subbandselection.crosslets().free();
+  m_subbandselection.beamlets().free();
   m_rcusettings().free();
   m_hbasettings().free();
   m_hbareadings().free();
@@ -127,6 +134,7 @@ CacheBuffer::~CacheBuffer()
   m_tbbsettings().free();
   m_bypasssettings().free();
   itsLatencys().free();
+  itsBitModeInfo().free();
 }
 
 void CacheBuffer::reset(void)
@@ -138,32 +146,55 @@ void CacheBuffer::reset(void)
 	tv.tv_sec = 0; tv.tv_usec = 0;
 	m_timestamp.set(tv);
 
-	m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS);
-	m_beamletweights() = complex<int16>(0,0);
+    itsBitsPerSample = MAX_BITS_PER_SAMPLE;
+    
+	m_beamletweights().resize( BeamletWeights::SINGLE_TIMESTEP, 
+	                           StationSettings::instance()->nrRcus(),
+	                           MAX_NR_BM_BANKS, 
+	                           MEPHeader::N_BEAMLETS);
+	m_beamletweights() = complex<int16>(25,36);
+// TODO remove this code!!!
+	for (int rcu = 0 ; rcu < StationSettings::instance()->nrRcus(); rcu++) {
+		int16	value=0;
+		for (int bank = 0; bank < (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE); bank++) {
+			for (int beamlet = 0; beamlet < MEPHeader::N_BEAMLETS; beamlet++) {
+				m_beamletweights()(0,rcu,bank,beamlet)=complex<int16>(value++,bank+10);
+			}
+		}
+	}
+//TODO
 
-	m_subbandselection().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
-	m_subbandselection() = 0;
-
+	m_subbandselection.crosslets().resize(StationSettings::instance()->nrRcus(),
+	                                      (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE),
+	                                      MEPHeader::N_LOCAL_XLETS );
+	m_subbandselection.crosslets() = 0;
+    m_subbandselection.beamlets().resize(StationSettings::instance()->nrRcus(),
+                                         (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE),
+                                         MEPHeader::N_BEAMLETS );
+	m_subbandselection.beamlets() = 0;
+	
 	if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i)) {
 		// these weights ensure that the beamlet statistics
 		// exactly match the subband statistics
-		m_beamletweights()(Range::all(), Range::all(), Range::all()) = complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
+		m_beamletweights() = complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
 
 		//
 		// Set default subband selection starting at RSPDriver.FIRST_SUBBAND
 		//
 		int		firstSubband = GET_CONFIG("RSPDriver.FIRST_SUBBAND", i);
-		for (int rcu = 0; rcu < m_subbandselection().extent(firstDim); rcu++) {
-			for (int rsp = 0; rsp < 4; rsp++) {
-				int	start(rsp*(MEPHeader::N_BEAMLETS/4));
-				int stop (start+MAX_BEAMLETS_PER_RSP);
-				if (rcu==0) LOG_DEBUG_STR("start=" << start << ", stop=" << stop);
-				for (int sb = start; sb < stop; sb++) {
-					m_subbandselection()(rcu, sb + MEPHeader::N_LOCAL_XLETS) = (rcu%N_POL) + (sb*N_POL) + (firstSubband*2);
-				} // for sb
-			} // for rsp
+		for (int rcu = 0; rcu < m_subbandselection.beamlets().extent(firstDim); rcu++) {
+    		for (int bank = 0; bank < (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE); bank++) {	
+    			for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+    				int	start(lane*(MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+    				int stop (start + maxBeamletsPerRSP(itsBitsPerSample));
+    				if (rcu==0) LOG_DEBUG_STR("start=" << start << ", stop=" << stop);
+    				for (int sb = start; sb < stop; sb++) {
+    					m_subbandselection.beamlets()(rcu, bank, sb) = (rcu%N_POL) + (sb*N_POL) + (firstSubband*2);
+    				} // for sb
+    			} // for lane
+    		} // for bank
 		} // for rcu
-		LOG_DEBUG_STR("m_subbandsel(0): " << m_subbandselection()(0, Range::all()));
+		LOG_DEBUG_STR("m_subbandsel(0): " << m_subbandselection.beamlets()(0, Range::all(), Range::all()));
 	} // if identity_weights
 
 	// initialize RCU settings
@@ -200,8 +231,11 @@ void CacheBuffer::reset(void)
 
 	m_subbandstats().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_SUBBANDS);
 	m_subbandstats() = 0;
-
-	m_beamletstats().resize(StationSettings::instance()->nrRspBoards() * N_POL, MEPHeader::N_BEAMLETS);
+    
+    // Number of cep streams -> in normal mode 4, in splitmode 8.
+    int maxStreams = 8; 
+	m_beamletstats().resize((maxStreams/MEPHeader::N_SERDES_LANES) * N_POL,
+	                        (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE) * MEPHeader::N_BEAMLETS);
 	m_beamletstats() = 0;
 
 	m_xcstats().resize(N_POL, N_POL, StationSettings::instance()->nrBlps(), StationSettings::instance()->nrBlps());
@@ -274,6 +308,14 @@ void CacheBuffer::reset(void)
 	memset(&radlatencyinit, 0, sizeof(RADLatency));
 	itsLatencys() = radlatencyinit;
 	itsSwappedXY.reset();
+	
+	// BitMode
+	itsBitModeInfo().resize(StationSettings::instance()->nrRspBoards());
+	RSRBeamMode bitmodeinfo;
+	bitmodeinfo.bm_select = 0;
+	bitmodeinfo.bm_max = 0;
+	itsBitModeInfo() = bitmodeinfo;
+	
 }
 
 

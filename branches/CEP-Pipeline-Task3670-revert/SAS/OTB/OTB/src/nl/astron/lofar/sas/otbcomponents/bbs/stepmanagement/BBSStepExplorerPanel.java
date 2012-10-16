@@ -25,7 +25,7 @@ package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.util.HashMap;
-import java.util.Vector;
+import java.util.ArrayList;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -52,7 +52,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     public final static Color NOT_INHERITED_FROM_PARENT = new Color(204,255,204);
     public final static Color DEFAULT = Color.WHITE;
     
-    private static HashMap<String,String> stepOperationPanels = new HashMap<String,String>();
+    private static HashMap<String,String> stepOperationPanels = new HashMap<>();
     private IBBSStepOperationPanel currentStepOperationsPanel = null;
             
     private BBSStep itsBBSStep = null;
@@ -184,7 +184,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         
         //sources
         stepExplorerNSources.setBackground(DEFAULT);
-        this.fillList(this.stepExplorerNSourcesList,new Vector<String>());
+        this.fillList(this.stepExplorerNSourcesList,new ArrayList<String>());
         if(stepData.getSources() != null){
             if(stepData.getSources().size()>0){
                 this.useAllSourcesCheckbox.setSelected(false);
@@ -214,7 +214,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
 
         //instrument model 
         stepExplorerInstrumentModel.setBackground(DEFAULT);
-        this.fillList(this.stepExplorerInstrumentModelList,new Vector<String>());
+        this.fillList(this.stepExplorerInstrumentModelList,new ArrayList<String>());
         if(stepData.getInstrumentModel() != null){
             if(stepData.getInstrumentModel().size()>0){
                 this.noInstrumentModelCheckbox.setSelected(false);
@@ -245,7 +245,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
 //        //extra sources
 //        stepExplorerESources.setBackground(DEFAULT);
 //        this.stepExplorerModifyESourceText.setText("");
-//        this.fillList(this.stepExplorerESourcesList,new Vector<String>());
+//        this.fillList(this.stepExplorerESourcesList,new ArrayList<String>());
 //        if(stepData.getExtraSources() != null){
 //            if(stepData.getExtraSources().size()>0){
 //                this.useExtraSourcesCheckbox.setSelected(true);
@@ -337,16 +337,16 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         //type
         this.stepExplorerCorrelationTypeList.setBackground(DEFAULT);
         if(stepData.getCorrelationType() != null){
-            this.fillSelectionListFromVector(stepExplorerCorrelationTypeList,stepData.getCorrelationType());
+            this.fillSelectionListFromArrayList(stepExplorerCorrelationTypeList,stepData.getCorrelationType());
             this.stepExplorerCorrelationTypeList.setBackground(NOT_INHERITED_FROM_PARENT);
             
         }else{
             if(inheritedData.getCorrelationType() != null){
-                this.fillSelectionListFromVector(stepExplorerCorrelationTypeList,inheritedData.getCorrelationType());
+                this.fillSelectionListFromArrayList(stepExplorerCorrelationTypeList,inheritedData.getCorrelationType());
                 stepExplorerCorrelationTypeList.setBackground(INHERITED_FROM_PARENT);
                 
             }else{
-                this.fillSelectionListFromVector(stepExplorerCorrelationTypeList,new Vector<String>());
+                this.fillSelectionListFromArrayList(stepExplorerCorrelationTypeList,new ArrayList<String>());
                 stepExplorerCorrelationTypeList.setBackground(NOT_DEFINED);
             }
         }
@@ -369,25 +369,25 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         this.BaselineSelectionPanel.setBackground(DEFAULT);
         this.baselineStation1Text.setText("");
         this.baselineStation2Text.setText("");
-        this.fillBaselineTableFromVectors(new Vector<String>(),new Vector<String>());
+        this.fillBaselineTableFromArrayLists(new ArrayList<String>(),new ArrayList<String>());
         
         if(stepData.getStation1Selection() != null && stepData.getStation2Selection() != null){
-            Vector<String> station1 = stepData.getStation1Selection();
-            Vector<String> station2 = stepData.getStation2Selection();
+            ArrayList<String> station1 = stepData.getStation1Selection();
+            ArrayList<String> station2 = stepData.getStation2Selection();
             if(station1.size()>0 && station2.size()>0){
                 this.baselineUseAllCheckbox.setSelected(false);
-                this.fillBaselineTableFromVectors(station1,station2);
+                this.fillBaselineTableFromArrayLists(station1,station2);
             }else{
                 this.baselineUseAllCheckbox.setSelected(true);
             }
             this.BaselineSelectionPanel.setBackground(NOT_INHERITED_FROM_PARENT);
         }else{
             if(inheritedData.getStation1Selection() != null && inheritedData.getStation2Selection() != null){
-                Vector<String> station1 = inheritedData.getStation1Selection();
-                Vector<String> station2 = inheritedData.getStation2Selection();
+                ArrayList<String> station1 = inheritedData.getStation1Selection();
+                ArrayList<String> station2 = inheritedData.getStation2Selection();
                 if(station1.size()>0 && station2.size()>0){
                     this.baselineUseAllCheckbox.setSelected(false);
-                    this.fillBaselineTableFromVectors(station1,station2);
+                    this.fillBaselineTableFromArrayLists(station1,station2);
                 }else{
                     this.baselineUseAllCheckbox.setSelected(true);
                 }
@@ -429,18 +429,18 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         BBSStepData inheritedData = BBSStepDataManager.getInstance().getInheritedStepData(aStep);
         
         //normal sources
-        Vector<String> sources = createList(stepExplorerNSourcesList);
+        ArrayList<String> sources = createList(stepExplorerNSourcesList);
         if(this.useAllSourcesCheckbox.isSelected()){
-            sources = new Vector<String>();
+            sources = new ArrayList<>();
         }
         if(sources.equals(inheritedData.getSources())){
             aStepData.setSources(null);
         }else{
             if(this.useAllSourcesCheckbox.isSelected()){
-                aStepData.setSources(new Vector<String>());
+                aStepData.setSources(new ArrayList<String>());
             }else{
                 if(sources.size()>0){
-                    aStepData.setSources(new Vector<String>());
+                    aStepData.setSources(new ArrayList<String>());
                 }else{
                     aStepData.setSources(null);
                 }
@@ -455,18 +455,18 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         
         //instrument model        
         
-        Vector<String> imodels = createList(stepExplorerInstrumentModelList);
+        ArrayList<String> imodels = createList(stepExplorerInstrumentModelList);
         if(this.noInstrumentModelCheckbox.isSelected()){
-            imodels = new Vector<String>();
+            imodels = new ArrayList<>();
         }
         if(imodels.equals(inheritedData.getInstrumentModel())){
             aStepData.setInstrumentModel(null);
         }else{
             if(this.noInstrumentModelCheckbox.isSelected()){
-                aStepData.setInstrumentModel(new Vector<String>());
+                aStepData.setInstrumentModel(new ArrayList<String>());
             }else{
                 if(imodels.size()>0){
-                    aStepData.setInstrumentModel(new Vector<String>());
+                    aStepData.setInstrumentModel(new ArrayList<String>());
                 }else{
                     aStepData.setInstrumentModel(null);
                 }
@@ -481,18 +481,18 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         
 /*        //instrument model        
         
-        Vector<String> imodels = createVectorFromSelectionList(stepExplorerInstrumentModelList);
+        ArrayList<String> imodels = createArrayListFromSelectionList(stepExplorerInstrumentModelList);
         if(this.noInstrumentModelCheckbox.isSelected()){
-            imodels = new Vector<String>();
+            imodels = new ArrayList<String>();
         }
         if(imodels.equals(inheritedData.getInstrumentModel())){
             aStepData.setInstrumentModel(null);
         }else{
             if(this.noInstrumentModelCheckbox.isSelected()){
-                aStepData.setInstrumentModel(new Vector<String>());
+                aStepData.setInstrumentModel(new ArrayList<String>());
             }else{
                 if(imodels.size()>0){
-                    aStepData.setInstrumentModel(new Vector<String>());
+                    aStepData.setInstrumentModel(new ArrayList<String>());
                 }else{
                     aStepData.setInstrumentModel(null);
                 }
@@ -507,18 +507,18 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
 */       
 
 //extra sources
-//        Vector<String> esources = createList(stepExplorerESourcesList);
+//        ArrayList<String> esources = createList(stepExplorerESourcesList);
 //        if(!this.useExtraSourcesCheckbox.isSelected()){
-//            esources = new Vector<String>();
+//            esources = new ArrayList<String>();
 //        }
 //        if(esources.equals(inheritedData.getExtraSources())){
 //            aStepData.setExtraSources(null);
 //        }else{
 //            if(!this.useExtraSourcesCheckbox.isSelected()){
-//                aStepData.setExtraSources(new Vector<String>());
+//                aStepData.setExtraSources(new ArrayList<String>());
 //            }else{
 //                if(esources.size()>0){
-//                    aStepData.setExtraSources(new Vector<String>());
+//                    aStepData.setExtraSources(new ArrayList<String>());
 //                }else{
 //                    aStepData.setExtraSources(null);
 //                }
@@ -591,18 +591,18 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         
         //Correlation
         //Type
-        if(this.createVectorFromSelectionList(this.stepExplorerCorrelationTypeList).size()==0){
+        if(this.createArrayListFromSelectionList(this.stepExplorerCorrelationTypeList).isEmpty()){
             aStepData.setCorrelationType(null);
         }else{
-            if(createVectorFromSelectionList(stepExplorerCorrelationTypeList).equals(inheritedData.getCorrelationType())){
+            if(createArrayListFromSelectionList(stepExplorerCorrelationTypeList).equals(inheritedData.getCorrelationType())){
                 aStepData.setCorrelationType(null);
             }else{
-                aStepData.setCorrelationType(new Vector<String>());
+                aStepData.setCorrelationType(new ArrayList<String>());
             }
         }
         if(aStepData.getCorrelationType()!=null){
-            if(!createVectorFromSelectionList(stepExplorerCorrelationTypeList).equals(aStepData.getCorrelationType())){
-                aStepData.setCorrelationType(createVectorFromSelectionList(stepExplorerCorrelationTypeList));
+            if(!createArrayListFromSelectionList(stepExplorerCorrelationTypeList).equals(aStepData.getCorrelationType())){
+                aStepData.setCorrelationType(createArrayListFromSelectionList(stepExplorerCorrelationTypeList));
             }
         }
         //Selection
@@ -630,21 +630,21 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         }
         
         //baseline selection
-        Vector<Vector<String>> baselines = createVectorsFromBaselineTable();
-        Vector<String> station1 = baselines.get(0);
-        Vector<String> station2 = baselines.get(1);
+        ArrayList<ArrayList<String>> baselines = createArrayListsFromBaselineTable();
+        ArrayList<String> station1 = baselines.get(0);
+        ArrayList<String> station2 = baselines.get(1);
         if(this.baselineUseAllCheckbox.isSelected()){
-            station1 = new Vector<String>();
-            station2 = new Vector<String>();
+            station1 = new ArrayList<>();
+            station2 = new ArrayList<>();
         }
         if(station1.equals(inheritedData.getStation1Selection()) && station2.equals(inheritedData.getStation2Selection())){
             aStepData.setStation1Selection(null);
         }else{
             if(this.baselineUseAllCheckbox.isSelected()){
-                aStepData.setStation1Selection(new Vector<String>());
+                aStepData.setStation1Selection(new ArrayList<String>());
             }else{
                 if(station1.size()>0 && station2.size()>0){
-                    aStepData.setStation1Selection(new Vector<String>());
+                    aStepData.setStation1Selection(new ArrayList<String>());
                 }else{
                     aStepData.setStation1Selection(null);
                 }
@@ -657,10 +657,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
             aStepData.setStation2Selection(null);
         }else{
             if(this.baselineUseAllCheckbox.isSelected()){
-                aStepData.setStation2Selection(new Vector<String>());
+                aStepData.setStation2Selection(new ArrayList<String>());
             }else{
                 if(station1.size()>0 && station2.size()>0){
-                    aStepData.setStation2Selection(new Vector<String>());
+                    aStepData.setStation2Selection(new ArrayList<String>());
                 }else{
                     aStepData.setStation2Selection(null);
                 }
@@ -713,7 +713,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
                 
                 HashMap<String,String> oldValuesFromStep = aStepData.getOperationAttributes();
                 
-                if(oldValuesFromStep == null) oldValuesFromStep = new HashMap<String,String>();
+                if(oldValuesFromStep == null) oldValuesFromStep = new HashMap<>();
                 
                 for(String aKey : valuesFromForm.keySet()){
                     if(oldValuesFromStep.containsKey(aKey)){
@@ -751,13 +751,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     }
     
     /**
-     * Helper method that builds a String Vector representation of the contents of a JList.
+     * Helper method that builds a String ArrayList representation of the contents of a JList.
      *
-     * @parm aListComponent the JList component to build a String Vector representation for.
-     * @return String Vector representation of the contents of the given JList.
+     * @parm aListComponent the JList component to build a String ArrayList representation for.
+     * @return String ArrayList representation of the contents of the given JList.
      */
-    private Vector<String> createList(JList aListComponent) {
-        Vector<String> aList = new Vector<String>();
+    private ArrayList<String> createList(JList aListComponent) {
+        ArrayList<String> aList = new ArrayList<>();
         if (aListComponent.getModel().getSize() > 0) {
             for (int i=0; i < aListComponent.getModel().getSize();i++) {
                 aList.add(aListComponent.getModel().getElementAt(i).toString());
@@ -767,12 +767,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     }
     
     /**
-     * Helper method that fills a JList with a String Vector representation of a JList.
+     * Helper method that fills a JList with a String ArrayList representation of a JList.
      *
      * @parm aListComponent the JList to fill
-     * @parm theList the String Vector to fill the JList with.
+     * @parm theList the String ArrayList to fill the JList with.
      */
-    private void fillList(JList aListComponent,Vector<String> theList) {
+    private void fillList(JList aListComponent,ArrayList<String> theList) {
         DefaultListModel itsModel = new DefaultListModel();
         aListComponent.setModel(itsModel);
         for(String anItem : theList){
@@ -782,13 +782,13 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     }
     
     /**
-     * Helper method that builds a String Vector representation of the <i>selected</i> contents of a JList.
+     * Helper method that builds a String ArrayList representation of the <i>selected</i> contents of a JList.
      *
-     * @parm aListComponent the JList component to build a String Vector representation for.
-     * @return String Vector representation of the <i>selected</i> contents of the given JList.
+     * @parm aListComponent the JList component to build a String ArrayList representation for.
+     * @return String ArrayList representation of the <i>selected</i> contents of the given JList.
      */
-    private Vector<String> createVectorFromSelectionList(JList aListComponent) {
-        Vector<String> aList= new Vector<String>();
+    private ArrayList<String> createArrayListFromSelectionList(JList aListComponent) {
+        ArrayList<String> aList= new ArrayList<>();
         int[] selectedIndices = aListComponent.getSelectedIndices();
         if (selectedIndices.length > 0) {
             for (int i=0; i < selectedIndices.length;i++) {
@@ -799,12 +799,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     }
     
     /**
-     * Helper method that selects items in a JList with a String Vector representation of the selected items of a JList.
+     * Helper method that selects items in a JList with a String ArrayList representation of the selected items of a JList.
      *
      * @parm aListComponent the JList to select items in.
-     * @parm theList the String Vector to select items in the JList with.
+     * @parm theList the String ArrayList to select items in the JList with.
      */
-    private void fillSelectionListFromVector(JList aListComponent,Vector<String> theList) {
+    private void fillSelectionListFromArrayList(JList aListComponent,ArrayList<String> theList) {
         int[] toBeSelectedIndices = new int[theList.size()];
         int aValueIndex = 0;
         if(theList.size()>0){
@@ -826,12 +826,12 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     }
     
     /**
-     * Helper method that fills the Baseline table with the Station1 and Station2 Vectors
+     * Helper method that fills the Baseline table with the Station1 and Station2 ArrayLists
      *
-     * @parm station1 the Station1 part of the Baseline pair of Vectors.
-     * @parm station2 the Station2 part of the Baseline pair of Vectors.
+     * @parm station1 the Station1 part of the Baseline pair of ArrayLists.
+     * @parm station2 the Station2 part of the Baseline pair of ArrayLists.
      */
-    private void fillBaselineTableFromVectors(Vector<String> station1,Vector<String> station2) {
+    private void fillBaselineTableFromArrayLists(ArrayList<String> station1,ArrayList<String> station2) {
         baselineStationsTable.setModel(new javax.swing.table.DefaultTableModel(
                 new Object [][] {
             
@@ -853,7 +853,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         
         if(station1.size() == station2.size()){
             for(int i = 0; i<station1.size();i++){
-                Vector<String> newRow = new Vector<String>();
+                ArrayList<String> newRow = new ArrayList<>();
                 newRow.add(station1.get(i));
                 newRow.add(station2.get(i));
                 bsltm.addRow(newRow);
@@ -862,28 +862,28 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     }
     
     /**
-     * Helper method that creates the Station1 and Station2 vectors out of the items in the Baseline table
+     * Helper method that creates the Station1 and Station2 ArrayLists out of the items in the Baseline table
      *
-     * @return Vector containing 2 String Vectors : Station1 (index 0) and Station2 (index 1).
+     * @return ArrayList containing 2 String ArrayLists : Station1 (index 0) and Station2 (index 1).
      */
-    private Vector<Vector<String>> createVectorsFromBaselineTable(){
-        Vector<Vector<String>> returnVector = new Vector<Vector<String>>();
-        Vector<String> station1Vector = new Vector<String>();
-        Vector<String> station2Vector = new Vector<String>();
+    private ArrayList<ArrayList<String>> createArrayListsFromBaselineTable(){
+        ArrayList<ArrayList<String>> returnArrayList = new ArrayList<>();
+        ArrayList<String> station1ArrayList = new ArrayList<>();
+        ArrayList<String> station2ArrayList = new ArrayList<>();
         DefaultTableModel bsltm = (DefaultTableModel)baselineStationsTable.getModel();
         if(bsltm.getRowCount()>0){
             for(int i = 0; i<bsltm.getRowCount();i++){
-                String station1 = ((Vector)bsltm.getDataVector().elementAt(i)).elementAt(0).toString();
-                String station2 = ((Vector)bsltm.getDataVector().elementAt(i)).elementAt(1).toString();
-                station1Vector.add(station1);
-                station2Vector.add(station2);
+                String station1 = ((ArrayList)bsltm.getDataVector().elementAt(i)).get(0).toString();
+                String station2 = ((ArrayList)bsltm.getDataVector().elementAt(i)).get(1).toString();
+                station1ArrayList.add(station1);
+                station2ArrayList.add(station2);
             }
         }
         
-        returnVector.add(station1Vector);
-        returnVector.add(station2Vector);
+        returnArrayList.add(station1ArrayList);
+        returnArrayList.add(station2ArrayList);
         
-        return returnVector;
+        return returnArrayList;
     }
     /**
      * Helper method that checks if the Baseline input text fields are filled 
@@ -912,17 +912,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         if(name!=null){
             try {
                 newPanel = (JPanel) Class.forName(name).newInstance();
-            } catch (ClassNotFoundException ex) {
-                String aS="Error during getPanel: "+ ex;
-                logger.error(aS);
-                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                return;
-            } catch (InstantiationException ex) {
-                String aS="Error during getPanel: "+ ex;
-                logger.error(aS);
-                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                return;
-            } catch (IllegalAccessException ex) {
+            } catch (    ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
                 String aS="Error during getPanel: "+ ex;
                 logger.error(aS);
                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
@@ -1695,7 +1685,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
         DefaultTableModel bsltm = (DefaultTableModel)this.baselineStationsTable.getModel();
         String typedText=baselineStation1Text.getText();
         String typedText2=baselineStation2Text.getText();
-        Vector<String> baselinePair = new Vector<String>();
+        ArrayList<String> baselinePair = new ArrayList<String>();
         baselinePair.add(typedText);
         baselinePair.add(typedText2);
         bsltm.addRow(baselinePair);

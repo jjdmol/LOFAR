@@ -45,13 +45,14 @@ namespace LOFAR {
 	static const int MAX_ANTENNAS			  = 96;						// Max number antenna's of each type.
 	static const int MAX_RCUS				  = (MAX_ANTENNAS * N_POL);	// Max number of RCU's in one station
 	static const int MAX_SUBBANDS			  = 512;					// Number of subbands that are created
-	static const int MAX_BEAMLETS_PER_RSP	  = 61;						// Max number of beamlets comming from one RSPboard
-	static const int MAX_BEAMLETS			  = (4 * MAX_BEAMLETS_PER_RSP);	// Max number of beamlets comming from one station
 	static const int MAX_RSPBOARDS			  = (MAX_RCUS / NR_RCUS_PER_RSPBOARD);
 
 	static const int NR_RCU_MODES			  = 7;
 	static const int NR_SPECTRAL_WINDOWS	  = 5;
 
+	static const int MAX_BITS_PER_SAMPLE	  = 16;
+	static const int MIN_BITS_PER_SAMPLE	  = 4;
+	static const int MAX_NR_BM_BANKS	      = (MAX_BITS_PER_SAMPLE / MIN_BITS_PER_SAMPLE);
 }
 
 #endif

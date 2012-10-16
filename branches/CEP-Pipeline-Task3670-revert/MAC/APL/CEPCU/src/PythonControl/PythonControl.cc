@@ -185,6 +185,10 @@ bool PythonControl::_startPython(const string&	pythonProg,
 		}
 	}
 
+	// Readin parameters from the obsercationfile.
+	itsFeedbackFile = observationParset(obsID)+"_feedback";
+	LOG_INFO_STR ("Expect metadata to be in file " << itsFeedbackFile);
+
 	// construct system command
 	string	startCmd;
 	string	startScript("startPython.sh");
@@ -203,13 +207,23 @@ bool PythonControl::_startPython(const string&	pythonProg,
 								myHostname(true).c_str(), parentService.c_str(), itsPythonName.c_str());
 	}
 	LOG_INFO_STR("About to start: " << startCmd);
-
-	int32	result = system (startCmd.c_str());
-	LOG_INFO_STR ("Result of start = " << result);
-
-	// Readin parameters from the obsercationfile.
-	itsFeedbackFile = observationParset(obsID)+"_feedback";
-	LOG_INFO_STR ("Expecting metadata in file " << itsFeedbackFile);
+#if 1
+	FILE*	pipe = popen(startCmd.c_str(), "r");
+	if (!pipe) {
+		LOG_FATAL_STR("Couldn't execute '" << startCmd << ", errno = " << strerror(errno));
+		return (false);
+	}
+	LOG_INFO("Output of command: ...");
+	while (!feof(pipe)) {
+		char	buffer[1024];
+		LOG_INFO_STR(fgets(buffer, 1024, pipe));
+	}
+	LOG_INFO("... end of command output");
+	int	result = pclose(pipe);
+#else
+	int	result = system (startCmd.c_str());
+#endif
+	LOG_INFO_STR ("Result of command = " << result);
 
 	if (result == -1) {
 		return (false);

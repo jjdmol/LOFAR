@@ -31,25 +31,21 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-unsigned int BeamletWeights::getSize()
+size_t BeamletWeights::getSize() const
 {
-  return MSH_ARRAY_SIZE(m_weights, complex<int16>);
+  return MSH_size(m_weights);
 }
 
-unsigned int BeamletWeights::pack  (void* buffer)
+size_t BeamletWeights::pack  (char* buffer) const
 {
-  unsigned int offset = 0;
-
-  MSH_PACK_ARRAY(buffer, offset, m_weights, complex<int16>);
-
+  size_t offset = 0;
+  MSH_pack(buffer, offset, m_weights);
   return offset;
 }
 
-unsigned int BeamletWeights::unpack(void *buffer)
+size_t BeamletWeights::unpack(const char *buffer)
 {
-  unsigned int offset = 0;
-
-  MSH_UNPACK_ARRAY(buffer, offset, m_weights, complex<int16>, NDIM);
-
+  size_t offset = 0;
+  MSH_unpack(buffer, offset, m_weights);
   return offset;
 }

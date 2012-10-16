@@ -26,7 +26,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.rmi.RemoteException;
 import java.util.Enumeration;
-import java.util.Vector;
+import java.util.ArrayList;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
@@ -65,7 +65,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             
     private jOTDBnode itsNode = null;
     private MainFrame  itsMainFrame;
-    private Vector<jOTDBparam> itsParamList;
+    private ArrayList<jOTDBparam> itsParamList;
     
     // BBS Strategy parameters
     private jOTDBnode StrategySteps;
@@ -132,13 +132,11 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         jOTDBparam aParam=null;
         try {
             //we need to get all the childs from this node.
-            Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
+            ArrayList<jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
             
             // get all the params per child
-            Enumeration e = childs.elements();
-            while( e.hasMoreElements()  ) {
+            for (jOTDBnode aNode:childs) {
                 aParam=null;
-                jOTDBnode aNode = (jOTDBnode)e.nextElement();
                 
                 // We need to keep all the nodes needed by this panel
                 // if the node is a leaf we need to get the pointed to value via Param.
@@ -216,12 +214,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
         jOTDBparam aParam=null;
         try {
-            Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            ArrayList<jOTDBnode> HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
             // get all the params per child
-            Enumeration e1 = HWchilds.elements();
-            while( e1.hasMoreElements()  ) {
-                
-                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+            for (jOTDBnode aHWNode:HWchilds) {
                 aParam=null;
                 // We need to keep all the params needed by this panel
                 if (aHWNode.leaf) {
@@ -321,96 +316,99 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         boolean isRef = LofarUtils.isReference(aNode.limits);
         String aKeyName = LofarUtils.keyName(aNode.name);
         String parentName = String.valueOf(parent.name);
-        
-        if(parentName.equals("Strategy")){
-            //Setup step tree
-            this.setupStepTree(parent);
-            this.setupStepsList(BBSStepDataManager.getInstance().getStepNames());
-            
-            if (aKeyName.equals("InputData")) {
-                this.inputDataText.setToolTipText(aParam.description);
-                this.StrategyInputData=aNode;
-                
-                if (isRef && aParam != null) {
-                    inputDataText.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputDataText.setText(aNode.limits);
-                }
-            }else if (aKeyName.equals("Stations")) {
-                this.stationsList.setToolTipText(aParam.description);
-                this.StrategyStations = aNode;
-                
-                //set the checkbox correctly when no stations are provided in the data
-                if(StrategyStations.limits == null || StrategyStations.limits.equals("[]")){
-                    this.stationsUseAllCheckbox.setSelected(true);
-                    stationsList.setModel(new DefaultListModel());
-                }else{
-                    this.stationsUseAllCheckbox.setSelected(false);
-                    TitledBorder aBorder = (TitledBorder)this.stationsPanel.getBorder();
+        switch (parentName) {
+            case "Strategy":
+                //Setup step tree
+                this.setupStepTree(parent);
+                this.setupStepsList(BBSStepDataManager.getInstance().getStepNames());
+                if (aKeyName.equals("InputData")) {
+                    this.inputDataText.setToolTipText(aParam.description);
+                    this.StrategyInputData=aNode;
+                    
                     if (isRef && aParam != null) {
-                        aBorder.setTitle("Station Names (Referenced)");
-                        LofarUtils.fillList(stationsList,aParam.limits,false);
+                        inputDataText.setText(aNode.limits + " : " + aParam.limits);
                     } else {
-                        aBorder.setTitle("Station Names");
-                        LofarUtils.fillList(stationsList,aNode.limits,true);
+                        inputDataText.setText(aNode.limits);
+                    }
+                }else if (aKeyName.equals("Stations")) {
+                    this.stationsList.setToolTipText(aParam.description);
+                    this.StrategyStations = aNode;
+                    
+                    //set the checkbox correctly when no stations are provided in the data
+                    if(StrategyStations.limits == null || StrategyStations.limits.equals("[]")){
+                        this.stationsUseAllCheckbox.setSelected(true);
+                        stationsList.setModel(new DefaultListModel());
+                    }else{
+                        this.stationsUseAllCheckbox.setSelected(false);
+                        TitledBorder aBorder = (TitledBorder)this.stationsPanel.getBorder();
+                        if (isRef && aParam != null) {
+                            aBorder.setTitle("Station Names (Referenced)");
+                            LofarUtils.fillList(stationsList,aParam.limits,false);
+                        } else {
+                            aBorder.setTitle("Station Names");
+                            LofarUtils.fillList(stationsList,aNode.limits,true);
+                        }
                     }
                 }
-            }
-        } else if(parentName.equals("WorkDomainSize")){
-            if (aKeyName.equals("Freq")) {
-                this.wdsFrequencyText.setToolTipText(aParam.description);
-                this.StrategyWDSFrequency=aNode;
-                
-                if (isRef && aParam != null) {
-                    wdsFrequencyText.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    wdsFrequencyText.setText(aNode.limits);
+                break;
+            case "WorkDomainSize":
+                if (aKeyName.equals("Freq")) {
+                    this.wdsFrequencyText.setToolTipText(aParam.description);
+                    this.StrategyWDSFrequency=aNode;
+                    
+                    if (isRef && aParam != null) {
+                        wdsFrequencyText.setText(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        wdsFrequencyText.setText(aNode.limits);
+                    }
+                } else if (aKeyName.equals("Time")) {
+                    this.wdsTimeText.setToolTipText(aParam.description);
+                    this.StrategyWDSTime=aNode;
+                    
+                    if (isRef && aParam != null) {
+                        wdsTimeText.setText(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        wdsTimeText.setText(aNode.limits);
+                    }
                 }
-            } else if (aKeyName.equals("Time")) {
-                this.wdsTimeText.setToolTipText(aParam.description);
-                this.StrategyWDSTime=aNode;
-                
-                if (isRef && aParam != null) {
-                    wdsTimeText.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    wdsTimeText.setText(aNode.limits);
+                break;
+            case "Integration":
+                if (aKeyName.equals("Freq")) {
+                    this.integrationFrequencyText.setToolTipText(aParam.description);
+                    this.StrategyIntegrationFrequency=aNode;
+             
+                    if (isRef && aParam != null) {
+                        integrationFrequencyText.setText(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        integrationFrequencyText.setText(aNode.limits);
+                    }
+                } else if (aKeyName.equals("Time")) {
+                    this.integrationTimeText.setToolTipText(aParam.description);
+                    this.StrategyIntegrationTime=aNode;
+             
+                    if (isRef && aParam != null) {
+                        integrationTimeText.setText(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        integrationTimeText.setText(aNode.limits);
+                    }
                 }
-            }
-        } else if(parentName.equals("Integration")){
-            if (aKeyName.equals("Freq")) {
-                this.integrationFrequencyText.setToolTipText(aParam.description);
-                this.StrategyIntegrationFrequency=aNode;
-         
-                if (isRef && aParam != null) {
-                    integrationFrequencyText.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    integrationFrequencyText.setText(aNode.limits);
+                break;
+            case "Correlation":
+                if (aKeyName.equals("Selection")) {
+                    this.correlationSelectionBox.setToolTipText(aParam.description);
+                    this.StrategyCorrelationSelection=aNode;
+                    this.correlationSelectionBox.setSelectedItem(aNode.limits);
+                    logger.trace("Correlation selection will be :"+this.correlationSelectionBox.getSelectedItem().toString());
+                } else if (aKeyName.equals("Type")) {
+                    this.correlationTypeList.setToolTipText(aParam.description);
+                    this.StrategyCorrelationType=aNode;
+                    if (isRef && aParam != null) {
+                        LofarUtils.fillSelectionListFromString(correlationTypeList,aParam.limits,false);
+                    } else {
+                        LofarUtils.fillSelectionListFromString(correlationTypeList,aNode.limits,true);
+                    }
                 }
-            } else if (aKeyName.equals("Time")) {
-                this.integrationTimeText.setToolTipText(aParam.description);
-                this.StrategyIntegrationTime=aNode;
-         
-                if (isRef && aParam != null) {
-                    integrationTimeText.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    integrationTimeText.setText(aNode.limits);
-                }
-            }
-        } else if(parentName.equals("Correlation")){
-            if (aKeyName.equals("Selection")) {
-                this.correlationSelectionBox.setToolTipText(aParam.description);
-                this.StrategyCorrelationSelection=aNode;
-                this.correlationSelectionBox.setSelectedItem(aNode.limits);
-                logger.trace("Correlation selection will be :"+this.correlationSelectionBox.getSelectedItem().toString());
-            } else if (aKeyName.equals("Type")) {
-                this.correlationTypeList.setToolTipText(aParam.description);
-                this.StrategyCorrelationType=aNode;
-                if (isRef && aParam != null) {
-                    LofarUtils.fillSelectionListFromString(correlationTypeList,aParam.limits,false);
-                } else {
-                    LofarUtils.fillSelectionListFromString(correlationTypeList,aNode.limits,true);
-                }
-            }
+                break;
         }
     }
     /** 
@@ -502,18 +500,16 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             //Add steps that make up the strategy to the steps tree browser
             //fetch the BBS root Container node, which is the parent of the BBS Strategy node given in strategyRootNode
-            Vector steps = OtdbRmi.getRemoteMaintenance().getItemList(strategyRootNode.treeID(), strategyRootNode.parentID(), 1);
+            ArrayList<jOTDBnode> steps = OtdbRmi.getRemoteMaintenance().getItemList(strategyRootNode.treeID(), strategyRootNode.parentID(), 1);
             // get all the params per child
-            Enumeration se = steps.elements();
-            while( se.hasMoreElements()  ) {
-                jOTDBnode aNode2 = (jOTDBnode)se.nextElement();
+            for (jOTDBnode aNode2:steps) {
                 
                 if (aNode2.leaf) {
                 //retrieve the BBS Step Container node, which holds all steps (BBS.Step)
                 }else if (LofarUtils.keyName(aNode2.name).equals("Step")) {
                     //Add steps to tree
                     Object[] rootNodeArgs = new Object[3];
-                    rootNodeArgs[0]= new String("Strategy Steps");
+                    rootNodeArgs[0]= "Strategy Steps";
                     rootNodeArgs[1]=aNode2;
                     TreeNode newStepRootNode = BBSStepTreeManager.getInstance(itsMainFrame.getUserAccount()).getRootNode(rootNodeArgs);
                     this.stepsTreePanel.newRootNode(newStepRootNode);
@@ -535,7 +531,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
      *
      * @param items the String items to be added to the combobox.
      */
-    private void setupStepsList(Vector<String> items){
+    private void setupStepsList(ArrayList<String> items){
         DefaultComboBoxModel itsModel = new DefaultComboBoxModel();
         stepsList.setModel(itsModel);
         for(String anItem : items){
@@ -1097,7 +1093,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 this.removeStepButton.setEnabled(true);
                 //show a somewhat (not completely) limited list of steps that can be added to prevent infinite loops
                 //remove all steps that are part of the step tree all the way to the strategy...
-                Vector<String> items = BBSStepDataManager.getInstance().getStepNames();
+                ArrayList<String> items = BBSStepDataManager.getInstance().getStepNames();
                 
                 Object[] treeForThisNode = selectedPath.getPath();
                 for(int i = 0; i < treeForThisNode.length; i++){
@@ -1150,7 +1146,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 this.stepMoveUpButton.setEnabled(false);
                 this.stepMoveDownButton.setEnabled(false);
                 //show full list of steps that can be added
-                Vector<String> items = BBSStepDataManager.getInstance().getStepNames();
+                ArrayList<String> items = BBSStepDataManager.getInstance().getStepNames();
                 this.setupStepsList(items);
             }
             
@@ -1200,7 +1196,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             theStationModel.remove(selectedIndices[0]);
             selectedIndices = stationsList.getSelectedIndices();
         }
-        if(theStationModel.size()==0){
+        if(theStationModel.isEmpty()){
             this.deleteStationButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteStationButtonActionPerformed

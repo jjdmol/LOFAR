@@ -24,6 +24,7 @@
 #define DIGITALBEAM_H_
 
 #include <lofar_config.h>
+#include <Common/lofar_bitset.h>
 #include <Common/lofar_string.h>
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/IBS_Protocol/Beamlet2SubbandMap.h>

@@ -12,6 +12,9 @@ receiverList		string
 sampleClock			int
 runState			string
 measurementSet		string
+processType		string
+processSubtype		string
+strategy		string
 
 stationList			string
 inputNodeList		string

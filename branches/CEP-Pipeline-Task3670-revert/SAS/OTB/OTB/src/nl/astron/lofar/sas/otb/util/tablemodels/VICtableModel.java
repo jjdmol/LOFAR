@@ -11,7 +11,7 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.rmi.RemoteException;
-import java.util.Vector;
+import java.util.ArrayList;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
@@ -63,14 +63,14 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
                 return false;
             }
             data[row][0]=new Integer(tInfo.treeID());	   
-            data[row][1]=new String(OtdbRmi.getTreeState().get(tInfo.state));
-            data[row][2]=new String(tInfo.processType);
-            data[row][3]=new String(tInfo.processSubtype);
-            data[row][4]=new String(tInfo.strategy);
-            data[row][5]=new String(tInfo.campaign);
-            data[row][6]=new String(tInfo.starttime.replace("T", " "));
-            data[row][7]=new String(tInfo.stoptime.replace("T", " "));
-            data[row][8]=new String(tInfo.description);
+            data[row][1]=OtdbRmi.getTreeState().get(tInfo.state);
+            data[row][2]=tInfo.processType;
+            data[row][3]=tInfo.processSubtype;
+            data[row][4]=tInfo.strategy;
+            data[row][5]=tInfo.campaign;
+            data[row][6]=tInfo.starttime.replace("T", " ");
+            data[row][7]=tInfo.stoptime.replace("T", " ");
+            data[row][8]=tInfo.description;
             fireTableDataChanged();
         } catch (RemoteException e) {
             logger.debug("Remote OTDB getTreeInfo failed: " + e);
@@ -90,25 +90,25 @@ public class VICtableModel extends javax.swing.table.AbstractTableModel {
                 return false;
             }
             // Get a Treelist of all available VHtree's
-            Vector aTreeList=OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("VHtree"),(short)0);
+            ArrayList aTreeList=OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("VHtree"),(short)0);
             data = new Object[aTreeList.size()][headers.length];
             logger.debug("Treelist downloaded. Size: "+aTreeList.size());
            
             for (int k=0; k< aTreeList.size();k++) {
-                jOTDBtree tInfo = (jOTDBtree)aTreeList.elementAt(k);
+                jOTDBtree tInfo = (jOTDBtree)aTreeList.get(k);
                 if (tInfo.treeID()==0) {
                     logger.error("No such tree found!");
                 } else {
                     logger.debug("Gathered info for ID: "+tInfo.treeID());
                     data[k][0]=new Integer(tInfo.treeID());	   
-	            data[k][1]=new String(OtdbRmi.getTreeState().get(tInfo.state));
-                    data[k][2]=new String(tInfo.processType);
-                    data[k][3]=new String(tInfo.processSubtype);
-                    data[k][4]=new String(tInfo.strategy);
-	            data[k][5]=new String(tInfo.campaign);
-	            data[k][6]=new String(tInfo.starttime.replace("T", " "));
-	            data[k][7]=new String(tInfo.stoptime.replace("T", " "));
-	            data[k][8]=new String(tInfo.description);
+	            data[k][1]=OtdbRmi.getTreeState().get(tInfo.state);
+                    data[k][2]=tInfo.processType;
+                    data[k][3]=tInfo.processSubtype;
+                    data[k][4]=tInfo.strategy;
+	            data[k][5]=tInfo.campaign;
+	            data[k][6]=tInfo.starttime.replace("T", " ");
+	            data[k][7]=tInfo.stoptime.replace("T", " ");
+	            data[k][8]=tInfo.description;
                 }
             }
             fireTableDataChanged();

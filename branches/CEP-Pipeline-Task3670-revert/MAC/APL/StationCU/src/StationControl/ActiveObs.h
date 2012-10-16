@@ -63,6 +63,8 @@ public:
 	ActiveObs (const string&	name,
 			   State			initial,
 			   ParameterSet*	aPS,
+			   const string&	LBAbitmap,
+			   const string&	HBAbitmap,
 			   bool				hasSplitters,
 			   GCFTask&			task);
 	virtual ~ActiveObs();
@@ -95,6 +97,8 @@ private:
 	RTDBPropertySet*			itsPropertySet;
 	GCFTimerPort*				itsPropSetTimer;
 
+	GCFTimerPort*				itsGuardTimer;
+
 	string						itsName;
 	GCFTask*					itsTask;
 	int32						itsInstanceNr;
@@ -109,6 +113,8 @@ private:
 	bool						itsReadyFlag;
 	CTState::CTstateNr			itsReqState;
 	CTState::CTstateNr			itsCurState;
+	string						itsLBAs;
+	string						itsHBAs;
 };
 
 //#

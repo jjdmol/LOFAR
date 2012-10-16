@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RTCCommon/PSAccess.h>
@@ -35,6 +36,29 @@ using namespace LOFAR;
 using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
+
+// BITMODE 16
+// bank 0:
+// lane 0    lane 1    lane 2    lane 3
+//	0,1      122,123   244,245   366,367
+//  2,3      124,125   246,247   368,369
+//   ..        ..        ..        ..
+// 120,121   242,243   364,365,  486,487
+//
+// BITMODE 8
+// bank 0:
+// lane 0    lane 1    lane 2    lane 3
+//	0,1      244,245   488,489   732,733
+//  2,3      246,247   490,491   734,735
+//   ..        ..        ..        ..
+// 120,121   364,365   608,609,  852,853
+//
+// bank 1:
+// lane 0    lane 1    lane 2    lane 3
+// 122,123   366,367   610,611   854,855
+// 124,125   368,369   612,613   856,857
+//   ..        ..        ..        ..
+// 242,243   486,487   730,731   974,975
 
 SetSubbandsCmd::SetSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
 	Command("SetSubbands", port, oper)
@@ -64,42 +88,46 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 
 	Range	dst_range;
 	Range	src_range;
+	int nBanks = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
 
 	switch (m_event->subbands.getType()) {
 
 	case SubbandSelection::BEAMLET: {
 		//dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
-		dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + m_event->subbands().extent(secondDim) - 1);
+		dst_range = Range(0, m_event->subbands.beamlets().extent(thirdDim) - 1);
 		for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 			if (m_event->rcumask[cache_rcu]) {
 				// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 				//       In other words: getSubbandSelection can contain more data than m_event->subbands
-				if (MEPHeader::N_BEAMLETS == MAX_BEAMLETS) {
-					cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
-					cache.getSubbandSelection()()(cache_rcu, dst_range) = m_event->subbands()(0, Range::all()) * (int)N_POL + (cache_rcu % N_POL);
-				}
-				else {
-					int nr_subbands = m_event->subbands().extent(secondDim);
-					for (int rsp = 0; rsp < 4; rsp++) {
-						int	swstart(rsp*MAX_BEAMLETS_PER_RSP);
-						int hwstart(MEPHeader::N_LOCAL_XLETS + rsp * (MEPHeader::N_BEAMLETS/4));
-						int nrSubbands2move(MIN(nr_subbands-swstart, MAX_BEAMLETS_PER_RSP));
-						if (nrSubbands2move > 0) {
-							dst_range = Range(hwstart, hwstart+nrSubbands2move-1);
-							src_range = Range(swstart, swstart+nrSubbands2move-1);
-							cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
-							cache.getSubbandSelection()()(cache_rcu, dst_range) = m_event->subbands()(0, src_range) * (int)N_POL + (cache_rcu % N_POL);
-							if (cache_rcu == 0) {
-								LOG_DEBUG_STR("Setsubbands:move(" << swstart << ".." << swstart+nrSubbands2move << ") to (" 
-																  << hwstart << ".." << hwstart+nrSubbands2move << ")");
-							}
-						} // subbands left
-					} // for each rsp-slice
-				} // difference in max'en
+
+				int nrSubbands = m_event->subbands.beamlets().extent(thirdDim);
+				int nrBlocks = MEPHeader::N_SERDES_LANES * nBanks;
+				for (int block = 0; block < nrBlocks; block++) {
+					int swbank = block / MEPHeader::N_SERDES_LANES;
+					int swlane = block % MEPHeader::N_SERDES_LANES;
+					int hwbank = block % nBanks;
+					int hwlane = block / nBanks;
+					int	swstart(swlane * maxDataslotsPerRSP(cache.getBitsPerSample()));
+					int hwstart(hwlane * (MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+					int nrSubbands2move(MIN(nrSubbands-swstart, maxDataslotsPerRSP(cache.getBitsPerSample())));
+					if (nrSubbands2move > 0) {
+						dst_range = Range(hwstart, hwstart+nrSubbands2move-1);
+						src_range = Range(swstart, swstart+nrSubbands2move-1);
+						cache.getSubbandSelection().beamlets()(cache_rcu, hwbank, dst_range) = 0;
+						cache.getSubbandSelection().beamlets()(cache_rcu, hwbank, dst_range) = 
+									m_event->subbands.beamlets()(0, swbank, src_range) * (int)N_POL + (cache_rcu % N_POL);
+						if (cache_rcu == 0) {
+							LOG_DEBUG_STR("SS:block=" << block << " move(" << swstart << ".." << swstart+nrSubbands2move << ") to (" 
+															  << hwstart << ".." << hwstart+nrSubbands2move << ")"
+															  << " swbank:" << swbank << " swlane:" << swlane 
+															  << " hwbank:" << hwbank << " hwlane:" << hwlane);
+						}
+					} // subbands left
+				} // for each block
 
 				if (cache_rcu == 0) {
-					LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
-					LOG_DEBUG_STR("cache->subbands(0) = " << cache.getSubbandSelection()()(0,Range::all()));
+					LOG_DEBUG_STR("m_event->subbands.beamlets() = " << m_event->subbands.beamlets());
+					LOG_DEBUG_STR("cache->subbands.beamlets(0) = " << cache.getSubbandSelection().beamlets()(0, Range::all(), Range::all()));
 				}
 			} // if rcu selected
 		} // for each rcu
@@ -110,10 +138,11 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 		dst_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
 		for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 			if (m_event->rcumask[cache_rcu]) {
-				cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
-				cache.getSubbandSelection()()(cache_rcu, dst_range) = m_event->subbands()(0,0) * N_POL + (cache_rcu % N_POL);
-
-				LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
+			    for (int bank = 0; bank < nBanks; bank++) {
+				    cache.getSubbandSelection().crosslets()(cache_rcu, bank, dst_range) = 0;
+				    cache.getSubbandSelection().crosslets()(cache_rcu, bank, dst_range) = m_event->subbands.crosslets()(0,0,0) * N_POL + (cache_rcu % N_POL);
+                }
+				LOG_DEBUG_STR("m_event->subbands.crosslets() = " << m_event->subbands.crosslets());
 			}
 		}
 	}
@@ -148,30 +177,41 @@ bool SetSubbandsCmd::validate() const
 	switch (m_event->subbands.getType()) {
 
 	case SubbandSelection::BEAMLET:
-		if (m_event->subbands().extent(secondDim) <= MEPHeader::N_BEAMLETS) valid = true;
+		if (   (m_event->subbands.beamlets().extent(thirdDim) <= MEPHeader::N_BEAMLETS)
+			&& (3 == m_event->subbands.beamlets().dimensions())
+		    && (1 == m_event->subbands.beamlets().extent(firstDim))) {
+		    valid = true;
+		}
 		break;
 
 	case SubbandSelection::XLET:
-		if (1 == m_event->subbands().extent(secondDim)) valid = true;
+		if (   (1 == m_event->subbands.crosslets().extent(thirdDim))
+	        && (3 == m_event->subbands.crosslets().dimensions())
+		    && (1 == m_event->subbands.crosslets().extent(firstDim))) {
+		    valid = true;
+		}
 		break;
 
 	default:
-		LOG_WARN("invalid SubbandSelection type");
+		LOG_WARN("invalid SubbandSelection type or dimensions");
 		break;
 	}
 
 	// return true when everything is right
-	if ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
-		&& (2 == m_event->subbands().dimensions())
-		&& (1 == m_event->subbands().extent(firstDim)) && valid) {
+	if (   (m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
+		&& valid) {
 		return (true);
 	}
 
 	// show our validation values.
-    LOG_DEBUG(formatString("cmd rcumask.count = %d",m_event->rcumask.count()));
-    LOG_DEBUG(formatString("nr Rcus           = %d",StationSettings::instance()->nrRcus()));
-    LOG_DEBUG(formatString("first dim         = %d",m_event->subbands().extent(firstDim)));
-    LOG_DEBUG(formatString("second dim        = %d",m_event->subbands().extent(secondDim)));
+    LOG_DEBUG(formatString("cmd rcumask.count    = %d",m_event->rcumask.count()));
+    LOG_DEBUG(formatString("nr Rcus              = %d",StationSettings::instance()->nrRcus()));
+    LOG_DEBUG(formatString("first dim crosslets  = %d",m_event->subbands.crosslets().extent(firstDim)));
+    LOG_DEBUG(formatString("second dim crosslets = %d",m_event->subbands.crosslets().extent(secondDim)));
+    LOG_DEBUG(formatString("thirth dim crosslets = %d",m_event->subbands.crosslets().extent(thirdDim)));
+    LOG_DEBUG(formatString("first dim beamlets   = %d",m_event->subbands.beamlets().extent(firstDim)));
+    LOG_DEBUG(formatString("second dim beamlets  = %d",m_event->subbands.beamlets().extent(secondDim)));
+    LOG_DEBUG(formatString("thirth dim beamlets  = %d",m_event->subbands.beamlets().extent(thirdDim)));
     return (false);
 
 }

@@ -39,6 +39,7 @@
 #include <csignal>
 #include <cstring>
 #include <cerrno>
+#include <libgen.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -449,7 +450,11 @@ int main(int argc, char* argv[]) {
 	setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 
 #if defined HAVE_LOG4CPLUS
-	INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/Storage_main.log_prop");
+	char *dirc = strdup(argv[0]);
+
+	INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/TBB_Writer_main.log_prop");
+
+	free(dirc);
 #endif
 
 	if ((err = parseArgs(argc, argv, &args)) != 0) {

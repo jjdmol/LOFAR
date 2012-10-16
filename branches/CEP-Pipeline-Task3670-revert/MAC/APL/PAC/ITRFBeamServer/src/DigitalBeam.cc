@@ -48,12 +48,12 @@ using namespace RTC;
 //
 // DigitalBeam(name, subarray, nrSubbands)
 //
-DigitalBeam::DigitalBeam(const string& 					name, 
-					     const string& 					antennaSet, 
-					     const Beamlet2SubbandMap&		allocation, 
-					     const bitset<MAX_RCUS>&		rcuMask,
-					     uint							ringNr,
-						 uint							rcuMode) :
+DigitalBeam::DigitalBeam(const string& 				name, 
+					     const string& 				antennaSet, 
+					     const Beamlet2SubbandMap&	allocation, 
+					     const bitset<MAX_RCUS>&	rcuMask,
+					     uint						ringNr,
+						 uint						rcuMode) :
 	Beam 				(name, antennaSet, rcuMask),
 	itsBeamletAllocation(allocation),
 	itsRingNr			(ringNr),
