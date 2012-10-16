@@ -107,11 +107,14 @@ def run_tasks(procs, err_q, out_q, num):
     results=[None]*num;
     for i in range(num):
         idx, result = out_q.get()
-        results[idx] = numpy.array(result, dtype=object)
+        results[idx] = result
 
     # Remove extra dimension added by array_split
-    return numpy.concatenate(results).tolist()
+    result_list = []
+    for result in results:
+            result_list += result
 
+    return result_list
 
 
 def parallel_map(function, sequence, numcores=None, bar=None, weights=None):
@@ -189,11 +192,15 @@ def parallel_map(function, sequence, numcores=None, bar=None, weights=None):
         for indx, weight in enumerate(weights):
             temp_sum += weight
             if temp_sum > weight_per_core:
-                cut_values.append(indx)
+                cut_values.append(indx+1)
                 temp_sum = weight
         if len(cut_values) > numcores - 1:
             cut_values = cut_values[0:numcores-1]
         sequence = numpy.array_split(sequence, cut_values)
+
+    # Make sure there are no empty chunks at the end of the sequence
+    while len(sequence[-1]) == 0:
+        sequence.pop()
 
     procs = [multiprocessing.Process(target=worker,
              args=(function, ii, chunk, out_q, err_q, lock, bar, bar_state))
