@@ -32,9 +32,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.Icon;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 import nl.astron.lofar.lofarutils.DateTimeChooser;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -53,7 +51,7 @@ import org.apache.log4j.Logger;
  *
  * @version $Id$
  */
-public class TreeInfoDialog extends javax.swing.JDialog {
+public final class TreeInfoDialog extends javax.swing.JDialog {
     static Logger logger = Logger.getLogger(TreeInfoDialog.class);
     static String name = "TreeInfoDialog";
     

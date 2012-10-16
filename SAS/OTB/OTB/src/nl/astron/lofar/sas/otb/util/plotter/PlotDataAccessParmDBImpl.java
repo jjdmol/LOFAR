@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.TimeZone;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import nl.astron.lofar.java.gui.plotter.IPlotDataAccess;
@@ -424,7 +423,6 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
             PlotterDataAccessException ex = new PlotterDataAccessException("An error occurred while updating the dataset! : "+e.getMessage());
             ex.initCause(e);
             logger.error(ex);
-            e.printStackTrace();
             throw ex;
             
         }

@@ -43,7 +43,7 @@ public class VerticalButtonPanel extends javax.swing.JPanel {
     
     /** Creates new form BeanForm */
     public VerticalButtonPanel() {
-        buttons = new HashMap<String,JButton>();
+        buttons = new HashMap<>();
         initComponents();
         hasPlaceHolder=true;
     }
@@ -107,7 +107,7 @@ public class VerticalButtonPanel extends javax.swing.JPanel {
             jPanelButtons.remove(buttons.get(aKey));
             buttons.remove(aKey);            
          }
-         if (buttons.size() == 0) {
+         if (buttons.isEmpty()) {
             jPanelButtons.add(buttonsPlaceHolder);
             hasPlaceHolder=true;
          }

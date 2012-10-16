@@ -44,7 +44,6 @@ public class CmdExec {
         }
         }
         catch (Exception err) {
-            err.printStackTrace();
         }
     }
 }

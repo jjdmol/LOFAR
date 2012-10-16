@@ -213,10 +213,13 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
         /// TEST ONLY ///
-        if (evt.getActionCommand().equals("Choice 1")) {
-            logger.debug("Param Choice 1 chosen");
-        }  else if (evt.getActionCommand().equals("Choice 2")) {
-            logger.debug("Param Choice 2 chosen");
+        switch (evt.getActionCommand()) {
+            case "Choice 1":
+                logger.debug("Param Choice 1 chosen");
+                break;
+            case "Choice 2":
+                logger.debug("Param Choice 2 chosen");
+                break;
         }
     }
 

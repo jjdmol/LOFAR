@@ -36,14 +36,14 @@ import org.apache.log4j.Logger;
  *
  * @updated
  */
-public class ButtonPanel extends javax.swing.JPanel {
+public final class ButtonPanel extends javax.swing.JPanel {
     
     static Logger logger = Logger.getLogger(ButtonPanel.class);
     static String name = "ButtonPanel";
     
     /** Creates new form BeanForm */
     public ButtonPanel() {
-        buttons = new HashMap<String,JButton>();
+        buttons = new HashMap<>();
         initComponents();
         hasPlaceHolder=true;
     }
@@ -139,7 +139,7 @@ public class ButtonPanel extends javax.swing.JPanel {
             jPanelButtons.remove(buttons.get(aKey));
             buttons.remove(aKey);            
          }
-         if (buttons.size() == 0) {
+         if (buttons.isEmpty()) {
             jPanelButtons.add(buttonsPlaceHolder);
             hasPlaceHolder=true;
          }

@@ -132,7 +132,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         jOTDBparam aParam=null;
         try {
             //we need to get all the childs from this node.
-            ArrayList<jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
+            ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1));
             
             // get all the params per child
             for (jOTDBnode aNode:childs) {
@@ -214,7 +214,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
         jOTDBparam aParam=null;
         try {
-            ArrayList<jOTDBnode> HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            ArrayList<jOTDBnode> HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
             // get all the params per child
             for (jOTDBnode aHWNode:HWchilds) {
                 aParam=null;
@@ -321,93 +321,99 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 //Setup step tree
                 this.setupStepTree(parent);
                 this.setupStepsList(BBSStepDataManager.getInstance().getStepNames());
-                if (aKeyName.equals("InputData")) {
-                    this.inputDataText.setToolTipText(aParam.description);
-                    this.StrategyInputData=aNode;
-                    
+        switch (aKeyName) {
+            case "InputData":
+                this.inputDataText.setToolTipText(aParam.description);
+                this.StrategyInputData=aNode;
+                if (isRef && aParam != null) {
+                    inputDataText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputDataText.setText(aNode.limits);
+                }
+                break;
+            case "Stations":
+                this.stationsList.setToolTipText(aParam.description);
+                this.StrategyStations = aNode;
+                //set the checkbox correctly when no stations are provided in the data
+                if(StrategyStations.limits == null || StrategyStations.limits.equals("[]")){
+                    this.stationsUseAllCheckbox.setSelected(true);
+                    stationsList.setModel(new DefaultListModel());
+                }else{
+                    this.stationsUseAllCheckbox.setSelected(false);
+                    TitledBorder aBorder = (TitledBorder)this.stationsPanel.getBorder();
                     if (isRef && aParam != null) {
-                        inputDataText.setText(aNode.limits + " : " + aParam.limits);
+                        aBorder.setTitle("Station Names (Referenced)");
+                        LofarUtils.fillList(stationsList,aParam.limits,false);
                     } else {
-                        inputDataText.setText(aNode.limits);
-                    }
-                }else if (aKeyName.equals("Stations")) {
-                    this.stationsList.setToolTipText(aParam.description);
-                    this.StrategyStations = aNode;
-                    
-                    //set the checkbox correctly when no stations are provided in the data
-                    if(StrategyStations.limits == null || StrategyStations.limits.equals("[]")){
-                        this.stationsUseAllCheckbox.setSelected(true);
-                        stationsList.setModel(new DefaultListModel());
-                    }else{
-                        this.stationsUseAllCheckbox.setSelected(false);
-                        TitledBorder aBorder = (TitledBorder)this.stationsPanel.getBorder();
-                        if (isRef && aParam != null) {
-                            aBorder.setTitle("Station Names (Referenced)");
-                            LofarUtils.fillList(stationsList,aParam.limits,false);
-                        } else {
-                            aBorder.setTitle("Station Names");
-                            LofarUtils.fillList(stationsList,aNode.limits,true);
-                        }
+                        aBorder.setTitle("Station Names");
+                        LofarUtils.fillList(stationsList,aNode.limits,true);
                     }
                 }
+                break;
+        }
                 break;
             case "WorkDomainSize":
-                if (aKeyName.equals("Freq")) {
-                    this.wdsFrequencyText.setToolTipText(aParam.description);
-                    this.StrategyWDSFrequency=aNode;
-                    
-                    if (isRef && aParam != null) {
-                        wdsFrequencyText.setText(aNode.limits + " : " + aParam.limits);
-                    } else {
-                        wdsFrequencyText.setText(aNode.limits);
-                    }
-                } else if (aKeyName.equals("Time")) {
-                    this.wdsTimeText.setToolTipText(aParam.description);
-                    this.StrategyWDSTime=aNode;
-                    
-                    if (isRef && aParam != null) {
-                        wdsTimeText.setText(aNode.limits + " : " + aParam.limits);
-                    } else {
-                        wdsTimeText.setText(aNode.limits);
-                    }
+        switch (aKeyName) {
+            case "Freq":
+                this.wdsFrequencyText.setToolTipText(aParam.description);
+                this.StrategyWDSFrequency=aNode;
+                if (isRef && aParam != null) {
+                    wdsFrequencyText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    wdsFrequencyText.setText(aNode.limits);
                 }
+                break;
+            case "Time":
+                this.wdsTimeText.setToolTipText(aParam.description);
+                this.StrategyWDSTime=aNode;
+                if (isRef && aParam != null) {
+                    wdsTimeText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    wdsTimeText.setText(aNode.limits);
+                }
+                break;
+        }
                 break;
             case "Integration":
-                if (aKeyName.equals("Freq")) {
-                    this.integrationFrequencyText.setToolTipText(aParam.description);
-                    this.StrategyIntegrationFrequency=aNode;
-             
-                    if (isRef && aParam != null) {
-                        integrationFrequencyText.setText(aNode.limits + " : " + aParam.limits);
-                    } else {
-                        integrationFrequencyText.setText(aNode.limits);
-                    }
-                } else if (aKeyName.equals("Time")) {
-                    this.integrationTimeText.setToolTipText(aParam.description);
-                    this.StrategyIntegrationTime=aNode;
-             
-                    if (isRef && aParam != null) {
-                        integrationTimeText.setText(aNode.limits + " : " + aParam.limits);
-                    } else {
-                        integrationTimeText.setText(aNode.limits);
-                    }
+        switch (aKeyName) {
+            case "Freq":
+                this.integrationFrequencyText.setToolTipText(aParam.description);
+                this.StrategyIntegrationFrequency=aNode;
+                if (isRef && aParam != null) {
+                    integrationFrequencyText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    integrationFrequencyText.setText(aNode.limits);
                 }
                 break;
-            case "Correlation":
-                if (aKeyName.equals("Selection")) {
-                    this.correlationSelectionBox.setToolTipText(aParam.description);
-                    this.StrategyCorrelationSelection=aNode;
-                    this.correlationSelectionBox.setSelectedItem(aNode.limits);
-                    logger.trace("Correlation selection will be :"+this.correlationSelectionBox.getSelectedItem().toString());
-                } else if (aKeyName.equals("Type")) {
-                    this.correlationTypeList.setToolTipText(aParam.description);
-                    this.StrategyCorrelationType=aNode;
-                    if (isRef && aParam != null) {
-                        LofarUtils.fillSelectionListFromString(correlationTypeList,aParam.limits,false);
-                    } else {
-                        LofarUtils.fillSelectionListFromString(correlationTypeList,aNode.limits,true);
-                    }
+            case "Time":
+                this.integrationTimeText.setToolTipText(aParam.description);
+                this.StrategyIntegrationTime=aNode;
+                if (isRef && aParam != null) {
+                    integrationTimeText.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    integrationTimeText.setText(aNode.limits);
                 }
+                break;
+        }
+                break;
+            case "Correlation":
+        switch (aKeyName) {
+            case "Selection":
+                this.correlationSelectionBox.setToolTipText(aParam.description);
+                this.StrategyCorrelationSelection=aNode;
+                this.correlationSelectionBox.setSelectedItem(aNode.limits);
+                logger.trace("Correlation selection will be :"+this.correlationSelectionBox.getSelectedItem().toString());
+                break;
+            case "Type":
+                this.correlationTypeList.setToolTipText(aParam.description);
+                this.StrategyCorrelationType=aNode;
+                if (isRef && aParam != null) {
+                    LofarUtils.fillSelectionListFromString(correlationTypeList,aParam.limits,false);
+                } else {
+                    LofarUtils.fillSelectionListFromString(correlationTypeList,aNode.limits,true);
+                }
+                break;
+        }
                 break;
         }
     }
@@ -500,7 +506,7 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             //Add steps that make up the strategy to the steps tree browser
             //fetch the BBS root Container node, which is the parent of the BBS Strategy node given in strategyRootNode
-            ArrayList<jOTDBnode> steps = OtdbRmi.getRemoteMaintenance().getItemList(strategyRootNode.treeID(), strategyRootNode.parentID(), 1);
+            ArrayList<jOTDBnode> steps = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(strategyRootNode.treeID(), strategyRootNode.parentID(), 1));
             // get all the params per child
             for (jOTDBnode aNode2:steps) {
                 
@@ -1210,81 +1216,82 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_addStationButtonActionPerformed
     
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand().equals("Apply")) {
-            boolean warning = false;
-            //perform input validation on the double values in the form
-            String integrationTime = this.integrationTimeText.getText();
-            String integrationFrequency = this.integrationFrequencyText.getText();
-            String wdsTime = this.wdsTimeText.getText();
-            String wdsFrequency = this.wdsFrequencyText.getText();
-            
-            if(!integrationTime.equals("")){
-                try {
-                    Double itime = Double.parseDouble(integrationTime);
-                    integrationTimeText.setBackground(Color.WHITE);
-                } catch (NumberFormatException ex) {
+        switch (evt.getActionCommand()) {
+            case "Apply":
+                boolean warning = false;
+                //perform input validation on the double values in the form
+                String integrationTime = this.integrationTimeText.getText();
+                String integrationFrequency = this.integrationFrequencyText.getText();
+                String wdsTime = this.wdsTimeText.getText();
+                String wdsFrequency = this.wdsFrequencyText.getText();
+                if(!integrationTime.equals("")){
+                    try {
+                        Double itime = Double.parseDouble(integrationTime);
+                        integrationTimeText.setBackground(Color.WHITE);
+                    } catch (NumberFormatException ex) {
+                        integrationTimeText.setBackground(Color.RED);
+                        warning=true;
+                    }
+                }else{
                     integrationTimeText.setBackground(Color.RED);
                     warning=true;
                 }
-            }else{
-                integrationTimeText.setBackground(Color.RED);
-                warning=true;
-            }
-            if(!integrationFrequency.equals("")){
-                try {
-                    Double itime = Double.parseDouble(integrationFrequency);
-                    integrationFrequencyText.setBackground(Color.WHITE);
-                } catch (NumberFormatException ex) {
+                if(!integrationFrequency.equals("")){
+                    try {
+                        Double itime = Double.parseDouble(integrationFrequency);
+                        integrationFrequencyText.setBackground(Color.WHITE);
+                    } catch (NumberFormatException ex) {
+                        warning=true;
+                        integrationFrequencyText.setBackground(Color.RED);
+                    }
+                }else{
                     warning=true;
                     integrationFrequencyText.setBackground(Color.RED);
                 }
-            }else{
-                warning=true;
-                integrationFrequencyText.setBackground(Color.RED);
-            }
-            if(!wdsFrequency.equals("")){
-                try {
-                    Double itime = Double.parseDouble(wdsFrequency);
-                    wdsFrequencyText.setBackground(Color.WHITE);
-                } catch (NumberFormatException ex) {
-                    
+                if(!wdsFrequency.equals("")){
+                    try {
+                        Double itime = Double.parseDouble(wdsFrequency);
+                        wdsFrequencyText.setBackground(Color.WHITE);
+                    } catch (NumberFormatException ex) {
+                        
+                        wdsFrequencyText.setBackground(Color.RED);
+                    }
+                }else{
+                    warning=true;
                     wdsFrequencyText.setBackground(Color.RED);
                 }
-            }else{
-                warning=true;
-                wdsFrequencyText.setBackground(Color.RED);
-            }
-            if(!wdsTime.equals("")){
-                try {
-                    Double itime = Double.parseDouble(wdsTime);
-                    wdsTimeText.setBackground(Color.WHITE);
-                } catch (NumberFormatException ex) {
+                if(!wdsTime.equals("")){
+                    try {
+                        Double itime = Double.parseDouble(wdsTime);
+                        wdsTimeText.setBackground(Color.WHITE);
+                    } catch (NumberFormatException ex) {
+                        warning=true;
+                        wdsTimeText.setBackground(Color.RED);
+                    }
+                }else{
                     warning=true;
                     wdsTimeText.setBackground(Color.RED);
                 }
-            }else{
-                warning=true;
-                wdsTimeText.setBackground(Color.RED);
-            }
-            if(!warning){
-                itsMainFrame.setHourglassCursor();
-                saveInput();
-                BBSStepDataManager.getInstance().persistStrategy();
-                this.setupStepTree(StrategySteps);
-                this.setupStepsList(BBSStepDataManager.getInstance().getStepNames());
-                itsMainFrame.setNormalCursor();
-            }
-            
-        } else if(evt.getActionCommand().equals("Revert")) {
-            String message = "Are you sure you want to revert all strategy attributes, including the step tree?";
-            message+="\n\nThis 'Revert' action will remove all changes you have made in the step tree since the last 'Save Settings' action!";
-            String[] buttons = {"Yes","No"};
-            int choice =  JOptionPane.showOptionDialog(this,message, "Please confirm", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,buttons,buttons[0]);
-            if(choice == 0){
-                itsMainFrame.setHourglassCursor();
-                this.restoreBBSStrategyPanel();
-                itsMainFrame.setNormalCursor();
-            }
+                if(!warning){
+                    itsMainFrame.setHourglassCursor();
+                    saveInput();
+                    BBSStepDataManager.getInstance().persistStrategy();
+                    this.setupStepTree(StrategySteps);
+                    this.setupStepsList(BBSStepDataManager.getInstance().getStepNames());
+                    itsMainFrame.setNormalCursor();
+                }
+                break;
+            case "Revert":
+                String message = "Are you sure you want to revert all strategy attributes, including the step tree?";
+                message+="\n\nThis 'Revert' action will remove all changes you have made in the step tree since the last 'Save Settings' action!";
+                String[] buttons = {"Yes","No"};
+                int choice =  JOptionPane.showOptionDialog(this,message, "Please confirm", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,buttons,buttons[0]);
+                if(choice == 0){
+                    itsMainFrame.setHourglassCursor();
+                    this.restoreBBSStrategyPanel();
+                    itsMainFrame.setNormalCursor();
+                }
+                break;
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
