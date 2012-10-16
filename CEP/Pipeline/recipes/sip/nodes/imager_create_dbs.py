@@ -73,7 +73,7 @@ class imager_create_dbs(LOFARnodeTCP):
         #*******************************************************************
         # 2convert it to a sourcedb (casa table)
         if self._create_source_db(source_list, sourcedb_target_path,
-                                  working_directory, makesourcedb_path, 
+                                  working_directory, makesourcedb_path,
                                   append) == None:
             self.logger.error("failed creating sourcedb")
             return 1
@@ -151,7 +151,7 @@ class imager_create_dbs(LOFARnodeTCP):
                  os.path.basename(executable)
             ) as logger:
                 catch_segfaults(cmd, working_directory, self.environment,
-                                            logger, cleanup = None)
+                                            logger, cleanup=None)
 
         except subprocess.CalledProcessError, called_proc_error:
             self.logger.error("Execution of external failed:")
@@ -372,17 +372,97 @@ class imager_create_dbs(LOFARnodeTCP):
             if ra_c < 0:  #gsm utils break when using negative ra_c ergo add 360
                 ra_c += 360.0
             decl_c = float(decl_c) * (180 / math.pi)
+            import sys
+
+            self.logger.error("external call to gsm module:")
+            self.logger.error("gsm.expected_fluxes_in_fov(conn, {0} , {1}, {2}, {3}, {4}, {5})".format(
+                ra_c, decl_c, float(fov_radius), float(assoc_theta), sourcelist, "storespectraplots=False"))
 
             gsm.expected_fluxes_in_fov(conn, ra_c ,
                         decl_c, float(fov_radius),
                         float(assoc_theta), sourcelist,
                         storespectraplots=False)
+            self.logger.error(gsm.__file__)
+
         except Exception, exception:
             self.logger.error("expected_fluxes_in_fov raise exception: " +
                               str(exception))
             return 1
 
+        # validate the retrieve sourcelist
+        fp = open(sourcelist)
+        sourcelist_corrected = self._validate_and_correct_sourcelist(fp.read())
+        fp.close()
+
+        if sourcelist_corrected != None:
+            self.logger.debug("Found duplicates in the sourcelist!")
+            self.logger.debug("Creating a new sourcelist")
+            #if a corrected sourcelist is created.
+            # move original sourcelist
+            shutil.move(sourcelist, sourcelist + "_with_duplicates")
+            # write correcte sourcelist at that location
+            fp = open(sourcelist, "w",)
+            fp.write(sourcelist_corrected)
+            self.logger.debug("Moved sourcelist and create a new sourcelist")
+            fp.close()
+        else:
+            self.logger.debug("Sourcelist did not contain duplicates")
         return 0
+
+    def _validate_and_correct_sourcelist(self, sourcelist):
+        """
+        Create a sourcelist with non duplicate entries based on the
+        supplied sourcelist
+        Return None of no duplicate found        
+        """
+        all_lines = sourcelist.split("\n")
+        header = ""
+        all_entries_list = []
+        for line in all_lines:
+            #skip the whiteline
+            if len(line) == 0:
+                continue
+            # get the header
+            if line[0] == "#":
+                header = line
+                continue
+            # unpack the values
+            all_entries_list.append(line.split(","))
+
+        # Get the names for the entries
+        entrie_names = []
+        for entrie in all_entries_list:
+            entrie_names.append(entrie[0]) #name is first index in entrie
+
+        #enumerate over all names-1
+        duplicate_entry_idx = 0
+        for idx, name in enumerate(entrie_names[:-1]):
+            if name in entrie_names[idx + 1:]:
+                # If duplicate change current entrie to unique name
+                entrie_names[idx] = name + "_duplicate_{0}".format(duplicate_entry_idx)
+                duplicate_entry_idx += 1
+
+        # now put back the possible changed name
+        for entrie, entrie_name in zip(all_entries_list,
+                                entrie_names) :
+            entrie[0] = entrie_name
+
+        # Write the new sourcelist if we found duplicate entries!
+        if duplicate_entry_idx > 0:
+            new_lines = []
+            # add header
+            new_lines.append(header)
+            # empty line
+            new_lines.append("")
+            # entries with non duplicate names
+            for entrie in all_entries_list:
+                new_lines.append(",".join(entrie))
+            # return the sourcelist
+            return "\n".join(new_lines)
+
+        return None
+
+
 
 
 if __name__ == "__main__":
@@ -390,3 +470,5 @@ if __name__ == "__main__":
     _jobid, _jobhost, _jobport = sys.argv[1:4]
     sys.exit(imager_create_dbs(
         _jobid, _jobhost, _jobport).run_with_stored_arguments())
+
+
