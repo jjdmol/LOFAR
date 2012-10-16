@@ -1,0 +1,4 @@
+# new setup
+instanceNr		  = 0
+useHardwareStates = Yes
+sampleClock		  = 160 		# TODO: use sampleClock setting of PVSS

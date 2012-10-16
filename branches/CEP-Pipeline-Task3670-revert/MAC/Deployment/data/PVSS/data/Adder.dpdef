@@ -1,0 +1,8 @@
+# Adder
+dropping			bool
+dropped			int
+dataProductType		string
+fileName		string
+locusNode		string
+directory		string
+observationName		string
