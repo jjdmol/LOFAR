@@ -177,16 +177,11 @@ def store_data_map(filename, data):
     `DataMap.save` instead.
     """
     try:
+        # Assume `data` is a DataMap object.
         data.save(filename)
     except AttributeError:
-        # Assume data is in "old-style" list of tuple (host, file) format.
-        try:
-            if not all(isinstance(item, tuple) for item in data):
-                raise TypeError
-            data_map = DataMap([DataProduct(*item) for item in data])
-            data_map.save(filename)
-        except TypeError:
-            raise DataMapError("Not an old-style data map: %s" % repr(data))
+        # Assume `data` can be used to construct a DataMap object.
+        DataMap(data).save(filename)
 
 
 def validate_data_maps(*args):
@@ -243,52 +238,3 @@ def tally_data_map(data, glob, logger=None):
     # Return a mask containing True if file exists, False otherwise
     return [(f.host, f.file) in found for f in data]
 
-
-# Self test.
-if __name__ == '__main__':
-    data_map = DataMap()
-    print "Empty DataMap"
-    for item in data_map:
-        print item
-
-    print "\nLoading foo"
-    data_map = load_data_map("foo")
-    print "In raw format:"
-    print data_map.data
-
-    print "Default iterator"
-    for item in data_map:
-        print item
-
-    print "TupleIterator"
-    data_map.iterator = DataMap.TupleIterator
-    for item in data_map:
-        print item
-
-    print "SkipIterator"
-    data_map.iterator = DataMap.SkipIterator
-    for item in data_map:
-        print item
-        
-    print "Saving to foo2"
-    store_data_map("foo2", data_map)
-
-    print "\nLoading bar"
-    data_map = DataMap.load("bar")
-    print "Default iterator"
-    for item in data_map:
-        print item
-
-    print "TupleIterator"
-    data_map.iterator = DataMap.TupleIterator
-    for item in data_map:
-        print item
-
-    print "SkipIterator"
-    data_map.iterator = DataMap.SkipIterator
-    for item in data_map:
-        print item
-
-    print "Saving to bar2"
-    data_map.save("bar2")
-    
