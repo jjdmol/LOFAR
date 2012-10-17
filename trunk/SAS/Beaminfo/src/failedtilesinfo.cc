@@ -27,8 +27,8 @@
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>    // needed for basename
+#include <Common/StringUtil.h>    // needed for split
 #include <Common/Exception.h>     // THROW macro for exceptions
-#include <ApplCommon/LofarDirs.h>
 
 // SAS
 #include <OTDB/OTDBconstants.h>
@@ -56,241 +56,164 @@ using namespace casa;
 Exception::TerminateHandler t(Exception::terminate);
 
 // Time converter helper functions
-string fromCasaTime (const MEpoch& epoch, double addDays);
-MVEpoch toCasaTime(const string &time);
-bool checkTime(const MVEpoch &starttime, const MVEpoch &endtime);
+MVEpoch toCasaTime (const string& time);
+string fromCasaTime (const MVEpoch& epoch);
 
-void getFailedTilesInfo(OTDBconnection &conn, 
-                        const string &filename,
-                        const MVEpoch &timeStart,
-                        const MVEpoch &timeEnd=0);
-string stripRCUString(const string &brokenHardware);
+// Get the failed tile info before the given date (if end=0)
+// or between the dates.
+void getFailedTilesInfo(OTDBconnection& conn, 
+                        const string& filename,
+                        const string& timeStart,
+                        const string& timeEnd=string());
 
-//----------------------------------------------------------------------------------
-void usage(char *programname)
-{
-  cout << "Usage: " << programname << " <options>" << endl;
-  cout << "-d             run in debug mode" << endl;
-  cout << "-p <filename>  read parset (instead of default: failedtilesinfo.parset)" << endl;
-  cout << "-s <time>      start time of observation in MS like 3-Mar-2011/13:54:23"<< endl;
-  cout << "-e <time>      end time of observation in MS"<< endl;
-  cout << "-v             turn on verbose mode" << endl;
-  cout << "-h             show this help info" << endl;
-
-  exit(0);
-}
-
-// These two flags are global so that every function can act accordingly
-bool debug=false;                           // debug mode
-bool verbose=false;                         // verbose mode
 
 int main (int argc, char* argv[])
 {
-  int opt=0;                                // argument parsing, current option
-  vector<MEpoch> failingTimes;
-
-  string parsetName="failedtilesinfo.parset";   // parset location (default)
-  string starttimeString, endtimeString;    // strings to get start and end time
-  MVEpoch startTime, endTime;               // starttime and endtime of observation
-
-  //---------------------------------------------
   // Init logger
   string progName = LOFAR::basename(argv[0]);
   INIT_LOGGER(progName);
-
-  // Parse command line arguments TODO!
-  while(opt != -1) 
-  {
-    opt = getopt( argc, argv, "dp:s:e:vh");
-    switch(opt) 
-    { 
-      case 'd':
-        debug=true;
-        break;
-      case 'p':         // location of parset file
-        parsetName=optarg;
-        break;
-      case 's':         // start time
-        starttimeString=optarg;
-      case 'e':         // end time
-        endtimeString=optarg;
-      case 'v':         // turn on verbose display of messages
-        verbose=true;
-        break;
-      case 'h':
-        usage(argv[0]);
-        break;
-      case ':':
-        cout << "Option " << opt << " is missing an argument" << endl;
-        usage(argv[0]);
-        break;
-      default:
-        break;
+  try {
+    // Get the parset name; use default if not given as first argument.
+    string parsetName = "failedtilesinfo.parset";
+    if (argc > 1) {
+      parsetName = argv[1];
     }
-  }
-  
-  // Parse parset entries
-  try
-  {
-    if(verbose)
-    {
-      LOG_INFO_STR("Reading parset: " << parsetName);
-    }
-
-    //---------------------------------------------------------------------
     ParameterSet parset(parsetName);
-    //string host        = parset.getString("host", "sas.control.lofar.eu");  // production
-    string host        = parset.getString("host", "RS005.astron.nl");         // DEBUG
-    string db          = parset.getString("db", "TESTLOFAR_3");
+    // Get the parameters.
+    ///string host        = parset.getString("host", "sas.control.lofar.eu");
+    string host        = parset.getString("host", "RS005.astron.nl");
+    string db          = parset.getString("db", "TESTLOFAR_4");
     string user        = parset.getString("user", "paulus");
     string password    = parset.getString("password", "boskabouter");
     string port        = parset.getString("port", "5432");
-    // Locations to save SAS hardware strings of broken and failed tiles to
-    string failedfilename = parset.getString("failedTilesFile", LOFAR_SHARE_LOCATION "/failedTiles.txt");
-    string brokenfilename = parset.getString("brokenTilesFile", LOFAR_SHARE_LOCATION "/brokenTiles.txt");
+    // Files to save SAS hardware strings of broken and failed tiles.
+    // Failed means tiles failing during the observations.
+    // Broken means tiles already broken at the start of the observation.
+    string failedfilename  = parset.getString("FailedTilesFile",
+                                              "failedTiles.txt");
+    string brokenfilename  = parset.getString("BrokenTilesFile",
+                                              "brokenTiles.txt");
+    string startTimeString = parset.getString("StartTime", "");
+    string endTimeString   = parset.getString("EndTime", "");
+    ASSERT (!(failedfilename.empty() || brokenfilename.empty()));
+    ASSERT (!(startTimeString.empty() || endTimeString.empty()));
+    MVEpoch startTime = toCasaTime(startTimeString);
+    MVEpoch endTime   = toCasaTime(endTimeString);
+    if (startTime.get() > endTime.get()) {
+      THROW(Exception, "starttime " << startTimeString
+            << " must be <= end time " << endTimeString);    
+    }
+    // Convert to time format (ISO) that Boost understands.
+    startTimeString = fromCasaTime(startTime);
+    endTimeString   = fromCasaTime(endTime);
 
-    //---------------------------------------------------------------------
-    // Handle observation starttime and endtime
-    if(starttimeString.empty())   // if we didn't get the start time from the command arguments
-    {
-      starttimeString = parset.getString("StartTime", "");
-    }
-    if(endtimeString.empty())     // if we didn't get the end time from the command arguments
-    {
-      endtimeString = parset.getString("EndTime", "");
-    }
-    startTime=toCasaTime(starttimeString);
-    endTime=toCasaTime(endtimeString);
-    if(checkTime(startTime, endTime) != true)
-    {
-      THROW(Exception, "starttime >= endtime: " << starttimeString << " >= " << endtimeString);    
-    }
-
-    LOG_INFO_STR("Getting SAS antenna health information");
+    LOG_DEBUG_STR("Getting SAS antenna health information");
     OTDBconnection conn(user, password, db, host, port); 
-    LOG_INFO("Trying to connect to the database");
+    LOG_DEBUG("Trying to connect to the database");
     ASSERTSTR(conn.connect(), "Connnection failed");
-    LOG_INFO_STR("Connection succesful: " << conn);
-
+    LOG_DEBUG_STR("Connection succesful: " << conn);
     // Get broken hardware strings from SAS
-    getFailedTilesInfo(conn, brokenfilename, startTime);
-    getFailedTilesInfo(conn, failedfilename, startTime, endTime);
-  }
-  catch (Exception& x)
-  {
+    getFailedTilesInfo (conn, brokenfilename, startTimeString);
+    getFailedTilesInfo (conn, failedfilename, startTimeString, endTimeString);
+  
+  } catch (Exception& x) {
     LOG_FATAL_STR("Unexpected exception: " << x);
     return 1;
   }
-  
-  LOG_INFO_STR ("Terminated succesfully: " << argv[0]);  
   return 0;
 }
 
-/*!
-  \brief Convert casa epoch to posix time
-  \param epoch      casa epoch
-  \param addDays    add days (default=0)
-  \return dateTime  string with date and time in the format ("YYYY-MM-DD HH:MM:SS")
-*/
-string fromCasaTime (const MVEpoch& epoch, double addDays=0)
-{
-  MVTime t (epoch.get() + addDays);
-  return t.getTime().ISODate();
-}
-
-// Convert a time string time YYYY-Mon-DD TT:MM:SS.ss to a CASA MVEpoch
-MVEpoch toCasaTime(const string &time)
+// Convert a casacore time string time YYYY-Mon-DD TT:MM:SS.ss to an MVEpoch
+MVEpoch toCasaTime (const string& time)
 {
   // e.g. 2011-Mar-19 21:17:06.514000
-  Double casaTime;                  // casa MVEpoch time to be returned
+  Double casaTime;                  // casacore MVEpoch time to be returned
   Quantity result(casaTime, "s");   // set quantity unit to seconds
-
   ASSERT(!time.empty());
   MVTime::read(result, time);
-
   return result;
 }
 
-bool checkTime(const MVEpoch &starttimeCasa, const MVEpoch &endtimeCasa)
+string fromCasaTime (const MVEpoch& epoch)
 {
-  return(starttimeCasa.get() < endtimeCasa.get());
+  MVTime t (epoch.get());
+  return t.getTime().ISODate();
 }
+
 
 // Get information about broken tiles from SAS database and store it in 
 // an ASCII text file
-//
-void getFailedTilesInfo(OTDBconnection &conn, 
-                        const string &filename,
-                        const MVEpoch &timeStart,
-                        const MVEpoch &timeEnd)
+void getFailedTilesInfo (OTDBconnection& conn, 
+                         const string& filename,
+                         const string& timeStart,
+                         const string& timeEnd)
 {
-
   ASSERT(!filename.empty());
-
+  // Get OTDB info.
   TreeTypeConv TTconv(&conn);     // TreeType converter object
-  ClassifConv CTconv(&conn);      // converter I don't know
-  vector<OTDBvalue> valueList;    // OTDB value list for the previous month
- 
+  ClassifConv CTconv(&conn);      // converter
+  vector<OTDBvalue> valueList;    // OTDB value list
+  vector<OTDBtree> treeList = conn.getTreeList(TTconv.get("hardware"),
+                                               CTconv.get("operational"));
+  ASSERTSTR(treeList.size(), "No hardware tree found, run tPICtree first");  
+  treeIDType treeID = treeList[treeList.size()-1].treeID();
+  LOG_DEBUG_STR ("Using tree " << treeID);
+  OTDBtree treeInfo = conn.getTreeInfo(treeID);
+  LOG_DEBUG_STR(treeInfo);
+  LOG_DEBUG("Constructing a TreeValue object");
+  TreeValue tv(&conn, treeID);
+  // Create the output file.
   fstream outfile;
-  outfile.open(filename.c_str(), ios::out);   // this shows the correct behaviour of overwriting the file
+  outfile.open(filename.c_str(), ios::out);
 
   // Get list of all broken hardware from SAS for timestamp
-  LOG_INFO("Searching for a Hardware tree");
-  vector<OTDBtree>    treeList = conn.getTreeList(TTconv.get("hardware"), CTconv.get("operational"));
-  //  showTreeList(treeList);
-  ASSERTSTR(treeList.size(),"No hardware tree found, run tPICtree first");  
-  treeIDType  treeID = treeList[treeList.size()-1].treeID();
-  LOG_INFO_STR ("Using tree " << treeID << " for the tests");
-  OTDBtree    treeInfo = conn.getTreeInfo(treeID);
-  LOG_INFO_STR(treeInfo);
-  LOG_INFO("Trying to construct a TreeValue object");
-  TreeValue   tv(&conn, treeID);
+  LOG_DEBUG("Searching for a Hardware tree");
 
-  if(timeEnd==0)    // getting tiles broken at beginning
-  {
-    valueList = tv.getBrokenHardware(time_from_string(fromCasaTime(timeStart)));
-  }
-  else              // getting tiles failed during observation
-  {
-    LOG_INFO_STR("Getting failed hardware from " << MVTime(timeStart.get()).getTime().ISODate() 
-                 << " to " << MVTime(timeEnd.get()).getTime().ISODate());
-    valueList = tv.getFailedHardware(time_from_string(fromCasaTime(timeStart)), 
-                                     time_from_string(fromCasaTime(timeEnd)));
+  if (timeEnd.empty()) {
+    // Getting tiles broken at beginning.
+    valueList = tv.getBrokenHardware (time_from_string(timeStart));
+  } else {
+    // Getting tiles failed during observation.
+    LOG_INFO_STR ("Getting failed hardware from "
+                  << timeStart << " to " << timeEnd);
+    valueList = tv.getBrokenHardware (time_from_string(timeStart), 
+                                      time_from_string(timeEnd));
   }
 
-  if(valueList.empty())
-  {
-    LOG_INFO_STR("No failed hardware found.");
-  }
-  else
-  {
-    // Now write entry in valuelist with broken hardware to file
-    for(unsigned int i=0; i<valueList.size(); i++)
-    {
-      if(valueList[i].name.find("RCU")!=string::npos)   // Only write lines that contain RCU
-      {
-        outfile << stripRCUString(valueList[i].name) << "\t" << valueList[i].time << endl;
-      }  
-    }  
+  if (valueList.empty()) {
+    LOG_INFO_STR ("No failed hardware found.");
+  } else {
+    // Write entry in valuelist with broken hardware to file.
+    // A broken antenna element/tile entry must contain .status_state
+    int nrtile = 0;
+    int nrrcu  = 0;
+    for (unsigned int i=0; i<valueList.size(); i++) {
+      if (valueList[i].name.find(".status_state") != string::npos) {
+        vector<string> parts = StringUtil::split (valueList[i].name, '.');
+        bool match = false;
+        if (parts.size() > 4  &&  parts[4].size() > 3) {
+          // parts[3] is station name; parts[4] is tile name/number
+          string type = parts[4].substr(0,3);
+          if (type == "LBA"  ||  type == "HBA") {
+            outfile << parts[3] + ' ' + parts[4] << ' '
+                    << valueList[i].time << endl;
+            nrtile++;
+            match = true;
+          }
+        }
+        if (!match  &&  parts.size() > 7  &&  parts[7].size() > 3) {
+          // parts[3] is station name; parts[7] is RCU name/number
+          string type = parts[7].substr(0,3);
+          if (type == "RCU") {
+            outfile << parts[3] + ' ' + parts[7] << ' '
+                    << valueList[i].time << endl;
+            nrrcu++;
+          }
+        }
+      }
+    }
+    LOG_INFO_STR ("Found " << nrtile << " broken tiles and "
+                  << nrrcu << " broken rcus");
   }
   outfile.close();
-}
-
-// Strip the RCU string in broken hardware of unnecessary information
-string stripRCUString(const string &brokenHardware)
-{
-  string stripped;          // stripped broken hardware line
-  vector<string> tokens;
-
-  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-  boost::char_separator<char> sep(".");
-  tokenizer tok(brokenHardware, sep);
-
-  for(tokenizer::iterator beg=tok.begin(); beg!=tok.end();++beg)
-  {
-    tokens.push_back(*beg);
-  }
-  stripped=tokens[3].append(".").append(tokens[7]).append(".");
-   
-  return stripped;
 }
