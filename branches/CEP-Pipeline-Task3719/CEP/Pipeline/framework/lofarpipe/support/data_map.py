@@ -11,10 +11,6 @@ to iterate over these maps. Data-map files contain a description of the
 different input- and output- data products in a human readable form.
 """
 
-import os
-
-from lofar.mstools import findFiles
-
 from lofarpipe.support.lofarexceptions import DataMapError
 from lofarpipe.support.utilities import deprecated
 
@@ -28,17 +24,29 @@ class DataProduct(object):
         self.skip = bool(skip)
 
     def __repr__(self):
-        "Represent an instance as a Python dict"
+        """Represent an instance as a Python dict"""
         return (
             "{'host': '%s', 'file': '%s', 'skip': %s}" %
             (self.host, self.file, self.skip)
         )
         
     def __str__(self):
-        "Print an instance as 'host:file'"
+        """Print an instance as 'host:file'"""
         return ':'.join((self.host, self.file))
 
-
+    def __eq__(self, other):
+        """Compare for equality"""
+        return (
+            self.host == other.host and 
+            self.file == other.file and
+            self.skip == other.skip
+        )
+        
+    def __ne__(self, other):
+        """Compare for non-equality"""
+        return not self.__eq__(other)
+        
+        
 class DataMap(object):
     """
     Class representing a data-map, which basically is a collection of data
@@ -91,17 +99,23 @@ class DataMap(object):
         self.data = data
         self.iterator = iterator
 
-    def __iter__(self):
-        return self.iterator(self.data)
-
     def __repr__(self):
         return repr(self.data)
+
+    def __iter__(self):
+        return self.iterator(self.data)
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
         return self.data[index]
+        
+    def __eq__(self, other):
+        return all(x == y for (x,y) in zip(self.data, other.data))
+        
+    def __ne__(self, other):
+        return not self.__eq__(other)
         
     @classmethod   
     def load(cls, filename):
@@ -116,14 +130,12 @@ class DataMap(object):
 
     @property
     def data(self):
-        """
-        Use property to get/set self.data, so that we can do input validation
-        before setting a value.
-        """
+        """Property to get self.data"""
         return self._data
         
     @data.setter
     def data(self, data):
+        """Property to set self.data, so that we can do input validation."""
         try:
             if all(isinstance(item, DataProduct) for item in data):
                 self._data = data
@@ -167,14 +179,14 @@ def store_data_map(filename, data):
     try:
         data.save(filename)
     except AttributeError:
-        # Assume data is in the "old-style" list of tuple (host, file) format.
+        # Assume data is in "old-style" list of tuple (host, file) format.
         try:
             if not all(isinstance(item, tuple) for item in data):
                 raise TypeError
             data_map = DataMap([DataProduct(*item) for item in data])
             data_map.save(filename)
         except TypeError:
-            raise DataMapError("Failed to validate data map: %s" % repr(data))
+            raise DataMapError("Not an old-style data map: %s" % repr(data))
 
 
 def validate_data_maps(*args):
@@ -212,6 +224,9 @@ def tally_data_map(data, glob, logger=None):
     This method is deprecated, because the new data-map files keep track of the
     `skip` attribute of each data product in the data-map.
     """
+    import os
+    from lofar.mstools import findFiles
+
     # Determine the directories to search. Get unique directory names from
     # `data` by creating a set first.
     dirs = list(set(os.path.dirname(d.file) for d in data))
