@@ -21,6 +21,7 @@ set (inst_HEADERS
   MSStation.h
   MSStationColumns.h
   BeamTables.h
+  FailedTileInfo.h
 )
 
 # Install header files.
