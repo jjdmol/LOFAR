@@ -258,7 +258,9 @@ namespace LOFAR
       sap.expTimeEndUTC().value = toUTC(stopTime);
       sap.expTimeEndMJD().value = toMJD(stopTime);
 
-      sap.totalIntegrationTime().value = parset.beamDuration(sapNr);
+      // TODO: fix the system to use the parset.beamDuration(sapNr), but OLAP
+      // does not work that way yet (beamDuration is currently unsupported).
+      sap.totalIntegrationTime().value = nrBlocks * parset.CNintegrationTime();
       sap.totalIntegrationTimeUnit().value = "s";
 
       // TODO: non-J2000 pointings
