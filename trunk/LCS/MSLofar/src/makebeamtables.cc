@@ -74,7 +74,7 @@ int main (int argc, char* argv[])
     }
     ASSERTSTR (!antSet.empty(), "No LOFAR_ANTENNA_SET found in OBSERVATION"
                " subtable of " << msName);
-   BeamTables::create (ms, overwrite);
+    BeamTables::create (ms, overwrite);
     BeamTables::fill   (ms, antSet, antSetFile, antFieldDir, hbaDeltaDir, true);
   } catch (Exception& x) {
     cerr << "Unexpected LOFAR exception: " << x << endl;
