@@ -65,7 +65,7 @@ static struct RandomState {
 } randomState;
 
 
-SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const std::string &nfskey, bool doAccept)
+SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol, Mode mode, time_t deadline, const std::string &nfskey, bool doAccept)
 :
   protocol(protocol),
   mode(mode),
@@ -98,7 +98,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
         struct addrinfo *result;
 
         if (mode == Client && nfskey != "")
-          port = boost::lexical_cast<uint16>(readkey(nfskey, timeout));
+          port = boost::lexical_cast<uint16>(readkey(nfskey, deadline));
 
         if (mode == Server && autoPort)
           port = MINPORT + static_cast<unsigned short>((MAXPORT - MINPORT) * erand48(randomState.xsubi)); // erand48() not thread safe, but not a problem.
@@ -124,11 +124,9 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
           throw SystemCallException("socket", errno, THROW_ARGS);
 
         if (mode == Client) {
-          time_t latestTime = time(0) + timeout;
-
           while (connect(fd, result->ai_addr, result->ai_addrlen) < 0)
             if (errno == ECONNREFUSED) {
-              if (timeout > 0 && time(0) >= latestTime)
+              if (deadline > 0 && time(0) >= deadline)
                 throw TimeOutException("client socket", THROW_ARGS);
 
               if (usleep(999999) < 0) {
@@ -156,7 +154,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
               throw BindException("listen", errno, THROW_ARGS);
 
             if (doAccept)
-              accept(timeout);
+              accept(deadline);
             else
               break;
           }
@@ -212,18 +210,18 @@ FileDescriptorBasedStream *SocketStream::detach()
 }
 
 
-void SocketStream::reaccept( time_t timeout )
+void SocketStream::reaccept(time_t deadline)
 {
   ASSERT( mode == Server );
 
   if (fd >= 0 && close(fd) < 0)
     throw SystemCallException("close", errno, THROW_ARGS);
 
-  accept( timeout );  
+  accept(deadline);
 }
 
 
-void SocketStream::accept( time_t timeout )
+void SocketStream::accept(time_t deadline)
 {
   if (nfskey != "")
     writekey(nfskey, port);
@@ -246,7 +244,7 @@ void SocketStream::accept( time_t timeout )
   } onDestruct = { nfskey };
   (void)onDestruct;
 
-  if (timeout > 0) {
+  if (deadline > 0) {
     fd_set fds;
 
     FD_ZERO(&fds);
@@ -254,13 +252,18 @@ void SocketStream::accept( time_t timeout )
 
     struct timeval timeval;
 
-    timeval.tv_sec  = timeout;
+    time_t now = time(0);
+    
+    if (now > deadline)
+      THROW(TimeOutException, "server socket");
+
+    timeval.tv_sec  = deadline - now;
     timeval.tv_usec = 0;
 
     switch (select(listen_sk + 1, &fds, 0, 0, &timeval)) {
       case -1 : throw SystemCallException("select", errno, THROW_ARGS);
 
-      case  0 : throw TimeOutException("server socket", THROW_ARGS);
+      case  0 : THROW(TimeOutException, "server socket");
     }
   }
 
@@ -292,7 +295,7 @@ void SocketStream::syncNFS()
 }
 
 
-std::string SocketStream::readkey(const std::string &nfskey, time_t &timeout)
+std::string SocketStream::readkey(const std::string &nfskey, time_t deadline)
 {
   for(;;) {
     char portStr[16];
@@ -307,8 +310,8 @@ std::string SocketStream::readkey(const std::string &nfskey, time_t &timeout)
       return std::string(portStr);
     }
 
-    if (timeout == 0)
-      throw TimeOutException("client socket", THROW_ARGS);
+    if (deadline > 0 && deadline <= time(0))
+      THROW(TimeOutException, "client socket");
 
     if (usleep(999999) > 0) {
       // interrupted by a signal handler -- abort to allow this thread to
@@ -316,8 +319,6 @@ std::string SocketStream::readkey(const std::string &nfskey, time_t &timeout)
       // system call
       throw SystemCallException("sleep", errno, THROW_ARGS);
     }
-
-    timeout--;
   }
 }
 

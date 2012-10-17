@@ -165,8 +165,8 @@ bool PortBroker::serverStarted()
 }
 
 
-FileDescriptorBasedStream *PortBroker::waitForClient( const string &resource, time_t timeout ) {
-  struct timespec deadline = { time(0L) + timeout, 0 };
+FileDescriptorBasedStream *PortBroker::waitForClient( const string &resource, time_t deadline ) {
+  struct timespec deadline_ts = { deadline, 0 };
 
   LOG_DEBUG_STR( "PortBroker server: registering " << resource );
 
@@ -188,9 +188,9 @@ FileDescriptorBasedStream *PortBroker::waitForClient( const string &resource, ti
       return serverStream.release();
     }
 
-    if (timeout > 0) {
-      if (!itsCondition.wait(itsMutex, deadline))
-        throw TimeOutException("port broker client: server did not register", THROW_ARGS);
+    if (deadline > 0) {
+      if (!itsCondition.wait(itsMutex, deadline_ts))
+        THROW(TimeOutException, "port broker client: server did not register");
     } else {
       itsCondition.wait(itsMutex);
     }
@@ -222,10 +222,10 @@ PortBroker::ServerStream::ServerStream( const string &resource )
 }
 
 
-PortBroker::ClientStream::ClientStream( const string &hostname, uint16 port, const string &resource )
+PortBroker::ClientStream::ClientStream( const string &hostname, uint16 port, const string &resource, time_t deadline )
 :
   // connect to port broker
-  SocketStream(hostname, port, SocketStream::TCP, SocketStream::Client)
+  SocketStream(hostname, port, SocketStream::TCP, SocketStream::Client, deadline)
 {
   // request service
   PortBroker::requestResource(*this, resource);

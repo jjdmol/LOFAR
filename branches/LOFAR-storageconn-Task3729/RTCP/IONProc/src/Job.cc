@@ -88,7 +88,9 @@ Job::Job(const char *parsetName)
     if (itsParset.PLC_controlled()) {
       // let the ApplController decide what we should do
       try {
-        itsPLCStream = new SocketStream(itsParset.PLC_Host(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60);
+        // Do _not_ wait for the stop time to communicate with ApplController,
+        // or the whole observation could be wasted.
+        itsPLCStream = new SocketStream(itsParset.PLC_Host(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, time(0) + 30);
 
         itsPLCClient = new PLCClient(*itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID);
         itsPLCClient->start();
@@ -242,7 +244,7 @@ void Job::StorageProcess::start()
 #endif
   );
 
-  itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey);
+  itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey, itsParset.stopTime());
   itsSSHconnection->start();
 #else
 
@@ -279,13 +281,10 @@ void Job::StorageProcess::stop(struct timespec deadline)
 #ifdef HAVE_LIBSSH2
   itsSSHconnection->stop(deadline);
 #else
-  // TODO: update timeout
-  time_t now = time(0);
+  joinSSH(itsLogPrefix, itsPID, (deadline.tv_sec ? deadline.tv_sec : time(0)) + 1);
+#endif
 
-  unsigned timeout = 1 + (now < deadline.tv_sec ? deadline.tv_sec - now : 0);
-
-  joinSSH(itsLogPrefix, itsPID, timeout);
-#endif  
+  itsThread->cancel();
 }
 
 
@@ -293,7 +292,7 @@ void Job::StorageProcess::controlThread()
 {
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
   std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
-  PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource);
+  PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource, itsParset.stopTime());
 
   // for now, we just send the parset and call it a day
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connected -- sending parset");
@@ -319,7 +318,7 @@ void Job::stopStorageProcesses()
 {
   struct timespec deadline;
 
-  deadline.tv_sec  = time(0) + 10;
+  deadline.tv_sec  = time(0) + 300;
   deadline.tv_nsec = 0;
 
   for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)

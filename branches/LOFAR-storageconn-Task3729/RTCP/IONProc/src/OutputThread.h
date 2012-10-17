@@ -55,6 +55,7 @@ class OutputThread
 
     const std::string       itsLogPrefix;
     const std::string       itsOutputDescriptor;
+    const double            itsDeadline;
 
   public:
     SmartPtr<Thread>	    itsThread;

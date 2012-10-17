@@ -8,7 +8,7 @@ Observation.Campaign.name = "Development"
 Observation.Campaign.title = "Development"
 
 # ----- Input streams
-Observation.VirtualInstrument.stationList = [CS302]
+Observation.VirtualInstrument.stationList = [S33]
 #Observation.antennaSet=LBA_INNER
 #Observation.antennaSet=LBA_OUTER
 #Observation.antennaSet=LBA_X
@@ -65,7 +65,7 @@ Observation.Beam[0].TiedArrayBeam[0].coherent = T
 #Observation.Beam[0].TiedArrayBeam[2].dispersionMeasure = 1.3
 
 # ----- Output streams
-OLAP.Storage.hosts = [locus080]
+OLAP.Storage.hosts = [locus095]
 OLAP.Storage.targetDirectory = /data # will be appended with dirmask and filenammask
 
 Observation.DataProducts.Output_Beamformed.enabled = T

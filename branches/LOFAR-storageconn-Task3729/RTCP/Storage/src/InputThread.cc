@@ -39,7 +39,8 @@ InputThread::InputThread(const Parset &parset, OutputType outputType, unsigned s
   itsLogPrefix(logPrefix + "[InputThread] "),
   itsInputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)),
   itsFreeQueue(freeQueue),
-  itsReceiveQueue(receiveQueue)
+  itsReceiveQueue(receiveQueue),
+  itsDeadline(parset.stopTime())
 {
 }
 
@@ -61,7 +62,7 @@ void InputThread::mainLoop()
 {
   try {
     LOG_INFO_STR(itsLogPrefix << "Creating connection from " << itsInputDescriptor << "..." );
-    SmartPtr<Stream> streamFromION(createStream(itsInputDescriptor, true));
+    SmartPtr<Stream> streamFromION(createStream(itsInputDescriptor, true, itsDeadline));
     LOG_INFO_STR(itsLogPrefix << "Creating connection from " << itsInputDescriptor << ": done" );
 
     // limit reads from NullStream to 10 blocks; otherwise unlimited
