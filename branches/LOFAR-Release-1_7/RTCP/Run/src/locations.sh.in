@@ -28,12 +28,14 @@ then
     STORAGE_HOME=/data/home/lofartest
 
     IONPROC_PARSET="/bghome0/lofarsys/parsets/T$OBSID.parset"
+    STORAGE_PARSET="/globalhome/lofartest/log/T$OBSID.parset"
     LOGPARAMS="-s `CEPlogProcessorSettings | awk '/test/ { print $2; }'`"
   else
     ISTESTENV=0
     STORAGE_HOME=/data/home/lofarsys
 
     IONPROC_PARSET="/bghome0/lofarsys/parsets/L$OBSID.parset"
+    STORAGE_PARSET="/globalhome/lofarsystem/log/L$OBSID.parset"
     LOGPARAMS="-s `CEPlogProcessorSettings | awk '/production/ { print $2; }'`"
   fi
 
