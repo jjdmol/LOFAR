@@ -45,24 +45,34 @@ CREATE OR REPLACE FUNCTION nextPICkvt(int,timestamp)
 	LIMIT    1; 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION getBrokenHardware(TIMESTAMP) 
+CREATE OR REPLACE FUNCTION getBrokenHardware(VARCHAR(20), VARCHAR(20)) 
 	RETURNS SETOF OTDBvalue AS $$
 	DECLARE
 		vRecord		RECORD;
 		vRecord2	RECORD;
 		vStartTime	TIMESTAMP;
+		vStopTime	TIMESTAMP;
+		vWhere		TEXT;
 
 	BEGIN
-		IF $1 IS NULL THEN
-			vStartTime = now();
+		IF $1 = '' THEN
+			vStartTime := now();
 		ELSE
-			vStartTime = $1;
+			vStartTime := $1;
 		END IF;
+		IF $2 = '' THEN
+			vStopTime := now();
+			vWhere := 'WHERE time < ' || chr(39) || vStartTime || chr(39);
+		ELSE
+			vStopTime := $2;
+			vWhere := 'WHERE time >= ' || chr(39) || vStartTime || chr(39) || ' AND time < ' || chr(39) || vStopTime || chr(39);
+		END IF;
+RAISE WARNING '% - % - %:' , vStartTime, vStopTime, vWhere;
 		FOR vRecord IN 
-			SELECT p.paramid,r.pvssname,p.value,p.time 
-			FROM pktemp p
-			LEFT JOIN PICparamref r ON r.paramid = p.paramid
-			WHERE time < vStartTime
+			EXECUTE '
+				SELECT p.paramid,r.pvssname,p.value,p.time 
+				FROM pktemp p
+				LEFT JOIN PICparamref r ON r.paramid = p.paramid ' || vWhere
 		LOOP
 			FOR vRecord2 IN 
 				SELECT p.paramid,r.pvssname,p.value,p.time 

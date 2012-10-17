@@ -23,10 +23,11 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if defined HAVE_BOOST_REGEX
-
 //# Includes
 #include <Common/LofarLogger.h>
+
+#if defined HAVE_BOOST_REGEX
+
 #include <Common/SystemUtil.h>
 #include <ApplCommon/StationInfo.h>
 #include <boost/regex.hpp>
