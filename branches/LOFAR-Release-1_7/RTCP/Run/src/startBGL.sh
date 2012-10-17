@@ -25,7 +25,7 @@ date
 echo starting obs $OBSID
 echo "---------------"
 
-STORAGE_PARSET=/opt/lofar/var/log/L$OBSID.parset
+STORAGE_PARSET=/globalhome/lofarsystem/log
 
 # Convert keys where needed
 /opt/lofar/bin/LOFAR/Parset.py -P $PARTITION $PARSET /opt/lofar/etc/OLAP.parset <(echo "$EXTRA_KEYS") > $IONPROC_PARSET &&
