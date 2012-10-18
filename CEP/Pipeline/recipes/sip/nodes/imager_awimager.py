@@ -34,14 +34,15 @@ from lofarpipe.support.parset import Parset
 import lofar.parmdb                          #@UnresolvedImport
 import numpy as np
 
+
 class imager_awimager(LOFARnodeTCP):
     def run(self, executable, environment, parset, working_directory,
             output_image, concatenated_measurement_set, sourcedb_path,
              mask_patch_size):
-        """       
+        """
         :param executable: Path to awimager executable
         :param environment: environment for catch_segfaults (executable runner)
-        :param parset: parameters for the awimager, 
+        :param parset: parameters for the awimager,
         :param working_directory: directory the place temporary files
         :param output_image: location and filesname to story the output images
           the multiple images are appended with type extentions
@@ -49,14 +50,14 @@ class imager_awimager(LOFARnodeTCP):
         :param sourcedb_path: Path the the sourcedb used to create the image 
           mask
         :param mask_patch_size: Scaling of the patch around the source in the 
-          mask  
+          mask
         :rtype: self.outputs["image"] The path to the output image
         
         """
         self.logger.info("Start imager_awimager node run:")
         log4_cplus_name = "imager_awimager"
         self.environment.update(environment)
-        
+
         with log_time(self.logger):
             # ****************************************************************
             # 1. Calculate awimager parameters that depend on measurement set
@@ -79,28 +80,33 @@ class imager_awimager(LOFARnodeTCP):
                          working_directory, log4_cplus_name, sourcedb_path,
                           mask_patch_size, image_path_head)
 
-            # ******************************************************************
+            # *****************************************************************
             # 4. Update the parset with calculated parameters, and output image
             patch_dictionary = {'uselogger': 'True', # enables log4cpluscd log
                                'ms': str(concatenated_measurement_set),
                                'cellsize': str(cell_size),
                                'npix': str(npix),
                                'wmax': str(w_max),
-                               'wprojplanes':str(w_proj_planes),
-                               'image':str(output_image),
-                               'maxsupport':str(npix),
-                               #'mask':str(mask_file_path),  #TODO REINTRODUCE 
+                               'wprojplanes': str(w_proj_planes),
+                               'image': str(output_image),
+                               'maxsupport': str(npix),
+                               #'mask':str(mask_file_path),  #TODO REINTRODUCE
                                # MASK, excluded to speed up in this debug stage
                                }
 
-            # save the parset at the target dir for the image            
-            temp_parset_filename = patch_parset(parset, patch_dictionary)
+            # save the parset at the target dir for the image
             calculated_parset_path = os.path.join(image_path_head,
-                                                   "parset.par")
-            # Copy tmp file to the final location
-            shutil.copy(temp_parset_filename, calculated_parset_path)
-            self.logger.debug("Wrote parset for awimager run: {0}".format(
+                                                       "parset.par")
+
+            try:
+                temp_parset_filename = patch_parset(parset, patch_dictionary)
+                # Copy tmp file to the final location
+                shutil.copyfile(temp_parset_filename, calculated_parset_path)
+                self.logger.debug("Wrote parset for awimager run: {0}".format(
                                                     calculated_parset_path))
+            finally:
+                # remove temp file
+                os.remove(temp_parset_filename)
 
             # *****************************************************************
             # 5. Run the awimager with the updated parameterset
@@ -126,24 +132,26 @@ class imager_awimager(LOFARnodeTCP):
         # *********************************************************************
         # 6. Return output
         # Append static .restored: This might change but prob. not
-        # The actual output image has this extention always, default of awimager
+        # The actual output image has this extention always, default of 
+        # awimager
         self.outputs["image"] = output_image + ".restored"
         return 0
 
     def _calc_par_from_measurement(self, measurement_set, parset):
         """
-        (1) calculate and format some parameters that are determined runtime. 
+        (1) calculate and format some parameters that are determined runtime.
         Based  on values in the measurementset and input parameter (set):
         
-        a. <string> The cellsize 
+        a. <string> The cellsize
         b. <int> The npixels in a each of the two dimension of the image
         c. <string> The largest baseline in the ms smaller then the maxbaseline
         d. <string> The number of projection planes
-                
+        
         The calculation of these parameters is done in three steps:
         
         1. Calculate intermediate results based on the ms. 
-        2. The calculation of the actual target values using intermediate result
+        2. The calculation of the actual target values using intermediate
+           result
         3. Scaling of cellsize and npix to allow for user input of the npix
         
         """
@@ -155,16 +163,17 @@ class imager_awimager(LOFARnodeTCP):
         # npix round up to nearest pow 2
         parset_npix = self._nearest_ceiled_power2(parset_object.getInt('npix'))
 
-        # Get the longest baseline      
+        # Get the longest baseline
         sqrt_max_baseline = pt.taql(
                         'CALC sqrt(max([select sumsqr(UVW[:2]) from ' + \
             '{0} where sumsqr(UVW[:2]) <{1} giving as memory]))'.format(\
             measurement_set, baseline_limit *
-            baseline_limit))[0]  #ask ger van diepen for details if ness.
+            baseline_limit))[0]  # ask ger van diepen for details if ness.
 
         #Calculate the wave_length
         table_ms = pt.table(measurement_set)
-        table_spectral_window = pt.table(table_ms.getkeyword("SPECTRAL_WINDOW"))
+        table_spectral_window = pt.table(
+                                        table_ms.getkeyword("SPECTRAL_WINDOW"))
         freq = table_spectral_window.getcell("REF_FREQUENCY", 0)
         table_spectral_window.close()
         wave_length = pt.taql('CALC C()') / freq
@@ -200,12 +209,12 @@ class imager_awimager(LOFARnodeTCP):
                     "Calculated w_max and the number pf projection plances:"
                     " {0} , {1}".format(w_max, w_proj_planes))
 
-        # MAximum number of proj planes set to 1024: George Heald, Ger van 
+        # MAximum number of proj planes set to 1024: George Heald, Ger van
         # Diepen if this exception occurs
         maxsupport = max(1024, npix)
         if w_proj_planes > maxsupport:
-            raise Exception("The number of projections planes for the current" +
-                            "measurement set is to large.")
+            raise Exception("The number of projections planes for the current"
+                            + "measurement set is to large.")
 
         # *********************************************************************
         # 3. if the npix from the parset is different to the ms calculations,
@@ -231,7 +240,7 @@ class imager_awimager(LOFARnodeTCP):
         """
         _field_of_view calculates the fov, which is dependend on the
         station type, location and mode:
-        For details see:        
+        For details see:
         (1) http://www.astron.nl/radio-observatory/astronomers/lofar-imaging-capabilities-sensitivity/lofar-imaging-capabilities/lofar
         
         """
@@ -247,7 +256,7 @@ class imager_awimager(LOFARnodeTCP):
         antenna_set = observation.getcell('LOFAR_ANTENNA_SET', 0)
         observation.close()
 
-        #static parameters for the station diameters ref (1)     
+        #static parameters for the station diameters ref (1)
         hba_core_diameter = 30.8
         hba_remote_diameter = 41.1
         lba_inner = 32.3
@@ -275,13 +284,14 @@ class imager_awimager(LOFARnodeTCP):
                     "Unknown antenna type encountered in Measurement set")
 
         #Get the wavelength
-        spectral_window_table = pt.table(table_ms.getkeyword("SPECTRAL_WINDOW"))
+        spectral_window_table = pt.table(table_ms.getkeyword(
+                                                            "SPECTRAL_WINDOW"))
         freq = float(spectral_window_table.getcell("REF_FREQUENCY", 0))
         wave_length = pt.taql('CALC C()') / freq
         spectral_window_table.close()
 
         # Now calculate the FOV see ref (1)
-        # alpha_one is a magic parameter: The value 1.3 is representative for a 
+        # alpha_one is a magic parameter: The value 1.3 is representative for a
         # WSRT dish, where it depends on the dish illumination
         alpha_one = 1.3
 
@@ -322,17 +332,18 @@ class imager_awimager(LOFARnodeTCP):
         # 1. Create the parset used to make a mask
         mask_file_path = output_image + ".mask"
 
-        mask_patch_dictionary = {"npix":str(npix),
-                                 "cellsize":str(cell_size),
-                                 "image":str(mask_file_path),
-                                 "ms":str(concatenated_measurement_set),
-                                 "operation":"empty",
-                                 "stokes":"'I'"
+        mask_patch_dictionary = {"npix": str(npix),
+                                 "cellsize": str(cell_size),
+                                 "image": str(mask_file_path),
+                                 "ms": str(concatenated_measurement_set),
+                                 "operation": "empty",
+                                 "stokes": "'I'"
                                  }
         mask_parset = Parset.fromDict(mask_patch_dictionary)
         mask_parset_path = os.path.join(image_path_directory, "mask.par")
         mask_parset.writeFile(mask_parset_path)
-        self.logger.debug("Write parset for awimager mask creation: {0}".format(
+        self.logger.debug(
+                "Write parset for awimager mask creation: {0}".format(
                                                       mask_parset_path))
 
         # *********************************************************************
@@ -393,21 +404,21 @@ class imager_awimager(LOFARnodeTCP):
         Version 0.3  (Wouter Klijn, klijn@astron.nl)
          - Usage of sourcedb instead of txt document as 'source' of sources
            This allows input from different source sources
-        Version 0.31  (Wouter Klijn, klijn@astron.nl)  
+        Version 0.31  (Wouter Klijn, klijn@astron.nl)
          - Adaptable patch size (patch size needs specification)
          - Patch size and geometry is broken: needs some astronomer magic to
            fix it, problem with afine transformation prol.
         Version 0.32 (Wouter Klijn, klijn@astron.nl)
-         - Renaming of variable names to python convention        
+         - Renaming of variable names to python convention
         """
-        pad = 500. # increment in maj/minor axes [arcsec]
+        # increment in maj/minor axes [arcsec]
+        pad = 500.
 
         # open mask
         mask = pim.image(mask_file_path, overwrite=True)
         mask_data = mask.getdata()
         xlen, ylen = mask.shape()[2:]
-        freq, stokes, null, null = mask.toworld([0, 0, 0, 0]) #@UnusedVariable
-
+        freq, stokes, null, null = mask.toworld([0, 0, 0, 0])
 
         #Open the sourcedb:
         table = pt.table(sourcedb_path + "::SOURCES")
@@ -442,12 +453,13 @@ class imager_awimager(LOFARnodeTCP):
                 # minor radius (+pad) in rad
                 minor = (((min_raw + pad)) / 3600.) * np.pi / 180.
                 pix_asc = pa_raw * np.pi / 180.
-                # wenss writes always 'GAUSSIAN' even for point sources 
+                # wenss writes always 'GAUSSIAN' even for point sources
                 #-> set to wenss beam+pad
                 if maj == 0 or minor == 0:
                     maj = ((54. + pad) / 3600.) * np.pi / 180.
                     minor = ((54. + pad) / 3600.) * np.pi / 180.
-            elif source_type == 0: # set to wenss beam+pad
+            # set to wenss beam+pad
+            elif source_type == 0:
                 maj = (((54. + pad) / 2.) / 3600.) * np.pi / 180.
                 minor = (((54. + pad) / 2.) / 3600.) * np.pi / 180.
                 pix_asc = 0.
@@ -505,7 +517,7 @@ class imager_awimager(LOFARnodeTCP):
     # some helper functions
     def _nearest_ceiled_power2(self, value):
         """
-        Return int value of  the nearest Ceiled power of 2 for the 
+        Return int value of  the nearest Ceiled power of 2 for the
         suplied argument
         
         """
