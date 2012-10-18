@@ -29,6 +29,7 @@ from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.jobserver import job_server
 import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
+from lofarpipe.support.utilities import create_directory
 
 
 class new_bbs(BaseRecipe):
@@ -220,7 +221,7 @@ class new_bbs(BaseRecipe):
         job_directory = self.config.get(
                             "layout", "job_directory")
         parset_directory = os.path.join(job_directory, "parsets")
-        os.mkdir(parset_directory)
+        create_directory(parset_directory)
 
         # patch the parset and copy result to target location remove tempfile
         try:
