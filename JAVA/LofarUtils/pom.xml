@@ -16,6 +16,13 @@
   <artifactId>lofarutils</artifactId>
 
 
+  <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
+  <scm>
+    <connection>scm:svn:http://svn.astron.nl/LOFAR/trunk/JAVA/LofarUtils</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/LofarUtils</developerConnection>
+  </scm>
+
+
   <!-- Information required to build a project. -->
   <build>
     <sourceDirectory>src</sourceDirectory>
