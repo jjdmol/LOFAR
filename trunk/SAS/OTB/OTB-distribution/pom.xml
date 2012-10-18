@@ -17,6 +17,15 @@
   <artifactId>OTB-distribution</artifactId>
   <packaging>pom</packaging>
 
+
+  <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
+  <scm>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/trunk/SAS/OTB/OTB-distribution</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/SAS/OTB/OTB-distribution</developerConnection>
+  </scm>
+
+
+  <!-- Information required to build a project. -->
   <build>
     <plugins>
 
