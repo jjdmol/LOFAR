@@ -25,6 +25,7 @@
     <lofar.lib.version>1.8.0-SNAPSHOT</lofar.lib.version>
   </properties>
 
+
   <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
   <scm>
     <connection>scm:svn:http://svn.astron.nl/LOFAR/trunk/SAS/OTB</connection>
