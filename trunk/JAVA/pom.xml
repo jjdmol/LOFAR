@@ -18,13 +18,6 @@
   <packaging>pom</packaging>
 
 
-  <!-- Properties that can be used throughout the POM as a substitution, 
-    and are used as filters in resources if enabled. -->
-  <properties>
-    <lofar.sas.otb.version>1.8.0-SNAPSHOT</lofar.sas.otb.version>
-  </properties>
-
-
   <!-- Specification for the SCM used by the project, such as CVS, Subversion, 
     etc. -->
   <scm>
