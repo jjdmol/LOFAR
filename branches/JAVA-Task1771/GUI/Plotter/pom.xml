@@ -18,7 +18,7 @@
 
   <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
   <scm>
-    <connection>scm:svn:http://svn.astron.nl/LOFAR/trunk/JAVA/GUI/Plotter</connection>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/GUI/Plotter</connection>
     <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/GUI/Plotter</developerConnection>
   </scm>
   
