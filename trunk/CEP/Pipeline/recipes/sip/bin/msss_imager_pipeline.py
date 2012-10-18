@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-#                                                         LOFAR IMAGING PIPELINE
+#                                                        LOFAR IMAGING PIPELINE
 #
-#                                                         Imager Pipeline recipe
-#                                                             Marcel Loose, 2012
-#                                                                loose@astron.nl
-# ------------------------------------------------------------------------------
+#                                                        Imager Pipeline recipe
+#                                                            Marcel Loose, 2012
+#                                                               loose@astron.nl
+#                                                            Wouter Klijn, 2012
+#                                                               klijn@astron.nl
+# -----------------------------------------------------------------------------
 import os
 import sys
 
@@ -21,20 +23,20 @@ from lofar.parameterset import parameterset
 class msss_imager_pipeline(control):
     """
     The Automatic MSSS imager pipeline is used to generate MSSS images and find
-    sources in the generated images. Generated images and lists of found sources
-    are complemented with meta data and thus ready for consumption by the 
-    Long Term Storage (LTA)
+    sources in the generated images. Generated images and lists of found
+    sources are complemented with meta data and thus ready for consumption by
+    the Long Term Storage (LTA)
 
     *subband groups*
     The imager_pipeline is able to generate images on the frequency range of
-    LOFAR in parallel. Combining the frequency subbands together in so called 
-    subbandgroups. Each subband group will result in an image and sourcelist, 
-    (typically 8, because ten subband groups are combined). 
+    LOFAR in parallel. Combining the frequency subbands together in so called
+    subbandgroups. Each subband group will result in an image and sourcelist,
+    (typically 8, because ten subband groups are combined).
 
     *Time Slices*
-    MSSS images are compiled from a number of so-called (time) slices. Each slice
-    comprises a short (approx. 10 min) observation of a field (an area on the
-    sky) containing typically 80 subbands. The number of slices will be
+    MSSS images are compiled from a number of so-called (time) slices. Each
+    slice comprises a short (approx. 10 min) observation of a field (an area on
+    the sky) containing typically 80 subbands. The number of slices will be
     different for LBA observations (typically 9) and HBA observations
     (typically 2), due to differences in sensitivity.
 
@@ -45,38 +47,39 @@ class msss_imager_pipeline(control):
     **This pipeline performs the following operations:**
 
     1. Prepare Phase. Copy the preprocessed MS's from the different compute
-       nodes to the nodes where the images will be compiled (the prepare phase).
+       nodes to the nodes where the images will be compiled (the prepare phase)
        Combine the subbands in subband groups, concattenate the timeslice in a
        single large measurement set and perform flagging, RFI and bad station
        exclusion.
     2. Create db. Generate a local sky model (LSM) from the global sky model
        (GSM) for the sources that are in the field-of-view (FoV). The LSM
        is stored as sourcedb.
-       In step 3 calibration of the measurement sets is performed on these 
-       sources and in step 4 to create a mask for the awimager. The calibration 
+       In step 3 calibration of the measurement sets is performed on these
+       sources and in step 4 to create a mask for the awimager. The calibration
        solution will be placed in an instrument table/db also created in this
        step.
     3. BBS. Calibrate the measurement set with the sourcedb from the gsm.
        In later iterations sourced found in the created images will be added
-       to this list. Resulting in a selfcalibration cycle.       
-    4. Awimager. The combined  measurement sets are now imaged. The imaging 
-       is performed using a mask: The sources in the sourcedb are used to create
-       an casa image masking known sources. Together with the measurement set
-       an image is created. 
-    5. Sourcefinding. The images created in step 4 are fed to pyBDSM to find and
-       describe sources. In multiple itterations substracting the found sources,
-       all sources are collectedin a sourcelist.       
-       Step I. The sources found in step 5 are fed back into step 2. This allows the 
-       Measurement sets to be calibrated with sources currently found in the
-       image. This loop will continue until convergence (3 times for the time 
-       being). 
-    6. Finalize. Meta data with regards to the input, computations performed and
-       results are collected an added to the casa image. The images created are
-       converted from casa to HDF5 and copied to the correct output location. 
+       to this list. Resulting in a selfcalibration cycle.
+    4. Awimager. The combined  measurement sets are now imaged. The imaging
+       is performed using a mask: The sources in the sourcedb are used to
+       create an casa image masking known sources. Together with the
+       measurement set an image is created.
+    5. Sourcefinding. The images created in step 4 are fed to pyBDSM to find
+       and describe sources. In multiple itterations substracting the found
+       sources, all sources are collectedin a sourcelist.
+       Step I. The sources found in step 5 are fed back into step 2.
+       This allows the Measurement sets to be calibrated with sources currently
+       found in the image. This loop will continue until convergence (3 times
+       for the time being).
+    6. Finalize. Meta data with regards to the input, computations performed
+       and results are collected an added to the casa image. The images created
+       are converted from casa to HDF5 and copied to the correct output
+       location.
     7. Export meta data: An outputfile with meta data is generated ready for
        consumption by the LTA and/or the LOFAR framework.
 
-    
+
     **Per subband-group, the following output products will be delivered:**
 
     a. An image
@@ -98,7 +101,6 @@ class msss_imager_pipeline(control):
         self.parset_dir = None
         self.mapfile_dir = None
 
-
     def usage(self):
         """
         Display usage information
@@ -119,12 +121,11 @@ class msss_imager_pipeline(control):
         self.parset_feedback_file = parset_file + "_feedback"
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
-        if not self.inputs.has_key('job_name'):
+        if not 'job_name' in self.inputs:
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
         return super(msss_imager_pipeline, self).go()
-
 
     def pipeline_logic(self):
         """
@@ -155,7 +156,7 @@ class msss_imager_pipeline(control):
 
         # *********************************************************************
         # (INPUT) Get the input from external sources and create pipeline types
-        # Input measure ment sets 
+        # Input measure ment sets
         input_mapfile = os.path.join(self.mapfile_dir, "uvdata.mapfile")
         store_data_map(input_mapfile, self.input_data)
         self.logger.debug(
@@ -174,7 +175,7 @@ class msss_imager_pipeline(control):
             "Wrote output sky-image mapfile: {0}".format(output_image_mapfile))
 
         # ******************************************************************
-        # (1) prepare phase: copy and collect the ms 
+        # (1) prepare phase: copy and collect the ms
         concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path, \
             processed_ms_dir = self._prepare_phase(input_mapfile,
                                     target_mapfile, skip=False)
@@ -196,15 +197,14 @@ class msss_imager_pipeline(control):
             bbs_output = self._bbs(timeslice_map_path, parmdbs_path,
                         sourcedb_map_path, skip=False)
 
-
-            # ******************************************************************
+            # *****************************************************************
             # (4) Get parameters awimager from the prepare_parset and inputs
             aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
                         idx_loop, sourcedb_map_path,
                         skip=False)
 
             # *****************************************************************
-            # (5) Source finding 
+            # (5) Source finding
             sourcelist_map, found_sourcedb_path = self._source_finding(
                     aw_image_mapfile, idx_loop, skip=False)
             #should the output be a sourcedb? instead of a sourcelist
@@ -271,7 +271,7 @@ class msss_imager_pipeline(control):
         """
         Perform the final step of the imager:
         Convert the output image to hdf5 and copy to output location
-        Collect meta data and add to the image 
+        Collect meta data and add to the image
         """
 
         placed_image_mapfile = self._write_datamap_to_file(None,
@@ -317,7 +317,8 @@ class msss_imager_pipeline(control):
         sourcedb_map_path = self._write_datamap_to_file(None,
              "source_dbs_outputs", "Map to sourcedbs based in found sources")
 
-        # construct the location to save the output products of the sourcefinder
+        # construct the location to save the output products of the
+        # sourcefinder
         cycle_path = os.path.join(self.scratch_directory,
                                   "awimage_cycle_{0}".format(major_cycle))
         catalog_path = os.path.join(cycle_path, "bdsm_catalog")
@@ -340,31 +341,30 @@ class msss_imager_pipeline(control):
 
             return source_list_map, sourcedb_map_path
 
-
     def _bbs(self, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
               skip=False):
         """
         Perform a calibration step. First with a set of sources from the
         gsm and in later iterations also on the found sources
         """
-        #create parset for bbs run 
+        #create parset for bbs run
         parset = self.parset.makeSubset("BBS.")
         parset_path = self._write_parset_to_file(parset, "bbs",
-                                    "Parset for calibration on local sky model")
+                                "Parset for calibration on local sky model")
 
         # create the output file path
         output_mapfile = self._write_datamap_to_file(None, "bbs_output",
                         "Mapfile with calibrated measurement sets.")
 
         converted_sourcedb_map_path = self._write_datamap_to_file(None,
-                    "source_db", "correctly shaped mapfile for input sourcedbs")
+                "source_db", "correctly shaped mapfile for input sourcedbs")
 
         if skip:
             return output_mapfile
 
         # The create db step produces a mapfile with a single sourcelist for
         # the different timeslices. Generate a mapfile with copies of the
-        # sourcelist location: This allows validation of maps in combination  
+        # sourcelist location: This allows validation of maps in combination
 
         # get the original map data
         sourcedb_map = load_data_map(sourcedb_map_path)
@@ -408,12 +408,17 @@ class msss_imager_pipeline(control):
         parset = self.parset.makeSubset("AWimager.")
         # Get maxbaseline from 'full' parset
         max_baseline = self.parset.getInt("Imaging.maxbaseline")
-        patch_dictionary = {"maxbaseline":str(
+        patch_dictionary = {"maxbaseline": str(
                                     max_baseline)}
-        temp_parset_filename = patch_parset(parset, patch_dictionary)
-        aw_image_parset = get_parset(temp_parset_filename)
-        aw_image_parset_path = self._write_parset_to_file(aw_image_parset,
-            "awimager_cycle_{0}".format(major_cycle), "Awimager recipe parset")
+        try:
+            temp_parset_filename = patch_parset(parset, patch_dictionary)
+            aw_image_parset = get_parset(temp_parset_filename)
+            aw_image_parset_path = self._write_parset_to_file(aw_image_parset,
+                "awimager_cycle_{0}".format(major_cycle),
+                "Awimager recipe parset")
+        finally:
+            # remove tempfile
+            os.remove(temp_parset_filename)
 
         # Create path to write the awimage files
         intermediate_image_path = os.path.join(self.scratch_directory,
@@ -438,16 +443,15 @@ class msss_imager_pipeline(control):
 
         return output_mapfile, max_baseline
 
-
     def _prepare_phase(self, input_ms_map_path, target_mapfile,
             skip=False):
         """
-        Copy ms to correct location, combine the ms in slices and combine 
+        Copy ms to correct location, combine the ms in slices and combine
         the time slices into a large virtual measurement set
         """
         # Create the dir where found and processed ms are placed
         # raw_ms_per_image_map_path contains all the original ms locations:
-        # this list contains possible missing files     
+        # this list contains possible missing files
         processed_ms_dir = os.path.join(self.scratch_directory, "subbands")
 
         # get the parameters, create a subset for ndppp, save
@@ -459,7 +463,7 @@ class msss_imager_pipeline(control):
         #[1] output -> prepare_output
         output_mapfile = self._write_datamap_to_file(None, "prepare_output")
         time_slices_mapfile = self._write_datamap_to_file(None,
-                                                          "prepare_time_slices")
+                                                    "prepare_time_slices")
         raw_ms_per_image_mapfile = self._write_datamap_to_file(None,
                                                          "raw_ms_per_image")
 
@@ -505,11 +509,10 @@ class msss_imager_pipeline(control):
         return output_mapfile, time_slices_mapfile, raw_ms_per_image_mapfile, \
             processed_ms_dir
 
-
     def _create_dbs(self, input_map_path, timeslice_map_path, source_list="",
                     skip_create_dbs=False):
         """
-        Create for each of the concatenated input measurement sets 
+        Create for each of the concatenated input measurement sets
         an instrument model and parmdb
         """
         # Create the parameters set
@@ -545,10 +548,9 @@ class msss_imager_pipeline(control):
     # TODO: Move these helpers to the parent class
     def _write_parset_to_file(self, parset, parset_name, message):
         """
-        Write the suplied the suplied parameterset to the parameter set 
+        Write the suplied the suplied parameterset to the parameter set
         directory in the jobs dir with the filename suplied in parset_name.
         Return the full path to the created file.
-
         """
         parset_dir = os.path.join(
             self.config.get("layout", "job_directory"), "parsets")
@@ -566,12 +568,11 @@ class msss_imager_pipeline(control):
 
         return parset_path
 
-
     def _write_datamap_to_file(self, datamap, mapfile_name, message=""):
         """
-        Write the suplied the suplied map to the mapfile  
+        Write the suplied the suplied map to the mapfile.
         directory in the jobs dir with the filename suplied in mapfile_name.
-        Return the full path to the created file.  
+        Return the full path to the created file.
         Id supllied data is None then the file is touched if not existing, but
         existing files are kept as is
         """
@@ -596,10 +597,8 @@ class msss_imager_pipeline(control):
                 self.logger.debug(
             "Touched mapfile <{0}>: {1}".format(mapfile_path, message))
 
-
         return mapfile_path
 
 
 if __name__ == '__main__':
     sys.exit(msss_imager_pipeline().main())
-
