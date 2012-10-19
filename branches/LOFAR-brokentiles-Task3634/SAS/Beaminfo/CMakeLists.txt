@@ -4,6 +4,7 @@ lofar_package(Beaminfo 0.1 DEPENDS Common ApplCommon OTDB)
 
 include(LofarFindPackage)
 lofar_find_package(Boost COMPONENTS date_time REQUIRED)
+lofar_find_package(Casacore COMPONENTS casa measures tables REQUIRED)
 
 #add_subdirectory(include/Beaminfo)
 add_subdirectory(src)
