@@ -117,9 +117,6 @@ char stdoutbuf[1024], stderrbuf[1024];
 
 int main(int argc, char *argv[])
 {
-  // hack to simulate a slow initialisation
-  sleep(100);
-  
 #if defined HAVE_LOG4CPLUS
   char *dirc = strdup(argv[0]);
 
