@@ -52,7 +52,7 @@ namespace LOFAR {
 namespace RTCP {
 
 #ifdef HAVE_LIBSSH2
-  
+
 SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey)
 :
   itsLogPrefix(logPrefix),
@@ -210,8 +210,8 @@ bool SSHconnection::waitsocket( FileDescriptorBasedStream &sock )
 void SSHconnection::commThread()
 {
 #if defined HAVE_BGP_ION
-  //doNotRunOnCore0();
-  runOnCore0();
+  doNotRunOnCore0();
+  //runOnCore0();
   //nice(19);
 #endif
 
@@ -323,8 +323,63 @@ void SSHconnection::commThread()
     LOG_INFO_STR(itsLogPrefix << "Terminated normally");
   }
 }
+ 
+#include <openssl/crypto.h>
+
+std::vector< SmartPtr<Mutex> > openssl_mutexes;
+
+static void lock_callback(int mode, int type, const char *file, int line)
+{
+  (void)file;
+  (void)line;
+
+  if (mode & CRYPTO_LOCK)
+    openssl_mutexes[type]->lock();
+  else
+    openssl_mutexes[type]->unlock();
+}
+ 
+static unsigned long thread_id_callback()
+{
+  return static_cast<unsigned long>(pthread_self());
+}
 
 #endif
+ 
+bool SSH_Init() {
+
+#ifdef HAVE_LIBSSH2
+  // initialise openssl
+  openssl_mutexes.resize(CRYPTO_num_locks());
+  for (size_t i = 0; i < openssl_mutexes.size(); ++i)
+    openssl_mutexes[i] = new Mutex;
+ 
+  CRYPTO_set_id_callback(&thread_id_callback);
+  CRYPTO_set_locking_callback(&lock_callback);
+
+  // initialise libssh2
+  int rc = libssh2_init(0);
+
+  if (rc)
+    return false;
+#endif
+
+  return true;
+}
+
+void SSH_Finalize() {
+#ifdef HAVE_LIBSSH2
+  // exit libssh2
+  libssh2_exit();
+
+  // exit openssl
+  CRYPTO_set_locking_callback(NULL);
+  CRYPTO_set_id_callback(NULL);
+ 
+  openssl_mutexes.clear();
+#endif  
+}
+  
 
 static void exitwitherror( const char *errorstr )
 {

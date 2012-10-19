@@ -62,12 +62,12 @@ public:
 
 private:
 	// Return the seleted rcus as bitset<MAX_N_RCUS>
-	bool					parseOptions(int myArgc, char** myArgv);
-	bool					checkOptions();
-	bitset<LOFAR::MAX_RCUS> getRCUMask() const;
-	list<int> 				strtolist(const char* str, int max) const;
-	void 			 		printList(list<int>&		theList) const;
-	void 					usage() const;
+	bool				parseOptions(int myArgc, char** myArgv);
+	bool				checkOptions();
+	bitset<MAX_RCUS> 	getRCUMask() const;
+	list<int> 			strtolist(const char* str, int max) const;
+	void 		 		printList(list<int>&		theList) const;
+	void 				usage() const;
 	void send_direction(double	longitude, double	latitude, const string&	dirType, bool	isAnalogue);
 
 	// ports

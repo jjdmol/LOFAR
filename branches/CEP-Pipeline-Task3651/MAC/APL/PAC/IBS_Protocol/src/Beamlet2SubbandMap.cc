@@ -33,43 +33,43 @@ using namespace IBS_Protocol;
 using namespace std;
 using namespace blitz;
 
-unsigned int Beamlet2SubbandMap::getSize()
+size_t Beamlet2SubbandMap::getSize() const
 {
 	// 1-dimensional array has 1 int32 for length
 	// map is converted to array of uint16 of 2 * map.size() elements
 	return (sizeof(int32) + (m_beamlet2subband.size() * sizeof(uint16) * 2));
 }
 
-unsigned int Beamlet2SubbandMap::pack  (void* buffer)
+size_t Beamlet2SubbandMap::pack  (char* buffer) const
 {
 	// the map is sent as a blitz array
 	blitz::Array<uint16, 1> maparray;
-	unsigned int offset = 0;
+	size_t offset = 0;
 
 	maparray.resize(m_beamlet2subband.size() * 2); // resize the array
 	maparray = 0;
 
 	// convert map to Blitz array
-	map<uint16, uint16>::iterator iter = m_beamlet2subband.begin();
-	map<uint16, uint16>::iterator end  = m_beamlet2subband.end();
+	map<uint16, uint16>::const_iterator iter = m_beamlet2subband.begin();
+	map<uint16, uint16>::const_iterator end  = m_beamlet2subband.end();
 	int i = 0;
 	for ( ; iter != end; ++iter, i+=2) {
 		maparray(i)   = iter->first;
 		maparray(i+1) = iter->second;
 	}
 
-	MSH_PACK_ARRAY(buffer, offset, maparray, uint16);
+	MSH_pack(buffer, offset, maparray);
 
 	return offset;
 }
 
-unsigned int Beamlet2SubbandMap::unpack(void *buffer)
+size_t Beamlet2SubbandMap::unpack(const char *buffer)
 {
 	// the map is received as a blitz array
 	blitz::Array<uint16, 1> maparray;
-	unsigned int offset = 0;
+	size_t offset = 0;
 
-	MSH_UNPACK_ARRAY(buffer, offset, maparray, uint16, 1);
+	MSH_unpack(buffer, offset, maparray);
 	ASSERT(maparray.extent(firstDim) % 2 == 0);
 
 	// convert Blitz array to map
@@ -92,7 +92,12 @@ bitset<MAX_SUBBANDS> Beamlet2SubbandMap::getSubbandBitset() const
 	map<uint16, uint16>::const_iterator iter = m_beamlet2subband.begin();
 	map<uint16, uint16>::const_iterator end  = m_beamlet2subband.end();
 	while (iter != end) {
-		result.set(iter->second);
+		if (iter->second >= MAX_SUBBANDS) {
+			LOG_FATAL_STR("Subband " << iter->second << " is not allowed, returning incomplete bitset!");
+		}
+		else {
+			result.set(iter->second);
+		}
 		++iter;
 	}
 
@@ -102,14 +107,20 @@ bitset<MAX_SUBBANDS> Beamlet2SubbandMap::getSubbandBitset() const
 //
 // returns a bitset in which the bits represent the used beamlets
 //
-bitset<MAX_BEAMLETS> Beamlet2SubbandMap::getBeamletBitset() const
+boost::dynamic_bitset<> Beamlet2SubbandMap::getBeamletBitset(const int	maxBeamlets) const
 {
-	bitset<MAX_BEAMLETS> result;
+	boost::dynamic_bitset<> result;
+	result.resize(maxBeamlets);
 
 	map<uint16, uint16>::const_iterator iter = m_beamlet2subband.begin();
 	map<uint16, uint16>::const_iterator end  = m_beamlet2subband.end();
 	while (iter != end) {
-		result.set(iter->first);
+		if (iter->first >= maxBeamlets) {
+			LOG_FATAL_STR("Beamlet " << iter->first << " is not allowed, returning incomplete bitset!");
+		}
+		else {
+			result.set(iter->first);
+		}
 		++iter;
 	}
 
@@ -128,7 +139,7 @@ ostream& Beamlet2SubbandMap::print (ostream&	os) const
 	return (os);
 	map<uint16,uint16>::const_iterator	iter;
 	map<uint16,uint16>::const_iterator	end = m_beamlet2subband.end();
-	while (idx < elements && idx < MAX_BEAMLETS) {
+	while (idx < elements) {
 		if (idx % MAX_ELEMENTS_PER_LINE == 0) {
 			if (idx % (2*MAX_ELEMENTS_PER_LINE) == 0) {
 				os << endl << formatString("[%d]: ", idx / (2*MAX_ELEMENTS_PER_LINE));

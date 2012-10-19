@@ -55,11 +55,14 @@ namespace LOFAR {
 ActiveObs::ActiveObs(const string&		name,
 					 State				initial,
 					 ParameterSet*		thePS,
+					 const string&		LBAbitmapString,
+					 const string&		HBAbitmapString,
 					 bool				hasSplitters,
 					 GCFTask&			task) :
 	GCFTask				(initial, string("ActiveObs:") + name),
 	itsStopTimerID		(0),
-	itsPropSetTimer		(new GCFTimerPort(task, name)),
+	itsPropSetTimer		(new GCFTimerPort(task, name)), // must use 'name' because F_TIMER events receive
+	itsGuardTimer		(new GCFTimerPort(task, name)),	// in StationControl task. Needed for routing.
 	itsName				(name),
 	itsTask				(&task),
 	itsInstanceNr		(getInstanceNr(name)),
@@ -76,7 +79,9 @@ ActiveObs::ActiveObs(const string&		name,
 						 itsInstanceNr, itsObsPar.obsID)),
 	itsReadyFlag		(false),
 	itsReqState			(CTState::NOSTATE),
-	itsCurState			(CTState::NOSTATE)
+	itsCurState			(CTState::NOSTATE),
+	itsLBAs				(LBAbitmapString),
+	itsHBAs				(HBAbitmapString)
 {
 	if (thePS->isDefined("Observation.TBB.TBBsetting[0].filter0_coeff0")) {
 		LOG_INFO("Observation also uses the TB boards");
@@ -105,7 +110,7 @@ ActiveObs::~ActiveObs()
 GCFEvent::TResult ActiveObs::initial(GCFEvent& event, 
 								     GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG(formatString("%s:initial - %04X", itsName.c_str(), event.signal));
+	LOG_DEBUG(formatString("%s:initial - %s", itsName.c_str(), eventName(event).c_str()));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -152,7 +157,7 @@ GCFEvent::TResult ActiveObs::initial(GCFEvent& event,
 		break;
 	
 	default:
-		LOG_DEBUG_STR ("initial, default");
+		LOG_DEBUG_STR(itsName << ":inital default: " << eventName(event));
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
@@ -166,16 +171,16 @@ GCFEvent::TResult ActiveObs::initial(GCFEvent& event,
 //
 GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 {
-	LOG_DEBUG(formatString("%s:starting - %04X", itsName.c_str(), event.signal));
+	LOG_DEBUG(formatString("%s:starting - %s", itsName.c_str(), eventName(event).c_str()));
 
 	switch (event.signal) {
 	case F_ENTRY:  {
-		// first make a mapping of the receivers that are used.
-		// the StationController already modified the set to reflect the available receivers
-		// So askfor this 'core' set by passed zeros.
-		// the receiver bitmap can be derived from the RCUset.
+		// First make a mapping of the receivers that are used.
+		// The StationController already modified the set to reflect the available receivers
+		// So askfor this 'core' set by passing zeros in the getRCUbitset function.
 		StationConfig		config;
 		bitset<MAX_RCUS>	theRCUs(itsObsPar.getRCUbitset(0, 0, ""));
+		// The receiver bitmap can be derived from the RCUset.
 		string	rbm;
 		rbm.resize(MAX_RCUS, '0');
 		for (int i = 0; i < MAX_RCUS; i++) {
@@ -185,6 +190,8 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 		}
 		LOG_INFO_STR("Setting receiverBitMap of DP:" << itsObsPar.realPVSSdatapoint << "." << PN_OBS_RECEIVER_BITMAP << "to " << theRCUs);
 		itsPropertySet->setValue(PN_OBS_RECEIVER_BITMAP,GCFPVString (rbm));
+		itsPropertySet->setValue(PN_OBS_LBA_BITMAP,GCFPVString (itsLBAs));
+		itsPropertySet->setValue(PN_OBS_HBA_BITMAP,GCFPVString (itsHBAs));
 		itsPropertySet->setValue(PN_OBS_CLAIM_NAME, 
 								 GCFPVString(formatString("LOFAR_ObsSW_Observation%d", itsObsPar.obsID)));
 
@@ -214,6 +221,7 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 		}
 
 		itsCurState = CTState::CONNECT;
+		itsGuardTimer->setTimer(10.0);	// max wait 10 seconds for connections.
 	}
 	break;
 
@@ -237,10 +245,17 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 		if (itsBeamCntlrReady && itsCalCntlrReady && (itsUsesTBB == itsTBBCntlrReady)) {
 			LOG_INFO_STR("Connected to all controllers, going to connected state");
 			itsCurState = CTState::CONNECTED;
+			itsGuardTimer->cancelAllTimers();
 			TRAN(ActiveObs::connected);
 		}
 	}
 	break;
+
+	case F_TIMER: 
+		LOG_FATAL_STR((!itsCalCntlrReady ? "Calibration" : (!itsBeamCntlrReady ? "Beam" : "TBB")) << "Controller did not start, aborting observation");
+		TRAN(ActiveObs::stopping);
+		break;
+		
 
 	case CONTROL_QUIT:
 		TRAN(ActiveObs::stopping);
@@ -254,8 +269,12 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 	}
 	break;
 
+	case F_EXIT:
+		itsGuardTimer->cancelAllTimers();
+		break;
+
 	default:
-		LOG_DEBUG_STR(itsName << ":default(" << F_EVT_PROTOCOL(event) << "," << F_EVT_SIGNAL(event) << ")");
+		LOG_DEBUG_STR(itsName << ":starting default: " << eventName(event) << "@" << port.getName());
 		return(GCFEvent::NOT_HANDLED);
 		break;
 	}
@@ -269,7 +288,7 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 //
 GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 {
-	LOG_DEBUG_STR(itsName << ":connected");
+	LOG_DEBUG_STR(itsName << ":connected - " << eventName(event) << "@" << port.getName());
 
 	switch (event.signal) {
 	case F_ENTRY: 
@@ -303,6 +322,7 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 			ChildControl::instance()-> requestState(CTState::CLAIMED, itsTBBCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		}
 		// will result in CONTROL_CLAIMED
+		itsGuardTimer->setTimer(10.0);	// max wait 10 seconds for answers.
 	}
 	break;
 
@@ -326,11 +346,17 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 		if (itsBeamCntlrReady && itsCalCntlrReady && (itsUsesTBB == itsTBBCntlrReady)) {
 			LOG_INFO("All controllers are ready, going to standby mode");
 			itsCurState = CTState::CLAIMED;
+			itsGuardTimer->cancelAllTimers();
 			TRAN(ActiveObs::standby);
 		}
 	}
 	break;
 
+	case F_TIMER: 
+		LOG_FATAL_STR((!itsCalCntlrReady ? "Calibration" : (!itsBeamCntlrReady ? "Beam" : "TBB")) << "Controller did not reached claim state, aborting observation");
+		TRAN(ActiveObs::stopping);
+		break;
+		
 	case CONTROL_QUIT:
 		TRAN(ActiveObs::stopping);
 		break;
@@ -343,8 +369,12 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 	}
 	break;
 
+	case F_EXIT:
+		itsGuardTimer->cancelAllTimers();
+		break;
+
 	default:
-		LOG_DEBUG_STR(itsName << ":default(" << F_EVT_PROTOCOL(event) << "," << F_EVT_SIGNAL(event) << ")");
+		LOG_DEBUG_STR(itsName << ":connected default: " << eventName(event) << "@" << port.getName());
 		return(GCFEvent::NOT_HANDLED);
 		break;
 	}
@@ -358,7 +388,7 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 //
 GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 {
-	LOG_DEBUG_STR(itsName << ":standby");
+	LOG_DEBUG_STR(itsName << ":standby - " << eventName(event) << "@" << port.getName());
 
 	switch (event.signal) {
 	case F_ENTRY: 
@@ -374,11 +404,13 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 		LOG_INFO_STR("Asking " << itsCalCntlrName << " to calibrate the subarray");
 		ChildControl::instance()->requestState(CTState::PREPARED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		// will result in CONTROL_PREPARED
+		itsGuardTimer->setTimer(10.0);	// max wait 10 seconds answer
 	}
 	break;
 
 	case CONTROL_PREPARED: {
 		CONTROLPreparedEvent		msg(event);
+		itsGuardTimer->cancelAllTimers();
 		if (msg.cntlrName == itsCalCntlrName) {
 			if (msg.result != CT_RESULT_NO_ERROR) {
 				LOG_ERROR_STR("Calibration of subarray FAILED with error " << msg.result);
@@ -388,6 +420,7 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 			itsCalCntlrReady = true;
 			ChildControl::instance()->requestState(CTState::PREPARED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
 			// will result in another CONTROL_PREPARED
+			itsGuardTimer->setTimer(10.0);	// max wait 10 seconds answer
 		}
 		else if (msg.cntlrName == itsBeamCntlrName) {
 			if (msg.result != CT_RESULT_NO_ERROR) {
@@ -397,16 +430,18 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 			LOG_INFO_STR("BeamController has started the beam, asking TBBCtlr to prepare TBBs");
 			itsBeamCntlrReady = true;
 			ChildControl::instance()->requestState(CTState::PREPARED, itsTBBCntlrName, 0, CNTLRTYPE_NO_TYPE);
+			itsGuardTimer->setTimer(10.0);	// max wait 10 seconds answer
 		}
 		else if (msg.cntlrName == itsTBBCntlrName) {
 			if (msg.result != CT_RESULT_NO_ERROR) {
 				LOG_ERROR_STR("Start of TBB failed with error, " << msg.result << 
 								". CONTINUING OBSERVATION WITHOUT TBB.");	
 				itsUsesTBB = false;
-				break;
 			}
-			LOG_INFO_STR("TBBController has started the beam");
-			itsTBBCntlrReady = true;
+			else {
+				LOG_INFO_STR("TBBController has started the beam");
+				itsTBBCntlrReady = true;
+			}
 		}
 		else {
 			ASSERTSTR(false, "Received claimed event of unknown controller: " << msg.cntlrName);
@@ -415,11 +450,17 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 		if (itsBeamCntlrReady && itsCalCntlrReady && (itsUsesTBB == itsTBBCntlrReady)) {
 			LOG_INFO("Both controllers are ready, going to operational mode");
 			itsCurState = CTState::PREPARED;
+			itsGuardTimer->cancelAllTimers();
 			TRAN(ActiveObs::operational);
 		}
 	}
 	break;
 
+	case F_TIMER: 
+		LOG_FATAL_STR((!itsCalCntlrReady ? "Calibration" : (!itsBeamCntlrReady ? "Beam" : "TBB")) << "Controller did not reach prepared state, aborting observation");
+		TRAN(ActiveObs::stopping);
+		break;
+		
 	case CONTROL_QUIT:
 		TRAN(ActiveObs::stopping);
 		break;
@@ -432,8 +473,12 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 	}
 	break;
 
+	case F_EXIT:
+		itsGuardTimer->cancelAllTimers();
+		break;
+
 	default:
-		LOG_DEBUG_STR(itsName << ":default(" << F_EVT_PROTOCOL(event) << "," << F_EVT_SIGNAL(event) << ")");
+		LOG_DEBUG_STR(itsName << ":standby default: " << eventName(event) << "@" << port.getName());
 		return(GCFEvent::NOT_HANDLED);
 		break;
 	}
@@ -447,7 +492,7 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 //
 GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port)
 {
-	LOG_DEBUG_STR(itsName << ":operational");
+	LOG_DEBUG_STR(itsName << ":operational - " << eventName(event) << "@" << port.getName());
 
 	switch (event.signal) {
 	case F_ENTRY: 
@@ -558,7 +603,7 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port
 	break;
 
 	default:
-		LOG_DEBUG_STR(itsName << ":default(" << eventName(event) << ")");
+		LOG_DEBUG_STR(itsName << ":operational default: " << eventName(event) << "@" << port.getName());
 		return(GCFEvent::NOT_HANDLED);
 		break;
 	}
@@ -572,7 +617,7 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port
 //
 GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*/)
 {
-	LOG_DEBUG_STR(itsName << ":stopping");
+	LOG_DEBUG(formatString("%s:stopping - %s", itsName.c_str(), eventName(event).c_str()));
 
 	switch (event.signal) {
 	case F_ENTRY:  {
@@ -597,8 +642,15 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 		}
 
 		LOG_INFO_STR(itsName << ": in 'stopping-mode' until controllers are down");
+		itsGuardTimer->setTimer(10.0);
 	}
 	break;
+
+	case F_TIMER:
+		LOG_ERROR_STR("Aborting while not all controllers reported successful shutdown!");
+		itsCurState  = CTState::QUITED;
+		itsReadyFlag = true;
+		break;
 
 	case CONTROL_QUITED: {
 		CONTROLQuitedEvent		msg(event);
@@ -621,12 +673,13 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 			LOG_INFO_STR("All controllers are down, informing stationControl task");
 			itsCurState  = CTState::QUITED;
 			itsReadyFlag = true;
+			itsGuardTimer->cancelAllTimers();
 		}
 	}
 	break;
 
 	default:
-		LOG_DEBUG_STR(itsName << ":default(" << F_EVT_PROTOCOL(event) << "," << F_EVT_SIGNAL(event) << ")");
+		LOG_DEBUG_STR(itsName << ":stopping default: " << eventName(event));
 		return(GCFEvent::NOT_HANDLED);
 		break;
 	}

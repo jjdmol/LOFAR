@@ -98,7 +98,7 @@ inline void WallClockTime::cancelWait()
   ScopedLock scopedLock(itsMutex);
 
   itsCancelled = true;
-  itsCondition.signal();
+  itsCondition.broadcast();
 }
 
 

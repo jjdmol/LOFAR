@@ -36,25 +36,25 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace EPA_Protocol;
 
-unsigned int SPUStatus::getSize()
+size_t SPUStatus::getSize() const
 {
-  return MSH_ARRAY_SIZE(itsSPUStatus, EPA_Protocol::SPUBoardStatus);
+  return MSH_size(itsSPUStatus);
 }
 
-unsigned int SPUStatus::pack  (void* buffer)
+size_t SPUStatus::pack  (char* buffer) const
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, itsSPUStatus, EPA_Protocol::SPUBoardStatus);
+  MSH_pack(buffer, offset, itsSPUStatus);
 
   return offset;
 }
 
-unsigned int SPUStatus::unpack(void *buffer)
+size_t SPUStatus::unpack(const char *buffer)
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
   
-  MSH_UNPACK_ARRAY(buffer, offset, itsSPUStatus, EPA_Protocol::SPUBoardStatus, 1);
+  MSH_unpack(buffer, offset, itsSPUStatus);
 
   return offset;
 }

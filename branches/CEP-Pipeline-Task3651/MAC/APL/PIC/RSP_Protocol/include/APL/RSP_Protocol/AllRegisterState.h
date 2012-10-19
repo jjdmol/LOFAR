@@ -85,6 +85,7 @@ public:
 		rawdataread_state.resize(nrRspBoards);
 		itsSerdesWriteState.resize(nrRspBoards);
 		itsSerdesReadState.resize(nrRspBoards);
+		itsBitModeWriteState.resize(nrRspBoards);
 		ts_state.resize(nrRspBoards);
 	}
 
@@ -123,8 +124,9 @@ public:
 		rawdataread_state.reset();
 		itsSerdesWriteState.reset();
 		itsSerdesReadState.reset();
-		ts_state.reset();
-
+		itsBitModeWriteState.reset();
+        ts_state.reset();
+		
 		sys_state.read();
 		bf_state.write();
 		ss_state.write();
@@ -153,6 +155,7 @@ public:
 		rawdataread_state.check();
 		itsSerdesWriteState.check();
 		itsSerdesReadState.check();
+		itsBitModeWriteState.check();
 		ts_state.write();
 	}
 
@@ -188,6 +191,7 @@ public:
 		rawdataread_state.check();
 		itsSerdesWriteState.check();
 		itsSerdesReadState.check();
+		itsBitModeWriteState.check();
 		ts_state.write(); // always write timestamp
 	}
 
@@ -223,7 +227,9 @@ public:
 		rawdataread_state.clear();
 		itsSerdesWriteState.clear();
 		itsSerdesReadState.clear();
+		itsBitModeWriteState.clear();
 		ts_state.clear();
+		
 	}
 
 	//
@@ -263,15 +269,16 @@ public:
 		out << "SerdesRead          "; itsSerdesReadState.print(out);
 		out << "RawDataBlock(write) "; rawdatawrite_state.print(out);
 		out << "RawDataBlock(read)  "; rawdataread_state.print(out);
+		out << "Bitmode Status (w)  "; itsBitModeWriteState.print(out);
 		out << "Timestamp           "; ts_state.print(out);
 		out << endl;
 	}
 
 	/*@{*/
 	// marshalling methods
-	unsigned int getSize();
-	unsigned int pack  (void* buffer);
-	unsigned int unpack(void *buffer);
+	size_t getSize() const;
+	size_t pack  (char* buffer) const;
+	size_t unpack(const char *buffer);
 	/*@}*/
 
 public:
@@ -306,6 +313,8 @@ public:
 	RTC::RegisterState& rawdataread()    { return rawdataread_state; }
 	RTC::RegisterState& sbwState()    	 { return itsSerdesWriteState; }
 	RTC::RegisterState& sbrState()    	 { return itsSerdesReadState; }
+	RTC::RegisterState& bmState()    	 { return itsBitModeWriteState; }
+	   
 
 	/*@}*/
 
@@ -339,6 +348,7 @@ private:
 	RTC::RegisterState rawdataread_state;	 // Read userdefined datablock
 	RTC::RegisterState itsSerdesWriteState;	 // Writing Serdes registers
 	RTC::RegisterState itsSerdesReadState;	 // Reading Serdes registers
+	RTC::RegisterState itsBitModeWriteState; // RSR Bitmode register state
 	RTC::RegisterState ts_state;             // RSR Timestamp register state
 
 	int m_nrcus;

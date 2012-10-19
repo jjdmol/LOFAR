@@ -1,7 +1,7 @@
 # $Id$
 
 # Do not split the following line, otherwise makeversion will fail!
-lofar_package(CEPCU 1.0 DEPENDS Common ALC PLC ApplCommon MACIO GCFTM GCFRTDB APLCommon OTDB)
+lofar_package(CEPCU 1.0 DEPENDS Common ALC PLC ApplCommon MACIO GCFTM GCFRTDB APLCommon RTDBCommon OTDB)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time)

@@ -1175,17 +1175,22 @@ void navFunct_fillObservationsList() {
     for (int i=1; i <= dynlen(g_processesList);i++) {
       // check if the dptype is of type (Stn)Observation
       string process = navFunct_getPathLessOne(g_processesList[i]);
-      if (dpTypeName(process) == "Observation" || dpTypeName(process) == "StnObservation" || dpTypeName(process) == "CEPObservation") {
-        // get the real observation name
-        int iPos = dynContains(g_observations["DP"],dpSubStr(process,DPSUB_DP));
-        if (iPos > 0) {
-          string observation = g_observations["NAME"][iPos];
-          strreplace(observation,"LOFAR_ObsSW_","");
+      // check if it is an existing databasePoint
+      if (dpExists(process) ) {
+        if (dpTypeName(process) == "Observation" || dpTypeName(process) == "StnObservation" || dpTypeName(process) == "CEPObservation") {
+          // get the real observation name
+          int iPos = dynContains(g_observations["DP"],dpSubStr(process,DPSUB_DP));
+          if (iPos > 0) {
+            string observation = g_observations["NAME"][iPos];
+            strreplace(observation,"LOFAR_ObsSW_","");
           
-          if (!dynContains(g_observationsList,observation)) {
-            dynAppend(g_observationsList,observation);
+            if (!dynContains(g_observationsList,observation)) {
+              dynAppend(g_observationsList,observation);
+            }
           }
         }
+      } else {
+        LOG_ERROR("navFunct.ctl:navFunct_fillObservationsLists| ERROR: illegal DP in processList: "+process);
       }
     }
   // otherwise hardware  
@@ -2096,6 +2101,8 @@ string navFunct_formatInt(int val,int maxval) {
     return "";
 
   int nr = val;  
+  // have to avoid loop when nr = 0
+  if (nr == 0) nr = 1;
   string ret="";
   while (nr < maxval) {
     if (nr*10 > maxval) break;

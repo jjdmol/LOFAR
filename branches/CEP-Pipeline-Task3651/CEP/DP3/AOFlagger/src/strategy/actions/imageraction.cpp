@@ -42,10 +42,10 @@ namespace rfiStrategy {
 			delete tmp;
 		}
 		
-		bool btPlaneImager = false;
+		bool btPlaneImager = true;
 		if(btPlaneImager)
 		{
-			typedef float ImagerNumeric;
+			typedef double ImagerNumeric;
 			BaselineTimePlaneImager<ImagerNumeric> btImager;
 			BandInfo band = metaData->Band();
 			Image2DCPtr

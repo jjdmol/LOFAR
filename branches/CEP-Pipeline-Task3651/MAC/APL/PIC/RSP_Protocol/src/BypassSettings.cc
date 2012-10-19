@@ -32,26 +32,22 @@ namespace LOFAR {
   namespace RSP_Protocol {
 
 
-unsigned int BypassSettings::getSize()
+size_t BypassSettings::getSize() const
 {
-  return MSH_ARRAY_SIZE(m_registers, BypassSettings::Control);
+  return MSH_size(m_registers);
 }
 
-unsigned int BypassSettings::pack  (void* buffer)
+size_t BypassSettings::pack  (char* buffer) const
 {
-  unsigned int offset = 0;
-  
-  MSH_PACK_ARRAY(buffer, offset, m_registers, BypassSettings::Control);
-
+  size_t offset = 0;
+  MSH_pack(buffer, offset, m_registers);
   return offset;
 }
 
-unsigned int BypassSettings::unpack(void *buffer)
+size_t BypassSettings::unpack(const char *buffer)
 {
-  unsigned int offset = 0;
-
-  MSH_UNPACK_ARRAY(buffer, offset, m_registers, BypassSettings::Control, 1);
-
+  size_t offset = 0;
+  MSH_unpack(buffer, offset, m_registers);
   return offset;
 }
 

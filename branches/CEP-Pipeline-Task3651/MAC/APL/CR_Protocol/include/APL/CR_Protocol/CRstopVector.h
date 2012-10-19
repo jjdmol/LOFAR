@@ -43,9 +43,9 @@ public:
 
 	//@{
 	// --- marshalling methods --- 
-	unsigned int getSize();
-	unsigned int pack  (void* buffer);
-	unsigned int unpack(void *buffer);
+	size_t getSize();
+	size_t pack  (void* buffer);
+	size_t unpack(void *buffer);
 	//@}
 
 	// --- datamembers ---

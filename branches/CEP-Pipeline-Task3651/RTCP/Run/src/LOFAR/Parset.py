@@ -629,7 +629,7 @@ class Parset(util.Parset.Parset):
           # make sure that the remainder is easily factorisable for easier post-processing
           cnIntegrationSteps = forced_factors * increase_factors( int(round(nrSamplesPerSecond * cnIntegrationTime / forced_factors)) )
 
-        cnIntegrationSteps = max(1, cnIntegrationSteps)
+        cnIntegrationSteps = max(forced_factors, cnIntegrationSteps)
 
         self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
 

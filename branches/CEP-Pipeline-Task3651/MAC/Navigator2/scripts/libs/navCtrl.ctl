@@ -65,6 +65,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   string aShape;
   string anEvent;
   dyn_string aSelection;
+  string selection="";
   
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".fw_viewBox.selection")) {
     dpGet(DPNAME_NAVIGATOR + g_navigatorID+".fw_viewBox.selection", aSelection);
@@ -87,6 +88,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| Found event    : " + anEvent);
   LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| Found selection: " + aSelection);
   navCtrl_handleNavigatorEvent(aSelection,anEvent,aShape); 
+
   
   // depending on the event received, actions need to be taken
   
@@ -125,6 +127,31 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   
   // Panel needs to be changed
   if (anEvent == "ChangePanel") {
+    // To be able to handle same panel for different choices we introduce the possiblity to give a fake extra _level in the
+    // selection datapoint, in that case the selection will be stripped from the fake point and set to the one b4 that
+    // a fake point will be known by the # delim
+    
+    string var="";
+    if (strpos(aSelection[1],"#") >= 0) {
+      dyn_string aS = strsplit(aSelection[1],"#");
+      selection = aS[1];
+      var= aS[2];
+      
+      LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|#selection: "+selection);
+      LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|#var:       "+var);
+      if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList")) {
+        dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList",var);
+      } else {
+        LOG_WARN("navCtrl.ctl:navCtrl_handleViewBoxEvent| Error: no dp " + DPNAME_NAVIGATOR + g_navigatorID+".panelParamList");
+      }
+    }
+      
+
+    
+    if (dpExists(selection)) {
+      g_currentDatapoint=selection;
+    }
+    
     if (navTabCtrl_showView()) {
         
       navFunct_waitObjectReady(500);
@@ -311,6 +338,7 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
   string aShape;
   string anEvent;
   dyn_string aSelection;
+  string selection="";
   
   
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".fw_viewSelection.selection")) {
@@ -366,7 +394,31 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
   
   //ChangePanel
   if (anEvent == "ChangePanel") {
-   
+ 
+    // To be able to handle same panel for different choices we introduce the possiblity to give a fake extra _level in the
+    // selection datapoint, in that case the selection will be stripped from the fake point and set to the one b4 that
+    // a fake point will be known by the # delim
+    
+    string var="";
+    if (strpos(selection,"#") >= 0) {
+      dyn_string aS = strsplit(selection,"#");
+      selection = aS[1];
+      var= aS[2];
+      
+      LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewSelectionEvent|#selection: "+selection);
+      LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewSelectionEvent|#var:       "+var);
+      if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList")) {
+        dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList",var);
+      } else {
+        LOG_WARN("navCtrl.ctl:navCtrl_handleViewSelectionEvent| Error: no dp " + DPNAME_NAVIGATOR + g_navigatorID+".panelParamList");
+      }
+    }
+      
+
+    if (dpExists(selection)) {
+      g_currentDatapoint=selection;
+    }
+    
     if (navTabCtrl_showView()) {
       navFunct_waitObjectReady(500);
       
@@ -534,10 +586,12 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
 
         if (sel[1] == "Observations") {
           typeSelector=sel[1];
-          observationType=sel[2];
-          selection=sel[3];
-          if (!dynContains(highlight,selection)) {
-            dynAppend(highlight,selection);
+          if (dynlen(sel) >= 2) observationType=sel[2];
+          if (dynlen(sel) >= 3) { 
+            selection=sel[3];
+            if (!dynContains(highlight,selection)) {
+              dynAppend(highlight,selection);
+            }
           }
           
           // if selection == observation, add involved hardware && software
@@ -573,7 +627,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
   }
   
   if (anEvent == "ChangePanel") {
-
+ 
     //check if a tab change should be initiated
     if (ACTIVE_TAB != typeSelector && typeSelector != "") {
       LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|Active tab should be changed to : "+ typeSelector);
@@ -587,7 +641,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
     // a fake point will be known by the # delim
     
     string var="";
-    if (strtok(selection,"#") >= 0) {
+    if (strpos(selection,"#") >= 0) {
       dyn_string aS = strsplit(selection,"#");
       selection = aS[1];
       var= aS[2];
@@ -597,7 +651,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
       if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList")) {
         dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList",var);
       } else {
-        LOG_WARN("navCtrl.ctl:navCtrl_handleLocatorEvent| Error: no dp " + DPNAME_NAVIGATOR + g_navigatorID+".panelParamList");
+        LOG_WARN("navCtrl.ctl:navCtrl_handleDetailSelectionEvent| Error: no dp " + DPNAME_NAVIGATOR + g_navigatorID+".panelParamList");
       }
     }
       

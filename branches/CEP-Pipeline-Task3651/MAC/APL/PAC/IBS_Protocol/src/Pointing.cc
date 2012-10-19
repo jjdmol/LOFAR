@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <APL/IBS_Protocol/Pointing.h>
-#include <MACIO/Marshalling.h>
+#include <MACIO/Marshalling.tcc>
 
 using namespace LOFAR;
 using namespace IBS_Protocol;
@@ -92,26 +92,26 @@ ostream& Pointing::print(ostream& os) const
 //
 // getSize()
 //
-unsigned int Pointing::getSize()
+size_t Pointing::getSize() const
 {
-	return (sizeof(double) * 2) + itsTime.getSize() + + sizeof(uint) + MSH_STRING_SIZE(itsType);
+	return (sizeof(double) * 2) + itsTime.getSize() + + sizeof(uint) + MSH_size(itsType);
 }
 
 //
 // pack(buffer)
 //
-unsigned int Pointing::pack  (void* buffer)
+size_t Pointing::pack  (char* buffer) const
 {
-	unsigned int offset = 0;
+	size_t offset = 0;
 
-	memcpy((char*)buffer + offset, &itsAngle2Pi, sizeof(double));
+	memcpy(buffer + offset, &itsAngle2Pi, sizeof(double));
 	offset += sizeof(double);
-	memcpy((char*)buffer + offset, &itsAnglePi, sizeof(double));
+	memcpy(buffer + offset, &itsAnglePi, sizeof(double));
 	offset += sizeof(double);
-	offset += itsTime.pack((char*)buffer + offset);
-	memcpy((char*)buffer + offset, &itsDuration, sizeof(uint));
+	offset += itsTime.pack(buffer + offset);
+	memcpy(buffer + offset, &itsDuration, sizeof(uint));
 	offset += sizeof(uint);
-	MSH_PACK_STRING(buffer, offset, itsType);
+	MSH_pack(buffer, offset, itsType);
 
 	return (offset);
 }
@@ -119,18 +119,18 @@ unsigned int Pointing::pack  (void* buffer)
 //
 // unpack(buffer)
 //
-unsigned int Pointing::unpack(void *buffer)
+size_t Pointing::unpack(const char *buffer)
 {
-	unsigned int offset = 0;
+	size_t offset = 0;
 
-	memcpy(&itsAngle2Pi, (char*)buffer + offset, sizeof(double));
+	memcpy(&itsAngle2Pi, buffer + offset, sizeof(double));
 	offset += sizeof(double);
-	memcpy(&itsAnglePi, (char*)buffer + offset, sizeof(double));
+	memcpy(&itsAnglePi, buffer + offset, sizeof(double));
 	offset += sizeof(double);
-	offset += itsTime.unpack((char*)buffer + offset);
-	memcpy(&itsDuration, (char*)buffer + offset, sizeof(uint));
+	offset += itsTime.unpack(buffer + offset);
+	memcpy(&itsDuration, buffer + offset, sizeof(uint));
 	offset += sizeof(uint);
-	MSH_UNPACK_STRING(buffer , offset, itsType);
+	MSH_unpack(buffer , offset, itsType);
 
 	return (offset);
 }
