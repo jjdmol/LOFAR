@@ -1,0 +1,35 @@
+SAS/OTDB package
+================
+
+The SAS/OTDB package contains the interface to the 'central' SAS database.
+The Observation Tree DataBase supports the storage and retrieval of the
+information needed to configure and execute an observation.
+
+There are 4 difference types of Observation Trees that are supported:
+ + Virtual Instrument Components
+   These are the building blocks that correspond with the programs that
+   are build to do an observation.
+ + VI template trees
+   The templates are used to configure the STRUCTURE of the tree so that is
+   is suitable for performing a specific kind of observation (e.g. quasar). 
+ + VI schedule trees
+   These are the real trees used to configure an observation. The tree
+   contains the startup parameters for all programs that should run.
+ + Physical Instrument trees.
+   A tree containing the values of the physical instrument.
+
+The OTDB interface offers access to the observation information to a width
+scale of users:
+ + Instrument scientist
+ + Operator
+ + Scheduler module
+ + Monitor And Control module
+ + System Health Management module
+
+The User Interface for the Instrument Scientist and the Operator is NOT
+in this package, this is build in the SAS/OTB package. 
+
+There are still some classes in the package that are defined already but don't
+have an operational contents. The are the classes related to 'events' and 
+'actions'. The contents of the classes wiil be developed in a future release
+of OTDB.
