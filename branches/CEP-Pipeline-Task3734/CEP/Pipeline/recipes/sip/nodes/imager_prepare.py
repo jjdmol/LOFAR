@@ -234,7 +234,6 @@ class imager_prepare(LOFARnodeTCP):
             # construct time slice name
             time_slice_path = os.path.join(time_slice_dir_path,
                                          output_ms_name)
-            time_slice_path_collected.append(time_slice_path)
 
             msin = "['{0}']".format("', '".join(ndppp_input_ms))
             # Update the parset with computed parameters
@@ -271,6 +270,8 @@ class imager_prepare(LOFARnodeTCP):
             try:
                 # Actual dppp call to externals (allows mucking)
                 self._dppp_call(working_dir, ndppp, cmd, self.environment)
+                # append the created timeslice on succesfull run 
+                time_slice_path_collected.append(time_slice_path)
 
             # On error the current timeslice should be skipped
             except subprocess.CalledProcessError, exception:
