@@ -10,15 +10,15 @@
   <parent>
     <groupId>nl.astron.lofar.sas.otb</groupId>
     <artifactId>parent</artifactId>
-    <version>1.8.0</version>
+    <version>1.8.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>jOTDB3</artifactId>
 
   <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
   <scm>
-    <connection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.sas.otb.parent-1.8.0/jOTDB3</connection>
-    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.sas.otb.parent-1.8.0/jOTDB3</developerConnection>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/trunk/SAS/OTB/jOTDB3</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/SAS/OTB/jOTDB3</developerConnection>
   </scm>
 
 
