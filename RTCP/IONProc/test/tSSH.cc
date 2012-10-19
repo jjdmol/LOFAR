@@ -47,8 +47,7 @@ void test_forkExec() {
   
   pid = forkSSH("", "localhost", params, USER, privkey);
 
-  unsigned timeout = 10;
-  joinSSH("", pid, timeout);
+  joinSSH("", pid, time(0) + 10);
 }
 
 int main() {

@@ -60,12 +60,12 @@ class PortBroker: protected SocketStream {
 
     class ClientStream: public SocketStream {
       public:
-        ClientStream( const std::string &hostname, uint16 port, const std::string &resource );
+        ClientStream( const std::string &hostname, uint16 port, const std::string &resource, time_t deadline = 0 );
     };
 
   protected:
     static void requestResource( Stream &stream, const std::string &resource );
-    FileDescriptorBasedStream *waitForClient( const std::string &resource, time_t timeout = 0 );
+    FileDescriptorBasedStream *waitForClient( const std::string &resource, time_t deadline = 0 );
 
   private:
     PortBroker( uint16 port );

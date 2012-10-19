@@ -46,6 +46,8 @@ template <typename T, class D = SmartPtrDelete<T> > class SmartPtr
     T & operator * () const;
     T * operator -> () const;
 
+    bool operator ! () const;
+
     SmartPtr<T,D> & operator = (T *);
     SmartPtr<T,D> & operator = (const SmartPtr<T,D> &);
 
@@ -112,6 +114,12 @@ template <typename T, class D> inline T &SmartPtr<T,D>::operator * () const
 template <typename T, class D> inline T *SmartPtr<T,D>::operator -> () const
 {
   return ptr;
+}
+
+
+template <typename T, class D> inline bool SmartPtr<T,D>::operator ! () const
+{
+  return ptr == 0;
 }
 
 

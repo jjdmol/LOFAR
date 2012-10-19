@@ -47,12 +47,12 @@ class SocketStream : public FileDescriptorBasedStream
       Client, Server
     };
 
-  	    SocketStream(const std::string &hostname, uint16 _port, Protocol, Mode, time_t timeout = 0, const std::string &nfskey = "", bool doAccept = true);
+  	    SocketStream(const std::string &hostname, uint16 _port, Protocol, Mode, time_t deadline = 0, const std::string &nfskey = "", bool doAccept = true);
     virtual ~SocketStream();
 
     FileDescriptorBasedStream *detach();
 
-    void    reaccept(time_t timeout = 0); // only for TCP server socket
+    void    reaccept(time_t deadline = 0); // only for TCP server socket
     void    setReadBufferSize(size_t size);
 
     const Protocol protocol;
@@ -68,7 +68,7 @@ class SocketStream : public FileDescriptorBasedStream
 
     static void syncNFS();
 
-    static std::string readkey(const std::string &nfskey, time_t &timeout);
+    static std::string readkey(const std::string &nfskey, time_t deadline);
     static void writekey(const std::string &nfskey, uint16 port);
     static void deletekey(const std::string &nfskey);
 };
