@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -10,7 +9,7 @@
   <parent>
     <groupId>nl.astron.lofar.lib</groupId>
     <artifactId>parent</artifactId>
-    <version>1.8.0-SNAPSHOT</version>
+    <version>1.8.0</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -18,8 +17,8 @@
 
   <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
   <scm>
-    <connection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/GUI/Plotter</connection>
-    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/GUI/Plotter</developerConnection>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/tags/Mvn-Release-parent-1.8.0/GUI/Plotter</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/tags/Mvn-Release-parent-1.8.0/GUI/Plotter</developerConnection>
   </scm>
   
   <!-- Information required to build a project. -->
