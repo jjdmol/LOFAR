@@ -372,17 +372,15 @@ class imager_create_dbs(LOFARnodeTCP):
             if ra_c < 0:  #gsm utils break when using negative ra_c ergo add 360
                 ra_c += 360.0
             decl_c = float(decl_c) * (180 / math.pi)
-            import sys
-
-            self.logger.error("external call to gsm module:")
-            self.logger.error("gsm.expected_fluxes_in_fov(conn, {0} , {1}, {2}, {3}, {4}, {5})".format(
+            self.logger.debug("external call to gsm module:")
+            self.logger.debug("gsm.expected_fluxes_in_fov(conn, {0} , {1}, {2}, {3}, {4}, {5})".format(
                 ra_c, decl_c, float(fov_radius), float(assoc_theta), sourcelist, "storespectraplots=False"))
 
             gsm.expected_fluxes_in_fov(conn, ra_c ,
                         decl_c, float(fov_radius),
                         float(assoc_theta), sourcelist,
                         storespectraplots=False)
-            self.logger.error(gsm.__file__)
+            self.logger.debug(gsm.__file__)
 
         except Exception, exception:
             self.logger.error("expected_fluxes_in_fov raise exception: " +
