@@ -699,7 +699,9 @@ inline unsigned Parset::nrBitsPerSample() const
   if (isDefined(key)) {
     return getUint32(key);
   } else {
+#ifndef HAVE_BGP_CN
     LOG_WARN_STR( "Missing key " << key << ", using the depricated key OLAP.nrBitsPerSample");
+#endif
     return getUint32("OLAP.nrBitsPerSample", 16);
   }  
 }
