@@ -42,7 +42,8 @@ namespace RTCP {
 OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, unsigned adderNr)
 :
   itsLogPrefix(str(boost::format("[obs %u type %u stream %3u adder %3u] ") % parset.observationID() % outputType % streamNr % adderNr)),
-  itsOutputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr))
+  itsOutputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)),
+  itsDeadline(parset.stopTime())
 {
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
     itsFreeQueue.append(newStreamableData(parset, outputType, streamNr, hugeMemoryAllocator));
@@ -65,7 +66,7 @@ void OutputThread::mainLoop()
 
   try {
     LOG_DEBUG_STR(itsLogPrefix << "Creating connection to " << itsOutputDescriptor << "...");
-    SmartPtr<Stream> streamToStorage(createStream(itsOutputDescriptor, false));
+    SmartPtr<Stream> streamToStorage(createStream(itsOutputDescriptor, false, static_cast<time_t>(itsDeadline)));
     LOG_DEBUG_STR(itsLogPrefix << "Creating connection to " << itsOutputDescriptor << ": done");
 
     for (SmartPtr<StreamableData> data; (data = itsSendQueue.remove()) != 0; itsFreeQueue.append(data.release()))

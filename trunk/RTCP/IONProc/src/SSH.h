@@ -31,6 +31,7 @@
 #include <Stream/FileDescriptorBasedStream.h>
 #include <libssh2.h>
 #include <Interface/SmartPtr.h>
+#include <time.h>
 #endif
 
 #include <string>
@@ -45,10 +46,12 @@ void SSH_Finalize();
 
 class SSHconnection {
 public:
-  SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey);
+  SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, time_t deadline = 0);
 
   void start();
   void stop( const struct timespec &deadline );
+
+  bool isDone();
 
 private:
   const string itsLogPrefix;
@@ -58,6 +61,7 @@ private:
   const string itsSSHKey;
 
   SmartPtr<Thread> itsThread;
+  const time_t itsDeadline;
 
   static void free_session( LIBSSH2_SESSION *session );
   static void free_channel( LIBSSH2_CHANNEL *channel );
@@ -77,7 +81,7 @@ private:
 #endif
 
 pid_t forkSSH(const std::string &logPrefix, const char *hostName, const char * const extraParams[], const char *userName, const char *sshKey);
-void joinSSH(const std::string &logPrefix, pid_t pid, unsigned &timeout);
+void joinSSH(const std::string &logPrefix, pid_t pid, time_t deadline = 0);
 
 const char *explainExitStatus( int exitstatus );
 

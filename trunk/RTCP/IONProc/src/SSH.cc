@@ -34,12 +34,14 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
 #include <vector>
 #include <string>
 #include <sstream>
 
 #ifdef HAVE_LIBSSH2
 #include <Scheduling.h>
+#include <Interface/SmartPtr.h>
 #include <sstream>
 #include <sys/select.h>
 #include <Common/lofar_string.h>
@@ -53,19 +55,25 @@ namespace RTCP {
 
 #ifdef HAVE_LIBSSH2
 
-SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey)
+SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, time_t deadline)
 :
   itsLogPrefix(logPrefix),
   itsHostName(hostname),
   itsCommandLine(commandline),
   itsUserName(username),
-  itsSSHKey(sshkey)
+  itsSSHKey(sshkey),
+  itsDeadline(deadline)
 {
 }
 
 void SSHconnection::start()
 {
   itsThread = new Thread(this, &SSHconnection::commThread, itsLogPrefix + "[SSH Thread] ", 65536);
+}
+
+bool SSHconnection::isDone()
+{
+  return itsThread->isDone();
 }
 
 void SSHconnection::stop( const struct timespec &deadline )
@@ -215,31 +223,40 @@ void SSHconnection::commThread()
   //nice(19);
 #endif
 
-  SocketStream sock( itsHostName, 22, SocketStream::TCP, SocketStream::Client );
-
-  LOG_DEBUG_STR( itsLogPrefix << "Connected" );
-
   int rc;
   int exitcode;
   char *exitsignal = 0;
+  SmartPtr<SocketStream> sock;
 
-  /* Prevent cancellation from here on -- we manually insert cancellation points to avoid
-     screwing up libssh2's internal administration. */
-  Cancellation::disable();
-  Cancellation::point();
+  for(;;) {
+    // keep trying to connect
+    sock = new SocketStream( itsHostName, 22, SocketStream::TCP, SocketStream::Client, itsDeadline );
 
-  if (!open_session(sock))
-    return;
+    LOG_DEBUG_STR( itsLogPrefix << "Connected" );
 
-  if (!open_channel(sock))
-    return;
+    /* Prevent cancellation from here on -- we manually insert cancellation points to avoid
+       screwing up libssh2's internal administration. */
+    {
+      ScopedDelayCancellation dc;
+
+      Cancellation::point();
+
+      if (!open_session(*sock))
+        continue;
+
+      if (!open_channel(*sock))
+        continue;
+    }
+
+    break;
+  }
 
   LOG_DEBUG_STR( itsLogPrefix << "Starting remote command: " << itsCommandLine);
 
   while( (rc = libssh2_channel_exec(channel, itsCommandLine.c_str())) ==
          LIBSSH2_ERROR_EAGAIN )
   {
-    waitsocket(sock);
+    waitsocket(*sock);
   }
 
   if (rc)
@@ -249,6 +266,9 @@ void SSHconnection::commThread()
   }
 
   LOG_DEBUG_STR( itsLogPrefix << "Remote command started, waiting for output" );
+
+  Cancellation::disable();
+  Cancellation::point();
 
 #define NRSTREAMS 2
 
@@ -263,7 +283,6 @@ void SSHconnection::commThread()
 
   // which streams still provide data
   bool isOpen[NRSTREAMS];
-
 
   for (unsigned s = 0; s < NRSTREAMS; ++s)
     isOpen[s] = true;
@@ -324,12 +343,12 @@ void SSHconnection::commThread()
     }
 
     if (nrOpenStreams > 0)
-      waitsocket(sock);
+      waitsocket(*sock);
   }
 
   LOG_DEBUG_STR( itsLogPrefix << "Disconnecting" );
 
-  close_channel(sock);
+  close_channel(*sock);
 
   if (rc == 0)
   {
@@ -497,7 +516,7 @@ pid_t forkSSH(const std::string &logPrefix, const char *hostName, const char * c
 }
 
 
-void joinSSH(const std::string &logPrefix, pid_t pid, unsigned &timeout)
+void joinSSH(const std::string &logPrefix, pid_t pid, time_t deadline)
 {
   if (pid != 0) {
     int status;
@@ -520,11 +539,10 @@ void joinSSH(const std::string &logPrefix, pid_t pid, unsigned &timeout)
         return;
       } else if (ret == 0) {
         // child still running
-        if (timeout == 0) {
+        if (deadline > 0 && deadline < time(0)) {
           break;
         }
 
-        timeout--;
         sleep(1);
       } else {
         // child exited
