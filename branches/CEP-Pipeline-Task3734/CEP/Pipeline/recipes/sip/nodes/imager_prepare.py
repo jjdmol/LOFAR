@@ -84,6 +84,12 @@ class imager_prepare(LOFARnodeTCP):
                     time_slices_per_image, input_map, subbands_per_group,
                     processed_ms_dir, parset, ndppp_executable)
 
+            # If no timeslices were created, bail out with exit status 1
+            if len(time_slices) == 0:
+                self.logger.error("No timeslices were created.")
+                self.logger.error("Exiting with error state 1")
+                return 1
+
             self.logger.debug("Produced time slices: {0}".format(time_slices))
             #***********************************************************
             # 3. run rfi_concole: flag datapoints which are corrupted
@@ -266,12 +272,14 @@ class imager_prepare(LOFARnodeTCP):
                 # Actual dppp call to externals (allows mucking)
                 self._dppp_call(working_dir, ndppp, cmd, self.environment)
 
+            # On error the current timeslice should be skipped
             except subprocess.CalledProcessError, exception:
-                self.logger.error(str(exception))
-                return 1
+                self.logger.warning(str(exception))
+                continue
+
             except Exception, exception:
-                self.logger.error(str(exception))
-                return 1
+                self.logger.warning(str(exception))
+                continue
 
         return time_slice_path_collected
 
