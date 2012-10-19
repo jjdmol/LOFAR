@@ -71,6 +71,7 @@ class Thread
 
     void		  wait();
     bool		  wait(const struct timespec &);
+    bool      isDone();
 
   private:
     Thread(const Thread&);
@@ -186,6 +187,14 @@ inline bool Thread::wait(const struct timespec &timespec)
     finished.up(); // allow multiple waits
 
   return ok;
+}
+
+
+inline bool Thread::isDone()
+{
+  struct timespec deadline = { 0, 0 };
+
+  return wait(deadline);
 }
 
 

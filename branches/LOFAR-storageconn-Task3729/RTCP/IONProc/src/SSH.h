@@ -51,6 +51,8 @@ public:
   void start();
   void stop( const struct timespec &deadline );
 
+  bool isDone();
+
 private:
   const string itsLogPrefix;
   const string itsHostName;
@@ -59,7 +61,7 @@ private:
   const string itsSSHKey;
 
   SmartPtr<Thread> itsThread;
-  const double itsDeadline;
+  const time_t itsDeadline;
 
   static void free_session( LIBSSH2_SESSION *session );
   static void free_channel( LIBSSH2_CHANNEL *channel );

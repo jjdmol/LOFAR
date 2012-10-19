@@ -98,6 +98,8 @@ class Job : public PLCRunnable
 
       void start();
       void stop( struct timespec deadline );
+      bool isDone();
+
     private:
       void                               controlThread();
 

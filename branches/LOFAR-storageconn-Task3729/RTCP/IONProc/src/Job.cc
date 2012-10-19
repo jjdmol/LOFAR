@@ -288,6 +288,16 @@ void Job::StorageProcess::stop(struct timespec deadline)
 }
 
 
+bool Job::StorageProcess::isDone()
+{
+#ifdef HAVE_LIBSSH2
+  return itsSSHconnection->isDone();
+#else
+  return false;
+#endif
+}
+
+
 void Job::StorageProcess::controlThread()
 {
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
@@ -316,13 +326,26 @@ void Job::startStorageProcesses()
 
 void Job::stopStorageProcesses()
 {
-  struct timespec deadline;
+  time_t deadline = time(0) + 300;
+  struct timespec immediately = { 0, 0 };
 
-  deadline.tv_sec  = time(0) + 300;
-  deadline.tv_nsec = 0;
+  size_t nrRunning = itsStorageProcesses.size();
+
+  do {
+    for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
+      if (itsStorageProcesses[rank]->isDone()) {
+        itsStorageProcesses[rank]->stop(immediately);
+
+        nrRunning--;
+      }
+
+    if (nrRunning > 0)
+      sleep(1);
+
+  } while( nrRunning > 0 && time(0) < deadline );
 
   for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
-    itsStorageProcesses[rank]->stop(deadline);
+    itsStorageProcesses[rank]->stop(immediately);
 }
 
 

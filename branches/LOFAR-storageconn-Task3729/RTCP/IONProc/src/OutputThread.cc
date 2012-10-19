@@ -66,7 +66,7 @@ void OutputThread::mainLoop()
 
   try {
     LOG_DEBUG_STR(itsLogPrefix << "Creating connection to " << itsOutputDescriptor << "...");
-    SmartPtr<Stream> streamToStorage(createStream(itsOutputDescriptor, false, itsDeadline));
+    SmartPtr<Stream> streamToStorage(createStream(itsOutputDescriptor, false, static_cast<time_t>(itsDeadline)));
     LOG_DEBUG_STR(itsLogPrefix << "Creating connection to " << itsOutputDescriptor << ": done");
 
     for (SmartPtr<StreamableData> data; (data = itsSendQueue.remove()) != 0; itsFreeQueue.append(data.release()))

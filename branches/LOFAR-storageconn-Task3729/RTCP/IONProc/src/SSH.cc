@@ -71,6 +71,11 @@ void SSHconnection::start()
   itsThread = new Thread(this, &SSHconnection::commThread, itsLogPrefix + "[SSH Thread] ", 65536);
 }
 
+bool SSHconnection::isDone()
+{
+  return itsThread->isDone();
+}
+
 void SSHconnection::stop( const struct timespec &deadline )
 {
   if (!itsThread->wait(deadline)) {
