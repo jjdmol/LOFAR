@@ -96,7 +96,6 @@
     the module. -->
   <modules>
     <module>jRSP</module>
-    <module>RSP</module>
     <module>jOTDB3</module>
     <module>jParmFacade</module>
   </modules>
@@ -117,11 +116,7 @@
         <version>${project.version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>RSP</artifactId>
-        <version>${project.version}</version>
-      </dependency>
+
 
       <dependency>
         <groupId>${project.groupId}</groupId>
@@ -135,17 +130,6 @@
         <version>${project.version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>OTB</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>OTB-distribution</artifactId>
-        <version>${project.version}</version>
-      </dependency>
 
       <!-- Import the group 'nl.astron.lofar.lib' -->
       <dependency>
