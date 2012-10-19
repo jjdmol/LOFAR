@@ -98,8 +98,6 @@
     <module>RSP</module>
     <module>jOTDB3</module>
     <module>jParmFacade</module>
-    <module>OTB</module>
-    <module>OTB-distribution</module>
   </modules>
 
 
