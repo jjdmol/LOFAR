@@ -50,6 +50,7 @@ void checkAntennaField()
   ASSERT (allEQ(afcol.position()(0), Vector<Double>(3, 2.5)));
   ASSERT (allEQ(afcol.coordinateAxes()(0), Matrix<Double>(3,3, 3.5)));
   ASSERT (allEQ(afcol.elementOffset()(0), Matrix<Double>(3,24, 5.)));
+  ASSERT (allEQ(afcol.elementRCU()(0), Matrix<Int>(2,24, 10)));
   ASSERT (allEQ(afcol.elementFlag()(0), Matrix<Bool>(2,24, False)));
   ASSERT (afcol.tileRotation()(0) == -2.);
   ASSERT (! afcol.tileElementOffset().isDefined(0));
@@ -87,6 +88,7 @@ void testAntennaField()
     afcol.position().put (0, Vector<Double>(3, 2.5));
     afcol.coordinateAxes().put (0, Matrix<Double>(3,3, 3.5));
     afcol.elementOffset().put (0, Matrix<Double>(3,24, 5.));
+    afcol.elementRCU().put (0, Matrix<Int>(2,24, 10));
     afcol.elementFlag().put (0, Matrix<Bool>(2,24, False));
     afcol.tileRotation().put (0, -2.);
     af.addRow();

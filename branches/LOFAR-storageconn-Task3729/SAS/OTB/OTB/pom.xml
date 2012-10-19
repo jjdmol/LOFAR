@@ -22,6 +22,14 @@
   </properties>
 
 
+  <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
+  <scm>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/trunk/SAS/OTB/OTB</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/SAS/OTB/OTB</developerConnection>
+  </scm>
+
+
+  <!-- Information required to build a project. -->
   <build>
 
     <sourceDirectory>src</sourceDirectory>

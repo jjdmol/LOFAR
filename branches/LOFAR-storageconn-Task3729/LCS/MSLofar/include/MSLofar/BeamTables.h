@@ -59,7 +59,7 @@ namespace LOFAR {
                         bool overwrite = false);
 
     // Fill the subtables. They should be empty.
-    // <src>mustExist</src> tells if the AntennaField and iHBADelta file on
+    // <src>mustExist</src> tells if the AntennaField and iHBADelta file of
     // an antenna must exist.
     static void fill (casa::Table& ms,
                       const string& antennaSet,
@@ -67,6 +67,14 @@ namespace LOFAR {
                       const string& antennaFieldDir,
                       const string& iHBADeltaDir,
                       bool mustExist=false);
+
+    // Update the beam info subtables for broken elements.
+    // The 'before' file contains the elements already broken at the beginning
+    // of the observation. The 'during' file contains elements broken during
+    // the observation.
+    ///    static void updateBroken (casa::Table& ms,
+    ///                              const string& beforeFileName,
+    ///                              const string& duringFilename);
 
     // Write an AntennaField entry in the given row.
     static void writeAntField (MSAntennaFieldColumns& columns, int rownr,
@@ -79,14 +87,15 @@ namespace LOFAR {
     // Write the possible AntennaField elements.
     // The elements in the configuration are given in the bitset
     // starting at the given bit (there is a bit for X and one for Y).
-    // The number of skipped elements has to be added for HBA1.
-    static void writeElements (MSAntennaFieldColumns& columns,
-                               int rownr,
-                               const AntField::AFArray& elemOffsets,
-                               const vector<int16>& elemPresent,
-                               bool addSkip,
-                               const AntField::AFArray& stationCenter,
-                               const AntField::AFArray& fieldCenter);
+    // It returns the diameter of the station calculated from the maximum
+    // distance of a used element to the center.
+    static double writeElements (MSAntennaFieldColumns& columns,
+                                 int rownr,
+                                 const AntField::AFArray& elemOffsets,
+                                 const vector<int16>& posIndex,
+                                 int addAnt,
+                                 const AntField::AFArray& stationCenter,
+                                 const AntField::AFArray& fieldCenter);
 
     // Write the antenna set name into all rows of the LOFAR_ANTENNA_SET
     // column of the OBSERVATION table.
@@ -104,7 +113,8 @@ namespace LOFAR {
     // The column is added if not existing.
     static void writeAntenna (casa::Table& antTable,
                               const casa::Vector<casa::String>& antNames,
-                              const map<string,int>& stationIdMap);
+                              const map<string,int>& stationIdMap,
+                              const vector<double>& diameters);
 
     // Convert an AFArray to a casacore Array object.
     static casa::Array<double> array2Casa (const AntField::AFArray& barray);

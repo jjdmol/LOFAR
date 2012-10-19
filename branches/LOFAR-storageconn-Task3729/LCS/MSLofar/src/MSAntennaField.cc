@@ -77,6 +77,9 @@ namespace LOFAR {
     addColumn (td, "ELEMENT_OFFSET", TpArrayDouble,
                "Position offsets of elements w.r.t. center of station field",
                "m", "POSITION", MPosition::ITRF, 2);
+    addColumn (td, "ELEMENT_RCU", TpArrayInt,
+               "RCU used for the elements (for X and Y)",
+               String(), String(), 0, 2);
     addColumn (td, "ELEMENT_FLAG", TpArrayBool,
                "T for inactive element receptors (for X and Y)",
                String(), String(), 0, 2);

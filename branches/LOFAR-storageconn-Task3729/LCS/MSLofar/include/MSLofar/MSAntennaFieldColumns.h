@@ -79,6 +79,8 @@ namespace LOFAR {
       { return elementOffset_p; }
     const casa::ROArrayQuantColumn<casa::Double>& elementOffsetQuant() const 
       { return elementOffsetQuant_p; }
+    const casa::ROArrayColumn<casa::Int>& elementRCU() const
+      { return elementRCU_p; }
     const casa::ROArrayColumn<casa::Bool>& elementFlag() const
       { return elementFlag_p; }
     const casa::ROScalarColumn<casa::Double>& tileRotation() const
@@ -116,6 +118,7 @@ namespace LOFAR {
     casa::ROArrayColumn<casa::Double> position_p;
     casa::ROArrayColumn<casa::Double> coordinateAxes_p;
     casa::ROArrayColumn<casa::Double> elementOffset_p;
+    casa::ROArrayColumn<casa::Int> elementRCU_p;
     casa::ROArrayColumn<casa::Bool> elementFlag_p;
     casa::ROScalarColumn<casa::Double> tileRotation_p;
     casa::ROArrayColumn<casa::Double> tileElementOffset_p;
@@ -169,6 +172,8 @@ namespace LOFAR {
       { return elementOffset_p; }
     casa::ArrayQuantColumn<casa::Double>& elementOffsetQuant()
       { return elementOffsetQuant_p; }
+    casa::ArrayColumn<casa::Int>& elementRCU()
+      { return elementRCU_p; }
     casa::ArrayColumn<casa::Bool>& elementFlag()
       { return elementFlag_p; }
     casa::ScalarColumn<casa::Double>& tileRotation()
@@ -201,6 +206,7 @@ namespace LOFAR {
     casa::ArrayColumn<casa::Double> position_p;
     casa::ArrayColumn<casa::Double> coordinateAxes_p;
     casa::ArrayColumn<casa::Double> elementOffset_p;
+    casa::ArrayColumn<casa::Int> elementRCU_p;
     casa::ArrayColumn<casa::Bool> elementFlag_p;
     casa::ScalarColumn<casa::Double> tileRotation_p;
     casa::ArrayColumn<casa::Double> tileElementOffset_p;
