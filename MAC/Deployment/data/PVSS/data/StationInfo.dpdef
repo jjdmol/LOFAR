@@ -7,6 +7,8 @@ HBA_Split		bool
 wide_LBAS		bool
 power48On		bool
 power220On		bool
+datastream0		bool
+datastream1		bool
 Cabinet.X		float
 Cabinet.Y		float
 Cabinet.Z		float
