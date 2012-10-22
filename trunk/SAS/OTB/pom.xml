@@ -15,7 +15,7 @@
   </parent>
 
   <groupId>nl.astron.lofar.sas.otb</groupId>
-  <artifactId>parent</artifactId>
+  <artifactId>otb-parent</artifactId>
   <packaging>pom</packaging>
 
 
@@ -151,7 +151,7 @@
       <!-- Import the group 'nl.astron.lofar.lib' -->
       <dependency>
         <groupId>nl.astron.lofar.lib</groupId>
-        <artifactId>parent</artifactId>
+        <artifactId>lofar-lib-parent</artifactId>
         <version>${lofar.lib.version}</version>
         <type>pom</type>
         <scope>import</scope>
