@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>Lofar Utilities :: LofarUtils</name>
+
+  <parent>
+    <groupId>nl.astron.lofar.lib</groupId>
+    <artifactId>lofar-lib-parent</artifactId>
+    <version>1.8.0</version>
+  </parent>
+
+  <artifactId>lofarutils</artifactId>
+
+
+  <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
+  <scm>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.lib.lofar-lib-parent-1.8.0/LofarUtils</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.lib.lofar-lib-parent-1.8.0/LofarUtils</developerConnection>
+  </scm>
+
+
+  <!-- Information required to build a project. -->
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+  </build>
+
+
+  <!-- This element describes all of the dependencies associated with a project. 
+    These dependencies are used to construct a classpath for your project during 
+    the build process. They are automatically downloaded from the repositories 
+    defined in this project. See for more information: 
+    http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html -->
+  <dependencies>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>
+
