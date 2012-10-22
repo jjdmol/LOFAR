@@ -11,7 +11,7 @@ working_directory = /data/scratch/$ENV{USER}
 task_files = [%(lofarroot)s/share/pipeline/tasks.cfg]
 
 [layout]
-job_directory = %(runtime_directory)s/jobs/%(job_name)s
+job_directory = %(runtime_directory)s/%(job_name)s
 
 [cluster]
 clusterdesc = %(lofarroot)s/share/cep2.clusterdesc
@@ -21,5 +21,5 @@ engine_ppath = %(pythonpath)s:%(pyraproot)s/lib:/opt/cep/pythonlibs/lib/python/s
 engine_lpath = %(lofarroot)s/lib:%(casaroot)s/lib:%(pyraproot)s/lib:%(hdf5root)s/lib:%(wcsroot)s/lib
 
 [logging]
-log_file = %(runtime_directory)s/jobs/%(job_name)s/logs/%(start_time)s/pipeline.log
+log_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/pipeline.log
 
