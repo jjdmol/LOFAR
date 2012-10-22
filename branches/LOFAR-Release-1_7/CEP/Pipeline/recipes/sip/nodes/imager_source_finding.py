@@ -92,6 +92,7 @@ class imager_source_finding(LOFARnodeTCP):
                     pass  #do nothing
                 bdsm_parameters[key] = parameter_value
 
+
             # *****************************************************************
             # 3. Start pybdsm
             self.logger.debug(
@@ -119,7 +120,7 @@ class imager_source_finding(LOFARnodeTCP):
             img.write_catalog(
                 outfile=catalog_output_path + "_{0}".format(str(idx)),
                 catalog_type='gaul', clobber=True,
-                format="bbs")
+                format="bbs", force_output=True)
 
             self.logger.debug("Wrote list of sources to file at: {0})".format(
                                                         catalog_output_path))
@@ -244,7 +245,7 @@ class imager_source_finding(LOFARnodeTCP):
                  os.path.basename(create_sourcdb_exec)
             ) as logger:
                 catch_segfaults(cmd, working_directory, self.environment,
-                                            logger, cleanup = None)
+                                            logger, cleanup=None)
 
         except Exception, exception:
             self.logger.error("Execution of external failed:")
