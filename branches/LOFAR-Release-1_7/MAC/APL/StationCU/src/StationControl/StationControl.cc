@@ -1152,9 +1152,7 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 						if (newState != RTDB_OBJ_STATE_OPERATIONAL) {
 							itsRCUmask.reset(rcubase + i);
 						}
-						else {
-							itsRCUmask.set(rcubase + i);
-						}
+						// no else: never mark an RCU operational on the state of an RSPBoard.
 					}
 				}
 			}
@@ -1297,7 +1295,7 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 		AntennaMask_t	antBitSet   = onLBAField ? itsLBAmask     : itsHBAmask;
 		for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 			int		idx((*mappingPtr)[rcu]);
-			if (!realReceivers[rcu] || idx<0 || !antBitSet[idx]) {
+			if (!realReceivers[rcu] || idx<0 || !antBitSet[idx] || !itsRCUmask[rcu]) {
 				realReceivers.reset(rcu);
 				if (idx >= 0 && !antBitSet[idx]) {
 					LOG_INFO_STR("Rejecting RCU " << rcu << " because Antenna is out of order");
