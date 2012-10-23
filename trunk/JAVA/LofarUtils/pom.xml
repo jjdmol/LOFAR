@@ -9,7 +9,7 @@
   <parent>
     <groupId>nl.astron.lofar.lib</groupId>
     <artifactId>lofar-lib-parent</artifactId>
-    <version>1.8.1</version>
+    <version>1.8.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>lofarutils</artifactId>
@@ -17,8 +17,8 @@
 
   <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
   <scm>
-    <connection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.lib.lofar-lib-parent-1.8.1/LofarUtils</connection>
-    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.lib.lofar-lib-parent-1.8.1/LofarUtils</developerConnection>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/LofarUtils</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/LofarUtils</developerConnection>
   </scm>
 
 
