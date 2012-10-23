@@ -11,6 +11,7 @@ import sys
 
 from lofarpipe.support.control import control
 from lofarpipe.support.lofarexceptions import PipelineException
+from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.group_data import validate_data_maps
 from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
@@ -67,29 +68,27 @@ class msss_calibrator_pipeline(control):
         Get input- and output-data product specifications from the
         parset-file, and do some sanity checks.
         """
-        dataproducts = self.parset.makeSubset(
+        dps = self.parset.makeSubset(
             self.parset.fullModuleName('DataProducts') + '.'
         )
-        self.input_data = [
+        self.input_data = DataMap([
             tuple(os.path.join(location, filename).split(':'))
                 for location, filename, skip in zip(
-                    dataproducts.getStringVector('Input_Correlated.locations'),
-                    dataproducts.getStringVector('Input_Correlated.filenames'),
-                    dataproducts.getBoolVector('Input_Correlated.skip'))
+                    dps.getStringVector('Input_Correlated.locations'),
+                    dps.getStringVector('Input_Correlated.filenames'),
+                    dps.getBoolVector('Input_Correlated.skip'))
                 if not skip
-        ]
+        ])
         self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data))
-        self.output_data = [
+        self.output_data = DataMap([
             tuple(os.path.join(location, filename).split(':'))
                 for location, filename, skip in zip(
-                    dataproducts.getStringVector(
-                                            'Output_InstrumentModel.locations'),
-                    dataproducts.getStringVector(
-                                            'Output_InstrumentModel.filenames'),
-                    dataproducts.getBoolVector('Output_InstrumentModel.skip'))
+                    dps.getStringVector('Output_InstrumentModel.locations'),
+                    dps.getStringVector('Output_InstrumentModel.filenames'),
+                    dps.getBoolVector('Output_InstrumentModel.skip'))
                 if not skip
-        ]
+        ])
         self.logger.debug("%d Output_InstrumentModel data products specified" %
                           len(self.output_data))
         # Sanity checks on input- and output data product specifications
@@ -124,7 +123,7 @@ class msss_calibrator_pipeline(control):
             self.logger.warn(
                 "The following input data files were not found: %s" %
                 ', '.join(
-                    ':'.join(f) for (f, m) in zip(
+                    str(f) for (f, m) in zip(
                         self.input_data, self.io_data_mask
                     ) if not m
                 )
@@ -189,7 +188,7 @@ class msss_calibrator_pipeline(control):
             return 0
 
         self.logger.debug("Processing: %s" %
-            ', '.join(':'.join(f) for f in self.input_data))
+            ', '.join(str(f) for f in self.input_data))
         # *********************************************************************
         # 2. Create database needed for performing work: 
         #    Vds, descibing data on the nodes
