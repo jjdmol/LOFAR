@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-#                                                     LOFAR CALIBRATION PIPELINE
+#                                                      STANDARD IMAGING PIPELINE
 #
-#                                                     Calibrator Pipeline recipe
+#                                                       MSSS Calibrator Pipeline
 #                                                        Marcel Loose, 2011-2012
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
@@ -12,8 +12,7 @@ import sys
 from lofarpipe.support.control import control
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.data_map import DataMap
-from lofarpipe.support.group_data import validate_data_maps
-from lofarpipe.support.group_data import tally_data_map
+from lofarpipe.support.data_map import validate_data_maps, tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 
@@ -77,7 +76,6 @@ class msss_calibrator_pipeline(control):
                     dps.getStringVector('Input_Correlated.locations'),
                     dps.getStringVector('Input_Correlated.filenames'),
                     dps.getBoolVector('Input_Correlated.skip'))
-                if not skip
         ])
         self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data))
@@ -87,7 +85,6 @@ class msss_calibrator_pipeline(control):
                     dps.getStringVector('Output_InstrumentModel.locations'),
                     dps.getStringVector('Output_InstrumentModel.filenames'),
                     dps.getBoolVector('Output_InstrumentModel.skip'))
-                if not skip
         ])
         self.logger.debug("%d Output_InstrumentModel data products specified" %
                           len(self.output_data))
@@ -101,12 +98,12 @@ class msss_calibrator_pipeline(control):
         # Update input- and output-data product specifications if needed
         if not all(self.io_data_mask):
             self.logger.info("Updating input/output product specifications")
-            self.input_data = [
-                f for (f, m) in zip(self.input_data, self.io_data_mask) if m
-            ]
-            self.output_data = [
-                f for (f, m) in zip(self.output_data, self.io_data_mask) if m
-            ]
+            for (f, m) in zip(self.input_data, self.io_data_mask):
+                if not m:
+                    f.skip = True
+            for (f, m) in zip(self.output_data, self.io_data_mask):
+                if not m:
+                    f.skip = True
 
 
     def _validate_input_data(self):
