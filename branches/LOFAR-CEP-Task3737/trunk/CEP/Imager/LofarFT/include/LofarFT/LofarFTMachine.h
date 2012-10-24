@@ -180,6 +180,10 @@ public:
   // Assignment operator
   LofarFTMachine &operator=(const LofarFTMachine &other);
 
+  // Empty constructor. Allows the copy constructor of derived classes to create
+  // an empty ftmachine and then call the assigment operator to fill it.
+  LofarFTMachine() {};  
+  
   // Clone
   LofarFTMachine* clone() const;
 

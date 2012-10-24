@@ -24,6 +24,7 @@
 
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
+#include <LofarFT/PythonFTMachine.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
@@ -59,7 +60,9 @@ namespace LOFAR
 
     if (itsParameters.asBool("splitbeam")) {
       cout << itsParameters<<endl;
-      itsMachine = new LofarFTMachine(cache_p/2, tile_p,
+//       itsMachine = new LofarFTMachine(
+      itsMachine = new PythonFTMachine("lofar.imager.myftmachine", "MyFTMachine",
+                                      cache_p/2, tile_p,
                                       visResampler, gridfunction_p,
                                       *ms_p, wprojPlanes_p, mLocation_p,
                                       padding_p, false, useDoublePrecGrid,
