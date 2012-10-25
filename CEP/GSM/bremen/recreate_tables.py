@@ -46,7 +46,7 @@ class Recreator(object):
     def __init__(self, database="test", use_monet=True):
         self.monet = use_monet
         if use_monet:
-            db_port = 50000
+            db_port = 52000
             db_autocommit = True
         db_host = "localhost"
         db_dbase = database
