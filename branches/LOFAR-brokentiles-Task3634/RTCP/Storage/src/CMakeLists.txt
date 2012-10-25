@@ -4,6 +4,7 @@ include(LofarPackageVersion)
 
 lofar_add_library(storage 
   Package__Version.cc
+  ExitOnClosedStdin.cc
   FastFileStream.cc
   InputThread.cc
   OutputThread.cc
@@ -28,6 +29,7 @@ install(FILES
   DESTINATION etc)
 
 lofar_add_bin_program(Storage_main Storage_main.cc)
+lofar_add_bin_program(FinalMetaDataGatherer FinalMetaDataGatherer.cc)
 lofar_add_bin_program(createHeaders createHeaders.cc)
 lofar_add_bin_program(plotMS plotMS.cc)
 lofar_add_bin_program(versionstorage versionstorage.cc)

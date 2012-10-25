@@ -47,10 +47,14 @@ void SSH_Finalize();
 
 class SSHconnection {
 public:
-  SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, time_t deadline = 0, bool captureStdout = false);
+  SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, bool captureStdout = false);
+
+  ~SSHconnection();
 
   void start();
-  void stop( const struct timespec &deadline );
+  void cancel();
+  void wait();
+  void wait( const struct timespec &deadline );
 
   bool isDone();
 
@@ -64,7 +68,6 @@ private:
   const string itsSSHKey;
 
   SmartPtr<Thread> itsThread;
-  const time_t itsDeadline;
   const bool itsCaptureStdout;
   stringstream itsStdoutBuffer;
 

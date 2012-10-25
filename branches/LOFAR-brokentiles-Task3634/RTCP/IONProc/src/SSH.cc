@@ -55,36 +55,66 @@ namespace RTCP {
 
 #ifdef HAVE_LIBSSH2
 
-SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, time_t deadline, bool captureStdout)
+SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, bool captureStdout)
 :
   itsLogPrefix(logPrefix),
   itsHostName(hostname),
   itsCommandLine(commandline),
   itsUserName(username),
   itsSSHKey(sshkey),
-  itsDeadline(deadline),
   itsCaptureStdout(captureStdout)
 {
 }
+
+
+SSHconnection::~SSHconnection()
+{
+  if (itsThread.get())
+    cancel();
+}
+
 
 void SSHconnection::start()
 {
   itsThread = new Thread(this, &SSHconnection::commThread, itsLogPrefix + "[SSH Thread] ", 65536);
 }
 
+
 bool SSHconnection::isDone()
 {
-  return itsThread->isDone();
+  return itsThread && itsThread->isDone();
 }
 
-void SSHconnection::stop( const struct timespec &deadline )
+
+void SSHconnection::cancel()
 {
+  ASSERT(itsThread.get());
+
+  itsThread->cancel();
+
+  itsThread->wait();
+}
+
+
+void SSHconnection::wait()
+{
+  ASSERT(itsThread.get());
+
+  itsThread->wait();
+}
+
+
+void SSHconnection::wait( const struct timespec &deadline )
+{
+  ASSERT(itsThread.get());
+
   if (!itsThread->wait(deadline)) {
     itsThread->cancel();
 
     itsThread->wait();
   }
 }
+
 
 std::string SSHconnection::stdoutBuffer() const
 {
@@ -236,7 +266,7 @@ void SSHconnection::commThread()
 
   for(;;) {
     // keep trying to connect
-    sock = new SocketStream( itsHostName, 22, SocketStream::TCP, SocketStream::Client, itsDeadline );
+    sock = new SocketStream( itsHostName, 22, SocketStream::TCP, SocketStream::Client, 0 );
 
     LOG_DEBUG_STR( itsLogPrefix << "Connected" );
 

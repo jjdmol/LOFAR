@@ -23,7 +23,7 @@ using namespace RTCP;
 
 void test_SSHconnection( const char *cmd, bool capture ) {
 #ifdef HAVE_LIBSSH2
-  SSHconnection ssh("", "localhost", cmd, USER, privkey, 0, capture);
+  SSHconnection ssh("", "localhost", cmd, USER, privkey, capture);
 
   ssh.start();
 
@@ -31,7 +31,7 @@ void test_SSHconnection( const char *cmd, bool capture ) {
   ts.tv_sec = time(0) + 10;
   ts.tv_nsec = 0;
 
-  ssh.stop(ts);
+  ssh.wait(ts);
 
   if (capture)
     cout << "Captured [" << ssh.stdoutBuffer() << "]" << endl;

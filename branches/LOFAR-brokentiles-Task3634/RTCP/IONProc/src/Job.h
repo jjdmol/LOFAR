@@ -28,12 +28,14 @@
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/FinalMetaData.h>
 #include <JobQueue.h>
 #include <Stream/Stream.h>
 #include <WallClockTime.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Queue.h>
 #include <Common/Thread/Thread.h>
+#include <Common/Thread/Semaphore.h>
 #include <PLCClient.h>
 #include <SSH.h>
 
@@ -91,9 +93,12 @@ class Job : public PLCRunnable
     void				 startStorageProcesses();
     void				 stopStorageProcesses();
 
+    void         forwardFinalMetaData();
+    void         finalMetaDataThread();
+
     class StorageProcess {
     public:
-      StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname );
+      StorageProcess( Job &job, const Parset &parset, const string &logPrefix, int rank, const string &hostname );
       ~StorageProcess();
 
       void start();
@@ -102,6 +107,8 @@ class Job : public PLCRunnable
 
     private:
       void                               controlThread();
+
+      Job                                &itsJob;
 
 #ifdef HAVE_LIBSSH2
       SmartPtr<SSHconnection>            itsSSHconnection;
@@ -126,6 +133,8 @@ class Job : public PLCRunnable
     std::string                          itsLogPrefix;
 
     std::vector<SmartPtr<StorageProcess> > itsStorageProcesses;
+    FinalMetaData                        itsFinalMetaData;
+    Semaphore                            itsFinalMetaDataAvailable;
 
     std::vector<Stream *>		 itsCNstreams, itsPhaseThreeCNstreams;
     Matrix<Stream *>			 itsPhaseOneTwoCNstreams;
