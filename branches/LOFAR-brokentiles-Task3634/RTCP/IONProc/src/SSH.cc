@@ -55,14 +55,15 @@ namespace RTCP {
 
 #ifdef HAVE_LIBSSH2
 
-SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, time_t deadline)
+SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, time_t deadline, bool captureStdout)
 :
   itsLogPrefix(logPrefix),
   itsHostName(hostname),
   itsCommandLine(commandline),
   itsUserName(username),
   itsSSHKey(sshkey),
-  itsDeadline(deadline)
+  itsDeadline(deadline),
+  itsCaptureStdout(captureStdout)
 {
 }
 
@@ -83,6 +84,11 @@ void SSHconnection::stop( const struct timespec &deadline )
 
     itsThread->wait();
   }
+}
+
+std::string SSHconnection::stdoutBuffer() const
+{
+  return itsStdoutBuffer.str();
 }
 
 void SSHconnection::free_session( LIBSSH2_SESSION *session )
@@ -299,31 +305,41 @@ void SSHconnection::commThread()
         rc = libssh2_channel_read_ex( channel, s, data[s], sizeof data[s] );
         if( rc > 0 )
         {
-          // create a buffer for line + data
-          stringstream buffer;
+          if (s == 0 && itsCaptureStdout) {
+            // save stdout verbatim in our buffer
 
-          buffer << line[s];
-          buffer.write( data[s], rc );
+            LOG_DEBUG_STR( itsLogPrefix << "Appending " << rc << " bytes to stdout buffer, which contains " << itsStdoutBuffer.rdbuf()->in_avail() << " bytes" );
+            
+            itsStdoutBuffer.write( data[s], rc );
+          } else {
+            // print stream to stdout (TODO: to logger)
+             
+            // create a buffer for line + data
+            stringstream buffer;
 
-          /* extract and log lines */
-          for( ;; )
-          {
-            Cancellation::point();
+            buffer << line[s];
+            buffer.write( data[s], rc );
 
-            std::getline( buffer, line[s] );
+            /* extract and log lines */
+            for( ;; )
+            {
+              Cancellation::point();
 
-            if (!buffer.good()) {
-              // 'line' now holds the remnant
+              std::getline( buffer, line[s] );
 
-              if (line[s].size() > 1024) {
-                LOG_ERROR_STR( itsLogPrefix << "Line too long (" << line[s].size() << "); truncated: " << line[s] );
-                line[s] = "";
+              if (!buffer.good()) {
+                // 'line' now holds the remnant
+
+                if (line[s].size() > 1024) {
+                  LOG_ERROR_STR( itsLogPrefix << "Line too long (" << line[s].size() << "); truncated: " << line[s] );
+                  line[s] = "";
+                }
+                break;
               }
-              break;
-            }
 
-            // TODO: Use logger somehow (we'd duplicate the prefix if we just use LOG_* macros..)
-            cout << line[s] << endl;
+              // TODO: Use logger somehow (we'd duplicate the prefix if we just use LOG_* macros..)
+              cout << line[s] << endl;
+            }
           }
         } else {
           if( rc < 0 && rc != LIBSSH2_ERROR_EAGAIN ) {
