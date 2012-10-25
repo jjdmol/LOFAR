@@ -10,8 +10,8 @@ StartTime = 2011/05/15/16:59:08.0
 EndTime = 2012/10/21/22:59:06.0
 BrokenTilesFile = tfailedtilesinfo_tmp.before
 FailedTilesFile = tfailedtilesinfo_tmp.during
-host = RS005
-db = TESTLOFAR_4
+host = sas099
+db = LOFAR_4
 port = 5432
 EOF
 

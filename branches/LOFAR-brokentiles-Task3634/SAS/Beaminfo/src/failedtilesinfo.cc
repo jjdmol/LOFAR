@@ -81,8 +81,8 @@ int main (int argc, char* argv[])
     ParameterSet parset(parsetName);
     // Get the parameters.
     ///string host        = parset.getString("host", "sas.control.lofar.eu");
-    string host        = parset.getString("host", "RS005.astron.nl");
-    string db          = parset.getString("db", "TESTLOFAR_4");
+    string host        = parset.getString("host", "sas001");
+    string db          = parset.getString("db", "LOFAR_4");
     string user        = parset.getString("user", "paulus");
     string password    = parset.getString("password", "boskabouter");
     string port        = parset.getString("port", "5432");
