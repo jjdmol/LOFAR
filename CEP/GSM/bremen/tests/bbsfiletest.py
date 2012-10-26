@@ -33,15 +33,12 @@ class BBSFileTest(SwitchableTest):
         self.assertTrue(xfile.read_and_store_data(self.conn))
 
     def test_wrong_default(self):
-        with self.assertRaises(SourceException):
-            xfile = GSMBBSFileSource('test', 0, 'tests/data/bad_file.dat')
-            xfile.read_and_store_data(self.conn)
+        xfile = GSMBBSFileSource('test', 0, 'tests/data/bad_file.dat')
+        self.assertRaises(SourceException, xfile.read_and_store_data, self.conn)
 
     def test_wrong_test(self):
-        with self.assertRaises(SourceException):
-            xfile = GSMBBSFileSource('test', 0, 'tests/data/bbs_field.dat', 'test')
-            self.assertTrue(xfile.read_and_store_data(self.conn))
-
+        xfile = GSMBBSFileSource('test', 0, 'tests/data/bbs_field.dat', 'test')
+        self.assertRaises(SourceException, xfile.read_and_store_data, self.conn)
 
     def tearDown(self):
         self.conn.execute("delete from detections;")
