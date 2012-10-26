@@ -3,8 +3,9 @@
 include(LofarPackageVersion)
 #include(PythonInstall)
 
-lofar_add_bin_program(failedtilesinfo failedtilesinfo.cc)
+lofar_add_library(beaminfo
+  Package__Version.cc
+  FailedTileInfo.cc)
 
-install(PROGRAMS
-  failedtilesinfo
-DESTINATION bin)
+lofar_add_bin_program(failedtilesinfo failedtilesinfo.cc)
+lofar_add_bin_program(versionbeaminfo versionbeaminfo.cc)
