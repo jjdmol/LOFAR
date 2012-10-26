@@ -40,6 +40,7 @@ then
   CNPROC=$HOME/production/lofar/bgp_cn/bin/CN_Processing
   IONPROC=$HOME/production/lofar/bgp_ion/bin/ION_Processing
   STORAGE=$STORAGE_HOME/production/lofar/bin/Storage_main
+  FINALMETADATAGATHERER=$STORAGE_HOME/production/lofar/bin/FinalMetaDataGatherer
 
   LOGDIR=/localhome/log
   RUNDIR=$HOME
@@ -53,6 +54,9 @@ OLAP.Storage.AntennaSetsConf = $STORAGE_HOME/production/lofar/etc/AntennaSets.co
 OLAP.Storage.AntennaFieldsDir = $STORAGE_HOME/production/lofar/etc/StaticMetaData
 OLAP.Storage.HBADeltasDir = $STORAGE_HOME/production/lofar/etc/StaticMetaData
 
+OLAP.Storage.otdbQueryHost = lhn001
+OLAP.Storage.otdbQueryExecutable = $FINALMETADATAGATHERER
+
 OLAP.IONProc.PLC_controlled = T
 OLAP.CNProc.partition = $PARTITION
   "
@@ -62,6 +66,7 @@ else
   CNPROC=$HOME/projects/LOFAR/installed/bgpcn_opt/bin/CN_Processing
   IONPROC=$HOME/projects/LOFAR/installed/bgpion_opt/bin/ION_Processing
   STORAGE=$HOME/projects/LOFAR/installed/gnu_opt/bin/Storage_main
+  FINALMETADATAGATHERER=$HOME/projects/LOFAR/installed/gnu_opt/bin/FinalMetaDataGatherer
 
   LOGDIR=$HOME/projects/LOFAR/log
   RUNDIR=$LOGDIR
@@ -76,6 +81,9 @@ OLAP.Storage.msWriter = $STORAGE
 OLAP.Storage.AntennaSetsConf = /data/home/lofarsys/production/lofar/etc/AntennaSets.conf
 OLAP.Storage.AntennaFieldsDir = /data/home/lofarsys/production/lofar/etc/StaticMetaData
 OLAP.Storage.HBADeltasDir = /data/home/lofarsys/production/lofar/etc/StaticMetaData
+
+OLAP.Storage.otdbQueryHost = lhn001
+OLAP.Storage.otdbQueryExecutable = $FINALMETADATAGATHERER
 
 OLAP.IONProc.PLC_controlled = F
 OLAP.CNProc.partition = $PARTITION
