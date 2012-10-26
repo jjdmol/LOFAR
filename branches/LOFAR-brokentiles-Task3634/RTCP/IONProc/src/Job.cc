@@ -125,9 +125,9 @@ Job::Job(const char *parsetName)
 
 Job::~Job()
 {
-  // explicitly free PLCClient first, because it refers to us and needs             
-  // a valid Job object to work on                                                  
-  delete itsPLCClient.release();                                                    
+  // explicitly free PLCClient first, because it refers to us and needs
+  // a valid Job object to work on
+  delete itsPLCClient.release();
 
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Job " << (itsIsRunning ? "finished" : "cancelled") << " successfully");
@@ -325,8 +325,11 @@ void Job::forwardFinalMetaData()
 
   // abort the thread if deadline passes
   try {
-    if (!thread.wait(deadline))
+    if (!thread.wait(deadline)) {
+      LOG_WARN_STR(itsLogPrefix << "Cancelling FinalMetaDataThread");
+
       thread.cancel();
+    }
   } catch(...) {
     thread.cancel();
     throw;
@@ -384,6 +387,8 @@ void Job::startStorageProcesses()
 
   itsStorageProcesses.resize(hostnames.size());
 
+  LOG_DEBUG_STR(itsLogPrefix << "Starting " << itsStorageProcesses.size() << " Storage processes");
+
   for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
     itsStorageProcesses[rank] = new StorageProcess(*this, itsParset, itsLogPrefix, rank, hostnames[rank]);
     itsStorageProcesses[rank]->start();
@@ -393,6 +398,8 @@ void Job::startStorageProcesses()
 
 void Job::stopStorageProcesses()
 {
+  LOG_DEBUG_STR(itsLogPrefix << "Stopping storage processes");
+
   time_t deadline = time(0) + 300;
   struct timespec immediately = { 0, 0 };
 
@@ -411,8 +418,15 @@ void Job::stopStorageProcesses()
 
   } while( nrRunning > 0 && time(0) < deadline );
 
-  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
+  LOG_DEBUG_STR(itsLogPrefix << "Killing any remaining storage processes");
+
+
+  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
     itsStorageProcesses[rank]->stop(immediately);
+    itsStorageProcesses[rank] = 0;
+  }
+
+  LOG_DEBUG_STR(itsLogPrefix << "Storage processes are stopped");
 }
 
 
@@ -571,12 +585,14 @@ void Job::jobThread()
 
       // PLC: RELEASE phase
 
-      forwardFinalMetaData();
+      if (myPsetNumber == 0) {
+        forwardFinalMetaData();
 
-      // all InputSections and OutputSections have finished their processing, so
-      // Storage should be done any second now.
+        // all InputSections and OutputSections have finished their processing, so
+        // Storage should be done any second now.
 
-      stopStorageProcesses();
+        stopStorageProcesses();
+      }
     }
   }
 
