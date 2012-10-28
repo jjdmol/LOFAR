@@ -228,7 +228,7 @@ class PlotWindow(QFrame):
       self.show()           # show the plotWindow widget
       self.parent.setXLabel()
       self.parent.setYLabel()
-      s
+
       # Matplotlib event connections
       #if self.showMarker==True:
       #  cid = self.fig.canvas.mpl_connect('motion_notify_event', self.update_marker)
