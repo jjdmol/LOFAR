@@ -23,7 +23,7 @@
 
 #include <lofar_config.h>
 #include <MSLofar/FailedTileInfo.h>
-#include <MsLofar/Package__Version.h>
+#include <MSLofar/Package__Version.h>
 #include <Common/InputParSet.h>
 #include <Common/SystemUtil.h>
 #include <Common/LofarLogger.h>
