@@ -93,16 +93,14 @@ def convert_distance_to_weigth_mutator(distance, max_distance,
     if type == "simple_mexican":
         fract_distance = (distance * 1.0) / max_distance
         correction = 0
-        if fract_distance >= 0.2:
-            correction = 0.0
-        elif fract_distance < 0.2 and distance > 0.05:
-            correction = -0.2
+        if fract_distance <= 0.2:
+            return 1.0
+        if fract_distance > 0.2 and fract_distance < 0.5:
+            return -0.2
         else:
-            correction = 0.4
-        print fract_distance, correction
+            correction = 0.0
         return correction
 
-    print type
     raise NotImplementedError("Unknown weight mutator type retrieved")
 
 def convert_neuron_index_to_position(index, n_neurons_in_side):
@@ -191,19 +189,19 @@ if __name__ == "__main__":
 #
 #
 #def back():
-    n_neurons = 20 * 20
+    n_neurons = 40 * 40
     n_side = int(round(sqrt(n_neurons)))
-    n_patterns = 25
-    parameter_v = numpy.complex(0.5, 0.5)
+    n_patterns = 3
+    parameter_v = numpy.complex(1, 0)
     activation, weights, output = create_data_objects(n_neurons)
     patterns = generate_random_input(n_patterns, n_neurons)
     weights = learn_patterns(patterns, n_neurons)
-    #weights = numpy.ones((n_neurons, n_neurons), dtype=complex)
-    apply_weight_mutator_to_weight_matrix(n_neurons, weights, scaling=2.0, type="linear")
+    weights = numpy.ones((n_neurons, n_neurons), dtype=complex)
+    apply_weight_mutator_to_weight_matrix(n_neurons, weights, scaling=2.0, type="simple_mexican")
     display_weight_matrix(weights)
 
     #external_input = numpy.zeros((n_neurons), dtype=complex)[numpy.newaxis] #patterns[0]
-    external_input = patterns[0]
+    external_input = patterns[0] # ones
     steepness = 1.2
     delta = None
     outputs = []
@@ -225,7 +223,8 @@ if __name__ == "__main__":
 
         activation += 0.05 * delta
         external_input = numpy.zeros((n_neurons), dtype=complex)[numpy.newaxis]
-
+        #external_input = ones times noisy input
+        # noise moet altijd in de vorm vorm echte input??
 
 
     t = numpy.arange(0, len(outputs[0]))
@@ -236,6 +235,7 @@ if __name__ == "__main__":
 #
     pylab.show()
     slide_show_of_output(outputs_slices, n_side)
+    weight_matrix
 
         #ax.imshow(pylab.real(q_slice))
 

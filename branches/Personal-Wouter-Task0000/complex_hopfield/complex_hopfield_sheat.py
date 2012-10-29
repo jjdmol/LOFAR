@@ -93,16 +93,17 @@ def convert_distance_to_weigth_mutator(distance, max_distance,
     if type == "simple_mexican":
         fract_distance = (distance * 1.0) / max_distance
         correction = 0
-        if fract_distance >= 0.4:
+
+        low_limit = 0.2
+        high_limit = 0.4
+        if fract_distance >= high_limit:
             correction = 0.0
-        elif (fract_distance < 0.4) and (fract_distance > 0.25):
+        elif (fract_distance >= low_limit) and (fract_distance < high_limit):
             correction = -0.1
         else:
             correction = 0.45
-        print fract_distance, correction
         return correction
 
-    print type
     raise NotImplementedError("Unknown weight mutator type retrieved")
 
 def convert_neuron_index_to_position(index, n_neurons_in_side):
@@ -143,7 +144,6 @@ def apply_weight_mutator_to_weight_matrix(n_neurons, weight_matrix, type="linear
             neuron_2_position = convert_neuron_index_to_position(idx_second, neuron_in_side)
             distance = get_distance_2d(neuron_1_position, neuron_2_position, neuron_in_side)
             weight_mutator = convert_distance_to_weigth_mutator(distance, max_distance, scaling, type)
-            print weight_mutator
             weight_matrix[idx_first][idx_second] *= weight_mutator
             weight_matrix[idx_second][idx_first] *= weight_mutator
 
