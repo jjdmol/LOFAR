@@ -8,6 +8,7 @@ lofar_add_library(interface
   BeamCoordinates.cc
   CN_Mapping.cc
   DataFactory.cc
+  FinalMetaData.cc
   Stream.cc
   Parset.cc
   RSPTimeStamp.cc)

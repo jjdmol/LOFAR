@@ -18,6 +18,7 @@
 #include <Interface/Exceptions.h>
 #include <Interface/Parset.h>
 #include <Interface/Stream.h>
+#include <Interface/FinalMetaData.h>
 #include <Common/Thread/Thread.h>
 #include <Stream/PortBroker.h>
 #include <Storage/SubbandWriter.h>
