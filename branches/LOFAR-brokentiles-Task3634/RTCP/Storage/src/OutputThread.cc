@@ -259,6 +259,7 @@ void OutputThread::doWork()
   }
 }
 
+
 void OutputThread::cleanUp()
 {
   flushSequenceNumbers();
@@ -266,6 +267,14 @@ void OutputThread::cleanUp()
   float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
 
   LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+}
+
+
+void OutputThread::augmentMS( const FinalMetaData &finalMetaData )
+{
+  ASSERT(itsWriter.get());
+
+  itsWriter->augment(finalMetaData);
 }
 
 

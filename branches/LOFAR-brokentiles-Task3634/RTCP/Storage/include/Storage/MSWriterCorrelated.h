@@ -40,6 +40,8 @@ class MSWriterCorrelated : public MSWriterFile
     ~MSWriterCorrelated();
 
     virtual void write(StreamableData *data);
+    
+    virtual void augment(const FinalMetaData &finalMetaData);
 
   protected:
     const Parset &itsParset;

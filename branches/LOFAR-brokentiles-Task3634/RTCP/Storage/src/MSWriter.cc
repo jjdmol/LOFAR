@@ -35,6 +35,10 @@ MSWriter::~MSWriter()
 {
 }
 
+void MSWriter::augment(const FinalMetaData &finalMetaData)
+{
+}
+
 
 }
 }

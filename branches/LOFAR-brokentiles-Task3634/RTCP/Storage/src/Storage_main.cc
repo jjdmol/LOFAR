@@ -105,6 +105,8 @@ int main(int argc, char *argv[])
     ASSERT(myRank < hostnames.size());
     string myHostName = hostnames[myRank];
 
+    string obsLogPrefix = str(boost::format("[obs %u] ") % parset.observationID());
+
     {
       // make sure "parset" stays in scope for the lifetime of the SubbandWriters
 
@@ -125,19 +127,30 @@ int main(int argc, char *argv[])
               }
             }
 
-            string logPrefix = str(boost::format("[obs %u type %u stream %3u writer %3u] ") % parset.observationID() % outputType % streamNr % writerNr);
+            string sbLogPrefix = str(boost::format("[obs %u type %u stream %3u writer %3u] ") % parset.observationID() % outputType % streamNr % writerNr);
 
             try {
-              subbandWriters.push_back(new SubbandWriter(parset, outputType, streamNr, isBigEndian, logPrefix));
+              subbandWriters.push_back(new SubbandWriter(parset, outputType, streamNr, isBigEndian, sbLogPrefix));
             } catch (Exception &ex) {
-              LOG_WARN_STR(logPrefix << "Could not create writer: " << ex);
+              LOG_WARN_STR(sbLogPrefix << "Could not create writer: " << ex);
             } catch (exception &ex) {
-              LOG_WARN_STR(logPrefix << "Could not create writer: " << ex.what());
+              LOG_WARN_STR(sbLogPrefix << "Could not create writer: " << ex.what());
             }
           }
         }
       }   
+
+      // Add final meta data (broken tile information, etc)
+      // that is obtained after the end of an observation.
+      LOG_INFO_STR(obsLogPrefix << "Reading final meta data");
+      FinalMetaData finalMetaData;
+      finalMetaData.read(controlStream);
+
+      LOG_INFO_STR(obsLogPrefix << "Processing final meta data");
+      for (size_t i = 0; i < subbandWriters.size(); ++i)
+        subbandWriters[i]->augment(finalMetaData);
     }
+
   } catch (Exception &ex) {
     LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
     return 1;

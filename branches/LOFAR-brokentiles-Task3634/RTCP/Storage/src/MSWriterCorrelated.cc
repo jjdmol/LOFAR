@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Storage/MSWriterCorrelated.h>
 #include <Interface/CorrelatedData.h>
+#include <Beaminfo/FailedTileInfo.h>
 #include <vector>
 #include <string>
 #include <boost/format.hpp>
@@ -65,6 +66,12 @@ void MSWriterCorrelated::write(StreamableData *data)
   ASSERT( cdata );
 
   MSWriterFile::write(data);
+}
+
+
+void MSWriterCorrelated::augment(const FinalMetaData &finalMetaData)
+{
+  // TODO
 }
 
 

@@ -28,6 +28,7 @@
 #include <Interface/OutputTypes.h>
 #include <Interface/SmartPtr.h>
 #include <Interface/StreamableData.h>
+#include <Interface/FinalMetaData.h>
 #include <Storage/MSWriter.h>
 #include <Stream/FileStream.h>
 #include <Common/Thread/Queue.h>
@@ -48,13 +49,14 @@ class OutputThread
 
     void			     start();
 
-    void			     createMS();
+    void           augment(const FinalMetaData &finalMetaData);
 
   private:
     void			     flushSequenceNumbers();
     void			     writeSequenceNumber(StreamableData *);
     void			     checkForDroppedData(StreamableData *);
     void			     doWork();
+    void			     createMS();
     void			     cleanUp();
     void			     mainLoop();
 
