@@ -49,6 +49,9 @@ class OutputThread
 
     void			     start();
 
+    // needed in createHeaders.cc
+    void           createMS();
+
     void           augment(const FinalMetaData &finalMetaData);
 
   private:
@@ -56,7 +59,6 @@ class OutputThread
     void			     writeSequenceNumber(StreamableData *);
     void			     checkForDroppedData(StreamableData *);
     void			     doWork();
-    void			     createMS();
     void			     cleanUp();
     void			     mainLoop();
 

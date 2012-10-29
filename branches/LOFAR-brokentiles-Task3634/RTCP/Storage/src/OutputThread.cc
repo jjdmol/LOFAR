@@ -270,7 +270,7 @@ void OutputThread::cleanUp()
 }
 
 
-void OutputThread::augmentMS( const FinalMetaData &finalMetaData )
+void OutputThread::augment( const FinalMetaData &finalMetaData )
 {
   ASSERT(itsWriter.get());
 
