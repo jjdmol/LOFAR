@@ -55,8 +55,6 @@ class OutputThread
     void           augment(const FinalMetaData &finalMetaData);
 
   private:
-    void			     flushSequenceNumbers();
-    void			     writeSequenceNumber(StreamableData *);
     void			     checkForDroppedData(StreamableData *);
     void			     doWork();
     void			     cleanUp();
@@ -74,8 +72,6 @@ class OutputThread
 
     unsigned		 	     itsBlocksWritten, itsBlocksDropped;
     unsigned			     itsNextSequenceNumber;
-    std::vector<unsigned>	     itsSequenceNumbers;
-    SmartPtr<FileStream>	     itsSequenceNumbersFile;
     SmartPtr<MSWriter>		     itsWriter;
     SmartPtr<Thread>		     itsThread;
 };

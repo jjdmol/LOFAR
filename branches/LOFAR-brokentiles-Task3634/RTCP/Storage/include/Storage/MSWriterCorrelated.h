@@ -28,6 +28,10 @@
 
 #include <Storage/MSWriterFile.h>
 #include <Interface/Parset.h>
+#include <Interface/SmartPtr.h>
+
+#include <string>
+#include <vector>
 
 namespace LOFAR {
 namespace RTCP {
@@ -36,7 +40,7 @@ namespace RTCP {
 class MSWriterCorrelated : public MSWriterFile
 {
   public:
-    MSWriterCorrelated(const string &msName, const Parset &parset);
+    MSWriterCorrelated(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian);
     ~MSWriterCorrelated();
 
     virtual void write(StreamableData *data);
@@ -44,7 +48,14 @@ class MSWriterCorrelated : public MSWriterFile
     virtual void augment(const FinalMetaData &finalMetaData);
 
   protected:
+    const std::string itsLogPrefix;
     const Parset &itsParset;
+
+    void			     flushSequenceNumbers();
+    void			     writeSequenceNumber(StreamableData *);
+
+    std::vector<unsigned>	     itsSequenceNumbers;
+    SmartPtr<FileStream>	     itsSequenceNumbersFile;
 };
 
 

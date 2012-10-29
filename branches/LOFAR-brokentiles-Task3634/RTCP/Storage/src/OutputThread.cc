@@ -28,7 +28,6 @@
 #include <Storage/MSWriterCorrelated.h>
 #include <Storage/MSWriterDAL.h>
 #include <Storage/MSWriterNull.h>
-#include <Storage/MeasurementSetFormat.h>
 #include <Storage/OutputThread.h>
 #include <Common/Thread/Semaphore.h>
 #include <Common/Thread/Cancellation.h>
@@ -37,9 +36,8 @@
 
 #include <errno.h>
 #include <time.h>
-#include <fcntl.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #if defined HAVE_AIPSPP
 #include <casa/Exceptions/Error.h>
@@ -131,41 +129,17 @@ void OutputThread::createMS()
 
   recursiveMakeDir(directoryName, itsLogPrefix);
 
-  if (itsOutputType == CORRELATED_DATA) {
-#if defined HAVE_AIPSPP
-    MeasurementSetFormat myFormat(itsParset, 512);
-            
-    /// Make MeasurementSet filestructures and required tables
-
-    myFormat.addSubband(path, itsStreamNr, itsIsBigEndian);
-
-    LOG_INFO_STR(itsLogPrefix << "MeasurementSet created");
-#endif // defined HAVE_AIPSPP
-
-    if (itsParset.getLofarStManVersion() > 1) {
-      string seqfilename = str(boost::format("%s/table.f0seqnr") % path);
-      
-      try {
-	itsSequenceNumbersFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
-      } catch (...) {
-	LOG_WARN_STR(itsLogPrefix << "Could not open sequence numbers file " << seqfilename);
-      }
-    }
-
-    path = str(boost::format("%s/table.f0data") % path);
-  }
-
   LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
   try {
     // HDF5 writer requested
     switch (itsOutputType) {
       case CORRELATED_DATA:
-        itsWriter = new MSWriterCorrelated(path, itsParset);
+        itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr, itsIsBigEndian);
         break;
 
       case BEAM_FORMED_DATA:
-        itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
+        itsWriter = new MSWriterDAL<float,3>(path, itsParset, itsStreamNr, itsIsBigEndian);
         break;
 
       default:
@@ -175,28 +149,6 @@ void OutputThread::createMS()
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
     itsWriter = new MSWriterNull;
-  }
-}
-
-
-void OutputThread::flushSequenceNumbers()
-{
-  if (itsSequenceNumbersFile != 0) {
-    LOG_INFO_STR(itsLogPrefix << "Flushing sequence numbers");
-    itsSequenceNumbersFile->write(itsSequenceNumbers.data(), itsSequenceNumbers.size() * sizeof(unsigned));
-    itsSequenceNumbers.clear();
-  }
-}
-
-
-void OutputThread::writeSequenceNumber(StreamableData *data)
-{
-  if (itsSequenceNumbersFile != 0) {
-    // write the sequencenumber in correlator endianness, no byteswapping
-    itsSequenceNumbers.push_back(data->sequenceNumber(true));
-    
-    if (itsSequenceNumbers.size() > 64)
-      flushSequenceNumbers();
   }
 }
 
@@ -234,7 +186,6 @@ void OutputThread::doWork()
     try {
       itsWriter->write(data);
       checkForDroppedData(data);
-      writeSequenceNumber(data);
     } catch (SystemCallException &ex) {
       LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what());
     } catch (...) {
@@ -262,8 +213,6 @@ void OutputThread::doWork()
 
 void OutputThread::cleanUp()
 {
-  flushSequenceNumbers();
-
   float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
 
   LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
