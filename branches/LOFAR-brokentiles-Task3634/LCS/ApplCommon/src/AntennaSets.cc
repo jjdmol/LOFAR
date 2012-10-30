@@ -163,17 +163,15 @@ bool AntennaSets::_adoptSelector(const string&	selector, const string& antennaFi
 
 		// next get the pattern
 		string	pattern;
-		uint	patLen(0);
 		while (sIdx < strLen && !isdigit(selector[sIdx])) {
-			pattern[patLen] = selector[sIdx];
-			patLen++;
+			pattern += selector[sIdx];
 			sIdx++;
 		}
-		ASSERTSTR(patLen, "Expected a pattern at position " << sIdx << " of selector " << selector);
+		ASSERTSTR(pattern.length(), "Expected a pattern at position " << sIdx << " of selector " << selector);
 
 		// now we have both the loopcount and the pattern, apply it to Set.
 		for (uint l = 0; l < loopCnt; l++) {
-			for (uint p = 0; p < patLen; p++) {
+			for (uint p = 0; p < pattern.length(); p++) {
 				char	input = pattern[p];
 				ASSERTSTR(input=='l' || input=='h' || input=='H' || input=='.', 
 						"character '" << input << 
