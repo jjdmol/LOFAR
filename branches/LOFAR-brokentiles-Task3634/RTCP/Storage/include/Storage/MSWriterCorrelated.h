@@ -49,6 +49,7 @@ class MSWriterCorrelated : public MSWriterFile
 
   protected:
     const std::string itsLogPrefix;
+    const std::string itsMSname;
     const Parset &itsParset;
 
     void			     flushSequenceNumbers();

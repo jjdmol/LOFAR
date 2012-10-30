@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 #include <Interface/CorrelatedData.h>
-#include <Beaminfo/FailedTileInfo.h>
+#include <MSLofar/FailedTileInfo.h>
 #include <Storage/MSWriterCorrelated.h>
 #include <Storage/MeasurementSetFormat.h>
 #include <vector>
@@ -39,6 +39,7 @@ namespace RTCP {
 MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian)
 :
   MSWriterFile(str(format("%s/table.f0data") % msName)),
+  itsMSname(msName),
   itsLogPrefix(logPrefix),
   itsParset(parset)
 {
@@ -73,6 +74,8 @@ MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std:
     } catch (...) {
       LOG_WARN_STR(itsLogPrefix << "Could not open sequence numbers file " << seqfilename);
     }
+
+    itsSequenceNumbers.reserve(64);
   }
 }
 
@@ -117,6 +120,7 @@ void MSWriterCorrelated::flushSequenceNumbers()
 void MSWriterCorrelated::augment(const FinalMetaData &finalMetaData)
 {
   // TODO
+  //FailedTileInfo::failedTiles2MS(itsMSname, beforeName, duringName);
 }
 
 

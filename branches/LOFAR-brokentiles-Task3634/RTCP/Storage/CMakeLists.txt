@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(Storage 1.0 DEPENDS Common ApplCommon Interface MSLofar LofarStMan Beaminfo)
+lofar_package(Storage 1.0 DEPENDS Common ApplCommon Interface MSLofar LofarStMan OTDB)
 
 include(LofarFindPackage)
 lofar_find_package(Casacore COMPONENTS casa ms tables REQUIRED)
