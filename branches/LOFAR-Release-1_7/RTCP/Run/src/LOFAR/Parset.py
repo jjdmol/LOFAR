@@ -819,7 +819,6 @@ class Parset(util.Parset.Parset):
         assert self.getNrOutputs() > 0, "No data output selected."
         assert len(self.stations) > 0, "No stations selected."
         assert len(self.getInt32Vector("Observation.subbandList")) > 0, "No subbands selected."
-        assert len(self.getInt32Vector("Observation.subbandList")) <= NRRSPBOARDS*NRBOARBEAMLETS, "More than %d subbands selected." % (NRRSPBOARDS*NRBOARBEAMLETS,)
 
         # phase 2 and 3 are either disjunct or equal
         assert self.phaseThreePsetDisjunct() or self.phaseTwoThreePsetEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
