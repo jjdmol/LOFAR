@@ -25,13 +25,11 @@ install(PROGRAMS
   DESTINATION bin)
 
 install(FILES
-  FinalMetaDataGatherer.log_prop
   Storage_main.log_prop
   TBB_Writer_main.log_prop
   DESTINATION etc)
 
 lofar_add_bin_program(Storage_main Storage_main.cc)
-lofar_add_bin_program(FinalMetaDataGatherer FinalMetaDataGatherer.cc)
 lofar_add_bin_program(createHeaders createHeaders.cc)
 lofar_add_bin_program(plotMS plotMS.cc)
 lofar_add_bin_program(versionstorage versionstorage.cc)

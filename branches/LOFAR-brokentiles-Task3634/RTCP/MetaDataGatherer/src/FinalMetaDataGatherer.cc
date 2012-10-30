@@ -70,7 +70,7 @@ MVEpoch toCasaTime (const string& time)
   ASSERT(!time.empty());
 
   // e.g. 2011-Mar-19 21:17:06.514000
-  Double casaTime;                  // casacore MVEpoch time to be returned
+  Double casaTime = 0.0;            // casacore MVEpoch time to be returned
   Quantity result(casaTime, "s");   // set quantity unit to seconds
   MVTime::read(result, time);
   return result;
