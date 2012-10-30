@@ -1,0 +1,11 @@
+##############################
+# Lofar GSM input parset.    #
+##############################
+source_lists = data/bbs_field0.dat
+image_id = Sky1
+image_date = ???
+frequency = 150000000 # in Hz
+pointing_ra = 0.0 # in degrees
+pointing_decl = 0.0 # in degrees
+beam_size = 4.00 # in degrees
+stokes = I
