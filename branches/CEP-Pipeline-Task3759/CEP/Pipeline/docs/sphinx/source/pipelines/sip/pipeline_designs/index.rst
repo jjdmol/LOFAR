@@ -9,7 +9,7 @@ It wil start with two smaller designs for the target and calibrator pipeline.
 Followed by the imaging pipeline. 
 
 
-.. image:: calibrator_pipeline.png
+.. image:: calibration_pipeline.png
 
 .. image:: target_pipeline.png
 
