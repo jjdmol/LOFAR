@@ -995,28 +995,28 @@ void StationControl::_databaseEventHandler(GCFEvent& event)
 		DPChangedEvent		dpEvent(event);
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_REQUESTED_CLOCK) != 0) {
 			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received (requested)clock change from PVSS, clock is now " << itsClock);
+			LOG_INFO_STR("Received (requested)clock change from PVSS, clock is now " << itsClock);
 			break;
 		}
 
 		// during startup we adopt the value set by the ClockController.
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_CLOCK) != 0) {
 			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received (actual)clock change from PVSS, bitmode is now " << itsClock);
+			LOG_INFO_STR("Received (actual)clock change from PVSS, bitmode is now " << itsClock);
 			_abortObsWithWrongClock();
 			break;
 		}
 
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_REQUESTED_BITMODE) != 0) {
 			itsBitmode = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received (requested)bitmode change from PVSS, bitmode is now " << itsBitmode);
+			LOG_INFO_STR("Received (requested)bitmode change from PVSS, bitmode is now " << itsBitmode);
 			break;
 		}
 
 		// during startup we adopt the value set by the ClockController.
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_BITMODE) != 0) {
 			itsBitmode = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received (actual)bitmode change from PVSS, bitmode is now " << itsBitmode);
+			LOG_INFO_STR("Received (actual)bitmode change from PVSS, bitmode is now " << itsBitmode);
 			_abortObsWithWrongBitmode();
 			break;
 		}
