@@ -23,3 +23,7 @@ args = parser.parse_args()
 
 cm = GSMConnectionManager(use_monet=args.monetdb, database=args.database)
 cleanup_db(cm.get_connection())
+if args.monetdb:
+    print "MonetDB database %s cleaned" % args.database
+else:
+    print "PostgreSQL database %s cleaned" % args.database

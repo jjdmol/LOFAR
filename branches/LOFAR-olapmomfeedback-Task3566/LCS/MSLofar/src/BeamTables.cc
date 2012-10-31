@@ -99,6 +99,7 @@ void BeamTables::fill (Table& ms,
   // Read the station names from the MS ANTENNA subtable.
   Table antTab (ms.keywordSet().asTable("ANTENNA"));
   ROScalarColumn<String> antNameCol(antTab, "NAME");
+  ScalarColumn<double> diameterCol(antTab, "DISH_DIAMETER");
   Vector<String> antNames(antNameCol.getColumn());
 
   // Fill the LOFAR_ANTENNA_FIELD table for each entry in the ANTENNA table.
@@ -107,20 +108,25 @@ void BeamTables::fill (Table& ms,
   int rownr = 0;
   // Keep a list of station names; keep it in order.
   // Also keep a map of unique station names and map them to clockId.
-  vector<string> stationNames;
+  vector<string>  stationNames;
   map<string,int> stationIdMap;
+  vector<double>  diameters;
   stationNames.reserve (antNames.size());
+  diameters.reserve (antNames.size());
 
   // Now write the info for each entry in the MS ANTENNA table.
   for (uint i=0; i<antNames.size(); ++i) {
-    // The MS antenna name consists of antenna field name and type.
+    // The MS antenna name consists of station name and antenna field name.
+    // E.g. CS001HBA0 (for dual mode) or CS001HBA (for joined mode).
     // For test purposes we do not assume that the station name has 5 chars.
+    // Get station type (core,remote,europe) using StationInfo.h.
     int    stationType  = stationTypeValue (antNames[i]);
     string stationName  = antNames[i].substr (0, 5);
     string antFieldName;
     if (antNames[i].size() > 5) {
       antFieldName = antNames[i].substr (5, 4);
     }
+    // Antenna field type is first 3 characters of antenna field name.
     string antFieldType = antFieldName.substr (0, 3);
     stationNames.push_back (stationName); // possibly non-unique names
     // Define id for a new station, otherwise get the id.
@@ -128,16 +134,13 @@ void BeamTables::fill (Table& ms,
       int stationId = stationIdMap.size();
       stationIdMap[stationName] = stationId;
     }
+    // Get the antenna field info of the station.
     AntField antField(antFieldPath + stationName + "-AntennaField.conf",
                       mustExist);
-    // Get the station type from the station name (using StationInfo.h).
-    // Use it to get the bitset telling which elements are present for
-    // the given antennaSet.
 
     // HBA stations have to be treated a bit special.
     AntField::AFArray hbaOffsets;   // offsets of HBA dipoles in a tile
     bool done = false;
-    int firstHbaOffset = 0;
     if (antFieldType == "HBA") {
       // Get the offsets of HBA dipoles w.r.t. tile center.
       getHBADeltas (hbaDeltaPath + stationName + "-iHBADeltas.conf",
@@ -152,46 +155,62 @@ void BeamTables::fill (Table& ms,
       antFieldType = "LBA";
       antFieldName = "LBA";
     }
+    double diameter = 0;
     if (antFieldName == "HBA") {
-      // HBA can be split into HBA0 and HBA1.
+      // HBA can be split into HBA0 and HBA1 (in e.g. core stations).
       // They have to be written separately.
-      if (antFieldName == "HBA") {
-        uint nelem0 = antField.nrAnts("HBA0");
-        uint nelem1 = antField.nrAnts("HBA1");
-        if (nelem0 > 0  &&  nelem1 > 0) {
-          // An extra row is needed.
-          antfTab.addRow();
-          // The HBA offsets can be the same for HBA0 and HBA1 (16 values)
-          // or different (32 values).
-          if (AntField::getShape(hbaOffsets)[0] == 16) {
-            writeAntField (antfCols, rownr, i, stationName,
-                           antField, "HBA0", hbaOffsets, 0);
-            writeAntField (antfCols, rownr+1, i, stationName,
-                           antField, "HBA1", hbaOffsets, 0);
-          } else {
-            writeAntField (antfCols, rownr, i, stationName,
-                           antField, "HBA0", hbaOffsets, 0);
-            writeAntField (antfCols, rownr+1, i, stationName,
-                           antField, "HBA1", hbaOffsets, 16);
-          }
-          // Write all elements.
-          writeElements (antfCols, rownr, antField.AntPos("HBA"),
-                         antennaSet.positionIndex ("HBA_ZERO", stationType),
-                         false,
-                         antField.Centre("HBA"),
-                         antField.Centre("HBA0"));
-          writeElements (antfCols, rownr+1, antField.AntPos("HBA"),
-                         antennaSet.positionIndex ("HBA_ONE", stationType),
-                         true,
-                         antField.Centre("HBA"),
-                         antField.Centre("HBA1"));
-          rownr += 2;
-          done = true;
+      uint nelem0 = antField.nrAnts("HBA0");
+      uint nelem1 = antField.nrAnts("HBA1");
+      if (nelem0 > 0  &&  nelem1 > 0) {
+        // Write separately, so an extra row is needed.
+        antfTab.addRow();
+        // The HBA offsets can be the same for HBA0 and HBA1 (16 values)
+        // or different (32 values).
+        if (AntField::getShape(hbaOffsets)[0] == 16) {
+          writeAntField (antfCols, rownr, i, stationName,
+                         antField, "HBA0", hbaOffsets, 0);
+          writeAntField (antfCols, rownr+1, i, stationName,
+                         antField, "HBA1", hbaOffsets, 0);
+        } else {
+          writeAntField (antfCols, rownr, i, stationName,
+                         antField, "HBA0", hbaOffsets, 0);
+          writeAntField (antfCols, rownr+1, i, stationName,
+                         antField, "HBA1", hbaOffsets, 16);
         }
+        // Write all elements.
+        // An HBA tile is 5 m wide, so add that to the diameter.
+        double d1 = writeElements (antfCols, rownr, antField.AntPos("HBA"),
+                                   antennaSet.positionIndex ("HBA_ZERO",
+                                                             stationType),
+                                   0,
+                                   antField.Centre("HBA"),
+                                   antField.Centre("HBA0")) + 5;
+        double d2 = writeElements (antfCols, rownr+1, antField.AntPos("HBA"),
+                                   antennaSet.positionIndex ("HBA_ONE",
+                                                             stationType),
+                                   48,
+                                   antField.Centre("HBA"),
+                                   antField.Centre("HBA1")) + 5;
+        // Calculate diameter from distance between field centers and
+        // the diameters of the fields.
+        AntField::AFArray c0 = antField.Centre("HBA0");
+        AntField::AFArray c1 = antField.Centre("HBA1");
+        double a0 = (AntField::getData(c0)[0] - AntField::getData(c1)[0]);
+        double a1 = (AntField::getData(c0)[1] - AntField::getData(c1)[1]);
+        double a2 = (AntField::getData(c0)[2] - AntField::getData(c1)[2]);
+        diameter = sqrt(a0*a0 + a1*a1 + a2*a2) + 0.5*(d1 + d2);
+        rownr += 2;
+        done = true;
       }
     }
     // In all other cases write a single row.
     if (!done) {
+      // For HBA1 48 needs to be added to the posIndex value to get the
+      // correct antenna number.
+      // Set diameter of an LBA element or HBA tile.
+      int firstHbaOffset = 0;
+      int addAnt = 0;
+      double elemDiam = (antFieldType=="LBA" ? 2:5);
       string setName(antennaSetName);
       if (antFieldName == "HBA0") {
         setName = "HBA_ZERO";
@@ -199,24 +218,28 @@ void BeamTables::fill (Table& ms,
         setName = "HBA_ONE";
         if (AntField::getShape(hbaOffsets)[0] == 32) {
           firstHbaOffset = 16;
+          addAnt         = 48;
         }
       }        
       writeAntField (antfCols, rownr, i, stationName,
                      antField, antFieldName, hbaOffsets, firstHbaOffset);
-      writeElements (antfCols, rownr, antField.AntPos(antFieldType),
-                     antennaSet.positionIndex (setName, stationType),
-                     setName == "HBA_ONE",
-                     antField.Centre(antFieldType),
-                     antField.Centre(antFieldName));
+      diameter = writeElements (antfCols, rownr,
+                                antField.AntPos(antFieldType),
+                                antennaSet.positionIndex (setName, stationType),
+                                addAnt,
+                                antField.Centre(antFieldType),
+                                antField.Centre(antFieldName)) + elemDiam;
       rownr++;
     }
-    LOG_DEBUG_STR ("Wrote " << rownr << " station field rows");
+    // Keep station diameter.
+    diameters.push_back (diameter);
   }
+  LOG_DEBUG_STR ("Wrote " << rownr << " station field rows");
 
   // Write the LOFAR_STATION subtable.
   writeStation (statTab, statCols, stationNames, stationIdMap.size());
-  // Write the STATION_ID in the ANTENNA subtable.
-  writeAntenna (antTab, antNames, stationIdMap);
+  // Write the STATION_ID and DISH_DIAMETER into the ANTENNA subtable.
+  writeAntenna (antTab, antNames, stationIdMap, diameters);
   // Write the AntennaSet name into the OBSERVATION subtable.
   if (ms.keywordSet().isDefined ("OBSERVATION")) {
     Table obsTable (ms.keywordSet().asTable("OBSERVATION"));
@@ -251,13 +274,13 @@ void BeamTables::writeAntField (MSAntennaFieldColumns& columns, int rownr,
   }
 }
 
-void BeamTables::writeElements (MSAntennaFieldColumns& columns,
-                                int rownr,
-                                const AntField::AFArray& elemOffsets,
-                                const vector<int16>& elemPresent,
-                                bool addSkip,
-                                const AntField::AFArray& stationCenter,
-                                const AntField::AFArray& fieldCenter)
+double BeamTables::writeElements (MSAntennaFieldColumns& columns,
+                                  int rownr,
+                                  const AntField::AFArray& elemOffsets,
+                                  const vector<int16>& posIndex,
+                                  int addAnt,
+                                  const AntField::AFArray& stationCenter,
+                                  const AntField::AFArray& fieldCenter)
 {
   double off0 = (AntField::getData(stationCenter)[0] -
                  AntField::getData(fieldCenter)[0]);
@@ -269,6 +292,7 @@ void BeamTables::writeElements (MSAntennaFieldColumns& columns,
   int nelem = elemOff.shape()[2];
   Matrix<Double> offset(3,nelem);
   Matrix<Bool>   flag(2,nelem, True);
+  Matrix<Int>    rcus(2,nelem, -1);
   for (int i=0; i<nelem; ++i) {
     // The element offsets are given as [nelem,npol,xyz].
     // Offsets are the same for the X and Y polarisation.
@@ -277,30 +301,35 @@ void BeamTables::writeElements (MSAntennaFieldColumns& columns,
     offset(2,i) = elemOff(2,0,i) + off2;
   }
   // Clear the flag for the dipoles that are present.
-  // Normally the value in the elemPresent vector gives the element index,
-  // but not for HBA1 in the core stations. For those the skipped number
-  // of values has to be added.
-  // Note that elemPresent defines which elements are used for a mode.
-  // -1 means not used.
-  // If >=0, the value is normally equal to the vector's index.
-  // However, for HBA_ONE this is not the case. It has 48 -1 values, and
-  // thereafter value 0..47. SAS/MAC/BeamServer needs it this way.
-  // Therefore the code adds the nr of -1 values if value != index to get
-  // the proper flag index (which is the RCU number).
+  // The index in the posIndex vector gives the RCU used (if not -1).
+  // The value in the posIndex vector gives the element number.
   Bool* flagPtr = flag.data();
-  int nskip = 0;
-  for (uint i=0; i<elemPresent.size(); ++i) {
-    if (elemPresent[i] < 0) {
-      nskip++;
-    } else {
-      int index = elemPresent[i];
-      if (addSkip) index += nskip;
-      ASSERT (index < int(flag.size()));
-      flagPtr[index] = False;
+  Int * rcusPtr = rcus.data();
+  for (uint i=0; i<posIndex.size(); ++i) {
+    if (posIndex[i] >= 0) {
+      int antNr = posIndex[i] + addAnt;
+      ASSERT (antNr < int(flag.size()));
+      flagPtr[antNr] = False;
+      rcusPtr[antNr] = i;
     }
   }
   columns.elementOffset().put (rownr, offset);
+  columns.elementRCU().put    (rownr, rcus);
   columns.elementFlag().put   (rownr, flag);
+  // Determine the station radius as the maximum distance of the used elements
+  // to the field center. Note that their offsets are wrt field center (0,0,0).
+  double radius = 0;
+  for (int i=0; i<nelem; ++i) {
+    if (! flag(0,i)) {
+      double dist = (offset(0,i) * offset(0,i) +
+                     offset(1,i) * offset(1,i) +
+                     offset(2,i) * offset(2,i));
+      if (dist > radius) {
+        radius = dist;
+      }
+    }
+  }
+  return 2*sqrt(radius);
 }
 
 void BeamTables::writeObservation (Table& obsTable,
@@ -349,18 +378,22 @@ void BeamTables::writeStation (MSStation& tab, MSStationColumns& columns,
 
 void BeamTables::writeAntenna (Table& antTable,
                                const Vector<String>& antNames,
-                               const map<string,int>& stationIdMap)
+                               const map<string,int>& stationIdMap,
+                               const vector<double>& diameters)
 {
   ASSERT (antTable.nrow() == antNames.size());
+  ASSERT (antTable.nrow() == diameters.size());
   // Add column if not existing yet.
   if (! antTable.tableDesc().isColumn ("LOFAR_STATION_ID")) {
     antTable.addColumn (ScalarColumnDesc<Int> ("LOFAR_STATION_ID"));
   }
-  // Write for each antenna the id in the LOFAR_STATION table.
-  ScalarColumn<Int> idCol (antTable, "LOFAR_STATION_ID");
+  // Write for each antenna the id and diameter into the LOFAR_STATION table.
+  ScalarColumn<Int>    idCol (antTable, "LOFAR_STATION_ID");
+  ScalarColumn<double> dmCol (antTable, "DISH_DIAMETER");
   for (uInt i=0; i<antTable.nrow(); ++i) {
     string stationName = antNames[i].substr(0,5);
     idCol.put (i, stationIdMap.find(stationName)->second);
+    dmCol.put (i, diameters[i]);
   }
 }
 

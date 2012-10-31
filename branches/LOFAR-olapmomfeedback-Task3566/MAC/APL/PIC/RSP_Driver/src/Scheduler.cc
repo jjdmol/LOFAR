@@ -236,6 +236,42 @@ int Scheduler::pqueue_remove_commands(pqueue&			pq,
 }
 
 //
+// oqueue_remove_commands(pqueue, port, memptr)
+//
+int Scheduler::oqueue_remove_commands(oqueue&			oq,
+									  GCFPortInterface& port,
+									  memptr_t 			handle)
+{
+	int count = 0;
+
+	// copy oq
+	oqueue tmp(oq);
+
+	// clear pq, it will be filled again in the next loop
+	while (!oq.empty())  {
+		oq.pop();
+	}
+
+	while (!tmp.empty()) {
+		// pop item from the queue
+		Ptr<Command> c = tmp.top();
+		tmp.pop();
+
+		// if port matches, delete c, else push back onto pq
+		if ((c->getPort() == &port) && (0 == handle || &(*c) == (Command*)handle)) {
+			count++;
+			// don't push back on pq, c will be deleted when it goes out of scope
+			LOG_DEBUG_STR("Removing command '" << c->name() << "' from the queue");
+		}
+		else {
+			oq.push(c);
+		}
+	}
+
+	return count;
+}
+
+//
 // cancel(port)
 //
 int Scheduler::cancel(GCFPortInterface& port)
@@ -246,7 +282,7 @@ int Scheduler::cancel(GCFPortInterface& port)
 	count += pqueue_remove_commands(m_later_queue,    port);
 	count += pqueue_remove_commands(m_now_queue,      port);
 	count += pqueue_remove_commands(m_periodic_queue, port);
-	count += pqueue_remove_commands(m_done_queue,     port);
+	count += oqueue_remove_commands(m_done_queue,     port);
 
 	return count;
 }
@@ -260,7 +296,7 @@ int Scheduler::remove_subscription(GCFPortInterface& port, memptr_t handle)
 	count += pqueue_remove_commands(m_later_queue,    port, handle);
 	count += pqueue_remove_commands(m_now_queue,      port, handle);
 	count += pqueue_remove_commands(m_periodic_queue, port, handle);
-	count += pqueue_remove_commands(m_done_queue,     port, handle);
+	count += oqueue_remove_commands(m_done_queue,     port, handle);
 
 	return count;
 }
@@ -407,6 +443,7 @@ void Scheduler::scheduleCommands()
 	/* copy periodic commands to the now queue */
 	pqueue pq = m_periodic_queue;
 
+	int orderNr(0);
 	while (!pq.empty()) {
 		Ptr<Command> command = pq.top();
 
@@ -425,6 +462,7 @@ void Scheduler::scheduleCommands()
 
 		if (command->getTimestamp() <= m_current_time + (long)scheduling_offset) {
 			LOG_DEBUG_STR("scheduling periodic command '" << command->name() << "' with time=" << command->getTimestamp());
+			command->order(orderNr++);
 			m_now_queue.push(command);
 		}
 

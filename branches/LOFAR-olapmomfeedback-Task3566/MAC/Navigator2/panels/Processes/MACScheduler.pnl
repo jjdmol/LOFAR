@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 1013 750 N "_3DFace" 0
@@ -150,7 +150,7 @@ updateOTDB(string dp1, bool connected,
       setValue(\"txt_OTDBpollinterval\", \"backCol\", \"Lofar_invalid\");
     } else {
       setValue(\"txt_OTDBconnected\", \"backCol\", \"Lofar_dpOffline\");
-      setValue(\"txt_OTDBlastPoll\", \"backCol\", \"Lofar_idpOffline\");
+      setValue(\"txt_OTDBlastPoll\", \"backCol\", \"Lofar_dpOffline\");
       setValue(\"txt_OTDBpollinterval\", \"backCol\", \"Lofar_dpOffline\");
     }
   }
@@ -268,9 +268,8 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 0 1 0 1 E 2.28571428571429 0 0.487179487179487 -38.5714285714286 172.384615384615 0 E 30 303 451 421
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 4 OTDB
 2 13
 "PRIMITIVE_TEXT7"
@@ -285,12 +284,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 40 344 105 358
+E E 0 1 1 2 1 E U  1 E 40 344 105 357
 0 2 2 "0s" 0 0 0 192 0 0  40 344 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 10 Connected:
 2 14
 "PRIMITIVE_TEXT8"
@@ -305,12 +303,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 349 344 421 358
+E E 0 1 1 2 1 E U  1 E 349 344 421 357
 0 2 2 "0s" 0 0 0 192 0 0  349 344 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 14 Poll Interval:
 2 15
 "PRIMITIVE_TEXT9"
@@ -325,12 +322,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 665 344 718 358
+E E 0 1 1 2 1 E U  1 E 665 344 718 357
 0 2 2 "0s" 0 0 0 192 0 0  665 344 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 10 Last Poll:
 14 16
 "txt_OTDBconnected"
@@ -345,9 +341,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 115 341 339 362
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  115 341 339 362
 2 "0s" 0 0 0 0 0 -1  E E E
 14 17
 "txt_OTDBpollinterval"
@@ -362,9 +357,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 428 338 652 359
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  428 338 652 359
 2 "0s" 0 0 0 0 0 -1  E E E
 14 18
 "txt_OTDBlastPoll"
@@ -379,9 +373,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 728 341 952 362
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  728 341 952 362
 2 "0s" 0 0 0 0 0 -1  E E E
 17 19
 "PlannedObservationList"
@@ -396,9 +389,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 28 418 322 722
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  28 418 322 722
 0
 
 E
@@ -419,12 +411,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 100 390 228 404
+E E 0 1 1 2 1 E U  1 E 100 390 228 403
 0 2 2 "0s" 0 0 0 192 0 0  100 390 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 21 Planned Observations:
 17 32
 "ActiveObservationList"
@@ -439,9 +430,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 358 418 652 722
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  358 418 652 722
 0
 
 E
@@ -462,12 +452,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 430 392 548 406
+E E 0 1 1 2 1 E U  1 E 430 392 548 405
 0 2 2 "0s" 0 0 0 192 0 0  430 392 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 20 Active Observations:
 17 34
 "FinishedObservationList"
@@ -482,9 +471,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 688 420 982 722
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  688 420 982 722
 0
 
 E
@@ -505,12 +493,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 760 392 889 406
+E E 0 1 1 2 1 E U  1 E 760 392 889 405
 0 2 2 "0s" 0 0 0 192 0 0  760 392 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 22 Finished Observations:
 0
 LAYER, 1 
@@ -541,7 +528,7 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 0 "PANEL_REF1"
+3 0 "PANEL_REF1" -1
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
 "$ctrlName""MACScheduler"

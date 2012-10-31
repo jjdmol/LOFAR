@@ -1,5 +1,28 @@
-#!/usr/bin/gnuplot
+#!/bin/bash
+#
+# V1.0, M.J.Norden, 18-09-2012
+# Usage: plotclock yyyymmdd
+#
+
+if [ "$1" != "" ]; then
+   cp /var/log/ntpstats/loopstats.$1 /localhome/data/loopstats
+   
+else 
+   cp /var/log/ntpstats/loopstats /localhome/data/loopstats
+   echo "Usage: plotclock yyyymmdd"
+   sleep 1
+   
+fi
+/usr/bin/gnuplot <<\EOF
 set grid ytics
-plot "/var/log/ntpstats/loopstats" using 2:3 axis x1y1 w lines lt 3 title "clock offset", '' using 2:5 w lines lt 1 title "RMS jitter"
+set xtics 7200
+set mxtics 4
+set autoscale
+set ylabel "time difference between GPS time and LCU clock"
+set xlabel "seconds elapsed since last midnight (UTC)"
+plot "/localhome/data/loopstats" using 2:3 axis x1y1 w lines lt 3 title "clock offset", '' using 2:5 w lines lt 1 title "RMS jitter"
 pause 30
 reread
+EOF
+
+

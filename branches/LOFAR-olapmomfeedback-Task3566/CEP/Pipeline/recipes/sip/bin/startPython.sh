@@ -53,7 +53,7 @@ if [ -n "$debug" ]; then
   echo "**** $(date) ****" >> ${logFile}
   echo "$0 $@" >> ${logFile}
   echo "PATH=${PATH}" >> ${logFile}
-  echo "PYHONTPATH=${PYTHONPATH}" >> ${logFile}
+  echo "PYTHONPATH=${PYTHONPATH}" >> ${logFile}
   echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> ${logFile}
   echo "${pythonProgram} ${programOptions} ${parsetFile}" >> ${logFile}
 fi

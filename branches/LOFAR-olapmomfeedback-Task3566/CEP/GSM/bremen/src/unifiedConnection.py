@@ -82,6 +82,7 @@ class UnifiedConnection(object):
             query = query + ';'
         try:
             self.start()
+            self.log.debug(query.replace('\n', ' '))
             result = cursor.execute(query)
         except Exception as oerr:
             self.log.error(query.replace('\n', ' '))
@@ -166,7 +167,7 @@ class UnifiedConnection(object):
         """
         Proper procedure call (for Monet/Postgres compatibility.)
         """
-        self.conn.execute('call %s' % procname)
+        self.execute('call %s' % procname)
 
     def cursor(self):
         """

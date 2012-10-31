@@ -24,10 +24,9 @@
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
 import java.rmi.RemoteException;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Vector;
+import java.util.ArrayList;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb3.jVICnodeDef;
@@ -46,7 +45,7 @@ public class BBSStepDataManager{
     private static BBSStepDataManager instance;
     private static Logger logger = Logger.getLogger(BBSStepDataManager.class);
     private static jOTDBnode stepContainerNode = null;
-    private static Vector OTDBcomponentCache = null;
+    private static ArrayList<jVICnodeDef> OTDBcomponentCache = null;
     private BBSStrategy theStrategy = null;
     private HashMap<String,BBSStepData> stepsCollection = null;
     private HashSet<BBSStep> stepStructureCollection = null;
@@ -55,8 +54,8 @@ public class BBSStepDataManager{
      * Creates a new instance of BBSStepDataManager, protected by a singleton pattern
      */
     private BBSStepDataManager() {
-        stepsCollection = new HashMap<String,BBSStepData> ();
-        stepStructureCollection = new HashSet<BBSStep>();
+        stepsCollection = new HashMap<> ();
+        stepStructureCollection = new HashSet<>();
     }
     /**
      * Returns a static instance of the BBSStepDataManager class.
@@ -84,12 +83,12 @@ public class BBSStepDataManager{
      *
      * @return the unique names of all the steps being managed.
      */
-    public synchronized Vector<String> getStepNames(){
-        Vector<String> returnVector = new Vector<String>();
+    public synchronized ArrayList<String> getStepNames(){
+        ArrayList<String> returnArrayList = new ArrayList<>();
         for(String aStep : stepsCollection.keySet()){
-            returnVector.add(aStep);
+            returnArrayList.add(aStep);
         }
-        return returnVector;
+        return returnArrayList;
     }
     /**
      * Returns a BBSStep with a given name, and attaches it to a given parent
@@ -221,17 +220,15 @@ public class BBSStepDataManager{
         
         if(strategyStepsParameter!=null){
             //retrieve the step names mentioned in the strategy steps parameter (Strategy.Steps)
-            Vector<String> strategySteps = this.getVectorFromString(strategyStepsParameter.limits,true);
+            ArrayList<String> strategySteps = this.getArrayListFromString(strategyStepsParameter.limits,true);
             
             if(strategySteps.size()>0){
-                Vector stepsVector;
+                ArrayList<jOTDBnode> stepsArrayList;
                 try {
-                    stepsVector = OtdbRmi.getRemoteMaintenance().getItemList(rootNode.treeID(), rootNode.nodeID(), 1);
+                    stepsArrayList = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(rootNode.treeID(), rootNode.nodeID(), 1));
                     //loop through steps
                     for(String aStep : strategySteps){
-                        Enumeration se = stepsVector.elements();
-                        while( se.hasMoreElements()  ) {
-                            jOTDBnode aHWNode = (jOTDBnode)se.nextElement();
+                        for(jOTDBnode aHWNode:stepsArrayList) {
                             //limiting the search for steps that are mentioned in the strategy steps parameter (Strategy.Steps)
                             if (aHWNode.name.equals(aStep)) {
                                 //Create a new step and build it (with its substeps as well)
@@ -266,13 +263,13 @@ public class BBSStepDataManager{
         jOTDBnode parentStepsNode = this.getStrategyStepsNode(this.getStepContainerNode());
         
         //determine the Parent children as defined by the BBS Step Parent object
-        Vector<BBSStep> currentParentChildren = theStrategy.getChildSteps();
+        ArrayList<BBSStep> currentParentChildren = new ArrayList(theStrategy.getChildSteps());
         
-        Vector<String> currentParentChildrenList = new Vector<String>();
+        ArrayList<String> currentParentChildrenList = new ArrayList<>();
         for(BBSStep someStep : currentParentChildren){
             currentParentChildrenList.add(someStep.getName());
         }
-        String newList = this.getStringFromVector(currentParentChildrenList,true);
+        String newList = this.getStringFromArrayList(currentParentChildrenList,true);
         parentStepsNode.limits=newList;
         try{
             OtdbRmi.getRemoteMaintenance().saveNode(parentStepsNode);
@@ -295,12 +292,9 @@ public class BBSStepDataManager{
         jOTDBnode strategyStepsParameter=null;
         //retrieve 1 levels of parameters to locate Step.XXX.Steps
         
-        Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1);
+        ArrayList<jOTDBnode> HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1));
         // get all the params per child
-        Enumeration e1 = HWchilds.elements();
-        while( e1.hasMoreElements()  ) {
-            
-            jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+        for(jOTDBnode aHWNode:HWchilds) {
             strategyStepsParameter=null;
             //retrieving Steps
             if (aHWNode.leaf && aHWNode.name.equals("Steps")) {
@@ -308,15 +302,15 @@ public class BBSStepDataManager{
                 logger.trace("Strategy Steps defined :"+strategyStepsParameter.limits);
             } else if (aHWNode.leaf && aHWNode.name.equals("Sources")) {
                 if(!aHWNode.limits.equals("")){
-                    stepDataObject.setSources(this.getVectorFromString(aHWNode.limits,true));
+                    stepDataObject.setSources(this.getArrayListFromString(aHWNode.limits,true));
                 }
             } else if (aHWNode.leaf && aHWNode.name.equals("ExtraSources")) {
                 if(!aHWNode.limits.equals("")){
-                    stepDataObject.setExtraSources(this.getVectorFromString(aHWNode.limits,true));
+                    stepDataObject.setExtraSources(this.getArrayListFromString(aHWNode.limits,true));
                 }
             } else if (aHWNode.leaf && aHWNode.name.equals("InstrumentModel")) {
                 if(!aHWNode.limits.equals("")){
-                    stepDataObject.setInstrumentModel(this.getVectorFromString(aHWNode.limits,true));
+                    stepDataObject.setInstrumentModel(this.getArrayListFromString(aHWNode.limits,true));
                 }
             } else if (aHWNode.leaf && aHWNode.name.equals("OutputData")) {
                 stepDataObject.setOutputDataColumn(aHWNode.limits);
@@ -331,11 +325,9 @@ public class BBSStepDataManager{
                     stepDataObject.setOperationName(value);
                 }
             } else if (!aHWNode.leaf && aHWNode.name.equals("Correlation")) {
-                Vector correlationParms = this.retrieveChildDataForNode(aHWNode);
+                ArrayList<jOTDBnode> correlationParms = this.retrieveChildDataForNode(aHWNode);
                 
-                Enumeration ce = correlationParms.elements();
-                while( ce.hasMoreElements()  ) {
-                    jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                for (jOTDBnode aCENode:correlationParms) {
                     
                     if (aCENode.leaf && aCENode.name.equals("Selection")) {
                         if(!aCENode.limits.equals("")){
@@ -343,33 +335,29 @@ public class BBSStepDataManager{
                         }
                     } else if (aCENode.leaf && aCENode.name.equals("Type")) {
                         if(!aCENode.limits.equals("")){
-                            stepDataObject.setCorrelationType(this.getVectorFromString(aCENode.limits,true));
+                            stepDataObject.setCorrelationType(this.getArrayListFromString(aCENode.limits,true));
                         }
                     }
                 }
             } else if (!aHWNode.leaf && aHWNode.name.equals("Baselines")) {
-                Vector baselinesParms = this.retrieveChildDataForNode(aHWNode);
+                ArrayList<jOTDBnode> baselinesParms = this.retrieveChildDataForNode(aHWNode);
                 
-                Enumeration ce = baselinesParms.elements();
-                while( ce.hasMoreElements()  ) {
-                    jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                for (jOTDBnode aCENode:baselinesParms) {
                     
                     if (aCENode.leaf && aCENode.name.equals("Station1")) {
                         if(!aCENode.limits.equals("")){
-                            stepDataObject.setStation1Selection(this.getVectorFromString(aCENode.limits,true));
+                            stepDataObject.setStation1Selection(this.getArrayListFromString(aCENode.limits,true));
                         }
                     } else if (aCENode.leaf && aCENode.name.equals("Station2")) {
                         if(!aCENode.limits.equals("")){
-                            stepDataObject.setStation2Selection(this.getVectorFromString(aCENode.limits,true));
+                            stepDataObject.setStation2Selection(this.getArrayListFromString(aCENode.limits,true));
                         }
                     }
                 }
             } else if (!aHWNode.leaf && aHWNode.name.equals("Integration")) {
-                Vector baselinesParms = this.retrieveChildDataForNode(aHWNode);
+                ArrayList<jOTDBnode> baselinesParms = this.retrieveChildDataForNode(aHWNode);
                 
-                Enumeration ce = baselinesParms.elements();
-                while( ce.hasMoreElements()  ) {
-                    jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                for (jOTDBnode aCENode: baselinesParms) {
                     
                     if (aCENode.leaf && aCENode.name.equals("Time")) {
                         if(!aCENode.limits.equals("")){
@@ -386,17 +374,14 @@ public class BBSStepDataManager{
         
         if(strategyStepsParameter!=null){
             //retrieve the step names mentioned in the steps parameter (XXX.Steps)
-            Vector<String> strategySteps = this.getVectorFromString(strategyStepsParameter.limits,true);
+            ArrayList<String> strategySteps = this.getArrayListFromString(strategyStepsParameter.limits,true);
             
             if(strategySteps.size()>0){
                 //Get all the steps present in the BBS Step Container
-                Vector stepsVector = OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.parentID(), 1);
+                ArrayList<jOTDBnode> stepsArrayList = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.parentID(), 1));
                 
                 for(String aStep : strategySteps){
-                    Enumeration se = stepsVector.elements();
-                    //loop through steps
-                    while( se.hasMoreElements()  ) {
-                        jOTDBnode aHWNode = (jOTDBnode)se.nextElement();
+                    for (jOTDBnode aHWNode:stepsArrayList) {
                         //limiting the search for steps that are mentioned in the strategy steps parameter (Strategy.Steps)
                         if (!aHWNode.leaf && aHWNode.name.equals(aStep)) {
                             //Create a new step and build it (with its substeps as well)
@@ -414,12 +399,9 @@ public class BBSStepDataManager{
         //another iteration to collect operation type attributes
         if(stepDataObject.getOperationName() !=null){
             
-            Vector HWchilds2 = OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1);
+            ArrayList<jOTDBnode> HWchilds2 = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1));
             // get all the params per child
-            Enumeration e2 = HWchilds2.elements();
-            while( e2.hasMoreElements()  ) {
-                
-                jOTDBnode aHWNode = (jOTDBnode)e2.nextElement();
+            for (jOTDBnode aHWNode:HWchilds2) {
                 /*
                  * This operation only supports operation node attributes of up to two levels deep.
                  *
@@ -427,22 +409,18 @@ public class BBSStepDataManager{
                  *               Predict.DomainSize.Integration.Freq is NOT supported...
                  */
                 if (!aHWNode.leaf && aHWNode.name.equals(stepDataObject.getOperationName())){
-                    Vector operationParms = this.retrieveChildDataForNode(aHWNode);
+                    ArrayList<jOTDBnode> operationParms = this.retrieveChildDataForNode(aHWNode);
                     
-                    Enumeration ce = operationParms.elements();
-                    while( ce.hasMoreElements()  ) {
-                        jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                    for (jOTDBnode aCENode:operationParms) {
                         
                         if (aCENode.leaf){
                             if(!aCENode.limits.equals("")){
                                 stepDataObject.addOperationAttribute(LofarUtils.keyName(aCENode.name),aCENode.limits);
                             }
                         } else {
-                            Vector operationSubParms = this.retrieveChildDataForNode(aCENode);
+                            ArrayList<jOTDBnode> operationSubParms = this.retrieveChildDataForNode(aCENode);
                             
-                            Enumeration cse = operationSubParms.elements();
-                            while( cse.hasMoreElements()  ) {
-                                jOTDBnode aCSENode = (jOTDBnode)cse.nextElement();
+                            for (jOTDBnode aCSENode:operationSubParms) {
                                 if (aCSENode.leaf){
                                     if(!aCSENode.limits.equals("")){
                                         stepDataObject.addOperationAttribute(LofarUtils.keyName(aCENode.name)+"."+LofarUtils.keyName(aCSENode.name),aCSENode.limits);
@@ -473,12 +451,8 @@ public class BBSStepDataManager{
         jOTDBnode existingStepNode = null;
         
         //check if the step is present in the Step Container
-        Vector stepsVector =  retrieveChildDataForNode(stepsNode);
-        Enumeration se = stepsVector.elements();
-        
-        //loop through steps
-        while( se.hasMoreElements()  ) {
-            jOTDBnode aHWNode = (jOTDBnode)se.nextElement();
+        ArrayList<jOTDBnode> stepsArrayList =  retrieveChildDataForNode(stepsNode);
+        for (jOTDBnode aHWNode:stepsArrayList) {
             
             //delete the standard bbs step found in the template tree
             if(aHWNode.name.equals("DefaultBBSStep")){
@@ -529,7 +503,7 @@ public class BBSStepDataManager{
                         
                         //collect components that are part of the operation type...
                         if(currentDataForStep.getOperationAttributes() != null){
-                            Vector<String> toBeAddedSubComponents = new Vector<String>();
+                            ArrayList<String> toBeAddedSubComponents = new ArrayList<>();
                             for(String someOperationAttribute : currentDataForStep.getOperationAttributes().keySet()){
                                 String[] splitter = someOperationAttribute.split("[.]");
                                 if(splitter.length>1){
@@ -546,18 +520,15 @@ public class BBSStepDataManager{
                     }
                     
                     newStepNode = OtdbRmi.getRemoteMaintenance().getNode(stepContainerNode.treeID(),newStepNodeID);
-                    Vector stepParametersVector = retrieveChildDataForNode(newStepNode);
-                    Enumeration spe = stepParametersVector.elements();
-                    
-                    while( spe.hasMoreElements()  ) {
-                        jOTDBnode aHWNode = (jOTDBnode)spe.nextElement();
+                    ArrayList<jOTDBnode> stepParametersArrayList = retrieveChildDataForNode(newStepNode);
+                    for (jOTDBnode aHWNode:stepParametersArrayList) {
                         
                         //do all BBS Step parameters
                         
                         //sources
                         if(aHWNode.name.equals("Sources")){
                             if ( currentDataForStep.getSources() != null){
-                                aHWNode.limits = this.getStringFromVector(currentDataForStep.getSources(),true);
+                                aHWNode.limits = this.getStringFromArrayList(currentDataForStep.getSources(),true);
                                 OtdbRmi.getRemoteMaintenance().saveNode(aHWNode);
                             }else{
                                 OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
@@ -566,7 +537,7 @@ public class BBSStepDataManager{
                         //extra sources
                         else if(aHWNode.name.equals("ExtraSources")){
                             if ( currentDataForStep.getExtraSources() != null){
-                                aHWNode.limits = this.getStringFromVector(currentDataForStep.getExtraSources(),true);
+                                aHWNode.limits = this.getStringFromArrayList(currentDataForStep.getExtraSources(),true);
                                 OtdbRmi.getRemoteMaintenance().saveNode(aHWNode);
                             }else{
                                 OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
@@ -585,7 +556,7 @@ public class BBSStepDataManager{
                         //instrument data model
                         else if(aHWNode.name.equals("InstrumentModel")){
                             if ( currentDataForStep.getInstrumentModel() != null){
-                                aHWNode.limits = this.getStringFromVector(currentDataForStep.getInstrumentModel(),true);
+                                aHWNode.limits = this.getStringFromArrayList(currentDataForStep.getInstrumentModel(),true);
                                 OtdbRmi.getRemoteMaintenance().saveNode(aHWNode);
                             }else{
                                 OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
@@ -595,11 +566,9 @@ public class BBSStepDataManager{
                         //Integration
                         
                         else if (!aHWNode.leaf && aHWNode.name.equals("Integration")) {
-                            Vector baselinesParms = this.retrieveChildDataForNode(aHWNode);
+                            ArrayList<jOTDBnode> baselinesParms = this.retrieveChildDataForNode(aHWNode);
                             int presentParams = 0;
-                            Enumeration ce = baselinesParms.elements();
-                            while( ce.hasMoreElements()  ) {
-                                jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                            for (jOTDBnode aCENode:baselinesParms) {
                                 
                                 //Time
                                 
@@ -633,17 +602,15 @@ public class BBSStepDataManager{
                         //Correlation
                         
                         else if (!aHWNode.leaf && aHWNode.name.equals("Correlation")) {
-                            Vector baselinesParms = this.retrieveChildDataForNode(aHWNode);
+                            ArrayList<jOTDBnode> baselinesParms = this.retrieveChildDataForNode(aHWNode);
                             int presentParams = 0;
-                            Enumeration ce = baselinesParms.elements();
-                            while( ce.hasMoreElements()  ) {
-                                jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                            for (jOTDBnode aCENode:baselinesParms) {
                                 
                                 //Type
                                 
                                 if (aCENode.leaf && aCENode.name.equals("Type")) {
                                     if ( currentDataForStep.getCorrelationType() != null){
-                                        aCENode.limits = this.getStringFromVector(currentDataForStep.getCorrelationType(),true);
+                                        aCENode.limits = this.getStringFromArrayList(currentDataForStep.getCorrelationType(),true);
                                         OtdbRmi.getRemoteMaintenance().saveNode(aCENode);
                                         presentParams++;
                                     }else{
@@ -670,17 +637,15 @@ public class BBSStepDataManager{
                         //Baseline Selection
                         
                         else if (!aHWNode.leaf && aHWNode.name.equals("Baselines")) {
-                            Vector baselinesParms = this.retrieveChildDataForNode(aHWNode);
+                            ArrayList<jOTDBnode> baselinesParms = this.retrieveChildDataForNode(aHWNode);
                             int presentParams = 0;
-                            Enumeration ce = baselinesParms.elements();
-                            while( ce.hasMoreElements()  ) {
-                                jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                            for (jOTDBnode aCENode:baselinesParms) {
                                 
                                 //Time
                                 
                                 if (aCENode.leaf && aCENode.name.equals("Station1")) {
                                     if ( currentDataForStep.getStation1Selection() != null){
-                                        aCENode.limits = getStringFromVector(currentDataForStep.getStation1Selection(),true);
+                                        aCENode.limits = getStringFromArrayList(currentDataForStep.getStation1Selection(),true);
                                         OtdbRmi.getRemoteMaintenance().saveNode(aCENode);
                                         presentParams++;
                                     }else{
@@ -691,7 +656,7 @@ public class BBSStepDataManager{
                                     
                                 } else if (aCENode.leaf && aCENode.name.equals("Station2")) {
                                     if ( currentDataForStep.getStation2Selection() != null){
-                                        aCENode.limits = getStringFromVector(currentDataForStep.getStation2Selection(),true);
+                                        aCENode.limits = getStringFromArrayList(currentDataForStep.getStation2Selection(),true);
                                         OtdbRmi.getRemoteMaintenance().saveNode(aCENode);
                                         presentParams++;
                                     }else{
@@ -718,10 +683,8 @@ public class BBSStepDataManager{
                         else if (!aHWNode.leaf && aHWNode.name.equals(currentDataForStep.getOperationName())) {
                             int presentParams = 0;
                             if(currentDataForStep.getOperationAttributes()!=null){
-                                Vector attributeParms = this.retrieveChildDataForNode(aHWNode);
-                                Enumeration ce = attributeParms.elements();
-                                while( ce.hasMoreElements()  ) {
-                                    jOTDBnode aCENode = (jOTDBnode)ce.nextElement();
+                                ArrayList<jOTDBnode> attributeParms = this.retrieveChildDataForNode(aHWNode);
+                                for (jOTDBnode aCENode:attributeParms) {
                                      /*
                                       * This operation only supports operation node attributes of up to two levels deep.
                                       *
@@ -740,11 +703,9 @@ public class BBSStepDataManager{
                                         }
                                         //parameter node inside Operation
                                     } else if (!aCENode.leaf){
-                                        Vector attributeSubParms = this.retrieveChildDataForNode(aCENode);
+                                        ArrayList<jOTDBnode> attributeSubParms = this.retrieveChildDataForNode(aCENode);
                                         int presentSubParams = 0;
-                                        Enumeration cse = attributeSubParms.elements();
-                                        while( cse.hasMoreElements()  ) {
-                                            jOTDBnode aCSENode = (jOTDBnode)cse.nextElement();
+                                        for (jOTDBnode aCSENode:attributeSubParms) {
                                             String toBeInsertedSubValue = currentDataForStep.getOperationAttribute(LofarUtils.keyName(aCENode.name)+"."+LofarUtils.keyName(aCSENode.name));
                                             if ( toBeInsertedSubValue != null){
                                                 aCSENode.limits = toBeInsertedSubValue;
@@ -770,13 +731,13 @@ public class BBSStepDataManager{
                         //add other variables...
                         //add name pointers to the child steps
                         else if(aHWNode.name.equals("Steps")){
-                            Vector<BBSStep> itsChildSteps = aBBSStep.getChildSteps();
+                            ArrayList<BBSStep> itsChildSteps = aBBSStep.getChildSteps();
                             if(itsChildSteps != null && itsChildSteps.size() > 0){
-                                Vector<String> childStepNames = new Vector<String>();
+                                ArrayList<String> childStepNames = new ArrayList<>();
                                 for(BBSStep aChildStep : itsChildSteps){
                                     childStepNames.add(aChildStep.getName());
                                 }
-                                aHWNode.limits = this.getStringFromVector(childStepNames,true);
+                                aHWNode.limits = this.getStringFromArrayList(childStepNames,true);
                                 OtdbRmi.getRemoteMaintenance().saveNode(aHWNode);
                             }else{
                                 OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
@@ -814,11 +775,9 @@ public class BBSStepDataManager{
         }
         
         //remove all steps
-        Vector parentParmVector = this.retrieveChildDataForNode(this.getStepContainerNode());
-        Enumeration ppe = parentParmVector.elements();
+        ArrayList<jOTDBnode> parentParmArrayList = this.retrieveChildDataForNode(this.getStepContainerNode());
         //loop through steps and delete the step that matches with the step provided
-        while( ppe.hasMoreElements()  ) {
-            jOTDBnode aHWNode = (jOTDBnode)ppe.nextElement();
+        for (jOTDBnode aHWNode:parentParmArrayList) {
             try {
                 OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
             } catch (RemoteException ex) {
@@ -915,14 +874,14 @@ public class BBSStepDataManager{
         return returnData;
     }
     /**
-     * Helper method that retrieves a Vector of strings out of a String representation thereof.
+     * Helper method that retrieves a ArrayList of strings out of a String representation thereof.
      *
-     * @parm theList the String representation of a Vector to convert
+     * @parm theList the String representation of a ArrayList to convert
      * @parm removeQuotes tells if quotes are/are not present in the String and should/should not be removed in the process.
-     * @return Vector of Strings extrapolated from theList.
+     * @return ArrayList of Strings extrapolated from theList.
      */
-    private Vector<String> getVectorFromString(String theList,boolean removeQuotes) {
-        Vector<String> listItems = new Vector<String>();
+    private ArrayList<String> getArrayListFromString(String theList,boolean removeQuotes) {
+        ArrayList<String> listItems = new ArrayList<>();
         String aList = theList;
         if (aList.startsWith("[")) {
             aList = aList.substring(1,aList.length());
@@ -943,17 +902,17 @@ public class BBSStepDataManager{
         return listItems;
     }
     /**
-     * Helper method that retrieves a String representation of a Vector of strings.
+     * Helper method that retrieves a String representation of a ArrayList of strings.
      *
-     * @parm aStringVector the String Vector to convert to a String representation.
+     * @parm aStringArrayList the String ArrayList to convert to a String representation.
      * @parm createQuotes tells if quotes should/should not be added in the process.
-     * @return String representation of aStringVector.
+     * @return String representation of aStringArrayList.
      */
-    private String getStringFromVector(Vector<String> aStringVector,boolean createQuotes) {
+    private String getStringFromArrayList(ArrayList<String> aStringArrayList,boolean createQuotes) {
         String aList="[";
-        if (aStringVector.size() > 0) {
+        if (aStringArrayList.size() > 0) {
             int i = 0;
-            for (String aString : aStringVector){
+            for (String aString : aStringArrayList){
                 if(i>0) aList+= ",";
                 if(createQuotes){
                     aList += "\"";
@@ -969,15 +928,15 @@ public class BBSStepDataManager{
         return aList;
     }
     /**
-     * Helper method that retrieves a Vector of jOTDBnode objects that are the child of aNode.
+     * Helper method that retrieves a ArrayList of jOTDBnode objects that are the child of aNode.
      *
      * @parm aNode the jOTDBnode to retrieve the child nodes for.
-     * @return Vector of child jOTDBnode objects.
+     * @return ArrayList of child jOTDBnode objects.
      */
-    private Vector retrieveChildDataForNode(jOTDBnode aNode){
-        Vector HWchilds = new Vector();
+    private ArrayList retrieveChildDataForNode(jOTDBnode aNode){
+        ArrayList HWchilds = new ArrayList();
         try {
-            HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
             // get all the params per child
         } catch (RemoteException ex) {
             logger.error("Error during retrieveChildDataForNode!", ex);
@@ -993,13 +952,10 @@ public class BBSStepDataManager{
     private jOTDBnode getStrategyStepsNode(jOTDBnode stepContainerNode){
         jOTDBnode strategyStepsParameter=null;
         try {
-            Vector HWchilds = null;
-            HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(stepContainerNode.treeID(), stepContainerNode.parentID(), 2);
+            ArrayList<jOTDBnode> HWchilds = null;
+            HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(stepContainerNode.treeID(), stepContainerNode.parentID(), 2));
             // get all the params per child
-            Enumeration e1 = HWchilds.elements();
-            while( e1.hasMoreElements()  ) {
-                
-                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+            for (jOTDBnode aHWNode: HWchilds) {
                 strategyStepsParameter=null;
                 //retrieving Strategy.Steps
                 if (aHWNode.leaf && aHWNode.name.equals("Steps")) {
@@ -1024,11 +980,9 @@ public class BBSStepDataManager{
         int returnId = 0;
         try {
             if(BBSStepDataManager.OTDBcomponentCache==null){
-                OTDBcomponentCache = OtdbRmi.getRemoteMaintenance().getComponentList("%",false);
+                OTDBcomponentCache = new ArrayList(OtdbRmi.getRemoteMaintenance().getComponentList("%",false));
             }
-            Enumeration ce = OTDBcomponentCache.elements();
-            while (ce.hasMoreElements()){
-                jVICnodeDef aDef = (jVICnodeDef)ce.nextElement();
+            for (jVICnodeDef aDef:OTDBcomponentCache) {
                 if(aDef.name.equals(nodeName)){
                     returnId = aDef.nodeID();
                 }

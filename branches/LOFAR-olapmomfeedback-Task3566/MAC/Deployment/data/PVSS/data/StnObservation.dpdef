@@ -1,5 +1,5 @@
 name			string
 claim			:Claim
 receiverBitmap		string
-HBAbitmap		string
-LBAbitmap		string
+HBABitmap		string
+LBABitmap		string

@@ -72,9 +72,9 @@ namespace LOFAR {
       /**
        * marshalling methods
        */
-      unsigned int getSize();
-      unsigned int pack  (void* buffer);
-      unsigned int unpack(void *buffer);
+	size_t getSize() const;
+	size_t pack  (char* buffer) const;
+	size_t unpack(const char *buffer);
       /*@}*/
 
     private:
@@ -82,7 +82,7 @@ namespace LOFAR {
        * Statistics
        * Dimensions are: (N_DEVICES, N_SUBBANDS);
        *
-       * N_DEVICES == N_RSPBOARDS * N_POL for beamlet statistics
+       * N_DEVICES == 2 * N_POL for beamlet statistics (2 *) for splitter
        * N_DEVICES == N_RSPBOARDS * N_BLPS * N_POL for subband statistics
        * 
        */

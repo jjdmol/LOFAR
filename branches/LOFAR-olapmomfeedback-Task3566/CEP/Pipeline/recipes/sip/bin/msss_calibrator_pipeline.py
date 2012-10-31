@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#                                                         LOFAR IMAGING PIPELINE
+#                                                     LOFAR CALIBRATION PIPELINE
 #
 #                                                     Calibrator Pipeline recipe
 #                                                        Marcel Loose, 2011-2012

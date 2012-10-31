@@ -162,7 +162,7 @@ namespace LOFAR {
           flagCol.put (row, flags);
         }
         // Now loop through all entries for the tiles broken during the obs.
-        // Add them to vectors if its flag is not set yet.
+        // Add to a vector if its flag is not set yet.
         for (FailedTileInfo::VectorFailed::const_iterator
                iter = brokenDuring[antId].begin();
              iter != brokenDuring[antId].end(); ++iter) {

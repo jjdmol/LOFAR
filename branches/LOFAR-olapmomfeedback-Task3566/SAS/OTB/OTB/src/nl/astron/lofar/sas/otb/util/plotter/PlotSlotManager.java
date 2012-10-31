@@ -38,7 +38,7 @@ import org.apache.log4j.Logger;
  * @created May 24, 2006, 11:12 AM
  * @author pompert
  */
-public class PlotSlotManager{
+public final class PlotSlotManager{
     
     public static final String REFRESH_FULL = "REFRESHFULL";
     public static final String REFRESH_SINGLE = "REFRESHSINGLE";
@@ -53,7 +53,7 @@ public class PlotSlotManager{
      * @param amountOfSlots The amount of PlotSlots to be managed in the PlotSlot collection.
      */
     public PlotSlotManager(int amountOfSlots) {
-        itsPlotSlots = new LinkedList<PlotSlot>();
+        itsPlotSlots = new LinkedList<>();
         setAmountOfSlots(amountOfSlots,true);
     }
     /**
@@ -361,9 +361,9 @@ public class PlotSlotManager{
         Object[] listeners = myListenerList.getListenerList();
         ActionEvent action = null;
         if(id == -1){
-            action = new ActionEvent(this,id,this.REFRESH_FULL);
+            action = new ActionEvent(this,id,PlotSlotManager.REFRESH_FULL);
         }else{
-            action = new ActionEvent(this,id,this.REFRESH_SINGLE);
+            action = new ActionEvent(this,id,PlotSlotManager.REFRESH_SINGLE);
         }
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {

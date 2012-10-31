@@ -31,21 +31,20 @@ using namespace LOFAR;
 using namespace EPA_Protocol;
 using namespace std;
 
-unsigned int MEPData::getSize()
+size_t MEPData::getSize() const
 {
   return m_count;
 }
 
-unsigned int MEPData::pack  (void* buffer)
+size_t MEPData::pack  (char* buffer) const
 {
   memcpy(buffer, m_dataptr, m_count);
   return m_count;
 }
 
-unsigned int MEPData::unpack(void* buffer)
+size_t MEPData::unpack(const char* buffer)
 {
-  if (m_count && m_dataptr)
-  {
+  if (m_count && m_dataptr) {
     memcpy(m_dataptr, buffer, m_count);
   }
   return m_count;

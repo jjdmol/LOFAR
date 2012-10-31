@@ -24,12 +24,18 @@
 #include <lofar_config.h>
 
 #include <MSLofar/BeamTables.h>
+#include <MSLofar/FailedTileInfo.h>
 
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/TableRow.h>
+#include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/ArrColDesc.h>
+#include <measures/TableMeasures/TableQuantumDesc.h>
+#include <measures/TableMeasures/ArrayQuantColumn.h>
+#include <casa/Quanta/MVTime.h>
 #include <casa/OS/Path.h>
 
 using namespace LOFAR;
@@ -51,50 +57,85 @@ void testBM (const string& antSet,
              const String& suffixa1 = String(),
              bool makeObs = false)
 {
-  cout << endl << "Test " << antSet << " ....." << endl;
-  // Make a simple table tBeamTables_tmp.ms with ANTENNA subtable.
-  // The ANTENNA table only needs column NAME.
-  SetupNewTable stab1("tBeamTables_tmp.ms", TableDesc(), Table::New);
-  Table tab1(stab1);
-  TableDesc td;
-  td.addColumn (ScalarColumnDesc<String>("NAME"));
-  SetupNewTable stab2("tBeamTables_tmp.ms/ANTENNA", td, Table::New);
-  Table antTab(stab2, 3);
-  // Write a core, remote, and international station into the table.
-  // Add a possible suffix (e.g. HBA0).
-  ScalarColumn<String> nameCol(antTab, "NAME");
-  nameCol.put (0, "CS001"+suffix1+suffixa0);
-  nameCol.put (1, "RS106"+suffix1);
-  nameCol.put (2, "DE601"+suffix1);
-  // Write core station more if a second suffix is given.
-  if (! suffixa1.empty()) {
-    antTab.addRow (1);
-    nameCol.put (3, "CS001"+suffix1+suffixa1);
-  }
-  antTab.flush();
-  tab1.rwKeywordSet().defineTable ("ANTENNA", antTab);
-  // Optionally add OBSERVATION table.
-  if (makeObs) {
-    SetupNewTable stab3("tBeamTables_tmp.ms/OBSERVATION",
-                        TableDesc(), Table::New);
-    Table obsTab(stab3, 3);
-    tab1.rwKeywordSet().defineTable ("OBSERVATION", obsTab);
-  }
+  {
+    cout << endl << "Test " << antSet << " ....." << endl;
+    // Make a simple table tBeamTables_tmp.ms with ANTENNA subtable.
+    // The ANTENNA table only needs columns NAME and DISH_DIAMETER.
+    SetupNewTable stab1("tBeamTables_tmp.ms", TableDesc(), Table::New);
+    Table tab1(stab1);
+    TableDesc td;
+    td.addColumn (ScalarColumnDesc<String>("NAME"));
+    td.addColumn (ScalarColumnDesc<double>("DISH_DIAMETER"));
+    SetupNewTable stab2("tBeamTables_tmp.ms/ANTENNA", td, Table::New);
+    Table antTab(stab2, 3);
+    // Write a core, remote, and international station into the table.
+    // Add a possible suffix (e.g. HBA0).
+    ScalarColumn<String> nameCol(antTab, "NAME");
+    nameCol.put (0, "CS001"+suffix1+suffixa0);
+    nameCol.put (1, "RS106"+suffix1);
+    nameCol.put (2, "DE601"+suffix1);
+    // Write core station more if a second suffix is given.
+    if (! suffixa1.empty()) {
+      antTab.addRow (1);
+      nameCol.put (3, "CS001"+suffix1+suffixa1);
+    }
+    antTab.flush();
+    tab1.rwKeywordSet().defineTable ("ANTENNA", antTab);
+    // Optionally add OBSERVATION table.
+    if (makeObs) {
+      TableDesc td;
+      td.addColumn (ArrayColumnDesc<Double> ("TIME_RANGE", IPosition(1,2)));
+      TableQuantumDesc tq(td, "TIME_RANGE", Unit("s"));
+      tq.write (td);
+      SetupNewTable stab3("tBeamTables_tmp.ms/OBSERVATION",
+                          td, Table::New);
+      Table obsTab(stab3, 1);
+      ArrayQuantColumn<double> timeCol (obsTab, "TIME_RANGE");
+      Vector<Quantity> times(2);
+      MVTime::read (times[0], "12-Oct-2012/12:00:00");
+      MVTime::read (times[1], "12-Oct-2012/15:00:00");
+      timeCol.put (0, times);
+      tab1.rwKeywordSet().defineTable ("OBSERVATION", obsTab);
+    }
 
-  // Get current directory to get absolute path name.
-  string pwd = Path(".").absoluteName();
-  // Now add the beam table info.
-  BeamTables::create (tab1, false);
-  BeamTables::fill   (tab1, antSet, pwd+"/tBeamTables.in_antset",
-                      pwd+"/tBeamTables.in_af", pwd+"/tBeamTables.in_hd",
-                      true);
-
+    // Get current directory to get absolute path name.
+    string pwd = Path(".").absoluteName();
+    // Now add the beam table info.
+    BeamTables::create (tab1, false);
+    BeamTables::fill   (tab1, antSet, pwd+"/tBeamTables.in_antset",
+                        pwd+"/tBeamTables.in_af", pwd+"/tBeamTables.in_hd",
+                        true);
+  }
   // Now print all the output (which is checked by assay).
+  showTab ("tBeamTables_tmp.ms/ANTENNA");
   showTab ("tBeamTables_tmp.ms/LOFAR_ANTENNA_FIELD");
   showTab ("tBeamTables_tmp.ms/LOFAR_ELEMENT_FAILURE");
   showTab ("tBeamTables_tmp.ms/LOFAR_STATION");
   if (makeObs) {
     showTab ("tBeamTables_tmp.ms/OBSERVATION");
+  }
+  
+  // Update for broken/failed tiles if an OBSERVATION table was written
+  // (because FailedTileInfo needs it).
+  // First with empty files; thereafter with some broken info.
+  if (makeObs) {
+    String name[2];
+    name[0] = "_empty";
+    name[1] = "_filled";
+    for (int i=0; i<2; ++i) {
+      FailedTileInfo::failedTiles2MS ("tBeamTables_tmp.ms",
+                                      "tBeamTables.in_before" + name[i],
+                                      "tBeamTables.in_during" + name[i]);
+      // Show the resulting flags.
+      Table tab("tBeamTables_tmp.ms/LOFAR_ANTENNA_FIELD");
+      cout << endl << "ELEMENT_FLAG after FailedTileInfo "
+           << name[i] << ':' << endl;
+      ROArrayColumn<Bool> flagCol (tab, "ELEMENT_FLAG");
+      for (uInt i=0; i<tab.nrow(); ++i) {
+        cout << flagCol(i);
+      }
+      showTab ("tBeamTables_tmp.ms/LOFAR_ELEMENT_FAILURE");
+    }
   }
 }
 

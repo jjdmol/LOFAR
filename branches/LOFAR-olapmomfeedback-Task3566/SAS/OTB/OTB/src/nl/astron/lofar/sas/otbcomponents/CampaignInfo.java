@@ -13,7 +13,7 @@ package nl.astron.lofar.sas.otbcomponents;
 
 import java.rmi.RemoteException;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.ArrayList;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jCampaignInfo;
@@ -106,7 +106,7 @@ public class CampaignInfo extends javax.swing.JPanel {
                 // get all existing campaigns to fill the combobox, set default to original CampainName
                 // only possible for Campaigns that have NoCampaign
                 if (isEditable) {
-                    itsCampaignList=OtdbRmi.getRemoteCampaign().getCampaignList();
+                    itsCampaignList=new ArrayList(OtdbRmi.getRemoteCampaign().getCampaignList());
                     if (itsCampaignList.size() > 0) {
                         Iterator itr = itsCampaignList.iterator();
                         while (itr.hasNext()){
@@ -174,7 +174,7 @@ public class CampaignInfo extends javax.swing.JPanel {
     private jCampaignInfo   itsCampaignInfo = null;
     private boolean         isEditable=false;
     private boolean         isChanged=false;
-    Vector<jCampaignInfo>   itsCampaignList=null;
+    ArrayList<jCampaignInfo>   itsCampaignList=null;
 
     /** This method is called from within the constructor to
      * initialize the form.

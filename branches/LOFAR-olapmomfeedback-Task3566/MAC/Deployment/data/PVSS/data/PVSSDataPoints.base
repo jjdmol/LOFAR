@@ -20,7 +20,7 @@
 LOFAR				-		M	N	LOFAR
 PIC				-		M	N	LOFAR_PIC
 Ring				-		M	N	LOFAR_PIC_@ring@
-Station				STS		M	Y	LOFAR_PIC_@ring@_@station@
+Station				-		M	Y	LOFAR_PIC_@ring@_@station@
 WAN				-		M	N	LOFAR_PIC_WAN
 WANarea				-		M	N	LOFAR_PIC_WAN_@wan@
 Switch				-		M	Y	LOFAR_PIC_WAN_@wan@_@switch@
@@ -28,7 +28,7 @@ PermSW				-		M	N	LOFAR_PermSW
 RTDBPort			-		M	N	CRTriggerPort
 # Note: the next 4 lines are neccesary for PVSS2SAS to create the PIC tree.
 Ring				-		M	N	LOFAR_PermSW_@ring@
-Station				STS		M	Y	LOFAR_PermSW_@ring@_@station@
+Station				-		M	Y	LOFAR_PermSW_@ring@_@station@
 Cluster				-		M	N	LOFAR_PermSW_@cluster@
 Node				-		M	Y	LOFAR_PermSW_@cluster@_@node@
 Daemons				-		M	N	LOFAR_PermSW_Daemons
@@ -62,7 +62,7 @@ IONode				ION		C	Y	LOFAR_PIC_BGP_@midplane@_@ionode@
 OSRack				-		C	N	LOFAR_PIC_@osrack@
 LocusNode			LCN		C	Y	LOFAR_PIC_@osrack@_@locusnode@
 CEPPermSW			-		C	N	LOFAR_PermSW
-CEPHardwareMonitor		CHM		C	Y	LOFAR_PermSW_HardwareMonitor
+CEPHardwareMonitor		CHM		C	Y	LOFAR_PermSW_CEPHardwareMonitor
 SoftwareMonitor			-		C	Y	LOFAR_PermSW_SoftwareMonitor
 Daemons				-		C	N	LOFAR_PermSW_Daemons
 PVSS00pmon			-		C	Y	LOFAR_PermSW_Daemons_PVSS00pmon
@@ -87,7 +87,7 @@ RCU				RCU		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@_@rcu@
 TBBoard				TBB		S	Y	LOFAR_PIC_@cabinet@_@subrack@_@TBBoard@
 LBAAntenna                      LBA             S       N       LOFAR_PIC_@lbaantenna@
 HBAAntenna                      HBA             S       N       LOFAR_PIC_@hbaantenna@
-StationInfo			-		S	Y	LOFAR_PIC_StationInfo
+StationInfo			STI		S	Y	LOFAR_PIC_StationInfo
 StnPermSW			-		S	N	LOFAR_PermSW
 # Note: the next 2 lines are neccesary for PVSS2SAS to create the PIC tree.
 Cluster				-		S	N	LOFAR_PermSW_@cluster@

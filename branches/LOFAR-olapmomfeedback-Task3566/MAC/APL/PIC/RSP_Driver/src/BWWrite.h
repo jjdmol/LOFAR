@@ -62,6 +62,8 @@ public:
 private:
 	int    m_blp;
 	int    m_regid;
+	int    itsBank;
+	int    itsActiveBanks;
 
 	size_t m_remaining; // how much to write
 	size_t m_offset;    // where to write

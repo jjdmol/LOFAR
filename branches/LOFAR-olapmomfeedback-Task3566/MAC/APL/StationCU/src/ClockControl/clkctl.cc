@@ -72,7 +72,7 @@ GCFEvent::TResult ClkCtl::doCommand(GCFEvent&	event, GCFPortInterface&	port)
 	
 	case CLKCTRL_GET_CLOCK_ACK: {
 		CLKCTRLGetClockAckEvent	ack(event);
-		cout << "Clock is set to " << ack.clock << "MHz" << endl;
+		cout << "Clock is set to " << ack.clock << " MHz" << endl;
 		GCFScheduler::instance()->stop();
 	}
 	break;
@@ -80,6 +80,20 @@ GCFEvent::TResult ClkCtl::doCommand(GCFEvent&	event, GCFPortInterface&	port)
 	case CLKCTRL_SET_CLOCK_ACK: {
 		CLKCTRLSetClockAckEvent	ack(event);
 		cout << "Setting the clock was " << ((ack.status == CLKCTRL_NO_ERR) ? "" : "NOT ") << "succesful" << endl;
+		GCFScheduler::instance()->stop();
+	}
+	break;
+	
+	case CLKCTRL_GET_BITMODE_ACK: {
+		CLKCTRLGetBitmodeAckEvent	ack(event);
+		cout << "Bitmode is set to " << ack.bits_per_sample << " bit" << endl;
+		GCFScheduler::instance()->stop();
+	}
+	break;
+
+	case CLKCTRL_SET_BITMODE_ACK: {
+		CLKCTRLSetBitmodeAckEvent	ack(event);
+		cout << "Setting the bitmode was " << ((ack.status == CLKCTRL_NO_ERR) ? "" : "NOT ") << "succesful" << endl;
 		GCFScheduler::instance()->stop();
 	}
 	break;
@@ -109,6 +123,8 @@ GCFEvent* ClkCtl::parseOptions(int argc, char** argv)
 	static struct option long_options[] = {
 		{ "getclock",		no_argument,		0,	'c'	},
 		{ "setclock",		required_argument,	0,	'C'	},
+		{ "getbitmode",		no_argument,		0,	'b'	},
+		{ "setbitmode",		required_argument,	0,	'B'	},
 		{ "getsplitters",	no_argument,		0,	's'	},
 		{ "setsplitters",	required_argument,	0,	'S'	},
 		{ "help",			no_argument,		0,	'h' },
@@ -117,7 +133,7 @@ GCFEvent* ClkCtl::parseOptions(int argc, char** argv)
 
 	optind = 0;
 	int	option_index = 0;
-	int c = getopt_long(argc, argv, "cC:sS:h", long_options, &option_index);	
+	int c = getopt_long(argc, argv, "cC:bB:sS:h", long_options, &option_index);	
 	if (c == -1) {
 		return(0);
 	}
@@ -130,6 +146,17 @@ GCFEvent* ClkCtl::parseOptions(int argc, char** argv)
 	case 'C': {
 		CLKCTRLSetClockEvent* event = new CLKCTRLSetClockEvent();
 		event->clock = atoi(optarg);
+		return(event);
+	}
+	break;
+
+	case 'b':
+		return(new CLKCTRLGetBitmodeEvent());
+		break;
+
+	case 'B': {
+		CLKCTRLSetBitmodeEvent* event = new CLKCTRLSetBitmodeEvent();
+		event->bits_per_sample = atoi(optarg);
 		return(event);
 	}
 	break;
@@ -161,6 +188,8 @@ void ClkCtl::doHelp()
 	cout << "clkctl syntax:" << endl;
 	cout << "clkctl --getclock" << endl;
 	cout << "clkctl --setclock=160|200" << endl;
+	cout << "clkctl --getbitmode" << endl;
+	cout << "clkctl --setbitmode=4|8|16" << endl;
 	cout << "clkctl --getsplitters" << endl;
 	cout << "clkctl --setsplitters=0|1" << endl;
 	cout << endl;

@@ -115,8 +115,8 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
             offsetS[0] = ""+offset;
             //Remove offsets if present to prevent gaps in the dataset.
             if(offset != 0.0 && !operation.equalsIgnoreCase("DATASET_OPERATOR_REMOVE_Y_OFFSET")){
-                HashMap<String,Object> alterOffset = new HashMap<String,Object>();
-                alterOffset.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
+                HashMap<String,Object> alterOffset = new HashMap<>();
+                Object put = alterOffset.put("PARMDBINTERFACE",SharedVars.getJParmFacade());
                 alterOffset.put("DATASET_OPERATOR_REMOVE_Y_OFFSET",offsetS);
                 itsSlotManager.modifyPlotInSlot(slotIndex,alterOffset);
                 //update the data identifiers passed as the offset has been removed...Not necessary for additions!
@@ -140,16 +140,16 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                 
             }
             //Perform the actual addition or removal of data in the plot.
-            HashMap<String,Object> alterData = new HashMap<String,Object>();
-            alterData.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
+            HashMap<String,Object> alterData = new HashMap<>();
+            Object put = alterData.put("PARMDBINTERFACE",SharedVars.getJParmFacade());
             alterData.put(operation,constraints);
             
             itsSlotManager.modifyPlotInSlot(slotIndex,alterData);
             
             //Reapply the offsets using the new values. Skips this step if the user wants to remove the offset.
             if(offset != 0.0 && !operation.equalsIgnoreCase("DATASET_OPERATOR_REMOVE_Y_OFFSET")){
-                HashMap<String,Object> alterOffset = new HashMap<String,Object>();
-                alterOffset.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
+                HashMap<String,Object> alterOffset = new HashMap<>();
+                Object put1 = alterOffset.put("PARMDBINTERFACE",SharedVars.getJParmFacade());
                 alterOffset.put("DATASET_OPERATOR_ADD_Y_OFFSET",offsetS);
                 itsSlotManager.modifyPlotInSlot(slotIndex,alterOffset);
             }
@@ -162,14 +162,13 @@ public class PlotSlotsPanel extends javax.swing.JPanel {
                         
                         String[] valueArray = new String[1];
                         valueArray[0] = ""+itsSlotManager.getSlot(slotIndex).getOffset();
-                        HashMap<String,Object> alterOffset = new HashMap<String,Object>();
-                        alterOffset.put(new String("PARMDBINTERFACE"),SharedVars.getJParmFacade());
+                        HashMap<String,Object> alterOffset = new HashMap<>();
+                        Object put1 = alterOffset.put("PARMDBINTERFACE",SharedVars.getJParmFacade());
                         alterOffset.put("DATASET_OPERATOR_REMOVE_Y_OFFSET",valueArray);
                         itsSlotManager.modifyPlotInSlot(slotIndex,alterOffset);
                         itsSlotManager.getSlot(slotIndex).setOffset(0.0);
                     }
                 } catch (PlotterException ex) {
-                    ex.printStackTrace();
                 }
             }
             

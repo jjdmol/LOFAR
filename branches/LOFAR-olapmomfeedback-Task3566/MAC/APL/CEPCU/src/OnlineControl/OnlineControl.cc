@@ -28,7 +28,9 @@
 #include <Common/ParameterSet.h>
 #include <Common/ParameterRecord.h>
 #include <Common/Exceptions.h>
+#include <Common/SystemUtil.h>
 #include <ApplCommon/StationInfo.h>
+#include <ApplCommon/Observation.h>
 #include <ApplCommon/LofarDirs.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Protocols.h>
@@ -64,6 +66,7 @@ static OnlineControl*	thisOnlineControl = 0;
 OnlineControl::OnlineControl(const string&	cntlrName) :
 	GCFTask 			((State)&OnlineControl::initial_state,cntlrName),
 	itsPropertySet		(0),
+	itsBGPApplPropSet	(0),
 	itsPropertySetInitialized (false),
 	itsParentControl	(0),
 	itsParentPort		(0),
@@ -304,10 +307,9 @@ void OnlineControl::_databaseEventHandler(GCFEvent& event)
 //
 // initial_state(event, port)
 //
-// Setup all connections.
+// Create my own propertySet
 //
-GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, 
-													GCFPortInterface& port)
+GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
 	LOG_INFO_STR ("initial:" << eventName(event) << "@" << port.getName());
 
@@ -320,7 +322,8 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
     case F_INIT: {
 		// Get access to my own propertyset.
 //		uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
-		string	propSetName(createPropertySetName(PSN_ONLINE_CONTROL, getName()));
+		string obsDPname = globalParameterSet()->getString("_DPname");
+		string	propSetName(createPropertySetName(PSN_ONLINE_CONTROL, getName(), obsDPname));
 		LOG_DEBUG_STR ("Activating PropertySet: "<< propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName,
 											 PST_ONLINE_CONTROL,
@@ -330,12 +333,12 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 		break;
 
 	case DP_CREATED: {
-		// NOTE: thsi function may be called DURING the construction of the PropertySet.
+		// NOTE: this function may be called DURING the construction of the PropertySet.
 		// Always exit this event in a way that GCF can end the construction.
 		DPCreatedEvent  dpEvent(event);
 		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
 		itsTimerPort->cancelAllTimers();
-		itsTimerPort->setTimer(0.0);
+		itsTimerPort->setTimer(0.1);
 		}
 		break;
 
@@ -344,7 +347,63 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("initial"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
-	  
+
+   		LOG_DEBUG ("Going to create BGPAppl datapoint");
+		TRAN(OnlineControl::propset_state);				// go to next state.
+		}
+		break;
+
+	case F_CONNECTED:
+		ASSERTSTR (&port == itsParentPort, "F_CONNECTED event from port " << port.getName());
+		break;
+
+	case F_DISCONNECTED:
+		break;
+	
+	default:
+		LOG_DEBUG_STR ("initial, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
+}
+
+//
+// propset_state(event, port)
+//
+// Connect to BGPAppl DP and start rest of tasks
+//
+GCFEvent::TResult OnlineControl::propset_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_INFO_STR ("propset:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+	case F_ENTRY: {
+		// Get access to my own propertyset.
+//		uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
+		string obsDPname = globalParameterSet()->getString("_DPname");
+		string	propSetName(createPropertySetName(PSN_BGP_APPL, getName(), obsDPname));
+		LOG_DEBUG_STR ("Activating PropertySet: "<< propSetName);
+		itsBGPApplPropSet = new RTDBPropertySet(propSetName,
+											 PST_BGP_APPL,
+											 PSAT_RW,
+											 this);
+		}
+		break;
+
+	case DP_CREATED: {
+		// NOTE: this function may be called DURING the construction of the PropertySet.
+		// Always exit this event in a way that GCF can end the construction.
+		DPCreatedEvent  dpEvent(event);
+		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+		itsTimerPort->cancelAllTimers();
+		itsTimerPort->setTimer(0.1);
+		}
+		break;
+
+	case F_TIMER: {	// must be timer that PropSet is online.
 		// start StopTimer for safety.
 		LOG_INFO_STR("Starting QUIT timer that expires 5 seconds after end of observation");
 		ptime	now(second_clock::universal_time());
@@ -361,15 +420,14 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 		break;
 
 	case F_CONNECTED:
-		ASSERTSTR (&port == itsParentPort, 
-									"F_CONNECTED event from port " << port.getName());
+		ASSERTSTR (&port == itsParentPort, "F_CONNECTED event from port " << port.getName());
 		break;
 
 	case F_DISCONNECTED:
 		break;
 	
 	default:
-		LOG_DEBUG_STR ("initial, default");
+		LOG_DEBUG_STR ("propset, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
@@ -441,6 +499,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		itsLogControlPort->send(announce);
 		// execute this state
 		_setState(CTState::CONNECT);
+		_setupBGPmappingTables();
 		_doBoot();			// start ACC's and boot them
 		break;
 	}
@@ -573,6 +632,84 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 	return (status);
 }
 
+//
+// _setupBGPmappingTables
+//
+void OnlineControl::_setupBGPmappingTables()
+{
+	Observation		theObs(globalParameterSet(), false);
+	int	nrStreams = theObs.streamsToStorage.size();
+	LOG_DEBUG_STR("_setupBGPmapping: " << nrStreams << " streams found.");
+
+	// e.g. CS001 , [0,2,3,6] , [L36000_SAP000_SB000_uv.MS, ...] , [1,3,5,4]
+	GCFPValueArray	ionodeArr;
+	GCFPValueArray	locusArr;
+	GCFPValueArray	adderArr;
+	GCFPValueArray	writerArr;
+	GCFPValueArray	dpArr;
+	GCFPValueArray	dptypeArr;
+
+	uint	prevPset = (nrStreams ? theObs.streamsToStorage[0].sourcePset : -1);
+	vector<string>	locusVector;
+	vector<int>		adderVector;
+	vector<int>		writerVector;
+	vector<string>	DPVector;
+	vector<string>	DPtypeVector;
+	for (int i = 0; i < nrStreams; i++) {
+		if (theObs.streamsToStorage[i].sourcePset != prevPset) {	// other Pset? write current vector to the database.
+			ionodeArr.push_back(new GCFPVInteger(prevPset));
+			{	stringstream	os;
+				writeVector(os, locusVector);
+				locusArr.push_back (new GCFPVString(os.str()));
+			}
+			{	stringstream	os;
+				writeVector(os, adderVector);
+				adderArr.push_back (new GCFPVString(os.str()));
+			}
+			{	stringstream	os;
+				writeVector(os, writerVector);
+				writerArr.push_back(new GCFPVString(os.str()));
+			}
+			{	stringstream	os;
+				writeVector(os, DPVector);
+				dpArr.push_back    (new GCFPVString(os.str()));
+			}
+			{	stringstream	os;
+				writeVector(os, DPtypeVector);
+				dptypeArr.push_back(new GCFPVString(os.str()));
+			}
+			// clear the collecting vectors
+			locusVector.clear();
+			adderVector.clear();
+			writerVector.clear();
+			DPVector.clear();
+			DPtypeVector.clear();
+			prevPset = theObs.streamsToStorage[i].sourcePset;
+		}
+		// extend vector with info
+		locusVector.push_back (theObs.streamsToStorage[i].destStorageNode);
+		adderVector.push_back (theObs.streamsToStorage[i].adderNr);
+		writerVector.push_back(theObs.streamsToStorage[i].writerNr);
+		DPVector.push_back    (theObs.streamsToStorage[i].filename);
+		DPtypeVector.push_back(theObs.streamsToStorage[i].dataProduct);
+	}
+	itsBGPApplPropSet->setValue(PN_BGPA_IO_NODE_LIST,           GCFPVDynArr(LPT_DYNINTEGER, ionodeArr));
+	itsBGPApplPropSet->setValue(PN_BGPA_LOCUS_NODE_LIST,        GCFPVDynArr(LPT_DYNSTRING,  locusArr));
+	itsBGPApplPropSet->setValue(PN_BGPA_ADDER_LIST,             GCFPVDynArr(LPT_DYNSTRING,  adderArr));
+	itsBGPApplPropSet->setValue(PN_BGPA_WRITER_LIST,            GCFPVDynArr(LPT_DYNSTRING,  writerArr));
+	itsBGPApplPropSet->setValue(PN_BGPA_DATA_PRODUCT_LIST,      GCFPVDynArr(LPT_DYNSTRING,  dpArr));
+	itsBGPApplPropSet->setValue(PN_BGPA_DATA_PRODUCT_TYPE_LIST, GCFPVDynArr(LPT_DYNSTRING,  dptypeArr));
+
+	// release claimed memory.
+	for (int i = ionodeArr.size()-1; i>=0; i--) {
+		delete ionodeArr[i];
+		delete locusArr[i];
+		delete adderArr[i];
+		delete writerArr[i];
+		delete dpArr[i];
+		delete dptypeArr[i];
+	}
+}
 
 //
 // _doBoot()

@@ -9,8 +9,11 @@ from tests.tempparset import TempParset
 from tests.pipelinegeneral import PipelineGeneralTest
 
 class PipelineExtendedTest(PipelineGeneralTest):
+    PARSET_EXTRAS = {'pointing_ra': 0.0,
+                     'pointing_decl': 0.0,
+                     'beam_size': 1.0 }
     def run_series_part(self, x, band='150000000'):
-        parset = TempParset('data_extended/series%s.dat' % x, band)
+        parset = TempParset('data_extended/series%s.dat' % x, band, **self.PARSET_EXTRAS)
         self.pipeline.run_parset(parset)
         self.assertEquals(parset.source_count, 1)
 

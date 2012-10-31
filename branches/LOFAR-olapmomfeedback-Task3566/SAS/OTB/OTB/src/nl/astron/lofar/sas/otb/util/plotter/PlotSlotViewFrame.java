@@ -65,7 +65,7 @@ public class PlotSlotViewFrame extends JDialog{
                 this.getContentPane().add(viewSlot.getPlot().getLegendForPlot(),BorderLayout.CENTER);
                 pack();
             } catch (PlotterException ex) {
-                ex.printStackTrace();
+                
             }
         }
         

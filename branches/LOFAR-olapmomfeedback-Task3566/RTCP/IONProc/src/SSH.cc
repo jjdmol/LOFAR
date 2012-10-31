@@ -34,12 +34,14 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
 #include <vector>
 #include <string>
 #include <sstream>
 
 #ifdef HAVE_LIBSSH2
 #include <Scheduling.h>
+#include <Interface/SmartPtr.h>
 #include <sstream>
 #include <sys/select.h>
 #include <Common/lofar_string.h>
@@ -52,20 +54,26 @@ namespace LOFAR {
 namespace RTCP {
 
 #ifdef HAVE_LIBSSH2
-  
-SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey)
+
+SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, time_t deadline)
 :
   itsLogPrefix(logPrefix),
   itsHostName(hostname),
   itsCommandLine(commandline),
   itsUserName(username),
-  itsSSHKey(sshkey)
+  itsSSHKey(sshkey),
+  itsDeadline(deadline)
 {
 }
 
 void SSHconnection::start()
 {
   itsThread = new Thread(this, &SSHconnection::commThread, itsLogPrefix + "[SSH Thread] ", 65536);
+}
+
+bool SSHconnection::isDone()
+{
+  return itsThread->isDone();
 }
 
 void SSHconnection::stop( const struct timespec &deadline )
@@ -210,34 +218,45 @@ bool SSHconnection::waitsocket( FileDescriptorBasedStream &sock )
 void SSHconnection::commThread()
 {
 #if defined HAVE_BGP_ION
-  //doNotRunOnCore0();
-  runOnCore0();
+  doNotRunOnCore0();
+  //runOnCore0();
   //nice(19);
 #endif
 
-  SocketStream sock( itsHostName, 22, SocketStream::TCP, SocketStream::Client );
-
-  LOG_DEBUG_STR( itsLogPrefix << "Connected" );
-
   int rc;
   int exitcode;
-  char *exitsignal=(char *)"none";
+  char *exitsignal = 0;
+  SmartPtr<SocketStream> sock;
 
-  /* Prevent cancellation from here on -- we manually insert cancellation points to avoid
-     screwing up libssh2's internal administration. */
-  Cancellation::disable();
-  Cancellation::point();
+  for(;;) {
+    // keep trying to connect
+    sock = new SocketStream( itsHostName, 22, SocketStream::TCP, SocketStream::Client, itsDeadline );
 
-  if (!open_session(sock))
-    return;
+    LOG_DEBUG_STR( itsLogPrefix << "Connected" );
 
-  if (!open_channel(sock))
-    return;
+    /* Prevent cancellation from here on -- we manually insert cancellation points to avoid
+       screwing up libssh2's internal administration. */
+    {
+      ScopedDelayCancellation dc;
+
+      Cancellation::point();
+
+      if (!open_session(*sock))
+        continue;
+
+      if (!open_channel(*sock))
+        continue;
+    }
+
+    break;
+  }
+
+  LOG_DEBUG_STR( itsLogPrefix << "Starting remote command: " << itsCommandLine);
 
   while( (rc = libssh2_channel_exec(channel, itsCommandLine.c_str())) ==
          LIBSSH2_ERROR_EAGAIN )
   {
-    waitsocket(sock);
+    waitsocket(*sock);
   }
 
   if (rc)
@@ -248,63 +267,88 @@ void SSHconnection::commThread()
 
   LOG_DEBUG_STR( itsLogPrefix << "Remote command started, waiting for output" );
 
+  Cancellation::disable();
+  Cancellation::point();
+
+#define NRSTREAMS 2
+
   // raw input buffer
-  char data[0x1000];
+  char data[NRSTREAMS][0x1000];
 
   // the current line (or line remnant)
-  string line("");
+  string line[NRSTREAMS];
+
+  // how many streams still provide data
+  unsigned nrOpenStreams = NRSTREAMS;
+
+  // which streams still provide data
+  bool isOpen[NRSTREAMS];
+
+  for (unsigned s = 0; s < NRSTREAMS; ++s)
+    isOpen[s] = true;
 
   /* Session I/O */
-  for( ;; )
+  while( nrOpenStreams > 0 )
   {
-    /* loop until we block */
-    do {
-      rc = libssh2_channel_read( channel, data, sizeof data );
-      if( rc > 0 )
-      {
-        // create a buffer for line + data
-        stringstream buffer;
+    for (unsigned s = 0; s < NRSTREAMS; ++s) {
+      if (!isOpen[s])
+        continue;
 
-        buffer << line;
-        buffer.write( data, rc );
-
-        /* extract and log lines */
-        for( ;; )
+      /* loop until we block */
+      do {
+        rc = libssh2_channel_read_ex( channel, s, data[s], sizeof data[s] );
+        if( rc > 0 )
         {
-          Cancellation::point();
+          // create a buffer for line + data
+          stringstream buffer;
 
-          std::getline( buffer, line );
+          buffer << line[s];
+          buffer.write( data[s], rc );
 
-          if (!buffer.good()) {
-            // 'line' now holds the remnant
-            break;
+          /* extract and log lines */
+          for( ;; )
+          {
+            Cancellation::point();
+
+            std::getline( buffer, line[s] );
+
+            if (!buffer.good()) {
+              // 'line' now holds the remnant
+
+              if (line[s].size() > 1024) {
+                LOG_ERROR_STR( itsLogPrefix << "Line too long (" << line[s].size() << "); truncated: " << line[s] );
+                line[s] = "";
+              }
+              break;
+            }
+
+            // TODO: Use logger somehow (we'd duplicate the prefix if we just use LOG_* macros..)
+            cout << line[s] << endl;
           }
-
-          // TODO: Use logger somehow (we'd duplicate the prefix if we just use LOG_* macros..)
-          cout << line << endl;
+        } else {
+          if( rc < 0 && rc != LIBSSH2_ERROR_EAGAIN ) {
+            /* no need to output this for the EAGAIN case */
+            LOG_ERROR_STR( itsLogPrefix << "libssh2_channel_read_ex returned " << rc << " for channel " << s);
+          }   
         }
-      } else {
-        if( rc < 0 && rc != LIBSSH2_ERROR_EAGAIN ) {
-          /* no need to output this for the EAGAIN case */
-          LOG_ERROR_STR( itsLogPrefix << "libssh2_channel_read returned " << rc);
-        }   
-      }
-    } while( rc > 0 );
+      } while( rc > 0 );
 
-    /* this is due to blocking that would occur otherwise so we loop on
-       this condition */
-    if( rc == LIBSSH2_ERROR_EAGAIN )
-    {
-      waitsocket(sock);
-    } else {
-      /* EOF */
-      break;
-    }    
+      /* this is due to blocking that would occur otherwise so we loop on
+         this condition */
+      if( rc != LIBSSH2_ERROR_EAGAIN )
+      {
+        /* EOF */
+        --nrOpenStreams;
+      }
+    }
+
+    if (nrOpenStreams > 0)
+      waitsocket(*sock);
   }
 
   LOG_DEBUG_STR( itsLogPrefix << "Disconnecting" );
 
-  close_channel(sock);
+  close_channel(*sock);
 
   if (rc == 0)
   {
@@ -323,8 +367,63 @@ void SSHconnection::commThread()
     LOG_INFO_STR(itsLogPrefix << "Terminated normally");
   }
 }
+ 
+#include <openssl/crypto.h>
+
+std::vector< SmartPtr<Mutex> > openssl_mutexes;
+
+static void lock_callback(int mode, int type, const char *file, int line)
+{
+  (void)file;
+  (void)line;
+
+  if (mode & CRYPTO_LOCK)
+    openssl_mutexes[type]->lock();
+  else
+    openssl_mutexes[type]->unlock();
+}
+ 
+static unsigned long thread_id_callback()
+{
+  return static_cast<unsigned long>(pthread_self());
+}
 
 #endif
+ 
+bool SSH_Init() {
+
+#ifdef HAVE_LIBSSH2
+  // initialise openssl
+  openssl_mutexes.resize(CRYPTO_num_locks());
+  for (size_t i = 0; i < openssl_mutexes.size(); ++i)
+    openssl_mutexes[i] = new Mutex;
+ 
+  CRYPTO_set_id_callback(&thread_id_callback);
+  CRYPTO_set_locking_callback(&lock_callback);
+
+  // initialise libssh2
+  int rc = libssh2_init(0);
+
+  if (rc)
+    return false;
+#endif
+
+  return true;
+}
+
+void SSH_Finalize() {
+#ifdef HAVE_LIBSSH2
+  // exit libssh2
+  libssh2_exit();
+
+  // exit openssl
+  CRYPTO_set_locking_callback(NULL);
+  CRYPTO_set_id_callback(NULL);
+ 
+  openssl_mutexes.clear();
+#endif  
+}
+  
 
 static void exitwitherror( const char *errorstr )
 {
@@ -417,7 +516,7 @@ pid_t forkSSH(const std::string &logPrefix, const char *hostName, const char * c
 }
 
 
-void joinSSH(const std::string &logPrefix, pid_t pid, unsigned &timeout)
+void joinSSH(const std::string &logPrefix, pid_t pid, time_t deadline)
 {
   if (pid != 0) {
     int status;
@@ -440,11 +539,10 @@ void joinSSH(const std::string &logPrefix, pid_t pid, unsigned &timeout)
         return;
       } else if (ret == 0) {
         // child still running
-        if (timeout == 0) {
+        if (deadline > 0 && deadline < time(0)) {
           break;
         }
 
-        timeout--;
         sleep(1);
       } else {
         // child exited

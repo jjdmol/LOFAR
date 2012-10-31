@@ -60,6 +60,8 @@ namespace LOFAR {
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
+      int itsActiveBanks;
+      
       EPA_Protocol::MEPHeader m_hdr;
     };
   };

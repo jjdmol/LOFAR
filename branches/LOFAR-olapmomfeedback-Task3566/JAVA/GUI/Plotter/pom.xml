@@ -1,62 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>nl.astron.lofar.gui</groupId>
-	<artifactId>plotter</artifactId>
-	<name>Java Plotter GUI Lib</name>
-	<version>1.0.2</version>
+  <modelVersion>4.0.0</modelVersion>
 
-	<organization>
-		<name>Astron</name>
-		<url>http://www.astron.nl</url>
-	</organization>
-	
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.test.sourceEncoding>UTF-8</project.test.sourceEncoding>
-	</properties>
+  <name>Lofar Utilities :: Plotter GUI</name>
 
-	<build>
-		<sourceDirectory>src</sourceDirectory>
-		<resources>
-			<resource>
-				<directory>src</directory>
-				<excludes>
-					<exclude>**/*.java</exclude>
-				</excludes>
-			</resource>
+  <parent>
+    <groupId>nl.astron.lofar.lib</groupId>
+    <artifactId>lofar-lib-parent</artifactId>
+    <version>1.8.2-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
 
-			<resource>
-				<directory>PlotterConfig/src</directory>
-				<excludes>
-					<exclude>**/*.java</exclude>
-				</excludes>
-			</resource>
-		</resources>
+  <artifactId>plotter</artifactId>
+  
+  
+  <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
+  <scm>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/GUI/Plotter</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/GUI/Plotter</developerConnection>
+  </scm>
 
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
-		</plugins>
 
-	</build>
-	
-	<distributionManagement>
-		<snapshotRepository>
-			<id>snapshots</id>
-			<name>Astron Nexus Repository</name>
-			<url>https://support.astron.nl/nexus/content/repositories/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
+  <!-- Information required to build a project. -->
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+
+      <resource>
+        <directory>PlotterConfig/src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
+  </build>
 
 </project>

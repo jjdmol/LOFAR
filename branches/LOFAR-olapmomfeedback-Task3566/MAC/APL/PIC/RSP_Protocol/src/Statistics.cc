@@ -31,25 +31,25 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-unsigned int Statistics::getSize()
+size_t Statistics::getSize() const
 {
-  return MSH_ARRAY_SIZE(m_statistics, double);
+  return MSH_size(m_statistics);
 }
 
-unsigned int Statistics::pack  (void* buffer)
+size_t Statistics::pack  (char* buffer) const
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_statistics, double);
+  MSH_pack(buffer, offset, m_statistics);
 
   return offset;
 }
 
-unsigned int Statistics::unpack(void *buffer)
+size_t Statistics::unpack(const char*buffer)
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_statistics, double, 2);
+  MSH_unpack(buffer, offset, m_statistics);
 
   return offset;
 }

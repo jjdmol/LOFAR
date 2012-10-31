@@ -75,25 +75,25 @@ int RCUSettings::Control::getNyquistZone() const
   return retval;
 }
 
-unsigned int RCUSettings::getSize()
+size_t RCUSettings::getSize() const
 {
-  return MSH_ARRAY_SIZE(m_registers, RCUSettings::Control);
+  return MSH_size(m_registers);
 }
 
-unsigned int RCUSettings::pack  (void* buffer)
+size_t RCUSettings::pack  (char* buffer) const
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_registers, RCUSettings::Control);
+  MSH_pack(buffer, offset, m_registers);
 
   return offset;
 }
 
-unsigned int RCUSettings::unpack(void *buffer)
+size_t RCUSettings::unpack(const char *buffer)
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_registers, RCUSettings::Control, 1);
+  MSH_unpack(buffer, offset, m_registers);
 
   return offset;
 }

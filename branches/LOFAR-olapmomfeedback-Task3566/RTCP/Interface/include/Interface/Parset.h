@@ -30,6 +30,7 @@
 
 //# Includes
 #include <Common/ParameterSet.h>
+#include <Common/LofarBitModeInfo.h>
 #include <Common/StreamUtil.h>
 #include <Common/StringUtil.h>
 #include <Common/lofar_datetime.h>
@@ -707,7 +708,16 @@ inline unsigned Parset::dedispersionFFTsize() const
 
 inline unsigned Parset::nrBitsPerSample() const
 {
-  return getUint32("OLAP.nrBitsPerSample");
+  const std::string key = "Observation.nrBitsPerSample";
+
+  if (isDefined(key)) {
+    return getUint32(key);
+  } else {
+#ifndef HAVE_BGP_CN
+    LOG_WARN_STR( "Missing key " << key << ", using the depricated key OLAP.nrBitsPerSample");
+#endif
+    return getUint32("OLAP.nrBitsPerSample", 16);
+  }  
 }
 
 inline unsigned Parset::CNintegrationSteps() const
@@ -1060,7 +1070,16 @@ inline int Parset::phaseThreeCoreIndex(unsigned core) const
 
 inline unsigned Parset::nrSlotsInFrame() const
 {
-  return getUint32("Observation.nrSlotsInFrame");
+  unsigned nrSlots = 0;
+
+  nrSlots = getUint32("Observation.nrSlotsInFrame", 0);
+
+  if (nrSlots == 0) {
+    // return default
+    return maxBeamletsPerRSP(nrBitsPerSample());
+  }
+
+  return nrSlots;
 }
 
 inline string Parset::partitionName() const

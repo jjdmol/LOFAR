@@ -1,7 +1,7 @@
-V 10
+V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1016 737 N "_3DFace" 0
+PANEL,-1 -1 1016 732 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -93,12 +93,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 370 2 446 23
+E E 0 1 1 2 1 E U  1 E 370 2 446 22
 0 2 2 "0s" 0 0 0 192 0 0  370 2 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
 LANG:1 7 Daemons
 2 37
 "PRIMITIVE_TEXT2"
@@ -113,12 +112,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 380 140 449 161
+E E 0 1 1 2 1 E U  1 E 380 140 449 160
 0 2 2 "0s" 0 0 0 192 0 0  380 140 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
 LANG:1 6 PermSW
 1 232 13 "" 4
 0
@@ -143,12 +141,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 200 20 207 34
+E E 0 1 1 2 1 E U  1 E 200 20 207 33
 0 2 2 "0s" 0 0 0 192 0 0  200 20 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 1 A
 2 112
 "PRIMITIVE_TEXT10"
@@ -163,12 +160,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 220 21 254 35
+E E 0 1 1 2 1 E U  1 E 220 21 254 34
 0 2 2 "0s" 0 0 0 192 0 0  220 21 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 6 logMsg
 1 237 14 "" 4
 0
@@ -213,12 +209,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 162 212 183 226
+E E 0 1 1 2 1 E U  1 E 162 212 183 225
 0 2 2 "0s" 0 0 0 192 0 0  162 212 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 5 error
 2 135
 "PRIMITIVE_TEXT13"
@@ -233,12 +228,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 286 212 349 226
+E E 0 1 1 2 1 E U  1 E 286 212 349 225
 0 2 2 "0s" 0 0 0 192 0 0  286 212 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 13 currentAction
 2 136
 "PRIMITIVE_TEXT14"
@@ -253,12 +247,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 415 212 449 226
+E E 0 1 1 2 1 E U  1 E 415 212 449 225
 0 2 2 "0s" 0 0 0 192 0 0  415 212 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 6 logMsg
 1 252 20 "" 4
 0
@@ -330,9 +323,9 @@ LANG:1 6 logMsg
 0
 1 286 31 "20.0" 1
 0
-1 287 31 "20" 2
+1 287 31 "20" 6
 0
-1 288 31 "20" 6
+1 288 31 "20" 2
 0
 1 289 31 "21" 4
 0
@@ -340,9 +333,9 @@ LANG:1 6 logMsg
 0
 1 291 31 "21.0" 1
 0
-1 292 31 "21" 2
+1 292 31 "21" 6
 0
-1 293 31 "21" 6
+1 293 31 "21" 2
 0
 1 294 31 "22" 4
 0
@@ -350,9 +343,9 @@ LANG:1 6 logMsg
 0
 1 296 31 "22.0" 1
 0
-1 297 31 "22" 2
+1 297 31 "22" 6
 0
-1 298 31 "22" 6
+1 298 31 "22" 2
 0
 1 299 31 "" 97
 0
@@ -419,12 +412,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 202 162 209 176
+E E 0 1 1 2 1 E U  1 E 202 162 209 175
 0 2 2 "0s" 0 0 0 192 0 0  202 162 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 1 A
 2 231
 "PRIMITIVE_TEXT16"
@@ -439,12 +431,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 222 163 256 177
+E E 0 1 1 2 1 E U  1 E 222 163 256 176
 0 2 2 "0s" 0 0 0 192 0 0  222 163 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 6 logMsg
 0
 LAYER, 1 
@@ -475,62 +466,62 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 13 "PANEL_REF14"
+3 13 "PANEL_REF14" -1
 "objects\\Processes\\daemon_small.pnl" 0 40 T 16 1 0 1 0 -5
 1
 "$name""LogProcessor"
-3 14 "PANEL_REF15"
+3 14 "PANEL_REF15" -1
 "objects\\Processes\\daemon_small.pnl" 0 80 T 24 1 0 1 0 -13
 1
 "$name""ServiceBroker"
-3 15 "PANEL_REF16"
+3 15 "PANEL_REF16" -1
 "objects\\Processes\\daemon_small.pnl" 0 110 T 25 1 0 1 0 70
 1
 "$name""CTStartDaemon"
-3 16 "PANEL_REF17"
+3 16 "PANEL_REF17" -1
 "objects\\Processes\\daemon_small.pnl" 0 140 T 26 1 0 1 0 -41
 1
 "$name""SASGateway"
-3 20 "PANEL_REF21"
+3 20 "PANEL_REF21" -1
 "objects\\Processes\\controller_small.pnl" 0 280 T 35 1 0 1 0 -50
 1
 "$name""AMCServer"
-3 21 "PANEL_REF22"
+3 21 "PANEL_REF22" -1
 "objects\\Processes\\controller_small.pnl" 0 270 T 35 1 0 1 0 -12
 1
 "$name""BeamServer"
-3 22 "PANEL_REF23"
+3 22 "PANEL_REF23" -1
 "objects\\Processes\\controller_small.pnl" 0 330 T 36 1 0 1 0 -44
 1
 "$name""CalServer"
-3 25 "PANEL_REF26"
+3 25 "PANEL_REF26" -1
 "objects\\Processes\\controller_small.pnl" 0 380 T 37 1 0 1 0 -66
 1
 "$name""SHMInfoServer"
-3 28 "PANEL_REF29"
+3 28 "PANEL_REF29" -1
 "objects\\Processes\\controller_small.pnl" 10 430 T 39 1 0 1 -10 -88
 1
 "$name""RSPDriver"
-3 31 "PANEL_REF32"
-"objects\\Processes\\ObsSW_Station.pnl" 100 502 T 39 1 0 1 -110 20.00000000000001
+3 31 "PANEL_REF32" -1
+"objects\\Processes\\ObsSW_Station.pnl" 100 502 T 39 1 0 1 -100 20.00000000000001
 0
-3 32 "PANEL_REF33"
+3 32 "PANEL_REF33" -1
 "objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -100
 1
 "$name""TBBDriver"
-3 34 "PANEL_REF35"
+3 34 "PANEL_REF35" -1
 "objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -72
 1
 "$name""StationControl"
-3 36 "PANEL_REF37"
+3 36 "PANEL_REF37" -1
 "objects\\Processes\\controller_small.pnl" 10 470 T 42 1 0 0.9653979238754328 -10 -26.7370242214534
 1
 "$name""ClockControl"
-3 37 "PANEL_REF38"
+3 37 "PANEL_REF38" -1
 "objects\\Processes\\controller_small.pnl" 10 470 T 43 1 0 1 -10 -15
 1
 "$name""HardwareMonitor"
-3 38 "PANEL_REF39"
+3 38 "PANEL_REF39" -1
 "objects\\Processes\\controller_small.pnl" 10 470 T 44 1 0 1 -10 14
 1
 "$name""SoftwareMonitor"
