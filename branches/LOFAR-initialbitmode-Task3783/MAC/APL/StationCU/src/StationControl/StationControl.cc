@@ -469,6 +469,10 @@ GCFEvent::TResult StationControl::subscribe2HWstates(GCFEvent& event, GCFPortInt
 			TRAN(StationControl::operational_state);		// go to next state.
 		}
 	break;
+	
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
 
 	default:
 		status = GCFEvent::NOT_HANDLED;
@@ -525,6 +529,10 @@ GCFEvent::TResult StationControl::subscribe2Splitters(GCFEvent& event, GCFPortIn
 		LOG_INFO("Going to operational mode");
 		TRAN(StationControl::operational_state);		// go to next state.
 	break;
+	
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
 
 	default:
 		status = GCFEvent::NOT_HANDLED;
