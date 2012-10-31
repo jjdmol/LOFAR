@@ -82,6 +82,7 @@ class UnifiedConnection(object):
             query = query + ';'
         try:
             self.start()
+            self.log.debug(query.replace('\n', ' '))
             result = cursor.execute(query)
         except Exception as oerr:
             self.log.error(query.replace('\n', ' '))
