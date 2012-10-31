@@ -20,9 +20,10 @@ namespace RTCP {
 
 union Tag {
   struct {
-    unsigned sourceRank :12; /* 0..4095, or one BG/P rack */
+    unsigned sign       : 1; /* must be 0 */
+    unsigned sourceRank :11; /* 0..4095, or one BG/P rack */
     unsigned subband    :10;
-    unsigned beam       :10;
+    unsigned beam       : 9;
   } info;
 
   uint32 nr;
@@ -70,6 +71,7 @@ AsyncTransposeBeams::AsyncTransposeBeams(
   for (unsigned h = 0; h < itsNrCommunications; h ++) {
     Tag t;
 
+    t.info.sign       = 0;
     t.info.sourceRank = rank;
     //t.info.comm       = h;
     t.info.beam       = beam;
@@ -141,6 +143,7 @@ unsigned AsyncTransposeBeams::waitForAnyReceive()
   for (unsigned h = 0; h < itsNrCommunications; h ++) {
     Tag t;
 
+    t.info.sign       = 0;
     t.info.sourceRank = itsLocationInfo.rank();
     //t.info.comm       = h;
     t.info.subband    = subband;
