@@ -130,6 +130,24 @@ template <typename T> inline void addNrValidSamples(T * __restrict__ dst, const 
 }
 
 
+template<> inline void addNrValidSamples<uint16_t>(uint16_t * __restrict__ dst, const uint16_t * __restrict__ src, unsigned count)
+{
+  addNrValidSamples<uint32_t>(reinterpret_cast<uint32_t*>(dst), reinterpret_cast<const uint32_t*>(src), count / 2);
+
+  if (count & 1)
+    dst[count - 1] += src[count - 1];
+}
+
+
+template<> inline void addNrValidSamples<uint8_t>(uint8_t * __restrict__ dst, const uint8_t * __restrict__ src, unsigned count)
+{
+  addNrValidSamples<uint16_t>(reinterpret_cast<uint16_t*>(dst), reinterpret_cast<const uint16_t*>(src), count / 2);
+
+  if (count & 1)
+    dst[count - 1] += src[count - 1];
+}
+
+
 inline IntegratableData &CorrelatedData::operator += (const IntegratableData &other_)
 {
   const CorrelatedData &other = static_cast<const CorrelatedData &>(other_);

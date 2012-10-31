@@ -1,5 +1,7 @@
 #include <lofar_config.h>
 
+#include <Common/Timer.h>
+
 #include <Interface/CorrelatedData.h>
 
 #include <cassert>
@@ -12,6 +14,8 @@ using namespace std;
 
 int main(void)
 {
+  NSTimer timer("addition", true, false);
+
   unsigned nr_maxsamples[] = { 255, 65535, 1000000 }; // encode using 1, 2, 4 bytes, respectively
   unsigned nr_channels[]  = { 1, 16, 64, 256 };
   unsigned nr_stations[] = { 1, 2, 3, 4, 5, 24 };
@@ -53,7 +57,9 @@ int main(void)
 
         // add
         cout << "add" << endl;
+        timer.start();
         data1 += data2;
+        timer.stop();
 
         // verify
         cout << "verify" << endl;
