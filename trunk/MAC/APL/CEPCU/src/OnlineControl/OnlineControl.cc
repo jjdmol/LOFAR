@@ -338,7 +338,7 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, GCFPortInterface
 		DPCreatedEvent  dpEvent(event);
 		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
 		itsTimerPort->cancelAllTimers();
-		itsTimerPort->setTimer(0.5);
+		itsTimerPort->setTimer(0.1);
 		}
 		break;
 
@@ -399,7 +399,7 @@ GCFEvent::TResult OnlineControl::propset_state(GCFEvent& event, GCFPortInterface
 		DPCreatedEvent  dpEvent(event);
 		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
 		itsTimerPort->cancelAllTimers();
-		itsTimerPort->setTimer(0.5);
+		itsTimerPort->setTimer(0.1);
 		}
 		break;
 

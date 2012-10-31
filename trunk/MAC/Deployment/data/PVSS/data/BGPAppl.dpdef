@@ -1,2 +1,7 @@
 ioNodeList		intArr
 adderList		stringArr
+# the next lists will be in adder.dpdef as from release 1.8
+locusNodeList		stringArr
+writerList		stringArr
+dataProductList		stringArr
+dataProductTypeList	stringArr
