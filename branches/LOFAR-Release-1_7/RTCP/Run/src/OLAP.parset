@@ -37,10 +37,10 @@ PIC.Core.CS007HBA0.clockCorrectionTime = 7.913020e-06
 PIC.Core.CS007HBA1.clockCorrectionTime = 7.913260e-06
 PIC.Core.CS007HBA.clockCorrectionTime  = 7.913140e-06 
 
-PIC.Core.CS001LBA.clockCorrectionTime  = 0
-PIC.Core.CS001HBA0.clockCorrectionTime = 0
-PIC.Core.CS001HBA1.clockCorrectionTime = 0
-PIC.Core.CS001HBA.clockCorrectionTime  = 0
+PIC.Core.CS001LBA.clockCorrectionTime  = 4.309154e-06
+PIC.Core.CS001HBA0.clockCorrectionTime = 4.309154e-06
+PIC.Core.CS001HBA1.clockCorrectionTime = 4.309154e-06
+PIC.Core.CS001HBA.clockCorrectionTime  = 4.309154e-06
 
 PIC.Core.CS011LBA.clockCorrectionTime  = 7.55795e-06
 PIC.Core.CS011HBA0.clockCorrectionTime = 7.55795e-06
@@ -62,55 +62,55 @@ PIC.Core.CS021HBA0.clockCorrectionTime = 1.829614e-05
 PIC.Core.CS021HBA1.clockCorrectionTime = 1.829614e-05
 PIC.Core.CS021HBA.clockCorrectionTime  = 1.829614e-05
 
-PIC.Core.CS024LBA.clockCorrectionTime  = 4.7566e-06
-PIC.Core.CS024HBA0.clockCorrectionTime = 4.7566e-06
-PIC.Core.CS024HBA1.clockCorrectionTime = 4.7566e-06
-PIC.Core.CS024HBA.clockCorrectionTime  = 4.7566e-06
+PIC.Core.CS024LBA.clockCorrectionTime  = 4.7597e-06
+PIC.Core.CS024HBA0.clockCorrectionTime = 4.7597e-06
+PIC.Core.CS024HBA1.clockCorrectionTime = 4.7597e-06
+PIC.Core.CS024HBA.clockCorrectionTime  = 4.7597e-06
 
-PIC.Core.CS026LBA.clockCorrectionTime  = 1.62052e-05
-PIC.Core.CS026HBA0.clockCorrectionTime = 1.62052e-05
-PIC.Core.CS026HBA1.clockCorrectionTime = 1.62052e-05
-PIC.Core.CS026HBA.clockCorrectionTime  = 1.62052e-05
+PIC.Core.CS026LBA.clockCorrectionTime  = 1.619986e-05
+PIC.Core.CS026HBA0.clockCorrectionTime = 1.619986e-05
+PIC.Core.CS026HBA1.clockCorrectionTime = 1.619986e-05
+PIC.Core.CS026HBA.clockCorrectionTime  = 1.619986e-05
 
 PIC.Core.CS028LBA.clockCorrectionTime  = 1.70614e-06
 PIC.Core.CS028HBA0.clockCorrectionTime = 1.70614e-06
 PIC.Core.CS028HBA1.clockCorrectionTime = 1.70614e-06
 PIC.Core.CS028HBA.clockCorrectionTime  = 1.70614e-06
 
-PIC.Core.CS030LBA.clockCorrectionTime  = 9.7189576e-06
-PIC.Core.CS030HBA0.clockCorrectionTime = 9.7189576e-06
-PIC.Core.CS030HBA1.clockCorrectionTime = 9.7189576e-06
-PIC.Core.CS030HBA.clockCorrectionTime  = 9.7189576e-06
+PIC.Core.CS030LBA.clockCorrectionTime  = 9.7160576e-06
+PIC.Core.CS030HBA0.clockCorrectionTime = 9.7160576e-06
+PIC.Core.CS030HBA1.clockCorrectionTime = 9.7160576e-06
+PIC.Core.CS030HBA.clockCorrectionTime  = 9.7160576e-06
 
-PIC.Core.CS031LBA.clockCorrectionTime  = 6.467456e-06
-PIC.Core.CS031HBA0.clockCorrectionTime = 6.467456e-06
-PIC.Core.CS031HBA1.clockCorrectionTime = 6.467456e-06
-PIC.Core.CS031HBA.clockCorrectionTime  = 6.467456e-06
+PIC.Core.CS031LBA.clockCorrectionTime  = 6.471391e-06
+PIC.Core.CS031HBA0.clockCorrectionTime = 6.471391e-06
+PIC.Core.CS031HBA1.clockCorrectionTime = 6.471391e-06
+PIC.Core.CS031HBA.clockCorrectionTime  = 6.471391e-06
 
 PIC.Core.CS032LBA.clockCorrectionTime  = 8.546815e-06
 PIC.Core.CS032HBA0.clockCorrectionTime = 8.546815e-06
 PIC.Core.CS032HBA1.clockCorrectionTime = 8.546815e-06
 PIC.Core.CS032HBA.clockCorrectionTime  = 8.546815e-06
 
-PIC.Core.CS101LBA.clockCorrectionTime  = 1.637684e-05
-PIC.Core.CS101HBA0.clockCorrectionTime = 1.637684e-05
-PIC.Core.CS101HBA1.clockCorrectionTime = 1.637684e-05
-PIC.Core.CS101HBA.clockCorrectionTime  = 1.637684e-05
+PIC.Core.CS101LBA.clockCorrectionTime  = 1.525453e-05
+PIC.Core.CS101HBA0.clockCorrectionTime = 1.525453e-05
+PIC.Core.CS101HBA1.clockCorrectionTime = 1.525453e-05
+PIC.Core.CS101HBA.clockCorrectionTime  = 1.525453e-05
 
-PIC.Core.CS103LBA.clockCorrectionTime  = 3.559829e-05
-PIC.Core.CS103HBA0.clockCorrectionTime = 3.559829e-05
-PIC.Core.CS103HBA1.clockCorrectionTime = 3.559829e-05
-PIC.Core.CS103HBA.clockCorrectionTime  = 3.559829e-05
+PIC.Core.CS103LBA.clockCorrectionTime  = 3.560284e-05
+PIC.Core.CS103HBA0.clockCorrectionTime = 3.560284e-05
+PIC.Core.CS103HBA1.clockCorrectionTime = 3.560284e-05
+PIC.Core.CS103HBA.clockCorrectionTime  = 3.560284e-05
 
 PIC.Core.CS201LBA.clockCorrectionTime  = 1.744858e-05
 PIC.Core.CS201HBA0.clockCorrectionTime = 1.744858e-05
 PIC.Core.CS201HBA1.clockCorrectionTime = 1.744858e-05
 PIC.Core.CS201HBA.clockCorrectionTime  = 1.744858e-05
 
-PIC.Core.CS301LBA.clockCorrectionTime  = 7.696183e-06
-PIC.Core.CS301HBA0.clockCorrectionTime = 7.696183e-06
-PIC.Core.CS301HBA1.clockCorrectionTime = 7.696183e-06
-PIC.Core.CS301HBA.clockCorrectionTime  = 7.696183e-06
+PIC.Core.CS301LBA.clockCorrectionTime  = 7.687733e-06
+PIC.Core.CS301HBA0.clockCorrectionTime = 7.687733e-06
+PIC.Core.CS301HBA1.clockCorrectionTime = 7.687733e-06
+PIC.Core.CS301HBA.clockCorrectionTime  = 7.687733e-06
 
 PIC.Core.CS302LBA.clockCorrectionTime  = 1.494415e-05
 PIC.Core.CS302HBA0.clockCorrectionTime = 1.494415e-05
