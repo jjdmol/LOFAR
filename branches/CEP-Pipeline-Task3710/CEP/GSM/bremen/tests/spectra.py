@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import unittest
 from math import log10, pow
-from src.spectra import polyval
+from numpy.polynomial.polynomial import polyval
 from numpy.testing import assert_array_almost_equal
 from stress.generator import FREQUENCY
 from src.gsmconnectionmanager import GSMConnectionManager

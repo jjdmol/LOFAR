@@ -1,9 +1,7 @@
 [license]
-code        = "RS305C 70099091807"
-version     = 30800002
-sn          = "471_3031_2_Astron_Gen_II_2_311/1"
-date        = 2012.10.11;09:46:36,000 
-comment     = "Remote Station RS305"
+code        = "dongleHost 50035217836"
+version     = 31100002
+sn          = "471_3031_2_Astron_Gen_II_2_311"
 expire      = 0000.00.00;00:00:00,000 
 redundancy  = 0
 ui          = 2
@@ -26,4 +24,6 @@ distributed = 255
  pararemote = 0
     ctrlext = 1
      update = 0
+licenseMax  = 100
+licenseLeft = 99
 

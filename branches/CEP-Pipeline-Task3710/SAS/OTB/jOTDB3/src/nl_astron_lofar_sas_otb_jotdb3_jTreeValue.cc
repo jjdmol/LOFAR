@@ -151,7 +151,8 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_addKVT
  * Method:    getBrokenHardware
  * Signature: (Ljava/lang/String,Ljava/lang/String)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getBrokenHardware__Ljava_lang_String_2Ljava_lang_String_2 (JNIEnv *env, jobject jTreeValue, jstring aStartTime, jstring aStopTime) {
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getBrokenHardware__Ljava_lang_String_2Ljava_lang_String_2 (JNIEnv *env, jobject jTreeValue, jstring aStartTime, jstrin
+g aStopTime) {
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,jTreeValue);
   
@@ -184,7 +185,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getBrok
     
     setErrorMsg(env,jTreeValue);
   } catch (exception &ex) {
-    cout << "Exception during treeValue::getBrokenHardware(" << tStart << " " << tStop ") "<< ex.what() << endl;
+    cout << "Exception during treeValue::getBrokenHardware(" << ts << ") "<< ex.what() << endl;
 
     env->ReleaseStringUTFChars (aStartTime, aStart);
     env->ReleaseStringUTFChars (aStopTime, aStop);

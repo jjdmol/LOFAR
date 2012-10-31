@@ -1,29 +1,7 @@
 #!/usr/bin/python
 import numpy
 from copy import copy
-
-
-def _verify_versions(a, b):
-    a = map(int, a.split('.'))
-    b = map(int, b.split('.'))
-    for i, val in enumerate(a):
-        if b[i] < val:
-            return False
-    return True
-
-if _verify_versions('1.4.0', numpy.__version__):
-    print 'Using 1.4 version'
-    from numpy.polynomial.polynomial import polyval
-else:
-    print 'Using substitute for 1.3 version'
-    from numpy import polyval as polyval_numpy
-    def polyval(x, args):
-        if not isinstance(args, list):
-            args = args.tolist()
-        pargs = copy(args)
-        pargs.reverse()
-        return polyval_numpy(pargs, x)
-
+from numpy.polynomial.polynomial import polyval
 #Unused:
 #from scipy.stats import chi2
 

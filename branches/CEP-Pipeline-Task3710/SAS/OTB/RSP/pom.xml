@@ -9,7 +9,7 @@
   <parent>
     <groupId>nl.astron.lofar.sas.otb</groupId>
     <artifactId>otb-parent</artifactId>
-    <version>1.8.2-SNAPSHOT</version>
+    <version>1.8.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>RSP</artifactId>

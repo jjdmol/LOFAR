@@ -7,11 +7,7 @@ import os
 
 LOGGERS = {}
 
-import platform
-if platform.node() == 'ldb001':
-    BASE_LOG_DIR = os.path.join(os.getenv('HOME'), 'GSM')
-else:
-    BASE_LOG_DIR = os.path.join(os.getenv('HOME'), 'prog', 'GSM')
+BASE_LOG_DIR = os.path.join(os.getenv('HOME'), 'prog', 'GSM')
 
 USE_CONSOLE = False
 

@@ -23,10 +23,7 @@
 
 #include <lofar_config.h>
 #include <MSLofar/BeamTables.h>
-#include <MSLofar/Package__Version.h>
-#include <Common/InputParSet.h>
-#include <Common/SystemUtil.h>
-#include <Common/LofarLogger.h>
+#include <casa/Inputs.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
@@ -35,12 +32,10 @@ using namespace casa;
 
 int main (int argc, char* argv[])
 {
-  TEST_SHOW_VERSION (argc, argv, MSLofar);
-  INIT_LOGGER(basename(string(argv[0])));
   try {
-    InputParSet inputs;
+    Input inputs(1);
     // define the input structure
-    inputs.setVersion("2012Oct29-GvD");
+    inputs.version("2011Mar31-GvD");
     inputs.create ("ms", "",
 		   "Name of MeasurementSet",
 		   "string");
@@ -57,7 +52,7 @@ int main (int argc, char* argv[])
 		   "Directory where the iHBADelta.conf files reside",
 		   "string");
     inputs.create ("overwrite", "false",
-                   "Overwriting existing beam subtables?",
+                   "Overwriting existing beam subtables?"
                    "bool");
     inputs.readArguments (argc, argv);
     String msName      = inputs.getString("ms");

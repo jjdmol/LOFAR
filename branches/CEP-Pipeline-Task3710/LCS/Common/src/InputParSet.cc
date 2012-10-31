@@ -208,7 +208,7 @@ namespace LOFAR {
 
   void InputParSet::setVersion (const string& version)
   {
-    itsVersion = version;
+    itsVersion == version;
 #ifdef HAVE_AIPSPP
     itsInput->version (version);
 #endif

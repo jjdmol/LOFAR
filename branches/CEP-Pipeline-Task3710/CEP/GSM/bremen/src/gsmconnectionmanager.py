@@ -12,8 +12,8 @@ class GSMConnectionManager(object):
     """
     DEFAULTS = {
         'hostname': 'localhost',
-        'port': 52000,
-        'database': 'GSM',
+        'port': 50000,
+        'database': 'gsm',
         'username': 'monetdb',
         'password': 'monetdb',
         'autocommit': True

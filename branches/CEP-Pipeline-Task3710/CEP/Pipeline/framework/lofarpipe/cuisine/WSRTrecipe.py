@@ -138,10 +138,7 @@ class WSRTrecipe(object):
                                 ## confidence in
             return 1
         else:
-            if status == 0:
-                self.logger.info('recipe ' + name + ' completed')
-            else:
-                self.logger.warn('recipe ' + name + ' completed with errors')
+            self.logger.info('recipe ' + name + ' completed')
             return status
 
     def get_run_info(self, filepath):
