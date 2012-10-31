@@ -30,9 +30,6 @@ void updateTrigger( string dp1, string objectName,
 
   if (objectName == panelName) {
     LOG_TRACE(\"station_interactive_controller_small.pnl:main|updateTrigger: \"+$name+\" objectName: \"+objectName+\" panelName: \"+panelName);
-    DebugN(\"station_interactive_controller_small.pnl:main|updateTrigger: \"+$name+\" objectName: \"+objectName+\" panelName: \"+panelName);
-    DebugN(\"databaselevel:\",$databaselevel);
-    DebugN(\"paramList:\",paramList);
     string observation=\"\";
     string station = \"\";
     if (dynlen(paramList) > 0) {
