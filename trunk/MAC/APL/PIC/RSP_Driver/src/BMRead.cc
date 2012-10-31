@@ -52,7 +52,9 @@ void BMRead::sendrequest()
   if ((( Cache::getInstance().getBack().getVersions().bp()(getBoardId()).fpga_maj * 10) +
          Cache::getInstance().getBack().getVersions().bp()(getBoardId()).fpga_min) < 74) {
     LOG_DEBUG_STR(formatString("BMRead:: Firmware on board[%d], has NO bitmode support", getBoardId()));
+    Cache::getInstance().getState().bmState().unmodified(getBoardId());
     setContinue(true); // continue with next action
+    setFinished();
   }
   else {
       EPAReadEvent bmread;
@@ -87,6 +89,7 @@ GCFEvent::TResult BMRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 
   if (!bm.hdr.isValidAck(itsHdr))
   {
+    Cache::getInstance().getState().bmState().read_error(getBoardId());
     LOG_ERROR("BMRead::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
@@ -98,6 +101,8 @@ GCFEvent::TResult BMRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).bm_select = bm.beammode.bm_select;
   Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).bm_max    = bm.beammode.bm_max;
   
+  Cache::getInstance().getState().bmState().read_ack(getBoardId());
+    
   LOG_DEBUG_STR("BMRead::handleack() done");
   return GCFEvent::HANDLED;
 }
