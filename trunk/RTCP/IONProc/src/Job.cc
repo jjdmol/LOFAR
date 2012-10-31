@@ -244,7 +244,7 @@ void Job::StorageProcess::start()
 #endif
   );
 
-  itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey, itsParset.stopTime());
+  itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey, 0);
   itsSSHconnection->start();
 #else
 
@@ -302,7 +302,7 @@ void Job::StorageProcess::controlThread()
 {
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
   std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
-  PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource, itsParset.stopTime());
+  PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource, 0);
 
   // for now, we just send the parset and call it a day
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connected -- sending parset");
