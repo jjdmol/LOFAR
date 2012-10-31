@@ -5,6 +5,7 @@ set(inst_HEADERS
   Allocator.h
   BeamCoordinates.h
   BeamFormedData.h
+  BGPAsm.h
   CN_Command.h
   CN_Mapping.h
   Stream.h
