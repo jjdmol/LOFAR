@@ -75,6 +75,7 @@ void CEPFeedback::addSubband(unsigned index)
 {
   setSubbandKey(index, "fileFormat",           "AIPS++/CASA");
   setSubbandKey(index, "filename",             "");
+  setSubbandKey(index, "size",                 "0");
   setSubbandKey(index, "location",             "");
   setSubbandKey(index, "percentageWritten",    "0");
   setSubbandKey(index, "startTime",            "");
@@ -1149,6 +1150,20 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
           }
 
           LOG_DEBUG_STR("Observation " << logline.obsID << " stream " << streamNr << " is subband " << subband << " at " << centralfreq << " MHz, with " << duration << " s duration, " << integration << " s integration and " << channels << " channels of " << channelwidth << " kHz");
+        }
+      }
+
+      if ((result = strstr(logline.msg, "Final characteristics: "))) {
+        int bytes = 0;
+        double duration = 0.0;
+        if (sscanf(result, "Final characteristics: duration %lf s, size %d bytes", &duration, &bytes) == 2) {
+
+          if (feedback) {
+            feedback->setSubbandKey(streamNr, "size",                formatString("%d", bytes));
+            feedback->setSubbandKey(streamNr, "duration",            formatString("%.4lf", duration));
+          }
+
+          LOG_DEBUG_STR("Observation " << logline.obsID << " stream " << streamNr << " has " << duration << " s duration and is " << bytes << " bytes");
         }
       }
 
