@@ -340,7 +340,6 @@ void OutputThread::cleanUp()
       break;
   }
 }
-}
 
 
 void OutputThread::mainLoop()
