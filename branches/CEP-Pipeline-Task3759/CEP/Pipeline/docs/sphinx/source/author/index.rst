@@ -700,11 +700,7 @@ And our earlier code can then simply be modified to:
 
 In general, the recipe author must define the mapping between hostnames and
 job arguments themselves: this will depend on the details of the problem the
-recipe is addressing. Often, it is conventient to use one recipe to generate
-the mapping, then save it to disk for use by several recipes in the pipeline.
-This is the approach taken in LOFAR's standard imaging pipeline. Here, the
-:ref:`recipe-datamapper` recipe determines which filenames are accessible from
-which hosts, and stores them to disk in a :ref:`parset file <parset-handling>`
+recipe is addressing. Store them to disk in a :ref:`parset file <parset-handling>`
 formatted as follows:
 
 .. code-block:: none

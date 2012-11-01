@@ -74,11 +74,8 @@ Imager Pipeline
 
 .. toctree::
     sip
-    datamapper
-    storagemapper
     dppp
     rficonsole
-    cimager
     vdsmaker
     vdsreader
 
