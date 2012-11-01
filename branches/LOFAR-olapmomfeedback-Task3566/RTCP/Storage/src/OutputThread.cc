@@ -327,7 +327,7 @@ void OutputThread::cleanUp()
     case CORRELATED_DATA:
       {
         LOG_INFO_STR(itsLogPrefix << "Final characteristics: "
-            << ", duration "     << setprecision(8) << itsNextSequenceNumber * itsParset.IONintegrationTime() << " s"
+            << "duration "     << setprecision(8) << itsNextSequenceNumber * itsParset.IONintegrationTime() << " s"
             << ", size "         << itsWriter->getDataSize() << " bytes"
         );
       }
