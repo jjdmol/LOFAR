@@ -540,7 +540,7 @@ void CEPlogProcessor::processParset( const std::string &observationID )
       feedback.addSubband(index);
       feedback.setSubbandKey(index, "filename",             s.filename);
       feedback.setSubbandKey(index, "location",             s.destStorageNode + ":" + s.destDirectory);
-      feedback.setSubbandKey(index, "startTime",            parset.getString("Observation.startTime"));
+      feedback.setSubbandKey(index, "startTime",            parset.getString(observationPrefix + "startTime"));
 
       nrCorrelatedStreams++; 
     }
