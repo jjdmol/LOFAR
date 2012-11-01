@@ -42,8 +42,7 @@ The relationship between all these classes is illustrated below.
 
    See the :ref:`distribution <lofarpipe-remotecommand>` section for details.
 
-.. autoclass:: lofarpipe.support.ipython.IPythonRecipeMixIn
+.. autoclass:: lofarpipe.support.deprecated.ipython.IPythonRecipeMixIn
 
    The use of IPython within the pipeline framework is :ref:`deprecated
    <ipython-deprecated>`.
-
