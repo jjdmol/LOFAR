@@ -321,6 +321,25 @@ void OutputThread::cleanUp()
   unsigned percent_written = roundedPercentage(itsBlocksWritten, itsNrExpectedBlocks);
 
   LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+
+  // log some final characteristics for CEPlogProcessor for feedback to MoM/LTA
+  switch (itsOutputType) {
+    case CORRELATED_DATA:
+      {
+        LOG_INFO_STR(itsLogPrefix << "Final characteristics: "
+            << ", duration "     << setprecision(8) << itsNextSequenceNumber * itsParset.IONintegrationTime() << " s"
+            << ", size "         << itsWriter->getDataSize() << " bytes"
+        );
+      }
+      break;
+    case BEAM_FORMED_DATA:
+      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
+      break;
+
+    default:
+      break;
+  }
+}
 }
 
 

@@ -35,6 +35,11 @@ MSWriter::~MSWriter()
 {
 }
 
+size_t MSWriter::getDataSize()
+{
+  return 0;
+}
+
 
 }
 }

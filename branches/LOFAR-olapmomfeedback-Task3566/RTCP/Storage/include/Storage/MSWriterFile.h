@@ -43,6 +43,8 @@ class MSWriterFile : public MSWriter
 
     virtual void write(StreamableData *data);
 
+    virtual size_t getDataSize();
+
   protected:
     FastFileStream	 itsFile;
 };

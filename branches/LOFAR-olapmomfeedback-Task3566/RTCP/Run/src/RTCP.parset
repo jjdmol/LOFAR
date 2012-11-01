@@ -33,7 +33,7 @@ OLAP.nrTimesInFrame = 16
 #     [ 3*(0;1;2;3)  ] --> [ 0,1,2,3,0,1,2,3,0,1,2,3 ]
 #     [ 3*(300..303) ] --> [ 300,301,302,303,300,301,302,303,300,301,302,303 ]
 #     [ 2*(5*0)      ] --> [ 0,0,0,0,0,0,0,0,0,0 ]       
-Observation.subbandList  = [100..159]
+Observation.subbandList  = [100..110]
 Observation.sampleClock  = 200
 Observation.nrBitsPerSample = 16
 
@@ -68,8 +68,8 @@ Observation.Beam[0].TiedArrayBeam[0].coherent = T
 OLAP.Storage.hosts = [locus095]
 OLAP.Storage.targetDirectory = /data # will be appended with dirmask and filenammask
 
-Observation.DataProducts.Output_Beamformed.enabled = T
-Observation.DataProducts.Output_Correlated.enabled = F
+Observation.DataProducts.Output_Beamformed.enabled = F
+Observation.DataProducts.Output_Correlated.enabled = T
 Observation.DataProducts.Output_Trigger.enabled = F
 
 Observation.DataProducts.Output_Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS
