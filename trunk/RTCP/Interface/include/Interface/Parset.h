@@ -92,6 +92,10 @@ class Parset: public ParameterSet
     unsigned			observationID() const;
     double			startTime() const;
     double			stopTime() const;
+
+    unsigned    nrCorrelatedBlocks() const;
+    unsigned    nrBeamFormedBlocks() const;
+
     unsigned			nrStations() const;
     unsigned			nrTabStations() const;
     unsigned			nrMergedStations() const;
@@ -593,6 +597,16 @@ inline double Parset::startTime() const
 inline double Parset::stopTime() const
 {
   return getTime("Observation.stopTime");
+}
+
+inline unsigned Parset::nrCorrelatedBlocks() const
+{
+  return static_cast<unsigned>(floor( (stopTime() - startTime()) / IONintegrationTime()));
+}
+
+inline unsigned Parset::nrBeamFormedBlocks() const
+{
+  return static_cast<unsigned>(floor( (stopTime() - startTime()) / CNintegrationTime()));
 }
 
 inline string Parset::stationName(int index) const

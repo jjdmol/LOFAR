@@ -423,7 +423,7 @@ void Job::jobThread()
         canStart = false;
       }
 
-      // obey the stop time in the parset -- the first anotherRun() will broadcast it
+      // obey the stop time in the parset -- the first startBlock() will broadcast it
       if (!pause(itsParset.stopTime())) {
         LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
         canStart = false;
@@ -477,7 +477,7 @@ void Job::jobThread()
 
       // each node is expected to:
       // 1. agree() on starting, to allow the compute nodes to complain in preprocess()
-      // 2. call anotherRun() until the end of the observation to synchronise the
+      // 2. call startBlock() until the end of the observation to synchronise the
       //    stop time.
 
       if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
@@ -494,8 +494,8 @@ void Job::jobThread()
       } else {
         if (agree(true)) { // we always agree on the fact that we can start
           // force pset 0 to broadcast itsIsRunning periodically
-	  while (anotherRun())
-	    ;
+	  while (startBlock())
+	    endBlock();
         }    
       }    
 
@@ -621,7 +621,7 @@ void Job::unconfigureCNs()
 }
 
 
-bool Job::anotherRun()
+bool Job::startBlock()
 {
   if (-- itsNrBlockTokens == 0) {
     itsNrBlockTokens = itsNrBlockTokensPerBroadcast;
@@ -637,19 +637,21 @@ bool Job::anotherRun()
     broadcast(itsStopTime);
   }
 
-  // move on to the next block
-  itsBlockNumber ++;
-
   bool done = !itsIsRunning;
 
   if (itsStopTime > 0.0) {
     // the end time of this block must still be within the observation
     double currentTime = itsParset.startTime() + (itsBlockNumber + 1) * itsParset.CNintegrationTime();
 
-    done = done || currentTime >= itsStopTime;
+    done = done || currentTime > itsStopTime;
   }
 
   return !done;
+}
+
+void Job::endBlock()
+{
+  itsBlockNumber++;
 }
 
 
@@ -700,13 +702,15 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     ControlPhase3Cores controlPhase3Cores(itsParset, itsPhaseThreeCNstreams, itsBlockNumber);
     controlPhase3Cores.start(); // start the thread
 
-    while (anotherRun()) {
+    while (startBlock()) {
       for (unsigned i = 0; i < outputSections.size(); i ++)
 	outputSections[i]->addIterations(1);
 
       controlPhase3Cores.addIterations(1);
 
       beamletBufferToComputeNode.process();
+
+      endBlock();
     }
 
     LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input done");

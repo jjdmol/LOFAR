@@ -45,6 +45,8 @@ class FastFileStream : public FileStream
 
     virtual void skip( size_t bytes );
 
+    virtual size_t size();
+
     // formally, the required alignment for O_DIRECT is determined by the file system
     static const unsigned alignment = 512;
   private:  

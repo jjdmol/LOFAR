@@ -37,6 +37,8 @@ class MSWriter
     virtual	 ~MSWriter();
 
     virtual void write(StreamableData *) = 0;
+
+    virtual size_t getDataSize();
 };
 
 
