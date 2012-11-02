@@ -233,7 +233,8 @@ void OutputSection::notDroppingData(unsigned stream)
 void OutputSection::mainLoop()
 {
 #if defined HAVE_BGP_ION
-  doNotRunOnCore0();
+  //doNotRunOnCore0();
+  runOnCore0();
   //runOnCore0();
   setPriority(2);
 #endif
