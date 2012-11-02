@@ -38,7 +38,7 @@ node  Output_Correlated_	4.0.0  development  	'node constraint'  "CorrelatedData
 #--------------------------------------------------------------------------------------------------------
 #    name               dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  size		O    uint   -      10    0    0      	- 	''
+par  size		O    uint   -      10    0    0      	- 	'In bytes'
 par  fileFormat		O    ptext  -      10    0    'FITS|AIPS++/CASA|HDF5;AIPS++/CASA'	-  	''
 par  filename           O    text   -      10    0    ''      	-       ''
 par  location           O    text   -      10    0    ''      	-       ''
@@ -49,5 +49,6 @@ par  integrationInterval O   dbl   seconds      10    0    0		-  	''
 par  centralFrequency   O   dbl     MHz    10    0    0		-  	''
 par  channelWidth 	O   dbl     kHz    10    0    0		-  	''
 par  channelsPerSubband O   uint     -      10    0    0		-  	''
-par  subband		O    uint   -      10    0    0      	-       ''
-par  stationSubband     O    uint   -      10    0    0      	-       ''
+par  subband		O    uint   -      10    0    0      	-       'Index given by OLAP, purely administative'
+par  stationSubband     O    uint   -      10    0    0      	-       'Index of subband on the station, selects freq. range'
+par  SAP		O    uint   -      10    0    0      	-       'Index of SubArrayPointing'

@@ -199,6 +199,24 @@ void FastFileStream::skip(size_t bytes)
 }
 
 
+size_t FastFileStream::size()
+{
+  // size we might have skip()ed and have some remaining data to write,
+  // we cannot rely on FileStream::size(), which would report the current
+  // file size, without skips or remainders in our buffer.
+
+  errno = 0;
+
+  off_t curlen = lseek(fd, 0, SEEK_CUR); // NOT SEEK_END, because skip() might push us beyond the end
+
+  // lseek can return -1 as a valid file position, so check errno as well
+  if (curlen == (off_t)-1 && errno)
+    throw SystemCallException("lseek", errno, THROW_ARGS);
+
+  return curlen + remainder;
+}
+
+
 } // namespace RTCP
 } // namespace LOFAR
 

@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/StreamUtil.h>
+#include <Common/SystemUtil.h>
 #include <Common/ParameterSet.h>
 #include <Common/ParameterRecord.h>
 #include <Common/Exceptions.h>
@@ -34,14 +35,13 @@
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/CTState.h>
-#include <GCF/RTDB/DP_Protocol.ph>
 #include <PLC/PCCmd.h>
-
 #include "OnlineControl.h"
 #include <OTDB/TreeValue.h>			// << need to include this after OnlineControl! ???
 #include "PVSSDatapointDefs.h"
