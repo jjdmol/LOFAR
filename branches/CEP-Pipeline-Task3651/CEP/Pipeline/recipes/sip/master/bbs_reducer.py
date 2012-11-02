@@ -9,8 +9,7 @@ import sys
 import lofarpipe.support.lofaringredient as ingredient
 
 from lofarpipe.support.baserecipe import BaseRecipe
-from lofarpipe.support.group_data import load_data_map, store_data_map
-from lofarpipe.support.group_data import validate_data_maps
+from lofarpipe.support.data_map import DataMap, validate_data_maps
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 
@@ -44,13 +43,16 @@ class bbs_reducer(BaseRecipe, RemoteCommandRecipeMixIn):
         'data_mapfile': ingredient.StringField(
             '--data-mapfile',
             help="Full path to the mapfile that will contain the names of the "
-                 "data files that were successfully processed by BBS"
+                 "data files that were processed by BBS"
         ),
     }
-    
     outputs = {
-        'mapfile': ingredient.FileField(
+        'data_mapfile': ingredient.FileField(
             help="Full path to a mapfile describing the processed data"
+        ),
+        'instrument_mapfile': ingredient.FileField(
+            help="Full path to the (updated) mapfile containing the names of "
+                 "the instrument model files that were processed by BBS"
         )
     }
     
@@ -62,47 +64,79 @@ class bbs_reducer(BaseRecipe, RemoteCommandRecipeMixIn):
         super(bbs_reducer, self).__init__()
         self.bbs_map = list()
         self.jobs = list()
+        self.data_map = DataMap()
+        self.inst_map = DataMap()
+        self.sky_map = DataMap()
 
 
-    def _make_bbs_map(self):
+    def _load_mapfiles(self):
         """
-        This method bundles the contents of three different map-files.
-        All three map-files contain a list of tuples of hostname and filename.
-        The contents of these files are related by index in the list. They
-        form triplets of MS-file, its associated instrument model and its
-        associated sky model.
-
-        The data structure `self.bbs_map` is a list of tuples, where each
-        tuple is a pair of hostname and the aforementioned triplet.
-
-        For example:
-        bbs_map[0] = ('locus001',
-            ('/data/L29697/L29697_SAP000_SB000_uv.MS',
-            '/data/scratch/loose/L29697/L29697_SAP000_SB000_uv.MS.instrument',
-            '/data/scratch/loose/L29697/L29697_SAP000_SB000_uv.MS.sky')
+        Load data map file, instrument map file, and sky map file.
+        Update the 'skip' fields in these map files: if 'skip' is True in any
+        of the maps, then 'skip' must be set to True in all maps.
+        """
+        self.logger.debug("Loading map files:"
+            "\n\tdata map: %s\n\tinstrument map: %s\n\tsky map: %s" % (
+                self.inputs['args'][0], 
+                self.inputs['instrument_mapfile'],
+                self.inputs['sky_mapfile']
+            )
         )
-        
-        Returns `False` if validation of the three map-files fails, otherwise
-        returns `True`.
-        """
-        self.logger.debug("Creating BBS map-file using: %s, %s, %s" %
-                          (self.inputs['args'][0],
-                           self.inputs['instrument_mapfile'],
-                           self.inputs['sky_mapfile']))
-        data_map = load_data_map(self.inputs['args'][0])
-        instrument_map = load_data_map(self.inputs['instrument_mapfile'])
-        sky_map = load_data_map(self.inputs['sky_mapfile'])
+        self.data_map = DataMap.load(self.inputs['args'][0])
+        self.inst_map = DataMap.load(self.inputs['instrument_mapfile'])
+        self.sky_map = DataMap.load(self.inputs['sky_mapfile'])
 
-        if not validate_data_maps(data_map, instrument_map, sky_map):
+        if not validate_data_maps(self.data_map, self.inst_map, self.sky_map):
             self.logger.error("Validation of input data mapfiles failed")
             return False
 
-        self.bbs_map = [
-            (dat[0], (dat[1], ins[1], sky[1]))
-            for dat, ins, sky in zip(data_map, instrument_map, sky_map)
-        ]
+        # Update the skip fields of the three maps. If 'skip' is True in any of
+        # these maps, then 'skip' must be set to True in all maps.
+        for x, y, z in zip(self.data_map, self.inst_map, self.sky_map):
+            x.skip = y.skip = z.skip = (x.skip or y.skip or z.skip)
         
         return True
+    
+
+    def _run_jobs(self):
+        """
+        Create and schedule the compute jobs
+        """
+        command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        self.data_map.iterator = DataMap.SkipIterator
+        self.inst_map.iterator = DataMap.SkipIterator
+        self.sky_map.iterator = DataMap.SkipIterator
+        for data, inst, sky in zip(self.data_map, self.inst_map, self.sky_map):
+            self.jobs.append(
+                ComputeJob(
+                    data.host, command, 
+                    arguments=[
+                        (data.file, inst.file, sky.file),
+                        self.inputs['executable'],
+                        self.inputs['parset'],
+                        self.environment
+                    ]
+                )
+            )
+        self._schedule_jobs(self.jobs)
+
+
+    def _update_mapfiles(self):
+        """
+        Update the data- and instrument- map files, taking into account any
+        failed runs.
+        """
+        self.logger.debug("Updating map files:"
+            "\n\tdata map: %s\n\tinstrument map: %s" % 
+            (self.inputs['args'][0], self.inputs['instrument_mapfile'])
+        )
+        for job, data, inst in zip(self.jobs, self.data_map, self.inst_map):
+            if job.results['returncode'] != 0:
+                data.skip = inst.skip = True
+        self.data_map.save(self.inputs['data_mapfile'])
+        self.inst_map.save(self.inputs['instrument_mapfile'])
+        self.outputs['data_mapfile'] = self.inputs['args'][0]
+        self.outputs['instrument_mapfile'] = self.inputs['instrument_mapfile']
 
 
     def _handle_errors(self):
@@ -125,26 +159,6 @@ class bbs_reducer(BaseRecipe, RemoteCommandRecipeMixIn):
         return 0
 
 
-    def _write_data_mapfile(self):
-        """
-        Write a new data map-file containing only the successful runs.
-        """
-        outdata = []
-        for job in self.jobs:
-            if job.results['returncode'] == 0:
-                # The first item in job.arguments is a tuple of file names, 
-                # whose first item is the name of the MS-file
-                # (see `_make_bbs_map` for details).
-                outdata.append((job.host, job.arguments[0][0]))
-
-        # Write output data-mapfile
-        self.logger.debug(
-            "Writing data map file: %s" % self.inputs['data_mapfile']
-        )
-        store_data_map(self.inputs['data_mapfile'], outdata)
-        self.outputs['mapfile'] = self.inputs['data_mapfile']
-
-
     def go(self):
         """
         This it the actual workhorse. It is called by the framework. We pass
@@ -155,28 +169,15 @@ class bbs_reducer(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Starting BBS-reducer run")
         super(bbs_reducer, self).go()
 
-        # Create a bbs_map describing the file mapping on disk
-        if not self._make_bbs_map():
+        # Load the required map-files.
+        if not self._load_mapfiles():
             return 1
 
         # Create and schedule the compute jobs
-        command = "python %s" % (self.__file__.replace('master', 'nodes'))
-        for host, files in self.bbs_map:
-            self.jobs.append(
-                ComputeJob(
-                    host, command, 
-                    arguments=[
-                        files,
-                        self.inputs['executable'],
-                        self.inputs['parset'],
-                        self.environment
-                    ]
-                )
-            )
-        self._schedule_jobs(self.jobs)
+        self._run_jobs()
 
-        # Write output data map-file
-        self._write_data_mapfile()
+        # Update the instrument map file, taking failed runs into account.
+        self._update_mapfiles()
 
         # Handle errors, if any.
         return self._handle_errors()

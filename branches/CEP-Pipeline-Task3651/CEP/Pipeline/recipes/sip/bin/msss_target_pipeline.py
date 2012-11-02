@@ -367,7 +367,7 @@ class msss_target_pipeline(control):
             parset=bbs_parset,
             instrument_mapfile=copied_instrument_mapfile,
             sky_mapfile=sourcedb_mapfile
-        )['mapfile']
+        )['data_mapfile']
 
         # *********************************************************************
         # 6. Second dppp run for  flaging NaN's in the MS.  
