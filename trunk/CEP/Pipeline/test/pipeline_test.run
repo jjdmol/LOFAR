@@ -12,3 +12,9 @@ PYTHONPATH=${srcdir}/test_framework/fixture:${PYTHONPATH}
 export PYTHONPATH
 
 python ${srcdir}/test_framework/unittest_runner.py -x results.xml -p ${srcdir}
+
+if [ $? -ne 0 ]; then
+  return 1
+else
+  return 0
+fi
