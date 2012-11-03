@@ -247,6 +247,7 @@ public:
 	static const uint16 N_BEAMLETS       = N_SERDES_LANES * N_DATA_SLOTS;
 	static const uint16 XLET_SIZE        = N_POL * sizeof(std::complex<uint32>);
 	static const uint16 WEIGHT_SIZE      = N_POL * sizeof(std::complex<uint16>);
+	static const uint16 MAX_N_BANKS      = 4;
 
 	// TBB related constants
 	static const uint16 TBB_MAXPAYLOADSIZE     = 1948; // available TBB payload bytes

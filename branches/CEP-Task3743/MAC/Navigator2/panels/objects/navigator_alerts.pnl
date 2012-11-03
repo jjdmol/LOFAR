@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 1058 126 N "_3DFace" 1
@@ -169,12 +169,14 @@ void ackAllClicked() {
 
       // ok rest should be possible to acknowledge
       // find the entry in the table
-      iPos=dynContains(g_alarms[\"DPNAME\"],dp);  
+      if ( dynlen(g_alarms[\"DPNAME\"]) >= 1) {
+        iPos=dynContains(g_alarms[\"DPNAME\"],dp);  
   
-      if (iPos < 1) {
-        LOG_ERROR(\"navigator_alerts.pnl:ackAllClicked|Strange, couldn't find chosen entry in alarm global list: \" + dp);
-      } else {
-        acknowledgeAlarm(iPos,getCurrentTime(),dp,message,0);
+        if (iPos < 1) {
+          LOG_ERROR(\"navigator_alerts.pnl:ackAllClicked|Strange, couldn't find chosen entry in alarm global list: \" + dp);
+        } else {
+          acknowledgeAlarm(iPos,getCurrentTime(),dp,message,0);
+        }
       }
     }    
   } 
@@ -419,10 +421,9 @@ LANG:0 0
 E E 0 1 1 0 1 E U  0 E 990 30 1031.999999999996 46
 0 2 2 "4d" 4 0 0 64 0 0  990 30 1
 2
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,Arial
+LANG:1 26 Arial,-1,13,5,75,0,0,0,0,0
 LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-2
+0 2
 LANG:1 1 0
 LANG:0 1 0
 25 11
@@ -446,9 +447,8 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 8 8 962 92
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  8 8 962 92
 E"main(int row, string column, string value)
 {
   click(row);
@@ -488,14 +488,13 @@ LANG:1 2 #3
 LANG:1 2 #4
 10 10
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
-0 1 0 1 7
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0 0 1 0 1 7
 1 0
 2 16
 "PRIMITIVE_TEXT1"
 ""
-1 970 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 968 -10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 28 0 0 0 0 0
 E E E
@@ -505,12 +504,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1.666666666666667 -2 -26.66666666666667 1 E 972 22 1025 36
+E E 0 1 1 2 1 E 1 0 1.666666666666667 -2 -26.66666666666667 1 E 972 22 1025 35
 0 2 2 "0s" 0 0 0 192 0 0  972 22 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 9 # Alarms:
 13 17
 "ack_all_button"
@@ -525,9 +523,8 @@ LANG:1 22 Acknowledge all alarms
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 968 58 1032 84
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  968 58 1032 84
 
 T 
 1

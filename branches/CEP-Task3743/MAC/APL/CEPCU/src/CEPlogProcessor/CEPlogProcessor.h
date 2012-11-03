@@ -27,6 +27,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <Common/ParameterSet.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 
@@ -49,6 +50,24 @@ namespace LOFAR {
 // \addtogroup CEPCU
 // @{
 
+// Provides feedback for correlated data to MoM/LTA
+class CEPFeedback
+{
+public:
+  CEPFeedback();
+
+  void write(const std::string &filename);
+
+  void addSubband(unsigned index);
+  void setSubbandKey(unsigned index, const std::string &key, const std::string &value);
+
+private:
+  ParameterSet parset;
+  unsigned nrSubbands;
+
+  std::string subbandSizeKey() const;
+  std::string subbandPrefix(unsigned index) const;
+};
 
 // The CEPlogProcessor class implements a small daemon that ...
 class CEPlogProcessor : public GCFTask
@@ -85,7 +104,8 @@ private:
     void     _processLogLine    (const char *cString);
 
     void     processParset      (const std::string &observationID);
-
+    void     writeFeedback      (int obsID);
+    
     struct logline {
       // original log line
       const char *fullmsg;
@@ -196,6 +216,15 @@ private:
     // a BiMap is needed to automatically remove obsIDs that point to
     // reused tempObsNames.
     BiMap<int, std::string> itsTempObsMapping;
+
+    // feedback information to write to _feedback file
+    map<int, CEPFeedback> itsCEPFeedback;
+
+    // adds/removes known observations from the maps
+    void registerObservation(int obsID, const std::string &tempObsName);
+    void unregisterObservation(int obsID);
+
+    bool observationRegistered(int obsID) const { return itsTempObsMapping.exists(obsID); }
 };
 
 // @} addgroup

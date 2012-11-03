@@ -22,6 +22,7 @@ own data some configuration has to be done. Keep in mind most of these steps hav
 2. Load an environment: 
 
 	a. ``use LofIm`` for the latest development version
+	   ``use Pythonlibs`` for the external python packages
    
 3. Create directories:
 
@@ -34,11 +35,18 @@ own data some configuration has to be done. Keep in mind most of these steps hav
 
 4. Copy the configuration files to your own config dir:
 
-	a. Because you are using the use command to set your environment you need to find out the location of these files. They might be create new each day. ``which msss_calibrator_pipeline.py`` Results for instance in. 		``/opt/cep/LofIm/daily/Fri/lofar_build/install/gnu_opt/bin/msss_calibrator_pipeline.py`` The config files are located relative from the ``install`` directory in ``gnu_opt/share/pipeline``
+	a. The enviroment used has influence on the location of some files. LofIm for instance is renewed each day with the resulting file in a different directory.
+	   Locate the current directory for your invironment. 
+	   ``which msss_calibrator_pipeline.py`` 
+	   This could result in the folowing: 		``/opt/cep/LofIm/daily/Fri/lofar_build/install/gnu_opt/bin/msss_calibrator_pipeline.py``
+	   The config files are found relative to the path install: ``install/gnu_opt/share/pipeline``
 	b. Copy the ``pipeline.cfg`` and ``tasks.cfg`` files to your own configuration directory.
-		``cp /opt/cep/lofar/lofar_versions/LOFAR-Release-1_3-latest/lofar_build/install/gnu_opt/share/pipeline/*.cfg /home/USERNAME/pipeline/config_files``
-	c. ``cp /home/klijn/cep1.clusterdesc /home/USERNAME/pipeline/config_files/cep1.clusterdesc`` Copy the cluster description file to your config dir. It is currently located in a home directory
-	d. This copy action will change the dynamic nature of the files. If you want to be sure that you have the bleeding edge software perform this copy step and the next adaptation step again. 
+	   Take the first part of the found path and add gnu_opt/share/pipeline copy all cfg files to your own config location.
+	   ``cp /opt/cep/lofar/lofar_versions/LOFAR-Release-1_3-latest/lofar_build/install/gnu_opt/share/pipeline/*.cfg /home/USERNAME/pipeline/config_files``
+	c. ``cp /home/klijn/cep1.clusterdesc /home/USERNAME/pipeline/config_files/cep1.clusterdesc`` Copy the cluster description file to your config dir. 
+	   It is currentlylocated in a home directory
+	d. This copy action will change the dynamic nature of the files. If you want to be sure that you have the bleeding edge software perform this copy step and the next     
+	   adaptation step again. 
 	
 5. Adapt the configuration files so they point to your own directories:
 
@@ -48,8 +56,8 @@ own data some configuration has to be done. Keep in mind most of these steps hav
 		**THIS RUNTIME_DIRECTORY MUST BE ACCESSIBLE FROM ALL NODES**
 	d. Change the working_directory entry to ``/data/scratch/USERNAME``
 		**THIS WORKING_DIRECTORY CAN --NOT-- EVER, FOR ANY REASON, BE ON A GLOBAL SHARE. EVER**
-	e. Change the clusterdesc entry to ``/home/USERNAME/pipeline/config/cep1.clusterdesc``
-	f. Change to task_files entry to ``[/home/USERNAME/pipeline/config/tasks.cfg]``
+	e. Change the clusterdesc entry to ``/home/USERNAME/pipeline/config_files/cep1.clusterdesc``
+	f. Change the task_files entry to ``[/home/USERNAME/pipeline/config_files/tasks.cfg]``
 
 .. code-block::	none 
 
@@ -82,8 +90,8 @@ own data some configuration has to be done. Keep in mind most of these steps hav
 6. Run a short template run of the imaging pipeline:
 
 	1. use LofIm
-	2. ``cp /data/scratch/klijn/*.parset /home/USERNAME/pipeline/parset_files/out.parset`` copy the test parametersets file to your own parset directory.
-	3. `` msss_imager_pipeline.py /data/scratch/klijn/out.parset --config ~/pipeline/config_files/pipeline.cfg --job test1 -d`` details: 
+	2. ``cp /data/scratch/klijn/out.parset /home/USERNAME/pipeline/parset_files/out.parset`` copy the test parametersets file to your own parset directory.
+	3. `` msss_imager_pipeline.py /data/scratch/USERNAME/out.parset --config ~/pipeline/config_files/pipeline.cfg --job test1 -d`` details: 
 
 		a. ``msss_imager_pipeline.py`` the imaging pipeline executable
 		b. ``/home/USERNAME/pipeline/parset_files/out.parset`` the settings for the pipeline

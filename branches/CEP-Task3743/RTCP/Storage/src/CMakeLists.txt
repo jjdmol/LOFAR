@@ -16,7 +16,6 @@ lofar_add_library(storage
   Format.cc
   MeasurementSetFormat.cc
   TBB_StaticMapping.cc
-  TBB_Writer_main.cc
   TBB_Writer.cc)
 
 install(PROGRAMS

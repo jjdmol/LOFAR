@@ -7,6 +7,7 @@
 #include <Interface/Allocator.h>
 #include <Interface/Config.h>
 #include <Interface/StreamableData.h>
+#include <Interface/BGPAsm.h>
 #include <Interface/MultiDimArray.h>
 #include <Stream/Stream.h>
 
@@ -122,10 +123,28 @@ inline void CorrelatedData::writeData(Stream *str)
 }
 
 
-template <typename T> inline void addNrValidSamples(T *dst, const T *src, unsigned count)
+template <typename T> inline void addNrValidSamples(T * __restrict__ dst, const T * __restrict__ src, unsigned count)
 {
   for (unsigned i = 0; i < count; i ++)
     dst[i] += src[i];
+}
+
+
+template<> inline void addNrValidSamples<uint16_t>(uint16_t * __restrict__ dst, const uint16_t * __restrict__ src, unsigned count)
+{
+  addNrValidSamples<uint32_t>(reinterpret_cast<uint32_t*>(dst), reinterpret_cast<const uint32_t*>(src), count / 2);
+
+  if (count & 1)
+    dst[count - 1] += src[count - 1];
+}
+
+
+template<> inline void addNrValidSamples<uint8_t>(uint8_t * __restrict__ dst, const uint8_t * __restrict__ src, unsigned count)
+{
+  addNrValidSamples<uint16_t>(reinterpret_cast<uint16_t*>(dst), reinterpret_cast<const uint16_t*>(src), count / 2);
+
+  if (count & 1)
+    dst[count - 1] += src[count - 1];
 }
 
 
@@ -138,9 +157,19 @@ inline IntegratableData &CorrelatedData::operator += (const IntegratableData &ot
     fcomplex	   *dst	 = visibilities.origin();
     const fcomplex *src	 = other.visibilities.origin();
     unsigned	   count = visibilities.num_elements();
+#ifdef HAVE_BGP
+    unsigned fastcopyfloats = (count * 2) & ~0xF;
+    unsigned remainder = count % 8;
 
+    for (unsigned i = 0; i < remainder; i ++)
+      dst[i] += src[i];
+
+    if (fastcopyfloats > 0)
+      _add_2_single_precision_vectors( reinterpret_cast<float*>(dst + remainder), reinterpret_cast<float*>(dst + remainder), reinterpret_cast<const float*>(src + remainder), fastcopyfloats );
+#else
     for (unsigned i = 0; i < count; i ++)
       dst[i] += src[i];
+#endif
   }
 
   // add nr. valid samples

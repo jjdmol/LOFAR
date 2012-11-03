@@ -82,7 +82,7 @@ namespace LOFAR {
        * Statistics
        * Dimensions are: (N_DEVICES, N_SUBBANDS);
        *
-       * N_DEVICES == 2 * N_POL for beamlet statistics
+       * N_DEVICES == 2 * N_POL for beamlet statistics (2 *) for splitter
        * N_DEVICES == N_RSPBOARDS * N_BLPS * N_POL for subband statistics
        * 
        */
