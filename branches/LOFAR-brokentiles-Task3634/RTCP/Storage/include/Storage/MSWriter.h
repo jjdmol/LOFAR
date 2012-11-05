@@ -40,6 +40,8 @@ class MSWriter
     virtual void write(StreamableData *) = 0;
 
     virtual void augment(const FinalMetaData &finalMetaData);
+
+    virtual size_t getDataSize();
 };
 
 

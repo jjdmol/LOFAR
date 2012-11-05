@@ -469,6 +469,10 @@ GCFEvent::TResult StationControl::subscribe2HWstates(GCFEvent& event, GCFPortInt
 			TRAN(StationControl::operational_state);		// go to next state.
 		}
 	break;
+	
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
 
 	default:
 		status = GCFEvent::NOT_HANDLED;
@@ -525,6 +529,10 @@ GCFEvent::TResult StationControl::subscribe2Splitters(GCFEvent& event, GCFPortIn
 		LOG_INFO("Going to operational mode");
 		TRAN(StationControl::operational_state);		// go to next state.
 	break;
+	
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
 
 	default:
 		status = GCFEvent::NOT_HANDLED;
@@ -987,28 +995,28 @@ void StationControl::_databaseEventHandler(GCFEvent& event)
 		DPChangedEvent		dpEvent(event);
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_REQUESTED_CLOCK) != 0) {
 			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received (requested)clock change from PVSS, clock is now " << itsClock);
+			LOG_INFO_STR("Received (requested)clock change from PVSS, clock is now " << itsClock);
 			break;
 		}
 
 		// during startup we adopt the value set by the ClockController.
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_CLOCK) != 0) {
 			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received (actual)clock change from PVSS, bitmode is now " << itsClock);
+			LOG_INFO_STR("Received (actual)clock change from PVSS, bitmode is now " << itsClock);
 			_abortObsWithWrongClock();
 			break;
 		}
 
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_REQUESTED_BITMODE) != 0) {
 			itsBitmode = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received (requested)bitmode change from PVSS, bitmode is now " << itsBitmode);
+			LOG_INFO_STR("Received (requested)bitmode change from PVSS, bitmode is now " << itsBitmode);
 			break;
 		}
 
 		// during startup we adopt the value set by the ClockController.
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_BITMODE) != 0) {
 			itsBitmode = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received (actual)bitmode change from PVSS, bitmode is now " << itsBitmode);
+			LOG_INFO_STR("Received (actual)bitmode change from PVSS, bitmode is now " << itsBitmode);
 			_abortObsWithWrongBitmode();
 			break;
 		}
@@ -1152,9 +1160,7 @@ void StationControl::_handleQueryEvent(GCFEvent& event)
 						if (newState != RTDB_OBJ_STATE_OPERATIONAL) {
 							itsRCUmask.reset(rcubase + i);
 						}
-						else {
-							itsRCUmask.set(rcubase + i);
-						}
+						// no else: never mark an RCU operational on the state of an RSPBoard.
 					}
 				}
 			}
@@ -1297,7 +1303,7 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 		AntennaMask_t	antBitSet   = onLBAField ? itsLBAmask     : itsHBAmask;
 		for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 			int		idx((*mappingPtr)[rcu]);
-			if (!realReceivers[rcu] || idx<0 || !antBitSet[idx]) {
+			if (!realReceivers[rcu] || idx<0 || !antBitSet[idx] || !itsRCUmask[rcu]) {
 				realReceivers.reset(rcu);
 				if (idx >= 0 && !antBitSet[idx]) {
 					LOG_INFO_STR("Rejecting RCU " << rcu << " because Antenna is out of order");

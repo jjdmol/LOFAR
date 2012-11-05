@@ -33,15 +33,24 @@ namespace LOFAR {
         i4complex() {}
 
 	i4complex(double real, double imag) {
-	  value = ((int) rint(real - .5) & 0xF) | (((int) rint(imag - .5) & 0xF) << 4);
+          int r = (int) rint(real);
+          int i = (int) rint(imag);
+
+          // clip to [-7..7] to center dynamic range around 0
+          if (r <= -8) r = -7;
+          if (i <= -8) i = -7;
+          if (r >= 8)  r = 7;
+          if (i >= 8)  i = 7;
+
+	  value = (r & 0xF) | ((i & 0xF) << 4);
 	}
 
 	double real() const {
-	  return ((signed char) (value << 4) >> 4) + .5; // extend sign
+	  return ((signed char) (value << 4) >> 4); // extend sign
 	}
 
 	double imag() const {
-	  return (value >> 4) + .5;
+	  return (value >> 4);
 	}
 
 	i4complex conj() const {

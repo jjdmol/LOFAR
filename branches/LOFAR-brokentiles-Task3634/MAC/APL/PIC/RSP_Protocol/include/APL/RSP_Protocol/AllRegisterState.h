@@ -67,7 +67,7 @@ public:
 		rsuclear_state.resize(nrRspBoards);
 		diagwgsettings_state.resize(nrRcus * EPA_Protocol::MEPHeader::N_DIAG_WG_REGISTERS);
 		sst_state.resize(nrBlps * EPA_Protocol::MEPHeader::SST_N_FRAGMENTS);
-		bst_state.resize(nrRspBoards);
+		bst_state.resize(EPA_Protocol::MEPHeader::N_SERDES_LANES);
 		xst_state.resize(nrRspBoards * EPA_Protocol::MEPHeader::XST_NR_STATS);
 		cdo_state.resize(nrRspBoards * EPA_Protocol::MEPHeader::N_CDO_REGISTERS);
 		bs_state.resize(nrBlps);

@@ -59,8 +59,10 @@ namespace LOFAR {
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
-      EPA_Protocol::MEPHeader m_hdr;
       int itsLaneId;
+      int itsRealLaneId;
+      
+      EPA_Protocol::MEPHeader m_hdr;
     };
   };
 };

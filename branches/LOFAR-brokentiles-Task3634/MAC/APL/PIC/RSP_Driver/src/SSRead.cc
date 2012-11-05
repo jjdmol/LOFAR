@@ -54,6 +54,7 @@ void SSRead::sendrequest()
 	itsActivePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
 	if (getCurrentIndex() >= (itsActivePlanes*NR_BLPS_PER_RSPBOARD)) {
 		setContinue(true);
+		return;
 	}
 
 	int dstid = 1 << (getCurrentIndex() / itsActivePlanes);

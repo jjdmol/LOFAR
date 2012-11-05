@@ -71,6 +71,7 @@ class OutputThread
     Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
 
     unsigned		 	     itsBlocksWritten, itsBlocksDropped;
+    unsigned           itsNrExpectedBlocks;
     unsigned			     itsNextSequenceNumber;
     SmartPtr<MSWriter>		     itsWriter;
     SmartPtr<Thread>		     itsThread;

@@ -46,8 +46,9 @@ using namespace EPA_Protocol;
 
 BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid)
 	: SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS*MAX_NR_BM_BANKS),
-	  m_blp(blp), m_regid(regid), itsBank(0), m_remaining(0), m_offset(0)
+	  m_blp(blp), m_regid(regid), itsBank(0), itsActiveBanks(1), m_remaining(0), m_offset(0)
 {
+	
 	memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
@@ -57,13 +58,17 @@ BWWrite::~BWWrite()
 
 void BWWrite::sendrequest()
 {
-    int activeBanks = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
-    if (getCurrentIndex() >= (activeBanks*MEPHeader::BF_N_FRAGMENTS)) {
+    itsActiveBanks = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
+    uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
+    if (getCurrentIndex() >= (itsActiveBanks*MEPHeader::BF_N_FRAGMENTS)) {
+        if (getCurrentIndex() == (MEPHeader::BF_N_FRAGMENTS*MAX_NR_BM_BANKS - 1)) {
+            Cache::getInstance().getState().bf().write_ack(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+        }
         setContinue(true);
         return;
     }
     
-    uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
+    
     itsBank = (getCurrentIndex() / MEPHeader::BF_N_FRAGMENTS) ;
         
 	// no conditional, update every second
@@ -122,11 +127,13 @@ void BWWrite::sendrequest()
                          m_offset);
 		break;
 	}
-	
+
+#if 0	
 	if (getBoardId() == 11) {
 		LOG_INFO_STR("BWWrite:board:" << getBoardId() << ",global_blp=" << (int)global_blp << ",bank=" << itsBank 
 			<< "," << bfcoefs.hdr);
 	}
+#endif
 
 	// create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
 	int nbeamlets_per_fragment = MEPHeader::N_BEAMLETS / MEPHeader::BF_N_FRAGMENTS;
@@ -154,13 +161,13 @@ void BWWrite::sendrequest()
 
 		Range hw_range(hw_offset, hw_offset + nbeamlets_per_fragment - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
 		Range cache_range(cache_offset, cache_offset + (nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES) - 1, 1);
-		
+#if 0		
 		if (getBoardId() == 11) {
 			LOG_INFO_STR("board=" << getBoardId() << ",bank=" << itsBank << ",lane=" << lane 
 					<< (m_regid / 2 ? ",Y" : ",X") << (m_regid % 2 ? "I" : "R")
 					<< ", hw_range=" << hw_range << ", cache_range=" << cache_range);
 		}
-
+#endif
 		// X = normal 0
 		weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, itsBank, cache_range);
 
@@ -295,7 +302,7 @@ GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 		//
 		// Last fragment signals completion
 		//
-		if (MEPHeader::MEPHeader::BF_N_FRAGMENTS - 1 == getCurrentIndex()) {
+		if ((MEPHeader::BF_N_FRAGMENTS*itsActiveBanks-1) == getCurrentIndex()) {
 		  Cache::getInstance().getState().bf().write_ack(global_blp * MEPHeader::N_PHASEPOL + m_regid);
 		}
 	}

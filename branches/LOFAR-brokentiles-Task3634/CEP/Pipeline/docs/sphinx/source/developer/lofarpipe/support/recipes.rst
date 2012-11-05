@@ -26,8 +26,8 @@ track of the pipeline progress
 
 The relationship between all these classes is illustrated below.
 
-.. inheritance-diagram:: lofarpipe.support.control.control lofarpipe.support.lofarrecipe.LOFARrecipe
-   :parts: 3
+   (deprecated) lofarpipe.support.control.control lofarpipe.support.lofarrecipe.LOFARrecipe
+
 
 .. autoclass:: lofarpipe.support.baserecipe.BaseRecipe
    :members:
@@ -42,8 +42,7 @@ The relationship between all these classes is illustrated below.
 
    See the :ref:`distribution <lofarpipe-remotecommand>` section for details.
 
-.. autoclass:: lofarpipe.support.ipython.IPythonRecipeMixIn
+   lofarpipe.support.deprecated.ipython.IPythonRecipeMixIn
 
    The use of IPython within the pipeline framework is :ref:`deprecated
    <ipython-deprecated>`.
-

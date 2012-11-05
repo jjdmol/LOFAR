@@ -82,7 +82,8 @@ class Job : public PLCRunnable
 
     void				 claimResources();
 
-    bool				 anotherRun();
+    bool				 startBlock(); // returns true if another block is to be processed
+    void				 endBlock();
 
     void				 jobThread();
     template <typename SAMPLE_TYPE> void doObservation();

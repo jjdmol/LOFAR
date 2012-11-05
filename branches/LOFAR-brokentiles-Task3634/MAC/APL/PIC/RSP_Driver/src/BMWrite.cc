@@ -55,7 +55,9 @@ void BMWrite::sendrequest()
   if ((( Cache::getInstance().getBack().getVersions().bp()(getBoardId()).fpga_maj * 10) +
          Cache::getInstance().getBack().getVersions().bp()(getBoardId()).fpga_min) < 74) {
     LOG_DEBUG_STR(formatString("BMWrite:: Firmware on board[%d], has NO bitmode support", getBoardId()));
+    Cache::getInstance().getState().bmState().read_ack(getBoardId());
     setContinue(true); // continue with next action
+    setFinished();
   }
   else {
       
@@ -67,7 +69,7 @@ void BMWrite::sendrequest()
       if (RTC::RegisterState::WRITE != Cache::getInstance().getState().bmState().get(getBoardId())) {
         Cache::getInstance().getState().bmState().unmodified(getBoardId());
         setContinue(true);
-    
+        setFinished();
         return;
       }
         

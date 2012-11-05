@@ -92,6 +92,7 @@ class imager_source_finding(LOFARnodeTCP):
                     pass  #do nothing
                 bdsm_parameters[key] = parameter_value
 
+
             # *****************************************************************
             # 3. Start pybdsm
             self.logger.debug(

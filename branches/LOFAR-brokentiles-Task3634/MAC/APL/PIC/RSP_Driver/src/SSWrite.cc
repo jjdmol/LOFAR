@@ -40,7 +40,9 @@ using namespace RSP;
 using namespace RTC;
 
 SSWrite::SSWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD * MAX_BITS_PER_SAMPLE / MIN_BITS_PER_SAMPLE)
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD * (MAX_BITS_PER_SAMPLE / MIN_BITS_PER_SAMPLE)),
+    itsActiveBanks(1)
+    
 {
 	memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -57,6 +59,7 @@ void SSWrite::sendrequest()
 		setContinue(true);
 		return;
 	}
+	
 	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex()/itsActiveBanks);
 	LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d", getBoardPort().getName().c_str(), global_blp));
 
@@ -69,7 +72,7 @@ void SSWrite::sendrequest()
 	int dstid = 1 << (getCurrentIndex() / itsActiveBanks);
 	// used bank 
 	int bank = getCurrentIndex() % itsActiveBanks;
-	LOG_INFO(formatString("SSWRITE:board=%d, index=%d, globalblp=%d, dstID=%d, bank=%d, regid=%d", 
+	LOG_DEBUG(formatString("SSWRITE:board=%d, index=%d, globalblp=%d, dstID=%d, bank=%d, regid=%d", 
 							getBoardId(), getCurrentIndex(), global_blp, dstid, bank, MEPHeader::SS_SELECT+bank));
 
 	ss.hdr.set( MEPHeader::WRITE, 
@@ -133,8 +136,10 @@ GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 		LOG_ERROR("SSWrite::handleack: invalid ack");
 		return GCFEvent::NOT_HANDLED;
 	}
-
-	Cache::getInstance().getState().ss().write_ack(global_blp);
+	
+    if ((getCurrentIndex() % itsActiveBanks) == 0) {
+	    Cache::getInstance().getState().ss().write_ack(global_blp);
+	}
 
 	return GCFEvent::HANDLED;
 }

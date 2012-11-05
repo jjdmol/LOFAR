@@ -184,7 +184,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getBrok
     
     setErrorMsg(env,jTreeValue);
   } catch (exception &ex) {
-    cout << "Exception during treeValue::getBrokenHardware(" << ts << ") "<< ex.what() << endl;
+    cout << "Exception during treeValue::getBrokenHardware(" << tStart << "," << tStop << ") "<< ex.what() << endl;
 
     env->ReleaseStringUTFChars (aStartTime, aStart);
     env->ReleaseStringUTFChars (aStopTime, aStop);
