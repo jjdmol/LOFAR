@@ -31,6 +31,7 @@
 #include <Common/ParameterRecord.h>
 #include <Common/Exceptions.h>
 #include <Common/SystemUtil.h>
+#include <Common/hexdump.h>
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/MACServiceInfo.h>
@@ -73,6 +74,9 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	itsParentPort		(0),
 	itsTimerPort		(0),
 	itsListener			(0),
+	itsFeedbackListener	(0),					// QUICK FIX #3633
+	itsFeedbackPort		(0),					// QUICK FIX #3633
+	itsFeedbackResult	(CT_RESULT_NO_ERROR),	// QUICK FIX #3633
 	itsPythonPort		(0),
 	itsState			(CTState::NOSTATE),
 	itsFeedbackFile     (""),
@@ -94,7 +98,11 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	itsParentControl = ParentControl::instance();
 
 	itsListener = new GCFTCPPort (*this, "listener", GCFPortInterface::MSPP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsListener, "Cannot allocate TCP for server port");
+	ASSERTSTR(itsListener, "Cannot allocate TCP port for server port");
+
+	// QUICK FIX #3633
+	itsFeedbackListener = new GCFTCPPort (*this, "Feedbacklistener", GCFPortInterface::MSPP, CONTROLLER_PROTOCOL);
+	ASSERTSTR(itsFeedbackListener, "Cannot allocate TCP port for feedback");
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -112,6 +120,11 @@ PythonControl::PythonControl(const string&	cntlrName) :
 PythonControl::~PythonControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
+	if (itsListener) 
+		{ itsListener->close(); delete itsListener; }
+
+	if (itsFeedbackListener) 	// QUICK FIX #3633
+		{ itsFeedbackListener->close(); delete itsFeedbackListener; }
 }
 
 //
@@ -249,6 +262,9 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event,
 	switch (event.signal) {
 	case F_ENTRY:
 		itsListener->open();	// will result in F_CONN
+		// QUICK FIX #3633
+		itsFeedbackListener->setPortNumber(MAC_PYTHON_FEEDBACK_QF);
+		itsFeedbackListener->open();	// will result in F_CONN
    		break;
 
     case F_INIT: {
@@ -441,14 +457,56 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 	}
 	break;
 
+	// QUICK FIX #3633
+	case F_ACCEPT_REQ: {
+		ASSERTSTR(&port == itsFeedbackListener, "Incoming connection on main listener iso feedbackListener");
+		itsFeedbackPort = new GCFTCPPort();
+		itsFeedbackPort->init(*this, "feedback", GCFPortInterface::SPP, 0, true);	// raw port
+		if (!itsFeedbackListener->accept(*itsFeedbackPort)) {
+			delete itsFeedbackPort;
+			itsFeedbackPort = 0;
+			LOG_ERROR("Connection with Python feedback FAILED");
+		}
+		else {
+			LOG_INFO("Connection made on feedback port, accepting commands");
+		}
+	} break;
+
 	case F_DISCONNECTED: {
 		port.close();
 		if (&port == itsPythonPort) {
 			LOG_FATAL_STR("Lost connection with Python, going to wait for a new connection");
 			TRAN(PythonControl::waitForConnection_state);
 		}
-	}
-	break;
+		// QUICK FIX #3633
+		if (&port == itsFeedbackPort) {
+			LOG_FATAL_STR("Lost connection with Feedback of PythonFramework.");
+			delete itsFeedbackPort;
+			itsFeedbackPort = 0;
+		}
+	} break;
+	
+	// QUICK FIX #3633
+	case F_DATAIN: {
+		ASSERTSTR(&port == itsFeedbackPort, "Didn't expect raw data on port " << port.getName());
+		char	buf[1024];
+		ssize_t	btsRead = port.recv((void*)&buf[0], 1023);
+		buf[btsRead] = '\0';
+		string	s;
+		hexdump(s, buf, btsRead);
+		LOG_INFO_STR("Received command on feedback port: " << s);
+
+		if (!strcmp(buf, "ABORT")) {
+			itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
+			TRAN(PythonControl::finishing_state);
+		}
+		else if (!strcmp(buf, "FINISHED")) {
+			TRAN(PythonControl::finishing_state);
+		}
+		else {
+			LOG_ERROR_STR("Received command on feedback port unrecognized");
+		}
+	} break;
 
 	case DP_CHANGED:
 		_databaseEventHandler(event);

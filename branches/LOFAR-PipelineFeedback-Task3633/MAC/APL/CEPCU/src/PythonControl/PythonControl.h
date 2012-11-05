@@ -102,6 +102,11 @@ private:
 
 	GCFTCPPort*				itsListener;
 
+	// QUICK FIX #3633
+	GCFTCPPort*				itsFeedbackListener;
+	GCFTCPPort*				itsFeedbackPort;
+	int						itsFeedbackResult;
+
 	GCFTCPPort*				itsPythonPort;
 	string					itsPythonName;
 	// Until the python pipeline can communicate we can 'fake' the communication by setting the variable to FALSE

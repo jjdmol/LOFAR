@@ -42,6 +42,9 @@ namespace LOFAR {
 #define	MAC_CODELOGGING_PORT			23999
 #define	MAC_SERVICEBROKER_PORT			24000
 
+// QUICK FIX #3633
+#define MAC_PYTHON_FEEDBACK_QF			23932
+
 // CEPlogprocessor needs fixed ports
 #define CEP_LOGPROC_LOGGING				23900
 #define CEP_LOGPROC_CONTROL				23901
