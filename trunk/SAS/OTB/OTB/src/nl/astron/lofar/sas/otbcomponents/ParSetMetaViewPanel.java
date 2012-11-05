@@ -472,20 +472,21 @@ public class ParSetMetaViewPanel extends javax.swing.JPanel implements IViewPane
     }//GEN-LAST:event_jScrollPane1MouseClicked
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
-    String aS= (String)jTable1.getModel().getValueAt(jTable1.getSelectedRow(), 1);
-    String newS = "";
-    // add newlines per 80 chars to be able to have a smaller sized popupwindow
-    for (int i=0; i< aS.length();i++) {
-        newS=newS.concat(aS.substring(i, i+1));
-        if ((i+1)%80==0) {
-            newS=newS.concat("\n");
+        if (jTable1.getSelectedRow() == -1) return;
+        String aS= (String)jTable1.getModel().getValueAt(jTable1.getSelectedRow(), 1);
+        String newS = "";
+        // add newlines per 80 chars to be able to have a smaller sized popupwindow
+        for (int i=0; i< aS.length();i++) {
+            newS=newS.concat(aS.substring(i, i+1));
+            if ((i+1)%80==0) {
+                newS=newS.concat("\n");
+            }
         }
-    }
 
-    //popup the result
-    JOptionPane.showMessageDialog(this,newS,
-                                "Show full row value",
-                                JOptionPane.INFORMATION_MESSAGE);
+        //popup the result
+        JOptionPane.showMessageDialog(this,newS,
+                                    "Show full row value",
+                                    JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jTable1MouseClicked
     
     private jOTDBnode itsNode        = null;
