@@ -53,6 +53,7 @@ CREATE OR REPLACE FUNCTION getExecutableTrees(INT2)
 			   t.classif, 
 			   u.username, 
 			   t.d_creation, 
+			   t.modificationdate, 
 			   t.treetype, 
 			   t.state, 
 			   t.originID, 
