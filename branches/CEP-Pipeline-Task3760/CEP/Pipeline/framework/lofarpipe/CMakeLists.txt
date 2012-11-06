@@ -26,7 +26,6 @@ python_install(
   support/loggingdecorators.py
   support/mac.py
   support/parset.py
-  support/pipelinexml.py
   support/remotecommand.py
   support/stateful.py
   support/subprocessgroup.py
