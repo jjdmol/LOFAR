@@ -1,3 +1,27 @@
+Version 2.1.0
+2012-08-12  André Offringa <of...nga@astro.rug.nl>
+  * This release adds support for .sdfits files that are used in Parkes data reduction and has various little enhancements. Strategy file format has not changed.
+  * New feature: Parkes' sdfits files can now be opened (with help from J. Delhaize) and the AOFlagger seems to be able to flag such observations well
+  * New feature: Save flags action can store flags to sdfits files
+  * New feature: New spectrum plot options in Rfigui (plot mean or sum of time steps)
+  * New feature: binary 'badstations', will use quality statistics to determine bad stations. Meant to be a fast tool for LOFAR data.
+  * New feature: allow reading non-standard columns in the gui (requested by R. van Weeren)
+  * New feature: new action 'Normalize variance', observations can be normalized by using the quality statistics.
+  * Bug fix: Sinc convolution in time direction can now be accomplished with FFT
+  * Bug fix: Added many improvements to the aoqplot quality plotting tool, i.e., better error msgs, more plots, bandpass/time correction, less crashes.
+  * Bug fix: No longer silently ignoring write errors during reordering -- before this, when writing failed, flag results were wrong without warning.
+  * Enhancement: more options for aoquality tool.
+  * Bug fix: The uvfits reader did not work any more on WSRT files because of architectural changes in the AOFlagger. Fixed.
+  * Bug fix: AOFlagger can now flag data without time stamps (wich allows me to flag data from my personal hobby telescope).
+  * Bug fix: Open button now has key accelerator.
+  * Bug fix: AOFlagger did not compile on gcc 4.7 (reported by J. Swinbank).
+  * Bug fix: Toolbar in the Rfigui will now always show both text and icons
+  * Bug fix: Interface changed to allow NDPPP to read the raw data, NDPPP's problems fixed that concerned quality collecting.
+  * Performance enhancement: Improved speed of horizontal sumthreshold algorithm with SSE instructions, leading to about 10\% improved speed on overal strategy.
+  * Bug fix: fixed bug in previously mentioned new SumThreshold algorithm causing crashes (reported by J. Swinbank), also adding test case to validate result.
+  * Performance enhancement: Improved performance of reading meta data of measurement sets.
+  * Experimental additions: the frequency filters are now optimized and can be applied on huge (LOFAR) observations.
+
 Version 2.0.1
 2012-03-16	André Offringa <of...nga@astro.rug.nl>
   * This release is a quick fix for a bug that caused a strategy read failure on machines with non-standard locales

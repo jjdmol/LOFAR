@@ -108,7 +108,6 @@ class StatisticsDerivator
 			std::vector<double> observationTimes;
 			BandInfo band;
 			size_t index = 0;
-			band.channelCount = frequencies.size();
 			for(std::set<double>::const_iterator i=frequencies.begin();i!=frequencies.end();++i)
 			{
 				freqIndices.insert(std::pair<double, size_t>(*i, index));

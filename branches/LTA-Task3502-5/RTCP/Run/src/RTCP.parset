@@ -8,7 +8,7 @@ Observation.Campaign.name = "Development"
 Observation.Campaign.title = "Development"
 
 # ----- Input streams
-Observation.VirtualInstrument.stationList = [CS302]
+Observation.VirtualInstrument.stationList = [S33]
 #Observation.antennaSet=LBA_INNER
 #Observation.antennaSet=LBA_OUTER
 #Observation.antennaSet=LBA_X
@@ -33,9 +33,9 @@ OLAP.nrTimesInFrame = 16
 #     [ 3*(0;1;2;3)  ] --> [ 0,1,2,3,0,1,2,3,0,1,2,3 ]
 #     [ 3*(300..303) ] --> [ 300,301,302,303,300,301,302,303,300,301,302,303 ]
 #     [ 2*(5*0)      ] --> [ 0,0,0,0,0,0,0,0,0,0 ]       
-Observation.subbandList  = [100..159]
+Observation.subbandList  = [100..110]
 Observation.sampleClock  = 200
-OLAP.nrBitsPerSample     = 16
+Observation.nrBitsPerSample = 16
 
 # Observation.{beamList,rspBoardList,rspSlotList} are automatically derived from Observation.subbandList
 #Observation.beamList     = [244*0]
@@ -65,11 +65,11 @@ Observation.Beam[0].TiedArrayBeam[0].coherent = T
 #Observation.Beam[0].TiedArrayBeam[2].dispersionMeasure = 1.3
 
 # ----- Output streams
-OLAP.Storage.hosts = [locus080]
+OLAP.Storage.hosts = [locus095]
 OLAP.Storage.targetDirectory = /data # will be appended with dirmask and filenammask
 
-Observation.DataProducts.Output_Beamformed.enabled = T
-Observation.DataProducts.Output_Correlated.enabled = F
+Observation.DataProducts.Output_Beamformed.enabled = F
+Observation.DataProducts.Output_Correlated.enabled = T
 Observation.DataProducts.Output_Trigger.enabled = F
 
 Observation.DataProducts.Output_Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS

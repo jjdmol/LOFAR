@@ -50,6 +50,12 @@ void MSWriterFile::write(StreamableData *data)
 }
 
 
+size_t MSWriterFile::getDataSize()
+{
+  return itsFile.size();
+}
+
+
 } // namespace RTCP
 } // namespace LOFAR
 

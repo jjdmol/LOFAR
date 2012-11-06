@@ -629,7 +629,7 @@ class Parset(util.Parset.Parset):
           # make sure that the remainder is easily factorisable for easier post-processing
           cnIntegrationSteps = forced_factors * increase_factors( int(round(nrSamplesPerSecond * cnIntegrationTime / forced_factors)) )
 
-        cnIntegrationSteps = max(1, cnIntegrationSteps)
+        cnIntegrationSteps = max(forced_factors, cnIntegrationSteps)
 
         self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
 
@@ -815,10 +815,10 @@ class Parset(util.Parset.Parset):
         return k in self and self.getBool(k)
 
       try:  
+        assert self["Observation.nrBeams"] > 0, "No SAPs (beams) specified."
         assert self.getNrOutputs() > 0, "No data output selected."
         assert len(self.stations) > 0, "No stations selected."
         assert len(self.getInt32Vector("Observation.subbandList")) > 0, "No subbands selected."
-        assert len(self.getInt32Vector("Observation.subbandList")) <= NRRSPBOARDS*NRBOARBEAMLETS, "More than %d subbands selected." % (NRRSPBOARDS*NRBOARBEAMLETS,)
 
         # phase 2 and 3 are either disjunct or equal
         assert self.phaseThreePsetDisjunct() or self.phaseTwoThreePsetEqual(), "Phase 2 and 3 should use either disjunct or the same psets."
@@ -921,6 +921,7 @@ if __name__ == "__main__":
 
   parset.postRead()
   parset.preWrite()
+  parset.check()
 
   if options.key:
     print parset[options.key]

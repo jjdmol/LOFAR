@@ -6,9 +6,9 @@ Downloading and installing
 .. note::
 
     If you are working on the LOFAR CEP I/II clusters, then PyBDSM is already installed. All that needs to be done is to initialize your environment as follows::
-    
+
         $ use LofIm
-        
+
 Downloading the code
 --------------------
 The latest version of the code may be obtained as a gzipped tar file from the STRW FTP server at ftp://ftp.strw.leidenuniv.nl/pub/rafferty/PyBDSM (e.g., ``PyBDSM-1.2.tar.gz``). Once downloaded, extract the files in the directory where you would like to install PyBDSM. The files are all contained in a subdirectory named ``LOFAR``.
@@ -19,7 +19,7 @@ Before compiling the PyBDSM source code, you need to make sure you have the requ
 
 * Python 2.6 or newer (including NumPy, SciPy, Matplotlib, and IPython). The easiest way to install Python and all of the required modules is to use the 64-bit EPD Python distribution, available at http://enthought.com/products/epd.php. For academic users, a free version is available at http://www.enthought.com/products/edudownload.php.
 * gfortran. Binaries are available from http://gcc.gnu.org/wiki/GFortranBinaries.
-* PyWCS. You can get PyWCS from https://trac6.assembla.com/astrolib.
+* PyFITS. You can get PyFITS from www.stsci.edu/institute/software_hardware/pyfits (if you use the EPD Python distribution described above, PyFITS is already included in that).
 * Boost. Get the latest version from http://www.boost.org. Only the Python libraries need to be compiled. For example, on a Mac, do the following (which assumes the latest version is ``boost_1_49_0.tar.gz``)::
 
     $ cd /usr/local/
@@ -28,16 +28,17 @@ Before compiling the PyBDSM source code, you need to make sure you have the requ
     $ sudo ./bootstrap.sh --with-libraries=python
     $ sudo ./b2 install
 
-
 .. note::
 
-    If you use the 64-bit EPD distribution on Mac OS X, there are problems with the default matplotlib backend that cause some of the plotting functionality of PyBDSM to be lost. To fix this problem, edit (or create) the ``~/.matplotlib/matplotlibrc`` file and add the line::
-    
-        backend : Qt4Agg
-        
-    Then add the following line to your ``.bash_profile``::
-    
-        export QT_API='pyside'
+    If you're using a Mac with OS 10.8 (Mountain Lion), you need to do use the clang compiler rather than the default gcc compiler. To do this, copy the following lines into a blank file and save the file as ``LOFAR/CMake/variants/hostname.variants``, where ``hostname`` is the name of your Mac (shown under System Preferences -> Sharing)::
+
+        option(USE_SHMEM "No shmem" OFF)
+        option(USE_THREADS "No threads" OFF)
+        set(GNU_COMPILERS GNU_C GNU_CXX GNU_ASM)
+        set(GNU_C    /usr/bin/clang )  # GNU C compiler
+        set(GNU_CXX  /usr/bin/g++ )  # GNU C++ compiler
+        set(GNU_ASM  /usr/bin/clang )  # GNU assembler
+
 
 
 Compiling and installing
@@ -49,8 +50,8 @@ Lastly, compile the software. To do so, change to the ``LOFAR`` directory and ma
     $ cd build/gnu_opt
     $ cmake -DBUILD_PACKAGES=PyBDSM -DUSE_LOG4CPLUS=OFF -DUSE_LOG4CXX=OFF ../..
     $ make install
-    
-If successful, PyBDSM should now be installed in ``LOFAR/build/gnu_opt/installed/``. 
+
+If successful, PyBDSM should now be installed in ``LOFAR/build/gnu_opt/installed/``.
 
 .. _add_to_path:
 
@@ -67,17 +68,17 @@ For the Bash shell::
 
     export LOFAR="<root directory of code tree>"
     source $LOFAR/build/gnu_opt/installed/lofarinit.sh
-    
+
 .. note::
 
      If you are working on the LOFAR CEP I/II clusters, then you need only to do::
-    
+
         $ use LofIm
 
 Keeping up-to-date
 ------------------
 PyBDSM is currently under active development, and bug fixes and improvements are frequently implemented. PyBDSM will automatically check for updates each time the interactive shell is started. To update PyBDSM to the latest version, download the new version and repeat the above steps.
-    
+
 Major updates will be listed in :ref:`new`.
-        
+
 

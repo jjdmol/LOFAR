@@ -235,7 +235,13 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList &args)
 
   // Fake intialization.
   InitializeCommand initCmd(strategy);
-  initCmd.accept(handler);
+  CommandResult initResult = initCmd.accept(handler);
+  if(!initResult)
+  {
+    LOG_ERROR_STR("Error executing " << initCmd.type() << " command: "
+      << initResult.message());
+    return 1;
+  }
 
   // Fake session control.
   StrategyIterator it;
@@ -243,9 +249,19 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList &args)
   {
     if(!it.atEnd())
     {
+      // Execute the current command.
       LOG_DEBUG_STR("Executing a " << (*it)->type() << " command:" << endl
         << **it);
-      (*it)->accept(handler);
+      CommandResult result = (*it)->accept(handler);
+
+      if(!result)
+      {
+        LOG_ERROR_STR("Error executing " << (*it)->type() << " command: "
+          << result.message());
+        return 1;
+      }
+
+      // Move to the next command in the strategy.
       ++it;
     }
     else
@@ -255,7 +271,17 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList &args)
       {
         // Fake finalization.
         FinalizeCommand finCmd;
-        finCmd.accept(handler);
+
+        LOG_DEBUG_STR("Executing a " << finCmd.type() << " command:" << endl
+          << finCmd);
+        CommandResult result = finCmd.accept(handler);
+
+        if(!result)
+        {
+          LOG_ERROR_STR("Error executing " << finCmd.type() << " command: "
+            << result.message());
+          return 1;
+        }
       }
       else
       {
@@ -270,9 +296,17 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList &args)
         // Fake next chunk.
         NextChunkCommand nextCmd(msFreqRange.first, msFreqRange.second, start,
           end);
+
         LOG_DEBUG_STR("Executing a " << nextCmd.type() << " command:" << endl
           << nextCmd);
-        nextCmd.accept(handler);
+        CommandResult result = nextCmd.accept(handler);
+
+        if(!result)
+        {
+          LOG_ERROR_STR("Error executing " << nextCmd.type() << " command: "
+            << result.message());
+          return 1;
+        }
 
         // Re-initialize strategy iterator.
         it = StrategyIterator(strategy);
@@ -368,7 +402,7 @@ int runDistributed(const ParameterSet &options,
       session.postResult(command.first, result);
 
       // If an error occurred, log a descriptive message and exit.
-      if(result.is(CommandResult::ERROR))
+      if(!result)
       {
         LOG_ERROR_STR("Error executing " << command.second->type()
           << " command: " << result.message());

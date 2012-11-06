@@ -149,6 +149,54 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_addKVT
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
  * Method:    getBrokenHardware
+ * Signature: (Ljava/lang/String,Ljava/lang/String)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getBrokenHardware__Ljava_lang_String_2Ljava_lang_String_2 (JNIEnv *env, jobject jTreeValue, jstring aStartTime, jstring aStopTime) {
+  // create the connection with the c++ TreeVal
+  setTreeValConnection(env,jTreeValue);
+  
+  const char* aStart = env->GetStringUTFChars (aStartTime, 0);
+  const string startTime (aStart);
+  const ptime tStart (time_from_string (startTime));
+  
+  const char* aStop = env->GetStringUTFChars (aStopTime, 0);
+  const string stopTime (aStop);
+  const ptime tStop (time_from_string (stopTime));
+  
+  jobject valueVector;
+  
+  try {
+    vector<OTDBvalue> valueList = ((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->getBrokenHardware (tStart,tStop);
+    vector<OTDBvalue>::iterator valueIterator;
+  
+  
+    // Construct java Vector
+    jclass class_Vector = env->FindClass("java/util/Vector");
+    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+    valueVector = env->NewObject(class_Vector, mid_Vector_cons);
+    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+  
+    for (valueIterator = valueList.begin(); valueIterator != valueList.end(); valueIterator++)
+      env->CallObjectMethod(valueVector, mid_Vector_add, convertOTDBvalue (env, *valueIterator));
+    
+    env->ReleaseStringUTFChars (aStartTime, aStart);
+    env->ReleaseStringUTFChars (aStopTime, aStop);
+    
+    setErrorMsg(env,jTreeValue);
+  } catch (exception &ex) {
+    cout << "Exception during treeValue::getBrokenHardware(" << tStart << "," << tStop << ") "<< ex.what() << endl;
+
+    env->ReleaseStringUTFChars (aStartTime, aStart);
+    env->ReleaseStringUTFChars (aStopTime, aStop);
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+
+  }
+  return valueVector;	     
+}
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
+ * Method:    getBrokenHardware
  * Signature: (Ljava/lang/String)Ljava/util/Vector;
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getBrokenHardware__Ljava_lang_String_2 (JNIEnv *env, jobject jTreeValue, jstring atTime ) {

@@ -32,25 +32,25 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 
 
-unsigned int RSUSettings::getSize()
+size_t RSUSettings::getSize() const
 {
-  return MSH_ARRAY_SIZE(m_registers, RSUSettings::ResetControl);
+  return MSH_size(m_registers);
 }
 
-unsigned int RSUSettings::pack  (void* buffer)
+size_t RSUSettings::pack  (char * buffer) const
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_registers, RSUSettings::ResetControl);
+  MSH_pack(buffer, offset, m_registers);
 
   return offset;
 }
 
-unsigned int RSUSettings::unpack(void *buffer)
+size_t RSUSettings::unpack(const char *buffer)
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_registers, RSUSettings::ResetControl, 1);
+  MSH_unpack(buffer, offset, m_registers);
 
   return offset;
 }

@@ -111,9 +111,9 @@ void *log_thread(void *arg)
 
     if (packets > 0) {
       if (input_proto == UDP || input_proto == Eth)
-	fprintf(stderr, "copied %u bytes (= %u packets) from %s to %s (%.2f %s)\n", bytes, packets, source, destination, speedval, suffix);
+	fprintf(stderr, "copied %zu bytes (= %zu packets) from %s to %s (%.2f %s)\n", bytes, packets, source, destination, speedval, suffix);
       else
-	fprintf(stderr, "copied %u bytes from %s to %s (%.2f %s)\n", bytes, source, destination, speedval, suffix);
+	fprintf(stderr, "copied %zu bytes from %s to %s (%.2f %s)\n", bytes, source, destination, speedval, suffix);
     }
   }
 
@@ -146,14 +146,14 @@ void init(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-  time_t   previous_time = 0, current_time;
-  unsigned i;
   char	   buffer[1024 * 1024] __attribute__ ((aligned(16)));
   size_t   read_size, write_size;
 
   init(argc, argv);
 
 #if defined USE_RING_BUFFER
+  time_t   previous_time = 0, current_time;
+
   if (input_proto == Eth) {
     unsigned offset = 0;
     while (1) {
@@ -183,6 +183,7 @@ int main(int argc, char **argv)
       //printf("mac = %02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
       unsigned char *data = (char *) frame + hdr->tp_net;
       //printf("data =");
+      //unsigned i;
       //for (i = 0; i < 48; i ++)
 	//printf(" %hhx", ((unsigned char *) data)[i]);
       //printf("\n");

@@ -23,8 +23,7 @@
 package nl.astron.lofar.sas.otb.util.treemanagers;
 
 import java.rmi.RemoteException;
-import java.util.Enumeration;
-import java.util.Vector;
+import java.util.ArrayList;
 import javax.swing.event.TreeModelEvent;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
@@ -108,12 +107,10 @@ public class ResultTreeManager extends GenericTreeManager implements ITreeManage
         aNode.areChildrenDefined = true;
         
         try {
-            Vector childs =
-                    OtdbRmi.getRemoteMaintenance().getItemList(((jOTDBnode)aNode.getUserObject()).treeID(), ((jOTDBnode)aNode.getUserObject()).nodeID(), 1);
+            ArrayList<jOTDBnode> childs = new ArrayList(
+                    OtdbRmi.getRemoteMaintenance().getItemList(((jOTDBnode)aNode.getUserObject()).treeID(), ((jOTDBnode)aNode.getUserObject()).nodeID(), 1));
             
-            Enumeration e = childs.elements();
-            while( e.hasMoreElements()  ) {
-                jOTDBnode item = (jOTDBnode)e.nextElement();
+            for (jOTDBnode item:childs) {
                 logger.trace("Node name selected :"+item.name);
                 TreeNode newNode = new TreeNode(ResultTreeManager.instance,item,item.name);
                 aNode.add(newNode);

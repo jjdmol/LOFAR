@@ -9,7 +9,7 @@ update runningcatalog
    and runningcatalog.runcatid = a.runcat_id
    and runningcatalog.group_head_id is null
    and runningcatalog.source_kind = 0
-   and e.image_id = {0};
+   and e.image_id = [i];
 
 --#deduct runningcatalog non-zero
 update runningcatalog
@@ -22,7 +22,7 @@ update runningcatalog
    and runningcatalog.group_head_id is null
    and runningcatalog.source_kind = 0
    and runningcatalog.datapoints <> 0
-   and e.image_id = {0};
+   and e.image_id = [i];
 
 
 --#deduct runningcatalog extended
@@ -38,7 +38,7 @@ update runningcatalog
            and r.runcatid = a.runcat_id
            and r.group_head_id is null
            and r.source_kind <> 0
-           and e.image_id = {0}
+           and e.image_id = [i]
         group by runcatid) as y
 where y.runcatid = runningcatalog.runcatid;
 
@@ -52,7 +52,7 @@ update runningcatalog
    and runningcatalog.group_head_id is null
    and runningcatalog.source_kind <> 0
    and runningcatalog.datapoints <> 0
-   and e.image_id = {0};
+   and e.image_id = [i];
 
 --#deduct runningcatalog_fluxes
 update runningcatalog_fluxes
@@ -66,7 +66,7 @@ update runningcatalog_fluxes
              runningcatalog_fluxes f
        where a.xtrsrc_id = e.xtrsrcid
          and f.runcat_id = a.runcat_id
-         and e.image_id = {0}
+         and e.image_id = [i]
          and e.image_id = i.imageid
          and a.lr_method <> 5 --not a group association
          and f.band = i.band
@@ -88,17 +88,17 @@ update runningcatalog_fluxes
    and runningcatalog_fluxes.band = i.band
    and i.imageid = e.image_id
    and runningcatalog_fluxes.datapoints <> 0
-   and e.image_id = {0};
+   and e.image_id = [i];
 
 
 --#deduct cleanup
 delete from assocxtrsources
  where exists (select 1 from extractedsources e
-                where e.image_id = {0}
+                where e.image_id = [i]
                   and e.xtrsrcid = assocxtrsources.xtrsrc_id);
 
 --#deduct remove extractedsources
 delete from extractedsources
- where image_id = {0}
+ where image_id = [i]
    and not exists (select 1 from assocxtrsources a
                     where a.xtrsrc_id = extractedsources.xtrsrcid);

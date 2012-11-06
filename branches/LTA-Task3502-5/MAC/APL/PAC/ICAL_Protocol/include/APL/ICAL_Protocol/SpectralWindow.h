@@ -70,9 +70,9 @@ public:
 
 	/*@{*/
 	// marshalling methods
-	unsigned int getSize() const;
-	unsigned int pack   (void* buffer) const;
-	unsigned int unpack (void* buffer);
+	size_t getSize() const;
+	size_t pack  (char* buffer) const;
+	size_t unpack(const char *buffer);
 	/*@}*/
 
 	// call for operator<<

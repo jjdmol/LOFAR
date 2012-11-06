@@ -47,8 +47,9 @@ public interface jTreeValueInterface extends Remote
     // public boolean addKVTparamSet(jParamterSet aPS) throws RemoteException;
 
 
-    // Query for getting list of broken hardware on a certain time.
-    public Vector<jOTDBvalue> getBrokenHardware (String atTime) throws RemoteException;
+    // Query for getting list of broken hardware on a certain time, or between a certain time range
+    public Vector<jOTDBvalue> getBrokenHardware (String aStartTime, String aStopTime) throws RemoteException;
+    public Vector<jOTDBvalue> getBrokenHardware (String aStartTime) throws RemoteException;
     public Vector<jOTDBvalue> getBrokenHardware () throws RemoteException;
 
     

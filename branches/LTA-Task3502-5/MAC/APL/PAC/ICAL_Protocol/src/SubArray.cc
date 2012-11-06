@@ -27,7 +27,7 @@
 #include <Common/hexdump.h>
 #include <ApplCommon/AntennaSets.h>
 
-#include <MACIO/Marshalling.h>
+#include <MACIO/Marshalling.tcc>
 #include <APL/RTCCommon/MarshallBlitz.h>
 #include <APL/ICAL_Protocol/SubArray.h>
 
@@ -188,59 +188,57 @@ ostream& SubArray::print (ostream& os) const
 //
 // ---------- pack and unpack routines ----------
 //
-unsigned int SubArray::getSize()
+size_t SubArray::getSize() const
 {
   return
-      MSH_STRING_SIZE(itsName)
-    + MSH_STRING_SIZE(itsAntennaSet)
-    + MSH_BITSET_SIZE(itsRCUmask)
+      MSH_size(itsName)
+    + MSH_size(itsAntennaSet)
+    + MSH_size(itsRCUmask)
     + itsSPW.getSize();
 }
 
-unsigned int SubArray::pack(void* buffer)
+size_t SubArray::pack(char* buffer) const
 {
-	unsigned int offset = 0;
+	size_t offset = 0;
 
-	MSH_PACK_STRING(buffer, offset, itsName);
-	MSH_PACK_STRING(buffer, offset, itsAntennaSet);
-	MSH_PACK_BITSET(buffer, offset, itsRCUmask);
-	offset += itsSPW.pack(((char*)buffer) + offset);
+	MSH_pack(buffer, offset, itsName);
+	MSH_pack(buffer, offset, itsAntennaSet);
+	MSH_pack(buffer, offset, itsRCUmask);
+	offset += itsSPW.pack(buffer + offset);
 
 	return offset;
 }
 
-unsigned int SubArray::unpack(void* buffer)
+size_t SubArray::unpack(const char* buffer)
 {
-	unsigned int offset = 0;
+	size_t offset = 0;
 
-	MSH_UNPACK_STRING(buffer, offset, itsName);
-	MSH_UNPACK_STRING(buffer, offset, itsAntennaSet);
-	MSH_UNPACK_BITSET(buffer, offset, itsRCUmask);
-	offset += itsSPW.unpack(((char*)buffer) + offset);
+	MSH_unpack(buffer, offset, itsName);
+	MSH_unpack(buffer, offset, itsAntennaSet);
+	MSH_unpack(buffer, offset, itsRCUmask);
+	offset += itsSPW.unpack(buffer + offset);
 
 	return offset;
 }
 
 // -------------------- SubArrayMap --------------------
 
-unsigned int SubArrayMap::getSize()
+size_t SubArrayMap::getSize() const
 {
-	unsigned int	offset = 0;
-	MSH_SIZE_MAP_STRING_CLASSPTR(offset, (*this), SubArray);
+	return MSH_size(*this);
+}
+
+size_t SubArrayMap::pack(char* buffer) const
+{
+	size_t	offset = 0;
+	MSH_pack(buffer, offset, (*this));
 	return (offset);
 }
 
-unsigned int SubArrayMap::pack(void* buffer)
+size_t SubArrayMap::unpack(const char* buffer)
 {
-	unsigned int	offset = 0;
-	MSH_PACK_MAP_STRING_CLASSPTR(buffer, offset, (*this), SubArray);
-	return (offset);
-}
-
-unsigned int SubArrayMap::unpack(void* buffer)
-{
-	unsigned int offset = 0;
-	MSH_UNPACK_MAP_STRING_CLASSPTR(buffer, offset, (*this), SubArray);
+	size_t offset = 0;
+	MSH_unpack(buffer, offset, (*this));
 	return (offset);
 }
 

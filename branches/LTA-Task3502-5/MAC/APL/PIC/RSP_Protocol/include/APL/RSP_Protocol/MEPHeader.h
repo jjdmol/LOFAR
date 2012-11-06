@@ -124,6 +124,7 @@ public:
 	static const uint8 RSR_STATUS       = 0x00;
 	static const uint8 RSR_VERSION      = 0x01;
 	static const uint8 RSR_TIMESTAMP    = 0x02;
+	static const uint8 RSR_BEAMMODE     = 0x03;
 
 	static const uint8 RSU_FLASHRW      = 0x01;
 	static const uint8 RSU_FLASHERASE   = 0x02;
@@ -139,11 +140,31 @@ public:
 	static const uint8 DIAG_SELFTEST    = 0x06;
 
 	static const uint8 SS_SELECT        = 0x00;
+	//static const uint8 SS_SELECT_0      = 0x00;
+	//static const uint8 SS_SELECT_1      = 0x01;
+	//static const uint8 SS_SELECT_2      = 0x02;
+	//static const uint8 SS_SELECT_3      = 0x03;
 
 	static const uint8 BF_XROUT         = 0x00;
 	static const uint8 BF_XIOUT         = 0x01;
 	static const uint8 BF_YROUT         = 0x02;
 	static const uint8 BF_YIOUT         = 0x03;
+    //static const uint8 BF_XROUT_0       = 0x00;
+	//static const uint8 BF_XIOUT_0       = 0x01;
+	//static const uint8 BF_YROUT_0       = 0x02;
+	//static const uint8 BF_YIOUT_0       = 0x03;
+    //static const uint8 BF_XROUT_1       = 0x04;
+	//static const uint8 BF_XIOUT_1       = 0x05;
+	//static const uint8 BF_YROUT_1       = 0x06;
+	//static const uint8 BF_YIOUT_1       = 0x07;
+    //static const uint8 BF_XROUT_2       = 0x08;
+	//static const uint8 BF_XIOUT_2       = 0x09;
+	//static const uint8 BF_YROUT_2       = 0x0a;
+	//static const uint8 BF_YIOUT_2       = 0x0b;
+    //static const uint8 BF_XROUT_3       = 0x0c;
+	//static const uint8 BF_XIOUT_3       = 0x0d;
+	//static const uint8 BF_YROUT_3       = 0x0e;
+	//static const uint8 BF_YIOUT_3       = 0x0f;
 
 	static const uint8 BST_POWER_LANE_0 = 0x00;
 	static const uint8 BST_POWER_LANE_1 = 0x01;
@@ -226,6 +247,7 @@ public:
 	static const uint16 N_BEAMLETS       = N_SERDES_LANES * N_DATA_SLOTS;
 	static const uint16 XLET_SIZE        = N_POL * sizeof(std::complex<uint32>);
 	static const uint16 WEIGHT_SIZE      = N_POL * sizeof(std::complex<uint16>);
+	static const uint16 MAX_N_BANKS      = 4;
 
 	// TBB related constants
 	static const uint16 TBB_MAXPAYLOADSIZE     = 1948; // available TBB payload bytes
@@ -239,6 +261,7 @@ public:
 	static const uint16 RSR_STATUS_SIZE       = 252;
 	static const uint16 RSR_VERSION_SIZE      = 2;
 	static const uint16 RSR_TIMESTAMP_SIZE    = 4;
+	static const uint16 RSR_BEAMMODE_SIZE     = 2;
 
 	static const uint16 RSU_FLASHRW_SIZE      = 1024;
 	static const uint16 RSU_FLASHERASE_SIZE   = 1;
@@ -253,7 +276,7 @@ public:
 	static const uint16 DIAG_RESULTS_SIZE     = 4096; // also 8192 ?
 	static const uint16 DIAG_SELFTEST_SIZE    = 4;
 
-	static const uint16 SS_SELECT_SIZE        = (N_LOCAL_XLETS + N_BEAMLETS) * N_POL * sizeof(uint16); // = 960?
+	static const uint16 SS_SELECT_SIZE        = (N_LOCAL_XLETS + N_BEAMLETS) * N_POL * sizeof(uint16); // = 1008
 
 	static const uint16 BF_XROUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
 	static const uint16 BF_XIOUT_SIZE         = (N_LOCAL_XLETS + N_BEAMLETS) * WEIGHT_SIZE;
@@ -311,9 +334,9 @@ public:
 
 	/*@{*/
 	// marshalling methods
-	unsigned int getSize();
-	unsigned int pack  (void* buffer);
-	unsigned int unpack(void *buffer);
+	size_t getSize() const;
+	size_t pack  (char* buffer) const;
+	size_t unpack(const char *buffer);
 	/*@}*/
 
 	// MEP 4.x header fields
@@ -363,6 +386,7 @@ public:
 	static const FieldsType RSR_STATUS_HDR;
 	static const FieldsType RSR_VERSION_HDR;
 	static const FieldsType RSR_TIMESTAMP_HDR;
+	static const FieldsType RSR_BEAMMODE_HDR;
 
 	static const FieldsType RSU_FLASHRW_HDR;
 	static const FieldsType RSU_FLASHERASE_HDR;
@@ -378,12 +402,32 @@ public:
 	static const FieldsType DIAG_SELFTEST_HDR;
 
 	static const FieldsType SS_SELECT_HDR;
+	//static const FieldsType SS_SELECT_HDR_0;
+	//static const FieldsType SS_SELECT_HDR_1;
+	//static const FieldsType SS_SELECT_HDR_2;
+	//static const FieldsType SS_SELECT_HDR_3;
 
 	static const FieldsType BF_XROUT_HDR;
 	static const FieldsType BF_XIOUT_HDR;
 	static const FieldsType BF_YROUT_HDR;
 	static const FieldsType BF_YIOUT_HDR;
-
+    //static const FieldsType BF_XROUT_HDR_0;
+	//static const FieldsType BF_XIOUT_HDR_0;
+	//static const FieldsType BF_YROUT_HDR_0;
+	//static const FieldsType BF_YIOUT_HDR_0;
+	//static const FieldsType BF_XROUT_HDR_1;
+	//static const FieldsType BF_XIOUT_HDR_1;
+	//static const FieldsType BF_YROUT_HDR_1;
+	//static const FieldsType BF_YIOUT_HDR_1;
+	//static const FieldsType BF_XROUT_HDR_2;
+	//static const FieldsType BF_XIOUT_HDR_2;
+	//static const FieldsType BF_YROUT_HDR_2;
+	//static const FieldsType BF_YIOUT_HDR_2;
+	//static const FieldsType BF_XROUT_HDR_3;
+	//static const FieldsType BF_XIOUT_HDR_3;
+	//static const FieldsType BF_YROUT_HDR_3;
+	//static const FieldsType BF_YIOUT_HDR_3;
+	
 	static const FieldsType BST_POWER_HDR;
 
 	static const FieldsType SST_POWER_HDR;
@@ -424,7 +468,18 @@ public:
 	static const FieldsType RSP_RAWDATA_READ;
 
 	/*@}*/
+	// Output function for operator <<
+	ostream& print (ostream& os) const;
+
 };
+
+//
+// operator <<
+//
+inline ostream& operator<< (ostream& os, const MEPHeader& hdr)
+{
+	return (hdr.print(os));
+}
 
   }; // namespace EPA_PROTOCOL
 }; // namespace LOFAR

@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 8 (NoName)
 PANEL,-1 -1 453 525 N "_3DFace" 1
@@ -17,17 +17,34 @@ PANEL,-1 -1 453 525 N "_3DFace" 1
     baseDP += \"_BGP_Midplane\" + mNr;         
   }
     
-  string aS = navFunct_DPName2CEPName(baseDP);
-  setValue(\"Midplane_Txt\",\"text\",aS);
 
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
 
+  if(dpExists(sysName+\"LOFAR_PIC_BGP.BGPSwitch\")) {
+    dpConnect(\"controlMidplane\", sysName+\"LOFAR_PIC_BGP.BGPSwitch:_online.._value\",
+                                 sysName+\"LOFAR_PIC_BGP.BGPSwitch:_online.._invalid\");
+    if (!navFunct_dpReachable(\"LOFAR_PIC_BGP.BGPSwitch\")) {
+      controlMidplane(\"\",false,\"\",true);
+    }
+  }
+  
   // connect for childUpdates
   showChildState(baseDP);
   // connect for selfUpdates
   showSelfState(baseDP);
-}" 0
+
+}
+
+void controlMidplane(string dp1, bool  bgpswitch,
+                string dp2, bool  invalid) {
+ 
+  if (!invalid) { 
+    string aS = navFunct_DPName2CEPName(baseDP);
+    setValue(\"Midplane_Txt\",\"text\",aS);
+  }
+}  
+" 0
  E "main()
 {
   click();
@@ -221,12 +238,11 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 0 1 E U  0 E 27 175 86 192
+ 0 1 1 0 1 E U  0 E 27 175 86 191
 0 2 0 "0s" 0 0 0 192 0 0  27 175 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 8 Midplane
 1 5 1 "" 1
 0
@@ -259,7 +275,7 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 1 "selfState"
+3 1 "selfState" -1
 "objects\\lofar_self_state.pnl" 363 291 T 87 0.8947368421052632 0 1 -298.7894736842105 -273
 0
 0

@@ -55,12 +55,14 @@ class PVSSservice;
 
 class GSAWaitForAnswer : public HotLinkWaitForAnswer
 {
+    using HotLinkWaitForAnswer::hotLinkCallBack;
+
 public:
     GSAWaitForAnswer (PVSSservice& service) :
 		HotLinkWaitForAnswer(), _service(service) {}
     virtual ~GSAWaitForAnswer () {};
     
-    void hotLinkCallBack (DpMsgAnswer& answer)
+    virtual void hotLinkCallBack (DpMsgAnswer& answer)
 		{ _service.handleHotLink(answer, *this);   }
 
     const string&	getDpName () const 
@@ -69,8 +71,8 @@ public:
 		{ _dpName = dpName; }
 
 protected:
-    // Answer on conenct
-    void hotLinkCallBack (DpHLGroup& group)
+    // Answer on connect
+    virtual void hotLinkCallBack (DpHLGroup& group)
 		{ _service.handleHotLink(group, *this); }
 
 private:

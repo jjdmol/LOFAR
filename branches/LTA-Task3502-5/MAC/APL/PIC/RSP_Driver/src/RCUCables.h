@@ -82,7 +82,7 @@ private:
 	int			itsLargestLBAlen;
 	int			itsLargestHBAlen;
 
-	CableAttenuation*			itsCableAtts;
+	CableAttenuation			itsCableAtts;
 	blitz::Array<int,  2>		itsCableLengths;
 	blitz::Array<float,2>		itsCableDelays;
 };

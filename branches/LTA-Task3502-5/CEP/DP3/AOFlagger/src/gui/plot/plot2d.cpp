@@ -179,8 +179,8 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 	double
 		xLeft = _system.XRangeMin(pointSet),
 		xRight = _system.XRangeMax(pointSet),
-		yMin = MinY(),
-		yMax = MaxY();
+		yMin = _logarithmicYAxis ? MinPositiveY() : MinY(),
+		yMax = _logarithmicYAxis ? MaxPositiveY() : MaxY();
 	if(!std::isfinite(xLeft) || !std::isfinite(xRight))
 	{
 		xLeft = -1;

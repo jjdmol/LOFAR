@@ -25,27 +25,18 @@ CREATE TABLE images
   ,band INT NOT NULL
   ,stokes CHAR(1) NOT NULL DEFAULT 'I'
   ,imagename CHAR(64) NOT NULL --unique LOFAR image id
-  --,tau_time double NOT NULL
-  --,freq_eff double NOT NULL
-  --,freq_bw double NULL
-  --,taustart_ts TIMESTAMP NOT NULL
-  --,bmaj double NOT NULL
-  --,bmin double NOT NULL
-  --,bpa double NOT NULL
   ,centr_ra double NOT NULL
   ,centr_decl double NOT NULL
   ,fov_radius double null -- field of view size
-  --,x double NOT NULL
-  --,y double NOT NULL
-  --,z double NOT NULL
   ,url VARCHAR(120) NULL
   ,reprocessing INT NOT NULL DEFAULT 0
   ,status int not null -- 0-created, 1-Ok, 2-removed from runningcatalog, 3-removed completely
   ,process_date timestamp not null default current_timestamp
   ,svn_version int null
+  ,run_id int not null
   ,PRIMARY KEY (imageid)
   --,FOREIGN KEY (ds_id) REFERENCES datasets (dsid)
-  ,FOREIGN KEY (band) REFERENCES frequencybands (freqbandid)
+  --,FOREIGN KEY (band) REFERENCES frequencybands (freqbandid)
   )
 ;
 

@@ -53,6 +53,7 @@ class InputThread
     const std::string		     itsLogPrefix, itsInputDescriptor;
     Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
     SmartPtr<Thread>		     itsThread;
+    const double             itsDeadline;
 };
 
 

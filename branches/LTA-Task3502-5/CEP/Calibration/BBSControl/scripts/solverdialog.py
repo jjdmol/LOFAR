@@ -5,7 +5,7 @@
 # File:           solverdialog.py
 # Author:         Sven Duscha (duscha@astron.nl)
 # Date:           2010-08-05
-# Last change;    2011-12-11  
+# Last change;    2012-09-27  
 #
 #
 
@@ -13,6 +13,8 @@
 import sys, os, random
 import lofar.bbs.solverquery as sq
 import lofar.bbs.plotwindow
+#import solverquery as sq  # DEBUG!!!
+#import plotwindow         # DEBUG!!!
 import lofar.parmdb as parmdb
 
 
@@ -870,7 +872,8 @@ class SolverAppForm(QMainWindow):
         self.getMessages()                             # get dictionary with solver messages
 
       	# TODO: get current PlotWindow
-        self.plots.append(lofar.bbs.plotwindow.PlotWindow(self))     # call PlotWindow class with this class as parent
+        self.plots.append(lofar.bbs.plotwindow.PlotWindow(self))  # call PlotWindow class with this class as parent
+        #self.plots.append(plotwindow.PlotWindow(self))  # DEBUG
         print "on_plot() finished drawing"
 
 
@@ -1127,7 +1130,6 @@ class SolverAppForm(QMainWindow):
 
                     # This solverQuery functions fetches the parameter along with the corresponding time stamps
                     y, x=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
-
                     return x, y["last"]
 
             # If we plot a single solution per iteration
@@ -1152,9 +1154,6 @@ class SolverAppForm(QMainWindow):
                 print "getSolutions() start_time = ", start_time, " end_time = ", end_time      # DEBUG
 
                 y, x=self.solverQuery.getSolution(start_time, end_time, start_freq, end_freq)
-
-                # This then calls Joris' plot function
-                #self.plot(self.fig, y["last"], x, sub=parsub, scatter=scatter, clf=self.clf)
                 return y, x
 
             elif parameter == "CORRMATRIX":
@@ -1171,7 +1170,9 @@ class SolverAppForm(QMainWindow):
                 #y=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq)
                 #x=self.solverQuery.getMidTimes(start_time, end_time)
 
-                #self.plot(self.fig, y['last'], x, sub=111, scatter=scatter, clf=self.clf)   # OLD
+                print "x=",x  # DEBUG
+                print "y=",y  # DEBUG
+
                 return x, y['last']
 
         else:
@@ -1733,16 +1734,16 @@ class SolverAppForm(QMainWindow):
         #print "createParmMap()"   # DEBUG
         parmMap={}                 # Dictionary containing Parameter names mapped to indices
 
-        parmNames=['gain', 'mim']  # extend these as necessary
+        parmNames=['gain', 'directionalgain','mim']  # extend these as necessary
 
         # Read keywords from TableKeywords
         keywords=self.solverQuery.solverTable.keywordnames()
-
         for key in keywords:                                    # loop over all the keywords found in the TableKeywords
-            for parmName in parmNames:                                    # loop over the list of all allowed parmNames
-                if parmName in key.lower():                               # if an allowed parmName is found in the key
-                    indices=self.solverQuery.solverTable.getkeyword(key)  # extract the indices
-                    parmMap[key]=indices                                  # and write them into the python map
+            for parmName in parmNames:                          # loop over the list of all allowed parmNames
+                if parmName in key.lower():                     # if an allowed parmName is found in the key
+		    index=keywords.index(key)			# better to use index for getkeyword to avoid . conflict
+                    indices=self.solverQuery.solverTable.getkeyword(index)  # extract the indices
+                    parmMap[key]=indices                                    # and write them into the python map
 
         return parmMap
 
@@ -1859,7 +1860,6 @@ class SolverAppForm(QMainWindow):
     # Compute amplitude for parameter
     #
     def computeAmplitude(self, parameter, solutions):
-        #print "computeAmplitude()"   # DEBUG
         #print "computeAmplitude(): parameter = ", parameter   # DEBUG
 
         parameter=str(parameter)
@@ -1869,8 +1869,9 @@ class SolverAppForm(QMainWindow):
         #print "computeAmplitude() parmMap = ", self.parmMap  # DEBUG
 
         # Insert REAL and Imag into parameter
-        parameterReal=parameter[:8] + ":Real" + parameter[8:]
-        parameterImag=parameter[:8] + ":Imag" + parameter[8:]
+	pos=parameter.find("Gain")	# this works for Gain: and DirectionalGain
+        parameterReal=parameter[:(pos+8)] + ":Real" + parameter[(pos+8):]
+        parameterImag=parameter[:(pos+8)] + ":Imag" + parameter[(pos+8):]
 
         #print "computeAmplitude() parameterReal =", parameterReal   # DEBUG
         #print "computeAmplitude() parameterImag = ", parameterImag  # DEBUG
@@ -1889,7 +1890,6 @@ class SolverAppForm(QMainWindow):
         # Decide on data type of solutions
         if isinstance(solutions, int):
             amplitude=math.sqrt(solutions[real_idx]^2 + solutions[imag_idx]^2)
-
         elif isinstance(solutions, np.ndarray) or isinstance(solutions, list):
             length=len(solutions)
 
@@ -1914,8 +1914,9 @@ class SolverAppForm(QMainWindow):
         self.parmMap=self.createParmMap()
 
         # Insert REAL and Imag into parameter
-        parameterReal=parameter[:8] + ":Real" + parameter[8:]
-        parameterImag=parameter[:8] + ":Imag" + parameter[8:]
+	pos=parameter.find("Gain")	# this works for Gain: and DirectionalGain
+        parameterReal=parameter[:(pos+8)] + ":Real" + parameter[(pos+8):]
+        parameterImag=parameter[:(pos+8)] + ":Imag" + parameter[(pos+8):]
 
         real_idx=self.parmMap[parameterReal][0]
         imag_idx=self.parmMap[parameterImag][0]

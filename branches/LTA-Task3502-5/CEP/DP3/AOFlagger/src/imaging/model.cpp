@@ -38,7 +38,7 @@ Model::~Model()
 template<typename T>
 void Model::SimulateObservation(struct OutputReceiver<T> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA)
 {
-	const size_t channelCount = observatorium.BandInfo().channelCount;
+	const size_t channelCount = observatorium.BandInfo().channels.size();
 	const double frequency = observatorium.BandInfo().channels[0].frequencyHz;
 
 	for(size_t f=0;f<channelCount;++f)
@@ -68,7 +68,7 @@ template void Model::SimulateObservation(struct OutputReceiver<TimeFrequencyData
 
 std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, size_t a1, size_t a2)
 {
-	const size_t channelCount = observatorium.BandInfo().channelCount;
+	const size_t channelCount = observatorium.BandInfo().channels.size();
 	const double frequency = observatorium.BandInfo().channels[0].frequencyHz;
 	
 	OutputReceiver<TimeFrequencyData> tfOutputter;

@@ -48,9 +48,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LofarVisibilityResamplerBase(): 
       uvwScale_p(), offset_p(), chanMap_p(), polMap_p(), convFuncStore_p(), inc_p()
     {};
-    LofarVisibilityResamplerBase(const CFStore& cfs): 
-      uvwScale_p(), offset_p(), chanMap_p(), polMap_p(), convFuncStore_p(), inc_p()
-    {setConvFunc(cfs);};
 
     LofarVisibilityResamplerBase(const LofarVisibilityResamplerBase& other):
       uvwScale_p(), offset_p(), chanMap_p(), polMap_p(), convFuncStore_p(), inc_p()

@@ -27,7 +27,7 @@ class Op_new_op(Op):
     ## we need to add option my_new_opt
     pass
 
-## this will extend Opts class at runtime and ensure that 
+## this will extend Opts class at runtime and ensure that
 ## type-checking works properly.
 Opts.my_new_opt = Float(33, doc="docstring")
 """
@@ -501,6 +501,28 @@ class Opts(object):
                                  "3-, or 4-D cube. The detection image and the main"\
                                  "image must have the same size and be registered.",
                              group = "advanced_opts")
+    do_mc_errors = Bool(False,
+                             doc = "Estimate uncertainties for 'M'-type sources using Monte "\
+                                "Carlo method\n"\
+                                "If True, uncertainties on the sizes and "\
+                                "positions of 'M'-type sources "\
+                                "due to uncertainties in the constituent Gaussians are "\
+                                "estimated using a Monte Carlo technique. These "\
+                                "uncertainties are added in quadrature with those "\
+                                "calculated using Condon (1997). If False, "\
+                                "these uncertainties are ignored, and errors are "\
+                                "calculated using Condon (1997) only.\n"\
+                                "Enabling this option will result in longer run "\
+                                "times if many 'M'-type sources are present, but "\
+                                "should give better estimates of the uncertainites, "
+                                "particularly for complex sources composed of many "\
+                                "Gaussians.",
+                             group = "advanced_opts")
+    ncores = Option(None, Int(),
+                             doc = "Number of cores to use during fitting, None => "\
+                                "use all\n"\
+                                "Sets the number of cores to use during fitting.",
+                             group = "advanced_opts")
 
     #--------------------------------ADAPTIVE RMS_BOX OPTIONS--------------------------------
     rms_box_bright = Option(None, Tuple(Int(), Int()),
@@ -598,7 +620,7 @@ class Opts(object):
                                  "flag_maxsnr times the image value at the peak "\
                                  "is flagged. The flag value is increased by 2.",
                              group = "flagging_opts")
-    flag_maxsize_isl = Float(1.0,
+    flag_maxsize_isl = Float(2.0,
                              doc = "Flag Gaussian if x, y bounding box "\
                                  "around sigma-contour is factor times island bbox\n"\
                                  "Any fitted Gaussian whose maximum x-dimension is "\
@@ -857,6 +879,11 @@ class Opts(object):
                                  "considered 'unresolved' and are used further to "\
                                  "estimate the PSFs.",
                              group = "psf_vary_do")
+    psf_smooth = Option(None, Float(),
+                             doc = "Size of Gaussian to use for smoothing of "\
+                                 "interpolated images in arcsec. None => no "\
+                                 "smoothing",
+                             group = "psf_vary_do")
     psf_snrcut = Float(10.0,
                              doc = "Minimum SNR for statistics\n"\
                                  "Only Gaussians with SNR greater than this are "\
@@ -1016,7 +1043,17 @@ class Opts(object):
                              doc = "Print debug info to the logfile",
                              group = "hidden")
     outfile = Option(None, String(),
-                             doc = "Output file name. None => file is named automatically",
+                             doc = "Output file name. None => file is named "\
+                                 "automatically; 'SAMP' => send to SAMP hub "\
+                                 "(e.g., to TOPCAT, ds9, or Aladin)",
+                             group = 'hidden')
+    broadcast = Bool(False,
+                             doc = "Broadcast Gaussian and source IDs and "\
+                                 "coordinates to SAMP hub when a Gaussian is "\
+                                 "clicked?\nNote that for the "\
+                                 "IDs to be useful, a catalog must have been sent "\
+                                 "to the SAMP hub previously using the write_catalog "\
+                                 "task (with outfile = 'SAMP').",
                              group = 'hidden')
     clobber = Bool(False,
                              doc = "Overwrite existing file?",
@@ -1048,6 +1085,21 @@ class Opts(object):
                              doc = "Include flux densities from each channel "\
                                  "(if any)?",
                              group = 'hidden')
+    incl_empty = Bool(False,
+                             doc = "Include islands without any valid Gaussians "\
+                                 "(source list only)?\n"\
+                                 "If True, islands for which Gaussian fitting "\
+                                 "failed will be included in the output catalog. "\
+                                 "In these cases, the source IDs "\
+                                 "are negative.",
+                             group = 'hidden')
+    force_output = Bool(False,
+                             doc = "Force creation of output file, even if the "\
+                                 "catalog is empty?\n"\
+                                 "If True, the output catalog will be created, "\
+                                 "even if there are no sources. In this case, "\
+                                 "the catalog will have a header but no entries.",
+                             group = 'hidden')
     catalog_type = Enum('gaul', 'shap', 'srl',
                              doc = "Type of catalog to write:  'gaul' - Gaussian "\
                                  "list, 'srl' - source list (formed "\
@@ -1061,7 +1113,7 @@ class Opts(object):
                              group = 'hidden')
     img_type = Enum('gaus_resid', 'shap_resid', 'rms', 'mean', 'gaus_model',
                              'shap_model', 'ch0', 'pi', 'psf_major', 'psf_minor',
-                             'psf_pa',
+                             'psf_pa', 'psf_ratio', 'psf_ratio_aper',
                              doc = "Type of image to export: 'gaus_resid', "\
                                  "'shap_resid', 'rms', 'mean', 'gaus_model', "\
                                  "'shap_model', 'ch0', 'pi', 'psf_major', "\
@@ -1075,9 +1127,11 @@ class Opts(object):
                                  "'gaus_model' - Gaussian model image\n"\
                                  "'shap_resid' - Shapelet model residual image\n"\
                                  "'shap_model' - Shapelet model image\n"\
-                                 "'psf_major' - PSF major axis FWHM (in pixels) image\n"\
-                                 "'psf_minor' - PSF minor axis FWHM (in pixels) image\n"\
-                                 "'psf_pa' - PSF position angle (E from N in degrees) image\n",
+                                 "'psf_major' - PSF major axis FWHM image (FWHM in arcsec)\n"\
+                                 "'psf_minor' - PSF minor axis FWHM image (FWHM in arcsec)\n"\
+                                 "'psf_pa' - PSF position angle image (degrees east of north)\n"\
+                                 "'psf_ratio' - PSF peak-to-total flux ratio (in units of 1/beam)\n"\
+                                 "'psf_ratio_aper' - PSF peak-to-aperture flux ratio (in units of 1/beam)",
                              group = 'hidden')
     ch0_image = Bool(True,
                              doc = "Show the ch0 image. This is the image used for "\
@@ -1122,11 +1176,11 @@ class Opts(object):
                              group = "hidden")
     psf_major = Bool(False,
                              doc = "Show the PSF major axis variation (values are "\
-                                 "FWHM in pixels)",
+                                 "FWHM in arcsec)",
                              group = "hidden")
     psf_minor = Bool(False,
                              doc = "Show the FWHM of PSF minor axis variation (values are "\
-                                 "FWHM in pixels)",
+                                 "FWHM in arcsec)",
                              group = "hidden")
     psf_pa = Bool(False,
                              doc = "Show the PSF position angle variation (values are "\
@@ -1135,7 +1189,7 @@ class Opts(object):
 
 
     def __init__(self, values = None):
-        """Build an instance of Opts and (possibly) 
+        """Build an instance of Opts and (possibly)
         initialize some variables.
 
         Parameters:
@@ -1150,7 +1204,7 @@ class Opts(object):
         """
         'private' function performing parse of a string containing
         a bool representation as defined in the parameter set/otdb
-        implementation       
+        implementation
         """
         true_chars = ['t', 'T', 'y', 'Y', '1']
         false_chars = ['f', 'F', 'n', 'N', '0']
@@ -1176,7 +1230,7 @@ class Opts(object):
                 # and then try to parse it
                 if hasattr(self, k):
                     if isinstance(self.__getattribute__(k), bool):
-                        if isinstance(v, bool):
+                        if isinstance(v, bool) or v == None:
                             # just enter the bool into the parameter
                             pass
                         elif isinstance(v, basestring):
@@ -1200,7 +1254,7 @@ class Opts(object):
 
         opt_names should be a list of opt names as strings, but can be
         a string of a single opt name.
-        
+
         If None, set all opts to default values."""
         if opt_names == None:
             TCInit(self)
@@ -1254,3 +1308,13 @@ class Opts(object):
         opts_list = sorted(opts_list)
         return opts_list
 
+    def __setstate__(self, state):
+        self.set_opts(state)
+
+    def __getstate__(self):
+        import tc
+        state = {}
+        for k, v in self.__class__.__dict__.iteritems():
+            if isinstance(v, tc.TC):
+                state.update({k: self.__getattribute__(k)})
+        return state

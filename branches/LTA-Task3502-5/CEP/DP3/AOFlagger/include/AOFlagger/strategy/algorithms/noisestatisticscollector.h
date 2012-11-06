@@ -316,7 +316,17 @@ class NoiseStatisticsCollector {
 			const TFIndex tfIndex = TFIndex(centralTime, centralFrequency);
 			add(_valuesTF, tfIndex, statistics);
 			
-			const TBIndex tbIndex = TBIndex(centralTime, std::pair<unsigned, unsigned>(metaData->Antenna1().id, metaData->Antenna2().id));
+			size_t a1, a2;
+			if(metaData->HasAntenna1())
+				a1 = metaData->Antenna1().id;
+			else
+				a1 = 0;
+			if(metaData->HasAntenna2())
+				a2 = metaData->Antenna2().id;
+			else
+				a2 = 0;
+			
+			const TBIndex tbIndex = TBIndex(centralTime, std::pair<unsigned, unsigned>(a1, a2));
 			add(_valuesTB, tbIndex, statistics);
 		}
 		

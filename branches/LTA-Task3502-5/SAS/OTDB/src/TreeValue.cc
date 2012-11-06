@@ -241,6 +241,8 @@ vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
 //
 vector<OTDBvalue> TreeValue::getSchedulableItems (nodeIDType	TODO_topNode)
 {
+	(void)TODO_topNode;
+
 	LOG_INFO("TreeValue::getSchedulableItems is not yet implemented");
 
 	vector<OTDBvalue>	empty;
@@ -250,7 +252,7 @@ vector<OTDBvalue> TreeValue::getSchedulableItems (nodeIDType	TODO_topNode)
 //
 // getBrokenHardware([timestamp])
 //
-vector<OTDBvalue> TreeValue::getBrokenHardware(const ptime&	atTime)
+vector<OTDBvalue> TreeValue::getBrokenHardware(const ptime&	fromTime, const ptime& toTime)
 {
 	vector<OTDBvalue>	resultVec;
 
@@ -260,12 +262,15 @@ vector<OTDBvalue> TreeValue::getBrokenHardware(const ptime&	atTime)
 		return (resultVec);
 	}
 
-	LOG_TRACE_FLOW_STR("TV:getBrokenHardware(" << to_simple_string(atTime) << ")");
+	string	startTime((fromTime.is_not_a_date_time()) ? "" : to_simple_string(fromTime));
+	string	endTime  ((toTime.is_not_a_date_time())   ? "" : to_simple_string(toTime));
+
+	LOG_TRACE_FLOW_STR("TV:getBrokenHardware(" << startTime << "," << endTime << ")");
 
 	// construct a query that calls a stored procedure.
 	work	xAction(*(itsConn->getConn()), "getBrokenHardware");
 	try {
-		string	query("SELECT * from getBrokenHardware('" + to_simple_string(atTime) + "')");
+		string	query("SELECT * from getBrokenHardware('" + startTime + "','" + endTime + "')");
 		result res = xAction.exec(query);
 		// check result
 		result::size_type	nrRecords = res.size();
@@ -276,15 +281,22 @@ vector<OTDBvalue> TreeValue::getBrokenHardware(const ptime&	atTime)
 		// list contains single records [A]  or double records[B]:
 		// [A] value always > 10 : its still broken
 		// [B] 1st record value <= 10, 2nd record (always same name) always > 10
-		//     if timestamp 1st record < atTime 'its OK skip this and next line' else is broken skip this line
+		//     if timestamp 1st record < checkTime 'its OK skip this and next line' else is broken skip this line
+
+		// first determine checkTime: 
+		// - broken AT ... : second time is not given --> we must check against the begintime
+		// - broken in period ... : secondtime is given --> we should use that time for checking
+		ptime	checkTime((toTime.is_not_a_date_time()) ? fromTime : toTime);
+
+		// loop over the records.
 		for (result::size_type	i = 0; i < nrRecords; ++i) {
 			OTDBvalue	theKVT(res[i]);
 			if (atoi(theKVT.value.c_str()) > 10) {	// [A]
 				resultVec.push_back(theKVT);
 			}
 			else {	// [B]
-				if (++i < nrRecords) {
-					if (theKVT.time > atTime) {
+				if (++i < nrRecords) {	// next record
+					if (theKVT.time > checkTime) {
 						OTDBvalue	nextKVT(res[i]);
 						ASSERTSTR(nextKVT.nodeID() == theKVT.nodeID(), 
 								"Expected same paramID: " << nextKVT.nodeID() << "!=" << theKVT.nodeID());
@@ -302,64 +314,6 @@ vector<OTDBvalue> TreeValue::getBrokenHardware(const ptime&	atTime)
 	}
 
 	return (resultVec);
-}
-
-
-//
-// getBrokenHardware([timestamp1], [timestamp2]) between startTime and endTime
-//
-vector<OTDBvalue> TreeValue::getFailedHardware(const ptime&	startTime, const ptime& endTime)
-{
-  vector<OTDBvalue>	resultVec;
-  
-  // Check connection
-  if (!itsConn->connect()) {
-      itsError = itsConn->errorMsg();
-      return (resultVec);
-  }
-  
-  LOG_TRACE_FLOW_STR("TV:getFailedHardware(" << to_simple_string(startTime) << ", "<< to_simple_string(endTime) << ")");
-  
-  // construct a query that calls a stored procedure.
-  work	xAction(*(itsConn->getConn()), "getBrokenHardware");
-  try {
-      string	query("SELECT * from getFailedHardware('" + to_simple_string(startTime) + "','" + to_simple_string(endTime) + "')");
-      result res = xAction.exec(query);
-      // check result
-      result::size_type	nrRecords = res.size();
-      if (!nrRecords) {
-          return (resultVec);
-      }
-      
-      // list contains single records [A]  or double records[B]:
-      // [A] value always > 10 : its still broken
-      // [B] 1st record value <= 10, 2nd record (always same name) always > 10
-      //     if timestamp 1st record < atTime 'its OK skip this and next line' else is broken skip this line
-      for (result::size_type	i = 0; i < nrRecords; ++i) {
-          OTDBvalue	theKVT(res[i]);
-          if (atoi(theKVT.value.c_str()) > 10) {	// [A]
-              resultVec.push_back(theKVT);
-          }
-          else {	// [B]
-              if (++i < nrRecords) {
-                  if (theKVT.time > endTime) {
-                      OTDBvalue	nextKVT(res[i]);
-                      ASSERTSTR(nextKVT.nodeID() == theKVT.nodeID(), 
-                                "Expected same paramID: " << nextKVT.nodeID() << "!=" << theKVT.nodeID());
-                      resultVec.push_back(nextKVT);
-                  }
-              }
-          }
-      } // for
-  } 
-  catch (std::exception&	ex) {
-      itsError = string("Exception during getBrokenHardware:") + ex.what();
-      LOG_FATAL(itsError);
-      vector<OTDBvalue>	empty;
-      return (empty);
-  }
-  
-  return (resultVec);
 }
 
 

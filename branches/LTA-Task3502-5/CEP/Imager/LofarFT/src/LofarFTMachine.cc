@@ -130,13 +130,13 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
     tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType),
     maxAbsData(0.0), centerLoc(IPosition(4,0)),
     offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
-    usePut2_p(False), machineName_p("LofarFTMachine"), itsMS(ms),
+    usePut2_p(False), machineName_p("LofarFTMachine"), itsParameters(parameters), itsMS(ms),
     itsNWPlanes(nwPlanes), itsWMax(wmax), itsConvFunc(0),
     itsVerbose(verbose),
     itsMaxSupport(maxsupport), itsOversample(oversample), itsImgName(imgName),
     itsGridMuellerMask(gridMuellerMask),
     itsDegridMuellerMask(degridMuellerMask),
-    itsGriddingTime(0), itsDegriddingTime(0), itsCFTime(0), itsParameters(parameters)
+    itsGriddingTime(0), itsDegriddingTime(0), itsCFTime(0)
 {
   cout << "=======LofarFTMachine====================================" << endl;
   cout << itsParameters << endl;
@@ -1012,7 +1012,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   CyrilTimer2Aterm.start();
   itsConvFunc->computeAterm (time);
   CyrilTimer2Aterm.stop();
-  double Taterm=CyrilTimer2Aterm.getReal();
+  //double Taterm=CyrilTimer2Aterm.getReal();
 
   uInt Nchannels = vb.nChannel();
 
@@ -1108,7 +1108,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       //cfTimer.stop();
       CyrilTimer2conv.stop();
 
-      Int nConvX = (*(cfStore.vdata))[0][0][0].shape()[0];
+      //Int nConvX = (*(cfStore.vdata))[0][0][0].shape()[0];
       //cout<<ant1[ist]<<" "<<ant2[ist]<<" " <<nConvX/5<<endl;
       //double cfstep=CyrilTimer2conv.getReal();
       CyrilTimer2grid.start();
@@ -1175,7 +1175,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   }//end While loop
 
   CyrilTimer2gridconv.stop();
-  double Tgridconv=CyrilTimer2gridconv.getReal();
+  //double Tgridconv=CyrilTimer2gridconv.getReal();
 
   PrecTimer CyrilTimer2elem;
   if(itsDeltaTime<(times[times.size()-1] - times[0])){itsDeltaTime=(times[times.size()-1] - times[0]);};

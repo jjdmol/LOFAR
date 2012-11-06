@@ -26,39 +26,6 @@
 
 #include <AOFlagger/util/ffttools.h>
 
-/*struct Image {
-	enum Type { SinglePolarisationReal, SinglePolarisationComplex, StokesI };
-	virtual ~Image() { };
-	virtual unsigned ImageCount() const = 0;
-	virtual const class Image2D &Image2D(unsigned index) const = 0;
-	virtual void Visualise(class Image2D &destination) const = 0;
-};
-
-struct SinglePolarisationRealImage : public Image {
-	SinglePolarisationRealImage() throw() : image(0) { }
-	SinglePolarisationRealImage(const class Image2D *initialImage) throw() : image(initialImage) { }
-	const class Image2D *image;
-	virtual unsigned ImageCount() const { return 1; };
-	virtual const class Image2D &Image2D(unsigned index) const { return *image; }
-	virtual void Visualise(class Image2D &destination) const
-	{
-		destination.SetValues(*image);
-	}
-};
-
-struct SinglePolarisationComplexImage : public Image {
-	SinglePolarisationComplexImage() : real(0), imaginary(0) { }
-	const class Image2D *real, *imaginary;
-	virtual unsigned ImageCount() const { return 2; };
-	virtual const class Image2D &Image2D(unsigned index) const { if(index==0) return *real; else return *imaginary; }
-	virtual void Visualise(class Image2D &destination) const
-	{
-		class Image2D *i = FFTTools::CreateAbsoluteImage(*real, *imaginary);
-		destination.SetValues(*i);
-		delete i;
-	}
-};*/
-
 class SurfaceFitMethod {
 	public:
 		virtual void Initialize(const TimeFrequencyData &input) = 0;

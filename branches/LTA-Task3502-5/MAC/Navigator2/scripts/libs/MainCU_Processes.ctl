@@ -130,9 +130,9 @@ void MainCU_Processes_UpdateMainControllers() {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","ObservationControlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
     // also connect to CCU Ctrls
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_StorageApplPanel",
-          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
+          DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","PythonControlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
   }
 }

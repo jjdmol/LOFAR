@@ -108,7 +108,6 @@ namespace rfiStrategy {
 				if(newMetaData->HasBand())
 				{
 					BandInfo band(newMetaData->Band());
-					band.channelCount -= _topChannels - _bottomChannels;
 					band.channels.erase(band.channels.end() - (_topChannels+_bottomChannels), band.channels.end());
 					band.channels.erase(band.channels.begin(), band.channels.begin() + _topChannels);
 					newMetaData->SetBand(band);

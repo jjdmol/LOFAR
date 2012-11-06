@@ -39,6 +39,8 @@ class FileStream : public FileDescriptorBasedStream
     virtual ~FileStream();
 
     virtual void skip( size_t bytes ); // seek ahead
+
+    virtual size_t size(); // return file size
 };
 
 } // namespace LOFAR

@@ -240,6 +240,11 @@ class EqualsAsserter {
 
 		void AssertFalse(bool actual, const std::string &description) const
 		{ assertEqualsBool(actual, false, description); }
+
+		static bool IsAlmostEqual(float first, float second)
+		{
+			return isAlmostEqual<float>(first, second, 12);
+		}
 	private:
 		void assertEqualsBool(bool actual, bool expected) const
 		{
@@ -319,6 +324,15 @@ class EqualsAsserter {
 				<< expected << " was expected, " << actual << " was the actual value, type = " << typeStr << ")";
 				throw std::runtime_error(s.str());
 			}
+		}
+		
+		template<typename T>
+		static bool isAlmostEqual(T first, T second, unsigned precision)
+		{
+			T maxArgument = std::max(std::max(std::abs(first), std::abs(second)), (T) 1.0);
+			T maxDistance = maxArgument/(T) powl((T) 2.0, precision);
+			T distance = std::abs(first - second);
+			return distance <= maxDistance;
 		}
 		
 		const char *boolToString(bool value) const

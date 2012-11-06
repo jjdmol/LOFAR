@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * $Id: TBB_Writer_main.cc 14523 2012-03-14 18:58:53Z amesfoort $
+ * $Id: TBB_Writer_main.cc 17682 2012-09-07 18:58:53Z amesfoort $
  *
  * @author Alexander S. van Amesfoort
  * Parts derived from the BF writer written by Jan David Mol, and from
@@ -29,34 +29,36 @@
  * TODO: Some code for spectral mode is implemented, but it could never be tested and the TBB HDF5 format considers transient data only.
  */
 
-#define _POSIX_C_SOURCE				1	// sigaction(2), gmtime_r(3)
-#define _GNU_SOURCE					1	// getopt_long(3)
+#define _POSIX_C_SOURCE			1	// sigaction(2)
+#define _GNU_SOURCE			1	// getopt_long(3)
 
-#include <lofar_config.h>				// before any other include
+#include <lofar_config.h>			// before any other include
 
 #include <cstddef>
 #include <cstdlib>
-#include <ctime>
+#include <csignal>
 #include <cstring>
-#include <cmath>
-#include <ctime>						// strftime()
-#include <climits>
+#include <cerrno>
+#include <libgen.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <unistd.h>
 #include <getopt.h>
 
 #include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <map>
 
 #include <boost/lexical_cast.hpp>
 
-#include <Common/StringUtil.h>
-#include <Common/StreamUtil.h>
-#include <Common/Thread/Thread.h>
-#include <Common/NewHandler.h>
 #include <Storage/TBB_Writer.h>
+#include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
+#include <Common/NewHandler.h>
+#include <ApplCommon/AntField.h>
+#include <Interface/Exceptions.h>
 #include <Storage/IOPriority.h>
+
+#include <dal/lofar/StationNames.h>
 
 #define TBB_DEFAULT_BASE_PORT		0x7bb0	// i.e. tbb0
 #define TBB_DEFAULT_LAST_PORT		0x7bbb	// 0x7bbf for NL, 0x7bbb for int'l stations
@@ -64,8 +66,9 @@
 using namespace std;
 
 struct progArgs {
-	string outDir;
 	string parsetFilename;
+	string antFieldDir;
+	string outputDir;
 	string proto;
 	uint16_t port;
 	struct timeval timeoutVal;
@@ -107,37 +110,6 @@ static void setTermSigsHandler() {
 	}
 }
 
-#if 0
-/*
- * Return station names that will send data to this host.
- * 
- * This function will be redundant once the mapping info is available through the parset.
- * Multiple stations may be sending to the same locus node (i.e. TBB writer).
- * This mapping is indicated in MAC/Deployment/data/StaticMetaData/TBBConnections.dat
- */
-static vector<string> getTBB_StationNames(const string& tbbMappingFilename) {
-	vector<string> stationNames;
-
-	LOFAR::TBB_StaticMapping tbbMapping(tbbMappingFilename);
-	if (tbbMapping.empty()) {
-		throw LOFAR::IOException("Failed to derive any node-to-station mappings from the static TBB mapping file");
-	}
-
-	string myHname(LOFAR::myHostname(true));
-	stationNames = tbbMapping.getStationNames(myHname);
-	if (stationNames.empty()) {
-		// Likely, it only knows e.g. 'tbbsinknode123' instead of 'tbbsinknode123.example.com', so retry.
-		myHname = LOFAR::myHostname(false);
-		stationNames = tbbMapping.getStationNames(myHname);
-		if (stationNames.empty()) {
-			throw LOFAR::IOException("Failed to retrieve station names that will send TBB data to this node");
-		}
-	}
-
-	return stationNames;
-}
-#endif
-
 static vector<string> getTBB_InputStreamNames(const string& proto, uint16_t portsBase) {
 	/*
 	 * Proto: TBB always arrives over UDP (but command-line override).
@@ -162,13 +134,89 @@ static vector<string> getTBB_InputStreamNames(const string& proto, uint16_t port
 	return allInputStreamNames;
 }
 
-static int doTBB_Run(const vector<string>& inputStreamNames, LOFAR::RTCP::Parset& parset, struct progArgs& args) {
-	string logPrefix("TBB obs " + LOFAR::formatString("%u", parset.observationID()) + " ");
+static int antSetName2AntFieldIndex(const string& antSetName) {
+	int idx;
+
+	if (strncmp(antSetName.c_str(), "LBA", sizeof("LBA")-1) == 0) {
+		idx = LOFAR::AntField::LBA_IDX;
+	} else if (strncmp(antSetName.c_str(), "HBA_ZERO", sizeof("HBA_ZERO")-1) == 0) {
+		idx = LOFAR::AntField::HBA0_IDX;
+	} else if (strncmp(antSetName.c_str(), "HBA_ONE", sizeof("HBA_ONE")-1) == 0) {
+		idx = LOFAR::AntField::HBA1_IDX;
+	} else if (strncmp(antSetName.c_str(), "HBA", sizeof("HBA")-1) == 0) {
+		idx = LOFAR::AntField::HBA_IDX;
+	} else {
+		throw LOFAR::RTCP::StorageException("unknown antenna set name");
+	}
+
+	return idx;
+}
+
+static LOFAR::RTCP::StationMetaDataMap getExternalStationMetaData(const LOFAR::RTCP::Parset& parset, const string& antFieldDir) {
+	LOFAR::RTCP::StationMetaDataMap stMdMap;
+
+	try {
+		// Find path to antenna field files. If not a prog arg, try via $LOFARROOT, else via parset.
+		// LOFAR repos location: MAC/Deployment/data/StaticMetaData/AntennaFields/
+		string antFieldPath(antFieldDir);
+		if (antFieldPath.empty()) {
+			char* lrpath = getenv("LOFARROOT");
+			if (lrpath != NULL) {
+				antFieldPath = string(lrpath) + "/etc/StaticMetaData/";
+			} else { // parset typically gives "/data/home/lofarsys/production/lofar/etc/StaticMetaData"
+				antFieldPath = parset.AntennaFieldsDir(); // doesn't quite do what its name suggests, so append a component
+				if (!antFieldPath.empty()) {
+					antFieldPath.push_back('/');
+				}
+			}
+			antFieldPath.append("AntennaFields/");
+		}
+
+		int fieldIdx = antSetName2AntFieldIndex(parset.antennaSet());
+
+		vector<string> stationNames(parset.allStationNames());
+		for (vector<string>::const_iterator it(stationNames.begin());
+                     it != stationNames.end(); ++it) {
+
+			string stName(it->substr(0, sizeof("CS001")-1)); // drop any "HBA0"-like suffix
+			string antFieldFilename(antFieldPath + stName + "-AntennaField.conf");
+
+			// Tries to locate the filename if no abs path is given, else throws AssertError exc.
+			LOFAR::AntField antField(antFieldFilename);
+
+			// Compute absolute antenna positions from centre + relative.
+			// See AntField.h in ApplCommon for the AFArray typedef and contents (first is shape, second is values).
+			LOFAR::RTCP::StationMetaData stMetaData;
+			stMetaData.available = true;
+			stMetaData.antPositions = antField.AntPos(fieldIdx).second;
+			for (size_t i = 0; i < stMetaData.antPositions.size(); i += 3) {
+				stMetaData.antPositions.at(i+2) += antField.Centre(fieldIdx).second.at(2);
+				stMetaData.antPositions[i+1]    += antField.Centre(fieldIdx).second[1];
+				stMetaData.antPositions[i]      += antField.Centre(fieldIdx).second[0];
+			}
+
+			stMetaData.normalVector   = antField.normVector(fieldIdx).second;
+			stMetaData.rotationMatrix = antField.rotationMatrix(fieldIdx).second;
+
+			stMdMap.insert(make_pair(dal::stationNameToID(stName), stMetaData));
+		}
+	} catch (exception& exc) { // LOFAR::AssertError or dal::DALValueError (rare)
+		// AssertError already sends a message to the logger.
+		throw LOFAR::RTCP::StorageException(exc.what());
+	}
+
+	return stMdMap;
+}
+
+static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::RTCP::Parset& parset,
+                     const LOFAR::RTCP::StationMetaDataMap& stMdMap, struct progArgs& args) {
+	string logPrefix("TBB obs " + LOFAR::formatString("%u", parset.observationID()) + ": ");
 
 	int err = 1;
 	try {
 		// When this obj goes out of scope, worker threads are cancelled and joined with.
-		LOFAR::RTCP::TBB_Writer writer(inputStreamNames, parset, args.outDir, args.rawDataFiles, logPrefix);
+		LOFAR::RTCP::TBB_Writer writer(inputStreamNames, parset, stMdMap,
+                                       args.outputDir, args.rawDataFiles, logPrefix);
 
 		/*
 		 * We don't know how much data comes in, so cancel workers when all are idle for a while (timeoutVal).
@@ -215,7 +263,7 @@ static int doTBB_Run(const vector<string>& inputStreamNames, LOFAR::RTCP::Parset
 	return err;
 }
 
-static int ensureOutDirExists(string outputDir) {
+static int ensureOutputDirExists(string outputDir) {
 	struct stat st;
 
 	if (outputDir == "") {
@@ -235,16 +283,43 @@ static int ensureOutDirExists(string outputDir) {
 }
 
 static void printUsage(const char* progname) {
-	cout << "Usage: " << progname << " [--help] [--version] [--outputdir=/data/tbboutdir] [--parsetfile=/home/user/tbb/obsxxx.parset]"
-		" [--proto=udp] [--portbase=0x7bb0] [--timeout=10] [--rawdata=1] [--keeprunning=1]" << endl;
+	cout << "LOFAR TBB_Writer version: ";
+#ifndef TBB_WRITER_VERSION
+	cout << LOFAR::StorageVersion::getVersion();
+#else
+	cout << TBB_WRITER_VERSION;
+#endif
+	cout << endl;
+	cout << "Write incoming LOFAR TBB data with meta data to disk in HDF5 format." << endl;
+	cout << "Usage: " << progname << " --parsetfile=parsets/L12345.parset [OPTION]..." << endl;
+	cout << endl;
+	cout << "Options:" << endl;
+	cout << "  -s, --parsetfile=L12345.parset      parset file (observation settings) (mandatory)" << endl;
+	cout << endl;
+	cout << "  -a, --antfielddir=/d/AntennaFields  override $LOFARROOT and parset path for antenna field files (like CS001-AntennaField.conf)" << endl;
+	cout << "  -o, --outputdir=tbbout              output directory" << endl;
+	cout << "  -p, --proto=tcp|udp                 input stream type (default: udp)" << endl;
+	cout << "              file:raw.dat" << endl;
+	cout << "              pipe:named.pipe" << endl;
+	cout << "  -b, --portbase=31665                start of range of 12 consecutive udp/tcp ports to receive from" << endl;
+	cout << "  -t, --timeout=10                    seconds of input inactivity until dump is considered completed" << endl;
+	cout << endl;
+	cout << "  -r, --rawdatafiles[=true|false]     output separate .raw data files (default: true; do not set to false atm);" << endl;
+	cout << "                                      .raw files is strongly recommended, esp. when receiving from multiple stations" << endl;
+	cout << "  -k, --keeprunning[=true|false]      accept new input after a dump completed (default: true)" << endl;
+	cout << endl;
+	cout << "  -h, --help                          print program name, version number and this info, then exit" << endl;
+	cout << "  -v, --version                       same as --help" << endl;
 }
 
 static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 	int rv = 0;
 
 	// Default values
-	args->outDir = "";
 	args->parsetFilename = "";	// there is no default parset filename, so not passing it is fatal
+	args->antFieldDir = "";		// idem
+
+	args->outputDir = "";
 	args->proto = "udp";
 	args->port = TBB_DEFAULT_BASE_PORT;
 	args->timeoutVal.tv_sec = 10; // after this default of inactivity cancel all input threads and close output files
@@ -252,49 +327,42 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 	args->rawDataFiles = true;
 	args->keepRunning = true;
 
-	static struct option long_opts[] = {
+	static const struct option long_opts[] = {
 		// {const char *name, int has_arg, int *flag, int val}
-		{"help",        no_argument,       NULL, 'h'},
-		{"version",     no_argument,       NULL, 'v'},
+		{"parsetfile",   required_argument, NULL, 's'}, // observation (s)ettings
+		{"antfielddir",  required_argument, NULL, 'a'},
+		{"outputdir",    required_argument, NULL, 'o'},
+		{"proto",        required_argument, NULL, 'p'},
+		{"portbase",     required_argument, NULL, 'b'}, // port (b)ase
+		{"timeout",      required_argument, NULL, 't'},
 
-		{"outputdir",   required_argument, NULL, 'd'},
-		{"parsetfile",  required_argument, NULL, 'c'}, // 'c'onfig
-		{"proto",       required_argument, NULL, 'p'},
-		{"portbase",    required_argument, NULL, 'b'}, // 'b'ase
-		{"timeout",     required_argument, NULL, 't'},
+		{"rawdatafiles", optional_argument, NULL, 'r'},
+		{"keeprunning",  optional_argument, NULL, 'k'},
 
-		{"rawdata",     optional_argument, NULL, 'r'},
-		{"keeprunning", optional_argument, NULL, 'k'},
+		{"help",         no_argument,       NULL, 'h'},
+		{"version",      no_argument,       NULL, 'v'},
 
 		{NULL, 0, NULL, 0}
 	};
 
 	opterr = 0; // prevent error printing to stderr by getopt_long()
 	int opt;
-	while ((opt = getopt_long(argc, argv, "hvd:c:p:b:t:r::k::", long_opts, NULL)) != -1) {
+	while ((opt = getopt_long(argc, argv, "hvs:a:o:p:b:t:r::k::", long_opts, NULL)) != -1) {
 		switch (opt) {
-		case 'h':
-		case 'v':
-			cout << "LOFAR TBB_Writer version: ";
-#ifdef HAVE_PKVERSION
-			cout << StorageVersion::getVersion();
-#else
-#warning TBB_Writer version cannot be printed correctly with help and version program options
-			cout << "0.909";
-#endif
-			cout << endl;
-			if (rv == 0) {
-				rv = 2;
-			}
-			break;
-		case 'd':
-			args->outDir = optarg;
-			if (args->outDir[args->outDir.size() - 1] != '/') {
-				args->outDir.push_back('/');
-			}
-			break;
-		case 'c':
+		case 's':
 			args->parsetFilename = optarg;
+			break;
+		case 'a':
+			args->antFieldDir = optarg;
+			if (args->antFieldDir[args->antFieldDir.size() - 1] != '/') {
+				args->antFieldDir.push_back('/');
+			}
+			break;
+		case 'o':
+			args->outputDir = optarg;
+			if (args->outputDir[args->outputDir.size() - 1] != '/') {
+				args->outputDir.push_back('/');
+			}
 			break;
 		case 'p':
 			if (strcmp(optarg, "tcp") == 0 || strcmp(optarg, "udp") == 0 ||
@@ -348,6 +416,12 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 				rv = 1;
 			}
 			break;
+		case 'h':
+		case 'v':
+			if (rv == 0) {
+				rv = 2;
+			}
+			break;
 		default: // '?'
 			cerr << "Invalid program argument: " << argv[optind-1] << endl;
 			rv = 1;
@@ -376,7 +450,11 @@ int main(int argc, char* argv[]) {
 	setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 
 #if defined HAVE_LOG4CPLUS
-	INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/Storage_main.log_prop");
+	char *dirc = strdup(argv[0]);
+
+	INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/TBB_Writer_main.log_prop");
+
+	free(dirc);
 #endif
 
 	if ((err = parseArgs(argc, argv, &args)) != 0) {
@@ -390,7 +468,7 @@ int main(int argc, char* argv[]) {
 
 	setTermSigsHandler();
 
-	if ((err = ensureOutDirExists(args.outDir)) != 0) {
+	if ((err = ensureOutputDirExists(args.outputDir)) != 0) {
 		LOG_FATAL_STR("TBB: output directory: " << strerror(err));
 #if defined HAVE_LOG4CPLUS
 		LOGGER_EXIT_THREAD();
@@ -398,49 +476,33 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-#if 0
-	/*
-	 * Retrieve the station name that will send data to this host (input thread will check this at least once).
-	 * Getting this from static meta data is inflexible.
-	 */
-	string tbbMappingFilename(args.conMapFilename); // no arg anymore
-	if (tbbMappingFilename.empty()) {
-		const string defaultTbbMappingFilename("TBBConnections.dat");
-		char* lrpath = getenv("LOFARROOT");
-		if (lrpath != NULL) {
-			tbbMappingFilename = string(lrpath) + "/etc/StaticMetaData/";
-		}
-		tbbMappingFilename.append(defaultTbbMappingFilename);
-	}
-	vector<string> stationNames(getTBB_StationNames(tbbMappingFilename));
-#endif
-
 	const vector<string> inputStreamNames(getTBB_InputStreamNames(args.proto, args.port));
 
-	// We don't run alone, so increase the QoS we get from the OS to decrease the chance of data loss.
-	setIOpriority();
-	setRTpriority();
-	lockInMemory();
+	// We don't run alone, so try to increase the QoS we get from the OS to decrease the chance of data loss.
+	setIOpriority(); // reqs CAP_SYS_NICE or CAP_SYS_ADMIN
+	setRTpriority(); // reqs CAP_SYS_NICE
+	lockInMemory();  // reqs CAP_IPC_LOCK
 
-	err = 0;
+	err = 1;
 	try {
+		LOFAR::RTCP::Parset parset(args.parsetFilename);
+		LOFAR::RTCP::StationMetaDataMap stMdMap(getExternalStationMetaData(parset, args.antFieldDir));
+
+		err = 0;
 		do {
-			LOFAR::RTCP::Parset parset(args.parsetFilename); // reload config per run
-
-			err += doTBB_Run(inputStreamNames, parset, args);
-
+			err += doTBB_Run(inputStreamNames, parset, stMdMap, args);
 		} while (args.keepRunning && err < 1000);
 		if (err == 1000) { // Nr of dumps per obs was estimated to fit in 3 digits.
 			LOG_FATAL("TBB: Reached max nr of errors seen. Shutting down to avoid filling up storage with logging crap.");
 		}
 
-	// parset exceptions are fatal
+	// Config exceptions (opening or parsing) are fatal. Too bad we cannot have it in one type.
 	} catch (LOFAR::RTCP::InterfaceException& exc) {
 		LOG_FATAL_STR("TBB: LOFAR::InterfaceException: parset: " << exc.text());
-		err = 1;
 	} catch (LOFAR::APSException& exc) {
 		LOG_FATAL_STR("TBB: LOFAR::APSException: parameterset: " << exc.text());
-		err = 1;
+	} catch (LOFAR::RTCP::StorageException& exc) {
+		LOG_FATAL_STR("TBB: LOFAR::StorageException: antenna field files: " << exc.text());
 	}
 
 #if defined HAVE_LOG4CPLUS

@@ -196,6 +196,7 @@ class ComputeJob(object):
         try:
             if killswitch.isSet():
                 logger.debug("Shutdown in progress: not starting remote job")
+                self.results['returncode'] = 1
                 error.set()
                 return 1
             process = run_remote_command(
@@ -204,8 +205,8 @@ class ComputeJob(object):
                 self.host,
                 self.command,
                 {
-                    "PYTHONPATH": config.get('deploy', 'engine_ppath'),
-                    "LD_LIBRARY_PATH": config.get('deploy', 'engine_lpath')
+                    "PYTHONPATH": os.environ.get('PYTHONPATH'),
+                    "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH')
                 },
                 arguments = [id, jobhost, jobport]
             )
@@ -223,6 +224,7 @@ class ComputeJob(object):
             log_process_output("Remote command", sout, serr, logger)
         except Exception, e:
             logger.exception("Failed to run remote process %s (%s)" % (self.command, str(e)))
+            self.results['returncode'] = 1
             error.set()
             return 1
         finally:
@@ -233,6 +235,7 @@ class ComputeJob(object):
                 (self.command, self.arguments, self.host, process.returncode)
             )
             error.set()
+        self.results['returncode'] = process.returncode
         return process.returncode
 
 def threadwatcher(threadpool, logger, killswitch):

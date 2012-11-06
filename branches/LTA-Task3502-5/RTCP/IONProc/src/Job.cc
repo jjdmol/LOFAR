@@ -33,6 +33,7 @@
 #include <Scheduling.h>
 #include <GlobalVars.h>
 #include <Job.h>
+#include <Scheduling.h>
 #include <OutputSection.h>
 #include <StreamMultiplexer.h>
 #include <Stream/SocketStream.h>
@@ -87,7 +88,9 @@ Job::Job(const char *parsetName)
     if (itsParset.PLC_controlled()) {
       // let the ApplController decide what we should do
       try {
-        itsPLCStream = new SocketStream(itsParset.PLC_Host(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60);
+        // Do _not_ wait for the stop time to communicate with ApplController,
+        // or the whole observation could be wasted.
+        itsPLCStream = new SocketStream(itsParset.PLC_Host(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, time(0) + 30);
 
         itsPLCClient = new PLCClient(*itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID);
         itsPLCClient->start();
@@ -224,7 +227,7 @@ void Job::StorageProcess::start()
     throw SystemCallException("getcwd", errno, THROW_ARGS);
 
 #ifdef HAVE_LIBSSH2
-  std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u")
+  std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u 2>&1")
     % cwd
 #if defined USE_VALGRIND
     % "valgrind --leak-check=full "
@@ -241,7 +244,7 @@ void Job::StorageProcess::start()
 #endif
   );
 
-  itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey);
+  itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey, 0);
   itsSSHconnection->start();
 #else
 
@@ -278,13 +281,20 @@ void Job::StorageProcess::stop(struct timespec deadline)
 #ifdef HAVE_LIBSSH2
   itsSSHconnection->stop(deadline);
 #else
-  // TODO: update timeout
-  time_t now = time(0);
+  joinSSH(itsLogPrefix, itsPID, (deadline.tv_sec ? deadline.tv_sec : time(0)) + 1);
+#endif
 
-  unsigned timeout = 1 + (now < deadline.tv_sec ? deadline.tv_sec - now : 0);
+  itsThread->cancel();
+}
 
-  joinSSH(itsLogPrefix, itsPID, timeout);
-#endif  
+
+bool Job::StorageProcess::isDone()
+{
+#ifdef HAVE_LIBSSH2
+  return itsSSHconnection->isDone();
+#else
+  return false;
+#endif
 }
 
 
@@ -292,7 +302,7 @@ void Job::StorageProcess::controlThread()
 {
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
   std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
-  PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource);
+  PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource, 0);
 
   // for now, we just send the parset and call it a day
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connected -- sending parset");
@@ -316,13 +326,26 @@ void Job::startStorageProcesses()
 
 void Job::stopStorageProcesses()
 {
-  struct timespec deadline;
+  time_t deadline = time(0) + 300;
+  struct timespec immediately = { 0, 0 };
 
-  deadline.tv_sec  = time(0) + 10;
-  deadline.tv_nsec = 0;
+  size_t nrRunning = itsStorageProcesses.size();
+
+  do {
+    for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
+      if (itsStorageProcesses[rank]->isDone()) {
+        itsStorageProcesses[rank]->stop(immediately);
+
+        nrRunning--;
+      }
+
+    if (nrRunning > 0)
+      sleep(1);
+
+  } while( nrRunning > 0 && time(0) < deadline );
 
   for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
-    itsStorageProcesses[rank]->stop(deadline);
+    itsStorageProcesses[rank]->stop(immediately);
 }
 
 
@@ -400,7 +423,7 @@ void Job::jobThread()
         canStart = false;
       }
 
-      // obey the stop time in the parset -- the first anotherRun() will broadcast it
+      // obey the stop time in the parset -- the first startBlock() will broadcast it
       if (!pause(itsParset.stopTime())) {
         LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
         canStart = false;
@@ -454,7 +477,7 @@ void Job::jobThread()
 
       // each node is expected to:
       // 1. agree() on starting, to allow the compute nodes to complain in preprocess()
-      // 2. call anotherRun() until the end of the observation to synchronise the
+      // 2. call startBlock() until the end of the observation to synchronise the
       //    stop time.
 
       if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
@@ -471,8 +494,8 @@ void Job::jobThread()
       } else {
         if (agree(true)) { // we always agree on the fact that we can start
           // force pset 0 to broadcast itsIsRunning periodically
-	  while (anotherRun())
-	    ;
+	  while (startBlock())
+	    endBlock();
         }    
       }    
 
@@ -598,7 +621,7 @@ void Job::unconfigureCNs()
 }
 
 
-bool Job::anotherRun()
+bool Job::startBlock()
 {
   if (-- itsNrBlockTokens == 0) {
     itsNrBlockTokens = itsNrBlockTokensPerBroadcast;
@@ -614,19 +637,21 @@ bool Job::anotherRun()
     broadcast(itsStopTime);
   }
 
-  // move on to the next block
-  itsBlockNumber ++;
-
   bool done = !itsIsRunning;
 
   if (itsStopTime > 0.0) {
     // the end time of this block must still be within the observation
     double currentTime = itsParset.startTime() + (itsBlockNumber + 1) * itsParset.CNintegrationTime();
 
-    done = done || currentTime >= itsStopTime;
+    done = done || currentTime > itsStopTime;
   }
 
   return !done;
+}
+
+void Job::endBlock()
+{
+  itsBlockNumber++;
 }
 
 
@@ -677,13 +702,15 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     ControlPhase3Cores controlPhase3Cores(itsParset, itsPhaseThreeCNstreams, itsBlockNumber);
     controlPhase3Cores.start(); // start the thread
 
-    while (anotherRun()) {
+    while (startBlock()) {
       for (unsigned i = 0; i < outputSections.size(); i ++)
 	outputSections[i]->addIterations(1);
 
       controlPhase3Cores.addIterations(1);
 
       beamletBufferToComputeNode.process();
+
+      endBlock();
     }
 
     LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input done");

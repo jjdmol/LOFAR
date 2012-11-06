@@ -32,7 +32,7 @@
 #include <AOFlagger/gui/imagepropertieswindow.h>
 
 ImagePlaneWindow::ImagePlaneWindow()
-  : _imager(1536*2, 1536*2 /*1536, 1536*/), _clearButton("Clear"),
+  : _imager(512, 512), /*3x1024 */ _clearButton("Clear"),
 	_applyWeightsButton("Apply weights"),
 	_refreshCurrentButton("R"),
 	_memoryStoreButton("MS"),
@@ -392,7 +392,7 @@ void ImagePlaneWindow::printStats()
 
 void ImagePlaneWindow::onButtonReleased(size_t x, size_t y)
 {
-	if(_imageWidget.HasImage())
+	if(_imageWidget.HasImage() && _lastMetaData != 0)
 	{
 		int 
 			width = _imageWidget.Image()->Width(),
@@ -405,7 +405,7 @@ void ImagePlaneWindow::onButtonReleased(size_t x, size_t y)
 		if(bottom >= height) bottom = height - 1;
 		
 		const BandInfo band = _lastMetaData->Band();
-		num_t frequencyHz = band.channels[band.channelCount/2].frequencyHz;
+		num_t frequencyHz = band.channels[band.channels.size()/2].frequencyHz;
 		num_t rms = _imageWidget.Image()->GetRMS(left, top, right-left, bottom-top);
 		num_t max = _imageWidget.Image()->GetMaximum(left, top, right-left, bottom-top);
 		num_t xRel = x-width/2.0, yRel = y-height/2.0;

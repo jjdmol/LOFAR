@@ -23,8 +23,7 @@
 package nl.astron.lofar.sas.otb.util.treemanagers;
 
 import java.rmi.RemoteException;
-import java.util.Enumeration;
-import java.util.Vector;
+import java.util.ArrayList;
 import javax.swing.event.TreeModelEvent;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb3.jVICnodeDef;
@@ -105,7 +104,7 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
         try {
             
             
-            Vector<jVICnodeDef> nodes = OtdbRmi.getRemoteMaintenance().getComponentList(aNodeName,false);
+            ArrayList<jVICnodeDef> nodes = new ArrayList(OtdbRmi.getRemoteMaintenance().getComponentList(aNodeName,false));
             if (nodes.size() > 0) {
                 logger.debug("Found "+ nodes.size()+ " nr of matches for node "+aNodeName);
             } else {
@@ -113,10 +112,8 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
                 return;
             }
             
-            Vector<jOTDBparam> params = OtdbRmi.getRemoteMaintenance().getComponentParams(((jVICnodeDef)nodes.elementAt(0)).nodeID());
-            Enumeration e = params.elements();
-            while( e.hasMoreElements()  ) {
-                jOTDBparam item = (jOTDBparam)e.nextElement();
+            ArrayList<jOTDBparam> params = new ArrayList(OtdbRmi.getRemoteMaintenance().getComponentParams(((jVICnodeDef)nodes.get(0)).nodeID()));
+            for (jOTDBparam item:params) {    
                 TreeNode newNode = new TreeNode(OTDBParamTreeManager.instance,item,item.name);
                 aNode.add(newNode);
                 //testcode to add parmdb

@@ -22,22 +22,22 @@
 
 #include <AOFlagger/util/ffttools.h>
 
-Image2DCPtr TimeFrequencyData::GetAbsoluteFromComplex(Image2DCPtr real, Image2DCPtr imag) const
+Image2DCPtr TimeFrequencyData::GetAbsoluteFromComplex(const Image2DCPtr &real, const Image2DCPtr &imag) const
 {
 	return Image2DPtr(FFTTools::CreateAbsoluteImage(*real, *imag));
 }
 			
-Image2DCPtr TimeFrequencyData::GetSum(Image2DCPtr left, Image2DCPtr right) const
+Image2DCPtr TimeFrequencyData::GetSum(const Image2DCPtr &left, const Image2DCPtr &right) const
 {
 	return StokesImager::CreateSum(left, right);
 }
 
-Image2DCPtr TimeFrequencyData::GetNegatedSum(Image2DCPtr left, Image2DCPtr right) const
+Image2DCPtr TimeFrequencyData::GetNegatedSum(const Image2DCPtr &left, const Image2DCPtr &right) const
 {
 	return StokesImager::CreateNegatedSum(left, right);
 }
 
-Image2DCPtr TimeFrequencyData::GetDifference(Image2DCPtr left, Image2DCPtr right) const
+Image2DCPtr TimeFrequencyData::GetDifference(const Image2DCPtr &left, const Image2DCPtr &right) const
 {
 	return StokesImager::CreateDifference(left, right);
 }
@@ -54,21 +54,28 @@ Image2DCPtr TimeFrequencyData::GetZeroImage() const
 
 Mask2DCPtr TimeFrequencyData::GetCombinedMask() const
 {
-	size_t
-		width = _images[0]->Width(),
-		height = _images[0]->Height();
-	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(width, height);
-	for(std::vector<Mask2DCPtr>::const_iterator i=_flagging.begin();i!=_flagging.end();++i)
+	if(_flagging.empty())
+		return GetSetMask<false>();
+	else if(_flagging.size() == 1)
+		return _flagging[0];
+	else
 	{
-		for(unsigned y=0;y<mask->Height();++y) {
-			for(unsigned x=0;x<mask->Width();++x) {
-				bool v = (*i)->Value(x, y);
-				if(v)
-					mask->SetValue(x, y, true);
+		std::vector<Mask2DCPtr>::const_iterator i = _flagging.begin();
+		Mask2DPtr mask = Mask2D::CreateCopy(*i);
+		++i;
+		while(i!=_flagging.end())
+		{
+			for(unsigned y=0;y<mask->Height();++y) {
+				for(unsigned x=0;x<mask->Width();++x) {
+					bool v = (*i)->Value(x, y);
+					if(v)
+						mask->SetValue(x, y, true);
+				}
 			}
+			++i;
 		}
+		return mask;
 	}
-	return mask;
 }
 
 TimeFrequencyData *TimeFrequencyData::CreateTFDataFromSingleComplex(enum PhaseRepresentation phase) const
@@ -388,7 +395,7 @@ void TimeFrequencyData::JoinMask(const TimeFrequencyData &other)
 		throw BadUsageException("Joining time frequency flagging with incompatible structures");
 }
 
-Image2DCPtr TimeFrequencyData::GetPhaseFromComplex(Image2DCPtr real, Image2DCPtr imag) const
+Image2DCPtr TimeFrequencyData::GetPhaseFromComplex(const Image2DCPtr &real, const Image2DCPtr &imag) const
 {
 	return FFTTools::CreatePhaseImage(real, imag);
 }

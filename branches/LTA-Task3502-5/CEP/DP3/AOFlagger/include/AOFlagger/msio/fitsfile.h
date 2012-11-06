@@ -260,14 +260,19 @@ class FitsFile {
 		void ReadGroupData(long groupIndex, long double *groupData);
 		void ReadGroupParameters(long groupIndex, long double *parametersData);
 		void ReadTableCell(int row, int col, long double *output, size_t size);
+		void ReadTableCell(int row, int col, double *output, size_t size);
 		void ReadTableCell(int row, int col, bool *output, size_t size);
 		void ReadTableCell(int row, int col, char *output);
+		void WriteTableCell(int row, int col, double *data, size_t size);
+		void WriteTableCell(int row, int col, const bool *data, size_t size);
+		bool HasTableColumn(const std::string &columnName, int columnIndex);
 		int GetTableColumnIndex(const std::string &columnName);
 		int GetTableColumnArraySize(int columnIndex);
 		long GetTableDimensionSize(int columnIndex, int dimension);
 		int GetGroupParameterIndex(const std::string &parameterName);
 		int GetGroupParameterIndex(const std::string &parameterName, int number);
 		bool HasGroupParameter(const std::string &parameterName);
+		bool HasGroupParameter(const std::string &parameterName, int number);
 		const std::string &Filename() const { return _filename; }
 	private:
 		const std::string _filename;

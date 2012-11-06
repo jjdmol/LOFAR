@@ -30,6 +30,7 @@
 
 //# Includes
 #include <Common/ParameterSet.h>
+#include <Common/LofarBitModeInfo.h>
 #include <Common/StreamUtil.h>
 #include <Common/StringUtil.h>
 #include <Common/lofar_datetime.h>
@@ -91,6 +92,10 @@ class Parset: public ParameterSet
     unsigned			observationID() const;
     double			startTime() const;
     double			stopTime() const;
+
+    unsigned    nrCorrelatedBlocks() const;
+    unsigned    nrBeamFormedBlocks() const;
+
     unsigned			nrStations() const;
     unsigned			nrTabStations() const;
     unsigned			nrMergedStations() const;
@@ -504,6 +509,8 @@ public:
     myPset( myPset ),
     myCore( myCore ),
 
+    phaseTwoPsetIndex( parset.phaseTwoPsetIndex(myPset) ),
+    phaseTwoCoreIndex( parset.phaseTwoCoreIndex(myCore) ),
     phaseThreePsetIndex( parset.phaseThreePsetIndex(myPset) ),
     phaseThreeCoreIndex( parset.phaseThreeCoreIndex(myCore) )
   {
@@ -544,6 +551,8 @@ public:
   const unsigned myPset;
   const unsigned myCore;
 
+  const int phaseTwoPsetIndex;
+  const int phaseTwoCoreIndex;
   const int phaseThreePsetIndex;
   const int phaseThreeCoreIndex;
 };
@@ -588,6 +597,16 @@ inline double Parset::startTime() const
 inline double Parset::stopTime() const
 {
   return getTime("Observation.stopTime");
+}
+
+inline unsigned Parset::nrCorrelatedBlocks() const
+{
+  return static_cast<unsigned>(floor( (stopTime() - startTime()) / IONintegrationTime()));
+}
+
+inline unsigned Parset::nrBeamFormedBlocks() const
+{
+  return static_cast<unsigned>(floor( (stopTime() - startTime()) / CNintegrationTime()));
 }
 
 inline string Parset::stationName(int index) const
@@ -689,7 +708,16 @@ inline unsigned Parset::dedispersionFFTsize() const
 
 inline unsigned Parset::nrBitsPerSample() const
 {
-  return getUint32("OLAP.nrBitsPerSample");
+  const std::string key = "Observation.nrBitsPerSample";
+
+  if (isDefined(key)) {
+    return getUint32(key);
+  } else {
+#ifndef HAVE_BGP_CN
+    LOG_WARN_STR( "Missing key " << key << ", using the depricated key OLAP.nrBitsPerSample");
+#endif
+    return getUint32("OLAP.nrBitsPerSample", 16);
+  }  
 }
 
 inline unsigned Parset::CNintegrationSteps() const
@@ -1042,7 +1070,16 @@ inline int Parset::phaseThreeCoreIndex(unsigned core) const
 
 inline unsigned Parset::nrSlotsInFrame() const
 {
-  return getUint32("Observation.nrSlotsInFrame");
+  unsigned nrSlots = 0;
+
+  nrSlots = getUint32("Observation.nrSlotsInFrame", 0);
+
+  if (nrSlots == 0) {
+    // return default
+    return maxBeamletsPerRSP(nrBitsPerSample());
+  }
+
+  return nrSlots;
 }
 
 inline string Parset::partitionName() const

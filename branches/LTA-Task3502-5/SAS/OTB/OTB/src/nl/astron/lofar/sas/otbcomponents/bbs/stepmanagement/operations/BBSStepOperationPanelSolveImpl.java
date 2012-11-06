@@ -39,8 +39,8 @@ import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepExplorerPanel
  */
 public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implements IBBSStepOperationPanel{
     
-    private HashMap<String,String> itsOperationParameters = new HashMap<String,String>();
-    private HashMap<String,String> itsInheritedOperationParameters = new HashMap<String,String>();
+    private HashMap<String,String> itsOperationParameters = new HashMap<>();
+    private HashMap<String,String> itsInheritedOperationParameters = new HashMap<>();
     
     
     /** 
@@ -211,7 +211,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
     }
     
     public HashMap<String,String> getBBSStepOperationAttributes(){
-        HashMap<String,String> returnMap = new HashMap<String,String>();
+        HashMap<String,String> returnMap = new HashMap<>();
         
         //Max iterations
         if(this.maxIterationsText.getText().equals("")){
@@ -724,7 +724,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
             selectedIndices = excludedParmsList.getSelectedIndices();
             excludedParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
         }
-        if(theSourceModel.size()==0){
+        if(theSourceModel.isEmpty()){
             this.deleteExcludedParmButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteExcludedParmButtonActionPerformed
@@ -764,7 +764,7 @@ public class BBSStepOperationPanelSolveImpl extends javax.swing.JPanel implement
             selectedIndices = solvableParmsList.getSelectedIndices();
             this.solvableParmsGroupPanel.setBackground(BBSStepExplorerPanel.NOT_INHERITED_FROM_PARENT);
         }
-        if(theSourceModel.size()==0){
+        if(theSourceModel.isEmpty()){
             this.deleteSolvableParmButton.setEnabled(false);
         }
     }//GEN-LAST:event_deleteSolvableParmButtonActionPerformed

@@ -40,6 +40,7 @@
 #include <AOFlagger/strategy/actions/fringestopaction.h>
 #include <AOFlagger/strategy/actions/imageraction.h>
 #include <AOFlagger/strategy/actions/iterationaction.h>
+#include <AOFlagger/strategy/actions/highpassfilteraction.h>
 #include <AOFlagger/strategy/actions/normalizevarianceaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
@@ -156,6 +157,9 @@ namespace rfiStrategy {
 			case FringeStopActionType:
 				writeFringeStopAction(static_cast<const FringeStopAction&>(action));
 				break;
+			case HighPassFilterActionType:
+				writeHighPassFilterAction(static_cast<const HighPassFilterAction&>(action));
+				break;
 			case ImagerActionType:
 				writeImagerAction(static_cast<const ImagerAction&>(action));
 				break;
@@ -209,6 +213,11 @@ namespace rfiStrategy {
 				break;
 			case WriteFlagsActionType:
 				writeWriteFlagsAction(static_cast<const WriteFlagsAction&>(action));
+				break;
+			case ForEachSimulatedBaselineActionType:
+			case ResamplingActionType:
+			case SpatialCompositionActionType:
+				throw std::runtime_error("Strategy contains an action for which saving is not supported");
 				break;
 		}
 		End();
@@ -388,6 +397,16 @@ namespace rfiStrategy {
 		Write<bool>("only-fringe-stop", action.OnlyFringeStop());
 		Write<int>("min-window-size", action.MinWindowSize());
 		Write<int>("max-window-size", action.MaxWindowSize());
+	}
+
+	void StrategyWriter::writeHighPassFilterAction(const HighPassFilterAction &action)
+	{
+		Attribute("type", "HighPassFilterAction");
+		Write<num_t>("horizontal-kernel-sigma-sq", action.HKernelSigmaSq());
+		Write<num_t>("vertical-kernel-sigma-sq", action.VKernelSigmaSq());
+		Write<int>("window-width", action.WindowWidth());
+		Write<int>("window-height", action.WindowHeight());
+		Write<int>("mode", action.Mode());
 	}
 
 	void StrategyWriter::writeImagerAction(const ImagerAction &)

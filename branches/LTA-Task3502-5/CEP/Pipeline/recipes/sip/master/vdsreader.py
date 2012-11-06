@@ -16,10 +16,15 @@ class vdsreader(BaseRecipe):
     """
     Read a GVDS file and return a list of the MS filenames referenced therein
     together with selected metadata.
+    
+    This recipe performs it's functionality at the master side of the recipe:
+    
+    1. Open the gvds file as a parameterset
+    2. Convert all part FileNames to mss
+    3. Parse start and end time and pointing information
 
-    **Arguments**
+    **no command line arguments:**
 
-    None.
     """
     inputs = {
         'gvds': ingredient.FileField(
@@ -39,6 +44,8 @@ class vdsreader(BaseRecipe):
         self.logger.info("Starting vdsreader run")
         super(vdsreader, self).go()
 
+        # *********************************************************************
+        # 1. Open the gvds file as a parameterset
         try:
             gvds = parameterset(self.inputs['gvds'])
         except:
@@ -46,6 +53,9 @@ class vdsreader(BaseRecipe):
             raise
 
         self.logger.info("Building list of measurementsets")
+
+        # **********************************************************************
+        # 2. convert al partx.FileName values to ms
         ms_names = [
             gvds.getString("Part%d.FileName" % (part_no,))
             for part_no in xrange(gvds.getInt("NParts"))
@@ -53,6 +63,9 @@ class vdsreader(BaseRecipe):
         self.logger.debug(ms_names)
 
         self.outputs['data'] = ms_names
+
+        # **********************************************************************\
+        # 3. parse start and end time and pointing information
         try:
             self.outputs['start_time'] = gvds.getString('StartTime')
             self.outputs['end_time'] = gvds.getString('EndTime')

@@ -66,10 +66,11 @@ void TimeConvolutionAction::PerformFFTSincOperation(ArtifactSet &artifacts, Imag
 			}
 			fftw_execute_dft(fftPlanBackward, fftOut, fftIn);
 			
+			const double n = width;
 			for(unsigned x=0;x<width;++x)
 			{
-				real->SetValue(x, y, fftIn[x][0]);
-				imag->SetValue(x, y, fftIn[x][1]);
+				real->SetValue(x, y, fftIn[x][0] / n);
+				imag->SetValue(x, y, fftIn[x][1] / n);
 			}
 		}
 	}

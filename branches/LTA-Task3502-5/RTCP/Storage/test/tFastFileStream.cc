@@ -27,6 +27,7 @@
 #include <Storage/FastFileStream.h>
 #include <cassert>
 #include <cstdio>
+#include <cstdlib>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -42,14 +43,20 @@ public:
     char templ[1024];
     snprintf(templ, sizeof templ, "%stFastFileStreamXXXXXX", dirname.c_str());
 
-    filename = mktemp(templ);
+    fd = mkstemp(templ);
+
+    filename = templ;
   }
   ~TempFile() {
-    if (filename != "")
+    if (filename != "") {
+      close(fd);
       (void)unlink(filename.c_str());
+    }
   }
 
   string filename;
+private:
+  int fd;
 };
 
 size_t filesize(const string &filename)

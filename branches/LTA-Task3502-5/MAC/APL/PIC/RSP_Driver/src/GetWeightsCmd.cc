@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RTCCommon/PSAccess.h>
@@ -50,33 +51,51 @@ GetWeightsCmd::~GetWeightsCmd()
 void GetWeightsCmd::ack(CacheBuffer& cache)
 {
 	RSPGetweightsackEvent ack;
-
+    int nPlanes = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
+	
 	ack.timestamp = getTimestamp();
 	ack.status    = RSP_SUCCESS;
-	ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP, m_event->rcumask.count(), MAX_BEAMLETS);	// 4 x 61
+	ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP, m_event->rcumask.count(), nPlanes, maxBeamletsPerPlane(cache.getBitsPerSample()));	// 4 x 61
 
-	int result_rcu = 0;
+    Range	dst_range;
+	Range	src_range;
+	int nBanks = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
+
+	int input_rcu = 0;
+	
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask[cache_rcu]) {
 			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 			//       In other words: getBeamletWeights can contain more data than ack.weights
-			if (MEPHeader::N_BEAMLETS == MAX_BEAMLETS) {
-				ack.weights()(0, result_rcu, Range::all()) = cache.getBeamletWeights()()(0, cache_rcu, Range::all());
-			}
-			else {
-				for (int rsp = 0; rsp < 4; rsp++) {
-					int	swstart(rsp*MAX_BEAMLETS_PER_RSP);
-					int hwstart(rsp*MEPHeader::N_BEAMLETS/4);
-					ack.weights()(0, result_rcu, Range(swstart,swstart+MAX_BEAMLETS_PER_RSP-1)) = cache.getBeamletWeights()()(0, cache_rcu, Range(hwstart, hwstart+MAX_BEAMLETS_PER_RSP-1));
-				}
-			}
-			result_rcu++;
+		    int nrBlocks = MEPHeader::N_SERDES_LANES * nBanks;
+			int dataslotsPerRSP = maxDataslotsPerRSP(cache.getBitsPerSample());
+			for (int block = 0; block < nrBlocks; block++) {
+				int swbank = block / MEPHeader::N_SERDES_LANES;
+				int swlane = block % MEPHeader::N_SERDES_LANES;
+				int hwbank = block % nBanks;
+				int hwlane = block / nBanks;
+				int	swstart(swlane * dataslotsPerRSP);
+				int hwstart(hwlane * (MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+				src_range = Range(hwstart, hwstart+dataslotsPerRSP-1);
+				dst_range = Range(swstart, swstart+dataslotsPerRSP-1);
+				for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
+					ack.weights()(0, input_rcu, swbank, dst_range) = 
+					    cache.getBeamletWeights()()(0, cache_rcu, hwbank, src_range); 
+					if (lane == 0) {
+						LOG_DEBUG_STR("BF:block=" << block << " move(" << src_range << ") to (" << dst_range << ")"
+									<< " swbank=" << swbank << " swlane=" << swlane
+									<< " hwbank=" << hwbank << " hwlane=" << hwlane);
+					}
+				} // lanes
+			} // blocks
+			
+		    
+			input_rcu++;
 			if (cache_rcu ==0) {
-				LOG_DEBUG_STR("GetWeights(ack[0]): " << ack.weights()(0,0,Range::all()));
+				LOG_DEBUG_STR("GetWeights(ack[0]): " << ack.weights()(0,0,Range::all(),Range::all()));
 			}
 		}
 	}
-
 	getPort()->send(ack);
 }
 

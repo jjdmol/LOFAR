@@ -49,6 +49,11 @@ class UnifiedConnection(object):
             self._start_transaction()
         self.in_transaction = True
 
+    def rollback(self):
+        if self.in_transaction:
+            self.log.debug('ROLLBACK;')
+            self.conn.execute('ROLLBACK;')
+
     def commit(self):
         """
         Commit only if it is needed.
@@ -76,8 +81,9 @@ class UnifiedConnection(object):
         if query.strip()[-1:] != ';':
             query = query + ';'
         try:
+            self.start()
+            self.log.debug(query.replace('\n', ' '))
             result = cursor.execute(query)
-            self.in_transaction = True
         except Exception as oerr:
             self.log.error(query.replace('\n', ' '))
             self.log.error(oerr)
@@ -161,7 +167,7 @@ class UnifiedConnection(object):
         """
         Proper procedure call (for Monet/Postgres compatibility.)
         """
-        self.conn.execute('call %s' % procname)
+        self.execute('call %s' % procname)
 
     def cursor(self):
         """

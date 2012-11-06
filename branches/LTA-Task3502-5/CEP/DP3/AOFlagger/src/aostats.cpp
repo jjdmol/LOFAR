@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 				RFIStatistics::TimeFrequencyInfo tfInfo;
 				tfInfo.time = time;
 				tfInfo.centralFrequency = band.CenterFrequencyHz();
-				for(unsigned freqIndex = 0;freqIndex < band.channelCount;++freqIndex)
+				for(unsigned freqIndex = 0;freqIndex < band.channels.size();++freqIndex)
 				{
 					for(unsigned p=0;p<polarizationCount;++p)
 					{

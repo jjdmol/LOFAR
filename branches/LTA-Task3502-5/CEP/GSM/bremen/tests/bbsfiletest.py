@@ -15,11 +15,11 @@ class BBSFileTest(SwitchableTest):
         self.conn = self.cm.get_connection()
 
     def test_first_file(self):
-        xfile = GSMBBSFileSource('test', 'tests/data/new_field.dat', 'test')
+        xfile = GSMBBSFileSource('test', 0, 'tests/data/new_field.dat', 'test')
         self.assertTrue(xfile.read_and_store_data(self.conn))
 
     def test_full(self):
-        xfile = GSMBBSFileSource('test', 'tests/data/full_file.dat')
+        xfile = GSMBBSFileSource('test', 0, 'tests/data/full_file.dat')
         self.assertTrue(xfile.read_and_store_data(self.conn))
         g_major =self.conn.exec_return('select g_major ' \
                                          'from detections where lra < 123.0;')
@@ -29,19 +29,16 @@ class BBSFileTest(SwitchableTest):
         self.assertEqual(g_major, 0.101701)
 
     def test_full2(self):
-        xfile = GSMBBSFileSource('test', 'tests/data_extended/field_ext.dat')
+        xfile = GSMBBSFileSource('test', 0, 'tests/data_extended/field_ext.dat')
         self.assertTrue(xfile.read_and_store_data(self.conn))
 
     def test_wrong_default(self):
-        with self.assertRaises(SourceException):
-            xfile = GSMBBSFileSource('test', 'tests/data/bad_file.dat')
-            xfile.read_and_store_data(self.conn)
+        xfile = GSMBBSFileSource('test', 0, 'tests/data/bad_file.dat')
+        self.assertRaises(SourceException, xfile.read_and_store_data, self.conn)
 
     def test_wrong_test(self):
-        with self.assertRaises(SourceException):
-            xfile = GSMBBSFileSource('test', 'tests/data/bbs_field.dat', 'test')
-            self.assertTrue(xfile.read_and_store_data(self.conn))
-
+        xfile = GSMBBSFileSource('test', 0, 'tests/data/bbs_field.dat', 'test')
+        self.assertRaises(SourceException, xfile.read_and_store_data, self.conn)
 
     def tearDown(self):
         self.conn.execute("delete from detections;")

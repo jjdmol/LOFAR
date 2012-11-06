@@ -12,7 +12,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#define MAX_SUM_THRESHOLD_ITERS 5
+#define MAX_SUM_THRESHOLD_ITERS 7
 
 namespace LOFAR {
 namespace RTCP {
@@ -21,7 +21,7 @@ namespace RTCP {
 
 static NSTimer RFIStatsTimer("RFI post statistics calculations", true, true);
 
-  Flagger::Flagger(const Parset& parset, const unsigned nrStations, const unsigned nrSubbands, const unsigned nrChannels, const float cutoffThreshold, 
+Flagger::Flagger(const Parset& parset, const unsigned nrStations, const unsigned nrSubbands, const unsigned nrChannels, const float cutoffThreshold, 
 		 float baseSentitivity, FlaggerStatisticsType flaggerStatisticsType) :
     itsParset(parset), itsNrStations(nrStations), itsNrSubbands(nrSubbands), itsNrChannels(nrChannels), itsCutoffThreshold(cutoffThreshold), 
   itsBaseSensitivity(baseSentitivity), itsFlaggerStatisticsType(flaggerStatisticsType)
@@ -191,7 +191,7 @@ void Flagger::calculateStatistics(const MultiDimArray<float,2> &powers, MultiDim
   memcpy(powers1D.data(), powers.data(), size * sizeof(float));
 
   // Std uses specialized versions for bools (bit vectors). So, we have to copy manually.
-  std::vector<bool> flags1D(size);
+  std::vector<bool> flags1D( flags.shape()[0] *  flags.shape()[1]);
   int idx=0;
   for (unsigned channel = 0; channel < flags.shape()[0]; channel++) {
     for (unsigned time = 0; time < flags.shape()[1]; time++) {
@@ -304,32 +304,7 @@ void Flagger::sumThreshold1D(std::vector<float>& powers, std::vector<bool>& flag
     }
   }
 }
-/* TODO, Andre's new version does not change powers. Also change statistics calculations
-template<size_t Length>
-void ThresholdMitigater::HorizontalSumThreshold(Image2DCPtr input, Mask2DPtr mask, num_t threshold)
-{
-        if(Length <= input->Width())
-        {
-                size_t width = input->Width()-Length+1; 
-                for(size_t y=0;y<input->Height();++y) {
-                        for(size_t x=0;x<width;++x) {
-                                num_t sum = 0.0;
-                                size_t count = 0;
-                                for(size_t i=0;i<Length;++i) {
-                                        if(!mask->Value(x+i, y)) {
-                                                sum += input->Value(x+i, y);
-                                                count++;
-                                        }
-                                }
-                                if(count>0 && fabs(sum/count) > threshold) {
-                                        for(size_t i=0;i<Length;++i)
-                                                mask->SetValue(x + i, y, true);
-                                }
-                        }
-                }
-        }
-}
-*/
+
 
 // in time direction
 void Flagger::sumThreshold2DHorizontal(MultiDimArray<float,2> &powers, MultiDimArray<bool,2> &flags, const unsigned window, const float threshold) {
@@ -444,7 +419,7 @@ void Flagger::thresholdingFlagger2D(const MultiDimArray<float,2> &powers, MultiD
 
 void Flagger::sumThresholdFlagger1D(std::vector<float>& powers, std::vector<bool>& flags, const float sensitivity) {
   float mean, stdDev, median;
-  calculateStatistics(powers,flags, mean, median, stdDev);
+  calculateStatistics(powers, flags, mean, median, stdDev);
 
   float factor;
   if (stdDev == 0.0f) {
@@ -495,10 +470,10 @@ bool Flagger::addToHistory(const float /* localMean */, const float /* localStdD
   float meanMedian = history.getMeanMedian();
   float stdDevOfMedians = history.getStdDevOfMedians();
 
-  float factor =  (meanMedian + historyFlaggingThreshold * stdDevOfMedians) / localMedian;
-  LOG_DEBUG_STR("localMedian = " << localMedian << ", meanMedian = " << meanMedian << ", stdDevOfMedians = " << stdDevOfMedians << ", factor from cuttoff is: " << factor);
-
   float threshold = meanMedian + historyFlaggingThreshold * stdDevOfMedians;
+
+//  LOG_DEBUG_STR("localMedian = " << localMedian << ", meanMedian = " << meanMedian << ", stdDevOfMedians = " << stdDevOfMedians << ", factor from cuttoff is: " << (localMedian / threshold));
+
   bool flagSecond = localMedian > threshold;
   if (flagSecond) {
       LOG_DEBUG_STR("History flagger flagged this second");
@@ -589,12 +564,21 @@ void Flagger::sumThresholdFlagger2DWithHistory(MultiDimArray<float,2> &powers, M
     }
   }
 
-#if 0
-  if (history[station][subband][pol].getSize() >= MIN_HISTORY_SIZE) {
+#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
+  flagWithIntegratedHistoryPowers(flags, sensitivity, history[station][subband][pol]);
+#endif
+}
+
+
+#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
+void Flagger::flagWithIntegratedHistoryPowers(MultiDimArray<bool,2> &flags,const float sensitivity, 
+					       FlaggerHistory history)
+{
+  if (history.getSize() >= MIN_HISTORY_SIZE) {
     std::vector<bool> tmpFlags(flags.shape()[0]);
     tmpFlags.clear();
 
-    std::vector<float>& historyIntegratedPowers = history[station][subband][pol].getIntegratedPowers();
+    std::vector<float>& historyIntegratedPowers = history.getIntegratedPowers();
     sumThresholdFlagger1D(historyIntegratedPowers, tmpFlags, sensitivity);
 
     // copy flags from tmp flags back to flags.
@@ -607,11 +591,12 @@ void Flagger::sumThresholdFlagger2DWithHistory(MultiDimArray<float,2> &powers, M
       }
     }
   }
-#endif
 }
+#endif
 
 
-void Flagger::apply1DflagsTo2D(MultiDimArray<bool,2> &flags, std::vector<bool> & integratedFlags) {
+void Flagger::apply1DflagsTo2D(MultiDimArray<bool,2> &flags, std::vector<bool> & integratedFlags)
+{
   for (unsigned channel = 0; channel < flags.shape()[0]; channel++) {
     if(integratedFlags[channel]) {
       for (unsigned time = 0; time < flags.shape()[1]; time++) {
@@ -650,6 +635,7 @@ FlaggerStatisticsType Flagger::getFlaggerStatisticsType(std::string t) {
   }
 }
 
+
 std::string Flagger::getFlaggerStatisticsTypeString(FlaggerStatisticsType t) {
   switch(t) {
   case FLAGGER_STATISTICS_NORMAL:
@@ -660,6 +646,7 @@ std::string Flagger::getFlaggerStatisticsTypeString(FlaggerStatisticsType t) {
     return "ILLEGAL FLAGGER STATISTICS TYPE";
   }
 }
+
 
 std::string Flagger::getFlaggerStatisticsTypeString() {
   return getFlaggerStatisticsTypeString(itsFlaggerStatisticsType);

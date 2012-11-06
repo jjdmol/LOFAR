@@ -37,11 +37,19 @@ def add_recipe_inputs(app, what_, name, obj, options, lines):
                 extra = "; optional"
             else:
                 extra = ""
-            lines.append("``%s`` (:class:`%s`%s)" % (name, type(field).__name__, extra))
-            if field.help:
-                lines.append("    %s" % field.help)
-            lines.append("")
+
+            parameter_line = ":param {0}: ``({2})`` {1} ({2})".format(name, field.help,
+                                                        type(field).__name__)
+            lines.append(parameter_line)
+            #lines.append("``%s`` (:class:`%s`%s)" % (name, type(field).__name__, extra))
+            #if field.help:
+            #    lines.append("    %s" % field.help)
+        lines.append("")
     if what_ == "class" and issubclass(obj, RecipeIngredients):
+        # Skip printing of input and output of both are not present
+        # This is normaly the toplevel recipe
+        if (not obj.inputs) and (not obj.outputs):
+            return
         lines.append("**Recipe inputs**")
         lines.append("")
         if obj.inputs:
@@ -49,7 +57,7 @@ def add_recipe_inputs(app, what_, name, obj, options, lines):
         else:
             lines.append("None defined -- defaults apply (see :class:`~lofarpipe.support.lofaringredient.RecipeIngredients`).")
             lines.append("")
-        lines.append("**Recipe outputs**")
+        lines.append("**Recipe outputs (job.results[parameter])**")
         lines.append("")
         if obj.outputs:
             format_ingredient_dict(obj.outputs)
@@ -95,7 +103,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'LOFAR Pipeline System'
-copyright = u'2009—11, John Swinbank'
+copyright = u'2009—12, John Swinbank, Wouter Klijn'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

@@ -150,8 +150,8 @@ int main(int argc, char *argv[])
 	bool *isRFI[polarizationCount];
 	for(unsigned p = 0; p < polarizationCount; ++p)
 	{
-		isRFI[p] = new bool[band.channelCount];
-		samples[p] = new std::complex<float>[band.channelCount];
+		isRFI[p] = new bool[band.channels.size()];
+		samples[p] = new std::complex<float>[band.channels.size()];
 	}
 
 	unsigned row = 0;
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 				casa::Array<casa::Complex>::const_iterator dataIter = dataArray.begin();
 				casa::Array<bool>::const_iterator flagIter = flagArray.begin();
 				
-				for(unsigned channel = 0; channel<band.channelCount; ++channel)
+				for(unsigned channel = 0; channel<band.channels.size(); ++channel)
 				{
 					for(unsigned p = 0; p < polarizationCount; ++p)
 					{

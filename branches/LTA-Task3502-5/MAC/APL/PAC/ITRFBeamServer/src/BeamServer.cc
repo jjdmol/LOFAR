@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/LofarBitModeInfo.h>
 #include <Common/lofar_complex.h>
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
@@ -47,11 +48,13 @@
 #include <sstream>
 #include <time.h>
 #include <fstream>
+#include <bitset>
 
 #include <netinet/in.h>
 #include <blitz/array.h>
 
 using namespace blitz;
+using namespace std;
 namespace LOFAR {
   using namespace RTC;
   using namespace IBS_Protocol;
@@ -66,6 +69,8 @@ int	gBeamformerGain = 0;
 //
 BeamServer::BeamServer(const string& name, long	timestamp) : 
 	GCFTask((State)&BeamServer::con2rspdriver, name),
+	itsCurrentBitsPerSample (MAX_BITS_PER_SAMPLE),
+	itsCurrentMaxBeamlets   (maxBeamlets(itsCurrentBitsPerSample)),
 	itsNrLBAbeams			(0),
 	itsNrHBAbeams			(0),
 	itsListener				(0),
@@ -230,7 +235,7 @@ GCFEvent::TResult BeamServer::con2rspdriver(GCFEvent& event, GCFPortInterface& p
 //
 // askConfiguration(event, port)
 //
-// Ask the RSPdriver what ahrdware is available
+// Ask the RSPdriver what hardware is available
 //
 GCFEvent::TResult BeamServer::askConfiguration(GCFEvent& event, GCFPortInterface& port)
 {
@@ -250,14 +255,9 @@ GCFEvent::TResult BeamServer::askConfiguration(GCFEvent& event, GCFPortInterface
 		RSPGetconfigackEvent ack(event);
 
 		// resize our array to the amount of current RCUs
-		itsMaxRCUs = ack.n_rcus;
-		LOG_INFO_STR("Station has " << itsMaxRCUs << " RCU's");
-
-		// initialize matrices
-		itsWeights.resize   (itsMaxRCUs, MAX_BEAMLETS);
-		itsWeights16.resize (itsMaxRCUs, MAX_BEAMLETS);
-		itsWeights   = complex<double>(0,0);
-		itsWeights16 = complex<int16_t>(0,0);
+		itsMaxRCUs      = ack.n_rcus;
+		itsMaxRSPboards = ack.max_rspboards;
+		LOG_INFO_STR("Station has " << itsMaxRCUs << " RCU's and " << itsMaxRSPboards << " RSPBoards");
 
 		itsConnectTimer->cancelAllTimers();
 		TRAN(BeamServer::subscribeSplitter);
@@ -301,10 +301,24 @@ GCFEvent::TResult BeamServer::subscribeSplitter(GCFEvent& event, GCFPortInterfac
 		RSPSubsplitterEvent		subSplitter;
 		subSplitter.period = 1;
 		itsRSPDriver->send(subSplitter);
+		itsConnectTimer->setTimer(5.0);
+		// wait for ack message
+	}
+	break;
+
+	case RSP_SUBSPLITTERACK: {
+		itsConnectTimer->cancelAllTimers();
+		RSPSubsplitterackEvent	ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_INFO("Could not get a subscription on the splitter, retry in 5 seconds");
+		}
+		itsConnectTimer->setTimer(5.0);
+		// wait for update message.
 	}
 	break;
 
 	case RSP_UPDSPLITTER: {
+		itsConnectTimer->cancelAllTimers();
 		RSPUpdsplitterEvent		answer(event);
 		if (answer.status != RSP_SUCCESS) {
 			LOG_INFO("Could not get a subscription on the splitter, retry in 5 seconds");
@@ -316,8 +330,8 @@ GCFEvent::TResult BeamServer::subscribeSplitter(GCFEvent& event, GCFPortInterfac
 		LOG_INFO_STR("The ringsplitter is " << (itsSplitterOn ? "ON" : "OFF"));
 		_createBeamPool();		// (re)allocate memory for the beamlet mapping
 
-		itsConnectTimer->cancelAllTimers();
-		TRAN(BeamServer::con2calserver);
+		TRAN(BeamServer::subscribeBitmode);
+//		TRAN(BeamServer::con2calserver);
 	}
 	break;
 
@@ -347,6 +361,92 @@ GCFEvent::TResult BeamServer::subscribeSplitter(GCFEvent& event, GCFPortInterfac
 
 	return (status);
 }
+
+#if 1
+//
+// subscribeBitmode(event, port)
+//
+// Take subscription on changes in the bitmode
+//
+GCFEvent::TResult BeamServer::subscribeBitmode(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR("subscribeBitmode:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch(event.signal) {
+	case F_ENTRY: {
+		// send request for splitter info
+		LOG_INFO("Requesting a subscription on the bitmode");
+		RSPSubbitmodeEvent		subBitmode;
+		subBitmode.period = 1;
+		itsRSPDriver->send(subBitmode);
+		itsConnectTimer->setTimer(5.0);
+		// wait for update event.
+	}
+	break;
+
+	case RSP_SUBBITMODEACK: {
+		itsConnectTimer->cancelAllTimers();
+		RSPSubbitmodeackEvent		ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_INFO("Could not get a subscription on the bitmode, retry in 5 seconds");
+			break;
+		}
+		itsConnectTimer->setTimer(5.0);
+		// wait for update event.
+	}
+	break;
+
+	case RSP_UPDBITMODE: {
+		itsConnectTimer->cancelAllTimers();
+		RSPUpdbitmodeEvent		answer(event);
+		if (answer.status != RSP_SUCCESS) {
+			LOG_INFO("Could not get a subscription on the bitmode, retry in 5 seconds");
+			itsConnectTimer->setTimer(5.0);
+			break;
+		}
+
+		itsCurrentBitsPerSample = MIN_BITS_PER_SAMPLE;
+		for (uint i = 0; i < itsMaxRSPboards; i++) {
+			itsCurrentBitsPerSample = (answer.bits_per_sample[i] > itsCurrentBitsPerSample) ? answer.bits_per_sample[i] : itsCurrentBitsPerSample;
+		}
+		itsCurrentMaxBeamlets = maxBeamlets(itsCurrentBitsPerSample);
+		LOG_INFO_STR("The bitmode is " << itsCurrentBitsPerSample << " bits");
+
+		_createBeamPool();		// (re)allocate memory for the beamlet mapping
+
+		TRAN(BeamServer::con2calserver);
+	}
+	break;
+
+	case F_TIMER: {
+		LOG_INFO("Requesting a subscription on the bitmode again.");
+		RSPSubbitmodeEvent		subBitmode;
+		subBitmode.period = 1;
+		itsRSPDriver->send(subBitmode);
+    }
+    break;
+
+	case F_DISCONNECTED: {
+		port.close();
+		if (&port == itsRSPDriver) {
+			LOG_WARN("Lost connection with the RSPDriver, going back to the reconnect state");
+			itsConnectTimer->cancelAllTimers();
+			TRAN(BeamServer::con2rspdriver);
+		}
+	}
+	break;
+
+	default:
+		LOG_DEBUG("subscribeBitmode:default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return (status);
+}
+#endif
 
 //
 // con2calserver(event, port)
@@ -567,6 +667,19 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 		// TODO: don't ignore status field!
 		itsSplitterOn = answer.splitter[0];
 		LOG_INFO_STR("The ringsplitter is switched " << (itsSplitterOn ? "ON" : "OFF"));
+		_createBeamPool();
+	}
+	break;
+
+	case RSP_UPDBITMODE: {
+		RSPUpdbitmodeEvent		answer(event);
+		// TODO: don't ignore status field!
+		itsCurrentBitsPerSample = MIN_BITS_PER_SAMPLE;
+		for (uint i = 0; i < itsMaxRSPboards; i++) {
+			itsCurrentBitsPerSample = (answer.bits_per_sample[i] > itsCurrentBitsPerSample) ? answer.bits_per_sample[i] : itsCurrentBitsPerSample;
+		}
+		itsCurrentMaxBeamlets = maxBeamlets(itsCurrentBitsPerSample);
+		LOG_INFO_STR("The bitmode changed to " << itsCurrentBitsPerSample << " bits");
 		_createBeamPool();
 	}
 	break;
@@ -1051,7 +1164,7 @@ void BeamServer::_createBeamPool()
 	itsBeamPool.clear();
 
 	// make a new one based on the current value of the splitter.
-	int		nrBeamlets = (itsSplitterOn ? 2 : 1 ) * MAX_BEAMLETS;
+	int		nrBeamlets = (itsSplitterOn ? 2 : 1 ) * itsCurrentMaxBeamlets;
 	LOG_INFO_STR("Initializing space for " << nrBeamlets << " beamlets");
 	itsBeamletAllocation.clear();
 	itsBeamletAllocation.resize(nrBeamlets, BeamletAlloc_t(0,0.0));
@@ -1059,6 +1172,15 @@ void BeamServer::_createBeamPool()
 	delete itsAnaBeamMgr;
 	itsAnaBeamMgr = new AnaBeamMgr(itsMaxRCUs, (itsSplitterOn ? 2 : 1 ));
 	ASSERTSTR(itsAnaBeamMgr, "Failed to create an Manager for the analogue beams.");
+
+	// initialize matrices
+	int	nPlanes          = MAX_BITS_PER_SAMPLE / itsCurrentBitsPerSample;
+	int	beamletsPerPlane = maxBeamletsPerPlane(itsCurrentBitsPerSample);
+	LOG_DEBUG(formatString("Size weights arrays set to %d x %d x %d", itsMaxRCUs, nPlanes, beamletsPerPlane));
+	itsWeights.resize   (itsMaxRCUs, nPlanes, beamletsPerPlane);
+	itsWeights16.resize (itsMaxRCUs, nPlanes, beamletsPerPlane);
+	itsWeights   = complex<double>(0,0);
+	itsWeights16 = complex<int16_t>(0,0);
 }
 
 //
@@ -1100,7 +1222,7 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 						  std::string 						name, 
 						  std::string 						antennaSetName, 
 						  IBS_Protocol::Beamlet2SubbandMap	allocation,
-						  LOFAR::bitset<LOFAR::MAX_RCUS>	rcumask,
+						  bitset<LOFAR::MAX_RCUS>		    rcumask,
 						  uint								ringNr,
 						  uint								rcuMode,
 						  int*								beamError)
@@ -1145,6 +1267,13 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 	else if (ringNr != 0) {		// splitter is off so ringNr must be 0
 		LOG_ERROR_STR("Splitter is off, ring segment 1 does not exist at this moment.");
 		*beamError = IBS_SPLITTER_OFF_ERR;
+		return (0);
+	}
+
+	// nr of subbands should fit in the beamlet space.
+	if (allocation.getSubbandBitset().count() > itsCurrentMaxBeamlets) {
+		LOG_ERROR_STR("Too many subbands specified (" << allocation.getSubbandBitset().count() << ") only " 
+					<< itsCurrentMaxBeamlets << " allowed");
 		return (0);
 	}
 
@@ -1218,7 +1347,7 @@ bool BeamServer::_checkBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 	// first check if the allocation is valid
 	for ( ; iter != end; iter++) {
 		//											v--- beamletnumber
-		int	index(ringNr * LOFAR::MAX_BEAMLETS + iter->first);
+		int	index(ringNr * itsCurrentMaxBeamlets + iter->first);
 		if (itsBeamletAllocation[index].subbandNr) {
 			LOG_ERROR_STR("Beamlet " << iter->first << "(" << index << 
 							") is already assigned to subband " << iter->second);
@@ -1240,11 +1369,11 @@ void BeamServer::_allocBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 	map<uint16,uint16>::const_iterator iter = allocation().begin();
 	map<uint16,uint16>::const_iterator end  = allocation().end();
 	for ( ; iter != end; iter++) {
-		itsBeamletAllocation[ringNr * LOFAR::MAX_BEAMLETS + iter->first].subbandNr = iter->second;
+		itsBeamletAllocation[ringNr * itsCurrentMaxBeamlets + iter->first].subbandNr = iter->second;
 		// NOTE: we like to set the scaling for each beamlets here also but we need
 		// the spectral window of the antenneSet for that. We will receive that info
 		// from the CalServer in a later state and calc the scalings than.
-		itsBeamletAllocation[ringNr * LOFAR::MAX_BEAMLETS + iter->first].scaling = complex<double>(0.0, 0.0);
+		itsBeamletAllocation[ringNr * itsCurrentMaxBeamlets + iter->first].scaling = complex<double>(0.0, 0.0);
 	} 
 
 	LOG_INFO_STR("Assignment of subbands to beamlets succesfull.");
@@ -1267,7 +1396,7 @@ void BeamServer::_scaleBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 	for ( ; iter != end; iter++) {
 		// first: beamletIndex, second: subbandnr
 		double	freq  = spw.getSubbandFreq(iter->second);
-		int		index = ringNr * LOFAR::MAX_BEAMLETS + iter->first;
+		int		index = ringNr * itsCurrentMaxBeamlets + iter->first;
 		itsBeamletAllocation[index].scaling = -2.0 * M_PI * freq * complex<double>(0.0,1.0) / speedOfLight;
 		LOG_TRACE_OBJ_STR("scaling subband[" << itsBeamletAllocation[index].subbandNr << 
 						  "]@beamlet[" << index << "] = " << itsBeamletAllocation[index].scaling <<
@@ -1287,8 +1416,8 @@ void BeamServer::_releaseBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 	map<uint16,uint16>::iterator iter = allocation().begin();
 	map<uint16,uint16>::iterator end  = allocation().end();
 	for ( ; iter != end; iter++) {
-		itsBeamletAllocation[ringNr * LOFAR::MAX_BEAMLETS + iter->first].subbandNr = 0;
-		itsBeamletAllocation[ringNr * LOFAR::MAX_BEAMLETS + iter->first].scaling   = complex<double>(0.0, 0.0);
+		itsBeamletAllocation[ringNr * itsCurrentMaxBeamlets + iter->first].subbandNr = 0;
+		itsBeamletAllocation[ringNr * itsCurrentMaxBeamlets + iter->first].scaling   = complex<double>(0.0, 0.0);
 	} 
 
 	LOG_INFO_STR("Assigned beamlets released succesfully.");
@@ -1475,12 +1604,14 @@ void BeamServer::compute_weights(Timestamp weightTime)
 	LOG_INFO_STR("Calculating weights for time " << weightTime);
 
 	// reset all weights
-	LOG_DEBUG_STR("Weights array has size: " << itsWeights.extent(firstDim) << "x" << itsWeights.extent(secondDim));
-	itsWeights(Range::all(), Range::all()) = 0.0;
+	LOG_DEBUG_STR("Weights array has size: " << itsWeights.extent(firstDim) << "x" << 
+								itsWeights.extent(secondDim) << "x" << itsWeights.extent(thirdDim));
+	itsWeights = 0.0;
 
 	// get ptr to antennafield information
 	AntennaField *gAntField = globalAntennaField();
 
+	int beamletsPerPlane = maxBeamletsPerPlane(itsCurrentBitsPerSample);
 	// Check both LBA and HBA antennas
 	for (uint	fieldNr = 0; fieldNr < 4; fieldNr++) {
 		string	fieldName;
@@ -1552,7 +1683,7 @@ void BeamServer::compute_weights(Timestamp weightTime)
 							sourceJ2000xyz(0,0), sourceJ2000xyz(0,1), sourceJ2000xyz(0,2)));
 
 			// Note: Beamlet numbers depend on the ring.
-			int	firstBeamlet(gAntField->ringNr(fieldName) * LOFAR::MAX_BEAMLETS);
+			int	firstBeamlet(gAntField->ringNr(fieldName) * itsCurrentMaxBeamlets);
 			LOG_DEBUG_STR("first beamlet of field " << fieldName << "=" << firstBeamlet);
 			// Note: RCUallocation is stationbased, rest info is fieldbased, 
 			bitset<MAX_RCUS>	RCUallocation(beamIter->second->rcuMask());
@@ -1566,7 +1697,9 @@ void BeamServer::compute_weights(Timestamp weightTime)
 				// Note: weight is in-procduct for RCUpos and source Pos and depends on 
 				// the frequency of the subband.
 				//
-				bitset<MAX_BEAMLETS>	beamletAllocation = beamIter->second->allocation().getBeamletBitset();
+				boost::dynamic_bitset<>	beamletAllocation;
+				beamletAllocation.resize(itsCurrentMaxBeamlets);
+				beamletAllocation = beamIter->second->allocation().getBeamletBitset(itsCurrentMaxBeamlets);
 				int		nrBeamlets = beamletAllocation.size();
 				for (int	beamlet = 0; beamlet < nrBeamlets; beamlet++) {
 					if (!beamletAllocation.test(beamlet)) {
@@ -1575,14 +1708,17 @@ void BeamServer::compute_weights(Timestamp weightTime)
 
 					complex<double>	CalFactor = _getCalFactor(beamIter->second->rcuMode(), rcu, 
 																itsBeamletAllocation[beamlet+firstBeamlet].subbandNr);
-					itsWeights(rcu, beamlet) = CalFactor * exp(itsBeamletAllocation[beamlet+firstBeamlet].scaling * 
-							(rcuJ2000Pos((int)posIndex[rcu], 0) * sourceJ2000xyz(0,0) +
-							 rcuJ2000Pos((int)posIndex[rcu], 1) * sourceJ2000xyz(0,1) +
-							 rcuJ2000Pos((int)posIndex[rcu], 2) * sourceJ2000xyz(0,2)));
+					int	bitPlane = beamlet / beamletsPerPlane;
+					itsWeights(rcu, bitPlane, beamlet % beamletsPerPlane) = 
+						CalFactor * exp(itsBeamletAllocation[beamlet+firstBeamlet].scaling * 
+								(rcuJ2000Pos((int)posIndex[rcu], 0) * sourceJ2000xyz(0,0) +
+								 rcuJ2000Pos((int)posIndex[rcu], 1) * sourceJ2000xyz(0,1) +
+								 rcuJ2000Pos((int)posIndex[rcu], 2) * sourceJ2000xyz(0,2)));
 
 					// some debugging
 					if (beamlet%100==0) {
-						LOG_DEBUG_STR("itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet)
+						LOG_DEBUG_STR("itsWeights(" << rcu << "," << bitPlane << "," << beamlet << ")="
+										<< itsWeights(rcu, bitPlane, beamlet)
 										<< " : rcuPos[" << posIndex[rcu] << "]=" << rcuJ2000Pos((int)posIndex[rcu],0)
 										<< " : CalFactor=" << CalFactor);
 					}
@@ -1616,8 +1752,9 @@ void BeamServer::send_weights(Timestamp time)
 		sw.rcumask.set(i);
 	}
   
-	sw.weights().resize(1, itsMaxRCUs, MAX_BEAMLETS);
-	sw.weights()(0, Range::all(), Range::all()) = itsWeights16;
+	int	nPlanes = MAX_BITS_PER_SAMPLE / itsCurrentBitsPerSample;
+	sw.weights().resize(1, itsMaxRCUs, nPlanes, itsCurrentMaxBeamlets / nPlanes);
+	sw.weights()(0, Range::all(), Range::all(), Range::all()) = itsWeights16;
   
 	LOG_INFO_STR("sending weights for interval " << time << " : " << time + (long)(itsComputeInterval-1));
 
@@ -1659,9 +1796,10 @@ void BeamServer::send_sbselection()
 		// beam 1, then beam 0 is deallocated, thus there is a hole
 		// of 64 beamlets before the beamlets of beam 1.
 		//
+		int	beamletsPerPlane = maxBeamletsPerPlane(itsCurrentBitsPerSample);
 		ss.subbands.setType(SubbandSelection::BEAMLET);
-		ss.subbands().resize(1, MAX_BEAMLETS);
-		ss.subbands() = 0;
+		ss.subbands.beamlets().resize(1, MAX_BITS_PER_SAMPLE/itsCurrentBitsPerSample, beamletsPerPlane);
+		ss.subbands.beamlets() = 0;
 
 		// reconstruct the selection
 		Beamlet2SubbandMap selection;
@@ -1682,23 +1820,23 @@ void BeamServer::send_sbselection()
 		for ( ; iter != end; ++iter) {
 			LOG_DEBUG(formatString("(%d,%d)", iter->first, iter->second));
 
-			if (iter->first >= MAX_BEAMLETS) {
-				LOG_ERROR(formatString("SBSELECTION: invalid src index %d", iter->first));
+			if (iter->first >= itsCurrentMaxBeamlets) {
+				LOG_ERROR(formatString("SBSELECTION: invalid src index %d (max=%d)", iter->first, itsCurrentMaxBeamlets));
 				continue;
 			}
 
 			if (iter->second >= MAX_SUBBANDS) {
-				LOG_ERROR(formatString("SBSELECTION: invalid tgt index %d", iter->second));
+				LOG_ERROR(formatString("SBSELECTION: invalid tgt index %d (max=%d)", iter->second, MAX_SUBBANDS));
 				continue;
 			}
 
 			// same selection for x and y polarization
-			ss.subbands()(0, (int)iter->first) = iter->second;
+			ss.subbands.beamlets()(0, iter->first/beamletsPerPlane, iter->first%beamletsPerPlane) = iter->second;
 		}
 
 		if (selection().size()) {
 			LOG_DEBUG_STR("Sending subbandselection for ring segment " << ringNr);
-			LOG_DEBUG_STR(ss.subbands());
+			LOG_DEBUG_STR(ss.subbands.beamlets());
 			itsRSPDriver->send(ss);
 		} 
 		else {

@@ -1,7 +1,29 @@
 #!/usr/bin/python
 import numpy
 from copy import copy
-from numpy.polynomial.polynomial import polyval
+
+
+def _verify_versions(a, b):
+    a = map(int, a.split('.'))
+    b = map(int, b.split('.'))
+    for i, val in enumerate(a):
+        if b[i] < val:
+            return False
+    return True
+
+if _verify_versions('1.4.0', numpy.__version__):
+    print 'Using 1.4 version'
+    from numpy.polynomial.polynomial import polyval
+else:
+    print 'Using substitute for 1.3 version'
+    from numpy import polyval as polyval_numpy
+    def polyval(x, args):
+        if not isinstance(args, list):
+            args = args.tolist()
+        pargs = copy(args)
+        pargs.reverse()
+        return polyval_numpy(pargs, x)
+
 #Unused:
 #from scipy.stats import chi2
 
@@ -101,18 +123,23 @@ select case when last_update_date > last_spectra_update_date
         self.freq = []
         self.flux = []
         self.flux_err = []
+        if self.conn.is_monet():
+            func = "log10("
+        else:
+            func = "log("
         cursor = self.conn.get_cursor("""
-select log(f.freq_central), log(rf.wm_f_int), rf.avg_weight_f_int
+select %s f.freq_central), %s rf.wm_f_int), rf.avg_weight_f_int
   from frequencybands f,
        runningcatalog_fluxes rf
  where f.freqbandid = rf.band
    and rf.runcat_id = %s
-   and rf.stokes = 'I'""" % runcat_id)
+   and rf.stokes = 'I'""" % (func, func, runcat_id))
         for xdata in iter(cursor.fetchone, None):
             self.freq.append(xdata[0])
             self.flux.append(xdata[1])
             self.flux_err.append(xdata[2])
         cursor.close()
+        print self.freq, self.flux
         self.args, sp_power = self.best_fit()
         sp_update = ','.join(map(lambda x: 'spectral_index_%s = %s' %
                                        (x, self.args[x]), range(sp_power)))

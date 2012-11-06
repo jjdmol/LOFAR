@@ -510,19 +510,21 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     public void composeTimeString(String time) {
         // Set the dateformat OTDB takes
         SimpleDateFormat id = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm",itsLocale);
-        if (time.equals("start")) {
-            if (itsStartTime != null) {
-              LogParamStartTimeText.setText(id.format(itsStartTime).replace("T", " "));
-            } else {
-                LogParamStartTimeText.setText("not-a-date-time");
-            }
-              
-        } else if (time.equals("stop")) {
-            if (itsStopTime != null) {
-                LogParamEndTimeText.setText(id.format(itsStopTime).replace("T", " "));
-            } else {
-                LogParamEndTimeText.setText("not-a-date-time");
-            }
+        switch (time) {
+            case "start":
+                if (itsStartTime != null) {
+                  LogParamStartTimeText.setText(id.format(itsStartTime).replace("T", " "));
+                } else {
+                    LogParamStartTimeText.setText("not-a-date-time");
+                }
+                break;
+            case "stop":
+                if (itsStopTime != null) {
+                    LogParamEndTimeText.setText(id.format(itsStopTime).replace("T", " "));
+                } else {
+                    LogParamEndTimeText.setText("not-a-date-time");
+                }
+                break;
         }
     }   
     private void setTime() {

@@ -97,7 +97,7 @@ class Image2D {
 		 * @throws FitsIOException if the images do not match in size.
 		 */
 		static Image2D *CreateFromSum(const Image2D &imageA, const Image2D &imageB);
-		static Image2DPtr CreateFromSum(Image2DCPtr imageA, Image2DCPtr imageB)
+		static Image2DPtr CreateFromSum(const Image2DCPtr &imageA, const Image2DCPtr &imageB)
 		{
 			return Image2DPtr(CreateFromSum(*imageA, *imageB));
 		}
@@ -109,13 +109,13 @@ class Image2D {
 		 * @throws FitsIOException if the images do not match in size.
 		 */
 		static Image2D *CreateFromDiff(const Image2D &imageA, const Image2D &imageB);
-		static Image2DPtr CreateFromDiff(Image2DCPtr imageA, Image2DCPtr imageB)
+		static Image2DPtr CreateFromDiff(const Image2DCPtr &imageA, const Image2DCPtr &imageB)
 		{
 			return Image2DPtr(CreateFromDiff(*imageA, *imageB));
 		}
 
 		static Image2D *CreateCopy(const Image2D &image);
-		static Image2DPtr CreateCopy(Image2DCPtr image)
+		static Image2DPtr CreateCopy(const Image2DCPtr &image)
 		{
 			return Image2DPtr(CreateCopy(*image));
 		}
@@ -198,18 +198,12 @@ class Image2D {
 		}
 
 		void SetValues(const Image2D &source);
-		void SetValues(Image2DCPtr source)
+		void SetValues(const Image2DCPtr &source)
 		{
 			SetValues(*source);
 		}
 
-		void SetAll(num_t value)
-		{
-			const size_t size = _stride * _height;
-			for(size_t i=0;i<size;i++) {
-				_dataConsecutive[i] = value;
-			}
-		}
+		void SetAll(num_t value);
 		
 		inline void AddValue(size_t x, size_t y, num_t addValue)
 		{
@@ -217,8 +211,8 @@ class Image2D {
 		}
 		
 		/**
-		 * Check whether this value is completely empty.
-		 * @return @c true if the value only contains zeros or unset values.
+		 * Check whether this image is completely zero.
+		 * @return @c true if the value only contains zeros.
 		 */
 		bool ContainsOnlyZeros() const;
 		
@@ -315,6 +309,11 @@ class Image2D {
 		 * Multiply all values with a factor.
 		 */
 		void MultiplyValues(num_t factor);
+		
+		/**
+		 * Will set all values to lhs - this.
+		 */
+		void SubtractAsRHS(const Image2DCPtr &lhs);
 
 		/**
 		 * Flips the image round the diagonal, i.e., x becomes y and y becomes x.
@@ -353,7 +352,7 @@ class Image2D {
 		 * Swaps the contents of the two masks. This can be used as a move assignment operator, as it
 		 * only swaps pointers; hence it is fast.
 		 */
-		void Swap(Image2DPtr source)
+		void Swap(const Image2DPtr &source)
 		{
 			Swap(*source);
 		}
@@ -386,7 +385,7 @@ class Image2D {
 		
 		void SetTrim(size_t startX, size_t startY, size_t endX, size_t endY);
 		
-		void CopyFrom(Image2DCPtr source, size_t destX, size_t destY)
+		void CopyFrom(const Image2DCPtr &source, size_t destX, size_t destY)
 		{
 			size_t
 				x2 = source->_width + destX,

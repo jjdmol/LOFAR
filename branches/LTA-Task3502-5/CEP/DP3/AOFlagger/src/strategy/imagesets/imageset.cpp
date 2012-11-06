@@ -31,7 +31,7 @@
 #include <AOFlagger/strategy/imagesets/timefrequencystatimageset.h>
 
 namespace rfiStrategy {
-	ImageSet *ImageSet::Create(const std::string &file, bool indirectReader, bool readUVW)
+	ImageSet *ImageSet::Create(const std::string &file, BaselineIOMode ioMode, bool readUVW)
 	{
 		if(IsFitsFile(file))
 			return new FitsImageSet(file);
@@ -50,7 +50,7 @@ namespace rfiStrategy {
 		else if(IsHarishFile(file))
 			return new HarishReader(file);
 		else {
-			MSImageSet *set = new MSImageSet(file, indirectReader);
+			MSImageSet *set = new MSImageSet(file, ioMode);
 			set->SetReadUVW(readUVW);
 			return set;
 		}
@@ -61,7 +61,9 @@ namespace rfiStrategy {
 		return
 		(file.size() > 4 && file.substr(file.size()- 4) == ".UVF")
 		||
-		(file.size() > 5 && file.substr(file.size() - 5) == ".fits" );
+		(file.size() > 5 && file.substr(file.size() - 5) == ".fits" )
+		||
+		(file.size() > 7 && file.substr(file.size() - 7) == ".sdfits" ); // Parkes raw files are named like this
 	}
 	
 	bool ImageSet::IsRCPRawFile(const std::string &file)

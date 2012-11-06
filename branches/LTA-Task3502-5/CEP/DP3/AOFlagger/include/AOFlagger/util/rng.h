@@ -33,9 +33,10 @@ class RNG{
 		static double GaussianComplex();
 		static double Rayleigh();
 		static double Uniform();
-		static double EvaluateRayleigh(double x, double sigma);
-		static long double EvaluateGaussian(long double x, long double sigma);
-		static double EvaluateGaussian(double x, double sigma);
+		static double EvaluateRayleigh(double x, double sigmaSquared);
+		static long double EvaluateGaussian(long double x, long double sigmaSquared);
+		static double EvaluateUnnormalizedGaussian(double x, double sigmaSquared);
+		static double EvaluateGaussian(double x, double sigmaSquared);
 		static double EvaluateGaussian2D(long double x1, long double x2, long double sigmaX1, long double sigmaX2);
 		static double IntegrateGaussian(long double upperLimit);
 		static void DoubleGaussian(long double &a, long double &b);

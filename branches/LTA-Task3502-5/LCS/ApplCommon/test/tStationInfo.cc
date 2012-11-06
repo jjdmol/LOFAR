@@ -23,17 +23,18 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if defined HAVE_BOOST_REGEX
-
 //# Includes
 #include <Common/LofarLogger.h>
+
+#if defined HAVE_BOOST_REGEX
+
 #include <Common/SystemUtil.h>
 #include <ApplCommon/StationInfo.h>
 #include <boost/regex.hpp>
 
 using namespace LOFAR;
 
-int main (int	argc, char* argv[]) 
+int main (int/*argc*/, char* argv[]) 
 {
 	INIT_LOGGER(argv[0]);
 	
@@ -59,6 +60,14 @@ int main (int	argc, char* argv[])
 				PVSS2SASname("RS002:LOFAR_ObsSW_Observation5.antennaArray"));
 	LOG_INFO_STR("PVSS==>SAS(RS002:LOFAR_ObsSW_Observation5_BeamControl.status.state)  = " << 
 				PVSS2SASname("RS002:LOFAR_ObsSW_Observation5_BeamControl.status.state"));
+	LOG_INFO_STR("PVSS==>SAS(RS005:LOFAR_PIC_HBA05.status.state)         = " << 
+				PVSS2SASname("RS005:LOFAR_PIC_HBA05.status.state"));
+	LOG_INFO_STR("PVSS==>SAS(DE603:LOFAR_PIC_LBA005.status.state)         = " << 
+				PVSS2SASname("DE603:LOFAR_PIC_LBA005.status.state"));
+	LOG_INFO_STR("PVSS==>SAS(CS101:LOFAR_PIC_HBA01.element00.status.state)         = " << 
+				PVSS2SASname("CS101:LOFAR_PIC_HBA01.element00.status.state"));
+	LOG_INFO_STR("PVSS==>SAS(CS101:LOFAR_PIC_HBA02.element12.X.status.state)         = " << 
+				PVSS2SASname("CS101:LOFAR_PIC_HBA02.element12.X.status.state"));
 
 	LOG_INFO_STR("SAS==>PVSS(LOFAR.PIC.Remote.RS002.Cabinet0.Subrack0.status_state)        = " << 
 				SAS2PVSSname("LOFAR.PIC.Remote.RS002.Cabinet0.Subrack0.status_state"));
@@ -68,8 +77,21 @@ int main (int	argc, char* argv[])
 				SAS2PVSSname("LOFAR.PermSW.Control.MCU001.MACScheduler.status_state"));
 	LOG_INFO_STR("SAS==>PVSS(LOFAR.ObsSW.Observation.VirtualInstrument.stationList) = " << 
 				SAS2PVSSname("LOFAR.ObsSW.Observation.VirtualInstrument.stationList"));
+	LOG_INFO_STR("SAS==>PVSS(LOFAR.PIC.Remote.RS005.LBA123.status_state)        = " << 
+				SAS2PVSSname("LOFAR.PIC.Remote.RS005.LBA123.status_state"));
+	LOG_INFO_STR("SAS==>PVSS(LOFAR.PIC.Europe.DE603.HBA23.status_state)        = " << 
+				SAS2PVSSname("LOFAR.PIC.Europe.DE603.HBA23.status_state"));
 
 	return (0);
+}
+
+#else
+
+int main (int/*argc*/, char* argv[]) 
+{
+	INIT_LOGGER(argv[0]);
+
+	return 0;
 }
 
 #endif

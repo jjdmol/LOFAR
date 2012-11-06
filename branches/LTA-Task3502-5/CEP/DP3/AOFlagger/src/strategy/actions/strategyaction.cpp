@@ -28,6 +28,7 @@
 #include <AOFlagger/strategy/actions/foreachmsaction.h>
 #include <AOFlagger/strategy/actions/foreachpolarisationaction.h>
 #include <AOFlagger/strategy/actions/frequencyselectionaction.h>
+#include <AOFlagger/strategy/actions/highpassfilteraction.h>
 #include <AOFlagger/strategy/actions/iterationaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/setflaggingaction.h>
@@ -79,27 +80,28 @@ namespace rfiStrategy {
 		current->Add(iteration);
 		current = iteration;
 		
-		SumThresholdAction *t2 = new SumThresholdAction();
-		t2->SetBaseSensitivity(1.0);
+		SumThresholdAction *t1 = new SumThresholdAction();
+		t1->SetBaseSensitivity(1.0);
 		if(pulsar)
-			t2->SetFrequencyDirectionFlagging(false);
-		current->Add(t2);
+			t1->SetFrequencyDirectionFlagging(false);
+		current->Add(t1);
 
-		CombineFlagResults *cfr2 = new CombineFlagResults();
-		current->Add(cfr2);
+		CombineFlagResults *cfr1 = new CombineFlagResults();
+		current->Add(cfr1);
 
-		cfr2->Add(new FrequencySelectionAction());
+		cfr1->Add(new FrequencySelectionAction());
 		if(!pulsar)
-			cfr2->Add(new TimeSelectionAction());
+			cfr1->Add(new TimeSelectionAction());
 	
 		current->Add(new SetImageAction());
-		ChangeResolutionAction *changeResAction2 = new ChangeResolutionAction();
+		ChangeResolutionAction *changeResAction = new ChangeResolutionAction();
 		if(pulsar)
-			changeResAction2->SetTimeDecreaseFactor(1);
+			changeResAction->SetTimeDecreaseFactor(1);
 		else
-			changeResAction2->SetTimeDecreaseFactor(3);
-		changeResAction2->SetFrequencyDecreaseFactor(3);
+			changeResAction->SetTimeDecreaseFactor(3);
+		changeResAction->SetFrequencyDecreaseFactor(3);
 
+		/*
 		SlidingWindowFitAction *swfAction2 = new SlidingWindowFitAction();
 		if(pulsar)
 		{
@@ -111,20 +113,30 @@ namespace rfiStrategy {
 		swfAction2->Parameters().frequencyDirectionKernelSize = 5.0;
 		swfAction2->Parameters().frequencyDirectionWindowSize = 15;
 		changeResAction2->Add(swfAction2);
+		
+		Replaced the sliding window fit action by the faster (SSE) high-pass
+		filter on 26-08-2011
+		*/
+		HighPassFilterAction *hpAction = new HighPassFilterAction();
+		if(pulsar)
+		{
+			hpAction->SetWindowWidth(1);
+		} else {
+			hpAction->SetHKernelSigmaSq(2.5);
+			hpAction->SetWindowWidth(21);
+		}
+		hpAction->SetVKernelSigmaSq(5.0);
+		hpAction->SetWindowHeight(31);
+		hpAction->SetMode(HighPassFilterAction::StoreRevised);
+		changeResAction->Add(hpAction);
 
-		current->Add(changeResAction2);
-
-		// This action causes iterations not to converge the thresholds towards the
-		// noise, but rather keep using the whole image for threshold calculation.
-		// The result is that strongly RFI contaminated sets are very weakly flagged.
-		// Commented out on june 11, 2011.
-		//current->Add(new SetFlaggingAction());
+		current->Add(changeResAction);
 
 		current = focAction;
-		SumThresholdAction *t3 = new SumThresholdAction();
+		SumThresholdAction *t2 = new SumThresholdAction();
 		if(pulsar)
-			t3->SetFrequencyDirectionFlagging(false);
-		current->Add(t3);
+			t2->SetFrequencyDirectionFlagging(false);
+		current->Add(t2);
 		
 		PlotAction *plotPolarizationStatistics = new PlotAction();
 		plotPolarizationStatistics->SetPlotKind(PlotAction::PolarizationStatisticsPlot);
@@ -138,11 +150,11 @@ namespace rfiStrategy {
 
 		if(pedantic)
 		{
-			CombineFlagResults *cfr3 = new CombineFlagResults();
-			block.Add(cfr3);
-			cfr3->Add(new FrequencySelectionAction());
+			CombineFlagResults *cfr2 = new CombineFlagResults();
+			block.Add(cfr2);
+			cfr2->Add(new FrequencySelectionAction());
 			if(!pulsar)
-				cfr3->Add(new TimeSelectionAction());
+				cfr2->Add(new TimeSelectionAction());
 		} else {
 			if(!pulsar)
 				block.Add(new TimeSelectionAction());
@@ -428,7 +440,7 @@ namespace rfiStrategy {
 		}
 	}
 
-	void Strategy::SetIndirectReader(Strategy &strategy, bool newValue)
+	/*void Strategy::SetIndirectReader(Strategy &strategy, bool newValue)
 	{
 		StrategyIterator i = StrategyIterator::NewStartIterator(strategy);
 		while(!i.PastEnd())
@@ -440,7 +452,7 @@ namespace rfiStrategy {
 			}
 			++i;
 		}
-	}
+	}*/
 
 	void Strategy::SyncAll(ActionContainer &root)
 	{

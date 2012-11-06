@@ -86,7 +86,7 @@ public class ParmDBConfigurationHelper{
     
     public HashMap<String,String> getParmDBServerInformation() throws ParmDBConfigurationException{
         if(servers == null){
-            servers = new HashMap<String,String>();
+            servers = new HashMap<>();
             String hostname = "lofar17.astron.nl";
             String port = "10668";
             String name = "ParmDB1";

@@ -32,10 +32,12 @@
 
 using namespace LOFAR;
 
-int main (int	argc, char*	argv[])
+int main (int, char*	argv[])
 {
+	INIT_LOGGER(argv[0]);
+
 	char	buf[4096];
-	int		offset(0);
+	size_t		offset(0);
 
 	// blitz array <double>
 	blitz::Array<double, 2>		ba1(2,4);
@@ -45,34 +47,34 @@ int main (int	argc, char*	argv[])
 			40, 41;
 	cout << "Testing blitz::Array<double, 2>" << ba1 << endl;
 	
-	cout << "size = " << MSH_ARRAY_SIZE(ba1, double) << endl;
+	cout << "size = " << MSH_size(ba1) << endl;
 
 	bzero(buf, 4096);
 	offset = 0;
-	MSH_PACK_ARRAY(buf, offset, ba1, double);
+	MSH_pack(buf, offset, ba1);
 	cout << "packed:" << endl;
 	hexdump(buf, offset);
 
 	blitz::Array<double, 2>		ba2(2,4);
 	offset = 0;
-	MSH_UNPACK_ARRAY(buf, offset, ba2, double, 2);
+	MSH_unpack(buf, offset, ba2);
 	cout << "unpacked: " << ba2 << endl;
 
 	// blitz array <int>
 	blitz::Array<int, 2>		emptyArr;
 	cout << "Testing EMPTY blitz::Array<int, 2>" << emptyArr << endl;
 	
-	cout << "size = " << MSH_ARRAY_SIZE(emptyArr, int) << endl;
+	cout << "size = " << MSH_size(emptyArr) << endl;
 
 	bzero(buf, 4096);
 	offset = 0;
-	MSH_PACK_ARRAY(buf, offset, emptyArr, int);
+	MSH_pack(buf, offset, emptyArr);
 	cout << "packed:" << endl;
 	hexdump(buf, offset);
 
 	blitz::Array<int, 2>		empty2;
 	offset = 0;
-	MSH_UNPACK_ARRAY(buf, offset, empty2, int, 2);
+	MSH_unpack(buf, offset, empty2);
 	cout << "unpacked: " << empty2 << endl;
 
 	return (0);

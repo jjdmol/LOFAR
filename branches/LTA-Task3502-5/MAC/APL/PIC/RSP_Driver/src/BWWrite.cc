@@ -45,9 +45,10 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid)
-	: SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS),
-	  m_blp(blp), m_regid(regid), m_remaining(0), m_offset(0)
+	: SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS*MAX_NR_BM_BANKS),
+	  m_blp(blp), m_regid(regid), itsBank(0), itsActiveBanks(1), m_remaining(0), m_offset(0)
 {
+	
 	memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
@@ -57,12 +58,23 @@ BWWrite::~BWWrite()
 
 void BWWrite::sendrequest()
 {
-	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
-
+    itsActiveBanks = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
+    uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
+    if (getCurrentIndex() >= (itsActiveBanks*MEPHeader::BF_N_FRAGMENTS)) {
+        if (getCurrentIndex() == (MEPHeader::BF_N_FRAGMENTS*MAX_NR_BM_BANKS - 1)) {
+            Cache::getInstance().getState().bf().write_ack(global_blp * MEPHeader::N_PHASEPOL + m_regid);
+        }
+        setContinue(true);
+        return;
+    }
+    
+    
+    itsBank = (getCurrentIndex() / MEPHeader::BF_N_FRAGMENTS) ;
+        
 	// no conditional, update every second
 
 	// reset m_offset and m_remaining for each register
-	if (0 == getCurrentIndex()) {
+	if (0 == (getCurrentIndex()%MEPHeader::BF_N_FRAGMENTS)) {
 		m_offset = MEPHeader::N_LOCAL_XLETS * MEPHeader::WEIGHT_SIZE;
 		m_remaining = MEPHeader::BF_XROUT_SIZE - m_offset; // representative for XR, XI, YR, YI size
 	}
@@ -71,9 +83,6 @@ void BWWrite::sendrequest()
 		LOG_FATAL("invalid regid");
 		exit(EXIT_FAILURE);
 	}
-
-	LOG_DEBUG(formatString(">>>> BWWrite(%s) global_blp=%d, blp=%d, regid=%d, m_offset=%d, m_remaining=%d",
-					getBoardPort().getName().c_str(), global_blp, m_blp, m_regid, m_offset, m_remaining));
 
 	// send next BF configure message
 	EPABfCoefsWriteEvent bfcoefs;
@@ -86,19 +95,46 @@ void BWWrite::sendrequest()
 	
 	switch (m_regid) {
 	case MEPHeader::BF_XROUT:
-		bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+		bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_XROUT+(itsBank*4),
+                         size,
+                         m_offset);
 		break;
 	case MEPHeader::BF_XIOUT:
-		bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+	    bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_XIOUT+(itsBank*4),
+                         size,
+                         m_offset);
 		break;
 	case MEPHeader::BF_YROUT:
-		bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+	    bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_YROUT+(itsBank*4),
+                         size,
+                         m_offset);
 		break;
 	case MEPHeader::BF_YIOUT:
-		bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+	    bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_YIOUT+(itsBank*4),
+                         size,
+                         m_offset);
 		break;
 	}
-	
+
+#if 0	
+	if (getBoardId() == 11) {
+		LOG_INFO_STR("BWWrite:board:" << getBoardId() << ",global_blp=" << (int)global_blp << ",bank=" << itsBank 
+			<< "," << bfcoefs.hdr);
+	}
+#endif
+
 	// create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
 	int nbeamlets_per_fragment = MEPHeader::N_BEAMLETS / MEPHeader::BF_N_FRAGMENTS;
 	Array<complex<int16>, 2> weights(nbeamlets_per_fragment, N_POL);
@@ -120,22 +156,23 @@ void BWWrite::sendrequest()
 
 	ASSERT(MEPHeader::N_BEAMLETS % MEPHeader::BF_N_FRAGMENTS == 0);
 	for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
-
 		int hw_offset = lane;
-		int cache_offset = lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) + (getCurrentIndex() * nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES);
+		int cache_offset = lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) + ((getCurrentIndex() % MEPHeader::BF_N_FRAGMENTS) * nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES);
 
 		Range hw_range(hw_offset, hw_offset + nbeamlets_per_fragment - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
 		Range cache_range(cache_offset, cache_offset + (nbeamlets_per_fragment / MEPHeader::N_SERDES_LANES) - 1, 1);
-
-		LOG_DEBUG_STR("lane=" << lane);
-		LOG_DEBUG_STR("hw_range=" << hw_range);
-		LOG_DEBUG_STR("cache_range=" << cache_range);
-
+#if 0		
+		if (getBoardId() == 11) {
+			LOG_INFO_STR("board=" << getBoardId() << ",bank=" << itsBank << ",lane=" << lane 
+					<< (m_regid / 2 ? ",Y" : ",X") << (m_regid % 2 ? "I" : "R")
+					<< ", hw_range=" << hw_range << ", cache_range=" << cache_range);
+		}
+#endif
 		// X = normal 0
-		weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, cache_range);
+		weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, itsBank, cache_range);
 
 		// Y = normal 1
-		weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, cache_range);
+		weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, itsBank, cache_range);
 
 #if 0
 			mapped_index(hw_range, 0) = index(cache_range, 0);
@@ -245,6 +282,7 @@ void BWWrite::sendrequest_status()
 GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	if (EPA_WRITEACK != event.signal) {
+		LOG_INFO_STR(formatString("event.signal=%d", event.signal)); 
 		LOG_WARN("BWWrite::handleack: unexpected ack");
 		return GCFEvent::NOT_HANDLED;
 	}
@@ -264,7 +302,7 @@ GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 		//
 		// Last fragment signals completion
 		//
-		if (MEPHeader::MEPHeader::BF_N_FRAGMENTS - 1 == getCurrentIndex()) {
+		if ((MEPHeader::BF_N_FRAGMENTS*itsActiveBanks-1) == getCurrentIndex()) {
 		  Cache::getInstance().getState().bf().write_ack(global_blp * MEPHeader::N_PHASEPOL + m_regid);
 		}
 	}

@@ -25,13 +25,15 @@
 #ifndef BEAMLET2SUBBANDMAP_H_
 #define BEAMLET2SUBBANDMAP_H_
 
-#include <MACIO/Marshalling.h>
+#include <MACIO/Marshalling.tcc>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
+#include <Common/LofarConstants.h>
 #include <Common/LofarTypes.h>
+#include <Common/lofar_bitset.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
-#include <Common/lofar_bitset.h>
+#include <boost/dynamic_bitset.hpp>
 
 namespace LOFAR {
   namespace IBS_Protocol {
@@ -52,14 +54,14 @@ public:
 
 	/*@{*/
 	// marshalling methods
-	unsigned int getSize();
-	unsigned int pack  (void* buffer);
-	unsigned int unpack(void *buffer);
+	size_t getSize() const;
+	size_t pack  (char* buffer) const;
+	size_t unpack(const char *buffer);
 	/*@}*/
 
 	// other methods
 	bitset<MAX_SUBBANDS> getSubbandBitset() const;
-	bitset<MAX_BEAMLETS> getBeamletBitset() const;
+	boost::dynamic_bitset<>   getBeamletBitset(const int maxBeamlets) const;
 
 	ostream& print (ostream& os) const;
 

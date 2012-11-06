@@ -20,11 +20,10 @@ namespace RTCP {
 
 union Tag {
   struct {
-    unsigned sourceRank :13; /* 0..8191, or two BG/P racks */
-    unsigned comm       :2;
-    unsigned _dummy     :1;
-    unsigned subband    :8;
-    unsigned beam       :8;
+    unsigned sign       : 1; /* must be 0 */
+    unsigned sourceRank :11; /* 0..4095, or one BG/P rack */
+    unsigned subband    :10;
+    unsigned beam       : 9;
   } info;
 
   uint32 nr;
@@ -48,6 +47,7 @@ AsyncTransposeBeams::AsyncTransposeBeams(
   itsCommHandles(itsNrCommunications,nrSubbands),
   itsLocalSubbands(nrSubbands)
 {
+  ASSERT(itsNrCommunications == 1); // no bits left to encode communication channel, so we can support only one
 }
 
   template <typename T,unsigned DIM, unsigned FLAGS_DIM> void AsyncTransposeBeams::postReceive(SampleData<T,DIM,FLAGS_DIM> *transposedData, unsigned localSubband, unsigned globalSubband, unsigned beam, unsigned psetIndex, unsigned coreIndex)
@@ -71,8 +71,9 @@ AsyncTransposeBeams::AsyncTransposeBeams(
   for (unsigned h = 0; h < itsNrCommunications; h ++) {
     Tag t;
 
+    t.info.sign       = 0;
     t.info.sourceRank = rank;
-    t.info.comm       = h;
+    //t.info.comm       = h;
     t.info.beam       = beam;
     t.info.subband    = globalSubband;
 
@@ -104,7 +105,8 @@ unsigned AsyncTransposeBeams::waitForAnyReceive()
     LOG_DEBUG_STR( "Received subband " << subband << " from pset ??, rank " << rank << ", tag " << tag );
 #endif
     // mark the right communication handle as received
-    itsCommHandles[t.info.comm][subband] = -1;
+    unsigned comm = 0; // = t.info.comm;
+    itsCommHandles[comm][subband] = -1;
 
     // check whether we have received all communications for this psetIndex.
     // This is the case when commHandles are -1.
@@ -141,8 +143,9 @@ unsigned AsyncTransposeBeams::waitForAnyReceive()
   for (unsigned h = 0; h < itsNrCommunications; h ++) {
     Tag t;
 
+    t.info.sign       = 0;
     t.info.sourceRank = itsLocationInfo.rank();
-    t.info.comm       = h;
+    //t.info.comm       = h;
     t.info.subband    = subband;
     t.info.beam       = globalBeam;
 

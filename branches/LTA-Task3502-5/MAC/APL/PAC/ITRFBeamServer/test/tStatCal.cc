@@ -33,9 +33,9 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace BS;
 
-int main(int	argc, char*	argv[]) 
+int main(int, char*	argv[]) 
 {
-	INIT_LOGGER("tCalStat");
+	INIT_LOGGER(argv[0]);
 
 	StatCal		theCalTable(1,12);
 	blitz::Array<std::complex<double>,3> theData = theCalTable();

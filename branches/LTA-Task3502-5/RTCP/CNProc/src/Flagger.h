@@ -35,6 +35,10 @@ private:
   bool addToHistory(const float localMean, const float localStdDev, const float localMedian, std::vector<float> powers, FlaggerHistory& history);
   void apply1DflagsTo2D(MultiDimArray<bool,2> &flags, std::vector<bool> & integratedFlags);
 
+#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
+  void flagWithIntegratedHistoryPowers(MultiDimArray<bool,2> &flags,const float sensitivity, FlaggerHistory history);
+#endif
+
 protected:
 
   // Does simple thresholding.

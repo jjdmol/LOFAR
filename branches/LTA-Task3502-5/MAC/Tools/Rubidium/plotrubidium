@@ -1,4 +1,20 @@
-#!/usr/bin/gnuplot
+#!/bin/bash
+#
+# V1.1, M.J.Norden, 02-11-2012
+# Usage: plotrubidium yyyymmdd
+#
+
+if [ "$1" != "" ]; then
+   cp /var/log/ntpstats/rubidium_log.$1 /localhome/data/rubidium_log
+   
+else 
+   now="`date +%Y%m%d`"
+   cp /var/log/ntpstats/rubidium_log.$now /localhome/data/rubidium_log
+   echo "Usage: plotrubidium yyyymmdd"
+   sleep 1
+   
+fi
+/usr/bin/gnuplot <<\EOF
 set grid ytics
 set xtics 7200
 set mxtics 4
@@ -9,6 +25,8 @@ set xlabel "date-time (UT)"
 set timefmt "%Y-%m-%dT%H:%M:%S"
 set xdata time
 set format x "%d %b-%H:%M"
-plot "/var/log/ntpstats/rubidium_log" using 1:5 every 20 notitle; 
+plot "/localhome/data/rubidium_log" using 1:5 every 20 notitle; 
 pause 300
 reread
+EOF
+

@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
@@ -79,7 +80,7 @@ void CDOWrite::setup_udpip_header(uint32 l_srcip, uint32 l_dstip)
 {
 	uint32 payload_size = EPA_CEP_OUTPUT_HEADER_SIZE
 		+ (GET_CONFIG("RSPDriver.CDO_N_BLOCKS", i) 
-			 * (MEPHeader::N_PHASEPOL * GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i)) 
+			 * (MEPHeader::N_PHASEPOL * maxDataslotsPerRSP(Cache::getInstance().getBack().getBitsPerSample())) 
 			 * EPA_CEP_BEAMLET_SIZE);
 
   //
@@ -192,7 +193,9 @@ void CDOWrite::sendrequest()
 		cdo.ffi              = 0xDDCC;
 
 		cdo.nof_blocks       = GET_CONFIG("RSPDriver.CDO_N_BLOCKS", i);
-		cdo.nof_beamlets     = GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i);
+		
+		//GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i);
+		cdo.nof_beamlets     = maxDataslotsPerRSP(Cache::getInstance().getBack().getBitsPerSample());
 
 		if (output_lane >= 0) {
 

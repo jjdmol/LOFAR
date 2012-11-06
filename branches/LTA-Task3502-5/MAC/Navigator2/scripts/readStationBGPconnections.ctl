@@ -32,12 +32,16 @@ main()
 { 
 
   bool showDebug = false;
+  
+  // first empty old settings
+  
+  emptyIONodes();
        
   string strCurConfig;
   string strDataDir     = "";
   string strDataDir             = ""; 
   if (isdir("/opt/lofar/etc/") ) {
-    strDataDir = "/opt/lofar/etc/StaticMetaData/";
+    strDataDir = "/opt/lofar/etc/";
   } else if ( isdir ("d:/data/TRUNK-CCU001/data/configs/") ) {
     strDataDir = "d:/data/TRUNK-CCU001/data/configs/";
   } else {
@@ -45,120 +49,77 @@ main()
     return;
   }
   
-  string strRSPDatFile   = strDataDir+"RSPConnections.dat";
-  string strMACDatFile   = strDataDir+"MAC+IP.dat";
+  string strRSPDatFile   = strDataDir+"RSPConnections_CCU.dat";
 
   dyn_string dynStr_RSPfile;
-  dyn_string dynStr_MACfile;
    
-  // first read the files
-  dynStr_RSPfile = lto_getFile_asDynStr(strRSPDatFile);
-  dynStr_MACfile = lto_getFile_asDynStr(strMACDatFile);
+  // first read the file
+  dynStr_RSPfile = lto_getFile_asDynStr(strRSPDatFile); 
   
   DebugN("Filling Database from file " + strRSPDatFile);
   for (int index=1;index <= dynlen(dynStr_RSPfile);index++) {
     if (strpos(dynStr_RSPfile[index],"#") < 0 || strpos(dynStr_RSPfile[index],"#") > 4) {
+      
       dyn_string linesplitted=strsplit(dynStr_RSPfile[index]," \t");
       if (showDebug) DebugN(index+" :"+linesplitted);
-      // check if stationname is not empty
-      if (dynlen(linesplitted) == 3 && linesplitted[3] != "") {
 
-        string ionode = linesplitted[3];
-        string ioname = "LOFAR_PIC_"+navFunct_CEPName2DPName(ionode);
- 
-        int stationPlace=1;
-        if (strpos(ionode,"BG") < 0) {
-          stationPlace = 0;
-        } else {
-          if (showDebug) DebugN("BGP in name found: " + ionode);
-          continue;
-        }
-        int rackPlace=1;
-        if (strpos(ionode,"R00") < 0) {
-            rackPlace=0;
-        }
+      string station    = linesplitted[1];
+      string rspstr     = linesplitted[2];
+      string ionode     = linesplitted[3];
+      string ip         = linesplitted[4];
+      string mac        = linesplitted[5];
+      string macForeign = "";
+      // the station/mac/ip places are for the cases were rsp1 can be the 2nd ear or a foreign station
+      // if a foreign station is used they will be in the list as R(00-01)_BG(1-3)_(DE,FR,SE,UK)(601-608)
+      // and the real ionode can be found based on the shared ipnr
+      // then the info will go to the 2nd station in the database
         
-        dyn_string rsp = strsplit(linesplitted[2],"_");
-        int nr = rsp[2];
-        if (showDebug) DebugN( "node: "+ionode+ "  rspfull: " + linesplitted[2]+ "  rsp[2]" + rsp[2]+ "nr: "+nr);
-        if (dpExists(ioname)) {
-          dpSet(ioname+".station"+stationPlace,linesplitted[1]);
-//          dpSet(ioname+".RSPBoard"+rackPlace,nr);
-        } else {
-            DebugN(ionode+" gives wrong dp: " , ioname);
-        }
-      }   
-    }
-  }
-  DebugN("Ready");
-
-  // now read MAC+IP
-  DebugN("Filling Database from file " + strMACDatFile);
-  for (int index=1;index <= dynlen(dynStr_MACfile);index++) {
-    if (strpos(dynStr_MACfile[index],"#") < 0 || strpos(dynStr_MACfile[index],"#") > 4) {
-      dyn_string linesplitted=strsplit(dynStr_MACfile[index]," \t");
-      
-      if (showDebug) DebugN(index+" :"+linesplitted);
-      // check if stationname is not empty
-      if (dynlen(linesplitted) == 3 && linesplitted[1] != "") {
-        string ionode= linesplitted[1];
-        if (strpos(ionode,"R02") >= 0) {
-          continue;
-        }
-        int rackPlace=1;
-        if (strpos(ionode,"R00") < 0) {
-            rackPlace=0;
-        }
-
-        string ioname = "LOFAR_PIC_"+navFunct_CEPName2DPName(ionode);
-
-        
-        int stationPlace=1;
-        
-        if (strpos(ionode,"BG") < 0) {
-          stationPlace = 0;
-        } else {
-          if (showDebug) DebugN("BGP in name found: " + ionode);
-          // we need te find out the foreign connection info out of two files
-          // first we need the Station and rspinfo that belong to thies node
-          dyn_string rspinfo = dynPatternMatch("*"+ionode+"*",dynStr_RSPfile);
-          // take stationname and rspnr
-          if (dynlen(rspinfo) < 1) {
-            DebugN("no match in RSPconnections.dat for pattern: "+ ionode);
-            continue;
-           }
-          dyn_string spl=strsplit(rspinfo[1]," \t");
-          string station = spl[1];
-          dyn_string rsp = strsplit(spl[2],"_");
-          int nr = rsp[2];
-          
-          
-          //now look for match on ip nr in same file
-          dyn_string ipinfo = dynPatternMatch("*"+linesplitted[2]+"*",dynStr_MACfile);
-          // there must be 2 hits, 1st is the right node, 2nd is the initial line with BG
-          if (dynlen(ipinfo) < 2) {
-            DebugN("couldn't find match on ip for :"+ionode+" with pattern "+"*"+linesplitted[2]+"*");
-            continue;
+      int stationPlace=1;
+      if (strpos(ionode,"R00") >= 0) {
+        stationPlace=0;
+      }
+      if (strpos(ionode,"BG") >= 0) {
+        if (showDebug) DebugN(" ionode contains BG router name, trying to find real ionode for connection based on ip: "+ip);
+        ionode="";
+        // check list based on ipnr and find the real ionode
+        for (int idx=1;idx <= index;idx++) {
+          if (strpos(dynStr_RSPfile[idx],ip) >= 0) {
+            if (showDebug) DebugN(" found match for ip in: " + dynStr_RSPfile[idx]);
+            dyn_string  sp = strsplit(dynStr_RSPfile[idx]," \t"); 
+            ionode= sp[3];
+            macForeign= mac;
+            break;
           }
-          spl=strsplit(ipinfo[1]," \t");
-          ionode= spl[1];
-          ioname = "LOFAR_PIC_"+navFunct_CEPName2DPName(ionode);
-          if (dpExists(ioname)) {
-            dpSet(ioname+".station"+stationPlace,station);
-//            dpSet(ioname+".RSPBoard"+rackPlace,nr);
-          } else {
-            DebugN(ionode+" gives wrong dp: " , ioname);
-            continue;
-          }          
-        } 
-
-        if (dpExists(ioname)) {
-          dpSet(ioname+".IP"+rackPlace,linesplitted[2]);
-          dpSet(ioname+".MAC"+rackPlace,linesplitted[3]);
-        } else {
-            DebugN(ionode+" gives wrong dp: " , ioname);
         }
-      }   
+      }
+        
+      if (ionode == "" ) {
+        DebugN("Found BG name in ionode, but couldn't find ip match. skipping....");
+        continue;
+      } else {
+        if (showDebug) DebugN("ionode match found: "+ionode); 
+      }  
+      
+      string ioname = "LOFAR_PIC_"+navFunct_CEPName2DPName(ionode);
+ 
+                
+               
+      dyn_string rsp = strsplit(rspstr,"_");
+      int nr = rsp[2];
+      if (showDebug) DebugN( "node: "+ionode+ "  rspfull: " + rspstr+ "  rsp[2]" + rsp[2]+ " nr: "+nr
+                             + " ip: "+ip+ " mac: "+mac);
+      if (dpExists(ioname)) {
+        dpSet(ioname+".IP"+stationPlace,ip);
+        if (macForeign != "") {
+          dpSet(ioname+".MACForeign",macForeign);
+          dpSet(ioname+".station1",station);          
+        } else {
+          dpSet(ioname+".MAC"+stationPlace,mac);
+          dpSet(ioname+".station0",station);
+        }
+      } else {
+          DebugN(ionode+" gives wrong dp: " , ioname);
+      }
     }
   }
   DebugN("Ready");
@@ -195,4 +156,23 @@ dyn_string lto_getFile_asDynStr(string aFileName)
   }
     
   return aFile_asDynStr;
+}
+
+void emptyIONodes() {
+  for (int i = 0; i < 64;i++) {
+    string ext = "";
+    if (i < 10) ext = "0";
+    string dp = "LOFAR_PIC_BGP_Midplane"+navFunct_IONode2Midplane(i)+"_IONode"+ext+i;  
+    if (dpExists(dp+".station0")) {
+      dpSet(dp+".station0","");
+      dpSet(dp+".IP0","");
+      dpSet(dp+".MAC0","");
+      dpSet(dp+".station1","");
+      dpSet(dp+".IP1","");
+      dpSet(dp+".MAC1","");
+      dpSet(dp+".MACForeign","");
+    } else {
+      DebugN("wrong dp found: "+dp+".station0");
+    }
+  }
 }

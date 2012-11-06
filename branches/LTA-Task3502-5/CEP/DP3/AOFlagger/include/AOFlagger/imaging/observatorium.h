@@ -44,9 +44,8 @@ struct WSRTObservatorium : public Observatorium
 			WSRTn(i, antennas[i]);
 			AddAntenna(antennas[i]);
 		}
-		GetBandInfo().channelCount = channelCount;
-		SetChannelWidthHz(bandwidthHz / GetBandInfo().channelCount);
-		initBand();
+		SetChannelWidthHz(bandwidthHz / channelCount);
+		initBand(channelCount);
 	}
 	explicit WSRTObservatorium(size_t antenna1, size_t antenna2, size_t channelCount = 16*4)
 	{
@@ -57,9 +56,8 @@ struct WSRTObservatorium : public Observatorium
 		WSRTn(antenna2, antennas[1]);
 		AddAntenna(antennas[0]);
 		AddAntenna(antennas[1]);
-		GetBandInfo().channelCount = channelCount;
-		SetChannelWidthHz(10000.0 * 256.0 * 16.0 / GetBandInfo().channelCount);
-		initBand();
+		SetChannelWidthHz(10000.0 * 256.0 * 16.0 / channelCount);
+		initBand(channelCount);
 	}
 
 	private:
@@ -173,10 +171,10 @@ struct WSRTObservatorium : public Observatorium
 				break;
 			}
 		}
-		void initBand()
+		void initBand(size_t channelCount)
 		{
 			GetBandInfo().windowIndex = 0;
-			for(size_t i=0;i<GetBandInfo().channelCount;++i)
+			for(size_t i=0;i<channelCount;++i)
 			{
 				ChannelInfo channel;
 				channel.frequencyIndex = i;

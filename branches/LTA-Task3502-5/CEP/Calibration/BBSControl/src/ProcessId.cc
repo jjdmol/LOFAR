@@ -62,5 +62,10 @@ bool operator==(const ProcessId &lhs, const ProcessId &rhs)
     return lhs.pid == rhs.pid && lhs.hostname == rhs.hostname;
 }
 
+ostream& operator<<(ostream& os, const ProcessId &obj)
+{
+    return os << obj.hostname << ":" << obj.pid;
+}
+
 } //# namespace BBS
 } //# namespace LOFAR

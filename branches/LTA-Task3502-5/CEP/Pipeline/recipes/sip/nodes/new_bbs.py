@@ -14,7 +14,6 @@ import shutil
 
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.lofarnode import LOFARnodeTCP
-from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import get_mountpoint
 from lofarpipe.support.utilities import log_time
 from lofarpipe.support.pipelinelogging import log_process_output
@@ -25,17 +24,15 @@ from lofar.parameterset import parameterset
 class new_bbs(LOFARnodeTCP):
     #                      Handles running a single BBS kernel on a compute node
     # --------------------------------------------------------------------------
-    def run(
-        self, executable, initscript, infiles,
-        db_key, db_name, db_user, db_host
-    ):
+    def run(self, executable, infiles, db_key, db_name, db_user, db_host):
+        """
+        Depricated functionality
+        """
         # executable : path to KernelControl executable
-        # initscript : path to lofarinit.sh
         # infiles    : tuple of MS, instrument- and sky-model files
         # db_*       : database connection parameters
         # ----------------------------------------------------------------------
         self.logger.debug("executable = %s" % executable)
-        self.logger.debug("initscript = %s" % initscript)
         self.logger.debug("infiles = %s" % str(infiles))
         self.logger.debug("db_key = %s" % db_key)
         self.logger.debug("db_name = %s" % db_name)
@@ -79,7 +76,6 @@ class new_bbs(LOFARnodeTCP):
             #               Catch & log output from the kernel logger and stdout
             # ------------------------------------------------------------------
             working_dir = mkdtemp()
-            env = read_initscript(self.logger, initscript)
             try:
                 self.logger.info("******** {0}".format(open(parset_file).read()))
                 cmd = [executable, parset_file, "0"]
@@ -90,7 +86,7 @@ class new_bbs(LOFARnodeTCP):
                     os.path.basename(executable),
                 ):
                     bbs_kernel_process = Popen(
-                        cmd, stdout = PIPE, stderr = PIPE, cwd = working_dir
+                        cmd, stdout=PIPE, stderr=PIPE, cwd=working_dir
                     )
                     sout, serr = bbs_kernel_process.communicate()
                 log_process_output("BBS kernel", sout, serr, self.logger)

@@ -69,6 +69,7 @@ class OutputThread
     Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
 
     unsigned		 	     itsBlocksWritten, itsBlocksDropped;
+    unsigned           itsNrExpectedBlocks;
     unsigned			     itsNextSequenceNumber;
     std::vector<unsigned>	     itsSequenceNumbers;
     SmartPtr<FileStream>	     itsSequenceNumbersFile;

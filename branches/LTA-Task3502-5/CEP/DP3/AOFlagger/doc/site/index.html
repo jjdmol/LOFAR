@@ -5,10 +5,10 @@
 <body>
 <a href="http://www.astro.rug.nl/~offringa/">Offringa</a>-&gt;RFI software
 <h2>RFI software</h2>
-<p>This page describes the software to detect and mitigate radio frequency interference (RFI) in a radio measurement set. The main algorithms is described in the articles
+<p>This page describes the software to detect and mitigate radio frequency interference (RFI) in a radio measurement set. The main algorithms are described in the articles
 "<a href="http://adsabs.harvard.edu/doi/10.1111/j.1365-2966.2010.16471.x">Post-correlation radio frequency interference classification methods'</a>" (Offringa et al. 2010, MNRAS, Volume 405, Issue 1, pp. 155-167) and "<a href="http://www.aanda.org/index.php?option=com_article&access=doi&doi=10.1051/0004-6361/201118497&Itemid=129">A morphological algorithm for improving radio-frequency interference detection</a>" (Offringa et al. 2012, A&amp;A, Volume 539, Issue A95). Please acknowledge these papers in publications in which the software is used. The first one introduces the SumThreshold method and tests signal estimation methods, the latter introduces the Scale-invariant rank operator.</p>
 <p>I've made a "<a href="faq.html">Frequently Asked Questions</a>" page for the software, a short <a href="gui-tutorial.html">RFI GUI tutorial</a> and an <a href="strategy-example-a.html">example of how one can optimize the strategy</a>.</p>
-<p>Last release: version 2.0.1, 16 March 2012.</p>
+<p>Last release: version 2.1.0, 12 August 2012.</p>
 <p>Contents:</p>
 <ul>
 <li><a href="#introduction">Introduction</a></li>
@@ -22,10 +22,11 @@
 <a id="introduction"><h4>Introduction</h4></a>
 <p>The RFI software presented here can automatically flag data and can be used to analyze the data in a measurement. The purpose of flagging is to mark samples that are affected by interfering sources such as radio stations, airplanes, electrical fences or other transmitting interferers.</p>
 <p>The tools in the package are meant for offline use. The software package contains a graphical interface ("<tt>rfigui</tt>") that can be used to visualize a measurement set and analyze mitigation techniques. It also contains a console flagger ("<tt>rficonsole</tt>") that can execute a script of mitigation functions without the overhead of a graphical environment. All tools were written in C++.</p>
-<p>The software has been tested extensively on low radio frequencies (150 MHz or lower) produced by the <a href="http://www.astron.nl/radio-observatory/astronomers/wsrt-astronomers">WSRT</a> and <a href="http://www.lofar.org">LOFAR</a> telescopes. For this purpose, I'm reasonably sure that it is both the <em>fastest</em> and <em>most accurate</em> flagger in the world. LOFAR is the Low Frequency Array that is built in and around the Netherlands. Higher frequencies have been tested as well. Some of the methods implemented are the <tt>SumThreshold</tt>, the <tt>VarThreshold</tt>, the <tt>Scale-Invariant Rank Operator</tt> and the singular value decomposition (SVD) method. Included also are several surface fitting algorithms.</p>
+<p>The software has been tested extensively on many radio telescopes, especially on but not limited to low radio frequencies (150 MHz or lower) produced by the <a href="http://www.astron.nl/radio-observatory/astronomers/wsrt-astronomers">WSRT</a> and <a href="http://www.lofar.org">LOFAR</a> telescopes. It also works on single dish radio telescopes. I believe that it is both the <em>fastest</em> and <em>most accurate</em> flagger available, which is supported by the scientific articles. </p>
 <p>The software is published under the GNU General Public License version 3.</p>
 <a id="download"><h4>Download</h4></a>
 <p>The latest version of the software can be downloaded here:</p>
+<ul><li>Download: <a href="AOFlagger-2.1.0.tar.bz2">AOFlagger-2.1.0.tar.bz2</a> (12 August 2012, <a href="CHANGELOG">changelog</a>)</li></ul>
 <ul><li>Download: <a href="AOFlagger-2.0.1.tar.bz2">AOFlagger-2.0.1.tar.bz2</a> (16 March 2012, <a href="CHANGELOG">changelog</a>)</li></ul>
 <ul><li>Download: <a href="AOFlagger-2.0.0.tar.bz2">AOFlagger-2.0.0.tar.bz2</a> (9 March 2012, <a href="CHANGELOG">changelog</a>)</li></ul>
 <ul><li>Download: <a href="AOFlagger-1.5.0.tar.bz2">AOFlagger-1.5.0.tar.bz2</a> (20 October 2011, <a href="CHANGELOG">changelog</a>)</li></ul>

@@ -246,7 +246,7 @@ echo "# Generated file !!!" >Stations.list
 if [ "${INDIR}" = "." ]; then 
   wdir="../StaticMetaData"
   otdbdir="."
-  pvssdir="../PVSS"
+  pvssdir="../PVSS/data"
 else
   wdir="/opt/lofar/etc"
   otdbdir="/opt/lofar/etc/otdb"

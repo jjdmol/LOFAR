@@ -20,6 +20,8 @@ CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
 #  message(STATUS " This probably means your gcc is old ( < 4.2).")
 #endif(COMPILER_SUPPORTS_MARCH_NATIVE)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+
 include(CheckIncludeFileCXX)
 
 FIND_PATH(BOOST_ASIO_H_FOUND "boost/asio.hpp")
@@ -86,6 +88,7 @@ set(MSIO_FILES
   msio/indirectbaselinereader.cpp
   msio/mask2d.cpp
   msio/measurementset.cpp
+  msio/memorybaselinereader.cpp
   msio/pngfile.cpp
   msio/rspreader.cpp
   msio/samplerow.cpp
@@ -112,6 +115,7 @@ set(STRATEGY_ACTION_FILES
   strategy/actions/foreachmsaction.cpp
   strategy/actions/frequencyselectionaction.cpp
   strategy/actions/fringestopaction.cpp
+	strategy/actions/highpassfilteraction.cpp
   strategy/actions/imageraction.cpp
   strategy/actions/normalizevarianceaction.cpp
   strategy/actions/plotaction.cpp
@@ -126,9 +130,11 @@ set(STRATEGY_ACTION_FILES
 
 set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/baselineselector.cpp
+	strategy/algorithms/baselinetimeplaneimager.cpp
   strategy/algorithms/eigenvalue.cpp
   strategy/algorithms/fringestoppingfitter.cpp
   strategy/algorithms/fringetestcreater.cpp
+	strategy/algorithms/highpassfilter.cpp
   strategy/algorithms/localfitmethod.cpp
   strategy/algorithms/methoditerator.cpp
   strategy/algorithms/mitigationtester.cpp

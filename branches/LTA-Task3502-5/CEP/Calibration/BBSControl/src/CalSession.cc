@@ -87,11 +87,6 @@ namespace
     }
 }
 
-ostream& operator<<(ostream& os, const ProcessId &obj)
-{
-    return os << obj.hostname << ":" << obj.pid;
-}
-
 CalSession::CalSession(const string &key, const string &db, const string &user,
     const string &password, const string &host, const string &port)
     :   itsSessionId(-1),

@@ -79,7 +79,8 @@
 //navFunct_CEPName2inputBuf                   : returns ionr from CEPname
 //navFunct_stationNameToIONode                : returns the IONode belonging to a station
 //navFunct_isBGPSwitch                        : returns the BGPSwitch setting (True = BGPRack1, False=BGPRack0)
-
+//navFunct_IONode2DPName                      : returns the DP name based on the ionode number.
+//navFunct_formatInt                          : returns a string with the int preceeded by zeros
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
 
@@ -1174,17 +1175,22 @@ void navFunct_fillObservationsList() {
     for (int i=1; i <= dynlen(g_processesList);i++) {
       // check if the dptype is of type (Stn)Observation
       string process = navFunct_getPathLessOne(g_processesList[i]);
-      if (dpTypeName(process) == "Observation" || dpTypeName(process) == "StnObservation") {
-        // get the real observation name
-        int iPos = dynContains(g_observations["DP"],dpSubStr(process,DPSUB_DP));
-        if (iPos > 0) {
-          string observation = g_observations["NAME"][iPos];
-          strreplace(observation,"LOFAR_ObsSW_","");
+      // check if it is an existing databasePoint
+      if (dpExists(process) ) {
+        if (dpTypeName(process) == "Observation" || dpTypeName(process) == "StnObservation" || dpTypeName(process) == "CEPObservation") {
+          // get the real observation name
+          int iPos = dynContains(g_observations["DP"],dpSubStr(process,DPSUB_DP));
+          if (iPos > 0) {
+            string observation = g_observations["NAME"][iPos];
+            strreplace(observation,"LOFAR_ObsSW_","");
           
-          if (!dynContains(g_observationsList,observation)) {
-            dynAppend(g_observationsList,observation);
+            if (!dynContains(g_observationsList,observation)) {
+              dynAppend(g_observationsList,observation);
+            }
           }
         }
+      } else {
+        LOG_ERROR("navFunct.ctl:navFunct_fillObservationsLists| ERROR: illegal DP in processList: "+process);
       }
     }
   // otherwise hardware  
@@ -1822,6 +1828,7 @@ string navFunct_CEPName2DPName(string CEPName) {
   int nodenr=0;
   int ionr=0;
   
+  
   if (foundRack) {
     name += "BGP";
   }
@@ -1890,7 +1897,7 @@ string navFunct_DPName2CEPName(string DPName) {
   int nodenr=0;
   int ionr=0;
   
-  if (foundRack) {
+  if (foundRack){
     name += "R0" + rack;
   }
   
@@ -2046,11 +2053,11 @@ bool navFunct_isOnline(int syst) {
   }
 }
   
-
+// Searchs all ionodes.usedStation names for  match with the given name
 string navFunct_stationNameToIONode(string name) {
  
   dyn_dyn_anytype tab;
-  dpQuery("SELECT '_original.._value' FROM 'R0*-*.station' REMOTE '"+CEPDBName+"' WHERE _DPT =  \"BGPConnectionInfo\"",tab);
+  dpQuery("SELECT '_original.._value' FROM 'LOFAR_PIC_BGP_Midplane*_IONode*.usedStation' REMOTE '"+CEPDBName+"' WHERE _DPT =  \"IONode\"",tab);
   
   for(int z=2;z<=dynlen(tab);z++) {
     if (tab[z][2] == name) return dpSubStr(tab[z][1],DPSUB_DP);
@@ -2058,9 +2065,51 @@ string navFunct_stationNameToIONode(string name) {
   return "not found";
 }
 
+// returns if the 2nd rack is used (true) or not (false)
 bool navFunct_isBGPSwitch() {
   // get BGPSwitch to see if rack 0 or rack 1 in use
   bool BGPSwitch=false;
   dpGet(CEPDBName+"LOFAR_PIC_BGP.BGPSwitch",BGPSwitch);
   return BGPSwitch;
 }
+
+//returns the name of the DataPoint for a given ionr
+string navFunct_IONode2DPName(int ionode) {
+  string ext="";
+  if (ionode < 10) ext = "0";
+  string dp = CEPDBName+"LOFAR_PIC_BGP_Midplane"+navFunct_IONode2Midplane(ionode)+"_IONode"+ext+ionode;
+
+  return dp;  
+  
+}
+
+// ****************************************
+// Name: navFunct_formatInt
+// ****************************************
+// val = the value to be formatted
+// maxval = the maximum value to determine the format
+//  so a val of 1 will be formatted"
+//  maxval 9   -  1
+//  maxval 99  -  01
+//  maxval 999 -  001
+// Returns:
+//     the intval as string preceeded with zeros 
+// or "" if error
+// ****************************************
+string navFunct_formatInt(int val,int maxval) {
+  if (val > maxval) 
+    return "";
+
+  int nr = val;  
+  // have to avoid loop when nr = 0
+  if (nr == 0) nr = 1;
+  string ret="";
+  while (nr < maxval) {
+    if (nr*10 > maxval) break;
+    nr*=10;
+    ret+="0";
+  }
+  ret+=val;
+  return ret;
+}
+    

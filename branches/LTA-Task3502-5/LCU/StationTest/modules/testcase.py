@@ -10,7 +10,7 @@ import time
 
 class Testcase:
 
-  def __init__(self, verbosity=11, testName='empty.py', repeat=1,
+  def __init__(self, verbosity=11, testName='empty.py', repeat=1, beamMode=0,
                      rspId=['rsp0'], bpId='rsp', blpId='blp0',
                      tbbId=None, tpId=None, mpId=None,
                      polId=['x','y']):
@@ -18,6 +18,13 @@ class Testcase:
     self.verbosity = verbosity
     self.testName = testName
     self.repeat = repeat
+    self.beamMode = beamMode
+    # Derive beam mode banks from beam mode (= bit mode)
+    self.bmBanks = [0]              # 1 * 16 bit beamlets is default
+    if beamMode == 1:
+      self.bmBanks = [1, 0]         # 2 *  8 bit beamlets
+    if beamMode == 2:
+      self.bmBanks = [3, 2, 1, 0]   # 4 *  4 bit beamlets
     self.rspId = rspId
     self.bpId = bpId
     self.blpId = blpId

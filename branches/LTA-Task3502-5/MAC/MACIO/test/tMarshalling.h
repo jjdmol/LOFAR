@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: tMarshalling.h 11023 2008-03-18 08:07:14Z overeem $
 
 #ifndef RTC_TMARSHALLING_H
 #define RTC_TMARSHALLING_H
@@ -51,9 +51,9 @@ public:
 
 	SubArray(int i, double d, string s);
 	SubArray() {};
-	unsigned int	getSize();
-	unsigned int	pack(void* buffer);
-	unsigned int	unpack(void* buffer);
+	size_t getSize() const;
+	size_t pack  (char* buffer) const;
+	size_t unpack(const char *buffer);
 };
 
 class	SubArrayNC
@@ -65,9 +65,9 @@ public:
 
 	SubArrayNC(int i, double d, string s);
 	SubArrayNC() {};
-	unsigned int	getSize();
-	unsigned int	pack(void* buffer);
-	unsigned int	unpack(void* buffer);
+	size_t getSize() const;
+	size_t pack  (char* buffer) const;
+	size_t unpack(const char *buffer);
 private:
 	// prevent copy
 	SubArrayNC(const SubArrayNC&);

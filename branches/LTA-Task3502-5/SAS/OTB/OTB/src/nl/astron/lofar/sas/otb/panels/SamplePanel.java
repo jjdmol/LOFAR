@@ -41,7 +41,7 @@ import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
  * @version $Id$
  * @updated
  */
-public class SamplePanel extends javax.swing.JPanel 
+public final class SamplePanel extends javax.swing.JPanel 
                        implements IPluginPanel {
 
     static Logger logger = Logger.getLogger(SamplePanel.class);
@@ -371,21 +371,20 @@ public class SamplePanel extends javax.swing.JPanel
 
     private void buttonPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanelActionPerformed
         logger.debug("actionPerformed: " + evt);
-        
-        if(evt.getActionCommand().equals("New Tree")) {
+        switch (evt.getActionCommand()) {
+            case "New Tree":
             // initialize the tree
             // create a sample root node. This should be retrieved from the OTDB of course.
             jOTDBnode otdbNode = new jOTDBnode(0,0,0,0);
             otdbNode.name = "Node_" + treeCounter++;
-
             // put the OTDBnode in a wrapper for the tree
             TreeNode otdbTreeNode = new TreeNode(ResultTreeManager.getInstance(itsMainFrame.getUserAccount()),otdbNode);
-            
             // and create a new root
             treePanel.newRootNode(otdbTreeNode);
-        }
-        else if(evt.getActionCommand().equals("Back to Main")) {
+                break;
+            case "Back to Main":
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
+                break;
         }
     }//GEN-LAST:event_buttonPanelActionPerformed
     

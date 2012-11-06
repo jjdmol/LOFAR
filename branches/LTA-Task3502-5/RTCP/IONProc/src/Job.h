@@ -80,7 +80,8 @@ class Job : public PLCRunnable
 
     void				 claimResources();
 
-    bool				 anotherRun();
+    bool				 startBlock(); // returns true if another block is to be processed
+    void				 endBlock();
 
     void				 jobThread();
     template <typename SAMPLE_TYPE> void doObservation();
@@ -98,6 +99,8 @@ class Job : public PLCRunnable
 
       void start();
       void stop( struct timespec deadline );
+      bool isDone();
+
     private:
       void                               controlThread();
 
