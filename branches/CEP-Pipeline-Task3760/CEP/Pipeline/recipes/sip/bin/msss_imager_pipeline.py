@@ -16,7 +16,7 @@ from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.group_data import validate_data_maps
 from lofarpipe.support.utilities import patch_parset, get_parset
-from lofarpipe.support.loggingdecorators import xml_node
+from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 
 from lofar.parameterset import parameterset
 
@@ -128,6 +128,7 @@ class msss_imager_pipeline(control):
             )
         return super(msss_imager_pipeline, self).go()
 
+    @mail_log_on_exception
     def pipeline_logic(self):
         """
         Define the individual tasks that comprise the current pipeline.
