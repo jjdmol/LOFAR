@@ -39,7 +39,9 @@ class loggingdecoratorsTest(unittest.TestCase):
         # class. After finishing it should have the duration in there
         target_xml = '<active_stack Name="Test" type="active_stack"><active_stack/><test duration="0.0"/></active_stack>'
 
-        self.assertTrue(an_object.active_stack.toxml() == target_xml)
+        self.assertTrue(float(get_child(
+            an_object.active_stack, "test").getAttribute("duration")) <= 0.1,
+            "The created active stack did not add the duration information")
 
 
     def test_xml_node_nested_timing_logging(self):
