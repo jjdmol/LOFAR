@@ -92,6 +92,7 @@ install(FILES
   Expr/RefCounting.h
   Expr/Request.h
   Expr/Resampler.h
+  Expr/Rotation.h
   Expr/ScalarMatrixMul.h
   Expr/Scope.h
   Expr/ShapeletCoherence.h
