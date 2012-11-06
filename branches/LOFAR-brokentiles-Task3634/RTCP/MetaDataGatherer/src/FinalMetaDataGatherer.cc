@@ -155,7 +155,7 @@ void parseBrokenHardware (const vector<OTDBvalue> &hardware, vector<struct Final
 
         info.station = station;
         info.type    = type;
-        into.seqnr   = seqnr;
+        info.seqnr   = seqnr;
         info.time    = to_simple_string(hardware[i].time);
 
         brokenrcus.push_back(info);
