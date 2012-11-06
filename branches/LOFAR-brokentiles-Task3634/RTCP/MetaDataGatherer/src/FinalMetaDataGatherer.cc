@@ -113,10 +113,9 @@ vector<OTDBvalue> getHardwareTree(OTDBconnection &conn, const string &timeStart,
 }
 
 // Get information about broken tiles from SAS database
-void parseBrokenHardware (const vector<OTDBvalue> &hardware, vector<struct FinalMetaData::BrokenTile> &brokentiles, vector<struct FinalMetaData::BrokenRCU> &brokenrcus)
+void parseBrokenHardware (const vector<OTDBvalue> &hardware, vector<struct FinalMetaData::BrokenRCU> &brokenrcus)
 {
   // Don't mess up our counts below
-  ASSERT(brokentiles.empty());
   ASSERT(brokenrcus.empty());
 
   // Write entry in valuelist with broken hardware
@@ -125,50 +124,46 @@ void parseBrokenHardware (const vector<OTDBvalue> &hardware, vector<struct Final
   for (size_t i = 0; i < hardware.size(); i++) {
     if (hardware[i].name.find(".status_state") != string::npos) {
       vector<string> parts = StringUtil::split (hardware[i].name, '.');
-      bool match = false;
 
-      // parts[3] is station name
+      // parts[3] is station name (f.e. CS001)
       string station = parts.size() > 3 ? parts[3] : "";
 
-      // parts[4] is tile name/number
+      // parts[4] is tile name/number (f.e. HBA1 or LBA3)
       string tile    = parts.size() > 4 ? parts[4] : "";
 
-      // parts[7] is RCU name/number
+      // parts[7] is RCU name/number (f.e. RCU20)
       string rcu     = parts.size() > 7 ? parts[7] : "";
 
-      {
-        string type = tile.substr(0,3);
+      string tiletype = tile.substr(0,3);
+      string rcutype  = rcu.substr(0,3);
 
-        if (type == "LBA" || type == "HBA") {
-          struct FinalMetaData::BrokenTile info;
+      string type = "";
+      int seqnr = 0;
 
-          info.station = station;
-          info.tile    = tile;
-          info.time    = to_simple_string(hardware[i].time);
-
-          brokentiles.push_back(info);
-          match = true;
-        }
+      if (tiletype == "LBA" || tiletype == "HBA") {
+        // broken tile
+        type = tiletype;
+        seqnr = boost::lexical_cast<int>(tile.substr(3));
+      } else if (rcutype == "RCU") {
+        // broken rcu
+        type = rcutype;
+        seqnr = boost::lexical_cast<int>(rcu.substr(3));
       }
 
-      if (!match) {
-        string type = rcu.substr(0,3);
+      if (type != "") {
+        struct FinalMetaData::BrokenRCU info;
 
-        if (type == "RCU") {
-          struct FinalMetaData::BrokenRCU info;
+        info.station = station;
+        info.type    = type;
+        into.seqnr   = seqnr;
+        info.time    = to_simple_string(hardware[i].time);
 
-          info.station = station;
-          info.rcu     = rcu;
-          info.time    = to_simple_string(hardware[i].time);
-
-          brokenrcus.push_back(info);
-        }
+        brokenrcus.push_back(info);
       }
     }
   }
 
-  LOG_INFO_STR (logPrefix << "Found " << brokentiles.size() << " broken tiles and "
-                  << brokenrcus.size() << " broken rcus");
+  LOG_INFO_STR(logPrefix << "Found " << brokenrcus.size() << " broken rcus/tiles");
 }
 
 char stdoutbuf[1024], stderrbuf[1024];
@@ -232,11 +227,11 @@ int main(int argc, char *argv[])
 
     LOG_INFO_STR (logPrefix << "Retrieving hardware broken at observation start");
     vector<OTDBvalue> hardwareBrokenAtBegin = getHardwareTree(conn, timeStart);
-    parseBrokenHardware(hardwareBrokenAtBegin, finalMetaData.brokenTilesAtBegin, finalMetaData.brokenRCUsAtBegin);
+    parseBrokenHardware(hardwareBrokenAtBegin, finalMetaData.brokenRCUsAtBegin);
 
     LOG_INFO_STR (logPrefix << "Retrieving hardware broken during the observation");
     vector<OTDBvalue> hardwareBrokenDuring  = getHardwareTree(conn, timeStart, timeEnd);
-    parseBrokenHardware(hardwareBrokenDuring, finalMetaData.brokenTilesDuring, finalMetaData.brokenRCUsDuring);
+    parseBrokenHardware(hardwareBrokenDuring, finalMetaData.brokenRCUsDuring);
 
     LOG_INFO_STR (logPrefix << "Uploading all information");
     finalMetaData.write(controlStream);

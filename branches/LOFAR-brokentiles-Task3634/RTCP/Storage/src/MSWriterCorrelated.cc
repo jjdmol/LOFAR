@@ -25,13 +25,18 @@
 #include <MSLofar/FailedTileInfo.h>
 #include <Storage/MSWriterCorrelated.h>
 #include <Storage/MeasurementSetFormat.h>
+#include <tables/Tables/Table.h>
+#include <casa/Quanta/MVTime.h>
 #include <vector>
 #include <string>
 #include <fcntl.h>
 #include <sys/types.h>
 
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 using boost::format;
+using namespace casa;
+
 
 namespace LOFAR {
 namespace RTCP {
@@ -39,8 +44,8 @@ namespace RTCP {
 MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian)
 :
   MSWriterFile(str(format("%s/table.f0data") % msName)),
-  itsMSname(msName),
   itsLogPrefix(logPrefix),
+  itsMSname(msName),
   itsParset(parset)
 {
   std::vector<std::string> stationNames = parset.mergedStationNames();
@@ -116,11 +121,47 @@ void MSWriterCorrelated::flushSequenceNumbers()
   }
 }
 
+static MVEpoch datetime2epoch(const string &datetime)
+{
+  Quantity q;
+
+  if (!MVTime::read(q, datetime))
+    return MVEpoch(0);
+
+  return MVEpoch(q);
+}
+
 
 void MSWriterCorrelated::augment(const FinalMetaData &finalMetaData)
 {
-  // TODO
-  //FailedTileInfo::failedTiles2MS(itsMSname, beforeName, duringName);
+  ScopedLock sl(MeasurementSetFormat::sharedMutex);
+
+  map<string, FailedTileInfo::VectorFailed> brokenBefore, brokenDuring;
+
+  // fill set of broken hardware at beginning of observation
+  for (size_t i = 0; i < finalMetaData.brokenRCUsAtBegin.size(); i++) {
+    const struct FinalMetaData::BrokenRCU &rcu = finalMetaData.brokenRCUsAtBegin[i];
+
+    brokenBefore[rcu.station].push_back(FailedTileInfo(rcu.station, rcu.time, datetime2epoch(rcu.time), rcu.type, rcu.seqnr));
+  }
+
+  // fill set of hardware that broke during the observation
+  for (size_t i = 0; i < finalMetaData.brokenRCUsDuring.size(); i++) {
+    const struct FinalMetaData::BrokenRCU &rcu = finalMetaData.brokenRCUsDuring[i];
+
+    brokenDuring[rcu.station].push_back(FailedTileInfo(rcu.station, rcu.time, datetime2epoch(rcu.time), rcu.type, rcu.seqnr));
+  }
+
+  LOG_INFO_STR(itsLogPrefix << "Reopening MeasurementSet");
+
+  Table ms(itsMSname, Table::Update);
+
+  vector<FailedTileInfo::VectorFailed> before(FailedTileInfo::antennaConvert(ms, brokenBefore));
+  vector<FailedTileInfo::VectorFailed> during(FailedTileInfo::antennaConvert(ms, brokenDuring));
+
+  LOG_INFO_STR(itsLogPrefix << "Writing broken hardware information to MeasurementSet");
+
+  FailedTileInfo::writeFailed(ms, before, during);
 }
 
 

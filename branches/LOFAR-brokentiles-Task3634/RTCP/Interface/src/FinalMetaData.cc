@@ -111,46 +111,30 @@ template<typename T> void StreamWriter< std::vector<T> >::read( Stream &s, std::
     StreamWriter<T>::read(s, data[i]);
 }
 
-template<> void StreamWriter<struct FinalMetaData::BrokenTile>::write( Stream &s, const struct FinalMetaData::BrokenTile &data )
-{
-  StreamWriter<std::string>::write(s, data.station);
-  StreamWriter<std::string>::write(s, data.tile);
-  StreamWriter<std::string>::write(s, data.time);
-}
-
-template<> void StreamWriter<struct FinalMetaData::BrokenTile>::read( Stream &s, struct FinalMetaData::BrokenTile &data )
-{
-  StreamWriter<std::string>::read(s, data.station);
-  StreamWriter<std::string>::read(s, data.tile);
-  StreamWriter<std::string>::read(s, data.time);
-}
-
 template<> void StreamWriter<struct FinalMetaData::BrokenRCU>::write( Stream &s, const struct FinalMetaData::BrokenRCU &data )
 {
   StreamWriter<std::string>::write(s, data.station);
-  StreamWriter<std::string>::write(s, data.rcu);
+  StreamWriter<std::string>::write(s, data.type);
+  StreamWriter<size_t>     ::write(s, data.seqnr);
   StreamWriter<std::string>::write(s, data.time);
 }
 
 template<> void StreamWriter<struct FinalMetaData::BrokenRCU>::read( Stream &s, struct FinalMetaData::BrokenRCU &data )
 {
   StreamWriter<std::string>::read(s, data.station);
-  StreamWriter<std::string>::read(s, data.rcu);
+  StreamWriter<std::string>::read(s, data.type);
+  StreamWriter<size_t>     ::read(s, data.seqnr);
   StreamWriter<std::string>::read(s, data.time);
 }
 
 void FinalMetaData::write(Stream &s)
 {
-  StreamWriter< std::vector<struct BrokenTile> >::write(s, brokenTilesAtBegin);
-  StreamWriter< std::vector<struct BrokenTile> >::write(s, brokenTilesDuring);
   StreamWriter< std::vector<struct BrokenRCU> >::write(s, brokenRCUsAtBegin);
   StreamWriter< std::vector<struct BrokenRCU> >::write(s, brokenRCUsDuring);
 }
 
 void FinalMetaData::read(Stream &s)
 {
-  StreamWriter< std::vector<struct BrokenTile> >::read(s, brokenTilesAtBegin);
-  StreamWriter< std::vector<struct BrokenTile> >::read(s, brokenTilesDuring);
   StreamWriter< std::vector<struct BrokenRCU> >::write(s, brokenRCUsAtBegin);
   StreamWriter< std::vector<struct BrokenRCU> >::write(s, brokenRCUsDuring);
 }
