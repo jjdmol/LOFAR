@@ -14,14 +14,14 @@
 
   <groupId>nl.astron.lofar.lib</groupId>
   <artifactId>lofar-lib-parent</artifactId>
-  <version>1.8.2-SNAPSHOT</version>
+  <version>1.8.2</version>
   <packaging>pom</packaging>
 
 
   <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
   <scm>
-    <connection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA</connection>
-    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA</developerConnection>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.lib.lofar-lib-parent-1.8.2</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.lib.lofar-lib-parent-1.8.2</developerConnection>
   </scm>
 
 
