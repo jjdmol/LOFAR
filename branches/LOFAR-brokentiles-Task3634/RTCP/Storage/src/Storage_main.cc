@@ -142,15 +142,18 @@ int main(int argc, char *argv[])
 
       // Add final meta data (broken tile information, etc)
       // that is obtained after the end of an observation.
-      LOG_INFO_STR(obsLogPrefix << "Reading final meta data");
+      LOG_INFO_STR(obsLogPrefix << "Waiting for final meta data");
       FinalMetaData finalMetaData;
       finalMetaData.read(controlStream);
 
       LOG_INFO_STR(obsLogPrefix << "Processing final meta data");
       for (size_t i = 0; i < subbandWriters.size(); ++i)
-        subbandWriters[i]->augment(finalMetaData);
+        try {
+          subbandWriters[i]->augment(finalMetaData);
+        } catch (Exception &ex) {
+          LOG_WARN_STR(obsLogPrefix << "Could not add final meta data: " << ex);
+        }
     }
-
   } catch (Exception &ex) {
     LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
     return 1;

@@ -43,11 +43,27 @@ namespace RTCP {
 
 MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian)
 :
-  MSWriterFile(str(format("%s/table.f0data") % msName)),
+  MSWriterFile(
+      (makeMeasurementSet(logPrefix, msName, parset, subbandIndex, isBigEndian), 
+      str(format("%s/table.f0data") % msName))),
   itsLogPrefix(logPrefix),
   itsMSname(msName),
   itsParset(parset)
 {
+  if (itsParset.getLofarStManVersion() > 1) {
+    string seqfilename = str(format("%s/table.f0seqnr") % msName);
+    
+    try {
+      itsSequenceNumbersFile = new FileStream(seqfilename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
+    } catch (...) {
+      LOG_WARN_STR(itsLogPrefix << "Could not open sequence numbers file " << seqfilename);
+    }
+
+    itsSequenceNumbers.reserve(64);
+  }
+
+  // derive baseline names
+
   std::vector<std::string> stationNames = parset.mergedStationNames();
   std::vector<std::string> baselineNames(parset.nrBaselines());
   unsigned nrStations = stationNames.size();
@@ -61,33 +77,24 @@ MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std:
     for(unsigned s2 = 0; s2 <= s1; s2++)
       baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
 
-  // Make MeasurementSet filestructures and required tables
-
-#if defined HAVE_AIPSPP
-  MeasurementSetFormat myFormat(itsParset, 512);
-
-  myFormat.addSubband(msName, subbandIndex, isBigEndian);
-
-  LOG_INFO_STR(itsLogPrefix << "MeasurementSet created");
-#endif // defined HAVE_AIPSPP
-
-  if (itsParset.getLofarStManVersion() > 1) {
-    string seqfilename = str(format("%s/table.f0seqnr") % msName);
-    
-    try {
-      itsSequenceNumbersFile = new FileStream(seqfilename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
-    } catch (...) {
-      LOG_WARN_STR(itsLogPrefix << "Could not open sequence numbers file " << seqfilename);
-    }
-
-    itsSequenceNumbers.reserve(64);
-  }
 }
 
 
 MSWriterCorrelated::~MSWriterCorrelated()
 {
   flushSequenceNumbers();
+}
+
+
+void MSWriterCorrelated::makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian)
+{
+#if defined HAVE_AIPSPP
+  MeasurementSetFormat myFormat(parset, 512);
+
+  myFormat.addSubband(msName, subbandIndex, isBigEndian);
+
+  LOG_INFO_STR(logPrefix << "MeasurementSet created");
+#endif // defined HAVE_AIPSPP
 }
 
 

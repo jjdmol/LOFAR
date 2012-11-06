@@ -169,7 +169,7 @@ void OutputThread::createMS()
         itsWriter = new MSWriterFile(path);
         break;
     }
-  } catch (SystemCallException &ex) {
+  } catch (Exception &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
     itsWriter = new MSWriterNull;
   }
@@ -294,6 +294,12 @@ void OutputThread::cleanUp()
 
 void OutputThread::augment( const FinalMetaData &finalMetaData )
 {
+  // wait for writer thread to finish, so we'll have an itsWriter
+  ASSERT(itsThread.get());
+
+  itsThread = 0;
+
+  // augment the data product
   ASSERT(itsWriter.get());
 
   itsWriter->augment(finalMetaData);

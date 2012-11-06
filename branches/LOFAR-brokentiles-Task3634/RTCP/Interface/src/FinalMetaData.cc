@@ -135,8 +135,8 @@ void FinalMetaData::write(Stream &s)
 
 void FinalMetaData::read(Stream &s)
 {
-  StreamWriter< std::vector<struct BrokenRCU> >::write(s, brokenRCUsAtBegin);
-  StreamWriter< std::vector<struct BrokenRCU> >::write(s, brokenRCUsDuring);
+  StreamWriter< std::vector<struct BrokenRCU> >::read(s, brokenRCUsAtBegin);
+  StreamWriter< std::vector<struct BrokenRCU> >::read(s, brokenRCUsDuring);
 }
 
 }

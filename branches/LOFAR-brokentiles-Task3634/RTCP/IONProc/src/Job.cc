@@ -129,6 +129,10 @@ Job::~Job()
   // a valid Job object to work on
   delete itsPLCClient.release();
 
+  // stop any started Storage processes
+  if (myPsetNumber == 0)
+    stopStorageProcesses();
+
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Job " << (itsIsRunning ? "finished" : "cancelled") << " successfully");
 }
@@ -313,7 +317,10 @@ void Job::StorageProcess::controlThread()
 
   // Send final meta data once it is available
   itsJob.itsFinalMetaDataAvailable.down();
+
+  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sending final meta data");
   itsJob.itsFinalMetaData.write(stream);
+  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent final meta data");
 }
 
 
@@ -401,30 +408,33 @@ void Job::stopStorageProcesses()
   LOG_DEBUG_STR(itsLogPrefix << "Stopping storage processes");
 
   time_t deadline = time(0) + 300;
-  struct timespec immediately = { 0, 0 };
 
-  size_t nrRunning = itsStorageProcesses.size();
+  size_t nrRunning = 0;
 
-  do {
-    for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
-      if (itsStorageProcesses[rank]->isDone()) {
+  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
+    if (itsStorageProcesses[rank].get())
+      nrRunning++;
+
+  while(nrRunning > 0) {
+    for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
+      if (!itsStorageProcesses[rank].get())
+        continue;
+
+      if (itsStorageProcesses[rank]->isDone() || time(0) >= deadline) {
+        struct timespec immediately = { 0, 0 };
+
         itsStorageProcesses[rank]->stop(immediately);
+        itsStorageProcesses[rank] = 0;
 
         nrRunning--;
       }
+    }  
 
     if (nrRunning > 0)
       sleep(1);
-
-  } while( nrRunning > 0 && time(0) < deadline );
-
-  LOG_DEBUG_STR(itsLogPrefix << "Killing any remaining storage processes");
-
-
-  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
-    itsStorageProcesses[rank]->stop(immediately);
-    itsStorageProcesses[rank] = 0;
   }
+
+  itsStorageProcesses.clear();
 
   LOG_DEBUG_STR(itsLogPrefix << "Storage processes are stopped");
 }

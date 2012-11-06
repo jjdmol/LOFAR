@@ -178,6 +178,11 @@ bool SSHconnection::open_session( FileDescriptorBasedStream &sock )
 
   if (rc) {
     LOG_ERROR_STR( itsLogPrefix << "Authentication by public key failed: " << rc);
+
+    // unrecoverable errors
+    if (rc == LIBSSH2_ERROR_FILE)
+      THROW(SSHException, "Error reading read key file " << itsSSHKey);
+
     return false;
   }
 

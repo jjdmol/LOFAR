@@ -78,7 +78,7 @@ else
   IONPROC_PARSET="$LOGDIR/L$OBSID.parset"
   EXTRA_KEYS="
 OLAP.Storage.userName = $USER
-OLAP.Storage.sshIdentityFile = $HOME/.ssh/id_rsa
+OLAP.Storage.sshIdentityFile = $HOME/id_rsa
 OLAP.Storage.msWriter = $STORAGE
 OLAP.Storage.AntennaSetsConf = /data/home/lofarsys/production/lofar/etc/AntennaSets.conf
 OLAP.Storage.AntennaFieldsDir = /data/home/lofarsys/production/lofar/etc/StaticMetaData

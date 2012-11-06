@@ -57,6 +57,9 @@ class MSWriterCorrelated : public MSWriterFile
 
     std::vector<unsigned>	     itsSequenceNumbers;
     SmartPtr<FileStream>	     itsSequenceNumbersFile;
+
+  private:
+    void makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian);
 };
 
 

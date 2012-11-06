@@ -122,44 +122,48 @@ void parseBrokenHardware (const vector<OTDBvalue> &hardware, vector<struct Final
   // A broken antenna element/tile entry must contain .status_state
 
   for (size_t i = 0; i < hardware.size(); i++) {
-    if (hardware[i].name.find(".status_state") != string::npos) {
-      vector<string> parts = StringUtil::split (hardware[i].name, '.');
+    try {
+      if (hardware[i].name.find(".status_state") != string::npos) {
+        vector<string> parts = StringUtil::split (hardware[i].name, '.');
 
-      // parts[3] is station name (f.e. CS001)
-      string station = parts.size() > 3 ? parts[3] : "";
+        // parts[3] is station name (f.e. CS001)
+        string station = parts.size() > 3 ? parts[3] : "";
 
-      // parts[4] is tile name/number (f.e. HBA1 or LBA3)
-      string tile    = parts.size() > 4 ? parts[4] : "";
+        // parts[4] is tile name/number (f.e. HBA1 or LBA3)
+        string tile    = parts.size() > 4 ? parts[4] : "";
 
-      // parts[7] is RCU name/number (f.e. RCU20)
-      string rcu     = parts.size() > 7 ? parts[7] : "";
+        // parts[7] is RCU name/number (f.e. RCU20)
+        string rcu     = parts.size() > 7 ? parts[7] : "";
 
-      string tiletype = tile.substr(0,3);
-      string rcutype  = rcu.substr(0,3);
+        string tiletype = tile.substr(0,3);
+        string rcutype  = rcu.substr(0,3);
 
-      string type = "";
-      int seqnr = 0;
+        string type = "";
+        int seqnr = 0;
 
-      if (tiletype == "LBA" || tiletype == "HBA") {
-        // broken tile
-        type = tiletype;
-        seqnr = boost::lexical_cast<int>(tile.substr(3));
-      } else if (rcutype == "RCU") {
-        // broken rcu
-        type = rcutype;
-        seqnr = boost::lexical_cast<int>(rcu.substr(3));
+        if (tiletype == "LBA" || tiletype == "HBA") {
+          // broken tile
+          type = tiletype;
+          seqnr = boost::lexical_cast<int>(tile.substr(3));
+        } else if (rcutype == "RCU") {
+          // broken rcu
+          type = rcutype;
+          seqnr = boost::lexical_cast<int>(rcu.substr(3));
+        }
+
+        if (type != "") {
+          struct FinalMetaData::BrokenRCU info;
+
+          info.station = station;
+          info.type    = type;
+          info.seqnr   = seqnr;
+          info.time    = to_simple_string(hardware[i].time);
+
+          brokenrcus.push_back(info);
+        }
       }
-
-      if (type != "") {
-        struct FinalMetaData::BrokenRCU info;
-
-        info.station = station;
-        info.type    = type;
-        info.seqnr   = seqnr;
-        info.time    = to_simple_string(hardware[i].time);
-
-        brokenrcus.push_back(info);
-      }
+    } catch(std::out_of_range &ex) {
+      LOG_ERROR_STR(logPrefix << "Error parsing name '" << hardware[i].name << "' time '" << hardware[i].time << "': " << ex.what());
     }
   }
 

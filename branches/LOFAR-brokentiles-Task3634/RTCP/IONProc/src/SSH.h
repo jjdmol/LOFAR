@@ -28,6 +28,7 @@
 
 #ifdef HAVE_LIBSSH2
 #include <Common/Thread/Thread.h>
+#include <Common/Exception.h>
 #include <Stream/FileDescriptorBasedStream.h>
 #include <libssh2.h>
 #include <Interface/SmartPtr.h>
@@ -47,6 +48,8 @@ void SSH_Finalize();
 
 class SSHconnection {
 public:
+  EXCEPTION_CLASS(SSHException, LOFAR::Exception);
+
   SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, bool captureStdout = false);
 
   ~SSHconnection();
