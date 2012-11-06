@@ -121,10 +121,21 @@ namespace LOFAR {
     // Size the vector (which creates empty elements).
     vector<FailedTileInfo::VectorFailed> brokenAnt (antTab.nrow());
     for (uInt row=0; row<antTab.nrow(); ++row) {
+      // Stations are named
+      // CS001HBA0
+      // CS001LBA
+      // RS503HBA
+      // DE601LBA
+      // RS005LBA (test station)
+      // S1 (virtual development station)
+      //
+      // NOTE: for virtual development stations, the matchings are
+      // allowed to fail for now.
+
       // Get first 5 and next 3 characters of the station name giving
       // proper station name and station type (LBA or HBA).
       string name = nameCol(row);
-      string type = name.substr(5,3);
+      string type = name.size() > 5 ? name.substr(5,3) : "";
       // Get the entry matching the station name proper.
       map<string, FailedTileInfo::VectorFailed>::const_iterator iter =
         broken.find(name.substr(0,5));
