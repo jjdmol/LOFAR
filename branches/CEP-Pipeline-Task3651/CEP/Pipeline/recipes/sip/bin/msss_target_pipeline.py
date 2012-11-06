@@ -6,14 +6,14 @@
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
+import copy
 import os
 import sys
 
 from lofarpipe.support.control import control
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.group_data import store_data_map, validate_data_maps, \
-        load_data_map
-from lofarpipe.support.group_data import tally_data_map
+from lofarpipe.support.data_map import DataMap, validate_data_maps
+#from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 
@@ -65,34 +65,31 @@ class msss_target_pipeline(control):
         parset-file, and do some sanity checks.
         """
         odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
-        self.input_data['data'] = [
-            tuple(os.path.join(location, filename).split(':'))
+        self.input_data['data'] = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
                     odp.getStringVector('Input_Correlated.locations'),
                     odp.getStringVector('Input_Correlated.filenames'),
                     odp.getBoolVector('Input_Correlated.skip'))
-                if not skip
-        ]
+        ])
         self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data['data']))
-        self.input_data['instrument'] = [
-            tuple(os.path.join(location, filename).split(':'))
+        self.input_data['instrument'] = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
                     odp.getStringVector('Input_InstrumentModel.locations'),
                     odp.getStringVector('Input_InstrumentModel.filenames'),
                     odp.getBoolVector('Input_InstrumentModel.skip'))
-                if not skip
-        ]
+        ])
         self.logger.debug("%d Input_InstrumentModel data products specified" %
                           len(self.input_data['instrument']))
-        self.output_data['data'] = [
-            tuple(os.path.join(location, filename).split(':'))
+        self.output_data['data'] = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
                     odp.getStringVector('Output_Correlated.locations'),
                     odp.getStringVector('Output_Correlated.filenames'),
                     odp.getBoolVector('Output_Correlated.skip'))
-                if not skip
-        ]
+        ])
         self.logger.debug("%d Output_Correlated data products specified" %
                           len(self.output_data['data']))
 
@@ -108,58 +105,58 @@ class msss_target_pipeline(control):
         ):  raise PipelineException(
                 "Validation of input/output data product specification failed!"
             )
-        # Validate input data, by searching the cluster for files
-        self._validate_input_data()
-        # Update input- and output-data product specifications if needed.
-        if not all(self.io_data_mask):
-            self.logger.info("Updating input/output product specifications")
-            self.input_data['data'] = [f for (f, m)
-                in zip(self.input_data['data'], self.io_data_mask) if m
-            ]
-            self.input_data['instrument'] = [f for (f, m)
-                in zip(self.input_data['instrument'], self.io_data_mask) if m
-            ]
-            self.output_data['data'] = [f for (f, m)
-                in zip(self.output_data['data'], self.io_data_mask) if m
-            ]
+#        # Validate input data, by searching the cluster for files
+#        self._validate_input_data()
+#        # Update input- and output-data product specifications if needed.
+#        if not all(self.io_data_mask):
+#            self.logger.info("Updating input/output product specifications")
+#            self.input_data['data'] = [f for (f, m)
+#                in zip(self.input_data['data'], self.io_data_mask) if m
+#            ]
+#            self.input_data['instrument'] = [f for (f, m)
+#                in zip(self.input_data['instrument'], self.io_data_mask) if m
+#            ]
+#            self.output_data['data'] = [f for (f, m)
+#                in zip(self.output_data['data'], self.io_data_mask) if m
+#            ]
 
 
-    def _validate_input_data(self):
-        """
-        Search for the requested input files and mask the files in
-        `self.input_data{}` that could not be found on the system.
-        """
-        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
-        data_mask = tally_data_map(
-            self.input_data['data'], 'L*_SB???_uv.MS', self.logger
-        )
-        # Log a warning if not all input data files were found.
-        if not all(data_mask):
-            self.logger.warn(
-                "The following input data files were not found: %s" %
-                ', '.join(
-                    ':'.join(f) for (f, m) in zip(
-                        self.input_data['data'], data_mask
-                    ) if not m
-                )
-            )
-        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
-        inst_mask = tally_data_map(
-            self.input_data['instrument'], 'L*_SB???_inst.INST', self.logger
-        )
-        # Log a warning if not all input instrument files were found.
-        if not all(inst_mask):
-            self.logger.warn(
-                "The following input instrument files were not found: %s" %
-                ', '.join(
-                    ':'.join(f) for (f, m) in zip(
-                        self.input_data['instrument'], inst_mask
-                    ) if not m
-                )
-            )
+#    def _validate_input_data(self):
+#        """
+#        Search for the requested input files and mask the files in
+#        `self.input_data{}` that could not be found on the system.
+#        """
+#        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
+#        data_mask = tally_data_map(
+#            self.input_data['data'], 'L*_SB???_uv.MS', self.logger
+#        )
+#        # Log a warning if not all input data files were found.
+#        if not all(data_mask):
+#            self.logger.warn(
+#                "The following input data files were not found: %s" %
+#                ', '.join(
+#                    ':'.join(f) for (f, m) in zip(
+#                        self.input_data['data'], data_mask
+#                    ) if not m
+#                )
+#            )
+#        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
+#        inst_mask = tally_data_map(
+#            self.input_data['instrument'], 'L*_SB???_inst.INST', self.logger
+#        )
+#        # Log a warning if not all input instrument files were found.
+#        if not all(inst_mask):
+#            self.logger.warn(
+#                "The following input instrument files were not found: %s" %
+#                ', '.join(
+#                    ':'.join(f) for (f, m) in zip(
+#                        self.input_data['instrument'], inst_mask
+#                    ) if not m
+#                )
+#            )
 
-        # Set the IO data mask
-        self.io_data_mask = [x and y for (x, y) in zip(data_mask, inst_mask)]
+#        # Set the IO data mask
+#        self.io_data_mask = [x and y for (x, y) in zip(data_mask, inst_mask)]
 
 
     def _create_target_map_for_instruments(self):
@@ -171,14 +168,12 @@ class msss_target_pipeline(control):
         scratch_dir = os.path.join(
             self.inputs['working_directory'], self.inputs['job_name'])
 
-        target_locations = []
-        for instrument_pair, data_pair \
-            in zip(self.input_data['instrument'], self.input_data['data']):
-            path_instr = instrument_pair[1]
-            host_data = data_pair[0]
-            # target location == working dir instrument file name
-            target_path = os.path.join(scratch_dir, os.path.basename(path_instr))
-            target_locations.append((host_data, target_path))
+        target_locations = copy.deepcopy(self.input_data['instrument'])
+        for data, target in zip(self.input_data['data'], target_locations):
+            target.host = data.host
+            target.file = os.path.join(
+                scratch_dir, os.path.basename(target.file)
+            )
 
         return target_locations
 
@@ -193,10 +188,10 @@ class msss_target_pipeline(control):
 
         #Write the two needed maps to file
         source_path = os.path.join(copier_map_path, "source_instruments.map")
-        store_data_map(source_path, self.input_data['instrument'])
+        self.input_data['instrument'].save(source_path)
 
         target_path = os.path.join(copier_map_path, "target_instruments.map")
-        store_data_map(target_path, target_map)
+        target_map.save(target_path)
 
         copied_files_path = os.path.join(copier_map_path, "copied_instruments.map")
 
@@ -208,23 +203,17 @@ class msss_target_pipeline(control):
                       mapfiles_dir=copier_map_path,
                       mapfile=copied_files_path)['mapfile_target_copied']
 
-        # Some copy action might fail, these files need to be removed from
-        # both the data and the instrument file!!
-        copied_instruments_map = load_data_map(copied_instruments_mapfile)
-        new_instrument_map = []
-        new_input_data_map = []
-        new_output_data_map = []
-        for instrument_pair, input_data_pair, output_data_pair in \
-            zip(target_map, self.input_data['data'], self.output_data['data']):
-            if instrument_pair in copied_instruments_map:
-                new_instrument_map.append(instrument_pair)
-                new_input_data_map.append(input_data_pair)
-                new_output_data_map.append(output_data_pair)
-            # else: Do not process further in the recipe
-
-        self.input_data['instrument'] = new_instrument_map
-        self.input_data['data'] = new_input_data_map
-        self.output_data['data'] = new_output_data_map
+        # Some copy action might fail; the skip fields in the other map-files
+        # need to be updated these to reflect this.
+        self.input_data['instrument'] = DataMap.load(copied_instruments_mapfile)
+        for data, inst, outp in zip(
+            self.input_data['data'], 
+            self.input_data['instrument'], 
+            self.output_data['data']
+        ):
+            data.skip = inst.skip = outp.skip = (
+                data.skip or inst.skip or outp.skip
+            )
 
 
     def go(self):
@@ -278,20 +267,18 @@ class msss_target_pipeline(control):
         # update both intrument and datamap to contain only successes!
         self._copy_instrument_files(mapfile_dir)
 
-
         # Write input- and output data map-files.
         data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
-        store_data_map(data_mapfile, self.input_data['data'])
+        self.input_data['data'].save(data_mapfile)
         copied_instrument_mapfile = os.path.join(mapfile_dir, "copied_instrument.mapfile")
-        store_data_map(copied_instrument_mapfile,
-                       self.input_data['instrument'])
+        self.input_data['instrument'].save(copied_instrument_mapfile)
         self.logger.debug(
             "Wrote input data mapfile: %s" % data_mapfile
         )
 
         # Save copied files to a new mapfile
         corrected_mapfile = os.path.join(mapfile_dir, "corrected_data.mapfile")
-        store_data_map(corrected_mapfile, self.output_data['data'])
+        self.output_data['data'].save(corrected_mapfile)
         self.logger.debug(
             "Wrote output corrected data mapfile: %s" % corrected_mapfile
         )
@@ -302,7 +289,7 @@ class msss_target_pipeline(control):
             return 0
 
         self.logger.debug("Processing: %s" %
-            ', '.join(':'.join(f) for f in self.input_data['data'])
+            ', '.join(str(f) for f in self.input_data['data'])
         )
 
         # *********************************************************************
