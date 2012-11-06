@@ -1,7 +1,0 @@
-TopNode.Observation.Virt Telescope.Rec Group.GFLOPS=2.0
-TopNode.Observation.Virt Telescope.Rec Group.GFLOPS{31536000}=2.5
-TopNode.Observation.Virt Telescope.Beamformer.Angle{1003456789}=0
-TopNode.Observation.Virt Telescope.Beamformer.Angle{1033456789}=1
-TopNode.Observation.Virt Telescope.Beamformer.Angle{1063456789}=3
-TopNode.Observation.Virt Telescope.Beamformer.Angle{1093456789}=5
-TopNode.Observation.Virt Telescope.Beamformer.Angle{1123456789}=7
