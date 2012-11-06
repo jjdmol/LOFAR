@@ -38,8 +38,40 @@ class control(StatefulRecipe):
 
         try:
             self.pipeline_logic()
-        except PipelineException, message:
+        except Exception, message:
+            self.logger.error("*******************************************")
             self.logger.error(message)
+            self.logger.error("We are in control after pipeline_logic exception WINNNNNNn")
+            mail_list = ["klijn@astron.nl", "nonoice@gmail.com"]
+            msg = "Just some random unstructure data!"
+
+            for entry in mail_list:
+                self._mail_msg_to("lce072@astron.nl", entry,
+                         "Fail pipeline run", msg)
+
             return 1
 
         return 0
+
+    def _mail_msg_to(self, adr_from, adr_to, subject, msg):
+        # Import smtplib for the actual sending function
+        import smtplib
+
+        # Import the email modules we'll need
+        from email.mime.text import MIMEText
+
+        # Create a text/plain message
+        msg = MIMEText(msg)
+
+        # me == the sender's email address
+        # you == the recipient's email address
+        msg['Subject'] = subject
+        msg['From'] = adr_from
+        msg['To'] = adr_to
+
+        # Send the message via our own SMTP server, but don't include the
+        # envelope header.
+        s = smtplib.SMTP('smtp.lofar.eu')
+        s.sendmail(adr_from, [adr_to], msg.as_string())
+        s.quit()
+

@@ -80,7 +80,6 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         3. Validate node output and format the recipe output   
         """
         super(imager_finalize, self).go()
-
         # *********************************************************************
         # 1. Load the datamaps
         awimager_output_map = load_data_map(
@@ -178,7 +177,7 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
             arguments = [awimager_output, raw_ms_per_image, sourcelist,
                         target, output_image, self.inputs["minbaseline"],
                         self.inputs["maxbaseline"], processed_ms_dir,
-                        fillrootimagegroup_exec]
+                        fillrootimagegroup_exec, self.environment]
             self.logger.info(arguments)
             jobs.append(ComputeJob(host, command, arguments))
         self._schedule_jobs(jobs)

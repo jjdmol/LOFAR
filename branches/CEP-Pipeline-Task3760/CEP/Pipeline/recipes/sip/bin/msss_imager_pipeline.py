@@ -16,6 +16,7 @@ from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.group_data import validate_data_maps
 from lofarpipe.support.utilities import patch_parset, get_parset
+from lofarpipe.support.loggingdecorators import xml_node
 
 from lofar.parameterset import parameterset
 
@@ -264,6 +265,7 @@ class msss_imager_pipeline(control):
                 (host, os.path.join(self.scratch_directory, 'concat.ms'))
             )
 
+    @xml_node
     def _finalize(self, awimager_output_map, processed_ms_dir,
                   raw_ms_per_image_map, sourcelist_map, minbaseline,
                   maxbaseline, target_mapfile,
@@ -297,6 +299,7 @@ class msss_imager_pipeline(control):
 
         return placed_image_mapfile
 
+    @xml_node
     def _source_finding(self, image_map_path, major_cycle, skip=True):
         """
         Perform the sourcefinding step
@@ -341,6 +344,7 @@ class msss_imager_pipeline(control):
 
             return source_list_map, sourcedb_map_path
 
+    @xml_node
     def _bbs(self, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
               skip=False):
         """
@@ -399,6 +403,7 @@ class msss_imager_pipeline(control):
 
         return output_mapfile
 
+    @xml_node
     def _aw_imager(self, prepare_phase_output, major_cycle, sky_path,
                    skip=False):
         """
@@ -443,6 +448,7 @@ class msss_imager_pipeline(control):
 
         return output_mapfile, max_baseline
 
+    @xml_node
     def _prepare_phase(self, input_ms_map_path, target_mapfile,
             skip=False):
         """
@@ -509,6 +515,7 @@ class msss_imager_pipeline(control):
         return output_mapfile, time_slices_mapfile, raw_ms_per_image_mapfile, \
             processed_ms_dir
 
+    @xml_node
     def _create_dbs(self, input_map_path, timeslice_map_path, source_list="",
                     skip_create_dbs=False):
         """
