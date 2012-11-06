@@ -229,6 +229,22 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                         makeFaradayRotationExpr(itsScope,
                         instrument->station(i), patch));
                 }
+                
+                // Polarization rotation.
+                if(config.useRotation())
+                {
+                    itsExpr[i] = compose(itsExpr[i],
+                        makeRotationExpr(itsScope, instrument->station(i),
+                        patch));
+                }
+
+                // Scalar phase.
+                if(config.useScalarPhase())
+                {
+                    itsExpr[i] = compose(itsExpr[i],
+                        makeScalarPhaseExpr(itsScope, instrument->station(i),
+                        patch));
+                }
 
                 // Ionosphere.
                 if(config.useIonosphere())

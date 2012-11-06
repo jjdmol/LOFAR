@@ -33,6 +33,7 @@
 #include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/FaradayRotation.h>
+#include <BBSKernel/Expr/Rotation.h>
 #include <BBSKernel/Expr/ITRFDirection.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/LMN.h>
@@ -350,6 +351,28 @@ makeFaradayRotationExpr(Scope &scope,
 }
 
 Expr<JonesMatrix>::Ptr
+makeRotationExpr(Scope &scope,
+    const Station::ConstPtr &station,
+    const string &patch)
+{
+    ExprParm::Ptr chi = scope(INSTRUMENT, "RotationAngle:" + station->name()
+        + ":" + patch);
+
+    return Expr<JonesMatrix>::Ptr(new Rotation(chi));
+}
+
+Expr<Scalar>::Ptr
+makeScalarPhaseExpr(Scope &scope,
+    const Station::ConstPtr &station,
+    const string &patch)
+{
+    ExprParm::Ptr phi = scope(INSTRUMENT, "ScalarPhase:" + station->name()
+        + ":" + patch);
+
+    return Expr<Scalar>::Ptr(new AsPhasor(phi));
+}
+
+Expr<JonesMatrix>::Ptr
 makeIonosphereExpr(const Station::ConstPtr &station,
     const casa::MPosition &refPosition,
     const Expr<Vector<2> >::Ptr &exprAzEl,
@@ -369,6 +392,13 @@ compose(const Expr<JonesMatrix>::Ptr &lhs,
     }
 
     return rhs;
+}
+
+Expr<JonesMatrix>::Ptr
+compose(const Expr<JonesMatrix>::Ptr &matrix,
+    const Expr<Scalar>::Ptr &scalar)
+{
+    return Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(scalar, matrix));
 }
 
 Expr<JonesMatrix>::Ptr

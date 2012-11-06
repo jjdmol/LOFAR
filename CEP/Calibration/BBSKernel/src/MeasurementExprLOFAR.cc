@@ -222,6 +222,22 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
                     patch));
             }
 
+            // Polarization rotation.
+            if(config.useRotation())
+            {
+                exprDDE[j] = compose(exprDDE[j],
+                    makeRotationExpr(itsScope, instrument->station(j),
+                    patch));
+            }
+
+            // Scalar phase.
+            if(config.useScalarPhase())
+            {
+                exprDDE[j] = compose(exprDDE[j],
+                    makeScalarPhaseExpr(itsScope, instrument->station(j),
+                    patch));
+            }
+
             // Ionosphere.
             if(config.useIonosphere())
             {
@@ -560,6 +576,22 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                     stationExpr[i] = compose(stationExpr[i],
                         makeFaradayRotationExpr(itsScope,
                         instrument->station(i), patch));
+                }
+
+                // Polarization rotation.
+                if(config.useRotation())
+                {
+                    stationExpr[i] = compose(stationExpr[i],
+                        makeRotationExpr(itsScope, instrument->station(i),
+                        patch));
+                }
+
+                // Scalar phase.
+                if(config.useScalarPhase())
+                {
+                    itsExpr[i] = compose(itsExpr[i],
+                        makeScalarPhaseExpr(itsScope, instrument->station(i),
+                        patch));
                 }
 
                 // Ionosphere.
