@@ -4,6 +4,7 @@ include(PythonInstall)
 
 python_install(
   helpers/__init__.py
+  helpers/mac_feedback.py
   helpers/metadata.py
   helpers/WritableParmDB.py
   helpers/ComplexArray.py
