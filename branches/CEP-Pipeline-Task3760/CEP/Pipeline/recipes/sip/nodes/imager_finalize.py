@@ -160,13 +160,13 @@ class imager_finalize(LOFARnodeTCP):
                 opener.open(url, filedata, timeout=2)
                 # HTTPError needs to be caught first.
             except urllib2.HTTPError as httpe:
-                self.logger.error("HTTP status is: {0}".format(httpe.code))
-                self.logger.error("failed exporting fits image to server")
-                return 1
+                self.logger.warn("HTTP status is: {0}".format(httpe.code))
+                self.logger.warn("failed exporting fits image to server")
+
             except urllib2.URLError as urle:
-                self.logger.error(str(urle.reason))
-                self.logger.error("failed exporting fits image to server")
-                return 1
+                self.logger.warn(str(urle.reason))
+                self.logger.warn("failed exporting fits image to server")
+
 
             # *****************************************************************
             # 5. export the sourcelist to the msss server
@@ -178,13 +178,13 @@ class imager_finalize(LOFARnodeTCP):
                 opener.open(url, filedata, timeout=2)
                 # HTTPError needs to be caught first.
             except urllib2.HTTPError as httpe:
-                self.logger.error("HTTP status is: {0}".format(httpe.code))
-                self.logger.error("failed exporting sourcelist to server")
-                return 1
+                self.logger.warn("HTTP status is: {0}".format(httpe.code))
+                self.logger.warn("failed exporting sourcelist to server")
+
             except urllib2.URLError as urle:
-                self.logger.error(str(urle.reason))
-                self.logger.error("failed exporting sourcelist image to server")
-                return 1
+                self.logger.warn(str(urle.reason))
+                self.logger.warn("failed exporting sourcelist image to server")
+
 
             self.outputs["hdf5"] = "succes"
             self.outputs["image"] = output_image
