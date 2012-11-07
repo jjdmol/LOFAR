@@ -91,10 +91,11 @@ class xmlloggingTest(unittest.TestCase):
 
         # Test if after leaving the stack the test node is moved to root and
         # that that the active node is empty:
-        xml_target_output = '<active_stack Name="a_class" type="active_stack"><active_stack/><test/></active_stack>'
+        xml_target_output = '<active_stack Name="a_class" type="active_stack"><active_stack info="Contains functions not left with a return"/><test/></active_stack>'
         #self.assertTrue(an_object.active_stack.toxml() ==
         #               pretty_xml_target_output)
-        self.assertTrue(xml_target_output == an_object.active_stack.toxml())
+        self.assertTrue(xml_target_output == an_object.active_stack.toxml(),
+                        an_object.active_stack.toxml())
 
 
     def test_enter_active_stack_twice(self):
@@ -128,10 +129,11 @@ class xmlloggingTest(unittest.TestCase):
 
         # after leaving the stack completely there should be a nested 
         # node structure with the two test nodes 
-        xml_target_output = '<active_stack Name="a_class" type="active_stack"><active_stack/><test><test2/></test></active_stack>'
+        xml_target_output = '<active_stack Name="a_class" type="active_stack"><active_stack info="Contains functions not left with a return"/><test><test2/></test></active_stack>'
         #self.assertTrue(an_object.active_stack.toxml() ==
         #               pretty_xml_target_output)
-        self.assertTrue(xml_target_output == an_object.active_stack.toxml())
+        self.assertTrue(xml_target_output == an_object.active_stack.toxml(),
+                        an_object.active_stack.toxml())
 
     def test_exit_incorrect_active_stack(self):
         class a_class(object):
