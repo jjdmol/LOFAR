@@ -54,7 +54,14 @@ def send_status(host, port, status):
 
 
 if __name__ == "__main__":
-    send_status('localhost', 9999, 0)
-    send_status('localhost', 9999, 1)
+    """
+    Simple command line test.
+    Usage: python mac_feedback.py [<host>] [<port>] [<status>]
+    """
+    import sys
+    host = str(sys.argv[1]) if len(sys.argv) > 1 else "localhost"
+    port = int(sys.argv[2]) if len(sys.argv) > 2 else 9999
+    stat = int(sys.argv[3]) if len(sys.argv) > 3 else 0
+    send_status(host, port, stat)
 
 
