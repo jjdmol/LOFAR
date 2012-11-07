@@ -66,6 +66,7 @@ RSPMonitor::RSPMonitor(const string&	cntlrName) :
 	itsNrRSPboards		(0),
 	itsNrSubracks		(0),
 	itsNrCabinets		(0),
+	itsStationInfo		(0),
 	itsRCUquery			(0),
 	itsAntMapper		(0)
 {
@@ -107,6 +108,8 @@ RSPMonitor::~RSPMonitor()
 	for (int	rcu = itsNrRCUs - 1; rcu >= 0; rcu--) {
 		delete itsRCUs[rcu];
 	}
+
+	if (itsStationInfo)	delete itsStationInfo;
 
 	if (itsRSPDriver)	itsRSPDriver->close();
 
@@ -407,6 +410,7 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 			}
 			usleep (2000); // wait 2 ms in order not to overload the system  
 		}
+		itsStationInfo = new RTDBPropertySet(PSN_STATION_INFO, PST_STATION_INFO, PSAT_WO | PSAT_CW, this);
 		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
 	}
 	break;
@@ -425,6 +429,8 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
 			ASSERTSTR(itsRCUs[rcu], "Allocation of PS for rcu " << rcu << " failed.");
 		}
+		ASSERTSTR(itsStationInfo, "Allocation of PS for StationInfo failed.");
+		
 		LOG_INFO_STR("Allocation of all propertySets successfull, going to subscribe to RCU states");
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		TRAN(RSPMonitor::subscribeToRCUs);
@@ -1076,7 +1082,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 	case F_TIMER:
 		LOG_ERROR_STR ("RSP:Timeout on getting the RCU information, trying other information");
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getRCU timeout"));
-		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
+		TRAN(RSPMonitor::askDatastream);			// go to next state.
 		break;
 
 	case RSP_GETRCUACK: {
@@ -1085,7 +1091,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		if (ack.status != RSP_SUCCESS) {
 			LOG_ERROR ("RSP:Failed to get the RCU information. Trying other information");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getRCU error"));
-			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
+			TRAN(RSPMonitor::askDatastream);			// go to next state.
 			break;
 		}
 
@@ -1182,7 +1188,82 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 			}
 		}
 
-		LOG_DEBUG ("Updated all station information, waiting for next cycle");
+		LOG_DEBUG ("Updated all antenna information, going for the datastreams");
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+		TRAN(RSPMonitor::askDatastream);			// go to next state.
+	}
+	break;
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect2RSP
+		break;
+
+	case DP_SET:
+		break;
+
+	case DP_QUERY_CHANGED:
+		_doQueryChanged(event);
+		break;
+
+	case F_QUIT:
+		TRAN (RSPMonitor::finish_state);
+		break;
+
+	default:
+		LOG_DEBUG("askRCUinfo, DEFAULT");
+		break;
+	}
+
+	return (status);
+}
+
+//
+// askDatastream(event, port)
+//
+// Get the info of the Datastream's
+//
+GCFEvent::TResult RSPMonitor::askDatastream(GCFEvent& event, GCFPortInterface& port)
+{
+	if (eventName(event) != "DP_SET") {
+		LOG_DEBUG_STR ("askDatastream:" << eventName(event) << "@" << port.getName());
+	}
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:updating Datastream info"));
+
+		RSPGetdatastreamEvent	getStatus;
+		getStatus.timestamp.setNow();
+		getStatus.cache   = true;
+		itsRSPDriver->send(getStatus);
+		itsTimerPort->setTimer(5.0);		// in case the answer never comes
+		break;
+	}
+
+	case F_TIMER:
+		LOG_ERROR_STR ("RSP:Timeout on getting the datastream information, trying other information");
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getdatastream timeout"));
+		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
+		break;
+
+	case RSP_GETDATASTREAMACK: {
+		itsTimerPort->cancelAllTimers();
+		RSPGetdatastreamackEvent	ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_ERROR ("RSP:Failed to get the datastream information. Trying other information");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getdatastream error"));
+			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
+			break;
+		}
+
+		// move the information to the database.
+		itsStationInfo->setValue(PN_STI_DATASTREAM0, GCFPVBool(ack.switch_on0), double(ack.timestamp), false);
+		itsStationInfo->setValue(PN_STI_DATASTREAM1, GCFPVBool(ack.switch_on1), double(ack.timestamp), false);
+		itsStationInfo->flush();
+
+		LOG_DEBUG ("Updated datastream information, waiting for next cycle");
 //		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
 	}
@@ -1204,7 +1285,7 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		break;
 
 	default:
-		LOG_DEBUG("askRCUinfo, DEFAULT");
+		LOG_DEBUG("askdatastream, DEFAULT");
 		break;
 	}
 
