@@ -167,6 +167,10 @@ class imager_finalize(LOFARnodeTCP):
                 self.logger.warn(str(urle.reason))
                 self.logger.warn("failed exporting fits image to server")
 
+            except Exception, exc:
+                self.logger.warn(str(exc))
+                self.logger.warn("failed exporting fits image to server")
+
 
             # *****************************************************************
             # 5. export the sourcelist to the msss server
@@ -184,6 +188,10 @@ class imager_finalize(LOFARnodeTCP):
             except urllib2.URLError as urle:
                 self.logger.warn(str(urle.reason))
                 self.logger.warn("failed exporting sourcelist image to server")
+
+            except Exception, exc:
+                self.logger.warn(str(exc))
+                self.logger.warn("failed exporting sourcelist image to serve")
 
 
             self.outputs["hdf5"] = "succes"
