@@ -218,7 +218,8 @@ class msss_imager_pipeline(control):
         # (6) Finalize:
         placed_data_image_map = self._finalize(aw_image_mapfile,
             processed_ms_dir, raw_ms_per_image_map_path, sourcelist_map,
-            minbaseline, maxbaseline, target_mapfile, output_image_mapfile)
+            minbaseline, maxbaseline, target_mapfile, output_image_mapfile,
+            found_sourcedb_path)
 
         # *********************************************************************
         # (7) Get metadata
@@ -270,7 +271,7 @@ class msss_imager_pipeline(control):
     def _finalize(self, awimager_output_map, processed_ms_dir,
                   raw_ms_per_image_map, sourcelist_map, minbaseline,
                   maxbaseline, target_mapfile,
-                  output_image_mapfile, skip=False):
+                  output_image_mapfile, sourcedb_map, skip=False):
         """
         Perform the final step of the imager:
         Convert the output image to hdf5 and copy to output location
@@ -290,6 +291,7 @@ class msss_imager_pipeline(control):
                 target_mapfile, awimager_output_map=awimager_output_map,
                     raw_ms_per_image_map=raw_ms_per_image_map,
                     sourcelist_map=sourcelist_map,
+                    sourcedb_map=sourcedb_map,
                     minbaseline=minbaseline,
                     maxbaseline=maxbaseline,
                     target_mapfile=target_mapfile,

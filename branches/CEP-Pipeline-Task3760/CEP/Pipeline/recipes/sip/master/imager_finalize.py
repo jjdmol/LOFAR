@@ -34,6 +34,11 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
             help='''mapfile containing (host, path) pairs to a list of sources
             found in the image'''
         ),
+        'sourcedb_map': ingredient.FileField(
+            '--sourcedb_map',
+            help='''mapfile containing (host, path) pairs to a db of sources
+            found in the image'''
+        ),
         'target_mapfile': ingredient.FileField(
             '--target-mapfile',
             help="Mapfile containing (host, path) pairs to the concatenated and"
@@ -87,6 +92,7 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         raw_ms_per_image_map = load_data_map(
                                     self.inputs["raw_ms_per_image_map"])
         sourcelist_map = load_data_map(self.inputs["sourcelist_map"])
+        sourcedb_map = load_data_map(self.inputs["sourcedb_map"])
         target_mapfile = load_data_map(self.inputs["target_mapfile"])
         output_image_mapfile = load_data_map(
                                     self.inputs["output_image_mapfile"])
@@ -163,9 +169,9 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
         for  (awimager_output_pair, raw_ms_per_image_pair, sourcelist_pair,
-              target_pair, output_image_pair) in zip(
+              target_pair, output_image_pair, sourcedb_pair) in zip(
                 awimager_output_map_new, raw_ms_per_image_map_new, sourcelist_map,
-                target_map_new, output_image_map_new):
+                target_map_new, output_image_map_new, sourcedb_map):
             # collect the data for the current node from the indexes in the 
             # mapfiles
             (host, awimager_output) = awimager_output_pair
@@ -173,11 +179,12 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
             (host, sourcelist) = sourcelist_pair
             (host, target) = target_pair
             (host, output_image) = output_image_pair
+            (host, sourcedb) = sourcedb_pair
 
             arguments = [awimager_output, raw_ms_per_image, sourcelist,
                         target, output_image, self.inputs["minbaseline"],
                         self.inputs["maxbaseline"], processed_ms_dir,
-                        fillrootimagegroup_exec, self.environment]
+                        fillrootimagegroup_exec, self.environment, sourcedb]
             self.logger.info(arguments)
             jobs.append(ComputeJob(host, command, arguments))
         self._schedule_jobs(jobs)

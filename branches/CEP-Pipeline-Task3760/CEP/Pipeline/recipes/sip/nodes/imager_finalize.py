@@ -35,7 +35,7 @@ class imager_finalize(LOFARnodeTCP):
     """
     def run(self, awimager_output, raw_ms_per_image, sourcelist, target,
             output_image, minbaseline, maxbaseline, processed_ms_dir,
-            fillrootimagegroup_exec, environment):
+            fillrootimagegroup_exec, environment, sourcedb):
         self.environment.update(environment)
         """
         :param awimager_output: Path to the casa image produced by awimager 
@@ -73,7 +73,7 @@ class imager_finalize(LOFARnodeTCP):
             #add the information the image
             try:
                 addimg.addImagingInfo(awimager_output, processed_ms_paths,
-                    sourcelist, minbaseline, maxbaseline)
+                    sourcedb, minbaseline, maxbaseline)
 
             except Exception, error:
                 self.logger.error("addImagingInfo Threw Exception:")
