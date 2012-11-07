@@ -37,14 +37,15 @@ node  FlysEyeBeam	4.0.0  development  	'node constraint'  "FlysEyeBeam specifica
 #--------------------------------------------------------------------------------------------------------
 #    name                  	dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  SubArrayPointingIdentifier	O    text   -      10    0    'MoM'    	- 	'MoM Id of the SubArrayPointing'
-par  beamNumber 	   	O    uint   -      10    0    0      	- 	''
-par  dispersionMeasure     	O    dbl    -      10    0    0		-  	''
+par  SAP	             	O    uint   -      10    0    0      	-   'Index of SubArrayPointing'
+par  beamNumber 	    	O    uint   -      10    0    0      	- 	''
+par  dispersionMeasure     	O    dbl    -      10    0    0	    	-  	''
 par  numberOfSubbands      	O    uint   -      10    0    0	        -	''
-par  stationSubbands	   	O    vint   -      10    0    '[]'    	- 	''
+par  stationSubbands	   	O    vint   -      10    0    '[]'    	- 	'Index of subband on the station, selects freq. range'
 par  centralFrequencies	   	O    vdbl   MHz    10    0    '[]'     	- 	'One per subband'
-par  channelWidth  	   	O    dbl    kHz    10    0    0		-  	'>>Obervation.channelWidth'
+par  channelWidth  	     	O    dbl    kHz    10    0    0  		-  	'>>Obervation.channelWidth'
 par  channelsPerSubband    	O    uint   -      10    0    0      	- 	'>>Obervation.channelPerSubband'
+par  stokes                 O    vtext  -      10    0    '[]'     	- 	'A list of one or more of the following: I,Q,U,V,XX,XY,XY,YX,YY,Xre,Xim,Yre,Yim'
 
 #      name              	vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
