@@ -40,16 +40,13 @@ class control(StatefulRecipe):
         try:
             self.pipeline_logic()
         except Exception, message:
-#            self.logger.error("*******************************************")
-#            self.logger.error(message)
-#            self.logger.error("Failed pipeline run")
-#            mail_list = ["klijn@astron.nl", "nonoice@gmail.com"]
-#
-#            active_stack_data = get_active_stack(self).toprettyxml(encoding='ascii')
-#
-#            for entry in mail_list:
-#                self._mail_msg_to("lce072@astron.nl", entry,
-#                         "Fail pipeline run", active_stack_data)
+            self.logger.error("*******************************************")
+            self.logger.error("Failed pipeline run: {0}".format(
+                        self.inputs['job_name']))
+            #message does not contain the original exception thrown in recipe
+            self.logger.error("\n" +
+                get_active_stack(self).toprettyxml(encoding='ascii'))
+            self.logger.error("*******************************************")
 
             return 1
 

@@ -83,6 +83,7 @@ def enter_active_stack(calling_object, child,
     if comment != None:
         stack_node.setAttribute("comment", comment)
 
+    active_stack_node.setAttribute("info", "Contains functions not left with a return")
     # if child is a string add a xml node with this name
     stacked_child = None
     if isinstance(child, basestring):

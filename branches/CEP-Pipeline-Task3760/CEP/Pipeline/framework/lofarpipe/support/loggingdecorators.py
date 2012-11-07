@@ -1,8 +1,9 @@
 """
-A collection of function and class decorators used to add structured logging 
+A collection of function and class decorators used to add structured logging
 functionality based on xml
 """
-
+import smtplib
+from email.mime.text import MIMEText
 import time
 
 from lofarpipe.support.xmllogging import enter_active_stack, \
@@ -50,10 +51,11 @@ def xml_node(target):
 
     return wrapper
 
+
 def mail_log_on_exception(target):
     """
     Simple decorator, it tests if the any exceptions are throw in the wrapped
-    function. It results in an email send on error 
+    function. It results in an email send on error.
     """
     def wrapper(*args, **argsw):
         """
@@ -65,30 +67,44 @@ def mail_log_on_exception(target):
         try:
             # call the actual function
             return_value = target(*args, **argsw)
+            # Force exception on non zero output
+            if return_value != 0:
+                raise Exception("Non zero pipeline output")
+
         except Exception, message:
-            calling_object.logger.error("*******************************************")
-            calling_object.logger.error(message)
-            calling_object.logger.error("Failed pipeline run")
-            mail_list = ["klijn@astron.nl", "nonoice@gmail.com"]
+            # Static list of mail to be send (could be made configurable,
+            # but yeah temp mail functionality so...)
+            mail_list = ["klijn@astron.nl", "loose@astron.nl",
+                         #"pizzo@astron.nl", "orru@astron.nl"
+                         ]
 
-            active_stack_data = get_active_stack(calling_object
-                                        ).toprettyxml(encoding='ascii')
+            # get the active stack
+            active_stack_data = get_active_stack(
+                    calling_object).toprettyxml(encoding='ascii')
 
+            # get the Obsid etc for subject
+            subject = "Failed pipeline run: {0}".format(
+                        calling_object.inputs['job_name'])
+
+            # construct the message
+            msg = "Error ({0}): {1} \n information: \n {2}".format(
+                    type(message), message, active_stack_data)
+
+            # mail all recipients
             for entry in mail_list:
-                _mail_msg_to("lce072@astron.nl", entry,
-                         "Fail pipeline run", active_stack_data)
+                _mail_msg_to("pipeline_error", entry,
+                         subject, msg)
         # return the actual value of the function
         return return_value
 
     return wrapper
 
+
 def _mail_msg_to(adr_from, adr_to, subject, msg):
-    # Import smtplib for the actual sending function
-    import smtplib
-
-    # Import the email modules we'll need
-    from email.mime.text import MIMEText
-
+    """
+    Fire and forget wrapper from lofar stmp mail access.
+    sends an email with a from adress to an adress with a subject and message.
+    """
     # Create a text/plain message
     msg = MIMEText(msg)
 
