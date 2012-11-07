@@ -58,19 +58,12 @@ class imager_awimager(LOFARnodeTCP):
         self.environment.update(environment)
 
         with log_time(self.logger):
-            # *******************************************************
-            # 1. Get awimager parameters that depend on measurement set
-            #   (CURRENTLY SKIPPED DUE TO BUGS)
-            # Code contains a bug. We need to get cycle 0 working: 
-            # skip calculating. get from parset
-            # cell_size, npix, w_max, w_proj_planes = \
-            #    self._calc_par_from_measurement(concatenated_measurement_set,
-            #                                     parset)
-            parset_object = get_parset(parset)
-            cell_size = parset_object.getString("cellsize")
-            npix = parset_object.getInt('npix')
-            w_max = parset_object.getString("wmax")
-            w_proj_planes = parset_object.getString("wprojplanes")
+            # ****************************************************************
+            # 1. Calculate awimager parameters that depend on measurement set
+            cell_size, npix, w_max, w_proj_planes = \
+                self._calc_par_from_measurement(concatenated_measurement_set,
+                                                 parset)
+
             # ****************************************************************
             # 2. Get the target image location from the mapfile for the parset.
             # Create target dir if it not exists
