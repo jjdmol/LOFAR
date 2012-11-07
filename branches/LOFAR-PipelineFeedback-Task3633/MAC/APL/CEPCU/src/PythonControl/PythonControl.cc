@@ -252,8 +252,7 @@ bool PythonControl::_startPython(const string&	pythonProg,
 //
 // Setup all connections.
 //
-GCFEvent::TResult PythonControl::initial_state(GCFEvent& event, 
-													GCFPortInterface& port)
+GCFEvent::TResult PythonControl::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
@@ -263,7 +262,7 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event,
 	case F_ENTRY:
 		itsListener->open();	// will result in F_CONN
 		// QUICK FIX #3633
-		itsFeedbackListener->setPortNumber(MAC_PYTHON_FEEDBACK_QF);
+		itsFeedbackListener->setPortNumber(MAC_PYTHON_FEEDBACK_QF + getObservationNr(getName())%1000);
 		itsFeedbackListener->open();	// will result in F_CONN
    		break;
 
