@@ -70,6 +70,10 @@ def mail_log_on_exception(target):
             # Force exception on non zero output
             if return_value != 0:
                 raise Exception("Non zero pipeline output")
+            # Mail main dev on succesfull run
+            _mail_msg_to("pipeline_finished", "klijn@astron.nl",
+                         "pipeline finished", get_active_stack(
+                    calling_object).toprettyxml(encoding='ascii'))
 
         except Exception, message:
             # Static list of mail to be send (could be made configurable,
@@ -94,6 +98,7 @@ def mail_log_on_exception(target):
             for entry in mail_list:
                 _mail_msg_to("pipeline_error", entry,
                          subject, msg)
+
         # return the actual value of the function
         return return_value
 
