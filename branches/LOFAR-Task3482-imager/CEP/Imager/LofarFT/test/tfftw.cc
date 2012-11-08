@@ -1,4 +1,4 @@
-F#include <fftw3.h>
+#include <fftw3.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -6,6 +6,7 @@ F#include <fftw3.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/OS/Timer.h>
+
 
 using namespace casa;
 
@@ -506,13 +507,11 @@ void timeParallel(int direction, int sz=128, int nthread=1, bool show=false, int
   Complex* ptr = static_cast<Complex*>(fftw_malloc ((sz*sz+1)*sizeof(Complex)));
   Matrix<Complex> arr(IPosition(2,sz,sz), ptr+align, SHARE);
   if (show) cout << ptr << ' ' << arr.data() << endl;
-  fftwf_init_threads();
-  fftwf_plan_with_nthreads (nthread);
   Timer timer;
   fftwf_plan plan = fftwf_plan_dft_2d(sz, sz,
                                       reinterpret_cast<fftwf_complex*>(arr.data()),
                                       reinterpret_cast<fftwf_complex*>(arr.data()),
-                                      direction, FFTW_ESTIMATE);
+                                      direction, FFTW_MEASURE);
   if (show) timer.show ("plan   ");
   init (arr);
   if (direction == FFTW_FORWARD) {
@@ -521,7 +520,9 @@ void timeParallel(int direction, int sz=128, int nthread=1, bool show=false, int
       preflip(arr);
       if (show) timer.show ("preflip");
       timer.mark();
+      cout<<"ececute"<<endl;
       fftwf_execute (plan);
+      cout<<"done"<<endl;
       if (show) timer.show ("exec   ");
     } else {
       timer.mark();
@@ -547,8 +548,8 @@ void timeParallel(int direction, int sz=128, int nthread=1, bool show=false, int
     scaleflip (arr);
     if (show) timer.show ("scalefl");
   }
-  fftwf_destroy_plan (plan);
 }
+
 
 int main (int argc)
 {
@@ -557,8 +558,18 @@ int main (int argc)
   //  timeParallel (FFTW_FORWARD, 4096, 2, true);
   //timeParallel (FFTW_FORWARD, 4096, 4, true);
   //timeParallel (FFTW_FORWARD, 4096, 8, true);
-  timeParallel (FFTW_FORWARD, 3*4096, 1, true);
-  timeParallel (FFTW_FORWARD, 3*4096, 8, true);
+  //timeParallel (FFTW_FORWARD, 2*4096, 1, true);
+  fftwf_init_threads();
+  //fftwf_plan_with_nthreads (1);
+  //timeParallel (FFTW_FORWARD, 2*4096, 1, true);
+  //timeParallel (FFTW_FORWARD, 2*4096, 1, true);
+  fftwf_plan_with_nthreads (6);
+  timeParallel (FFTW_FORWARD, 2*4096, 6, true);
+  timeParallel (FFTW_FORWARD, 2*4096, 6, true);
+  //fftwf_plan_with_nthreads (1);
+  //timeParallel (FFTW_FORWARD, 2*4096, 1, true);
+  //timeParallel (FFTW_FORWARD, 2*4096, 1, true);
+  //fftwf_destroy_plan (plan);
   return 0;
   ///  testvec();
   checkFlip(5);
