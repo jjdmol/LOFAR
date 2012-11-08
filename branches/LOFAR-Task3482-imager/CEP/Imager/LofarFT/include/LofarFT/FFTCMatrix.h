@@ -25,10 +25,7 @@
 
 #include <fftw3.h>
 #include <Common/LofarTypes.h>
-#include <Common/lofar_vector.h>
-#include <Common/Timer.h>
 #include <complex>
-#include <ostream>
 
 
 namespace LOFAR {
@@ -136,13 +133,17 @@ namespace LOFAR {
     // These function are similar to fft and normalized_fft but use the
     // given data array.
     void forward (size_t size, std::complex<float>* data,
-                  int nthreads=1, unsigned flags=FFTW_ESTIMATE);
+                  int nthreads=1,
+		  unsigned flags=FFTW_ESTIMATE);
     void backward (size_t size, std::complex<float>* data,
-                   int nthreads=1, unsigned flags=FFTW_ESTIMATE);
+                   int nthreads=1,
+		   unsigned flags=FFTW_ESTIMATE);
     void normalized_forward (size_t size, std::complex<float>* data,
-                             int nthreads=1, unsigned flags=FFTW_ESTIMATE);
+                             int nthreads=1,
+			     unsigned flags=FFTW_ESTIMATE);
     void normalized_backward (size_t size, std::complex<float>* data,
-                              int nthreads=1, unsigned flags=FFTW_ESTIMATE);
+                              int nthreads=1,
+			      unsigned flags=FFTW_ESTIMATE);
 
     ///  private:
     // Flip the quadrants as needed for the FFT.
@@ -178,29 +179,7 @@ namespace LOFAR {
     // Get number of optimal odd FFTW sizes.
     static int nOptimalOddFFTSizes();
 
-    // Show how often FFT sizes and threads are used.
-    void showUsed (std::ostream&) const;
-
-    // Get the timer information.
-    const NSTimer& timerPlan() const
-      { return itsTimerPlan; }
-    const NSTimer& timerFFT() const
-      { return itsTimerFFT; }
-    const NSTimer& timerFlip() const
-      { return itsTimerFlip; }
-
-    // Show the timer percentages.
-    void showTimerPerc (std::ostream&) const;
-
   private:
-    // Execute the plan and time it.
-    void executePlan()
-    {
-      itsTimerFFT.start();
-      fftwf_execute (itsPlan);
-      itsTimerFFT.stop();
-    }
-
     // Helper functions for flip and scaledFlip.
     void flipOdd (bool toZero);
     void scaledFlipOdd (bool toZero, float factor);
@@ -212,11 +191,6 @@ namespace LOFAR {
     size_t               itsReserved;
     int                  itsNThreads;
     bool                 itsIsForward;
-    vector<int>          itsNUsedVec;     //# count how often FFT size is used
-    vector<int>          itsNThreadVec;   //# Count how often nthreads is used
-    NSTimer              itsTimerPlan;
-    NSTimer              itsTimerFFT;
-    NSTimer              itsTimerFlip;
     static bool          theirInitDone;
   };
 

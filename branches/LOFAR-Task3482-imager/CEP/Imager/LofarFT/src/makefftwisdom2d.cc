@@ -23,16 +23,12 @@
 #include <lofar_config.h>
 #include <LofarFT/FFTCMatrix.h>
 #include <Common/lofar_iostream.h>
-#include <Common/Exception.h>
 #include <casa/OS/Path.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>     //# for strerror
 
 using namespace LOFAR;
-
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 void showhelp()
 {
@@ -59,8 +55,9 @@ void showhelp()
   cout << endl;
 }
 
-int main (int argc, char* argv[])
+int main (int argc, char* argv[], bool argparallel)
 {
+  if(argparallel==false){
   casa::String name = "fftwisdom2d.txt";
   if (argc > 1) {
     casa::String arg(argv[1]);
@@ -110,4 +107,64 @@ int main (int argc, char* argv[])
   fclose (wisdomFile);
 
   return 0;
+  }
+
+  else
+
+    {
+  casa::String name = "fftwisdom2d_parallel.txt";
+  if (argc > 1) {
+    casa::String arg(argv[1]);
+    if (arg == "-h"  ||  arg == "--help"  ||  arg == "?") {
+      showhelp();
+      return 1;
+    }
+    name = casa::Path(arg).absoluteName();
+  }
+  FILE* wisdomFile = fopen (name.c_str(), "w");
+  if (!wisdomFile) {
+    cerr << "makefftwisdom2d: could not create output file " << name << "; "
+         << strerror(errno) << endl;
+    return 1;
+  }
+  int maxsize = 2000;
+  // if (argc > 2) {
+  //   istringstream iss(argv[2]);
+  //   iss >> maxsize;
+  // }
+  cout << "Creating 2D FFTW wisdom for optimal sizes between 1 and "
+       << maxsize << " ..." << endl;
+  FFTCMatrix fftmat;
+  // Collect the wisdom for creating convolution functions in awimager.
+  // They use odd sizes FFTs of optimal length as defined in FFTCMatrix.
+  fftwf_init_threads();
+
+  fftwf_plan_with_nthreads (1);
+  const int* sizes = FFTCMatrix::getOptimalOddFFTSizes();
+  int nsizes = FFTCMatrix::nOptimalOddFFTSizes();
+  // for (int i=0; i<nsizes && sizes[i]<maxsize; ++i) {
+  //   cerr << ' ' << sizes[i];
+  //   fftmat.plan (sizes[i], true, FFTW_PATIENT);
+  //   fftmat.plan (sizes[i], false, FFTW_PATIENT);
+  // }
+  cerr << endl;
+  cout << "Creating 2D FFTW wisdom for some multiples of 1024 (till 16384) ..."
+       << endl;
+  
+  int otherSizes[] = { 8192};//, 9216, 10240};//, 11264, 12288, 13312};
+  //nsizes = sizeof(otherSizes) / sizeof(int);
+  fftwf_plan_with_nthreads (6);
+  for (int i=0; i<1; ++i) {
+    cerr << ' ' << otherSizes[i];
+    fftmat.plan (otherSizes[i], true, FFTW_MEASURE);//FFTW_PATIENT);
+    fftmat.plan (otherSizes[i], false, FFTW_MEASURE);//FFTW_PATIENT);
+  }
+
+  cout << "Writing 2D FFTW wisdom into file '" << name << "'" << endl;
+  fftwf_export_wisdom_to_file (wisdomFile);
+  fclose (wisdomFile);
+
+  return 0;
+    
+  }
 }
