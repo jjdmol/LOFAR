@@ -71,9 +71,13 @@ def mail_log_on_exception(target):
             if return_value != 0:
                 raise Exception("Non zero pipeline output")
             # Mail main dev on succesfull run
+            msg_string = get_active_stack(
+                    calling_object).toprettyxml(encoding='ascii')
             _mail_msg_to("pipeline_finished", "klijn@astron.nl",
-                         "pipeline finished", get_active_stack(
-                    calling_object).toprettyxml(encoding='ascii'))
+                         "pipeline finished", msg_string)
+
+            calling_object.logger.info("pipeline_finished:" + "xml summary:")
+            calling_object.logger.info(msg_string)
 
         except Exception, message:
             # Static list of mail to be send (could be made configurable,
