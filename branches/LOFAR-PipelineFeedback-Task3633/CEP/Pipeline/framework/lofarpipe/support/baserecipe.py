@@ -17,6 +17,7 @@ import errno
 import lofarpipe.support.utilities as utilities
 from lofarpipe.support.lofarexceptions import PipelineException, PipelineRecipeFailed
 from lofarpipe.cuisine.WSRTrecipe import WSRTrecipe
+from lofarpipe.cuisine.cook import CookError
 from lofarpipe.support.lofaringredient import RecipeIngredients, LOFARinput, LOFARoutput
 from lofarpipe.support.group_data import store_data_map
 
@@ -139,11 +140,13 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         outputs = LOFARoutput()
 
         # Cook the recipe and return the results"
-        if self.cook_recipe(recipe, inputs, outputs):
+        try:
+            self.cook_recipe(recipe, inputs, outputs)
+        except CookError:
             self.logger.warn(
                 "%s reports failure (using %s recipe)" % (configblock, recipe)
             )
-            raise PipelineRecipeFailed("%s failed", configblock)
+            raise PipelineRecipeFailed("%s failed" % configblock)
         return outputs
 
     def _read_config(self):
