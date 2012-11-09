@@ -124,7 +124,6 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         super(imager_prepare, self).go()
         self.logger.info("Starting imager_prepare run")
-
         # *********************************************************************
         # input data     
         input_map = load_data_map(self.inputs['args'][0])
