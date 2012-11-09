@@ -76,8 +76,6 @@ def mail_log_on_exception(target):
             _mail_msg_to("pipeline_finished", "klijn@astron.nl",
                          "pipeline finished", msg_string)
 
-            calling_object.logger.info("pipeline_finished:" + "xml summary:")
-            calling_object.logger.info(msg_string)
 
         except Exception, message:
             # Static list of mail to be send (could be made configurable,
@@ -102,6 +100,9 @@ def mail_log_on_exception(target):
             for entry in mail_list:
                 _mail_msg_to("pipeline_error", entry,
                          subject, msg)
+
+        calling_object.logger.info("pipeline_finished:" + "xml summary:")
+        calling_object.logger.info(msg_string)
 
         # return the actual value of the function
         return return_value
