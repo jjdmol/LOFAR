@@ -31,6 +31,5 @@ python_install(
   support/stateful.py
   support/subprocessgroup.py
   support/utilities.py
-  support/xmlparset.py
   support/xmllogging.py
   DESTINATION lofarpipe)
