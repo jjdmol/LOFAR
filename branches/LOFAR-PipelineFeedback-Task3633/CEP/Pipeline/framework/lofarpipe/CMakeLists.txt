@@ -24,6 +24,7 @@ python_install(
   support/lofaringredient.py
   support/lofarnode.py
   support/mac.py
+  support/mac_feedback.py
   support/parset.py
   support/pipelinelogging.py
   support/pipelinexml.py
