@@ -37,7 +37,7 @@ def __try_connect(host, port, tries=5, min_timeout=1.0, max_timeout=5.0):
                       (timeout, tries, "try" if tries==1 else "tries"))
                 time.sleep(timeout)
             else:
-                raise
+                raise IOError(err)
         else:
             return sock
 
