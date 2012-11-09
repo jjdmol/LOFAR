@@ -101,7 +101,7 @@ def mail_log_on_exception(target):
                 _mail_msg_to("pipeline_error", entry,
                          subject, msg)
 
-        calling_object.logger.info("pipeline_finished:" + "xml summary:")
+        calling_object.logger.info("pipeline_finished" + " xml summary:")
         calling_object.logger.info(msg_string)
 
         # return the actual value of the function
