@@ -78,8 +78,8 @@ def mail_log_on_exception(target):
         except Exception, message:
             # Static list of mail to be send (could be made configurable,
             # but yeah temp mail functionality so...)
-            mail_list = ["klijn@astron.nl", "loose@astron.nl",
-                         #"pizzo@astron.nl", "orru@astron.nl"
+            mail_list = ["klijn@astron.nl",
+                         "pizzo@astron.nl", "orru@astron.nl"
                          ]
 
             # get the active stack
