@@ -60,13 +60,19 @@ public:
 
   void addSubband(unsigned index);
   void setSubbandKey(unsigned index, const std::string &key, const std::string &value);
+  void setBeamKey(unsigned index, const std::string &key, const std::string &value);
 
 private:
   ParameterSet parset;
   unsigned nrSubbands;
+  unsigned nrBeams;
 
-  std::string subbandSizeKey() const;
+  std::string nrSubbandsKey() const;
   std::string subbandPrefix(unsigned index) const;
+
+  std::string nrBeamsKey() const;
+  std::string beamPrefix(unsigned index) const;
+  std::string arrayBeamInfix(bool coherent, bool flyseye) const;
 };
 
 // The CEPlogProcessor class implements a small daemon that ...

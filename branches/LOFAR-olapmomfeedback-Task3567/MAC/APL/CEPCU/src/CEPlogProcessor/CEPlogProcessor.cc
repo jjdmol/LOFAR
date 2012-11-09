@@ -53,10 +53,17 @@ namespace LOFAR {
 // static pointer to this object for signal handler
 static CEPlogProcessor*     thisLogProcessor = 0;
 
+/*
+ * Implement the feedback for MoM and the LTA.
+ *
+ * An ObservationXXXXX_feedback file is created containing the keys described
+ * in Output_BeamFormed_.comp and Output_Correlated_.comp
+ */
 
 CEPFeedback::CEPFeedback()
 :
-  nrSubbands(0)
+  nrSubbands(0),
+  nrBeams(0)
 {
 }
 
@@ -65,7 +72,8 @@ void CEPFeedback::write(const std::string &filename)
 {
   LOG_DEBUG_STR("Writing feedback file " << filename);
 
-  parset.replace(subbandSizeKey(), formatString("%u", nrSubbands));
+  parset.replace(nrSubbandsKey(), formatString("%u", nrSubbands));
+  parset.replace(nrBeamsKey(),    formatString("%u", nrBeams));
 
   parset.writeFile(filename);
 }
@@ -91,6 +99,53 @@ void CEPFeedback::addSubband(unsigned index)
   ++nrSubbands;
 }
 
+
+void CEPFeedback::addBeam(unsigned index, bool coherent, bool flyseye)
+{
+  setBeamKey(index, "fileFormat",                "HDF5");
+  setBeamKey(index, "filename",                  "");
+  setBeamKey(index, "size",                      "0");
+  setBeamKey(index, "location",                  "");
+  setBeamKey(index, "nrOfCoherentStokesBeams",   coherent && !flyseye ? "1" : "0");
+  setBeamKey(index, "nrOfIncoherentStokesBeams", !coherent            ? "1" : "0");
+  setBeamKey(index, "nrOfFlysEyeBeams",          flyseye              ? "1" : "0");
+  setBeamKey(index, "beamTypes",                 "[]"); // TODO
+
+  //setBeamKey(index, "startTime",                 "");
+  //setBeamKey(index, "duration",                  "");
+
+  string infix = arrayBeamInfix(coherent, flyseye);
+
+  setBeamKey(index, infix + "SAP",                       "");
+  setBeamKey(index, infix + "beamNumber",                "");
+  setBeamKey(index, infix + "dispersionMeasure",         "");
+  setBeamKey(index, infix + "nrSubbands",                "");
+  setBeamKey(index, infix + "stationSubbands",           "[]");
+  setBeamKey(index, infix + "centralFrequencies",        "[]");
+  setBeamKey(index, infix + "channelWidth",              "");
+  setBeamKey(index, infix + "channelsPerSubband",        "");
+  setBeamKey(index, infix + "stokes",                    "[]");
+
+  if (coherent && !flyseye) {
+    setBeamKey(index, infix + "Pointing.equinox",          "J2000");
+    setBeamKey(index, infix + "Pointing.coordType",        "RA-DEC");
+    setBeamKey(index, infix + "Pointing.angle1",           "");
+    setBeamKey(index, infix + "Pointing.angle2",           "");
+
+    setBeamKey(index, infix + "Offset.equinox",          "J2000");
+    setBeamKey(index, infix + "Offset.coordType",        "RA-DEC");
+    setBeamKey(index, infix + "Offset.angle1",           "");
+    setBeamKey(index, infix + "Offset.angle2",           "");
+  }
+
+  if (flyseye) {
+    setBeamKey(index, infix + "stationName",             "");
+    setBeamKey(index, infix + "antennaFieldName",        "");
+  }
+
+  ++nrBeams;
+}
+
 void CEPFeedback::setSubbandKey(unsigned index, const std::string &key, const std::string &value)
 {
   LOG_DEBUG_STR("setSubbandKey for index " << index << ": " << key << " = " << value);
@@ -98,15 +153,48 @@ void CEPFeedback::setSubbandKey(unsigned index, const std::string &key, const st
   parset.replace(subbandPrefix(index) + key, value);
 }
 
-std::string CEPFeedback::subbandSizeKey() const
+void CEPFeedback::setBeamKey(unsigned index, const std::string &key, const std::string &value)
+{
+  LOG_DEBUG_STR("setBeamKey for index " << index << ": " << key << " = " << value);
+
+  parset.replace(beamPrefix(index) + key, value);
+}
+
+std::string CEPFeedback::nrSubbandsKey() const
 {
   return "LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_";
 }
+
+std::string CEPFeedback::nrBeamsKey() const
+{
+  return "LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_BeamFormed_";
+}
+
 
 std::string CEPFeedback::subbandPrefix(unsigned index) const
 {
   return formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", index);
 }
+
+
+std::string CEPFeedback::beamPrefix(unsigned index) const
+{
+  return formatString("LOFAR.ObsSW.Observation.DataProducts.Output_BeamFormed_[%u].", index);
+}
+
+
+std::string CEPFeedback::arrayBeamInfix(bool coherent, bool flyseye) const
+{
+  if (coherent && !flyseye)
+    return "CoherentStokesBeam[0].";
+
+  if (!coherent)
+    return "IncoherentStokesBeam[0].";
+
+  // if(coherent && flyseye)
+  return "FlysEyeBeam[0].";
+}
+
 
 //
 // CEPlogProcessor()
@@ -1144,7 +1232,7 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
             feedback->setSubbandKey(streamNr, "stationSubband",      formatString("%d", subband));
             feedback->setSubbandKey(streamNr, "integrationInterval", formatString("%.4lf", integration));
             feedback->setSubbandKey(streamNr, "centralFrequency",    formatString("%.4lf", centralfreq));
-            feedback->setSubbandKey(streamNr, "channelsPerSubband",  formatString("%d", channels));
+            feedback->setSubbandKey(streamNr, "channelsPerSubband",  formatString("%d",    channels));
             feedback->setSubbandKey(streamNr, "channelWidth",        formatString("%.4lf", channelwidth));
             feedback->setSubbandKey(streamNr, "duration",            formatString("%.4lf", duration));
           }
