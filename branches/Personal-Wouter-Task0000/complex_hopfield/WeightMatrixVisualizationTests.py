@@ -66,15 +66,94 @@ class WeightMatrixVisualizationTests(unittest.TestCase):
         self.assertTrue(numpy.sum(numpy.abs(result - target)) == 0, "matrix swap failed")
 
 
-    def test_sort_matrix_on_weight_function(self):
-        input_data = numpy.array([[1, 2, 3], [4, 0, 0], [7, 8, 0]])
+    def test_sort_matrix_on_feedforward(self):
+        input_data = numpy.array([[1, 2, 3],
+                                  [4, 0, 0],
+                                  [7, 8, 0]])
+
+        target = numpy.array([[0, 8, 7],
+                              [0, 0, 4],
+                              [3, 2, 1]])
 
         sut = WeightMatrixVisualization(input_data)
         sut.sort_matrix_on_direction()
         result = sut.get_matrix()
-        target = numpy.array([[0, 8, 7], [0, 0, 4], [3, 2, 1]])
+
         self.assertTrue(numpy.sum(numpy.abs(result - target)) == 0,
                          "matrix sort failed")
+
+    def test_sort_matrix_on_weight_equality(self):
+        input_data = numpy.array([[2, 0, 2, 2, 0, 0],
+                                  [0, 2, 0, 0, 2, 2],
+                                  [2, 0, 2, 2, 0, 0],
+                                  [2, 0, 2, 2, 0, 0],
+                                  [0, 2, 0, 0, 2, 2],
+                                  [0, 2, 0, 0, 2, 2]])
+
+        target = numpy.array([[2, 2, 2, 0, 0, 0],
+                              [2, 2, 2, 0, 0, 0],
+                              [2, 2, 2, 0, 0, 0],
+                              [0, 0, 0, 2, 2, 2],
+                              [0, 0, 0, 2, 2, 2],
+                              [0, 0, 0, 2, 2, 2]])
+
+
+        sut = WeightMatrixVisualization(input_data)
+        sut.sort_matrix_on_weight_equality()
+        result = sut.get_matrix()
+
+        self.assertTrue(numpy.sum(numpy.abs(result - target)) == 0,
+                         "\n" + str(result))
+        # compare the equality of the sorting order (the new indexes)
+        target = numpy.array([0, 2, 3, 1, 4, 5])
+        result = sut._order
+        self.assertTrue(numpy.sum(numpy.abs(result - target)) == 0,
+                         "\n" + str(result))
+
+    def test_sort_matrix_on_weight_2d_symetric(self):
+        # currently the best effort for symetry..
+        input_data = numpy.array([[2, 0, 0, 0, 0, 1, 1],
+                                  [0, 2, 0, 1, 0, 0, 1],
+                                  [0, 0, 2, 0, 1, 1, 0],
+                                  [0, 1, 0, 2, 1, 0, 0],
+                                  [0, 0, 1, 1, 2, 0, 0],
+                                  [1, 0, 1, 0, 0, 2, 0],
+                                  [1, 1, 0, 0, 0, 0, 2]])
+
+        target = numpy.array([[2, 1, 0, 0, 0, 0, 1],
+                              [1, 2, 1, 0, 0, 0, 0],
+                              [0, 1, 2, 1, 0, 0, 0],
+                              [0, 0, 1, 2, 1, 0, 0],
+                              [0, 0, 0, 1, 2, 1, 0],
+                              [0, 0, 0, 0, 1, 2, 1],
+                              [1, 0, 0, 0, 0, 1, 2]])
+
+        sut = WeightMatrixVisualization(input_data)
+        sut.sort_matrix_on_weight_equality()
+        result = sut.get_matrix()
+
+        self.assertTrue(numpy.sum(numpy.abs(result - target)) == 0,
+                         "\n" + str(result))
+
+    def test_apply_sorting_to_matrix(self):
+        input_data = numpy.array([[1, 2, 3, 4],
+                                  [5, 6, 7, 8],
+                                  [9, 10, 11, 12],
+                                  [13, 14, 15, 16]])
+
+        target = numpy.array([[16, 15, 14, 13],
+                              [12, 11, 10, 9],
+                              [ 8, 7, 6, 5],
+                              [ 4, 3, 2, 1]])
+        target_sorting = [3, 2, 1, 0]
+        sut = WeightMatrixVisualization(input_data)
+
+        sut.apply_sorting_to_matrix(target_sorting)
+        result = sut.get_matrix()
+        self.assertTrue(numpy.sum(numpy.abs(result - target)) == 0,
+                         "apply matrix sorting failed")
+        self.assertTrue(target_sorting == sut._order, str("neuron _order not"
+                                        " correct after applying sort!!"))
 
 if __name__ == "__main__":
     unittest.main()
