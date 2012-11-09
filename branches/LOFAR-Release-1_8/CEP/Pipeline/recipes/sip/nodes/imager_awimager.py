@@ -61,10 +61,37 @@ class imager_awimager(LOFARnodeTCP):
         with log_time(self.logger):
             # ****************************************************************
             # 1. Calculate awimager parameters that depend on measurement set
-            cell_size, npix, w_max, w_proj_planes = \
+            parset_object = get_parset(parset)
+            npix = parset_object.getString('npix')
+            w_proj_planes = parset_object.getString('wprojplanes')
+            cell_size = parset_object.getString('cellsize')
+            w_max = parset_object.getString('wmax')
+
+            # If none of these parameters is specified
+            if npix == "" and w_proj_planes == "" and cell_size == "" \
+                                                  and w_max == "":
+                # calculate them
+                cell_size, npix, w_max, w_proj_planes = \
                 self._calc_par_from_measurement(concatenated_measurement_set,
                                                  parset)
-
+            # if they are all specified
+            elif npix != "" and w_proj_planes != "" and cell_size != "" \
+                                                    and w_max != "":
+                # Cast them to numbers
+                try:
+                    npix = int(npix)
+                    w_proj_planes = int(w_proj_planes)
+                    w_max = float(w_max)
+                except Exception, exception_object:
+                    self.logger.error("Error while parsing parset parameters:")
+                    self.logger.error(str(exception_object))
+                    raise
+            # if not all empty or not all specified
+            else:
+                raise PipelineException("The specification in the parset is "
+                    "incorrect: (awimager.) npix, wprojplanes, cellsize, wmax "
+                    "should all be specified or none of them (generated),"
+                    "specifying a subset in not possible")
             # ****************************************************************
             # 2. Get the target image location from the mapfile for the parset.
             # Create target dir if it not exists
@@ -151,9 +178,7 @@ class imager_awimager(LOFARnodeTCP):
         
         1. Calculate intermediate results based on the ms. 
         2. The calculation of the actual target values using intermediate
-           result
-        3. Scaling of cellsize and npix to allow for user input of the npix
-        
+           result       
         """
         # *********************************************************************
         # 1. Get partial solutions from the parameter set
@@ -161,27 +186,27 @@ class imager_awimager(LOFARnodeTCP):
         parset_object = get_parset(parset)
         baseline_limit = parset_object.getInt('maxbaseline')
         # npix round up to nearest pow 2
-        parset_npix = self._nearest_ceiled_power2(parset_object.getInt('npix'))
 
         # Get the longest baseline
-        sqrt_max_baseline = pt.taql(
+        max_baseline = pt.taql(
                         'CALC sqrt(max([select sumsqr(UVW[:2]) from ' + \
             '{0} where sumsqr(UVW[:2]) <{1} giving as memory]))'.format(\
             measurement_set, baseline_limit *
             baseline_limit))[0]  # ask ger van diepen for details if ness.
-
         #Calculate the wave_length
         table_ms = pt.table(measurement_set)
         table_spectral_window = pt.table(
                                         table_ms.getkeyword("SPECTRAL_WINDOW"))
         freq = table_spectral_window.getcell("REF_FREQUENCY", 0)
+
         table_spectral_window.close()
         wave_length = pt.taql('CALC C()') / freq
+        wave_length = wave_length[0]
 
         #Calculate the cell_size from the ms
         arc_sec_in_degree = 3600
         arc_sec_in_rad = (180.0 / math.pi) * arc_sec_in_degree
-        cell_size = (1.0 / 3) * (wave_length / float(sqrt_max_baseline))\
+        cell_size = (1.0 / 3) * (wave_length / float(max_baseline))\
              * arc_sec_in_rad
 
         # Calculate the number of pixels in x and y dim
@@ -201,13 +226,9 @@ class imager_awimager(LOFARnodeTCP):
             measurement_set, baseline_limit * baseline_limit))[0]
 
         # Calculate number of projection planes
-        w_proj_planes = min(257, math.floor((sqrt_max_baseline * wave_length) /
+        w_proj_planes = min(257, math.floor((max_baseline * wave_length) /
                                              (station_diameter ** 2)))
-
         w_proj_planes = int(round(w_proj_planes))
-        self.logger.debug(
-                    "Calculated w_max and the number pf projection plances:"
-                    " {0} , {1}".format(w_max, w_proj_planes))
 
         # MAximum number of proj planes set to 1024: George Heald, Ger van
         # Diepen if this exception occurs
@@ -219,21 +240,18 @@ class imager_awimager(LOFARnodeTCP):
         # *********************************************************************
         # 3. if the npix from the parset is different to the ms calculations,
         # calculate a sizeconverter value  (to be applied to the cellsize)
-        size_converter = 1
-        if npix != parset_npix:
-            size_converter = npix / parset_npix
-            npix = parset_npix
-
         if npix < 256:
             self.logger.warn("Using a image size smaller then 256x256:"
                 " This leads to problematic imaging in some instances!!")
 
         cell_size_formatted = str(
-                        int(round(cell_size * size_converter))) + 'arcsec'
-        npix = int(npix)
-        self.logger.info("Using the folowing image"
-            " properties: npix: {0}, cell_size: {1}".format(
-              npix, cell_size_formatted))
+                        int(round(cell_size))) + 'arcsec'
+
+        print ("Using the following dynamic generated awimager parameters:"
+            " cell_size: {0}, npix: {1},".format(
+                        cell_size_formatted, npix) +
+             " w_max: {0}, w_proj_planes: {1}".format(w_max, w_proj_planes))
+
         return cell_size_formatted, npix, str(w_max), str(w_proj_planes)
 
     def _get_fov_and_station_diameter(self, measurement_set):
