@@ -125,7 +125,6 @@ class gainoutliercorrection(LOFARnodeTCP):
         # Create a local WritableParmDB
         parmdb = WritableParmDB(outfile)
 
-
         #get all stations in the parmdb
         stations = list_stations(parmdb)
 

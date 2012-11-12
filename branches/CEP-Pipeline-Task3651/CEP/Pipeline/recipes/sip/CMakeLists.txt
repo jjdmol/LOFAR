@@ -7,6 +7,7 @@ python_install(
   helpers/metadata.py
   helpers/WritableParmDB.py
   helpers/ComplexArray.py
+  helpers/MultipartPostHandler.py
   master/__init__.py
   master/bbs_reducer.py
   master/copier.py
@@ -46,6 +47,7 @@ python_install(
   DESTINATION lofarpipe/recipes)
 
 install(PROGRAMS
+  bin/calibration_pipeline.py
   bin/msss_calibrator_pipeline.py
   bin/msss_imager_pipeline.py
   bin/msss_target_pipeline.py

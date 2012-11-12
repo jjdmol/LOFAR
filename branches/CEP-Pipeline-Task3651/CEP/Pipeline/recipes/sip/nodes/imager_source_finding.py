@@ -92,6 +92,7 @@ class imager_source_finding(LOFARnodeTCP):
                     pass  #do nothing
                 bdsm_parameters[key] = parameter_value
 
+
             # *****************************************************************
             # 3. Start pybdsm
             self.logger.debug(
@@ -119,7 +120,7 @@ class imager_source_finding(LOFARnodeTCP):
             img.write_catalog(
                 outfile=catalog_output_path + "_{0}".format(str(idx)),
                 catalog_type='gaul', clobber=True,
-                format="bbs")
+                format="bbs", force_output=True)
 
             self.logger.debug("Wrote list of sources to file at: {0})".format(
                                                         catalog_output_path))
@@ -149,8 +150,13 @@ class imager_source_finding(LOFARnodeTCP):
 
         # *********************************************************************
         # 6. Convert sourcelist to sourcedb
-        self._create_source_db(catalog_output_path, sourcedb_target_path,
-            working_directory, create_sourcdb_exec, False)
+        status = self._create_source_db(catalog_output_path,
+            sourcedb_target_path, working_directory, create_sourcdb_exec, False)
+
+        if status == 1:
+            # exit with return status 1
+            return 1
+
         # Assign the outputs
         self.outputs["catalog_output_path"] = catalog_output_path
         self.outputs["source_db"] = sourcedb_target_path

@@ -24,12 +24,13 @@ python_install(
   support/lofarexceptions.py
   support/lofaringredient.py
   support/lofarnode.py
+  support/loggingdecorators.py
   support/mac.py
   support/parset.py
   support/pipelinelogging.py
-  support/pipelinexml.py
   support/remotecommand.py
   support/stateful.py
   support/subprocessgroup.py
   support/utilities.py
+  support/xmllogging.py
   DESTINATION lofarpipe)

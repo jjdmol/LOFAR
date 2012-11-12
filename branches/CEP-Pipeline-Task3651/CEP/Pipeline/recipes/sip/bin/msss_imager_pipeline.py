@@ -9,13 +9,14 @@
 # -----------------------------------------------------------------------------
 import os
 import sys
+import copy
 
 from lofarpipe.support.control import control
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.group_data import load_data_map, store_data_map
-from lofarpipe.support.group_data import validate_data_maps
+from lofarpipe.support.data_map import DataMap, validate_data_maps
 from lofarpipe.support.utilities import patch_parset, get_parset
+from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 
 from lofar.parameterset import parameterset
 
@@ -93,9 +94,9 @@ class msss_imager_pipeline(control):
         """
         control.__init__(self)
         self.parset = parameterset()
-        self.input_data = []
-        self.target_data = []
-        self.output_data = []
+        self.input_data = DataMap()
+        self.target_data = DataMap()
+        self.output_data = DataMap()
         self.scratch_directory = None
         self.parset_feedback_file = None
         self.parset_dir = None
@@ -127,6 +128,7 @@ class msss_imager_pipeline(control):
             )
         return super(msss_imager_pipeline, self).go()
 
+    @mail_log_on_exception
     def pipeline_logic(self):
         """
         Define the individual tasks that comprise the current pipeline.
@@ -158,19 +160,20 @@ class msss_imager_pipeline(control):
         # (INPUT) Get the input from external sources and create pipeline types
         # Input measure ment sets
         input_mapfile = os.path.join(self.mapfile_dir, "uvdata.mapfile")
-        store_data_map(input_mapfile, self.input_data)
+        self.input_data.save(input_mapfile)
+        #storedata_map(input_mapfile, self.input_data)
         self.logger.debug(
             "Wrote input UV-data mapfile: {0}".format(input_mapfile))
 
-        # TODO: What is the difference between target and output???
-        # output datafiles
+        # Provides location for the scratch directory and concat.ms location
         target_mapfile = os.path.join(self.mapfile_dir, "target.mapfile")
-        store_data_map(target_mapfile, self.target_data)
+        self.target_data.save(target_mapfile)
         self.logger.debug(
             "Wrote target mapfile: {0}".format(target_mapfile))
+
         # images datafiles
         output_image_mapfile = os.path.join(self.mapfile_dir, "images.mapfile")
-        store_data_map(output_image_mapfile, self.output_data)
+        self.output_data.save(output_image_mapfile)
         self.logger.debug(
             "Wrote output sky-image mapfile: {0}".format(output_image_mapfile))
 
@@ -197,6 +200,9 @@ class msss_imager_pipeline(control):
             bbs_output = self._bbs(timeslice_map_path, parmdbs_path,
                         sourcedb_map_path, skip=False)
 
+            # TODO: Extra recipe: concat timeslices using pyrap.concatms 
+            # (see prepare)
+
             # *****************************************************************
             # (4) Get parameters awimager from the prepare_parset and inputs
             aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
@@ -215,8 +221,9 @@ class msss_imager_pipeline(control):
         # *********************************************************************
         # (6) Finalize:
         placed_data_image_map = self._finalize(aw_image_mapfile,
-            processed_ms_dir, raw_ms_per_image_map_path, found_sourcedb_path,
-            minbaseline, maxbaseline, target_mapfile, output_image_mapfile)
+            processed_ms_dir, raw_ms_per_image_map_path, sourcelist_map,
+            minbaseline, maxbaseline, target_mapfile, output_image_mapfile,
+            found_sourcedb_path)
 
         # *********************************************************************
         # (7) Get metadata
@@ -236,38 +243,48 @@ class msss_imager_pipeline(control):
         Get input- and output-data product specifications from the
         parset-file, and do some sanity checks.
         """
-        odp = self.parset.makeSubset(
+        dps = self.parset.makeSubset(
             self.parset.fullModuleName('DataProducts') + '.'
         )
-        self.input_data = [tuple(os.path.join(*x).split(':')) for x in zip(
-            odp.getStringVector('Input_Correlated.locations', []),
-            odp.getStringVector('Input_Correlated.filenames', []))
-        ]
+        # convert input dataproducts from parset value to DataMap
+        self.input_data = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
+                for location, filename, skip in zip(
+                    dps.getStringVector('Input_Correlated.locations'),
+                    dps.getStringVector('Input_Correlated.filenames'),
+                    dps.getBoolVector('Input_Correlated.skip'))
+        ])
         self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data))
-        self.output_data = [tuple(os.path.join(*x).split(':')) for x in zip(
-            odp.getStringVector('Output_SkyImage.locations', []),
-            odp.getStringVector('Output_SkyImage.filenames', []))
-        ]
+
+        self.output_data = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
+                for location, filename, skip in zip(
+                    dps.getStringVector('Output_SkyImage.locations'),
+                    dps.getStringVector('Output_SkyImage.filenames'),
+                    dps.getBoolVector('Output_SkyImage.skip'))
+        ])
         self.logger.debug("%d Output_SkyImage data products specified" %
                           len(self.output_data))
+
         # Sanity checks on input- and output data product specifications
-        if not(validate_data_maps(self.input_data) and
-               validate_data_maps(self.output_data)):
+        if not validate_data_maps(self.input_data, self.output_data):
             raise PipelineException(
                 "Validation of input/output data product specification failed!"
             )
+
         # Target data is basically scratch data, consisting of one concatenated
         # MS per image. It must be stored on the same host as the final image.
-        for host, path in self.output_data:
-            self.target_data.append(
-                (host, os.path.join(self.scratch_directory, 'concat.ms'))
-            )
+        self.target_data = copy.deepcopy(self.output_data)
 
+        for item in self.target_data:
+            item.file = os.path.join(self.scratch_directory, 'concat.ms')
+
+    @xml_node
     def _finalize(self, awimager_output_map, processed_ms_dir,
                   raw_ms_per_image_map, sourcelist_map, minbaseline,
                   maxbaseline, target_mapfile,
-                  output_image_mapfile, skip=False):
+                  output_image_mapfile, sourcedb_map, skip=False):
         """
         Perform the final step of the imager:
         Convert the output image to hdf5 and copy to output location
@@ -287,6 +304,7 @@ class msss_imager_pipeline(control):
                 target_mapfile, awimager_output_map=awimager_output_map,
                     raw_ms_per_image_map=raw_ms_per_image_map,
                     sourcelist_map=sourcelist_map,
+                    sourcedb_map=sourcedb_map,
                     minbaseline=minbaseline,
                     maxbaseline=maxbaseline,
                     target_mapfile=target_mapfile,
@@ -297,6 +315,7 @@ class msss_imager_pipeline(control):
 
         return placed_image_mapfile
 
+    @xml_node
     def _source_finding(self, image_map_path, major_cycle, skip=True):
         """
         Perform the sourcefinding step
@@ -341,6 +360,7 @@ class msss_imager_pipeline(control):
 
             return source_list_map, sourcedb_map_path
 
+    @xml_node
     def _bbs(self, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
               skip=False):
         """
@@ -367,38 +387,44 @@ class msss_imager_pipeline(control):
         # sourcelist location: This allows validation of maps in combination
 
         # get the original map data
-        sourcedb_map = load_data_map(sourcedb_map_path)
-        parmdbs_map = load_data_map(parmdbs_map_path)
+        sourcedb_map = DataMap.load(sourcedb_map_path)
+        parmdbs_map = DataMap.load(parmdbs_map_path)
         converted_sourcedb_map = []
-        # walk the two maps in pairs
-        for (source_db_pair, parmdbs) in zip(sourcedb_map, parmdbs_map):
-            (host_sourcedb, sourcedb_path) = source_db_pair
-            (host_parmdbs, parmdbs_entries) = parmdbs
-            # sanity check: host should be the same
-            if host_parmdbs != host_sourcedb:
-                self.logger.error("The input files for bbs do not contain "
-                                  "matching host names for each entry")
-                self.logger.error(repr(sourcedb_map))
-                self.logger.error(repr(parmdbs_map_path))
 
-            #add the entries but with skymap multiplied with len (parmds list)
-            converted_sourcedb_map.append((host_sourcedb,
-                                [sourcedb_path] * len(parmdbs_entries)))
-        #save the new mapfile
-        store_data_map(converted_sourcedb_map_path, converted_sourcedb_map)
-        self.logger.error("Wrote converted sourcedb datamap: {0}".format(
-                                      converted_sourcedb_map_path))
+        # sanity check for correcy output from previous recipes
+        if not validate_data_maps(sourcedb_map, parmdbs_map):
+            self.logger.error("The input files for bbs do not contain "
+                                "matching host names for each entry content:")
+            self.logger.error(repr(sourcedb_map))
+            self.logger.error(repr(parmdbs_map_path))
+            raise PipelineException("Invalid input data for imager_bbs recipe")
+
+#        # walk the two maps in pairs to validate that they contain some hosts
+#        converted_sourcedb_map = copy.deepcopy(sourcedb_map)
+#        for (source_db_pair, parmdbs) in zip(sourcedb_map, parmdbs_map):
+#            (host_sourcedb, sourcedb_path) = source_db_pair
+#            (host_parmdbs, parmdbs_entries) = parmdbs
+#            
+#            add the entries but with skymap multiplied with len (parmds list)
+#            converted_sourcedb_map.append((host_sourcedb,
+#                                [sourcedb_path] * len(parmdbs_entries)))
+#        #save the new mapfile
+#        converted_sourcedb_map.save(converted_sourcedb_map_path)
+#
+#        self.logger.error("Wrote converted sourcedb datamap: {0}".format(
+#                                      converted_sourcedb_map_path))
 
         self.run_task("imager_bbs",
                       timeslice_map_path,
                       parset=parset_path,
                       instrument_mapfile=parmdbs_map_path,
-                      sourcedb_mapfile=converted_sourcedb_map_path,
+                      sourcedb_mapfile=sourcedb_map,
                       mapfile=output_mapfile,
                       working_directory=self.scratch_directory)
 
         return output_mapfile
 
+    @xml_node
     def _aw_imager(self, prepare_phase_output, major_cycle, sky_path,
                    skip=False):
         """
@@ -443,6 +469,7 @@ class msss_imager_pipeline(control):
 
         return output_mapfile, max_baseline
 
+    @xml_node
     def _prepare_phase(self, input_ms_map_path, target_mapfile,
             skip=False):
         """
@@ -509,6 +536,7 @@ class msss_imager_pipeline(control):
         return output_mapfile, time_slices_mapfile, raw_ms_per_image_mapfile, \
             processed_ms_dir
 
+    @xml_node
     def _create_dbs(self, input_map_path, timeslice_map_path, source_list="",
                     skip_create_dbs=False):
         """
@@ -588,14 +616,16 @@ class msss_imager_pipeline(control):
 
         #display a debug log entrie with path and message
         if datamap != None:
-            store_data_map(mapfile_path, datamap)
+            datamap.save(mapfile_path)
+
             self.logger.debug(
             "Wrote mapfile <{0}>: {1}".format(mapfile_path, message))
         else:
             if not os.path.exists(mapfile_path):
-                store_data_map(mapfile_path, [])
+                DataMap().save(mapfile_path)
+
                 self.logger.debug(
-            "Touched mapfile <{0}>: {1}".format(mapfile_path, message))
+                    "Touched mapfile <{0}>: {1}".format(mapfile_path, message))
 
         return mapfile_path
 
