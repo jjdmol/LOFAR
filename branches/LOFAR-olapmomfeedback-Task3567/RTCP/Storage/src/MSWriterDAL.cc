@@ -129,10 +129,13 @@ namespace LOFAR
         subbands[sb] = allSubbands[subbandIndices[sb]];
 
       vector<string> stokesVars;
+      vector<string> stokesVars_LTA;
+
 
       switch (itsInfo.stokesType) {
         case STOKES_I:
           stokesVars.push_back("I");
+          stokesVars_LTA = stokesVars;
           break;
 
         case STOKES_IQUV:
@@ -140,6 +143,7 @@ namespace LOFAR
           stokesVars.push_back("Q");
           stokesVars.push_back("U");
           stokesVars.push_back("V");
+          stokesVars_LTA = stokesVars;
           break;
 
         case STOKES_XXYY:
@@ -147,6 +151,10 @@ namespace LOFAR
           stokesVars.push_back("Xi");
           stokesVars.push_back("Yr");
           stokesVars.push_back("Yi");
+          stokesVars_LTA.push_back("Xre");
+          stokesVars_LTA.push_back("Xim");
+          stokesVars_LTA.push_back("Yre");
+          stokesVars_LTA.push_back("Yim");
           break;
 
         case INVALID_STOKES:
@@ -472,6 +480,67 @@ namespace LOFAR
       stokesDS.nofChannels()    .value = vector<unsigned>(nrSubbands, itsInfo.nrChannels);
       stokesDS.nofSubbands()    .value = nrSubbands;
       stokesDS.nofSamples()     .value = dims[0];
+
+      // construct feedback for LTA -- Implements Output_BeamFormed_.comp
+
+      string type = "";
+      
+      if (itsInfo.coherent)
+        if (beamStationList.size() > 1)
+          type = "CoherentStokesBeam";
+        else
+          type = "FlysEyeBeam";
+      else
+        type = "IncoherentStokesBeam";
+
+      itsConfiguration.add("fileFormat",                "HDF5");
+      itsConfiguration.add("filename",                  LOFAR::basename(h5filename));
+      itsConfiguration.add("size",                      "0");
+      itsConfiguration.add("location",                  parset.getHostName(BEAM_FORMED_DATA, fileno) + ":" + LOFAR::dirname(h5filename));
+      itsConfiguration.add("percentageWritten",         "0");
+
+      itsConfiguration.add("nrOfCoherentStokesBeams",   "0");
+      itsConfiguration.add("nrOfIncoherentStokesBeams", "0");
+      itsConfiguration.add("nrOfFlysEyeBeams",          "0");
+      itsConfiguration.replace(formatString("nrOf%ss", type.c_str()), "1");
+
+      itsConfiguration.add("beamTypes",                 "[]");
+      
+      string prefix = formatString("%s[0].", type.c_str());
+
+      itsConfiguration.add(prefix + "SAP",               formatString("%u", itsInfo.sap));
+      itsConfiguration.add(prefix + "beamNumber",        formatString("%u", itsInfo.beam));
+      itsConfiguration.add(prefix + "dispersionMeasure", formatString("%lf", DM));
+      itsConfiguration.add(prefix + "nrSubbands",        formatString("%u", nrSubbands));
+
+      ostringstream centralFreqsStr;
+      writeVector(centralFreqsStr, beamCenterFrequencies);
+      itsConfiguration.add(prefix + "centralFrequencies", centralFreqsStr.str());
+
+      itsConfiguration.add(prefix + "channelWidth",      formatString("%lf", channelBandwidth));
+      itsConfiguration.add(prefix + "channelsPerSubband",formatString("%u", itsInfo.nrChannels));
+      itsConfiguration.add(prefix + "stokes",            formatString("[%s]", stokesVars_LTA[stokesNr].c_str()));
+
+      if (type == "CoherentStokesBeam") {
+        itsConfiguration.add(prefix + "Pointing.equinox",   "J2000");
+        itsConfiguration.add(prefix + "Pointing.coordType", "RA-DEC");
+        itsConfiguration.add(prefix + "Pointing.angle1",    formatString("%lf", beamDir[0] + pbeamDir[0]));
+        itsConfiguration.add(prefix + "Pointing.angle2",    formatString("%lf", beamDir[1] + pbeamDir[1]));
+
+        itsConfiguration.add(prefix + "Offset.equinox",     "J2000");
+        itsConfiguration.add(prefix + "Offset.coordType",   "RA-DEC");
+        itsConfiguration.add(prefix + "Offset.angle1",      formatString("%lf", pbeamDir[0]));
+        itsConfiguration.add(prefix + "Offset.angle2",      formatString("%lf", pbeamDir[1]));
+      }
+
+      if (type == "FlysEyeBeam") {
+        string olapname = beamStationList[0];
+        string stationName = olapname.substr(0,5);
+        string antennaFieldName = olapname.size() > 5 ? olapname.substr(5) : "";
+
+        itsConfiguration.add(prefix + "stationName",      stationName);
+        itsConfiguration.add(prefix + "antennaFieldName", antennaFieldName);
+      }
     }
 
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::~MSWriterDAL()
@@ -495,6 +564,7 @@ namespace LOFAR
 
       // make sure we skip |2 in the highest dimension
       itsFile.write(sdata->samples.origin(), bytesPerBlock);
+      itsConfiguration.replace("size", formatString("%ll", getDataSize()));
 
       itsNextSeqNr = seqNr + 1;
     }

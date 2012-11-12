@@ -40,6 +40,11 @@ size_t MSWriter::getDataSize()
   return 0;
 }
 
+ParameterSet MSWriter::configuration() const
+{
+  return itsConfiguration;
+}
+
 
 }
 }

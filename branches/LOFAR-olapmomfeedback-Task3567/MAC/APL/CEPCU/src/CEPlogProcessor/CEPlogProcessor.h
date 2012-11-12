@@ -50,31 +50,6 @@ namespace LOFAR {
 // \addtogroup CEPCU
 // @{
 
-// Provides feedback for correlated data to MoM/LTA
-class CEPFeedback
-{
-public:
-  CEPFeedback();
-
-  void write(const std::string &filename);
-
-  void addSubband(unsigned index);
-  void setSubbandKey(unsigned index, const std::string &key, const std::string &value);
-  void setBeamKey(unsigned index, const std::string &key, const std::string &value);
-
-private:
-  ParameterSet parset;
-  unsigned nrSubbands;
-  unsigned nrBeams;
-
-  std::string nrSubbandsKey() const;
-  std::string subbandPrefix(unsigned index) const;
-
-  std::string nrBeamsKey() const;
-  std::string beamPrefix(unsigned index) const;
-  std::string arrayBeamInfix(bool coherent, bool flyseye) const;
-};
-
 // The CEPlogProcessor class implements a small daemon that ...
 class CEPlogProcessor : public GCFTask
 {
@@ -224,7 +199,7 @@ private:
     BiMap<int, std::string> itsTempObsMapping;
 
     // feedback information to write to _feedback file
-    map<int, CEPFeedback> itsCEPFeedback;
+    map<int, ParameterSet> itsFeedback;
 
     // adds/removes known observations from the maps
     void registerObservation(int obsID, const std::string &tempObsName);

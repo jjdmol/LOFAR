@@ -26,6 +26,7 @@
 #define LOFAR_STORAGE_MSWRITER_H
 
 #include <Interface/StreamableData.h>
+#include <Common/ParameterSet.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -39,6 +40,11 @@ class MSWriter
     virtual void write(StreamableData *) = 0;
 
     virtual size_t getDataSize();
+
+    ParameterSet configuration() const;
+
+  protected:
+    ParameterSet itsConfiguration;
 };
 
 

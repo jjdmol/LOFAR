@@ -53,149 +53,6 @@ namespace LOFAR {
 // static pointer to this object for signal handler
 static CEPlogProcessor*     thisLogProcessor = 0;
 
-/*
- * Implement the feedback for MoM and the LTA.
- *
- * An ObservationXXXXX_feedback file is created containing the keys described
- * in Output_BeamFormed_.comp and Output_Correlated_.comp
- */
-
-CEPFeedback::CEPFeedback()
-:
-  nrSubbands(0),
-  nrBeams(0)
-{
-}
-
-
-void CEPFeedback::write(const std::string &filename)
-{
-  LOG_DEBUG_STR("Writing feedback file " << filename);
-
-  parset.replace(nrSubbandsKey(), formatString("%u", nrSubbands));
-  parset.replace(nrBeamsKey(),    formatString("%u", nrBeams));
-
-  parset.writeFile(filename);
-}
-
-
-void CEPFeedback::addSubband(unsigned index)
-{
-  setSubbandKey(index, "fileFormat",           "AIPS++/CASA");
-  setSubbandKey(index, "filename",             "");
-  setSubbandKey(index, "size",                 "0");
-  setSubbandKey(index, "location",             "");
-  setSubbandKey(index, "percentageWritten",    "0");
-  setSubbandKey(index, "startTime",            "");
-  setSubbandKey(index, "duration",             "");
-  setSubbandKey(index, "integrationInterval",  "");
-  setSubbandKey(index, "centralFrequency",     "");
-  setSubbandKey(index, "channelWidth",         "");
-  setSubbandKey(index, "channelsPerSubband",   "");
-  setSubbandKey(index, "subband",              "");
-  setSubbandKey(index, "stationSubband",       "");
-  setSubbandKey(index, "SAP",                  "");
-
-  ++nrSubbands;
-}
-
-
-void CEPFeedback::addBeam(unsigned index, bool coherent, bool flyseye)
-{
-  setBeamKey(index, "fileFormat",                "HDF5");
-  setBeamKey(index, "filename",                  "");
-  setBeamKey(index, "size",                      "0");
-  setBeamKey(index, "location",                  "");
-  setBeamKey(index, "nrOfCoherentStokesBeams",   coherent && !flyseye ? "1" : "0");
-  setBeamKey(index, "nrOfIncoherentStokesBeams", !coherent            ? "1" : "0");
-  setBeamKey(index, "nrOfFlysEyeBeams",          flyseye              ? "1" : "0");
-  setBeamKey(index, "beamTypes",                 "[]"); // TODO
-
-  //setBeamKey(index, "startTime",                 "");
-  //setBeamKey(index, "duration",                  "");
-
-  string infix = arrayBeamInfix(coherent, flyseye);
-
-  setBeamKey(index, infix + "SAP",                       "");
-  setBeamKey(index, infix + "beamNumber",                "");
-  setBeamKey(index, infix + "dispersionMeasure",         "");
-  setBeamKey(index, infix + "nrSubbands",                "");
-  setBeamKey(index, infix + "stationSubbands",           "[]");
-  setBeamKey(index, infix + "centralFrequencies",        "[]");
-  setBeamKey(index, infix + "channelWidth",              "");
-  setBeamKey(index, infix + "channelsPerSubband",        "");
-  setBeamKey(index, infix + "stokes",                    "[]");
-
-  if (coherent && !flyseye) {
-    setBeamKey(index, infix + "Pointing.equinox",          "J2000");
-    setBeamKey(index, infix + "Pointing.coordType",        "RA-DEC");
-    setBeamKey(index, infix + "Pointing.angle1",           "");
-    setBeamKey(index, infix + "Pointing.angle2",           "");
-
-    setBeamKey(index, infix + "Offset.equinox",          "J2000");
-    setBeamKey(index, infix + "Offset.coordType",        "RA-DEC");
-    setBeamKey(index, infix + "Offset.angle1",           "");
-    setBeamKey(index, infix + "Offset.angle2",           "");
-  }
-
-  if (flyseye) {
-    setBeamKey(index, infix + "stationName",             "");
-    setBeamKey(index, infix + "antennaFieldName",        "");
-  }
-
-  ++nrBeams;
-}
-
-void CEPFeedback::setSubbandKey(unsigned index, const std::string &key, const std::string &value)
-{
-  LOG_DEBUG_STR("setSubbandKey for index " << index << ": " << key << " = " << value);
-
-  parset.replace(subbandPrefix(index) + key, value);
-}
-
-void CEPFeedback::setBeamKey(unsigned index, const std::string &key, const std::string &value)
-{
-  LOG_DEBUG_STR("setBeamKey for index " << index << ": " << key << " = " << value);
-
-  parset.replace(beamPrefix(index) + key, value);
-}
-
-std::string CEPFeedback::nrSubbandsKey() const
-{
-  return "LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_";
-}
-
-std::string CEPFeedback::nrBeamsKey() const
-{
-  return "LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_BeamFormed_";
-}
-
-
-std::string CEPFeedback::subbandPrefix(unsigned index) const
-{
-  return formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", index);
-}
-
-
-std::string CEPFeedback::beamPrefix(unsigned index) const
-{
-  return formatString("LOFAR.ObsSW.Observation.DataProducts.Output_BeamFormed_[%u].", index);
-}
-
-
-std::string CEPFeedback::arrayBeamInfix(bool coherent, bool flyseye) const
-{
-  if (coherent && !flyseye)
-    return "CoherentStokesBeam[0].";
-
-  if (!coherent)
-    return "IncoherentStokesBeam[0].";
-
-  // if(coherent && flyseye)
-  return "FlysEyeBeam[0].";
-}
-
-
 //
 // CEPlogProcessor()
 //
@@ -562,7 +419,7 @@ void CEPlogProcessor::processParset( const std::string &observationID )
     Observation obs(&parset, false, itsNrPsets);
     string observationPrefix = parset.locateModule("Observation") + "Observation.";
 
-    CEPFeedback &feedback = itsCEPFeedback[obsID];
+    ParameterSet &feedback = itsFeedback[obsID];
 
     unsigned nrStreams = obs.streamsToStorage.size();
 
@@ -616,23 +473,21 @@ void CEPlogProcessor::processParset( const std::string &observationID )
     }
 
     // process feedback for correlated data
+    unsigned nrBeamFormedStreams = 0;
     unsigned nrCorrelatedStreams = 0;
 
     for (unsigned i = 0; i < nrStreams; i++ ) {
       Observation::StreamToStorage &s = obs.streamsToStorage[i];
 
-      if (s.dataProduct != "Correlated")
-        continue;
+      if (s.dataProduct == "Beamformed")
+        nrBeamFormedStreams++; 
 
-      unsigned index = nrCorrelatedStreams;
-
-      feedback.addSubband(index);
-      feedback.setSubbandKey(index, "filename",             s.filename);
-      feedback.setSubbandKey(index, "location",             s.destStorageNode + ":" + s.destDirectory);
-      feedback.setSubbandKey(index, "startTime",            parset.getString(observationPrefix + "startTime"));
-
-      nrCorrelatedStreams++; 
+      if (s.dataProduct == "Correlated")
+        nrCorrelatedStreams++; 
     }
+
+    feedback.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_BeamFormed_", formatString("%u", nrBeamFormedStreams));
+    feedback.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_", formatString("%u", nrCorrelatedStreams));
 }
 
 
@@ -642,7 +497,7 @@ void CEPlogProcessor::writeFeedback( int obsID )
     string filename(formatString("%s/Observation%d_feedback", 
                                  LOFAR_SHARE_LOCATION, obsID));
 
-    itsCEPFeedback[obsID].write(filename);
+    itsFeedback[obsID].write(filename);
 }
 
 
@@ -944,7 +799,7 @@ void CEPlogProcessor::registerObservation(int obsID, const std::string &tempObsN
 
   itsTempObsMapping.set(obsID, tempObsName);
 
-  itsCEPFeedback[obsID] = CEPFeedback();
+  itsFeedback[obsID] = ParameterSet();
 
   processParset(formatString("%d",obsID));
 }
@@ -958,7 +813,7 @@ void CEPlogProcessor::unregisterObservation(int obsID)
 
   writeFeedback(obsID);
 
-  itsCEPFeedback.erase(obsID);
+  itsFeedback.erase(obsID);
 
   itsTempObsMapping.erase(obsID);
 }
@@ -1212,46 +1067,22 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
         writer->setValue("process.logMsg", GCFPVString(logline.fullmsg), logline.timestamp, true);
       }
 
-      CEPFeedback *feedback = 0;
+      ParameterSet *feedback = 0;
       int streamNr = -1;
 
       if (logline.obsID >= 0 && observationRegistered(logline.obsID)) {
-        feedback = &itsCEPFeedback[logline.obsID];
+        feedback = &itsFeedback[logline.obsID];
         streamNr = _getParam(logline.target, "stream ");
       }
 
-      if ((result = strstr(logline.msg, "Characteristics: "))) {
-        int subband = 0, channels = 0, SAP = 0;
-        double centralfreq = 0.0, integration = 0.0, channelwidth = 0.0, duration = 0.0;
-        if (sscanf(result, "Characteristics: SAP %d, subband %d, centralfreq %lf MHz, duration %lf s, integration %lf s, channels %u, channelwidth %lf kHz", &SAP, &subband, &centralfreq, &duration, &integration, &channels, &channelwidth) == 7) {
+      if ((result = strstr(logline.msg, "LTA FEEDBACK: "))) {
+        vector<char> key(strlen(logline.msg)+1);
+        vector<char> value(strlen(logline.msg)+1);
 
-          if (feedback) {
-            feedback->setSubbandKey(streamNr, "subband",             formatString("%d", streamNr));
+        if (sscanf(result, "LTA FEEDBACK: %s = %[^\n]s", &key[0], &value[0]) == 2) {
+          feedback.replace(&key[0], &value[0]);
 
-            feedback->setSubbandKey(streamNr, "SAP",                 formatString("%d", SAP));
-            feedback->setSubbandKey(streamNr, "stationSubband",      formatString("%d", subband));
-            feedback->setSubbandKey(streamNr, "integrationInterval", formatString("%.4lf", integration));
-            feedback->setSubbandKey(streamNr, "centralFrequency",    formatString("%.4lf", centralfreq));
-            feedback->setSubbandKey(streamNr, "channelsPerSubband",  formatString("%d",    channels));
-            feedback->setSubbandKey(streamNr, "channelWidth",        formatString("%.4lf", channelwidth));
-            feedback->setSubbandKey(streamNr, "duration",            formatString("%.4lf", duration));
-          }
-
-          LOG_DEBUG_STR("Observation " << logline.obsID << " stream " << streamNr << " is subband " << subband << " at " << centralfreq << " MHz, with " << duration << " s duration, " << integration << " s integration and " << channels << " channels of " << channelwidth << " kHz");
-        }
-      }
-
-      if ((result = strstr(logline.msg, "Final characteristics: "))) {
-        int bytes = 0;
-        double duration = 0.0;
-        if (sscanf(result, "Final characteristics: duration %lf s, size %d bytes", &duration, &bytes) == 2) {
-
-          if (feedback) {
-            feedback->setSubbandKey(streamNr, "size",                formatString("%d", bytes));
-            feedback->setSubbandKey(streamNr, "duration",            formatString("%.4lf", duration));
-          }
-
-          LOG_DEBUG_STR("Observation " << logline.obsID << " stream " << streamNr << " has " << duration << " s duration and is " << bytes << " bytes");
+          LOG_DEBUG_STR("Observation " << logline.obsID << ": Added LTA feedback parameter " << &key[0] << " = " << &value[0]);
         }
       }
 

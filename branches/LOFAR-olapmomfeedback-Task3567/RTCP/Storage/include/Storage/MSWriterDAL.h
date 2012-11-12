@@ -28,7 +28,7 @@
 
 //# Includes
 #include <Common/LofarTypes.h>
-#include <Common/lofar_vector.h>
+#include <Common/ParameterSet.h>
 
 #include <Interface/Parset.h>
 #include <Interface/StreamableData.h>

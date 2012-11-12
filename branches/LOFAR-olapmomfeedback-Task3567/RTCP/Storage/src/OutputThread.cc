@@ -184,11 +184,11 @@ void OutputThread::createMS()
     // HDF5 writer requested
     switch (itsOutputType) {
       case CORRELATED_DATA:
-        itsWriter = new MSWriterCorrelated(path, itsParset);
+        itsWriter = new MSWriterCorrelated(path, itsParset, itsStreamNr);
         break;
 
       case BEAM_FORMED_DATA:
-        itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
+        itsWriter = new MSWriterDAL<float,3>(path, itsParset, itsStreamNr, itsIsBigEndian);
         break;
 
       default:
@@ -205,21 +205,6 @@ void OutputThread::createMS()
     case CORRELATED_DATA:
       itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
 
-      {
-        const vector<unsigned> subbands  = itsParset.subbandList();
-        const vector<unsigned> SAPs      = itsParset.subbandToSAPmapping();
-        const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
-
-        LOG_INFO_STR(itsLogPrefix << "Characteristics: "
-            << "SAP "            << SAPs[itsStreamNr]
-            << ", subband "      << subbands[itsStreamNr]
-            << ", centralfreq "  << setprecision(8) << frequencies[itsStreamNr]/1e6 << " MHz"
-            << ", duration "     << setprecision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
-            << ", integration "  << setprecision(8) << itsParset.IONintegrationTime() << " s"
-            << ", channels "     << itsParset.nrChannelsPerSubband() 
-            << ", channelwidth " << setprecision(8) << itsParset.channelWidth()/1e3 << " kHz"
-        );
-      }
       break;
     case BEAM_FORMED_DATA:
       itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
@@ -323,22 +308,25 @@ void OutputThread::cleanUp()
   LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
 
   // log some final characteristics for CEPlogProcessor for feedback to MoM/LTA
+  ParameterSet feedbackLTA = itsWriter->configuration();
+  string prefix = "UNKNOWN";
+
   switch (itsOutputType) {
     case CORRELATED_DATA:
-      {
-        LOG_INFO_STR(itsLogPrefix << "Final characteristics: "
-            << "duration "     << setprecision(8) << itsNextSequenceNumber * itsParset.IONintegrationTime() << " s"
-            << ", size "         << itsWriter->getDataSize() << " bytes"
-        );
-      }
+      prefix = formatString("Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr);
       break;
+
     case BEAM_FORMED_DATA:
-      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
+      prefix = formatString("Observation.DataProducts.Output_BeamFormed_[%u].", itsStreamNr);
       break;
 
     default:
       break;
   }
+
+  // For now, transport feedback parset through log lines
+  for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)
+    LOG_INFO_STR(itsLogPrefix << "LTA FEEDBACK: " << prefix << i->first << " = " << i->second);
 }
 
 
