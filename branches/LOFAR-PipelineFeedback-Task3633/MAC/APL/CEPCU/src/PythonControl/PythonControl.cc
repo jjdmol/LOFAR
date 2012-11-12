@@ -743,8 +743,13 @@ void PythonControl::_passMetadatToOTDB()
 	ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
 	string  myPrefix  (thePS->locateModule("PythonControl")+"PythonControl.");
 	string	pythonHost(thePS->getString(myPrefix+"pythonHost","@pythonHost@"));
-	if (copyFromRemote(realHostname(pythonHost), itsFeedbackFile, itsFeedbackFile) != 0) {
-		LOG_ERROR_STR("Failed to copy metadatafile " << itsFeedbackFile << " from host " << realHostname(pythonHost));
+	try {
+		if (copyFromRemote(realHostname(pythonHost), itsFeedbackFile, itsFeedbackFile) != 0) {
+			LOG_ERROR_STR("Failed to copy metadatafile " << itsFeedbackFile << " from host " << realHostname(pythonHost));
+			return;
+		}
+	}
+	catch (...) { 
 		return;
 	}
 
