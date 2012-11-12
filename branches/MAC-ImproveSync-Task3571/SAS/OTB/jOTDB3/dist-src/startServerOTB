@@ -1,13 +1,24 @@
 #!/bin/sh
 
+# Check if portnumber is added to commandline; if yes, use it.
+if [ -z $1 ]; then
+  port1=12500
+  port2=12501
+else
+  port1=$1
+  let port2=port1+1
+fi
+echo "Using port $port1 and $port2 for this server"
+
 export OTB_DIR=/opt/sas/otb/server
 export JAVA_HOME=/usr/java/jdk1.7.0_02
 
 echo
 echo --- Starting OTB Server ---
 
+jotdb3file=`ls $OTB_DIR/jOTDB3*.jar | grep -v javadoc | grep -v sources`
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OTB_DIR
-export OTB_APP=$OTB_DIR/`basename $OTB_DIR/jOTDB3*.jar`
+export OTB_APP=$OTB_DIR/`basename $jotdb3file`
 export CLASSPATH=$OTB_APP
 
 for JAR_DEPENDENCY in $OTB_DIR/lib/*.jar
@@ -18,11 +29,15 @@ done
 
 echo Starting up ...
 
+curdate=`date +%Y%m%dT%H%M%S`
+logfile="/localhome/log/OTBServer_${port1}_${curdate}.log"
+echo "Logging serverlogs to file $logfile"
 serverpid=0
-ps -ef | grep -v grep | grep java | grep 12500 2>&1 1>/dev/null
+ps -ef | grep -v grep | grep java | grep $port1 2>&1 1>/dev/null
 if [ $? -ne 0 ]; then
-    $JAVA_HOME/bin/java -cp $CLASSPATH nl.astron.lofar.sas.otb.jotdb3.jOTDBserver -s sas001 -d sas001 -p 12500 -o 12501 &
+    $JAVA_HOME/bin/java -cp $CLASSPATH nl.astron.lofar.sas.otb.jotdb3.jOTDBserver -s sas001 -d sas001 -p $port1 -o $port2 2>&1 1>&$logfile &
     serverpid=$!
+    echo Started server with PID: $serverpid
+else
+    echo "Server for port $port1 already running!"
 fi
-
-echo OTB Server stopped.

@@ -136,6 +136,7 @@ jobject convertOTDBtree(JNIEnv *env, OTDBtree aTree) {
   jfieldID fid_jOTDBtree_classification = env->GetFieldID (class_jOTDBtree, "classification", "S");
   jfieldID fid_jOTDBtree_creator = env->GetFieldID (class_jOTDBtree, "creator", "Ljava/lang/String;");
   jfieldID fid_jOTDBtree_creationDate = env->GetFieldID (class_jOTDBtree, "creationDate", "Ljava/lang/String;");
+  jfieldID fid_jOTDBtree_modificationDate = env->GetFieldID (class_jOTDBtree, "modificationDate", "Ljava/lang/String;");
   jfieldID fid_jOTDBtree_type = env->GetFieldID (class_jOTDBtree, "type", "S");
   jfieldID fid_jOTDBtree_state = env->GetFieldID (class_jOTDBtree, "state", "S");
   jfieldID fid_jOTDBtree_originalTree = env->GetFieldID (class_jOTDBtree, "originalTree", "I");
@@ -152,6 +153,7 @@ jobject convertOTDBtree(JNIEnv *env, OTDBtree aTree) {
   env->SetShortField (jTree, fid_jOTDBtree_classification, aTree.classification);
   env->SetObjectField (jTree, fid_jOTDBtree_creator, env->NewStringUTF (aTree.creator.c_str ()));
   env->SetObjectField (jTree, fid_jOTDBtree_creationDate, env->NewStringUTF (to_iso_extended_string(aTree.creationDate).c_str ()));
+  env->SetObjectField (jTree, fid_jOTDBtree_modificationDate, env->NewStringUTF (to_iso_extended_string(aTree.modificationDate).c_str ()));
   env->SetShortField (jTree, fid_jOTDBtree_type, aTree.type);
   env->SetShortField (jTree, fid_jOTDBtree_state, aTree.state);
   env->SetIntField (jTree, fid_jOTDBtree_originalTree, aTree.originalTree);
