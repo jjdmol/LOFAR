@@ -773,14 +773,14 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 }
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getModifiedTrees__Ljava_lang_String_2S
-  (JNIEnv *, jobject jOTDBconnection, jstring after, jshort treeType) {
+  (JNIEnv *env, jobject jOTDBconnection, jstring after, jshort treeType) {
   jobject treeVector;
 
   const char* ad = env->GetStringUTFChars (after, 0);
   try {
 
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
-                       ->getModificationDate(time_from_string(ad),treeType);
+                       ->getModifiedTrees(time_from_string(ad),treeType);
     vector<OTDBtree>::iterator treeIterator;
 
 
@@ -796,7 +796,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
     env->ReleaseStringUTFChars(after, ad);
 
   } catch (exception &ex) {
-    cout << "Exception during OTDBconnection::getModificationDate(" << after << "," << treeType << ") "<< ex.what() << endl;
+    cout << "Exception during OTDBconnection::getModifiedTrees(" << after << "," << treeType << ") "<< ex.what() << endl;
     env->ReleaseStringUTFChars(after, ad);
 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
@@ -805,14 +805,14 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
 }
 
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_getModifiedTrees__Ljava_lang_String_2
-  (JNIEnv *, jobject jOTDBconnection, jstring after) {
+  (JNIEnv *env, jobject jOTDBconnection, jstring after) {
   jobject treeVector;
 
   const char* ad = env->GetStringUTFChars (after, 0);
   try {
 
     vector<OTDBtree> trees = ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))
-                       ->getModificationDate(time_from_string(ad));
+                       ->getModifiedTrees(time_from_string(ad));
     vector<OTDBtree>::iterator treeIterator;
 
 
@@ -828,8 +828,6 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_ge
     env->ReleaseStringUTFChars(after, ad);
 
   } catch (exception &ex) {
-    cout << "Exception during OTDBconnection::getModificationDate(" << after << ") "<< ex.what() << endl;
-    env->ReleaseStringUTFChars(after, ad);
 
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }

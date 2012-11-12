@@ -537,6 +537,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
         classificationInput.setSelectedItem(itsClassification);
         creatorInput.setText(itsTree.creator);
         creationDateInput.setText(itsTree.creationDate.replace("T", " "));
+        modificationDateInput.setText(itsTree.modificationDate.replace("T", " "));
         typeInput.setText((String)OtdbRmi.getTreeType().get(itsTree.type));
         stateInput.setSelectedItem(itsTreeState);
         originalTreeIDInput.setText(String.valueOf(itsTree.originalTree));
@@ -762,6 +763,8 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
         strategyInput = new javax.swing.JTextField();
         descriptionInput = new javax.swing.JTextArea();
         processSubTypeInput = new javax.swing.JTextField();
+        jLabel12 = new javax.swing.JLabel();
+        modificationDateInput = new javax.swing.JTextField();
 
         jTextField1.setText("jTextField1");
 
@@ -851,7 +854,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
 
         creationDateInput.setToolTipText("Date this entry was created");
         creationDateInput.setEnabled(false);
-        getContentPane().add(creationDateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 290, 440, -1));
+        getContentPane().add(creationDateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 290, 170, -1));
 
         jLabel11.setText("Type:");
         getContentPane().add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 320, -1, 20));
@@ -1017,6 +1020,13 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
         descriptionInput.setToolTipText("Set Description for this tree");
         getContentPane().add(descriptionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 580, 550, 60));
         getContentPane().add(processSubTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 170, 450, -1));
+
+        jLabel12.setText("ModificationDate:");
+        getContentPane().add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 290, -1, 20));
+
+        modificationDateInput.setToolTipText("Date this entry was modified last");
+        modificationDateInput.setEnabled(false);
+        getContentPane().add(modificationDateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(430, 290, 170, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -1285,12 +1295,14 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField jTextField1;
+    private javax.swing.JTextField modificationDateInput;
     private javax.swing.JTextField momIDInput;
     private javax.swing.JLabel momIDLabel;
     private javax.swing.JTextField nameInput;
