@@ -97,14 +97,22 @@ namespace LOFAR
 	if (cond) THROW(::LOFAR::AssertError, "Failtest: " #cond); \
 	} while(0)
 
+// If the condition of failwhen is met, a logrequest is sent to the logger
+// <tt>\<module\>.EXCEPTION</tt> and an AssertError exception is thrown.
+#define FAILWHENSTR(cond,stream) do { \
+	if (cond) THROW(::LOFAR::AssertError, "Failtest: " #cond "; " << stream); \
+	} while(0)
+
 #ifdef ENABLE_DBGASSERT
 #define DBGASSERT(cond)				ASSERT(cond)
 #define DBGASSERTSTR(cond,stream)	ASSERTSTR(cond,stream)
 #define DBGFAILWHEN(cond)			FAILWHEN(cond)
+#define DBGFAILWHENSTR(cond,stream)	ASSERTSTR(cond,stream)
 #else
 #define DBGASSERT(cond)
 #define DBGASSERTSTR(cond,stream)
 #define DBGFAILWHEN(cond)
+#define DBGFAILWHENSTR(cond,stream)
 #endif
 
 // @}
