@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/Expr/Rotation.h>
-#include <casa/BasicSL/Constants.h>
 
 using namespace casa;
 
@@ -31,12 +30,12 @@ namespace LOFAR
 namespace BBS
 {
 
-Rotation::Rotation(const Expr<Scalar>::ConstPtr &rm)
-    :   BasicUnaryExpr<Scalar, JonesMatrix>(rm)
+Rotation::Rotation(const Expr<Scalar>::ConstPtr &chi)
+    :   BasicUnaryExpr<Scalar, JonesMatrix>(chi)
 {
 }
 
-const JonesMatrix::View Rotation::evaluateImpl(const Grid &grid,
+const JonesMatrix::View Rotation::evaluateImpl(const Grid&,
     const Scalar::View &chi) const
 {
     Matrix cosChi = cos(chi());

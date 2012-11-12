@@ -138,10 +138,11 @@ Expr<JonesMatrix>::Ptr
 compose(const Expr<JonesMatrix>::Ptr &lhs,
     const Expr<JonesMatrix>::Ptr &rhs);
 
-// Right multiply \p lhs by \p rhs. Return \p rhs if \p lhs is uninitialized.
+// Right multiply \p lhs by \p rhs. Return \p rhs as a diagonal Jones matrix
+// if \p lhs is uninitialized.
 Expr<JonesMatrix>::Ptr
-compose(const Expr<JonesMatrix>::Ptr &matrix,
-    const Expr<Scalar>::Ptr &scalar);
+compose(const Expr<JonesMatrix>::Ptr &lhs,
+    const Expr<Scalar>::Ptr &rhs);
 
 // Construct \p lhs * \p coherence * (\p rhs)^H. Return \p coherence if
 // either \p lhs or \p rhs are uninitialized.
