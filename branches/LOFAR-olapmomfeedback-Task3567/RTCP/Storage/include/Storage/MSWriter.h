@@ -35,6 +35,7 @@ namespace RTCP {
 class MSWriter
 {
   public:
+    MSWriter();
     virtual	 ~MSWriter();
 
     virtual void write(StreamableData *) = 0;
@@ -43,7 +44,11 @@ class MSWriter
 
     ParameterSet configuration() const;
 
+    unsigned percentageWritten() const;
+
   protected:
+    size_t itsNrBlocksWritten;
+    size_t itsNrExpectedBlocks;
     ParameterSet itsConfiguration;
 };
 

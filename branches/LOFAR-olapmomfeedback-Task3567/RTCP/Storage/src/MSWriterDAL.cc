@@ -97,6 +97,7 @@ namespace LOFAR
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::MSWriterDAL (const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian)
     :
       MSWriterFile(forceextension(string(filename),".raw")),
+      itsParset(parset),
       itsTransposeLogic(parset.transposeLogic()),
       itsInfo(itsTransposeLogic.streamInfo[fileno]),
       itsNrChannels(itsInfo.nrChannels * itsInfo.subbands.size()),
@@ -104,6 +105,8 @@ namespace LOFAR
       itsNextSeqNr(0),
       itsBlockSize(itsNrSamples * itsNrChannels)
     {
+      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
+
       string h5filename = forceextension(string(filename),".h5");
       string rawfilename = forceextension(string(filename),".raw");
 
@@ -486,7 +489,7 @@ namespace LOFAR
       string type = "";
       
       if (itsInfo.coherent)
-        if (beamStationList.size() > 1)
+        if (beamStationList.size() != 1)
           type = "CoherentStokesBeam";
         else
           type = "FlysEyeBeam";
@@ -502,11 +505,11 @@ namespace LOFAR
       itsConfiguration.add("nrOfCoherentStokesBeams",   "0");
       itsConfiguration.add("nrOfIncoherentStokesBeams", "0");
       itsConfiguration.add("nrOfFlysEyeBeams",          "0");
-      itsConfiguration.replace(formatString("nrOf%ss", type.c_str()), "1");
+      itsConfiguration.replace(str(format("nrOf%ss") % type), "1");
 
       itsConfiguration.add("beamTypes",                 "[]");
       
-      string prefix = formatString("%s[0].", type.c_str());
+      string prefix = str(format("%s[0].") % type);
 
       itsConfiguration.add(prefix + "SAP",               formatString("%u", itsInfo.sap));
       itsConfiguration.add(prefix + "beamNumber",        formatString("%u", itsInfo.beam));
@@ -514,7 +517,14 @@ namespace LOFAR
       itsConfiguration.add(prefix + "nrSubbands",        formatString("%u", nrSubbands));
 
       ostringstream centralFreqsStr;
-      writeVector(centralFreqsStr, beamCenterFrequencies);
+      centralFreqsStr << "[";
+      for (size_t i = 0; i < beamCenterFrequencies.size(); ++i) {
+        if( i > 0 )
+          centralFreqsStr << ", ";
+        centralFreqsStr << str(format("%.4lf") % beamCenterFrequencies[i]);
+      }
+      centralFreqsStr << "]";
+
       itsConfiguration.add(prefix + "centralFrequencies", centralFreqsStr.str());
 
       itsConfiguration.add(prefix + "channelWidth",      formatString("%lf", channelBandwidth));
@@ -564,9 +574,12 @@ namespace LOFAR
 
       // make sure we skip |2 in the highest dimension
       itsFile.write(sdata->samples.origin(), bytesPerBlock);
-      itsConfiguration.replace("size", formatString("%ll", getDataSize()));
 
       itsNextSeqNr = seqNr + 1;
+      itsNrBlocksWritten++;
+
+      itsConfiguration.replace("size",              str(format("%ll") % getDataSize()));
+      itsConfiguration.replace("percentageWritten", str(format("%u")  % percentageWritten()));
     }
 
     // specialisation for FinalBeamFormedData

@@ -49,6 +49,7 @@ namespace LOFAR
       ~MSWriterDAL();
       virtual void write(StreamableData *data);
     private:
+      const Parset &itsParset;
       const Transpose2 &itsTransposeLogic;
       const StreamInfo &itsInfo;
       const unsigned itsNrChannels;

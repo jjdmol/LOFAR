@@ -97,26 +97,6 @@ static void recursiveMakeDir(const string &dirname, const string &logPrefix)
   }
 }
 
-/* Returns a percentage based on a current and a target value,
- * with the following rounding:
- *
- * 0     -> current == 0
- * 1..99 -> 0 < current < target
- * 100   -> current == target
- */
-
-static unsigned roundedPercentage(unsigned current, unsigned target)
-{
-  if (current == target)
-    return 100;
-
-  if (current == 0)
-    return 0;
-
-  return std::min(std::max(100 * current / target, 1u), 99u);
-}
-
-
 OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory)
 :
   itsParset(parset),
@@ -130,7 +110,6 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),
   itsBlocksDropped(0),
-  itsNrExpectedBlocks(0),
   itsNextSequenceNumber(0)
 {
 }
@@ -198,20 +177,6 @@ void OutputThread::createMS()
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
     itsWriter = new MSWriterNull;
-  }
-
-  // log some core characteristics for CEPlogProcessor for feedback to MoM/LTA
-  switch (itsOutputType) {
-    case CORRELATED_DATA:
-      itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
-
-      break;
-    case BEAM_FORMED_DATA:
-      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
-      break;
-
-    default:
-      break;
   }
 }
 
@@ -284,16 +249,14 @@ void OutputThread::doWork()
 
     time_t now = time(0L);
 
-    unsigned percent_written = roundedPercentage(itsBlocksWritten, itsNrExpectedBlocks);
-
     if (now > prevlog + 5) {
       // print info every 5 seconds
-      LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped");
+      LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
 
       prevlog = now;
     } else {
       // print debug info for the other blocks
-      LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped");
+      LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
     }
   }
 }
@@ -303,9 +266,8 @@ void OutputThread::cleanUp()
   flushSequenceNumbers();
 
   float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
-  unsigned percent_written = roundedPercentage(itsBlocksWritten, itsNrExpectedBlocks);
 
-  LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+  LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
 
   // log some final characteristics for CEPlogProcessor for feedback to MoM/LTA
   ParameterSet feedbackLTA = itsWriter->configuration();

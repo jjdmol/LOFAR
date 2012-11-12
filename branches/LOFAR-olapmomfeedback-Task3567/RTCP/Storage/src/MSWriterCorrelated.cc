@@ -38,6 +38,8 @@ MSWriterCorrelated::MSWriterCorrelated (const string &msName, const Parset &pars
  MSWriterFile(msName),
  itsParset(parset)
 {
+  itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
+
   std::vector<std::string> stationNames = parset.mergedStationNames();
   std::vector<std::string> baselineNames(parset.nrBaselines());
   unsigned nrStations = stationNames.size();
@@ -87,8 +89,11 @@ void MSWriterCorrelated::write(StreamableData *data)
 
   MSWriterFile::write(data);
 
+  itsNrBlocksWritten++;
+
   itsConfiguration.replace("size",     str(format("%ll") % getDataSize()));
   itsConfiguration.replace("duration", str(format("%lf") % ((data->sequenceNumber() + 1) * itsParset.IONintegrationTime())));
+  itsConfiguration.replace("percentageWritten", str(format("%u") % percentageWritten()));
 }
 
 
