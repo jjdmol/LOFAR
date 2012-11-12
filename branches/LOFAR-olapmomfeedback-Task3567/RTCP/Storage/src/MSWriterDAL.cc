@@ -511,10 +511,10 @@ namespace LOFAR
       
       string prefix = str(format("%s[0].") % type);
 
-      itsConfiguration.add(prefix + "SAP",               formatString("%u", itsInfo.sap));
-      itsConfiguration.add(prefix + "beamNumber",        formatString("%u", itsInfo.beam));
-      itsConfiguration.add(prefix + "dispersionMeasure", formatString("%lf", DM));
-      itsConfiguration.add(prefix + "nrSubbands",        formatString("%u", nrSubbands));
+      itsConfiguration.add(prefix + "SAP",               str(format("%u") % itsInfo.sap));
+      itsConfiguration.add(prefix + "beamNumber",        str(format("%u") % itsInfo.beam));
+      itsConfiguration.add(prefix + "dispersionMeasure", str(format("%f") % DM));
+      itsConfiguration.add(prefix + "nrSubbands",        str(format("%u") % nrSubbands));
 
       ostringstream centralFreqsStr;
       centralFreqsStr << "[";
@@ -527,20 +527,20 @@ namespace LOFAR
 
       itsConfiguration.add(prefix + "centralFrequencies", centralFreqsStr.str());
 
-      itsConfiguration.add(prefix + "channelWidth",      formatString("%lf", channelBandwidth));
-      itsConfiguration.add(prefix + "channelsPerSubband",formatString("%u", itsInfo.nrChannels));
-      itsConfiguration.add(prefix + "stokes",            formatString("[%s]", stokesVars_LTA[stokesNr].c_str()));
+      itsConfiguration.add(prefix + "channelWidth",      str(format("%f") % channelBandwidth));
+      itsConfiguration.add(prefix + "channelsPerSubband",str(format("%u") % itsInfo.nrChannels));
+      itsConfiguration.add(prefix + "stokes",            str(format("[%s]") % stokesVars_LTA[stokesNr]));
 
       if (type == "CoherentStokesBeam") {
         itsConfiguration.add(prefix + "Pointing.equinox",   "J2000");
         itsConfiguration.add(prefix + "Pointing.coordType", "RA-DEC");
-        itsConfiguration.add(prefix + "Pointing.angle1",    formatString("%lf", beamDir[0] + pbeamDir[0]));
-        itsConfiguration.add(prefix + "Pointing.angle2",    formatString("%lf", beamDir[1] + pbeamDir[1]));
+        itsConfiguration.add(prefix + "Pointing.angle1",    str(format("%f") % (beamDir[0] + pbeamDir[0])));
+        itsConfiguration.add(prefix + "Pointing.angle2",    str(format("%f") % (beamDir[1] + pbeamDir[1])));
 
         itsConfiguration.add(prefix + "Offset.equinox",     "J2000");
         itsConfiguration.add(prefix + "Offset.coordType",   "RA-DEC");
-        itsConfiguration.add(prefix + "Offset.angle1",      formatString("%lf", pbeamDir[0]));
-        itsConfiguration.add(prefix + "Offset.angle2",      formatString("%lf", pbeamDir[1]));
+        itsConfiguration.add(prefix + "Offset.angle1",      str(format("%f") % pbeamDir[0]));
+        itsConfiguration.add(prefix + "Offset.angle2",      str(format("%f") % pbeamDir[1]));
       }
 
       if (type == "FlysEyeBeam") {
@@ -578,8 +578,8 @@ namespace LOFAR
       itsNextSeqNr = seqNr + 1;
       itsNrBlocksWritten++;
 
-      itsConfiguration.replace("size",              str(format("%ll") % getDataSize()));
-      itsConfiguration.replace("percentageWritten", str(format("%u")  % percentageWritten()));
+      itsConfiguration.replace("size",              str(format("%u") % getDataSize()));
+      itsConfiguration.replace("percentageWritten", str(format("%u") % percentageWritten()));
     }
 
     // specialisation for FinalBeamFormedData

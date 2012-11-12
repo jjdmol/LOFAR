@@ -65,9 +65,9 @@ MSWriterCorrelated::MSWriterCorrelated (const string &msName, const Parset &pars
   itsConfiguration.add("percentageWritten",    "0");
   itsConfiguration.add("startTime",            parset.getString("Observation.startTime"));
   itsConfiguration.add("duration",             "0");
-  itsConfiguration.add("integrationInterval",  str(format("%lf") % parset.IONintegrationTime()));
-  itsConfiguration.add("centralFrequency",     str(format("%lf") % (frequencies[streamNr]/1e6)));
-  itsConfiguration.add("channelWidth",         str(format("%lf") % (parset.channelWidth()/1e3)));
+  itsConfiguration.add("integrationInterval",  str(format("%f") % parset.IONintegrationTime()));
+  itsConfiguration.add("centralFrequency",     str(format("%f") % (frequencies[streamNr]/1e6)));
+  itsConfiguration.add("channelWidth",         str(format("%f") % (parset.channelWidth()/1e3)));
   itsConfiguration.add("channelsPerSubband",   str(format("%u") % parset.nrChannelsPerSubband()));
   itsConfiguration.add("stationSubband",       str(format("%u") % subbands[streamNr]));
   itsConfiguration.add("subband",              str(format("%u") % streamNr));
@@ -91,8 +91,8 @@ void MSWriterCorrelated::write(StreamableData *data)
 
   itsNrBlocksWritten++;
 
-  itsConfiguration.replace("size",     str(format("%ll") % getDataSize()));
-  itsConfiguration.replace("duration", str(format("%lf") % ((data->sequenceNumber() + 1) * itsParset.IONintegrationTime())));
+  itsConfiguration.replace("size",     str(format("%u") % getDataSize()));
+  itsConfiguration.replace("duration", str(format("%f") % ((data->sequenceNumber() + 1) * itsParset.IONintegrationTime())));
   itsConfiguration.replace("percentageWritten", str(format("%u") % percentageWritten()));
 }
 
