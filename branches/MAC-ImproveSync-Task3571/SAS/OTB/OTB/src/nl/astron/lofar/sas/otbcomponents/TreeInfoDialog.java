@@ -793,7 +793,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                 cancelButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 650, 100, -1));
+        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 650, 120, -1));
 
         saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         saveButton.setText("Apply");
@@ -804,7 +804,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                 saveButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 650, 90, -1));
+        getContentPane().add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 650, 100, -1));
 
         jLabel1.setText("ID:");
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, 20));
@@ -974,7 +974,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                 showCampaignButtonMouseClicked(evt);
             }
         });
-        getContentPane().add(showCampaignButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 410, 90, -1));
+        getContentPane().add(showCampaignButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 410, 120, -1));
 
         nameLabel.setText("Name:");
         getContentPane().add(nameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 50, -1, 20));
@@ -1006,7 +1006,7 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
         processTypeInput.setToolTipText("processType");
         getContentPane().add(processTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 140, 130, -1));
 
-        processSubTypeLabel.setText("ProcessSubType:");
+        processSubTypeLabel.setText("  \"   SubType:");
         getContentPane().add(processSubTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, -1, 20));
 
         strategyLabel.setText("Strategy:");
