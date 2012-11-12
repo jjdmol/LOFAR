@@ -14,5 +14,6 @@ lofar_find_package(Pyrap REQUIRED)
 # Needed for casarest
 add_definitions(-DCASA_STANDALONE)
 
+add_subdirectory(include/casaimwrap)
 add_subdirectory(src)
 #add_subdirectory(test)

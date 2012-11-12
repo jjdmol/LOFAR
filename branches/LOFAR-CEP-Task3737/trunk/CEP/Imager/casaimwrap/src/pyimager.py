@@ -103,6 +103,7 @@ class CleanOptions:
         return self._cycleMaxPsfFraction
 
 def show_image(title, data):
+    print "title:", title, "max:", numpy.max(data), "min:", numpy.min(data), "mean:", numpy.mean(data)
     fig, axes = pylab.subplots(nrows=2, ncols=2) #, sharex=True, sharey=True, squeeze=True)
     fig.suptitle(title, fontsize=14)
 
@@ -315,6 +316,11 @@ def mfclean(args):
     fwhm = wl / D
     print "full width half maximum: %.2f deg" % (fwhm * 180.0 / numpy.pi)
 
+    # TODO: Cyril mentioned above FOV estimation is too conservative. Need to
+    # check this and find a better estimate if necessary. For now, will just
+    # multiply estimated FOV by 2.0.
+#    fwhm *= 2.0
+
 #    fov = 2.0 * fwhm
 
 #    lm_max = numpy.sin(fov / 2.0)
@@ -374,6 +380,71 @@ def mfclean(args):
     memento = lofar.casaimwrap.Memento()
     lofar.casaimwrap.init(memento, args.ms, csys.dict(), image_shape, parms)
 
+    ms = pyrap.tables.table(args.ms)
+    ms = ms.query("ANTENNA1 != ANTENNA2")
+    first = True
+    for chunk in ms.iter(["ARRAY_ID", "FIELD_ID", "DATA_DESC_ID", "TIME"]):
+        x = {}
+        x["antenna1"] = chunk.getcol("ANTENNA1")
+        x["antenna2"] = chunk.getcol("ANTENNA2")
+        x["uvw"] = chunk.getcol("UVW")
+        x["time"] = chunk.getcol("TIME")
+        x["centroid"] = chunk.getcol("TIME_CENTROID")
+        x["flag_row"] = chunk.getcol("FLAG_ROW")
+        x["weight"] = chunk.getcol("WEIGHT")
+        x["flag"] = chunk.getcol("FLAG")
+        x["data"] = chunk.getcol("DATA")
+#        x["data"] = chunk.getcol("CORRECTED_DATA")
+
+        print "data:", numpy.min(x["data"]), numpy.max(x["data"])
+        if first:
+            lofar.casaimwrap.begin_grid(memento, False, x)
+            first = False
+        else:
+            lofar.casaimwrap.grid(memento, x)
+
+#    x = {}
+#    x["antenna1"] = ms.getcol("ANTENNA1")
+#    x["antenna2"] = ms.getcol("ANTENNA2")
+#    x["uvw"] = ms.getcol("UVW")
+#    x["time"] = ms.getcol("TIME")
+#    x["centroid"] = ms.getcol("TIME_CENTROID")
+#    x["flag_row"] = ms.getcol("FLAG_ROW")
+#    x["weight"] = ms.getcol("WEIGHT")
+#    x["flag"] = ms.getcol("FLAG")
+#    x["data"] = ms.getcol("CORRECTED_DATA")
+
+#    lofar.casaimwrap.begin_grid(memento, False, x)
+    result = lofar.casaimwrap.end_grid(memento, True)
+    gridImage = result["image"]
+    gridWeight = result["weight"]
+
+    print gridImage.shape
+    print gridWeight.shape
+    show_image("image", gridImage[0,:,:,:]);
+    show_image("weight", gridWeight[0,:,:,:]);
+    show_image("image normalized", gridImage[0,:,:,:] / gridWeight[0,:,:,:]);
+
+#    y = {}
+#    y["antenna1"] = ms.getcol("ANTENNA1")
+#    y["antenna2"] = ms.getcol("ANTENNA2")
+#    y["uvw"] = ms.getcol("UVW")
+#    y["time"] = ms.getcol("TIME")
+#    y["centroid"] = ms.getcol("TIME_CENTROID")
+#    y["flag_row"] = ms.getcol("FLAG_ROW")
+#    y["weight"] = ms.getcol("WEIGHT")
+#    y["flag"] = ms.getcol("FLAG")
+
+#    result = lofar.casaimwrap.begin_degrid(memento, gridImage[0,:,:,:] / gridWeight[0,:,:,:], y)
+#    degrid_data = result["data"]
+#    print degrid_data.shape
+
+#    tmp_data = ms.getcol("CORRECTED_DATA")
+#    delta = numpy.abs(degrid_data[:1000, 0, 0] / tmp_data[:1000, 0, 0])
+#    print "delta: max:", numpy.max(delta), "min:", numpy.min(delta), "mean:", numpy.mean(delta)
+    pylab.show()
+    return True
+
     n_model = 1
     # TODO: Double check code for n_model > 1!
     assert(n_model == 1)
@@ -399,6 +470,8 @@ def mfclean(args):
         assert(fit["ok"])
         beam[model] = BeamParameters((fit["major"] * numpy.pi) / (3600.0 * 180.0), (fit["minor"] * numpy.pi) / (3600.0 * 180.0), (fit["angle"] * numpy.pi) / 180.0)
         print "PSF: model:", i, "major axis:", abs(fit["major"]), "arcsec", "minor axis:", abs(fit["minor"]), "arcsec", "position angle:", fit["angle"], "deg"
+
+    show_image("approximate PSF", psf[0][0,:,:,:])
 
     (min_psf, max_psf, max_psf_outer, psf_patch_size, max_sidelobe) = validate_psf(csys, psf, beam)
 

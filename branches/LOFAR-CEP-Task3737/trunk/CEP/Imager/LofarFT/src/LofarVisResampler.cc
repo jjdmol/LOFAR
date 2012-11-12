@@ -294,6 +294,7 @@ namespace LOFAR {
     // psfValues[2] = -Complex(1,-1);
     // psfValues[3] = -Complex(0,0);
 
+//    cout << "data: " << *(vbs.visCube_p.data() + rows[rbeg] * nVisChan * nVisPol) << endl;
 
     // Loop over all visibility rows to process.
     for (Int inx=rbeg; inx<=rend; ++inx) {

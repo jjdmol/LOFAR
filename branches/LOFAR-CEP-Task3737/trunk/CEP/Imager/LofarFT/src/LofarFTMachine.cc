@@ -115,16 +115,16 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
                                const Matrix<bool>& gridMuellerMask,
                                const Matrix<bool>& degridMuellerMask,
 			       Double RefFreq,
-			       Bool Use_Linear_Interp_Gridder, 
-			       Bool Use_EJones, 
-			       int StepApplyElement, 
-			       Double PBCut, 
-			       Bool PredictFT, 
-			       String PsfOnDisk, 
+			       Bool Use_Linear_Interp_Gridder,
+			       Bool Use_EJones,
+			       int StepApplyElement,
+			       Double PBCut,
+			       Bool PredictFT,
+			       String PsfOnDisk,
 			       Bool UseMasksDegrid,
-			       Bool reallyDoPSF, 
+			       Bool reallyDoPSF,
                                const Record& parameters
-                              )//, 
+                              )//,
 			       //Double FillFactor)
   : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
     tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType),
@@ -141,7 +141,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   cout << "=======LofarFTMachine====================================" << endl;
   cout << itsParameters << endl;
   cout << "=========================================================" << endl;
-  
+
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   mLocation_p=mLocation;
@@ -635,7 +635,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  if(!itsPredictFT){
 	    fact*=sqrt(maxPB)/sqrt(data(pos2));
 	  } else {
-	    fact/=datai(pos2); //*datai(pos2); 
+	    fact/=datai(pos2); //*datai(pos2);
 	    if(its_Apply_Element){fact/=spheroidCutElement(pos2);}
 	  }
 	  pixel*=Complex(fact);
@@ -993,6 +993,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   vbs.freq_p.reference(interpVisFreq_p);
   vbs.rowFlag_p.reference(vb.flagRow());
 
+  cout << "flagRow shape: " << vb.flagRow().shape() << endl;
+
   // Really nice way of converting a Cube<Int> to Cube<Bool>.
   // However the VBS objects should ultimately be references
   // directly to bool cubes.
@@ -1061,10 +1063,12 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       try{
 
       // compute average weight for baseline for CF averaging
+//      cout << "ist: " << ist << " iend: " << iend << endl;
 	double average_weight=0.;
       uInt Nvis=0;
-      for(Int j=ist; j<iend; ++j){
+      for(Int j=ist; j<=iend; ++j){
         uInt row=blIndex[j];
+//        cout << "row: " << row << " rowFlag: " << vbs.rowFlag()[row] << " flagRow: " << vb.flagRow()[row] << endl;
         if(!vbs.rowFlag()[row]){
           Nvis+=1;
           for(uInt k=0; k<Nchannels; ++k) {
@@ -1102,7 +1106,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                                               itsSumCFWeight[threadNum],
 					      spw,thisterm_p,itsRefFreq
 					      );
-      
+
 
 
       //cfTimer.stop();
@@ -1316,17 +1320,17 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   bool usebl      = false;
   bool allFlagged = true;
   const Vector<Bool>& flagRow = vb.flagRow();
-  for (uint i=0; i<blnr.size(); ++i) 
+  for (uint i=0; i<blnr.size(); ++i)
   {
     Int inx = blIndex[i];
     Int bl = blnr[inx];
-    if (bl != lastbl) 
+    if (bl != lastbl)
     {
       // New baseline. Write the previous end index if applicable.
-      if (usebl  &&  !allFlagged) 
+      if (usebl  &&  !allFlagged)
       {
         double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[i-1]](2)));
-        if (abs(Wmean) <= itsWMax) 
+        if (abs(Wmean) <= itsWMax)
         {
           if (itsVerbose > 1) {
             cout<<"using w="<<Wmean<<endl;
@@ -1349,15 +1353,15 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
     if (! flagRow[inx]) {
       allFlagged = false;
     }
-    
+
   }
   // Write the last end index if applicable.
-  if (usebl  &&  !allFlagged) 
+  if (usebl  &&  !allFlagged)
   {
     double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[blnr.size()-1]](2)));
-    if (abs(Wmean) <= itsWMax) 
+    if (abs(Wmean) <= itsWMax)
     {
-      if (itsVerbose > 1) 
+      if (itsVerbose > 1)
       {
         cout<<"...using w="<<Wmean<<endl;
       }
@@ -1536,6 +1540,10 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
   AlwaysAssert(image, AipsError);
   logIO() << LogOrigin("LofarFTMachine", "getImage") << LogIO::NORMAL;
 
+  cout << "itsSumPB: " << max(itsSumPB[0]) << " " << min(itsSumPB[0]) << endl;
+  cout << "itsSumCFWeight: " << itsSumCFWeight.size() << " "  << itsSumCFWeight[0] << endl;
+  cout << "itsSumWeight: " << max(itsSumWeight[0]) << " " << min(itsSumWeight[0]) << endl;
+
   itsAvgPB.reference (itsConvFunc->Compute_avg_pb(itsSumPB[0], itsSumCFWeight[0]));
 
   //cout<<"weights.shape() "<<weights.shape()<<"  "<<sumWeight<<endl;
@@ -1556,7 +1564,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     logIO() << LogIO::DEBUGGING
 	    << "Starting FFT and scaling of image" << LogIO::POST;
 
-
+    cout << "checking lattice: " << max(lattice->get()) << " " << min(lattice->get()) << endl;
 
     // if(useDoubleGrid_p){
     //   convertArray(griddedData, griddedData2);
@@ -1580,6 +1588,8 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     } else {
       LatticeFFT::cfft2d(*lattice, False);
     }
+
+    cout << "checking lattice: " << max(lattice->get()) << " " << min(lattice->get()) << endl;
 
     if (itsVerbose > 0) {
       cout<<"POLMAP:::::::  "<<polMap<<endl;
@@ -1630,6 +1640,8 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       }
     }
 
+    cout << "checking lattice: " << max(lattice->get()) << " " << min(lattice->get()) << endl;
+
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // Normalising dirty image by the spheroidal function
 
@@ -1648,7 +1660,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     // Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
 
 
-
+// =====================>>> here it goes wrong.
 
     // for(uInt k=0;k<lattice->shape()[2];++k){
     //   for(uInt i=0;i<lattice->shape()[0];++i){
@@ -1707,6 +1719,8 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       }
     }
 
+    cout << "checking lattice: " << max(lattice->get()) << " " << min(lattice->get()) << endl;
+
     // uInt count_cycle(0);
     // Bool written(false);
 
@@ -1736,6 +1750,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     //====================================================================================================================
     //====================================================================================================================
 
+    cout << "checking stacked gridded data: " << max(its_stacked_GriddedData) << " " << min(its_stacked_GriddedData) << endl;
 
 
     if(!isTiled) {
