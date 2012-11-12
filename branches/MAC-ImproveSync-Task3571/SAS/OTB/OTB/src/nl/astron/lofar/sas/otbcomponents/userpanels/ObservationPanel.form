@@ -123,16 +123,16 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="anaBeamConfiguration" min="-2" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Group type="102" alignment="0" attributes="0">
-                                  <EmptySpace type="separate" max="-2" attributes="0"/>
-                                  <Component id="jPanel10" min="-2" max="-2" attributes="1"/>
-                              </Group>
-                              <Group type="102" alignment="0" attributes="0">
+                              <Group type="102" attributes="0">
                                   <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="0" attributes="0">
                                       <Component id="jPanel5" alignment="0" min="-2" max="-2" attributes="1"/>
                                       <Component id="jPanel4" alignment="0" min="-2" max="-2" attributes="1"/>
                                   </Group>
+                              </Group>
+                              <Group type="102" alignment="0" attributes="0">
+                                  <EmptySpace type="separate" max="-2" attributes="0"/>
+                                  <Component id="jPanel10" min="-2" max="-2" attributes="1"/>
                               </Group>
                           </Group>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
@@ -209,47 +209,44 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="labelNrChannelsPerSubband" max="32767" attributes="1"/>
-                                  <Component id="labelNrSlotsInFrame" alignment="0" min="-2" max="-2" attributes="1"/>
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="labelNrChannelsPerSubband" min="-2" max="-2" attributes="1"/>
+                                      <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" attributes="0">
+                                      <Component id="labelNrBitsPerSample" pref="102" max="32767" attributes="1"/>
+                                      <EmptySpace min="-2" pref="35" max="-2" attributes="0"/>
+                                  </Group>
                               </Group>
-                              <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="inputNrSlotsInFrame" max="32767" attributes="1"/>
+                                  <Component id="inputNrBitsPerSample" alignment="1" max="32767" attributes="1"/>
                                   <Component id="inputNrChannelsPerSubband" alignment="0" pref="102" max="32767" attributes="1"/>
                               </Group>
-                              <EmptySpace pref="22" max="32767" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
                     <DimensionLayout dim="1">
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" alignment="0" attributes="0">
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelNrSlotsInFrame" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputNrSlotsInFrame" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="32" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
                                   <Component id="labelNrChannelsPerSubband" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="inputNrChannelsPerSubband" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelNrBitsPerSample" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputNrBitsPerSample" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace pref="24" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
                   </Layout>
                   <SubComponents>
-                    <Component class="javax.swing.JLabel" name="labelNrSlotsInFrame">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="# Slots In Frame"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JTextField" name="inputNrSlotsInFrame">
-                      <Events>
-                        <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="inputNrSlotsInFrameFocusGained"/>
-                      </Events>
-                    </Component>
                     <Component class="javax.swing.JTextField" name="inputNrChannelsPerSubband">
                       <Properties>
                         <Property name="toolTipText" type="java.lang.String" value="This field will be removes as soon as the input in the AntennaConfig tab wil be used for receiver selection."/>
@@ -262,6 +259,19 @@
                       <Properties>
                         <Property name="text" type="java.lang.String" value="# Channels per Subband"/>
                       </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelNrBitsPerSample">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="# Bits per Sample"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputNrBitsPerSample">
+                      <Properties>
+                        <Property name="toolTipText" type="java.lang.String" value="This field will be removes as soon as the input in the AntennaConfig tab wil be used for receiver selection."/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="inputNrBitsPerSampleFocusGained"/>
+                      </Events>
                     </Component>
                   </SubComponents>
                 </Container>

@@ -143,12 +143,6 @@ public class BeamDialog extends javax.swing.JDialog {
         inputAngle1.setText(itsBeam.getAngle1());
         inputAngle2.setText(itsBeam.getAngle2());
         coordTypeChange.setSelectedItem(itsBeam.getCoordType());
-        if (!itsBeam.getMaximizeDuration().equals("Missing")) {
-            inputMaxDur.setVisible(true);
-            inputMaxDur.setSelected(LofarUtils.StringToBoolean(itsBeam.getMaximizeDuration()));
-        } else {
-            inputMaxDur.setVisible(false);
-        }
         inputSubbandList.setText(itsBeam.getSubbandList());
         inputBeamletList.setText(itsBeam.getBeamletList());
         inputDuration.setText(itsBeam.getDuration());
@@ -176,7 +170,6 @@ public class BeamDialog extends javax.swing.JDialog {
         inputAngle1.setEnabled(flag);
         inputAngle2.setEnabled(flag);
         coordTypeChange.setEnabled(flag);
-        inputMaxDur.setEnabled(flag);
         inputSubbandList.setEnabled(flag);
         inputBeamletList.setEnabled(flag);
         inputDuration.setEnabled(flag);
@@ -225,7 +218,6 @@ public class BeamDialog extends javax.swing.JDialog {
         saveButton = new javax.swing.JButton();
         labelDirectionTypes = new javax.swing.JLabel();
         coordTypeChange = new javax.swing.JComboBox();
-        inputMaxDur = new javax.swing.JCheckBox();
         jPanel3 = new javax.swing.JPanel();
         TABConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         addTiedArrayBeamButton = new javax.swing.JButton();
@@ -290,8 +282,6 @@ public class BeamDialog extends javax.swing.JDialog {
                 coordTypeChangeActionPerformed(evt);
             }
         });
-
-        inputMaxDur.setText("Maximize Duration");
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "TiedArrayBeam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
         jPanel3.setPreferredSize(new java.awt.Dimension(200, 125));
@@ -396,18 +386,15 @@ public class BeamDialog extends javax.swing.JDialog {
                                     .add(inputDirectionTypes, 0, 126, Short.MAX_VALUE)
                                     .add(inputNrTabRings))
                                 .add(38, 38, 38)
-                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(jPanel1Layout.createSequentialGroup()
-                                        .add(coordTypeChange, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 81, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                        .add(121, 121, 121)
-                                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                                            .add(org.jdesktop.layout.GroupLayout.LEADING, labelStartTime, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                            .add(org.jdesktop.layout.GroupLayout.LEADING, labelTarget, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 96, Short.MAX_VALUE))
-                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                                            .add(inputTarget)
-                                            .add(inputStartTime, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)))
-                                    .add(inputMaxDur)))
+                                .add(coordTypeChange, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 81, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .add(121, 121, 121)
+                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, labelStartTime, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .add(org.jdesktop.layout.GroupLayout.LEADING, labelTarget, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 96, Short.MAX_VALUE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                    .add(inputTarget)
+                                    .add(inputStartTime, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)))
                             .add(org.jdesktop.layout.GroupLayout.LEADING, labelNrTabRings, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 86, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .addContainerGap())
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
@@ -456,8 +443,7 @@ public class BeamDialog extends javax.swing.JDialog {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelDuration, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 23, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(inputDuration, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(inputMaxDur))
+                    .add(inputDuration, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelSubbandList)
@@ -636,12 +622,6 @@ public class BeamDialog extends javax.swing.JDialog {
             return;
         }
 
-        if (inputMaxDur.isVisible()) {
-            if (!itsBeam.getMaximizeDuration().equals(LofarUtils.BooleanToString(inputMaxDur.isSelected()))) {
-                isChanged=true;
-            }
-        }
-
         if (!itsBeam.getSubbandList().equals(inputSubbandList.getText())) {
             isChanged=true;
             return;
@@ -681,17 +661,12 @@ public class BeamDialog extends javax.swing.JDialog {
     }
     
     public Beam getBeam() {
-        String aS= "Missing";
-        if(!itsBeam.getMaximizeDuration().equals("Missing")) {
-            aS=LofarUtils.BooleanToString(inputMaxDur.isSelected());
-        }
         itsBeam.setTarget(inputTarget.getText());
         itsBeam.setDirectionType(inputDirectionTypes.getSelectedItem().toString());
         itsBeam.setAngle1(inputAngle1.getText());
         itsBeam.setAngle2(inputAngle2.getText());
         itsBeam.setCoordType(coordTypeChange.getSelectedItem().toString());
         itsBeam.setDuration(inputDuration.getText());
-        itsBeam.setMaximizeDuration(aS);
         itsBeam.setStartTime(inputStartTime.getText());
         itsBeam.setSubbandList(LofarUtils.compactedArrayString(inputSubbandList.getText()));
         itsBeam.setBeamletList(LofarUtils.compactedArrayString(inputBeamletList.getText()));
@@ -781,7 +756,6 @@ public class BeamDialog extends javax.swing.JDialog {
     private javax.swing.JTextField inputBeamletList;
     private javax.swing.JComboBox inputDirectionTypes;
     private javax.swing.JTextField inputDuration;
-    private javax.swing.JCheckBox inputMaxDur;
     private javax.swing.JTextField inputNrTabRings;
     private javax.swing.JTextField inputStartTime;
     private javax.swing.JTextField inputSubbandList;
