@@ -169,7 +169,7 @@ namespace LOFAR
     			       estimateAResolution(m_shape, m_coordinates));
     //Double aPixelAngSize = estimateAResolution(m_shape, m_coordinates, 30);
     Int nPixelsConv = imageDiameter / aPixelAngSize;
-
+    
     Matrix<Complex> spheroid_cut_element(IPosition(2,nPixelsConv,nPixelsConv),1.);
     taper(spheroid_cut_element);
     //Matrix<Complex> spheroid_cut_element_fft=give_normalized_fft_lapack(spheroid_cut_element, true);
@@ -319,7 +319,7 @@ namespace LOFAR
       coordinate.setIncrement(increment);
       Vector<Double> refpix(2, 0.5*(nPixelsConv-1));
       coordinate.setReferencePixel(refpix);
-
+      
       DirectionCoordinate coordinate_element = m_coordinates;
       //Double aPixelAngSize_element = estimateAResolution(m_shape, m_coordinates, 30.);
       Double aPixelAngSize_element = min(m_pixelSizeSpheroidal, estimateAResolution(m_shape, m_coordinates));
@@ -335,14 +335,14 @@ namespace LOFAR
       coordinate_element.setIncrement(increment_element);
       Vector<Double> refpix_element(2, 0.5*(nPixelsConv_element-1));
       coordinate_element.setReferencePixel(refpix_element);
-
+      
       //hier is het
-
+      
       m_aTerm.setDirection(coordinate, shape);
-
+      
       MEpoch binEpoch;
       binEpoch.set(Quantity(time, "s"));
-
+      
       m_aTerm.setEpoch(binEpoch);
 //       LofarATerm::ITRFDirectionMap dirMap = m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
 
@@ -901,10 +901,6 @@ namespace LOFAR
    double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF,
    double& sum_weight_square, uInt spw, Int /*TaylorTerm*/, double /*RefFreq*/)
   {
-//    cout << "Append_average_PB_CF: " << Append_average_PB_CF << endl;
-//    cout << "Stack_PB_CF: " << max(Stack_PB_CF) << " " << min(Stack_PB_CF) << endl;
-//    cout << "sum_weight_square: " << sum_weight_square << endl;
-
     // Initialize timers.
     PrecTimer timerFFT;
     PrecTimer timerPar;

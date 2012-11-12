@@ -254,7 +254,7 @@ void correctImages (const String& restoName, const String& modelName,
 							  IPosition(4, nximg, nximg,1,1)))).nonDegenerate();
     factors = sphinner_el *sphinner / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
   } else{
-
+    
     factors = sphinner / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
   }
   applyFactors (restoredImage, factors);
@@ -493,7 +493,7 @@ int main(int argc, char *argv[])
     // inputs.create ("FillFactor", "1",
     // 		   "Fraction of the data that will be selected from the selected MS. (don't use it yet)",
     // 		   "Double");
-
+ 
     // Fill the input structure from the command line.
     inputs.readArguments (argc, argv);
 
@@ -646,7 +646,7 @@ int main(int argc, char *argv[])
     operation.downcase();
     AlwaysAssertExit (operation=="empty" || operation=="image" ||
                       operation=="csclean" || operation=="msmfs" ||
-                      operation=="predict" || operation=="psf" || operation=="mfclark");
+                      operation=="predict" || operation=="psf");
     ///AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
     IPosition maskBlc, maskTrc;
     Quantity threshold;
@@ -697,7 +697,7 @@ int main(int argc, char *argv[])
     params.define ("applyBeam", applyBeam);
     params.define ("splitbeam", splitbeam);
     //params.define ("FillFactor", FillFactor);
-
+    
     LOFAR::LofarImager imager(ms, params);
 
     MSSpWindowColumns window(ms.spectralWindow());
@@ -737,8 +737,8 @@ int main(int argc, char *argv[])
 
     imager.setmfcontrol(cyclefactor,          //Float cyclefactor,
   			cyclespeedup,         //Float cyclespeedup,
-  			0.8,                        //Float cyclemaxpsffraction,
-  			2,                          //Int stoplargenegatives,
+  			0.8,                        //Float cyclemaxpsffraction, 
+  			2,                          //Int stoplargenegatives, 
   			-1,                         //Int stoppointmode,
   			"",                         //String& scaleType,
   			0.1,                        //Float minPB,
@@ -904,15 +904,15 @@ int main(int argc, char *argv[])
 	  makeEmpty (imager, imgName, 0);
 	  Directory filee(imgName);
 
-
+	  
 	  Vector<String> modelNames(nterms);
 	  for(Int i=0;i<nterms;++i){
 	    modelNames(i)="test.img.model.tt"+String::toString(i);
-
+	    
 	    Directory filee0(modelNames(i));
 	    File file_model0(modelNames(i));
 	    if(file_model0.exists()){filee0.removeRecursive();};
-	    Path model0(modelNames(i));
+	    Path model0(modelNames(i)); 
 	    filee.copy(model0);
 	  };
 
@@ -931,7 +931,7 @@ int main(int argc, char *argv[])
                        Vector<String>(1, restoName),  // restored
                        Vector<String>(1, residName),  // residual
                        Vector<String>(1, psfName));   // psf
-
+	  
 	}
 	else {
 	  Vector<String> modelNames(2);
