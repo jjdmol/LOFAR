@@ -451,7 +451,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
 
     const bool haveDDE = config.useDirectionalGain()
         || config.useBeam() || config.useDirectionalTEC()
-        || config.useFaradayRotation() || config.useIonosphere();
+        || config.useFaradayRotation() || config.useRotation()
+        || config.useScalarPhase() || config.useIonosphere();
 
     if(haveDDE)
     {
@@ -589,7 +590,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 // Scalar phase.
                 if(config.useScalarPhase())
                 {
-                    itsExpr[i] = compose(itsExpr[i],
+                    stationExpr[i] = compose(stationExpr[i],
                         makeScalarPhaseExpr(itsScope, instrument->station(i),
                         patch));
                 }

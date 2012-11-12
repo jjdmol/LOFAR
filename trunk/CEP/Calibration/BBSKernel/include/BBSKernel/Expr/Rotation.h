@@ -39,14 +39,14 @@ namespace BBS
 class Rotation: public BasicUnaryExpr<Scalar, JonesMatrix>
 {
 public:
-    typedef shared_ptr<Rotation>         Ptr;
-    typedef shared_ptr<const Rotation>   ConstPtr;
+    typedef shared_ptr<Rotation>        Ptr;
+    typedef shared_ptr<const Rotation>  ConstPtr;
 
-    Rotation(const Expr<Scalar>::ConstPtr &rm);
+    Rotation(const Expr<Scalar>::ConstPtr &chi);
 
 protected:
     virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
-        const Scalar::View &rm) const;
+        const Scalar::View &chi) const;
 };
 
 // @}
