@@ -1080,7 +1080,7 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
         vector<char> value(strlen(logline.msg)+1);
 
         if (sscanf(result, "LTA FEEDBACK: %s = %[^\n]s", &key[0], &value[0]) == 2) {
-          feedback.replace(&key[0], &value[0]);
+          feedback->replace(&key[0], &value[0]);
 
           LOG_DEBUG_STR("Observation " << logline.obsID << ": Added LTA feedback parameter " << &key[0] << " = " << &value[0]);
         }
@@ -1094,10 +1094,6 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
           writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
           writer->flush();
-
-          if (feedback) {
-            feedback->setSubbandKey(streamNr, "percentageWritten", formatString("%d", perc_written));
-          }
         }
         return;
       }
@@ -1110,10 +1106,6 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
           writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
           writer->flush();
-
-          if (feedback) {
-            feedback->setSubbandKey(streamNr, "percentageWritten", formatString("%d", perc_written));
-          }
         }
         return;
       }
