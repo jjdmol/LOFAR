@@ -56,7 +56,7 @@ namespace RTCP {
 
 #ifdef HAVE_LIBSSH2
 
-#ifndef HAVE_LOG4CPLUS
+#ifndef HAVE_LOG4COUT
 Mutex coutMutex;
 #endif
 
@@ -329,7 +329,7 @@ void SSHconnection::commThread()
 
             // TODO: Use logger somehow (we'd duplicate the prefix if we just use LOG_* macros..)
             {
-#ifdef HAVE_LOG4CPLUS
+#ifdef HAVE_LOG4COUT
               ScopedLock sl(LFDebug::mutex);
 #else
               ScopedLock sl(coutMutex);
