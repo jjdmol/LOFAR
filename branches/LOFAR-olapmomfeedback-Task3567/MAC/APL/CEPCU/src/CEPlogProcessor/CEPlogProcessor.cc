@@ -497,7 +497,7 @@ void CEPlogProcessor::writeFeedback( int obsID )
     string filename(formatString("%s/Observation%d_feedback", 
                                  LOFAR_SHARE_LOCATION, obsID));
 
-    itsFeedback[obsID].write(filename);
+    itsFeedback[obsID].writeFile(filename);
 }
 
 
