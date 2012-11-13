@@ -170,7 +170,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
 
             #save the (input) ms, as a list of  mapfiles
             paths_to_image_mapfiles.append(
-                tuple(item.host, inputs_for_image_mapfile_path, False)) # TODO
+                tuple(item.host, inputs_for_image_mapfile_path, False))
 
             arguments = [self.environment,
                          self.inputs['parset'],
@@ -220,7 +220,6 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.error("None of the started compute node finished:"
                 "The current recipe produced no output, aborting")
             return 1
-
 
         # Write the output mapfiles:
         # concat.ms paths:

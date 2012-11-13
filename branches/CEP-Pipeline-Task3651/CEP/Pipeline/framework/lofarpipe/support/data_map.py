@@ -19,6 +19,7 @@ class DataProduct(object):
     Class representing a single data product.
     """
     def __init__(self, host, file, skip=True):
+
         self.host = str(host)
         self.file = str(file)
         self.skip = bool(skip)
@@ -29,7 +30,7 @@ class DataProduct(object):
             "{'host': '%s', 'file': '%s', 'skip': %s}" %
             (self.host, self.file, self.skip)
         )
-        
+
     def __str__(self):
         """Print an instance as 'host:file'"""
         return ':'.join((self.host, self.file))
@@ -37,16 +38,16 @@ class DataProduct(object):
     def __eq__(self, other):
         """Compare for equality"""
         return (
-            self.host == other.host and 
+            self.host == other.host and
             self.file == other.file and
             self.skip == other.skip
         )
-        
+
     def __ne__(self, other):
         """Compare for non-equality"""
         return not self.__eq__(other)
-        
-        
+
+
 class DataMap(object):
     """
     Class representing a data-map, which basically is a collection of data
@@ -110,14 +111,14 @@ class DataMap(object):
 
     def __getitem__(self, index):
         return self.data[index]
-        
+
     def __eq__(self, other):
-        return all(x == y for (x,y) in zip(self.data, other.data))
-        
+        return all(x == y for (x, y) in zip(self.data, other.data))
+
     def __ne__(self, other):
         return not self.__eq__(other)
-        
-    @classmethod   
+
+    @classmethod
     def load(cls, filename):
         """Load a data map from file `filename`. Return a DataMap instance."""
         with open(filename) as f:
@@ -132,7 +133,7 @@ class DataMap(object):
     def data(self):
         """Property to get self.data"""
         return self._data
-        
+
     @data.setter
     def data(self, data):
         """Property to set self.data, so that we can do input validation."""
@@ -147,7 +148,7 @@ class DataMap(object):
                 raise TypeError
         except TypeError:
             raise DataMapError("Failed to validate data map: %s" % repr(data))
-        
+
 
 @deprecated
 def load_data_map(filename):
@@ -198,16 +199,16 @@ def validate_data_maps(*args):
     # from a tuple of lenghts of `args`. The set must have length 1.
     if len(set(len(arg) for arg in args)) != 1:
         return False
-    
+
     # Next, check if the data products in `args`, when matched by index,
     # reside on the same host. We can use the same trick as before, by
     # checking the size of a set created from a tuple of hostnames.
     for i in xrange(len(args[0])):
         if len(set(arg[i].host for arg in args)) != 1:
             return False
-    
+
     return True
-    
+
 
 @deprecated
 def tally_data_map(data, glob, logger=None):
@@ -234,7 +235,7 @@ def tally_data_map(data, glob, logger=None):
     if logger:
         logger.debug("Searching for files: %s" % glob)
     found = zip(*findFiles(glob, '-1d'))
-    
+
     # Return a mask containing True if file exists, False otherwise
     return [(f.host, f.file) in found for f in data]
 

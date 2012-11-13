@@ -212,7 +212,7 @@ class imager_prepare(LOFARnodeTCP):
 
             # convert the datamap to a file list: Do not remove skipped files:
             # ndppp needs the incorrect files there to allow filling with zeros
-            ndppp_input_ms = [item.path for item in input_map_subgroup]
+            ndppp_input_ms = [item.file for item in input_map_subgroup]
 
             # Join into a single list of paths.
             msin = "['{0}']".format("', '".join(ndppp_input_ms))

@@ -6,11 +6,13 @@ import shutil
 import numpy
 import tempfile
 
+from lofarpipe.support.data_map import DataMap
+
 #imports from fixture:
 from logger import logger
 
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
-from lofarpipe.recipes.master.imager_prepare import imager_prepare                              #@UnresolvedImport
+from master.imager_prepare import imager_prepare                              #@UnresolvedImport
 
 
 
@@ -48,20 +50,28 @@ class imager_prepareTest(unittest.TestCase):
         sut = ImagerPrepareWrapper()
         output = sut._create_input_map_for_sbgroup(slices_per_image, n_subband_groups,
                        subbands_per_image, idx_sb_group, input_mapfile)
-        self.assertTrue(output == input_mapfile)
+        target = DataMap(input_mapfile)
+
+        self.assertTrue(output == target, "Actual output = {0}".format(output))
 
     def test_create_input_map_for_sbgroup_2slice(self):
-
+        """
+        Test correct collection of the subbands for the first subband group
+        with two timeslices and one subband per image
+        """
         slices_per_image = 2
         n_subband_groups = 1
         subbands_per_image = 1
-        idx_sb_group = 0 # get the 2nd sb group
+        idx_sb_group = 0 # get the 1st
         input_mapfile = [('host', "path"), ('host2', "path2"), ('host3', "path3")]
 
         sut = ImagerPrepareWrapper()
         output = sut._create_input_map_for_sbgroup(slices_per_image, n_subband_groups,
                        subbands_per_image, idx_sb_group, input_mapfile)
-        self.assertTrue(output == [('host', "path"), ('host2', "path2")])
+        target = DataMap([('host', "path"), ('host2', "path2")])
+        self.assertTrue(target == output,
+
+                        "Actual output = {0}".format(output))
 
     def test_create_input_map_for_sbgroup_2slice_2ndgroup(self):
 
@@ -77,8 +87,9 @@ class imager_prepareTest(unittest.TestCase):
         sut = ImagerPrepareWrapper()
         output = sut._create_input_map_for_sbgroup(slices_per_image, n_subband_groups,
                        subbands_per_image, idx_sb_group, input_mapfile)
-        self.assertTrue(output == [('host3', "path3"), ('host4', "path4"),
-                                   ('host7', "path7"), ('host8', "path8")], output)
+        target = DataMap([('host3', "path3"), ('host4', "path4"),
+                                   ('host7', "path7"), ('host8', "path8")])
+        self.assertTrue(output == target, "Actual output = {0}".format(output))
 
     def test_validate_input_map_succes(self):
         input_map = [(1), (1), (1), (1)]
@@ -90,9 +101,9 @@ class imager_prepareTest(unittest.TestCase):
         output = sut._validate_input_map(input_map, output_map,
                                     slices_per_image, subbands_per_image)
 
-        self.assertTrue(output == 0, "validating input map failed: incorrect output")
+        self.assertTrue(output == True, "validating input map failed: incorrect output")
 
-    def test_validate_input_map_succes(self):
+    def test_validate_input_map_incorrect(self):
         input_map = [(1), (1), (1)]
         output_map = [(1)]
         slices_per_image = 2
@@ -102,8 +113,8 @@ class imager_prepareTest(unittest.TestCase):
         output = sut._validate_input_map(input_map, output_map,
                                     slices_per_image, subbands_per_image)
 
-        self.assertTrue(output == 1,
-                     "validating input map failed: incorrect output")
+        self.assertTrue(output == False,
+                     "Actual output = {0}".format(output))
         self.assertTrue(sut.logger.last() == ('error', 'Incorrect number of input ms for supplied parameters:\n\tlen(input_map) = 3\n\tlen(output_map) * slices_per_image * subbands_per_image = 1 * 2 * 2 = 4'),
                                 "incorrect logger message retrieved")
 

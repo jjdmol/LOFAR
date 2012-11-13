@@ -181,7 +181,7 @@ class msss_imager_pipeline(control):
         # (1) prepare phase: copy and collect the ms
         concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path, \
             processed_ms_dir = self._prepare_phase(input_mapfile,
-                                    target_mapfile, skip=False)
+                                    target_mapfile)
 
         #We start with an empty source_list
         source_list = ""  # path to local sky model (list of 'found' sources)
@@ -399,21 +399,6 @@ class msss_imager_pipeline(control):
             self.logger.error(repr(parmdbs_map_path))
             raise PipelineException("Invalid input data for imager_bbs recipe")
 
-#        # walk the two maps in pairs to validate that they contain some hosts
-#        converted_sourcedb_map = copy.deepcopy(sourcedb_map)
-#        for (source_db_pair, parmdbs) in zip(sourcedb_map, parmdbs_map):
-#            (host_sourcedb, sourcedb_path) = source_db_pair
-#            (host_parmdbs, parmdbs_entries) = parmdbs
-#            
-#            add the entries but with skymap multiplied with len (parmds list)
-#            converted_sourcedb_map.append((host_sourcedb,
-#                                [sourcedb_path] * len(parmdbs_entries)))
-#        #save the new mapfile
-#        converted_sourcedb_map.save(converted_sourcedb_map_path)
-#
-#        self.logger.error("Wrote converted sourcedb datamap: {0}".format(
-#                                      converted_sourcedb_map_path))
-
         self.run_task("imager_bbs",
                       timeslice_map_path,
                       parset=parset_path,
@@ -470,8 +455,7 @@ class msss_imager_pipeline(control):
         return output_mapfile, max_baseline
 
     @xml_node
-    def _prepare_phase(self, input_ms_map_path, target_mapfile,
-            skip=False):
+    def _prepare_phase(self, input_ms_map_path, target_mapfile):
         """
         Copy ms to correct location, combine the ms in slices and combine
         the time slices into a large virtual measurement set
@@ -498,39 +482,36 @@ class msss_imager_pipeline(control):
         slices_per_image = self.parset.getInt("Imaging.slices_per_image")
         subbands_per_image = self.parset.getInt("Imaging.subbands_per_image")
 
-        if skip:
-            pass
-        else:
-            outputs = self.run_task("imager_prepare", input_ms_map_path,
-                    parset=ndppp_parset_path,
-                    target_mapfile=target_mapfile,
-                    slices_per_image=slices_per_image,
-                    subbands_per_image=subbands_per_image,
-                    mapfile=output_mapfile,
-                    slices_mapfile=time_slices_mapfile,
-                    raw_ms_per_image_mapfile=raw_ms_per_image_mapfile,
-                    working_directory=self.scratch_directory,
-                    processed_ms_dir=processed_ms_dir)
+        outputs = self.run_task("imager_prepare", input_ms_map_path,
+                parset=ndppp_parset_path,
+                target_mapfile=target_mapfile,
+                slices_per_image=slices_per_image,
+                subbands_per_image=subbands_per_image,
+                mapfile=output_mapfile,
+                slices_mapfile=time_slices_mapfile,
+                raw_ms_per_image_mapfile=raw_ms_per_image_mapfile,
+                working_directory=self.scratch_directory,
+                processed_ms_dir=processed_ms_dir)
 
-            #validate that the prepare phase produced the correct data
-            output_keys = outputs.keys()
-            if not ('mapfile' in output_keys):
-                error_msg = "The imager_prepare master script did not"\
-                        "return correct data. missing: {0}".format('mapfile')
-                self.logger.error(error_msg)
-                raise PipelineException(error_msg)
-            if not ('slices_mapfile' in output_keys):
-                error_msg = "The imager_prepare master script did not"\
-                        "return correct data. missing: {0}".format(
-                                                            'slices_mapfile')
-                self.logger.error(error_msg)
-                raise PipelineException(error_msg)
-            if not ('raw_ms_per_image_mapfile' in output_keys):
-                error_msg = "The imager_prepare master script did not"\
-                        "return correct data. missing: {0}".format(
-                                                    'raw_ms_per_image_mapfile')
-                self.logger.error(error_msg)
-                raise PipelineException(error_msg)
+        #validate that the prepare phase produced the correct data
+        output_keys = outputs.keys()
+        if not ('mapfile' in output_keys):
+            error_msg = "The imager_prepare master script did not"\
+                    "return correct data. missing: {0}".format('mapfile')
+            self.logger.error(error_msg)
+            raise PipelineException(error_msg)
+        if not ('slices_mapfile' in output_keys):
+            error_msg = "The imager_prepare master script did not"\
+                    "return correct data. missing: {0}".format(
+                                                        'slices_mapfile')
+            self.logger.error(error_msg)
+            raise PipelineException(error_msg)
+        if not ('raw_ms_per_image_mapfile' in output_keys):
+            error_msg = "The imager_prepare master script did not"\
+                    "return correct data. missing: {0}".format(
+                                                'raw_ms_per_image_mapfile')
+            self.logger.error(error_msg)
+            raise PipelineException(error_msg)
 
         # Return the mapfiles paths with processed data
         return output_mapfile, time_slices_mapfile, raw_ms_per_image_mapfile, \
