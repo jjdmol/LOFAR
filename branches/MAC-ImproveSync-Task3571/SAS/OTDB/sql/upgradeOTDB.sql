@@ -37,4 +37,4 @@ CREATE TYPE treeInfo AS (
 
 -- Load new functions
 \i create_rules.sql
-\i getModifiedTrees.sql
+\i getModifiedTrees_func.sql
