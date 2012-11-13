@@ -12,7 +12,7 @@ from lofarpipe.support.data_map import DataMap
 from logger import logger
 
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
-from master.imager_prepare import imager_prepare                              #@UnresolvedImport
+from lofarpipe.recipes.master.imager_prepare import imager_prepare                              #@UnresolvedImport
 
 
 
