@@ -419,8 +419,6 @@ void CEPlogProcessor::processParset( const std::string &observationID )
     Observation obs(&parset, false, itsNrPsets);
     string observationPrefix = parset.locateModule("Observation") + "Observation.";
 
-    ParameterSet &feedback = itsFeedback[obsID];
-
     unsigned nrStreams = obs.streamsToStorage.size();
 
     // process all the writers
