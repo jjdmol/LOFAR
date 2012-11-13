@@ -32,22 +32,26 @@ class imager_bbs(LOFARnodeTCP):
         # read in the mapfiles to data maps: The master recipe added the single
         # path to a mapfilem which allows usage of default data methods 
         # (load_data_map)
-        node, ms_list = load_data_map(ms_list_path)[0]
-        node, parmdb_list = load_data_map(parmdb_list_path)[0]
-        node, sky_list = load_data_map(sky_list_path)[0]
-
+        # TODO: Datamap
+        ms_list = eval(open(ms_list_path).read())
+        parmdb_list = eval(open(parmdb_list_path).read())
+        sky_list = eval(open(sky_list_path).read())
+        source_db = sky_list[0]["file"]
         try:
             bbs_process_group = SubProcessGroup(self.logger)
             # *****************************************************************
             # 2. start the bbs executable with data
-            for (measurement_set, parmdm, sky) in zip(
-                                                ms_list, parmdb_list, sky_list):
+            for (measurement_set, parmdm) in zip(
+                                                ms_list, parmdb_list):
+
                 command = [
                     bbs_executable,
-                    "--sourcedb={0}".format(sky),
+                    "--sourcedb={0}".format(source_db),
                     "--parmdb={0}".format(parmdm) ,
                     measurement_set,
                     parset]
+                self.logger.error(command)
+
                 self.logger.info("Executing bbs command: {0}".format(" ".join(
                             command)))
                 bbs_process_group.run(command)

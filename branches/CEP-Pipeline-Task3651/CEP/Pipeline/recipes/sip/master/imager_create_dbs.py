@@ -10,8 +10,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map, store_data_map, \
-                                         validate_data_maps
+from lofarpipe.support.data_map import DataMap
 
 
 class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -119,10 +118,13 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             assoc_theta = None
 
         # Load mapfile data from files
-        slice_paths_map = load_data_map(self.inputs["slice_paths_mapfile"])
-        input_map = load_data_map(self.inputs['args'][0])
-        if self._validate_input_data(slice_paths_map, input_map):
-            return 1
+        # TODO: Due it limmitation in DataMap slicePath is here a list
+        # of tuple (host, [list of paths], skip)
+        slice_paths_map = eval(open(self.inputs["slice_paths_mapfile"]).read())
+        input_map = DataMap.load(self.inputs['args'][0])
+        # TODO; We miss input validation here due to DATAMAP
+#        if self._validate_input_data(input_map):
+#            return 1
 
         # Run the nodes with now collected inputs
         jobs = self._run_create_dbs_node(input_map, slice_paths_map,
@@ -170,9 +172,10 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         # create jobs
         jobs = []
-        for (input_ms, slice_paths)  in zip(input_map, slice_paths_map):
-            host_ms, concatenated_measurement_set = input_ms
-            host_slice, slice_paths = slice_paths
+        for (input_item, slice_item)  in zip(input_map, slice_paths_map):
+            host_ms, concatenated_measurement_set = input_item.host, \
+                input_item.file
+            host_slice, slice_paths = slice_item[0], slice_item[1]
 
             # Create the parameters depending on the input_map
             sourcedb_target_path = os.path.join(
@@ -214,14 +217,14 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         for job in jobs:
             host = job.host
             if job.results.has_key("sourcedb"):
-                sourcedb_files.append((host, job.results["sourcedb"]))
+                sourcedb_files.append(tuple([host, job.results["sourcedb"], False]))
             else:
                 self.logger.warn("Warning failed ImagerCreateDBs run "
                     "detected: No sourcedb file created, {0} continue".format(
                                                                         host))
 
             if job.results.has_key("parmdbms"):
-                parmdbs.append((host, job.results["parmdbms"]))
+                parmdbs.append(tuple([host, job.results["parmdbms"], False]))
             else:
                 self.logger.warn("Failed ImagerCreateDBs run detected: No "
                                  "parmdbms created{0} continue".format(host))
@@ -236,8 +239,14 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             return 1
 
         # write the mapfiles     
-        store_data_map(self.inputs["sourcedb_map_path"], sourcedb_files)
-        store_data_map(self.inputs["parmdbs_map_path"], parmdbs)
+        DataMap(sourcedb_files).save(self.inputs["sourcedb_map_path"])
+        # TODO: Parmdbs are created for each timeslice: DataMap does not
+        # allow multiple return yet
+        #store_data_map(self.inputs["parmdbs_map_path"], parmdbs)
+        fp = open(self.inputs["parmdbs_map_path"], 'w')
+        fp.write(repr(parmdbs))
+        fp.close
+
         self.logger.debug("Wrote sourcedb dataproducts: {0} \n {1}".format(
             self.inputs["sourcedb_map_path"], self.inputs["parmdbs_map_path"]))
 

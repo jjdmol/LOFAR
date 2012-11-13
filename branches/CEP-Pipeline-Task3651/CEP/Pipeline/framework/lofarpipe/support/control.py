@@ -43,6 +43,7 @@ class control(StatefulRecipe):
             self.logger.error("*******************************************")
             self.logger.error("Failed pipeline run: {0}".format(
                         self.inputs['job_name']))
+            self.logger.error(message)
             #message does not contain the original exception thrown in recipe
             if get_active_stack(self) != None:
                 self.logger.error("\n" +

@@ -130,7 +130,7 @@ class imager_prepare(LOFARnodeTCP):
         """
         copied_ms_map = copy.deepcopy(input_map)
         #loop all measurement sets
-        for input_item, copied_item in (input_map, copied_ms_map):
+        for input_item, copied_item in zip(input_map, copied_ms_map):
             # fill the copied item with the correct data
             copied_item.host = self.host
             copied_item.file = os.path.join(

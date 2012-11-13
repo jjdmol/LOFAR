@@ -267,11 +267,11 @@ class msss_imager_pipeline(control):
         self.logger.debug("%d Output_SkyImage data products specified" %
                           len(self.output_data))
 
-        # Sanity checks on input- and output data product specifications
-        if not validate_data_maps(self.input_data, self.output_data):
-            raise PipelineException(
-                "Validation of input/output data product specification failed!"
-            )
+        ## Sanity checks on input- and output data product specifications
+        #if not validate_data_maps(self.input_data, self.output_data):
+        #    raise PipelineException(
+        #        "Validation of input/output data product specification failed!"
+        #    )#Turned off untill DataMap is extended..
 
         # Target data is basically scratch data, consisting of one concatenated
         # MS per image. It must be stored on the same host as the final image.
@@ -279,6 +279,7 @@ class msss_imager_pipeline(control):
 
         for item in self.target_data:
             item.file = os.path.join(self.scratch_directory, 'concat.ms')
+
 
     @xml_node
     def _finalize(self, awimager_output_map, processed_ms_dir,
@@ -403,7 +404,7 @@ class msss_imager_pipeline(control):
                       timeslice_map_path,
                       parset=parset_path,
                       instrument_mapfile=parmdbs_map_path,
-                      sourcedb_mapfile=sourcedb_map,
+                      sourcedb_mapfile=sourcedb_map_path,
                       mapfile=output_mapfile,
                       working_directory=self.scratch_directory)
 
@@ -514,8 +515,11 @@ class msss_imager_pipeline(control):
             raise PipelineException(error_msg)
 
         # Return the mapfiles paths with processed data
-        return output_mapfile, time_slices_mapfile, raw_ms_per_image_mapfile, \
+        return output_mapfile, outputs["slices_mapfile"], raw_ms_per_image_mapfile, \
             processed_ms_dir
+        # TODO: change second return value back to a mapfile
+#        return output_mapfile, time_slices_mapfile, raw_ms_per_image_mapfile, \
+#            processed_ms_dir
 
     @xml_node
     def _create_dbs(self, input_map_path, timeslice_map_path, source_list="",

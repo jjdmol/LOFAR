@@ -23,7 +23,7 @@ from lofarpipe.support.data_map import DataMap
 class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Prepare phase master:
-    
+
     1. Validate input
     2. Create mapfiles with input for work to be perform on the individual nodes
        based on the structured input mapfile. The input mapfile contains a list 
@@ -170,14 +170,14 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
 
             #save the (input) ms, as a list of  mapfiles
             paths_to_image_mapfiles.append(
-                tuple(item.host, inputs_for_image_mapfile_path, False))
+                tuple([item.host, inputs_for_image_mapfile_path, False]))
 
             arguments = [self.environment,
                          self.inputs['parset'],
                          self.inputs['working_directory'],
                          self.inputs['processed_ms_dir'],
                          self.inputs['ndppp_exec'],
-                         item.output_measurement_set,
+                         item.file,
                          slices_per_image,
                          subbands_per_image,
                          inputs_for_image_mapfile_path,
@@ -206,11 +206,13 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             if job.results["returncode"] == 0:
                 finished_runs += 1
                 #only save the slices if the node has completed succesfull
-                slices.append((item.host, job.results["time_slices"], False))
+
+                slices.append(tuple([item.host,
+                                 job.results["time_slices"], False]))
             else:
                 # Set the dataproduct to skipped!!
                 item.skip = True
-                slices.append((item.host, "/Failed", True))
+                slices.append(tuple([item.host, "/Failed", True]))
 
                 msg = "Failed run on {0}. NOT Created: {1} ".format(
                                                 item.host, item.file)
@@ -226,14 +228,19 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         self._store_data_map(output_ms_mapfile_path, concat_ms,
                     "mapfile with concat.ms")
 
-        # slices in each concat
+        # TODO: expand DataMap to allow lists of paths...?
+#        # slices in each concat
         slices_mapfile = self.inputs['slices_mapfile']
-        self._store_data_map(slices_mapfile, slices, "mapfile with Time_slice")
+        fp = open(slices_mapfile, 'w')
+        fp.write(repr(slices))
+        fp.close()
+#        self._store_data_map(slices_mapfile, DataMap(slices),
+#                              "mapfile with Time_slice")
 
         # map to map with actual input mss.
         self._store_data_map(self.inputs["raw_ms_per_image_mapfile"],
-                       paths_to_image_mapfiles,
-                       " mapfile containing (raw) input ms per image:")
+                             DataMap(paths_to_image_mapfiles),
+                             " mapfile containing (raw) input ms per image:")
 
         # Set the outputs
         self.outputs['mapfile'] = output_ms_mapfile_path

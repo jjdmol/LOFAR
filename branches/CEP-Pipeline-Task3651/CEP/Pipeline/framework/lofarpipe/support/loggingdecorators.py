@@ -9,7 +9,6 @@ import time
 from lofarpipe.support.xmllogging import enter_active_stack, \
         exit_active_stack, get_active_stack
 
-
 def xml_node(target):
     """
     function decorator to be used on member functions of (pipeline)
@@ -71,23 +70,25 @@ def mail_log_on_exception(target):
             if return_value != 0:
                 raise Exception("Non zero pipeline output")
             # Mail main dev on succesfull run
-            msg_string = get_active_stack(
-                    calling_object).toprettyxml(encoding='ascii')
+            stack = get_active_stack(calling_object)
+            if stack != None:
+                msg_string = stack.toprettyxml(encoding='ascii')
+
             _mail_msg_to("pipeline_finished", "klijn@astron.nl",
                          "pipeline finished", msg_string)
-
 
         except Exception, message:
             # Static list of mail to be send (could be made configurable,
             # but yeah temp mail functionality so...)
             mail_list = ["klijn@astron.nl",
-                         "pizzo@astron.nl", "orru@astron.nl"
+                         #"pizzo@astron.nl", "orru@astron.nl"
                          ]
 
             # get the active stack
-            active_stack_data = get_active_stack(
-                    calling_object).toprettyxml(encoding='ascii')
-
+            stack = get_active_stack(calling_object)
+            if stack != None:
+                active_stack_data = stack.toprettyxml(encoding='ascii')
+            active_stack_data = ""
             # get the Obsid etc for subject
             subject = "Failed pipeline run: {0}".format(
                         calling_object.inputs['job_name'])
@@ -100,6 +101,8 @@ def mail_log_on_exception(target):
             for entry in mail_list:
                 _mail_msg_to("pipeline_error", entry,
                          subject, msg)
+
+            raise
 
         calling_object.logger.info("pipeline_finished" + " xml summary:")
         calling_object.logger.info(msg_string)
