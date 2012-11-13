@@ -1003,9 +1003,15 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
         adder->flush();
         return;
       }
-    }   
+    }
 
-    if ((result = strstr(logline.msg, "LTA FEEDBACK: "))) {
+    ParameterSet *feedback = 0;
+
+    if (logline.obsID >= 0 && observationRegistered(logline.obsID)) {
+      feedback = &itsFeedback[logline.obsID];
+    }
+
+    if (feedback && (result = strstr(logline.msg, "LTA FEEDBACK: "))) {
       vector<char> key(strlen(logline.msg)+1);
       vector<char> value(strlen(logline.msg)+1);
 
@@ -1065,14 +1071,12 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
       }
 
       ParameterSet *feedback = 0;
-      int streamNr = -1;
 
       if (logline.obsID >= 0 && observationRegistered(logline.obsID)) {
         feedback = &itsFeedback[logline.obsID];
-        streamNr = _getParam(logline.target, "stream ");
       }
 
-      if ((result = strstr(logline.msg, "LTA FEEDBACK: "))) {
+      if (feedback && (result = strstr(logline.msg, "LTA FEEDBACK: "))) {
         vector<char> key(strlen(logline.msg)+1);
         vector<char> value(strlen(logline.msg)+1);
 
