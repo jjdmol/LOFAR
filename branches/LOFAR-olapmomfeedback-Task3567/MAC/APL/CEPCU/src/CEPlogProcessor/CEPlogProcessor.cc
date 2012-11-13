@@ -471,23 +471,6 @@ void CEPlogProcessor::processParset( const std::string &observationID )
       // register the temporary obs name
       registerObservation( obsID, parset.getString("_DPname") );
     }
-
-    // process feedback for correlated data
-    unsigned nrBeamFormedStreams = 0;
-    unsigned nrCorrelatedStreams = 0;
-
-    for (unsigned i = 0; i < nrStreams; i++ ) {
-      Observation::StreamToStorage &s = obs.streamsToStorage[i];
-
-      if (s.dataProduct == "Beamformed")
-        nrBeamFormedStreams++; 
-
-      if (s.dataProduct == "Correlated")
-        nrCorrelatedStreams++; 
-    }
-
-    feedback.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_BeamFormed_", formatString("%u", nrBeamFormedStreams));
-    feedback.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_", formatString("%u", nrCorrelatedStreams));
 }
 
 
@@ -497,7 +480,10 @@ void CEPlogProcessor::writeFeedback( int obsID )
     string filename(formatString("%s/Observation%d_feedback", 
                                  LOFAR_SHARE_LOCATION, obsID));
 
-    itsFeedback[obsID].writeFile(filename);
+    // add a prefix
+    ParameterSet prefixedFeedback = itsFeedback[obsID].makeSubset("", "LOFAR.ObsSW.");
+
+    prefixedFeedback.writeFile(filename);
 }
 
 
@@ -1018,6 +1004,17 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
         return;
       }
     }   
+
+    if ((result = strstr(logline.msg, "LTA FEEDBACK: "))) {
+      vector<char> key(strlen(logline.msg)+1);
+      vector<char> value(strlen(logline.msg)+1);
+
+      if (sscanf(result, "LTA FEEDBACK: %s = %[^\n]s", &key[0], &value[0]) == 2) {
+        feedback->replace(&key[0], &value[0]);
+
+        LOG_DEBUG_STR("Observation " << logline.obsID << ": Added LTA feedback parameter " << &key[0] << " = " << &value[0]);
+      }
+    }  
 }
 
 void CEPlogProcessor::_processCNProcLine(const struct logline &logline)

@@ -508,6 +508,14 @@ void Job::jobThread()
       // Storage should be done any second now.
 
       stopStorageProcesses();
+
+      // Augment the LTA feedback logging
+      ParameterSet feedback;
+      feedback.add("Observation.Dataproducts.nrOfOutput_BeamFormed_", str(format("%u") % parset.nrStreams(BEAM_FORMED_DATA));
+      feedback.add("Observation.Dataproducts.nrOfOutput_Correlated_", str(format("%u") % parset.nrStreams(CORRELATED_DATA));
+
+      for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)
+        LOG_INFO_STR(itsLogPrefix << "LTA FEEDBACK: " << i->first << " = " << i->second);
     }
   }
 
