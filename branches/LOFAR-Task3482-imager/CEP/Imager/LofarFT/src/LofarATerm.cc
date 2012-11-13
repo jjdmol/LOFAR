@@ -75,10 +75,11 @@ namespace
       MDirection::J2000)();
      itsDirectionCoordinates = 0;
     itsParameters = parameters;
-    itsapplyIonosphere = False;
-    if (itsParameters.fieldNumber("applyIonosphere") > -1) itsapplyIonosphere = itsParameters.asBool("applyIonosphere");
-    cout << "Apply Ionosphere:" << itsapplyIonosphere << endl;
-    if (itsapplyIonosphere) 
+    itsApplyBeam = True;
+    if (itsParameters.fieldNumber("applyBeam") > -1) itsApplyBeam = itsParameters.asBool("applyBeam");
+    itsApplyIonosphere = False;
+    if (itsParameters.fieldNumber("applyIonosphere") > -1) itsApplyIonosphere = itsParameters.asBool("applyIonosphere");
+    if (itsApplyIonosphere) 
     {
       String parmdbname = ms.tableName() + "/instrument";
       cout << parmdbname << endl;
@@ -92,6 +93,7 @@ namespace
     this->pdb = new LOFAR::BBS::ParmFacade (parmdbname);
     std::string prefix = "Piercepoint:X:";
     std::vector<std::string> v = this->pdb->getNames(prefix + "*");
+    cout << "Nparm: " << v.size() << endl;
     this->cal_pp_names = Vector<String>(v.size());
     this->cal_pp = Matrix<Double>(3,v.size());
     this->tec_white = Vector<Double>(v.size());
@@ -113,30 +115,37 @@ namespace
   void LofarATerm::setEpoch( const MEpoch &epoch )
   {
     if (this->itsDirectionCoordinates) itsITRFDirectionMap = makeDirectionMap(*itsDirectionCoordinates, *itsShape, epoch);    
-    if (this->itsapplyIonosphere) 
+    if (this->itsApplyIonosphere) 
     {
       this->time = epoch.get(casa::Unit("s")).getValue();
-      this->r0 = get_parmvalue("r_0");
-      this->beta = get_parmvalue("beta");
-      this->height = get_parmvalue("height");
+      cout << "Epoch set to " << this->time << " reading parms..." << flush;
+      double freq = 50e6; // the ionospheric parameters are not frequency dependent, so just pick an arbitrary frequency
+                          // this frequency should be within the range specified in the parmdbname
+                          // this range is again quite arbitrary
+                          
+      Record parms = this->pdb->getValues ("*", freq, freq+0.5, 1.0, this->time, this->time + 0.5, 1.0 );
+      this->r0 = get_parmvalue(parms, "r_0");
+      this->beta = get_parmvalue(parms, "beta");
+      this->height = get_parmvalue(parms, "height");
       for(uint i = 0; i < this->cal_pp_names.size(); ++i) {
-        this->cal_pp(0, i) = get_parmvalue("Piercepoint:X:" + this->cal_pp_names(i));
-        this->cal_pp(1, i) = get_parmvalue("Piercepoint:Y:" + this->cal_pp_names(i));
-        this->cal_pp(2, i) = get_parmvalue("Piercepoint:Z:" + this->cal_pp_names(i));
-        this->tec_white(i) = get_parmvalue("TECfit_white:0:" + this->cal_pp_names(i));
+        this->cal_pp(0, i) = get_parmvalue(parms, "Piercepoint:X:" + this->cal_pp_names(i));
+        this->cal_pp(1, i) = get_parmvalue(parms, "Piercepoint:Y:" + this->cal_pp_names(i));
+        this->cal_pp(2, i) = get_parmvalue(parms, "Piercepoint:Z:" + this->cal_pp_names(i));
+        this->tec_white(i) = get_parmvalue(parms, "TECfit_white:0:" + this->cal_pp_names(i));
       }
+      cout << "done." << endl;
     }
   }
   
-  double LofarATerm::get_parmvalue( std::string parmname ) 
+  double LofarATerm::get_parmvalue( Record& parms, std::string parmname ) 
   {
-    double freq = 50e6; // the ionospheric parameters are not frequency dependent, so just pick an arbitrary frequency
-                         // this frequency should be within the range specified in the parmdbname
-                         // this range is again quite arbitrary
-    casa::Record result = this->pdb->getValues (parmname, freq, freq+0.5, 1.0, this->time, this->time + 0.5, 1.0 );
-    casa::Array<double> parmvalues;
-    result.subRecord(parmname).get("values", parmvalues);
-    return parmvalues(IPosition(2,0,0));
+    double r = 0.0;
+    if (parms.isDefined(parmname)) {
+      casa::Array<double> parmvalues;
+      parms.subRecord(parmname).get("values", parmvalues);
+      r = parmvalues(IPosition(2,0,0));
+    }  
+    return r;
   }
   
   
@@ -254,6 +263,51 @@ namespace
     return asVector(E);
   }
 
+  
+  
+  Cube<DComplex> LofarATerm::evaluateStationScalarFactor(const uint idStation,
+    const Vector<Double> &freq, const Vector<Double> &reference, bool normalize) const
+  {
+    AlwaysAssert(idStation < itsInstrument->nStations(), SynthesisError);
+
+    const uint idPolarization = 0;
+    const ITRFDirectionMap &map = itsITRFDirectionMap;
+
+    const uint nX = map.directions.shape()[1];
+    const uint nY = map.directions.shape()[2];
+    const uint nFreq = freq.size();
+    
+    Cube<DComplex> SF(nX, nY, nFreq, DComplex(1.0, 0.0));
+    
+    if (itsApplyBeam) {
+      BBS::Station::ConstPtr station = itsInstrument->station(idStation);
+      Array<DComplex> AF = computeFieldArrayFactor(station, 0, map, freq,
+        reference);
+
+      if(station->nField() > 1)
+      {
+        AF += computeFieldArrayFactor(station, 1, map, freq, reference);
+      }
+      IPosition start(4, 0, 0, idPolarization, 0);
+      IPosition end(4, nX - 1, nY - 1, idPolarization, nFreq - 1);
+      Cube<DComplex> AFslice = AF(start, end).reform(IPosition(3, nX, nY, nFreq));
+      SF *= AFslice;
+    }
+    
+    if (itsApplyIonosphere) 
+    {
+      Cube<DComplex> IF = evaluateIonosphere(idStation, freq);
+      SF *= IF;
+    }
+    
+    if(normalize)
+    {
+      rescale(SF);
+    }
+    
+    return SF;
+  }
+
   vector<Matrix<Complex> > LofarATerm::evaluateArrayFactor(uint idStation,
     uint idPolarization,
     const Vector<Double> &freq, const Vector<Double> &reference, bool normalize)
@@ -284,7 +338,6 @@ namespace
     {
       rescale(slice);
     }
-
     return asVector(slice);
   }
 
@@ -316,18 +369,9 @@ namespace
     return asVector(response);
   }
 
-  vector<Cube<Complex> > LofarATerm::evaluateIonosphere(
-    uint station,
-    const Vector<Double> &freq,
-    bool normalize)
+  Cube<DComplex> LofarATerm::evaluateIonosphere(uint station, const Vector<Double> &freq) const
   {
     const ITRFDirectionMap &map = itsITRFDirectionMap;
-
-//    AlwaysAssert(station < this->instrument.nStations(), SynthesisError);
-//    AlwaysAssert(shape[0] > 0 && shape[1] > 0, SynthesisError);
-//    AlwaysAssert(freq.size() > 0, SynthesisError);
-
-    // Create conversion engine (from J2000 -> ITRF).
 
     const uint nX = map.directions.shape()[1];
     const uint nY = map.directions.shape()[2];
@@ -355,9 +399,6 @@ namespace
     
     casa::Cube<double> piercepoints(4, nX, nY, 0.0);
    
-    #pragma omp parallel
-    {
-    #pragma omp for
     for(uint i = 0 ; i < nX; ++i) 
     {
       for(uint j = 0 ; j < nY; ++j) 
@@ -377,12 +418,6 @@ namespace
         double norm_normal2 = normal_x*normal_x + normal_y*normal_y + normal_z*normal_z;
         double norm_normal = std::sqrt(norm_normal2);
         double sin_lat2 = normal_z*normal_z / norm_normal2;
-//         double cos_za = (mapITRF(0,i,j)*normal_x + mapITRF(1,i,j)*normal_y + mapITRF(2,i,j)*normal_z) / norm_normal;
-//         piercepoints(3, i, j) = cos_za;
-
-//        casa::MPosition p1(casa::MVPosition(piercepoints(0, i, j), piercepoints(1, i, j), piercepoints(2, i, j)),casa::MPosition::ITRF);
-//        positionWGS84 = casa::MPosition::Convert(p1, casa::MPosition::WGS84)();
-//        piercepoints(2, i, j) = positionWGS84.getValue().getLength().getValue()-height;
 
         double g = 1.0 - earth_ellipsoid_e2*sin_lat2;
         double sqrt_g = std::sqrt(g);
@@ -419,21 +454,12 @@ namespace
         double cos_za_rec = norm_normal / (map.directions(0,i,j)*normal_x + map.directions(1,i,j)*normal_y + map.directions(2,i,j)*normal_z);
         piercepoints(3, i, j) = cos_za_rec;
 
-//         p1 = casa::MPosition(casa::MVPosition(piercepoints(0, i, j), piercepoints(1, i, j), piercepoints(2, i, j)),casa::MPosition::ITRF);
-//        positionWGS84 = casa::MPosition::Convert(p1, casa::MPosition::WGS84)();
-//        piercepoints(0, i, j) = positionWGS84.getValue().getLength().getValue()-height;
-//        cout << positionWGS84.getValue().getLength().getValue()-height << endl;
-
       }
-    }
     }  
     Matrix<Double> tec(nX, nY, 0.0);
     
     Double r0sqr = r0 * r0;
     Double beta_2 = 0.5 * beta;
-    #pragma omp parallel
-    {
-    #pragma omp for
     for(uint i = 0 ; i < nX; ++i) 
     {
       for(uint j = 0 ; j < nY; ++j) 
@@ -449,31 +475,21 @@ namespace
         tec(i,j) *= (-0.5 * piercepoints(3,i,j));
       }
     }
-    }
-
-    // Convert an Array<DComplex> to a vector<Cube<Complex> >.
-
-    vector<Cube<Complex> > tmp;
-//    cout << "freq: " << freq[0] << endl;
-    tmp.reserve(nFreq);
+    
+    Cube<DComplex> IF(nX, nY, nFreq, DComplex(0.0, 0.0));
     for (uint i = 0; i < freq.size(); ++i)
     {
       Double a = (8.44797245e9 / freq[i]);
-      Cube<Complex> planef(IPosition(3, nX, nY, 4), Complex(0.0, 0.0));
       for(uint j = 0 ; j < nX; ++j) 
       {
         for(uint k = 0 ; k < nY; ++k) 
         {
-          Double phase = -tec(j,k) * a;
-          Complex phasor(cos(phase), sin(phase));
-          planef(j,k, 0) = phasor;
-          planef(j,k, 3) = phasor;
+          Double phase = -tec(j,k) * a; 
+          IF(j,k,i) = DComplex(cos(phase), sin(phase));
         }
       }
-//      cout << planef << endl;
-      tmp.push_back(planef);
     }
-    return tmp;
+    return IF;
   }
   
   
@@ -665,7 +681,7 @@ namespace
         slice *= tileAF;
       }
     }
-
+    
     return AF;
   }
 

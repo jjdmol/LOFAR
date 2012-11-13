@@ -87,6 +87,12 @@ namespace LOFAR
     // reference frequencies. The normalize argument, when set to true, causes
     // the response to be multiplied by the inverse of the array factor at the
     // central pixel.
+      
+    casa::Cube<casa::DComplex> evaluateStationScalarFactor(uint idStation,
+      const casa::Vector<casa::Double> &freq,
+      const casa::Vector<casa::Double> &reference, bool normalize = false)
+      const;
+
     vector<casa::Matrix<casa::Complex> > evaluateArrayFactor(uint idStation,
       uint idPolarization,
       const casa::Vector<casa::Double> &freq,
@@ -104,18 +110,17 @@ namespace LOFAR
       uint idField,
       const casa::Vector<casa::Double> &freq, bool normalize = false) const;
 
-    vector<casa::Cube<casa::Complex> > evaluateIonosphere(
-      uint station,
-      const casa::Vector<casa::Double> &freq,
-      bool normalize);
+    casa::Cube<casa::DComplex> evaluateIonosphere(
+      const uint station,
+      const casa::Vector<casa::Double> &freq) const;
 
   private:
     
     void initParmDB(const casa::String &parmdbname);
-    double get_parmvalue( std::string parmname );
+    double get_parmvalue( casa::Record &parms, std::string parmname );
 
     casa::Record itsParameters;
-
+    casa::Record itsParmValues;
     BBS::Instrument::Ptr  itsInstrument;
     const casa::DirectionCoordinate *itsDirectionCoordinates;
     const casa::IPosition       *itsShape;
@@ -123,7 +128,8 @@ namespace LOFAR
     ITRFDirectionMap      itsITRFDirectionMap;
     
     // state variables for ionosphere
-    casa::Bool itsapplyIonosphere;
+    casa::Bool itsApplyBeam;
+    casa::Bool itsApplyIonosphere;
     LOFAR::BBS::ParmFacade* pdb;
     double time, r0, beta, height;
     casa::Vector<casa::String>   cal_pp_names;
