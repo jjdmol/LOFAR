@@ -510,12 +510,14 @@ void Job::jobThread()
       stopStorageProcesses();
 
       // Augment the LTA feedback logging
-      ParameterSet feedbackLTA;
-      feedbackLTA.add("Observation.Dataproducts.nrOfOutput_BeamFormed_", str(boost::format("%u") % itsParset.nrStreams(BEAM_FORMED_DATA)));
-      feedbackLTA.add("Observation.Dataproducts.nrOfOutput_Correlated_", str(boost::format("%u") % itsParset.nrStreams(CORRELATED_DATA)));
+      if (myPsetNumber == 0) {
+        ParameterSet feedbackLTA;
+        feedbackLTA.add("Observation.DataProducts.nrOfOutput_BeamFormed_", str(boost::format("%u") % itsParset.nrStreams(BEAM_FORMED_DATA)));
+        feedbackLTA.add("Observation.DataProducts.nrOfOutput_Correlated_", str(boost::format("%u") % itsParset.nrStreams(CORRELATED_DATA)));
 
-      for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)
-        LOG_INFO_STR(itsLogPrefix << "LTA FEEDBACK: " << i->first << " = " << i->second);
+        for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)
+          LOG_INFO_STR(itsLogPrefix << "LTA FEEDBACK: " << i->first << " = " << i->second);
+      }  
     }
   }
 
