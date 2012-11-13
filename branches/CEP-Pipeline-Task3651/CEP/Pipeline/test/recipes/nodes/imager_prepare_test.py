@@ -9,7 +9,7 @@ import tempfile
 
 import pyrap.tables as tb                                                       #@UnresolvedImport
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
-from lofarpipe.recipes.nodes.imager_prepare import imager_prepare \
+from nodes.imager_prepare import imager_prepare \
      as imager_prepare_node
 from logger import logger
 
