@@ -8,7 +8,7 @@
 #run the actual python script performing the tests
 # Run all test collected in the current directory (including possible self tests!)
 
-PYTHONPATH=${srcdir}/test_framework/fixture:${PYTHONPATH}
+PYTHONPATH=${srcdir}/recipes/sip:${srcdir}/test_framework/fixture:${PYTHONPATH}
 export PYTHONPATH
 
 python ${srcdir}/test_framework/unittest_runner.py -x results.xml -p ${srcdir}
