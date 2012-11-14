@@ -797,12 +797,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         itsBeamConfigurationTableModel = new BeamConfigurationTableModel();
         beamConfigurationPanel.setTableModel(itsBeamConfigurationTableModel);
         beamConfigurationPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        beamConfigurationPanel.setColumnSize("dirtype",20);
-        beamConfigurationPanel.setColumnSize("angle 1",20);
-        beamConfigurationPanel.setColumnSize("angle 2",20);
-        beamConfigurationPanel.setColumnSize("coordtype",20);
-        beamConfigurationPanel.setColumnSize("maxDur",20);
-        beamConfigurationPanel.setColumnSize("#TAB",20);
+        beamConfigurationPanel.setColumnSize("dirtype",24);
+        beamConfigurationPanel.setColumnSize("angle 1",24);
+        beamConfigurationPanel.setColumnSize("angle 2",24);
+        beamConfigurationPanel.setColumnSize("coordtype",24);
+        beamConfigurationPanel.setColumnSize("#TAB",24);
         beamConfigurationPanel.setColumnSize("subbands",65);
         beamConfigurationPanel.setColumnSize("beamlets",65);
         beamConfigurationPanel.repaint();
@@ -810,12 +809,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         itsAnaBeamConfigurationTableModel = new AnaBeamConfigurationTableModel();
         anaBeamConfigurationPanel.setTableModel(itsAnaBeamConfigurationTableModel);
         anaBeamConfigurationPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        anaBeamConfigurationPanel.setColumnSize("dirtype",40);
-        anaBeamConfigurationPanel.setColumnSize("angle 1",40);
-        anaBeamConfigurationPanel.setColumnSize("angle 2",40);
-        anaBeamConfigurationPanel.setColumnSize("coordtype",30);
-        anaBeamConfigurationPanel.setColumnSize("maxDur",20);
-        anaBeamConfigurationPanel.setColumnSize("rank",30);
+        anaBeamConfigurationPanel.setColumnSize("dirtype",44);
+        anaBeamConfigurationPanel.setColumnSize("angle 1",44);
+        anaBeamConfigurationPanel.setColumnSize("angle 2",44);
+        anaBeamConfigurationPanel.setColumnSize("coordtype",34);
+        anaBeamConfigurationPanel.setColumnSize("rank",34);
         anaBeamConfigurationPanel.repaint();
 
         itsBeamformerConfigurationTableModel = new BeamformerConfigurationTableModel();

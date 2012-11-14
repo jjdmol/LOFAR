@@ -60,7 +60,6 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         this.addColumn("angle 1");
         this.addColumn("angle 2");
         this.addColumn("coordtype");
-        this.addColumn("maxDur");
         this.addColumn("rank");
     }
     

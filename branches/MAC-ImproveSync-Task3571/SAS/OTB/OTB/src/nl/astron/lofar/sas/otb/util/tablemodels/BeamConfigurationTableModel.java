@@ -59,7 +59,6 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         this.addColumn("angle 1");
         this.addColumn("angle 2");
         this.addColumn("coordtype");
-        this.addColumn("maxDur");
         this.addColumn("#TAB");
         this.addColumn("subbands");
         this.addColumn("beamlets");
