@@ -96,8 +96,7 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
   itsStartTime = toMJDs(itsPS.startTime());
 
   itsTimeStep = itsPS.IONintegrationTime();
-  itsNrTimes = 29030400;  /// equates to about one year, sets valid
-			  /// timerage to 1 year beyond starttime
+  itsNrTimes = itsPS.nrCorrelatedBlocks();
 }
 
   
