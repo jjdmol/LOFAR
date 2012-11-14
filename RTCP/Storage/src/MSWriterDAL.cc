@@ -414,7 +414,7 @@ namespace LOFAR
 
       timeCoordinate.get()->referenceValue().value = 0;
       timeCoordinate.get()->referencePixel().value = 0;
-      timeCoordinate.get()->increment()     .value = parset.sampleDuration() * itsInfo.timeIntFactor;
+      timeCoordinate.get()->increment()     .value = parset.sampleDuration() * parset.nrChannelsPerSubband() * itsInfo.timeIntFactor;
       timeCoordinate.get()->pc()            .value = unitvector;
 
       timeCoordinate.get()->axisValuesPixel().value = vector<unsigned>(1, 0); // not used
