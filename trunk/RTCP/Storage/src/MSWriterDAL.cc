@@ -449,7 +449,7 @@ namespace LOFAR
       vector<double> spectralWorld;
 
       for(unsigned sb = 0; sb < nrSubbands; sb++) {
-        const double subbandBeginFreq = nrChannels == 1 ? beamCenterFrequencies[sb] : beamCenterFrequencies[sb] - 0.5 * subbandBandwidth;
+        const double subbandBeginFreq = itsNrChannels == 1 ? beamCenterFrequencies[sb] : beamCenterFrequencies[sb] - 0.5 * subbandBandwidth;
 
 	// NOTE: channel 0 will be wrongly annotated if nrChannels > 1, because it is a combination of the
 	// highest and the lowest frequencies (half a channel each).
