@@ -406,7 +406,7 @@ void MeasurementSetFormat::fillObs(unsigned subarray)
     ctargets[i] = targets[i];
 
   vector<string> cois(itsPS.getStringVector("Observation.Campaign.CO_I"));
-  casa::Vector<String> ccois(targets.size());
+  casa::Vector<String> ccois(cois.size());
 
   for (uint i = 0; i < cois.size(); ++ i)
     ccois[i] = cois[i];
