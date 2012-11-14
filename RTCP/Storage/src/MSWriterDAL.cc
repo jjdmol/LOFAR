@@ -190,17 +190,23 @@ namespace LOFAR
       file.observationNofStations().value = parset.nrStations(); // TODO: SS beamformer?
       file.observationStationsList().value = parset.allStationNames(); // TODO: SS beamformer?
 
+      double subbandBandwidth = parset.sampleRate();
+      double channelBandwidth = parset.channelWidth();
+
+      // if PPF is used, the frequencies are shifted down by half a channel
+      // We'll annotate channel 0 to be below channel 1, but in reality it will
+      // contain frequencies from both the top and the bottom half-channel.
+      double frequencyOffsetPPF = parset.nrChannelsPerSubband() > 1 ? 0.5 * channelBandwidth : 0.0;
+
       const vector<double> subbandCenterFrequencies = parset.subbandToFrequencyMapping();
+
       double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
       double max_centerfrequency = *max_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
       double sum_centerfrequencies = accumulate( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end(), 0.0 );
 
-      double subbandBandwidth = parset.sampleRate();
-      double channelBandwidth = parset.channelWidth();
-
-      file.observationFrequencyMax()   .value = (max_centerfrequency + subbandBandwidth / 2) / 1e6;
-      file.observationFrequencyMin()   .value = (min_centerfrequency - subbandBandwidth / 2) / 1e6;
-      file.observationFrequencyCenter().value = sum_centerfrequencies / subbandCenterFrequencies.size() / 1e6;
+      file.observationFrequencyMax()   .value = (max_centerfrequency + subbandBandwidth / 2 - frequencyOffsetPPF) / 1e6;
+      file.observationFrequencyMin()   .value = (min_centerfrequency - subbandBandwidth / 2 - frequencyOffsetPPF) / 1e6;
+      file.observationFrequencyCenter().value = (sum_centerfrequencies / subbandCenterFrequencies.size() - frequencyOffsetPPF) / 1e6;
       file.observationFrequencyUnit()  .value = "MHz";
 
       file.observationNofBitsPerSample().value = parset.nrBitsPerSample();
@@ -339,7 +345,7 @@ namespace LOFAR
 
       double beamCenterFrequencySum = accumulate(beamCenterFrequencies.begin(), beamCenterFrequencies.end(), 0.0);
 
-      beam.beamFrequencyCenter()    .value = beamCenterFrequencySum / nrSubbands / 1e6;
+      beam.beamFrequencyCenter()    .value = (beamCenterFrequencySum / nrSubbands - frequencyOffsetPPF) / 1e6;
       beam.beamFrequencyCenterUnit().value = "MHz";
 
       double DM = parset.dispersionMeasure(sapNr, beamNr);
@@ -443,7 +449,10 @@ namespace LOFAR
       vector<double> spectralWorld;
 
       for(unsigned sb = 0; sb < nrSubbands; sb++) {
-        const double subbandBeginFreq = beamCenterFrequencies[sb] - 0.5 * subbandBandwidth;
+        const double subbandBeginFreq = beamCenterFrequencies[sb] - 0.5 * subbandBandwidth - frequencyOffsetPPF;
+
+	// NOTE: channel 0 will be wrongly annotated if nrChannels > 1, because it is a combination of the
+	// highest and the lowest frequencies (half a channel each).
 
         for(unsigned ch = 0; ch < itsInfo.nrChannels; ch++) {
           spectralPixels.push_back(spectralPixels.size());
