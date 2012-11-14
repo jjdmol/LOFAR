@@ -2607,24 +2607,24 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
             FILE* file;
             file = fopen(filename,"w");
             if (file) {
-                fprintf(file,  "Station ID      : %d",itsStationId);
-                fprintf(file,  "RSP ID          : %d",itsRspId);
-                fprintf(file,  "RCU ID          : %d",itsRcuId);
-                fprintf(file,  "Sample freq     : %d MHz",itsSampleFreq);
+                fprintf(file,  "Station ID      : %d\n",itsStationId);
+                fprintf(file,  "RSP ID          : %d\n",itsRspId);
+                fprintf(file,  "RCU ID          : %d\n",itsRcuId);
+                fprintf(file,  "Sample freq     : %d MHz\n",itsSampleFreq);
                 if (itsTime < 0) {
-                    fprintf(file,"Time            : invalid");
+                    fprintf(file,"Time            : invalid\n");
                 } else {
-                    fprintf(file,"Time of 1e sample/slice  : %s (%u)",timestring,(uint32)itsTime);
+                    fprintf(file,"Time of 1e sample/slice  : %s (%u)\n",timestring,(uint32)itsTime);
                 }
                 if (itsFreqBands > 0) {
-                    fprintf(file,"Slice number of 1e slice : %d",itsSliceNr);
-                    fprintf(file,"Band number of 1e sample : %d",itsBandNr);
-                    fprintf(file,"Number of bands          : %d",itsFreqBands);
-                    fprintf(file,"Data file format         : binary complex(int16 Re, int16 Im)");
+                    fprintf(file,"Slice number of 1e slice : %d\n",itsSliceNr);
+                    fprintf(file,"Band number of 1e sample : %d\n",itsBandNr);
+                    fprintf(file,"Number of bands          : %d\n",itsFreqBands);
+                    fprintf(file,"Data file format         : binary complex(int16 Re, int16 Im)\n");
                 } else {
-                    fprintf(file,"Sample number of 1e sample : %u",itsSampleNr);
-                    fprintf(file,"Total number of samples    : %u",itsTotalSamples);
-                    fprintf(file,"Data file format           : binary  int16");
+                    fprintf(file,"Sample number of 1e sample : %u\n",itsSampleNr);
+                    fprintf(file,"Total number of samples    : %u\n",itsTotalSamples);
+                    fprintf(file,"Data file format           : binary  int16\n");
                     fprintf(file," ");
                 }
                 fclose(file);
