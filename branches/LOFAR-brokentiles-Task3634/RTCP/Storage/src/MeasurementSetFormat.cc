@@ -96,8 +96,7 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
   itsStartTime = toMJDs(itsPS.startTime());
 
   itsTimeStep = itsPS.IONintegrationTime();
-  itsNrTimes = 29030400;  /// equates to about one year, sets valid
-			  /// timerage to 1 year beyond starttime
+  itsNrTimes = itsPS.nrCorrelatedBlocks();
 }
 
   
@@ -406,7 +405,7 @@ void MeasurementSetFormat::fillObs(unsigned subarray)
     ctargets[i] = targets[i];
 
   vector<string> cois(itsPS.getStringVector("Observation.Campaign.CO_I"));
-  casa::Vector<String> ccois(targets.size());
+  casa::Vector<String> ccois(cois.size());
 
   for (uint i = 0; i < cois.size(); ++ i)
     ccois[i] = cois[i];

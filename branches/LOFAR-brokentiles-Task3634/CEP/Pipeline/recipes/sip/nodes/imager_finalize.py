@@ -8,12 +8,19 @@ from __future__ import with_statement
 import sys
 import subprocess
 import os
+import tempfile
+import shutil
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.utilities import log_time, create_directory
 import lofar.addImagingInfo as addimg
 import pyrap.images as pim
+from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.pipelinelogging import CatchLog4CPlus
+
+import urllib2
+import lofarpipe.recipes.helpers.MultipartPostHandler as mph
 
 class imager_finalize(LOFARnodeTCP):
     """
@@ -21,13 +28,15 @@ class imager_finalize(LOFARnodeTCP):
     
     1. Add the image info to the casa image:
        addimg.addImagingInfo (imageName, msNames, sourcedbName, minbl, maxbl)
-    2. Convert the image to hdf5 image format:
+    2. Convert the image to hdf5 and fits image
     3. Filling of the HDF5 root group
+    4. Export fits image to msss image server
     4. Return the outputs
     """
     def run(self, awimager_output, raw_ms_per_image, sourcelist, target,
             output_image, minbaseline, maxbaseline, processed_ms_dir,
-            fillrootimagegroup_exec):
+            fillrootimagegroup_exec, environment, sourcedb):
+        self.environment.update(environment)
         """
         :param awimager_output: Path to the casa image produced by awimager 
         :param raw_ms_per_image: The X (90) measurements set scheduled to 
@@ -64,7 +73,7 @@ class imager_finalize(LOFARnodeTCP):
             #add the information the image
             try:
                 addimg.addImagingInfo(awimager_output, processed_ms_paths,
-                    sourcelist, minbaseline, maxbaseline)
+                    sourcedb, minbaseline, maxbaseline)
 
             except Exception, error:
                 self.logger.error("addImagingInfo Threw Exception:")
@@ -79,13 +88,14 @@ class imager_finalize(LOFARnodeTCP):
 
             # ***************************************************************
             # 2. convert to hdf5 image format
+            output_directory = None
             pim_image = pim.image(awimager_output)
-
             try:
                 self.logger.info("Saving image in HDF5 Format to: {0}" .format(
                                 output_image))
                 # Create the output directory
-                create_directory(os.path.split(output_image)[0])
+                output_directory = os.path.dirname(output_image)
+                create_directory(output_directory)
                 # save the image
                 pim_image.saveas(output_image, hdf5=True)
 
@@ -94,6 +104,27 @@ class imager_finalize(LOFARnodeTCP):
                     "Exception raised inside pyrap.images: {0}".format(
                                                                 str(error)))
                 raise error
+
+            # Convert to fits
+            # create target location
+            fits_output = output_image + ".fits"
+            # To allow reruns a possible earlier version needs to be removed!
+            if os.path.exists(fits_output):
+                os.unlink(fits_output)
+
+            try:
+                temp_dir = tempfile.mkdtemp()
+                with CatchLog4CPlus(temp_dir,
+                    self.logger.name + '.' + os.path.basename(awimager_output),
+                            "image2fits") as logger:
+                    catch_segfaults(["image2fits", '-in', awimager_output,
+                                                 '-out', fits_output],
+                                    temp_dir, self.environment, logger)
+            except Exception, excp:
+                self.logger.error(str(excp))
+                return 1
+            finally:
+                shutil.rmtree(temp_dir)
 
             # ****************************************************************
             # 3. Filling of the HDF5 root group
@@ -118,6 +149,50 @@ class imager_finalize(LOFARnodeTCP):
                     "see above lines. Exit status: {0}".format(exit_status))
 
                 return 1
+
+            # *****************************************************************
+            # 4 Export the fits image to the msss server
+            url = "http://tanelorn.astron.nl:8000/upload"
+            try:
+                self.logger.info("Starting upload of fits image data to server!")
+                opener = urllib2.build_opener(mph.MultipartPostHandler)
+                filedata = {"file": open(fits_output, "rb")}
+                opener.open(url, filedata, timeout=2)
+                # HTTPError needs to be caught first.
+            except urllib2.HTTPError as httpe:
+                self.logger.warn("HTTP status is: {0}".format(httpe.code))
+                self.logger.warn("failed exporting fits image to server")
+
+            except urllib2.URLError as urle:
+                self.logger.warn(str(urle.reason))
+                self.logger.warn("failed exporting fits image to server")
+
+            except Exception, exc:
+                self.logger.warn(str(exc))
+                self.logger.warn("failed exporting fits image to server")
+
+
+            # *****************************************************************
+            # 5. export the sourcelist to the msss server
+            url = "http://tanelorn.astron.nl:8000/upload_srcs"
+            try:
+                self.logger.info("Starting upload of sourcelist data to server!")
+                opener = urllib2.build_opener(mph.MultipartPostHandler)
+                filedata = {"file": open(sourcelist, "rb")}
+                opener.open(url, filedata, timeout=2)
+                # HTTPError needs to be caught first.
+            except urllib2.HTTPError as httpe:
+                self.logger.warn("HTTP status is: {0}".format(httpe.code))
+                self.logger.warn("failed exporting sourcelist to server")
+
+            except urllib2.URLError as urle:
+                self.logger.warn(str(urle.reason))
+                self.logger.warn("failed exporting sourcelist image to server")
+
+            except Exception, exc:
+                self.logger.warn(str(exc))
+                self.logger.warn("failed exporting sourcelist image to serve")
+
 
             self.outputs["hdf5"] = "succes"
             self.outputs["image"] = output_image
