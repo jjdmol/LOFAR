@@ -9,6 +9,7 @@ python_install(
   format.py
   ionosphere.py
   acalc.py
+  client.py
   sphere.py
   error.py
   mpfit.py
