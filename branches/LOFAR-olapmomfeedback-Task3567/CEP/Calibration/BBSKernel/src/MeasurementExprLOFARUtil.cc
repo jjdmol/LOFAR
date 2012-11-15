@@ -395,10 +395,15 @@ compose(const Expr<JonesMatrix>::Ptr &lhs,
 }
 
 Expr<JonesMatrix>::Ptr
-compose(const Expr<JonesMatrix>::Ptr &matrix,
-    const Expr<Scalar>::Ptr &scalar)
+compose(const Expr<JonesMatrix>::Ptr &lhs,
+    const Expr<Scalar>::Ptr &rhs)
 {
-    return Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(scalar, matrix));
+    if(lhs)
+    {
+        return Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(rhs, lhs));
+    }
+
+    return Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(rhs, rhs));
 }
 
 Expr<JonesMatrix>::Ptr

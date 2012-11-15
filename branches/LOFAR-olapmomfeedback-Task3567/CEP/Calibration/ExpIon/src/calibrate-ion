@@ -172,8 +172,11 @@ ion_model = ionosphere.IonosphericModel(gdsfiles, clusterdescfile,
 def operation_clocktec ( step ):
    ClockEnable = parset.getBool('.'.join(["ExpIon.Steps", step, "Clock.Enable"]), True )
    TECEnable = parset.getBool('.'.join(["ExpIon.Steps", step, "TEC.Enable"]), True )
+   print '.'.join(["ExpIon.Steps", step, "Stations"])
+   stations = parset.getStringVector('.'.join(["ExpIon.Steps", step, "Stations"]), [])
+   print "stations: ", stations
    if ClockEnable or TECEnable :
-      ion_model.ClockTEC( ClockEnable = ClockEnable, TECEnable = TECEnable )
+      ion_model.ClockTEC( ClockEnable = ClockEnable, TECEnable = TECEnable, stations = stations )
    
 
 def operation_fitmodel( step ) :
