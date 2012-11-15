@@ -31,13 +31,14 @@ import re
 import atexit
 
 # import 3rd party modules
-from IPython.kernel import client
+  
 import numpy
 from pylab import *
 import scipy.optimize
 
 # import user modules
 #from files import *
+import client
 from acalc import *
 import sphere
 import lofar.parmdb
@@ -53,10 +54,6 @@ import tables
 
 
 ###############################################################################
-
-
-# Without the following statement python sometimes throws an exception on exit
-atexit.register(client.rit.stop)
 
 class IonosphericModel:
    """IonosphericModel class is the main interface to the functions impelmented in the ionosphere module"""
@@ -504,7 +501,7 @@ class IonosphericModel:
       N_times = self.TECfit.shape[1]
       N_sources = len(self.sources)
       N_piercepoints = N_stations * N_sources
-      N_pol = len(self.polarizations)
+      N_pol = self.TECfit_white.shape[0]
       R = 6378137
       taskids = []
       
@@ -536,6 +533,7 @@ class IonosphericModel:
          clf()
          for pol in range(N_pol) :
             (phi,w) = tc.get_task_result(taskids.pop(0), block = True)
+            print phi
             phi = phi + self.offsets[pol, i]
             subplot(1, N_pol, pol+1)
             w = w*R*1e-3
