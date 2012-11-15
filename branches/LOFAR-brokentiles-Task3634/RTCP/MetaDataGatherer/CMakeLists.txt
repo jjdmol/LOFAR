@@ -6,3 +6,4 @@ include(LofarFindPackage)
 lofar_find_package(Casacore COMPONENTS casa ms tables REQUIRED)
 
 add_subdirectory(src)
+add_subdirectory(test)
