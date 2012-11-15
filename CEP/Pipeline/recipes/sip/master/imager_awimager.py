@@ -9,7 +9,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map, validate_data_maps
+from lofarpipe.support.data_map import DataMap, validate_data_maps
 
 class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -74,8 +74,8 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # *********************************************************************
         # 1. collect the inputs and validate        
-        input_map = load_data_map(self.inputs['args'][0])
-        sourcedb_map = load_data_map(self.inputs['sourcedb_path'])
+        input_map = DataMap.load(self.inputs['args'][0])
+        sourcedb_map = DataMap.load(self.inputs['sourcedb_path'])
 
         if not validate_data_maps(input_map, sourcedb_map):
             self.logger.error(
@@ -90,11 +90,11 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         # Compile the command to be executed on the remote machine
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
-        for measurement_set, source in zip(input_map, sourcedb_map):
+        for measurement_item, source_item in zip(input_map, sourcedb_map):
             # both the sourcedb and the measurement are in a map
             # unpack both
-            host , measurement_set = measurement_set
-            host2 , sourcedb_path = source
+            host , measurement_path = measurement_item.host, measurement_item.file
+            host2 , sourcedb_path = source_item.host, source_item.file
 
             #construct and save the output name
             arguments = [self.inputs['executable'],
@@ -102,7 +102,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['parset'],
                           self.inputs['working_directory'],
                          self.inputs['output_image'],
-                         measurement_set,
+                         measurement_path,
                          sourcedb_path,
                          self.inputs['mask_patch_size']]
 
@@ -114,7 +114,10 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         created_awimages = []
         for job in  jobs:
             if job.results.has_key("image"):
-                created_awimages.append((job.host, job.results["image"]))
+                created_awimages.append(tuple([job.host, job.results["image"], False]))
+            else:
+                created_awimages.append(tuple([job.host, "failed", True]))
+
 
         # If not succesfull runs abort
         if len(created_awimages) == 0:
@@ -128,8 +131,8 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         if self.error.isSet():
             self.logger.error("Failed awimager node run detected. continue with"
                               "successful tasks.")
-
-        self._store_data_map(self.inputs['mapfile'], created_awimages,
+        datamap_of_created_im = DataMap(created_awimages)
+        self._store_data_map(self.inputs['mapfile'], datamap_of_created_im,
                              "mapfile containing produces awimages")
 
         self.outputs["mapfile"] = self.inputs['mapfile']

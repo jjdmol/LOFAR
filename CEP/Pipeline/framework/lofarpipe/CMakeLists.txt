@@ -18,6 +18,7 @@ python_install(
   support/baserecipe.py
   support/clusterdesc.py
   support/control.py
+  support/data_map.py
   support/group_data.py
   support/jobserver.py
   support/lofarexceptions.py
