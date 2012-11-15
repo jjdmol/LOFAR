@@ -124,6 +124,8 @@ void parseBrokenHardware (const vector<OTDBvalue> &hardware, vector<struct Final
   for (size_t i = 0; i < hardware.size(); i++) {
     try {
       if (hardware[i].name.find(".status_state") != string::npos) {
+        LOG_DEBUG_STR(logPrefix << "Hardware status line '" << hardware[i].name << "'");
+
         vector<string> parts = StringUtil::split (hardware[i].name, '.');
 
         // parts[3] is station name (f.e. CS001)
@@ -160,6 +162,8 @@ void parseBrokenHardware (const vector<OTDBvalue> &hardware, vector<struct Final
           info.time    = to_simple_string(hardware[i].time);
 
           brokenrcus.push_back(info);
+
+          LOG_DEBUG_STR(logPrefix << "Found broken " << info.station << " " << info.type << " antenna " << seqnr << " at " << info.time);
         }
       }
     } catch(std::out_of_range &ex) {
