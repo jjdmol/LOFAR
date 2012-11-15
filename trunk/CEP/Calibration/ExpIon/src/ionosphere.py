@@ -287,11 +287,15 @@ class IonosphericModel:
       # First collect all frequencies 
       # We need them beforehand to sort the frequencies (frequencies are not necessarily given in sorted order)
       for instrumentdb_name in self.instrumentdb_name_list:
-         instrumentdb = lofar.parmdb.parmdb( instrumentdb_name )
-         v0 = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]
-         freqs = v0['freqs']
-         self.freqs = numpy.concatenate([self.freqs, freqs])
-         self.freqwidths = numpy.concatenate([self.freqwidths, v0['freqwidths']])
+        try:
+          instrumentdb = lofar.parmdb.parmdb( instrumentdb_name )
+          v0 = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]
+          freqs = v0['freqs']
+          self.freqs = numpy.concatenate([self.freqs, freqs])
+          self.freqwidths = numpy.concatenate([self.freqwidths, v0['freqwidths']])
+        except:
+          print "Error opening " + instrumentdb_name
+          exit()
       # Sort frequencies, find both the forward and inverse mapping
       # Mappings are such that
       #    sorted_freqs = unsorted_freqs[sorted_freq_idx]
@@ -471,7 +475,7 @@ class IonosphericModel:
          p.update( i )
          U = self.U_list[i]
          S = self.S_list[i]
-         for pol in range(N_pol) :
+         for pol in range(1) : # range(N_pol) :
             TEC = self.TEC[ pol, self.n_list[i], :, :].reshape( (N_sources * N_stations, 1) )
             TECfit = dot(U, dot(inv(dot(U.T, dot(G, U))), dot(U.T, dot(G, TEC))))
             TECfit_white = dot(U, dot(diag(1/S), dot(U.T, TECfit)))
