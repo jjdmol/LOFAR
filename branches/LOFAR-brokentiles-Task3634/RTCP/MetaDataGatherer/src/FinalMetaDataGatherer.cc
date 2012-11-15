@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
     Parset parset(&controlStream);
     logPrefix = str(boost::format("[obs %u] ") % parset.observationID());
 
-    string host     = "sas001";
+    string host     = parset.getString("OLAP.FinalMetaDataGatherer.database.host");
     string db       = "LOFAR_4";
     string user     = "paulus";
     string password = "boskabouter";
@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
 
     FinalMetaData finalMetaData;
 
-    LOG_INFO_STR (logPrefix << "Connecting to SAS database");
+    LOG_INFO_STR (logPrefix << "Connecting to SAS database " << db << " on " << host);
 
     OTDBconnection conn(user, password, db, host, port); 
     bool connected = conn.connect();

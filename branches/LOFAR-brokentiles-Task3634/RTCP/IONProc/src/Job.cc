@@ -346,10 +346,10 @@ void Job::forwardFinalMetaData()
 
 void Job::finalMetaDataThread()
 {
-  std::string hostName    = itsParset.getString("OLAP.Storage.otdbQueryHost");
-  std::string userName    = itsParset.getString("OLAP.Storage.userName");
-  std::string sshKey      = itsParset.getString("OLAP.Storage.sshIdentityFile");
-  std::string executable  = itsParset.getString("OLAP.Storage.otdbQueryExecutable");
+  std::string hostName    = itsParset.getString("OLAP.FinalMetaDataGatherer.host");
+  std::string userName    = itsParset.getString("OLAP.FinalMetaDataGatherer.userName");
+  std::string sshKey      = itsParset.getString("OLAP.FinalMetaDataGatherer.sshIdentityFile");
+  std::string executable  = itsParset.getString("OLAP.FinalMetaDataGatherer.executable");
 
   char cwd[1024];
 
