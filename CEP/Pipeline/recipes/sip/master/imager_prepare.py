@@ -147,7 +147,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
 
         jobs = []
         paths_to_image_mapfiles = []
-        n_subband_groups = len(output_map)                                                          output_map):
+        n_subband_groups = len(output_map)
         for idx_sb_group, item in enumerate(output_map):
             #create the input files for this node
             self.logger.debug("Creating input data subset for processing"
