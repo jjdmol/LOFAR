@@ -18,7 +18,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap
+from lofarpipe.support.data_map import DataMap, MultiDataMap
 
 class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -203,19 +203,17 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         finished_runs = 0
         #scan the return dict for completed key
         for (item, job) in zip(concat_ms, jobs):
+            # only save the slices if the node has completed succesfull
             if job.results["returncode"] == 0:
                 finished_runs += 1
-                #only save the slices if the node has completed succesfull
-
                 slices.append(tuple([item.host,
                                  job.results["time_slices"], False]))
             else:
                 # Set the dataproduct to skipped!!
                 item.skip = True
                 slices.append(tuple([item.host, "/Failed", True]))
-
                 msg = "Failed run on {0}. NOT Created: {1} ".format(
-                                                item.host, item.file)
+                    item.host, item.file)
                 self.logger.warn(msg)
 
         if finished_runs == 0:
@@ -228,23 +226,20 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         self._store_data_map(output_ms_mapfile_path, concat_ms,
                     "mapfile with concat.ms")
 
-        # TODO: expand DataMap to allow lists of paths...?
-#        # slices in each concat
-        slices_mapfile = self.inputs['slices_mapfile']
-        fp = open(slices_mapfile, 'w')
-        fp.write(repr(slices))
-        fp.close()
-#        self._store_data_map(slices_mapfile, DataMap(slices),
-#                              "mapfile with Time_slice")
+        # timeslices
+        MultiDataMap(slices).save(self.inputs['slices_mapfile'])
+        self.logger.info(
+            "Wrote MultiMapfile with produces timeslice: {0}".format(
+                self.inputs['slices_mapfile']))
 
         # map to map with actual input mss.
         self._store_data_map(self.inputs["raw_ms_per_image_mapfile"],
-                             DataMap(paths_to_image_mapfiles),
-                             " mapfile containing (raw) input ms per image:")
+            DataMap(paths_to_image_mapfiles),
+                "mapfile containing (raw) input ms per image:")
 
-        # Set the outputs
+        # Set the return values
         self.outputs['mapfile'] = output_ms_mapfile_path
-        self.outputs['slices_mapfile'] = slices_mapfile
+        self.outputs['slices_mapfile'] = self.inputs['slices_mapfile']
         self.outputs['raw_ms_per_image_mapfile'] = \
             self.inputs["raw_ms_per_image_mapfile"]
         return 0

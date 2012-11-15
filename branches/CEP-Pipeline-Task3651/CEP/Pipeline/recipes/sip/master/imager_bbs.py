@@ -9,7 +9,7 @@ import os
 
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.baserecipe import BaseRecipe
-from lofarpipe.support.data_map import DataMap
+from lofarpipe.support.data_map import DataMap, MultiDataMap
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.remotecommand import ComputeJob
 
@@ -77,8 +77,8 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         # ********************************************************************
         # 1. Load the and validate the data
 
-        ms_map = eval(open(self.inputs['args'][0]).read())
-        parmdb_map = eval(open(self.inputs['instrument_mapfile']).read())
+        ms_map = MultiDataMap.load(self.inputs['args'][0])
+        parmdb_map = MultiDataMap.load(self.inputs['instrument_mapfile'])
         sourcedb_map = DataMap.load(self.inputs['sourcedb_mapfile'])
 
         # TODO: DataMap extention
@@ -100,33 +100,22 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             #host is same for each entry (validate_data_maps)
             # TODO: DataMap
             #raise Exception(ms_map)
-            host, ms_list = ms[0], ms[1]
+            host, ms_list = ms.host, ms.file
 
-            # Write data maps to mapfiles: The (node, data) pairs are inserted
-            # into an array to allow writing of the mapfiles using the default 
-            # functions
+            # Write data maps to MultaDataMaps
             ms_list_path = os.path.join(
                     map_dir, host + "_ms_" + run_id + ".map")
-            fp = open(ms_list_path, 'w')
-            fp.write(repr(ms[1]))
-            fp.close()
-#            self._store_data_map(
-#                    ms_list_path, [ms], "mapfile with ms")
+            MultiDataMap([tuple([host, ms_list, False])]).save(ms_list_path)
+
             parmdb_list_path = os.path.join(
                     map_dir, host + "_parmdb_" + run_id + ".map")
+            MultiDataMap(
+                [tuple([host, parmdb.file, False])]).save(parmdb_list_path)
 
-            fp = open(parmdb_list_path, 'w')
-            fp.write(repr(parmdb[1]))
-            fp.close()
-#            self._store_data_map(
-#                    parmdb_list_path, [parmdb], "mapfile with parmdb")
             sourcedb_list_path = os.path.join(
                     map_dir, host + "_sky_" + run_id + ".map")
-            fp = open(sourcedb_list_path, 'w')
-            fp.write(repr([sourcedb]))
-            fp.close()
-#            self._store_data_map(
-#                    sourcedb_list_path, [sourcedb], "mapfile with sourcedbs")
+            MultiDataMap(
+                [tuple([host, [sourcedb.file], False])]).save(sourcedb_list_path)
 
             arguments = [self.inputs['bbs_executable'],
                          self.inputs['parset'],
@@ -140,15 +129,12 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         # 3. validate the node output and construct the output mapfile.
         if self.error.isSet():   #if one of the nodes failed
             self.logger.error("One of the nodes failed while performing"
-                              "a BBS run. Aborting")
+                              "a BBS run. Aborting: concat.ms corruption")
             return 1
 
         # return the output: The measurement set that are calibrated:
         # calibrated data is placed in the ms sets
-        # TODO: DataMap
-        fp = open(self.inputs['mapfile'], 'w')
-        fp.write(repr(ms_map))
-        fp.close()
+        MultiDataMap(ms_map).save(self.inputs['mapfile'])
         self.logger.info("Wrote file with  calibrated data")
 
         self.outputs['mapfile'] = self.inputs['mapfile']

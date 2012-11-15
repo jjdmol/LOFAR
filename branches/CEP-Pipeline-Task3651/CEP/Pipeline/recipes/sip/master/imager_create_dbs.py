@@ -10,7 +10,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap
+from lofarpipe.support.data_map import DataMap, MultiDataMap, validate_data_maps
 
 
 class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -118,13 +118,12 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             assoc_theta = None
 
         # Load mapfile data from files
-        # TODO: Due it limmitation in DataMap slicePath is here a list
-        # of tuple (host, [list of paths], skip)
-        slice_paths_map = eval(open(self.inputs["slice_paths_mapfile"]).read())
+        self.logger.error(self.inputs["slice_paths_mapfile"])
+        slice_paths_map = MultiDataMap.load(self.inputs["slice_paths_mapfile"])
         input_map = DataMap.load(self.inputs['args'][0])
         # TODO; We miss input validation here due to DATAMAP
-#        if self._validate_input_data(input_map):
-#            return 1
+        if self._validate_input_data(input_map, slice_paths_map):
+            return 1
 
         # Run the nodes with now collected inputs
         jobs = self._run_create_dbs_node(input_map, slice_paths_map,
@@ -172,17 +171,18 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         # create jobs
         jobs = []
-        for (input_item, slice_item)  in zip(input_map, slice_paths_map):
-            host_ms, concatenated_measurement_set = input_item.host, \
-                input_item.file
-            host_slice, slice_paths = slice_item[0], slice_item[1]
+        for (input_item, slice_item) in zip(input_map, slice_paths_map):
+            if input_item.skip and slice_item.skip:
+                continue
+            host_ms, concat_ms = input_item.host, input_item.file
+            host_slice, slice_paths = slice_item.host, slice_item.file
 
             # Create the parameters depending on the input_map
             sourcedb_target_path = os.path.join(
-                  concatenated_measurement_set + self.inputs["sourcedb_suffix"])
+                  concat_ms + self.inputs["sourcedb_suffix"])
 
             # The actual call for the node script
-            arguments = [concatenated_measurement_set,
+            arguments = [concat_ms,
                          sourcedb_target_path,
                          self.inputs["monetdb_hostname"],
                          self.inputs["monetdb_port"],
@@ -200,7 +200,8 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
             jobs.append(ComputeJob(host_ms, node_command, arguments))
         # Wait the nodes to finish
-        self._schedule_jobs(jobs)
+        if len(jobs) > 0:
+            self._schedule_jobs(jobs)
 
         return jobs
 
@@ -233,20 +234,14 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         if len(sourcedb_files) == 0 or len(parmdbs) == 0:
             self.logger.error("The creation of dbs on the nodes failed:")
             self.logger.error("Not a single node produces all needed data")
-            self.logger.error("products. sourcedb_files: {0}    ".format(
-                                                        sourcedb_files))
+            self.logger.error(
+                "products. sourcedb_files: {0}".format(sourcedb_files))
             self.logger.error("parameter dbs: {0}".format(parmdbs))
             return 1
 
         # write the mapfiles     
         DataMap(sourcedb_files).save(self.inputs["sourcedb_map_path"])
-        # TODO: Parmdbs are created for each timeslice: DataMap does not
-        # allow multiple return yet
-        #store_data_map(self.inputs["parmdbs_map_path"], parmdbs)
-        fp = open(self.inputs["parmdbs_map_path"], 'w')
-        fp.write(repr(parmdbs))
-        fp.close
-
+        MultiDataMap(parmdbs).save(self.inputs["parmdbs_map_path"])
         self.logger.debug("Wrote sourcedb dataproducts: {0} \n {1}".format(
             self.inputs["sourcedb_map_path"], self.inputs["parmdbs_map_path"]))
 

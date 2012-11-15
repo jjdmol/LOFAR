@@ -14,7 +14,7 @@ import copy
 from lofarpipe.support.control import control
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.data_map import DataMap, validate_data_maps
+from lofarpipe.support.data_map import DataMap, validate_data_maps, MultiDataMap
 from lofarpipe.support.utilities import patch_parset, get_parset
 from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 
@@ -370,8 +370,9 @@ class msss_imager_pipeline(control):
         """
         #create parset for bbs run
         parset = self.parset.makeSubset("BBS.")
+        self.logger.error("debug 1")
         parset_path = self._write_parset_to_file(parset, "bbs",
-                                "Parset for calibration on local sky model")
+                        "Parset for calibration with a local sky model")
 
         # create the output file path
         output_mapfile = self._write_datamap_to_file(None, "bbs_output",
@@ -389,7 +390,7 @@ class msss_imager_pipeline(control):
 
         # get the original map data
         sourcedb_map = DataMap.load(sourcedb_map_path)
-        parmdbs_map = DataMap.load(parmdbs_map_path)
+        parmdbs_map = MultiDataMap.load(parmdbs_map_path)
         converted_sourcedb_map = []
 
         # sanity check for correcy output from previous recipes
@@ -576,7 +577,7 @@ class msss_imager_pipeline(control):
         parset.writeFile(parset_path)
 
         #display a debug log entrie with path and message
-        self.logger.debug("Wrote parset to path <{0}> : ".format(
+        self.logger.debug("Wrote parset to path <{0}> : {1}".format(
                                parset_path, message))
 
         return parset_path
