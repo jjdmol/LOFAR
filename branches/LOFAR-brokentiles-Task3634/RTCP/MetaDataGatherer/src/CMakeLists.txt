@@ -10,3 +10,4 @@ install(FILES
   DESTINATION etc)
 
 lofar_add_bin_program(FinalMetaDataGatherer FinalMetaDataGatherer.cc)
+lofar_add_bin_program(failedtilesinfo failedtilesinfo.cc)
