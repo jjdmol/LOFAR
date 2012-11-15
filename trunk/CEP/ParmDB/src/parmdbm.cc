@@ -410,7 +410,7 @@ Box getDomain (const KeyValueMap& kvmap, ostream& ostr,
           MUString str (iter->getString());
           Quantity res;
           if (MVTime::read (res, str)) {
-            vec.push_back (res.getValue("sec"));
+            vec.push_back (res.getValue("s"));
           } else {
             ostr << "Error in interpreting " << iter->getString() << endl;
             ok = false;

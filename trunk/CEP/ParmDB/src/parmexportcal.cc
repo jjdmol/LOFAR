@@ -121,7 +121,7 @@ void writeParm (const Matrix<double>& val, const String& name,
 
 Matrix<double> getAP (const Matrix<double>& ampl,
                       const Matrix<double>& phase,
-                      double perc, int skipLast)
+                      double perc, long skipLast)
 {
   // Get the median in time for each frequency.
   ASSERT (ampl.shape() == phase.shape());
