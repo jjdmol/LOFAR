@@ -16,7 +16,7 @@ from lofarpipe.support.utilities import log_time, create_directory
 import lofar.addImagingInfo as addimg
 import pyrap.images as pim
 from lofarpipe.support.utilities import catch_segfaults
-from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 
 import urllib2
@@ -54,7 +54,7 @@ class imager_finalize(LOFARnodeTCP):
         :rtype: self.outputs['image'] path to the produced hdf5 image
         """
         with log_time(self.logger):
-            raw_ms_per_image_map = load_data_map(raw_ms_per_image)
+            raw_ms_per_image_map = DataMap.load(raw_ms_per_image)
 
             # *****************************************************************
             # 1. add image info                      
@@ -63,7 +63,8 @@ class imager_finalize(LOFARnodeTCP):
             # TODO: BUG!! the meta data might contain files that were copied
             # but failed in imager_bbs 
             processed_ms_paths = []
-            for (node, path) in raw_ms_per_image_map:
+            for item in raw_ms_per_image_map:
+                path = item.file
                 raw_ms_file_name = os.path.split(path)[1]
                 #if the raw ms is in the processed dir (additional check)
                 if (raw_ms_file_name in file_list):
