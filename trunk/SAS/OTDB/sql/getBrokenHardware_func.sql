@@ -67,7 +67,6 @@ CREATE OR REPLACE FUNCTION getBrokenHardware(VARCHAR(20), VARCHAR(20))
 			vStopTime := $2;
 			vWhere := 'WHERE time >= ' || chr(39) || vStartTime || chr(39) || ' AND time < ' || chr(39) || vStopTime || chr(39);
 		END IF;
-RAISE WARNING '% - % - %:' , vStartTime, vStopTime, vWhere;
 		FOR vRecord IN 
 			EXECUTE '
 				SELECT p.paramid,r.pvssname,p.value,p.time 
