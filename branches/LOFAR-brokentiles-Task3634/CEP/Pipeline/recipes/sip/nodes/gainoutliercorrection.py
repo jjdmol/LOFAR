@@ -135,11 +135,11 @@ class gainoutliercorrection(LOFARnodeTCP):
             polarization_data, type_pair = \
                self._read_polarisation_data_and_type_from_db(parmdb, station)
 
-            corected_data = self._swap_outliers_with_median(polarization_data,
+            corrected_data = self._swap_outliers_with_median(polarization_data,
                                                   type_pair, sigma)
             #print polarization_data
             self._write_corrected_data(parmdb, station,
-                                       polarization_data, corected_data)
+                                       polarization_data, corrected_data)
 
     def _read_polarisation_data_and_type_from_db(self, parmdb, station):
         """
@@ -203,7 +203,7 @@ class gainoutliercorrection(LOFARnodeTCP):
                    median,
                    amplitudes
                    )
-            # assign the corect data back to the complex_array
+            # assign the correct data back to the complex_array
             complex_array.amp = numpy.concatenate((corrected, complex_array.amp[-1:]))
             # collect all corrected data
             corrected_polarization_data[pol] = complex_array
@@ -228,18 +228,18 @@ class gainoutliercorrection(LOFARnodeTCP):
         return complex_array
 
     def _write_corrected_data(self, parmdb, station, polarization_data,
-                               corected_data):
+                               corrected_data):
         """
         Use pyparmdb to write (now corrected) data to the parmdb
         """
         for pol, data in polarization_data.iteritems():
-            if not pol in corected_data:
+            if not pol in corrected_data:
                 error_message = "Requested polarisation type is unknown:" \
-                        "{0} \n valid polarisations: {1}".format(pol, corected_data.keys())
+                        "{0} \n valid polarisations: {1}".format(pol, corrected_data.keys())
                 self.logger.error(error_message)
                 raise PipelineRecipeFailed(error_message)
 
-            corrected_data_pol = corected_data[pol]
+            corrected_data_pol = corrected_data[pol]
             #get the "complex" converted data from the complex array
             for component, value in corrected_data_pol.writeable.iteritems():
                 #Collect all the data needed to write an array 

@@ -7,15 +7,14 @@
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
-from __future__ import with_statement
+import copy
 import os
 import sys
 
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
-from lofarpipe.support.group_data import load_data_map, store_data_map
-from lofarpipe.support.group_data import validate_data_maps
+from lofarpipe.support.data_map import DataMap, validate_data_maps
 from lofarpipe.support.remotecommand import ComputeJob
 
 class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -72,8 +71,9 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     outputs = {
-        'mapfile': ingredient.FileField(help="mapfile with created sourcedb"
-         "paths")
+        'mapfile': ingredient.FileField(
+            help="mapfile with created sourcedb paths"
+        )
     }
 
 
@@ -86,24 +86,23 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
 
         args = self.inputs['args']
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
-        indata = load_data_map(args[0])
+        indata = DataMap.load(args[0])
         if len(args) > 1:
             self.logger.debug("Loading output-data mapfile: %s" % args[1])
-            outdata = load_data_map(args[1])
+            outdata = DataMap.load(args[1])
             if not validate_data_maps(indata, outdata):
                 self.logger.error(
                     "Validation of input/output data mapfiles failed"
                 )
                 return 1
         else:
-            outdata = [
-                (host,
-                 os.path.join(
+            outdata = copy.deepcopy(indata)
+            for item in outdata:
+                item.file = os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
-                    os.path.basename(infile) + self.inputs['suffix'])
-                ) for host, infile in indata
-            ]
+                    os.path.basename(item.file) + self.inputs['suffix']
+                )
 
         # *********************************************************************
         # 2. Check if input skymodel file exists. If not, make filename empty.
@@ -116,32 +115,41 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         # ********************************************************************
         # 3. Call node side of script
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        outdata.iterator = DataMap.SkipIterator
         jobs = []
-        for host, outfile in outdata:
+        for outp in outdata:
             jobs.append(
                 ComputeJob(
-                    host,
+                    outp.host,
                     command,
                     arguments=[
                         self.inputs['executable'],
                         skymodel,
-                        outfile,
+                        outp.file,
                         self.inputs['type']
                     ]
                 )
             )
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
+        for job, outp in zip(jobs, outdata):
+            if job.results['returncode'] != 0:
+                outp.skip = True
 
         # *********************************************************************
-        # 4. check performance and create output data
+        # 4. Check job results, and create output data map file
         if self.error.isSet():
-            return 1
-        else:
-            self.logger.debug("Writing sky map file: %s" %
-                              self.inputs['mapfile'])
-            store_data_map(self.inputs['mapfile'], outdata)
-            self.outputs['mapfile'] = self.inputs['mapfile']
-            return 0
+             # Abort if all jobs failed
+            if all(job.results['returncode'] != 0 for job in jobs):
+                self.logger.error("All jobs failed. Bailing out!")
+                return 1
+            else:
+                self.logger.warn(
+                    "Some jobs failed, continuing with succeeded runs"
+                )
+        self.logger.debug("Writing sky map file: %s" % self.inputs['mapfile'])
+        outdata.save(self.inputs['mapfile'])
+        self.outputs['mapfile'] = self.inputs['mapfile']
+        return 0
 
 
 if __name__ == '__main__':

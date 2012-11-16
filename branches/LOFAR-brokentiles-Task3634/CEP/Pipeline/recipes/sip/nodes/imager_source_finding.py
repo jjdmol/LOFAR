@@ -99,28 +99,35 @@ class imager_source_finding(LOFARnodeTCP):
                 "Starting sourcefinder bdsm on {0} using parameters:".format(
                                                         input_image_local))
             self.logger.debug(repr(bdsm_parameters))
-            img = bdsm.process_image(bdsm_parameters,
+            try:
+                img = bdsm.process_image(bdsm_parameters,
                         filename=input_image_local, frequency=frequency)
 
+                # If no more matching of sources with gausians is possible (nsrc==0)
+                # break the loop
+                if img.nsrc == 0:
+                    self.logger.debug("No sources found: exiting")
+                    n_itter_sourcefind = idx
+                    break
+                else:
+                    # We have at least found a single source!
+                    self.logger.debug("Number of source found: {0}".format(
+                                                                    img.nsrc))
+                    sources_found = True
 
-            # If no more matching of sources with gausians is possible (nsrc==0)
-            # break the loop
-            if img.nsrc == 0:
-                self.logger.debug("No sources found: exiting")
-                n_itter_sourcefind = idx
-                break
-            else:
-                # We have at least found a single source!
-                self.logger.debug("Number of source found: {0}".format(
-                                                                img.nsrc))
-                sources_found = True
+                # *****************************************************************
+                # 4. export the catalog and the image with 
+                    img.write_catalog(
+                        outfile=catalog_output_path + "_{0}".format(str(idx)),
+                        catalog_type='gaul', clobber=True,
+                        format="bbs", force_output=True)
 
-            # *****************************************************************
-            # 4. export the catalog and the image with 
-            img.write_catalog(
-                outfile=catalog_output_path + "_{0}".format(str(idx)),
-                catalog_type='gaul', clobber=True,
-                format="bbs", force_output=True)
+            except Exception, except_object:
+                self.logger.error(
+                            "Source finder (pyBDSM) generated an exception:")
+                self.logger.error(except_object)
+                self.logger.error("Bailing out")
+                return 1
 
             self.logger.debug("Wrote list of sources to file at: {0})".format(
                                                         catalog_output_path))

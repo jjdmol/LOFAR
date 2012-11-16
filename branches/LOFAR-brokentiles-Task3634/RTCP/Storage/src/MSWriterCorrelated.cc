@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Interface/CorrelatedData.h>
 #include <MSLofar/FailedTileInfo.h>
+#include <Common/SystemUtil.h>
 #include <Storage/MSWriterCorrelated.h>
 #include <Storage/MeasurementSetFormat.h>
 #include <tables/Tables/Table.h>
@@ -63,7 +64,6 @@ MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std:
   }
 
   // derive baseline names
-
   std::vector<std::string> stationNames = parset.mergedStationNames();
   std::vector<std::string> baselineNames(parset.nrBaselines());
   unsigned nrStations = stationNames.size();
@@ -77,6 +77,25 @@ MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std:
     for(unsigned s2 = 0; s2 <= s1; s2++)
       baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
 
+  const vector<unsigned> subbands  = itsParset.subbandList();
+  const vector<unsigned> SAPs      = itsParset.subbandToSAPmapping();
+  const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
+
+  itsConfiguration.add("fileFormat",           "AIPS++/CASA");
+  itsConfiguration.add("filename",             LOFAR::basename(msName));
+  itsConfiguration.add("size",                 "0");
+  itsConfiguration.add("location",             parset.getHostName(CORRELATED_DATA, subbandIndex) + ":" + LOFAR::dirname(msName));
+
+  itsConfiguration.add("percentageWritten",    "0");
+  itsConfiguration.add("startTime",            parset.getString("Observation.startTime"));
+  itsConfiguration.add("duration",             "0");
+  itsConfiguration.add("integrationInterval",  str(format("%f") % parset.IONintegrationTime()));
+  itsConfiguration.add("centralFrequency",     str(format("%f") % (frequencies[subbandIndex]/1e6)));
+  itsConfiguration.add("channelWidth",         str(format("%f") % (parset.channelWidth()/1e3)));
+  itsConfiguration.add("channelsPerSubband",   str(format("%u") % parset.nrChannelsPerSubband()));
+  itsConfiguration.add("stationSubband",       str(format("%u") % subbands[subbandIndex]));
+  itsConfiguration.add("subband",              str(format("%u") % subbandIndex));
+  itsConfiguration.add("SAP",                  str(format("%u") % SAPs[subbandIndex]));
 }
 
 
@@ -116,6 +135,12 @@ void MSWriterCorrelated::write(StreamableData *data)
     if (itsSequenceNumbers.size() > 64)
       flushSequenceNumbers();
   }
+
+  itsNrBlocksWritten++;
+
+  itsConfiguration.replace("size",     str(format("%u") % getDataSize()));
+  itsConfiguration.replace("duration", str(format("%f") % ((data->sequenceNumber() + 1) * itsParset.IONintegrationTime())));
+  itsConfiguration.replace("percentageWritten", str(format("%u") % percentageWritten()));
 }
 
 
