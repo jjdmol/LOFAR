@@ -328,10 +328,14 @@ namespace BBS {
            itx!=mapx.end(); ++itx) {
         double valx = *pvalx++;
         // Get the coefficients.
-        const Array<double>& carr = pvset.getParmValue(*itx+inxy).getValues();
-        const double* coeff = carr.data();
-        int nrcx = carr.shape()[0];
-        int nrcy = carr.shape()[1];
+        // If no ParmValues are found, take default one.
+        const Array<double>* carr = &(pvset.getDefParmValue().getValues());
+        if (*itx+inxy < int(pvset.size())) {
+          carr = &(pvset.getParmValue(*itx+inxy).getValues());
+        }
+        const double* coeff = carr->data();
+        int nrcx = carr->shape()[0];
+        int nrcy = carr->shape()[1];
         // Calculate sigma(c[i,j] * x^i * y^j)
         double y = 1;
         double val = 0;
@@ -371,12 +375,16 @@ namespace BBS {
                itx!=mapx.end(); ++itx) {
             double valx = *pvalx++;
             // Get the coefficients.
-            const Array<double>& carr = pvset.getParmValue(*itx+inxy).getValues();
-            DBGASSERT (carr.size() == perturbations.size());
-            const double* coeff = carr.data();
+            // If no ParmValues are found, take default one.
+            const Array<double>* carr = &(pvset.getDefParmValue().getValues());
+            if (*itx+inxy < int(pvset.size())) {
+              carr = &(pvset.getParmValue(*itx+inxy).getValues());
+            }
+            DBGASSERT (carr->size() == perturbations.size());
+            const double* coeff = carr->data();
             const double* pcoeff = &(pertCoeff[0]);
-            int nrcx = carr.shape()[0];
-            int nrcy = carr.shape()[1];
+            int nrcx = carr->shape()[0];
+            int nrcy = carr->shape()[1];
             // Calculate sigma(c[i,j] * x^i * y^j)
             double y = 1;
             double val = 0;
