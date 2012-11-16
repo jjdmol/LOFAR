@@ -97,26 +97,6 @@ static void recursiveMakeDir(const string &dirname, const string &logPrefix)
   }
 }
 
-/* Returns a percentage based on a current and a target value,
- * with the following rounding:
- *
- * 0     -> current == 0
- * 1..99 -> 0 < current < target
- * 100   -> current == target
- */
-
-static unsigned roundedPercentage(unsigned current, unsigned target)
-{
-  if (current == target)
-    return 100;
-
-  if (current == 0)
-    return 0;
-
-  return std::min(std::max(100 * current / target, 1u), 99u);
-}
-
-
 OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory)
 :
   itsParset(parset),
@@ -130,7 +110,6 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),
   itsBlocksDropped(0),
-  itsNrExpectedBlocks(0),
   itsNextSequenceNumber(0)
 {
 }
@@ -184,11 +163,11 @@ void OutputThread::createMS()
     // HDF5 writer requested
     switch (itsOutputType) {
       case CORRELATED_DATA:
-        itsWriter = new MSWriterCorrelated(path, itsParset);
+        itsWriter = new MSWriterCorrelated(path, itsParset, itsStreamNr);
         break;
 
       case BEAM_FORMED_DATA:
-        itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
+        itsWriter = new MSWriterDAL<float,3>(path, itsParset, itsStreamNr, itsIsBigEndian);
         break;
 
       default:
@@ -198,35 +177,6 @@ void OutputThread::createMS()
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
     itsWriter = new MSWriterNull;
-  }
-
-  // log some core characteristics for CEPlogProcessor for feedback to MoM/LTA
-  switch (itsOutputType) {
-    case CORRELATED_DATA:
-      itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
-
-      {
-        const vector<unsigned> subbands  = itsParset.subbandList();
-        const vector<unsigned> SAPs      = itsParset.subbandToSAPmapping();
-        const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
-
-        LOG_INFO_STR(itsLogPrefix << "Characteristics: "
-            << "SAP "            << SAPs[itsStreamNr]
-            << ", subband "      << subbands[itsStreamNr]
-            << ", centralfreq "  << setprecision(8) << frequencies[itsStreamNr]/1e6 << " MHz"
-            << ", duration "     << setprecision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
-            << ", integration "  << setprecision(8) << itsParset.IONintegrationTime() << " s"
-            << ", channels "     << itsParset.nrChannelsPerSubband() 
-            << ", channelwidth " << setprecision(8) << itsParset.channelWidth()/1e3 << " kHz"
-        );
-      }
-      break;
-    case BEAM_FORMED_DATA:
-      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
-      break;
-
-    default:
-      break;
   }
 }
 
@@ -299,16 +249,14 @@ void OutputThread::doWork()
 
     time_t now = time(0L);
 
-    unsigned percent_written = roundedPercentage(itsBlocksWritten, itsNrExpectedBlocks);
-
     if (now > prevlog + 5) {
       // print info every 5 seconds
-      LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped");
+      LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
 
       prevlog = now;
     } else {
       // print debug info for the other blocks
-      LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped");
+      LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
     }
   }
 }
@@ -318,27 +266,29 @@ void OutputThread::cleanUp()
   flushSequenceNumbers();
 
   float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
-  unsigned percent_written = roundedPercentage(itsBlocksWritten, itsNrExpectedBlocks);
 
-  LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << percent_written << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+  LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
 
   // log some final characteristics for CEPlogProcessor for feedback to MoM/LTA
+  ParameterSet feedbackLTA = itsWriter->configuration();
+  string prefix = "UNKNOWN";
+
   switch (itsOutputType) {
     case CORRELATED_DATA:
-      {
-        LOG_INFO_STR(itsLogPrefix << "Final characteristics: "
-            << "duration "     << setprecision(8) << itsNextSequenceNumber * itsParset.IONintegrationTime() << " s"
-            << ", size "         << itsWriter->getDataSize() << " bytes"
-        );
-      }
+      prefix = formatString("Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr);
       break;
+
     case BEAM_FORMED_DATA:
-      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
+      prefix = formatString("Observation.DataProducts.Output_BeamFormed_[%u].", itsStreamNr);
       break;
 
     default:
       break;
   }
+
+  // For now, transport feedback parset through log lines
+  for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)
+    LOG_INFO_STR(itsLogPrefix << "LTA FEEDBACK: " << prefix << i->first << " = " << i->second);
 }
 
 

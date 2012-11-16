@@ -36,7 +36,7 @@ namespace RTCP {
 class MSWriterCorrelated : public MSWriterFile
 {
   public:
-    MSWriterCorrelated(const string &msName, const Parset &parset);
+    MSWriterCorrelated(const string &msName, const Parset &parset, unsigned streamNr);
     ~MSWriterCorrelated();
 
     virtual void write(StreamableData *data);

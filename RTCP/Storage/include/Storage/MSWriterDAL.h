@@ -28,7 +28,7 @@
 
 //# Includes
 #include <Common/LofarTypes.h>
-#include <Common/lofar_vector.h>
+#include <Common/ParameterSet.h>
 
 #include <Interface/Parset.h>
 #include <Interface/StreamableData.h>
@@ -49,6 +49,7 @@ namespace LOFAR
       ~MSWriterDAL();
       virtual void write(StreamableData *data);
     private:
+      const Parset &itsParset;
       const Transpose2 &itsTransposeLogic;
       const StreamInfo &itsInfo;
       const unsigned itsNrChannels;
