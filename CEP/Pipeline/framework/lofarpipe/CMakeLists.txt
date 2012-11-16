@@ -26,6 +26,7 @@ python_install(
   support/lofarnode.py
   support/loggingdecorators.py
   support/mac.py
+  support/mac_feedback.py
   support/parset.py
   support/pipelinelogging.py
   support/remotecommand.py
