@@ -13,16 +13,17 @@
 from __future__ import with_statement
 import os
 import sys
+import copy
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import store_data_map, load_data_map
+from lofarpipe.support.data_map import DataMap, MultiDataMap
 
 class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Prepare phase master:
-    
+
     1. Validate input
     2. Create mapfiles with input for work to be perform on the individual nodes
        based on the structured input mapfile. The input mapfile contains a list 
@@ -126,12 +127,12 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Starting imager_prepare run")
         # *********************************************************************
         # input data     
-        input_map = load_data_map(self.inputs['args'][0])
-        output_map = load_data_map(self.inputs['target_mapfile'])
+        input_map = DataMap.load(self.inputs['args'][0])
+        output_map = DataMap.load(self.inputs['target_mapfile'])
         slices_per_image = self.inputs['slices_per_image']
         subbands_per_image = self.inputs['subbands_per_image']
         # Validate input
-        if self._validate_input_map(input_map, output_map, slices_per_image,
+        if not self._validate_input_map(input_map, output_map, slices_per_image,
                             subbands_per_image):
             return 1
 
@@ -147,11 +148,10 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         jobs = []
         paths_to_image_mapfiles = []
         n_subband_groups = len(output_map)
-        for idx_sb_group, (host, output_measurement_set) in enumerate(
-                                                            output_map):
+        for idx_sb_group, item in enumerate(output_map):
             #create the input files for this node
             self.logger.debug("Creating input data subset for processing"
-                              "on: {0}".format(host))
+                              "on: {0}".format(item.host))
             inputs_for_image_map = \
                 self._create_input_map_for_sbgroup(
                                 slices_per_image, n_subband_groups,
@@ -167,15 +167,15 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                                 inputs_for_image_map, "inputmap for location")
 
             #save the (input) ms, as a list of  mapfiles
-            paths_to_image_mapfiles.append((host,
-                                            inputs_for_image_mapfile_path))
+            paths_to_image_mapfiles.append(
+                tuple([item.host, inputs_for_image_mapfile_path, False]))
 
             arguments = [self.environment,
                          self.inputs['parset'],
                          self.inputs['working_directory'],
                          self.inputs['processed_ms_dir'],
                          self.inputs['ndppp_exec'],
-                         output_measurement_set,
+                         item.file,
                          slices_per_image,
                          subbands_per_image,
                          inputs_for_image_mapfile_path,
@@ -184,56 +184,60 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['msselect_executable'],
                          self.inputs['rficonsole_executable']]
 
-            jobs.append(ComputeJob(host, node_command, arguments))
+            jobs.append(ComputeJob(item.host, node_command, arguments))
 
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
 
         # *********************************************************************
         # validate the output, cleanup, return output
-        slices = []
         if self.error.isSet():   #if one of the nodes failed
             self.logger.warn("Failed prepare_imager run detected: Generating "
                              "new output_ms_mapfile_path without failed runs:"
                              " {0}".format(output_ms_mapfile_path))
-            concatenated_timeslices = []
-            #scan the return dict for completed key
-            for ((host, output_measurement_set), job) in zip(output_map, jobs):
-                if job.results.has_key("completed"):
-                    concatenated_timeslices.append(
-                                            (host, output_measurement_set))
 
-                    #only save the slices if the node has completed succesfull
-                    if job.results.has_key("time_slices"):
-                        slices.append((host, job.results["time_slices"]))
-                else:
-                    self.logger.warn(
-                        "Failed run on {0}. NOT Created: {1} ".format(
-                                                host, output_measurement_set))
-            if len(concatenated_timeslices) == 0:
-                self.logger.error("None of the started compute node finished:"
-                    "The current recipe produced no output, aborting")
-                return 1
+        concat_ms = copy.deepcopy(output_map)
+        slices = []
+        finished_runs = 0
+        #scan the return dict for completed key
+        for (item, job) in zip(concat_ms, jobs):
+            # only save the slices if the node has completed succesfull
+            if job.results["returncode"] == 0:
+                finished_runs += 1
+                slices.append(tuple([item.host,
+                                 job.results["time_slices"], False]))
+            else:
+                # Set the dataproduct to skipped!!
+                item.skip = True
+                slices.append(tuple([item.host, "/Failed", True]))
+                msg = "Failed run on {0}. NOT Created: {1} ".format(
+                    item.host, item.file)
+                self.logger.warn(msg)
 
-            self._store_data_map(output_ms_mapfile_path,
-                    concatenated_timeslices,
-                    "mapfile with concatenated timeslace == ms with all data")
+        if finished_runs == 0:
+            self.logger.error("None of the started compute node finished:"
+                "The current recipe produced no output, aborting")
+            return 1
 
-        else: #Copy output map from input output_ms_mapfile_path and return
-            store_data_map(output_ms_mapfile_path, output_map)
-            for ((host, output_measurement_set), job) in zip(output_map, jobs):
-                if job.results.has_key("time_slices"):
-                    slices.append((host, job.results["time_slices"]))
+        # Write the output mapfiles:
+        # concat.ms paths:
+        self._store_data_map(output_ms_mapfile_path, concat_ms,
+                    "mapfile with concat.ms")
 
-        self._store_data_map(self.inputs['slices_mapfile'], slices,
-                "mapfile with Time_slice")
+        # timeslices
+        MultiDataMap(slices).save(self.inputs['slices_mapfile'])
+        self.logger.info(
+            "Wrote MultiMapfile with produces timeslice: {0}".format(
+                self.inputs['slices_mapfile']))
+
+        #map with actual input mss.
         self._store_data_map(self.inputs["raw_ms_per_image_mapfile"],
-                       paths_to_image_mapfiles,
-                       " mapfile containing (raw) input ms:")
+            DataMap(paths_to_image_mapfiles),
+                "mapfile containing (raw) input ms per image:")
 
-        # Set the outputs
+        # Set the return values
         self.outputs['mapfile'] = output_ms_mapfile_path
-        self.outputs['slices_mapfile'] = self.inputs["slices_mapfile"]
+        self.outputs['slices_mapfile'] = self.inputs['slices_mapfile']
         self.outputs['raw_ms_per_image_mapfile'] = \
             self.inputs["raw_ms_per_image_mapfile"]
         return 0
@@ -260,14 +264,15 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             #extend inputs with the files for the current time slice
             inputs_for_image.extend(input_mapfile[line_idx_start: line_idx_end])
 
-        return inputs_for_image
+        return DataMap(inputs_for_image)
 
 
     def _validate_input_map(self, input_map, output_map, slices_per_image,
                             subbands_per_image):
         """
-        Return 1 if the inputs supplied are incorrect, the number if inputs and 
-        output does not match. Return 0 if correct.
+        Return False if the inputs supplied are incorrect:
+        the number if inputs and  output does not match. 
+        Return True if correct.              
         The number of inputs is correct iff.
         len(input_map) == 
         len(output_map) * slices_per_image * subbands_per_image
@@ -289,9 +294,9 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                     len(output_map) * slices_per_image * subbands_per_image
                 )
             )
-            return 1
+            return False
 
-        return 0
+        return True
 
 
 if __name__ == "__main__":

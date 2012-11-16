@@ -5,8 +5,7 @@
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
 
-from collections import defaultdict
-
+import copy
 import sys
 import os
 
@@ -15,26 +14,22 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map, store_data_map
-from lofarpipe.support.group_data import validate_data_maps
+from lofarpipe.support.data_map import DataMap, validate_data_maps
 
 class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-    Runs DPPP (either ``NDPPP`` or -- in the unlikely event it's required --
-    ``IDPPP``) on a number of MeasurementSets. This is used for compressing
-    and/or flagging data
+    Runs ``NDPPP`` on a number of MeasurementSets. This is used for averaging,
+    and/or flagging, and/or demixing of data.
 
     1. Load input data files
     2. Load parmdb and sourcedb
     3. Call the node side of the recipe
-    4. Parse logfile for fully flagged baselines
-    5. Create mapfile with successful noderecipe runs
+    4. Create mapfile with successful noderecipe runs
 
     **Command line arguments**
 
     1. A mapfile describing the data to be processed.
-    2. Mapfile with target output locations <if procided input and output
-       mapfiles are validated>
+    2. Optionally, a mapfile with target output locations.
 
     """
     inputs = {
@@ -142,10 +137,10 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
     outputs = {
         'mapfile': ingredient.FileField(
             help="The full path to a mapfile describing the processed data"
-        ),
-        'fullyflagged': ingredient.ListField(
-            help="A list of all baselines which were completely flagged in any "
-                 "of the input MeasurementSets"
+#        ),
+#        'fullyflagged': ingredient.ListField(
+#            help="A list of all baselines which were completely flagged in any "
+#                 "of the input MeasurementSets"
         )
     }
 
@@ -154,33 +149,27 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Starting DPPP run")
         super(dppp, self).go()
 
-        #                Keep track of "Total flagged" messages in the DPPP logs
-        # ----------------------------------------------------------------------
-        self.logger.searchpatterns["fullyflagged"] = "Fully flagged baselines"
+#        #                Keep track of "Total flagged" messages in the DPPP logs
+#        # ----------------------------------------------------------------------
+#        self.logger.searchpatterns["fullyflagged"] = "Fully flagged baselines"
 
         # *********************************************************************
         # 1. load input data file, validate output vs the input location if
         #    output locations are provided
         args = self.inputs['args']
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
-        indata = load_data_map(args[0])
+        indata = DataMap.load(args[0])
         if len(args) > 1:
             self.logger.debug("Loading output-data mapfile: %s" % args[1])
-            outdata = load_data_map(args[1])
-            if not validate_data_maps(indata, outdata):
-                self.logger.error(
-                    "Validation of input/output data mapfiles failed"
-                )
-                return 1
+            outdata = DataMap.load(args[1])
         else:
-            outdata = [
-                (host,
-                 os.path.join(
+            outdata = copy.deepcopy(indata)
+            for item in outdata:
+                item.file = os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
-                    os.path.basename(infile) + self.inputs['suffix'])
-                ) for host, infile in indata
-            ]
+                    os.path.basename(item.file) + self.inputs['suffix']
+                )
 
         # ********************************************************************
         # 2. Load parmdb and sourcedb
@@ -189,34 +178,55 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.debug(
                 "Loading parmdb mapfile: %s" % self.inputs['parmdb_mapfile']
             )
-            parmdbdata = load_data_map(self.inputs['parmdb_mapfile'])
+            parmdbdata = DataMap.load(self.inputs['parmdb_mapfile'])
         else:
-            parmdbdata = [(None, None)] * len(indata)
+            parmdbdata = copy.deepcopy(indata)
+            for item in parmdbdata:
+                item.file = ''
 
         # Load sourcedb-mapfile, if one was given.         
         if self.inputs.has_key('sourcedb_mapfile'):
             self.logger.debug(
                 "Loading sourcedb mapfile: %s" % self.inputs['sourcedb_mapfile']
             )
-            sourcedbdata = load_data_map(self.inputs['sourcedb_mapfile'])
+            sourcedbdata = DataMap.load(self.inputs['sourcedb_mapfile'])
         else:
-            sourcedbdata = [(None, None)] * len(indata)
+            sourcedbdata = copy.deepcopy(indata)
+            for item in sourcedbdata:
+                item.file = ''
+
+        # Validate all the data maps.
+        if not validate_data_maps(indata, outdata, parmdbdata, sourcedbdata):
+            self.logger.error(
+                "Validation of data mapfiles failed!"
+            )
+            return 1
+
+        # Update the skip fields of the four maps. If 'skip' is True in any of
+        # these maps, then 'skip' must be set to True in all maps.
+        for w, x, y, z in zip(indata, outdata, parmdbdata, sourcedbdata):
+            w.skip = x.skip = y.skip = z.skip = (
+                w.skip or x.skip or y.skip or z.skip
+            )
 
         # ********************************************************************
         # 3. Call the node side of the recipe
         # Create and schedule the compute jobs
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        indata.iterator = outdata.iterator = DataMap.SkipIterator
+        parmdbdata.iterator = sourcedbdata.iterator = DataMap.SkipIterator
         jobs = []
-        for host, infile, outfile, parmdb, sourcedb in (w + (x[1], y[1], z[1])
-            for w, x, y, z in zip(indata, outdata, parmdbdata, sourcedbdata)):
+        for inp, outp, pdb, sdb in zip(
+            indata, outdata, parmdbdata, sourcedbdata
+        ):
             jobs.append(
                 ComputeJob(
-                    host, command,
+                    inp.host, command,
                     arguments=[
-                        infile,
-                        outfile,
-                        parmdb,
-                        sourcedb,
+                        inp.file,
+                        outp.file,
+                        pdb.file,
+                        sdb.file,
                         self.inputs['parset'],
                         self.inputs['executable'],
                         self.environment,
@@ -230,57 +240,36 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
                 )
             )
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
+        for job, outp in zip(jobs, outdata):
+            if job.results['returncode'] != 0:
+                outp.skip = True
+
+#        # *********************************************************************
+#        # 4. parse logfile for fully flagged baselines
+#        matches = self.logger.searchpatterns["fullyflagged"].results
+#        self.logger.searchpatterns.clear() # finished searching
+#        stripchars = "".join(set("Fully flagged baselines: "))
+#        baselinecounter = defaultdict(lambda: 0)
+#        for match in matches:
+#            for pair in (
+#                pair.strip(stripchars) for pair in match.getMessage().split(";")
+#            ):
+#                baselinecounter[pair] += 1
+#        self.outputs['fullyflagged'] = baselinecounter.keys()
 
         # *********************************************************************
-        # 4. parse logfile for fully flagged baselines
-        matches = self.logger.searchpatterns["fullyflagged"].results
-        self.logger.searchpatterns.clear() # finished searching
-        stripchars = "".join(set("Fully flagged baselines: "))
-        baselinecounter = defaultdict(lambda: 0)
-        for match in matches:
-            for pair in (
-                pair.strip(stripchars) for pair in match.getMessage().split(";")
-            ):
-                baselinecounter[pair] += 1
-        self.outputs['fullyflagged'] = baselinecounter.keys()
-
-        # *********************************************************************
-        # 5. Create mapfile with successful noderecipe runs
-        #    fail if no runs succeeded
+        # 4. Check job results, and create output data map file
         if self.error.isSet():
-            # dppp needs to continue on partial succes.
-            # Get the status of the jobs
-            node_status = {}
-            ok_counter = 0
-            for job in jobs:
-                if job.results.has_key("ok"):
-                    node_status[job.host] = True
-                    ok_counter += 1
-                else:
-                    node_status[job.host] = False
-
-            # if all nodes failed abort
-            if ok_counter == 0:
-                self.logger.error("None of the dppp runs finished with an ok status")
-                self.logger.error("Exiting recipe with fail status")
+            # Abort if all jobs failed
+            if all(job.results['returncode'] != 0 for job in jobs):
+                self.logger.error("All jobs failed. Bailing out!")
                 return 1
-
-            # Create new mapfile with only the successful runs
-            new_outdata = []
-            for host, path in outdata:
-                if node_status[host]:
-                    new_outdata.append((host, path))
-                # else do not put in the outdata list
-            #swap the outputfiles
-            outdata = new_outdata
-
-            self.logger.warn("Failed DPPP process detected,"
-                             "continue with succeeded runs")
-
-        # Write output data return ok status
-        self.logger.debug("Writing data map file: %s" %
-                          self.inputs['mapfile'])
-        store_data_map(self.inputs['mapfile'], outdata)
+            else:
+                self.logger.warn(
+                    "Some jobs failed, continuing with succeeded runs"
+                )
+        self.logger.debug("Writing data map file: %s" % self.inputs['mapfile'])
+        outdata.save(self.inputs['mapfile'])
         self.outputs['mapfile'] = self.inputs['mapfile']
         return 0
 

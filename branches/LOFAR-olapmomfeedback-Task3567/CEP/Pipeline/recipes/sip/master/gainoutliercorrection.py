@@ -13,8 +13,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map, store_data_map
-from lofarpipe.support.group_data import validate_data_maps
+from lofarpipe.support.data_map import DataMap, validate_data_maps
 
 
 class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -92,39 +91,43 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
         # 2. load mapfiles, validate if a target output location is provided
         args = self.inputs['args']
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
-        indata = load_data_map(args[0])
+        indata = DataMap.load(args[0])
         if len(args) > 1:
             self.logger.debug("Loading output-data mapfile: %s" % args[1])
-            outdata = load_data_map(args[1])
+            outdata = DataMap.load(args[1])
             if not validate_data_maps(indata, outdata):
                 self.logger.error(
                     "Validation of input/output data mapfiles failed"
                 )
                 return 1
         else:
-            outdata = [
-                (host,
-                 os.path.join(
+            outdata = copy.deepcopy(indata)
+            for item in outdata:
+                item.file = os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
                     (os.path.splitext(os.path.basename(infile))[0] +
-                     self.inputs['suffix']))
-                 ) for host, infile in indata
-            ]
+                     self.inputs['suffix'])
+                )
 
+        # Update the skip fields of the two maps. If 'skip' is True in any of
+        # these maps, then 'skip' must be set to True in all maps.
+        for x, y in zip(indata, outdata):
+            x.skip = y.skip = (x.skip or y.skip)
+            
         # ********************************************************************
         # 3. Call node side of the recipe
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        indata.iterator = outdata.iterator = DataMap.SkipIterator
         jobs = []
-        for host, infile, outfile in (x + (y[1],)
-            for x, y in zip(indata, outdata)):
+        for inp, outp in zip(indata, outdata):
             jobs.append(
                 ComputeJob(
-                    host,
+                    outp.host,
                     command,
                     arguments=[
-                        infile,
-                        outfile,
+                        inp.file,
+                        outp.file,
                         self.inputs['executable'],
                         self.environment,
                         self.inputs['sigma']
@@ -132,6 +135,9 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
                 )
             )
         self._schedule_jobs(jobs)
+        for job, outp in zip(jobs, outdata):
+            if job.results['returncode'] != 0:
+                outp.skip = True
 
         # ********************************************************************
         # 4. validate performance, return corrected files
@@ -141,7 +147,7 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
         else:
             self.logger.debug("Writing instrument map file: %s" %
                               self.inputs['mapfile'])
-            store_data_map(self.inputs['mapfile'], outdata)
+            outdata.save(self.inputs['mapfile'])
             self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
 

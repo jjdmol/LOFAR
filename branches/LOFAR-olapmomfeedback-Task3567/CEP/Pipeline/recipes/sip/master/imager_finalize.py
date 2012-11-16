@@ -5,8 +5,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map, validate_data_maps, \
-    store_data_map
+from lofarpipe.support.data_map import DataMap, validate_data_maps
 
 class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -87,66 +86,56 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         super(imager_finalize, self).go()
         # *********************************************************************
         # 1. Load the datamaps
-        awimager_output_map = load_data_map(
+        awimager_output_map = DataMap.load(
                                 self.inputs["awimager_output_map"])
-        raw_ms_per_image_map = load_data_map(
+        raw_ms_per_image_map = DataMap.load(
                                     self.inputs["raw_ms_per_image_map"])
-        sourcelist_map = load_data_map(self.inputs["sourcelist_map"])
-        sourcedb_map = load_data_map(self.inputs["sourcedb_map"])
-        target_mapfile = load_data_map(self.inputs["target_mapfile"])
-        output_image_mapfile = load_data_map(
+        sourcelist_map = DataMap.load(self.inputs["sourcelist_map"])
+        sourcedb_map = DataMap.load(self.inputs["sourcedb_map"])
+        target_mapfile = DataMap.load(self.inputs["target_mapfile"])
+        output_image_mapfile = DataMap.load(
                                     self.inputs["output_image_mapfile"])
         processed_ms_dir = self.inputs["processed_ms_dir"]
         fillrootimagegroup_exec = self.inputs["fillrootimagegroup_exec"]
 
-        # The input mapfiles might nog be of the same length:
+        # The input mapfiles might not be of the same length:
         # host_source are unique and can be used to match the entries!
         # Final step is the source_finder: use this mapfile as 'source'
         awimager_output_map_new = []
         raw_ms_per_image_map_new = []
         target_map_new = []
         output_image_map_new = []
-        for host_source, path_source in sourcelist_map:
-            for host_comp, path_comp in awimager_output_map:
-                if host_comp == host_source:
-                    awimager_output_map_new.append((host_comp, path_comp))
 
-            for host_comp, path_comp in raw_ms_per_image_map:
+        for item in sourcelist_map:
+            host_source, path_source = item.host, item.file
+            for item in awimager_output_map:
+                host_comp, path_comp = item.host, item.file
                 if host_comp == host_source:
-                    raw_ms_per_image_map_new.append((host_comp, path_comp))
+                    awimager_output_map_new.append(
+                                        tuple([host_comp, path_comp, False]))
 
-            for host_comp, path_comp in target_mapfile:
+            for item in raw_ms_per_image_map:
+                host_comp, path_comp = item.host, item.file
                 if host_comp == host_source:
-                    target_map_new.append((host_comp, path_comp))
+                    raw_ms_per_image_map_new.append(
+                                        tuple([host_comp, path_comp, False]))
 
-            for host_comp, path_comp in output_image_mapfile:
+            for item in target_mapfile:
+                host_comp, path_comp = item.host, item.file
                 if host_comp == host_source:
-                    output_image_map_new.append((host_comp, path_comp))
+                    target_map_new.append(
+                                        tuple([host_comp, path_comp, False]))
 
-        # The input mapfiles might nog be of the same length:
-        # host_source are unique and can be used to match the entries!
-        # Final step is the source_finder: use this mapfile as 'source'
-        awimager_output_map_new = []
-        raw_ms_per_image_map_new = []
-        target_map_new = []
-        output_image_map_new = []
-        for host_source, path_source in sourcelist_map:
-            for host_comp, path_comp in awimager_output_map:
+            for item in output_image_mapfile:
+                host_comp, path_comp = item.host, item.file
                 if host_comp == host_source:
-                    awimager_output_map_new.append((host_comp, path_comp))
+                    output_image_map_new.append(
+                                        tuple([host_comp, path_comp, False]))
 
-            for host_comp, path_comp in raw_ms_per_image_map:
-                if host_comp == host_source:
-                    raw_ms_per_image_map_new.append((host_comp, path_comp))
-
-            for host_comp, path_comp in target_mapfile:
-                if host_comp == host_source:
-                    target_map_new.append((host_comp, path_comp))
-
-            for host_comp, path_comp in output_image_mapfile:
-                if host_comp == host_source:
-                    output_image_map_new.append((host_comp, path_comp))
-
+        awimager_output_map_new = DataMap(awimager_output_map_new)
+        raw_ms_per_image_map_new = DataMap(raw_ms_per_image_map_new)
+        target_map_new = DataMap(target_map_new)
+        output_image_map_new = DataMap(output_image_map_new)
         # chech validity of the maps: all on same node with the same length
         if not validate_data_maps(awimager_output_map_new, raw_ms_per_image_map_new,
                 sourcelist_map, target_map_new, output_image_map_new):
@@ -168,18 +157,18 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         # 2. Run the node side of the recupe
         command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
-        for  (awimager_output_pair, raw_ms_per_image_pair, sourcelist_pair,
-              target_pair, output_image_pair, sourcedb_pair) in zip(
+        for  (awimager_output_item, raw_ms_per_image_item, sourcelist_item,
+              target_item, output_image_item, sourcedb_item) in zip(
                 awimager_output_map_new, raw_ms_per_image_map_new, sourcelist_map,
                 target_map_new, output_image_map_new, sourcedb_map):
             # collect the data for the current node from the indexes in the 
             # mapfiles
-            (host, awimager_output) = awimager_output_pair
-            (host, raw_ms_per_image) = raw_ms_per_image_pair
-            (host, sourcelist) = sourcelist_pair
-            (host, target) = target_pair
-            (host, output_image) = output_image_pair
-            (host, sourcedb) = sourcedb_pair
+            host, target = target_item.host, target_item.file
+            awimager_output = awimager_output_item.file
+            raw_ms_per_image = raw_ms_per_image_item.file
+            sourcelist = sourcelist_item.file
+            output_image = output_image_item.file
+            sourcedb = sourcedb_item.file
 
             arguments = [awimager_output, raw_ms_per_image, sourcelist,
                         target, output_image, self.inputs["minbaseline"],
@@ -194,13 +183,15 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         placed_images = []
         for job in  jobs:
             if job.results.has_key("hdf5"):
-                placed_images.append((job.host, job.results["image"]))
+                placed_images.append(tuple([job.host, job.results["image"], False]))
+            else:
+                placed_images.append(tuple([job.host, job.results["image"], True]))
 
-        if self.error.isSet():
+        if len(placed_images) == 0:
             self.logger.warn("Failed finalizer node run detected")
             return 1
 
-        store_data_map(self.inputs['placed_image_mapfile'], placed_images)
+        DataMap(placed_images).save(self.inputs['placed_image_mapfile'])
         self.logger.debug(
            "Wrote mapfile containing placed hdf5 images: {0}".format(
                            self.inputs['placed_image_mapfile']))
