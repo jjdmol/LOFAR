@@ -435,7 +435,8 @@ def mfclean(args):
 #    y["weight"] = ms.getcol("WEIGHT")
 #    y["flag"] = ms.getcol("FLAG")
 
-#    result = lofar.casaimwrap.begin_degrid(memento, gridImage[0,:,:,:] / gridWeight[0,:,:,:], y)
+#    lofar.casaimwrap.begin_degrid(memento, gridImage[0,:,:,:] / gridWeight[0,:,:,:], y)
+#    result = lofar.casaimwrap.end_degrid(memento)
 #    degrid_data = result["data"]
 #    print degrid_data.shape
 
