@@ -21,6 +21,7 @@
 //#  $Id: $
 
 #include <lofar_config.h>
+#include <Common/SystemUtil.h>
 #include <Storage/MSWriterCorrelated.h>
 #include <Interface/CorrelatedData.h>
 #include <vector>
@@ -32,11 +33,13 @@ using boost::format;
 namespace LOFAR {
 namespace RTCP {
 
-MSWriterCorrelated::MSWriterCorrelated (const string &msName, const Parset &parset)
+MSWriterCorrelated::MSWriterCorrelated (const string &msName, const Parset &parset, unsigned streamNr)
 :
  MSWriterFile(msName),
  itsParset(parset)
 {
+  itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
+
   std::vector<std::string> stationNames = parset.mergedStationNames();
   std::vector<std::string> baselineNames(parset.nrBaselines());
   unsigned nrStations = stationNames.size();
@@ -49,6 +52,26 @@ MSWriterCorrelated::MSWriterCorrelated (const string &msName, const Parset &pars
   for(unsigned s1 = 0; s1 < nrStations; s1++)
     for(unsigned s2 = 0; s2 <= s1; s2++)
       baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
+
+  const vector<unsigned> subbands  = itsParset.subbandList();
+  const vector<unsigned> SAPs      = itsParset.subbandToSAPmapping();
+  const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
+
+  itsConfiguration.add("fileFormat",           "AIPS++/CASA");
+  itsConfiguration.add("filename",             LOFAR::basename(msName));
+  itsConfiguration.add("size",                 "0");
+  itsConfiguration.add("location",             parset.getHostName(CORRELATED_DATA, streamNr) + ":" + LOFAR::dirname(msName));
+
+  itsConfiguration.add("percentageWritten",    "0");
+  itsConfiguration.add("startTime",            parset.getString("Observation.startTime"));
+  itsConfiguration.add("duration",             "0");
+  itsConfiguration.add("integrationInterval",  str(format("%f") % parset.IONintegrationTime()));
+  itsConfiguration.add("centralFrequency",     str(format("%f") % (frequencies[streamNr]/1e6)));
+  itsConfiguration.add("channelWidth",         str(format("%f") % (parset.channelWidth()/1e3)));
+  itsConfiguration.add("channelsPerSubband",   str(format("%u") % parset.nrChannelsPerSubband()));
+  itsConfiguration.add("stationSubband",       str(format("%u") % subbands[streamNr]));
+  itsConfiguration.add("subband",              str(format("%u") % streamNr));
+  itsConfiguration.add("SAP",                  str(format("%u") % SAPs[streamNr]));
 }
 
 
@@ -65,6 +88,12 @@ void MSWriterCorrelated::write(StreamableData *data)
   ASSERT( cdata );
 
   MSWriterFile::write(data);
+
+  itsNrBlocksWritten++;
+
+  itsConfiguration.replace("size",     str(format("%u") % getDataSize()));
+  itsConfiguration.replace("duration", str(format("%f") % ((data->sequenceNumber() + 1) * itsParset.IONintegrationTime())));
+  itsConfiguration.replace("percentageWritten", str(format("%u") % percentageWritten()));
 }
 
 

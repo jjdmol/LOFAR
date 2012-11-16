@@ -25,6 +25,7 @@
 #include <SSH.h>
 
 #include <Common/Thread/Cancellation.h>
+#include <Common/Thread/Mutex.h>
 #include <Common/SystemCallException.h>
 #include <Common/LofarLogger.h>
 #include <sys/wait.h>
@@ -54,6 +55,10 @@ namespace LOFAR {
 namespace RTCP {
 
 #ifdef HAVE_LIBSSH2
+
+#ifndef HAVE_LOG4COUT
+Mutex coutMutex;
+#endif
 
 SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, time_t deadline)
 :
@@ -323,7 +328,14 @@ void SSHconnection::commThread()
             }
 
             // TODO: Use logger somehow (we'd duplicate the prefix if we just use LOG_* macros..)
-            cout << line[s] << endl;
+            {
+#ifdef HAVE_LOG4COUT
+              ScopedLock sl(LFDebug::mutex);
+#else
+              ScopedLock sl(coutMutex);
+#endif
+              cout << line[s] << endl;
+            }
           }
         } else {
           if( rc < 0 && rc != LIBSSH2_ERROR_EAGAIN ) {
