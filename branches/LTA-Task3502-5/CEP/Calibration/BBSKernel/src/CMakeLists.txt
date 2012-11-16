@@ -79,6 +79,7 @@ lofar_add_library(bbskernel
   Expr/PolynomialLayer.cc
   Expr/Request.cc
   Expr/Resampler.cc
+  Expr/Rotation.cc
   Expr/ScalarMatrixMul.cc
   Expr/Scope.cc
   Expr/ShapeletCoherence.cc

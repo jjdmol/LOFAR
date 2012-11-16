@@ -165,6 +165,10 @@ namespace LOFAR
         toString(itsModelConfig.useDirectionalTEC()));
       ps.add(prefix + "Model.FaradayRotation.Enable",
         toString(itsModelConfig.useFaradayRotation()));
+      ps.add(prefix + "Model.Rotation.Enable",
+        toString(itsModelConfig.useRotation()));
+      ps.add(prefix + "Model.ScalarPhase.Enable",
+        toString(itsModelConfig.useScalarPhase()));
 
       ps.add(prefix + "Model.Ionosphere.Enable",
         toString(itsModelConfig.useIonosphere()));
@@ -257,6 +261,14 @@ namespace LOFAR
       itsModelConfig.setFaradayRotation
         (ps.getBool("Model.FaradayRotation.Enable",
           itsModelConfig.useFaradayRotation()));
+
+      itsModelConfig.setRotation
+        (ps.getBool("Model.Rotation.Enable",
+          itsModelConfig.useRotation()));
+
+      itsModelConfig.setScalarPhase
+        (ps.getBool("Model.ScalarPhase.Enable",
+          itsModelConfig.useScalarPhase()));
 
       if(ps.getBool("Model.Ionosphere.Enable", itsModelConfig.useIonosphere()))
       {

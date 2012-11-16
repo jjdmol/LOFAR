@@ -156,6 +156,22 @@ protected:
         const Scalar::View &mod, const Scalar::View &arg) const;
 };
 
+// Adaptor class to transform a real Expr<Scalar> into a complex
+// Expr<Scalar> phasor, where the input Expr represents the complex argument
+// (phase).
+class AsPhasor: public BasicUnaryExpr<Scalar, Scalar>
+{
+public:
+    typedef shared_ptr<AsPhasor>        Ptr;
+    typedef shared_ptr<const AsPhasor>  ConstPtr;
+
+    AsPhasor(const Expr<Scalar>::ConstPtr &phase);
+
+protected:
+    virtual const Scalar::View evaluateImpl(const Grid&,
+        const Scalar::View &phase) const;
+};
+
 // @}
 
 // -------------------------------------------------------------------------- //

@@ -17,8 +17,9 @@ import errno
 import lofarpipe.support.utilities as utilities
 from lofarpipe.support.lofarexceptions import PipelineException, PipelineRecipeFailed
 from lofarpipe.cuisine.WSRTrecipe import WSRTrecipe
+from lofarpipe.cuisine.cook import CookError
 from lofarpipe.support.lofaringredient import RecipeIngredients, LOFARinput, LOFARoutput
-from lofarpipe.support.group_data import store_data_map
+from lofarpipe.support.data_map import DataMap
 
 class BaseRecipe(RecipeIngredients, WSRTrecipe):
     """
@@ -40,7 +41,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         self.error.clear()
         # Environment variables we like to pass on to the node script.
         self.environment = dict(
-            (k,v) for (k,v) in os.environ.iteritems() 
+            (k, v) for (k, v) in os.environ.iteritems()
                 if k.endswith('PATH') or k.endswith('ROOT')
         )
 
@@ -139,11 +140,13 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         outputs = LOFARoutput()
 
         # Cook the recipe and return the results"
-        if self.cook_recipe(recipe, inputs, outputs):
+        try:
+            self.cook_recipe(recipe, inputs, outputs)
+        except CookError:
             self.logger.warn(
                 "%s reports failure (using %s recipe)" % (configblock, recipe)
             )
-            raise PipelineRecipeFailed("%s failed", configblock)
+            raise PipelineRecipeFailed("%s failed" % configblock)
         return outputs
 
     def _read_config(self):
@@ -245,11 +248,11 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
 
         self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])
 
-    def _store_data_map(self, path, mapfile, message=""):
+    def _store_data_map(self, path, data_map, message=""):
         """
-        Write mapfile to path, display debug error message on the logger
+        Write data_map to path, display debug error message on the logger
         """
-        store_data_map(path, mapfile)
-        self.logger.debug("Wrote mapfile <{0}>: {1}".format(
+        data_map.save(path)
+        self.logger.debug("Wrote data_map <{0}>: {1}".format(
                 path, message))
 
