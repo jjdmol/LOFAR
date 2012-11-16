@@ -1,0 +1,94 @@
+#!/bin/sh
+
+# Copyright (C) 2006
+# ASTRON (Netherlands Institute for Radio Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+#
+# This file is part of the LOFAR software suite.
+# The LOFAR software suite is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# The LOFAR software suite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+#
+# $Id$
+
+
+# Find the packages used by other packages.
+# Packages taken into account are all LOFAR packages and external packages.
+#
+# The output is put in a file where each line contains a pair of package
+# names (pkg1 pkg2).
+# The file finddep.uses tells that pkg1 uses pkg2.
+# The file finddep.used tells that pkg1 is used by pkg2.
+#
+# Both files can be processed by pkgdep (in LCS/Common) to display the
+# packages dependencies in a tree-like format.
+#
+#  Run as:   finddep [rootdir]
+#    rootdir:   root of LOFAR software tree
+#                 (default is /home/lofar/weekly/LOFAR)
+
+if [ $# -lt 1 ]; then
+  echo "Usage: `basename $0` <LOFAR source root directory>"
+  exit 1
+fi
+
+bindir=`dirname $0`
+rootdir=$1
+
+# Get all dependencies and sort on name.
+# It gives the 'uses' relation.
+$bindir/finddep.py $rootdir | sort > finddep.uses
+# Make a reversed copy to get the 'used by' relation.
+awk '{ print $2, $1 }' finddep.uses | sort > finddep.used
+
+# Make a file giving the LOFAR package directory structure.
+rm -f tmp.out
+for FIL in `cat tmp.fil`
+do
+  lfr="LOFAR/$FIL"
+  first=`echo $lfr | sed -e 's%/.*%%'`
+  last=`echo $lfr | sed -e "s%$first/% %"`
+  parts=`echo $last | sed -e 's%/% %g'`
+  for PART in $parts
+  do
+    echo "$first#$first/$PART" >> tmp.out
+    first="$first/$PART"
+  done
+done
+sort tmp.out | uniq | sed -e 's/#/ /' > finddep.pkg
+mv tmp.fil finddep.fil
+rm -f tmp.out tmp.fil
+
+# Now 'expand' the uses and used file to get the relations for the
+# higher level packages.
+for FIL in finddep.uses finddep.used
+do
+  rm -f tmp.fil
+  touch tmp.fil
+  for LIN in `sed -e 's/ /,/' $FIL`
+  do
+    part2=`echo $LIN | awk -F, '{ print $2 }'`
+    part1=`echo $LIN | awk -F, '{ print $1 }' | sed -e 's%/% %g'`
+    parts=
+    for part in $part1
+    do
+      if [ "$parts" = "" ]; then
+        parts="$part"
+      else
+        parts="$parts/$part"
+      fi
+      echo "$parts $part2" >> tmp.fil
+    done
+  done
+  sort tmp.fil | uniq > $FIL-all
+  rm -f tmp.fil
+done
