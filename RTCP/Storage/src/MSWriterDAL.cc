@@ -493,7 +493,7 @@ namespace LOFAR
       stokesDS.nofSubbands()    .value = nrSubbands;
       stokesDS.nofSamples()     .value = dims[0];
 
-      // construct feedback for LTA -- Implements Output_BeamFormed_.comp
+      // construct feedback for LTA -- Implements Output_Beamformed_.comp
 
       string type = "";
       

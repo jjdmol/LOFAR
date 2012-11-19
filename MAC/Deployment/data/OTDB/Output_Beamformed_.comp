@@ -1,6 +1,6 @@
-# -- Output_BeamFormed_ --
+# -- Output_Beamformed_ --
 #
-# Component description of a BeamFormed Dataproduct
+# Component description of a Beamformed Dataproduct
 #
 # $Id$
 #
@@ -19,10 +19,10 @@
 #
 
 #########################################################################################################
-# -- Output_BeamFormed_ --
+# -- Output_Beamformed_ --
 #      name       	vers   qual  		constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Output_BeamFormed_	4.0.0  development  	'node constraint'  "BeamFormedDataProduct specification"
+node  Output_Beamformed_	4.0.0  development  	'node constraint'  "BeamformedDataProduct specification"
 
 #
 # name			name of the parameter
