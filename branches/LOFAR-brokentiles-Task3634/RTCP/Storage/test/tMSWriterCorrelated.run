@@ -1,0 +1,6 @@
+#!/bin/bash
+
+./tMSWriterCorrelated
+
+taql 'select ELEMENT_FLAG[,0] from tMSWriterCorrelated.in_1/SB000.MS::LOFAR_ANTENNA_FIELD'
+
