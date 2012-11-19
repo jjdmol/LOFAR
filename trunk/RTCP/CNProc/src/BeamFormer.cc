@@ -639,7 +639,9 @@ void BeamFormer::formBeams(const SubbandMetaData *metaData, SampleData<> *sample
   // we use all stations
   //
 
-  double baseFrequency = centerFrequency - (itsNrChannels/2) * itsChannelBandwidth;
+  // take the 2nd PPF into account, which shifts the center down frequency by half
+  // a channel.
+  double baseFrequency = itsNrChannels == 1 ? centerFrequency : centerFrequency - 0.5 * itsNrChannels * itsChannelBandwidth;
 
   formBeamsTimer.start();
 
