@@ -43,6 +43,10 @@ MSWriter::~MSWriter()
 {
 }
 
+size_t MSWriter::getDataSize()
+{
+  return 0;
+}
 
 void MSWriter::augment(const FinalMetaData &finalMetaData)
 {

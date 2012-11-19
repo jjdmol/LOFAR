@@ -53,6 +53,60 @@ namespace LOFAR {
 // static pointer to this object for signal handler
 static CEPlogProcessor*     thisLogProcessor = 0;
 
+CEPFeedback::CEPFeedback()
+:
+  nrSubbands(0)
+{
+}
+
+
+void CEPFeedback::write(const std::string &filename)
+{
+  LOG_DEBUG_STR("Writing feedback file " << filename);
+
+  parset.replace(subbandSizeKey(), formatString("%u", nrSubbands));
+
+  parset.writeFile(filename);
+}
+
+
+void CEPFeedback::addSubband(unsigned index)
+{
+  setSubbandKey(index, "fileFormat",           "AIPS++/CASA");
+  setSubbandKey(index, "filename",             "");
+  setSubbandKey(index, "size",                 "0");
+  setSubbandKey(index, "location",             "");
+  setSubbandKey(index, "percentageWritten",    "0");
+  setSubbandKey(index, "startTime",            "");
+  setSubbandKey(index, "duration",             "");
+  setSubbandKey(index, "integrationInterval",  "");
+  setSubbandKey(index, "centralFrequency",     "");
+  setSubbandKey(index, "channelWidth",         "");
+  setSubbandKey(index, "channelsPerSubband",   "");
+  setSubbandKey(index, "subband",              "");
+  setSubbandKey(index, "stationSubband",       "");
+  setSubbandKey(index, "SAP",                  "");
+
+  ++nrSubbands;
+}
+
+void CEPFeedback::setSubbandKey(unsigned index, const std::string &key, const std::string &value)
+{
+  LOG_DEBUG_STR("setSubbandKey for index " << index << ": " << key << " = " << value);
+
+  parset.replace(subbandPrefix(index) + key, value);
+}
+
+std::string CEPFeedback::subbandSizeKey() const
+{
+  return "LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_";
+}
+
+std::string CEPFeedback::subbandPrefix(unsigned index) const
+{
+  return formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", index);
+}
+
 //
 // CEPlogProcessor()
 //
@@ -419,6 +473,8 @@ void CEPlogProcessor::processParset( const std::string &observationID )
     Observation obs(&parset, false, itsNrPsets);
     string observationPrefix = parset.locateModule("Observation") + "Observation.";
 
+    CEPFeedback &feedback = itsCEPFeedback[obsID];
+
     unsigned nrStreams = obs.streamsToStorage.size();
 
     // process all the writers
@@ -469,6 +525,25 @@ void CEPlogProcessor::processParset( const std::string &observationID )
       // register the temporary obs name
       registerObservation( obsID, parset.getString("_DPname") );
     }
+
+    // process feedback for correlated data
+    unsigned nrCorrelatedStreams = 0;
+
+    for (unsigned i = 0; i < nrStreams; i++ ) {
+      Observation::StreamToStorage &s = obs.streamsToStorage[i];
+
+      if (s.dataProduct != "Correlated")
+        continue;
+
+      unsigned index = nrCorrelatedStreams;
+
+      feedback.addSubband(index);
+      feedback.setSubbandKey(index, "filename",             s.filename);
+      feedback.setSubbandKey(index, "location",             s.destStorageNode + ":" + s.destDirectory);
+      feedback.setSubbandKey(index, "startTime",            parset.getString(observationPrefix + "startTime"));
+
+      nrCorrelatedStreams++; 
+    }
 }
 
 
@@ -483,7 +558,6 @@ void CEPlogProcessor::writeFeedback( int obsID )
 
     prefixedFeedback.writeFile(filename);
 }
-
 
 //
 // operational(event, port)
@@ -1093,6 +1167,10 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
           writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
           writer->flush();
+
+          if (feedback) {
+            feedback->setSubbandKey(streamNr, "percentageWritten", formatString("%d", perc_written));
+          }
         }
         return;
       }
@@ -1105,6 +1183,10 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
           writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
           writer->flush();
+
+          if (feedback) {
+            feedback->setSubbandKey(streamNr, "percentageWritten", formatString("%d", perc_written));
+          }
         }
         return;
       }

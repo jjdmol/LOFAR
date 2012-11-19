@@ -95,6 +95,7 @@ static void recursiveMakeDir(const string &dirname, const string &logPrefix)
   }
 }
 
+
 OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory)
 :
   itsParset(parset),
@@ -108,6 +109,7 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),
   itsBlocksDropped(0),
+  itsNrExpectedBlocks(0),
   itsNextSequenceNumber(0)
 {
 }
@@ -130,7 +132,6 @@ void OutputThread::createMS()
   std::string path	    = directoryName + "/" + fileName;
 
   recursiveMakeDir(directoryName, itsLogPrefix);
-
   LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
   try {
@@ -151,6 +152,35 @@ void OutputThread::createMS()
   } catch (Exception &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
     itsWriter = new MSWriterNull;
+  }
+
+  // log some core characteristics for CEPlogProcessor for feedback to MoM/LTA
+  switch (itsOutputType) {
+    case CORRELATED_DATA:
+      itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
+
+      {
+        const vector<unsigned> subbands  = itsParset.subbandList();
+        const vector<unsigned> SAPs      = itsParset.subbandToSAPmapping();
+        const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
+
+        LOG_INFO_STR(itsLogPrefix << "Characteristics: "
+            << "SAP "            << SAPs[itsStreamNr]
+            << ", subband "      << subbands[itsStreamNr]
+            << ", centralfreq "  << setprecision(8) << frequencies[itsStreamNr]/1e6 << " MHz"
+            << ", duration "     << setprecision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
+            << ", integration "  << setprecision(8) << itsParset.IONintegrationTime() << " s"
+            << ", channels "     << itsParset.nrChannelsPerSubband() 
+            << ", channelwidth " << setprecision(8) << itsParset.channelWidth()/1e3 << " kHz"
+        );
+      }
+      break;
+    case BEAM_FORMED_DATA:
+      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
+      break;
+
+    default:
+      break;
   }
 }
 
