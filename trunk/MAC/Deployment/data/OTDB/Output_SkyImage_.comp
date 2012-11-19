@@ -37,7 +37,7 @@ node  Output_SkyImage_	4.0.0  development  	'node constraint'  "SkyImageDataProd
 #--------------------------------------------------------------------------------------------------------
 #    name                  	  dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  size 	                  O    ulng   -      10    0    0      	- 	''
+par  size 	                  O    ulng   -      10    0    0      	- 	'In bytes'
 par  fileFormat                   O    ptext  -      10    0    'FITS|AIPS++/CASA|HDF5;AIPS++/CASA'      -       ''
 par  filename                     O    text   -      10    0    ''      	-       ''
 par  location                     O    text   -      10    0    ''      	-       ''
@@ -48,7 +48,12 @@ par  nrOfSpectralCoordinates      O    uint   -      10    0    0	        -	''
 par  nrOfPolarizationCoordinates  O    uint   -      10    0    0	        -	''
 par  locationFrame                O    ptext  -      10    0    'GEOCENTER|BARYCENTER|HELIOCENTER|TOPOCENTER|LSRK|LSRD|GALACTIC|LOCAL_GROUP|RELOCATABLE;GEOCENTER'      -       ''
 par  timeFrame	   	          O    text   -      10    0    ''      	- 	''
-
+par  restoringBeamMajorValue	   	          O    dbl   -      10    0    ''      	- 	'From imageinfo:restoringbeam.major'
+par  restoringBeamMajorUnit	   	          O    text   -      10    0    ''      	- 	'From imageinfo:restoringbeam.major'
+par  restoringBeamMinorValue	   	          O    dbl   -      10    0    ''      	- 	'From imageinfo:restoringbeam.minor'
+par  restoringBeamMinorUnit	   	          O    text   -      10    0    ''      	- 	'From imageinfo:restoringbeam.minor'
+par  rmsNoiseValue		O    dbl   -	   10    0    0	        -	'Average StokesI RMS noise'
+par  rmsNoiseUnit		O    text   -	   10    0    0	        -	'Average StokesI RMS noise'
 
 #      name              	vers   qual        constr.       descr.
 #--------------------------------------------------------------------------------------------------------
