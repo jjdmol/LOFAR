@@ -521,7 +521,8 @@ namespace LOFAR
       string prefix = str(format("%s[0].") % type);
 
       itsConfiguration.add(prefix + "SAP",               str(format("%u") % itsInfo.sap));
-      itsConfiguration.add(prefix + "beamNumber",        str(format("%u") % itsInfo.beam));
+      itsConfiguration.add(prefix + "TAB",               str(format("%u") % itsInfo.beam));
+      itsConfiguration.add(prefix + "samplingTime",      str(format("%f") % (parset.sampleDuration() * parset.nrChannelsPerSubband() * itsInfo.timeIntFactor)));
       itsConfiguration.add(prefix + "dispersionMeasure", str(format("%f") % DM));
       itsConfiguration.add(prefix + "nrSubbands",        str(format("%u") % nrSubbands));
 
