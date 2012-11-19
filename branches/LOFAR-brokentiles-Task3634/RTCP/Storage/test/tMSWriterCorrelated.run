@@ -2,5 +2,8 @@
 
 ./tMSWriterCorrelated
 
+# add path to casacore for lhn001
+export PATH=$PATH:/opt/cep/casacore/bin
+
 taql 'select ELEMENT_FLAG[,0] from tMSWriterCorrelated.in_1/SB000.MS::LOFAR_ANTENNA_FIELD'
 
