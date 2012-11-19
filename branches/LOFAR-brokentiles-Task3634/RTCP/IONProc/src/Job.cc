@@ -607,7 +607,7 @@ void Job::jobThread()
       // Augment the LTA feedback logging
       if (myPsetNumber == 0) {
         ParameterSet feedbackLTA;
-        feedbackLTA.add("Observation.DataProducts.nrOfOutput_BeamFormed_", str(boost::format("%u") % itsParset.nrStreams(BEAM_FORMED_DATA)));
+        feedbackLTA.add("Observation.DataProducts.nrOfOutput_Beamformed_", str(boost::format("%u") % itsParset.nrStreams(BEAM_FORMED_DATA)));
         feedbackLTA.add("Observation.DataProducts.nrOfOutput_Correlated_", str(boost::format("%u") % itsParset.nrStreams(CORRELATED_DATA)));
 
         for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)

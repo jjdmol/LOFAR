@@ -493,7 +493,7 @@ namespace LOFAR
       stokesDS.nofSubbands()    .value = nrSubbands;
       stokesDS.nofSamples()     .value = dims[0];
 
-      // construct feedback for LTA -- Implements Output_BeamFormed_.comp
+      // construct feedback for LTA -- Implements Output_Beamformed_.comp
 
       string type = "";
       
@@ -521,7 +521,8 @@ namespace LOFAR
       string prefix = str(format("%s[0].") % type);
 
       itsConfiguration.add(prefix + "SAP",               str(format("%u") % itsInfo.sap));
-      itsConfiguration.add(prefix + "beamNumber",        str(format("%u") % itsInfo.beam));
+      itsConfiguration.add(prefix + "TAB",               str(format("%u") % itsInfo.beam));
+      itsConfiguration.add(prefix + "samplingTime",      str(format("%f") % (parset.sampleDuration() * parset.nrChannelsPerSubband() * itsInfo.timeIntFactor)));
       itsConfiguration.add(prefix + "dispersionMeasure", str(format("%f") % DM));
       itsConfiguration.add(prefix + "nrSubbands",        str(format("%u") % nrSubbands));
 

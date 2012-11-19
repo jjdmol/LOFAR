@@ -144,9 +144,7 @@ class HistogramCollection : public Serializable
 		void Save(class HistogramTablesFormatter &histogramTables);
 		
 		void Load(class HistogramTablesFormatter &histogramTables);
-		
-		void Plot(class Plot2D &plot, unsigned polarization);
-		
+				
 		unsigned PolarizationCount() const { return _polarizationCount; }
 		
 		virtual void Serialize(std::ostream &stream) const
@@ -307,6 +305,8 @@ class HistogramCollection : public Serializable
 					target.Add(*i->second);
 			}
 		}
+
+
 };
 
 #endif

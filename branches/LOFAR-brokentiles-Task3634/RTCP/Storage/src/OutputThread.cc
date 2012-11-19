@@ -259,7 +259,7 @@ void OutputThread::cleanUp()
       break;
 
     case BEAM_FORMED_DATA:
-      prefix = formatString("Observation.DataProducts.Output_BeamFormed_[%u].", itsStreamNr);
+      prefix = formatString("Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr);
       break;
 
     default:
