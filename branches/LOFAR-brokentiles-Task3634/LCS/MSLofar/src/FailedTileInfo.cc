@@ -147,6 +147,9 @@ namespace LOFAR {
           // if it is matching the station type.
           if (fail->itsType == "RCU"  ||  fail->itsType == type) {
             brokenAnt[row].push_back (*fail);
+            LOG_INFO_STR("Adding broken antenna " << fail->itsType << " " << fail->itsSeqNr << " failed at " << fail->itsTime);
+          } else {
+            LOG_INFO_STR("Not adding broken antenna " << fail->itsType << " " << fail->itsSeqNr << " failed at " << fail->itsTime);
           }
         }
       }
@@ -195,7 +198,13 @@ namespace LOFAR {
                           << " (" << iter->itsType << ' ' << iter->itsSeqNr
                           << " on " << iter->itsStation
                           << " failed at " << iter->itsTime << ')');
-          }
+          } else {
+            LOG_INFO_STR ("Not flagged element " << elem
+                          << " for antenna field " << row
+                          << " (" << iter->itsType << ' ' << iter->itsSeqNr
+                          << " on " << iter->itsStation
+                          << " failed at " << iter->itsTime << "); flags.ncolumn == " << int(flags.ncolumn()) );
+          }  
         }
         if (changed) {
           flagCol.put (row, flags);
