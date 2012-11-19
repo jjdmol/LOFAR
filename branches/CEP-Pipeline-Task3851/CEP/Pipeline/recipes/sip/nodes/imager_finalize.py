@@ -177,10 +177,16 @@ class imager_finalize(LOFARnodeTCP):
             # 5. export the sourcelist to the msss server
             url = "http://tanelorn.astron.nl:8000/upload_srcs"
             try:
+                # Copy file to something that joins the fits output name??
+                new_sourcelist_path = os.path.join(os.path.dirname(sourcelist),
+                            os.path.basename(fits_output) + "_sourcelist")
+
+                shutil.copy(sourcelist, new_sourcelist_path)
                 self.logger.info("Starting upload of sourcelist data to server!")
                 opener = urllib2.build_opener(mph.MultipartPostHandler)
                 filedata = {"file": open(sourcelist, "rb")}
                 opener.open(url, filedata, timeout=2)
+                os.remove(new_sourcelist_path)
                 # HTTPError needs to be caught first.
             except urllib2.HTTPError as httpe:
                 self.logger.warn("HTTP status is: {0}".format(httpe.code))
