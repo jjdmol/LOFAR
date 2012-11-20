@@ -8,6 +8,7 @@ set(interface_LIB_SRCS
   BeamCoordinates.cc
   CN_Mapping.cc
   DataFactory.cc
+  FinalMetaData.cc
   Stream.cc
   Parset.cc
   RSPTimeStamp.cc)

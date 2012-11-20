@@ -26,6 +26,7 @@
 #define LOFAR_STORAGE_MSWRITER_H
 
 #include <Interface/StreamableData.h>
+#include <Interface/FinalMetaData.h>
 #include <Common/ParameterSet.h>
 
 namespace LOFAR {
@@ -39,6 +40,8 @@ class MSWriter
     virtual	 ~MSWriter();
 
     virtual void write(StreamableData *) = 0;
+
+    virtual void augment(const FinalMetaData &finalMetaData);
 
     virtual size_t getDataSize();
 

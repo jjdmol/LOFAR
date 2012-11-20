@@ -44,6 +44,9 @@ class MeasurementSetFormat : public Format
 
     virtual void addSubband(const string MSname, unsigned subband, bool isBigEndian);
 
+    // casacore/measurementset mutex
+    static Mutex sharedMutex;
+
   private:
     const Parset &itsPS;
 
@@ -60,8 +63,6 @@ class MeasurementSetFormat : public Format
     SmartPtr<MSLofar> itsMS;
 
     const uint32 itsAlignment;
-
-    static Mutex sharedMutex;
 
     void createMSTables(const string &MSname, unsigned subband);
     void createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian);

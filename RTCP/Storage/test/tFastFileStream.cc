@@ -86,14 +86,31 @@ void test_smallwrite( size_t bytes )
   int flags = O_RDWR | O_CREAT | O_TRUNC;
   int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
-  char buf[bytes];
+  unsigned char buf[bytes];
+
+  // write 'bytes' bytes
+  for (size_t i = 0; i < bytes; ++i)
+    buf[i] = i % 256;
 
   {
     FastFileStream s(tmpfile.filename, flags, mode);
     s.write(&buf, sizeof buf);
   }
 
+  // verify file size
   assert(filesize(tmpfile.filename) == bytes);
+
+  // verify contents
+  for (size_t i = 0; i < bytes; ++i)
+    buf[i] = 0;
+
+  {
+    FileStream s(tmpfile.filename, O_RDONLY, mode);
+    s.read(&buf, sizeof buf);
+  }
+
+  for (size_t i = 0; i < bytes; ++i)
+    assert(buf[i] == i % 256);
 }
 
 void test_skip( size_t bytes1, size_t skip, size_t bytes2 )
@@ -128,6 +145,7 @@ int main() {
   test_smallwrite( 2 * blocksize );
   test_smallwrite( 2 * blocksize - 1 );
   test_smallwrite( 2 * blocksize + 1 );
+  test_smallwrite( 409 * 16 * 4 );
 
   // test write() + skip() + write()
   size_t values[] = {0, 1, blocksize - 1, blocksize, blocksize + 1};
