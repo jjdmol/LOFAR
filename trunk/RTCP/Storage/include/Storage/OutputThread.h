@@ -28,6 +28,7 @@
 #include <Interface/OutputTypes.h>
 #include <Interface/SmartPtr.h>
 #include <Interface/StreamableData.h>
+#include <Interface/FinalMetaData.h>
 #include <Storage/MSWriter.h>
 #include <Stream/FileStream.h>
 #include <Common/Thread/Queue.h>
@@ -48,11 +49,12 @@ class OutputThread
 
     void			     start();
 
-    void			     createMS();
+    // needed in createHeaders.cc
+    void           createMS();
+
+    void           augment(const FinalMetaData &finalMetaData);
 
   private:
-    void			     flushSequenceNumbers();
-    void			     writeSequenceNumber(StreamableData *);
     void			     checkForDroppedData(StreamableData *);
     void			     doWork();
     void			     cleanUp();
@@ -71,8 +73,6 @@ class OutputThread
     unsigned		 	     itsBlocksWritten, itsBlocksDropped;
     unsigned           itsNrExpectedBlocks;
     unsigned			     itsNextSequenceNumber;
-    std::vector<unsigned>	     itsSequenceNumbers;
-    SmartPtr<FileStream>	     itsSequenceNumbersFile;
     SmartPtr<MSWriter>		     itsWriter;
     SmartPtr<Thread>		     itsThread;
 };

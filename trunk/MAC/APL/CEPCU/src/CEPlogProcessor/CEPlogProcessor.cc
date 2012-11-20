@@ -484,7 +484,6 @@ void CEPlogProcessor::writeFeedback( int obsID )
     prefixedFeedback.writeFile(filename);
 }
 
-
 //
 // operational(event, port)
 //

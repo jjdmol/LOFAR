@@ -4,6 +4,7 @@ include(LofarPackageVersion)
 
 lofar_add_library(storage 
   Package__Version.cc
+  ExitOnClosedStdin.cc
   FastFileStream.cc
   InputThread.cc
   OutputThread.cc
@@ -24,6 +25,7 @@ install(PROGRAMS
 
 install(FILES
   Storage_main.log_prop
+  TBB_Writer_main.log_prop
   DESTINATION etc)
 
 lofar_add_bin_program(Storage_main Storage_main.cc)

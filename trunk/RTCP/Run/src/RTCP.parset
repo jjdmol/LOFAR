@@ -49,17 +49,16 @@ Observation.Beam[0].angle1 = 5.2336866848083394 # Cygnus
 Observation.Beam[0].angle2 = 0.71094251447010637
 Observation.Beam[0].directionType = J2000
 
-Observation.Beam[0].nrTiedArrayBeams = 2
+Observation.Beam[0].nrTiedArrayBeams = 0
 Observation.Beam[0].TiedArrayBeam[0].angle1 = 0
 Observation.Beam[0].TiedArrayBeam[0].angle2 = 0
 Observation.Beam[0].TiedArrayBeam[0].directionType = J2000
 Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure = 0
-Observation.Beam[0].TiedArrayBeam[0].coherent = F
-Observation.Beam[0].TiedArrayBeam[1].angle1 = 1
-Observation.Beam[0].TiedArrayBeam[1].angle2 = 2
-Observation.Beam[0].TiedArrayBeam[1].directionType = J2000
-Observation.Beam[0].TiedArrayBeam[1].dispersionMeasure = 1.2
-Observation.Beam[0].TiedArrayBeam[1].coherent = T
+Observation.Beam[0].TiedArrayBeam[0].coherent = T
+#Observation.Beam[0].TiedArrayBeam[1].angle1 = 0
+#Observation.Beam[0].TiedArrayBeam[1].angle2 = 0
+#Observation.Beam[0].TiedArrayBeam[1].directionType = J2000
+#Observation.Beam[0].TiedArrayBeam[1].dispersionMeasure = 1.2
 #Observation.Beam[0].TiedArrayBeam[2].angle1 = 0
 #Observation.Beam[0].TiedArrayBeam[2].angle2 = 0
 #Observation.Beam[0].TiedArrayBeam[2].directionType = J2000
@@ -69,7 +68,7 @@ Observation.Beam[0].TiedArrayBeam[1].coherent = T
 OLAP.Storage.hosts = [locus095]
 OLAP.Storage.targetDirectory = /data # will be appended with dirmask and filenammask
 
-Observation.DataProducts.Output_Beamformed.enabled = T
+Observation.DataProducts.Output_Beamformed.enabled = F
 Observation.DataProducts.Output_Correlated.enabled = T
 Observation.DataProducts.Output_Trigger.enabled = F
 
