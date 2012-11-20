@@ -160,6 +160,12 @@ public:
     bool useFaradayRotation() const;
     void setFaradayRotation(bool value = true);
 
+    bool useRotation() const;
+    void setRotation(bool value = true);
+
+    bool useScalarPhase() const;
+    void setScalarPhase(bool value = true);
+
     bool useIonosphere() const;
     void setIonosphereConfig(const IonosphereConfig &config);
     const IonosphereConfig &getIonosphereConfig() const;
@@ -183,12 +189,14 @@ private:
         BANDPASS,
         CLOCK,
         GAIN,
+        SCALAR_PHASE,
         TEC,
         DIRECTIONAL_GAIN,
         ELEVATION_CUT,
         BEAM,
         DIRECTIONAL_TEC,
         FARADAY_ROTATION,
+        ROTATION,
         IONOSPHERE,
         FLAGGER,
         CACHE,

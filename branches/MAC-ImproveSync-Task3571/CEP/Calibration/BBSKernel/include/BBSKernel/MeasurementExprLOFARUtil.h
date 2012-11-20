@@ -118,6 +118,16 @@ makeFaradayRotationExpr(Scope &scope,
     const string &patch);
 
 Expr<JonesMatrix>::Ptr
+makeRotationExpr(Scope &scope,
+    const Station::ConstPtr &station,
+    const string &patch);
+
+Expr<Scalar>::Ptr
+makeScalarPhaseExpr(Scope &scope,
+    const Station::ConstPtr &station,
+    const string &patch);
+
+Expr<JonesMatrix>::Ptr
 makeIonosphereExpr(const Station::ConstPtr &station,
     const casa::MPosition &refPosition,
     const Expr<Vector<2> >::Ptr &exprAzEl,
@@ -127,6 +137,12 @@ makeIonosphereExpr(const Station::ConstPtr &station,
 Expr<JonesMatrix>::Ptr
 compose(const Expr<JonesMatrix>::Ptr &lhs,
     const Expr<JonesMatrix>::Ptr &rhs);
+
+// Right multiply \p lhs by \p rhs. Return \p rhs as a diagonal Jones matrix
+// if \p lhs is uninitialized.
+Expr<JonesMatrix>::Ptr
+compose(const Expr<JonesMatrix>::Ptr &lhs,
+    const Expr<Scalar>::Ptr &rhs);
 
 // Construct \p lhs * \p coherence * (\p rhs)^H. Return \p coherence if
 // either \p lhs or \p rhs are uninitialized.

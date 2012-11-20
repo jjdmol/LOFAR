@@ -6,7 +6,7 @@ from lofarpipe.support.baserecipe import BaseRecipe
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
-from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.data_map import DataMap
 
 class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -81,17 +81,16 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         # ********************************************************************
         # 1. load mapfiles with input images and collect some parameters from
         # The input ingredients       
-        input_map = load_data_map(self.inputs['args'][0])
+        input_map = DataMap.load(self.inputs['args'][0])
         catalog_output_path = self.inputs["catalog_output_path"]
 
         # ********************************************************************
         # 2. Start the node script
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
-        created_sourcelists = []
-        created_sourcedbs = []
-        for host, data in input_map:
-            arguments = [data,
+
+        for item in input_map:
+            arguments = [item.file,
                          self.inputs["bdsm_parset_file_run1"],
                          self.inputs["bdsm_parset_file_run2x"],
                          catalog_output_path,
@@ -103,10 +102,8 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['working_directory'],
                          self.inputs['makesourcedb_path']
                         ]
-            created_sourcelists.append((host, catalog_output_path))
-            created_sourcedbs.append((host,
-                                    self.inputs['sourcedb_target_path']))
-            jobs.append(ComputeJob(host, node_command, arguments))
+
+            jobs.append(ComputeJob(item.host, node_command, arguments))
 
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
@@ -121,11 +118,17 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         catalog_output_path_from_nodes = []
         for job in jobs:
             if "source_db"  in job.results:
-                source_dbs_from_nodes.append((
-                                        job.host, job.results["source_db"]))
+                source_dbs_from_nodes.append(tuple([
+                                        job.host, job.results["source_db"], False]))
                 # We now also have catalog path
-                catalog_output_path_from_nodes.append((
-                               job.host, job.results["catalog_output_path"]))
+                catalog_output_path_from_nodes.append(tuple([
+                               job.host, job.results["catalog_output_path"], False]))
+            else:
+                source_dbs_from_nodes.append(tuple([
+                                        job.host, "/failed", True]))
+                # We now also have catalog path
+                catalog_output_path_from_nodes.append(tuple([
+                               job.host, "/failed", True]))
 
         # Abort if none of the recipes succeeded
         if len(source_dbs_from_nodes) == 0:
@@ -133,11 +136,12 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.error("Exiting with a failure status")
             return 1
 
-        self.logger.info(created_sourcelists)
-        self._store_data_map(self.inputs['mapfile'], created_sourcelists,
+        self._store_data_map(self.inputs['mapfile'],
+                 DataMap(catalog_output_path_from_nodes),
                 "datamap with created sourcelists")
         self._store_data_map(self.inputs['sourcedb_map_path'],
-                created_sourcedbs, " datamap with created sourcedbs")
+                DataMap(source_dbs_from_nodes),
+                 " datamap with created sourcedbs")
 
         self.outputs["mapfile"] = self.inputs['mapfile']
         self.outputs["sourcedb_map_path"] = self.inputs['sourcedb_map_path']

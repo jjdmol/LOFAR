@@ -27,6 +27,7 @@
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
 #include <Interface/StreamableData.h>
+#include <Interface/FinalMetaData.h>
 #include <Storage/InputThread.h>
 #include <Storage/OutputThread.h>
 #include <Common/Thread/Queue.h>
@@ -42,6 +43,8 @@ class SubbandWriter
 {
   public:
     SubbandWriter(const Parset &, OutputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix);
+
+    void augment(const FinalMetaData &finalMetaData);
 
   private:
     static const unsigned	     maxReceiveQueueSize = 30;

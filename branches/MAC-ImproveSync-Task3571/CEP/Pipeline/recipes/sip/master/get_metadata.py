@@ -12,7 +12,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.data_map import DataMap
 from lofarpipe.recipes.helpers import metadata
 from lofar.parameterset import parameterset
 from lofarpipe.support.utilities import create_directory
@@ -73,29 +73,42 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         # ********************************************************************
         # 2. Load mapfiles
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
-        data = load_data_map(args[0])
+        data = DataMap.load(args[0])
 
         # ********************************************************************
         # 3. call node side of the recipe
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        data.iterator = DataMap.SkipIterator
         jobs = []
-        for host, infile in data:
+        for inp in data:
             jobs.append(
                 ComputeJob(
-                    host, command,
+                    inp.host, command,
                     arguments=[
-                        infile,
+                        inp.file,
                         self.inputs['product_type']
                     ]
                 )
             )
         self._schedule_jobs(jobs)
+        for job, inp in zip(jobs, data):
+            if job.results['returncode'] != 0:
+                inp.skip = True
 
         # ********************************************************************
         # 4. validate performance
+        # 4. Check job results, and create output data map file
         if self.error.isSet():
-            self.logger.warn("Failed get_metadata process detected")
-            return 1
+            # Abort if all jobs failed
+            if all(job.results['returncode'] != 0 for job in jobs):
+                self.logger.error("All jobs failed. Bailing out!")
+                return 1
+            else:
+                self.logger.warn(
+                    "Some jobs failed, continuing with succeeded runs"
+                )
+        self.logger.debug("Updating data map file: %s" % args[0])
+        data.save(args[0])
 
         # ********************************************************************
         # 5. Create the parset-file and write it to disk.        

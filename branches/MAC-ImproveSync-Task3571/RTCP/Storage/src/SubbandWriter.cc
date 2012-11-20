@@ -48,6 +48,11 @@ SubbandWriter::SubbandWriter(const Parset &parset, OutputType outputType, unsign
     
 }
 
+void SubbandWriter::augment( const FinalMetaData &finalMetaData )
+{
+  itsOutputThread->augment(finalMetaData);
+}
+
 
 } // namespace RTCP
 } // namespace LOFAR

@@ -125,9 +125,13 @@ Job::Job(const char *parsetName)
 
 Job::~Job()
 {
-  // explicitly free PLCClient first, because it refers to us and needs             
-  // a valid Job object to work on                                                  
-  delete itsPLCClient.release();                                                    
+  // explicitly free PLCClient first, because it refers to us and needs
+  // a valid Job object to work on
+  delete itsPLCClient.release();
+
+  // stop any started Storage processes
+  if (myPsetNumber == 0)
+    stopStorageProcesses();
 
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Job " << (itsIsRunning ? "finished" : "cancelled") << " successfully");
@@ -198,8 +202,9 @@ template <typename T> void Job::broadcast(T &value)
 }
 
 
-Job::StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname )
+Job::StorageProcess::StorageProcess( Job &job, const Parset &parset, const string &logPrefix, int rank, const string &hostname )
 :
+  itsJob(job),
   itsParset(parset),
   itsLogPrefix(str(boost::format("%s [StorageWriter rank %2d host %s] ") % logPrefix % rank % hostname)),
   itsRank(rank),
@@ -279,7 +284,7 @@ void Job::StorageProcess::start()
 void Job::StorageProcess::stop(struct timespec deadline)
 {
 #ifdef HAVE_LIBSSH2
-  itsSSHconnection->stop(deadline);
+  itsSSHconnection->wait(deadline);
 #else
   joinSSH(itsLogPrefix, itsPID, (deadline.tv_sec ? deadline.tv_sec : time(0)) + 1);
 #endif
@@ -300,14 +305,86 @@ bool Job::StorageProcess::isDone()
 
 void Job::StorageProcess::controlThread()
 {
+  // Connect
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
   std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
   PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource, 0);
 
-  // for now, we just send the parset and call it a day
+  // Send parset
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connected -- sending parset");
   itsParset.write(&stream);
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent parset");
+
+  // Send final meta data once it is available
+  itsJob.itsFinalMetaDataAvailable.down();
+
+  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sending final meta data");
+  itsJob.itsFinalMetaData.write(stream);
+  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent final meta data");
+}
+
+
+void Job::forwardFinalMetaData()
+{
+  struct timespec deadline = { time(0) + 60, 0 };
+
+  Thread thread(this, &Job::finalMetaDataThread, itsLogPrefix + "[FinalMetaDataThread] ", 65536);
+
+  // abort the thread if deadline passes
+  try {
+    if (!thread.wait(deadline)) {
+      LOG_WARN_STR(itsLogPrefix << "Cancelling FinalMetaDataThread");
+
+      thread.cancel();
+    }
+  } catch(...) {
+    thread.cancel();
+    throw;
+  }
+}
+
+
+void Job::finalMetaDataThread()
+{
+  std::string hostName    = itsParset.getString("OLAP.FinalMetaDataGatherer.host");
+  std::string userName    = itsParset.getString("OLAP.FinalMetaDataGatherer.userName");
+  std::string sshKey      = itsParset.getString("OLAP.FinalMetaDataGatherer.sshIdentityFile");
+  std::string executable  = itsParset.getString("OLAP.FinalMetaDataGatherer.executable");
+
+  char cwd[1024];
+
+  if (getcwd(cwd, sizeof cwd) == 0)
+    throw SystemCallException("getcwd", errno, THROW_ARGS);
+
+  std::string commandLine = str(boost::format("cd %s && %s %d 2>&1")
+      % cwd
+      % executable
+      % itsParset.observationID()
+      );
+
+  // Start the remote process
+  SSHconnection sshconn(itsLogPrefix + "[FinalMetaData] ", hostName, commandLine, userName, sshKey);
+  sshconn.start();
+
+  // Connect
+  LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connecting...");
+  std::string resource = getStorageControlDescription(itsParset.observationID(), -1);
+  PortBroker::ClientStream stream(hostName, storageBrokerPort(itsParset.observationID()), resource, 0);
+
+  // Send parset
+  LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connected -- sending parset");
+  itsParset.write(&stream);
+  LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] sent parset");
+
+  // Receive final meta data
+  itsFinalMetaData.read(stream);
+  LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] obtained final meta data");
+
+  // Notify clients
+  itsFinalMetaDataAvailable.up(itsStorageProcesses.size());
+
+  // Wait for or end the remote process
+  sshconn.wait();
 }
 
 
@@ -317,8 +394,10 @@ void Job::startStorageProcesses()
 
   itsStorageProcesses.resize(hostnames.size());
 
+  LOG_DEBUG_STR(itsLogPrefix << "Starting " << itsStorageProcesses.size() << " Storage processes");
+
   for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
-    itsStorageProcesses[rank] = new StorageProcess(itsParset, itsLogPrefix, rank, hostnames[rank]);
+    itsStorageProcesses[rank] = new StorageProcess(*this, itsParset, itsLogPrefix, rank, hostnames[rank]);
     itsStorageProcesses[rank]->start();
   }  
 }
@@ -326,26 +405,38 @@ void Job::startStorageProcesses()
 
 void Job::stopStorageProcesses()
 {
+  LOG_DEBUG_STR(itsLogPrefix << "Stopping storage processes");
+
   time_t deadline = time(0) + 300;
-  struct timespec immediately = { 0, 0 };
 
-  size_t nrRunning = itsStorageProcesses.size();
+  size_t nrRunning = 0;
 
-  do {
-    for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
-      if (itsStorageProcesses[rank]->isDone()) {
+  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
+    if (itsStorageProcesses[rank].get())
+      nrRunning++;
+
+  while(nrRunning > 0) {
+    for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
+      if (!itsStorageProcesses[rank].get())
+        continue;
+
+      if (itsStorageProcesses[rank]->isDone() || time(0) >= deadline) {
+        struct timespec immediately = { 0, 0 };
+
         itsStorageProcesses[rank]->stop(immediately);
+        itsStorageProcesses[rank] = 0;
 
         nrRunning--;
       }
+    }  
 
     if (nrRunning > 0)
       sleep(1);
+  }
 
-  } while( nrRunning > 0 && time(0) < deadline );
+  itsStorageProcesses.clear();
 
-  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
-    itsStorageProcesses[rank]->stop(immediately);
+  LOG_DEBUG_STR(itsLogPrefix << "Storage processes are stopped");
 }
 
 
@@ -504,10 +595,24 @@ void Job::jobThread()
 
       // PLC: RELEASE phase
 
-      // all InputSections and OutputSections have finished their processing, so
-      // Storage should be done any second now.
+      if (myPsetNumber == 0) {
+        forwardFinalMetaData();
 
-      stopStorageProcesses();
+        // all InputSections and OutputSections have finished their processing, so
+        // Storage should be done any second now.
+
+        stopStorageProcesses();
+      }
+
+      // Augment the LTA feedback logging
+      if (myPsetNumber == 0) {
+        ParameterSet feedbackLTA;
+        feedbackLTA.add("Observation.DataProducts.nrOfOutput_Beamformed_", str(boost::format("%u") % itsParset.nrStreams(BEAM_FORMED_DATA)));
+        feedbackLTA.add("Observation.DataProducts.nrOfOutput_Correlated_", str(boost::format("%u") % itsParset.nrStreams(CORRELATED_DATA)));
+
+        for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)
+          LOG_INFO_STR(itsLogPrefix << "LTA FEEDBACK: " << i->first << " = " << i->second);
+      }  
     }
   }
 

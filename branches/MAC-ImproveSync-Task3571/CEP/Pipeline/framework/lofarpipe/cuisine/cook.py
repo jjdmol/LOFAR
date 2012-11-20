@@ -1,5 +1,5 @@
 #from message import ErrorLevel, NotifyLevel, VerboseLevel, DebugLevel
-import time, os, select, pty, fcntl, sys, logging, imp
+import time, os, select, sys, logging, imp
 from lofarpipe.support.pipelinelogging import getSearchingLogger
 
 class CookError(Exception):
@@ -95,6 +95,7 @@ class SystemCook(WSRTCook):
 
     def spawn(self, env=None):
         """Try to start the task."""
+        import pty
         try:
             (self._pid, self._child_fd) = pty.fork()
         except OSError, e:
@@ -120,6 +121,7 @@ class SystemCook(WSRTCook):
                 sys.stderr.write('Process could not be started: ' + self.task)
                 os._exit(1)
         else: ## the parent
+            import fcntl
 ##            self.poll.register(self._child_fd)
 ##            self.poll.register(self._errorpipe_end)
             os.close(self._errorpipe_front) ## close what we don't need

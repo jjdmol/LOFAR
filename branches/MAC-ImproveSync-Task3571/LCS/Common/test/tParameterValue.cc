@@ -33,14 +33,41 @@ void testScalar()
   ASSERT (pv.get() == "abc");
   ASSERT (! pv.isVector());
   ASSERT (pv.getString() == "abc");
-  ParameterValue pv1("  abc  ",false);
+  ASSERT (pv.getStringVector().size() == 1);
+  ASSERT (pv.getStringVector()[0] == "abc");
+  ParameterValue pv1("  abc  ", false);
   ASSERT (pv1.get() == "  abc  ");
   ASSERT (! pv1.isVector());
   ASSERT (pv1.getString() == "  abc  ");
+  ASSERT (pv1.getStringVector().size() == 1);
+  ASSERT (pv1.getStringVector()[0] == "  abc  ");
   ParameterValue pv2("'  abc  '");
   ASSERT (pv2.get() == "'  abc  '");
   ASSERT (! pv2.isVector());
   ASSERT (pv2.getString() == "  abc  ");
+  ASSERT (pv2.getStringVector().size() == 1);
+  ASSERT (pv2.getStringVector()[0] == "  abc  ");
+}
+
+void testEmpty()
+{
+  ParameterValue pv("  ");
+  ASSERT (pv.get() == "");
+  ASSERT (! pv.isVector());
+  ASSERT (pv.getString() == "");
+  ASSERT (pv.getStringVector().size() == 0);
+  ParameterValue pv1("  ", false);
+  ASSERT (pv1.get() == "  ");
+  ASSERT (! pv1.isVector());
+  ASSERT (pv1.getString() == "  ");
+  ASSERT (pv1.getStringVector().size() == 1);
+  ASSERT (pv1.getStringVector()[0] == "  ");
+  ParameterValue pv2("'  '");
+  ASSERT (pv2.get() == "'  '");
+  ASSERT (! pv2.isVector());
+  ASSERT (pv2.getString() == "  ");
+  ASSERT (pv2.getStringVector().size() == 1);
+  ASSERT (pv2.getStringVector()[0] == "  ");
 }
 
 void testVector()
@@ -112,6 +139,7 @@ int main()
   try {
     INIT_LOGGER("tParameterValue");
     testScalar();
+    testEmpty();
     testVector();
     testExpand();
   } catch (std::exception& x) {

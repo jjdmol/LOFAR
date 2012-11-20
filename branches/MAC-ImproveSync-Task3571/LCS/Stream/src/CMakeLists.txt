@@ -10,6 +10,7 @@ lofar_add_library(stream
   NullStream.cc
   PortBroker.cc
   SocketStream.cc
-  Stream.cc)
+  Stream.cc
+  StringStream.cc)
 
 lofar_add_bin_program(versionstream versionstream.cc)
