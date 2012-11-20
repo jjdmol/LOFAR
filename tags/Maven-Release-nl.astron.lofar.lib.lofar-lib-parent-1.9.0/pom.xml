@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>Lofar Utilities :: Parent</name>
+
+  <parent>
+    <groupId>nl.astron</groupId>
+    <artifactId>parent</artifactId>
+    <version>2.0.0</version>
+  </parent>
+
+  <groupId>nl.astron.lofar.lib</groupId>
+  <artifactId>lofar-lib-parent</artifactId>
+  <version>1.9.0</version>
+  <packaging>pom</packaging>
+
+
+  <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
+  <scm>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.lib.lofar-lib-parent-1.9.0</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.lib.lofar-lib-parent-1.9.0</developerConnection>
+  </scm>
+
+
+  <!-- The modules (sometimes called subprojects) to build as a part of this 
+    project. Each module listed is a relative path to the directory containing 
+    the module. -->
+  <modules>
+    <module>LofarUtils</module>
+    <module>GUI/Plotter</module>
+  </modules>
+
+
+  <!-- Default dependency information for projects that inherit from this 
+    one. The dependencies in this section are not immediately resolved. Instead, 
+    when a POM derived from this one declares a dependency described by a matching 
+    groupId and artifactId, the version and other values from this section are 
+    used for that dependency if they were not already specified. -->
+  <dependencyManagement>
+    <dependencies>
+
+      <!-- Child dependencies, childs use the same group-ID and version by default. -->
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>lofarutils</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>plotter</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
+
+</project>
