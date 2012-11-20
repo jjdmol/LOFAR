@@ -56,6 +56,7 @@ public class jOTDBtree implements java.io.Serializable
     public short classification; // development / test / operational
     public String creator;
     public String creationDate;	
+    public String modificationDate;	
     public short type;			// hardware / VItemplate / VHtree
     public short state;			// idle / configure / ... / active / ...
     public String processType;          // Maintenance / Reservation / Observation / ..

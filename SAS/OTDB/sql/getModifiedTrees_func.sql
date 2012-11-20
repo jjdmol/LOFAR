@@ -1,7 +1,7 @@
 --
---  getTreeList.sql: function for getting treeinfo from the OTDB
+--  getModifiedTrees.sql: function for getting treeinfo from the OTDB
 --
---  Copyright (C) 2005
+--  Copyright (C) 2012
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
 --  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
@@ -19,13 +19,13 @@
 --  along with this program; if not, write to the Free Software
 --  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 --
---  $Id$
+--  $Id: getTreeList_func.sql 18624 2011-07-27 15:34:51Z schoenmakers $
 --
 
 --
--- getTreeList ([treeType], [classification], [groupID], [processType], [processSubtype], [strategy])
+-- getModifiedTrees (after, [treeType])
 -- 
--- Get a list of trees.
+-- Get a list of trees that is modified after given timestamp.
 --
 -- Authorisation: none
 --
@@ -35,7 +35,7 @@
 --
 -- Types:	treeInfo
 --
-CREATE OR REPLACE FUNCTION getTreeList(INT2, INT2, INT4, VARCHAR(20), VARCHAR(50), VARCHAR(30))
+CREATE OR REPLACE FUNCTION getModifiedTrees(VARCHAR(20), INT2)
   RETURNS SETOF treeInfo AS $$
 	DECLARE
 		vRecord		RECORD;
@@ -43,35 +43,10 @@ CREATE OR REPLACE FUNCTION getTreeList(INT2, INT2, INT4, VARCHAR(20), VARCHAR(50
 
 	BEGIN
 	  -- Construct where clause
-	  IF $1 = 0 AND $2 = 0 THEN
-		-- parameters are both zero, select all records
-	    vQuery := 'WHERE t.treeID != 0';
-	  ELSE
-	    vQuery := 'WHERE ';
-	    IF $1 > 0 THEN
-		  -- add selection on treeType
-	      vQuery := vQuery || 't.treetype = ' || chr(39) || $1 || chr(39);
-	      IF $2 > 0 THEN
-		    vQuery := vQuery || ' AND ';
-	      END IF;
-	    END IF;
-	    IF $2 > 0 THEN
-		  -- add selection on classification
-	      vQuery := vQuery || 't.classif = ' || chr(39) || $2 || chr(39);
-	    END IF;
-	  END IF;
-	  IF $3 != 0 THEN
-		vQuery := vQuery || ' AND t.groupID = ' || chr(39) || $3 || chr(39);
-	  END IF;
-	  IF $4 != '' THEN
-		vQuery := vQuery || ' AND t.processType = ' || chr(39) || $4 || chr(39);
-	  END IF;
-	  IF $5 != '' THEN
-		vQuery := vQuery || ' AND t.processSubtype = ' || chr(39) || $5 || chr(39);
-	  END IF;
-	  IF $6 != '' THEN
-		vQuery := vQuery || ' AND t.strategy = ' || chr(39) || $6 || chr(39);
-	  END IF;
+	  vQuery := 'WHERE t.modificationDate >' || chr(39) || $1 || chr(39);
+      IF $2 > 0 THEN
+	    vQuery := vQuery || ' AND t.treetype = ' || $2;
+      END IF;
 
 	  -- do selection
 	  FOR vRecord IN  EXECUTE '

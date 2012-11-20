@@ -47,6 +47,9 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 	string crea;
 	row["creationDate"].to(crea);
 	creationDate = time_from_string(crea);
+	string modif;
+	row["modificationDate"].to(modif);
+	modificationDate = time_from_string(modif);
 	row["type"].to(type);
 	row["state"].to(state);
 
@@ -81,6 +84,7 @@ ostream& OTDBtree::print (ostream& os) const
 	os << "classification  : " << classification	<< endl;
 	os << "creator         : " << creator			<< endl;
 	os << "creationdate    : " << creationDate		<< endl;
+	os << "modificationdate: " << modificationDate	<< endl;
 	os << "tree type       : " << type				<< endl;
 	os << "state           : " << state				<< endl;
 	os << "original tree   : " << originalTree		<< endl;

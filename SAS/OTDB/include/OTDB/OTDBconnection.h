@@ -105,6 +105,8 @@ public:
 									   const ptime& beginDate = ptime(min_date_time),
 									   const ptime& endDate   = ptime(max_date_time));
 
+	// To get a list of all OTDB trees modified after given timestamp
+	vector<OTDBtree> getModifiedTrees(const ptime&	after, treeType	aTreeType = 0);
 
 	// Get a map to translate MoMIds to treeID's
     map<uint, uint> getMomID2treeIDMap();

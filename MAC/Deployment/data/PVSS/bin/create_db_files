@@ -1215,6 +1215,17 @@ create_cpp_headerfile()
 	echo "#endif"  >>${DESTDIR}/${CPP_HEADERFILE}
 }
 
+check_start_dir()
+{
+   if [ -f PVSSbase.dpdef ]; then
+     return
+   else
+     echo "Start create_db_files from the directory with the PVSS datafiles"
+     echo "Start with ../bin/create_db_files [options]"
+     echo
+     exit
+   fi
+}
 #------------------------------ MAIN program ------------------------------
 #
 # Syntax: create_db_files [-d destdir] [-s station | -C]
@@ -1278,8 +1289,9 @@ elif [ "$DBTYPE" == "M" ]; then
      cd $DESTDIR
      echo "Making files for $STNNAME in $DESTDIR"
    else
-     configdir=".."
-     dpdefdir=""
+     check_start_dir 
+     configdir="../../"
+     dpdefdir="../data/"
    fi    
 elif [ "$DBTYPE" == "C" ]; then 
    if [ "$HOSTNAME" == "CCU001" -o "$HOSTNAME" == "CCU099" ]; then  
@@ -1290,12 +1302,14 @@ elif [ "$DBTYPE" == "C" ]; then
      cd $DESTDIR
      echo "Making files for $STNNAME in $DESTDIR"
    else
-     configdir=".."
-     dpdefdir=""
+     check_start_dir
+     configdir="../../"
+     dpdefdir="../data/"
    fi    
 else
-   configdir=".."
-   dpdefdir=""
+   check_start_dir
+   configdir="../.."
+   dpdefdir="../data"
    STNNAME=$DBTYPENAME
 fi
 
@@ -1306,12 +1320,12 @@ if [ ! -f $STATIONINFOFILE ]; then
   exit
 fi
 
-COMPONENT_FILE=${dpdefdir}PVSSbase.dpdef
-CLUSTERFILE=${dpdefdir}Clusters.list
-RINGFILE=${dpdefdir}Rings.list
-WANFILE=${dpdefdir}Wan.list
+COMPONENT_FILE=${dpdefdir}/PVSSbase.dpdef
+CLUSTERFILE=${dpdefdir}/Clusters.list
+RINGFILE=${dpdefdir}/Rings.list
+WANFILE=${dpdefdir}/Wan.list
 ERRORFILE=/tmp/Crea.Error
-INPUTFILE=${dpdefdir}PVSSDataPoints.base
+INPUTFILE=${dpdefdir}/PVSSDataPoints.base
 
 # define the output files
 CPP_HEADERFILE=PVSSDatapointDefs.h
