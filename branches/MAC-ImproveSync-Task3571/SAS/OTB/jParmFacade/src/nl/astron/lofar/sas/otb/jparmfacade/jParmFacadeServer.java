@@ -46,7 +46,7 @@ public class jParmFacadeServer {
             String logConfig = "jParmFacade.log_prop";
 
             PropertyConfigurator.configure(logConfig);
-            jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig);
+            jInitCPPLogger aCPPLogger=new jInitCPPLogger(logConfig) {};
             logger.info("jParmFacadeServer started. LogPropFile: "+ logConfig);
             
 //	     if (System.getSecurityManager () == null)
