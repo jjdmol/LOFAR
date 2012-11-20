@@ -616,7 +616,7 @@ void BeamFormer::mergeStations(SampleData<> *sampleData)
   mergeStationsTimer.stop();
 }
 
-void BeamFormer::formBeams(const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency, unsigned sap, unsigned firstBeam, unsigned nrBeams)
+void BeamFormer::formBeams(const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, unsigned subband, unsigned sap, unsigned firstBeam, unsigned nrBeams)
 {
   ASSERT(sampleData->samples.shape()[0] == itsNrChannels);
   ASSERT(sampleData->samples.shape()[1] == itsNrStations);
@@ -641,7 +641,7 @@ void BeamFormer::formBeams(const SubbandMetaData *metaData, SampleData<> *sample
 
   // take the 2nd PPF into account, which shifts the center down frequency by half
   // a channel.
-  double baseFrequency = itsNrChannels == 1 ? centerFrequency : centerFrequency - 0.5 * itsNrChannels * itsChannelBandwidth;
+  double baseFrequency = itsParset.channel0Frequency(subband);
 
   formBeamsTimer.start();
 
