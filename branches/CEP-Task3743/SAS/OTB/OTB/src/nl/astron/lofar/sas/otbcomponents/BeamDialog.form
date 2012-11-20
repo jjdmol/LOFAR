@@ -90,21 +90,16 @@
                                           <Component id="inputNrTabRings" alignment="0" max="32767" attributes="1"/>
                                       </Group>
                                       <EmptySpace min="-2" pref="38" max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="0" attributes="0">
-                                          <Group type="102" attributes="0">
-                                              <Component id="coordTypeChange" min="-2" pref="81" max="-2" attributes="0"/>
-                                              <EmptySpace min="-2" pref="121" max="-2" attributes="0"/>
-                                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                                                  <Component id="labelStartTime" alignment="0" max="32767" attributes="1"/>
-                                                  <Component id="labelTarget" alignment="0" pref="96" max="32767" attributes="1"/>
-                                              </Group>
-                                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                                  <Component id="inputTarget" max="32767" attributes="1"/>
-                                                  <Component id="inputStartTime" alignment="0" pref="196" max="32767" attributes="1"/>
-                                              </Group>
-                                          </Group>
-                                          <Component id="inputMaxDur" min="-2" max="-2" attributes="0"/>
+                                      <Component id="coordTypeChange" min="-2" pref="81" max="-2" attributes="0"/>
+                                      <EmptySpace min="-2" pref="121" max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                          <Component id="labelStartTime" alignment="0" max="32767" attributes="1"/>
+                                          <Component id="labelTarget" alignment="0" pref="96" max="32767" attributes="1"/>
+                                      </Group>
+                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                          <Component id="inputTarget" max="32767" attributes="1"/>
+                                          <Component id="inputStartTime" alignment="0" pref="196" max="32767" attributes="1"/>
                                       </Group>
                                   </Group>
                                   <Component id="labelNrTabRings" alignment="0" min="-2" pref="86" max="-2" attributes="0"/>
@@ -172,7 +167,6 @@
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="labelDuration" alignment="3" min="-2" pref="23" max="-2" attributes="0"/>
                           <Component id="inputDuration" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputMaxDur" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
@@ -279,11 +273,6 @@
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="coordTypeChangeActionPerformed"/>
               </Events>
-            </Component>
-            <Component class="javax.swing.JCheckBox" name="inputMaxDur">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Maximize Duration"/>
-              </Properties>
             </Component>
             <Container class="javax.swing.JPanel" name="jPanel3">
               <Properties>

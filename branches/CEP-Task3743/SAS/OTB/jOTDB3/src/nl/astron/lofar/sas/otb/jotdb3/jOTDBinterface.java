@@ -73,6 +73,10 @@ public interface jOTDBinterface extends Remote
    public Vector<jOTDBtree> getTreesInPeriod (short treeType, String beginDate) throws RemoteException;
    public Vector<jOTDBtree> getTreesInPeriod (short treeType) throws RemoteException;
 
+       // To get a list of all OTDB trees modified after given timestamp
+    public Vector<jOTDBtree> getModifiedTrees(String after, short treeType) throws RemoteException;
+    public Vector<jOTDBtree> getModifiedTrees(String after) throws RemoteException;
+
    // Get a new unique groupID
    public int newGroupID() throws RemoteException;
 

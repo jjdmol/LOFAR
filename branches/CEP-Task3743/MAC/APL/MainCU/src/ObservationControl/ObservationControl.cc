@@ -700,17 +700,22 @@ void ObservationControl::setObservationTimers(double	minimalDelay)
 	}
 
 	// (re)set the stop timer
-	if (itsState < CTState::RELEASE) { 				// not yet shutting down?
-		if (sec2stop > 0) {
-			itsStopTimer = itsTimerPort->setTimer((sec2stop < minimalDelay) ? minimalDelay : 1.0 * sec2stop);
-			// make sure we go down 30 seconds after quit was requested.
-			itsForcedQuitTimer = itsTimerPort->setTimer(sec2stop + (1.0 * itsForcedQuitDelay));
-			LOG_INFO_STR ("Observation stops over " << sec2stop << " seconds");
-		}
-		else {
-			assumedState = CTState::RELEASE;
-			LOG_INFO_STR ("Observation should have been stopped " << -sec2start << 
-							" seconds AGO!");
+	if (itsProcessType == "Pipeline") {		// QUICK FIX #3633
+		LOG_INFO("NOT SETTING STOP_TIMERS BECAUSE WE ARE RUNNING A PIPELINE!");
+	}
+	else {
+		if (itsState < CTState::RELEASE) { 				// not yet shutting down?
+			if (sec2stop > 0) {
+				itsStopTimer = itsTimerPort->setTimer((sec2stop < minimalDelay) ? minimalDelay : 1.0 * sec2stop);
+				// make sure we go down 30 seconds after quit was requested.
+				itsForcedQuitTimer = itsTimerPort->setTimer(sec2stop + (1.0 * itsForcedQuitDelay));
+				LOG_INFO_STR ("Observation stops over " << sec2stop << " seconds");
+			}
+			else {
+				assumedState = CTState::RELEASE;
+				LOG_INFO_STR ("Observation should have been stopped " << -sec2start << 
+								" seconds AGO!");
+			}
 		}
 	}
 
@@ -753,7 +758,7 @@ void  ObservationControl::doHeartBeatTask()
 		uint32	nrStations = itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL);
 		time_t	now   = to_time_t(second_clock::universal_time());
 		time_t	stop  = to_time_t(itsStopTime);
-		if (now < stop && itsProcessType == "Observation" && itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL)==0) {
+		if (now < stop && itsProcessType == "Observation" && !nrStations) {
 			LOG_FATAL("Too less stations left, FORCING QUIT OF OBSERVATION");
 			if (itsState < CTState::RESUME) {
 				itsQuitReason = CT_RESULT_LOST_CONNECTION;

@@ -144,8 +144,7 @@ void Dedispersion::initChirp(const Parset &parset, const std::vector<unsigned> &
     for (unsigned dmIndex = 0; dmIndex < uniqueDMs.size(); dmIndex++) {
       double   dm                = uniqueDMs[dmIndex];
       unsigned subbandIndex      = subbandIndices[i];
-      double   subbandFrequency  = parset.subbandToFrequencyMapping()[subbandIndex];
-      double   channel0frequency = subbandFrequency - (itsNrChannels * 0.5) * itsChannelBandwidth;
+      double   channel0frequency = parset.channel0Frequency(subbandIndex);
       double   binWidth	       = itsChannelBandwidth / itsFFTsize;
       double   dmConst	       = dm * 2 * M_PI / 2.41e-16;
 

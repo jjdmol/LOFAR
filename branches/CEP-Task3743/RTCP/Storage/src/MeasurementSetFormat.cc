@@ -16,6 +16,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 #include <linux/limits.h>
 
@@ -96,8 +97,7 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
   itsStartTime = toMJDs(itsPS.startTime());
 
   itsTimeStep = itsPS.IONintegrationTime();
-  itsNrTimes = 29030400;  /// equates to about one year, sets valid
-			  /// timerage to 1 year beyond starttime
+  itsNrTimes = itsPS.nrCorrelatedBlocks();
 }
 
   
@@ -379,21 +379,20 @@ void MeasurementSetFormat::fillObs(unsigned subarray)
 
   // Get minimum and maximum frequency.
   vector<double> freqs = itsPS.subbandToFrequencyMapping();
-  double minFreq = freqs[0];
-  double maxFreq = freqs[0];
+  ASSERT( freqs.size() > 0 );
 
-  for (vector<double>::const_iterator iter = freqs.begin(); iter != freqs.end(); ++ iter) {
-    if (*iter < minFreq)
-      minFreq = *iter;
+  double minFreq = *std::min_element( freqs.begin(), freqs.end() );
+  double maxFreq = *std::max_element( freqs.begin(), freqs.end() );
 
-    if (*iter > maxFreq)
-      maxFreq = *iter;
+  size_t nchan = itsPS.nrChannelsPerSubband();
+
+  if( nchan > 1 ) {
+    // 2nd PPF shifts frequencies downwards by half a channel
+    double width = itsPS.channelWidth();
+
+    minFreq -= 0.5 * nchan * width;
+    maxFreq -= 0.5 * nchan * width;
   }
-
-  double nchan = itsPS.nrChannelsPerSubband();
-  double width = itsPS.channelWidth();
-  minFreq -= nchan * width * 0.5;
-  maxFreq += nchan * width * 0.5;
 
   casa::Vector<String> corrSchedule(1);
   corrSchedule = "corrSchedule";
@@ -406,7 +405,7 @@ void MeasurementSetFormat::fillObs(unsigned subarray)
     ctargets[i] = targets[i];
 
   vector<string> cois(itsPS.getStringVector("Observation.Campaign.CO_I"));
-  casa::Vector<String> ccois(targets.size());
+  casa::Vector<String> ccois(cois.size());
 
   for (uint i = 0; i < cois.size(); ++ i)
     ccois[i] = cois[i];
@@ -454,23 +453,22 @@ void MeasurementSetFormat::fillObs(unsigned subarray)
 }
 
 void MeasurementSetFormat::fillSpecWindow(unsigned subband) {
-  const double refFreq = itsPS.subbandToFrequencyMapping()[subband];
+  const double refFreq   = itsPS.subbandToFrequencyMapping()[subband];
+  const size_t nchan     = itsPS.nrChannelsPerSubband();
   const double chanWidth = itsPS.channelWidth();
-  casa::Vector<double> chanWidths(itsPS.nrChannelsPerSubband());
-  chanWidths = chanWidth;
-  casa::Vector<double> chanFreqs(itsPS.nrChannelsPerSubband());
-  indgen (chanFreqs, refFreq - (itsPS.nrChannelsPerSubband()-1)*chanWidth/2., chanWidth);
+  const double totalBW   = nchan * chanWidth;
+  const double channel0freq = itsPS.channel0Frequency(subband);
 
-  casa::Vector<double> stFreqs = chanFreqs - chanWidth/2.;
-  casa::Vector<double> endFreqs = chanFreqs + chanWidth/2.;
-  double totalBW = max(endFreqs) - min(stFreqs);
+  casa::Vector<double> chanWidths(nchan, chanWidth);
+  casa::Vector<double> chanFreqs(nchan);
+  indgen (chanFreqs, channel0freq, chanWidth);
 
   MSSpectralWindow msspw = itsMS->spectralWindow();
   MSSpWindowColumns msspwCol(msspw);
     
   msspw.addRow();
 
-  msspwCol.numChan().put(0, itsPS.nrChannelsPerSubband());
+  msspwCol.numChan().put(0, nchan);
   msspwCol.name().put(0, "SB-" + String::toString(subband));
   msspwCol.refFrequency().put(0, refFreq);
   msspwCol.chanFreq().put(0, chanFreqs);

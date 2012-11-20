@@ -100,8 +100,12 @@ namespace LOFAR {
   {
     uint st   = 1;
     uint last = itsValue.size() - 1;
+    // An empty string is an empty vector.
+    if (itsValue.empty()) {
+      return vector<ParameterValue>();
+    }
     // A single value if there is no opening and closing bracket.
-    if (itsValue.empty() || !(itsValue[0] == '['  &&  itsValue[last] == ']')) {
+    if (!(itsValue[0] == '['  &&  itsValue[last] == ']')) {
       return vector<ParameterValue> (1, *this);
     }
     ASSERTSTR (itsValue.size() >= 2  &&  itsValue[0] == '['  &&

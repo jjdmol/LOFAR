@@ -40,75 +40,75 @@ import java.util.Set;
  *
  */
 public class ConfigPanelHelper {
-   
+
     private HashMap<String,ArrayList<String> > itsPanelMap;
     private ArrayList<String> itsArrayList;
     private static ConfigPanelHelper ref;
-    
+
     /** Creates a new instance of ConfigPanelHelper */
     private ConfigPanelHelper() {
         initMap();
     }
-    
+
     public static synchronized ConfigPanelHelper getConfigPanelHelper() {
         if (ref== null) {
             ref = new ConfigPanelHelper();
         }
         return ref;
     }
-    
+
     @Override
     public Object clone() throws CloneNotSupportedException {
         throw new CloneNotSupportedException();
     }
-    
+
     private void initMap() {
         itsPanelMap = new HashMap<>();
-        
+
         //generic panels
         itsArrayList = new ArrayList<>();
         addBasePanels();
         itsPanelMap.put("*",itsArrayList);
-        
+
         //BBS
- //       itsVector = new Vector<String>();
- //       itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSPanel");
+ //       itsArrayList = new ArrayList<>();
+ //       itsArrayList.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSPanel");
  //       itsPanelMap.put("BBSControl",itsVector);
  //       addParSetPanel();
-        
+
         //BBS Strategy
-//        itsVector = new Vector<String>();
-//        itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel");
+//        itsArrayList = new ArrayList<>();
+//        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel");
 //       itsPanelMap.put("Strategy",itsVector);
 //        addParSetPanel();
-  
+
 
         //OLAP
         itsArrayList = new ArrayList<>();
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.OlapPanel");
         itsPanelMap.put("OLAP",itsArrayList);
         addParSetPanel();
-        
+
         // Observation
         itsArrayList = new ArrayList<>();
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.ObservationPanel");
         itsPanelMap.put("Observation",itsArrayList);
         addParSetPanel();
-        
+
         //TBB
         itsArrayList = new ArrayList<>();
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.TBBConfigPanel");
         itsPanelMap.put("TBB",itsArrayList);
         addParSetPanel();
-        
+
         //Imager
         itsArrayList = new ArrayList<>();
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
         itsPanelMap.put("Imager",itsArrayList);
         addParSetPanel();
     }
-    
-    
+
+
     private void addBasePanels() {
         //generic node panel
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.NodeViewPanel");
@@ -116,7 +116,7 @@ public class ConfigPanelHelper {
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.ParameterViewPanel");
         addParSetPanel();
     }
-    
+
     private void addParSetPanel() {
         //generic parset view panel
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
@@ -145,7 +145,7 @@ public class ConfigPanelHelper {
         }
         return returnVector;
     }
-    
+
     /**
      * Returns all keys kept in this class
      *
@@ -174,6 +174,6 @@ public class ConfigPanelHelper {
         }
         return returnBool;
     }
-    
-    
+
+
 }

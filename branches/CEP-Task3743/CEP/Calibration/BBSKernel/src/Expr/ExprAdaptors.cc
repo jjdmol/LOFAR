@@ -182,5 +182,21 @@ const Scalar::View AsPolar::evaluateImpl(const Grid&, const Scalar::View &mod,
     return result;
 }
 
+// -------------------------------------------------------------------------- //
+// - Implementation: AsPolar                                                - //
+// -------------------------------------------------------------------------- //
+
+AsPhasor::AsPhasor(const Expr<Scalar>::ConstPtr &phase)
+    : BasicUnaryExpr<Scalar, Scalar>(phase)
+{
+}
+
+const Scalar::View AsPhasor::evaluateImpl(const Grid&, const Scalar::View &phase) const
+{
+    Scalar::View result;
+    result.assign(tocomplex(cos(phase()), sin(phase())));
+    return result;
+}
+
 } //# namespace BBS
 } //# namespace LOFAR

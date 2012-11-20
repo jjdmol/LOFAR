@@ -40,7 +40,7 @@ using namespace std;
 void testBasic()
 {
   // Create a parm data base.
-  ParmDBMeta dbm1("casa", "tParmSet_tmp.pdb1");
+  ParmDBMeta dbm1("casa", "tParm_tmp.pdb1");
   ParmDB db1(dbm1, true);
   // Create a parm in the ParmSet.
   ParmSet pset;

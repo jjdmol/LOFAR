@@ -373,7 +373,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 			// claim was successful, update admin
 			LOG_INFO_STR("Observation " << obsID << " is mapped to " << cmEvent.DPname);
 			LOG_DEBUG_STR("PVSS preparation of observation " << obsID << " ready.");
-			itsPreparedObs[obsID] = true;
+			itsPreparedObs[obsID].prepReady = true;
 		}
 		break;
 
@@ -620,6 +620,7 @@ void MACScheduler::_updatePlannedList()
 		// construct name and timings info for observation
 		treeIDType		obsID = plannedDBlist[idx].treeID();
 		string			obsName(observationName(obsID));
+		ptime			modTime = plannedDBlist[idx].modificationDate;
 
 		// remove obs from backup of the planned-list (it is in the list again)
 		OLiter	oldObsIter = backupObsList.find(obsID);
@@ -629,7 +630,8 @@ void MACScheduler::_updatePlannedList()
 
 		// must we claim this observation at the claimMgr?
 		OLiter	prepIter = itsPreparedObs.find(obsID);
-		if ((prepIter == itsPreparedObs.end()) || (prepIter->second == false)) {
+		if ((prepIter == itsPreparedObs.end()) || (prepIter->second.prepReady == false) || 
+												  (prepIter->second.modTime != modTime)) {
 			// create a ParameterFile for this Observation
 			TreeMaintenance		tm(itsOTDBconnection);
 			OTDBnode			topNode = tm.getTopNode(obsID);
@@ -642,7 +644,7 @@ void MACScheduler::_updatePlannedList()
 				// Claim a DP in PVSS and write obssettings to it so the operator can see it.
 				LOG_DEBUG_STR("Requesting preparation of PVSS for " << obsName);
 				itsClaimerTask->prepareObservation(obsName);
-				itsPreparedObs[obsID] = false;	// requested claim but no answer yet.
+				itsPreparedObs[obsID] = schedInfo(modTime, false);	// requested claim but no answer yet.
 			}
 		}
 		else {
@@ -655,7 +657,7 @@ void MACScheduler::_updatePlannedList()
 		int		timeBeforeStart = time_duration(plannedDBlist[idx].starttime - currentTime).total_seconds();
 //		LOG_DEBUG_STR(obsName << " starts over " << timeBeforeStart << " seconds");
 		if (timeBeforeStart > 0 && timeBeforeStart <= (int)itsQueuePeriod) {
-			if (itsPreparedObs[obsID] == false) {
+			if (itsPreparedObs[obsID].prepReady == false) {
 				LOG_ERROR_STR("Observation " << obsID << " must be started but is not claimed yet.");
 			}
 			else {

@@ -18,17 +18,20 @@ python_install(
   support/baserecipe.py
   support/clusterdesc.py
   support/control.py
+  support/data_map.py
   support/group_data.py
   support/jobserver.py
   support/lofarexceptions.py
   support/lofaringredient.py
   support/lofarnode.py
+  support/loggingdecorators.py
   support/mac.py
+  support/mac_feedback.py
   support/parset.py
   support/pipelinelogging.py
-  support/pipelinexml.py
   support/remotecommand.py
   support/stateful.py
   support/subprocessgroup.py
   support/utilities.py
+  support/xmllogging.py
   DESTINATION lofarpipe)

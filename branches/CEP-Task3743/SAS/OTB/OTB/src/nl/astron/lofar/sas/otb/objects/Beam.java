@@ -61,14 +61,6 @@ public class Beam implements IBeam {
         this.itsDuration = aDuration;
     }
 
-    public String getMaximizeDuration() {
-        return itsMaximizeDuration;
-    }
-
-    public void setMaximizeDuration(String aMaximizeDuration) {
-        this.itsMaximizeDuration = aMaximizeDuration;
-    }
-
     public String getMomID() {
         return itsMomID;
     }
@@ -177,7 +169,6 @@ public class Beam implements IBeam {
         clone.itsDirectionType = itsDirectionType;
         clone.itsStartTime = itsStartTime;
         clone.itsDuration = itsDuration;
-        clone.itsMaximizeDuration = itsMaximizeDuration;
         clone.itsSubbandList = itsSubbandList;
         clone.itsBeamletList = itsBeamletList;
         clone.itsMomID = itsMomID;
@@ -204,7 +195,6 @@ public class Beam implements IBeam {
     private String                   itsDirectionType;
     private String                   itsStartTime;
     private String                   itsDuration;
-    private String                   itsMaximizeDuration;
     private String                   itsSubbandList;
     private String                   itsBeamletList;
     private String                   itsMomID;

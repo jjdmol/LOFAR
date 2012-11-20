@@ -20,7 +20,7 @@ from sets import Set
 PERFORMANCE_TEST = False
 
 NRRSPBOARDS=4
-NRBOARBEAMLETS=61
+NRBOARDBEAMLETS=61
 
 class Parset(util.Parset.Parset):
     def __init__(self):
@@ -160,9 +160,19 @@ class Parset(util.Parset.Parset):
 	if "Observation.subbandList" in self:
 	  nrSubbands = len(self.getInt32Vector("Observation.subbandList"))
         else:
-          nrSubbands = NRRSPBOARDS*NRBOARBEAMLETS
+          nrSubbands = NRRSPBOARDS*NRBOARDBEAMLETS
 
-        slots = int(self["Observation.nrSlotsInFrame"])  
+        if "Observation.nrBitsPerSample" in self:
+          bitmode = int(self["Observation.nrBitsPerSample"])
+        elif "OLAP.nrBitsPerSample" in self:
+          bitmode = int(self["OLAP.nrBitsPerSample"])
+        else:
+          bitmode = 16
+
+        if "Observation.nrSlotsInFrame" in self:
+          slots = int(self["Observation.nrSlotsInFrame"])
+        else:
+          slots = 16/bitmode * NRBOARDBEAMLETS
 
         self.setdefault("Observation.subbandList",  [151+s for s in xrange(nrSubbands)])  
 	self.setdefault("Observation.beamList",     [0     for s in xrange(nrSubbands)])

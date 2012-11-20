@@ -70,6 +70,7 @@ private:
    	GCFEvent::TResult askTDstatus	  		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askSPUstatus	  		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askRCUinfo			 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult askDatastream			 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult waitForNextCycle		 (GCFEvent& e, GCFPortInterface& p);
 
    	GCFEvent::TResult finish_state  		 (GCFEvent& e, GCFPortInterface& p);
@@ -104,6 +105,7 @@ private:
 	vector<RTDBPropertySet*>	itsSubracks;
 	vector<RTDBPropertySet*>	itsRSPs;
 	vector<RTDBPropertySet*>	itsRCUs;
+	RTDBPropertySet*			itsStationInfo;
 
 	blitz::Array<uint,1>		itsRCUstates;		// actual status of the RCUs
 	blitz::Array<bool,2>		itsRCUInputStates;	// enable state of the three RCU inputs

@@ -25,19 +25,61 @@
 #include <lofar_config.h>
 
 #include <Storage/MSWriter.h>
+#include <algorithm>
 
 
 namespace LOFAR {
 namespace RTCP {
+
+MSWriter::MSWriter()
+:
+  itsNrBlocksWritten(0),
+  itsNrExpectedBlocks(0)
+{
+}
 
 
 MSWriter::~MSWriter()
 {
 }
 
+void MSWriter::augment(const FinalMetaData &finalMetaData)
+{
+  (void)finalMetaData;
+}
+
+
 size_t MSWriter::getDataSize()
 {
   return 0;
+}
+
+ParameterSet MSWriter::configuration() const
+{
+  return itsConfiguration;
+}
+
+
+/* Returns a percentage based on a current and a target value,
+ * with the following rounding:
+ *
+ * 0     -> current == 0
+ * 1..99 -> 0 < current < target
+ * 100   -> current == target
+ */
+
+unsigned MSWriter::percentageWritten() const
+{
+  size_t current = itsNrBlocksWritten;
+  size_t target = itsNrExpectedBlocks;
+
+  if (current == target || target == 0)
+    return 100;
+
+  if (current == 0)
+    return 0;
+
+  return std::min(std::max(100 * current / target, static_cast<size_t>(1)), static_cast<size_t>(99));
 }
 
 

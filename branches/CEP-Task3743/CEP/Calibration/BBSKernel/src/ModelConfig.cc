@@ -266,6 +266,16 @@ bool ModelConfig::useFaradayRotation() const
     return itsModelOptions[FARADAY_ROTATION];
 }
 
+bool ModelConfig::useRotation() const
+{
+    return itsModelOptions[ROTATION];
+}
+
+bool ModelConfig::useScalarPhase() const
+{
+    return itsModelOptions[SCALAR_PHASE];
+}
+
 bool ModelConfig::useIonosphere() const
 {
     return itsModelOptions[IONOSPHERE];
@@ -353,6 +363,16 @@ void ModelConfig::setDirectionalTEC(bool value)
 void ModelConfig::setFaradayRotation(bool value)
 {
     itsModelOptions[FARADAY_ROTATION] = value;
+}
+
+void ModelConfig::setRotation(bool value)
+{
+    itsModelOptions[ROTATION] = value;
+}
+
+void ModelConfig::setScalarPhase(bool value)
+{
+    itsModelOptions[SCALAR_PHASE] = value;
 }
 
 void ModelConfig::setIonosphereConfig(const IonosphereConfig &config)
@@ -471,6 +491,10 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useDirectionalTEC() << noboolalpha;
     out << endl << indent << "Faraday rotation enabled: " << boolalpha
         << obj.useFaradayRotation() << noboolalpha;
+    out << endl << indent << "Polarization rotation enabled: " << boolalpha
+        << obj.useRotation() << noboolalpha;
+    out << endl << indent << "Scalar phase enabled: " << boolalpha
+        << obj.useScalarPhase() << noboolalpha;
 
     out << endl << indent << "Ionosphere enabled: " << boolalpha
         << obj.useIonosphere() << noboolalpha;

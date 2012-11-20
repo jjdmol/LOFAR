@@ -7,6 +7,7 @@ python_install(
   helpers/metadata.py
   helpers/WritableParmDB.py
   helpers/ComplexArray.py
+  helpers/MultipartPostHandler.py
   master/__init__.py
   master/bbs_reducer.py
   master/copier.py

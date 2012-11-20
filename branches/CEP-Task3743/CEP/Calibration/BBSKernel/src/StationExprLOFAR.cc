@@ -110,6 +110,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
     // Direction dependent effects (DDE).
     if(config.useDirectionalGain() || config.useBeam()
         || config.useDirectionalTEC() || config.useFaradayRotation()
+        || config.useRotation() || config.useScalarPhase()
         || config.useIonosphere())
     {
         // Position of interest on the sky (given as patch name).
@@ -228,6 +229,22 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                     itsExpr[i] = compose(itsExpr[i],
                         makeFaradayRotationExpr(itsScope,
                         instrument->station(i), patch));
+                }
+
+                // Polarization rotation.
+                if(config.useRotation())
+                {
+                    itsExpr[i] = compose(itsExpr[i],
+                        makeRotationExpr(itsScope, instrument->station(i),
+                        patch));
+                }
+
+                // Scalar phase.
+                if(config.useScalarPhase())
+                {
+                    itsExpr[i] = compose(itsExpr[i],
+                        makeScalarPhaseExpr(itsScope, instrument->station(i),
+                        patch));
                 }
 
                 // Ionosphere.
