@@ -1,0 +1,11 @@
+# ascii dump of database
+
+# DpType
+TypeName
+BeamCntrl.BeamCntrl	1#1
+	state	25#2
+	error	25#3
+	connected	23#4
+
+	
+	
