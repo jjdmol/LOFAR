@@ -88,7 +88,7 @@ namespace LOFAR
     // the response to be multiplied by the inverse of the array factor at the
     // central pixel.
       
-    vector<casa::Matrix<casa::Complex> > evaluateStationScalarFactor(uint idStation,
+    casa::Cube<casa::DComplex> evaluateStationScalarFactor(uint idStation,
       const casa::Vector<casa::Double> &freq,
       const casa::Vector<casa::Double> &reference, bool normalize = false)
       const;
@@ -117,10 +117,10 @@ namespace LOFAR
   private:
     
     void initParmDB(const casa::String &parmdbname);
-    double get_parmvalue( std::string parmname );
+    double get_parmvalue( casa::Record &parms, std::string parmname );
 
     casa::Record itsParameters;
-
+    casa::Record itsParmValues;
     BBS::Instrument::Ptr  itsInstrument;
     const casa::DirectionCoordinate *itsDirectionCoordinates;
     const casa::IPosition       *itsShape;

@@ -27,12 +27,8 @@
 
 //# Includes
 #include <lofar_config.h>
-#include <LofarFT/Exceptions.h>
 #include <LofarFT/LofarImager.h>
-#include <LofarFT/Package__Version.h>
 #include <Common/InputParSet.h>
-#include <Common/LofarLogger.h>
-#include <Common/SystemUtil.h>
 
 #include <images/Images/PagedImage.h>
 #include <images/Images/HDF5Image.h>
@@ -51,20 +47,14 @@
 #include <casa/sstream.h>
 
 using namespace casa;
-using namespace LOFAR;
 
-// Define handler that tries to print a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
-
-
-// Define some common functions.
 IPosition handlePos (const IPosition& pos, const IPosition& def)
 {
   if (pos.nelements() == 0) {
     return def;
   }
   if (pos.nelements() != 2) {
-    THROW(AWImagerException, "Give 0 or 2 values in maskblc and masktrc");
+    throw AipsError("Give 0 or 2 values in maskblc and masktrc");
   }
   IPosition npos(def);
   int n = npos.nelements();
@@ -91,7 +81,7 @@ Quantity readQuantity (const String& in)
 {
   Quantity res;
   if (!Quantity::read(res, in)) {
-    THROW(AWImagerException, in + " is an illegal quantity");
+    throw AipsError (in + " is an illegal quantity");
   }
   return res;
 }
@@ -100,12 +90,12 @@ MDirection readDirection (const String& in)
 {
   Vector<String> vals = stringToVector(in);
   if (vals.size() > 3) {
-    THROW(AWImagerException, "MDirection value " + in + " is invalid;"
+    throw AipsError ("MDirection value " + in + " is invalid;"
 		     " up to 3 values can be given");
   }
   MDirection::Types tp;
   if (! MDirection::getType (tp, vals[0])) {
-    THROW(AWImagerException, vals[0] + " is an invalid MDirection type");
+    throw AipsError(vals[0] + " is an invalid MDirection type");
   }
   Quantity v0(0, "deg");
   Quantity v1(90, "deg");     // same default as in measures.g
@@ -126,7 +116,7 @@ void readFilter (const String& filter,
   }
   Vector<String> strs = stringToVector(filter);
   if (strs.size() != 3) {
-    THROW(AWImagerException, "Specify gaussian tapering filter as bmajor,bminor,bpa");
+    throw AipsError("Specify gaussian tapering filter as bmajor,bminor,bpa");
   }
   if (! strs[0].empty()) {
     bmajor = readQuantity (strs[0]);
@@ -155,7 +145,7 @@ Matrix<Bool> readMueller (const String& str, String stokes, Bool grid)
     if (s == "BAND1") {
       mat(0,3) = mat(1,4) = mat(3,0) = mat(4,1) = False;
     } else if (s != "BAND2") {
-      THROW(AWImagerException, str + " is an invalid Mueller specification");
+      throw AipsError (str + " is an invalid Mueller specification");
     }
   }
   if((stokes=="I")&&(grid)){
@@ -178,7 +168,7 @@ Matrix<Bool> readMueller (const String& str, String stokes, Bool grid)
 void makeEmpty (Imager& imager, const String& imgName, Int fieldid)
 {
   CoordinateSystem coords;
-  ASSERT (imager.imagecoordinates(coords));
+  AlwaysAssert (imager.imagecoordinates(coords), AipsError);
   String name(imgName);
   imager.makeEmptyImage(coords, name, fieldid);
   imager.unlock();
@@ -204,43 +194,42 @@ void applyFactors (PagedImage<Float>& image, const Array<Float>& factors)
 
 void correctImages (const String& restoName, const String& modelName,
                     const String& residName, const String& imgName,
-                    LOFAR::LofarImager& imager, Bool CorrectElement)
+                    LOFAR::LofarImager& imager, Bool CorrectElement, Bool CorrectWPlanes, Bool doRestored)
 {
   (void)imager;
 
   // Copy the images to .corr ones.
   {
-    Directory restoredIn(restoName);
-    restoredIn.copy (restoName+".corr");
     Directory modelIn(modelName);
     modelIn.copy (modelName+".corr");
     Directory residualIn(residName);
     residualIn.copy (residName+".corr");
   }
   // Open the images.
-  PagedImage<Float> restoredImage(restoName+".corr");
   PagedImage<Float> modelImage(modelName+".corr");
   PagedImage<Float> residualImage(residName+".corr");
-  AlwaysAssert (residualImage.shape() == modelImage.shape()  &&
-                restoredImage.shape() == modelImage.shape(), SynthesisError);
+  // AlwaysAssert (residualImage.shape() == modelImage.shape()  &&
+   //              restoredImage.shape() == modelImage.shape(), SynthesisError);
 
   // Get average primary beam and spheroidal.
   Matrix<Float> avgPB = LOFAR::LofarConvolutionFunction::getAveragePB(imgName+"0");
   Matrix<Float> spheroidCut = LOFAR::LofarConvolutionFunction::getSpheroidCut(imgName+"0");
-  String nameii("Spheroid_cut_im_element.img");
-  ostringstream nameiii(nameii);
-  PagedImage<Float> tmpi(nameiii.str().c_str());
-  Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
-  Array<Float> spheroidCutElement;
-  tmpi.doGetSlice(spheroidCutElement, slicei);
+
+  // String nameii("Spheroid_cut_im_element.img");
+  // ostringstream nameiii(nameii);
+  // PagedImage<Float> tmpi(nameiii.str().c_str());
+  // Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
+  // Array<Float> spheroidCutElement;
+  // tmpi.doGetSlice(spheroidCutElement, slicei);
+
   // Use the inner part of the beam and spheroidal.
-  Int nximg = restoredImage.shape()[0];
+  Int nximg = residualImage.shape()[0];
   Int nxpb  = avgPB.shape()[0];
   Int nxsph = spheroidCut.shape()[0];
-  AlwaysAssert (restoredImage.shape()[1] == nximg  &&
-                avgPB.shape()[1] == nxpb  &&
-                spheroidCut.shape()[1] == nxsph  &&
-                nxsph >= nximg  &&  nxpb >= nximg, SynthesisError);
+  //AlwaysAssert (restoredImage.shape()[1] == nximg  &&
+  //              avgPB.shape()[1] == nxpb  &&
+  //              spheroidCut.shape()[1] == nxsph  &&
+  //              nxsph >= nximg  &&  nxpb >= nximg, SynthesisError);
   // Get inner parts of beam and spheroid.
   Int offpb  = (nxpb  - nximg) / 2;
   Int offsph = (nxsph - nximg) / 2;
@@ -248,31 +237,38 @@ void correctImages (const String& restoName, const String& modelName,
                                        IPosition(2, nximg, nximg)));
   Array<Float> sphinner = spheroidCut(Slicer(IPosition(2, offsph, offsph),
                                              IPosition(2, nximg, nximg)));
+  Array<Float> ones(IPosition(sphinner.shape()),1.);
   Array<Float> factors;
-  if(CorrectElement){
-    Array<Float> sphinner_el = (spheroidCutElement(Slicer(IPosition(4, offsph, offsph,0,0),
-							  IPosition(4, nximg, nximg,1,1)))).nonDegenerate();
-    factors = sphinner_el *sphinner / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
-  } else{
-    
-    factors = sphinner / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
-  }
-  applyFactors (restoredImage, factors);
+  // Array<Float> sphinner_el = (spheroidCutElement(Slicer(IPosition(4, offsph, offsph,0,0),
+  // 							  IPosition(4, nximg, nximg,1,1)))).nonDegenerate();
+
+  // if(CorrectElement){
+  //   factors = sphinner_el *sphinner / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
+  // } else{
+  //   factors = ones / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
+  // }
+  //if(CorrectWPlanes){factors *= sphinner;}
+
+  factors = ones / sqrt(pbinner);
+  cout<<"Final normalisation"<<endl;
   applyFactors (modelImage, factors);
   applyFactors (residualImage, factors);
+  if(doRestored){
+    cout<<"... restored image too ..."<<endl;
+    Directory restoredIn(restoName);
+    restoredIn.copy (restoName+".corr");
+    PagedImage<Float> restoredImage(restoName+".corr");
+    applyFactors (restoredImage, factors);
+  }
 }
 
 
-int main(int argc, char *argv[])
+int main (Int argc, char** argv)
 {
-  try
-  {
-    TEST_SHOW_VERSION (argc, argv, LofarFT);
-    INIT_LOGGER(basename(string(argv[0])));
-    Version::show<LofarFTVersion> (cout);
+  try {
     LOFAR::InputParSet inputs;
     // define the input structure
-    ///    inputs.setVersion("2012Mar-CT/SvdT/JvZ/GvD");
+    inputs.setVersion("2011Oct05-CT/SvdT/JvZ/GvD");
     inputs.create ("ms", "",
 		   "Name of input MeasurementSet",
 		   "string");
@@ -330,7 +326,7 @@ int main(int argc, char *argv[])
     inputs.create ("timewindow", "300.0",
                    "width of time window (in sec) where AW-term is constant",
                    "double");
-    inputs.create ("wmax", "500.0",
+    inputs.create ("wmax", "10000.0",
 		   "omit data with w-term > wmax (in meters)",
 		   "float");
     inputs.create ("muellergrid", "all",
@@ -392,7 +388,7 @@ int main(int argc, char *argv[])
 		   "string");
     inputs.create ("operation", "image",
                    ///		   "Operation (empty,image,clark,hogbom,csclean,multiscale,entropy)",
-		   "Operation (empty,image,csclean,predict,psf)",
+		   "Operation (empty,image,csclean,predict,psf,mfclark)",
 		   "string");
     inputs.create ("niter", "1000",
 		   "Number of clean iterations",
@@ -460,9 +456,6 @@ int main(int argc, char *argv[])
     inputs.create ("applyIonosphere", "false",
                    "apply ionospheric correction",
                    "bool");
-    inputs.create ("applyBeam", "true",
-                   "apply beam (array factor)",
-                   "bool");
     inputs.create ("splitbeam", "true",
                    "Evaluate station beam and element beam separately (splitbeam = true is faster)",
                    "bool");
@@ -478,18 +471,58 @@ int main(int argc, char *argv[])
     inputs.create ("cyclespeedup", "-1",
 		   "Cycle Factor. See Casa definition.",
 		   "Double");
+    inputs.create ("ModelImPredict", "",
+		   "Input Model image for the predict",
+		   "string");
     inputs.create ("PsfImage", "",
 		   "Input PSF image for the cleaning",
 		   "string");
-    inputs.create ("StepApplyElement", "0",
-		   "If turned to >0, apply the element beam every N number of timewindows.",
+    inputs.create ("ApplyElement", "0",
+		   "If turned to true, apply the element beam every TWElement.",
+		   "int");
+    inputs.create ("ApplyBeamCode", "0",
+		   "Ask developers.",
 		   "int");
     inputs.create ("UseMasks", "true",
 		   "When the element beam is applied (StepApplyElement), the addictional step of convolving the grid can be made more efficient by computing masks. If true, it will create a directory in which it stores the masks.",
 		   "bool");
+    inputs.create ("UVmin", "0",
+		   "Minimum UV distance (klambda)",
+		   "Double");
+    inputs.create ("UVmax", "1000",
+		   "Maximum UV distance (klambda)",
+		   "Double");
     inputs.create ("RowBlock", "0",
 		   "In certain obscure circounstances (taql, selection using uvdist), the RowBlocking used by the imager calculated from the timewindow value is not correct. This parameter can be used to specify the RowBlocking.",
 		   "int");
+    inputs.create ("MakeDirtyCorr", "false",
+		   "Image plane correction.",
+		   "bool");
+    inputs.create ("UseWSplit", "true",
+		   "W split.",
+		   "bool");
+    inputs.create ("TWElement", "20.",
+		   "Timewindow for applying the element beam in hours. ChunkSize otherwise.",
+		   "Double");
+    inputs.create ("SpheSupport", "15",
+		   "Spheroidal/Aterm Support.",
+		   "Double");
+    inputs.create ("t0", "-1",
+		   "tmin in minutes since beginning.",
+		   "Double");
+     inputs.create ("t1", "-1",
+		   "tmax in minutes since beginning.",
+		   "Double");
+    inputs.create ("SingleGridMode", "true",
+		   "If set to true, then the FTMachine uses only one grid.",
+		   "bool");
+    inputs.create ("FindNWplanes", "true",
+		   "If set to true, then find the optimal number of W-planes, given spheroid support, wmax and field of view.",
+		   "bool");
+    inputs.create ("ChanBlockSize", "0",
+		   "Channel block size. Use if you want to use a different CF per block of channels.",
+		   "int");
+    
     // inputs.create ("FillFactor", "1",
     // 		   "Fraction of the data that will be selected from the selected MS. (don't use it yet)",
     // 		   "Double");
@@ -500,14 +533,16 @@ int main(int argc, char *argv[])
     // Get the input specification.
     Bool fixed          = inputs.getBool("fixed");
     Bool UseLIG         = inputs.getBool("UseLIG");
+    Bool UseWSplit         = inputs.getBool("UseWSplit");
     Bool UseEJones      = inputs.getBool("UseEJones");
+    Bool MakeDirtyCorr  = inputs.getBool("MakeDirtyCorr");
     Bool applyIonosphere = inputs.getBool("applyIonosphere");
-    Bool applyBeam = inputs.getBool("applyBeam");
     Bool splitbeam = inputs.getBool("splitbeam");
     Bool ApplyElement   ;//= inputs.getBool("ApplyElement");
     Bool constrainFlux  = inputs.getBool("constrainflux");
     Bool preferVelocity = inputs.getBool("prefervelocity");
     Bool displayProgress= inputs.getBool("displayprogress");
+
     Long cachesize   = inputs.getInt("cachesize");
     Int fieldid      = inputs.getInt("field");
     Vector<Int> spwid(inputs.getIntVector("spwid"));
@@ -525,7 +560,8 @@ int main(int argc, char *argv[])
     Int verbose      = inputs.getInt("verbose");
     Int maxsupport   = inputs.getInt("maxsupport");
     Int oversample   = inputs.getInt("oversample");
-    Int StepApplyElement   = inputs.getInt("StepApplyElement");
+    Int StepApplyElement   = inputs.getInt("ApplyElement");
+    Int ApplyBeamCode   = inputs.getInt("ApplyBeamCode");
     if ((StepApplyElement%2 == 0)&&((StepApplyElement%2 != 0))) {
       StepApplyElement++;
     }
@@ -560,6 +596,9 @@ int main(int argc, char *argv[])
     String psfName   = inputs.getString("psf");
     String imageType = inputs.getString("data");
     String select    = inputs.getString("select");
+    if (select!=""){
+      cout<<"        !!!!! You are discouraged to use data selection, this has not been tested... "<<endl;
+    }
     String uvdist    = inputs.getString("uvdist");
     String maskName  = inputs.getString("mask");
     String mstrBlc   = inputs.getString("maskblc");
@@ -570,15 +609,26 @@ int main(int argc, char *argv[])
     Double cyclespeedup  = inputs.getDouble("cyclespeedup");
     Matrix<Bool> muelgrid   = readMueller (inputs.getString("muellergrid"), stokes, true);
     Matrix<Bool> mueldegrid = readMueller (inputs.getString("muellerdegrid"), stokes, false);
+    String ModelImPredict    = inputs.getString("ModelImPredict");
     String PsfImage    = inputs.getString("PsfImage");
     Bool Use_masks    = inputs.getBool("UseMasks");
     Int RowBlock   = inputs.getInt("RowBlock");
+    Double UVmin   = inputs.getDouble("UVmin");
+    Double UVmax   = inputs.getDouble("UVmax");
+    Double TWElement   = inputs.getDouble("TWElement");
+    Double SpheSupport = inputs.getDouble("SpheSupport");
+    Double t0 = inputs.getDouble("t0");
+    Double t1 = inputs.getDouble("t1");
+    Bool SingleGridMode    = inputs.getBool("SingleGridMode");
+    Bool FindNWplanes    = inputs.getBool("FindNWplanes");
+    Int ChanBlockSize   = inputs.getInt("ChanBlockSize");
+    
     //Double FillFactor= 1.;//inputs.getDouble("FillFactor");
 
     // Check and interpret input values.
     Quantity qcellsize = readQuantity (cellsize);
     if (msName.empty()) {
-      THROW(AWImagerException, "An MS name must be given like ms=test.ms");
+      throw AipsError("An MS name must be given like ms=test.ms");
     }
     imageType.downcase();
     if (imageType == "data") {
@@ -634,8 +684,6 @@ int main(int argc, char *argv[])
     if (weight == "briggsabs") {
       weight = "briggs";
       rmode  = "abs";
-    } else if (weight == "uniform") {
-      rmode = "none";
     }
     bool doShift = False;
     MDirection phaseCenter;
@@ -644,9 +692,7 @@ int main(int argc, char *argv[])
       phaseCenter = readDirection (phasectr);
     }
     operation.downcase();
-    AlwaysAssertExit (operation=="empty" || operation=="image" ||
-                      operation=="csclean" || operation=="msmfs" ||
-                      operation=="predict" || operation=="psf");
+    AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="csclean"|| operation=="msmfs"||operation=="predict"||operation=="psf"||operation=="mfclark");
     ///AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
     IPosition maskBlc, maskTrc;
     Quantity threshold;
@@ -682,10 +728,12 @@ int main(int argc, char *argv[])
     params.define ("oversample", oversample);
     params.define ("imagename", imgName);
     params.define ("UseLIG", UseLIG);
+    params.define ("UseWSplit", UseWSplit);
     params.define ("UseEJones", UseEJones);
     //params.define ("ApplyElement", ApplyElement);
     params.define ("PBCut", PBCut);
     params.define ("StepApplyElement", StepApplyElement);
+    params.define ("ApplyBeamCode", ApplyBeamCode);
     Bool PredictFT(false);
     if(operation=="predict"){PredictFT=true;}
     params.define ("PredictFT", PredictFT);
@@ -694,8 +742,19 @@ int main(int argc, char *argv[])
     params.define ("RowBlock", RowBlock);
     params.define ("doPSF", doPSF);
     params.define ("applyIonosphere", applyIonosphere);
-    params.define ("applyBeam", applyBeam);
     params.define ("splitbeam", splitbeam);
+    params.define ("MakeDirtyCorr", MakeDirtyCorr);
+    params.define ("UVmin", UVmin);
+    params.define ("UVmax", UVmax);
+    params.define ("TWElement", TWElement);
+    params.define ("SpheSupport", SpheSupport);
+    params.define ("t0", t0);
+    params.define ("t1", t1);
+    params.define ("SingleGridMode", SingleGridMode);
+    params.define ("FindNWplanes", FindNWplanes);
+    params.define ("ChanBlockSize", ChanBlockSize);
+
+    
     //params.define ("FillFactor", FillFactor);
     
     LOFAR::LofarImager imager(ms, params);
@@ -705,10 +764,14 @@ int main(int argc, char *argv[])
     // cout<<"timerange"<<timerange.timerange()<<endl;
     Vector<Int> wind(window.nrow());
     for(uInt iii=0;iii<window.nrow();++iii){wind(iii)=iii;};
+    cout<<"... Windows is shit"<<endl;
 
     ROArrayColumn<Double> chfreq(window.chanFreq());
 
     cout<<"Number of channels: "<<chfreq(0).shape()[0]<<endl;
+    if(ChanBlockSize!=0){
+      AlwaysAssertExit (((chfreq(0).shape()[0]%ChanBlockSize)==0)&(ChanBlockSize<chfreq(0).shape()[0]));
+    }
 
     Vector<Int> chansel(1);
     chansel(0)=chfreq(0).shape()[0];
@@ -775,7 +838,7 @@ int main(int argc, char *argv[])
                         MPosition(),                  // mLocation
                         padding,                      // padding
                         wplanes);                     // wprojplanes
-      imager.ft(Vector<String>(1, modelName), "",
+      imager.ft(Vector<String>(1, ModelImPredict), "",
 		False);
     } else{
 
@@ -839,7 +902,7 @@ int main(int argc, char *argv[])
                                                  fitsName,
                                                  64,         // memoryInMB
                                                  preferVelocity)) {
-            THROW(AWImagerException, error);
+            throw AipsError(error);
           }
         }
 
@@ -937,8 +1000,8 @@ int main(int argc, char *argv[])
 	  Vector<String> modelNames(2);
 	  modelNames[0]="model.main";
 	  modelNames[1]="model.outlier";
-	  File Dir_masks_file("JAWS_masks_degrid");
-	  Directory Dir_masks("JAWS_masks_degrid");
+	  File Dir_masks_file("JAWS_products");
+	  Directory Dir_masks("JAWS_products");
 	  if(Dir_masks_file.exists()){
 	    Dir_masks.removeRecursive();
 	  }
@@ -984,7 +1047,9 @@ int main(int argc, char *argv[])
         // Do the final correction for primary beam and spheroidal.
 	ApplyElement=false;
 	if(StepApplyElement>0){ApplyElement=true;}
-        correctImages (restoName, modelName, residName, imgName, imager, ApplyElement);
+	Bool doRestored(false);
+	if(niter>0){doRestored=true;}
+        correctImages (restoName, modelName, residName, imgName, imager, ApplyElement, UseWSplit, doRestored);
         precTimer.stop();
         timer.show ("clean");
 	///        imager.showTimings (cout, precTimer.getReal());
@@ -997,13 +1062,13 @@ int main(int argc, char *argv[])
                                                  fitsName,
                                                  64,         // memoryInMB
                                                  preferVelocity)) {
-            THROW(AWImagerException, error);
+            throw AipsError(error);
           }
         }
       }
     }
-    } }catch (Exception& ex) {
-    cerr << ex << endl;
+    } }catch (AipsError& x) {
+    cout << x.getMesg() << endl;
     return 1;
   }
   cout << "awimager normally ended" << endl;

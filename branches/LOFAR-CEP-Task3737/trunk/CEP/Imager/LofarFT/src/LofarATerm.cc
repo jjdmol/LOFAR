@@ -93,6 +93,7 @@ namespace
     this->pdb = new LOFAR::BBS::ParmFacade (parmdbname);
     std::string prefix = "Piercepoint:X:";
     std::vector<std::string> v = this->pdb->getNames(prefix + "*");
+    cout << "Nparm: " << v.size() << endl;
     this->cal_pp_names = Vector<String>(v.size());
     this->cal_pp = Matrix<Double>(3,v.size());
     this->tec_white = Vector<Double>(v.size());
@@ -117,27 +118,34 @@ namespace
     if (this->itsApplyIonosphere)
     {
       this->time = epoch.get(casa::Unit("s")).getValue();
-      this->r0 = get_parmvalue("r_0");
-      this->beta = get_parmvalue("beta");
-      this->height = get_parmvalue("height");
+      cout << "Epoch set to " << this->time << " reading parms..." << flush;
+      double freq = 50e6; // the ionospheric parameters are not frequency dependent, so just pick an arbitrary frequency
+                          // this frequency should be within the range specified in the parmdbname
+                          // this range is again quite arbitrary
+                          
+      Record parms = this->pdb->getValues ("*", freq, freq+0.5, 1.0, this->time, this->time + 0.5, 1.0 );
+      this->r0 = get_parmvalue(parms, "r_0");
+      this->beta = get_parmvalue(parms, "beta");
+      this->height = get_parmvalue(parms, "height");
       for(uint i = 0; i < this->cal_pp_names.size(); ++i) {
-        this->cal_pp(0, i) = get_parmvalue("Piercepoint:X:" + this->cal_pp_names(i));
-        this->cal_pp(1, i) = get_parmvalue("Piercepoint:Y:" + this->cal_pp_names(i));
-        this->cal_pp(2, i) = get_parmvalue("Piercepoint:Z:" + this->cal_pp_names(i));
-        this->tec_white(i) = get_parmvalue("TECfit_white:0:" + this->cal_pp_names(i));
+        this->cal_pp(0, i) = get_parmvalue(parms, "Piercepoint:X:" + this->cal_pp_names(i));
+        this->cal_pp(1, i) = get_parmvalue(parms, "Piercepoint:Y:" + this->cal_pp_names(i));
+        this->cal_pp(2, i) = get_parmvalue(parms, "Piercepoint:Z:" + this->cal_pp_names(i));
+        this->tec_white(i) = get_parmvalue(parms, "TECfit_white:0:" + this->cal_pp_names(i));
       }
+      cout << "done." << endl;
     }
   }
-
-  double LofarATerm::get_parmvalue( std::string parmname )
+  
+  double LofarATerm::get_parmvalue( Record& parms, std::string parmname ) 
   {
-    double freq = 50e6; // the ionospheric parameters are not frequency dependent, so just pick an arbitrary frequency
-                         // this frequency should be within the range specified in the parmdbname
-                         // this range is again quite arbitrary
-    casa::Record result = this->pdb->getValues (parmname, freq, freq+0.5, 1.0, this->time, this->time + 0.5, 1.0 );
-    casa::Array<double> parmvalues;
-    result.subRecord(parmname).get("values", parmvalues);
-    return parmvalues(IPosition(2,0,0));
+    double r = 0.0;
+    if (parms.isDefined(parmname)) {
+      casa::Array<double> parmvalues;
+      parms.subRecord(parmname).get("values", parmvalues);
+      r = parmvalues(IPosition(2,0,0));
+    }  
+    return r;
   }
 
 
@@ -257,7 +265,7 @@ namespace
 
 
 
-  vector<Matrix<Complex> > LofarATerm::evaluateStationScalarFactor(const uint idStation,
+  Cube<DComplex> LofarATerm::evaluateStationScalarFactor(const uint idStation,
     const Vector<Double> &freq, const Vector<Double> &reference, bool normalize) const
   {
     AlwaysAssert(idStation < itsInstrument->nStations(), SynthesisError);
@@ -303,7 +311,7 @@ namespace
       rescale(SF);
     }
 
-    return asVector(SF);
+    return SF;
   }
 
   vector<Matrix<Complex> > LofarATerm::evaluateArrayFactor(uint idStation,
@@ -487,8 +495,7 @@ namespace
       {
         for(uint k = 0 ; k < nY; ++k)
         {
-          Double phase = -tec(j,k) * a; // SvdT : removed minus sign, but still believe it should be there
-                                        // put it back again
+          Double phase = -tec(j,k) * a; 
           IF(j,k,i) = DComplex(cos(phase), sin(phase));
         }
       }

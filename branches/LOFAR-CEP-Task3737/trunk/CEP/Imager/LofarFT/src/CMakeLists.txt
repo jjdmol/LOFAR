@@ -18,7 +18,7 @@ lofar_add_library(lofarft
   LofarVisResampler.cc
   LofarVisResamplerOld.cc
   LofarCubeSkyEquation.cc
-  PythonFTMachine.cc
+#  PythonFTMachine.cc
   VisBufferProxy.cc
   VisibilityResamplerProxy.cc
   ROVisibilityIteratorProxy.cc
@@ -40,22 +40,21 @@ python_install(
   get_rms_noise.py
   DESTINATION lofar)
 
-python_install(
-  __init__.py 
-  lofarftmachine.py
-  rovisibilityiterator.py
-  myftmachine.py 
-  DESTINATION lofar/imager)
+#python_install(
+#  __init__.py 
+#  lofarftmachine.py
+#  rovisibilityiterator.py
+#  myftmachine.py 
+#  DESTINATION lofar/imager)
 
-lofar_add_library(pylofarft MODULE pylofarft.cc)
-SET_TARGET_PROPERTIES(pylofarft PROPERTIES
-  PREFIX ""
-  LIBRARY_OUTPUT_DIRECTORY ${PYTHON_BUILD_DIR}/lofar/imager)
-target_link_libraries(pylofarft lofarft)
+#lofar_add_library(pylofarft MODULE pylofarft.cc)
+#SET_TARGET_PROPERTIES(pylofarft PROPERTIES
+#  PREFIX ""
+#  LIBRARY_OUTPUT_DIRECTORY ${PYTHON_BUILD_DIR}/lofar/imager)
+#target_link_libraries(pylofarft lofarft)
 
 # This is a quick-and-dirty fix to install the Python binding module in the
 # right place. It will now be installed twice, because lofar_add_library()
 # will install it in $prefix/$libdir
-install(TARGETS pylofarft
-  DESTINATION ${PYTHON_INSTALL_DIR}/lofar/imager)
-
+#install(TARGETS pylofarft
+#  DESTINATION ${PYTHON_INSTALL_DIR}/lofar/imager)

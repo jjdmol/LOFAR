@@ -24,7 +24,7 @@
 
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
-#include <LofarFT/PythonFTMachine.h>
+//#include <LofarFT/PythonFTMachine.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
@@ -55,13 +55,13 @@ namespace LOFAR
   {
     CountedPtr<VisibilityResamplerBase> visResampler;
     Bool useDoublePrecGrid = False;
-    Double RefFreq = 0.0;
-    if (sm_p) RefFreq = Double((*sm_p).getReferenceFrequency());
+    Double RefFreq((*sm_p).getReferenceFrequency());
+
 
     if (itsParameters.asBool("splitbeam")) {
       cout << itsParameters<<endl;
-//       itsMachine = new LofarFTMachine(
-      itsMachine = new PythonFTMachine("lofar.imager.myftmachine", "MyFTMachine",
+       itsMachine = new LofarFTMachine(
+//      itsMachine = new PythonFTMachine("lofar.imager.myftmachine", "MyFTMachine",
                                       cache_p/2, tile_p,
                                       visResampler, gridfunction_p,
                                       *ms_p, wprojPlanes_p, mLocation_p,
@@ -77,14 +77,21 @@ namespace LOFAR
                                       itsParameters.asBool("UseLIG"),
                                       itsParameters.asBool("UseEJones"),
                                       itsParameters.asInt("StepApplyElement"),
+                                      itsParameters.asInt("ApplyBeamCode"),
                                       itsParameters.asDouble("PBCut"),
                                       itsParameters.asBool("PredictFT"),
                                       itsParameters.asString("PsfImage"),
                                       itsParameters.asBool("UseMasksDegrid"),
                                       itsParameters.asBool("doPSF"),
+				      itsParameters.asDouble("UVmin"),
+				      itsParameters.asDouble("UVmax"),
+                                      itsParameters.asBool("MakeDirtyCorr"),
                                       itsParameters);//,
                                       //itsParameters.asDouble("FillFactor"));
     
+      itsMachine->initGridThreads(itsGridsParallel,itsGridsParallel2);
+
+
       ft_p  = itsMachine;
     } else {
     itsMachineOld = new LofarFTMachineOld(cache_p/2, tile_p,
@@ -111,7 +118,8 @@ namespace LOFAR
                        TableIterator::NoSort);
     uInt nrowPerTime = iter.table().nrow();
     double interval  = ROScalarColumn<double>(iter.table(),"INTERVAL")(0);
-    Int ntime = itsParameters.asDouble("timewindow") / interval;
+    //Int ntime = itsParameters.asDouble("timewindow") / interval;
+    Int ntime = itsParameters.asDouble("TWElement")*3600. / interval;
     Int nrowBlock = nrowPerTime * max(1,ntime);
     // Set row blocking in VisIter.
     rvi_p->setRowBlocking (nrowBlock);

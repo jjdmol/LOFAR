@@ -103,7 +103,7 @@ class CleanOptions:
         return self._cycleMaxPsfFraction
 
 def show_image(title, data):
-    print "title:", title, "max:", numpy.max(data), "min:", numpy.min(data), "mean:", numpy.mean(data)
+    print "%s:" % title, "min:", numpy.min(data), "max:", numpy.max(data), "median:", numpy.median(data)
     fig, axes = pylab.subplots(nrows=2, ncols=2) #, sharex=True, sharey=True, squeeze=True)
     fig.suptitle(title, fontsize=14)
 
@@ -298,7 +298,8 @@ def mfclean(args):
     del ms
 
     B_max = numpy.max(numpy.sqrt(numpy.sum(numpy.square(uvw), 1)))
-    B_max = min(float(args.B), B_max)
+    if args.B > 0.0:
+        B_max = min(float(args.B), B_max)
     print "maximum baseline length: %.2f m" % B_max
 
     nu = 60e6
@@ -319,7 +320,7 @@ def mfclean(args):
     # TODO: Cyril mentioned above FOV estimation is too conservative. Need to
     # check this and find a better estimate if necessary. For now, will just
     # multiply estimated FOV by 2.0.
-#    fwhm *= 2.0
+    fwhm *= 2.0
 
 #    fov = 2.0 * fwhm
 
@@ -361,13 +362,27 @@ def mfclean(args):
     parms["PredictFT"] = False
     parms["PsfImage"] = ""
     parms["UseMasksDegrid"] = True
-    parms["RowBlock"] = 0
+    parms["RowBlock"] = 10000000
     parms["doPSF"] = False
     parms["applyIonosphere"] = False
     parms["applyBeam"] = True
     parms["splitbeam"] = True
     parms["padding"] = args.padding
     parms["wplanes"] = args.w_planes
+
+    parms["ApplyBeamCode"] = 3
+    parms["UVmin"] = 0
+    parms["UVmax"] = 100000
+    parms["MakeDirtyCorr"] = False
+
+    parms["timewindow"] = 300
+    parms["UseWSplit"] = True
+    parms["SingleGridMode"] = True
+    parms["SpheSupport"] = 15
+    parms["t0"] = -1
+    parms["t1"] = -1
+    parms["ChanBlockSize"] = 0
+    parms["FindNWplanes"] = True
 
     parms["gain"] = 0.1
     parms["cyclefactor"] = 1.5
@@ -382,67 +397,99 @@ def mfclean(args):
 
     ms = pyrap.tables.table(args.ms)
     ms = ms.query("ANTENNA1 != ANTENNA2")
-    first = True
-    for chunk in ms.iter(["ARRAY_ID", "FIELD_ID", "DATA_DESC_ID", "TIME"]):
-        x = {}
-        x["antenna1"] = chunk.getcol("ANTENNA1")
-        x["antenna2"] = chunk.getcol("ANTENNA2")
-        x["uvw"] = chunk.getcol("UVW")
-        x["time"] = chunk.getcol("TIME")
-        x["centroid"] = chunk.getcol("TIME_CENTROID")
-        x["flag_row"] = chunk.getcol("FLAG_ROW")
-        x["weight"] = chunk.getcol("WEIGHT")
-        x["flag"] = chunk.getcol("FLAG")
-        x["data"] = chunk.getcol("DATA")
+#    first = True
+#    for chunk in ms.iter(["ARRAY_ID", "FIELD_ID", "DATA_DESC_ID", "TIME"]):
+#        x = {}
+#        x["antenna1"] = chunk.getcol("ANTENNA1")
+#        x["antenna2"] = chunk.getcol("ANTENNA2")
+#        x["uvw"] = chunk.getcol("UVW")
+#        x["time"] = chunk.getcol("TIME")
+#        x["centroid"] = chunk.getcol("TIME_CENTROID")
+#        x["flag_row"] = chunk.getcol("FLAG_ROW")
+#        x["weight"] = chunk.getcol("WEIGHT")
+#        x["flag"] = chunk.getcol("FLAG")
+#        x["data"] = chunk.getcol("DATA")
 #        x["data"] = chunk.getcol("CORRECTED_DATA")
+#
+#        print "data:", numpy.min(x["data"]), numpy.max(x["data"])
+#        if first:
+#            lofar.casaimwrap.begin_grid(memento, False, x)
+#            first = False
+#        else:
+#            lofar.casaimwrap.grid(memento, x)
 
-        print "data:", numpy.min(x["data"]), numpy.max(x["data"])
-        if first:
-            lofar.casaimwrap.begin_grid(memento, False, x)
-            first = False
-        else:
-            lofar.casaimwrap.grid(memento, x)
+    x = {}
+    x["antenna1"] = ms.getcol("ANTENNA1")
+    x["antenna2"] = ms.getcol("ANTENNA2")
+    x["uvw"] = ms.getcol("UVW")
+    x["time"] = ms.getcol("TIME")
+    x["centroid"] = ms.getcol("TIME_CENTROID")
+    x["flag_row"] = ms.getcol("FLAG_ROW")
+    x["weight"] = ms.getcol("WEIGHT")
+    x["flag"] = ms.getcol("FLAG")
+    x["data"] = ms.getcol("CORRECTED_DATA")
 
-#    x = {}
-#    x["antenna1"] = ms.getcol("ANTENNA1")
-#    x["antenna2"] = ms.getcol("ANTENNA2")
-#    x["uvw"] = ms.getcol("UVW")
-#    x["time"] = ms.getcol("TIME")
-#    x["centroid"] = ms.getcol("TIME_CENTROID")
-#    x["flag_row"] = ms.getcol("FLAG_ROW")
-#    x["weight"] = ms.getcol("WEIGHT")
-#    x["flag"] = ms.getcol("FLAG")
-#    x["data"] = ms.getcol("CORRECTED_DATA")
-
-#    lofar.casaimwrap.begin_grid(memento, False, x)
+    lofar.casaimwrap.begin_grid(memento, False, x)
     result = lofar.casaimwrap.end_grid(memento, True)
-    gridImage = result["image"]
-    gridWeight = result["weight"]
+    image = result["image"]
+    weight = result["weight"]
 
-    print gridImage.shape
-    print gridWeight.shape
-    show_image("image", gridImage[0,:,:,:]);
-    show_image("weight", gridWeight[0,:,:,:]);
-    show_image("image normalized", gridImage[0,:,:,:] / gridWeight[0,:,:,:]);
+    print image.shape
+    print weight.shape
+    show_image("image", image[0,:,:,:]);
+    print "weight: min:", numpy.min(weight), "max:", numpy.max(weight), "median:", numpy.median(weight)
+    show_image("image (normalized)", image[0,:,:,:] / weight[0,:,:,:]);
 
-#    y = {}
-#    y["antenna1"] = ms.getcol("ANTENNA1")
-#    y["antenna2"] = ms.getcol("ANTENNA2")
-#    y["uvw"] = ms.getcol("UVW")
-#    y["time"] = ms.getcol("TIME")
-#    y["centroid"] = ms.getcol("TIME_CENTROID")
-#    y["flag_row"] = ms.getcol("FLAG_ROW")
-#    y["weight"] = ms.getcol("WEIGHT")
-#    y["flag"] = ms.getcol("FLAG")
+    y = {}
+    y["antenna1"] = ms.getcol("ANTENNA1")
+    y["antenna2"] = ms.getcol("ANTENNA2")
+    y["uvw"] = ms.getcol("UVW")
+    y["time"] = ms.getcol("TIME")
+    y["centroid"] = ms.getcol("TIME_CENTROID")
+    y["flag_row"] = ms.getcol("FLAG_ROW")
+    y["weight"] = ms.getcol("WEIGHT")
+    y["flag"] = ms.getcol("FLAG")
 
-#    lofar.casaimwrap.begin_degrid(memento, gridImage[0,:,:,:] / gridWeight[0,:,:,:], y)
-#    result = lofar.casaimwrap.end_degrid(memento)
-#    degrid_data = result["data"]
-#    print degrid_data.shape
+    result = lofar.casaimwrap.begin_degrid(memento, image / weight, y)
+    lofar.casaimwrap.end_degrid(memento)
+    degrid_data = result["data"]
+    print degrid_data.shape
 
-#    tmp_data = ms.getcol("CORRECTED_DATA")
-#    delta = numpy.abs(degrid_data[:1000, 0, 0] / tmp_data[:1000, 0, 0])
-#    print "delta: max:", numpy.max(delta), "min:", numpy.min(delta), "mean:", numpy.mean(delta)
+    degrid_data = numpy.squeeze(degrid_data[:,0,0])
+    print "#finite:", numpy.sum(numpy.isfinite(degrid_data)), "#non-finite:", numpy.sum(~numpy.isfinite(degrid_data))
+    print "min:", numpy.min(degrid_data[numpy.isfinite(degrid_data)]), "max:", numpy.max(degrid_data[numpy.isfinite(degrid_data)]), "median:", numpy.median(degrid_data[numpy.isfinite(degrid_data)])
+
+    tmp_ant1 = ms.getcol("ANTENNA1")
+    tmp_ant2 = ms.getcol("ANTENNA2")
+    tmp_data = ms.getcol("CORRECTED_DATA")
+    tmp_data = numpy.squeeze(tmp_data[:,0,0])
+
+    tmp_flag = ms.getcol("FLAG")
+    tmp_flag_row = ms.getcol("FLAG_ROW")
+    tmp_flag = numpy.squeeze(numpy.sum(tmp_flag[:,0,:], axis=1))
+
+    print tmp_flag.dtype, tmp_flag_row.dtype
+
+    tmp_flag = tmp_flag | tmp_flag_row | (~numpy.isfinite(degrid_data)) | (~numpy.isfinite(tmp_data))
+
+    print tmp_flag.dtype
+
+    idx = ~tmp_flag
+#    idx = (tmp_ant1 == 5) & (tmp_ant2 == 2)
+    print "#samples:", numpy.sum(idx)
+#    idx = idx & (~tmp_flag)
+    print "#valid samples:", numpy.sum(idx)
+
+    y0 = numpy.abs(degrid_data[idx])
+    y1 = numpy.abs(tmp_data[idx])
+    print y0.shape
+    print y1.shape
+
+    print "degridded: max:", numpy.max(y0), "min:", numpy.min(y0), "mean:", numpy.mean(y0)
+    print "original: max:", numpy.max(y1), "min:", numpy.min(y1), "mean:", numpy.mean(y1)
+    pylab.figure()
+    pylab.plot(y0)
+    pylab.plot(y1)
     pylab.show()
     return True
 
@@ -688,7 +735,7 @@ def main():
     subparser.set_defaults(func=empty)
 
     subparser = subparsers.add_parser("mfclean", help="multi-field Clark clean")
-    subparser.add_argument("-B", type=float, help="maximum projected baseline length (m)")
+    subparser.add_argument("-B", type=float, default=0.0, help="maximum projected baseline length (m)")
     subparser.add_argument("-w", "--w-planes", dest="w_planes", type=int, default=128, help="number of W-planes")
     subparser.add_argument("-p", "--padding", type=float, default=1.0, help="image plane padding factor (>= 1.0)")
 #    subparser.add_argument("-g", choices=["awz", "aw", "w"], help="gridder to use")

@@ -112,6 +112,9 @@ struct Memento
     VisBufferStub*              gridBuffer;
     bool                        gridPSF;
 
+    vector<Array<Complex> > itsGridsParallel;
+    vector<Array<DComplex> > itsGridsParallel2;
+
     Memento()
         :   obsKnown(false),
             it(0),
@@ -418,12 +421,19 @@ void init(Memento &memento, const string &name, const Record &csys,
         parms.asBool("UseLIG"),
         parms.asBool("UseEJones"),
         parms.asInt("StepApplyElement"),
+        parms.asInt("ApplyBeamCode"),
         parms.asDouble("PBCut"),
         parms.asBool("PredictFT"),
         parms.asString("PsfImage"),
         parms.asBool("UseMasksDegrid"),
         parms.asBool("doPSF"),
+        parms.asDouble("UVmin"),
+        parms.asDouble("UVmax"),
+        parms.asBool("MakeDirtyCorr"),
         parms);
+
+    memento.ft->initGridThreads(memento.itsGridsParallel,
+        memento.itsGridsParallel2);
 
     Int rowBlock = parms.asInt("RowBlock");
     if(rowBlock <= 0)
@@ -639,7 +649,7 @@ Record makeCoordinateSystemPy(const string &name, unsigned int size,
     return record.subRecord(0);
 }
 
-void begin_degrid(Memento &memento, const ValueHolder &image,
+Record begin_degrid(Memento &memento, const ValueHolder &image,
     const Record &chunk)
 {
     // Create temporary image.
@@ -668,9 +678,13 @@ void begin_degrid(Memento &memento, const ValueHolder &image,
 
     memento.ft->initializeToVis(memento.gridImage, *memento.gridBuffer);
     memento.ft->get(*memento.gridBuffer);
+
+    Record result;
+    result.define("data", memento.gridBuffer->modelVisCube());
+    return result;
 }
 
-void degrid(Memento &memento, const Record &chunk)
+Record degrid(Memento &memento, const Record &chunk)
 {
     // Update temporary VisBuffer.
     memento.gridBuffer->setChunk(chunk.asArrayInt("antenna1"),
@@ -685,15 +699,15 @@ void degrid(Memento &memento, const Record &chunk)
 
     // Grid data.
     memento.ft->get(*memento.gridBuffer);
-}
-
-Record end_degrid(Memento &memento)
-{
-    memento.ft->finalizeToVis();
 
     Record result;
     result.define("data", memento.gridBuffer->modelVisCube());
     return result;
+}
+
+void end_degrid(Memento &memento)
+{
+    memento.ft->finalizeToVis();
 }
 
 void begin_grid(Memento &memento, bool gridPSF, const Record &chunk)
@@ -757,7 +771,8 @@ Record end_grid(Memento &memento, bool normalize)
     ImageInterface<Complex> &image =
         memento.ft->getImage(memento.gridWeight, normalize);
 
-    TempImage<Float> tmp_image(memento.image.shape(), memento.image.coordinates());
+    TempImage<Float> tmp_image(memento.image.shape(),
+        memento.image.coordinates());
     tmp_image.set(0.0);
 
     if(memento.gridPSF)
@@ -816,8 +831,8 @@ BOOST_PYTHON_MODULE(_casaimwrap)
     def("fitGaussianPSF", LOFAR::casaimwrap::fitGaussianPSF, (boost::python::arg("csys"), boost::python::arg("psf")));
 
     def("begin_degrid", LOFAR::casaimwrap::begin_degrid, (boost::python::arg("memento"), boost::python::arg("image"), boost::python::arg("chunk")));
-    def("degrid", LOFAR::casaimwrap::grid, (boost::python::arg("memento"), boost::python::arg("chunk")));
-    def("end_degrid", LOFAR::casaimwrap::end_grid, (boost::python::arg("memento")));
+    def("degrid", LOFAR::casaimwrap::degrid, (boost::python::arg("memento"), boost::python::arg("chunk")));
+    def("end_degrid", LOFAR::casaimwrap::end_degrid, (boost::python::arg("memento")));
     def("begin_grid", LOFAR::casaimwrap::begin_grid, (boost::python::arg("memento"), boost::python::arg("gridPSF"), boost::python::arg("chunk")));
     def("grid", LOFAR::casaimwrap::grid, (boost::python::arg("memento"), boost::python::arg("chunk")));
     def("end_grid", LOFAR::casaimwrap::end_grid, (boost::python::arg("memento"), boost::python::arg("normalize")));

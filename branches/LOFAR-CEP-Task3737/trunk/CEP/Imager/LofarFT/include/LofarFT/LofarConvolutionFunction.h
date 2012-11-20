@@ -36,6 +36,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Utilities/Assert.h>
+#include <casa/sstream.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <measures/Measures/MDirection.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -46,6 +47,11 @@
 
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
+
+
+
+
+
 
 using namespace casa;
 
@@ -80,7 +86,9 @@ namespace LOFAR
                              const String& imgName,
 			     Bool Use_EJones,
 			     Bool Apply_Element,
-                             const casa::Record& parameters
+			     int ApplyBeamCode,
+                             const casa::Record& parameters,
+			     vector< vector< vector < Matrix<Complex> > > > & StackMuellerNew
                             );
     //,
     //			     Int TaylorTerm,
@@ -89,6 +97,7 @@ namespace LOFAR
 //      ~LofarConvolutionFunction ()
 //      {
 //      }
+
 
     // Show the relative timings of the various steps.
     void showTimings (std::ostream&, double duration, double timeCF) const;
@@ -101,6 +110,7 @@ namespace LOFAR
 
     // Get the spheroidal cut.
     const Matrix<Float>& getSpheroidCut();
+    Matrix<Float> getSpheroid(uInt npix);
 
     // Get the spheroidal cut from the file.
     static Matrix<Float> getSpheroidCut (const String& imgName);
@@ -112,6 +122,42 @@ namespace LOFAR
     // Compute the fft of the beam at the minimal resolution for all antennas,
     // and append it to a map object with a (double time) key.
     void computeAterm(Double time);
+    vector<Double> VecTimesAterm;
+    void computeVecAterm(Double t0, Double t1, Double dt)
+    {
+
+      Double tmax(0.);
+      for(uInt i=0; i<VecTimesAterm.size(); ++i){
+	if(VecTimesAterm[i]>tmax){
+	  tmax=VecTimesAterm[i];
+	}
+      }
+
+      if(t0>tmax){
+	for(Double tat=t0+dt/2.;tat<t1; tat+=dt)
+	  {
+	    computeAterm(tat);
+	    VecTimesAterm.push_back(tat);
+	  }
+      }
+
+    }
+
+    Double GiveClosestTimeAterm(Double tat)
+    {
+      Double dtmin(1e30);
+      Double tmin(0.);
+      Double dt;
+      for(uInt ind=0; ind <VecTimesAterm.size(); ++ind)
+	{
+	  dt=abs(tat-VecTimesAterm[ind]);
+	  if(dt<dtmin){
+	    tmin=VecTimesAterm[ind];
+	    dtmin=dt;
+	  }
+	}
+      return tmin;
+    }
 
     // Compute the convolution function for all channel, for the polarisations
     // specified in the Mueller_mask matrix
@@ -127,10 +173,51 @@ namespace LOFAR
                                          double Append_average_PB_CF,
                                          Matrix<Complex>& Stack_PB_CF,
                                          double& sum_weight_square,
-					 uInt spw, Int TaylorTerm, double RefFreq);
+					 Vector<uInt> ChanBlock, Int TaylorTerm, double RefFreq,
+					 vector< vector < Matrix<Complex> > > & StackMuellerNew,
+					 Int ImposeSupport, Bool UseWTerm);
+
+    LofarCFStore makeConvolutionFunctionAterm(uInt stationA, uInt stationB,
+                                         Double time, Double w,
+                                         const Matrix<bool>& Mask_Mueller,
+                                         bool degridding_step,
+                                         double Append_average_PB_CF,
+                                         Matrix<Complex>& Stack_PB_CF,
+                                         double& sum_weight_square,
+					 uInt spw, Int TaylorTerm, double RefFreq,
+					 vector< vector < Matrix<Complex> > > & StackMuellerNew,
+					 Int ImposeSupport);
+
+    Int GiveWSupport(Double w,uInt spw);
+    uInt GiveWindex(Double w,uInt spw);
+    Int GiveWindexIncludeNegative(Double w,uInt spw);
+    void initMeanWStepsGridder();
+    Int FindNWplanes();
 
     Array<Complex>  ApplyElementBeam(Array<Complex> input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step);
+    Array<Complex> ApplyElementBeam_Image(Array<Complex>& input_grid, Double timeIn, uInt spw, const Matrix<bool>& Mask_Mueller_in2, bool degridding_step);
     Array<Complex>  ApplyElementBeam2(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step, Int UsedMask=-1);
+    Array<Complex>  ApplyElementBeam3(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step, vector< Array<Complex> >& gridsparalel, Int UsedMask);
+    Array<Complex>  ApplyWterm(Array<Complex>& input_grid, uInt spw, bool degridding_step, Int w_index, vector< Array<Complex> >& gridsparalel, Int TnumMask, Int WnumMask);
+    void ApplyWterm_Image(Array<Complex>& input_grid, Array<Complex>& output_grid, uInt spw, bool degridding_step, Int w_index);
+    void ConvolveArrayArrayParallel( const Array<Complex>& gridin, Array<Complex>& gridout,
+				     const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel);
+    void ConvolveArrayArrayParallel2( const Array<Complex>& gridin, Array<Complex>& gridout,
+				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel);
+    void ConvolveArrayArrayParallel2( const Array<Complex>& gridin, Array<Complex>& gridout,
+				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel, Matrix<Bool> MaskIn);
+    void ConvolveArrayArrayParallel3( const Array<Complex>& gridin, Array<Complex>& gridout,
+				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel);
+    void ConvolveArrayArrayParallel3( const Array<Complex>& gridin, Array<Complex>& gridout,
+				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel, Matrix<Bool> MaskIn);
+    void ConvolveArrayArrayParallel4( const Array<Complex>& gridin, Array<Complex>& gridout,
+				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel, Matrix<uShort> MaskIn);
+    void ConvolveArrayArrayParallel4( const Array<Complex>& gridin, Array<Complex>& gridout, uInt polNum,
+				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel, Matrix<uShort> MaskIn);
+    void SumGridsOMP(Array<Complex>& grid, const vector< Array<Complex> >& GridToAdd0 );
+    void SumGridsOMP(Array<Complex>& grid, const vector< Array<Complex> >& GridToAdd0 , uInt PolNumIn, uInt PolNumOut);
+    void SumGridsOMP(Array<Complex>& grid, const Array<Complex> & GridToAdd0 , uInt PolNumIn, uInt PolNumOut);
+
     
     // Returns the average Primary Beam from the disk
     Matrix<float> Give_avg_pb();
@@ -144,73 +231,309 @@ namespace LOFAR
 
     // Zero padding of a Matrix
     Matrix<Complex> zero_padding(const Matrix<Complex>& Image, int Npixel_Out);
+    Matrix<Complex> zero_padding(const Matrix<Complex>& Image, Matrix<Complex>& Image_Enlarged, bool tozero);
 
+    
 
     // Get the W scale.
     const WScale& wScale() const
       { return m_wScale; }
 
+    Float wStep()
+      { return its_wStep; }
+    vector<Complex> wCorrGridder()
+      { return its_wCorrGridder; }
+
+    vector<Complex> its_wCorrGridder;
+    vector<Matrix< Complex > > its_wCorrGridderMatrix;
+    Float its_wStep;
+    Bool its_UseWSplit;
+
     vector< Matrix< Bool > > itsVectorMasksDegridElement;
+    vector< vector< Matrix< Bool > > > itsVecMasks;
+    vector< vector< Matrix< uShort > > > itsVecMasksNew;
+    vector< vector< Matrix< uShort > > > itsVecMasksNewW;
+    vector< Matrix< uShort > > itsVecMasksNewElement;
+    uInt NBigChunks;
+    void initStoreMasks()
+    {
+      NBigChunks=20;
+      Int sizeVec(2*m_nWPlanes);
+      itsVecMasks.resize(NBigChunks);
+      for(uInt i=0; i<NBigChunks; ++i)
+	{
+	  itsVecMasks[i].resize(sizeVec);
+	}
+    }
+    void initStoreMasksNew()
+    {
+      NBigChunks=20;
+      Int sizeVec(2*m_nWPlanes);
+      itsVecMasksNew.resize(NBigChunks);
+      itsVecMasksNewW.resize(NBigChunks);
+      itsVecMasksNewElement.resize(0);
+      for(uInt i=0; i<NBigChunks; ++i)
+	{
+	  itsVecMasksNew[i].resize(sizeVec);
+	  itsVecMasksNewW[i].resize(sizeVec);
+	}
+    }
+
     void MakeMaskDegrid( const Array<Complex>& gridin, Int NumMask)
     {
 
-      String MaskName("JAWS_masks_degrid/Mask"+String::toString(NumMask)+".boolim");
+      String MaskName("JAWS_products/Mask"+String::toString(NumMask)+".boolim");
       File MaskFile(MaskName);
       if(!MaskFile.exists()){
-        //cout<<"... Making Masks ..."<<endl;
-        Matrix<Bool> Mask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
-        Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
-        uInt GridSize(gridin.shape()[0]);
-        const Complex* inPtr = gridin.data();
-        Bool* outPtr = Mask.data();
-        for (uInt i=0; i<GridSize; ++i) {
-         for (uInt j=0; j<GridSize; ++j) {
-           if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
-             (*(outPtr)) = true;
-            }
-            inPtr++;
-            outPtr++;
-          }
-        }
-        //itsVectorMasksDegridElement.push_back(Mask);
-
-        store(Mask,MaskName);
-        //cout<<"... Done Making Masks ..."<<endl;
+	//cout<<"... Making Masks ..."<<endl;
+	Matrix<Bool> Mask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+	Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+	int GridSize(gridin.shape()[0]);
+	const Complex* inPtr = gridin.data();
+	Bool* outPtr = Mask.data();
+	for (uInt i=0; i<GridSize; ++i) {
+	  for (uInt j=0; j<GridSize; ++j) {
+	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
+	      (*(outPtr)) = true;
+	    }
+	    inPtr++;
+	    outPtr++;
+	  }
+	}
+	//itsVectorMasksDegridElement.push_back(Mask);
+	
+	store(Mask,MaskName);
+	//cout<<"... Done Making Masks ..."<<endl;
       }
     }
 
+    
+    void MakeVectorMaskWplanes( const Array<Complex>& gridin, Int NumTime, Int NumWplane)
+    {
+      String MaskName("JAWS_products/Mask.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim");
+      File MaskFile(MaskName);
+
+
+      if(!MaskFile.exists()){
+	//cout<<"... Making Masks ..."<<endl;
+	Matrix<Bool> Mask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+	Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+	int GridSize(gridin.shape()[0]);
+	const Complex* inPtr = gridin.data();
+	Bool* outPtr = Mask.data();
+	for (uInt i=0; i<GridSize; ++i) {
+	  for (uInt j=0; j<GridSize; ++j) {
+	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
+	      (*(outPtr)) = true;
+	    }
+	    inPtr++;
+	    outPtr++;
+	  }
+	}
+	//itsVectorMasksDegridElement.push_back(Mask);
+	store(Mask,MaskName);
+	//cout<<"... Done Making Masks ..."<<endl;
+      }
+    }
+
+    void MakeVectorMaskWplanesNew( const Array<Complex>& gridin, Int NumTime, Int NumWplane, Bool grid, Bool Element, Int MaskType)
+    {
+      //cout<<"make mask "<<grid<<endl;
+      String MaskName;
+      File MaskFile;
+      if(MaskType==0){
+	MaskName="JAWS_products/MaskGrid.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim";
+	File MaskFilein(MaskName);
+	MaskFile=MaskFilein;
+	} 
+      if(MaskType==1){
+	MaskName="JAWS_products/MaskDeGrid.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim";
+	File MaskFilein(MaskName);
+	MaskFile=MaskFilein;
+      }
+      if(MaskType==2){
+	MaskName="JAWS_products/MaskGrid.Element.T"+String::toString(NumTime)+".boolim";
+	File MaskFilein(MaskName);
+	MaskFile=MaskFilein;
+      }
+
+      if(!MaskFile.exists()){
+    	Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+    	int GridSize(gridin.shape()[0]);
+    	const Complex* inPtr = gridin.data();
+    	uInt Nnonzero(0);
+    	for (uInt i=0; i<GridSize; ++i) {
+    	  for (uInt j=0; j<GridSize; ++j) {
+    	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
+    	      Nnonzero+=1;
+	    }
+    	    inPtr++;
+    	  }
+	}
+    	inPtr = gridin.data();
+	Nnonzero=std::max(1,int(Nnonzero));
+    	Matrix<uShort> Mask(IPosition(2,Nnonzero,2));
+	Mask=0;
+	uInt indec(0);
+	uShort* outPtr = Mask.data();
+    	for (uInt i=0; i<GridSize; ++i) {
+    	  for (uInt j=0; j<GridSize; ++j) {
+    	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
+	      Mask(indec,0)=i;
+	      Mask(indec,1)=j;
+	      indec+=1;
+	    }
+    	    inPtr++;
+    	  }
+    	}
+    	//itsVectorMasksDegridElement.push_back(Mask);
+    	store(Mask,MaskName);
+	if(MaskType==0){
+	  itsVecMasksNew[NumTime][NumWplane+m_nWPlanes].reference (Mask);
+	}
+	if(MaskType==1){
+	  itsVecMasksNewW[NumTime][NumWplane+m_nWPlanes].reference (Mask);
+	}
+	if(MaskType==2){
+	  itsVecMasksNewElement.push_back(Mask);
+	}
+	
+    	//cout<<"... Done Making Masks ... t="<<NumTime<<" w="<<NumWplane+m_nWPlanes<<" npix="<<Nnonzero<<endl;
+      }
+    }
+
+
+    void Make_MuellerAvgPB(vector< vector< vector < Matrix<Complex> > > > & StackMueller, double sum_weight_square);
+
+    Array< Complex > Correct_CC(Array< Complex > & ModelImage);
+
+
     Bool itsFilledVectorMasks;
       //vector< Matrix< Bool > > itsVectorMasksDegridElement;
-      void ReadMaskDegrid()
-      {
-      	Int NumMask(0);
-      	while(true){
-      	  String MaskName("JAWS_masks_degrid/Mask"+String::toString(NumMask)+".boolim");
-      	  File MaskFile(MaskName);
-      	  if(MaskFile.exists())
+    void ReadMaskDegrid()
+    {
+      Int NumMask(0);
+      while(true){
+	String MaskName("JAWS_products/Mask"+String::toString(NumMask)+".boolim");
+	File MaskFile(MaskName);
+	if(MaskFile.exists())
+	  {
+	    //cout<<"Reading:"<<MaskName<<endl;
+	    PagedImage<Bool> pim(MaskName);
+	    Array<Bool> arr = pim.get();
+	    Matrix<Bool> Mask;
+	    Mask.reference (arr.nonDegenerate(2));
+	    itsVectorMasksDegridElement.push_back(Mask);
+	    NumMask+=1;
+	  }
+	else
+	  {
+	    break;
+	  }
+      }
+      itsFilledVectorMasks=true;
+      
+    }
+      
+    void ReadMaskDegridW()
+    {
+      initStoreMasks();
+      Int NumMask(0);
+      Int Wc(0);
+      for(Int Tnum=0;Tnum<NBigChunks;++Tnum){
+	for(Int Wnum=0;Wnum<2*m_nWPlanes;++Wnum){
+	
+	  Int Wsearch(Wnum-m_nWPlanes);
+	  String MaskName("JAWS_products/Mask.T"+String::toString(Tnum)+".W"+String::toString(Wsearch)+".boolim");
+	  File MaskFile(MaskName);
+	  if(MaskFile.exists())
 	    {
-	      //cout<<"Reading:"<<MaskName<<endl;
 	      PagedImage<Bool> pim(MaskName);
 	      Array<Bool> arr = pim.get();
-	      Matrix<Bool> Mask;
-	      Mask.reference (arr.nonDegenerate(2));
-	      itsVectorMasksDegridElement.push_back(Mask);
-	      NumMask+=1;
-	    }
-	  else
-	    {
-	      break;
+	      itsVecMasks[Tnum][Wnum].reference (arr.nonDegenerate(2));
+	      //cout<<"  ... read t="<<Tnum<<" w="<<Wsearch<<" put at:"<<Wnum<<endl;
+	      Wc+=1;
 	    }
 	}
-	itsFilledVectorMasks=true;
-	
       }
+      itsFilledVectorMasks=true;
+      
+    }
+
+    void ReadMaskDegridWNew()
+    {
+      //cout<<"...reading masks degrid"<<endl;
+      Int NumMask(0);
+      Int Wc(0);
+      initStoreMasksNew();
+
+      /* MaskName="JAWS_products/MaskGrid.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim"; */
+      /* MaskName="JAWS_products/MaskDeGrid.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim"; */
+      /* MaskName="JAWS_products/MaskGrid.Element.T"+String::toString(NumTime)+".boolim"; */
+      /* vector< vector< Matrix< uInt > > > itsVecMasksNew; */
+      /* vector< vector< Matrix< uInt > > > itsVecMasksNewW; */
+      /* vector< Matrix< uInt > > itsVecMasksNewElement; */
+
+      for(Int Tnum=0;Tnum<NBigChunks;++Tnum){
+	for(Int Wnum=0;Wnum<2*m_nWPlanes;++Wnum){
+	
+	  Int Wsearch(Wnum-m_nWPlanes);
+	  String MaskName("JAWS_products/MaskGrid.T"+String::toString(Tnum)+".W"+String::toString(Wsearch)+".boolim");
+	  File MaskFile(MaskName);
+	  if(MaskFile.exists())
+	    {
+	      //cout<<".. reading "<<MaskName<<endl;
+	      PagedImage<uShort> pim(MaskName);
+	      Array<uShort> arr = pim.get();
+	      itsVecMasksNew[Tnum][Wnum].reference (arr.nonDegenerate(2));
+	      Wc+=1;
+	    }
+	  String MaskName2("JAWS_products/MaskDeGrid.T"+String::toString(Tnum)+".W"+String::toString(Wsearch)+".boolim");
+	  File MaskFile2(MaskName);
+	  if(MaskFile2.exists())
+	    {
+	      //cout<<".. reading "<<MaskName2<<endl;
+	      PagedImage<uShort> pim(MaskName2);
+	      Array<uShort> arr = pim.get();
+	      itsVecMasksNewW[Tnum][Wnum].reference (arr.nonDegenerate(2));
+	      Wc+=1;
+	    }
+	}
+	String MaskName("JAWS_products/MaskGrid.Element.T"+String::toString(Tnum)+".boolim");
+	File MaskFile(MaskName);
+	if(MaskFile.exists())
+	  {
+	    //cout<<".. reading "<<MaskName<<endl;
+	    PagedImage<uShort> pim(MaskName);
+	    Array<uShort> arr = pim.get();
+	    Matrix<uShort> Mask;
+	    Mask.reference(arr.nonDegenerate(2));
+	    itsVecMasksNewElement.push_back(Mask);
+	  }
+
+      }
+      //cout<<"... deon reading masks degrid"<<endl;
+      itsFilledVectorMasks=true;
+      
+    }
       
       Bool VectorMaskIsFilled(){return itsFilledVectorMasks;}
-
-  private:
     void normalized_fft (Matrix<Complex>&, bool toFreq=true);
+    void normalized_fft_parallel(Matrix<Complex> &im, bool toFreq=true);
     void normalized_fft (PrecTimer& timer, Matrix<Complex>&, bool toFreq=true);
+
+    Vector< Double >    list_freq_spw;
+    Vector< Double >    list_freq_chanBlock;
+    Vector< uInt >      map_chan_chanBlock;
+    Vector< uInt >      map_chanBlock_spw;
+    vector<Vector< uInt > >     map_spw_chanBlock;
+    Vector< uInt > map_chan_Block_buffer;
+
+
+
+
+    uInt                m_nWPlanes;
+  private:
 
     Matrix<Complex> give_normalized_fft_lapack(const Matrix<Complex> &im, bool toFreq=true)
       {
@@ -263,6 +586,28 @@ namespace LOFAR
           function(j, i) *= x[i] * x[j];
         }
       }
+    }
+
+    template <typename T>
+    void taper_parallel (Matrix<T> &function) const
+    {
+      AlwaysAssert(function.shape()[0] == function.shape()[1], SynthesisError);
+      uInt size = function.shape()[0];
+      Double halfSize = (size-1) / 2.0;
+      Vector<Double> x(size);
+      for (uInt i=0; i<size; ++i) {
+        x[i] = spheroidal(abs(i - halfSize) / halfSize);
+      }
+      uInt j;
+#pragma omp parallel
+    {
+#pragma omp for private(j) schedule(dynamic)
+      for (uInt i=0; i<size; ++i) {
+        for (j=0; j<size; ++j) {
+          function(j, i) *= x[i] * x[j];
+        }
+      }
+    }
     }
 
 
@@ -386,7 +731,39 @@ namespace LOFAR
       }
     }
     
+    void ConvolveArrayArray( const Array<Complex>& gridin, Array<Complex>& gridout,
+			   const Matrix<Complex>& ConvFunc)
+    {
+      int Support(ConvFunc.shape()[0]);
+      int GridSize(gridin.shape()[0]);
+      int off(Support/2);
+
+
+
+      for(uInt ConvPol=0; ConvPol<gridin.shape()[2];++ConvPol){
+
+	Int offPol(ConvPol*GridSize*GridSize);
+	const Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
+	for (uInt i=0; i<GridSize-Support; ++i) {
+	  for (uInt j=0; j<GridSize-Support; ++j) {
+	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
+	      const Complex* cfPtr = ConvFunc.data();
+	      for (uInt ii=0; ii<Support; ++ii) {
+		Complex* outPtr = gridout.data() + (i+ii)*GridSize + j +offPol;
+		for (uInt jj=0; jj<Support; ++jj) {
+		  outPtr[jj] += *cfPtr++ * *inPtr;
+		}
+	      }
+	    }
+	    inPtr++;
+	  }
+	  inPtr += Support;
+	}
+
+      }
+    }
     
+
 
     void ConvolveGerArrayMask( const Array<Complex>& gridin, Int ConvPol, Matrix<Complex>& gridout,
 			       const Matrix<Complex>& ConvFunc, Int UsedMask)
@@ -474,7 +851,15 @@ namespace LOFAR
       coordinate.setReferencePixel(refpix);
     }
 
+
+
+
     Double spheroidal(Double nu) const;
+
+
+
+
+
 
     template <typename T>
     uInt findSupport(Matrix<T> &function, Double threshold) const
@@ -493,6 +878,8 @@ namespace LOFAR
 
     //# Data members.
     casa::Record       itsParameters;
+    Array<Complex> its_output_grid_element;
+    Matrix<Complex> its_ArrMatrix_out_element;
     IPosition           m_shape;
     DirectionCoordinate m_coordinates;
     WScale              m_wScale;
@@ -500,19 +887,20 @@ namespace LOFAR
     LofarATerm          m_aTerm;
     Double              m_maxW;
     Double              m_pixelSizeSpheroidal;
-    uInt                m_nWPlanes;
     uInt                m_nStations;
     uInt                m_oversampling;
-    uInt                m_nChannel;
+    uInt                m_nChannelBlocks;
+    uInt                m_NPixATerm;
     Double              m_refFrequency;
     uInt                m_maxCFSupport;
+    vector<Double>      its_VectorThreadsSumWeights;
+
     //# Stack of the convolution functions for the average PB calculation
     Matrix<Complex>     Spheroid_cut;
     //# Stack of the convolution functions for the average PB calculation
     Matrix<Float>       Spheroid_cut_im;
     Matrix<Float>       Spheroid_cut_im_element;
     //# List of the ferquencies the CF have to be caluclated for
-    Vector< Double >    list_freq;
     vector< Matrix<Complex> > m_WplanesStore;
     //# Aterm_store[double time][antenna][channel]=Cube[Npix,Npix,4]
     map<Double, vector< vector< Cube<Complex> > > > m_AtermStore;
@@ -540,9 +928,12 @@ namespace LOFAR
     unsigned long long  itsTimeCFcnt;
     Bool                its_Use_EJones;
     Bool                its_Apply_Element;
+    Bool                its_NotApplyElement;
+    Bool                its_NotApplyArray;
     uInt                its_MaxWSupport;
     uInt                its_count_time;
     mutable LogIO       m_logIO;
+    Int                 its_ChanBlockSize;
     Matrix<Complex>     spheroid_cut_element_fft;
     vector< vector< Matrix< Complex > > > GridsMueller;
     LogIO &logIO() const
