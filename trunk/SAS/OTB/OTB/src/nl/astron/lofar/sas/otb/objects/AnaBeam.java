@@ -68,13 +68,7 @@ public class AnaBeam implements IBeam {
         this.itsDuration = aDuration;
     }
 
-    public String getMaximizeDuration() {
-        return itsMaximizeDuration;
-    }
 
-    public void setMaximizeDuration(String aMaximizeDuration) {
-        this.itsMaximizeDuration = aMaximizeDuration;
-    }
 
     public String getRank() {
         return itsRank;
@@ -119,7 +113,6 @@ public class AnaBeam implements IBeam {
         clone.itsDirectionTypeChoices = itsDirectionTypeChoices;
         clone.itsStartTime = itsStartTime;
         clone.itsDuration = itsDuration;
-        clone.itsMaximizeDuration = itsMaximizeDuration;
         clone.itsRank = itsRank;
         clone.itsRankChoices = itsRankChoices;
         return clone;
@@ -134,7 +127,6 @@ public class AnaBeam implements IBeam {
     private String itsDirectionTypeChoices;
     private String itsStartTime;
     private String itsDuration;
-    private String itsMaximizeDuration;
     private String itsRank;
     private String itsRankChoices;
 }

@@ -24,6 +24,7 @@
 \i getExecutableTrees_func.sql
 \i getTreeGroup_func.sql
 \i getTreesInPeriod_func.sql
+\i getModifiedTrees_func.sql
 
 -- PICtree
 \i create_PIC_tables.sql
@@ -77,6 +78,7 @@
 \i setMomInfo_func.sql
 \i setDescription_func.sql
 \i getMomID2treeID_func.sql
+\i create_rules.sql
 
 -- campaign
 \i campaignAPI.sql

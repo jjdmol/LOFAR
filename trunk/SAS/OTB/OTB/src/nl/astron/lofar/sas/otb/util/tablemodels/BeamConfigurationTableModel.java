@@ -59,7 +59,6 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         this.addColumn("angle 1");
         this.addColumn("angle 2");
         this.addColumn("coordtype");
-        this.addColumn("maxDur");
         this.addColumn("#TAB");
         this.addColumn("subbands");
         this.addColumn("beamlets");
@@ -138,7 +137,6 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
                              aBeam.getAngle1(),
                              aBeam.getAngle2(),
                              aBeam.getCoordType(),
-                             aBeam.getMaximizeDuration(),
                              aBeam.getNrTiedArrayBeams(),
                              aBeam.getSubbandList(),
                              aBeam.getBeamletList() };
@@ -171,7 +169,6 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         this.setValueAt(newBeam.getAngle1(),row,1);
         this.setValueAt(newBeam.getAngle2(),row,2);
         this.setValueAt(newBeam.getCoordType(),row,3);
-        this.setValueAt(newBeam.getMaximizeDuration(),row,4);
         this.setValueAt(newBeam.getNrTiedArrayBeams(),row,5);
         this.setValueAt(newBeam.getSubbandList(),row,6);
         this.setValueAt(newBeam.getBeamletList(),row,7);

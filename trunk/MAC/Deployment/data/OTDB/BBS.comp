@@ -174,7 +174,7 @@ par  Level                   I    text   -      10    0    'NONE'               
 node OutlierRejection 4.0.0  development 1                 'Outlier rejections configuration'
 #    name                    dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Enable                  I    bool   F      10    0    F                    -        'Toggles outlier rejection'
+par  Enable                  I    bool   -      10    0    F                    -        'Toggles outlier rejection'
 par  Threshold               I    vdbl   -      10    0    [7.0,5.0,4.0,3.5,3.0,2.8,2.6,2.4,2.2,2.5] - 'RMS thresholds for outlier rejection'
 
 # -- Solve Step PhaseShift attributes

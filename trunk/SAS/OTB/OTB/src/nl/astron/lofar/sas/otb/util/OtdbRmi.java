@@ -22,6 +22,7 @@
 
 package nl.astron.lofar.sas.otb.util;
 
+import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -267,7 +268,12 @@ public final class OtdbRmi {
 
     public boolean openAccessConnection() throws NoAccessException {
         String aRa="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIAccessName;
-        isOpened=openRemoteAccess(aRa);
+        try {
+            isOpened=openRemoteAccess(aRa);
+        } catch (RemoteException ex) {
+	     String aS="Open Remote Access via RMI and JNI failed: " + ex;
+             logger.error(aS);            
+        }
         if (isOpened){
             logger.debug("Remote access connection opened");
             isConnected=true;
@@ -287,7 +293,7 @@ public final class OtdbRmi {
         return isConnected;
     }
 
-    private boolean openRemoteAccess(String RMIRegHostName) {
+    private boolean openRemoteAccess(String RMIRegHostName) throws RemoteException, AccessException {
         try {
             logger.debug("openRemoteAccess for "+RMIRegHostName);
 
@@ -302,7 +308,7 @@ public final class OtdbRmi {
 	    logger.debug("Connection to RemoteAccess succesful!");
             return true;
           }
-        catch (NumberFormatException | RemoteException | NotBoundException e)
+        catch (NumberFormatException | NotBoundException | RemoteException e)
 	  {
 	     String aS="Open Remote Access via RMI and JNI failed: " + e;
              logger.error(aS);
