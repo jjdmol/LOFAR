@@ -457,10 +457,7 @@ void MeasurementSetFormat::fillSpecWindow(unsigned subband) {
   const size_t nchan     = itsPS.nrChannelsPerSubband();
   const double chanWidth = itsPS.channelWidth();
   const double totalBW   = nchan * chanWidth;
-
-  // The 2nd PPF shifts all channel frequencies downwards by half a channel, so subtracting
-  // half of the subband ends up at the middle of channel 0 instead of the bottom.
-  const double channel0freq = nchan == 1 ? refFreq : refFreq - 0.5 * nchan * chanWidth;
+  const double channel0freq = itsPS.channel0Frequency(subband);
 
   casa::Vector<double> chanWidths(nchan, chanWidth);
   casa::Vector<double> chanFreqs(nchan);

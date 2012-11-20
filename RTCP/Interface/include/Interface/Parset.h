@@ -220,6 +220,8 @@ class Parset: public ParameterSet
     std::vector<unsigned>	subbandToRSPboardMapping(const std::string &stationName) const;
     std::vector<unsigned>	subbandToRSPslotMapping(const std::string &stationName) const;
 
+    double channel0Frequency( size_t subband ) const;
+
     unsigned			nrSlotsInFrame() const;
     std::string			partitionName() const;
     bool			realTime() const;
@@ -1066,6 +1068,19 @@ inline int Parset::phaseTwoCoreIndex(unsigned core) const
 inline int Parset::phaseThreeCoreIndex(unsigned core) const
 {
   return findIndex(core, phaseThreeCores());
+}
+
+inline double Parset::channel0Frequency(size_t subband) const
+{
+  double sbFreq = subbandToFrequencyMapping()[subband];
+
+  if (nrChannelsPerSubband() == 1)
+    return sbFreq;
+
+  // if the 2nd PPF is used, the subband is shifted half a channel
+  // downwards, so subtracting half a subband results in the
+  // center of channel 0 (instead of the bottom).
+  return sbFreq - 0.5 * sampleRate();
 }
 
 inline unsigned Parset::nrSlotsInFrame() const

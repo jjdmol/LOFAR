@@ -844,7 +844,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams(unsig
 
   timer.start();
   computeTimer.start();
-  itsBeamFormer->formBeams(itsTransposedSubbandMetaData, itsFilteredData, itsBeamFormedData, itsCenterFrequencies[*itsCurrentSubband], sap, firstBeam, nrBeams);
+  itsBeamFormer->formBeams(itsTransposedSubbandMetaData, itsFilteredData, itsBeamFormedData, *itsCurrentSubband, sap, firstBeam, nrBeams);
   computeTimer.stop();
   timer.stop();
 

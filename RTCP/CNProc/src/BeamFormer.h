@@ -57,7 +57,7 @@ class BeamFormer
     void mergeStations( SampleData<> *sampleData );
 
     // fills beamFormedData with pencil beams
-    void formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency, unsigned sap, unsigned firstBeam, unsigned nrBeams );
+    void formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, unsigned subband, unsigned sap, unsigned firstBeam, unsigned nrBeams );
 
     // rearrange dimensions in preparation for transpose
     void preTransposeBeam( const BeamFormedData *in, PreTransposeBeamFormedData *out, unsigned inbeam );
