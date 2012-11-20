@@ -344,6 +344,7 @@ GCFEvent::TResult	GCFTCPPort::dispatch(GCFEvent&	event)
 			return (GCFEvent::HANDLED);
 		}
 		if (TEptr->arg == &itsConnectTimer) {
+		    LOG_INFO_STR("GCFTCPPort:connect(" << _portNumber << "@" << _host << ") still in progress");
 			_pSocket->connect(_portNumber, _host);
 			return (GCFEvent::HANDLED);
 		}
@@ -412,6 +413,9 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
 	if (!_pSocket->open(portNumber)) {
 		_handleDisconnect();
 	}
+
+    // Set socket to non-blocking to prevent stalls
+    _pSocket->setBlocking(false);
 
 	switch (_pSocket->connect(portNumber, host)) {
 	case -1: _handleDisconnect(); break;	// error
