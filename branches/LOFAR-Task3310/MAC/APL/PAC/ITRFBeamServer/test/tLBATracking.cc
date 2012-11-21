@@ -42,8 +42,6 @@ using namespace CAL;
 
 int	gBeamformerGain = 8000;
 
-BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
-
 //
 // Convert the weights to 16-bits signed integer.
 //
@@ -52,6 +50,7 @@ inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 	return complex<int16_t>((int16_t)(round(cd.real() * gBeamformerGain)),
 							(int16_t)(round(cd.imag() * gBeamformerGain)));
 }
+BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
 
 #define	NR_TEST_RCUS		8
 #define NR_TEST_SUBBANDS	5
