@@ -274,6 +274,8 @@ namespace LOFAR {
       .def ("isDefined", &ParameterSet::isDefined,
  	    (boost::python::arg("key")),
             "Does a parameter with the given name exist? ")
+      .def ("unusedKeys", &ParameterSet::unusedKeys,
+            "Get the list of parameter keys not asked for")
       .def ("_get", &PyParameterSet::get,
             ///            return_value_policy < copy_const_reference> (),
  	    (boost::python::arg("key")))
