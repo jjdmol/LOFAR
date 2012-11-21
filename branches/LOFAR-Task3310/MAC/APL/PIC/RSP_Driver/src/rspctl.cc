@@ -24,7 +24,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-//#include <Common/lofar_bitset.h>
+#include <Common/lofar_bitset.h>
 #include <Common/hexdump.h>
 #include <Common/Exception.h>
 
@@ -1187,7 +1187,7 @@ GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
 					}
 					else {
 						for (unsigned int ilong = 0; ilong < ack.settings()(0).size()/(sizeof(uint32) * BITSOFBYTE); ilong++) {
-							cout << formatString("%08lx ", htonl((ack.settings()(rcuin) & bitset<MAX_SUBBANDS>(0xFFFFFFFF)).to_ulong()));
+							cout << formatString("%08lx ", htonl((ack.settings()(rcuin) & bitset<MAX_SUBBANDS>(0xFFFFFFFF)).to_uint32()));
 							ack.settings()(rcuin) >>= sizeof(uint32)*BITSOFBYTE;
 						}
 					}
