@@ -280,7 +280,7 @@ namespace LOFAR
 	      _M_w[__wshift] = _M_w[0] << __offset;
 	    }
 
-	  fill(_M_w + 0, _M_w + __wshift, static_cast<_WordT>(0));
+	  std::fill(_M_w + 0, _M_w + __wshift, static_cast<_WordT>(0));
 	}
     }
 
@@ -306,7 +306,7 @@ namespace LOFAR
 	      _M_w[__limit] = _M_w[_Nw-1] >> __offset;
 	    }
 
-	  fill(_M_w + __limit + 1, _M_w + _Nw, static_cast<_WordT>(0));
+	  std::fill(_M_w + __limit + 1, _M_w + _Nw, static_cast<_WordT>(0));
 	}
     }
 
