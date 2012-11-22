@@ -67,8 +67,10 @@ bool GTMFile::close()
 		_pHandler->deregisterFile(*this);
 		result = (::close(_fd) == 0);
 		if (!result) {
-			LOG_WARN(formatString ( "::close, error: %s", strerror(errno)));
-			close();
+			LOG_ERROR(formatString ( "::close, error: %s", strerror(errno)));
+
+			// there is nothing we can do at this point, since we cannot know
+			// whether the fd is still valid.
 		}
 
 		_fd = -1;
