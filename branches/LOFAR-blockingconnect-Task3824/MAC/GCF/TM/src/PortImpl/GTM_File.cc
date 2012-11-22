@@ -117,6 +117,21 @@ void GTMFile::doWork()
 	}
 }
 
+
+void GTM_File::setBlocking(bool	blocking) const
+{
+	if (_fd < -1)
+		return;
+
+	int flags = fcntl(_fd, F_GETFL);
+
+    if (blocking) {
+		fcntl(_fd, F_SETFL, flags | O_NONBLOCK);
+	} else {
+		fcntl(_fd, F_SETFL, flags & ~O_NONBLOCK);
+	}
+}
+
 //
 // forwardEvent(event)
 //
