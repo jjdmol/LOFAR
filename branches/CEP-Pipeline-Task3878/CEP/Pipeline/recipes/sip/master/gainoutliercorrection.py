@@ -64,7 +64,7 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
             default=1.0,
             help="Clip at sigma * median: (not used by parmexportcal"
         ),
-        'use_parmexportcal': ingredient.FloatField(
+        'export_instrument_model': ingredient.FloatField(
             '--use-parmexportcal',
             default=False,
             help="Select between parmexportcal and edit parmdb"
@@ -136,7 +136,7 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
                         self.inputs['executable'],
                         self.environment,
                         self.inputs['sigma'],
-                        self.inputs['use_parmexportcal']
+                        self.inputs['export_instrument_model']
                      ]
                 )
             )

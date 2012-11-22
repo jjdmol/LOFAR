@@ -11,7 +11,6 @@ import shutil
 import sys
 import tempfile
 import numpy
-import errno
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
@@ -51,15 +50,8 @@ class gainoutliercorrection(LOFARnodeTCP):
         # Create output directory (if it doesn't already exist)
         create_directory(os.path.dirname(outfile))
         # Remove the target outfile if there: parexportcall fail otherwise
-        try:
-            os.remove(outfile)
-        except OSError, exp:
-            self.logger.error("debug errno: {0}".format(exp.errno))
-
-            if exp.errno == 2:  # no such file
-                pass
-            else:
-                raise
+        if os.path.exists(os.path.exists()):
+            shutil.rmtree(outfile)
 
         # ********************************************************************
         # 1. Select correction method
