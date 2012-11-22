@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
   <actions/>
-  <description>Regression/delta test for the LOFAR imaging pipeline.
-Triggers a build and test at midnight on changes in the trunk.</description>
+  <description>This is a jenkins build to test the imaging pipeline regressions test on task branches.
+It performs a complete build from scratch. Builds the task branche and performs a simple imaging pipeline.
+Produced data products are compared default data. 
+This build will fail if the branche produces output different to the baseline.
+</description>
   <logRotator>
     <daysToKeep>-1</daysToKeep>
     <numToKeep>15</numToKeep>
@@ -13,18 +16,43 @@ Triggers a build and test at midnight on changes in the trunk.</description>
   <properties>
     <hudson.plugins.redmine.RedmineProjectProperty plugin="redmine@0.11">
       <redmineWebsite>https://support.astron.nl/lofar_issuetracker/</redmineWebsite>
-      <projectName>lofarsys</projectName>
+      <projectName/>
       <redmineVersionNumber/>
     </hudson.plugins.redmine.RedmineProjectProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.scm.listtagsparameter.ListSubversionTagsParameterDefinition plugin="subversion@1.43">
+          <name>BRANCHE</name>
+          <description>Select a Subversion entry</description>
+          <tagsDir>https://svn.astron.nl/LOFAR/branches</tagsDir>
+          <tagsFilter/>
+          <reverseByDate>true</reverseByDate>
+          <reverseByName>false</reverseByName>
+          <defaultValue/>
+          <maxTags/>
+          <uuid>d531da4e-0b31-44d8-862d-af81f335ec4d</uuid>
+        </hudson.scm.listtagsparameter.ListSubversionTagsParameterDefinition>
+        <hudson.model.TextParameterDefinition>
+          <name>NOTES</name>
+          <description>Short description of the current run</description>
+          <defaultValue/>
+        </hudson.model.TextParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>KEEP_DATA</name>
+          <description>Keep the data of the previous run. Allows faster debug and rerun cycles. *experimental*</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
   </properties>
   <scm class="hudson.scm.SubversionSCM" plugin="subversion@1.43">
     <locations>
       <hudson.scm.SubversionSCM_-ModuleLocation>
-        <remote>https://svn.astron.nl/LOFAR/trunk/CEP</remote>
+        <remote>https://svn.astron.nl/LOFAR/branches/$BRANCHE/CEP</remote>
         <local>LOFAR/CEP</local>
       </hudson.scm.SubversionSCM_-ModuleLocation>
       <hudson.scm.SubversionSCM_-ModuleLocation>
-        <remote>https://svn.astron.nl/LOFAR/trunk/CMake</remote>
+        <remote>https://svn.astron.nl/LOFAR/branches/$BRANCHE/CMake</remote>
         <local>LOFAR/CMake</local>
       </hudson.scm.SubversionSCM_-ModuleLocation>
     </locations>
@@ -45,20 +73,18 @@ Triggers a build and test at midnight on changes in the trunk.</description>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <jdk>(Default)</jdk>
-  <triggers class="vector">
-    <hudson.triggers.SCMTrigger>
-      <spec>0 5 * * *</spec>
-    </hudson.triggers.SCMTrigger>
-  </triggers>
+  <triggers class="vector"/>
   <concurrentBuild>true</concurrentBuild>
-  <customWorkspace>/home/lofarbuild/jenkins_builds</customWorkspace>
+  <customWorkspace>/home/lofarbuild/jenkins_builds/imager_branche_test</customWorkspace>
   <builders>
     <hudson.tasks.Shell>
       <command># Perform svn steps needed before building
+echo "This is a test"
 if [ -f $WORKSPACE/LOFAR/CMakeLists.txt ]
   then  echo "Found a previous checkout: updating"; svn up --depth files LOFAR
-  else  echo "not found a previous checkout: checkingout"; svn checkout --depth files  https://svn.astron.nl/LOFAR/trunk LOFAR
-fi</command>
+  else  echo "not found a previous checkout: checkingout"; svn checkout --depth files  https://svn.astron.nl/LOFAR/branches/$BRANCHE LOFAR
+fi
+#svn checkout --depth files  https://svn.astron.nl/LOFAR/branches/$BRANCHE LOFAR</command>
     </hudson.tasks.Shell>
     <hudson.plugins.cmake.CmakeBuilder plugin="cmakebuilder@1.9">
       <sourceDir>LOFAR</sourceDir>
@@ -83,37 +109,55 @@ ctest -R pipeline
 cd ..
 
 # 2. set environment
-. /opt/cep/login/bashrc  # allows usage of the use command
+. /opt/cep/login/bashrc
 use LofIm
 use Pythonlibs
-export PYTHONPATH=$WORKSPACE/install/lib/python2.6/dist-packages:$PYTHONPATH  
+export PYTHONPATH=$WORKSPACE/install/lib/python2.6/dist-packages:$PYTHONPATH
 
 # 3. Remove old data
-rm -f $WORKSPACE/install/var/run/pipeline/trunk_imager_regression/statefile
-rm -f /data/lofar/testdata/CEP/Pipeline/imager_pipeline/trunk_regression.parset_feedback
-rm -rf /data/scratch/lofarbuild/trunk_imager_regression
-ssh lce069 "rm -rf /data/scratch/lofarbuild/trunk_imager_regression"
+# ***************** DANGER: HERE BE DRAGONS!!*************
+#remove old state file if requested
+if $KEEP_DATA
+  then 
+    echo "Keeping statefile: Skipping previous work done!!"
+  else 
+    # Remove state file
+    rm -f $WORKSPACE/install/var/run/pipeline/$BRANCHE/statefile
+
+    # remove old data products
+    # assure content in dir
+    rm -f /data/lofar/testdata/CEP/Pipeline/imager_pipeline/branch_regression.parset_feedback
+    rm -rf /data/scratch/lofarbuild/branch_imaging_regression
+    ssh lce069 "rm -rf /data/scratch/lofarbuild/$BRANCHE"
+    ssh lce069 "rm -rf /data/scratch/lofarbuild/branch_imaging_regression"
+   
+    mkdir -p $WORKSPACE/install/var/run/pipeline
+fi
+# ***************** DANGER: HERE BE DRAGONS!!*************
+
 
 # 4. Create directory for logs and statefile
 mkdir -p $WORKSPACE/install/var/run/pipeline
 
 # 5. run the pipeline
 cd $WORKSPACE/install/bin
-python msss_imager_pipeline.py /data/lofar/testdata/CEP/Pipeline/imager_pipeline/trunk_regression.parset -c $WORKSPACE/install/share/pipeline/pipeline.cfg --job trunk_imager_regression -d
+python msss_imager_pipeline.py /data/lofar/testdata/CEP/Pipeline/imager_pipeline/branch_regression.parset -c $WORKSPACE/install/share/pipeline/pipeline.cfg --job $BRANCHE -d 
 
 # 6. Copy target data and the produced data to a scratch directory (on lce072)
-#  a. copy target image data to the scratch directory
-mkdir /data/scratch/lofarbuild/trunk_imager_regression
-scp -r /data/lofar/testdata/CEP/Pipeline/imager_pipeline/data/image.restored_22_11_2012 /data/scratch/lofarbuild/trunk_imager_regression/image.restored.target
-scp -r lce069:/data/scratch/lofarbuild/trunk_imager_regression/awimage_cycle_0/image.restored /data/scratch/lofarbuild/trunk_imager_regression/image.restored
+#  a. copy image data to the scratch directory
+mkdir -p /data/scratch/lofarbuild/branch_imaging_regression
+scp -r /data/lofar/testdata/CEP/Pipeline/imager_pipeline/data/image.restored_22_11_2012 /data/scratch/lofarbuild/branch_imaging_regression/image.restored.target
+scp -r lce069:/data/scratch/lofarbuild/$BRANCHE/awimage_cycle_0/image.restored /data/scratch/lofarbuild/branch_imaging_regression/image.restored
 
-#  b. copy target sourcelist to the scratch directory
-scp -r /data/lofar/testdata/CEP/Pipeline/imager_pipeline/data/bdsm_catalog_22_11_2012 /data/scratch/lofarbuild/trunk_imager_regression/bdsm_catalog.target 
-scp -r lce069:/data/scratch/lofarbuild/trunk_imager_regression/awimage_cycle_0/bdsm_catalog /data/scratch/lofarbuild/trunk_imager_regression/bdsm_catalog
+#  b. copy  sourcelist to the scratch directory
+scp -r /data/lofar/testdata/CEP/Pipeline/imager_pipeline/data/bdsm_catalog_22_11_2012   /data/scratch/lofarbuild/branch_imaging_regression/bdsm_catalog.target 
+scp -r lce069:/data/scratch/lofarbuild/$BRANCHE/awimage_cycle_0/bdsm_catalog /data/scratch/lofarbuild/branch_imaging_regression/bdsm_catalog
 
 #  c. Do actual comparison
-cd /data/scratch/lofarbuild/trunk_imager_regression
-python $WORKSPACE/LOFAR/CEP/Pipeline/test/regression_tests/imaging_pipeline.py bdsm_catalog bdsm_catalog.target image.restored image.restored.target 0.0002</command>
+cd /data/scratch/lofarbuild/branch_imaging_regression
+python $WORKSPACE/LOFAR/CEP/Pipeline/test/regression_tests/imaging_pipeline.py bdsm_catalog bdsm_catalog.target image.restored image.restored.target 0.0002
+
+echo #NOTES</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
@@ -180,7 +224,7 @@ python $WORKSPACE/LOFAR/CEP/Pipeline/test/regression_tests/imaging_pipeline.py b
       <thresholdMode>1</thresholdMode>
     </xunit>
     <hudson.tasks.Mailer>
-      <recipients>klijn@astron.nl</recipients>
+      <recipients/>
       <dontNotifyEveryUnstableBuild>true</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>true</sendToIndividuals>
     </hudson.tasks.Mailer>
