@@ -285,7 +285,7 @@ class msss_calibrator_pipeline(control):
         # the results in the files specified in the instrument mapfile.
         self.run_task("gainoutliercorrection",
                       (parmdb_mapfile, instrument_mapfile),
-                      sigma=1.0) # TODO: Parset parameter
+                      sigma=1.0, use_parmexportcal=True) # TODO: Parset parameter
 
         # *********************************************************************
         # 6. Create feedback file for further processing by the LOFAR framework

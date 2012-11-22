@@ -7,7 +7,7 @@
 from __future__ import with_statement
 import os
 import sys
-
+import copy
 import lofarpipe.support.lofaringredient as ingredient
 
 from lofarpipe.support.baserecipe import BaseRecipe
@@ -62,7 +62,12 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
         'sigma': ingredient.FloatField(
             '--sigma',
             default=1.0,
-            help="Clip at sigma * median: activates 'edit_parmdb' functionality"
+            help="Clip at sigma * median: (not used by parmexportcal"
+        ),
+        'use_parmexportcal': ingredient.FloatField(
+            '--use-parmexportcal',
+            default=False,
+            help="Select between parmexportcal and edit parmdb"
         )
     }
 
@@ -106,7 +111,7 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
                 item.file = os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
-                    (os.path.splitext(os.path.basename(infile))[0] +
+                    (os.path.splitext(os.path.basename(item.file))[0] +
                      self.inputs['suffix'])
                 )
 
@@ -114,7 +119,7 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
         # these maps, then 'skip' must be set to True in all maps.
         for x, y in zip(indata, outdata):
             x.skip = y.skip = (x.skip or y.skip)
-            
+
         # ********************************************************************
         # 3. Call node side of the recipe
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
@@ -130,7 +135,8 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
                         outp.file,
                         self.inputs['executable'],
                         self.environment,
-                        self.inputs['sigma']
+                        self.inputs['sigma'],
+                        self.inputs['use_parmexportcal']
                      ]
                 )
             )
