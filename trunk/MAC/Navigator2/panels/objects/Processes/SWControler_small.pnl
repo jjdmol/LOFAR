@@ -35,14 +35,12 @@ PANEL,-1 -1 388 166 N "_3DFace" 2
 private void observationChanged(string dp1, dyn_string observations,
                                 string dp2, bool invalid) {
 
-  DebugN(\"Observations: \" + observations);
   // for now the object will only show the controller for the first observation
   if (dynlen(observations) >= 1) {
     firstObservation = observations[1];
     // get real name from claimmanager
     obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+firstObservation);
     baseDP = station+\":\"+obsDP+\"_\"+$name;
-    DebugN(\"baseDP: \"+baseDP);
     reload();
   }
 }

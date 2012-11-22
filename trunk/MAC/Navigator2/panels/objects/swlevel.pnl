@@ -64,9 +64,7 @@ showLevels()
               formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 15\";
     }
 
-    LOG_DEBUG(\"swlevel.pnl:showLevelsQuery: \" + query);
     dpQuery(query, tab);
-    LOG_DEBUG(\"swlevel.pnl:showLevels|Found: \" + tab + \" length: \" + dynlen(tab));
 	 	 
 	 	
     for(z=2;z<dynlen(tab);z++) {
