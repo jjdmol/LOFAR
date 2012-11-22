@@ -1,8 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 388 166 N "_3DFace" 3
-"$Station"
+PANEL,-1 -1 388 166 N "_3DFace" 2
 "$name"
 "$station"
 "main()
@@ -107,7 +106,7 @@ void click() {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    navPanel_setEvent($Station,\"EventClick\");
+    navPanel_setEvent(station,\"EventClick\");
   }
 }
 
@@ -119,7 +118,7 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"SWcontroller_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
-    navPanel_setEvent($Station,\"ChangePanel\");
+    navPanel_setEvent(station,\"ChangePanel\");
   }
   
   // set delay to avoid click event will be triggered
