@@ -104,7 +104,16 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 	}
 
 	setFD(socketFD);
+
+    // set non-blocking
 	if (::fcntl(socketFD, F_SETFL, FNDELAY) != 0) {
+		close();
+		return (false);
+	}
+
+    // close socket on execve (prevents system() from duplicating the socket and thus
+    // blocking the port if this server is restarted).
+	if (::fcntl(socketFD, F_SETFD, FD_CLOEXEC) != 0) {
 		close();
 		return (false);
 	}

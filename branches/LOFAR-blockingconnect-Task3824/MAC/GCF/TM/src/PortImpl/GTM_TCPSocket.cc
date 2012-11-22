@@ -33,6 +33,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <errno.h>
@@ -134,6 +135,12 @@ bool GTMTCPSocket::open(unsigned int /*portNumber*/)
 		LOG_WARN(formatString ( "::socket, error: %s", strerror(errno)));
 		close();
 	}
+
+    // close socket on execve
+	if (::fcntl(_fd, F_SETFD, FD_CLOEXEC) != 0) {
+		close();
+	}
+
 	return (_fd > -1);
 }
 
