@@ -9,4 +9,5 @@ node  Calibration  4.0.0  development 'node constraint'  "Calibration pipeline"
 #    name                    dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  CalibratorSource        I    text   -	100   0    ''                   -        "Calibrator source for generation of instrument model"
-par  SkyModel                I    text   -      100   0    ''                   -        "User-supplied sky model for generic calibration pipeline"
+par  SkyModel                I    text   -  100   0    ''                   -        "User-supplied sky model for generic calibration pipeline"
+par  export_instrument_model I    bool   -  10    0    False                -        "Perform an export of the intrument model (using parmexportcal) using default values"
