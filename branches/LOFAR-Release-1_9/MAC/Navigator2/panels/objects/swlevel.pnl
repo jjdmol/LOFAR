@@ -138,7 +138,7 @@ addLevel(int lvl,string changed)
   // set new values
   setValue(\"level15_text\",\"backCol\",lvlcolor);
   setValue(\"level15_text\",\"toolTipText\",toolTip);
-  if (filled < 15) filled++;
+  if (filled < 14) filled++;
 }
 
 
