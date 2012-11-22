@@ -1,7 +1,8 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 388 166 N "_3DFace" 2
+PANEL,-1 -1 388 166 N "_3DFace" 3
+"$Station"
 "$name"
 "$station"
 "main()
@@ -53,10 +54,9 @@ private void reload() {
                                         baseDP +\".process.stopTime:_online.._value\",
                                         baseDP +\".process.stopTime:_online.._invalid\",
                                         baseDP +\".process.startTime:_online.._invalid\") == -1) {
-      LOG_ERROR(\"SWControler_small.pnl:main|Couldn't connect to: \"+baseDP+\" \"+getLastError());
+      setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
     }
   } else {
-    LOG_ERROR(\"SWControler_small.pnl:main|Couldn't find DP to connect to: \"+baseDP);
     setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
 
   }	
@@ -69,7 +69,7 @@ updateSWController(string dp1, time start,
 {
   setValue(\"process\",\"toolTipText\",baseDP);
   if (! startInvalid) {
-      setValue(\"process\", \"backCol\", \"_Window\");
+      setValue(\"process\", \"backCol\", \"Lofar_invalid\");
       if (stopInvalid) {
         setValue(\"process\", \"backCol\", \"green\");
       } else if (start > stop) {
@@ -78,16 +78,59 @@ updateSWController(string dp1, time start,
         setValue(\"process\", \"backCol\", \"red\");
       }        
     } else {
-      setValue(\"process\", \"backCol\", \"Lofar_invalid\");
+      setValue(\"process\", \"backCol\", \"red\");
     }
 }" 0
- E E E E 1 -1 -1 0  0 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
 ""0  1
 E "#uses \"navPanel.ctl\"
 string station = \"\";
 string baseDP=\"\";
 string obsDP=\"\";
-string firstObservation=\"\";" 0
+string firstObservation=\"\";
+bool bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent($Station,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"SWcontroller_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent($Station,\"ChangePanel\");
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}                       
+
+// routine for right mouse click
+void rClick() {
+
+}                       " 0
  2
 "CBRef" "1"
 "EClose" E
@@ -100,7 +143,15 @@ LANG:1 0
 "process"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 0 0 0 0 0 0
 E E E
 0
@@ -109,7 +160,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 0 -10 1 E 0 10 14 19
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 0 -10 1 E 0 10 14 19
 0
 LAYER, 1 
 1
