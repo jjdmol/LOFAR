@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>Lofar OTB :: RSP</name>
+
+  <parent>
+    <groupId>nl.astron.lofar.sas.otb</groupId>
+    <artifactId>otb-parent</artifactId>
+    <version>1.9.0</version>
+  </parent>
+
+  <artifactId>RSP</artifactId>
+
+  <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
+  <scm>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.sas.otb.otb-parent-1.9.0/RSP</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.sas.otb.otb-parent-1.9.0/RSP</developerConnection>
+  </scm>
+
+
+  <!-- Information required to build a project. -->
+  <build>
+
+    <sourceDirectory>src</sourceDirectory>
+
+    <resources>
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+          <exclude>**/*.form</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
+  </build>
+
+  <dependencies>
+
+    <!-- Sibling dependencies -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>jRSP</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>OTB</artifactId>
+    </dependency>
+
+    <!-- Internal dependencies -->
+    <dependency>
+      <groupId>nl.astron.lofar.lib</groupId>
+      <artifactId>plotter</artifactId>
+    </dependency>
+
+    <!-- External dependencies -->
+    <dependency>
+      <groupId>org.swinglabs</groupId>
+      <artifactId>swing-layout</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+
+
+
+  </dependencies>
+
+</project>
