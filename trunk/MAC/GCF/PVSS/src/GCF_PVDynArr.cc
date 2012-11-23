@@ -26,6 +26,7 @@
 #include <GCF/PVSS/GCF_PVDynArr.h>
 #include <Common/DataConvert.h>
 #include <Common/LofarTypes.h>
+#include <cstring>
 
 using LOFAR::TYPES::uint16;
 
