@@ -1,0 +1,12 @@
+
+log4cplus.rootLogger=DEBUG, STDOUT
+log4cplus.additivity.TRC=FALSE
+log4cplus.logger.TRC=DEBUG,DUMP
+
+log4cplus.appender.STDOUT=log4cplus::ConsoleAppender
+log4cplus.appender.STDOUT.layout=log4cplus::PatternLayout
+log4cplus.appender.STDOUT.layout.ConversionPattern=%-5p %c{3} - %m [%.25l]%n
+
+log4cplus.appender.DUMP=log4cplus::NullAppender
+
+
