@@ -28,7 +28,6 @@ from datetime import *
 from math import *
 import time
 import re
-import atexit
 
 # import 3rd party modules
   
@@ -501,6 +500,9 @@ class IonosphericModel:
             self.TECfit_white[ pol, i, :, : ] = reshape( TECfit_white, (N_sources, N_stations) )
       p.finished()      
 
+      self.TECfit.attrs.r_0 = self.r_0
+      self.TECfit.attrs.beta = self.beta
+
       self.TECfit_white.attrs.r_0 = self.r_0
       self.TECfit_white.attrs.beta = self.beta
       
@@ -522,8 +524,11 @@ class IonosphericModel:
       N_sources = len(self.sources)
       N_piercepoints = N_stations * N_sources
       N_pol = self.TECfit_white.shape[0]
-      R = 6378137
+      R = 6378137.0
       taskids = []
+
+      beta = self.TECfit.attrs.beta
+      r_0 = self.TECfit.attrs.r_0
       
       print "Making movie..."
       p = ProgressBar( len( self.n_list ), 'Submitting jobs: ' )
@@ -535,8 +540,8 @@ class IonosphericModel:
          else :
             w = 1.1*abs(Xp_table).max()
          for pol in range(N_pol) :
-            v = self.TECfit_white[ pol, i, :, : ].reshape((N_piercepoints,1))
-            maptask = client.MapTask(calculate_frame, (Xp_table, v, self.beta, self.r_0, npixels, w) )
+            v = self.TECfit[ pol, i, :, : ].reshape((N_piercepoints,1))
+            maptask = client.MapTask(calculate_frame, (Xp_table, v, beta, r_0, npixels, w) )
             taskids.append(tc.run(maptask))
       p.finished()
       
@@ -553,7 +558,6 @@ class IonosphericModel:
          clf()
          for pol in range(N_pol) :
             (phi,w) = tc.get_task_result(taskids.pop(0), block = True)
-            print phi
             phi = phi + self.offsets[pol, i]
             subplot(1, N_pol, pol+1)
             w = w*R*1e-3
@@ -877,18 +881,27 @@ def fillarray( a, v ) :
 
 
 def calculate_frame(Xp_table, v, beta, r_0, npixels, w):
-   import numpy
-   phi = numpy.zeros((npixels,npixels))
-   N_piercepoints = Xp_table.shape[0]
-   P = numpy.eye(N_piercepoints) - numpy.ones((N_piercepoints, N_piercepoints)) / N_piercepoints
-   for x_idx in range(0, npixels):
-      x = -w + 2*x_idx*w/( npixels-1 )  
-      for y_idx in range(0, npixels):
-         y = -w + 2*y_idx*w/(npixels-1)
-         D2 = numpy.sum((Xp_table - numpy.array([ x, y ]))**2,1)
-         C = (D2 / ( r_0**2 ) )**( beta / 2. ) / -2.
-         phi[y_idx, x_idx] = numpy.dot(C, v)
-   return phi, w
+  import numpy
+  
+  N_piercepoints = Xp_table.shape[0]
+  P = numpy.eye(N_piercepoints) - numpy.ones((N_piercepoints, N_piercepoints)) / N_piercepoints
+  # calculate structure matrix
+  D = numpy.resize( Xp_table, ( N_piercepoints, N_piercepoints, 2 ) )
+  D = numpy.transpose( D, ( 1, 0, 2 ) ) - D
+  D2 = numpy.sum( D**2, 2 )
+  C = -(D2 / ( r_0**2 ) )**( beta / 2.0 )/2.0
+  C = numpy.dot(numpy.dot(P, C ), P)
+  v = numpy.dot(numpy.linalg.pinv(C), v)
+   
+  phi = numpy.zeros((npixels,npixels))
+  for x_idx in range(0, npixels):
+    x = -w + 2*x_idx*w/( npixels-1 )  
+    for y_idx in range(0, npixels):
+      y = -w + 2*y_idx*w/(npixels-1)
+      D2 = numpy.sum((Xp_table - numpy.array([ x, y ]))**2,1)
+      C = (D2 / ( r_0**2 ) )**( beta / 2.0 ) / -2.0
+      phi[y_idx, x_idx] = numpy.dot(C, v)
+  return phi, w
 
 def fit_Clock_or_TEC( phase, freqs, flags, ClockEnable ):
    
