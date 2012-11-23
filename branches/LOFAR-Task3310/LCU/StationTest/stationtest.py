@@ -3,7 +3,7 @@
 #
 # Run the tests to test a LOFAR station
 # H. Meulman
-# Version 0.18               2-okt-2012	SVN*****
+# Version 0.19               9-nov-2012	SVN*****
 
 # 24 sep: local log directory aangepast
 # 27 sept: 	- Toevoeging delay voor tbbdriver polling
@@ -34,6 +34,10 @@
 # 13 Apr 2012: added LBAdatatest directory. Also directorys need to change permissions to work with USER0.
 # 20 Apr 2012: Logging suspicious tiles and elements in HBA modem test
 # 13 Sep 2012: Added for user0..9 sys.path.append("/opt/stationtest/modules")
+# 9 Nov 2012: New remote stations added: RS210 RS305 RS310 RS407 and RS409
+#             CS302 changed in Core station
+#             Write permissions changed from the log files for all users
+#             Added LBA statistics High and Low limmit. Changed it to 158% and 63%
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
@@ -66,11 +70,13 @@ import numpy
 debug=0
 clkoffset=1
 
-factor = 30	# station statistics fault window: Antenna average + and - factor = 100 +/- 30
+#factor = 30	# station statistics fault window: Antenna average + and - factor = 100 +/- 30
+factorHL = 158	# LBA statistics high limmit
+factorLL = 63	# LBA statistics low limmit
 
 InternationalStations = ('DE601C','DE602C','DE603C','DE604C','DE605C','FR606C','SE607C','UK608C')
-RemoteStations = ('CS302C','RS106C','RS205C','RS208C','RS306C','RS307C','RS406C','RS503C')
-CoreStations = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C','CS013C','CS017C','CS021C','CS024C','CS026C','CS028C','CS030C','CS031','CS032C','CS101C','CS103C','CS201C','CS301C','CS401C','CS501C')
+RemoteStations = ('RS106C','RS205C','RS208C','RS210C','RS305C','RS306C','RS307C','RS310C','RS406C','RS407C','RS409C','RS503C')
+CoreStations = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C','CS013C','CS017C','CS021C','CS024C','CS026C','CS028C','CS030C','CS031','CS032C','CS101C','CS103C','CS201C','CS301C','CS302C','CS401C','CS501C')
 NoHBAelementtestPossible = ('DE601C','DE602C','DE603C','DE605C','FR606C','SE607C','UK608C') # 
 NoHBANaStestPossible = ('')
 HBASubband = dict( 	DE601C=155,\
@@ -101,7 +107,7 @@ Remote = 2
 International = 3
 StIDlist = os.popen3('hostname -s')[1].readlines()		# Name of the station
 StID = str(StIDlist[0].strip('\n'))
-if debug: print ('StationID = %s' % StID)
+print ('StationID = %s' % StID)
 if StID in InternationalStations: StationType = International	# International station
 if StID in RemoteStations: StationType = Remote			# Remote Station
 if StID in CoreStations: StationType = Core			# Core Station
@@ -1245,7 +1251,7 @@ def LBAtest():
 	SeverityOfThisTest=2
 	PriorityOfThisTest=2
 	
-#	debug=1
+	debug=0
 	
 	global Severity
 	global Priority
@@ -1370,7 +1376,7 @@ def LBAtest():
 			for rcuind in range(num_rcu) :
 				if debug: print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data[rcuind]*100/average_lba))
         		        f_logfac.write(str(rcuind) + ' ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')  
-				if (round(meet_data[rcuind]*100/average_lba)) < 100-factor or (round((meet_data[rcuind]*100/average_lba))) > 100+factor:
+				if (round(meet_data[rcuind]*100/average_lba)) < factorLL or (round((meet_data[rcuind]*100/average_lba))) > factorHL:
 					
 					# Store in log file
         		                f_log.write('RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')
@@ -1496,7 +1502,7 @@ def LBAtest():
 		for rcuind in range(num_rcu) :
 			if debug: print 'RCU: ' + str(rcuind) + ' factor: ' + str(round(meet_data[rcuind]*100/average_lba))
         	        f_logfac.write(str(rcuind) + ' ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')  
-			if (round(meet_data[rcuind]*100/average_lba)) < 100-factor or (round((meet_data[rcuind]*100/average_lba))) > 100+factor:
+			if (round(meet_data[rcuind]*100/average_lba)) < factorLL or (round((meet_data[rcuind]*100/average_lba))) > factorHL:
 				
 				# Store in log file
         	                f_log.write('RCU: ' + str(rcuind)+ ' factor: ' + str(round(meet_data[rcuind]*100/average_lba)) + '\n')
@@ -1549,7 +1555,7 @@ def LBAtest():
 	rm_files(dir_name,'*')
 #	os.popen("killall beamctl")
 	if debug:
-		print ('Factor should be inbetween %d and %d. ' % (int(100-factor), int(100+factor)))
+		print ('Factor should be inbetween %d and %d. ' % (int(factorLL), int(factorHL)))
 		print 'Factor 100 is average of all antennas.'
 	return
 
@@ -1949,7 +1955,7 @@ def HBANaStest():
 				HBAfail[HBAoscRCU[Subnr]] = 1
 				HBAfact[HBAoscRCU[Subnr]] = HBAoscFactor[Subnr]
 				
-		for Subnr in range(0,512): print('Osc factors Subnr %s = %s, of RCU %s (Fail=%s)' % (Subnr,HBAoscFactor[Subnr],HBAoscRCU[Subnr],HBAfail[HBAoscRCU[Subnr]]))
+		#for Subnr in range(0,512): print('Osc factors Subnr %s = %s, of RCU %s (Fail=%s)' % (Subnr,HBAoscFactor[Subnr],HBAoscRCU[Subnr],HBAfail[HBAoscRCU[Subnr]]))
 		
 		# Save in log file
 		for RCUnr in range(0,num_rcu):
@@ -2273,6 +2279,10 @@ st_log.write('TestTm>: %02dm:%02ds\n' % (dt/60 % 60, dt % 60))
 st_log.close()
 time.sleep(1)
 res = os.popen3('swlevel 1')[1].readlines()	# Put station in current saving mode.....
+
+# Change write permissions for al log files
+res = os.popen3("chmod g+w %s" % (TestlogName))[1].readlines()
+#res = os.popen3("chmod 755 %s" % (TestlogName))[1].readlines()
 
 # Finaly move temporary logfile to final logfile
 res = os.popen3("scp -rp %s %s" % (TestlogName , HistlogName))[1].readlines()

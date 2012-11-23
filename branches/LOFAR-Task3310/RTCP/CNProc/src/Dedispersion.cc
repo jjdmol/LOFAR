@@ -144,12 +144,7 @@ void Dedispersion::initChirp(const Parset &parset, const std::vector<unsigned> &
     for (unsigned dmIndex = 0; dmIndex < uniqueDMs.size(); dmIndex++) {
       double   dm                = uniqueDMs[dmIndex];
       unsigned subbandIndex      = subbandIndices[i];
-      double   subbandFrequency  = parset.subbandToFrequencyMapping()[subbandIndex];
-
-      // center of channel 0. If no 2nd PPF is used, the central frequency is the same as that of the subband.
-      // If the 2nd PPF is used, the central frequency of channel 0 is the beginning of the subband, due to the
-      // half-channel frequency shift caused by the FFT.
-      double   channel0frequency = itsNrChannels == 1 ? subbandFrequency : subbandFrequency - (itsNrChannels * 0.5) * itsChannelBandwidth;
+      double   channel0frequency = parset.channel0Frequency(subbandIndex);
       double   binWidth	       = itsChannelBandwidth / itsFFTsize;
       double   dmConst	       = dm * 2 * M_PI / 2.41e-16;
 

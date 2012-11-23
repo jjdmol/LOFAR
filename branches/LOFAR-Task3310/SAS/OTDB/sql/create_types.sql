@@ -41,6 +41,7 @@ CREATE TYPE treeInfo AS (
 	classification		INT2,			-- classification.ID%TYPE,
 	creator				VARCHAR(20),	-- OTDBuser.username%TYPE,
 	creationDate		timestamp(0),
+	modificationDate	timestamp(0),
 	type				INT2,			-- treetype.ID%TYPE,
 	state				INT2,			-- treestate.ID%TYPE,
 	originalTree		INT4,			-- OTDBtree.treeID%TYPE,

@@ -28,6 +28,7 @@
 
 #ifdef HAVE_LIBSSH2
 #include <Common/Thread/Thread.h>
+#include <Common/Exception.h>
 #include <Stream/FileDescriptorBasedStream.h>
 #include <libssh2.h>
 #include <Interface/SmartPtr.h>
@@ -35,6 +36,7 @@
 #endif
 
 #include <string>
+#include <sstream>
 
 namespace LOFAR {
 namespace RTCP {
@@ -46,12 +48,20 @@ void SSH_Finalize();
 
 class SSHconnection {
 public:
-  SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, time_t deadline = 0);
+  EXCEPTION_CLASS(SSHException, LOFAR::Exception);
+
+  SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, bool captureStdout = false);
+
+  ~SSHconnection();
 
   void start();
-  void stop( const struct timespec &deadline );
+  void cancel();
+  void wait();
+  void wait( const struct timespec &deadline );
 
   bool isDone();
+
+  string stdoutBuffer() const;
 
 private:
   const string itsLogPrefix;
@@ -61,7 +71,8 @@ private:
   const string itsSSHKey;
 
   SmartPtr<Thread> itsThread;
-  const time_t itsDeadline;
+  const bool itsCaptureStdout;
+  stringstream itsStdoutBuffer;
 
   static void free_session( LIBSSH2_SESSION *session );
   static void free_channel( LIBSSH2_CHANNEL *channel );

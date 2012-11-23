@@ -122,8 +122,15 @@ private:
 	// Define a list in which we keep the obsID's of the observations we prepared PVSS for.
 	// When an obs is in the list we at least have sent a claim request to PVSS. When the 
 	// second value it true we succeeded the claim and we don't have to claim it again.
-	typedef map<int /*obsID*/, bool /*prepReady*/>	ObsList;
-	typedef map<int ,bool>::iterator				OLiter;
+	class schedInfo {
+	public:
+		ptime	modTime;
+		bool	prepReady;
+		schedInfo(ptime t, bool p) : modTime(t), prepReady(p) {};
+		schedInfo() : modTime(min_date_time), prepReady(false) {};
+	};
+	typedef map<int /*obsID*/, schedInfo /*prepReady*/>	ObsList;
+	typedef map<int ,schedInfo>::iterator				OLiter;
 	ObsList				itsPreparedObs;			// Observations we already prepared PVSS for.
 
 	// Ports for StartDaemon and ObservationControllers.

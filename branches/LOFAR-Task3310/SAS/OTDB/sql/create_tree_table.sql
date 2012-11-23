@@ -61,10 +61,13 @@ CREATE TABLE OTDBtree (
 	description	TEXT,
 	name		VARCHAR(32),	-- for default templates only
 
-	-- categorisaton
+	-- categorisation
 	processType			VARCHAR(20) DEFAULT '',
 	processSubtype		VARCHAR(50) DEFAULT '',
 	strategy			VARCHAR(30) DEFAULT '',
+
+	-- modifier
+	modificationDate	TIMESTAMP(0) DEFAULT now(),
 
 	-- contraints
 	CONSTRAINT	tree_uniq		UNIQUE (treeID),

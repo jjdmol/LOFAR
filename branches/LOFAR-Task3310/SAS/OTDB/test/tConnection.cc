@@ -43,17 +43,18 @@ using namespace LOFAR::OTDB;
 void showTreeList(const vector<OTDBtree>&	trees) {
 
 
-	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|Starttime" << endl;
-	cout << "------+-------+----------+--------------------+----+--------+------------------" << endl;
+	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|Starttime           |ModiDate" << endl;
+	cout << "------+-------+----------+--------------------+----+--------+--------------------+--------------------" << endl;
 	for (uint32	i = 0; i < trees.size(); ++i) {
-		string row(formatString("%6d|%7d|%-10.10s|%-20.20s|%4d|%-8.8s|%s",
+		string row(formatString("%6d|%7d|%-10.10s|%-20.20s|%4d|%-8.8s|%-20.20s|%s",
 			trees[i].treeID(),
 			trees[i].classification,
 			trees[i].creator.c_str(),
 			to_simple_string(trees[i].creationDate).c_str(),
 			trees[i].type,
 			trees[i].campaign.c_str(),
-			to_simple_string(trees[i].starttime).c_str()));
+			to_simple_string(trees[i].starttime).c_str(),
+			to_simple_string(trees[i].modificationDate).c_str()));
 		cout << row << endl;
 	}
 
@@ -259,6 +260,15 @@ int main (int	argc, char*	argv[]) {
 				iter++;
 			}
 			cout << theMap.size() << " records" << endl << endl;
+		}
+
+		LOG_INFO("getModifiedTrees('2012-11-05 14:12:30',0)");
+		treeList = conn.getModifiedTrees(time_from_string("2012-11-05 14:12:30"), 0);
+		if (treeList.size() == 0) {
+			LOG_INFO_STR("Error:" << conn.errorMsg());
+		}
+		else {
+			showTreeList(treeList);
 		}
 	}
 	catch (std::exception&	ex) {

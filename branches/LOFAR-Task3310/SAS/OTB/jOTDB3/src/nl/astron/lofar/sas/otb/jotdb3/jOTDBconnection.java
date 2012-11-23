@@ -64,56 +64,88 @@ public class jOTDBconnection implements jOTDBinterface
     private native void initOTDBconnection (String username, String passwd, String database, String hostname) throws Exception;
 
     // To test if we are (still) connected.
+    @Override
     public native boolean isConnected() throws RemoteException;
 
     // To connect or reconnect in case the connection was lost
+    @Override
     public native boolean connect() throws RemoteException;
 
     // To disconnect the connection
+    @Override
     public native void disconnect () throws RemoteException;
 
     
     // get OTDBtree of one specific tree
+    @Override
     public native jOTDBtree getTreeInfo (int atreeID, boolean isMomID)throws RemoteException ;
+    @Override
     public native jOTDBtree getTreeInfo (int atreeID)throws RemoteException;
 
     // To get a list of all OTDB trees available in the database.
+    @Override
     public native Vector<jOTDBtree> getTreeList(short treeType, short classifType,int aGroupID, String aProcessType, String aProcessSubtype, String aStrategy) throws RemoteException;
+    @Override
     public native Vector<jOTDBtree> getTreeList(short treeType, short classifType,int aGroupID, String aProcessType, String aProcessSubtype) throws RemoteException;
+    @Override
     public native Vector<jOTDBtree> getTreeList(short treeType, short classifType,int aGroupID, String aProcessType) throws RemoteException;
+    @Override
     public native Vector<jOTDBtree> getTreeList(short treeType, short classifType,int aGroupID) throws RemoteException;
+    @Override
     public native Vector<jOTDBtree> getTreeList(short treeType, short classifType) throws RemoteException;
+    @Override
     public native Vector<jOTDBtree> getTreeList(short treeType) throws RemoteException;
 
     // Get a list of all state changes after a certain time.
     // When aTreeID is 0 all state changes of all trees are returned.
     // The beginDate is only used when a treeID != 0 is specified.
+    @Override
     public native Vector<jTreeState> getStateList(int atreeID, boolean isMomID ,String beginDate, String endDate) throws RemoteException;
+    @Override
     public native Vector<jTreeState> getStateList (int treeID, boolean isMomID, String beginDate) throws RemoteException;
+    @Override
     public native Vector<jTreeState> getStateList (int treeID, boolean isMomID) throws RemoteException;
+    @Override
     public native Vector<jTreeState> getStateList (int treeID) throws RemoteException;
 
     // To get a list of all DefaultTemplates available in the database.
+    @Override
     public native Vector<jDefaultTemplate> getDefaultTemplates () throws RemoteException;
 
     // To get a list of all executable OTDB trees available in the database.
+    @Override
     public native Vector<jOTDBtree> getExecutableTrees (short classifiType) throws RemoteException;
+    @Override
     public native Vector<jOTDBtree> getExecutableTrees () throws RemoteException;
 
     // To get a list of the treeGroups fitting the bounds
+    @Override
     public native Vector<jOTDBtree> getTreeGroup (short groupType,short periodInMinutes) throws RemoteException;
 
     // To get a list of the trees fitting the bounds
+    @Override
     public native Vector<jOTDBtree> getTreesInPeriod (short treeType, String beginDate, String endDate) throws RemoteException;
+    @Override
     public native Vector<jOTDBtree> getTreesInPeriod (short treeType, String beginDate) throws RemoteException;
+    @Override
     public native Vector<jOTDBtree> getTreesInPeriod (short treeType) throws RemoteException;
 
+    // To get a list of all OTDB trees modified after given timestamp
+    @Override
+    public native Vector<jOTDBtree> getModifiedTrees(String after, short treeType);
+    @Override
+    public native Vector<jOTDBtree> getModifiedTrees(String after);
+
     // Get a new unique groupID
+    @Override
     public native int newGroupID() throws RemoteException;
 
+    @Override
     public native String errorMsg() throws RemoteException;
 
+    @Override
     public native int getAuthToken() throws RemoteException;
 
+    @Override
     public native String getDBName() throws RemoteException;
 }

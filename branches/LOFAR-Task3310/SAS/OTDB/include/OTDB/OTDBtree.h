@@ -59,6 +59,7 @@ public:
 	classifType		classification; // development / test / operational
 	string			creator;
 	ptime			creationDate;	
+	ptime			modificationDate;	
 	treeType		type;			// hardware / VItemplate / VHtree
 	treeState		state;			// idle / configure / ... / active / ...
 	string			processType;	// Maintenance / Reservation / Observation / ..

@@ -28,7 +28,6 @@
 #include <Storage/MSWriterCorrelated.h>
 #include <Storage/MSWriterDAL.h>
 #include <Storage/MSWriterNull.h>
-#include <Storage/MeasurementSetFormat.h>
 #include <Storage/OutputThread.h>
 #include <Common/Thread/Semaphore.h>
 #include <Common/Thread/Cancellation.h>
@@ -38,9 +37,8 @@
 #include <errno.h>
 #include <iomanip>
 #include <time.h>
-#include <fcntl.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #if defined HAVE_AIPSPP
 #include <casa/Exceptions/Error.h>
@@ -97,6 +95,7 @@ static void recursiveMakeDir(const string &dirname, const string &logPrefix)
   }
 }
 
+
 OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory)
 :
   itsParset(parset),
@@ -110,6 +109,7 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),
   itsBlocksDropped(0),
+  itsNrExpectedBlocks(0),
   itsNextSequenceNumber(0)
 {
 }
@@ -132,38 +132,13 @@ void OutputThread::createMS()
   std::string path	    = directoryName + "/" + fileName;
 
   recursiveMakeDir(directoryName, itsLogPrefix);
-
-  if (itsOutputType == CORRELATED_DATA) {
-#if defined HAVE_AIPSPP
-    MeasurementSetFormat myFormat(itsParset, 512);
-            
-    /// Make MeasurementSet filestructures and required tables
-
-    myFormat.addSubband(path, itsStreamNr, itsIsBigEndian);
-
-    LOG_DEBUG_STR(itsLogPrefix << "MeasurementSet created");
-#endif // defined HAVE_AIPSPP
-
-    if (itsParset.getLofarStManVersion() > 1) {
-      string seqfilename = str(boost::format("%s/table.f0seqnr") % path);
-      
-      try {
-	itsSequenceNumbersFile = new FileStream(seqfilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR |  S_IWUSR | S_IRGRP | S_IROTH);
-      } catch (...) {
-	LOG_WARN_STR(itsLogPrefix << "Could not open sequence numbers file " << seqfilename);
-      }
-    }
-
-    path = str(boost::format("%s/table.f0data") % path);
-  }
-
   LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
   try {
     // HDF5 writer requested
     switch (itsOutputType) {
       case CORRELATED_DATA:
-        itsWriter = new MSWriterCorrelated(path, itsParset, itsStreamNr);
+        itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr, itsIsBigEndian);
         break;
 
       case BEAM_FORMED_DATA:
@@ -174,31 +149,38 @@ void OutputThread::createMS()
         itsWriter = new MSWriterFile(path);
         break;
     }
-  } catch (SystemCallException &ex) {
+  } catch (Exception &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
     itsWriter = new MSWriterNull;
   }
-}
 
+  // log some core characteristics for CEPlogProcessor for feedback to MoM/LTA
+  switch (itsOutputType) {
+    case CORRELATED_DATA:
+      itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
 
-void OutputThread::flushSequenceNumbers()
-{
-  if (itsSequenceNumbersFile != 0) {
-    LOG_INFO_STR(itsLogPrefix << "Flushing sequence numbers");
-    itsSequenceNumbersFile->write(itsSequenceNumbers.data(), itsSequenceNumbers.size() * sizeof(unsigned));
-    itsSequenceNumbers.clear();
-  }
-}
+      {
+        const vector<unsigned> subbands  = itsParset.subbandList();
+        const vector<unsigned> SAPs      = itsParset.subbandToSAPmapping();
+        const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
 
+        LOG_INFO_STR(itsLogPrefix << "Characteristics: "
+            << "SAP "            << SAPs[itsStreamNr]
+            << ", subband "      << subbands[itsStreamNr]
+            << ", centralfreq "  << setprecision(8) << frequencies[itsStreamNr]/1e6 << " MHz"
+            << ", duration "     << setprecision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
+            << ", integration "  << setprecision(8) << itsParset.IONintegrationTime() << " s"
+            << ", channels "     << itsParset.nrChannelsPerSubband() 
+            << ", channelwidth " << setprecision(8) << itsParset.channelWidth()/1e3 << " kHz"
+        );
+      }
+      break;
+    case BEAM_FORMED_DATA:
+      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
+      break;
 
-void OutputThread::writeSequenceNumber(StreamableData *data)
-{
-  if (itsSequenceNumbersFile != 0) {
-    // write the sequencenumber in correlator endianness, no byteswapping
-    itsSequenceNumbers.push_back(data->sequenceNumber(true));
-    
-    if (itsSequenceNumbers.size() > 64)
-      flushSequenceNumbers();
+    default:
+      break;
   }
 }
 
@@ -236,7 +218,6 @@ void OutputThread::doWork()
     try {
       itsWriter->write(data);
       checkForDroppedData(data);
-      writeSequenceNumber(data);
     } catch (SystemCallException &ex) {
       LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what());
     } catch (...) {
@@ -261,10 +242,9 @@ void OutputThread::doWork()
   }
 }
 
+
 void OutputThread::cleanUp()
 {
-  flushSequenceNumbers();
-
   float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
 
   LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
@@ -289,6 +269,20 @@ void OutputThread::cleanUp()
   // For now, transport feedback parset through log lines
   for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)
     LOG_INFO_STR(itsLogPrefix << "LTA FEEDBACK: " << prefix << i->first << " = " << i->second);
+}
+
+
+void OutputThread::augment( const FinalMetaData &finalMetaData )
+{
+  // wait for writer thread to finish, so we'll have an itsWriter
+  ASSERT(itsThread.get());
+
+  itsThread = 0;
+
+  // augment the data product
+  ASSERT(itsWriter.get());
+
+  itsWriter->augment(finalMetaData);
 }
 
 

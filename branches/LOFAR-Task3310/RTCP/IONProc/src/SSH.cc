@@ -60,34 +60,70 @@ namespace RTCP {
 Mutex coutMutex;
 #endif
 
-SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, time_t deadline)
+SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, bool captureStdout)
 :
   itsLogPrefix(logPrefix),
   itsHostName(hostname),
   itsCommandLine(commandline),
   itsUserName(username),
   itsSSHKey(sshkey),
-  itsDeadline(deadline)
+  itsCaptureStdout(captureStdout)
 {
 }
+
+
+SSHconnection::~SSHconnection()
+{
+  if (itsThread.get())
+    cancel();
+}
+
 
 void SSHconnection::start()
 {
   itsThread = new Thread(this, &SSHconnection::commThread, itsLogPrefix + "[SSH Thread] ", 65536);
 }
 
+
 bool SSHconnection::isDone()
 {
-  return itsThread->isDone();
+  return itsThread && itsThread->isDone();
 }
 
-void SSHconnection::stop( const struct timespec &deadline )
+
+void SSHconnection::cancel()
 {
+  ASSERT(itsThread.get());
+
+  itsThread->cancel();
+
+  itsThread->wait();
+}
+
+
+void SSHconnection::wait()
+{
+  ASSERT(itsThread.get());
+
+  itsThread->wait();
+}
+
+
+void SSHconnection::wait( const struct timespec &deadline )
+{
+  ASSERT(itsThread.get());
+
   if (!itsThread->wait(deadline)) {
     itsThread->cancel();
 
     itsThread->wait();
   }
+}
+
+
+std::string SSHconnection::stdoutBuffer() const
+{
+  return itsStdoutBuffer.str();
 }
 
 void SSHconnection::free_session( LIBSSH2_SESSION *session )
@@ -147,6 +183,11 @@ bool SSHconnection::open_session( FileDescriptorBasedStream &sock )
 
   if (rc) {
     LOG_ERROR_STR( itsLogPrefix << "Authentication by public key failed: " << rc);
+
+    // unrecoverable errors
+    if (rc == LIBSSH2_ERROR_FILE)
+      THROW(SSHException, "Error reading read key file " << itsSSHKey);
+
     return false;
   }
 
@@ -235,7 +276,7 @@ void SSHconnection::commThread()
 
   for(;;) {
     // keep trying to connect
-    sock = new SocketStream( itsHostName, 22, SocketStream::TCP, SocketStream::Client, itsDeadline );
+    sock = new SocketStream( itsHostName, 22, SocketStream::TCP, SocketStream::Client, 0 );
 
     LOG_DEBUG_STR( itsLogPrefix << "Connected" );
 
@@ -304,37 +345,47 @@ void SSHconnection::commThread()
         rc = libssh2_channel_read_ex( channel, s, data[s], sizeof data[s] );
         if( rc > 0 )
         {
-          // create a buffer for line + data
-          stringstream buffer;
+          if (s == 0 && itsCaptureStdout) {
+            // save stdout verbatim in our buffer
 
-          buffer << line[s];
-          buffer.write( data[s], rc );
+            LOG_DEBUG_STR( itsLogPrefix << "Appending " << rc << " bytes to stdout buffer, which contains " << itsStdoutBuffer.rdbuf()->in_avail() << " bytes" );
+            
+            itsStdoutBuffer.write( data[s], rc );
+          } else {
+            // print stream to stdout (TODO: to logger)
+             
+            // create a buffer for line + data
+            stringstream buffer;
 
-          /* extract and log lines */
-          for( ;; )
-          {
-            Cancellation::point();
+            buffer << line[s];
+            buffer.write( data[s], rc );
 
-            std::getline( buffer, line[s] );
-
-            if (!buffer.good()) {
-              // 'line' now holds the remnant
-
-              if (line[s].size() > 1024) {
-                LOG_ERROR_STR( itsLogPrefix << "Line too long (" << line[s].size() << "); truncated: " << line[s] );
-                line[s] = "";
-              }
-              break;
-            }
-
-            // TODO: Use logger somehow (we'd duplicate the prefix if we just use LOG_* macros..)
+            /* extract and log lines */
+            for( ;; )
             {
+              Cancellation::point();
+
+              std::getline( buffer, line[s] );
+
+              if (!buffer.good()) {
+                // 'line' now holds the remnant
+
+                if (line[s].size() > 1024) {
+                  LOG_ERROR_STR( itsLogPrefix << "Line too long (" << line[s].size() << "); truncated: " << line[s] );
+                  line[s] = "";
+                }
+                break;
+              }
+
+              // TODO: Use logger somehow (we'd duplicate the prefix if we just use LOG_* macros..)
+              {
 #ifdef HAVE_LOG4COUT
-              ScopedLock sl(LFDebug::mutex);
+                ScopedLock sl(LFDebug::mutex);
 #else
-              ScopedLock sl(coutMutex);
+                ScopedLock sl(coutMutex);
 #endif
-              cout << line[s] << endl;
+                cout << line[s] << endl;
+              }
             }
           }
         } else {

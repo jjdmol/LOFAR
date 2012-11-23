@@ -15,14 +15,14 @@
 
   <groupId>nl.astron.lofar.sas.otb</groupId>
   <artifactId>otb-parent</artifactId>
-  <version>1.9.0-SNAPSHOT</version>
+  <version>1.10.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
 
   <!-- Properties that can be used throughout the POM as a substitution, 
     and are used as filters in resources if enabled. -->
   <properties>
-    <lofar.lib.version>1.8.2</lofar.lib.version>
+    <lofar.lib.version>1.9.0</lofar.lib.version>
   </properties>
 
 

@@ -4,7 +4,7 @@ lofar_package(IONProc 1.0
   DEPENDS Common ApplCommon Stream Interface FCNP)
 
 include(LofarFindPackage)
-lofar_find_package(Boost REQUIRED)
+lofar_find_package(Boost REQUIRED date_time)
 lofar_find_package(Libssh2)
 lofar_find_package(Valgrind)
 lofar_find_package(Casacore COMPONENTS measures REQUIRED)
