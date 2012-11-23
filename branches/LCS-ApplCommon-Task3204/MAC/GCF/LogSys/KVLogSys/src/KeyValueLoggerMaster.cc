@@ -33,7 +33,7 @@
 #include <OTDB/TreeTypeConv.h>
 #include <OTDB/TreeStateConv.h>
 #include <OTDB/ClassifConv.h>
-#include <ApplCommon/lofar_datetime.h>
+#include <ApplCommon/PosixTime.h>
 
 namespace LOFAR {
 	using namespace OTDB;  
