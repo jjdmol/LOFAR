@@ -198,10 +198,11 @@ BOOST_PYTHON_MODULE(pylofarft)
   ;
   
   class_<LOFAR::LofarConvolutionFunction> ("LofarConvolutionFunction", 
-    init<IPosition&, DirectionCoordinate&, MeasurementSet&, uInt, double, uInt, Int, Int, String&, Bool, Bool, Record&>())
+    init<IPosition&, DirectionCoordinate&, MeasurementSet&, uInt, double, uInt, Int, Int, String&, Bool, Bool, int, 
+      Record&, vector< vector< vector < Matrix<Complex> > > > &>())
     .def("makeConvolutionFunction", &LOFAR::LofarConvolutionFunction::makeConvolutionFunction)
   ;
-
+  
   class_<LOFAR::VisibilityResamplerProxy> ("VisibilityResampler")
   ;
 

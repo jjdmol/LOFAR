@@ -30,15 +30,21 @@ namespace LOFAR {
                  Bool Use_Linear_Interp_Gridder,
                  Bool Use_EJones,
                  int StepApplyElement,
+                 int ApplyBeamCode,
                  Double PBCut,
                  Bool PredictFT,
                  String PsfOnDisk,
                  Bool UseMasksDegrid,
                  Bool ReallyDoPSF,
-                 const casa::Record& parameters
-                ) : LofarFTMachine(cachesize, tilesize,  visResampler, convType, ms, nwPlanes, mLocation, padding, usezero, useDoublePrec, wmax,
-                                   verbose, maxsupport, oversample, imageName, gridMuellerMask, degridMuellerMask, RefFreq, Use_Linear_Interp_Gridder,
-                                   Use_EJones, StepApplyElement, PBCut, PredictFT, PsfOnDisk, UseMasksDegrid, ReallyDoPSF, parameters)
+                 Double UVmin,
+                 Double UVmax,
+                 Bool MakeDirtyCorr,
+                 const casa::Record& parameters)
+                  : LofarFTMachine(cachesize, tilesize, visResampler, convType, ms, nwPlanes, mLocation, padding, usezero, useDoublePrec, wmax, verbose,
+                 maxsupport, oversample, imageName, gridMuellerMask, degridMuellerMask, RefFreq, Use_Linear_Interp_Gridder, Use_EJones,
+                 StepApplyElement, ApplyBeamCode, PBCut, PredictFT, PsfOnDisk, UseMasksDegrid, ReallyDoPSF, UVmin, UVmax, MakeDirtyCorr,
+                 parameters)
+                    
  {
   
     Py_Initialize();

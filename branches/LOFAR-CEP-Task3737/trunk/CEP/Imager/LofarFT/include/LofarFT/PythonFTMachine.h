@@ -46,9 +46,8 @@ public:
 //  LofarFTMachine(Long cachesize, Int tilesize, CountedPtr<VisibilityResamplerBase>& visResampler,
 //        String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
   PythonFTMachine(casa::String pythonmodule, casa::String pythonclass, 
-                 casa::Long cachesize, casa::Int tilesize,  casa::CountedPtr<casa::VisibilityResamplerBase>& visResampler,
-                 casa::String convType, const casa::MeasurementSet& ms,
-                 casa::Int nwPlanes,
+                 Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
+                 Int nwPlanes,
                  MPosition mLocation, Float padding, Bool usezero,
                  Bool useDoublePrec, double wmax,
                  Int verbose,
@@ -61,13 +60,16 @@ public:
                  Bool Use_Linear_Interp_Gridder,
                  Bool Use_EJones,
                  int StepApplyElement,
+                 int ApplyBeamCode,
                  Double PBCut,
                  Bool PredictFT,
                  String PsfOnDisk,
                  Bool UseMasksDegrid,
                  Bool ReallyDoPSF,
-                 const casa::Record& parameters
-                );
+                 Double UVmin,
+                 Double UVmax,
+                 Bool MakeDirtyCorr,
+                 const casa::Record& parameters);
 
   // Copy constructor
   PythonFTMachine(const PythonFTMachine &other);

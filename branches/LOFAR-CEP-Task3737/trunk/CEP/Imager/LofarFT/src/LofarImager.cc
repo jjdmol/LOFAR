@@ -24,7 +24,7 @@
 
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
-//#include <LofarFT/PythonFTMachine.h>
+#include <LofarFT/PythonFTMachine.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
@@ -55,13 +55,13 @@ namespace LOFAR
   {
     CountedPtr<VisibilityResamplerBase> visResampler;
     Bool useDoublePrecGrid = False;
-    Double RefFreq((*sm_p).getReferenceFrequency());
-
+//     Double RefFreq((*sm_p).getReferenceFrequency());
+    Double RefFreq(0.0);
 
     if (itsParameters.asBool("splitbeam")) {
       cout << itsParameters<<endl;
-       itsMachine = new LofarFTMachine(
-//      itsMachine = new PythonFTMachine("lofar.imager.myftmachine", "MyFTMachine",
+//       itsMachine = new LofarFTMachine(
+      itsMachine = new PythonFTMachine("lofar.imager.myftmachine", "MyFTMachine",
                                       cache_p/2, tile_p,
                                       visResampler, gridfunction_p,
                                       *ms_p, wprojPlanes_p, mLocation_p,
