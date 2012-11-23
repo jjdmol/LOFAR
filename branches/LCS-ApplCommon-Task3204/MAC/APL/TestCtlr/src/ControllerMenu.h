@@ -38,7 +38,7 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
-#include <ApplCommon/PosixTime.h>
+#include <ApplCommon/lofar_datetime.h>
 #include <Common/LofarLogger.h>
 
 //# ACC Includes

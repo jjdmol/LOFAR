@@ -29,7 +29,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/lofar_string.h>
-#include <ApplCommon/PosixTime.h>
+#include <ApplCommon/lofar_datetime.h>
 #include <Common/lofar_list.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_TCPPort.h>

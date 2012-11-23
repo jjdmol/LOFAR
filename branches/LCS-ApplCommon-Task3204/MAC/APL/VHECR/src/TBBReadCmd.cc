@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ApplCommon/PosixTime.h>
+#include <ApplCommon/lofar_datetime.h>
 #include <VHECR/TBBReadCmd.h>
 
 namespace LOFAR {
