@@ -15,7 +15,7 @@ from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.data_map import validate_data_maps#, tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
-
+from lofarpipe.support.loggingdecorators import mail_log_on_exception
 
 class msss_calibrator_pipeline(control):
     """
@@ -149,7 +149,7 @@ class msss_calibrator_pipeline(control):
         # Call the base-class's `go()` method.
         return super(msss_calibrator_pipeline, self).go()
 
-
+    @mail_log_on_exception
     def pipeline_logic(self):
         """
         Define the individual tasks that comprise the current pipeline.

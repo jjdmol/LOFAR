@@ -14,6 +14,7 @@ from lofarpipe.support.group_data import validate_data_maps, tally_data_map
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
+from lofarpipe.support.loggingdecorators import mail_log_on_exception
 
 class preprocessing_pipeline(control):
     """
@@ -26,7 +27,7 @@ class preprocessing_pipeline(control):
     2. Create VDS-file; it will contain important input-data for NDPPP
     3. Average and flag data, and demix A-team sources using NDPPP.
     """
-    
+
     def __init__(self):
         super(preprocessing_pipeline, self).__init__()
         self.parset = parameterset()
@@ -110,7 +111,7 @@ class preprocessing_pipeline(control):
                 )
             )
 
-
+    @mail_log_on_exception
     def go(self):
         """
         Read the parset-file that was given as input argument;

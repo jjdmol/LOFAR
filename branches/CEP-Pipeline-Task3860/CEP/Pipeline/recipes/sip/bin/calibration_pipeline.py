@@ -14,6 +14,7 @@ from lofarpipe.support.group_data import validate_data_maps, tally_data_map
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
+from lofarpipe.support.loggingdecorators import mail_log_on_exception
 
 class calibration_pipeline(control):
     """
@@ -29,7 +30,7 @@ class calibration_pipeline(control):
     4. Create a sourcedb from the user-supplied sky model, and an empty parmdb.
     5. Run BBS to calibrate the data.
     """
-    
+
     def __init__(self):
         super(calibration_pipeline, self).__init__()
         self.parset = parameterset()
@@ -136,7 +137,7 @@ class calibration_pipeline(control):
         # Call the base-class's `go()` method.
         return super(calibration_pipeline, self).go()
 
-
+    @mail_log_on_exception
     def pipeline_logic(self):
         """
         Define the individual tasks that comprise the current pipeline.
@@ -209,7 +210,7 @@ class calibration_pipeline(control):
             raise PipelineException("Skymodel %s does not exist" % skymodel)
 
         sourcedb_mapfile = self.run_task(
-            "setupsourcedb", dppp_mapfile, 
+            "setupsourcedb", dppp_mapfile,
             skymodel=skymodel
         )['mapfile']
 

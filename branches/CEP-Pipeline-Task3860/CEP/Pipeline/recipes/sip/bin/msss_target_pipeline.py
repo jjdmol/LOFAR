@@ -16,6 +16,8 @@ from lofarpipe.support.data_map import DataMap, validate_data_maps
 #from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
+from lofarpipe.support.loggingdecorators import mail_log_on_exception
+
 
 class msss_target_pipeline(control):
     """
@@ -207,8 +209,8 @@ class msss_target_pipeline(control):
         # need to be updated these to reflect this.
         self.input_data['instrument'] = DataMap.load(copied_instruments_mapfile)
         for data, inst, outp in zip(
-            self.input_data['data'], 
-            self.input_data['instrument'], 
+            self.input_data['data'],
+            self.input_data['instrument'],
             self.output_data['data']
         ):
             data.skip = inst.skip = outp.skip = (
@@ -236,6 +238,7 @@ class msss_target_pipeline(control):
         return super(msss_target_pipeline, self).go()
 
 
+    @mail_log_on_exception
     def pipeline_logic(self):
         """
         Define the individual tasks that comprise the current pipeline.

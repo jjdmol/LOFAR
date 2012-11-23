@@ -5,6 +5,7 @@ functionality based on xml
 import smtplib
 from email.mime.text import MIMEText
 import time
+import os
 
 from lofarpipe.support.xmllogging import enter_active_stack, \
         exit_active_stack, get_active_stack
@@ -91,8 +92,9 @@ def mail_log_on_exception(target):
             active_stack_data = ""
             if stack != None:
                 active_stack_data = stack.toprettyxml(encoding='ascii')
-            # get the Obsid etc for subject
-            subject = "Failed pipeline run: {0}".format(
+            # get the Obsid and pipeline name add to subjecy title
+            subject = "Failed pipeline run {0}: {1}".format(
+                        os.path.basename(calling_object.__file__),
                         calling_object.inputs['job_name'])
 
             # construct the message
