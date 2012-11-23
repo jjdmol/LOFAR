@@ -33,7 +33,7 @@
 #include <Common/LofarBitModeInfo.h>
 #include <Common/StreamUtil.h>
 #include <Common/StringUtil.h>
-#include <Common/lofar_datetime.h>
+#include <ApplCommon/lofar_datetime.h>
 #include <Common/LofarLogger.h> 
 #include <Interface/BeamCoordinates.h>
 #include <Interface/Config.h>
