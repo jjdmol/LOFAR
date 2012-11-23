@@ -49,8 +49,9 @@ class gainoutliercorrection(LOFARnodeTCP):
 
         # Create output directory (if it doesn't already exist)
         create_directory(os.path.dirname(outfile))
+
         # Remove the target outfile if there: parexportcall fail otherwise
-        if os.path.exists(os.path.exists()):
+        if os.path.exists(outfile):
             shutil.rmtree(outfile)
 
         # ********************************************************************
