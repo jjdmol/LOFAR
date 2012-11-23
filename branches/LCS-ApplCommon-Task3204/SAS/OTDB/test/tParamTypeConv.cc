@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
-#include <ApplCommon/lofar_datetime.h>
+#include <ApplCommon/PosixTime.h>
 #include <Common/SystemUtil.h>
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/ParamTypeConv.h>

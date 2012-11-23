@@ -6,10 +6,10 @@ set(inst_HEADERS
   AntennaSets.h
   LofarDirs.h
   Observation.h
+  PosixTime.h
   StationConfig.h
   StationDatatypes.h
-  StationInfo.h
-  lofar_datetime.h)
+  StationInfo.h)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 

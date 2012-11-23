@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ApplCommon/lofar_datetime.h>
+#include <ApplCommon/PosixTime.h>
 #include <Common/StringUtil.h>
 #include <OTDB/VICnodeDef.h>
 #include <OTDB/misc.h>
