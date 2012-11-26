@@ -30,6 +30,7 @@
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/Campaign.h>
 #include <libgen.h>             // for basename
+#include <cstring>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;

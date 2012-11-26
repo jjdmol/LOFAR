@@ -30,6 +30,7 @@
 #include <Common/SystemUtil.h>
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/ParamTypeConv.h>
+#include <cstring>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;

@@ -28,6 +28,10 @@
 #include <ApplCommon/PosixTime.h>
 #include <OTDB/Campaign.h>
 
+#include <pqxx/transaction>
+
+using namespace pqxx;
+
 namespace LOFAR {
   namespace OTDB {
 

@@ -28,7 +28,6 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <ApplCommon/PosixTime.h>
 #include <OTDB/OTDBtypes.h>
 
 namespace LOFAR {
