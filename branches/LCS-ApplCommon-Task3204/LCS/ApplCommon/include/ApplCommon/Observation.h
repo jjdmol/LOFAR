@@ -34,6 +34,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <Common/LofarConstants.h>
+#include <ctime>
 
 namespace LOFAR {
 

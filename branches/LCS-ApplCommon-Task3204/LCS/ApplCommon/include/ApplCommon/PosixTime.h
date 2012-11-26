@@ -30,21 +30,16 @@
 #error Boost.Date_Time is required.
 #endif
 
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <ctime>
+
+//# Forward declarations
+namespace boost { namespace posix_time { class ptime; } }
 
 namespace LOFAR
 {
-  using namespace boost::posix_time;
+  time_t to_time_t(boost::posix_time::ptime aPtime);
 
-	inline time_t to_time_t(ptime aPtime) {
-          ptime epoch(boost::gregorian::date(1970, 1, 1));
-          time_duration diff(aPtime - epoch);
-          return diff.total_seconds();
-	}
-
-	inline ptime from_ustime_t(double	secsEpoch1970) {
-		return (from_time_t((time_t)trunc(secsEpoch1970)) + microseconds((int64_t)((secsEpoch1970-trunc(secsEpoch1970))*1000000)));
-	}
+  boost::posix_time::ptime from_ustime_t(double	secsEpoch1970);
 }
 
 #endif

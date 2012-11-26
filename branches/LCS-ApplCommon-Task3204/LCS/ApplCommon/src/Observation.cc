@@ -35,9 +35,11 @@
 #include <ApplCommon/Observation.h>
 
 #include <Common/lofar_map.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/format.hpp>
 
 using boost::format;
+using namespace boost::posix_time;
 
 namespace LOFAR {
 
