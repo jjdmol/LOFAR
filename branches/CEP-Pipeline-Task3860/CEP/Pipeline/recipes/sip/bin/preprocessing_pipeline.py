@@ -14,7 +14,7 @@ from lofarpipe.support.group_data import validate_data_maps, tally_data_map
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
-from lofarpipe.support.loggingdecorators import mail_log_on_exception
+from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
 
 class preprocessing_pipeline(control):
     """
@@ -171,22 +171,26 @@ class preprocessing_pipeline(control):
 
         # *********************************************************************
         # 2. Create VDS-file; it will contain important input-data for NDPPP
-        gvds_file = self.run_task("vdsmaker", input_data_mapfile)['gvds']
+        with duration(self, "vdsmaker"):
+            gvds_file = self.run_task("vdsmaker", input_data_mapfile)['gvds']
 
         # Read metadata (start, end times, pointing direction) from GVDS.
-        vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+        with duration(self, "vdsreader"):
+            vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
         # *********************************************************************
         # 3. Average and flag data, using NDPPP.
+
         ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
         py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
-        self.run_task("ndppp",
-            (input_data_mapfile, output_data_mapfile),
-            data_start_time=vdsinfo['start_time'],
-            data_end_time=vdsinfo['end_time'],
-            parset=ndppp_parset)
+        with duration(self, "ndppp"):
+            self.run_task("ndppp",
+                (input_data_mapfile, output_data_mapfile),
+                data_start_time=vdsinfo['start_time'],
+                data_end_time=vdsinfo['end_time'],
+                parset=ndppp_parset)
 
 
 if __name__ == '__main__':
