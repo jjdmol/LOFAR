@@ -16,7 +16,7 @@ from lofarpipe.support.data_map import DataMap, validate_data_maps
 #from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
-from lofarpipe.support.loggingdecorators import mail_log_on_exception
+from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
 
 
 class msss_target_pipeline(control):
@@ -301,23 +301,27 @@ class msss_target_pipeline(control):
         #    sourcedb, For skymodel (A-team)
         #    parmdb for outputtting solutions
         # Produce a GVDS file describing the data on the compute nodes.
-        gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
+        with duration(self, "vdsmaker"):
+            gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
 
         # Read metadata (e.g., start- and end-time) from the GVDS file.
-        vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+        with duration(self, "vdsreader"):
+            vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
         # Create an empty parmdb for DPPP
-        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
+        with duration(self, "setupparmdb"):
+            parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
 
         # Create a sourcedb to be used by the demixing phase of DPPP
         # The path to the A-team sky model is currently hard-coded.
-        sourcedb_mapfile = self.run_task(
-            "setupsourcedb", data_mapfile,
-            skymodel=os.path.join(
-                self.config.get('DEFAULT', 'lofarroot'),
-                'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
-            )
-        )['mapfile']
+        with duration(self, "setupsourcedb"):
+            sourcedb_mapfile = self.run_task(
+                "setupsourcedb", data_mapfile,
+                skymodel=os.path.join(
+                    self.config.get('DEFAULT', 'lofarroot'),
+                    'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
+                )
+            )['mapfile']
 
         # *********************************************************************
         # 4. Run NDPPP to demix the A-Team sources
@@ -326,15 +330,16 @@ class msss_target_pipeline(control):
         py_parset.makeSubset('DPPP[0].').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
-        dppp_mapfile = self.run_task("ndppp",
-            data_mapfile,
-            data_start_time=vdsinfo['start_time'],
-            data_end_time=vdsinfo['end_time'],
-            parset=ndppp_parset,
-            parmdb_mapfile=parmdb_mapfile,
-            sourcedb_mapfile=sourcedb_mapfile,
-            mapfile=os.path.join(mapfile_dir, 'dppp[0].mapfile')
-        )['mapfile']
+        with duration(self, "ndppp"):
+            dppp_mapfile = self.run_task("ndppp",
+                data_mapfile,
+                data_start_time=vdsinfo['start_time'],
+                data_end_time=vdsinfo['end_time'],
+                parset=ndppp_parset,
+                parmdb_mapfile=parmdb_mapfile,
+                sourcedb_mapfile=sourcedb_mapfile,
+                mapfile=os.path.join(mapfile_dir, 'dppp[0].mapfile')
+            )['mapfile']
 
 #        demix_mapfile = dppp_mapfile
 #        # Demix the relevant A-team sources
@@ -343,21 +348,23 @@ class msss_target_pipeline(control):
         # ********************************************************************
         # 5. Run bss using the instrument file from the target observation
         # Create an empty sourcedb for BBS
-        sourcedb_mapfile = self.run_task(
-            "setupsourcedb", data_mapfile
-        )['mapfile']
+        with duration(self, "setupsourcedb"):
+            sourcedb_mapfile = self.run_task(
+                "setupsourcedb", data_mapfile
+            )['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(parset_dir, "BBS.parset")
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the target source(s).
-        bbs_mapfile = self.run_task("bbs_reducer",
-            dppp_mapfile,
-            parset=bbs_parset,
-            instrument_mapfile=copied_instrument_mapfile,
-            sky_mapfile=sourcedb_mapfile
-        )['data_mapfile']
+        with duration(self, "bbs_reducer"):
+            bbs_mapfile = self.run_task("bbs_reducer",
+                dppp_mapfile,
+                parset=bbs_parset,
+                instrument_mapfile=copied_instrument_mapfile,
+                sky_mapfile=sourcedb_mapfile
+            )['data_mapfile']
 
         # *********************************************************************
         # 6. Second dppp run for  flaging NaN's in the MS.  
@@ -369,24 +376,28 @@ class msss_target_pipeline(control):
         # results in the files specified in the corrected data map-file
         # WARNING: This will create a new MS with a DATA column containing the
         # CORRECTED_DATA column of the original MS.
-        self.run_task("ndppp",
-            (bbs_mapfile, corrected_mapfile),
-            clobber=False,
-            suffix='',
-            parset=ndppp_parset,
-            mapfile=os.path.join(mapfile_dir, 'dppp[1].mapfile')
-        )
+        with duration(self, "ndppp"):
+            self.run_task("ndppp",
+                (bbs_mapfile, corrected_mapfile),
+                clobber=False,
+                suffix='',
+                parset=ndppp_parset,
+                mapfile=os.path.join(mapfile_dir, 'dppp[1].mapfile')
+            )
 
         # 7. Create feedback file for further processing by the LOFAR framework
         # (MAC)
         # Create a parset-file containing the metadata for MAC/SAS
-        self.run_task("get_metadata", corrected_mapfile,
-            parset_file=self.parset_feedback_file,
-            parset_prefix=(
-                self.parset.getString('prefix') +
-                self.parset.fullModuleName('DataProducts')
-            ),
-            product_type="Correlated")
+        with duration(self, "get_metadata"):
+            self.run_task("get_metadata", corrected_mapfile,
+                parset_file=self.parset_feedback_file,
+                parset_prefix=(
+                    self.parset.getString('prefix') +
+                    self.parset.fullModuleName('DataProducts')
+                ),
+                product_type="Correlated")
+
+        return 0
 
 
 if __name__ == '__main__':

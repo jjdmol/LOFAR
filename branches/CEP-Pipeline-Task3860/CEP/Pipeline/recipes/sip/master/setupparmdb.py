@@ -162,7 +162,7 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             shutil.rmtree(pdbdir, ignore_errors=True)
 
         if self.error.isSet():
-             # Abort if all jobs failed
+            # Abort if all jobs failed
             if all(job.results['returncode'] != 0 for job in jobs):
                 self.logger.error("All jobs failed. Bailing out!")
                 return 1

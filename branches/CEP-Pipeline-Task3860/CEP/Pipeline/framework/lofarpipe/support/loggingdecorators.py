@@ -51,6 +51,53 @@ def xml_node(target):
 
     return wrapper
 
+class duration:
+    """
+    context manager for logging duration of a code block:
+    1. Add an xml active stack member on the object if not present
+    2. Add a new active stack entry for current context
+    3. On exit add the duration of the code block to the now deactivate stack
+       member
+    """
+    def __init__(self, containing_object, name):
+        """
+        On creation of the contect manager provide the object instance to add
+        the xml stack to and the name for in the loggin tree.
+        """
+        self._containing_object = containing_object
+        self._name = name
+        self._xml_current_node = None
+        self._time_info_start = None
+
+    def __enter__(self):
+        """
+        The duration context should be initialized with the calling object self
+        pointer. This allows adding the duration xml to the object
+        """
+        # Get or create an active stack (default name)
+        self._xml_current_node = enter_active_stack(
+            self._containing_object, self._name)
+        # Get and save the current time
+        self._time_info_start = time.time()
+
+        return self # return self, the context manager
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        """
+        upon leaving the context log the duration and leave the current
+        Xml node
+        """
+        time_info_end = time.time()
+        self._xml_current_node.setAttribute(
+                    "duration", str(time_info_end - self._time_info_start))
+        if exc_type == None:
+
+            exit_active_stack(self._containing_object)
+        else:
+            # Exception thrown in the context: Return False here reraises it
+            # automatically.
+            False
+
 
 def mail_log_on_exception(target):
     """
@@ -66,16 +113,23 @@ def mail_log_on_exception(target):
 
         try:
             # call the actual function
+            time_info_start = time.time()
             return_value = target(*args, **argsw)
+            time_info_end = time.time()
             # Force exception on non zero output
             if return_value != 0:
                 raise Exception("Non zero pipeline output")
             # Mail main dev on succesfull run
             stack = get_active_stack(calling_object)
+            duration_recipe = str(time_info_end - time_info_start)
             if stack != None:
+                stack.setAttribute(
+                    "duration", duration_recipe)
                 msg_string = stack.toprettyxml(encoding='ascii')
             else:
-                msg_string = "No additional pipeline data available"
+                msg_string = "duration: {0} \n "\
+                 "No additional pipeline data available".format(duration_recipe
+                        )
 
             _mail_msg_to("pipeline_finished", "klijn@astron.nl",
                          "pipeline finished", msg_string)
@@ -109,7 +163,7 @@ def mail_log_on_exception(target):
             raise
 
         calling_object.logger.info("pipeline_finished" + " xml summary:")
-        calling_object.logger.info(msg_string)
+        calling_object.logger.info("\n" + msg_string)
 
         # return the actual value of the function
         return return_value
