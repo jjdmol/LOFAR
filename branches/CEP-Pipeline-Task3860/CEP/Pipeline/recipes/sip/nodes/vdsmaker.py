@@ -42,8 +42,8 @@ class vdsmaker(LOFARnodeTCP):
                 # For CalledProcessError isn't properly propagated by IPython
                 # Temporary workaround...
                 self.logger.error(str(e))
-				self.logger.info("A common cause for this failure is the usage"
-				"of an incorrect cluster.desc file in the pipeline.cfg")
+                self.logger.info("A common cause for this failure is the usage"
+                       "of an incorrect cluster.desc file in the pipeline.cfg")
                 return 1
 
 
