@@ -110,8 +110,8 @@ class UnitTesterTest(unittest.TestCase):
         This sanity check only works on the CEP systems lhn001,2 and lce072. comment out on other systems
         """
         path = "/opt/cep/LofIm/daily/lofar/lofarinit.sh"
-        self.assertTrue(os.path.exists(path), "Daily build has failed:"
-                        " lofarinit.sh is missing!")
+        self.assertTrue( True ) #os.path.exists(path), "Daily build has failed:"
+                        #" lofarinit.sh is missing!")
 
 
 def usage():
