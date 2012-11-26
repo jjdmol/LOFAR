@@ -41,6 +41,7 @@
 
 #include <cstdio>
 #include <stdexcept>
+#include <iomanip>
 
 #include <boost/format.hpp>
 

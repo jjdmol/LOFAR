@@ -34,6 +34,7 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/format.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
@@ -647,6 +648,32 @@ int Parset::findIndex(unsigned pset, const vector<unsigned> &psets)
 
   return index != psets.size() ? static_cast<int>(index) : -1;
 }
+
+double Parset::getTime(const char *name) const
+{
+  return to_time_t(boost::posix_time::time_from_string(getString(name)));
+}
+
+unsigned Parset::nrPencilBeams(unsigned beam) const
+{
+  using boost::format;
+  return getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % beam));
+}
+
+string Parset::PLC_Host() const
+{
+  using boost::format;
+  string prefix = getString("_parsetPrefix"); // includes a trailing dot!
+  return getString(str(format("%s_ACnode") % prefix));
+}
+
+uint32 Parset::PLC_Port() const
+{
+  using boost::format;
+  string prefix = getString("_parsetPrefix"); // includes a trailing dot!
+  return getUint32(str(format("%s_ACport") % prefix));
+}
+
 
 } // namespace RTCP
 } // namespace LOFAR

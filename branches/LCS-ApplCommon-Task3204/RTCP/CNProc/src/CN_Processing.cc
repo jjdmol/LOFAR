@@ -54,7 +54,7 @@
 #endif
 
 #include <boost/format.hpp>
-
+#include <sys/time.h>
 
 #if defined HAVE_BGP
 //#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)

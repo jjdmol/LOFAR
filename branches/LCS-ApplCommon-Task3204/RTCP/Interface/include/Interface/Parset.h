@@ -48,9 +48,6 @@
 #include <vector>
 #include <string>
 
-#include <boost/date_time/c_local_time_adjustor.hpp>
-#include <boost/format.hpp>
-
 namespace LOFAR {
 namespace RTCP {
 
@@ -586,11 +583,6 @@ inline unsigned Parset::observationID() const
   return getUint32("Observation.ObsID");
 }
 
-inline double Parset::getTime(const char *name) const
-{
-  return to_time_t(time_from_string(getString(name)));
-}
-
 inline double Parset::startTime() const
 {
   return getTime("Observation.startTime");
@@ -1107,13 +1099,6 @@ inline bool Parset::realTime() const
   return getBool("OLAP.realTime");
 }
 
-inline unsigned Parset::nrPencilBeams(unsigned beam) const
-{
-  using boost::format;
-
-  return getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % beam));
-}
-
 inline std::vector<unsigned> Parset::nrPencilBeams() const
 {
   std::vector<unsigned> counts(nrBeams());
@@ -1170,24 +1155,6 @@ inline bool Parset::PLC_controlled() const
 inline string Parset::PLC_ProcID() const
 {
   return getString("_processName","CNProc");
-}
-
-inline string Parset::PLC_Host() const
-{
-  using boost::format;
-
-  string prefix = getString("_parsetPrefix"); // includes a trailing dot!
-
-  return getString(str(format("%s_ACnode") % prefix));
-}
-
-inline uint32 Parset::PLC_Port() const
-{
-  using boost::format;
-
-  string prefix = getString("_parsetPrefix"); // includes a trailing dot!
-
-  return getUint32(str(format("%s_ACport") % prefix));
 }
 
 inline string Parset::PVSS_TempObsName() const
