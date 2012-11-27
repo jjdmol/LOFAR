@@ -42,15 +42,20 @@ int main(int argc, char* argv[])
 		return(-1);
 	}
 
-	GCFScheduler::instance()->init(argc, argv, argv[1]);
+	try {
+		GCFScheduler::instance()->init(argc, argv, argv[1]);
 
-	ParentControl*	pc = ParentControl::instance();
-	pc->start();	// make initial transition
+		ParentControl*	pc = ParentControl::instance();
+		pc->start();	// make initial transition
 
-	OnlineControl	olc(argv[1]);
-	olc.start(); 	// make initial transition
+		OnlineControl	olc(argv[1]);
+		olc.start(); 	// make initial transition
 
-	GCFScheduler::instance()->run();
+		GCFScheduler::instance()->run();
+	} catch( Exception &ex ) {
+		LOG_FATAL_STR("Caught exception: " << ex);
+		return 1;
+	}
 
 	return (0);
 }
