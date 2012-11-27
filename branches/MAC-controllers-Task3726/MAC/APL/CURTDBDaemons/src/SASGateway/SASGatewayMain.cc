@@ -35,13 +35,18 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
-	GCFScheduler::instance()->init(argc, argv, "SASGateway");
-	LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_SASGateway");
+	try {
+		GCFScheduler::instance()->init(argc, argv, "SASGateway");
+		LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_SASGateway");
 
-	SASGateway SGW("SASGateway"); 
-	SGW.start(); // make initial transition
+		SASGateway SGW("SASGateway"); 
+		SGW.start(); // make initial transition
 
-	GCFScheduler::instance()->run();
+		GCFScheduler::instance()->run();
+	} catch( Exception &ex ) {
+		LOG_FATAL_STR("Caught exception: " << ex);
+		return 1;
+	}
 
 	return (0);
 }
