@@ -25,8 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jCommon.h>
-#include <boost/date_time/posix_time/ptime.hpp>
-#include <boost/date_time/posix_time/time_formatters.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <string>
 #include <iostream>
 #include <map>
