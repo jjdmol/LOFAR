@@ -118,7 +118,7 @@ void GTMFile::doWork()
 }
 
 
-void GTM_File::setBlocking(bool	blocking) const
+void GTMFile::setBlocking(bool	blocking) const
 {
 	if (_fd < -1)
 		return;
