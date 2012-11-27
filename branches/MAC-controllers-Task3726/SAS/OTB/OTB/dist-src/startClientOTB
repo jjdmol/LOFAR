@@ -1,0 +1,20 @@
+#!/bin/sh
+
+export OTB_DIR=/opt/sas/otb/client
+export JAVA_HOME=/usr/java/jdk1.7.0_02
+
+echo
+echo --- Starting OTB Client ---
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OTB_DIR
+export OTB_APP=$OTB_DIR/`basename $OTB_DIR/OTB*.jar`
+export CLASSPATH=$OTB_APP
+
+for JAR_DEPENDENCY in $OTB_DIR/lib/*.jar
+do
+	echo -- Adding dependency to CLASSPATH: `basename $JAR_DEPENDENCY`
+	export CLASSPATH=$CLASSPATH:$JAR_DEPENDENCY
+done
+
+echo Starting up ...
+$JAVA_HOME/bin/java -cp $CLASSPATH nl.astron.lofar.sas.otb.Main -s sas001 -p 12500 -d LOFAR_4 -u busyman
