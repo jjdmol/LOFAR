@@ -36,15 +36,20 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {
-	GCFScheduler::instance()->init(argc, argv, "MACScheduler");
+	try {
+		GCFScheduler::instance()->init(argc, argv, "MACScheduler");
 
-	ChildControl*	cc = ChildControl::instance();
-	cc->start();	// make initial transition
+		ChildControl*	cc = ChildControl::instance();
+		cc->start();	// make initial transition
 
-	MACScheduler	ms;
-	ms.start(); // make initial transition
-  
-	GCFScheduler::instance()->run();
+		MACScheduler	ms;
+		ms.start(); // make initial transition
+	  
+		GCFScheduler::instance()->run();
+	} catch( Exception &ex ) {
+		LOG_FATAL_STR("Caught exception: " << ex);
+		return 1;
+	}
 
 	return 0;
 }
