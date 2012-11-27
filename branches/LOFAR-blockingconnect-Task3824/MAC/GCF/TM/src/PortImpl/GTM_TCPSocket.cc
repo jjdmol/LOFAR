@@ -33,6 +33,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <fcntl.h>
 #include <netdb.h>
 #include <stdio.h>
@@ -43,7 +44,8 @@ namespace LOFAR {
   namespace TM {
 
 GTMTCPSocket::GTMTCPSocket(GCFTCPPort& port) :
-  GTMFile(port)
+  GTMFile(port),
+  _connecting(false)
 {
 }
 
@@ -164,20 +166,53 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 	serverAddr.sin_addr = *(struct in_addr *) *hostinfo->h_addr_list;
 	serverAddr.sin_port = htons(portNumber);
 	errno = 0;
-	if ((::connect(_fd, (struct sockaddr *)&serverAddr, sizeof(struct sockaddr_in)) == 0) || (errno == EISCONN)) {
-		// connect succesfull, register filedescriptor
-		ASSERT(_pHandler);
-		_pHandler->registerFile(*this);
-		return (1);
-	}
 
-	// socket should be in 'non-blocking' mode so several errors are allowed
-	if (errno != EINPROGRESS && errno != EALREADY) {
-		// serious error
-		LOG_WARN_STR(_port.getName() << ":connect(" << host << "," << portNumber << "), error: " << strerror(errno));
-		::close(_fd);
-		_fd = -1;
-		return (-1);	
+        if (!_connecting) {
+		// create a new connection
+		if ((::connect(_fd, (struct sockaddr *)&serverAddr, sizeof(struct sockaddr_in)) == 0)) {
+			// connect succesfull, register filedescriptor
+			ASSERT(_pHandler);
+			_pHandler->registerFile(*this);
+			return (1);
+		}
+
+		// socket should be in 'non-blocking' mode so several errors are allowed
+		if (errno != EINPROGRESS && errno != EALREADY) {
+			// serious error
+			LOG_WARN_STR(_port.getName() << ":connect(" << host << "," << portNumber << "), error: " << strerror(errno));
+			::close(_fd);
+			_fd = -1;
+			return (-1);	
+		}
+
+		connecting = true;
+
+	} else {
+		// poll an existing connection
+		fd_set fds;
+		struct timeval timeout = { 0, 0 };
+
+		FD_ZERO(&fds);
+		FD_SET(_fd, &fds);
+
+		// if the socket is writable, then the connection is established
+		switch(::select(_fd + 1, NULL, &fds, NULL, &timeout)) {
+			case -1:
+				// serious error
+				LOG_WARN_STR(_port.getName() << ":select(" << host << "," << portNumber << "), error: " << strerror(errno));
+				::close(_fd);
+				_fd = -1;
+				return (-1);	
+			case 0:
+				// no data available
+				return 0;
+
+			default:
+				// connect succesfull, register filedescriptor
+				ASSERT(_pHandler);
+				_pHandler->registerFile(*this);
+				return 1;
+		}
 	}
 
 	LOG_DEBUG_STR(_port.getName() << ": still waiting for connection");

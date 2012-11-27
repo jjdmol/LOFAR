@@ -61,6 +61,8 @@ private:
     GTMTCPSocket (const GTMTCPSocket&);
     GTMTCPSocket& operator= (const GTMTCPSocket&);
 
+	bool	_connecting;
+
 };
 
   } // namespace TM
