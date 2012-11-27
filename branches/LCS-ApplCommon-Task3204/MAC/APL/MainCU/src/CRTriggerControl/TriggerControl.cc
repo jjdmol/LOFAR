@@ -49,10 +49,12 @@
 #include "TriggerControl.h"
 #include "PVSSDatapointDefs.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
+using namespace boost::posix_time;
 using namespace std;
 using namespace LOFAR::StringUtil;
 

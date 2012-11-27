@@ -38,6 +38,8 @@
 #include <APL/APLCommon/APL_Defines.h>
 #include "CTState.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
@@ -49,6 +51,8 @@ namespace LOFAR {
   using GCF::TM::GCFPortInterface;
   using APLCommon::CTState;
   namespace APLCommon {
+
+using boost::posix_time::ptime;
 
 // \addtogroup APLCommon
 // @{

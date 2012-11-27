@@ -44,6 +44,8 @@
 //# ACC Includes
 #include <Common/ParameterSet.h>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 // forward declaration
 
 namespace LOFAR {
@@ -56,6 +58,7 @@ using	GCF::TM::GCFPort;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
 using	APLCommon::ChildControl;
+using boost::posix_time::ptime;
 
 class ControllerMenu : public GCFTask
 {
