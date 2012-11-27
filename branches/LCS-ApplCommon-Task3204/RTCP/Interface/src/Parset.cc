@@ -1352,7 +1352,7 @@ unsigned Transpose2::nrStreams() const
 }
 
 // compose and decompose a stream number
-unsigned Transpose2::stream( unsigned sap, unsigned beam, unsigned stokes, unsigned part, unsigned startAt = 0) const
+unsigned Transpose2::stream( unsigned sap, unsigned beam, unsigned stokes, unsigned part, unsigned startAt ) const
 {
   for (unsigned i = startAt; i < streamInfo.size(); i++) {
     const struct StreamInfo &info = streamInfo[i];

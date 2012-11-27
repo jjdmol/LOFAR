@@ -309,13 +309,13 @@ public:
 
   // the pset/core which processes a certain block of a certain subband
   // note: AsyncTransposeBeams applied the mapping of phaseThreePsets
-  unsigned sourceCore( unsigned subband, unsigned block );
-  unsigned sourcePset( unsigned subband, unsigned block );
+  unsigned sourceCore( unsigned subband, unsigned block ) const;
+  unsigned sourcePset( unsigned subband, unsigned block ) const;
 
   // the pset/core which processes a certain block of a certain stream
   // note: AsyncTransposeBeams applied the mapping of phaseTwoPsets
-  unsigned destCore( unsigned stream, unsigned block );
-  unsigned destPset( unsigned stream, unsigned block );
+  unsigned destCore( unsigned stream, unsigned block ) const;
+  unsigned destPset( unsigned stream, unsigned block ) const;
 
   // if phase2 == phase3, each block in phase3 is processed by more cores (more cores idle to align phases 2 and 3)
   unsigned phaseThreeGroupSize() const;
