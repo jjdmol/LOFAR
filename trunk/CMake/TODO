@@ -3,6 +3,12 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
+* When not configuring explicitly for PyBDSM, a warning is printed that the
+  Fortran compiler could not be determined, which may cause trouble later on.
+  PyBDSM builds without problems, though. Probable cause: the Fortran
+  language is added too late to the CMake project, i.e. only after F2Py
+  searches for a suitable Fortran compiler.
+
 * Python byte-code compilation fails during install when using DESTDIR option
   to specify a different install directory.
 
