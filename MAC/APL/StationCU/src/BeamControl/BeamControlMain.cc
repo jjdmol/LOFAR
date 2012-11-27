@@ -34,16 +34,21 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {
-	// args: cntlrname, parentHost, parentService
-	GCFScheduler::instance()->init(argc, argv, argv[1]);
+	try {
+		// args: cntlrname, parentHost, parentService
+		GCFScheduler::instance()->init(argc, argv, argv[1]);
 
-	ParentControl*	pc = ParentControl::instance();
-	pc->start();	// make initial transition
+		ParentControl*	pc = ParentControl::instance();
+		pc->start();	// make initial transition
 
-	BeamControl	bc(argv[1]);
-	bc.start(); 	// make initial transition
+		BeamControl	bc(argv[1]);
+		bc.start(); 	// make initial transition
 
-	GCFScheduler::instance()->run();
+		GCFScheduler::instance()->run();
+	} catch( Exception &ex ) {
+		LOG_FATAL_STR("Caught exception: " << ex);
+		return 1;
+	}
 
 	return 0;
 }

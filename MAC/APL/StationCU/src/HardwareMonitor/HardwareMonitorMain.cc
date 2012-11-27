@@ -42,65 +42,70 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {
-	// args: cntlrname, parentHost, parentService
-	GCFScheduler::instance()->init(argc, argv, "HardwareMonitor");
+	try {
+		// args: cntlrname, parentHost, parentService
+		GCFScheduler::instance()->init(argc, argv, "HardwareMonitor");
 
-	LOG_INFO("MACProcessScope: LOFAR_PermSW_HardwareMonitor");
-	LOG_INFO(Version::getInfo<StationCUVersion>("HardwareMonitor"));
+		LOG_INFO("MACProcessScope: LOFAR_PermSW_HardwareMonitor");
+		LOG_INFO(Version::getInfo<StationCUVersion>("HardwareMonitor"));
 
-	// for debugging purposes
-	registerProtocol (RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
-	registerProtocol (TBB_PROTOCOL, TBB_PROTOCOL_STRINGS);
-	registerProtocol (DP_PROTOCOL,  DP_PROTOCOL_STRINGS);
+		// for debugging purposes
+		registerProtocol (RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
+		registerProtocol (TBB_PROTOCOL, TBB_PROTOCOL_STRINGS);
+		registerProtocol (DP_PROTOCOL,  DP_PROTOCOL_STRINGS);
 
-	// Create tasks and call initial routines
-	RSPMonitor*		rsp(0);
-	TBBMonitor*		tbb(0);
-	ECMonitor*     ec(0);
-	
-	// monitor RSP?
-	if (globalParameterSet()->getUint32("WatchRSPboards",0)) {
-		rsp = new RSPMonitor("RSPMonitor");
-		rsp->start();
-		LOG_INFO("Monitoring the RSP boards");
+		// Create tasks and call initial routines
+		RSPMonitor*		rsp(0);
+		TBBMonitor*		tbb(0);
+		ECMonitor*     ec(0);
+		
+		// monitor RSP?
+		if (globalParameterSet()->getUint32("WatchRSPboards",0)) {
+			rsp = new RSPMonitor("RSPMonitor");
+			rsp->start();
+			LOG_INFO("Monitoring the RSP boards");
+		}
+
+		// monitor TBB?
+		if (globalParameterSet()->getUint32("WatchTBboards",0)) {
+			tbb = new TBBMonitor("TBBMonitor");
+			tbb->start();
+			LOG_INFO("Monitoring the TB boards");
+		}
+
+		// monitor EC?
+		if (globalParameterSet()->getUint32("WatchEnvCntrl",0)) {
+			ec = new ECMonitor("ECMonitor");
+			ec->start();
+			LOG_INFO("Monitoring the Environment Controller");
+		}
+
+		// sanity check
+		if (!tbb && !rsp && !ec) {
+			LOG_FATAL_STR("Non of the monitortask (WatchRSPboards, WatchTBboards, WatchEnvCntrl) "
+							"was switched on in the configfile, terminating program");
+			return (0);
+		}
+
+		// ok, we have something to do, do it.
+		GCFScheduler::instance()->setDelayedQuit(true);	// we need a clean shutdown
+		GCFScheduler::instance()->run();	// until stop was called
+
+		if (rsp) {
+			rsp->quit();		// let task quit nicely
+		}
+		if (tbb) {
+			tbb->quit();		// let task quit nicely
+		}
+	   if (ec) {
+			ec->quit();		   // let task quit nicely
+		}
+		double	postRunTime = globalParameterSet()->getDouble("closingDelay", 1.5);
+		GCFScheduler::instance()->run(postRunTime);	// let processes die.
+	} catch( Exception &ex ) {
+		LOG_FATAL_STR("Caught exception: " << ex);
+		return 1;
 	}
-
-	// monitor TBB?
-	if (globalParameterSet()->getUint32("WatchTBboards",0)) {
-		tbb = new TBBMonitor("TBBMonitor");
-		tbb->start();
-		LOG_INFO("Monitoring the TB boards");
-	}
-
-	// monitor EC?
-	if (globalParameterSet()->getUint32("WatchEnvCntrl",0)) {
-		ec = new ECMonitor("ECMonitor");
-		ec->start();
-		LOG_INFO("Monitoring the Environment Controller");
-	}
-
-	// sanity check
-	if (!tbb && !rsp && !ec) {
-		LOG_FATAL_STR("Non of the monitortask (WatchRSPboards, WatchTBboards, WatchEnvCntrl) "
-						"was switched on in the configfile, terminating program");
-		return (0);
-	}
-
-	// ok, we have something to do, do it.
-	GCFScheduler::instance()->setDelayedQuit(true);	// we need a clean shutdown
-	GCFScheduler::instance()->run();	// until stop was called
-
-	if (rsp) {
-		rsp->quit();		// let task quit nicely
-	}
-	if (tbb) {
-		tbb->quit();		// let task quit nicely
-	}
-   if (ec) {
-		ec->quit();		   // let task quit nicely
-	}
-	double	postRunTime = globalParameterSet()->getDouble("closingDelay", 1.5);
-	GCFScheduler::instance()->run(postRunTime);	// let processes die.
 
 	return (0);
 }
