@@ -289,10 +289,13 @@ class msss_calibrator_pipeline(control):
         #    Swapping outliers in the gains with the median 
         # Export the calibration solutions using gainoutliercorrection and store
         # the results in the files specified in the instrument mapfile.
+        export_instrument_model = eval(py_parset.getString(
+            'Calibration.export_instrument_model'))
         with duration(self, "gainoutliercorrection"):
             self.run_task("gainoutliercorrection",
                       (parmdb_mapfile, instrument_mapfile),
-                      sigma=1.0) # TODO: Parset parameter
+                      sigma=1.0,
+                      export_instrument_model=export_instrument_model) # TODO: Parset parameter
 
         # *********************************************************************
         # 6. Create feedback file for further processing by the LOFAR framework
