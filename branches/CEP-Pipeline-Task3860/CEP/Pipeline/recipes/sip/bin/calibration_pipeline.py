@@ -236,6 +236,8 @@ class calibration_pipeline(control):
                 sky_mapfile=sourcedb_mapfile
             )
 
+        return 0
+
 
 if __name__ == '__main__':
     sys.exit(calibration_pipeline().main())

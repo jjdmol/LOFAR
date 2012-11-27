@@ -192,6 +192,8 @@ class preprocessing_pipeline(control):
                 data_end_time=vdsinfo['end_time'],
                 parset=ndppp_parset)
 
+        return 0
+
 
 if __name__ == '__main__':
     sys.exit(preprocessing_pipeline().main())
