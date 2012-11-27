@@ -185,7 +185,7 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 			return (-1);	
 		}
 
-		connecting = true;
+		_connecting = true;
 
 	} else {
 		// poll an existing connection
