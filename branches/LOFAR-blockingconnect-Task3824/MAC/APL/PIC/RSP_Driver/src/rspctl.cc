@@ -4208,8 +4208,6 @@ using namespace LOFAR::rspctl;
 
 int main(int argc, char** argv)
 {
-	INIT_LOGGER(argv[0]);
-
 	GCFScheduler::instance()->init(argc, argv, "rspctl");
 
 	LOG_INFO(formatString("Program %s has started", argv[0]));
