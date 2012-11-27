@@ -55,19 +55,6 @@ class Transpose2;
 class CN_Transpose2;
 
 enum StokesType { STOKES_I = 0, STOKES_IQUV, STOKES_XXYY, INVALID_STOKES = -1 };
-
-static StokesType stokesType( const std::string &name ) {
-  if (name == "I")
-    return STOKES_I;
-
-  if (name == "IQUV")
-    return STOKES_IQUV;
-
-  if (name == "XXYY")
-    return STOKES_XXYY;
-
-  return INVALID_STOKES;
-};
     
 
 // The Parset class is a public struct that can be used as base-class
