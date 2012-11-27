@@ -49,15 +49,11 @@ int main (int argc, char* argv[])
 		loggerTask.start(); // make initial transition
 
 		GCFScheduler::instance()->run();
-
-		LOG_INFO_STR("Shutting down: " << argv[0]);
 	}
 	catch (LOFAR::Exception&	ex) {
 		LOG_FATAL_STR("Caught exception: " << ex);
-		LOG_FATAL     ("Terminated by exception!");
 		return (1);
 	}
 
-	LOG_INFO("Terminated normally");
 	return (0);
 }

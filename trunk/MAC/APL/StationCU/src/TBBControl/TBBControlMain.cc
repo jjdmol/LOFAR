@@ -34,17 +34,22 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {
-	// args: cntlrname, parentHost, parentService
-	GCFScheduler::instance()->init(argc, argv, argv[0]);
-	GCFScheduler::instance()->disableQueue();  // run as fast as possible
+	try {
+		// args: cntlrname, parentHost, parentService
+		GCFScheduler::instance()->init(argc, argv, argv[0]);
+		GCFScheduler::instance()->disableQueue();  // run as fast as possible
 
-	ParentControl*	pc = ParentControl::instance();
-	pc->start();	// make initial transition
+		ParentControl*	pc = ParentControl::instance();
+		pc->start();	// make initial transition
 
-	TBBControl		tc(argv[1]);
-	tc.start(); 	// make initial transition
+		TBBControl		tc(argv[1]);
+		tc.start(); 	// make initial transition
 
-	GCFScheduler::instance()->run();
+		GCFScheduler::instance()->run();
+	} catch( Exception &ex ) {
+		LOG_FATAL_STR("Caught exception: " << ex);
+		return 1;
+	}
 
 	return 0;
 }
