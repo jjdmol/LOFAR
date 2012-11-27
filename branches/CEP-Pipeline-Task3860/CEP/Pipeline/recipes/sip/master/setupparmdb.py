@@ -152,7 +152,13 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
                 )
             self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
             for job, outp in zip(jobs, outdata):
-                if job.results['returncode'] != 0:
+                # If the returncode is 123456, failing ssh
+                if job.results['returncode'] == 123456:
+                    self.logger.warning("ssh connection with {0} failed."
+                        "Skipping further work on this task".format(outp.host))
+                    self.logger.warning("Error code 123456.")
+                    outp.skip = True
+                elif job.results['returncode'] != 0:
                     outp.skip = True
 
         # *********************************************************************

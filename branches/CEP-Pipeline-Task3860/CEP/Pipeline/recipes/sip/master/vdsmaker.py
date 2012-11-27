@@ -104,7 +104,7 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
             )
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
         vdsnames = [
-            vds for vds, job in zip(vdsnames, jobs)
+            vds for vds, job in zip(vdsnames, jobs) 
             if job.results['returncode'] == 0
         ]
 
