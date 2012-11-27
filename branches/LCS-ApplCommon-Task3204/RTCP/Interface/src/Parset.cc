@@ -1310,7 +1310,7 @@ string Parset::HBADeltasDir() const
   return getString("OLAP.Storage.HBADeltasDir","");
 }
 
-struct StreamInfo::log() const
+void StreamInfo::log() const
 {
   LOG_DEBUG_STR( "Stream " << stream << " is sap " << sap << " beam " << beam << " stokes " << stokes << " part " << part << " consisting of subbands " << subbands );
 }
