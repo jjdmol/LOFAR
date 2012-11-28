@@ -61,7 +61,6 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         this.addColumn("coordtype");
         this.addColumn("#TAB");
         this.addColumn("subbands");
-        this.addColumn("beamlets");
     }
     
     /** fills the table with the initial settings
@@ -138,8 +137,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
                              aBeam.getAngle2(),
                              aBeam.getCoordType(),
                              aBeam.getNrTiedArrayBeams(),
-                             aBeam.getSubbandList(),
-                             aBeam.getBeamletList() };
+                             aBeam.getSubbandList() };
         this.addRow(newRow);
         itsBeams.trimToSize();
 
@@ -171,7 +169,6 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         this.setValueAt(newBeam.getCoordType(),row,3);
         this.setValueAt(newBeam.getNrTiedArrayBeams(),row,5);
         this.setValueAt(newBeam.getSubbandList(),row,6);
-        this.setValueAt(newBeam.getBeamletList(),row,7);
         
         isChanged=true;
 

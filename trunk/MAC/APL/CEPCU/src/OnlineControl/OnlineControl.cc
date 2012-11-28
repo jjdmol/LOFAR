@@ -614,7 +614,7 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		int32	result = system (startCmd.c_str());
 		LOG_INFO_STR ("Result of command = " << result);
 
-		itsTimerPort->setTimer(2.0);
+		itsTimerPort->setTimer(302.0); // IONProc, and thus CEPlogProcessor, can take up to 5 minutes to wrap up
 		break;
 	}
 
