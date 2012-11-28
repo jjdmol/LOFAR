@@ -79,17 +79,7 @@ private:
 		string 			servicename;
 		string			hostname;
 		time_t			timestamp;
-		action_t& operator= (const action_t& other) {        
-			if (this != &other) {
-				seqnr		= other.seqnr;
-				type		= other.type;
-				pPort		= other.pPort;
-				servicename = other.servicename;          
-				hostname	= other.hostname;
-				timestamp	= other.timestamp;
-			}
-			return (*this);
-		}      
+
 		string print() const {
 			stringstream	oss;
 			oss << "Action[" << seqnr << ": " << type << ", " << servicename << "@" << hostname << "]";

@@ -334,10 +334,10 @@ void ServiceBrokerTask::_doActionList(const string&	hostname)
 
 	// Note: while processing the list, the list grows. Therefore we use actionsLeft.
     actionList_t 		tmpActionList;    	// NOTE: 'erase' reorders the elements of a list!!!
+
 	tmpActionList.swap(itsActionList);
-	ALiter		end  = tmpActionList.end();
-	ALiter		iter = tmpActionList.begin();
-	while (iter != end) {
+
+	for (ALiter iter = tmpActionList.begin(); iter != tmpActionList.end(); ++iter) {
 		LOG_TRACE_COND_STR("doActionList checking: " << iter->print());
 		// only process the actions for this host
 		if (iter->hostname != hostname) {
@@ -361,9 +361,7 @@ void ServiceBrokerTask::_doActionList(const string&	hostname)
 			ASSERTSTR(false, "Unknown action in actionlist: " << iter->type
 						<< ":" << iter->servicename << "@" << iter->hostname);
 		}
-		iter++;
 	}
-	tmpActionList.clear();
 }
 
 //
@@ -379,9 +377,8 @@ void ServiceBrokerTask::_lostBroker(const string& hostname)
 	// Note: while processing the list, the list grows. Therefore we use actionsLeft.
     actionList_t 		tmpActionList;    	// NOTE: 'erase' reorders the elements of a list!!!
 	tmpActionList.swap(itsActionList);
-	ALiter		end  = tmpActionList.end();
-	ALiter		iter = tmpActionList.begin();
-	while (iter != end) {
+
+	for (ALiter iter = tmpActionList.begin(); iter != tmpActionList.end(); ++iter) {
 		LOG_TRACE_COND_STR("_lostBroker checking: " << iter->print());
 		// only process the actions for this host
 		if (iter->hostname != hostname) {
@@ -416,9 +413,7 @@ void ServiceBrokerTask::_lostBroker(const string& hostname)
 			ASSERTSTR(false, "Unknown action in actionlist: " << iter->type
 						<< ":" << iter->servicename << "@" << iter->hostname);
 		}
-		iter++;
 	}
-	tmpActionList.clear();
 }
 
 //
