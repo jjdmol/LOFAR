@@ -28,6 +28,7 @@
 #include <Stream/FileStream.h>
 
 #include <string>
+#include <iostream>
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
