@@ -27,6 +27,7 @@
 #include <Common/SystemUtil.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/LofarDirs.h>
+#include <ApplCommon/PosixTime.h>
 
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>

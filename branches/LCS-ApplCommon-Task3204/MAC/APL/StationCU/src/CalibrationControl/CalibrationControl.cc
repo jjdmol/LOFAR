@@ -21,7 +21,6 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <ApplCommon/PosixTime.h>
 #include <Common/Version.h>
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationConfig.h>

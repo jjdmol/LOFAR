@@ -25,7 +25,6 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ApplCommon/PosixTime.h>
 #include <Common/StringUtil.h>
 
 #include "VHECR/TBBTrigger.h" // path for online use

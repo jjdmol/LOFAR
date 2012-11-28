@@ -25,7 +25,6 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
-#include<ApplCommon/PosixTime.h>
 #include<OTDB/CampaignInfo.h>
 
 using namespace pqxx;

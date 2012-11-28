@@ -25,7 +25,6 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
-#include<ApplCommon/PosixTime.h>
 #include<OTDB/OTDBtree.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 

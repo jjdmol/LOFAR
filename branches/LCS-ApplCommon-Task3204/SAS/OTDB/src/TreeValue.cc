@@ -25,7 +25,6 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ApplCommon/PosixTime.h>
 #include <OTDB/TreeValue.h>
 
 #include <pqxx/transaction>

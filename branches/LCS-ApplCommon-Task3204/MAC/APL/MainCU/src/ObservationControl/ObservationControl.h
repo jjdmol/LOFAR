@@ -42,7 +42,6 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
-#include <ApplCommon/PosixTime.h>
 
 //# ACC Includes
 #include <Common/ParameterSet.h>
