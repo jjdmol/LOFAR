@@ -55,17 +55,6 @@ GTMSBTCPPort::GTMSBTCPPort()
 {
 }
 
-//
-// ~GTMSBTCPPort()
-//
-GTMSBTCPPort::~GTMSBTCPPort()
-{
-	if (_pSocket) {
-		delete _pSocket;  
-		_pSocket = 0;  
-	}
-}
-
 
 //
 // open()
@@ -79,7 +68,6 @@ bool GTMSBTCPPort::open()
 
 	if (!_pSocket) {
 		_pSocket = new GTMTCPSocket(*this);
-		ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for SBtask");
 		_pSocket->setBlocking(false);
 	}
 

@@ -49,8 +49,6 @@ class GTMSBTCPPort : public TM::GCFTCPPort
 						   bool 						   transportRawData = false);
     explicit GTMSBTCPPort ();
   
-    virtual ~GTMSBTCPPort ();
-  
   public:
 
     // open/close functions
