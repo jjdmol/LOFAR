@@ -132,7 +132,10 @@ def mail_log_on_exception(target):
                         )
 
             _mail_msg_to("pipeline_finished", "klijn@astron.nl",
-                         "pipeline finished", msg_string)
+                         "pipeline finished: {0}: {1}".format(
+                                os.path.basename(calling_object.__file__),
+                                calling_object.inputs['job_name']),
+                         msg_string)
 
         except Exception, message:
             # Static list of mail to be send (could be made configurable,
