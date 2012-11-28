@@ -61,6 +61,8 @@ private:
     GTMTCPServerSocket (const GTMTCPServerSocket&);
     GTMTCPServerSocket& operator= (const GTMTCPServerSocket&);
 
+    bool _accept (GTMFile& newSocket);
+
 protected:
     virtual void doWork();
     
