@@ -209,9 +209,9 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 
 			default:
                                 // check whether connect was succesful or error
-                                int so_error, ret;
+                                int so_error;
                                 socklen_t slen = sizeof so_error;
-                                if (getsockopt(s, SOL_SOCKET, SO_ERROR, &so_error, &slen) < 0) {
+                                if (getsockopt(_fd, SOL_SOCKET, SO_ERROR, &so_error, &slen) < 0) {
                                     // serious error
                                     LOG_WARN_STR(_port.getName() << ":getsockopt(" << host << "," << portNumber << "), error: " << strerror(errno));
                                     ::close(_fd);
