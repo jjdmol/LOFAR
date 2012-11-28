@@ -49,11 +49,6 @@ GTMTCPSocket::GTMTCPSocket(GCFTCPPort& port) :
 {
 }
 
-GTMTCPSocket::~GTMTCPSocket()
-{
-  close();
-}
-
 //
 // send(buf, count)
 //
