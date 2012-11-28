@@ -159,12 +159,10 @@ bool GCFTCPPort::open()
 
 		if ((getType() == SPP) || (getType() == MSPP)) {
 			_pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
-			ASSERTSTR(_pSocket, "Could not create GTMTCPServerSocket for port " << getName());
 		}
 		else {
 			ASSERTSTR (SAP == getType(), "Unknown TPCsocket type " << getType());
 			_pSocket = new GTMTCPSocket(*this);
-			ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for port " << getName());
 			_pSocket->setBlocking(false);
 		}
 	}
@@ -218,9 +216,8 @@ bool GCFTCPPort::open()
 	// porttype = MSPP or SPP
 	// portnumber overruled by user? try mac.ns.<taskname>.<realname>.port
 	string portNumParam = formatString(PARAM_TCP_PORTNR, getTask()->getName().c_str(), getRealName().c_str());
-	if (globalParameterSet()->isDefined(portNumParam)) {
-		_portNumber = globalParameterSet()->getInt32(portNumParam);
-	}
+
+	_portNumber = globalParameterSet()->getInt32(portNumParam, 0);
 	if (_portNumber > 0) {					// portnumber hard set by user.
 		serviceRegistered(SB_NO_ERROR, _portNumber);	// 'hard' open port
 		return (true);
