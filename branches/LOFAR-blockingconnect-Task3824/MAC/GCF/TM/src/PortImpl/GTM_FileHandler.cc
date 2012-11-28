@@ -77,7 +77,6 @@ void GTMFileHandler::deregisterFile(GTMFile& file)
 void GTMFileHandler::workProc()
 {
 	int				result;
-	int				fd;
 	TFiles 			testFiles;
 	struct timeval	select_timeout;
 
@@ -101,8 +100,8 @@ void GTMFileHandler::workProc()
 
 	if (result >= 0) {
     for (TFiles::iterator i = testFiles.begin(); i != testFiles.end() && _running; ++i) {
-      int &fd = i->first;
-      GTMFile &file = i->second;
+      int fd = i->first;
+      GTMFile *file = i->second;
 
 			if (FD_ISSET(fd, &testFDs)) {
 				file->doWork();
