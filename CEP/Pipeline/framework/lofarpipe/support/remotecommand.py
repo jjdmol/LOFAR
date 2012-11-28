@@ -57,7 +57,7 @@ class ParamikoWrapper(object):
     def kill(self):
         self.chan.close()
 
-def run_remote_command(config, logger, host, command, env, arguments = None):
+def run_remote_command(config, logger, host, command, env, arguments=None):
     """
     Run command on host, passing it arguments from the arguments list and
     exporting key/value pairs from env(a dictionary).
@@ -101,7 +101,7 @@ def run_via_mpirun(logger, host, command, environment, arguments):
     mpi_cmd.extend(str(arg) for arg in arguments)
     env = os.environ
     env.update(environment)
-    process = spawn_process(mpi_cmd, logger, env = env)
+    process = spawn_process(mpi_cmd, logger, env=env)
     # mpirun should be killed with a SIGTERM to enable it to shut down the
     # remote command.
     process.kill = lambda : os.kill(process.pid, signal.SIGTERM)
@@ -135,7 +135,7 @@ def run_via_paramiko(logger, host, command, environment, arguments, key_filename
     import paramiko
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(host, key_filename = key_filename)
+    client.connect(host, key_filename=key_filename)
     commandstring = ["%s=%s" % (key, value) for key, value in environment.items()]
     commandstring.append(command)
     commandstring.extend(re.escape(str(arg)) for arg in arguments)
@@ -152,7 +152,7 @@ class ProcessLimiter(defaultdict):
     :param nproc: Bound value for semaphore (ie, maximum number of jobs)
     :type nproc: integer or none
     """
-    def __init__(self, nproc = None):
+    def __init__(self, nproc=None):
         if nproc:
             super(ProcessLimiter, self).__init__(
                 lambda: BoundedSemaphore(int(nproc))
@@ -177,11 +177,13 @@ class ComputeJob(object):
     :param command: Full path to command to be run on target host
     :param arguments: List of arguments which will be passed to command
     """
-    def __init__(self, host, command, arguments = []):
+    def __init__(self, host, command, arguments=[]):
         self.host = host
         self.command = command
         self.arguments = arguments
         self.results = {}
+        self.results['returncode'] = 123456 # Default to obscure code to allow
+        # test of failing ssh connections
 
     def dispatch(self, logger, config, limiter, id, jobhost, jobport, error, killswitch):
 
@@ -208,7 +210,7 @@ class ComputeJob(object):
                     "PYTHONPATH": os.environ.get('PYTHONPATH'),
                     "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH')
                 },
-                arguments = [id, jobhost, jobport]
+                arguments=[id, jobhost, jobport]
             )
             # Wait for process to finish. In the meantime, if the killswitch
             # is set (by an exception in the main thread), forcibly kill our
@@ -277,7 +279,7 @@ class RemoteCommandRecipeMixIn(object):
     """
     Mix-in for recipes to dispatch jobs using the remote command mechanism.
     """
-    def _schedule_jobs(self, jobs, max_per_node = None):
+    def _schedule_jobs(self, jobs, max_per_node=None):
         """
         Schedule a series of compute jobs. Blocks until completion.
 
@@ -300,8 +302,8 @@ class RemoteCommandRecipeMixIn(object):
                 jobpool[job_id] = job
                 threadpool.append(
                     threading.Thread(
-                        target = job.dispatch,
-                        args = (
+                        target=job.dispatch,
+                        args=(
                             self.logger, self.config, limiter, job_id,
                             jobhost, jobport, self.error, killswitch
                         )

@@ -2,8 +2,8 @@
 #coding: iso-8859-15
 
 ## database info
-dbName="BBSbwcomp"
-dbHost="rs005"
+dbName="LOFAR_4"
+dbHost="sas001"
 
 def getDBname():
     return(dbName)
