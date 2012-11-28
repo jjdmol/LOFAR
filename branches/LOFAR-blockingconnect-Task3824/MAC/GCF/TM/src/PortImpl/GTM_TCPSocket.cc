@@ -166,8 +166,7 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 		// create a new connection
 		if ((::connect(_fd, (struct sockaddr *)&serverAddr, sizeof(struct sockaddr_in)) == 0)) {
 			// connect succesfull, register filedescriptor
-			ASSERT(_pHandler);
-			_pHandler->registerFile(*this);
+      setFD(_fd);
 			return (1);
 		}
 
@@ -175,8 +174,7 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 		if (errno != EINPROGRESS) {
 			// serious error
 			LOG_WARN_STR(_port.getName() << ":connect(" << host << "," << portNumber << "), error: " << strerror(errno));
-			::close(_fd);
-			_fd = -1;
+                        close();
 			return (-1);	
 		}
 
@@ -192,39 +190,36 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 
 		// if the socket is writable, then the connection is established
 		switch(::select(_fd + 1, NULL, &fds, NULL, &timeout)) {
+			case 0:
+				// no data available
+	                        break;
+
 			case -1:
 				// serious error
 				LOG_WARN_STR(_port.getName() << ":select(" << host << "," << portNumber << "), error: " << strerror(errno));
-				::close(_fd);
-				_fd = -1;
+				close();
 				return (-1);	
-			case 0:
-				// no data available
-				return 0;
 
 			default:
-                                // check whether connect was succesful or error
+                                // data available OR connection error
                                 int so_error;
                                 socklen_t slen = sizeof so_error;
                                 if (getsockopt(_fd, SOL_SOCKET, SO_ERROR, &so_error, &slen) < 0) {
                                     // serious error
                                     LOG_WARN_STR(_port.getName() << ":getsockopt(" << host << "," << portNumber << "), error: " << strerror(errno));
-                                    ::close(_fd);
-                                    _fd = -1;
+                                    close();
                                     return (-1);	
                                 }
 
                                 if (so_error == 0) {
                                     // connect succesfull, register filedescriptor
-                                    ASSERT(_pHandler);
-                                    _pHandler->registerFile(*this);
+                                    setFD(_fd);
                                     return 1;
                                 }
 
                                 // connection failure
                                 LOG_WARN_STR(_port.getName() << ":connect(" << host << "," << portNumber << "), error: " << strerror(errno));
-                                ::close(_fd);
-                                _fd = -1;
+                                close();
                                 return (-1);	
 		}
 	}

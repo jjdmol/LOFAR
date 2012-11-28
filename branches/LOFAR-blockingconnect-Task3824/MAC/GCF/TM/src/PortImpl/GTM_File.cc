@@ -53,8 +53,10 @@ GTMFile::GTMFile(GCFRawPort& port) :
 GTMFile::~GTMFile()
 {
 	close();
+
 	GTMFileHandler::release();
 	_pHandler = 0;
+
 	itsScheduler = 0;
 }
 
@@ -63,9 +65,10 @@ bool GTMFile::close()
 	bool result(true);
 
 	if (_fd > -1) { 
-		ASSERT(_pHandler);
 		_pHandler->deregisterFile(*this);
+
 		result = (::close(_fd) == 0);
+
 		if (!result) {
 			LOG_ERROR(formatString ( "::close, error: %s", strerror(errno)));
 
@@ -75,13 +78,14 @@ bool GTMFile::close()
 
 		_fd = -1;
 	}
+
 	return result;
 }
 
 int GTMFile::setFD(int fd)
 {
 	if (fd >= 0) {
-		if (_fd > -1) {
+		if (_fd > -1 && _fd != fd) {
 			close();
 		}
 		_fd = fd;
