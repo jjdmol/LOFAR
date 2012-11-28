@@ -176,8 +176,8 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 			return (1);
 		}
 
-		// socket should be in 'non-blocking' mode so several errors are allowed
-		if (errno != EINPROGRESS && errno != EALREADY) {
+		// socket should be in 'non-blocking' mode so some errors are allowed
+		if (errno != EINPROGRESS) {
 			// serious error
 			LOG_WARN_STR(_port.getName() << ":connect(" << host << "," << portNumber << "), error: " << strerror(errno));
 			::close(_fd);
@@ -208,10 +208,29 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 				return 0;
 
 			default:
-				// connect succesfull, register filedescriptor
-				ASSERT(_pHandler);
-				_pHandler->registerFile(*this);
-				return 1;
+                                // check whether connect was succesful or error
+                                int so_error, ret;
+                                socklen_t slen = sizeof so_error;
+                                if (getsockopt(s, SOL_SOCKET, SO_ERROR, &so_error, &slen) < 0) {
+                                    // serious error
+                                    LOG_WARN_STR(_port.getName() << ":getsockopt(" << host << "," << portNumber << "), error: " << strerror(errno));
+                                    ::close(_fd);
+                                    _fd = -1;
+                                    return (-1);	
+                                }
+
+                                if (so_error == 0) {
+                                    // connect succesfull, register filedescriptor
+                                    ASSERT(_pHandler);
+                                    _pHandler->registerFile(*this);
+                                    return 1;
+                                }
+
+                                // connection failure
+                                LOG_WARN_STR(_port.getName() << ":connect(" << host << "," << portNumber << "), error: " << strerror(errno));
+                                ::close(_fd);
+                                _fd = -1;
+                                return (-1);	
 		}
 	}
 
