@@ -39,21 +39,15 @@ void report( const string &filename )
   FileStream f(filename);
 
   struct RSP packet;
-  size_t nbytes;
 
-  nbytes = f.tryRead( &packet, sizeof packet );
+  // read header
+  f.read( &packet.header, sizeof (RSP::Header) );
 
 #ifdef WORDS_BIGENDIAN
   dataConvert(LittleEndian, packet.header.configuration);
   dataConvert(LittleEndian, packet.header.timestamp);
   dataConvert(LittleEndian, packet.header.blockSequenceNumber);
 #endif
-
-  // Check packet size
-
-  ASSERTSTR( nbytes > sizeof(RSP::Header), "Could not read RSP header (need " << sizeof(RSP::Header) << " bytes, got " << nbytes << " bytes)" );
-
-  ASSERTSTR( nbytes >= packet.packetSize(), "Invalid packet size (expected " << packet.packetSize() << " bytes, got " << nbytes << " bytes)" );
 
   cout << "RSP version:  " << (int)packet.header.version << endl;
   cout << "RSP board nr: " << packet.rspBoard() << endl;
@@ -62,6 +56,9 @@ void report( const string &filename )
   cout << "Bit mode:     " << packet.bitMode() << " bit" << endl;
   cout << "Blocks:       " << (int)packet.header.nrBlocks << endl;
   cout << "Beamlets:     " << (int)packet.header.nrBeamlets << endl;
+
+  // read payload
+  f.read( &packet.payload, packet.packetSize() - sizeof (RSP::Header) );
 
 #ifdef WORDS_BIGENDIAN
   if (packet.bitMode() == 16)
