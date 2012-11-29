@@ -1364,6 +1364,6 @@ rm -f ${TMP_FILE}
 ) >${DESTDIR}/${CPP_HEADERFILE}
 create_cpp_headerfile ${INPUTFILE} ${DBTYPE}
 echo "created: ${DESTDIR}/${CPP_HEADERFILE}"
-mkdir -p ../../../../installed/gnu_debug/include/Deployment/
-cp ${DESTDIR}/${CPP_HEADERFILE} ../../../../installed/gnu_debug/include/Deployment/
+#mkdir -p ../../../../installed/gnu_debug/include/Deployment/
+#cp ${DESTDIR}/${CPP_HEADERFILE} ../../../../installed/gnu_debug/include/Deployment/
 
