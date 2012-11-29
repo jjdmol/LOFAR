@@ -38,7 +38,7 @@ namespace LOFAR
   posix_time::ptime from_ustime_t(double secsEpoch1970) 
   {
     time_t sec(static_cast<time_t>(secsEpoch1970));
-    long usec(1000000 * (secsEpoch1970 - sec));
+    long usec(static_cast<long>(1000000 * (secsEpoch1970 - sec)));
     return posix_time::from_time_t(sec) + posix_time::microseconds(usec);
 	}
 
