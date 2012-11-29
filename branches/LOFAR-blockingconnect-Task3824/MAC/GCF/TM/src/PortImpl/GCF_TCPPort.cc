@@ -214,16 +214,20 @@ bool GCFTCPPort::open()
 	}
 
 	// porttype = MSPP or SPP
-	// portnumber overruled by user? try mac.ns.<taskname>.<realname>.port
-	string portNumParam = formatString(PARAM_TCP_PORTNR, getTask()->getName().c_str(), getRealName().c_str());
 
-	_portNumber = globalParameterSet()->getInt32(portNumParam, 0);
+	// PortNumber is determined by:
+	// 1. override by user in globalParameterSet ("mac.ns.<taskname>.<realname>.port")
+	// 2. set by setPortNumber()
+	// 3. given by ServiceBroker
+	string portNumParam = formatString(PARAM_TCP_PORTNR, getTask()->getName().c_str(), getRealName().c_str());
+	_portNumber = globalParameterSet()->getInt32(portNumParam, _portNumber);
+
 	if (_portNumber > 0) {					// portnumber hard set by user.
 		serviceRegistered(SB_NO_ERROR, _portNumber);	// 'hard' open port
 		return (true);
 	}
 
-	// portnumber not overruled by user so ask SB for a portnumber
+	// portnumber not known so ask SB for a portnumber
 	_broker = ServiceBrokerTask::instance();
 	ASSERT(_broker);
 	_broker->registerService(*this); // a (dis)connect event will be scheduled
