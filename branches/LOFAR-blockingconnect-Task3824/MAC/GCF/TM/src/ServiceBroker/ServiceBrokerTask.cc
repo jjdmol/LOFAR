@@ -462,7 +462,7 @@ void ServiceBrokerTask::_reconnectBrokers()
 				iter->second.port->open();						// might result in F_CONN or F_DISCONN
 			}
 			else {
-				LOG_DEBUG_STR("Removing servicebroker for " << tmp->first << " from brokermap");
+				LOG_DEBUG_STR("Removing servicebroker for " << iter->first << " from brokermap");
 				itsBrokerMap.erase(iter);
 			}
 		}
