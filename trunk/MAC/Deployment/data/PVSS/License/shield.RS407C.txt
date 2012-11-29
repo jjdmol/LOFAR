@@ -1,8 +1,8 @@
 [license]
-code        = "RS407C 20556792170"
-version     = 30800002
-sn          = "471_3031_2_Astron_Gen_II_2_311/5"
-date        = 2012.11.29;16:53:51,000 
+code        = "RS407C 00474340129"
+version     = 31100002
+sn          = "471_3031_2_Astron_Gen_II_2_311/6"
+date        = 2012.11.29;17:02:49,000 
 comment     = "Remote Station RS407"
 expire      = 0000.00.00;00:00:00,000 
 redundancy  = 0
