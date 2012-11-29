@@ -56,7 +56,7 @@ public:
 		void setYSI(bool	on) { bypass.siy_enable = on ? 1 : 0; }
 		bool getXSI() const 	{ return (bypass.six_enable); }
 		bool getYSI() const 	{ return (bypass.siy_enable); }
-		uint8	getAsUint8() const	{ return *reinterpret_cast<uint8*>(&bypass))); } // Yak
+		uint8	getAsUint8() const	{ return *reinterpret_cast<const uint8*>(&bypass); } // Yak
 		DIAGBypass	getRaw()  const	{ return (bypass); }
 		void setRaw(const DIAGBypass	newBypass) { bypass = newBypass; }
 	private:
