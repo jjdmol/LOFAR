@@ -513,7 +513,7 @@ def mfclean(args):
     parms["cyclefactor"] = 1.5
     parms["cyclespeedup"] = -1.0
     parms["threshold"] = 0.0
-    parms["niter"] = 100
+    parms["niter"] = 10000
 
     n_model = 1
     # TODO: Double check code for n_model > 1!
