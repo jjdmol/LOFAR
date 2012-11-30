@@ -440,7 +440,7 @@ void SSHconnection::commThread()
               if (!buffer.good()) {
                 // 'line' now holds the remnant
 
-                if (line[s].size() > 1024) {
+                if (line[s].size() > 10240) {
                   LOG_ERROR_STR( itsLogPrefix << "Line too long (" << line[s].size() << "); truncated: " << line[s] );
                   line[s] = "";
                 }
