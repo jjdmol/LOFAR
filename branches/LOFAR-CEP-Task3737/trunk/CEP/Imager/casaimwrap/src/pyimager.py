@@ -2,208 +2,207 @@
 
 import sys
 import argparse
+import os.path as path
 
 import pylab
 import numpy
-import lofar.casaimwrap
 import pyrap.images
-import pyrap.tables
-import os.path as path
+import lofar.casaimwrap
 
 #class WeightAlgorithm:
 #    NATURAL, UNIFORM, ROBUST, RADIAL = range(4)
 
-class MeasurementProcessorCASA:
-    def __init__(self, measurement, options):
-        self._measurement = measurement
-        self._ms = pyrap.tables.table(measurement)
-        self._ms = self._ms.query("ANTENNA1 != ANTENNA2 && OBSERVATION_ID == 0 \
-            && FIELD_ID == 0 && DATA_DESC_ID == 0")
+#class MeasurementProcessorCASA:
+#    def __init__(self, measurement, options):
+#        self._measurement = measurement
+#        self._ms = pyrap.tables.table(measurement)
+#        self._ms = self._ms.query("ANTENNA1 != ANTENNA2 && OBSERVATION_ID == 0 \
+#            && FIELD_ID == 0 && DATA_DESC_ID == 0")
 
-#        assert(options["weight_algorithm"] == WeightAlgorithm.NATURAL)
-        self._data_column = "CORRECTED_DATA"
+##        assert(options["weight_algorithm"] == WeightAlgorithm.NATURAL)
+#        self._data_column = "CORRECTED_DATA"
 
-        # Defaults from awimager.
-        parms = {}
-        parms["wmax"] = options["wmax"]
-        parms["mueller.grid"] = numpy.ones((4, 4), dtype=bool)
-        parms["mueller.degrid"] = numpy.ones((4, 4), dtype=bool)
-        parms["verbose"] = 0                # 1, 2 for more output
-        parms["maxsupport"] = 1024
-        parms["oversample"] = 8
-        parms["imagename"] = options["image"]
-        parms["UseLIG"] = False             # linear interpolation
-        parms["UseEJones"] = True
-        #parms["ApplyElement"] = True
-        parms["PBCut"] = 1e-2
-        parms["StepApplyElement"] = 0       # if 0 don't apply element beam
-        parms["PredictFT"] = False
-        parms["PsfImage"] = ""
-        parms["UseMasksDegrid"] = True
-        parms["RowBlock"] = 10000000
-        parms["doPSF"] = False
-        parms["applyIonosphere"] = False
-        parms["applyBeam"] = True
-        parms["splitbeam"] = True
-        parms["padding"] = options["padding"]
-        # will be determined by LofarFTMachine
-        parms["wplanes"] = 64
+#        # Defaults from awimager.
+#        parms = {}
+#        parms["wmax"] = options["wmax"]
+#        parms["mueller.grid"] = numpy.ones((4, 4), dtype=bool)
+#        parms["mueller.degrid"] = numpy.ones((4, 4), dtype=bool)
+#        parms["verbose"] = 0                # 1, 2 for more output
+#        parms["maxsupport"] = 1024
+#        parms["oversample"] = 8
+#        parms["imagename"] = options["image"]
+#        parms["UseLIG"] = False             # linear interpolation
+#        parms["UseEJones"] = True
+#        #parms["ApplyElement"] = True
+#        parms["PBCut"] = 1e-2
+#        parms["StepApplyElement"] = 0       # if 0 don't apply element beam
+#        parms["PredictFT"] = False
+#        parms["PsfImage"] = ""
+#        parms["UseMasksDegrid"] = True
+#        parms["RowBlock"] = 10000000
+#        parms["doPSF"] = False
+#        parms["applyIonosphere"] = False
+#        parms["applyBeam"] = True
+#        parms["splitbeam"] = True
+#        parms["padding"] = options["padding"]
+#        # will be determined by LofarFTMachine
+#        parms["wplanes"] = 64
 
-        parms["ApplyBeamCode"] = 3
-        parms["UVmin"] = 0
-        parms["UVmax"] = 100000
-        parms["MakeDirtyCorr"] = False
+#        parms["ApplyBeamCode"] = 3
+#        parms["UVmin"] = 0
+#        parms["UVmax"] = 100000
+#        parms["MakeDirtyCorr"] = False
 
-        parms["timewindow"] = 300
-        parms["UseWSplit"] = True
-        parms["SingleGridMode"] = True
-        parms["SpheSupport"] = 15
-        parms["t0"] = -1
-        parms["t1"] = -1
-        parms["ChanBlockSize"] = 0
-        parms["FindNWplanes"] = True
+#        parms["timewindow"] = 300
+#        parms["UseWSplit"] = True
+#        parms["SingleGridMode"] = True
+#        parms["SpheSupport"] = 15
+#        parms["t0"] = -1
+#        parms["t1"] = -1
+#        parms["ChanBlockSize"] = 0
+#        parms["FindNWplanes"] = True
 
-        self._memento = lofar.casaimwrap.Memento()
-        lofar.casaimwrap.init(self._memento, self._measurement, parms)
+#        self._memento = lofar.casaimwrap.Memento()
+#        lofar.casaimwrap.init(self._memento, self._measurement, parms)
 
-    def capabilities(self):
-        return {}
+#    def capabilities(self):
+#        return {}
 
-    def phase_reference(self):
-        field = pyrap.tables.table(path.join(self._measurement, "FIELD"))
-        # Assumed to be in J2000 for now.
-        assert(field.getcolkeyword("PHASE_DIR", "MEASINFO")["Ref"] == "J2000")
-        return field.getcell("PHASE_DIR", 0)[0]
+#    def phase_reference(self):
+#        field = pyrap.tables.table(path.join(self._measurement, "FIELD"))
+#        # Assumed to be in J2000 for now.
+#        assert(field.getcolkeyword("PHASE_DIR", "MEASINFO")["Ref"] == "J2000")
+#        return field.getcell("PHASE_DIR", 0)[0]
 
-    def channel_frequency(self):
-        spw = pyrap.tables.table(path.join(self._measurement, \
-            "SPECTRAL_WINDOW"))
-        return spw.getcell("CHAN_FREQ", 0)
+#    def channel_frequency(self):
+#        spw = pyrap.tables.table(path.join(self._measurement, \
+#            "SPECTRAL_WINDOW"))
+#        return spw.getcell("CHAN_FREQ", 0)
 
-    def channel_width(self):
-        spw = pyrap.tables.table(path.join(self._measurement, \
-            "SPECTRAL_WINDOW"))
-        return spw.getcell("CHAN_FREQ", 0)
+#    def channel_width(self):
+#        spw = pyrap.tables.table(path.join(self._measurement, \
+#            "SPECTRAL_WINDOW"))
+#        return spw.getcell("CHAN_FREQ", 0)
 
-    def maximum_baseline_length(self):
-        return numpy.max(numpy.sqrt(numpy.sum(numpy.square( \
-            self._ms.getcol("UVW")), 1)))
+#    def maximum_baseline_length(self):
+#        return numpy.max(numpy.sqrt(numpy.sum(numpy.square( \
+#            self._ms.getcol("UVW")), 1)))
 
-    def density(self):
-        assert(False)
+#    def density(self):
+#        assert(False)
 
-    def average_response(self):
-        assert(False)
+#    def average_response(self):
+#        assert(False)
 
-    def psf(self, shape, coordinates):
-        args = {}
-        args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
-        args["ANTENNA2"] = self._ms.getcol("ANTENNA2")
-        args["UVW"] = self._ms.getcol("UVW")
-        args["TIME"] = self._ms.getcol("TIME")
-        args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
-        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
-        args["WEIGHT"] = self._ms.getcol("WEIGHT")
-        args["FLAG"] = self._ms.getcol("FLAG")
-        args["DATA"] = numpy.ones(args["FLAG"].shape, dtype=numpy.complex64)
+#    def psf(self, shape, coordinates):
+#        args = {}
+#        args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
+#        args["ANTENNA2"] = self._ms.getcol("ANTENNA2")
+#        args["UVW"] = self._ms.getcol("UVW")
+#        args["TIME"] = self._ms.getcol("TIME")
+#        args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
+#        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
+#        args["WEIGHT"] = self._ms.getcol("WEIGHT")
+#        args["FLAG"] = self._ms.getcol("FLAG")
+#        args["DATA"] = numpy.ones(args["FLAG"].shape, dtype=numpy.complex64)
 
-        lofar.casaimwrap.begin_grid(self._memento, shape, coordinates.dict(), \
-            True, args)
-        result = lofar.casaimwrap.end_grid(self._memento, False)
+#        lofar.casaimwrap.begin_grid(self._memento, shape, coordinates.dict(), \
+#            True, args)
+#        result = lofar.casaimwrap.end_grid(self._memento, False)
 
-        # Divide each plane (single channel, single correlation, all pixels)
-        # by its maximal weight (if larger than 0.0).
-        #
-        # TODO: Should this be done here or on a higher level?
-        image = result["image"]
-        weight = numpy.max(numpy.max(result["weight"], axis=3), axis=2)
-        return numpy.where(weight[:, :, numpy.newaxis, numpy.newaxis] > 0.0,
-            image / weight[:, :, numpy.newaxis, numpy.newaxis], 0.0)
+#        # Divide each plane (single channel, single correlation, all pixels)
+#        # by its maximal weight (if larger than 0.0).
+#        #
+#        # TODO: Should this be done here or on a higher level?
+#        image = result["image"]
+#        weight = numpy.max(numpy.max(result["weight"], axis=3), axis=2)
+#        return numpy.where(weight[:, :, numpy.newaxis, numpy.newaxis] > 0.0,
+#            image / weight[:, :, numpy.newaxis, numpy.newaxis], 0.0)
 
-    def grid(self, shape, coordinates):
-        args = {}
-        args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
-        args["ANTENNA2"] = self._ms.getcol("ANTENNA2")
-        args["UVW"] = self._ms.getcol("UVW")
-        args["TIME"] = self._ms.getcol("TIME")
-        args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
-        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
-        args["WEIGHT"] = self._ms.getcol("WEIGHT")
-        args["FLAG"] = self._ms.getcol("FLAG")
-        args["DATA"] = self._ms.getcol(self._data_column)
+#    def grid(self, shape, coordinates):
+#        args = {}
+#        args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
+#        args["ANTENNA2"] = self._ms.getcol("ANTENNA2")
+#        args["UVW"] = self._ms.getcol("UVW")
+#        args["TIME"] = self._ms.getcol("TIME")
+#        args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
+#        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
+#        args["WEIGHT"] = self._ms.getcol("WEIGHT")
+#        args["FLAG"] = self._ms.getcol("FLAG")
+#        args["DATA"] = self._ms.getcol(self._data_column)
 
-        lofar.casaimwrap.begin_grid(self._memento, shape, coordinates.dict(), \
-            False, args)
-        result = lofar.casaimwrap.end_grid(self._memento, False)
+#        lofar.casaimwrap.begin_grid(self._memento, shape, coordinates.dict(), \
+#            False, args)
+#        result = lofar.casaimwrap.end_grid(self._memento, False)
 
-        # Divide by the sum of the weights.
-        #
-        # TODO: Should this be done here or on a higher level?
-        image = result["image"]
-        weight = result["weight"]
-        return (numpy.where(weight > 0.0, image / weight, 0.0), weight)
+#        # Divide by the sum of the weights.
+#        #
+#        # TODO: Should this be done here or on a higher level?
+#        image = result["image"]
+#        weight = result["weight"]
+#        return (numpy.where(weight > 0.0, image / weight, 0.0), weight)
 
-    def degrid(self, coordinates, image):
-        args = {}
-        args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
-        args["ANTENNA2"] = self._ms.getcol("ANTENNA2")
-        args["UVW"] = self._ms.getcol("UVW")
-        args["TIME"] = self._ms.getcol("TIME")
-        args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
-        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
-        args["WEIGHT"] = self._ms.getcol("WEIGHT")
-        args["FLAG"] = self._ms.getcol("FLAG")
+#    def degrid(self, coordinates, image):
+#        args = {}
+#        args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
+#        args["ANTENNA2"] = self._ms.getcol("ANTENNA2")
+#        args["UVW"] = self._ms.getcol("UVW")
+#        args["TIME"] = self._ms.getcol("TIME")
+#        args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
+#        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
+#        args["WEIGHT"] = self._ms.getcol("WEIGHT")
+#        args["FLAG"] = self._ms.getcol("FLAG")
 
-        result = lofar.casaimwrap.begin_degrid(self._memento, \
-            coordinates.dict(), image, args)
-        lofar.casaimwrap.end_degrid(self._memento)
-        return result["data"]
-#        self._ms.putcol(self._data_column, result["data"])
+#        result = lofar.casaimwrap.begin_degrid(self._memento, \
+#            coordinates.dict(), image, args)
+#        lofar.casaimwrap.end_degrid(self._memento)
+#        return result["data"]
+##        self._ms.putcol(self._data_column, result["data"])
 
-    def residual(self, coordinates, image):
-        # Degrid image.
-        args = {}
-        args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
-        args["ANTENNA2"] = self._ms.getcol("ANTENNA2")
-        args["UVW"] = self._ms.getcol("UVW")
-        args["TIME"] = self._ms.getcol("TIME")
-        args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
-        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
-        args["WEIGHT"] = self._ms.getcol("WEIGHT")
-        args["FLAG"] = self._ms.getcol("FLAG")
+#    def residual(self, coordinates, image):
+#        # Degrid image.
+#        args = {}
+#        args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
+#        args["ANTENNA2"] = self._ms.getcol("ANTENNA2")
+#        args["UVW"] = self._ms.getcol("UVW")
+#        args["TIME"] = self._ms.getcol("TIME")
+#        args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
+#        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
+#        args["WEIGHT"] = self._ms.getcol("WEIGHT")
+#        args["FLAG"] = self._ms.getcol("FLAG")
 
-        result = lofar.casaimwrap.begin_degrid(self._memento, \
-            coordinates.dict(), image, args)
-        lofar.casaimwrap.end_degrid(self._memento)
+#        result = lofar.casaimwrap.begin_degrid(self._memento, \
+#            coordinates.dict(), image, args)
+#        lofar.casaimwrap.end_degrid(self._memento)
 
-        # Compute residual.
-        residual = result["data"] - self._ms.getcol(self._data_column)
+#        # Compute residual.
+#        residual = result["data"] - self._ms.getcol(self._data_column)
 
-        # Grid residual.
-        args = {}
-        args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
-        args["ANTENNA2"] = self._ms.getcol("ANTENNA2")
-        args["UVW"] = self._ms.getcol("UVW")
-        args["TIME"] = self._ms.getcol("TIME")
-        args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
-        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
-        args["WEIGHT"] = self._ms.getcol("WEIGHT")
-        args["FLAG"] = self._ms.getcol("FLAG")
-        args["DATA"] = residual
+#        # Grid residual.
+#        args = {}
+#        args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
+#        args["ANTENNA2"] = self._ms.getcol("ANTENNA2")
+#        args["UVW"] = self._ms.getcol("UVW")
+#        args["TIME"] = self._ms.getcol("TIME")
+#        args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
+#        args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
+#        args["WEIGHT"] = self._ms.getcol("WEIGHT")
+#        args["FLAG"] = self._ms.getcol("FLAG")
+#        args["DATA"] = residual
 
-        lofar.casaimwrap.begin_grid(self._memento, image.shape, \
-            coordinates.dict(), False, args)
-        result = lofar.casaimwrap.end_grid(self._memento, False)
+#        lofar.casaimwrap.begin_grid(self._memento, image.shape, \
+#            coordinates.dict(), False, args)
+#        result = lofar.casaimwrap.end_grid(self._memento, False)
 
-        # Divide by the sum of the weights.
-        #
-        # TODO: Should this be done here or on a higher level?
-        image = result["image"]
-        weight = result["weight"]
-        return (numpy.where(weight > 0.0, -image / weight, 0.0), weight)
+#        # Divide by the sum of the weights.
+#        #
+#        # TODO: Should this be done here or on a higher level?
+#        image = result["image"]
+#        weight = result["weight"]
+#        return (numpy.where(weight > 0.0, -image / weight, 0.0), weight)
 
-#    def average_response_and_grid(self):
-#        return (average_response(self), grid(self))
+##    def average_response_and_grid(self):
+##        return (average_response(self), grid(self))
 
 def show_image(title, data):
     print "%s:" % title, "min:", numpy.min(data), "max:", numpy.max(data), \
@@ -468,7 +467,8 @@ def mfclean(args):
     options["padding"] = args.padding
     options["image"] = args.image
 
-    proc = MeasurementProcessorCASA(args.ms, options)
+#    proc = MeasurementProcessorCASA(args.ms, options)
+    proc = lofar.casaimwrap.DataProcessorCASA(args.ms, options)
 
     channel_frequency = proc.channel_frequency()
     channel_width = proc.channel_width()
@@ -489,7 +489,7 @@ def mfclean(args):
     # multiply estimated FOV by 2.0.
     fwhm *= 2.0
 
-    delta_lm = wl / (6.0 * B_max)
+    delta_lm = wl / (3.0 * B_max)
     n_px = 2 * int(fwhm / delta_lm)
 
     print "angular scale @ 3 pixel/beam: %.2f arcsec/pixel" % (3600.0 * delta_lm * 180.0 / numpy.pi)
@@ -533,7 +533,7 @@ def mfclean(args):
     # Make approximate PSF images for all models.
     print "making approximate PSF images for all fields..."
     for model in range(n_model):
-        psf[model] = proc.psf(image_shape, image_coordinates)
+        psf[model] = proc.point_spread_function(image_coordinates, image_shape)
         fit = lofar.casaimwrap.fitGaussianPSF(image_coordinates.dict(), \
             psf[model])
         assert(fit["ok"])
@@ -585,7 +585,9 @@ def mfclean(args):
             # the degridded visibilities (see LofarCubeSkyEquation.cc).
             assert(n_model == 1)
             for i in range(n_model):
-                residual[i], ggS[i] = proc.residual(image_coordinates, image[i])
+                residual[i], ggS[i] = proc.residual(image_coordinates, \
+                    image[i], lofar.casaimwrap.Normalization.FLAT_NOISE, \
+                    lofar.casaimwrap.Normalization.FLAT_NOISE)
             modified = False
 
         if cycle == 1:
@@ -710,7 +712,9 @@ def mfclean(args):
         print "finalizing residual images for all fields..."
 
         for i in range(n_model):
-            residual[i], ggS[i] = proc.residual(image_coordinates, image[i])
+            residual[i], ggS[i] = proc.residual(image_coordinates, \
+                image[i], lofar.casaimwrap.Normalization.FLAT_NOISE, \
+                lofar.casaimwrap.Normalization.FLAT_NOISE)
         modified = False
 
 #        print "Final max ggS:", numpy.max(ggS[0])

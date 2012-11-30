@@ -20,7 +20,7 @@ install(TARGETS _casaimwrap
   DESTINATION ${PYTHON_INSTALL_DIR}/lofar/casaimwrap)
 
 # Install Python modules
-python_install(__init__.py DESTINATION lofar/casaimwrap)
+python_install(__init__.py DataProcessorCASA.py DataProcessorLowLevelCASA.py DESTINATION lofar/casaimwrap)
 
 # Install Python scripts
 install(PROGRAMS pyimager.py DESTINATION bin)
