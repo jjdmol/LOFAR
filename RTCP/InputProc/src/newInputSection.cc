@@ -13,6 +13,7 @@
 #include "StationSettings.h"
 #include "SampleBuffer.h"
 #include "StationData.h"
+#include "Generator.h"
 #include "mpi.h"
 
 #include <vector>
