@@ -8,7 +8,7 @@ lofar_add_library(casaimwrapcpp
 )
 
 lofar_add_library(_casaimwrap MODULE casaimwrap.cc)
-set_target_properties(_casaimwrap PROPERTIES 
+set_target_properties(_casaimwrap PROPERTIES
   PREFIX ""
   LIBRARY_OUTPUT_DIRECTORY ${PYTHON_BUILD_DIR}/lofar/casaimwrap)
 target_link_libraries(_casaimwrap casaimwrapcpp)
@@ -19,9 +19,5 @@ target_link_libraries(_casaimwrap casaimwrapcpp)
 install(TARGETS _casaimwrap
   DESTINATION ${PYTHON_INSTALL_DIR}/lofar/casaimwrap)
 
-# Install Python modules
-python_install(__init__.py DataProcessorCASA.py DataProcessorLowLevelCASA.py DESTINATION lofar/casaimwrap)
-
-# Install Python scripts
-install(PROGRAMS pyimager.py DESTINATION bin)
-
+# Install Python modules.
+python_install(__init__.py DESTINATION lofar/casaimwrap)

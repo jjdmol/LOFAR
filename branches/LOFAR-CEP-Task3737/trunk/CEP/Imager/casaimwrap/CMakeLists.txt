@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(casaimwrap 1.0 DEPENDS LofarFT)
+lofar_package(casaimwrap 0.1 DEPENDS LofarFT)
 
 include(LofarFindPackage)
 

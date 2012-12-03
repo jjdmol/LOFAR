@@ -21,5 +21,3 @@
 # $Id: __init__.py 20560 2012-03-26 12:06:49Z zwieten $
 
 from _casaimwrap import *
-from DataProcessorCASA import DataProcessorCASA, Normalization
-from DataProcessorLowLevelCASA import DataProcessorLowLevelCASA
