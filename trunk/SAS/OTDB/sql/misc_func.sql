@@ -35,6 +35,7 @@
 --
 CREATE OR REPLACE FUNCTION isAuthorized(INT4, INT4, INT2, INT4)
   RETURNS BOOLEAN AS $$
+    --  $Id$
 	DECLARE
 		vTreeType		OTDBtree.treetype%TYPE;
 		vState			OTDBtree.state%TYPE;
