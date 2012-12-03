@@ -5,8 +5,8 @@
 #include <Stream/Stream.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
-#include <RSP.h>
-#include <WallClockTime.h>
+#include <IONProc/RSP.h>
+#include <IONProc/WallClockTime.h>
 #include "SampleBuffer.h"
 #include "Ranges.h"
 #include "StationSettings.h"
@@ -21,14 +21,11 @@ template<typename T> class RSPBoard {
 public:
   RSPBoard( Stream &inputStream, SampleBuffer<T> &buffer, unsigned boardNr, const struct StationSettings &settings );
 
+  // RSP board  number
   const unsigned nr;
 
   bool readPacket();
   void writePacket();
-
-  static size_t packetSize( struct RSP &packet ) {
-    return sizeof(struct RSP::Header) + packet.header.nrBeamlets * packet.header.nrBlocks * sizeof(T);
-  }
   
 private:
   const std::string logPrefix;
@@ -44,7 +41,7 @@ private:
   const struct StationSettings settings;
   const size_t firstBeamlet;
 
-  size_t nrReceived, nrBadSize, nrBadTime, nrOutOfOrder;
+  size_t nrReceived, nrBadSize, nrBadTime, nrBadData, nrBadConfig, nrOutOfOrder;
 
   void logStatistics();
 };
@@ -64,6 +61,8 @@ template<typename T> RSPBoard<T>::RSPBoard( Stream &inputStream, SampleBuffer<T>
   nrReceived(0),
   nrBadSize(0),
   nrBadTime(0),
+  nrBadData(0),
+  nrBadConfig(0),
   nrOutOfOrder(0)
 {
 }
@@ -118,7 +117,7 @@ template<typename T> bool RSPBoard<T>::readPacket()
     inputStream.read(&packet, sizeof(struct RSP::Header));
 
     // read rest of packet
-    inputStream.read(&packet.data, packetSize(packet) - sizeof(struct RSP::Header));
+    inputStream.read(&packet.data, packet.packetSize() - sizeof(struct RSP::Header));
 
     ++nrReceived;
   } else {
@@ -128,8 +127,8 @@ template<typename T> bool RSPBoard<T>::readPacket()
     ++nrReceived;
 
     if( numbytes < sizeof(struct RSP::Header)
-     || numbytes != packetSize(packet) ) {
-      LOG_WARN_STR( logPrefix << "Packet is " << numbytes << " bytes, but should be " << packetSize(packet) << " bytes" );
+     || numbytes != packet.packetSize() ) {
+      LOG_WARN_STR( logPrefix << "Packet is " << numbytes << " bytes, but should be " << packet.packetSize() << " bytes" );
 
       ++nrBadSize;
       return false;
@@ -160,6 +159,23 @@ template<typename T> bool RSPBoard<T>::readPacket()
     return false;
   }
 
+  // discard packets with errors
+  if (packet.payloadError()) {
+    ++nrBadData;
+    return false;
+  }
+
+  // check whether the station configuration matches ours
+  if (packet.clockMHz() * 1000000 != settings.station.clock) {
+    ++nrBadConfig;
+    return false;
+  }
+
+  if (packet.bitMode() != settings.station.bitmode) {
+    ++nrBadConfig;
+    return false;
+  }
+
   // packet was read and is sane
 
   last_timestamp = timestamp;
@@ -176,12 +192,14 @@ template<typename T> bool RSPBoard<T>::readPacket()
 
 template<typename T> void RSPBoard<T>::logStatistics()
 {
-  LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrOutOfOrder << " out of order, " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes" );
+  LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrOutOfOrder << " out of order, " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadConfig << " configuration errors" );
 
   nrReceived = 0;
-  nrOutOfOrder = 0;
   nrBadTime = 0;
   nrBadSize = 0;
+  nrBadData = 0;
+  nrBadConfig = 0;
+  nrOutOfOrder = 0;
 }
 
 
@@ -294,82 +312,6 @@ template<typename T> void Station<T>::processBoard( size_t nr )
       if (board.readPacket())
         board.writePacket();
 
-  } catch (Stream::EndOfStreamException &ex) {
-    LOG_INFO_STR( logPrefix << "End of stream");
-  } catch (SystemCallException &ex) {
-    if (ex.error == EINTR)
-      LOG_INFO_STR( logPrefix << "Aborted: " << ex.what());
-    else
-      LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
-  } catch (Exception &ex) {
-    LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
-  }
-
-  LOG_INFO_STR( logPrefix << "End");
-}
-
-
-template<typename T> class Generator: public StationStreams {
-public:
-  Generator( const StationSettings &settings, const std::vector<std::string> &streamDescriptors );
-
-protected:
-  void processBoard( size_t nr );
-
-  virtual void makePacket( struct RSP &header, const TimeStamp &timestamp );
-};
-
-template<typename T> Generator<T>::Generator( const StationSettings &settings, const std::vector<std::string> &streamDescriptors )
-:
-  StationStreams(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors)
-{
-  LOG_INFO_STR( logPrefix << "Initialised" );
-}
-
-template<typename T> void Generator<T>::makePacket( struct RSP &packet, const TimeStamp &timestamp )
-{
-  packet.header.nrBeamlets = settings.nrBeamlets / settings.nrBoards;
-  packet.header.nrBlocks = 16;
-
-  packet.header.timestamp = timestamp.getSeqId();
-  packet.header.blockSequenceNumber = timestamp.getBlockId();
-
-  int64 data = timestamp;
-
-  memset(packet.data, data & 0xFF, sizeof packet.data);
-}
-
-template<typename T> void Generator<T>::processBoard( size_t nr )
-{
-  const std::string logPrefix(str(boost::format("[station %s %s board %u] [Generator] ") % settings.station.stationName % settings.station.antennaSet % nr));
-
-  try {
-    LOG_INFO_STR( logPrefix << "Connecting to " << streamDescriptors[nr] );
-    SmartPtr<Stream> s = createStream(streamDescriptors[nr], false);
-
-    LOG_INFO_STR( logPrefix << "Start" );
-
-    TimeStamp current(time(0L) + 1, 0, settings.station.clock);
-    for(;;) {
-      struct RSP packet;
-
-      makePacket( packet, current );
-
-      ASSERT(RSPBoard<T>::packetSize(packet) <= sizeof packet);
-     
-      if (!waiter.waitUntil(current))
-        break;
-
-      try {
-        s->write(&packet, RSPBoard<T>::packetSize(packet));
-      } catch (SystemCallException &ex) {
-        // UDP can return ECONNREFUSED or EINVAL if server does not have its port open
-        if (ex.error != ECONNREFUSED && ex.error != EINVAL)
-          throw;
-      }
-
-      current += packet.header.nrBlocks;
-    }
   } catch (Stream::EndOfStreamException &ex) {
     LOG_INFO_STR( logPrefix << "End of stream");
   } catch (SystemCallException &ex) {
