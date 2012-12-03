@@ -8,9 +8,11 @@ import numpy as N
 from image import *
 import mylogger
 import os
-from . import has_pl
-if has_pl:
+try:
     import matplotlib.pyplot as pl
+    has_pl = True
+except ImportError:
+    has_pl = False
 import _cbdsm
 from math import log, floor, sqrt
 import scipy.signal as S
@@ -154,6 +156,7 @@ class Op_wavelet_atrous(Op):
               wimg.extraparams['bbsappend'] = True
               wimg.bbspatchnum = img.bbspatchnum
               wimg.waveletimage = True
+              wimg.use_wcs = img.use_wcs
               wimg.j = j
               self.FITS_simple(wimg, img, w, '.atrous.' + suffix)
               img.atrous_opts.append(wimg.opts)

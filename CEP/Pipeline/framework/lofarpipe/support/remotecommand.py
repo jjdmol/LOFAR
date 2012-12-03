@@ -238,6 +238,8 @@ class ComputeJob(object):
             )
             error.set()
         self.results['returncode'] = process.returncode
+        logger.debug("compute.dispatch results job {0}: {1}".format(
+                    self.id, self.results))
         return process.returncode
 
 def threadwatcher(threadpool, logger, killswitch):

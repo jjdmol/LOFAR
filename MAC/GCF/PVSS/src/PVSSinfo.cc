@@ -458,7 +458,7 @@ bool PVSSinfo::isValidPropName(const char* propName)
 
 	// ref indication may only found at begin or after a GCF_PROP_NAME_SEP
 	char	refInd[] = "__";
-	const char*	refIndPos = strstr(propName, refInd);
+	char*	refIndPos = strstr(propName, refInd);
 	if (refIndPos != 0) {									// we found it
 		if (refIndPos > propName) {							// not at begin
 			if (*(refIndPos - 1) != GCF_PROP_NAME_SEP) {	// not at a dot
