@@ -85,6 +85,8 @@ if(NOT PVSS_FOUND)
     set(pvss_version "V${pvss_version_main}_${pvss_version_build}")
   endif(NOT PVSS_VERSINFO_MK)
 
+  message(STATUS "Searching for PVSS ${pvss_version}")
+
   # Search for the PVSS include directory
   find_path(PVSS_INCLUDE_DIR
     NAMES Basics/Utilities/Util.hxx
