@@ -48,6 +48,7 @@ protected:
     const struct BufferSettings settings;
 
     size_t nrReceived, nrBadSize, nrBadTime, nrBadData, nrBadMode;
+    bool hadSizeError, hadModeError;
   };
 
   class BufferWriter {
@@ -147,7 +148,9 @@ template<typename T> Station<T>::StreamReader::StreamReader( const std::string &
   nrBadSize(0),
   nrBadTime(0),
   nrBadData(0),
-  nrBadMode(0)
+  nrBadMode(0),
+  hadSizeError(false),
+  hadModeError(false)
 {
   inputStream = createStream(streamDescriptor, true);
 
@@ -176,7 +179,11 @@ template<typename T> bool Station<T>::StreamReader::readPacket( struct RSP &pack
 
     if( numbytes < sizeof(struct RSP::Header)
      || numbytes != packet.packetSize() ) {
-      LOG_WARN_STR( logPrefix << "Packet is " << numbytes << " bytes, but should be " << packet.packetSize() << " bytes" );
+
+      if (!hadSizeError) {
+        LOG_ERROR_STR( logPrefix << "Packet is " << numbytes << " bytes, but should be " << packet.packetSize() << " bytes" );
+        hadSizeError = true;
+      }
 
       ++nrBadSize;
       return false;
@@ -200,6 +207,12 @@ template<typename T> bool Station<T>::StreamReader::readPacket( struct RSP &pack
   // check whether the station configuration matches ours
   if (packet.clockMHz() * 1000000 != settings.station.clock
    || packet.bitMode() != settings.station.bitmode) {
+
+    if (!hadModeError) {
+      LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitmode() << " bit), but should be mode (" << settings.Station.clock / 1000000 << " MHz, " << settings.station.bitmode << " bit)");
+      hadModeError = true;
+    }
+
     ++nrBadMode;
     return false;
   }
@@ -217,6 +230,9 @@ template<typename T> void Station<T>::StreamReader::logStatistics()
   nrBadSize = 0;
   nrBadData = 0;
   nrBadMode = 0;
+
+  hadSizeError = false;
+  hadModeError = false;
 }
 
 
@@ -244,18 +260,24 @@ template<typename T> void Station<T>::BufferWriter::writePacket( const struct RS
 
   const TimeStamp timestamp(packet.header.timestamp, packet.header.blockSequenceNumber, settings.station.clock);
 
+  // determine the time span when cast on the buffer
   const size_t from_offset = (int64)timestamp % settings.nrSamples;
   size_t to_offset = ((int64)timestamp + nrTimeslots) % settings.nrSamples;
 
   if (to_offset == 0)
     to_offset = settings.nrSamples;
 
+  const size_t wrap = from_offset < to_offset ? 0 : settings.nrSamples - from_offset;
+
+  /*
+   * Make sure the buffer and flags are always consistent.
+   */
+
   // mark data we overwrite as invalid
   flags.excludeBefore(timestamp + nrTimeslots - settings.nrSamples);
 
   // transpose
   const T *beamlets = reinterpret_cast<const T*>(&packet.data);
-  const size_t wrap = from_offset < to_offset ? 0 : settings.nrSamples - from_offset;
 
   for (uint8 b = 0; b < nrBeamlets; ++b) {
     T *dst1 = &buffer.beamlets[firstBeamlet + b][from_offset];
@@ -285,7 +307,6 @@ template<typename T> void Station<T>::BufferWriter::logStatistics()
 
   nrWritten = 0;
 }
-
 
 
 }
