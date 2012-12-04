@@ -33,7 +33,7 @@ public:
 
 private:
   struct Range {
-    // Write'from' before 'to' to allow the following invariant:
+    // Write 'from' before 'to' to allow the following invariant:
     //
     // from <  to   : a valid range
     // from >= to   : invalid range (being written)
@@ -44,9 +44,9 @@ private:
   };
 
   size_t len;
-  Range * ranges;
-  Range * begin;
-  Range * end;
+  Range *ranges;
+  Range *begin;
+  Range *end;
   Range *head;
 
   // minimal history to maintain (samples newer than this
