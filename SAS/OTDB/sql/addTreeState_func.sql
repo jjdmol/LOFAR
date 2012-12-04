@@ -36,6 +36,7 @@
 --
 CREATE OR REPLACE FUNCTION addTreeState (INT4, INT4, INT2, INT4, VARCHAR(20))
   RETURNS VOID AS '
+    --  $Id$
 	DECLARE
 		vTime		timestamp := NULL;
 

@@ -35,6 +35,7 @@ DROP TYPE	OTDBnodeDef		CASCADE;
 DROP TYPE	campaignInfo	CASCADE;
 
 CREATE TYPE treeInfo AS (
+    --  $Id$
 	treeID				INT4,			-- OTDBtree.treeID%TYPE,
 	momID				INT4,
 	groupID				INT4,
@@ -55,6 +56,7 @@ CREATE TYPE treeInfo AS (
 );
 
 CREATE TYPE stateInfo AS (
+    --  $Id$
 	treeID			INT4,			-- OTDBtree.treeID%TYPE,
 	momID			INT4,			-- OTDBtree.momID%TYPE,
 	state			INT2,			-- treestate.ID%TYPE,
@@ -63,6 +65,7 @@ CREATE TYPE stateInfo AS (
 );
 
 CREATE TYPE OTDBnode AS (
+    --  $Id$
 	nodeID			INT4,
 	parentID		INT4,
 	paramDefID		INT4,
@@ -77,6 +80,7 @@ CREATE TYPE OTDBnode AS (
 -- make constructor for OTDBnode
 CREATE OR REPLACE FUNCTION makeOTDBnode(INT4,INT4,INT4,VARCHAR(40),INT2,BOOLEAN,INT2,TEXT,TEXT)
   RETURNS OTDBnode AS $$
+    --  $Id$
 	DECLARE
 	  vResult	RECORD;
 
@@ -88,6 +92,7 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE TYPE OTDBparamDef AS (
+    --  $Id$
 	paramID			INT4,
 	nodeID			INT4,
 	name			VARCHAR(40),
@@ -102,6 +107,7 @@ CREATE TYPE OTDBparamDef AS (
 
 
 CREATE TYPE OTDBvalue AS (
+    --  $Id$
 	paramID			INT4,
 	name			VARCHAR(150),
 	value			TEXT,
@@ -110,6 +116,7 @@ CREATE TYPE OTDBvalue AS (
 
 
 CREATE TYPE OTDBnodeDef AS (
+    --  $Id$
 	nodeID			INT4,
 	name			VARCHAR(40),
 	version			INT4,
@@ -119,6 +126,7 @@ CREATE TYPE OTDBnodeDef AS (
 );
 
 CREATE TYPE campaignInfo AS (
+    --  $Id$
     ID          INT2,
     name        VARCHAR(30),
     title       VARCHAR(100),
@@ -128,6 +136,7 @@ CREATE TYPE campaignInfo AS (
 );
 
 CREATE TYPE templateInfo AS (
+    --  $Id$
 	treeID			INT4,
 	name			VARCHAR(32),
 	processType		VARCHAR(20),

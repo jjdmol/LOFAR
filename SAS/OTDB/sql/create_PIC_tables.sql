@@ -58,6 +58,7 @@ DROP INDEX pic_kvt_time;
 CREATE SEQUENCE PICparamrefID;
 
 CREATE TABLE PICparamref (
+    --  $Id$
 	paramID		INT4			NOT NULL DEFAULT nextval('PICparamrefID'),
 	PVSSname	VARCHAR(150)	NOT NULL,
 	par_type	INT2			REFERENCES param_type(ID),
@@ -80,6 +81,7 @@ CREATE TABLE PICparamref (
 CREATE SEQUENCE	PIChierarchID;
 
 CREATE TABLE PIChierarchy (
+    --  $Id$
 	treeID		INT4			NOT NULL REFERENCES OTDBtree(treeID),
 	nodeID		INT4			NOT NULL DEFAULT nextval('PIChierarchID'),
 	parentID	INT4			NOT NULL, --  REFERENCES PIChierachy(nodeID),
@@ -103,6 +105,7 @@ CREATE UNIQUE INDEX PIChierarchy_treeid_nodeid_indx ON PIChierarchy(treeid, node
 -- because in simultaneous observations different PIC reference trees
 -- can be used. A change in value is important for all observations.
 CREATE TABLE PICkvt (
+    --  $Id$
 	paramID		INT4			NOT NULL REFERENCES PICparamref(paramID), 
 	value		TEXT			NOT NULL,
 	time		TIMESTAMP		DEFAULT now(),
