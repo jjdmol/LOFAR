@@ -11,6 +11,7 @@
 #include "OMPThread.h"
 #include "StationID.h"
 #include "StationSettings.h"
+#include "SampleType.h"
 #include "SampleBuffer.h"
 #include "SampleBufferReader.h"
 #include "RSPBoard.h"
@@ -627,7 +628,7 @@ int main( int argc, char **argv )
 {
   size_t clock = 200*1000*1000;
 
-  typedef SampleBuffer<int16>::SampleType SampleT;
+  typedef SampleType<i16complex> SampleT;
   const TimeStamp from(time(0L) + 1, 0, clock);
   const TimeStamp to(time(0L) + 1 + DURATION, 0, clock);
   const size_t blockSize = BLOCKSIZE * clock / 1024;
