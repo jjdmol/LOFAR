@@ -3,15 +3,19 @@
 
 #include <complex>
 #include <ostream>
+#include <Common/LofarTypes.h>
 
 namespace LOFAR {
 namespace RTCP {
 
 
 template<typename T> struct SampleType {
-  std::complex<T> x;
-  std::complex<T> y;
+  T x, y;
 };
+
+template<> struct SampleType<i16complex>;
+template<> struct SampleType<i8complex>;
+template<> struct SampleType<i4complex>;
 
 
 template<typename T> std::ostream &operator <<(std::ostream &str, const struct SampleType<T> &sample)
