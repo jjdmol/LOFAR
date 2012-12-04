@@ -9,6 +9,7 @@
 #include "SampleBuffer.h"
 #include "Ranges.h"
 #include "StationSettings.h"
+#include "time.h"
 #include <string>
 
 namespace LOFAR {
@@ -18,7 +19,7 @@ template<typename T> class RSPBoard {
 public:
   RSPBoard( Stream &inputStream, SampleBuffer<T> &buffer, unsigned boardNr, const struct StationSettings &settings );
 
-  // RSP board  number
+  // RSP board number
   const unsigned nr;
 
   bool readPacket();
@@ -31,14 +32,14 @@ private:
   const bool supportPartialReads;
   struct RSP packet;
   TimeStamp last_timestamp;
-  TimeStamp last_logtimestamp;
+  time_t last_logtime;
 
   SampleBuffer<T> &buffer;
   Ranges &flags;
   const struct StationSettings settings;
   const size_t firstBeamlet;
 
-  size_t nrReceived, nrBadSize, nrBadTime, nrBadData, nrBadConfig, nrOutOfOrder;
+  size_t nrReceived, nrBadSize, nrBadTime, nrBadData, nrBadMode, nrOutOfOrder;
 
   void logStatistics();
 };
@@ -49,6 +50,7 @@ template<typename T> RSPBoard<T>::RSPBoard( Stream &inputStream, SampleBuffer<T>
   logPrefix(str(boost::format("[station %s %s board %u] [RSPBoard] ") % settings.station.stationName % settings.station.antennaSet % nr)),
   inputStream(inputStream),
   supportPartialReads(dynamic_cast<SocketStream *>(&inputStream) == 0 || dynamic_cast<SocketStream &>(inputStream).protocol != SocketStream::UDP),
+  last_logtime(0),
 
   buffer(buffer),
   flags(buffer.flags[boardNr]),
@@ -59,7 +61,7 @@ template<typename T> RSPBoard<T>::RSPBoard( Stream &inputStream, SampleBuffer<T>
   nrBadSize(0),
   nrBadTime(0),
   nrBadData(0),
-  nrBadConfig(0),
+  nrBadMode(0),
   nrOutOfOrder(0)
 {
 }
@@ -109,6 +111,8 @@ template<typename T> void RSPBoard<T>::writePacket()
 
 template<typename T> bool RSPBoard<T>::readPacket()
 {
+  bool valid = true;
+
   if (supportPartialReads) {
     // read header first
     inputStream.read(&packet, sizeof(struct RSP::Header));
@@ -128,74 +132,67 @@ template<typename T> bool RSPBoard<T>::readPacket()
       LOG_WARN_STR( logPrefix << "Packet is " << numbytes << " bytes, but should be " << packet.packetSize() << " bytes" );
 
       ++nrBadSize;
-      return false;
+      valid = false;
     }
   }
 
-  // check sanity of packet
-
-  // detect bad timestamp
+  // illegal timestamp means illegal packet
   if (packet.header.timestamp == ~0U) {
     ++nrBadTime;
-    return false;
+    valid = false;
   }
 
-  const TimeStamp timestamp(packet.header.timestamp, packet.header.blockSequenceNumber, settings.station.clock);
+  if (valid) {
+    // check sanity of packet
 
-  // detect out-of-order data
-  if (timestamp < last_timestamp) {
-    ++nrOutOfOrder;
-    return false;
+    const TimeStamp timestamp(packet.header.timestamp, packet.header.blockSequenceNumber, settings.station.clock);
+
+    // don't accept out-of-order data
+    if (last_timestamp > timestamp) {
+      ++nrOutOfOrder;
+      valid = false;
+    }
+
+    // packet has legal timestamp
+    last_timestamp = timestamp;
+
+    // discard packets with errors
+    if (packet.payloadError()) {
+      ++nrBadData;
+      valid = false;
+    }
+
+    // check whether the station configuration matches ours
+    if (packet.clockMHz() * 1000000 != settings.station.clock
+     || packet.bitMode() != settings.station.bitmode) {
+      ++nrBadMode;
+      valid = false;
+    }
   }
 
-  // don't accept big jumps (>10s) in timestamp
-  const int64 oneSecond = settings.station.clock / 1024;
+  // log updated statistics
+  // TODO: use separate thread!
+  time_t now = time(0);
 
-  if (last_timestamp && packet.header.timestamp > last_timestamp + 10 * oneSecond) {
-    ++nrBadTime;
-    return false;
-  }
-
-  // discard packets with errors
-  if (packet.payloadError()) {
-    ++nrBadData;
-    return false;
-  }
-
-  // check whether the station configuration matches ours
-  if (packet.clockMHz() * 1000000 != settings.station.clock) {
-    ++nrBadConfig;
-    return false;
-  }
-
-  if (packet.bitMode() != settings.station.bitmode) {
-    ++nrBadConfig;
-    return false;
-  }
-
-  // packet was read and is sane
-
-  last_timestamp = timestamp;
-
-  if (timestamp > last_logtimestamp + oneSecond) {
+  if (now >= last_logtime + 1) {
     logStatistics();
 
-    last_logtimestamp = timestamp;
+    last_logtime = now;
   }
 
-  return true;
+  return valid;
 }
 
 
 template<typename T> void RSPBoard<T>::logStatistics()
 {
-  LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrOutOfOrder << " out of order, " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadConfig << " configuration errors" );
+  LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrOutOfOrder << " out of order, " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadMode << " mode errors" );
 
   nrReceived = 0;
   nrBadTime = 0;
   nrBadSize = 0;
   nrBadData = 0;
-  nrBadConfig = 0;
+  nrBadMode = 0;
   nrOutOfOrder = 0;
 }
 
