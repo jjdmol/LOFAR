@@ -400,9 +400,9 @@ LANG:1 0
 1
 "$name""MACScheduler"
 3 20 "PANEL_REF21" -1
-"objects\\Processes\\controller_small.pnl" 0 280 T 35 1 0 1 0 -32
+"objects\\Processes\\controller_small.pnl" 0 280 T 35 1 0 1 0 -30
 1
-"$name""SoftwareMonitor"
+"$name""Daemons_SoftwareMonitor"
 3 21 "PANEL_REF22" -1
 "objects\\Processes\\daemon_small.pnl" 0 140 T 35 1 0 1 0 12
 1
