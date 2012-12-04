@@ -10,7 +10,7 @@
 namespace LOFAR {
 namespace RTCP {
 
-Generator::Generator( const StationSettings &settings, const std::vector<std::string> &streamDescriptors )
+Generator::Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
 :
   StationStreams(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors)
 {

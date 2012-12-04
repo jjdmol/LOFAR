@@ -2,7 +2,7 @@
 #define __GENERATOR__
 
 #include <IONProc/RSP.h>
-#include "StationSettings.h"
+#include "BufferSettings.h"
 #include <string>
 #include <vector>
 
@@ -11,7 +11,7 @@ namespace RTCP {
 
 class Generator: public StationStreams {
 public:
-  Generator( const StationSettings &settings, const std::vector<std::string> &streamDescriptors );
+  Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
 
 protected:
   void processBoard( size_t nr );

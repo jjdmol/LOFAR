@@ -5,7 +5,7 @@
 #include <Stream/Stream.h>
 #include <Interface/SmartPtr.h>
 #include "SampleBuffer.h"
-#include "StationSettings.h"
+#include "BufferSettings.h"
 #include <string>
 #include <vector>
 #include <ios>
@@ -16,7 +16,7 @@ namespace RTCP {
 
 template<typename T> class Station: public StationStreams {
 public:
-  Station( const StationSettings &settings, const std::vector<std::string> &streamDescriptors );
+  Station( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
 
 protected:
   SampleBuffer<T> buffer;
@@ -25,7 +25,7 @@ protected:
   virtual void processBoard( size_t nr );
 };
 
-template<typename T> Station<T>::Station( const StationSettings &settings, const std::vector<std::string> &streamDescriptors )
+template<typename T> Station<T>::Station( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
 :
   StationStreams(str(boost::format("[station %s %s] [Station] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors),
 

@@ -1,7 +1,7 @@
 #ifndef __STATIONSTREAMS__
 #define __STATIONSTREAMS__
 
-#include "StationSettings.h"
+#include "BufferSettings.h"
 #include <IONProc/WallClockTime.h>
 #include <string>
 #include <vector>
@@ -12,7 +12,7 @@ namespace RTCP {
 
 class StationStreams {
 public:
-  StationStreams( const std::string &logPrefix, const StationSettings &settings, const std::vector<std::string> &streamDescriptors );
+  StationStreams( const std::string &logPrefix, const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
 
   void process();
 
@@ -20,7 +20,7 @@ public:
 
 protected:
   const std::string logPrefix;
-  const StationSettings settings;
+  const BufferSettings settings;
   const std::vector<std::string> streamDescriptors;
   const size_t nrBoards;
 

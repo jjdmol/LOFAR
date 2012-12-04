@@ -7,7 +7,7 @@ namespace LOFAR {
 namespace RTCP {
 
 
-StationStreams::StationStreams( const std::string &logPrefix, const StationSettings &settings, const std::vector<std::string> &streamDescriptors )
+StationStreams::StationStreams( const std::string &logPrefix, const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
 :
   logPrefix(logPrefix),
   settings(settings),

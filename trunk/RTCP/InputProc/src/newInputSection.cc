@@ -10,7 +10,7 @@
 #include "Ranges.h"
 #include "OMPThread.h"
 #include "StationID.h"
-#include "StationSettings.h"
+#include "BufferSettings.h"
 #include "SampleType.h"
 #include "SampleBuffer.h"
 #include "SampleBufferReader.h"
@@ -41,7 +41,7 @@ Mutex MPIMutex;
 
 template<typename T> class MPISharedBuffer: public SampleBuffer<T> {
 public:
-  MPISharedBuffer( const struct StationSettings &settings );
+  MPISharedBuffer( const struct BufferSettings &settings );
 
   ~MPISharedBuffer();
 
@@ -53,7 +53,7 @@ private:
 #endif
 };
 
-template<typename T> MPISharedBuffer<T>::MPISharedBuffer( const struct StationSettings &settings )
+template<typename T> MPISharedBuffer<T>::MPISharedBuffer( const struct BufferSettings &settings )
 :
   SampleBuffer<T>(settings, false)
 #ifdef MULTIPLE_WINDOWS
@@ -90,14 +90,14 @@ template<typename T> MPISharedBuffer<T>::~MPISharedBuffer()
 
 template<typename T> class MPISharedBufferReader {
 public:
-  MPISharedBufferReader( const std::vector<struct StationSettings> &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets );
+  MPISharedBufferReader( const std::vector<struct BufferSettings> &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets );
 
   ~MPISharedBufferReader();
 
   void process( double maxDelay );
 
 private:
-  const std::vector<struct StationSettings> settings;
+  const std::vector<struct BufferSettings> settings;
   const TimeStamp from, to;
   const size_t blockSize;
   const std::vector<size_t> beamlets;
@@ -115,7 +115,7 @@ private:
   void copy( const TimeStamp &from, const TimeStamp &to );
 };
 
-template<typename T> MPISharedBufferReader<T>::MPISharedBufferReader( const std::vector<struct StationSettings> &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets )
+template<typename T> MPISharedBufferReader<T>::MPISharedBufferReader( const std::vector<struct BufferSettings> &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets )
 :
   settings(settings),
   from(from),
@@ -224,7 +224,7 @@ template<typename T> void MPISharedBufferReader<T>::copy( const TimeStamp &from,
 #endif
 
     //LOG_INFO_STR("Copying from station " << s);
-    const struct StationSettings settings = this->settings[s];
+    const struct BufferSettings settings = this->settings[s];
 
     size_t from_offset = (int64)from % settings.nrSamples;
     size_t to_offset   = (int64)to % settings.nrSamples;
@@ -292,7 +292,7 @@ template<typename T> void MPISharedBufferReader<T>::copy( const TimeStamp &from,
 
 template<typename T> class MPISendStation: public SampleBufferReader<T> {
 public:
-  MPISendStation( const struct StationSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets, unsigned destRank );
+  MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets, unsigned destRank );
 
   struct Header {
     StationID station;
@@ -342,7 +342,7 @@ protected:
 };
 
 
-template<typename T> MPISendStation<T>::MPISendStation( const struct StationSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets, unsigned destRank )
+template<typename T> MPISendStation<T>::MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets, unsigned destRank )
 :
   SampleBufferReader<T>(settings, beamlets, from, to, blockSize),
   destRank(destRank),
@@ -475,12 +475,12 @@ template<typename T> void MPISendStation<T>::copyEnd()
 
 template<typename T> class MPIReceiveStation {
 public:
-  MPIReceiveStation( const struct StationSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
+  MPIReceiveStation( const struct BufferSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
 
   void receiveBlock();
 
 private:
-  const struct StationSettings settings;
+  const struct BufferSettings settings;
   const std::vector<int> stationRanks;
 
 public:
@@ -490,7 +490,7 @@ public:
   Matrix< SparseSet<int64> > flags;  // [station][board]
 };
 
-template<typename T> MPIReceiveStation<T>::MPIReceiveStation( const struct StationSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
+template<typename T> MPIReceiveStation<T>::MPIReceiveStation( const struct BufferSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
 :
   settings(settings),
   stationRanks(stationRanks),
@@ -635,7 +635,7 @@ int main( int argc, char **argv )
   std::map<unsigned, std::vector<size_t> > beamlets;
 
   struct StationID stationID("RS106", "LBA", clock, 16);
-  struct StationSettings settings;
+  struct BufferSettings settings;
 
   settings.station = stationID;
   settings.nrBeamlets = 244;
@@ -672,7 +672,7 @@ int main( int argc, char **argv )
     LOG_INFO_STR("Receiver " << rank << " starts, handling " << beamlets[rank].size() << " subbands from " << nrStations << " stations." );
 
 #ifdef USE_RMA
-    std::vector<struct StationSettings> stations(nrStations, settings);
+    std::vector<struct BufferSettings> stations(nrStations, settings);
 
     {
       MPISharedBufferReader<SampleT> receiver(stations, from, to, blockSize, beamlets[rank]);
@@ -731,7 +731,7 @@ int main( int argc, char **argv )
       #pragma omp section
       {
         struct StationID lookup("RS106", "HBA0");
-        struct StationSettings s(stationID);
+        struct BufferSettings s(stationID);
 
         LOG_INFO_STR("Detected " << s);
 #ifdef USE_RMA
@@ -750,7 +750,7 @@ int main( int argc, char **argv )
     }
   } else {
       struct StationID lookup("RS106", "HBA0");
-      struct StationSettings s(stationID);
+      struct BufferSettings s(stationID);
 
       LOG_INFO_STR("Detected " << s);
 #ifdef USE_RMA

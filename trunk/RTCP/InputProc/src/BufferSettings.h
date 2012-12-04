@@ -1,5 +1,5 @@
-#ifndef __STATIONSETTINGS__
-#define __STATIONSETTINGS__
+#ifndef __BUFFERSETTINGS__
+#define __BUFFERSETTINGS__
 
 #include <Common/LofarLogger.h>
 #include "StationID.h"
@@ -10,7 +10,7 @@ namespace RTCP {
 
 #define NR_RSPBOARDS 4
 
-struct StationSettings {
+struct BufferSettings {
 private:
   static const unsigned currentVersion = 1;
 
@@ -30,12 +30,12 @@ public:
 
   key_t    dataKey;
 
-  StationSettings();
+  BufferSettings();
 
   // read settings from shared memory, using the given stationID
-  StationSettings(struct StationID station);
+  BufferSettings(struct StationID station);
 
-  bool operator==(const struct StationSettings &other) const {
+  bool operator==(const struct BufferSettings &other) const {
     return station == other.station
         && nrBeamlets == other.nrBeamlets 
         && nrSamples == other.nrSamples
@@ -46,19 +46,19 @@ public:
 
 };
 
-StationSettings::StationSettings()
+BufferSettings::BufferSettings()
 :
   version(currentVersion)
 {
 }
 
-StationSettings::StationSettings(struct StationID station)
+BufferSettings::BufferSettings(struct StationID station)
 :
   version(currentVersion),
   station(station)
 {
   do {
-    SharedStruct<struct StationSettings> shm(station.hash(), false);
+    SharedStruct<struct BufferSettings> shm(station.hash(), false);
 
     *this = shm.get();
   } while (!valid());  
@@ -66,7 +66,7 @@ StationSettings::StationSettings(struct StationID station)
   ASSERT( valid() );
 }
 
-std::ostream& operator<<( std::ostream &str, const struct StationSettings &s ) {
+std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s ) {
   str << s.station << " beamlets: " << s.nrBeamlets << " buffer: " << (1.0 * s.nrSamples / s.station.clock * 1024) << "s";
 
   return str;
