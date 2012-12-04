@@ -35,6 +35,7 @@
 --
 CREATE OR REPLACE FUNCTION getVTitemRecursive(INT4, VARCHAR(150), INT4)
   RETURNS OTDBnode AS $$
+    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vRecord			RECORD;
 		vParentName		VARCHAR(150);
@@ -114,6 +115,7 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION getVTitem(INT4, VARCHAR(150))
   RETURNS OTDBnode AS $$
+    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
     DECLARE
 	  vRecord	RECORD;
 

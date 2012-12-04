@@ -47,6 +47,7 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION getBrokenHardware(VARCHAR(20), VARCHAR(20)) 
 	RETURNS SETOF OTDBvalue AS $$
+    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vRecord		RECORD;
 		vRecord2	RECORD;

@@ -38,6 +38,7 @@
 --
 CREATE OR REPLACE FUNCTION removeVCnode(INT4, INT4)
   RETURNS BOOLEAN AS '
+    --  $Id$
 	DECLARE
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;

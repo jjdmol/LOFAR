@@ -37,6 +37,7 @@
 --
 CREATE OR REPLACE FUNCTION getVTChildren(INT4, TEXT)
   RETURNS SETOF OTDBnode AS '
+    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 

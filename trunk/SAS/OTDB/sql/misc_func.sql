@@ -83,6 +83,7 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION whoIs(INT4)
   RETURNS INT4 AS '
+    --  $Id$
 	BEGIN
 		RETURN 1;		-- for now return userid 1
 	END;
@@ -102,6 +103,7 @@ CREATE OR REPLACE FUNCTION whoIs(INT4)
 --
 CREATE OR REPLACE FUNCTION VersionNrString(INT4)
   RETURNS VARCHAR(20) AS $$
+    --  $Id$
 	BEGIN
 		RETURN $1/10000 || '.' || ($1/100)%100 || '.' || $1%100;
 	END;
@@ -120,6 +122,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 --
 CREATE OR REPLACE FUNCTION VersionNrValue(VARCHAR(50))
   RETURNS INT4 AS $$
+    --  $Id$
 	DECLARE
 		vRelease		INT4;
 		vUpdate			INT4;
@@ -147,6 +150,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 --
 CREATE OR REPLACE FUNCTION getVersionNr(VARCHAR(150))
   RETURNS INT4 AS $$
+    --  $Id$
 	BEGIN
 		RETURN VersionNrValue(substring($1 from '%{#"%#"}' for '#'));
 	END;
@@ -166,6 +170,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 --
 CREATE OR REPLACE FUNCTION childNodeName(VARCHAR(150), INT4)
   RETURNS VARCHAR(150) AS $$
+    --  $Id$
 	BEGIN
 		RETURN '#' || $1 || '{' || VersionNrString($2) || '}';
 	END;
@@ -185,6 +190,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 --
 CREATE OR REPLACE FUNCTION cleanNodeName(VARCHAR(150))
   RETURNS TEXT AS $$
+    --  $Id$
 	BEGIN
 		IF substr($1, length($1)) = '}' THEN
 			RETURN ltrim(substr($1, 1, strpos($1,'{')-1), '#');
@@ -209,6 +215,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 --
 CREATE OR REPLACE FUNCTION strippedNodeName(VARCHAR(150))
   RETURNS TEXT AS $$
+    --  $Id$
 	DECLARE
 		vColonPos	INT;
 		vName		VARCHAR(150);
@@ -235,6 +242,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 --
 CREATE OR REPLACE FUNCTION isReference(TEXT)
   RETURNS BOOLEAN AS $$
+    --  $Id$
 	BEGIN
 		RETURN substr($1, 1, 2) = '>>';
 	END;
@@ -251,6 +259,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 --
 CREATE OR REPLACE FUNCTION calcArraySize(TEXT)
   RETURNS TEXT AS $$
+    --  $Id$
 	DECLARE
 		vSize		INTEGER;
 		vArray		TEXT;

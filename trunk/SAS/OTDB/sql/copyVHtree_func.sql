@@ -38,6 +38,7 @@
 --
 CREATE OR REPLACE FUNCTION copyVHparams(INT4, INT4, INT4)
   RETURNS VOID AS '
+    --  $Id$
 	DECLARE
 		vParam	RECORD;
 
@@ -73,6 +74,7 @@ CREATE OR REPLACE FUNCTION copyVHparams(INT4, INT4, INT4)
 --
 CREATE OR REPLACE FUNCTION copyVHleafNode(INT4, INT4, INT4)
   RETURNS INT4 AS '
+    --  $Id$
 	DECLARE
 		vRow		RECORD;
 		vNewNodeID	VIChierarchy.nodeID%TYPE;
@@ -114,6 +116,7 @@ CREATE OR REPLACE FUNCTION copyVHleafNode(INT4, INT4, INT4)
 --
 CREATE OR REPLACE FUNCTION copyVHsubTree(INT4, INT4, INT4)
   RETURNS INT4 AS '
+    --  $Id$
 	DECLARE
 	  vNewNodeID	VIChierarchy.nodeID%TYPE;
 	  vDummy		VIChierarchy.nodeID%TYPE;
