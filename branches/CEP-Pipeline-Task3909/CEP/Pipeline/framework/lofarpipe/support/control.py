@@ -8,6 +8,7 @@
 # ------------------------------------------------------------------------------
 import sys
 import re
+import traceback
 
 from lofarpipe.support.stateful import StatefulRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
@@ -87,11 +88,11 @@ class control(StatefulRecipe):
                         self.inputs['job_name']))
             self.logger.error(message)
             # Get detailed information of the caught exception
-            (type, value, traceback) = sys.exc_info()
+            (type, value, traceback_object) = sys.exc_info()
             self.logger.error("Detailed exception information:")
             self.logger.error(str(type))
             self.logger.error(str(value))
-            self.logger.error(str(traceback))
+            self.logger.error(str(traceback.extract_tb(traceback_object)))
             #message does not contain the original exception thrown in recipe
             if get_active_stack(self) != None:
                 self.logger.error("\n" +
