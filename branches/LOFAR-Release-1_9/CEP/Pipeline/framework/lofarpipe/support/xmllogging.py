@@ -51,7 +51,7 @@ def enter_active_stack(calling_object, child,
     functionality.
     If the function is called on a class with an active_stack already present
     a nested node is added.
-    The current nesting is bookkeeped in the active stack. Past calls are
+    The current nesting is book kept in the active stack. Past calls are
     saved for logging purposes.
     The comment argument allows adding extra info to a node
     """
