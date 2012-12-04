@@ -6,7 +6,7 @@
 #                                                             Marcel Loose, 2012
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
-
+import sys
 import re
 
 from lofarpipe.support.stateful import StatefulRecipe
@@ -86,6 +86,12 @@ class control(StatefulRecipe):
             self.logger.error("Failed pipeline run: {0}".format(
                         self.inputs['job_name']))
             self.logger.error(message)
+            # Get detailed information of the caught exception
+            (type, value, traceback) = sys.exc_info()
+            self.logger.error("Detailed exception information:")
+            self.logger.error(str(type))
+            self.logger.error(str(value))
+            self.logger.error(str(traceback))
             #message does not contain the original exception thrown in recipe
             if get_active_stack(self) != None:
                 self.logger.error("\n" +
