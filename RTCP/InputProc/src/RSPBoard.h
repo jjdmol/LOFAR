@@ -1,18 +1,15 @@
-#ifndef __STATIONDATA__
-#define __STATIONDATA__
+#ifndef __RSPBOARD__
+#define __RSPBOARD__
 
 #include <Common/LofarLogger.h>
 #include <Stream/Stream.h>
 #include <Interface/RSPTimeStamp.h>
-#include <Interface/SmartPtr.h>
 #include <IONProc/RSP.h>
 #include <IONProc/WallClockTime.h>
 #include "SampleBuffer.h"
 #include "Ranges.h"
 #include "StationSettings.h"
 #include <string>
-#include <cstring>
-#include <omp.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -202,129 +199,6 @@ template<typename T> void RSPBoard<T>::logStatistics()
   nrOutOfOrder = 0;
 }
 
-
-class StationStreams {
-public:
-  StationStreams( const std::string &logPrefix, const StationSettings &settings, const std::vector<std::string> &streamDescriptors );
-
-  void process();
-
-  void stop();
-
-protected:
-  const std::string logPrefix;
-  const StationSettings settings;
-  const std::vector<std::string> streamDescriptors;
-  const size_t nrBoards;
-
-  WallClockTime waiter;
-
-  virtual void processBoard( size_t nr ) = 0;
-};
-
-StationStreams::StationStreams( const std::string &logPrefix, const StationSettings &settings, const std::vector<std::string> &streamDescriptors )
-:
-  logPrefix(logPrefix),
-  settings(settings),
-  streamDescriptors(streamDescriptors),
-  nrBoards(streamDescriptors.size())
-{
-}
-
-void StationStreams::process()
-{
-  std::vector<OMPThread> threads(nrBoards);
-
-  ASSERT(nrBoards > 0);
-
-  LOG_INFO_STR( logPrefix << "Start" );
-
-  #pragma omp parallel sections num_threads(2)
-  {
-    #pragma omp section
-    {
-      // start all boards
-      LOG_INFO_STR( logPrefix << "Starting all boards" );
-      #pragma omp parallel for num_threads(nrBoards)
-      for (size_t i = 0; i < nrBoards; ++i) {
-        OMPThread::ScopedRun sr(threads[i]);
-  
-        processBoard(i);
-      }
-    }
-
-    #pragma omp section
-    {
-      // wait until we have to stop
-      LOG_INFO_STR( logPrefix << "Waiting for stop signal" );
-      waiter.waitForever();     
-
-      // kill all boards
-      LOG_INFO_STR( logPrefix << "Stopping all boards" );
-      #pragma omp parallel for num_threads(nrBoards)
-      for (size_t i = 0; i < nrBoards; ++i)
-        threads[i].kill();
-    }
-  }
-
-  LOG_INFO_STR( logPrefix << "End" );
-}
-
-void StationStreams::stop()
-{
-  waiter.cancelWait();
-}
-
-
-template<typename T> class Station: public StationStreams {
-public:
-  Station( const StationSettings &settings, const std::vector<std::string> &streamDescriptors );
-
-protected:
-  SampleBuffer<T> buffer;
-
-  virtual void processBoard( size_t nr );
-};
-
-template<typename T> Station<T>::Station( const StationSettings &settings, const std::vector<std::string> &streamDescriptors )
-:
-  StationStreams(str(boost::format("[station %s %s] [Station] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors),
-
-  buffer(settings, true)
-{
-  LOG_INFO_STR( logPrefix << "Initialised" );
-}
-
-template<typename T> void Station<T>::processBoard( size_t nr )
-{
-  const std::string logPrefix(str(boost::format("[station %s %s board %u] [Station] ") % settings.station.stationName % settings.station.antennaSet % nr));
-
-  try {
-    LOG_INFO_STR( logPrefix << "Connecting to " << streamDescriptors[nr] );
-    SmartPtr<Stream> s = createStream(streamDescriptors[nr], true);
-
-    LOG_INFO_STR( logPrefix << "Connecting to shared memory buffer 0x" << std::hex << settings.dataKey );
-    RSPBoard<T> board(*s, buffer, nr, settings);
-
-    LOG_INFO_STR( logPrefix << "Start" );
-
-    for(;;)
-      if (board.readPacket())
-        board.writePacket();
-
-  } catch (Stream::EndOfStreamException &ex) {
-    LOG_INFO_STR( logPrefix << "End of stream");
-  } catch (SystemCallException &ex) {
-    if (ex.error == EINTR)
-      LOG_INFO_STR( logPrefix << "Aborted: " << ex.what());
-    else
-      LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
-  } catch (Exception &ex) {
-    LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
-  }
-
-  LOG_INFO_STR( logPrefix << "End");
-}
 
 }
 }

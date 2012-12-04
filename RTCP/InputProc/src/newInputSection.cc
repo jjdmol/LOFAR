@@ -12,8 +12,9 @@
 #include "StationID.h"
 #include "StationSettings.h"
 #include "SampleBuffer.h"
-#include "StationData.h"
+#include "RSPBoard.h"
 #include "Generator.h"
+#include "Station.h"
 #include "mpi.h"
 
 #include <vector>
