@@ -868,7 +868,7 @@ int main( int argc, char **argv )
 
   if(rank == 0) {
     Station< SampleT > station( settings, inputStreams );
-    Generator< SampleT > generator( settings, inputStreams );
+    Generator generator( settings, inputStreams );
 
     #pragma omp parallel sections num_threads(4)
     {
