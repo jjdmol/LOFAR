@@ -8,7 +8,7 @@
 #include <IONProc/WallClockTime.h>
 #include "SampleBuffer.h"
 #include "Ranges.h"
-#include "StationSettings.h"
+#include "BufferSettings.h"
 #include "time.h"
 #include <string>
 
@@ -17,7 +17,7 @@ namespace RTCP {
 
 template<typename T> class RSPBoard {
 public:
-  RSPBoard( Stream &inputStream, SampleBuffer<T> &buffer, unsigned boardNr, const struct StationSettings &settings );
+  RSPBoard( Stream &inputStream, SampleBuffer<T> &buffer, unsigned boardNr, const struct BufferSettings &settings );
 
   // RSP board number
   const unsigned nr;
@@ -36,7 +36,7 @@ private:
 
   SampleBuffer<T> &buffer;
   Ranges &flags;
-  const struct StationSettings settings;
+  const struct BufferSettings settings;
   const size_t firstBeamlet;
 
   size_t nrReceived, nrBadSize, nrBadTime, nrBadData, nrBadMode, nrOutOfOrder;
@@ -44,7 +44,7 @@ private:
   void logStatistics();
 };
 
-template<typename T> RSPBoard<T>::RSPBoard( Stream &inputStream, SampleBuffer<T> &buffer, unsigned boardNr, const struct StationSettings &settings )
+template<typename T> RSPBoard<T>::RSPBoard( Stream &inputStream, SampleBuffer<T> &buffer, unsigned boardNr, const struct BufferSettings &settings )
 :
   nr(boardNr),
   logPrefix(str(boost::format("[station %s %s board %u] [RSPBoard] ") % settings.station.stationName % settings.station.antennaSet % nr)),

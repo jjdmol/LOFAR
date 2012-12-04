@@ -4,7 +4,7 @@
 #include <Common/LofarLogger.h>
 #include <WallClockTime.h>
 #include <Interface/RSPTimeStamp.h>
-#include "StationSettings.h"
+#include "BufferSettings.h"
 #include "SampleBuffer.h"
 
 #include <mpi.h>
@@ -19,12 +19,12 @@ namespace RTCP {
 
 template<typename T> class SampleBufferReader {
 public:
-  SampleBufferReader( const StationSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize );
+  SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize );
 
   void process( double maxDelay );
 
 protected:
-  const StationSettings settings;
+  const BufferSettings settings;
   SampleBuffer<T> buffer;
 
   const std::vector<size_t> beamlets;
@@ -46,7 +46,7 @@ private:
 };
 
 
-template<typename T> SampleBufferReader<T>::SampleBufferReader( const StationSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize )
+template<typename T> SampleBufferReader<T>::SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize )
 :
   settings(settings),
   buffer(settings, false),

@@ -5,7 +5,7 @@
 #include <Common/LofarConstants.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/Allocator.h>
-#include "StationSettings.h"
+#include "BufferSettings.h"
 #include "SharedMemory.h"
 #include "Ranges.h"
 #include "SampleType.h"
@@ -17,23 +17,23 @@ namespace RTCP {
 
 template<typename T> class SampleBuffer {
 public:
-  SampleBuffer( const struct StationSettings &settings, bool create );
+  SampleBuffer( const struct BufferSettings &settings, bool create );
 
 private:
   const std::string logPrefix;
   SharedMemoryArena data;
   SparseSetAllocator allocator;
 
-  struct StationSettings *initSettings( const struct StationSettings &localSettings, bool create );
+  struct BufferSettings *initSettings( const struct BufferSettings &localSettings, bool create );
 
-  static size_t dataSize( const struct StationSettings &settings ) {
+  static size_t dataSize( const struct BufferSettings &settings ) {
     return sizeof settings
          + NR_RSPBOARDS * (Ranges::size(settings.nrFlagRanges) + 8)
          + settings.nrBeamlets * (settings.nrSamples * sizeof(T) + 128);
   }
 
 public:
-  struct StationSettings *settings;
+  struct BufferSettings *settings;
 
   const size_t nrBeamlets;
   const size_t nrSamples;
@@ -44,7 +44,7 @@ public:
 };
 
 
-template<typename T> SampleBuffer<T>::SampleBuffer( const struct StationSettings &_settings, bool create )
+template<typename T> SampleBuffer<T>::SampleBuffer( const struct BufferSettings &_settings, bool create )
 :
   logPrefix(str(boost::format("[station %s %s board] [SampleBuffer] ") % _settings.station.stationName % _settings.station.antennaSet)),
   data(_settings.dataKey, dataSize(_settings), create ? SharedMemoryArena::CREATE_EXCL : SharedMemoryArena::READ),
@@ -70,10 +70,10 @@ template<typename T> SampleBuffer<T>::SampleBuffer( const struct StationSettings
   LOG_INFO_STR( logPrefix << "Initialised" );
 }
 
-template<typename T> struct StationSettings *SampleBuffer<T>::initSettings( const struct StationSettings &localSettings, bool create )
+template<typename T> struct BufferSettings *SampleBuffer<T>::initSettings( const struct BufferSettings &localSettings, bool create )
 {
-  //struct StationSettings *sharedSettings = allocator.allocateTyped<struct StationSettings>();
-  struct StationSettings *sharedSettings = allocator.allocateTyped();
+  //struct BufferSettings *sharedSettings = allocator.allocateTyped<struct BufferSettings>();
+  struct BufferSettings *sharedSettings = allocator.allocateTyped();
 
   if (create) {
     // register settings
