@@ -6,7 +6,6 @@
 #include <Interface/SmartPtr.h>
 #include "SampleBuffer.h"
 #include "StationSettings.h"
-#include "StationData.h"
 #include <string>
 #include <vector>
 
