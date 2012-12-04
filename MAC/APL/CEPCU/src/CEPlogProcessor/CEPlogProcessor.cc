@@ -37,7 +37,6 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h> // usleep
-#include <cstdio>
 
 #include "CEPlogProcessor.h"
 #include "PVSSDatapointDefs.h"
@@ -843,7 +842,7 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
         inputBuffer->setValue("process.logMsg", GCFPVString(logline.fullmsg), logline.timestamp, true);
     }
 
-    const char*   result;
+    char*   result;
 
     // IONProc@00 31-03-11 00:17:22.438 INFO  [obs 24811] ----- Creating new job
     // IONProc@00 31-03-11 00:17:22.550 INFO  [obs 24811] Waiting for job to start: sleeping until Thu Mar 31 00:18:50 2011
@@ -1023,7 +1022,7 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
 
 void CEPlogProcessor::_processCNProcLine(const struct logline &logline)
 { 
-  const char *result;
+  char *result;
 
   // CNProc@0000 13-02-12 12:13:44.823 WARN  [obs 1003431 phases 111] Station S17 subband 0 consists of only zeros.
   if ((result = strstr(logline.msg, "consists of only zeros"))) {
@@ -1056,7 +1055,7 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
 
     hostNr--; // use 0-based indexing in our arrays
 
-    const char*   result;
+    char*   result;
 
     int writerNr = _getParam(logline.target, "writer ");
 

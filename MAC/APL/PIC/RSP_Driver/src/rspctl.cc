@@ -116,6 +116,7 @@ bool    gSplitterChanged = false;
  * Function to convert the complex semi-floating point representation used by the
  * EPA firmware to a complex<double>.
  */
+BZ_DECLARE_FUNCTION_RET(convert_to_amplphase, complex<double>)
 inline complex<double> convert_to_amplphase(complex<double> val)
 {
 	double phase     = 0.0;
@@ -133,8 +134,8 @@ inline complex<double> convert_to_amplphase(complex<double> val)
 
 	return complex<double>(amplitude, phase);
 }
-BZ_DECLARE_FUNCTION_RET(convert_to_amplphase, complex<double>)
 
+BZ_DECLARE_FUNCTION_RET(convert_to_amplphase_from_int16, complex<double>)
 inline complex<double> convert_to_amplphase_from_int16(complex<int16> int16val)
 {
 	// scale and convert from int16 to double in range (-1,1]
@@ -155,19 +156,18 @@ inline complex<double> convert_to_amplphase_from_int16(complex<int16> int16val)
 	return complex<double>(::sqrt(real(cdval)*real(cdval) + imag(cdval)*imag(cdval)),
 				((::atan(imag(cdval) / real(cdval))) / M_PI) * 180.0);
 }
-BZ_DECLARE_FUNCTION_RET(convert_to_amplphase_from_int16, complex<double>)
 
+BZ_DECLARE_FUNCTION_RET(blitz_abs, double)
 inline double blitz_abs(complex<double> val)
 {
 	return sqrt(val.real()*val.real() + val.imag()*val.imag());
 }
-BZ_DECLARE_FUNCTION_RET(blitz_abs, double)
 
+BZ_DECLARE_FUNCTION_RET(blitz_angle, double)
 inline double blitz_angle(complex<double> val)
 {
 	return atan(val.imag() / val.real()) * 180.0 / M_PI;
 }
-BZ_DECLARE_FUNCTION_RET(blitz_angle, double)
 
 WeightsCommand::WeightsCommand(GCFPortInterface& port, const int bitsPerSample) : 
 	Command			(port), 
@@ -1251,7 +1251,7 @@ void SICommand::send()
 		request.settings()(0).setXSI(m_siOn);
 		request.settings()(0).setYSI(m_siOn);
 
-		logMessage(cout,formatString("bypassSetting  =%02X", request.settings()(0).getAsUint8()));
+		logMessage(cout,formatString("bypassSetting  =%02X", request.settings()(0).getAsUint16()));
 
 		m_rspport.send(request);
 	}

@@ -36,7 +36,6 @@
 --
 CREATE OR REPLACE FUNCTION getStateList(INT4, BOOLEAN, TIMESTAMP, TIMESTAMP)
   RETURNS SETOF stateInfo AS '
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 		vQuery		TEXT;

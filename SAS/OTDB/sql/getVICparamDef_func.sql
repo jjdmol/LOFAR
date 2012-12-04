@@ -35,7 +35,6 @@
 --
 CREATE OR REPLACE FUNCTION getVICParamDef(INT4)
   RETURNS OTDBparamDef AS '
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 

@@ -33,7 +33,6 @@
 --
 CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, VARCHAR(20), VARCHAR(20))
   RETURNS BOOLEAN AS $$
-    --  $Id$
 	DECLARE
 		vFunction				INT2 := 1;
 		TSactive				CONSTANT INT2 := 600;
