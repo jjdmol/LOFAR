@@ -2,6 +2,7 @@
 #define __BUFFERSETTINGS__
 
 #include <Common/LofarLogger.h>
+#include "SharedMemory.h"
 #include "StationID.h"
 #include <ostream>
 
@@ -46,31 +47,7 @@ public:
 
 };
 
-BufferSettings::BufferSettings()
-:
-  version(currentVersion)
-{
-}
-
-BufferSettings::BufferSettings(struct StationID station)
-:
-  version(currentVersion),
-  station(station)
-{
-  do {
-    SharedStruct<struct BufferSettings> shm(station.hash(), false);
-
-    *this = shm.get();
-  } while (!valid());  
-
-  ASSERT( valid() );
-}
-
-std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s ) {
-  str << s.station << " beamlets: " << s.nrBeamlets << " buffer: " << (1.0 * s.nrSamples / s.station.clock * 1024) << "s";
-
-  return str;
-}
+std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s );
 
 }
 }
