@@ -8,20 +8,16 @@
 #include "StationSettings.h"
 #include "SharedMemory.h"
 #include "Ranges.h"
+#include "SampleType.h"
 #include <string>
-#include <complex>
 
 namespace LOFAR {
 namespace RTCP {
 
+
 template<typename T> class SampleBuffer {
 public:
   SampleBuffer( const struct StationSettings &settings, bool create );
-
-  struct SampleType {
-    std::complex<T> x;
-    std::complex<T> y;
-  };
 
 private:
   const std::string logPrefix;
