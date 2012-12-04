@@ -9,6 +9,7 @@
 namespace LOFAR {
 namespace RTCP {
 
+/* A class that generates or processes a set of data streams of a station. */
 
 class StationStreams {
 public:
