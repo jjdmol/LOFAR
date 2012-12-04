@@ -104,7 +104,7 @@ class LOFARnodeTCP(LOFARnode):
                 if tries > 0:
                     timeout = random.uniform(min_timeout, max_timeout)
                     print("Retrying in %f seconds (%d more %s)." %
-                          (timeout, tries, "try" if tries==1 else "tries"))
+                          (timeout, tries, "try" if tries == 1 else "tries"))
                     time.sleep(timeout)
                 else:
                     raise
@@ -133,7 +133,10 @@ class LOFARnodeTCP(LOFARnode):
         Send the contents of self.outputs to the originating job dispatch
         server.
         """
+        print ("preparing to send pickle result/outputs: {0}".format(
+                                                                self.outputs))
         message = "PUT %d %s" % (self.job_id, pickle.dumps(self.outputs))
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__try_connect(s)
         s.send(struct.pack(">L", len(message)) + message)
