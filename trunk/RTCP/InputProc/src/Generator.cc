@@ -12,7 +12,8 @@ namespace RTCP {
 
 Generator::Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
 :
-  StationStreams(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors)
+  StationStreams(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors),
+  nrSent(nrBoards, 0)
 {
   LOG_INFO_STR( logPrefix << "Initialised" );
 }
@@ -89,6 +90,8 @@ void Generator::processBoard( size_t nr )
           throw;
       }
 
+      nrSent[nr]++;
+
       current += packet.header.nrBlocks;
     }
   } catch (Stream::EndOfStreamException &ex) {
@@ -103,6 +106,17 @@ void Generator::processBoard( size_t nr )
   }
 
   LOG_INFO_STR( logPrefix << "End");
+}
+
+void Generator::logStatistics()
+{
+  for( size_t nr = 0; nr < nrBoards; nr++ ) {
+    const std::string logPrefix(str(boost::format("[station %s %s board %u] [Generator] ") % settings.station.stationName % settings.station.antennaSet % nr));
+
+    LOG_INFO_STR( logPrefix << nrSent[nr] << " packets sent.");
+
+    nrSent[nr] = 0;
+  }
 }
 
 }

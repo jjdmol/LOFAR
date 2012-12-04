@@ -15,6 +15,8 @@
 namespace LOFAR {
 namespace RTCP {
 
+/* Receives input of one RSP board and stores it in shared memory. */
+
 template<typename T> class RSPBoard {
 public:
   RSPBoard( Stream &inputStream, SampleBuffer<T> &buffer, unsigned boardNr, const struct BufferSettings &settings );
@@ -24,7 +26,9 @@ public:
 
   bool readPacket();
   void writePacket();
-  
+
+  void logStatistics();
+
 private:
   const std::string logPrefix;
 
@@ -41,7 +45,6 @@ private:
 
   size_t nrReceived, nrBadSize, nrBadTime, nrBadData, nrBadMode, nrOutOfOrder;
 
-  void logStatistics();
 };
 
 template<typename T> RSPBoard<T>::RSPBoard( Stream &inputStream, SampleBuffer<T> &buffer, unsigned boardNr, const struct BufferSettings &settings )
@@ -64,12 +67,15 @@ template<typename T> RSPBoard<T>::RSPBoard( Stream &inputStream, SampleBuffer<T>
   nrBadMode(0),
   nrOutOfOrder(0)
 {
+  ASSERTSTR(boardNr < settings.nrBoards, "Invalid board number: " << boardNr << ", nrBoards: " << settings.nrBoards);
 }
 
 template<typename T> void RSPBoard<T>::writePacket()
 {
   const uint8 &nrBeamlets  = packet.header.nrBeamlets;
   const uint8 &nrTimeslots = packet.header.nrBlocks;
+
+  ASSERT( nrBeamlets <= settings.nrBeamlets / settings.nrBoards );
 
   // the timestamp is of the last read packet by definition
   const TimeStamp &timestamp = last_timestamp;
@@ -80,16 +86,13 @@ template<typename T> void RSPBoard<T>::writePacket()
   if (to_offset == 0)
     to_offset = settings.nrSamples;
 
-  const size_t wrap = from_offset < to_offset ? 0 : settings.nrSamples - from_offset;
-
-  const T *beamlets = reinterpret_cast<const T*>(&packet.data);
-
-  ASSERT( nrBeamlets <= settings.nrBeamlets / settings.nrBoards );
-
   // mark data we overwrite as invalid
   flags.excludeBefore(timestamp + nrTimeslots - settings.nrSamples);
 
   // transpose
+  const T *beamlets = reinterpret_cast<const T*>(&packet.data);
+  const size_t wrap = from_offset < to_offset ? 0 : settings.nrSamples - from_offset;
+
   for (uint8 b = 0; b < nrBeamlets; ++b) {
     T *dst1 = &buffer.beamlets[firstBeamlet + b][from_offset];
 
@@ -137,7 +140,7 @@ template<typename T> bool RSPBoard<T>::readPacket()
   }
 
   // illegal timestamp means illegal packet
-  if (packet.header.timestamp == ~0U) {
+  if (valid && packet.header.timestamp == ~0U) {
     ++nrBadTime;
     valid = false;
   }
@@ -168,16 +171,6 @@ template<typename T> bool RSPBoard<T>::readPacket()
       ++nrBadMode;
       valid = false;
     }
-  }
-
-  // log updated statistics
-  // TODO: use separate thread!
-  time_t now = time(0);
-
-  if (now >= last_logtime + 1) {
-    logStatistics();
-
-    last_logtime = now;
   }
 
   return valid;
