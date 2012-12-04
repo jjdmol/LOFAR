@@ -1,0 +1,396 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 251 88 N "_3DFace" 1
+"$station"
+"main()
+{
+  //Point to show the datastreamlevel of a certain station
+  
+  station = $station;
+  
+  baseDP = station+\":LOFAR_PIC_StationInfo\";
+  
+  if (dpExists(baseDP)) {
+    showDatastreams();
+  }
+}" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string station = \"\";
+string baseDP=\"\";
+
+int filled0=0;
+int filled1=0;
+
+
+// ****************************************
+// Name: showDatastreams   
+// ****************************************
+//    Connects to the given datapoint .datastream0 && 1 it's historical data (if any)
+//    and logs all
+//           
+// ****************************************
+showDatastreams()
+{
+  LOG_TRACE(\"datastreamLevel.pnl:showLevels| Entered for DP:\" ,baseDP);
+	
+  string dpStream0 = baseDP+\".datastream0\";
+  string dpStream1 = baseDP+\".datastream1\";
+  string systemName = dpSubStr(dpStream0,DPSUB_SYS);
+  string bareDP     = dpSubStr(dpStream0,DPSUB_DP_EL_CONF_DET_ATT);
+
+  if(dpExists(dpStream0)) {
+    // gather the historical data:
+    dyn_dyn_anytype tab;
+    int z;
+    time tStart;
+    time tStop;
+    tStop = getCurrentTime();
+    tStart = tStop - 15*3600; // 15 hours of history
+	
+    string query=\"\";
+            
+    if (systemName != MainDBName) {     
+      query = \"SELECT ALL '_original.._value','_original.._stime' FROM '\" + dpStream0 + \"' REMOTE'\"+systemName +\"' TIMERANGE(\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 5\";
+    } else {
+      query = \"SELECT ALL '_original.._value','_original.._stime' FROM '\" + dpStream0 + \"' TIMERANGE(\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 5\";
+    }
+
+    LOG_DEBUG(\"datastreamLevel.pnl:showLevelsQuery: \" + query);
+    dpQuery(query, tab);
+    LOG_DEBUG(\"datastreamLevel.pnl:showLevels|Found: \" + tab + \" length: \" + dynlen(tab));
+	 	 
+	 	
+    for(z=2;z<dynlen(tab);z++) {
+      addStream(0,tab[z][2],tab[z][3]);
+    }
+	
+    // connect to levels
+    if (dpConnect(\"updateStream0\",dpStream0,
+                                  dpStream0+\":_original.._stime\",
+                                  dpStream0+\":_online.._invalid\") == -1) {
+      LOG_ERROR(\"datastreamLevel.pnl:showLevels|Couldn't connect to \"+dpStream0+ \" \" + getLastError());
+    }
+  } else {
+    LOG_DEBUG(\"statstreamLevel.pnl:showLevels|error connecting to: \"+ dpStream0);
+  }    
+
+  if(dpExists(dpStream1)) {
+    // gather the historical data:
+    dyn_dyn_anytype tab;
+    int z;
+    time tStart;
+    time tStop;
+    tStop = getCurrentTime();
+    tStart = tStop - 15*3600; // 15 hours of history
+	
+    string query=\"\";
+            
+    if (systemName != MainDBName) {     
+      query = \"SELECT ALL '_original.._value','_original.._stime' FROM '\" + dpStream1 + \"' REMOTE'\"+systemName +\"' TIMERANGE(\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 5\";
+    } else {
+      query = \"SELECT ALL '_original.._value','_original.._stime' FROM '\" + dpStream1 + \"' TIMERANGE(\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 5\";
+    }
+
+    LOG_DEBUG(\"datastreamLevel.pnl:showLevelsQuery: \" + query);
+    dpQuery(query, tab);
+    LOG_DEBUG(\"datastreamLevel.pnl:showLevels|Found: \" + tab + \" length: \" + dynlen(tab));
+	 	 
+	 	
+    for(z=2;z<dynlen(tab);z++) {
+      addStream(1,tab[z][2],tab[z][3]);
+    }
+	
+    // connect to levels
+    if (dpConnect(\"updateStream1\",dpStream1,
+                                  dpStream1+\":_original.._stime\",
+                                  dpStream1+\":_online.._invalid\") == -1) {
+      LOG_ERROR(\"datastreamLevel.pnl:showLevels|Couldn't connect to \"+dpStream1+ \" \" + getLastError());
+    }
+  } else {
+    LOG_DEBUG(\"datastreamLevel.pnl:showLevels|error connecting to: \"+ dpStream1);
+  }    
+}
+
+// ****************************************
+// Name: updateStream0
+// ****************************************
+//    callback for showStreams
+//           
+// ****************************************
+updateStream0(string dp1, bool stream,
+              string dp2, string changed,
+              string dp3, bool invalid)
+{
+  LOG_TRACE(\"datastreamLevel.pnl:showStream0|stream: \"+stream);
+  addStream(0,stream,changed);
+}
+
+// ****************************************
+// Name: updateStream1
+// ****************************************
+//    callback for showStreams
+//           
+// ****************************************
+updateStream1(string dp1, bool stream,
+              string dp2, string changed,
+              string dp3, bool invalid)
+{
+  LOG_TRACE(\"datastreamLevel.pnl:showStream1|Stream: \"+stream);
+  addStream(1,stream,changed);
+}
+// ****************************************
+// Name: addStream   
+// ****************************************
+//    fill the 15 timestamped datastreamLevel for this Database
+//           
+// ****************************************
+addStream(int streamnr,int stream,string changed)
+{
+  
+  LOG_TRACE(\"dataStreamLlevel.pnl:addlevel|streamnr -stream: \" + streamnr + \" - \"+stream);
+
+  string toolTip = changed+\"<br>  stream: \"+stream;
+  
+  string streamcolor=\"\";
+  if (!stream) {
+    streamcolor=\"red\";
+  } else if (stream) {
+    streamcolor=\"green\";
+  }
+
+  string oldstream=\"white\";
+  string oldToolTip = \"\";
+  if (streamnr == 0) {
+    for (int i=5-filled0; i< 5 ;i++) {
+      // get the original color and tooltip from the next right point and move it to this point
+      getValue(\"stream0-\"+(i+1)+\"_text\",\"backCol\",oldstream);
+      setValue(\"stream0-\"+(i)+\"_text\",\"backCol\",oldstream);
+      getValue(\"stream0-\"+(i+1)+\"_text\",\"toolTipText\",oldToolTip);
+      setValue(\"stream0-\"+(i)+\"_text\",\"toolTipText\",oldToolTip);
+    }
+    // set new values
+    setValue(\"stream0-5_text\",\"backCol\",streamcolor);
+    setValue(\"stream0-5_text\",\"toolTipText\",toolTip);
+    if (filled0 < 5) filled0++;
+  } else if (streamnr == 1) {
+    for (int i=5-filled1; i< 5 ;i++) {
+      // get the original color and tooltip from the next right point and move it to this point
+      getValue(\"stream1-\"+(i+1)+\"_text\",\"backCol\",oldstream);
+      setValue(\"stream1-\"+(i)+\"_text\",\"backCol\",oldstream);
+      getValue(\"stream1-\"+(i+1)+\"_text\",\"toolTipText\",oldToolTip);
+      setValue(\"stream1-\"+(i)+\"_text\",\"toolTipText\",oldToolTip);
+    }
+    // set new values
+    setValue(\"stream1-5_text\",\"backCol\",streamcolor);
+    setValue(\"stream1-5_text\",\"toolTipText\",toolTip);
+    if (filled1 < 5) filled1++;
+  }
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 0
+"stream0-1_text"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -230 -140 1 E 230 150 234 159
+6 2
+"stream0-2_text"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -225 -140 1 E 230 150 234 159
+6 3
+"stream0-3_text"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -220 -140 1 E 230 150 234 159
+6 4
+"stream0-4_text"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -215 -140 1 E 230 150 234 159
+6 5
+"stream0-5_text"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -210 -140 1 E 230 150 234 159
+6 8
+"stream1-1_text"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -195 -140 1 E 230 150 234 159
+6 9
+"stream1-2_text"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -190 -140 1 E 230 150 234 159
+6 10
+"stream1-3_text"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -185 -140 1 E 230 150 234 159
+6 11
+"stream1-4_text"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -180 -140 1 E 230 150 234 159
+6 12
+"stream1-5_text"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -175 -140 1 E 230 150 234 159
+2 16
+"PRIMITIVE_TEXT1"
+""
+1 70 80 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 70 80 71 93
+0 2 2 "0s" 0 0 0 192 0 0  70 80 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 0 
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

@@ -1,0 +1,667 @@
+V 11
+1
+LANG:1 18 station_HBAAntenna
+PANEL,-1 -1 1047 803 N "_3DFace" 0
+"main()
+{
+   // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+
+  baseDP = g_currentDatapoint;
+  LOG_DEBUG(\"HBAAntenna.pnl:initialize| baseDP: \"+baseDP);
+  
+  dyn_string dpAr= strsplit(dpSubStr(g_currentDatapoint,DPSUB_DP),\"_\");
+  LOG_DEBUG(\"HBAAntenna.pnl:initialize|dpAr: \"+dpAr+\" dpAr[last]: \"+dpAr[dynlen(dpAr)]);
+  
+  if (strpos(dpAr[dynlen(dpAr)],\"HBA\") > -1) {
+    hbaNr = substr(dpAr[dynlen(dpAr)],3,strlen(dpAr[dynlen(dpAr)]));
+    setValue(\"theHBAAntenna\", \"text\", baseDP);
+  } else {
+    LOG_DEBUG(\"HBAAntenna.pnl:initialize|No HBA found in currentDatapoint.\");
+  }
+ 
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+  
+   reload();
+}
+
+
+void prepareHardwareList() { 
+  dynAppend(g_stationList,navFunct_bareDBName(sysName));
+  dynAppend(g_HBAList,hbaNr);  
+  dynAppend(g_elementList,0);
+  dynAppend(g_elementList,1);
+  dynAppend(g_elementList,2);
+  dynAppend(g_elementList,3);
+  dynAppend(g_elementList,4);
+  dynAppend(g_elementList,5);
+  dynAppend(g_elementList,6);
+  dynAppend(g_elementList,7);
+  dynAppend(g_elementList,8);
+  dynAppend(g_elementList,9);
+  dynAppend(g_elementList,10);
+  dynAppend(g_elementList,11);
+  dynAppend(g_elementList,12);
+  dynAppend(g_elementList,13);
+  dynAppend(g_elementList,14);
+  dynAppend(g_elementList,15);
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"HBAAntenna.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"HBAAntenna.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  } else if (actionString[1] == \"DistChanged\") {
+    // for dist system bound hardware only, if the distsystem went offline we need to replace 
+    // the screen with a broken connection screen.
+    if (!g_initializing) {
+    
+      // check if this syst is in the connectionlist and down
+      int iPos=dynContains(g_connections[\"NAME\"],sysName);
+      if (iPos > 0) {
+        if (!g_connections[\"UP\"][iPos]) {
+          navPanel_setEvent(\"invalid DP\",\"ChangePanel\");
+        }
+      }
+    }
+    return;
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"HBAAntenna.pnl\",\"Update\");
+
+}
+" 0
+ E E E E 1 -1 -1 0  130 290
+""0  1
+E "#uses \"navPanel.ctl\"
+string baseDP=\"\";
+int hbaNr=-1;
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    string extra = \"\";
+    if (hbaNr < 10) extra=\"0\";
+    navPanel_setEvent(\"HBA\"+extra+hbaNr,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"HBAAntenna.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    string  extra = \"\";
+    if (hbaNr < 10) extra=\"0\";
+    navPanel_setEvent(\"HBA\"+extra+hbaNr,\"ChangePanel\"); 
+  }
+
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  string  extra = \"\";
+  if (hbaNr < 10) extra=\"0\";
+  navPanel_setEvent(\"HBA\"+extra+hbaNr,\"EventRightClick\");
+}
+
+
+
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 180
+"hbaHighLight"
+""
+1 150 40 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+265 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"HBACallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void HBACallback(string dp1, bool aTrig) {
+    string extra = \"\";
+    if (hbaNr < 10) extra=\"0\";
+
+  LOG_DEBUG(\"HBAAntenna.pnl:HBACallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"HBAAntenna.pnl:HBACallback|Found highlight : \" + highlight + \" Looking for: HBA\" + extra+ hbaNr);
+  bool bHighlight=false;
+  if (dynContains(highlight,\"HBA\"+extra+hbaNr)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"HBAAntenna.pnl:HBACallback|Highlight request: \"+bHighlight);
+  hbaHighLight.visible = bHighlight;  
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 2 1 1 E 60 70 514 524
+1 181 1 "" 1
+0
+6 2
+"childStateBorder"
+""
+1 151 99 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+226 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 2 1 1 E 1 0 1 -4 -6 1 E 71 83 515 527
+2 18
+"theHBAAntenna"
+""
+1 80.04925642195182 24 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+235 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1.19672131147541 0 1 -13.37704918032785 0 0 E 70 24 249 55
+0 2 2 "0s" 0 0 0 64 0 0  70 24 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 11 Station:HBA
+1 182 2 "" 7
+0
+1 183 2 "" 2
+0
+1 184 2 "" 9
+0
+1 185 2 "" 10
+0
+1 186 2 "" 13
+0
+1 187 2 "" 14
+0
+1 188 2 "" 5
+0
+1 189 2 "1" 1
+0
+1 190 2 "" 11
+0
+1 191 2 "" 15
+0
+1 192 3 "" 7
+0
+1 193 3 "" 2
+0
+1 194 3 "" 9
+0
+1 195 3 "" 10
+0
+1 196 3 "" 13
+0
+1 197 3 "" 14
+0
+1 198 3 "" 5
+0
+1 199 3 "1" 1
+0
+1 200 3 "" 11
+0
+1 201 3 "" 15
+0
+1 202 4 "" 7
+0
+1 203 4 "" 2
+0
+1 204 4 "" 9
+0
+1 205 4 "" 10
+0
+1 206 4 "" 13
+0
+1 207 4 "" 14
+0
+1 208 4 "" 5
+0
+1 209 4 "1" 1
+0
+1 210 4 "" 11
+0
+1 211 4 "" 15
+0
+1 212 5 "" 7
+0
+1 213 5 "" 2
+0
+1 214 5 "" 9
+0
+1 215 5 "" 10
+0
+1 216 5 "" 13
+0
+1 217 5 "" 14
+0
+1 218 5 "" 5
+0
+1 219 5 "1" 1
+0
+1 220 5 "" 11
+0
+1 221 5 "" 15
+0
+1 222 6 "" 7
+0
+1 223 6 "" 2
+0
+1 224 6 "" 9
+0
+1 225 6 "" 10
+0
+1 226 6 "" 13
+0
+1 227 6 "" 14
+0
+1 228 6 "" 5
+0
+1 229 6 "1" 1
+0
+1 230 6 "" 11
+0
+1 231 6 "" 15
+0
+1 232 7 "" 7
+0
+1 233 7 "" 2
+0
+1 234 7 "" 9
+0
+1 235 7 "" 10
+0
+1 236 7 "" 13
+0
+1 237 7 "" 14
+0
+1 238 7 "" 5
+0
+1 239 7 "1" 1
+0
+1 240 7 "" 11
+0
+1 241 7 "" 15
+0
+1 242 8 "" 7
+0
+1 243 8 "" 2
+0
+1 244 8 "" 9
+0
+1 245 8 "" 10
+0
+1 246 8 "" 13
+0
+1 247 8 "" 14
+0
+1 248 8 "" 5
+0
+1 249 8 "1" 1
+0
+1 250 8 "" 11
+0
+1 251 8 "" 15
+0
+1 252 9 "" 7
+0
+1 253 9 "" 2
+0
+1 254 9 "" 9
+0
+1 255 9 "" 10
+0
+1 256 9 "" 13
+0
+1 257 9 "" 14
+0
+1 258 9 "" 5
+0
+1 259 9 "1" 1
+0
+1 260 9 "" 11
+0
+1 261 9 "" 15
+0
+1 262 10 "" 7
+0
+1 263 10 "" 2
+0
+1 264 10 "" 9
+0
+1 265 10 "" 10
+0
+1 266 10 "" 13
+0
+1 267 10 "" 14
+0
+1 268 10 "" 5
+0
+1 269 10 "1" 1
+0
+1 270 10 "" 11
+0
+1 271 10 "" 15
+0
+1 272 11 "" 7
+0
+1 273 11 "" 2
+0
+1 274 11 "" 9
+0
+1 275 11 "" 10
+0
+1 276 11 "" 13
+0
+1 277 11 "" 14
+0
+1 278 11 "" 5
+0
+1 279 11 "1" 1
+0
+1 280 11 "" 11
+0
+1 281 11 "" 15
+0
+1 282 12 "" 7
+0
+1 283 12 "" 2
+0
+1 284 12 "" 9
+0
+1 285 12 "" 10
+0
+1 286 12 "" 13
+0
+1 287 12 "" 14
+0
+1 288 12 "" 5
+0
+1 289 12 "1" 1
+0
+1 290 12 "" 11
+0
+1 291 12 "" 15
+0
+1 292 13 "" 7
+0
+1 293 13 "" 2
+0
+1 294 13 "" 9
+0
+1 295 13 "" 10
+0
+1 296 13 "" 13
+0
+1 297 13 "" 14
+0
+1 298 13 "" 5
+0
+1 299 13 "1" 1
+0
+1 300 13 "" 11
+0
+1 301 13 "" 15
+0
+1 302 14 "" 7
+0
+1 303 14 "" 2
+0
+1 304 14 "" 9
+0
+1 305 14 "" 10
+0
+1 306 14 "" 13
+0
+1 307 14 "" 14
+0
+1 308 14 "" 5
+0
+1 309 14 "1" 1
+0
+1 310 14 "" 11
+0
+1 311 14 "" 15
+0
+1 312 15 "" 7
+0
+1 313 15 "" 2
+0
+1 314 15 "" 9
+0
+1 315 15 "" 10
+0
+1 316 15 "" 13
+0
+1 317 15 "" 14
+0
+1 318 15 "" 5
+0
+1 319 15 "1" 1
+0
+1 320 15 "" 11
+0
+1 321 15 "" 15
+0
+1 322 16 "" 7
+0
+1 323 16 "" 2
+0
+1 324 16 "" 9
+0
+1 325 16 "" 10
+0
+1 326 16 "" 13
+0
+1 327 16 "" 14
+0
+1 328 16 "" 5
+0
+1 329 16 "1" 1
+0
+1 330 16 "" 11
+0
+1 331 16 "" 15
+0
+1 332 17 "" 7
+0
+1 333 17 "" 2
+0
+1 334 17 "" 9
+0
+1 335 17 "" 10
+0
+1 336 17 "" 13
+0
+1 337 17 "" 14
+0
+1 338 17 "" 5
+0
+1 339 17 "1" 1
+0
+1 340 17 "" 11
+0
+1 341 17 "" 15
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 1 "selfState" -1
+"objects\\lofar_self_state.pnl" 35 732 T 225 1 0 1 -5 -680
+0
+3 2 "PANEL_REF2" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 250 1 0 1 -450 349
+1
+"$elementNr""0"
+3 3 "PANEL_REF3" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 251 1 0 1 -334 349
+1
+"$elementNr""1"
+3 4 "PANEL_REF4" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 252 1 0 1 -221 349
+1
+"$elementNr""2"
+3 5 "PANEL_REF5" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 253 1 0 1 -109 348
+1
+"$elementNr""3"
+3 6 "PANEL_REF6" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 254 1 0 1 -450 236
+1
+"$elementNr""4"
+3 7 "PANEL_REF7" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 255 1 0 1 -334 236
+1
+"$elementNr""5"
+3 8 "PANEL_REF8" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 256 1 0 1 -221 236
+1
+"$elementNr""6"
+3 9 "PANEL_REF9" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 257 1 0 1 -109 236
+1
+"$elementNr""7"
+3 10 "PANEL_REF10" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 258 1 0 1 -450 125
+1
+"$elementNr""8"
+3 11 "PANEL_REF11" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 259 1 0 1 -334 125
+1
+"$elementNr""9"
+3 12 "PANEL_REF12" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 260 1 0 1 -221 125
+1
+"$elementNr""10"
+3 13 "PANEL_REF13" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 261 1 0 1 -109 125
+1
+"$elementNr""11"
+3 14 "PANEL_REF14" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 262 1 0 1 -450 14
+1
+"$elementNr""12"
+3 15 "PANEL_REF15" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 263 1 0 1 -334 14
+1
+"$elementNr""13"
+3 16 "PANEL_REF16" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 264 1 0 1 -219 11
+1
+"$elementNr""14"
+3 17 "PANEL_REF17" -1
+"objects\\Hardware\\HBA_TileElement.pnl" 547 217 T 265 1 0 1 -109 14
+1
+"$elementNr""15"
+0
