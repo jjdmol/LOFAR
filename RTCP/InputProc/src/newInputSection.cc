@@ -14,7 +14,6 @@
 #include "SampleType.h"
 #include "SampleBuffer.h"
 #include "SampleBufferReader.h"
-#include "RSPBoard.h"
 #include "Generator.h"
 #include "Station.h"
 #include "mpi.h"

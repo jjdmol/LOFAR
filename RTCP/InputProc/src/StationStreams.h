@@ -28,6 +28,7 @@ protected:
   WallClockTime waiter;
 
   virtual void processBoard( size_t nr ) = 0;
+  virtual void logStatistics() = 0;
 };
 
 
