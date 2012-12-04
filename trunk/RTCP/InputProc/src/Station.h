@@ -8,6 +8,8 @@
 #include "StationSettings.h"
 #include <string>
 #include <vector>
+#include <ios>
+#include <boost/format.hpp>
 
 namespace LOFAR {
 namespace RTCP {
@@ -19,6 +21,7 @@ public:
 protected:
   SampleBuffer<T> buffer;
 
+  // process data for this board until interrupted or end of data
   virtual void processBoard( size_t nr );
 };
 

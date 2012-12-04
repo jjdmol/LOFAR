@@ -11,6 +11,9 @@ StationID::StationID( const std::string &stationName = "", const std::string &an
   clock(clock),
   bitmode(bitmode)
 {
+  ASSERTSTR( stationName.size() < sizeof this->stationName, "Station name longer than " << (sizeof this->stationName - 1) << " characters.");
+  ASSERTSTR( antennaSet.size() < sizeof this->antennaSet, "Antenna-set name longer than " << (sizeof this->antennaSet - 1) << " characters.");
+
   snprintf(this->stationName, sizeof this->stationName, "%s", stationName.c_str());
   snprintf(this->antennaSet, sizeof this->antennaSet, "%s", antennaSet.c_str());
 }
