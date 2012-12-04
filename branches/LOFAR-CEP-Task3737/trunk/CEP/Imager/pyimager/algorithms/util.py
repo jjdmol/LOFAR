@@ -1,6 +1,15 @@
 import numpy
 import constants
 
+def notice(msg):
+    print "\033[1;32m%s\033[m" % msg
+
+def warning(msg):
+    print "\033[1;33mwarning: %s\033[m" % msg
+
+def error(msg):
+    print "\033[1;31merror: %s\033[m" % msg
+
 def full_width_half_max(diameter, freq):
     """Return an estimate of the full width half maximum of the beam given the
     station diameter and the frequency of interest."""

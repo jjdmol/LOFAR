@@ -91,7 +91,7 @@ namespace LOFAR
 namespace casaimwrap
 {
 
-struct Memento
+struct CASAContext
 {
     MeasurementSet              ms;
     CountedPtr<LofarFTMachine>  ft;
@@ -148,12 +148,6 @@ CoordinateSystem makeCoordinateSystem(const Vector<Int> &shape,
     SpectralCoordinate spectralCoordinate(MFrequency::TOPO, fmean, finc, 0,
         0.0);
 
-    cout << "center frequency = "
-        << MFrequency(Quantity(fmean, "Hz")).get("MHz").getValue()
-        << " MHz, synthesized continuum bandwidth = "
-        << MFrequency(Quantity(finc, "Hz")).get("MHz").getValue()
-        << " MHz" << endl;
-
     CoordinateSystem coordinates;
     coordinates.addCoordinate(directionCoordinate);
     coordinates.addCoordinate(StokesCoordinate(stokes));
@@ -161,10 +155,10 @@ CoordinateSystem makeCoordinateSystem(const Vector<Int> &shape,
     return coordinates;
 }
 
-void init(Memento &memento, const String &name, const Record &options)
+void init(CASAContext &context, const String &name, const Record &options)
 {
     MeasurementSet ms(name);
-    memento.ms = ms(ms.col("ANTENNA1") != ms.col("ANTENNA2")
+    context.ms = ms(ms.col("ANTENNA1") != ms.col("ANTENNA2")
         && ms.col("OBSERVATION_ID") == 0
         && ms.col("FIELD_ID") == 0
         && ms.col("DATA_DESC_ID") == 0);
@@ -188,9 +182,9 @@ void init(Memento &memento, const String &name, const Record &options)
     // RefFreq doesn't look to be used by LofarFTMachine (!)
     Double RefFreq = 0.0;
 
-    memento.ft = CountedPtr<LofarFTMachine>(new LofarFTMachine(cache_p / 2,
+    context.ft = CountedPtr<LofarFTMachine>(new LofarFTMachine(cache_p / 2,
         tile_p, visResampler, gridfunction_p,
-        memento.ms, wprojPlanes_p, mLocation_p,
+        context.ms, wprojPlanes_p, mLocation_p,
         padding_p, false, useDoublePrecGrid,
         options.asDouble("wmax"),
         options.asInt("verbose"),
@@ -214,8 +208,8 @@ void init(Memento &memento, const String &name, const Record &options)
         options.asBool("MakeDirtyCorr"),
         options));
 
-    memento.ft->initGridThreads(memento.grids, memento.gridsComplex);
-    memento.buffer = CountedPtr<VisBufferStub>(new VisBufferStub(memento.ms));
+    context.ft->initGridThreads(context.grids, context.gridsComplex);
+    context.buffer = CountedPtr<VisBufferStub>(new VisBufferStub(context.ms));
 }
 
 Record clarkClean(const ValueHolder &psf, const ValueHolder &residual,
@@ -232,20 +226,20 @@ Record clarkClean(const ValueHolder &psf, const ValueHolder &residual,
     ClarkCleanModel cleaner(delta);
     cleaner.setMask(mask.asArrayFloat());
     cleaner.setGain(options.asFloat("gain"));
-    cleaner.setNumberIterations(options.asInt("numberIterations"));
+    cleaner.setNumberIterations(options.asInt("iterations"));
     cleaner.setInitialNumberIterations(iterations);
-    cleaner.setThreshold(options.asFloat("cycleThreshold"));
-    cleaner.setPsfPatchSize(IPosition(2, options.asInt("psfpatch")));
+    cleaner.setThreshold(options.asFloat("cycle_threshold"));
+    cleaner.setPsfPatchSize(IPosition(2, options.asInt("psf_patch_size")));
     cleaner.setMaxNumberMajorCycles(10);
     cleaner.setHistLength(1024);
     cleaner.setMaxNumPix(32 * 1024);
     cleaner.setChoose(false);
-    cleaner.setCycleSpeedup(options.asFloat("cycleSpeedup"));
+    cleaner.setCycleSpeedup(options.asFloat("cycle_speedup"));
     cleaner.setSpeedup(0.0);
     cleaner.singleSolve(eqn, residualArray);
 
     Record result;
-    result.define("numberIterations", cleaner.numberIterations());
+    result.define("iterations", cleaner.numberIterations());
     result.define("delta", delta);
 
     // TODO: It seems that delta already has the clean components, so this
@@ -309,31 +303,31 @@ Record makeCoordinateSystemPy(const ValueHolder &size, const ValueHolder &delta,
     return record.subRecord(0);
 }
 
-Record begin_degrid(Memento &memento, const Record &coordinates,
+Record begin_degrid(CASAContext &context, const Record &coordinates,
     const ValueHolder &image, const Record &chunk)
 {
     CountedPtr<CoordinateSystem> tmp_coordinates =
         CountedPtr<CoordinateSystem>(CoordinateSystem::restore(coordinates,
         ""));
     AlwaysAssert(!tmp_coordinates.null(), AipsError);
-    memento.coordinates = *tmp_coordinates;
+    context.coordinates = *tmp_coordinates;
 
     Array<Float> pixels = image.asArrayFloat();
-    memento.shape = pixels.shape();
+    context.shape = pixels.shape();
 
     // Create temporary image.
-    TempImage<Float> tmp_image(memento.shape, memento.coordinates);
+    TempImage<Float> tmp_image(context.shape, context.coordinates);
     tmp_image.put(pixels);
 
     // Complex image to degrid.
-    memento.image = TempImage<Complex>(memento.shape, memento.coordinates);
-    StokesImageUtil::changeCStokesRep(memento.image, SkyModel::LINEAR);
+    context.image = TempImage<Complex>(context.shape, context.coordinates);
+    StokesImageUtil::changeCStokesRep(context.image, SkyModel::LINEAR);
 
     // Convert from Stokes to complex.
-    StokesImageUtil::From(memento.image, tmp_image);
+    StokesImageUtil::From(context.image, tmp_image);
 
     // Update temporary VisBuffer.
-    memento.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
+    context.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
         chunk.asArrayInt("ANTENNA2"),
         chunk.asArrayDouble("UVW"),
         chunk.asArrayDouble("TIME"),
@@ -343,18 +337,18 @@ Record begin_degrid(Memento &memento, const Record &coordinates,
         chunk.asArrayBool("FLAG"),
         true);
 
-    memento.ft->initializeToVis(memento.image, *memento.buffer);
-    memento.ft->get(*memento.buffer);
+    context.ft->initializeToVis(context.image, *context.buffer);
+    context.ft->get(*context.buffer);
 
     Record result;
-    result.define("data", memento.buffer->modelVisCube());
+    result.define("data", context.buffer->modelVisCube());
     return result;
 }
 
-Record degrid(Memento &memento, const Record &chunk)
+Record degrid(CASAContext &context, const Record &chunk)
 {
     // Update temporary VisBuffer.
-    memento.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
+    context.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
         chunk.asArrayInt("ANTENNA2"),
         chunk.asArrayDouble("UVW"),
         chunk.asArrayDouble("TIME"),
@@ -365,44 +359,44 @@ Record degrid(Memento &memento, const Record &chunk)
         false);
 
     // Degrid into buffer.
-    memento.ft->get(*memento.buffer);
+    context.ft->get(*context.buffer);
 
     Record result;
-    result.define("data", memento.buffer->modelVisCube());
+    result.define("data", context.buffer->modelVisCube());
     return result;
 }
 
-void end_degrid(Memento &memento)
+void end_degrid(CASAContext &context)
 {
-    memento.ft->finalizeToVis();
+    context.ft->finalizeToVis();
 }
 
-void begin_grid(Memento &memento, const ValueHolder &shape,
+void begin_grid(CASAContext &context, const ValueHolder &shape,
     const Record &coordinates, bool psf, const Record &chunk)
 {
-    memento.psf = psf;
+    context.psf = psf;
 
     CountedPtr<CoordinateSystem> tmp_coordinates =
         CountedPtr<CoordinateSystem>(CoordinateSystem::restore(coordinates,
         ""));
     AlwaysAssert(!tmp_coordinates.null(), AipsError);
-    memento.coordinates = *tmp_coordinates;
+    context.coordinates = *tmp_coordinates;
 
     Vector<Int> tmp_shape = shape.asArrayInt();
     AlwaysAssert(tmp_shape.size() == 4, AipsError);
-    memento.shape = IPosition(4, tmp_shape[3], tmp_shape[2], tmp_shape[1],
+    context.shape = IPosition(4, tmp_shape[3], tmp_shape[2], tmp_shape[1],
         tmp_shape[0]);
 
     // Create temporary image.
-    memento.image = TempImage<Complex>(memento.shape, memento.coordinates);
-    StokesImageUtil::changeCStokesRep(memento.image, SkyModel::LINEAR);
-    memento.image.set(0.0);
+    context.image = TempImage<Complex>(context.shape, context.coordinates);
+    StokesImageUtil::changeCStokesRep(context.image, SkyModel::LINEAR);
+    context.image.set(0.0);
 
     // Create weight matrix.
     // ==> No need, will be resized by LofarFTMachine.
 
     // Update temporary VisBuffer.
-    memento.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
+    context.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
         chunk.asArrayInt("ANTENNA2"),
         chunk.asArrayDouble("UVW"),
         chunk.asArrayDouble("TIME"),
@@ -414,16 +408,16 @@ void begin_grid(Memento &memento, const ValueHolder &shape,
         true);
 
     // Initialize static information in temporary VisBuffer.
-    memento.ft->initializeToSky(memento.image, memento.weight, *memento.buffer);
+    context.ft->initializeToSky(context.image, context.weight, *context.buffer);
 
     // Grid data.
-    memento.ft->put(*memento.buffer, -1, memento.psf, FTMachine::OBSERVED);
+    context.ft->put(*context.buffer, -1, context.psf, FTMachine::OBSERVED);
 }
 
-void grid(Memento &memento, const Record &chunk)
+void grid(CASAContext &context, const Record &chunk)
 {
     // Update temporary VisBuffer.
-    memento.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
+    context.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
         chunk.asArrayInt("ANTENNA2"),
         chunk.asArrayDouble("UVW"),
         chunk.asArrayDouble("TIME"),
@@ -435,20 +429,20 @@ void grid(Memento &memento, const Record &chunk)
         false);
 
     // Grid data.
-    memento.ft->put(*memento.buffer, -1, memento.psf, FTMachine::OBSERVED);
+    context.ft->put(*context.buffer, -1, context.psf, FTMachine::OBSERVED);
 }
 
-Record end_grid(Memento &memento, bool normalize)
+Record end_grid(CASAContext &context, bool normalize)
 {
-    memento.ft->finalizeToSky();
+    context.ft->finalizeToSky();
 
-    ImageInterface<Complex> &image = memento.ft->getImage(memento.weight,
+    ImageInterface<Complex> &image = context.ft->getImage(context.weight,
         normalize);
 
-    TempImage<Float> tmp_image(memento.shape, memento.coordinates);
+    TempImage<Float> tmp_image(context.shape, context.coordinates);
     tmp_image.set(0.0);
 
-    if(memento.psf)
+    if(context.psf)
     {
         StokesImageUtil::ToStokesPSF(tmp_image, image);
     }
@@ -457,21 +451,11 @@ Record end_grid(Memento &memento, bool normalize)
         StokesImageUtil::To(tmp_image, image);
     }
 
-    // Create temporary weight image.
-    TempImage<Float> tmp_weight_image(memento.shape, memento.coordinates);
-    tmp_weight_image.set(0.0);
-    memento.ft->getWeightImage(tmp_weight_image, memento.weight);
-
     Record result;
-    result.define("weight", tmp_weight_image.get());
+    result.define("weight", context.weight);
     result.define("image", tmp_image.get());
     return result;
 }
-
-//ValueHolder averagePB(Memento &memento)
-//{
-//    return ValueHolder(memento.ft->getAveragePB());
-//}
 
 } // namespace casaimwrap
 } // namespace LOFAR
@@ -483,28 +467,61 @@ BOOST_PYTHON_MODULE(_casaimwrap)
     casa::pyrap::register_convert_casa_valueholder();
     casa::pyrap::register_convert_casa_record();
 
-    class_<LOFAR::casaimwrap::Memento>("Memento");
+    class_<LOFAR::casaimwrap::CASAContext>("CASAContext");
 
-    def("init", LOFAR::casaimwrap::init, (boost::python::arg("memento"),
-        boost::python::arg("name"), boost::python::arg("options")));
+    def("init", LOFAR::casaimwrap::init,
+        (boost::python::arg("context"),
+        boost::python::arg("name"),
+        boost::python::arg("options")));
+
     def("makeCoordinateSystem", LOFAR::casaimwrap::makeCoordinateSystemPy,
-        (boost::python::arg("size"), boost::python::arg("delta"),
-        boost::python::arg("reference"), boost::python::arg("frequency"),
+        (boost::python::arg("size"),
+        boost::python::arg("delta"),
+        boost::python::arg("reference"),
+        boost::python::arg("frequency"),
         boost::python::arg("width")));
-//    def("makeApproxPSF", LOFAR::casaimwrap::makeApproxPSF,
-//        (boost::python::arg("memento")));
-//    def("makeNewtonRaphsonStep", LOFAR::casaimwrap::makeNewtonRaphsonStep, (boost::python::arg("memento"), boost::python::arg("modelToMS")));
-    def("clarkClean", LOFAR::casaimwrap::clarkClean, (boost::python::arg("psf"), boost::python::arg("residual"), boost::python::arg("wmask"), boost::python::arg("iterations"), boost::python::arg("options")));
-//    def("setImage", LOFAR::casaimwrap::setImage, (boost::python::arg("memento"), boost::python::arg("id"), boost::python::arg("image")));
-    def("convolveWithBeam", LOFAR::casaimwrap::convolveWithBeam, (boost::python::arg("coordinates"), boost::python::arg("image"), boost::python::arg("major"), boost::python::arg("minor"), boost::python::arg("pa")));
-    def("fitGaussianPSF", LOFAR::casaimwrap::fitGaussianPSF, (boost::python::arg("coordinates"), boost::python::arg("psf")));
 
-    def("begin_degrid", LOFAR::casaimwrap::begin_degrid, (boost::python::arg("memento"), boost::python::arg("coordinates"), boost::python::arg("image"), boost::python::arg("chunk")));
-    def("degrid", LOFAR::casaimwrap::degrid, (boost::python::arg("memento"), boost::python::arg("chunk")));
-    def("end_degrid", LOFAR::casaimwrap::end_degrid, (boost::python::arg("memento")));
-    def("begin_grid", LOFAR::casaimwrap::begin_grid, (boost::python::arg("memento"), boost::python::arg("shape"), boost::python::arg("coordinates"), boost::python::arg("psf"),
+    def("clarkClean", LOFAR::casaimwrap::clarkClean,
+        (boost::python::arg("psf"),
+        boost::python::arg("residual"),
+        boost::python::arg("wmask"),
+        boost::python::arg("iterations"),
+        boost::python::arg("options")));
+
+   def("convolveWithBeam", LOFAR::casaimwrap::convolveWithBeam,
+        (boost::python::arg("coordinates"),
+        boost::python::arg("image"),
+        boost::python::arg("major"),
+        boost::python::arg("minor"),
+        boost::python::arg("pa")));
+
+    def("fitGaussianPSF", LOFAR::casaimwrap::fitGaussianPSF,
+        (boost::python::arg("coordinates"),
+        boost::python::arg("psf")));
+
+    def("begin_degrid", LOFAR::casaimwrap::begin_degrid,
+        (boost::python::arg("context"),
+        boost::python::arg("coordinates"),
+        boost::python::arg("image"),
         boost::python::arg("chunk")));
-    def("grid", LOFAR::casaimwrap::grid, (boost::python::arg("memento"), boost::python::arg("chunk")));
-    def("end_grid", LOFAR::casaimwrap::end_grid, (boost::python::arg("memento"), boost::python::arg("normalize")));
-//    def("averagePB", LOFAR::casaimwrap::averagePB, (boost::python::arg("memento")));
+
+    def("degrid", LOFAR::casaimwrap::degrid,
+        (boost::python::arg("context"),
+        boost::python::arg("chunk")));
+
+    def("end_degrid", LOFAR::casaimwrap::end_degrid,
+        (boost::python::arg("context")));
+
+    def("begin_grid", LOFAR::casaimwrap::begin_grid,
+        (boost::python::arg("context"), boost::python::arg("shape"),
+        boost::python::arg("coordinates"), boost::python::arg("psf"),
+        boost::python::arg("chunk")));
+
+    def("grid", LOFAR::casaimwrap::grid,
+        (boost::python::arg("context"),
+        boost::python::arg("chunk")));
+
+    def("end_grid", LOFAR::casaimwrap::end_grid,
+        (boost::python::arg("context"),
+        boost::python::arg("normalize")));
 }

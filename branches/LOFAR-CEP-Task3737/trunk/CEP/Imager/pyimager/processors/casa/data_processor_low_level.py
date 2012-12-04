@@ -27,6 +27,7 @@ class DataProcessorLowLevel:
         #parms["ApplyElement"] = True
         parms["PBCut"] = 1e-2
         parms["StepApplyElement"] = 0       # if 0 don't apply element beam
+#        parms["TWElement"] = 0.02
         parms["PredictFT"] = False
         parms["PsfImage"] = ""
         parms["UseMasksDegrid"] = True
@@ -39,6 +40,7 @@ class DataProcessorLowLevel:
         # will be determined by LofarFTMachine
         parms["wplanes"] = 64
 
+#        parms["ApplyBeamCode"] = 0
         parms["ApplyBeamCode"] = 3
         parms["UVmin"] = 0
         parms["UVmax"] = 100000
@@ -53,8 +55,8 @@ class DataProcessorLowLevel:
         parms["ChanBlockSize"] = 0
         parms["FindNWplanes"] = True
 
-        self._memento = lofar.casaimwrap.Memento()
-        lofar.casaimwrap.init(self._memento, self._measurement, parms)
+        self._context = lofar.casaimwrap.CASAContext()
+        lofar.casaimwrap.init(self._context, self._measurement, parms)
 
     def capabilities(self):
         return {}
@@ -100,9 +102,9 @@ class DataProcessorLowLevel:
         args["FLAG"] = self._ms.getcol("FLAG")
         args["DATA"] = numpy.ones(args["FLAG"].shape, dtype=numpy.complex64)
 
-        lofar.casaimwrap.begin_grid(self._memento, shape, coordinates.dict(), \
+        lofar.casaimwrap.begin_grid(self._context, shape, coordinates.dict(), \
             True, args)
-        result = lofar.casaimwrap.end_grid(self._memento, False)
+        result = lofar.casaimwrap.end_grid(self._context, False)
         return (result["image"], result["weight"])
 
     def grid(self, coordinates, shape, density, as_grid):
@@ -120,9 +122,9 @@ class DataProcessorLowLevel:
         args["FLAG"] = self._ms.getcol("FLAG")
         args["DATA"] = self._ms.getcol(self._data_column)
 
-        lofar.casaimwrap.begin_grid(self._memento, shape, coordinates.dict(), \
+        lofar.casaimwrap.begin_grid(self._context, shape, coordinates.dict(), \
             False, args)
-        result = lofar.casaimwrap.end_grid(self._memento, False)
+        result = lofar.casaimwrap.end_grid(self._context, False)
         return (result["image"], result["weight"])
 
     def degrid(self, coordinates, model, as_grid):
@@ -138,9 +140,9 @@ class DataProcessorLowLevel:
         args["WEIGHT"] = self._ms.getcol("WEIGHT")
         args["FLAG"] = self._ms.getcol("FLAG")
 
-        result = lofar.casaimwrap.begin_degrid(self._memento, \
+        result = lofar.casaimwrap.begin_degrid(self._context, \
             coordinates.dict(), model, args)
-        lofar.casaimwrap.end_degrid(self._memento)
+        lofar.casaimwrap.end_degrid(self._context)
 #        self._ms.putcol(self._data_column, result["data"])
 
     def residual(self, coordinates, model, density, as_grid):
@@ -158,9 +160,9 @@ class DataProcessorLowLevel:
         args["WEIGHT"] = self._ms.getcol("WEIGHT")
         args["FLAG"] = self._ms.getcol("FLAG")
 
-        result = lofar.casaimwrap.begin_degrid(self._memento, \
+        result = lofar.casaimwrap.begin_degrid(self._context, \
             coordinates.dict(), model, args)
-        lofar.casaimwrap.end_degrid(self._memento)
+        lofar.casaimwrap.end_degrid(self._context)
 
         # Compute residual.
         residual = self._ms.getcol(self._data_column) - result["data"]
@@ -177,8 +179,8 @@ class DataProcessorLowLevel:
         args["FLAG"] = self._ms.getcol("FLAG")
         args["DATA"] = residual
 
-        lofar.casaimwrap.begin_grid(self._memento, model.shape, \
+        lofar.casaimwrap.begin_grid(self._context, model.shape, \
             coordinates.dict(), False, args)
-        result = lofar.casaimwrap.end_grid(self._memento, False)
+        result = lofar.casaimwrap.end_grid(self._context, False)
 
         return (result["image"], result["weight"])

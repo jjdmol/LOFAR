@@ -1,3 +1,9 @@
+"""This module is a straight-forward Python port of the multi field Clark clean
+algorithm as implemented in CASA (see MFCleanImageSkyModel.cc). In constrast to
+the CASA implementation, masks are not supported, nor is the option to use
+Hogbohm instead of Clark clean in the minor cycle.
+"""
+
 import pylab
 import numpy
 import pyrap.images
@@ -5,6 +11,41 @@ import pyrap.images
 import lofar.casaimwrap
 import lofar.pyimager.processors as processors
 import util
+
+class BeamParameters:
+    def __init__(self, major_axis = 1.0, minor_axis = 1.0, \
+        position_angle = 0.0):
+
+        self._major = abs(major_axis)
+        self._minor = abs(minor_axis)
+        self._angle = position_angle
+
+    def _set_major_axis(self, major):
+        self._major = abs(major)
+
+    def _set_minor_axis(self, minor):
+        self._minor = abs(minor)
+
+    def _set_position_angle(self, angle):
+        self._angle = angle
+
+    def _major_axis(self):
+        return self._major
+
+    def _minor_axis(self):
+        return self._minor
+
+    def _position_angle(self):
+        return self._angle
+
+    major_axis = property(_major_axis, _set_major_axis, \
+        doc="Major axis size (rad).")
+
+    minor_axis = property(_minor_axis, _set_minor_axis, \
+        doc="Minor axis size (rad).")
+
+    position_angle = property(_position_angle, _set_position_angle, \
+        doc="Position angle (rad).")
 
 def max_outer(image, distance):
     """Return maximum absolute outer sidelobe, more than distance pixels from
@@ -56,7 +97,7 @@ def validate_psf(csys, psf, beam):
     for model in range(len(psf)):
         threshold = 0.8 * numpy.max(psf[model])
 
-        # Find channel for which the (signed) maximum of the first polarization
+        # Find channel for which the (signed) maximum of the first correlation
         # is larger than threshold.
         ch = 0
         n_ch = psf[model].shape[0]
@@ -72,18 +113,20 @@ def validate_psf(csys, psf, beam):
         # Comment from CASA source code:
         #    4 pixels:  pretty arbitrary, but only look for sidelobes
         #    outside the inner (2n+1) * (2n+1) square
+        #
         distance = 4
 
         # Comment from CASA source code:
         #    locate peak size
+        #
         # TODO: Should this not be min(abs(...))??
         # TODO: Should each model image have its own coordinate system?
         increment = numpy.abs(numpy.min(csys.get_increment()[2]))
         assert(csys.get_unit()[2] == ["rad", "rad"])
         if increment > 0.0:
             distance = max(distance, \
-                int(numpy.ceil(max(beam[model].majorAxis() / increment, \
-                beam[model].minorAxis() / increment))))
+                int(numpy.ceil(max(beam[model].major_axis / increment, \
+                beam[model].minor_axis / increment))))
 
         # TODO: psf_patch_size will always be set based on the distance computed
         # for the last (solvable) model. This seems rather arbitrary?
@@ -97,32 +140,35 @@ def validate_psf(csys, psf, beam):
 
     return (min_psf, max_psf, max_psf_outer, psf_patch_size, max_sidelobe)
 
-def max_field(ggS, residual):
+def max_field(weight, residual):
     """Re-normalize the residual and return the (signed) minimum and maximum
     residual, as well as the (absolute) maximum residual.
 
     Re-implementation of MFCleanImageSkyModel::maxField().
     """
-    assert(len(ggS) == len(residual))
-    n_model = len(ggS)
+    assert(len(weight) == len(residual))
+    n_model = len(weight)
 
-    # Compute the (signed) maximum of ggS over all models.
-    max_ggS = 0.0
+    # Compute the (signed) maximum of weight over all models.
+    max_weight = 0.0
     for model in range(n_model):
-        max_ggS = max(max_ggS, numpy.max(ggS[model]))
+        max_weight = max(max_weight, numpy.max(weight[model]))
 
     absmax = 0.0
     min_residual = [1e20 for i in range(n_model)]
     max_residual = [-1e20 for i in range(n_model)]
     for model in range(n_model):
-        assert(ggS[model].shape == residual[model].shape)
-
-        # TODO: Why is this done per channel?
         n_ch = residual[model].shape[0]
         for ch in range(n_ch):
-            # Re-weight residual
-            residual[model][ch, :, :, :] *= numpy.sqrt(ggS[model][ch, :, :, :] \
-                / max_ggS)
+            # TODO: Why is the residual re-weighted here? In practice for LOFAR
+            # all weights seem to be equal, which causes the residual to be
+            # re-weighted by a factor 1.0. Ensure that this is the case, such
+            # that it does not go unnoticed when the re-weighting would have had
+            # an effect.
+            #
+#            residual[model][ch, :, :, :] *= \
+#                numpy.sqrt(weight[model][ch, :, :, :] / max_weight)
+            assert(numpy.all(weight[model][ch, :] == max_weight))
 
             fmax = numpy.max(residual[model][ch, :, :, :])
             fmin = numpy.min(residual[model][ch, :, :, :])
@@ -142,10 +188,10 @@ def max_field(ggS, residual):
 def restore_image(csys, image, residual, beam):
     """Convolve the input clean component image with a Gaussian restoring beam
     and add the residual."""
-    if beam.majorAxis() > 0.0 and beam.minorAxis() > 0.0:
-        major = beam.majorAxis() * 180.0 * 3600.0 / numpy.pi
-        minor = beam.minorAxis() * 180.0 * 3600.0 / numpy.pi
-        pa = beam.positionAngle() * 180.0 / numpy.pi
+    if beam.major_axis > 0.0 and beam.minor_axis > 0.0:
+        major = beam.major_axis * 180.0 * 3600.0 / numpy.pi
+        minor = beam.minor_axis * 180.0 * 3600.0 / numpy.pi
+        pa = beam.position_angle * 180.0 / numpy.pi
         restored = lofar.casaimwrap.convolveWithBeam(csys, image, major, \
             minor, pa)
     else:
@@ -154,111 +200,41 @@ def restore_image(csys, image, residual, beam):
     restored += residual
     return restored
 
-class BeamParameters:
-    def __init__(self, majorAxis = 1.0, minorAxis = 1.0, positionAngle = 0.0):
-        self._major = abs(majorAxis)
-        self._minor = abs(minorAxis)
-        self._angle = positionAngle
+def show_image(title, data):
+    print "%s:" % title, "min:", numpy.min(data), "max:", numpy.max(data), "median:", numpy.median(data)
+    fig, axes = pylab.subplots(nrows=2, ncols=2) #, sharex=True, sharey=True, squeeze=True)
+    fig.suptitle(title, fontsize=14)
 
-    def setMajorAxis(self, major):
-        self._major = abs(major)
+    vmin = numpy.min(data)
+    vmax = numpy.max(data)
+    for k, ax in zip(range(4), axes.flat):
+        __im = ax.imshow(data[k,:,:], origin="lower", interpolation="nearest", cmap="bone", vmin=vmin, vmax=vmax) # aspect="auto")
+        __im.axes.get_xaxis().set_visible(False)
+        __im.axes.get_yaxis().set_visible(False)
 
-    def setMinorAxis(self, minor):
-        self._minor = abs(minor)
+    fig.subplots_adjust(right=0.70, wspace=0.0, hspace=0.0)
+    cax = fig.add_axes([0.75, 0.1, 0.03, 0.8])
+    cbr = fig.colorbar(__im, cax=cax)
+    cbr.set_clim(vmin, vmax)
 
-    def setPositionAngle(self, angle):
-        self._angle = angle
+def mfclean(options):
+    clark_options = {}
+    clark_options["gain"] = options.gain
+    clark_options["iterations"] = options.iterations
+    clark_options["cycle_speedup"] = options.cycle_speedup
 
-    def majorAxis(self):
-        return self._major
+    max_baseline = options.max_baseline if options.max_baseline > 0.0 else \
+        10000.0
+    processor_options = {}
+    processor_options["wmax"] = max_baseline
+    processor_options["padding"] = 1.0
+    processor_options["image"] = options.image
 
-    def minorAxis(self):
-        return self._minor
+    processor = processors.create_data_processor(options.processor, \
+        options.ms, processor_options)
 
-    def positionAngle(self):
-        return self._angle
-
-class CleanOptions:
-    def __init__(self):
-        self._numberIterations = 100
-        self._gain = 1.0
-        self._tolerance = 0.000001
-        self._threshold = 0.0
-        self._free = False
-        self._mode = ""
-        self._cycleFactor = 1.5
-        self._cycleSpeedup = -1.0
-        self._cycleMaxPsfFraction = 0.8
-
-    def setFree(self):
-        self._free = True
-
-    def setNotFree(self):
-        self._free = False
-
-    def free(self):
-        return self._free
-
-    def setNumberIterations(self, n):
-        self._numberIterations = n
-
-    def setGain(self, gain):
-        self._gain = gain
-
-    def setTolerance(self, tolerance):
-        self._tolerance = tolerance
-
-    def setThreshold(self, threshold):
-        self._threshold = threshold
-
-    def setMode(self, mode):
-        self._mode = mode
-
-    def setCycleFactor(self, factor):
-        self._cycleFactor = factor
-
-    def setCycleSpeedup(self, speedup):
-        self._cycleSpeedup = speedup
-
-    def setCycleMaxPsfFraction(self, fraction):
-        self._cycleMaxPsfFraction = fraction
-
-    def numberIterations(self):
-        return self._numberIterations
-
-    def gain(self):
-        return self._gain
-
-    def tolerance(self):
-        return self._tolerance
-
-    def threshold(self):
-        return self._threshold
-
-    def mode(self):
-        return self._mode
-
-    def cycleFactor(self):
-        return self._cycleFactor
-
-    def cycleSpeedup(self):
-        return self._cycleSpeedup
-
-    def cycleMaxPsfFraction(self):
-        return self._cycleMaxPsfFraction
-
-def mfclean(args):
-    options = {}
-
-    max_baseline = args.B if args.B > 0.0 else 10000.0
-    options["wmax"] = max_baseline
-    options["padding"] = args.padding
-    options["image"] = args.image
-
-    proc = processors.create_data_processor(args.processor, args.ms, options)
-
-    channel_freq = proc.channel_frequency()
-    channel_width = proc.channel_width()
+    channel_freq = processor.channel_frequency()
+    channel_width = processor.channel_width()
 
     max_freq = numpy.max(channel_freq)
     image_size = 2.0 * util.full_width_half_max(70.0, max_freq)
@@ -271,254 +247,256 @@ def mfclean(args):
     (n_px, delta_px) = util.image_configuration(image_size, max_freq, \
         max_baseline)
 
-    print "image configuration:"
-    print "    size: %d x %d pixel" % (n_px, n_px)
-    print "    angular size: %.2f deg" \
-        % (image_size * 180.0 / numpy.pi)
-    print "    angular resolution @ 3 pixel/beam: %.2f arcsec/pixel" \
-        % (3600.0 * delta_px * 180.0 / numpy.pi)
+    util.notice("image configuration:")
+    util.notice("    size: %d x %d pixel" % (n_px, n_px))
+    util.notice("    angular size: %.2f deg" \
+        % (image_size * 180.0 / numpy.pi))
+    util.notice("    angular resolution @ 3 pixel/beam: %.2f arcsec/pixel" \
+        % (3600.0 * delta_px * 180.0 / numpy.pi))
+
     if n_px > 750:
-        print "image too large!"
+        util.error("image too large!")
         return
 
-    n_ch = len(channel_freq)
-    n_cr = 4
-
-    image_shape = (n_ch, n_cr, n_px, n_px)
+    # TODO: Need to implement support for multiple channel images. Currently,
+    # all data channels are combined into a single MFS image per correlation.
+    image_shape = (1, 4, n_px, n_px)
     image_coordinates = pyrap.images.coordinates.coordinatesystem( \
         lofar.casaimwrap.makeCoordinateSystem(image_shape[2:], [delta_px, \
-        delta_px], proc.phase_reference(), channel_freq, channel_width))
-
-    ############################################################################
-
-    parms = {}
-    parms["gain"] = 0.1
-    parms["cyclefactor"] = 1.5
-    parms["cyclespeedup"] = -1.0
-    parms["threshold"] = 0.0
-    parms["niter"] = 10000
+        delta_px], processor.phase_reference(), channel_freq, channel_width))
 
     n_model = 1
-    # TODO: Double check code for n_model > 1!
+    # TODO: Check code for n_model > 1!
     assert(n_model == 1)
 
-    doPolJoint = True
-    # TODO: Double check code for doPolJoint = False!
-    assert(doPolJoint)
-
-    psf = [None for i in range(n_model)]
-    ggS = [None for i in range(n_model)]
-    beam = [None for i in range(n_model)]
-    image = [numpy.zeros(image_shape) for i in range(n_model)]
-    delta = [numpy.zeros(image_shape) for i in range(n_model)]
-    residual = [numpy.zeros(image_shape) for i in range(n_model)]
+    do_cr_joint = True
+    # TODO: Check code for do_cr_joint = False!
+    assert(do_cr_joint)
 
     # Make approximate PSF images for all models.
-    print "making approximate PSF images for all fields..."
+    util.notice("making approximate PSF images for all fields...")
+    psf = [None for i in range(n_model)]
+    beam = [None for i in range(n_model)]
     for model in range(n_model):
-        psf[model] = proc.point_spread_function(image_coordinates, image_shape)
+        psf[model] = processor.point_spread_function(image_coordinates, \
+            image_shape)
         fit = lofar.casaimwrap.fitGaussianPSF(image_coordinates.dict(), \
             psf[model])
         assert(fit["ok"])
-        beam[model] = BeamParameters((fit["major"] * numpy.pi) / (3600.0 * 180.0), (fit["minor"] * numpy.pi) / (3600.0 * 180.0), (fit["angle"] * numpy.pi) / 180.0)
-        print "PSF: model:", i, "major axis:", abs(fit["major"]), "arcsec", "minor axis:", abs(fit["minor"]), "arcsec", "position angle:", fit["angle"], "deg"
 
+        beam[model] = BeamParameters((fit["major"] * numpy.pi) \
+            / (3600.0 * 180.0), (fit["minor"] * numpy.pi) / (3600.0 * 180.0), \
+            (fit["angle"] * numpy.pi) / 180.0)
+        util.notice("PSF: model: %d major axis: %f arcsec minor axis: %f arcsec"
+            " position angle: %f deg" % (model, abs(fit["major"]), \
+            abs(fit["minor"]), fit["angle"]))
 #    show_image("approximate PSF", psf[0][0,:,:,:])
 
-    (min_psf, max_psf, max_psf_outer, psf_patch_size, max_sidelobe) = validate_psf(image_coordinates, psf, beam)
+    # Analyse PSF images.
+    (min_psf, max_psf, max_psf_outer, psf_patch_size, max_sidelobe) = \
+        validate_psf(image_coordinates, psf, beam)
+    clark_options["psf_patch_size"] = psf_patch_size
 
-    options = CleanOptions()
-    options.setGain(parms["gain"])
-    options.setNumberIterations(parms["niter"])
-    options.setThreshold(parms["threshold"])
-    options.setCycleFactor(parms["cyclefactor"])
-    options.setCycleSpeedup(parms["cyclespeedup"])
-    options.setCycleMaxPsfFraction(0.8)
-
-    modified = True
-
-    absmax = options.threshold()
-    oldabsmax = 1e30
-    cycleThreshold = 0.0
-
+    weight = [None for i in range(n_model)]
+    image = [numpy.zeros(image_shape) for i in range(n_model)]
+    delta = [numpy.zeros(image_shape) for i in range(n_model)]
+    residual = [numpy.zeros(image_shape) for i in range(n_model)]
     iterations = [[] for i in range(n_model)]
-    maxIterations = 0
-    oldMaxIterations = 0
 
-#    Loop over major cycles
+    converged = False
+    modified = True
+    absmax = options.threshold
+    old_absmax = 1e30
+    cycle_threshold = 0.0
+    max_iterations = 0
+    old_max_iterations = 0
     cycle = 0
-    stop = False
-    diverging = False
 
-    maxggS = 0.0
-    lastCycleWriteModel = False
+    while absmax >= options.threshold and max_iterations < options.iterations:
+        util.notice("starting major cycle: %d" % cycle)
 
-    while absmax >= options.threshold() and maxIterations < options.numberIterations() and not stop and not diverging:
-        print "==> starting major cycle:", cycle
-        cycle += 1
-
-#        Make the residual images. We do an incremental update
-#        for cycles after the first one. If we have only one
-#        model then we use convolutions to speed the processing
-
-        print "making residual images for all fields..."
-
+        # Comment from CASA source code:
+        #
+        # Make the residual images. We do an incremental update for cycles after
+        # the first one. If we have only one model then we use convolutions to
+        # speed the processing
+        util.notice("making residual images for all fields...")
         if modified:
             # TODO: If n_models > 1, need to compute residuals from the sum of
             # the degridded visibilities (see LofarCubeSkyEquation.cc).
             assert(n_model == 1)
             for i in range(n_model):
-                residual[i], ggS[i] = proc.residual(image_coordinates, \
+                residual[i], weight[i] = processor.residual(image_coordinates, \
                     image[i], processors.Normalization.FLAT_NOISE, \
                     processors.Normalization.FLAT_NOISE)
             modified = False
 
-        if cycle == 1:
-            maxggS = 0.0
+        if cycle == 0:
+            max_weight = 0.0
             for i in range(n_model):
-                maxggS = max(maxggS, numpy.max(ggS[i]))
-            print "maximum sensitivity:", 1.0 / numpy.sqrt(maxggS), "Jy/beam"
+                max_weight = max(max_weight, numpy.max(weight[i]))
+            util.notice("maximum sensitivity: %f Jy/beam" % (1.0 \
+                / numpy.sqrt(max_weight)))
 
-        (absmax, resmin, resmax) = max_field(ggS, residual)
-#        print "absmax:", absmax, "resmin:", resmin, "resmax:", resmax
+        (absmax, resmin, resmax) = max_field(weight, residual)
 
-        if cycle > 1:
-            # check if its 5% above previous value
-            if absmax < 1.000005 * oldabsmax:
-                oldabsmax = absmax
-            else:
-                diverging = True
-                print "clean not converging!"
-
-        for i in range(n_model):
-            print "model:", i, "max, min (weighted) residuals =", resmax[i], ",", resmin[i]
-
-        # Can we stop?
-        if absmax < options.threshold():
-            print "reached stopping peak residual:", absmax
-            stop = True
-            if cycle > 1:
-                lastCycleWriteModel = True
-        else:
-            # Calculate the threshold for this cycle. Add a safety factor
+        # Check for divergence.
+        if cycle > 0:
+            # Comment from CASA source code:
             #
-            # fractionOfPsf controls how deep the cleaning should go.
-            # There are two user-controls.
-            # cycleFactor_p : scale factor for the PSF sidelobe level.
-            #                        1 : clean down to the psf sidelobe level
-            #                        <1 : go deeper
-            #                        >1 : shallower : stop sooner.
-            #                        Default : 1.5
-            # cycleMaxPsfFraction_p : scale factor as a fraction of the PSF peak
-            #                                    must be 0.0 < xx < 1.0 (obviously)
-            #                                    Default : 0.8
-            fractionOfPsf = min(options.cycleMaxPsfFraction(), options.cycleFactor() * max_sidelobe)
-            if fractionOfPsf > 0.8:
-                print "PSF fraction for threshold computation is too high:", fractionOfPsf, ".  Forcing to 0.8 to ensure that the threshold is smaller than the peak residual !"
-                print "Current values of max-PSF-fraction, cycle-factor and max PSF sidelobe level result in a stopping threshold more than 80% of the peak residual. Forcing the maximum threshold to 80% of the peak."
-                fractionOfPsf = 0.8   # painfully slow!
-
-            cycleThreshold = max(0.95 * options.threshold(), fractionOfPsf * absmax)
-            print "minor-cycle threshold MAX[ 0.95 x", options.threshold(), ", peak residual x", fractionOfPsf, "]:", cycleThreshold
-            print "maximum residual:", absmax, ", cleaning down to:", cycleThreshold
-
-            for model in range(n_model):
-                nx = image[model].shape[-1]
-                ny = image[model].shape[-2]
-                npol = image[model].shape[-3]
-                nchan = image[model].shape[-4]
-
-                npolcube = npol if doPolJoint else 1
-                if cycle == 1:
-                    # TODO: some useless code in MFCleanImageSkyModel at this point??
-                    iterations[model] = [0 for i in range(nchan * npol)]
-
-                # NB: zero delta image!!
-                delta[model].fill(0.0)
-
-                if max(abs(resmin[model]), abs(resmax[model])) > cycleThreshold:
-                    for ch in range(nchan):
-                        if max_psf[model] <= 0.0:
-                            continue
-
-                        if nchan > 1:
-                            print "processing channel %d/%d" % (ch, nchan)
-
-                        # TODO: maxggS is only updated during cycle 0. Is this
-                        # correct?
-                        wmask = numpy.zeros((ny, nx))
-                        for pol in range(npol):
-                            wmask[numpy.sqrt(ggS[model][ch, pol, :, :] / maxggS) > 0.01] = 1.0
-
-                        ccoptions = {}
-                        ccoptions["gain"] = options.gain()
-                        ccoptions["numberIterations"] = options.numberIterations()
-                        ccoptions["cycleThreshold"] = cycleThreshold
-                        ccoptions["psfpatch"] = psf_patch_size
-                        ccoptions["cycleSpeedup"] = options.cycleSpeedup()
-
-                        ccresult = lofar.casaimwrap.clarkClean(psf[model][ch,0,:,:], residual[model][ch,:,:,:], wmask, iterations[model][ch * npolcube], ccoptions)
-                        iterations[model][ch * npolcube] = ccresult["numberIterations"]
-                        delta[model][ch,:,:,:] = ccresult["delta"]
-
-                        maxIterations = max(maxIterations, iterations[model][ch * npolcube])
-                        modified = True
-
-                        print "finished Clark clean inner cycle"
-
-                        # TODO: This is rather dubious because it only depends on the value of maxIterations of the last channel???
-                        stop = (maxIterations == 0)
-
-                        print "clean used %d iterations to approach a threshold of %f" % (iterations[model][ch * npolcube], cycleThreshold)
-
-                else:
-                        print "no need to clean model %d: peak residual below threshold" % (model)
-
-            if maxIterations != oldMaxIterations:
-                oldMaxIterations = maxIterations
-
-                for model in range(n_model):
-                    image[model] += delta[model]
-
-#                    # Update image in the MFCleanImageSkyModel class, such that
-#                    # it gets picked up by LofarCubeSkyEquation.
-#                    lofar.casaimwrap.setImage(memento, model, image[model])
-                    print "%f Jy <- cleaned in this cycle for model %d" % (numpy.sum(delta[model]), model)
-
+            # Check if absmax is 5% above its previous value.
+            if absmax < 1.000005 * old_absmax:
+                old_absmax = absmax
             else:
-                print "no more iterations left in this major cycle - stopping now"
-                stop = True
-                converged = True
-
-
-    if modified or lastCycleWriteModel:
-        print "finalizing residual images for all fields..."
+                util.error("clean diverging!")
+                break
 
         for i in range(n_model):
-            residual[i], ggS[i] = proc.residual(image_coordinates, \
+            util.notice("model: %d min residual: %f max residual: %f" % (i, \
+                resmin[i], resmax[i]))
+
+        # Check stop criterium.
+        if absmax < options.threshold:
+            util.notice("reached peak residual treshold: %f" % absmax)
+            converged = True
+            break
+
+        # Comment from CASA source code:
+        #
+        # Calculate the threshold for this cycle. Add a safety factor
+        #
+        # fractionOfPsf controls how deep the cleaning should go.
+        # There are two user-controls.
+        # cycleFactor_p : scale factor for the PSF sidelobe level.
+        #                        1 : clean down to the psf sidelobe level
+        #                        <1 : go deeper
+        #                        >1 : shallower : stop sooner.
+        #                        Default : 1.5
+        # cycleMaxPsfFraction_p : scale factor as a fraction of the PSF peak
+        #                                    must be 0.0 < xx < 1.0 (obviously)
+        #                                    Default : 0.8
+        fraction_of_psf = min(options.cycle_max_psf_fraction, \
+            options.cycle_factor * max_sidelobe)
+
+        if fraction_of_psf > 0.8:
+            util.warning("PSF fraction for threshold computation is too"
+                " high: %f. Forcing to 0.8 to ensure that the threshold is"
+                " smaller than the peak residual!" % fraction_of_psf)
+            fraction_of_psf = 0.8   # painfully slow!
+
+        # Update cycle threshold.
+        cycle_threshold = max(0.95 * options.threshold, fraction_of_psf \
+            * absmax)
+        clark_options["cycle_threshold"] = cycle_threshold
+
+        util.notice("minor cycle threshold max(0.95 * %f, peak residual * %f):"
+            " %f" % (options.threshold, fraction_of_psf, cycle_threshold))
+        util.notice("peak residual: %f, cleaning down to: %f" % (absmax, \
+            cycle_threshold))
+
+        # Execute the minor cycle (Clark clean) for each channel of each model.
+        for model in range(n_model):
+            util.notice("processing model %d/%d" % (model, n_model))
+
+            n_x = image[model].shape[-1]
+            n_y = image[model].shape[-2]
+            n_cr = image[model].shape[-3]
+            n_ch = image[model].shape[-4]
+            n_cr_cube = n_cr if do_cr_joint else 1
+
+            if cycle == 0:
+                # TODO: Useless code in MFCleanImageSkyModel.cc at this
+                # location?
+                iterations[model] = [0 for i in range(n_ch * n_cr)]
+
+            # Zero the delta image for this model.
+            delta[model].fill(0.0)
+
+            if max(abs(resmin[model]), abs(resmax[model])) <= cycle_threshold:
+                util.notice("    peak residual below threshold")
+            elif max_psf[model] > 0.0:
+                modified = True
+
+                for ch in range(n_ch):
+                    # TODO: The value of max_weight is only updated during
+                    # cycle 0. Is this correct?
+                    #
+                    assert(len(weight[model].shape) == 2 \
+                        and weight[model].shape[0] == n_ch \
+                        and weight[model].shape[1] == n_cr)
+
+                    plane_weight = numpy.sqrt(weight[model][ch, :] / max_weight)
+                    if numpy.any(plane_weight > 0.01):
+                        weight_mask = numpy.ones((n_y, n_x))
+                    else:
+                        weight_mask = numpy.zeros((n_y, n_x))
+
+                    # Call CASA Clark clean implementation (minor cycle).
+                    result = lofar.casaimwrap.clarkClean(psf[model][ch,0,:,:], \
+                        residual[model][ch,:,:,:], weight_mask, \
+                        iterations[model][ch * n_cr_cube], clark_options)
+                    iterations[model][ch * n_cr_cube] = result["iterations"]
+                    delta[model][ch,:,:,:] = result["delta"]
+
+                    max_iterations = max(max_iterations, \
+                        iterations[model][ch * n_cr_cube])
+
+                    util.notice("    cleaned channel: %d/%d iterations: %d" \
+                        % (ch, n_ch, iterations[model][ch * n_cr_cube]))
+            else:
+                    util.warning("    psf negative or zero")
+
+        if max_iterations != old_max_iterations:
+            old_max_iterations = max_iterations
+
+            # Update model images.
+            for model in range(n_model):
+                image[model] += delta[model]
+                util.notice("%f Jy <- cleaned in this cycle for model %d" \
+                    % (numpy.sum(delta[model]), model))
+        else:
+            util.notice("no more iterations left in this major cycle," \
+                " stopping now")
+            converged = True
+            break
+
+        # Update major cycle counter.
+        cycle += 1
+
+    if modified:
+        util.notice("finalizing residual images for all fields...")
+        for i in range(n_model):
+            residual[i], weight[i] = processor.residual(image_coordinates, \
                 image[i], processors.Normalization.FLAT_NOISE, \
                 processors.Normalization.FLAT_NOISE)
         modified = False
 
-#        print "Final max ggS:", numpy.max(ggS[0])
-        (finalabsmax, resmin, resmax) = max_field(ggS, residual)
+        (final_absmax, resmin, resmax) = max_field(weight, residual)
         show_image("final residual", residual[0][0,:,:,:])
 
-        print "final maximum residual:", finalabsmax
-        converged = (finalabsmax < 1.05 * options.threshold())
+        util.notice("final peak residual: %f" % final_absmax)
+        converged = (final_absmax < 1.05 * options.threshold)
 
         for model in range(n_model):
-            print "model", model, ": max, min residuals:", resmax[model], ",", resmin[model], "clean flux", numpy.sum(image[model]), "rms:", numpy.std(residual[model])
+            util.notice("model: %d min residual: %f max residual: %f clean" \
+                " flux: %f residual rms: %f" % (model, resmin[model], \
+                resmax[model], numpy.sum(image[model]), \
+                numpy.std(residual[model])))
     else:
-        print "residual images for all fields are up-to-date..."
+        util.notice("residual images for all fields are up-to-date...")
 
-    if stop:
-        converged = True
+    util.notice("saving restored image...")
+    restored = restore_image(image_coordinates.dict(), image[0], residual[0], \
+        beam[0])
+    show_image("restored image", restored[0,:,:,:])
 
-    restored = restore_image(image_coordinates.dict(), image[0], residual[0], beam[0])
-
-    show_image("final restored image", restored[0,:,:,:])
-    pylab.show()
-
-    im_restored = pyrap.images.image(args.image + ".restored", shape=image_shape, coordsys=image_coordinates)
+    im_restored = pyrap.images.image(options.image + ".restored", \
+        shape=image_shape, coordsys=image_coordinates)
     im_restored.putdata(restored)
+
+    if converged:
+        util.notice("clean converged.")
+    else:
+        util.error("clean did NOT converge.")
+
+    pylab.show()

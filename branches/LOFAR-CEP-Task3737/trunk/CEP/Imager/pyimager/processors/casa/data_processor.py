@@ -36,13 +36,8 @@ class DataProcessor:
         psf, weight = self._processor.point_spread_function(self._coordinates,
             self._shape, self._density(), False)
 
-        # TODO: This is a sanity check that can be removed when we refactor
-        # LofarFTMachine.
-        planar_weight = numpy.max(numpy.max(weight, axis=3), axis=2)
-        assert(numpy.all(weight == planar_weight[:, :, numpy.newaxis, \
-            numpy.newaxis]))
-
-        return numpy.where(weight > 0.0, psf / weight, 0.0)
+        exp_weight = weight[:, :, numpy.newaxis, numpy.newaxis]
+        return numpy.where(exp_weight > 0.0, psf / exp_weight, 0.0)
 
     def response(self, coordinates, shape):
         self._update_image_configuration(coordinates, shape)
@@ -55,7 +50,8 @@ class DataProcessor:
             self._density(), False)
 
         # TODO: Normalization to "normalization".
-        return (numpy.where(weight > 0.0, image / weight, 0.0), weight)
+        exp_weight = weight[:, :, numpy.newaxis, numpy.newaxis]
+        return (numpy.where(exp_weight > 0.0, image / exp_weight, 0.0), weight)
 
     def degrid(self, coordinates, model, normalization):
         self._update_image_configuration(coordinates, model.shape)
@@ -69,12 +65,12 @@ class DataProcessor:
         self._update_image_configuration(coordinates, model.shape)
 
         # TODO: Normalization to FLAT_GAIN from "normalization_model".
-
         residual, weight = self._processor.residual(self._coordinates, model, \
             self._density(), False)
 
-        # TODO: Normalization to "normalization_residual".
-        return (numpy.where(weight > 0.0, residual / weight, 0.0), weight)
+        exp_weight = weight[:, :, numpy.newaxis, numpy.newaxis]
+        return (numpy.where(exp_weight > 0.0, residual / exp_weight, 0.0), \
+            weight)
 
     def _density(self):
         if self._cached_density is None:
