@@ -9,8 +9,6 @@
 namespace LOFAR {
 namespace RTCP {
 
-#define NR_RSPBOARDS 4
-
 struct BufferSettings {
 private:
   static const unsigned currentVersion = 1;

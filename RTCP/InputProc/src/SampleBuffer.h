@@ -10,6 +10,7 @@
 #include "Ranges.h"
 #include "SampleType.h"
 #include <string>
+#include <vector>
 
 namespace LOFAR {
 namespace RTCP {
@@ -28,7 +29,7 @@ private:
 
   static size_t dataSize( const struct BufferSettings &settings ) {
     return sizeof settings
-         + NR_RSPBOARDS * (Ranges::size(settings.nrFlagRanges) + 8)
+         + settings.nrBoards * (Ranges::size(settings.nrFlagRanges) + 8)
          + settings.nrBeamlets * (settings.nrSamples * sizeof(T) + 128);
   }
 
