@@ -129,9 +129,10 @@ template<typename T> void Station<T>::processBoard( size_t nr )
 
 template<typename T> void Station<T>::logStatistics()
 {
-  ASSERT(readers.size() == writers.size());
+  ASSERT(readers.size() == nrBoards);
+  ASSERT(writers.size() == nrBoards);
 
-  for (size_t nr = 0; nr < readers.size(); nr++) {
+  for (size_t nr = 0; nr < nrBoards; nr++) {
     if (readers[nr].get())
       readers[nr]->logStatistics();
 

@@ -12,6 +12,10 @@
 namespace LOFAR {
 namespace RTCP {
 
+/*
+ * A memory region manager for shared memory, to be used by
+ * allocators defined in Interface/Allocator.h
+ */
 class SharedMemoryArena: public FixedArena {
 public:
   EXCEPTION_CLASS(TimeOutException, LOFAR::Exception);
@@ -23,6 +27,10 @@ public:
     READWRITE
   };
 
+  /* Create a shared memory region, or attach to an existing one. The timeout
+   * specifies how long the constructor will wait for the memory region to
+   * appear if mode == READ or mode == READWRITE.
+   */
   SharedMemoryArena( key_t key, size_t size, Mode mode = CREATE, time_t timeout = 60 );
   ~SharedMemoryArena();
 
@@ -36,6 +44,9 @@ private:
   int shmid;
 };
 
+/*
+ * Provides an interface for any struct stored as a shared memory region.
+ */
 template<typename T> class SharedStruct {
 public:
   SharedStruct( key_t key, bool create = false, time_t timeout = 60 );
