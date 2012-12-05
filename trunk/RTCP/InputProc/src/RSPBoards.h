@@ -1,5 +1,5 @@
-#ifndef __STATIONSTREAMS__
-#define __STATIONSTREAMS__
+#ifndef __RSPBOARDS__
+#define __RSPBOARDS__
 
 #include "BufferSettings.h"
 #include <IONProc/WallClockTime.h>
@@ -11,9 +11,9 @@ namespace RTCP {
 
 /* A class that generates or processes a set of data streams of a station. */
 
-class StationStreams {
+class RSPBoards {
 public:
-  StationStreams( const std::string &logPrefix, const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
+  RSPBoards( const std::string &logPrefix, const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
 
   void process();
 

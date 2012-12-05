@@ -15,7 +15,7 @@ namespace RTCP {
 
 Generator::Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
 :
-  StationStreams(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors),
+  RSPBoards(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors),
   nrSent(nrBoards, 0)
 {
   LOG_INFO_STR( logPrefix << "Initialised" );
