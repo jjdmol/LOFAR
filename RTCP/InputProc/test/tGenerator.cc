@@ -3,10 +3,6 @@
 #include "PacketReader.h"
 #include "OMPThread.h"
 #include <Common/LofarLogger.h>
-#include <Common/Thread/Thread.h>
-#include <Interface/SmartPtr.h>
-#include <Interface/Stream.h>
-#include <unistd.h>
 #include <vector>
 #include <string>
 #include <unistd.h>
