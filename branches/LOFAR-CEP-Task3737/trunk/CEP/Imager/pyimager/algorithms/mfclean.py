@@ -273,7 +273,7 @@ def mfclean(options):
         util.notice("PSF: model: %d major axis: %f arcsec minor axis: %f arcsec"
             " position angle: %f deg" % (model, abs(fit["major"]), \
             abs(fit["minor"]), fit["angle"]))
-#    show_image(psf[0][0,:,:,:], "approximate PSF")
+#    util.show_image(psf[0][0,:,:,:], "approximate PSF")
 
     # Analyse PSF images.
     (min_psf, max_psf, max_psf_outer, psf_patch_size, max_sidelobe) = \
@@ -455,7 +455,7 @@ def mfclean(options):
         modified = False
 
         (final_absmax, resmin, resmax) = max_field(weight, residual)
-        show_image(residual[0][0,:,:,:], "final residual")
+        util.show_image(residual[0][0,:,:,:], "final residual")
 
         util.notice("final peak residual: %f" % final_absmax)
         converged = (final_absmax < 1.05 * options.threshold)
@@ -471,7 +471,7 @@ def mfclean(options):
     util.notice("saving restored image...")
     restored = restore_image(image_coordinates.dict(), image[0], residual[0], \
         beam[0])
-    show_image(restored[0,:,:,:], "restored image")
+    util.show_image(restored[0,:,:,:], "restored image")
 
     im_restored = pyrap.images.image(options.image + ".restored", \
         shape=image_shape, coordsys=image_coordinates)
