@@ -2,6 +2,7 @@
 #define __GENERATOR__
 
 #include <IONProc/RSP.h>
+#include "StationStreams.h"
 #include "BufferSettings.h"
 #include <string>
 #include <vector>

@@ -32,7 +32,7 @@ protected:
 
   class StreamReader {
   public:
-    StreamReader( const std::string &logPrefix, const std::string &streamDescriptor, SampleBuffer<T> &buffer, const struct BufferSettings &settings );
+    StreamReader( const std::string &logPrefix, const std::string &streamDescriptor, const struct BufferSettings &settings );
 
     // Reads a packet from the input stream. Returns true if a packet was
     // succesfully read.
@@ -53,7 +53,7 @@ protected:
 
   class BufferWriter {
   public:
-    BufferWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, size_t firstBeamlet, const struct BufferSettings &settings );
+    BufferWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, Ranges &flags, size_t firstBeamlet, const struct BufferSettings &settings );
 
     // Write a packet to the SampleBuffer
     void writePacket( const struct RSP &packet );
@@ -98,11 +98,11 @@ template<typename T> void Station<T>::processBoard( size_t nr )
 
   try {
     LOG_INFO_STR( logPrefix << "Connecting to " << streamDescriptors[nr] );
-    readers[nr] = new StreamReader<T>(logPrefix, streamDescriptors[nr], settings);
+    readers[nr] = new StreamReader(logPrefix, streamDescriptors[nr], settings);
 
     LOG_INFO_STR( logPrefix << "Connecting to shared memory buffer 0x" << std::hex << settings.dataKey );
     size_t firstBeamlet = settings.nrBeamlets / settings.nrBoards * nr;
-    writers[nr] = new BufferWriter<T>(logPrefix, buffer, firstBeamlet, settings);
+    writers[nr] = new BufferWriter(logPrefix, buffer, buffer.flags[nr], firstBeamlet, settings);
 
     LOG_INFO_STR( logPrefix << "Start" );
 
@@ -129,7 +129,9 @@ template<typename T> void Station<T>::processBoard( size_t nr )
 
 template<typename T> void Station<T>::logStatistics()
 {
-  for (size_t nr = 0; nr < boards.size(); nr++) {
+  ASSERT(readers.size() == writers.size());
+
+  for (size_t nr = 0; nr < readers.size(); nr++) {
     if (readers[nr].get())
       readers[nr]->logStatistics();
 
@@ -165,10 +167,10 @@ template<typename T> bool Station<T>::StreamReader::readPacket( struct RSP &pack
 {
   if (supportPartialReads) {
     // read header first
-    inputStream->read(&packet, sizeof(struct RSP::Header));
+    inputStream->read(&packet.header, sizeof packet.header);
 
     // read rest of packet
-    inputStream->read(&packet.data, packet.packetSize() - sizeof(struct RSP::Header));
+    inputStream->read(&packet.payload.data, packet.packetSize() - sizeof packet.header);
 
     ++nrReceived;
   } else {
@@ -209,7 +211,7 @@ template<typename T> bool Station<T>::StreamReader::readPacket( struct RSP &pack
    || packet.bitMode() != settings.station.bitmode) {
 
     if (!hadModeError) {
-      LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitmode() << " bit), but should be mode (" << settings.Station.clock / 1000000 << " MHz, " << settings.station.bitmode << " bit)");
+      LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit), but should be mode (" << settings.station.clock / 1000000 << " MHz, " << settings.station.bitmode << " bit)");
       hadModeError = true;
     }
 
@@ -236,12 +238,12 @@ template<typename T> void Station<T>::StreamReader::logStatistics()
 }
 
 
-template<typename T> Station<T>::BufferWriter::BufferWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, size_t firstBeamlet, const struct BufferSettings &settings )
+template<typename T> Station<T>::BufferWriter::BufferWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, Ranges &flags, size_t firstBeamlet, const struct BufferSettings &settings )
 :
   logPrefix(str(boost::format("%s [BufferWriter] ") % logPrefix)),
 
   buffer(buffer),
-  flags(buffer.flags[boardNr]),
+  flags(flags),
   settings(settings),
   firstBeamlet(firstBeamlet),
 
@@ -277,7 +279,7 @@ template<typename T> void Station<T>::BufferWriter::writePacket( const struct RS
   flags.excludeBefore(timestamp + nrTimeslots - settings.nrSamples);
 
   // transpose
-  const T *beamlets = reinterpret_cast<const T*>(&packet.data);
+  const T *beamlets = reinterpret_cast<const T*>(&packet.payload.data);
 
   for (uint8 b = 0; b < nrBeamlets; ++b) {
     T *dst1 = &buffer.beamlets[firstBeamlet + b][from_offset];

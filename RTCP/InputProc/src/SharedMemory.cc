@@ -1,3 +1,4 @@
+#include <lofar_config.h>
 #include "SharedMemory.h"
 #include <Common/Exception.h>
 #include <Common/SystemCallException.h>

@@ -1,6 +1,7 @@
 #ifndef __STATIONID__
 #define __STATIONID__
 
+#include <Common/LofarTypes.h>
 #include <ostream>
 #include <string>
 
