@@ -135,7 +135,7 @@ template<typename T> PacketsToBuffer<T>::BufferWriter::BufferWriter( const std::
   nrWritten(0)
 {
   // bitmode must coincide with our template
-  ASSERT( sizeof(T) == N_POL * 2 * settings->station.bitmode / 8 );
+  ASSERT( sizeof(T) == N_POL * 2 * settings.station.bitmode / 8 );
 }
 
 
