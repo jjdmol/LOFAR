@@ -4,6 +4,7 @@ lofar_add_library(inputproc
   Package__Version.cc
   BufferSettings.cc
   Generator.cc
+  Ranges.cc
   SharedMemory.cc
   StationID.cc
   StationStreams.cc
