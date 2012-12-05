@@ -11,6 +11,7 @@
 #include "SampleType.h"
 #include <string>
 #include <vector>
+#include <boost/format.hpp>
 
 namespace LOFAR {
 namespace RTCP {

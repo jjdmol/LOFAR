@@ -3,8 +3,10 @@
 
 #include <Common/LofarLogger.h>
 #include <Stream/Stream.h>
+#include <Stream/SocketStream.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
+#include <Interface/Stream.h>
 #include <IONProc/RSP.h>
 #include <IONProc/WallClockTime.h>
 #include "SampleBuffer.h"
