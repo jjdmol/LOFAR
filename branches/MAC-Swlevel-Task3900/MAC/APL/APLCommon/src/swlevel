@@ -93,7 +93,7 @@ findImage()
          fi 
        done < ${ETCDIR}/RSPImage.conf
        if [ $image -eq 0 ]; then 
-	   echo "Could not find a match for this station"
+	   echo "Could not find station $findstation in file ${ETCDIR}/RSPImage.conf"
            exit;
        fi
        return
