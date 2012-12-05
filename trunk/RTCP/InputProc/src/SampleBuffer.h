@@ -2,7 +2,6 @@
 #define __SAMPLEBUFFER__
 
 #include <Common/LofarLogger.h>
-#include <Common/LofarConstants.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/Allocator.h>
 #include "BufferSettings.h"
@@ -39,7 +38,8 @@ public:
 
   const size_t nrBeamlets;
   const size_t nrSamples;
-  const size_t nrFlagRanges;
+  const size_t nrBoards;
+  const size_t nrFlagRanges; // width of each flag range
 
   MultiDimArray<T,2>  beamlets; // [subband][sample]
   std::vector<Ranges> flags;    // [rspboard]
@@ -55,14 +55,12 @@ template<typename T> SampleBuffer<T>::SampleBuffer( const struct BufferSettings 
 
   nrBeamlets(settings->nrBeamlets),
   nrSamples(settings->nrSamples),
+  nrBoards(settings->nrBoards),
   nrFlagRanges(settings->nrFlagRanges),
 
   beamlets(boost::extents[nrBeamlets][nrSamples], 128, allocator, false, false),
-  flags(settings->nrBoards)
+  flags(nrBoards)
 {
-  // bitmode must coincide with our template
-  ASSERT( sizeof(T) == N_POL * 2 * settings->station.bitmode / 8 );
-
   for (size_t f = 0; f < flags.size(); f++) {
     size_t numBytes = Ranges::size(nrFlagRanges);
 
@@ -74,7 +72,6 @@ template<typename T> SampleBuffer<T>::SampleBuffer( const struct BufferSettings 
 
 template<typename T> struct BufferSettings *SampleBuffer<T>::initSettings( const struct BufferSettings &localSettings, bool create )
 {
-  //struct BufferSettings *sharedSettings = allocator.allocateTyped<struct BufferSettings>();
   struct BufferSettings *sharedSettings = allocator.allocateTyped();
 
   if (create) {

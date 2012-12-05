@@ -2,6 +2,7 @@
 #define __STATION__
 
 #include <Common/LofarLogger.h>
+#include <Common/LofarConstants.h>
 #include <Stream/Stream.h>
 #include <Stream/SocketStream.h>
 #include <Interface/RSPTimeStamp.h>
@@ -133,6 +134,8 @@ template<typename T> PacketsToBuffer<T>::BufferWriter::BufferWriter( const std::
 
   nrWritten(0)
 {
+  // bitmode must coincide with our template
+  ASSERT( sizeof(T) == N_POL * 2 * settings->station.bitmode / 8 );
 }
 
 
