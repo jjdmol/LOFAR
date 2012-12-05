@@ -1,6 +1,7 @@
 #include <lofar_config.h>
 #include "Generator.h"
 #include "PacketReader.h"
+#include "OMPThread.h"
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Thread.h>
 #include <Interface/SmartPtr.h>
@@ -18,19 +19,20 @@ using namespace std;
 // Duration of the test (seconds)
 #define DURATION 2
 
-void sighandler(int)
-{
-  /* no-op */
-}
+// The number of packets to transmit
+#define NUMPACKETS (200000000/1024)
+
 
 int main( int, char **argv ) {
   INIT_LOGGER( argv[0] );
 
+  // Don't run forever if communication fails for some reason
+  alarm(10);
+
   omp_set_nested(true);
   omp_set_num_threads(16);
 
-  signal(SIGHUP, sighandler);
-  siginterrupt(SIGHUP, 1);
+  OMPThread::init();
 
   vector<string> streamDescs(1, "tcp:localhost:54321");
 
@@ -49,7 +51,7 @@ int main( int, char **argv ) {
 
   Generator g(settings, streamDescs);
 
-  #pragma omp parallel sections num_threads(3)
+  #pragma omp parallel sections num_threads(2)
   {
     #pragma omp section
     {
@@ -69,7 +71,7 @@ int main( int, char **argv ) {
       try {
         PacketReader reader("", streamDescs[0], settings);
 
-        for(;;) {
+        for(size_t nr = 0; nr < NUMPACKETS; ++nr) {
           struct RSP packet;
 
           if (!reader.readPacket(packet)) {
@@ -78,18 +80,14 @@ int main( int, char **argv ) {
             ASSERT(false);
           }
         }
+
+        // We received NUMPACKETS packets, kill the generator
+        g.stop();
+
       } catch(Stream::EndOfStreamException &ex) {
       } catch(Exception &ex) {
         LOG_ERROR_STR("Caught exception: " << ex);
       }
-    }
-
-    #pragma omp section
-    { 
-      // Stop the experiment after a while
-      
-      sleep(DURATION);
-      g.stop();
     }
   }
 

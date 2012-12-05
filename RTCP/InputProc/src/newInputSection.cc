@@ -618,10 +618,6 @@ template<typename T> void MPIReceiveStation<T>::receiveBlock()
 }
 #endif
 
-void sighandler(int)
-{
-  /* no-op */
-}
 
 int main( int argc, char **argv )
 {
@@ -702,9 +698,7 @@ int main( int argc, char **argv )
 
   omp_set_nested(true);
   omp_set_num_threads(32);
-
-  signal(SIGHUP, sighandler);
-  siginterrupt(SIGHUP, 1);
+  OMPThread::init();
 
   std::vector<std::string> inputStreams(4);
   inputStreams[0] = "udp:127.0.0.1:4346";
