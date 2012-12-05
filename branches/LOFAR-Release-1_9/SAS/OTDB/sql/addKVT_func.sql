@@ -42,6 +42,7 @@ CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
 		vTime		timestamp := NULL;
+		vLastValue	TEXT;
 
 	BEGIN
 	  -- convert timestamp
@@ -62,6 +63,19 @@ CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
 
 	  IF FOUND THEN
 		-- its a PIC parameter
+		IF $3::integer <= 10 THEN	
+		  -- plain ON/OFF only register if last one was a serious problem
+		  vLastValue := 100;
+		  SELECT value
+		  INTO	 vLastValue
+		  FROM   PICkvt
+		  WHERE  paramID = vParRefID
+		  ORDER BY time DESC
+		  LIMIT 1;
+	      IF vLastValue::integer <= 10 THEN
+		  	RETURN FALSE;
+		  END IF;
+	    END IF;
 	    INSERT INTO PICkvt(paramID, value, time)
 		VALUES (vParRefID, $3, vTime);
 		RETURN TRUE;
