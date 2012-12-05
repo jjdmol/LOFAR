@@ -139,7 +139,7 @@ def validate_psf(csys, psf, beam):
 
     return (min_psf, max_psf, max_psf_outer, psf_patch_size, max_sidelobe)
 
-def max_field(weight, residual):
+def max_field(residual, weight):
     """Re-normalize the residual and return the (signed) minimum and maximum
     residual, as well as the (absolute) maximum residual.
 
@@ -281,17 +281,18 @@ def mfclean(options):
     delta = [numpy.zeros(image_shape) for i in range(n_model)]
     residual = [numpy.zeros(image_shape) for i in range(n_model)]
     iterations = [[] for i in range(n_model)]
+    updated = [True for i in range(n_model)]
 
-    converged = False
-    modified = True
+    diverged = False
     absmax = options.threshold
-    old_absmax = 1e30
+    previous_absmax = 1e30
     cycle_threshold = 0.0
     max_iterations = 0
-    old_max_iterations = 0
     cycle = 0
 
-    while absmax >= options.threshold and max_iterations < options.iterations:
+    while absmax >= options.threshold and max_iterations < options.iterations \
+        and any(updated):
+
         util.notice("starting major cycle: %d" % cycle)
 
         # Comment from CASA source code:
@@ -300,45 +301,50 @@ def mfclean(options):
         # the first one. If we have only one model then we use convolutions to
         # speed the processing
         util.notice("making residual images for all fields...")
-        if modified:
-            # TODO: If n_models > 1, need to compute residuals from the sum of
-            # the degridded visibilities (see LofarCubeSkyEquation.cc).
-            assert(n_model == 1)
-            for i in range(n_model):
+
+        # TODO: If n_models > 1, need to compute residuals from the sum of
+        # the degridded visibilities (see LofarCubeSkyEquation.cc).
+        assert(n_model == 1)
+        for i in range(n_model):
+            if updated[i]:
                 residual[i], weight[i] = processor.residual(image_coordinates, \
                     model[i], processors.Normalization.FLAT_NOISE, \
                     processors.Normalization.FLAT_NOISE)
-            modified = False
+                updated[i] = False
 
+        # Compute residual statistics.
+        (absmax, resmin, resmax) = max_field(residual, weight)
+
+        # Print some statistics.
+        for i in range(n_model):
+            util.notice("model: %d min residual: %f max residual: %f" % (i, \
+                resmin[i], resmax[i]))
+        util.notice("peak residual: %f" % absmax)
+
+        # Comment from CASA source code:
+        #
+        # Check if absmax is 5% above its previous value.
+        #
+        # TODO: Value used does not look like 5%?
+        if absmax >= 1.000005 * previous_absmax:
+            diverged = True
+            break
+
+        # Store absmax of this major cycle for later reference.
+        previous_absmax = absmax
+
+        # Check stop criterium.
+        if absmax < options.threshold:
+            break
+
+        # TODO: What is this really used for? And does the max weight indeed
+        # correspond to sensitivity in Jy/beam?
         if cycle == 0:
             max_weight = 0.0
             for i in range(n_model):
                 max_weight = max(max_weight, numpy.max(weight[i]))
             util.notice("maximum sensitivity: %f Jy/beam" % (1.0 \
                 / numpy.sqrt(max_weight)))
-
-        (absmax, resmin, resmax) = max_field(weight, residual)
-
-        # Check for divergence.
-        if cycle > 0:
-            # Comment from CASA source code:
-            #
-            # Check if absmax is 5% above its previous value.
-            if absmax < 1.000005 * old_absmax:
-                old_absmax = absmax
-            else:
-                util.error("clean diverging!")
-                break
-
-        for i in range(n_model):
-            util.notice("model: %d min residual: %f max residual: %f" % (i, \
-                resmin[i], resmax[i]))
-
-        # Check stop criterium.
-        if absmax < options.threshold:
-            util.notice("reached peak residual treshold: %f" % absmax)
-            converged = True
-            break
 
         # Comment from CASA source code:
         #
@@ -370,8 +376,6 @@ def mfclean(options):
 
         util.notice("minor cycle threshold max(0.95 * %f, peak residual * %f):"
             " %f" % (options.threshold, fraction_of_psf, cycle_threshold))
-        util.notice("peak residual: %f, cleaning down to: %f" % (absmax, \
-            cycle_threshold))
 
         # Execute the minor cycle (Clark clean) for each channel of each model.
         for i in range(n_model):
@@ -394,8 +398,6 @@ def mfclean(options):
             if max(abs(resmin[i]), abs(resmax[i])) <= cycle_threshold:
                 util.notice("    peak residual below threshold")
             elif max_psf[i] > 0.0:
-                modified = True
-
                 for ch in range(n_ch):
                     # TODO: The value of max_weight is only updated during
                     # cycle 0. Is this correct?
@@ -414,8 +416,13 @@ def mfclean(options):
                     result = lofar.casaimwrap.clarkClean(psf[i][ch,0,:,:], \
                         residual[i][ch,:,:,:], weight_mask, \
                         iterations[i][ch * n_cr_cube], clark_options)
-                    iterations[i][ch * n_cr_cube] = result["iterations"]
-                    delta[i][ch,:,:,:] = result["delta"]
+
+                    if result["iterations"] > iterations[i][ch * n_cr_cube]:
+                        updated[i] = True
+                        delta[i][ch,:,:,:] = result["delta"]
+                        iterations[i][ch * n_cr_cube] = result["iterations"]
+                    else:
+                        assert(numpy.all(result["delta"] == 0.0))
 
                     max_iterations = max(max_iterations, \
                         iterations[i][ch * n_cr_cube])
@@ -425,43 +432,44 @@ def mfclean(options):
             else:
                     util.warning("    psf negative or zero")
 
-        if max_iterations != old_max_iterations:
-            old_max_iterations = max_iterations
+        # TODO: This test may be wrong, because it could be that a model makes
+        # progress, even if the model with the maximum number of iterations does
+        # not. It that case, the model image of the model that made progress
+        # should still be updated?
+#        if max_iterations != old_max_iterations:
+#            old_max_iterations = max_iterations
 
-            # Update model images.
-            for i in range(n_model):
+        for i in range(n_model):
+            if updated[i]:
+                # Update model images.
                 model[i] += delta[i]
-                util.notice("%f Jy <- cleaned in this cycle for model %d" \
-                    % (numpy.sum(delta[i]), i))
-        else:
-            util.notice("no more iterations left in this major cycle," \
-                " stopping now")
-            converged = True
-            break
+
+        # Print some statistics.
+        for i in range(n_model):
+            util.notice("model: %d cleaned flux: %f Jy" % (i, \
+                numpy.sum(delta[i])))
 
         # Update major cycle counter.
         cycle += 1
 
-    if modified:
+    if any(updated):
         util.notice("finalizing residual images for all fields...")
         for i in range(n_model):
-            residual[i], weight[i] = processor.residual(image_coordinates, \
-                model[i], processors.Normalization.FLAT_NOISE, \
-                processors.Normalization.FLAT_NOISE)
-        modified = False
+            if updated[i]:
+                residual[i], weight[i] = processor.residual(image_coordinates, \
+                    model[i], processors.Normalization.FLAT_NOISE, \
+                    processors.Normalization.FLAT_NOISE)
+        (absmax, resmin, resmax) = max_field(residual, weight)
 
-        (final_absmax, resmin, resmax) = max_field(weight, residual)
-        util.notice("final peak residual: %f" % final_absmax)
-        converged = (final_absmax < 1.05 * options.threshold)
-
+        # Print some statistics.
         for i in range(n_model):
-            util.notice("model: %d min residual: %f max residual: %f clean" \
-                " flux: %f residual rms: %f" % (i, resmin[i], \
-                resmax[i], numpy.sum(model[i]), \
-                numpy.std(residual[i])))
+            util.notice("model: %d min residual: %f max residual: %f" % (i, \
+                resmin[i], resmax[i]))
+        util.notice("peak residual: %f" % absmax)
     else:
         util.notice("residual images for all fields are up-to-date...")
 
+    # Store output images.
     util.notice("storing average response...")
     util.store_image(options.image + ".response", image_coordinates, \
         processor.response(image_coordinates, image_shape))
@@ -496,10 +504,18 @@ def mfclean(options):
             processors.Normalization.FLAT_NOISE, \
             processors.Normalization.FLAT_GAIN))
 
-    if converged:
+    # Print some statistics.
+    for i in range(n_model):
+        util.notice("model: %d clean flux: %f residual rms: %f" % (i, \
+            numpy.sum(model[i]), numpy.std(residual[i])))
+
+    if diverged:
+        util.error("clean diverged.")
+    elif absmax < options.threshold:
         util.notice("clean converged.")
     else:
-        util.error("clean did NOT converge.")
+        util.warning("clean did not reach threshold: %f Jy." \
+            % options.threshold)
 
     util.show_image(residual[0][0,:,:,:], "final residual")
     restored = restore_image(image_coordinates.dict(), model[0], residual[0], \
