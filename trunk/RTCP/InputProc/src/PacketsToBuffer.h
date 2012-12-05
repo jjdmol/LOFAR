@@ -24,9 +24,9 @@ namespace RTCP {
 
 /* Receives station input and stores it in shared memory */
 
-template<typename T> class Station: public RSPBoards {
+template<typename T> class PacketsToBuffer: public RSPBoards {
 public:
-  Station( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
+  PacketsToBuffer( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
 
 protected:
   SampleBuffer<T> buffer;
@@ -61,7 +61,7 @@ protected:
 };
 
 
-template<typename T> Station<T>::Station( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
+template<typename T> PacketsToBuffer<T>::PacketsToBuffer( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
 :
   RSPBoards(str(boost::format("[station %s %s] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors),
 
@@ -72,7 +72,7 @@ template<typename T> Station<T>::Station( const BufferSettings &settings, const 
   LOG_INFO_STR( logPrefix << "Initialised" );
 }
 
-template<typename T> void Station<T>::processBoard( size_t nr )
+template<typename T> void PacketsToBuffer<T>::processBoard( size_t nr )
 {
   const std::string logPrefix(str(boost::format("%s [board %u] ") % this->logPrefix % nr));
 
@@ -107,7 +107,7 @@ template<typename T> void Station<T>::processBoard( size_t nr )
 }
 
 
-template<typename T> void Station<T>::logStatistics()
+template<typename T> void PacketsToBuffer<T>::logStatistics()
 {
   ASSERT(readers.size() == nrBoards);
   ASSERT(writers.size() == nrBoards);
@@ -122,7 +122,7 @@ template<typename T> void Station<T>::logStatistics()
 }
 
 
-template<typename T> Station<T>::BufferWriter::BufferWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, Ranges &flags, size_t firstBeamlet, const struct BufferSettings &settings )
+template<typename T> PacketsToBuffer<T>::BufferWriter::BufferWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, Ranges &flags, size_t firstBeamlet, const struct BufferSettings &settings )
 :
   logPrefix(str(boost::format("%s [BufferWriter] ") % logPrefix)),
 
@@ -136,7 +136,7 @@ template<typename T> Station<T>::BufferWriter::BufferWriter( const std::string &
 }
 
 
-template<typename T> void Station<T>::BufferWriter::writePacket( const struct RSP &packet )
+template<typename T> void PacketsToBuffer<T>::BufferWriter::writePacket( const struct RSP &packet )
 {
   const uint8 &nrBeamlets  = packet.header.nrBeamlets;
   const uint8 &nrTimeslots = packet.header.nrBlocks;
@@ -187,7 +187,7 @@ template<typename T> void Station<T>::BufferWriter::writePacket( const struct RS
 }
 
 
-template<typename T> void Station<T>::BufferWriter::logStatistics()
+template<typename T> void PacketsToBuffer<T>::BufferWriter::logStatistics()
 {
   LOG_INFO_STR( logPrefix << "Written " << nrWritten << " packets");
 

@@ -15,7 +15,7 @@
 #include "SampleBuffer.h"
 #include "SampleBufferReader.h"
 #include "Generator.h"
-#include "Station.h"
+#include "PacketsToBuffer.h"
 #include "mpi.h"
 
 #include <vector>
@@ -713,7 +713,7 @@ int main( int argc, char **argv )
   inputStreams[3] = "udp:127.0.0.1:4349";
 
   if(rank == 0) {
-    Station< SampleT > station( settings, inputStreams );
+    PacketsToBuffer< SampleT > station( settings, inputStreams );
     Generator generator( settings, inputStreams );
 
     #pragma omp parallel sections num_threads(4)
