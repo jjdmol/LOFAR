@@ -6,4 +6,5 @@ include(LofarCTest)
 include_directories(${PACKAGE_SOURCE_DIR}/src)
 
 lofar_add_test(tRSPTimeStamp2 tRSPTimeStamp2.cc)
+lofar_add_test(tRanges tRanges.cc)
 lofar_add_test(tSharedMemory tSharedMemory.cc)

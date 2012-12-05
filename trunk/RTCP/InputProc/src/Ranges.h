@@ -31,6 +31,8 @@ public:
 
   SparseSet<int64> sparseSet( int64 first, int64 last ) const;
 
+  static size_t elementSize() { return sizeof(struct Range); }
+
 private:
   struct Range {
     // Write 'from' before 'to' to allow the following invariant:
@@ -110,7 +112,7 @@ void Ranges::excludeBefore( int64 to )
       continue;
     }
 
-    if (i->from > to) {
+    if (i->from < to) {
       // shorten
       i->from = to;
     }
@@ -138,8 +140,8 @@ bool Ranges::include( int64 from, int64 to )
   // new range is needed
   struct Range * const next = head + 1 == end ? begin : head + 1;
 
-  if (next->to < to - minHistory) {
-    // range at 'next' is old enough to toss away
+  if (next->to == 0 || next->to < to - minHistory) {
+    // range at 'next' is either unused or old enough to toss away
     next->from = from;
     next->to   = to;
 
