@@ -122,20 +122,20 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
                                const Matrix<bool>& gridMuellerMask,
                                const Matrix<bool>& degridMuellerMask,
 			       Double RefFreq,
-			       Bool Use_Linear_Interp_Gridder, 
-			       Bool Use_EJones, 
-			       int StepApplyElement, 
+			       Bool Use_Linear_Interp_Gridder,
+			       Bool Use_EJones,
+			       int StepApplyElement,
 			       int ApplyBeamCode,
-			       Double PBCut, 
-			       Bool PredictFT, 
-			       String PsfOnDisk, 
+			       Double PBCut,
+			       Bool PredictFT,
+			       String PsfOnDisk,
 			       Bool UseMasksDegrid,
-			       Bool reallyDoPSF, 
+			       Bool reallyDoPSF,
 			       Double UVmin,
 			       Double UVmax,
 			       Bool MakeDirtyCorr,
                                const Record& parameters
-                              )//, 
+                              )//,
 			       //Double FillFactor)
   : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
     tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType),
@@ -152,7 +152,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   cout << "=======LofarFTMachine====================================" << endl;
   cout << itsParameters << endl;
   cout << "=========================================================" << endl;
-  
+
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   mLocation_p=mLocation;
@@ -195,7 +195,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   itsUVmax=UVmax;
   itsSeconds.mark();
   itsSupport_Speroidal = FFTCMatrix::optimalOddFFTSize (itsParameters.asDouble("SpheSupport"));
-  
+
   its_tot_time_grid=0.;
   its_tot_time_cf=0.;
   its_tot_time_w=0.;
@@ -471,7 +471,7 @@ void LofarFTMachine::init() {
 					     its_ApplyBeamCode,
                                              itsParameters,
 					     itsStackMuellerNew);
-  
+
   itsNWPlanes=itsConvFunc->m_nWPlanes;
 
   VecFFTMachine.resize(image->shape()(2));
@@ -482,7 +482,7 @@ void LofarFTMachine::init() {
       VecFFTMachine[pol].normalized_backward(dummy.nrow(),dummy.data(),OpenMP::maxThreads()/npol , FFTW_MEASURE);
     }
   	cout<<" done..."<<endl;
-	
+
 
   //   cout<<"computing fft for size="<<sz<<endl;
   // fftwf_init_threads();
@@ -615,7 +615,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     itsSumWeight[i] = 0.;
     //added for WStack parallel convolve
   }
-  
+
   if(!useDoubleGrid_p){
     for (int i=0; i<its_NGrids; ++i) {
       (*itsGriddedData)[i].resize (gridShape);
@@ -802,7 +802,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     //   }
     // }
 
-    
+
     //store(image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)), KeepModel,itsImgName+".Model"+String::toString(itsNumCycle)+".img");
     itsNumCycle+=1;
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1029,7 +1029,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type)
 {
-  
+
   //cout<<"times "<<itsSeconds.user()<<" "<<itsSeconds.system ()<<" "<<itsSeconds.real ()<<" "<<endl;
 
   itsCyrilTimer.stop();
@@ -1058,8 +1058,8 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
 
-  
-  
+
+
 
   //cout<<"... Gridding Spectral Window:    "<<vb.spectralWindow()<<", with Taylor Term: "<< thisterm_p<<endl;
 
@@ -1127,7 +1127,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   // dims are w-plane, non-touching bl-timechunk group, bl-timechunk, row
   vector<vector<vector<vector<uInt> > > > MapBlTimesW_grid=LofarFTMachine::make_mapping_time_W_grid(vb, spw);
   //assert(false);
-  
+
 
   // Determine the time center of this data chunk.
   const Vector<Double>& times = vb.timeCentroid();
@@ -1172,7 +1172,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   double Taterm=CyrilTimer2Aterm.getReal();
 
   uInt Nchannels = vb.nChannel();
-  
+
   itsTotalTimer.start();
 
   Int doagain(0);
@@ -1274,7 +1274,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
     done.resize(int(MapBlTimesW_grid[iwplane][igrid].size()));
     for(int i=0; i<int(MapBlTimesW_grid[iwplane][igrid].size()); ++i) {done[i]=false;};
     Bool all_done(false);
-    
+
 
   while(!all_done){
 
@@ -1353,7 +1353,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
       for(uInt cc=0; cc<BlockCF.size(); ++cc){
 	BlockCFlala[cc]=BlockCF[cc];
       }
-      
+
 
       LofarCFStore cfStore =
 	itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], TimeMean,
@@ -1365,13 +1365,13 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
 					      BlockCFlala,thisterm_p,itsRefFreq,
 					      itsStackMuellerNew[threadNum],
 						   0, false);
-      
+
 
 
       //cfTimer.stop();
 	CyrilTimer2conv.stop();
 	time_conv[threadNum]+=CyrilTimer2conv.getReal();
-	
+
 	Int nConvX = (*(cfStore.vdata))[0][0][0].shape()[0];
 	double cfstep=CyrilTimer2conv.getReal();
 	CyrilTimer2grid.start();
@@ -1388,7 +1388,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
 	CyrilTimer2grid.reset();
 	CyrilTimer2conv.reset();
       //CyrilTimer.reset();
-	
+
       done[i]=true;
       } catch (std::bad_alloc &)
 	{
@@ -1440,7 +1440,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   //tmp_stacked_GriddedData.reference(itsConvFunc->ApplyWterm(tmp_stacked_GriddedData, spw, false, w_index, (*itsGriddedData),itsTotalStepsGrid, w_index));
 
   //FFTConvolution
-  
+
   cout<<"  put::apply-W"<<endl;
   // ArrayLattice<Complex> tmp_stacked_GriddedData_arrayLattice(tmp_stacked_GriddedData);
   // LatticeFFT::cfft2d(tmp_stacked_GriddedData_arrayLattice, false);
@@ -1457,14 +1457,14 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
     }
   }
   fftw_plan_with_nthreads(1);
-  
+
     // for(uInt pol=0; pol<npol; ++pol){
     //   Complex* ptr = tmp_stacked_GriddedData.data()+pol*nx*nx;
     //   Matrix<Complex> arr(IPosition(2,nx,nx), ptr, SHARE);
     //   dofft(arr,false);
     // }
     // fftw_plan_with_nthreads(1);
-  
+
 
   //cout<<"donefft lp"<<endl;
   itsConvFunc->ApplyWterm_Image(tmp_stacked_GriddedData, tmp_stacked_GriddedData, spw, false, w_index);
@@ -1488,7 +1488,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   }
   //cout<<" ... Done put to 0"<<endl;
   }//end for w-planes
-  
+
   //time_w/=countw;
 
   CyrilElement.start();
@@ -1504,9 +1504,9 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
     tmp_stacked_stacked_GriddedData.reference(itsConvFunc->ApplyElementBeam_Image(tmp_stacked_stacked_GriddedData, timeChunk, spw,
 										  itsGridMuellerMask, false));
     //cout<<" .. Done Apply Element"<<endl;
-     
+
   }
-  
+
   //ArrayLattice<Complex> tmp_stacked_stacked_GriddedData_arrayLattice(tmp_stacked_stacked_GriddedData);
   //LatticeFFT::cfft2d(tmp_stacked_stacked_GriddedData_arrayLattice, true);
 
@@ -1526,7 +1526,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   //     dofft(arr,true);
   //   }
   // fftw_plan_with_nthreads(1);
-  
+
   CyrilElement.stop();
 
   // for(uInt pol=0; pol<npol; ++pol){
@@ -1535,7 +1535,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   //   dofft(slice,true);
   // }
   // CyrilElement.stop();
-  
+
   double tot_time_grid(0);
   double tot_time_cf(0);
   double tot_chunk(0);
@@ -1727,13 +1727,13 @@ void LofarFTMachine::getSplitWplanes(VisBuffer& vb, Int row)
   }
 
 
-  
+
 
   PrecTimer CyrilConv;
   PrecTimer CyrilGrid;
 
   //itsConvFunc->MakeVectorMaskWplanes( tmp_stacked_GriddedData, 0, w_index);
-  
+
   //ArrayLattice<Complex> GridToDegridElement_arrayLattice(GridToDegridElement);
   //LatticeFFT::cfft2d(GridToDegridElement_arrayLattice, false);
   itsGridToDegrid.resize(GridToDegridElement.shape());
@@ -1790,7 +1790,7 @@ void LofarFTMachine::getSplitWplanes(VisBuffer& vb, Int row)
 
   while(!all_done){
 
-    
+
 
 
 #pragma omp parallel
@@ -1869,7 +1869,7 @@ void LofarFTMachine::getSplitWplanes(VisBuffer& vb, Int row)
 	  cout<<"memoryUsed() "<< HostInfo::memoryUsed()<< ", Free: "<<HostInfo::memoryFree()<<endl;
 	  cout<<"-----------------------------------------"<<endl;
 	}
-      
+
 
     } // end omp for
     double cftime = cfTimer.getReal();
@@ -1908,9 +1908,11 @@ void LofarFTMachine::getSplitWplanes(VisBuffer& vb, Int row)
 
 }
 
-
-
-
+Matrix<Float> LofarFTMachine::getAverageResponse() const
+{
+    AlwaysAssert(!itsAvgPB.empty(), AipsError);
+    return itsAvgPB;
+}
 
 // Finalize the FFT to the Sky. Here we actually do the FFT and
 // return the resulting image
@@ -1978,7 +1980,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     //   ///griddedData2.resize();
     // } else {
     //LatticeFFT::cfft2d(*lattice, False);
-    // } 
+    // }
 
 #pragma omp parallel
   {
@@ -2130,7 +2132,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
 
 
     // Matrix<Float> matt(spheNoCut.shape());
-    // Vector<Float> where(2);  
+    // Vector<Float> where(2);
     // where(0) = 3.452;  where(1) = 6.1;
     // Interpolate2D myInterp(Interpolate2D::CUBIC);
     // Float result;
@@ -2157,7 +2159,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
 	      if(its_Apply_Element){prod/=sphe(ii+istart,jj+istart);}
 	      prod/=sphe(ii+istart,jj+istart);
 	    }
-	    
+
 	    // if(sphe(pos)<its_PBCut){prod=0.;}
 	    // else{
 	    //   prod/=sqrt(itsAvgPB(ii+istart,jj+istart));
@@ -2165,7 +2167,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
 	    //   if(its_Apply_Element){prod/=spheNoCut(ii+istart,jj+istart);}
 	    //   prod/=spheNoCut(ii+istart,jj+istart);
 	    // }
-	    
+
 
 
 	    for(uInt pol=0; pol<its_stacked_GriddedData.shape()[2]; ++pol){
@@ -2178,9 +2180,9 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       	}
     }
       }
-      
 
-      
+
+
 
     // for(Int k=0;k<lattice->shape()[2];++k){
     //   for(uInt i=0;i<shapeout;++i){
@@ -2243,7 +2245,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
 
     // 	}
     //   }
-    
+
 
     // uInt count_cycle(0);
     // Bool written(false);
@@ -3019,7 +3021,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 void LofarFTMachine::putTraditional(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type)
 {
-  
+
   //cout<<"times "<<itsSeconds.user()<<" "<<itsSeconds.system ()<<" "<<itsSeconds.real ()<<" "<<endl;
 
   itsCyrilTimer.stop();
@@ -3114,7 +3116,7 @@ void LofarFTMachine::putTraditional(const VisBuffer& vb, Int row, Bool dopsf,
 
   //LofarFTMachine::make_mapping(vb);
   vector<vector<uInt> > MapBlTimes=LofarFTMachine::make_mapping_time(vb, spw);
-  
+
 
   // Determine the time center of this data chunk.
   const Vector<Double>& times = vb.timeCentroid();
@@ -3256,7 +3258,7 @@ void LofarFTMachine::putTraditional(const VisBuffer& vb, Int row, Bool dopsf,
 					      ChanBlock,thisterm_p,itsRefFreq,
 					      itsStackMuellerNew[threadNum],
 					      0, true);
-      
+
 
 
       //cfTimer.stop();
@@ -3276,7 +3278,7 @@ void LofarFTMachine::putTraditional(const VisBuffer& vb, Int row, Bool dopsf,
 	CyrilTimer2grid.reset();
 	CyrilTimer2conv.reset();
       //CyrilTimer.reset();
-	
+
       done[i]=true;
       } catch (std::bad_alloc &)
 	{
@@ -3579,7 +3581,7 @@ void LofarFTMachine::getTraditional(VisBuffer& vb, Int row)
 	  cout<<"memoryUsed() "<< HostInfo::memoryUsed()<< ", Free: "<<HostInfo::memoryFree()<<endl;
 	  cout<<"-----------------------------------------"<<endl;
 	}
-      
+
 
     } // end omp for
     double cftime = cfTimer.getReal();
@@ -3617,7 +3619,7 @@ void LofarFTMachine::getTraditional(VisBuffer& vb, Int row)
 void LofarFTMachine::putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type)
 {
-  
+
   //cout<<"times "<<itsSeconds.user()<<" "<<itsSeconds.system ()<<" "<<itsSeconds.real ()<<" "<<endl;
 
   itsCyrilTimer.stop();
@@ -3714,7 +3716,7 @@ void LofarFTMachine::putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
   vector<vector<vector<uInt> > > MapBlTimesW=LofarFTMachine::make_mapping_time_W(vb, spw);
   //vector<vector<vector<vector<uInt> > > > MapBlTimesW_grid=LofarFTMachine::make_mapping_time_W_grid(vb, spw);
   //assert(false);
-  
+
 
   // Determine the time center of this data chunk.
   const Vector<Double>& times = vb.timeCentroid();
@@ -3874,7 +3876,7 @@ void LofarFTMachine::putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
 					      ChanBlock,thisterm_p,itsRefFreq,
 					      itsStackMuellerNew[threadNum],
 						   0, false);
-      
+
 
 
       //cfTimer.stop();
@@ -3894,7 +3896,7 @@ void LofarFTMachine::putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
 	CyrilTimer2grid.reset();
 	CyrilTimer2conv.reset();
       //CyrilTimer.reset();
-	
+
       done[i]=true;
       } catch (std::bad_alloc &)
 	{
@@ -3944,7 +3946,7 @@ void LofarFTMachine::putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
   //tmp_stacked_GriddedData.reference(itsConvFunc->ApplyWterm(tmp_stacked_GriddedData, spw, false, w_index, (*itsGriddedData),itsTotalStepsGrid, w_index));
 
   //FFTConvolution
-  
+
   cout<<"dofft lp"<<endl;
   // ArrayLattice<Complex> tmp_stacked_GriddedData_arrayLattice(tmp_stacked_GriddedData);
   // LatticeFFT::cfft2d(tmp_stacked_GriddedData_arrayLattice, false);
@@ -3975,7 +3977,7 @@ void LofarFTMachine::putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
   }
   cout<<" ... Done put to 0"<<endl;
   }//end for w-planes
-  
+
 
   if(its_Apply_Element){
     // if(!itsMasksGridAllDone){
@@ -3989,9 +3991,9 @@ void LofarFTMachine::putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
     itsConvFunc->ApplyElementBeam_Image(tmp_stacked_stacked_GriddedData, timeChunk, spw,
 					itsGridMuellerMask, false);
     cout<<" .. Done Apply Element"<<endl;
-     
+
   }
-  
+
   ArrayLattice<Complex> tmp_stacked_stacked_GriddedData_arrayLattice(tmp_stacked_stacked_GriddedData);
   LatticeFFT::cfft2d(tmp_stacked_stacked_GriddedData_arrayLattice, true);
 

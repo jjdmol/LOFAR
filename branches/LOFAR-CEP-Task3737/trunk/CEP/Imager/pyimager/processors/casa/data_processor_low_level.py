@@ -86,7 +86,12 @@ class DataProcessorLowLevel:
         return 1.0
 
     def response(self, coordinates, shape, density):
-        assert(False)
+        # TODO: This is a hack! LofarFTMachine computes the average response
+        # while gridding. It cannot compute it on its own for arbitrary
+        # coordinates and shape. For the moment, the CASA DataProcessor class
+        # ensures this function is always called with the same coordinates and
+        # shape as were used in the last call to get().
+        return lofar.casaimwrap.average_response(self._context)
 
     def point_spread_function(self, coordinates, shape, density, as_grid):
         assert(density == 1.0)

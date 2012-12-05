@@ -196,8 +196,8 @@ public:
 
   // Empty constructor. Allows the copy constructor of derived classes to create
   // an empty ftmachine and then call the assigment operator to fill it.
-  LofarFTMachine() {};  
-  
+  LofarFTMachine() {};
+
   // Clone
   LofarFTMachine* clone() const;
 
@@ -217,14 +217,14 @@ public:
   void finalizeToVis();
   void getSplitWplanes(VisBuffer& vb, Int row);
   void getTraditional(VisBuffer& vb, Int row);
-  
+
   void putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool dopsf,
 			      FTMachine::Type type);
   void putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type);
   void putTraditional(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type);
-  
+
   // Initialize transform to Sky plane: initializes the image
   void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 		       const VisBuffer& vb);
@@ -268,6 +268,7 @@ public:
   const Matrix<Float>& getSpheroidCut() const
     { return itsConvFunc->getSpheroidCut(); }
 
+  Matrix<Float> getAverageResponse() const;
 
   ///  virtual void normalizeImage(Lattice<Complex>& skyImage,
   ///			      const Matrix<Double>& sumOfWts,
@@ -346,16 +347,16 @@ public:
   void makeCFPolMap(const VisBuffer& vb, const Vector<Int>& cfstokes, Vector<Int>& polM);
 
   String itsNamePsfOnDisk;
-  vector< vector< vector < Matrix<Complex> > > > itsStackMuellerNew; 
+  vector< vector< vector < Matrix<Complex> > > > itsStackMuellerNew;
 
   void setPsfOnDisk(String NamePsf){itsNamePsfOnDisk=NamePsf;}
   virtual String GiveNamePsfOnDisk(){return itsNamePsfOnDisk;}
-  
+
     // Arrays for non-tiled gridding (one per thread).
-  
+
   void initGridThreads(vector< Array<Complex> >&  otherGriddedData, vector< Array<DComplex> >&  otherGriddedData2)
   {
-    
+
     itsGriddedData=&otherGriddedData;
     itsGriddedData2=&otherGriddedData2;
     if(itsParameters.asBool("SingleGridMode")==false){
@@ -434,7 +435,7 @@ protected:
     int NChan(grid.shape()[3]);
     T* gridPtr;
     const T* GridToAddPtr;
-    
+
 #pragma omp parallel for private(y,ch,pol,gridPtr,GridToAddPtr)
     for(int x=0 ; x<grid.shape()[0] ; ++x){
       for(ch=0 ; ch<NChan ; ++ch){
@@ -449,7 +450,7 @@ protected:
 	}
       }
     }
-    
+
   }
 
   template <class T>
@@ -463,7 +464,7 @@ protected:
       int NChan(grid.shape()[3]);
       T* gridPtr;
       const T* GridToAddPtr;
-      
+
 #pragma omp parallel for private(y,ch,pol,gridPtr,GridToAddPtr)
       for(int x=0 ; x<grid.shape()[0] ; ++x){
 	for(ch=0 ; ch<NChan ; ++ch){
@@ -482,8 +483,8 @@ protected:
 
   }
 
-  
-  
+
+
 
 
   // Is this tiled?
@@ -506,11 +507,11 @@ protected:
   // Image Scaling and offset
   Vector<Double> uvScale, uvOffset;
 
-  
+
   Array<Complex> its_stacked_GriddedData;
   Array<DComplex> its_stacked_GriddedData2;
   uInt itsNumCycle;
-  
+
 
   //vector< Array<DComplex> > itsGriddedData2;
   vector< Matrix<Complex> > itsSumPB;
@@ -725,7 +726,7 @@ protected:
   /*   } */
 
   return Map;
-     
+
   }
 
   vector<Int> WIndexMap;
@@ -768,7 +769,7 @@ protected:
   for(uInt RowNum=0; RowNum<blIndex.size();++RowNum){
     uInt irow=blIndex[RowNum];
     //cout<<ant1[irow]<<" "<<ant2[irow]<<" "<<times[irow]<<" "<<WPCoord[irow]<<endl;
-    
+
     double u=vb.uvw()[irow](0);
     double v=vb.uvw()[irow](1);
     double w=vb.uvw()[irow](2);
@@ -776,7 +777,7 @@ protected:
     Bool cond0(((uvdistance>itsUVmin)&(uvdistance<itsUVmax)));
     Bool cond1(abs(w)<itsWMax);
     //Bool cond2(((ant1[irow]==8)&(ant2[irow]==0)));
-    //if 
+    //if
     //Bool cond2(((ant1[irow]==7)&(ant2[irow]==1)));
     Bool cond2(((ant1[irow]==5)&(ant2[irow]==40)));
     //Bool cond2((ant1[irow]==7));
@@ -808,7 +809,7 @@ protected:
       WIndexMap.push_back(iwcoord);
       iwcoord=WPCoord[irow];
     }
-      
+
     MapChunck.push_back(irow);
 
     }
@@ -835,7 +836,7 @@ protected:
   /*   } */
 
   return Map;
-     
+
 
 
      /* } */
@@ -878,7 +879,7 @@ protected:
      /* 	      } */
      /* 	      WindexLast=Windex; */
      /* 	    } */
-	  
+
      /* 	  WChunck.push_back(w); */
 
      /* 	} */
@@ -892,14 +893,14 @@ protected:
      /* 	//   cout<<NRow<<" bl: "<<i<<" || Start("<<RowChunckStart.size()<<"): "<<RowChunckStart[chunk]<<" , End("<<RowChunckEnd.size()<<"): "<<RowChunckEnd[chunk] */
      /* 	//       <<" w="<< 0.5*(vbs.uvw()(2,blIndex[RowChunckEnd[chunk]])+vbs.uvw()(2,blIndex[RowChunckStart[chunk]])) */
      /* 	//       <<" size="<< WsChunck[chunk].size()<<" wCF="<< WCFforChunck[chunk]<<endl; */
-	  
+
      /* 	//   // for(uInt iii=0; iii< WsChunck[chunk].size();++iii){ */
      /* 	//   //   cout<<WsChunck[chunk][iii]<<" "<<vbs.uvw()(2,blIndex[RowChunckEnd[chunk]]<<endl; */
      /* 	//   // } */
 
      /* 	// } */
 
-	
+
 
      /* 	for(uInt chunk=0; chunk<RowChunckStart.size();++chunk){ */
      /* 	  Float WmeanChunk(0.5*(vbs.uvw()(2,blIndex[RowChunckEnd[chunk]])+vbs.uvw()(2,blIndex[RowChunckStart[chunk]]))); */
@@ -977,7 +978,7 @@ protected:
 
   for(uInt RowNum=0; RowNum<blIndex.size();++RowNum){
     uInt irow=blIndex[RowNum];
-      
+
     double u=vb.uvw()[irow](0);
     double v=vb.uvw()[irow](1);
     double w=vb.uvw()[irow](2);
@@ -1004,7 +1005,7 @@ protected:
 	time0=timeRow;
 	MapW.push_back(MapChunck);
 	MapChunck.resize(0);
-	
+
 	xminBL.push_back(xmin);
 	xmaxBL.push_back(xmax);
 	yminBL.push_back(ymin);
@@ -1020,7 +1021,7 @@ protected:
     if(WPCoord[irow]!=iwcoord){
       Map.push_back(MapW);
       MapW.resize(0);
-      
+
       xminW.push_back(xminBL);
       xminBL.resize(0);
       xmaxW.push_back(xmaxBL);
@@ -1033,9 +1034,9 @@ protected:
       WIndexMap.push_back(iwcoord);
       iwcoord=WPCoord[irow];
     }
-      
+
     MapChunck.push_back(irow);
-    
+
     Int xrow = int(u * uvScale(0) * recipWvl + uvOffset(0));
     Int yrow = int(v * uvScale(1) * recipWvl + uvOffset(1));
     if(xrow-support<xmin){xmin=xrow-support;};
@@ -1061,7 +1062,7 @@ protected:
   /*   { */
   /*     for(uInt j=0; j<Map[i].size();++j) */
   /* 	{ */
-	  
+
   /* 	  for(uInt k=0; k<Map[i][j].size();++k) */
   /* 	    { */
   /* 	      uInt irow=Map[i][j][k]; */
@@ -1109,7 +1110,7 @@ protected:
       //cout<<"  plane w="<<i<<" nbl_blocks="<< Map[i].size()<<endl;
 
       while(!alldone){
-	
+
 	for(uInt j=0; j<Map[i].size();++j)
 	  {
 	    // Find if baseline j has overlap with the current grid
@@ -1119,7 +1120,7 @@ protected:
 	      {
 		cond_xmin=xminW[i][j]<=xmaxW[posBlock[jj](0)][posBlock[jj](1)];
 		cond_xmax=xmaxW[i][j]>=xminW[posBlock[jj](0)][posBlock[jj](1)];
-		cond_ymin=yminW[i][j]<=ymaxW[posBlock[jj](0)][posBlock[jj](1)]; 
+		cond_ymin=yminW[i][j]<=ymaxW[posBlock[jj](0)][posBlock[jj](1)];
 		cond_ymax=ymaxW[i][j]>=yminW[posBlock[jj](0)][posBlock[jj](1)];
 		Bool condIsOverlap(cond_xmin&&cond_xmax&&cond_ymin&&cond_ymax);
 		if(condIsOverlap){
@@ -1135,7 +1136,7 @@ protected:
 	      posBlock.push_back(pos);
 	    }
 	  }
-	
+
 	alldone=true;
 	for(uInt j=0; j<done.size();++j)
 	  {
@@ -1152,7 +1153,7 @@ protected:
 	MapWOut.push_back(MapWGridOut);
 	MapWGridOut.resize(0);
 	iblock+=1;
-	
+
 
       }
       MapOut.push_back(MapWOut);

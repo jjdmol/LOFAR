@@ -1,6 +1,7 @@
 import numpy
 import constants
 
+import pyrap.images
 import matplotlib.pyplot
 import datetime
 
@@ -16,6 +17,13 @@ def warning(msg):
 
 def error(msg):
     print "\033[91m[%s] error: %s\033[m" % (now(), msg)
+
+def store_image(name, coordinates, image):
+    assert(len(image.shape) <= 4)
+    shape = [1 for i in range(4)]
+    shape[(4 - len(image.shape)):] = image.shape
+    im = pyrap.images.image(name, shape=shape, coordsys=coordinates)
+    im.putdata(image)
 
 def show_image(data, title=None):
     """Create a figure with 2 x 2 subplots that show the four correlation planes

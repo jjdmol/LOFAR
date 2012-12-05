@@ -94,21 +94,20 @@ def validate_psf(csys, psf, beam):
     max_psf = [0.0 for i in range(len(psf))]
     max_psf_outer = [0.0 for i in range(len(psf))]
 
-    for model in range(len(psf)):
-        threshold = 0.8 * numpy.max(psf[model])
+    for i in range(len(psf)):
+        threshold = 0.8 * numpy.max(psf[i])
 
         # Find channel for which the (signed) maximum of the first correlation
         # is larger than threshold.
         ch = 0
-        n_ch = psf[model].shape[0]
-        while ch < n_ch:
-            max_psf[model] = numpy.max(psf[model][ch, 0, :, :])
-            if max_psf[model] >= threshold:
+        while ch < len(psf[i]):
+            max_psf[i] = numpy.max(psf[i][ch, 0, :, :])
+            if max_psf[i] >= threshold:
                 break
             ch += 1
 
         # Compute the minimum for the same channel.
-        min_psf[model] = numpy.min(psf[model][ch, 0, :, :])
+        min_psf[i] = numpy.min(psf[i][ch, 0, :, :])
 
         # Comment from CASA source code:
         #    4 pixels:  pretty arbitrary, but only look for sidelobes
@@ -125,18 +124,18 @@ def validate_psf(csys, psf, beam):
         assert(csys.get_unit()[2] == ["rad", "rad"])
         if increment > 0.0:
             distance = max(distance, \
-                int(numpy.ceil(max(beam[model].major_axis / increment, \
-                beam[model].minor_axis / increment))))
+                int(numpy.ceil(max(beam[i].major_axis / increment, \
+                beam[i].minor_axis / increment))))
 
         # TODO: psf_patch_size will always be set based on the distance computed
         # for the last (solvable) model. This seems rather arbitrary?
         psf_patch_size = 3 * distance + 1
 
-        max_psf_outer[model] = max_outer(psf[model][ch, 0, :, :], distance)
+        max_psf_outer[i] = max_outer(psf[i][ch, 0, :, :], distance)
 
         # TODO: What does this do exactly?
-        max_sidelobe = max(max_sidelobe, abs(min_psf[model]))
-        max_sidelobe = max(max_sidelobe, max_psf_outer[model])
+        max_sidelobe = max(max_sidelobe, abs(min_psf[i]))
+        max_sidelobe = max(max_sidelobe, max_psf_outer[i])
 
     return (min_psf, max_psf, max_psf_outer, psf_patch_size, max_sidelobe)
 
@@ -151,27 +150,26 @@ def max_field(weight, residual):
 
     # Compute the (signed) maximum of weight over all models.
     max_weight = 0.0
-    for model in range(n_model):
-        max_weight = max(max_weight, numpy.max(weight[model]))
+    for i in range(n_model):
+        max_weight = max(max_weight, numpy.max(weight[i]))
 
     absmax = 0.0
     min_residual = [1e20 for i in range(n_model)]
     max_residual = [-1e20 for i in range(n_model)]
-    for model in range(n_model):
-        n_ch = residual[model].shape[0]
-        for ch in range(n_ch):
+    for i in range(n_model):
+        for ch in range(len(residual[i])):
             # TODO: Why is the residual re-weighted here? In practice for LOFAR
             # all weights seem to be equal, which causes the residual to be
             # re-weighted by a factor 1.0. Ensure that this is the case, such
             # that it does not go unnoticed when the re-weighting would have had
             # an effect.
             #
-#            residual[model][ch, :, :, :] *= \
-#                numpy.sqrt(weight[model][ch, :, :, :] / max_weight)
-            assert(numpy.all(weight[model][ch, :] == max_weight))
+#            residual[i][ch, :, :, :] *= \
+#                numpy.sqrt(weight[i][ch, :, :, :] / max_weight)
+            assert(numpy.all(weight[i][ch, :] == max_weight))
 
-            fmax = numpy.max(residual[model][ch, :, :, :])
-            fmin = numpy.min(residual[model][ch, :, :, :])
+            fmax = numpy.max(residual[i][ch, :, :, :])
+            fmin = numpy.min(residual[i][ch, :, :, :])
 
             # TODO: What is the logic behind this?
             if fmax < 0.99 * -1e20:
@@ -180,8 +178,8 @@ def max_field(weight, residual):
                 fmin = 0.0
 
             absmax = max(absmax, max(abs(fmax), abs(fmin)))
-            min_residual[model] = min(min_residual[model], fmin)
-            max_residual[model] = max(max_residual[model], fmax)
+            min_residual[i] = min(min_residual[i], fmin)
+            max_residual[i] = max(max_residual[i], fmax)
 
     return (absmax, min_residual, max_residual)
 
@@ -260,18 +258,16 @@ def mfclean(options):
     util.notice("making approximate PSF images for all fields...")
     psf = [None for i in range(n_model)]
     beam = [None for i in range(n_model)]
-    for model in range(n_model):
-        psf[model] = processor.point_spread_function(image_coordinates, \
-            image_shape)
-        fit = lofar.casaimwrap.fitGaussianPSF(image_coordinates.dict(), \
-            psf[model])
+    for i in range(n_model):
+        psf[i] = processor.point_spread_function(image_coordinates, image_shape)
+        fit = lofar.casaimwrap.fitGaussianPSF(image_coordinates.dict(), psf[i])
         assert(fit["ok"])
 
-        beam[model] = BeamParameters((fit["major"] * numpy.pi) \
-            / (3600.0 * 180.0), (fit["minor"] * numpy.pi) / (3600.0 * 180.0), \
-            (fit["angle"] * numpy.pi) / 180.0)
+        beam[i] = BeamParameters((fit["major"] * numpy.pi) / (3600.0 * 180.0), \
+            (fit["minor"] * numpy.pi) / (3600.0 * 180.0), (fit["angle"] \
+            * numpy.pi) / 180.0)
         util.notice("PSF: model: %d major axis: %f arcsec minor axis: %f arcsec"
-            " position angle: %f deg" % (model, abs(fit["major"]), \
+            " position angle: %f deg" % (i, abs(fit["major"]), \
             abs(fit["minor"]), fit["angle"]))
 #    util.show_image(psf[0][0,:,:,:], "approximate PSF")
 
@@ -281,7 +277,7 @@ def mfclean(options):
     clark_options["psf_patch_size"] = psf_patch_size
 
     weight = [None for i in range(n_model)]
-    image = [numpy.zeros(image_shape) for i in range(n_model)]
+    model = [numpy.zeros(image_shape) for i in range(n_model)]
     delta = [numpy.zeros(image_shape) for i in range(n_model)]
     residual = [numpy.zeros(image_shape) for i in range(n_model)]
     iterations = [[] for i in range(n_model)]
@@ -310,7 +306,7 @@ def mfclean(options):
             assert(n_model == 1)
             for i in range(n_model):
                 residual[i], weight[i] = processor.residual(image_coordinates, \
-                    image[i], processors.Normalization.FLAT_NOISE, \
+                    model[i], processors.Normalization.FLAT_NOISE, \
                     processors.Normalization.FLAT_NOISE)
             modified = False
 
@@ -378,54 +374,54 @@ def mfclean(options):
             cycle_threshold))
 
         # Execute the minor cycle (Clark clean) for each channel of each model.
-        for model in range(n_model):
-            util.notice("processing model %d/%d" % (model, n_model))
+        for i in range(n_model):
+            util.notice("processing model %d/%d" % (i, n_model))
 
-            n_x = image[model].shape[-1]
-            n_y = image[model].shape[-2]
-            n_cr = image[model].shape[-3]
-            n_ch = image[model].shape[-4]
+            n_x = model[i].shape[-1]
+            n_y = model[i].shape[-2]
+            n_cr = model[i].shape[-3]
+            n_ch = model[i].shape[-4]
             n_cr_cube = n_cr if do_cr_joint else 1
 
             if cycle == 0:
                 # TODO: Useless code in MFCleanImageSkyModel.cc at this
                 # location?
-                iterations[model] = [0 for i in range(n_ch * n_cr)]
+                iterations[i] = [0 for j in range(n_ch * n_cr)]
 
             # Zero the delta image for this model.
-            delta[model].fill(0.0)
+            delta[i].fill(0.0)
 
-            if max(abs(resmin[model]), abs(resmax[model])) <= cycle_threshold:
+            if max(abs(resmin[i]), abs(resmax[i])) <= cycle_threshold:
                 util.notice("    peak residual below threshold")
-            elif max_psf[model] > 0.0:
+            elif max_psf[i] > 0.0:
                 modified = True
 
                 for ch in range(n_ch):
                     # TODO: The value of max_weight is only updated during
                     # cycle 0. Is this correct?
                     #
-                    assert(len(weight[model].shape) == 2 \
-                        and weight[model].shape[0] == n_ch \
-                        and weight[model].shape[1] == n_cr)
+                    assert(len(weight[i].shape) == 2 \
+                        and weight[i].shape[0] == n_ch \
+                        and weight[i].shape[1] == n_cr)
 
-                    plane_weight = numpy.sqrt(weight[model][ch, :] / max_weight)
+                    plane_weight = numpy.sqrt(weight[i][ch, :] / max_weight)
                     if numpy.any(plane_weight > 0.01):
                         weight_mask = numpy.ones((n_y, n_x))
                     else:
                         weight_mask = numpy.zeros((n_y, n_x))
 
                     # Call CASA Clark clean implementation (minor cycle).
-                    result = lofar.casaimwrap.clarkClean(psf[model][ch,0,:,:], \
-                        residual[model][ch,:,:,:], weight_mask, \
-                        iterations[model][ch * n_cr_cube], clark_options)
-                    iterations[model][ch * n_cr_cube] = result["iterations"]
-                    delta[model][ch,:,:,:] = result["delta"]
+                    result = lofar.casaimwrap.clarkClean(psf[i][ch,0,:,:], \
+                        residual[i][ch,:,:,:], weight_mask, \
+                        iterations[i][ch * n_cr_cube], clark_options)
+                    iterations[i][ch * n_cr_cube] = result["iterations"]
+                    delta[i][ch,:,:,:] = result["delta"]
 
                     max_iterations = max(max_iterations, \
-                        iterations[model][ch * n_cr_cube])
+                        iterations[i][ch * n_cr_cube])
 
                     util.notice("    cleaned channel: %d/%d iterations: %d" \
-                        % (ch, n_ch, iterations[model][ch * n_cr_cube]))
+                        % (ch, n_ch, iterations[i][ch * n_cr_cube]))
             else:
                     util.warning("    psf negative or zero")
 
@@ -433,10 +429,10 @@ def mfclean(options):
             old_max_iterations = max_iterations
 
             # Update model images.
-            for model in range(n_model):
-                image[model] += delta[model]
+            for i in range(n_model):
+                model[i] += delta[i]
                 util.notice("%f Jy <- cleaned in this cycle for model %d" \
-                    % (numpy.sum(delta[model]), model))
+                    % (numpy.sum(delta[i]), i))
         else:
             util.notice("no more iterations left in this major cycle," \
                 " stopping now")
@@ -450,36 +446,63 @@ def mfclean(options):
         util.notice("finalizing residual images for all fields...")
         for i in range(n_model):
             residual[i], weight[i] = processor.residual(image_coordinates, \
-                image[i], processors.Normalization.FLAT_NOISE, \
+                model[i], processors.Normalization.FLAT_NOISE, \
                 processors.Normalization.FLAT_NOISE)
         modified = False
 
         (final_absmax, resmin, resmax) = max_field(weight, residual)
-        util.show_image(residual[0][0,:,:,:], "final residual")
-
         util.notice("final peak residual: %f" % final_absmax)
         converged = (final_absmax < 1.05 * options.threshold)
 
-        for model in range(n_model):
+        for i in range(n_model):
             util.notice("model: %d min residual: %f max residual: %f clean" \
-                " flux: %f residual rms: %f" % (model, resmin[model], \
-                resmax[model], numpy.sum(image[model]), \
-                numpy.std(residual[model])))
+                " flux: %f residual rms: %f" % (i, resmin[i], \
+                resmax[i], numpy.sum(model[i]), \
+                numpy.std(residual[i])))
     else:
         util.notice("residual images for all fields are up-to-date...")
 
-    util.notice("saving restored image...")
-    restored = restore_image(image_coordinates.dict(), image[0], residual[0], \
-        beam[0])
-    util.show_image(restored[0,:,:,:], "restored image")
+    util.notice("storing average response...")
+    util.store_image(options.image + ".response", image_coordinates, \
+        processor.response(image_coordinates, image_shape))
 
-    im_restored = pyrap.images.image(options.image + ".restored", \
-        shape=image_shape, coordsys=image_coordinates)
-    im_restored.putdata(restored)
+    util.notice("storing model image(s)...")
+    for i in range(n_model):
+        util.store_image(options.image + ".model.flat_noise", \
+            image_coordinates, model[i])
+        util.store_image(options.image + ".model", image_coordinates, \
+            processor.normalize(image_coordinates, model[i], \
+            processors.Normalization.FLAT_NOISE, \
+            processors.Normalization.FLAT_GAIN))
+
+    util.notice("storing residual image(s)...")
+    for i in range(n_model):
+        util.store_image(options.image + ".residual.flat_noise", \
+            image_coordinates, residual[i])
+        util.store_image(options.image + ".residual", image_coordinates, \
+            processor.normalize(image_coordinates, residual[i], \
+            processors.Normalization.FLAT_NOISE, \
+            processors.Normalization.FLAT_GAIN))
+
+    util.notice("storing restored image(s)...")
+    for i in range(n_model):
+        restored = restore_image(image_coordinates.dict(), model[i], \
+            residual[i], beam[i])
+
+        util.store_image(options.image + ".restored.flat_noise", \
+            image_coordinates, restored)
+        util.store_image(options.image, image_coordinates, \
+            processor.normalize(image_coordinates, restored, \
+            processors.Normalization.FLAT_NOISE, \
+            processors.Normalization.FLAT_GAIN))
 
     if converged:
         util.notice("clean converged.")
     else:
         util.error("clean did NOT converge.")
 
+    util.show_image(residual[0][0,:,:,:], "final residual")
+    restored = restore_image(image_coordinates.dict(), model[0], residual[0], \
+        beam[0])
+    util.show_image(restored[0,:,:,:], "restored image")
     matplotlib.pyplot.show()

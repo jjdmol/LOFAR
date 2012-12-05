@@ -303,6 +303,11 @@ Record makeCoordinateSystemPy(const ValueHolder &size, const ValueHolder &delta,
     return record.subRecord(0);
 }
 
+ValueHolder average_response(const CASAContext &context)
+{
+    return ValueHolder(context.ft->getAverageResponse());
+}
+
 Record begin_degrid(CASAContext &context, const Record &coordinates,
     const ValueHolder &image, const Record &chunk)
 {
@@ -498,6 +503,9 @@ BOOST_PYTHON_MODULE(_casaimwrap)
     def("fitGaussianPSF", LOFAR::casaimwrap::fitGaussianPSF,
         (boost::python::arg("coordinates"),
         boost::python::arg("psf")));
+
+    def("average_response", LOFAR::casaimwrap::average_response,
+        (boost::python::arg("context")));
 
     def("begin_degrid", LOFAR::casaimwrap::begin_degrid,
         (boost::python::arg("context"),
