@@ -51,6 +51,8 @@ int main( int, char **argv ) {
 
   Generator g(settings, streamDescs);
 
+  bool error = false;
+
   #pragma omp parallel sections num_threads(2)
   {
     #pragma omp section
@@ -61,6 +63,7 @@ int main( int, char **argv ) {
         g.process();
       } catch(Exception &ex) {
         LOG_ERROR_STR("Caught exception: " << ex);
+        error = true;
       }
     }
 
@@ -83,14 +86,13 @@ int main( int, char **argv ) {
 
         // We received NUMPACKETS packets, kill the generator
         g.stop();
-
-      } catch(Stream::EndOfStreamException &ex) {
       } catch(Exception &ex) {
         LOG_ERROR_STR("Caught exception: " << ex);
+        error = true;
       }
     }
   }
 
-  return 0;
+  return error ? 1 : 0;
 }
 
