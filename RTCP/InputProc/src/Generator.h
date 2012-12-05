@@ -2,7 +2,7 @@
 #define __GENERATOR__
 
 #include <IONProc/RSP.h>
-#include "StationStreams.h"
+#include "RSPBoards.h"
 #include "BufferSettings.h"
 #include <string>
 #include <vector>
@@ -12,7 +12,7 @@ namespace RTCP {
 
 /* Generate station input data */
 
-class Generator: public StationStreams {
+class Generator: public RSPBoards {
 public:
   Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
 

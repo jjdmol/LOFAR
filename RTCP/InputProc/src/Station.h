@@ -24,7 +24,7 @@ namespace RTCP {
 
 /* Receives station input and stores it in shared memory */
 
-template<typename T> class Station: public StationStreams {
+template<typename T> class Station: public RSPBoards {
 public:
   Station( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
 
@@ -63,7 +63,7 @@ protected:
 
 template<typename T> Station<T>::Station( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
 :
-  StationStreams(str(boost::format("[station %s %s] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors),
+  RSPBoards(str(boost::format("[station %s %s] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors),
 
   buffer(settings, true),
   readers(nrBoards, 0),

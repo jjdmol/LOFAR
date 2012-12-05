@@ -1,5 +1,5 @@
 #include <lofar_config.h>
-#include "StationStreams.h"
+#include "RSPBoards.h"
 #include "OMPThread.h"
 #include <Common/LofarLogger.h>
 #include <omp.h>
@@ -8,7 +8,7 @@ namespace LOFAR {
 namespace RTCP {
 
 
-StationStreams::StationStreams( const std::string &logPrefix, const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
+RSPBoards::RSPBoards( const std::string &logPrefix, const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
 :
   logPrefix(logPrefix),
   settings(settings),
@@ -17,7 +17,7 @@ StationStreams::StationStreams( const std::string &logPrefix, const BufferSettin
 {
 }
 
-void StationStreams::process()
+void RSPBoards::process()
 {
   std::vector<OMPThread> threads(nrBoards * 2);
 
@@ -88,7 +88,7 @@ void StationStreams::process()
   LOG_INFO_STR( logPrefix << "End" );
 }
 
-void StationStreams::stop()
+void RSPBoards::stop()
 {
   waiter.cancelWait();
 }
