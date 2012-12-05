@@ -48,7 +48,7 @@ public:
 
 template<typename T> SampleBuffer<T>::SampleBuffer( const struct BufferSettings &_settings, bool create )
 :
-  logPrefix(str(boost::format("[station %s %s board] [SampleBuffer] ") % _settings.station.stationName % _settings.station.antennaSet)),
+  logPrefix(str(boost::format("[station %s %s board] [SampleBuffer] ") % _settings.station.stationName % _settings.station.antennaField)),
   data(_settings.dataKey, dataSize(_settings), create ? SharedMemoryArena::CREATE_EXCL : SharedMemoryArena::READ),
   allocator(data),
   settings(initSettings(_settings, create)),
