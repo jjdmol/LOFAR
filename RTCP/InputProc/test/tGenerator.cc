@@ -16,7 +16,7 @@ using namespace RTCP;
 using namespace std;
 
 // Duration of the test (seconds)
-#define DURATION 5
+#define DURATION 2
 
 void sighandler(int)
 {
@@ -27,7 +27,7 @@ int main( int, char **argv ) {
   INIT_LOGGER( argv[0] );
 
   omp_set_nested(true);
-  omp_set_num_threads(32);
+  omp_set_num_threads(16);
 
   signal(SIGHUP, sighandler);
   siginterrupt(SIGHUP, 1);
@@ -46,6 +46,7 @@ int main( int, char **argv ) {
   settings.nrFlagRanges = 64;
 
   settings.dataKey = stationID.hash();
+
   Generator g(settings, streamDescs);
 
   #pragma omp parallel sections num_threads(3)
