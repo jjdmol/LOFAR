@@ -10,12 +10,12 @@ namespace RTCP {
 
 struct StationID {
   char stationName[64];
-  char antennaSet[64];
+  char antennaField[64];
 
   unsigned clock;
   unsigned bitmode;
 
-  StationID( const std::string &stationName = "", const std::string &antennaSet = "", unsigned clock = 200 * 1000 * 1000, unsigned bitmode = 16);
+  StationID( const std::string &stationName = "", const std::string &antennaField = "", unsigned clock = 200 * 1000 * 1000, unsigned bitmode = 16);
 
   bool operator==(const struct StationID &other) const;
   bool operator!=(const struct StationID &other) const;
