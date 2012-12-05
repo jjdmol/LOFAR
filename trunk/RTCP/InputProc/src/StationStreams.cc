@@ -1,3 +1,4 @@
+#include <lofar_config.h>
 #include "StationStreams.h"
 #include "OMPThread.h"
 #include <Common/LofarLogger.h>

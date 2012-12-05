@@ -1,10 +1,13 @@
+#include <lofar_config.h>
 #include "Generator.h"
 
 #include <Common/LofarLogger.h>
 #include <Stream/Stream.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
+#include <Interface/Stream.h>
 #include <IONProc/WallClockTime.h>
+#include <boost/format.hpp>
 
 
 namespace LOFAR {
@@ -24,7 +27,7 @@ void Generator::makePacket( size_t boardNr, struct RSP &packet, const TimeStamp 
   packet.header.version = 3; // we emulate BDI 6.0
 
   packet.header.sourceInfo1 =
-      (nr & 0x1F) | (settings.station.clock == 200 * 1000 * 1000 ? 1 << 7 : 0);
+      (boardNr & 0x1F) | (settings.station.clock == 200 * 1000 * 1000 ? 1 << 7 : 0);
 
   switch (settings.station.bitmode) {
     case 16:
@@ -49,10 +52,10 @@ void Generator::makePacket( size_t boardNr, struct RSP &packet, const TimeStamp 
   // insert data that is different for each packet
   int64 data = timestamp;
 
-  memset(packet.data, data & 0xFF, sizeof packet.data);
+  memset(packet.payload.data, data & 0xFF, sizeof packet.payload.data);
 
   // verify whether the packet really reflects what we intended
-  ASSERT(packet.rspBoard()     == nr);
+  ASSERT(packet.rspBoard()     == boardNr);
   ASSERT(packet.payloadError() == false);
   ASSERT(packet.bitMode()      == settings.station.bitmode);
   ASSERT(packet.clockMHz()     == settings.station.clock / 1000000);

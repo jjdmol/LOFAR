@@ -1,3 +1,4 @@
+#include <lofar_config.h>
 #include "BufferSettings.h"
 #include "SharedMemory.h"
 #include <Common/LofarLogger.h>
@@ -35,6 +36,3 @@ std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s ) {
 
 }
 }
-
-#endif
-

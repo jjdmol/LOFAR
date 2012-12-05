@@ -2,7 +2,7 @@
 #define __SAMPLEBUFFERREADER__
 
 #include <Common/LofarLogger.h>
-#include <WallClockTime.h>
+#include <IONProc/WallClockTime.h>
 #include <Interface/RSPTimeStamp.h>
 #include "BufferSettings.h"
 #include "SampleBuffer.h"

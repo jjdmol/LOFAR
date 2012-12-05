@@ -1,12 +1,14 @@
+#include <lofar_config.h>
 #include "StationID.h"
 #include <Common/LofarLogger.h>
 #include <cstdio>
+#include <cstring>
 
 namespace LOFAR {
 namespace RTCP {
 
 
-StationID::StationID( const std::string &stationName = "", const std::string &antennaSet = "", unsigned clock = 200 * 1000 * 1000, unsigned bitmode = 16)
+StationID::StationID( const std::string &stationName, const std::string &antennaSet, unsigned clock, unsigned bitmode)
 :
   clock(clock),
   bitmode(bitmode)

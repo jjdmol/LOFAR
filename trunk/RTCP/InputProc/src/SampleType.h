@@ -1,7 +1,6 @@
 #ifndef __SAMPLETYPE__
 #define __SAMPLETYPE__
 
-#include <complex>
 #include <ostream>
 #include <Common/LofarTypes.h>
 
@@ -13,9 +12,9 @@ template<typename T> struct SampleType {
   T x, y;
 };
 
-template<> struct SampleType<i16complex>;
-template<> struct SampleType<i8complex>;
-template<> struct SampleType<i4complex>;
+template struct SampleType<i16complex>;
+template struct SampleType<i8complex>;
+template struct SampleType<i4complex>;
 
 
 template<typename T> std::ostream &operator <<(std::ostream &str, const struct SampleType<T> &sample)
