@@ -31,12 +31,35 @@ protected:
   const TimeStamp from, to;
   const size_t blockSize;
 
+  /* process() will call one of these sequences:
+   *
+   * 1. copyNothing(from, to);
+   *
+   * 2. copyStart(from, to, 0);
+   *    foreach(beamlet)
+   *      copyBeamlet(beamlet, 0, from, .., ..);
+   *    foreach(board)
+   *      copyFlags(board, ..);
+   *    copyEnd();
+   *
+   * 3. copyStart(from, to, ..);
+   *    foreach(beamlet) {
+   *      copyBeamlet(beamlet, 0, from, .., ..);
+   *      copyBeamlet(beamlet, 1, .., .., ..);
+   *    }
+   *    foreach(board)
+   *      copyFlags(board, ..);
+   *    copyEnd();
+   *
+   * Two transfers are needed per beamlet if the requested
+   * range wraps around the end of the buffer.
+   */
+
   virtual void copyNothing( const TimeStamp &from, const TimeStamp &to ) { (void)from, (void)to; }
 
-  virtual void copyBeamlet( unsigned beamlet, unsigned transfer, const TimeStamp &from_ts, const T* from, size_t nrSamples ) = 0;
   virtual void copyStart( const TimeStamp &from, const TimeStamp &to, size_t wrap ) { (void)from, (void)to, (void)wrap; }
-
-  virtual void copyFlags  ( unsigned transfer, const SparseSet<int64> &flags ) = 0;
+  virtual void copyBeamlet( unsigned beamlet, unsigned transfer, const TimeStamp &from_ts, const T* from, size_t nrSamples ) = 0;
+  virtual void copyFlags( unsigned board, const SparseSet<int64> &flags ) = 0;
   virtual void copyEnd() {}
 
   void copy( const TimeStamp &from, const TimeStamp &to );
