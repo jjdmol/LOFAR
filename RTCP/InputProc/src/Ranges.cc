@@ -17,6 +17,7 @@ std::ostream& operator<<( std::ostream &str, const Ranges &r )
 
 Ranges::Ranges()
 :
+  create(false),
   len(0),
   ranges(0),
   begin(0),
@@ -28,6 +29,7 @@ Ranges::Ranges()
 
 Ranges::Ranges( void *data, size_t numBytes, int64 minHistory, bool create )
 :
+  create(create),
   len(numBytes / sizeof *ranges),
   ranges(create ? new(data)Range[len] : static_cast<Range*>(data)),
   begin(&ranges[0]),
@@ -40,8 +42,9 @@ Ranges::Ranges( void *data, size_t numBytes, int64 minHistory, bool create )
 
 Ranges::~Ranges()
 {
-  for (struct Range *i = begin; i != end; ++i)
-    i->~Range();
+  if (create)
+    for (struct Range *i = begin; i != end; ++i)
+      i->~Range();
 }
 
 void Ranges::excludeBefore( int64 to )

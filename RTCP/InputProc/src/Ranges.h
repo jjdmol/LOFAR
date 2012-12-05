@@ -56,6 +56,7 @@ private:
     Range(): from(0), to(0) {}
   };
 
+  bool create;
   size_t len;
   Range *ranges;
   Range *begin;
