@@ -19,8 +19,8 @@ using namespace std;
 // Duration of the test (seconds)
 #define DURATION 2
 
-// The number of packets to transmit
-#define NUMPACKETS (200000000/1024)
+// The number of packets to transmit (note: there are 16 time samples/packet)
+#define NUMPACKETS (200000000/1024/16)
 
 
 int main( int, char **argv ) {
