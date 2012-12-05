@@ -1,8 +1,6 @@
 #include <lofar_config.h>
 #include "Ranges.h"
 #include <Common/LofarLogger.h>
-#include <Common/Thread/Thread.h>
-#include <unistd.h>
 #include <vector>
 
 using namespace LOFAR;
