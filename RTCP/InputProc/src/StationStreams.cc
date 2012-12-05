@@ -35,7 +35,11 @@ void StationStreams::process()
       for (size_t i = 0; i < nrBoards; ++i) {
         OMPThread::ScopedRun sr(threads[i]);
   
-        processBoard(i);
+        try {
+          processBoard(i);
+        } catch(Exception &ex) {
+          LOG_ERROR_STR("Caught exception: " << ex);
+        }
       }
 
       // we're done
@@ -50,10 +54,15 @@ void StationStreams::process()
       for (size_t i = 0; i < nrBoards; ++i) {
         OMPThread::ScopedRun sr(threads[i + nrBoards]);
   
-        for(;;) {
-          sleep(1);
+        try {
+          for(;;) {
+            if (usleep(999999) == -1 && errno == EINTR)
+              break;
 
-          logStatistics();
+            logStatistics();
+          }
+        } catch(Exception &ex) {
+          LOG_ERROR_STR("Caught exception: " << ex);
         }
       }
     }
@@ -68,7 +77,11 @@ void StationStreams::process()
       LOG_INFO_STR( logPrefix << "Stopping all boards" );
       #pragma omp parallel for num_threads(threads.size())
       for (size_t i = 0; i < threads.size(); ++i)
-        threads[i].kill();
+        try {
+          threads[i].kill();
+        } catch(Exception &ex) {
+          LOG_ERROR_STR("Caught exception: " << ex);
+        }
     }
   }
 
