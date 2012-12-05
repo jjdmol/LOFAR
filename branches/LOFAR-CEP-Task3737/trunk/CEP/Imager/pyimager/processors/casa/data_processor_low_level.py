@@ -38,7 +38,7 @@ class DataProcessorLowLevel:
         parms["splitbeam"] = True
         parms["padding"] = options["padding"]
         # will be determined by LofarFTMachine
-        parms["wplanes"] = 64
+        parms["wplanes"] = 0
 
 #        parms["ApplyBeamCode"] = 0
         parms["ApplyBeamCode"] = 3
@@ -47,6 +47,7 @@ class DataProcessorLowLevel:
         parms["MakeDirtyCorr"] = False
 
         parms["timewindow"] = 300
+        parms["TWElement"] = 20
         parms["UseWSplit"] = True
         parms["SingleGridMode"] = True
         parms["SpheSupport"] = 15
@@ -75,7 +76,7 @@ class DataProcessorLowLevel:
     def channel_width(self):
         spw = pyrap.tables.table(path.join(self._measurement, \
             "SPECTRAL_WINDOW"))
-        return spw.getcell("CHAN_FREQ", 0)
+        return spw.getcell("CHAN_WIDTH", 0)
 
     def maximum_baseline_length(self):
         return numpy.max(numpy.sqrt(numpy.sum(numpy.square( \

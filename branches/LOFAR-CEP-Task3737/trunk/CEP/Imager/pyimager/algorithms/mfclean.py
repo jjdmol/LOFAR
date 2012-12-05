@@ -4,9 +4,9 @@ the CASA implementation, masks are not supported, nor is the option to use
 Hogbohm instead of Clark clean in the minor cycle.
 """
 
-import pylab
 import numpy
 import pyrap.images
+import matplotlib.pyplot
 
 import lofar.casaimwrap
 import lofar.pyimager.processors as processors
@@ -200,23 +200,6 @@ def restore_image(csys, image, residual, beam):
     restored += residual
     return restored
 
-def show_image(title, data):
-    print "%s:" % title, "min:", numpy.min(data), "max:", numpy.max(data), "median:", numpy.median(data)
-    fig, axes = pylab.subplots(nrows=2, ncols=2) #, sharex=True, sharey=True, squeeze=True)
-    fig.suptitle(title, fontsize=14)
-
-    vmin = numpy.min(data)
-    vmax = numpy.max(data)
-    for k, ax in zip(range(4), axes.flat):
-        __im = ax.imshow(data[k,:,:], origin="lower", interpolation="nearest", cmap="bone", vmin=vmin, vmax=vmax) # aspect="auto")
-        __im.axes.get_xaxis().set_visible(False)
-        __im.axes.get_yaxis().set_visible(False)
-
-    fig.subplots_adjust(right=0.70, wspace=0.0, hspace=0.0)
-    cax = fig.add_axes([0.75, 0.1, 0.03, 0.8])
-    cbr = fig.colorbar(__im, cax=cax)
-    cbr.set_clim(vmin, vmax)
-
 def mfclean(options):
     clark_options = {}
     clark_options["gain"] = options.gain
@@ -290,7 +273,7 @@ def mfclean(options):
         util.notice("PSF: model: %d major axis: %f arcsec minor axis: %f arcsec"
             " position angle: %f deg" % (model, abs(fit["major"]), \
             abs(fit["minor"]), fit["angle"]))
-#    show_image("approximate PSF", psf[0][0,:,:,:])
+#    show_image(psf[0][0,:,:,:], "approximate PSF")
 
     # Analyse PSF images.
     (min_psf, max_psf, max_psf_outer, psf_patch_size, max_sidelobe) = \
@@ -472,7 +455,7 @@ def mfclean(options):
         modified = False
 
         (final_absmax, resmin, resmax) = max_field(weight, residual)
-        show_image("final residual", residual[0][0,:,:,:])
+        show_image(residual[0][0,:,:,:], "final residual")
 
         util.notice("final peak residual: %f" % final_absmax)
         converged = (final_absmax < 1.05 * options.threshold)
@@ -488,7 +471,7 @@ def mfclean(options):
     util.notice("saving restored image...")
     restored = restore_image(image_coordinates.dict(), image[0], residual[0], \
         beam[0])
-    show_image("restored image", restored[0,:,:,:])
+    show_image(restored[0,:,:,:], "restored image")
 
     im_restored = pyrap.images.image(options.image + ".restored", \
         shape=image_shape, coordsys=image_coordinates)
@@ -499,4 +482,4 @@ def mfclean(options):
     else:
         util.error("clean did NOT converge.")
 
-    pylab.show()
+    matplotlib.pyplot.show()
