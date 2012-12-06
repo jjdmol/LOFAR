@@ -80,8 +80,8 @@ ApplControlClient::ApplControlClient(const string&	aUniqUserName,
 	LOG_DEBUG(formatString("Private ACserver is at %s:%d, trying to connect", 
 														host.c_str(), port));
 
-	LOG_DEBUG("Waiting 3 second before starting up the ApplController");
-	sleep (3);
+	LOG_DEBUG("Waiting 5 second before starting up the ApplController");
+	sleep (5);
 
 	itsCommChan = new ApplControlComm(host, toString(port), syncClient);
 	ASSERTSTR(itsCommChan, "Unable to allocate a communication channel");

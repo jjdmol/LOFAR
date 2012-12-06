@@ -129,11 +129,18 @@ void MSWriterCorrelated::write(StreamableData *data)
 
   // Write sequence number
   if (itsSequenceNumbersFile != 0) {
+    // quick fix: always write to maintain integrity
+    unsigned seqnr = data->sequenceNumber(true);
+
+    itsSequenceNumbersFile->write(&seqnr, sizeof seqnr);
+
+#if 0
     // write the sequencenumber in correlator endianness, no byteswapping
     itsSequenceNumbers.push_back(data->sequenceNumber(true));
-    
+   
     if (itsSequenceNumbers.size() > 64)
       flushSequenceNumbers();
+#endif
   }
 
   itsNrBlocksWritten++;

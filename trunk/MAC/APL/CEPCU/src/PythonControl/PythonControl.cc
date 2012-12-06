@@ -312,28 +312,29 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event, GCFPortInterface
 		string	pythonHost      (thePS->getString(myPrefix+"pythonHost",     "@pythonHost@"));
 		itsChildCanCommunicate = thePS->getBool  (myPrefix+"canCommunicate", true);
 		// START PYTHON
-		bool	startOK = _startPython(pythonProg, getObservationNr(getName()), realHostname(pythonHost), itsListener->makeServiceName());
-		if (!startOK) {
-			LOG_ERROR("Failed to start the Python environment.");
-			CONTROLConnectedEvent	answer;
-			answer.cntlrName = msg.cntlrName;
-			answer.result    = CONTROL_LOST_CONN_ERR;
-			port.send(answer);
-			TRAN(PythonControl::finishing_state);
+		// QUICK FIX #3633: if-else nesting was different
+		if (itsChildCanCommunicate) {
+			bool startOK = _startPython(pythonProg, getObservationNr(getName()), realHostname(pythonHost), 
+										itsListener->makeServiceName());
+			if (!startOK) {
+				LOG_ERROR("Failed to start the Python environment.");
+				CONTROLConnectedEvent	answer;
+				answer.cntlrName = msg.cntlrName;
+				answer.result    = CONTROL_LOST_CONN_ERR;
+				port.send(answer);
+				TRAN(PythonControl::finishing_state);
+				break;
+			}
+			LOG_DEBUG ("Started Python environment, going to waitForConnection state");
+			TRAN(PythonControl::waitForConnection_state);
 		}
 		else {
-			if (itsChildCanCommunicate) {
-				LOG_DEBUG ("Started Python environment, going to waitForConnection state");
-				TRAN(PythonControl::waitForConnection_state);
-			}
-			else {
-				LOG_WARN ("Started Python environment, CHILD CANNOT COMMUNICATE, FAKING RESPONSES!!!");
-				CONTROLConnectedEvent	answer;
-				answer.cntlrName = itsMyName;
-				answer.result = CT_RESULT_NO_ERROR;
-				itsParentPort->send(answer);
-				TRAN(PythonControl::operational_state);
-			}
+			LOG_WARN ("Python environment CANNOT COMMUNICATE, FAKING RESPONSES!!!");
+			CONTROLConnectedEvent	answer;
+			answer.cntlrName = itsMyName;
+			answer.result = CT_RESULT_NO_ERROR;
+			itsParentPort->send(answer);
+			TRAN(PythonControl::operational_state);
 		}
 	}
 	break;
@@ -570,7 +571,25 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 			itsPythonPort->send(msg);
 		}
 		else {
-			LOG_WARN("Sending FAKE Resume response");
+			// QUICK FIX #3633
+			LOG_INFO("Trying to start the Python environment");
+			ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
+			string  myPrefix        (thePS->locateModule("PythonControl")+"PythonControl.");
+			string	pythonProg      (thePS->getString(myPrefix+"pythonProgram",  "@pythonProgram@"));
+			string	pythonHost      (thePS->getString(myPrefix+"pythonHost",     "@pythonHost@"));
+			bool startOK = _startPython(pythonProg, getObservationNr(getName()), realHostname(pythonHost), 
+										itsListener->makeServiceName());
+			if (!startOK) {
+				LOG_ERROR("Failed to start the Python environment, ABORTING.");
+				CONTROLConnectedEvent	answer;
+				answer.cntlrName = msg.cntlrName;
+				answer.result    = CONTROL_LOST_CONN_ERR;
+				port.send(answer);
+				TRAN(PythonControl::finishing_state);
+				break;
+			}
+			// QUICK FIX #3633 END
+			LOG_WARN("Start of Python environment looks OK, sending FAKE Resume response");
 			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
 		}
 		break;
