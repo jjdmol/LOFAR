@@ -150,10 +150,6 @@ HBAElement.HBAElement	1#
 	comm	1#
 		status	41#:ObjectStatus
 
-TypeName
-ScriptInfo.ScriptInfo	1#
-	paramDone	23#
-
 
 
 # Create missing CtrlDbg internals and DP for remoteStation
@@ -162,17 +158,19 @@ DpName	TypeName
 __navigator	Navigator
 standalone	NavPanelConfig
 rootSaves	NavigatorUserSaves
-scriptInfo	ScriptInfo
 _CtrlDebug_CTRL_5	_CtrlDebug
 _CtrlDebug_CTRL_6	_CtrlDebug
 _CtrlDebug_CTRL_7	_CtrlDebug
 _CtrlDebug_CTRL_8	_CtrlDebug
 _CtrlDebug_CTRL_9	_CtrlDebug
+_CtrlDebug_CTRL_10	_CtrlDebug
 
 #Fill some defaults
 # DpValue
 ElementName	TypeName	_original.._value
 scriptInfo.paramDone	ScriptInfo	0
+_ValueArchive_2.size.maxDpElGet	_ValueArchive	500
+_ValueArchive_2.size.maxDpElSet	_ValueArchive	500
 standalone.StnLOFAR_Hardware	NavPanelConfig	"Hardware/Station.pnl"
 standalone.StnPIC_Hardware	NavPanelConfig	"Hardware/Station_Cabinet.pnl"
 standalone.Cabinet_Hardware	NavPanelConfig	"Hardware/Station_Cabinet_detailed.pnl"
