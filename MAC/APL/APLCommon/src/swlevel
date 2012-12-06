@@ -124,6 +124,7 @@ start_prog()
 	# Check if program is already running
 	/sbin/pidof ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
+                curdate=`date +%Y%m%dT%H%M%S`
 		# PVSS needs special treatment
 		if [ "$prog" = "PVSS00pmon" ]; then 
 		    echo Starting $prog
@@ -136,7 +137,7 @@ start_prog()
 		    if [ "$user" = "lofarsys" ]; then
 			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
-			$BINDIR/$prog 1>>$LOGDIR//$prog.stdout 2>&1 &
+			$BINDIR/$prog 1>>$LOGDIR//$prog.stdout.${curdate} 2>&1 &
                     else
                         echo "Local use, not starting $prog"
                     fi		    
@@ -146,14 +147,14 @@ start_prog()
 		       sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
 		       if [ "$prog" = "RSPDriver" ]; then
 			   selectImage
-			   sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1
+			   sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
 		       else
-		           sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1
+		           sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
 		       fi
 		    else
 			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
-			$BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1 &
+			$BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1 &
 		    fi
 		fi
 		usleep 250000
