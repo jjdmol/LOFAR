@@ -43,8 +43,14 @@ LocationInfo::LocationInfo()
   itsNrPsets    = boost::lexical_cast<unsigned>(nrPsetsStr);
   itsPsetSize   = boost::lexical_cast<unsigned>(psetSizeStr);
 
+#if defined CLUSTER_SCHEDULING
+  itsPsetNumber = 0;
+  itsRankInPset = itsRank;
+#else
   itsPsetNumber = itsRank % itsNrPsets;
   itsRankInPset = itsRank / itsNrPsets;
+#endif
+
 #endif
 
   ASSERT( itsPsetNumber < itsNrPsets );

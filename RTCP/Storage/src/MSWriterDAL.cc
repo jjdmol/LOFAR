@@ -201,7 +201,7 @@ namespace LOFAR
       file.observationNofStations().value = parset.nrStations(); // TODO: SS beamformer?
       file.observationStationsList().value = parset.allStationNames(); // TODO: SS beamformer?
 
-      double subbandBandwidth = parset.sampleRate();
+      double subbandBandwidth = parset.subbandBandwidth();
       double channelBandwidth = parset.channelWidth();
 
       // if PPF is used, the frequencies are shifted down by half a channel
@@ -290,7 +290,7 @@ namespace LOFAR
       sap.pointDEC().value     = beamDir[1] * 180.0 / M_PI;
       sap.pointDECUnit().value = "deg";
 
-      sap.observationNofBeams().value = parset.nrPencilBeams(sapNr);
+      sap.observationNofBeams().value = parset.nrTABs(sapNr);
       sap.nofBeams()           .value = 1;
 
       BF_ProcessingHistory sapHistory = sap.processHistory();
@@ -309,7 +309,7 @@ namespace LOFAR
       beam.create();
       beam.groupType()         .value = "Beam";
 
-      vector<string> beamStationList = parset.pencilBeamStationList(sapNr, beamNr);
+      vector<string> beamStationList = parset.TABStationList(sapNr, beamNr);
       beam.nofStations() .value = beamStationList.size();
       beam.stationsList().value = beamStationList;
 
@@ -318,7 +318,7 @@ namespace LOFAR
       beam.targets()     .value = beamtargets;
       beam.tracking().value     = parset.getBeamDirectionType(sapNr);
 
-      BeamCoordinates pbeamDirs = parset.pencilBeams(sapNr);
+      BeamCoordinates pbeamDirs = parset.TABs(sapNr);
       BeamCoord3D pbeamDir = pbeamDirs[beamNr];
       beam.pointRA()           .value = (beamDir[0] + pbeamDir[0]) * 180.0 / M_PI;
       beam.pointRAUnit()       .value = "deg";
@@ -340,7 +340,7 @@ namespace LOFAR
       beam.beamDiameterDECUnit().value = "arcmin";
 
       beam.nofSamples()        .value = itsNrSamples * nrBlocks;
-      beam.samplingRate()      .value = parset.sampleRate() / parset.nrChannelsPerSubband() / itsInfo.timeIntFactor;
+      beam.samplingRate()      .value = parset.subbandBandwidth() / parset.nrChannelsPerSubband() / itsInfo.timeIntFactor;
       beam.samplingRateUnit()  .value = "Hz";
       beam.samplingTime()      .value = parset.sampleDuration() * parset.nrChannelsPerSubband() * itsInfo.timeIntFactor;
       beam.samplingTimeUnit()  .value = "s";

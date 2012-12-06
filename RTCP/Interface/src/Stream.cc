@@ -68,7 +68,7 @@ Stream *createStream(const string &descriptor, bool asServer, time_t deadline)
 #endif    
   else if (split.size() == 3 && split[0] == "tcpkey")
 #if defined CLUSTER_SCHEDULING
-    return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, deadline, split[2].c_str());
+    return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30000, split[2].c_str());
 #else
     return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, deadline, split[2].c_str());
 #endif
