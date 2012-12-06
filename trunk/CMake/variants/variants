@@ -22,7 +22,7 @@ set_if_not_set(LOFAR_SEARCH_PATH
 # NOT IMPLEMENTED YET: These options may be overridden for a given compiler
 # suite. For example: option(USE_BOOST_GNU "Use Boost for GNU" OFF)
 option(BUILD_DOCUMENTATION      "Build code documentation"    OFF)
-option(BUILD_SHARED_LIBS        "Build shared libraries"      OFF)
+option(BUILD_SHARED_LIBS        "Build shared libraries"      ON)
 option(BUILD_STATIC_EXECUTABLES "Build static executables"    OFF)
 option(BUILD_TESTING            "Build the testing tree"      ON)
 option(LOFAR_VERBOSE_CONFIGURE  "Be verbose when configuring" ON)
