@@ -10,8 +10,9 @@ PVSS00event      | always |      30 |        3 |        1 |
 PVSS00ctrl       | always |      30 |        3 |        1 |-f pvss_scripts.lst
 PVSS00sim        | always |      30 |        3 |        1 |
 PVSS00dist       | always |      30 |        3 |        1 |
-PVSS00ctrl       |   once |      30 |        2 |        2 |claim.ctl
-PVSS00ctrl       | always |      30 |        2 |        2 |monitorStateChanges.ctl
 PVSS00ctrl       |   once |      30 |        2 |        2 |readStationConfigs.ctl
+PVSS00ctrl       | always |      30 |        2 |        2 |transferMPs.ctl
+PVSS00ctrl       | always |      30 |        2 |        2 |claim.ctl
+PVSS00ctrl       | always |      30 |        2 |        2 |monitorStateChanges.ctl
 PVSS00ctrl       | always |      30 |        2 |        2 |monitorStateReset.ctl
 PVSS00ui         | manual |      30 |        2 |        2 |-m para -display localhost:10.0

@@ -524,5 +524,5 @@ LANG:1 0
 3 38 "PANEL_REF39" -1
 "objects\\Processes\\controller_small.pnl" 10 470 T 44 1 0 1 -10 14
 1
-"$name""SoftwareMonitor"
+"$name""Daemons_SoftwareMonitor"
 0
