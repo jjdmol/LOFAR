@@ -5,14 +5,17 @@
 #include <Stream/SocketStream.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/Stream.h>
-#include <WallClockTime.h>
+#include <IONProc/WallClockTime.h>
 #include "SharedMemory.h"
 #include "Ranges.h"
 #include "OMPThread.h"
 #include "StationID.h"
-#include "StationSettings.h"
+#include "BufferSettings.h"
+#include "SampleType.h"
 #include "SampleBuffer.h"
-#include "StationData.h"
+#include "SampleBufferReader.h"
+#include "Generator.h"
+#include "PacketsToBuffer.h"
 #include "mpi.h"
 
 #include <vector>
@@ -27,161 +30,6 @@
 using namespace LOFAR;
 using namespace RTCP;
 
-template<typename T> class SampleBufferReader {
-public:
-  SampleBufferReader( const StationSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize );
-
-  void process( double maxDelay );
-
-protected:
-  const StationSettings settings;
-  SampleBuffer<T> buffer;
-
-  const std::vector<size_t> beamlets;
-  const TimeStamp from, to;
-  const size_t blockSize;
-
-  virtual void copyNothing( const TimeStamp &from, const TimeStamp &to ) { (void)from, (void)to; }
-
-  virtual void copyBeamlet( unsigned beamlet, unsigned transfer, const TimeStamp &from_ts, const T* from, size_t nrSamples ) = 0;
-  virtual void copyStart( const TimeStamp &from, const TimeStamp &to, size_t wrap ) { (void)from, (void)to, (void)wrap; }
-
-  virtual void copyFlags  ( unsigned transfer, const SparseSet<int64> &flags ) = 0;
-  virtual void copyEnd() {}
-
-  void copy( const TimeStamp &from, const TimeStamp &to );
-
-private:
-  WallClockTime waiter;
-};
-
-
-template<typename T> SampleBufferReader<T>::SampleBufferReader( const StationSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize )
-:
-  settings(settings),
-  buffer(settings, false),
-
-  beamlets(beamlets),
-  from(from),
-  to(to),
-  blockSize(blockSize)
-{
-  for (size_t i = 0; i < beamlets.size(); ++i)
-    ASSERT( beamlets[i] < buffer.nrBeamlets );
-
-  ASSERT( blockSize > 0 );
-  ASSERT( blockSize < settings.nrSamples );
-  ASSERT( from < to );
-}
-
-
-template<typename T> void SampleBufferReader<T>::process( double maxDelay )
-{
-  /*const TimeStamp maxDelay_ts(static_cast<int64>(maxDelay * settings.station.clock / 1024) + blockSize, settings.station.clock);
-
-  const TimeStamp current(from);
-
-  for (TimeStamp current = from; current < to; current += blockSize) {
-    // wait
-    LOG_INFO_STR("Waiting until " << (current + maxDelay_ts) << " for " << current);
-    waiter.waitUntil( current + maxDelay_ts );
-
-    // read
-    LOG_INFO_STR("Reading from " << current << " to " << (current + blockSize));
-    copy(current, current + blockSize);
-  }
-
-  LOG_INFO("Done reading data");*/
-  const TimeStamp maxDelay_ts(static_cast<int64>(maxDelay * settings.station.clock / 1024) + blockSize, settings.station.clock);
-
-  const TimeStamp current(from);
-
-  double totalwait = 0.0;
-  unsigned totalnr = 0;
-
-  double lastreport = MPI_Wtime();
-
-  for (TimeStamp current = from; current < to; current += blockSize) {
-    // wait
-    waiter.waitUntil( current + maxDelay_ts );
-
-    // read
-    double bs = MPI_Wtime();
-
-    copy(current, current + blockSize);
-
-    totalwait += MPI_Wtime() - bs;
-    totalnr++;
-
-    if (bs - lastreport > 1.0) {
-      double mbps = (sizeof(T) * blockSize * beamlets.size() * 8) / (totalwait/totalnr) / 1e6;
-      lastreport = bs;
-      totalwait = 0.0;
-      totalnr = 0;
-
-      LOG_INFO_STR("Reading speed: " << mbps << " Mbit/s");
-    }
-  }
-
-  LOG_INFO("Done reading data");
-}
-
-template<typename T> void SampleBufferReader<T>::copy( const TimeStamp &from, const TimeStamp &to )
-{
-  ASSERT( from < to );
-  ASSERT( to - from < (int64)buffer.nrSamples );
-
-  const unsigned nrBoards = buffer.flags.size();
-
-#if 0
-  // check whether there is any data at all
-  bool data = false;
-
-  for (unsigned b = 0; b < nrBoards; ++b)
-    if (buffer.flags[b].anythingBetween(from, to)) {
-      data = true;
-      break;
-    }
-
-  if (!data) {
-    copyNothing(from, to);
-    return;
-  }
-#endif
-
-  // copy the beamlets
-
-  size_t from_offset = (int64)from % buffer.nrSamples;
-  size_t to_offset   = (int64)to % buffer.nrSamples;
-
-  if (to_offset == 0)
-    to_offset = buffer.nrSamples;
-
-  // wrap > 0 if we need to wrap around the end of the buffer
-  size_t wrap         = from_offset < to_offset ? 0 : buffer.nrSamples - from_offset;
-
-  copyStart(from, to, wrap);
-
-  for (size_t i = 0; i < beamlets.size(); ++i) {
-    unsigned nr = beamlets[i];
-    const T* origin = &buffer.beamlets[nr][0];
-
-    if (wrap > 0) {
-      copyBeamlet( nr, 0, from, origin + from_offset, wrap );
-      copyBeamlet( nr, 1, from, origin,               to_offset );
-    } else {
-      copyBeamlet( nr, 0, from, origin + from_offset, to_offset - from_offset );
-    }
-  }
-
-  // copy the flags
-
-  for (unsigned b = 0; b < nrBoards; ++b)
-    copyFlags( b, buffer.flags[b].sparseSet(from, to).invert(from, to) );
-
-  copyEnd();
-}
-
 Mutex MPIMutex;
 
 //#define USE_RMA
@@ -192,7 +40,7 @@ Mutex MPIMutex;
 
 template<typename T> class MPISharedBuffer: public SampleBuffer<T> {
 public:
-  MPISharedBuffer( const struct StationSettings &settings );
+  MPISharedBuffer( const struct BufferSettings &settings );
 
   ~MPISharedBuffer();
 
@@ -204,7 +52,7 @@ private:
 #endif
 };
 
-template<typename T> MPISharedBuffer<T>::MPISharedBuffer( const struct StationSettings &settings )
+template<typename T> MPISharedBuffer<T>::MPISharedBuffer( const struct BufferSettings &settings )
 :
   SampleBuffer<T>(settings, false)
 #ifdef MULTIPLE_WINDOWS
@@ -241,14 +89,14 @@ template<typename T> MPISharedBuffer<T>::~MPISharedBuffer()
 
 template<typename T> class MPISharedBufferReader {
 public:
-  MPISharedBufferReader( const std::vector<struct StationSettings> &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets );
+  MPISharedBufferReader( const std::vector<struct BufferSettings> &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets );
 
   ~MPISharedBufferReader();
 
   void process( double maxDelay );
 
 private:
-  const std::vector<struct StationSettings> settings;
+  const std::vector<struct BufferSettings> settings;
   const TimeStamp from, to;
   const size_t blockSize;
   const std::vector<size_t> beamlets;
@@ -266,7 +114,7 @@ private:
   void copy( const TimeStamp &from, const TimeStamp &to );
 };
 
-template<typename T> MPISharedBufferReader<T>::MPISharedBufferReader( const std::vector<struct StationSettings> &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets )
+template<typename T> MPISharedBufferReader<T>::MPISharedBufferReader( const std::vector<struct BufferSettings> &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets )
 :
   settings(settings),
   from(from),
@@ -375,7 +223,7 @@ template<typename T> void MPISharedBufferReader<T>::copy( const TimeStamp &from,
 #endif
 
     //LOG_INFO_STR("Copying from station " << s);
-    const struct StationSettings settings = this->settings[s];
+    const struct BufferSettings settings = this->settings[s];
 
     size_t from_offset = (int64)from % settings.nrSamples;
     size_t to_offset   = (int64)to % settings.nrSamples;
@@ -443,7 +291,7 @@ template<typename T> void MPISharedBufferReader<T>::copy( const TimeStamp &from,
 
 template<typename T> class MPISendStation: public SampleBufferReader<T> {
 public:
-  MPISendStation( const struct StationSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets, unsigned destRank );
+  MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets, unsigned destRank );
 
   struct Header {
     StationID station;
@@ -493,7 +341,7 @@ protected:
 };
 
 
-template<typename T> MPISendStation<T>::MPISendStation( const struct StationSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets, unsigned destRank )
+template<typename T> MPISendStation<T>::MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets, unsigned destRank )
 :
   SampleBufferReader<T>(settings, beamlets, from, to, blockSize),
   destRank(destRank),
@@ -626,12 +474,12 @@ template<typename T> void MPISendStation<T>::copyEnd()
 
 template<typename T> class MPIReceiveStation {
 public:
-  MPIReceiveStation( const struct StationSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
+  MPIReceiveStation( const struct BufferSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
 
   void receiveBlock();
 
 private:
-  const struct StationSettings settings;
+  const struct BufferSettings settings;
   const std::vector<int> stationRanks;
 
 public:
@@ -641,7 +489,7 @@ public:
   Matrix< SparseSet<int64> > flags;  // [station][board]
 };
 
-template<typename T> MPIReceiveStation<T>::MPIReceiveStation( const struct StationSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
+template<typename T> MPIReceiveStation<T>::MPIReceiveStation( const struct BufferSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
 :
   settings(settings),
   stationRanks(stationRanks),
@@ -770,23 +618,19 @@ template<typename T> void MPIReceiveStation<T>::receiveBlock()
 }
 #endif
 
-void sighandler(int)
-{
-  /* no-op */
-}
 
 int main( int argc, char **argv )
 {
   size_t clock = 200*1000*1000;
 
-  typedef SampleBuffer<int16>::SampleType SampleT;
+  typedef SampleType<i16complex> SampleT;
   const TimeStamp from(time(0L) + 1, 0, clock);
   const TimeStamp to(time(0L) + 1 + DURATION, 0, clock);
   const size_t blockSize = BLOCKSIZE * clock / 1024;
   std::map<unsigned, std::vector<size_t> > beamlets;
 
   struct StationID stationID("RS106", "LBA", clock, 16);
-  struct StationSettings settings;
+  struct BufferSettings settings;
 
   settings.station = stationID;
   settings.nrBeamlets = 244;
@@ -823,7 +667,7 @@ int main( int argc, char **argv )
     LOG_INFO_STR("Receiver " << rank << " starts, handling " << beamlets[rank].size() << " subbands from " << nrStations << " stations." );
 
 #ifdef USE_RMA
-    std::vector<struct StationSettings> stations(nrStations, settings);
+    std::vector<struct BufferSettings> stations(nrStations, settings);
 
     {
       MPISharedBufferReader<SampleT> receiver(stations, from, to, blockSize, beamlets[rank]);
@@ -854,9 +698,7 @@ int main( int argc, char **argv )
 
   omp_set_nested(true);
   omp_set_num_threads(32);
-
-  signal(SIGHUP, sighandler);
-  siginterrupt(SIGHUP, 1);
+  OMPThread::init();
 
   std::vector<std::string> inputStreams(4);
   inputStreams[0] = "udp:127.0.0.1:4346";
@@ -865,8 +707,8 @@ int main( int argc, char **argv )
   inputStreams[3] = "udp:127.0.0.1:4349";
 
   if(rank == 0) {
-    Station< SampleT > station( settings, inputStreams );
-    Generator< SampleT > generator( settings, inputStreams );
+    PacketsToBuffer< SampleT > station( settings, inputStreams );
+    Generator generator( settings, inputStreams );
 
     #pragma omp parallel sections num_threads(4)
     {
@@ -882,7 +724,7 @@ int main( int argc, char **argv )
       #pragma omp section
       {
         struct StationID lookup("RS106", "HBA0");
-        struct StationSettings s(stationID);
+        struct BufferSettings s(stationID);
 
         LOG_INFO_STR("Detected " << s);
 #ifdef USE_RMA
@@ -901,7 +743,7 @@ int main( int argc, char **argv )
     }
   } else {
       struct StationID lookup("RS106", "HBA0");
-      struct StationSettings s(stationID);
+      struct BufferSettings s(stationID);
 
       LOG_INFO_STR("Detected " << s);
 #ifdef USE_RMA

@@ -1,65 +1,9 @@
-#ifndef RANGES
-#define RANGES
-
-#include <Interface/SparseSet.h>
+#include <lofar_config.h>
+#include "Ranges.h"
 #include <Common/LofarLogger.h>
-#include <Common/LofarTypes.h>
-
-#include <ostream>
 
 namespace LOFAR {
 namespace RTCP {
-
-//
-// Thread-safe set of int64 [from,to) ranges.
-//
-class Ranges {
-public:
-  Ranges();
-  Ranges( void *data, size_t numBytes, int64 minHistory, bool create );
-  ~Ranges();
-
-  // remove [0,to)
-  void excludeBefore( int64 to );
-
-  // add a range [from,to), and return whether the addition
-  // was succesful.
-  bool include( int64 from, int64 to );
-
-  // returns whether there is anything set in [first, last)
-  bool anythingBetween( int64 first, int64 last ) const;
-
-  SparseSet<int64> sparseSet( int64 first, int64 last ) const;
-
-private:
-  struct Range {
-    // Write'from' before 'to' to allow the following invariant:
-    //
-    // from <  to   : a valid range
-    // from >= to   : invalid range (being written)
-    // from = to = 0: an unused range
-    volatile int64 from, to;
-
-    Range(): from(0), to(0) {}
-  };
-
-  size_t len;
-  Range * ranges;
-  Range * begin;
-  Range * end;
-  Range *head;
-
-  // minimal history to maintain (samples newer than this
-  // will be maintained in favour of newly added ranges)
-  int64 minHistory;
-
-public:
-  static size_t size(size_t numElements) {
-    return numElements * sizeof(struct Range);
-  }
-
-  friend std::ostream& operator<<( std::ostream &str, const Ranges &r );
-};
 
 std::ostream& operator<<( std::ostream &str, const Ranges &r )
 {
@@ -73,6 +17,7 @@ std::ostream& operator<<( std::ostream &str, const Ranges &r )
 
 Ranges::Ranges()
 :
+  create(false),
   len(0),
   ranges(0),
   begin(0),
@@ -84,6 +29,7 @@ Ranges::Ranges()
 
 Ranges::Ranges( void *data, size_t numBytes, int64 minHistory, bool create )
 :
+  create(create),
   len(numBytes / sizeof *ranges),
   ranges(create ? new(data)Range[len] : static_cast<Range*>(data)),
   begin(&ranges[0]),
@@ -96,8 +42,9 @@ Ranges::Ranges( void *data, size_t numBytes, int64 minHistory, bool create )
 
 Ranges::~Ranges()
 {
-  for (struct Range *i = begin; i != end; ++i)
-    i->~Range();
+  if (create)
+    for (struct Range *i = begin; i != end; ++i)
+      i->~Range();
 }
 
 void Ranges::excludeBefore( int64 to )
@@ -110,7 +57,7 @@ void Ranges::excludeBefore( int64 to )
       continue;
     }
 
-    if (i->from > to) {
+    if (i->from < to) {
       // shorten
       i->from = to;
     }
@@ -123,7 +70,7 @@ bool Ranges::include( int64 from, int64 to )
   ASSERTSTR( from >= head->to, from << " >= " << head->to );
 
   if (head->to == 0) {
-    // *head is unused
+    // *head is unused, set 'from' first!
     head->from = from;
     head->to   = to;
     return true;
@@ -138,8 +85,8 @@ bool Ranges::include( int64 from, int64 to )
   // new range is needed
   struct Range * const next = head + 1 == end ? begin : head + 1;
 
-  if (next->to < to - minHistory) {
-    // range at 'next' is old enough to toss away
+  if (next->to == 0 || next->to < to - minHistory) {
+    // range at 'next' is either unused or old enough to toss away
     next->from = from;
     next->to   = to;
 
@@ -212,6 +159,3 @@ SparseSet<int64> Ranges::sparseSet( int64 first, int64 last ) const
 
 }
 }
-
-#endif
-

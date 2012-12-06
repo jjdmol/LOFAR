@@ -31,6 +31,7 @@
 #include <Common/ParameterValue.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_set.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iostream.h>
@@ -125,6 +126,10 @@ public:
 	// thePrefix.
 	void	adoptCollection(const ParameterSetImpl&     theCollection,
 				const string&               thePrefix = "");
+
+        // Adds the Key-Values pairs in the argument list.
+        // It ignores arguments not having the Key=Value syntax.
+        void    adoptArgv      (int nr, char const * const argv[]);
 	// @}
 
 
@@ -316,6 +321,9 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const ParameterSetImpl &thePS);
 	// @}
 
+        // Get all unused parameter names.
+        vector<string> unusedKeys() const;
+
 private:
 	// Copying is not needed, thus not allowed.
 	// @{
@@ -347,6 +355,8 @@ private:
 	int itsCount;
 	// Key comparison mode.
 	const KeyCompare::Mode itsMode;
+        // The set of keys that have been asked.
+        mutable set<string> itsAskedParms;
 };
 
 //# -------------------- Global functions --------------------

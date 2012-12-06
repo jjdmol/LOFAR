@@ -615,7 +615,7 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		int32	result = system (startCmd.c_str());
 		LOG_INFO_STR ("Result of command = " << result);
 
-		itsTimerPort->setTimer(2.0);
+		itsTimerPort->setTimer(302.0); // IONProc, and thus CEPlogProcessor, can take up to 5 minutes to wrap up
 		break;
 	}
 
@@ -776,8 +776,8 @@ void OnlineControl::_doBoot()
 			remoteCopy(paramFileName,accHost,LOFAR_SHARE_LOCATION);
 
 			// Finally start ApplController on the right host
-			LOG_INFO_STR("Starting controller for " << applName << " in 3 seconds ");
-			sleep(3);			 // sometimes we are too quick, wait a second.
+			LOG_INFO_STR("Starting controller for " << applName << " in 5 seconds ");
+			sleep(5);			 // sometimes we are too quick, wait a second.
 			int32	expectedRuntime = time_duration(itsStopTime - itsStartTime).total_seconds();
 			uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
 			CEPApplMgrPtr	accClient (new CEPApplMgr(*this, formatString("%s%d", applName.c_str(), obsID),

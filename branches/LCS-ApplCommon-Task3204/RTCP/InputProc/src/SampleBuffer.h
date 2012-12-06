@@ -2,69 +2,65 @@
 #define __SAMPLEBUFFER__
 
 #include <Common/LofarLogger.h>
-#include <Common/LofarConstants.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/Allocator.h>
-#include "StationSettings.h"
+#include "BufferSettings.h"
 #include "SharedMemory.h"
 #include "Ranges.h"
+#include "SampleType.h"
 #include <string>
-#include <complex>
+#include <vector>
+#include <boost/format.hpp>
 
 namespace LOFAR {
 namespace RTCP {
 
+
 template<typename T> class SampleBuffer {
 public:
-  SampleBuffer( const struct StationSettings &settings, bool create );
-
-  struct SampleType {
-    std::complex<T> x;
-    std::complex<T> y;
-  };
+  SampleBuffer( const struct BufferSettings &settings, bool create );
 
 private:
   const std::string logPrefix;
   SharedMemoryArena data;
   SparseSetAllocator allocator;
 
-  struct StationSettings *initSettings( const struct StationSettings &localSettings, bool create );
+  struct BufferSettings *initSettings( const struct BufferSettings &localSettings, bool create );
 
-  static size_t dataSize( const struct StationSettings &settings ) {
+  static size_t dataSize( const struct BufferSettings &settings ) {
     return sizeof settings
-         + NR_RSPBOARDS * (Ranges::size(settings.nrFlagRanges) + 8)
+         + settings.nrBoards * (Ranges::size(settings.nrFlagRanges) + 8)
          + settings.nrBeamlets * (settings.nrSamples * sizeof(T) + 128);
   }
 
 public:
-  struct StationSettings *settings;
+  struct BufferSettings *settings;
 
   const size_t nrBeamlets;
   const size_t nrSamples;
-  const size_t nrFlagRanges;
+  const size_t nrBoards;
+  const size_t nrFlagRanges; // width of each flag range
 
   MultiDimArray<T,2>  beamlets; // [subband][sample]
   std::vector<Ranges> flags;    // [rspboard]
 };
 
 
-template<typename T> SampleBuffer<T>::SampleBuffer( const struct StationSettings &_settings, bool create )
+template<typename T> SampleBuffer<T>::SampleBuffer( const struct BufferSettings &_settings, bool create )
 :
-  logPrefix(str(boost::format("[station %s %s board] [SampleBuffer] ") % _settings.station.stationName % _settings.station.antennaSet)),
+  logPrefix(str(boost::format("[station %s %s board] [SampleBuffer] ") % _settings.station.stationName % _settings.station.antennaField)),
   data(_settings.dataKey, dataSize(_settings), create ? SharedMemoryArena::CREATE_EXCL : SharedMemoryArena::READ),
   allocator(data),
   settings(initSettings(_settings, create)),
 
   nrBeamlets(settings->nrBeamlets),
   nrSamples(settings->nrSamples),
+  nrBoards(settings->nrBoards),
   nrFlagRanges(settings->nrFlagRanges),
 
   beamlets(boost::extents[nrBeamlets][nrSamples], 128, allocator, false, false),
-  flags(settings->nrBoards)
+  flags(nrBoards)
 {
-  // bitmode must coincide with our template
-  ASSERT( sizeof(T) == N_POL * 2 * settings->station.bitmode / 8 );
-
   for (size_t f = 0; f < flags.size(); f++) {
     size_t numBytes = Ranges::size(nrFlagRanges);
 
@@ -74,10 +70,9 @@ template<typename T> SampleBuffer<T>::SampleBuffer( const struct StationSettings
   LOG_INFO_STR( logPrefix << "Initialised" );
 }
 
-template<typename T> struct StationSettings *SampleBuffer<T>::initSettings( const struct StationSettings &localSettings, bool create )
+template<typename T> struct BufferSettings *SampleBuffer<T>::initSettings( const struct BufferSettings &localSettings, bool create )
 {
-  //struct StationSettings *sharedSettings = allocator.allocateTyped<struct StationSettings>();
-  struct StationSettings *sharedSettings = allocator.allocateTyped();
+  struct BufferSettings *sharedSettings = allocator.allocateTyped();
 
   if (create) {
     // register settings

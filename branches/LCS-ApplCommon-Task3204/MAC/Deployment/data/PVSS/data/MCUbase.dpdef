@@ -145,9 +145,7 @@ GCFWatchDog.GCFWatchDog	1#
 	lastDownTime	10#
 	name	9#
 
-TypeName
-ScriptInfo.ScriptInfo	1#
-	paramDone	23#
+
 
 # create mps for NavPanelConfig , NavigatorUserSaves and NavigatorInstance
 # Datapoint/DpId 
@@ -166,16 +164,18 @@ __navigator	Navigator
 root	NavPanelConfig
 __gcf_cwd	GCFWatchDog
 rootSaves	NavigatorUserSaves
-scriptInfo	ScriptInfo
 _CtrlDebug_CTRL_5	_CtrlDebug
 _CtrlDebug_CTRL_6	_CtrlDebug
 _CtrlDebug_CTRL_7	_CtrlDebug
+_CtrlDebug_CTRL_8	_CtrlDebug
 
 
 #Fill some defaults
 # DpValue
 ElementName	TypeName	_original.._value
 scriptInfo.paramDone	ScriptInfo	0
+_ValueArchive_2.size.maxDpElGet	_ValueArchive	500
+_ValueArchive_2.size.maxDpElSet	_ValueArchive	500
 root.LOFAR_Processes	NavPanelConfig	"Processes/MainCU_Processes.pnl"
 root.LOFAR_Observations	NavPanelConfig	"Observations/Observations.pnl"
 root.StnLOFAR_Hardware	NavPanelConfig	"Hardware/Station.pnl"

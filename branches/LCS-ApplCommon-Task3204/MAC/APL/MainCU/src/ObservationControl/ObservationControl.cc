@@ -762,7 +762,7 @@ void  ObservationControl::doHeartBeatTask()
 		uint32	nrStations = itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL);
 		time_t	now   = to_time_t(second_clock::universal_time());
 		time_t	stop  = to_time_t(itsStopTime);
-		if (now < stop && itsProcessType == "Observation" && !nrStations) {
+		if (!nrChilds || (now < stop && itsProcessType == "Observation" && !nrStations)) {
 			LOG_FATAL("Too less stations left, FORCING QUIT OF OBSERVATION");
 			if (itsState < CTState::RESUME) {
 				itsQuitReason = CT_RESULT_LOST_CONNECTION;

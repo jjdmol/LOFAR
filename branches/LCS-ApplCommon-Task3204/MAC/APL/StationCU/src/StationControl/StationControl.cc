@@ -852,6 +852,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                     LOG_INFO_STR("new observation also uses clock " << itsClock);
 		            itsTimerPort->setTimer(0.0);
                 }
+				break;
             }
 
             case 1: {
@@ -870,6 +871,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                 CLKCTRLSetSplittersEvent	setEvent;
                 setEvent.splittersOn = splitterState;
                 itsClkCtrlPort->send(setEvent);		// will result in CLKCTRL_SET_SPLITTERS_ACK
+				break;
             } 
 
             case 2: {
@@ -901,6 +903,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                     LOG_INFO_STR("new observation also uses bitmode " << itsBitmode);
 		            itsTimerPort->setTimer(0.0);
                 }
+				break;
             }
 
             default: {
@@ -912,6 +915,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                 LOG_INFO("Going back to operational state");
                 itsStartingObs = itsObsMap.end();
                 TRAN(StationControl::operational_state);
+				break;
             }
         }  
 	}

@@ -42,6 +42,7 @@ DROP SEQUENCE	OTDBactionID;
 -- TODO: Check if table contents is complete
 --
 CREATE TABLE eventStatus (
+    --  $Id$
 	status		INT2			NOT NULL,
 	name		VARCHAR(20)		NOT NULL,
 
@@ -64,6 +65,7 @@ INSERT INTO eventStatus VALUES ( 32, 'maintenance');
 -- TODO: Check if table contents is complete
 --
 CREATE TABLE actionStatus (
+    --  $Id$
 	status		INT2			NOT NULL,
 	name		VARCHAR(20)		NOT NULL,
 
@@ -85,6 +87,7 @@ INSERT INTO actionStatus VALUES ( 32, 'closed');
 CREATE SEQUENCE	OTDBeventID;
 
 CREATE TABLE OTDBevent (
+    --  $Id$
 	eventID		INT4			NOT NULL DEFAULT nextval('OTDBeventID'),
 	nodename	VARCHAR(80)		NOT NULL,
 	status		INT2			NOT NULL REFERENCES eventStatus(status),
@@ -105,6 +108,7 @@ CREATE TABLE OTDBevent (
 CREATE SEQUENCE	OTDBactionID;
 
 CREATE TABLE OTDBaction (
+    --  $Id$
 	actionID	INT4			NOT NULL DEFAULT nextval('OTDBactionID'),
 	eventID		INT4			NOT NULL REFERENCES OTDBevent(eventID),
 	userID		INT4			NOT NULL REFERENCES OTDBuser(userID),

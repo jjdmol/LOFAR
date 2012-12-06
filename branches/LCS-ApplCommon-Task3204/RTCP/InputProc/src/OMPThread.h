@@ -9,6 +9,18 @@
 
 namespace LOFAR {
 
+/*
+ * Represents an OpenMP thread. To use,
+ * call start() and stop() at the beginning and end
+ * of an OpenMP thread. The kill() command can then
+ * be used by another thread to kill the OpenMP thread.
+ *
+ * The thread is killed by sending SIGHUP to it until
+ * stop() is called by the thread.
+ *
+ * To be able to use this class properly, please call
+ * OMPThread::init() to clear the SIGHUP handler.
+ */
 class OMPThread {
 public:
   OMPThread(): id(0), stopped(false) {}
@@ -56,9 +68,20 @@ public:
     OMPThread &thread;
   };
 
+  static void init() {
+    signal(SIGHUP, sighandler);
+    siginterrupt(SIGHUP, 1);
+  }
+
 private:
   volatile pthread_t id;
   volatile bool stopped;
+
+  static void sighandler(int) {
+    /* no-op. We use SIGHUP only
+     * to interrupt system calls.
+     */
+  }
 };
 
 }
