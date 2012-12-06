@@ -64,7 +64,7 @@ protected:
 
 template<typename T> PacketsToBuffer<T>::PacketsToBuffer( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
 :
-  RSPBoards(str(boost::format("[station %s %s] ") % settings.station.stationName % settings.station.antennaSet), settings, streamDescriptors),
+  RSPBoards(str(boost::format("[station %s %s] ") % settings.station.stationName % settings.station.antennaField), settings, streamDescriptors),
 
   buffer(settings, true),
   readers(nrBoards, 0),
