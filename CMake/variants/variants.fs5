@@ -13,12 +13,13 @@
 # Define build variants.
 #list(APPEND LOFAR_BUILD_VARIANTS CN ION)
 
-set(GNU_CXX_FLAGS "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas -fopenmp -DCLUSTER_SCHEDULING")
+set(GNU_CXX_FLAGS "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas -DCLUSTER_SCHEDULING")
 
 # Options
 option(USE_HDF5      "Use HDF5"      OFF)
 option(USE_LOG4CPLUS            "Use Log4Cplus"               OFF)
 option(USE_MPI                  "Use MPI"                     ON)
+option(USE_OPENMP               "Use OpenMP"                  ON)
 option(USE_PQXX                 "Use libpqxx"                 OFF)
 
 # Host specific paths to third party packages
