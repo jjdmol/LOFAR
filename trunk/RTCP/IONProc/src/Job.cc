@@ -326,7 +326,7 @@ void Job::StorageProcess::controlThread()
 
 void Job::forwardFinalMetaData()
 {
-  struct timespec deadline = { time(0) + 240, 0 };
+  struct timespec deadline = { time(0) + 60, 0 };
 
   Thread thread(this, &Job::finalMetaDataThread, itsLogPrefix + "[FinalMetaDataThread] ", 65536);
 
