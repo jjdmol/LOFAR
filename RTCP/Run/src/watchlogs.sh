@@ -21,6 +21,7 @@ then
   done 
 fi
 
+
 multitail --no-mark-change --follow-all --retry-all -m 10240 --basename -F $ETCDIR/multitail-olap.conf \
   $FLAGS -t "-- FLAGS --"  -fr flags -ks flags -i $IONPROC_LOG \
   $FLAGS -t "-- ERRORS --" -fr errors          -i $IONPROC_LOG \

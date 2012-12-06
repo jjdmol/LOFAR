@@ -65,7 +65,7 @@ ChildControl::ChildControl() :
 	itsTimerPort			(*this, "childControlTimer"),
 	itsStartDaemonMap		(),
 	itsStartupRetryInterval	(10),
-	itsMaxStartupRetries	(2),
+	itsMaxStartupRetries	(5),
 	itsCntlrList	 		(0),
 	itsActionList	 		(),
 	itsActionTimer			(0),
@@ -1053,8 +1053,9 @@ void ChildControl::_doGarbageCollection()
 				LOG_DEBUG_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
 				_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), CT_RESULT_LOST_CONNECTION);
 				iter->port = (GCFPortInterface*) -1;
+				restartTimer = true;
 			}
-			restartTimer = true;
+
 			iter++;
 		} else if (iter->port == (GCFPortInterface*)-1) {
 			LOG_DEBUG_STR ("Removing controller " << iter->cntlrName << " from the controller list");

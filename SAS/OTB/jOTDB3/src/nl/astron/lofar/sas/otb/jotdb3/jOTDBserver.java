@@ -23,7 +23,6 @@ package nl.astron.lofar.sas.otb.jotdb3;
 
 import com.darwinsys.lang.GetOpt;
 import com.darwinsys.lang.GetOptDesc;
-import java.io.File;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -68,30 +67,17 @@ public class jOTDBserver {
 
     public static void main(String[] argv)  {
 
-        String logConfig = "jOTDB3.log_prop";
-
         try {
-            File f = new File(logConfig);
-            if (f.exists()) {
-                PropertyConfigurator.configure(logConfig);
-            } else {
-                logConfig = File.separator+"opt"+File.separator+"sas"+File.separator+"otb"+File.separator+"etc"+File.separator+logConfig;
-                f = new File(logConfig);
-                if (f.exists()) {
-                    PropertyConfigurator.configure(logConfig);
-                } else {
-                    logger.error("jOTDB3.log_prop not found.");
-                }
-            }
-            logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
-            logger.info("java.library.path:"+ System.getProperty("java.library.path"));
+            String logConfig = "jOTDB3.log_prop";
             
-            
+            PropertyConfigurator.configure(logConfig);
             try {
                 jInitCPPLogger aCPPLogger= new jInitCPPLogger(logConfig);
             } catch (Exception ex) {
                 System.out.println("Error: "+ ex);
             }
+            logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
+            logger.info("java.library.path:"+ System.getProperty("java.library.path"));
 
 /*
 	    if (System.getSecurityManager () == null) {

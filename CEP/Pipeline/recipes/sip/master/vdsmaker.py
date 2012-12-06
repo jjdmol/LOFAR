@@ -107,9 +107,6 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
             vds for vds, job in zip(vdsnames, jobs) 
             if job.results['returncode'] == 0
         ]
-        if not vdsnames:
-            self.logger.error("All makevds processes failed. Bailing out!")
-            return 1
 
         # *********************************************************************
         # 3. Combine VDS files to produce GDS
