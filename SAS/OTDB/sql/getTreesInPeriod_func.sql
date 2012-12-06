@@ -37,7 +37,6 @@
 --
 CREATE OR REPLACE FUNCTION getTreesInPeriod(INT2, TIMESTAMP, TIMESTAMP)
   RETURNS SETOF treeInfo AS $$
-    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vRecord		RECORD;
 		vQuery		TEXT;

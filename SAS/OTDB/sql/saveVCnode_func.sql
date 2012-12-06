@@ -37,7 +37,6 @@
 CREATE OR REPLACE FUNCTION saveVCnode(INT4, INT4, VARCHAR(150), INT4, 
 										INT2, TEXT, TEXT)
   RETURNS INT4 AS $$
-    --  $Id$
 	DECLARE
 		vNodeID			VICnodedef.nodeID%TYPE;
 		vName			VICnodedef.name%TYPE;

@@ -74,7 +74,6 @@ DROP INDEX VIChierarchy_treeid_nodeid_indx;
 CREATE SEQUENCE	VICnodedefID;
 
 CREATE TABLE VICnodedef (
-    --  $Id$
 	nodeID		INT4			NOT NULL DEFAULT nextval('VICnodedefID'),
 	name		VARCHAR(40)		NOT NULL,
 	version		INT4			NOT NULL DEFAULT 010000,
@@ -100,7 +99,6 @@ CREATE UNIQUE INDEX Vnodedef_node_indx ON VICnodedef(nodeID);
 CREATE SEQUENCE VICparamdefID;
 
 CREATE TABLE VICparamdef (
-    --  $Id$
 	paramID		INT4			NOT NULL DEFAULT nextval('VICparamdefID'),
 	nodeID		INT4			NOT NULL REFERENCES VICnodedef(nodeID),
 	name		VARCHAR(40)		NOT NULL,
@@ -134,7 +132,6 @@ CREATE TABLE VICparamdef (
 CREATE SEQUENCE	VICtemplateID;
 
 CREATE TABLE VICtemplate (
-    --  $Id$
 	treeID		INT4			NOT NULL REFERENCES OTDBtree(treeID),
 	nodeID		INT4			NOT NULL DEFAULT nextval('VICtemplateID'),
 	parentID	INT4			NOT NULL,  -- REFERENCES VICtemplate(nodeID),
@@ -185,7 +182,6 @@ CREATE INDEX VTempl_treeid_parentid_indx ON VICTemplate(treeid, parentid);
 CREATE SEQUENCE	VIChierarchID;
 
 CREATE TABLE VIChierarchy (
-    --  $Id$
 	treeID		INT4			NOT NULL REFERENCES OTDBtree(treeID),
 	nodeID		INT4			NOT NULL DEFAULT nextval('VIChierarchID'),
 	parentID	INT4			NOT NULL, -- REFERENCES VIChierachy(nodeID),
@@ -217,7 +213,6 @@ CREATE UNIQUE INDEX VIChierarchy_treeid_nodeid_indx ON VIChierarchy( treeid, nod
 -- parametername is set to NULL.
 --
 CREATE TABLE VICkvt (
-    --  $Id$
 	treeID		INT4			NOT NULL REFERENCES OTDBtree(treeID),
 	paramName	VARCHAR(150)	DEFAULT NULL, -- for shared applications
 	value		TEXT			NOT NULL,

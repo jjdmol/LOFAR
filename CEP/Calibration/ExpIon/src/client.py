@@ -4,8 +4,7 @@ import IPython
 
 if float(IPython.__version__) < 0.11 :
   from IPython.kernel import client
-  import atexit
-# Without the following statement python sometimes throws an exception on exit
+  # Without the following statement python sometimes throws an exception on exit
   atexit.register(client.rit.stop)
   MultiEngineClient = client.MultiEngineClient
   TaskClient = client.TaskClient

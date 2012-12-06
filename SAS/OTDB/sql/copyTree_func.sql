@@ -38,7 +38,6 @@
 --
 CREATE OR REPLACE FUNCTION copyTree(INT4, INT4)
   RETURNS INT4 AS $$
-    --  $Id$
 	DECLARE
 		vFunction		INT2 := 1;
 		TThardware 		CONSTANT INT2 := 10;

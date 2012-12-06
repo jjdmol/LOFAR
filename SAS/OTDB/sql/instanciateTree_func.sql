@@ -37,7 +37,6 @@
 --
 CREATE OR REPLACE FUNCTION getTemplateOrigin(INT4)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vTemplateID		INT4;
 		vName			OTDBtree.name%TYPE;
@@ -78,7 +77,6 @@ CREATE OR REPLACE FUNCTION getTemplateOrigin(INT4)
 --
 CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
   RETURNS TEXT AS '
-    --  $Id$
 	DECLARE
 		vDotpos		INTEGER;
 		vNodeName	VARCHAR(200);
@@ -179,7 +177,6 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 --
 CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
   RETURNS VOID AS '
-    --  $Id$
 	DECLARE
 		vParam	RECORD;
 
@@ -218,7 +215,6 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
 --
 CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2, TEXT)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vNode			RECORD;
 		vNewNodeID		VICtemplate.nodeID%TYPE;
@@ -282,7 +278,6 @@ CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2, TEXT)
 --
 CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 	  vNode				RECORD;
 	  vVTnode			RECORD;
@@ -371,7 +366,6 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 --
 CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
   RETURNS INT4 AS $$
-    --  $Id$
 	DECLARE
 		vFunction  CONSTANT		INT2 := 1;
 		TTVHtree   CONSTANT		INT2 := 30;

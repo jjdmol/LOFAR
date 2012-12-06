@@ -37,7 +37,6 @@
 --
 CREATE OR REPLACE FUNCTION assignProcessType(INT4, INT4, VARCHAR(20), VARCHAR(50), VARCHAR(30))
   RETURNS BOOLEAN AS $$
-    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		TTtemplate  CONSTANT	INT2 := 20;
 		vFunction   CONSTANT	INT2 := 1;
@@ -126,7 +125,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION copyProcessType(INT4, INT4)
   RETURNS BOOLEAN AS $$
-    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vProcessType		OTDBtree.processType%TYPE;
 		vProcessSubtype		OTDBtree.processSubtype%TYPE;
@@ -171,7 +169,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION exportProcessType(INT4, INT4)
   RETURNS TEXT AS $$
-    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vResult			    TEXT := '';
 		vPrefix     		TEXT;
