@@ -38,7 +38,7 @@ node  IncoherentStokesBeam	4.0.0  development  	'node constraint'  "IncoherentSt
 #--------------------------------------------------------------------------------------------------------
 par  SAP		            O    uint   -      10    0    0      	-   'Index of SubArrayPointing'
 par  TAB 	   	    		O    uint   -      10    0    0      	- 	'Index of TiedArrayBeam within SubArrayPointing'
-par  samplingTime 	   	    O    dbl   	seconds      10    0    0      	- 	'Duration of one sample'
+par  samplingTime 	   	    O    dbl   	s      10    0    0      	- 	'Duration of one sample'
 par  dispersionMeasure     	O    dbl    -      10    0    0	     	-  	''
 par  nrSubbands          	O    uint   -      10    0    0	        -	''
 par  stationSubbands	   	O    vint   -      10    0    '[]'     	- 	'Index of subband on the station, selects freq. range'

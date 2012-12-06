@@ -37,7 +37,6 @@ DROP SEQUENCE	OTDBuserID;
 CREATE SEQUENCE	OTDBuserID;
 
 CREATE TABLE OTDBuser (
-    --  $Id$
 	userID		INT4			NOT NULL DEFAULT nextval('OTDBuserID'),
 	username	VARCHAR(20)		NOT NULL,
 	password	VARCHAR(20)		NOT NULL,
@@ -63,7 +62,6 @@ INSERT INTO OTDBuser (username, password, role)
 -- what arguments
 --
 CREATE TABLE OTDBaccess (
-    --  $Id$
 	userID		INT4			NOT NULL REFERENCES OTDBuser(userID),
 	task		INT4			NOT NULL DEFAULT 0,
 	value		INT4			NOT NULL DEFAULT 0

@@ -6,8 +6,7 @@
 #--------------------------------------------------------------------------------------------------------
 node  Calibration  4.0.0  development 'node constraint'  "Calibration pipeline"
 
-#    name                          dir. type   unit   prun. vm   value                constr.  descr.
+#    name                    dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  CalibratorSource              I    text   -      100   0    ''                   -        "Calibrator source for generation of instrument model"
-par  SkyModel                      I    text   -      100   0    ''                   -        "User-supplied sky model for generic calibration pipeline"
-par  exportCalibrationParameters   I    bool   -      100   0    'false'              -        "export the instrument model parameters using parmexportcal"
+par  CalibratorSource        I    text   -	100   0    ''                   -        "Calibrator source for generation of instrument model"
+par  SkyModel                I    text   -      100   0    ''                   -        "User-supplied sky model for generic calibration pipeline"

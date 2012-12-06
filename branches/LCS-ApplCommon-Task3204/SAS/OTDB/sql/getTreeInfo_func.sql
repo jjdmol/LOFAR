@@ -37,7 +37,6 @@
 --
 CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
   RETURNS treeInfo AS $$
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 

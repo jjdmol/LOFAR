@@ -36,27 +36,10 @@ namespace LOFAR {
   Matrix<bool> BaselineSelect::convert (const string& msName,
                                         const string& baselineSelection)
   {
-    // Find the unique baselines in the MS.
-    // Do not use unique sort, because that is slow for a large MS.
-    // Simply go through all baselines.
-    Table bltab;
-    {
-      Table tab(msName);
-      Vector<Int> a1 = ROScalarColumn<Int>(tab, "ANTENNA1").getColumn();
-      Vector<Int> a2 = ROScalarColumn<Int>(tab, "ANTENNA2").getColumn();
-      int nant = 1 + std::max(max(a1), max(a2));
-      Matrix<bool> bl(nant, nant, false);
-      vector<uInt> rows;
-      rows.reserve (nant*nant);
-      for (uint i=0; i<a1.size(); ++i) {
-        if (! bl(a1[i], a2[i])) {
-          rows.push_back (i);
-          bl(a1[i], a2[i]) = true;
-        }
-      }
-      bltab = tab(Vector<uInt>(rows));
-    }
-    MeasurementSet ms(bltab);
+    // Get the unique baselines.
+    Table sortab (tableCommand("select from " + msName +
+                               " order by unique ANTENNA1, ANTENNA2"));
+    MeasurementSet ms(sortab);
     MSSelection select;
     // Set given selection strings.
     select.setAntennaExpr (baselineSelection);
@@ -67,7 +50,8 @@ namespace LOFAR {
     Vector<Int> a1 = ROScalarColumn<Int>(seltab, "ANTENNA1").getColumn();
     Vector<Int> a2 = ROScalarColumn<Int>(seltab, "ANTENNA2").getColumn();
     int nant = ms.antenna().nrow();
-    Matrix<bool> bl(nant, nant, false);
+    Matrix<bool> bl(nant, nant);
+    bl = false;
     for (uint i=0; i<a1.size(); ++i) {
       bl(a1[i], a2[i]) = true;
       bl(a2[i], a1[i]) = true;

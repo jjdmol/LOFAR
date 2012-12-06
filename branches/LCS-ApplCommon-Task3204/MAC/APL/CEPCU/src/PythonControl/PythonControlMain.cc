@@ -42,20 +42,15 @@ int main(int argc, char* argv[])
 		return(-1);
 	}
 
-	try {
-		GCFScheduler::instance()->init(argc, argv, argv[1]);
+	GCFScheduler::instance()->init(argc, argv, "PythonControl");
 
-		ParentControl*	pc = ParentControl::instance();
-		pc->start();	// make initial transition
+	ParentControl*	pc = ParentControl::instance();
+	pc->start();	// make initial transition
 
-		PythonControl	pyc(argv[1]);
-		pyc.start(); 	// make initial transition
+	PythonControl	pyc(argv[1]);
+	pyc.start(); 	// make initial transition
 
-		GCFScheduler::instance()->run();
-	} catch( Exception &ex ) {
-		LOG_FATAL_STR("Caught exception: " << ex);
-		return 1;
-	}
+	GCFScheduler::instance()->run();
 
 	return (0);
 }

@@ -38,7 +38,6 @@
 --
 CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(150), INT2)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
 		vNodeID		PIChierarchy.nodeID%TYPE;

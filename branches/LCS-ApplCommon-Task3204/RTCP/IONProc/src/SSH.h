@@ -50,7 +50,7 @@ class SSHconnection {
 public:
   EXCEPTION_CLASS(SSHException, LOFAR::Exception);
 
-  SSHconnection(const std::string &logPrefix, const std::string &hostname, const std::string &commandline, const std::string &username, const std::string &sshkey, bool captureStdout = false);
+  SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, bool captureStdout = false);
 
   ~SSHconnection();
 
@@ -61,7 +61,7 @@ public:
 
   bool isDone();
 
-  std::string stdoutBuffer() const;
+  string stdoutBuffer() const;
 
 private:
   const string itsLogPrefix;
@@ -72,19 +72,22 @@ private:
 
   SmartPtr<Thread> itsThread;
   const bool itsCaptureStdout;
-  std::stringstream itsStdoutBuffer;
+  stringstream itsStdoutBuffer;
 
-  bool waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock );
+  static void free_session( LIBSSH2_SESSION *session );
+  static void free_channel( LIBSSH2_CHANNEL *channel );
 
-  LIBSSH2_SESSION *open_session( FileDescriptorBasedStream &sock );
-  void close_session( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock );
-  LIBSSH2_CHANNEL *open_channel( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock );
-  void close_channel( LIBSSH2_SESSION *session, LIBSSH2_CHANNEL *channel, FileDescriptorBasedStream &sock );
+  SmartPtr<LIBSSH2_SESSION, SmartPtrFreeFunc<LIBSSH2_SESSION, free_session> > session;
+  SmartPtr<LIBSSH2_CHANNEL, SmartPtrFreeFunc<LIBSSH2_CHANNEL, free_channel> > channel;
+
+  bool waitsocket( FileDescriptorBasedStream &sock );
+
+  bool open_session( FileDescriptorBasedStream &sock );
+  bool open_channel( FileDescriptorBasedStream &sock );
+  bool close_channel( FileDescriptorBasedStream &sock );
 
   void commThread();
 };
-
-const char *explainLibSSH2Error( int error );
 
 #endif
 

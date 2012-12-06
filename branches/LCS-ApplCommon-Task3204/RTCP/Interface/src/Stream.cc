@@ -57,14 +57,14 @@ Stream *createStream(const string &descriptor, bool asServer, time_t deadline)
   if (descriptor == "null:")
     return new NullStream;
   else if (split.size() == 3 && split[0] == "udp")
-    return new SocketStream(split[1].c_str(), boost::lexical_cast<unsigned short>(split[2]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline);
+    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline);
   else if (split.size() == 3 && split[0] == "tcp")
-    return new SocketStream(split[1].c_str(), boost::lexical_cast<unsigned short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, deadline);
+    return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, deadline);
   else if (split.size() == 3 && split[0] == "udpkey")
     return new SocketStream(split[1].c_str(), 0, SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline, split[2].c_str());
 #ifdef USE_THREADS    
   else if (split.size() == 4 && split[0] == "tcpbroker") 
-    return asServer ? static_cast<Stream*>(new PortBroker::ServerStream(split[3])) : static_cast<Stream*>(new PortBroker::ClientStream(split[1], boost::lexical_cast<unsigned short>(split[2]), split[3]));
+    return asServer ? static_cast<Stream*>(new PortBroker::ServerStream(split[3])) : static_cast<Stream*>(new PortBroker::ClientStream(split[1], boost::lexical_cast<short>(split[2]), split[3]));
 #endif    
   else if (split.size() == 3 && split[0] == "tcpkey")
 #if defined CLUSTER_SCHEDULING
@@ -77,7 +77,7 @@ Stream *createStream(const string &descriptor, bool asServer, time_t deadline)
   else if (split.size() == 2 && split[0] == "pipe")
     return new NamedPipeStream(split[1].c_str(), asServer);
   else if (split.size() == 2)
-    return new SocketStream(split[0].c_str(), boost::lexical_cast<unsigned short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline);
+    return new SocketStream(split[0].c_str(), boost::lexical_cast<short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline);
   else if (split.size() == 1)
     return asServer ? new FileStream(split[0].c_str()) : new FileStream(split[0].c_str(), 0666);
   else

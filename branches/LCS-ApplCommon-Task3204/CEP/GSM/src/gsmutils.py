@@ -43,22 +43,27 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
     
     #TODO: Check what happens at high decl when alpha goes to 180 degrees
     if ra_central - alpha(fov_radius, decl_central) < 0:
+        #"This will be implemented soon"
         ra_min1 = np.float(ra_central - alpha(fov_radius, decl_central) + 360.0)
         ra_max1 = np.float(360.0)
         ra_min2 = np.float(0.0)
         ra_max2 = np.float(ra_central + alpha(fov_radius, decl_central))
+        #print ra_min1, ra_max1, ra_min2, ra_max2
         q = "q_across_ra0"
     elif ra_central + alpha(fov_radius, decl_central) > 360:
+        #"This will be implemented soon"
         ra_min1 = np.float(ra_central - alpha(fov_radius, decl_central))
         ra_max1 = np.float(360.0)
         ra_min2 = np.float(0.0)
         ra_max2 = np.float(ra_central + alpha(fov_radius, decl_central) - 360)
+        #print ra_min1, ra_max1, ra_min2, ra_max2
         q = "q_across_ra0"
     elif ra_central - alpha(fov_radius, decl_central) < 0 and ra_central + alpha(fov_radius, decl_central) > 360:
         raise BaseException("ra = %s > 360 degrees, not implemented yet" % str(ra_central + alpha(fov_radius, decl_central))) 
     else:
         ra_min = np.float(ra_central - alpha(fov_radius, decl_central))
         ra_max = np.float(ra_central + alpha(fov_radius, decl_central))
+        #print ra_min, ra_max
         q = "q0"
     
     if vlss_flux_cutoff is None:
@@ -350,7 +355,6 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
            ) t3
         ON t0.v_catsrcid = t3.v_catsrcid
      WHERE t0.v_flux >= %s
-    ORDER BY t0.v_catsrcid
     """
     q0 = """\
     SELECT t0.v_catsrcid
@@ -609,7 +613,6 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
            ) t3
         ON t0.v_catsrcid = t3.v_catsrcid
      WHERE t0.v_flux >= %s
-    ORDER BY t0.v_catsrcid
     """
     try:
         cursor = conn.cursor()
@@ -703,31 +706,14 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
         else:
             status = False
         spectrumfiles = []
-        # Check for duplicate vlss_names. This may arise when a VLSS source 
-        # is associated with one or more (genuine) counterparts.
-        # Eg., if two NVSS sources are seen as counterparts
-        # VLSS - WENSS - NVSS_1
-        # VLSS - WENSS - NVSS_2
-        # two rows will be added to the sky model, where the VLSS name 
-        # is postfixed with _0 and _1, resp.
-        import collections
-        items = collections.defaultdict(list)
-        src_name = list(vlss_name)
-        for i, item in enumerate(src_name):
-            items[item].append(i)
-        for item, locs in items.iteritems():
-            if len(locs) > 1:
-                #print "duplicates of", item, "at", locs
-                for j in range(len(locs)):
-                    src_name[locs[j]] = src_name[locs[j]] + "_" + str(j)
         if len(results) != 0:
             for i in range(len(vlss_catsrcid)):
                 ##print "\ni = ", i
                 bbsrow = ""
                 # Here we check the cases for the degree of the polynomial spectral index fit
                 #print i, vlss_name[i],vlss_catsrcid[i], wenssm_catsrcid[i], wenssp_catsrcid[i], nvss_catsrcid[i]
-                # Write the vlss name of the source (either postfixed or not)
-                bbsrow += src_name[i] + ", "
+                #print "VLSS",vlss_name[i]
+                bbsrow += vlss_name[i] + ", "
                 # According to Jess, only sources that have values for all
                 # three are considered as GAUSSIAN
                 if pa[i] is not None and major[i] is not None and minor[i] is not None:

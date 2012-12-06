@@ -181,12 +181,11 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         # *********************************************************************
         # 3. Validate the performance of the node script and assign output
         placed_images = []
-        for (job, output_image_item) in  zip(jobs, output_image_map_new):
+        for job in  jobs:
             if job.results.has_key("hdf5"):
                 placed_images.append(tuple([job.host, job.results["image"], False]))
             else:
-                # On failure on the node the file should be gotten from the input
-                placed_images.append(tuple([job.host, output_image_item.file, True]))
+                placed_images.append(tuple([job.host, job.results["image"], True]))
 
         if len(placed_images) == 0:
             self.logger.warn("Failed finalizer node run detected")

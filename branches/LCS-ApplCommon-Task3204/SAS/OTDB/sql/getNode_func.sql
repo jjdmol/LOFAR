@@ -35,7 +35,6 @@
 --
 CREATE OR REPLACE FUNCTION getNode(INT4, INT4)
   RETURNS OTDBnode AS '
-    --  $Id$
 	DECLARE
 		TThardware CONSTANT	INT2 := 10;
 		TTtemplate CONSTANT	INT2 := 20;

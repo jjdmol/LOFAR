@@ -82,12 +82,7 @@ class JobStreamHandler(SocketServer.StreamRequestHandler):
             (job_id, self.request.getpeername())
         )
         results = pickle.loads(pickled_results)
-        self.server.logger.debug("Results for job {0} : {1}".format(
-                job_id, results))
-        # Use update to insert the result value from the node. (do not replace)
-        self.server.jobpool[job_id].results.update(results)
-        self.server.logger.debug("Joined results for job {0} : {1}".format(
-                job_id, self.server.jobpool[job_id].results))
+        self.server.jobpool[job_id].results = results
 
     def handle_log_record(self, chunk):
         record = logging.makeLogRecord(pickle.loads(chunk))

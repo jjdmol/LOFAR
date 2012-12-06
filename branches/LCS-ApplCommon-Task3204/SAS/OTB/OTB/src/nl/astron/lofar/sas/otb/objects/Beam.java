@@ -5,6 +5,8 @@
 package nl.astron.lofar.sas.otb.objects;
 
 import java.util.ArrayList;
+import java.util.BitSet;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.util.IBeam;
 
 /**
@@ -33,6 +35,14 @@ public class Beam implements IBeam {
 
     public void setAngle2(String anAngle2) {
         this.itsAngle2 = anAngle2;
+    }
+
+    public String getBeamletList() {
+        return itsBeamletList;
+    }
+
+    public void setBeamletList(String aBeamletList) {
+        this.itsBeamletList = aBeamletList;
     }
 
     public String getDirectionType() {
@@ -134,6 +144,9 @@ public class Beam implements IBeam {
         this.itsDirectionTypeChoices = directionTypeChoices;
     }
     
+    public BitSet getBeamletBitSet() {
+        return LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(itsBeamletList));
+    }
     
     public String getTreeType() {
         return itsTreeType;
@@ -157,6 +170,7 @@ public class Beam implements IBeam {
         clone.itsStartTime = itsStartTime;
         clone.itsDuration = itsDuration;
         clone.itsSubbandList = itsSubbandList;
+        clone.itsBeamletList = itsBeamletList;
         clone.itsMomID = itsMomID;
         clone.itsNrTiedArrayBeams = itsNrTiedArrayBeams;     // 
         clone.itsNrTabRings = itsNrTabRings;
@@ -182,6 +196,7 @@ public class Beam implements IBeam {
     private String                   itsStartTime;
     private String                   itsDuration;
     private String                   itsSubbandList;
+    private String                   itsBeamletList;
     private String                   itsMomID;
     private String                   itsNrTiedArrayBeams="1";     // 
     private String                   itsNrTabRings;

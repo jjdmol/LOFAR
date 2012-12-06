@@ -103,13 +103,9 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
                 )
             )
         self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
-        vdsnames = [
-            vds for vds, job in zip(vdsnames, jobs) 
-            if job.results['returncode'] == 0
-        ]
-        if not vdsnames:
-            self.logger.error("All makevds processes failed. Bailing out!")
-            return 1
+        for idx, job in enumerate(jobs):
+            if job.results['returncode'] != 0:
+                del vdsnames[idx]
 
         # *********************************************************************
         # 3. Combine VDS files to produce GDS

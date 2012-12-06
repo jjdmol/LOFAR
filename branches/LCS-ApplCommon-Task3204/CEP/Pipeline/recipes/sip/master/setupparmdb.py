@@ -152,13 +152,7 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
                 )
             self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
             for job, outp in zip(jobs, outdata):
-                # If the returncode is 123456, failing ssh
-                if job.results['returncode'] == 123456:
-                    self.logger.warning("ssh connection with {0} failed."
-                        "Skipping further work on this task".format(outp.host))
-                    self.logger.warning("Error code 123456.")
-                    outp.skip = True
-                elif job.results['returncode'] != 0:
+                if job.results['returncode'] != 0:
                     outp.skip = True
 
         # *********************************************************************
@@ -168,7 +162,7 @@ class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             shutil.rmtree(pdbdir, ignore_errors=True)
 
         if self.error.isSet():
-            # Abort if all jobs failed
+             # Abort if all jobs failed
             if all(job.results['returncode'] != 0 for job in jobs):
                 self.logger.error("All jobs failed. Bailing out!")
                 return 1

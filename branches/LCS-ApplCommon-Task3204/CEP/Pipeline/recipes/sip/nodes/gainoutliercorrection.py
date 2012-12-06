@@ -11,6 +11,7 @@ import shutil
 import sys
 import tempfile
 import numpy
+import errno
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
@@ -30,52 +31,48 @@ class gainoutliercorrection(LOFARnodeTCP):
     Outliers in the gain are swapped with the median. resulting gains 
     are written back to the supplied ms:
     
-    1. Select correction correction method:
+    1. Select correction correction method
     2. Call parmexportcal for gain correction
     3. use gainoutliercorrect from Swinbank
        Step are summarized in the functions of this recipe
 
     """
-    def run(self, infile, outfile, executable, environment, sigma,
-            use_parmexportcal):
+    def run(self, infile, outfile, executable, environment, sigma):
         self.environment.update(environment)
-        if os.path.exists(infile):
-            self.logger.info("Processing {0}".format(infile))
-        else:
-            self.logger.error(
-                "Instrument model file %s does not exist" % infile
+        # Time execution of this job
+        with log_time(self.logger):
+            if os.path.exists(infile):
+                self.logger.info("Processing %s" % infile)
+            else:
+                self.logger.error(
+                    "Instrument model file %s does not exist" % infile
                 )
-            return 1
-
+                return 1
         # Create output directory (if it doesn't already exist)
         create_directory(os.path.dirname(outfile))
-
-        # Remove the target outfile if there: parexportcall fail otherwise
-        if os.path.exists(outfile):
-            shutil.rmtree(outfile)
-
         # ********************************************************************
         # 1. Select correction method
-        if not use_parmexportcal:
-            # ****************************************************************
-            # 3. use gainoutliercorrect from Swinbank
+        if not os.access(executable, os.X_OK) and sigma != None:
+            # If the executable is not accesable and we have a sigma:
+            # use the 'local' functionality (edit parmdb)
             self.logger.info(
-                "Using the gainoutlier correction based on editparmdb")
+                    "Using the gainoutlier correction based on edit_parmdb")
+
+        # *********************************************************************
+        # 3. use gainoutliercorrect from Swinbank
             self._filter_stations_parmdb(infile, outfile, sigma)
             return 0
 
-        # else:
+        # else we need an executable
+        # Check if exists and is executable.
         if not os.access(executable, os.X_OK):
-            self.logger.error(
-                "Could not find parmexport call executable at: {0}".format(
-                                    executable))
-            self.logger.error("bailing out!")
+            self.logger.error("Executable %s not found" % executable)
             return 1
 
         # ********************************************************************
         # 2. Call parmexportcal for gain correction
         self.logger.info(
-            "Using the gainoutlier correction based on parmexportcal")
+                    "Using the gainoutlier correction based on parmexportcal")
         try:
             temp_dir = tempfile.mkdtemp()
             with CatchLog4CPlus(
@@ -83,11 +80,8 @@ class gainoutliercorrection(LOFARnodeTCP):
                 self.logger.name + '.' + os.path.basename(infile),
                 os.path.basename(executable)
             ) as logger:
-                cmd = [executable, '-in', infile, '-out', outfile]
-                self.logger.debug(
-                    "Parmexportcal call: {0} ".format(" ".join(cmd)))
                 catch_segfaults(
-                    cmd,
+                    [executable, '-in', infile, '-out', outfile],
                     temp_dir,
                     self.environment,
                     logger

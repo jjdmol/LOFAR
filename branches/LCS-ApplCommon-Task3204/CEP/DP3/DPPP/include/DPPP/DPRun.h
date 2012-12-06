@@ -29,7 +29,7 @@
 
 #include <lofar_config.h>
 #include <DPPP/DPStep.h>
-#include <Common/ParameterSet.h>
+#include <DPPP/ParSet.h>
 
 namespace LOFAR {
   namespace DPPP {
@@ -49,7 +49,7 @@ namespace LOFAR {
     private:
       // Create the step objects.
       // It fills DPInfo object and the name of the MS being written.
-      static DPStep::ShPtr makeSteps (const ParameterSet& parset,
+      static DPStep::ShPtr makeSteps (const ParSet& parset,
                                       std::string& msName);
     };
 

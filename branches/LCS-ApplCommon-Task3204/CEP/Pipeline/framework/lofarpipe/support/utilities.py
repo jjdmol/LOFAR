@@ -9,6 +9,7 @@
 
 from __future__ import with_statement
 
+from subprocess import Popen, CalledProcessError, PIPE
 from itertools import islice, repeat, chain, izip
 from contextlib import closing, contextmanager
 from time import sleep
@@ -18,14 +19,7 @@ import warnings
 import os
 import errno
 import shutil
-import sys
-
-try:
-    import subprocess27 as subprocess
-    print >> sys.stderr, __file__, ": Using Python 2.7 subprocess module!"
-except ImportError:
-    import subprocess
-    print >> sys.stderr, __file__, ": Using default subprocess module!"
+import subprocess
 
 from lofarpipe.support.pipelinelogging import log_process_output
 
@@ -92,7 +86,7 @@ def disk_usage(*paths):
     Return the disk usage in bytes by the file(s) in ``paths``.
     """
     cmd = ['du', '-s', '-b']
-    proc = subprocess.Popen(cmd + list(paths), stdout = subprocess.PIPE)
+    proc = Popen(cmd + list(paths), stdout = PIPE)
     sout = proc.communicate()[0]
     if sout:
         return sum([int(s.split('\t')[0]) for s in sout.strip().split('\n')])
@@ -230,8 +224,8 @@ def spawn_process(cmd, logger, cwd = None, env = None, max_tries = 2, max_timeou
         logger.debug(
             "Spawning subprocess: cmd=%s, cwd=%s, env=%s" % (cmd, cwd, env))
         try:
-            process = subprocess.Popen(
-                cmd, cwd = cwd, env = env, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE
+            process = Popen(
+                cmd, cwd = cwd, env = env, stdin = PIPE, stdout = PIPE, stderr = PIPE
             )
         except OSError, e:
             logger.warn(
@@ -273,10 +267,10 @@ def catch_segfaults(cmd, cwd, env, logger, max = 1, cleanup = lambda: None):
             tries += 1
             continue
         else:
-            raise subprocess.CalledProcessError(
+            raise CalledProcessError(
                 process.returncode, cmd[0]
             )
     if tries > max:
         logger.error("Too many segfaults from %s; aborted" % (cmd[0]))
-        raise subprocess.CalledProcessError(process.returncode, cmd[0])
+        raise CalledProcessError(process.returncode, cmd[0])
     return process

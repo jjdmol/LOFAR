@@ -43,7 +43,6 @@
 --
 CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
   RETURNS SETOF treeInfo AS $$
-    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vRecord			RECORD;
 		TSscheduled		CONSTANT	INT2 := 400;

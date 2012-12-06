@@ -3,12 +3,6 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
-* When not configuring explicitly for PyBDSM, a warning is printed that the
-  Fortran compiler could not be determined, which may cause trouble later on.
-  PyBDSM builds without problems, though. Probable cause: the Fortran
-  language is added too late to the CMake project, i.e. only after F2Py
-  searches for a suitable Fortran compiler.
-
 * Python byte-code compilation fails during install when using DESTDIR option
   to specify a different install directory.
 
@@ -31,6 +25,14 @@
   1) Each library is installed in lib instead of python/site-packages.
   2) For every target, the library prefix must be cleared and an (additional)
      install directory -- python/site-packages -- must be added.
+
+* Use something like set_if_not_set() in the variants files for non-cached
+  CMake variables. Contrary to options, which are just cached variables of
+  type bool, non-cached variables will be overwritten. So, in fact, for
+  non-cached variables the include-order of variants file should be exactly 
+  the opposite of the order for cached variables. The proper way to solve
+  this, IMO, is to use something like set_if_not_set(), which will only set a
+  non-cached variable when it has not already been set.
 
 * Switch from FindPthread to FindThreads, which is the "standard" CMake
   module to use (and it also used by FindBLAS and FindLAPACK). Unfortunately,

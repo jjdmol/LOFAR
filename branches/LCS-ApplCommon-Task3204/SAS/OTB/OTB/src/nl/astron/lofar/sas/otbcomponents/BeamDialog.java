@@ -21,6 +21,7 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 import java.util.ArrayList;
+import java.util.BitSet;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
@@ -48,17 +49,20 @@ public class BeamDialog extends javax.swing.JDialog {
      *
      * @param   parent                  Frame where this dialog belongs
      * @param   modal                   Should the Dialog be modal or not
+     * @param   usedBeamlets            Bitset of all used beamlets(in case edit, the old ones have been xorred allready)
      * @param   selection               Vector of all Beam parameters
      * @param   directionTypeChoices    String with all possible choices + default for combobox
      * @param   edit                    indicates edit or add mode
      * @param   show                    indicates show only mode
      */
-    public BeamDialog(java.awt.Frame parent, String treeType, boolean modal,Beam aBeam, boolean edit, boolean show ) {
+    public BeamDialog(java.awt.Frame parent, String treeType, boolean modal,BitSet usedBeamlets, Beam aBeam, boolean edit, boolean show ) {
 
         super(parent, modal);
         initComponents();
         LofarUtils.setPopupComboChoices(inputDirectionTypes,aBeam.getDirectionTypeChoices());
         itsBeam = aBeam;
+        itsSavedBeamlets=(BitSet)usedBeamlets.clone();
+        itsUsedBeamlets=(BitSet)usedBeamlets.clone();
         editting=edit;
         showing=show;
         itsTreeType = treeType;
@@ -95,6 +99,29 @@ public class BeamDialog extends javax.swing.JDialog {
         return true;
     }
 
+    // check if Beamlets are spelled correctly and if Beamlets are not used by other Beams'
+    private boolean checkBeamlets(){
+        if (inputBeamletList.getText().length() <=2) {
+            return true;
+        }
+        
+        BitSet aBitSet = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(inputBeamletList.getText()));
+        if(itsUsedBeamlets.intersects(aBitSet)) {
+            return false;
+        } else {
+            itsUsedBeamlets.or(aBitSet);
+        }
+        return true;
+    }
+
+    // check if nr of beamlets used and nr of subbands used are equal
+    private boolean checkNrOfBeamletsAndSubbands() {
+        if (LofarUtils.nrArrayStringElements(inputBeamletList.getText())!= LofarUtils.nrArrayStringElements(inputSubbandList.getText()) ) {
+            return false;
+        }
+
+        return true;
+    }
     
     private void initialize() {
         
@@ -117,6 +144,7 @@ public class BeamDialog extends javax.swing.JDialog {
         inputAngle2.setText(itsBeam.getAngle2());
         coordTypeChange.setSelectedItem(itsBeam.getCoordType());
         inputSubbandList.setText(itsBeam.getSubbandList());
+        inputBeamletList.setText(itsBeam.getBeamletList());
         inputDuration.setText(itsBeam.getDuration());
         inputTarget.setText(itsBeam.getTarget());
         inputStartTime.setText(itsBeam.getStartTime());
@@ -143,6 +171,7 @@ public class BeamDialog extends javax.swing.JDialog {
         inputAngle2.setEnabled(flag);
         coordTypeChange.setEnabled(flag);
         inputSubbandList.setEnabled(flag);
+        inputBeamletList.setEnabled(flag);
         inputDuration.setEnabled(flag);
         inputTarget.setEnabled(flag);
         inputStartTime.setEnabled(flag);
@@ -152,6 +181,10 @@ public class BeamDialog extends javax.swing.JDialog {
     
     public boolean hasChanged() {
         return isChanged;
+    }
+    
+    public BitSet getBeamletList() {
+        return itsUsedBeamlets;
     }
     
     public void setBorderTitle(String text) {
@@ -179,6 +212,8 @@ public class BeamDialog extends javax.swing.JDialog {
         inputAngle2 = new javax.swing.JTextField();
         labelSubbandList = new javax.swing.JLabel();
         inputSubbandList = new javax.swing.JTextField();
+        labelBeamletList = new javax.swing.JLabel();
+        inputBeamletList = new javax.swing.JTextField();
         cancelButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
         labelDirectionTypes = new javax.swing.JLabel();
@@ -219,6 +254,8 @@ public class BeamDialog extends javax.swing.JDialog {
         labelAngle2.setText("Angle 2 :");
 
         labelSubbandList.setText("Subbands :");
+
+        labelBeamletList.setText("Beamlets :");
 
         cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
@@ -301,7 +338,7 @@ public class BeamDialog extends javax.swing.JDialog {
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel3Layout.createSequentialGroup()
-                .add(TABConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 202, Short.MAX_VALUE)
+                .add(TABConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 201, Short.MAX_VALUE)
                 .add(18, 18, 18)
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(addTiedArrayBeamButton)
@@ -361,13 +398,20 @@ public class BeamDialog extends javax.swing.JDialog {
                             .add(org.jdesktop.layout.GroupLayout.LEADING, labelNrTabRings, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 86, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .addContainerGap())
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .add(labelSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
-                        .add(18, 18, 18)
-                        .add(inputSubbandList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 1077, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jPanel1Layout.createSequentialGroup()
+                                .add(labelSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 87, Short.MAX_VALUE)
+                                .add(18, 18, 18))
+                            .add(jPanel1Layout.createSequentialGroup()
+                                .add(labelBeamletList)
+                                .add(45, 45, 45)))
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                            .add(inputBeamletList)
+                            .add(inputSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1077, Short.MAX_VALUE))
                         .add(665, 665, 665))
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 1201, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(661, Short.MAX_VALUE))))
+                        .addContainerGap(646, Short.MAX_VALUE))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -404,7 +448,11 @@ public class BeamDialog extends javax.swing.JDialog {
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelSubbandList)
                     .add(inputSubbandList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(49, 49, 49)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(labelBeamletList)
+                    .add(inputBeamletList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(18, 18, 18)
                 .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 267, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(94, 94, 94)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
@@ -434,12 +482,33 @@ public class BeamDialog extends javax.swing.JDialog {
     private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
         //check if input is correct
         checkChanged();
-        if (hasChanged() && !checkSubbands()) {
-            if (JOptionPane.showConfirmDialog(this,"There is an error in the SubbandsList , Only subbands 1-511 can be used. continueing discards all changes. Continue?","SubbandNr Error",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+        if (hasChanged() && !checkBeamlets()) {
+            if (JOptionPane.showConfirmDialog(this,"There is an error in the beamletList, some of them are allready in use by other Beams. continueing discards all changes. Continue?","Beamlet Error",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
                 isChanged=false;
                 setVisible(false);
                 dispose();
             } else {
+                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
+                return;
+            }
+        } else if (hasChanged() && !checkSubbands()) {
+            if (JOptionPane.showConfirmDialog(this,"There is an error in the SubbandsList , Only subbands 1-511 can be used. continueing discards all changes. Continue?","Beamlet Error",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
+                isChanged=false;
+                setVisible(false);
+                dispose();
+            } else {
+                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
+                return;
+            }
+
+        } else if (hasChanged() && !checkNrOfBeamletsAndSubbands() ) {
+            if (JOptionPane.showConfirmDialog(this,"The number of beamlets and subbands differ.","Beamlet-subband amount differ  Error",JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION ) {
+                setVisible(false);
+                dispose();
+            } else {
+                itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
                 return;
             }
 
@@ -454,6 +523,7 @@ public class BeamDialog extends javax.swing.JDialog {
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
         isChanged=false;
+        itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
         setVisible(false);
         TABConfigurationPanel=null;
         itsTABConfigurationTableModel = null;
@@ -556,6 +626,10 @@ public class BeamDialog extends javax.swing.JDialog {
             isChanged=true;
             return;
         }
+        if (!itsBeam.getBeamletList().equals(inputBeamletList.getText())) {
+            isChanged=true;
+            return;
+        }
         if (!itsBeam.getDuration().equals(inputDuration.getText())) {
             isChanged=true;
             return;
@@ -595,6 +669,7 @@ public class BeamDialog extends javax.swing.JDialog {
         itsBeam.setDuration(inputDuration.getText());
         itsBeam.setStartTime(inputStartTime.getText());
         itsBeam.setSubbandList(LofarUtils.compactedArrayString(inputSubbandList.getText()));
+        itsBeam.setBeamletList(LofarUtils.compactedArrayString(inputBeamletList.getText()));
         itsBeam.setNrTabRings(inputNrTabRings.getText());
         itsBeam.setTabRingSize(inputTabRingSize.getText());
         itsBeam.setNrTiedArrayBeams(Integer.toString(itsTiedArrayBeams.size()-offset));
@@ -605,6 +680,7 @@ public class BeamDialog extends javax.swing.JDialog {
     private void deleteTiedArrayBeam() {
         itsSelectedRow = TABConfigurationPanel.getSelectedRow();
         if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this TAB ?","Delete TAB",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+            // if removed then the old Beamlets's should be removed form the checklist also
             if (itsSelectedRow > -1) {
                 itsTABConfigurationTableModel.removeRow(itsSelectedRow);
                 // No selection anymore after delete, so buttons disabled again
@@ -661,6 +737,8 @@ public class BeamDialog extends javax.swing.JDialog {
     private boolean   editTiedArrayBeam = false;
     private boolean   editting          = false;
     private boolean   showing           = false;
+    private BitSet    itsUsedBeamlets   = null;
+    private BitSet    itsSavedBeamlets  = null;
     private String    itsTreeType       = null;
     
     private TiedArrayBeamConfigurationTableModel itsTABConfigurationTableModel = null;
@@ -675,6 +753,7 @@ public class BeamDialog extends javax.swing.JDialog {
     private javax.swing.JButton editTiedArrayBeamButton;
     private javax.swing.JTextField inputAngle1;
     private javax.swing.JTextField inputAngle2;
+    private javax.swing.JTextField inputBeamletList;
     private javax.swing.JComboBox inputDirectionTypes;
     private javax.swing.JTextField inputDuration;
     private javax.swing.JTextField inputNrTabRings;
@@ -687,6 +766,7 @@ public class BeamDialog extends javax.swing.JDialog {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel labelAngle1;
     private javax.swing.JLabel labelAngle2;
+    private javax.swing.JLabel labelBeamletList;
     private javax.swing.JLabel labelDirectionTypes;
     private javax.swing.JLabel labelDuration;
     private javax.swing.JLabel labelNrTabRings;

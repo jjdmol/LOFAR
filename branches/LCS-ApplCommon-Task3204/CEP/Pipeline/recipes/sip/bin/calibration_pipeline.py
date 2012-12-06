@@ -14,7 +14,6 @@ from lofarpipe.support.group_data import validate_data_maps, tally_data_map
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
-from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
 
 class calibration_pipeline(control):
     """
@@ -30,7 +29,7 @@ class calibration_pipeline(control):
     4. Create a sourcedb from the user-supplied sky model, and an empty parmdb.
     5. Run BBS to calibrate the data.
     """
-
+    
     def __init__(self):
         super(calibration_pipeline, self).__init__()
         self.parset = parameterset()
@@ -137,7 +136,7 @@ class calibration_pipeline(control):
         # Call the base-class's `go()` method.
         return super(calibration_pipeline, self).go()
 
-    @mail_log_on_exception
+
     def pipeline_logic(self):
         """
         Define the individual tasks that comprise the current pipeline.
@@ -174,12 +173,10 @@ class calibration_pipeline(control):
 
         # *********************************************************************
         # 2. Create VDS-file; it will contain important input-data for NDPPP
-        with duration(self, "vdsmaker"):
-            gvds_file = self.run_task("vdsmaker", input_data_mapfile)['gvds']
+        gvds_file = self.run_task("vdsmaker", input_data_mapfile)['gvds']
 
         # Read metadata (start, end times, pointing direction) from GVDS.
-        with duration(self, "vdsreader"):
-            vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+        vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
         # *********************************************************************
         # 3. Average and flag data, using NDPPP.
@@ -187,12 +184,11 @@ class calibration_pipeline(control):
         py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
-        with duration(self, "ndppp"):
-            dppp_mapfile = self.run_task("ndppp",
-                input_data_mapfile,
-                data_start_time=vdsinfo['start_time'],
-                data_end_time=vdsinfo['end_time'],
-                parset=ndppp_parset)['mapfile']
+        dppp_mapfile = self.run_task("ndppp",
+            input_data_mapfile,
+            data_start_time=vdsinfo['start_time'],
+            data_end_time=vdsinfo['end_time'],
+            parset=ndppp_parset)['mapfile']
 
         # *********************************************************************
         # 4. Create a sourcedb from the user-supplied sky model, 
@@ -211,16 +207,15 @@ class calibration_pipeline(control):
             )
         if not os.path.isfile(skymodel):
             raise PipelineException("Skymodel %s does not exist" % skymodel)
-        with duration(self, "setupsourcedb"):
-            sourcedb_mapfile = self.run_task(
-                "setupsourcedb", dppp_mapfile,
-                skymodel=skymodel
-            )['mapfile']
 
-        with duration(self, "setupparmdb"):
-            parmdb_mapfile = self.run_task(
-                "setupparmdb", dppp_mapfile
-            )['mapfile']
+        sourcedb_mapfile = self.run_task(
+            "setupsourcedb", dppp_mapfile, 
+            skymodel=skymodel
+        )['mapfile']
+
+        parmdb_mapfile = self.run_task(
+            "setupparmdb", dppp_mapfile
+        )['mapfile']
 
         # *********************************************************************
         # 5. Run BBS to calibrate the data.
@@ -228,15 +223,13 @@ class calibration_pipeline(control):
         # Create a parameter subset for BBS
         bbs_parset = os.path.join(parset_dir, "BBS.parset")
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
-        with duration(self, "bbs_reducer"):
-            self.run_task("bbs_reducer",
-                (dppp_mapfile, output_data_mapfile),
-                parset=bbs_parset,
-                instrument_mapfile=parmdb_mapfile,
-                sky_mapfile=sourcedb_mapfile
-            )
 
-        return 0
+        self.run_task("bbs_reducer",
+            (dppp_mapfile, output_data_mapfile),
+            parset=bbs_parset,
+            instrument_mapfile=parmdb_mapfile,
+            sky_mapfile=sourcedb_mapfile
+        )
 
 
 if __name__ == '__main__':

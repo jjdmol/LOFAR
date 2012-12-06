@@ -75,7 +75,7 @@
     <Component class="javax.swing.JTextField" name="nameInput">
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-          <AbsoluteConstraints x="220" y="200" width="300" height="-1"/>
+          <AbsoluteConstraints x="170" y="200" width="300" height="-1"/>
         </Constraint>
       </Constraints>
     </Component>
@@ -92,7 +92,7 @@
     <Component class="javax.swing.JTextField" name="processTypeInput">
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-          <AbsoluteConstraints x="220" y="230" width="300" height="-1"/>
+          <AbsoluteConstraints x="170" y="230" width="300" height="-1"/>
         </Constraint>
       </Constraints>
     </Component>
@@ -109,7 +109,7 @@
     <Component class="javax.swing.JTextField" name="processSubtypeInput">
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-          <AbsoluteConstraints x="220" y="260" width="300" height="-1"/>
+          <AbsoluteConstraints x="170" y="260" width="300" height="-1"/>
         </Constraint>
       </Constraints>
     </Component>
@@ -126,7 +126,7 @@
     <Component class="javax.swing.JTextField" name="strategyInput">
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-          <AbsoluteConstraints x="220" y="290" width="300" height="-1"/>
+          <AbsoluteConstraints x="170" y="290" width="300" height="-1"/>
         </Constraint>
       </Constraints>
     </Component>

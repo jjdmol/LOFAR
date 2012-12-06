@@ -35,7 +35,6 @@
 --
 CREATE OR REPLACE FUNCTION getVCNodeList(VARCHAR(150), INT4, BOOLEAN)
   RETURNS SETOF OTDBnodeDef AS '
-    --  $Id$
 	DECLARE
 		vRecord			RECORD;
 		vRestriction	VARCHAR(200);

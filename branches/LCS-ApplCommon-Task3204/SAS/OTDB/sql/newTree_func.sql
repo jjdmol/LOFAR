@@ -35,7 +35,6 @@
 --
 CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT4, INT2, INT2, INT2, INT4)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vFunction		INT2 := 1;
 		vNewTreeID		OTDBtree.treeID%TYPE;

@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
@@ -486,6 +487,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                    } else {
                         itsActiveBeam.setStartTime(aNode.limits);
                    }break;
+                case "beamletList":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setBeamletList(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        itsActiveBeam.setBeamletList(aNode.limits);
+                   }break;
                 case "subbandList":
                     if (isRef && aParam != null) {
                         itsActiveBeam.setSubbandList(aNode.limits + " : " + aParam.limits);
@@ -714,8 +721,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
       inputDescription.setText("");
       inputTreeDescription.setText(itsOldTreeDescription);
     
-      // set tables back to initial values
-      boolean fillTable = itsBeamConfigurationTableModel.fillTable(itsTreeType,itsBeamList,false);
+      if (!itsTreeType.equals("VHtree")) {
+         // Observation Beam parameters
+         // create original Beamlet Bitset
+         fillBeamletBitset();
+      }
+        // set tables back to initial values
+        boolean fillTable = itsBeamConfigurationTableModel.fillTable(itsTreeType,itsBeamList,false);
       itsAnaBeamConfigurationTableModel.fillTable(itsTreeType,itsAnaBeamList,false);
       
       itsBeamformerConfigurationTableModel.fillTable(itsTreeType, itsStations);
@@ -750,7 +762,27 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      // also restore antennaConfigPanel
       antennaConfigPanel.restore();
     }
-   
+
+    
+    /** fill the Beamlet bitset to see what Beamlets have been set. To be able to determine later if a given Beamlet is indeed free.
+     */
+    private void fillBeamletBitset() {
+        itsUsedBeamlets.clear();
+        for (Beam b : itsBeamList) {
+            BitSet aNewBitSet=b.getBeamletBitSet();
+            // check if no duplication between the two bitsets
+            if (itsUsedBeamlets.intersects(aNewBitSet)) {
+                String errorMsg = "ERROR:  This BeamletList has beamlets defined that are allready used in a prior BeamConfiguration!!!!!  Beam: "+b;
+                JOptionPane.showMessageDialog(this,errorMsg,"BeamletError",JOptionPane.ERROR_MESSAGE);
+                logger.debug(errorMsg );
+                return;
+            }
+            
+            // No intersection, both bitsets can be or
+            itsUsedBeamlets.or(aNewBitSet);
+        }
+    }
+    
      
     private void initialize() {
         buttonPanel1.addButton("Restore");
@@ -771,6 +803,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         beamConfigurationPanel.setColumnSize("coordtype",24);
         beamConfigurationPanel.setColumnSize("#TAB",24);
         beamConfigurationPanel.setColumnSize("subbands",65);
+        beamConfigurationPanel.setColumnSize("beamlets",65);
         beamConfigurationPanel.repaint();
         
         itsAnaBeamConfigurationTableModel = new AnaBeamConfigurationTableModel();
@@ -829,6 +862,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }
         
         // set defaults
+        // create initial beamletBitset
         // create initial table
         restore();
         
@@ -1091,6 +1125,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                                     break;
                                 case "subbandList" :
                                     n.limits=b.getSubbandList();
+                                    break;
+                                case "beamletList" :
+                                    n.limits=b.getBeamletList();
                                     break;
                                 case "momID" :
                                     n.limits=b.getMomID();
@@ -1440,8 +1477,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private void deleteBeam() {
         int row = beamConfigurationPanel.getSelectedRow();
         if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this Beam ?","Delete Beam",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+            // if removed then the old Beamlets's should be removed form the checklist also
+            BitSet beamletSet = itsBeamConfigurationTableModel.getSelection(row).getBeamletBitSet();
             if (row > -1) {
                 itsBeamConfigurationTableModel.removeRow(row);
+                itsUsedBeamlets.xor(beamletSet);
                 // No selection anymore after delete, so buttons disabled again
                 this.editBeamButton.setEnabled(false);
                 this.deleteBeamButton.setEnabled(false);
@@ -1482,6 +1522,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
     private void addBeam() {
      
+        BitSet aBS=itsUsedBeamlets;
         itsSelectedRow=-1;
         itsSelectedRow = beamConfigurationPanel.getSelectedRow();
         // set selection to defaults.
@@ -1489,8 +1530,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         if (editBeam) {
             selection = itsBeamConfigurationTableModel.getSelection(itsSelectedRow);
                        
+            BitSet oldBeamlets = selection.getBeamletBitSet();
+            aBS.xor(oldBeamlets);
         }
-        beamDialog = new BeamDialog(itsMainFrame,itsTreeType,true,selection.clone(),editBeam,showBeam);
+        beamDialog = new BeamDialog(itsMainFrame,itsTreeType,true,aBS,selection.clone(),editBeam,showBeam);
         
         beamDialog.setLocationRelativeTo(this);
         if (editBeam) {
@@ -1507,6 +1550,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // check if something has changed 
         if (beamDialog.hasChanged()) {
             Beam newBeam = beamDialog.getBeam();
+            itsUsedBeamlets=beamDialog.getBeamletList();
             // check if we are editting an entry or adding a new entry
             if (editBeam) {
                 itsBeamConfigurationTableModel.updateRow(newBeam,itsSelectedRow);
@@ -1604,6 +1648,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // beam0.directionType=AZEL
         // beam0.duration=300
         // beam0.subbandList=[1,2,3,4,5]
+        // beam0.beamletList[1,2,3,4,5]
         // beam0.tiedarraybeam0.angle1 = 1
         // #
         // beam1.target=test2
@@ -1613,6 +1658,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // beam1.directionType=LMN
         // beam1.duration=360
         // beam1.subbandList=[6..10]
+        // beam1.beamletList[6..10]
         //
         if (choice.equals("AnaBeams") || choice.equals("Beams")) {
             File aNewFile=null;
@@ -1860,6 +1906,17 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         switch (check) {
                             case "beam" :
                                 readBeams.get(idx+1).setSubbandList(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                break;
+                            case "tiedarraybeam" :
+                                break;
+                        }
+                        break;
+                    case "beamletlist" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setBeamletList(keyVal[1]);
                                 break;
                             case "anabeam" :
                                 break;
@@ -2704,6 +2761,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     // keeps lists of available (unused)  and all used stations for Beamformer creation
     private ArrayList<String>    itsAvailableBeamformStations       = new ArrayList<>();
     private ArrayList<String>    itsUsedBeamformStations            = new ArrayList<>();
+    // each beamlet has its bit in the bitset
+    private BitSet   itsUsedBeamlets = new BitSet(216);
     private boolean  editBeam = false;
     private boolean  editAnaBeam = false;
     private boolean  showBeam = false;
