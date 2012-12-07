@@ -2,7 +2,7 @@ import numpy
 import lofar.casaimwrap
 import time
 import os
-import socket 
+import socket
 import subprocess
 import sys
 import IPython.parallel
@@ -43,7 +43,7 @@ class DataProcessorParallelLowLevel:
             measurements = datadescriptor[hostname]
             if isinstance(measurements, str):
                 measurements = [measurements]
-            shell = subprocess.Popen( ["ssh", hostname, "/bin/sh"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=fnull)
+            shell = subprocess.Popen(["ssh", hostname, "/bin/sh"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=fnull)
             shell.stdin.write("export PYTHONPATH=" + os.environ['PYTHONPATH'] + "\n")
             shell.stdin.write("export LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'] +"\n")
             shell.stdin.write("export PATH=" + os.environ['PATH'] +"\n")
@@ -95,7 +95,7 @@ class DataProcessorParallelLowLevel:
         channels = list(set(itertools.izip(itertools.chain.from_iterable(freqs),
             itertools.chain.from_iterable(widths))))
         return channels
-        
+
     def maximum_baseline_length(self):
         results = self._rc[:].apply_sync(lambda processor : processor.maximum_baseline_length(), self._remoteprocessor)
         maximum_baseline_length = max(results)
@@ -149,7 +149,7 @@ class DataProcessorParallelLowLevel:
         return 1.0
 
     def response(self, coordinates, shape, density):
-        results = self._rc[:].apply_sync(lambda processor, *args : 
+        results = self._rc[:].apply_sync(lambda processor, *args :
             processor.response(*args), self._remoteprocessor, \
             coordinates, shape, density)
         response = results[0].copy()
@@ -157,10 +157,10 @@ class DataProcessorParallelLowLevel:
             response += result
         return response
 
-    def close(self) :
+    def close(self):
         if self._connected :
             self._rc.shutdown(hub=True)
             self._connected = False
-    
+
     def __del__(self) :
         self.close()

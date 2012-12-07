@@ -4,9 +4,9 @@ import data_processor_low_level
 
 class DataProcessor:
     def __init__(self, measurement, options):
-        
+
         self._create_processor(measurement, options)
-            
+
         # Since the coordinatesystem and shape are arguments to the grid(), etc.
         # functions, the density and average response have to be recomputed
         # internally when the supplied coordinatesystem or shape do not match
@@ -20,7 +20,7 @@ class DataProcessor:
     def _create_processor(self, measurement, options) :
         self._processor = \
             data_processor_low_level.DataProcessorLowLevel(measurement, options)
-        
+
     def capabilities(self):
         return self._processor.capabilities()
 
@@ -76,10 +76,12 @@ class DataProcessor:
     def degrid(self, coordinates, model, normalization):
         self._update_image_configuration(coordinates, model.shape)
 
-#        # Normalize model image to FLAT_GAIN.
-#        # TODO: Is this required?
-#        model = self.normalize(coordinates, model, normalization,
-#            Normalization.FLAT_GAIN)
+        # TODO: Normalize model image to FLAT_GAIN. At the moment,
+        # LofarFTMachine assumes a FLAT_NOISE image as input, and performs this
+        # normalization internally. It would be more intuitive if it would
+        # accept a FLAT_GAIN input instead.
+        model = self.normalize(coordinates, model, normalization, \
+            Normalization.FLAT_NOISE)
 
         # Degrid
         self._processor.degrid(self._coordinates, model, False)
@@ -89,10 +91,12 @@ class DataProcessor:
 
         self._update_image_configuration(coordinates, model.shape)
 
-#        # Normalize model image to FLAT_GAIN.
-#        # TODO: Is this required?
-#        model = self.normalize(coordinates, model, normalization_model,
-#            Normalization.FLAT_GAIN)
+        # TODO: Normalize model image to FLAT_GAIN. At the moment,
+        # LofarFTMachine assumes a FLAT_NOISE image as input, and performs this
+        # normalization internally. It would be more intuitive if it would
+        # accept a FLAT_GAIN input instead.
+        model = self.normalize(coordinates, model, normalization_model, \
+            Normalization.FLAT_NOISE)
 
         # Compute the residual image.
         residual, weight = self._processor.residual(self._coordinates, model, \

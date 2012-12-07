@@ -7,8 +7,8 @@ class DataProcessorLowLevel:
     def __init__(self, measurement, options):
         self._measurement = measurement
         self._ms = pyrap.tables.table(measurement)
-        self._ms = self._ms.query("ANTENNA1 != ANTENNA2 && OBSERVATION_ID == 0 \
-            && FIELD_ID == 0 && DATA_DESC_ID == 0")
+        self._ms = self._ms.query("ANTENNA1 != ANTENNA2 && OBSERVATION_ID ==" \
+            " 0 && FIELD_ID == 0 && DATA_DESC_ID == 0")
 
 #        assert(options["weight_algorithm"] == WeightAlgorithm.NATURAL)
         self._data_column = "CORRECTED_DATA"
