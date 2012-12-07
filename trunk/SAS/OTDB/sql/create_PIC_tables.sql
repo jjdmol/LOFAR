@@ -66,8 +66,7 @@ CREATE TABLE PICparamref (
 	pruning		INT2			DEFAULT 10,
 	description	TEXT,
 
-	CONSTRAINT      param_PK	 	PRIMARY KEY (paramID),
-	CONSTRAINT	paramID_uniq		UNIQUE(paramID),
+	CONSTRAINT	paramID_uniq		PRIMARY KEY(paramID),
 	CONSTRAINT	paramname_uniq		UNIQUE(PVSSname)
 ) WITHOUT OIDS;
 
@@ -90,12 +89,11 @@ CREATE TABLE PIChierarchy (
 	index		INT2			NOT NULL DEFAULT -1,
 	leaf		BOOLEAN			DEFAULT TRUE,
 
-	CONSTRAINT	param_uniq_in_tree	UNIQUE(treeID, nodeID)
+	CONSTRAINT	param_uniq_in_tree	PRIMARY KEY(treeID, nodeID)
 ) WITHOUT OIDS;
 
 -- Index: pichierarchy_treeid_nodeid_indx
-
-CREATE UNIQUE INDEX PIChierarchy_treeid_nodeid_indx ON PIChierarchy(treeid, nodeid);
+--CREATE UNIQUE INDEX PIChierarchy_treeid_nodeid_indx ON PIChierarchy(treeid, nodeid);
 
 --
 -- PIC Key Values Time sets.
@@ -110,12 +108,9 @@ CREATE TABLE PICkvt (
 	value		TEXT			NOT NULL,
 	time		TIMESTAMP		DEFAULT now(),
 
-	CONSTRAINT	pickvt_uniq		UNIQUE(paramID, time)
+	CONSTRAINT	pickvt_uniq		PRIMARY KEY(paramID, time)
 ) WITHOUT OIDS;
 
 CREATE INDEX PIC_kvt_id   ON PICkvt(paramID);
 CREATE INDEX PIC_kvt_time ON PICkvt(time);
-CREATE UNIQUE INDEX PIC_kvt_id_time_indx ON pickvt(paramid, "time");
-
-
-
+--CREATE UNIQUE INDEX PIC_kvt_id_time_indx ON pickvt(paramid, "time");
