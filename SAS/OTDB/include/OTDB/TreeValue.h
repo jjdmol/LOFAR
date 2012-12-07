@@ -40,6 +40,8 @@ namespace LOFAR {
 // \addtogroup OTDB
 // @{
 
+using boost::posix_time::not_a_date_time;
+
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
 

@@ -26,7 +26,6 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
-#include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h>
 
 //# ACC Includes
@@ -43,6 +42,8 @@
 
 #include <CEPApplMgr.h>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 // forward declaration
 
 namespace LOFAR {
@@ -56,7 +57,7 @@ using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
 using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ParentControl;
-
+using boost::posix_time::ptime;
 
 class OnlineControl : public GCFTask,
                       public CEPApplMgrInterface

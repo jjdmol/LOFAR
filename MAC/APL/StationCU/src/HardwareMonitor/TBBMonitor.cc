@@ -22,7 +22,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
-#include <Common/lofar_datetime.h>
 #include <Common/StringUtil.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -39,6 +38,9 @@
 #include "RCUConstants.h"
 #include "PVSSDatapointDefs.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+using namespace boost::posix_time;
 
 namespace LOFAR {
 	using namespace GCF::TM;

@@ -29,6 +29,7 @@
 #include <Common/lofar_fstream.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_iomanip.h>
 #include <Common/Exception.h>
 #include <OTDB/TreeMaintenance.h>
 

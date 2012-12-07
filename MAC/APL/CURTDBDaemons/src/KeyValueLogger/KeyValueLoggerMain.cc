@@ -35,18 +35,13 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
-	try {
-		GCFScheduler::instance()->init(argc, argv, "KeyValueLogger");
-		LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_KVLogger");
+	GCFScheduler::instance()->init(argc, argv, "KeyValueLogger");
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_KVLogger");
 
-		KeyValueLogger kvl("KeyValueLogger"); 
-		kvl.start(); // make initial transition
+	KeyValueLogger kvl("KeyValueLogger"); 
+	kvl.start(); // make initial transition
 
-		GCFScheduler::instance()->run();
-	} catch( Exception &ex ) {
-		LOG_FATAL_STR("Caught exception: " << ex);
-		return 1;
-	}
+	GCFScheduler::instance()->run();
 
 	return (0);
 }

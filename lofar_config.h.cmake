@@ -172,6 +172,3 @@
 
 /* Define to 1 if you have a declaration for the `getprotobyname_r' function. */
 #cmakedefine HAVE_GETPROTOBYNAME_R 1
-
-/* Define to 1 if you have a declaration for the `strnlen' function. */
-#cmakedefine HAVE_STRNLEN 1

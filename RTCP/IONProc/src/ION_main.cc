@@ -51,6 +51,7 @@
 #include <sys/mman.h>
 
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 
 #if defined HAVE_MPI
 #include <mpi.h>

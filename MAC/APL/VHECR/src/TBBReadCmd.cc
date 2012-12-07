@@ -25,11 +25,13 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/lofar_datetime.h>
 #include <VHECR/TBBReadCmd.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace LOFAR {
   namespace VHECR {
+
+using namespace boost::posix_time;
 
 //
 // TBBReadCmd(...)

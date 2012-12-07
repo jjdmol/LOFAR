@@ -24,7 +24,6 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h>
 #include <OTDB/OTDBevent.h>
 
