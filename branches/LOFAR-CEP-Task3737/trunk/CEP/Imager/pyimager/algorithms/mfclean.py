@@ -254,8 +254,8 @@ def mfclean(options):
     #
     # Set to search for peak in I^2+Q^2+U^2+V^2 domain or each stokes plane
     # seperately. Ignored for hogbom and msclean for now.
-    join_stokes = False
-#    join_stokes = True
+#    join_stokes = False
+    join_stokes = True
 
     # Compute approximate PSFs.
     util.notice("computing approximate point spread functions...")
@@ -412,7 +412,6 @@ def mfclean(options):
 
                     plane_weight = numpy.sqrt(weight[i][ch, cr_slice] \
                         / max_weight)
-                    print plane_weight
                     if numpy.any(plane_weight > 0.01):
                         weight_mask = numpy.ones((residual[i].shape[2:]))
                     else:
