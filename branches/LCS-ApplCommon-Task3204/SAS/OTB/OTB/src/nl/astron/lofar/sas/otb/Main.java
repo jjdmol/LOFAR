@@ -132,7 +132,7 @@ public class Main {
             if (f.exists()) {
                 PropertyConfigurator.configure(logConfig);
             } else {
-                logConfig = File.separator+"opt"+File.separator+"sas"+File.separator+logConfig;
+                logConfig = File.separator+"opt"+File.separator+"sas"+File.separator+"otb"+File.separator+"etc"+File.separator+logConfig;
                 f = new File(logConfig);
                 if (f.exists()) {
                     PropertyConfigurator.configure(logConfig);

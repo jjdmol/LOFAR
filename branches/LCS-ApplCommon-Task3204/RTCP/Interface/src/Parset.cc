@@ -335,6 +335,10 @@ unsigned Parset::maxNrStreamsPerPset(OutputType outputType, bool force) const
   return nrPsets == 0 ? 0 : (nrOutputStreams + nrPsets - 1) / nrPsets;
 }
 
+size_t Parset::nrBytesPerComplexSample() const
+{
+  return 2 * nrBitsPerSample() / 8;
+}
 
 unsigned Parset::nyquistZone() const
 {
@@ -376,7 +380,7 @@ std::vector<double> Parset::subbandToFrequencyMapping() const
   std::vector<double>   subbandFreqs(subbandIds.size());
 
   for (unsigned subband = 0; subband < subbandIds.size(); subband ++)
-    subbandFreqs[subband] = sampleRate() * (subbandIds[subband] + subbandOffset);
+    subbandFreqs[subband] = subbandBandwidth() * (subbandIds[subband] + subbandOffset);
 
   return subbandFreqs;
 }
@@ -473,14 +477,14 @@ double Parset::beamDuration(unsigned beam) const
 }
 
 
-std::vector<double> Parset::getPencilBeam(unsigned beam, unsigned pencil) const
+std::vector<double> Parset::getTAB(unsigned beam, unsigned pencil) const
 {
-  std::vector<double> pencilBeam(2);
+  std::vector<double> TAB(2);
  
-  pencilBeam[0] = getDouble(str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].angle1") % beam % pencil));
-  pencilBeam[1] = getDouble(str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].angle2") % beam % pencil));
+  TAB[0] = getDouble(str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].angle1") % beam % pencil));
+  TAB[1] = getDouble(str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].angle2") % beam % pencil));
 
-  return pencilBeam;
+  return TAB;
 }
 
 
@@ -503,7 +507,7 @@ double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
 }
 
 
-std::vector<string> Parset::pencilBeamStationList(unsigned beam, unsigned pencil) const
+std::vector<string> Parset::TABStationList(unsigned beam, unsigned pencil) const
 {
   string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].stationList") % beam % pencil);
   std::vector<string> stations;
@@ -668,7 +672,7 @@ double Parset::getTime(const char *name) const
   return to_time_t(boost::posix_time::time_from_string(getString(name)));
 }
 
-unsigned Parset::nrPencilBeams(unsigned beam) const
+unsigned Parset::nrTABs(unsigned beam) const
 {
   using boost::format;
   return getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % beam));
@@ -818,14 +822,14 @@ unsigned Parset::clockSpeed() const
   return getUint32("Observation.sampleClock") * 1000000;
 } 
 
-double Parset::sampleRate() const
+double Parset::subbandBandwidth() const
 {
   return 1.0 * clockSpeed() / 1024;
 } 
 
 double Parset::sampleDuration() const
 {
-  return 1.0 / sampleRate();
+  return 1.0 / subbandBandwidth();
 } 
 
 unsigned Parset::dedispersionFFTsize() const
@@ -990,7 +994,7 @@ bool Parset::checkFakeInputData() const
 
 double Parset::CNintegrationTime() const
 {
-  return nrSubbandSamples() / sampleRate();
+  return nrSamplesPerSubband() / subbandBandwidth();
 }
 
 double Parset::IONintegrationTime() const
@@ -998,9 +1002,14 @@ double Parset::IONintegrationTime() const
   return CNintegrationTime() * IONintegrationSteps();
 }
 
-unsigned Parset::nrSubbandSamples() const
+unsigned Parset::nrSamplesPerSubband() const
 {
   return CNintegrationSteps() * nrChannelsPerSubband();
+}
+
+unsigned Parset::nrSamplesPerChannel() const
+{
+  return CNintegrationSteps();
 }
 
 unsigned Parset::nrHistorySamples() const
@@ -1010,17 +1019,17 @@ unsigned Parset::nrHistorySamples() const
 
 unsigned Parset::nrSamplesToCNProc() const
 {
-  return nrSubbandSamples() + nrHistorySamples() + 32 / (NR_POLARIZATIONS * 2 * nrBitsPerSample() / 8);
+  return nrSamplesPerSubband() + nrHistorySamples() + 32 / (NR_POLARIZATIONS * 2 * nrBitsPerSample() / 8);
 }
 
 unsigned Parset::inputBufferSize() const
 {
-  return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer") * sampleRate());
+  return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer") * subbandBandwidth());
 }
 
 unsigned Parset::maxNetworkDelay() const
 {
-  return (unsigned) (getDouble("OLAP.maxNetworkDelay") * sampleRate());
+  return (unsigned) (getDouble("OLAP.maxNetworkDelay") * subbandBandwidth());
 }
 
 unsigned Parset::nrSubbandsPerPset() const
@@ -1095,7 +1104,7 @@ std::vector<unsigned> Parset::subbandToSAPmapping() const
 
 double Parset::channelWidth() const
 {
-  return sampleRate() / nrChannelsPerSubband();
+  return subbandBandwidth() / nrChannelsPerSubband();
 }
 
 bool Parset::delayCompensation() const
@@ -1205,7 +1214,7 @@ double Parset::channel0Frequency(size_t subband) const
   // if the 2nd PPF is used, the subband is shifted half a channel
   // downwards, so subtracting half a subband results in the
   // center of channel 0 (instead of the bottom).
-  return sbFreq - 0.5 * sampleRate();
+  return sbFreq - 0.5 * subbandBandwidth();
 }
 
 unsigned Parset::nrSlotsInFrame() const
@@ -1232,36 +1241,36 @@ bool Parset::realTime() const
   return getBool("OLAP.realTime");
 }
 
-std::vector<unsigned> Parset::nrPencilBeams() const
+std::vector<unsigned> Parset::nrTABs() const
 {
   std::vector<unsigned> counts(nrBeams());
 
   for (unsigned beam = 0; beam < nrBeams(); beam++)
-    counts[beam] = nrPencilBeams(beam);
+    counts[beam] = nrTABs(beam);
 
   return counts;
 }
 
-unsigned Parset::totalNrPencilBeams() const
+unsigned Parset::totalNrTABs() const
 {
-  std::vector<unsigned> beams = nrPencilBeams();
+  std::vector<unsigned> beams = nrTABs();
 
   return std::accumulate(beams.begin(), beams.end(), 0);
 }
 
-unsigned Parset::maxNrPencilBeams() const
+unsigned Parset::maxNrTABs() const
 {
-  std::vector<unsigned> beams = nrPencilBeams();
+  std::vector<unsigned> beams = nrTABs();
 
   return *std::max_element(beams.begin(), beams.end());
 }
 
-BeamCoordinates Parset::pencilBeams(unsigned beam) const
+BeamCoordinates Parset::TABs(unsigned beam) const
 {
   BeamCoordinates coordinates;
 
-  for (unsigned pencil = 0; pencil < nrPencilBeams(beam); pencil ++) {
-    const std::vector<double> coords = getPencilBeam(beam, pencil);
+  for (unsigned pencil = 0; pencil < nrTABs(beam); pencil ++) {
+    const std::vector<double> coords = getTAB(beam, pencil);
 
     // assume ra,dec
     coordinates += BeamCoord3D(coords[0],coords[1]);
@@ -1331,7 +1340,7 @@ Transpose2::Transpose2( const Parset &parset )
   coherentTimeIntFactor( parset.coherentStokesTimeIntegrationFactor() ),
   incoherentTimeIntFactor( parset.incoherentStokesTimeIntegrationFactor() ),
 
-  nrBeams( parset.totalNrPencilBeams() ),
+  nrBeams( parset.totalNrTABs() ),
   coherentNrSubbandsPerFile( parset.coherentStokesNrSubbandsPerFile() ),
   incoherentNrSubbandsPerFile( parset.incoherentStokesNrSubbandsPerFile() ),
 
@@ -1482,7 +1491,7 @@ std::vector<struct StreamInfo> Transpose2::generateStreamInfo( const Parset &par
   info.stream = 0;
 
   for (unsigned sap = 0; sap < nrSAPs; sap++) {
-    const unsigned nrBeams = parset.nrPencilBeams(sap);
+    const unsigned nrBeams = parset.nrTABs(sap);
 
     info.sap = sap;
 

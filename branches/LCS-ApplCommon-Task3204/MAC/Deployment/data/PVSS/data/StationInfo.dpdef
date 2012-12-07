@@ -46,10 +46,18 @@ LBA.RotationMatrix.Y	floatArr
 LBA.RotationMatrix.Z	floatArr
 
 
+#
+# Next points are needed for dataparameterization Do not alter them unless you know what you are doing. tabs are essential in these
+#
+
 !# DbArchiveInfo
-!ElementName			TypeName	DetailNr	_archive.._type	_archive.._archive
-!_mp_StationInfo.datastream0	SoftwareMonitor	45		1
+!ElementName			TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class
+!_mp_StationInfo.datastream0	SoftwareMonitor			45	1
 !_mp_StationInfo.datastream0	SoftwareMonitor	1		15		_ValueArchive_2
-!_mp_StationInfo.datastream1	SoftwareMonitor	45		1
+!_mp_StationInfo.datastream1	SoftwareMonitor			45	1
 !_mp_StationInfo.datastream1	SoftwareMonitor	1		15		_ValueArchive_2
 !
+!# DpValue
+!ElementName	TypeName	_original.._value
+!_dt_StationInfo.Leaf	_DynamicDatapoints	"_mp_StationInfo.datastream0:_archive", "_mp_StationInfo.datastream1:_archive"
+!_dt_StationInfo.DynamicAttribute	_DynamicDatapoints	"_da_none", "_da_none"

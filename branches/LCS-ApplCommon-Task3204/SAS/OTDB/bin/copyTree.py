@@ -24,12 +24,12 @@ def copyVICtree(treeID):
         newNodeIDmap[node['nodeid']] = newNodeID
         if node['value'] == None:
             node['value'] = ''
+        print "%s = %s (id:%d -> %d)" % (node['name'], node['value'][0:30], node['nodeid'], newNodeID)
         query = "insert into VIChierarchy(treeid,nodeid,parentID,paramRefID,name,index,leaf,value) \
           values (%d,%d,%d,%d,'%s',%d,'%s','%s')" %  \
           (treeID, newNodeID, newNodeIDmap[node['parentid']], compIDmap[node['paramrefid']], \
            node['name'], node['index'], node['leaf'], node['value'])
         dummy = toDB.query(query)
-        print "%s = %s (id:%d -> %d)" % (node['name'], node['value'][0:30], node['nodeid'], newNodeID)
 
     # Finally copy the parameters
     fromParList = fromDB.query("select * from VIChierarchy where treeid=%d and leaf='true' order by nodeid" % treeID).dictresult()
@@ -40,13 +40,55 @@ def copyVICtree(treeID):
         newNodeIDmap[par['nodeid']] = newNodeID
         if par['value'] == None:
             par['value'] = ''
+        print "%s = %s (id:%d -> %d)" % (par['name'], par['value'][0:30], par['nodeid'], newNodeID)
         query = "insert into VIChierarchy(treeid,nodeid,parentID,paramRefID,name,index,leaf,value) \
           values (%d,%d,%d,%d,'%s',%d,'%s','%s')" %  \
           (treeID, newNodeID, newNodeIDmap[par['parentid']], parIDmap[par['paramrefid']], \
            par['name'], par['index'], par['leaf'], par['value'])
         dummy = toDB.query(query)
-        print "%s = %s (id:%d -> %d)" % (par['name'], par['value'][0:30], par['nodeid'], newNodeID)
 
+#
+# copyTemplateTree(treeID)
+#
+def copyTemplateTree(treeID):
+    """
+    Copy the Template tree by first copying the nodes and then the parameters.
+    """
+    # Unfortunately there are no suitable stored procedures for the functionality we need.
+
+    # First copy all nodes in order of original creation so the parentID can be set in the new DB
+    fromNodeList = fromDB.query("select * from VICtemplate where treeid=%d and leaf='false' order by nodeid" % treeID).dictresult()
+    print "Found %d nodes in the tree" % len(fromNodeList)
+    newNodeIDmap = {}
+    newNodeIDmap[0] = 0
+    for node in fromNodeList:
+        # copy node
+        newNodeID = toDB.query("select * from nextval('VICtemplateID')").getresult()[0][0]
+        newNodeIDmap[node['nodeid']] = newNodeID
+        if node['limits'] == None:
+            node['limits'] = ''
+        print "%s = %s (id:%d -> %d)" % (node['name'], node['limits'][0:30], node['nodeid'], newNodeID)
+        query = "insert into VICtemplate(treeid,nodeid,parentID,originID,name,index,leaf,instances,limits) \
+          values (%d,%d,%d,%d,'%s',%d,'%s',%d,'%s')" %  \
+          (treeID, newNodeID, newNodeIDmap[node['parentid']], compIDmap[node['originid']], \
+           node['name'], node['index'], node['leaf'], node['instances'], node['limits'])
+        dummy = toDB.query(query)
+
+    # Finally copy the parameters
+    fromParList = fromDB.query("select * from VICtemplate where treeid=%d and leaf='true' order by nodeid" % treeID).dictresult()
+    print "Found %d parameters in the tree" % len(fromParList)
+    for par in fromParList:
+        # copy parameter
+        newNodeID = toDB.query("select * from nextval('VICtemplateID')").getresult()[0][0]
+        newNodeIDmap[par['nodeid']] = newNodeID
+        if par['limits'] == None:
+            par['limits'] = ''
+        print "%s = %s (id:%d -> %d)" % (par['name'], par['limits'][0:30], par['nodeid'], newNodeID)
+        query = "insert into VICtemplate(treeid,nodeid,parentID,originID,name,index,leaf,instances,limits) \
+          values (%d,%d,%d,%d,'%s',%d,'%s',%d,'%s')" %  \
+          (treeID, newNodeID, newNodeIDmap[par['parentid']], parIDmap[par['originid']], \
+           par['name'], par['index'], par['leaf'], par['instances'], par['limits'])
+        dummy = toDB.query(query)
 
        
 #
@@ -58,17 +100,66 @@ def copyTreeMetaData(treeID, campID):
     """
     # First create the tree. Unfortunately there are no suitable stored procedures to do this in a nice way...
 	# TODO: Funerable in the current implementation are groupid and pt+pst+strategy
-    #       the name is always left empty so we cannot accidently create a default template
+    #       The name is always left empty so we cannot accidently create a default template
     fromTree = fromDB.query("select * from otdbtree where treeid=%d" % treeID).dictresult()[0]
-    query = "insert into otdbtree(treeid,momid,originid,classif,treetype,state,creator, \
+    query = ''
+    if fromTree['treetype'] == '20':
+      query = "insert into otdbtree(treeid,momid,originid,classif,treetype,state,creator, \
       campaign,starttime,stoptime,owner,description,groupid,processtype,processsubtype,strategy) values \
       (%d,%d,0,%d::int2,%d::int2,%d::int2,%d,%d::int2,'%s','%s',%d,'%s',%d,'%s','%s','%s')" %  \
       (treeID, fromTree['momid'], fromTree['classif'], fromTree['treetype'], fromTree['state'],  \
       fromTree['creator'], campID, fromTree['starttime'], fromTree['stoptime'],  \
       fromTree['owner'], fromTree['description'], fromTree['groupid'],  \
       fromTree['processtype'], fromTree['processsubtype'], fromTree['strategy'])
+    else:
+      query = "insert into otdbtree(treeid,momid,originid,classif,treetype,state,creator, \
+      campaign,owner,description,groupid,processtype,processsubtype,strategy) values \
+      (%d,%d,0,%d::int2,%d::int2,%d::int2,%d,%d::int2,%d,'%s',%d,'%s','%s','%s')" %  \
+      (treeID, fromTree['momid'], fromTree['classif'], fromTree['treetype'], fromTree['state'],  \
+      fromTree['creator'], campID, \
+      fromTree['owner'], fromTree['description'], fromTree['groupid'],  \
+      fromTree['processtype'], fromTree['processsubtype'], fromTree['strategy'])
+    print query
     result = toDB.query(query)  # void function
     print "Created metadata for tree %d" % treeID
+    return
+
+
+#
+# copyStateHistory(treeID)
+#
+def copyStateHistory(treeID):
+    """
+    Copy the state-history of the tree.
+    """
+    # Unfortunately there are no suitable stored procedures to do this in a nice way...
+    fromStateList = fromDB.query("select * from statehistory where treeid=%d" % treeID).dictresult()
+    for fromState in fromStateList:
+        # copy state
+        query = "insert into StateHistory(treeID,momID,state,userID,timestamp) values \
+          (%d,%d,%d::int2,%d,'%s')" %  \
+          (treeID, fromState['momid'], fromState['state'], fromState['userid'], fromState['timestamp'])
+        result = toDB.query(query)  # void function
+    print "Copied state-history for tree %d" % treeID
+    return
+
+
+#
+# copyVICkvt(treeID)
+#
+def copyVICkvt(treeID):
+    """
+    Copy the key-value information of this tree.
+    """
+    # Unfortunately there are no suitable stored procedures to do this in a nice way...
+    fromKvtList = fromDB.query("select * from vickvt where treeid=%d" % treeID).dictresult()
+    for fromkvt in fromKvtList:
+        # copy kvt
+        query = "insert into vickvt(treeID,paramname,value,time) values \
+          (%d,'%s','%s','%s')" %  \
+          (treeID, fromkvt['paramname'], fromkvt['value'], fromkvt['timestamp'])
+        result = toDB.query(query)  # void function
+    print "Copied key-value information for tree %d" % treeID
     return
 
 
@@ -88,7 +179,7 @@ def	checkCampaign(campaignName):
         print "Campaign '%s' already exists (id=%d)" % (fromCamp['name'], toCamp[0]['id'])
         return toCamp[0]['id']
     except:
-        newID = toDB.query("select * from saveCampaign(0,%s,%s,%s,%s,%s)" %
+        newID = toDB.query("select * from saveCampaign(0,'%s','%s','%s','%s','%s')" % 
           (fromCamp['name'],fromCamp['title'],fromCamp['pi'],fromCamp['co_i'],fromCamp['contact'])).getresult()[0][0]
         print "Campaign '%s' copied (id=%d) => %d" % (fromCamp['name'], fromCamp['id'], newID)
         return newID
@@ -104,7 +195,7 @@ def copyOrMapComponents(version):
 
     # get all nodes with this version
     nodeList = fromDB.query("select * from getVCNodeList('%%', %d, 'false')" % version).dictresult()
-    print "Found %d components to" % len(nodeList)
+    print "Found %d components to map" % len(nodeList)
     for comp in nodeList:
         newNodeID = toDB.query("select * from saveVCnode(1, %d, '%s', %d, 3::int2, '%s', '%s')" % 
                 (comp['nodeid'], comp['name'], version, comp['constraints'], comp['description'])).getresult()[0][0]
@@ -135,11 +226,11 @@ if __name__ == '__main__':
     """
 
     # check syntax of invocation
-    # Expected syntax: copyTree momID fromDB toDB
+    # Expected syntax: copyTree treeID fromDB toDB
     if (len(sys.argv) != 4):
-        print "Syntax: %s MoMID fromDB toDB" % sys.argv[0]
+        print "Syntax: %s treeID fromDB toDB" % sys.argv[0]
         sys.exit(1)
-    momID      = int(sys.argv[1])
+    treeID     = int(sys.argv[1])
     fromDBname = sys.argv[2]
     toDBname   = sys.argv[3]
     
@@ -150,21 +241,20 @@ if __name__ == '__main__':
     print "Connected to database", toDBname
 
     # Check for tree-existance in both databases.
-    fromDBtree = fromDB.query("select * from gettreelist(0::int2,3::int2,0,'','','') where momid=%d" % momID).dictresult()
-    toDBtree = toDB.query("select * from gettreelist(0::int2,3::int2,0,'','','') where momid=%d" % momID).dictresult()
+    fromDBtree = fromDB.query("select * from OTDBtree t INNER JOIN campaign c ON c.ID = t.campaign where treeID=%d" % treeID).dictresult()
+    toDBtree = toDB.query("select * from otdbtree where treeID=%d" % treeID).dictresult()
     if len(fromDBtree) == 0:
-        print "Tree with MoMId %d not found in database %s" % (momID, fromDBname)
+        print "Tree with treeID %d not found in database %s" % (treeID, fromDBname)
         sys.exit(1)
     if len(toDBtree) != 0:
-        print "Tree with MoMId %d already exists in database %s" % (momID, toDBname)
+        print "Tree with treeID %d already exists in database %s" % (treeID, toDBname)
         # TODO: implement -f option to copy the tree under a different number.
         sys.exit(1)
-    if fromDBtree[0]['type'] == 10:	# PIC tree?
+    if fromDBtree[0]['treetype'] == 10:	# PIC tree?
         print "PIC trees cannot be copied"
         sys.exit(1)
 
     # What's the version of this tree?
-    treeID    = fromDBtree[0]['treeid']
     nodeDefID = fromDB.query("select * from getTopNode(%d)" % treeID).dictresult()[0]
     nodeInfo  = fromDB.query("select * from getVICnodedef(%s)" % nodeDefID['paramdefid']).dictresult()[0]
     version   = nodeInfo['version']
@@ -182,22 +272,22 @@ if __name__ == '__main__':
     # components are now in the new database for sure and the node and par ID's are in the map dicts.
 
 	# make sure the campaign exists also
-    newCampaignID = checkCampaign(fromDBtree[0]['campaign'])
+    print fromDBtree
+    newCampaignID = checkCampaign(fromDBtree[0]['name'])
 
     # TODO: check user table (owner of tree must exist)
 
     # copy the trees metadata first
     copyTreeMetaData(treeID, newCampaignID)
 
-    if fromDBtree[0]['type'] == 20:	# template?
-        print "Copy of template trees is not supported yet"
-        sys.exit(2)
+    if fromDBtree[0]['treetype'] == 20:	# template?
+        copyTemplateTree(treeID)
     else:	# type must be 30 (VIC tree)
         copyVICtree(treeID)
 
-    # TODO: copy treeState table also
+    copyStateHistory(treeID)
 
-    # TODO: copy vickvt table also
+    copyVICkvt(treeID)
 
     toDB.close()
     fromDB.close()

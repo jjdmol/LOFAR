@@ -53,7 +53,7 @@ template <typename SAMPLE_TYPE> class AsyncTranspose
 
   unsigned itsNrSubbands;
   unsigned itsNrSubbandsPerPset;
-  unsigned itsNrPencilBeams;
+  unsigned itsNrTABs;
 
   // A mapping that tells us, if we receive a message from a source,
   // to which pset that source belongs.

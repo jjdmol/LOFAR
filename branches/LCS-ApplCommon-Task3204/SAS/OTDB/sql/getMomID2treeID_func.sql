@@ -36,6 +36,7 @@ CREATE TYPE treeIDmomID AS (treeID INTEGER, momID INTEGER);
 
 CREATE OR REPLACE FUNCTION getMomID2treeID()
   RETURNS SETOF treeIDmomID AS $$
+    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vRecord		RECORD;
 

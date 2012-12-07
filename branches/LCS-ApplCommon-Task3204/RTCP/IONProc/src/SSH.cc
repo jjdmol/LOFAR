@@ -59,6 +59,36 @@ namespace RTCP {
 Mutex coutMutex;
 #endif
 
+void free_session( LIBSSH2_SESSION *session )
+{
+  ScopedDelayCancellation dc;
+
+  if (!session)
+    return;
+
+  libssh2_session_free(session);
+}
+
+void free_channel( LIBSSH2_CHANNEL *channel )
+{
+  ScopedDelayCancellation dc;
+
+  if (!channel)
+    return;
+
+  libssh2_channel_free(channel);
+}
+
+typedef SmartPtr<LIBSSH2_SESSION, SmartPtrFreeFunc<LIBSSH2_SESSION, free_session> > session_t;
+typedef SmartPtr<LIBSSH2_CHANNEL, SmartPtrFreeFunc<LIBSSH2_CHANNEL, free_channel> > channel_t;
+
+/*
+ * Make sure we ScopedDelayCancellation around calls to libssh2 because
+ * it is an external library.
+ *
+ * Note that waitsocket() is a forced cancellation point.
+ */
+
 SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, bool captureStdout)
 :
   itsLogPrefix(logPrefix),
@@ -125,30 +155,15 @@ std::string SSHconnection::stdoutBuffer() const
   return itsStdoutBuffer.str();
 }
 
-void SSHconnection::free_session( LIBSSH2_SESSION *session )
+LIBSSH2_SESSION *SSHconnection::open_session( FileDescriptorBasedStream &sock )
 {
-  if (!session)
-    return;
+  ScopedDelayCancellation dc;
 
-  libssh2_session_disconnect(session, "Normal Shutdown, Thank you for playing");
-  libssh2_session_free(session);
-}
-
-void SSHconnection::free_channel( LIBSSH2_CHANNEL *channel )
-{
-  if (!channel)
-    return;
-
-  libssh2_channel_free(channel);
-}
-
-bool SSHconnection::open_session( FileDescriptorBasedStream &sock )
-{
   int rc;
 
   /* Create a session instance */
-  session = libssh2_session_init();
-  if (!session) {
+  session_t session = libssh2_session_init();
+  if (!session.get()) {
     LOG_ERROR_STR( itsLogPrefix << "Cannot create SSH session object" );
     return false;
   }
@@ -161,12 +176,14 @@ bool SSHconnection::open_session( FileDescriptorBasedStream &sock )
    */
   while ((rc = libssh2_session_handshake(session, sock.fd)) ==
          LIBSSH2_ERROR_EAGAIN) {
-    waitsocket(sock);
+    waitsocket(session, sock);
   }
 
+  /* NOTE: libssh2 now holds a copy of sock.fd, so don't invalidate it! */
+
   if (rc) {
-    LOG_ERROR_STR( itsLogPrefix << "Failure establishing SSH session: " << rc);
-    return false;
+    LOG_ERROR_STR( itsLogPrefix << "Failure establishing SSH session: " << rc << " (" << explainLibSSH2Error(rc) << ")");
+    return NULL;
   }
 
   /* Authenticate by public key */
@@ -177,54 +194,86 @@ bool SSHconnection::open_session( FileDescriptorBasedStream &sock )
                       NULL                 // password
                       )) ==
          LIBSSH2_ERROR_EAGAIN) {
-    waitsocket(sock);
+    waitsocket(session, sock);
   }
 
   if (rc) {
-    LOG_ERROR_STR( itsLogPrefix << "Authentication by public key failed: " << rc);
+    LOG_ERROR_STR( itsLogPrefix << "Authentication by public key failed: " << rc << " (" << explainLibSSH2Error(rc) << ")");
 
     // unrecoverable errors
     if (rc == LIBSSH2_ERROR_FILE)
       THROW(SSHException, "Error reading read key file " << itsSSHKey);
 
-    return false;
+    return NULL;
   }
 
-  return true;
+  return session.release();
 }
 
-bool SSHconnection::open_channel( FileDescriptorBasedStream &sock )
+void SSHconnection::close_session( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock )
 {
+  ScopedDelayCancellation dc;
+
+  int rc;
+
+  while ((rc = libssh2_session_disconnect(session, "Normal Shutdown, Thank you for playing")) ==
+         LIBSSH2_ERROR_EAGAIN) {
+    waitsocket(session, sock);
+  }
+
+  if (rc)
+  {
+    LOG_ERROR_STR( itsLogPrefix << "Failure closing session: " << rc << " (" << explainLibSSH2Error(rc) << ")");
+    return;
+  }
+}
+
+LIBSSH2_CHANNEL *SSHconnection::open_channel( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock )
+{
+  ScopedDelayCancellation dc;
+
+  channel_t channel;
+
   /* Exec non-blocking on the remote host */
   while( (channel = libssh2_channel_open_session(session)) == NULL &&
          libssh2_session_last_error(session,NULL,NULL,0) ==
          LIBSSH2_ERROR_EAGAIN )
   {
-    waitsocket(sock);
+    waitsocket(session, sock);
   }
 
-  if (!channel)
+  if (!channel.get())
   {
     LOG_ERROR_STR( itsLogPrefix << "Could not set up SSH channel" );
-    return false;
+    return NULL;
   }
 
-  return true;
+  return channel.release();
 }
 
-bool SSHconnection::close_channel( FileDescriptorBasedStream &sock )
+void SSHconnection::close_channel( LIBSSH2_SESSION *session, LIBSSH2_CHANNEL *channel, FileDescriptorBasedStream &sock )
 {
+  ScopedDelayCancellation dc;
+
   int rc;
 
   while( (rc = libssh2_channel_close(channel)) == LIBSSH2_ERROR_EAGAIN ) {
-    waitsocket(sock);
+    waitsocket(session, sock);
   }
 
-  return true;
+  if (rc)
+  {
+    LOG_ERROR_STR( itsLogPrefix << "Failure closing channel: " << rc << " (" << explainLibSSH2Error(rc) << ")");
+    return;
+  }
 }
 
-bool SSHconnection::waitsocket( FileDescriptorBasedStream &sock )
+bool SSHconnection::waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock )
 {
+  // we manually control the cancellation points, so make sure
+  // cancellation is actually disabled.
+  ScopedDelayCancellation dc;
+
   struct timeval timeout;
   int rc;
   fd_set fd;
@@ -271,7 +320,18 @@ void SSHconnection::commThread()
   int rc;
   int exitcode;
   char *exitsignal = 0;
+
+  // WARNING: Make sure sock stays alive while a session is active, because the session
+  // will retain a copy of sock.fd so we can't invalidate it. We don't want to
+  // (for example) send a libssh2_session_disconnect to a sock.fd that has been
+  // reused by the system!
+ 
+  // Declaring sock before session will cause ~sock to be called after
+  // ~session.
+
   SmartPtr<SocketStream> sock;
+  session_t session;
+  channel_t channel;
 
   for(;;) {
     // keep trying to connect
@@ -286,11 +346,21 @@ void SSHconnection::commThread()
 
       Cancellation::point();
 
-      if (!open_session(*sock))
+      // TODO: add a delay if opening session or channel fails
+
+      session = open_session(*sock);
+
+      if (!session.get())
         continue;
 
-      if (!open_channel(*sock))
+      channel = open_channel(session, *sock);
+
+      if (!channel.get()) {
+        close_session(session, *sock);
+
+        session = 0;
         continue;
+      }
     }
 
     break;
@@ -301,12 +371,12 @@ void SSHconnection::commThread()
   while( (rc = libssh2_channel_exec(channel, itsCommandLine.c_str())) ==
          LIBSSH2_ERROR_EAGAIN )
   {
-    waitsocket(*sock);
+    waitsocket(session, *sock);
   }
 
   if (rc)
   {
-    LOG_ERROR_STR( itsLogPrefix << "Failure starting remote command: " << rc);
+    LOG_ERROR_STR( itsLogPrefix << "Failure starting remote command: " << rc << " (" << explainLibSSH2Error(rc) << ")");
     return;
   }
 
@@ -341,7 +411,7 @@ void SSHconnection::commThread()
 
       /* loop until we block */
       do {
-        rc = libssh2_channel_read_ex( channel, s, data[s], sizeof data[s] );
+        rc = libssh2_channel_read_ex(channel, s, data[s], sizeof data[s]);
         if( rc > 0 )
         {
           if (s == 0 && itsCaptureStdout) {
@@ -369,7 +439,7 @@ void SSHconnection::commThread()
               if (!buffer.good()) {
                 // 'line' now holds the remnant
 
-                if (line[s].size() > 1024) {
+                if (line[s].size() > 10240) {
                   LOG_ERROR_STR( itsLogPrefix << "Line too long (" << line[s].size() << "); truncated: " << line[s] );
                   line[s] = "";
                 }
@@ -390,7 +460,7 @@ void SSHconnection::commThread()
         } else {
           if( rc < 0 && rc != LIBSSH2_ERROR_EAGAIN ) {
             /* no need to output this for the EAGAIN case */
-            LOG_ERROR_STR( itsLogPrefix << "libssh2_channel_read_ex returned " << rc << " for channel " << s);
+            LOG_ERROR_STR( itsLogPrefix << "libssh2_channel_read_ex returned " << rc << " (" << explainLibSSH2Error(rc) << ") for channel " << s);
           }   
         }
       } while( rc > 0 );
@@ -405,21 +475,23 @@ void SSHconnection::commThread()
     }
 
     if (nrOpenStreams > 0)
-      waitsocket(*sock);
+      waitsocket(session, *sock);
   }
 
   LOG_DEBUG_STR( itsLogPrefix << "Disconnecting" );
 
-  close_channel(*sock);
+  close_channel(session, channel, *sock);
 
   if (rc == 0)
   {
-    exitcode = libssh2_channel_get_exit_status( channel );
+    exitcode = libssh2_channel_get_exit_status(channel);
     libssh2_channel_get_exit_signal(channel, &exitsignal,
                                     NULL, NULL, NULL, NULL, NULL);
   } else {
     exitcode = 127;
   }
+
+  close_session(session, *sock);
 
   if (exitsignal) {
     LOG_ERROR_STR(itsLogPrefix << "SSH was killed by signal " << exitsignal);
@@ -428,6 +500,70 @@ void SSHconnection::commThread()
   } else {
     LOG_INFO_STR(itsLogPrefix << "Terminated normally");
   }
+}
+
+
+const char *explainLibSSH2Error( int error )
+{
+  const char *explanation;
+
+  switch(error) {
+    default:
+      explanation = "??";
+      break;
+
+      case LIBSSH2_ERROR_NONE:			        explanation ="LIBSSH2_ERROR_NONE"; break;
+      case LIBSSH2_ERROR_SOCKET_NONE:			explanation ="LIBSSH2_ERROR_SOCKET_NONE"; break;
+      case LIBSSH2_ERROR_BANNER_RECV:			explanation ="LIBSSH2_ERROR_BANNER_RECV"; break;
+      case LIBSSH2_ERROR_BANNER_SEND:			explanation ="LIBSSH2_ERROR_BANNER_SEND"; break;
+      case LIBSSH2_ERROR_INVALID_MAC:			explanation ="LIBSSH2_ERROR_INVALID_MAC"; break;
+      case LIBSSH2_ERROR_KEX_FAILURE:			explanation ="LIBSSH2_ERROR_KEX_FAILURE"; break;
+      case LIBSSH2_ERROR_ALLOC:			        explanation ="LIBSSH2_ERROR_ALLOC"; break;
+      case LIBSSH2_ERROR_SOCKET_SEND:			explanation ="LIBSSH2_ERROR_SOCKET_SEND"; break;
+      case LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE:		explanation ="LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE"; break;
+      case LIBSSH2_ERROR_TIMEOUT:			explanation ="LIBSSH2_ERROR_TIMEOUT"; break;
+      case LIBSSH2_ERROR_HOSTKEY_INIT:			explanation ="LIBSSH2_ERROR_HOSTKEY_INIT"; break;
+      case LIBSSH2_ERROR_HOSTKEY_SIGN:			explanation ="LIBSSH2_ERROR_HOSTKEY_SIGN"; break;
+      case LIBSSH2_ERROR_DECRYPT:			explanation ="LIBSSH2_ERROR_DECRYPT"; break;
+      case LIBSSH2_ERROR_SOCKET_DISCONNECT:		explanation ="LIBSSH2_ERROR_SOCKET_DISCONNECT"; break;
+      case LIBSSH2_ERROR_PROTO:			        explanation ="LIBSSH2_ERROR_PROTO"; break;
+      case LIBSSH2_ERROR_PASSWORD_EXPIRED:		explanation ="LIBSSH2_ERROR_PASSWORD_EXPIRED"; break;
+      case LIBSSH2_ERROR_FILE:			        explanation ="LIBSSH2_ERROR_FILE"; break;
+      case LIBSSH2_ERROR_METHOD_NONE:			explanation ="LIBSSH2_ERROR_METHOD_NONE"; break;
+      case LIBSSH2_ERROR_AUTHENTICATION_FAILED:		explanation ="LIBSSH2_ERROR_AUTHENTICATION_FAILED"; break;
+      //case LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED:	explanation ="LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED"; break;
+      case LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED:		explanation ="LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED"; break;
+      case LIBSSH2_ERROR_CHANNEL_OUTOFORDER:		explanation ="LIBSSH2_ERROR_CHANNEL_OUTOFORDER"; break;
+      case LIBSSH2_ERROR_CHANNEL_FAILURE:		explanation ="LIBSSH2_ERROR_CHANNEL_FAILURE"; break;
+      case LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED:	explanation ="LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED"; break;
+      case LIBSSH2_ERROR_CHANNEL_UNKNOWN:		explanation ="LIBSSH2_ERROR_CHANNEL_UNKNOWN"; break;
+      case LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED:	explanation ="LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED"; break;
+      case LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED:	explanation ="LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED"; break;
+      case LIBSSH2_ERROR_CHANNEL_CLOSED:		explanation ="LIBSSH2_ERROR_CHANNEL_CLOSED"; break;
+      case LIBSSH2_ERROR_CHANNEL_EOF_SENT:		explanation ="LIBSSH2_ERROR_CHANNEL_EOF_SENT"; break;
+      case LIBSSH2_ERROR_SCP_PROTOCOL:			explanation ="LIBSSH2_ERROR_SCP_PROTOCOL"; break;
+      case LIBSSH2_ERROR_ZLIB:			        explanation ="LIBSSH2_ERROR_ZLIB"; break;
+      case LIBSSH2_ERROR_SOCKET_TIMEOUT:		explanation ="LIBSSH2_ERROR_SOCKET_TIMEOUT"; break;
+      case LIBSSH2_ERROR_SFTP_PROTOCOL:			explanation ="LIBSSH2_ERROR_SFTP_PROTOCOL"; break;
+      case LIBSSH2_ERROR_REQUEST_DENIED:		explanation ="LIBSSH2_ERROR_REQUEST_DENIED"; break;
+      case LIBSSH2_ERROR_METHOD_NOT_SUPPORTED:		explanation ="LIBSSH2_ERROR_METHOD_NOT_SUPPORTED"; break;
+      case LIBSSH2_ERROR_INVAL:			        explanation ="LIBSSH2_ERROR_INVAL"; break;
+      case LIBSSH2_ERROR_INVALID_POLL_TYPE:		explanation ="LIBSSH2_ERROR_INVALID_POLL_TYPE"; break;
+      case LIBSSH2_ERROR_PUBLICKEY_PROTOCOL:		explanation ="LIBSSH2_ERROR_PUBLICKEY_PROTOCOL"; break;
+      case LIBSSH2_ERROR_EAGAIN:			explanation ="LIBSSH2_ERROR_EAGAIN"; break;
+      case LIBSSH2_ERROR_BUFFER_TOO_SMALL:		explanation ="LIBSSH2_ERROR_BUFFER_TOO_SMALL"; break;
+      case LIBSSH2_ERROR_BAD_USE:			explanation ="LIBSSH2_ERROR_BAD_USE"; break;
+      case LIBSSH2_ERROR_COMPRESS:			explanation ="LIBSSH2_ERROR_COMPRESS"; break;
+      case LIBSSH2_ERROR_OUT_OF_BOUNDARY:		explanation ="LIBSSH2_ERROR_OUT_OF_BOUNDARY"; break;
+      case LIBSSH2_ERROR_AGENT_PROTOCOL:		explanation ="LIBSSH2_ERROR_AGENT_PROTOCOL"; break;
+      case LIBSSH2_ERROR_SOCKET_RECV:			explanation ="LIBSSH2_ERROR_SOCKET_RECV"; break;
+      case LIBSSH2_ERROR_ENCRYPT:			explanation ="LIBSSH2_ERROR_ENCRYPT"; break;
+      case LIBSSH2_ERROR_BAD_SOCKET:			explanation ="LIBSSH2_ERROR_BAD_SOCKET"; break;
+      case LIBSSH2_ERROR_KNOWN_HOSTS:			explanation ="LIBSSH2_ERROR_KNOWN_HOSTS"; break;
+      //case LIBSSH2_ERROR_BANNER_NONE:			explanation ="LIBSSH2_ERROR_BANNER_NONE"; break;
+  }
+
+  return explanation;
 }
  
 std::vector< SmartPtr<Mutex> > openssl_mutexes;

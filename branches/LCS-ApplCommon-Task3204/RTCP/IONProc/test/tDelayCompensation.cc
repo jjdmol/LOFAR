@@ -52,7 +52,7 @@ void doTest()
 
   unsigned nrBeams    = parset.nrBeams();
   double   startTime  = parset.startTime();
-  double   sampleFreq = parset.sampleRate();
+  double   sampleFreq = parset.subbandBandwidth();
   unsigned seconds    = static_cast<unsigned>(floor(startTime));
   unsigned samples    = static_cast<unsigned>((startTime - floor(startTime)) * sampleFreq);
 
@@ -61,9 +61,9 @@ void doTest()
   Delays w(parset, inputs[0].station, ts);
   w.start();
 
-  unsigned nrPencilBeams = 0;
-  Matrix<double> delays(nrBeams, nrPencilBeams + 1);
-  Matrix<casa::MVDirection> prev_directions(nrBeams, nrPencilBeams + 1), directions(nrBeams, nrPencilBeams + 1);
+  unsigned nrTABs = 0;
+  Matrix<double> delays(nrBeams, nrTABs + 1);
+  Matrix<casa::MVDirection> prev_directions(nrBeams, nrTABs + 1), directions(nrBeams, nrTABs + 1);
  
   for (unsigned i = 0; i < 256; i ++) {
     prev_directions = directions;

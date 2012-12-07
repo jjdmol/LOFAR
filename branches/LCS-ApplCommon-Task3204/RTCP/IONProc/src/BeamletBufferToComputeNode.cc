@@ -69,20 +69,19 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
 
   itsLogPrefix = str(boost::format("[obs %u station %s] ") % ps.observationID() % stationName);
 
-  // TODO: make most of these const members
-  itsSampleRate		      = ps.sampleRate();
+  itsSubbandBandwidth	      = ps.subbandBandwidth();
   itsNrSubbands		      = ps.nrSubbands();
   itsNrSubbandsPerPset	      = ps.nrSubbandsPerPset();
-  itsNrSamplesPerSubband      = ps.nrSubbandSamples();
+  itsNrSamplesPerSubband      = ps.nrSamplesPerSubband();
   itsNrBeams		      = ps.nrBeams();
-  itsMaxNrPencilBeams	      = ps.maxNrPencilBeams();
-  itsNrPencilBeams	      = ps.nrPencilBeams();
+  itsMaxNrTABs	              = ps.maxNrTABs();
+  itsNrTABs	              = ps.nrTABs();
   itsNrPhaseTwoPsets	      = ps.phaseTwoPsets().size();
   itsCurrentPhaseOneTwoComputeCore = (itsBlockNumber * itsNrSubbandsPerPset) % itsNrPhaseOneTwoCoresPerPset;
   itsSampleDuration	      = ps.sampleDuration();
   itsDelayCompensation	      = ps.delayCompensation();
   itsCorrectClocks	      = ps.correctClocks();
-  itsNeedDelays               = (itsDelayCompensation || itsMaxNrPencilBeams > 1 || itsCorrectClocks) && itsNrInputs > 0;
+  itsNeedDelays               = (itsDelayCompensation || itsMaxNrTABs > 1 || itsCorrectClocks) && itsNrInputs > 0;
   itsSubbandToSAPmapping      = ps.subbandToSAPmapping();
 
   if (haveStationInput) {
@@ -90,7 +89,8 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
     itsSubbandToRSPslotMapping  = ps.subbandToRSPslotMapping(stationName);
   }
 
-  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSampleRate + itsBlockNumber * itsNrSamplesPerSubband), ps.clockSpeed());
+  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSubbandBandwidth + itsBlockNumber * itsNrSamplesPerSubband), ps.clockSpeed());
+
   itsIsRealTime		      = ps.realTime();
   itsMaxNetworkDelay	      = ps.maxNetworkDelay();
   itsNrHistorySamples	      = ps.nrHistorySamples();
@@ -103,12 +103,12 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   LOG_DEBUG_STR(itsLogPrefix << "maxNetworkDelay = " << itsMaxNetworkDelay << " samples");
 
   if (haveStationInput && itsNeedDelays) {
-    itsDelaysAtBegin.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
-    itsDelaysAfterEnd.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
-    itsBeamDirectionsAtBegin.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
-    itsBeamDirectionsAfterEnd.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
+    itsDelaysAtBegin.resize(itsNrBeams, itsMaxNrTABs + 1);
+    itsDelaysAfterEnd.resize(itsNrBeams, itsMaxNrTABs + 1);
+    itsBeamDirectionsAtBegin.resize(itsNrBeams, itsMaxNrTABs + 1);
+    itsBeamDirectionsAfterEnd.resize(itsNrBeams, itsMaxNrTABs + 1);
 
-    if (itsDelayCompensation || itsMaxNrPencilBeams > 1) {
+    if (itsDelayCompensation || itsMaxNrTABs > 1) {
       itsDelays = new Delays(ps, stationName, itsCurrentTimeStamp);
       itsDelays->start();
     }  
@@ -121,8 +121,8 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
    
   itsDelayedStamps.resize(itsNrBeams);
   itsSamplesDelay.resize(itsNrBeams);
-  itsFineDelaysAtBegin.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
-  itsFineDelaysAfterEnd.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
+  itsFineDelaysAtBegin.resize(itsNrBeams, itsMaxNrTABs + 1);
+  itsFineDelaysAfterEnd.resize(itsNrBeams, itsMaxNrTABs + 1);
   itsFlags.resize(boost::extents[itsNrInputs][itsNrBeams]);
 
 #if defined HAVE_BGP_ION // FIXME: not in preprocess
@@ -147,7 +147,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
 
 #ifdef USE_VALGRIND  
   for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-    for (unsigned pencil = 0; pencil < itsMaxNrPencilBeams + 1; pencil ++)
+    for (unsigned pencil = 0; pencil < itsMaxNrTABs + 1; pencil ++)
       itsDelaysAfterEnd[beam][pencil] = 0;
 #endif        
 
@@ -155,14 +155,14 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
     itsDelays->getNextDelays(itsBeamDirectionsAfterEnd, itsDelaysAfterEnd);
   else
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      for (unsigned pencil = 0; pencil < itsMaxNrPencilBeams + 1; pencil ++)
+      for (unsigned pencil = 0; pencil < itsMaxNrTABs + 1; pencil ++)
 	itsDelaysAfterEnd[beam][pencil] = 0;
    
   // apply clock correction due to cable differences
 
   if (itsCorrectClocks)
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      for (unsigned pencil = 0; pencil < itsMaxNrPencilBeams + 1; pencil ++)
+      for (unsigned pencil = 0; pencil < itsMaxNrTABs + 1; pencil ++)
 	itsDelaysAfterEnd[beam][pencil] += itsClockCorrectionTime;
 }
 
@@ -191,7 +191,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
     // time interval and is expressed in an entire amount of samples.
     //
     // We use the central pencil beam (#0) for the coarse delay compensation.
-    signed int coarseDelay = static_cast<signed int>(floor(0.5 * (itsDelaysAtBegin[beam][0] + itsDelaysAfterEnd[beam][0]) * itsSampleRate + 0.5));
+    signed int coarseDelay = static_cast<signed int>(floor(0.5 * (itsDelaysAtBegin[beam][0] + itsDelaysAfterEnd[beam][0]) * itsSubbandBandwidth + 0.5));
 
     // The fine delay is determined for the boundaries of the current
     // time interval and is expressed in seconds.
@@ -200,7 +200,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
     itsDelayedStamps[beam] -= coarseDelay;
     itsSamplesDelay[beam]  = -coarseDelay;
 
-    for (unsigned pencil = 0; pencil < itsNrPencilBeams[beam] + 1; pencil ++) {
+    for (unsigned pencil = 0; pencil < itsNrTABs[beam] + 1; pencil ++) {
       // we don't do coarse delay compensation for the individual pencil beams to avoid complexity and overhead
       itsFineDelaysAtBegin[beam][pencil]  = static_cast<float>(itsDelaysAtBegin[beam][pencil] - d);
       itsFineDelaysAfterEnd[beam][pencil] = static_cast<float>(itsDelaysAfterEnd[beam][pencil] - d);
@@ -264,7 +264,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::set
   unsigned beam     = itsSubbandToSAPmapping[subband];
 
   if (itsNeedDelays) {
-    for (unsigned p = 0; p < itsNrPencilBeams[beam] + 1; p ++) {
+    for (unsigned p = 0; p < itsNrTABs[beam] + 1; p ++) {
       struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(psetIndex)[p];
 
       beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
@@ -320,7 +320,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
 
           Stream *stream = itsPhaseOneTwoStreams[psetIndex][itsCurrentPhaseOneTwoComputeCore];
 
-          SubbandMetaData metaData(1, itsMaxNrPencilBeams + 1);
+          SubbandMetaData metaData(1, itsMaxNrTABs + 1);
 
           setMetaData(metaData, 0, subband);
           metaData.write(stream);
@@ -330,7 +330,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
 #else
         // create and send all metadata in one "large" message, since initiating a message
         // has significant overhead in FCNP.
-        SubbandMetaData metaData(itsNrPhaseTwoPsets, itsMaxNrPencilBeams + 1);
+        SubbandMetaData metaData(itsNrPhaseTwoPsets, itsMaxNrTABs + 1);
 
         for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
           unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;

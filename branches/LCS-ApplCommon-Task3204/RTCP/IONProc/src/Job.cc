@@ -594,6 +594,8 @@ void Job::jobThread()
       barrier();
 
       // PLC: RELEASE phase
+      itsIsRunning = false;
+      jobQueue.itsReevaluate.broadcast();
 
       if (myPsetNumber == 0) {
         forwardFinalMetaData();

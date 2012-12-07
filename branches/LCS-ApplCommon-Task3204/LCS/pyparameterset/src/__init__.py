@@ -137,6 +137,12 @@ class parameterset(PyParameterSet):
             d[key] = self.get(key).get()
         return d
 
+    def adoptArgv(self, argv):
+        for arg in argv:
+            kv = arg.split('=', 1)
+            if len(kv) == 2:
+                self.replace (kv[0], kv[1])
+
     def get(self, key):
         """Get the parametervalue object of a parameter."""
         return parametervalue (self._get(key), _copyObj=True)

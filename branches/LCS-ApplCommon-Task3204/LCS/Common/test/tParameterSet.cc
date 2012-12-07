@@ -1,4 +1,4 @@
-//# tParameterSet.cc: Simple testprogrm to test the ParameterSet class.
+//# tParameterSet.cc: Program to test the ParameterSet class.
 //#
 //# Copyright (C) 2002-2003
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -272,6 +272,33 @@ int doIt(KeyCompare::Mode mode)
   return 0;
 }
 
+void testUsed()
+{
+  ParameterSet parset;
+  const char* argv1[] = {"name", "k1=v1", "k2={k2=v2}", "-re"};
+  parset.adoptArgv (4, argv1);
+  ASSERT (parset.getString("k1") == "v1");
+  vector<string> unused = parset.unusedKeys();
+  ASSERT (unused.size()==1 && unused[0]=="k2");
+  ASSERT (parset.getString("k2") == "{k2=v2}");
+  unused = parset.unusedKeys();
+  ASSERT (unused.size()==0);
+  const char* argv2[] = {"s1.k1=v1a", "s1.sk1.k2=v2a"};
+  parset.adoptArgv (2, argv2);
+  unused = parset.unusedKeys();
+  ASSERT (unused.size()==2);
+  // Take a subset and check that such keys are marked as used.
+  ParameterSet subset = parset.makeSubset ("s1.");
+  unused = parset.unusedKeys();
+  // Check the subset.
+  ASSERT (unused.size()==0);
+  unused = subset.unusedKeys();
+  ASSERT (unused.size()==2);
+  ASSERT (subset.getString("k1") == "v1a");
+  ASSERT (subset.getString("sk1.k2") == "v2a");
+  unused = subset.unusedKeys();
+  ASSERT (unused.size()==0);
+}
 
 int main()
 {
@@ -279,6 +306,7 @@ int main()
   uint fails(0);
   fails += doIt(KeyCompare::NORMAL);
   fails += doIt(KeyCompare::NOCASE);
+  testUsed();
   if (fails > 0) {
     cout << fails << " test(s) failed" << endl;
     return 1;

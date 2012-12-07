@@ -86,9 +86,10 @@ class Parset: public ParameterSet
     unsigned			nrBaselines() const;
     unsigned			nrCrossPolarisations() const;
     unsigned			clockSpeed() const; // Hz
-    double			sampleRate() const;
+    double			subbandBandwidth() const;
     double			sampleDuration() const;
     unsigned			nrBitsPerSample() const;
+    size_t			nrBytesPerComplexSample() const;
     std::vector<double>		positions() const;
     std::string			positionType() const;
     std::vector<double>		getRefPhaseCentre() const;
@@ -105,7 +106,8 @@ class Parset: public ParameterSet
     unsigned			incoherentStokesNrSubbandsPerFile() const; 
     double			CNintegrationTime() const;
     double			IONintegrationTime() const;
-    unsigned			nrSubbandSamples() const;
+    unsigned			nrSamplesPerChannel() const;
+    unsigned			nrSamplesPerSubband() const;
     unsigned			nrSubbandsPerPset() const; 
     unsigned			nrPhase3StreamsPerPset() const; 
     unsigned			nrHistorySamples() const;
@@ -184,14 +186,14 @@ class Parset: public ParameterSet
     std::string                 beamTarget(unsigned beam) const;
     double                      beamDuration(unsigned beam) const;
 
-    unsigned			nrPencilBeams(unsigned beam) const;
-    std::vector<unsigned>	nrPencilBeams() const;
-    unsigned			totalNrPencilBeams() const;
-    unsigned			maxNrPencilBeams() const;
+    unsigned			nrTABs(unsigned beam) const;
+    std::vector<unsigned>	nrTABs() const;
+    unsigned			totalNrTABs() const;
+    unsigned			maxNrTABs() const;
     bool                        isCoherent(unsigned beam, unsigned pencil) const;
-    BeamCoordinates		pencilBeams(unsigned beam) const;
+    BeamCoordinates		TABs(unsigned beam) const;
     double			dispersionMeasure(unsigned beam=0,unsigned pencil=0) const;
-    std::vector<std::string>	pencilBeamStationList(unsigned beam=0,unsigned pencil=0) const;
+    std::vector<std::string>	TABStationList(unsigned beam=0,unsigned pencil=0) const;
 
     std::vector<unsigned>	subbandList() const;
     unsigned			nrSubbands() const;
@@ -251,7 +253,7 @@ private:
     void			checkVectorLength(const std::string &key, unsigned expectedSize) const;
     void			checkInputConsistency() const;
 
-    std::vector<double>         getPencilBeam(unsigned beam, unsigned pencil) const;
+    std::vector<double>         getTAB(unsigned beam, unsigned pencil) const;
 
     void			addPosition(string stName);
     double			getTime(const char *name) const;

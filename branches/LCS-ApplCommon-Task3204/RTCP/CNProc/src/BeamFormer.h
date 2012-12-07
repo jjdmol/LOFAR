@@ -22,8 +22,8 @@ namespace RTCP {
 
    This beam former supports three modes:
 
-   1) merging stations, as indicated by the station2BeamFormedStation array.
-   2) creating pencil beams, as indicated by the nrPencilBeams and metaData parameters.
+   1) merging stations, using the mergeStations function.
+   2) creating tied-array beams (TABs), using the formBeams function.
    3) creating a 'fly's eye', which is a variation on mode 2, except
       that each station creates its own beam (i.e. the data is copied).
 
@@ -34,11 +34,11 @@ namespace RTCP {
    source -> dest of length nrStations. Multiple sources with the same dest are added and stored at dest.
    If the station2BeamFormedStation array is empty, source and dest are mapped 1:1 and no stations are merged.
 
-   Creating pencil beams
+   Creating tied-array beams
    -------------------------
 
-   Pencil beams are created by specifying their number as nrPencilBeams upon construction, and by the
-   delays as provided by the metaData given to formBeams. If nrPencilBeams = 0, the target data structure
+   Pencil beams are created by specifying their number as nrBeams in the formBeams function, and by the
+   delays as provided by the metaData given to formBeams. If nrTABs = 0, the target data structure
    remains untouched.
 
 */
@@ -68,7 +68,7 @@ class BeamFormer
     // return the station mapping
     std::vector<unsigned> &getStationMapping();
 
-    Matrix<double>          itsDelays; // [itsNrStations][itsNrPencilBeams]
+    Matrix<double>          itsDelays; // [itsNrStations][BEST_NRBEAMS]
   private:
     unsigned calcNrBeamFormedStations();
     Matrix<std::vector<unsigned> > initStationIndices( const Parset &parset );

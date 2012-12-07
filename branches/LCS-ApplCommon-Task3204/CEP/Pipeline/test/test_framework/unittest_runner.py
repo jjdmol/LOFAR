@@ -103,16 +103,6 @@ class UnitTesterTest(unittest.TestCase):
         """
         self.assertTrue(self.tester == "A test string")
 
-    #@unittest.expectedFailure # decorator can be used from python 2.7
-    def test_daily_build_exists(self):
-        """
-        Performs a simple import to check if the daily is created
-        This sanity check only works on the CEP systems lhn001,2 and lce072. comment out on other systems
-        """
-        path = "/opt/cep/LofIm/daily/lofar/lofarinit.sh"
-        self.assertTrue(os.path.exists(path), "Daily build has failed:"
-                        " lofarinit.sh is missing!")
-
 
 def usage():
     """

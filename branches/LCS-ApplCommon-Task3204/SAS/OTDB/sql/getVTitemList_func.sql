@@ -35,6 +35,7 @@
 --
 CREATE OR REPLACE FUNCTION getVTitemList(INT4, VARCHAR(150))
   RETURNS SETOF OTDBnode AS '
+    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 

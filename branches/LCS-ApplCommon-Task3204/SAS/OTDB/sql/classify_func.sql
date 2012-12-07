@@ -35,6 +35,7 @@
 --
 CREATE OR REPLACE FUNCTION classify(INT4, INT4, INT2)
   RETURNS BOOLEAN AS '
+    --  $Id$
 	DECLARE
 		vFunction				INT2 := 1;
 		vTreeID					OTDBtree.treeID%TYPE;

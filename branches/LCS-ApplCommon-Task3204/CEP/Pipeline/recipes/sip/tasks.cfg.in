@@ -47,7 +47,7 @@ data_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/bbs.mapfile
 
 [gainoutliercorrection]
 recipe = gainoutliercorrection
-executable = '' # Comment out the executable, for now use the  editparmdb behaviour. #%(lofarroot)s/bin/parmexportcal
+executable = %(lofarroot)s/bin/parmexportcal
 mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/instrument.mapfile
 
 [rficonsole]

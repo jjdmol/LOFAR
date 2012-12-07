@@ -15,6 +15,7 @@ from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.data_map import validate_data_maps#, tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
+from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
 
 
 class msss_calibrator_pipeline(control):
@@ -149,7 +150,7 @@ class msss_calibrator_pipeline(control):
         # Call the base-class's `go()` method.
         return super(msss_calibrator_pipeline, self).go()
 
-
+    @mail_log_on_exception
     def pipeline_logic(self):
         """
         Define the individual tasks that comprise the current pipeline.
@@ -177,9 +178,7 @@ class msss_calibrator_pipeline(control):
         # Write input- and output data map-files
         data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
         self.input_data.save(data_mapfile)
-#        self._store_data_map(data_mapfile, self.input_data, "inputs")
         instrument_mapfile = os.path.join(mapfile_dir, "instrument.mapfile")
-#        self._store_data_map(instrument_mapfile, self.output_data, "output")
         self.output_data.save(instrument_mapfile)
 
         if len(self.input_data) == 0:
@@ -194,30 +193,34 @@ class msss_calibrator_pipeline(control):
         #    sourcedb, For skymodel (A-team)
         #    parmdb for outputtting solutions
         # Produce a GVDS file describing the data on the compute nodes.
-        gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
+        with duration(self, "vdsmaker"):
+            gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
 
         # Read metadata (start, end times, pointing direction) from GVDS.
-        vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+        with duration(self, "vdsreader"):
+            vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
         # Create an empty parmdb for DPPP
-        parmdb_mapfile = self.run_task(
-            "setupparmdb", data_mapfile,
-            mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
-            suffix='.dppp.parmdb')['mapfile']
+        with duration(self, "setupparmdb"):
+            parmdb_mapfile = self.run_task(
+                "setupparmdb", data_mapfile,
+                mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
+                suffix='.dppp.parmdb')['mapfile']
 
         # Create a sourcedb to be used by the demixing phase of DPPP
         # The path to the A-team sky model is currently hard-coded.
         # Run makesourcedb on skymodel files for calibrator source(s) and the
         # Ateam, which are to be stored in a standard place ($LOFARROOT/share)
-        sourcedb_mapfile = self.run_task(
-            "setupsourcedb", data_mapfile,
-            skymodel=os.path.join(
-                self.config.get('DEFAULT', 'lofarroot'),
-                'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'),
-                                         # TODO: LBA skymodel!! 
-            mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
-            suffix='.dppp.sourcedb',
-            type='blob')['mapfile']
+        with duration(self, "setupsourcedb"):
+            sourcedb_mapfile = self.run_task(
+                "setupsourcedb", data_mapfile,
+                skymodel=os.path.join(
+                    self.config.get('DEFAULT', 'lofarroot'),
+                    'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'),
+                                             # TODO: LBA skymodel!! 
+                mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
+                suffix='.dppp.sourcedb',
+                type='blob')['mapfile']
 
         # *********************************************************************
         # 3. Run NDPPP to demix the A-Team sources
@@ -227,13 +230,14 @@ class msss_calibrator_pipeline(control):
         py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
-        dppp_mapfile = self.run_task("ndppp",
-            data_mapfile,
-            data_start_time=vdsinfo['start_time'],
-            data_end_time=vdsinfo['end_time'],
-            parset=ndppp_parset,
-            parmdb_mapfile=parmdb_mapfile,
-            sourcedb_mapfile=sourcedb_mapfile)['mapfile']
+        with duration(self, "ndppp"):
+            dppp_mapfile = self.run_task("ndppp",
+                data_mapfile,
+                data_start_time=vdsinfo['start_time'],
+                data_end_time=vdsinfo['end_time'],
+                parset=ndppp_parset,
+                parmdb_mapfile=parmdb_mapfile,
+                sourcedb_mapfile=sourcedb_mapfile)['mapfile']
 
         demix_mapfile = dppp_mapfile
 
@@ -250,54 +254,63 @@ class msss_calibrator_pipeline(control):
         #    Create sourcedb with known calibration solutions
         #    Run bbs with both
         # Create an empty parmdb for BBS
-        parmdb_mapfile = self.run_task(
-            "setupparmdb", data_mapfile,
-            mapfile=os.path.join(mapfile_dir, 'bbs.parmdb.mapfile'),
-            suffix='.bbs.parmdb')['mapfile']
-
+        with duration(self, "setupparmdb"):
+            parmdb_mapfile = self.run_task(
+                "setupparmdb", data_mapfile,
+                mapfile=os.path.join(mapfile_dir, 'bbs.parmdb.mapfile'),
+                suffix='.bbs.parmdb')['mapfile']
 
         # Create a sourcedb based on sourcedb's input argument "skymodel"
-        sourcedb_mapfile = self.run_task(
-            "setupsourcedb", data_mapfile,
-            skymodel=os.path.join(
-                self.config.get('DEFAULT', 'lofarroot'),
-                'share', 'pipeline', 'skymodels',
-                py_parset.getString('Calibration.CalibratorSource') +
-                    '.skymodel'),
-            mapfile=os.path.join(mapfile_dir, 'bbs.sourcedb.mapfile'),
-            suffix='.bbs.sourcedb')['mapfile']
+        with duration(self, "setupsourcedb"):
+            sourcedb_mapfile = self.run_task(
+                "setupsourcedb", data_mapfile,
+                skymodel=os.path.join(
+                    self.config.get('DEFAULT', 'lofarroot'),
+                    'share', 'pipeline', 'skymodels',
+                    py_parset.getString('Calibration.CalibratorSource') +
+                        '.skymodel'),
+                mapfile=os.path.join(mapfile_dir, 'bbs.sourcedb.mapfile'),
+                suffix='.bbs.sourcedb')['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(parset_dir, "BBS.parset")
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the calibrator source(s).
-        self.run_task("bbs_reducer",
-            dppp_mapfile,
-            parset=bbs_parset,
-            instrument_mapfile=parmdb_mapfile,
-            sky_mapfile=sourcedb_mapfile)
+        with duration(self, "bbs_reducer"):
+            self.run_task("bbs_reducer",
+                dppp_mapfile,
+                parset=bbs_parset,
+                instrument_mapfile=parmdb_mapfile,
+                sky_mapfile=sourcedb_mapfile)
 
         # *********************************************************************
         # 5. Perform gain outlier correction on the found calibration solutions
         #    Swapping outliers in the gains with the median 
         # Export the calibration solutions using gainoutliercorrection and store
         # the results in the files specified in the instrument mapfile.
-        self.run_task("gainoutliercorrection",
+        export_instrument_model = py_parset.getBool(
+            'Calibration.exportCalibrationParameters', False)
+
+        with duration(self, "gainoutliercorrection"):
+            self.run_task("gainoutliercorrection",
                       (parmdb_mapfile, instrument_mapfile),
-                      sigma=1.0) # TODO: Parset parameter
+                      sigma=1.0,
+                      export_instrument_model=export_instrument_model) # TODO: Parset parameter
 
         # *********************************************************************
         # 6. Create feedback file for further processing by the LOFAR framework
         # (MAC)
         # Create a parset-file containing the metadata for MAC/SAS
-        self.run_task("get_metadata", instrument_mapfile,
-            parset_file=self.parset_feedback_file,
-            parset_prefix=(
-                self.parset.getString('prefix') +
-                self.parset.fullModuleName('DataProducts')),
-            product_type="InstrumentModel")
+        with duration(self, "get_metadata"):
+            self.run_task("get_metadata", instrument_mapfile,
+                parset_file=self.parset_feedback_file,
+                parset_prefix=(
+                    self.parset.getString('prefix') +
+                    self.parset.fullModuleName('DataProducts')),
+                product_type="InstrumentModel")
 
+        return 0
 
 if __name__ == '__main__':
     sys.exit(msss_calibrator_pipeline().main())
