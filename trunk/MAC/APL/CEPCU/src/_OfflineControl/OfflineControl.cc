@@ -25,7 +25,6 @@
 #include <boost/shared_array.hpp>
 #include <Common/ParameterSet.h>
 #include <Common/Exceptions.h>
-#include <ApplCommon/PosixTime.h>
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>

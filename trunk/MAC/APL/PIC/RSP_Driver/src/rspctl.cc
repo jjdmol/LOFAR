@@ -1251,7 +1251,7 @@ void SICommand::send()
 		request.settings()(0).setXSI(m_siOn);
 		request.settings()(0).setYSI(m_siOn);
 
-		logMessage(cout,formatString("bypassSetting  =%02X", request.settings()(0).getAsUint16()));
+		logMessage(cout,formatString("bypassSetting  =%02X", request.settings()(0).getAsUint8()));
 
 		m_rspport.send(request);
 	}

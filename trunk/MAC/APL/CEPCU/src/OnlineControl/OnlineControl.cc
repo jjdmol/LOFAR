@@ -50,7 +50,6 @@ using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDB;
 using namespace std;
-using namespace boost::posix_time;
 
 namespace LOFAR {
 	using namespace APLCommon;
@@ -615,7 +614,7 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		int32	result = system (startCmd.c_str());
 		LOG_INFO_STR ("Result of command = " << result);
 
-		itsTimerPort->setTimer(2.0);
+		itsTimerPort->setTimer(302.0); // IONProc, and thus CEPlogProcessor, can take up to 5 minutes to wrap up
 		break;
 	}
 

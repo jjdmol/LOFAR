@@ -40,28 +40,33 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {
-	// args: cntlrname, parentHost, parentService
-	GCFScheduler::instance()->init(argc, argv, "SoftwareMonitor");
+	try {
+		// args: cntlrname, parentHost, parentService
+		GCFScheduler::instance()->init(argc, argv, "SoftwareMonitor");
 
-	LOG_INFO("MACProcessScope: LOFAR_PermSW_SoftwareMonitor");
-	LOG_INFO(Version::getInfo<CURTDBDaemonsVersion>("SoftwareMonitor"));
+		LOG_INFO("MACProcessScope: LOFAR_PermSW_SoftwareMonitor");
+		LOG_INFO(Version::getInfo<CURTDBDaemonsVersion>("SoftwareMonitor"));
 
-	// for debugging purposes
-	registerProtocol (DP_PROTOCOL,  DP_PROTOCOL_STRINGS);
+		// for debugging purposes
+		registerProtocol (DP_PROTOCOL,  DP_PROTOCOL_STRINGS);
 
-	// Create tasks and call initial routines
-	SoftwareMonitor*	swm = new SoftwareMonitor("SoftwareMonitor");
-	ASSERTSTR(swm, "Can't create an software monitortask");
-	swm->start();
+		// Create tasks and call initial routines
+		SoftwareMonitor*	swm = new SoftwareMonitor("SoftwareMonitor");
+		ASSERTSTR(swm, "Can't create an software monitortask");
+		swm->start();
 
-	// ok, we have something to do, do it.
-	GCFScheduler::instance()->setDelayedQuit(true);	// we need a clean shutdown
-	GCFScheduler::instance()->run();	// until stop was called
+		// ok, we have something to do, do it.
+		GCFScheduler::instance()->setDelayedQuit(true);	// we need a clean shutdown
+		GCFScheduler::instance()->run();	// until stop was called
 
-	swm->quit();		// let task quit nicely
+		swm->quit();		// let task quit nicely
 
-	double	postRunTime = globalParameterSet()->getDouble("closingDelay", 1.5);
-	GCFScheduler::instance()->run(postRunTime);	// let processes die.
+		double	postRunTime = globalParameterSet()->getDouble("closingDelay", 1.5);
+		GCFScheduler::instance()->run(postRunTime);	// let processes die.
+	} catch( Exception &ex ) {
+		LOG_FATAL_STR("Caught exception: " << ex);
+		return 1;
+	}
 
 	return (0);
 }

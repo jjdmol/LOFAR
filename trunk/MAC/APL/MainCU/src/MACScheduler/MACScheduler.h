@@ -48,8 +48,6 @@
 
 #include "ObsClaimer.h"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 // forward declaration
 
 namespace LOFAR {
@@ -63,8 +61,6 @@ namespace LOFAR {
 	using	APLCommon::ChildControl;
 	namespace MainCU {
 
-using boost::posix_time::ptime;
-using boost::posix_time::min_date_time;
 
 class MACScheduler : public GCFTask
 {

@@ -42,11 +42,10 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 
 //# ACC Includes
 #include <Common/ParameterSet.h>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 // forward declaration
 
@@ -64,8 +63,6 @@ namespace LOFAR {
 	using	APLCommon::ParentControl;
 	using	APLCommon::CTState;
 	namespace MainCU {
-
-using boost::posix_time::ptime;
 
 class ObservationControl : public GCFTask
 {

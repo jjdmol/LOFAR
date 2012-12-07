@@ -3,8 +3,7 @@
 lofar_package(MetaDataGatherer 1.0 DEPENDS Common Stream OTDB Interface Storage)
 
 include(LofarFindPackage)
-lofar_find_package(Casacore COMPONENTS casa measures REQUIRED)
-lofar_find_package(Boost REQUIRED date_time)
+lofar_find_package(Casacore COMPONENTS casa ms tables REQUIRED)
 
 add_subdirectory(src)
 add_subdirectory(test)

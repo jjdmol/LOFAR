@@ -26,6 +26,7 @@
 //# Common Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_datetime.h>
 #include <APL/APLCommon/AntennaField.h>
 
 //# ACC Includes
