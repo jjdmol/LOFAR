@@ -361,7 +361,7 @@ std::vector<double> Parset::subbandToFrequencyMapping() const
   std::vector<double>   subbandFreqs(subbandIds.size());
 
   for (unsigned subband = 0; subband < subbandIds.size(); subband ++)
-    subbandFreqs[subband] = subbandBandwidth() * (subbandIds[subband] + subbandOffset);
+    subbandFreqs[subband] = sampleRate() * (subbandIds[subband] + subbandOffset);
 
   return subbandFreqs;
 }
@@ -458,7 +458,7 @@ double Parset::beamDuration(unsigned beam) const
 }
 
 
-std::vector<double> Parset::getTAB(unsigned beam, unsigned pencil) const
+std::vector<double> Parset::getPencilBeam(unsigned beam, unsigned pencil) const
 {
   std::vector<double> pencilBeam(2);
  
@@ -488,7 +488,7 @@ double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
 }
 
 
-std::vector<string> Parset::TABStationList(unsigned beam, unsigned pencil) const
+std::vector<string> Parset::pencilBeamStationList(unsigned beam, unsigned pencil) const
 {
   string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].stationList") % beam % pencil);
   std::vector<string> stations;

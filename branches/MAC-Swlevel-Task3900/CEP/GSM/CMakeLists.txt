@@ -3,7 +3,7 @@
 lofar_package(GSM 1.0)
 
 include(LofarFindPackage)
-lofar_find_package(Python 2.6 REQUIRED)
+lofar_find_package(Python REQUIRED)
 
 add_subdirectory(src)
 #add_subdirectory(db)

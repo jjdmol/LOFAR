@@ -39,21 +39,16 @@ int main(int argc, char* argv[])
 		return (1);
 	}
 
-	try {
-		// args: cntlrname, parentHost, parentService
-		GCFScheduler::instance()->init(argc, argv, "ClockControl");
+	// args: cntlrname, parentHost, parentService
+	GCFScheduler::instance()->init(argc, argv, "ClockControl");
 
-		ParentControl*	pc = ParentControl::instance();
-		pc->start();	// make initial transition
+	ParentControl*	pc = ParentControl::instance();
+	pc->start();	// make initial transition
 
-		ClockControl	cc(argv[1]);
-		cc.start(); 	// make initial transition
+	ClockControl	cc(argv[1]);
+	cc.start(); 	// make initial transition
 
-		GCFScheduler::instance()->run();
-	} catch( Exception &ex ) {
-		LOG_FATAL_STR("Caught exception: " << ex);
-		return 1;
-	}
+	GCFScheduler::instance()->run();
 
 	return 0;
 }

@@ -50,11 +50,6 @@ namespace RTCP {
   EXCEPTION_CLASS(CNProcException, RTCPException);
 
   //
-  // This exception will be thrown when an an GPUProc error occurs.
-  //
-  EXCEPTION_CLASS(GPUProcException, RTCPException);
-
-  //
   // This exception will be thrown when an an Storage error occurs.
   //
   EXCEPTION_CLASS(StorageException, RTCPException);

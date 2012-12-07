@@ -36,20 +36,15 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
-	try {
-		GCFScheduler::instance()->init(argc, argv, "ServiceBroker");
-		
-		LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_ServiceBroker");
+  GCFScheduler::instance()->init(argc, argv, "ServiceBroker");
+  
+  LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_ServiceBroker");
 
-		ServiceBroker	 sb; 
-		
-		sb.start(); // make initial transition
-		
-		GCFScheduler::instance()->run();
-	} catch( Exception &ex ) {
-		LOG_FATAL_STR("Caught exception: " << ex);
-		return 1;
-	}
+  ServiceBroker	 sb; 
+  
+  sb.start(); // make initial transition
+  
+  GCFScheduler::instance()->run();
 
-	return 0;
+  return 0;
 }

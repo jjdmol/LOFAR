@@ -1,4 +1,4 @@
-# Common types in Station, CCU and MainCU PVSS Database
+# Common types in Station and MainCU PVSS Database
 # Definition of some basic types
 
 # DpType
@@ -80,50 +80,25 @@ ProcessStatus.ProcessStatus	1#
 	error	25#
 	currentAction	25#
 
-Typename
-ScriptInfo.ScriptInfo	1#
-	claim	1#
-		debug	23#
-	gcf_cwd	1#
-		debug	23#
-	monitorAlarms	1#
-		debug	23#
-	monitorStateChanges	1#
-		debug	23#
-	monitorStateReset	1#
-		debug	23#
-	monitorStationAlarms	1#
-		debug	23#
-	readStationBGPconnections	1#
-		debug	23#
-		runDone	23#
-	readStationConfigs	1#
-		debug	23#
-		runDone	23#
-	transferMPs	1#
-		debug	23#
-		runDone	23#
-
 # create mp for ProcessStatus and attach an archive
-DpName	TypeName
-_mp_ProcessStatus	ProcessStatus
-_dt_ProcessStatus	_DynamicDatapoints
+DpName	TypeName	ID
+_mp_ProcessStatus	ProcessStatus	0
+_dt_ProcessStatus	_DynamicDatapoints	0
 
-ElementName	TypeName	_original.._value
-_dt_ProcessStatus.Leaf	_DynamicDatapoints	"_mp_ProcessStatus.logMsg:_archive"
-_dt_ProcessStatus.DynamicAttribute	_DynamicDatapoints	"_da_none"
+ElementName	TypeName	_original.._value	_original.._status
+_dt_ProcessStatus.Leaf	_DynamicDatapoints	"_mp_ProcessStatus.logMsg:_archive"	0x101
+_dt_ProcessStatus.DynamicAttribute	_DynamicDatapoints	"_da_none"	0x101
 
-ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class
-_mp_ProcessStatus.logMsg	ProcessStatus		45	1
-_mp_ProcessStatus.logMsg	ProcessStatus	1	15		_ValueArchive_2
+StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class
+0	0	_mp_ProcessStatus.logMsg	ProcessStatus		45	1
+0	0	_mp_ProcessStatus.logMsg	ProcessStatus	1	15		_ValueArchive_2
 
 
 # create datapoints for ClaimManager,NCFObjectState and lofarSpeedTest
-DpName	TypeName
-ClaimManager	ClaimManager
-__navObjectState	NCFObjectState
-__resetObjectState	NCFObjectState
-lofarSpeedTest	LofarSpeedTest
-scriptInfo	ScriptInfo
+DpName	TypeName	ID
+ClaimManager	ClaimManager	0
+__navObjectState	NCFObjectState	0
+__resetObjectState	NCFObjectState	0
+lofarSpeedTest	LofarSpeedTest	0
 
 

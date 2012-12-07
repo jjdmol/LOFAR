@@ -155,9 +155,9 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   unsigned nrMergedStations  = parset.nrMergedStations();
   itsNrSubbands              = parset.nrSubbands();
   itsSubbandToSAPmapping     = parset.subbandToSAPmapping();
-  itsNrTABs                  = parset.nrTABs();
-  itsMaxNrTABs	             = parset.maxNrTABs();
-  itsTotalNrTABs	     = parset.totalNrTABs();
+  itsNrPencilBeams           = parset.nrPencilBeams();
+  itsMaxNrPencilBeams	     = parset.maxNrPencilBeams();
+  itsTotalNrPencilBeams	     = parset.totalNrPencilBeams();
   itsNrSubbandsPerPset       = parset.nrSubbandsPerPset();
   itsCenterFrequencies       = parset.subbandToFrequencyMapping();
   itsNrChannels		     = parset.nrChannelsPerSubband();
@@ -175,7 +175,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   if (itsHasPhaseOne) {
     itsFirstInputSubband = new Ring(0, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
     itsInputData = new InputData<SAMPLE_TYPE>(itsPhaseTwoPsetSize, parset.nrSamplesToCNProc(), itsBigAllocator);
-    itsInputSubbandMetaData = new SubbandMetaData(itsPhaseTwoPsetSize, itsMaxNrTABs + 1);
+    itsInputSubbandMetaData = new SubbandMetaData(itsPhaseTwoPsetSize, itsMaxNrPencilBeams + 1);
 
     // skip ahead to the first block
     itsFirstInputSubband->skipFirstBlocks(itsBlock);
@@ -190,7 +190,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     // skip ahead to the first block
     itsCurrentSubband->skipFirstBlocks(itsBlock);
 
-    itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, itsTotalNrTABs + 1);
+    itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, itsTotalNrPencilBeams + 1);
     itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(itsNrStations, parset.nrSamplesToCNProc(), itsBigAllocator);
 
 #if defined HAVE_MPI
@@ -198,7 +198,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       LOG_DEBUG_STR("Processes subbands " << itsCurrentSubband->list());
 #endif // HAVE_MPI
 
-    itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.subbandBandwidth() / itsNrChannels, parset.delayCompensation() || itsTotalNrTABs > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
+    itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.delayCompensation() || itsTotalNrPencilBeams > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
     itsFilteredData = new FilteredData(parset.nrStations(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), itsBigAllocator);
 
     if (parset.onlineFlagging() && parset.onlinePreCorrelationFlagging()) {
@@ -243,10 +243,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsBeamFormedData = new BeamFormedData(BeamFormer::BEST_NRBEAMS, itsNrChannels, itsNrSamplesPerIntegration, itsBigAllocator);
 
       if (LOG_CONDITION)
-        LOG_DEBUG_STR("Considering dedispersion for " << itsTotalNrTABs << " pencil beams");
+        LOG_DEBUG_STR("Considering dedispersion for " << itsTotalNrPencilBeams << " pencil beams");
 
-      itsCoherentDMs.resize(itsTotalNrTABs, 0.0);
-      itsIncoherentDMs.resize(itsTotalNrTABs, 0.0);
+      itsCoherentDMs.resize(itsTotalNrPencilBeams, 0.0);
+      itsIncoherentDMs.resize(itsTotalNrPencilBeams, 0.0);
 
       bool dedisperseCoherent = false;
       bool dedisperseIncoherent = false;
@@ -254,9 +254,9 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       unsigned nrSAPs = parset.nrBeams();
 
       for (unsigned sap = 0; sap < nrSAPs; sap++) {
-        for (unsigned pencil = 0; pencil < itsNrTABs[sap]; pencil++) {
+        for (unsigned pencil = 0; pencil < itsNrPencilBeams[sap]; pencil++) {
           double DM = parset.dispersionMeasure(sap, pencil);
-          if(LOG_CONDITION) LOG_DEBUG_STR("DM for beam " << sap << " TAB " << pencil << " is " << DM);
+          if(LOG_CONDITION) LOG_DEBUG_STR("DM for beam " << sap << " pencil " << pencil << " is " << DM);
 
           if (DM != 0.0) {
             if (parset.isCoherent(sap, pencil)) {
@@ -309,10 +309,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsBeamArena      = new FixedArena(itsBeamMemory.ptr, max_totalsize);
       itsBeamAllocator  = new SparseSetAllocator(*itsBeamArena.get()); // allocates consecutively
 
-      itsPreTransposeBeamFormedData.resize(itsMaxNrTABs);
+      itsPreTransposeBeamFormedData.resize(itsMaxNrPencilBeams);
 
       if (LOG_CONDITION) {
-        LOG_DEBUG_STR("MaxNrTABs = " << itsMaxNrTABs << ", TotalNrTABs = " << itsTotalNrTABs);
+        LOG_DEBUG_STR("MaxNrPencilBeams = " << itsMaxNrPencilBeams << ", TotalNrPencilBeams = " << itsTotalNrPencilBeams);
         LOG_DEBUG_STR("Allocated " << max_totalsize << " bytes for beam forming.");
       }
   }
@@ -383,7 +383,7 @@ template <typename SAMPLE_TYPE> double CN_Processing<SAMPLE_TYPE>::blockAge()
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveInput()
 {
-  SubbandMetaData metaData(1, itsMaxNrTABs + 1);
+  SubbandMetaData metaData(1, itsMaxNrPencilBeams + 1);
 
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     if (LOG_CONDITION)
@@ -534,7 +534,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
     unsigned subband = *itsCurrentSubband;
     unsigned sap = itsSubbandToSAPmapping[subband];
 
-    unsigned nrBeams = itsNrTABs[sap];
+    unsigned nrBeams = itsNrPencilBeams[sap];
     unsigned coherentPart   = itsTranspose2Logic.myPart(subband, true);
     unsigned incoherentPart = itsTranspose2Logic.myPart(subband, false);
 

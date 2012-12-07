@@ -103,10 +103,9 @@ class Parset: public ParameterSet
     unsigned			nrBaselines() const;
     unsigned			nrCrossPolarisations() const;
     unsigned			clockSpeed() const; // Hz
-    double			subbandBandwidth() const;
+    double			sampleRate() const;
     double			sampleDuration() const;
     unsigned			nrBitsPerSample() const;
-    size_t			nrBytesPerComplexSample() const;
     std::vector<double>		positions() const;
     std::string			positionType() const;
     std::vector<double>		getRefPhaseCentre() const;
@@ -123,8 +122,7 @@ class Parset: public ParameterSet
     unsigned			incoherentStokesNrSubbandsPerFile() const; 
     double			CNintegrationTime() const;
     double			IONintegrationTime() const;
-    unsigned			nrSamplesPerChannel() const;
-    unsigned			nrSamplesPerSubband() const;
+    unsigned			nrSubbandSamples() const;
     unsigned			nrSubbandsPerPset() const; 
     unsigned			nrPhase3StreamsPerPset() const; 
     unsigned			nrHistorySamples() const;
@@ -203,14 +201,14 @@ class Parset: public ParameterSet
     std::string                 beamTarget(unsigned beam) const;
     double                      beamDuration(unsigned beam) const;
 
-    unsigned			nrTABs(unsigned beam) const;
-    std::vector<unsigned>	nrTABs() const;
-    unsigned			totalNrTABs() const;
-    unsigned			maxNrTABs() const;
+    unsigned			nrPencilBeams(unsigned beam) const;
+    std::vector<unsigned>	nrPencilBeams() const;
+    unsigned			totalNrPencilBeams() const;
+    unsigned			maxNrPencilBeams() const;
     bool                        isCoherent(unsigned beam, unsigned pencil) const;
-    BeamCoordinates		TABs(unsigned beam) const;
+    BeamCoordinates		pencilBeams(unsigned beam) const;
     double			dispersionMeasure(unsigned beam=0,unsigned pencil=0) const;
-    std::vector<std::string>	TABStationList(unsigned beam=0,unsigned pencil=0) const;
+    std::vector<std::string>	pencilBeamStationList(unsigned beam=0,unsigned pencil=0) const;
 
     std::vector<unsigned>	subbandList() const;
     unsigned			nrSubbands() const;
@@ -270,7 +268,7 @@ private:
     void			checkVectorLength(const std::string &key, unsigned expectedSize) const;
     void			checkInputConsistency() const;
 
-    std::vector<double>         getTAB(unsigned beam, unsigned pencil) const;
+    std::vector<double>         getPencilBeam(unsigned beam, unsigned pencil) const;
 
     void			addPosition(string stName);
     double			getTime(const char *name) const;
@@ -322,7 +320,7 @@ public:
     coherentTimeIntFactor( parset.coherentStokesTimeIntegrationFactor() ),
     incoherentTimeIntFactor( parset.incoherentStokesTimeIntegrationFactor() ),
 
-    nrBeams( parset.totalNrTABs() ),
+    nrBeams( parset.totalNrPencilBeams() ),
     coherentNrSubbandsPerFile( parset.coherentStokesNrSubbandsPerFile() ),
     incoherentNrSubbandsPerFile( parset.incoherentStokesNrSubbandsPerFile() ),
 
@@ -457,7 +455,7 @@ private:
     info.stream = 0;
 
     for (unsigned sap = 0; sap < nrSAPs; sap++) {
-      const unsigned nrBeams = parset.nrTABs(sap);
+      const unsigned nrBeams = parset.nrPencilBeams(sap);
 
       info.sap = sap;
 
@@ -695,14 +693,14 @@ inline unsigned Parset::clockSpeed() const
   return getUint32("Observation.sampleClock") * 1000000;
 } 
 
-inline double Parset::subbandBandwidth() const
+inline double Parset::sampleRate() const
 {
   return 1.0 * clockSpeed() / 1024;
 } 
 
 inline double Parset::sampleDuration() const
 {
-  return 1.0 / subbandBandwidth();
+  return 1.0 / sampleRate();
 } 
 
 inline unsigned Parset::dedispersionFFTsize() const
@@ -722,11 +720,6 @@ inline unsigned Parset::nrBitsPerSample() const
 #endif
     return getUint32("OLAP.nrBitsPerSample", 16);
   }  
-}
-
-inline size_t Parset::nrBytesPerComplexSample() const
-{
-  return 2 * nrBitsPerSample() / 8;
 }
 
 inline unsigned Parset::CNintegrationSteps() const
@@ -872,7 +865,7 @@ inline bool Parset::checkFakeInputData() const
 
 inline double Parset::CNintegrationTime() const
 {
-  return nrSamplesPerSubband() / subbandBandwidth();
+  return nrSubbandSamples() / sampleRate();
 }
 
 inline double Parset::IONintegrationTime() const
@@ -880,14 +873,9 @@ inline double Parset::IONintegrationTime() const
   return CNintegrationTime() * IONintegrationSteps();
 }
 
-inline unsigned Parset::nrSamplesPerChannel() const
+inline unsigned Parset::nrSubbandSamples() const
 {
-  return CNintegrationSteps();
-}
-
-inline unsigned Parset::nrSamplesPerSubband() const
-{
-  return nrSamplesPerChannel() * nrChannelsPerSubband();
+  return CNintegrationSteps() * nrChannelsPerSubband();
 }
 
 inline unsigned Parset::nrHistorySamples() const
@@ -897,17 +885,17 @@ inline unsigned Parset::nrHistorySamples() const
 
 inline unsigned Parset::nrSamplesToCNProc() const
 {
-  return nrSamplesPerSubband() + nrHistorySamples() + 32 / (NR_POLARIZATIONS * 2 * nrBitsPerSample() / 8);
+  return nrSubbandSamples() + nrHistorySamples() + 32 / (NR_POLARIZATIONS * 2 * nrBitsPerSample() / 8);
 }
 
 inline unsigned Parset::inputBufferSize() const
 {
-  return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer") * subbandBandwidth());
+  return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer") * sampleRate());
 }
 
 inline unsigned Parset::maxNetworkDelay() const
 {
-  return (unsigned) (getDouble("OLAP.maxNetworkDelay") * subbandBandwidth());
+  return (unsigned) (getDouble("OLAP.maxNetworkDelay") * sampleRate());
 }
 
 inline unsigned Parset::nrSubbandsPerPset() const
@@ -982,7 +970,7 @@ inline std::vector<unsigned> Parset::subbandToSAPmapping() const
 
 inline double Parset::channelWidth() const
 {
-  return subbandBandwidth() / nrChannelsPerSubband();
+  return sampleRate() / nrChannelsPerSubband();
 }
 
 inline bool Parset::delayCompensation() const
@@ -1092,7 +1080,7 @@ inline double Parset::channel0Frequency(size_t subband) const
   // if the 2nd PPF is used, the subband is shifted half a channel
   // downwards, so subtracting half a subband results in the
   // center of channel 0 (instead of the bottom).
-  return sbFreq - 0.5 * subbandBandwidth();
+  return sbFreq - 0.5 * sampleRate();
 }
 
 inline unsigned Parset::nrSlotsInFrame() const
@@ -1119,43 +1107,43 @@ inline bool Parset::realTime() const
   return getBool("OLAP.realTime");
 }
 
-inline unsigned Parset::nrTABs(unsigned beam) const
+inline unsigned Parset::nrPencilBeams(unsigned beam) const
 {
   using boost::format;
 
   return getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % beam));
 }
 
-inline std::vector<unsigned> Parset::nrTABs() const
+inline std::vector<unsigned> Parset::nrPencilBeams() const
 {
   std::vector<unsigned> counts(nrBeams());
 
   for (unsigned beam = 0; beam < nrBeams(); beam++)
-    counts[beam] = nrTABs(beam);
+    counts[beam] = nrPencilBeams(beam);
 
   return counts;
 }
 
-inline unsigned Parset::totalNrTABs() const
+inline unsigned Parset::totalNrPencilBeams() const
 {
-  std::vector<unsigned> beams = nrTABs();
+  std::vector<unsigned> beams = nrPencilBeams();
 
   return std::accumulate(beams.begin(), beams.end(), 0);
 }
 
-inline unsigned Parset::maxNrTABs() const
+inline unsigned Parset::maxNrPencilBeams() const
 {
-  std::vector<unsigned> beams = nrTABs();
+  std::vector<unsigned> beams = nrPencilBeams();
 
   return *std::max_element(beams.begin(), beams.end());
 }
 
-inline BeamCoordinates Parset::TABs(unsigned beam) const
+inline BeamCoordinates Parset::pencilBeams(unsigned beam) const
 {
   BeamCoordinates coordinates;
 
-  for (unsigned pencil = 0; pencil < nrTABs(beam); pencil ++) {
-    const std::vector<double> coords = getTAB(beam, pencil);
+  for (unsigned pencil = 0; pencil < nrPencilBeams(beam); pencil ++) {
+    const std::vector<double> coords = getPencilBeam(beam, pencil);
 
     // assume ra,dec
     coordinates += BeamCoord3D(coords[0],coords[1]);

@@ -35,18 +35,13 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
-	try {
-		GCFScheduler::instance()->init(argc, argv, "LogProcessor");
-	//	LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_LogProcessor");
+	GCFScheduler::instance()->init(argc, argv, "LogProcessor");
+//	LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_LogProcessor");
 
-		LogProcessor clp("LogProcessor"); 
-		clp.start(); // make initial transition
+	LogProcessor clp("LogProcessor"); 
+	clp.start(); // make initial transition
 
-		GCFScheduler::instance()->run();
-	} catch( Exception &ex ) {
-		LOG_FATAL_STR("Caught exception: " << ex);
-		return 1;
-	}
+	GCFScheduler::instance()->run();
 
 	return (0);
 }

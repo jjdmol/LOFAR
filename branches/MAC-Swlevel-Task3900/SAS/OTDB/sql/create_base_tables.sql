@@ -40,7 +40,6 @@ DROP TABLE operator 	  CASCADE;
 -- Assigns a level of 'maturity' to a node or tree
 --
 CREATE TABLE classification (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(15)		NOT NULL,
 
@@ -58,7 +57,6 @@ INSERT INTO classification VALUES (4, 'example');
 -- Defines the ways the node+parameter constraints can be checked.
 --
 CREATE TABLE constr_type (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(10)		NOT NULL,
 
@@ -77,7 +75,6 @@ INSERT INTO constr_type VALUES (3, 'exec');
 -- so that it can check the values that are entered.
 --
 CREATE TABLE param_type (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(5)		NOT NULL,
 
@@ -137,7 +134,6 @@ INSERT INTO param_type VALUES (315, 'pdate');
 -- in the param_type table.
 --
 CREATE TABLE pvss_type (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(5)		NOT NULL REFERENCES param_type(name),
 
@@ -165,7 +161,6 @@ INSERT INTO pvss_type VALUES (25, 'text');
 -- TODO: Check contents of the table.
 --
 CREATE TABLE validation (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(10)		NOT NULL,
 
@@ -186,7 +181,6 @@ INSERT INTO validation VALUES (3, 'resource');
 -- TODO: Extend table with a lot more records.
 --
 CREATE TABLE unit (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name 		VARCHAR(10)		NOT NULL,
 	label		VARCHAR(5),
@@ -218,7 +212,6 @@ INSERT INTO unit values (15, 'degrees',  'deg', '',			false);
 -- 
 -- Define the kind of tree the information refers to.
 CREATE TABLE treetype (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(10)		NOT NULL,
 
@@ -235,7 +228,6 @@ INSERT INTO treetype VALUES (30, 'VHtree');
 -- Define states for trees that indicate the phase of the
 -- lifecycle the tree is in.
 CREATE TABLE treestate (
-    --  $Id$
 	ID			INT2			NOT NULL,
 	name		VARCHAR(20)		NOT NULL,
 
@@ -266,7 +258,6 @@ INSERT INTO treestate VALUES (1200, 'obsolete');
 --
 CREATE SEQUENCE	campaignID;
 CREATE TABLE campaign (
-    --  $Id$
 	ID			INT2			NOT NULL DEFAULT NEXTVAL('campaignID'),
 	name		VARCHAR(30)		NOT NULL,
 	title		VARCHAR(100)	NOT NULL,
@@ -285,7 +276,6 @@ INSERT INTO campaign(id, name, title, PI) VALUES (0, 'no campaign', 'not related
 -- Names and ID of the operater allowed to manage the trees.
 --
 CREATE TABLE operator (
-    --  $Id$
 	ID			INT4			NOT NULL,
 	name		VARCHAR(30)		NOT NULL,
 	telephone	VARCHAR(10)		NOT NULL,

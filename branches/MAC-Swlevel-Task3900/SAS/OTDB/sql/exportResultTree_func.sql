@@ -36,7 +36,6 @@
 --
 CREATE OR REPLACE FUNCTION exportMDSubTree(INT4, INT4, INT4)
   RETURNS TEXT AS $$
-    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 	  vResult		TEXT := '';
 	  vRow			RECORD;
@@ -100,7 +99,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION exportResultTree(INT4, INT4, INT4)
   RETURNS TEXT AS $$
-    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;

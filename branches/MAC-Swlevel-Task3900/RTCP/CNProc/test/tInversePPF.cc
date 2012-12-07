@@ -55,9 +55,9 @@ static unsigned nrChannels = 1; // for the NuMoon pipeline, there are no separat
 //static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
 static unsigned nrSamplesPerIntegration = 19648; // roughly 0.1 seconds
 //static unsigned nrSamplesPerIntegration = 64;
-static double subbandBandwidth = 195312.5;
-static double centerFrequency = (nrSamplesPerIntegration / 2) * subbandBandwidth;
-static double signalFrequency = centerFrequency - (0.5 * subbandBandwidth);
+static double sampleRate = 195312.5;
+static double centerFrequency = (nrSamplesPerIntegration / 2) * sampleRate;
+static double signalFrequency = centerFrequency - (0.5 * sampleRate);
 
 float originalStationPPFWeightsFloat[1024][16];
 float* fftInData;
@@ -158,7 +158,7 @@ static void fftTest() {
 
   // generate signal
   for (unsigned time = 0; time < onStationFilterSize; time++) {
-    double val = sin(signalFrequency * time / subbandBandwidth);
+    double val = sin(signalFrequency * time / sampleRate);
     fftInData[time] = val;
     inputData[time] = val;
   }

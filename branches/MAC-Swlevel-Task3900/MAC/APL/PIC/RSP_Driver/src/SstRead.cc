@@ -73,6 +73,7 @@ void SstRead::sendrequest_status()
  * Function to convert the semi-floating point representation used by the
  * EPA firmware to a double.
  */
+BZ_DECLARE_FUNCTION_RET(convert_uint32_to_double, double)
 inline double convert_uint32_to_double(uint32 val)
 {
   int64 val64;
@@ -90,7 +91,6 @@ inline double convert_uint32_to_double(uint32 val)
 
   return (double)val64;
 }
-BZ_DECLARE_FUNCTION_RET(convert_uint32_to_double, double)
 
 GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {

@@ -37,7 +37,6 @@
 CREATE OR REPLACE FUNCTION saveVICparamDef(INT4, INT4, VARCHAR(150), INT2, 
 							INT2, INT2, INT2, BOOLEAN, TEXT, TEXT)
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 		vParamID		VICparamDef.paramID%TYPE;
 		vName			VICparamDef.name%TYPE;

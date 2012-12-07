@@ -38,7 +38,6 @@
 --
 CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
   RETURNS VOID AS $$
-    --  $Id$
 	DECLARE
 		vFunction		INT2 := 1;
 		TThardware 		CONSTANT INT2 := 10;

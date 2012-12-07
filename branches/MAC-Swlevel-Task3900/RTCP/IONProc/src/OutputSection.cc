@@ -246,7 +246,7 @@ void OutputSection::mainLoop()
     // core (to stay in sync with other psets).
     for (unsigned i = 0; i < itsNrCoresPerIteration; i ++) {
       if (i < itsNrStreams) {
-        //LOG_DEBUG_STR(itsLogPrefix << "] Reading data from core " << itsCurrentComputeCore);
+        LOG_DEBUG_STR(itsLogPrefix << "] Reading data from core " << itsCurrentComputeCore);
         
         if (lastTime) {
           if (itsIsRealTime && itsOutputThreads[i]->itsFreeQueue.empty()) {
