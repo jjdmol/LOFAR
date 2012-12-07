@@ -250,12 +250,15 @@ def mfclean(options):
     # TODO: Check code for n_model > 1!
     assert(n_model == 1)
 
-    do_cr_joint = True
-    # TODO: Check code for do_cr_joint = False!
-    assert(do_cr_joint)
+    # Comment from CASA source code:
+    #
+    # Set to search for peak in I^2+Q^2+U^2+V^2 domain or each stokes plane
+    # seperately. Ignored for hogbom and msclean for now.
+    join_stokes = False
+#    join_stokes = True
 
-    # Make approximate PSF images for all models.
-    util.notice("making approximate PSF images for all fields...")
+    # Compute approximate PSFs.
+    util.notice("computing approximate point spread functions...")
     psf = [None for i in range(n_model)]
     beam = [None for i in range(n_model)]
     for i in range(n_model):
@@ -266,41 +269,47 @@ def mfclean(options):
         beam[i] = BeamParameters((fit["major"] * numpy.pi) / (3600.0 * 180.0), \
             (fit["minor"] * numpy.pi) / (3600.0 * 180.0), (fit["angle"] \
             * numpy.pi) / 180.0)
-        util.notice("PSF: model: %d major axis: %f arcsec minor axis: %f arcsec"
-            " position angle: %f deg" % (i, abs(fit["major"]), \
-            abs(fit["minor"]), fit["angle"]))
-#    util.show_image(psf[0][0,:,:,:], "approximate PSF")
 
-    # Analyse PSF images.
+        util.notice("model %d/%d: major axis: %f arcsec, minor axis: %f arcsec,"
+            " position angle: %f deg" % (i, n_model - 1, abs(fit["major"]), \
+            abs(fit["minor"]), fit["angle"]))
+
+    # Validate PSFs.
     (min_psf, max_psf, max_psf_outer, psf_patch_size, max_sidelobe) = \
         validate_psf(image_coordinates, psf, beam)
     clark_options["psf_patch_size"] = psf_patch_size
 
+    updated = [True for i in range(n_model)]
     weight = [None for i in range(n_model)]
     model = [numpy.zeros(image_shape) for i in range(n_model)]
     delta = [numpy.zeros(image_shape) for i in range(n_model)]
     residual = [numpy.zeros(image_shape) for i in range(n_model)]
-    iterations = [[] for i in range(n_model)]
-    updated = [True for i in range(n_model)]
 
+    if join_stokes:
+        iterations = numpy.zeros((n_model, 1, image_shape[0]))
+        stokes = ["JOINT"]
+        cr_slices = [slice(None)]
+    else:
+        iterations = numpy.zeros((n_model, image_shape[1], image_shape[0]))
+        stokes = image_coordinates.get_coordinate("stokes").get_stokes()
+        cr_slices = [slice(i, i + 1) for i in range(4)]
+
+    cycle = 0
     diverged = False
     absmax = options.threshold
     previous_absmax = 1e30
-    cycle_threshold = 0.0
-    max_iterations = 0
-    cycle = 0
 
-    while absmax >= options.threshold and max_iterations < options.iterations \
-        and any(updated):
+    while absmax >= options.threshold and numpy.max(iterations) \
+        < options.iterations and any(updated):
 
-        util.notice("starting major cycle: %d" % cycle)
+        util.notice(">> starting major cycle: %d <<" % cycle)
 
         # Comment from CASA source code:
         #
         # Make the residual images. We do an incremental update for cycles after
         # the first one. If we have only one model then we use convolutions to
         # speed the processing
-        util.notice("making residual images for all fields...")
+        util.notice("computing residuals...")
 
         # TODO: If n_models > 1, need to compute residuals from the sum of
         # the degridded visibilities (see LofarCubeSkyEquation.cc).
@@ -317,8 +326,8 @@ def mfclean(options):
 
         # Print some statistics.
         for i in range(n_model):
-            util.notice("model: %d min residual: %f max residual: %f" % (i, \
-                resmin[i], resmax[i]))
+            util.notice("model %d/%d: min residual: %f, max residual: %f" \
+                % (i, n_model - 1, resmin[i], resmax[i]))
         util.notice("peak residual: %f" % absmax)
 
         # Comment from CASA source code:
@@ -378,76 +387,66 @@ def mfclean(options):
             " %f" % (options.threshold, fraction_of_psf, cycle_threshold))
 
         # Execute the minor cycle (Clark clean) for each channel of each model.
+        util.notice("starting minor cycle...")
         for i in range(n_model):
-            util.notice("processing model %d/%d" % (i, n_model))
+            if max(abs(resmin[i]), abs(resmax[i])) < cycle_threshold:
+                util.notice("model %d/%d: peak residual below threshold" \
+                    % (i, n_model - 1))
+                continue
 
-            n_x = model[i].shape[-1]
-            n_y = model[i].shape[-2]
-            n_cr = model[i].shape[-3]
-            n_ch = model[i].shape[-4]
-            n_cr_cube = n_cr if do_cr_joint else 1
-
-            if cycle == 0:
-                # TODO: Useless code in MFCleanImageSkyModel.cc at this
-                # location?
-                iterations[i] = [0 for j in range(n_ch * n_cr)]
+            if max_psf[i] <= 0.0:
+                util.warning("model %d/%d: point spread function negative or"
+                    " zero" % (i, n_model - 1))
+                continue
 
             # Zero the delta image for this model.
             delta[i].fill(0.0)
 
-            if max(abs(resmin[i]), abs(resmax[i])) <= cycle_threshold:
-                util.notice("    peak residual below threshold")
-            elif max_psf[i] > 0.0:
-                for ch in range(n_ch):
+            for (cr, cr_slice) in enumerate(cr_slices):
+                for ch in range(len(residual)):
                     # TODO: The value of max_weight is only updated during
                     # cycle 0. Is this correct?
                     #
                     assert(len(weight[i].shape) == 2 \
-                        and weight[i].shape[0] == n_ch \
-                        and weight[i].shape[1] == n_cr)
+                        and weight[i].shape[:2] == residual[i].shape[:2])
 
-                    plane_weight = numpy.sqrt(weight[i][ch, :] / max_weight)
+                    plane_weight = numpy.sqrt(weight[i][ch, cr_slice] \
+                        / max_weight)
+                    print plane_weight
                     if numpy.any(plane_weight > 0.01):
-                        weight_mask = numpy.ones((n_y, n_x))
+                        weight_mask = numpy.ones((residual[i].shape[2:]))
                     else:
-                        weight_mask = numpy.zeros((n_y, n_x))
+                        weight_mask = numpy.zeros((residual[i].shape[2:]))
 
                     # Call CASA Clark clean implementation (minor cycle).
+                    # TODO: When cleaning each Stokes parameter separately,
+                    # the PSF of Stokes I is used for all others as well?
+                    #
+                    # Comment from CASA source code:
+                    #
+                    # We only want the PSF for the first polarization so we
+                    # iterate over polarization LAST.
+                    #
                     result = lofar.casaimwrap.clarkClean(psf[i][ch,0,:,:], \
-                        residual[i][ch,:,:,:], weight_mask, \
-                        iterations[i][ch * n_cr_cube], clark_options)
+                        residual[i][ch,cr_slice,:,:], weight_mask, \
+                        iterations[i,cr,ch], clark_options)
 
-                    if result["iterations"] > iterations[i][ch * n_cr_cube]:
+                    if result["iterations"] > iterations[i,cr,ch]:
                         updated[i] = True
-                        delta[i][ch,:,:,:] = result["delta"]
-                        iterations[i][ch * n_cr_cube] = result["iterations"]
+                        delta[i][ch,cr_slice,:,:] = result["delta"]
+                        iterations[i,cr,ch] = result["iterations"]
                     else:
                         assert(numpy.all(result["delta"] == 0.0))
 
-                    max_iterations = max(max_iterations, \
-                        iterations[i][ch * n_cr_cube])
+                util.notice("model %d/%d: stokes: %s, cleaned: %f Jy, " \
+                    "iterations per channel: %s" % (i, n_model - 1, \
+                    stokes[cr], numpy.sum(delta[i][ch,cr_slice,:,:]), \
+                    str(iterations[i,cr,:])))
 
-                    util.notice("    cleaned channel: %d/%d iterations: %d" \
-                        % (ch, n_ch, iterations[i][ch * n_cr_cube]))
-            else:
-                    util.warning("    psf negative or zero")
-
-        # TODO: This test may be wrong, because it could be that a model makes
-        # progress, even if the model with the maximum number of iterations does
-        # not. It that case, the model image of the model that made progress
-        # should still be updated?
-#        if max_iterations != old_max_iterations:
-#            old_max_iterations = max_iterations
-
+        # Update model images if required.
         for i in range(n_model):
             if updated[i]:
-                # Update model images.
                 model[i] += delta[i]
-
-        # Print some statistics.
-        for i in range(n_model):
-            util.notice("model: %d cleaned flux: %f Jy" % (i, \
-                numpy.sum(delta[i])))
 
         # Update major cycle counter.
         cycle += 1
@@ -463,8 +462,8 @@ def mfclean(options):
 
         # Print some statistics.
         for i in range(n_model):
-            util.notice("model: %d min residual: %f max residual: %f" % (i, \
-                resmin[i], resmax[i]))
+            util.notice("model %d/%d: min residual: %f, max residual: %f" \
+                % (i, n_model - 1, resmin[i], resmax[i]))
         util.notice("peak residual: %f" % absmax)
     else:
         util.notice("residual images for all fields are up-to-date...")
@@ -474,7 +473,7 @@ def mfclean(options):
     util.store_image(options.image + ".response", image_coordinates, \
         processor.response(image_coordinates, image_shape))
 
-    util.notice("storing model image(s)...")
+    util.notice("storing model images...")
     for i in range(n_model):
         util.store_image(options.image + ".model.flat_noise", \
             image_coordinates, model[i])
@@ -483,7 +482,7 @@ def mfclean(options):
             processors.Normalization.FLAT_NOISE, \
             processors.Normalization.FLAT_GAIN))
 
-    util.notice("storing residual image(s)...")
+    util.notice("storing residual images...")
     for i in range(n_model):
         util.store_image(options.image + ".residual.flat_noise", \
             image_coordinates, residual[i])
@@ -492,7 +491,7 @@ def mfclean(options):
             processors.Normalization.FLAT_NOISE, \
             processors.Normalization.FLAT_GAIN))
 
-    util.notice("storing restored image(s)...")
+    util.notice("storing restored images...")
     for i in range(n_model):
         restored = restore_image(image_coordinates.dict(), model[i], \
             residual[i], beam[i])
@@ -506,8 +505,8 @@ def mfclean(options):
 
     # Print some statistics.
     for i in range(n_model):
-        util.notice("model: %d clean flux: %f residual rms: %f" % (i, \
-            numpy.sum(model[i]), numpy.std(residual[i])))
+        util.notice("model %d/%d: clean flux: %f, residual rms: %f" % (i, \
+            n_model - 1, numpy.sum(model[i]), numpy.std(residual[i])))
 
     if diverged:
         util.error("clean diverged.")
