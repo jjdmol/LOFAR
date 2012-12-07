@@ -13,7 +13,6 @@ def create_data_processor(name, measurement, options):
         # The call to __import__ fails when not passing the global variables.
         module = __import__(name, globals=globals())
     except ImportError:
-        raise
         raise RuntimeError("Unable to import data processor implementation: \
             %s" % name)
 
