@@ -26,9 +26,14 @@
 //# Includes
 #include<Common/LofarLogger.h>
 #include<Common/StringUtil.h>
-#include<Common/lofar_datetime.h>
 #include<OTDB/OTDBconnection.h>
 #include<OTDB/OTDBconstants.h>
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <pqxx/transaction>
+
+using namespace pqxx;
+using namespace boost::posix_time;
 
 namespace LOFAR {
   namespace OTDB {

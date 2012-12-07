@@ -25,8 +25,11 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/lofar_datetime.h>
 #include <OTDB/Campaign.h>
+
+#include <pqxx/transaction>
+
+using namespace pqxx;
 
 namespace LOFAR {
   namespace OTDB {

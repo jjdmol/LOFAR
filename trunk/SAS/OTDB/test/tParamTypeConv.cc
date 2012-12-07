@@ -26,10 +26,10 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
-#include <Common/lofar_datetime.h>
 #include <Common/SystemUtil.h>
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/ParamTypeConv.h>
+#include <cstring>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;

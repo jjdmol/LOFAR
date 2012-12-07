@@ -39,6 +39,10 @@
 #include <OTDB/ClassifConv.h>
 #include <OTDB/misc.h>
 
+#include <pqxx/transaction>
+
+using namespace pqxx;
+
 namespace LOFAR {
   namespace OTDB {
 

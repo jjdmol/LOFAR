@@ -25,7 +25,6 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/lofar_datetime.h>
 #include <Common/StringUtil.h>
 
 #include "VHECR/TBBTrigger.h" // path for online use

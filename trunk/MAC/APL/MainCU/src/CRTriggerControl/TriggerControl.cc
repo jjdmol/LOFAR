@@ -34,6 +34,7 @@
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/Observation.h>
+#include <ApplCommon/PosixTime.h>
 
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -49,10 +50,12 @@
 #include "TriggerControl.h"
 #include "PVSSDatapointDefs.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
+using namespace boost::posix_time;
 using namespace std;
 using namespace LOFAR::StringUtil;
 
