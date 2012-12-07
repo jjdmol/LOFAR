@@ -70,6 +70,35 @@ SyntaxError()
 	exit 0
 }
 
+# Find which image to load on a given station; uses file 
+# ${ETCDIR}/RSPImage.conf
+#
+# returns $image with image number
+
+findImage()
+{ 
+       findstation=$1
+       RSPImageFile=${ETCDIR}/RSPImage.conf
+       if [ ! -e $RSPImageFile ] ; then 
+          echo "Cannot find Image file ${ETCDIR}/RSPImage.conf"
+          exit;
+       fi
+       image=0
+       while read line
+       do
+	 first=`echo $line | awk '{print $1}'`
+         if [ "$first" == "$findstation" ]; then
+            image=`echo $line | awk '{print $2}'`
+	    break
+         fi 
+       done < ${ETCDIR}/RSPImage.conf
+       if [ $image -eq 0 ]; then 
+	   echo "Could not find station $findstation in file ${ETCDIR}/RSPImage.conf"
+           exit;
+       fi
+       return
+}       
+
 #
 # selectImage(); the image to load has been set in parameter $image in MAIN
 #
@@ -137,7 +166,7 @@ start_prog()
 		    if [ "$user" = "lofarsys" ]; then
 			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
-			$BINDIR/$prog 1>>$LOGDIR//$prog.stdout.${curdate} 2>&1 &
+			$BINDIR/$prog 1>>${LOGDIR}/${prog}.stdout.${curdate} 2>&1 &
                     else
                         echo "Local use, not starting $prog"
                     fi		    
@@ -485,7 +514,7 @@ handle_args()
 
   # default image is 1
   if [ -z $image ]; then  
-   image=1
+    findImage `hostname -s`
   fi
 
   return
