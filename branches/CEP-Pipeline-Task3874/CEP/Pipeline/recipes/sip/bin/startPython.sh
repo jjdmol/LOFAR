@@ -43,6 +43,14 @@ pythonProgram="${1}"
 parsetFile="${2}"
 controlHost="${3}"
 
+# Try to run a script that resets the invironment based on a parset
+# value
+if [ -r $(dirname $0)/startPythonVersion.sh ]; then
+  . startPythonVersion.sh
+else
+  echo "startPythonVersion.sh not found, parset software version ignored"
+fi
+
 programOptions=" \
  -d \
  -c ${LOFARROOT}/share/pipeline/pipeline.cfg \
