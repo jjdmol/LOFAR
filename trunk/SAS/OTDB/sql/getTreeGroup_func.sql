@@ -46,6 +46,7 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
     --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vRecord			RECORD;
+		TSapproved		CONSTANT	INT2 := 300;
 		TSscheduled		CONSTANT	INT2 := 400;
 		TSqueued		CONSTANT	INT2 := 500;
 		TSfinished		CONSTANT	INT2 := 1000;
@@ -76,7 +77,7 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
                           vSortOrder := 't.stoptime, t.treeID';
                 ELSE
 		      IF $1 = 4 THEN
-		  	    vQuery := ' AND t.state >= ' || TSfinished;
+		  	    vQuery := ' AND t.state >= ' || TSapproved;
 			    vQuery := vQuery || ' AND t.stoptime < now() ';
 			    vSortOrder := 't.treeID';
 		      ELSE
