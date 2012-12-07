@@ -31,9 +31,7 @@
 #include <OTDB/OTDBconstants.h>
 #include <OTDB/OTDBtypes.h>
 #include <boost/date_time/posix_time/ptime.hpp>
-#include <pqxx/pqxx>
-
-using namespace boost::posix_time;
+#include <pqxx/result>
 
 namespace LOFAR {
   namespace OTDB {

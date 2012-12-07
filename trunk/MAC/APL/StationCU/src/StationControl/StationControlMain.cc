@@ -37,31 +37,26 @@ int main(int argc, char* argv[])
 {
 	using LOFAR::basename;
 
-	try {
-		// args: cntlrname, parentHost, parentService
-		GCFScheduler::instance()->init(argc, argv, basename(argv[0]));
+	// args: cntlrname, parentHost, parentService
+	GCFScheduler::instance()->init(argc, argv, basename(argv[0]));
 
-		ParentControl*	pc = ParentControl::instance();
-		pc->start();	// make initial transition
+	ParentControl*	pc = ParentControl::instance();
+	pc->start();	// make initial transition
 
-		ChildControl*	cc = ChildControl::instance();
-		cc->start();	// make initial transition
+	ChildControl*	cc = ChildControl::instance();
+	cc->start();	// make initial transition
 
-		string		myName;
-		if (argc < 2) {		// started by swlevel?
-			myName = myHostname(false) + ":" + basename(argv[0]);
-		}
-		else {
-			myName = argv[1];
-		}
-		StationControl	sc(myName.c_str());
-		sc.start(); 	// make initial transition
-
-		GCFScheduler::instance()->run();
-	} catch( Exception &ex ) {
-		LOG_FATAL_STR("Caught exception: " << ex);
-		return 1;
+	string		myName;
+	if (argc < 2) {		// started by swlevel?
+		myName = myHostname(false) + ":" + basename(argv[0]);
 	}
+	else {
+		myName = argv[1];
+	}
+	StationControl	sc(myName.c_str());
+	sc.start(); 	// make initial transition
+
+	GCFScheduler::instance()->run();
 
 	return 0;
 }

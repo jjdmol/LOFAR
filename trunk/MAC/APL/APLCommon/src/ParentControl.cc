@@ -37,6 +37,7 @@
 
 namespace LOFAR {
   using namespace GCF::TM;
+  using namespace boost::posix_time;
   namespace APLCommon {
 
 typedef struct stateFlow_t {

@@ -35,20 +35,15 @@ int main(int argc, char* argv[])
 {
 //	signal (SIGCHLD, SIG_IGN);
 
-	try {
-		GCFScheduler::instance()->init(argc, argv, "CTStartDaemon");
+	GCFScheduler::instance()->init(argc, argv, "CTStartDaemon");
 
-		LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_CTStartDaemon");
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_CTStartDaemon");
 
-		CUDaemons::CTStartDaemon sd("StartDaemon");		// give myself a name
+	CUDaemons::CTStartDaemon sd("StartDaemon");		// give myself a name
 
-		sd.start(); // make initial transition
+	sd.start(); // make initial transition
 
-		GCFScheduler::instance()->run();
-	} catch( Exception &ex ) {
-		LOG_FATAL_STR("Caught exception: " << ex);
-		return 1;
-	}
+	GCFScheduler::instance()->run();
 
 	return 0;
 }

@@ -20,6 +20,9 @@
 
 lofar_package(IBS_Protocol 1.0 DEPENDS Common MACIO RTCCommon RSP_Protocol)
 
+include(LofarFindPackage)
+lofar_find_package(Boost REQUIRED)
+
 add_subdirectory(include/APL/IBS_Protocol)
 add_subdirectory(src)
 #add_subdirectory(test)
