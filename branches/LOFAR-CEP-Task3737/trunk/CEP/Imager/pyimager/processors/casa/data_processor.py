@@ -4,9 +4,9 @@ import data_processor_low_level
 
 class DataProcessor:
     def __init__(self, measurement, options):
-        self._processor = \
-            data_processor_low_level.DataProcessorLowLevel(measurement, options)
-
+        
+        self._create_processor(measurement, options)
+            
         # Since the coordinatesystem and shape are arguments to the grid(), etc.
         # functions, the density and average response have to be recomputed
         # internally when the supplied coordinatesystem or shape do not match
@@ -17,6 +17,10 @@ class DataProcessor:
         self._cached_response = None
         self._response_available = False
 
+    def _create_processor(self, measurement, options) :
+        self._processor = \
+            data_processor_low_level.DataProcessorLowLevel(measurement, options)
+        
     def capabilities(self):
         return self._processor.capabilities()
 
