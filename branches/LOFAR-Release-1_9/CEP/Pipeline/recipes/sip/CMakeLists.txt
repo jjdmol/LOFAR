@@ -53,6 +53,7 @@ install(PROGRAMS
   bin/msss_target_pipeline.py
   bin/preprocessing_pipeline.py
   bin/startPython.sh
+  bin/startPythonVersion.sh
   external/bad_station_detection/asciistats.py
   external/bad_station_detection/statsplot.py
   DESTINATION bin)
