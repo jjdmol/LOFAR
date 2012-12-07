@@ -111,8 +111,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     unsigned		itsNrSlotsInFrame;
     unsigned		itsNrSubbands;
     std::vector<unsigned> itsSubbandToSAPmapping;
-    std::vector<unsigned> itsNrPencilBeams;
-    unsigned		itsMaxNrPencilBeams, itsTotalNrPencilBeams;
+    std::vector<unsigned> itsNrTABs;
+    unsigned		itsMaxNrTABs, itsTotalNrTABs;
     unsigned		itsNrSubbandsPerPset;
     unsigned		itsNrSubbandsPerPart;
     unsigned		itsNrChannels;
@@ -125,6 +125,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     const Parset        &itsParset;
 
     const std::vector<SmartPtr<Stream> > &itsInputStreams;
+
     SmartPtr<Stream>	itsCorrelatedDataStream;
     SmartPtr<Stream>	itsFinalBeamFormedDataStream;
     SmartPtr<Stream>	itsTriggerDataStream;

@@ -31,9 +31,15 @@
 # $Id$
 
 # Set options string to pass to the find_package() commands below.
-set(_options)
+set(_options ${Python_FIND_VERSION})
+if(Python_FIND_VERSION_EXACT)
+  list(APPEND _options EXACT)
+endif(Python_FIND_VERSION_EXACT)
+if(Python_FIND_QUIETLY)
+  list(APPEND _options QUIET)
+endif(Python_FIND_QUIETLY)
 if(Python_FIND_REQUIRED)
-  set(_options REQUIRED)
+  list(APPEND _options REQUIRED)
 endif(Python_FIND_REQUIRED)
 
 # Search for the Python interpreter.

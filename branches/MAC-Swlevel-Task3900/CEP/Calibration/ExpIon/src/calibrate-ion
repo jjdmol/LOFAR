@@ -154,6 +154,8 @@ polarizations = [d[key] for key in l]
 DirectionalGainEnable = parset.getBool( "ExpIon.DirectionalGain.Enable", False ) 
 GainEnable = parset.getBool( "ExpIon.Gain.Enable", False ) 
 PhasorsEnable = parset.getBool( "ExpIon.Phasors.Enable", False )
+RotationEnable = parset.getBool( "ExpIon.Rotation.Enable", False )
+print "RotationEnable:", RotationEnable
 
 print repr(stations)
 print repr(sources)
@@ -162,6 +164,7 @@ print repr(DirectionalGainEnable)
 ion_model = ionosphere.IonosphericModel(gdsfiles, clusterdescfile,
                                         GainEnable = GainEnable,
                                         DirectionalGainEnable = DirectionalGainEnable,
+                                        RotationEnable = RotationEnable,
                                         PhasorsEnable = PhasorsEnable,
                                         stations = stations,
                                         sources = sources,

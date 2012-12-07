@@ -27,6 +27,7 @@
 #include <Common/DataConvert.h>
 #include <Common/StringUtil.h>
 #include <cstdio>
+#include <cstring>
 
 namespace LOFAR {
   namespace GCF {

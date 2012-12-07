@@ -38,15 +38,21 @@ int main(int argc, char* argv[])
 	  printf("%s usage: %s <controller name>\n",argv[0],argv[0]);
 	  exit(-1);
 	}
-	GCFTask::init(argc, argv);
 
-	ParentControl*	pc = ParentControl::instance();
-	pc->start();	// make initial transition
+	try {
+		GCFTask::init(argc, argv);
 
-	OfflineControl	ofc(argv[1]);
-	ofc.start(); 	// make initial transition
+		ParentControl*	pc = ParentControl::instance();
+		pc->start();	// make initial transition
 
-	GCFTask::run();
+		OfflineControl	ofc(argv[1]);
+		ofc.start(); 	// make initial transition
+
+		GCFTask::run();
+	} catch( Exception &ex ) {
+		LOG_FATAL_STR("Caught exception: " << ex);
+		return 1;
+	}
 
 	return 0;
 }

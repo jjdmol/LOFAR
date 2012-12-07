@@ -29,7 +29,7 @@ Dedispersion::Dedispersion(const Parset &parset, const std::vector<unsigned> &su
   itsNrChannels(parset.nrChannelsPerSubband()),
   itsNrSamplesPerIntegration(parset.CNintegrationSteps()),
   itsFFTsize(parset.dedispersionFFTsize()),
-  itsChannelBandwidth(parset.sampleRate() / itsNrChannels),
+  itsChannelBandwidth(parset.subbandBandwidth() / itsNrChannels),
   itsFFTedBuffer(NR_POLARIZATIONS, itsFFTsize),
   itsAllocator(allocator)
 {

@@ -25,6 +25,7 @@
 
 #include <GCF/PVSS/GCF_PVBlob.h>
 #include <Common/DataConvert.h>
+#include <cstring>
 
 namespace LOFAR {
  namespace GCF {

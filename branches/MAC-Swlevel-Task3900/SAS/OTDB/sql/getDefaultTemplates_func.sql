@@ -37,6 +37,7 @@
 --
 CREATE OR REPLACE FUNCTION getDefaultTemplates()
   RETURNS SETOF templateInfo AS $$
+    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vRecord		RECORD;
 		TSobsolete	CONSTANT	INT2 := 1200;
@@ -72,6 +73,7 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION assignTemplateName(INT4, INT4, VARCHAR(32))
   RETURNS BOOLEAN AS $$
+    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		TSobsolete   		CONSTANT	INT2 := 1200;
 		TTtemplate  		CONSTANT	INT2 := 20;

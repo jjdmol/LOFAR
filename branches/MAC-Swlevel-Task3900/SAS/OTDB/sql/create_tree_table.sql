@@ -42,6 +42,7 @@ CREATE SEQUENCE	OTDBtreeID START 6112;
 CREATE SEQUENCE	OTDBgroupID START 1;
 
 CREATE TABLE OTDBtree (
+    --  $Id$
 	-- required info
 	treeID		INT4			NOT NULL DEFAULT nextval('OTDBtreeID'),
 	momID 		INT4			NOT NULL DEFAULT 0,
@@ -76,6 +77,7 @@ CREATE TABLE OTDBtree (
 ) WITHOUT OIDS;
 
 CREATE OR REPLACE FUNCTION newGroupID()
+    --  $Id$
   RETURNS INT4 AS $$
   BEGIN
    RETURN nextval('OTDBgroupID');
@@ -87,6 +89,7 @@ $$ LANGUAGE plpgsql;
 CREATE INDEX otdbtree_treeid_indx ON otdbtree(treeid);
 
 CREATE TABLE StateHistory (
+    --  $Id$
 	treeID		INT4			NOT NULL,
 	momID		INT4			NOT NULL,
 	state		INT2			NOT NULL,

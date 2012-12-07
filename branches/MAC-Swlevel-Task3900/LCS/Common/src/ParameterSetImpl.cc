@@ -104,6 +104,7 @@ ParameterSetImpl::makeSubset(const string& baseKey,
     // cut off baseString and copy to subset
     pos = subSet->insert(pos, make_pair(prefix + it->first.substr(base.size()),
                                         it->second));
+    itsAskedParms.insert (it->first);
   }
   
   return (subSet);
@@ -185,6 +186,18 @@ void ParameterSetImpl::adoptCollection(const ParameterSetImpl& theCollection,
     for (const_iterator iter = tmp.begin();
          iter != tmp.end(); ++iter) {
       replace(thePrefix+iter->first, iter->second);
+    }
+  }
+}
+
+void ParameterSetImpl::adoptArgv (int nr, char const * const argv[])
+{
+  for (int i=0; i<nr; ++i) {
+    string arg(argv[i]);
+    // Only add arguments containing an =-sign.
+    string::size_type eqs = arg.find('=');
+    if (eqs != string::npos) {
+      replace (arg.substr(0, eqs), ParameterValue(arg.substr(eqs+1)));
     }
   }
 }
@@ -326,8 +339,12 @@ ParameterSetImpl::findKV(const string& aKey, bool doThrow) const
 
 	const_iterator	iter = find(aKey);
 
-	if (iter == end() && doThrow) {
+	if (iter == end()) {
+          if (doThrow) {
 		THROW (APSException, formatString("Key %s unknown", aKey.c_str()));
+          }
+        } else {
+          itsAskedParms.insert (aKey);          \
 	}
 
 	return (iter);
@@ -650,6 +667,17 @@ string	ParameterSetImpl::fullModuleName(const string&	shortKey) const
 	}
 
 	return ("");
+}
+
+vector<string> ParameterSetImpl::unusedKeys() const
+{
+  vector<string> vec;
+  for (const_iterator iter = begin(); iter != end(); ++iter) {
+    if (itsAskedParms.find (iter->first) == itsAskedParms.end()) {
+      vec.push_back (iter->first);
+    }
+  }
+  return vec;
 }
 
 } // namespace LOFAR

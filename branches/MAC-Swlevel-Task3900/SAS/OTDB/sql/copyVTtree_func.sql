@@ -39,6 +39,7 @@
 --
 CREATE OR REPLACE FUNCTION copyVTparams(INT4, INT4, INT4)
   RETURNS VOID AS '
+    --  $Id$
 	DECLARE
 		vParam	RECORD;
 
@@ -77,6 +78,7 @@ CREATE OR REPLACE FUNCTION copyVTparams(INT4, INT4, INT4)
 --
 CREATE OR REPLACE FUNCTION copyVTleafNode(INT4, INT4, INT4)
   RETURNS INT4 AS '
+    --  $Id$
 	DECLARE
 		vNode		RECORD;
 		vNewNodeID	VICtemplate.nodeID%TYPE;
@@ -123,6 +125,7 @@ CREATE OR REPLACE FUNCTION copyVTleafNode(INT4, INT4, INT4)
 --
 CREATE OR REPLACE FUNCTION copyVTsubTree(INT4, INT4, INT4)
   RETURNS INT4 AS '
+    --  $Id$
 	DECLARE
 	  vNewNodeID		VICtemplate.nodeID%TYPE;
 	  vDummy			VICtemplate.nodeID%TYPE;
