@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: Delays.h 17975 2011-05-10 09:52:51Z mol $
+//#  $Id: Delays.h 23195 2012-12-06 16:01:41Z mol $
 
 #ifndef LOFAR_GPUPROC_DELAYS_H
 #define LOFAR_GPUPROC_DELAYS_H
@@ -29,13 +29,13 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include "Common/Timer.h"
-#include "Interface/MultiDimArray.h"
-#include "Interface/Parset.h"
-#include "Interface/RSPTimeStamp.h"
-#include "Interface/SmartPtr.h"
-#include "Common/Thread/Semaphore.h"
-#include "Common/Thread/Thread.h"
+#include <Common/Timer.h>
+#include <Interface/MultiDimArray.h>
+#include <Interface/Parset.h>
+#include <Interface/RSPTimeStamp.h>
+#include <Interface/SmartPtr.h>
+#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Thread.h>
 
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MDirection.h>
@@ -83,8 +83,10 @@ class Delays
     Delays(const Parset &ps, const string &stationName, const TimeStamp &startTime);
     ~Delays();
 
+    void start();
+
     // get the set of directions (ITRF) and delays for the beams, for the next CN integration time
-    // Both matrices must have dimensions [itsNrBeams][itsNrTABs+1]
+    // Both matrices must have dimensions [itsNrBeams][itsMaxNrTABs+1]
     void getNextDelays(Matrix<casa::MVDirection> &directions, Matrix<double> &delays);
     
   private:
@@ -132,9 +134,10 @@ class Delays
 
     // Beam info.
     const unsigned			itsNrBeams;
-    const unsigned			itsNrTABs;
-    casa::MDirection::Types		itsDirectionType;
-    Matrix<casa::MVDirection>		itsBeamDirections; // [itsNrBeams][itsNrTABs+1]
+    const unsigned			itsMaxNrTABs;
+    const std::vector<unsigned>		itsNrTABs;
+    Vector<casa::MDirection::Types>	itsDirectionTypes;
+    Matrix<casa::MVDirection>		itsBeamDirections; // [itsNrBeams][itsMaxNrTABs+1]
 
     // Sample timings.
     const TimeStamp			itsStartTime;
@@ -144,7 +147,7 @@ class Delays
     // Station Name.
     const string			itsStationName;
     casa::MeasFrame			itsFrame;
-    SmartPtr<casa::MDirection::Convert>	itsConverter;
+    std::map<casa::MDirection::Types, casa::MDirection::Convert> itsConverters;
     
     // Station phase centre. 
     casa::MPosition			itsPhaseCentre;
@@ -154,7 +157,7 @@ class Delays
     
     NSTimer				itsDelayTimer;
 
-    Thread				itsThread;
+    SmartPtr<Thread>			itsThread;
 };
 
 } // namespace RTCP
