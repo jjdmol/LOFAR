@@ -1,6 +1,6 @@
 # $Id: CMakeLists.txt 16350 2010-09-20 13:14:52Z nieuwpoort $
 
-lofar_package(GPUProc 1.0 DEPENDS Common Stream Interface OpenCL_FFT)
+lofar_package(GPUProc 1.0 DEPENDS Common Stream ApplCommon Interface OpenCL_FFT)
 
 #add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
 
