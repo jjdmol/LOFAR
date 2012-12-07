@@ -22,6 +22,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <jni.h>
@@ -35,7 +36,8 @@
 #include <OTDB/TreeStateConv.h>
 #include <OTDB/TreeTypeConv.h>
 #include <OTDB/UnitConv.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/date_time/posix_time/time_formatters.hpp>
 #include <string>
 #include <iostream>
 

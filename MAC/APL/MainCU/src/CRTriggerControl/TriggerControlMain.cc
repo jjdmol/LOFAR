@@ -35,14 +35,18 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {
-	
-	// args: cntlrname
-	GCFScheduler::instance()->init(argc, argv, argv[0]);
+	try {
+		// args: cntlrname
+		GCFScheduler::instance()->init(argc, argv, argv[0]);
 
-	TriggerControl	tc(argv[0]);
-	tc.start(); // make initial transition
+		TriggerControl	tc(argv[0]);
+		tc.start(); // make initial transition
 
-	GCFScheduler::instance()->run();
+		GCFScheduler::instance()->run();
+	} catch( Exception &ex ) {
+		LOG_FATAL_STR("Caught exception: " << ex);
+		return 1;
+	}
 
 	return 0;
 }

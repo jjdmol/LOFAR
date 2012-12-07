@@ -26,6 +26,7 @@
 //# Common Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_datetime.h>
 
 //# GCF Includes
 #include <MACIO/GCF_Event.h>
@@ -33,8 +34,6 @@
 #include <GCF/RTDB/RTDB_PropertySet.h>
 #include <GCF/RTDB/GCF_RTDBPort.h>
 #include <GCF/RTDB/DPservice.h>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 // forward declaration
 
@@ -48,8 +47,6 @@ namespace LOFAR {
 	using	GCF::RTDB::DPservice;
 	using	GCF::RTDB::GCFRTDBPort;
 	namespace MainCU {
-
-using boost::posix_time::ptime;
 
 class TriggerControl : public GCFTask
 {

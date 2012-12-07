@@ -27,7 +27,6 @@
 #include <Common/SystemUtil.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/LofarDirs.h>
-#include <ApplCommon/PosixTime.h>
 
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
@@ -43,9 +42,6 @@
 #include "PVSSDatapointDefs.h"
 #include <MainCU/Package__Version.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
-using namespace boost::posix_time;
 
 namespace LOFAR {
 	using namespace APLCommon;

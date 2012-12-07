@@ -36,7 +36,6 @@
 #include <OTDB/TreeValue.h>
 #include "SASGateway.h"
 #include <CURTDBDaemons/Package__Version.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace LOFAR {
   using namespace MACIO;
@@ -46,8 +45,6 @@ namespace LOFAR {
     using namespace PVSS;
     using namespace RTDB;
     namespace RTDBDaemons {
-
-using namespace boost::posix_time;
 
 //
 // SASGateway()

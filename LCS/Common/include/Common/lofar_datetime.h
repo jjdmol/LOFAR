@@ -1,6 +1,6 @@
-//# PosixTime.h: conversion routines from/to Unix to/from Posix time.
+//# lofar_datetime.h: namespace wrapper for Boost.Date_Time Posix classes
 //#
-//# Copyright (C) 2002-2012
+//# Copyright (C) 2002
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,26 +20,31 @@
 //#
 //# $Id$
 
-#ifndef APPLCOMMON_POSIXTIME_H
-#define APPLCOMMON_POSIXTIME_H
+#ifndef LOFAR_COMMON_DATETIME_H
+#define LOFAR_COMMON_DATETIME_H
 
 // \file
-// Conversion routines from/to Unix to/from Posix time.
+// namespace wrapper for Boost.Date_Time Posix classes
 
-#if !defined(HAVE_BOOST_DATE_TIME)
+#if !defined(HAVE_BOOST)
 #error Boost.Date_Time is required.
 #endif
 
-#include <ctime>
-
-//# Forward declarations
-namespace boost { namespace posix_time { class ptime; } }
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace LOFAR
 {
-  time_t to_time_t(boost::posix_time::ptime aPtime);
+  using namespace boost::posix_time;
 
-  boost::posix_time::ptime from_ustime_t(double	secsEpoch1970);
+	inline time_t to_time_t(ptime aPtime) {
+          ptime epoch(boost::gregorian::date(1970, 1, 1));
+          time_duration diff(aPtime - epoch);
+          return diff.total_seconds();
+	}
+
+	inline ptime from_ustime_t(double	secsEpoch1970) {
+		return (from_time_t((time_t)trunc(secsEpoch1970)) + microseconds((int64_t)((secsEpoch1970-trunc(secsEpoch1970))*1000000)));
+	}
 }
 
 #endif

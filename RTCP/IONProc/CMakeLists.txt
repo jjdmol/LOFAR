@@ -6,7 +6,6 @@ lofar_package(IONProc 1.0
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Libssh2)
-lofar_find_package(OpenSSL)
 lofar_find_package(Valgrind)
 lofar_find_package(Casacore COMPONENTS measures REQUIRED)
 

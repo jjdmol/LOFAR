@@ -43,9 +43,10 @@
 #ifdef HAVE_LIBSSH2
 #include <Scheduling.h>
 #include <Interface/SmartPtr.h>
+#include <sstream>
 #include <sys/select.h>
+#include <Common/lofar_string.h>
 #include <Stream/SocketStream.h>
-#include <openssl/crypto.h>
 #endif
 
 using namespace std;
@@ -566,6 +567,8 @@ const char *explainLibSSH2Error( int error )
   return explanation;
 }
  
+#include <openssl/crypto.h>
+
 std::vector< SmartPtr<Mutex> > openssl_mutexes;
 
 static void lock_callback(int mode, int type, const char *file, int line)
