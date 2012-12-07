@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 	}
 
 	try {
-		GCFScheduler::instance()->init(argc, argv, "PythonControl");
+		GCFScheduler::instance()->init(argc, argv, argv[1]);
 
 		ParentControl*	pc = ParentControl::instance();
 		pc->start();	// make initial transition

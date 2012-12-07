@@ -29,7 +29,6 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/lofar_string.h>
-#include <Common/lofar_datetime.h>
 #include <Common/lofar_list.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_TCPPort.h>
@@ -37,6 +36,8 @@
 #include <GCF/TM/GCF_TimerPort.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include "CTState.h"
+
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -49,6 +50,8 @@ namespace LOFAR {
   using GCF::TM::GCFPortInterface;
   using APLCommon::CTState;
   namespace APLCommon {
+
+using boost::posix_time::ptime;
 
 // \addtogroup APLCommon
 // @{

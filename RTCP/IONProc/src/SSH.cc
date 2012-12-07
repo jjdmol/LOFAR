@@ -43,10 +43,9 @@
 #ifdef HAVE_LIBSSH2
 #include <Scheduling.h>
 #include <Interface/SmartPtr.h>
-#include <sstream>
 #include <sys/select.h>
-#include <Common/lofar_string.h>
 #include <Stream/SocketStream.h>
+#include <openssl/crypto.h>
 #endif
 
 using namespace std;
@@ -560,15 +559,13 @@ const char *explainLibSSH2Error( int error )
       case LIBSSH2_ERROR_SOCKET_RECV:			explanation ="LIBSSH2_ERROR_SOCKET_RECV"; break;
       case LIBSSH2_ERROR_ENCRYPT:			explanation ="LIBSSH2_ERROR_ENCRYPT"; break;
       case LIBSSH2_ERROR_BAD_SOCKET:			explanation ="LIBSSH2_ERROR_BAD_SOCKET"; break;
-      case LIBSSH2_ERROR_KNOWN_HOSTS:			explanation ="LIBSSH2_ERROR_KNOWN_HOSTS"; break;
+//      case LIBSSH2_ERROR_KNOWN_HOSTS:			explanation ="LIBSSH2_ERROR_KNOWN_HOSTS"; break;
       //case LIBSSH2_ERROR_BANNER_NONE:			explanation ="LIBSSH2_ERROR_BANNER_NONE"; break;
   }
 
   return explanation;
 }
  
-#include <openssl/crypto.h>
-
 std::vector< SmartPtr<Mutex> > openssl_mutexes;
 
 static void lock_callback(int mode, int type, const char *file, int line)

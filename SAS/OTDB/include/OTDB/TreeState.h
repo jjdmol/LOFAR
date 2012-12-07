@@ -29,13 +29,13 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <OTDB/OTDBtypes.h>
-#include <Common/lofar_datetime.h>
-#include <pqxx/pqxx>
-
-using namespace boost::posix_time;
+#include <pqxx/result>
+#include <boost/date_time/posix_time/ptime.hpp>
 
 namespace LOFAR {
   namespace OTDB {
+
+using boost::posix_time::ptime;
 
 // \addtogroup OTDB
 // @{

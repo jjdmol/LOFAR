@@ -103,7 +103,7 @@ LANG:1 0
 3 1 "PANEL_REF1" -1
 "objects\\Processes\\SWControler_small.pnl" 0 0 T 18 U 
 2
-"$name""PermSW_Daemons_SoftwareMonitor"
+"$name""PermSW_SoftwareMonitor"
 "$station""$station"
 3 2 "PANEL_REF2" -1
 "objects\\Processes\\SWControler_small.pnl" 20 0 T 19 1 0 1 -4 0

@@ -34,6 +34,7 @@
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/AntennaSets.h>
+//#include <ApplCommon/PosixTime.h>
 
 #include <Common/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -54,10 +55,13 @@
 #include "Clock_Protocol.ph"
 #include <StationCU/Package__Version.h>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
 using namespace LOFAR::APL::RTDBCommon;
+using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
@@ -848,7 +852,6 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                     LOG_INFO_STR("new observation also uses clock " << itsClock);
 		            itsTimerPort->setTimer(0.0);
                 }
-				break;
             }
 
             case 1: {
@@ -867,7 +870,6 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                 CLKCTRLSetSplittersEvent	setEvent;
                 setEvent.splittersOn = splitterState;
                 itsClkCtrlPort->send(setEvent);		// will result in CLKCTRL_SET_SPLITTERS_ACK
-				break;
             } 
 
             case 2: {
@@ -899,7 +901,6 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                     LOG_INFO_STR("new observation also uses bitmode " << itsBitmode);
 		            itsTimerPort->setTimer(0.0);
                 }
-				break;
             }
 
             default: {
@@ -911,7 +912,6 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                 LOG_INFO("Going back to operational state");
                 itsStartingObs = itsObsMap.end();
                 TRAN(StationControl::operational_state);
-				break;
             }
         }  
 	}

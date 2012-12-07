@@ -36,54 +36,49 @@ using namespace LOFAR::CEPCU;
 
 int main(int argc, char* argv[])
 {
-	try {
-		// args: cntlrname, parentHost, parentService
-		GCFScheduler::instance()->init(argc, argv, "CEPHardwareMonitor");
+	// args: cntlrname, parentHost, parentService
+	GCFScheduler::instance()->init(argc, argv, "CEPHardwareMonitor");
 
-		LOG_INFO("MACProcessScope: LOFAR_PermSW_HardwareMonitor");
-		LOG_INFO(Version::getInfo<CEPCUVersion>("CEPHardwareMonitor"));
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_HardwareMonitor");
+	LOG_INFO(Version::getInfo<CEPCUVersion>("CEPHardwareMonitor"));
 
-		// Create tasks and call initial routines
-		BlueGeneMonitor*	bgm(0);
-		ClusterMonitor*		ctm(0);
-		
-		// monitor BLUEGENE?
-		if (globalParameterSet()->getUint32("WatchBlueGene",0)) {
-			bgm = new BlueGeneMonitor("BlueGeneMonitor");
-			bgm->start();
-			LOG_INFO("Monitoring the BlueGene");
-		}
-
-		// monitor CEP2Cluster?
-		if (globalParameterSet()->getUint32("WatchCluster",0)) {
-			ctm = new ClusterMonitor("ClusterMonitor");
-			ctm->start();
-			LOG_INFO("Monitoring the Cluster");
-		}
-
-		// sanity check
-		if (!bgm && !ctm) {
-			LOG_FATAL_STR("Non of the monitortask (WatchBlueGene, WatchCluster) "
-							"was switched on in the configfile, terminating program");
-			return (0);
-		}
-
-		// ok, we have something to do, do it.
-		GCFScheduler::instance()->setDelayedQuit(true);	// we need a clean shutdown
-		GCFScheduler::instance()->run();				// until stop was called
-
-		if (bgm) {
-			bgm->quit();		// let task quit nicely
-		}
-		if (ctm) {
-			ctm->quit();		// let task quit nicely
-		}
-		double	postRunTime = globalParameterSet()->getDouble("closingDelay", 1.5);
-		GCFScheduler::instance()->run(postRunTime);	// let processes die.
-	} catch( Exception &ex ) {
-		LOG_FATAL_STR("Caught exception: " << ex);
-		return 1;
+	// Create tasks and call initial routines
+	BlueGeneMonitor*	bgm(0);
+	ClusterMonitor*		ctm(0);
+	
+	// monitor BLUEGENE?
+	if (globalParameterSet()->getUint32("WatchBlueGene",0)) {
+		bgm = new BlueGeneMonitor("BlueGeneMonitor");
+		bgm->start();
+		LOG_INFO("Monitoring the BlueGene");
 	}
+
+	// monitor CEP2Cluster?
+	if (globalParameterSet()->getUint32("WatchCluster",0)) {
+		ctm = new ClusterMonitor("ClusterMonitor");
+		ctm->start();
+		LOG_INFO("Monitoring the Cluster");
+	}
+
+	// sanity check
+	if (!bgm && !ctm) {
+		LOG_FATAL_STR("Non of the monitortask (WatchBlueGene, WatchCluster) "
+						"was switched on in the configfile, terminating program");
+		return (0);
+	}
+
+	// ok, we have something to do, do it.
+	GCFScheduler::instance()->setDelayedQuit(true);	// we need a clean shutdown
+	GCFScheduler::instance()->run();				// until stop was called
+
+	if (bgm) {
+		bgm->quit();		// let task quit nicely
+	}
+	if (ctm) {
+		ctm->quit();		// let task quit nicely
+	}
+	double	postRunTime = globalParameterSet()->getDouble("closingDelay", 1.5);
+	GCFScheduler::instance()->run(postRunTime);	// let processes die.
 
 	return (0);
 }

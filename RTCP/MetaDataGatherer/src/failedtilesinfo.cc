@@ -47,10 +47,14 @@
 #include <measures/Measures/MEpoch.h>
 #include <casa/Quanta/MVTime.h>
 
+// Boost
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
 using namespace casa;
+using namespace boost::posix_time;
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
