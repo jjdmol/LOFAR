@@ -199,6 +199,9 @@ class Parset: public ParameterSet
     std::string			bandFilter() const;
     std::string			antennaSet() const;
 
+    size_t          nrCoherentStokes() const { return coherentStokes().size(); }
+    size_t          nrIncoherentStokes() const { return incoherentStokes().size(); }
+
     unsigned			nrBeams() const;
     std::string                 beamTarget(unsigned beam) const;
     double                      beamDuration(unsigned beam) const;
