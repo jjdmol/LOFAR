@@ -43,10 +43,11 @@ pythonProgram="${1}"
 parsetFile="${2}"
 controlHost="${3}"
 
+echo "**** $(date) ****" >> ${logFile}
 # Try to run a script that resets the invironment based on a parset
 # value
 if [ -r $(dirname $0)/startPythonVersion.sh ]; then
-  . startPythonVersion.sh
+  . $(dirname $0)/startPythonVersion.sh >> ${logFile}
 else
   echo "startPythonVersion.sh not found, parset software version ignored"
 fi
@@ -60,7 +61,6 @@ programOptions=" \
   
 # Print some debugging information if debugging is enabled.
 if [ -n "$debug" ]; then
-  echo "**** $(date) ****" >> ${logFile}
   echo "$0 $@" >> ${logFile}
   echo "PATH=${PATH}" >> ${logFile}
   echo "PYTHONPATH=${PYTHONPATH}" >> ${logFile}
