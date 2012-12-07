@@ -17,7 +17,8 @@
 
 #include "Align.h"
 #include "BandPass.h"
-#include "Common/lofar_datetime.h"
+#include "ApplCommon/PosixTime.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "Common/LofarLogger.h"
 #include "Common/SystemUtil.h"
 #include "FilterBank.h"
