@@ -6,6 +6,7 @@ lofar_package(InputProc 1.0
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time)
 lofar_find_package(OpenMP REQUIRED)
+lofar_find_package(MPI REQUIRED)
 #lofar_find_package(Valgrind)
 #lofar_find_package(Casacore COMPONENTS measures REQUIRED)
 
