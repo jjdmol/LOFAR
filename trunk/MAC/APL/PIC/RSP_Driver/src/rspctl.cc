@@ -2116,7 +2116,7 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 
 			Timestamp timeNow;
 			timeNow.setNow();
-			if(timeNow >= m_duration) {
+			if(m_nseconds >= m_duration) {
 				logMessage(cout,"Statistics capturing successfully ended.");
 				stop();
 				GCFScheduler::instance()->stop();
