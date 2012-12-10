@@ -2093,7 +2093,7 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 		}
 	}
 
-	if (m_integration > 0) {
+	if (m_integration > 1) {
 		m_stats += stats;
 	} else {
 		m_stats = stats;
@@ -2101,7 +2101,7 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 	m_nseconds++; // advance to next second
 
 	if (0 == (int32)m_nseconds % m_integration) {
-		if (m_integration > 0) {
+		if (m_integration > 1) {
 			m_stats /= m_integration;
 		}
 
@@ -2116,7 +2116,7 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 
 			Timestamp timeNow;
 			timeNow.setNow();
-			if(timeNow >= m_endTime) {
+			if(timeNow >= m_duration) {
 				logMessage(cout,"Statistics capturing successfully ended.");
 				stop();
 				GCFScheduler::instance()->stop();

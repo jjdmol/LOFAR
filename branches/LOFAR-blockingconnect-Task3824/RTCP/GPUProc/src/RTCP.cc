@@ -1900,7 +1900,7 @@ struct UHEP_TriggerTest : public UnitTest
 struct FFT_Test : public UnitTest
 {
   FFT_Test(const Parset &ps)
-  : UnitTest(ps, "fft.cl")
+  : UnitTest(ps, "fft2.cl")
   {
     MultiArraySharedBuffer<std::complex<float>, 1> in(boost::extents[8], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
     MultiArraySharedBuffer<std::complex<float>, 1> out(boost::extents[8], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
