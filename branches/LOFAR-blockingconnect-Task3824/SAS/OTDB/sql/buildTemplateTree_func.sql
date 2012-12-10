@@ -39,6 +39,7 @@
 --
 CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
   RETURNS VOID AS $$
+    --  $Id$
 	DECLARE
 		vParam		RECORD;
 		dfltValue	VARCHAR(200);
@@ -87,6 +88,7 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4)
   RETURNS INT4 AS $$
+    --  $Id$
 	DECLARE
 		vNode		RECORD;
 		vNewNodeID	VICtemplate.nodeID%TYPE;
@@ -143,6 +145,7 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION instanciateVTsubTree(INT4, INT4, INT4)
   RETURNS INT4 AS $$
+    --  $Id$
 	DECLARE
 	  vNode				RECORD;
 	  vNodeID			VICnodeDef.nodeID%TYPE;
@@ -196,6 +199,7 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION instanciateVTtree(INT4, INT4, INT2)
   RETURNS INT4 AS $$
+    --  $Id$
 	DECLARE
 		vFunction   CONSTANT	INT2 := 1;
 		TTtemplate  CONSTANT	INT2 := 20;

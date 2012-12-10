@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/lofar_datetime.h>
+#include <ApplCommon/PosixTime.h>
 #include <Common/lofar_set.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -35,9 +35,11 @@
 #include <ApplCommon/Observation.h>
 
 #include <Common/lofar_map.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/format.hpp>
 
 using boost::format;
+using namespace boost::posix_time;
 
 namespace LOFAR {
 

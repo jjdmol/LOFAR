@@ -72,24 +72,20 @@ if(NOT PVSS_FOUND)
   # Use hard-coded value if version information file cannot be found.
   find_file(PVSS_VERSINFO_MK
     NAMES VersInfo.mk
-    HINTS ${PVSS_PROJ_DIR})
+    HINTS ${PVSS_ROOT_DIR}
+    PATH_SUFFIXES api)
   mark_as_advanced(PVSS_VERSINFO_MK)
   if(NOT PVSS_VERSINFO_MK)
     set(pvss_version "V37_304")
-    set(PVSS_ROOT_DIR "/opt/pvss/pvss2_v3.7")
   else()
     file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_VERSION_MAIN")
     string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_version_main ${match})
     file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_VERSION_BUILD")
     string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_version_build ${match})
-    file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_ROOT_DIR")
-    string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_root_dir ${match})
     set(pvss_version "V${pvss_version_main}_${pvss_version_build}")
-
-    file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_ROOT_DIR")
-    string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_root ${match})
-    set(PVSS_ROOT_DIR "${pvss_root}")
   endif(NOT PVSS_VERSINFO_MK)
+
+  message(STATUS "Searching for PVSS ${pvss_version}")
 
   # Search for the PVSS include directory
   find_path(PVSS_INCLUDE_DIR
@@ -105,7 +101,7 @@ if(NOT PVSS_FOUND)
     find_library(PVSS_${lib}_LIBRARY
       NAMES ${lib}${pvss_version}
       HINTS ${PVSS_ROOT_DIR}
-      PATH_SUFFIXES api/lib.${osname})
+      PATH_SUFFIXES api/lib.${osname} bin)
     list(APPEND pvss_check_list PVSS_${lib}_LIBRARY)
   endforeach(lib Manager Messages Datapoint Basics bcm)
 

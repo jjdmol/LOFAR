@@ -23,7 +23,6 @@
 #include <Stream/PortBroker.h>
 #include <Storage/SubbandWriter.h>
 #include <Storage/IOPriority.h>
-#include <Storage/ExitOnClosedStdin.h>
 #include <Storage/Package__Version.h>
 
 #if defined HAVE_MPI
@@ -42,6 +41,7 @@
 #include <vector>
 
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 
 
 // install a new handler to produce backtraces for bad_alloc
@@ -78,7 +78,6 @@ int main(int argc, char *argv[])
     if (argc != 4)
       throw StorageException(str(boost::format("usage: %s obsid rank is_bigendian") % argv[0]), THROW_ARGS);
 
-    ExitOnClosedStdin			  stdinWatcher;
     setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
     setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 

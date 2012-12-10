@@ -24,7 +24,6 @@
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
-#include <Common/lofar_datetime.h>
 #include <Common/StringUtil.h>
 #include <Common/hexdump.h>
 

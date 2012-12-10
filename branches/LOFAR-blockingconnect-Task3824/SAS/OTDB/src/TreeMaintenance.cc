@@ -26,13 +26,16 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-#include <Common/lofar_datetime.h>
 #include <Common/lofar_string.h>
 #include <fstream>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBnode.h>
 #include <OTDB/OTDBparam.h>
 #include <OTDB/misc.h>
+
+#include <pqxx/transaction>
+
+using namespace pqxx;
 
 namespace LOFAR {
   namespace OTDB {

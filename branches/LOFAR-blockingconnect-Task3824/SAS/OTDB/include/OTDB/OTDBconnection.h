@@ -33,11 +33,13 @@
 #include <OTDB/DefaultTemplate.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
-
-using namespace pqxx;
+#include <pqxx/connection>
 
 namespace LOFAR {
   namespace OTDB {
+
+using boost::posix_time::min_date_time;
+using boost::posix_time::max_date_time;
 
 // \addtogroup OTDB
 // @{
@@ -120,7 +122,7 @@ public:
 	//# --- accessor functions ---
 	inline string errorMsg() const;
 	inline uint32 getAuthToken() const;
-	inline connection* getConn() const;
+	inline pqxx::connection* getConn() const;
 	inline string getDBName() const;
 
 private:
@@ -135,7 +137,7 @@ private:
 	string		itsHost;
 	string		itsPort;
 	bool		itsIsConnected;
-	connection*	itsConnection;
+	pqxx::connection*	itsConnection;
 	uint32		itsAuthToken;
 	string		itsError;
 };
@@ -165,7 +167,7 @@ inline uint32 OTDBconnection::getAuthToken() const
 //# a non copyable object, making it difficult to define a call like:
 //# work(*)	OTDBconnection::transaction(transactionName);
 //#
-inline connection* OTDBconnection::getConn() const
+inline pqxx::connection* OTDBconnection::getConn() const
 {
 	return (itsConnection);
 }

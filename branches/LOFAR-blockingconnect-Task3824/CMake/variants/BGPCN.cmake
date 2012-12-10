@@ -10,6 +10,7 @@ set(LOFAR_BUILD_VARIANTS DEBUG OPT)
 
 # Options
 option(BUILD_STATIC_EXECUTABLES "Build static executables" ON)
+option(BUILD_SHARED_LIBS        "Build shared libraries"   OFF)
 option(USE_BACKTRACE            "Use backtrace"            ON)
 option(USE_LOG4CPLUS            "Use log4cplus"            OFF)
 option(USE_SHMEM                "Use shmem"                OFF)

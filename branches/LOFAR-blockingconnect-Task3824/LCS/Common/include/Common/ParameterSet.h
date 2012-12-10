@@ -140,6 +140,10 @@ public:
         // <br>If theCollection is this collection, nothing will be done.
 	void	adoptCollection(const ParameterSet&         theCollection,
 				const string&               thePrefix = "");
+
+        // Adds the Key-Values pairs in the argument list.
+        // It ignores arguments not having the Key=Value syntax.
+        void    adoptArgv      (int nr, char const * const argv[]);
 	// @}
 
 
@@ -340,6 +344,10 @@ public:
 
 	// @}
 
+        // Get all unused parameter names, thus the names of parameters
+        // that have not been asked for.
+        vector<string> unusedKeys() const;
+
 	// \name Printing
 	// Mostly for debug purposes the collection can be printed.
 	// @{
@@ -423,6 +431,11 @@ inline void	ParameterSet::adoptBuffer	(const string& theBuffer, const string& th
 inline void	ParameterSet::adoptCollection	(const ParameterSet& theCollection, const string& thePrefix)
 {
 	itsSet->adoptCollection (*theCollection.itsSet, thePrefix);
+}
+
+  inline void	ParameterSet::adoptArgv  	(int nr, const char * const argv[])
+{
+        itsSet->adoptArgv (nr, argv);
 }
 
 inline void	ParameterSet::writeFile   (const string& theFilename, bool append) const
@@ -856,6 +869,11 @@ inline vector<time_t> ParameterSet::getTimeVector(const string& aKey,
                                                   bool expandable) const
 {
         return itsSet->getTimeVector(aKey, aValue, expandable);
+}
+
+inline vector<string> ParameterSet::unusedKeys() const
+{
+        return itsSet->unusedKeys();
 }
 
 } // namespace LOFAR

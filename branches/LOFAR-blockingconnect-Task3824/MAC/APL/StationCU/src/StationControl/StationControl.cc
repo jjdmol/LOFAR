@@ -34,6 +34,7 @@
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/AntennaSets.h>
+//#include <ApplCommon/PosixTime.h>
 
 #include <Common/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -54,10 +55,13 @@
 #include "Clock_Protocol.ph"
 #include <StationCU/Package__Version.h>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
 using namespace LOFAR::APL::RTDBCommon;
+using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {

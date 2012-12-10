@@ -1,5 +1,3 @@
-option(BUILD_SHARED_LIBS "Build shared libraries" ON)
-
 set(CASACORE_ROOT_DIR /opt/cep/LofIm/daily/casacore)
 set(CASAREST_ROOT_DIR /opt/cep/LofIm/daily/casarest)
 set(LDA_ROOT_DIR /opt/cep/lda)

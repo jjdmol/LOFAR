@@ -43,6 +43,10 @@ if(GSL_FOUND)
   link_libraries(${GSL_LIBRARIES})
 endif(GSL_FOUND)
 
+if(SIGCXX_FOUND)
+  include_directories(${SIGCXX_INCLUDE_DIRS})
+endif(SIGCXX_FOUND)
+
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
 lofar_add_bin_program(aorefscript aorefscript.cpp)

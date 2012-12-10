@@ -127,6 +127,18 @@ if(NOT DEFINED LOFAR_GENERAL_INCLUDED)
   endif(HAVE_NETDB_H)
 
   ## --------------------------------------------------------------------------
+  ## Define `STRNLEN', if the strnlen() function exists.
+  ## --------------------------------------------------------------------------
+  check_c_source_compiles("
+    #include <string.h>
+    #include <stdio.h>
+    int main() {
+      char *s = \"test\";
+      int i = 3;
+      unsigned l = strnlen(s,i);
+    }" HAVE_STRNLEN)
+
+  ## --------------------------------------------------------------------------
   ## Define custom target 'check', so that we can do 'make check', like we did
   ## with the GNU Autotools. Tests should be added with lofar_add_test().
   ## --------------------------------------------------------------------------

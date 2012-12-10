@@ -266,7 +266,8 @@ namespace LOFAR {
         }
       }
     } else {
-      return fail.itsSeqNr/2;
+      // LBA and HBA already provide the tile number
+      return fail.itsSeqNr;
     }
     return -1;
   }

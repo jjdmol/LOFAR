@@ -31,7 +31,8 @@ class imager_finalize(LOFARnodeTCP):
     2. Convert the image to hdf5 and fits image
     3. Filling of the HDF5 root group
     4. Export fits image to msss image server
-    4. Return the outputs
+    5. Export sourcelist to msss server, copy the sourcelist to hdf5 location
+    6. Return the outputs
     """
     def run(self, awimager_output, raw_ms_per_image, sourcelist, target,
             output_image, minbaseline, maxbaseline, processed_ms_dir,
@@ -110,6 +111,7 @@ class imager_finalize(LOFARnodeTCP):
             # create target location
             fits_output = output_image + ".fits"
             # To allow reruns a possible earlier version needs to be removed!
+            # image2fits fails if not done!!
             if os.path.exists(fits_output):
                 os.unlink(fits_output)
 
@@ -159,6 +161,7 @@ class imager_finalize(LOFARnodeTCP):
                 opener = urllib2.build_opener(mph.MultipartPostHandler)
                 filedata = {"file": open(fits_output, "rb")}
                 opener.open(url, filedata, timeout=2)
+
                 # HTTPError needs to be caught first.
             except urllib2.HTTPError as httpe:
                 self.logger.warn("HTTP status is: {0}".format(httpe.code))
@@ -177,10 +180,18 @@ class imager_finalize(LOFARnodeTCP):
             # 5. export the sourcelist to the msss server
             url = "http://tanelorn.astron.nl:8000/upload_srcs"
             try:
-                self.logger.info("Starting upload of sourcelist data to server!")
+                # Copy file to output location
+                new_sourcelist_path = output_image + ".sourcelist"
+                if os.path.exists(new_sourcelist_path):
+                    os.unlink(new_sourcelist_path)
+
+                shutil.copy(sourcelist, new_sourcelist_path)
+                self.logger.info(
+                            "Starting upload of sourcelist data to server!")
                 opener = urllib2.build_opener(mph.MultipartPostHandler)
-                filedata = {"file": open(sourcelist, "rb")}
+                filedata = {"file": open(new_sourcelist_path, "rb")}
                 opener.open(url, filedata, timeout=2)
+
                 # HTTPError needs to be caught first.
             except urllib2.HTTPError as httpe:
                 self.logger.warn("HTTP status is: {0}".format(httpe.code))
