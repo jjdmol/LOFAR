@@ -9,6 +9,8 @@ set(LOFAR_COMPILER_SUITES BGPION)
 set(LOFAR_BUILD_VARIANTS DEBUG OPT)
 
 # Options
+option(BUILD_STATIC_EXECUTABLES "Build static executables" OFF)
+option(BUILD_SHARED_LIBS        "Build shared libraries"   OFF)
 option(USE_BACKTRACE            "Use backtrace"            ON)
 option(USE_BOOST_REGEX          "Use Boost regex"          OFF)
 option(USE_LOG4CPLUS            "Use log4cplus"            OFF)
