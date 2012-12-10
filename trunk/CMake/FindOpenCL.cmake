@@ -32,14 +32,16 @@
 
 if(NOT OPENCL_FOUND)
 
+  # CentOS sets OPENCL_INCLUDE and OPENCL_LIB in the environment
+
   find_path(OPENCL_INCLUDE_DIR "CL/cl.h"
-    HINTS /usr/local/cuda/include /cm/shared/apps/cuda50/toolkit/5.0.35/include) #FIXME
+    HINTS ${OPENCL_ROOT_DIR} ENV OPENCL_INCLUDE PATH_SUFFIXES include)
   find_library(OPENCL_LIBRARY OpenCL
-    HINTS ${OPENCL_ROOT_DIR} PATH_SUFFIXES lib)
+    HINTS ${OPENCL_ROOT_DIR} ENV OPENCL_LIB PATH_SUFFIXES lib)
   mark_as_advanced(OPENCL_INCLUDE_DIR OPENCL_LIBRARY)
 
   include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(OPENCL DEFAULT_MSG 
+  find_package_handle_standard_args(OpenCL DEFAULT_MSG 
     OPENCL_LIBRARY OPENCL_INCLUDE_DIR)
 
   set(OPENCL_INCLUDE_DIRS ${OPENCL_INCLUDE_DIR})
