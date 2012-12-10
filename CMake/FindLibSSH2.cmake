@@ -39,7 +39,7 @@ if(NOT LIBSSH2_FOUND)
   mark_as_advanced(LIBSSH2_INCLUDE_DIR LIBSSH2_LIBRARY)
 
   include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(LIBSSH2 DEFAULT_MSG 
+  find_package_handle_standard_args(LibSSH2 DEFAULT_MSG 
     LIBSSH2_LIBRARY LIBSSH2_INCLUDE_DIR)
 
   set(LIBSSH2_INCLUDE_DIRS ${LIBSSH2_INCLUDE_DIR})
