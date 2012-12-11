@@ -1,0 +1,574 @@
+#!/bin/bash
+#
+# swlevel : bring software on node in certain runlevel
+#
+# Copyright (C) 2006
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Syntax: swlevel [ 0 | 1 | 2 | 3 | 4 | 5 | 6 ]
+#
+# $Id$
+#
+VERSION="v2.2 20120710"		# waiting for initialize before going to level 3 and up
+
+if [ "$LOFARROOT" == "" ]; then
+  # default value until all MAC controlled systems provide $LOFARROOT
+  LOFARROOT=/opt/lofar
+fi
+
+BINDIR=$LOFARROOT/bin
+LOGDIR=$LOFARROOT/var/log
+ETCDIR=$LOFARROOT/etc
+LEVELTABLE=${ETCDIR}/swlevel.conf
+
+# Make sure all files are user/group writeable (needed for Int. 
+# Stations)
+
+umask 002
+
+#
+# SyntaxError msg
+#
+SyntaxError()
+{
+	Msg=$1
+
+	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
+	echo ""
+	echo "Syntax: $(basename $0) [-s/S/v/V] [-i x] [-r/q processname] [-l][ 0 |1 |2 |3 |4 |5 |6 ]"
+	echo "-s: Show current level, exit (-S: only print number)"
+	echo "-v: Show running LOFAR version, exit (-V: only print version)"
+	echo "-i: Load RSP firmware from image [x] (default image is 1)"
+        echo "-l: Set to level as provided (optional)"
+        echo "-q: Quit process with name processname"
+        echo "-r: Run process with name processname"        
+        echo
+	echo "Levels:"
+	echo "0:  Stop all lofar software"
+	echo "1:  Run Lofar daemons and PVSS"
+	echo "2:  Run Lowlevel hardware drivers"
+	echo "3:  Run Calculation services"
+	echo "4:  Run Hardware and software monitors"
+	echo "5:  Run System Health Management"
+	echo "6:  MAC is controlling the software"
+	echo ""
+	exit 0
+}
+
+# Find which image to load on a given station; uses file 
+# ${ETCDIR}/RSPImage.conf
+#
+# returns $image with image number
+
+findImage()
+{ 
+       findstation=$1
+       RSPImageFile=${ETCDIR}/RSPImage.conf
+       if [ ! -e $RSPImageFile ] ; then 
+          echo "Cannot find Image file ${ETCDIR}/RSPImage.conf"
+          exit;
+       fi
+       image=0
+       while read line
+       do
+	 first=`echo $line | awk '{print $1}'`
+         if [ "$first" == "$findstation" ]; then
+            image=`echo $line | awk '{print $2}'`
+	    break
+         fi 
+       done < ${ETCDIR}/RSPImage.conf
+       if [ $image -eq 0 ]; then 
+	   echo "Could not find station $findstation in file ${ETCDIR}/RSPImage.conf"
+           exit;
+       fi
+       return
+}       
+
+#
+# selectImage(); the image to load has been set in parameter $image in MAIN
+#
+selectImage()
+{
+	let nrRSPs=`grep RSPBOARDS ${ETCDIR}/RemoteStation.conf | cut -d'=' -f2 | sed 's/ //g'`
+	let board=0
+	while [ $board -lt $nrRSPs ]
+	do
+		# get version number of RSPboard in var. rsu
+		boardHex=`echo $board | awk '{ printf "%02x", $1 }'`
+		rsu=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
+		if [ $imageForced ] || [ ${rsu} -eq 1 ]; then
+  		  let version=$rsu
+ 		  # if board has reset itself to image 0, load image 1 again
+		  echo "Loading image $image on RSPboard $board ..."
+		  sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
+		  #fi
+                elif [ ${rsu} -eq 6 ]; then
+		  echo "No need to reload image for RSPboard $board"
+		elif [ ${#rsu} -ne 1 ]; then 
+                  echo "No RSPboard $board found"
+                else
+                  echo "Not a valid image found for RSPboard $board; perhaps an image is being loaded"
+		fi
+		let board+=1
+	done
+}
+
+#
+# Start the program when it exists
+#
+start_prog()
+{
+	# make arguments readable
+	prog=$1
+	asroot=${2:1}
+	withmpi=${3:1}
+
+	# special check for logging-daemons
+	[ $prog == $logProgToSkip ] && return
+	
+	# check existance
+	[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || return
+
+	# if it is a shell script call the script
+	if [ -f $BINDIR/${prog}.sh ]; then
+		$BINDIR/${prog}.sh start
+		return
+	fi
+
+	# Check if program is already running
+	/sbin/pidof ${prog} 1>/dev/null 2>&1
+	if [ $? -ne 0 ]; then
+                curdate=`date +%Y%m%dT%H%M%S`
+		# PVSS needs special treatment
+		if [ "$prog" = "PVSS00pmon" ]; then 
+		    echo Starting $prog
+		    start_pvss2 1>/dev/null 2>&1 &
+		    sleep 3
+		elif [ "$prog" = "SASGateway" ]; then  
+		    # Foreign stations not under central control should not
+		    # connect to the SAS database; this prevents SAS main-
+		    # tenance etc.
+		    if [ "$user" = "lofarsys" ]; then
+			echo Starting $prog
+			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
+			$BINDIR/$prog 1>>${LOGDIR}/${prog}.stdout.${curdate} 2>&1 &
+                    else
+                        echo "Local use, not starting $prog"
+                    fi		    
+  		else
+		    if [ -n "$asroot" ]; then
+		       echo Starting $prog
+		       sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
+		       if [ "$prog" = "RSPDriver" ]; then
+			   selectImage
+			   sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
+		       else
+		           sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
+		       fi
+		    else
+			echo Starting $prog
+			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
+			$BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1 &
+		    fi
+		fi
+		usleep 250000
+		ps -ef | grep -v grep | egrep '[0-9][0-9] [a-zA-Z0-9/_.]*/'${prog}
+	fi
+}
+
+#
+# Stop the program when it is running
+#
+stop_prog()
+{
+	# make arguments readable
+	prog=$1
+	asroot=${2:1}
+	withmpi=${3:1}
+	[ ! -z "$asroot" ] && asroot=sudo	
+
+	# special check for logging-daemons
+	[ $prog == $logProgToSkip ] && return
+	
+	# check existance
+	[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || return
+	
+	# if it is a shell script call the script
+	if [ -f $BINDIR/${prog}.sh ]; then
+		$BINDIR/${prog}.sh stop
+		return
+	fi
+
+	# get processlist
+	/sbin/pidof ${prog} 1>/dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		return
+	fi
+
+	# PVSS needs special treatment
+	if [ "$prog" = "PVSS00pmon" ]; then
+		echo "Stopping PVSS database"
+		start_pvss2 -stopWait
+		return
+	fi
+
+	# first handle mpi programs
+	if [ ! -z "$withmpi" ]; then
+		$asroot cexec :0-11 killall -9 ${prog}
+		return
+	fi
+
+	# first try normal kill
+	for pid in `/sbin/pidof ${prog}`
+	do 
+		echo "Softly killing ${prog}(${pid})"
+		$asroot kill $pid
+		usleep 500000
+	done
+
+	# when normal kill did not work, kill is with -9
+	for pid in `/sbin/pidof ${prog}`
+	do 
+		echo "Hard killing ${prog}(${pid})"
+		$asroot kill -9 $pid 1>/dev/null 2>&1
+	done
+}
+
+#
+# show status of program
+#
+status_prog()
+{
+	echo
+	echo Status of all software level:
+	prevlevel=1
+	list=( `cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' ` )
+	for line in ${list[@]}
+	do
+		levelnr=`echo $line | cut -d":" -f1`
+		prog=`echo $line | cut -d":" -f6`
+                pid=("")
+
+		# special check for logging-daemons
+		[ $prog == $logProgToSkip ] && continue
+		
+		# check existance
+		[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || continue
+	
+		if [ $prevlevel -ne $levelnr ]; then
+			echo "---"
+			prevlevel=$levelnr
+		fi
+
+		# if it is a shell script call the script
+		if [ -f $BINDIR/${prog}.sh ]; then
+			$BINDIR/${prog}.sh status $levelnr
+			continue
+		fi
+		obsid=()
+		/sbin/pidof ${prog} 1>/dev/null 2>&1
+		if [ $? -eq 0 ]; then
+			pid=( `/sbin/pidof ${prog}` )
+			i=0
+			for apid in ${pid[@]}
+			do
+			  obsid[i]=`ps -p $apid --no-heading -o command | awk -F{ '{print $2}' | awk -F} '{print $1}'`
+			  i=$i+1
+			done
+		else
+			pid="DOWN"
+		fi
+
+		if [ "$pid" != "DOWN" ] && [ ${#obsid[0]} != 0 ]; then 
+    		  echo ${levelnr}:${prog}:${pid[*]}:${obsid[*]} | awk -F: '{ printf "%s : %-25s %s [ObsID: %s]\n", $1, $2, $3, $4 }'
+		else
+                  echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
+		fi
+		# Some Checks
+		# Controllers must have one instance, only
+		if [ ${#pid[@]} -ge 2 ]; then 
+                     toomany="$toomany ${prog}[$levelnr]"
+		fi
+		
+		# Check for missing controllers 
+		if [ "$pid" = "DOWN" -o "$pid" = "0" ]; then 
+  		  if [ $levelnr -le $level ]; then 
+		    if [ $levelnr -le 5 ]; then
+			missing="$missing ${prog}[$levelnr]"
+		    else
+			# LCU level 6 has two permanent controllers running
+			if [ "$prog" == "StationControl" \
+			    -o "$prog" == "ClockControl" ]; then 
+			    missing="$missing ${prog}[$levelnr]"
+			fi
+			# MCU level 6 must have MACScheduler running
+			if [ "$prog" == "MACScheduler" ]; then 
+			    missing="$missing ${prog}[$levelnr]"
+			fi
+		    fi
+		  fi
+		fi
+	done
+	echo "---"
+	if [ "$missing" ]; then 
+		echo "Missing :"$missing
+	fi
+	if [ "$toomany" ]; then 
+		echo "Too many:"$toomany
+	fi
+}
+
+#
+# goto_level levelnr
+#
+goto_level()
+{
+	#first power down to new level
+	newlevel=$1
+
+	# set rcumode to 0 (power save) when entering level 1
+	if [ ${newlevel} -le 1 ]; then
+          if [ -e /tmp/level.admin ]; then
+            curlevel=`cat /tmp/level.admin`
+          else
+            curlevel=-1
+          fi
+          if [ ${curlevel} -ge 2 ]; then 
+	    /sbin/pidof RSPDriver 1>/dev/null 2>&1
+	    if [ $? -eq 0 ]; then
+	      status=`( rspctl --version | grep "0.0" ) >& /dev/null; echo $?`
+              if [ $status == 1 ]; then 
+       	        echo "set rcumode to 0 (power save)"
+	        rspctl --rcumode=0 1>/dev/null 2>&1
+	      else
+		echo "Beware: NOT going to rcumode 0 as images are still being initialized"
+	      fi
+            fi
+          fi
+	fi
+
+	for (( l=6 ; l>newlevel ; l-- ))
+	do
+		tac $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | \
+		grep "^${l}:" | grep ":d:" |  while read line
+		do
+                        (
+			asroot=`echo $line | cut -d":" -f4`
+			withmpi=`echo $line | cut -d":" -f5`
+			program=`echo $line | cut -d":" -f6`
+			stop_prog $program x$asroot x$withmpi
+                        ) <&- # cant have programs reading from stdin
+                              # as that would mess up 'while read line'
+		done
+	done
+
+	# then power up to new level
+	for (( l=1 ; l<=newlevel ; l++ ))
+	do
+	  if [ $l == 3 ]; then 
+	     # First make sure RSP images are properly loaded
+             # Introduce a timeout of 60 sec for images to initialize
+	     echo "Waiting for images to be initialized"
+	     timeout=59
+	     sleep 1
+             for (( s=0 ; s<timeout; s++ ))
+	     do 
+	       rsu_ready=`( rspctl --version | grep "0.0" ) >& /dev/null; echo $?`
+	       if [ $rsu_ready == 1 ]; then
+		   echo "Images are loaded"
+		   break
+	       fi
+               sleep 1
+             done
+             if [ $s == $timeout ]; then 
+               echo "Could not load RSP images in time; Reset RSP boards"
+               exit 1
+             fi 
+          fi
+	  cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | grep "^${l}:" | grep ":u:" |  while read line
+		do
+                        (
+			asroot=`echo $line | cut -d":" -f4`
+			withmpi=`echo $line | cut -d":" -f5`
+			program=`echo $line | cut -d":" -f6`
+			start_prog $program x$asroot x$withmpi
+                        ) <&- # cant have programs reading from stdin
+                              # as that would mess up 'while read line'
+	       done
+	done
+}
+
+show_level()
+{
+        if [ -e /tmp/level.admin ]; then
+          level=`cat /tmp/level.admin`
+	  if [ "$1" != "S" ]; then
+	     echo -n "Currently set level is "
+	  fi
+	  echo $level
+          if [ "$1" = "S" -o "$1" = "s" ]; then
+            exit
+          fi
+        else
+          level=-1
+          if [ "$1" != "S" ]; then
+             echo "Currently set level unknown"
+          fi
+        fi
+        # argument -s/-S only returns level, no list
+        if [ -z "$1" ]; then
+            status_prog
+        fi
+        exit $level
+}
+
+show_lofar_version()
+{
+        if [ -e /opt/lofar/Version.txt ]; then
+          version=`cat /opt/lofar/Version.txt`
+	  if [ "$1" = "v" ]; then  
+            echo -n "Current LOFAR version is "
+	  fi
+          echo $version
+        else
+          version="-1"
+          if [ "$1" = "v" ]; then
+            echo "Current LOFAR version unknown"
+          fi
+        fi
+	if [ "$version" != "-1" ]; then 
+  	  exit
+        else
+          exit $version
+        fi
+}
+
+handle_args()
+{
+
+  # Handle arguments
+  while getopts  "hSsVvi:l:q:r:" flag
+  do
+    case "$flag" in
+    [sS])
+    show_level $flag
+    ;;
+    [vV])
+    show_lofar_version $flag
+    ;;
+    i)
+    imageForced=true
+    image=$OPTARG
+    # This is needed to be able to retrieve the requested swlevel
+    # when it is not provided with option -l
+    shift $((OPTIND-1)); OPTIND=1
+    ;;
+    q)
+    procesname=$OPTARG
+    stop_prog $procesname
+    exit
+    ;;
+    r)
+    procesname=$OPTARG
+    start_prog $procesname
+    exit
+    ;;
+    l)
+    level=$OPTARG
+    ;;
+    h)
+    SyntaxError
+    ;;
+    *) 
+    exit 
+    ;;
+    esac
+  done
+  if [ -z $level ]; then
+    if [ "$1" != "" ]; then
+      level=$1
+    else
+      level=-1
+    fi
+  fi
+
+  if [ "$user" != "lofarsys" -a $level -gt 3 ]; then
+      echo "Will only start up to level 3 as this appears to be local use"
+      level=3
+  fi
+
+  # default image is 1
+  if [ -z $image ]; then  
+    findImage `hostname -s`
+  fi
+
+  return
+}
+
+
+#
+# MAIN
+#
+
+
+# Find out if we are running on a PVSS system
+# Note: on PVSS systems LoggingClient must be ignored, 
+# On non-PVSS system LoggingProcessor.
+
+logProgToSkip=LoggingProcessor
+if [ -f ${BINDIR}/PVSS00pmon ]; then
+	logProgToSkip=LoggingClient
+fi
+
+
+# All users can ask for current level
+if [ -z $1 ]; then 
+  show_level 
+fi
+
+user=`id | cut -d'(' -f2 | cut -d')' -f1`
+group=`groups | awk '{print $1}'`
+imageForced=false
+
+handle_args $*
+
+# All other options that act on the station status are for lofarsys only
+# Don't allow root to run swlevel because all logfile get root access.
+if [ "$LOFARROOT" == "/opt/lofar" -a "$user" != "lofarsys" -a "$group" != "local" ]; then 
+  echo "swlevel must be run by user lofarsys or group local members!"
+  exit
+fi
+
+# first power down to this level
+case $level in
+	0|1|2|3|4|5|6)  
+			;;
+	*) SyntaxError
+esac
+echo Going to level $level
+cwd=`pwd`
+cd ${BINDIR}
+goto_level $level
+cd ${cwd}
+status_prog
+
+# save for later
+echo $level > /tmp/level.admin
+date=`date +%Y-%m-%d\ %H:%M:%S`
+echo [${date}]:$0 $* >> ${LOGDIR}/swlevel.log
+exit $level
