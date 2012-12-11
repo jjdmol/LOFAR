@@ -231,7 +231,6 @@ void Job::StorageProcess::start()
   if (getcwd(cwd, sizeof cwd) == 0)
     throw SystemCallException("getcwd", errno, THROW_ARGS);
 
-#ifdef HAVE_LIBSSH2
   std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u 2>&1")
     % cwd
 #if defined USE_VALGRIND
@@ -251,31 +250,6 @@ void Job::StorageProcess::start()
 
   itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey, 0);
   itsSSHconnection->start();
-#else
-
-#warning Using fork/exec for SSH processes to Storage
-  const std::string obsID = boost::lexical_cast<std::string>(itsParset.observationID());
-  const std::string rank = boost::lexical_cast<std::string>(itsRank);
-
-  const char * const commandLine[] = {
-    "cd ", cwd, " && ",
-#if defined USE_VALGRIND
-    "valgrind " "--leak-check=full "
-#endif
-    executable.c_str(),
-    obsID.c_str(),
-    rank.c_str(),
-#if defined WORDS_BIGENDIAN
-    "1",
-#else
-    "0",
-#endif
-    0
-  };
-  itsPID = forkSSH(itsLogPrefix, itsHostname.c_str(), commandLine, userName.c_str(), sshKey.c_str());
-
-  // client process won't reach this point
-#endif
 
   itsThread = new Thread(this, &Job::StorageProcess::controlThread, itsLogPrefix + "[ControlThread] ", 65535);
 }
@@ -283,11 +257,7 @@ void Job::StorageProcess::start()
 
 void Job::StorageProcess::stop(struct timespec deadline)
 {
-#ifdef HAVE_LIBSSH2
   itsSSHconnection->wait(deadline);
-#else
-  joinSSH(itsLogPrefix, itsPID, (deadline.tv_sec ? deadline.tv_sec : time(0)) + 1);
-#endif
 
   itsThread->cancel();
 }
@@ -295,11 +265,7 @@ void Job::StorageProcess::stop(struct timespec deadline)
 
 bool Job::StorageProcess::isDone()
 {
-#ifdef HAVE_LIBSSH2
   return itsSSHconnection->isDone();
-#else
-  return false;
-#endif
 }
 
 
