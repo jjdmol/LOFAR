@@ -38,10 +38,9 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Parset &parset, unsigned psetNumber)
 {
   std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(psetNumber);
-  string stationName = inputs.size() > 0 ? inputs[0].station : "none"; // TODO: support more than one station
   itsNrRSPboards = inputs.size();
 
-  itsLogPrefix = str(format("[station %s] ") % stationName);
+  itsLogPrefix = "[InputSection]";
 
   itsBeamletBuffers.resize(itsNrRSPboards);
 
@@ -68,12 +67,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStream
     unsigned	      rsp	 = inputs[i].rsp;
     std::string	      streamName = parset.getInputStreamName(station, rsp);
 
-    LOG_DEBUG_STR(itsLogPrefix << "input " << i << ": RSP board " << rsp << ", reads from \"" << streamName << '"');
-
-#if 0
-    if (station != inputs[0].station)
-      THROW(GPUProcException, "inputs from multiple stations on one I/O node not supported (yet)");
-#endif
+    LOG_DEBUG_STR(itsLogPrefix << "input " << i << ": station " << station << " board " << rsp << ", reads from \"" << streamName << '"');
 
     itsInputStreams[i] = createStream(streamName, true);
 
@@ -87,7 +81,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStream
 
 template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThreads(const Parset &parset, const std::vector<Parset::StationRSPpair> &inputs)
 {
-  itsLogThread = new LogThread(itsNrRSPboards, inputs.size() > 0 ? inputs[0].station : "none");
+  itsLogThread = new LogThread(itsNrRSPboards, "all");
 
   /* start up thread which writes RSP data from ethernet link
      into cyclic buffers */
