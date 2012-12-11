@@ -3,6 +3,7 @@
 // To copy all _mp defined functionality (archives , dp_fct etc to the real DP's
 // we use this script after setup (or each time that the scriptInfo.paramDone is set to false)
 // we run this script
+//
 bool bDebug=false;
 
 void main()
