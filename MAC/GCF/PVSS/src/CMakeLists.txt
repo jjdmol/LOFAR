@@ -27,4 +27,14 @@ lofar_add_library(gcfpvss
   PVSSinfo.cc
   PVSSservice.cc)
 
+# Disable the compiler flags -Wextra and -Woverloaded-virtual for the following
+# sources. They include PVSS header files that will otherwise produce warnings.
+set_source_files_properties(
+  GSA_SCADAHandler.cc
+  GSA_PvssApi.cc
+  GSA_Resources.cc
+  PVSSinfo.cc
+  PVSSservice.cc
+  PROPERTIES COMPILE_FLAGS "-Wno-extra -Wno-overloaded-virtual")
+
 lofar_add_bin_program(versiongcfpvss versiongcfpvss.cc)
