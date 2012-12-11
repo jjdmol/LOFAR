@@ -6,28 +6,29 @@ PANEL,-1 -1 1010 745 N "_3DFace" 0
 {
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
-  
-  baseDP=g_currentDatapoint;
 
   strPanelName    = \"antennaField\";
-  strModuleName   = myModuleName();   
+  strModuleName   = myModuleName();  
+
+  baseDP=g_currentDatapoint;
+ 
 
   stationList = makeDynString(\"CS001\",\"CS002\",\"CS003\",\"CS004\",\"CS005\",\"CS006\",\"RS007\",
                               \"CS011\",\"CS013\",\"CS017\",
                               \"CS021\",\"CS024\",\"CS026\",\"CS028\",
                               \"CS030\",\"CS031\",\"CS032\",
-                              \"RS101\",\"RS103\",\"RS201\",\"RS301\",\"RS302\",\"RS401\",\"RS501\",
+                              \"CS101\",\"CS103\",\"CS201\",\"CS301\",\"CS302\",\"CS401\",\"CS501\",
                               \"RS106\",
-                              \"RS205\",\"rs208\",\"RS210\",
+                              \"RS205\",\"RS208\",\"RS210\",
                               \"RS305\",\"RS306\",\"RS307\",\"RS310\",
                               \"RS406\",\"RS407\",\"RS409\",
                               \"RS503\",\"RS508\",\"RS509\",
                               \"DE601\",\"DE602\",\"DE603\",\"DE604\",\"RS605\",\"FR606\",\"SE607\",\"UK608\",
                               \"CCU001\",\"MCU001\");
-
+  
   redraw();
+}
 
-}  
 
 //
 // Callback for dpConnect to action point.
@@ -75,6 +76,14 @@ dyn_string swCtrlRefNames;
 string strPanelName;
 string strModuleName;
 string baseDP=\"\";
+dyn_string station_procList;
+dyn_string station_result;
+
+void prepareHardwareList() {
+
+  g_stationList = stationList;
+}  
+
 
 void clearSWLevelRefNames() {
   // remove all symbols because new ones will be added
@@ -101,9 +110,14 @@ void clearSwCtrlRefNames() {
 }
 
 void redraw() {
-  
+  dynClear(station_result);
+  dynClear(station_procList);
+    
   navFunct_clearGlobalLists();
-  
+
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+    
   string addPanelName    = \"objects/swlevel.pnl\";
         
   if (dynlen(SWLevelRefNames) > 0) {
@@ -129,8 +143,7 @@ void redraw() {
   
   // set panel to ready
   g_objectReady=true;
-  
-  navPanel_setEvent(\"swlevel.pnl\",\"Update\");
+  navPanel_setEvent(\"main.pnl:redraw\",\"Update\");
 }
 
 
@@ -193,8 +206,9 @@ void addDatastreams() {
 
 void addSWCtrlers() {
   int xPos_AddSymbol = 235; 
-  int yPos_AddSymbol = 28; 
+  int yPos_AddSymbol = 28;
   int ref = 1;
+
   string addPanelName    = \"objects/Processes/stationSWLevelView.pnl\";
   //loop over list and prepare panel with all datastreamobjects   
   for (int i=1; i<= dynlen(stationList); i++) {
@@ -217,7 +231,52 @@ void addSWCtrlers() {
           }
     yPos_AddSymbol += 10;
     ref++;
+    addStationProcesses(stationList[i]+\":\");
   }
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",station_result);
+
+}
+
+void addStationProcesses(string selectedStation) {
+    if (!navFunct_dpReachable(selectedStation)) {
+    return;
+  }
+  int z;
+  dyn_dyn_anytype tab;
+  //PermSW + PermSW_Daemons
+  string query=\"SELECT '_original.._value' FROM 'LOFAR_PermSW_*.status.state' REMOTE '\" +selectedStation + \"'\";
+  
+  dpQuery(query, tab);
+  LOG_TRACE(\"main.pnl:addStationProcesses|Found: \"+ tab);
+  
+
+  dyn_string aDS=navFunct_getDynString(tab, 2,1);
+  dynSortAsc(aDS);
+  for(z=1;z<=dynlen(aDS);z++){
+    
+    // strip .status.state from station_result
+    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+
+    // keep Path to work with
+    string path=aS;
+    
+
+    // strip all including PermsSW out of the string
+    strreplace(aS,selectedStation+dpSubStr(baseDP,DPSUB_DP)+\"_PermSW_\",\"\");
+
+    // Remainder should be PermsSW Programs + Daemons  split on _ 
+    dyn_string spl=strsplit(aS,\"_\");
+    if (dynlen(spl) > 1) { // Daemon
+      dynAppend(station_result,navFunct_dpStripLastElement(path)+\",\"+spl[2]+\",\"+path);
+      dynAppend(station_procList,path);
+    } else {   // Program
+      dynAppend(station_result,\",\"+spl[1]+\",\"+path);
+      if (spl[1] != \"Daemons\") {
+        dynAppend(station_procList,path);
+      }
+    }
+  }
+  LOG_TRACE(\"main.pnl:addStationProcesses|station_result composed: \"+ station_result);  
 }" 0
  2
 "CBRef" "1"

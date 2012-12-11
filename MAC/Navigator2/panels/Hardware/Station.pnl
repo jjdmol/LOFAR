@@ -241,10 +241,11 @@ void redraw(string mode) {
   g_stationList[1] = navFunct_bareDBName(sysName);
   
   LOG_DEBUG(\"Station.pnl:redraw|Mode: \"+mode);
-  if (strpos(mode,\"LBA\") > -1) {
+
+  if (mode == \"LBA\") {
     addPanelName    = \"objects/Hardware/Station_LBA.pnl\";
     angle=0;
-  } else if (strpos(mode,\"HBA\") > -1) {
+  } else if (mode == \"HBA\") {
     addPanelName    = \"objects/Hardware/Station_HBA.pnl\";
     angle=HBA0Angle;
   }
@@ -306,19 +307,16 @@ void redraw(string mode) {
       YRCU = 2*i-1 - NRSP*8;
     }
       
-    if (isCore && strpos(mode,\"HBA\") > -1) {
+    if (isCore && mode == \"HBA\") {
       if (i > 24) angle=HBA1Angle;
     }
 
-      string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
+    string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
                navFunct_receiver2Subrack(XRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(XRCU)+\"_RCU\"+XRCU;
     string yDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(YRCU)+\"_Subrack\"+
                navFunct_receiver2Subrack(YRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(YRCU)+\"_RCU\"+YRCU;
-    if (i-1 < NRSP*8/2) {
-//      dynAppend(g_RCUList,XRCU);
-//      dynAppend(g_RCUList,YRCU);
-      dynAppend(g_HBAList,navFunct_receiver2HBA(XRCU));
-    }
+    if (mode == \"HBA\")  dynAppend(g_HBAList,i-1);
+    if (mode == \"LBA\")  dynAppend(g_LBAList,i-1);
     refNames[ref]=\"ant\"+(ref);
     xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsX[i] * expandFactorX);
     yPos_AddSymbol = (mainpanel_midY+shiftFactorY) - (antennaOffsetsY[i] * expandFactorY);

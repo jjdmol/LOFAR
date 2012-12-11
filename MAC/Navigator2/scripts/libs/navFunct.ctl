@@ -26,61 +26,64 @@
 //
 // Functions and procedures
 //
-// navFunct_splitEvent                        : Splits an event string into the essentials
-// navFunct_splitAction                       : Splits an actionstring into a dyn_string action + params
-// navFunct_queryConnectObservations          : Queryconnect to keep track of all observations
-// navFunct_updateObservations                : Callback for the above query
-// navFunct_getArmFromStation                 : Returns the armposition code from a stationName
-// navFunct_getArmFromStation                 : Returns the ringName from a stationName
-// navFunct_receiver2Cabinet                  : Returns the CabinetNr for a RecieverNr
-// navFunct_receiver2Subrack                  : Returns the SubrackNr for a RecieverNr
-// navFunct_receiver2RSP                      : Returns the RSPNr for a RecieverNr
-// navFunct_receiver2HBA                      : Returns the HBANr for a RecieverNr
-// navFunct_RSP2Cabinet                       : Returns the CabinetNr for a given RSP
-// navFunct_RSP2Subrack                       : Returns the SubrackNr for a given RSP
-// navFunct_TBB2Cabinet                       : Returns the CabinetNr for a given TBB
-// navFunct_TBB2Subrack                       : Returns the SubrackNr for a given TBB
-// navFunct_subrack2Cabinet                   : Returns the CabinetNr for a given Subrack
-// navFunct_locusNode2OSRack                  : Returns the OSRackNr for a given LocusNode
-// navFunct_BGPMidplane2BGPRack               : Returns the BGPRackNr for a given BGPMidplane
-// navFunct_IONode2BGPMidplane                : Returns the BGPMidplaneNr for a given IONode
-// navFunct_dpStripLastElement                : Returns DP string without last element 
-// navFunct_dpGetLastElement                  : Returns last element from DP 
-// navFunct_dpGetFullPathAsTypes              : Returns full dp path (maincu && station components) as dynstring)
-// navFunct_getDPFromTypePath                 : Returns Dpname derived from currentDatapoint,typeList and chosen type
-// navFunct_dynToString                       : Returns a dynArray as a , seperated string
-// navFunct_getDynString                      : Returns a dynString from a dyn_dyn[index]
-// navFunct_bareDBName                        : Returns a DatabaseName without the : (if any)
-// navFunct_findFirstOne                      : Returns the number of a given array that is true for a certain range
 // navFunct_acknowledgePanel                  : Returns acknowledge on a given action
-// navFunct_getPathLessOne                    : Returns path less last leaf/node
-// navFunct_hardware2Obs                      : Looks if a piece of hardware maps to an observation
-// navFunct_fillHardwareLists                 : Fill g_StationList, g_CabinetList,g_SubrackList,gRSPList,g_RCUList and g_TBBList
-// navFunct_fillObservationsList              : Fill g_observationList
-// navFunct_fillProcessesList                 : Fill g_processList
-// navFunct_fillHardwareTree                  : Prepare the DP for HardwareTrees
-// navFunct_fillProcessesTree                 : Prepare the DP for ProcessTrees
-// navFunct_fillObservationsTree              : Prepare the DP for ObservationTrees
-// navFunct_clearGlobalLists                  : clear all temporarily global hardware,observation and processes lists..
-// navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
-// navFunct_fillStationLists                  : fill global lists with core/europe and remote stations
-// navFunct_getStationFromDP                  : get the stationname out of a DP name (if any)
-// navFunct_dpReachable                       : looks if the databpoint on a dist system is also reachable
-// navFunct_dpHasPanels                       : checkes if a given DP has loadable panels.
-// navFunct_waitObjectReady                   : Loops till object Read or breaks out with error. 
+// navFunct_bareDBName                        : Returns a DatabaseName without the : (if any)
+// navFunct_BGPMidplane2BGPRack               : Returns the BGPRackNr for a given BGPMidplane
 // navFunct_CEPName2DPName                    : Translates Rxx-Mx-Nxx-Jxx names to _BGP_Midplane_IONode names
+// navFunct_CEPName2inputBuf                  : returns ionr from CEPname
+// navFunct_clearGlobalLists                  : clear all temporarily global hardware,observation and processes lists..
+// navFunct_dpGetFullPathAsTypes              : Returns full dp path (maincu && station components) as dynstring)
+// navFunct_dpGetLastElement                  : Returns last element from DP 
+// navFunct_dpHasPanels                       : checkes if a given DP has loadable panels.
 // navFunct_DPName2CEPName                    : Translates _BGP_Midplane_IONode names to Rxx-Mx-Nxx-Jxx names
-// navFunct_inputBuf2CEPName                  : Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
-// navFunct_getReceiverBitmap                 : returns the stations receiverBitMap for a given observation
-// navFunct_ObsToTemp                         : returns the temp observationname
-// navFunct_TempToObs                         : returns the observationname from the temp
+// navFunct_dpReachable                       : looks if the databpoint on a dist system is also reachable
+// navFunct_dpStripLastElement                : Returns DP string without last element 
+// navFunct_dynToString                       : Returns a dynArray as a , seperated string
+// navFunct_fillHardwareLists                 : Fill g_StationList, g_CabinetList,g_SubrackList,gRSPList,g_RCUList and g_TBBList
+// navFunct_fillHardwareTree                  : Prepare the DP for HardwareTrees
+// navFunct_fillObservationsList              : Fill g_observationList
+// navFunct_fillObservationsTree              : Prepare the DP for ObservationTrees
+// navFunct_fillProcessesList                 : Fill g_processList
+// navFunct_fillProcessesTree                 : Prepare the DP for ProcessTrees
+// navFunct_fillStationLists                  : fill global lists with core/europe and remote stations
+// navFunct_findFirstOne                      : Returns the number of a given array that is true for a certain range
+// navFunct_formatInt                         : returns a string with the int preceeded by zeros
+// navFunct_getArmFromStation                 : Returns the armposition code from a stationName
+// navFunct_getDPFromTypePath                 : Returns Dpname derived from currentDatapoint,typeList and chosen type
+// navFunct_getDynString                      : Returns a dynString from a dyn_dyn[index]
+// navFunct_getHBABitmap                      : get the HBABitmap from a given observation on a given station
+// navFunct_getLBABitmap                      : get the LBABitmap from a given observation on a given station
 // navFunct_getLogColor                       : returns the color that belongs to a log level
 // navFunct_getLogLevel                       : returns the level from a logline
-//navFunct_CEPName2inputBuf                   : returns ionr from CEPname
-//navFunct_stationNameToIONode                : returns the IONode belonging to a station
-//navFunct_isBGPSwitch                        : returns the BGPSwitch setting (True = BGPRack1, False=BGPRack0)
-//navFunct_IONode2DPName                      : returns the DP name based on the ionode number.
-//navFunct_formatInt                          : returns a string with the int preceeded by zeros
+// navFunct_getPathLessOne                    : Returns path less last leaf/node
+// navFunct_getReceiverBitmap                 : returns the stations receiverBitMap for a given observation
+// navFunct_getRingFromStation                : Returns the ringName from a stationName
+// navFunct_getStationFromDP                  : get the stationname out of a DP name (if any)
+// navFunct_hardware2Obs                      : Looks if a piece of hardware maps to an observation
+// navFunct_inputBuf2CEPName                  : Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
+// navFunct_IONode2BGPMidplane                : Returns the BGPMidplaneNr for a given IONode
+// navFunct_IONode2DPName                     : returns the DP name based on the ionode number.
+// navFunct_isBGPSwitch                       : returns the BGPSwitch setting (True = BGPRack1, False=BGPRack0)
+// navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
+// navFunct_locusNode2OSRack                  : Returns the OSRackNr for a given LocusNode
+// navFunct_ObsToTemp                         : returns the temp observationname
+// navFunct_queryConnectObservations          : Queryconnect to keep track of all observations
+// navFunct_receiver2Cabinet                  : Returns the CabinetNr for a RecieverNr
+// navFunct_receiver2HBA                      : Returns the HBANr for a RecieverNr
+// navFunct_receiver2RSP                      : Returns the RSPNr for a RecieverNr
+// navFunct_receiver2Subrack                  : Returns the SubrackNr for a RecieverNr
+// navFunct_RSP2Cabinet                       : Returns the CabinetNr for a given RSP
+// navFunct_RSP2Subrack                       : Returns the SubrackNr for a given RSP
+// navFunct_splitAction                       : Splits an actionstring into a dyn_string action + params
+// navFunct_splitEvent                        : Splits an event string into the essentials
+// navFunct_stationNameToIONode               : returns the IONode belonging to a station
+// navFunct_subrack2Cabinet                   : Returns the CabinetNr for a given Subrack
+// navFunct_TBB2Cabinet                       : Returns the CabinetNr for a given TBB
+// navFunct_TBB2Subrack                       : Returns the SubrackNr for a given TBB
+// navFunct_TempToObs                         : returns the observationname from the temp
+// navFunct_updateObservations                : Callback for the above query
+// navFunct_waitObjectReady                   : Loops till object Read or breaks out with error. 
+
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
 
@@ -205,6 +208,61 @@ string navFunct_getReceiverBitmap(string db,string obsname) {
   return receiverBitmap;
   
 }
+
+// ****************************************
+// Name : avFunct_getHBABitmap
+// ****************************************
+// Description:
+//    Search if on a given station a given observation has a HBABitMap
+//    This is used to determine what hardware is used for that observation on that station
+//
+// Returns:
+//    The HBABitMap 
+// ***************************************
+string navFunct_getHBABitmap(string db,string obsname) {
+  string HBABitmap;
+  if (obsname == "") {
+    return HBABitmap;
+  }
+
+
+  string dp = claimManager_nameToRealName(obsname); 
+  string aDP=navFunct_bareDBName(db)+":"+dpSubStr(dp,DPSUB_DP);
+
+  if (dpExists(aDP+".HBABitmap")) {
+    dpGet(aDP+".HBABitmap",HBABitmap);
+  }
+  return HBABitmap;
+  
+}
+
+// ****************************************
+// Name : avFunct_getLBABitmap
+// ****************************************
+// Description:
+//    Search if on a given station a given observation has a LBABitMap
+//    This is used to determine what hardware is used for that observation on that station
+//
+// Returns:
+//    The LBABitMap 
+// ***************************************
+string navFunct_getLBABitmap(string db,string obsname) {
+  string LBABitmap;
+  if (obsname == "") {
+    return LBABitmap;
+  }
+
+
+  string dp = claimManager_nameToRealName(obsname); 
+  string aDP=navFunct_bareDBName(db)+":"+dpSubStr(dp,DPSUB_DP);
+
+  if (dpExists(aDP+".LBABitmap")) {
+    dpGet(aDP+".LBABitmap",LBABitmap);
+  }
+  return LBABitmap;
+  
+}
+
 
 void navFunct_updateObservations(string dp1, dyn_string active,
                                  string dp2, dyn_string planned,
@@ -416,6 +474,7 @@ void showDynArray(dyn_anytype anArray,string name) {
 int navFunct_receiver2HBA(int receiverNr) {
   return floor(receiverNr/2);
 }
+
 
 // ****************************************
 // Name : navFunct_receiver2Cabinet
@@ -1002,7 +1061,8 @@ bool navFunct_hardware2Obs(string stationName, string observation,
   
   dyn_string obsStations = navFunct_listToDynString(g_observations[ "STATIONLIST"    ][iPos]);
   string receiverBitmap = navFunct_getReceiverBitmap(stationName,observation);
-  
+  string HBABitmap = navFunct_getHBABitmap(stationName,observation);
+  string LBABitmap = navFunct_getLBABitmap(stationName,observation);  
   
 
   
@@ -1039,13 +1099,6 @@ bool navFunct_hardware2Obs(string stationName, string observation,
     return flag;
   } else {
     
-    // the station is involved in the stationList, but since receiverbitmap has been moved 
-    // to the station database it is possible that the station is offline, so the receiverbitmap can be empty, in that case it is
-    // not meaning that the station is not involved. So we won't check for an empty receiverBitmap anymore
-//    if (receiverBitmap == "" && stationName) {
-//        LOG_ERROR("navFunct.ctl:navFunct_hardware2Obs|Empty receiverBitmap");
-//        return false;
-//    }  
  
     if (objectName == "Station") {
       flag = true;
@@ -1074,13 +1127,13 @@ bool navFunct_hardware2Obs(string stationName, string observation,
         flag = true;
       }
     } else if (objectName == "HBA") {
-      if (receiverBitmap != "" && (receiverBitmap[(intData*2)] == "1" || receiverBitmap[((intData*2)+1)] == "1")) {
+      if (HBABitmap != "" && HBABitmap[intData] == "1") {
         flag = true;
-      } 
-    } else if (objectName == "element") {  // needs to be done when element is added to the receiverbitmap
-//      if (receiverBitmap != "" && (receiverBitmap[(intData*2)] == "1" || receiverBitmap[((intData*2)+1)] == "1")) {
+      }        
+    } else if (objectName == "LBA") {
+      if (LBABitmap != "" && LBABitmap[intData] == "1") {
         flag = true;
-//      }       
+      }        
     } else if (objectName == "SPU") {
       flag = true;
     } else if (objectName == "Clock") {
@@ -1309,16 +1362,17 @@ void navFunct_fillObservationsList() {
         }
 
         if (!found) {
-          // check Element
-          for (int c = 1; c<=dynlen(g_elementList); c++) {
-            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"element","",g_elementList[c])) {
-              // we found one involved Element, so obs can be included and we can skip the rest
+          // check LBAAntenna
+          for (int c = 1; c<=dynlen(g_LBAList); c++) {
+            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"LBA","",g_LBAList[c])) {
+              // we found one involved LBA, so obs can be included and we can skip the rest
               found = true;
             }
             if (found) break;
           }
         }
 
+        
         if (found && !dynContains(g_observationsList, shortObs)){
           dynAppend(g_observationsList,shortObs);
         }
@@ -1533,22 +1587,17 @@ void navFunct_fillHardwareTree() {
           dynAppend(result,connectTo+",HBA"+extrah+g_HBAList[i]+","+dp);
         }
       }
-      
-      // add Elements
-      if (dynlen(g_elementList) > 0) {
-        for (int i = 1; i <= dynlen(g_HBAList); i++) {
-         string extrah = "";
-         if (g_HBAList[i] < 10) extrah = "0";          
-          connectTo = station+":LOFAR_PIC_HBA"+extrah+g_HBAList[i];
-          for (int j = 1; j <= dynlen(g_elementList); j++) {
-            string extra = "";
-            if (g_elementList[j] < 10) extra = "0";
-            string dpel = station+":LOFAR_PIC_HBA"+extrah+g_HBAList[i] + ".element" + extra +g_elementList[j];
-            dynAppend(result,connectTo+",element"+extra+g_elementList[j]+","+dpel);
-          }
+      // add LBAAntennas
+      if (dynlen(g_LBAList) > 0) {
+        for (int i = 1; i <= dynlen(g_LBAList); i++) {
+          connectTo = station+":LOFAR";
+          string extrah = "";
+           if (g_LBAList[i] < 100) extrah = "0";          
+           if (g_LBAList[i] < 10) extrah = "00";          
+          dp = station+":LOFAR_PIC_LBA"+extrah+g_LBAList[i];
+          dynAppend(result,connectTo+",LBA"+extrah+g_LBAList[i]+","+dp);
         }
       }
-
     }
   }
   
@@ -1624,7 +1673,7 @@ void navFunct_clearGlobalLists() {
   dynClear(g_TBBList);
   dynClear(g_RCUList);
   dynClear(g_HBAList);
-  dynClear(g_elementList);  
+  dynClear(g_LBAList);
   dynClear(g_BGPRackList);
   dynClear(g_BGPMidplaneList);
   dynClear(g_IONodeList);

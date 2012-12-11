@@ -15,15 +15,58 @@ PANEL,-1 -1 251 88 N "_3DFace" 1
     showDatastreams();
   }
 }" 0
- E E E E 1 -1 -1 0  0 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
 ""0  1
 E "#uses \"navPanel.ctl\"
 string station = \"\";
 string baseDP=\"\";
 
+bool bDoubleClicked  = false;
+
 int filled0=0;
 int filled1=0;
 
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(station,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"datastreamLevel.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(station,\"ChangePanel\");
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}                       
+
+// routine for right mouse click
+void rClick() {
+
+}   
 
 // ****************************************
 // Name: showDatastreams   
@@ -209,7 +252,15 @@ LANG:1 0
 "stream0-1_text"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
 0 0 0 0 0 0
 E E E
 0
@@ -218,12 +269,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -230 -140 1 E 230 150 234 159
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -230 -140 1 E 230 150 234 159
 6 2
 "stream0-2_text"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
 2 0 0 0 0 0
 E E E
 0
@@ -232,12 +295,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -225 -140 1 E 230 150 234 159
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -225 -140 1 E 230 150 234 159
 6 3
 "stream0-3_text"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
 3 0 0 0 0 0
 E E E
 0
@@ -246,12 +321,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -220 -140 1 E 230 150 234 159
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -220 -140 1 E 230 150 234 159
 6 4
 "stream0-4_text"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
 4 0 0 0 0 0
 E E E
 0
@@ -260,12 +347,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -215 -140 1 E 230 150 234 159
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -215 -140 1 E 230 150 234 159
 6 5
 "stream0-5_text"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
 5 0 0 0 0 0
 E E E
 0
@@ -274,12 +373,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -210 -140 1 E 230 150 234 159
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -210 -140 1 E 230 150 234 159
 6 8
 "stream1-1_text"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
 8 0 0 0 0 0
 E E E
 0
@@ -288,12 +399,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -195 -140 1 E 230 150 234 159
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -195 -140 1 E 230 150 234 159
 6 9
 "stream1-2_text"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
 9 0 0 0 0 0
 E E E
 0
@@ -302,12 +425,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -190 -140 1 E 230 150 234 159
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -190 -140 1 E 230 150 234 159
 6 10
 "stream1-3_text"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
 10 0 0 0 0 0
 E E E
 0
@@ -316,12 +451,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -185 -140 1 E 230 150 234 159
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -185 -140 1 E 230 150 234 159
 6 11
 "stream1-4_text"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
 11 0 0 0 0 0
 E E E
 0
@@ -330,12 +477,24 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -180 -140 1 E 230 150 234 159
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -180 -140 1 E 230 150 234 159
 6 12
 "stream1-5_text"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
 12 0 0 0 0 0
 E E E
 0
@@ -344,7 +503,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -175 -140 1 E 230 150 234 159
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 -175 -140 1 E 230 150 234 159
 2 16
 "PRIMITIVE_TEXT1"
 ""
