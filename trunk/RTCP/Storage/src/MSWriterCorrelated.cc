@@ -59,8 +59,6 @@ MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std:
     } catch (...) {
       LOG_WARN_STR(itsLogPrefix << "Could not open sequence numbers file " << seqfilename);
     }
-
-    itsSequenceNumbers.reserve(64);
   }
 
   // derive baseline names
@@ -101,7 +99,6 @@ MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std:
 
 MSWriterCorrelated::~MSWriterCorrelated()
 {
-  flushSequenceNumbers();
 }
 
 
@@ -133,14 +130,6 @@ void MSWriterCorrelated::write(StreamableData *data)
     unsigned seqnr = data->sequenceNumber(true);
 
     itsSequenceNumbersFile->write(&seqnr, sizeof seqnr);
-
-#if 0
-    // write the sequencenumber in correlator endianness, no byteswapping
-    itsSequenceNumbers.push_back(data->sequenceNumber(true));
-   
-    if (itsSequenceNumbers.size() > 64)
-      flushSequenceNumbers();
-#endif
   }
 
   itsNrBlocksWritten++;
@@ -150,15 +139,6 @@ void MSWriterCorrelated::write(StreamableData *data)
   itsConfiguration.replace("percentageWritten", str(format("%u") % percentageWritten()));
 }
 
-
-void MSWriterCorrelated::flushSequenceNumbers()
-{
-  if (itsSequenceNumbersFile != 0) {
-    LOG_INFO_STR(itsLogPrefix << "Flushing sequence numbers");
-    itsSequenceNumbersFile->write(itsSequenceNumbers.data(), itsSequenceNumbers.size() * sizeof(unsigned));
-    itsSequenceNumbers.clear();
-  }
-}
 
 static MVEpoch datetime2epoch(const string &datetime)
 {
