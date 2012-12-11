@@ -28,32 +28,22 @@
 #include <Common/Thread/Mutex.h>
 #include <Common/SystemCallException.h>
 #include <Common/LofarLogger.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <signal.h>
-#include <fcntl.h>
 #include <string.h>
-#include <errno.h>
 #include <time.h>
 #include <vector>
 #include <string>
 #include <sstream>
 
-#ifdef HAVE_LIBSSH2
 #include <Scheduling.h>
 #include <Interface/SmartPtr.h>
 #include <sys/select.h>
 #include <Stream/SocketStream.h>
 #include <openssl/crypto.h>
-#endif
 
 using namespace std;
 
 namespace LOFAR {
 namespace RTCP {
-
-#ifdef HAVE_LIBSSH2
 
 #ifndef HAVE_LOG4COUT
 Mutex coutMutex;
@@ -584,11 +574,8 @@ static unsigned long thread_id_callback()
   return static_cast<unsigned long>(pthread_self());
 }
 
-#endif
  
 bool SSH_Init() {
-
-#ifdef HAVE_LIBSSH2
   // initialise openssl
   openssl_mutexes.resize(CRYPTO_num_locks());
   for (size_t i = 0; i < openssl_mutexes.size(); ++i)
@@ -602,13 +589,11 @@ bool SSH_Init() {
 
   if (rc)
     return false;
-#endif
 
   return true;
 }
 
 void SSH_Finalize() {
-#ifdef HAVE_LIBSSH2
   // exit libssh2
   libssh2_exit();
 
@@ -617,154 +602,6 @@ void SSH_Finalize() {
   CRYPTO_set_id_callback(NULL);
  
   openssl_mutexes.clear();
-#endif  
-}
-  
-
-static void exitwitherror( const char *errorstr )
-{
-  // can't cast to (void) since gcc won't allow that as a method to drop the result
-  int ignoreResult;
-
-  ignoreResult = write(STDERR_FILENO, errorstr, strlen(errorstr)+1);
-
-  // use _exit instead of exit to avoid calling atexit handlers in both
-  // the master and the child process.
-  _exit(1);
-}
-
-static void execSSH(const char * const sshParams[])
-{
-  // DO NOT DO ANY CALL THAT GRABS A LOCK, since the lock may be held by a
-  // thread that is no longer part of our address space
-
-  // use write() for output since the Logger uses a mutex, and printf also holds locks
-
-  // Prevent cancellation due to race conditions. A cancellation can still be pending for this JobThread, in which case one of the system calls
-  // below triggers it. If this thread/process can be cancelled, there will be multiple processes running, leading to all kinds of Bad Things.
-  Cancellation::disable();
-
-  // close all file descriptors other than stdin/out/err, which might have been openend by
-  // other threads at the time of fork(). We brute force over all possible fds, most of which will be invalid.
-  for (int f = sysconf(_SC_OPEN_MAX); f > 2; --f)
-    (void)close(f);
-
-  // create a valid stdin from which can be read (a blocking fd created by pipe() won't suffice anymore for since at least OpenSSH 5.8)
-  // rationale: this forked process inherits stdin from the parent process, which is unusable because IONProc is started in the background
-  // and routed through mpirun as well. Also, it is shared by all forked processes. Nevertheless, we want Storage to be able to determine
-  // when to shut down based on whether stdin is open. So we create a new stdin.
-  int devzero = open("/dev/zero", O_RDONLY);
-
-  if (devzero < 0)
-    exitwitherror("cannot open /dev/zero\n");
-
-  if (close(0) < 0)
-    exitwitherror("cannot close stdin\n");
-
-  if (dup(devzero) < 0)
-    exitwitherror("cannot dup /dev/zero into stdin\n");
-
-  if (close(devzero) < 0)
-    exitwitherror("cannot close /dev/zero\n");
-
-  if (execv("/usr/bin/ssh", const_cast<char * const *>(sshParams)) < 0)
-    exitwitherror("execv failed\n");
-
-  exitwitherror("execv succeeded but did return\n");
-}
-
-
-pid_t forkSSH(const std::string &logPrefix, const char *hostName, const char * const extraParams[], const char *userName, const char *sshKey)
-{
-  pid_t pid;
-
-  LOG_INFO_STR(logPrefix << "Starting");
-
-  vector<const char*> sshParams;
-
-  const char * const defaultParams[] = {
-    "ssh",
-    "-q",
-    "-i", sshKey,
-    "-c", "blowfish",
-    "-o", "StrictHostKeyChecking=no",
-    "-o", "UserKnownHostsFile=/dev/null",
-    "-o", "ServerAliveInterval=30",
-    "-l", userName,
-    hostName,
-    0 };
-
-  for( const char * const *p = defaultParams; *p != 0; p++ )
-    sshParams.push_back(*p);
-
-  for( const char * const *p = extraParams; *p != 0; p++ )
-    sshParams.push_back(*p);
-
-  sshParams.push_back(0);
-
-  switch (pid = fork()) {
-    case -1 : throw SystemCallException("fork", errno, THROW_ARGS);
-
-    case  0 : execSSH(&sshParams[0]);
-  }
-
-  return pid;
-}
-
-
-void joinSSH(const std::string &logPrefix, pid_t pid, time_t deadline)
-{
-  if (pid != 0) {
-    int status;
-
-    // always try at least one waitpid(). if child has not exited, optionally
-    // sleep and try again.
-    for (;;) {
-      pid_t ret;
-
-      if ((ret = waitpid(pid, &status, WNOHANG)) == (pid_t)-1) {
-        int error = errno;
-
-        if (error == EINTR) {
-          LOG_DEBUG_STR(logPrefix << " waitpid() was interrupted -- retrying");
-          continue;
-        }
-
-        // error
-        LOG_WARN_STR(logPrefix << " waitpid() failed with errno " << error);
-        return;
-      } else if (ret == 0) {
-        // child still running
-        if (deadline > 0 && deadline < time(0)) {
-          break;
-        }
-
-        sleep(1);
-      } else {
-        // child exited
-        if (WIFSIGNALED(status) != 0)
-          LOG_WARN_STR(logPrefix << "SSH was killed by signal " << WTERMSIG(status));
-        else if (WEXITSTATUS(status) != 0) {
-
-          LOG_ERROR_STR(logPrefix << " exited with exit code " << WEXITSTATUS(status) << " (" << explainExitStatus(WEXITSTATUS(status)) << ")" );
-        } else
-          LOG_INFO_STR(logPrefix << " terminated normally");
-
-        return;  
-      }
-    }
-
-    // child did not exit within the given timeout
-
-    LOG_WARN_STR(logPrefix << " sending SIGTERM");
-    kill(pid, SIGTERM);
-
-    if (waitpid(pid, &status, 0) == -1) {
-      LOG_WARN_STR(logPrefix << " waitpid() failed");
-    }
-
-    LOG_WARN_STR(logPrefix << " terminated after sending SIGTERM");
-  }
 }
 
 

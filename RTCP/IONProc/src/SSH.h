@@ -26,15 +26,12 @@
 
 #include <string>
 
-#ifdef HAVE_LIBSSH2
 #include <Common/Thread/Thread.h>
 #include <Common/Exception.h>
 #include <Stream/FileDescriptorBasedStream.h>
 #include <libssh2.h>
 #include <Interface/SmartPtr.h>
 #include <time.h>
-#endif
-
 #include <string>
 #include <sstream>
 
@@ -43,8 +40,6 @@ namespace RTCP {
 
 bool SSH_Init();
 void SSH_Finalize();
-
-#ifdef HAVE_LIBSSH2
 
 class SSHconnection {
 public:
@@ -85,12 +80,6 @@ private:
 };
 
 const char *explainLibSSH2Error( int error );
-
-#endif
-
-pid_t forkSSH(const std::string &logPrefix, const char *hostName, const char * const extraParams[], const char *userName, const char *sshKey);
-void joinSSH(const std::string &logPrefix, pid_t pid, time_t deadline = 0);
-
 const char *explainExitStatus( int exitstatus );
 
 } // namespace RTCP
