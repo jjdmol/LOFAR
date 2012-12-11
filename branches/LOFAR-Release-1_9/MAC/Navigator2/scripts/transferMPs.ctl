@@ -8,19 +8,25 @@ bool bDebug=false;
 void main()
 {
   // connect to debugflag to be able to switch debug on/off during run
-    if (dpExists("scriptInfo.transferMPs.debug")) {
+  if (dpExists("scriptInfo.transferMPs.debug")) {
     dpConnect("debugCB",true,"scriptInfo.transferMPs.debug");
   } else {
     DebugTN("transferMPs.ctl:main|scriptInfo.transferMPs.runDone point not found in Database");  
-    exit();
   } 
 
   if (dpExists("scriptInfo.transferMPs.runDone")) {
     dpConnect("startTransferMP",true,"scriptInfo.transferMPs.runDone");
   } else {
     DebugTN("transferMPs.ctl:main|scriptInfo.transferMPs.runDone point not found in Database");  
-    exit();
   } 
+
+  //Check all .state and .childState points in the database if they are invalid, invalid points mean that they never have been initialised and thus are new
+  // in the database. These will be set to operational initialy
+  if (setOperational()) {
+    DebugTN("transferMPs.ctl:main|set new points to Operational done");  
+  } else {
+    DebugTN("transferMPs.ctl:main|set new points to Operational failed");
+  }
 }
 
 private void debugCB(string dp1, bool debug) {
@@ -91,6 +97,36 @@ private void startTransferMP(string dp1, bool done ) {
   }
   dpSet("scriptInfo.transferMPs.runDone",true);
   DebugTN("MPTransfer Done.");
+}
+
+private bool setOperational() {
+
+  dyn_dyn_anytype tab;
+  string dp="";
+  string query="";
+  int z;
+  int aVal;
+  int err;
+
+  query = "SELECT '_online.._invalid' FROM '{**.**.status.childState,**.**.status.state}' WHERE '_online.._invalid' == 1";
+ 
+  if (bDebug) DebugN("transferMPs.ctl:setOperational|Query: ",query);
+  err = dpQuery(query, tab);
+   
+  if (err < 0) {
+    if (bDebug) DebugN("transferMPs.ctl:setOperational|Error " + err + " while getting query.");
+    return false;
+  }
+ 
+  for(z=2;z<=dynlen(tab);z++) {
+
+    dp = tab[z][1];
+    // filter out the _mp_ points
+    if (strpos(dp,"_mp_") < 0) {
+      dpSet(dp,10);
+    }
+  }
+  return true;
 }
 
 bool skipDP(string dp) {
