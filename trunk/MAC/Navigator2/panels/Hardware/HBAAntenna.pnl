@@ -35,22 +35,6 @@ PANEL,-1 -1 1047 803 N "_3DFace" 0
 void prepareHardwareList() { 
   dynAppend(g_stationList,navFunct_bareDBName(sysName));
   dynAppend(g_HBAList,hbaNr);  
-  dynAppend(g_elementList,0);
-  dynAppend(g_elementList,1);
-  dynAppend(g_elementList,2);
-  dynAppend(g_elementList,3);
-  dynAppend(g_elementList,4);
-  dynAppend(g_elementList,5);
-  dynAppend(g_elementList,6);
-  dynAppend(g_elementList,7);
-  dynAppend(g_elementList,8);
-  dynAppend(g_elementList,9);
-  dynAppend(g_elementList,10);
-  dynAppend(g_elementList,11);
-  dynAppend(g_elementList,12);
-  dynAppend(g_elementList,13);
-  dynAppend(g_elementList,14);
-  dynAppend(g_elementList,15);
 }
 
 //
@@ -232,7 +216,7 @@ E "main()
 2 18
 "theHBAAntenna"
 ""
-1 80.04925642195182 24 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 82.41960194758174 24 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 235 0 0 0 0 0
 E E E

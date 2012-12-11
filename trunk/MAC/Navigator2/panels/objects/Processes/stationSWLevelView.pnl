@@ -116,7 +116,7 @@ LANG:1 0
 "$name""PermSW_Daemons_ServiceBroker"
 "$station""$station"
 3 4 "PANEL_REF4" -1
-"objects\\Processes\\SWControler_small.pnl" 50 0 T 21 1 0 1 -2 0
+"objects\\Processes\\SWControler_small.pnl" 50 0 T 21 U 
 2
 "$name""PermSW_Daemons_SASGateway"
 "$station""$station"

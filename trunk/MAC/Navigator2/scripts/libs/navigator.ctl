@@ -64,7 +64,7 @@ global dyn_int    g_RSPList;           // holds valid RSP's for choices in the v
 global dyn_int    g_TBBList;           // holds valid TBB's for choices in the viewBox
 global dyn_int    g_RCUList;           // holds valid RCU's for choices in the viewBox
 global dyn_int    g_HBAList;           // holds valid HBAAntenna's for choices in the viewBox
-global dyn_int    g_elementList;       // holds valid HBA Elements's for choices in the viewBox
+global dyn_int    g_LBAList;           // holds valid LBAAntenna's for choices in the viewBox
 // CEP based globals
 global dyn_int    g_BGPRackList;       // holds valid bgpracks for choices in viewBox
 global dyn_int    g_BGPMidplaneList;   // holds valid bgpmidplanes for choices in viewBox
@@ -102,10 +102,10 @@ void navigator_handleEventInitialize()
     } else {
     g_standAlone       = true;    // can be used to check if we are in standalone mode (== station only mode)
   }
-    g_currentDatapoint      = MainDBName+"LOFAR";
-    g_lastHardwareDatapoint = MainDBName+"LOFAR";
-    g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
-    g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
+  g_currentDatapoint      = MainDBName+"LOFAR";
+  g_lastHardwareDatapoint = MainDBName+"LOFAR";
+  g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
+  g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
     
   // Set the global statecolors/colornames, we need to do this before we 
   //start the rest of the framework, because the other processes need these
