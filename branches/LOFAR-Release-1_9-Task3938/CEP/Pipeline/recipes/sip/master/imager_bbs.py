@@ -81,6 +81,14 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         parmdb_map = MultiDataMap.load(self.inputs['instrument_mapfile'])
         sourcedb_map = DataMap.load(self.inputs['sourcedb_mapfile'])
 
+        # TODO: DataMap extention
+#        #Check if the input has equal length and on the same nodes
+#        if not validate_data_maps(ms_map, parmdb_map):
+#            self.logger.error("The combination of mapfiles failed validation:")
+#            self.logger.error("ms_map: \n{0}".format(ms_map))
+#            self.logger.error("parmdb_map: \n{0}".format(parmdb_map))
+#            return 1
+
         # *********************************************************************
         # 2. Start the node scripts
         jobs = []
@@ -88,17 +96,7 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         map_dir = os.path.join(
                         self.config.get("layout", "job_directory"), "mapfiles")
         run_id = str(self.inputs.get("id"))
-
-        # Update the skip fields of the four maps. If 'skip' is True in any of
-        # these maps, then 'skip' must be set to True in all maps.        
-        for w, x, y in zip(ms_map, parmdb_map, sourcedb_map):
-            w.skip = x.skip = y.skip = (w.skip or x.skip or y.skip)
-
-
-        parmdb_map.iterator = sourcedb_map.iterator = \
-            ms_map.iterator = DataMap.SkipIterator
         for (ms, parmdb, sourcedb) in zip(ms_map, parmdb_map, sourcedb_map):
-
             #host is same for each entry (validate_data_maps)
             host, ms_list = ms.host, ms.file
 
@@ -134,7 +132,7 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # return the output: The measurement set that are calibrated:
         # calibrated data is placed in the ms sets
-        ms_map.save(self.inputs['mapfile'])
+        MultiDataMap(ms_map).save(self.inputs['mapfile'])
         self.logger.info("Wrote file with  calibrated data")
 
         self.outputs['mapfile'] = self.inputs['mapfile']
