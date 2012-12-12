@@ -223,7 +223,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         parmdbs = []
         output_map.iterator = DataMap.SkipIterator # The maps are synced
 
-        for (output_item, slice_item, job) in zip(output_map, jobs):
+        for (output_item, job) in zip(output_map, jobs):
             node_succeeded = job.results.has_key("parmdbms") and \
                     job.results.has_key("sourcedb")
 
