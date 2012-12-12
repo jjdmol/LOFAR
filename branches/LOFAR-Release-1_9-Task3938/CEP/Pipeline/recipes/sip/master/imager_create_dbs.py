@@ -127,12 +127,12 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             return 1
 
         # Run the nodes with now collected inputs
-        jobs, output_map = self._run_create_dbs_node(input_map, slice_paths_map,
-                                           assoc_theta)
+        jobs, output_map, pardbs_map = self._run_create_dbs_node(
+                 input_map, slice_paths_map, assoc_theta)
 
         # Collect the output of the node scripts write to (map) files
         return self._collect_and_assign_outputs(jobs, output_map,
-                                                slice_paths_map)
+                                    slice_paths_map, pardbs_map)
 
 
     def _validate_input_data(self, slice_paths_map, input_map):
@@ -174,11 +174,12 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         # create jobs
         jobs = []
         output_map = copy.deepcopy(input_map)
+        pardbs_map = copy.deepcopy(input_map)
         # Update the skip fields of the four maps. If 'skip' is True in any of
         # these maps, then 'skip' must be set to True in all maps.
-        for w, x, y in zip(input_map, output_map, slice_paths_map):
-            w.skip = x.skip = y.skip = (
-                w.skip or x.skip or y.skip
+        for w, x, y, z in zip(input_map, output_map, slice_paths_map, pardbs_map):
+            w.skip = x.skip = y.skip = z.skip = (
+                w.skip or x.skip or y.skip or z.skip
             )
         slice_paths_map.iterator = input_map.iterator = DataMap.SkipIterator
         for (input_item, slice_item) in zip(input_map, slice_paths_map):
@@ -211,19 +212,20 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         if len(jobs) > 0:
             self._schedule_jobs(jobs)
 
-        return jobs, output_map
+        return jobs, output_map, pardbs_map
 
-    def _collect_and_assign_outputs(self, jobs, output_map, slice_paths_map):
+    def _collect_and_assign_outputs(self, jobs, output_map, slice_paths_map,
+                                pardbs_map):
         """
         Collect and combine the outputs of the individual create_dbs node
         recipes. Combine into output mapfiles and save these at the supplied
         path locations       
         """
         # Collect the parmdbs
-        parmdbs = []
-        output_map.iterator = DataMap.SkipIterator # The maps are synced
-
-        for (output_item, job) in zip(output_map, jobs):
+        output_map.iterator = pardbs_map.iterator = DataMap.SkipIterator # The maps are synced
+        succesfull_run = False
+        for (output_item, parmdbs_item, job) in zip(
+                                                output_map, pardbs_map, jobs):
             node_succeeded = job.results.has_key("parmdbms") and \
                     job.results.has_key("sourcedb")
 
@@ -237,25 +239,28 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                                                             host))
                 output_item.file = "failed"
                 output_item.skip = True
-                parmdbs.append(tuple([host, ["failed"], True]))
+                parmdbs_item.file = "failed"
+                parmdbs_item.skip = True
 
             # Else it succeeded and we can write te results
             else:
+                succesfull_run = True
                 output_item.file = job.results["sourcedb"]
-                parmdbs.append(tuple([host, job.results["parmdbms"], False]))
+                parmdbs_item.file = job.results["parmdbms"]
+
 
         # Fail if none of the nodes returned all data
-        if len(parmdbs) == 0:
+        if not succesfull_run:
             self.logger.error("The creation of dbs on the nodes failed:")
             self.logger.error("Not a single node produces all needed data")
             self.logger.error(
                 "products. sourcedb_files: {0}".format(output_map))
-            self.logger.error("parameter dbs: {0}".format(parmdbs))
+            self.logger.error("parameter dbs: {0}".format(pardbs_map))
             return 1
 
         # write the mapfiles     
         output_map.save(self.inputs["sourcedb_map_path"])
-        MultiDataMap(parmdbs).save(self.inputs["parmdbs_map_path"])
+        pardbs_map.save(self.inputs["parmdbs_map_path"])
         self.logger.debug("Wrote sourcedb dataproducts: {0} \n {1}".format(
             self.inputs["sourcedb_map_path"], self.inputs["parmdbs_map_path"]))
 

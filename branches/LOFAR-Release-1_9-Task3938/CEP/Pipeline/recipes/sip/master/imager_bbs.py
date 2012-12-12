@@ -81,14 +81,6 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         parmdb_map = MultiDataMap.load(self.inputs['instrument_mapfile'])
         sourcedb_map = DataMap.load(self.inputs['sourcedb_mapfile'])
 
-        # TODO: DataMap extention
-#        #Check if the input has equal length and on the same nodes
-#        if not validate_data_maps(ms_map, parmdb_map):
-#            self.logger.error("The combination of mapfiles failed validation:")
-#            self.logger.error("ms_map: \n{0}".format(ms_map))
-#            self.logger.error("parmdb_map: \n{0}".format(parmdb_map))
-#            return 1
-
         # *********************************************************************
         # 2. Start the node scripts
         jobs = []
