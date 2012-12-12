@@ -127,6 +127,10 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
 
         parset.writeFile(self.inputs['parset_file'])
 
+        return 0
+
+
+
 
 if __name__ == '__main__':
     sys.exit(get_metadata().main())
