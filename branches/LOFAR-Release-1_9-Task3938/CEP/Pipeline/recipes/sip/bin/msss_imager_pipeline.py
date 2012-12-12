@@ -397,7 +397,7 @@ class msss_imager_pipeline(control):
             self.logger.error("The input files for bbs do not contain "
                                 "matching host names for each entry content:")
             self.logger.error(repr(sourcedb_map))
-            self.logger.error(repr(parmdbs_map_path))
+            self.logger.error(repr(parmdbs_map))
             raise PipelineException("Invalid input data for imager_bbs recipe")
 
         self.run_task("imager_bbs",
