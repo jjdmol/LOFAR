@@ -301,10 +301,6 @@ class RemoteCommandRecipeMixIn(object):
         with job_server(self.logger, jobpool, self.error) as (jobhost, jobport):
             self.logger.debug("Job dispatcher at %s:%d" % (jobhost, jobport))
             for job_id, job in enumerate(jobs):
-                # To allow tracking of skipped jobs allow the addition of None
-                # In this jobs list
-                if job == None:
-                    continue
                 jobpool[job_id] = job
                 threadpool.append(
                     threading.Thread(

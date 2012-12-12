@@ -5,6 +5,7 @@
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
 import sys
+import copy
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
@@ -91,6 +92,14 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
 
+        output_map = copy.deepcopy(input_map)
+        for w, x, y in zip(input_map, output_map, sourcedb_map):
+            w.skip = x.skip = y.skip = (
+                w.skip or x.skip or y.skip
+            )
+        sourcedb_map.iterator = input_map.iterator = output_map.iterator = \
+            DataMap.SkipIterator
+
         for measurement_item, source_item in zip(input_map, sourcedb_map):
             if measurement_item.skip or source_item.skip:
                 jobs.append(None)
@@ -115,18 +124,25 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # *********************************************************************
         # 3. Check output of the node scripts
-        created_awimages = []
-        for job in  jobs:
+
+        for job, output_item in  zip(jobs, output_map):
             # job ==  None on skipped job
-            if job == None or not "image" in job.results:
-                created_awimages.append(tuple([job.host, "/failed", True]))
+            if not "image" in job.results:
+                output_item.file = "failed"
+                output_item.skip = True
+
             else:
-                created_awimages.append(
-                            tuple([job.host, job.results["image"], False]))
+                output_item.file = job.results["image"]
+                output_item.skip = False
 
+        # Check if there are finished runs
+        succesfull_runs = None
+        for item in output_map:
+            if item.skip == False:
+                succesfull_runs = True
+                break
 
-        # If not succesfull runs abort
-        if len(created_awimages) == 0:
+        if not succesfull_runs:
             self.logger.error(
                     "None of the starter awimager run finished correct")
             self.logger.error(
@@ -137,8 +153,8 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         if self.error.isSet():
             self.logger.error("Failed awimager node run detected. continue with"
                               "successful tasks.")
-        datamap_of_created_im = DataMap(created_awimages)
-        self._store_data_map(self.inputs['mapfile'], datamap_of_created_im,
+
+        self._store_data_map(self.inputs['mapfile'], output_map,
                              "mapfile containing produces awimages")
 
         self.outputs["mapfile"] = self.inputs['mapfile']

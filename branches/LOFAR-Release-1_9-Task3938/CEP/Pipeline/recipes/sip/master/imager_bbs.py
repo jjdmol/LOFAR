@@ -103,10 +103,10 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             w.skip = x.skip = y.skip = (w.skip or x.skip or y.skip)
 
 
+        parmdb_map.iterator = sourcedb_map.iterator = \
+            ms_map.iterator = DataMap.SkipIterator
         for (ms, parmdb, sourcedb) in zip(ms_map, parmdb_map, sourcedb_map):
-            if ms.skip or parmdb.skip or sourcedb.skip:
-                jobs.append(None)
-                continue
+
             #host is same for each entry (validate_data_maps)
             host, ms_list = ms.host, ms.file
 
@@ -142,7 +142,7 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # return the output: The measurement set that are calibrated:
         # calibrated data is placed in the ms sets
-        MultiDataMap(ms_map).save(self.inputs['mapfile'])
+        ms_map.save(self.inputs['mapfile'])
         self.logger.info("Wrote file with  calibrated data")
 
         self.outputs['mapfile'] = self.inputs['mapfile']

@@ -5,6 +5,7 @@
 # ------------------------------------------------------------------------------
 import os
 import sys
+import copy
 
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
@@ -126,11 +127,11 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             return 1
 
         # Run the nodes with now collected inputs
-        jobs = self._run_create_dbs_node(input_map, slice_paths_map,
+        jobs, output_map = self._run_create_dbs_node(input_map, slice_paths_map,
                                            assoc_theta)
 
         # Collect the output of the node scripts write to (map) files
-        return self._collect_and_assign_outputs(jobs, input_map,
+        return self._collect_and_assign_outputs(jobs, output_map,
                                                 slice_paths_map)
 
 
@@ -172,11 +173,15 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         # create jobs
         jobs = []
-        #slice_paths_map.iterator = input_map.iterator = DataMap.SkipIterator
+        output_map = copy.deepcopy(input_map)
+        # Update the skip fields of the four maps. If 'skip' is True in any of
+        # these maps, then 'skip' must be set to True in all maps.
+        for w, x, y in zip(input_map, output_map, slice_paths_map):
+            w.skip = x.skip = y.skip = (
+                w.skip or x.skip or y.skip
+            )
+        slice_paths_map.iterator = input_map.iterator = DataMap.SkipIterator
         for (input_item, slice_item) in zip(input_map, slice_paths_map):
-            if input_item.skip or slice_item.skip:
-                jobs.append(None)
-                continue
             host_ms, concat_ms = input_item.host, input_item.file
             host_slice, slice_paths = slice_item.host, slice_item.file
 
@@ -206,56 +211,50 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         if len(jobs) > 0:
             self._schedule_jobs(jobs)
 
-        return jobs
+        return jobs, output_map
 
-    def _collect_and_assign_outputs(self, jobs, input_map, slice_paths_map):
+    def _collect_and_assign_outputs(self, jobs, output_map, slice_paths_map):
         """
         Collect and combine the outputs of the individual create_dbs node
         recipes. Combine into output mapfiles and save these at the supplied
         path locations       
         """
-        # Collect the output of the node scripts write to (map) files
-        sourcedb_files = []
+        # Collect the parmdbs
         parmdbs = []
-        # now parse the node output append to list
-        for (input_item, slice_item, job) in zip(input_map, slice_paths_map,
-                                                 jobs):
-            if job != None:
-                node_succeeded = job.results.has_key("parmdbms") and \
+        output_map.iterator = DataMap.SkipIterator # The maps are synced
+
+        for (output_item, slice_item, job) in zip(output_map, jobs):
+            node_succeeded = job.results.has_key("parmdbms") and \
                     job.results.has_key("sourcedb")
-            else:
-                node_succeeded = False
-            host = input_item.host
+
+            host = output_item.host
 
             # The current job has to be skipped (due to skip field)
             # Or if the node failed:
-            if input_item.skip or slice_item.skip or not node_succeeded:
-                # Log failing nodes
-                if not node_succeeded:
-                    self.logger.warn("Warning failed ImagerCreateDBs run "
+            if not node_succeeded:
+                self.logger.warn("Warning failed ImagerCreateDBs run "
                     "detected: No sourcedb file created, {0} continue".format(
                                                             host))
-                sourcedb_files.append(tuple([host, "failed",
-                                              True]))
+                output_item.file = "failed"
+                output_item.skip = True
                 parmdbs.append(tuple([host, ["failed"], True]))
 
             # Else it succeeded and we can write te results
             else:
-                sourcedb_files.append(tuple([host, job.results["sourcedb"],
-                                             False]))
+                output_item.file = job.results["sourcedb"]
                 parmdbs.append(tuple([host, job.results["parmdbms"], False]))
 
         # Fail if none of the nodes returned all data
-        if len(sourcedb_files) == 0 or len(parmdbs) == 0:
+        if len(parmdbs) == 0:
             self.logger.error("The creation of dbs on the nodes failed:")
             self.logger.error("Not a single node produces all needed data")
             self.logger.error(
-                "products. sourcedb_files: {0}".format(sourcedb_files))
+                "products. sourcedb_files: {0}".format(output_map))
             self.logger.error("parameter dbs: {0}".format(parmdbs))
             return 1
 
         # write the mapfiles     
-        DataMap(sourcedb_files).save(self.inputs["sourcedb_map_path"])
+        output_map.save(self.inputs["sourcedb_map_path"])
         MultiDataMap(parmdbs).save(self.inputs["parmdbs_map_path"])
         self.logger.debug("Wrote sourcedb dataproducts: {0} \n {1}".format(
             self.inputs["sourcedb_map_path"], self.inputs["parmdbs_map_path"]))
