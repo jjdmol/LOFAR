@@ -1,0 +1,27 @@
+station0	string
+IP0		string
+MAC0		string
+station1	string
+IP1		string
+MAC1		string
+MACForeign	string
+use2ndStation	bool
+usedStation	string
+usedIP		string
+usedMAC		string
+
+
+#
+# Next points are needed for dataparameterization Do not alter them unless you know what you are doing. tabs are essential in these
+#
+!# DpFunction
+!ElementName	TypeName	_dp_fct.._type	_dp_fct.._param	_dp_fct.._fct
+!_mp_IONode.usedStation	IONode	60	_mp_IONode.station0:_original.._value, _mp_IONode.station1:_original.._value, _mp_IONode.use2ndStation:_original.._value	"p3?p2:p1"	
+!_mp_IONode.usedIP	IONode	60	_mp_IONode.IP0:_original.._value, _mp_IONode.IP1:_original.._value, LOFAR_PIC_BGP.BGPSwitch:_original.._value	"p3?p2:p1"	
+!_mp_IONode.usedMAC	IONode	60	_mp_IONode.MAC0:_original.._value, _mp_IONode.MAC1:_original.._value, _mp_IONode.MACForeign:_original.._value, LOFAR_PIC_BGP.BGPSwitch:_original.._value, _mp_IONode.use2ndStation:_original.._value	"p5?p3:(p4?p2:p1)"	
+!
+!# DpValue
+!ElementName	TypeName	_original.._value
+!_dt_IONode.Leaf	_DynamicDatapoints	"_mp_IONode.usedStation:_dp_fct", "_mp_IONode.usedIP:_dp_fct", "_mp_IONode.usedMAC:_dp_fct"
+!_dt_IONode.DynamicAttribute	_DynamicDatapoints	"_da_none", "_da_none", "_da_none"
+!
