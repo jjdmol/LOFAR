@@ -225,8 +225,8 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         parmdbs_list = []
         # loop over the raw data including the skip file (use the data member)
         for output_entry in output_map.data:
-            parms_tuple = tuple(output_entry.host, [],
-                                output_entry.skip)
+            parms_tuple = tuple([output_entry.host, [],
+                                output_entry.skip])
 
         parmdbs_map = MultiDataMap(parmdbs_list)
 
