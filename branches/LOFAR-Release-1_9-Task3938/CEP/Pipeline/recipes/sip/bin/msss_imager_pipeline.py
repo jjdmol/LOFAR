@@ -386,12 +386,11 @@ class msss_imager_pipeline(control):
         # The create db step produces a mapfile with a single sourcelist for
         # the different timeslices. Generate a mapfile with copies of the
         # sourcelist location: This allows validation of maps in combination
-        self.logger.debug("debug 1")
         # get the original map data
         sourcedb_map = DataMap.load(sourcedb_map_path)
         parmdbs_map = MultiDataMap.load(parmdbs_map_path)
         converted_sourcedb_map = []
-        self.logger.debug("debug 2")
+
         # sanity check for correcy output from previous recipes
         if not validate_data_maps(sourcedb_map, parmdbs_map):
             self.logger.error("The input files for bbs do not contain "
@@ -400,7 +399,6 @@ class msss_imager_pipeline(control):
             self.logger.error(repr(parmdbs_map))
             raise PipelineException("Invalid input data for imager_bbs recipe")
 
-        self.logger.debug("debug 3")
         self.run_task("imager_bbs",
                       timeslice_map_path,
                       parset=parset_path,

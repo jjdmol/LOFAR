@@ -127,12 +127,12 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             return 1
 
         # Run the nodes with now collected inputs
-        jobs, output_map, pardbs_map = self._run_create_dbs_node(
+        jobs, output_map = self._run_create_dbs_node(
                  input_map, slice_paths_map, assoc_theta)
 
         # Collect the output of the node scripts write to (map) files
         return self._collect_and_assign_outputs(jobs, output_map,
-                                    slice_paths_map, pardbs_map)
+                                    slice_paths_map)
 
 
     def _validate_input_data(self, slice_paths_map, input_map):
@@ -174,12 +174,12 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         # create jobs
         jobs = []
         output_map = copy.deepcopy(input_map)
-        pardbs_map = copy.deepcopy(input_map)
+
         # Update the skip fields of the four maps. If 'skip' is True in any of
         # these maps, then 'skip' must be set to True in all maps.
-        for w, x, y, z in zip(input_map, output_map, slice_paths_map, pardbs_map):
-            w.skip = x.skip = y.skip = z.skip = (
-                w.skip or x.skip or y.skip or z.skip
+        for w, x, y in zip(input_map, output_map, slice_paths_map):
+            w.skip = x.skip = y.skip = (
+                w.skip or x.skip or y.skip
             )
         slice_paths_map.iterator = input_map.iterator = DataMap.SkipIterator
         for (input_item, slice_item) in zip(input_map, slice_paths_map):
@@ -212,16 +212,23 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         if len(jobs) > 0:
             self._schedule_jobs(jobs)
 
-        return jobs, output_map, pardbs_map
+        return jobs, output_map
 
-    def _collect_and_assign_outputs(self, jobs, output_map, slice_paths_map,
-                                pardbs_map):
+    def _collect_and_assign_outputs(self, jobs, output_map, slice_paths_map):
         """
         Collect and combine the outputs of the individual create_dbs node
         recipes. Combine into output mapfiles and save these at the supplied
         path locations       
         """
-        # Collect the parmdbs
+        # Create a container for the output parmdbs: same host and 
+        output_map.iterator = DataMap.TupleIterator
+        parmdbs_list = []
+        for output_entry in output_map:
+            parms_tuple = tuple(output_entry.host, [],
+                                output_entry.skip)
+
+        parmdbs_map = MultiDataMap(parmdbs_list)
+
         output_map.iterator = pardbs_map.iterator = DataMap.SkipIterator # The maps are synced
         succesfull_run = False
         for (output_item, parmdbs_item, job) in zip(
@@ -239,7 +246,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                                                             host))
                 output_item.file = "failed"
                 output_item.skip = True
-                parmdbs_item.file = "failed"
+                parmdbs_item.file = ["failed"]
                 parmdbs_item.skip = True
 
             # Else it succeeded and we can write te results
@@ -247,7 +254,9 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                 succesfull_run = True
                 output_item.file = job.results["sourcedb"]
                 parmdbs_item.file = job.results["parmdbms"]
-
+                # we also need to manually set the skip for this new 
+                # file list
+                parmdbs_item.file_skip = [True] * len(job.results["parmdbms"])
 
         # Fail if none of the nodes returned all data
         if not succesfull_run:
