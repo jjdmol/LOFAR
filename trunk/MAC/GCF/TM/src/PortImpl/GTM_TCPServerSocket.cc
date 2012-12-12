@@ -61,8 +61,6 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 		return (false);
 	}
 
-	struct sockaddr_in address;
-	int addrLen;
 	int socketFD = ::socket(AF_INET, SOCK_STREAM, 0);
 	if (socketFD == -1) {
 		LOG_WARN(formatString ( "::socket, error: %s", strerror(errno)));
@@ -71,7 +69,7 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 	unsigned int val = 1;
 	struct linger lin = { 1,1 };
 
-	if (::setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, (char*)&val, sizeof(val)) < 0) {
+	if (::setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, (const void*)&val, sizeof val) < 0) {
 		LOG_WARN(formatString (
 					"Error on setting socket options SO_REUSEADDR: %s",
 					strerror(errno)));
@@ -79,7 +77,7 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 		return false;
 	}
 
-	if (::setsockopt(socketFD, SOL_SOCKET, SO_LINGER, (const char*)&lin, sizeof(lin)) < 0) {
+	if (::setsockopt(socketFD, SOL_SOCKET, SO_LINGER, (const void*)&lin, sizeof lin) < 0) {
 		LOG_WARN(formatString (
 					"Error on setting socket options SO_LINGER: %s",
 					strerror(errno)));
@@ -87,11 +85,11 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 		return false;
 	}
 
+	struct sockaddr_in address;
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = htonl(INADDR_ANY);
 	address.sin_port = htons(portNumber);
-	addrLen = sizeof(address);
-	if (::bind(socketFD, (struct sockaddr*)&address, addrLen) == -1) {
+	if (::bind(socketFD, (const struct sockaddr*)&address, sizeof address) == -1) {
 		LOG_WARN(formatString ( "::bind, error: %s", strerror(errno)));
 		::close(socketFD);
 		return (false);
@@ -103,11 +101,20 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 		return (false);
 	}
 
-	setFD(socketFD);
+    // set non-blocking
 	if (::fcntl(socketFD, F_SETFL, FNDELAY) != 0) {
-		close();
+		::close(socketFD);
 		return (false);
 	}
+
+    // close socket on execve (prevents system() from duplicating the socket and thus
+    // blocking the port if this server is restarted).
+	if (::fcntl(socketFD, F_SETFD, FD_CLOEXEC) != 0) {
+		::close(socketFD);
+		return (false);
+	}
+
+	setFD(socketFD);
 
 	return (true);
 }
@@ -126,30 +133,15 @@ void GTMTCPServerSocket::doWork()
 		forwardEvent(acceptReqEvent);
 	}
 	else {
-		GCFTCPPort* pPort = (GCFTCPPort*)(&_port);
+		GCFTCPPort &pPort = dynamic_cast<GCFTCPPort&>(_port);
 
 		ASSERT(_pDataSocket == 0);
-		_pDataSocket = new GTMTCPSocket(*pPort);
+		_pDataSocket = new GTMTCPSocket(pPort);
 		ASSERT (_pDataSocket->getFD() < 0);
 
-		struct sockaddr_in clientAddress;
-		socklen_t clAddrLen = sizeof(clientAddress);
-		int newSocketFD;
-
-		/* loop to handle transient errors */
-		int retries = MAX_ACCEPT_RETRIES;
-		while ((newSocketFD = ::accept(_fd, (struct sockaddr*) &clientAddress, &clAddrLen)) < 0
-			&& (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno) && --retries > 0) 
-			/*noop*/;
-
-		_pDataSocket->setFD(newSocketFD);
-
-		if (_pDataSocket->getFD() >= 0) {
+    if (_accept(*_pDataSocket)) {
 			GCFEvent connectedEvent(F_CONNECTED);
 			forwardEvent(connectedEvent);
-		}
-		else {
-			LOG_WARN(formatString ( "::accept(%d, %d)-> error:(%d)=%s", _fd, clAddrLen, errno, strerror(errno)));
 		}
 
 		// because we only accept one connection (SPP), we don't need to listen with
@@ -165,23 +157,36 @@ void GTMTCPServerSocket::doWork()
 //
 bool GTMTCPServerSocket::accept(GTMFile& newSocket)
 {
-	bool result(false);
 	if (_isProvider && _pDataSocket == 0) {
-		struct sockaddr_in clientAddress;
-		socklen_t clAddrLen = sizeof(clientAddress);
-		int newSocketFD;
+    return _accept(newSocket);
+	} else {
+    return false;
+  }
+}
 
-		/* loop to handle transient errors */
-		int retries = MAX_ACCEPT_RETRIES;
-		while ((newSocketFD = ::accept(_fd, (struct sockaddr*) &clientAddress, &clAddrLen)) < 0
-			&& (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno) && --retries > 0) 
-			/*noop*/;
+//
+// _accept(newsocket)
+//
+// Common ::accept() code
+//
+bool GTMTCPServerSocket::_accept(GTMFile& newSocket)
+{
+	bool result;
 
-		result = (newSocket.setFD(newSocketFD) > 0);
-		if (!result) {
-			LOG_WARN(formatString ("::accept, error: %s", strerror(errno)));
-		}
-	}
+  struct sockaddr_in clientAddress;
+  socklen_t clAddrLen = sizeof clientAddress;
+  int newSocketFD;
+
+  /* loop to handle transient errors */
+  int retries = MAX_ACCEPT_RETRIES;
+  while ((newSocketFD = ::accept(_fd, (struct sockaddr*) &clientAddress, &clAddrLen)) < 0
+    && (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno) && --retries > 0) 
+    /*noop*/;
+
+  result = (newSocket.setFD(newSocketFD) > 0);
+  if (!result) {
+    LOG_WARN(formatString ("::accept, error: %s", strerror(errno)));
+  }
 
 	return result;
 }
