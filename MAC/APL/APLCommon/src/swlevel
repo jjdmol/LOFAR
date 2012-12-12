@@ -113,7 +113,11 @@ selectImage()
 		rsu=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
 		if [ $imageForced ] || [ ${rsu} -eq 1 ]; then
   		  let version=$rsu
- 		  # if board has reset itself to image 0, load image 1 again
+                  # Find image location for this station
+                  if [ -z $image ]; then  
+                     findImage `hostname -s`
+                  fi
+ 		  # if board has reset itself to image 0, load default RSP image again
 		  echo "Loading image $image on RSPboard $board ..."
 		  sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
 		  #fi
@@ -379,7 +383,7 @@ goto_level()
 	# then power up to new level
 	for (( l=1 ; l<=newlevel ; l++ ))
 	do
-	  if [ $l == 3 ]; then 
+	  if [ $l == 3 -a -e $BINDIR/rspctl ]; then 
 	     # First make sure RSP images are properly loaded
              # Introduce a timeout of 60 sec for images to initialize
 	     echo "Waiting for images to be initialized"
@@ -509,11 +513,6 @@ handle_args()
   if [ "$user" != "lofarsys" -a $level -gt 3 ]; then
       echo "Will only start up to level 3 as this appears to be local use"
       level=3
-  fi
-
-  # default image is 1
-  if [ -z $image ]; then  
-    findImage `hostname -s`
   fi
 
   return
