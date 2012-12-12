@@ -172,6 +172,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         # create jobs
         jobs = []
+        slice_paths_map.iterator = input_map.iterator = DataMap.SkipIterator
         for (input_item, slice_item) in zip(input_map, slice_paths_map):
             if input_item.skip or slice_item.skip:
                 continue
