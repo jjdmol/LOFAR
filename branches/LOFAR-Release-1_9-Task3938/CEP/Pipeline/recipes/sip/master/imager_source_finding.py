@@ -90,9 +90,10 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         # 2. Start the node script
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
-
+        self.logger.debug(repr(input_map))
         input_map.iterator = DataMap.SkipIterator
         for item in input_map:
+            self.logger.debug(repr(item))
             arguments = [item.file,
                          self.inputs["bdsm_parset_file_run1"],
                          self.inputs["bdsm_parset_file_run2x"],
