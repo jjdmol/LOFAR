@@ -1,4 +1,4 @@
-V 10
+V 11
 3
 LANG:1 4 aLBA
 LANG:6 0 
@@ -15,8 +15,15 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   curLBA= $aNr;
   sysName=dpSubStr(baseDP,DPSUB_SYS);
   string aS=sysName+\"LOFAR_PIC_LBA\";
-  if (curLBA < 10) aS+=\"0\";
-  if (curLBA < 100) aS+=\"0\";
+  extrazero=\"\";
+  if (curLBA < 100) {
+    extrazero+=\"0\";
+    aS+=\"0\";
+  }
+  if (curLBA < 10){
+    aS+=\"0\";
+    extrazero+=\"0\";
+  }
   string antennaDP=aS+curLBA;
   string RCUX;
   string RCUY;
@@ -47,14 +54,14 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   
   string strColor   = \"yellow\";
   
-  string strToolTip=\"Antenna: \"+curLBA;
+  string strToolTip=\"Antenna: \"+extrazero+curLBA;
   strToolTip += \" located on: Cabinet:\" + cabinet;
   strToolTip += \" ->Subrack\" + subrack;
   strToolTip += \" -> TBB\" + tbboard;
   strToolTip += \" -> RSP\" + rspboard;
   strToolTip += \" -> RCU\" + curXRCU + \" && RCU\" + curYRCU;
   strToolTip += \"---------\";
-  strToolTip += \" (LBA\" + curLBA + \")\";
+  strToolTip += \" (LBA\" + extrazero+curLBA + \")\";
 
   strToolTip += \"\\n diff from centerOL:\" + $aX;
   strToolTip += \"\\n diff from centerNB:\" + $aY;
@@ -143,6 +150,8 @@ string baseDPX;
 string baseDPY;
 string RCUXDP;
 string RCUYDP;
+string extrazero=\"\";
+
 
 int    cabinet;
 int    subrack;
@@ -158,7 +167,7 @@ void click() {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    navPanel_setEvent(\"RCU\"+curXRCU+\"|RCU\"+curYRCU,\"EventClick\");
+    navPanel_setEvent(\"LBA\"+extrazero+curLBA,\"EventClick\");
   }
 }
 
@@ -182,7 +191,7 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent(\"Antenna\"+curLBA,\"EventRightClick\");
+  navPanel_setEvent(\"Antenna\"+extrazero+curLBA,\"EventRightClick\");
 }" 0
  2
 "CBRef" "1"
@@ -277,10 +286,9 @@ LANG:1 0
 void StationCallback(string dp1, bool aTrig) {
   
   LOG_DEBUG(\"Station_LBA.pnl:StationCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"Station_LBA.pnl:StationCallback|Found highlight : \" + highlight + \" Looking for RCU\" + curXRCU +
-             \" or RCU\" + curYRCU);
+  LOG_DEBUG(\"Station_LBA.pnl:StationCallback|Found highlight : \" + highlight + \" Looking for LBA\" + extrazero+curLBA);
   bool bHighlight=false;
-  if (dynContains(highlight,\"RCU\"+curXRCU) ||dynContains(highlight,\"RCU\"+curYRCU) ) {
+  if (dynContains(highlight,\"LBA\"+extrazero+curLBA )) {
     bHighlight=true;
   }
   LOG_DEBUG(\"Station_LBA.pnl:StationCallback|Highlight request: \"+bHighlight);
@@ -373,14 +381,13 @@ LANG:30 0
 {
   click();
 }" 0
- 0 1 1 0 1 E U  0 E 13 11 25 28
+ 0 1 1 0 1 E U  0 E 12 11 26 27
 0 2 0 "0s" 0 0 0 193 0 0  19 11 1
 3
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
 LANG:6 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 LANG:30 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
-0 ""
-3
+0 3
 LANG:1 2 nr
 LANG:6 2 nr
 LANG:30 2 nr

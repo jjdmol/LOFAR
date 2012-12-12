@@ -38,21 +38,6 @@ void test_SSHconnection( const char *cmd, bool capture ) {
 #endif
 }
 
-
-void test_forkExec() {
-  pid_t pid;
-
-  const char * const params[] = {
-    "echo",
-    "forkExec success",
-    0
-  };
-  
-  pid = forkSSH("", "localhost", params, USER, privkey);
-
-  joinSSH("", pid, time(0) + 10);
-}
-
 int main() {
   INIT_LOGGER( "tSSH" );
 
@@ -79,7 +64,6 @@ int main() {
 
   test_SSHconnection( "echo stderr first [stderr] 1>&2; echo stdout second [stdout]", false );
   test_SSHconnection( "echo stdout first [stdout]; echo stderr second [stderr] 1>&2", false );
-  test_forkExec();
 
   SSH_Finalize();
 

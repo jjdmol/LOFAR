@@ -15,7 +15,11 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   curHBA= $aNr;
   sysName=dpSubStr(baseDP,DPSUB_SYS);
   string aS=sysName+\"LOFAR_PIC_HBA\";
-  if (curHBA < 10) aS+=\"0\";
+  extrazero=\"\";
+  if (curHBA < 10) {
+    aS+=\"0\";
+    extrazero=\"0\";
+  }
   string antennaDP=aS+curHBA;
   string RCUX;
   string RCUY;
@@ -54,7 +58,7 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   strToolTip += \"<br> -> RSP\" + rspboard;
   strToolTip += \"<br> -> RCU\" + curXRCU + \" && RCU\" + curYRCU;
   strToolTip += \"<br>---------\";
-  strToolTip += \"<br> (HBA\" + curHBA + \")\";
+  strToolTip += \"<br> (HBA\" + extrazero+curHBA + \")\";
 
   strToolTip += \"<br> diff from centerOL:\" + $aX;
   strToolTip += \"<br> diff from centerNB:\" + $aY;
@@ -155,6 +159,7 @@ string baseDPX;
 string baseDPY;
 string RCUXDP;
 string RCUYDP;
+string extrazero=\"\";
 
 int    cabinet;
 int    subrack;
@@ -170,7 +175,7 @@ void click() {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    navPanel_setEvent(\"HBA\"+curHBA,\"EventClick\");
+    navPanel_setEvent(\"HBA\"+extrazero+curHBA,\"EventClick\");
   }
 }
 
@@ -184,7 +189,7 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"Station_HBA.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
-    navPanel_setEvent(\"HBA\"+curHBA,\"ChangePanel\");   
+    navPanel_setEvent(\"HBA\"+extrazero+curHBA,\"ChangePanel\");   
   }
   
   // set delay to avoid click event will be triggered
@@ -194,7 +199,7 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent(\"HBA\"+curHBA,\"EventRightClick\");
+  navPanel_setEvent(\"HBA\"+extrazero+curHBA,\"EventRightClick\");
 }" 0
  2
 "CBRef" "1"
@@ -315,9 +320,9 @@ LANG:1 0
 void StationCallback(string dp1, bool aTrig) {
   
   LOG_DEBUG(\"Station_HBA.pnl:StationCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"Station_HBA.pnl:StationCallback|Found highlight : \" + highlight + \" Looking for HBA\" + curHBA);
+  LOG_DEBUG(\"Station_HBA.pnl:StationCallback|Found highlight : \" + highlight + \" Looking for HBA\" + extrazero+curHBA);
   bool bHighlight=false;
-  if (dynContains(highlight,\"HBA\"+curHBA)) {
+  if (dynContains(highlight,\"HBA\"+extrazero+curHBA)) {
     bHighlight=true;
   }
   LOG_DEBUG(\"Station_HBA.pnl:StationCallback|Highlight request: \"+bHighlight);
