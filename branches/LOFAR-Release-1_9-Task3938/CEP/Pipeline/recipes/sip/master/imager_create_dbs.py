@@ -130,7 +130,8 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                                            assoc_theta)
 
         # Collect the output of the node scripts write to (map) files
-        return self._collect_and_assign_outputs(jobs)
+        return self._collect_and_assign_outputs(jobs, input_map,
+                                                slice_paths_map)
 
 
     def _validate_input_data(self, slice_paths_map, input_map):
@@ -172,7 +173,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         # create jobs
         jobs = []
         for (input_item, slice_item) in zip(input_map, slice_paths_map):
-            if input_item.skip and slice_item.skip:
+            if input_item.skip or slice_item.skip:
                 continue
             host_ms, concat_ms = input_item.host, input_item.file
             host_slice, slice_paths = slice_item.host, slice_item.file
@@ -205,7 +206,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         return jobs
 
-    def _collect_and_assign_outputs(self, jobs):
+    def _collect_and_assign_outputs(self, jobs, input_map, slice_paths_map):
         """
         Collect and combine the outputs of the individual create_dbs node
         recipes. Combine into output mapfiles and save these at the supplied
@@ -215,20 +216,29 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         sourcedb_files = []
         parmdbs = []
         # now parse the node output append to list
-        for job in jobs:
+        for (input_item, slice_item, job) in zip(input_map, slice_paths_map,
+                                                 jobs):
+            node_succeeded = job.results.has_key("parmdbms") and \
+                job.results.has_key("sourcedb")
             host = job.host
-            if job.results.has_key("sourcedb"):
-                sourcedb_files.append(tuple([host, job.results["sourcedb"], False]))
-            else:
-                self.logger.warn("Warning failed ImagerCreateDBs run "
-                    "detected: No sourcedb file created, {0} continue".format(
-                                                                        host))
 
-            if job.results.has_key("parmdbms"):
-                parmdbs.append(tuple([host, job.results["parmdbms"], False]))
+            # The current job has to be skipped (due to skip field)
+            # Or if the node failed:
+            if input_item.skip or slice_item.skip or not node_succeeded:
+                # Log failing nodes
+                if not node_succeeded:
+                    self.logger.warn("Warning failed ImagerCreateDBs run "
+                    "detected: No sourcedb file created, {0} continue".format(
+                                                            host))
+                sourcedb_files.append(tuple([host, job.results["sourcedb"],
+                                              True]))
+                parmdbs.append(tuple([host, job.results["parmdbms"], True]))
+
+            # Else it succeeded and we can write te results
             else:
-                self.logger.warn("Failed ImagerCreateDBs run detected: No "
-                                 "parmdbms created{0} continue".format(host))
+                sourcedb_files.append(tuple([host, job.results["sourcedb"],
+                                             False]))
+                parmdbs.append(tuple([host, job.results["parmdbms"], False]))
 
         # Fail if none of the nodes returned all data
         if len(sourcedb_files) == 0 or len(parmdbs) == 0:
