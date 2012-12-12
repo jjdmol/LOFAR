@@ -1,27 +1,42 @@
-log4j.rootLogger=ERROR, STDOUT, FILE
+log4j.rootLogger=INFO, FILE
 log4j.additivity.ASTRON=FALSE
+
+# Define the Java STDOUT appender
 
 log4j.appender.STDOUT=org.apache.log4j.ConsoleAppender
 log4j.appender.STDOUT.layout=org.apache.log4j.PatternLayout
 log4j.appender.STDOUT.layout.ConversionPattern=%d [%t] %-5p (%F:%L) %m%n
 
+# Define the Java FILE appender
 log4j.appender.FILE=org.apache.log4j.RollingFileAppender
-log4j.appender.FILE.File=jOTDB3.log
+log4j.appender.FILE.File=/opt/sas/log/jOTDB3.log
 log4j.appender.FILE.MaxFileSize=10MB
 log4j.appender.FILE.MaxBackupIndex=10
 log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
-log4j.appender.FILE.layout.ConversionPattern=%d [%t] %-5p (%F:%L) %m%n
+log4j.appender.FILE.layout.ConversionPattern=%d{dd-mm-yyyy HH:mm:ss} [%t] %-5p %c{3} - %m [%.25l]%n
 
+# Define the Java DUMP appender
 log4j.appender.DUMP=org.apache.log4j.NullAppender
 
 # Configure the rootLogger
-log4cplus.rootLogger=DEBUG, STDOUT
+log4cplus.rootLogger=INFO, ROLFILE
+
 # Define the STDOUT appender
 log4cplus.appender.STDOUT=log4cplus::ConsoleAppender
 log4cplus.appender.STDOUT.layout=log4cplus::PatternLayout
-log4cplus.appender.STDOUT.layout.ConversionPattern=%-5p [%x]%c{3} - %m%n
+log4cplus.appender.STDOUT.layout.ConversionPattern=%x %D{%d-%m-%y %H:%M:%S} %-5p %c{3} - %m [%.25l]%n
 log4cplus.appender.STDOUT.ImmediateFlush=true
 
+# Define the ROLFILE appender
+log4cplus.appender.ROLFILE=log4cplus::RollingFileAppender
+log4cplus.appender.ROLFILE.File=/localhome/log/jOTDB3-C++.log
+log4cplus.appender.ROLFILE.MaxFileSize=10MB
+log4cplus.appender.ROLFILE.MaxBackupIndex=10
+log4cplus.appender.ROLFILE.Schedule=DAILY
+log4cplus.appender.ROLFILE.layout=log4cplus::PatternLayout
+log4cplus.appender.ROLFILE.layout.ConversionPattern=%x %D{%d-%m-%y %H:%M:%S} %-5p %c{3} - %m [%.25l]%n
+
+#
 # Define TRC at level INFO
 log4cplus.logger.TRC=TRACE3
 #log4cplus.logger.TRC=INFO
