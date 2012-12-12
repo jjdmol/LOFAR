@@ -102,9 +102,11 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         for w, x, y in zip(ms_map, parmdb_map, sourcedb_map):
             w.skip = x.skip = y.skip = (w.skip or x.skip or y.skip)
 
-        ms_map.iterator = parmdb_map.iterator = sourcedb_map.iterator = \
-            DataMap.SkipIterator
+
         for (ms, parmdb, sourcedb) in zip(ms_map, parmdb_map, sourcedb_map):
+            if ms.skip or parmdb.skip or sourcedb.skip:
+                jobs.append(None)
+                continue
             #host is same for each entry (validate_data_maps)
             host, ms_list = ms.host, ms.file
 

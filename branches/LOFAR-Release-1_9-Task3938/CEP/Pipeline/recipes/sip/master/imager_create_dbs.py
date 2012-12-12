@@ -172,9 +172,10 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         # create jobs
         jobs = []
-        slice_paths_map.iterator = input_map.iterator = DataMap.SkipIterator
+        #slice_paths_map.iterator = input_map.iterator = DataMap.SkipIterator
         for (input_item, slice_item) in zip(input_map, slice_paths_map):
             if input_item.skip or slice_item.skip:
+                jobs.append(None)
                 continue
             host_ms, concat_ms = input_item.host, input_item.file
             host_slice, slice_paths = slice_item.host, slice_item.file
@@ -219,8 +220,11 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         # now parse the node output append to list
         for (input_item, slice_item, job) in zip(input_map, slice_paths_map,
                                                  jobs):
-            node_succeeded = job.results.has_key("parmdbms") and \
-                job.results.has_key("sourcedb")
+            if job != None:
+                node_succeeded = job.results.has_key("parmdbms") and \
+                    job.results.has_key("sourcedb")
+            else:
+                node_succeeded = False
             host = job.host
 
             # The current job has to be skipped (due to skip field)

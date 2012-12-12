@@ -90,6 +90,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         # Compile the command to be executed on the remote machine
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
+        input_map.iterator = sourcedb_map.iterator = DataMap.SkipIterator
         for measurement_item, source_item in zip(input_map, sourcedb_map):
             # both the sourcedb and the measurement are in a map
             # unpack both
