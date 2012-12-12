@@ -33,6 +33,8 @@
 
 //# GCF Includes
 #include <GCF/TM/GCF_Control.h>
+#include <GCF/PVSS/PVSSservice.h>
+#include <GCF/PVSS/PVSSresponse.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 
 //# local includes
@@ -55,6 +57,8 @@ using	GCF::TM::GCFITCPort;
 using	GCF::TM::GCFPort;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
+using	GCF::PVSS::PVSSservice;
+using	GCF::PVSS::PVSSresponse;
 using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ParentControl;
 using boost::posix_time::ptime;
@@ -125,6 +129,8 @@ private:
    	RTDBPropertySet*           	itsPropertySet;
    	RTDBPropertySet*           	itsBGPApplPropSet;
 	bool					  	itsPropertySetInitialized;
+	PVSSservice*				itsPVSSService;
+	PVSSresponse*				itsPVSSResponse;
 
 	// pointer to parent control task
 	ParentControl*			itsParentControl;

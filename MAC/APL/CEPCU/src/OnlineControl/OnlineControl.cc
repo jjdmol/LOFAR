@@ -21,6 +21,7 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <signal.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/StreamUtil.h>
@@ -35,6 +36,7 @@
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/PVSS/PVSSservice.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
@@ -43,14 +45,15 @@
 #include <APL/APLCommon/CTState.h>
 #include <PLC/PCCmd.h>
 #include "OnlineControl.h"
+#include "Response.h"
 #include <OTDB/TreeValue.h>			// << need to include this after OnlineControl! ???
 #include "PVSSDatapointDefs.h"
 
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDB;
-using namespace std;
 using namespace boost::posix_time;
+using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
@@ -69,6 +72,8 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsPropertySet		(0),
 	itsBGPApplPropSet	(0),
 	itsPropertySetInitialized (false),
+	itsPVSSService		(0),
+	itsPVSSResponse		(0),
 	itsParentControl	(0),
 	itsParentPort		(0),
 	itsTimerPort		(0),
@@ -321,6 +326,12 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, GCFPortInterface
    		break;
 
     case F_INIT: {
+		// create PVSS hook for direct access to PVSS datapoints
+		itsPVSSResponse = new Response;
+		ASSERTSTR(itsPVSSResponse, "Failed to allocate a PVSS response class");
+		itsPVSSService  = new PVSSservice(itsPVSSResponse);
+		ASSERTSTR(itsPVSSService, "Failed to allocate a PVSS Service class");
+
 		// Get access to my own propertyset.
 //		uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
 		string obsDPname = globalParameterSet()->getString("_DPname");
@@ -640,75 +651,66 @@ void OnlineControl::_setupBGPmappingTables()
 {
 	Observation		theObs(globalParameterSet(), false);
 	int	nrStreams = theObs.streamsToStorage.size();
-	LOG_DEBUG_STR("_setupBGPmapping: " << nrStreams << " streams found.");
+	LOG_INFO_STR("_setupBGPmapping: " << nrStreams << " streams found.");
 
-	// e.g. CS001 , [0,2,3,6] , [L36000_SAP000_SB000_uv.MS, ...] , [1,3,5,4]
+	// Which IOnodes and Adders are used is collected in arrays and written to BGPAppl datapoints.
+	// e.g. BGPAppl.IONodelist = {0,1,2,3} ; BGPAppl.AdderList = {[0,2,3],[0,1,2],[3,6,2],[6,6,6]}
+	// The dataproduct, writer and locus information is written to datapoint in the related adder.
+	// eg. IONode99.Adder0.dataProductType=Correlated, IONode99.Adder0.dataProduct=L55522_SAP000_SB000_uv.MS, 
+	//     IONode99.Adder0.locusnode=2, IONode99.Adder0.writer=0
+	// BGPAppl vectors
 	GCFPValueArray	ionodeArr;
-	GCFPValueArray	locusArr;
 	GCFPValueArray	adderArr;
-	GCFPValueArray	writerArr;
-	GCFPValueArray	dpArr;
-	GCFPValueArray	dptypeArr;
+	// Adder vector
+	vector<string>		fields;
+	fields.push_back("dataProductType");
+	fields.push_back("dataProduct");
+	fields.push_back("locusNode");
+	fields.push_back("writer");
 
 	uint	prevPset = (nrStreams ? theObs.streamsToStorage[0].sourcePset : -1);
-	vector<string>	locusVector;
 	vector<int>		adderVector;
-	vector<int>		writerVector;
-	vector<string>	DPVector;
-	vector<string>	DPtypeVector;
 	for (int i = 0; i < nrStreams; i++) {
+		// BGPAppl information
 		if (theObs.streamsToStorage[i].sourcePset != prevPset) {	// other Pset? write current vector to the database.
 			ionodeArr.push_back(new GCFPVInteger(prevPset));
-			{	stringstream	os;
-				writeVector(os, locusVector);
-				locusArr.push_back (new GCFPVString(os.str()));
-			}
 			{	stringstream	os;
 				writeVector(os, adderVector);
 				adderArr.push_back (new GCFPVString(os.str()));
 			}
-			{	stringstream	os;
-				writeVector(os, writerVector);
-				writerArr.push_back(new GCFPVString(os.str()));
-			}
-			{	stringstream	os;
-				writeVector(os, DPVector);
-				dpArr.push_back    (new GCFPVString(os.str()));
-			}
-			{	stringstream	os;
-				writeVector(os, DPtypeVector);
-				dptypeArr.push_back(new GCFPVString(os.str()));
-			}
 			// clear the collecting vectors
-			locusVector.clear();
 			adderVector.clear();
-			writerVector.clear();
-			DPVector.clear();
-			DPtypeVector.clear();
 			prevPset = theObs.streamsToStorage[i].sourcePset;
 		}
 		// extend vector with info
-		locusVector.push_back (theObs.streamsToStorage[i].destStorageNode);
 		adderVector.push_back (theObs.streamsToStorage[i].adderNr);
-		writerVector.push_back(theObs.streamsToStorage[i].writerNr);
-		DPVector.push_back    (theObs.streamsToStorage[i].filename);
-		DPtypeVector.push_back(theObs.streamsToStorage[i].dataProduct);
-	}
-	itsBGPApplPropSet->setValue(PN_BGPA_IO_NODE_LIST,           GCFPVDynArr(LPT_DYNINTEGER, ionodeArr));
-	itsBGPApplPropSet->setValue(PN_BGPA_LOCUS_NODE_LIST,        GCFPVDynArr(LPT_DYNSTRING,  locusArr));
-	itsBGPApplPropSet->setValue(PN_BGPA_ADDER_LIST,             GCFPVDynArr(LPT_DYNSTRING,  adderArr));
-	itsBGPApplPropSet->setValue(PN_BGPA_WRITER_LIST,            GCFPVDynArr(LPT_DYNSTRING,  writerArr));
-	itsBGPApplPropSet->setValue(PN_BGPA_DATA_PRODUCT_LIST,      GCFPVDynArr(LPT_DYNSTRING,  dpArr));
-	itsBGPApplPropSet->setValue(PN_BGPA_DATA_PRODUCT_TYPE_LIST, GCFPVDynArr(LPT_DYNSTRING,  dptypeArr));
 
-	// release claimed memory.
+		// Adder information
+		string	propSetMask(createPropertySetName(PSN_ADDER, "", ""));
+		string	adderDPname(formatString(propSetMask.c_str(), theObs.streamsToStorage[i].sourcePset, 
+							theObs.streamsToStorage[i].adderNr));
+		vector<GCFPValue*>	values;
+		values.push_back(new GCFPVString (theObs.streamsToStorage[i].dataProduct));
+		values.push_back(new GCFPVString (theObs.streamsToStorage[i].filename));
+		int	locusNodeNr(0);
+		if (sscanf(theObs.streamsToStorage[i].destStorageNode.c_str(), "locus%d", &locusNodeNr) != 1) {
+			LOG_ERROR_STR("Cannot determine number in '" << theObs.streamsToStorage[i].destStorageNode <<"'");
+		}
+		values.push_back(new GCFPVInteger(locusNodeNr));
+		values.push_back(new GCFPVInteger(theObs.streamsToStorage[i].writerNr));
+		itsPVSSService->dpeSetMultiple(adderDPname, fields, values, 0.0, false); // ignore answer
+		// release claimed memory for Adder
+		for (int i = values.size()-1; i>=0; i--) {
+			delete values[i];
+		}
+	}
+	itsBGPApplPropSet->setValue(PN_BGPA_IO_NODE_LIST, GCFPVDynArr(LPT_DYNINTEGER, ionodeArr));
+	itsBGPApplPropSet->setValue(PN_BGPA_ADDER_LIST,   GCFPVDynArr(LPT_DYNSTRING,  adderArr));
+
+	// release claimed memory for BGPAppl.
 	for (int i = ionodeArr.size()-1; i>=0; i--) {
 		delete ionodeArr[i];
-		delete locusArr[i];
 		delete adderArr[i];
-		delete writerArr[i];
-		delete dpArr[i];
-		delete dptypeArr[i];
 	}
 }
 
