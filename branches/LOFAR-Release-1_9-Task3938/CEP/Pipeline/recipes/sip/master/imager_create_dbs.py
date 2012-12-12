@@ -230,7 +230,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         parmdbs_map = MultiDataMap(parmdbs_list)
 
-        output_map.iterator = pardbs_map.iterator = DataMap.SkipIterator # The maps are synced
+        output_map.iterator = parmdbs_map.iterator = DataMap.SkipIterator # The maps are synced
         succesfull_run = False
         for (output_item, parmdbs_item, job) in zip(
                                                 output_map, pardbs_map, jobs):
@@ -257,7 +257,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                 parmdbs_item.file = job.results["parmdbms"]
                 # we also need to manually set the skip for this new 
                 # file list
-                parmdbs_item.file_skip = [True] * len(job.results["parmdbms"])
+                parmdbs_item.file_skip = [False] * len(job.results["parmdbms"])
 
         # Fail if none of the nodes returned all data
         if not succesfull_run:
