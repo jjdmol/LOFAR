@@ -223,7 +223,8 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         # Create a container for the output parmdbs: same host and 
         output_map.iterator = DataMap.TupleIterator
         parmdbs_list = []
-        for output_entry in output_map:
+        # loop over the raw data including the skip file (use the data member)
+        for output_entry in output_map.data:
             parms_tuple = tuple(output_entry.host, [],
                                 output_entry.skip)
 
