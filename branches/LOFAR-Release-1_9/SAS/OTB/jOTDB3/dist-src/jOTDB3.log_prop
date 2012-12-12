@@ -29,7 +29,7 @@ log4cplus.appender.STDOUT.ImmediateFlush=true
 
 # Define the ROLFILE appender
 log4cplus.appender.ROLFILE=log4cplus::RollingFileAppender
-log4cplus.appender.ROLFILE.File=/localhome/log/jOTDB3-C++.log
+log4cplus.appender.ROLFILE.File=/opt/sas/log/jOTDB3-C++.log
 log4cplus.appender.ROLFILE.MaxFileSize=10MB
 log4cplus.appender.ROLFILE.MaxBackupIndex=10
 log4cplus.appender.ROLFILE.Schedule=DAILY
