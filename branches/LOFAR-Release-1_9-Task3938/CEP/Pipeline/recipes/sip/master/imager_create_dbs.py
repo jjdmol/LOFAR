@@ -235,9 +235,9 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                     self.logger.warn("Warning failed ImagerCreateDBs run "
                     "detected: No sourcedb file created, {0} continue".format(
                                                             host))
-                sourcedb_files.append(tuple([host, job.results["sourcedb"],
+                sourcedb_files.append(tuple([host, "failed",
                                               True]))
-                parmdbs.append(tuple([host, job.results["parmdbms"], True]))
+                parmdbs.append(tuple([host, ["failed"], True]))
 
             # Else it succeeded and we can write te results
             else:
