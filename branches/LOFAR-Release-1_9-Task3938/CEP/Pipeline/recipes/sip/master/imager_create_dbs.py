@@ -233,8 +233,8 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         output_map.iterator = parmdbs_map.iterator = DataMap.SkipIterator # The maps are synced
         succesfull_run = False
         for (output_item, parmdbs_item, job) in zip(
-                                                output_map, pardbs_map, jobs):
-            node_succeeded = job.results.has_key("parmdbms") and \
+                                                output_map, parmdbs_map, jobs):
+            node_succeeded = job.results.has_key("parmdbs") and \
                     job.results.has_key("sourcedb")
 
             host = output_item.host
@@ -254,10 +254,11 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             else:
                 succesfull_run = True
                 output_item.file = job.results["sourcedb"]
-                parmdbs_item.file = job.results["parmdbms"]
+                parmdbs_item.file = job.results["parmdbs"]
+
                 # we also need to manually set the skip for this new 
                 # file list
-                parmdbs_item.file_skip = [False] * len(job.results["parmdbms"])
+                parmdbs_item.file_skip = [False] * len(job.results["parmdbs"])
 
         # Fail if none of the nodes returned all data
         if not succesfull_run:
@@ -265,12 +266,12 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.error("Not a single node produces all needed data")
             self.logger.error(
                 "products. sourcedb_files: {0}".format(output_map))
-            self.logger.error("parameter dbs: {0}".format(pardbs_map))
+            self.logger.error("parameter dbs: {0}".format(parmdbs_map))
             return 1
 
         # write the mapfiles     
         output_map.save(self.inputs["sourcedb_map_path"])
-        pardbs_map.save(self.inputs["parmdbs_map_path"])
+        parmdbs_map.save(self.inputs["parmdbs_map_path"])
         self.logger.debug("Wrote sourcedb dataproducts: {0} \n {1}".format(
             self.inputs["sourcedb_map_path"], self.inputs["parmdbs_map_path"]))
 
