@@ -154,6 +154,8 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         self.outputs["mapfile"] = self.inputs['mapfile']
         self.outputs["sourcedb_map_path"] = self.inputs['sourcedb_map_path']
 
+        raise Exception("Exit at sourcefinding to allow quick rerunning of the current script")
+
 if __name__ == '__main__':
     sys.exit(imager_source_finding().main())
 
