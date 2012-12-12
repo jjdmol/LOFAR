@@ -159,12 +159,10 @@ bool GCFTCPPort::open()
 
 		if ((getType() == SPP) || (getType() == MSPP)) {
 			_pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
-			ASSERTSTR(_pSocket, "Could not create GTMTCPServerSocket for port " << getName());
 		}
 		else {
 			ASSERTSTR (SAP == getType(), "Unknown TPCsocket type " << getType());
 			_pSocket = new GTMTCPSocket(*this);
-			ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for port " << getName());
 			_pSocket->setBlocking(false);
 		}
 	}
@@ -216,17 +214,20 @@ bool GCFTCPPort::open()
 	}
 
 	// porttype = MSPP or SPP
-	// portnumber overruled by user? try mac.ns.<taskname>.<realname>.port
+
+	// PortNumber is determined by:
+	// 1. override by user in globalParameterSet ("mac.ns.<taskname>.<realname>.port")
+	// 2. set by setPortNumber()
+	// 3. given by ServiceBroker
 	string portNumParam = formatString(PARAM_TCP_PORTNR, getTask()->getName().c_str(), getRealName().c_str());
-	if (globalParameterSet()->isDefined(portNumParam)) {
-		_portNumber = globalParameterSet()->getInt32(portNumParam);
-	}
+	_portNumber = globalParameterSet()->getInt32(portNumParam, _portNumber);
+
 	if (_portNumber > 0) {					// portnumber hard set by user.
 		serviceRegistered(SB_NO_ERROR, _portNumber);	// 'hard' open port
 		return (true);
 	}
 
-	// portnumber not overruled by user so ask SB for a portnumber
+	// portnumber not known so ask SB for a portnumber
 	_broker = ServiceBrokerTask::instance();
 	ASSERT(_broker);
 	_broker->registerService(*this); // a (dis)connect event will be scheduled
@@ -344,6 +345,7 @@ GCFEvent::TResult	GCFTCPPort::dispatch(GCFEvent&	event)
 			return (GCFEvent::HANDLED);
 		}
 		if (TEptr->arg == &itsConnectTimer) {
+		    LOG_INFO_STR("GCFTCPPort:connect(" << _portNumber << "@" << _host << ") still in progress");
 			_pSocket->connect(_portNumber, _host);
 			return (GCFEvent::HANDLED);
 		}
@@ -412,6 +414,9 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
 	if (!_pSocket->open(portNumber)) {
 		_handleDisconnect();
 	}
+
+    // Set socket to non-blocking to prevent stalls
+    _pSocket->setBlocking(false);
 
 	switch (_pSocket->connect(portNumber, host)) {
 	case -1: _handleDisconnect(); break;	// error
