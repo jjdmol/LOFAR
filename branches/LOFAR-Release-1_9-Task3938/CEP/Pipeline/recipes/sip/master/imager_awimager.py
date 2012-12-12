@@ -90,8 +90,11 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         # Compile the command to be executed on the remote machine
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
-        input_map.iterator = sourcedb_map.iterator = DataMap.SkipIterator
+
         for measurement_item, source_item in zip(input_map, sourcedb_map):
+            if measurement_item.skip or source_item.skip:
+                jobs.append(None)
+                continue
             # both the sourcedb and the measurement are in a map
             # unpack both
             host , measurement_path = measurement_item.host, measurement_item.file
@@ -114,10 +117,12 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         # 3. Check output of the node scripts
         created_awimages = []
         for job in  jobs:
-            if job.results.has_key("image"):
-                created_awimages.append(tuple([job.host, job.results["image"], False]))
+            # job ==  None on skipped job
+            if job == None or not "image" in job.results:
+                created_awimages.append(tuple([job.host, "/failed", True]))
             else:
-                created_awimages.append(tuple([job.host, "failed", True]))
+                created_awimages.append(
+                            tuple([job.host, job.results["image"], False]))
 
 
         # If not succesfull runs abort

@@ -225,7 +225,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                     job.results.has_key("sourcedb")
             else:
                 node_succeeded = False
-            host = job.host
+            host = input_item.host
 
             # The current job has to be skipped (due to skip field)
             # Or if the node failed:
