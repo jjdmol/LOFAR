@@ -227,8 +227,10 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         for output_entry in output_map.data:
             parms_tuple = tuple([output_entry.host, [],
                                 output_entry.skip])
+            parmdbs_list.append(parms_tuple)
 
         parmdbs_map = MultiDataMap(parmdbs_list)
+        self.logger.debug()
 
         output_map.iterator = parmdbs_map.iterator = DataMap.SkipIterator # The maps are synced
         succesfull_run = False
