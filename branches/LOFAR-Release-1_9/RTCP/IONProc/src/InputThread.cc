@@ -83,6 +83,7 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 
 #if 1 && defined HAVE_BGP_ION
   doNotRunOnCore0();
+  setPriority(4);
 #endif
 
   const unsigned maxNrPackets = 128;
