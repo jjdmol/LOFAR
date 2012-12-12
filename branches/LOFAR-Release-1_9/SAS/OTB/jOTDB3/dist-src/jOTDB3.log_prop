@@ -32,7 +32,6 @@ log4cplus.appender.ROLFILE=log4cplus::RollingFileAppender
 log4cplus.appender.ROLFILE.File=/opt/sas/log/jOTDB3-C++.log
 log4cplus.appender.ROLFILE.MaxFileSize=10MB
 log4cplus.appender.ROLFILE.MaxBackupIndex=10
-log4cplus.appender.ROLFILE.Schedule=DAILY
 log4cplus.appender.ROLFILE.layout=log4cplus::PatternLayout
 log4cplus.appender.ROLFILE.layout.ConversionPattern=%x %D{%d-%m-%y %H:%M:%S} %-5p %c{3} - %m [%.25l]%n
 
