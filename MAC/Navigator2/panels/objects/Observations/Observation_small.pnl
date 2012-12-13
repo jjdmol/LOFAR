@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 999 293 N "_3DFace" 1
@@ -110,12 +110,10 @@ updateObservations(string dp1, dyn_string obs,
       if (!navFunct_dpReachable(obsDP) ){
         LOG_ERROR(\"Observation_small.pnl:updateObservations|DP unreachable\");
         updateObservationsTableValues(\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",true);
-        return;
       }
          
     } else {
       LOG_ERROR(\"Observation_small.pnl:updateObservations|ERROR: Dp for LOFAR_ObsSW_\"+obs[i]+\" doesn't exist.\");   
-      return;
     }
   }
 }
@@ -184,9 +182,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- -2 -2 991 219
+LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
+0  -2 -2 991 219
 "main()
 {
   myTable.tableMode(TABLE_SELECT_BROWSE);
@@ -253,9 +250,8 @@ LANG:1 0
 514 
 18 18 10 10
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-0 1 2 1 7
+LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
+0 0 1 2 1 7
 1 0
 0
 LAYER, 1 

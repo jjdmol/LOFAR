@@ -13,7 +13,7 @@ PANEL,-1 -1 1010 745 N "_3DFace" 0
   baseDP=g_currentDatapoint;
  
 
-  stationList = makeDynString(\"CS001\",\"CS002\",\"CS003\",\"CS004\",\"CS005\",\"CS006\",\"RS007\",
+  stationList = makeDynString(\"CS001\",\"CS002\",\"CS003\",\"CS004\",\"CS005\",\"CS006\",\"CS007\",
                               \"CS011\",\"CS013\",\"CS017\",
                               \"CS021\",\"CS024\",\"CS026\",\"CS028\",
                               \"CS030\",\"CS031\",\"CS032\",
@@ -24,7 +24,7 @@ PANEL,-1 -1 1010 745 N "_3DFace" 0
                               \"RS406\",\"RS407\",\"RS409\",
                               \"RS503\",\"RS508\",\"RS509\",
                               \"DE601\",\"DE602\",\"DE603\",\"DE604\",\"RS605\",\"FR606\",\"SE607\",\"UK608\",
-                              \"CCU001\",\"MCU001\");
+                              CEPDBName,MainDBName);
   
   redraw();
 }
@@ -209,12 +209,17 @@ void addSWCtrlers() {
   int yPos_AddSymbol = 28;
   int ref = 1;
 
-  string addPanelName    = \"objects/Processes/stationSWLevelView.pnl\";
+  string addPanelName;
   //loop over list and prepare panel with all datastreamobjects   
   for (int i=1; i<= dynlen(stationList); i++) {
-    //skip CCU and MCU machines
-    if (strpos(stationList[i],\"MCU\") >=0 ||strpos(stationList[i],\"CCU\") >=0) continue;
-
+    //CCU and MCU machines different layout
+    if (strpos(stationList[i],\"MCU\") >=0 ) {
+      addPanelName    = \"objects/Processes/MCUSWLevelView.pnl\";
+    } else if( strpos(stationList[i],\"CCU\") >=0) {
+      addPanelName    = \"objects/Processes/CCUSWLevelView.pnl\";
+    } else {
+      addPanelName    = \"objects/Processes/stationSWLevelView.pnl\";
+    }
     swCtrlRefNames[i]=\"swCtrl\"+(i);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
@@ -231,7 +236,14 @@ void addSWCtrlers() {
           }
     yPos_AddSymbol += 10;
     ref++;
-    addStationProcesses(stationList[i]+\":\");
+    //CCU and MCU machines different layout
+    if (strpos(stationList[i],\"MCU\") >=0 ) {
+//      addMCUProcesses(stationList[i]+\":\");
+    } else if( strpos(stationList[i],\"CCU\") >=0) {
+//      addCCUProcesses(stationList[i]+\":\");
+    } else {
+      addStationProcesses(stationList[i]+\":\");
+    }
   }
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",station_result);
 
