@@ -51,11 +51,11 @@ LBA.RotationMatrix.Z	floatArr
 #
 
 !# DbArchiveInfo
-!ElementName			TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class
-!_mp_StationInfo.datastream0	SoftwareMonitor			45	1
-!_mp_StationInfo.datastream0	SoftwareMonitor	1		15		_ValueArchive_2
-!_mp_StationInfo.datastream1	SoftwareMonitor			45	1
-!_mp_StationInfo.datastream1	SoftwareMonitor	1		15		_ValueArchive_2
+!ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class
+!_mp_StationInfo.datastream0	SoftwareMonitor		45	1
+!_mp_StationInfo.datastream0	SoftwareMonitor	1	15		_ValueArchive_2
+!_mp_StationInfo.datastream1	SoftwareMonitor		45	1
+!_mp_StationInfo.datastream1	SoftwareMonitor	1	15		_ValueArchive_2
 !
 !# DpValue
 !ElementName	TypeName	_original.._value

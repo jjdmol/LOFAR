@@ -168,7 +168,7 @@ _CtrlDebug_CTRL_10	_CtrlDebug
 #Fill some defaults
 # DpValue
 ElementName	TypeName	_original.._value
-scriptInfo.paramDone	ScriptInfo	0
+scriptInfo.transferMPs.runDone	ScriptInfo	0
 _ValueArchive_2.size.maxDpElGet	_ValueArchive	500
 _ValueArchive_2.size.maxDpElSet	_ValueArchive	500
 standalone.StnLOFAR_Hardware	NavPanelConfig	"Hardware/Station.pnl"
