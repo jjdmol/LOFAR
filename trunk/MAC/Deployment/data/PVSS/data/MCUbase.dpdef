@@ -173,7 +173,7 @@ _CtrlDebug_CTRL_8	_CtrlDebug
 #Fill some defaults
 # DpValue
 ElementName	TypeName	_original.._value
-scriptInfo.paramDone	ScriptInfo	0
+scriptInfo.transferMPs.runDone	ScriptInfo	0
 _ValueArchive_2.size.maxDpElGet	_ValueArchive	500
 _ValueArchive_2.size.maxDpElSet	_ValueArchive	500
 root.LOFAR_Processes	NavPanelConfig	"Processes/MainCU_Processes.pnl"
