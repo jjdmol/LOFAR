@@ -18,10 +18,10 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: BeamletBufferToComputeNode.h 17893 2011-04-29 09:04:10Z romein $
+//#  $Id: BeamletBufferToComputeNode.h 23195 2012-12-06 16:01:41Z mol $
 
-#ifndef LOFAR_IONPROC_BEAMLET_BUFFER_TO_COMPUTE_NODE_H
-#define LOFAR_IONPROC_BEAMLET_BUFFER_TO_COMPUTE_NODE_H
+#ifndef LOFAR_GPUPROC_BEAMLET_BUFFER_TO_COMPUTE_NODE_H
+#define LOFAR_GPUPROC_BEAMLET_BUFFER_TO_COMPUTE_NODE_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -30,6 +30,7 @@
 #include <Interface/Parset.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
+#include <Interface/SubbandMetaData.h>
 #include <Stream/Stream.h>
 #include <BeamletBuffer.h>
 #include <Delays.h>
@@ -48,7 +49,7 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
   public:
-    BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber);
+    BeamletBufferToComputeNode(const Parset &ps, const Matrix<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber, unsigned firstBlockNumber);
     ~BeamletBufferToComputeNode();
   
     void			 process();
@@ -60,14 +61,14 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
 
     void			 computeDelays(), computeNextDelays();
 
+    void                         setMetaData( SubbandMetaData &metaData, unsigned psetIndex, unsigned subband );
+    void                         sendSubband( Stream *stream, unsigned subband );
+    
+
     void			 startTransaction();
     void			 writeLogMessage() const;
     void			 toComputeNodes();
     void			 stopTransaction();
-
-    void			 dumpRawData();
-    SmartPtr<Stream>		 itsRawDataStream;
-    bool			 itsFileHeaderWritten;
 
     std::string                  itsLogPrefix;
 
@@ -75,12 +76,12 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     bool			 itsCorrectClocks;
     bool			 itsNeedDelays;
     bool			 itsIsRealTime;
-    bool			 itsDumpRawData;
     std::vector<unsigned>	 itsSubbandToSAPmapping;
     std::vector<unsigned>	 itsSubbandToRSPboardMapping;
     std::vector<unsigned>	 itsSubbandToRSPslotMapping;
 
-    const std::vector<Stream *>  &itsPhaseOneTwoStreams;
+    const Matrix<Stream *>       &itsPhaseOneTwoStreams;
+    const unsigned               itsNrPhaseOneTwoCoresPerPset;
     
     const Parset		 &itsPS;
     
@@ -100,7 +101,8 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     unsigned			 itsNrHistorySamples;
     unsigned			 itsNrInputs;
     unsigned			 itsNrBeams;
-    unsigned			 itsNrTABs;
+    unsigned			 itsMaxNrTABs;
+    std::vector<unsigned>	 itsNrTABs;
 
     unsigned			 itsCurrentPhaseOneTwoComputeCore;
     unsigned			 itsPsetNumber;

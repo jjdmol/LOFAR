@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: InputThread.h 17975 2011-05-10 09:52:51Z mol $
+//#  $Id: InputThread.h 20294 2012-03-01 12:43:34Z mol $
 
 #ifndef LOFAR_GPUPROC_INPUTTHREAD_H
 #define LOFAR_GPUPROC_INPUTTHREAD_H
@@ -31,6 +31,7 @@
 //# Includes
 #include <Common/lofar_vector.h>
 #include <Interface/RSPTimeStamp.h>
+#include <Interface/SmartPtr.h>
 #include <Common/Thread/Thread.h>
 
 #include <BeamletBuffer.h>
@@ -60,13 +61,15 @@ template<typename SAMPLE_TYPE> class InputThread
 			  InputThread(ThreadArgs args);
 			  ~InputThread();
 
-    void		  mainLoop();
+    void                  start();                      
 
     static const unsigned packetBuffersSize = 128;
 
   private:
+    void		  mainLoop();
+
     ThreadArgs		  itsArgs;
-    Thread		  itsThread;
+    SmartPtr<Thread>	  itsThread;
 };
 
 } // namespace RTCP

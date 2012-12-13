@@ -69,8 +69,6 @@ Delays::Delays(const Parset &parset, const string &stationName, const TimeStamp 
   itsStationName(stationName),
   itsDelayTimer("delay producer", true, true)
 {
-  // FIXME: call from outside this class
-  start();
 }
 
 

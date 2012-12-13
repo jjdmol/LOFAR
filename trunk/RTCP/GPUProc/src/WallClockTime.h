@@ -16,7 +16,7 @@
 //# along with this program; if not, write to the Free Software
 //# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//# $Id: WallClockTime.h 17975 2011-05-10 09:52:51Z mol $
+//# $Id: WallClockTime.h 22199 2012-10-03 13:27:48Z mol $
 
 #ifndef LOFAR_GPUPROC_WALL_CLOCK_TIME_H
 #define LOFAR_GPUPROC_WALL_CLOCK_TIME_H
@@ -98,7 +98,7 @@ inline void WallClockTime::cancelWait()
   ScopedLock scopedLock(itsMutex);
 
   itsCancelled = true;
-  itsCondition.signal();
+  itsCondition.broadcast();
 }
 
 
