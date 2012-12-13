@@ -1,7 +1,7 @@
-V 10
+V 11
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 366 54 N "_3DFace" 1
+PANEL,-1 -1 366 71 N "_3DFace" 1
 "$name"
 "main() {
     //delay while navigator instance is being prepared, shouldn't be needed, but this way we at least have a trigger when something goes wrong
@@ -270,9 +270,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- -2 8 72 34
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  -2 8 72 32
 
 T 
 1
@@ -304,9 +303,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 78 8 152 34
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  78 8 152 32
 
 T 
 1
