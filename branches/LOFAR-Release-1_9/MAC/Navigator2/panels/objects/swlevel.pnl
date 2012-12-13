@@ -217,7 +217,7 @@ E "main(int x, int y)
 2 1
 "station_text"
 ""
-1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 5 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  "main()
 {
   rClick(station);
@@ -239,8 +239,8 @@ E "main(int x, int y)
 {
   click(station);
 }" 0
- 0 1 1 2 1 E U  0 E 10 10 38 23
-0 2 2 "0s" 0 0 0 192 0 0  10 10 1
+ 0 1 1 2 1 E U  0 E 5 10 33 23
+0 2 2 "0s" 0 0 0 192 0 0  5 10 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
