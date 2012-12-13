@@ -19,7 +19,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: InputThread.cc 17975 2011-05-10 09:52:51Z mol $
+//#  $Id: InputThread.cc 22045 2012-09-17 14:57:53Z mol $
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -31,6 +31,7 @@
 #include <Common/Timer.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/Exceptions.h>
+#include <Interface/SmartPtr.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <BeamletBuffer.h>
@@ -50,27 +51,38 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs args /* call by value! */)
 :
-  itsArgs(args),
-  itsThread(this, &InputThread<SAMPLE_TYPE>::mainLoop, itsArgs.logPrefix + "[InputThread] ", 65536)
+  itsArgs(args)
 {
   LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::InputThread(...)");
+}
+
+
+template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::start()
+{
+  itsThread = new Thread(this, &InputThread<SAMPLE_TYPE>::mainLoop, itsArgs.logPrefix + "[InputThread] ", 65536);
 }
 
 
 template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
 {
   LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::~InputThread()");
-  itsThread.cancel();
+
+  if (itsThread)
+    itsThread->cancel();
 }
 
 
 template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 {
-#if 1 && defined HAVE_BGP_ION
-  if (itsArgs.threadID == 0)
+#if 0 && defined HAVE_BGP_ION
+  if (0 && itsArgs.threadID == 0)
     runOnCore0();
   else
     doNotRunOnCore0();
+#endif
+
+#if 1 && defined HAVE_BGP_ION
+  doNotRunOnCore0();
 #endif
 
   const unsigned maxNrPackets = 128;
