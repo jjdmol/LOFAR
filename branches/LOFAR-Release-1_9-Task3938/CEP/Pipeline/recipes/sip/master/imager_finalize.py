@@ -98,6 +98,23 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         processed_ms_dir = self.inputs["processed_ms_dir"]
         fillrootimagegroup_exec = self.inputs["fillrootimagegroup_exec"]
 
+
+        self.logger.debug("Before validate")
+        validate_data_maps(sourcelist_map, awimager_output_map,
+                raw_ms_per_image_map, target_mapfile, output_image_mapfile)
+
+        self.logger.debug("after validate")
+
+        for w, x, y in zip(ms_map, parmdb_map, sourcedb_map):
+            w.skip = x.skip = y.skip = (
+                w.skip or x.skip or y.skip
+            )
+        self.logger.debug(sourcelist_map)
+        self.logger.debug(awimager_output_map)
+        self.logger.debug(raw_ms_per_image_map)
+        self.logger.debug(target_mapfile)
+        self.logger.debug(output_image_mapfile)
+
         # The input mapfiles might not be of the same length:
         # host_source are unique and can be used to match the entries!
         # Final step is the source_finder: use this mapfile as 'source'
@@ -198,6 +215,8 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
                            self.inputs['placed_image_mapfile']))
         self.outputs["placed_image_mapfile"] = self.inputs[
                                                     'placed_image_mapfile']
+
+        
         return 0
 
 
