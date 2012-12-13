@@ -42,11 +42,11 @@ LANG:1 0
 0
 1 20 4 "" 0
 0
-1 27 11 "" 0
+1 21 11 "" 0
 0
-1 28 12 "" 0
+1 22 12 "" 0
 0
-1 29 13 "" 0
+1 23 13 "" 0
 0
 0
 LAYER, 1 
@@ -80,23 +80,23 @@ LANG:1 0
 3 1 "PANEL_REF1" -1
 "objects\\Processes\\SWControler_small.pnl" 0 0 T 18 U 
 2
-"$name""PermSW_SoftwareMonitor"
-"$station""CCU"
+"$name""PermSW_Daemons_SoftwareMonitor"
+"$station""$station"
 3 2 "PANEL_REF2" -1
 "objects\\Processes\\SWControler_small.pnl" 20 0 T 19 1 0 1 -4 0
 2
 "$name""PermSW_Daemons_LogProcessor"
-"$station""CCU"
+"$station""$station"
 3 3 "PANEL_REF3" -1
 "objects\\Processes\\SWControler_small.pnl" 30 0 T 20 1 0 1 2 0
 2
 "$name""PermSW_Daemons_CEPlogProcessor"
-"$station""CCU"
+"$station""$station"
 3 4 "PANEL_REF4" -1
 "objects\\Processes\\SWControler_small.pnl" 50 0 T 21 U 
 2
 "$name""PermSW_Daemons_ServiceBroker"
-"$station""CCU"
+"$station""$station"
 3 11 "PANEL_REF11" -1
 "objects\\Processes\\SWControler_small.pnl" 270 0 T 28 U 
 2
@@ -106,10 +106,10 @@ LANG:1 0
 "objects\\Processes\\SWControler_small.pnl" 290 0 T 29 1 0 1 -4 0
 2
 "$name""OnlineControl"
-"$station""CCU"
+"$station""$station"
 3 13 "PANEL_REF13" -1
 "objects\\Processes\\SWControler_small.pnl" 300 0 T 30 1 0 1 2 0
 2
 "$name""PythonControl"
-"$station""CCU"
+"$station""$station"
 0
