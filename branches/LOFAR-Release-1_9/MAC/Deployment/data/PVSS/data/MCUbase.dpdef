@@ -128,6 +128,7 @@ NavPanelConfig.NavPanelConfig	1#
 	HBAAntenna_Hardware	9#
 	IONode_Hardware	9#
 	IONode_Processes	9#
+	CEPLogProcessor_Processes	9#
 	PythonControl_Processes	9#
 	
 TypeName
