@@ -973,10 +973,10 @@ add_values()
 		# Create MasterDataPoint for LOFAR tree elements
 
 		if [ -f ${dpt}.dpdef ]; then
-		    cleancomments ${dpt}.dpdef|grep "^\!" |cut -d! -f2- >>${DESTDIR}/${DP_FILE}
+		    cleancomments ${dpt}.dpdef|grep "^\!" |cut -d! -f2- >>${DESTDIR}/${DPT_FILE}
 		fi
 	done
-	echo "added values to  ${DESTDIR}/${DP_FILE}"
+	echo "added values to  ${DESTDIR}/${DPT_FILE}"
 
 }
 

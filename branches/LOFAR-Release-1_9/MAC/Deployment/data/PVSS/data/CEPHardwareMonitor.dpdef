@@ -1,4 +1,4 @@
 # CEPHardwareMonitor
 #
-BGP.connected		bool
-Cluster.connected		bool
+BGP.connected	bool
+Cluster.connected	bool
