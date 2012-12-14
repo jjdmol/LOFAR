@@ -1200,7 +1200,7 @@ create_cpp_headerfile()
 			if [ -f ${dpt}.dpdef ]; then
 				cleanlist ${dpt}.dpdef | while read varname vartype
 				do
-					if [ ${vartype:0:1} == ":" ]; then
+					if [ "${vartype:0:1}" == ":" ]; then
 						expand_component ${vartype:1} ${prefix}_${varname} ${varname}
 					else
 						varlabel=`labelize ${varname}`
