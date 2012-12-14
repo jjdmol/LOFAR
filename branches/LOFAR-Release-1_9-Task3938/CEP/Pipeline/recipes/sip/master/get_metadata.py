@@ -130,7 +130,5 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         return 0
 
 
-
-
 if __name__ == '__main__':
     sys.exit(get_metadata().main())

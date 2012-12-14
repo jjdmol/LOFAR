@@ -188,6 +188,12 @@ def _mail_msg_to(adr_from, adr_to, subject, msg):
 
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
-    s = smtplib.SMTP('smtp.lofar.eu')
-    s.sendmail(adr_from, [adr_to], msg.as_string())
-    s.quit()
+    try:
+        s = smtplib.SMTP('smtp.lofar.eu')
+        s.sendmail(adr_from, [adr_to], msg.as_string())
+        s.quit()
+    except:
+        # Nothing: This is additional functionality.
+        # If the smtp server is down we kan nothing else here
+        print "Could not establish a connection with smtp.lofar.eu"
+
