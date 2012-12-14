@@ -80,16 +80,16 @@ class imager_create_dbs(LOFARnodeTCP):
 
         #*******************************************************************
         # 3. Create a empty parmdb for each timeslice\
-        parmdbms = self._create_parmdb_for_timeslices(parmdb_executable,
+        parmdbs = self._create_parmdb_for_timeslices(parmdb_executable,
                                     slice_paths, parmdb_suffix)
-        if parmdbms == None:
+        if parmdbs == None:
             self.logger.error("failed creating paramdb for slices")
             return 1
 
         #*******************************************************************
         # 4. Assign the outputs
         self.outputs["sourcedb"] = sourcedb_target_path
-        self.outputs["parmdbms"] = parmdbms
+        self.outputs["parmdbs"] = parmdbs
         return 0
 
     def _create_source_list(self, source_list_path_extern, sourcedb_target_path,

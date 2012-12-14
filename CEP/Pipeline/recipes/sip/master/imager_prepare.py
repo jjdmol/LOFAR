@@ -209,7 +209,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             else:
                 # Set the dataproduct to skipped!!
                 item.skip = True
-                slices.append(tuple([item.host, "/Failed", True]))
+                slices.append(tuple([item.host, ["/Failed"], True]))
                 msg = "Failed run on {0}. NOT Created: {1} ".format(
                     item.host, item.file)
                 self.logger.warn(msg)
