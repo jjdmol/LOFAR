@@ -24,7 +24,7 @@ PANEL,-1 -1 1010 745 N "_3DFace" 0
                               \"RS406\",\"RS407\",\"RS409\",
                               \"RS503\",\"RS508\",\"RS509\",
                               \"DE601\",\"DE602\",\"DE603\",\"DE604\",\"RS605\",\"FR606\",\"SE607\",\"UK608\",
-                              CEPDBName,MainDBName);
+                              navFunct_bareDBName(CEPDBName),navFunct_bareDBName(MainDBName));
   
   redraw();
 }
@@ -46,7 +46,7 @@ void doAction(string aDP, string anAction) {
   
   // Reload
   if (actionString[1] == \"Reload\") {
-    redraw(arrayList.text(arrayList.number()));
+    redraw();
     return;
   } else if (actionString[1] == \"DistChanged\") {
     // for dist system bound hardware only, if the distsystem went offline we need to replace 
