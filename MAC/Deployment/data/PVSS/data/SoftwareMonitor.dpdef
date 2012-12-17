@@ -8,7 +8,7 @@ SWLevel		int
 !# DbArchiveInfo
 !ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class
 !_mp_SoftwareMonitor.SWLevel	SoftwareMonitor		45	1
-!_mp_SoftwareMonitor.SWLevel	SoftwareMonitor	1	15	_ValueArchive_2
+!_mp_SoftwareMonitor.SWLevel	SoftwareMonitor	1	15		_ValueArchive_2
 
 !# DpValue
 !ElementName	TypeName	_original.._value
