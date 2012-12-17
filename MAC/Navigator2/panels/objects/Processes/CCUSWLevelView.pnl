@@ -93,7 +93,7 @@ LANG:1 0
 "$name""PermSW_Daemons_CEPlogProcessor"
 "$station""$station"
 3 4 "PANEL_REF4" -1
-"objects\\Processes\\SWControler_small.pnl" 50 0 T 21 U 
+"objects\\Processes\\SWControler_small.pnl" 50 0 T 21 1 0 1 -2 0
 2
 "$name""PermSW_Daemons_ServiceBroker"
 "$station""$station"
