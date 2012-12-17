@@ -367,14 +367,16 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
 		if (timerEvent.id == itsStopTimerID) {
 			LOG_DEBUG("StopTimer expired, starting QUIT sequence");
-			finish();
 			itsStopTimerID = 0;
-			itsFinishTimerID = itsTimerPort->setTimer(30.0);
+			finish();
+//			itsFinishTimerID = itsTimerPort->setTimer(30.0);
 		}
+#if 0
 		else if (timerEvent.id == itsFinishTimerID) {
 			LOG_INFO("Forcing quit");
 			GCFScheduler::instance()->stop();
 		}
+#endif
 		else {
 			LOG_WARN_STR("Received unknown timer event");
 		}
@@ -525,7 +527,7 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		uint32	result = forkexec(startCmd.c_str());
 		LOG_INFO_STR ("Result of command = " << result);
 
-		itsTimerPort->setTimer(3.0);
+		itsTimerPort->setTimer(302.0); // IONProc, and thus CEPlogProcessor, can take up to 5 minutes to wrap up
 		break;
 	}
 
@@ -719,67 +721,73 @@ void OnlineControl::_passMetadatToOTDB()
 	}
 
 	// read parameterset
-	ParameterSet	metadata;
-	metadata.adoptFile(feedbackFile);
+	try {
+		ParameterSet	metadata;
+		metadata.adoptFile(feedbackFile);
 
-	// Try to setup the connection with the database
-	string	confFile = globalParameterSet()->getString("OTDBconfFile", "SASGateway.conf");
-	ConfigLocator	CL;
-	string	filename = CL.locate(confFile);
-	LOG_INFO_STR("Trying to read database information from file " << filename);
-	ParameterSet	otdbconf;
-	otdbconf.adoptFile(filename);
-	string database = otdbconf.getString("SASGateway.OTDBdatabase");
-	string dbhost   = otdbconf.getString("SASGateway.OTDBhostname");
-	OTDBconnection  conn("paulus", "boskabouter", database, dbhost);
-	if (!conn.connect()) {
-		LOG_FATAL_STR("Cannot connect to database " << database << " on machine " << dbhost);
-		return;
-	}
-	LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
-
-	TreeValue   tv(&conn, getObservationNr(getName()));
-
-	// Loop over the parameterset and send the information to the KVTlogger.
-	// During the transition phase from parameter-based to record-based storage in OTDB the
-	// nodenames ending in '_' are implemented both as parameter and as record.
-	ParameterSet::iterator		iter = metadata.begin();
-	ParameterSet::iterator		end  = metadata.end();
-	while (iter != end) {
-		string	key(iter->first);	// make destoyable copy
-		rtrim(key, "[]0123456789");
-//		bool	doubleStorage(key[key.size()-1] == '_');
-		bool	isRecord(iter->second.isRecord());
-		//   isRecord  doubleStorage
-		// --------------------------------------------------------------
-		//      Y          Y           store as record and as parameters
-		//      Y          N           store as parameters
-		//      N          *           store parameter
-		if (!isRecord) {
-			LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
-			tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+		// Try to setup the connection with the database
+		string	confFile = globalParameterSet()->getString("OTDBconfFile", "SASGateway.conf");
+		ConfigLocator	CL;
+		string	filename = CL.locate(confFile);
+		LOG_INFO_STR("Trying to read database information from file " << filename);
+		ParameterSet	otdbconf;
+		otdbconf.adoptFile(filename);
+		string database = otdbconf.getString("SASGateway.OTDBdatabase");
+		string dbhost   = otdbconf.getString("SASGateway.OTDBhostname");
+		OTDBconnection  conn("paulus", "boskabouter", database, dbhost);
+		if (!conn.connect()) {
+			LOG_FATAL_STR("Cannot connect to database " << database << " on machine " << dbhost);
+			return;
 		}
-		else {
-//			if (doubleStorage) {
-//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
-//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
-//			}
-			// to store is a node/param values the last _ should be stipped of
-			key = iter->first;		// destroyable copy
-//			string::size_type pos = key.find_last_of('_');
-//			key.erase(pos,1);
-			ParameterRecord	pr(iter->second.getRecord());
-			ParameterRecord::const_iterator	prIter = pr.begin();
-			ParameterRecord::const_iterator	prEnd  = pr.end();
-			while (prIter != prEnd) {
-				LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
-				tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
-				prIter++;
+		LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
+
+		TreeValue   tv(&conn, getObservationNr(getName()));
+
+		// Loop over the parameterset and send the information to the KVTlogger.
+		// During the transition phase from parameter-based to record-based storage in OTDB the
+		// nodenames ending in '_' are implemented both as parameter and as record.
+		ParameterSet::iterator		iter = metadata.begin();
+		ParameterSet::iterator		end  = metadata.end();
+		while (iter != end) {
+			string	key(iter->first);	// make destoyable copy
+			rtrim(key, "[]0123456789");
+	//		bool	doubleStorage(key[key.size()-1] == '_');
+			bool	isRecord(iter->second.isRecord());
+			//   isRecord  doubleStorage
+			// --------------------------------------------------------------
+			//      Y          Y           store as record and as parameters
+			//      Y          N           store as parameters
+			//      N          *           store parameter
+			if (!isRecord) {
+				LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
+				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
 			}
+			else {
+	//			if (doubleStorage) {
+	//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
+	//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+	//			}
+				// to store is a node/param values the last _ should be stipped of
+				key = iter->first;		// destroyable copy
+	//			string::size_type pos = key.find_last_of('_');
+	//			key.erase(pos,1);
+				ParameterRecord	pr(iter->second.getRecord());
+				ParameterRecord::const_iterator	prIter = pr.begin();
+				ParameterRecord::const_iterator	prEnd  = pr.end();
+				while (prIter != prEnd) {
+					LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
+					tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
+					prIter++;
+				}
+			}
+			iter++;
 		}
-		iter++;
+		LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
 	}
-	LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
+	catch (APSException &e) {
+		// Parameterfile not found
+		LOG_FATAL(e.text());
+	}
 }
 // -------------------- Application-order administration --------------------
 
