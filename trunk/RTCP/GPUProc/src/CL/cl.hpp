@@ -1,4 +1,4 @@
-#include <iostream>
+//#include <iostream>
 /*******************************************************************************
  * Copyright (c) 2008-2011 The Khronos Group Inc.
  *
@@ -2069,9 +2069,9 @@ public:
     {
         cl_int error;
         object_ = ::clCreateBuffer(context(), flags, size, host_ptr, &error);
-if (!(flags & CL_MEM_ALLOC_HOST_PTR))
-#pragma omp critical (cout)
-std::cout << "A: Allocating " << size << " bytes" << std::endl;
+//if (!(flags & CL_MEM_ALLOC_HOST_PTR))
+//#pragma omp critical (cout)
+//std::cout << "A: Allocating " << size << " bytes" << std::endl;
 
         detail::errHandler(error, __CREATE_BUFFER_ERR);
         if (err != NULL) {
@@ -2090,9 +2090,9 @@ std::cout << "A: Allocating " << size << " bytes" << std::endl;
         Context context = Context::getDefault(err);
 
         object_ = ::clCreateBuffer(context(), flags, size, host_ptr, &error);
-if (!(flags & CL_MEM_ALLOC_HOST_PTR))
-#pragma omp critical (cout)
-std::cout << "B: Allocating " << size << " bytes" << std::endl;
+//if (!(flags & CL_MEM_ALLOC_HOST_PTR))
+//#pragma omp critical (cout)
+//std::cout << "B: Allocating " << size << " bytes" << std::endl;
 
         detail::errHandler(error, __CREATE_BUFFER_ERR);
         if (err != NULL) {

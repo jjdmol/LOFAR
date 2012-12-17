@@ -14,11 +14,11 @@
 #include <iostream>
 #include <sstream>
 #include <boost/multi_array.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "Align.h"
-#include "BandPass.h"
 #include "ApplCommon/PosixTime.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include "BandPass.h"
 #include "Common/LofarLogger.h"
 #include "Common/SystemUtil.h"
 #include "FilterBank.h"
@@ -29,6 +29,11 @@
 #include "OpenMP_Support.h"
 #include "UHEP/InvertedStationPPFWeights.h"
 //#include "clAmdFft/include/clAmdFft.h"
+
+#if defined __linux__
+#include <sched.h>
+#include <sys/time.h>
+#endif
 
 namespace LOFAR {
 namespace RTCP {
@@ -41,9 +46,7 @@ unsigned nrGPUs;
 #define NR_TAPS			16
 #define NR_STATION_FILTER_TAPS	16
 
-// the SAP to process (we support only one SAP for now)
-#define SAP 0
-
+#undef USE_NEW_CORRELATOR
 #define USE_2X2
 #undef USE_CUSTOM_FFT
 #undef USE_TEST_DATA
@@ -80,6 +83,40 @@ double getTime()
 
   return now - firstTime;
 }
+
+#if defined __linux__
+
+inline void set_affinity(unsigned device)
+{
+#if 0
+  static const char mapping[1][12] = {
+     0,  1,  2,  3,  8,  9, 10, 11,
+  };
+#else
+  static const char mapping[8][12] = {
+     { 0,  1,  2,  3,  4,  5, 12, 13, 14, 15, 16, 17, },
+     { 0,  1,  2,  3,  4,  5, 12, 13, 14, 15, 16, 17, },
+     { 0,  1,  2,  3,  4,  5, 12, 13, 14, 15, 16, 17, },
+     { 0,  1,  2,  3,  4,  5, 12, 13, 14, 15, 16, 17, },
+     { 6,  7,  8,  9, 10, 11, 18, 19, 20, 21, 22, 23, },
+     { 6,  7,  8,  9, 10, 11, 18, 19, 20, 21, 22, 23, },
+     { 6,  7,  8,  9, 10, 11, 18, 19, 20, 21, 22, 23, },
+     { 6,  7,  8,  9, 10, 11, 18, 19, 20, 21, 22, 23, },
+  };
+#endif
+
+  cpu_set_t set;
+
+  CPU_ZERO(&set);
+
+  for (unsigned coreIndex = 0; coreIndex < 12; coreIndex ++)
+    CPU_SET(mapping[device][coreIndex], &set);
+
+  if (sched_setaffinity(0, sizeof set, &set) < 0)
+    perror("sched_setaffinity");
+}
+
+#endif
 
 
 class PerformanceCounter
@@ -200,7 +237,7 @@ cl::Program createProgram(const Parset &ps, cl::Context &context, std::vector<cl
   args << " -DNR_SAMPLES_PER_CHANNEL=" << ps.nrSamplesPerChannel();
   args << " -DNR_SAMPLES_PER_SUBBAND=" << ps.nrSamplesPerSubband();
   args << " -DNR_BEAMS=" << ps.nrBeams();
-  args << " -DNR_TABS=" << ps.nrTABs(SAP);
+  args << " -DNR_TABS=" << ps.nrTABs(0);
   args << " -DNR_COHERENT_STOKES=" << ps.nrCoherentStokes();
   args << " -DNR_INCOHERENT_STOKES=" << ps.nrIncoherentStokes();
   args << " -DCOHERENT_STOKES_TIME_INTEGRATION_FACTOR=" << ps.coherentStokesTimeIntegrationFactor();
@@ -257,6 +294,10 @@ class Pipeline
     SmartPtr<InputSection<i16complex> > inputSection16;
     SmartPtr<InputSection<i8complex> >	inputSection8;
     SmartPtr<InputSection<i4complex> >	inputSection4;
+
+#if defined USE_B7015
+    OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
+#endif
 };
 
 
@@ -273,12 +314,12 @@ class CorrelatorPipeline : public Pipeline
     FilterBank		    filterBank;
 
     cl::Program		    firFilterProgram, delayAndBandPassProgram, correlatorProgram;
+#if defined USE_NEW_CORRELATOR
+    PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlateTriangleCounter, correlateRectangleCounter, fftCounter;
+#else
     PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlatorCounter, fftCounter;
-    PerformanceCounter	    samplesCounter, visibilitiesCounter;
-
-#if defined USE_B7015
-    OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
 #endif
+    PerformanceCounter	    samplesCounter, visibilitiesCounter;
 };
 
 
@@ -332,7 +373,12 @@ CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
   filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER),
   firFilterCounter("FIR filter"),
   delayAndBandPassCounter("delay/bp"),
+#if defined USE_NEW_CORRELATOR
+  correlateTriangleCounter("cor.triangle"),
+  correlateRectangleCounter("cor.rectangle"),
+#else
   correlatorCounter("correlator"),
+#endif
   fftCounter("FFT"),
   samplesCounter("samples"),
   visibilitiesCounter("visibilities")
@@ -348,8 +394,11 @@ CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
 #pragma omp section
     delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
 #pragma omp section
+#if defined USE_NEW_CORRELATOR
     correlatorProgram = createProgram("NewCorrelator.cl");
-    //correlatorProgram = createProgram("Correlator.cl");
+#else
+    correlatorProgram = createProgram("Correlator.cl");
+#endif
   }
 
   std::cout << "compile time = " << getTime() - startTime << std::endl;
@@ -666,7 +715,7 @@ class DelayAndBandPassKernel : public Kernel
 };
 
 
-#if 0
+#if !defined USE_NEW_CORRELATOR
 
 class CorrelatorKernel : public Kernel
 {
@@ -714,12 +763,13 @@ class CorrelatorKernel : public Kernel
       nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
       //std::cout << "nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads << std::endl;
 
-      globalWorkSize = cl::NDRange(nrPasses * nrThreads, ps.nrChannelsPerSubband());
+      unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+      globalWorkSize = cl::NDRange(nrPasses * nrThreads, nrUsableChannels);
       localWorkSize  = cl::NDRange(nrThreads, 1);
 
-      nrOperations   = (size_t) ps.nrChannelsPerSubband() * ps.nrBaselines() * ps.nrSamplesPerChannel() * 32;
-      nrBytesRead    = (size_t) nrPasses * ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      nrBytesWritten = (size_t) ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrOperations   = (size_t) nrUsableChannels * ps.nrBaselines() * ps.nrSamplesPerChannel() * 32;
+      nrBytesRead    = (size_t) nrPasses * ps.nrStations() * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) ps.nrBaselines() * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
 };
 
@@ -731,7 +781,7 @@ class CorrelatorKernel : public Kernel
     CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
     :
 #if defined USE_2X2
-      Kernel(ps, program, "correlateRectangles")
+      Kernel(ps, program, "correlate")
 #else
 #error not implemented
 #endif
@@ -739,17 +789,90 @@ class CorrelatorKernel : public Kernel
       setArg(0, devVisibilities);
       setArg(1, devCorrectedData);
 
-      unsigned nrRectanglesPerSide = ((ps.nrStations() - 1) / (2 * 16));
+      unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
+      unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
+//#pragma omp critical (cout)
+      //std::cout << "nrRectangles = " << nrRectangles << std::endl;
+
+      unsigned nrBlocksPerSide = (ps.nrStations() + 2 * 16 - 1) / (2 * 16);
+      unsigned nrBlocks	       = nrBlocksPerSide * (nrBlocksPerSide + 1) / 2;
+//#pragma omp critical (cout)
+      //std::cout << "nrBlocks = " << nrBlocks << std::endl;
+
+      unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+      globalWorkSize = cl::NDRange(16 * 16, nrBlocks, nrUsableChannels);
+      localWorkSize  = cl::NDRange(16 * 16, 1, 1);
+
+      // FIXME
+      //nrOperations   = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
+      nrOperations   = (size_t) ps.nrBaselines() * ps.nrSamplesPerSubband() * 32;
+      nrBytesRead    = (size_t) (32 + 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+    }
+};
+
+
+class CorrelateRectangleKernel : public Kernel
+{
+  public:
+    CorrelateRectangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
+    :
+#if defined USE_2X2
+      Kernel(ps, program, "correlateRectangleKernel")
+#else
+#error not implemented
+#endif
+    {
+      setArg(0, devVisibilities);
+      setArg(1, devCorrectedData);
+
+      unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
       unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
 #pragma omp critical (cout)
       std::cout << "nrRectangles = " << nrRectangles << std::endl;
 
-      globalWorkSize = cl::NDRange(16 * 16, nrRectangles, ps.nrChannelsPerSubband());
+      unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+      globalWorkSize = cl::NDRange(16 * 16, nrRectangles, nrUsableChannels);
       localWorkSize  = cl::NDRange(16 * 16, 1, 1);
 
-      nrOperations   = (size_t) (32 * 32) * nrRectangles * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * 32;
-      nrBytesRead    = (size_t) (32 + 32) * nrRectangles * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      nrBytesWritten = (size_t) (32 * 32) * nrRectangles * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrOperations   = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
+      nrBytesRead    = (size_t) (32 + 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+    }
+};
+
+
+class CorrelateTriangleKernel : public Kernel
+{
+  public:
+    CorrelateTriangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
+    :
+#if defined USE_2X2
+      Kernel(ps, program, "correlateTriangleKernel")
+#else
+#error not implemented
+#endif
+    {
+      setArg(0, devVisibilities);
+      setArg(1, devCorrectedData);
+
+      unsigned nrTriangles = (ps.nrStations() + 2 * 16 - 1) / (2 * 16);
+      unsigned nrMiniBlocksPerSide = 16;
+      unsigned nrMiniBlocks = nrMiniBlocksPerSide * (nrMiniBlocksPerSide + 1) / 2;
+      size_t   preferredMultiple;
+      getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
+      unsigned nrThreads = align(nrMiniBlocks, preferredMultiple);
+
+#pragma omp critical (cout)
+      std::cout << "nrTriangles = " << nrTriangles << ", nrMiniBlocks = " << nrMiniBlocks << ", nrThreads = " << nrThreads << std::endl;
+
+      unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+      globalWorkSize = cl::NDRange(nrThreads, nrTriangles, nrUsableChannels);
+      localWorkSize  = cl::NDRange(nrThreads, 1, 1);
+
+      nrOperations   = (size_t) (32 * 32 / 2) * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
+      nrBytesRead    = (size_t) 32 * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) (32 * 32 / 2) * nrTriangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
 };
 
@@ -815,18 +938,18 @@ class BeamFormerKernel : public Kernel
       setArg(1, devCorrectedData);
       setArg(2, devBeamFormerWeights);
 
-      globalWorkSize = cl::NDRange(NR_POLARIZATIONS, ps.nrTABs(SAP), ps.nrChannelsPerSubband());
-      localWorkSize  = cl::NDRange(NR_POLARIZATIONS, ps.nrTABs(SAP), 1);
+      globalWorkSize = cl::NDRange(NR_POLARIZATIONS, ps.nrTABs(0), ps.nrChannelsPerSubband());
+      localWorkSize  = cl::NDRange(NR_POLARIZATIONS, ps.nrTABs(0), 1);
 
       // FIXME: nrTABs
-      //queue.enqueueNDRangeKernel(*this, cl::NullRange, cl::NDRange(16, ps.nrTABs(SAP), ps.nrChannelsPerSubband()), cl::NDRange(16, ps.nrTABs(SAP), 1), 0, &event);
+      //queue.enqueueNDRangeKernel(*this, cl::NullRange, cl::NDRange(16, ps.nrTABs(0), ps.nrChannelsPerSubband()), cl::NDRange(16, ps.nrTABs(0), 1), 0, &event);
 
       size_t count = ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
-      size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(SAP) * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(0) * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * sizeof(std::complex<float>);
       size_t nrSampleBytesPerPass = count * ps.nrStations() * sizeof(std::complex<float>);
-      size_t nrComplexVoltagesBytesPerPass = count * ps.nrTABs(SAP) * sizeof(std::complex<float>);
+      size_t nrComplexVoltagesBytesPerPass = count * ps.nrTABs(0) * sizeof(std::complex<float>);
       unsigned nrPasses = std::max((ps.nrStations() + 6) / 16, 1U);
-      nrOperations   = count * ps.nrStations() * ps.nrTABs(SAP) * 8;
+      nrOperations   = count * ps.nrStations() * ps.nrTABs(0) * 8;
       nrBytesRead    = nrWeightsBytes + nrSampleBytesPerPass + (nrPasses - 1) * nrComplexVoltagesBytesPerPass;
       nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
     }
@@ -844,14 +967,14 @@ class BeamFormerTransposeKernel : public Kernel
       setArg(0, devTransposedData);
       setArg(1, devComplexVoltages);
 
-      //globalWorkSize = cl::NDRange(256, (ps.nrTABs(SAP) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
-      globalWorkSize = cl::NDRange(256, (ps.nrTABs(SAP) + 15) / 16, ps.nrSamplesPerChannel() / 16);
+      //globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
+      globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, ps.nrSamplesPerChannel() / 16);
       localWorkSize  = cl::NDRange(256, 1, 1);
 
       nrOperations   = 0;
-      nrBytesRead    = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(SAP) * NR_POLARIZATIONS * sizeof(std::complex<float>),
-      //nrBytesWritten = (size_t) ps.nrTABs(SAP) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>);
-      nrBytesWritten = (size_t) ps.nrTABs(SAP) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
+      nrBytesRead    = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>),
+      //nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
     }
 };
 
@@ -871,7 +994,7 @@ class Dedispersion_FFT_Kernel
 
     void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, clFFT_Direction direction)
     {
-      size_t nrFFTs = (size_t) ps.nrTABs(SAP) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize();
+      size_t nrFFTs = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize();
 
       cl_int error = clFFT_ExecuteInterleaved(queue(), plan.plan, nrFFTs, direction, buffer(), buffer(), 0, 0, &event());
 
@@ -896,7 +1019,7 @@ class DedispersionForwardFFTkernel : public FFT_Kernel
   public:
     DedispersionForwardFFTkernel(const Parset &ps, cl::Context &context, cl::Buffer &buffer)
     :
-      FFT_Kernel(context, ps.dedispersionFFTsize(), ps.nrTABs(SAP) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize(), true, buffer)
+      FFT_Kernel(context, ps.dedispersionFFTsize(), ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize(), true, buffer)
     {
       ASSERT(ps.nrSamplesPerChannel() % ps.dedispersionFFTsize() == 0);
     }
@@ -908,7 +1031,7 @@ class DedispersionBackwardFFTkernel : public FFT_Kernel
   public:
     DedispersionBackwardFFTkernel(const Parset &ps, cl::Context &context, cl::Buffer &buffer)
     :
-      FFT_Kernel(context, ps.dedispersionFFTsize(), ps.nrTABs(SAP) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize(), false, buffer)
+      FFT_Kernel(context, ps.dedispersionFFTsize(), ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize(), false, buffer)
     {
       ASSERT(ps.nrSamplesPerChannel() % ps.dedispersionFFTsize() == 0);
     }
@@ -946,8 +1069,8 @@ class DedispersionChirpKernel : public Kernel
 	//std::cout << "localWorkSize = NDRange(" << fftSize / divisor << ", 1, 1))" << std::endl;
       }
 
-      nrOperations = (size_t) NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * (9 * ps.nrTABs(SAP) + 17),
-      nrBytesRead  = nrBytesWritten = sizeof(std::complex<float>) * ps.nrTABs(SAP) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel();
+      nrOperations = (size_t) NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * (9 * ps.nrTABs(0) + 17),
+      nrBytesRead  = nrBytesWritten = sizeof(std::complex<float>) * ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel();
     }
 
     void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, double subbandFrequency)
@@ -970,12 +1093,12 @@ class CoherentStokesKernel : public Kernel
       setArg(0, devStokesData);
       setArg(1, devComplexVoltages);
 
-      globalWorkSize = cl::NDRange(256, (ps.nrTABs(SAP) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
+      globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
       localWorkSize  = cl::NDRange(256, 1, 1);
 
-      nrOperations   = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(SAP) * (ps.nrCoherentStokes() == 1 ? 8 : 20 + 2.0 / ps.coherentStokesTimeIntegrationFactor());
-      nrBytesRead    = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(SAP) * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      nrBytesWritten = (size_t) ps.nrTABs(SAP) * ps.nrCoherentStokes() * ps.nrSamplesPerChannel() / ps.coherentStokesTimeIntegrationFactor() * ps.nrChannelsPerSubband() * sizeof(float);
+      nrOperations   = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * (ps.nrCoherentStokes() == 1 ? 8 : 20 + 2.0 / ps.coherentStokesTimeIntegrationFactor());
+      nrBytesRead    = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) ps.nrTABs(0) * ps.nrCoherentStokes() * ps.nrSamplesPerChannel() / ps.coherentStokesTimeIntegrationFactor() * ps.nrChannelsPerSubband() * sizeof(float);
     }
 };
 
@@ -992,31 +1115,31 @@ class UHEP_BeamFormerKernel : public Kernel
       setArg(2, devBeamFormerWeights);
 
 #if 1
-      globalWorkSize = cl::NDRange(NR_POLARIZATIONS, ps.nrTABs(SAP), ps.nrSubbands());
-      localWorkSize  = cl::NDRange(NR_POLARIZATIONS, ps.nrTABs(SAP), 1);
+      globalWorkSize = cl::NDRange(NR_POLARIZATIONS, ps.nrTABs(0), ps.nrSubbands());
+      localWorkSize  = cl::NDRange(NR_POLARIZATIONS, ps.nrTABs(0), 1);
 
       size_t count = ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS;
-      size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(SAP) * ps.nrSubbands() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(0) * ps.nrSubbands() * NR_POLARIZATIONS * sizeof(std::complex<float>);
       size_t nrSampleBytes = count * ps.nrStations() * ps.nrBytesPerComplexSample();
-      size_t nrComplexVoltagesBytesPerPass = count * ps.nrTABs(SAP) * sizeof(std::complex<float>);
+      size_t nrComplexVoltagesBytesPerPass = count * ps.nrTABs(0) * sizeof(std::complex<float>);
       unsigned nrPasses = std::max((ps.nrStations() + 6) / 16, 1U);
-      nrOperations   = count * ps.nrStations() * ps.nrTABs(SAP) * 8;
+      nrOperations   = count * ps.nrStations() * ps.nrTABs(0) * 8;
       nrBytesRead    = nrWeightsBytes + nrSampleBytes + (nrPasses - 1) * nrComplexVoltagesBytesPerPass;
       nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
 #else
-      ASSERT(ps.nrTABs(SAP) % 3 == 0);
+      ASSERT(ps.nrTABs(0) % 3 == 0);
       ASSERT(ps.nrStations() % 6 == 0);
-      unsigned nrThreads = NR_POLARIZATIONS * (ps.nrTABs(SAP) / 3) * (ps.nrStations() / 6);
+      unsigned nrThreads = NR_POLARIZATIONS * (ps.nrTABs(0) / 3) * (ps.nrStations() / 6);
       globalWorkSize = cl::NDRange(nrThreads, ps.nrSubbands());
       localWorkSize  = cl::NDRange(nrThreads, 1);
-      //globalWorkSize = cl::NDRange(ps.nrStations() / 6, ps.nrTABs(SAP) / 3, ps.nrSubbands());
-      //localWorkSize  = cl::NDRange(ps.nrStations() / 6, ps.nrTABs(SAP) / 3, 1);
+      //globalWorkSize = cl::NDRange(ps.nrStations() / 6, ps.nrTABs(0) / 3, ps.nrSubbands());
+      //localWorkSize  = cl::NDRange(ps.nrStations() / 6, ps.nrTABs(0) / 3, 1);
 
       size_t count = ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS;
-      size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(SAP) * ps.nrSubbands() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(0) * ps.nrSubbands() * NR_POLARIZATIONS * sizeof(std::complex<float>);
       size_t nrSampleBytes = count * ps.nrStations() * ps.nrBytesPerComplexSample();
-      size_t nrComplexVoltagesBytes = count * ps.nrTABs(SAP) * sizeof(std::complex<float>);
-      nrOperations   = count * ps.nrStations() * ps.nrTABs(SAP) * 8;
+      size_t nrComplexVoltagesBytes = count * ps.nrTABs(0) * sizeof(std::complex<float>);
+      nrOperations   = count * ps.nrStations() * ps.nrTABs(0) * 8;
       nrBytesRead    = nrWeightsBytes + nrSampleBytes;
       nrBytesWritten = nrComplexVoltagesBytes;
 #endif
@@ -1035,12 +1158,12 @@ class UHEP_TransposeKernel : public Kernel
       setArg(1, devComplexVoltages);
       setArg(2, devReverseSubbandMapping);
 
-      globalWorkSize = cl::NDRange(256, (ps.nrTABs(SAP) + 15) / 16, 512 / 16);
+      globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, 512 / 16);
       localWorkSize  = cl::NDRange(256, 1, 1);
 
       nrOperations   = 0;
-      nrBytesRead    = (size_t) ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * ps.nrTABs(SAP) * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      nrBytesWritten = (size_t) ps.nrTABs(SAP) * NR_POLARIZATIONS * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * 512 * sizeof(std::complex<float>);
+      nrBytesRead    = (size_t) ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * 512 * sizeof(std::complex<float>);
     }
 };
 
@@ -1055,10 +1178,10 @@ class UHEP_InvFFT_Kernel : public Kernel
       setArg(0, devFFTedData);
       setArg(1, devFFTedData);
 
-      globalWorkSize = cl::NDRange(128, ps.nrTABs(SAP) * NR_POLARIZATIONS * ps.nrSamplesPerChannel());
+      globalWorkSize = cl::NDRange(128, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel());
       localWorkSize  = cl::NDRange(128, 1);
 
-      size_t nrFFTs = (size_t) ps.nrTABs(SAP) * NR_POLARIZATIONS * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1);
+      size_t nrFFTs = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1);
       nrOperations   = nrFFTs * 5 * 1024 * 10;
       nrBytesRead    = nrFFTs * 512 * sizeof(std::complex<float>);
       nrBytesWritten = nrFFTs * 1024 * sizeof(float);
@@ -1083,10 +1206,10 @@ class UHEP_InvFIR_Kernel : public Kernel
       for (nrThreads = 1024; nrThreads > maxNrThreads; nrThreads /= 2)
 	;
 
-      globalWorkSize = cl::NDRange(1024, NR_POLARIZATIONS, ps.nrTABs(SAP));
+      globalWorkSize = cl::NDRange(1024, NR_POLARIZATIONS, ps.nrTABs(0));
       localWorkSize  = cl::NDRange(nrThreads, 1, 1);
 
-      size_t count = ps.nrTABs(SAP) * NR_POLARIZATIONS * 1024;
+      size_t count = ps.nrTABs(0) * NR_POLARIZATIONS * 1024;
       nrOperations   = count * ps.nrSamplesPerChannel() * NR_STATION_FILTER_TAPS * 2;
       nrBytesRead    = count * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * sizeof(float);
       nrBytesWritten = count * ps.nrSamplesPerChannel() * sizeof(float);
@@ -1104,12 +1227,12 @@ class UHEP_TriggerKernel : public Kernel
       setArg(0, devTriggerInfo);
       setArg(1, devInvFIRfilteredData);
 
-      globalWorkSize = cl::NDRange(16, 16, ps.nrTABs(SAP));
+      globalWorkSize = cl::NDRange(16, 16, ps.nrTABs(0));
       localWorkSize  = cl::NDRange(16, 16, 1);
 
-      nrOperations   = (size_t) ps.nrTABs(SAP) * ps.nrSamplesPerChannel() * 1024 * (3 /* power */ + 2 /* window */ + 1 /* max */ + 7 /* mean/variance */);
-      nrBytesRead    = (size_t) ps.nrTABs(SAP) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * 1024 * sizeof(float);
-      nrBytesWritten = (size_t) ps.nrTABs(SAP) * sizeof(TriggerInfo);
+      nrOperations   = (size_t) ps.nrTABs(0) * ps.nrSamplesPerChannel() * 1024 * (3 /* power */ + 2 /* window */ + 1 /* max */ + 7 /* mean/variance */);
+      nrBytesRead    = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * 1024 * sizeof(float);
+      nrBytesWritten = (size_t) ps.nrTABs(0) * sizeof(TriggerInfo);
     }
 };
 
@@ -1143,6 +1266,8 @@ CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline)
   inputSamples(boost::extents[ps.nrStations()][(ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, devBufferA),
  visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, devBufferB)
 {
+  memset(inputSamples.origin(), 0, inputSamples.bytesize()); // FIXME
+  memset(visibilities.origin(), 0, visibilities.bytesize()); // FIXME
   size_t firWeightsSize = ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float);
   devFIRweights = cl::Buffer(pipeline.context, CL_MEM_READ_ONLY, firWeightsSize);
   queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), pipeline.filterBank.getWeights().origin());
@@ -1168,7 +1293,12 @@ void CorrelatorWorkQueue::doWork()
   FIR_FilterKernel firFilterKernel(ps, queue, pipeline.firFilterProgram, devFilteredData, inputSamples, devFIRweights);
   Filter_FFT_Kernel fftKernel(ps, pipeline.context, devFilteredData);
   DelayAndBandPassKernel delayAndBandPassKernel(ps, pipeline.delayAndBandPassProgram, devCorrectedData, devFilteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights);
+#if defined USE_NEW_CORRELATOR
+  CorrelateTriangleKernel correlateTriangleKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData);
+  CorrelateRectangleKernel correlateRectangleKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData);
+#else
   CorrelatorKernel correlatorKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData);
+#endif
   double startTime = ps.startTime(), currentTime, stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
 
 #pragma omp barrier
@@ -1176,7 +1306,7 @@ void CorrelatorWorkQueue::doWork()
   double executionStartTime = getTime();
 
   for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) {
-#pragma omp single
+#pragma omp single nowait
 #pragma omp critical (cout)
     std::cout << "block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << std::endl;
 
@@ -1185,17 +1315,14 @@ void CorrelatorWorkQueue::doWork()
     memset(phaseOffsets.origin(), 0, phaseOffsets.bytesize());
 
     // FIXME!!!
-    if (ps.nrStations() >= 3)
-      delaysAtBegin[0][2][0] = 1e-6, delaysAfterEnd[0][2][0] = 1.1e-6;
+    //if (ps.nrStations() >= 3)
+      //delaysAtBegin[0][2][0] = 1e-6, delaysAfterEnd[0][2][0] = 1.1e-6;
 
     delaysAtBegin.hostToDevice(CL_FALSE);
     delaysAfterEnd.hostToDevice(CL_FALSE);
     phaseOffsets.hostToDevice(CL_FALSE);
-    queue.finish();
 
-#pragma omp barrier
-
-#pragma omp for schedule(dynamic)
+#pragma omp for schedule(dynamic), nowait
     for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) {
       try {
 #if defined USE_TEST_DATA
@@ -1217,7 +1344,12 @@ void CorrelatorWorkQueue::doWork()
 	}
 
 	delayAndBandPassKernel.enqueue(queue, pipeline.delayAndBandPassCounter, subband);
+#if defined USE_NEW_CORRELATOR
+	correlateTriangleKernel.enqueue(queue, pipeline.correlateTriangleCounter);
+	correlateRectangleKernel.enqueue(queue, pipeline.correlateRectangleCounter);
+#else
 	correlatorKernel.enqueue(queue, pipeline.correlatorCounter);
+#endif
 	queue.finish();
 
 	{
@@ -1276,11 +1408,11 @@ BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline)
   delaysAfterEnd(boost::extents[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
   phaseOffsets(boost::extents[ps.nrBeams()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
   devCorrectedData(cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>))),
-  beamFormerWeights(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrTABs(SAP)], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
-  devComplexVoltages(cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(SAP) * NR_POLARIZATIONS * sizeof(std::complex<float>))),
-  //transposedComplexVoltages(boost::extents[ps.nrTABs(SAP)][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE)
-  transposedComplexVoltages(boost::extents[ps.nrTABs(SAP)][NR_POLARIZATIONS][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE),
-  DMs(boost::extents[ps.nrTABs(SAP)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY)
+  beamFormerWeights(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
+  devComplexVoltages(cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>))),
+  //transposedComplexVoltages(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE)
+  transposedComplexVoltages(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE),
+  DMs(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY)
 {
   if (ps.correctBandPass()) {
     BandPass::computeCorrectionFactors(bandPassCorrectionWeights.origin(), ps.nrChannelsPerSubband());
@@ -1310,7 +1442,7 @@ void BeamFormerWorkQueue::doWork()
   double executionStartTime = getTime();
 
   for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) {
-#pragma omp single
+#pragma omp single nowait
 #pragma omp critical (cout)
     std::cout << "block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << std::endl;
 
@@ -1326,11 +1458,8 @@ void BeamFormerWorkQueue::doWork()
     delaysAfterEnd.hostToDevice(CL_FALSE);
     phaseOffsets.hostToDevice(CL_FALSE);
     beamFormerWeights.hostToDevice(CL_FALSE);
-    queue.finish();
 
-#pragma omp barrier
-
-#pragma omp for schedule(dynamic)
+#pragma omp for schedule(dynamic), nowait
     for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) {
       try {
 #if 1
@@ -1384,13 +1513,13 @@ UHEP_WorkQueue::UHEP_WorkQueue(UHEP_Pipeline &pipeline)
   WorkQueue(pipeline),
   pipeline(pipeline),
   hostInputSamples(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY),
-  hostBeamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(SAP)], queue, CL_MEM_WRITE_ONLY),
-  hostTriggerInfo(ps.nrTABs(SAP), queue, CL_MEM_READ_ONLY)
+  hostBeamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY),
+  hostTriggerInfo(ps.nrTABs(0), queue, CL_MEM_READ_ONLY)
 {
   size_t inputSamplesSize = ps.nrStations() * ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
-  size_t complexVoltagesSize = ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * ps.nrTABs(SAP) * NR_POLARIZATIONS * sizeof(std::complex<float>);
-  size_t transposedDataSize = ps.nrTABs(SAP) * NR_POLARIZATIONS * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * 512 * sizeof(std::complex<float>);
-  size_t invFIRfilteredDataSize = ps.nrTABs(SAP) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * 512 * sizeof(std::complex<float>);
+  size_t complexVoltagesSize = ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);
+  size_t transposedDataSize = ps.nrTABs(0) * NR_POLARIZATIONS * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * 512 * sizeof(std::complex<float>);
+  size_t invFIRfilteredDataSize = ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * 512 * sizeof(std::complex<float>);
 
   size_t buffer0size = std::max(inputSamplesSize, transposedDataSize);
   size_t buffer1size = std::max(complexVoltagesSize, invFIRfilteredDataSize);
@@ -1398,7 +1527,7 @@ UHEP_WorkQueue::UHEP_WorkQueue(UHEP_Pipeline &pipeline)
   devBuffers[0] = cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, buffer0size);
   devBuffers[1] = cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, buffer1size);
 
-  size_t beamFormerWeightsSize = ps.nrStations() * ps.nrSubbands() * ps.nrTABs(SAP) * sizeof(std::complex<float>);
+  size_t beamFormerWeightsSize = ps.nrStations() * ps.nrSubbands() * ps.nrTABs(0) * sizeof(std::complex<float>);
   devBeamFormerWeights = cl::Buffer(pipeline.context, CL_MEM_READ_ONLY, beamFormerWeightsSize);
 
   devInputSamples = devBuffers[0];
@@ -1409,7 +1538,7 @@ UHEP_WorkQueue::UHEP_WorkQueue(UHEP_Pipeline &pipeline)
   devFFTedData = devBuffers[0];
   devInvFIRfilteredData = devBuffers[1];
 
-  devTriggerInfo = cl::Buffer(pipeline.context, CL_MEM_WRITE_ONLY, ps.nrTABs(SAP) * sizeof(TriggerInfo));
+  devTriggerInfo = cl::Buffer(pipeline.context, CL_MEM_WRITE_ONLY, ps.nrTABs(0) * sizeof(TriggerInfo));
 }
 
 
@@ -1430,12 +1559,12 @@ void UHEP_WorkQueue::doWork(const float * /*delaysAtBegin*/, const float * /*del
 
   double executionStartTime = getTime();
 
-#pragma omp for schedule(dynamic)
+#pragma omp for schedule(dynamic), nowait
   for (unsigned block = 0; block < nrBlocks; block ++) {
     try {
       double currentTime = startTime + block * blockTime;
 
-//#pragma omp single // FIXME: why does the compiler complain here???
+//#pragma omp single nowait // FIXME: why does the compiler complain here???
 #pragma omp critical (cout)
       std::cout << "block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << std::endl;
 
@@ -1607,18 +1736,21 @@ struct CorrelatorTest : public UnitTest
 {
   CorrelatorTest(const Parset &ps)
   :
-    //UnitTest(ps, "Correlator.cl")
+#if defined USE_NEW_CORRELATOR
     UnitTest(ps, "NewCorrelator.cl")
+#else
+    UnitTest(ps, "Correlator.cl")
+#endif
   {
     if (ps.nrStations() >= 5 && ps.nrChannelsPerSubband() >= 6 && ps.nrSamplesPerChannel() >= 100) {
-      MultiArraySharedBuffer<std::complex<float>, 4> inputData(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
       MultiArraySharedBuffer<std::complex<float>, 4> visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
+      MultiArraySharedBuffer<std::complex<float>, 4> inputData(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
       CorrelatorKernel correlator(ps, queue, program, visibilities, inputData);
 
       //inputData[3][5][99][1] = std::complex<float>(3, 4);
       //inputData[4][5][99][1] = std::complex<float>(5, 6);
-      inputData[2][5][99][1] = std::complex<float>(3, 4);
-      inputData[65][5][99][1] = std::complex<float>(5, 6);
+      inputData[0][5][99][1] = std::complex<float>(3, 4);
+      inputData[2][5][99][1] = std::complex<float>(5, 6);
 
 visibilities.hostToDevice(CL_FALSE);
       inputData.hostToDevice(CL_FALSE);
@@ -1633,6 +1765,70 @@ visibilities.hostToDevice(CL_FALSE);
     }
   }
 };
+
+
+#if defined USE_NEW_CORRELATOR
+
+struct CorrelateRectangleTest : public UnitTest
+{
+  CorrelateRectangleTest(const Parset &ps)
+  :
+    //UnitTest(ps, "Correlator.cl")
+    UnitTest(ps, "NewCorrelator.cl")
+  {
+    if (ps.nrStations() >= 5 && ps.nrChannelsPerSubband() >= 6 && ps.nrSamplesPerChannel() >= 100) {
+      MultiArraySharedBuffer<std::complex<float>, 4> visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
+      MultiArraySharedBuffer<std::complex<float>, 4> inputData(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
+      CorrelateRectangleKernel correlator(ps, queue, program, visibilities, inputData);
+
+      inputData[27][5][99][1] = std::complex<float>(3, 4);
+      inputData[68][5][99][1] = std::complex<float>(5, 6);
+
+visibilities.hostToDevice(CL_FALSE);
+      inputData.hostToDevice(CL_FALSE);
+      correlator.enqueue(queue, counter);
+      visibilities.deviceToHost(CL_TRUE);
+
+      //check(visibilities[5463][5][1][1], std::complex<float>(39, 2));
+      for (unsigned bl = 0; bl < ps.nrBaselines(); bl ++)
+	if (visibilities[bl][5][1][1] != std::complex<float>(0, 0))
+	  std::cout << "bl = " << bl << ", visibility = " << visibilities[bl][5][1][1] << std::endl;
+    }
+  }
+};
+
+
+struct CorrelateTriangleTest : public UnitTest
+{
+  CorrelateTriangleTest(const Parset &ps)
+  :
+    //UnitTest(ps, "Correlator.cl")
+    UnitTest(ps, "NewCorrelator.cl")
+  {
+    if (ps.nrStations() >= 5 && ps.nrChannelsPerSubband() >= 6 && ps.nrSamplesPerChannel() >= 100) {
+      MultiArraySharedBuffer<std::complex<float>, 4> visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
+      MultiArraySharedBuffer<std::complex<float>, 4> inputData(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
+      CorrelateTriangleKernel correlator(ps, queue, program, visibilities, inputData);
+
+      //inputData[3][5][99][1] = std::complex<float>(3, 4);
+      //inputData[4][5][99][1] = std::complex<float>(5, 6);
+      inputData[0][5][99][1] = std::complex<float>(3, 4);
+      inputData[2][5][99][1] = std::complex<float>(5, 6);
+
+visibilities.hostToDevice(CL_FALSE);
+      inputData.hostToDevice(CL_FALSE);
+      correlator.enqueue(queue, counter);
+      visibilities.deviceToHost(CL_TRUE);
+
+      //check(visibilities[13][5][1][1], std::complex<float>(39, 2));
+      for (unsigned bl = 0; bl < ps.nrBaselines(); bl ++)
+	if (visibilities[bl][5][1][1] != std::complex<float>(0, 0))
+	  std::cout << "bl = " << bl << ", visibility = " << visibilities[bl][5][1][1] << std::endl;
+    }
+  }
+};
+
+#endif
 
 
 struct IncoherentStokesTest : public UnitTest
@@ -1699,10 +1895,10 @@ struct BeamFormerTest : public UnitTest
   :
     UnitTest(ps, "BeamFormer/BeamFormer.cl")
   {
-    if (ps.nrStations() >= 5 && ps.nrSamplesPerChannel() >= 13 && ps.nrChannelsPerSubband() >= 7 && ps.nrTABs(SAP) >= 6) {
+    if (ps.nrStations() >= 5 && ps.nrSamplesPerChannel() >= 13 && ps.nrChannelsPerSubband() >= 7 && ps.nrTABs(0) >= 6) {
       MultiArraySharedBuffer<std::complex<float>, 4> inputData(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-      MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrTABs(SAP)], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][ps.nrTABs(SAP)][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE);
+      MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
+      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][ps.nrTABs(0)][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE);
       BeamFormerKernel beamFormer(ps, program, complexVoltages, inputData, beamFormerWeights);
 
       inputData[4][6][12][1] = std::complex<float>(2.2, 3);
@@ -1716,7 +1912,7 @@ struct BeamFormerTest : public UnitTest
       check(complexVoltages[6][12][5][1], std::complex<float>(-6.2, 23));
 
 #if 0
-      for (unsigned tab = 0; tab < ps.nrTABs(SAP); tab ++)
+      for (unsigned tab = 0; tab < ps.nrTABs(0); tab ++)
 	for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++)
 	  for (unsigned ch = 0; ch < ps.nrChannelsPerSubband(); ch ++)
 	    for (unsigned t = 0; t < ps.nrSamplesPerChannel(); t ++)
@@ -1734,9 +1930,9 @@ struct BeamFormerTransposeTest : public UnitTest
   :
     UnitTest(ps, "BeamFormer/Transpose.cl")
   {
-    if (ps.nrChannelsPerSubband() >= 19 && ps.nrSamplesPerChannel() >= 175 && ps.nrTABs(SAP) >= 5) {
-      MultiArraySharedBuffer<std::complex<float>, 4> transposedData(boost::extents[ps.nrTABs(SAP)][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
-      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][ps.nrTABs(SAP)][NR_POLARIZATIONS], queue, CL_MEM_READ_WRITE, CL_MEM_READ_ONLY);
+    if (ps.nrChannelsPerSubband() >= 19 && ps.nrSamplesPerChannel() >= 175 && ps.nrTABs(0) >= 5) {
+      MultiArraySharedBuffer<std::complex<float>, 4> transposedData(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
+      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][ps.nrTABs(0)][NR_POLARIZATIONS], queue, CL_MEM_READ_WRITE, CL_MEM_READ_ONLY);
       BeamFormerTransposeKernel transpose(ps, program, transposedData, complexVoltages);
 
       complexVoltages[18][174][4][1] = std::complex<float>(24, 42);
@@ -1757,9 +1953,9 @@ struct DedispersionChirpTest : public UnitTest
   :
     UnitTest(ps, "BeamFormer/Dedispersion.cl")
   {
-    if (ps.nrTABs(SAP) > 3 && ps.nrChannelsPerSubband() > 13 && ps.nrSamplesPerChannel() / ps.dedispersionFFTsize() > 1 && ps.dedispersionFFTsize() > 77) {
-      MultiArraySharedBuffer<std::complex<float>, 5> data(boost::extents[ps.nrTABs(SAP)][NR_POLARIZATIONS][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel() / ps.dedispersionFFTsize()][ps.dedispersionFFTsize()], queue, CL_MEM_READ_WRITE, CL_MEM_READ_WRITE);
-      MultiArraySharedBuffer<float, 1> DMs(boost::extents[ps.nrTABs(SAP)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
+    if (ps.nrTABs(0) > 3 && ps.nrChannelsPerSubband() > 13 && ps.nrSamplesPerChannel() / ps.dedispersionFFTsize() > 1 && ps.dedispersionFFTsize() > 77) {
+      MultiArraySharedBuffer<std::complex<float>, 5> data(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel() / ps.dedispersionFFTsize()][ps.dedispersionFFTsize()], queue, CL_MEM_READ_WRITE, CL_MEM_READ_WRITE);
+      MultiArraySharedBuffer<float, 1> DMs(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
       DedispersionChirpKernel dedispersionChirpKernel(ps, program, queue, data, DMs);
 
       data[3][1][13][1][77] = std::complex<float>(2, 3);
@@ -1782,16 +1978,16 @@ struct CoherentStokesTest : public UnitTest
   :
     UnitTest(ps, "BeamFormer/CoherentStokes.cl")
   {
-    if (ps.nrChannelsPerSubband() >= 19 && ps.nrSamplesPerChannel() >= 175 && ps.nrTABs(SAP) >= 5) {
-      MultiArraySharedBuffer<float, 4> stokesData(boost::extents[ps.nrTABs(SAP)][ps.nrCoherentStokes()][ps.nrSamplesPerChannel() / ps.coherentStokesTimeIntegrationFactor()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
+    if (ps.nrChannelsPerSubband() >= 19 && ps.nrSamplesPerChannel() >= 175 && ps.nrTABs(0) >= 5) {
+      MultiArraySharedBuffer<float, 4> stokesData(boost::extents[ps.nrTABs(0)][ps.nrCoherentStokes()][ps.nrSamplesPerChannel() / ps.coherentStokesTimeIntegrationFactor()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
 #if 1
-      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][ps.nrTABs(SAP)][NR_POLARIZATIONS], queue, CL_MEM_READ_WRITE, CL_MEM_READ_ONLY);
+      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][ps.nrTABs(0)][NR_POLARIZATIONS], queue, CL_MEM_READ_WRITE, CL_MEM_READ_ONLY);
       CoherentStokesKernel stokesKernel(ps, program, stokesData, complexVoltages);
 
       complexVoltages[18][174][4][0] = std::complex<float>(2, 3);
       complexVoltages[18][174][4][1] = std::complex<float>(4, 5);
 #else
-      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrTABs(SAP)][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_WRITE, CL_MEM_READ_ONLY);
+      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_WRITE, CL_MEM_READ_ONLY);
       CoherentStokesKernel stokesKernel(ps, program, stokesData, complexVoltages);
 
       complexVoltages[18][174][4][0] = std::complex<float>(2, 3);
@@ -1815,10 +2011,10 @@ struct UHEP_BeamFormerTest : public UnitTest
   :
     UnitTest(ps, "UHEP/BeamFormer.cl")
   {
-    if (ps.nrStations() >= 5 && (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) >= 13 && ps.nrSubbands() >= 7 && ps.nrTABs(SAP) >= 6) {
+    if (ps.nrStations() >= 5 && (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) >= 13 && ps.nrSubbands() >= 7 && ps.nrTABs(0) >= 6) {
       MultiArraySharedBuffer<char, 5> inputSamples(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-      MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(SAP)], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][ps.nrTABs(SAP)][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE);
+      MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
+      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][ps.nrTABs(0)][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE);
       UHEP_BeamFormerKernel beamFormer(ps, program, complexVoltages, inputSamples, beamFormerWeights);
 
       switch (ps.nrBytesPerComplexSample()) {
@@ -1851,9 +2047,9 @@ struct UHEP_TransposeTest : public UnitTest
   :
     UnitTest(ps, "UHEP/Transpose.cl")
   {
-    if (ps.nrSubbands() >= 19 && ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1 >= 175 && ps.nrTABs(SAP) >= 5) {
-      MultiArraySharedBuffer<std::complex<float>, 4> transposedData(boost::extents[ps.nrTABs(SAP)][NR_POLARIZATIONS][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][512], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
-      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][ps.nrTABs(SAP)][NR_POLARIZATIONS], queue, CL_MEM_READ_WRITE, CL_MEM_READ_ONLY);
+    if (ps.nrSubbands() >= 19 && ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1 >= 175 && ps.nrTABs(0) >= 5) {
+      MultiArraySharedBuffer<std::complex<float>, 4> transposedData(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][512], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
+      MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][ps.nrTABs(0)][NR_POLARIZATIONS], queue, CL_MEM_READ_WRITE, CL_MEM_READ_ONLY);
       cl::Buffer devReverseSubbandMapping(context, CL_MEM_READ_ONLY, 512 * sizeof(int));
       UHEP_TransposeKernel transpose(ps, program, transposedData, complexVoltages, devReverseSubbandMapping);
 
@@ -1876,9 +2072,9 @@ struct UHEP_TriggerTest : public UnitTest
   :
     UnitTest(ps, "UHEP/Trigger.cl")
   {
-    if (ps.nrTABs(SAP) >= 4 && 1024 * ps.nrSamplesPerChannel() > 100015) {
-      MultiArraySharedBuffer<float, 3> inputData(boost::extents[ps.nrTABs(SAP)][NR_POLARIZATIONS][ps.nrSamplesPerChannel() * 1024], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-      MultiArraySharedBuffer<TriggerInfo, 1> triggerInfo(boost::extents[ps.nrTABs(SAP)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
+    if (ps.nrTABs(0) >= 4 && 1024 * ps.nrSamplesPerChannel() > 100015) {
+      MultiArraySharedBuffer<float, 3> inputData(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrSamplesPerChannel() * 1024], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
+      MultiArraySharedBuffer<TriggerInfo, 1> triggerInfo(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
       UHEP_TriggerKernel trigger(ps, program, triggerInfo, inputData);
 
       inputData[3][1][100015] = 1000;
@@ -1900,7 +2096,7 @@ struct UHEP_TriggerTest : public UnitTest
 struct FFT_Test : public UnitTest
 {
   FFT_Test(const Parset &ps)
-  : UnitTest(ps, "fft2.cl")
+  : UnitTest(ps, "fft.cl")
   {
     MultiArraySharedBuffer<std::complex<float>, 1> in(boost::extents[8], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
     MultiArraySharedBuffer<std::complex<float>, 1> out(boost::extents[8], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
@@ -1979,34 +2175,14 @@ int main(int argc, char **argv)
     const char *str = getenv("NR_GPUS");
     nrGPUs = str ? atoi(str) : 1;
 
-#if 0
-    ps.nrSubbands()		= 10;//488;
-    ps.nrChannelsPerSubband()	= 64;
-    ps.nrBeams()		= 1;
-    ps.nrSamplesPerChannel()	= 196608 / ps.nrChannelsPerSubband();
-    ps.subbandBandwidth()	= 195312.5;
-    ps.correctBandPass()	= true;
-#endif
+    profiling = false; CorrelatorPipeline(ps).doWork();
+    profiling = true; CorrelatorPipeline(ps).doWork();
 
-    //profiling = false; CorrelatorPipeline(ps).doWork();
-    //profiling = true; CorrelatorPipeline(ps).doWork();
-
-    (CorrelatorTest)(ps);
+    //(CorrelatorTest)(ps);
+    //(CorrelateRectangleTest)(ps);
+    //(CorrelateTriangleTest)(ps);
 
 #if 0
-    ps.nrSubbands()		  = 488;
-    ps.nrChannelsPerSubband()	  = 2048;
-    ps.nrBeams()		  = 1;
-    ps.nrTABs(SAP)			  = 128;
-    ps.nrIncoherentStokes()	  = 4;
-    ps.nrCoherentStokes()	  = 4;
-    ps.incoherentStokesTimeIntegrationFactor() = 8;
-    ps.coherentStokesTimeIntegrationFactor() = 8;
-    ps.nrSamplesPerChannel()	  = 65536 / ps.nrChannelsPerSubband();//262144 / ps.nrChannelsPerSubband();
-    ps.subbandBandwidth()	  = 195312.5;
-    ps.correctBandPass()	  = true;
-    ps.dedispersionFFTsize()	  = ps.nrSamplesPerChannel();
-  
     profiling = false; BeamFormerPipeline(ps).doWork();
     profiling = true; BeamFormerPipeline(ps).doWork();
     //(IncoherentStokesTest)(ps);
@@ -2018,12 +2194,6 @@ int main(int argc, char **argv)
 #endif
 
 #if 0
-    ps.nrSubbands()	   = 488;
-    ps.nrSamplesPerChannel() = 1024;
-    ps.nrBeams()	   = 1;
-    ps.subbandBandwidth()  = 195312.5;
-    ps.nrTABs(SAP)		   = 48;
-
     profiling = false; UHEP_Pipeline(ps).doWork();
     profiling = true; UHEP_Pipeline(ps).doWork();
     //(UHEP_BeamFormerTest)(ps);

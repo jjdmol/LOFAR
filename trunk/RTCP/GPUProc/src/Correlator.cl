@@ -1,7 +1,7 @@
 #define NR_BASELINES	 (NR_STATIONS * (NR_STATIONS + 1) / 2)
 
 #if NR_STATIONS == 288
-#define BLOCK_SIZE	 8
+#define BLOCK_SIZE	 6
 #elif defined NVIDIA_CUDA && NR_SAMPLES_PER_CHANNEL % 24 == 0
 #define BLOCK_SIZE	 24
 #else
@@ -24,7 +24,7 @@ __kernel void correlate(__global void *visibilitiesPtr,
   __local float samples[4][BLOCK_SIZE][NR_STATIONS | 1]; // avoid power-of-2
 
   uint baseline	    = get_global_id(0);
-  uint channel	    = get_global_id(1);
+  uint channel	    = get_global_id(1) + 1;
   uint stat_0	    = convert_uint_rtz(sqrt(convert_float(8 * baseline + 1)) - 0.99999f) / 2;
   uint stat_A	    = baseline - stat_0 * (stat_0 + 1) / 2;
 
@@ -84,7 +84,7 @@ __kernel void correlate_2x2(__global void *visibilitiesPtr,
 
   __local float4 samples[2][BLOCK_SIZE][(NR_STATIONS + 1) / 2 | 1]; // avoid power-of-2
 
-  uint channel	    = get_global_id(1);
+  uint channel	    = get_global_id(1) + 1;
   uint block	    = get_global_id(0);
 
   uint x	    = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
@@ -181,7 +181,7 @@ __kernel void correlate_3x3(__global void *visibilitiesPtr,
 
   __local float4 samples[3][BLOCK_SIZE][(NR_STATIONS + 2) / 3 | 1]; // avoid power-of-2
 
-  uint channel	    = get_global_id(1);
+  uint channel	    = get_global_id(1) + 1;
   uint block	    = get_global_id(0);
 
   uint x	    = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
@@ -338,7 +338,7 @@ __kernel void correlate_4x4(__global void *visibilitiesPtr,
 
   __local float4 samples[4][BLOCK_SIZE][(NR_STATIONS + 3) / 4 | 1]; // avoid power-of-2
 
-  uint channel	    = get_global_id(1);
+  uint channel	    = get_global_id(1) + 1;
   uint block	    = get_global_id(0);
 
   uint x	    = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
