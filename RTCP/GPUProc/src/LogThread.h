@@ -19,7 +19,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: LogThread.h 17975 2011-05-10 09:52:51Z mol $
+//#  $Id: LogThread.h 20294 2012-03-01 12:43:34Z mol $
 
 #ifndef LOFAR_GPUPROC_LOG_THREAD_H
 #define LOFAR_GPUPROC_LOG_THREAD_H
@@ -28,6 +28,7 @@
 
 
 #include <Common/Thread/Thread.h>
+#include <Interface/SmartPtr.h>
 
 #include <vector>
 #include <string>
@@ -42,6 +43,8 @@ class LogThread
     LogThread(unsigned nrRspBoards, std::string stationName);
     ~LogThread();
 
+    void start();
+
     struct Counters {
       unsigned received, badTimeStamp, badSize;
       unsigned pad[5]; // pad to cache line size to avoid false sharing 
@@ -54,7 +57,7 @@ class LogThread
 
     std::string itsStationName;
   
-    Thread	itsThread;
+    SmartPtr<Thread>	itsThread;
 
 #if defined HAVE_BGP_ION
     struct CPUload {
