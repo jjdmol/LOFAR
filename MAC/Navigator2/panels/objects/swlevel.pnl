@@ -188,6 +188,51 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 0 
+6 16
+"station_highLight"
+""
+1 240 10 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"swlevel_stationCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void swlevel_stationCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"swlevel.pnl:swlevel_stationCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"swlevel.pnl:swlevel_stationCallback|Found highlight : \" + highlight + \" Looking for station\");
+  bool bHighlight=false;
+  if (dynContains(highlight,station)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"swlevel.pnl:swlevel_stationCallback|Highlight request: \"+bHighlight);
+  station_highLight.visible = bHighlight;
+  
+}
+
+" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 2 1 1 E 0 8 33 23
 6 0
 "level1_text"
 ""
