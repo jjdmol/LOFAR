@@ -72,7 +72,8 @@ public class Main {
      */
     public static void main(String[] argv) {
         try {
-            String logConfig = "OTB.log_prop";
+            String logConfigName = "OTB.log_prop";
+            String logConfig = "";
             String server    = "sas001";
             String port      = "10199";
             String database  = "LOFAR_2";
@@ -124,15 +125,15 @@ public class Main {
             if (errs) {
                 System.err.println("Usage: OTB.jar [-s server] [-p port] [-d database] [-u username] [-l logFile] [-h]");
             }   
-            // install tab focus
+            
             LofarUtils.TextSelector.install();
 
-
+            if (logConfig.isEmpty()) logConfig = logConfigName;
             File f = new File(logConfig);
             if (f.exists()) {
                 PropertyConfigurator.configure(logConfig);
             } else {
-                logConfig = File.separator+"opt"+File.separator+"sas"+File.separator+"otb"+File.separator+"etc"+File.separator+logConfig;
+                logConfig = File.separator+"opt"+File.separator+"sas"+File.separator+"otb"+File.separator+"etc"+File.separator+logConfigName;
                 f = new File(logConfig);
                 if (f.exists()) {
                     PropertyConfigurator.configure(logConfig);
