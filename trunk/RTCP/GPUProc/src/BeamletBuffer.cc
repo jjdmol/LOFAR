@@ -26,8 +26,8 @@
 #include <Interface/Align.h>
 #include <Interface/Exceptions.h>
 #include <BeamletBuffer.h>
-#include <ION_Allocator.h>
-#include <InputThreadAsm.h>
+//#include <ION_Allocator.h>
+//#include <InputThreadAsm.h>
 #include <RSP.h>
 
 #include <boost/lexical_cast.hpp>
@@ -58,7 +58,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
   itsIsRealTime(ps->realTime()),
   itsSynchronizedReaderWriter(itsIsRealTime ? 0 : new SynchronizedReaderAndWriter(itsSize)), // FIXME: does not work for multiple observations
   itsLockedRanges(itsSize),
-  itsSBBuffers(boost::extents[itsNrSubbands][itsSize][NR_POLARIZATIONS], 128, hugeMemoryAllocator),
+  itsSBBuffers(boost::extents[itsNrSubbands][itsSize][NR_POLARIZATIONS], 128 /*, hugeMemoryAllocator*/),
   itsOffset(0),
   itsPreviousTimeStamp(0),
   itsPreviousI(0),

@@ -46,7 +46,7 @@ unsigned nrGPUs;
 #define NR_TAPS			16
 #define NR_STATION_FILTER_TAPS	16
 
-#undef USE_NEW_CORRELATOR
+#define USE_NEW_CORRELATOR
 #define USE_2X2
 #undef USE_CUSTOM_FFT
 #undef USE_TEST_DATA

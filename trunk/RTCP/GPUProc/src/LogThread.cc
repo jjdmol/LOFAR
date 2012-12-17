@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: LogThread.cc 17975 2011-05-10 09:52:51Z mol $
+//#  $Id: LogThread.cc 22267 2012-10-09 13:28:03Z mol $
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -45,15 +45,22 @@ namespace RTCP {
 LogThread::LogThread(unsigned nrRspBoards, std::string stationName)
 :
   itsCounters(nrRspBoards),
-  itsStationName(stationName),
-  itsThread(this, &LogThread::mainLoop, "[LogThread] ", 65536)
+  itsStationName(stationName)
 {
+}
+
+
+void LogThread::start()
+{
+  itsThread = new Thread(this, &LogThread::mainLoop, "[LogThread] ", 65536);
 }
 
 
 LogThread::~LogThread()
 {
-  itsThread.cancel();
+  if (itsThread)
+    itsThread->cancel();
+
   LOG_DEBUG_STR("[LogThread] finished");
 }
 
@@ -95,10 +102,22 @@ void LogThread::writeCPUstats(std::stringstream &str)
   struct CPUload load;
   struct timeval tv;
 
+  static size_t lowIdleCount = 0;
+
   if (readCPUstats(load)) {
     gettimeofday( &tv, 0 );
 
     float timediff = (tv.tv_sec - previousTimeval.tv_sec) + (tv.tv_usec - previousTimeval.tv_usec)/1.0e6;
+
+    unsigned idle0 = static_cast<unsigned>((load.idle0 - previousLoad.idle0) / timediff);
+    if (idle0 < 10)
+      lowIdleCount++;
+    else
+      lowIdleCount = 0;
+
+    // TODO: Don't print this error in non-realtime mode
+    if (lowIdleCount == 5)
+      LOG_ERROR("CPU load critical on core 0");
 
     //str << ", us/sy/in/id: ["
     str << ", us/sy/in/id(0): ["
@@ -107,7 +126,7 @@ void LogThread::writeCPUstats(std::stringstream &str)
 	<< (unsigned(load.system    - previousLoad.system)    + 2) / 4 / timediff << '/'
 	<< (unsigned(load.interrupt - previousLoad.interrupt) + 2) / 4 / timediff << '/'
 	<< (unsigned(load.idle	    - previousLoad.idle)      + 2) / 4 / timediff << '('
-	<< (unsigned(load.idle0	    - previousLoad.idle0) / timediff) << ")]";
+	<< idle0 << ")]";
 #if 0
 	<< "], id: ["
 	<< (unsigned(load.idlePerCore[0] - previousLoad.idlePerCore[0]) << '/'
@@ -130,6 +149,7 @@ void LogThread::writeCPUstats(std::stringstream &str)
 void LogThread::mainLoop()
 {
 #if defined HAVE_BGP_ION
+  //doNotRunOnCore0();
   runOnCore0();
   readCPUstats(previousLoad);
   gettimeofday(&previousTimeval,0);
