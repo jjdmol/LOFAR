@@ -174,152 +174,155 @@ void FilterBank::interpolate(const double x[], const double y[], unsigned xlen, 
 // but has better stopband characteristics.
 void FilterBank::generate_fir_filter(unsigned n, double w, const double window[], double result[])
 {
-  // make sure grid is big enough for the window
-  // the grid must be at least (n+1)/2
-  // for all filters where the order is a power of two minus 1, grid_n = n+1;
-  unsigned grid_n = nextPowerOfTwo(n + 1);
+#pragma omp critical (FFTW)
+  {
+    // make sure grid is big enough for the window
+    // the grid must be at least (n+1)/2
+    // for all filters where the order is a power of two minus 1, grid_n = n+1;
+    unsigned grid_n = nextPowerOfTwo(n + 1);
 
-  unsigned ramp_n = 2; // grid_n/20;
+    unsigned ramp_n = 2; // grid_n/20;
 
-  // Apply ramps to discontinuities
-  // this is a low pass filter
-  // maybe we can omit the "w, 0" point?
-  // I did observe a small difference
-  double f[] = { 0.0, w - ramp_n / grid_n / 2.0, w, w + ramp_n / grid_n / 2.0, 1.0 };
-  double m[] = { 1.0, 1.0, 0.0, 0.0, 0.0 };
+    // Apply ramps to discontinuities
+    // this is a low pass filter
+    // maybe we can omit the "w, 0" point?
+    // I did observe a small difference
+    double f[] = { 0.0, w - ramp_n / grid_n / 2.0, w, w + ramp_n / grid_n / 2.0, 1.0 };
+    double m[] = { 1.0, 1.0, 0.0, 0.0, 0.0 };
 
-  // grid is a 1-D array with grid_n+1 points. Values are 1 in filter passband, 0 otherwise
-  std::vector<double> grid(grid_n + 1);
+    // grid is a 1-D array with grid_n+1 points. Values are 1 in filter passband, 0 otherwise
+    std::vector<double> grid(grid_n + 1);
 
-  // interpolate between grid points
-  interpolate(f, m, 5 /* length of f and m arrays */, grid_n + 1, &grid[0]);
+    // interpolate between grid points
+    interpolate(f, m, 5 /* length of f and m arrays */, grid_n + 1, &grid[0]);
 
 #if 0
-  std::stringstream logStr;
-  logStr << "interpolated = [";
-  for(unsigned i=0; i<grid_n+1; i++) {
-    logStr << grid[i];
-    if(i != grid_n+1-1) logStr << ", ";
-  }
-  logStr << "];";
-  LOG_DEBUG(logStr.str());
+    std::stringstream logStr;
+    logStr << "interpolated = [";
+    for(unsigned i=0; i<grid_n+1; i++) {
+      logStr << grid[i];
+      if(i != grid_n+1-1) logStr << ", ";
+    }
+    logStr << "];";
+    LOG_DEBUG(logStr.str());
 #endif
 
-  // the grid we do an ifft on is:
-  // grid appended with grid_n*2 zeros
-  // appended with original grid values from indices grid_n..2, i.e., the values in reverse order
-  // (note, arrays start at 1 in octave!)
-  // the input for the ifft is of size 4*grid_n
-  // input = [grid ; zeros(grid_n*2,1) ;grid(grid_n:-1:2)];
+    // the grid we do an ifft on is:
+    // grid appended with grid_n*2 zeros
+    // appended with original grid values from indices grid_n..2, i.e., the values in reverse order
+    // (note, arrays start at 1 in octave!)
+    // the input for the ifft is of size 4*grid_n
+    // input = [grid ; zeros(grid_n*2,1) ;grid(grid_n:-1:2)];
 
 #if defined HAVE_FFTW3
-  fftwf_complex* cinput = (fftwf_complex*) fftwf_malloc(grid_n * 4 * sizeof(fftwf_complex));
-  fftwf_complex* coutput = (fftwf_complex*) fftwf_malloc(grid_n * 4 * sizeof(fftwf_complex));
+    fftwf_complex* cinput = (fftwf_complex*) fftwf_malloc(grid_n * 4 * sizeof(fftwf_complex));
+    fftwf_complex* coutput = (fftwf_complex*) fftwf_malloc(grid_n * 4 * sizeof(fftwf_complex));
 #elif defined HAVE_FFTW2
-  fftw_complex* cinput = (fftw_complex*) fftw_malloc(grid_n*4*sizeof(fftw_complex));
-  fftw_complex* coutput = (fftw_complex*) fftw_malloc(grid_n*4*sizeof(fftw_complex));
+    fftw_complex* cinput = (fftw_complex*) fftw_malloc(grid_n*4*sizeof(fftw_complex));
+    fftw_complex* coutput = (fftw_complex*) fftw_malloc(grid_n*4*sizeof(fftw_complex));
 #endif
 
-  if (cinput == NULL || coutput == NULL) {
-    THROW(GPUProcException, "cannot allocate buffers");
-  }
+    if (cinput == NULL || coutput == NULL) {
+      THROW(GPUProcException, "cannot allocate buffers");
+    }
 
-  // wipe imaginary part
-  for (unsigned i = 0; i < grid_n * 4; i++) {
-    fftw_imag(cinput[i]) = 0.0;
-  }
+    // wipe imaginary part
+    for (unsigned i = 0; i < grid_n * 4; i++) {
+      fftw_imag(cinput[i]) = 0.0;
+    }
 
-  // copy first part of grid
-  for (unsigned i = 0; i < grid_n + 1; i++) {
-    fftw_real(cinput[i]) = grid[i];
-  }
+    // copy first part of grid
+    for (unsigned i = 0; i < grid_n + 1; i++) {
+      fftw_real(cinput[i]) = grid[i];
+    }
 
-  // append zeros
-  for (unsigned i = grid_n + 1; i <= grid_n * 3; i++) {
-    fftw_real(cinput[i]) = 0.0;
-  }
+    // append zeros
+    for (unsigned i = grid_n + 1; i <= grid_n * 3; i++) {
+      fftw_real(cinput[i]) = 0.0;
+    }
 
-  // now append the grid in reverse order
-  for (unsigned i = grid_n - 1, index = 0; i >= 1; i --, index ++) {
-    fftw_real(cinput[grid_n * 3 + 1 + index]) = grid[i];
-  }
+    // now append the grid in reverse order
+    for (unsigned i = grid_n - 1, index = 0; i >= 1; i --, index ++) {
+      fftw_real(cinput[grid_n * 3 + 1 + index]) = grid[i];
+    }
 
 #if 0
-  std::stringstream logStr;
-  logStr << "ifft_in = [";
-  for(unsigned i=0; i<grid_n*4; i++) {
-    logStr << fftw_real(cinput[i]) << " " << fftw_imag(cinput[i]);
-    if(i != grid_n*4-1) logStr << ", ";
-  }
-  logStr << "];";
-  LOG_DEBUG(logStr.str());
+    std::stringstream logStr;
+    logStr << "ifft_in = [";
+    for(unsigned i=0; i<grid_n*4; i++) {
+      logStr << fftw_real(cinput[i]) << " " << fftw_imag(cinput[i]);
+      if(i != grid_n*4-1) logStr << ", ";
+    }
+    logStr << "];";
+    LOG_DEBUG(logStr.str());
 #endif
 
 #if defined HAVE_FFTW3
-  fftwf_plan plan = fftwf_plan_dft_1d(grid_n * 4, cinput, coutput, FFTW_BACKWARD, FFTW_ESTIMATE);
-  fftwf_execute(plan);
+    fftwf_plan plan = fftwf_plan_dft_1d(grid_n * 4, cinput, coutput, FFTW_BACKWARD, FFTW_ESTIMATE);
+    fftwf_execute(plan);
 #elif defined HAVE_FFTW2
-  fftw_plan plan = fftw_create_plan(grid_n * 4, FFTW_BACKWARD, FFTW_ESTIMATE);
-  fftw_one(plan, cinput, coutput);
+    fftw_plan plan = fftw_create_plan(grid_n * 4, FFTW_BACKWARD, FFTW_ESTIMATE);
+    fftw_one(plan, cinput, coutput);
 #endif
 
 #if 0
-  for(unsigned i=0; i<grid_n*4; i++) {
-    LOG_DEBUG_STR("ifft result [" << i << "] = " << fftw_real(coutput[i]) << " " << fftw_imag(coutput[i]));
-  }
+    for(unsigned i=0; i<grid_n*4; i++) {
+      LOG_DEBUG_STR("ifft result [" << i << "] = " << fftw_real(coutput[i]) << " " << fftw_imag(coutput[i]));
+    }
 #endif
 
-  //                        half                   end
-  // 1 2       n+1          2(n+1)      3(n+1)     4(n+1)
-  //                                    x x x x x x x x x     # last quarter
-  //   x x x x x x                                            # first quarter
+    //                        half                   end
+    // 1 2       n+1          2(n+1)      3(n+1)     4(n+1)
+    //                                    x x x x x x x x x     # last quarter
+    //   x x x x x x                                            # first quarter
 
-  // last_quarter  = b([end-n+1:2:end]); # the size is only 1/8, since we skip half of the elements
-  // first_quarter = b(2:2:(n+1));       # the size is only 1/8, since we skip half of the elements
+    // last_quarter  = b([end-n+1:2:end]); # the size is only 1/8, since we skip half of the elements
+    // first_quarter = b(2:2:(n+1));       # the size is only 1/8, since we skip half of the elements
 
-  unsigned index = 0;
+    unsigned index = 0;
 
-  for (unsigned i = 4 * grid_n - n; i < 4 * grid_n; i += 2) {
-    result[index] = fftw_real(coutput[i]);
-    index++;
-  }
+    for (unsigned i = 4 * grid_n - n; i < 4 * grid_n; i += 2) {
+      result[index] = fftw_real(coutput[i]);
+      index++;
+    }
 
-  for (unsigned i = 1; i <= n; i += 2) {
-    result[index] = fftw_real(coutput[i]);
-    index++;
-  }
+    for (unsigned i = 1; i <= n; i += 2) {
+      result[index] = fftw_real(coutput[i]);
+      index++;
+    }
 
 #if defined HAVE_FFTW3
-  fftwf_destroy_plan(plan);
-  fftwf_free(cinput);
-  fftwf_free(coutput);
+    fftwf_destroy_plan(plan);
+    fftwf_free(cinput);
+    fftwf_free(coutput);
 #elif defined HAVE_FFTW2
-  fftw_destroy_plan(plan);
-  fftw_free(cinput);
-  fftw_free(coutput);
+    fftw_destroy_plan(plan);
+    fftw_free(cinput);
+    fftw_free(coutput);
 #endif
 
-  // multiply with window
-  for (unsigned i = 0; i <= n; i++) {
-    result[i] *= window[i];
-  }
+    // multiply with window
+    for (unsigned i = 0; i <= n; i++) {
+      result[i] *= window[i];
+    }
 
-  // normalize
-  double factor = result[n / 2];
-  for (unsigned i = 0; i <= n; i++) {
-    result[i] /= factor;
-  }
+    // normalize
+    double factor = result[n / 2];
+    for (unsigned i = 0; i <= n; i++) {
+      result[i] /= factor;
+    }
 
 #if 0
-  std::stringstream logStr;
-  logStr << "result = [";
-  for(unsigned i=0; i<=n; i++) {
-    logStr << result[i];
-    if(i != n) logStr << ", ";
-  }
-  logStr << "];";
-  LOG_DEBUG(logStr.str());
+    std::stringstream logStr;
+    logStr << "result = [";
+    for(unsigned i=0; i<=n; i++) {
+      logStr << result[i];
+      if(i != n) logStr << ", ";
+    }
+    logStr << "];";
+    LOG_DEBUG(logStr.str());
 #endif
+  }
 }
 
 
