@@ -39,7 +39,7 @@ using namespace RTC;
 
 // NOTE: The following the tables have the next format:
 //	2 bytes that is the register addres + 2 bytes that are the values that are written to the register.
-static char SERDES_OFF_CMD[] = {
+static unsigned char SERDES_OFF_CMD[] = {
 	0x00, 0x00,  0x40, 0x20,	// Enable primary port
 	0x00, 0xC0,  0x40, 0x20,	// Enable redundant port
 	0x90, 0xD0,  0x00, 0x01,	// Recv from prim, connect RX_XAUI_P to RX_XGMII
@@ -54,7 +54,7 @@ static char SERDES_OFF_CMD[] = {
 };
 static int SERDES_OFF_CMD_LEN = sizeof(SERDES_OFF_CMD);
 
-static char SERDES_ON_CMD[] = {
+static unsigned char SERDES_ON_CMD[] = {
 	0x00, 0x00,  0x40, 0x20,	// Enable primary port
 	0x00, 0xC0,  0x40, 0x20,	// Enable redundant port
 	0x90, 0xD0,  0x04, 0x05,	// Recv from prim, connect RX_XAUI_P to RX_XGMII
