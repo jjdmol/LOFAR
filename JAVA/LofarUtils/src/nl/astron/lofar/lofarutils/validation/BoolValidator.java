@@ -22,6 +22,7 @@ public class BoolValidator extends AbstractValidator {
         super(parent, c, message);
     }
 
+    @Override
     protected boolean validationCriteria(JComponent c) {
         String input = ((JTextField)c).getText();
 

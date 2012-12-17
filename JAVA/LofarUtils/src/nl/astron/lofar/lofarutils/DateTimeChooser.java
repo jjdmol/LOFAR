@@ -42,7 +42,7 @@ import javax.swing.event.EventListenerList;
  * 
  * Minor changes to adepts to  LOFAR
  */
-public class DateTimeChooser 
+public final class DateTimeChooser 
         extends javax.swing.JPanel {
     
 
@@ -340,7 +340,7 @@ public class DateTimeChooser
         try {
             aD=aDate.parse(aS);
         } catch (ParseException ex) {
-            ex.printStackTrace();
+            System.out.println(ex.getMessage());
         }
         DateTimeChooser.this.setDate(aD,false);
     }//GEN-LAST:event_nowActionPerformed
