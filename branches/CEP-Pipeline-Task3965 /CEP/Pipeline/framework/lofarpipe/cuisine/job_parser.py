@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 from WSRTrecipe import *
 
-JobError     = -1
-JobHold      =  0
-JobScheduled =  1
-JobProducing =  2
-JobProduced  =  3
+JobError = -1
+JobHold = 0
+JobScheduled = 1
+JobProducing = 2
+JobProduced = 3
 
 class job_parser(WSRTrecipe):
     def __init__(self):
@@ -18,7 +18,7 @@ class job_parser(WSRTrecipe):
         self.helptext = """
         Script to parse an XML job file for use by the pipeline_manager.
         See the exportjob.dtd for a definition of the format of a valid file."""
-    
+
     ## Code to generate results ---------------------------------------------
     def go(self):
         try:
@@ -35,18 +35,18 @@ class job_parser(WSRTrecipe):
                             if itemnode.nodeName == 'server':
                                 name = itemnode.childNodes[0].nodeValue
                             elif itemnode.nodeName == 'resultdir':
-                                res  = itemnode.childNodes[0].nodeValue
-                        if res and name: 
+                                res = itemnode.childNodes[0].nodeValue
+                        if res and name:
                             self.outputs['repository'] = (name, res)
                     elif node.nodeName == 'inputlist':
-                        name  = "'" + node.attributes.get('name').nodeValue + "'"
+                        name = "'" + node.attributes.get('name').nodeValue + "'"
                         exec(eval("'self.outputs[%s] = []' % (name)"))
                         for itemnode in node.childNodes:
                             if itemnode.nodeName == 'listitem':
                                 value = itemnode.childNodes[0].nodeValue
                                 exec(eval("'self.outputs[%s].append(%s)' % (name, value)"))
                     elif node.nodeName == 'input':
-                        name  = "'" + node.attributes.get('name').nodeValue + "'"
+                        name = "'" + node.attributes.get('name').nodeValue + "'"
                         value = node.childNodes[0].nodeValue
                         #try: # we should just interpret the value, and have the cook/script worry about if it's an int or string.
                         if value == 'True' or value == 'False':
@@ -59,7 +59,7 @@ class job_parser(WSRTrecipe):
                 self.outputs['Status'] = JobScheduled
                 return
         except Exception, inst:
-            self.print_notification('Failed importing job: ' + self.inputs['Job'] + '; Error: ' + str(inst))
+            self.logger.info('Failed importing job: ' + self.inputs['Job'] + '; Error: ' + str(inst))
         self.outputs['Status'] = JobError
 
 ## Stand alone execution code ------------------------------------------
