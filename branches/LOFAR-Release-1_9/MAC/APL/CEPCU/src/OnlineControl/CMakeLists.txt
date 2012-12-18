@@ -8,6 +8,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 lofar_add_bin_program(OnlineControl
   OnlineControlMain.cc
   OnlineControl.cc
-  CEPApplMgr.cc)
+  forkexec.cc)
 
 lofar_add_executable(tPVSSMapping tPVSSMapping.cc)
