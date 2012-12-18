@@ -108,7 +108,7 @@ class WSRTrecipe(object):
         except IOError:
             logging.debug(
                 "Could not find (optional) default parset {0}".format(
-                                                                    my_parset))
+                                self.name + ".parset"))
 
         # Parse the arguments using default parser
         (options, args) = self.optionparser.parse_args(opts)
