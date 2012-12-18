@@ -144,6 +144,7 @@ GCFEvent::TResult SHMInfoServer::accepting(GCFEvent& e, GCFPortInterface& p)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	static unsigned long garbageTimerID = 0;
+	(void)p;  // may be unused, depending on switch().
 //	static unsigned long rereadPolicyTimerID = 0;
 //	static bool hasPVSS = false; 
 

@@ -181,6 +181,7 @@ void GCFRTDBPort::dpeSubscriptionLost (const string& DPname, PVSSresult /*result
 void GCFRTDBPort::dpeUnsubscribed (const string& DPname, PVSSresult result)
 {
 	LOG_TRACE_FLOW_STR("GCFRTDBPort::dpUnsubscribed(" << DPname << "," << result << ")");
+	(void)DPname, (void)result;
 	itsIsOpened = false;
 	schedule_disconnected();
 }
