@@ -191,11 +191,10 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface
 	LOG_DEBUG_STR("operational:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	static unsigned long garbageTimerID = 0;
 
 	switch (event.signal) {
 	case F_ENTRY:
-		garbageTimerID = itsTimerPort->setTimer(1.0, 5.0); 
+		itsTimerPort->setTimer(1.0, 5.0); 
 	break;
 
 	// Catch incoming connections of new clients
