@@ -47,10 +47,10 @@ PIC.Core.CS011HBA0.clockCorrectionTime = 7.55852e-06
 PIC.Core.CS011HBA1.clockCorrectionTime = 7.55852e-06
 PIC.Core.CS011HBA.clockCorrectionTime  = 7.55852e-06
 
-PIC.Core.CS013LBA.clockCorrectionTime  = 1.639118e-05
-PIC.Core.CS013HBA0.clockCorrectionTime = 1.639118e-05
-PIC.Core.CS013HBA1.clockCorrectionTime = 1.639118e-05
-PIC.Core.CS013HBA.clockCorrectionTime  = 1.639118e-05
+PIC.Core.CS013LBA.clockCorrectionTime  = 9.47910e-06
+PIC.Core.CS013HBA0.clockCorrectionTime = 9.47910e-06
+PIC.Core.CS013HBA1.clockCorrectionTime = 9.47910e-06
+PIC.Core.CS013HBA.clockCorrectionTime  = 9.47910e-06
 
 PIC.Core.CS017LBA.clockCorrectionTime  = 1.540812e-05
 PIC.Core.CS017HBA0.clockCorrectionTime = 1.541095e-05
