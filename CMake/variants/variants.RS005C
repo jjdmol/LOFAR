@@ -1,5 +1,6 @@
 # Preset rs002 specific options
 option(USE_BACKTRACE     "Use backtrace" OFF)
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 # Path to Postgres C API
 set(PQ_ROOT_DIR /usr/local/pgsql)

@@ -42,8 +42,6 @@
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
 
-#include <CEPApplMgr.h>
-
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 // forward declaration
@@ -63,8 +61,7 @@ using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ParentControl;
 using boost::posix_time::ptime;
 
-class OnlineControl : public GCFTask,
-                      public CEPApplMgrInterface
+class OnlineControl : public GCFTask
 {
 public:
 	explicit OnlineControl(const string& cntlrName);
@@ -83,47 +80,20 @@ public:
 	static void signalHandler (int	signum);
 	void	    finish();
 
-protected: // implemenation of abstract CEPApplMgrInterface methods
-    string  appSupplyInfo		(const string& procName, const string& keyList);
-    void    appSupplyInfoAnswer (const string& procName, const string& answer);
-	// A result of one of the applications was received, update the administration
-	// off the controller and send the result to the parentcontroller if appropriate.
-	void	appSetStateResult	 (const string&			procName, 
-								  CTState::CTstateNr   	newState, 
-								  uint16				result);
-
-  
 private:
 	// avoid defaultconstruction and copying
 	OnlineControl();
 	OnlineControl(const OnlineControl&);
    	OnlineControl& operator=(const OnlineControl&);
 
+	uint32	_doBoot();
 	void	_setupBGPmappingTables();
-	void	_doBoot();
-	void	_doQuit();
 	void   	_finishController	 (uint16_t 				result);
    	void	_connectedHandler	 (GCFPortInterface& 	port);
    	void	_disconnectedHandler (GCFPortInterface& 	port);
 	void	_setState	  		 (CTState::CTstateNr	newState);
 	void	_databaseEventHandler(GCFEvent&				event);
 	void	_passMetadatToOTDB   ();
-
-	// Send a command to all (or the first) applications.
-	void	startNewState (CTState::CTstateNr		newState,
-						   const string&			options);
-
-	// typedefs for the internal adminsitration of all the Applications we control
-	typedef boost::shared_ptr<CEPApplMgr> CEPApplMgrPtr;
-    typedef	map<string, CEPApplMgrPtr>  			CAMmap;
-	typedef map<string, CEPApplMgrPtr>::iterator	CAMiter;
-
-	// Internal bookkeeping-finctions for the dependancy-order of the applications. 
-	void	setApplOrder	(vector<string>&	anApplOrder);
-	CAMiter	firstApplication(CTState::CTstateNr		aState);
-	CAMiter	nextApplication();
-	bool	hasNextApplication();
-	void	noApplication();
 
 	// ----- datamembers -----
    	RTDBPropertySet*           	itsPropertySet;
@@ -140,19 +110,7 @@ private:
 
 	GCFTCPPort*				itsLogControlPort;
 
-	CAMmap					itsCEPapplications;
-    ParameterSet  itsResultParams;
-
 	CTState::CTstateNr		itsState;
-
-	bool					itsUseApplOrder;	// Applications depend?
-	vector<string>			itsApplOrder;		// startOrder of the applications.
-	string					itsCurrentAppl;		// current application we are handling.
-	CTState::CTstateNr		itsApplState;		// state currently handled by apps.
-	string					itsOptions;			// Current active option
-
-	uint16					itsOverallResult;
-	int16					itsNrOfAcks2Recv;
 
 	// ParameterSet variables
 	string					itsTreePrefix;
