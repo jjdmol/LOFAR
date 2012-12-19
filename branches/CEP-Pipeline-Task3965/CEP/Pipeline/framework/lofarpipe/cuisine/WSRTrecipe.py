@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 import os.path
-import ingredient
+from lofarpipe.support.lofaringredient import LOFARingredient
 import cook
 import parset
 import pickle
@@ -37,12 +37,12 @@ class WSRTrecipe(object):
     """
     def __init__(self):
         """
-        Initiate the input and output with empty WSRTingredient(dict)
+        Initiate the input and output with empty LOFARingredient(dict)
         Fill the default python option parser
         """
         # List of inputs, outputs
-        self.inputs = ingredient.WSRTingredient()
-        self.outputs = ingredient.WSRTingredient()
+        self.inputs = LOFARingredient(None)
+        self.outputs = LOFARingredient(None)
 
         ## Try using the standard Python system for handling options
         self.optionparser = OptionParser(usage="usage: %prog [options]")
@@ -157,35 +157,6 @@ class WSRTrecipe(object):
             else:
                 self.logger.warn('recipe ' + name + ' completed with errors')
             return status
-
-    def get_run_info(self, filepath):
-        # obscure function:
-        try:
-            fd = open(filepath + '/pipeline.pickle')
-            results = pickle.load(fd)
-        except:
-            return None
-        fd.close()
-        if self.name in results.keys():
-            return results[self.name]
-        else:
-            return None
-
-    def set_run_info(self, filepath):
-        # This function is not save to use: multiple runs share the 'state'
-        try:
-            fd = open(filepath + '/' + 'pipeline.pickle', 'w')
-            try:
-                results = pickle.load(fd)
-            except:
-                results = {}
-
-            results[self.name] = {'inputs': self.inputs,
-                                  'outputs': self.outputs}
-            pickle.dump(results, fd)
-            fd.close()
-        except:
-            return None
 
     def go(self):
         """

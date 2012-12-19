@@ -6,12 +6,7 @@ python_install(
   __init__.py
   cuisine/__init__.py
   cuisine/cook.py
-  cuisine/ingredient.py
-  cuisine/job_parser.py
-  cuisine/message.py
   cuisine/parset.py
-  cuisine/pipeline.py
-  cuisine/pipeline_manager_config.py
   cuisine/WSRTrecipe.py
   support/__init__.py
   support/baserecipe.py

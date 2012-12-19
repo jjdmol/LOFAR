@@ -9,13 +9,12 @@ import os
 from optparse import make_option
 from UserDict import DictMixin
 
-from lofarpipe.cuisine.ingredient import WSRTingredient
 from lofarpipe.support.utilities import string_to_list, is_iterable
 
 #       These are currently only used by lofarrecipe.run_task to provide default
 #              input and output dicts based on copying metadata from the parent.
 # ------------------------------------------------------------------------------
-class LOFARinput(WSRTingredient):
+class LOFARinput(dict):
     """
     All LOFAR pipeline ingredients are required to provide a few basic
     parameters:
@@ -37,9 +36,9 @@ class LOFARinput(WSRTingredient):
             if param != "args" and defaults.has_key(param):
                 self[param] = defaults[param]
 
-class LOFARoutput(WSRTingredient):
+class LOFARoutput(dict):
     """
-    LOFARoutput makes no changes to WSRTingredient.
+    placesholder: No changes applied
     """
     pass
 

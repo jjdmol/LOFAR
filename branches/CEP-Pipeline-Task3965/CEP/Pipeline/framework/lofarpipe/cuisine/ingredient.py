@@ -1,3 +1,0 @@
-class WSRTingredient(dict):
-    pass
-
