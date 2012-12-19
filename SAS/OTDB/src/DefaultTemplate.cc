@@ -25,6 +25,7 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
+#include<Common/lofar_datetime.h>
 #include<OTDB/DefaultTemplate.h>
 
 using namespace pqxx;

@@ -101,8 +101,8 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     unsigned			 itsNrHistorySamples;
     unsigned			 itsNrInputs;
     unsigned			 itsNrBeams;
-    unsigned			 itsMaxNrTABs;
-    std::vector<unsigned>	 itsNrTABs;
+    unsigned			 itsMaxNrPencilBeams;
+    std::vector<unsigned>	 itsNrPencilBeams;
 
     unsigned			 itsCurrentPhaseOneTwoComputeCore;
     unsigned			 itsPsetNumber;
@@ -110,7 +110,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &itsBeamletBuffers;
     unsigned                     itsBlockNumber;
     SmartPtr<Delays>		 itsDelays;
-    double			 itsSubbandBandwidth, itsSampleDuration;
+    double			 itsSampleRate, itsSampleDuration;
     double			 itsClockCorrectionTime;
 
     std::vector<TimeStamp>	 itsDelayedStamps;

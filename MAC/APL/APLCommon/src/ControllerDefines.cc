@@ -313,9 +313,6 @@ string	createPropertySetName(const string&		propSetMask,
 	if ((pos = psName.find("@ionode@")) != string::npos) {
 		psName.replace(pos, 8, string("IONode%02d"));
 	}
-	if ((pos = psName.find("@osionode@")) != string::npos) {
-		psName.replace(pos, 10, string("OSIONode%02d"));
-	}
 	if ((pos = psName.find("@locusnode@")) != string::npos) {
 		psName.replace(pos, 11, string("LocusNode%03d"));
 	}

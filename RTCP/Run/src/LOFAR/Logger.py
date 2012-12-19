@@ -232,11 +232,6 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "output to stdout [%default]" )
-  parser.add_option( "-t", "--timestamp",
-  			dest = "timestamp",
-			action = "store_true",
-			default = False,
-  			help = "prefix each line with the current date/time [%default]" )
   parser.add_option( "-m", "--maxmb",
   			dest = "maxmb",
 			type = "int",
@@ -257,7 +252,6 @@ if __name__ == "__main__":
   logger.handlers[0].maxBytes = options.maxmb * 1024 * 1024
 
   verbose = options.verbose
-  add_time = options.timestamp
   if options.server:
     host,port = options.server.split(":")
     port = int(port)
@@ -278,9 +272,6 @@ if __name__ == "__main__":
       server.write(line)
 
     line = line[:-1] # strip trailing \n
-
-    if add_time:
-      line = strftime("%Y-%m-%d %H:%M:%S ") + line
 
     logger.info( "%s", line )
 

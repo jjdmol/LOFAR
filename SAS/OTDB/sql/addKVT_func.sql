@@ -39,7 +39,6 @@
 --
 CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
   RETURNS BOOLEAN AS '
-    --  $Id$
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
 		vTime		timestamp := NULL;

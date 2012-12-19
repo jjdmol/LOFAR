@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
+#include <Common/lofar_datetime.h>
 #include <Common/StringUtil.h>
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/TreeState.h>
@@ -33,11 +34,8 @@
 #include <OTDB/TreeMaintenance.h>
 #include <libgen.h>             // for basename
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
-using namespace boost::posix_time;
 
 //
 // show tree result

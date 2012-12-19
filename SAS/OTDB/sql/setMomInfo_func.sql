@@ -33,7 +33,6 @@
 --
 CREATE OR REPLACE FUNCTION setMomInfo(INT4, INT4, INT4, INT4, TEXT)
   RETURNS BOOLEAN AS $$
-    --  $Id$
 	DECLARE
 		vFunction				INT2 := 1;
 		vIsAuth					BOOLEAN;

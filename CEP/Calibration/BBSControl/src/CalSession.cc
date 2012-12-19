@@ -724,14 +724,15 @@ bool CalSession::waitForTrigger(Trigger::Type type, double timeOut) const
     else
     {
         LOG_TRACE_COND("Waiting for notification");
+        unsigned int notifs;
         if(timeOut < 0)
         {
-            itsConnection->await_notification();
+            notifs = itsConnection->await_notification();
         }
         else
         {
             timeval tv = asTimeval(timeOut);
-            itsConnection->await_notification(tv.tv_sec, tv.tv_usec);
+            notifs = itsConnection->await_notification(tv.tv_sec, tv.tv_usec);
         }
     }
 

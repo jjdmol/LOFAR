@@ -30,18 +30,18 @@ BeamFormer::BeamFormer(const Parset &parset)
   itsValidStations(BEST_NRBEAMS),
   itsNrChannels(parset.nrChannelsPerSubband()),
   itsNrSamples(parset.CNintegrationSteps()),
-  itsChannelBandwidth(parset.subbandBandwidth() / parset.CNintegrationSteps())
+  itsChannelBandwidth(parset.sampleRate() / parset.CNintegrationSteps())
 {
   initStationMergeMap(parset.tabList());
 }
 
 Matrix<std::vector<unsigned> > BeamFormer::initStationIndices(const Parset &parset)
 {
-  Matrix<std::vector<unsigned> > indexMatrix(parset.nrBeams(), parset.maxNrTABs());
+  Matrix<std::vector<unsigned> > indexMatrix(parset.nrBeams(), parset.maxNrPencilBeams());
 
   for (unsigned sap = 0; sap < parset.nrBeams(); sap++) {
-    for (unsigned pencil = 0; pencil < parset.nrTABs(sap); pencil++) {
-      const std::vector<std::string> stations = parset.TABStationList(sap, pencil);
+    for (unsigned pencil = 0; pencil < parset.nrPencilBeams(sap); pencil++) {
+      const std::vector<std::string> stations = parset.pencilBeamStationList(sap, pencil);
       std::vector<unsigned> &indexList = indexMatrix[sap][pencil];
 
       indexList.resize(stations.size());

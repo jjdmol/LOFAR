@@ -86,7 +86,7 @@ class Delays
     void start();
 
     // get the set of directions (ITRF) and delays for the beams, for the next CN integration time
-    // Both matrices must have dimensions [itsNrBeams][itsMaxNrTABs+1]
+    // Both matrices must have dimensions [itsNrBeams][itsMaxNrPencilBeams+1]
     void getNextDelays(Matrix<casa::MVDirection> &directions, Matrix<double> &delays);
     
   private:
@@ -134,10 +134,10 @@ class Delays
 
     // Beam info.
     const unsigned			itsNrBeams;
-    const unsigned			itsMaxNrTABs;
-    const std::vector<unsigned>		itsNrTABs;
+    const unsigned			itsMaxNrPencilBeams;
+    const std::vector<unsigned>		itsNrPencilBeams;
     Vector<casa::MDirection::Types>	itsDirectionTypes;
-    Matrix<casa::MVDirection>		itsBeamDirections; // [itsNrBeams][itsMaxNrTABs+1]
+    Matrix<casa::MVDirection>		itsBeamDirections; // [itsNrBeams][itsNrPencilBeams+1]
 
     // Sample timings.
     const TimeStamp			itsStartTime;

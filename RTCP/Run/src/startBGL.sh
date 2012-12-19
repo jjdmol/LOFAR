@@ -40,4 +40,4 @@ echo "---------------"
 # Inject the parset into the correlator
 /opt/lofar/bin/commandOLAP.py -P $PARTITION parset $IONPROC_PARSET
 
-) 2>&1 | /opt/lofar/bin/LOFAR/Logger.py -t "$LOGDIR/startBGL.log"
+) 2>&1 | /opt/lofar/bin/LOFAR/Logger.py "$LOGDIR/startBGL.log"

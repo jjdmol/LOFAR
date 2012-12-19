@@ -38,7 +38,6 @@
 --
 CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(150), INT2)
   RETURNS INT4 AS $$
-    --  $Id$
 	DECLARE
 		vNode		RECORD;
 		vNewNodeID	VICtemplate.nodeID%TYPE;
@@ -79,7 +78,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150))
   RETURNS INT4 AS $$
-    --  $Id$
 	DECLARE
 	  vFunction  		CONSTANT INT2 := 1;
 	  TTtemplate 		CONSTANT INT2 := 20;

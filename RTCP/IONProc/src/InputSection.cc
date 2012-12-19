@@ -102,7 +102,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThread
   args.nrTimesPerPacket    = parset.getInt32("OLAP.nrTimesInFrame");
   args.nrSlotsPerPacket    = parset.nrSlotsInFrame();
   args.isRealTime	   = parset.realTime();
-  args.startTime	   = TimeStamp(static_cast<int64>(parset.startTime() * parset.subbandBandwidth()), parset.clockSpeed());
+  args.startTime	   = TimeStamp(static_cast<int64>(parset.startTime() * parset.sampleRate()), parset.clockSpeed());
 
   itsInputThreads.resize(itsNrRSPboards);
 

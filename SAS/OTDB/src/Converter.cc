@@ -29,8 +29,6 @@
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/Converter.h>
 
-#include <pqxx/transaction>
-
 using namespace pqxx;
 
 namespace LOFAR {

@@ -52,6 +52,10 @@ class MSWriterCorrelated : public MSWriterFile
     const std::string itsMSname;
     const Parset &itsParset;
 
+    void			     flushSequenceNumbers();
+    void			     writeSequenceNumber(StreamableData *);
+
+    std::vector<unsigned>	     itsSequenceNumbers;
     SmartPtr<FileStream>	     itsSequenceNumbersFile;
 
   private:

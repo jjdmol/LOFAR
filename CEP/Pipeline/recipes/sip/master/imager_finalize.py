@@ -5,8 +5,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.data_map import DataMap, validate_data_maps, \
-                                       align_data_maps
+from lofarpipe.support.data_map import DataMap, validate_data_maps
 
 class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -99,16 +98,60 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         processed_ms_dir = self.inputs["processed_ms_dir"]
         fillrootimagegroup_exec = self.inputs["fillrootimagegroup_exec"]
 
-        # Align the skip fields
-        align_data_maps(awimager_output_map, raw_ms_per_image_map,
-                sourcelist_map, target_mapfile, output_image_mapfile,
-                sourcedb_map)
+        # The input mapfiles might not be of the same length:
+        # host_source are unique and can be used to match the entries!
+        # Final step is the source_finder: use this mapfile as 'source'
+        awimager_output_map_new = []
+        raw_ms_per_image_map_new = []
+        target_map_new = []
+        output_image_map_new = []
 
-        # Set the correct iterator
-        sourcelist_map.iterator = awimager_output_map.iterator = \
-            raw_ms_per_image_map.iterator = target_mapfile.iterator = \
-            output_image_mapfile.iterator = sourcedb_map.iterator = \
-                DataMap.SkipIterator
+        for item in sourcelist_map:
+            host_source, path_source = item.host, item.file
+            for item in awimager_output_map:
+                host_comp, path_comp = item.host, item.file
+                if host_comp == host_source:
+                    awimager_output_map_new.append(
+                                        tuple([host_comp, path_comp, False]))
+
+            for item in raw_ms_per_image_map:
+                host_comp, path_comp = item.host, item.file
+                if host_comp == host_source:
+                    raw_ms_per_image_map_new.append(
+                                        tuple([host_comp, path_comp, False]))
+
+            for item in target_mapfile:
+                host_comp, path_comp = item.host, item.file
+                if host_comp == host_source:
+                    target_map_new.append(
+                                        tuple([host_comp, path_comp, False]))
+
+            for item in output_image_mapfile:
+                host_comp, path_comp = item.host, item.file
+                if host_comp == host_source:
+                    output_image_map_new.append(
+                                        tuple([host_comp, path_comp, False]))
+
+        awimager_output_map_new = DataMap(awimager_output_map_new)
+        raw_ms_per_image_map_new = DataMap(raw_ms_per_image_map_new)
+        target_map_new = DataMap(target_map_new)
+        output_image_map_new = DataMap(output_image_map_new)
+        # chech validity of the maps: all on same node with the same length
+        if not validate_data_maps(awimager_output_map_new, raw_ms_per_image_map_new,
+                sourcelist_map, target_map_new, output_image_map_new):
+            self.logger.error("The suplied datamaps for the imager_finalize"
+                              "are incorrect.")
+            self.logger.error("awimager_output_map: {0}".format(
+                                                        awimager_output_map_new))
+            self.logger.error("raw_ms_per_image_map: {0}".format(
+                                                        raw_ms_per_image_map_new))
+            self.logger.error("sourcelist_map: {0}".format(
+                                                        sourcelist_map))
+            self.logger.error("target_mapfile: {0}".format(
+                                                        target_map_new))
+            self.logger.error("output_image_mapfile: {0}".format(
+                                                        output_image_map_new))
+            return 1
 
         # *********************************************************************
         # 2. Run the node side of the recupe
@@ -116,51 +159,45 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         jobs = []
         for  (awimager_output_item, raw_ms_per_image_item, sourcelist_item,
               target_item, output_image_item, sourcedb_item) in zip(
-                  awimager_output_map, raw_ms_per_image_map, sourcelist_map,
-                  target_mapfile, output_image_mapfile, sourcedb_map):
-            # collect the files as argument
-            arguments = [awimager_output_item.file,
-                         raw_ms_per_image_item.file,
-                         sourcelist_item.file,
-                         target_item.file,
-                         output_image_item.file,
-                         self.inputs["minbaseline"],
-                         self.inputs["maxbaseline"],
-                         processed_ms_dir,
-                         fillrootimagegroup_exec,
-                         self.environment,
-                         sourcedb_item.file]
+                awimager_output_map_new, raw_ms_per_image_map_new, sourcelist_map,
+                target_map_new, output_image_map_new, sourcedb_map):
+            # collect the data for the current node from the indexes in the 
+            # mapfiles
+            host, target = target_item.host, target_item.file
+            awimager_output = awimager_output_item.file
+            raw_ms_per_image = raw_ms_per_image_item.file
+            sourcelist = sourcelist_item.file
+            output_image = output_image_item.file
+            sourcedb = sourcedb_item.file
 
-            self.logger.info(
-                "Starting finalize with the folowing args: {0}".format(
-                                                                    arguments))
-            jobs.append(ComputeJob(target_item.host, command, arguments))
-
+            arguments = [awimager_output, raw_ms_per_image, sourcelist,
+                        target, output_image, self.inputs["minbaseline"],
+                        self.inputs["maxbaseline"], processed_ms_dir,
+                        fillrootimagegroup_exec, self.environment, sourcedb]
+            self.logger.info(arguments)
+            jobs.append(ComputeJob(host, command, arguments))
         self._schedule_jobs(jobs)
 
         # *********************************************************************
         # 3. Validate the performance of the node script and assign output
-        succesful_run = False
-        for (job, output_image_item) in  zip(jobs, output_image_mapfile):
-            if not "hdf5" in job.results:
-                # If the output failed set the skip to True
-                output_image_item.skip = True
+        placed_images = []
+        for (job, output_image_item) in  zip(jobs, output_image_map_new):
+            if job.results.has_key("hdf5"):
+                placed_images.append(tuple([job.host, job.results["image"], False]))
             else:
-                succesful_run = True
-                # signal that we have at least a single run finished ok.
-                # No need to set skip in this case
+                # On failure on the node the file should be gotten from the input
+                placed_images.append(tuple([job.host, output_image_item.file, True]))
 
-        if not succesful_run:
+        if len(placed_images) == 0:
             self.logger.warn("Failed finalizer node run detected")
             return 1
 
-        output_image_mapfile.save(self.inputs['placed_image_mapfile'])
+        DataMap(placed_images).save(self.inputs['placed_image_mapfile'])
         self.logger.debug(
            "Wrote mapfile containing placed hdf5 images: {0}".format(
                            self.inputs['placed_image_mapfile']))
         self.outputs["placed_image_mapfile"] = self.inputs[
                                                     'placed_image_mapfile']
-
         return 0
 
 

@@ -26,6 +26,7 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h>
 
 //# ACC Includes
@@ -33,16 +34,12 @@
 
 //# GCF Includes
 #include <GCF/TM/GCF_Control.h>
-#include <GCF/PVSS/PVSSservice.h>
-#include <GCF/PVSS/PVSSresponse.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 
 //# local includes
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 // forward declaration
 
@@ -55,11 +52,8 @@ using	GCF::TM::GCFITCPort;
 using	GCF::TM::GCFPort;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
-using	GCF::PVSS::PVSSservice;
-using	GCF::PVSS::PVSSresponse;
 using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ParentControl;
-using boost::posix_time::ptime;
 
 class OnlineControl : public GCFTask
 {
@@ -99,8 +93,6 @@ private:
    	RTDBPropertySet*           	itsPropertySet;
    	RTDBPropertySet*           	itsBGPApplPropSet;
 	bool					  	itsPropertySetInitialized;
-	PVSSservice*				itsPVSSService;
-	PVSSresponse*				itsPVSSResponse;
 
 	// pointer to parent control task
 	ParentControl*			itsParentControl;

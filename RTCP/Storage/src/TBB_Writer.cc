@@ -479,7 +479,7 @@ void TBB_Station::initCommonLofarAttributes() {
 	double max_centerfrequency = *max_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
 	double sum_centerfrequencies = accumulate( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end(), 0.0 );
 
-	double subbandBandwidth = itsParset.subbandBandwidth();
+	double subbandBandwidth = itsParset.sampleRate();
 
 	itsH5File.observationFrequencyMax()   .value = (max_centerfrequency + subbandBandwidth / 2) / 1e6;
 	itsH5File.observationFrequencyMin()   .value = (min_centerfrequency - subbandBandwidth / 2) / 1e6;
