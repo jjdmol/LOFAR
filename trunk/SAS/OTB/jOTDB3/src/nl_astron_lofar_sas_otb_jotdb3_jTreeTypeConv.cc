@@ -68,7 +68,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_get__
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
   
-  short ret;
+  short ret(0);
   try {
     ret= ((TreeTypeConv*)getCObjectPtr(env,jTreeTypeConv,"_TreeTypeConv"))->get (str);
   
@@ -90,7 +90,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_get__
  * Signature: (S)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_get__S(JNIEnv *env, jobject jTreeTypeConv, jshort aConv) {
-  jstring jstr;
+  jstring jstr(0);
   try {
     jstr= env->NewStringUTF (((TreeTypeConv*)getCObjectPtr(env,jTreeTypeConv,"_TreeTypeConv"))->get(aConv).c_str());
   } catch (exception &ex) {
@@ -182,7 +182,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_top(JNI
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_next(JNIEnv *env, jobject jTreeTypeConv) {
-  jboolean aBool;
+  jboolean aBool(0);
   try {
     aBool=((TreeTypeConv*)getCObjectPtr(env,jTreeTypeConv,"_TreeTypeConv"))->next();
   } catch (exception &ex) {

@@ -69,7 +69,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jCampaign_initCampaig
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jCampaign_getCampaign__Ljava_lang_String_2
   (JNIEnv *env, jobject jCampaign, jstring aName) {
-  const char* name;
+  const char* name(0);
   CampaignInfo aCampaignInfo;
   jboolean isCopy;
 
@@ -114,7 +114,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jCampaign_getCampa
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jCampaign_getCampaignList
   (JNIEnv *env, jobject jCampaign){
-  jobject itemVector;
+  jobject itemVector(0);
   try {
     vector<CampaignInfo> itemList = ((Campaign*)getCObjectPtr(env,jCampaign,"_Campaign"))->getCampaignList();
 
@@ -145,7 +145,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jCampaign_getCampa
  */
 JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jCampaign_saveCampaign
   (JNIEnv *env, jobject jCampaign, jobject jCampaignInfo){
-  jint retVal;
+  jint retVal(0);
 
   try {
     CampaignInfo aCampaignInfo = convertjCampaignInfo (env, jCampaignInfo,jCampaign);
@@ -173,7 +173,7 @@ JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jCampaign_errorMsg
  * Signature: ()Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jCampaign_errorMsg(JNIEnv *env, jobject jCampaign) {
-  jstring aS;
+  jstring aS(0);
   try {
     aS = env->NewStringUTF(((OTDBconnection*)getCObjectPtr(env,jCampaign,"_OTDBconnection"))->errorMsg().c_str());
   } catch (exception &ex) {
