@@ -131,8 +131,7 @@ int main (int argc, char* argv[])
 MVEpoch toCasaTime (const string& time)
 {
   // e.g. 2011-Mar-19 21:17:06.514000
-  Double casaTime;                  // casacore MVEpoch time to be returned
-  Quantity result(casaTime, "s");   // set quantity unit to seconds
+  Quantity result;
   ASSERT(!time.empty());
   MVTime::read(result, time);
   return result;
