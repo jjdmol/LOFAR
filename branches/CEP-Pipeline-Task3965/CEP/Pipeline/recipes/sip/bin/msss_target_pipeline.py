@@ -202,7 +202,6 @@ class msss_target_pipeline(control):
         copied_instruments_mapfile = self.run_task("copier",
                       mapfile_source=source_path,
                       mapfile_target=target_path,
-                      mapfiles_dir=copier_map_path,
                       mapfile=copied_files_path)['mapfile_target_copied']
 
         # Some copy action might fail; the skip fields in the other map-files

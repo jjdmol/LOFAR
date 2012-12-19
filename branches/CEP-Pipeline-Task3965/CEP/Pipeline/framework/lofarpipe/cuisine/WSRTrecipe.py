@@ -1,22 +1,14 @@
 #!/usr/bin/env python
 import sys
 import os.path
-from lofarpipe.support.lofaringredient import LOFARingredient
-import cook
 import parset
-import pickle
 import logging
 from optparse import OptionParser
 
+import lofarpipe.cuisine.cook as cook
 from lofarpipe.support.pipelinelogging import getSearchingLogger
-
-
-class RecipeError(cook.CookError):
-    """
-    Exception used to signal problems in running a recipe
-    """
-    pass
-
+from lofarpipe.support.lofaringredient import LOFARingredient
+from lofarpipe.support.lofarexceptions import RecipeArgumentException
 
 class NullLogHandler(logging.Handler):
     """
@@ -84,7 +76,30 @@ class WSRTrecipe(object):
             for k in self._outfields.keys():
                 print '  ' + k
 
-    def main_init(self):
+    def main(self):
+        """
+        Main function for running the recipe in standalone mode.\
+        Parse options from command line.
+        Calls the run function containing actual functionality.
+
+        This is the single function called after construction of a master
+        recipe in standalone mode.
+        """
+        # Get script name (no extention)
+        self.name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+
+        # Parse options
+        status = self.prepare_run()
+        if not status:
+            status = self.run(self.name)
+            self.finalize_run()
+        else:
+            self.help_text()
+
+        logging.shutdown()
+        return status
+
+    def prepare_run(self):
         """
         Main initialization for stand alone execution, reading input from
         the command line
@@ -92,17 +107,30 @@ class WSRTrecipe(object):
         # The root logger has a null handler; we'll override in recipes.
         logging.getLogger().addHandler(NullLogHandler())
         self.logger = getSearchingLogger(self.name)
-        opts = sys.argv[1:]
 
-        # Try opening a default parset with the name recipename.parset
+        # Add a stdout log handler to allow output of logging from this point
+        stream_handler = logging.StreamHandler(sys.stdout)
+        logformat = "%(asctime)s %(levelname)-7s %(name)s: %(message)s"
+        datefmt = "%Y-%m-%d %H:%M:%S"
+        formatter = logging.Formatter(logformat, datefmt)
+        stream_handler.setFormatter(formatter)
+        self.logger.addHandler(stream_handler)
+        self.logger.setLevel(logging.DEBUG)
+
+        # get the options from the command line
+        opts = sys.argv[1:]
         try:
+            # Try opening a default parset with the name recipename.parset
             my_parset = parset.Parset(self.name + ".parset")
+            # Add the keys to the opts dict to allow parsing
             for key in my_parset.keys():
                 opts[0:0] = "--" + key, my_parset.getString(key)
         except IOError:
-            logging.debug(
+            # Logger is not working here
+            self.logger.debug(
                 "Could not find (optional) default parset {0}".format(
                                 self.name + ".parset"))
+
 
         # Parse the arguments using default parser
         (options, args) = self.optionparser.parse_args(opts)
@@ -115,25 +143,6 @@ class WSRTrecipe(object):
             self.inputs['args'] = args
             return 0
 
-    def main(self):
-        """
-        Main function for running the recipe in standalone mode.\
-        Parse options from command line.
-        Calls the run function containing actual functionality
-        """
-        # Get script name (no extention)
-        self.name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
-
-        # Parse options
-        status = self.main_init()
-        if not status:
-            status = self.run(self.name)
-            self.main_result()
-        else:
-            self.help_text()
-
-        logging.shutdown()
-        return status
 
     def run(self, name):
         """
@@ -143,10 +152,17 @@ class WSRTrecipe(object):
         """
         self.name = name
         self.logger.info('recipe ' + name + ' started')
+
         try:
             status = self.go()
             if not self.outputs.complete():
                 self.logger.warn("Note: recipe outputs are not complete")
+        except RecipeArgumentException, exception_object:
+            self.logger.error("Received the following argument exception:")
+            self.logger.error(exception_object)
+            self.help_text()
+            self.outputs = None
+            return 1
         except Exception, exception_object:
             self.logger.error(exception_object)
             self.outputs = None
@@ -158,23 +174,24 @@ class WSRTrecipe(object):
                 self.logger.warn('recipe ' + name + ' completed with errors')
             return status
 
+    def finalize_run(self):
+        """
+        Main results display for stand alone execution, displaying results
+        on stdout
+        """
+        if self.outputs == None:
+            print 'The recipe run did not create any outputs'
+        else:
+            print 'Results:'
+            for o in self.outputs.keys():
+                print str(o) + ' = ' + str(self.outputs[o])
+
     def go(self):
         """
         Main functionality, this empty placeholder only shows help
         """
         self.help_text()
 
-    def main_result(self):
-        """
-        Main results display for stand alone execution, displaying results
-        on stdout
-        """
-        if self.outputs == None:
-            print 'No results'
-        else:
-            print 'Results:'
-            for o in self.outputs.keys():
-                print str(o) + ' = ' + str(self.outputs[o])
 
     def cook_recipe(self, recipe, inputs, outputs):
         """

@@ -94,7 +94,7 @@ class MasterNodeInterface(BaseRecipe, RemoteCommandRecipeMixIn):
         This method can be overridden in the derived class.
         """
         return 1
-        
+
     def on_succes(self):
         """
         This method is called when all node recipes return with a zero exit
@@ -103,7 +103,7 @@ class MasterNodeInterface(BaseRecipe, RemoteCommandRecipeMixIn):
         This method can be overridden in the derived class.
         """
         return 0
-        
+
 
 class copier(MasterNodeInterface):
     """
@@ -141,11 +141,6 @@ class copier(MasterNodeInterface):
             '--allow-rename',
             default=True,
             help="Allow renaming of basename at target location"
-        ),
-        'mapfiles_dir': ingredient.StringField(
-            '--mapfiles-dir',
-            help="Path of directory, shared by all nodes, which will be used"
-                " to write mapfile for master-node communication, "
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
@@ -201,14 +196,14 @@ class copier(MasterNodeInterface):
         self.logger.debug("Writing mapfile: %s" % self.inputs['mapfile'])
         self.target_map.save(self.inputs['mapfile'])
         self.outputs['mapfile_target_copied'] = self.inputs['mapfile']
-        
+
     def on_failure(self):
         """
         All copier jobs failed. Bailing out.
         """
         self.logger.error("All copier jobs failed. Bailing out!")
         return 1
-        
+
     def on_error(self):
         """
         Some copier jobs failed. Update the target map, setting 'skip' to True
@@ -222,7 +217,7 @@ class copier(MasterNodeInterface):
                 target.skip = True
         self._write_mapfile()
         return 0
-        
+
     def on_succes(self):
         """
         All copier jobs succeeded. Save an updated mapfile.
@@ -232,9 +227,8 @@ class copier(MasterNodeInterface):
         return 0
 
     def go(self):
-        # TODO: Remove dependency on mapfile_dir 
-        self.logger.info("Starting copier run")
         super(copier, self).go()
+        self.logger.info("Starting copier go")
 
         # Load data from mapfiles
         self.source_map = DataMap.load(self.inputs['mapfile_source'])

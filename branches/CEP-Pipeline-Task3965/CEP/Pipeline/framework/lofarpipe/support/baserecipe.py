@@ -15,7 +15,8 @@ import logging
 import errno
 
 import lofarpipe.support.utilities as utilities
-from lofarpipe.support.lofarexceptions import PipelineException, PipelineRecipeFailed
+from lofarpipe.support.lofarexceptions import PipelineException, \
+    PipelineRecipeFailed, RecipeArgumentException
 from lofarpipe.cuisine.WSRTrecipe import WSRTrecipe
 from lofarpipe.cuisine.cook import CookError
 from lofarpipe.support.lofaringredient import RecipeIngredients, LOFARinput, LOFARoutput
@@ -89,14 +90,22 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             if failure.errno != errno.EEXIST:
                 raise
 
-        stream_handler = logging.StreamHandler(sys.stdout)
-        file_handler = logging.FileHandler(logfile)
-
         formatter = logging.Formatter(format, datefmt)
 
+        # In standalone mode it might be possible that a streaming handler is
+        # added (wsrt recipe)
+        # test for existance of a stream handler to std and remove it
+        for entry in self.logger.handlers:
+            if entry.stream.name == "<stdout>":
+                self.logger.removeHandler(entry)
+                break
+
+        stream_handler = logging.StreamHandler(sys.stdout)
         stream_handler.setFormatter(formatter)
-        file_handler.setFormatter(formatter)
         self.logger.addHandler(stream_handler)
+
+        file_handler = logging.FileHandler(logfile)
+        file_handler.setFormatter(formatter)
         self.logger.addHandler(file_handler)
 
     def run_task(self, configblock, datafiles=[], **kwargs):
@@ -162,7 +171,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
                     self.inputs["config"] = path
                     break
             if not self.inputs.has_key("config"):
-                raise PipelineException("Configuration file not found")
+                raise RecipeArgumentException("Missing argument: <--config>")
 
         config = ConfigParser({
             "job_name": self.inputs["job_name"],
@@ -182,7 +191,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         """
         # Every recipe needs a job identifier
         if not self.inputs.has_key("job_name"):
-            raise PipelineException("Job undefined")
+            raise RecipeArgumentException("Missing argument: <--job-name>")
 
         if not self.inputs.has_key("start_time"):
             import datetime
@@ -211,6 +220,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
                 )
             except NoOptionError:
                 self.inputs["task_files"] = []
+
         self.task_definitions = ConfigParser(self.config.defaults())
         print >> sys.stderr, "Reading task definition file(s): %s" % \
                              ",".join(self.inputs["task_files"])
@@ -236,7 +246,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
 
         # At this point, the recipe inputs must be complete. If not, exit.
         if not self.inputs.complete():
-            raise PipelineException(
+            raise RecipeArgumentException(
                 "Required inputs not available: %s" %
                 " ".join(self.inputs.missing())
             )
@@ -244,6 +254,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         # Only configure handlers if our parent is the root logger.
         # Otherwise, our parent should have done it for us.
         if isinstance(self.logger.parent, logging.RootLogger):
+
             self._setup_logging()
 
         self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])

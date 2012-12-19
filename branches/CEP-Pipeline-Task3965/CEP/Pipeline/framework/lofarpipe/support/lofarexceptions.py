@@ -11,6 +11,9 @@ class ExecutableMissing(Exception):
 class PipelineException(Exception):
     pass
 
+class RecipeArgumentException(Exception):
+    pass
+
 class PipelineRecipeFailed(PipelineException):
     pass
 
@@ -26,7 +29,7 @@ class PipelineQuit(PipelineException):
 
 class ClusterError(PipelineException):
     pass
-    
+
 class DataMapError(PipelineException):
     pass
 
