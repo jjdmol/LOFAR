@@ -88,7 +88,6 @@ fillrootimagegroup_exec = %(lofarroot)s/bin/fillRootImageGroup
 
 [copier]
 recipe = copier
-mapfiles_dir = %(runtime_directory)s/%(job_name)s/mapfiles
 
 [bbs_reducer]
 recipe = bbs_reducer
