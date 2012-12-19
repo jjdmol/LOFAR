@@ -101,7 +101,7 @@ class WSRTrecipe(object):
 
     def prepare_run(self):
         """
-        Main initialization for stand alone execution, reading input from
+        run initialization for stand alone execution, reading input from
         the command line
         """
         # The root logger has a null handler; we'll override in recipes.
