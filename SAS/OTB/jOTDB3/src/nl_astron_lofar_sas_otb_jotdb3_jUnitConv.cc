@@ -67,7 +67,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jUnitConv_get__Ljav
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
   
-  short ret;
+  short ret(0);
   try {
     ret = ((UnitConv*)getCObjectPtr(env,jUnitConv,"_UnitConv"))->get (str);
   
@@ -88,7 +88,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jUnitConv_get__Ljav
  * Signature: (S)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jUnitConv_get__S(JNIEnv *env, jobject jUnitConv, jshort aConv) {
-  jstring jstr;
+  jstring jstr(0);
   try {
     jstr= env->NewStringUTF (((UnitConv*)getCObjectPtr(env,jUnitConv,"_UnitConv"))->get(aConv).c_str());
   } catch (exception &ex) {
@@ -180,7 +180,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jUnitConv_top(JNIEnv 
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jUnitConv_next(JNIEnv *env, jobject jUnitConv) {
-  jboolean aBool;
+  jboolean aBool(0);
   try {
     aBool=((UnitConv*)getCObjectPtr(env,jUnitConv,"_UnitConv"))->next();
   } catch (exception &ex) {
