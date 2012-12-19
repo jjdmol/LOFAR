@@ -1,0 +1,95 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 500 400 N "_3DFace" 1
+"$STATION"
+"main()
+{
+  STATION.text = $STATION;
+  
+  dpConnect( \"Callback\", \"MCU001:Trigger.trigger\" );
+}
+
+void Callback( string strDP, bool bDummy )
+{
+  if( dynContains( strHighlight, $STATION ) > 0 )
+  {
+    ELLIPSE1.backCol = \"yellow\"; 
+  } 
+  else
+    ELLIPSE1.backCol = \"\";
+}" 0
+ E E E E 1 -1 -1 0  40 40
+""0  1
+E E 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+7 0
+"ELLIPSE1"
+""
+1 40 40 E E E 1 E 1 E N {0,0,0} E N {26,153,11} E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 40 40 16 16
+2 1
+"STATION"
+""
+1 16 72 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 16 72 72 88
+0 2 2 "0s" 0 0 0 64 0 0  16 72 1
+1
+LANG:1 85 -*-Arial-*-r-normal-*-*-100-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 7 STATION
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
