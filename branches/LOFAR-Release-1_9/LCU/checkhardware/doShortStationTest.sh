@@ -1,6 +1,6 @@
 #!/bin/bash
 
-logdir="/opt/checkhardware/log/"
+logdir="/globalhome/log/"
 
 host=`hostname -s`
 filenameFrom=$logdir$host"_StationTest.csv"

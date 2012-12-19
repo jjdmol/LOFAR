@@ -42,10 +42,15 @@ StID = args.get('s', getHostName())
 
 
 def main():
-    logdir = '/opt/checkhardware/log/'
+    f = open("checkHardware.conf", 'r')
+    data = f.readlines()
+    f.close()
+    for line in data:
+        if line.find('log-dir') != -1:
+            key, logdir = line.strip().split('=')
     
     testfilename = '%s_StationTest.csv' %(StID)
-    fullFilename = logdir + testfilename
+    fullFilename = os.path.join(logdir, testfilename)
     f = open(fullFilename, 'r')
     data = f.readlines()
     f.close()

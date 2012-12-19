@@ -12,11 +12,17 @@ sys.path.insert(0, libPath)
 
 from general_lib import *
 
-logdir = '/opt/checkhardware/log/'
+f = open("checkHardware.conf", 'r')
+data = f.readlines()
+f.close()
+for line in data:
+    if line.find('log-dir') != -1:
+        key, logdir = line.strip().split('=')
+
 log = cStationLogger(logdir)
 
 testfilename = '%s_StationTest.csv' %(getHostName())
-fullFilename = logdir + testfilename
+fullFilename = os.path.join(logdir, testfilename)
 f = open(fullFilename, 'r')
 testdata = f.readlines()
 f.close()

@@ -89,10 +89,10 @@ class cStationLogger(cLogger):
     def __init__(self, logdir):
         filename = "stationtest_" + getHostName() + '.log'        
         cLogger.__init__(self, logdir, filename)
-        cLogger.info(self, "#StID  >: %s" %(getHostName()))
-        cLogger.info(self, "#Lgfl  >: %s" %(logdir+filename))
+        cLogger.info(self, "StID  >: %s" %(getHostName()))
+        cLogger.info(self, "Lgfl  >: %s" %(os.path.join(logdir,filename)))
         testdate = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
-        cLogger.info(self, "#Time  >: %s" %(testdate))
+        cLogger.info(self, "Time  >: %s" %(testdate))
     
     def addLine(self, info):
         cLogger.info(self, info) 
