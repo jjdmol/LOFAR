@@ -6,7 +6,6 @@ python_install(
   __init__.py
   cuisine/__init__.py
   cuisine/cook.py
-  cuisine/files.py
   cuisine/ingredient.py
   cuisine/job_parser.py
   cuisine/message.py
