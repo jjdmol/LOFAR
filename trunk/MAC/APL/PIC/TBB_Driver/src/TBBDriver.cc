@@ -1385,6 +1385,7 @@ bool TBBDriver::handleTbbCommandFromQueue()
     // command handled, now delete it from queue
     TbbEvent* tmp = itsTbbQueue->front();
     itsTbbQueue->pop_front();
+    (void)status;
     delete e;
     delete tmp;
     return(tp_cmd);

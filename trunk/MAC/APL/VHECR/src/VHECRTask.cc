@@ -311,11 +311,10 @@ namespace LOFAR {
    //  - adds the trigger message to the buffer
    //  - first check if its timestamp is valid!
    void VHECRTask::addTrigger(const TBBTrigger& trigger) {
-    int newindex;
     //      cout << "Received trigger: " << trigger.itsRcuNr << ", " << trigger.itsTime <<endl;
     if (trigger.itsTime < 2.1e9)
     {
-      newindex = add2buffer(trigger);
+      add2buffer(trigger);
     } else
     {
      // cout << "Discarded trigger! " << trigger.itsTime << endl;
@@ -761,7 +760,7 @@ namespace LOFAR {
              minDebugTimeOffsets[k] = debugTimeOffsets[k] - mu/nofChannels;
             }
           }
-
+          (void)minDebugTimeOffsets;
           // cout << "theta = " << 360.0/TWOPI * (TWOPI/4 - theta) << ", phi = " << (double)j / phiSteps * 360 << ": fitResult = " << fitResult[i][j] << endl;
 
         }

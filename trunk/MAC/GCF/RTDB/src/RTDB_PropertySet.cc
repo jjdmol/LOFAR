@@ -389,6 +389,7 @@ RTDBPropertySet::Property* RTDBPropertySet::_getProperty (const string& propName
 void RTDBPropertySet::dpCreated(const string&	propName, PVSSresult		result)
 {
 	LOG_TRACE_FLOW_STR("RTDBPropertySet::dpCreated(" << propName << "," << result << ")");
+	(void)propName;
 
 	// Now that DP exists in the database we can access the elements.
 	_createAllProperties();

@@ -32,7 +32,7 @@
 
 namespace LOFAR {
   namespace GCF {
-    class PVSS::GCFPValue;
+    using PVSS::GCFPValue;
 	using PVSS::GCFPVDynArr;
 	using PVSS::PVSSresult;
 	using PVSS::PVSSresponse;

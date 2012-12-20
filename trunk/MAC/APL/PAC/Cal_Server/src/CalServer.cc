@@ -667,7 +667,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 				steps = 1;
 				jump = 2;
 			}
-            int delay;
+            int delay(0);
 			for (int step = 0; step < steps; ++step) {
 				validmask.reset();
 				// select 12 even(X) rcus and 12 odd(Y) rcus

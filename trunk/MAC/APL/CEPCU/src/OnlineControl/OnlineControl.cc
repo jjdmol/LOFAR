@@ -630,10 +630,9 @@ uint32 OnlineControl::_doBoot()
 	vector<string> applList = thePS->getStringVector("applications");
 	string 	paramFileName;
 
-	uint32	result;
+	uint32	result(CT_RESULT_NO_ERROR);
 	for (size_t a = 0; a < applList.size(); a++) {
 		// Initialize basic variables
-    	result = CT_RESULT_NO_ERROR;
 		string 	applName  (applList[a]);
 		string	applPrefix(applName+".");
 
@@ -693,7 +692,7 @@ uint32 OnlineControl::_doBoot()
 			LOG_INFO_STR("Starting controller for " << applName << " in 5 seconds ");
 			sleep(5);			 // sometimes we are too quick, wait a second.
 			LOG_INFO_STR("About to start: " << startCmd);
-			result = forkexec(startCmd.c_str()) == 0 ? CT_RESULT_NO_ERROR : CT_RESULT_LOST_CONNECTION;
+			result |= forkexec(startCmd.c_str()) == 0 ? CT_RESULT_NO_ERROR : CT_RESULT_LOST_CONNECTION;
 		} 
 		catch (APSException &e) {
 			// key not found. skip

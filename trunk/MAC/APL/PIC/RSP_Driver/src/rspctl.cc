@@ -339,7 +339,7 @@ void SubbandsCommand::send()
 
 	    logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
         
-        if (m_subbandlist.size() > maxBeamlets(itsBitsPerSample)) {
+        if (static_cast<int>(m_subbandlist.size()) > maxBeamlets(itsBitsPerSample)) {
             logMessage(cerr,"Error: too many subbands selected");
 			exit(EXIT_FAILURE);
 		}

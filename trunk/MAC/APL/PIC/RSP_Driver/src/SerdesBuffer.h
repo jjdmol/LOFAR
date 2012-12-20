@@ -54,11 +54,11 @@ public:
 	~SerdesBuffer() {}
 
 	void clear();
-	bool newCommand   (char* cmdbuf, int	cmdLen);
-	bool appendCommand(char* cmdbuf, int	cmdLen);
+	bool newCommand   (unsigned char* cmdbuf, int	cmdLen);
+	bool appendCommand(unsigned char* cmdbuf, int	cmdLen);
 
 	// bdatabuffer functions
-	inline const char*	getBufferPtr()
+	inline const unsigned char*	getBufferPtr()
 		{ return (&itsBuffer[0]); }
 	inline int			getDataLen	() 
 		{ return (itsNrBytes);	}
@@ -72,7 +72,7 @@ private:
 	SerdesBuffer& operator=(const SerdesBuffer& that);
 
 	//# --- Datamembers ---
-	char						itsBuffer [SERDES_BUFFER_SIZE];
+	unsigned char				itsBuffer [SERDES_BUFFER_SIZE];
 	int							itsNrBytes;
 };
 
