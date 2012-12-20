@@ -7,12 +7,12 @@
 import sys
 import os
 
-libPath = os.path.join(os.getcwd(),'lib')
+libPath = libPath = '/opt/stationtest/lib'
 sys.path.insert(0, libPath)
 
 from general_lib import *
 
-f = open("checkHardware.conf", 'r')
+f = open("/opt/stationtest/checkHardware.conf", 'r')
 data = f.readlines()
 f.close()
 for line in data:

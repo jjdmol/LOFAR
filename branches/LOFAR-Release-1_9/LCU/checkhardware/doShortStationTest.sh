@@ -8,11 +8,11 @@ filenameToo=$logdir$host"_StationTestHistory.csv"
 cat $filenameFrom >> $filenameToo
 
 # Check hardware in CheckLevel 1, only antennas
-./checkHardware.py -l 1
+checkHardware.py -l 1
 
 # Add test results too PVSS
 pvssFile=$logdir$host"_StationTest_PVSS.log"
-/opt/lofar/sbin/setObjectState $pvssFile
+setObjectState $pvssFile
 
 # Make old station log files
-./makeStationLogFile.py
+makeStationLogFile.py

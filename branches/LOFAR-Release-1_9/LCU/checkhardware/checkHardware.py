@@ -3,7 +3,7 @@
 import sys
 import os
 
-libPath = os.path.join(os.getcwd(),'lib')
+libPath = '/opt/stationtest/lib'
 sys.path.insert(0, libPath)
 
 from general_lib import *
@@ -68,7 +68,7 @@ def setLevelTests(conf):
 class cConfiguration:
     def __init__(self):
         self.conf = dict()
-        f = open("checkHardware.conf", 'r')
+        f = open("/opt/stationtest/checkHardware.conf", 'r')
         data = f.readlines()
         f.close()
         for line in data:
@@ -105,7 +105,7 @@ def main():
 
     StID = getHostName()
     
-    logger = cLogger(os.getcwd()+'/', 'checkHardware.log', screenPrefix=StID)
+    logger = cLogger('/opt/stationtest/', 'checkHardware.log', screenPrefix=StID)
     
     # Read in RemoteStation.conf 
     ID, nRSP, nTBB, nLBL, nLBH, nHBA = readStationConfig()

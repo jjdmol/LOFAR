@@ -6,7 +6,7 @@ import sys
 import os
 import string
 
-libPath = os.path.join(os.getcwd(),'lib')
+libPath = libPath = '/opt/stationtest/lib'
 sys.path.insert(0, libPath)
 
 from general_lib import *
@@ -42,7 +42,7 @@ StID = args.get('s', getHostName())
 
 
 def main():
-    f = open("checkHardware.conf", 'r')
+    f = open("/opt/stationtest/checkHardware.conf", 'r')
     data = f.readlines()
     f.close()
     for line in data:
