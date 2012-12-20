@@ -149,8 +149,17 @@ PIC.Core.RS306HBA.clockCorrectionTime = 0
 PIC.Core.RS307LBA.clockCorrectionTime = 0
 PIC.Core.RS307HBA.clockCorrectionTime = 0
 
+PIC.Core.RS310LBA.clockCorrectionTime = 0
+PIC.Core.RS310HBA.clockCorrectionTime = 0
+
 PIC.Core.RS406LBA.clockCorrectionTime = 0
 PIC.Core.RS406HBA.clockCorrectionTime = 0
+
+PIC.Core.RS407LBA.clockCorrectionTime = 0
+PIC.Core.RS407HBA.clockCorrectionTime = 0
+
+PIC.Core.RS409LBA.clockCorrectionTime = 0
+PIC.Core.RS409HBA.clockCorrectionTime = 0
 
 PIC.Core.RS503LBA.clockCorrectionTime = 0
 PIC.Core.RS503HBA.clockCorrectionTime = 0
@@ -347,6 +356,9 @@ PIC.Core.RS306HBA.phaseCenter = [3829771.249, 452761.702, 5063243.181]
 
 PIC.Core.RS307LBA.phaseCenter = [3837940.949, 449560.756, 5057381.288]
 PIC.Core.RS307HBA.phaseCenter = [3837964.520, 449627.261, 5057357.585]
+
+PIC.Core.RS310LBA.phaseCenter = [3845433.052, 413580.888, 5054756.170]
+PIC.Core.RS310HBA.phaseCenter = [3845376.290, 413616.564, 5054796.341]
 
 PIC.Core.RS406LBA.phaseCenter = [3818467.634, 451974.601, 5071790.597]
 PIC.Core.RS406HBA.phaseCenter = [3818424.939, 452020.269, 5071817.644]
