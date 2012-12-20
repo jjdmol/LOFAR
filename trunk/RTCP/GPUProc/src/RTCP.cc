@@ -1385,7 +1385,7 @@ void CorrelatorWorkQueue::doWork()
     delaysAfterEnd.hostToDevice(CL_FALSE);
     phaseOffsets.hostToDevice(CL_FALSE);
 
-#pragma omp for schedule(dynamic), nowait
+#pragma omp for schedule(dynamic), nowait, ordered
     for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) {
       try {
 	doSubband(block, subband);
