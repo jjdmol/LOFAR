@@ -266,6 +266,11 @@ class Kernel : public cl::Kernel
 
     void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter)
     {
+      // AMD complains if we submit 0-sized work
+      for (unsigned dim = 0; dim < globalWorkSize.dimensions(); dim ++)
+	if (globalWorkSize[dim] == 0)
+	  return;
+
       queue.enqueueNDRangeKernel(*this, cl::NullRange, globalWorkSize, localWorkSize, 0, &event);
       counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
