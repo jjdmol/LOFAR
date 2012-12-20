@@ -39,10 +39,8 @@ class Mutex
     bool trylock();
 
   private:
-    Mutex(const Mutex&);
-    Mutex& operator=(const Mutex&);
-
     friend class Condition;
+
 #ifdef USE_THREADS    
     pthread_mutex_t mutex;
 #endif    

@@ -10,6 +10,7 @@ lofar_add_library(stream
   NamedPipeStream.cc
   NullStream.cc
   PortBroker.cc
+  SharedMemoryStream.cc
   SocketStream.cc
   Stream.cc
   StringStream.cc)
