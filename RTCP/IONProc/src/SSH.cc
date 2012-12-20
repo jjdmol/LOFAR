@@ -155,7 +155,7 @@ LIBSSH2_SESSION *SSHconnection::open_session( FileDescriptorBasedStream &sock )
   session_t session = libssh2_session_init();
   if (!session.get()) {
     LOG_ERROR_STR( itsLogPrefix << "Cannot create SSH session object" );
-    return false;
+    return 0;
   }
 
   /* tell libssh2 we want it all done non-blocking */
