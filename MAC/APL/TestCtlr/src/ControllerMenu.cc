@@ -552,7 +552,9 @@ void ControllerMenu::_doStartMenu()
 	cout << "Its name has the format " << LOFAR_SHARE_LOCATION 
 	     << "/Observation<nr>." << endl;
 	string	command("ls -1 " LOFAR_SHARE_LOCATION "/Observation[0-9]*");
-	system(command.c_str());
+	if (system(command.c_str()) != 0) {
+		cout << "Command '" << command << "' failed!" << endl;
+	}
 
 	int32	obsnr(-1);
 	while (obsnr < 0) {

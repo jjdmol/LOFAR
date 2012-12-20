@@ -155,11 +155,10 @@ GCFEvent::TResult LogProcessor::operational(GCFEvent&			event,
 	LOG_DEBUG_STR("operational:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	static unsigned long garbageTimerID = 0;
 
 	switch (event.signal) {
 	case F_ENTRY:
-		garbageTimerID = itsTimerPort->setTimer(1.0, 5.0); 
+		itsTimerPort->setTimer(1.0, 5.0); 
 		// Register my own logging too.
 		LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_LogProcessor");
 	
@@ -310,7 +309,7 @@ GCFEvent::TResult LogProcessor::operational(GCFEvent&			event,
 		answer.seqnr  = logEvent.seqnr;
 		answer.result = PVSS::SA_NO_ERROR;
 		for (uint32 i = 0; i < logEvent.msgCount; i++) {
-			PVSSresult	result;
+			PVSSresult	result(PVSS::SA_NO_ERROR);
 // = itsDPservice->setValue(logEvent.DPnames.theVector[i], 
 //											GCFPVString(logEvent.messages.theVector[i]));
 			switch (result) {

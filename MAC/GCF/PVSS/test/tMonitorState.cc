@@ -76,7 +76,7 @@ GCFEvent::TResult tMonitorState::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 	case F_INIT:  {
 		LOG_DEBUG("Creating a Service Class");
 		itsService = new PVSSservice(itsResponse);
-		PVSSresult		  result;
+		PVSSresult		  result(SA_NO_ERROR);
 
 		try {
 			LOG_DEBUG("Taking subscribtion: FROM 'state' WHERE _DP='LOFAR_PIC_*'");

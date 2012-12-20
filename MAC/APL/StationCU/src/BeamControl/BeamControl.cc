@@ -253,7 +253,8 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 		itsParentControl->activateObservationTimers(msg.cntlrName, startTime, stopTime);
 
 		LOG_INFO ("Killing running beamctl's if any");
-		system ("killall beamctl");
+		int retval = system ("killall beamctl");
+		(void)retval;
 
 		LOG_INFO ("Going to started state");
 		TRAN(BeamControl::started_state);				// go to next state.

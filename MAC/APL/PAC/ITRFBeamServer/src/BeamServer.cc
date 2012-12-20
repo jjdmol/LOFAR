@@ -1271,7 +1271,7 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 	}
 
 	// nr of subbands should fit in the beamlet space.
-	if (allocation.getSubbandBitset().count() > itsCurrentMaxBeamlets) {
+	if (static_cast<int>(allocation.getSubbandBitset().count()) > itsCurrentMaxBeamlets) {
 		LOG_ERROR_STR("Too many subbands specified (" << allocation.getSubbandBitset().count() << ") only " 
 					<< itsCurrentMaxBeamlets << " allowed");
 		return (0);
