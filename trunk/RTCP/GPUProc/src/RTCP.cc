@@ -24,9 +24,13 @@
 #include "FilterBank.h"
 #include "InputSection.h"
 #include "Interface/Parset.h"
+#include "Interface/SmartPtr.h"
 #include "OpenCL_FFT/clFFT.h"
 #include "OpenCL_Support.h"
 #include "OpenMP_Support.h"
+#include "SlidingPointer.h"
+#include "Stream/Stream.h"
+#include "Stream/NullStream.h"
 #include "UHEP/InvertedStationPPFWeights.h"
 //#include "clAmdFft/include/clAmdFft.h"
 
@@ -52,37 +56,6 @@ unsigned nrGPUs;
 #undef USE_TEST_DATA
 #undef USE_B7015
 
-
-double getTime()
-{
-  static double firstTime = 0.0;
-
-#if defined __linux__
-  struct timeval tv;
-
-  if (gettimeofday(&tv, 0) < 0) {
-    perror("gettimeofday");
-    exit(1);
-  }
-
-  double now = tv.tv_sec + tv.tv_usec / 1e6;
-#elif defined _WIN32 || defined __WIN32__ || defined _WIN64
-  static LARGE_INTEGER freq;
-
-  if (firstTime == 0 && !QueryPerformanceFrequency(&freq))
-    std::cerr << "No high-resolution timer available" << std::endl;
-
-  LARGE_INTEGER time;
-  QueryPerformanceCounter(&time);
-
-  double now = (double) time.QuadPart / (double) freq.QuadPart;
-#endif
-
-  if (firstTime == 0.0)
-    firstTime = now;
-
-  return now - firstTime;
-}
 
 #if defined __linux__
 
@@ -278,291 +251,6 @@ class FFT_Plan
     }
 
     clFFT_Plan plan;
-};
-
-
-class Pipeline
-{
-  public:
-			    Pipeline(const Parset &);
-
-    cl::Program		    createProgram(const char *sources);
-
-    const Parset	    &ps;
-    cl::Context		    context;
-    std::vector<cl::Device> devices;
-    SmartPtr<InputSection<i16complex> > inputSection16;
-    SmartPtr<InputSection<i8complex> >	inputSection8;
-    SmartPtr<InputSection<i4complex> >	inputSection4;
-
-#if defined USE_B7015
-    OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
-#endif
-};
-
-
-class CorrelatorPipeline : public Pipeline
-{
-  public:
-			    CorrelatorPipeline(const Parset &);
-
-    void		    doWork();
-
-  //private:
-    //friend class CorrelatorWorkQueue;
-
-    FilterBank		    filterBank;
-
-    cl::Program		    firFilterProgram, delayAndBandPassProgram, correlatorProgram;
-#if defined USE_NEW_CORRELATOR
-    PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlateTriangleCounter, correlateRectangleCounter, fftCounter;
-#else
-    PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlatorCounter, fftCounter;
-#endif
-    PerformanceCounter	    samplesCounter, visibilitiesCounter;
-};
-
-
-class BeamFormerPipeline : public Pipeline
-{
-  public:
-			    BeamFormerPipeline(const Parset &);
-
-    void		    doWork();
-
-    cl::Program		    intToFloatProgram, delayAndBandPassProgram, beamFormerProgram, transposeProgram, dedispersionChirpProgram;
-
-    PerformanceCounter	    intToFloatCounter, fftCounter, delayAndBandPassCounter, beamFormerCounter, transposeCounter, dedispersionForwardFFTcounter, dedispersionChirpCounter, dedispersionBackwardFFTcounter;
-    PerformanceCounter	    samplesCounter;
-};
-
-
-class UHEP_Pipeline : public Pipeline
-{
-  public:
-			    UHEP_Pipeline(const Parset &);
-
-    void		    doWork();
-
-    cl::Program		    beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
-    PerformanceCounter	    beamFormerCounter, transposeCounter, invFFTcounter, invFIRfilterCounter, triggerCounter;
-    PerformanceCounter	    beamFormerWeightsCounter, samplesCounter;
-};
-
-
-Pipeline::Pipeline(const Parset &ps)
-:
-  ps(ps)//,
-  //inputSection16(ps.nrBitsPerSample() == 16 ? new InputSection<i16complex>(ps, 0) : 0),
-  //inputSection8(ps.nrBitsPerSample() == 8 ? new InputSection<i8complex>(ps, 0) : 0),
-  //inputSection4(ps.nrBitsPerSample() == 4 ? new InputSection<i4complex>(ps, 0) : 0)
-{
-  createContext(context, devices);
-}
-
-
-cl::Program Pipeline::createProgram(const char *sources)
-{
-  return LOFAR::RTCP::createProgram(ps, context, devices, sources);
-}
-
-
-CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
-:
-  Pipeline(ps),
-  filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER),
-  firFilterCounter("FIR filter"),
-  delayAndBandPassCounter("delay/bp"),
-#if defined USE_NEW_CORRELATOR
-  correlateTriangleCounter("cor.triangle"),
-  correlateRectangleCounter("cor.rectangle"),
-#else
-  correlatorCounter("correlator"),
-#endif
-  fftCounter("FFT"),
-  samplesCounter("samples"),
-  visibilitiesCounter("visibilities")
-{
-  filterBank.negateWeights();
-
-  double startTime = getTime();
-
-#pragma omp parallel sections
-  {
-#pragma omp section
-    firFilterProgram = createProgram("FIR.cl");
-#pragma omp section
-    delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
-#pragma omp section
-#if defined USE_NEW_CORRELATOR
-    correlatorProgram = createProgram("NewCorrelator.cl");
-#else
-    correlatorProgram = createProgram("Correlator.cl");
-#endif
-  }
-
-  std::cout << "compile time = " << getTime() - startTime << std::endl;
-}
-
-
-BeamFormerPipeline::BeamFormerPipeline(const Parset &ps)
-:
-  Pipeline(ps),
-  intToFloatCounter("int-to-float"),
-  fftCounter("FFT"),
-  delayAndBandPassCounter("delay/bp"),
-  beamFormerCounter("beamformer"),
-  transposeCounter("transpose"),
-  dedispersionForwardFFTcounter("ddisp.fw.FFT"),
-  dedispersionChirpCounter("chirp"),
-  dedispersionBackwardFFTcounter("ddisp.bw.FFT"),
-  samplesCounter("samples")
-{
-  double startTime = getTime();
-
-#pragma omp parallel sections
-  {
-#pragma omp section
-    intToFloatProgram = createProgram("BeamFormer/IntToFloat.cl");
-#pragma omp section
-    delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
-#pragma omp section
-    beamFormerProgram = createProgram("BeamFormer/BeamFormer.cl");
-#pragma omp section
-    transposeProgram = createProgram("BeamFormer/Transpose.cl");
-#pragma omp section
-    dedispersionChirpProgram = createProgram("BeamFormer/Dedispersion.cl");
-  }
-
-  std::cout << "compile time = " << getTime() - startTime << std::endl;
-}
-
-
-UHEP_Pipeline::UHEP_Pipeline(const Parset &ps)
-:
-  Pipeline(ps),
-  beamFormerCounter("beamformer"),
-  transposeCounter("transpose"),
-  invFFTcounter("inv. FFT"),
-  invFIRfilterCounter("inv. FIR"),
-  triggerCounter("trigger"),
-  beamFormerWeightsCounter("BF weights"),
-  samplesCounter("samples")
-{
-  double startTime = getTime();
-
-#pragma omp parallel sections
-  {
-#pragma omp section
-    beamFormerProgram = createProgram("UHEP/BeamFormer.cl");
-#pragma omp section
-    transposeProgram = createProgram("UHEP/Transpose.cl");
-#pragma omp section
-    invFFTprogram = createProgram("UHEP/InvFFT.cl");
-#pragma omp section
-    invFIRfilterProgram = createProgram("UHEP/InvFIR.cl");
-#pragma omp section
-    triggerProgram = createProgram("UHEP/Trigger.cl");
-  }
-
-  std::cout << "compile time = " << getTime() - startTime << std::endl;
-}
-
-
-class WorkQueue
-{
-  public:
-    WorkQueue(Pipeline &);
-
-    const unsigned	gpu;
-    cl::Device		&device;
-    cl::CommandQueue	queue;
-
-  protected:
-    const Parset	&ps;
-};
-
-
-class CorrelatorWorkQueue : public WorkQueue
-{
-  public:
-    CorrelatorWorkQueue(CorrelatorPipeline &);
-
-    void doWork();
-
-#if defined USE_TEST_DATA
-    void setTestPattern();
-    void printTestOutput();
-#endif
-
-  //private:
-    CorrelatorPipeline	&pipeline;
-    cl::Buffer		devFIRweights;
-    cl::Buffer		devBufferA, devBufferB;
-    MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
-    MultiArraySharedBuffer<float, 3> delaysAtBegin, delaysAfterEnd;
-    MultiArraySharedBuffer<float, 2> phaseOffsets;
-    MultiArraySharedBuffer<char, 4> inputSamples;
-
-    cl::Buffer		devFilteredData;
-    cl::Buffer		devCorrectedData;
-
-    MultiArraySharedBuffer<std::complex<float>, 4> visibilities;
-};
-
-
-class BeamFormerWorkQueue : public WorkQueue
-{
-  public:
-    BeamFormerWorkQueue(BeamFormerPipeline &);
-
-    void doWork();
-
-    BeamFormerPipeline	&pipeline;
-
-    MultiArraySharedBuffer<char, 4>	   inputSamples;
-    cl::Buffer					   devFilteredData;
-    MultiArraySharedBuffer<float, 1>		   bandPassCorrectionWeights;
-    MultiArraySharedBuffer<float, 3>		   delaysAtBegin, delaysAfterEnd;
-    MultiArraySharedBuffer<float, 2>		   phaseOffsets;
-    cl::Buffer					   devCorrectedData;
-    MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights;
-    cl::Buffer					   devComplexVoltages;
-    MultiArraySharedBuffer<std::complex<float>, 4> transposedComplexVoltages;
-    MultiArraySharedBuffer<float, 1>		   DMs;
-};
-
-
-struct TriggerInfo {
-  float	   mean, variance, bestValue;
-  unsigned bestApproxIndex;
-};
-
-class UHEP_WorkQueue : public WorkQueue
-{
-  public:
-    UHEP_WorkQueue(UHEP_Pipeline &);
-
-    void doWork(const float *delaysAtBegin, const float *delaysAfterEnd, const float *phaseOffsets);
-
-    UHEP_Pipeline	&pipeline;
-    cl::Event		inputSamplesEvent, beamFormerWeightsEvent;
-
-    cl::Buffer		devBuffers[2];
-    cl::Buffer		devInputSamples;
-    MultiArrayHostBuffer<char, 5> hostInputSamples;
-
-    cl::Buffer		devBeamFormerWeights;
-    MultiArrayHostBuffer<std::complex<float>, 3> hostBeamFormerWeights;
-
-    cl::Buffer		devComplexVoltages;
-    cl::Buffer		devReverseSubbandMapping;
-    cl::Buffer		devFFTedData;
-    cl::Buffer		devInvFIRfilteredData;
-    cl::Buffer		devInvFIRfilterWeights;
-
-    cl::Buffer		devTriggerInfo;
-    VectorHostBuffer<TriggerInfo> hostTriggerInfo;
 };
 
 
@@ -1217,6 +905,11 @@ class UHEP_InvFIR_Kernel : public Kernel
 };
 
 
+struct TriggerInfo {
+  float	   mean, variance, bestValue;
+  unsigned bestApproxIndex;
+};
+
 class UHEP_TriggerKernel : public Kernel
 {
   public:
@@ -1237,9 +930,319 @@ class UHEP_TriggerKernel : public Kernel
 };
 
 
-WorkQueue::WorkQueue(Pipeline &pipeline)
+class Pipeline
+{
+  public:
+			    Pipeline(const Parset &);
+
+    cl::Program		    createProgram(const char *sources);
+
+    const Parset	    &ps;
+    cl::Context		    context;
+    std::vector<cl::Device> devices;
+    SmartPtr<InputSection<i16complex> > inputSection16;
+    SmartPtr<InputSection<i8complex> >	inputSection8;
+    SmartPtr<InputSection<i4complex> >	inputSection4;
+
+    std::vector<SmartPtr<Stream> >  bufferToGPUstreams; // indexed by station
+    std::vector<SmartPtr<Stream> >  GPUtoStorageStreams; // indexed by subband
+    std::vector<SlidingPointer<unsigned> > inputSynchronization, outputSynchronization; // indexed by subband
+
+#if defined USE_B7015
+    OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
+#endif
+};
+
+
+class CorrelatorWorkQueue;
+
+class CorrelatorPipeline : public Pipeline
+{
+  public:
+			    CorrelatorPipeline(const Parset &);
+
+    void		    doWork();
+
+  private:
+    friend class CorrelatorWorkQueue;
+
+    FilterBank		    filterBank;
+
+    cl::Program		    firFilterProgram, delayAndBandPassProgram, correlatorProgram;
+#if defined USE_NEW_CORRELATOR
+    PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlateTriangleCounter, correlateRectangleCounter, fftCounter;
+#else
+    PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlatorCounter, fftCounter;
+#endif
+    PerformanceCounter	    samplesCounter, visibilitiesCounter;
+};
+
+
+class BeamFormerPipeline : public Pipeline
+{
+  public:
+			    BeamFormerPipeline(const Parset &);
+
+    void		    doWork();
+
+    cl::Program		    intToFloatProgram, delayAndBandPassProgram, beamFormerProgram, transposeProgram, dedispersionChirpProgram;
+
+    PerformanceCounter	    intToFloatCounter, fftCounter, delayAndBandPassCounter, beamFormerCounter, transposeCounter, dedispersionForwardFFTcounter, dedispersionChirpCounter, dedispersionBackwardFFTcounter;
+    PerformanceCounter	    samplesCounter;
+};
+
+
+class UHEP_Pipeline : public Pipeline
+{
+  public:
+			    UHEP_Pipeline(const Parset &);
+
+    void		    doWork();
+
+    cl::Program		    beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
+    PerformanceCounter	    beamFormerCounter, transposeCounter, invFFTcounter, invFIRfilterCounter, triggerCounter;
+    PerformanceCounter	    beamFormerWeightsCounter, samplesCounter;
+};
+
+
+Pipeline::Pipeline(const Parset &ps)
 :
-  gpu(omp_get_thread_num() % nrGPUs),
+  ps(ps),
+  //inputSection16(ps.nrBitsPerSample() == 16 ? new InputSection<i16complex>(ps, 0) : 0),
+  //inputSection8(ps.nrBitsPerSample() == 8 ? new InputSection<i8complex>(ps, 0) : 0),
+  //inputSection4(ps.nrBitsPerSample() == 4 ? new InputSection<i4complex>(ps, 0) : 0)
+  bufferToGPUstreams(ps.nrStations()),
+  GPUtoStorageStreams(ps.nrSubbands()),
+  inputSynchronization(ps.nrSubbands()),
+  outputSynchronization(ps.nrSubbands())
+{
+  createContext(context, devices);
+
+  for (unsigned stat = 0; stat < ps.nrStations(); stat ++)
+    bufferToGPUstreams[stat] = new NullStream;
+
+  for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++)
+    GPUtoStorageStreams[sb] = new NullStream;
+}
+
+
+cl::Program Pipeline::createProgram(const char *sources)
+{
+  return LOFAR::RTCP::createProgram(ps, context, devices, sources);
+}
+
+
+CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
+:
+  Pipeline(ps),
+  filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER),
+  firFilterCounter("FIR filter"),
+  delayAndBandPassCounter("delay/bp"),
+#if defined USE_NEW_CORRELATOR
+  correlateTriangleCounter("cor.triangle"),
+  correlateRectangleCounter("cor.rectangle"),
+#else
+  correlatorCounter("correlator"),
+#endif
+  fftCounter("FFT"),
+  samplesCounter("samples"),
+  visibilitiesCounter("visibilities")
+{
+  filterBank.negateWeights();
+
+  double startTime = omp_get_wtime();
+
+#pragma omp parallel sections
+  {
+#pragma omp section
+    firFilterProgram = createProgram("FIR.cl");
+#pragma omp section
+    delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
+#pragma omp section
+#if defined USE_NEW_CORRELATOR
+    correlatorProgram = createProgram("NewCorrelator.cl");
+#else
+    correlatorProgram = createProgram("Correlator.cl");
+#endif
+  }
+
+  std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
+}
+
+
+BeamFormerPipeline::BeamFormerPipeline(const Parset &ps)
+:
+  Pipeline(ps),
+  intToFloatCounter("int-to-float"),
+  fftCounter("FFT"),
+  delayAndBandPassCounter("delay/bp"),
+  beamFormerCounter("beamformer"),
+  transposeCounter("transpose"),
+  dedispersionForwardFFTcounter("ddisp.fw.FFT"),
+  dedispersionChirpCounter("chirp"),
+  dedispersionBackwardFFTcounter("ddisp.bw.FFT"),
+  samplesCounter("samples")
+{
+  double startTime = omp_get_wtime();
+
+#pragma omp parallel sections
+  {
+#pragma omp section
+    intToFloatProgram = createProgram("BeamFormer/IntToFloat.cl");
+#pragma omp section
+    delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
+#pragma omp section
+    beamFormerProgram = createProgram("BeamFormer/BeamFormer.cl");
+#pragma omp section
+    transposeProgram = createProgram("BeamFormer/Transpose.cl");
+#pragma omp section
+    dedispersionChirpProgram = createProgram("BeamFormer/Dedispersion.cl");
+  }
+
+  std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
+}
+
+
+UHEP_Pipeline::UHEP_Pipeline(const Parset &ps)
+:
+  Pipeline(ps),
+  beamFormerCounter("beamformer"),
+  transposeCounter("transpose"),
+  invFFTcounter("inv. FFT"),
+  invFIRfilterCounter("inv. FIR"),
+  triggerCounter("trigger"),
+  beamFormerWeightsCounter("BF weights"),
+  samplesCounter("samples")
+{
+  double startTime = omp_get_wtime();
+
+#pragma omp parallel sections
+  {
+#pragma omp section
+    beamFormerProgram = createProgram("UHEP/BeamFormer.cl");
+#pragma omp section
+    transposeProgram = createProgram("UHEP/Transpose.cl");
+#pragma omp section
+    invFFTprogram = createProgram("UHEP/InvFFT.cl");
+#pragma omp section
+    invFIRfilterProgram = createProgram("UHEP/InvFIR.cl");
+#pragma omp section
+    triggerProgram = createProgram("UHEP/Trigger.cl");
+  }
+
+  std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
+}
+
+
+class WorkQueue
+{
+  public:
+    WorkQueue(Pipeline &, unsigned queueNumber);
+
+    const unsigned	gpu;
+    cl::Device		&device;
+    cl::CommandQueue	queue;
+
+  protected:
+    const Parset	&ps;
+};
+
+
+class CorrelatorWorkQueue : public WorkQueue
+{
+  public:
+    CorrelatorWorkQueue(CorrelatorPipeline &, unsigned queueNumber);
+
+    void doWork();
+
+#if defined USE_TEST_DATA
+    void setTestPattern();
+    void printTestOutput();
+#endif
+
+  //private:
+    void doSubband(unsigned block, unsigned subband);
+    void receiveSubbandSamples(unsigned block, unsigned subband);
+    void sendSubbandVisibilites(unsigned block, unsigned subband);
+
+    CorrelatorPipeline	&pipeline;
+    cl::Buffer		devFIRweights;
+    cl::Buffer		devBufferA, devBufferB;
+    MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
+    MultiArraySharedBuffer<float, 3> delaysAtBegin, delaysAfterEnd;
+    MultiArraySharedBuffer<float, 2> phaseOffsets;
+    MultiArraySharedBuffer<char, 4> inputSamples;
+
+    cl::Buffer		devFilteredData;
+    cl::Buffer		devCorrectedData;
+
+    MultiArraySharedBuffer<std::complex<float>, 4> visibilities;
+
+    FIR_FilterKernel		firFilterKernel;
+    Filter_FFT_Kernel		fftKernel;
+    DelayAndBandPassKernel	delayAndBandPassKernel;
+#if defined USE_NEW_CORRELATOR
+    CorrelateTriangleKernel	correlateTriangleKernel;
+    CorrelateRectangleKernel	correlateRectangleKernel;
+#else
+    CorrelatorKernel		correlatorKernel;
+#endif
+};
+
+
+class BeamFormerWorkQueue : public WorkQueue
+{
+  public:
+    BeamFormerWorkQueue(BeamFormerPipeline &, unsigned queueNumber);
+
+    void doWork();
+
+    BeamFormerPipeline	&pipeline;
+
+    MultiArraySharedBuffer<char, 4>		   inputSamples;
+    cl::Buffer					   devFilteredData;
+    MultiArraySharedBuffer<float, 1>		   bandPassCorrectionWeights;
+    MultiArraySharedBuffer<float, 3>		   delaysAtBegin, delaysAfterEnd;
+    MultiArraySharedBuffer<float, 2>		   phaseOffsets;
+    cl::Buffer					   devCorrectedData;
+    MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights;
+    cl::Buffer					   devComplexVoltages;
+    MultiArraySharedBuffer<std::complex<float>, 4> transposedComplexVoltages;
+    MultiArraySharedBuffer<float, 1>		   DMs;
+};
+
+
+class UHEP_WorkQueue : public WorkQueue
+{
+  public:
+    UHEP_WorkQueue(UHEP_Pipeline &, unsigned queueNumber);
+
+    void doWork(const float *delaysAtBegin, const float *delaysAfterEnd, const float *phaseOffsets);
+
+    UHEP_Pipeline	&pipeline;
+    cl::Event		inputSamplesEvent, beamFormerWeightsEvent;
+
+    cl::Buffer		devBuffers[2];
+    cl::Buffer		devInputSamples;
+    MultiArrayHostBuffer<char, 5> hostInputSamples;
+
+    cl::Buffer		devBeamFormerWeights;
+    MultiArrayHostBuffer<std::complex<float>, 3> hostBeamFormerWeights;
+
+    cl::Buffer		devComplexVoltages;
+    cl::Buffer		devReverseSubbandMapping;
+    cl::Buffer		devFFTedData;
+    cl::Buffer		devInvFIRfilteredData;
+    cl::Buffer		devInvFIRfilterWeights;
+
+    cl::Buffer		devTriggerInfo;
+    VectorHostBuffer<TriggerInfo> hostTriggerInfo;
+};
+
+
+WorkQueue::WorkQueue(Pipeline &pipeline, unsigned queueNumber)
+:
+  gpu(queueNumber % nrGPUs),
   device(pipeline.devices[gpu]),
   ps(pipeline.ps)
 {
@@ -1251,10 +1254,12 @@ WorkQueue::WorkQueue(Pipeline &pipeline)
 }
 
 
-CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline)
+CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, unsigned queueNumber)
 :
-  WorkQueue(pipeline),
+  WorkQueue(pipeline, queueNumber),
   pipeline(pipeline),
+
+  devFIRweights(pipeline.context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
   devBufferA(pipeline.context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
   devBufferB(pipeline.context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
   bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
@@ -1264,21 +1269,26 @@ CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline)
   //inputSamples(boost::extents[ps.nrStations()][(ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
  //visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY)
   inputSamples(boost::extents[ps.nrStations()][(ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, devBufferA),
- visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, devBufferB)
+  devFilteredData(devBufferB),
+  devCorrectedData(devBufferA),
+ visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, devBufferB),
+  firFilterKernel(ps, queue, pipeline.firFilterProgram, devFilteredData, inputSamples, devFIRweights),
+
+  fftKernel(ps, pipeline.context, devFilteredData),
+  delayAndBandPassKernel(ps, pipeline.delayAndBandPassProgram, devCorrectedData, devFilteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights),
+#if defined USE_NEW_CORRELATOR
+  correlateTriangleKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData),
+  correlateRectangleKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData)
+#else
+  correlatorKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData);
+#endif
 {
-  memset(inputSamples.origin(), 0, inputSamples.bytesize()); // FIXME
-  memset(visibilities.origin(), 0, visibilities.bytesize()); // FIXME
-  size_t firWeightsSize = ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float);
-  devFIRweights = cl::Buffer(pipeline.context, CL_MEM_READ_ONLY, firWeightsSize);
   queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), pipeline.filterBank.getWeights().origin());
 
 #if 0
   size_t filteredDataSize = ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>);
   devFilteredData = cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, filteredDataSize);
   devCorrectedData = cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, filteredDataSize);
-#else
-  devFilteredData = devBufferB;
-  devCorrectedData = devBufferA;
 #endif
 
   if (ps.correctBandPass()) {
@@ -1288,22 +1298,70 @@ CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline)
 }
 
 
+void CorrelatorWorkQueue::receiveSubbandSamples(unsigned block, unsigned subband)
+{
+  pipeline.inputSynchronization[subband].waitFor(block);
+
+  for (unsigned stat = 0; stat < ps.nrStations(); stat ++)
+    pipeline.bufferToGPUstreams[stat]->read(inputSamples[stat].origin(), inputSamples[stat].num_elements());
+
+  pipeline.inputSynchronization[subband].advanceTo(block + 1);
+}
+
+
+void CorrelatorWorkQueue::sendSubbandVisibilites(unsigned block, unsigned subband)
+{
+  pipeline.outputSynchronization[subband].waitFor(block);
+  pipeline.GPUtoStorageStreams[subband]->write(visibilities.origin(), visibilities.num_elements() * sizeof(std::complex<float>));
+  pipeline.outputSynchronization[subband].advanceTo(block + 1);
+}
+
+
+void CorrelatorWorkQueue::doSubband(unsigned block, unsigned subband)
+{
+  receiveSubbandSamples(block, subband);
+
+  {
+#if defined USE_B7015
+    OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
+#endif
+    inputSamples.hostToDevice(CL_TRUE);
+    pipeline.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
+  }
+
+  if (ps.nrChannelsPerSubband() > 1) {
+    firFilterKernel.enqueue(queue, pipeline.firFilterCounter);
+    fftKernel.enqueue(queue, pipeline.fftCounter);
+  }
+
+  delayAndBandPassKernel.enqueue(queue, pipeline.delayAndBandPassCounter, subband);
+#if defined USE_NEW_CORRELATOR
+  correlateTriangleKernel.enqueue(queue, pipeline.correlateTriangleCounter);
+  correlateRectangleKernel.enqueue(queue, pipeline.correlateRectangleCounter);
+#else
+  correlatorKernel.enqueue(queue, pipeline.correlatorCounter);
+#endif
+  queue.finish();
+
+  {
+#if defined USE_B7015
+    OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
+#endif
+    visibilities.deviceToHost(CL_TRUE);
+    pipeline.visibilitiesCounter.doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
+  }
+
+  sendSubbandVisibilites(block, subband);
+}
+
+
 void CorrelatorWorkQueue::doWork()
 {
-  FIR_FilterKernel firFilterKernel(ps, queue, pipeline.firFilterProgram, devFilteredData, inputSamples, devFIRweights);
-  Filter_FFT_Kernel fftKernel(ps, pipeline.context, devFilteredData);
-  DelayAndBandPassKernel delayAndBandPassKernel(ps, pipeline.delayAndBandPassProgram, devCorrectedData, devFilteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights);
-#if defined USE_NEW_CORRELATOR
-  CorrelateTriangleKernel correlateTriangleKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData);
-  CorrelateRectangleKernel correlateRectangleKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData);
-#else
-  CorrelatorKernel correlatorKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData);
-#endif
   double startTime = ps.startTime(), currentTime, stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
 
 #pragma omp barrier
 
-  double executionStartTime = getTime();
+  double executionStartTime = omp_get_wtime();
 
   for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) {
 #pragma omp single nowait
@@ -1325,45 +1383,7 @@ void CorrelatorWorkQueue::doWork()
 #pragma omp for schedule(dynamic), nowait
     for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) {
       try {
-#if defined USE_TEST_DATA
-	if (subband == 0)
-	  setTestPattern();
-#endif
-
-	{
-#if defined USE_B7015
-	  OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
-#endif
-	  inputSamples.hostToDevice(CL_TRUE);
-	  pipeline.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
-	}
-
-	if (ps.nrChannelsPerSubband() > 1) {
-	  firFilterKernel.enqueue(queue, pipeline.firFilterCounter);
-	  fftKernel.enqueue(queue, pipeline.fftCounter);
-	}
-
-	delayAndBandPassKernel.enqueue(queue, pipeline.delayAndBandPassCounter, subband);
-#if defined USE_NEW_CORRELATOR
-	correlateTriangleKernel.enqueue(queue, pipeline.correlateTriangleCounter);
-	correlateRectangleKernel.enqueue(queue, pipeline.correlateRectangleCounter);
-#else
-	correlatorKernel.enqueue(queue, pipeline.correlatorCounter);
-#endif
-	queue.finish();
-
-	{
-#if defined USE_B7015
-	  OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
-#endif
-	  visibilities.deviceToHost(CL_TRUE);
-	  pipeline.visibilitiesCounter.doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
-	}
-
-#if defined USE_TEST_DATA
-	if (subband == 0)
-	  printTestOutput();
-#endif
+	doSubband(block, subband);
       } catch (cl::Error &error) {
 #pragma omp critical (cerr)
 	std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
@@ -1377,7 +1397,7 @@ void CorrelatorWorkQueue::doWork()
 #pragma omp master
   if (!profiling)
 #pragma omp critical (cout)
-    std::cout << "run time = " << getTime() - executionStartTime << std::endl;
+    std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
 }
 
 
@@ -1397,9 +1417,9 @@ void CorrelatorWorkQueue::doWork()
 // float (*StokesType)[NR_TABS][NR_STOKES][NR_TIMES_PER_BLOCK / STOKES_INTEGRATION_SAMPLES][NR_CHANNELS];
 
 
-BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline)
+BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline, unsigned queueNumber)
 :
-  WorkQueue(pipeline),
+  WorkQueue(pipeline, queueNumber),
   pipeline(pipeline),
   inputSamples(boost::extents[ps.nrStations()][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
   devFilteredData(pipeline.context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
@@ -1439,7 +1459,7 @@ void BeamFormerWorkQueue::doWork()
 
 #pragma omp barrier
 
-  double executionStartTime = getTime();
+  double executionStartTime = omp_get_wtime();
 
   for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) {
 #pragma omp single nowait
@@ -1504,13 +1524,13 @@ void BeamFormerWorkQueue::doWork()
 #pragma omp master
   if (!profiling)
 #pragma omp critical (cout)
-    std::cout << "run time = " << getTime() - executionStartTime << std::endl;
+    std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
 }
 
 
-UHEP_WorkQueue::UHEP_WorkQueue(UHEP_Pipeline &pipeline)
+UHEP_WorkQueue::UHEP_WorkQueue(UHEP_Pipeline &pipeline, unsigned queueNumber)
 :
-  WorkQueue(pipeline),
+  WorkQueue(pipeline, queueNumber),
   pipeline(pipeline),
   hostInputSamples(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY),
   hostBeamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY),
@@ -1557,7 +1577,7 @@ void UHEP_WorkQueue::doWork(const float * /*delaysAtBegin*/, const float * /*del
 
 #pragma omp barrier
 
-  double executionStartTime = getTime();
+  double executionStartTime = omp_get_wtime();
 
 #pragma omp for schedule(dynamic), nowait
   for (unsigned block = 0; block < nrBlocks; block ++) {
@@ -1602,7 +1622,7 @@ void UHEP_WorkQueue::doWork(const float * /*delaysAtBegin*/, const float * /*del
 #pragma omp master
   if (!profiling)
 #pragma omp critical (cout)
-    std::cout << "run time = " << getTime() - executionStartTime << std::endl;
+    std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
 }
 
 
@@ -1650,10 +1670,10 @@ void CorrelatorWorkQueue::printTestOutput()
 
 void CorrelatorPipeline::doWork()
 {
-#pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
+#pragma omp parallel num_threads((profiling ? 1 : 3) * nrGPUs)
   try
   {
-    CorrelatorWorkQueue(*this).doWork();
+    CorrelatorWorkQueue(*this, omp_get_thread_num()).doWork();
   } catch (cl::Error &error) {
 #pragma omp critical (cerr)
     std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
@@ -1667,7 +1687,7 @@ void BeamFormerPipeline::doWork()
 #pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
   try
   {
-    BeamFormerWorkQueue(*this).doWork();
+    BeamFormerWorkQueue(*this, omp_get_thread_num()).doWork();
   } catch (cl::Error &error) {
 #pragma omp critical (cerr)
     std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
@@ -1690,7 +1710,7 @@ void UHEP_Pipeline::doWork()
 #pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
   try
   {
-      UHEP_WorkQueue(*this).doWork(&delaysAtBegin[0][0][0], &delaysAfterEnd[0][0][0], &phaseOffsets[0][0]);
+      UHEP_WorkQueue(*this, omp_get_thread_num()).doWork(&delaysAtBegin[0][0][0], &delaysAfterEnd[0][0][0], &phaseOffsets[0][0]);
   } catch (cl::Error &error) {
 #pragma omp critical (cerr)
     std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
