@@ -23,6 +23,8 @@
 #ifndef LOFAR_LCS_STREAM_SHARED_MEMORY_STREAM_H
 #define LOFAR_LCS_STREAM_SHARED_MEMORY_STREAM_H
 
+#if defined USE_THREADS
+
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Semaphore.h>
 #include <Stream/Stream.h>
@@ -46,4 +48,5 @@ class SharedMemoryStream : public Stream
 
 } // namespace LOFAR
 
+#endif
 #endif

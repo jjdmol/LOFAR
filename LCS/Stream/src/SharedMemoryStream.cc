@@ -22,6 +22,8 @@
 
 #include <lofar_config.h>
 
+#if defined USE_THREADS
+
 #include <Stream/SharedMemoryStream.h>
 
 #include <cstring>
@@ -60,3 +62,5 @@ size_t SharedMemoryStream::tryWrite(const void *ptr, size_t size)
 }
 
 } // namespace LOFAR
+
+#endif
