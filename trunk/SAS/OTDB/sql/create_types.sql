@@ -69,7 +69,7 @@ CREATE TYPE OTDBnode AS (
 	nodeID			INT4,
 	parentID		INT4,
 	paramDefID		INT4,
-	name			VARCHAR(40),
+	name			VARCHAR(150),
 	index			SMALLINT,
 	leaf			BOOLEAN,
 	instances		INT2,			-- only filled for VIC template

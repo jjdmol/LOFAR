@@ -48,7 +48,7 @@ CREATE OR REPLACE FUNCTION getVTChildren(INT4, TEXT)
 	    SELECT t.nodeid,
 			   t.parentid, 
 			   t.originid,
-			   t.name, 
+			   t.name::VARCHAR(150),
 			   t.index, 
 			   t.leaf,
 			   t.instances,

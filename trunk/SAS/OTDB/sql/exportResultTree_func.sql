@@ -64,7 +64,8 @@ CREATE OR REPLACE FUNCTION exportMDSubTree(INT4, INT4, INT4)
 
 	  -- call myself for all the children
 	  FOR vRow IN
-	    SELECT	nodeID, name, recordID, tablename
+--	    SELECT	nodeID, name, recordID, tablename
+	    SELECT	nodeID, name
 	    FROM	VIChierarchy
 	    WHERE	treeID = $1
 	    AND	 	parentID = $2
@@ -72,14 +73,14 @@ CREATE OR REPLACE FUNCTION exportMDSubTree(INT4, INT4, INT4)
 		ORDER BY name
 	  LOOP
 --RAISE WARNING 'NODE: %, %, %', vRow.nodeID, vRow.name, vRow.tablename;
-		IF vRow.tablename != '' THEN
-			-- export definition before first record
-			SELECT value INTO vValue FROM VICkvt WHERE treeID=$1 AND paramname=vRow.name ORDER BY time DESC LIMIT 1;
-			IF NOT FOUND THEN
-			  EXECUTE 'SELECT * FROM export' || vRow.tablename || '(' || vRow.recordID || ')' INTO vValue;
-			END IF;
-			vResult := vResult || substr(vRow.name,$3) || '=' || vValue || chr(10);
-		END IF;
+--		IF vRow.tablename != '' THEN
+--			-- export definition before first record
+--			SELECT value INTO vValue FROM VICkvt WHERE treeID=$1 AND paramname=vRow.name ORDER BY time DESC LIMIT 1;
+--			IF NOT FOUND THEN
+--			  EXECUTE 'SELECT * FROM export' || vRow.tablename || '(' || vRow.recordID || ')' INTO vValue;
+--			END IF;
+--			vResult := vResult || substr(vRow.name,$3) || '=' || vValue || chr(10);
+--		END IF;
 		vResult := vResult || exportMDSubTree($1, vRow.nodeID, $3);
 	  END LOOP;
 
