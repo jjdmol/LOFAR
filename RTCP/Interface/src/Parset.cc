@@ -678,21 +678,6 @@ unsigned Parset::nrTABs(unsigned beam) const
   return getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % beam));
 }
 
-string Parset::PLC_Host() const
-{
-  using boost::format;
-  string prefix = getString("_parsetPrefix"); // includes a trailing dot!
-  return getString(str(format("%s_ACnode") % prefix));
-}
-
-uint32 Parset::PLC_Port() const
-{
-  using boost::format;
-  string prefix = getString("_parsetPrefix"); // includes a trailing dot!
-  return getUint32(str(format("%s_ACport") % prefix));
-}
-
-
 std::string Parset::name() const
 {
   return itsName;
@@ -1287,16 +1272,6 @@ string Parset::bandFilter() const
 string Parset::antennaSet() const
 {
   return getString("Observation.antennaSet");
-}
-
-bool Parset::PLC_controlled() const
-{
-  return getBool("OLAP.IONProc.PLC_controlled",false);
-}
-
-string Parset::PLC_ProcID() const
-{
-  return getString("_processName","CNProc");
 }
 
 string Parset::PVSS_TempObsName() const
