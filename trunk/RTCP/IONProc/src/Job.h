@@ -36,7 +36,6 @@
 #include <Common/Thread/Queue.h>
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Semaphore.h>
-#include <PLCClient.h>
 #include <SSH.h>
 
 #include <sys/time.h>
@@ -49,7 +48,7 @@ namespace LOFAR {
 namespace RTCP {
 
 
-class Job : public PLCRunnable
+class Job
 {
   public:
 					 Job(const char *parsetName);
@@ -61,13 +60,8 @@ class Job : public PLCRunnable
     const Parset			 itsParset;
     const unsigned			 itsJobID, itsObservationID;
 
-    // implement PLCRunnable
-    virtual bool			 define();
-    virtual bool			 init();
-    virtual bool			 run();
-    virtual bool			 pause(const double &when);
-    virtual bool			 quit();
-    virtual bool			 observationRunning();
+    bool			 	 pause(const double &when);
+    bool			 	 quit();
 
   private:
     bool				 checkParset() const;
@@ -127,9 +121,6 @@ class Job : public PLCRunnable
     };
 
     void				 waitUntilCloseToStartOfObservation(time_t secondsPriorToStart);
-
-    SmartPtr<Stream>			 itsPLCStream;
-    SmartPtr<PLCClient>			 itsPLCClient;
 
     std::string                          itsLogPrefix;
 

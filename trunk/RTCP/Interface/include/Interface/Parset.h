@@ -232,10 +232,6 @@ class Parset: public ParameterSet
 
     std::vector<double>		itsStPositions;
 
-    bool			PLC_controlled() const;
-    std::string			PLC_ProcID() const;
-    std::string			PLC_Host() const;
-    uint32			PLC_Port() const;
     std::string                 PVSS_TempObsName() const;
 
     std::string                 AntennaSetsConf() const;
