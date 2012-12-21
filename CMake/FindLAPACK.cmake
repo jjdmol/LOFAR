@@ -40,7 +40,13 @@ endif(NOT _enabled_languages MATCHES Fortran)
 # If we have a working Fortran compiler, call the "real" FindLAPACK module;
 # otherwise display a diagnostic message.
 if(CMAKE_Fortran_COMPILER_WORKS)
-  include(${CMAKE_ROOT}/Modules/FindLAPACK.cmake)
+  # Set policy CMP0017 to OLD to suppress warning when using CMake >= 2.8.4
+  if(POLICY CMP0017)
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0017 OLD)
+    include(${CMAKE_ROOT}/Modules/FindLAPACK.cmake)
+    cmake_policy(POP)
+  endif(POLICY CMP0017)
 else(CMAKE_Fortran_COMPILER_WORKS)
   if(LAPACK_FIND_REQUIRED)
     message(SEND_ERROR "FindLAPACK requires a working Fortran compiler!")
