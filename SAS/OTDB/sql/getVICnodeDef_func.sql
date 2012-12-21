@@ -130,7 +130,7 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4, VARCHAR(150), VARCHAR(150))
 	    SELECT t.nodeid,
 			   t.parentid, 
 			   t.originid,
-			   t.name, 
+			   t.name::VARCHAR(150), 
 			   t.index, 
 			   t.leaf,
 			   t.instances,

@@ -63,6 +63,7 @@
 -- VIChierarchy
 \i getVHitemList_func.sql
 \i exportTree_func.sql
+\i exportResultTree_func.sql
 \i searchVHinPeriod_func.sql
 \i setSchedule_func.sql
 
