@@ -66,7 +66,6 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(150), INT2)
 	  vNodename := rtrim($2, \'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890_\');			-- xxx:aaa_bbb_ccc.
 	  vNodename := rtrim(vNodename, \'.\');				-- xxx:aaa.bbb.ccc
 	  vFullname := $2;									-- xxx:aaa.bbb.ccc.ddd_eee
-raise warning \'nodename:%, fullname:%\', vNodeName, vFullname;
 	  IF length(vNodename) > 0 THEN
 	    SELECT paramID 
 	    INTO   vParRefID
@@ -75,7 +74,6 @@ raise warning \'nodename:%, fullname:%\', vNodeName, vFullname;
 	    LIMIT  1;
 	    IF NOT FOUND THEN
 		  -- node not yet in reference table, add it.
-raise warning \'INSERT INTO PICparamRef(%,0)\', vNodename;
 	      INSERT INTO PICparamRef(PVSSname, par_type)
 	      VALUES (vNodename, 0);	-- type=node
 	    END IF;
@@ -91,7 +89,6 @@ raise warning \'INSERT INTO PICparamRef(%,0)\', vNodename;
 	  IF NOT FOUND THEN
 		-- param not yet in reference table, add it.
 		-- TODO: add other fields also.
-raise warning \'INSERT INTO PICparamRef(%,%)\', vFullname, vParType;
 	    INSERT INTO PICparamRef(PVSSname, par_type)
 	    VALUES (vFullname, vParType);
 		-- and retrieve its ID
