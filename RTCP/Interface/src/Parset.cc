@@ -25,6 +25,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/DataConvert.h>
+#include <Common/LofarBitModeInfo.h>
 #include <ApplCommon/PosixTime.h>
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
@@ -643,6 +644,21 @@ vector<unsigned> Parset::subbandToRSPboardMapping(const string &stationName) con
     key = "Observation.rspBoardList";
   }
 
+  if (!isDefined(key)) {
+    LOG_WARN_STR('"' << key << "\" not defined, falling back to default");
+
+    /* Map the subbands linearly onto the RSP boards */
+    size_t n = nrSubbands();
+    size_t beamletsPerRSP = maxBeamletsPerRSP(nrBitsPerSample());
+
+    vector<unsigned> rspBoards(n);
+
+    for (size_t i = 0; i < n; i++)
+      rspBoards[i] = i / beamletsPerRSP;
+
+    return rspBoards;
+  }
+
   return getUint32Vector(key, true);
 }
 
@@ -654,6 +670,21 @@ vector<unsigned> Parset::subbandToRSPslotMapping(const string &stationName) cons
   if (!isDefined(key)) {
     //LOG_WARN_STR('"' << key << "\" not defined, trying \"Observation.rspSlotList\"");
     key = "Observation.rspSlotList";
+  }
+
+  if (!isDefined(key)) {
+    LOG_WARN_STR('"' << key << "\" not defined, falling back to default");
+
+    /* Map the subbands linearly onto the RSP boards */
+    size_t n = nrSubbands();
+    size_t beamletsPerRSP = maxBeamletsPerRSP(nrBitsPerSample());
+
+    vector<unsigned> rspSlots(n);
+
+    for (size_t i = 0; i < n; i++)
+      rspSlots[i] = i % beamletsPerRSP;
+
+    return rspSlots;
   }
 
   return getUint32Vector(key, true);
@@ -1009,12 +1040,12 @@ unsigned Parset::nrSamplesToCNProc() const
 
 unsigned Parset::inputBufferSize() const
 {
-  return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer") * subbandBandwidth());
+  return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer", 1.0) * subbandBandwidth());
 }
 
 unsigned Parset::maxNetworkDelay() const
 {
-  return (unsigned) (getDouble("OLAP.maxNetworkDelay") * subbandBandwidth());
+  return (unsigned) (getDouble("OLAP.maxNetworkDelay", 0.25) * subbandBandwidth());
 }
 
 unsigned Parset::nrSubbandsPerPset() const
@@ -1094,12 +1125,12 @@ double Parset::channelWidth() const
 
 bool Parset::delayCompensation() const
 {
-  return getBool("OLAP.delayCompensation");
+  return getBool("OLAP.delayCompensation", true);
 }
 
 unsigned Parset::nrCalcDelays() const
 {
-  return getUint32("OLAP.DelayComp.nrCalcDelays");
+  return getUint32("OLAP.DelayComp.nrCalcDelays", 16);
 }
 
 string Parset::positionType() const
