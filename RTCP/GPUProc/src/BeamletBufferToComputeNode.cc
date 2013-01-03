@@ -89,12 +89,14 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsNeedDelays               = (itsDelayCompensation || itsMaxNrTABs > 1 || itsCorrectClocks) && itsNrInputs > 0;
   itsSubbandToSAPmapping      = ps.subbandToSAPmapping();
 
+  ASSERT( itsSubbandToSAPmapping.size() == itsNrSubbands );
+
   if (haveStationInput) {
     itsSubbandToRSPboardMapping = ps.subbandToRSPboardMapping(stationName);
     itsSubbandToRSPslotMapping  = ps.subbandToRSPslotMapping(stationName);
 
-    ASSERT( itsSubbandToRSPboardMapping.size() == itsSubbandToRSPslotMapping.size() );
-    ASSERT( itsSubbandToRSPboardMapping.size() == itsSubbandToSAPmapping.size() );
+    ASSERT( itsSubbandToRSPboardMapping.size() == itsNrSubbands );
+    ASSERT( itsSubbandToRSPslotMapping.size() == itsNrSubbands );
   }
 
   itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSubbandBandwidth + itsBlockNumber * itsNrSamplesPerSubband), ps.clockSpeed());
