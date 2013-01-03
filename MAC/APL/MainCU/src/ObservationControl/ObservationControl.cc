@@ -267,7 +267,7 @@ void ObservationControl::registerResultMessage(const string& cntlrName, int	resu
 	// always handle a quited-msg from a controller.
 	if (state == CTState::QUITED) {
 		_updateChildInfo(cntlrName, state);
-		if (result != CT_RESULT_NO_ERROR) {
+		if (result != CT_RESULT_NO_ERROR && result != CT_RESULT_LOST_CONNECTION) {
 			itsQuitReason = result;
 		}
 	}
