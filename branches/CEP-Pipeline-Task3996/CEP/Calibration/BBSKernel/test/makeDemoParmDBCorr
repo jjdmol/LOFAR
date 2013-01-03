@@ -1,0 +1,62 @@
+#!/bin/sh
+
+pert="1e-6"
+
+echo "creating instrument_model (aips++)..."
+parmdb > $1_tmp.outpdb1 2>&1 << EOF
+create db='$USER', dbtype='aips', tablename='$1_tmp.demo_instr'
+adddef gain:11:real values=1, perturbation=${pert}
+adddef gain:12:real values=0, perturbation=${pert}
+adddef gain:21:real values=0, perturbation=${pert}
+adddef gain:22:real values=1, perturbation=${pert}
+adddef gain:11:imag values=0, perturbation=${pert}
+adddef gain:12:imag values=0, perturbation=${pert}
+adddef gain:21:imag values=0, perturbation=${pert}
+adddef gain:22:imag values=0, perturbation=${pert}
+adddef gain:11:ampl values=1, perturbation=${pert}
+adddef gain:12:ampl values=0, perturbation=${pert}
+adddef gain:21:ampl values=0, perturbation=${pert}
+adddef gain:22:ampl values=1, perturbation=${pert}
+adddef gain:11:phase values=0, perturbation=${pert}
+adddef gain:12:phase values=0, perturbation=${pert}
+adddef gain:21:phase values=0, perturbation=${pert}
+adddef gain:22:phase values=0, perturbation=${pert}
+adddef frot values=0, perturbation=${pert}
+adddef drot values=0, perturbation=${pert}
+adddef dell values=0, perturbation=${pert}
+adddef dgain:X values=1, perturbation=${pert}
+adddef dgain:Y values=1, perturbation=${pert}
+quit
+EOF
+if [ $? != 0 ]; then
+  cat $1_tmp.outpdb1 > /dev/stderr
+  exit 1
+fi
+
+echo "creating sky_model (aips++)..."
+parmdb > $1_tmp.outpdb2 2>&1 << EOF
+create db='$USER', dbtype='aips', tablename='$1_tmp.demo_sky'
+adddef RA:SRC1  values=2.734003,  perturbation=${pert}, pert_rel=F
+adddef DEC:SRC1 values=0.4537895, perturbation=${pert}, pert_rel=F
+adddef StokesI:SRC1 values=1, perturbation=${pert}
+adddef StokesQ:SRC1 values=0, perturbation=${pert}
+adddef StokesU:SRC1 values=0, perturbation=${pert}
+adddef StokesV:SRC1 values=0, perturbation=${pert}
+adddef RA:SRC2  values=2.7340205,  perturbation=${pert}, pert_rel=F
+adddef DEC:SRC2 values=0.45368975, perturbation=${pert}, pert_rel=F
+adddef StokesI:SRC2 values=1, perturbation=${pert} 
+adddef StokesQ:SRC2 values=0, perturbation=${pert} 
+adddef StokesU:SRC2 values=0, perturbation=${pert}
+adddef StokesV:SRC2 values=0, perturbation=${pert}
+adddef RA:SRC3  values=2.733981,   perturbation=${pert}, pert_rel=F
+adddef DEC:SRC3 values=0.45375025, perturbation=${pert}, pert_rel=F
+adddef StokesI:SRC3 values=1, perturbation=${pert} 
+adddef StokesQ:SRC3 values=0, perturbation=${pert} 
+adddef StokesU:SRC3 values=0, perturbation=${pert}
+adddef StokesV:SRC3 values=0, perturbation=${pert}
+quit
+EOF
+if [ $? != 0 ]; then
+  cat $1_tmp.outpdb2 > /dev/stderr
+  exit 1
+fi
