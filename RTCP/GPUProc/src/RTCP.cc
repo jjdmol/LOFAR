@@ -951,7 +951,7 @@ class Pipeline
 
     std::vector<SmartPtr<Stream> >  bufferToGPUstreams; // indexed by station
     std::vector<SmartPtr<Stream> >  GPUtoStorageStreams; // indexed by subband
-    std::vector<SlidingPointer<unsigned> > inputSynchronization, outputSynchronization; // indexed by subband
+    SlidingPointer<uint64_t> inputSynchronization, outputSynchronization;
 
 #if defined USE_B7015
     OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
@@ -1017,9 +1017,7 @@ Pipeline::Pipeline(const Parset &ps)
   //inputSection8(ps.nrBitsPerSample() == 8 ? new InputSection<i8complex>(ps, 0) : 0),
   //inputSection4(ps.nrBitsPerSample() == 4 ? new InputSection<i4complex>(ps, 0) : 0)
   bufferToGPUstreams(ps.nrStations()),
-  GPUtoStorageStreams(ps.nrSubbands()),
-  inputSynchronization(ps.nrSubbands()),
-  outputSynchronization(ps.nrSubbands())
+  GPUtoStorageStreams(ps.nrSubbands())
 {
   createContext(context, devices);
 
@@ -1057,13 +1055,13 @@ CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
 
   double startTime = omp_get_wtime();
 
-#pragma omp parallel sections
+//#pragma omp parallel sections
   {
-#pragma omp section
+//#pragma omp section
     firFilterProgram = createProgram("FIR.cl");
-#pragma omp section
+//#pragma omp section
     delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
-#pragma omp section
+//#pragma omp section
 #if defined USE_NEW_CORRELATOR
     correlatorProgram = createProgram("NewCorrelator.cl");
 #else
@@ -1305,20 +1303,20 @@ CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, unsigned 
 
 void CorrelatorWorkQueue::receiveSubbandSamples(unsigned block, unsigned subband)
 {
-  pipeline.inputSynchronization[subband].waitFor(block);
+  pipeline.inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
 
   for (unsigned stat = 0; stat < ps.nrStations(); stat ++)
     pipeline.bufferToGPUstreams[stat]->read(inputSamples[stat].origin(), inputSamples[stat].num_elements());
 
-  pipeline.inputSynchronization[subband].advanceTo(block + 1);
+  pipeline.inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
 }
 
 
 void CorrelatorWorkQueue::sendSubbandVisibilites(unsigned block, unsigned subband)
 {
-  pipeline.outputSynchronization[subband].waitFor(block);
+  pipeline.outputSynchronization.waitFor(block * ps.nrSubbands() + subband);
   pipeline.GPUtoStorageStreams[subband]->write(visibilities.origin(), visibilities.num_elements() * sizeof(std::complex<float>));
-  pipeline.outputSynchronization[subband].advanceTo(block + 1);
+  pipeline.outputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
 }
 
 
@@ -1367,11 +1365,13 @@ void CorrelatorWorkQueue::doWork()
 #pragma omp barrier
 
   double executionStartTime = omp_get_wtime();
+double lastTime = omp_get_wtime();
 
   for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) {
 #pragma omp single nowait
 #pragma omp critical (cout)
-    std::cout << "block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << std::endl;
+    std::cout << "block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << ", exec = " << omp_get_wtime() - lastTime << std::endl;
+    lastTime = omp_get_wtime();
 
     memset(delaysAtBegin.origin(), 0, delaysAtBegin.bytesize());
     memset(delaysAfterEnd.origin(), 0, delaysAfterEnd.bytesize());
@@ -1675,7 +1675,7 @@ void CorrelatorWorkQueue::printTestOutput()
 
 void CorrelatorPipeline::doWork()
 {
-#pragma omp parallel num_threads((profiling ? 1 : 3) * nrGPUs)
+#pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
   try
   {
     CorrelatorWorkQueue(*this, omp_get_thread_num()).doWork();
@@ -2201,7 +2201,7 @@ int main(int argc, char **argv)
     nrGPUs = str ? atoi(str) : 1;
 
     profiling = false; CorrelatorPipeline(ps).doWork();
-    profiling = true; CorrelatorPipeline(ps).doWork();
+    //profiling = true; CorrelatorPipeline(ps).doWork();
 
     //(CorrelatorTest)(ps);
     //(CorrelateRectangleTest)(ps);
