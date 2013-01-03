@@ -1135,7 +1135,7 @@ unsigned Parset::nrCalcDelays() const
 
 string Parset::positionType() const
 {
-  return getString("OLAP.DelayComp.positionType");
+  return getString("OLAP.DelayComp.positionType", "ITRF");
 }
 
 double Parset::clockCorrectionTime(const std::string &station) const
