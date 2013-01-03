@@ -15,10 +15,12 @@ set(gpuproc_LIB_SRCS
   #Package__Version.cc
   BandPass.cc
   BeamletBuffer.cc
+  BeamletBufferToComputeNode.cc
   Delays.cc
   FilterBank.cc
   InputSection.cc
   InputThread.cc
+  ION_Allocator.cc
   LogThread.cc
   OpenCL_Support.cc
   ReaderWriterSynchronization.cc

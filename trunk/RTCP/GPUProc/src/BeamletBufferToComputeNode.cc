@@ -26,11 +26,11 @@
 //# Includes
 #include <Common/Timer.h>
 #include <Common/PrettyUnits.h>
+#include <Stream/FixedBufferStream.h>
 #include <BeamletBufferToComputeNode.h>
 #include <BeamletBuffer.h>
 #include <ION_Allocator.h>
 #include <Scheduling.h>
-#include <GlobalVars.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Mapping.h>
@@ -301,8 +301,17 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sen
 }
 
 
+template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toStream( Stream *stream )
+{
+    // send all subband data
+    for (unsigned subband = 0; subband < itsNrSubbands; subband ++)
+      sendSubband(stream, subband);
+}
+
+
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toComputeNodes()
 {
+  /*
   CN_Command command(CN_Command::PROCESS, itsBlockNumber ++);
 
   if (itsNrPhaseOneTwoCoresPerPset > 0) {
@@ -364,6 +373,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
         itsCurrentPhaseOneTwoComputeCore = 0;
     }
   }
+  */
 }
 
 
@@ -374,7 +384,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sto
 }
 
 
-template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::process()
+template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::process( Stream *stream )
 {
   // stay in sync with other psets even if there are no inputs to allow a synchronised early abort
 
@@ -399,7 +409,9 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
   NSTimer timer;
   timer.start();
   
-  toComputeNodes();
+  /* write data to buffer */
+  //toComputeNodes();
+  toStream(stream);
 
   if (itsNrInputs > 0) {
     stopTransaction();
