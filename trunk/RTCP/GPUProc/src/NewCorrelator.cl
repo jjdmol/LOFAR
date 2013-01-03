@@ -10,7 +10,7 @@ typedef __global float8 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
 
 __kernel
 void correlateTriangleKernel(__global void *visibilitiesPtr,
-	       __global const void *correctedDataPtr)
+			     __global const void *correctedDataPtr)
 {
   VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
