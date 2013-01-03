@@ -92,6 +92,9 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   if (haveStationInput) {
     itsSubbandToRSPboardMapping = ps.subbandToRSPboardMapping(stationName);
     itsSubbandToRSPslotMapping  = ps.subbandToRSPslotMapping(stationName);
+
+    ASSERT( itsSubbandToRSPboardMapping.size() == itsSubbandToRSPslotMapping.size() );
+    ASSERT( itsSubbandToRSPboardMapping.size() == itsSubbandToSAPmapping.size() );
   }
 
   itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSubbandBandwidth + itsBlockNumber * itsNrSamplesPerSubband), ps.clockSpeed());
@@ -293,6 +296,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::set
 
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sendSubband( Stream *stream, unsigned subband )
 {
+  ASSERT( subband < itsSubbandToSAPmapping.size() );
+
   unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
   unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
   unsigned beam     = itsSubbandToSAPmapping[subband];
