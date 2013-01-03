@@ -304,7 +304,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sen
   unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
   unsigned beam     = itsSubbandToSAPmapping[subband];
 
-  itsBeamletBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
+  itsBeamletBuffers[rspBoard]->sendUnalignedSubband(stream, rspSlot, beam);
 }
 
 
