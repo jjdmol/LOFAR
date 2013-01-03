@@ -21,8 +21,8 @@
 //#
 //#  $Id: LogThread.h 20294 2012-03-01 12:43:34Z mol $
 
-#ifndef LOFAR_GPUPROC_LOG_THREAD_H
-#define LOFAR_GPUPROC_LOG_THREAD_H
+#ifndef LOFAR_IONPROC_LOG_THREAD_H
+#define LOFAR_IONPROC_LOG_THREAD_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 

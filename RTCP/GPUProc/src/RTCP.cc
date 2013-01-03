@@ -22,6 +22,7 @@
 #include "Common/LofarLogger.h"
 #include "Common/SystemUtil.h"
 #include "FilterBank.h"
+#include "BeamletBufferToComputeNode.h"
 #include "InputSection.h"
 #include "Interface/Parset.h"
 #include "Interface/SmartPtr.h"
@@ -50,6 +51,7 @@ unsigned nrGPUs;
 #define NR_TAPS			16
 #define NR_STATION_FILTER_TAPS	16
 
+#undef USE_INPUT_SECTION
 #define USE_NEW_CORRELATOR
 #define USE_2X2
 #undef USE_CUSTOM_FFT
@@ -253,6 +255,24 @@ class FFT_Plan
     clFFT_Plan plan;
 };
 
+template <typename SAMPLE_TYPE> class StationInput
+{
+public:
+  SmartPtr<InputSection<SAMPLE_TYPE> >               inputSection;
+  SmartPtr<BeamletBufferToComputeNode<SAMPLE_TYPE> > beamletBufferToComputeNode;
+
+  void init(const Parset &ps, unsigned psetNumber);
+
+private:
+  // needed as fake input for beamletBufferToComputeNode
+  Matrix<Stream *>                        phaseOneTwoStreams;
+};
+
+template<typename SAMPLE_TYPE> void StationInput<SAMPLE_TYPE>::init(const Parset &ps, unsigned psetNumber)
+{
+  inputSection = new InputSection<SAMPLE_TYPE>(ps, psetNumber);
+  beamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(ps, phaseOneTwoStreams, inputSection->itsBeamletBuffers, psetNumber, 0);
+}
 
 class Kernel : public cl::Kernel
 {
@@ -945,9 +965,10 @@ class Pipeline
     const Parset	    &ps;
     cl::Context		    context;
     std::vector<cl::Device> devices;
-    SmartPtr<InputSection<i16complex> > inputSection16;
-    SmartPtr<InputSection<i8complex> >	inputSection8;
-    SmartPtr<InputSection<i4complex> >	inputSection4;
+
+    std::vector<StationInput<i16complex> > stationInputs16; // indexed by station
+    std::vector<StationInput<i8complex> >  stationInputs8; // indexed by station
+    std::vector<StationInput<i4complex> >  stationInputs4; // indexed by station
 
     std::vector<SmartPtr<Stream> >  bufferToGPUstreams; // indexed by station
     std::vector<SmartPtr<Stream> >  GPUtoStorageStreams; // indexed by subband
@@ -956,6 +977,9 @@ class Pipeline
 #if defined USE_B7015
     OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
 #endif
+
+  //private:
+    void                    sendNextBlock();
 };
 
 
@@ -1013,13 +1037,32 @@ class UHEP_Pipeline : public Pipeline
 Pipeline::Pipeline(const Parset &ps)
 :
   ps(ps),
-  //inputSection16(ps.nrBitsPerSample() == 16 ? new InputSection<i16complex>(ps, 0) : 0),
-  //inputSection8(ps.nrBitsPerSample() == 8 ? new InputSection<i8complex>(ps, 0) : 0),
-  //inputSection4(ps.nrBitsPerSample() == 4 ? new InputSection<i4complex>(ps, 0) : 0)
+  stationInputs16(ps.nrStations()),
+  stationInputs8(ps.nrStations()),
+  stationInputs4(ps.nrStations()),
   bufferToGPUstreams(ps.nrStations()),
   GPUtoStorageStreams(ps.nrSubbands())
 {
   createContext(context, devices);
+
+#if !defined USE_INPUT_SECTION
+  for (unsigned stat = 0; stat < ps.nrStations(); stat ++) {
+    switch (ps.nrBitsPerSample()) {
+      default:
+      case 16:
+        stationInputs16[stat].init(ps, stat);
+        break;
+
+      case 8:
+        stationInputs8[stat].init(ps, stat);
+        break;
+
+      case 4:
+        stationInputs4[stat].init(ps, stat);
+        break;
+    }
+  }
+#endif
 
   for (unsigned stat = 0; stat < ps.nrStations(); stat ++)
     bufferToGPUstreams[stat] = new NullStream;
@@ -1032,6 +1075,35 @@ Pipeline::Pipeline(const Parset &ps)
 cl::Program Pipeline::createProgram(const char *sources)
 {
   return LOFAR::RTCP::createProgram(ps, context, devices, sources);
+}
+
+
+void Pipeline::sendNextBlock()
+{
+#if !defined USE_INPUT_SECTION
+  size_t nrStations = ps.nrStations();
+  unsigned bitsPerSample = ps.nrBitsPerSample();
+
+#pragma omp for schedule(dynamic), nowait
+  for (size_t stat = 0; stat < nrStations; stat++) {
+    Stream *stream = bufferToGPUstreams[stat];
+
+    switch(bitsPerSample) {
+      default:
+      case 16:
+        stationInputs16[stat].beamletBufferToComputeNode->process(stream);
+        break;
+        
+      case 8:
+        stationInputs8[stat].beamletBufferToComputeNode->process(stream);
+        break;
+        
+      case 4:
+        stationInputs4[stat].beamletBufferToComputeNode->process(stream);
+        break;
+    }
+  }
+#endif
 }
 
 
@@ -1388,11 +1460,11 @@ double lastTime = omp_get_wtime();
 #pragma omp for schedule(dynamic), nowait, ordered
     for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) {
       try {
-	doSubband(block, subband);
+        doSubband(block, subband);
       } catch (cl::Error &error) {
 #pragma omp critical (cerr)
-	std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
-	exit(1);
+        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
+        exit(1);
       }
     }
   }
@@ -1636,19 +1708,19 @@ void UHEP_WorkQueue::doWork(const float * /*delaysAtBegin*/, const float * /*del
 void CorrelatorWorkQueue::setTestPattern()
 {
   if (ps.nrStations() >= 3) {
-    double centerFrequency = 384 * ps.sampleRate();
-    double baseFrequency = centerFrequency - .5 * ps.sampleRate();
+    double centerFrequency = 384 * ps.nrSamplesPerSubband();
+    double baseFrequency = centerFrequency - .5 * ps.nrSamplesPerSubband();
     unsigned testSignalChannel = ps.nrChannelsPerSubband() >= 231 ? 230 : ps.nrChannelsPerSubband() / 2;
-    double signalFrequency = baseFrequency + testSignalChannel * ps.sampleRate() / ps.nrChannelsPerSubband();
+    double signalFrequency = baseFrequency + testSignalChannel * ps.nrSamplesPerSubband() / ps.nrChannelsPerSubband();
 
     for (unsigned time = 0; time < (NR_TAPS - 1 + ps.nrSamplesPerChannel()) * ps.nrChannelsPerSubband(); time ++) {
-      double phi = 2.0 * M_PI * signalFrequency * time / ps.sampleRate();
+      double phi = 2.0 * M_PI * signalFrequency * time / ps.nrSamplesPerSubband();
 
       switch (ps.nrBytesPerComplexSample()) {
-	case 4 : reinterpret_cast<std::complex<short> &>(hostInputSamples[2][time][1][0]) = std::complex<short>((short) rint(32767 * cos(phi)), (short) rint(32767 * sin(phi)));
+	case 4 : reinterpret_cast<std::complex<short> &>(inputSamples[2][time][1][0]) = std::complex<short>((short) rint(32767 * cos(phi)), (short) rint(32767 * sin(phi)));
 		 break;
 
-	case 2 : reinterpret_cast<std::complex<signed char> &>(hostInputSamples[2][time][1][0]) = std::complex<signed char>((signed char) rint(127 * cos(phi)), (signed char) rint(127 * sin(phi)));
+	case 2 : reinterpret_cast<std::complex<signed char> &>(inputSamples[2][time][1][0]) = std::complex<signed char>((signed char) rint(127 * cos(phi)), (signed char) rint(127 * sin(phi)));
 		 break;
       }
     }
@@ -1666,7 +1738,7 @@ void CorrelatorWorkQueue::printTestOutput()
     //for (int channel = 0; channel < ps.nrChannelsPerSubband(); channel ++)
     if (ps.nrChannelsPerSubband() == 256)
       for (int channel = 228; channel <= 232; channel ++)
-	std::cout << channel << ' ' << hostVisibilities[5][channel][1][1] << std::endl;
+	std::cout << channel << ' ' << visibilities[5][channel][1][1] << std::endl;
   }
 }
 
@@ -1675,14 +1747,32 @@ void CorrelatorWorkQueue::printTestOutput()
 
 void CorrelatorPipeline::doWork()
 {
-#pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
-  try
+#pragma omp parallel sections
   {
-    CorrelatorWorkQueue(*this, omp_get_thread_num()).doWork();
-  } catch (cl::Error &error) {
+    #pragma omp section
+    {
+      double startTime = ps.startTime(), currentTime, stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
+
+      for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) {
+#pragma omp critical (cout)
+        std::cout << "send block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << std::endl;
+
+        sendNextBlock();
+      }
+    }
+
+    #pragma omp section
+    {
+#pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
+      try
+      {
+        CorrelatorWorkQueue(*this, omp_get_thread_num()).doWork();
+      } catch (cl::Error &error) {
 #pragma omp critical (cerr)
-    std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
-    exit(1);
+        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
+        exit(1);
+      }
+    }
   }
 }
 
@@ -2171,6 +2261,8 @@ struct FFT_Test : public UnitTest
 int main(int argc, char **argv)
 {
   using namespace LOFAR::RTCP;
+
+  INIT_LOGGER("RTCP");
 
   std::cout << "running ..." << std::endl;
 

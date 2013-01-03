@@ -102,6 +102,9 @@ MVEpoch Delays::toUTC(int64 timeInSamples)
 
 void Delays::init()
 {
+  ScopedLock lock(casacoreMutex);
+  ScopedDelayCancellation dc;
+
   setBeamDirections(itsParset);
   setPositionDiff(itsParset);
 
@@ -111,9 +114,6 @@ void Delays::init()
 
   if (bufferSize % itsNrCalcDelays > 0)
     THROW(GPUProcException, "nrCalcDelays (" << itsNrCalcDelays << ") must divide bufferSize (" << bufferSize << ")");
-
-  ScopedLock lock(casacoreMutex);
-  ScopedDelayCancellation dc;
 
   // Set an initial epoch for the itsFrame
   itsFrame.set(MEpoch(toUTC(itsStartTime), MEpoch::UTC));

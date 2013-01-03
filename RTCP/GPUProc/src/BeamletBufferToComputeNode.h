@@ -52,7 +52,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     BeamletBufferToComputeNode(const Parset &ps, const Matrix<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber, unsigned firstBlockNumber);
     ~BeamletBufferToComputeNode();
   
-    void			 process();
+    void			 process( Stream *stream );
 
     TimeStamp                    getCurrentTimeStamp() const { return itsCurrentTimeStamp; }
     
@@ -67,6 +67,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
 
     void			 startTransaction();
     void			 writeLogMessage() const;
+    void			 toStream( Stream *stream );
     void			 toComputeNodes();
     void			 stopTransaction();
 
