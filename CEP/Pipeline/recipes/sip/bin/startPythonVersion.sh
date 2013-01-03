@@ -11,7 +11,7 @@ if [ $versionString != "notFound" ]; then
   echo "Using parset supplied software version: $versionString"
  
   # Provide Lofar with the new lofarversion: correctness is validated there
-  use Lofar_test $versionString 
+  use Lofar $versionString 
   
 fi
 
