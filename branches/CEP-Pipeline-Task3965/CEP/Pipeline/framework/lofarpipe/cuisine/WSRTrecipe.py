@@ -1,7 +1,15 @@
+"""
+WSRTrecipe base class for recipes: profides a single unified interface for
+STANDALONE and recipes as part of other recipes.
+Perform the setup of logging and performs parsing of possible 
+commandline inputs or ingredients
+
+Helper objects and stand alone runtime functionality
+"""
 #!/usr/bin/env python
 import sys
 import os.path
-import parset
+import parset  # relative import of parset!!!!! Make absolute 
 import logging
 from optparse import OptionParser
 
@@ -9,6 +17,7 @@ import lofarpipe.cuisine.cook as cook
 from lofarpipe.support.pipelinelogging import getSearchingLogger
 from lofarpipe.support.lofaringredient import LOFARingredient
 from lofarpipe.support.lofarexceptions import RecipeArgumentException
+
 
 class NullLogHandler(logging.Handler):
     """
@@ -131,7 +140,6 @@ class WSRTrecipe(object):
                 "Could not find (optional) default parset {0}".format(
                                 self.name + ".parset"))
 
-
         # Parse the arguments using default parser
         (options, args) = self.optionparser.parse_args(opts)
         if options.help:
@@ -142,7 +150,6 @@ class WSRTrecipe(object):
                     self.inputs[key] = value
             self.inputs['args'] = args
             return 0
-
 
     def run(self, name):
         """
@@ -183,8 +190,8 @@ class WSRTrecipe(object):
             print 'The recipe run did not create any outputs'
         else:
             print 'Results:'
-            for o in self.outputs.keys():
-                print str(o) + ' = ' + str(self.outputs[o])
+            for key in self.outputs.keys():
+                print str(key) + ' = ' + str(self.outputs[key])
 
     def go(self):
         """
@@ -192,19 +199,18 @@ class WSRTrecipe(object):
         """
         self.help_text()
 
-
     def cook_recipe(self, recipe, inputs, outputs):
         """
         Execute another recipe/pipeline as part of this one
         """
-        c = cook.PipelineCook(recipe, inputs, outputs,
+        cook_object = cook.PipelineCook(recipe, inputs, outputs,
                               self.logger, self.recipe_path)
 
         # Start the external recipe
-        c.spawn()
+        cook_object.spawn()
 
 
 # Stand alone execution code ------------------------------------------
 if __name__ == '__main__':
-    standalone = WSRTrecipe()
-    sys.exit(standalone.main())
+    STANDALONE = WSRTrecipe()
+    sys.exit(STANDALONE.main())

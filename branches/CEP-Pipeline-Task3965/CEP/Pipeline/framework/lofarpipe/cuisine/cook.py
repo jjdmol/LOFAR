@@ -1,8 +1,4 @@
 #from message import ErrorLevel, NotifyLevel, VerboseLevel, DebugLevel
-import time
-import os
-import select
-import sys
 import imp
 
 from lofarpipe.support.pipelinelogging import getSearchingLogger
