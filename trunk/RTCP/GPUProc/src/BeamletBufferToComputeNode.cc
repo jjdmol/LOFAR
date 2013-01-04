@@ -304,7 +304,44 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sen
   unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
   unsigned beam     = itsSubbandToSAPmapping[subband];
 
+  struct header header;
+
+  header.subband    = subband;
+  header.nrSamples  = itsNrSamplesPerSubband + itsNrHistorySamples;
+  header.sampleSize = NR_POLARIZATIONS * sizeof(SAMPLE_TYPE);
+  header.nrDelays   = itsNrTABs[beam] + 1;
+
+  // send header
+  stream->write(&header, sizeof header);
+
+  // send subband
   itsBeamletBuffers[rspBoard]->sendUnalignedSubband(stream, rspSlot, beam);
+
+  // send meta data
+  SubbandMetaData metaData(1, itsNrTABs[beam] + 1);
+
+  if (itsNeedDelays) {
+    for (unsigned p = 0; p < itsNrTABs[beam] + 1; p ++) {
+      struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[p];
+
+      beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
+      beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
+
+      // extract the carthesian coordinates
+      const casa::Vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].getValue();
+      const casa::Vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].getValue();
+
+      for (unsigned i = 0; i < 3; i ++) {
+        beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
+        beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
+      }
+    }
+  }
+
+  metaData.alignmentShift(0) = 0;
+  metaData.setFlags(0, itsFlags[rspBoard][beam]);
+
+  metaData.write(stream);
 }
 
 
