@@ -268,34 +268,6 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
 }
 
 
-template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::setMetaData( SubbandMetaData &metaData, unsigned psetIndex, unsigned subband )
-{
-  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-  unsigned beam     = itsSubbandToSAPmapping[subband];
-
-  if (itsNeedDelays) {
-    for (unsigned p = 0; p < itsNrTABs[beam] + 1; p ++) {
-      struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(psetIndex)[p];
-
-      beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
-      beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
-
-      // extract the carthesian coordinates
-      const casa::Vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].getValue();
-      const casa::Vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].getValue();
-
-      for (unsigned i = 0; i < 3; i ++) {
-        beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
-        beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
-      }
-    }
-  }
-
-  metaData.alignmentShift(psetIndex) = itsBeamletBuffers[rspBoard]->alignmentShift(beam);
-  metaData.setFlags(psetIndex, itsFlags[rspBoard][beam]);
-}
-
-
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sendSubband( Stream *stream, unsigned subband )
 {
   ASSERT( subband < itsSubbandToSAPmapping.size() );
@@ -350,74 +322,6 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toS
     // send all subband data
     for (unsigned subband = 0; subband < itsNrSubbands; subband ++)
       sendSubband(stream, subband);
-}
-
-
-template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toComputeNodes()
-{
-  /*
-  CN_Command command(CN_Command::PROCESS, itsBlockNumber ++);
-
-  if (itsNrPhaseOneTwoCoresPerPset > 0) {
-    // If the total number of subbands is not dividable by the nrSubbandsPerPset,
-    // we may have to send dummy process commands, without sending subband data.
-
-    for (unsigned subbandBase = 0; subbandBase < itsNrSubbandsPerPset; subbandBase ++) {
-      Stream *controlStream = itsPhaseOneTwoStreams[myPsetNumber][itsCurrentPhaseOneTwoComputeCore];
-
-      // tell CN to process data
-      command.write(controlStream);
-
-      if (itsNrInputs > 0) {
-#ifdef CLUSTER_SCHEDULING
-        // transpose the data and send it to the correct compute nodes directly
-        for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
-          unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
-          if (subband >= itsNrSubbands)
-            continue;
-
-          Stream *stream = itsPhaseOneTwoStreams[psetIndex][itsCurrentPhaseOneTwoComputeCore];
-
-          SubbandMetaData metaData(1, itsMaxNrTABs + 1);
-
-          setMetaData(metaData, 0, subband);
-          metaData.write(stream);
-          sendSubband(stream, subband);
-        }
-      }
-#else
-        // create and send all metadata in one "large" message, since initiating a message
-        // has significant overhead in FCNP.
-        SubbandMetaData metaData(itsNrPhaseTwoPsets, itsMaxNrTABs + 1);
-
-        for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
-          unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
-
-          if (subband >= itsNrSubbands)
-            continue;
-
-          setMetaData(metaData, psetIndex, subband);
-        }
-
-        metaData.write(controlStream);
-
-        // now send all subband data
-        for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
-          unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
-
-          if (subband >= itsNrSubbands)
-            continue;
-
-          sendSubband(controlStream, subband);
-        }
-      }
-#endif
-
-      if (++ itsCurrentPhaseOneTwoComputeCore == itsNrPhaseOneTwoCoresPerPset)
-        itsCurrentPhaseOneTwoComputeCore = 0;
-    }
-  }
-  */
 }
 
 

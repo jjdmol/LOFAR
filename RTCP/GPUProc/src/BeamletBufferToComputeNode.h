@@ -68,14 +68,12 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
 
     void			 computeDelays(), computeNextDelays();
 
-    void                         setMetaData( SubbandMetaData &metaData, unsigned psetIndex, unsigned subband );
     void                         sendSubband( Stream *stream, unsigned subband );
     
 
     void			 startTransaction();
     void			 writeLogMessage() const;
     void			 toStream( Stream *stream );
-    void			 toComputeNodes();
     void			 stopTransaction();
 
     std::string                  itsLogPrefix;
