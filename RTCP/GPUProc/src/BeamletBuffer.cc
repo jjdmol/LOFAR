@@ -46,14 +46,14 @@ template<typename SAMPLE_TYPE> const unsigned BeamletBuffer<SAMPLE_TYPE>::itsNrT
 // itsOffset to a proper value, we can assure that input packets never
 // wrap around the circular buffer
 
-template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const Parset *ps, string &stationName, unsigned rspBoard)
+template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const Parset &ps, const std::string &stationName, unsigned rspBoard)
 :
   itsRSPboard(rspBoard),
-  itsNrSubbands(ps->nrSlotsInFrame()),
+  itsNrSubbands(ps.nrSlotsInFrame()),
   itsPacketSize(sizeof(struct RSP::Header) + itsNrTimesPerPacket * itsNrSubbands * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE)),
-  itsSize(align(ps->inputBufferSize(), itsNrTimesPerPacket)),
-  itsHistorySize(ps->nrHistorySamples()),
-  itsIsRealTime(ps->realTime()),
+  itsSize(align(ps.inputBufferSize(), itsNrTimesPerPacket)),
+  itsHistorySize(ps.nrHistorySamples()),
+  itsIsRealTime(ps.realTime()),
   itsSynchronizedReaderWriter(itsIsRealTime ? 0 : new SynchronizedReaderAndWriter(itsSize)), // FIXME: does not work for multiple observations
   itsLockedRanges(itsSize),
   itsSBBuffers(boost::extents[itsNrSubbands][itsSize][NR_POLARIZATIONS], 128 /*, hugeMemoryAllocator*/),
@@ -72,7 +72,7 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
 {
   itsLogPrefix = str(format("[station %s board %u] ") % stationName % rspBoard);
 
-  if (ps->getUint32("OLAP.nrTimesInFrame") != itsNrTimesPerPacket)
+  if (ps.getUint32("OLAP.nrTimesInFrame") != itsNrTimesPerPacket)
     THROW(GPUProcException, "OLAP.nrTimesInFrame should be " << boost::lexical_cast<std::string>(itsNrTimesPerPacket));
 
 #if 0
