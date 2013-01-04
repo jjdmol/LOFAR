@@ -21,6 +21,7 @@
 #include "BandPass.h"
 #include "Common/LofarLogger.h"
 #include "Common/SystemUtil.h"
+#include "Stream/SharedMemoryStream.h"
 #include "FilterBank.h"
 #include "BeamletBufferToComputeNode.h"
 #include "InputSection.h"
@@ -979,7 +980,7 @@ class Pipeline
 #endif
 
   //private:
-    void                    sendNextBlock();
+    void                    sendNextBlock(unsigned station);
 };
 
 
@@ -1045,8 +1046,10 @@ Pipeline::Pipeline(const Parset &ps)
 {
   createContext(context, devices);
 
-#if !defined USE_INPUT_SECTION
+#ifdef USE_INPUT_SECTION
   for (unsigned stat = 0; stat < ps.nrStations(); stat ++) {
+    bufferToGPUstreams[stat] = new SharedMemoryStream;
+
     switch (ps.nrBitsPerSample()) {
       default:
       case 16:
@@ -1062,10 +1065,10 @@ Pipeline::Pipeline(const Parset &ps)
         break;
     }
   }
-#endif
-
+#else
   for (unsigned stat = 0; stat < ps.nrStations(); stat ++)
     bufferToGPUstreams[stat] = new NullStream;
+#endif
 
   for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++)
     GPUtoStorageStreams[sb] = new NullStream;
@@ -1078,30 +1081,26 @@ cl::Program Pipeline::createProgram(const char *sources)
 }
 
 
-void Pipeline::sendNextBlock()
+void Pipeline::sendNextBlock(unsigned station)
 {
-#if !defined USE_INPUT_SECTION
-  size_t nrStations = ps.nrStations();
+#ifdef USE_INPUT_SECTION
   unsigned bitsPerSample = ps.nrBitsPerSample();
 
-#pragma omp for schedule(dynamic), nowait
-  for (size_t stat = 0; stat < nrStations; stat++) {
-    Stream *stream = bufferToGPUstreams[stat];
+  Stream *stream = bufferToGPUstreams[station];
 
-    switch(bitsPerSample) {
-      default:
-      case 16:
-        stationInputs16[stat].beamletBufferToComputeNode->process(stream);
-        break;
-        
-      case 8:
-        stationInputs8[stat].beamletBufferToComputeNode->process(stream);
-        break;
-        
-      case 4:
-        stationInputs4[stat].beamletBufferToComputeNode->process(stream);
-        break;
-    }
+  switch(bitsPerSample) {
+    default:
+    case 16:
+      stationInputs16[station].beamletBufferToComputeNode->process(stream);
+      break;
+      
+    case 8:
+      stationInputs8[station].beamletBufferToComputeNode->process(stream);
+      break;
+      
+    case 4:
+      stationInputs4[station].beamletBufferToComputeNode->process(stream);
+      break;
   }
 #endif
 }
@@ -1377,8 +1376,42 @@ void CorrelatorWorkQueue::receiveSubbandSamples(unsigned block, unsigned subband
 {
   pipeline.inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
 
-  for (unsigned stat = 0; stat < ps.nrStations(); stat ++)
-    pipeline.bufferToGPUstreams[stat]->read(inputSamples[stat].origin(), inputSamples[stat].num_elements());
+#ifdef USE_INPUT_SECTION
+
+#pragma omp parallel for
+  for (unsigned stat = 0; stat < ps.nrStations(); stat ++) {
+    Stream *stream = pipeline.bufferToGPUstreams[stat];
+
+    // read header
+    struct BeamletBufferToComputeNode<i16complex>::header header;
+    size_t subbandSize = inputSamples[stat].num_elements() * sizeof *inputSamples.origin();
+
+    stream->read(&header, sizeof header);
+
+    ASSERTSTR(subband == header.subband, "Expected subband " << subband << ", got subband " << header.subband);
+    ASSERTSTR(subbandSize == header.nrSamples * header.sampleSize, "Expected " << subbandSize << " bytes, got " << header.nrSamples * header.sampleSize << " bytes (= " << header.nrSamples << " samples * " << header.sampleSize << " bytes/sample)");
+
+    // read subband
+    stream->read(inputSamples[stat].origin(), subbandSize);
+
+    unsigned beam = ps.subbandToSAPmapping()[subband];
+
+    // read meta data
+    SubbandMetaData metaData(1, header.nrDelays);
+    metaData.read(stream);
+
+    // the first set of delays represents the central beam, which is the one we correlate
+    struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
+
+    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
+      delaysAtBegin[beam][stat][pol]  = beamInfo.delayAtBegin;
+      delaysAfterEnd[beam][stat][pol] = beamInfo.delayAfterEnd;
+
+      phaseOffsets[beam][pol] = 0.0;
+    }
+  }
+
+#endif
 
   pipeline.inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
 }
@@ -1751,13 +1784,20 @@ void CorrelatorPipeline::doWork()
   {
     #pragma omp section
     {
-      double startTime = ps.startTime(), currentTime, stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
+      double startTime = ps.startTime(), stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
 
-      for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) {
+      size_t nrStations = ps.nrStations();
+
+#pragma omp parallel for num_threads(nrStations)
+      for (size_t stat = 0; stat < nrStations; stat++) {
+        double currentTime;
+
+        for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) {
 #pragma omp critical (cout)
-        std::cout << "send block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << std::endl;
+          std::cout << "send station = " << stat << ", block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << std::endl;
 
-        sendNextBlock();
+          sendNextBlock(stat);
+        }
       }
     }
 
@@ -2260,6 +2300,8 @@ struct FFT_Test : public UnitTest
 
 int main(int argc, char **argv)
 {
+  omp_set_nested(true);
+
   using namespace LOFAR::RTCP;
 
   INIT_LOGGER("RTCP");

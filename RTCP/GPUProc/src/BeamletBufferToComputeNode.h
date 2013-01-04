@@ -51,6 +51,13 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
   public:
     BeamletBufferToComputeNode(const Parset &ps, const Matrix<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber, unsigned firstBlockNumber);
     ~BeamletBufferToComputeNode();
+
+    struct header {
+      unsigned subband;
+      size_t nrSamples;
+      size_t sampleSize;
+      size_t nrDelays;
+    };
   
     void			 process( Stream *stream );
 
