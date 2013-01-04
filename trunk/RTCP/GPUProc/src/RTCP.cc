@@ -53,6 +53,7 @@ unsigned nrGPUs;
 #define NR_STATION_FILTER_TAPS	16
 
 #undef USE_INPUT_SECTION
+//#define USE_INPUT_SECTION
 #define USE_NEW_CORRELATOR
 #define USE_2X2
 #undef USE_CUSTOM_FFT
@@ -263,16 +264,15 @@ public:
   SmartPtr<BeamletBufferToComputeNode<SAMPLE_TYPE> > beamletBufferToComputeNode;
 
   void init(const Parset &ps, unsigned psetNumber);
-
-private:
-  // needed as fake input for beamletBufferToComputeNode
-  Matrix<Stream *>                        phaseOneTwoStreams;
 };
 
 template<typename SAMPLE_TYPE> void StationInput<SAMPLE_TYPE>::init(const Parset &ps, unsigned psetNumber)
 {
-  inputSection = new InputSection<SAMPLE_TYPE>(ps, psetNumber);
-  beamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(ps, phaseOneTwoStreams, inputSection->itsBeamletBuffers, psetNumber, 0);
+  string stationName = ps.getStationNamesAndRSPboardNumbers(psetNumber)[0].station; // TODO: support more than one station
+  std::vector<Parset::StationRSPpair> inputs = ps.getStationNamesAndRSPboardNumbers(psetNumber);
+
+  inputSection = new InputSection<SAMPLE_TYPE>(ps, inputs);
+  beamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(ps, stationName, inputSection->itsBeamletBuffers, 0);
 }
 
 class Kernel : public cl::Kernel

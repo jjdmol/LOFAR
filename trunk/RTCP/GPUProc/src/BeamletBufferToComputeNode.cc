@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/Timer.h>
 #include <Common/PrettyUnits.h>
+#include <Common/LofarLogger.h>
 #include <Stream/FixedBufferStream.h>
 #include <BeamletBufferToComputeNode.h>
 #include <BeamletBuffer.h>
@@ -53,58 +54,42 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> const unsigned BeamletBufferToComputeNode<SAMPLE_TYPE>::itsMaximumDelay;
 
 
-template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset &ps, const Matrix<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber, unsigned firstBlockNumber)
+template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset &ps, const std::string &stationName, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned firstBlockNumber)
 :
-  itsPhaseOneTwoStreams(phaseOneTwoStreams),
-  itsNrPhaseOneTwoCoresPerPset(phaseOneTwoStreams.size() > 0 ? phaseOneTwoStreams[0].size() : 0),
   itsPS(ps),
-  itsNrInputs(beamletBuffers.size()),
-  itsPsetNumber(psetNumber),
+  itsNrRSPboards(beamletBuffers.size()),
   itsBeamletBuffers(beamletBuffers),
-  itsBlockNumber(firstBlockNumber),
   itsDelayTimer("delay consumer", true, true)
 {
-  bool haveStationInput = itsNrInputs > 0;
-  string stationName = haveStationInput ? ps.getStationNamesAndRSPboardNumbers(psetNumber)[0].station : "none"; // TODO: support more than one station
+  bool haveStationInput = itsNrRSPboards > 0;
+  ASSERTSTR(itsNrRSPboards > 0, "BeamletBufferToComputeNode requires at least one BeamletBuffer");
 
   itsLogPrefix = str(boost::format("[obs %u station %s] ") % ps.observationID() % stationName);
 
   itsSubbandBandwidth	      = ps.subbandBandwidth();
   itsNrSubbands		      = ps.nrSubbands();
-  itsNrSubbandsPerPset	      = ps.nrSubbandsPerPset();
   itsNrSamplesPerSubband      = ps.nrSamplesPerSubband();
   itsNrBeams		      = ps.nrBeams();
   itsMaxNrTABs	              = ps.maxNrTABs();
   itsNrTABs	              = ps.nrTABs();
-  itsNrPhaseTwoPsets	      = ps.phaseTwoPsets().size();
-
-  if (itsNrPhaseOneTwoCoresPerPset > 0)
-    itsCurrentPhaseOneTwoComputeCore = (itsBlockNumber * itsNrSubbandsPerPset) % itsNrPhaseOneTwoCoresPerPset;
-  else
-    itsCurrentPhaseOneTwoComputeCore = 0;
 
   itsSampleDuration	      = ps.sampleDuration();
   itsDelayCompensation	      = ps.delayCompensation();
   itsCorrectClocks	      = ps.correctClocks();
-  itsNeedDelays               = (itsDelayCompensation || itsMaxNrTABs > 1 || itsCorrectClocks) && itsNrInputs > 0;
+  itsNeedDelays               = itsDelayCompensation || itsMaxNrTABs > 1 || itsCorrectClocks;
   itsSubbandToSAPmapping      = ps.subbandToSAPmapping();
+  itsSubbandToRSPboardMapping = ps.subbandToRSPboardMapping(stationName);
+  itsSubbandToRSPslotMapping  = ps.subbandToRSPslotMapping(stationName);
 
   ASSERT( itsSubbandToSAPmapping.size() == itsNrSubbands );
+  ASSERT( itsSubbandToRSPboardMapping.size() == itsNrSubbands );
+  ASSERT( itsSubbandToRSPslotMapping.size() == itsNrSubbands );
 
-  if (haveStationInput) {
-    itsSubbandToRSPboardMapping = ps.subbandToRSPboardMapping(stationName);
-    itsSubbandToRSPslotMapping  = ps.subbandToRSPslotMapping(stationName);
-
-    ASSERT( itsSubbandToRSPboardMapping.size() == itsNrSubbands );
-    ASSERT( itsSubbandToRSPslotMapping.size() == itsNrSubbands );
-  }
-
-  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSubbandBandwidth + itsBlockNumber * itsNrSamplesPerSubband), ps.clockSpeed());
+  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSubbandBandwidth + firstBlockNumber * itsNrSamplesPerSubband), ps.clockSpeed());
 
   itsIsRealTime		      = ps.realTime();
   itsMaxNetworkDelay	      = ps.maxNetworkDelay();
   itsNrHistorySamples	      = ps.nrHistorySamples();
-  itsObservationID	      = ps.observationID();
 
   LOG_DEBUG_STR(itsLogPrefix << "nrSubbands = " << itsNrSubbands);
   LOG_DEBUG_STR(itsLogPrefix << "nrChannelsPerSubband = " << ps.nrChannelsPerSubband());
@@ -133,7 +118,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsSamplesDelay.resize(itsNrBeams);
   itsFineDelaysAtBegin.resize(itsNrBeams, itsMaxNrTABs + 1);
   itsFineDelaysAfterEnd.resize(itsNrBeams, itsMaxNrTABs + 1);
-  itsFlags.resize(boost::extents[itsNrInputs][itsNrBeams]);
+  itsFlags.resize(boost::extents[itsNrRSPboards][itsNrBeams]);
 
 #if defined HAVE_BGP_ION // FIXME: not in preprocess
   doNotRunOnCore0();
@@ -146,7 +131,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::~Beamlet
 {
   LOG_DEBUG_STR(itsLogPrefix << "BeamletBufferToComputeNode::~BeamletBufferToComputeNode");
 
-  for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
+  for (unsigned rsp = 0; rsp < itsNrRSPboards; rsp ++)
     itsBeamletBuffers[rsp]->noMoreReading();
 }
 
@@ -223,7 +208,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::com
 
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::startTransaction()
 {
-  for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++) {
+  for (unsigned rsp = 0; rsp < itsNrRSPboards; rsp ++) {
     itsBeamletBuffers[rsp]->startReadTransaction(itsDelayedStamps, itsNrSamplesPerSubband + itsNrHistorySamples);
 
     for (unsigned beam = 0; beam < itsNrBeams; beam ++)
@@ -261,7 +246,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
     logStr << "]";
   }
 
-  for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
+  for (unsigned rsp = 0; rsp < itsNrRSPboards; rsp ++)
     logStr << ", flags " << rsp << ": " << itsFlags[rsp][0] << '(' << std::setprecision(3) << (100.0 * itsFlags[rsp][0].count() / (itsNrSamplesPerSubband + itsNrHistorySamples)) << "%)"; // not really correct; beam(0) may be shifted
   
   LOG_INFO(logStr.str());
@@ -327,7 +312,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toS
 
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::stopTransaction()
 {
-  for (unsigned rsp = 0; rsp < itsNrInputs; rsp ++)
+  for (unsigned rsp = 0; rsp < itsNrRSPboards; rsp ++)
     itsBeamletBuffers[rsp]->stopReadTransaction();
 }
 
@@ -336,39 +321,34 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::pro
 {
   // stay in sync with other psets even if there are no inputs to allow a synchronised early abort
 
-  if (itsNrInputs > 0)
-    for (unsigned beam = 0; beam < itsNrBeams; beam ++)
-      itsDelayedStamps[beam] = itsCurrentTimeStamp - itsNrHistorySamples;
+  for (unsigned beam = 0; beam < itsNrBeams; beam ++)
+    itsDelayedStamps[beam] = itsCurrentTimeStamp - itsNrHistorySamples;
 
   if (itsNeedDelays)
     computeDelays();
 
   if (itsIsRealTime) {
+    // wait for the deadline for these data
     itsCorrelationStartTime = itsCurrentTimeStamp + itsNrSamplesPerSubband + itsMaxNetworkDelay + itsMaximumDelay;
 
     itsWallClock.waitUntil(itsCorrelationStartTime);
   }
 
-  if (itsNrInputs > 0) {
-    startTransaction();
-    writeLogMessage();
-  }
+  startTransaction();
+  writeLogMessage();
 
   NSTimer timer;
   timer.start();
   
   /* write data to buffer */
-  //toComputeNodes();
   toStream(stream);
 
-  if (itsNrInputs > 0) {
-    stopTransaction();
-  }
+  stopTransaction();
 
   itsCurrentTimeStamp += itsNrSamplesPerSubband;
   timer.stop();
 
-  if (itsNrInputs > 0)
+  if (itsNrRSPboards > 0)
     LOG_DEBUG_STR(itsLogPrefix << " ION->CN: " << PrettyTime(timer.getElapsed()));
 }
 

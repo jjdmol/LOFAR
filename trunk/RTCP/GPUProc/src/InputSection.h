@@ -38,6 +38,7 @@
 
 #include <boost/multi_array.hpp>
 #include <pthread.h>
+#include <vector>
 
 
 namespace LOFAR {
@@ -46,7 +47,7 @@ namespace RTCP {
 template <typename SAMPLE_TYPE> class InputSection
 {
   public:
-							InputSection(const Parset &, unsigned psetNumber);
+							InputSection(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
 							~InputSection();
   
     std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > itsBeamletBuffers;
