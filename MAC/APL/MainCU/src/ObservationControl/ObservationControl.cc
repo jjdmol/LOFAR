@@ -780,7 +780,6 @@ void  ObservationControl::doHeartBeatTask()
 
 #if 1
 	// NOTE: [15122010] Sending respons when first child reached required state.
-	// NOTE: [15122010] WHEN nrChilds = 1 EACH TIME WE COME HERE A REPLY IS SENT!!!!!
 	if ((itsBusyControllers == nrChilds-1) && (itsLastReportedState != itsState)) {	// first reply received?
 		CTState		cts;					// report that state is reached.
 		LOG_INFO_STR("First controller reached required state " << cts.name(cts.stateAck(itsState)) << 
