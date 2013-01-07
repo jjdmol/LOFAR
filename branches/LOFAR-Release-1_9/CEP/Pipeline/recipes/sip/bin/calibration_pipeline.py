@@ -234,6 +234,18 @@ class calibration_pipeline(control):
                 sky_mapfile=sourcedb_mapfile
             )
 
+        # *********************************************************************
+        # 6. Create feedback file for further processing by the LOFAR framework
+        # (MAC)
+        # Create a parset-file containing the metadata for MAC/SAS
+        with duration(self, "get_metadata"):
+            self.run_task("get_metadata", output_data_mapfile,
+                parset_file=self.parset_feedback_file,
+                parset_prefix=(
+                    self.parset.getString('prefix') +
+                    self.parset.fullModuleName('DataProducts')),
+                product_type="Correlated")
+
         return 0
 
 
