@@ -263,7 +263,7 @@ void ObservationControl::registerResultMessage(const string& cntlrName, int	resu
 	// always handle a quited-msg from a controller.
 	if (state == CTState::QUITED) {
 		_updateChildInfo(cntlrName, state);
-		if (result != CT_RESULT_NO_ERROR) {
+		if (result != CT_RESULT_NO_ERROR && result != CT_RESULT_LOST_CONNECTION) {
 			itsQuitReason = result;
 		}
 	}
@@ -776,7 +776,6 @@ void  ObservationControl::doHeartBeatTask()
 
 #if 1
 	// NOTE: [15122010] Sending respons when first child reached required state.
-	// NOTE: [15122010] WHEN nrChilds = 1 EACH TIME WE COME HERE A REPLY IS SENT!!!!!
 	if ((itsBusyControllers == nrChilds-1) && (itsLastReportedState != itsState)) {	// first reply received?
 		CTState		cts;					// report that state is reached.
 		LOG_INFO_STR("First controller reached required state " << cts.name(cts.stateAck(itsState)) << 
