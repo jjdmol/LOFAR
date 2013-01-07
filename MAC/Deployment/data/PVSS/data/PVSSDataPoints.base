@@ -36,7 +36,6 @@ PVSS00pmon			-		M	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor			-		M	Y	LOFAR_PermSW_Daemons_LogProcessor
 ServiceBroker			- 		M	Y	LOFAR_PermSW_Daemons_ServiceBroker
 SASGateway			-		M	Y	LOFAR_PermSW_Daemons_SASGateway
-KeyValueLogger			-		M	Y	LOFAR_PermSW_Daemons_KeyValueLogger
 SoftwareMonitor			-		M	Y	LOFAR_PermSW_Daemons_SoftwareMonitor
 CTStartDaemon			-		M	Y	LOFAR_PermSW_CTStartDaemon
 MACScheduler			MS		M	Y	LOFAR_PermSW_MACScheduler
