@@ -144,7 +144,7 @@ bool Station_Processes_UpdateStationControllers() {
   LOG_TRACE("Station_Processes.ctl:updateStationControllers|selected station: "+ station_selectedStation +" New: "+ newSelectedStation);
 
   // check if selection is made, and the selection is indeed a new one
-  if (newSelectedStation != 0) {
+  if (newSelectedStation != "") {
     if (strpos(newSelectedStation,":") < 0) {
       station_selectedStation=newSelectedStation+":";
     } else {

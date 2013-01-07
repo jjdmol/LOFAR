@@ -371,7 +371,7 @@ void navTabCtrl_fillPanelChoice(dyn_string panels,int panelNr) {
 //
 ///////////////////////////////////////////////////////////////////////////
 void navTabCtrl_saveAndRestoreCurrentDP(string newtab) {
-/*
+
   LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP| curDP: "+g_currentDatapoint);
   LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP| ACTIVE_TAB: "+ACTIVE_TAB);
   LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP| newtab: "+newtab);
@@ -402,7 +402,7 @@ void navTabCtrl_saveAndRestoreCurrentDP(string newtab) {
     g_currentDatapoint = MainDBName+"LOFAR";
   }     
   LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP|curDP after change: ",g_currentDatapoint);
-  */
+  
 }
 
 

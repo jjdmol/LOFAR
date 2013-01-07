@@ -584,11 +584,13 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|g_processesList: ",g_processesList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|g_observationsList: ",g_observationsList);
 
+          
         if (sel[1] == "Observations") {
           typeSelector=sel[1];
           if (dynlen(sel) >= 2) observationType=sel[2];
           if (dynlen(sel) >= 3) { 
             selection=sel[3];
+            navProgressCtrl_handleObservation(selection);
             if (!dynContains(highlight,selection)) {
               dynAppend(highlight,selection);
             }

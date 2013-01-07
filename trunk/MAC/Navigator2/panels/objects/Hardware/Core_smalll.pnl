@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 369 118 N "_3DFace" 0
@@ -8,7 +8,6 @@ PANEL,-1 -1 369 118 N "_3DFace" 0
   baseDP       = MainDBName+\"LOFAR_PIC_Core\";
   CoreDP        = baseDP;
   
-
   setValue(\"\",\"toolTipText\",\"Core\");
   setValue(\"selfState.light\",\"toolTipText\",CoreDP);
   setValue(\"childStateBorder\",\"toolTipText\",\"Core\");
@@ -196,7 +195,7 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 1 "selfState"
+3 1 "selfState" -1
 "objects\\lofar_self_state.pnl" 118 28 T 4 1.133333333333333 0 1.8 -128.7333333333333 -47.36078431372548
 0
 0
