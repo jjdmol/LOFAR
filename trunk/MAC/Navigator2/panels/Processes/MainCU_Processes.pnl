@@ -337,16 +337,6 @@ LANG:1 6 logMsg
 0
 1 208 20 "" 6
 0
-1 209 21 "" 4
-0
-1 210 21 "" 3
-0
-1 211 21 "0" 1
-0
-1 212 21 "" 2
-0
-1 213 21 "" 6
-0
 0
 LAYER, 1 
 1
@@ -403,8 +393,4 @@ LANG:1 0
 "objects\\Processes\\controller_small.pnl" 0 280 T 35 1 0 1 0 -32
 1
 "$name""SoftwareMonitor"
-3 21 "PANEL_REF22" -1
-"objects\\Processes\\daemon_small.pnl" 0 140 T 35 1 0 1 0 12
-1
-"$name""KeyValueLogger"
 0
