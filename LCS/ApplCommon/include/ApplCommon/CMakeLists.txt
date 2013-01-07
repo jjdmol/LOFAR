@@ -6,7 +6,6 @@ set(inst_HEADERS
   AntennaSets.h
   LofarDirs.h
   Observation.h
-  PosixTime.h
   StationConfig.h
   StationDatatypes.h
   StationInfo.h)

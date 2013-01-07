@@ -21,6 +21,7 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 #include <Common/Version.h>
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationConfig.h>
@@ -39,13 +40,10 @@
 #include "PVSSDatapointDefs.h"
 #include <StationCU/Package__Version.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
 using namespace LOFAR::APL::RTDBCommon;
-using namespace boost::posix_time;
 
 namespace LOFAR {
 	using namespace APLCommon;

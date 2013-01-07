@@ -10,3 +10,4 @@ stderr first [stderr]
 stdout second [stdout]
 stdout first [stdout]
 stderr second [stderr]
+forkExec success

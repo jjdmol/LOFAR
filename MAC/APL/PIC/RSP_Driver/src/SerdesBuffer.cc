@@ -33,7 +33,7 @@ namespace LOFAR {
 //
 // newCommmand (buf, len)
 //
-bool SerdesBuffer::newCommand   (unsigned char* cmdbuf, int	cmdLen)
+bool SerdesBuffer::newCommand   (char* cmdbuf, int	cmdLen)
 {
 	if (cmdLen > SERDES_BUFFER_SIZE) {
 		LOG_ERROR_STR("Serdes buffer is only " << SERDES_BUFFER_SIZE << " bytes tall, not " << cmdLen);
@@ -48,7 +48,7 @@ bool SerdesBuffer::newCommand   (unsigned char* cmdbuf, int	cmdLen)
 //
 // appendCommmand (buf, len)
 //
-bool SerdesBuffer::appendCommand(unsigned char* cmdbuf, int	cmdLen)
+bool SerdesBuffer::appendCommand(char* cmdbuf, int	cmdLen)
 {
 	if (itsNrBytes + cmdLen > SERDES_BUFFER_SIZE) {
 		LOG_ERROR_STR("Serdes buffer is only " << SERDES_BUFFER_SIZE << " bytes tall, not " << itsNrBytes + cmdLen);

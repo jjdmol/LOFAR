@@ -116,6 +116,7 @@ bool    gSplitterChanged = false;
  * Function to convert the complex semi-floating point representation used by the
  * EPA firmware to a complex<double>.
  */
+BZ_DECLARE_FUNCTION_RET(convert_to_amplphase, complex<double>)
 inline complex<double> convert_to_amplphase(complex<double> val)
 {
 	double phase     = 0.0;
@@ -133,8 +134,8 @@ inline complex<double> convert_to_amplphase(complex<double> val)
 
 	return complex<double>(amplitude, phase);
 }
-BZ_DECLARE_FUNCTION_RET(convert_to_amplphase, complex<double>)
 
+BZ_DECLARE_FUNCTION_RET(convert_to_amplphase_from_int16, complex<double>)
 inline complex<double> convert_to_amplphase_from_int16(complex<int16> int16val)
 {
 	// scale and convert from int16 to double in range (-1,1]
@@ -155,19 +156,18 @@ inline complex<double> convert_to_amplphase_from_int16(complex<int16> int16val)
 	return complex<double>(::sqrt(real(cdval)*real(cdval) + imag(cdval)*imag(cdval)),
 				((::atan(imag(cdval) / real(cdval))) / M_PI) * 180.0);
 }
-BZ_DECLARE_FUNCTION_RET(convert_to_amplphase_from_int16, complex<double>)
 
+BZ_DECLARE_FUNCTION_RET(blitz_abs, double)
 inline double blitz_abs(complex<double> val)
 {
 	return sqrt(val.real()*val.real() + val.imag()*val.imag());
 }
-BZ_DECLARE_FUNCTION_RET(blitz_abs, double)
 
+BZ_DECLARE_FUNCTION_RET(blitz_angle, double)
 inline double blitz_angle(complex<double> val)
 {
 	return atan(val.imag() / val.real()) * 180.0 / M_PI;
 }
-BZ_DECLARE_FUNCTION_RET(blitz_angle, double)
 
 WeightsCommand::WeightsCommand(GCFPortInterface& port, const int bitsPerSample) : 
 	Command			(port), 
@@ -339,7 +339,7 @@ void SubbandsCommand::send()
 
 	    logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
         
-        if (static_cast<int>(m_subbandlist.size()) > maxBeamlets(itsBitsPerSample)) {
+        if (m_subbandlist.size() > maxBeamlets(itsBitsPerSample)) {
             logMessage(cerr,"Error: too many subbands selected");
 			exit(EXIT_FAILURE);
 		}
@@ -2093,7 +2093,7 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 		}
 	}
 
-	if (m_integration > 1) {
+	if (m_integration > 0) {
 		m_stats += stats;
 	} else {
 		m_stats = stats;
@@ -2101,7 +2101,7 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 	m_nseconds++; // advance to next second
 
 	if (0 == (int32)m_nseconds % m_integration) {
-		if (m_integration > 1) {
+		if (m_integration > 0) {
 			m_stats /= m_integration;
 		}
 
@@ -2116,7 +2116,7 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
 
 			Timestamp timeNow;
 			timeNow.setNow();
-			if(m_nseconds >= m_duration) {
+			if(timeNow >= m_endTime) {
 				logMessage(cout,"Statistics capturing successfully ended.");
 				stop();
 				GCFScheduler::instance()->stop();

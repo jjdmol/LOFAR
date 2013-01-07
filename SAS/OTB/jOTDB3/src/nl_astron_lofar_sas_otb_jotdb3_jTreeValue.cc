@@ -29,7 +29,9 @@
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jCommon.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jTreeValue.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/date_time/posix_time/time_formatters.hpp>
+#include <boost/date_time/posix_time/time_parsers.hpp>
 #include <string>
 #include <iostream>
 
@@ -58,7 +60,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_addKVT
   
   const ptime aTime (time_from_string (aT));
 
-  jboolean succes(0);
+  jboolean succes;
   try {
     succes=((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->addKVT(aKey,aValue,aTime);
     
@@ -89,7 +91,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_addKVT
   setTreeValConnection(env,jTreeValue);
 
   OTDBvalue anOTDBvalue = convertjOTDBvalue (env, jOTDBval);
-  jboolean succes(0);
+  jboolean succes;
   try {
     succes = ((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->addKVT(anOTDBvalue);
     setErrorMsg(env,jTreeValue);
@@ -133,7 +135,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_addKVT
 
   setErrorMsg(env,jTreeValue);
 
-  jboolean succes(0);
+  jboolean succes;
   try {
     succes=((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->addKVTlist(aCValList);
   } catch (exception &ex) {
@@ -161,7 +163,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getBrok
   const string stopTime (aStop);
   const ptime tStop (time_from_string (stopTime));
   
-  jobject valueVector(0);
+  jobject valueVector;
   
   try {
     vector<OTDBvalue> valueList = ((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->getBrokenHardware (tStart,tStop);
@@ -210,7 +212,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getBrok
   
   
   const ptime ts (time_from_string (time));
-  jobject valueVector(0);
+  jobject valueVector;
   
   try {
     vector<OTDBvalue> valueList = ((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->getBrokenHardware (ts);
@@ -249,7 +251,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getBrok
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,jTreeValue);
 
-    jobject valueVector(0);
+    jobject valueVector;
   
   try {
     vector<OTDBvalue> valueList = ((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->getBrokenHardware ();
@@ -296,7 +298,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchI
   
   const ptime ts (time_from_string (beginTime));  
   const ptime te (time_from_string (endTime));  
-  jobject valueVector(0);
+  jobject valueVector;
   
   try {
     vector<OTDBvalue> valueList = ((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->searchInPeriod (topNode, depth, ts, te, mostRecentOnly);
@@ -349,7 +351,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchI
 
   const ptime ts (time_from_string (beginTime));
   const ptime te (time_from_string (endTime));
-  jobject valueVector(0);
+  jobject valueVector;
 
   try {
     vector<OTDBvalue> valueList = ((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->searchInPeriod (topNode, depth, ts, te);
@@ -399,7 +401,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchI
 
 
   const ptime ts (time_from_string (beginTime));
-  jobject valueVector(0);
+  jobject valueVector;
 
   try {
     vector<OTDBvalue> valueList = ((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->searchInPeriod (topNode, depth, ts);
@@ -438,7 +440,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchI
 
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,jTreeValue);
-  jobject valueVector(0);
+  jobject valueVector;
 
   try {
     vector<OTDBvalue> valueList = ((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->searchInPeriod (topNode, depth);
@@ -475,7 +477,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSche
 
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,jTreeValue);
-  jobject itemVector(0);
+  jobject itemVector;
 
   try {
     vector<OTDBvalue> itemList = ((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->getSchedulableItems(aNodeID);
@@ -511,7 +513,7 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSche
 
   // create the connection with the c++ TreeVal
   setTreeValConnection(env,jTreeValue);
-  jobject itemVector(0);
+  jobject itemVector;
 
   try {
     vector<OTDBvalue> itemList = ((TreeValue*)getCObjectPtr(env,jTreeValue,"_TreeValue"))->getSchedulableItems();
@@ -582,7 +584,7 @@ void setErrorMsg(JNIEnv *env, jobject jTreeValue) {
   jfieldID id_errorMsg = env->GetFieldID (jTreeValue_class, "itsErrorMsg","Ljava/lang/String;");
 
   // get the ErrorMsg
-  jstring errorMsg(0);
+  jstring errorMsg;
   try {
     errorMsg=env->NewStringUTF(((OTDBconnection*)getCObjectPtr(env,jTreeValue,"_OTDBconnection"))->errorMsg().c_str());
   } catch (exception &ex) {

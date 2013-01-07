@@ -82,7 +82,6 @@ install(FILES
   skymodels/3C380.skymodel
   skymodels/3C48.skymodel
   skymodels/Ateam_LBA_CC.skymodel
-  skymodels/CygA.skymodel
   DESTINATION share/pipeline/skymodels)
 
 install(FILES

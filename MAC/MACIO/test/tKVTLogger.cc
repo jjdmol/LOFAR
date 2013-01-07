@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 #include <MACIO/KVTLogger.h>
 #include <MACIO/KVT_Protocol.ph>
 

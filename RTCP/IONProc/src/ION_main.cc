@@ -51,7 +51,6 @@
 #include <sys/mman.h>
 
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 
 #if defined HAVE_MPI
 #include <mpi.h>
@@ -207,17 +206,17 @@ static void abortHandler(int sig)
 static void installSigHandlers()
 {
   // ignore SIGPIPE
-  if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+  if (signal(SIGPIPE, SIG_IGN) < 0)
     perror("warning: ignoring SIGPIPE failed");
 
   // force abort() on a few signals, as OpenMPI appears to be broken in this regard
-  if (signal(SIGBUS, abortHandler) == SIG_ERR)
+  if (signal(SIGBUS, abortHandler) < 0)
     perror("warning: rerouting SIGBUS failed");
-  if (signal(SIGSEGV, abortHandler) == SIG_ERR)
+  if (signal(SIGSEGV, abortHandler) < 0)
     perror("warning: rerouting SIGSEGV failed");
-  if (signal(SIGILL, abortHandler) == SIG_ERR)
+  if (signal(SIGILL, abortHandler) < 0)
     perror("warning: rerouting SIGILL failed");
-  if (signal(SIGFPE, abortHandler) == SIG_ERR)
+  if (signal(SIGFPE, abortHandler) < 0)
     perror("warning: rerouting SIGFPE failed");
 }
 

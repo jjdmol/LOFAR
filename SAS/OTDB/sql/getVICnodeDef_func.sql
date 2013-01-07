@@ -35,7 +35,6 @@
 --
 CREATE OR REPLACE FUNCTION getVICnodedef(INT4)
   RETURNS OTDBnodeDef AS '
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 
@@ -71,7 +70,6 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4)
 --
 CREATE OR REPLACE FUNCTION getVICnodedef(VARCHAR(40), INT4, INT2)
   RETURNS OTDBnodeDef AS '
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 
@@ -110,7 +108,6 @@ CREATE OR REPLACE FUNCTION getVICnodedef(VARCHAR(40), INT4, INT2)
 --
 CREATE OR REPLACE FUNCTION getVICnodedef(INT4, VARCHAR(150), VARCHAR(150))
   RETURNS OTDBnode AS '
-    --  $Id$
 	DECLARE
 		vNodeID		VICtemplate.nodeID%TYPE;
 		vRecord		RECORD;
@@ -130,7 +127,7 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4, VARCHAR(150), VARCHAR(150))
 	    SELECT t.nodeid,
 			   t.parentid, 
 			   t.originid,
-			   t.name::VARCHAR(150), 
+			   t.name, 
 			   t.index, 
 			   t.leaf,
 			   t.instances,

@@ -75,7 +75,7 @@ template <> inline void toComplex<i16complex>(double phi, i16complex &z)
 }
 
 
-template <typename SAMPLE_TYPE> void setSubbandTestPattern(SubbandMetaData &metaData, TransposedData<SAMPLE_TYPE> &transposedData, unsigned nrStations, double signalFrequency, double subbandBandwidth)
+template <typename SAMPLE_TYPE> void setSubbandTestPattern(SubbandMetaData &metaData, TransposedData<SAMPLE_TYPE> &transposedData, unsigned nrStations, double signalFrequency, double sampleRate)
 {
   // Simulate a monochrome complex signal into the PPF, with station 1 at a
   // distance of .25 labda to introduce a delay.  Also, a few samples can be
@@ -97,7 +97,7 @@ template <typename SAMPLE_TYPE> void setSubbandTestPattern(SubbandMetaData &meta
   }
 
   for (unsigned time = 0; time < transposedData.samples[0].size(); time ++) {
-    double phi = 2 * M_PI * signalFrequency * time / subbandBandwidth;
+    double phi = 2 * M_PI * signalFrequency * time / sampleRate;
     SAMPLE_TYPE sample;
     toComplex(phi, sample);
 
@@ -178,13 +178,13 @@ void checkCorrelatorTestPattern(const CorrelatedData &correlatedData, unsigned n
 template <typename SAMPLE_TYPE> void doWork()
 {
   unsigned   nrStations			= 288;
-  unsigned   nrChannels			= 256;
+  unsigned   nrChannels			= 64;
   unsigned   nrSamplesPerIntegration	= 196608 / nrChannels;
-  double     subbandBandwidth		= 195312.5;
-  double     centerFrequency		= 384 * subbandBandwidth;
-  double     baseFrequency		= centerFrequency - .5 * subbandBandwidth;
+  double     sampleRate			= 195312.5;
+  double     centerFrequency		= 384 * sampleRate;
+  double     baseFrequency		= centerFrequency - .5 * sampleRate;
   double     testSignalChannel		= nrChannels / 5.0;
-  double     signalFrequency		= baseFrequency + testSignalChannel * subbandBandwidth / nrChannels;
+  double     signalFrequency		= baseFrequency + testSignalChannel * sampleRate / nrChannels;
   unsigned   nrHistorySamples		= nrChannels > 1 ? nrChannels * (NR_TAPS - 1) : 0;
   unsigned   nrSamplesToCNProc		= nrChannels * nrSamplesPerIntegration + nrHistorySamples + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
 
@@ -250,10 +250,10 @@ template <typename SAMPLE_TYPE> void doWork()
   CorrelatedData correlatedData(nrBeamFormedStations, nrChannels, nrChannels * nrSamplesPerIntegration);
   SubbandMetaData metaData(nrStations, 1);
 
-  PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, subbandBandwidth / nrChannels, true /* use delay compensation */, true /* use bandpass correction */, true /* verbose in filter bank */);
+  PPF<SAMPLE_TYPE> ppf(nrStations, nrChannels, nrSamplesPerIntegration, sampleRate / nrChannels, true /* use delay compensation */, true /* use bandpass correction */, true /* verbose in filter bank */);
   Correlator	   correlator(beamFormer.getStationMapping(), nrChannels, nrSamplesPerIntegration);
 
-  setSubbandTestPattern(metaData, transposedData, nrStations, signalFrequency, subbandBandwidth);
+  setSubbandTestPattern(metaData, transposedData, nrStations, signalFrequency, sampleRate);
 
   for (unsigned stat = 0; stat < nrStations; stat ++) {
     static NSTimer ppfTimer("PPF", true);

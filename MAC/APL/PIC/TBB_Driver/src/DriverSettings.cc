@@ -165,7 +165,6 @@ void TbbSettings::getTbbSettings()
 															,itsBoardInfo[boardnr].dstIpCep.c_str()
 															,itsBoardInfo[boardnr].dstMacCep.c_str()));
 	}
-	(void)configOK;
 }
 
 //---- setBoardPorts ------------------------------

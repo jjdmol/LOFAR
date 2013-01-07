@@ -36,7 +36,6 @@
 --
 CREATE OR REPLACE FUNCTION fullTemplateNodeName(INT4, INT4, TEXT)
   RETURNS TEXT AS $$
-    --  $Id$
 	DECLARE
 	  vResult		TEXT;
 	  vName			VICtemplate.name%TYPE;
@@ -74,7 +73,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION exportTemplateSubTree(INT4, INT4, TEXT)
   RETURNS TEXT AS $$
-    --  $Id$
 	DECLARE
 	  vResult		TEXT := '';
 	  vRow			RECORD;
@@ -132,7 +130,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION exportVICSubTree(INT4, INT4, INT4)
   RETURNS TEXT AS $$
-    --  $Id$
 	DECLARE
 	  vResult		TEXT := '';
 	  vRow			RECORD;
@@ -181,7 +178,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION exportPICSubTree(INT4, INT4, INT4)
   RETURNS TEXT AS $$
-    --  $Id$
 	DECLARE
 	  vResult		TEXT := '';
 	  vRow			RECORD;
@@ -228,7 +224,6 @@ $$ LANGUAGE plpgsql;
 --
 CREATE OR REPLACE FUNCTION exportTree(INT4, INT4, INT4)
   RETURNS TEXT AS $$
-    --  $Id$
 	DECLARE
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;

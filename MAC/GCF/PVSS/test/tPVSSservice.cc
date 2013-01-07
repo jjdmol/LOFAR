@@ -78,7 +78,7 @@ GCFEvent::TResult tGSAService::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 		itsService = new PVSSservice(itsResponse);
 
 		// test PVSSInfo class
-		int8	sysID(0);
+		int8	sysID;
 		string	sysName;
 		LOG_DEBUG_STR("LocalSystemName: " << PVSSinfo::getLocalSystemName());
 		LOG_DEBUG_STR("LocalSystemID  : " << (sysID = PVSSinfo::getLocalSystemId()));
@@ -285,7 +285,7 @@ GCFEvent::TResult tGSAService::test5(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test5:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	PVSSresult		  result(SA_NO_ERROR);
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
@@ -460,7 +460,7 @@ GCFEvent::TResult tGSAService::test10(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test10:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	PVSSresult		  result(SA_NO_ERROR);
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
@@ -531,7 +531,7 @@ GCFEvent::TResult tGSAService::testWriteMdpe(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("testWriteMdpe:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	PVSSresult		  result(SA_NO_ERROR);
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
@@ -579,7 +579,7 @@ GCFEvent::TResult tGSAService::testWriteMdpeTimed(GCFEvent& e, GCFPortInterface&
 	LOG_DEBUG_STR("testWriteMdpeTimed:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	PVSSresult		  result(SA_NO_ERROR);
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
@@ -636,7 +636,7 @@ GCFEvent::TResult tGSAService::testWriteDynArray(GCFEvent& e, GCFPortInterface& 
 	LOG_DEBUG_STR("testWriteDynArray:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	PVSSresult		  result(SA_NO_ERROR);
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
@@ -677,7 +677,7 @@ GCFEvent::TResult tGSAService::testQuerySingle(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("testQuerySingle:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	PVSSresult		  result(SA_NO_ERROR);
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
@@ -714,7 +714,7 @@ GCFEvent::TResult tGSAService::testQueryUnsubscribe(GCFEvent& e, GCFPortInterfac
 	LOG_DEBUG_STR("testQueryUnsubscribe:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	PVSSresult		  result(SA_NO_ERROR);
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {

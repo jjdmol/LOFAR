@@ -562,6 +562,7 @@ void SoftwareMonitor::_buildProcessMap()
 
 	DIR*	procDir = opendir("/proc");
 	ASSERTSTR(procDir, "Cannot open directory /proc to check programlist");
+	chdir("/proc");
 
 	struct dirent*	dirPtr;
 	while ((dirPtr = readdir(procDir))) {
@@ -679,9 +680,7 @@ void SoftwareMonitor::_restartProgram(const string&	procName)
 	}
 
 	LOG_WARN_STR("Trying to restart program " << procName);
-	if (system (formatString("swlevel -r %s", procName.c_str()).c_str()) != 0) {
-	    LOG_ERROR_STR("Failed to restart program" << procName);
-	}
+	system (formatString("swlevel -r %s", procName.c_str()).c_str());
 }
 
 

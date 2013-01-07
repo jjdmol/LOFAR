@@ -25,7 +25,6 @@
 
 #include <GCF/PVSS/GCF_PVBool.h>
 #include <Common/StringUtil.h>
-#include <cstring>
 
 namespace LOFAR {
  namespace GCF {

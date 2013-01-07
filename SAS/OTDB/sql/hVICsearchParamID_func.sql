@@ -36,7 +36,6 @@
 --
 CREATE OR REPLACE FUNCTION hVICsearchParamID(VARCHAR(150))
   RETURNS INT4 AS '
-    --  $Id$
 	DECLARE
 	  vDotPos		INT4;
 	  vFieldnr		INT4;

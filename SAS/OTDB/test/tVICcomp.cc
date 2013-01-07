@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
+#include <Common/lofar_datetime.h>
 #include <Common/StringUtil.h>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBtypes.h>
@@ -33,7 +34,6 @@
 #include <OTDB/OTDBparam.h>
 #include <OTDB/ClassifConv.h>
 #include <libgen.h>             // for basename
-#include <cstring>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;

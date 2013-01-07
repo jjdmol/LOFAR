@@ -234,6 +234,8 @@ void PreCorrelationNoChannelsFlagger::initFlagsTime(unsigned station, FilteredDa
 
 void PreCorrelationNoChannelsFlagger::applyFlagsTime(unsigned station, FilteredData* filteredData)
 {
+  const fcomplex zero = makefcomplex(0, 0);
+
   for (unsigned i = 0; i < itsFFTSize; i++) {
     if(itsFlagsTime[i]) {
       unsigned startIndex = i * itsIntegrationFactor;

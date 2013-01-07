@@ -34,8 +34,8 @@ namespace LOFAR {
 MsgHandler::MsgHandler()
 {
 	TS = TbbSettings::instance();
-	memset(itsFileName, 0, sizeof(itsFileName));
-	memset(itsTimeString, 0, sizeof(itsTimeString));
+	memset(itsFileName, 12, '\0');
+	memset(itsTimeString, 12, '\0');
 	itsFile = 0;
 	itsStartFilePos = 0;
 }
@@ -106,8 +106,10 @@ void MsgHandler::openTriggerFile()
 	if (itsFile == 0) {
 		time_t timenow;
 		timenow = time(NULL);
-		strftime(itsTimeString, sizeof(itsTimeString), "%Y-%m-%d", gmtime(&timenow));
-		snprintf(itsFileName, sizeof(itsFileName), "/localhome/data/%s_TRIGGER.dat", itsTimeString);
+		char timestring[12];
+		strftime(timestring, 255, "%Y-%m-%d", gmtime(&timenow));
+		strcpy(itsTimeString, timestring);
+		snprintf(itsFileName, PATH_MAX, "/localhome/data/%s_TRIGGER.dat", itsTimeString);
 		itsFile = fopen(itsFileName,"a");
 		itsStartFilePos = ftell(itsFile);
 	}
@@ -125,6 +127,7 @@ void MsgHandler::closeTriggerFile()
 //-----------------------------------------------------------------------------
 void MsgHandler::writeTriggerToFile(TBBTriggerEvent *trigger_event)
 {
+	int err;
 	if (itsFile != 0) {
 	    // if file to big, open a new one and ad file number
 	    // the highest number is the oldest file
@@ -137,7 +140,7 @@ void MsgHandler::writeTriggerToFile(TBBTriggerEvent *trigger_event)
 			
 			// find first free file number
 			while(true) {
-			    snprintf(fileName1, sizeof(fileName1), "/localhome/data/%s_TRIGGER_%d.dat", itsTimeString, fileNr);
+			    snprintf(fileName1, PATH_MAX, "/localhome/data/%s_TRIGGER_%d.dat", itsTimeString, fileNr);
 			    f = fopen(fileName1,"r");
 			    if (f) {
 			        fclose(f);
@@ -150,8 +153,8 @@ void MsgHandler::writeTriggerToFile(TBBTriggerEvent *trigger_event)
 			
 			// shift all files one number, so number 0 is free
 			while (fileNr > 0) {
-			    snprintf(fileName1, sizeof(fileName1), "/localhome/data/%s_TRIGGER_%d.dat", itsTimeString, fileNr-1);
-			    snprintf(fileName2, sizeof(fileName2), "/localhome/data/%s_TRIGGER_%d.dat", itsTimeString, fileNr);
+			    snprintf(fileName1, PATH_MAX, "/localhome/data/%s_TRIGGER_%d.dat", itsTimeString, fileNr-1);
+			    snprintf(fileName2, PATH_MAX, "/localhome/data/%s_TRIGGER_%d.dat", itsTimeString, fileNr);
 			    rename(fileName1, fileName2);
 			    --fileNr;
 			}
@@ -169,12 +172,12 @@ void MsgHandler::writeTriggerToFile(TBBTriggerEvent *trigger_event)
 		if (strcmp(timestring, itsTimeString) != 0) {
 			strcpy(itsTimeString, timestring);
 			fclose(itsFile);
-			snprintf(itsFileName, sizeof(itsFileName), "/localhome/data/%s_TRIGGER.dat", itsTimeString);
+			snprintf(itsFileName, PATH_MAX, "/localhome/data/%s_TRIGGER.dat", itsTimeString);
 			itsFile = fopen(itsFileName,"a");
 			itsStartFilePos = ftell(itsFile);
 		}
 	
-		(void)fprintf(itsFile,"%d %lu %lu %u %u %u %u %u %u \n",
+		err = fprintf(itsFile,"%d %lu %lu %u %u %u %u %u %u \n",
 				trigger_event->rcu,
 				trigger_event->nstimestamp.sec(),
 				trigger_event->nstimestamp.nsec(),

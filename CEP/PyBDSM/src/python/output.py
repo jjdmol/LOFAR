@@ -25,7 +25,7 @@ class Op_outlist(Op):
             if len(img.gaussians) > 0:
                 dir = img.basedir + '/catalogues/'
                 if not os.path.exists(dir):
-                    os.makedirs(dir)
+                    os.mkdir(dir)
                 self.write_bbs(img, dir)
                 self.write_gaul(img, dir)
                 self.write_srl(img, dir)
@@ -35,7 +35,7 @@ class Op_outlist(Op):
                 self.write_gaul_FITS(img, dir)
                 self.write_srl_FITS(img, dir)
             if not os.path.exists(img.basedir + '/misc/'):
-                os.makedirs(img.basedir + '/misc/')
+                os.mkdir(img.basedir + '/misc/')
             self.write_opts(img, img.basedir + '/misc/')
             self.save_opts(img, img.basedir + '/misc/')
             img.completed_Ops.append('outlist')
@@ -292,7 +292,7 @@ def write_ds9_list(img, filename=None, srcroot=None, deconvolve=False,
                 outn.append(root + '_i' + str(dsrc.island_id) + '_s' +
                             str(dsrc.source_id))
         outn = [outn]
-    outstr_list = make_ds9_str(img, outl, outn, deconvolve=deconvolve, objtype=objtype)
+    outstr_list = make_ds9_str(img, outl, outn, deconvolve=deconvolve)
     if filename == None:
         filename = img.imagename + '.' + objtype + '.reg'
     if os.path.exists(filename) and clobber == False:
@@ -637,7 +637,7 @@ def make_lsm_str(img, glist, gnames):
     return outstr_list
 
 
-def make_ds9_str(img, glist, gnames, deconvolve=False, objtype='gaul'):
+def make_ds9_str(img, glist, gnames, deconvolve=False):
     """Makes a list of string entries for a ds9 region file."""
     outstr_list = []
     freq = "%.5e" % img.frequency
@@ -658,15 +658,11 @@ def make_ds9_str(img, glist, gnames, deconvolve=False, objtype='gaul'):
                            'move=1 delete=1 include=1 fixed=0 source\n'+equinox+'\n')
 
     for gindx, g in enumerate(glist[0]):
-        if objtype == 'gaul':
-            objid = g.gaus_num
-        else:
-            objid = g.source_id
-        if objid >= 0 or (objid < 0 and img.opts.incl_empty):
+        if g.gaus_num >= 0 or (g.gaus_num < 0 and img.opts.incl_empty):
             src_name = gnames[0][gindx]
-            if objtype == 'gaul':
+            try:
                 ra, dec = g.centre_sky
-            else:
+            except AttributeError:
                 ra, dec = g.posn_sky_centroid
             if deconvolve:
                 deconv = g.deconv_size_sky
@@ -781,7 +777,7 @@ def write_islands(img):
 
     ### write out island properties for reference since achaar doesnt work.
     filename = img.basedir + '/misc/'
-    if not os.path.exists(filename): os.makedirs(filename)
+    if not os.path.exists(filename): os.mkdir(filename)
     filename = filename + 'island_file'
 
     if img.j == 0:

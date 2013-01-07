@@ -458,7 +458,7 @@ bool PVSSinfo::isValidPropName(const char* propName)
 
 	// ref indication may only found at begin or after a GCF_PROP_NAME_SEP
 	char	refInd[] = "__";
-	const char*	refIndPos = strstr(propName, refInd);
+	char*	refIndPos = strstr(propName, refInd);
 	if (refIndPos != 0) {									// we found it
 		if (refIndPos > propName) {							// not at begin
 			if (*(refIndPos - 1) != GCF_PROP_NAME_SEP) {	// not at a dot
@@ -467,7 +467,7 @@ bool PVSSinfo::isValidPropName(const char* propName)
 			}
 		}
 		// ref indication may not used in struct name: ***__***.*** is not valid
-		if (strchr(refIndPos, GCF_PROP_NAME_SEP) != 0) {
+		if (strchr(refIndPos, GCF_PROP_NAME_SEP) > 0) {
 			LOG_TRACE_COND_STR("isValidPropName(" << propName << "): double underscore in DP-part");
 			return (false);
 		}
@@ -475,7 +475,7 @@ bool PVSSinfo::isValidPropName(const char* propName)
 
 	// only allow dots, :  and __ in the name.
 	for (unsigned short i = 0; i < length; i++) {
-		if (refIndPos != 0 && ((propName + i) == refIndPos)) {
+		if (refIndPos > 0 && ((propName + i) == refIndPos)) {
 			i += 2; // skip the ref indicator
 		}
 		if (!isalnum(propName[i]) && (propName[i] != GCF_PROP_NAME_SEP) && 

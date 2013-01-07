@@ -22,7 +22,6 @@ lofar_add_sbin_program(LimitExec LimitExec.cc)
 lofar_add_sbin_program(pkgdep pkgdep.cc)
 
 install(PROGRAMS
-  checkcomp.py
   checkrun
   countalllines
   countlines

@@ -43,6 +43,7 @@ class GTMTCPSocket : public GTMFile
 public: 
 	// constructors, destructors and default operators
     GTMTCPSocket (GCFTCPPort& port);
+    virtual ~GTMTCPSocket ();
   
 	// GTMTCPSocket specific member methods
     // open/connect methods
@@ -59,8 +60,6 @@ private:
     /// Don't allow copying of the GTMTCPSocket object.
     GTMTCPSocket (const GTMTCPSocket&);
     GTMTCPSocket& operator= (const GTMTCPSocket&);
-
-	bool	_connecting;
 
 };
 

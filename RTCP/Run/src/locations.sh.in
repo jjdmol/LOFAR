@@ -65,6 +65,7 @@ OLAP.FinalMetaDataGatherer.executable = LD_LIBRARY_PATH= $FINALMETADATAGATHERER
 
 OLAP.FinalMetaDataGatherer.database.host = $OTDB_HOST
 
+OLAP.IONProc.PLC_controlled = F
 OLAP.CNProc.partition = $PARTITION
   "
 else
@@ -96,6 +97,7 @@ OLAP.FinalMetaDataGatherer.executable = $FINALMETADATAGATHERER
 
 OLAP.FinalMetaDataGatherer.database.host = sas099
 
+OLAP.IONProc.PLC_controlled = F
 OLAP.CNProc.partition = $PARTITION
   "
 fi

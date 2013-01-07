@@ -47,7 +47,6 @@ public class remoteFile implements remoteFileInterface{
         itsName=ext;
     }
 
-    @Override
     public boolean deleteTempFile(String aFileName) throws RemoteException {
         if (aFileName != null) {
             try {
@@ -61,6 +60,7 @@ public class remoteFile implements remoteFileInterface{
                 }
             } catch (Exception ex) {
                 System.out.println("RemoteFileImpl: " + ex.getMessage());
+                ex.printStackTrace();
                 return false;
             }
         } else {
@@ -69,7 +69,6 @@ public class remoteFile implements remoteFileInterface{
         }
     }
 
-    @Override
     public byte[] downloadFile(String aFileName) throws RemoteException  {
         if (aFileName != null) {
             try {
@@ -82,6 +81,7 @@ public class remoteFile implements remoteFileInterface{
                 return(buffer);
             } catch (Exception ex) {
                 System.out.println("RemoteFileImpl: " + ex.getMessage());
+                ex.printStackTrace();
                 return(null);
             }
         } else {
@@ -90,7 +90,6 @@ public class remoteFile implements remoteFileInterface{
         }
     }
     
-    @Override
     public boolean uploadFile(byte[] buffer,String aFileName) throws RemoteException  {
         boolean succes=false;
         if (buffer != null && aFileName.length() > 0) {
@@ -104,6 +103,7 @@ public class remoteFile implements remoteFileInterface{
                 return(true);
             } catch (Exception ex) {
                 System.out.println("RemoteFileAdapter: " + ex.getMessage());
+                ex.printStackTrace();
                 return(succes);
             }
         } else {

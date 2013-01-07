@@ -281,35 +281,6 @@ def validate_data_maps(*args):
     return True
 
 
-def align_data_maps(*args):
-    """
-    Aligns the skip fields in the supplied datamaps.
-    If a single skip is set for an entrie, all other entries in the other
-    datamaps will be set.
-    
-    Raises a DataMapError if the datamaps are of different size and
-    alignment is not possible.
-    """
-    if len(args) < 2:
-        raise DataMapError("At least two datamaps are needed to perform align.")
-
-    if not validate_data_maps(*args):
-        raise DataMapError(
-            "Validation of data maps failed in align_data_map"
-            " Supplied datamaps: {0}".format(repr(args)))
-
-    # for all the input maps get the entries in a single tuple
-    for entries in zip(*args):
-        skip = False
-        # For each entrie perform an or of the skip fields
-        for entrie in entries:
-            skip = skip or entrie.skip
-        # Assign the resulting skip field to all the entries
-        for entrie in entries:
-            entrie.skip = skip
-
-
-
 @deprecated
 def tally_data_map(data, glob, logger=None):
     """

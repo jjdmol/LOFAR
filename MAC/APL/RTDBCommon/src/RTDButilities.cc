@@ -38,8 +38,8 @@ namespace LOFAR {
     namespace RTDBCommon {
 
 typedef struct RTDBObjState {
-	uint32  		RTDBvalue;
-	const char*		name;
+	uint32		RTDBvalue;
+	char*		name;
 } RTDBobjState_t;
 
 RTDBobjState_t	objStateTable[] = {

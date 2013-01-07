@@ -69,8 +69,8 @@ public:
 	virtual bool readFromCache() const { return (false); }
 
 	// tables needed by UpdSplitterCmd
-	static unsigned char SERDES_ON_RESP[];
-	static unsigned char SERDES_OFF_RESP[];
+	static char SERDES_ON_RESP[];
+	static char SERDES_OFF_RESP[];
 	static int  SERDES_ON_RESP_LEN;
 	static int  SERDES_OFF_RESP_LEN;
 

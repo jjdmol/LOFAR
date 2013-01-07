@@ -68,7 +68,8 @@ class GTMFile
     virtual int setFD (int fd);
     virtual void doWork ();
 
-	void setBlocking(bool	blocking) const;
+	void setBlocking(bool	blocking) const {
+		if (_fd >= 0) fcntl(_fd, F_SETFL, blocking ? 0 : O_NONBLOCK); }
     
   protected: // helper methods
     void forwardEvent (GCFEvent& event);

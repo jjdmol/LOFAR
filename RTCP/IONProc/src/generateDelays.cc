@@ -53,13 +53,13 @@ void generateDelays( const string &parsetFilename, const string &station )
   Parset parset(parsetFilename);
 
   unsigned nrBeams    = parset.nrBeams();
-  unsigned maxNrTABs = parset.maxNrTABs();
-  vector<unsigned> nrTABs = parset.nrTABs();
+  unsigned maxNrPencilBeams = parset.maxNrPencilBeams();
+  vector<unsigned> nrPencilBeams = parset.nrPencilBeams();
 
   double   startTime  = parset.startTime();
   double   stopTime   = parset.stopTime();
-  double   sampleFreq = parset.subbandBandwidth();
-  unsigned samplesPerBlock = parset.nrSamplesPerSubband();
+  double   sampleFreq = parset.sampleRate();
+  unsigned samplesPerBlock = parset.nrSubbandSamples();
   double   blockSize  = parset.CNintegrationTime();
   unsigned nrBlocks   = static_cast<unsigned>(floor((stopTime - startTime) / blockSize));
 
@@ -71,8 +71,8 @@ void generateDelays( const string &parsetFilename, const string &station )
   Delays w(parset, station, ts);
   w.start();
 
-  Matrix<double> delays(nrBeams, maxNrTABs + 1);
-  Matrix<casa::MVDirection> prev_directions(nrBeams, maxNrTABs + 1), directions(nrBeams, maxNrTABs + 1);
+  Matrix<double> delays(nrBeams, maxNrPencilBeams + 1);
+  Matrix<casa::MVDirection> prev_directions(nrBeams, maxNrPencilBeams + 1), directions(nrBeams, maxNrPencilBeams + 1);
 
   for( unsigned block = 0; block < nrBlocks; block++ ) {
     w.getNextDelays(directions, delays);
@@ -92,7 +92,7 @@ void generateDelays( const string &parsetFilename, const string &station )
     }   
 
     for( unsigned beam = 0; beam < nrBeams; beam++ ) {
-      unsigned nr_delays = print_tabs ? nrTABs[beam] + 1 : 1;
+      unsigned nr_delays = print_tabs ? nrPencilBeams[beam] + 1 : 1;
 
       for( unsigned pencil = 0; pencil < nr_delays; pencil++ )
         cout << fixed << setprecision(12) << delays[beam][pencil] << " ";

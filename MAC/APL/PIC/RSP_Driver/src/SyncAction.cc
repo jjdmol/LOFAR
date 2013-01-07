@@ -54,6 +54,8 @@ SyncAction::~SyncAction()
 
 GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
   switch (event.signal) {
     case F_INIT: {
     }
@@ -73,7 +75,7 @@ GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*po
     break;
 
     default:
-      return GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
 
@@ -82,6 +84,8 @@ GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*po
 
 GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
 	switch (event.signal) {
 	case F_ENTRY: {
 		for (;;) {
@@ -122,7 +126,7 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
 	break;
 
 	default:
-		return GCFEvent::NOT_HANDLED;
+		status = GCFEvent::NOT_HANDLED;
 	break;
 	}
 

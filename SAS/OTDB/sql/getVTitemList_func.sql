@@ -35,7 +35,6 @@
 --
 CREATE OR REPLACE FUNCTION getVTitemList(INT4, VARCHAR(150))
   RETURNS SETOF OTDBnode AS '
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 
@@ -44,7 +43,7 @@ CREATE OR REPLACE FUNCTION getVTitemList(INT4, VARCHAR(150))
 	    SELECT t.nodeid,
 			   t.parentid, 
 			   t.originid,
-			   t.name::VARCHAR(150), 
+			   t.name, 
 			   t.index, 
 			   t.leaf,
 			   t.instances,

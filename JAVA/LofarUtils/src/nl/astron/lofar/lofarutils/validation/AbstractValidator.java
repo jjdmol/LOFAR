@@ -85,7 +85,6 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
      * validationCriteria() instead.
      */
 
-    @Override
     public boolean verify(JComponent c) {
 //        System.out.println("AbstractValidator-entered verify. Component-"+ c.getName()+" popup.visible: "+popup.isVisible());
         popup.setVisible(false);
@@ -130,7 +129,6 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
       * @see KeyListener
       */
 
-    @Override
     public void keyPressed(KeyEvent e) {
         checkPopup();
     }
@@ -139,14 +137,12 @@ public abstract class AbstractValidator extends InputVerifier implements KeyList
      * @see KeyListener
      */
 
-    @Override
     public void keyTyped(KeyEvent e) {}
 
     /**
      * @see KeyListener
      */
 
-    @Override
     public void keyReleased(KeyEvent e) {}
 
     public boolean isVisible() {

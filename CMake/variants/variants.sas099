@@ -1,5 +1,6 @@
 set(ENV{JAVA_HOME} /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0)
 set(PVSS_ROOT_DIR /opt/pvss/pvss2_v3.7)
+set(PVSS_DEFINITIONS "-Wno-deprecated")
 
 set(CTEST_CUSTOM_WARNING_EXCEPTION 
   "/boost/date_time/time_facet.hpp:[0-9]+: warning: unused parameter"

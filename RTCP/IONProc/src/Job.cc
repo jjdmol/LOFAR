@@ -83,6 +83,30 @@ Job::Job(const char *parsetName)
     LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
   }
 
+  // Handle PLC communication
+  if (myPsetNumber == 0) {
+    if (itsParset.PLC_controlled()) {
+      // let the ApplController decide what we should do
+      try {
+        // Do _not_ wait for the stop time to communicate with ApplController,
+        // or the whole observation could be wasted.
+        itsPLCStream = new SocketStream(itsParset.PLC_Host(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, time(0) + 30);
+
+        itsPLCClient = new PLCClient(*itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID);
+        itsPLCClient->start();
+      } catch (Exception &ex) {
+        LOG_WARN_STR(itsLogPrefix << "Could not connect to ApplController on " << itsParset.PLC_Host() << ":" << itsParset.PLC_Port() << " as " << itsParset.PLC_ProcID() << " -- continuing on autopilot: " << ex);
+      }
+    }
+
+    if (!itsPLCClient) {
+      // we are either not PLC controlled, or we're supposed to be but can't connect to
+      // the ApplController
+      LOG_INFO_STR(itsLogPrefix << "Not controlled by ApplController");
+    }  
+
+  }
+
   // check enough parset settings just to get to the coordinated check in jobThread safely
   if (itsParset.CNintegrationTime() <= 0)
     THROW(IONProcException,"CNintegrationTime must be bigger than 0");
@@ -101,6 +125,10 @@ Job::Job(const char *parsetName)
 
 Job::~Job()
 {
+  // explicitly free PLCClient first, because it refers to us and needs
+  // a valid Job object to work on
+  delete itsPLCClient.release();
+
   // stop any started Storage processes
   if (myPsetNumber == 0)
     stopStorageProcesses();
@@ -203,6 +231,7 @@ void Job::StorageProcess::start()
   if (getcwd(cwd, sizeof cwd) == 0)
     throw SystemCallException("getcwd", errno, THROW_ARGS);
 
+#ifdef HAVE_LIBSSH2
   std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u 2>&1")
     % cwd
 #if defined USE_VALGRIND
@@ -222,6 +251,31 @@ void Job::StorageProcess::start()
 
   itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey, 0);
   itsSSHconnection->start();
+#else
+
+#warning Using fork/exec for SSH processes to Storage
+  const std::string obsID = boost::lexical_cast<std::string>(itsParset.observationID());
+  const std::string rank = boost::lexical_cast<std::string>(itsRank);
+
+  const char * const commandLine[] = {
+    "cd ", cwd, " && ",
+#if defined USE_VALGRIND
+    "valgrind " "--leak-check=full "
+#endif
+    executable.c_str(),
+    obsID.c_str(),
+    rank.c_str(),
+#if defined WORDS_BIGENDIAN
+    "1",
+#else
+    "0",
+#endif
+    0
+  };
+  itsPID = forkSSH(itsLogPrefix, itsHostname.c_str(), commandLine, userName.c_str(), sshKey.c_str());
+
+  // client process won't reach this point
+#endif
 
   itsThread = new Thread(this, &Job::StorageProcess::controlThread, itsLogPrefix + "[ControlThread] ", 65535);
 }
@@ -229,7 +283,11 @@ void Job::StorageProcess::start()
 
 void Job::StorageProcess::stop(struct timespec deadline)
 {
+#ifdef HAVE_LIBSSH2
   itsSSHconnection->wait(deadline);
+#else
+  joinSSH(itsLogPrefix, itsPID, (deadline.tv_sec ? deadline.tv_sec : time(0)) + 1);
+#endif
 
   itsThread->cancel();
 }
@@ -237,7 +295,11 @@ void Job::StorageProcess::stop(struct timespec deadline)
 
 bool Job::StorageProcess::isDone()
 {
+#ifdef HAVE_LIBSSH2
   return itsSSHconnection->isDone();
+#else
+  return false;
+#endif
 }
 
 
@@ -445,7 +507,7 @@ void Job::jobThread()
     createIONstreams();
 
     if (myPsetNumber == 0) {
-      // DEFINE phase
+      // PLC: DEFINE phase
       bool canStart = true;
 
       if (!checkParset()) {
@@ -459,9 +521,19 @@ void Job::jobThread()
       }
 
       if (canStart) {
-        // INIT phase
+        // PLC: INIT phase
         if (itsParset.realTime())
           waitUntilCloseToStartOfObservation(20);
+
+        // PLC: in practice, RUN must start here, because resources
+        // can become available just before the observation starts.
+        // This means we will miss the beginning of the observation
+        // for now, because we need to calculate the delays still,
+        // which can only be done if we know the start time.
+        // That means we forgo full PLC control for now and ignore
+        // the init/run commands. In practice, the define command
+        // won't be useful either since we'll likely disconnect
+        // due to an invalid parset before PLC can ask.
 
         claimResources();
 
@@ -474,7 +546,7 @@ void Job::jobThread()
     broadcast(itsIsRunning);
 
     if (itsIsRunning) {
-      // RUN phase
+      // PLC: RUN phase
 
       if (itsParset.realTime()) {
         // if we started after itsParset.startTime(), we want to skip ahead to
@@ -518,10 +590,10 @@ void Job::jobThread()
         }    
       }    
 
-      // PAUSE phase
+      // PLC: PAUSE phase
       barrier();
 
-      // RELEASE phase
+      // PLC: RELEASE phase
       itsIsRunning = false;
       jobQueue.itsReevaluate.broadcast();
 
@@ -799,6 +871,35 @@ void Job::printInfo() const
 }
 
 
+// expected sequence: define -> init -> run -> pause -> release -> quit
+
+bool Job::define()
+{
+  LOG_DEBUG_STR(itsLogPrefix << "Job: define(): check parset");
+
+  return checkParset();
+}
+
+
+bool Job::init()
+{
+  LOG_DEBUG_STR(itsLogPrefix << "Job: init(): allocate buffers / make connections");
+
+  return true;
+}
+
+
+bool Job::run()
+{
+  LOG_DEBUG_STR(itsLogPrefix << "Job: run(): run observation");
+
+  // we ignore this, since 'now' is both ill-defined and we need time
+  // to communicate changes to other psets
+
+  return true;
+}
+
+
 bool Job::pause(const double &when)
 {
   char   buf[26];
@@ -839,6 +940,12 @@ bool Job::quit()
   return true;
 }
 
+
+bool Job::observationRunning()
+{
+  LOG_DEBUG_STR(itsLogPrefix << "Job: observationRunning()");
+  return itsIsRunning;
+}
 
 } // namespace RTCP
 } // namespace LOFAR

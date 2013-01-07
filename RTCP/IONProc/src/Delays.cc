@@ -54,17 +54,17 @@ Delays::Delays(const Parset &parset, const string &stationName, const TimeStamp 
   itsParset(parset),
   stop(false),
   // we need an extra entry for the central beam
-  itsBuffer(bufferSize, parset.nrBeams(), parset.maxNrTABs() + 1),
+  itsBuffer(bufferSize, parset.nrBeams(), parset.maxNrPencilBeams() + 1),
   head(0),
   tail(0),
   bufferFree(bufferSize),
   bufferUsed(0),
   itsNrCalcDelays(parset.nrCalcDelays()),
   itsNrBeams(parset.nrBeams()),
-  itsMaxNrTABs(parset.maxNrTABs()),
-  itsNrTABs(parset.nrTABs()),
+  itsMaxNrPencilBeams(parset.maxNrPencilBeams()),
+  itsNrPencilBeams(parset.nrPencilBeams()),
   itsStartTime(startTime),
-  itsNrSamplesPerSec(parset.nrSamplesPerSubband()),
+  itsNrSamplesPerSec(parset.nrSubbandSamples()),
   itsSampleDuration(parset.sampleDuration()),
   itsStationName(stationName),
   itsDelayTimer("delay producer", true, true)
@@ -174,7 +174,7 @@ void Delays::mainLoop()
 	  for (uint b = 0; b < itsNrBeams; b ++) {
             MDirection::Convert &converter = itsConverters[itsDirectionTypes[b]];
 
-	    for (uint p = 0; p < itsNrTABs[b] + 1; p ++) {
+	    for (uint p = 0; p < itsNrPencilBeams[b] + 1; p ++) {
 	      // Define the astronomical direction as a J2000 direction.
 	      MVDirection &sky = itsBeamDirections[b][p];
 
@@ -217,11 +217,11 @@ void Delays::mainLoop()
 
 void Delays::getNextDelays(Matrix<MVDirection> &directions, Matrix<double> &delays)
 {
-  ASSERTSTR(directions.num_elements() == itsNrBeams * (itsMaxNrTABs + 1),
-	    directions.num_elements() << " == " << itsNrBeams << "*" << (itsMaxNrTABs + 1));
+  ASSERTSTR(directions.num_elements() == itsNrBeams * (itsMaxNrPencilBeams + 1),
+	    directions.num_elements() << " == " << itsNrBeams << "*" << (itsMaxNrPencilBeams + 1));
 
-  ASSERTSTR(delays.num_elements() == itsNrBeams * (itsMaxNrTABs + 1),
-	    delays.num_elements() << " == " << itsNrBeams << "*" << (itsMaxNrTABs + 1));
+  ASSERTSTR(delays.num_elements() == itsNrBeams * (itsMaxNrPencilBeams + 1),
+	    delays.num_elements() << " == " << itsNrBeams << "*" << (itsMaxNrPencilBeams + 1));
 
   ASSERT(itsThread);
 
@@ -233,7 +233,7 @@ void Delays::getNextDelays(Matrix<MVDirection> &directions, Matrix<double> &dela
   // copy the directions at itsBuffer[head] into the provided buffer,
   // and calculate the respective delays
   for (unsigned b = 0; b < itsNrBeams; b ++) {
-    for (unsigned p = 0; p < itsNrTABs[b] + 1; p ++) {
+    for (unsigned p = 0; p < itsNrPencilBeams[b] + 1; p ++) {
       const MVDirection &dir = itsBuffer[head][b][p];
 
       directions[b][p] = dir;
@@ -256,7 +256,7 @@ void Delays::setBeamDirections(const Parset &parset)
   // To do the coordinates properly, the offsets should be applied
   // in today's coordinates (JMEAN/JTRUE?), not J2000.
   
-  itsBeamDirections.resize(itsNrBeams, itsMaxNrTABs + 1);
+  itsBeamDirections.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
   itsDirectionTypes.resize(itsNrBeams);
 
   for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
@@ -270,14 +270,14 @@ void Delays::setBeamDirections(const Parset &parset)
   // Split the \a dir vector into separate Direction objects.
   for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
     const vector<double> beamDir = parset.getBeamDirection(beam);
-    const BeamCoordinates& TABs = parset.TABs(beam);
+    const BeamCoordinates& pencilBeams = parset.pencilBeams(beam);
 
     // add central beam coordinates for non-beamforming pipelines
     itsBeamDirections[beam][0] = MVDirection(beamDir[0], beamDir[1]);
 
-    for (unsigned pencil = 0; pencil < itsNrTABs[beam]; pencil ++) {
+    for (unsigned pencil = 0; pencil < itsNrPencilBeams[beam]; pencil ++) {
       // obtain pencil coordinate
-      const BeamCoord3D &pencilCoord = TABs[pencil];
+      const BeamCoord3D &pencilCoord = pencilBeams[pencil];
 
       // apply angle modification
       const double angle1 = beamDir[0] + pencilCoord[0];

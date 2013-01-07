@@ -28,6 +28,7 @@ lofar_add_library(ionproc
   LogThread.cc
   OutputThread.cc
   OutputSection.cc
+  PLCClient.cc
   ReaderWriterSynchronization.cc
   Scheduling.cc
   StreamMultiplexer.cc

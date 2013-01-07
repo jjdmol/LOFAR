@@ -66,7 +66,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jClassifConv_get__L
   
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
-  short ret(0);
+  short ret;
   try {
     ret = ((ClassifConv*)getCObjectPtr(env,jClassifConv,"_ClassifConv"))->get (str);
     env->ReleaseStringUTFChars (aConv, chars);	     
@@ -87,7 +87,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jClassifConv_get__L
  */
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jClassifConv_get__S(JNIEnv *env, jobject jClassifConv, jshort aConv) {
 
-  jstring jstr(0);
+  jstring jstr;
   try {
     jstr = env->NewStringUTF (((ClassifConv*)getCObjectPtr(env,jClassifConv,"_ClassifConv"))->get(aConv).c_str());
   } catch (exception &ex) {
@@ -175,7 +175,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jClassifConv_top(JNIE
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jClassifConv_next(JNIEnv *env, jobject jClassifConv) {
-  jboolean aBool(0);
+  jboolean aBool;
   try {
     aBool=((ClassifConv*)getCObjectPtr(env,jClassifConv,"_ClassifConv"))->next();
   } catch (exception &ex) {

@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 #include <Common/StringUtil.h>
 
 #include "TBBObservation.h"
@@ -121,7 +122,7 @@ TBBObservation::TBBObservation(ParameterSet* aParSet)
 //
 uint16 TBBObservation::_windowNr(const string&        wdwName)
 {
-    static    const char* windowNames[] = {
+    static    char* windowNames[] = {
         "4K", "16K", "64K", "256K", "1M", "4M", "16M", "64M", "256M", "" };
 
     uint32    idx = 0;

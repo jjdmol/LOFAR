@@ -6,7 +6,6 @@ include(LofarFindPackage)
 lofar_find_package(Casacore COMPONENTS casa ms tables REQUIRED)
 lofar_find_package(DAL REQUIRED)
 lofar_find_package(HDF5 REQUIRED)
-lofar_find_package(Boost REQUIRED)
 
 add_subdirectory(include/Storage)
 add_subdirectory(src)

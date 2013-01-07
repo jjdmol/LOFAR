@@ -174,7 +174,7 @@ class EC:
         return PL2
     
     def getStatus(self):
-        ec_mode = ('OFF','ON','AUTO','MANUAL','STARTUP','AUTO-SEEK','ABSENT','TEST')
+        ec_mode = ('OFF','ON','AUTO','MANUAL','STARTUP','AUTO-SEEK','ABSENT')
         fan = ('.  .  .  .','.  .  .  .','.  2  .  .','1  2  .  .',\
                '.  .  3  .','.  .  .  .','.  2  3  .','1  2  3  .',\
                '.  .  .  .','.  .  .  .','.  .  .  .','.  .  .  .',\

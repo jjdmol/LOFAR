@@ -1271,7 +1271,7 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 	}
 
 	// nr of subbands should fit in the beamlet space.
-	if (static_cast<int>(allocation.getSubbandBitset().count()) > itsCurrentMaxBeamlets) {
+	if (allocation.getSubbandBitset().count() > itsCurrentMaxBeamlets) {
 		LOG_ERROR_STR("Too many subbands specified (" << allocation.getSubbandBitset().count() << ") only " 
 					<< itsCurrentMaxBeamlets << " allowed");
 		return (0);
@@ -1576,6 +1576,8 @@ vector<double>	BeamServer::blitz2vector(const blitz::Array<double,1>&	anBA) cons
 	return (resultVect);
 }
 
+BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
+
 //
 // Convert the weights to 16-bits signed integer.
 //
@@ -1584,7 +1586,6 @@ inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 	return complex<int16_t>((int16_t)(round(cd.real() * gBeamformerGain)),
 							(int16_t)(round(cd.imag() * gBeamformerGain)));
 }
-BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
 
 //
 // compute_weights(time)

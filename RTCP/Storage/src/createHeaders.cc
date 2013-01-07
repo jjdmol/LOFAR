@@ -20,7 +20,6 @@
 #include <string>
 
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;

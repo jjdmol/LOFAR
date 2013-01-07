@@ -108,7 +108,7 @@ void GetTDStatusCmd::ack_fail()
   // send back dummy status array
   ack.tdstatus.board().resize(1);
   TDBoardStatus tdstatusinit;
-  memset(&tdstatusinit, 0, sizeof(TDBoardStatus));
+  memset(&tdstatusinit, 0, sizeof(BoardStatus));
   tdstatusinit.invalid = 1;
 
   ack.tdstatus.board()(0) = tdstatusinit;

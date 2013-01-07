@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <ApplCommon/PosixTime.h>
+#include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h>
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
@@ -36,7 +36,6 @@
 #include <OTDB/TreeValue.h>
 #include "KeyValueLogger.h"
 #include <CURTDBDaemons/Package__Version.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace LOFAR {
   using namespace MACIO;
@@ -46,8 +45,6 @@ namespace LOFAR {
     using namespace PVSS;
     using namespace RTDB;
     namespace RTDBDaemons {
-
-using namespace boost::posix_time;
 
 //
 // CodeloggingProcessor()
@@ -191,10 +188,11 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface
 	LOG_DEBUG_STR("operational:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
+	static unsigned long garbageTimerID = 0;
 
 	switch (event.signal) {
 	case F_ENTRY:
-		itsTimerPort->setTimer(1.0, 5.0); 
+		garbageTimerID = itsTimerPort->setTimer(1.0, 5.0); 
 	break;
 
 	// Catch incoming connections of new clients

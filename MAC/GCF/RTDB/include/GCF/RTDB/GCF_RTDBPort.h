@@ -34,9 +34,7 @@ namespace LOFAR {
     class GCFEvent;
   }
   namespace GCF {
-    namespace TM {
-      class GCFTask;
-    }
+	class TM::GCFTask;
 	namespace PVSS {
 	  class PVSSservice;
 	  class PVSSresponse;

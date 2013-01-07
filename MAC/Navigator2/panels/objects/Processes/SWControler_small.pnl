@@ -7,7 +7,10 @@ PANEL,-1 -1 388 166 N "_3DFace" 2
 "main()
 {
   station = $station+\":\";
-   
+  
+  if (station == \"MCU\") station = MAINDBName;
+  if (station == \"CCU\") station = CEPDBName;
+  
   baseDP = station+\"LOFAR_\"+$name;
 
   // some controllers are observationbased and are only active if there is actually an observation running

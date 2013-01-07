@@ -42,6 +42,9 @@ class Condition
     bool wait(Mutex &, const struct timespec &);
 
   private:
+    Condition(const Condition&);
+    Condition& operator=(const Condition&);
+
     pthread_cond_t condition;
 };
 

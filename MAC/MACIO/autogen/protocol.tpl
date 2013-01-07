@@ -186,7 +186,6 @@ void [+ event_class_name +]::pack()
   [+ ENDIF +][+ ENDFOR +]
 	[+ IF (= (count "param") 0) +]
   // no params in this event to pack
-  (void)__offset;
 	[+ ENDIF +]
 }
 

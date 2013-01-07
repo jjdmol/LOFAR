@@ -48,22 +48,19 @@ public:
 	public:
 		Control() { 
 			memset(&bypass,0,sizeof(bypass));
-			bypass.raw.dc_disable = 1;
+			bypass.dc_disable = 1;
 		}
 		~Control() {}
 
-		void setXSI(bool	on) { bypass.raw.six_enable = on ? 1 : 0; }
-		void setYSI(bool	on) { bypass.raw.siy_enable = on ? 1 : 0; }
-		bool getXSI() const 	{ return bypass.raw.six_enable; }
-		bool getYSI() const 	{ return bypass.raw.siy_enable; }
-		uint16	getAsUint16() const	{ return bypass.as_uint; }
-		DIAGBypass	getRaw()  const	{ return bypass.raw; }
-		void setRaw(const DIAGBypass	newBypass) { bypass.raw = newBypass; }
+		void setXSI(bool	on) { bypass.six_enable = on ? 1 : 0; }
+		void setYSI(bool	on) { bypass.siy_enable = on ? 1 : 0; }
+		bool getXSI() const 	{ return (bypass.six_enable); }
+		bool getYSI() const 	{ return (bypass.siy_enable); }
+		uint16	getAsUint16() const	{ return (*((uint16*) &bypass)); } // Yak
+		DIAGBypass	getRaw()  const	{ return (bypass); }
+		void setRaw(const DIAGBypass	newBypass) { bypass = newBypass; }
 	private:
-		union {
-			EPA_Protocol::DIAGBypass	raw;
-			uint16	as_uint;
-		} bypass;
+		EPA_Protocol::DIAGBypass	bypass;
 	};
 
 	/* get reference to diag settings array */

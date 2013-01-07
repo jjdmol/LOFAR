@@ -35,7 +35,6 @@
 --
 CREATE OR REPLACE FUNCTION getTopNode(INT4)
   RETURNS OTDBnode AS '
-    --  $Id$
 	DECLARE
 		TThardware CONSTANT	INT2 := 10;
 		TTtemplate CONSTANT	INT2 := 20;
@@ -56,7 +55,7 @@ CREATE OR REPLACE FUNCTION getTopNode(INT4)
 		  SELECT h.nodeID,
 				 h.parentID,
 				 h.paramrefID,
-				 h.name::VARCHAR(150),
+				 h.name,
 				 h.index,
 				 h.leaf,
 				 1::int2,
@@ -72,7 +71,7 @@ CREATE OR REPLACE FUNCTION getTopNode(INT4)
 		  SELECT t.nodeID,
 				 t.parentID,
 				 t.originID,
-				 t.name::VARCHAR(150),
+				 t.name,
 				 t.index,
 				 t.leaf,
 				 t.instances,
@@ -88,7 +87,7 @@ CREATE OR REPLACE FUNCTION getTopNode(INT4)
 		  SELECT h.nodeID,
 				 h.parentID,
 				 h.paramRefID,
-				 h.name::VARCHAR(150),
+				 h.name,
 				 h.index,
 				 h.leaf,
 				 1::int2,

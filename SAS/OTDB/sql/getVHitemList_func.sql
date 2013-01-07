@@ -36,7 +36,6 @@
 --
 CREATE OR REPLACE FUNCTION getVHitemList(INT4, INT4, INT4)
   RETURNS SETOF OTDBnode AS '
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 		vFullname	VARCHAR(250);
@@ -71,7 +70,7 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, INT4, INT4)
 	    SELECT h.nodeid,
 			   h.parentid, 
 			   h.paramrefid,
-			   h.name::VARCHAR(150),
+			   h.name, 
 			   h.index, 
 			   h.leaf,
 			   1::int2,
@@ -104,7 +103,6 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, INT4, INT4)
 --
 CREATE OR REPLACE FUNCTION getVHitemList(INT4, VARCHAR(120))
   RETURNS SETOF OTDBnode AS '
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 
@@ -113,7 +111,7 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, VARCHAR(120))
 	    SELECT h.nodeid,
 			   h.parentid, 
 			   h.paramrefid,
-			   h.name::VARCHAR(150), 
+			   h.name, 
 			   h.index, 
 			   h.leaf,
 			   1::int2,

@@ -65,7 +65,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jParamTypeConv_get_
   
   const char* chars = env->GetStringUTFChars (aConv, 0);
   const string str (chars);
-  short ret(0);
+  short ret;
 
   try {  
     ret = ((ParamTypeConv*)getCObjectPtr(env,jParamTypeConv,"_ParamTypeConv"))->get (str);
@@ -88,7 +88,7 @@ JNIEXPORT jshort JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jParamTypeConv_get_
  */
 JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jParamTypeConv_get__S(JNIEnv *env, jobject jParamTypeConv, jshort aConv) {
 
-  jstring jstr(0);
+  jstring jstr;
   try {
     jstr = env->NewStringUTF (((ParamTypeConv*)getCObjectPtr(env,jParamTypeConv,"_ParamTypeConv"))->get(aConv).c_str());
   } catch (exception &ex) {
@@ -181,7 +181,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jParamTypeConv_top(JN
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jParamTypeConv_next(JNIEnv *env, jobject jParamTypeConv) {
-  jboolean aBool(0);
+  jboolean aBool;
   try {
     aBool=((ParamTypeConv*)getCObjectPtr(env,jParamTypeConv,"_ParamTypeConv"))->next();
   } catch (exception &ex) {

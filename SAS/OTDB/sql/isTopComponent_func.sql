@@ -35,7 +35,6 @@
 --
 CREATE OR REPLACE FUNCTION isTopComponent(INT)
   RETURNS BOOLEAN AS '
-    --  $Id$
 	DECLARE
 		vNodeID		VICnodeDEF.nodeID%TYPE;
 

@@ -35,7 +35,6 @@
 --
 CREATE OR REPLACE FUNCTION getVCparams(INT4)
   RETURNS SETOF OTDBparamDef AS '
-    --  $Id$
 	DECLARE
 		vRecord		RECORD;
 

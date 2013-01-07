@@ -406,7 +406,6 @@ void gnuplot_plot_x(
 {
     int     i ;
 	int		tmpfd ;
-	int     retval;
     char    name[128] ;
     char    cmd[GP_CMD_SIZE] ;
     char    line[GP_CMD_SIZE] ;
@@ -435,8 +434,7 @@ void gnuplot_plot_x(
     /* Write data to this file  */
     for (i=0 ; i<n ; i++) {
 		snprintf(line, sizeof line, "%g\n", d[i]);
-		retval=write(tmpfd, line, strlen(line));
-		(void)retval;
+		write(tmpfd, line, strlen(line));
     }
     close(tmpfd) ;
 
