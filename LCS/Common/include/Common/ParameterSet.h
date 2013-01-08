@@ -30,6 +30,7 @@
 //# Includes
 #include <Common/ParameterSetImpl.h>
 #include <Common/KVpair.h>
+#include <Common/lofar_smartptr.h>
 
 namespace LOFAR {
 
@@ -358,13 +359,10 @@ public:
 
 private:
 	// Construct from an existing impl object.
-	explicit ParameterSet (ParameterSetImpl* set)
+        explicit ParameterSet (const shared_ptr<ParameterSetImpl>& set)
 	  { itsSet = set; }
 
-	// Decrement the refcount and delete the impl if the count is zero.
-	void unlink();
-
-	ParameterSetImpl* itsSet;
+        shared_ptr<ParameterSetImpl> itsSet;
 };
 
 

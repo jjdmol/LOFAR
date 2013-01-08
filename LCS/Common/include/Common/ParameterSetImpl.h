@@ -37,6 +37,8 @@
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/StringUtil.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/lofar_smartptr.h>
 
 namespace LOFAR {
 
@@ -65,6 +67,10 @@ typedef map <string, ParameterValue, KeyCompare>	KVMap;
 // A couple of getXxx routines are provided to convert the strings to the 
 // desired type.
 //
+// It keeps track of the keys being asked for. Unused keys might mean
+// that their names were misspelled.
+// The class is fully thread-safe.
+//
 class ParameterSetImpl : public KVMap
 {
 public:
@@ -87,14 +93,6 @@ public:
 	// argument \a mode determines how keys should be compared.
 	explicit ParameterSetImpl(const string&		theFilename,
 				  KeyCompare::Mode	mode);
-	// @}
-
-	// Deal with the reference count.
-	// @{
-	ParameterSetImpl* incrCount()
-	  { itsCount++; return this; }
-	int decrCount()
-	  { return --itsCount; }
 	// @}
 
         // Get the ParameterValue.
@@ -154,12 +152,12 @@ public:
 	// of the keys in the collection.
 	// @{
 
-	// Creates a subset from the current ParameterSetImpl containing all the 
-	// parameters that start with the given baseKey. The baseKey is cut off 
+	// Creates a subset from the current ParameterSetImpl containing all 
+	// parameters starting with the given baseKey. The baseKey is cut off 
 	// from the Keynames in the created subset, the optional prefix is put
 	// before all keys in the subset.
-	ParameterSetImpl*	makeSubset(const string& baseKey,
-								   const string& prefix = "") const;
+        shared_ptr<ParameterSetImpl> makeSubset(const string& baseKey,
+                                                const string& prefix="") const;
 
 	// Subtract a subset from the current ParameterSet. Every parameter
 	// whose key starts with the given name will be removed from the
@@ -349,14 +347,19 @@ private:
         // and merge=false.
         void addMerge (const string& key, const string& value, bool merge);
 
+        // For internal use, add a key without locking.
+        void addUnlocked(const string& aKey, const ParameterValue& aValue);
+
+        // For internal use, replace a key without locking.
+        void replaceUnlocked(const string& aKey, const ParameterValue& aValue);
 
         //# Data members.
-	// Reference count.
-	int itsCount;
 	// Key comparison mode.
 	const KeyCompare::Mode itsMode;
         // The set of keys that have been asked.
         mutable set<string> itsAskedParms;
+        // Mutex to make access to parset thread-safe.
+        mutable Mutex itsMutex;
 };
 
 //# -------------------- Global functions --------------------
