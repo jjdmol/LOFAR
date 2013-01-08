@@ -1738,7 +1738,8 @@ void navFunct_fillStationLists() {
 //                                 "RS306","RS307","RS308","RS309","RS310","RS311",
 //                                 "RS404","RS406","RS407","RS408","RS409","RS410","RS411","RS412","RS413",
 //                                 "RS503","RS506","RS507","RS508","RS509");
-  europeStations = makeDynString("DE601","DE602","DE603","DE604","FR606","SE607","UK608","FI609");
+//  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608","FI609");
+  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608");
 }
 
 
