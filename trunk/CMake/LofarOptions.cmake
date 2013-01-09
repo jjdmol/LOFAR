@@ -32,17 +32,23 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
   ## --------------------------------------------------------------------------
   ## Handle contradicting options
   ## --------------------------------------------------------------------------
+  if(BUILD_STATIC_EXECUTABLES AND BUILD_SHARED_LIBS)
+    message(FATAL_ERROR 
+      "Cannot create static executables, when creating shared libraries. "
+      "Please check your variants file!")
+  endif(BUILD_STATIC_EXECUTABLES AND BUILD_SHARED_LIBS)
+
   if(USE_LOG4CXX AND USE_LOG4CPLUS)
     message(FATAL_ERROR 
       "You cannot use more than one logger implementation. "
       "Please check your variants file!")
   endif(USE_LOG4CXX AND USE_LOG4CPLUS)
 
-  if(BUILD_STATIC_EXECUTABLES AND BUILD_SHARED_LIBS)
-    message(FATAL_ERROR 
-      "Cannot create static executables, when creating shared libraries. "
+  if(USE_OPENMP AND NOT USE_THREADS)
+    message(FATAL_ERROR
+      "Using OpenMP implies using threads. "
       "Please check your variants file!")
-  endif(BUILD_STATIC_EXECUTABLES AND BUILD_SHARED_LIBS)
+  endif(USE_OPENMP AND NOT USE_THREADS)
 
   ## --------------------------------------------------------------------------
   ## Handle each option
