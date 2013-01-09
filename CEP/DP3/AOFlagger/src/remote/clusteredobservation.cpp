@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <lofar_config.h>
+
 #include <AOFlagger/remote/clusteredobservation.h>
 
 #include <stdexcept>
