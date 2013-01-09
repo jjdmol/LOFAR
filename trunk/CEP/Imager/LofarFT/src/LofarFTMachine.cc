@@ -1410,10 +1410,8 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       itsTStartObs=1.e30;
       itsCounterTimes=0;
     }
-    Bool lastchunk(false);
     if((times[times.size()-1] - times[0])<0.95*itsDeltaTime){
       //cout<<"Last Chunk Degrid!!!"<<endl;
-      lastchunk=true;
       itsDeltaTime=0.;
       itsTStartObs=1e12;
     }
@@ -2036,12 +2034,11 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     outImage.resize(inShape);
     outImage.setCoordinateInfo(inImage.coordinates());
 
-    Bool isRefIn, isRefOut;
+    Bool isRefIn;
     Array<Complex> inBuf;
     Array<Float> outBuf;
 
     isRefIn  = inImage.get(inBuf);
-    isRefOut = outImage.get(outBuf);
     log_l << "Normalizing the average PBs to unity"
 	  << LogIO::NORMAL << LogIO::POST;
     //
