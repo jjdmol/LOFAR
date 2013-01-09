@@ -35,6 +35,8 @@
 #include "GTM_TCPServerSocket.h"
 #include <errno.h>
 
+const uint UDP_BUFFER_SIZE = 1600;
+
 namespace LOFAR {
   namespace GCF {
     using namespace SB;
@@ -48,13 +50,15 @@ GCFTCPPort::GCFTCPPort(GCFTask& 	 task,
                        const string& name, 
                        TPortType 	 type, 
                        int 			 protocol, 
-                       bool 		 transportRawData) 
+                       bool 		 transportRawData,
+					   bool			 useUDP) 
   : GCFRawPort(task, name, type, protocol, transportRawData),
     _pSocket		  (0),
     _addrIsSet		  (false),
 	_addr			  (),
 	_host			  (myHostname(false)),
     _portNumber		  (0),
+	itsUseUDP		  (useUDP),
 	itsFixedPortNr	  (false),
 	itsAutoOpen		  (false),
 	itsAutoOpenTimer  (0),
@@ -65,10 +69,10 @@ GCFTCPPort::GCFTCPPort(GCFTask& 	 task,
     _broker			  (0)
 {
 	if (SPP == getType() || MSPP == getType()) {
-		_pSocket = new GTMTCPServerSocket(*this, (MSPP == type));
+		_pSocket = new GTMTCPServerSocket(*this, (MSPP == type), itsUseUDP);
 	}
 	else if (SAP == getType()) {
-		_pSocket = new GTMTCPSocket(*this);
+		_pSocket = new GTMTCPSocket(*this, itsUseUDP);
 	}  
 }
 
@@ -82,6 +86,7 @@ GCFTCPPort::GCFTCPPort()
 	_addr			  (),
 	_host			  (myHostname(false)),
     _portNumber		  (0),
+	itsUseUDP		  (false),
 	itsFixedPortNr	  (false),
 	itsAutoOpen		  (false),
 	itsAutoOpenTimer  (0),
@@ -124,6 +129,7 @@ void GCFTCPPort::init(GCFTask& 		task,
     _portNumber 	= 0;
     _host       	= myHostname(false);
     _addrIsSet  	= false;
+	itsUseUDP		= false;
 	itsFixedPortNr	= false;
     if (_pSocket) {
 		delete _pSocket;
@@ -152,17 +158,20 @@ bool GCFTCPPort::open()
 
 	// allocate a TCP socket when not done before.
 	if (!_pSocket) {
+		LOG_DEBUG_STR("No socket yet during 'open', creating it");
 		if (isSlave()) {
 			LOG_ERROR(formatString ("Port %s not initialised.", makeServiceName().c_str()));
 			return (false);
 		}
 
 		if ((getType() == SPP) || (getType() == MSPP)) {
-			_pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
+			_pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()), itsUseUDP);
+			ASSERTSTR(_pSocket, "Could not create GTMTCPServerSocket for port " << getName());
 		}
 		else {
 			ASSERTSTR (SAP == getType(), "Unknown TPCsocket type " << getType());
-			_pSocket = new GTMTCPSocket(*this);
+			_pSocket = new GTMTCPSocket(*this, itsUseUDP);
+			ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for port " << getName());
 			_pSocket->setBlocking(false);
 		}
 	}
@@ -328,6 +337,9 @@ void GCFTCPPort::_handleConnect()
 //
 GCFEvent::TResult	GCFTCPPort::dispatch(GCFEvent&	event)
 {
+	LOG_TRACE_FLOW("GCFTCPPort::dispatch");
+
+	// autoOpen timer event?
 	if (event.signal == F_TIMER) {
 		GCFTimerEvent	*TEptr = static_cast<GCFTimerEvent*>(&event);
 		if (TEptr->arg == &itsAutoOpenTimer) {	// Max auto open time reached?
@@ -351,9 +363,46 @@ GCFEvent::TResult	GCFTCPPort::dispatch(GCFEvent&	event)
 		}
 	}
 
+	// UDP specialty?
+	if (itsUseUDP && event.signal == F_DATAIN && !isTransportRawData()) {
+		return (_recvUDPevent());
+	}
+
+	// fallback to default dispatcher.
 	return(GCFRawPort::dispatch(event));	// call dispatch from parent (RawPort).
 }
 
+GCFEvent::TResult GCFTCPPort::_recvUDPevent()
+{   
+	LOG_TRACE_FLOW("GCFTCPPort::recvUDPevent()");
+
+	char        event_buf[UDP_BUFFER_SIZE];
+	GCFEvent*   newEvent = new GCFEvent;
+	ASSERTSTR(newEvent, "Could not allocate memory for a GCFEvent class");
+
+	// read the bytes from the socket (must be done in one time)
+	size_t nrBytes = _pSocket->recv(event_buf, UDP_BUFFER_SIZE);
+	ASSERTSTR(nrBytes >= GCFEvent::sizeSignal + GCFEvent::sizeLength, "UPD packet too small: " << nrBytes);
+
+	// copy some fields of the Event structure                  
+	memcpy(&newEvent->signal, event_buf,                        GCFEvent::sizeSignal);
+	memcpy(&newEvent->length, event_buf + GCFEvent::sizeSignal, GCFEvent::sizeLength);
+
+	// check if payload matches nr of bytes received.
+	ASSERTSTR(newEvent->length == nrBytes - GCFEvent::sizeSignal - GCFEvent::sizeLength,
+				"Length (" << newEvent->length << ") doesn't match number is received bytes(" <<
+				nrBytes - GCFEvent::sizeSignal - GCFEvent::sizeLength <<")");
+
+	// dispatch the event to the task
+	newEvent->_buffer = event_buf;  // attach buffer to event
+	if (_pTask->doEvent(*newEvent, *this) == GCFEvent::NEXT_STATE) {
+		LOG_TRACE_STAT_STR("GCFITCPort::dispatch:Task returned NEXT_STATE, queing " << eventName(*newEvent));
+		_pTask->queueTaskEvent(*newEvent, *this);
+	}
+	newEvent->_buffer = 0;
+	delete newEvent;
+	return (GCFEvent::HANDLED);
+}
 
 //
 // serviceRegistered(resultToReturn, portNr)
@@ -443,38 +492,38 @@ void GCFTCPPort::serviceGone()
 //
 ssize_t GCFTCPPort::send(GCFEvent& e)
 {
-	ssize_t written = 0;
-
 	ASSERT(_pSocket);
 
 	if (!isConnected()) {
-		LOG_ERROR(formatString (
-					"Port '%s' on task '%s' not connected! Event not sent!",
+		LOG_ERROR(formatString ("Port '%s' on task '%s' not connected! Event not sent!",
 					getRealName().c_str(), getTask()->getName().c_str()));
 		return 0;
 	}
 
-	if (MSPP == getType())   {
+	if (getType() == MSPP && !itsUseUDP) {
 		return 0; // no messages can be send by this type of port
 	}
 
-#if 0
-	unsigned int packSize;
-	void* buf = e.pack(packSize);
-#else
 	e.pack();
 	char*	buf      = e.packedBuffer();
 	uint	packSize = e.bufferSize();
-#endif
 
-	LOG_TRACE_STAT(formatString (
-						"Sending event '%s' for task '%s' on port '%s'",
-						eventName(e).c_str(), 
-						getTask()->getName().c_str(), 
-						getRealName().c_str()));
+	LOG_TRACE_STAT(formatString ("Sending event '%s' for task '%s' on port '%s'",
+					eventName(e).c_str(), getTask()->getName().c_str(), getRealName().c_str()));
 
-	if ((written = _pSocket->send(buf, packSize)) != (ssize_t) packSize) {  
-		LOG_ERROR_STR("Could only send " << written << " of " << packSize << " bytes");
+	return (send(buf, packSize));
+}
+
+//
+// send(buf, size) for RAW ports
+//
+ssize_t GCFTCPPort::send(void* buf, size_t  count)
+{
+	ASSERT(_pSocket);
+
+	ssize_t	written;
+	if ((written = _pSocket->send(buf, count)) != (ssize_t) count) {  
+		LOG_ERROR_STR("Could only send " << written << " of " << count << " bytes");
 		setState(S_DISCONNECTING);     
 		LOG_TRACE_COND("write: state = DISCONNECTING");
 		_handleDisconnect();
@@ -494,9 +543,8 @@ ssize_t GCFTCPPort::recv(void* buf, size_t count)
 	ASSERT(_pSocket);
 
 	if (!isConnected()) {
-		LOG_ERROR(formatString (
-					"Port '%s' on task '%s' not connected! Can't read device!",
-					getRealName().c_str(), getTask()->getName().c_str()));
+		LOG_ERROR(formatString ("Port '%s' on task '%s' not connected! Can't read device!",
+								getRealName().c_str(), getTask()->getName().c_str()));
 		return 0;
 	}
 
@@ -555,6 +603,7 @@ void GCFTCPPort::setAddr(const TPeerAddr& addr)
 	_addrIsSet = ((_addr.taskname != "") && (_addr.portname != ""));
 	_deviceNameMask = formatString("%s:%s", _addr.taskname.c_str(), 
 											_addr.portname.c_str());
+	LOG_DEBUG_STR("AddrIsSet:" << (_addrIsSet?"Y":"N"));
 }
 
 //
@@ -566,6 +615,10 @@ bool GCFTCPPort::accept(GCFTCPPort& port)
 
 	// NOTE: MSPP is check against getType and SPP against PORT.getType() !!!!
 	if (getType() != MSPP || port.getType() != SPP) {
+		return (false);
+	}
+
+	if (itsUseUDP) {
 		return (false);
 	}
 

@@ -39,8 +39,8 @@ namespace LOFAR {
  namespace GCF {
   namespace TM {
     
-GTMTCPServerSocket::GTMTCPServerSocket(GCFTCPPort& port, bool isProvider) : 
-	GTMTCPSocket(port),
+GTMTCPServerSocket::GTMTCPServerSocket(GCFTCPPort& port, bool isProvider, bool useUDP) : 
+	GTMTCPSocket(port, useUDP),
 	_isProvider(isProvider),
 	_pDataSocket(0)
 {
@@ -53,6 +53,8 @@ GTMTCPServerSocket::~GTMTCPServerSocket()
 
 bool GTMTCPServerSocket::open(unsigned int portNumber)
 {
+	LOG_TRACE_COND_STR("open:fd=" << _fd << ", port=" << _port.getName());
+
 	if (_fd != -1) {
 		if (_pDataSocket != 0) {
 			_pDataSocket->close();
@@ -61,7 +63,7 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 		return (false);
 	}
 
-	int socketFD = ::socket(AF_INET, SOCK_STREAM, 0);
+	int socketFD = ::socket(AF_INET, itsUseUDP ? SOCK_DGRAM : SOCK_STREAM, 0);
 	if (socketFD == -1) {
 		LOG_WARN(formatString ( "::socket, error: %s", strerror(errno)));
 		return (false);
@@ -69,7 +71,7 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 	unsigned int val = 1;
 	struct linger lin = { 1,1 };
 
-	if (::setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, (const void*)&val, sizeof val) < 0) {
+	if (::setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, (const void*)&val, sizeof(val)) < 0) {
 		LOG_WARN(formatString (
 					"Error on setting socket options SO_REUSEADDR: %s",
 					strerror(errno)));
@@ -77,7 +79,7 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 		return false;
 	}
 
-	if (::setsockopt(socketFD, SOL_SOCKET, SO_LINGER, (const void*)&lin, sizeof lin) < 0) {
+	if (::setsockopt(socketFD, SOL_SOCKET, SO_LINGER, (const void*)&lin, sizeof(lin)) < 0) {
 		LOG_WARN(formatString (
 					"Error on setting socket options SO_LINGER: %s",
 					strerror(errno)));
@@ -95,10 +97,12 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 		return (false);
 	}
 
-	if (::listen(socketFD, 5) == -1) {    
-		LOG_WARN(formatString ( "::listen, error: %s", strerror(errno)));
-		::close(socketFD);
-		return (false);
+	if (!itsUseUDP) {
+		if (::listen(socketFD, 5) == -1) {    
+			LOG_WARN(formatString ( "::listen, error: %s", strerror(errno)));
+			::close(socketFD);
+			return (false);
+		}
 	}
 
     // set non-blocking
@@ -127,6 +131,12 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 void GTMTCPServerSocket::doWork()
 {
 	LOG_TRACE_FLOW("GTMTCPServerSocket::doWork()");
+	if (itsUseUDP) {
+		LOG_TRACE_FLOW("doWork: socket is UDP, assuming data-in event");
+		GCFEvent    dataInEvent(F_DATAIN);
+		forwardEvent(dataInEvent);
+		return;
+	}
 
 	if (_isProvider) {
 		GCFEvent acceptReqEvent(F_ACCEPT_REQ);
@@ -139,7 +149,7 @@ void GTMTCPServerSocket::doWork()
 		_pDataSocket = new GTMTCPSocket(pPort);
 		ASSERT (_pDataSocket->getFD() < 0);
 
-    if (_accept(*_pDataSocket)) {
+		if (_accept(*_pDataSocket)) {
 			GCFEvent connectedEvent(F_CONNECTED);
 			forwardEvent(connectedEvent);
 		}
@@ -157,11 +167,11 @@ void GTMTCPServerSocket::doWork()
 //
 bool GTMTCPServerSocket::accept(GTMFile& newSocket)
 {
-	if (_isProvider && _pDataSocket == 0) {
-    return _accept(newSocket);
-	} else {
-    return false;
-  }
+	if (!itsUseUDP && _isProvider && _pDataSocket == 0) {
+		return (_accept(newSocket));
+	} 
+
+	return (false);
 }
 
 //
@@ -173,20 +183,20 @@ bool GTMTCPServerSocket::_accept(GTMFile& newSocket)
 {
 	bool result;
 
-  struct sockaddr_in clientAddress;
-  socklen_t clAddrLen = sizeof clientAddress;
-  int newSocketFD;
+	struct sockaddr_in clientAddress;
+	socklen_t clAddrLen = sizeof clientAddress;
+	int newSocketFD;
 
-  /* loop to handle transient errors */
-  int retries = MAX_ACCEPT_RETRIES;
-  while ((newSocketFD = ::accept(_fd, (struct sockaddr*) &clientAddress, &clAddrLen)) < 0
-    && (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno) && --retries > 0) 
-    /*noop*/;
+	/* loop to handle transient errors */
+	int retries = MAX_ACCEPT_RETRIES;
+	while ((newSocketFD = ::accept(_fd, (struct sockaddr*) &clientAddress, &clAddrLen)) < 0
+		&& (EINTR == errno || EWOULDBLOCK == errno || EAGAIN == errno) && --retries > 0) 
+		/*noop*/;
 
-  result = (newSocket.setFD(newSocketFD) > 0);
-  if (!result) {
-    LOG_WARN(formatString ("::accept, error: %s", strerror(errno)));
-  }
+	result = (newSocket.setFD(newSocketFD) > 0);
+	if (!result) {
+		LOG_WARN(formatString ("::accept(%d), error:(%d)=%s", _fd, errno, strerror(errno)));
+	}
 
 	return result;
 }
@@ -209,6 +219,10 @@ bool GTMTCPServerSocket::close()
 
 ssize_t GTMTCPServerSocket::send(void* buf, size_t count)
 {
+	if (itsUseUDP) {
+		return GTMTCPSocket::send(buf, count);
+	}
+
 	if (!_isProvider && _pDataSocket != 0) {
 		return _pDataSocket->send(buf, count);
 	}
@@ -217,6 +231,10 @@ ssize_t GTMTCPServerSocket::send(void* buf, size_t count)
 
 ssize_t GTMTCPServerSocket::recv(void* buf, size_t count, bool  raw)
 {
+	if (itsUseUDP) {
+		return GTMTCPSocket::recv(buf, count, raw);
+	}
+
 	if (!_isProvider && _pDataSocket != 0) {
 		return _pDataSocket->recv(buf, count, raw);
 	}
