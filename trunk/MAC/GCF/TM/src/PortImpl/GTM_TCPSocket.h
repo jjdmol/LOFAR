@@ -25,6 +25,7 @@
 
 #include "GTM_File.h"
 #include <Common/lofar_string.h>
+#include <netinet/in.h>
 
 namespace LOFAR {
  namespace GCF {
@@ -42,7 +43,7 @@ class GTMTCPSocket : public GTMFile
 {
 public: 
 	// constructors, destructors and default operators
-    GTMTCPSocket (GCFTCPPort& port);
+    GTMTCPSocket (GCFTCPPort& port, bool useUDP = false);
   
 	// GTMTCPSocket specific member methods
     // open/connect methods
@@ -54,13 +55,21 @@ public:
     virtual ssize_t send (void* buf, size_t count);
     virtual ssize_t recv (void* buf, size_t count, bool raw = false);
 
+protected:
+	virtual void doWork();
+
+	// --- datamembers ---
+	bool		itsUseUDP;
+
 private:
     GTMTCPSocket ();
     /// Don't allow copying of the GTMTCPSocket object.
     GTMTCPSocket (const GTMTCPSocket&);
     GTMTCPSocket& operator= (const GTMTCPSocket&);
 
-	bool	_connecting;
+	// --- datamembers ---
+	struct sockaddr_in  itsTCPaddr;
+	bool				itsConnecting;
 
 };
 

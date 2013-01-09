@@ -42,7 +42,8 @@ class GTMTCPServerSocket : public GTMTCPSocket
 public: 
 	// constructors, destructors and default operators
     GTMTCPServerSocket (GCFTCPPort& port, 
-                        bool isProvider = false);
+                        bool 		isProvider = false,
+						bool		useUDP = false);
     virtual ~GTMTCPServerSocket ();
   
 	// GTMTCPServerSocket specific member methods
