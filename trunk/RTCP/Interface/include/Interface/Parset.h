@@ -196,7 +196,7 @@ class Parset: public ParameterSet
     bool                        isCoherent(unsigned beam, unsigned pencil) const;
     BeamCoordinates		TABs(unsigned beam) const;
     double			dispersionMeasure(unsigned beam=0,unsigned pencil=0) const;
-    std::vector<std::string>	TABStationList(unsigned beam=0,unsigned pencil=0) const;
+    std::vector<std::string>	TABStationList(unsigned beam=0,unsigned pencil=0, bool raw=false) const;
 
     std::vector<unsigned>	subbandList() const;
     unsigned			nrSubbands() const;
