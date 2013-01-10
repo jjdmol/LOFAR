@@ -1,5 +1,4 @@
 """
-
 The Gauge widget draws a semi-circular gauge. You supply raw_limits,
 shaded regions, names and the current value, and invoke it like this:
 

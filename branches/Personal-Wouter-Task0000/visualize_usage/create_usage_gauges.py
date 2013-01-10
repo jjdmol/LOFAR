@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 A simple script collecting usage data from the locus usage files.
 Parse and cleaning it. create averaged data taking in account nodes not in 
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     draw = True
     # First create a disk load image    
     disk_io_average = sum(disk_io_floats) / n_nodes
-    file_name = 'gauge_disk_io.png'
+    file_name = '/tmp/gauge_disk_io.png'
     attribute_name = "% disk io usage\n (5 Min. Av.)"
     value = 80.0
     create_and_save_gauge(
@@ -60,7 +61,7 @@ if __name__ == '__main__':
 
     # The cpu usage
     cpu_usage_average = sum(cpu_usage_floats) / n_nodes
-    file_name = 'gauge_cpu.png'
+    file_name = '/tmp/gauge_cpu.png'
     attribute_name = "% CPU usage\n (5 Min. Av.)"
     create_and_save_gauge(
             cpu_usage_average, file_name, attribute_name, draw=False)
@@ -77,7 +78,7 @@ if __name__ == '__main__':
            "MAX swap usage\n (5 Min. Av.)\nNODES:\n{0}".format(
                             str(swapping_list).strip("[]"))
 
-    file_name = 'gauge_swap.png'
+    file_name = '/tmp/gauge_swap.png'
     create_and_save_gauge(
             swap_max, file_name, attribute_name, draw=draw,
                 limits=[0.0, 7.0, 10.0, 100.0])
