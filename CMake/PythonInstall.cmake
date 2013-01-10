@@ -84,9 +84,13 @@ macro(python_install)
     set(_py_code
       "import py_compile"
       "print('-- Byte-compiling: ${_inst_dir}/${_py}')"
-      "py_compile.compile('${_inst_dir}/${_py}')")
+      "py_compile.compile('${_inst_dir}/${_py}', doraise=True)")
     install(CODE 
-      "execute_process(COMMAND ${PYTHON_EXECUTABLE} -c \"${_py_code}\")")
+      "execute_process(COMMAND ${PYTHON_EXECUTABLE} -c \"${_py_code}\"
+                       RESULT_VARIABLE _result)
+       if(NOT _result EQUAL 0)
+         message(FATAL_ERROR \"Byte-compilation FAILED: ${_inst_dir}/${_py}\")
+       endif(NOT _result EQUAL 0)")
   endforeach(_py ${_py_files})
 
   # Make sure that there's a __init__.py file in each build/install directory.
