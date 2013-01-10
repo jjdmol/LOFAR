@@ -8,6 +8,7 @@ from logging.handlers import TimedRotatingFileHandler
 from traceback import format_exception
 from itertools import count
 import socket
+from struct import pack
 import Queue
 from threading import Thread
 
@@ -42,6 +43,7 @@ class reconnecting_socket:
       while not self.done:
         try:
           self.socket.connect( (self.host,self.port) )
+          self.socket.setsockopt( socket.SOL_SOCKET, socket.SO_LINGER, pack('ii', 1, self.socket_timeout) )
         except socket.error:
           pass
         except socket.timeout:
@@ -57,25 +59,23 @@ class reconnecting_socket:
           sleep( 1 )
 
     def write( data ):
-      if self.socket is None:
-        reconnect()
-
-      if self.done:
-        return
-
       written = 0
 
-      try:
-        while written < len(data):
+      while written < len(data):
+        if self.socket is None:
+          reconnect()
+
+        if self.done:
+          return
+
+        try:
           written += self.socket.send( data[written:] )
-      except socket.error:
-        # do not attempt to send remaining data
-        close()
-        return
-      except socket.timeout:
-        # do not attempt to send remaining data
-        close()
-        return
+        except socket.error:
+          close()
+          continue
+        except socket.timeout:
+          close()
+	  continue
 
     # start with a connection
     if self.socket is None:
