@@ -508,13 +508,16 @@ double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
 }
 
 
-std::vector<string> Parset::TABStationList(unsigned beam, unsigned pencil) const
+std::vector<string> Parset::TABStationList(unsigned beam, unsigned pencil, bool raw) const
 {
   string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].stationList") % beam % pencil);
   std::vector<string> stations;
   
   if (isDefined(key))
     stations = getStringVector(key,true);
+
+  if (raw)
+    return stations;
 
   // default to all stations
   if (stations.empty())

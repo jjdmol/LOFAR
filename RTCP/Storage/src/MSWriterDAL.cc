@@ -496,9 +496,12 @@ namespace LOFAR
       // construct feedback for LTA -- Implements Output_Beamformed_.comp
 
       string type = "";
+
+      // FIXME: specifiedNrStations == 1 only implies Fly's Eye when Parset.py generates the stationList
+      size_t specifiedNrStations = parset.TABStationList(sapNr, beamNr, true).size();
       
       if (itsInfo.coherent)
-        if (beamStationList.size() != 1)
+        if (specifiedNrStations != 1)
           type = "CoherentStokesBeam";
         else
           type = "FlysEyeBeam";
