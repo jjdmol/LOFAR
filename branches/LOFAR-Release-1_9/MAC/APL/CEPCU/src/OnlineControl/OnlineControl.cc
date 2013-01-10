@@ -473,6 +473,7 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 			return (status);
 		}
 		itsInFinishState = true;
+		itsTimerPort->cancelAllTimers();
 
 		// update PVSS
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
