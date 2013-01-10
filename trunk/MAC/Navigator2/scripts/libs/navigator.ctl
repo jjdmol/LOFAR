@@ -42,6 +42,7 @@
 #uses "navConfig.ctl"
 #uses "navFunct.ctl"
 #uses "navTabCtrl.ctl"
+#uses "navProgressCtrl.ctl"
 
 global bool       g_objectReady           = true;     // Can be used for timing by objects
 
