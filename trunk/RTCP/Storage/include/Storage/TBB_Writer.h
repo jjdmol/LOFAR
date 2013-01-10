@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: TBB_Writer.h 13275 2012-09-07 15:41:22Z amesfoort $
+ * $Id: TBB_Writer.h 14188 2012-09-07 15:41:22Z amesfoort $
  */
 
 #ifndef LOFAR_STORAGE_TBB_WRITER_H
@@ -29,7 +29,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <fstream>
 
 #include <boost/crc.hpp>
 
@@ -39,6 +38,7 @@
 #endif
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Queue.h>
+#include <Stream/FileStream.h>
 #include <Interface/Parset.h>
 
 /*
@@ -49,7 +49,7 @@
 #ifndef TBB_WRITER_VERSION
 #include <Storage/Package__Version.h>
 #else
-#warning TBB_Writer version not derived from cmake build system, but hard coded using TBB_WRITER_VERSION define.
+#warning TBB_Writer version not derived from the cmake build system, but hard-coded using the TBB_WRITER_VERSION symbol.
 #endif
 
 #include <dal/lofar/TBB_File.h>
@@ -83,9 +83,9 @@ struct TBB_Header {
 		uint32_t sampleNr;
 
 		// In spectral mode indicates frequency band and slice (transform block of 1024 samples) of first payload sample.
-		uint32_t bandsliceNr; // bandNr[9:0] and sliceNr[31:10].
-		// Avoid bit fields, (portable) compilation support is messy. Instead use mask and shift to decode.
-#define TBB_BAND_NR_MASK	((1 << 11) - 1) 
+		uint32_t bandSliceNr; // bandNr[9:0] and sliceNr[31:10].
+		// Avoid bit fields, (portable) compilation support is messy. Instead use mask and shift to extract.
+#define TBB_BAND_NR_MASK	((1 << 10) - 1) 
 #define TBB_SLICE_NR_SHIFT	10
 	};
 
@@ -103,7 +103,7 @@ struct TBB_Header {
 
 struct TBB_Payload {
 	/*
-	 * In transient mode, a sample is 12 bit. In spectral, 2*16 bit (real, imag).
+	 * In transient mode, a sample is a signed 12 bit integer. In spectral mode, it is a complex int16_t.
 	 * In the TBBs, transient samples are packed (2 samples per 3 bytes) with the checksum all the way at the end. This changes on transfer.
 	 *
 	 * TBB stores a frame in 2040 bytes (actually, 2048 with preamble and gaps). It sends a frame at a time, so derive our max from it.
@@ -115,18 +115,26 @@ struct TBB_Payload {
 
 	// Unpacked, sign-extended (for transient) samples without padding, i.e. as received.
 	// Frames might not be full; the crc32 is always sent right after (no padding unlike as stored by TBB),
-	// so we include it in 'data', but note that the crc32 is a little endian uint32_t, hence + 2. The crc32 is computed for transient data only.
-	int16_t data[MAX_TBB_TRANSIENT_NSAMPLES + 2];				// 1300*2 bytes; Because only transient data is unpacked, use its max.
+	// so we include it in 'data', but note that the crc32 is a little endian uint32_t, hence ' + 2'.
+#ifndef MAX
+#define MAX(a, b)	((a) > (b) ? (a) : (b))
+#endif
+	int16_t data[MAX(MAX_TBB_TRANSIENT_NSAMPLES, 2 * MAX_TBB_SPECTRAL_NSAMPLES) + 2];				
 
-#define DEFAULT_TRANSIENT_NSAMPLES	1024						// From the spec and from real data.
-#define DEFAULT_SPECTRAL_NSAMPLES	MAX_TBB_SPECTRAL_NSAMPLES	// The spec only states a max, so guess. Spectral mode has never been used or tested.
+	// For transient, TBB always sends sends 1024 samples per frame (from the spec and from the data).
+	// For spectral, it depends on the nr of subbands (max is equal to MAX_TBB_SPECTRAL_NSAMPLES).
+	// TBB sends as many samples for all subbands as it can fit; e.g. with 5 subbands, each frame has 485 samples. TODO: correct?
+
+#define SPECTRAL_TRANSFORM_SIZE		1024						// RSP FFT block size
+
+#define DEFAULT_TBB_TRANSIENT_NSAMPLES	1024
+#define DEFAULT_TBB_SPECTRAL_NSAMPLES	487
 };
 
 struct TBB_Frame {
 	TBB_Header  header;
 	TBB_Payload payload;
 };
-
 
 // Station meta data from other sources than the parset.
 struct StationMetaData {
@@ -136,7 +144,7 @@ struct StationMetaData {
 	// from the antenna field files
 	std::vector<double> antPositions;
 	std::vector<double> normalVector;   // [3]
-	std::vector<double> rotationMatrix; // [3, 3] row-minor order
+	std::vector<double> rotationMatrix; // [3, 3] row-major order
 
 	// from the station calibration table files
 	//...
@@ -145,21 +153,29 @@ struct StationMetaData {
 // From station ID to a vector of antenna position coordinate components.
 typedef std::map<unsigned, StationMetaData> StationMetaDataMap;
 
+struct SubbandInfo {
+	std::vector<double>   centralFreqs;   // empty in transient mode
+	std::vector<unsigned> storageIndices; // idem
+};
+
 
 class TBB_Dipole {
 	dal::TBB_DipoleDataset* itsDataset;
-	std::ofstream itsRawOut; // if raw out requested
-
+	LOFAR::FileStream*	itsRawOut;
 	std::vector<dal::Range> itsFlagOffsets;
 
+	uint32_t itsSampleFreq; // Hz
+	unsigned itsNrSubbands; // spectral mode only, 0 in transient mode
+
+	uint32_t itsTime; // seconds
+	union {
+		uint32_t itsExpSampleNr; // transient mode
+		uint32_t itsExpSliceNr;  // spectral mode
+	};
 	ssize_t itsDatasetLen;
 
-	uint32_t itsSampleFreq; // Hz
-	uint32_t itsTime0; // seconds
-	uint32_t itsSampleNr0; // for transient data only
-
 	// Same truncated polynomial as standard crc32, but with initial_remainder=0, final_xor_value=0, reflected_input=false, reflected_remainder_output=false.
-	// The boost::crc_optimal<> declarations precompute lookup tables, so do not declare inside the checking routine.
+	// The boost::crc_optimal<> declarations precompute lookup tables, so do not declare inside the checking routine. (Still, for every TBB_Dipole...)
 	boost::crc_optimal<32, 0x04C11DB7/*, 0, 0, false, false*/> itsCrc32gen; // instead of boost::crc_32_type
 
 	// do not use
@@ -172,22 +188,23 @@ public:
 
 	// Output threads
 	bool isInitialized() const;
-	bool usesExternalDataFile() const;
 
 	// All TBB_Dipole objects are default constructed in a vector, so provide an init procedure.
-	void initDipole(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
-                    const std::string& rawFilename, dal::TBB_Station& station, Mutex& h5Mutex);
+	void init(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
+              const SubbandInfo& subbandInfo, const std::string& rawFilename, dal::TBB_Station& station,
+              Mutex& h5Mutex);
 
-	void processFrameData(const TBB_Frame& frame, Mutex& h5Mutex);
+	void processTransientFrameData(const TBB_Frame& frame);
+	void processSpectralFrameData(const TBB_Frame& frame, const SubbandInfo& subbandInfo);
 
 private:
 	void addFlags(size_t offset, size_t len);
 	// initTBB_DipoleDataset() must be called with the global h5Mutex held.
 	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset,
-                               const StationMetaData& stationMetaData, const std::string& rawFilename,
-                               dal::TBB_Station& station);
-	bool hasAllZeroDataSamples(const TBB_Frame& frame) const;
-	bool crc32tbb(const TBB_Payload* payload, size_t nsamples);
+                               const StationMetaData& stationMetaData, const SubbandInfo& subbandInfo,
+                               const std::string& rawFilename, dal::TBB_Station& station);
+	bool hasAllZeroDataSamples(const TBB_Payload& payload, size_t nTrSamples) const;
+	bool crc32tbb(const TBB_Payload* payload, size_t nTrSamples);
 };
 
 class TBB_Station {
@@ -197,10 +214,12 @@ class TBB_Station {
 	std::vector<TBB_Dipole> itsDipoles;
 	const Parset& itsParset;
 	const StationMetaData& itsStationMetaData;
+	const SubbandInfo itsSubbandInfo; // relevant for spectral mode
 	const std::string itsH5Filename;
-	const bool itsDumpRaw;
 
-	std::string getRawFilename(unsigned rspID, unsigned rcuID);
+	double getSubbandCentralFreq(unsigned subbandNr, unsigned nyquistZone, double sampleFreq) const;
+	SubbandInfo getSubbandInfo(const Parset& parset) const;
+	std::string getRawFilename(unsigned rspID, unsigned rcuID) const;
 
 	// do not use
 	TBB_Station();
@@ -209,10 +228,9 @@ class TBB_Station {
 
 public:
 	// This constructor must be called with the h5Mutex already held.
-	// The caller must still unlock, even though a ref to the same mutex is passed.
+	// The caller must still unlock after the return, the constructor does not use the passed ref to unlock.
 	TBB_Station(const string& stationName, Mutex& h5Mutex, const Parset& parset,
-                const StationMetaData& stationMetaData, const std::string& h5Filename,
-                bool dumpRaw);
+                const StationMetaData& stationMetaData, const std::string& h5Filename);
 	~TBB_Station();
 
 	// Output threads
@@ -225,7 +243,7 @@ private:
 	void initCommonLofarAttributes();
 	void initTBB_RootAttributesAndGroups(const std::string& stName);
 	void initStationGroup(dal::TBB_Station& st, const std::string& stName,
-                              const std::vector<double>& stPosition);
+                          const std::string& stFullName, const std::vector<double>& stPosition);
 	void initTriggerGroup(dal::TBB_Trigger& tg);
 };
 
@@ -255,13 +273,20 @@ class TBB_StreamWriter {
 
 	TBB_Writer& itsWriter;
 	const std::string& itsInputStreamName;
+	const size_t itsExpFrameSize;
 	const std::string& itsLogPrefix;
+	int& itsInExitStatus;
+	int& itsOutExitStatus;
 
-	// See TBB_Writer_main.cc::doTBB_Run() why this is used racily and thus tmp.
+	// See TBB_Writer_main.cc::doTBB_Run() why this is used racily for now.
 	// Inflate struct timeval to 64 bytes (typical LEVEL1_DCACHE_LINESIZE).
 	struct timeval itsTimeoutStamp __attribute__((aligned(64)));
 
 	boost::crc_optimal<16, 0x8005/*, 0, 0, false, false*/> itsCrc16gen; // instead of boost::crc_16_type
+
+#ifdef DUMP_RAW_STATION_DATA
+	LOFAR::FileStream* itsRawStationData;
+#endif
 
 	// Thread objects must be last in TBB_StreamWriter for safe destruction.
 	Thread* itsOutputThread;
@@ -274,7 +299,8 @@ class TBB_StreamWriter {
 
 public:
 	TBB_StreamWriter(TBB_Writer& writer, const std::string& inputStreamName,
-                     const std::string& logPrefix);
+                     size_t expNTrSamples, const std::string& logPrefix,
+                     int& inExitStatus, int& outExitStatus);
 	~TBB_StreamWriter();
 
 	// Main thread
@@ -283,7 +309,7 @@ public:
 private:
 	// Input threads
 	void frameHeaderLittleToHost(TBB_Header& fh) const;
-	void correctTransientSampleNr(TBB_Header& header) const;
+	void correctSampleNr(TBB_Header& header) const;
 	bool crc16tbb(const TBB_Header* header);
 	void processHeader(TBB_Header& header, size_t recvPayloadSize);
 	void mainInputLoop();
@@ -295,7 +321,7 @@ private:
 class TBB_Writer {
 	// Usually, we handle only 1 station, but we can handle multiple at a time.
 	// map from stationID to a TBB_Station*
-	std::map<unsigned, TBB_Station* > itsStations;
+	std::map<unsigned, TBB_Station*> itsStations;
 	Mutex itsStationsMutex;
 
 	// Global H5 mutex. All HDF5 operations go under a single mutex, incl file creation:
@@ -306,12 +332,11 @@ class TBB_Writer {
 	const StationMetaDataMap& itsStationMetaDataMap;
 	StationMetaData itsUnknownStationMetaData; // referred to for data from unknown stations
 	const std::string& itsOutDir;
-	const bool itsDumpRaw;
 
 	unsigned itsRunNr;
 
-	// Stream writers (threads) must be last in TBB_Writer for safe destruction.
-	std::vector<TBB_StreamWriter* > itsStreamWriters;
+	std::vector<TBB_StreamWriter*> itsStreamWriters;
+	// NOTE: do not add vars here; leave itsStreamWriters last for safe thread destruction!
 
 	// do not use
 	TBB_Writer();
@@ -320,12 +345,13 @@ class TBB_Writer {
 
 public:
 	TBB_Writer(const std::vector<std::string>& inputStreamNames, const Parset& parset,
-                   const StationMetaDataMap& stationMetaDataMap, const std::string& outDir,
-                   bool dumpRaw, const std::string& logPrefix);
+               const StationMetaDataMap& stationMetaDataMap, const std::string& outDir,
+               const std::string& logPrefix, vector<int>& thrExitStatus);
 	~TBB_Writer();
 
 	// Output threads
 	TBB_Station* getStation(const TBB_Header& header);
+	// Must be called holding itsStationsMutex.
 	std::string createNewTBB_H5Filename(const TBB_Header& header, const std::string& stationName);
 
 	// Main thread
