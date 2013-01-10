@@ -96,11 +96,13 @@ def calculate_and_write_metric_full_time_range(data_path, target_path, metric_st
 if __name__ == '__main__':
     target_path = "/tmp/"
 
-    metric_str = "CPU"
+    data_path = "/tmp/locus_usage"
+    metric_str = "daily CPU"
+    duration_str = "uptime"
         #one day images
-    target_path_format = collect_data_create_images.py + "cpu_full.png"
-    duration_str = "current logging uptime per day"
+    target_path_format = target_path + "cpu_full.png"
+
     day_average = calculate_and_write_metric_full_time_range(
-                "/tmp/locus_usage", target_path_format, "cpu_", duration_str)
+                "/tmp/locus_usage", target_path_format, metric_str, duration_str)
 
     show()
