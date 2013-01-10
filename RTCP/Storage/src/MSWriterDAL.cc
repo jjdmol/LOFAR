@@ -540,6 +540,17 @@ namespace LOFAR
 
       itsConfiguration.add(prefix + "centralFrequencies", centralFreqsStr.str());
 
+      ostringstream stationSubbandsStr;
+      stationSubbandsStr << "[";
+      for (size_t i = 0; i < subbands.size(); ++i) {
+        if( i > 0 )
+          stationSubbandsStr << ", ";
+        stationSubbandsStr << str(format("%u") % subbands[i]);
+      }
+      stationSubbandsStr << "]";
+
+      itsConfiguration.add(prefix + "stationSubbands",  stationSubbandsStr.str());
+
       itsConfiguration.add(prefix + "channelWidth",      str(format("%f") % channelBandwidth));
       itsConfiguration.add(prefix + "channelsPerSubband",str(format("%u") % itsInfo.nrChannels));
       itsConfiguration.add(prefix + "stokes",            str(format("[%s]") % stokesVars_LTA[stokesNr]));
