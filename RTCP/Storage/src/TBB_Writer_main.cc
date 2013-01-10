@@ -17,23 +17,17 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * $Id: TBB_Writer_main.cc 17682 2012-09-07 18:58:53Z amesfoort $
- *
- * @author Alexander S. van Amesfoort
+ * $Id: TBB_Writer_main.cc 17261 2012-09-07 18:58:53Z amesfoort $
+ */
+
+/* @author Alexander S. van Amesfoort
  * Parts derived from the BF writer written by Jan David Mol, and from
  * TBB writers written by Lars Baehren, Andreas Horneffer, and Joseph Masters.
  */
 
-/*
- * NOTE: Only transient data mode has been implemented and tested.
- * TODO: Some code for spectral mode is implemented, but it could never be tested and the TBB HDF5 format considers transient data only.
- */
-
-#define _POSIX_C_SOURCE			1	// sigaction(2)
-#define _GNU_SOURCE			1	// getopt_long(3)
-
 #include <lofar_config.h>			// before any other include
 
+#define _FILE_OFFSET_BITS 64
 #include <cstddef>
 #include <cstdlib>
 #include <csignal>
@@ -54,6 +48,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/NewHandler.h>
+#include <ApplCommon/StationConfig.h>
 #include <ApplCommon/AntField.h>
 #include <Interface/Exceptions.h>
 #include <Storage/IOPriority.h>
@@ -63,18 +58,22 @@
 #define TBB_DEFAULT_BASE_PORT		0x7bb0	// i.e. tbb0
 #define TBB_DEFAULT_LAST_PORT		0x7bbb	// 0x7bbf for NL, 0x7bbb for int'l stations
 
+#define STDLOG_BUFFER_SIZE			1024
+
 using namespace std;
 
 struct progArgs {
 	string parsetFilename;
 	string antFieldDir;
 	string outputDir;
-	string proto;
+	string input;
 	uint16_t port;
 	struct timeval timeoutVal;
 	bool keepRunning;
-	bool rawDataFiles;
 };
+
+static char stdoutbuf[STDLOG_BUFFER_SIZE];
+static char stderrbuf[STDLOG_BUFFER_SIZE];
 
 // Install a new handler to produce backtraces for std::bad_alloc.
 LOFAR::NewHandler badAllocExcHandler(LOFAR::BadAllocException::newHandler);
@@ -110,25 +109,34 @@ static void setTermSigsHandler() {
 	}
 }
 
-static vector<string> getTBB_InputStreamNames(const string& proto, uint16_t portsBase) {
-	/*
-	 * Proto: TBB always arrives over UDP (but command-line override).
-	 * 
-	 * Ports: Each board sends data to port TBB_DEFAULT_BASE_PORT + itsBoardNr, so that's where put a r/w thread pair each to listen.
-	 * The number of TBB boards can be retrieved using LCS/ApplCommon/src/StationConfig.cc: nrTBBs = StationInfo.getInt("RS.N_TBBOARDS");
-	 * but we know that stations have 6 (NL stations) or 12 (EU stations) TBB boards, so simply use defines.
-	 */
-	vector<string> allInputStreamNames;
+static vector<string> getTBB_InputStreamNames(const string& input, uint16_t portsBase) {
+	int nTbbBoards;
+	try {
+		LOFAR::StationConfig stConf;
+		nTbbBoards = stConf.nrTBBs;
+	} catch (LOFAR::AssertError& ) { // config file not found
+		LOG_DEBUG_STR("Falling back to up to " << TBB_DEFAULT_LAST_PORT - TBB_DEFAULT_BASE_PORT + 1 << " streams (1 per board)");
+		nTbbBoards = TBB_DEFAULT_LAST_PORT - TBB_DEFAULT_BASE_PORT + 1; // fallback
+	}
 
-	if (proto == "udp" || proto == "tcp") {
-		uint16_t portsEnd = portsBase + TBB_DEFAULT_LAST_PORT - TBB_DEFAULT_BASE_PORT;
-		for (uint16_t port = portsBase; port <= portsEnd; port++) {
-			// 0.0.0.0: It would be better to restrict to station IPs/network, but need netmask lookup and need to allow localhost.
-			string streamName(proto + ":0.0.0.0:" + LOFAR::formatString("%hu", port));
+	vector<string> allInputStreamNames;
+	if (input == "udp" || input == "tcp") {
+		for (uint16_t port = portsBase; port <= portsBase + nTbbBoards; ++port) {
+			// 0.0.0.0: could restrict to station IPs/network, but need netmask lookup and allow localhost. Not critical: we are on a separate VLAN.
+			string streamName(input + ":0.0.0.0:" + LOFAR::formatString("%hu", port));
 			allInputStreamNames.push_back(streamName);
 		}
-	} else { // e.g. "file:data/rw_20110719_110541_1110.dat" or "pipe:data/rw_20110719_110541_1110.pipe"
-		allInputStreamNames.push_back(proto);
+	} else { // file or named pipe input
+		size_t placeholderPos = input.find_last_of('%');
+		if (placeholderPos == string::npos) { // single input, no expansion needed
+			allInputStreamNames.push_back(input);
+		} else { // expand: replace e.g. file:x%y-%.raw by file:x%y-0.raw, file:x%y-1.raw, ..., file:x%y-11.raw
+			for (int i = 0; i < nTbbBoards; ++i) {
+				string streamName(input);
+				streamName.replace(placeholderPos, 1, LOFAR::formatString("%u", i));
+				allInputStreamNames.push_back(streamName);
+			}
+		}
 	}
 
 	return allInputStreamNames;
@@ -200,8 +208,9 @@ static LOFAR::RTCP::StationMetaDataMap getExternalStationMetaData(const LOFAR::R
 
 			stMdMap.insert(make_pair(dal::stationNameToID(stName), stMetaData));
 		}
-	} catch (exception& exc) { // LOFAR::AssertError or dal::DALValueError (rare)
-		// AssertError already sends a message to the logger.
+	} catch (LOFAR::AssertError& exc) {
+		// Throwing AssertError already sends a message to the logger.
+	} catch (dal::DALValueError& exc) {
 		throw LOFAR::RTCP::StorageException(exc.what());
 	}
 
@@ -212,11 +221,11 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::RTCP::
                      const LOFAR::RTCP::StationMetaDataMap& stMdMap, struct progArgs& args) {
 	string logPrefix("TBB obs " + LOFAR::formatString("%u", parset.observationID()) + ": ");
 
+	vector<int> thrExitStatus(2 * inputStreamNames.size(), 0);
 	int err = 1;
 	try {
 		// When this obj goes out of scope, worker threads are cancelled and joined with.
-		LOFAR::RTCP::TBB_Writer writer(inputStreamNames, parset, stMdMap,
-                                       args.outputDir, args.rawDataFiles, logPrefix);
+		LOFAR::RTCP::TBB_Writer writer(inputStreamNames, parset, stMdMap, args.outputDir, logPrefix, thrExitStatus);
 
 		/*
 		 * We don't know how much data comes in, so cancel workers when all are idle for a while (timeoutVal).
@@ -234,7 +243,7 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::RTCP::
 		do {
 			pause();
 			if (sigint_seen) { // typically Ctrl-C
-				args.keepRunning = false;
+				args.keepRunning = false; // for main(), not for worker threads
 				break;
 			}
 
@@ -251,13 +260,19 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::RTCP::
 				}
 			}
 		} while (nrWorkersDone < inputStreamNames.size());
-
 		err = 0;
-
 	} catch (LOFAR::Exception& exc) {
-		LOG_FATAL_STR(logPrefix << "LOFAR::Exception: " << exc.text());
+		LOG_FATAL_STR(logPrefix << "LOFAR::Exception: " << exc);
 	} catch (exception& exc) {
 		LOG_FATAL_STR(logPrefix << "std::exception: " << exc.what());
+	}
+
+	// Propagate exit status != 0 from any input or output worker thread.
+	for (unsigned i = 0; i < thrExitStatus.size(); ++i) {
+		if (thrExitStatus[i] != 0) {
+			err = 1;
+			break;
+		}
 	}
 
 	return err;
@@ -298,14 +313,12 @@ static void printUsage(const char* progname) {
 	cout << endl;
 	cout << "  -a, --antfielddir=/d/AntennaFields  override $LOFARROOT and parset path for antenna field files (like CS001-AntennaField.conf)" << endl;
 	cout << "  -o, --outputdir=tbbout              output directory" << endl;
-	cout << "  -p, --proto=tcp|udp                 input stream type (default: udp)" << endl;
-	cout << "              file:raw.dat" << endl;
-	cout << "              pipe:named.pipe" << endl;
+	cout << "  -i, --input=tcp|udp                 input stream(s) or type (default: udp)" << endl;
+	cout << "              file:raw.dat                if file or pipe name has a '%'," << endl;
+	cout << "              pipe:named-%.pipe           then the last '%' is replaced by 0, 1, ..., 11" << endl;
 	cout << "  -b, --portbase=31665                start of range of 12 consecutive udp/tcp ports to receive from" << endl;
 	cout << "  -t, --timeout=10                    seconds of input inactivity until dump is considered completed" << endl;
 	cout << endl;
-	cout << "  -r, --rawdatafiles[=true|false]     output separate .raw data files (default: true; do not set to false atm);" << endl;
-	cout << "                                      .raw files is strongly recommended, esp. when receiving from multiple stations" << endl;
 	cout << "  -k, --keeprunning[=true|false]      accept new input after a dump completed (default: true)" << endl;
 	cout << endl;
 	cout << "  -h, --help                          print program name, version number and this info, then exit" << endl;
@@ -320,11 +333,10 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 	args->antFieldDir = "";		// idem
 
 	args->outputDir = "";
-	args->proto = "udp";
+	args->input = "udp";
 	args->port = TBB_DEFAULT_BASE_PORT;
 	args->timeoutVal.tv_sec = 10; // after this default of inactivity cancel all input threads and close output files
 	args->timeoutVal.tv_usec = 0;
-	args->rawDataFiles = true;
 	args->keepRunning = true;
 
 	static const struct option long_opts[] = {
@@ -332,11 +344,10 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 		{"parsetfile",   required_argument, NULL, 's'}, // observation (s)ettings
 		{"antfielddir",  required_argument, NULL, 'a'},
 		{"outputdir",    required_argument, NULL, 'o'},
-		{"proto",        required_argument, NULL, 'p'},
+		{"input",        required_argument, NULL, 'i'},
 		{"portbase",     required_argument, NULL, 'b'}, // port (b)ase
 		{"timeout",      required_argument, NULL, 't'},
 
-		{"rawdatafiles", optional_argument, NULL, 'r'},
 		{"keeprunning",  optional_argument, NULL, 'k'},
 
 		{"help",         no_argument,       NULL, 'h'},
@@ -347,7 +358,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 
 	opterr = 0; // prevent error printing to stderr by getopt_long()
 	int opt;
-	while ((opt = getopt_long(argc, argv, "hvs:a:o:p:b:t:r::k::", long_opts, NULL)) != -1) {
+	while ((opt = getopt_long(argc, argv, "hvs:a:o:p:b:t:k::", long_opts, NULL)) != -1) {
 		switch (opt) {
 		case 's':
 			args->parsetFilename = optarg;
@@ -364,12 +375,12 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 				args->outputDir.push_back('/');
 			}
 			break;
-		case 'p':
+		case 'i':
 			if (strcmp(optarg, "tcp") == 0 || strcmp(optarg, "udp") == 0 ||
-				strncmp(optarg, "file", sizeof("file")-1) == 0 || strncmp(optarg, "pipe", sizeof("pipe")-1) == 0) {
-				args->proto = optarg;
+				strncmp(optarg, "file:", sizeof("file:")-1) == 0 || strncmp(optarg, "pipe:", sizeof("pipe:")-1) == 0) {
+				args->input = optarg;
 			} else {
-				cerr << "Invalid protocol option: " << optarg << endl;
+				LOG_FATAL_STR("TBB: Invalid input option: " << optarg);
 				rv = 1;
 			}
 			break;
@@ -380,7 +391,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 					throw boost::bad_lexical_cast(); // abuse exc type to have single catch
 				}
 			} catch (boost::bad_lexical_cast& /*exc*/) {
-				cerr << "Invalid port option: " << optarg << endl;
+				LOG_FATAL_STR("TBB: Invalid port option: " << optarg);
 				rv = 1;
 			}
 			break;
@@ -388,19 +399,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 			try {
 				args->timeoutVal.tv_sec = boost::lexical_cast<unsigned long>(optarg);
 			} catch (boost::bad_lexical_cast& /*exc*/) {
-				cerr << "Invalid timeout option: " << optarg << endl;
-				rv = 1;
-			}
-			break;
-		case 'r':
-			if (optarg == NULL || optarg[0] == '\0') {
-				args->rawDataFiles = true;
-				break;
-			}
-			try {
-				args->rawDataFiles = boost::lexical_cast<bool>(optarg);
-			} catch (boost::bad_lexical_cast& /*exc*/) {
-				cerr << "Invalid rawdata option: " << optarg << endl;
+				LOG_FATAL_STR("TBB: Invalid timeout option: " << optarg);
 				rv = 1;
 			}
 			break;
@@ -412,7 +411,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 			try {
 				args->keepRunning = boost::lexical_cast<bool>(optarg);
 			} catch (boost::bad_lexical_cast& /*exc*/) {
-				cerr << "Invalid keeprunning option: " << optarg << endl;
+				LOG_FATAL_STR("TBB: Invalid keeprunning option: " << optarg);
 				rv = 1;
 			}
 			break;
@@ -423,46 +422,51 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 			}
 			break;
 		default: // '?'
-			cerr << "Invalid program argument: " << argv[optind-1] << endl;
+			LOG_FATAL_STR("TBB: Invalid program argument: " << argv[optind-1]);
 			rv = 1;
 		}
 	}
 
 	if (optind < argc) {
-		cerr << "Failed to recognize options:";
+		LOG_FATAL("TBB: Failed to recognize options:");
 		while (optind < argc) {
-			cerr << " " << argv[optind++];
+			LOG_FATAL_STR(" " << argv[optind++]);
 		}
-		cerr << endl;
 		rv = 1;
 	}
 
 	return rv;
 }
 
-static char stdoutbuf[1024], stderrbuf[1024];
-
 int main(int argc, char* argv[]) {
 	struct progArgs args;
 	int err;
 
-	setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
-	setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
+#if defined HAVE_LOG4CPLUS || defined HAVE_LOG4CXX
+	struct Log {
+		Log(const char* argv0) {
+			char *dirc = strdup(argv0); // dirname() may clobber its arg
+			if (dirc != NULL) {
+				INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/Storage_main.log_prop");
+				free(dirc);
+			}
+		}
 
-#if defined HAVE_LOG4CPLUS
-	char *dirc = strdup(argv[0]);
-
-	INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/TBB_Writer_main.log_prop");
-
-	free(dirc);
+		~Log() {
+			LOGGER_EXIT_THREAD(); // destroys NDC created by INIT_LOGGER()
+		}
+	} logger(argv[0]);
 #endif
+
+	err  = setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
+	err |= setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
+	if (err != 0) {
+		LOG_WARN("TBB: failed to change stdout and/or stderr output buffers");
+	}
 
 	if ((err = parseArgs(argc, argv, &args)) != 0) {
 		if (err == 2) err = 0;
 		printUsage(argv[0]);
-#if defined HAVE_LOG4CPLUS
-		LOGGER_EXIT_THREAD();
-#endif
 		return err;
 	}
 
@@ -470,13 +474,10 @@ int main(int argc, char* argv[]) {
 
 	if ((err = ensureOutputDirExists(args.outputDir)) != 0) {
 		LOG_FATAL_STR("TBB: output directory: " << strerror(err));
-#if defined HAVE_LOG4CPLUS
-		LOGGER_EXIT_THREAD();
-#endif
 		return 1;
 	}
 
-	const vector<string> inputStreamNames(getTBB_InputStreamNames(args.proto, args.port));
+	const vector<string> inputStreamNames(getTBB_InputStreamNames(args.input, args.port));
 
 	// We don't run alone, so try to increase the QoS we get from the OS to decrease the chance of data loss.
 	setIOpriority(); // reqs CAP_SYS_NICE or CAP_SYS_ADMIN
@@ -498,16 +499,12 @@ int main(int argc, char* argv[]) {
 
 	// Config exceptions (opening or parsing) are fatal. Too bad we cannot have it in one type.
 	} catch (LOFAR::RTCP::InterfaceException& exc) {
-		LOG_FATAL_STR("TBB: LOFAR::InterfaceException: parset: " << exc.text());
+		LOG_FATAL_STR("TBB: LOFAR::InterfaceException: parset: " << exc);
 	} catch (LOFAR::APSException& exc) {
-		LOG_FATAL_STR("TBB: LOFAR::APSException: parameterset: " << exc.text());
+		LOG_FATAL_STR("TBB: LOFAR::APSException: parameterset: " << exc);
 	} catch (LOFAR::RTCP::StorageException& exc) {
-		LOG_FATAL_STR("TBB: LOFAR::StorageException: antenna field files: " << exc.text());
+		LOG_FATAL_STR("TBB: LOFAR::StorageException: antenna field files: " << exc);
 	}
-
-#if defined HAVE_LOG4CPLUS
-	LOGGER_EXIT_THREAD();
-#endif
 
 	return err == 0 ? 0 : 1;
 }
