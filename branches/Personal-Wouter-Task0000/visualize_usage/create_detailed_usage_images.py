@@ -19,6 +19,11 @@ a incorrect number of time points: The number not being a multiple of a day
 length. Add the average of the remaining data as best effort estimation in that
 timeslice: Leads to correct positioning of the axis labels
 Add support from printing images of day averages
+
+known issues:
+If the the number of day entries is the same as the number of 5 min steps in 7
+days or a single day the x-axis label with use this labeling. (minor problem:
+This will happen a single day in the future  
 """
 import matplotlib
 matplotlib.use("Agg")
