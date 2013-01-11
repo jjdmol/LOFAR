@@ -50,7 +50,12 @@ int main(int argc, char* argv[])
 	PythonControl	pyc(argv[1]);
 	pyc.start(); 	// make initial transition
 
-	GCFScheduler::instance()->run();
+	GCFScheduler::instance()->setDelayedQuit(true);
+	GCFScheduler::instance()->run();	// until stop was called.
+
+	pc->quit();		// let tasks quit nicely.
+	pyc.quit();
+	GCFScheduler::instance()->run(0.3);	// let tasks die.
 
 	return (0);
 }
