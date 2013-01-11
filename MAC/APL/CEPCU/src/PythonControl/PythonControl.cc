@@ -732,7 +732,7 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		_passMetadatToOTDB();
 		CONTROLQuitedEvent		msg;
 		msg.cntlrName = itsMyName;
-		msg.result = CT_RESULT_NO_ERROR;
+		msg.result = itsFeedbackResult;
 		itsParentPort->send(msg);
 		GCFScheduler::instance()->stop();
 		break;
