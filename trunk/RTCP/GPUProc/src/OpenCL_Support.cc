@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <sstream>
 #include <iomanip>
 #include <iostream>
 
@@ -127,10 +128,9 @@ void createContext(cl::Context &context, std::vector<cl::Device> &devices)
 
 cl::Program createProgram(cl::Context &context, std::vector<cl::Device> &devices, const char *sources, const char *args)
 {
-  std::ifstream		kernelStream(sources);
-  std::string		kernelSource((std::istreambuf_iterator<char>(kernelStream)), std::istreambuf_iterator<char>());
-  cl::Program::Sources	source(1, std::make_pair(kernelSource.data(), kernelSource.size()));
-  cl::Program		program(context, source);
+  std::stringstream cmd;
+  cmd << "#include \"" << std::string(sources) << '"' << std::endl;
+  cl::Program program(context, cmd.str());
 
   try {
     program.build(devices, args);
