@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_string.h>
 #include <Common/StringUtil.h>
 #include <OTDB/misc.h>
 #include <cstdio>
@@ -92,6 +93,20 @@ string cleanNodeName(const string&	aName)
 	// return everything till {
 	return(theName.substr(0, start));
 }
+
+string escapeQuotes(const string& origin)
+{
+	string	result(origin);
+
+	string::size_type	prev_pos = 0;
+	string::size_type	pos;
+	while ((pos = result.find("'", prev_pos)) != string::npos) {
+		result.insert(prev_pos+pos, 1, '\\');
+		prev_pos = pos + 2;
+	}
+
+	return (result);
+}	
 
   } // namespace OTDB
 } // namespace LOFAR

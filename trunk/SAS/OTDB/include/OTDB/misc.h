@@ -41,6 +41,7 @@ string	VersionNr(int32		VersNumber);
 bool	isReference(const string&	limitsContents);
 uint32	getVersionNrFromName(const string&	aName);
 string	cleanNodeName(const string& aName);
+string  escapeQuotes (const string& origin);
 
 // @}
   } // namespace OTDB
