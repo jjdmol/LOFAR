@@ -35,6 +35,7 @@
 --
 CREATE OR REPLACE FUNCTION getCampaign(INT4)
   RETURNS campaignInfo AS '
+    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vCampaign	RECORD;
 
@@ -64,6 +65,7 @@ CREATE OR REPLACE FUNCTION getCampaign(INT4)
 --
 CREATE OR REPLACE FUNCTION getCampaign(VARCHAR(20))
   RETURNS campaignInfo AS '
+    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vCampaign	RECORD;
 
@@ -93,6 +95,7 @@ CREATE OR REPLACE FUNCTION getCampaign(VARCHAR(20))
 --
 CREATE OR REPLACE FUNCTION getCampaignList()
   RETURNS SETOF campaignInfo AS '
+    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
     DECLARE
         vRecord     RECORD;
 
@@ -121,28 +124,17 @@ CREATE OR REPLACE FUNCTION getCampaignList()
 --
 CREATE OR REPLACE FUNCTION saveCampaign(INT4, VARCHAR(30), VARCHAR(100), VARCHAR(80), VARCHAR(80), VARCHAR(120))
   RETURNS INT4 AS '
+    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
 	DECLARE
 		vID			campaign.ID%TYPE;
-		vName		TEXT;
-		vTitle		TEXT;
-		vPI			TEXT;
-		vCO_I		TEXT;
-		vContact	TEXT;
 
 	BEGIN
-		-- remove single quotes
-		vName    := replace($2, \'\\\'\', \'\');
-		vTitle   := replace($3, \'\\\'\', \'\');
-		vPI      := replace($4, \'\\\'\', \'\');
-		vCO_I    := replace($5, \'\\\'\', \'\');
-		vContact := replace($6, \'\\\'\', \'\');
-
 		-- check if node exists
 		IF $1 = 0 THEN
 		  SELECT ID
 		  INTO   vID
 		  FROM   campaign
-		  WHERE  name = vName;
+		  WHERE  name = $2;
 		ELSE
 		  SELECT	ID
 		  INTO	vID
@@ -187,6 +179,7 @@ CREATE OR REPLACE FUNCTION saveCampaign(INT4, VARCHAR(30), VARCHAR(100), VARCHAR
 --
 CREATE OR REPLACE FUNCTION exportCampaign(INT4, INT4)
   RETURNS TEXT AS $$
+    --  $Id: addComponentToVT_func.sql 19935 2012-01-25 09:06:14Z mol $
     DECLARE
 		vResult		TEXT := '';
 		vPrefix		TEXT;

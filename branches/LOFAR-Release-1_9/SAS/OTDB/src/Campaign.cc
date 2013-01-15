@@ -27,6 +27,11 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
 #include <OTDB/Campaign.h>
+#include <OTDB/misc.h>
+
+#include <pqxx/transaction>
+
+using namespace pqxx;
 
 namespace LOFAR {
   namespace OTDB {
@@ -147,10 +152,12 @@ int32 Campaign::saveCampaign(const CampaignInfo&	aCampaign)
 
 	work	xAction(*(itsConn->getConn()), "saveCampaign");
 	try {
-		result	res = xAction.exec(formatString(
+		string	query(formatString(
 			"SELECT saveCampaign(%d,'%s','%s','%s','%s','%s')", 
-					aCampaign.ID(), 	  aCampaign.name.c_str(), aCampaign.title.c_str(), 
-					aCampaign.PI.c_str(), aCampaign.CO_I.c_str(), aCampaign.contact.c_str()));
+					aCampaign.ID(), 	  escapeQuotes(aCampaign.name).c_str(), 
+					escapeQuotes(aCampaign.title).c_str(), escapeQuotes(aCampaign.PI).c_str(), 
+					escapeQuotes(aCampaign.CO_I).c_str(), escapeQuotes(aCampaign.contact).c_str()));
+		result	res = xAction.exec(query);
 
 		// Analyze result
 		int32	newID;
@@ -164,7 +171,7 @@ int32 Campaign::saveCampaign(const CampaignInfo&	aCampaign)
 		
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during getCampaignList:") + ex.what();
+		itsError = string("Exception during saveCampaign:") + ex.what();
 		LOG_FATAL(itsError);
 	}
 
