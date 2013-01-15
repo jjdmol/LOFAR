@@ -9,7 +9,11 @@ import re
 from os import path
 try:
     import monetdb.sql as db
-    import monetdb.monetdb_exceptions as me
+    try:
+        import monetdb.exceptions as me
+    except ImportError:
+        # Older version
+        import monetdb.monetdb_exceptions as me
     HAS_MONET = True
 except ImportError:
     HAS_MONET =False
@@ -59,7 +63,7 @@ class Recreator(object):
                                    port=db_port,
                                    autocommit=db_autocommit)
         else:
-            connect = psycopg2.connect(host=db_host, user=db_user,
+            connect = psycopg2.connect(host=db_host, user=db_user, password=db_passwd,
                                        database=db_dbase)
             connect.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             self.conn = connect.cursor()

@@ -27,7 +27,10 @@ CREATE TABLE images
   ,imagename CHAR(64) NOT NULL --unique LOFAR image id
   ,centr_ra double NOT NULL
   ,centr_decl double NOT NULL
-  ,fov_radius double null -- field of view size
+  ,fov_radius double null -- field of view size in degrees
+  ,bmaj double null -- beam major axis (NOT semi-!)
+  ,bmin double null -- beam minor axis (NOT semi-!)
+  ,bpa double null -- beam posizion angle
   ,url VARCHAR(120) NULL
   ,reprocessing INT NOT NULL DEFAULT 0
   ,status int not null -- 0-created, 1-Ok, 2-removed from runningcatalog, 3-removed completely
@@ -39,4 +42,3 @@ CREATE TABLE images
   --,FOREIGN KEY (band) REFERENCES frequencybands (freqbandid)
   )
 ;
-

@@ -40,6 +40,7 @@ print bcolors.HEADER, '='*10, 'CRITICAL', '='*10, bcolors.ENDC
 testImport('pysvn')
 testImportAlternative('monetdb', 'psycopg2')
 testImport('numpy')
+testImport('healpy')
 testImportAlternative('configobj', 'lofar.parameterset')
 
 print bcolors.HEADER, '='*10, 'API', '='*10, bcolors.ENDC

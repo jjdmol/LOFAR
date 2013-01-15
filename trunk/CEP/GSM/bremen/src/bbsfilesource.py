@@ -166,7 +166,7 @@ class GSMBBSFileSource(object):
                     continue
                 self.sources = self.sources + 1
                 dhash = self.process_line(data_line.split())
-                pix = hp.ang2pix(16, radians(90. - float(dhash[1])),
+                pix = hp.ang2pix(32, radians(90. - float(dhash[1])),
                                  radians(float(dhash[0])), nest=True)
                 sql_data.append("(%s, '%s', %s, %s )" %
                                 (self.run_id, self.parset_id,

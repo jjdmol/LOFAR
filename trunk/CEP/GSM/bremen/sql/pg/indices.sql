@@ -15,3 +15,6 @@ CREATE INDEX i_runcat_id      ON runningcatalog USING btree (runcatid, band, sto
 CREATE INDEX i_runcat_parent  ON runningcatalog USING btree (parent_runcat_id, band, stokes);
 CREATE INDEX i_runcat_parent0 ON runningcatalog USING btree (parent_runcat_id);
 CREATE INDEX i_runcat_healpix ON runningcatalog USING btree (healpix_zone );
+
+CREATE INDEX i_temp_assoc_runcat ON temp_associations USING btree (runcat_id);
+CREATE INDEX i_temp_assoc_xtrsrc ON temp_associations USING btree (xtrsrc_id2);

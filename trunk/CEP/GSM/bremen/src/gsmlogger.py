@@ -4,10 +4,10 @@ Tools for logging in GSM package.
 """
 import logging
 import os
+import platform
 
 LOGGERS = {}
 
-import platform
 if platform.node() == 'ldb001':
     BASE_LOG_DIR = os.path.join(os.getenv('HOME'), 'GSM')
 else:

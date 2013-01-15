@@ -73,10 +73,10 @@ def get_assoc_r(runcat_alias, extract_alias):
     @param extract_alias: alias for extractedsources;
     """
     return """\
-3600*sqrt((({0}.wm_ra * {0}.z - {1}.ra * {1}.z)
-          *({0}.wm_ra * {0}.z - {1}.ra * {1}.z)
-          )/ ({0}.wm_ra_err * {0}.wm_ra_err + {1}.ra_err * {1}.ra_err)
-        + (({0}.wm_decl - {1}.decl) * ({0}.wm_decl - {1}.decl))
+    (({0}.wm_ra * {0}.z - {1}.ra * {1}.z)
+          *({0}.wm_ra * {0}.z - {1}.ra * {1}.z
+          )/ ({0}.wm_ra_err * {0}.wm_ra_err + {1}.ra_err * {1}.ra_err))
+        + (({0}.wm_decl - {1}.decl) * ({0}.wm_decl - {1}.decl)
          / ({0}.wm_decl_err * {0}.wm_decl_err + {1}.decl_err * {1}.decl_err))
 """.format(runcat_alias, extract_alias)
 
@@ -275,5 +275,3 @@ select r.wm_ra as ra, r.wm_decl as decl, f.wm_f_peak
 """.format(get_field_conditions(x, y, z, r, min_flux, min_datapoints),
            stokes, band)
     return sql
-
-
