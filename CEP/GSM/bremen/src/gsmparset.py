@@ -1,16 +1,11 @@
 #!/usr/bin/python
 from os import path
 from math import cos
-try:
-    # Try loading LOFAR parset support, fallback to ConfigObj.
-    from lofar.parameterset import parameterset
-    LOFAR_PARAMETERSET = True
-except ImportError:
-    from configobj import ConfigObj
-    LOFAR_PARAMETERSET = False
 
+from src.ini_load import load_parameters
 from src.errors import ParsetContentError, SourceException, GSMException
 from src.bbsfilesource import GSMBBSFileSource
+from src.pysefilesource import PySEFileSource
 from src.sqllist import get_sql, get_svn_version
 from src.gsmlogger import get_gsm_logger
 from src.queries import sql_insert_run
@@ -31,10 +26,7 @@ class GSMParset(object):
             self.log.error('Parset file does not exist: %s' % filename)
             raise GSMException('Parset file does not exist: %s' % filename)
         self.path = path.dirname(path.realpath(filename))
-        if LOFAR_PARAMETERSET:
-            self.data = parameterset(filename).dict()
-        else:
-            self.data = ConfigObj(filename, raise_errors=True, file_error=True)
+        self.data = load_parameters(filename)
         self.parset_id = self.data.get('image_id')
         self.image_id = None  # Not yet known.
         self.source_count = None
@@ -63,9 +55,14 @@ class GSMParset(object):
                                             single_column=True)
         for source in sources:
             if self.data.get('bbs_format'):
-                bbsfile = GSMBBSFileSource(self.parset_id, self.run_id,
-                                           "%s/%s" % (self.path, source),
-                                           self.data.get('bbs_format'))
+                if self.data.get('bbs_format') == 'PySE':
+                    bbsfile = PySEFileSource(self.parset_id, self.run_id,
+                                               "%s/%s" % (self.path, source),
+                                               self.data.get('bbs_format'))
+                else:
+                    bbsfile = GSMBBSFileSource(self.parset_id, self.run_id,
+                                               "%s/%s" % (self.path, source),
+                                               self.data.get('bbs_format'))
             else:
                 bbsfile = GSMBBSFileSource(self.parset_id, self.run_id,
                                         "%s/%s" % (self.path, source))
@@ -102,6 +99,15 @@ class GSMParset(object):
                     max_ra - avg_ra * cos(avg_decl)]), \
                     avg_decl, avg_ra
 
+    def get(self, key):
+        """
+        SQL-friendly get.
+        """
+        if key in self.data:
+            return self.data.get(key)
+        else:
+            return 'null'
+
     def save_image_info(self, conn):
         """
         Write image info into images table.
@@ -134,8 +140,10 @@ class GSMParset(object):
 
         conn.execute(get_sql('insert image', self.parset_id, band,
                              avg_ra, avg_decl, size,
-                             get_svn_version(), self.run_id))
+                             get_svn_version(), self.run_id,
+                             self.get('bmaj'),
+                             self.get('bmin'),
+                             self.get('bpa')))
         image_id = conn.exec_return(get_sql('get last image_id'))
         self.log.info('Image %s created' % image_id)
         return image_id
-

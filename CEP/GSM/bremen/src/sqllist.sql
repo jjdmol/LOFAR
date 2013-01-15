@@ -8,9 +8,11 @@ select max(imageid) from images;
 
 --#insert image
 insert into images (ds_id, tau, band, imagename, status,
-                    centr_ra, centr_decl, fov_radius, svn_version, run_id)
+                    centr_ra, centr_decl, fov_radius, svn_version, run_id,
+                    bmaj, bmin, bpa)
 select 0, 1, {1}, '{0}' as imagename, 0,
-       {2}, {3}, {4}, {5}, {6}
+       {2}, {3}, {4}, {5}, {6},
+       {7}, {8}, {9}
 
 --#Cleanup
 delete from detections where run_id = [r];
@@ -51,15 +53,23 @@ select [i], cast(floor(ldecl) as integer) as zone, lra, ldecl, lra_err, ldecl_er
        cos(radians(ldecl))*cos(radians(lra)),
        cos(radians(ldecl))*sin(radians(lra)),
        sin(radians(ldecl)), 3.0, lf_peak, lf_peak_err, lf_int, lf_int_err,
-       case when g_major is null or ldecl_err > g_major or g_pa_err = 0.0 or g_major_err = 0.0 or g_minor_err = 0.0 then 0
+       case when g_major is null or
+                 --ldecl_err > g_major or
+                 g_pa_err = 0.0 or
+                 g_major_err = 0.0 or
+                 g_minor_err = 0.0 or
+                 (im.bmaj is not null and g_major < im.bmaj) then 0
             else 1 end,
        g_minor, g_minor_err, g_major, g_major_err,
        g_pa, g_pa_err, healpix_zone
-from detections
+from detections d, images im
 where lf_int_err > 0
   and lf_int > 0
   and lf_peak_err > 0
-  and run_id = [r];
+  and lra_err > 0
+  and ldecl_err > 0
+  and d.run_id = [r]
+  and im.imageid = [i];
 
 
 --#insert dummysources

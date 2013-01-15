@@ -1,15 +1,18 @@
 #!/usr/bin/env python
+import logging
+import math
+import healpy
+import os
+
 import monetdb.sql as db
+
 from src.errors import SourceException, ImageStateError
 from src.gsmconnectionmanager import GSMConnectionManager
 from src.gsmlogger import get_gsm_logger
 from src.sqllist import get_sql, get_svn_version, GLOBALS
 from src.grouper import Grouper
 from src.updater import run_update
-import logging
-import math
-import healpy
-
+from src.ini_load import load_parameters
 
 class GSMPipeline(object):
     """
@@ -40,6 +43,8 @@ class GSMPipeline(object):
         except db.Error as exc:
             self.log.error("Failed to connect: %s" % exc)
             raise exc
+        self.options = load_parameters('%s/settings.ini' % os.path.dirname(__file__))
+        self.log.debug('Pipeline parameters: %s' % self.options)
         self.log.info('Pipeline started.')
 
     def reopen_connection(self, **params):
@@ -94,7 +99,7 @@ class GSMPipeline(object):
         """
         vector = healpy.ang2vec(math.radians(90.0 - centr_decl),
                                 math.radians(centr_ra))
-        pixels = healpy.query_disc(16, vector, math.radians(fov_radius),
+        pixels = healpy.query_disc(32, vector, math.radians(fov_radius),
                                    inclusive=True, nest=True)
         return str(pixels.tolist())[1:-1]
 
@@ -115,9 +120,9 @@ class GSMPipeline(object):
         already.
         """
         self.conn.start()
-        status, band, stokes, fov_radius, centr_ra, centr_decl, run_loaded = \
+        status, band, stokes, fov_radius, centr_ra, centr_decl, run_loaded, bmaj = \
         self.conn.exec_return("""
-        select status, band, stokes, fov_radius, centr_ra, centr_decl, run_id
+        select status, band, stokes, fov_radius, centr_ra, centr_decl, run_id, bmaj
           from images
          where imageid = %s;""" % image_id, single_column=False)
         if not run_id:
@@ -131,10 +136,17 @@ class GSMPipeline(object):
         if not sources_loaded:
             self.conn.execute(get_sql('insert_extractedsources'))
             self.conn.execute(get_sql('insert dummysources'))
+        if bmaj:
+            max_assoc = bmaj
+        else:
+            max_assoc = self.options.get('maximum_association_distance')
         self.conn.execute(get_sql('Associate point',
-                                  math.sin(0.025), 1.0, pix))
+                                  math.sin(max_assoc), 
+                                  self.options.get('match_distance'), pix))
         self.conn.execute_set(get_sql('Associate extended',
-                                      math.sin(0.025), 0.5, pix))
+                                  math.sin(max_assoc), 
+                                  self.options.get('match_distance_extended'),
+                                  pix))
         self.conn.call_procedure("fill_temp_assoc_kind(%s);" % image_id)
         # Process one-to-one associations;
         self.conn.execute(get_sql('add 1 to 1'))

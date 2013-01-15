@@ -24,6 +24,8 @@ optional arguments:
 import time
 import argparse
 import logging
+import traceback
+
 from src.gsmparset import GSMParset
 from src.pipeline import GSMPipeline
 from src.gsmlogger import switch_console, set_all_levels
@@ -37,10 +39,11 @@ def run_pipeline(database, filenames, use_monet=True, profile=False, quiet=False
             parset = GSMParset(parname)
             set_all_levels(logging.DEBUG)
             pipeline.run_parset(parset)
-            print 'Time spent: %s' % (time.time() - start)
+            print 'Time spent: %s seconds' % (time.time() - start)
             return True
         except GSMException, e:
             print 'ERROR occured: %s' % e
+            traceback.print_exc()
             return False
 
     pipeline = GSMPipeline(database=database,
@@ -81,3 +84,4 @@ try:
                  filenames=args.filename)
 except Exception as e:
     print 'Unexpected error: %s' % e
+    traceback.print_exc()

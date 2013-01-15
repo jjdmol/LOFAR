@@ -147,7 +147,7 @@ class UnifiedConnection(object):
         except (psycopg2.Error, monetdb.Error), exc:
             self.log.error("Failed on query: %s. Error: %s" % (query, exc))
             raise exc
-        except NoneType, exc:
+        except TypeError, exc:
             self.log.error("Failed on query: %s. No data returned" % query)
             raise exc
         finally:
