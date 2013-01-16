@@ -25,7 +25,6 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/lofar_datetime.h>
 #include <OTDB/Campaign.h>
 #include <OTDB/misc.h>
 
