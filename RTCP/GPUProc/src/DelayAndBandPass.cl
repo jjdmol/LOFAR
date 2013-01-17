@@ -66,10 +66,10 @@ __kernel void applyDelaysAndCorrectBandPass(__global void *correctedDataPtr,
   float2 myPhiBegin = (phiBegin + major * deltaPhi) * frequency + (*phaseOffsets)[station];
   float2 myPhiDelta = 16 * deltaPhi * frequency;
 #endif
-  float2 vX = (float2) { native_cos(myPhiBegin.x), native_sin(myPhiBegin.x) };
-  float2 vY = (float2) { native_cos(myPhiBegin.y), native_sin(myPhiBegin.y) };
-  float2 dvX = (float2) { native_cos(myPhiDelta.x), native_sin(myPhiDelta.x) };
-  float2 dvY = (float2) { native_cos(myPhiDelta.y), native_sin(myPhiDelta.y) };
+  float2 vX = cexp(myPhiBegin.x);
+  float2 vY = cexp(myPhiBegin.y);
+  float2 dvX = cexp(myPhiDelta.x);
+  float2 dvY = cexp(myPhiDelta.y);
 #endif
 
 #if defined BANDPASS_CORRECTION
