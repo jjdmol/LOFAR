@@ -115,7 +115,7 @@ string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned ionod
 
 uint16 storageBrokerPort(int observationID)
 {
-  return 8000 + observationID % 1000;
+  return 7000 + observationID % 1000;
 }
 
 
