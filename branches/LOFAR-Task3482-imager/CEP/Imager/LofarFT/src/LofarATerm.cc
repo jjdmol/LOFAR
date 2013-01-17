@@ -297,13 +297,14 @@ namespace
     if (itsApplyIonosphere) 
     {
       Cube<DComplex> IF = evaluateIonosphere(idStation, freq);
-      SF *= IF;
+      SF *= conj(IF);
     }
     
     if(normalize)
     {
       rescale(SF);
     }
+
     
     return SF;
   }

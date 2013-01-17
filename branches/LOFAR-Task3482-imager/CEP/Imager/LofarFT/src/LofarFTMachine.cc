@@ -1036,11 +1036,11 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   //PrecTimer TimerCyril;
   //TimerCyril.start();
 
-    if (itsVerbose > 0) {
+  //if (itsVerbose > 0) {
     logIO() << LogOrigin("LofarFTMachine", "put") << LogIO::NORMAL
             << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
     logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
-    }
+    //}
 
 
   gridOk(gridder->cSupport()(0));
@@ -1125,7 +1125,21 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   //LofarFTMachine::make_mapping(vb);
   //vector<vector<vector<uInt> > > MapBlTimesW=LofarFTMachine::make_mapping_time_W(vb, spw);
   // dims are w-plane, non-touching bl-timechunk group, bl-timechunk, row
+  cout<<"do mapping"<<endl;
   vector<vector<vector<vector<uInt> > > > MapBlTimesW_grid=LofarFTMachine::make_mapping_time_W_grid(vb, spw);
+
+//   vector<vector<vector<vector<vector<uInt> > > > > MapBlTimesW_grid_threads;
+//   uInt NRow(vb.nRow());
+//   uInt rowstep(Nrow/itsNThreads);
+// #pragma omp parallel
+//   {
+// #pragma omp for schedule(dynamic)
+//     for (int i=0; i<int(MapBlTimes.size()); ++i) {
+      
+//       MapBlTimesW_grid_threads[i]=LofarFTMachine::make_mapping_time_W_grid(vb, spw);
+//     }
+//   }
+  cout<<"done"<<endl;
   //assert(false);
   
 
@@ -1164,9 +1178,10 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   CyrilTimer2Aterm.start();
 
   if(!itsAllAtermsDone){
-    //cout<<"Calc Aterm"<<endl;
+    cout<<"Calc Aterm"<<endl;
     itsConvFunc->computeAterm (timeChunk);
     itsConvFunc->computeVecAterm(times[0],times[times.size()-1],its_TimeWindow);
+    cout<<"... done"<<endl;
   }
   CyrilTimer2Aterm.stop();
   double Taterm=CyrilTimer2Aterm.getReal();

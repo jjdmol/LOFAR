@@ -545,7 +545,6 @@ namespace LOFAR
       PrecTimer timerFFT;
       PrecTimer timerPar;
 
-      ///#pragma omp for
       DirectionCoordinate coordinate = m_coordinates;
       Double aPixelAngSize = min(m_pixelSizeSpheroidal, estimateAResolution(m_shape, m_coordinates));
       Int nPixelsConv = imageDiameter / aPixelAngSize;
@@ -589,7 +588,8 @@ namespace LOFAR
       
       m_aTerm.setEpoch(binEpoch);
 //       LofarATerm::ITRFDirectionMap dirMap = m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
-
+      
+      //#pragma omp for
       for (uInt i=0; i<m_nStations; ++i) {
         timerPar.start();
 
@@ -598,8 +598,26 @@ namespace LOFAR
         //======================================
 	vector< Cube<Complex> > aTermA_element;
 	vector< Cube<Complex> > aTermA_array;
-	vector< Cube<Complex> > aTermA(m_aTerm.evaluate(i, list_freq_chanBlock , list_freq_chanBlock , true));
-	vector< Matrix<Complex> > aTermA_array_plane(m_aTerm.evaluateArrayFactor(i, 0, list_freq_chanBlock , list_freq_chanBlock, true));
+	
+	vector< Cube<Complex> > aTermA;
+	//aTermA=m_aTerm.evaluate(i, list_freq_chanBlock , list_freq_chanBlock , true);
+
+	Bool itsapplyIonosphere = itsParameters.asBool("applyIonosphere");
+	Cube<DComplex> zTermA;
+	//if(itsapplyIonosphere==true){zTermA=m_aTerm.evaluateIonosphere(i, list_freq_chanBlock);}
+	if(itsapplyIonosphere==true){zTermA=m_aTerm.evaluateStationScalarFactor(i, list_freq_chanBlock, list_freq_chanBlock, true);}
+
+	vector< Matrix<Complex> > aTermA_array_plane;
+	if(its_NotApplyArray==false){
+	  aTermA_array_plane=m_aTerm.evaluateArrayFactor(i, 0, list_freq_chanBlock , list_freq_chanBlock, true);
+	} else{
+	  aTermA_array_plane.resize(m_nChannelBlocks);
+	  for (uInt ch=0; ch<m_nChannelBlocks; ++ch) {
+	    aTermA_array_plane[ch].resize(IPosition(2,shape[0],shape[0]));
+	    aTermA_array_plane[ch]=0.;
+	  }
+	}
+
 	aTermA_array.resize(m_nChannelBlocks);
         for (uInt ch=0; ch<m_nChannelBlocks; ++ch) {
 	  aTermA_array[ch].resize(IPosition(3,shape[0],shape[0],4));
@@ -610,9 +628,28 @@ namespace LOFAR
 	  plane=aTermA_array_plane[ch].copy();
 	  Matrix<Complex> plane2(aTermA_array[ch].xyPlane(3));
 	  plane2=aTermA_array_plane[ch].copy();
+	  if(itsapplyIonosphere==true){
+	    Matrix<DComplex> plane3(zTermA.xyPlane(ch));
+	    Matrix<Complex> plane3b(plane3.shape());
+	    convertArray (plane3b, plane3);
+	    //plane=plane*plane3b;
+	    //plane2=plane2*plane3b;
+	    plane=plane3b.copy();
+	    plane2=plane3b.copy();
+	  }
 	}
 
-	aTermA_element=m_aTerm.evaluateElementResponse(i, 0, list_freq_spw, true);
+	//store(zTermA[0],"Ion"+String::toString(i)+".img");
+
+	if(its_NotApplyElement==false){
+	  aTermA_element=m_aTerm.evaluateElementResponse(i, 0, list_freq_spw, true);
+	} else{
+	  aTermA_element.resize(m_nChannelBlocks);
+	  for (uInt ch=0; ch<m_nChannelBlocks; ++ch) {
+	    aTermA_element[ch].resize(IPosition(3,shape[0],shape[0],4));
+	    aTermA_element[ch]=0.;
+	  }
+	}
 	// Disable element beam and station beam
 	  
 	if(its_NotApplyElement==true){
@@ -686,6 +723,7 @@ namespace LOFAR
     //cout<<"For time: "<<time<<endl;
     //assert(false);
     //timerCyril.show(cout,"LofarConvolutionFunction::computeAterm");
+    //assert(false);
   }
 
 
