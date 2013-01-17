@@ -1,0 +1,12 @@
+# -- Ring--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Core               4.0.0  development 'node constraint'  "Central Core"
+uses  @CoreStation@      4.0.0  development 1	              "Station in this ring"		 
+node  Remote             4.0.0  development 'node constraint'  "Remote Stations"
+uses  @RemoteStation@    4.0.0  development 1	              "Station in this ring"		 
+node  Europe             4.0.0  development 'node constraint'  "European stations"
+uses  @EuropeStation@    4.0.0  development 1	              "Station in this ring"		 
