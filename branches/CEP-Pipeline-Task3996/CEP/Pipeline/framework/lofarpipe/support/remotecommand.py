@@ -185,7 +185,8 @@ class ComputeJob(object):
         self.results['returncode'] = 123456 # Default to obscure code to allow
         # test of failing ssh connections
 
-    def dispatch(self, logger, config, limiter, id, jobhost, jobport, error, killswitch):
+    def dispatch(self, logger, config, limiter, id, jobhost, jobport,
+                  error, killswitch):
 
         """
         Dispatch this job to the relevant compute node.
@@ -193,6 +194,8 @@ class ComputeJob(object):
         Note that error is an instance of threading.Event, which will be set
         if the remote job fails for some reason.
         """
+        # time the duration of this node call
+        time_info_start = time.time()
         self.id = id
         limiter[self.host].acquire()
         try:
@@ -237,6 +240,11 @@ class ComputeJob(object):
                 (self.command, self.arguments, self.host, process.returncode)
             )
             error.set()
+        # this is after the node has returned.
+        # simply add the duration of this node at this point
+        time_info_end = time.time()
+        self.results["node_wallclock_duration"] = str(
+                                            time_info_end - time_info_start)
         self.results['returncode'] = process.returncode
         logger.debug("compute.dispatch results job {0}: {1}".format(
                     self.id, self.results))
@@ -312,4 +320,8 @@ class RemoteCommandRecipeMixIn(object):
                     )
                 )
             threadwatcher(threadpool, self.logger, killswitch)
+        # this is the calling master node
+        # after all nodes have finished.
+        self.outputs["node_logging_information"] = "This is a test"
+
         return jobpool
