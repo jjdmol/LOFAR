@@ -56,9 +56,13 @@ namespace LOFAR
     // Layout of a trace line
     struct TraceLine {
       TraceLine() : function("??"), file("??"), line(0) {}
+      TraceLine(const std::string& _func, const std::string& _file, 
+                unsigned _line) :
+        function(_func), file(_file), line(_line) {}
       std::string function;
       std::string file;
       unsigned line;
+      std::vector<TraceLine> inlines;
     };
     // Constructor. Calls backtrace() to fill \c itsAddr with the return
     // addresses of the current program state.

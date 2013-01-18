@@ -64,7 +64,16 @@ namespace LOFAR
       if (i < itsTrace.size()) {
         os << " in " << itsTrace[i].function
            << " at " << itsTrace[i].file
+           // << "\n    at " << itsTrace[i].file
            << ":"    << itsTrace[i].line;
+        for(unsigned j = 0; j < itsTrace[i].inlines.size(); j++) {
+          os << endl
+             << "    " << itsTrace[i].inlines[j].function
+             // << "    (inlined by) " << itsTrace[i].inlines[j].function
+             << " at " << itsTrace[i].inlines[j].file
+             // << "\n    at " << itsTrace[i].inlines[j].file
+             << ":" << itsTrace[i].inlines[j].line;
+        }
         if (stopAtMain && itsTrace[i].function == "main") break;
       }
     }

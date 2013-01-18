@@ -45,16 +45,16 @@ struct J
 //     terminate();
 //     throw;
 //     throw 1;
-    throw runtime_error("Oops!");
-    THROW (AssertError, "Ouch!"); 
-    LOFAR::Exception* excp;
+//    throw runtime_error("Oops!");
+//    THROW (AssertError, "Ouch!"); 
+//    LOFAR::Exception* excp;
     char* p;
-    cerr << "sizeof(AssertError) = " << sizeof(AssertError) << endl;
+//    cerr << "sizeof(AssertError) = " << sizeof(AssertError) << endl;
     try {
-      ostringstream oss;
-      oss << "cat /proc/" << getpid() << "/status";
+//      ostringstream oss;
+//      oss << "cat /proc/" << getpid() << "/status";
       while (true) {
-        system(oss.str().c_str());
+//        system(oss.str().c_str());
         p = new char[2000000];
       }
     } catch (std::bad_alloc&) {

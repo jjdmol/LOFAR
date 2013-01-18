@@ -38,6 +38,7 @@ please install the GNU binutils development package.
 #endif
 
 #include <Common/Thread/Mutex.h>
+#include <string>
 
 namespace LOFAR
 {
@@ -93,6 +94,9 @@ namespace LOFAR
     // #filename, #line, and #functionname.
     void do_find_address_in_section(bfd* abfd, asection* section);
 
+    // Demangle the C++ mangled function name in \a name.
+    std::string demangle(const char* name);
+    
     // @name Local variables set by operator()
     // @{
     asymbol** syms;  ///< BFD symbol table information

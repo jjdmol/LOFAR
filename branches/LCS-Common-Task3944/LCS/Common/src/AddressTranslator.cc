@@ -27,6 +27,7 @@
 #include <Common/AddressTranslator.h>
 #include <Common/Backtrace.h>
 #include <Common/SymbolTable.h>
+// #include <Common/SystemUtil.h>
 #include <map>
 #include <cstdlib>
 #include <cstring>
@@ -108,35 +109,24 @@ namespace LOFAR
       // attached to the BFD \a abfd. This function will set #filename,
       // #functionname, #line and #found.
       bfd_map_over_sections(abfd, find_address_in_section, this);
-
       if (found) {
-        // Unwind inlined functions to get the source information of the first
-        // non-inlined function. In general, this will improve the usefulness
-        // of the backtrace information.
-        while(bfd_find_inliner_info(abfd, &filename, &functionname, &line));
-        
-        if (functionname && *functionname) {
-# ifdef __GNUG__
-          char* realname = abi::__cxa_demangle(functionname, 0, 0, 0);
-          if (realname) {
-            trace[i].function = realname;
-            free(realname);
-          }
-          else {
-            trace[i].function = functionname;
-          }
-# else
-          trace[i].function = functionname;
-# endif
-        }
-        if (filename) {
-          const char* h = strrchr(filename,'/');
-          if (h) {
-            filename = h+1;
-          }
-          trace[i].file = filename;
-        }
+        trace[i].function = demangle(functionname);
+        trace[i].file = filename ? /*basename*/(filename) : "??";
+        // if (filename) {
+        //   // const char* h = strrchr(filename,'/');
+        //   // if (h) {
+        //   //   filename = h+1;
+        //   // }
+        //   trace[i].file = filename;
+        // }
         trace[i].line = line;
+        // Unwind inlined functions.
+        while(bfd_find_inliner_info(abfd, &filename, &functionname, &line)) {
+          trace[i].inlines.push_back(Backtrace::TraceLine
+                                     (demangle(functionname),
+                                      filename ? /*basename*/(filename) : "??",
+                                      line));
+        }
       }
     }
 #else
@@ -182,16 +172,16 @@ namespace LOFAR
   }
     
 
-  void AddressTranslator::find_address_in_section(bfd*      abfd,
-						  asection* section,
-						  void*     data)
+  void AddressTranslator::find_address_in_section(bfd* abfd,
+                                                  asection* section,
+                                                  void* data)
   {
     AddressTranslator* obj = static_cast<AddressTranslator*>(data);
     obj->do_find_address_in_section(abfd, section);
   }
 
-  void AddressTranslator::do_find_address_in_section(bfd*       abfd, 
-						     asection*  section)
+  void AddressTranslator::do_find_address_in_section(bfd* abfd,
+                                                     asection*  section)
   {
     if (found)
       return;
@@ -207,8 +197,28 @@ namespace LOFAR
     if (pc >= vma + size)
       return;
 
-    found = bfd_find_nearest_line (abfd, section, syms, pc - vma, 
-				   &filename, &functionname, &line);
+    found = bfd_find_nearest_line (abfd, section, syms, pc - vma,
+                                   &filename, &functionname, &line);
+  }
+
+
+  std::string AddressTranslator::demangle(const char* name)
+  {
+    std::string demangled("??");
+    if (name && *name) {
+# ifdef __GNUG__
+      char* dmgl = abi::__cxa_demangle(name, 0, 0, 0);
+      if (dmgl) {
+        demangled = dmgl;
+        free(dmgl);
+      } else {
+        demangled = name;
+      }
+# else
+      demangled = name;
+# endif
+    }
+    return demangled;
   }
 
 #endif
