@@ -26,7 +26,7 @@ fi
 # Update database
 if [ -e /tmp/otdb_func_update_$$.sql ]; then
   echo "Updating database $LOFAR_DB ; see file otdb_func_update_$$.log for log messages"
-  echo psql -f /tmp/otdb_func_update_$$.sql -U postgres -h localhost $LOFAR_DB >& otdb_func_update_$$.log 
+  psql -f /tmp/otdb_func_update_$$.sql -U postgres -h localhost $LOFAR_DB >& otdb_func_update_$$.log 
 else
   echo "Could not find file /tmp/otdb_func_update_$$.sql "
   exit
