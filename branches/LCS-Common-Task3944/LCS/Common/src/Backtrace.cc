@@ -57,25 +57,19 @@ namespace LOFAR
     ios::fmtflags flags(os.flags());
 
     os.setf(ios::left);
-    for(unsigned i = 1; i < itsNrAddr; ++i) {
+    for(unsigned i = 1; i < itsTrace.size(); ++i) {
       if (i > 1) os << endl;
-      os << "#" << setw(2) << i-1
-         << " " << itsAddr[i];
-      if (i < itsTrace.size()) {
-        os << " in " << itsTrace[i].function
-           << " at " << itsTrace[i].file
-           // << "\n    at " << itsTrace[i].file
-           << ":"    << itsTrace[i].line;
-        for(unsigned j = 0; j < itsTrace[i].inlines.size(); j++) {
-          os << endl
-             << "    " << itsTrace[i].inlines[j].function
-             // << "    (inlined by) " << itsTrace[i].inlines[j].function
-             << " at " << itsTrace[i].inlines[j].file
-             // << "\n    at " << itsTrace[i].inlines[j].file
-             << ":" << itsTrace[i].inlines[j].line;
-        }
-        if (stopAtMain && itsTrace[i].function == "main") break;
+      os << "#" << setw(2) << i-1 << " ";
+      if (itsTrace[i].address) {
+        os << itsTrace[i].address << " in ";
       }
+      os << itsTrace[i].function;
+      if (itsTrace[i].line == 0) {
+        os << " from " << itsTrace[i].file;
+      } else {
+        os << " at " << itsTrace[i].file << ":" << itsTrace[i].line;
+      }
+      if (stopAtMain && itsTrace[i].function == "main") break;
     }
 
     // Restore the fmtflags

@@ -71,7 +71,7 @@ namespace LOFAR
                                      void* const* addr, int size) 
   {
     // Initialize \a size elements of vector \a trace to avoid reallocations.
-    trace.resize(size);
+    // trace.resize(size);
   
 #ifdef HAVE_BFD
     ScopedLock sc(mutex);
@@ -110,23 +110,21 @@ namespace LOFAR
       // #functionname, #line and #found.
       bfd_map_over_sections(abfd, find_address_in_section, this);
       if (found) {
-        trace[i].function = demangle(functionname);
-        trace[i].file = filename ? /*basename*/(filename) : "??";
-        // if (filename) {
-        //   // const char* h = strrchr(filename,'/');
-        //   // if (h) {
-        //   //   filename = h+1;
-        //   // }
-        //   trace[i].file = filename;
-        // }
-        trace[i].line = line;
+        trace.push_back(Backtrace::TraceLine
+                        (addr[i], 
+                         demangle(functionname),
+                         filename && line ? filename : bfdFile,
+                         line));
         // Unwind inlined functions.
         while(bfd_find_inliner_info(abfd, &filename, &functionname, &line)) {
-          trace[i].inlines.push_back(Backtrace::TraceLine
-                                     (demangle(functionname),
-                                      filename ? /*basename*/(filename) : "??",
-                                      line));
+          trace.push_back(Backtrace::TraceLine
+                          (0, 
+                           demangle(functionname),
+                           filename && line ? filename : bfdFile,
+                           line));
         }
+      } else {
+        trace.push_back(Backtrace::TraceLine());
       }
     }
 #else
