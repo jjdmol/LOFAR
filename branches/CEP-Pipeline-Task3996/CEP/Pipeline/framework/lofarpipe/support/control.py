@@ -84,19 +84,19 @@ class control(StatefulRecipe):
             self.pipeline_logic()
         except Exception, message:
             self.logger.error("*******************************************")
+            # Now for more detailed in formation
             self.logger.error("Failed pipeline run: {0}".format(
                         self.inputs['job_name']))
-            self.logger.error(message)
+
             # Get detailed information of the caught exception
             (type, value, traceback_object) = sys.exc_info()
             self.logger.error("Detailed exception information:")
             self.logger.error(str(type))
             self.logger.error(str(value))
-            self.logger.error(str(traceback.extract_tb(traceback_object)))
-            #message does not contain the original exception thrown in recipe
-            if get_active_stack(self) != None:
-                self.logger.error("\n" +
-                    get_active_stack(self).toprettyxml(encoding='ascii'))
+            # Get the stacktrace and pretty print it:
+            # self.logger.error("\n" + " ".join(traceback.format_list(
+            #            traceback.extract_tb(traceback_object))))
+
             self.logger.error("*******************************************")
 
             self._send_mac_feedback(1)
@@ -104,7 +104,16 @@ class control(StatefulRecipe):
         else:
             self._send_mac_feedback(0)
             return 0
+        finally:
+            # always print a xml stats file
+            if get_active_stack(self) != None:
+                xmlfile = self.config.get("logging", "xml_stat_file")
+                try:
+                    fp = open(xmlfile, "w")
+                    fp.write(get_active_stack(self).toxml(encoding='ascii'))
+                    fp.close()
+                except Exception, except_object:
+                    self.logger.error("Failed opening xml stat file:")
+                    self.logger.error(except_object)
 
         return 0
-
-

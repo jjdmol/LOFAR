@@ -42,6 +42,24 @@ def get_active_stack(calling_object, stack_name="active_stack"):
     return None
 
 
+def add_child_to_active_stack_head(calling_object, child,
+                              stack_name="active_stack"):
+    """
+    Add the supplied child to the current active node in the active stack.
+    returns the added child on succes, None if not active stack was found.
+    Selection between active stacks can be done with the stack_name argument
+    """
+    active_stack = get_active_stack(calling_object, stack_name="active_stack")
+    if not active_stack == None:
+        active_stack_node = get_child(active_stack, stack_name)
+        last_child = active_stack_node.lastChild
+        if last_child != None:
+            last_child.appendChild(child)
+            return child
+
+    return None
+
+
 def enter_active_stack(calling_object, child,
              stack_name="active_stack", comment=None):
     """
@@ -83,7 +101,8 @@ def enter_active_stack(calling_object, child,
     if comment != None:
         stack_node.setAttribute("comment", comment)
 
-    active_stack_node.setAttribute("info", "Contains functions not left with a return")
+    active_stack_node.setAttribute("info",
+                             "Contains functions not left with a return")
     # if child is a string add a xml node with this name
     stacked_child = None
     if isinstance(child, basestring):
