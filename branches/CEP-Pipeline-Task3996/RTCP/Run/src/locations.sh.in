@@ -92,7 +92,7 @@ OLAP.Storage.HBADeltasDir = /data/home/lofarsys/production/lofar/etc/StaticMetaD
 OLAP.FinalMetaDataGatherer.host = lhn001
 OLAP.FinalMetaDataGatherer.userName = $USER
 OLAP.FinalMetaDataGatherer.sshIdentityFile = $HOME/id_rsa
-OLAP.FinalMetaDataGatherer.executable = $FINALMETADATAGATHERER
+OLAP.FinalMetaDataGatherer.executable = LD_LIBRARY_PATH= $FINALMETADATAGATHERER
 
 OLAP.FinalMetaDataGatherer.database.host = sas099
 

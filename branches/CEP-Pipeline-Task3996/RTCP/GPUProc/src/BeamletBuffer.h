@@ -57,7 +57,7 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> class BeamletBuffer
 {
   public:
-	     BeamletBuffer(const Parset *, std::string &stationName, unsigned rspBoard);
+	     BeamletBuffer(const Parset &, const std::string &stationName, unsigned rspBoard);
 
     void     writePacketData(const SAMPLE_TYPE *data, const TimeStamp &begin);
     void     writeMultiplePackets(const void *rspData, const std::vector<TimeStamp> &);

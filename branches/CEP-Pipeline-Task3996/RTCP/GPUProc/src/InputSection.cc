@@ -35,10 +35,11 @@ namespace LOFAR {
 namespace RTCP {
 
 
-template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Parset &parset, unsigned psetNumber)
+template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Parset &parset, const std::vector<Parset::StationRSPpair> &inputs)
 {
-  std::vector<Parset::StationRSPpair> inputs = parset.getStationNamesAndRSPboardNumbers(psetNumber);
-  string stationName = inputs.size() > 0 ? inputs[0].station : "none"; // TODO: support more than one station
+  ASSERT(inputs.size() > 0);
+
+  string stationName = inputs[0].station;
   itsNrRSPboards = inputs.size();
 
   itsLogPrefix = str(format("[station %s] ") % stationName);
@@ -46,7 +47,7 @@ template<typename SAMPLE_TYPE> InputSection<SAMPLE_TYPE>::InputSection(const Par
   itsBeamletBuffers.resize(itsNrRSPboards);
 
   for (unsigned rsp = 0; rsp < itsNrRSPboards; rsp ++)
-    itsBeamletBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(&parset, inputs[rsp].station, inputs[rsp].rsp);
+    itsBeamletBuffers[rsp] = new BeamletBuffer<SAMPLE_TYPE>(parset, inputs[rsp].station, inputs[rsp].rsp);
 
   createInputStreams(parset, inputs);
   createInputThreads(parset, inputs);

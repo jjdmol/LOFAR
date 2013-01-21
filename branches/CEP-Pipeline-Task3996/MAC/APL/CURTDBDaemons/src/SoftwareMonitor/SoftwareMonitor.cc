@@ -498,9 +498,9 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 		else {	// retrieval of time failed assume 'now'
 			iter->startTime = time(0);
 		}
-		LOG_DEBUG_STR("starttime of " << iter->name << " = " << to_simple_string(from_time_t(iter->startTime)));
+		LOG_DEBUG_STR("starttime of " << iter->name << " = " << to_iso_extended_string(from_time_t(iter->startTime)));
 		itsDPservice->setValue(iter->DPname+".process.startTime", 
-								GCFPVString(to_simple_string(from_time_t(iter->startTime))));
+								GCFPVString(to_iso_extended_string(from_time_t(iter->startTime))));
 		itsDPservice->setValue(iter->DPname+".process.processID", GCFPVInteger(iter->pid));
 		return;
 	}
@@ -541,9 +541,9 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 	// update stopTime is not done already.
 	if (iter->startTime > iter->stopTime) {
 		iter->stopTime = time(0);
-		LOG_DEBUG_STR("stoptime of " << iter->name << " = " << to_simple_string(from_time_t(iter->stopTime)));
+		LOG_DEBUG_STR("stoptime of " << iter->name << " = " << to_iso_extended_string(from_time_t(iter->stopTime)));
 		itsDPservice->setValue(iter->DPname+".process.stopTime", 
-									GCFPVString(to_simple_string(from_time_t(iter->stopTime))));
+									GCFPVString(to_iso_extended_string(from_time_t(iter->stopTime))));
 		itsDPservice->setValue(iter->DPname+".process.processID", GCFPVInteger(0));
 		iter->startTime = 0;
 	}

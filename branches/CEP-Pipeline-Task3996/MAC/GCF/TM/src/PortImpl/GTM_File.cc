@@ -53,10 +53,8 @@ GTMFile::GTMFile(GCFRawPort& port) :
 GTMFile::~GTMFile()
 {
 	close();
-
 	GTMFileHandler::release();
 	_pHandler = 0;
-
 	itsScheduler = 0;
 }
 
@@ -65,20 +63,17 @@ bool GTMFile::close()
 	bool result(true);
 
 	if (_fd > -1) { 
+		ASSERT(_pHandler);
 		_pHandler->deregisterFile(*this);
-
 		result = (::close(_fd) == 0);
-
 		if (!result) {
 			LOG_ERROR(formatString ( "::close, error: %s", strerror(errno)));
-
 			// there is nothing we can do at this point, since we cannot know
 			// whether the fd is still valid.
 		}
 
 		_fd = -1;
 	}
-
 	return result;
 }
 
@@ -129,7 +124,7 @@ void GTMFile::setBlocking(bool	blocking) const
 
 	int flags = fcntl(_fd, F_GETFL);
 
-    if (blocking) {
+	if (blocking) {
 		fcntl(_fd, F_SETFL, flags | O_NONBLOCK);
 	} else {
 		fcntl(_fd, F_SETFL, flags & ~O_NONBLOCK);

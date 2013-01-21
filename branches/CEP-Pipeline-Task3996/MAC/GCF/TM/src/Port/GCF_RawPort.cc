@@ -305,11 +305,8 @@ GCFEvent::TResult GCFRawPort::recvEvent()
 // Note:
 string GCFRawPort::getRealName() const
 {
-//	return (isSlave() ? _pMaster->getName() : _name);
-
 	GCFPort*	thePort = (isSlave() ? _pMaster : (GCFPort*)(this));
-	return (thePort->usesModernServiceName() ? 
-						thePort->makeServiceName() : thePort->getName());
+	return (thePort->usesModernServiceName() ? thePort->makeServiceName() : thePort->getName());
 }
 
   } // namespace TM

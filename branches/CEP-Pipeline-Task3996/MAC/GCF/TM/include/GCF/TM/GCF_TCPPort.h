@@ -52,10 +52,11 @@ class GCFTCPPort : public GCFRawPort
 public:// consturctors && destructors
     /// params see constructor of GCFPortInterface    
     GCFTCPPort (GCFTask& 		task,
-						 const string&	name,
-						 TPortType 		type,
-						 int 			protocol, 
-						 bool 			transportRawData = false);
+				const string&	name,
+				TPortType 		type,
+				int 			protocol, 
+				bool 			transportRawData = false,
+				bool			useUDP = false);
     
     /** default constructor 
      * GCFPortInterface params are:
@@ -75,7 +76,7 @@ public:// consturctors && destructors
                const string& name, 
                TPortType 	 type, 
                int 			 protocol, 
-               bool 		 transportRawData = false); 
+               bool 		 transportRawData = false);
 
     // open/close methods
     virtual bool open ();
@@ -83,8 +84,8 @@ public:// consturctors && destructors
       
     // send/recv functions
     virtual ssize_t send (GCFEvent& event);
-    virtual ssize_t recv (void* buf,
-                          size_t count);
+    virtual ssize_t send (void* buf, size_t count);		// for RAW ports
+    virtual ssize_t recv (void* buf, size_t count);
 
 	// Special auto-open mode that does the retries itself
 	// nrRetries		: -1 = infinite ; How often to retry the open when it fails.
@@ -106,6 +107,9 @@ public:// consturctors && destructors
     string getHostName();
     unsigned int getPortNumber();
 
+	// support of UDP
+	void useUDP(bool useIt) { itsUseUDP = useIt; }
+
 private:  
     /// copying is not allowed.
     GCFTCPPort (const GCFTCPPort&);
@@ -120,6 +124,7 @@ private:
 
 	void _handleConnect();
 	void _handleDisconnect();
+	GCFEvent::TResult _recvUDPevent();
     
 	// ----- Data Members -----
 protected: 
@@ -130,6 +135,7 @@ private:
     TPeerAddr				_addr;
     string					_host;
     unsigned int			_portNumber;
+	bool					itsUseUDP;
 	bool					itsFixedPortNr;
 	bool					itsAutoOpen;
 	unsigned int			itsAutoOpenTimer;

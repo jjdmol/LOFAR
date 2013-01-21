@@ -49,8 +49,15 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
   public:
-    BeamletBufferToComputeNode(const Parset &ps, const Matrix<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber, unsigned firstBlockNumber);
+    BeamletBufferToComputeNode(const Parset &ps, const std::string &stationName, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned firstBlockNumber);
     ~BeamletBufferToComputeNode();
+
+    struct header {
+      unsigned subband;
+      size_t nrSamples;
+      size_t sampleSize;
+      size_t nrDelays;
+    };
   
     void			 process( Stream *stream );
 
@@ -61,14 +68,12 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
 
     void			 computeDelays(), computeNextDelays();
 
-    void                         setMetaData( SubbandMetaData &metaData, unsigned psetIndex, unsigned subband );
     void                         sendSubband( Stream *stream, unsigned subband );
     
 
     void			 startTransaction();
     void			 writeLogMessage() const;
     void			 toStream( Stream *stream );
-    void			 toComputeNodes();
     void			 stopTransaction();
 
     std::string                  itsLogPrefix;
@@ -81,9 +86,6 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     std::vector<unsigned>	 itsSubbandToRSPboardMapping;
     std::vector<unsigned>	 itsSubbandToRSPslotMapping;
 
-    const Matrix<Stream *>       &itsPhaseOneTwoStreams;
-    const unsigned               itsNrPhaseOneTwoCoresPerPset;
-    
     const Parset		 &itsPS;
     
     TimeStamp			 itsCurrentTimeStamp;
@@ -92,24 +94,17 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     Matrix<double>		 itsDelaysAfterEnd;
     Matrix<casa::MVDirection>	 itsBeamDirectionsAtBegin;
     Matrix<casa::MVDirection>	 itsBeamDirectionsAfterEnd;
-    unsigned			 itsNrPhaseTwoPsets;
-    unsigned			 itsObservationID;
     
     unsigned			 itsMaxNetworkDelay; // in samples
     unsigned                     itsNrSubbands;
-    unsigned			 itsNrSubbandsPerPset;
     unsigned			 itsNrSamplesPerSubband;
     unsigned			 itsNrHistorySamples;
-    unsigned			 itsNrInputs;
+    unsigned			 itsNrRSPboards;
     unsigned			 itsNrBeams;
     unsigned			 itsMaxNrTABs;
     std::vector<unsigned>	 itsNrTABs;
 
-    unsigned			 itsCurrentPhaseOneTwoComputeCore;
-    unsigned			 itsPsetNumber;
-   
     const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &itsBeamletBuffers;
-    unsigned                     itsBlockNumber;
     SmartPtr<Delays>		 itsDelays;
     double			 itsSubbandBandwidth, itsSampleDuration;
     double			 itsClockCorrectionTime;

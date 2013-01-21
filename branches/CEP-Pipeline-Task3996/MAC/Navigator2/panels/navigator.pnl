@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 9 Navigator
 PANEL,-1 -1 1232 873 N "_3DFace" 0
@@ -190,6 +190,8 @@ LANG:1 6 Layer1
 0
 1 48 9 "" 5
 0
+1 49 9 "" 6
+0
 1 34 3 "" 6
 0
 1 35 3 "" 7
@@ -208,49 +210,29 @@ LANG:1 6 Layer1
 0
 1 43 6 "" 2
 0
-1 49 12 "" 0
-1 "selectionChanged" 1 1 "main()
-{
-  string aS;
-  getValue (\"\", \"namedActiveRegister\", aS);
-
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_currentTab\") ){
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".fw_currentTab\",aS);
-  }
-
-  setEvent(aS,\"TabChanged\");
-}" 0
- 
+1 50 12 "" 18
 0
-1 50 12 "" 5
+1 51 12 "" 13
 0
-1 51 12 "" 7
+1 52 12 "" 14
 0
-1 52 12 "" 9
+1 53 12 "0" 1
 0
-1 53 12 "" 11
+1 54 12 "1" 1
 0
-1 54 12 "" 13
+1 55 12 "2" 1
 0
-1 55 12 "" 14
+1 56 13 "" 9
 0
-1 56 12 "0" 1
+1 57 13 "" 11
 0
-1 57 12 "1" 1
+1 58 13 "" 16
 0
-1 58 12 "2" 1
+1 59 13 "" 17
 0
-1 59 13 "" 9
+1 60 16 "" 1
 0
-1 60 13 "" 11
-0
-1 61 13 "" 16
-0
-1 62 13 "" 17
-0
-1 63 16 "" 1
-0
-1 64 16 "" 2
+1 61 16 "" 2
 0
 15 33
 "CLOCK1"
@@ -265,19 +247,16 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 780 1 900 23
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  780 1 900 23
 E 1 1 "%H:%M:%S" "%d/%m/%y"
 1 1 1 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-
-1 65 20 "" 1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 
+1 62 20 "" 1
 0
 0
 LAYER, 1 
@@ -308,41 +287,41 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 3 "fw_topDetailSelection"
+3 3 "fw_topDetailSelection" -1
 "objects\\navigator_typeSelector.pnl" 1002 89 T 16 1 0 1 -260 -123
 2
 "$name""fw_topDetailSelection"
 "$selection""Hardware"
-3 4 "fw_bottomDetailSelection"
+3 4 "fw_bottomDetailSelection" -1
 "objects\\navigator_typeSelector.pnl" 1084 468 T 17 1 0 1 -344 -125
 2
 "$name""fw_bottomDetailSelection"
 "$selection""Processes"
-3 5 "fw_headLines"
+3 5 "fw_headLines" -1
 "objects\\navigator_headlines.pnl" 87 765 T 19 1 0 1 -87 -5
 1
 "$name""fw_headLines"
-3 6 "fw_locator"
+3 6 "fw_locator" -1
 "objects\\navigator_locator.pnl" 1065 798 T 20 1.00104275286757 0 1 -34.1105318039622 -36
 1
 "$name""fw_locator"
-3 9 "fw_progressBar"
-"objects\\navigator_progressBar.pnl" 815 767 T 23 1.305 0 1 -60.5749999999999 -6.999999999999972
+3 9 "fw_progressBar" -1
+"objects\\navigator_progressBar.pnl" 815 767 T 23 1.305 0 1 -81.57500000000002 -6.999999999999972
 1
 "$name""fw_progressBar"
-3 12 "fw_viewSelection"
+3 12 "fw_viewSelection" -1
 "objects\\navigator_viewSelection.pnl" -6 -6.99999999999989 T 25 0.996062992125984 0 1 5.976377952755904 6
 1
 "$name""fw_viewSelection"
-3 13 "fw_alerts"
+3 13 "fw_alerts" -1
 "objects\\navigator_alerts.pnl" 727 845 T 26 1 0 0.89 -737 29.0500000000001
 1
 "$name""fw_alerts"
-3 16 "PANEL_REF17"
+3 16 "PANEL_REF17" -1
 "objects\\navigator_fastJumper.pnl" 580 10 T 26 1 0 1 -10 -9
 1
 "$name""fw_fastJumper"
-3 20 "PANEL_REF21"
+3 20 "PANEL_REF21" -1
 "objects\\show_legenda.pnl" 500 110 T 28 1 0 1 -24 -7
 0
 0

@@ -21,14 +21,11 @@ install(PROGRAMS
 
 install(FILES
   BlueGeneControl.conf
+  casarc
   multitail-olap.conf
   OLAP.parset
   MAC+IP.dat
   RSPConnections.dat
-  DESTINATION etc)
-
-install(FILES
-  multitail-olap.conf
   DESTINATION etc)
 
 lofar_add_bin_program(CEPlogProcessorSettings CEPlogProcessorSettings.cc)

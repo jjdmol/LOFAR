@@ -36,3 +36,17 @@ python_install(
   addImagingInfo.py 
   get_rms_noise.py
   DESTINATION lofar)
+  
+# Suppress compiler warnings from casarest by disabling them for some sources
+set_source_files_properties(
+  LofarCubeSkyEquation.cc
+  LofarFTMachine.cc
+  LofarFTMachineOld.cc
+  LofarImager.cc
+  LofarVisResampler.cc
+  LofarVisResamplerOld.cc
+  awimager.cc
+  PROPERTIES COMPILE_FLAGS
+    "-Wno-extra -Wno-ignored-qualifiers -Wno-overloaded-virtual -Wno-unused"
+)
+

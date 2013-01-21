@@ -33,3 +33,10 @@ set(BLITZ_ROOT_DIR /globalhome/lofarsystem/packages/root/bgfen/blitz)
 set(LOG4CPLUS_ROOT_DIR /globalhome/lofarsystem/packages/root/bgfen/log4cplus)
 
 set(VALGRIND_ROOT_DIR /globalhome/mol/root-ppc)
+
+# Ignore warnings matching the following pattern(s)
+set(CTEST_CUSTOM_WARNING_EXCEPTION
+  "/boost/date_time/(gregorian|posix_time)/conversion.hpp:[0-9]+: warning: missing initializer for member"
+  "/mpicxx.h:[0-9]+: warning: unused parameter"
+)
+

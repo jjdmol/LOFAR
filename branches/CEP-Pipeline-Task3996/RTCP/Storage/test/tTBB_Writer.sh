@@ -11,7 +11,7 @@ touch tTBB_Writer.log
 
 nstreams = 6    # the nr of RSPs in NL stations
 
-parsetfilename = "tTBB_Writer.parset"
+parsetfilename = "tTBB_Writer-transient.parset" # does not belong to the test data, but good enough to test
 declare -a rawinfilenames
 outfilename = "unk.h5"
 declare -a rawoutfilenames
@@ -25,6 +25,10 @@ done
 
 ./runctest.sh TBB_Writer --parsetfile=$parsetfilename --timeout=1 --keeprunning=0 2>&1 >> tTBB_Writer.log
 
+# Ideally, we use h5check first to verify that the file is a proper hdf5 file,
+# but h5check is a separate util and usually not installed, so check content straight away.
+
+#can use lofar_tbb_headerinfo.py for a first guess/test
 ./tTBB_Writer-verify.py $outfilename 2>&1 >> tTBB_Writer.log
 STATUS = $?
 

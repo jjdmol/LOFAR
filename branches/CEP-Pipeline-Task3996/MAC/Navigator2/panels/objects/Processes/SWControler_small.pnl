@@ -20,13 +20,13 @@ PANEL,-1 -1 388 166 N "_3DFace" 2
       $name == \"BeamControl\" ||    // Station
       $name == \"TBBControl\") {    // Station
 
-    if (dpExists(\"MCU001:LOFAR_PermSW_MACScheduler.activeObservations\")) {
-      if (dpConnect(\"observationChanged\", \"MCU001:LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\",
-                                          \"MCU001:LOFAR_PermSW_MACScheduler.activeObservations:_online.._invalid\") == -1) {
-        LOG_ERROR(\"Observation_small.pnl:main|Couldn't connect to: MCU001:LOFAR_PermSW_MACScheduler.activeObservations\");
+    if (dpExists(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\")) {
+      if (dpConnect(\"observationChanged\", MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\",
+                                          MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._invalid\") == -1) {
+        LOG_ERROR(\"SWController_small.pnl:main|Couldn't connect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations\");
       }
     } else {
-      if (!isStandalone()) LOG_ERROR(\"Observation_small.pnl:main|Couldn't find DP to connect to: MCU001:LOFAR_PermSW_MACScheduler.activeObservations\");
+      if (!isStandalone()) LOG_ERROR(\"SWController_small.pnl:main|Couldn't find DP to connect to: \"+MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\");
     }
   }	else {
     reload();

@@ -39,7 +39,6 @@ namespace LOFAR {
 //
 ParameterSetImpl::ParameterSetImpl(KeyCompare::Mode	mode)
 	: KVMap(mode),
-	  itsCount (1),
 	  itsMode(mode)
 {}
 
@@ -49,7 +48,6 @@ ParameterSetImpl::ParameterSetImpl(KeyCompare::Mode	mode)
 ParameterSetImpl::ParameterSetImpl(const string&	theFilename,
 				   KeyCompare::Mode	mode)
 	: KVMap(mode), 
-	  itsCount (1),
 	  itsMode(mode)
 {
 	readFile(theFilename, "", false);
@@ -79,14 +77,16 @@ std::ostream&	operator<< (std::ostream& os, const ParameterSetImpl &thePS)
 // The baseKey is cut off from the Keynames in the created subset, the 
 // optional prefix is put before the keynames.
 //
-ParameterSetImpl* 
+shared_ptr<ParameterSetImpl>
 ParameterSetImpl::makeSubset(const string& baseKey, 
                              const string& prefix) const
 {
+  // Thread-safety.
+  ScopedLock locker(itsMutex);
   // Convert \a baseKey to lowercase, if we need to do case insensitve compare.
-  string            base   = (itsMode == KeyCompare::NOCASE) ? toLower(baseKey) : baseKey;
-  ParameterSetImpl* subSet = new ParameterSetImpl(itsMode);
-  iterator          pos    = subSet->begin();
+  string   base = (itsMode == KeyCompare::NOCASE) ? toLower(baseKey) : baseKey;
+  shared_ptr<ParameterSetImpl> subSet (new ParameterSetImpl(itsMode));
+  iterator pos  = subSet->begin();
 
   LOG_TRACE_CALC_STR("makeSubSet(" << baseKey << "," << prefix << ")");
 
@@ -117,6 +117,8 @@ ParameterSetImpl::makeSubset(const string& baseKey,
 //
 void ParameterSetImpl::subtractSubset(const string& fullPrefix) 
 {
+        // Thread-safety.
+        ScopedLock locker(itsMutex);
 	LOG_TRACE_CALC_STR("subtractSubSet(" << fullPrefix << ")");
 
 	// Convert \a baseKey to lowercase, if we need to do case insensitve compare.
@@ -173,11 +175,13 @@ void ParameterSetImpl::adoptBuffer(const string&	theBuffer,
 void ParameterSetImpl::adoptCollection(const ParameterSetImpl& theCollection,
 				       const string&	thePrefix)
 {
+  // Thread-safety.
+  ScopedLock locker(itsMutex);
   // Cannot adopt itself.
   if (&theCollection != this) {
     for (const_iterator iter = theCollection.begin();
          iter != theCollection.end(); ++iter) {
-      replace(thePrefix+iter->first, iter->second);
+      replaceUnlocked(thePrefix+iter->first, iter->second);
     }
   } else if (! thePrefix.empty()) {
     // However, adopt itself if a prefix is given.
@@ -185,19 +189,21 @@ void ParameterSetImpl::adoptCollection(const ParameterSetImpl& theCollection,
     KVMap tmp(theCollection);
     for (const_iterator iter = tmp.begin();
          iter != tmp.end(); ++iter) {
-      replace(thePrefix+iter->first, iter->second);
+      replaceUnlocked(thePrefix+iter->first, iter->second);
     }
   }
 }
 
 void ParameterSetImpl::adoptArgv (int nr, char const * const argv[])
 {
+  // Thread-safety.
+  ScopedLock locker(itsMutex);
   for (int i=0; i<nr; ++i) {
     string arg(argv[i]);
     // Only add arguments containing an =-sign.
     string::size_type eqs = arg.find('=');
     if (eqs != string::npos) {
-      replace (arg.substr(0, eqs), ParameterValue(arg.substr(eqs+1)));
+      replaceUnlocked(arg.substr(0, eqs), ParameterValue(arg.substr(eqs+1)));
     }
   }
 }
@@ -249,6 +255,8 @@ void ParameterSetImpl::readStream (istream& inputStream,
                                    const string& prefix,
                                    bool	merge)
 {
+  // Thread-safety.
+  ScopedLock locker(itsMutex);
   // Define key and value.
   string value;
   string key;
@@ -272,7 +280,8 @@ void ParameterSetImpl::readStream (istream& inputStream,
           } else {
             if (line[st] == '=') {
               if (! key.empty()) {
-                addMerge (key, value, merge);   // Add previous key/value to map
+                // Add previous key/value to map.
+                addMerge (key, value, merge);
                 value.erase();
               }
               // Use ParameterValue to get the key without possible quotes.
@@ -325,7 +334,7 @@ void ParameterSetImpl::addMerge (const string& key,
   if ((erase(key) > 0)  &&  !merge) {
     LOG_WARN ("Key " + key + " is defined twice; ignoring first value");
   }
-  add (key, ParameterValue(value));
+  addUnlocked (key, ParameterValue(value));
 }
 
 //------------------------- single pair functions ----------------------------
@@ -335,6 +344,8 @@ void ParameterSetImpl::addMerge (const string& key,
 ParameterSetImpl::const_iterator
 ParameterSetImpl::findKV(const string& aKey, bool doThrow) const
 {
+        // Thread-safety.
+        ScopedLock locker(itsMutex);
 	LOG_TRACE_CALC_STR("find(" << aKey << ")");
 
 	const_iterator	iter = find(aKey);
@@ -355,6 +366,13 @@ ParameterSetImpl::findKV(const string& aKey, bool doThrow) const
 //
 void ParameterSetImpl::add(const string& aKey, const ParameterValue& aValue)
 {
+  ScopedLock locker(itsMutex);
+  addUnlocked (aKey, aValue);
+}
+
+void ParameterSetImpl::addUnlocked(const string& aKey,
+                                   const ParameterValue& aValue)
+{
   if (!insert(make_pair(aKey, aValue)).second) {
     THROW (APSException, "add: Key " + aKey + " double defined?"); 
   }
@@ -365,6 +383,13 @@ void ParameterSetImpl::add(const string& aKey, const ParameterValue& aValue)
 //
 void ParameterSetImpl::replace(const string& aKey, const ParameterValue& aValue)
 {
+  ScopedLock locker(itsMutex);
+  replaceUnlocked (aKey, aValue);
+}
+
+void ParameterSetImpl::replaceUnlocked(const string& aKey,
+                                       const ParameterValue& aValue)
+{
   (*this)[aKey] = aValue;
 }
 
@@ -373,6 +398,7 @@ void ParameterSetImpl::replace(const string& aKey, const ParameterValue& aValue)
 //
 void ParameterSetImpl::remove(const string& aKey)
 {
+  ScopedLock locker(itsMutex);
   // remove any existed value
   erase(aKey);
 }
@@ -488,6 +514,7 @@ void ParameterSetImpl::writeBuffer(string&	aBuffer) const
 //
 void ParameterSetImpl::writeStream(ostream&	os) const
 {
+        ScopedLock locker(itsMutex);
 	// Write all the pairs to the file
 	const_iterator		curPair = begin();
 	while (curPair != end()) {
@@ -671,6 +698,7 @@ string	ParameterSetImpl::fullModuleName(const string&	shortKey) const
 
 vector<string> ParameterSetImpl::unusedKeys() const
 {
+  ScopedLock locker(itsMutex);
   vector<string> vec;
   for (const_iterator iter = begin(); iter != end(); ++iter) {
     if (itsAskedParms.find (iter->first) == itsAskedParms.end()) {

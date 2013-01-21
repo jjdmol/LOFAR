@@ -1295,7 +1295,8 @@ void navFunct_fillObservationsList() {
           if (found) break;
         }
       } else {
-        string station = stationList[1];
+        string station="";
+        if (dynlen(stationList) >=1) station = stationList[1];
         found = false;
         // check cabinets
         for (int c = 1; c<=dynlen(g_cabinetList); c++) {
@@ -1305,6 +1306,7 @@ void navFunct_fillObservationsList() {
           }
           if (found) break;
         }
+        
         
         if (!found) {
           // check subracks
@@ -1726,17 +1728,18 @@ void navFunct_fillStationLists() {
 //                               "CS301","CS302",
 //                               "CS401",
 //                               "CS501");
-  remoteStations = makeDynString("RS104","RS106",
-                                 "RS205","RS208","RS210"
-                                 "RS306","RS307","RS310",
-                                 "RS404","RS406","RS407","RS409","RS410",
+  remoteStations = makeDynString("RS106",
+                                 "RS205","RS208",
+                                 "RS305","RS306","RS307","RS310",
+                                 "RS406","RS407","RS409",
                                  "RS503","RS508","RS509");
 //  remoteStations = makeDynString("RS104","RS106","RS107",
 //                                 "RS205","RS206","RS207","RS208",
 //                                 "RS306","RS307","RS308","RS309","RS310","RS311",
 //                                 "RS404","RS406","RS407","RS408","RS409","RS410","RS411","RS412","RS413",
 //                                 "RS503","RS506","RS507","RS508","RS509");
-  europeStations = makeDynString("DE601","DE602","DE603","DE604","FR606","SE607","UK608");
+//  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608","FI609");
+  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608");
 }
 
 
