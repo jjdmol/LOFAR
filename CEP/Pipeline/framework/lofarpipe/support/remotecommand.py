@@ -14,10 +14,13 @@ import os
 import signal
 import threading
 import time
+import xml.dom.minidom as xml
 
 from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.utilities import spawn_process
 from lofarpipe.support.jobserver import job_server
+import lofarpipe.support.lofaringredient as ingredient
+from lofarpipe.support.xmllogging import add_child
 
 # By default, Linux allocates lots more memory than we need(?) for a new stack
 # frame. When multiplexing lots of threads, that will cause memory issues.
@@ -185,7 +188,8 @@ class ComputeJob(object):
         self.results['returncode'] = 123456 # Default to obscure code to allow
         # test of failing ssh connections
 
-    def dispatch(self, logger, config, limiter, id, jobhost, jobport, error, killswitch):
+    def dispatch(self, logger, config, limiter, id, jobhost, jobport,
+                  error, killswitch):
 
         """
         Dispatch this job to the relevant compute node.
@@ -193,6 +197,8 @@ class ComputeJob(object):
         Note that error is an instance of threading.Event, which will be set
         if the remote job fails for some reason.
         """
+        # time the duration of this node
+        time_info_start = time.time()
         self.id = id
         limiter[self.host].acquire()
         try:
@@ -237,10 +243,17 @@ class ComputeJob(object):
                 (self.command, self.arguments, self.host, process.returncode)
             )
             error.set()
+
+        # after node returned.
+        # add the duration of
+        time_info_end = time.time()
+        self.results["duration"] = str(time_info_end - time_info_start)
         self.results['returncode'] = process.returncode
+
         logger.debug("compute.dispatch results job {0}: {1}".format(
                     self.id, self.results))
         return process.returncode
+
 
 def threadwatcher(threadpool, logger, killswitch):
     """
@@ -277,6 +290,7 @@ def threadwatcher(threadpool, logger, killswitch):
         # alive (and hence not join()-able).
         [thread.join() for thread in threadpool if thread.isAlive()]
 
+
 class RemoteCommandRecipeMixIn(object):
     """
     Mix-in for recipes to dispatch jobs using the remote command mechanism.
@@ -312,4 +326,32 @@ class RemoteCommandRecipeMixIn(object):
                     )
                 )
             threadwatcher(threadpool, self.logger, killswitch)
+
+        # Add information regarding specific nodes to an xml node.
+        self.logger.debug("Adding node_logging_information")
+        local_document = xml.Document()
+        node_durations = local_document.createElement("nodes")
+        for job_id, job in enumerate(jobs):
+            # Test if the duration is there
+            if "duration" in job.results:
+                child_node_duration = add_child(node_durations, "job")
+                child_node_duration.setAttribute("job_id", str(job_id))
+                child_node_duration.setAttribute("duration",
+                     str(job.results["duration"]))
+                # return code if present (Not there on error
+                if "returncode" in job.results:
+                    child_node_duration.setAttribute(
+                        "returncode", str(job.results['returncode']))
+                else:
+                    child_node_duration.setAttribute(
+                        "returncode", str(-1))
+
+
+        # manually add the result xml as an ingredient output.
+        # this allows backward compatible logging: If not read an additional
+        # output does not matter
+        self.outputs._fields["return_xml"] = ingredient.StringField(
+                                                help="XML return data.")
+        self.outputs["return_xml"] = node_durations.toxml(encoding="ascii")
+
         return jobpool

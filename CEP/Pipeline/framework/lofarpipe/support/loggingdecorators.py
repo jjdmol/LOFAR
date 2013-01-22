@@ -165,9 +165,6 @@ def mail_log_on_exception(target):
 
             raise
 
-        calling_object.logger.info("pipeline_finished" + " xml summary:")
-        calling_object.logger.info("\n" + msg_string)
-
         # return the actual value of the function
         return return_value
 
