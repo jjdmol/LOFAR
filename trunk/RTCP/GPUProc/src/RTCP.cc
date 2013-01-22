@@ -1354,7 +1354,7 @@ CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, unsigned 
   correlateTriangleKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData),
   correlateRectangleKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData)
 #else
-  correlatorKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData);
+  correlatorKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData)
 #endif
 {
   queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), pipeline.filterBank.getWeights().origin());
@@ -1793,8 +1793,8 @@ void CorrelatorPipeline::doWork()
         double currentTime;
 
         for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) {
-#pragma omp critical (cout)
-          std::cout << "send station = " << stat << ", block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << std::endl;
+//#pragma omp critical (cout)
+          //std::cout << "send station = " << stat << ", block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << std::endl;
 
           sendNextBlock(stat);
         }
@@ -2335,7 +2335,7 @@ int main(int argc, char **argv)
     nrGPUs = str ? atoi(str) : 1;
 
     profiling = false; CorrelatorPipeline(ps).doWork();
-    //profiling = true; CorrelatorPipeline(ps).doWork();
+    profiling = true; CorrelatorPipeline(ps).doWork();
 
     //(CorrelatorTest)(ps);
     //(CorrelateRectangleTest)(ps);
