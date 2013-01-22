@@ -83,6 +83,9 @@ public:
 	// Save the given event on the task queue. It will be release by the scheduler on the next state transition.
 	void queueTaskEvent(GCFEvent&	event, GCFPortInterface&	port);
 
+	// Define function for eventBinding
+	typedef void (GCFFsm::*GCFFunction) (GCFEvent& event, GCFPortInterface& port);
+
 protected: // constructors && destructors
 	// Define TRANEvent
 	struct GCFTranEvent : public GCFEvent

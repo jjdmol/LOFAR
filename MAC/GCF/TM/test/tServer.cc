@@ -39,7 +39,7 @@ tServer::tServer(string name, uint	startupDelay) :
 {
 	registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_STRINGS);
 
-	itsListener = new GCFTCPPort(*this, "Echo:Server", GCFPortInterface::SPP, ECHO_PROTOCOL);
+	itsListener = new GCFTCPPort(*this, "Echo:Server", GCFPortInterface::MSPP, ECHO_PROTOCOL);
 	ASSERTSTR(itsListener, "failed to alloc listener");
 
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
@@ -86,6 +86,17 @@ GCFEvent::TResult tServer::connected(GCFEvent& event, GCFPortInterface& port)
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
+	case F_ACCEPT_REQ: {
+		GCFTCPPort* client = new GCFTCPPort();
+		client->init(*this, "client", GCFPortInterface::SPP, ECHO_PROTOCOL);
+		if (!itsListener->accept(*client)) {
+			delete client;
+		} else {
+			LOG_INFO("NEW CLIENT CONNECTED");
+		}
+	}
+	break;
+
 	case ECHO_PING: {
 		EchoPingEvent	ping(event);
 		EchoEchoEvent	echo;
@@ -93,8 +104,17 @@ GCFEvent::TResult tServer::connected(GCFEvent& event, GCFPortInterface& port)
 		echo.ping_time = ping.ping_time;
 		echo.someName = formatString("Echo event has seqnr %d", echo.seqnr);
 		port.send(echo);
+		if (ping.seqnr == 192837) {		// magic 'disconnect' seqnr?
+			port.close();
+		}
 		break;
 	}
+
+    case F_DISCONNECTED:
+		LOG_DEBUG_STR("SERVER received 'disconnect', closing port");
+		port.close();
+//		TRAN(tServer::initial);	// hope this will work...
+		break;
 
 	default:
 		status = GCFEvent::NOT_HANDLED;

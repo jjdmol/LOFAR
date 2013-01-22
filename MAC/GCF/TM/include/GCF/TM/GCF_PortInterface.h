@@ -106,7 +106,7 @@ public:
     * Attribute access functions
     */
     const string&	getName ()     	const 		{ return _name; }
-    void			setName(const string& name) { _name = name; }
+//    void			setName(const string& name) { _name = name; }
     TPortType		getType ()     	const 		{ return _type; }
     bool			isConnected () 	const 		{ return _state==S_CONNECTED; }
     TSTATE			getState ()    	const 		{ return _state; }
