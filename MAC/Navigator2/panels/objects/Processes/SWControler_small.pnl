@@ -20,13 +20,13 @@ PANEL,-1 -1 388 166 N "_3DFace" 2
       $name == \"BeamControl\" ||    // Station
       $name == \"TBBControl\") {    // Station
 
-    if (dpExists(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\")) {
+    if (navFunct_dpReachable(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\")) {
       if (dpConnect(\"observationChanged\", MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\",
                                           MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._invalid\") == -1) {
         LOG_ERROR(\"SWController_small.pnl:main|Couldn't connect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations\");
       }
     } else {
-      if (!isStandalone()) LOG_ERROR(\"SWController_small.pnl:main|Couldn't find DP to connect to: \"+MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\");
+      if (!isStandalone()) LOG_ERROR(\"SWController_small.pnl:main|\"+MainDBName+\" seems offline\");
     }
   }	else {
     reload();
@@ -49,7 +49,7 @@ private void observationChanged(string dp1, dyn_string observations,
 private void reload() {
   
   // check if the required datapoint for this view are enabled and accessible
-  if (dpExists(baseDP+\".process.startTime\")) {
+  if (navFunct_dpReachable(baseDP+\".process.startTime\")) {
     if (dpConnect(\"updateSWController\", baseDP +\".process.startTime:_online.._value\",
                                         baseDP +\".process.stopTime:_online.._value\",
                                         baseDP +\".process.stopTime:_online.._invalid\",
@@ -57,29 +57,44 @@ private void reload() {
       setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
     }
   } else {
-    setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"process\", \"backCol\", \"Lofar_dpOffline\");
 
   }	
 }
 
-updateSWController(string dp1, time start,
-                   string dp2, time stop,
+updateSWController(string dp1, string sStart,
+                   string dp2, string sStop,
                    string dp3, bool stopInvalid,
                    string dp4, bool startInvalid)
 {
-  setValue(\"process\",\"toolTipText\",baseDP);
-  if (! startInvalid) {
-      setValue(\"process\", \"backCol\", \"Lofar_invalid\");
-      if (stopInvalid) {
-        setValue(\"process\", \"backCol\", \"green\");
-      } else if (start > stop) {
-        setValue(\"process\", \"backCol\", \"green\");
-      } else if (stop >= start) {
-        setValue(\"process\", \"backCol\", \"red\");
-      }        
+  bool startError=false;
+  bool stopError=false;
+  time start=0;
+  time stop=0;
+
+  if (startInvalid) {
+    setValue(\"process\", \"backCol\", \"Lofar_invalid\");
+    if (stopInvalid) {
+      setValue(\"process\",\"toolTipText\",baseDP+ \"<br> start: invalid <br> stop : invalid\");
     } else {
-      setValue(\"process\", \"backCol\", \"red\");
+      setValue(\"process\",\"toolTipText\",baseDP+ \"<br> start: invalid <br> stop : \"+sStop);
     }
+    return;
+  }
+  setValue(\"process\",\"toolTipText\",baseDP+ \"<br> start: \"+sStart + \"<br> stop : \"+sStop);
+  
+  if (sStart != \"\") startError = navFunct_lofarDate2PVSSDate(sStart,start);
+  if (sStop != \"\") stopError = navFunct_lofarDate2PVSSDate(sStop,stop);
+  
+  if (!startError || (!stopError && sStop != \"\")) {
+    setValue(\"process\", \"backCol\", \"red\");
+  } else if (start > stop) {
+    setValue(\"process\", \"backCol\", \"green\");
+  } else if (stop >= start) {
+    setValue(\"process\", \"backCol\", \"red\");
+  } else {       
+    setValue(\"process\", \"backCol\", \"red\");
+  }
 }" 0
  E "main(int x, int y)
 {
@@ -119,9 +134,11 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"SWcontroller_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
-    navPanel_setEvent(station,\"ChangePanel\");
+    //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.
+    navPanel_setEvent(\"Processes\",\"ChangeTab\");
   }
-  
+
+
   // set delay to avoid click event will be triggered
   delay(0, 500);
   bDoubleClicked = false;  
