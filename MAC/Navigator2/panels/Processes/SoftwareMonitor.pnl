@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 1013 750 N "_3DFace" 0
@@ -10,7 +10,37 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   baseDP         = g_currentDatapoint;
   database = dpSubStr(baseDP,DPSUB_SYS);
   
+  
+  // check if the requiered datapoint for this view are enabled and accessible
+  if (dpExists(baseDP + \".SWLevel\")) {
+    if (dpConnect(\"updateSoftwareMonitor\", baseDP + \".SWLevel\",
+                                           baseDP + \".SWLevel:_online.._invalid\") == -1) {
+      LOG_ERROR(\"SoftwareMonitor.pnl:main|Couldn't connect to: \"+baseDP);
+    }
+    if (!navFunct_dpReachable(baseDP)) {
+      updateSoftwareMonitor(\"\",false,\"\",0,\"\",true);
+    }
+  } else {
+    LOG_ERROR(\"SoftwareMonitor.pnl:main|Couldn't find DP to connect to: \"+baseDP);
+    setValue(\"SWLevelText\", \"backCol\", \"Lofar_dpdoesnotexist\");
+  } 
+  
   reload();
+}
+
+private void updateSoftwareMonitor(string dp1, int SWLevel,
+                                   string dp2, bool invalid)
+{
+  LOG_DEBUG(\"SoftwareMonitor.pnl:updateSoftwareMonitor|entered with SWLevel: \"+ SWLevel);  
+  if (!invalid) {
+    setValue(\"SWLevelText\", \"text\", SWLevel);
+  } else {
+    string SymbolCol = \"Lofar_invalid\";
+    if (dp1 == \"\") {
+      SymboLCol = \"Lofar_dpOffline\";
+    }
+    setValue(\"SWLevelText\", \"backCol\", SymbolCol);
+  }  
 }
 
 void prepareProcesses() {
@@ -110,12 +140,12 @@ LANG:1 0
 0
 1 64 0 "" 20
 0
-2 47
-"PRIMITIVE_TEXT7"
+2 67
+"PRIMITIVE_TEXT11"
 ""
-1 30 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 32 334 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-21 0 0 0 0 0
+24 0 0 0 0 0
 E E E
 0
 1
@@ -123,13 +153,28 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 320 60 334
-0 2 2 "0s" 0 0 0 192 0 0  30 320 1
+E E 0 1 1 2 1 E U  1 E 32 334 87 347
+0 2 2 "0s" 0 0 0 192 0 0  32 334 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
+LANG:1 8 SWLevel:
+14 68
+"SWLevelText"
+""
+1 162 330 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+25 0 0 0 0 0
+E E E
+0
 1
-LANG:1 4 None
+LANG:1 0 
+
+0
+1
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  160 328 284 349
+2 "0s" 0 0 0 0 0 -1  E E E
 0
 LAYER, 1 
 1
@@ -159,7 +204,7 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 0 "PANEL_REF1"
+3 0 "PANEL_REF1" -1
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
 "$ctrlName""SoftwareMonitor"

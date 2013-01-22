@@ -44,7 +44,8 @@
 void navProgressCtrl_handleObservation(string selection){
   LOG_TRACE("navProgressCtrl.ctl:navProgressCtrl_handleObservation|entered with: "+selection);
 
-  string toolText=selection;
+  string toolText="";
+  float percentDone=0;
   
   int startpos =strpos(selection,"Observation");
 
@@ -57,12 +58,26 @@ void navProgressCtrl_handleObservation(string selection){
   
   // find  starttime and endtime and current time and calculate %done
   
+  string sStart, sStop;
   time start,stop;
-  dpGet(obsDP+".startTime",start);
-  dpGet(obsDP+".stopTime",stop);
-  LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| start: "+start);  
-  LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| stop:" +stop);  
+  dpGet(obsDP+".startTime",sStart);
+  dpGet(obsDP+".stopTime",sStop);
+  if (!navFunct_lofarDate2PVSSDate(sStart,start)) {
+      LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation|illegal startTime: "+sStart);
+  // change progressBar
+  dpSet(PROGRESSBARACTIONDP,"Update|"+percentDone+"|"+toolText);
+      return;
+    }
+  if (!navFunct_lofarDate2PVSSDate(sStop,stop))  {
+      LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation|illegal stopTime: "+sStop);
+      return;
+    }
   
+  LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| start: "+start);  
+  LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| stop:" +stop);
+
+    
+  toolText=selection;
   int duration=period(stop) - period(start);
 
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| Duration: "+duration);
@@ -73,11 +88,10 @@ void navProgressCtrl_handleObservation(string selection){
   int finished=period(getCurrentTime())-period(start);
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| finished: "+finished);  
   
-  float percentDone=0;
   if (percent > 0) {
     percentDone = finished/percent;
   }
-  DLOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| PercentDone: "+percentDone);
+  LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| PercentDone: "+percentDone);
   // change progressBar
   dpSet(PROGRESSBARACTIONDP,"Update|"+percentDone+"|"+toolText);
   
