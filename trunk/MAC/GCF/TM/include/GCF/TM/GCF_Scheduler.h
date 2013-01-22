@@ -161,9 +161,16 @@ public:
     static int _argc;
     static char** _argv;
    
+	// Queue-related commands
 	void queueEvent(GCFFsm*	task, GCFEvent&	event, GCFPortInterface* port);
 	void printEventQueue();
 	void disableQueue() { itsUseQueue = false; }
+
+	// Event binding
+	typedef void (GCFFsm::*GCFFunction) (GCFEvent& event, GCFPortInterface& port);
+	bool 	bindEvent    (uint16 signal, const GCFPortInterface* port, const GCFFsm* task, GCFFunction funct, bool fixed);
+	void 	deleteBinding(uint16 signal, const GCFPortInterface* port, const GCFFsm* task);
+	ssize_t	nrBindings() const { return (itsRouteList.size()); }
 
 protected:
 	// makes sure that the current task makes a transition to the new state.
@@ -172,11 +179,16 @@ protected:
 	friend class GCFFsm;	// to use this queueTransition function.
 
 private:
+	// Queue related private functions.
 	void				_addEvent   (GCFFsm* task, GCFEvent& event, GCFPortInterface* port);
 	void 				_injectEvent(GCFFsm* task, GCFEvent& event, GCFPortInterface* port, bool deepCopy=true);
 	GCFEvent::TResult	_sendEvent  (GCFFsm* task, GCFEvent& event, GCFPortInterface* port);
 	bool 				_isInEventQueue(GCFEvent*	someEvent, GCFPortInterface*    somePort);
 	void				_injectParkedEvents();
+	// Event binding private functions.
+	GCFFunction			_searchBinding(uint16	signal, const GCFPortInterface*	port, const GCFFsm* task, bool fixed) const;
+	bool				_findBinding  (uint16	signal, const GCFPortInterface*	port, const GCFFsm* task) const;
+	void				_showBindings () const;
 
     // Singleton
     GCFScheduler();
@@ -190,6 +202,7 @@ private:
 	// give a stop signal to all the handlers
 	void stopHandlers();
 
+	bool _handleEvent(GCFFsm* task, GCFEvent* event, GCFPortInterface*    port, bool cloneEvent);
 	void handleEventQueue();
 
 	// --- DATA MEMBERS ---
@@ -223,6 +236,19 @@ private:
 	bool	itsIsInitialized;
 
 	bool	itsUseQueue;
+
+	// Route administration
+	class RouteInfo {
+	public:
+		RouteInfo(uint16 s, const GCFPortInterface* p, const GCFFsm* t, GCFFunction f, bool fixed) :
+			signal(s), port(p), task(t), funct(f), isFixed(fixed) {};
+		uint16					signal;
+		const GCFPortInterface*	port;
+		const GCFFsm*			task;
+		GCFFunction				funct;
+		bool					isFixed;
+	};
+	list<RouteInfo>		itsRouteList;
 
 	// Dummy port to be passed in event we make.
     GCFDummyPort*			itsFrameworkPort;
