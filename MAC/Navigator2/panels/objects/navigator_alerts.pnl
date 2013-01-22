@@ -169,7 +169,7 @@ void ackAllClicked() {
 
       // ok rest should be possible to acknowledge
       // find the entry in the table
-      DebugN(\"navigator_alerts.pnl:ackAllClicked| g_alarms: \",g_alarms[\"DPNAME\"]);
+      if (g_alarms[\"DPNAME\"] == \"\") return;
       if ( dynlen(g_alarms[\"DPNAME\"]) >= 1) {
         iPos=dynContains(g_alarms[\"DPNAME\"],dp);  
   

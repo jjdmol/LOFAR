@@ -50,15 +50,18 @@ private void reload() {
   
   // check if the required datapoint for this view are enabled and accessible
   if (navFunct_dpReachable(baseDP+\".process.startTime\")) {
-    if (dpConnect(\"updateSWController\", baseDP +\".process.startTime:_online.._value\",
-                                        baseDP +\".process.stopTime:_online.._value\",
-                                        baseDP +\".process.stopTime:_online.._invalid\",
-                                        baseDP +\".process.startTime:_online.._invalid\") == -1) {
-      setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    }
+    if (dpExists(baseDP+\".process.startTime\")) {
+      if (dpConnect(\"updateSWController\", baseDP +\".process.startTime:_online.._value\",
+                                          baseDP +\".process.stopTime:_online.._value\",
+                                          baseDP +\".process.stopTime:_online.._invalid\",
+                                          baseDP +\".process.startTime:_online.._invalid\") == -1) {
+        setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
+      }
+    } else {
+        setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    } 
   } else {
     setValue(\"process\", \"backCol\", \"Lofar_dpOffline\");
-
   }	
 }
 
