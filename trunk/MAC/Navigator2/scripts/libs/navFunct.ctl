@@ -2194,7 +2194,9 @@ bool navFunct_lofarDate2PVSSDate(string inDate, time& t) {
     if (dynlen(strsplit(splittedTime[1],":")) != 3 ) return false;
     tm = splittedTime[1];
   }
-  if (dynlen(strsplit(splittedDate[1],"-")) != 3) return false;
+  dyn_string spl_date=strsplit(splittedDate[1],"-");
+  if (dynlen(spl_date) != 3) return false;
+  if (strlen(spl_date[2]) > 2) return false;
   // change - into . notation
   date=splittedDate[1];
   strreplace(date,"-",".");
