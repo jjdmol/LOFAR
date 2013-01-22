@@ -166,3 +166,34 @@ class xmlloggingTest(unittest.TestCase):
 
 
         xmllogging.exit_active_stack(an_object, stack_name="test_stack")
+
+
+    def test_add_child_to_active_stack_head(self):
+        class a_class(object):
+            def __init__(self):
+                pass
+
+        local_document = xml.Document()
+        created_node = local_document.createElement("Tester")
+
+        an_object = a_class()
+        return_value = xmllogging.add_child_to_active_stack_head(an_object,
+                        created_node)
+
+        self.assertTrue(return_value == None,
+            "function should return None when adding child when no active stack is there ")
+
+
+        xmllogging.enter_active_stack(an_object, "test")
+        # Add the chilf
+        return_value = xmllogging.add_child_to_active_stack_head(an_object,
+                                                           created_node)
+        # get the stack
+        stack = xmllogging.get_active_stack(an_object)
+        stack_text = stack.toxml()
+        goal_text = """<active_stack Name="a_class" type="active_stack"><active_stack info="Contains functions not left with a return"><test><Tester/></test></active_stack></active_stack>"""
+        # The node text should have a Tester node added
+        xmllogging.exit_active_stack(an_object)
+
+        self.assertEqual(stack_text, goal_text,
+            "THe created xml structure is not correct")

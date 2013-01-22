@@ -13,6 +13,7 @@ import os
 import sys
 import logging
 import errno
+import xml.dom.minidom as xml
 
 import lofarpipe.support.utilities as utilities
 from lofarpipe.support.lofarexceptions import PipelineException, PipelineRecipeFailed
@@ -20,6 +21,8 @@ from lofarpipe.cuisine.WSRTrecipe import WSRTrecipe
 from lofarpipe.cuisine.cook import CookError
 from lofarpipe.support.lofaringredient import RecipeIngredients, LOFARinput, LOFARoutput
 from lofarpipe.support.data_map import DataMap
+from lofarpipe.support.xmllogging import add_child_to_active_stack_head
+
 
 class BaseRecipe(RecipeIngredients, WSRTrecipe):
     """
@@ -147,6 +150,14 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
                 "%s reports failure (using %s recipe)" % (configblock, recipe)
             )
             raise PipelineRecipeFailed("%s failed" % configblock)
+
+        # Get the (optional) node xml information
+        if "return_xml" in outputs:
+            return_node = xml.parseString(
+                                outputs['return_xml']).documentElement
+            # If no active stack, fail silently.
+            add_child_to_active_stack_head(self, return_node)
+
         return outputs
 
     def _read_config(self):
