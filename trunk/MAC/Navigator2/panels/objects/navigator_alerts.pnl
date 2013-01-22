@@ -169,6 +169,7 @@ void ackAllClicked() {
 
       // ok rest should be possible to acknowledge
       // find the entry in the table
+      DebugN(\"navigator_alerts.pnl:ackAllClicked| g_alarms: \",g_alarms[\"DPNAME\"]);
       if ( dynlen(g_alarms[\"DPNAME\"]) >= 1) {
         iPos=dynContains(g_alarms[\"DPNAME\"],dp);  
   
@@ -338,11 +339,13 @@ void rewriteAlarms() {
 }
 
 void acknowledgeAlarm(int iPos,time timeStamp,string dp,string message,int status) {
+  LOG_DEBUG(\"navigator_alerts.pnl:acknowledgeAlarms| entered with:\",iPos,timeStamp,dp, message, status);
   // if iPos < 1 there was no entry in the globalmap, so we can drop the item since the datapoint was illegal
   if (iPos < 1) {
     for (int i=1;i<dynlen(g_alarms[ \"TIME\" ]);i++) {
       if (g_alarms[ \"TIME\"][i] == timeStamp) {
         if (g_alarms[ \"MESSAGE\"][i] == message && g_alarms[ \"STATUS\" ][i] == status) {
+          DebugN(\"removing from g_alarms\");
           dynRemove(g_alarms[\"DPNAME\" ],i);
           dynRemove(g_alarms[\"TIME\"   ],i);  
           dynRemove(g_alarms[\"STATE\"  ],i);
@@ -494,7 +497,7 @@ LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
 2 16
 "PRIMITIVE_TEXT1"
 ""
-1 968 -10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 966 -43.33333333333334 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 28 0 0 0 0 0
 E E E

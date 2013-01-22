@@ -160,7 +160,7 @@ main()
 
 EP_childPanelOn()
 {
-  if ( isdir (\"d:/data/TRUNK-Navigator2\")) {
+  if ( isdir (\"d:/data/TRUNK-Navigator2\") || getenv(\"HOSTNAME\") == \"kis001\") {
     ChildPanelOnCentral(\"Test/Event_Viewer.pnl\",
                         \"Test Panel\",
                         makeDynString(\"\"));
@@ -185,7 +185,7 @@ EP_childPanelOn()
 22 14
 "panelChoice"
 ""
-1 860 50 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+1 860 34 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
  E E
 15 0 0 0 0 0
 E E E
@@ -196,7 +196,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  858 48 1012 69
+0  858 32 1012 53
 0
 
 E

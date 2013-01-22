@@ -59,6 +59,7 @@
 // navFunct_getReceiverBitmap                 : returns the stations receiverBitMap for a given observation
 // navFunct_getRingFromStation                : Returns the ringName from a stationName
 // navFunct_getStationFromDP                  : get the stationname out of a DP name (if any)
+// navFunct_giveFadedColor                    : returns faded color string between green and red depending on min,max and currentValue
 // navFunct_hardware2Obs                      : Looks if a piece of hardware maps to an observation
 // navFunct_inputBuf2CEPName                  : Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
 // navFunct_IONode2BGPMidplane                : Returns the BGPMidplaneNr for a given IONode
@@ -66,6 +67,7 @@
 // navFunct_isBGPSwitch                       : returns the BGPSwitch setting (True = BGPRack1, False=BGPRack0)
 // navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
 // navFunct_locusNode2OSRack                  : Returns the OSRackNr for a given LocusNode
+// navFunct_lofarDate2PVSSDate                : returns Lofardate Datestring 2000.11.19 [18:12:21[.888]] in PVSS format 2000.11.19 [18:12:21[.888]]
 // navFunct_ObsToTemp                         : returns the temp observationname
 // navFunct_queryConnectObservations          : Queryconnect to keep track of all observations
 // navFunct_receiver2Cabinet                  : Returns the CabinetNr for a RecieverNr
@@ -2165,3 +2167,87 @@ string navFunct_formatInt(int val,int maxval) {
   return ret;
 }
     
+// ***************************
+// navFunct_lofarTime2PVSSTime
+// ***************************
+// inDate : the input datestring in the format 2000.11.19[ 18:12:21[.888]]
+// outDate: the date in PVSS format 2000.11.19[ 18:12:21[.888]] or empty string
+//
+// Returns true or false in case of an error
+// ***************************
+bool navFunct_lofarDate2PVSSDate(string inDate, time& t) {
+  string outDate="";
+  string date ="";
+  string tm   = "";
+  string mSec = "";
+  t=0;
+
+  if (inDate == "") return false;
+  // expects the date in   2000-05-19[ 10:22:12[.123]]  format, so check this
+  dyn_string splittedDate = strsplit(inDate," ");
+  if (dynlen(splittedDate) < 1) return false;
+  if (dynlen(splittedDate) >= 2) {      // Time available, so split that also
+    dyn_string splittedTime = strsplit(splittedDate[2],".");
+    if (dynlen(splittedTime) >= 2) {      // mSec available
+      mSec=splittedTime[2];
+    }
+    if (dynlen(strsplit(splittedTime[1],":")) != 3 ) return false;
+    tm = splittedTime[1];
+  }
+  if (dynlen(strsplit(splittedDate[1],"-")) != 3) return false;
+  // change - into . notation
+  date=splittedDate[1];
+  strreplace(date,"-",".");
+  
+  
+  outDate += date;
+  if (tm != "") outDate += " "+tm;
+  if (mSec != "") outDate += "."+mSec;
+  t = scanTimeUTC(outDate);
+    
+  return true;
+}
+
+// ***************************
+// navFunct_giveFadedColor
+// ***************************
+// minValue     :  Minimal Value for the given currentValue
+// maxValue     :  Maximal Value for the given currentValue
+// currentValue :  The currentValue
+//
+// returns:     : String containing the RGB color values between green and red in the form: {0,255,0}
+// ***************************
+
+string navFunct_giveFadedColor(int minValue, int maxValue,int currentValue) {
+  
+  string error = "navFunct.ctl:givefadedColor|ERROR: ";
+  if (maxValue < minValue || currentValue < minValue || currentValue > maxValue) {
+    if (maxValue < minValue) {
+      error+="maxvalue ("+ maxValue+") < minValue ("+minValue+")";
+    } else {
+      error += "currentValue ("+currentValue+") out of bounds ("+minValue+") <> ("+maxValue+")";
+    }
+    LOG_ERROR(error);
+    return "{0,0,0}";
+  }
+  
+  int r,g,b,perc;
+  string color="";
+  float step;
+
+  step = (maxValue-minValue)/100;
+  
+  perc = currentValue/step;
+  
+  if (perc < 50) {
+    r = 0+(255-0) * perc/50.0;
+    g = 255+(255-255) * perc/50.0;
+    b = 0;
+  } else {
+    r = 255+(255-255) * (perc-50.0)/50.0;
+    g = 255+(0-255) * (perc-50.0)/50.0;
+    b = 0;    
+  }      
+  color="{"+r+","+g+","+b+"}";
+  return color;
+}

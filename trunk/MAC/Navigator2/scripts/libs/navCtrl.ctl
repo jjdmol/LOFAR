@@ -67,7 +67,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   dyn_string aSelection;
   string selection="";
   
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".fw_viewBox.selection")) {
+   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".fw_viewBox.selection")) {
     dpGet(DPNAME_NAVIGATOR + g_navigatorID+".fw_viewBox.selection", aSelection);
   } else {
     LOG_WARN("navCtrl.ctl:navCtrl_handleViewBoxEvent| Error getting selection from : " + DPNAME_NAVIGATOR + g_navigatorID+".fw_viewBox.selection");

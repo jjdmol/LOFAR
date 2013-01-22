@@ -12,10 +12,14 @@ PANEL,-1 -1 251 88 N "_3DFace" 1
   
   baseDP = station+\":LOFAR_PermSW_Daemons_SoftwareMonitor\";
   
-  if (dpExists(baseDP)) {
-    showLevels();
+  if (navFunct_dpReachable(baseDP)) {
+    if (dpExists(baseDP)) {
+      showLevels();
+    } else {
+      station_text.foreCol(\"Lofar_dpdoesnotexist\");
+    }
   } else {
-    station_text.foreCol(\"Lofar_dpdoesnotexist\");
+      station_text.foreCol(\"Lofar_dpOffline\");
   }
 }
 " 0
@@ -47,7 +51,7 @@ void dblClick(string name) {
     LOG_DEBUG(\"swlevel.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
     if (name == station) {
-      DebugN(\"dblClic with: \"+name+\" currentDP: \"+g_currentDatapoint);
+      DebugN(\"dblClick with: \"+name+\" currentDP: \"+g_currentDatapoint);
       navPanel_setEvent(station,\"ChangePanel\");
     } else {
       //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.
@@ -80,43 +84,47 @@ showLevels()
   string systemName = dpSubStr(dpLvl,DPSUB_SYS);
   string bareDP     = dpSubStr(dpLvl,DPSUB_DP_EL_CONF_DET_ATT);
 
-  if(dpExists(dpLvl)) {
-    // gather the historical data:
-    dyn_dyn_anytype tab;
-    int z;
-    time tStart;
-    time tStop;
-    tStop = getCurrentTime();
-    tStart = tStop - 15*3600; // 15 hours of history
+  if (navFunct_dpReachable(dpLvl)) {
+    if(dpExists(dpLvl)) {
+      // gather the historical data:
+      dyn_dyn_anytype tab;
+      int z;
+      time tStart;
+      time tStop;
+      tStop = getCurrentTime();
+      tStart = tStop - 15*3600; // 15 hours of history
 	
-    string query=\"\";
+      string query=\"\";
             
-    if (systemName != MainDBName) {     
-      query = \"SELECT ALL '_original.._value','_original.._stime' FROM '\" + dpLvl + \"' REMOTE'\"+systemName +\"' TIMERANGE(\\\"\" +
-              formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
-              formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 15\";
-    } else {
-      query = \"SELECT ALL '_original.._value','_original.._stime' FROM '\" + dpLvl + \"' TIMERANGE(\\\"\" +
-              formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
-              formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 15\";
-    }
+      if (systemName != MainDBName) {     
+        query = \"SELECT ALL '_original.._value','_original.._stime' FROM '\" + dpLvl + \"' REMOTE'\"+systemName +\"' TIMERANGE(\\\"\" +
+                formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+                formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 15\";
+      } else {
+        query = \"SELECT ALL '_original.._value','_original.._stime' FROM '\" + dpLvl + \"' TIMERANGE(\\\"\" +
+                formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+                formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 15\";
+      }
 
-    dpQuery(query, tab);
+      dpQuery(query, tab);
 	 	 
 	 	
-    for(z=2;z<dynlen(tab);z++) {
-      addLevel(tab[z][2],tab[z][3]);
-    }
+      for(z=2;z<dynlen(tab);z++) {
+        addLevel(tab[z][2],tab[z][3]);
+      }
 	
-    // connect to levels
-    if (dpConnect(\"updateLevel\",dpLvl,
-                                dpLvl+\":_original.._stime\",
-                                dpLvl+\":_online.._invalid\") == -1) {
-      LOG_ERROR(\"swlevel.pnl:showLevels|Couldn't connect to \"+dpLvl+ \" \" + getLastError());
-    }
+      // connect to levels
+      if (dpConnect(\"updateLevel\",dpLvl,
+                                  dpLvl+\":_original.._stime\",
+                                  dpLvl+\":_online.._invalid\") == -1) {
+        LOG_ERROR(\"swlevel.pnl:showLevels|Couldn't connect to \"+dpLvl+ \" \" + getLastError());
+      }
+    } else {
+      LOG_DEBUG(\"swlevel.pnl:showLevels|error connecting to: \"+ dpLvl);
+    }    
   } else {
-    LOG_DEBUG(\"swlevel.pnl:showLevels|error connecting to: \"+ dpLvl);
-  }    
+    station_text.foreCol(\"Lofar_dpOffline\");
+  }
 }
 
 // ****************************************
@@ -166,6 +174,7 @@ addLevel(int lvl,string changed)
   string oldlvl=\"white\";
   string oldToolTip = \"\";
   for (int i=15-filled; i< 15 ;i++) {
+    if (i=0) continue;
     // get the original color and tooltip from the next right point and move it to this point
     getValue(\"level\"+(i+1)+\"_text\",\"backCol\",oldlvl);
     setValue(\"level\"+(i)+\"_text\",\"backCol\",oldlvl);
