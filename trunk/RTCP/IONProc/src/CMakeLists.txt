@@ -34,6 +34,10 @@ lofar_add_library(ionproc
   SSH.cc
   FCNP_ServerStream.cc)
 
+install(FILES
+  casarc
+  DESTINATION etc)
+
 lofar_add_bin_program(versionionproc versionionproc.cc)
 lofar_add_bin_program(ION_Processing ION_main.cc)
 lofar_add_bin_program(generateDelays generateDelays.cc)
