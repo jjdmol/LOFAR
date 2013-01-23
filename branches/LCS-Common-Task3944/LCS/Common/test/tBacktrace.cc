@@ -46,7 +46,7 @@ struct J
 //     throw;
 //     throw 1;
 //    throw runtime_error("Oops!");
-//    THROW (AssertError, "Ouch!"); 
+    THROW (AssertError, "Ouch!"); 
 //    LOFAR::Exception* excp;
     char* p;
 //    cerr << "sizeof(AssertError) = " << sizeof(AssertError) << endl;

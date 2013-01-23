@@ -62,13 +62,18 @@ namespace LOFAR
     ~AddressTranslator();
 
     // Translate the \a size addresses specified in \a addr to \a size
-    // trace lines, containing function name, filename, and line number, iff
-    // that information can be retrieved from the program's symbol table.
-    // \param[out] trace vector containing the trace lines
+    // trace lines, and pretty-print them to \a os. Each trace line contains
+    // the stack address, and -- if that information can be retrieved from the
+    // program's symbol table -- the function name, filename and line number,
+    // or the name of the binary object file containing the function.
+    // \param[out] os output stream containing nicely formatted trace lines
     // \param[in]  addr C-array of return addresses
     // \param[in]  size number of return addresses in \a addr
-    void operator()(std::vector<Backtrace::TraceLine>& trace, 
-                    void* const* addr, int size);
+    void operator()(std::ostream& os, void* const* addr, unsigned int size);
+
+    // Indicates whether we should stop printing a backtrace when we reach
+    // main(), or not.
+    static bool stopAtMain;
 
   private:
 #ifdef HAVE_BFD
@@ -94,9 +99,22 @@ namespace LOFAR
     // #filename, #line, and #functionname.
     void do_find_address_in_section(bfd* abfd, asection* section);
 
+    // Print a trace line into the output stream \a os.
+    // The trace line contains:
+    // - function name
+    // - filename and line number, if set; 
+    //   otherwise name of the (shared) library containing the function
+    // \param [out] os output stream to print the trace line to
+    // \param [in] count line counter for the trace lines (zero based)
+    // \param [in] stack address (zero if not provided)
+    // \return true: if stopAtMain is \c true and function name is \c main()
+    // \return false: otherwise
+    bool printTraceLine(std::ostream& os, unsigned int count, 
+                        void* const addr = 0);
+
     // Demangle the C++ mangled function name in \a name.
     std::string demangle(const char* name);
-    
+
     // @name Local variables set by operator()
     // @{
     asymbol** syms;  ///< BFD symbol table information
@@ -116,6 +134,12 @@ namespace LOFAR
     unsigned int line;         ///< Line number in matching source file
     bool found;                ///< Indicates whether a match was found
     // @}
+
+    // @name Local variables set/used by operator() and printTraceLine()
+    // @{
+    unsigned int lineCount;
+    // @}
+
 #endif /* HAVE_BFD */
   };
 
