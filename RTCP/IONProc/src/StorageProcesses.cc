@@ -1,6 +1,7 @@
 #include "lofar_config.h"
 #include <StorageProcesses.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include <Common/Thread/Thread.h>
 #include <Stream/PortBroker.h>
 #include <SSH.h>
@@ -17,8 +18,19 @@ using boost::format;
  *
  * hostList = "OLAP.Storage.hosts"
  *
- * for(host in hostList):
- *   spawnThread("ssh host <storage process>")
+ * 1. Create a StorageProcesses manager object:
+ *      manager = StorageProcesses(parset, logprefix)
+ * 2. Spawn all Storage processes:
+ *      manager.start()
+ *    Which will ssh to all hosts in hostList and start Storage_main,
+ *    and establish a control channel to each.
+ * 3. Let your application connect to whatever is indicated by
+ *      getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)
+ * 4. After the observation, generate and forward the final metadata by calling
+ *      manager.forwardFinalMetaData( deadline )
+ * 5. Optionally, wait for the Storage_main processes to finish with a given
+ * deadline:
+ *      manager.stop( deadline )
  */
 
 
@@ -42,7 +54,6 @@ StorageProcess::~StorageProcess()
 
 void StorageProcess::start()
 {
-  // fork (child process will exec)
   std::string userName   = itsParset.getString("OLAP.Storage.userName");
   std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
@@ -78,6 +89,11 @@ void StorageProcess::start()
 
 void StorageProcess::stop(struct timespec deadline)
 {
+  if (!itsSSHconnection) {
+    // never started
+    return;
+  }
+
   itsSSHconnection->wait(deadline);
 
   itsThread->cancel();
@@ -118,6 +134,12 @@ StorageProcesses::StorageProcesses( const Parset &parset, const std::string &log
 {
 }
 
+StorageProcesses::~StorageProcesses()
+{
+  // never let any processes linger
+  stop(0);
+}
+
 
 void StorageProcesses::start()
 {
@@ -134,11 +156,9 @@ void StorageProcesses::start()
 }
 
 
-void StorageProcesses::stop()
+void StorageProcesses::stop( time_t deadline )
 {
   LOG_DEBUG_STR(itsLogPrefix << "Stopping storage processes");
-
-  time_t deadline = time(0) + 300;
 
   size_t nrRunning = 0;
 
@@ -171,15 +191,15 @@ void StorageProcesses::stop()
 }
 
 
-void StorageProcesses::forwardFinalMetaData()
+void StorageProcesses::forwardFinalMetaData( time_t deadline )
 {
-  struct timespec deadline = { time(0) + 240, 0 };
+  struct timespec deadline_ts = { deadline, 0 };
 
   Thread thread(this, &StorageProcesses::finalMetaDataThread, itsLogPrefix + "[FinalMetaDataThread] ", 65536);
 
   // abort the thread if deadline passes
   try {
-    if (!thread.wait(deadline)) {
+    if (!thread.wait(deadline_ts)) {
       LOG_WARN_STR(itsLogPrefix << "Cancelling FinalMetaDataThread");
 
       thread.cancel();

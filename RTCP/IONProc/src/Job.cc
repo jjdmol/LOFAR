@@ -103,7 +103,7 @@ Job::~Job()
 {
   // stop any started Storage processes
   if (myPsetNumber == 0)
-    itsStorageProcesses.stop();
+    itsStorageProcesses.stop(0);
 
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Job " << (itsIsRunning ? "finished" : "cancelled") << " successfully");
@@ -322,12 +322,12 @@ void Job::jobThread()
       jobQueue.itsReevaluate.broadcast();
 
       if (myPsetNumber == 0) {
-        itsStorageProcesses.forwardFinalMetaData();
+        itsStorageProcesses.forwardFinalMetaData(time(0) + 240);
 
         // all InputSections and OutputSections have finished their processing, so
         // Storage should be done any second now.
 
-        itsStorageProcesses.stop();
+        itsStorageProcesses.stop(time(0) + 300);
       }
 
       // Augment the LTA feedback logging
