@@ -38,8 +38,6 @@
 
 #include <pthread.h>
 #include <memory>
-#include <cstdlib>
-#include <boost/format.hpp>
 
 
 namespace LOFAR {
@@ -50,23 +48,6 @@ using namespace casa;
 static LOFAR::Mutex casacoreMutex; // casacore is not thread safe
 
 //##----------------  Public methods  ----------------##//
-
-bool Casacore_Init()
-{
-  // set up AIPS++ configuration
-  const char *lofarroot = getenv("LOFARROOT");
-  if (!lofarroot) {
-    LOG_ERROR("Please set $LOFARROOT");
-    return false;
-  }
-
-  std::string casarcfiles = str(boost::format("%s/etc/casarc") % lofarroot);
-
-  LOG_DEBUG_STR("CASARCFILES = " << casarcfiles);
-  setenv("CASARCFILES", casarcfiles.c_str(), 1);
-
-  return true;
-}
 
 Delays::Delays(const Parset &parset, const string &stationName, const TimeStamp &startTime)
 :

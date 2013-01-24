@@ -33,7 +33,6 @@
 #include <Interface/Stream.h>
 #include <Interface/Parset.h>
 #include <ION_Allocator.h>
-#include <Delays.h>
 #include <SSH.h>
 #include <Stream/SocketStream.h>
 #include <StreamMultiplexer.h>
@@ -388,6 +387,11 @@ int main(int argc, char **argv)
       exit(1);
     }
 #endif
+
+  if (!SSH_Init()) {
+    std::cerr << "SSH subsystem init failed" << std::endl;
+    exit(1);
+  }
   
 #if defined HAVE_BGP
   INIT_LOGGER_WITH_SYSINFO(str(boost::format("IONProc@%02d") % myPsetNumber));
@@ -401,16 +405,6 @@ int main(int argc, char **argv)
 #else
   INIT_LOGGER_WITH_SYSINFO(str(boost::format("IONProc@%02d") % myPsetNumber));
 #endif
-
-  if (!SSH_Init()) {
-    std::cerr << "SSH subsystem init failed" << std::endl;
-    exit(1);
-  }
-
-  if (!Casacore_Init()) {
-    std::cerr << "Casacore subsystem init failed" << std::endl;
-    exit(1);
-  }
 
   //CasaLogSink::attach();
 

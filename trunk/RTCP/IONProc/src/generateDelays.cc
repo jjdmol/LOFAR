@@ -22,7 +22,6 @@
 #include <Delays.h>
 #include <Interface/Parset.h>
 #include <Common/Exception.h>
-#include <Common/LofarLogger.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Common/lofar_math.h>
 #include <Common/Exception.h>
@@ -118,8 +117,6 @@ void print_usage()
 
 int main(int argc, char *argv[])
 {
-  INIT_LOGGER("generateDelays");
-
   try {
     int opt;
 
@@ -152,11 +149,6 @@ int main(int argc, char *argv[])
 
     if (!parset || !station) {
       print_usage();
-      exit(1);
-    }
-
-    if (!Casacore_Init()) {
-      cerr << "Casacore subsystem init failed." << endl;
       exit(1);
     }
 
