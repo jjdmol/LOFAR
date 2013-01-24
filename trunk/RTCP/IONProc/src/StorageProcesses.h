@@ -59,9 +59,9 @@ public:
     StorageProcesses( const Parset &parset, const std::string &logPrefix );
 
     void start();
-    void stop();
+    void stop( time_t deadline );
 
-    void forwardFinalMetaData();
+    void forwardFinalMetaData( time_t deadline );
 
 private:
     const Parset			 &itsParset;
