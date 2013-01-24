@@ -57,6 +57,7 @@ class StorageProcess {
 class StorageProcesses {
 public:
     StorageProcesses( const Parset &parset, const std::string &logPrefix );
+    ~StorageProcesses();
 
     void start();
     void stop( time_t deadline );
