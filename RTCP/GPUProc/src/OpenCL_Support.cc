@@ -12,7 +12,7 @@
 namespace LOFAR {
 namespace RTCP {
 
-const char *errorMessage(cl_int error)
+std::string errorMessage(cl_int error)
 {
   switch (error) {
     case CL_SUCCESS:				return "Success!";
@@ -61,7 +61,7 @@ const char *errorMessage(cl_int error)
     case CL_INVALID_GL_OBJECT:			return "Invalid OpenGL object";
     case CL_INVALID_BUFFER_SIZE:		return "Invalid buffer size";
     case CL_INVALID_MIP_LEVEL:			return "Invalid mip-map level";
-    default:					return "Unknown";
+    default:					std::stringstream str; str << "Unknown (" << error << ')'; return str.str();
   }
 }
 
