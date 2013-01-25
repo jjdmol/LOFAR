@@ -143,23 +143,26 @@ PerformanceCounter::~PerformanceCounter()
 
 void PerformanceCounter::eventCompleteCallBack(cl_event ev, cl_int /*status*/, void *counter)
 {
-  cl::Event event(ev);
+  try {
+    cl::Event event(ev);
 
-  size_t queued, submitted, start, stop;
-  event.getProfilingInfo(CL_PROFILING_COMMAND_QUEUED, &queued);
-  event.getProfilingInfo(CL_PROFILING_COMMAND_SUBMIT, &submitted);
-  event.getProfilingInfo(CL_PROFILING_COMMAND_START, &start);
-  event.getProfilingInfo(CL_PROFILING_COMMAND_END, &stop);
-  double seconds = (stop - start) / 1e9;
+    size_t queued = event.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+    size_t submitted = event.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>();
+    size_t start = event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+    size_t stop = event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
+    double seconds = (stop - start) / 1e9;
 
-  if (seconds < 0 || seconds > 15)
+    if (seconds < 0 || seconds > 15)
 #pragma omp critical (cout)
-    std::cout << "BAH! " << omp_get_thread_num() << ": " << queued << ' ' << submitted - queued << ' ' << start - queued << ' ' << stop - queued << std::endl;
+      std::cout << "BAH! " << omp_get_thread_num() << ": " << queued << ' ' << submitted - queued << ' ' << start - queued << ' ' << stop - queued << std::endl;
 
 #pragma omp atomic
-  static_cast<PerformanceCounter *>(counter)->totalTime += seconds;
+    static_cast<PerformanceCounter *>(counter)->totalTime += seconds;
 
-  // cl::~Event() decreases ref count
+    // cl::~Event() decreases ref count
+  } catch (cl::Error &error) {
+    // ignore errors in callback function (OpenCL library not exception safe)
+  }
 }
 
 
