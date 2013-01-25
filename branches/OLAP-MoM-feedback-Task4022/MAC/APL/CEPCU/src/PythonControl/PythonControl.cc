@@ -46,6 +46,8 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/CTState.h>
 #include <OTDB/TreeValue.h>
+#include <OTDB/TreeMaintenance.h>
+#include <OTDB/TreeStateConv.h>
 
 #include "PythonControl.h"
 #include "PVSSDatapointDefs.h"
@@ -795,7 +797,8 @@ void PythonControl::_passMetadatToOTDB()
 	}
 	LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
 
-	TreeValue   tv(&conn, getObservationNr(getName()));
+	int			obsID(getObservationNr(getName()));
+	TreeValue   tv(&conn, obsID);
 
 	// Loop over the parameterset and send the information to the KVTlogger.
 	// During the transition phase from parameter-based to record-based storage in OTDB the
@@ -837,6 +840,11 @@ void PythonControl::_passMetadatToOTDB()
 		iter++;
 	}
 	LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
+
+	// finally report state to SAS
+	TreeMaintenance	tm(&conn);
+	TreeStateConv	tsc(&conn);
+	tm.setTreeState(obsID, tsc.get("finished"));
 }
 
 }; // CEPCU

@@ -47,6 +47,8 @@
 #include "Response.h"
 #include "forkexec.h"
 #include <OTDB/TreeValue.h>			// << need to include this after OnlineControl! ???
+#include <OTDB/TreeMaintenance.h>
+#include <OTDB/TreeStateConv.h>
 #include "PVSSDatapointDefs.h"
 
 using namespace LOFAR::GCF::PVSS;
@@ -783,6 +785,11 @@ void OnlineControl::_passMetadatToOTDB()
 			iter++;
 		}
 		LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
+
+		// finally report state to SAS
+		TreeMaintenance	tm(&conn);
+		TreeStateConv	tsc(&conn);
+		tm.setTreeState(obsID, tsc.get("finished"));
 	}
 	catch (APSException &e) {
 		// Parameterfile not found

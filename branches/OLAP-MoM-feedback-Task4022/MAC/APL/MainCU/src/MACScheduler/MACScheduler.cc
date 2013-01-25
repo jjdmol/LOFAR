@@ -465,7 +465,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		TreeStateConv			tsc(itsOTDBconnection);
 		// CT_RESULT_: MANUAL_REMOVED, MANUAL_ABORT, LOST_CONNECTION, NO_ERROR
 		if (quitedEvent.result == CT_RESULT_NO_ERROR) {
-			tm.setTreeState(theObs->second, tsc.get("finished"));
+			tm.setTreeState(theObs->second, tsc.get("completing"));
 		}
 		else {
 			tm.setTreeState(theObs->second, tsc.get("aborted"));
