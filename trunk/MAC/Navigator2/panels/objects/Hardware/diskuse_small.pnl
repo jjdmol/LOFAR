@@ -40,7 +40,7 @@ updateDiskUsage(string dp1, int total,
   
   string color = navFunct_giveFadedColor(0, total, current);
   int step = total/100;
-  setValue(\"diskUsage\",\"toolTipText\",\"Disk Used :\"+current/step+\"%\" );
+  setValue(\"diskUsage\",\"toolTipText\",station +\" Disk Used :\"+current/step+\"%\" );
   setValue(\"diskUsage\", \"backCol\", color);
  }" 0
  E E E E 1 -1 -1 0  0 0
