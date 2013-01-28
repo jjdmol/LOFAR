@@ -115,16 +115,16 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
                                const Matrix<bool>& gridMuellerMask,
                                const Matrix<bool>& degridMuellerMask,
 			       Double RefFreq,
-			       Bool Use_Linear_Interp_Gridder, 
-			       Bool Use_EJones, 
-			       int StepApplyElement, 
-			       Double PBCut, 
-			       Bool PredictFT, 
-			       String PsfOnDisk, 
+			       Bool Use_Linear_Interp_Gridder,
+			       Bool Use_EJones,
+			       int StepApplyElement,
+			       Double PBCut,
+			       Bool PredictFT,
+			       String PsfOnDisk,
 			       Bool UseMasksDegrid,
-			       Bool reallyDoPSF, 
+			       Bool reallyDoPSF,
                                const Record& parameters
-                              )//, 
+                              )//,
 			       //Double FillFactor)
   : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
     tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType),
@@ -141,7 +141,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   cout << "=======LofarFTMachine====================================" << endl;
   cout << itsParameters << endl;
   cout << "=========================================================" << endl;
-  
+
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   mLocation_p=mLocation;
@@ -635,7 +635,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  if(!itsPredictFT){
 	    fact*=sqrt(maxPB)/sqrt(data(pos2));
 	  } else {
-	    fact/=datai(pos2); //*datai(pos2); 
+	    fact/=datai(pos2); //*datai(pos2);
 	    if(its_Apply_Element){fact/=spheroidCutElement(pos2);}
 	  }
 	  pixel*=Complex(fact);
@@ -1063,7 +1063,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       // compute average weight for baseline for CF averaging
 	double average_weight=0.;
       uInt Nvis=0;
-      for(Int j=ist; j<iend; ++j){
+      for(Int j=ist; j<=iend; ++j){
         uInt row=blIndex[j];
         if(!vbs.rowFlag()[row]){
           Nvis+=1;
@@ -1102,7 +1102,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                                               itsSumCFWeight[threadNum],
 					      spw,thisterm_p,itsRefFreq
 					      );
-      
+
 
 
       //cfTimer.stop();
@@ -1316,17 +1316,17 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   bool usebl      = false;
   bool allFlagged = true;
   const Vector<Bool>& flagRow = vb.flagRow();
-  for (uint i=0; i<blnr.size(); ++i) 
+  for (uint i=0; i<blnr.size(); ++i)
   {
     Int inx = blIndex[i];
     Int bl = blnr[inx];
-    if (bl != lastbl) 
+    if (bl != lastbl)
     {
       // New baseline. Write the previous end index if applicable.
-      if (usebl  &&  !allFlagged) 
+      if (usebl  &&  !allFlagged)
       {
         double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[i-1]](2)));
-        if (abs(Wmean) <= itsWMax) 
+        if (abs(Wmean) <= itsWMax)
         {
           if (itsVerbose > 1) {
             cout<<"using w="<<Wmean<<endl;
@@ -1349,15 +1349,15 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
     if (! flagRow[inx]) {
       allFlagged = false;
     }
-    
+
   }
   // Write the last end index if applicable.
-  if (usebl  &&  !allFlagged) 
+  if (usebl  &&  !allFlagged)
   {
     double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[blnr.size()-1]](2)));
-    if (abs(Wmean) <= itsWMax) 
+    if (abs(Wmean) <= itsWMax)
     {
-      if (itsVerbose > 1) 
+      if (itsVerbose > 1)
       {
         cout<<"...using w="<<Wmean<<endl;
       }
