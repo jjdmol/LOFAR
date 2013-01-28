@@ -1819,17 +1819,17 @@ bool navFunct_dpHasPanels(string dp) {
 // ****************************************
 //  Waits a given time in ms to see if g_objectReady is true
 //  if not true within a given time, it will issue an error
-//  sets it true and returns.
+//  sets it true and returns. Name can be used to show the program where the call came from
 //
 // 
 // ****************************************
-void navFunct_waitObjectReady(int timer) {
+void navFunct_waitObjectReady(int timer,string name) {
   int retry=0;
   while (!g_objectReady) {
     delay(0,50);
     retry+=50;
     if (retry >= timer) {
-      LOG_ERROR("navFunct.ctl:navFunct_waitObjectReady|retry longer then timer, we will try to continue");
+      LOG_ERROR("navFunct.ctl:navFunct_waitObjectReady|retry called by: "+name+" longer then timer, we will try to continue");
       g_objectReady=true;
       return;
     }
