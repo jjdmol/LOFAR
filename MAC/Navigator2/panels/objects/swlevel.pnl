@@ -51,7 +51,6 @@ void dblClick(string name) {
     LOG_DEBUG(\"swlevel.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
     if (name == station) {
-      DebugN(\"dblClick with: \"+name+\" currentDP: \"+g_currentDatapoint);
       navPanel_setEvent(station,\"ChangePanel\");
     } else {
       //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.

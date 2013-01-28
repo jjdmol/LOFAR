@@ -121,7 +121,6 @@ void redraw() {
   // set the hardware selectable items for this screen
   prepareHardwareList();
     
-  string addPanelName    = \"objects/swlevel.pnl\";
         
   if (dynlen(SWLevelRefNames) > 0) {
     clearSWLevelRefNames();
