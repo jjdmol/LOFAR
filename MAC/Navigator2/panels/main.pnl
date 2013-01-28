@@ -141,7 +141,7 @@ void redraw() {
   }
 
   if (dynlen(stationViewRefNames) > 0) {
-    stationViewRefNames();
+    clearStationViewRefNames();
   }
 
   addSWLevels();
