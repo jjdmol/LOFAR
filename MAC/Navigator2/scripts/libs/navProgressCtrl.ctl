@@ -77,7 +77,9 @@ void navProgressCtrl_handleObservation(string selection){
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| stop:" +stop);
 
     
-  toolText=selection;
+  toolText=selection + 
+           "<br> start: " + sStart+
+           "<br> stop : " + sStop;
   int duration=period(stop) - period(start);
 
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| Duration: "+duration);
@@ -86,10 +88,15 @@ void navProgressCtrl_handleObservation(string selection){
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| percent: "+percent);  
 
   int finished=period(getCurrentTime())-period(start);
+  
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| finished: "+finished);  
   
   if (percent > 0) {
     percentDone = finished/percent;
+  }
+  if (percentDone > 100) {
+    LOG_ERROR("navProgressCtrl.ctl:navProgressCtrl_handleObservation| ERROR: Observation exceeds stoptime!! " + selection);
+    percentDone = 100;
   }
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| PercentDone: "+percentDone);
   // change progressBar

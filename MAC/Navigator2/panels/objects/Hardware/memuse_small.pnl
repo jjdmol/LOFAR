@@ -39,7 +39,7 @@ updateMemUsage(string dp1, int total,
   }
   int step = total/100;
   string color = navFunct_giveFadedColor(0, total, current);
-  setValue(\"memUsage\",\"toolTipText\",\"Memory used: \"+current/step+\"%\" );
+  setValue(\"memUsage\",\"toolTipText\",station+\" Memory used: \"+current/step+\"%\" );
   setValue(\"memUsage\", \"backCol\", color);
  }" 0
  E E E E 1 -1 -1 0  0 0
