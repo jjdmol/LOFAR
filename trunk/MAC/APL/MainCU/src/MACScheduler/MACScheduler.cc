@@ -619,7 +619,11 @@ void MACScheduler::_updatePlannedList()
 	GCFPValueArray	plannedArr;
 	int32			idx = MIN2(plannedDBlist.size(), itsMaxPlanned) - 1;
 
-	while (idx >= 0)  {
+	for ( ; idx >= 0; idx--)  {
+		if (plannedDBlist[idx].processType=="RESERVATION" || plannedDBlist[idx].processType=="MAINTENANCE") {
+			continue;
+		}
+
 		// construct name and timings info for observation
 		treeIDType		obsID = plannedDBlist[idx].treeID();
 		string			obsName(observationName(obsID));
@@ -686,8 +690,7 @@ void MACScheduler::_updatePlannedList()
 				}
 			}
 		}
-		idx--;
-	} // while processing all planned obs'
+	} // process all planned obs'
 
 	// Finally we can pass the list with planned observations to PVSS.
 	itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, plannedArr));
@@ -729,7 +732,11 @@ void MACScheduler::_updateActiveList()
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	activeArr;
 	int32			idx = activeDBlist.size() - 1;
-	while (idx >= 0)  {
+	for ( ; idx >= 0; idx--)  {
+		if (activeDBlist[idx].processType=="RESERVATION" || activeDBlist[idx].processType=="MAINTENANCE") {
+			continue;
+		}
+
 		// construct name and timings info for observation
 		string		obsName(observationName(activeDBlist[idx].treeID()));
 		activeArr.push_back(new GCFPVString(obsName));
@@ -739,9 +746,7 @@ void MACScheduler::_updateActiveList()
 		if (prepIter != itsPreparedObs.end()) {
 			itsPreparedObs.erase(prepIter);
 		}
-
-		idx--;
-	} // while
+	} // for
 
 	// Finally we can pass the list with active observations to PVSS.
 	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,	GCFPVDynArr(LPT_DYNSTRING, activeArr));
@@ -773,12 +778,15 @@ void MACScheduler::_updateFinishedList()
 	int32	freeSpace = MAX_CONCURRENT_OBSERVATIONS - itsNrPlanned - itsNrActive;
 	int32	idx       = finishedDBlist.size() - 1;
 	int32	limit     = idx - (MIN2(MIN2(finishedDBlist.size(), itsMaxFinished), (uint32)freeSpace) - 1);
-	while (idx >= limit)  {
+	for ( ; idx >= limit ; idx--)  {
+		if (finishedDBlist[idx].processType=="RESERVATION" || finishedDBlist[idx].processType=="MAINTENANCE") {
+			continue;
+		}
+
 		// construct name and timings info for observation
 		string		obsName(observationName(finishedDBlist[idx].treeID()));
 		finishedArr.push_back(new GCFPVString(obsName));
-		idx--;
-	} // while
+	} // for
 
 	// Finally we can pass the list with finished observations to PVSS.
 	itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, finishedArr));
