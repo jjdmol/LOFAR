@@ -2589,12 +2589,11 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     outImage.resize(inShape);
     outImage.setCoordinateInfo(inImage.coordinates());
 
-    Bool isRefIn, isRefOut;
+    Bool isRefIn;
     Array<Complex> inBuf;
     Array<Float> outBuf;
 
     isRefIn  = inImage.get(inBuf);
-    isRefOut = outImage.get(outBuf);
     log_l << "Normalizing the average PBs to unity"
 	  << LogIO::NORMAL << LogIO::POST;
     //
