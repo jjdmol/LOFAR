@@ -1,0 +1,181 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 255 95 N "_3DFace" 1
+"$station"
+"main()
+{
+  station = $station+\":\";
+   
+  baseDP = station+\"LOFAR_PIC\";
+
+  reload();
+}
+  
+private void reload() {
+  
+  // since 
+  // check if the required datapoint for this view are enabled and accessible
+  if (navFunct_dpReachable(baseDP)) {
+    if (dpExists(baseDP+\"_Cabinet1.temperature\") ){
+      if (dpConnect(\"updateStation\", baseDP +\"_Cabinet1.temperature:_online.._value\",
+                                      baseDP +\"_Cabinet1.tempMin:_online.._value\",
+                                      baseDP +\"_Cabinet1.tempMax:_online.._value\",
+                                      baseDP +\"_Cabinet1.tempMaxMax:_online.._value\",
+                                      baseDP +\"_Cabinet1.humidity:_online.._value\",
+                                      baseDP +\"_Cabinet1.humidityMax:_online.._value\",
+                                      baseDP +\"_Cabinet1.humidityMaxMax:_online.._value\",                                      
+                                      baseDP +\"_Cabinet1.temperature:_online.._invalid\") == -1) {
+        setValue(\"temperature\", \"backCol\", \"Lofar_dpdoesnotexist\");
+        setValue(\"humidity\", \"backCol\", \"Lofar_dpdoesnotexist\");
+      }
+    } else {
+        setValue(\"temperature\", \"backCol\", \"Lofar_dpdoesnotexist\");
+        setValue(\"humidity\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    }
+  } else {
+    setValue(\"temperature\", \"backCol\", \"Lofar_dpOffline\");
+    setValue(\"humidity\", \"backCol\", \"Lofar_dpOffline\");
+
+  }	
+}
+
+updateStation(string dp1, float temp,
+              string dp2, float tempMin,
+              string dp3, float tempMax,
+              string dp4, float tempMaxMax,
+              string dp2, float hum,
+              string dp2, float humMax,
+              string dp2, float humMaxMax,
+              string dp8, bool invalid)
+{
+
+  if (invalid) {
+    setValue(\"temperature\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"humidity\", \"backCol\", \"Lofar_invalid\");
+    return;
+  }
+  // temperatures
+  string tempColor=\"Lofar_test\";
+  if (temp > tempMin && temp < tempMax) {
+    tempColor = \"Lofar_operational\";
+  } else if (temp >= tempMax && temp < tempMaxMax) {
+    tempColor = \"Lofar_suspicious\";
+  } else if (temp >= tempMaxMax) {
+    tempColor = \"Lofar_broken\";
+  }
+  
+  // humidity
+  string humColor=\"Lofar_test\";
+  if (hum < humMax) {
+    humColor = \"Lofar_operational\";
+  } else if (hum >= humMax && hum < humMaxMax) {
+    humColor = \"Lofar_suspicious\";
+  } else if (hum >= humMaxMax) {
+    humColor = \"Lofar_broken\";
+  }
+  
+
+  setValue(\"temperature\",\"toolTipText\",station+\" temp \"+temp+\" C\" );
+  setValue(\"temperature\", \"backCol\", tempColor);
+  setValue(\"humidity\",\"toolTipText\",station+\" humidity \"+hum+\" Rel%\" );
+  setValue(\"humidity\", \"backCol\", humColor);
+ }" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string station = \"\";
+string baseDP=\"\";
+string obsDP=\"\";
+
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 0
+"temperature"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 0 -10 1 E 0 10 14 19
+6 1
+"humidity"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 20 -10 1 E 0 10 14 19
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
