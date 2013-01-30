@@ -25,6 +25,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <casa/Containers/Record.h>
 #include <casa/HDF5/HDF5File.h>
 #include <casa/HDF5/HDF5Group.h>
@@ -70,16 +72,16 @@ void fill (const String& imageName)
 {
   HDF5File hfile(imageName, ByteIO::Update);
   // Check if the LOFAR_OBSERVATION and LOFAR_ANTENNA group exists.
-  // ASSERTSTR (HDF5Group::exists (hfile, "ATTRGROUPS"),
-  //            "The ATTRGROUPS group does no exist in image "
-  //            << imageName);
+  ASSERTSTR (HDF5Group::exists (hfile, "ATTRGROUPS"),
+             "The ATTRGROUPS group does no exist in image "
+             << imageName);
   HDF5Group attr(hfile, "ATTRGROUPS");
-  // ASSERTSTR (HDF5Group::exists (attr, "LOFAR_OBSERVATION"),
-  //            "The LOFAR_OBSERVATION group does no exist in image "
-  //            << imageName);
-  // ASSERTSTR (HDF5Group::exists (attr, "LOFAR_ANTENNA"),
-  //            "The LOFAR_ANTENNA group does no exist in image "
-  //            << imageName);
+  ASSERTSTR (HDF5Group::exists (attr, "LOFAR_OBSERVATION"),
+             "The LOFAR_OBSERVATION group does no exist in image "
+             << imageName);
+  ASSERTSTR (HDF5Group::exists (attr, "LOFAR_ANTENNA"),
+             "The LOFAR_ANTENNA group does no exist in image "
+             << imageName);
   Record mainObsRec (HDF5Record::readRecord (attr, "LOFAR_OBSERVATION"));
   const Record& obsRec = mainObsRec.subRecord(0);
   Record antRec (HDF5Record::readRecord (attr, "LOFAR_ANTENNA"));
@@ -173,7 +175,7 @@ void fill (const String& imageName)
                   "0.03.00");
   rootRec.define ("NOTES",
                   String());
-  //HDF5Record::doWriteRecord (hfile, rootRec);
+  HDF5Record::doWriteRecord (hfile, rootRec);
 }
 
 int main (int argc, char* argv[])
