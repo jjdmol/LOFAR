@@ -42,6 +42,7 @@ CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
     --  $Id$
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
+		vTreeType	OTDBtree.treetype%TYPE;
 		vTime		timestamp := NULL;
 		vLastValue	TEXT;
 		TThierarchy	CONSTANT INT2 := 30;
