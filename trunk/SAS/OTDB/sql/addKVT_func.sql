@@ -44,6 +44,7 @@ CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
 		vParRefID	PICparamref.paramID%TYPE;
 		vTime		timestamp := NULL;
 		vLastValue	TEXT;
+		TThierarchy	CONSTANT INT2 := 30;
 
 	BEGIN
 	  -- convert timestamp
@@ -83,8 +84,15 @@ CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
 	  END IF;
 
 	  -- it is probably a VIC parameter, just store on name.
-	  INSERT INTO VICkvt (treeid, paramName, value, time)
-	  VALUES ($1, $2, $3, vTime);
+	  SELECT	treetype
+	  INTO		vTreeType
+	  FROM		otdbtree
+	  WHERE treeid=$1;
+	  IF vTreeType = TThierarchy THEN
+		  INSERT INTO VICkvt (treeid, paramName, value, time)
+		  VALUES ($1, $2, $3, vTime);
+	  -- ELSE its a PIC kvt without an entry in the PIC
+	  END IF;
 
 	  RETURN TRUE;
 	END;
