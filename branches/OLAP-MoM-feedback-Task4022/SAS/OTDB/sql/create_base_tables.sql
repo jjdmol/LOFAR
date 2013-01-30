@@ -252,6 +252,7 @@ INSERT INTO treestate VALUES (350, 'prescheduled');
 INSERT INTO treestate VALUES (400, 'scheduled');
 INSERT INTO treestate VALUES (500, 'queued');
 INSERT INTO treestate VALUES (600, 'active');
+INSERT INTO treestate VALUES (900, 'completing');
 INSERT INTO treestate VALUES (1000, 'finished');
 INSERT INTO treestate VALUES (1100, 'aborted');
 INSERT INTO treestate VALUES (1150, 'error');

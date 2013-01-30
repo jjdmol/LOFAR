@@ -125,11 +125,15 @@ PythonControl::PythonControl(const string&	cntlrName) :
 PythonControl::~PythonControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
-	if (itsListener) 
-		{ itsListener->close(); delete itsListener; }
+	if (itsListener) { 
+		itsListener->close(); 
+		delete itsListener; 
+	}
 
-	if (itsFeedbackListener) 	// QUICK FIX #3633
-		{ itsFeedbackListener->close(); delete itsFeedbackListener; }
+	if (itsFeedbackListener) { 	// QUICK FIX #3633
+		itsFeedbackListener->close(); 
+		delete itsFeedbackListener; 
+	}
 }
 
 //

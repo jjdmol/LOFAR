@@ -49,6 +49,7 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 		TSapproved		CONSTANT	INT2 := 300;
 		TSscheduled		CONSTANT	INT2 := 400;
 		TSqueued		CONSTANT	INT2 := 500;
+--		TScompleting	CONSTANT	INT2 := 900;
 		TSfinished		CONSTANT	INT2 := 1000;
 		TThierarchy		CONSTANT	INT2 := 30;
 		TCoperational	CONSTANT	INT2 := 3;
@@ -71,18 +72,18 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 		    vQuery := vQuery || ' AND t.state > ' || TSscheduled;
 		    vQuery := vQuery || ' AND t.state < ' || TSfinished;
 	      ELSE 
-                    IF $1 = 3 THEN
-                          vQuery := ' AND t.state >= ' || TSfinished;
-                          vQuery := vQuery || ' AND t.stoptime > now()-interval ' || chr(39) || $2 || ' minutes' || chr(39);
-                          vSortOrder := 't.stoptime, t.treeID';
-                ELSE
+            IF $1 = 3 THEN
+              vQuery := ' AND t.state >= ' || TSfinished;
+              vQuery := vQuery || ' AND t.stoptime > now()-interval ' || chr(39) || $2 || ' minutes' || chr(39);
+              vSortOrder := 't.stoptime, t.treeID';
+            ELSE
 		      IF $1 = 4 THEN
 		  	    vQuery := ' AND t.state >= ' || TSapproved;
 			    vQuery := vQuery || ' AND t.stoptime < now() ';
 			    vSortOrder := 't.treeID';
 		      ELSE
 			    RAISE EXCEPTION 'groupType must be 0,1,2,3 or 4 not %', $1;
-                      END IF;
+              END IF;
 		    END IF;
 		  END IF;
 	    END IF;
