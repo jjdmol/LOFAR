@@ -83,7 +83,7 @@ LANG:1 0
 3 2 "PANEL_REF2" -1
 "objects\\genericOnOffView.pnl" 40 0 T 35 U 
 2
-"$fullDP""StationInfo.power48On"
+"$fullDP""LOFAR_PIC_StationInfo.power48On"
 "$station""$station"
 3 3 "PANEL_REF3" -1
 "objects\\genericOnOffView.pnl" 60 0 T 36 U 
