@@ -14,5 +14,5 @@ PVSS00ctrl       | always |      30 |        2 |        2 |monitorStateChanges.c
 PVSS00ctrl       |   once |      30 |        2 |        2 |readStationConfigs.ctl
 PVSS00ctrl       | always |      30 |        2 |        2 |monitorStateReset.ctl
 PVSS00ctrl       | always |      30 |        2 |        2 |monitorStationAlarms.ctl
-PVSS00ctrl       | always |      30 |        2 |        2 |TransferMPs.ctl
+PVSS00ctrl       | always |      30 |        2 |        2 |transferMPs.ctl
 PVSS00ui         | manual |      30 |        2 |        2 |-m para -display localhost:10.0

@@ -777,7 +777,7 @@ LANG:1 5 T   H
 2 46
 "PRIMITIVE_TEXT18"
 ""
-1 704 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 705 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 31 0 0 0 0 0
 E E E
@@ -787,8 +787,8 @@ LANG:1 22 Temperature & Humidity
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 704 10 735 23
-0 2 2 "0s" 0 0 0 192 0 0  704 10 1
+E E 0 1 1 2 1 E U  0 E 705 10 736 23
+0 2 2 "0s" 0 0 0 192 0 0  705 10 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1

@@ -86,6 +86,7 @@ updateSWController(string dp1, string sStart,
   }
   setValue(\"process\",\"toolTipText\",baseDP+ \"<br> start: \"+sStart + \"<br> stop : \"+sStop);
   
+
   if (sStart != \"\") startError = navFunct_lofarDate2PVSSDate(sStart,start);
   if (sStop != \"\") stopError = navFunct_lofarDate2PVSSDate(sStop,stop);
   
