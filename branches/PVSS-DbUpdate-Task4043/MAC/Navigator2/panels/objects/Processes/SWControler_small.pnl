@@ -1,0 +1,217 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 388 166 N "_3DFace" 2
+"$name"
+"$station"
+"main()
+{
+  station = $station+\":\";
+   
+  baseDP = station+\"LOFAR_\"+$name;
+
+  // some controllers are observationbased and are only active if there is actually an observation running
+  // these should be reloaded if the active observation changes, the name of the observation (temp place) will also change
+  // So we have to be triggered:
+  if ($name == \"ObservationControl\" ||    // MCU
+      $name == \"OnlineControl\" ||    // CCU
+      $name == \"PythonControl\" ||    // CCU
+      $name == \"CalibrationControl\" ||    // Station
+      $name == \"BeamControl\" ||    // Station
+      $name == \"TBBControl\") {    // Station
+
+    if (navFunct_dpReachable(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\")) {
+      if (dpConnect(\"observationChanged\", MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\",
+                                          MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._invalid\") == -1) {
+        LOG_ERROR(\"SWController_small.pnl:main|Couldn't connect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations\");
+      }
+    } else {
+      if (!isStandalone()) LOG_ERROR(\"SWController_small.pnl:main|\"+MainDBName+\" seems offline\");
+    }
+  }	else {
+    reload();
+  }
+}
+
+private void observationChanged(string dp1, dyn_string observations,
+                                string dp2, bool invalid) {
+
+  // for now the object will only show the controller for the first observation
+  if (dynlen(observations) >= 1) {
+    firstObservation = observations[1];
+    // get real name from claimmanager
+    obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+firstObservation);
+    baseDP = station+obsDP+\"_\"+$name;
+    reload();
+  }
+}
+  
+private void reload() {
+  
+  // check if the required datapoint for this view are enabled and accessible
+  if (navFunct_dpReachable(baseDP+\".process.startTime\")) {
+    if (dpExists(baseDP+\".process.startTime\")) {
+      if (dpConnect(\"updateSWController\", baseDP +\".process.startTime:_online.._value\",
+                                          baseDP +\".process.stopTime:_online.._value\",
+                                          baseDP +\".process.stopTime:_online.._invalid\",
+                                          baseDP +\".process.startTime:_online.._invalid\") == -1) {
+        setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
+      }
+    } else {
+        setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    } 
+  } else {
+    setValue(\"process\", \"backCol\", \"Lofar_dpOffline\");
+  }	
+}
+
+updateSWController(string dp1, string sStart,
+                   string dp2, string sStop,
+                   string dp3, bool stopInvalid,
+                   string dp4, bool startInvalid)
+{
+  bool startError=false;
+  bool stopError=false;
+  time start=0;
+  time stop=0;
+
+  if (startInvalid) {
+    setValue(\"process\", \"backCol\", \"Lofar_invalid\");
+    if (stopInvalid) {
+      setValue(\"process\",\"toolTipText\",baseDP+ \"<br> start: invalid <br> stop : invalid\");
+    } else {
+      setValue(\"process\",\"toolTipText\",baseDP+ \"<br> start: invalid <br> stop : \"+sStop);
+    }
+    return;
+  }
+  setValue(\"process\",\"toolTipText\",baseDP+ \"<br> start: \"+sStart + \"<br> stop : \"+sStop);
+  
+  if (sStart != \"\") startError = navFunct_lofarDate2PVSSDate(sStart,start);
+  if (sStop != \"\") stopError = navFunct_lofarDate2PVSSDate(sStop,stop);
+  
+  if (!startError || (!stopError && sStop != \"\")) {
+    setValue(\"process\", \"backCol\", \"red\");
+  } else if (start > stop) {
+    setValue(\"process\", \"backCol\", \"green\");
+  } else if (stop >= start) {
+    setValue(\"process\", \"backCol\", \"red\");
+  } else {       
+    setValue(\"process\", \"backCol\", \"red\");
+  }
+}" 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string station = \"\";
+string baseDP=\"\";
+string obsDP=\"\";
+string firstObservation=\"\";
+bool bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(station,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"SWcontroller_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.
+    navPanel_setEvent(\"Processes\",\"ChangeTab\");
+  }
+
+
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}                       
+
+// routine for right mouse click
+void rClick() {
+
+}                       " 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 0
+"process"
+""
+1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 0 -10 1 E 0 10 14 19
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
