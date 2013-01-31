@@ -295,6 +295,7 @@ patch_kernel_source:
 	ERR_MACRO(err);
 	
 	num_devices = ret_size / sizeof(cl_device_id);
+	cl_int build_err = clBuildProgram(plan->program, num_devices, devices, "-cl-mad-enable", NULL, NULL);
 	
 	for(i = 0; i < num_devices; i++)
 	{
@@ -304,8 +305,8 @@ patch_kernel_source:
 		if(device_type == CL_DEVICE_TYPE_CPU || device_type == CL_DEVICE_TYPE_GPU)
 		{	
 			gpu_found = 1;
-	        err = clBuildProgram(plan->program, 1, &devices[i], "-cl-mad-enable", NULL, NULL);
-	        if (err != CL_SUCCESS)
+	        //err = clBuildProgram(plan->program, 1, &devices[i], "-cl-mad-enable", NULL, NULL);
+	        if (build_err != CL_SUCCESS)
 	        {
 		        char *build_log;				
 				char devicename[200];
