@@ -2183,17 +2183,16 @@ bool navFunct_lofarDate2PVSSDate(string inDate, time& t) {
   t=0;
 
   if (inDate == "") return false;
-  // expects the date in   2000-05-19[T10:22:12[.123]]  format, so check this
+  // expects the date in   2000-05-19T10:22:12.123  format, so check this
   dyn_string splittedDate = strsplit(inDate,"T");
-  if (dynlen(splittedDate) < 1) return false;
-  if (dynlen(splittedDate) >= 2) {      // Time available, so split that also
-    dyn_string splittedTime = strsplit(splittedDate[2],".");
-    if (dynlen(splittedTime) >= 2) {      // mSec available
-      mSec=splittedTime[2];
-    }
-    if (dynlen(strsplit(splittedTime[1],":")) != 3 ) return false;
-    tm = splittedTime[1];
+  if (dynlen(splittedDate) != 2) return false;
+  dyn_string splittedTime = strsplit(splittedDate[2],".");
+  if (dynlen(splittedTime) >= 2) {      // mSec available
+    mSec=splittedTime[2];
   }
+  if (dynlen(strsplit(splittedTime[1],":")) != 3 ) return false;
+  tm = splittedTime[1];
+
   dyn_string spl_date=strsplit(splittedDate[1],"-");
   if (dynlen(spl_date) != 3) return false;
   if (strlen(spl_date[2]) > 2) return false;
