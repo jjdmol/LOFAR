@@ -26,6 +26,8 @@ tempMP1				float
 tempMP2				float
 tempMP3				float
 
+recording			bool
+
 # additional information 
 imageInfo.version	stringArr
 imageInfo.writeDate	stringArr
