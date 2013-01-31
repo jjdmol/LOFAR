@@ -806,7 +806,7 @@ void CEPlogProcessor::unregisterObservation(int obsID)
   LOG_INFO_STR("Observation " << obsID << " finished, informing OnlineControl");
   try {
     SocketStream ss("localhost", 21000 + obsID % 1000, SocketStream::TCP, SocketStream::Client, time(0) + 30);
-    const char status = "FINISHED"; // alternative: "ABORT"
+    const char *status = "FINISHED"; // alternative: "ABORT"
     ss.write(&status[0], strlen(status));
   } catch(Exception &ex) {
     LOG_ERROR_STR("Caught exception: " << ex);
