@@ -62,15 +62,7 @@ LANG:1 0
 "memUsage"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 0 0 0 0 0 0
 E E E
 0
@@ -79,11 +71,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E 1 0 1 0 -10 1 E 0 10 14 19
+E E 0 1 1 2 1 E 1 0 1 0 -10 1 E 0 10 14 19
 0
 LAYER, 1 
 1
