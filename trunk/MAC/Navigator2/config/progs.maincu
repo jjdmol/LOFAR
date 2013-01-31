@@ -15,6 +15,7 @@ PVSS00ctrl       | always |      30 |        2 |        2 |monitorStateChanges.c
 PVSS00ctrl       | always |      30 |        2 |        2 |monitorStateReset.ctl
 PVSS00ctrl       | always |      30 |        2 |        2 |monitorAlarms.ctl
 PVSS00ctrl       | always |      30 |        2 |        2 |gcf_cwd.ctl
+PVSS00ctrl       | always |      30 |        2 |        2 |TransferMPs.ctl
 PVSS00ui         | manual |      30 |        2 |        2 |-m para -display localhost:10.0
 
 
