@@ -2311,7 +2311,7 @@ int main(int argc, char **argv)
 
   std::cout << "running ..." << std::endl;
 
-  if (setenv("DISPLAY", ":0.0", 1) < 0) {
+  if (setenv("DISPLAY", ":0", 1) < 0) {
     perror("error setting DISPLAY");
     exit(1);
   }
