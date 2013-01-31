@@ -24,6 +24,7 @@
 #include <Common/LofarConstants.h>
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
+#include <Stream/SocketStream.h>
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/Observation.h>
 #include <ApplCommon/StationInfo.h>
@@ -800,6 +801,16 @@ void CEPlogProcessor::unregisterObservation(int obsID)
   itsFeedback.erase(obsID);
 
   itsTempObsMapping.erase(obsID);
+
+  // signal to MAC that the observation is finished, see redmine ticket #4021
+  LOG_INFO_STR("Observation " << obsID << " finished, informing OnlineControl");
+  try {
+    SocketStream ss("localhost", 21000 + obsID % 1000, SocketStream::TCP, SocketStream::Client, time(0) + 30);
+    const char status = "FINISHED"; // alternative: "ABORT"
+    ss.write(&status[0], strlen(status));
+  } catch(Exception &ex) {
+    LOG_ERROR_STR("Caught exception: " << ex);
+  }
 }
 
 
