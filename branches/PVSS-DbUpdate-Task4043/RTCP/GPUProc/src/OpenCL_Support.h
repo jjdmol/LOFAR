@@ -11,7 +11,7 @@
 namespace LOFAR {
 namespace RTCP {
 
-extern const char *errorMessage(cl_int error);
+extern std::string errorMessage(cl_int error);
 extern void createContext(cl::Context &, std::vector<cl::Device> &);
 extern cl::Program createProgram(cl::Context &, std::vector<cl::Device> &, const char *sources, const char *args);
 

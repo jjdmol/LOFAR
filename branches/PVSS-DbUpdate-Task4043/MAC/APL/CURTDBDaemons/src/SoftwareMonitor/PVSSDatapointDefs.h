@@ -385,7 +385,7 @@
 #define PN_HWM_EC_CONNECTED	"EC.connected"
 
 // SoftwareMonitor
-#define PSN_SOFTWARE_MONITOR	"LOFAR_PermSW_SoftwareMonitor"
+#define PSN_SOFTWARE_MONITOR	"LOFAR_PermSW_Daemons_SoftwareMonitor"
 #define PST_SOFTWARE_MONITOR	"SoftwareMonitor"
 #define PN_SWM_SW_LEVEL	"SWLevel"
 

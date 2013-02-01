@@ -730,12 +730,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 10 516 124 529
+E E 0 1 1 2 1 E U  0 E 10 516 131 529
 0 2 2 "0s" 0 0 0 192 0 0  10 516 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 18 CEPobservationView
+LANG:1 20 CEP Observation View
 2 44
 "PRIMITIVE_TEXT16"
 ""
@@ -758,7 +758,7 @@ LANG:1 6 D    M
 2 45
 "PRIMITIVE_TEXT17"
 ""
-1 668 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 670 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 30 0 0 0 0 0
 E E E
@@ -768,8 +768,8 @@ LANG:1 22 Temperature & Humidity
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 668 10 692 23
-0 2 2 "0s" 0 0 0 192 0 0  668 10 1
+E E 0 1 1 2 1 E U  0 E 670 10 694 23
+0 2 2 "0s" 0 0 0 192 0 0  670 10 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -777,22 +777,22 @@ LANG:1 5 T   H
 2 46
 "PRIMITIVE_TEXT18"
 ""
-1 705 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 703 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 31 0 0 0 0 0
 E E E
 0
 1
-LANG:1 22 Temperature & Humidity
+LANG:1 27 power 48V and TBB.recording
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 705 10 736 23
-0 2 2 "0s" 0 0 0 192 0 0  705 10 1
+E E 0 1 1 2 1 E U  0 E 703 10 741 23
+0 2 2 "0s" 0 0 0 192 0 0  703 10 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 5 48 TB
+LANG:1 6 48 TBB
 0
 LAYER, 1 
 1
