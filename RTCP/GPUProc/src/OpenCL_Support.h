@@ -2,7 +2,7 @@
 #define OPEN_CL_SUPPORT_H
 
 #define __CL_ENABLE_EXCEPTIONS
-#include <CL/cl.hpp>
+#include "CL/cl.hpp"
 
 #include <boost/multi_array.hpp>
 #include <vector>
