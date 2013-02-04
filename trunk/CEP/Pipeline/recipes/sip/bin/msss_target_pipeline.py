@@ -335,6 +335,10 @@ class msss_target_pipeline(control):
                 data_mapfile,
                 data_start_time=vdsinfo['start_time'],
                 data_end_time=vdsinfo['end_time'],
+                demix_always=
+                    py_parset.getStringVector('PreProcessing.demix_always'),
+                demix_if_needed=
+                    py_parset.getStringVector('PreProcessing.demix_if_needed'),
                 parset=ndppp_parset,
                 parmdb_mapfile=parmdb_mapfile,
                 sourcedb_mapfile=sourcedb_mapfile,
