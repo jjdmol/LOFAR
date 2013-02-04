@@ -110,6 +110,11 @@ namespace LOFAR
       bfd_map_over_sections(abfd, find_address_in_section, this);
 
       if (found) {
+        // Unwind inlined functions to get the source information of the first
+        // non-inlined function. In general, this will improve the usefulness
+        // of the backtrace information.
+        while(bfd_find_inliner_info(abfd, &filename, &functionname, &line));
+        
         if (functionname && *functionname) {
 # ifdef __GNUG__
           char* realname = abi::__cxa_demangle(functionname, 0, 0, 0);
