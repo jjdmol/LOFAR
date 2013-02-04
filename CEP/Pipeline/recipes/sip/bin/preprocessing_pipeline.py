@@ -188,6 +188,10 @@ class preprocessing_pipeline(control):
                 (input_data_mapfile, output_data_mapfile),
                 data_start_time=vdsinfo['start_time'],
                 data_end_time=vdsinfo['end_time'],
+                demix_always=
+                    py_parset.getStringVector('PreProcessing.demix_always'),
+                demix_if_needed=
+                    py_parset.getStringVector('PreProcessing.demix_if_needed'),
                 parset=ndppp_parset)
 
         # *********************************************************************
