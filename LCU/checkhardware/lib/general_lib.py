@@ -14,6 +14,7 @@ def writeMessage(msg):
 def getShortDateStr(tm=time.gmtime()):
     return (time.strftime("%Y%m%d", tm))
 
+
 # Run cmd with args and return response 
 def sendCmd(cmd='', args=''):
     if cmd != '':

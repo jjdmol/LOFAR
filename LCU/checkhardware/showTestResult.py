@@ -5,51 +5,59 @@
 import sys
 import os
 import string
-
-libPath = libPath = '/opt/stationtest/lib'
-sys.path.insert(0, libPath)
-
-from general_lib import *
-from lofar_lib import *
+import datetime
+import time
 
 def printHelp():
     print "possible option for this script"
     print "-------------------------------"
-    print "-h  print this help screen"
-    print "-s  station to show 'CS002C'"
+    print "-h            print this help screen"
+    print "-s=CS002C     station to show 'CS002C'"
+    print "-d=2          show last 2 days"
+    print "-p=full_path  path too this script"
     print "-------------------------------"
     sys.exit(0)
-    
 
 i = 1
 args = dict()
 while i < len(sys.argv):
     if sys.argv[i][0] == '-':
-        opt = sys.argv[i][1]
-        if opt in ('s',):
-            optval = sys.argv[i+1]
-            args[opt] = optval.upper()
-            i += 2
-        else:
-            args[opt] = '-'
-            i += 1       
+        opt = sys.argv[i][1].upper()
+        optval = '-'
+        valpos = sys.argv[i].find('=')
+        if valpos != -1:
+            optval = sys.argv[i][valpos+1:]
+        args[opt] = optval
+        i += 1       
 
-if args.has_key('h'):
+if args.has_key('H'):
     printHelp()
-StID = args.get('s', getHostName())
+    sys.exit(0)
 
-#print os.path.join(os.getcwd(),'log')
+runPath = r'/opt/stationtest'
+if args.has_key('P'):
+	runPath = args.get('P')
+libPath = runPath+r'/lib'
+sys.path.insert(0, libPath)
 
+from general_lib import *
+from lofar_lib import *
+
+StID = args.get('S', getHostName()).upper()
 
 def main():
-    f = open("/opt/stationtest/checkHardware.conf", 'r')
+    f = open(runPath+r'/checkHardware.conf', 'r')
     data = f.readlines()
     f.close()
     for line in data:
         if line.find('log-dir') != -1:
             key, logdir = line.strip().split('=')
     
-    testfilename = '%s_StationTest.csv' %(StID)
+    if args.has_key('D'):
+        testfilename = '%s_StationTestHistory.csv' %(StID)
+    else:
+        testfilename = '%s_StationTest.csv' %(StID)
+        
     fullFilename = os.path.join(logdir, testfilename)
     f = open(fullFilename, 'r')
     data = f.readlines()
@@ -72,6 +80,16 @@ def main():
     _element_nr = -1
     _c_summator_defect = -1
     
+    first_date = 0
+    if args.has_key('D'):
+        days = int(args.get('D'))
+        linedate = data[len(data)-1].strip().split(',')[0]
+        #print linedate
+        dt = datetime.date(int(linedate[:4]), int(linedate[4:6]), int(linedate[6:]))
+        start_date = dt - datetime.timedelta(days-1)
+        first_date = int(getShortDateStr(tm=start_date.timetuple()))
+        #print first_date
+        
     for line in data:
         partnumber = -1
         if line[0] == '#':
@@ -80,6 +98,10 @@ def main():
         if len(d) < 4:
             continue
         date = d[0]
+           
+        if first_date != 0 and int(date) < first_date:
+            continue
+            
         part = d[1]
         if d[2] != '---':
             partnumber = int(d[2])
@@ -99,8 +121,13 @@ def main():
                 kv[d[i]] = '-'
                 
         if part == 'NFO':
-            print " Test date : %s-%s-%s" %(date[6:], date[4:6], date[:4])
-            print " Tests done: %s" %(string.join(d[4:],', ')) 
+            if args.has_key('D'):
+            	print
+            	print '-'*103
+                print "   NEW TEST  "*8
+                print '-'*103
+            print ">> Test date : %s-%s-%s" %(date[6:], date[4:6], date[:4])
+            print ">> Tests done: %s" %(string.join(d[4:],', ')) 
             
         if part == 'RSP':
             if part != _part:
@@ -167,16 +194,20 @@ def main():
                       (lbaNumber, 'RCU %d/%d' %(RCUx, RCUy), kv.get('X',('?',)), kv.get('Xoff',('?',)), kv.get('Y',('?',)), kv.get('Yoff',('?',)))
             
             if msg == 'LOW_NOISE':
-                if kv.has_key('X'):
-                    print "   Antenna %2d, %-7s, X Low Noise" %(lbaNumber, 'RCU %d' %(RCUx))
-                if kv.has_key('Y'):
-                    print "   Antenna %2d, %-7s, Y Low Noise" %(lbaNumber, 'RCU %d' %(RCUy))
+                if kv.has_key('Xproc'):
+                    print "   Antenna %2d, %-7s, X Low Noise, %s%% bad, signal=%sdB" %\
+                          (lbaNumber, 'RCU %d' %(RCUx), kv.get('Xproc'), kv.get('Xval'))
+                if kv.has_key('Yproc'):
+                    print "   Antenna %2d, %-7s, Y Low Noise, %s%% bad, signal=%sdB" %\
+                          (lbaNumber, 'RCU %d' %(RCUy), kv.get('Yproc'), kv.get('Yval'))
                     
             if msg == 'HIGH_NOISE':
-                if kv.has_key('X'):
-                    print "   Antenna %2d, %-7s, X High Noise" %(lbaNumber, 'RCU %d' %(RCUx))
-                if kv.has_key('Y'):
-                    print "   Antenna %2d, %-7s, Y High Noise" %(lbaNumber, 'RCU %d' %(RCUy))
+                if kv.has_key('Xproc'):
+                    print "   Antenna %2d, %-7s, X High Noise, %s%% bad, signal=%sdB" %\
+                          (lbaNumber, 'RCU %d' %(RCUx), kv.get('Xproc'), kv.get('Xval'))
+                if kv.has_key('Yproc'):
+                    print "   Antenna %2d, %-7s, Y High Noise, %s%% bad, signal=%sdB" %\
+                          (lbaNumber, 'RCU %d' %(RCUy), kv.get('Yproc'), kv.get('Yval'))
                     
             if msg == 'FAIL':
                 if kv.has_key('X'):
@@ -211,16 +242,20 @@ def main():
                       (lbaNumber, 'RCU %d/%d' %(RCUx, RCUy), kv.get('X',('?',)), kv.get('Xoff',('?',)), kv.get('Y',('?',)), kv.get('Yoff',('?',)))
             
             if msg == 'LOW_NOISE':
-                if kv.has_key('X'):
-                    print "   Antenna %2d, %-7s, X Low Noise" %(lbaNumber, 'RCU %d' %(RCUx))
-                if kv.has_key('Y'):
-                    print "   Antenna %2d, %-7s, Y Low Noise" %(lbaNumber, 'RCU %d' %(RCUy))
+                if kv.has_key('Xproc'):
+                    print "   Antenna %2d, %-7s, X Low Noise, %s%% bad, signal=%sdB" %\
+                          (lbaNumber, 'RCU %d' %(RCUx), kv.get('Xproc'), kv.get('Xval'))
+                if kv.has_key('Yproc'):
+                    print "   Antenna %2d, %-7s, Y Low Noise, %s%% bad, signal=%sdB" %\
+                          (lbaNumber, 'RCU %d' %(RCUy), kv.get('Yproc'), kv.get('Yval'))
                     
             if msg == 'HIGH_NOISE':
-                if kv.has_key('X'):
-                    print "   Antenna %2d, %-7s, X High Noise" %(lbaNumber, 'RCU %d' %(RCUx))
-                if kv.has_key('Y'):
-                    print "   Antenna %2d, %-7s, Y High Noise" %(lbaNumber, 'RCU %d' %(RCUy))
+                if kv.has_key('Xproc'):
+                    print "   Antenna %2d, %-7s, X High Noise, %s%% bad, signal=%sdB" %\
+                          (lbaNumber, 'RCU %d' %(RCUx), kv.get('Xproc'), kv.get('Xval'))
+                if kv.has_key('Yproc'):
+                    print "   Antenna %2d, %-7s, Y High Noise, %s%% bad, signal=%sdB" %\
+                          (lbaNumber, 'RCU %d' %(RCUy), kv.get('Yproc'), kv.get('Yval'))
             
             if msg == 'FAIL':
                 if kv.has_key('X'):
@@ -254,16 +289,16 @@ def main():
                 print "   No RF all elements" 
             
             if msg == 'LOW_NOISE':
-                if kv.has_key('X'):
-                    print "   X Low Noise"
-                if kv.has_key('Y'):
-                    print "   Y Low Noise"
+                if kv.has_key('Xproc'):
+                    print "   X Low Noise, %s%% bad, signal=%sdB" %(kv.get('Xproc'), kv.get('Xval'))
+                if kv.has_key('Yproc'):
+                    print "   Y Low Noise, %s%% bad, signal=%sdB" %(kv.get('Yproc'), kv.get('Yval'))
                     
             if msg == 'HIGH_NOISE':
-                if kv.has_key('X'):
-                    print "   X High Noise"
-                if kv.has_key('Y'):
-                    print "   Y High Noise"
+                if kv.has_key('Xproc'):
+                    print "   X High Noise, %s%% bad, signal=%sdB" %(kv.get('Xproc'), kv.get('Xval'))
+                if kv.has_key('Yproc'):
+                    print "   Y High Noise, %s%% bad, signal=%sdB" %(kv.get('Yproc'), kv.get('Yval'))
             
             if msg == 'FAIL':
                 # loop over number of elements

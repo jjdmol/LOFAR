@@ -27,6 +27,7 @@ f = open(fullFilename, 'r')
 testdata = f.readlines()
 f.close()
 
+last_c_summator = -1
 for line in testdata:
     if line[0] == '#':
         continue
@@ -78,9 +79,9 @@ for line in testdata:
                            (partNr*2+1, float(keyinfo['Y'])))               
         
         elif msgType == 'DOWN':
-            log.addLine('LBAmd1>: Sv=normal  Pr=normal , LBA Outer (LBL) down: RCU: %d factor: %3.1f offset: %d' %\
+            log.addLine('LBAdn1>: Sv=normal  Pr=normal , LBA Outer (LBL) down: RCU: %d factor: %3.1f offset: %d' %\
                        (partNr*2, float(keyinfo['X']), int(keyinfo['Xoff'])))
-            log.addLine('LBAmd1>: Sv=normal  Pr=normal , LBA Outer (LBL) down: RCU: %d factor: %3.1f offset: %d' %\
+            log.addLine('LBAdn1>: Sv=normal  Pr=normal , LBA Outer (LBL) down: RCU: %d factor: %3.1f offset: %d' %\
                        (partNr*2+1, float(keyinfo['Y']), int(keyinfo['Yoff'])))
         
         elif msgType == 'TOOLOW':
@@ -96,22 +97,26 @@ for line in testdata:
                            (partNr*2, float(keyinfo['Y'])))           
         
         elif msgType == 'DOWN':
-            log.addLine('LBAmd3>: Sv=normal  Pr=normal , LBA Inner (LBH) down: RCU: %d factor: %3.1f offset: %d' %\
+            log.addLine('LBAdn3>: Sv=normal  Pr=normal , LBA Inner (LBH) down: RCU: %d factor: %3.1f offset: %d' %\
                        (partNr*2, float(keyinfo['X']), int(keyinfo['Xoff'])))
-            log.addLine('LBAmd3>: Sv=normal  Pr=normal , LBA Inner (LBH) down: RCU: %d factor: %3.1f offset: %d' %\
+            log.addLine('LBAdn3>: Sv=normal  Pr=normal , LBA Inner (LBH) down: RCU: %d factor: %3.1f offset: %d' %\
                        (partNr*2+1, float(keyinfo['Y']), int(keyinfo['Yoff'])))
         
         elif msgType == 'TOOLOW':
                 log.addLine('LBAmd3>: Sv=normal  Pr=normal , LBA	levels to low!!!' )               
 
     if part == 'HBA':
-        if msgType == 'FAIL':
+    	if msgType == 'C_SUMMATOR':
+    		last_c_summator = partNr
+    		log.addLine('HBAmdt>: Sv=normal  Pr=normal , Tile %d - RCU %d; Broken. No modem communication' %\
+                                (partNr, partNr*2+1))
+        if last_c_summator != partNr and msgType == 'FAIL':
             for elem_nr in range(1,17,1):
 
                 if keyinfo.has_key('M%d' %(elem_nr)):
-                    val1 = keyinfo.get('M%d' %(elem_nr))
-                    log.addLine('HBAmdt>: Sv=normal  Pr=normal , Tile %d - RCU %d; Element %s Suspicious. : (%s))' %\
-                               (partNr, partNr*2+1, elem_nr, val1))
+                    val = keyinfo.get('M%d' %(elem_nr))
+                    log.addLine('HBAmdt>: Sv=normal  Pr=normal , Tile %d - RCU %d; Element %d Broken. No modem communication : (%s)' %\
+                                (partNr, partNr*2+1, elem_nr, val))
 
                 if keyinfo.has_key('X%d' %(elem_nr)):
                     val = keyinfo.get('X%d' %(elem_nr))
