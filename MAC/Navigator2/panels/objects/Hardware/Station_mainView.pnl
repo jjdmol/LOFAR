@@ -47,6 +47,10 @@ LANG:1 0
 0
 1 20 3 "" 0
 0
+1 21 4 "" 0
+0
+1 22 5 "" 0
+0
 0
 LAYER, 1 
 1
@@ -89,5 +93,15 @@ LANG:1 0
 "objects\\genericOnOffView.pnl" 60 0 T 36 U 
 2
 "$fullDP""LOFAR_PIC_Cabinet0_Subrack0_TBBoard0.recording"
+"$station""$station"
+3 4 "PANEL_REF4" -1
+"objects\\Hardware\\antennaBroken_Small.pnl" 80 0 T 37 1 0 1 2 0
+2
+"$antennaType""HBA"
+"$station""$station"
+3 5 "PANEL_REF5" -1
+"objects\\Hardware\\antennaBroken_Small.pnl" 100 0 T 38 1 0 1 5 0
+2
+"$antennaType""LBA"
 "$station""$station"
 0
