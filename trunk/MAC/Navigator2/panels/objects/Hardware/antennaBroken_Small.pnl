@@ -56,7 +56,7 @@ void updateAntennaInfo(string ident, dyn_dyn_anytype tab)
   int nrBroken = 0;
   int z; 
   for(z=2;z<=dynlen(tab);z++) {
-    if (tab[z][2] != 10) nrbroken++;
+    if (tab[z][2] != 10) nrBroken++;
   }
   
   int percent= 0;
