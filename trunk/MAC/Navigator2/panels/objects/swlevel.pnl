@@ -173,7 +173,7 @@ addLevel(int lvl,string changed)
   string oldlvl=\"white\";
   string oldToolTip = \"\";
   for (int i=15-filled; i< 15 ;i++) {
-    if (i=0) continue;
+    if (i<=0) continue;
     // get the original color and tooltip from the next right point and move it to this point
     getValue(\"level\"+(i+1)+\"_text\",\"backCol\",oldlvl);
     setValue(\"level\"+(i)+\"_text\",\"backCol\",oldlvl);

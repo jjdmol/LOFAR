@@ -97,6 +97,8 @@ void navProgressCtrl_handleObservation(string selection){
   if (percentDone > 100) {
     LOG_ERROR("navProgressCtrl.ctl:navProgressCtrl_handleObservation| ERROR: Observation exceeds stoptime!! " + selection);
     percentDone = 100;
+  } else if (percentDone < 0) {
+    percentDone=0;
   }
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| PercentDone: "+percentDone);
   // change progressBar
