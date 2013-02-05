@@ -445,7 +445,7 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
       
       ACTIVE_TAB = aSelection;
       if (navTabCtrl_showView()) {
-        navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait navTabCtrl_showView");
+        navFunct_waitObjectReady(750,"handleViewSelectionEvent:TabChanged wait navTabCtrl_showView");
       
         
         // change locator
