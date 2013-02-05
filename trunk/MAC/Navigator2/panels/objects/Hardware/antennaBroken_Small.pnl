@@ -70,8 +70,8 @@ void updateAntennaInfo(string ident, dyn_dyn_anytype tab)
   } else if ( percent >=5 && percent < 20) {
     color = \"Lofar_suspicious\";
   } else if ( percent >= 20 && percent < 100) {
-    color = \"Lofar_error\";
-  } else if (percent > 99) {
+    color = \"Lofar_broken\";
+  } else if (nrBroken == nrAntennas) {
     color = \"black\";
   }      
   
