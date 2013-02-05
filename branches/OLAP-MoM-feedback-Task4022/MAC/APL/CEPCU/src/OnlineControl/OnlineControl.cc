@@ -90,7 +90,8 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsStopTime         (),
 	itsStopTimerID      (0),
 	itsFinishTimerID 	(0),
-	itsInFinishState	(false)
+	itsInFinishState	(false),
+	itsFeedbackAvailable(false)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -372,7 +373,8 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	} break;
 
 	case F_CONNECTED: {
-		ASSERTSTR (&port == itsParentPort, "F_CONNECTED event from port " << port.getName());
+//		ASSERTSTR (&port == itsParentPort, "F_CONNECTED event from port " << port.getName());
+		LOG_INFO_STR("F_CONNECTED event from port " << port.getName());
 	} break;
 
 	case F_DISCONNECTED: {
@@ -554,7 +556,9 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		uint32	result = forkexec(startCmd.c_str());
 		LOG_INFO_STR ("Result of command = " << result);
 
-//		itsTimerPort->setTimer(302.0); // IONProc, and thus CEPlogProcessor, can take up to 5 minutes to wrap up
+		if (itsFeedbackAvailable) {
+			TRAN(OnlineControl::completing_state);
+		}
 		break;
 	}
 
@@ -791,86 +795,89 @@ uint32 OnlineControl::_doBoot()
 void OnlineControl::_passMetadatToOTDB()
 {
 	// No name specified?
+	bool	metadataFileAvailable (true);
 	uint32	obsID(globalParameterSet()->getUint32("Observation.ObsID", 0));
 	string  feedbackFile = observationParset(obsID)+"_feedback";
 	LOG_INFO_STR ("Expecting metadata to be in file " << feedbackFile);
 	if (feedbackFile.empty()) {
-		return;
+		metadataFileAvailable = false;
 	}
 
 	// read parameterset
-	try {
-		ParameterSet	metadata;
-		metadata.adoptFile(feedbackFile);
+	// Try to setup the connection with the database
+	string	confFile = globalParameterSet()->getString("OTDBconfFile", "SASGateway.conf");
+	ConfigLocator	CL;
+	string	filename = CL.locate(confFile);
+	LOG_INFO_STR("Trying to read database information from file " << filename);
+	ParameterSet	otdbconf;
+	otdbconf.adoptFile(filename);
+	string database = otdbconf.getString("SASGateway.OTDBdatabase");
+	string dbhost   = otdbconf.getString("SASGateway.OTDBhostname");
+	OTDBconnection  conn("paulus", "boskabouter", database, dbhost);
+	if (!conn.connect()) {
+		LOG_FATAL_STR("Cannot connect to database " << database << " on machine " << dbhost);
+		// WE DO HAVE A PROBLEM HERE BECAUSE THIS PIPELINE CANNOT BE SET TO FINISHED IN SAS.
+		return;
+	}
+	LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
 
-		// Try to setup the connection with the database
-		string	confFile = globalParameterSet()->getString("OTDBconfFile", "SASGateway.conf");
-		ConfigLocator	CL;
-		string	filename = CL.locate(confFile);
-		LOG_INFO_STR("Trying to read database information from file " << filename);
-		ParameterSet	otdbconf;
-		otdbconf.adoptFile(filename);
-		string database = otdbconf.getString("SASGateway.OTDBdatabase");
-		string dbhost   = otdbconf.getString("SASGateway.OTDBhostname");
-		OTDBconnection  conn("paulus", "boskabouter", database, dbhost);
-		if (!conn.connect()) {
-			LOG_FATAL_STR("Cannot connect to database " << database << " on machine " << dbhost);
-			return;
-		}
-		LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
-
-		TreeValue   tv(&conn, getObservationNr(getName()));
-
-		// Loop over the parameterset and send the information to the KVTlogger.
-		// During the transition phase from parameter-based to record-based storage in OTDB the
-		// nodenames ending in '_' are implemented both as parameter and as record.
-		ParameterSet::iterator		iter = metadata.begin();
-		ParameterSet::iterator		end  = metadata.end();
-		while (iter != end) {
-			string	key(iter->first);	// make destoyable copy
-			rtrim(key, "[]0123456789");
-	//		bool	doubleStorage(key[key.size()-1] == '_');
-			bool	isRecord(iter->second.isRecord());
-			//   isRecord  doubleStorage
-			// --------------------------------------------------------------
-			//      Y          Y           store as record and as parameters
-			//      Y          N           store as parameters
-			//      N          *           store parameter
-			if (!isRecord) {
-				LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
-				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
-			}
-			else {
-	//			if (doubleStorage) {
-	//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
-	//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
-	//			}
-				// to store is a node/param values the last _ should be stipped of
-				key = iter->first;		// destroyable copy
-	//			string::size_type pos = key.find_last_of('_');
-	//			key.erase(pos,1);
-				ParameterRecord	pr(iter->second.getRecord());
-				ParameterRecord::const_iterator	prIter = pr.begin();
-				ParameterRecord::const_iterator	prEnd  = pr.end();
-				while (prIter != prEnd) {
-					LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
-					tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
-					prIter++;
+	if (metadataFileAvailable) {
+		try {
+			TreeValue   tv(&conn, getObservationNr(getName()));
+			ParameterSet	metadata;
+			metadata.adoptFile(feedbackFile);
+			// Loop over the parameterset and send the information to the KVTlogger.
+			// During the transition phase from parameter-based to record-based storage in OTDB the
+			// nodenames ending in '_' are implemented both as parameter and as record.
+			ParameterSet::iterator		iter = metadata.begin();
+			ParameterSet::iterator		end  = metadata.end();
+			while (iter != end) {
+				string	key(iter->first);	// make destoyable copy
+				rtrim(key, "[]0123456789");
+		//		bool	doubleStorage(key[key.size()-1] == '_');
+				bool	isRecord(iter->second.isRecord());
+				//   isRecord  doubleStorage
+				// --------------------------------------------------------------
+				//      Y          Y           store as record and as parameters
+				//      Y          N           store as parameters
+				//      N          *           store parameter
+				if (!isRecord) {
+					LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
+					tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
 				}
+				else {
+		//			if (doubleStorage) {
+		//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
+		//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+		//			}
+					// to store is a node/param values the last _ should be stipped of
+					key = iter->first;		// destroyable copy
+		//			string::size_type pos = key.find_last_of('_');
+		//			key.erase(pos,1);
+					ParameterRecord	pr(iter->second.getRecord());
+					ParameterRecord::const_iterator	prIter = pr.begin();
+					ParameterRecord::const_iterator	prEnd  = pr.end();
+					while (prIter != prEnd) {
+						LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
+						tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
+						prIter++;
+					}
+				}
+				iter++;
 			}
-			iter++;
+			LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
 		}
-		LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
+		catch (APSException &e) {
+			// Parameterfile not found
+			LOG_FATAL(e.text());
+		}
+	}
 
-		// finally report state to SAS
-		TreeMaintenance	tm(&conn);
-		TreeStateConv	tsc(&conn);
-		tm.setTreeState(obsID, tsc.get("finished"));
-	}
-	catch (APSException &e) {
-		// Parameterfile not found
-		LOG_FATAL(e.text());
-	}
+	// finally report state to SAS
+	sleep (60);			/// AAARRRRGGGHH, make 'sure' we are later than the ObservationControl. #4022
+	TreeMaintenance	tm(&conn);
+	TreeStateConv	tsc(&conn);
+	tm.setTreeState(obsID, tsc.get("finished"));
 }
 // -------------------- Application-order administration --------------------
 
@@ -921,13 +928,22 @@ void OnlineControl::_handleDataIn(GCFPortInterface& port)
 
 	if (!strcmp(buf, "ABORT")) {
 		itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
-		TRAN(OnlineControl::finishing_state);
+		itsFeedbackAvailable = true;
 	}
 	else if (!strcmp(buf, "FINISHED")) {
-		TRAN(OnlineControl::finishing_state);
+		itsFeedbackAvailable = true;
 	}
 	else {
 		LOG_FATAL_STR("Received command on feedback port unrecognized");
+	}
+
+	if (itsFeedbackAvailable) {	// recognized command?
+		if (itsInFinishState) {	// already stopped BGP?
+			TRAN(OnlineControl::completing_state);	// pass metadata
+		}
+		else {
+			TRAN(OnlineControl::finishing_state);	// stop BGP first.
+		}
 	}
 }
 

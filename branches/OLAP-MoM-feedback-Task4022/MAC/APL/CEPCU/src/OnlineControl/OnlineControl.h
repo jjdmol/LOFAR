@@ -127,6 +127,7 @@ private:
 	uint16					itsStopTimerID;
 	uint16					itsFinishTimerID;
 	bool					itsInFinishState;
+	bool					itsFeedbackAvailable;
 };
 
   };//CEPCU
