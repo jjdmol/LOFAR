@@ -92,7 +92,7 @@ LANG:1 0
 3 3 "PANEL_REF3" -1
 "objects\\genericOnOffView.pnl" 60 0 T 36 U 
 2
-"$fullDP""LOFAR_PIC_Cabinet0_Subrack0_TBBoard0.recording"
+"$fullDP""LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0.TBB.mode"
 "$station""$station"
 3 4 "PANEL_REF4" -1
 "objects\\Hardware\\antennaBroken_Small.pnl" 80 0 T 37 1 0 1 2 0

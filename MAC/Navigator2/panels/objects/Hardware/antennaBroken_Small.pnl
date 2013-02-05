@@ -51,12 +51,12 @@ void updateAntennaInfo(string ident, dyn_dyn_anytype tab)
     setValue(\"antenna\",\"toolTipText\",\"nrAntennas not found\");
     setValue(\"antenna\", \"backCol\", color);
   }  
-  float step = nrAntennas / 100;
+  float step = (float)nrAntennas / 100.;
 
   int nrBroken = 0;
   int z; 
   for(z=2;z<=dynlen(tab);z++) {
-    if (tab[z][2] != 10) nrBroken++;
+    if (tab[z][2] >= 20) nrBroken++;
   }
   
   int percent= 0;
@@ -86,7 +86,36 @@ string antennaType = \"\";
 string baseDP=\"\";
 string obsDP=\"\";
 
-" 0
+bool    bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {  
+    navPanel_setEvent(station,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"antennaBroken_Small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(station,\"ChangePanel\");
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+}" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -99,7 +128,15 @@ LANG:1 0
 "antenna"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 0 0 0 0 0 0
 E E E
 0
@@ -108,7 +145,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 0 -10 1 E 0 10 14 19
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 0 -10 1 E 0 10 14 19
 0
 LAYER, 1 
 1
