@@ -3,7 +3,7 @@
 
 ## database info
 dbName="LOFAR_4"
-dbHost="sas001"
+dbHost="sasdb"
 
 def getDBname():
     return(dbName)

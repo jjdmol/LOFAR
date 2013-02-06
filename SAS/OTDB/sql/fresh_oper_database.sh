@@ -11,9 +11,9 @@ fi
 echo "DELETING AND REBUILDING DATABASE " $DATABASENAME
 sleep 5
 #
-dropdb -h sas001 -U lofarsystem $DATABASENAME
-createdb -h sas001 -U lofarsystem $DATABASENAME
+dropdb -h sasdb -U lofarsystem $DATABASENAME
+createdb -h sasdb -U lofarsystem $DATABASENAME
 
 echo "creating new tables"
-psql -f create_OTDB.sql -h sas001 -U lofarsystem $DATABASENAME 2>&1 | grep ERROR | grep -v "does not exist"
+psql -f create_OTDB.sql -h sasdb -U lofarsystem $DATABASENAME 2>&1 | grep ERROR | grep -v "does not exist"
 

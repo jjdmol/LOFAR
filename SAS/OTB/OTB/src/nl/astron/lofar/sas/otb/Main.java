@@ -74,7 +74,7 @@ public class Main {
         try {
             String logConfigName = "OTB.log_prop";
             String logConfig = "";
-            String server    = "sas001";
+            String server    = "sasdb";
             String port      = "10199";
             String database  = "LOFAR_2";
             String user      = "observer";
