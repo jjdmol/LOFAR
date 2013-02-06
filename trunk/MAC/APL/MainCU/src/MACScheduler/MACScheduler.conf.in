@@ -2,7 +2,7 @@
 
 # OTDB connection info
 OTDBdatabasename	= LOFAR_4
-OTDBhostname		= sas001
+OTDBhostname		= sasdb
 OTDBusername		= paulus
 OTDBpassword		= boskabouter
 OTDBpollInterval	= 5s

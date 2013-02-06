@@ -39,7 +39,7 @@ SyntaxError()
 	echo "        - databasename is always needed"
 	echo "        - versionnumber is svn revision number (max 6 digits) [Current]"
 	echo "        - qualifier can be development|test|operational|example []"
-	echo "        - hostname is the hostname of the database server [sas001]" 
+	echo "        - hostname is the hostname of the database server " 
 	echo "        - directory is the path to the executable load_OTDB_comps [/opt/lofar/bin]"
         echo "        - Option -l says this is run locally in a checked out SVN tree"
 	echo ""
