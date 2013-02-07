@@ -72,13 +72,13 @@ public:
 	// Connect to BGPAppl propset and start remaining tasks.
    	GCFEvent::TResult propset_state (GCFEvent& e, GCFPortInterface& p);
 	// Normal control mode. 
-   	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
-	// Finishing mode. 
-	GCFEvent::TResult finishing_state(GCFEvent& event, GCFPortInterface& port);
+   	GCFEvent::TResult active_state    (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult finishing_state (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult completing_state(GCFEvent& event, GCFPortInterface& port);
 	
 	// Interrupthandler for switching to finisingstate when exiting the program
 	static void signalHandler (int	signum);
-	void	    finish();
+	void	    finish(int	result);
 
 private:
 	// avoid defaultconstruction and copying
@@ -89,13 +89,15 @@ private:
 	uint32	_doBoot();
 	void	_setupBGPmappingTables();
 	void   	_finishController	 (uint16_t 				result);
-   	void	_connectedHandler	 (GCFPortInterface& 	port);
-   	void	_disconnectedHandler (GCFPortInterface& 	port);
+   	void	_handleDisconnect	 (GCFPortInterface& 	port);
+   	void	_handleAcceptRequest (GCFPortInterface& 	port);
+   	void	_handleDataIn		 (GCFPortInterface& 	port);
 	void	_setState	  		 (CTState::CTstateNr	newState);
 	void	_databaseEventHandler(GCFEvent&				event);
 	void	_passMetadatToOTDB   ();
 
 	// ----- datamembers -----
+	string						itsMyName;
    	RTDBPropertySet*           	itsPropertySet;
    	RTDBPropertySet*           	itsBGPApplPropSet;
 	bool					  	itsPropertySetInitialized;
@@ -112,6 +114,11 @@ private:
 
 	CTState::CTstateNr		itsState;
 
+	// QUICK FIX #4022
+	GCFTCPPort*				itsFeedbackListener;
+	GCFTCPPort*				itsFeedbackPort;
+	int						itsFeedbackResult;
+
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
@@ -120,6 +127,7 @@ private:
 	uint16					itsStopTimerID;
 	uint16					itsFinishTimerID;
 	bool					itsInFinishState;
+	bool					itsFeedbackAvailable;
 };
 
   };//CEPCU

@@ -946,6 +946,27 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    exportMetadata
+ * Signature: (ILjava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportMetadata(JNIEnv *env, jobject jTreeMaintenance, jint treeID, jstring aName) {
+  jboolean isCopy(0);
+  jboolean succes(0);
+  const char* name = env->GetStringUTFChars (aName, &isCopy);
+  try {
+    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->exportMetadata (treeID, name);
+    env->ReleaseStringUTFChars (aName, name);
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::exportMetadata(" << treeID << "," << name <<   ") "<< ex.what() << endl;
+    env->ReleaseStringUTFChars (aName, name);
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+  return succes;
+}
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
  * Method:    deleteTree
  * Signature: (I)Z
  */
