@@ -35,7 +35,7 @@
 -- Types:	OTDBnode
 --
 CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
-  RETURNS BOOLEAN AS '
+  RETURNS BOOLEAN AS $$
     --  $Id$
 	DECLARE
 		TTtemplate  CONSTANT	INT2 := 20;
@@ -52,7 +52,7 @@ CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
 		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized\';
+			RAISE EXCEPTION 'Not authorized';
 			RETURN FALSE;
 		END IF;
 
@@ -62,36 +62,36 @@ CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
 		FROM	OTDBtree
 		WHERE	treeID = $2;
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Tree % does not exist\', $1;
+		  RAISE EXCEPTION 'Tree % does not exist', $1;
 		END IF;
 
 		IF vTreeType = TTtemplate THEN
 			-- get ParentID of node to duplicate
-			vLimits := replace($5, \'\\\'\', \'\');
+			vLimits := replace($5, E'\\\'', E'');
 			UPDATE	VICtemplate
 			SET		instances = $4,
 					limits    = vLimits
 			WHERE	treeID = $2
 			AND 	nodeID = $3;
 			IF NOT FOUND THEN
-			  RAISE EXCEPTION \'Node % of template-tree could not be updated\', $3;
+			  RAISE EXCEPTION 'Node % of template-tree could not be updated', $3;
 			  RETURN FALSE;
 			END IF;
 		ELSEIF vTreeType = TThierarchy THEN
-			vLimits := replace($5, \'\\\'\', \'\');
+			vLimits := replace($5, E'\\\'', E'');
 			UPDATE	VIChierarchy
-			SET		value = vLimits
+			SET	value = vLimits
 			WHERE	treeID = $2
 			AND 	nodeID = $3;
 			IF NOT FOUND THEN
-			  RAISE EXCEPTION \'Node % of VIC-tree could not be updated\', $3;
+			  RAISE EXCEPTION 'Node % of VIC-tree could not be updated', $3;
 			  RETURN FALSE;
 			END IF;
 		ELSE
-			RAISE EXCEPTION \'Nodes of PIC trees can not be updated\';
+			RAISE EXCEPTION 'Nodes of PIC trees can not be updated';
 		END IF;
 
 		RETURN TRUE;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
