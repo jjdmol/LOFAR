@@ -26,7 +26,7 @@ then
   then
     ISTESTENV=1
     STORAGE_HOME=/data/home/lofartest
-    OTDB_HOST=sas099
+    OTDB_HOST=sasdbtest
 
     IONPROC_PARSET="/bghome0/lofarsys/parsets/T$OBSID.parset"
     STORAGE_PARSET="/globalhome/lofartest/log/T$OBSID.parset"
@@ -34,7 +34,7 @@ then
   else
     ISTESTENV=0
     STORAGE_HOME=/data/home/lofarsys
-    OTDB_HOST=sas001
+    OTDB_HOST=sasdb
 
     IONPROC_PARSET="/bghome0/lofarsys/parsets/L$OBSID.parset"
     STORAGE_PARSET="/globalhome/lofarsystem/log/L$OBSID.parset"
@@ -94,7 +94,7 @@ OLAP.FinalMetaDataGatherer.userName = $USER
 OLAP.FinalMetaDataGatherer.sshIdentityFile = $HOME/id_rsa
 OLAP.FinalMetaDataGatherer.executable = LD_LIBRARY_PATH= $FINALMETADATAGATHERER
 
-OLAP.FinalMetaDataGatherer.database.host = sas099
+OLAP.FinalMetaDataGatherer.database.host = sasdb
 
 OLAP.CNProc.partition = $PARTITION
   "

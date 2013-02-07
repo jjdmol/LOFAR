@@ -100,11 +100,11 @@ class cDB:
             pol_nr = _rcu % 2  # 0=X, 1=Y
             
             if pol_nr == 0:
-                if self.lbl.ant[ant_nr].x_error: error_count += 1
+                if self.nr_lbl > 0 and self.lbl.ant[ant_nr].x_error: error_count += 1
                 if self.lbh.ant[ant_nr].x_error: error_count += 1
                 if self.hba.tile[ant_nr].x_rcu_error: error_count += 1
             else:
-                if self.lbl.ant[ant_nr].y_error: error_count += 1
+                if self.nr_lbl > 0 and self.lbl.ant[ant_nr].y_error: error_count += 1
                 if self.lbh.ant[ant_nr].y_error: error_count += 1
                 if self.hba.tile[ant_nr].y_rcu_error: error_count += 1
                     
@@ -172,14 +172,14 @@ class cDB:
                         else:
                             valstr = ''
                             if ant.x_low_noise or ant.y_low_noise:
-                                if ant.x_low_noise: valstr += ',X'
-                                if ant.y_low_noise: valstr += ',Y'
+                                if ant.x_low_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f' %(ant.x_low_proc, ant.x_low_val)
+                                if ant.y_low_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f' %(ant.y_low_proc, ant.y_low_val)
                                 log.addLine("%s,%s,%03d,LOW_NOISE%s" %(date, lba.label, ant.nr, valstr))
                             
                             valstr = ''
                             if ant.x_high_noise or ant.y_high_noise:
-                                if ant.x_high_noise: valstr += ',X'
-                                if ant.y_high_noise: valstr += ',Y'
+                                if ant.x_high_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f' %(ant.x_high_proc, ant.x_high_val)
+                                if ant.y_high_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f' %(ant.y_high_proc, ant.y_high_val)
                                 log.addLine("%s,%s,%03d,HIGH_NOISE%s" %(date, lba.label, ant.nr, valstr))
                             
                             valstr = ''
@@ -196,13 +196,13 @@ class cDB:
             if tile.x_error or tile.y_error:
                 valstr = ''
                 if tile.x_low_noise or tile.y_low_noise:
-                    if tile.x_low_noise: valstr += ',X'
-                    if tile.y_low_noise: valstr += ',Y'
+                    if tile.x_low_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f' %(tile.x_low_proc, tile.x_low_val)
+                    if tile.y_low_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f' %(tile.y_low_proc, tile.y_low_val)
                     log.addLine("%s,HBA,%03d,LOW_NOISE%s" %(date, tile.nr, valstr))
 
                 if tile.x_high_noise or tile.y_high_noise:
-                    if tile.x_high_noise: valstr += ',X'
-                    if tile.y_high_noise: valstr += ',Y'
+                    if tile.x_high_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f' %(tile.x_high_proc, tile.x_high_val)
+                    if tile.y_high_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f' %(tile.y_high_proc, tile.y_high_val)
                     log.addLine("%s,HBA,%03d,HIGH_NOISE%s" %(date, tile.nr, valstr))
                 
                 # check for broken summators
@@ -307,6 +307,7 @@ class cDB:
     class cLBA:
         def __init__(self, label, nr_antennas, nr_offset=0):
             self.check_done = 0
+            self.check_time_noise = 0
             self.nr_antennas = nr_antennas
             self.nr_offset = nr_offset
             self.label = label
@@ -349,10 +350,23 @@ class cDB:
                 self.y_too_high   = 0
                 self.x_rcu_error  = 0
                 self.y_rcu_error  = 0
-                self.x_low_noise  = 0
-                self.x_high_noise = 0
-                self.y_low_noise  = 0
-                self.y_high_noise = 0
+                
+                # noise: state 0|1
+                # proc : bad time in meausured time 0..100%        
+                # val  : max or min meausured value
+                self.x_low_noise  = 0  
+                self.x_low_proc   = 0.0
+                self.x_low_val    = 0.0
+                self.x_high_noise = 0  
+                self.x_high_proc  = 0.0
+                self.x_high_noise = 0.0
+                self.y_low_noise  = 0  
+                self.y_low_proc   = 0.0
+                self.y_low_val    = 0.0
+                self.y_high_noise = 0  
+                self.y_high_proc  = 0.0
+                self.y_high_val   = 0.0
+
                 self.down = 0
                 
                 self.last_state = State['OFF']
@@ -378,6 +392,8 @@ class cDB:
     class cHBA:
         def __init__(self, nr_tiles):
             self.check_done = 0
+            self.check_time_noise = 0
+            self.check_time_noise_elements = 0
             self.nr_tiles = nr_tiles
             self.error   = 0
             self.avg_2_low = 0
@@ -403,10 +419,23 @@ class cDB:
                 self.y_rcu_error  = 0
                 self.x_error      = 0
                 self.y_error      = 0
-                self.x_low_noise  = 0
-                self.x_high_noise = 0
-                self.y_low_noise  = 0
-                self.y_high_noise = 0
+
+                # noise: state 0|1
+                # proc : bad time in meausured time 0..100%        
+                # val  : max or min meausured value
+                self.x_low_noise  = 0  
+                self.x_low_proc   = 0.0
+                self.x_low_val    = 0.0
+                self.x_high_noise = 0  
+                self.x_high_proc  = 0.0
+                self.x_high_noise = 0.0
+                self.y_low_noise  = 0  
+                self.y_low_proc   = 0.0
+                self.y_low_val    = 0.0
+                self.y_high_noise = 0  
+                self.y_high_proc  = 0.0
+                self.y_high_val   = 0.0
+                
                 self.p_summator_error = 0
                 self.c_summator_error = 0
                 self.nr_elements      = 16
@@ -437,14 +466,14 @@ class cDB:
                     if elem.modem_error:
                         modem_err_cnt += 1
     
-                    self.x_low_noise  = max(self.x_low_noise, elem.x_low_noise)
-                    self.x_high_noise = max(self.x_high_noise, elem.x_high_noise)
-                    self.y_low_noise  = max(self.y_low_noise, elem.y_low_noise)
-                    self.y_high_noise = max(self.y_high_noise, elem.y_high_noise)
+                    #self.x_low_noise  = max(self.x_low_noise, elem.x_low_noise)
+                    #self.x_high_noise = max(self.x_high_noise, elem.x_high_noise)
+                    #self.y_low_noise  = max(self.y_low_noise, elem.y_low_noise)
+                    #self.y_high_noise = max(self.y_high_noise, elem.y_high_noise)
                     self.x_error = max(self.x_error, elem.x_error)
                     self.y_error = max(self.y_error, elem.y_error)
                     
-                if (no_modem_cnt + modem_err_cnt) >= 15:
+                if (no_modem_cnt >= 8) or (modem_err_cnt >= 8):
                     self.c_summator_error = 1
                 if no_power_cnt >= 15:
                     self.p_summator_error = 1
@@ -502,7 +531,7 @@ class cDB:
                     self.x_error = max(self.x_too_low, self.x_too_high, self.x_low_noise, self.x_high_noise, self.x_no_signal,
                                        self.no_power, self.no_modem, self.modem_error)
                     
-                    self.y_error = max(self.y_too_low, self.y_too_high, self.x_low_noise, self.x_high_noise, self.y_no_signal, 
+                    self.y_error = max(self.y_too_low, self.y_too_high, self.y_low_noise, self.y_high_noise, self.y_no_signal, 
                                        self.no_power, self.no_modem, self.modem_error)
                     return
                 

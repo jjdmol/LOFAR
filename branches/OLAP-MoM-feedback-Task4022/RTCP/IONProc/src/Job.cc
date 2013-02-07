@@ -63,14 +63,14 @@ Job::Job(const char *parsetName)
   itsParset(parsetName),
   itsJobID(nextJobID ++), // no need to make thread safe
   itsObservationID(itsParset.observationID()),
+  itsLogPrefix(str(boost::format("[obs %d] ") % itsParset.observationID())),
   itsIsRunning(false),
   itsDoCancel(false),
   itsBlockNumber(0),
   itsRequestedStopTime(0.0),
-  itsStopTime(0.0)
+  itsStopTime(0.0),
+  itsStorageProcesses(itsParset, itsLogPrefix)
 {
-  itsLogPrefix = str(boost::format("[obs %d] ") % itsParset.observationID());
-
   // fill the cache to avoid regenerating it many times over
   itsParset.write(NULL);
 
@@ -103,7 +103,7 @@ Job::~Job()
 {
   // stop any started Storage processes
   if (myPsetNumber == 0)
-    stopStorageProcesses();
+    itsStorageProcesses.stop(0);
 
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Job " << (itsIsRunning ? "finished" : "cancelled") << " successfully");
@@ -171,210 +171,6 @@ template <typename T> void Job::broadcast(T &value)
       itsIONstreams[i]->write(&value, sizeof value);
   else
     itsIONstreams[0]->read(&value, sizeof value);
-}
-
-
-Job::StorageProcess::StorageProcess( Job &job, const Parset &parset, const string &logPrefix, int rank, const string &hostname )
-:
-  itsJob(job),
-  itsParset(parset),
-  itsLogPrefix(str(boost::format("%s [StorageWriter rank %2d host %s] ") % logPrefix % rank % hostname)),
-  itsRank(rank),
-  itsHostname(hostname)
-{
-}
-
-Job::StorageProcess::~StorageProcess()
-{
-  // cancel the control thread in case it is still active
-  itsThread->cancel();
-}
-
-
-void Job::StorageProcess::start()
-{
-  // fork (child process will exec)
-  std::string userName   = itsParset.getString("OLAP.Storage.userName");
-  std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
-  std::string executable = itsParset.getString("OLAP.Storage.msWriter");
-
-  char cwd[1024];
-
-  if (getcwd(cwd, sizeof cwd) == 0)
-    throw SystemCallException("getcwd", errno, THROW_ARGS);
-
-  std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u 2>&1")
-    % cwd
-#if defined USE_VALGRIND
-    % "valgrind --leak-check=full "
-#else
-    % ""
-#endif
-    % executable
-    % itsParset.observationID()
-    % itsRank
-#if defined WORDS_BIGENDIAN
-    % 1
-#else
-    % 0
-#endif
-  );
-
-  itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey, 0);
-  itsSSHconnection->start();
-
-  itsThread = new Thread(this, &Job::StorageProcess::controlThread, itsLogPrefix + "[ControlThread] ", 65535);
-}
-
-
-void Job::StorageProcess::stop(struct timespec deadline)
-{
-  itsSSHconnection->wait(deadline);
-
-  itsThread->cancel();
-}
-
-
-bool Job::StorageProcess::isDone()
-{
-  return itsSSHconnection->isDone();
-}
-
-
-void Job::StorageProcess::controlThread()
-{
-  // Connect
-  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
-  std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
-  PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource, 0);
-
-  // Send parset
-  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connected -- sending parset");
-  itsParset.write(&stream);
-  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent parset");
-
-  // Send final meta data once it is available
-  itsJob.itsFinalMetaDataAvailable.down();
-
-  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sending final meta data");
-  itsJob.itsFinalMetaData.write(stream);
-  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent final meta data");
-}
-
-
-void Job::forwardFinalMetaData()
-{
-  struct timespec deadline = { time(0) + 240, 0 };
-
-  Thread thread(this, &Job::finalMetaDataThread, itsLogPrefix + "[FinalMetaDataThread] ", 65536);
-
-  // abort the thread if deadline passes
-  try {
-    if (!thread.wait(deadline)) {
-      LOG_WARN_STR(itsLogPrefix << "Cancelling FinalMetaDataThread");
-
-      thread.cancel();
-    }
-  } catch(...) {
-    thread.cancel();
-    throw;
-  }
-}
-
-
-void Job::finalMetaDataThread()
-{
-  std::string hostName    = itsParset.getString("OLAP.FinalMetaDataGatherer.host");
-  std::string userName    = itsParset.getString("OLAP.FinalMetaDataGatherer.userName");
-  std::string sshKey      = itsParset.getString("OLAP.FinalMetaDataGatherer.sshIdentityFile");
-  std::string executable  = itsParset.getString("OLAP.FinalMetaDataGatherer.executable");
-
-  char cwd[1024];
-
-  if (getcwd(cwd, sizeof cwd) == 0)
-    throw SystemCallException("getcwd", errno, THROW_ARGS);
-
-  std::string commandLine = str(boost::format("cd %s && %s %d 2>&1")
-      % cwd
-      % executable
-      % itsParset.observationID()
-      );
-
-  // Start the remote process
-  SSHconnection sshconn(itsLogPrefix + "[FinalMetaData] ", hostName, commandLine, userName, sshKey);
-  sshconn.start();
-
-  // Connect
-  LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connecting...");
-  std::string resource = getStorageControlDescription(itsParset.observationID(), -1);
-  PortBroker::ClientStream stream(hostName, storageBrokerPort(itsParset.observationID()), resource, 0);
-
-  // Send parset
-  LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connected -- sending parset");
-  itsParset.write(&stream);
-  LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] sent parset");
-
-  // Receive final meta data
-  itsFinalMetaData.read(stream);
-  LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] obtained final meta data");
-
-  // Notify clients
-  itsFinalMetaDataAvailable.up(itsStorageProcesses.size());
-
-  // Wait for or end the remote process
-  sshconn.wait();
-}
-
-
-void Job::startStorageProcesses()
-{
-  vector<string> hostnames = itsParset.getStringVector("OLAP.Storage.hosts");
-
-  itsStorageProcesses.resize(hostnames.size());
-
-  LOG_DEBUG_STR(itsLogPrefix << "Starting " << itsStorageProcesses.size() << " Storage processes");
-
-  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
-    itsStorageProcesses[rank] = new StorageProcess(*this, itsParset, itsLogPrefix, rank, hostnames[rank]);
-    itsStorageProcesses[rank]->start();
-  }  
-}
-
-
-void Job::stopStorageProcesses()
-{
-  LOG_DEBUG_STR(itsLogPrefix << "Stopping storage processes");
-
-  time_t deadline = time(0) + 300;
-
-  size_t nrRunning = 0;
-
-  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
-    if (itsStorageProcesses[rank].get())
-      nrRunning++;
-
-  while(nrRunning > 0) {
-    for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
-      if (!itsStorageProcesses[rank].get())
-        continue;
-
-      if (itsStorageProcesses[rank]->isDone() || time(0) >= deadline) {
-        struct timespec immediately = { 0, 0 };
-
-        itsStorageProcesses[rank]->stop(immediately);
-        itsStorageProcesses[rank] = 0;
-
-        nrRunning--;
-      }
-    }  
-
-    if (nrRunning > 0)
-      sleep(1);
-  }
-
-  itsStorageProcesses.clear();
-
-  LOG_DEBUG_STR(itsLogPrefix << "Storage processes are stopped");
 }
 
 
@@ -467,7 +263,7 @@ void Job::jobThread()
 
         // we could start Storage before claiming resources
         if (itsIsRunning && itsParset.hasStorage())
-          startStorageProcesses();
+          itsStorageProcesses.start();
       } 
     }
 
@@ -526,12 +322,12 @@ void Job::jobThread()
       jobQueue.itsReevaluate.broadcast();
 
       if (myPsetNumber == 0) {
-        forwardFinalMetaData();
+        itsStorageProcesses.forwardFinalMetaData(time(0) + 240);
 
         // all InputSections and OutputSections have finished their processing, so
         // Storage should be done any second now.
 
-        stopStorageProcesses();
+        itsStorageProcesses.stop(time(0) + 300);
       }
 
       // Augment the LTA feedback logging

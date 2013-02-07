@@ -1819,17 +1819,17 @@ bool navFunct_dpHasPanels(string dp) {
 // ****************************************
 //  Waits a given time in ms to see if g_objectReady is true
 //  if not true within a given time, it will issue an error
-//  sets it true and returns.
+//  sets it true and returns. Name can be used to show the program where the call came from
 //
 // 
 // ****************************************
-void navFunct_waitObjectReady(int timer) {
+void navFunct_waitObjectReady(int timer,string name) {
   int retry=0;
   while (!g_objectReady) {
     delay(0,50);
     retry+=50;
     if (retry >= timer) {
-      LOG_ERROR("navFunct.ctl:navFunct_waitObjectReady|retry longer then timer, we will try to continue");
+      LOG_ERROR("navFunct.ctl:navFunct_waitObjectReady|retry called by: "+name+" longer then timer, we will try to continue");
       g_objectReady=true;
       return;
     }
@@ -2183,17 +2183,16 @@ bool navFunct_lofarDate2PVSSDate(string inDate, time& t) {
   t=0;
 
   if (inDate == "") return false;
-  // expects the date in   2000-05-19[ 10:22:12[.123]]  format, so check this
-  dyn_string splittedDate = strsplit(inDate," ");
-  if (dynlen(splittedDate) < 1) return false;
-  if (dynlen(splittedDate) >= 2) {      // Time available, so split that also
-    dyn_string splittedTime = strsplit(splittedDate[2],".");
-    if (dynlen(splittedTime) >= 2) {      // mSec available
-      mSec=splittedTime[2];
-    }
-    if (dynlen(strsplit(splittedTime[1],":")) != 3 ) return false;
-    tm = splittedTime[1];
+  // expects the date in   2000-05-19T10:22:12.123  format, so check this
+  dyn_string splittedDate = strsplit(inDate,"T");
+  if (dynlen(splittedDate) != 2) return false;
+  dyn_string splittedTime = strsplit(splittedDate[2],".");
+  if (dynlen(splittedTime) >= 2) {      // mSec available
+    mSec=splittedTime[2];
   }
+  if (dynlen(strsplit(splittedTime[1],":")) != 3 ) return false;
+  tm = splittedTime[1];
+
   dyn_string spl_date=strsplit(splittedDate[1],"-");
   if (dynlen(spl_date) != 3) return false;
   if (strlen(spl_date[2]) > 2) return false;
@@ -2205,6 +2204,7 @@ bool navFunct_lofarDate2PVSSDate(string inDate, time& t) {
   outDate += date;
   if (tm != "") outDate += " "+tm;
   if (mSec != "") outDate += "."+mSec;
+
   t = scanTimeUTC(outDate);
     
   return true;

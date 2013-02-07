@@ -34,7 +34,7 @@
 -- Types:   OTDBvalue
 --
 
-CREATE OR REPLACE VIEW pktemp AS SELECT DISTINCT ON (paramid) paramid, value, time  FROM pickvt WHERE value > 10 ORDER BY paramid,time DESC;
+CREATE OR REPLACE VIEW pktemp AS SELECT DISTINCT ON (paramid) paramid, value, time  FROM pickvt WHERE value::integer > 10 ORDER BY paramid,time DESC;
 
 CREATE OR REPLACE FUNCTION nextPICkvt(int,timestamp) 
 	RETURNS SETOF OTDBvalue AS $$ 

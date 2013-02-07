@@ -21,6 +21,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <unistd.h>
+#include <boost/format.hpp>
 
 #include <casa/IO/AipsIO.h>
 #include <casa/Containers/Block.h>
@@ -29,6 +30,8 @@
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 using namespace std;
+
+using boost::format;
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);

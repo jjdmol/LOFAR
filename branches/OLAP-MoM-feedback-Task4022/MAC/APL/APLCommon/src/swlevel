@@ -24,7 +24,6 @@
 #
 # $Id$
 #
-VERSION="v2.2 20120710"		# waiting for initialize before going to level 3 and up
 
 if [ "$LOFARROOT" == "" ]; then
   # default value until all MAC controlled systems provide $LOFARROOT
@@ -303,9 +302,13 @@ status_prog()
                   echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
 		fi
 		# Some Checks
-		# Controllers must have one instance, only
+		# Controllers must have one instance, only. Some programs may have more instances.
 		if [ ${#pid[@]} -ge 2 ]; then 
-                     toomany="$toomany ${prog}[$levelnr]"
+		    if [ "$prog" != "ObservationControl" \
+			-a "$prog" != "PythonControl" \
+			-a "$prog" != "OnlineControl" ]; then
+                       toomany="$toomany ${prog}[$levelnr]"
+		    fi
 		fi
 		
 		# Check for missing controllers 
@@ -420,6 +423,10 @@ show_level()
 {
         if [ -e /tmp/level.admin ]; then
           level=`cat /tmp/level.admin`
+          status_prog >& /dev/null
+          if [ "$missing" != "" ]; then
+            let level=0-$level
+          fi 
 	  if [ "$1" != "S" ]; then
 	     echo -n "Currently set level is "
 	  fi

@@ -2,7 +2,7 @@
 #define OPEN_CL_SUPPORT_H
 
 #define __CL_ENABLE_EXCEPTIONS
-#include <CL/cl.hpp>
+#include "CL/cl.hpp"
 
 #include <boost/multi_array.hpp>
 #include <vector>
@@ -11,7 +11,7 @@
 namespace LOFAR {
 namespace RTCP {
 
-extern const char *errorMessage(cl_int error);
+extern std::string errorMessage(cl_int error);
 extern void createContext(cl::Context &, std::vector<cl::Device> &);
 extern cl::Program createProgram(cl::Context &, std::vector<cl::Device> &, const char *sources, const char *args);
 

@@ -202,11 +202,13 @@ class Parset(util.Parset.Parset):
           self.setdefault("Observation.Beam[%s].tabRingSize" % (b,),0.0)
 
           dirtype = self["Observation.Beam[%s].directionType" % (b,)]  
+          center_angle1 = float(self["Observation.Beam[%s].angle1" % (b,)])
+          center_angle2 = float(self["Observation.Beam[%s].angle2" % (b,)])
           dm = int(self.get("OLAP.dispersionMeasure",0))
 
           nrrings = int(self["Observation.Beam[%s].nrTabRings" % (b,)]) 
           width   = float(self["Observation.Beam[%s].tabRingSize" % (b,)]) 
-          ringcoordinates = RingCoordinates( nrrings, width )
+          ringcoordinates = RingCoordinates( nrrings, width, (center_angle1, center_angle2), dirtype )
           ringset = [
             { "angle1": angle1,
               "angle2": angle2,

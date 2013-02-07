@@ -1,7 +1,7 @@
 #include "lofar_config.h"
 
 #define __CL_ENABLE_EXCEPTIONS
-#include <CL/cl.hpp>
+#include "CL/cl.hpp"
 
 #include <omp.h>
 
@@ -143,23 +143,26 @@ PerformanceCounter::~PerformanceCounter()
 
 void PerformanceCounter::eventCompleteCallBack(cl_event ev, cl_int /*status*/, void *counter)
 {
-  cl::Event event(ev);
+  try {
+    cl::Event event(ev);
 
-  size_t queued, submitted, start, stop;
-  event.getProfilingInfo(CL_PROFILING_COMMAND_QUEUED, &queued);
-  event.getProfilingInfo(CL_PROFILING_COMMAND_SUBMIT, &submitted);
-  event.getProfilingInfo(CL_PROFILING_COMMAND_START, &start);
-  event.getProfilingInfo(CL_PROFILING_COMMAND_END, &stop);
-  double seconds = (stop - start) / 1e9;
+    size_t queued = event.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+    size_t submitted = event.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>();
+    size_t start = event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+    size_t stop = event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
+    double seconds = (stop - start) / 1e9;
 
-  if (seconds < 0 || seconds > 15)
+    if (seconds < 0 || seconds > 15)
 #pragma omp critical (cout)
-    std::cout << "BAH! " << omp_get_thread_num() << ": " << queued << ' ' << submitted - queued << ' ' << start - queued << ' ' << stop - queued << std::endl;
+      std::cout << "BAH! " << omp_get_thread_num() << ": " << queued << ' ' << submitted - queued << ' ' << start - queued << ' ' << stop - queued << std::endl;
 
 #pragma omp atomic
-  static_cast<PerformanceCounter *>(counter)->totalTime += seconds;
+    static_cast<PerformanceCounter *>(counter)->totalTime += seconds;
 
-  // cl::~Event() decreases ref count
+    // cl::~Event() decreases ref count
+  } catch (cl::Error &error) {
+    // ignore errors in callback function (OpenCL library not exception safe)
+  }
 }
 
 
@@ -1334,8 +1337,8 @@ CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, unsigned 
   pipeline(pipeline),
 
   devFIRweights(pipeline.context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
-  devBufferA(pipeline.context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
-  devBufferB(pipeline.context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
+  devBufferA(pipeline.context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
+  devBufferB(pipeline.context, CL_MEM_READ_WRITE, std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>), ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
   bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
   delaysAtBegin(boost::extents[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
   delaysAfterEnd(boost::extents[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
@@ -2308,7 +2311,7 @@ int main(int argc, char **argv)
 
   std::cout << "running ..." << std::endl;
 
-  if (setenv("DISPLAY", ":0.0", 1) < 0) {
+  if (setenv("DISPLAY", ":0", 1) < 0) {
     perror("error setting DISPLAY");
     exit(1);
   }

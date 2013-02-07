@@ -160,6 +160,10 @@ class Delays
     SmartPtr<Thread>			itsThread;
 };
 
+// Initalialise casacore (call at beginning of program). Returns whether
+// initialisation was succesful.
+bool Casacore_Init();
+
 } // namespace RTCP
 } // namespace LOFAR
 

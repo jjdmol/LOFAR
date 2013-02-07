@@ -30,6 +30,7 @@ lofar_add_library(ionproc
   OutputSection.cc
   ReaderWriterSynchronization.cc
   Scheduling.cc
+  StorageProcesses.cc
   StreamMultiplexer.cc
   SSH.cc
   FCNP_ServerStream.cc)

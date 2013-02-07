@@ -25,17 +25,17 @@ def printHelp():
     print "       level 1..n: see checkhardware.conf file for tests done"
     print 
     print "For testing only one part, set level too 0 and use one of the following keys"
-    print "-s1  : LBA signal test rcumode 1"
-    print "-s3  : LBA signal test rcumode 3"
-    print "-s5  : HBA signal test rcumode 5"
-    print "-m   : HBA modem test"
-    print "-n1  : LBA noise and spurious test rcumode 1"
-    print "-n3  : LBA noise and spurious test rcumode 3"
-    print "-n5  : HBA noise and spurious test rcumode 5"
-    print "-ne  : HBA noise and spurious test rcumode 5 element based"
-    print "-rv  : RSP version test"
-    print "-tv  : TBB version test"
-    print "-tm  : TBB memeory test"
+    print "-s1    : LBA signal test rcumode 1"
+    print "-s3    : LBA signal test rcumode 3"
+    print "-s5    : HBA signal test rcumode 5"
+    print "-m     : HBA modem test"
+    print "-n1=120: LBA noise and spurious test rcumode 1 use 120sec data"
+    print "-n3=120: LBA noise and spurious test rcumode 3 use 120sec data"
+    print "-n5=120: HBA noise and spurious test rcumode 5 use 120sec data"
+    print "-ne=120: HBA noise and spurious test rcumode 5 element based use 120sec data"
+    print "-rv    : RSP version test"
+    print "-tv    : TBB version test"
+    print "-tm    : TBB memeory test"
     
     
     print "----------------------------------------------------------------------------"
@@ -47,13 +47,18 @@ def getArguments():
     i = 1
     while i < len(sys.argv):
         if sys.argv[i][0] == '-':
-            opt = sys.argv[i][1:]
-            if opt in ('t','T','l','L'): # for testing
-                optval = sys.argv[i+1]
-                args[opt.upper()] = optval.upper()
+            opt = sys.argv[i][1:].upper()
+            if opt in ('T','L'): # for testing
+                optval = sys.argv[i+1].upper()
+                args[opt] = optval
                 i += 2
             else:
-                args[opt.upper()] = '-'
+                valpos = opt.find('=')
+                if valpos != -1:
+                    args[opt[:valpos]] = int(opt[valpos+1:])
+                    #print opt[:valpos], opt[valpos+1:]
+                else:
+                    args[opt] = '-'
                 i += 1       
 
 def setLevelTests(conf):
@@ -61,7 +66,10 @@ def setLevelTests(conf):
     level = args.get('L')
     tests = conf.getStr('level-%s-tests' %(level)).split(',')
     for tst in tests:
-        args[tst.upper()]='-'
+        if tst.find('=') != -1:
+            args[tst[:valpos].upper()] = int(tst[valpos+1:])
+        else:
+            args[tst.upper()]='-'
             
 
 # get Configuration file
@@ -144,59 +152,75 @@ def main():
                     db.tests += ',RV'
                     rsp.checkVersions(conf.getStr('bp-version'), conf.getStr('ap-version'))
             
-                # if right images loaded
-                if rsp.checkVersions(conf.getStr('bp-version'), conf.getStr('ap-version')):
-                    rsp.resetSettings()
-                    rsp.waitReady()
-                    rsp.turnonRCUs()
-                    #rspctl("--rcuenable=0 --sel=0,1,8,11")
-                
-                    lbl = cLBA(db.lbl, logger)
-                    lbh = cLBA(db.lbh, logger)
-                    hba = cHBA(db.hba, logger)
+                rsp.resetSettings()
+                rsp.waitReady()
+                rsp.turnonRCUs()
+                #rspctl("--rcuenable=0 --sel=0,1,8,11")
+            
+                lbl = cLBA(db.lbl, logger)
+                lbh = cLBA(db.lbh, logger)
+                hba = cHBA(db.hba, logger)
 
-                    rsp.swapXY(1)
-                    if args.has_key('S1'):
-                        db.tests += ',S1'
-                        if StID in CoreStations or StID in RemoteStations:
-                            lbl.checkSignal(mode=1, subband=conf.getInt('lbl-test-sb',301),
-                                                    min_deviation=conf.getFloat('lba-min-deviation', -2.0), 
-                                                    max_deviation=conf.getFloat('lba-max-deviation', 2.0))
-                    if args.has_key('N1'):
-                        db.tests += ',N1'
-                        if StID in CoreStations or StID in RemoteStations:
-                            lbl.checkNaS(mode=1, sampletime=180)  # sampletime in seconds
                 
-                    rsp.swapXY(0)               
-                    if args.has_key('S3'):
-                        db.tests += ',S3'
-                        lbh.checkSignal(mode=3, subband=conf.getInt('lbh-test-sb',301),
+                if args.has_key('S1'):
+                    rsp.swapXY(1)
+                    db.tests += ',S1'
+                    if StID in CoreStations or StID in RemoteStations:
+                        lbl.checkSignal(mode=1, subband=conf.getInt('lbl-test-sb',301),
                                                 min_deviation=conf.getFloat('lba-min-deviation', -2.0), 
                                                 max_deviation=conf.getFloat('lba-max-deviation', 2.0))
-                    if args.has_key('N3'):
-                        db.tests += ',N3'
-                        lbh.checkNaS(mode=3, sampletime=180)  # sampletime in seconds
-                        
-                    if args.has_key('M'):
-                        db.tests += ',M'   
-                        hba.checkModem()
-                        hba.turnOffBadTiles()
-                
-                    if args.has_key('N5'):
-                        db.tests += ',N5'   
-                        hba.checkNaS(mode=5, sampletime=180)  # sampletime in seconds
-                
-                    if args.has_key('NE'):
-                        db.tests += ',NE'   
-                        hba.checkNaS_elements(mode=5, sampletime=120)
-    
-                    if args.has_key('S5'):
-                        db.tests += ',S5'   
-                        hba.checkSignal(mode=5, subband=conf.getInt('hba-test-sb',155),
-                                                min_deviation=conf.getFloat('hba-min-deviation', -24.0), 
-                                                max_deviation=conf.getFloat('hba-max-deviation', 12.0))    
-                
-                    rsp.turnoffRCUs()
+                if args.has_key('N1'):
+                    rsp.swapXY(1)
+                    if args.get('N1') == '-':
+                        sample_time = 180
+                    else:
+                        sample_time = int(args.get('N1'))
+                    db.tests += ',N1=%d' %(sample_time)
+                    if StID in CoreStations or StID in RemoteStations:
+                        lbl.checkNaS(mode=1, sampletime=sample_time)  # sampletime in seconds
+            
+                rsp.swapXY(0)               
+                if args.has_key('S3'):
+                    db.tests += ',S3'
+                    lbh.checkSignal(mode=3, subband=conf.getInt('lbh-test-sb',301),
+                                            min_deviation=conf.getFloat('lba-min-deviation', -2.0), 
+                                            max_deviation=conf.getFloat('lba-max-deviation', 2.0))
+                if args.has_key('N3'):
+                    if args.get('N3') == '-':
+                        sample_time = 180
+                    else:
+                        sample_time = int(args.get('N3'))
+                    db.tests += ',N3=%d' %(sample_time)
+                    lbh.checkNaS(mode=3, sampletime=sample_time)  # sampletime in seconds
+                    
+                if args.has_key('M'):
+                    db.tests += ',M'   
+                    hba.checkModem()
+                    hba.turnOffBadTiles()
+            
+                if args.has_key('N5'):
+                    if args.get('N5') == '-':
+                        sample_time = 180
+                    else:
+                        sample_time = int(args.get('N5'))
+                    db.tests += ',N5=%d' %(sample_time)
+                    hba.checkNaS(mode=5, sampletime=sample_time)  # sampletime in seconds
+            
+                if args.has_key('NE'):
+                    if args.get('NE') == '-':
+                        sample_time = 60
+                    else:
+                        sample_time = int(args.get('NE'))
+                    hba.checkNaS_elements(mode=5, sampletime=sample_time)
+                    db.tests += ',NE=%d' %(sample_time)
+
+                if args.has_key('S5'):
+                    db.tests += ',S5'   
+                    hba.checkSignal(mode=5, subband=conf.getInt('hba-test-sb',155),
+                                            min_deviation=conf.getFloat('hba-min-deviation', -24.0), 
+                                            max_deviation=conf.getFloat('hba-max-deviation', 12.0))    
+            
+                rsp.turnoffRCUs()
                 
         # do TBB tests if requested
         if args.has_key('TV') or args.has_key('TM'):

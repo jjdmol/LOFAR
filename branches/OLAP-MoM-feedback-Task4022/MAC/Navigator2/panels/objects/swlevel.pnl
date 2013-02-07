@@ -51,7 +51,6 @@ void dblClick(string name) {
     LOG_DEBUG(\"swlevel.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
     if (name == station) {
-      DebugN(\"dblClick with: \"+name+\" currentDP: \"+g_currentDatapoint);
       navPanel_setEvent(station,\"ChangePanel\");
     } else {
       //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.
@@ -174,7 +173,7 @@ addLevel(int lvl,string changed)
   string oldlvl=\"white\";
   string oldToolTip = \"\";
   for (int i=15-filled; i< 15 ;i++) {
-    if (i=0) continue;
+    if (i<=0) continue;
     // get the original color and tooltip from the next right point and move it to this point
     getValue(\"level\"+(i+1)+\"_text\",\"backCol\",oldlvl);
     setValue(\"level\"+(i)+\"_text\",\"backCol\",oldlvl);

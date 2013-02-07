@@ -1,11 +1,28 @@
 #!/usr/bin/python
 
-from math import sqrt
+from math import sqrt, cos, pi
 
 class RingCoordinates:
-    def __init__(self, numrings, width):
+    def __init__(self, numrings, width, center, dirtype):
         self.numrings = numrings
         self.width    = width
+        self.center   = center
+        self.dirtype  = dirtype
+
+    def cos_adjust(self, offset):
+        if dirtype != "J2000" and dirtype != "B1950":
+          return offset
+
+        # warp coordinates closer to the NCP
+
+        cos_dec = cos(self.center[1] + offset[1])
+        epsilon = 0.0001
+
+        if cos_dec > epsilon:
+            return (offset[0]/cos_dec, offset[1])
+        else:
+            return offset
+
 
     def len_edge(self):
         """
@@ -120,5 +137,5 @@ class RingCoordinates:
               l += dl[side]
               m += dm[side]
 
-        return coordinates
+        return map(self.cos_adjust, coordinates)
 

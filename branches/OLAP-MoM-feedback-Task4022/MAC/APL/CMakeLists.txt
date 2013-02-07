@@ -15,7 +15,6 @@ lofar_add_package(CURTDBDaemons)   # Control Unit RTDB Daemons
 lofar_add_package(PIC)             # Physical Instrument Components (?)
 lofar_add_package(PAC)             # ???
 lofar_add_package(VHECR)           # VHECR related code
-lofar_add_package(Appl_Controller) # ACC based controller
 lofar_add_package(Log_Client)      # Log Client
 lofar_add_package(CEPCU)           # CEP-related MAC controllers
 lofar_add_package(MainCU)          # Main Control Unit

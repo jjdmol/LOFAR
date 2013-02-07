@@ -60,6 +60,7 @@ dyn_string SWLevelRefNames;
 dyn_string datastreamRefNames;
 dyn_string swCtrlRefNames;
 dyn_string memAndHDDRefNames;
+dyn_string stationViewRefNames;
 string strPanelName;
 string strModuleName;
 string baseDP=\"\";
@@ -104,6 +105,13 @@ void clearMemAndHDDRefNames() {
   dynClear(memAndHDDRefNames);
 }
 
+void clearStationViewRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(stationViewRefNames); i++) {
+    removeSymbol(strModuleName,\"\",stationViewRefNames[i]);
+  }
+  dynClear(stationViewRefNames);
+}
 void redraw() {
   dynClear(station_result);
   dynClear(station_procList);
@@ -113,7 +121,6 @@ void redraw() {
   // set the hardware selectable items for this screen
   prepareHardwareList();
     
-  string addPanelName    = \"objects/swlevel.pnl\";
         
   if (dynlen(SWLevelRefNames) > 0) {
     clearSWLevelRefNames();
@@ -131,6 +138,11 @@ void redraw() {
   if (dynlen(memAndHDDRefNames) > 0) {
     clearMemAndHDDRefNames();
   }
+
+  if (dynlen(stationViewRefNames) > 0) {
+    clearStationViewRefNames();
+  }
+
   addSWLevels();
 
   addDatastreams();
@@ -139,6 +151,7 @@ void redraw() {
   
   addMemAndHDD();
   
+  addStationView();
   
  
  
@@ -173,9 +186,9 @@ void addSWLevels() {
                       0,                               // angle
                       1    ,1                          // zoomX , zoomY
         ) < 0 ) {
-	  LOG_ERROR(\"swlevel.pnl:redraw|Error Appending swlevel for: \" + stationList[i] + \" in this panel.\");
+	  LOG_ERROR(\"swlevel.pnl:addSWLevels|Error Appending swlevel for: \" + stationList[i] + \" in this panel.\");
           }
-    yPos_AddSymbol += 10;
+    yPos_AddSymbol += 11;
     ref++;
   }
 }
@@ -202,9 +215,9 @@ void addDatastreams() {
                       0,                               // angle
                       1    ,1                          // zoomX , zoomY
         ) < 0 ) {
-	  LOG_ERROR(\"swlevel.pnl:redraw|Error datastream for : \" + stationList[i] + \" in this panel.\");
+	  LOG_ERROR(\"swlevel.pnl:addDatastreams|Error datastream for : \" + stationList[i] + \" in this panel.\");
           }
-    yPos_AddSymbol += 10;
+    yPos_AddSymbol += 11;
     ref++;
   }
 }
@@ -237,9 +250,9 @@ void addSWCtrlers() {
                       0,                               // angle
                       1    ,1                          // zoomX , zoomY
         ) < 0 ) {
-	  LOG_ERROR(\"swlevel.pnl:redraw|Error swCtrl for : \" + stationList[i] + \" in this panel.\");
+	  LOG_ERROR(\"swlevel.pnl:addSWCtrlers|Error swCtrl for : \" + stationList[i] + \" in this panel.\");
           }
-    yPos_AddSymbol += 10;
+    yPos_AddSymbol += 11;
     ref++;
     //CCU and MCU machines different layout
     if (strpos(stationList[i],\"MCU\") >=0 ) {
@@ -316,9 +329,38 @@ void addMemAndHDD() {
                       0,                               // angle
                       1    ,1                          // zoomX , zoomY
         ) < 0 ) {
-	  LOG_ERROR(\"swlevel.pnl:redraw|Error memAndHDD for : \" + stationList[i] + \" in this panel.\");
+	  LOG_ERROR(\"main.pnl:addMemAndHDD|Error memAndHDD for : \" + stationList[i] + \" in this panel.\");
           }
-    yPos_AddSymbol += 10;
+    yPos_AddSymbol += 11;
+    ref++;
+  }
+}
+
+void addStationView() {
+  int xPos_AddSymbol = 665; 
+  int yPos_AddSymbol = 28; 
+  int ref = 1;
+  string addPanelName    = \"objects/Hardware/Station_mainView.pnl\";
+  //loop over list and prepare panel with all MainInfo   
+  for (int i=1; i<= dynlen(stationList); i++) {
+    //skip CCU and MCU machines
+    if (strpos(stationList[i],\"MCU\") >=0 ||strpos(stationList[i],\"CCU\") >=0) continue;
+
+    stationViewRefNames[i]=\"memAndHDD\"+(i);
+      
+    if (  addSymbol(  strModuleName,                   // Stay in this modul
+                      \"\",                              // Name of this panel
+                      addPanelName,                    // Panel to add
+                      stationViewRefNames[ref],         // Ref of the addedPanel
+                      makeDynString( \"$station:\" + stationList[i]) ,     // Define all $values
+                      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+                      yPos_AddSymbol,                  // Ypos of the AddedSymbol
+                      0,                               // angle
+                      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  LOG_ERROR(\"main.pnl:addStationView|Error stationView for : \" + stationList[i] + \" in this panel.\");
+          }
+    yPos_AddSymbol += 11;
     ref++;
   }
 }
@@ -466,7 +508,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 2 1 E  230 0 230 509
+E E 0 2 1 2 1 E  230 0 230 550
 2 29
 "PRIMITIVE_TEXT6"
 ""
@@ -546,7 +588,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 2 1 E  621 0 621 509
+E E 0 2 1 2 1 E  621 0 621 550
 2 34
 "PRIMITIVE_TEXT8"
 ""
@@ -664,7 +706,7 @@ LANG:1 3 sw6
 4 41
 "LINE4"
 ""
-1 0 510 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 0 550 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 26 0 0 0 0 0
 E E E
@@ -674,11 +716,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 2 1 E  0 510 1010 510
+E E 0 2 1 2 1 E  0 550 1010 550
 2 42
 "PRIMITIVE_TEXT14"
 ""
-1 10 516 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 556 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 27 0 0 0 0 0
 E E E
@@ -688,31 +730,88 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 10 516 124 529
-0 2 2 "0s" 0 0 0 192 0 0  10 516 1
+E E 0 1 1 2 1 E U  0 E 10 556 131 569
+0 2 2 "0s" 0 0 0 192 0 0  10 556 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 18 CEPobservationView
+LANG:1 20 CEP Observation View
 2 44
 "PRIMITIVE_TEXT16"
 ""
-1 630 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 627 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 29 0 0 0 0 0
 E E E
 0
 1
-LANG:1 0 
+LANG:1 18 DiskSpace & Memory
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 630 10 654 23
-0 2 2 "0s" 0 0 0 192 0 0  630 10 1
+E E 0 1 1 2 1 E U  0 E 627 10 657 23
+0 2 2 "0s" 0 0 0 192 0 0  627 10 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 4 D  M
+LANG:1 6 D    M
+2 45
+"PRIMITIVE_TEXT17"
+""
+1 670 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+1
+LANG:1 22 Temperature & Humidity
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 670 10 694 23
+0 2 2 "0s" 0 0 0 192 0 0  670 10 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 5 T   H
+2 46
+"PRIMITIVE_TEXT18"
+""
+1 703 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+1
+LANG:1 27 power 48V and TBB.recording
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 703 10 741 23
+0 2 2 "0s" 0 0 0 192 0 0  703 10 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 6 48 TBB
+2 47
+"PRIMITIVE_TEXT19"
+""
+1 745 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 26 #faulty HBA & LBA Antennas
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 745 10 792 23
+0 2 2 "0s" 0 0 0 192 0 0  745 10 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 HBA LBA
 0
 LAYER, 1 
 1

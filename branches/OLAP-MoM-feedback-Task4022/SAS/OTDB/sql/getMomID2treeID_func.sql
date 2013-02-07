@@ -32,6 +32,7 @@
 -- Types:	none
 --
 
+DROP TYPE treeIDmomID CASCADE;
 CREATE TYPE treeIDmomID AS (treeID INTEGER, momID INTEGER);
 
 CREATE OR REPLACE FUNCTION getMomID2treeID()

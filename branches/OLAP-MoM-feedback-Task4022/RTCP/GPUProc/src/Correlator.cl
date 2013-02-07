@@ -1,8 +1,14 @@
 #define NR_BASELINES	 (NR_STATIONS * (NR_STATIONS + 1) / 2)
 
 #if NR_STATIONS == 288
+#if defined NVIDIA_CUDA
+#define BLOCK_SIZE	 8
+#elif NR_SAMPLES_PER_CHANNEL % 6 == 0
 #define BLOCK_SIZE	 6
-#elif defined NVIDIA_CUDA && NR_SAMPLES_PER_CHANNEL % 24 == 0
+#else
+#define BLOCK_SIZE	 4
+#endif
+#elif NR_SAMPLES_PER_CHANNEL % 24 == 0
 #define BLOCK_SIZE	 24
 #else
 #define BLOCK_SIZE	 16

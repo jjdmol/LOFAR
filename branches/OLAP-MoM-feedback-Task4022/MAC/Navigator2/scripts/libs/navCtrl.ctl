@@ -102,7 +102,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     }
     if (navTabCtrl_showView()) {
       
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait navTabCtrl_showView");
       
       //clear old highlights
       dynClear(strHighlight);        
@@ -110,17 +110,17 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
       
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait Locator ChangeSelection"+aSelection);
       
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
 
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait FastJumper ChangeSelection"+aSelection);
 
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
 
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait HeadLines ChangeInfo");
       
     }
   }
@@ -154,22 +154,22 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     
     if (navTabCtrl_showView()) {
         
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangePanel wait navTabCtrl_showView");
       
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
       
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangePanel wait Locator ChangeSelection"+aSelection);
 
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
 
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangePanel wait FastJumper ChangeSelection"+aSelection);
       
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
    
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangePanel wait HeadLines ChangeInfo");
       
     }
     return;
@@ -178,7 +178,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   if (anEvent == "Reload") {
     dpSet(VIEWBOXACTIONDP,"Reload");
 
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewBoxEvent:Reload wait ViewBox Reload");
       
   }
   
@@ -210,24 +210,22 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     
 
     dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait TopDetail");
       
     dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait BottomDetailSelection");
       
     dpSet(LOCATORACTIONDP,"Update");
-    navFunct_waitObjectReady(500);
-      
-    navFunct_waitObjectReady(500);
-      
+    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait Locator");
+            
     dpSet(FASTJUMPERACTIONDP,"Update");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait FastJumper");
       
     dpSet(PROGRESSBARACTIONDP,"Update");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait ProgressBar");
       
     dpSet(HEADLINESACTIONDP,"Update");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait HeadLines");
       
 
     return;
@@ -313,13 +311,13 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     
     // inform headLines Object
     dpSet(HEADLINESACTIONDP,"ChangeInfo|"+aSelection);
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewBoxEvent:EventClick wait HeadLines");
       
     dpSet(TOPDETAILSELECTIONACTIONDP,"Highlight");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewBoxEvent:EventClick wait TopDetailSelection");
       
     dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Highlight");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewBoxEvent:EventClick wait BottomDetailSelection");
 
     return;
   }
@@ -369,25 +367,25 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
   // navigator object can be initialized now.
   if (anEvent == "Initialized") {
     dpSet(TOPDETAILSELECTIONACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(750,"handleViewSelectionEvent:Initialized wait TopDetailSelection");
       
     dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait BottomDetailSelection");
       
     dpSet(LOCATORACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait Locator");
       
     dpSet(FASTJUMPERACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait FastJumper");
       
     dpSet(PROGRESSBARACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait ProgressBar");
       
     dpSet(HEADLINESACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait HeadLines");
       
     dpSet(ALERTSACTIONDP,"Initialize");
-    navFunct_waitObjectReady(500);
+    navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait Alerts");
       
     return;
   }
@@ -420,17 +418,17 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
     }
     
     if (navTabCtrl_showView()) {
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleViewSelectionEvent:ChangePanel wait navTabCtrl_showView");
       
         
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+g_currentDatapoint);
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleViewSelectionEvent:ChangePanel wait Locator ChangeSelection");
       
 
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+g_currentDatapoint);
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleViewSelectionEvent:ChangePanel wait FastJumper ChangeSelection");
       
     }
   }  
@@ -447,30 +445,30 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
       
       ACTIVE_TAB = aSelection;
       if (navTabCtrl_showView()) {
-        navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(750,"handleViewSelectionEvent:TabChanged wait navTabCtrl_showView");
       
         
         // change locator
         dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
-        navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait Locator ChangeSelection "+ aSelection);
       
 
         // change fastJumper
         dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
-        navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait FastJumper ChangeSelection "+ aSelection);
       
 
         // inform headLines Object
         dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
-        navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait HeadLines ChangeInfo");
       
         
         // update selectors   
         dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
-        navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait TopDetailSelection Update");
       
         dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");      }
-        navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait BottomDetailSelection Update");
       
     }
     return;
@@ -562,11 +560,11 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
   if (anEvent == "ChangeSelection") {
     if (target == "bottom") {
       dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
-      navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangeSelectiond wait BottomDetailSelection Update");
       
     } else {
       dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
-      navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangeSelectiond wait TopDetailSelection Update");
       
     }
   }
@@ -663,17 +661,17 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
     }
     
     if (navTabCtrl_showView()) {
-      navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangePanel wait navTabCtrl_showView");
       
         
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangePanel wait Locator ChangeSelection "+aSelection);
       
 
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangePanel wait FastJumper ChangeSelection "+aSelection);
       
     }
   }       
@@ -718,7 +716,7 @@ void navCtrl_handleLocatorEvent(string dp,string value){
   // depending on the event received, actions need to be taken
   if (anEvent == "ChangePanel") {
     if (navTabCtrl_showView()) {
-      navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleLocatorEvent:ChangePanel wait navTabCtrl_showView");
       
       
       //clear old highlights
@@ -726,17 +724,17 @@ void navCtrl_handleLocatorEvent(string dp,string value){
       
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleLocatorEvent:ChangePanel wait Locator ChangeSelection " + aSelection);
       
       
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleLocatorEvent:ChangePanel wait FastJumper ChangeSelection " + aSelection);
       
 
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
-      navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleLocatorEvent:ChangePanel wait HeadLines ChangeInfo ");
       
     }
   }  
@@ -861,7 +859,7 @@ void navCtrl_handleAlertsEvent(string dp,string value){
       ACTIVE_TAB = aSelection;
     }
     if (navTabCtrl_showView()) {
-      navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleAlertsEvent:ChangeTab wait navTabCtrl_showView");
       
       
       //clear old highlights
@@ -869,17 +867,16 @@ void navCtrl_handleAlertsEvent(string dp,string value){
       
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500);
-      
+      navFunct_waitObjectReady(500,"handleAlertsEvent:ChangeTab wait Locator ChangeSelection " + aSelection);
+     
       
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500);
-      
+      navFunct_waitObjectReady(500,"handleAlertsEvent:ChangeTab wait FastJumper ChangeSelection " + aSelection);     
 
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleAlertsEvent:ChangeTab wait HeadLines ChangeInfo " + aSelection);
       
     }
   }
@@ -925,7 +922,7 @@ void navCtrl_handleFastJumperEvent(string dp,string value){
   
   if (anEvent == "ChangePanel") {
     if (navTabCtrl_showView()) {
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleFastJumperEvent:ChangePanel wait navTabCtrl_showView");
       
       
       //clear old highlights
@@ -933,12 +930,12 @@ void navCtrl_handleFastJumperEvent(string dp,string value){
       
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleFastJumperEvent:ChangePanel wait Locator ChangeSelection "+aSelection);
       
       
       // change fastJumper
       dpSet(FASTJUMPERACTIONDP,"ChangeSelection|"+aSelection);
-      navFunct_waitObjectReady(500);
+      navFunct_waitObjectReady(500,"handleFastJumperEvent:ChangePanel wait FastJumper ChangeSelection "+aSelection);
       
 
     }
@@ -1202,7 +1199,7 @@ void navCtrl_handleNavigatorEvent(string selection,string event, string initiato
     if (event == "DistChanged") {
       // change locator
       dpSet(VIEWBOXACTIONDP,"DistChanged");
-      navFunct_waitObjectReady(500);
+        navFunct_waitObjectReady(500,"handleNavigatorEvent:DistChanged wait ViewBox DistChanged");
       
       
     }

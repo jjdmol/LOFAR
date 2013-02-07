@@ -28,15 +28,14 @@
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
 #include <Interface/MultiDimArray.h>
-#include <Interface/FinalMetaData.h>
 #include <JobQueue.h>
 #include <Stream/Stream.h>
 #include <WallClockTime.h>
+#include <StorageProcesses.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Queue.h>
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Semaphore.h>
-#include <SSH.h>
 
 #include <sys/time.h>
 
@@ -85,48 +84,10 @@ class Job
     template <typename SAMPLE_TYPE> void attachToInputSection();
     template <typename SAMPLE_TYPE> void detachFromInputSection();
 
-    void				 startStorageProcesses();
-    void				 stopStorageProcesses();
-
-    void         forwardFinalMetaData();
-    void         finalMetaDataThread();
-
-    class StorageProcess {
-    public:
-      StorageProcess( Job &job, const Parset &parset, const string &logPrefix, int rank, const string &hostname );
-      ~StorageProcess();
-
-      void start();
-      void stop( struct timespec deadline );
-      bool isDone();
-
-    private:
-      void                               controlThread();
-
-      Job                                &itsJob;
-
-#ifdef HAVE_LIBSSH2
-      SmartPtr<SSHconnection>            itsSSHconnection;
-#else      
-      int itsPID;
-#endif
-
-      const Parset &itsParset;
-      const std::string itsLogPrefix;
-
-      const int itsRank;
-      const std::string itsHostname;
-
-      SmartPtr<Thread> itsThread;
-    };
 
     void				 waitUntilCloseToStartOfObservation(time_t secondsPriorToStart);
 
-    std::string                          itsLogPrefix;
-
-    std::vector<SmartPtr<StorageProcess> > itsStorageProcesses;
-    FinalMetaData                        itsFinalMetaData;
-    Semaphore                            itsFinalMetaDataAvailable;
+    const std::string                    itsLogPrefix;
 
     std::vector<Stream *>		 itsCNstreams, itsPhaseThreeCNstreams;
     Matrix<Stream *>			 itsPhaseOneTwoCNstreams;
@@ -137,6 +98,8 @@ class Job
     unsigned                             itsBlockNumber;
     double                               itsRequestedStopTime, itsStopTime;
     unsigned				 itsNrBlockTokens, itsNrBlockTokensPerBroadcast;
+
+    StorageProcesses			 itsStorageProcesses;
 
     static unsigned			 nextJobID;
 

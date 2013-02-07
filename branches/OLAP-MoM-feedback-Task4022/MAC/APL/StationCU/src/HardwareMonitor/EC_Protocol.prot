@@ -27,15 +27,18 @@ prelude = << PRELUDE_END
    
    //-- EC cab state code's ----------------------------------------------------
    static const int16 CAB_OK                 = 0x0000;
-   static const int16 CAB_TEMP_MIN_CTRL      = 0x0001;
-   static const int16 CAB_TEMP_HEATER        = 0x0002;
-   static const int16 CAB_TEMP_MAX_CTRL      = 0x0004;
-   static const int16 CAB_TEMP_TRIP          = 0x0008;
-   static const int16 CAB_HUMIDITY_MAX       = 0x0010;
-   static const int16 CAB_HUMIDITY_TRIP      = 0x0020;
-   static const int16 CAB_TEMPERATURE_SENSOR = 0x0100;
+   static const int16 CAB_MIN_CTRL_TEMP      = 0x0001;
+   static const int16 CAB_MAX_CTRL_TEMP      = 0x0002;
+   static const int16 CAB_HEATER_ACTIVE      = 0x0004;
+   static const int16 CAB_TRIP_TEMP          = 0x0008;
+   static const int16 CAB_MAX_HUMIDITY       = 0x0010;
+   static const int16 CAB_TRIP_HUMIDITY      = 0x0020;
+   static const int16 CAB_BROKEN_TEMP_SENSOR = 0x0100;
    static const int16 CAB_HUMIDITY_CONTROL   = 0x0200;
    static const int16 CAB_DOOR_CONTROL       = 0x0400;
+   static const int16 CAB_TRIP               = 0x1000;
+   static const int16 CAB_WARNING_1          = 0x2000;
+   static const int16 CAB_WARNING_2          = 0x4000;
    
    //-- EC cab control code's --------------------------------------------------
    static const int16 CAB_FRONT_FAN_OUTER = 0x0001;
@@ -53,10 +56,8 @@ prelude = << PRELUDE_END
    //-- EC station code's ------------------------------------------------------
    static const int16 STS_POWER48_ON      = 0x0001;
    static const int16 STS_POWER220_ON     = 0x0002;
-   static const int16 STS_LIGHTNING       = 0x0004;
+   static const int16 STS_LIGHTNING       = 0x0001;
    
-
-
    struct cab_status {
 	   int16 mode;
 	   int16 state;
@@ -74,14 +75,21 @@ prelude = << PRELUDE_END
 	};
    
    struct cab_settings {
-      int16 temp_min;
-      int16 temp_min_min;
-      int16 temp_max;
-      int16 temp_max_max;
-      int16 humidity_max;
-      int16 humidity_max_max;
+      int16 min_ctrl_temp;
+      int16 max_ctrl_temp;
+      int16 heater_temp;
+      int16 warn_1_temp;
+      int16 warn_2_temp;
+      int16 trip_temp;
+      int16 max_hum;
+      int16 trip_hum;
+      int16 max_hr_change;
+      int16 balance_point;
+      int16 start_side;
+      int16 seek_time;
+      int16 seek_change;
    };
-   
+				
    struct sts_settings {
       cab_settings cab[4];
    };
