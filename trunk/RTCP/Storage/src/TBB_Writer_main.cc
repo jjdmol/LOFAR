@@ -25,7 +25,7 @@
  * TBB writers written by Lars Baehren, Andreas Horneffer, and Joseph Masters.
  */
 
-#include <lofar_config.h>			// before any other include
+#include <lofar_config.h>		// before any other include
 
 #define _FILE_OFFSET_BITS 64
 #include <cstddef>
@@ -41,6 +41,7 @@
 #include <getopt.h>
 
 #include <iostream>
+#include <sstream>
 
 #include <boost/lexical_cast.hpp>
 
@@ -55,15 +56,16 @@
 
 #include <dal/lofar/StationNames.h>
 
-#define TBB_DEFAULT_BASE_PORT		0x7bb0	// i.e. tbb0
-#define TBB_DEFAULT_LAST_PORT		0x7bbb	// 0x7bbf for NL, 0x7bbb for int'l stations
+#define TBB_DEFAULT_BASE_PORT	0x7bb0	// i.e. tbb0
+#define TBB_DEFAULT_LAST_PORT	0x7bbb	// 0x7bbf for NL, 0x7bbb for int'l stations
 
-#define STDLOG_BUFFER_SIZE			1024
+#define STDLOG_BUFFER_SIZE	1024
 
 using namespace std;
 
 struct progArgs {
 	string parsetFilename;
+	string stCalTablesDir;
 	string antFieldDir;
 	string outputDir;
 	string input;
@@ -75,7 +77,6 @@ struct progArgs {
 static char stdoutbuf[STDLOG_BUFFER_SIZE];
 static char stderrbuf[STDLOG_BUFFER_SIZE];
 
-// Install a new handler to produce backtraces for std::bad_alloc.
 LOFAR::NewHandler badAllocExcHandler(LOFAR::BadAllocException::newHandler);
 
 static bool sigint_seen;
@@ -115,31 +116,77 @@ static vector<string> getTBB_InputStreamNames(const string& input, uint16_t port
 		LOFAR::StationConfig stConf;
 		nTbbBoards = stConf.nrTBBs;
 	} catch (LOFAR::AssertError& ) { // config file not found
-		LOG_DEBUG_STR("Falling back to up to " << TBB_DEFAULT_LAST_PORT - TBB_DEFAULT_BASE_PORT + 1 << " streams (1 per board)");
+		LOG_DEBUG_STR("Falling back to at most " << TBB_DEFAULT_LAST_PORT - TBB_DEFAULT_BASE_PORT + 1 << " input streams (1 per board)");
 		nTbbBoards = TBB_DEFAULT_LAST_PORT - TBB_DEFAULT_BASE_PORT + 1; // fallback
 	}
 
 	vector<string> allInputStreamNames;
 	if (input == "udp" || input == "tcp") {
 		for (uint16_t port = portsBase; port <= portsBase + nTbbBoards; ++port) {
-			// 0.0.0.0: could restrict to station IPs/network, but need netmask lookup and allow localhost. Not critical: we are on a separate VLAN.
+			// 0.0.0.0: could restrict to station IPs/network, but need netmask lookup and allow localhost. Not critical: data arrives on a separate VLAN.
 			string streamName(input + ":0.0.0.0:" + LOFAR::formatString("%hu", port));
 			allInputStreamNames.push_back(streamName);
 		}
 	} else { // file or named pipe input
+		size_t colonPos = input.find(':');
+		if (colonPos == string::npos) {
+			return allInputStreamNames;
+		}
 		size_t placeholderPos = input.find_last_of('%');
 		if (placeholderPos == string::npos) { // single input, no expansion needed
-			allInputStreamNames.push_back(input);
-		} else { // expand: replace e.g. file:x%y-%.raw by file:x%y-0.raw, file:x%y-1.raw, ..., file:x%y-11.raw
+			if (access(input.c_str() + colonPos + 1, R_OK) == 0) {
+				allInputStreamNames.push_back(input);
+			}
+		} else { // expand e.g. file:x%y-%.raw into {file:x%y-0.raw, file:x%y-1.raw, ..., file:x%y-11.raw}
 			for (int i = 0; i < nTbbBoards; ++i) {
 				string streamName(input);
 				streamName.replace(placeholderPos, 1, LOFAR::formatString("%u", i));
-				allInputStreamNames.push_back(streamName);
+				if (access(streamName.c_str() + colonPos + 1, R_OK) == 0) {
+					allInputStreamNames.push_back(streamName);
+				}
 			}
 		}
 	}
 
 	return allInputStreamNames;
+}
+
+static void retrieveStationCalTables(string& stCalTablesDir) {
+	/*
+	 * Users need the station calibration tables included. This is a major pain, because
+	 * we figure out which station(s) we receive from at runtime (relying on the static
+	 * mapping is a disaster waiting to happen), we cannot ask the stations and the
+	 * alternative, from svn, is unreliable and races with (few) Science Support updates.
+	 * Not all users care about the race, a few do. Also, auth, and this exposes an internal
+	 * interface (cal tables) to users... Still do it: TBB is too low prio to get stuff nice.
+	 *
+	 * Get tables from all stations for the right cal mode (i.e. usually only verifies svn local copy),
+	 * Run 'svn cleanup' and 'svn upgrade' when needed, otherwise remove the local copies and re-retrieve.
+	 *
+
+	 */
+
+//svn checkout https://svn.astron.nl/Station/trunk/CalTables
+//but only the needed files
+//svn update
+//Ctrl-C doesn't seem to kill svn co/up (only pause/halt), so use Ctrl-\ (QUIT), then svn cleanup
+
+//svn: Working copy '.' locked
+//svn: run 'svn cleanup' to remove locks (type 'svn help cleanup' for details)
+//svn cleanup
+
+//rm -rf CalTables
+
+// Note: include the entire cal table as-is, because that easily allows users to just resort to the raw files
+
+//	- if stCalTablesDir.empty():
+
+//	- get station names, st cal mode
+//	- fork process (sh script), do data writes
+//	- sh script does svn checkout/update on req files only into ~/TBB_Writer-Station-CalTabs-localcopy/Station/CalTables/*
+//	- listen for tbb data. When data writes done, do timed wait() on script pid, and if ok, add cal tables.
+//	- if not ok: if timeout { signal script to abort and run svn cleanup, wait()}. Skip writing cal tabs, log warning + script output.
+
 }
 
 static int antSetName2AntFieldIndex(const string& antSetName) {
@@ -235,7 +282,7 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::RTCP::
 		 */
 		struct itimerval timer = {args.timeoutVal, args.timeoutVal};
 		if (setitimer(ITIMER_REAL, &timer, NULL) != 0) {
-			throw LOFAR::SystemCallException("setitimer failed");
+			throw LOFAR::SystemCallException("setitimer", errno, THROW_ARGS);
 		}
 
 		bool anyFrameReceived = false; // don't quit if there is no data immediately after starting
@@ -278,14 +325,10 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::RTCP::
 	return err;
 }
 
-static int ensureOutputDirExists(string outputDir) {
+static int isExistingDirname(const string& dirname) {
 	struct stat st;
 
-	if (outputDir == "") {
-		outputDir = ".";
-	}
-
-	if (stat(outputDir.c_str(), &st) != 0) {
+	if (stat(dirname.c_str(), &st) != 0) {
 		return errno;
 	}
 
@@ -305,14 +348,15 @@ static void printUsage(const char* progname) {
 	cout << TBB_WRITER_VERSION;
 #endif
 	cout << endl;
-	cout << "Write incoming LOFAR TBB data with meta data to disk in HDF5 format." << endl;
-	cout << "Usage: " << progname << " --parsetfile=parsets/L12345.parset [OPTION]..." << endl;
+	cout << "Write incoming LOFAR TBB data with meta data to storage in HDF5 format." << endl;
+	cout << "Usage: " << progname << " -p parsets/L12345.parset [OPTION]..." << endl;
 	cout << endl;
 	cout << "Options:" << endl;
-	cout << "  -s, --parsetfile=L12345.parset      parset file (observation settings) (mandatory)" << endl;
+	cout << "  -p, --parset=L12345.parset          path to file with observation settings (mandatory)" << endl;
 	cout << endl;
-	cout << "  -a, --antfielddir=/d/AntennaFields  override $LOFARROOT and parset path for antenna field files (like CS001-AntennaField.conf)" << endl;
-	cout << "  -o, --outputdir=tbbout              output directory" << endl;
+	cout << "  -c, --stcaltablesdir=/c/CalTables   path to override SVN retrieval of station calibration tables (like CS001/CalTable_001_mode1.dat)" << endl;
+	cout << "  -a, --antfielddir=/a/AntennaFields  path to override $LOFARROOT and parset path for antenna field files (like CS001-AntennaField.conf)" << endl;
+	cout << "  -o, --outputdir=tbbout              existing output directory" << endl;
 	cout << "  -i, --input=tcp|udp                 input stream(s) or type (default: udp)" << endl;
 	cout << "              file:raw.dat                if file or pipe name has a '%'," << endl;
 	cout << "              pipe:named-%.pipe           then the last '%' is replaced by 0, 1, ..., 11" << endl;
@@ -326,11 +370,12 @@ static void printUsage(const char* progname) {
 }
 
 static int parseArgs(int argc, char *argv[], struct progArgs* args) {
-	int rv = 0;
+	int status = 0;
 
 	// Default values
 	args->parsetFilename = "";	// there is no default parset filename, so not passing it is fatal
-	args->antFieldDir = "";		// idem
+	args->stCalTablesDir = "";	// idem, but otherwise, retrieve from svn and not fatal
+	args->antFieldDir = "";		// idem, but otherwise, detect and not fatal
 
 	args->outputDir = "";
 	args->input = "udp";
@@ -340,48 +385,69 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 	args->keepRunning = true;
 
 	static const struct option long_opts[] = {
+		// NOTE: If you change this, then also change the code below AND the printUsage() code above!
 		// {const char *name, int has_arg, int *flag, int val}
-		{"parsetfile",   required_argument, NULL, 's'}, // observation (s)ettings
-		{"antfielddir",  required_argument, NULL, 'a'},
-		{"outputdir",    required_argument, NULL, 'o'},
-		{"input",        required_argument, NULL, 'i'},
-		{"portbase",     required_argument, NULL, 'b'}, // port (b)ase
-		{"timeout",      required_argument, NULL, 't'},
+		{"parset",         required_argument, NULL, 'p'},
+		{"stcaltablesdir", required_argument, NULL, 'c'}, // station calibration tables
+		{"antfielddir",    required_argument, NULL, 'a'}, // antenna field info
+		{"outputdir",      required_argument, NULL, 'o'},
+		{"input",          required_argument, NULL, 'i'},
+		{"portbase",       required_argument, NULL, 'b'}, // port (b)ase
+		{"timeout",        required_argument, NULL, 't'},
 
-		{"keeprunning",  optional_argument, NULL, 'k'},
+		{"keeprunning",    optional_argument, NULL, 'k'},
 
-		{"help",         no_argument,       NULL, 'h'},
-		{"version",      no_argument,       NULL, 'v'},
+		{"help",           no_argument,       NULL, 'h'},
+		{"version",        no_argument,       NULL, 'v'},
 
 		{NULL, 0, NULL, 0}
 	};
 
 	opterr = 0; // prevent error printing to stderr by getopt_long()
-	int opt;
+	int opt, err;
 	while ((opt = getopt_long(argc, argv, "hvs:a:o:p:b:t:k::", long_opts, NULL)) != -1) {
 		switch (opt) {
-		case 's':
+		case 'p':
 			args->parsetFilename = optarg;
+			break;
+		case 'c':
+			args->stCalTablesDir = optarg;
+			if (args->stCalTablesDir[0] != '\0' && args->stCalTablesDir[args->stCalTablesDir.size() - 1] != '/') {
+				args->stCalTablesDir.push_back('/');
+			}
+			if ((err = isExistingDirname(args->stCalTablesDir)) != 0) {
+				LOG_FATAL_STR("TBB: station cal tab dir argument value " << optarg << ": " << strerror(err));
+				status = 1;
+			}
 			break;
 		case 'a':
 			args->antFieldDir = optarg;
-			if (args->antFieldDir[args->antFieldDir.size() - 1] != '/') {
+			if (args->antFieldDir[0] != '\0' && args->antFieldDir[args->antFieldDir.size() - 1] != '/') {
 				args->antFieldDir.push_back('/');
+			}
+			if ((err = isExistingDirname(args->antFieldDir)) != 0) {
+				LOG_FATAL_STR("TBB: antenna field dir argument value " << optarg << ": " << strerror(err));
+				status = 1;
 			}
 			break;
 		case 'o':
 			args->outputDir = optarg;
-			if (args->outputDir[args->outputDir.size() - 1] != '/') {
+			if (args->outputDir[0] != '\0' && args->outputDir[args->outputDir.size() - 1] != '/') {
 				args->outputDir.push_back('/');
+			}
+			if ((err = isExistingDirname(args->outputDir)) != 0) {
+				LOG_FATAL_STR("TBB: output dir argument value " << optarg << ": " << strerror(err));
+				status = 1;
 			}
 			break;
 		case 'i':
 			if (strcmp(optarg, "tcp") == 0 || strcmp(optarg, "udp") == 0 ||
-				strncmp(optarg, "file:", sizeof("file:")-1) == 0 || strncmp(optarg, "pipe:", sizeof("pipe:")-1) == 0) {
+					strncmp(optarg, "file:", sizeof("file:")-1) == 0 ||
+					strncmp(optarg, "pipe:", sizeof("pipe:")-1) == 0) {
 				args->input = optarg;
 			} else {
-				LOG_FATAL_STR("TBB: Invalid input option: " << optarg);
-				rv = 1;
+				LOG_FATAL_STR("TBB: Invalid input argument value: " << optarg);
+				status = 1;
 			}
 			break;
 		case 'b':
@@ -391,16 +457,16 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 					throw boost::bad_lexical_cast(); // abuse exc type to have single catch
 				}
 			} catch (boost::bad_lexical_cast& /*exc*/) {
-				LOG_FATAL_STR("TBB: Invalid port option: " << optarg);
-				rv = 1;
+				LOG_FATAL_STR("TBB: Invalid port argument value: " << optarg);
+				status = 1;
 			}
 			break;
 		case 't':
 			try {
 				args->timeoutVal.tv_sec = boost::lexical_cast<unsigned long>(optarg);
 			} catch (boost::bad_lexical_cast& /*exc*/) {
-				LOG_FATAL_STR("TBB: Invalid timeout option: " << optarg);
-				rv = 1;
+				LOG_FATAL_STR("TBB: Invalid timeout argument value: " << optarg);
+				status = 1;
 			}
 			break;
 		case 'k':
@@ -411,31 +477,33 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 			try {
 				args->keepRunning = boost::lexical_cast<bool>(optarg);
 			} catch (boost::bad_lexical_cast& /*exc*/) {
-				LOG_FATAL_STR("TBB: Invalid keeprunning option: " << optarg);
-				rv = 1;
+				LOG_FATAL_STR("TBB: Invalid keeprunning argument value: " << optarg);
+				status = 1;
 			}
 			break;
 		case 'h':
 		case 'v':
-			if (rv == 0) {
-				rv = 2;
+			if (status == 0) {
+				status = 2;
 			}
 			break;
 		default: // '?'
-			LOG_FATAL_STR("TBB: Invalid program argument: " << argv[optind-1]);
-			rv = 1;
+			LOG_FATAL_STR("TBB: Invalid program argument or missing argument value: " << argv[optind-1]);
+			status = 1;
 		}
 	}
 
 	if (optind < argc) {
-		LOG_FATAL("TBB: Failed to recognize options:");
+		ostringstream oss;
+		oss << "TBB: Failed to recognize arguments:";
 		while (optind < argc) {
-			LOG_FATAL_STR(" " << argv[optind++]);
+			oss << " " << argv[optind++]; // good enough
 		}
-		rv = 1;
+		LOG_FATAL_STR(oss.str());
+		status = 1;
 	}
 
-	return rv;
+	return status;
 }
 
 int main(int argc, char* argv[]) {
@@ -472,12 +540,13 @@ int main(int argc, char* argv[]) {
 
 	setTermSigsHandler();
 
-	if ((err = ensureOutputDirExists(args.outputDir)) != 0) {
-		LOG_FATAL_STR("TBB: output directory: " << strerror(err));
+	const vector<string> inputStreamNames(getTBB_InputStreamNames(args.input, args.port));
+	if (inputStreamNames.empty()) {
+		LOG_FATAL("TBB: none of the input streams is accessible to read from");
 		return 1;
 	}
 
-	const vector<string> inputStreamNames(getTBB_InputStreamNames(args.input, args.port));
+	retrieveStationCalTables(args.stCalTablesDir);
 
 	// We don't run alone, so try to increase the QoS we get from the OS to decrease the chance of data loss.
 	setIOpriority(); // reqs CAP_SYS_NICE or CAP_SYS_ADMIN
@@ -499,11 +568,11 @@ int main(int argc, char* argv[]) {
 
 	// Config exceptions (opening or parsing) are fatal. Too bad we cannot have it in one type.
 	} catch (LOFAR::RTCP::InterfaceException& exc) {
-		LOG_FATAL_STR("TBB: LOFAR::InterfaceException: parset: " << exc);
+		LOG_FATAL_STR("TBB: Required RTCP parset key/values missing: " << exc);
 	} catch (LOFAR::APSException& exc) {
-		LOG_FATAL_STR("TBB: LOFAR::APSException: parameterset: " << exc);
+		LOG_FATAL_STR("TBB: Parameterset error: " << exc);
 	} catch (LOFAR::RTCP::StorageException& exc) {
-		LOG_FATAL_STR("TBB: LOFAR::StorageException: antenna field files: " << exc);
+		LOG_FATAL_STR("TBB: Antenna field files: " << exc);
 	}
 
 	return err == 0 ? 0 : 1;

@@ -25,6 +25,7 @@
 
 #define _FILE_OFFSET_BITS 64
 #include <cstddef>
+#include <cstring>
 #include <csignal>
 #include <ctime>
 #include <cerrno>
@@ -61,7 +62,7 @@
 #define TBB_TRANSIENT_MODE			1
 #define TBB_SPECTRAL_MODE			2
 
-#define RSP_NR_SUBBANDS				512		// nr of subbands produced by the RSP polyphase filter
+#define RSP_NR_SUBBANDS				512
 
 namespace LOFAR {
 namespace RTCP {
@@ -70,10 +71,7 @@ using namespace std;
 
 EXCEPTION_CLASS(TBB_MalformedFrameException, StorageException);
 
-/*
- * The output_format is without seconds. The output_size is including the terminating NUL char.
- * Helper for in filenames and for the FILEDATE attribute.
- */
+// The output_format is without seconds. The output_size is including the terminating NUL char.
 static string formatFilenameTimestamp(const struct timeval& tv, const char* output_format,
                                       const char* output_format_secs, size_t output_size) {
 	struct tm tm;
@@ -91,7 +89,7 @@ static string formatFilenameTimestamp(const struct timeval& tv, const char* outp
 	return string(&date[0]);
 }
 
-// FileStream doesn't do pwrite(2). Roll our own as nobody else needs it, but in the FileStream way, just in case.
+// FileStream doesn't do pwrite(2).
 static size_t tryPWrite(int fd, const void *ptr, size_t size, off_t offset) {
 	ssize_t bytes = ::pwrite(fd, ptr, size, offset);
 	if (bytes < 0)
@@ -108,48 +106,43 @@ static void pwrite(int fd, const void *ptr, size_t size, off_t offset) {
 	}
 }
 
-string TBB_Header::toString() const {
-	ostringstream oss;
-	oss << (unsigned)stationID << " " << (unsigned)rspID << " " << (unsigned)rcuID << " " << (unsigned)sampleFreq <<
-           " " << seqNr << " " << time << " " << (nOfFreqBands == 0 ? sampleNr : bandSliceNr) << " " << nOfSamplesPerFrame <<
-           " " << nOfFreqBands << " " << spare << " " << crc16; // casts uin8_t to unsigned to avoid printing as char
-	return oss.str();
+static ostream& operator<<(ostream& out, const TBB_Header& h) {
+	out << (unsigned)h.stationID << " " << (unsigned)h.rspID << " " << (unsigned)h.rcuID << " " << (unsigned)h.sampleFreq <<
+           " " << h.seqNr << " " << h.time << " " << (h.nOfFreqBands == 0 ? h.sampleNr : h.bandSliceNr) << " " << h.nOfSamplesPerFrame <<
+           " " << h.nOfFreqBands << " " << h.spare << " " << h.crc16; // casts uin8_t to unsigned to avoid printing as char
+	return out;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
 TBB_Dipole::TBB_Dipole()
-: itsDataset(NULL) // needed, setting the others is superfluous
-, itsRawOut(NULL)
+: itsRawOut(NULL) // needed, setting the others is superfluous
+, itsDataset(NULL)
 , itsFlagOffsets()
 , itsSampleFreq(0)
 , itsNrSubbands(0)
 , itsTime(0)
-, itsExpSampleNr(0) // also inits itsExpSliceNr
+, itsExpSampleNr(0)
 , itsDatasetLen(0)
 {
 }
 
 // Do not use. Only needed for vector<TBB_Dipole>(N).
 TBB_Dipole::TBB_Dipole(const TBB_Dipole& rhs)
-: itsDataset(rhs.itsDataset) // needed, setting the others is superfluous
-, itsRawOut(NULL) // Safe destr. FileStream has no copy constr, so disabled; also see comments in init()
+: itsRawOut(NULL) // idem. FileStream has no copy constr, but only copied before really set, so NULL is fine.
+, itsDataset(rhs.itsDataset)
 , itsFlagOffsets(rhs.itsFlagOffsets)
 , itsSampleFreq(rhs.itsSampleFreq)
 , itsNrSubbands(rhs.itsNrSubbands)
 , itsTime(rhs.itsTime)
-, itsExpSampleNr(rhs.itsExpSampleNr) // also inits itsExpSliceNr
+, itsExpSampleNr(rhs.itsExpSampleNr)
 , itsDatasetLen(rhs.itsDatasetLen)
 {
 }
 
 TBB_Dipole::~TBB_Dipole() {
-	/*
-	 * Set dataset len (if ext raw) and SPECTRAL_*, DATA_LENGTH and FLAG_OFFSETS attributes at the end.
-	 * Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
-	 * Skip on uninitialized (default constructed) objects.
-	 */
-	if (itsDataset != NULL) {
+	// Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
+	if (isInitialized()) {
 		try {
 			if (itsNrSubbands == 0) { // transient mode
 				itsDataset->resize1D(itsDatasetLen);
@@ -169,15 +162,14 @@ TBB_Dipole::~TBB_Dipole() {
 			LOG_WARN_STR("TBB: failed to set dipole DATA_LENGTH attribute: " << exc.what());
 		}
 		try {
-			itsDataset->flagOffsets().value = itsFlagOffsets;
+			itsDataset->flagOffsets().create(itsFlagOffsets.size()).set(itsFlagOffsets);
 		} catch (dal::DALException& exc) {
 			LOG_WARN_STR("TBB: failed to set dipole FLAG_OFFSETS attribute: " << exc.what());
 		}
 
 		delete itsDataset;
+		delete itsRawOut;
 	}
-
-	delete itsRawOut;
 }
 
 void TBB_Dipole::init(const TBB_Header& header, const Parset& parset,
@@ -185,7 +177,10 @@ void TBB_Dipole::init(const TBB_Header& header, const Parset& parset,
                             const SubbandInfo& subbandInfo, const string& rawFilename,
                             dal::TBB_Station& station, Mutex& h5Mutex) {
 	itsSampleFreq = static_cast<uint32_t>(header.sampleFreq) * 1000000;
-	itsNrSubbands = subbandInfo.centralFreqs.size();
+	itsNrSubbands = header.nOfFreqBands;
+	if (itsNrSubbands > subbandInfo.centralFreqs.size()) {
+		throw StorageException("TBB: dropping frame with invalid nOfFreqBands");
+	}
 
 	itsRawOut = new FileStream(rawFilename, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 
@@ -197,7 +192,7 @@ void TBB_Dipole::init(const TBB_Header& header, const Parset& parset,
 			/*
 			 * This nonsense is needed, because FileStream has no FileStream() and open() (and swap()),
 			 * and since we know the filename only at runtime (timestamp), we need itsRawOut to be a raw ptr.
-			 * We already have a raw ptr for itsDataset and >1 raw ptr in 1 C++ class becomes buggy or messy.
+			 * We already have a raw ptr for the dataset and >1 raw ptr in 1 C++ class becomes buggy or messy.
 			 */
 			delete itsRawOut;
 			itsRawOut = NULL;
@@ -211,18 +206,18 @@ void TBB_Dipole::init(const TBB_Header& header, const Parset& parset,
 	} else { // spectral mode
 		itsExpSliceNr  = header.bandSliceNr >> TBB_SLICE_NR_SHIFT;
 	}
-	itsDatasetLen = 0; // already 0, so just for completeness
+	itsDatasetLen = 0; // already 0, for completeness
 }
 
 bool TBB_Dipole::isInitialized() const {
-	return itsDataset != NULL; // constructed after itsRawOut so test itsDataset
+	return itsRawOut != NULL;
 }
 
-// Add a new flag range or extend the last stored flag range. 'len' may not be 0.
-void TBB_Dipole::addFlags(size_t offset, size_t len) {
+// Add a new flag range at the end or extend the last stored flag range. 'len' may not be 0.
+void TBB_Dipole::appendFlags(size_t offset, size_t len) {
 	if (itsFlagOffsets.empty() || offset > itsFlagOffsets.back().end) {
 		itsFlagOffsets.push_back(dal::Range(offset, offset + len));
-	} else { // extend flag range
+	} else { // extend
 		itsFlagOffsets.back().end += len;
 	}
 }
@@ -230,10 +225,10 @@ void TBB_Dipole::addFlags(size_t offset, size_t len) {
 void TBB_Dipole::processTransientFrameData(const TBB_Frame& frame) {
 	/*
 	 * Out-of-order or duplicate frames are very unlikely in the LOFAR TBB setup,
-	 * but let us know if it ever happens, then we will adapt this code and addFlags().
+	 * but let us know if it ever happens, then we will adapt this code and appendFlags().
 	 */
 	if (frame.header.time < itsTime || (frame.header.time == itsTime && frame.header.sampleNr < itsExpSampleNr)) {
-		LOG_WARN_STR("TBB: Please notify developer: unhandled out-of-order or duplicate TBB frame: " <<
+		LOG_WARN_STR("TBB: Unhandled out-of-order or duplicate frame: " <<
                      (unsigned)frame.header.stationID << " " << (unsigned)frame.header.rspID << " " << (unsigned)frame.header.rcuID <<
                      " " << frame.header.time << " " << itsTime << " " << frame.header.sampleNr << " " << itsExpSampleNr);
 		return;
@@ -256,11 +251,11 @@ void TBB_Dipole::processTransientFrameData(const TBB_Frame& frame) {
 
 	/*
 	 * Flag lost frame(s) (assume no out-of-order, see below). Assumes all frames have the same nr of samples.
-	 * Note: this cannot detect lost frames at the end of a dataset.
+	 * This cannot detect lost frames at the end of a dataset.
 	 */
 	size_t nskipped = offset - itsDatasetLen;
 	if (nskipped > 0) {
-		addFlags(itsDatasetLen, nskipped);
+		appendFlags(itsDatasetLen, nskipped);
 		itsRawOut->skip(nskipped * sizeof(frame.payload.data[0])); // skip space of lost frame(s)
 	}
 
@@ -269,11 +264,12 @@ void TBB_Dipole::processTransientFrameData(const TBB_Frame& frame) {
 	 * Flag zeroed payloads too, as incredibly unlikely to be correct, but not rejected by crc32tbb.
 	 */
 	if (!crc32tbb(&frame.payload, frame.header.nOfSamplesPerFrame)) {
-		addFlags(offset, frame.header.nOfSamplesPerFrame);
-		const uint32_t* crc32 = reinterpret_cast<const uint32_t*>(&frame.payload.data[frame.header.nOfSamplesPerFrame]);
-		LOG_INFO_STR("TBB: crc32: " << frame.header.toString() << " " << *crc32);
+		appendFlags(offset, frame.header.nOfSamplesPerFrame);
+		uint32_t crc32;
+		memcpy(&crc32, &frame.payload.data[frame.header.nOfSamplesPerFrame], sizeof crc32); // strict-aliasing safe
+		LOG_WARN_STR("TBB: crc32: " << frame.header << " " << crc32);
 	} else if (hasAllZeroDataSamples(frame.payload, frame.header.nOfSamplesPerFrame)) {
-		addFlags(offset, frame.header.nOfSamplesPerFrame);
+		appendFlags(offset, frame.header.nOfSamplesPerFrame);
 	}
 
 	// Since we are writing around HDF5, there is no need to lock. Resize the HDF5 dataset at the end (destr).
@@ -287,11 +283,11 @@ void TBB_Dipole::processTransientFrameData(const TBB_Frame& frame) {
 void TBB_Dipole::processSpectralFrameData(const TBB_Frame& frame, const SubbandInfo& subbandInfo) {
 	/*
 	 * Out-of-order or duplicate frames are very unlikely in the LOFAR TBB setup,
-	 * but let us know if it ever happens, then we will adapt this code and addFlags().
+	 * but let us know if it ever happens, then we will adapt this code and appendFlags().
 	 */
 	uint32_t sliceNr = frame.header.bandSliceNr >> TBB_SLICE_NR_SHIFT; // cannot sanitize fully: too large values indicate lost data: flag
 	if (frame.header.time < itsTime || (frame.header.time == itsTime && sliceNr < itsExpSliceNr)) {
-		LOG_WARN_STR("TBB: Please notify developer: unhandled out-of-order or duplicate TBB frame: " <<
+		LOG_WARN_STR("TBB: Unhandled out-of-order or duplicate frame: " <<
                      (unsigned)frame.header.stationID << " " << (unsigned)frame.header.rspID << " " << (unsigned)frame.header.rcuID <<
                      " " << frame.header.time << " " << itsTime << " " << frame.header.bandSliceNr << " " << itsExpSliceNr);
 		return;
@@ -310,45 +306,51 @@ void TBB_Dipole::processSpectralFrameData(const TBB_Frame& frame, const SubbandI
 	}
 
 	/*
-	 * Flag lost frame(s) (assume no out-of-order, see below). Assumes all frames have the same nr of samples.
-	 * Note: this cannot detect lost frames at the end of a dataset.
+	 * Flag lost frame(s) (assume no out-of-order, see below). Assumes all frames have the same nr of samples (fine).
+	 * This cannot detect lost frames at the end of a dataset.
 	 */
-	unsigned nSamplesPerSubband = frame.header.nOfSamplesPerFrame / itsNrSubbands; // TODO: remainder is zeroed??? chksum pos???
 	size_t nskipped = offset - itsDatasetLen;
 	if (nskipped > 0) {
-////		addFlags(itsDatasetLen, nskipped); // no need to skip/lseek; we use pwrite() below
+		appendFlags(itsDatasetLen, nskipped); // no need to skip/lseek; we use pwrite() below
 	}
 
 	/*
 	 * On a data checksum error, flag these samples.
 	 * Flag zeroed payloads too, as incredibly unlikely to be correct, but not rejected by crc32tbb.
 	 *
-	 * The spec says the crc32 is computed for transient data only, but it is also present and valid for spectral data.
+	 * TBB Design Doc states the crc32 is computed for transient data only, but it is also valid for spectral data.
+	 * Except that it looks invalid for the first spectral frame each second, so skip checking those. // TODO: enable 'sliceNr != 0 && ' below after verifying with recent real data
 	 */
-	if (!crc32tbb(&frame.payload, 2 * frame.header.nOfSamplesPerFrame)) {
-////		addFlags(offset, frame.header.nOfSamplesPerFrame);
-		const uint32_t* crc32 = reinterpret_cast<const uint32_t*>(&frame.payload.data[2 * frame.header.nOfSamplesPerFrame]);
-		LOG_INFO_STR("TBB: crc32: " << frame.header.toString() << " " << *crc32);
+	unsigned nSamplesPerSubband = frame.header.nOfSamplesPerFrame / itsNrSubbands; // any remainder is zeroed until the crc32
+	if (/*sliceNr != 0 && */!crc32tbb(&frame.payload, 2 * MAX_TBB_SPECTRAL_NSAMPLES)) {
+		appendFlags(offset, nSamplesPerSubband);
+		uint32_t crc32;
+		memcpy(&crc32, &frame.payload.data[2 * MAX_TBB_SPECTRAL_NSAMPLES], sizeof crc32); // strict-aliasing safe
+		LOG_WARN_STR("TBB: crc32: " << frame.header << " " << crc32);
 	} else if (hasAllZeroDataSamples(frame.payload, 2 * frame.header.nOfSamplesPerFrame)) {
-////		addFlags(offset, frame.header.nOfSamplesPerFrame);
+		appendFlags(offset, nSamplesPerSubband);
 	}
 
-	unsigned bandNr = frame.header.bandSliceNr & TBB_BAND_NR_MASK;
+	/*
+	 * In practice, each frame contains the same number of samples for all subbands, so the received band number is always 0.
+	 * Hence, disable support for cross-frame slices, such that in spectral mode we can also store flags in 1D.
+	 */
+	/*unsigned bandNr = frame.header.bandSliceNr & TBB_BAND_NR_MASK;
 	if (bandNr + itsNrSubbands >= RSP_NR_SUBBANDS) {
 		LOG_WARN("TBB: Incorrect band number has been corrected to 0");
-		bandNr = 0; // may also be wrong, but at least mem safe
-	}
+		bandNr = 0; // safe default
+	}*/
 	// Data arrives interleaved, so reorder, one sample at a time. Esp. inefficient if only 1 subband, but fast enough.
 	for (unsigned i = 0; i < nSamplesPerSubband; ++i) {
 		for (unsigned j = 0; j < itsNrSubbands; ++j) {
-			off_t sampleOffset = (offset + subbandInfo.storageIndices[bandNr + j] * SPECTRAL_TRANSFORM_SIZE) * 2 * sizeof(frame.payload.data[0]);
+			off_t sampleOffset = (offset + subbandInfo.storageIndices[j/*(bandNr + j) % itsNrSubbands*/] * SPECTRAL_TRANSFORM_SIZE) * 2 * sizeof(frame.payload.data[0]);
 			pwrite(itsRawOut->fd, &frame.payload.data[2 * (i * itsNrSubbands + j)], 2 * sizeof(frame.payload.data[0]), sampleOffset);
 		}
 		offset += 1;
 	}
 
 	itsTime       = frame.header.time;
-	itsExpSliceNr = sliceNr + frame.header.nOfSamplesPerFrame;
+	itsExpSliceNr = sliceNr + nSamplesPerSubband;
 	itsDatasetLen = offset;
 }
 
@@ -356,28 +358,29 @@ void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& p
                                        const StationMetaData& stationMetaData,
                                        const SubbandInfo& subbandInfo,
                                        const string& rawFilename, dal::TBB_Station& station) {
-	itsDataset = new dal::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID)); // deleted in destr
-
-	// Create 1- or 2-dim, unbounded (-1) dataset. 
 	// Override endianess. TBB data is always stored little endian and also received as such, so written as-is on any platform.
 	if (subbandInfo.centralFreqs.empty()) { // transient mode
+		dal::TBB_DipoleDataset* dpDataset = new dal::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
+		itsDataset = static_cast<dal::TBB_Dataset<short>*>(dpDataset);
+
 		itsDataset->create1D(0, -1, LOFAR::basename(rawFilename), itsDataset->LITTLE);
 
-		itsDataset->sampleNumber().value = header.sampleNr;
+		dpDataset->sampleNumber().value = header.sampleNr;
 	} else { // spectral mode
+		dal::TBB_SubbandsDataset* sbDataset = new dal::TBB_SubbandsDataset(station.subbands(header.stationID, header.rspID, header.rcuID));
+		itsDataset = reinterpret_cast<dal::TBB_Dataset<short>*>(sbDataset); // not so nice
+
 		vector<ssize_t> dims(2), maxdims(2);
 		dims[0]    = 0;
-		dims[1]    = subbandInfo.centralFreqs.size();
+		dims[1]    = itsNrSubbands;
 		maxdims[0] = -1; // only the 1st dim can be extendible
-		maxdims[1] = subbandInfo.centralFreqs.size();
+		maxdims[1] = itsNrSubbands;
 		itsDataset->create(dims, maxdims, LOFAR::basename(rawFilename), itsDataset->LITTLE);
 
-// TODO: enable and add to DAL
-//		itsDataset->sliceNumber().value       = header.bandSliceNr >> TBB_SLICE_NR_SHIFT; // TODO: needed?
-
-//		itsDataset->spectralNofBands().value  = subbandInfo.centralFreqs.size();
-//		itsDataset->spectralBands().value     = subbandInfo.centralFreqs;
-//		itsDataset->spectralBandsUnit().value = "MHz";
+		sbDataset->sliceNumber()      .value = header.bandSliceNr >> TBB_SLICE_NR_SHIFT;
+		sbDataset->spectralNofBands() .value = itsNrSubbands;
+		sbDataset->spectralBands().create(itsNrSubbands).set(subbandInfo.centralFreqs);
+		sbDataset->spectralBandsUnit().value = "MHz";
 	}
 
 	itsDataset->groupType().value = "DipoleDataset";
@@ -392,7 +395,7 @@ void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& p
 
 	itsDataset->samplesPerFrame().value     = header.nOfSamplesPerFrame; // possibly sanitized
 	//itsDataset->dataLength().value is set at the end (destr)
-	//itsDataset->flagOffsets().value is set at the end (destr) // TODO: remove
+	//itsDataset->flagOffsets().value is set at the end (destr) // TODO: attrib -> 1D dataset
 	itsDataset->nyquistZone().value         = parset.nyquistZone();
 
 //#include "MAC/APL/PIC/RSP_Driver/src/CableSettings.h" or "RCUCables.h"
@@ -420,14 +423,15 @@ elke .dat file bevat 96*512*2 doubles
 voor 96 rcus, 512 frequenties, een complexe waarde
 maar nu vraag ik me wel weer af of de frequenties of de rcus eerst komen
 */
+//NL stations: 768 kB, Int'l: 1.5 MB. Drop optional ASCI header. See also Station/StationCal/writeCalTable.m
 	//itsDataset->dipoleCalibrationDelay().value = ???; // Pim can compute this from the GainCurve below
 	//itsDataset->dipoleCalibrationDelayUnit().value = 's';
-	//itsDataset->dipoleCalibrationGainCurve().value = ???;
-
+	//itsDataset->dipoleCalibrationGainCurve().create(???.size()).set(???); // st cal table
+//write cal tables into proper n-dimensional h5 data set, not attribute! Add access functions to DAL?
 
 	// Skip if station is not participating in the observation (should not happen).
 	if (stationMetaData.available && 2u * 3u * header.rcuID + 2u < stationMetaData.antPositions.size()) {
-		/*
+		/*TODO
 		 * Selecting the right positions depends on the antenna set. Checking vs the tables in
 		 * lhn001:/home/veen/lus/src/code/data/lofar/antennapositions/ can help, but their repos may be outdated.
 		 */
@@ -435,7 +439,7 @@ maar nu vraag ik me wel weer af of de frequenties of de rcus eerst komen
 		antPos[0] = stationMetaData.antPositions[2u * 3u * header.rcuID];
 		antPos[1] = stationMetaData.antPositions[2u * 3u * header.rcuID + 1u];
 		antPos[2] = stationMetaData.antPositions[2u * 3u * header.rcuID + 2u];
-		itsDataset->antennaPosition()     .value = antPos; // absolute position
+		itsDataset->antennaPosition().create(antPos.size()).set(antPos); // absolute position
 
 		itsDataset->antennaPositionUnit() .value = "m";
 		itsDataset->antennaPositionFrame().value = parset.positionType(); // "ITRF"
@@ -445,17 +449,18 @@ maar nu vraag ik me wel weer af of de frequenties of de rcus eerst komen
 		 * but given the HBA0/HBA1 "ears" depending on antenna set, it was
 		 * decided to store them per antenna.
 		 */
-		itsDataset->antennaNormalVector()  .value = stationMetaData.normalVector;   // 3 doubles
-		itsDataset->antennaRotationMatrix().value = stationMetaData.rotationMatrix; // 9 doubles, 3x3, row-major
+		itsDataset->antennaNormalVector()  .create(stationMetaData.normalVector.size()).set(stationMetaData.normalVector);     // 3 doubles
+		itsDataset->antennaRotationMatrix().create(stationMetaData.rotationMatrix.size()).set(stationMetaData.rotationMatrix); // 9 doubles, 3x3, row-major
 	}
 
 	// Tile beam is the analog beam. Only HBA can have one analog beam; optional.
 	if (parset.haveAnaBeam()) {
-		itsDataset->tileBeam()     .value = parset.getAnaBeamDirection(); // always for beam 0
+		vector<double> anaBeamDir(parset.getAnaBeamDirection());
+		itsDataset->tileBeam()     .create(anaBeamDir.size()).set(anaBeamDir); // always for beam 0
 		itsDataset->tileBeamUnit() .value = "m";
 		itsDataset->tileBeamFrame().value = parset.getAnaBeamDirectionType(); // idem
 
-		//itsDataset->tileBeamDipoles().value = ???;
+		//itsDataset->tileBeamDipoles().create(???.size()).set(???);
 
 		//itsDataset->tileCoefUnit().value = ???;
 		//itsDataset->tileBeamCoefs().value = ???;
@@ -466,7 +471,7 @@ maar nu vraag ik me wel weer af of de frequenties of de rcus eerst komen
 		//itsDataset->tileDipolePositionFrame().value = ???;
 	}
 
-	itsDataset->dispersionMeasure()    .value = parset.dispersionMeasure(0, 0); // 0.0 if no dedispersion was done
+	itsDataset->dispersionMeasure()    .value = parset.dispersionMeasure(0, 0); // beam, pencil TODO: adapt too if >1 beam?
 	itsDataset->dispersionMeasureUnit().value = "pc/cm^3";
 }
 
@@ -502,10 +507,15 @@ TBB_Station::TBB_Station(const string& stationName, Mutex& h5Mutex, const Parset
 }
 
 TBB_Station::~TBB_Station() {
-	// Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
+	/*
+	 * Apart from the main thread, also potentially (rarely) executed by an output thread on failed
+	 * to insert new TBB_Station object into an std::map. For the output thread case, do dc and slH5.
+	 */
+	ScopedDelayCancellation dc;
 	try {
+		ScopedLock slH5(itsH5Mutex);
 		itsStation.nofDipoles().value = itsStation.dipoles().size();
-	} catch (dal::DALException& exc) {
+	} catch (exception& exc) { // dal::DALException or worse
 		LOG_WARN_STR("TBB: failed to set station NOF_DIPOLES attribute: " << exc.what());
 	}
 }
@@ -519,9 +529,9 @@ SubbandInfo TBB_Station::getSubbandInfo(const Parset& parset) const {
 
 	int operatingMode = itsParset.getInt("Observation.TBB.TBBsetting.operatingMode", 0);
 	if (operatingMode == TBB_SPECTRAL_MODE) {
-		vector<unsigned> tbbSubbandList(parset.getUint32Vector("Observation.TBB.TBBsetting.subbandList", true)); // TODO: what happens if key does not exists? exc? also test empty parset
+		vector<unsigned> tbbSubbandList(parset.getUint32Vector("Observation.TBB.TBBsetting.subbandList", true));
 		if (tbbSubbandList.empty() || tbbSubbandList.size() > MAX_TBB_SPECTRAL_NSAMPLES) {
-			throw InterfaceException("TBB: in spectral mode, the TBB subband list must be non-empty and not too long");
+			throw InterfaceException("TBB: spectral mode selected, but empty or too long subband list provided");
 		}
 		sort(tbbSubbandList.begin(), tbbSubbandList.end());
 
@@ -537,7 +547,7 @@ SubbandInfo TBB_Station::getSubbandInfo(const Parset& parset) const {
 		for (unsigned i = 0; i < tbbSubbandList.size(); ++i) {
 			unsigned sbNr = tbbSubbandList[i];
 			if (sbNr >= RSP_NR_SUBBANDS) {
-				throw InterfaceException("TBB: all indicated subband numbers must be < 512");
+				throw InterfaceException("TBB: indicated subband number too high");
 			}
 			info.storageIndices[sbNr] = i;
 		}
@@ -575,7 +585,6 @@ void TBB_Station::processPayload(const TBB_Frame& frame) {
 	}
 }
 
-// For timestamp attributes in UTC.
 string TBB_Station::utcTimeStr(double time) const {
 	time_t timeSec = static_cast<time_t>(floor(time));
 	unsigned long timeNSec = static_cast<unsigned long>(round( (time-floor(time))*1e9 ));
@@ -627,7 +636,8 @@ void TBB_Station::initCommonLofarAttributes() {
 	itsH5File.observationNofStations().value = itsParset.nrStations(); // TODO: SS beamformer?
 	// For the observation attribs, dump all stations participating in the observation (i.e. allStationNames(), not mergedStationNames()).
 	// This may not correspond to which station HDF5 groups will be written for TBB, but that is true anyway, regardless of any merging.
-	itsH5File.observationStationsList().value = itsParset.allStationNames(); // TODO: SS beamformer?
+	vector<string> allStNames(itsParset.allStationNames());
+	itsH5File.observationStationsList().create(allStNames.size()).set(allStNames); // TODO: SS beamformer?
 
 	double subbandBandwidth = itsParset.subbandBandwidth();
 	double channelBandwidth = itsParset.channelWidth();
@@ -662,7 +672,7 @@ void TBB_Station::initCommonLofarAttributes() {
 		targets[sap] = itsParset.beamTarget(sap);
 	}
 
-	itsH5File.targets().value = targets;
+	itsH5File.targets().create(targets.size()).set(targets);
 
 #ifndef TBB_WRITER_VERSION
 	itsH5File.systemVersion().value = LOFAR::StorageVersion::getVersion();
@@ -681,14 +691,14 @@ void TBB_Station::initTBB_RootAttributesAndGroups(const string& stName) {
 	int operatingMode = itsParset.getInt("Observation.TBB.TBBsetting.operatingMode", 0);
 	if (operatingMode == TBB_SPECTRAL_MODE) {
 		itsH5File.operatingMode().value = "spectral";
-//		itsH5File.spectralTransformSize().value = SPECTRAL_TRANSFORM_SIZE; // TODO: enable and add to DAL
+		itsH5File.spectralTransformSize().value = SPECTRAL_TRANSFORM_SIZE;
 	} else {
 		itsH5File.operatingMode().value = "transient";
 	}
 
 	itsH5File.nofStations().value = 1u;
 
-	// Find the station name we are looking for ("CS001" == "CS001HBA0") and retrieve its pos using the found idx.
+	// Find the station name we are looking for and retrieve its pos using the found idx.
 	vector<double> stPos;
 
 	vector<string> obsStationNames(itsParset.allStationNames());
@@ -723,14 +733,15 @@ void TBB_Station::initStationGroup(dal::TBB_Station& st, const string& stName,
 	st.stationName().value = stName;
 
 	if (!stPosition.empty()) {
-		st.stationPosition()     .value = stPosition;
+		st.stationPosition()     .create(stPosition.size()).set(stPosition);
 		st.stationPositionUnit() .value = "m";
 		st.stationPositionFrame().value = itsParset.positionType();
 	}
 
 	// digital beam(s)
 	if (itsParset.nrBeams() > 0) { // TODO: adapt DAL, so we can write all digital beams, analog too if tiles (HBA)
-		st.beamDirection()     .value = itsParset.getBeamDirection(0);
+		vector<double> beamDir(itsParset.getBeamDirection(0));
+		st.beamDirection()     .create(beamDir.size()).set(beamDir);
 		st.beamDirectionUnit() .value = "m";
 		st.beamDirectionFrame().value = itsParset.getBeamDirectionType(0);
 	}
@@ -741,7 +752,7 @@ void TBB_Station::initStationGroup(dal::TBB_Station& st, const string& stName,
 		st.clockOffset()    .value = clockCorr;
 		st.clockOffsetUnit().value = "s";
 	} catch (APSException& exc) {
-		LOG_WARN_STR("TBB: failed to write clock correction and offset attributes: " << exc);
+		LOG_WARN_STR("TBB: failed to write station clock offset and unit attributes: " << exc);
 	}
 
 	//st.nofDipoles.value is set at the end (destr)
@@ -821,8 +832,10 @@ TBB_StreamWriter::TBB_StreamWriter(TBB_Writer& writer, const string& inputStream
 		throw;
 	}
 
-#ifdef DUMP_RAW_STATION_DATA
-	string rawStDataFilename("station_data_" + formatString("%zu", itsFrameBuffers) + ".raw");
+#ifdef DUMP_RAW_STATION_FRAMES
+	struct timeval ts;
+	::gettimeofday(&ts, NULL);
+	string rawStDataFilename("tbb_raw_station_frames_" + formatString("%ld_%p", ts.tv_sec, (void*)itsFrameBuffers) + ".fraw");
 	try {
 		itsRawStationData = new FileStream(rawStDataFilename, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 	} catch (exception& exc) {
@@ -835,7 +848,7 @@ TBB_StreamWriter::~TBB_StreamWriter() {
 	// Only cancel the input thread, which will notify the output thread.
 	itsInputThread->cancel();
 
-#ifdef DUMP_RAW_STATION_DATA
+#ifdef DUMP_RAW_STATION_FRAMES
 	delete itsRawStationData;
 #endif
 	delete itsInputThread;
@@ -848,9 +861,9 @@ time_t TBB_StreamWriter::getTimeoutStampSec() const {
 }
 
 void TBB_StreamWriter::frameHeaderLittleToHost(TBB_Header& header) const {
-	header.seqNr              = le32toh(header.seqNr); // to be zeroed to check header crc; otherwise not so useful
+	header.seqNr              = le32toh(header.seqNr); // set to 0 for crc16, otherwise unused
 	header.time               = le32toh(header.time);
-	header.sampleNr           = le32toh(header.sampleNr); // also swaps header.bandSliceNr
+	header.sampleNr           = le32toh(header.sampleNr);
 	header.nOfSamplesPerFrame = le16toh(header.nOfSamplesPerFrame);
 	header.nOfFreqBands       = le16toh(header.nOfFreqBands);
 	header.spare              = le16toh(header.spare); // unused
@@ -877,19 +890,17 @@ void TBB_StreamWriter::correctSampleNr(TBB_Header& header) const {
 bool TBB_StreamWriter::crc16tbb(const TBB_Header* header) {
 	itsCrc16gen.reset();
 
-	/*
-	 * The header checksum is done like the data, i.e. on 16 bit little endian blocks at a time.
-	 * As with the data crc, both big and little endian CPUs need to byte swap.
-	 */
-	const int16_t* ptr = reinterpret_cast<const int16_t*>(header); // TODO: access cross-type through char or uchar ptrs (or memcpy), in all reint_cast cases in the code: unsigned char *ptr = (unsigned char*)&floatVar; // and then accessing ptr[0] to ptr[sizeof(floatVar)-1] is legal.
-	for (size_t i = 0; i < (sizeof(*header) - sizeof(header->crc16)) / sizeof(int16_t); i++) {
-		int16_t val = __bswap_16(ptr[i]);
-		itsCrc16gen.process_bytes(&val, sizeof(int16_t));
+	const char* ptr = reinterpret_cast<const char*>(header); // to char* for strict-aliasing
+	for (unsigned i = 0; i < sizeof(*header) - sizeof(header->crc16); i += 2) {
+		int16_t val;
+		memcpy(&val, &ptr[i], sizeof val); // strict-aliasing safe
+		val = __bswap_16(val);
+		itsCrc16gen.process_bytes(&val, sizeof val);
 	}
 
 	// It is also possible to process header->crc16 and see if checksum() equals 0.
 	uint16_t crc16val = header->crc16;
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if __BYTE_ORDER == __BIG_ENDIAN || defined WORDS_BIGENDIAN // for cross-compilation on little endian; fails for big->little
 	crc16val = __bswap_16(crc16val);
 #endif
 	return itsCrc16gen.checksum() == crc16val;
@@ -902,19 +913,18 @@ bool TBB_StreamWriter::crc16tbb(const TBB_Header* header) {
 bool TBB_Dipole::crc32tbb(const TBB_Payload* payload, size_t nTrSamples) {
 	itsCrc32gen.reset();
 
-	/*
-	 * Both little and big endian CPUs need to byte swap, because the data always arrives
-	 * in little and the boost routines treat it as uint8_t[] (big).
-	 */
-	const int16_t* ptr = reinterpret_cast<const int16_t*>(payload->data);
-	for (size_t i = 0; i < nTrSamples; i++) {
-		int16_t val = __bswap_16(ptr[i]);
-		itsCrc32gen.process_bytes(&val, sizeof(int16_t));
+	const char* ptr = reinterpret_cast<const char*>(payload->data); // to char* for strict-aliasing
+	for (unsigned i = 0; i < nTrSamples * sizeof(int16_t); i += 2) {
+		int16_t val;
+		memcpy(&val, &ptr[i], sizeof val); // strict-aliasing safe
+		val = __bswap_16(val);
+		itsCrc32gen.process_bytes(&val, sizeof val);
 	}
 
 	// It is also possible to process crc32val and see if checksum() equals 0.
-	uint32_t crc32val = *reinterpret_cast<const uint32_t*>(&ptr[nTrSamples]);
-#if __BYTE_ORDER == __BIG_ENDIAN
+	uint32_t crc32val;
+	memcpy(&crc32val, &ptr[nTrSamples * sizeof(int16_t)], sizeof crc32val); // idem
+#if __BYTE_ORDER == __BIG_ENDIAN || defined WORDS_BIGENDIAN // for cross-compilation on little endian; fails for big->little
 	crc32val = __bswap_32(crc32val);
 #endif
 	return itsCrc32gen.checksum() == crc32val;
@@ -929,9 +939,9 @@ void TBB_StreamWriter::processHeader(TBB_Header& header, size_t recvPayloadSize)
 	if (!crc16tbb(&header)) {
 		/*
 		 * The TBB spec states that each frame has the same fixed length, so the previous values are a good base guess if the header crc fails.
-		 * But it is not clear if it is worth the effort to try to guess to fix something up. More likely there is a bug, so for now, drop the frame.
+		 * But it is not clear if it is worth the effort to try to guess to fix something up. For now, drop and log.
 		 */
-		throw TBB_MalformedFrameException("crc16: " + header.toString()); // printed header not bswapped on big endian
+		THROW(TBB_MalformedFrameException, "crc16: " << header); // header not yet bswapped on _big_ endian
 	}
 
 	/*
@@ -940,12 +950,12 @@ void TBB_StreamWriter::processHeader(TBB_Header& header, size_t recvPayloadSize)
 	 */
 	if (recvPayloadSize < 2 * sizeof(int16_t) + sizeof(uint32_t)) {
 		// Drop it. The data crc routine only works for at least 2 transient or 1 spectral sample(s) + a crc32.
-		throw TBB_MalformedFrameException("dropping too small frame: " + recvPayloadSize);
+		THROW(TBB_MalformedFrameException, "dropping too small frame: " << recvPayloadSize);
 	}
 	frameHeaderLittleToHost(header);
 	// Verify indicated sample freq, also to reject zeroed headers, which the crc16tbb does not reject.
 	if (header.sampleFreq != 200 && header.sampleFreq != 160) {
-		throw TBB_MalformedFrameException("invalid sample frequency in frame header: " + header.sampleFreq);
+		THROW(TBB_MalformedFrameException, "dropping frame with invalid sample frequency in frame header: " << header.sampleFreq);
 	}
 
 	size_t sampleSize;
@@ -960,7 +970,7 @@ void TBB_StreamWriter::processHeader(TBB_Header& header, size_t recvPayloadSize)
 }
 
 void TBB_StreamWriter::mainInputLoop() {
-	// Always (try to) notify output thread to stop at the end.
+	// Always (try to) notify output thread to stop at the end, else we may hang.
 	class NotifyOutputThread {
 		Queue<TBB_Frame*>& queue;
 	public:
@@ -979,7 +989,8 @@ void TBB_StreamWriter::mainInputLoop() {
 		stream = createStream(itsInputStreamName, true);
 	} catch (Exception& exc) { // SystemCallException or InterfaceException (or TimeOutException)
 		LOG_WARN_STR(itsLogPrefix << exc);
-		return; // do not set itsInExitStatus to 1: if not all files with "$" replaced exist, that's fine
+		itsInExitStatus = 1;
+		return;
 	}
 	LOG_INFO_STR(itsLogPrefix << "reading incoming data from " << itsInputStreamName);
 
@@ -987,21 +998,21 @@ void TBB_StreamWriter::mainInputLoop() {
 		TBB_Frame* frame;
 
 		try {
-			frame = itsFreeQueue.remove(); // may only throw SystemCallException
+			frame = itsFreeQueue.remove();
 
-			size_t nread = stream->tryRead(frame, itsExpFrameSize); // cannot simply retry until expected size: UDP used unless local test
+			size_t nread = stream->tryRead(frame, itsExpFrameSize); // read() once for udp
 
 			// Notify master that we are still busy. (Racy, but ok, see the timeoutstamp decl.)
 			::gettimeofday(&itsTimeoutStamp, NULL);
 
-#ifdef DUMP_RAW_STATION_DATA
+#ifdef DUMP_RAW_STATION_FRAMES
 			try {
 				itsRawStationData->write(frame, nread);
 			} catch (exception& exc) { /* open() probably failed, don't spam */ }
 #endif
 
 			if (nread < sizeof(TBB_Header)) {
-				throw TBB_MalformedFrameException("dropping too small TBB frame");
+				throw TBB_MalformedFrameException("dropping too small frame");
 			}
 			processHeader(frame->header, nread - sizeof(TBB_Header));
 
@@ -1086,7 +1097,6 @@ TBB_Writer::TBB_Writer(const vector<string>& inputStreamNames, const Parset& par
 , itsRunNr(0)
 {
 	// Mask all signals to inherit for workers. This forces signals to be delivered to the main thread.
-	// Wrap to make sure we always (try to) restore the signal mask.
 	struct SigMask {
 		sigset_t sigset_old;
 
@@ -1094,14 +1104,12 @@ TBB_Writer::TBB_Writer(const vector<string>& inputStreamNames, const Parset& par
 			sigset_t sigset_all_masked;
 			::sigfillset(&sigset_all_masked);
 			if (::pthread_sigmask(SIG_SETMASK, &sigset_all_masked, &sigset_old) != 0) {
-				// The LOFAR sys uses another way to control us, so do not make this fatal.
 				LOG_WARN_STR("TBB: pthread_sigmask() failed to mask signals to inherit for worker threads.");
 			}
 		}
 
 		~SigMask() {
 			if (::pthread_sigmask(SIG_SETMASK, &sigset_old, NULL) != 0) {
-				// No exc in destr. If restoring fails and keepRunning = true, we remain deaf.
 				LOG_WARN_STR("TBB: pthread_sigmask() failed to restore signals. We may be deaf to signals.");
 			}
 		}
@@ -1114,8 +1122,9 @@ TBB_Writer::TBB_Writer(const vector<string>& inputStreamNames, const Parset& par
 	if (operatingMode == TBB_TRANSIENT_MODE) {
 		expNTrSamples = DEFAULT_TBB_TRANSIENT_NSAMPLES;
 	} else if (operatingMode == TBB_SPECTRAL_MODE) {
-		expNTrSamples = 2 * DEFAULT_TBB_SPECTRAL_NSAMPLES;
+		expNTrSamples = 2 * MAX_TBB_SPECTRAL_NSAMPLES;
 	} else {
+		expNTrSamples = DEFAULT_TBB_TRANSIENT_NSAMPLES;
 		LOG_WARN("TBB: Failed to get operating mode from parset, assuming transient");
 	}
 
@@ -1154,10 +1163,15 @@ TBB_Station* TBB_Writer::getStation(const TBB_Header& header) {
 	TBB_Station* station;
 	{
 		ScopedLock slH5(itsH5Mutex);
-		station = new TBB_Station(stationName, itsH5Mutex, itsParset, stMetaData, h5Filename); // TODO: must guarantee insert() cannot fail, else leaks; destr here is unsafe
+		station = new TBB_Station(stationName, itsH5Mutex, itsParset, stMetaData, h5Filename);
 	}
 
-	return itsStations.insert(make_pair(header.stationID, station)).first->second;
+	try {
+		return itsStations.insert(make_pair(header.stationID, station)).first->second;
+	} catch (exception& exc) {
+		delete station;
+		throw;
+	}
 }
 
 string TBB_Writer::createNewTBB_H5Filename(const TBB_Header& header, const string& stationName) {
@@ -1183,7 +1197,7 @@ string TBB_Writer::createNewTBB_H5Filename(const TBB_Header& header, const strin
 	string triggerDateTime(formatFilenameTimestamp(tv, output_format, output_format_secs, sizeof(output_format_example)));
 	string h5Filename(itsOutDir + "L" + obsIDStr + "_" + stationName + "_" + triggerDateTime + "_" + typeExt);
 
-	// If the file already exists, add a run nr and retry. (seq race with DAL's open and doesn't check .raw, but good enough)
+	// If the file already exists, add a run nr and retry. (might race and doesn't check .raw, but good enough)
 	// If >1 stations per node, start at the prev run nr if any (hence itsRunNr).
 	if (itsRunNr == 0) {
 		if (::access(h5Filename.c_str(), F_OK) != 0 && errno == ENOENT) {
