@@ -149,6 +149,10 @@ public interface jTreeMaintenanceInterface extends Remote
     public boolean exportResultTree (int aTreeID,int topItem,String filename) throws RemoteException;
     //# --- Finally some general tree maintenance ---
     // Delete a tree (of any kind) from the database.
+    
+    // Export all reported metadata from the given VIC tree
+    public boolean exportMetadata (int	aTreeID,String filename) throws RemoteException;
+    
     public boolean deleteTree (int aTreeID) throws RemoteException;
 
     // Retrieve the topNode of any tree
