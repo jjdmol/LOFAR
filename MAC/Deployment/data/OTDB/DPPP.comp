@@ -180,6 +180,7 @@ par	type		I		text	-	10		0	"stationadder"	-	"Type of the step, do not change"
 par	stations        	I	text	-	10            0	""              -		"Stations to be added (in record-format)"
 par	minpoints	I      	int	-	10		0	1		-	"If fewer unflagged input points are available, the averaged point is flagged."
 par	autocorr	I		bool	-	10		0	F			-	"Add autocorrelations?"
+par	sumauto	I		bool	-	10		0      T			-	"Sum auto or cross for new autocorrelations?"
 par	useweights I		bool	-	10		0      T			-	"F = use weight 1"
 
 node	filter          	4.0.0	development	'node constraint'	"Selection"
