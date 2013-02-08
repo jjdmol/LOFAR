@@ -20,7 +20,7 @@ def printHelp():
     print "----------------------------------------------------------------------------"
     print "Usage of arguments"
     print "-c   : clean test (do not use last test results)"
-    print "-l 2 : set level too 2 (default level is 0)"
+    print "-l=2 : set level too 2 (default level is 0)"
     print "       level 0   : manual tests, use keys listed below"
     print "       level 1..n: see checkhardware.conf file for tests done"
     print 
@@ -44,22 +44,14 @@ args = dict()
 def getArguments():
     global args
     args['L'] = 0 # default test level
-    i = 1
-    while i < len(sys.argv):
+
+    for i in range(len(sys.argv)):
         if sys.argv[i][0] == '-':
-            opt = sys.argv[i][1:].upper()
-            if opt in ('T','L'): # for testing
-                optval = sys.argv[i+1].upper()
-                args[opt] = optval
-                i += 2
+            valpos = sys.argv[i].find('=')
+            if valpos != -1:
+                args[sys.argv[i][1:valpos].upper()] = int(sys.argv[i][valpos+1:])
             else:
-                valpos = opt.find('=')
-                if valpos != -1:
-                    args[opt[:valpos]] = int(opt[valpos+1:])
-                    #print opt[:valpos], opt[valpos+1:]
-                else:
-                    args[opt] = '-'
-                i += 1       
+                args[sys.argv[i][1:].upper()]='-'
 
 def setLevelTests(conf):
     global args
@@ -117,10 +109,9 @@ def main():
     
     # Read in RemoteStation.conf 
     ID, nRSP, nTBB, nLBL, nLBH, nHBA = readStationConfig()
-    print  ID, nRSP, nTBB, nLBL, nLBH, nHBA
    
     # setup intern database
-    db = cDB(StID, nRSP, nTBB, nLBL, nLBH, nHBA, clean=args.has_key('C'))
+    db = cDB(StID, nRSP, nTBB, nLBL, nLBH, nHBA)
     
     logger.info('== START OF HARDWARE CHECK ==', screen=True)
     logger.resetStartTime(screen=True)
