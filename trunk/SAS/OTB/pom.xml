@@ -22,7 +22,7 @@
   <!-- Properties that can be used throughout the POM as a substitution, 
     and are used as filters in resources if enabled. -->
   <properties>
-    <lofar.lib.version>1.10.0</lofar.lib.version>
+    <lofar.lib.version>1.11.0</lofar.lib.version>
   </properties>
 
 
