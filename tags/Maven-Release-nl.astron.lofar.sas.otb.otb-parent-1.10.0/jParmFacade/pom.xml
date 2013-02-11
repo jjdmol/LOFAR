@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>Lofar OTB :: jParmFacade</name>
+  <description>Object Tree Browser Client/Server - jParmFacade</description>
+
+  <parent>
+    <groupId>nl.astron.lofar.sas.otb</groupId>
+    <artifactId>otb-parent</artifactId>
+    <version>1.10.0</version>
+  </parent>
+
+  <artifactId>jParmFacade</artifactId>
+
+  <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
+  <scm>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.sas.otb.otb-parent-1.10.0/jParmFacade</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.sas.otb.otb-parent-1.10.0/jParmFacade</developerConnection>
+  </scm>
+
+
+  <!-- Information required to build a project. -->
+  <build>
+
+    <sourceDirectory>src</sourceDirectory>
+    <testSourceDirectory>test</testSourceDirectory>
+
+    <resources>
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+          <exclude>**/*.cc</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
+    <plugins>
+
+      <!-- Generate HEADER files from JNI Java classes -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>native-maven-plugin</artifactId>
+
+        <configuration>
+          <javahClassNames>
+            <javahClassName>nl.astron.lofar.sas.otb.jparmfacade.jParmFacade</javahClassName>
+          </javahClassNames>
+        </configuration>
+
+        <executions>
+          <execution>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>javah</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+
+  </build>
+
+
+  <dependencies>
+    <dependency>
+      <groupId>nl.astron.lofar.sas.otb</groupId>
+      <artifactId>jOTDB3</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>
+
+
