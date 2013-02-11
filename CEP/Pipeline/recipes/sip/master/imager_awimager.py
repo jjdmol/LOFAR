@@ -61,6 +61,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'autogenerate_parameters': ingredient.BoolField(
             '--autogenerate-parameters',
+            default=True,
             help="Turns on the autogeneration of: cellsize, image-size. MSSS like"
             "functionality"
         ),
