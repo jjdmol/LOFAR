@@ -21,7 +21,21 @@ PANEL,-1 -1 1010 745 N "_3DFace" 0
   dynAppend(stationList,remote);
   dynAppend(stationList,europe);                      
   dynAppend(stationList,ccu);                      
-  dynAppend(stationList,mcu);  
+  dynAppend(stationList,mcu); 
+ 
+  string DP = MainDBName+\"LOFAR_PermSW_MACScheduler\";
+  
+
+  // check if the required datapoint for this view are enabled and accessible
+  if (dpExists(DP)) {
+    if (dpConnect(\"updateObservations\", DP +\".activeObservations:_online.._value\",
+                                        DP +\".activeObservations:_online.._invalid\") == -1) {
+      LOG_ERROR(\"main.pnl:main|Couldn't connect to: \"+DP);
+    }
+  } else {
+    if (!isStandalone()) LOG_ERROR(\"main.pnl:main|Couldn't find DP to connect to: \"+DP);
+  }	
+ 
  
   redraw();
 }
@@ -56,11 +70,14 @@ void doAction(string aDP, string anAction) {
 E "#uses \"navPanel.ctl\"
 
 dyn_string stationList;
+dyn_string observationsList;
 dyn_string SWLevelRefNames;
 dyn_string datastreamRefNames;
 dyn_string swCtrlRefNames;
 dyn_string memAndHDDRefNames;
 dyn_string stationViewRefNames;
+dyn_string observationRefNames;
+
 string strPanelName;
 string strModuleName;
 string baseDP=\"\";
@@ -112,6 +129,23 @@ void clearStationViewRefNames() {
   }
   dynClear(stationViewRefNames);
 }
+
+void clearObservationRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(observationRefNames); i++) {
+    removeSymbol(strModuleName,\"\",observationRefNames[i]);
+  }
+  dynClear(observationRefNames);
+}
+
+void redrawObservations() {
+  if (dynlen(observationRefNames) > 0) {
+    clearObservationRefNames();
+  }
+
+  addObservations();
+}
+
 void redraw() {
   dynClear(station_result);
   dynClear(station_procList);
@@ -143,6 +177,7 @@ void redraw() {
     clearStationViewRefNames();
   }
 
+
   addSWLevels();
 
   addDatastreams();
@@ -152,6 +187,7 @@ void redraw() {
   addMemAndHDD();
   
   addStationView();
+  
   
  
  
@@ -363,6 +399,47 @@ void addStationView() {
     yPos_AddSymbol += 11;
     ref++;
   }
+}
+
+void addObservations() {
+  int xPos_AddSymbol = 5; 
+  int yPos_AddSymbol = 565; 
+  int ref = 1;
+  string addPanelName    = \"objects/Observations/observation_smallCEPView.pnl\";
+  //loop over list and prepare panel with all stations and swlevel objects   
+  for (int i=1; i<= dynlen(observationsList); i++) {
+
+    observationRefNames[i]=\"stationSW\"+(i);
+      
+    if (  addSymbol(  strModuleName,                   // Stay in this modul
+                      \"\",                              // Name of this panel
+                      addPanelName,                    // Panel to add
+                      observationRefNames[ref],        // Ref of the addedPanel
+                      makeDynString( \"$observation:\" + observationsList[i]) ,     // Define all $values
+                      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+                      yPos_AddSymbol,                  // Ypos of the AddedSymbol
+                      0,                               // angle
+                      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  LOG_ERROR(\"swlevel.pnl:addObservations|Error Appending observation: \" + observationsList[i] + \" in this panel.\");
+          }
+    yPos_AddSymbol += 15;
+    ref++;
+  }
+}
+
+updateObservations(string dp1, dyn_string obs,
+                   string dp2, bool invalid)
+{
+  
+  if (invalid) {
+    return;
+  }
+  
+  dynClear(observationsList);
+  observationsList = obs;
+  
+  redrawObservations();
 }
 " 0
  2
