@@ -38,7 +38,7 @@ import numpy as np
 class imager_awimager(LOFARnodeTCP):
     def run(self, executable, environment, parset, working_directory,
             output_image, concatenated_measurement_set, sourcedb_path,
-             mask_patch_size, autogenerate_parameters):
+             mask_patch_size):
         """
         :param executable: Path to awimager executable
         :param environment: environment for catch_segfaults (executable runner)
@@ -51,8 +51,6 @@ class imager_awimager(LOFARnodeTCP):
           mask
         :param mask_patch_size: Scaling of the patch around the source in the 
           mask
-        :param autogenerate_parameters: Turns on the autogeneration of: 
-           cellsize, npix, wprojplanes, wmax
         :rtype: self.outputs["image"] The path to the output image
         
         """
@@ -61,22 +59,39 @@ class imager_awimager(LOFARnodeTCP):
         self.environment.update(environment)
 
         with log_time(self.logger):
-            # Read the parameters as specified in the parset
+            # ****************************************************************
+            # 1. Calculate awimager parameters that depend on measurement set
             parset_object = get_parset(parset)
             npix = parset_object.getString('npix')
             w_proj_planes = parset_object.getString('wprojplanes')
             cell_size = parset_object.getString('cellsize')
             w_max = parset_object.getString('wmax')
 
-            if autogenerate_parameters:
-                # *************************************************************
-                # 1. Calculate awimager parameters that depend on measurement set
-                # If none of these parameters is specified
-                    # calculate them
+            # If none of these parameters is specified
+            if npix == "" and w_proj_planes == "" and cell_size == "" \
+                                                  and w_max == "":
+                # calculate them
                 cell_size, npix, w_max, w_proj_planes = \
-                    self._calc_par_from_measurement(
-                            concatenated_measurement_set, parset)
-
+                self._calc_par_from_measurement(concatenated_measurement_set,
+                                                 parset)
+            # if they are all specified
+            elif npix != "" and w_proj_planes != "" and cell_size != "" \
+                                                    and w_max != "":
+                # Cast them to numbers
+                try:
+                    npix = int(npix)
+                    w_proj_planes = int(w_proj_planes)
+                    w_max = float(w_max)
+                except Exception, exception_object:
+                    self.logger.error("Error while parsing parset parameters:")
+                    self.logger.error(str(exception_object))
+                    raise
+            # if not all empty or not all specified
+            else:
+                raise PipelineException("The specification in the parset is "
+                    "incorrect: (awimager.) npix, wprojplanes, cellsize, wmax "
+                    "should all be specified or none of them (generated),"
+                    "specifying a subset in not possible")
             # ****************************************************************
             # 2. Get the target image location from the mapfile for the parset.
             # Create target dir if it not exists
@@ -237,7 +252,7 @@ class imager_awimager(LOFARnodeTCP):
                         cell_size_formatted, npix) +
              " w_max: {0}, w_proj_planes: {1}".format(w_max, w_proj_planes))
 
-        return cell_size_formatted, str(npix), str(w_max), str(w_proj_planes)
+        return cell_size_formatted, npix, str(w_max), str(w_proj_planes)
 
     def _get_fov_and_station_diameter(self, measurement_set):
         """
