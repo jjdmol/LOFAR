@@ -77,6 +77,13 @@ class imager_awimager(LOFARnodeTCP):
                     self._calc_par_from_measurement(
                             concatenated_measurement_set, parset)
 
+                self.logger.info(
+                    "Calculated parameters: cell_size: {0}, npix: {1}".format(
+                        cell_size, npix))
+                self.logger.info("w_max: {0}, w_proj_planes: {1} ".format(
+                        w_max, w_proj_planes))
+
+
             # ****************************************************************
             # 2. Get the target image location from the mapfile for the parset.
             # Create target dir if it not exists
