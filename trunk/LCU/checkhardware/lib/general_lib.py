@@ -14,6 +14,10 @@ def writeMessage(msg):
 def getShortDateStr(tm=time.gmtime()):
     return (time.strftime("%Y%m%d", tm))
 
+# Return time string in the following format HH:MM:SS
+def getTimeStr(tm=time.gmtime()):
+    return (time.strftime("%H:%M:%S", tm))
+
 
 # Run cmd with args and return response 
 def sendCmd(cmd='', args=''):
@@ -80,19 +84,18 @@ class cTestLogger(cLogger):
     def __init__(self, logdir):
         filename = getHostName() + "_StationTest" + '.csv'
         cLogger.__init__(self, logdir, filename)
-        cLogger.info(self, "# Station test for station %s" %(getHostName()))
              
     def addLine(self, info):
         cLogger.info(self, info)      
 
 
 class cStationLogger(cLogger):
-    def __init__(self, logdir):
+    def __init__(self, logdir, filetime=time.gmtime()):
         filename = "stationtest_" + getHostName() + '.log'        
         cLogger.__init__(self, logdir, filename)
         cLogger.info(self, "StID  >: %s" %(getHostName()))
         cLogger.info(self, "Lgfl  >: %s" %(os.path.join(logdir,filename)))
-        testdate = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+        testdate = time.strftime("%a, %d %b %Y %H:%M:%S", filetime)
         cLogger.info(self, "Time  >: %s" %(testdate))
     
     def addLine(self, info):

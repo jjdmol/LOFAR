@@ -124,7 +124,7 @@ def main():
         removeAllDataFiles()
     else:
         os.mkdir(dataDir())
-    
+    db.check_start_time = time.gmtime()
     writeMessage('!!!   (new version)  This station will be in use for a test! Please do not use the station!  (new version)   !!!')
     start_level = swlevel()
     sw_level = swlevel(2)
@@ -226,15 +226,16 @@ def main():
                     tbb.checkMemory()
 
 
+    db.check_stop_time = time.gmtime()
     # do db test and write result files to log directory
     db.test(conf.getStr('log-dir'))
     
     swlevel(start_level)
     logger.printBusyTime(screen=True)
     writeMessage('!!!     The test is ready and the station can be used again!               !!!')
-    
+        
     # delete files from data directory
-    removeAllDataFiles()
+    #removeAllDataFiles()
 
 
 if __name__ == '__main__':
