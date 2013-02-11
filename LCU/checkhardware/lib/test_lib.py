@@ -14,7 +14,7 @@ import numpy as np
 #DefaultLBASubband = 301
 #DefaultHBASubband = 155
 
-datadir = r'/tmp/data'
+#datadir = r'/tmp/data'
 
 # get and return recorded data in various ways
 class cRCUdata:
@@ -35,7 +35,7 @@ class cRCUdata:
         return (data)
         
     def readFiles(self):
-        files_in_dir = sorted(os.listdir(datadir))
+        files_in_dir = sorted(os.listdir(dataDir()))
         ssdata = np.array([self.readFile(os.path.join(dataDir(),file_name)) for file_name in files_in_dir])
         # mask zero values and convert to dBm
         self.ssData = np.log10(np.ma.masked_less(ssdata, self.minvalue)) * 10.0
@@ -128,7 +128,7 @@ def detectBadAntHighSignal(data, logger):
                     bad_val[rcu] = spec_median 
     #print np.arange(len(bad_rcus))[bad_rcus]
     #print proc_bad
-    return np.arange(len(bad_rcus))[bad_rcus], proc_bad[bad_rcus], bad_val[bad_rcus]
+    return np.arange(len(bad_rcus))[bad_rcus], proc_bad[bad_rcus], bad_val[bad_rcus], masked_median
 
 
 def detectBadAntLowSignal(data, logger):
@@ -169,7 +169,7 @@ def detectBadAntLowSignal(data, logger):
                     bad_val[rcu] = spec_median 
     #print np.arange(len(bad_rcus))[bad_rcus]
     #print proc_bad
-    return np.arange(len(bad_rcus))[bad_rcus], proc_bad[bad_rcus], bad_val[bad_rcus]
+    return np.arange(len(bad_rcus))[bad_rcus], proc_bad[bad_rcus], bad_val[bad_rcus], masked_median
 
 
 # class for checking TBB boards using tbbctl
@@ -393,54 +393,58 @@ class cLBA:
         self.lba.check_time_noise = sampletime 
         self.log.info("Start %s Noise test" %(self.lba.label), screen=True)
         
-        rspctl('--rcumode=%d' %(mode), wait=1.0)
+        rspctl('--rcumode=%d' %(mode), wait=2.0)
         recordTime = sampletime
         removeAllDataFiles()
         self.log.info("Wait %d seconds while recording data" %(recordTime), screen=True)
-        print rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=0:%d' %(recordTime, dataDir(), (self.lba.nr_antennas*2)-1), wait=0.0)
+        rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=0:%d' %(recordTime, dataDir(), (self.lba.nr_antennas*2)-1), wait=0.0)
         self.rcudata.readFiles()
         
-        bad, proc, val = detectBadAntLowSignal(self.rcudata.getAllX(), self.log)
+        bad, proc, val, ref = detectBadAntLowSignal(self.rcudata.getAllX(), self.log)
         for i in range(len(bad)):
             nr = bad[i]
             self.log.info("%s %d X Low Noise, %3.1f%% bad, min.val %5.3f" %(self.lba.label, nr, proc[i], val[i]), screen=True)
             self.lba.ant[nr].x_low_noise = 1
             self.lba.ant[nr].x_low_proc  = proc[i]
             self.lba.ant[nr].x_low_val   = val[i]
+            self.lba.ant[nr].x_low_ref   = ref
             
         
-        bad, proc, val = detectBadAntHighSignal(self.rcudata.getAllX(), self.log)
+        bad, proc, val, ref = detectBadAntHighSignal(self.rcudata.getAllX(), self.log)
         for i in range(len(bad)):
             nr = bad[i]
             self.log.info("%s %d X High Noise, %3.1f%% bad, max.val %5.3f" %(self.lba.label, nr, proc[i], val[i]), screen=True)
             self.lba.ant[nr].x_high_noise = 1
             self.lba.ant[nr].x_high_proc  = proc[i]
             self.lba.ant[nr].x_high_val   = val[i]
+            self.lba.ant[nr].x_high_ref   = ref
         
-        bad, proc, val = detectBadAntLowSignal(self.rcudata.getAllY(), self.log)
+        bad, proc, val, ref = detectBadAntLowSignal(self.rcudata.getAllY(), self.log)
         for i in range(len(bad)):
             nr = bad[i]
             self.log.info("%s %d Y Low Noise, %3.1f%% bad, min.val %5.3f" %(self.lba.label, nr, proc[i], val[i]), screen=True)
             self.lba.ant[nr].y_low_noise = 1
             self.lba.ant[nr].y_low_proc  = proc[i]
             self.lba.ant[nr].y_low_val   = val[i]
+            self.lba.ant[nr].y_low_ref   = ref
         
-        bad, proc, val = detectBadAntHighSignal(self.rcudata.getAllY(), self.log)
+        bad, proc, val, ref = detectBadAntHighSignal(self.rcudata.getAllY(), self.log)
         for i in range(len(bad)):
             nr = bad[i]
             self.log.info("%s %d Y High Noise, %3.1f%% bad, max.val %5.3f" %(self.lba.label, nr, proc[i], val[i]), screen=True)
             self.lba.ant[nr].y_high_noise = 1
             self.lba.ant[nr].y_high_proc  = proc[i]
             self.lba.ant[nr].y_high_val   = val[i]
+            self.lba.ant[nr].y_high_ref   = ref
         
         
     def checkSignal(self, mode, subband, min_deviation, max_deviation):
         self.lba.check_done = 1
         self.log.info("Start %s RF test" %(self.lba.label), screen=True)
               
-        rspctl('--rcumode=%d' %(mode), wait=1.0)
+        rspctl('--rcumode=%d' %(mode), wait=2.0)
         removeAllDataFiles()
-        rspctl('--statistics --duration=2 --integration=1 --directory=%s --select=0:%d' %(dataDir(), (self.lba.nr_antennas*2)-1), wait=0.0)
+        print rspctl('--statistics --duration=2 --integration=1 --directory=%s --select=0:%d' %(dataDir(), (self.lba.nr_antennas*2)-1), wait=0.0)
         self.rcudata.readFiles()
         self.rcudata.searchTestSignal(subband=subband, minsignal=75.0, maxsignal=90.0)
         
@@ -631,37 +635,41 @@ class cHBA:
         rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=0:%d' %(recordTime, dataDir(), (self.hba.nr_tiles*2)-1), wait=0.0)
         self.rcudata.readFiles()
         
-        bad, proc, val = detectBadAntLowSignal(self.rcudata.getAllX(), self.log)
+        bad, proc, val, ref = detectBadAntLowSignal(self.rcudata.getAllX(), self.log)
         for i in range(len(bad)):
             nr = bad[i]
             self.log.info("HBA Tile %d X Low Noise, %3.1f%% bad, min.val %5.3f" %(nr, proc[i], val[i]), screen=True)
             self.hba.tile[nr].x_low_noise = 1
             self.hba.tile[nr].x_low_proc  = proc[i]
             self.hba.tile[nr].x_low_val   = val[i]
+            self.hba.tile[nr].x_low_ref   = ref
         
-        bad, proc, val = detectBadAntHighSignal(self.rcudata.getAllX(), self.log)
+        bad, proc, val, ref = detectBadAntHighSignal(self.rcudata.getAllX(), self.log)
         for i in range(len(bad)):
             nr = bad[i]
             self.log.info("HBA Tile %d X High Noise, %3.1f%% bad, max.val %5.3f" %(nr, proc[i], val[i]), screen=True)
             self.hba.tile[nr].x_high_noise = 1
             self.hba.tile[nr].x_high_proc  = proc[i]
             self.hba.tile[nr].x_high_val   = val[i]
+            self.hba.tile[nr].x_high_ref   = ref
         
-        bad, proc, val = detectBadAntLowSignal(self.rcudata.getAllY(), self.log)
+        bad, proc, val, ref = detectBadAntLowSignal(self.rcudata.getAllY(), self.log)
         for i in range(len(bad)):
             nr = bad[i]
             self.log.info("HBA Tile %d Y Low Noise, %3.1f%% bad, min.val %5.3f" %(nr, proc[i], val[i]), screen=True)
             self.hba.tile[nr].y_low_noise = 1
             self.hba.tile[nr].y_low_proc  = proc[i]
             self.hba.tile[nr].y_low_val   = val[i]
+            self.hba.tile[nr].y_low_ref   = ref
         
-        bad, proc, val = detectBadAntHighSignal(self.rcudata.getAllY(), self.log)
+        bad, proc, val, ref = detectBadAntHighSignal(self.rcudata.getAllY(), self.log)
         for i in range(len(bad)):
             nr = bad[i]
             self.log.info("HBA Tile %d Y High Noise, %3.1f%% bad, max.val %5.3f" %(nr, proc[i], val[i]), screen=True)
             self.hba.tile[nr].y_high_noise = 1
             self.hba.tile[nr].y_high_proc  = proc[i]
             self.hba.tile[nr].y_high_val   = val[i]
+            self.hba.tile[nr].y_high_ref   = ref
         
     def checkNaS_elements(self, mode, sampletime):
         self.hba.check_done = 1
@@ -686,7 +694,7 @@ class cHBA:
             rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=0:%d' %(record_time, dataDir(), (self.hba.nr_tiles*2)-1), wait=0.0)
             self.rcudata.readFiles()
             
-            bad, proc, val = detectBadAntLowSignal(self.rcudata.getAllX(), self.log)
+            bad, proc, val, ref = detectBadAntLowSignal(self.rcudata.getAllX(), self.log)
             for i in range(len(bad)):
                 nr = bad[i]
                 if self.hba.tile[nr].x_rcu_off or self.hba.tile[nr].y_rcu_off:
@@ -695,7 +703,7 @@ class cHBA:
                 self.log.info("HBA Tile %d Element %d X Low Noise, %3.1f%% bad, min.val %5.3f" %(nr, elem_nr+1, proc[i], val[i]), screen=True)
                 self.hba.tile[nr].element[elem_nr].x_low_noise = 1
             
-            bad, proc, val = detectBadAntHighSignal(self.rcudata.getAllX(), self.log)
+            bad, proc, val, ref = detectBadAntHighSignal(self.rcudata.getAllX(), self.log)
             for i in range(len(bad)):
                 nr = bad[i]
                 if self.hba.tile[nr].x_rcu_off or self.hba.tile[nr].y_rcu_off:
@@ -704,7 +712,7 @@ class cHBA:
                 self.log.info("HBA Tile %d Element %d X High Noise, %3.1f%% bad, max.val %5.3f" %(nr, elem_nr+1, proc[i], val[i]), screen=True)
                 self.hba.tile[nr].element[elem_nr].x_high_noise = 1
             
-            bad, proc, val = detectBadAntLowSignal(self.rcudata.getAllY(), self.log)
+            bad, proc, val, ref = detectBadAntLowSignal(self.rcudata.getAllY(), self.log)
             for i in range(len(bad)):
                 nr = bad[i]
                 if self.hba.tile[nr].x_rcu_off or self.hba.tile[nr].y_rcu_off:
@@ -713,7 +721,7 @@ class cHBA:
                 self.log.info("HBA Tile %d Element %d Y Low Noise, %3.1f%% bad, min.val %5.3f" %(nr, elem_nr+1, proc[i], val[i]), screen=True)
                 self.hba.tile[nr].element[elem_nr].y_low_noise = 1    
             
-            bad, proc, val = detectBadAntHighSignal(self.rcudata.getAllY(), self.log)
+            bad, proc, val, ref = detectBadAntHighSignal(self.rcudata.getAllY(), self.log)
             for i in range(len(bad)):
                 nr = bad[i]
                 if self.hba.tile[nr].x_rcu_off or self.hba.tile[nr].y_rcu_off:

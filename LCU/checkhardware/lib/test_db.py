@@ -14,6 +14,8 @@ class cDB:
         self.nr_tbb = nTBB
         
         self.tests = ''
+        self.check_start_time = 0
+        self.check_stop_time = 0
         
         self.station_error     = 0
         self.rspdriver_version = "ok"
@@ -85,11 +87,17 @@ class cDB:
         print logdir
         date = getShortDateStr()
         log = cTestLogger(logdir)
+        log.addLine("%s,NFO,---,STATION,NAME=%s" %\
+                   (date, getHostName()))    
+        log.addLine("%s,NFO,---,RUNTIME,START=%s,STOP=%s" %\
+                   (date, getTimeStr(self.check_start_time), getTimeStr(self.check_stop_time)))
+        log.addLine("%s,NFO,---,CHECKS%s" %(date, self.tests))
+        log.addLine("%s,NFO,---,STATISTICS,BAD_LBL=%d,BAD_LBH=%d,BAD_HBA=%d" %\
+                   (date, self.lbl.nr_bad_antennas, self.lbh.nr_bad_antennas, self.hba.nr_bad_tiles))
         
-        log.addLine("%s,NFO,---,TESTS%s" %(date, self.tests))
-
         if self.rspdriver_version != "ok" or self.rspctl_version != "ok":
-            log.addLine("%s,RSP,---,VERSION,RSPDRIVER=%s,RSPCTL=%s" %(date, self.rspdriver_version, self.rspctl_version))
+            log.addLine("%s,RSP,---,VERSION,RSPDRIVER=%s,RSPCTL=%s" %\
+                       (date, self.rspdriver_version, self.rspctl_version))
         
         for rsp in self.rsp:
             rsp.test()
@@ -98,7 +106,8 @@ class cDB:
                            (date, rsp.nr, rsp.bp_version, rsp.ap_version))
         
         if self.tbbdriver_version != "ok" or self.tbbctl_version != "ok":
-            log.addLine("%s,TBB,---,VERSION,TBBDRIVER=%s,TBBCTL=%s" %(date, self.tbbdriver_version, self.tbbctl_version))
+            log.addLine("%s,TBB,---,VERSION,TBBDRIVER=%s,TBBCTL=%s" %\
+                       (date, self.tbbdriver_version, self.tbbctl_version))
         
         for tbb in self.tbb:
             tbb.test()
@@ -134,14 +143,14 @@ class cDB:
                         else:
                             valstr = ''
                             if ant.x_low_noise or ant.y_low_noise:
-                                if ant.x_low_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f' %(ant.x_low_proc, ant.x_low_val)
-                                if ant.y_low_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f' %(ant.y_low_proc, ant.y_low_val)
+                                if ant.x_low_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f,Xref=%3.1f' %(ant.x_low_proc, ant.x_low_val, ant.x_low_ref)
+                                if ant.y_low_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f,Yref=%3.1f' %(ant.y_low_proc, ant.y_low_val, ant.y_low_ref)
                                 log.addLine("%s,%s,%03d,LOW_NOISE%s" %(date, lba.label, ant.nr, valstr))
                             
                             valstr = ''
                             if ant.x_high_noise or ant.y_high_noise:
-                                if ant.x_high_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f' %(ant.x_high_proc, ant.x_high_val)
-                                if ant.y_high_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f' %(ant.y_high_proc, ant.y_high_val)
+                                if ant.x_high_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f,Xref=%3.1f' %(ant.x_high_proc, ant.x_high_val, ant.x_high_ref)
+                                if ant.y_high_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f,Yref=%3.1f' %(ant.y_high_proc, ant.y_high_val, ant.y_high_ref)
                                 log.addLine("%s,%s,%03d,HIGH_NOISE%s" %(date, lba.label, ant.nr, valstr))
                             
                             valstr = ''
@@ -158,13 +167,13 @@ class cDB:
             if tile.x_error or tile.y_error:
                 valstr = ''
                 if tile.x_low_noise or tile.y_low_noise:
-                    if tile.x_low_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f' %(tile.x_low_proc, tile.x_low_val)
-                    if tile.y_low_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f' %(tile.y_low_proc, tile.y_low_val)
+                    if tile.x_low_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f,Xref=%3.1f' %(tile.x_low_proc, tile.x_low_val, tile.x_low_ref)
+                    if tile.y_low_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f,Yref=%3.1f' %(tile.y_low_proc, tile.y_low_val, tile.y_low_ref)
                     log.addLine("%s,HBA,%03d,LOW_NOISE%s" %(date, tile.nr, valstr))
 
                 if tile.x_high_noise or tile.y_high_noise:
-                    if tile.x_high_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f' %(tile.x_high_proc, tile.x_high_val)
-                    if tile.y_high_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f' %(tile.y_high_proc, tile.y_high_val)
+                    if tile.x_high_noise: valstr += ',Xproc=%3.1f,Xval=%3.1f,Xref=%3.1f' %(tile.x_high_proc, tile.x_high_val, tile.x_high_ref)
+                    if tile.y_high_noise: valstr += ',Yproc=%3.1f,Yval=%3.1f,Yref=%3.1f' %(tile.y_high_proc, tile.y_high_val, tile.y_high_ref)
                     log.addLine("%s,HBA,%03d,HIGH_NOISE%s" %(date, tile.nr, valstr))
                 
                 # check for broken summators
@@ -241,6 +250,7 @@ class cDB:
             self.test_subband_y = 0
             self.test_signal_x  = 0
             self.test_signal_y  = 0
+            self.nr_bad_antennas= 0
             self.ant = list()
             for i in range(self.nr_antennas):
                 self.ant.append(self.cAntenna(i, nr_offset))
@@ -249,7 +259,10 @@ class cDB:
         def test(self):
             for ant in self.ant:
                 ant.test()
-                self.error = max(self.error, ant.x_error, ant.y_error)
+                ant_error = max(ant.x_error, ant.y_error)
+                self.error = max(self.error, ant_error)
+                if ant_error:
+                    self.nr_bad_antennas += 1
             return (self.error) 
             
         class cAntenna:
@@ -279,15 +292,19 @@ class cDB:
                 self.x_low_noise  = 0  
                 self.x_low_proc   = 0.0
                 self.x_low_val    = 0.0
+                self.x_low_ref    = 0.0
                 self.x_high_noise = 0  
                 self.x_high_proc  = 0.0
                 self.x_high_noise = 0.0
+                self.x_high_ref   = 0.0
                 self.y_low_noise  = 0  
                 self.y_low_proc   = 0.0
                 self.y_low_val    = 0.0
+                self.y_low_ref    = 0.0
                 self.y_high_noise = 0  
                 self.y_high_proc  = 0.0
                 self.y_high_val   = 0.0
+                self.y_high_ref   = 0.0
 
                 self.down = 0
                 return
@@ -306,6 +323,7 @@ class cDB:
             self.error   = 0
             self.avg_2_low = 0
             self.tile = list()
+            self.nr_bad_tiles = 0
             for i in range(self.nr_tiles):
                 self.tile.append(self.cTile(i))
             return
@@ -313,7 +331,11 @@ class cDB:
         def test(self):
             for tile in self.tile:
                 tile.test()
-                self.error = max(self.error, tile.x_error, tile.y_error)
+                tile_error = max(tile.x_error, tile.y_error)
+                self.error = max(self.error, tile_error)
+                if tile_error:
+                    self.nr_bad_tiles += 1
+
             return (self.error)   
         
         class cTile:
@@ -334,15 +356,19 @@ class cDB:
                 self.x_low_noise  = 0  
                 self.x_low_proc   = 0.0
                 self.x_low_val    = 0.0
+                self.x_low_ref    = 0.0
                 self.x_high_noise = 0  
                 self.x_high_proc  = 0.0
                 self.x_high_noise = 0.0
+                self.x_high_ref   = 0.0
                 self.y_low_noise  = 0  
                 self.y_low_proc   = 0.0
                 self.y_low_val    = 0.0
+                self.y_low_ref    = 0.0
                 self.y_high_noise = 0  
                 self.y_high_proc  = 0.0
                 self.y_high_val   = 0.0
+                self.y_high_ref   = 0.0
                 
                 self.p_summator_error = 0
                 self.c_summator_error = 0

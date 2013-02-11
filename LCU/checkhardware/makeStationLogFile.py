@@ -6,6 +6,7 @@
 
 import sys
 import os
+from time import gmtime
 
 libPath = libPath = '/opt/stationtest/lib'
 sys.path.insert(0, libPath)
@@ -19,13 +20,14 @@ for line in data:
     if line.find('log-dir') != -1:
         key, logdir = line.strip().split('=')
 
-log = cStationLogger(logdir)
-
 testfilename = '%s_StationTest.csv' %(getHostName())
 fullFilename = os.path.join(logdir, testfilename)
 f = open(fullFilename, 'r')
 testdata = f.readlines()
 f.close()
+
+fileinfo = os.stat(fullFilename)
+log = cStationLogger(logdir, gmtime(fileinfo[-1]))
 
 last_c_summator = -1
 for line in testdata:
@@ -71,7 +73,7 @@ for line in testdata:
     if part == 'LBL':
         rcu = partNr * 2 
         if msgType == 'LOW_NOISE':
-    		log.addLine('LBAosc1>: Sv=normal  Pr=normal , LBA Outer (LBL) large oscillation (low noise): RCU: (%d,%d)' %\
+    		log.addLine('LBAmd1>: Sv=normal  Pr=normal , LBA Outer (LBL) low noise: RCU: (%d,%d)' %\
                         (partNr*2, partNr*2+1))
         elif msgType == 'HIGH_NOISE':
     		log.addLine('LBAosc1>: Sv=normal  Pr=normal , LBA Outer (LBL) large oscillation (high noise): RCU: (%d,%d)' %\
@@ -95,7 +97,7 @@ for line in testdata:
             
     if part == 'LBH':
         if msgType == 'LOW_NOISE':
-    		log.addLine('LBAosc3>: Sv=normal  Pr=normal , LBA Inner (LBH) large oscillation (low noise): RCU: (%d,%d)' %\
+    		log.addLine('LBAmd3>: Sv=normal  Pr=normal , LBA Inner (LBH) low noise: RCU: (%d,%d)' %\
                         (partNr*2, partNr*2+1))
         elif msgType == 'HIGH_NOISE':
     		log.addLine('LBAosc3>: Sv=normal  Pr=normal , LBA Inner (LBH) large oscillation (high noise): RCU: (%d,%d)' %\
@@ -119,7 +121,7 @@ for line in testdata:
 
     if part == 'HBA':
     	if msgType == 'LOW_NOISE':
-    		log.addLine('HBAosc>: Sv=normal  Pr=normal , Tile %d - RCU (%d,%d); Large oscillation (low noise)' %\
+    		log.addLine('HBAmd5>: Sv=normal  Pr=normal , Tile %d - RCU (%d,%d); low noise' %\
                         (partNr, partNr*2, partNr*2+1))
         
         elif msgType == 'HIGH_NOISE':

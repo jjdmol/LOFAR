@@ -99,6 +99,7 @@ def swlevel(level=None):
 def rspctl(args='', wait=0.0):
     if args != '':
         response = sendCmd('rspctl', args)
+        #print "rspctl %s" %(args)
         if wait > 0.0:
             time.sleep(wait)
         return (response)
