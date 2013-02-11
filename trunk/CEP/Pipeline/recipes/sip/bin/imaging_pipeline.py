@@ -20,7 +20,6 @@ from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 
 from lofar.parameterset import parameterset
 
-
 class imaging_pipeline(control):
     """
     The imaging pipeline is used to generate images and find
