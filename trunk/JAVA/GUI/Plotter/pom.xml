@@ -9,7 +9,7 @@
   <parent>
     <groupId>nl.astron.lofar.lib</groupId>
     <artifactId>lofar-lib-parent</artifactId>
-    <version>1.11.0-SNAPSHOT</version>
+    <version>1.11.0</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -18,8 +18,8 @@
   
   <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
   <scm>
-    <connection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/GUI/Plotter</connection>
-    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/JAVA/GUI/Plotter</developerConnection>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.lib.lofar-lib-parent-1.11.0/GUI/Plotter</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.lib.lofar-lib-parent-1.11.0/GUI/Plotter</developerConnection>
   </scm>
 
 
