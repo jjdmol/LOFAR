@@ -59,6 +59,11 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             '--mask-patch-size',
             help="Scale factor for patches in the awimager mask"
         ),
+        'autogenerate_parameters': ingredient.BoolField(
+            '--autogenerate-parameters',
+            help="Turns on the autogeneration of: cellsize, image-size. MSSS like"
+            "functionality"
+        ),
     }
 
     outputs = {
@@ -113,11 +118,13 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             arguments = [self.inputs['executable'],
                          self.environment,
                          self.inputs['parset'],
-                          self.inputs['working_directory'],
+                         self.inputs['working_directory'],
                          self.inputs['output_image'],
                          measurement_path,
                          sourcedb_path,
-                         self.inputs['mask_patch_size']]
+                         self.inputs['mask_patch_size'],
+                         self.inputs['autogenerate_parameters']
+                         ]
 
             jobs.append(ComputeJob(host, node_command, arguments))
         self._schedule_jobs(jobs)
