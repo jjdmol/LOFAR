@@ -44,6 +44,8 @@ namespace LOFAR {
 
 // QUICK FIX #3633
 #define MAC_PYTHON_FEEDBACK_QF			22000
+// Quick Fix #4022
+#define MAC_ONLINE_FEEDBACK_QF			21000
 
 // CEPlogprocessor needs fixed ports
 #define CEP_LOGPROC_LOGGING				23900

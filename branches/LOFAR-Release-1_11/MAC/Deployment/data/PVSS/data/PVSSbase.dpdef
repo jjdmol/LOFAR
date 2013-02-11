@@ -65,6 +65,13 @@ NCFObjectState.NCFObjectState	1#
 	force	23#
 
 TypeName
+NCFObjectStates.NCFObjectStates	1#
+	DPNames	9#
+	stateNrs	5#
+	messages	9#
+	force	7#
+
+TypeName
 ObjectStatus.ObjectStatus	1#
 	state	21#
 	childState	21#
@@ -123,6 +130,8 @@ DpName	TypeName
 ClaimManager	ClaimManager
 __navObjectState	NCFObjectState
 __resetObjectState	NCFObjectState
+__navObjectStates	NCFObjectStates
+__resetObjectStates	NCFObjectStates
 lofarSpeedTest	LofarSpeedTest
 scriptInfo	ScriptInfo
 

@@ -163,6 +163,7 @@ _CtrlDebug_CTRL_7	_CtrlDebug
 _CtrlDebug_CTRL_8	_CtrlDebug
 _CtrlDebug_CTRL_9	_CtrlDebug
 _CtrlDebug_CTRL_10	_CtrlDebug
+_CtrlDebug_CTRL_11	_CtrlDebug
 
 #Fill some defaults
 # DpValue

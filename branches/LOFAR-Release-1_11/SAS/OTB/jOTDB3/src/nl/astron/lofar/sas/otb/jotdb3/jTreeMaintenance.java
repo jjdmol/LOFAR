@@ -195,6 +195,10 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     @Override
     public native boolean exportResultTree (int aTreeID,int topItem,String filename) throws RemoteException;
 
+    // Export all reported metadata from the given VIC tree
+    @Override
+    public native boolean exportMetadata (int	aTreeID,String filename) throws RemoteException;
+
     //# --- Finally some general tree maintenance ---
     // Delete a tree (of any kind) from the database.
     @Override

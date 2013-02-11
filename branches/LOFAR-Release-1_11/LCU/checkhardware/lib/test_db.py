@@ -3,11 +3,8 @@
 from general_lib import *
 from lofar_lib import *
 
-# PVSS states
-State = dict({'OFF':0, 'OPERATIONAL':1, 'MAINTENANCE':2, 'TEST':3, 'SUSPICIOUS':4, 'BROKEN':5})
-    
 class cDB:
-    def __init__(self, StID, nRSP, nTBB, nLBL, nLBH, nHBA, clean=False):
+    def __init__(self, StID, nRSP, nTBB, nLBL, nLBH, nHBA):
         self.StID   = StID
         self.nr_rsp = nRSP
         self.nr_rcu = nRSP * 8
@@ -39,42 +36,8 @@ class cDB:
         self.lbl = self.cLBA(label='LBL', nr_antennas=nLBL, nr_offset=48)
         self.lbh = self.cLBA(label='LBH', nr_antennas=nLBH)
         self.hba = self.cHBA(nr_tiles=nHBA)
-                
-        # try to read in from last test file LBL, LBH and HBA status
-        try:
-            if not clean:
-                print "Import latest log file"
-                f = open("%s_StationTest.csv" %(self.StID), 'r')
-                data = f.readlines()
-                f.close()
-                for line in data:
-                    d = line.split(',')
-                    if d[1] == 'LBL':
-                        if d[2] != '---':
-                            nr = int(d[2])
-                            msg = d[3].strip()
-                            if msg in ('DOWN', 'FAIL', 'LOW_NOISE', 'HIGH_NOISE'):
-                                self.lbl.ant[nr].last_state = State['BROKEN']
-                    elif d[1] == 'LBH':
-                        if d[2] != '---':
-                            nr = int(d[2])
-                            msg = d[3].strip()
-                            if msg in ('DOWN', 'FAIL', 'LOW_NOISE', 'HIGH_NOISE'):
-                                self.lbh.ant[nr].last_state = State['BROKEN']
-                    elif d[1] == 'HBA':
-                        if d[2] != '---':
-                            nr = int(d[2])
-                            msg = d[3].strip()
-                            if msg in ('FAIL', 'LOW_NOISE', 'HIGH_NOISE'):
-                                self.hba.tile[nr].las_state = State['BROKEN']
-                                for elem in hba.tile[nr].element:
-                                    nr = elem.nr
-                                    if line.find('M%d=' %(nr)) > 0 or line.find('X%d=' %(nr)) > 0 or line.find('Y%d=' %(nr)) > 0:
-                                        elem.last_state = State['BROKEN']
-        except:
-            pass
-            
     
+    # test
     def test(self, logdir):
         if self.rspdriver_version != "ok" or self.rspctl_version != "ok":
             self.station_error = 1
@@ -114,7 +77,6 @@ class cDB:
         self.station_error = max(self.station_error, self.lbl.test(), self.lbh.test(), self.hba.test())
         
         self.makeLogFile(logdir)
-        self.makePVSSfile(logdir)      
         return (self.station_error)
     
     
@@ -249,47 +211,7 @@ class cDB:
                 if len(valstr):
                     log.addLine("%s,HBA,%03d,FAIL%s" %(date, tile.nr, valstr)) 
         return
-
-
-    # make log file for PVSS logging, use setObjectState to enter settings in PVSS              
-    """       
-    Syntax: /opt/lofar/sbin/setObjectState who datapoint stateNr
-    OR    /opt/lofar/sbin/setObjectState who filename
-    who        : Identification who changes the state, name of program or user
-    datapoint  : PVSS datapoint name including database name
-    stateNr    : 0 - Off
-                 1 - Operational
-                 2 - Maintenance
-                 3 - Test
-                 4 - Suspicious
-                 5 - Broken
-    """
-    def makePVSSfile(self, logdir):
-        pvss = cPVSSLogger(logdir)
-        
-        for ant in self.lbh.ant:
-            ant.testPVSS()
-            pvss.addLine("LOFAR_PIC_LBA%03d %d" %(ant.nr_total, ant.state))     
-            pvss.addLine("LOFAR_PIC_LBA%03d.X %d" %(ant.nr_total, ant.x_state))     
-            pvss.addLine("LOFAR_PIC_LBA%03d.Y %d" %(ant.nr_total, ant.y_state))     
-        
-        for ant in self.lbl.ant:
-            ant.testPVSS()
-            pvss.addLine("LOFAR_PIC_LBA%03d %d" %(ant.nr_total, ant.state))                
-            pvss.addLine("LOFAR_PIC_LBA%03d.X %d" %(ant.nr_total, ant.x_state))                
-            pvss.addLine("LOFAR_PIC_LBA%03d.Y %d" %(ant.nr_total, ant.y_state))                
-        
-        for tile in self.hba.tile:
-            tile.testPVSS()
-            pvss.addLine("LOFAR_PIC_HBA%02d %d" %(tile.nr, tile.state))
-            for elem in tile.element:
-                pvss.addLine("LOFAR_PIC_HBA%02d.element%02d %d" %(tile.nr, elem.nr, elem.state))
-                pvss.addLine("LOFAR_PIC_HBA%02d.element%02d.comm %d" %(tile.nr, elem.nr, elem.modem_state))
-                pvss.addLine("LOFAR_PIC_HBA%02d.element%02d.X %d" %(tile.nr, elem.nr, elem.x_state))
-                pvss.addLine("LOFAR_PIC_HBA%02d.element%02d.Y %d" %(tile.nr, elem.nr, elem.y_state))
-        return
                 
-    
     class cRSP:
         def __init__(self, nr):
             self.nr = nr
@@ -368,25 +290,11 @@ class cDB:
                 self.y_high_val   = 0.0
 
                 self.down = 0
-                
-                self.last_state = State['OFF']
-                # states for PVSS
-                self.x_state = State['OFF']
-                self.y_state = State['OFF']
-                self.state = State['OFF']
                 return
                 
             def test(self):
                 self.x_error = max(self.x_too_low, self.x_too_high, self.x_high_noise, self.x_low_noise, self.down)
                 self.y_error = max(self.y_too_low, self.y_too_high, self.y_high_noise, self.y_low_noise, self.down)
-                return
-            
-            def testPVSS(self):
-                if self.x_error:
-                    self.x_state = State['BROKEN']
-                if self.y_error:
-                    self.y_state = State['BROKEN']
-                self.state = max(self.last_state, self.state, self.x_state, self.y_state)
                 return
             
     class cHBA:
@@ -442,9 +350,6 @@ class cDB:
                 self.element = list()
                 for i in range(self.nr_elements):
                     self.element.append(self.cElement(i))
-                
-                # states for PVSS
-                self.state = State['OFF']
                 return
             
             def test(self):
@@ -466,14 +371,10 @@ class cDB:
                     if elem.modem_error:
                         modem_err_cnt += 1
     
-                    #self.x_low_noise  = max(self.x_low_noise, elem.x_low_noise)
-                    #self.x_high_noise = max(self.x_high_noise, elem.x_high_noise)
-                    #self.y_low_noise  = max(self.y_low_noise, elem.y_low_noise)
-                    #self.y_high_noise = max(self.y_high_noise, elem.y_high_noise)
                     self.x_error = max(self.x_error, elem.x_error)
                     self.y_error = max(self.y_error, elem.y_error)
                     
-                if (no_modem_cnt >= 8) or (modem_err_cnt >= 8):
+                if (no_modem_cnt + modem_err_cnt) >= 15:
                     self.c_summator_error = 1
                 if no_power_cnt >= 15:
                     self.p_summator_error = 1
@@ -486,12 +387,6 @@ class cDB:
                 self.y_error = max(self.y_error, self.y_low_noise, self.y_high_noise, self.p_summator_error, self.c_summator_error) 
                 return
             
-            def testPVSS(self):
-                for elem in self.element:
-                    elem.testPVSS()
-                    self.state = max(self.state, elem.state)
-                return       
-                
             class cElement:
                 def __init__(self, nr):
                     self.nr = nr
@@ -519,12 +414,6 @@ class cDB:
                     self.no_modem = 0 # modem reponse = ??
                     self.modem_error = 0 # wrong response from modem
                     
-                    self.last_state = State['OFF']
-                    # states for PVSS
-                    self.modem_state = State['OFF']
-                    self.x_state = State['OFF']
-                    self.y_state = State['OFF']
-                    self.state = State['OFF']
                     return
                 
                 def test(self):
@@ -535,26 +424,6 @@ class cDB:
                                        self.no_power, self.no_modem, self.modem_error)
                     return
                 
-                # test for PVSS settings    
-                def testPVSS(self):
-                    self.state = self.last_state
-    
-                    if self.modem_error:
-                        self.modem_state = State['SUSPICIOUS']
-                    
-                    if self.no_modem:
-                        self.modem_state = State['BROKEN']
-                    
-                    if self.x_no_signal or self.x_too_low or self.x_low_noise or self.x_high_noise or self.no_power or self.no_modem or self.modem_error:
-                        self.x_state = State['BROKEN']
-                    
-                    if self.y_no_signal or self.y_too_low or self.y_low_noise or self.y_high_noise or self.no_power or self.no_modem or self.modem_error:
-                        self.y_state = State['BROKEN']
-                        
-                    self.state = max(self.state, self.x_state, self.y_state, self.modem_state)
-                    return 
-                        
-    
     class cTDS:
         def __init__(self):
             self.test_done = 0

@@ -141,7 +141,8 @@ def mail_log_on_exception(target):
             # Static list of mail to be send (could be made configurable,
             # but yeah temp mail functionality so...)
             mail_list = ["klijn@astron.nl", "frieswijk@astron.nl",
-                         "pizzo@astron.nl", "orru@astron.nl"
+                         "pizzo@astron.nl", "orru@astron.nl",
+                         "jong@astron.nl"
                          ]
 
             # get the active stack

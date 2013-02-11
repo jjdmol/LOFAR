@@ -111,9 +111,12 @@ int main (int	argc, char*	argv[]) {
 		showCampaignList(campList);
 		ASSERTSTR(campList.size(),"No campaign list found");
 
-		LOG_INFO("Adding 'my campaign'");
-		CampaignInfo	CI("my campaign", "campaign of me", "me", "no-one", "also me");
+		LOG_INFO("Adding 'ruud's campaign'");
+		CampaignInfo	CI("ruud's campaign", "campaign of me", "me", "no-one", "also me");
+		LOG_INFO_STR(CI);
 		LOG_INFO_STR("new recordID = " << camp.saveCampaign(CI));
+		LOG_INFO("AFTER SAVECAMPAIGN");
+#if 0
 		campList = camp.getCampaignList();
 		showCampaignList(campList);
 		ASSERTSTR(campList.size(),"No campaign list found");
@@ -134,6 +137,7 @@ int main (int	argc, char*	argv[]) {
 		showCampaignList(campList);
 		ASSERTSTR(campList.size(),"No campaign list found");
 
+#endif
 #if 0		
 		LOG_INFO("Trying to change the state of the tree to active(400)");
 		bool 	actionOK = tm.setTreeState(treeID, TSconv.get("active"));

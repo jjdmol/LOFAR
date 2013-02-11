@@ -30,6 +30,7 @@
 #include <Common/ParameterRecord.h>
 #include <Common/Exceptions.h>
 #include <Common/SystemUtil.h>
+#include <Common/hexdump.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/Observation.h>
 #include <ApplCommon/LofarDirs.h>
@@ -47,6 +48,8 @@
 #include "Response.h"
 #include "forkexec.h"
 #include <OTDB/TreeValue.h>			// << need to include this after OnlineControl! ???
+#include <OTDB/TreeMaintenance.h>
+#include <OTDB/TreeStateConv.h>
 #include "PVSSDatapointDefs.h"
 
 using namespace LOFAR::GCF::PVSS;
@@ -78,13 +81,17 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsTimerPort		(0),
 	itsLogControlPort	(0),
 	itsState			(CTState::NOSTATE),
+	itsFeedbackListener	(0),					// QUICK FIX #4022
+	itsFeedbackPort		(0),					// QUICK FIX #4022
+	itsFeedbackResult	(CT_RESULT_NO_ERROR),	// QUICK FIX #4022
 	itsTreePrefix       (""),
 	itsInstanceNr       (0),
 	itsStartTime        (),
 	itsStopTime         (),
 	itsStopTimerID      (0),
 	itsFinishTimerID 	(0),
-	itsInFinishState	(false)
+	itsInFinishState	(false),
+	itsFeedbackAvailable(false)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -106,6 +113,10 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 
 	// Controlport to logprocessor
 	itsLogControlPort = new GCFTCPPort(*this, MAC_SVCMASK_CEPLOGCONTROL, GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+
+	// QUICK FIX #4022
+	itsFeedbackListener = new GCFTCPPort (*this, "Feedbacklistener", GCFPortInterface::MSPP, CONTROLLER_PROTOCOL);
+	ASSERTSTR(itsFeedbackListener, "Cannot allocate TCP port for feedback");
 
 	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
@@ -129,6 +140,11 @@ OnlineControl::~OnlineControl()
 	if (itsTimerPort) {
 		delete itsTimerPort;
 	}
+
+	if (itsFeedbackListener) {
+		itsFeedbackListener->close();
+		delete itsFeedbackListener;
+	}
 }
 
 //
@@ -139,15 +155,16 @@ void OnlineControl::signalHandler(int	signum)
 	LOG_INFO (formatString("SIGNAL %d detected", signum));
 
 	if (thisOnlineControl) {
-		thisOnlineControl->finish();
+		thisOnlineControl->finish(CT_RESULT_MANUAL_ABORT);
 	}
 }
 
 //
-// finish()
+// finish(result)
 //
-void OnlineControl::finish()
+void OnlineControl::finish(int	result)
 {
+	itsFeedbackResult = result;
 	TRAN(OnlineControl::finishing_state);
 }
 
@@ -246,10 +263,10 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, GCFPortInterface
 		break;
 
 	case F_CONNECTED:
-		ASSERTSTR (&port == itsParentPort, "F_CONNECTED event from port " << port.getName());
 		break;
 
 	case F_DISCONNECTED:
+		_handleDisconnect(port);
 		break;
 	
 	default:
@@ -274,7 +291,6 @@ GCFEvent::TResult OnlineControl::propset_state(GCFEvent& event, GCFPortInterface
 	switch (event.signal) {
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-//		uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
 		string obsDPname = globalParameterSet()->getString("_DPname");
 		string	propSetName(createPropertySetName(PSN_BGP_APPL, getName(), obsDPname));
 		LOG_DEBUG_STR ("Activating PropertySet: "<< propSetName);
@@ -297,7 +313,7 @@ GCFEvent::TResult OnlineControl::propset_state(GCFEvent& event, GCFPortInterface
 
 	case F_TIMER: {	// must be timer that PropSet is online.
 		// start StopTimer for safety.
-		LOG_INFO_STR("Starting QUIT timer that expires 5 seconds after end of observation");
+		LOG_INFO("Starting QUIT timer that expires 5 seconds after end of observation");
 		ptime	now(second_clock::universal_time());
 		itsStopTimerID = itsTimerPort->setTimer(time_duration(itsStopTime - now).total_seconds() + 5.0);
 
@@ -306,16 +322,22 @@ GCFEvent::TResult OnlineControl::propset_state(GCFEvent& event, GCFPortInterface
 		itsParentPort = itsParentControl->registerTask(this);
 		// results in CONTROL_CONNECT
 
+		// QUICK FIX #4022
+		uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
+		LOG_INFO_STR("Openening feedback port for OLAP: " << MAC_ONLINE_FEEDBACK_QF + obsID%1000);
+		itsFeedbackListener->setPortNumber(MAC_ONLINE_FEEDBACK_QF + obsID%1000);
+		itsFeedbackListener->open();	// will result in F_CONN
+
 		LOG_DEBUG ("Going to operational state");
 		TRAN(OnlineControl::active_state);				// go to next state.
 		}
 		break;
 
 	case F_CONNECTED:
-		ASSERTSTR (&port == itsParentPort, "F_CONNECTED event from port " << port.getName());
 		break;
 
 	case F_DISCONNECTED:
+		_handleDisconnect(port);
 		break;
 	
 	default:
@@ -343,21 +365,26 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		// update PVSS
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("active"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
-	}
-	break;
+	} break;
 
-	case F_ACCEPT_REQ:
-		break;
+	// QUICKFIX #4022
+	case F_ACCEPT_REQ: {
+		_handleAcceptRequest(port);
+	} break;
 
 	case F_CONNECTED: {
-		ASSERTSTR (&port == itsParentPort, "F_CONNECTED event from port " << port.getName());
-	}
-	break;
+//		ASSERTSTR (&port == itsParentPort, "F_CONNECTED event from port " << port.getName());
+		LOG_INFO_STR("F_CONNECTED event from port " << port.getName());
+	} break;
 
 	case F_DISCONNECTED: {
-		port.close();
-	}
-	break;
+		_handleDisconnect(port);
+	} break;
+
+	// QUICKFIX #4022
+	case F_DATAIN: {
+		_handleDataIn(port);
+	} break;
 
 	case DP_CHANGED:
 		_databaseEventHandler(event);
@@ -368,7 +395,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		if (timerEvent.id == itsStopTimerID) {
 			LOG_DEBUG("StopTimer expired, starting QUIT sequence");
 			itsStopTimerID = 0;
-			finish();
+			finish(itsFeedbackResult);
 //			itsFinishTimerID = itsTimerPort->setTimer(30.0);
 		}
 #if 0
@@ -387,6 +414,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	case CONTROL_CONNECT: {
 		CONTROLConnectEvent		msg(event);
 		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
+		itsMyName = msg.cntlrName;
 		// first inform CEPlogProcessor
 		CONTROLAnnounceEvent		announce;
 		announce.observationID = toString(getObservationNr(msg.cntlrName));
@@ -455,7 +483,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		CONTROLQuitEvent		msg(event);
 		LOG_DEBUG_STR("Received QUIT(" << msg.cntlrName << ")");
 		_setState(CTState::QUIT);
-		finish();
+		finish(itsFeedbackResult);
 		break;
 	}
 
@@ -488,7 +516,7 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		itsTimerPort->cancelAllTimers();
 
 		// update PVSS
-		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("stopping"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 
 		ParameterSet*	thePS  = globalParameterSet();		// shortcut to global PS.
@@ -528,14 +556,23 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		uint32	result = forkexec(startCmd.c_str());
 		LOG_INFO_STR ("Result of command = " << result);
 
-		itsTimerPort->setTimer(302.0); // IONProc, and thus CEPlogProcessor, can take up to 5 minutes to wrap up
+		if (itsFeedbackAvailable) {
+			TRAN(OnlineControl::completing_state);
+		}
 		break;
 	}
 
-	case F_TIMER:
-		_passMetadatToOTDB();
-		GCFScheduler::instance()->stop();
-		break;
+	case F_ACCEPT_REQ: {
+		_handleAcceptRequest(port);
+	} break;
+
+	case F_DISCONNECTED: {
+		_handleDisconnect(port);
+	} break;
+
+	case F_DATAIN: {
+		_handleDataIn(port);		// may switch to completing state
+	} break;
 
 	default:
 		LOG_DEBUG("finishing_state, default");
@@ -543,6 +580,51 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		break;
 	}
 
+	return (status);
+}
+
+//
+// completing_state(event, port)
+//
+//
+GCFEvent::TResult OnlineControl::completing_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_INFO_STR ("completing:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		// update PVSS
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("completing"));
+		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
+
+		_passMetadatToOTDB();
+
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
+		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
+
+		CONTROLQuitedEvent      msg;
+		msg.cntlrName = itsMyName;
+		msg.result = itsFeedbackResult;
+		itsParentPort->send(msg);
+
+		itsTimerPort->setTimer(0.3);
+	} break;
+
+	case F_TIMER:
+		GCFScheduler::instance()->stop();
+		break;
+
+	case F_DISCONNECTED:
+		_handleDisconnect(port);
+		break;
+
+	case F_DATAIN:
+		_handleDataIn(port);
+		break;
+
+	}
 	return (status);
 }
 
@@ -713,97 +795,156 @@ uint32 OnlineControl::_doBoot()
 void OnlineControl::_passMetadatToOTDB()
 {
 	// No name specified?
+	bool	metadataFileAvailable (true);
 	uint32	obsID(globalParameterSet()->getUint32("Observation.ObsID", 0));
 	string  feedbackFile = observationParset(obsID)+"_feedback";
 	LOG_INFO_STR ("Expecting metadata to be in file " << feedbackFile);
 	if (feedbackFile.empty()) {
-		return;
+		metadataFileAvailable = false;
 	}
 
 	// read parameterset
-	try {
-		ParameterSet	metadata;
-		metadata.adoptFile(feedbackFile);
+	// Try to setup the connection with the database
+	string	confFile = globalParameterSet()->getString("OTDBconfFile", "SASGateway.conf");
+	ConfigLocator	CL;
+	string	filename = CL.locate(confFile);
+	LOG_INFO_STR("Trying to read database information from file " << filename);
+	ParameterSet	otdbconf;
+	otdbconf.adoptFile(filename);
+	string database = otdbconf.getString("SASGateway.OTDBdatabase");
+	string dbhost   = otdbconf.getString("SASGateway.OTDBhostname");
+	OTDBconnection  conn("paulus", "boskabouter", database, dbhost);
+	if (!conn.connect()) {
+		LOG_FATAL_STR("Cannot connect to database " << database << " on machine " << dbhost);
+		// WE DO HAVE A PROBLEM HERE BECAUSE THIS PIPELINE CANNOT BE SET TO FINISHED IN SAS.
+		return;
+	}
+	LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
 
-		// Try to setup the connection with the database
-		string	confFile = globalParameterSet()->getString("OTDBconfFile", "SASGateway.conf");
-		ConfigLocator	CL;
-		string	filename = CL.locate(confFile);
-		LOG_INFO_STR("Trying to read database information from file " << filename);
-		ParameterSet	otdbconf;
-		otdbconf.adoptFile(filename);
-		string database = otdbconf.getString("SASGateway.OTDBdatabase");
-		string dbhost   = otdbconf.getString("SASGateway.OTDBhostname");
-		OTDBconnection  conn("paulus", "boskabouter", database, dbhost);
-		if (!conn.connect()) {
-			LOG_FATAL_STR("Cannot connect to database " << database << " on machine " << dbhost);
-			return;
-		}
-		LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
-
-		TreeValue   tv(&conn, getObservationNr(getName()));
-
-		// Loop over the parameterset and send the information to the KVTlogger.
-		// During the transition phase from parameter-based to record-based storage in OTDB the
-		// nodenames ending in '_' are implemented both as parameter and as record.
-		ParameterSet::iterator		iter = metadata.begin();
-		ParameterSet::iterator		end  = metadata.end();
-		while (iter != end) {
-			string	key(iter->first);	// make destoyable copy
-			rtrim(key, "[]0123456789");
-	//		bool	doubleStorage(key[key.size()-1] == '_');
-			bool	isRecord(iter->second.isRecord());
-			//   isRecord  doubleStorage
-			// --------------------------------------------------------------
-			//      Y          Y           store as record and as parameters
-			//      Y          N           store as parameters
-			//      N          *           store parameter
-			if (!isRecord) {
-				LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
-				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
-			}
-			else {
-	//			if (doubleStorage) {
-	//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
-	//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
-	//			}
-				// to store is a node/param values the last _ should be stipped of
-				key = iter->first;		// destroyable copy
-	//			string::size_type pos = key.find_last_of('_');
-	//			key.erase(pos,1);
-				ParameterRecord	pr(iter->second.getRecord());
-				ParameterRecord::const_iterator	prIter = pr.begin();
-				ParameterRecord::const_iterator	prEnd  = pr.end();
-				while (prIter != prEnd) {
-					LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
-					tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
-					prIter++;
+	if (metadataFileAvailable) {
+		try {
+			TreeValue   tv(&conn, getObservationNr(getName()));
+			ParameterSet	metadata;
+			metadata.adoptFile(feedbackFile);
+			// Loop over the parameterset and send the information to the KVTlogger.
+			// During the transition phase from parameter-based to record-based storage in OTDB the
+			// nodenames ending in '_' are implemented both as parameter and as record.
+			ParameterSet::iterator		iter = metadata.begin();
+			ParameterSet::iterator		end  = metadata.end();
+			while (iter != end) {
+				string	key(iter->first);	// make destoyable copy
+				rtrim(key, "[]0123456789");
+		//		bool	doubleStorage(key[key.size()-1] == '_');
+				bool	isRecord(iter->second.isRecord());
+				//   isRecord  doubleStorage
+				// --------------------------------------------------------------
+				//      Y          Y           store as record and as parameters
+				//      Y          N           store as parameters
+				//      N          *           store parameter
+				if (!isRecord) {
+					LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
+					tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
 				}
+				else {
+		//			if (doubleStorage) {
+		//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
+		//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+		//			}
+					// to store is a node/param values the last _ should be stipped of
+					key = iter->first;		// destroyable copy
+		//			string::size_type pos = key.find_last_of('_');
+		//			key.erase(pos,1);
+					ParameterRecord	pr(iter->second.getRecord());
+					ParameterRecord::const_iterator	prIter = pr.begin();
+					ParameterRecord::const_iterator	prEnd  = pr.end();
+					while (prIter != prEnd) {
+						LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
+						tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
+						prIter++;
+					}
+				}
+				iter++;
 			}
-			iter++;
+			LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
 		}
-		LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
+		catch (APSException &e) {
+			// Parameterfile not found
+			LOG_FATAL(e.text());
+		}
 	}
-	catch (APSException &e) {
-		// Parameterfile not found
-		LOG_FATAL(e.text());
-	}
+
+	// finally report state to SAS
+	sleep (60);			/// AAARRRRGGGHH, make 'sure' we are later than the ObservationControl. #4022
+	TreeMaintenance	tm(&conn);
+	TreeStateConv	tsc(&conn);
+	tm.setTreeState(obsID, tsc.get("finished"));
 }
 // -------------------- Application-order administration --------------------
 
 //
-// _connectedHandler(port)
+// _handleDisconnect(port)
 //
-void OnlineControl::_connectedHandler(GCFPortInterface& /*port*/)
+void OnlineControl::_handleDisconnect(GCFPortInterface& port)
 {
+	port.close();
+	// QUICKFIX #4022
+	if (&port == itsFeedbackPort) {
+		LOG_FATAL_STR("Lost connection with Feedback of OLAP.");
+		delete itsFeedbackPort;
+		itsFeedbackPort = 0;
+	}
 }
 
 //
-// _disconnectedHandler(port)
+// _handleAcceptRequest(port)
 //
-void OnlineControl::_disconnectedHandler(GCFPortInterface& port)
+void OnlineControl::_handleAcceptRequest(GCFPortInterface& port)
 {
-	port.close();
+	ASSERTSTR(&port == itsFeedbackListener, "Incoming connection on main listener iso feedbackListener");
+	itsFeedbackPort = new GCFTCPPort();
+	itsFeedbackPort->init(*this, "feedback", GCFPortInterface::SPP, 0, true);   // raw port
+	if (!itsFeedbackListener->accept(*itsFeedbackPort)) {
+		delete itsFeedbackPort;
+		itsFeedbackPort = 0;
+		LOG_ERROR("Connection with Python feedback FAILED");
+	}
+	else {
+		LOG_INFO("Connection made on feedback port, accepting commands");
+	}
+}
+
+//
+// _handleDataIn(port)
+//
+void OnlineControl::_handleDataIn(GCFPortInterface& port)
+{
+	ASSERTSTR(&port == itsFeedbackPort, "Didn't expect raw data on port " << port.getName());
+	char    buf[1024];
+	ssize_t btsRead = port.recv((void*)&buf[0], 1023);
+	buf[btsRead] = '\0';
+	string  s;
+	hexdump(s, buf, btsRead);
+	LOG_INFO_STR("Received command on feedback port: " << s);
+
+	if (!strcmp(buf, "ABORT")) {
+		itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
+		itsFeedbackAvailable = true;
+	}
+	else if (!strcmp(buf, "FINISHED")) {
+		itsFeedbackAvailable = true;
+	}
+	else {
+		LOG_FATAL_STR("Received command on feedback port unrecognized");
+	}
+
+	if (itsFeedbackAvailable) {	// recognized command?
+		if (itsInFinishState) {	// already stopped BGP?
+			TRAN(OnlineControl::completing_state);	// pass metadata
+		}
+		else {
+			TRAN(OnlineControl::finishing_state);	// stop BGP first.
+		}
+	}
 }
 
 }; // CEPCU

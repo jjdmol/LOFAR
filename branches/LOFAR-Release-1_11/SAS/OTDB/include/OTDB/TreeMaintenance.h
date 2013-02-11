@@ -190,6 +190,10 @@ public:
 							  nodeIDType		topItem,
 							  const string&		filename);
 
+	// Export all reported metadata from the given VIC tree
+	bool	exportMetadata (treeIDType			aTreeID,
+					  		const string&		filename);
+
 	//# --- Finally some general tree maintenance ---
 	// Delete a tree (of any kind) from the database.
 	bool		deleteTree(treeIDType		aTreeID);

@@ -76,7 +76,8 @@ CREATE OR REPLACE FUNCTION getVTitemRecursive(INT4, VARCHAR(150), INT4)
         FROM   VICtemplate
         WHERE  treeID = $1
         AND    name   = vParentName
-	AND    (index::VARCHAR(50) = vIndex OR index::VARCHAR(50) = vIndex2);
+		AND    (index::VARCHAR(50) = vIndex OR index::VARCHAR(50) = vIndex2)
+        ORDER BY index;
       ELSE
         SELECT nodeid,
                parentid,
@@ -91,8 +92,9 @@ CREATE OR REPLACE FUNCTION getVTitemRecursive(INT4, VARCHAR(150), INT4)
         FROM   VICtemplate
         WHERE  treeID = $1
         AND    name   = vParentName
-	    AND    (index::VARCHAR(50) = vIndex OR index::VARCHAR(50) = vIndex2)
-        AND    parentid = aParentID;
+		AND    (index::VARCHAR(50) = vIndex OR index::VARCHAR(50) = vIndex2)
+        AND    parentid = aParentID
+		ORDER BY index;
 	  END IF;
 
 	  IF FOUND AND NOT vChildName IS NULL THEN

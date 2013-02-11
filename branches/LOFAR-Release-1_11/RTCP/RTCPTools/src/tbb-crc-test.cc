@@ -6,6 +6,7 @@
  */
 
 #include <stdint.h>
+#include <string.h>
 #include <endian.h>
 #if __BYTE_ORDER != __BIG_ENDIAN && __BYTE_ORDER != __LITTLE_ENDIAN
 #error Byte order is neither big endian nor little endian: not supported
@@ -43,7 +44,8 @@ struct TBB_Header {
 };
 
 #define MAX_TRANSIENT_NSAMPLES		1298 // based on frames stored by TBB and (un)packing
-#define DEFAULT_TRANSIENT_NSAMPLES	1024
+#define DEFAULT_TRANSIENT_NSAMPLES	1024 // int16_t
+#define DEFAULT_SPECTRAL_NSAMPLES	 487 // complex int16_t
 struct TBB_Payload {
 	// For transient data, we typically receive 1024 samples per frame.
 	// uint32_t crc comes right after, so cannot easily declare it after data[], hence + 2.
@@ -225,6 +227,22 @@ static int verify_crc(TBB_Frame& frame, size_t frameSize) {
 	if (!crc32tbb_boost( &frame.payload, ( frameSize - sizeof(TBB_Header) - sizeof(uint32_t) ) / sizeof(int16_t) )) {
 		cerr << "crc32tbb_boost(): Incorrect payload crc" << endl;
 		err = 1;
+
+#if 0 // this guessing doesn't work: the wrong crc32 is different every time, even on the same data
+		TBB_Payload p;
+		unsigned i;
+		for (i = 0; i < 487; i++) {
+			memcpy(&p, &frame.payload, i * 2 * sizeof(int16_t)); // data
+			memcpy((char*)&p + i * 2 * sizeof(int16_t), (char*)(&frame.payload.data[2*487 + 2]) - sizeof(uint32_t), sizeof(uint32_t)); // crc32
+			if (crc32tbb_boost(&p, 2 * i)) {
+				cerr << "found it: i=" << i << endl;
+				break;
+			} else {
+				cerr << "doesn't work either: " << i << endl;
+			}
+		}
+#endif
+
 	}
 
 	return err;
@@ -236,6 +254,22 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
+	bool transient;
+	ifstream iftype(argv[1], ios_base::binary);
+	if (!iftype) {
+		cerr << "Failed to open file " << argv[1] << endl;
+		return 1;
+	}
+	TBB_Header header;
+	iftype.read(reinterpret_cast<char*>(&header), sizeof header);
+	if (!iftype) {
+		cerr << "Failed to read first frame to determine transient or spectral mode" << endl;
+		return 1;
+	}
+	iftype.close();
+	transient = header.nOfFreqBands == 0;
+
+
 	ifstream ifs(argv[1], ios_base::binary);
 	if (!ifs) {
 		cerr << "Failed to open file " << argv[1] << endl;
@@ -245,7 +279,12 @@ int main(int argc, char* argv[]) {
 	int err = 0;
 
 	TBB_Frame frame;
-	size_t frameSize = sizeof(TBB_Header) + DEFAULT_TRANSIENT_NSAMPLES * sizeof(int16_t) + sizeof(uint32_t);
+	size_t frameSize;
+	if (transient) {
+		frameSize = sizeof(TBB_Header) + DEFAULT_TRANSIENT_NSAMPLES * sizeof(int16_t) + sizeof(uint32_t);
+	} else { // spectral
+		frameSize = sizeof(TBB_Header) + DEFAULT_SPECTRAL_NSAMPLES * 2 * sizeof(int16_t) + sizeof(uint32_t);
+	}
 
 	while (ifs.read(reinterpret_cast<char*>(&frame), frameSize)) {
 		err |= verify_crc(frame, frameSize);

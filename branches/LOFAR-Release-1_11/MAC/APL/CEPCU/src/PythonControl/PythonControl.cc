@@ -46,6 +46,8 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/CTState.h>
 #include <OTDB/TreeValue.h>
+#include <OTDB/TreeMaintenance.h>
+#include <OTDB/TreeStateConv.h>
 
 #include "PythonControl.h"
 #include "PVSSDatapointDefs.h"
@@ -123,11 +125,15 @@ PythonControl::PythonControl(const string&	cntlrName) :
 PythonControl::~PythonControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
-	if (itsListener) 
-		{ itsListener->close(); delete itsListener; }
+	if (itsListener) { 
+		itsListener->close(); 
+		delete itsListener; 
+	}
 
-	if (itsFeedbackListener) 	// QUICK FIX #3633
-		{ itsFeedbackListener->close(); delete itsFeedbackListener; }
+	if (itsFeedbackListener) { 	// QUICK FIX #3633
+		itsFeedbackListener->close(); 
+		delete itsFeedbackListener; 
+	}
 }
 
 //
@@ -756,28 +762,27 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 //
 void PythonControl::_passMetadatToOTDB()
 {
+	bool	metadataFileAvailable (true);
+
 	// No name specified?
 	if (itsFeedbackFile.empty()) {
-		return;
+		metadataFileAvailable = false;
 	}
-
-	// Copy file form remote system to localsystem
-	ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
-	string  myPrefix  (thePS->locateModule("PythonControl")+"PythonControl.");
-	string	pythonHost(thePS->getString(myPrefix+"pythonHost","@pythonHost@"));
-	try {
-		if (copyFromRemote(realHostname(pythonHost), itsFeedbackFile, itsFeedbackFile) != 0) {
-			LOG_ERROR_STR("Failed to copy metadatafile " << itsFeedbackFile << " from host " << realHostname(pythonHost));
-			return;
+	else {
+		// Copy file from remote system to localsystem
+		ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
+		string  myPrefix  (thePS->locateModule("PythonControl")+"PythonControl.");
+		string	pythonHost(thePS->getString(myPrefix+"pythonHost","@pythonHost@"));
+		try {
+			if (copyFromRemote(realHostname(pythonHost), itsFeedbackFile, itsFeedbackFile) != 0) {
+				LOG_ERROR_STR("Failed to copy metadatafile " << itsFeedbackFile << " from host " << realHostname(pythonHost));
+				metadataFileAvailable = false;
+			}
+		}
+		catch (...) { 
+			metadataFileAvailable = false;
 		}
 	}
-	catch (...) { 
-		return;
-	}
-
-	// read parameterset
-	ParameterSet	metadata;
-	metadata.adoptFile(itsFeedbackFile);
 
 	// Try to setup the connection with the database
 	string	confFile = globalParameterSet()->getString("OTDBconfFile", "SASGateway.conf");
@@ -791,52 +796,65 @@ void PythonControl::_passMetadatToOTDB()
 	OTDBconnection  conn("paulus", "boskabouter", database, dbhost);
 	if (!conn.connect()) {
 		LOG_FATAL_STR("Cannot connect to database " << database << " on machine " << dbhost);
+		// WE DO HAVE A PROBLEM HERE BECAUSE THIS PIPELINE CANNOT BE SET TO FINISHED IN SAS.
 		return;
 	}
 	LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
 
-	TreeValue   tv(&conn, getObservationNr(getName()));
+	int			obsID(getObservationNr(getName()));
+	TreeValue   tv(&conn, obsID);
 
-	// Loop over the parameterset and send the information to the KVTlogger.
-	// During the transition phase from parameter-based to record-based storage in OTDB the
-	// nodenames ending in '_' are implemented both as parameter and as record.
-	ParameterSet::iterator		iter = metadata.begin();
-	ParameterSet::iterator		end  = metadata.end();
-	while (iter != end) {
-		string	key(iter->first);	// make destoyable copy
-		rtrim(key, "[]0123456789");
-//		bool	doubleStorage(key[key.size()-1] == '_');
-		bool	isRecord(iter->second.isRecord());
-		//   isRecord  doubleStorage
-		// --------------------------------------------------------------
-		//      Y          Y           store as record and as parameters
-		//      Y          N           store as parameters
-		//      N          *           store parameter
-		if (!isRecord) {
-			LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
-			tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
-		}
-		else {
-//			if (doubleStorage) {
-//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
-//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
-//			}
-			// to store is a node/param values the last _ should be stipped of
-			key = iter->first;		// destroyable copy
-//			string::size_type pos = key.find_last_of('_');
-//			key.erase(pos,1);
-			ParameterRecord	pr(iter->second.getRecord());
-			ParameterRecord::const_iterator	prIter = pr.begin();
-			ParameterRecord::const_iterator	prEnd  = pr.end();
-			while (prIter != prEnd) {
-				LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
-				tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
-				prIter++;
+	if (metadataFileAvailable) {
+		// read parameterset
+		ParameterSet	metadata;
+		metadata.adoptFile(itsFeedbackFile);
+
+		// Loop over the parameterset and send the information to the KVTlogger.
+		// During the transition phase from parameter-based to record-based storage in OTDB the
+		// nodenames ending in '_' are implemented both as parameter and as record.
+		ParameterSet::iterator		iter = metadata.begin();
+		ParameterSet::iterator		end  = metadata.end();
+		while (iter != end) {
+			string	key(iter->first);	// make destoyable copy
+			rtrim(key, "[]0123456789");
+	//		bool	doubleStorage(key[key.size()-1] == '_');
+			bool	isRecord(iter->second.isRecord());
+			//   isRecord  doubleStorage
+			// --------------------------------------------------------------
+			//      Y          Y           store as record and as parameters
+			//      Y          N           store as parameters
+			//      N          *           store parameter
+			if (!isRecord) {
+				LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
+				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
 			}
+			else {
+	//			if (doubleStorage) {
+	//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
+	//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
+	//			}
+				// to store is a node/param values the last _ should be stipped of
+				key = iter->first;		// destroyable copy
+	//			string::size_type pos = key.find_last_of('_');
+	//			key.erase(pos,1);
+				ParameterRecord	pr(iter->second.getRecord());
+				ParameterRecord::const_iterator	prIter = pr.begin();
+				ParameterRecord::const_iterator	prEnd  = pr.end();
+				while (prIter != prEnd) {
+					LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
+					tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
+					prIter++;
+				}
+			}
+			iter++;
 		}
-		iter++;
+		LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
 	}
-	LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
+
+	// finally report state to SAS
+	TreeMaintenance	tm(&conn);
+	TreeStateConv	tsc(&conn);
+	tm.setTreeState(obsID, tsc.get("finished"));
 }
 
 }; // CEPCU

@@ -70,7 +70,13 @@ for line in testdata:
     
     if part == 'LBL':
         rcu = partNr * 2 
-        if msgType == 'FAIL':
+        if msgType == 'LOW_NOISE':
+    		log.addLine('LBAosc1>: Sv=normal  Pr=normal , LBA Outer (LBL) large oscillation (low noise): RCU: (%d,%d)' %\
+                        (partNr*2, partNr*2+1))
+        elif msgType == 'HIGH_NOISE':
+    		log.addLine('LBAosc1>: Sv=normal  Pr=normal , LBA Outer (LBL) large oscillation (high noise): RCU: (%d,%d)' %\
+                        (partNr*2, partNr*2+1))
+        elif msgType == 'FAIL':
             if keyinfo.has_key('X'):
                 log.addLine('LBAmd1>: Sv=normal  Pr=normal , LBA Outer (LBL) defect: RCU: %d factor: %3.1f' %\
                            (partNr*2, float(keyinfo['X'])))
@@ -88,13 +94,19 @@ for line in testdata:
                 log.addLine('LBAmd1>: Sv=normal  Pr=normal , LBA	levels to low!!!' )               
             
     if part == 'LBH':
-        if msgType == 'FAIL':
+        if msgType == 'LOW_NOISE':
+    		log.addLine('LBAosc3>: Sv=normal  Pr=normal , LBA Inner (LBH) large oscillation (low noise): RCU: (%d,%d)' %\
+                        (partNr*2, partNr*2+1))
+        elif msgType == 'HIGH_NOISE':
+    		log.addLine('LBAosc3>: Sv=normal  Pr=normal , LBA Inner (LBH) large oscillation (high noise): RCU: (%d,%d)' %\
+                        (partNr*2, partNr*2+1))
+        elif msgType == 'FAIL':
             if keyinfo.has_key('X'):
                 log.addLine('LBAmd3>: Sv=normal  Pr=normal , LBA Inner (LBH) defect: RCU: %s factor: %3.1f' %\
                            (partNr*2, float(keyinfo['X'])))
             if keyinfo.has_key('Y'):
                 log.addLine('LBAmd3>: Sv=normal  Pr=normal , LBA Inner (LBH) defect: RCU: %s factor: %3.1f' %\
-                           (partNr*2, float(keyinfo['Y'])))           
+                           (partNr*2+1, float(keyinfo['Y'])))           
         
         elif msgType == 'DOWN':
             log.addLine('LBAdn3>: Sv=normal  Pr=normal , LBA Inner (LBH) down: RCU: %d factor: %3.1f offset: %d' %\
@@ -106,16 +118,24 @@ for line in testdata:
                 log.addLine('LBAmd3>: Sv=normal  Pr=normal , LBA	levels to low!!!' )               
 
     if part == 'HBA':
-    	if msgType == 'C_SUMMATOR':
+    	if msgType == 'LOW_NOISE':
+    		log.addLine('HBAosc>: Sv=normal  Pr=normal , Tile %d - RCU (%d,%d); Large oscillation (low noise)' %\
+                        (partNr, partNr*2, partNr*2+1))
+        
+        elif msgType == 'HIGH_NOISE':
+    		log.addLine('HBAosc>: Sv=normal  Pr=normal , Tile %d - RCU (%d,%d); Large oscillation (high noise)' %\
+                        (partNr, partNr*2, partNr*2+1))                
+        
+        elif msgType == 'C_SUMMATOR':
     		last_c_summator = partNr
     		log.addLine('HBAmdt>: Sv=normal  Pr=normal , Tile %d - RCU %d; Broken. No modem communication' %\
                                 (partNr, partNr*2+1))
-        if last_c_summator != partNr and msgType == 'FAIL':
+        elif last_c_summator != partNr and msgType == 'FAIL':
             for elem_nr in range(1,17,1):
 
                 if keyinfo.has_key('M%d' %(elem_nr)):
                     val = keyinfo.get('M%d' %(elem_nr))
-                    log.addLine('HBAmdt>: Sv=normal  Pr=normal , Tile %d - RCU %d; Element %d Broken. No modem communication : (%s)' %\
+                    log.addLine('HBAmdt>: Sv=normal  Pr=normal , Tile %d - RCU %d; Element %s Broken. No modem communication : (%s)' %\
                                 (partNr, partNr*2+1, elem_nr, val))
 
                 if keyinfo.has_key('X%d' %(elem_nr)):
