@@ -52,6 +52,7 @@ install(PROGRAMS
   bin/msss_imager_pipeline.py
   bin/msss_target_pipeline.py
   bin/preprocessing_pipeline.py
+  bin/imaging_pipeline.py
   bin/startPython.sh
   bin/startPythonVersion.sh
   external/bad_station_detection/asciistats.py
