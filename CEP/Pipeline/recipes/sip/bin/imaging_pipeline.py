@@ -456,7 +456,7 @@ class imaging_pipeline(control):
                           mask_patch_size=mask_patch_size,
                           sourcedb_path=sky_path,
                           working_directory=self.scratch_directory,
-                          autogenerate_parameters=auto_imaging_specs # TODO: This has to be dynamic
+                          autogenerate_parameters=auto_imaging_specs
                           )
 
         return output_mapfile, max_baseline
