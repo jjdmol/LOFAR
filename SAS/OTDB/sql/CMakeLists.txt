@@ -9,5 +9,6 @@ file(GLOB otdb_sql_files
   *.sql)
 install(FILES
   ${otdb_sql_files}
+  update_all_functions.sh
   DESTINATION sbin/sql)
 
