@@ -239,7 +239,7 @@ class imager_awimager(LOFARnodeTCP):
         cell_size_formatted = str(
                         int(round(cell_size))) + 'arcsec'
 
-        print ("Using the following dynamic generated awimager parameters:"
+        self.logger.info("Using the following dynamic generated awimager parameters:"
             " cell_size: {0}, npix: {1},".format(
                         cell_size_formatted, npix) +
              " w_max: {0}, w_proj_planes: {1}".format(w_max, w_proj_planes))
