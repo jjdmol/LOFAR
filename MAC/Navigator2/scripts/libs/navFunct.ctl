@@ -2200,10 +2200,13 @@ bool navFunct_lofarDate2PVSSDate(string inDate, time& t) {
   date=splittedDate[1];
   strreplace(date,"-",".");
   
+  // the date must exactly be of form YY.MM.DD HH:MM:SS.msec
   
+  if (tm   == "") tm = "00:00:00";
+  if (mSec == "") mSec = "000";
   outDate += date;
-  if (tm != "") outDate += " "+tm;
-  if (mSec != "") outDate += "."+mSec;
+  outDate += " "+tm;
+  outDate += "."+mSec;
 
   t = scanTimeUTC(outDate);
     
