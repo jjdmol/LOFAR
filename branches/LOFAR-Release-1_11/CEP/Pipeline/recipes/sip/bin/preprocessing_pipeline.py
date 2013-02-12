@@ -168,13 +168,46 @@ class preprocessing_pipeline(control):
             ', '.join(str(f) for f in self.input_data))
 
         # *********************************************************************
-        # 2. Create VDS-file; it will contain important input-data for NDPPP
+        # 2. Create VDS-file and databases. The latter are needed when doing
+        #    demixing within DPPP.
         with duration(self, "vdsmaker"):
             gvds_file = self.run_task("vdsmaker", input_data_mapfile)['gvds']
 
         # Read metadata (start, end times, pointing direction) from GVDS.
         with duration(self, "vdsreader"):
             vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+
+        # Create a parameter database that will be used by the NDPPP demixing
+        with duration(self, "setupparmdb"):
+            parmdb_mapfile = self.run_task(
+                "setupparmdb", input_data_mapfile,
+                mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
+                suffix='.dppp.parmdb'
+            )['mapfile']
+                
+        # Create a source database from a user-supplied sky model
+        # The user-supplied sky model can either be a name, in which case the
+        # pipeline will search for a file <name>.skymodel in the default search
+        # path $LOFARROOT/share/pipeline/skymodels; or a full path.
+        # It is an error if the file does not exist.
+        skymodel = py_parset.getString('PreProcessing.SkyModel')
+        if not os.path.isabs(skymodel):
+            skymodel = os.path.join(
+                # This should really become os.environ['LOFARROOT']
+                self.config.get('DEFAULT', 'lofarroot'),
+                'share', 'pipeline', 'skymodels', skymodel + '.skymodel'
+            )
+        if not os.path.isfile(skymodel):
+            raise PipelineException("Skymodel %s does not exist" % skymodel)
+        with duration(self, "setupsourcedb"):
+            sourcedb_mapfile = self.run_task(
+                "setupsourcedb", input_data_mapfile,
+                mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
+                skymodel=skymodel,
+                suffix='.dppp.sourcedb',
+                type='blob'
+            )['mapfile']
+
 
         # *********************************************************************
         # 3. Average and flag data, using NDPPP.
@@ -192,7 +225,10 @@ class preprocessing_pipeline(control):
                     py_parset.getStringVector('PreProcessing.demix_always'),
                 demix_if_needed=
                     py_parset.getStringVector('PreProcessing.demix_if_needed'),
-                parset=ndppp_parset)
+                parset=ndppp_parset,
+                parmdb_mapfile=parmdb_mapfile,
+                sourcedb_mapfile=sourcedb_mapfile
+            )
 
         # *********************************************************************
         # 6. Create feedback file for further processing by the LOFAR framework
