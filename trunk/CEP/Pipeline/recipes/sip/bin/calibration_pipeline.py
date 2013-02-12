@@ -171,7 +171,8 @@ class calibration_pipeline(control):
             ', '.join(str(f) for f in self.input_data))
 
         # *********************************************************************
-        # 2. Create VDS-file; it will contain important input-data for NDPPP
+        # 2. Create VDS-file and databases. The latter are needed when doing
+        #    demixing within DPPP.
         with duration(self, "vdsmaker"):
             gvds_file = self.run_task("vdsmaker", input_data_mapfile)['gvds']
 
@@ -179,6 +180,38 @@ class calibration_pipeline(control):
         with duration(self, "vdsreader"):
             vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
+        # Create a parameter database that will be used by the NDPPP demixing
+        with duration(self, "setupparmdb"):
+            parmdb_mapfile = self.run_task(
+                "setupparmdb", input_data_mapfile,
+                mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
+                suffix='.dppp.parmdb'
+            )['mapfile']
+                
+        # Create a source database from a user-supplied sky model
+        # The user-supplied sky model can either be a name, in which case the
+        # pipeline will search for a file <name>.skymodel in the default search
+        # path $LOFARROOT/share/pipeline/skymodels; or a full path.
+        # It is an error if the file does not exist.
+        skymodel = py_parset.getString('PreProcessing.SkyModel')
+        if not os.path.isabs(skymodel):
+            skymodel = os.path.join(
+                # This should really become os.environ['LOFARROOT']
+                self.config.get('DEFAULT', 'lofarroot'),
+                'share', 'pipeline', 'skymodels', skymodel + '.skymodel'
+            )
+        if not os.path.isfile(skymodel):
+            raise PipelineException("Skymodel %s does not exist" % skymodel)
+        with duration(self, "setupsourcedb"):
+            sourcedb_mapfile = self.run_task(
+                "setupsourcedb", input_data_mapfile,
+                mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
+                skymodel=skymodel,
+                suffix='.dppp.sourcedb',
+                type='blob'
+            )['mapfile']
+
+                
         # *********************************************************************
         # 3. Average and flag data, using NDPPP.
         ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
@@ -194,7 +227,10 @@ class calibration_pipeline(control):
                     py_parset.getStringVector('PreProcessing.demix_always'),
                 demix_if_needed=
                     py_parset.getStringVector('PreProcessing.demix_if_needed'),
-                parset=ndppp_parset)['mapfile']
+                parset=ndppp_parset,
+                parmdb_mapfile=parmdb_mapfile,
+                sourcedb_mapfile=sourcedb_mapfile
+            )['mapfile']
 
         # *********************************************************************
         # 4. Create a sourcedb from the user-supplied sky model, 
@@ -216,12 +252,14 @@ class calibration_pipeline(control):
         with duration(self, "setupsourcedb"):
             sourcedb_mapfile = self.run_task(
                 "setupsourcedb", dppp_mapfile,
-                skymodel=skymodel
+                skymodel=skymodel,
+                suffix='.bbs.sourcedb'
             )['mapfile']
 
         with duration(self, "setupparmdb"):
             parmdb_mapfile = self.run_task(
-                "setupparmdb", dppp_mapfile
+                "setupparmdb", dppp_mapfile,
+                suffix='.bbs.parmdb'
             )['mapfile']
 
         # *********************************************************************

@@ -208,19 +208,27 @@ class msss_calibrator_pipeline(control):
                 suffix='.dppp.parmdb')['mapfile']
 
         # Create a sourcedb to be used by the demixing phase of DPPP
-        # The path to the A-team sky model is currently hard-coded.
-        # Run makesourcedb on skymodel files for calibrator source(s) and the
-        # Ateam, which are to be stored in a standard place ($LOFARROOT/share)
+        # The user-supplied sky model can either be a name, in which case the
+        # pipeline will search for a file <name>.skymodel in the default search
+        # path $LOFARROOT/share/pipeline/skymodels; or a full path.
+        # It is an error if the file does not exist.
+        skymodel = py_parset.getString('PreProcessing.SkyModel')
+        if not os.path.isabs(skymodel):
+            skymodel = os.path.join(
+                # This should really become os.environ['LOFARROOT']
+                self.config.get('DEFAULT', 'lofarroot'),
+                'share', 'pipeline', 'skymodels', skymodel + '.skymodel'
+            )
+        if not os.path.isfile(skymodel):
+            raise PipelineException("Skymodel %s does not exist" % skymodel)
         with duration(self, "setupsourcedb"):
             sourcedb_mapfile = self.run_task(
                 "setupsourcedb", data_mapfile,
-                skymodel=os.path.join(
-                    self.config.get('DEFAULT', 'lofarroot'),
-                    'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'),
-                                             # TODO: LBA skymodel!! 
                 mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
+                skymodel=skymodel,
                 suffix='.dppp.sourcedb',
-                type='blob')['mapfile']
+                type='blob'
+            )['mapfile']
 
         # *********************************************************************
         # 3. Run NDPPP to demix the A-Team sources
