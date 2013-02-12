@@ -72,5 +72,7 @@ LBA.RotationMatrix.Z	floatArr
 
 !# DpFunction
 !ElementName	TypeName	_dp_fct.._type	_dp_fct.._param	_dp_fct.._fct	_dp_fct.._global	_dp_fct.._stat_type	_dp_fct.._interval	_dp_fct.._time
-!_mp_StationInfo.HBA.nrBrokenArchive	StationInfo	63		"g"	_mp_StationInfo.HBA.nrBroken:_original.._value		86400	82800
-!_mp_StationInfo.LBA.nrBrokenArchive	StationInfo	63		"g"	_mp_StationInfo.LBA.nrBroken:_original.._value		86400	82800
+!_mp_StationInfo.HBA.nrBrokenArchive	StationInfo	63	_mp_StationInfo.HBA.nrBroken:_original.._value	"p1"		17	86400	82800
+!_mp_StationInfo.LBA.nrBrokenArchive	StationInfo	63	_mp_StationInfo.LBA.nrBroken:_original.._value	"p1"		17	86400	82800
+
+
