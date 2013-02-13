@@ -38,7 +38,7 @@ CREATE OR REPLACE VIEW pktemp AS SELECT DISTINCT ON (paramid) paramid, value, ti
 
 CREATE OR REPLACE FUNCTION nextPICkvt(int,timestamp) 
 	RETURNS SETOF OTDBvalue AS $$ 
-	SELECT   paramid,''::VARCHAR(150),value,time 
+	SELECT   paramid,''::VARCHAR(150),value,time::timestamp(0)
 	FROM     pickvt 
 	WHERE    paramid=$1 AND time>$2 
 	ORDER BY TIME 
@@ -70,12 +70,12 @@ CREATE OR REPLACE FUNCTION getBrokenHardware(VARCHAR(20), VARCHAR(20))
 		END IF;
 		FOR vRecord IN 
 			EXECUTE '
-				SELECT p.paramid,r.pvssname,p.value,p.time 
+				SELECT p.paramid,r.pvssname::VARCHAR(150),p.value,p.time::timestamp(0)
 				FROM pktemp p
 				LEFT JOIN PICparamref r ON r.paramid = p.paramid ' || vWhere
 		LOOP
 			FOR vRecord2 IN 
-				SELECT p.paramid,r.pvssname,p.value,p.time 
+				SELECT p.paramid,r.pvssname::VARCHAR(150),p.value,p.time::timestamp(0)
 				FROM nextPICkvt(vRecord.paramid,vRecord.time) p
 				LEFT JOIN PICparamref r ON r.paramid = p.paramid
 			LOOP
