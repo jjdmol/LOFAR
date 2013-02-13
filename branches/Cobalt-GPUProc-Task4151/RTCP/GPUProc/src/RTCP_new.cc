@@ -43,6 +43,7 @@
 #include "createProgram.h"
 #include "PerformanceCounter.h"
 #include "UnitTest.h"
+#include "Kernel.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -62,7 +63,6 @@ namespace LOFAR {
 
 #undef USE_INPUT_SECTION
         //#define USE_INPUT_SECTION
-#define USE_NEW_CORRELATOR
 #define USE_2X2
 #undef USE_CUSTOM_FFT
 #undef USE_TEST_DATA
@@ -146,35 +146,6 @@ namespace LOFAR {
             inputSection = new InputSection<SAMPLE_TYPE>(ps, inputs);
             beamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(ps, stationName, inputSection->itsBeamletBuffers, 0);
         }
-
-        class Kernel : public cl::Kernel
-        {
-        public:
-            Kernel(const Parset &ps, cl::Program &program, const char *name)
-                :
-            cl::Kernel(program, name),
-                ps(ps)
-            {
-            }
-
-            void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter)
-            {
-                // AMD complains if we submit 0-sized work
-                for (unsigned dim = 0; dim < globalWorkSize.dimensions(); dim ++)
-                    if (globalWorkSize[dim] == 0)
-                        return;
-
-                queue.enqueueNDRangeKernel(*this, cl::NullRange, globalWorkSize, localWorkSize, 0, &event);
-                counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
-            }
-
-        protected:
-            cl::Event	 event;
-            const Parset &ps;
-            cl::NDRange  globalWorkSize, localWorkSize;
-            size_t       nrOperations, nrBytesRead, nrBytesWritten;
-        };
-
 
         class FIR_FilterKernel : public Kernel
         {
