@@ -25,11 +25,12 @@ set(gpuproc_LIB_SRCS
   OpenCL_Support.cc
   ReaderWriterSynchronization.cc
   RTCP.cc
-  createProgram.cc
+  
   UHEP/InvertedStationPPFWeights.cc)
 
 lofar_add_library(gpuproc ${gpuproc_LIB_SRCS})
 
 lofar_add_bin_program(RTCP RTCP.cc)
+lofar_add_bin_program(RTCP_new RTCP_new.cc   createProgram.cc   PerformanceCounter.cc   global_defines.cc UnitTest.cc )
 #lofar_add_bin_program(versiongpuproc versiongpuproc.cc)
 
