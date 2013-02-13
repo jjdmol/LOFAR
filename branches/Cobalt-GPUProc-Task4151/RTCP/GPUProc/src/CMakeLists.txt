@@ -25,6 +25,7 @@ set(gpuproc_LIB_SRCS
   OpenCL_Support.cc
   ReaderWriterSynchronization.cc
   RTCP.cc
+  createProgram.cc
   UHEP/InvertedStationPPFWeights.cc)
 
 lofar_add_library(gpuproc ${gpuproc_LIB_SRCS})
