@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 12 Event Viewer
 PANEL,-1 -1 1165 830 N "_3DFace" 0
@@ -86,14 +86,12 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 948 509 1098 536
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  948 509 1098 536
 
 T 
 1
-LANG:1 15 show g_TBBList
-
+LANG:1 14 show g_TBBList
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_TBBList\");
@@ -117,9 +115,8 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 2 1 0 1 E 0.986193293885602 0 0.450511945392491 395.138067061144 298.549488054608 0 E 10 1 518 295
 1
-LANG:1 99 -*-Arial Black-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,Arial Black
-0 ""
-1
+LANG:1 32 Arial Black,-1,13,5,75,0,0,0,0,0
+0 1
 LANG:1 19 Navigator Framework
 14 3
 "text_event"
@@ -134,14 +131,13 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 555 346 899 369
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  555 346 899 369
 3 "0s" 0 0 0 0 0 -1  E E E
 2 6
 "PRIMITIVE_TEXT4"
 ""
-1 556 378.569139327545 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 692 384.6269190170683 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -151,17 +147,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1.00763358778626 136 3.16793893129752 1 E 283 371 384 387
+E E 0 1 1 2 1 E 1 0 1.00763358778626 136 3.16793893129752 1 E 283 371 384 386
 0 2 2 "0s" 0 0 0 192 0 0  283 371 1
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
-1
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 18 Initiating Object:
 2 7
 "PRIMITIVE_TEXT5"
 ""
-1 556 350.330691684634 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 693 359.4095519265014 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -171,17 +166,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1.00763358778626 137 6.40458015267157 1 E 282 340 379 356
+E E 0 1 1 2 1 E 1 0 1.00763358778626 137 6.40458015267157 1 E 282 340 379 355
 0 2 2 "0s" 0 0 0 192 0 0  282 340 1
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
-1
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 15 Event Received:
 2 8
 "PRIMITIVE_TEXT6"
 ""
-1 556 405.792203251558 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 693 409.8364185435547 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 8 0 0 0 0 0
 E E E
@@ -191,12 +185,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1.00763358778626 137 0.946564885495969 1 E 282 400 342 416
+E E 0 1 1 2 1 E 1 0 1.00763358778626 137 0.946564885495969 1 E 282 400 342 415
 0 2 2 "0s" 0 0 0 192 0 0  282 400 1
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
-1
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 10 Selection:
 14 9
 "text_initiator"
@@ -211,9 +204,8 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 555 374 899 397
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  555 374 899 397
 3 "0s" 0 0 0 0 0 -1  E E E
 14 11
 "text_selection"
@@ -228,9 +220,8 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 555 401 899 424
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  555 401 899 424
 3 "0s" 0 0 0 0 0 -1  E E E
 4 18
 "LINE4"
@@ -623,14 +614,13 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 555 320 899 343
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  555 320 899 343
 3 "0s" 0 0 0 0 0 -1  E E E
 2 135
 "PRIMITIVE_TEXT11"
 ""
-1 565.633663366337 324.330691684634 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 722.4300558768761 307.2110786440587 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 125 0 0 0 0 0
 E E E
@@ -640,12 +630,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1.06930693069307 0 1.00763358778626 117.594059405941 -19.5954198473284 1 E 282 340 391 356
+E E 0 1 1 2 1 E 1.06930693069307 0 1.00763358778626 117.594059405941 -19.5954198473284 1 E 282 340 391 355
 0 2 2 "0s" 0 0 0 192 0 0  282 340 1
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
-1
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0 1
 LANG:1 18 Active Datapoint: 
 13 178
 "PUSH_BUTTON1"
@@ -660,9 +649,8 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 948 306 1098 333
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  948 306 1098 333
 
 T 
 1
@@ -685,9 +673,8 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 948 335 1098 362
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  948 335 1098 362
 
 T 
 1
@@ -710,14 +697,12 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 948 364 1098 391
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  948 364 1098 391
 
 T 
 1
-LANG:1 14 show g_alarms
-
+LANG:1 13 show g_alarms
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl showMapping for g_alarms\");
@@ -737,9 +722,8 @@ LANG:1 9 Datapoint
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 18 728 305 751
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  18 728 305 751
 3 "0s" 0 0 0 0 0 -1  E E E
 13 182
 "PUSH_BUTTON4"
@@ -754,9 +738,8 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 180 759 304 786
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  180 759 304 786
 
 T 
 1
@@ -791,9 +774,8 @@ LANG:1 5 state
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 19 760 71 783
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  19 760 71 783
 3 "4d" 4 0 0 0 0 -1  E E E
 13 227
 "PUSH_BUTTON5"
@@ -808,9 +790,8 @@ LANG:1 0
 
 0
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 948 278 1098 304
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0  948 278 1098 304
 
 T 
 1
@@ -847,14 +828,12 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 948 393 1098 420
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  948 393 1098 420
 
 T 
 1
-LANG:1 19 show g_stationList
-
+LANG:1 18 show g_stationList
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_stationList\");
@@ -876,14 +855,12 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 948 422 1098 449
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  948 422 1098 449
 
 T 
 1
-LANG:1 19 show g_cabinetList
-
+LANG:1 18 show g_cabinetList
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_cabinetList\");
@@ -905,14 +882,12 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 948 451 1098 478
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  948 451 1098 478
 
 T 
 1
-LANG:1 19 show g_subrackList
-
+LANG:1 18 show g_subrackList
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_subrackList\");
@@ -934,14 +909,12 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 948 480 1098 507
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  948 480 1098 507
 
 T 
 1
-LANG:1 15 show g_RSPList
-
+LANG:1 14 show g_RSPList
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_RSPList\");
@@ -963,14 +936,12 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 948 538 1098 565
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  948 538 1098 565
 
 T 
 1
-LANG:1 15 show g_RCUList
-
+LANG:1 14 show g_RCUList
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_RCUList\");
@@ -992,14 +963,12 @@ LANG:1 0
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 948 568 1112 595
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  948 568 1112 595
 
 T 
 1
-LANG:1 24 show g_observationsList
-
+LANG:1 23 show g_observationsList
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_observationsList\");
@@ -1021,9 +990,8 @@ LANG:1 0
 
 0
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 948 598 1098 624
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0  948 598 1098 624
 
 T 
 1
@@ -1050,9 +1018,8 @@ LANG:1 0
 E E 2 1 1 2 1 E U  1 E 730 684 810 708
 0 2 2 "0s" 0 0 0 64 0 0  730 684 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 10 Type name:
 2 495
 "PRIMITIVE_TEXT2"
@@ -1070,9 +1037,8 @@ LANG:1 0
 E E 2 1 1 2 1 E U  1 E 730 708 810 732
 0 2 2 "0s" 0 0 0 64 0 0  730 708 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 16 New object name:
 13 496
 "PUSH_BUTTON16"
@@ -1087,9 +1053,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 952 674 1036 734
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  952 674 1036 734
 
 T 
 1
@@ -1165,9 +1130,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 864 674 948 702
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  864 674 948 702
 3 "0s" 0 0 0 0 0 -1  E "main()
 {
   this.text = \"Observation\";
@@ -1186,9 +1150,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 864 706 948 734
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  864 706 948 734
 3 "0s" 0 0 0 0 0 -1  E E E
 30 499
 "FRAME2"
@@ -1205,9 +1168,8 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 0 1 0 1 E 0.825 0 0.88888888888889 703.4 654.6666666666666 0 E 8 6 409 97
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 5 Claim
 13 504
 "PUSH_BUTTON17"
@@ -1222,9 +1184,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 1048 668 1154 742
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  1048 668 1154 742
 
 T 
 1
@@ -1262,14 +1223,13 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 0 1 0 1 E 1.1 0 0.6666666666666674 701.2000000000001 736 0 E 8 6 409 97
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 8 Response
 2 548
 "PRIMITIVE_TEXT3"
 ""
-1 721.9999999999999 764 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 721.9999999999998 764 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 190 0 0 0 0 0
 E E E
@@ -1282,9 +1242,8 @@ LANG:1 0
 E E 2 1 1 2 1 E 0.9999999999999999 0 1 0 0 1 E 722 764 802 788
 0 2 2 "0s" 0 0 0 64 0 0  722 764 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 3 DP:
 14 549
 "txt_response"
@@ -1299,9 +1258,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 768 762 1142 790
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  768 762 1142 790
 3 "0s" 0 0 0 0 0 -1  E E E
 13 592
 "PUSH_BUTTON18"
@@ -1316,9 +1274,8 @@ LANG:1 0
 
 0
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 948 248 1098 274
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0  948 248 1098 274
 
 T 
 1
@@ -1341,14 +1298,12 @@ LANG:1 0
 
 0
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 948 628 1098 654
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0  948 628 1098 654
 
 T 
 1
-LANG:1 21 show g_processesList
-
+LANG:1 20 show g_processesList
 "main()
 {
   LOG_DEBUG(\"Event_Viewer.pnl show g_processesList\");
@@ -1424,9 +1379,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 78 748 172 802
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  78 748 172 802
 1
 T 
 1
@@ -1452,9 +1406,8 @@ LANG:1 12 alarmmessage
 
 0
 1
-LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
-0 ""
- 18 792 304 815
+LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
+0  18 792 304 815
 3 "0s" 0 0 0 0 0 -1  E E E
 13 785
 "PUSH_BUTTON20"
@@ -1469,14 +1422,12 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 948 18 1072 44
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  948 18 1072 44
 
 T 
 1
-LANG:1 16 Logger Settings
-
+LANG:1 15 Logger Settings
 "// SimpleCtrlScriptStart {valid}
 main()
 {
@@ -1530,67 +1481,67 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 0 "PANEL_REF1"
+3 0 "PANEL_REF1" -1
 "objects\\Test\\Action.pnl" 158 150 T 105 1 0 1 -81 -32
 1
 "$name""fw_viewSelection"
-3 1 "PANEL_REF2"
+3 1 "PANEL_REF2" -1
 "objects\\Test\\Action.pnl" 390 150 T 106 1 0 1 -10 32
 1
 "$name""fw_topDetailSelection"
-3 2 "PANEL_REF3"
+3 2 "PANEL_REF3" -1
 "objects\\Test\\Action.pnl" 668 220 T 107 1 0 1 -78 4
 1
 "$name""fw_bottomDetailSelection"
-3 4 "PANEL_REF5"
+3 4 "PANEL_REF5" -1
 "objects\\Test\\Action.pnl" 649 450 T 108 1 0 1 -77 -3
 1
 "$name""fw_locator"
-3 5 "PANEL_REF6"
+3 5 "PANEL_REF6" -1
 "objects\\Test\\Action.pnl" 413 460 T 109 1 0 1 -43 220
 1
 "$name""fw_progressBar"
-3 6 "PANEL_REF7"
+3 6 "PANEL_REF7" -1
 "objects\\Test\\Action.pnl" 189 450 T 110 1 0 1 -39 130
 1
 "$name""fw_headLines"
-3 7 "PANEL_REF8"
+3 7 "PANEL_REF8" -1
 "objects\\Test\\Event.pnl" 15 8 T 111 1 0 1 -5 0
 1
 "$name""fw_viewSelection"
-3 9 "PANEL_REF10"
+3 9 "PANEL_REF10" -1
 "objects\\Test\\Event.pnl" 377 7 T 112 1 0 1 0 1
 1
 "$name""fw_topDetailSelection"
-3 12 "PANEL_REF13"
+3 12 "PANEL_REF13" -1
 "objects\\Test\\Event.pnl" 541 104 T 113 1 0 1 31 -1
 1
 "$name""fw_bottomDetailSelection"
-3 14 "PANEL_REF15"
+3 14 "PANEL_REF15" -1
 "objects\\Test\\Event.pnl" 578 531 T 114 U 
 1
 "$name""fw_locator"
-3 17 "PANEL_REF18"
+3 17 "PANEL_REF18" -1
 "objects\\Test\\Event.pnl" 334 642 T 115 1 0 1 -4 86
 1
 "$name""fw_progressBar"
-3 18 "PANEL_REF19"
+3 18 "PANEL_REF19" -1
 "objects\\Test\\Event.pnl" -2 533 T 116 1 0 1 2 105
 1
 "$name""fw_headLines"
-3 19 "PANEL_REF20"
+3 19 "PANEL_REF20" -1
 "objects\\Test\\Event.pnl" 0 205 T 116 1 0 1 -10 3
 1
 "$name""fw_viewBox"
-3 20 "PANEL_REF21"
+3 20 "PANEL_REF21" -1
 "objects\\Test\\Action.pnl" 207 346 T 122 1 0 1 -117 -26
 1
 "$name""fw_viewBox"
-3 21 "PANEL_REF22"
+3 21 "PANEL_REF22" -1
 "objects\\Test\\Event.pnl" 0 205 T 197 1 0 1 10 253
 1
 "$name""fw_fastJumper"
-3 22 "PANEL_REF23"
+3 22 "PANEL_REF23" -1
 "objects\\Test\\Action.pnl" 207 346 T 198 1 0 1 -117 64
 1
 "$name""fw_fastJumper"

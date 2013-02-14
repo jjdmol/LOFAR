@@ -199,7 +199,7 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent(\"HBA\"+extrazero+curHBA,\"EventRightClick\");
+  navPanel_statePopup(baseDP);
 }" 0
  2
 "CBRef" "1"

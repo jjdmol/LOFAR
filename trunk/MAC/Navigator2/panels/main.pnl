@@ -409,7 +409,7 @@ void addObservations() {
   //loop over list and prepare panel with all stations and swlevel objects   
   for (int i=1; i<= dynlen(observationsList); i++) {
 
-    observationRefNames[i]=\"stationSW\"+(i);
+    observationRefNames[i]=\"stationObs\"+(i);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
