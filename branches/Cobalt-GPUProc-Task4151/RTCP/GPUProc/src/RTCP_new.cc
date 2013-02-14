@@ -56,6 +56,10 @@
 #include "Kernels/CoherentStokesKernel.h"
 #include "Kernels/UHEP_BeamFormerKernel.h"
 #include "Kernels/UHEP_TransposeKernel.h"
+#include "Kernels/UHEP_InvFFT_Kernel.h"
+#include "Kernels/UHEP_InvFIR_Kernel.h"
+
+
 #if defined __linux__
 #include <sched.h>
 #include <sys/time.h>
@@ -284,53 +288,9 @@ namespace LOFAR {
 #endif
   
         
-        class UHEP_InvFFT_Kernel : public Kernel
-        {
-        public:
-            UHEP_InvFFT_Kernel(const Parset &ps, cl::Program &program, cl::Buffer &devFFTedData)
-                :
-            Kernel(ps, program, "inv_fft")
-            {
-                setArg(0, devFFTedData);
-                setArg(1, devFFTedData);
-
-                globalWorkSize = cl::NDRange(128, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel());
-                localWorkSize  = cl::NDRange(128, 1);
-
-                size_t nrFFTs = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1);
-                nrOperations   = nrFFTs * 5 * 1024 * 10;
-                nrBytesRead    = nrFFTs * 512 * sizeof(std::complex<float>);
-                nrBytesWritten = nrFFTs * 1024 * sizeof(float);
-            }
-        };
+        
 
 
-        class UHEP_InvFIR_Kernel : public Kernel
-        {
-        public:
-            UHEP_InvFIR_Kernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devInvFIRfilteredData, cl::Buffer &devFFTedData, cl::Buffer &devInvFIRfilterWeights)
-                :
-            Kernel(ps, program, "invFIRfilter")
-            {
-                setArg(0, devInvFIRfilteredData);
-                setArg(1, devFFTedData);
-                setArg(2, devInvFIRfilterWeights);
-
-                size_t maxNrThreads, nrThreads;
-                getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
-                // round down to nearest power of two
-                for (nrThreads = 1024; nrThreads > maxNrThreads; nrThreads /= 2)
-                    ;
-
-                globalWorkSize = cl::NDRange(1024, NR_POLARIZATIONS, ps.nrTABs(0));
-                localWorkSize  = cl::NDRange(nrThreads, 1, 1);
-
-                size_t count = ps.nrTABs(0) * NR_POLARIZATIONS * 1024;
-                nrOperations   = count * ps.nrSamplesPerChannel() * NR_STATION_FILTER_TAPS * 2;
-                nrBytesRead    = count * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * sizeof(float);
-                nrBytesWritten = count * ps.nrSamplesPerChannel() * sizeof(float);
-            }
-        };
 
 
         struct TriggerInfo {

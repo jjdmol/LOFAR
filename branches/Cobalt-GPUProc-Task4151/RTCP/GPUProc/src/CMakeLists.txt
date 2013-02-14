@@ -48,6 +48,8 @@ lofar_add_bin_program(RTCP_new RTCP_new.cc
    Kernels/CoherentStokesKernel.cc
    Kernels/UHEP_BeamFormerKernel.cc
    Kernels/UHEP_TransposeKernel.cc
+   Kernels/UHEP_InvFFT_Kernel.cc
+   Kernels/UHEP_InvFIR_Kernel.cc
    )
 #lofar_add_bin_program(versiongpuproc versiongpuproc.cc)
 
