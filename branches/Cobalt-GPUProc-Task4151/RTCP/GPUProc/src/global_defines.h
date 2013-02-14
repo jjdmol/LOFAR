@@ -8,6 +8,8 @@ namespace LOFAR
     {
 #define NR_STATION_FILTER_TAPS	16
 #define USE_NEW_CORRELATOR
+#define NR_POLARIZATIONS	 2
+#define NR_TAPS			16
         extern bool	 profiling;
     }
 }
