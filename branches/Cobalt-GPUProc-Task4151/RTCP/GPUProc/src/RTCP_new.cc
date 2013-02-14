@@ -51,6 +51,8 @@
 #include "Kernels/IntToFloatKernel.h"
 #include "Kernels/IncoherentStokesKernel.h"
 #include "Kernels/BeamFormerKernel.h"
+#include "Kernels/BeamFormerTransposeKernel.h"
+#include "Kernels/DedispersionChirpKernel.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -220,29 +222,6 @@ namespace LOFAR {
         };
 
 
-        class BeamFormerTransposeKernel : public Kernel
-        {
-        public:
-            BeamFormerTransposeKernel(const Parset &ps, cl::Program &program, cl::Buffer &devTransposedData, cl::Buffer &devComplexVoltages)
-                :
-            Kernel(ps, program, "transposeComplexVoltages")
-            {
-                ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
-                setArg(0, devTransposedData);
-                setArg(1, devComplexVoltages);
-
-                //globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
-                globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, ps.nrSamplesPerChannel() / 16);
-                localWorkSize  = cl::NDRange(256, 1, 1);
-
-                nrOperations   = 0;
-                nrBytesRead    = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>),
-                    //nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>);
-                    nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
-            }
-        };
-
-
 #if 0
         class Dedispersion_FFT_Kernel
         {
@@ -301,49 +280,7 @@ namespace LOFAR {
             }
         };
 #endif
-
-
-        class DedispersionChirpKernel : public Kernel
-        {
-        public:
-            DedispersionChirpKernel(const Parset &ps, cl::Program &program, cl::CommandQueue &queue, cl::Buffer &buffer, cl::Buffer &DMs)
-                :
-            Kernel(ps, program, "applyChirp")
-            {
-                setArg(0, buffer);
-                setArg(1, DMs);
-
-                size_t maxNrThreads;
-                getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
-                unsigned fftSize = ps.dedispersionFFTsize();
-
-                globalWorkSize = cl::NDRange(fftSize, ps.nrSamplesPerChannel() / fftSize, ps.nrChannelsPerSubband());
-                //std::cout << "globalWorkSize = NDRange(" << fftSize << ", " << ps.nrSamplesPerChannel() / fftSize << ", " << ps.nrChannelsPerSubband() << ')' << std::endl;
-
-                if (fftSize <= maxNrThreads) {
-                    localWorkSize = cl::NDRange(fftSize, 1, maxNrThreads / fftSize);
-                    //std::cout << "localWorkSize = NDRange(" << fftSize << ", 1, " << maxNrThreads / fftSize << ')' << std::endl;
-                } else {
-                    unsigned divisor;
-
-                    for (divisor = 1; fftSize / divisor > maxNrThreads || fftSize % divisor != 0; divisor ++)
-                        ;
-
-                    localWorkSize = cl::NDRange(fftSize / divisor, 1, 1);
-                    //std::cout << "localWorkSize = NDRange(" << fftSize / divisor << ", 1, 1))" << std::endl;
-                }
-
-                nrOperations = (size_t) NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * (9 * ps.nrTABs(0) + 17),
-                    nrBytesRead  = nrBytesWritten = sizeof(std::complex<float>) * ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel();
-            }
-
-            void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, double subbandFrequency)
-            {
-                setArg(2, (float) subbandFrequency);
-                Kernel::enqueue(queue, counter);
-            }
-        };
-
+        
 
         class CoherentStokesKernel : public Kernel
         {
