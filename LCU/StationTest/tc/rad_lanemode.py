@@ -22,8 +22,9 @@ repeat = tc.repeat
 
 settings = 0
 for i in range(rsp.c_nof_lanes):
-  settings += ((arg_rad_lane_mode[i] << 2) + arg_rad_lane_mode[i+rsp.c_nof_lanes]) << (8*i)  # X,B[3:0]
-
+  k = rsp.c_nof_lanes-1-i
+  settings += ((arg_rad_lane_mode[i] << 2) + arg_rad_lane_mode[i+rsp.c_nof_lanes]) << (8*k)  # X,B[3:0]
+  #print 'settings = 0x%x' % settings
 
 #############################################################################
 # Read RAD latency for each RSP board
