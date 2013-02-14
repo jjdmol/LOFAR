@@ -1288,7 +1288,7 @@ void navFunct_fillObservationsList() {
         for (int j=1; j<= dynlen(stationList); j++) {
         
           //test if station is used in the observation
-          if ( navFunct_hardware2Obs(stationList[j], g_observations["NAME"][i],"Station",stationList[j],0)) {
+          if ( dynlen(g_observations["NAME"]) >= i && navFunct_hardware2Obs(stationList[j], g_observations["NAME"][i],"Station",stationList[j],0)) {
             if (!dynContains(g_observationsList, shortObs)){
               dynAppend(g_observationsList,shortObs);
               found=true;
@@ -1302,7 +1302,7 @@ void navFunct_fillObservationsList() {
         found = false;
         // check cabinets
         for (int c = 1; c<=dynlen(g_cabinetList); c++) {
-          if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"Cabinet","",g_cabinetList[c])) {
+          if (dynlen(g_observations["NAME"]) >= i && navFunct_hardware2Obs(station, g_observations["NAME"][i],"Cabinet","",g_cabinetList[c])) {
             // we found one involved cabinet, so obs can be included and we can skip the rest
             found = true;
           }
@@ -1313,7 +1313,7 @@ void navFunct_fillObservationsList() {
         if (!found) {
           // check subracks
           for (int c = 1; c<=dynlen(g_subrackList); c++) {
-            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"Subrack","",g_subrackList[c])) {
+            if (dynlen(g_observations["NAME"]) >= i && navFunct_hardware2Obs(station, g_observations["NAME"][i],"Subrack","",g_subrackList[c])) {
               // we found one involved subrack, so obs can be included and we can skip the rest
               found = true;
             }
@@ -1324,7 +1324,7 @@ void navFunct_fillObservationsList() {
         if (!found) {
           // check RSPBoards
           for (int c = 1; c<=dynlen(g_RSPList); c++) {
-            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"RSPBoard","",g_RSPList[c])) {
+            if (dynlen(g_observations["NAME"]) >= i && navFunct_hardware2Obs(station, g_observations["NAME"][i],"RSPBoard","",g_RSPList[c])) {
               // we found one involved rspBoard, so obs can be included and we can skip the rest
               found = true;
             }
@@ -1335,7 +1335,7 @@ void navFunct_fillObservationsList() {
         if (!found) {
           // check TBBoards
           for (int c = 1; c<=dynlen(g_TBBList); c++) {
-            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"TBBoard","",g_TBBList[c])) {
+            if (dynlen(g_observations["NAME"]) >= i && navFunct_hardware2Obs(station, g_observations["NAME"][i],"TBBoard","",g_TBBList[c])) {
               // we found one involved TBBoard, so obs can be included and we can skip the rest
               found = true;
             }
@@ -1346,7 +1346,7 @@ void navFunct_fillObservationsList() {
         if (!found) {
           // check RCU
           for (int c = 1; c<=dynlen(g_RCUList); c++) {
-            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"RCU","",g_RCUList[c])) {
+            if (dynlen(g_observations["NAME"]) >= i && navFunct_hardware2Obs(station, g_observations["NAME"][i],"RCU","",g_RCUList[c])) {
               // we found one involved RCU, so obs can be included and we can skip the rest
               found = true;
             }
@@ -1357,7 +1357,7 @@ void navFunct_fillObservationsList() {
         if (!found) {
           // check HBAAntenna
           for (int c = 1; c<=dynlen(g_HBAList); c++) {
-            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"HBA","",g_HBAList[c])) {
+            if (dynlen(g_observations["NAME"]) >= i && navFunct_hardware2Obs(station, g_observations["NAME"][i],"HBA","",g_HBAList[c])) {
               // we found one involved HBA, so obs can be included and we can skip the rest
               found = true;
             }
@@ -1368,7 +1368,7 @@ void navFunct_fillObservationsList() {
         if (!found) {
           // check LBAAntenna
           for (int c = 1; c<=dynlen(g_LBAList); c++) {
-            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"LBA","",g_LBAList[c])) {
+            if (dynlen(g_observations["NAME"]) >= i && navFunct_hardware2Obs(station, g_observations["NAME"][i],"LBA","",g_LBAList[c])) {
               // we found one involved LBA, so obs can be included and we can skip the rest
               found = true;
             }
@@ -1779,8 +1779,10 @@ string navFunct_getStationFromDP(string aDPName) {
 //     Returns true if system is still reachable
 // ****************************************
 bool navFunct_dpReachable(string aDP) {
+  if (!dpExists(aDP)) return false;
+  
   string sys = dpSubStr(aDP,DPSUB_SYS);
-  // check if system is in our active connections. (if not dpExists should have given false ealier...
+  // check if system is in our active connections.
   if (sys == MainDBName) {
     return true;
   }
@@ -1789,7 +1791,6 @@ bool navFunct_dpReachable(string aDP) {
     return false;
   }
   
-
   // return state of the connection
   return g_connections[ "UP" ][iPos];
 }

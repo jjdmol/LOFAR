@@ -416,7 +416,7 @@ navPanel_addLogMessage(string aMsg)
 // ****************************************
 // Name: navPanel_statePopup   
 // ****************************************
-//    creates a popup whet the user can (recursively)
+//    creates a popup where the user can (recursively)
 //    set the states of objects.
 //           
 // ****************************************

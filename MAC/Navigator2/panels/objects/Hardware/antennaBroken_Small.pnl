@@ -34,6 +34,8 @@ private void reload() {
 void updateAntennaInfo(string ident, dyn_dyn_anytype tab)
 {
 
+  if (dynlen(tab) <= 1) return;
+  
   if (tab[2][3] == TRUE) {
     setValue(\"antenna\", \"backCol\", \"Lofar_invalid\");
     return;
