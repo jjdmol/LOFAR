@@ -47,6 +47,7 @@
 
 #include "Kernels/FIR_FilterKernel.h"
 #include "Kernels/DelayAndBandPassKernel.h"
+#include "Kernels/CorrelatorKernel.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -66,7 +67,7 @@ namespace LOFAR {
 
 #undef USE_INPUT_SECTION
         //#define USE_INPUT_SECTION
-#define USE_2X2
+//#define USE_2X2
 #undef USE_CUSTOM_FFT
 #undef USE_TEST_DATA
 #undef USE_B7015
@@ -150,32 +151,7 @@ namespace LOFAR {
             beamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(ps, stationName, inputSection->itsBeamletBuffers, 0);
         }
 
-        //class FIR_FilterKernel : public Kernel
-        //{
-        //public:
-        //    FIR_FilterKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devFilteredData, cl::Buffer &devInputSamples, cl::Buffer &devFIRweights)
-        //        :
-        //    Kernel(ps, program, "FIR_filter")
-        //    {
-        //        setArg(0, devFilteredData);
-        //        setArg(1, devInputSamples);
-        //        setArg(2, devFIRweights);
-
-        //        size_t maxNrThreads;
-        //        getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
-        //        unsigned totalNrThreads = ps.nrChannelsPerSubband() * NR_POLARIZATIONS * 2;
-        //        unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
-        //        globalWorkSize = cl::NDRange(totalNrThreads, ps.nrStations());
-        //        localWorkSize  = cl::NDRange(totalNrThreads / nrPasses, 1);
-
-        //        size_t nrSamples = (size_t) ps.nrStations() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS;
-        //        nrOperations   = nrSamples * ps.nrSamplesPerChannel() * NR_TAPS * 2 * 2;
-        //        nrBytesRead    = nrSamples * (NR_TAPS - 1 + ps.nrSamplesPerChannel()) * ps.nrBytesPerComplexSample();
-        //        nrBytesWritten = nrSamples * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
-        //    }
-        //};
-
-
+ 
         class FFT_Kernel
         {
         public:
@@ -241,203 +217,170 @@ namespace LOFAR {
         };
 
 
-        //class DelayAndBandPassKernel : public Kernel
-        //{
-        //public:
-        //    DelayAndBandPassKernel(const Parset &ps, cl::Program &program, cl::Buffer &devCorrectedData, cl::Buffer &devFilteredData, cl::Buffer &devDelaysAtBegin, cl::Buffer &devDelaysAfterEnd, cl::Buffer &devPhaseOffsets, cl::Buffer &devBandPassCorrectionWeights)
-        //        :
-        //    Kernel(ps, program, "applyDelaysAndCorrectBandPass")
-        //    {
-        //        ASSERT(ps.nrChannelsPerSubband() % 16 == 0 || ps.nrChannelsPerSubband() == 1);
-        //        ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
-
-        //        setArg(0, devCorrectedData);
-        //        setArg(1, devFilteredData);
-        //        setArg(4, devDelaysAtBegin);
-        //        setArg(5, devDelaysAfterEnd);
-        //        setArg(6, devPhaseOffsets);
-        //        setArg(7, devBandPassCorrectionWeights);
-
-        //        globalWorkSize = cl::NDRange(256, ps.nrChannelsPerSubband() == 1 ? 1 : ps.nrChannelsPerSubband() / 16, ps.nrStations());
-        //        localWorkSize  = cl::NDRange(256, 1, 1);
-
-        //        size_t nrSamples = ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
-        //        nrOperations = nrSamples * 12;
-        //        nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
-        //    }
-
-        //    void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, unsigned subband)
-        //    {
-        //        setArg(2, (float) ps.subbandToFrequencyMapping()[subband]);
-        //        setArg(3, 0); // beam
-        //        Kernel::enqueue(queue, counter);
-        //    }
-        //};
-
-
-#if !defined USE_NEW_CORRELATOR
-
-        class CorrelatorKernel : public Kernel
-        {
-        public:
-            CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
-                :
-#if defined USE_4X4
-            Kernel(ps, program, "correlate_4x4")
-#elif defined USE_3X3
-            Kernel(ps, program, "correlate_3x3")
-#elif defined USE_2X2
-            Kernel(ps, program, "correlate_2x2")
-#else
-            Kernel(ps, program, "correlate")
-#endif
-            {
-                setArg(0, devVisibilities);
-                setArg(1, devCorrectedData);
-
-                size_t maxNrThreads, preferredMultiple;
-                getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
-
-                std::vector<cl_context_properties> properties;
-                queue.getInfo<CL_QUEUE_CONTEXT>().getInfo(CL_CONTEXT_PROPERTIES, &properties);
-
-                if (cl::Platform((cl_platform_id) properties[1]).getInfo<CL_PLATFORM_NAME>() == "AMD Accelerated Parallel Processing")
-                    preferredMultiple = 256;
-                else
-                    getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
-
-#if defined USE_4X4
-                unsigned quartStations = (ps.nrStations() + 2) / 4;
-                unsigned nrBlocks = quartStations * (quartStations + 1) / 2;
-#elif defined USE_3X3
-                unsigned thirdStations = (ps.nrStations() + 2) / 3;
-                unsigned nrBlocks = thirdStations * (thirdStations + 1) / 2;
-#elif defined USE_2X2
-                unsigned halfStations = (ps.nrStations() + 1) / 2;
-                unsigned nrBlocks = halfStations * (halfStations + 1) / 2;
-#else
-                unsigned nrBlocks = ps.nrBaselines();
-#endif
-                unsigned nrPasses = (nrBlocks + maxNrThreads - 1) / maxNrThreads;
-                unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
-                nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
-                //std::cout << "nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads << std::endl;
-
-                unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
-                globalWorkSize = cl::NDRange(nrPasses * nrThreads, nrUsableChannels);
-                localWorkSize  = cl::NDRange(nrThreads, 1);
-
-                nrOperations   = (size_t) nrUsableChannels * ps.nrBaselines() * ps.nrSamplesPerChannel() * 32;
-                nrBytesRead    = (size_t) nrPasses * ps.nrStations() * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
-                nrBytesWritten = (size_t) ps.nrBaselines() * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
-            }
-        };
-
-#else
-
-        class CorrelatorKernel : public Kernel
-        {
-        public:
-            CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
-                :
-#if defined USE_2X2
-            Kernel(ps, program, "correlate")
-#else
-#error not implemented
-#endif
-            {
-                setArg(0, devVisibilities);
-                setArg(1, devCorrectedData);
-
-                unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
-                unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
-                //#pragma omp critical (cout)
-                //std::cout << "nrRectangles = " << nrRectangles << std::endl;
-
-                unsigned nrBlocksPerSide = (ps.nrStations() + 2 * 16 - 1) / (2 * 16);
-                unsigned nrBlocks	       = nrBlocksPerSide * (nrBlocksPerSide + 1) / 2;
-                //#pragma omp critical (cout)
-                //std::cout << "nrBlocks = " << nrBlocks << std::endl;
-
-                unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
-                globalWorkSize = cl::NDRange(16 * 16, nrBlocks, nrUsableChannels);
-                localWorkSize  = cl::NDRange(16 * 16, 1, 1);
-
-                // FIXME
-                //nrOperations   = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
-                nrOperations   = (size_t) ps.nrBaselines() * ps.nrSamplesPerSubband() * 32;
-                nrBytesRead    = (size_t) (32 + 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
-                nrBytesWritten = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
-            }
-        };
-
-
-        class CorrelateRectangleKernel : public Kernel
-        {
-        public:
-            CorrelateRectangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
-                :
-#if defined USE_2X2
-            Kernel(ps, program, "correlateRectangleKernel")
-#else
-#error not implemented
-#endif
-            {
-                setArg(0, devVisibilities);
-                setArg(1, devCorrectedData);
-
-                unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
-                unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
-#pragma omp critical (cout)
-                std::cout << "nrRectangles = " << nrRectangles << std::endl;
-
-                unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
-                globalWorkSize = cl::NDRange(16 * 16, nrRectangles, nrUsableChannels);
-                localWorkSize  = cl::NDRange(16 * 16, 1, 1);
-
-                nrOperations   = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
-                nrBytesRead    = (size_t) (32 + 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
-                nrBytesWritten = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
-            }
-        };
-
-
-        class CorrelateTriangleKernel : public Kernel
-        {
-        public:
-            CorrelateTriangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
-                :
-#if defined USE_2X2
-            Kernel(ps, program, "correlateTriangleKernel")
-#else
-#error not implemented
-#endif
-            {
-                setArg(0, devVisibilities);
-                setArg(1, devCorrectedData);
-
-                unsigned nrTriangles = (ps.nrStations() + 2 * 16 - 1) / (2 * 16);
-                unsigned nrMiniBlocksPerSide = 16;
-                unsigned nrMiniBlocks = nrMiniBlocksPerSide * (nrMiniBlocksPerSide + 1) / 2;
-                size_t   preferredMultiple;
-                getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
-                unsigned nrThreads = align(nrMiniBlocks, preferredMultiple);
-
-#pragma omp critical (cout)
-                std::cout << "nrTriangles = " << nrTriangles << ", nrMiniBlocks = " << nrMiniBlocks << ", nrThreads = " << nrThreads << std::endl;
-
-                unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
-                globalWorkSize = cl::NDRange(nrThreads, nrTriangles, nrUsableChannels);
-                localWorkSize  = cl::NDRange(nrThreads, 1, 1);
-
-                nrOperations   = (size_t) (32 * 32 / 2) * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
-                nrBytesRead    = (size_t) 32 * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
-                nrBytesWritten = (size_t) (32 * 32 / 2) * nrTriangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
-            }
-        };
-
-#endif
-
+  
+//#if !defined USE_NEW_CORRELATOR
+//
+//        class CorrelatorKernel : public Kernel
+//        {
+//        public:
+//            CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
+//                :
+//#if defined USE_4X4
+//            Kernel(ps, program, "correlate_4x4")
+//#elif defined USE_3X3
+//            Kernel(ps, program, "correlate_3x3")
+//#elif defined USE_2X2
+//            Kernel(ps, program, "correlate_2x2")
+//#else
+//            Kernel(ps, program, "correlate")
+//#endif
+//            {
+//                setArg(0, devVisibilities);
+//                setArg(1, devCorrectedData);
+//
+//                size_t maxNrThreads, preferredMultiple;
+//                getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+//
+//                std::vector<cl_context_properties> properties;
+//                queue.getInfo<CL_QUEUE_CONTEXT>().getInfo(CL_CONTEXT_PROPERTIES, &properties);
+//
+//                if (cl::Platform((cl_platform_id) properties[1]).getInfo<CL_PLATFORM_NAME>() == "AMD Accelerated Parallel Processing")
+//                    preferredMultiple = 256;
+//                else
+//                    getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
+//
+//#if defined USE_4X4
+//                unsigned quartStations = (ps.nrStations() + 2) / 4;
+//                unsigned nrBlocks = quartStations * (quartStations + 1) / 2;
+//#elif defined USE_3X3
+//                unsigned thirdStations = (ps.nrStations() + 2) / 3;
+//                unsigned nrBlocks = thirdStations * (thirdStations + 1) / 2;
+//#elif defined USE_2X2
+//                unsigned halfStations = (ps.nrStations() + 1) / 2;
+//                unsigned nrBlocks = halfStations * (halfStations + 1) / 2;
+//#else
+//                unsigned nrBlocks = ps.nrBaselines();
+//#endif
+//                unsigned nrPasses = (nrBlocks + maxNrThreads - 1) / maxNrThreads;
+//                unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
+//                nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
+//                //std::cout << "nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads << std::endl;
+//
+//                unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+//                globalWorkSize = cl::NDRange(nrPasses * nrThreads, nrUsableChannels);
+//                localWorkSize  = cl::NDRange(nrThreads, 1);
+//
+//                nrOperations   = (size_t) nrUsableChannels * ps.nrBaselines() * ps.nrSamplesPerChannel() * 32;
+//                nrBytesRead    = (size_t) nrPasses * ps.nrStations() * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+//                nrBytesWritten = (size_t) ps.nrBaselines() * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+//            }
+//        };
+//
+//#else
+//
+//        class CorrelatorKernel : public Kernel
+//        {
+//        public:
+//            CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
+//                :
+//#if defined USE_2X2
+//            Kernel(ps, program, "correlate")
+//#else
+//#error not implemented
+//#endif
+//            {
+//                setArg(0, devVisibilities);
+//                setArg(1, devCorrectedData);
+//
+//                unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
+//                unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
+//                //#pragma omp critical (cout)
+//                //std::cout << "nrRectangles = " << nrRectangles << std::endl;
+//
+//                unsigned nrBlocksPerSide = (ps.nrStations() + 2 * 16 - 1) / (2 * 16);
+//                unsigned nrBlocks	       = nrBlocksPerSide * (nrBlocksPerSide + 1) / 2;
+//                //#pragma omp critical (cout)
+//                //std::cout << "nrBlocks = " << nrBlocks << std::endl;
+//
+//                unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+//                globalWorkSize = cl::NDRange(16 * 16, nrBlocks, nrUsableChannels);
+//                localWorkSize  = cl::NDRange(16 * 16, 1, 1);
+//
+//                // FIXME
+//                //nrOperations   = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
+//                nrOperations   = (size_t) ps.nrBaselines() * ps.nrSamplesPerSubband() * 32;
+//                nrBytesRead    = (size_t) (32 + 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+//                nrBytesWritten = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+//            }
+//        };
+//
+//
+//        class CorrelateRectangleKernel : public Kernel
+//        {
+//        public:
+//            CorrelateRectangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
+//                :
+//#if defined USE_2X2
+//            Kernel(ps, program, "correlateRectangleKernel")
+//#else
+//#error not implemented
+//#endif
+//            {
+//                setArg(0, devVisibilities);
+//                setArg(1, devCorrectedData);
+//
+//                unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
+//                unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
+//#pragma omp critical (cout)
+//                std::cout << "nrRectangles = " << nrRectangles << std::endl;
+//
+//                unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+//                globalWorkSize = cl::NDRange(16 * 16, nrRectangles, nrUsableChannels);
+//                localWorkSize  = cl::NDRange(16 * 16, 1, 1);
+//
+//                nrOperations   = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
+//                nrBytesRead    = (size_t) (32 + 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+//                nrBytesWritten = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+//            }
+//        };
+//
+//
+//        class CorrelateTriangleKernel : public Kernel
+//        {
+//        public:
+//            CorrelateTriangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
+//                :
+//#if defined USE_2X2
+//            Kernel(ps, program, "correlateTriangleKernel")
+//#else
+//#error not implemented
+//#endif
+//            {
+//                setArg(0, devVisibilities);
+//                setArg(1, devCorrectedData);
+//
+//                unsigned nrTriangles = (ps.nrStations() + 2 * 16 - 1) / (2 * 16);
+//                unsigned nrMiniBlocksPerSide = 16;
+//                unsigned nrMiniBlocks = nrMiniBlocksPerSide * (nrMiniBlocksPerSide + 1) / 2;
+//                size_t   preferredMultiple;
+//                getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
+//                unsigned nrThreads = align(nrMiniBlocks, preferredMultiple);
+//
+//#pragma omp critical (cout)
+//                std::cout << "nrTriangles = " << nrTriangles << ", nrMiniBlocks = " << nrMiniBlocks << ", nrThreads = " << nrThreads << std::endl;
+//
+//                unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
+//                globalWorkSize = cl::NDRange(nrThreads, nrTriangles, nrUsableChannels);
+//                localWorkSize  = cl::NDRange(nrThreads, 1, 1);
+//
+//                nrOperations   = (size_t) (32 * 32 / 2) * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
+//                nrBytesRead    = (size_t) 32 * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+//                nrBytesWritten = (size_t) (32 * 32 / 2) * nrTriangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+//            }
+//        };
+//
+//#endif
+//
 
         class IntToFloatKernel : public Kernel
         {
