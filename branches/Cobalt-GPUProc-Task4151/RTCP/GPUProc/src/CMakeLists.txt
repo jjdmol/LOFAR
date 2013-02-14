@@ -45,6 +45,7 @@ lofar_add_bin_program(RTCP_new RTCP_new.cc
    Kernels/BeamFormerKernel.cc
    Kernels/BeamFormerTransposeKernel.cc
    Kernels/DedispersionChirpKernel.cc
+   Kernels/CoherentStokesKernel.cc
    )
 #lofar_add_bin_program(versiongpuproc versiongpuproc.cc)
 

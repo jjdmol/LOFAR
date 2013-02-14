@@ -503,6 +503,7 @@ class CorrelatorKernel : public Kernel
 #error not implemented
 #endif
     {
+        (void)queue;
       setArg(0, devVisibilities);
       setArg(1, devCorrectedData);
 
@@ -540,6 +541,7 @@ class CorrelateRectangleKernel : public Kernel
 #error not implemented
 #endif
     {
+        (void)queue;
       setArg(0, devVisibilities);
       setArg(1, devCorrectedData);
 
@@ -1086,6 +1088,7 @@ cl::Program Pipeline::createProgram(const char *sources)
 
 void Pipeline::sendNextBlock(unsigned station)
 {
+    (void)station;
 #ifdef USE_INPUT_SECTION
   unsigned bitsPerSample = ps.nrBitsPerSample();
 
