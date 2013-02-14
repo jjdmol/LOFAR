@@ -51,6 +51,8 @@ lofar_add_bin_program(RTCP_new RTCP_new.cc
    Kernels/UHEP_InvFFT_Kernel.cc
    Kernels/UHEP_InvFIR_Kernel.cc
    Kernels/UHEP_TriggerKernel.cc
+   FFT_Kernel.cc
+   FFT_Plan.cc
    )
 #lofar_add_bin_program(versiongpuproc versiongpuproc.cc)
 

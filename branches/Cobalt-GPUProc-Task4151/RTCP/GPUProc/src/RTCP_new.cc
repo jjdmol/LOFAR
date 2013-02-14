@@ -59,6 +59,8 @@
 #include "Kernels/UHEP_InvFFT_Kernel.h"
 #include "Kernels/UHEP_InvFIR_Kernel.h"
 #include "Kernels/UHEP_TriggerKernel.h"
+#include "FFT_Kernel.h"
+#include "FFT_Plan.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -121,29 +123,6 @@ namespace LOFAR {
         //Moved to seperate cc and h file
         //cl::Program createProgram(const Parset &ps, cl::Context &context, std::vector<cl::Device> &devices, const char *sources)
 
-        class FFT_Plan
-        {
-        public:
-            FFT_Plan(cl::Context &context, unsigned fftSize)
-            {
-                clFFT_Dim3 dim = { fftSize, 1, 1 };
-                cl_int error;
-                plan = clFFT_CreatePlan(context(), dim, clFFT_1D, clFFT_InterleavedComplexFormat, &error);
-
-                if (error != CL_SUCCESS)
-                    throw cl::Error(error, "clFFT_CreatePlan");
-
-                //clFFT_DumpPlan(plan, stdout);
-            }
-
-            ~FFT_Plan()
-            {
-                clFFT_DestroyPlan(plan);
-            }
-
-            clFFT_Plan plan;
-        };
-
         template <typename SAMPLE_TYPE> class StationInput
         {
         public:
@@ -162,61 +141,7 @@ namespace LOFAR {
             beamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(ps, stationName, inputSection->itsBeamletBuffers, 0);
         }
 
- 
-        class FFT_Kernel
-        {
-        public:
-            FFT_Kernel(cl::Context &context, unsigned fftSize, unsigned nrFFTs, bool forward, cl::Buffer &buffer)
-                :
-            nrFFTs(nrFFTs),
-                fftSize(fftSize)
-#if defined USE_CUSTOM_FFT
-            {
-                ASSERT(fftSize == 256);
-                ASSERT(forward);
-                std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
-                cl::Program program = createProgram(context, devices, "FFT.cl", "");
-                kernel = cl::Kernel(program, "fft0");
-                kernel.setArg(0, buffer);
-            }
-#else
-                , direction(forward ? clFFT_Forward : clFFT_Inverse),
-                plan(context, fftSize),
-                buffer(buffer)
-            {
-            }
-#endif
-
-            void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter)
-            {
-#if defined USE_CUSTOM_FFT
-                queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(nrFFTs * 64 / 4, 4), cl::NDRange(64, 4), 0, &event);
-#else
-                cl_int error = clFFT_ExecuteInterleaved(queue(), plan.plan, nrFFTs, direction, buffer(), buffer(), 0, 0, &event());
-
-                if (error != CL_SUCCESS)
-                    throw cl::Error(error, "clFFT_ExecuteInterleaved");
-#endif
-
-                counter.doOperation(event,
-                    (size_t) nrFFTs * 5 * fftSize * log2(fftSize),
-                    (size_t) nrFFTs * fftSize * sizeof(std::complex<float>),
-                    (size_t) nrFFTs * fftSize * sizeof(std::complex<float>));
-            }
-
-        private:
-            unsigned	 nrFFTs, fftSize;
-#if defined USE_CUSTOM_FFT
-            cl::Kernel	 kernel;
-#else
-            clFFT_Direction direction;
-            FFT_Plan     plan;
-            cl::Buffer	 &buffer;
-#endif 
-            cl::Event	 event;
-        };
-
-
+        
         class Filter_FFT_Kernel : public FFT_Kernel
         {
         public:
