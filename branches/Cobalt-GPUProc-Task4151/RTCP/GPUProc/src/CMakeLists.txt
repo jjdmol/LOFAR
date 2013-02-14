@@ -40,6 +40,7 @@ lofar_add_bin_program(RTCP_new RTCP_new.cc
    Kernels/FIR_FilterKernel.cc
    Kernels/DelayAndBandPassKernel.cc
    Kernels/CorrelatorKernel.cc
+   Kernels/IntToFloatKernel.cc
    )
 #lofar_add_bin_program(versiongpuproc versiongpuproc.cc)
 
