@@ -42,6 +42,7 @@ lofar_add_bin_program(RTCP_new RTCP_new.cc
    Kernels/CorrelatorKernel.cc
    Kernels/IntToFloatKernel.cc
    Kernels/IncoherentStokesKernel.cc
+   Kernels/BeamFormerKernel.cc
    )
 #lofar_add_bin_program(versiongpuproc versiongpuproc.cc)
 
