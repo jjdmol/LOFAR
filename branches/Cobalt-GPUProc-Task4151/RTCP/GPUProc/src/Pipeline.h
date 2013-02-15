@@ -1,5 +1,5 @@
-#ifndef GPUPROC_PIPELINE_H
-#define GPUPROC_PIPELINE_H
+#ifndef GPUPROC_PIPELINECLASS_H
+#define GPUPROC_PIPELINECLASS_H
 #include "CL/cl.hpp"
 #include "Interface/Parset.h"
 #include "OpenCL_Support.h"

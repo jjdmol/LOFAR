@@ -66,6 +66,8 @@
 #include "Kernels/DedispersionBackwardFFTkernel.h"
 
 #include "Pipeline.h"
+#include "Pipelines/CorrelatorPipeline.h"
+
 #if defined __linux__
 #include <sched.h>
 #include <sys/time.h>
@@ -76,6 +78,7 @@ namespace LOFAR {
 
         extern bool profiling;  
         unsigned nrGPUs;
+
 
 #undef USE_CUSTOM_FFT
 #undef USE_TEST_DATA
@@ -115,55 +118,8 @@ namespace LOFAR {
 
 #endif
 
-//        template <typename SAMPLE_TYPE> class StationInput
-//        {
-//        public:
-//            SmartPtr<InputSection<SAMPLE_TYPE> >               inputSection;
-//            SmartPtr<BeamletBufferToComputeNode<SAMPLE_TYPE> > beamletBufferToComputeNode;
-//
-//            void init(const Parset &ps, unsigned psetNumber);
-//        };
-//
-//        template<typename SAMPLE_TYPE> void StationInput<SAMPLE_TYPE>::init(const Parset &ps, unsigned psetNumber)
-//        {
-//            string stationName = ps.getStationNamesAndRSPboardNumbers(psetNumber)[0].station; // TODO: support more than one station
-//            std::vector<Parset::StationRSPpair> inputs = ps.getStationNamesAndRSPboardNumbers(psetNumber);
-//
-//            inputSection = new InputSection<SAMPLE_TYPE>(ps, inputs);
-//            beamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(ps, stationName, inputSection->itsBeamletBuffers, 0);
-//        }
-//
-//       
-//
-//        class Pipeline
-//        {
-//        public:
-//            Pipeline(const Parset &);
-//
-//            cl::Program		    createProgram(const char *sources);
-//
-//            const Parset	    &ps;
-//            cl::Context		    context;
-//            std::vector<cl::Device> devices;
-//
-//            std::vector<StationInput<i16complex> > stationInputs16; // indexed by station
-//            std::vector<StationInput<i8complex> >  stationInputs8; // indexed by station
-//            std::vector<StationInput<i4complex> >  stationInputs4; // indexed by station
-//
-//            std::vector<SmartPtr<Stream> >  bufferToGPUstreams; // indexed by station
-//            std::vector<SmartPtr<Stream> >  GPUtoStorageStreams; // indexed by subband
-//            SlidingPointer<uint64_t> inputSynchronization, outputSynchronization;
-//
-//#if defined USE_B7015
-//            OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
-//#endif
-//
-//            //private:
-//            void                    sendNextBlock(unsigned station);
-//        };
-//
 
-        class CorrelatorWorkQueue;
+   /*     class CorrelatorWorkQueue;
 
         class CorrelatorPipeline : public Pipeline
         {
@@ -185,7 +141,7 @@ namespace LOFAR {
 #endif
             PerformanceCounter	    samplesCounter, visibilitiesCounter;
         };
-
+*/
 
         class BeamFormerPipeline : public Pipeline
         {
@@ -213,115 +169,6 @@ namespace LOFAR {
             PerformanceCounter	    beamFormerWeightsCounter, samplesCounter;
         };
 
-
-//        Pipeline::Pipeline(const Parset &ps)
-//            :
-//        ps(ps),
-//            stationInputs16(ps.nrStations()),
-//            stationInputs8(ps.nrStations()),
-//            stationInputs4(ps.nrStations()),
-//            bufferToGPUstreams(ps.nrStations()),
-//            GPUtoStorageStreams(ps.nrSubbands())
-//        {
-//            createContext(context, devices);
-//
-//#ifdef USE_INPUT_SECTION
-//            for (unsigned stat = 0; stat < ps.nrStations(); stat ++) {
-//                bufferToGPUstreams[stat] = new SharedMemoryStream;
-//
-//                switch (ps.nrBitsPerSample()) {
-//                default:
-//                case 16:
-//                    stationInputs16[stat].init(ps, stat);
-//                    break;
-//
-//                case 8:
-//                    stationInputs8[stat].init(ps, stat);
-//                    break;
-//
-//                case 4:
-//                    stationInputs4[stat].init(ps, stat);
-//                    break;
-//                }
-//            }
-//#else
-//            for (unsigned stat = 0; stat < ps.nrStations(); stat ++)
-//                bufferToGPUstreams[stat] = new NullStream;
-//#endif
-//
-//            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++)
-//                GPUtoStorageStreams[sb] = new NullStream;
-//        }
-//
-//
-//        cl::Program Pipeline::createProgram(const char *sources)
-//        {
-//            return LOFAR::RTCP::createProgram(ps, context, devices, sources);
-//        }
-//
-//
-//        void Pipeline::sendNextBlock(unsigned station)
-//        {
-//            (void)station;
-//#ifdef USE_INPUT_SECTION
-//            unsigned bitsPerSample = ps.nrBitsPerSample();
-//
-//            Stream *stream = bufferToGPUstreams[station];
-//
-//            switch(bitsPerSample) {
-//            default:
-//            case 16:
-//                stationInputs16[station].beamletBufferToComputeNode->process(stream);
-//                break;
-//
-//            case 8:
-//                stationInputs8[station].beamletBufferToComputeNode->process(stream);
-//                break;
-//
-//            case 4:
-//                stationInputs4[station].beamletBufferToComputeNode->process(stream);
-//                break;
-//            }
-//#endif
-//        }
-//
-
-        CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
-            :
-        Pipeline(ps),
-            filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER),
-            firFilterCounter("FIR filter"),
-            delayAndBandPassCounter("delay/bp"),
-#if defined USE_NEW_CORRELATOR
-            correlateTriangleCounter("cor.triangle"),
-            correlateRectangleCounter("cor.rectangle"),
-#else
-            correlatorCounter("correlator"),
-#endif
-            fftCounter("FFT"),
-            samplesCounter("samples"),
-            visibilitiesCounter("visibilities")
-        {
-            filterBank.negateWeights();
-
-            double startTime = omp_get_wtime();
-
-            //#pragma omp parallel sections
-            {
-                //#pragma omp section
-                firFilterProgram = createProgram("FIR.cl");
-                //#pragma omp section
-                delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
-                //#pragma omp section
-#if defined USE_NEW_CORRELATOR
-                correlatorProgram = createProgram("NewCorrelator.cl");
-#else
-                correlatorProgram = createProgram("Correlator.cl");
-#endif
-            }
-
-            std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
-        }
 
 
         BeamFormerPipeline::BeamFormerPipeline(const Parset &ps)
