@@ -1,5 +1,6 @@
 #include "lofar_config.h"
 #include "Common/LofarLogger.h"
+#include "Common/Exception.h"
 
 #include <iostream>
 #include <omp.h>
@@ -21,9 +22,14 @@
 //#include "UnitTests/CorrelatorTest.h"
 //#include "UnitTests/FFT_Test.h"
 
+using namespace LOFAR;
+using namespace LOFAR::RTCP;
+
+// Use our own terminate handler
+Exception::TerminateHandler t(RTCP::terminate);
+
 int main(int argc, char **argv)
 {
-    using namespace LOFAR::RTCP;
 
     INIT_LOGGER("RTCP");
     std::cout << "running ..." << std::endl;
@@ -31,42 +37,34 @@ int main(int argc, char **argv)
     if (argc < 2)
     {
         std::cerr << "usage: " << argv[0] << " parset" << std::endl;
-        exit(1);
+        return 1;
     }
-    try
-    {
-        Parset ps(argv[1]);
 
-        //(CorrelatorTest)(ps);       //needs parset AARTFAAC!!
-        //(CorrelateRectangleTest)(ps); //needs parset AARTFAAC!!
+    Parset ps(argv[1]);
 
-        //works with all parsets
-        //Correlate unittest 
-        (CorrelateTriangleTest)(ps);
+    //(CorrelatorTest)(ps);       //needs parset AARTFAAC!!
+    //(CorrelateRectangleTest)(ps); //needs parset AARTFAAC!!
 
-        ////UHEP unittest
-        (UHEP_BeamFormerTest)(ps);
-        (UHEP_TransposeTest)(ps);
-        (UHEP_TriggerTest)(ps);
+    //works with all parsets
+    //Correlate unittest 
+    (CorrelateTriangleTest)(ps);
 
-        //// beamformed unittest 
-        (IncoherentStokesTest)(ps);
-        (IntToFloatTest)(ps);
-        (BeamFormerTest)(ps);
-        (BeamFormerTransposeTest)(ps);
-        (DedispersionChirpTest)(ps);
-        (CoherentStokesTest)(ps);
+    ////UHEP unittest
+    (UHEP_BeamFormerTest)(ps);
+    (UHEP_TransposeTest)(ps);
+    (UHEP_TriggerTest)(ps);
 
-        // dunno what test
-        //(FFT_Test)(ps);  unknown test
-        //the actual unittests!
-    }
-    catch (cl::Error &error)
-    {
-#pragma omp critical (cerr)
-        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
-        exit(1);
-    }
+    //// beamformed unittest 
+    (IncoherentStokesTest)(ps);
+    (IntToFloatTest)(ps);
+    (BeamFormerTest)(ps);
+    (BeamFormerTransposeTest)(ps);
+    (DedispersionChirpTest)(ps);
+    (CoherentStokesTest)(ps);
+
+    // dunno what test
+    //(FFT_Test)(ps);  unknown test
+    //the actual unittests!
 
     return 0;
 }
