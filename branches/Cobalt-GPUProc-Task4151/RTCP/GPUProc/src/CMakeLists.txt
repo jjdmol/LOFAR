@@ -55,6 +55,7 @@ lofar_add_bin_program(RTCP_new RTCP_new.cc
    FFT_Plan.cc
    Kernels/Filter_FFT_Kernel.cc
    Kernels/DedispersionForwardFFTkernel.cc
+   Kernels/DedispersionBackwardFFTkernel.cc
    )
 #lofar_add_bin_program(versiongpuproc versiongpuproc.cc)
 
