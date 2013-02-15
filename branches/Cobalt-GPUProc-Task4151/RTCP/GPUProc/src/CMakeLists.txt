@@ -58,6 +58,29 @@ lofar_add_bin_program(RTCP_new
    Kernels/DedispersionForwardFFTkernel.cc
    Kernels/DedispersionBackwardFFTkernel.cc
    )
+   
+lofar_add_bin_program( RTCP_UnitTest 
+   RTCP_UnitTest.cc
+   UHEP/InvertedStationPPFWeights.cc
+   PerformanceCounter.cc
+   global_defines.cc
+   UnitTest.cc 
+   Kernel.cc
+   Kernels/FIR_FilterKernel.cc
+   Kernels/DelayAndBandPassKernel.cc
+   Kernels/CorrelatorKernel.cc
+   Kernels/IntToFloatKernel.cc
+   Kernels/IncoherentStokesKernel.cc
+   Kernels/BeamFormerKernel.cc
+   Kernels/BeamFormerTransposeKernel.cc
+   Kernels/DedispersionChirpKernel.cc
+   Kernels/CoherentStokesKernel.cc
+   Kernels/UHEP_BeamFormerKernel.cc
+   Kernels/UHEP_TransposeKernel.cc
+   Kernels/UHEP_InvFFT_Kernel.cc
+   Kernels/UHEP_InvFIR_Kernel.cc
+   Kernels/UHEP_TriggerKernel.cc
+  )
 #lofar_add_bin_program(versiongpuproc versiongpuproc.cc)
 
 

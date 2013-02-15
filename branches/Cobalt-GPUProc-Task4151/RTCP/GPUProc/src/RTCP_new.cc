@@ -65,20 +65,6 @@
 #include "Kernels/DedispersionForwardFFTkernel.h"
 #include "Kernels/DedispersionBackwardFFTkernel.h"
 
-#include "UnitTests/IncoherentStokesTest.h"
-#include "UnitTests/IntToFloatTest.h"
-#include "UnitTests/BeamFormerTransposeTest.h"
-#include "UnitTests/DedispersionChirpTest.h"
-#include "UnitTests/CoherentStokesTest.h"
-#include "UnitTests/UHEP_BeamFormerTest.h"
-#include "UnitTests/UHEP_TransposeTest.h"
-#include "UnitTests/BeamFormerTest.h"
-#include "UnitTests/CorrelateTriangleTest.h"
-#include "UnitTests/UHEP_TriggerTest.h"
-#include "UnitTests/CorrelateRectangleTest.h"
-#include "UnitTests/CorrelatorTest.h"
-#include "UnitTests/FFT_Test.h"
-
 #if defined __linux__
 #include <sched.h>
 #include <sys/time.h>
@@ -1042,7 +1028,7 @@ namespace LOFAR {
 
 void usage(char **argv)
 {
-    std::cerr << "usage: " << argv[0] << " parset" <<  " [correlator|beam|UHEP|unittest]" << std::endl;
+    std::cerr << "usage: " << argv[0] << " parset" <<  " [correlator|beam|UHEP]" << std::endl;
 }
 
 enum SELECTPIPELINE { correlator, beam, UHEP,unittest};
@@ -1058,9 +1044,6 @@ SELECTPIPELINE to_select_pipeline(char *argument)
 
     if (!strcmp(argument,"UHEP")) 
         return UHEP;
-
-    if (!strcmp(argument,"unittest")) 
-        return unittest;
 
     std::cout << "incorrect third argument supplied." << std::endl;
     exit(1);
@@ -1150,32 +1133,6 @@ int main(int argc, char **argv)
             UHEP_Pipeline(ps).doWork();
             profiling = true;
             UHEP_Pipeline(ps).doWork();
-            break;
-
-        case unittest:
-            std::cout << "We are in the unittest part of the code." << std::endl;
-            //(CorrelatorTest)(ps);       //needs parset AARTFAAC!!
-            //(CorrelateRectangleTest)(ps); //needs parset AARTFAAC!!
-
-            //works with all parsets
-            //Correlate unittest 
-            (CorrelateTriangleTest)(ps);
-
-            //UHEP unittest
-            (UHEP_BeamFormerTest)(ps);
-            (UHEP_TransposeTest)(ps);
-            (UHEP_TriggerTest)(ps);
-
-            // beamformed unittest 
-            (IncoherentStokesTest)(ps);
-            (IntToFloatTest)(ps);
-            (BeamFormerTest)(ps);
-            (BeamFormerTransposeTest)(ps);
-            (DedispersionChirpTest)(ps);
-            (CoherentStokesTest)(ps);
-
-            // dunno what test
-            //(FFT_Test)(ps);  unknown test
             break;
 
         default:

@@ -7,6 +7,7 @@
 #include "global_defines.h"
 #include <complex>
 #include "Kernels/UHEP_TransposeKernel.h"
+#include "UHEP/InvertedStationPPFWeights.h" // reverseSubbandMapping
 
 namespace LOFAR
 {
