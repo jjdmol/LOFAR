@@ -132,48 +132,7 @@ namespace LOFAR {
             beamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(ps, stationName, inputSection->itsBeamletBuffers, 0);
         }
 
-
-#if 0
-        class Dedispersion_FFT_Kernel
-        {
-        public:
-            Dedispersion_FFT_Kernel(const Parset &ps, cl::Context &context, cl::Buffer &buffer)
-                :
-            ps(ps),
-                plan(context, ps.dedispersionFFTsize()),
-                buffer(buffer)
-            {
-                ASSERT(ps.nrSamplesPerChannel() % ps.dedispersionFFTsize() == 0);
-            }
-
-            void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, clFFT_Direction direction)
-            {
-                size_t nrFFTs = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize();
-
-                cl_int error = clFFT_ExecuteInterleaved(queue(), plan.plan, nrFFTs, direction, buffer(), buffer(), 0, 0, &event());
-
-                if (error != CL_SUCCESS)
-                    throw cl::Error(error, "clFFT_ExecuteInterleaved");
-
-                counter.doOperation(event,
-                    nrFFTs * 5 * ps.dedispersionFFTsize() * log2(ps.dedispersionFFTsize()),
-                    nrFFTs * ps.dedispersionFFTsize() * sizeof(std::complex<float>),
-                    nrFFTs * ps.dedispersionFFTsize() * sizeof(std::complex<float>));
-            }
-
-        private:
-            const Parset &ps;
-            FFT_Plan	 plan;
-            cl::Buffer	 &buffer;
-            cl::Event	 event;
-        };
-#else
-
-
-
-#endif
-  
-        
+       
 
         class Pipeline
         {
