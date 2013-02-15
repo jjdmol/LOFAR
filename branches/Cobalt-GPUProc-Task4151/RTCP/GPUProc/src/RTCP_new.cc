@@ -74,6 +74,8 @@
 #include "UnitTests/UHEP_TransposeTest.h"
 #include "UnitTests/BeamFormerTest.h"
 #include "UnitTests/CorrelateTriangleTest.h"
+#include "UnitTests/UHEP_TriggerTest.h"
+#include "UnitTests/CorrelateRectangleTest.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -1062,65 +1064,7 @@ namespace LOFAR {
         };
 
 
-#if defined USE_NEW_CORRELATOR
-
-        struct CorrelateRectangleTest : public UnitTest
-        {
-            CorrelateRectangleTest(const Parset &ps)
-                :
-            //UnitTest(ps, "Correlator.cl")
-            UnitTest(ps, "NewCorrelator.cl")
-            {
-                if (ps.nrStations() >= 5 && ps.nrChannelsPerSubband() >= 6 && ps.nrSamplesPerChannel() >= 100) {
-                    MultiArraySharedBuffer<std::complex<float>, 4> visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
-                    MultiArraySharedBuffer<std::complex<float>, 4> inputData(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-                    CorrelateRectangleKernel correlator(ps, queue, program, visibilities, inputData);
-
-                    inputData[27][5][99][1] = std::complex<float>(3, 4);
-                    inputData[68][5][99][1] = std::complex<float>(5, 6);
-
-                    visibilities.hostToDevice(CL_FALSE);
-                    inputData.hostToDevice(CL_FALSE);
-                    correlator.enqueue(queue, counter);
-                    visibilities.deviceToHost(CL_TRUE);
-
-                    //check(visibilities[5463][5][1][1], std::complex<float>(39, 2));
-                    for (unsigned bl = 0; bl < ps.nrBaselines(); bl ++)
-                        if (visibilities[bl][5][1][1] != std::complex<float>(0, 0))
-                            std::cout << "bl = " << bl << ", visibility = " << visibilities[bl][5][1][1] << std::endl;
-                }
-            }
-        };
-
-
-
-#endif
-
     
-        struct UHEP_TriggerTest : public UnitTest
-        {
-            UHEP_TriggerTest(const Parset &ps)
-                :
-            UnitTest(ps, "UHEP/Trigger.cl")
-            {
-                if (ps.nrTABs(0) >= 4 && 1024 * ps.nrSamplesPerChannel() > 100015) {
-                    MultiArraySharedBuffer<float, 3> inputData(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrSamplesPerChannel() * 1024], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-                    MultiArraySharedBuffer<TriggerInfo, 1> triggerInfo(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
-                    UHEP_TriggerKernel trigger(ps, program, triggerInfo, inputData);
-
-                    inputData[3][1][100015] = 1000;
-
-                    inputData.hostToDevice(CL_FALSE);
-                    trigger.enqueue(queue, counter);
-                    triggerInfo.deviceToHost(CL_TRUE);
-
-                    std::cout << "trigger info: mean = " << triggerInfo[3].mean << ", variance = " << triggerInfo[3].variance << ", bestValue = " << triggerInfo[3].bestValue << ", bestApproxIndex = " << triggerInfo[3].bestApproxIndex << std::endl;
-                    //check(triggerInfo[3].mean, (float) (1000.0f * 1000.0f) / (float) (ps.nrSamplesPerChannel() * 1024));
-                    check(triggerInfo[3].bestValue, 1000.0f * 1000.0f);
-                    check(triggerInfo[3].bestApproxIndex, 100016U);
-                }
-            }
-        };
 
 
 #if 0
