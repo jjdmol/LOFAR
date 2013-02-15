@@ -72,6 +72,8 @@
 #include "UnitTests/CoherentStokesTest.h"
 #include "UnitTests/UHEP_BeamFormerTest.h"
 #include "UnitTests/UHEP_TransposeTest.h"
+#include "UnitTests/BeamFormerTest.h"
+#include "UnitTests/CorrelateTriangleTest.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -1091,78 +1093,10 @@ namespace LOFAR {
         };
 
 
-        struct CorrelateTriangleTest : public UnitTest
-        {
-            CorrelateTriangleTest(const Parset &ps)
-                :
-            //UnitTest(ps, "Correlator.cl")
-            UnitTest(ps, "NewCorrelator.cl")
-            {
-                if (ps.nrStations() >= 5 && ps.nrChannelsPerSubband() >= 6 && ps.nrSamplesPerChannel() >= 100) {
-                    MultiArraySharedBuffer<std::complex<float>, 4> visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
-                    MultiArraySharedBuffer<std::complex<float>, 4> inputData(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-                    CorrelateTriangleKernel correlator(ps, queue, program, visibilities, inputData);
-
-                    //inputData[3][5][99][1] = std::complex<float>(3, 4);
-                    //inputData[4][5][99][1] = std::complex<float>(5, 6);
-                    inputData[0][5][99][1] = std::complex<float>(3, 4);
-                    inputData[2][5][99][1] = std::complex<float>(5, 6);
-
-                    visibilities.hostToDevice(CL_FALSE);
-                    inputData.hostToDevice(CL_FALSE);
-                    correlator.enqueue(queue, counter);
-                    visibilities.deviceToHost(CL_TRUE);
-
-                    //check(visibilities[13][5][1][1], std::complex<float>(39, 2));
-                    for (unsigned bl = 0; bl < ps.nrBaselines(); bl ++)
-                        if (visibilities[bl][5][1][1] != std::complex<float>(0, 0))
-                            std::cout << "bl = " << bl << ", visibility = " << visibilities[bl][5][1][1] << std::endl;
-                }
-            }
-        };
 
 #endif
 
-        struct BeamFormerTest : public UnitTest
-        {
-            BeamFormerTest(const Parset &ps)
-                :
-            UnitTest(ps, "BeamFormer/BeamFormer.cl")
-            {
-                if (ps.nrStations() >= 5 && ps.nrSamplesPerChannel() >= 13 && ps.nrChannelsPerSubband() >= 7 && ps.nrTABs(0) >= 6) {
-                    MultiArraySharedBuffer<std::complex<float>, 4> inputData(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-                    MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-                    MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][ps.nrTABs(0)][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE);
-                    BeamFormerKernel beamFormer(ps, program, complexVoltages, inputData, beamFormerWeights);
-
-                    inputData[4][6][12][1] = std::complex<float>(2.2, 3);
-                    beamFormerWeights[4][6][5] = std::complex<float>(4, 5);
-
-                    inputData.hostToDevice(CL_FALSE);
-                    beamFormerWeights.hostToDevice(CL_FALSE);
-                    beamFormer.enqueue(queue, counter);
-                    complexVoltages.deviceToHost(CL_TRUE);
-
-                    check(complexVoltages[6][12][5][1], std::complex<float>(-6.2, 23));
-
-#if 0
-                    for (unsigned tab = 0; tab < ps.nrTABs(0); tab ++)
-                        for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++)
-                            for (unsigned ch = 0; ch < ps.nrChannelsPerSubband(); ch ++)
-                                for (unsigned t = 0; t < ps.nrSamplesPerChannel(); t ++)
-                                    if (complexVoltages[tab][pol][ch][t] != std::complex<float>(0, 0))
-                                        std::cout << "complexVoltages[" << tab << "][" << pol << "][" << ch << "][" << t << "] = " << complexVoltages[tab][pol][ch][t] << std::endl;
-#endif
-                }
-            }
-        };
-
-      
-      
-
-       
-
-
+    
         struct UHEP_TriggerTest : public UnitTest
         {
             UHEP_TriggerTest(const Parset &ps)
