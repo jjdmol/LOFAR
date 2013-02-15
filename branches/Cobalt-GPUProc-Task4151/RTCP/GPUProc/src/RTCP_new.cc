@@ -44,6 +44,8 @@
 #include "PerformanceCounter.h"
 #include "UnitTest.h"
 #include "Kernel.h"
+#include "FFT_Kernel.h"
+#include "FFT_Plan.h"
 
 #include "Kernels/FIR_FilterKernel.h"
 #include "Kernels/DelayAndBandPassKernel.h"
@@ -59,8 +61,8 @@
 #include "Kernels/UHEP_InvFFT_Kernel.h"
 #include "Kernels/UHEP_InvFIR_Kernel.h"
 #include "Kernels/UHEP_TriggerKernel.h"
-#include "FFT_Kernel.h"
-#include "FFT_Plan.h"
+#include "Kernels/Filter_FFT_Kernel.h"
+
 
 #if defined __linux__
 #include <sched.h>
@@ -73,18 +75,10 @@ namespace LOFAR {
         extern bool profiling;  //moved to global defines
         unsigned nrGPUs;
 
-        //#define NR_BITS_PER_SAMPLE	 8
-//#define NR_POLARIZATIONS	 2
-//#define NR_TAPS			16
-//#define NR_STATION_FILTER_TAPS	16
-
 #undef USE_INPUT_SECTION
-        //#define USE_INPUT_SECTION
-//#define USE_2X2
 #undef USE_CUSTOM_FFT
 #undef USE_TEST_DATA
 #undef USE_B7015
-
 
 #if defined __linux__
 
@@ -120,9 +114,6 @@ namespace LOFAR {
 
 #endif
 
-        //Moved to seperate cc and h file
-        //cl::Program createProgram(const Parset &ps, cl::Context &context, std::vector<cl::Device> &devices, const char *sources)
-
         template <typename SAMPLE_TYPE> class StationInput
         {
         public:
@@ -140,17 +131,6 @@ namespace LOFAR {
             inputSection = new InputSection<SAMPLE_TYPE>(ps, inputs);
             beamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(ps, stationName, inputSection->itsBeamletBuffers, 0);
         }
-
-        
-        class Filter_FFT_Kernel : public FFT_Kernel
-        {
-        public:
-            Filter_FFT_Kernel(const Parset &ps, cl::Context &context, cl::Buffer &devFilteredData)
-                :
-            FFT_Kernel(context, ps.nrChannelsPerSubband(), ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel(), true, devFilteredData)
-            {
-            }
-        };
 
 
 #if 0
@@ -768,22 +748,6 @@ namespace LOFAR {
 #pragma omp critical (cout)
                 std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
         }
-
-
-        // complexVoltages()
-        // float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_TIMES_PER_BLOCK][NR_TABS][NR_POLARIZATIONS];
-        // transpose()
-        //
-        // float2 (*DedispersedDataType)[nrTABs][NR_POLARIZATIONS][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()];
-        // FFT()
-        //
-        // applyChrip()
-        //
-        // FFT-1()
-        // float2 (*DedispersedDataType)[nrTABs][NR_POLARIZATIONS][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()];
-        // (*ComplexVoltagesType)[NR_CHANNELS][NR_TIMES_PER_BLOCK][NR_TABS];
-        // computeStokes()
-        // float (*StokesType)[NR_TABS][NR_STOKES][NR_TIMES_PER_BLOCK / STOKES_INTEGRATION_SAMPLES][NR_CHANNELS];
 
 
         BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline, unsigned queueNumber)
