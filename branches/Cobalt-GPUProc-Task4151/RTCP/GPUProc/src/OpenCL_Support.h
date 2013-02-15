@@ -223,6 +223,13 @@ template <typename T, std::size_t DIM> class MultiArraySharedBuffer : public Mul
 };
 #endif
 
+// The sole purpose of this function is to extract detailed error
+// information if a cl::Error was thrown. Since we want the complete
+// backtrace, we cannot simply try-catch in main(), because that would
+// unwind the stack. The only option we have is to use our own terminate
+// handler.
+void terminate();
+
 } // namespace RTCP
 } // namespace LOFAR
 
