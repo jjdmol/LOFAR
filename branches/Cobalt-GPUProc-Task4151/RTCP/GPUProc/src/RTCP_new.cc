@@ -69,6 +69,7 @@
 #include "UnitTests/IntToFloatTest.h"
 #include "UnitTests/BeamFormerTransposeTest.h"
 #include "UnitTests/DedispersionChirpTest.h"
+#include "UnitTests/CoherentStokesTest.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -1154,64 +1155,7 @@ namespace LOFAR {
             }
         };
 
-        //struct DedispersionChirpTest : public UnitTest
-        //{
-        //    DedispersionChirpTest(const Parset &ps)
-        //        :
-        //    UnitTest(ps, "BeamFormer/Dedispersion.cl")
-        //    {
-        //        if (ps.nrTABs(0) > 3 && ps.nrChannelsPerSubband() > 13 && ps.nrSamplesPerChannel() / ps.dedispersionFFTsize() > 1 && ps.dedispersionFFTsize() > 77) {
-        //            MultiArraySharedBuffer<std::complex<float>, 5> data(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel() / ps.dedispersionFFTsize()][ps.dedispersionFFTsize()], queue, CL_MEM_READ_WRITE, CL_MEM_READ_WRITE);
-        //            MultiArraySharedBuffer<float, 1> DMs(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
-        //            DedispersionChirpKernel dedispersionChirpKernel(ps, program, queue, data, DMs);
-
-        //            data[3][1][13][1][77] = std::complex<float>(2, 3);
-        //            DMs[3] = 2;
-
-        //            DMs.hostToDevice(CL_FALSE);
-        //            data.hostToDevice(CL_FALSE);
-        //            dedispersionChirpKernel.enqueue(queue, counter, 60e6);
-        //            data.deviceToHost(CL_TRUE);
-
-        //            std::cout << data[3][1][13][1][77] << std::endl;
-        //        }
-        //    }
-        //};
-
-
-        struct CoherentStokesTest : public UnitTest
-        {
-            CoherentStokesTest(const Parset &ps)
-                :
-            UnitTest(ps, "BeamFormer/CoherentStokes.cl")
-            {
-                if (ps.nrChannelsPerSubband() >= 19 && ps.nrSamplesPerChannel() >= 175 && ps.nrTABs(0) >= 5) {
-                    MultiArraySharedBuffer<float, 4> stokesData(boost::extents[ps.nrTABs(0)][ps.nrCoherentStokes()][ps.nrSamplesPerChannel() / ps.coherentStokesTimeIntegrationFactor()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
-#if 1
-                    MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][ps.nrTABs(0)][NR_POLARIZATIONS], queue, CL_MEM_READ_WRITE, CL_MEM_READ_ONLY);
-                    CoherentStokesKernel stokesKernel(ps, program, stokesData, complexVoltages);
-
-                    complexVoltages[18][174][4][0] = std::complex<float>(2, 3);
-                    complexVoltages[18][174][4][1] = std::complex<float>(4, 5);
-#else
-                    MultiArraySharedBuffer<std::complex<float>, 4> complexVoltages(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_WRITE, CL_MEM_READ_ONLY);
-                    CoherentStokesKernel stokesKernel(ps, program, stokesData, complexVoltages);
-
-                    complexVoltages[18][174][4][0] = std::complex<float>(2, 3);
-                    complexVoltages[18][174][4][1] = std::complex<float>(4, 5);
-#endif
-
-                    complexVoltages.hostToDevice(CL_FALSE);
-                    stokesKernel.enqueue(queue, counter);
-                    stokesData.deviceToHost(CL_TRUE);
-
-                    for (unsigned stokes = 0; stokes < ps.nrCoherentStokes(); stokes ++)
-                        std::cout << stokesData[4][stokes][174 / ps.coherentStokesTimeIntegrationFactor()][18] << std::endl;
-                }
-            }
-        };
-
-
+      
         struct UHEP_BeamFormerTest : public UnitTest
         {
             UHEP_BeamFormerTest(const Parset &ps)
