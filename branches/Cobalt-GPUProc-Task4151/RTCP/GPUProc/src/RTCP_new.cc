@@ -62,7 +62,7 @@
 #include "Kernels/UHEP_InvFIR_Kernel.h"
 #include "Kernels/UHEP_TriggerKernel.h"
 #include "Kernels/Filter_FFT_Kernel.h"
-
+#include "Kernels/DedispersionForwardFFTkernel.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -168,16 +168,6 @@ namespace LOFAR {
             cl::Event	 event;
         };
 #else
-        class DedispersionForwardFFTkernel : public FFT_Kernel
-        {
-        public:
-            DedispersionForwardFFTkernel(const Parset &ps, cl::Context &context, cl::Buffer &buffer)
-                :
-            FFT_Kernel(context, ps.dedispersionFFTsize(), ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize(), true, buffer)
-            {
-                ASSERT(ps.nrSamplesPerChannel() % ps.dedispersionFFTsize() == 0);
-            }
-        };
 
 
         class DedispersionBackwardFFTkernel : public FFT_Kernel
