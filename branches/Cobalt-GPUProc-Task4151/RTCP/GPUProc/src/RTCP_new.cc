@@ -66,6 +66,7 @@
 #include "Kernels/DedispersionBackwardFFTkernel.h"
 
 #include "UnitTests/IncoherentStokesTest.h"
+#include "UnitTests/IntToFloatTest.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -1116,65 +1117,6 @@ namespace LOFAR {
         };
 
 #endif
-
-
-        //struct IncoherentStokesTest : public UnitTest
-        //{
-        //    IncoherentStokesTest(const Parset &ps)
-        //        :
-        //    UnitTest(ps, "BeamFormer/IncoherentStokes.cl")
-        //    {
-        //        if (ps.nrStations() >= 5 && ps.nrChannelsPerSubband() >= 14 && ps.nrSamplesPerChannel() >= 108) {
-        //            MultiArraySharedBuffer<std::complex<float>, 4> inputData(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-        //            MultiArraySharedBuffer<float, 3> stokesData(boost::extents[ps.nrIncoherentStokes()][ps.nrSamplesPerChannel() / ps.incoherentStokesTimeIntegrationFactor()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
-        //            IncoherentStokesKernel kernel(ps, queue, program, stokesData, inputData);
-
-        //            inputData[4][13][107][0] = std::complex<float>(2, 3);
-        //            inputData[4][13][107][1] = std::complex<float>(4, 5);
-
-        //            inputData.hostToDevice(CL_FALSE);
-        //            kernel.enqueue(queue, counter);
-        //            stokesData.deviceToHost(CL_TRUE);
-
-        //            const static float expected[] = { 54, -28, 46, 4 };
-
-        //            for (unsigned stokes = 0; stokes < ps.nrIncoherentStokes(); stokes ++)
-        //                check(stokesData[stokes][107 / ps.incoherentStokesTimeIntegrationFactor()][13], expected[stokes]);
-        //        }
-        //    }
-        //};
-
-
-        struct IntToFloatTest : public UnitTest
-        {
-            IntToFloatTest(const Parset &ps)
-                :
-            UnitTest(ps, "BeamFormer/IntToFloat.cl")
-            {
-                if (ps.nrStations() >= 3 && ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() >= 10077) {
-                    MultiArraySharedBuffer<char, 4> inputData(boost::extents[ps.nrStations()][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
-                    MultiArraySharedBuffer<std::complex<float>, 3> outputData(boost::extents[ps.nrStations()][NR_POLARIZATIONS][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
-                    IntToFloatKernel kernel(ps, queue, program, outputData, inputData);
-
-                    switch (ps.nrBytesPerComplexSample()) {
-                    case 4 : reinterpret_cast<std::complex<short> &>(inputData[2][10076][1][0]) = 7;
-                        break;
-
-                    case 2 : reinterpret_cast<std::complex<signed char> &>(inputData[2][10076][1][0]) = 7;
-                        break;
-
-                    case 1 : reinterpret_cast<i4complex &>(inputData[2][10076][1][0]) = i4complex(7, 0);
-                        break;
-                    }
-
-                    inputData.hostToDevice(CL_FALSE);
-                    kernel.enqueue(queue, counter);
-                    outputData.deviceToHost(CL_TRUE);
-                    check(outputData[2][1][10076], std::complex<float>(7.0f, 0));
-                }
-            }
-        };
-
 
         struct BeamFormerTest : public UnitTest
         {
