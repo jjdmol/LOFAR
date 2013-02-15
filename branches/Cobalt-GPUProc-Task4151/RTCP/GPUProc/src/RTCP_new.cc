@@ -523,7 +523,7 @@ namespace LOFAR {
                         doSubband(block, subband);
                     } catch (cl::Error &error) {
 #pragma omp critical (cerr)
-                        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
+                        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
                         exit(1);
                     }
                 }
@@ -634,7 +634,7 @@ namespace LOFAR {
                         //dedispersedData.deviceToHost(CL_TRUE);
                     } catch (cl::Error &error) {
 #pragma omp critical (cerr)
-                        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
+                        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
                         exit(1);
                     }
                 }
@@ -733,7 +733,7 @@ namespace LOFAR {
                     queue.enqueueReadBuffer(devTriggerInfo, CL_TRUE, 0, hostTriggerInfo.size() * sizeof(TriggerInfo), &hostTriggerInfo[0]);
                 } catch (cl::Error &error) {
 #pragma omp critical (cerr)
-                    std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
+                    std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
                     exit(1);
                 }
             }
@@ -820,7 +820,7 @@ namespace LOFAR {
                         CorrelatorWorkQueue(*this, omp_get_thread_num()).doWork();
                     } catch (cl::Error &error) {
 #pragma omp critical (cerr)
-                        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
+                        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
                         exit(1);
                     }
                 }
@@ -836,7 +836,7 @@ namespace LOFAR {
                 BeamFormerWorkQueue(*this, omp_get_thread_num()).doWork();
             } catch (cl::Error &error) {
 #pragma omp critical (cerr)
-                std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
+                std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
                 exit(1);
             }
         }
@@ -859,7 +859,7 @@ namespace LOFAR {
                 UHEP_WorkQueue(*this, omp_get_thread_num()).doWork(&delaysAtBegin[0][0][0], &delaysAfterEnd[0][0][0], &phaseOffsets[0][0]);
             } catch (cl::Error &error) {
 #pragma omp critical (cerr)
-                std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
+                std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
                 exit(1);
             }
         }
@@ -989,7 +989,7 @@ int main(int argc, char **argv)
     catch (cl::Error &error)
     {
 #pragma omp critical (cerr)
-        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl << error;
+        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
         exit(1);
     }
 
