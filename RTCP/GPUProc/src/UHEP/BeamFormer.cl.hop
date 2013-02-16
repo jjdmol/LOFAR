@@ -7,8 +7,8 @@ typedef short2 SampleType;
 #endif
 
 
-typedef __global float2 (*ComplexVoltagesType)[NR_SUBBANDS][NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1][NR_TABS][NR_POLARIZATIONS];
-typedef __global SampleType (*SamplesType)[NR_STATIONS][NR_SUBBANDS][NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS];
+typedef __global float2 (*ComplexVoltagesType)[NR_SUBBANDS][NR_SAMPLES_PER_SUBBAND + NR_STATION_FILTER_TAPS - 1][NR_TABS][NR_POLARIZATIONS];
+typedef __global SampleType (*SamplesType)[NR_STATIONS][NR_SUBBANDS][NR_SAMPLES_PER_SUBBAND + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS];
 typedef __global float2 (*WeightsType)[NR_STATIONS][NR_SUBBANDS][NR_TABS];
 
 float2 cmul(float2 a, float2 b)
@@ -73,8 +73,8 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
   }
 #endif
 
-  for (int time = 0 - station_group; time < (int) (NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1 + NR_STATIONS / 6 - 1 - station_group); time ++) {
-    bool validTime = time >= 0 && time < NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1;
+  for (int time = 0 - station_group; time < (int) (NR_SAMPLES_PER_SUBBAND + NR_STATION_FILTER_TAPS - 1 + NR_STATIONS / 6 - 1 - station_group); time ++) {
+    bool validTime = time >= 0 && time < NR_SAMPLES_PER_SUBBAND + NR_STATION_FILTER_TAPS - 1;
 
     if (validTime) {
       sample_0 = convert_float2((*samples)[first_station + 0][subband][time][pol]);
@@ -83,7 +83,14 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
       sample_3 = convert_float2((*samples)[first_station + 3][subband][time][pol]);
       sample_4 = convert_float2((*samples)[first_station + 4][subband][time][pol]);
       sample_5 = convert_float2((*samples)[first_station + 5][subband][time][pol]);
+    }
 
+
+#if !defined USE_WARP_SHUFFLE_INSN
+    barrier(CLK_LOCAL_MEM_FENCE);
+#endif
+
+    if (validTime) {
 #if !defined USE_WARP_SHUFFLE_INSN
       sum_0 = local_sums[0][station_group][tab_group][pol];
       sum_1 = local_sums[1][station_group][tab_group][pol];
@@ -169,9 +176,5 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
 #endif
       }
     }
-
-#if !defined USE_WARP_SHUFFLE_INSN
-    barrier(CLK_LOCAL_MEM_FENCE);
-#endif
   }
 }
