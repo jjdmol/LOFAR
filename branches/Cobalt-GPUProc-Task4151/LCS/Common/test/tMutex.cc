@@ -63,20 +63,28 @@ void test_simple(Mutex::Type type) {
   }
 }
 
-void relock_trylock_fails(Mutex::Type type, Mutex &mutex) {
+void relock_trylock(Mutex::Type type, Mutex &mutex) {
   switch(type) {
     default:
       ASSERT( !mutex.trylock() );
       break;
 
     case Mutex::RECURSIVE:
+      // relocking using trylock works with a recursive lock
       ASSERT( mutex.trylock() );
       mutex.unlock();
       break;
 
     case Mutex::ERRORCHECK:
       // mutex.trylock() can cause a dead-lock in the same thread,
-      // so an exception is thrown.
+      // and throws an exception.
+
+      try {
+        mutex.trylock();
+
+        ASSERTSTR(false, "lock + trylock must fail on error checked mutex");
+      } catch (LOFAR::SystemCallException&) {
+      }
       break;
   }
 }
@@ -89,17 +97,17 @@ void test_trylock(Mutex::Type type) {
   ASSERT( mutex.trylock() );
   mutex.unlock();
 
-  // trylock fails after lock
+  // try lock + relocking
   mutex.lock();
-  relock_trylock_fails(type, mutex);
+  relock_trylock(type, mutex);
   mutex.unlock();
 
   {
     // ScopedLock test
     ScopedLock sl(mutex);
 
-    // trylock fails
-    relock_trylock_fails(type, mutex);
+    // try relocking
+    relock_trylock(type, mutex);
   }
 #else
   (void)type;
