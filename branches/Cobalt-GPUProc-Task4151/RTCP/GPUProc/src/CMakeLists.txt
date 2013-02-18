@@ -63,6 +63,7 @@ lofar_add_bin_program(RTCP_new
    Pipelines/UHEP_Pipeline.cc
    WorkQueues/WorkQueue.cc
    WorkQueues/CorrelatorWorkQueue.cc
+   WorkQueues/BeamFormerWorkQueue.cc
    )
    
 lofar_add_bin_program( RTCP_UnitTest 
@@ -89,5 +90,6 @@ lofar_add_bin_program( RTCP_UnitTest
    Kernels/UHEP_TriggerKernel.cc
   )
 #lofar_add_bin_program(versiongpuproc versiongpuproc.cc)
+
 
 
