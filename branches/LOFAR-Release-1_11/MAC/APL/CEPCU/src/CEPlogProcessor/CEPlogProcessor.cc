@@ -589,7 +589,7 @@ void CEPlogProcessor::_handleDataStream(GCFPortInterface*   port)
     LOG_DEBUG_STR("Read " << newBytes << " bytes.");
     stream.buffer->incTail( newBytes );
 
-    char lineBuf[1024];
+    char lineBuf[10240];
     while (stream.buffer->getLine( lineBuf, sizeof lineBuf )) {
       LOG_DEBUG_STR("Read log line '" << lineBuf << "'" );
       _processLogLine(lineBuf);
