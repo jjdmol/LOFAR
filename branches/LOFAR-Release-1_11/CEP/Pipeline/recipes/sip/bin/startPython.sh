@@ -1,7 +1,7 @@
 #!/bin/bash -l
 #
-# This script is started by the MAC Python Controller using the following
-# parameters:
+# This script is called by MAC PythonControl to start a pipeline, using the
+# following parameters:
 #
 #   <pythonProgram> <parsetname> <3 fields with communication settings> 
 #
