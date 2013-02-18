@@ -210,7 +210,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     
 
     dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
-    navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait TopDetail");
+    navFunct_waitObjectReady(1500,"handleViewBoxEvent:Update wait TopDetail");
       
     dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
     navFunct_waitObjectReady(500,"handleViewBoxEvent:Update wait BottomDetailSelection");
@@ -367,7 +367,7 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
   // navigator object can be initialized now.
   if (anEvent == "Initialized") {
     dpSet(TOPDETAILSELECTIONACTIONDP,"Initialize");
-    navFunct_waitObjectReady(750,"handleViewSelectionEvent:Initialized wait TopDetailSelection");
+    navFunct_waitObjectReady(2000,"handleViewSelectionEvent:Initialized wait TopDetailSelection");
       
     dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Initialize");
     navFunct_waitObjectReady(500,"handleViewSelectionEvent:Initialized wait BottomDetailSelection");

@@ -65,6 +65,7 @@
 // navFunct_IONode2BGPMidplane                : Returns the BGPMidplaneNr for a given IONode
 // navFunct_IONode2DPName                     : returns the DP name based on the ionode number.
 // navFunct_isBGPSwitch                       : returns the BGPSwitch setting (True = BGPRack1, False=BGPRack0)
+// navFunct_isObservation                     : returns  true is a given observationnumber is an observation or false when it is a pipeline
 // navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
 // navFunct_locusNode2OSRack                  : Returns the OSRackNr for a given LocusNode
 // navFunct_lofarDate2PVSSDate                : returns Lofardate Datestring 2000.11.19 [18:12:21[.888]] in PVSS format 2000.11.19 [18:12:21[.888]]
@@ -1282,6 +1283,8 @@ void navFunct_fillObservationsList() {
       // If we are have more entries in the station list we assume we are looking at a panel that has only stations
       // involved, so we  do not need to look at more hardware, in other cases we have to look if at least one piece
       // of each hardwareType also is needed for the observation to decide if it needs 2b in the list
+
+      if ( dynlen(g_observations["NAME"]) < i) break;
       
       if (dynlen(stationList) > 1) {           
         // loop through stationList
@@ -1779,8 +1782,10 @@ string navFunct_getStationFromDP(string aDPName) {
 //     Returns true if system is still reachable
 // ****************************************
 bool navFunct_dpReachable(string aDP) {
+  if (!dpExists(aDP)) return false;
+  
   string sys = dpSubStr(aDP,DPSUB_SYS);
-  // check if system is in our active connections. (if not dpExists should have given false ealier...
+  // check if system is in our active connections.
   if (sys == MainDBName) {
     return true;
   }
@@ -1789,7 +1794,6 @@ bool navFunct_dpReachable(string aDP) {
     return false;
   }
   
-
   // return state of the connection
   return g_connections[ "UP" ][iPos];
 }
@@ -2200,10 +2204,13 @@ bool navFunct_lofarDate2PVSSDate(string inDate, time& t) {
   date=splittedDate[1];
   strreplace(date,"-",".");
   
+  // the date must exactly be of form YY.MM.DD HH:MM:SS.msec
   
+  if (tm   == "") tm = "00:00:00";
+  if (mSec == "") mSec = "000";
   outDate += date;
-  if (tm != "") outDate += " "+tm;
-  if (mSec != "") outDate += "."+mSec;
+  outDate += " "+tm;
+  outDate += "."+mSec;
 
   t = scanTimeUTC(outDate);
     
@@ -2252,4 +2259,28 @@ string navFunct_giveFadedColor(int minValue, int maxValue,int currentValue) {
   }      
   color="{"+r+","+g+","+b+"}";
   return color;
+}
+
+// ***************************
+// navFunct_isObservation
+// ***************************
+// obsName : the observation in question
+//
+// Returns true if observation false when it is a pipeline
+// ***************************
+bool navFunct_isObservation(string obsName) {
+  bool isObs = true;
+  int iPos = dynContains( g_observations[ "NAME"         ], obsName );
+   if (iPos <=0) {
+    LOG_ERROR("navFunct.ctl:navFunct_hardware2Obs|observation: "+ observation+" not in g_observations.");     
+    return flag;
+  }
+  
+  
+  dyn_string stations = navFunct_listToDynString(g_observations[ "STATIONLIST"    ][iPos]);  
+  if (dynlen(stations)< 1) {
+    isObs=false;
+  }
+  
+  return isObs;
 }
