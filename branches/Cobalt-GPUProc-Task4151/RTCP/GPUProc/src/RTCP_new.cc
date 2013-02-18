@@ -70,7 +70,7 @@
 #include "Pipelines/BeamFormerPipeline.h"
 #include "Pipelines/UHEP_Pipeline.h"
 
-#include "WorkQueue/WorkQueue.h
+#include "WorkQueues/WorkQueue.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -81,7 +81,7 @@ namespace LOFAR {
     namespace RTCP {
 
         extern bool profiling;  
-
+        unsigned nrGPUs;
 
 
 #undef USE_CUSTOM_FFT
@@ -121,8 +121,6 @@ namespace LOFAR {
         }
 
 #endif
-
-
 
 
         class CorrelatorWorkQueue : public WorkQueue
@@ -215,7 +213,6 @@ namespace LOFAR {
             cl::Buffer		devTriggerInfo;
             VectorHostBuffer<TriggerInfo> hostTriggerInfo;
         };
-
 
 
 
@@ -812,7 +809,9 @@ int main(int argc, char **argv)
         //}
         std::cout << "nr stations = " << ps.nrStations() << std::endl;        
 
-
+        // Select number of GPUs to run on
+        const char *str = getenv("NR_GPUS");
+        nrGPUs = str ? atoi(str) : 1;
 
 
         // use a switch to select between modes
