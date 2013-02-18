@@ -24,7 +24,7 @@ set(gpuproc_LIB_SRCS
   LogThread.cc
   OpenCL_Support.cc
   ReaderWriterSynchronization.cc
-  RTCP.cc
+  #RTCP.cc
   
   UHEP/InvertedStationPPFWeights.cc)
 
@@ -61,9 +61,12 @@ lofar_add_bin_program(RTCP_new
    Pipelines/CorrelatorPipeline.cc
    Pipelines/BeamFormerPipeline.cc
    Pipelines/UHEP_Pipeline.cc
+   WorkQueues/WorkQueue.cc
+   WorkQueues/CorrelatorWorkQueue.cc
    )
    
 lofar_add_bin_program( RTCP_UnitTest 
+   createProgram.cc
    RTCP_UnitTest.cc
    UHEP/InvertedStationPPFWeights.cc
    PerformanceCounter.cc

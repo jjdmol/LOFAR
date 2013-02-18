@@ -1,4 +1,5 @@
 #include "lofar_config.h"    
+#include "CL/cl.hpp"
 
 #include "Common/LofarLogger.h"
 #include "global_defines.h"
@@ -12,7 +13,6 @@ namespace LOFAR
 {
     namespace  RTCP 
     {      
-
                 WorkQueue::WorkQueue(Pipeline &pipeline, unsigned queueNumber)
             :
         gpu(queueNumber % nrGPUs),
