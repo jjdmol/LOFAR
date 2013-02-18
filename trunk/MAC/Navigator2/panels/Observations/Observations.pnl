@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1000 735 N "_3DFace" 0
+PANEL,-1 -1 1000 750 N "_3DFace" 0
 "main()
 {
   
@@ -173,7 +173,7 @@ LANG:1 21 Planned Observations:
 2 213
 "PRIMITIVE_TEXT15"
 ""
-1 -5 2 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -5 -14 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 44 0 0 0 0 0
 E E E
@@ -183,8 +183,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 7 266 125 279
-0 2 2 "0s" 0 0 0 194 0 0  125 266 1
+E E 0 1 1 2 1 E U  1 E 7 250 125 263
+0 2 2 "0s" 0 0 0 194 0 0  125 250 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
@@ -192,7 +192,7 @@ LANG:1 20 Active Observations:
 2 214
 "PRIMITIVE_TEXT16"
 ""
-1 5 478 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 5 454 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 46 0 0 0 0 0
 E E E
@@ -202,8 +202,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 6 504 135 517
-0 2 2 "0s" 0 0 0 194 0 0  135 504 1
+E E 0 1 1 2 1 E U  1 E 6 480 135 493
+0 2 2 "0s" 0 0 0 194 0 0  135 480 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
@@ -245,11 +245,11 @@ LANG:1 0
 1
 "$name""plannedObservations"
 3 5 "activeObservationsTable" -1
-"objects\\Observations\\Observation_small.pnl" 0 280 T 40 1 0 1 2 0
+"objects\\Observations\\Observation_small.pnl" 0 280 T 40 1 0 1 2 -10
 1
 "$name""activeObservations"
 3 6 "finishedObservationsTable" -1
-"objects\\Observations\\Observation_small.pnl" 0 530 T 41 1 0 0.9999999999999998 0 -9.99999999999989
+"objects\\Observations\\Observation_small.pnl" 0 530 T 41 1 0 0.9999999999999998 0 -29.99999999999989
 1
 "$name""finishedObservations"
 0
