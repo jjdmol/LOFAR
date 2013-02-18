@@ -1,43 +1,18 @@
 #include "lofar_config.h"
-
 #define __CL_ENABLE_EXCEPTIONS
 #include "CL/cl.hpp"
 
 #include <global_defines.h>
 
-#include <omp.h>
-#include <string.h>
-#include <cmath>
-#include <complex>
-#include <cstdio>
-#include <cstdlib>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <boost/multi_array.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-
-
-#include "Align.h"
-#include "ApplCommon/PosixTime.h"
-#include "BandPass.h"
-#include "Common/LofarLogger.h"
-#include "Common/SystemUtil.h"
-#include "Stream/SharedMemoryStream.h"
-#include "FilterBank.h"
-#include "BeamletBufferToComputeNode.h"
-#include "InputSection.h"
-#include "Interface/Parset.h"
-#include "Interface/SmartPtr.h"
-#include "OpenCL_FFT/clFFT.h"
-#include "OpenCL_Support.h"
 #include "OpenMP_Support.h"
-#include "SlidingPointer.h"
-#include "Stream/Stream.h"
-#include "Stream/NullStream.h"
-#include "UHEP/InvertedStationPPFWeights.h"
-//#include "clAmdFft/include/clAmdFft.h"
+#include "Common/LofarLogger.h"
+#include <cstdlib>
+#include "Interface/Parset.h"
+#include <iostream>
+#include <cstring>
+#include "OpenCL_Support.h"
+#include <cstdlib>
+#include <cstdio>
 
 //functionality moved to individual sources
 #include "createProgram.h"
@@ -74,101 +49,6 @@
 #include "WorkQueues/CorrelatorWorkQueue.h"
 #include "WorkQueues/BeamFormerWorkQueue.h"
 #include "WorkQueues/UHEP_WorkQueue.h"
-
-#if defined __linux__
-#include <sched.h>
-#include <sys/time.h>
-#endif
-
-namespace LOFAR {
-    namespace RTCP {
-
-
-#undef USE_CUSTOM_FFT
-#undef USE_TEST_DATA
-#undef USE_B7015
-
-#if defined __linux__
-
-        inline void set_affinity(unsigned device)
-        {
-#if 0
-            static const char mapping[1][12] = {
-                0,  1,  2,  3,  8,  9, 10, 11,
-            };
-#else
-            static const char mapping[8][12] = {
-                { 0,  1,  2,  3,  4,  5, 12, 13, 14, 15, 16, 17, },
-                { 0,  1,  2,  3,  4,  5, 12, 13, 14, 15, 16, 17, },
-                { 0,  1,  2,  3,  4,  5, 12, 13, 14, 15, 16, 17, },
-                { 0,  1,  2,  3,  4,  5, 12, 13, 14, 15, 16, 17, },
-                { 6,  7,  8,  9, 10, 11, 18, 19, 20, 21, 22, 23, },
-                { 6,  7,  8,  9, 10, 11, 18, 19, 20, 21, 22, 23, },
-                { 6,  7,  8,  9, 10, 11, 18, 19, 20, 21, 22, 23, },
-                { 6,  7,  8,  9, 10, 11, 18, 19, 20, 21, 22, 23, },
-            };
-#endif
-
-            cpu_set_t set;
-
-            CPU_ZERO(&set);
-
-            for (unsigned coreIndex = 0; coreIndex < 12; coreIndex ++)
-                CPU_SET(mapping[device][coreIndex], &set);
-
-            if (sched_setaffinity(0, sizeof set, &set) < 0)
-                perror("sched_setaffinity");
-        }
-
-#endif
-
-
-#if defined USE_TEST_DATA
-
-        void CorrelatorWorkQueue::setTestPattern()
-        {
-            if (ps.nrStations() >= 3) {
-                double centerFrequency = 384 * ps.nrSamplesPerSubband();
-                double baseFrequency = centerFrequency - .5 * ps.nrSamplesPerSubband();
-                unsigned testSignalChannel = ps.nrChannelsPerSubband() >= 231 ? 230 : ps.nrChannelsPerSubband() / 2;
-                double signalFrequency = baseFrequency + testSignalChannel * ps.nrSamplesPerSubband() / ps.nrChannelsPerSubband();
-
-                for (unsigned time = 0; time < (NR_TAPS - 1 + ps.nrSamplesPerChannel()) * ps.nrChannelsPerSubband(); time ++) {
-                    double phi = 2.0 * M_PI * signalFrequency * time / ps.nrSamplesPerSubband();
-
-                    switch (ps.nrBytesPerComplexSample()) {
-                    case 4 : reinterpret_cast<std::complex<short> &>(inputSamples[2][time][1][0]) = std::complex<short>((short) rint(32767 * cos(phi)), (short) rint(32767 * sin(phi)));
-                        break;
-
-                    case 2 : reinterpret_cast<std::complex<signed char> &>(inputSamples[2][time][1][0]) = std::complex<signed char>((signed char) rint(127 * cos(phi)), (signed char) rint(127 * sin(phi)));
-                        break;
-                    }
-                }
-            }
-        }
-
-
-        void CorrelatorWorkQueue::printTestOutput()
-        {
-            if (ps.nrBaselines() >= 6)
-#pragma omp critical (cout)
-            {
-                std::cout << "newgraph newcurve linetype solid pts" << std::endl;
-
-                //for (int channel = 0; channel < ps.nrChannelsPerSubband(); channel ++)
-                if (ps.nrChannelsPerSubband() == 256)
-                    for (int channel = 228; channel <= 232; channel ++)
-                        std::cout << channel << ' ' << visibilities[5][channel][1][1] << std::endl;
-            }
-        }
-
-#endif
-
-
-
-
-    } // namespace RTCP
-} // namespace LOFAR
 
 
 void usage(char **argv)
