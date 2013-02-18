@@ -14,8 +14,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "Pipelines/BeamFormerPipeline.h"
-#include "CorrelatorWorkQueue.h"
 #include "BandPass.h"
+#include "WorkQueue.h"
 
 namespace LOFAR
 {

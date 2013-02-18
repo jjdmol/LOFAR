@@ -64,6 +64,7 @@ lofar_add_bin_program(RTCP_new
    WorkQueues/WorkQueue.cc
    WorkQueues/CorrelatorWorkQueue.cc
    WorkQueues/BeamFormerWorkQueue.cc
+   WorkQueues/UHEP_WorkQueue.cc
    )
    
 lofar_add_bin_program( RTCP_UnitTest 
