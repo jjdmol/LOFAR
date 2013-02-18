@@ -141,6 +141,8 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
+  string  extra = \"\";
+  if (hbaNr < 10) extra=\"0\";
   navPanel_setEvent(\"element\"+extra+elementNr,\"EventRightClick\");
 }" 0
  2
@@ -220,7 +222,7 @@ E "main()
 {
   click();
 }" 0
- 0 2 1 0 1 E 1 0 1 -18 -72 1 E 25 79 94 148
+ 0 2 1 0 1 E 1 0 1 -20 -74 1 E 25 79 94 148
 6 9
 "XBox"
 ""
@@ -234,7 +236,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -54 -83 1 E 62 115 83 136
+E E 0 1 1 2 1 E 1 0 1 -56 -83 1 E 62 115 83 136
 6 10
 "YBox"
 ""
@@ -248,11 +250,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -31 -83 1 E 62 115 83 136
+E E 0 1 1 2 1 E 1 0 1 -33 -83 1 E 62 115 83 136
 2 13
 "XChar"
 ""
-1 10 32 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 8 32 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  "main()
 {
   rClick();
@@ -274,8 +276,8 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 2 1 E U  0 E 10 32 27 53
-0 2 2 "0s" 0 0 0 65 0 0  10 32 1
+ 0 1 1 2 1 E U  0 E 8 32 25 53
+0 2 2 "0s" 0 0 0 65 0 0  8 32 1
 1
 LANG:1 35 MS Shell Dlg 2,14,-1,5,75,0,0,0,0,0
 0 1
@@ -283,7 +285,7 @@ LANG:1 1 X
 2 14
 "YChar"
 ""
-1 33 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 31 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  "main()
 {
   rClick();
@@ -305,8 +307,8 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 2 1 E U  0 E 33 32 50 53
-0 2 2 "0s" 0 0 0 65 0 0  33 32 1
+ 0 1 1 2 1 E U  0 E 31 32 48 53
+0 2 2 "0s" 0 0 0 65 0 0  31 32 1
 1
 LANG:1 35 MS Shell Dlg 2,14,-1,5,75,0,0,0,0,0
 0 1
@@ -357,11 +359,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -8 -83 1 E 62 115 83 136
+E E 0 1 1 2 1 E 1 0 1 -10 -83 1 E 62 115 83 136
 2 15
 "CChar"
 ""
-1 55 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 53 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  "main()
 {
   rClick();
@@ -383,8 +385,8 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 2 1 E U  0 E 55 32 72 53
-0 2 2 "0s" 0 0 0 65 0 0  55 32 1
+ 0 1 1 2 1 E U  0 E 53 32 70 53
+0 2 2 "0s" 0 0 0 65 0 0  53 32 1
 1
 LANG:1 35 MS Shell Dlg 2,14,-1,5,75,0,0,0,0,0
 0 1

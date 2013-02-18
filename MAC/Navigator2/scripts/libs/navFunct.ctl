@@ -65,6 +65,7 @@
 // navFunct_IONode2BGPMidplane                : Returns the BGPMidplaneNr for a given IONode
 // navFunct_IONode2DPName                     : returns the DP name based on the ionode number.
 // navFunct_isBGPSwitch                       : returns the BGPSwitch setting (True = BGPRack1, False=BGPRack0)
+// navFunct_isObservation                     : returns  true is a given observationnumber is an observation or false when it is a pipeline
 // navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
 // navFunct_locusNode2OSRack                  : Returns the OSRackNr for a given LocusNode
 // navFunct_lofarDate2PVSSDate                : returns Lofardate Datestring 2000.11.19 [18:12:21[.888]] in PVSS format 2000.11.19 [18:12:21[.888]]
@@ -2258,4 +2259,28 @@ string navFunct_giveFadedColor(int minValue, int maxValue,int currentValue) {
   }      
   color="{"+r+","+g+","+b+"}";
   return color;
+}
+
+// ***************************
+// navFunct_isObservation
+// ***************************
+// obsName : the observation in question
+//
+// Returns true if observation false when it is a pipeline
+// ***************************
+bool navFunct_isObservation(string obsName) {
+  bool isObs = true;
+  int iPos = dynContains( g_observations[ "NAME"         ], obsName );
+   if (iPos <=0) {
+    LOG_ERROR("navFunct.ctl:navFunct_hardware2Obs|observation: "+ observation+" not in g_observations.");     
+    return flag;
+  }
+  
+  
+  dyn_string stations = navFunct_listToDynString(g_observations[ "STATIONLIST"    ][iPos]);  
+  if (dynlen(stations)< 1) {
+    isObs=false;
+  }
+  
+  return isObs;
 }
