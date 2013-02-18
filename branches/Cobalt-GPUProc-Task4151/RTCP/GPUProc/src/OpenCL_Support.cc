@@ -186,42 +186,44 @@ cl::Program createProgram(cl::Context &context, std::vector<cl::Device> &devices
 }
 
 
-void terminate()
+namespace OpenCL_Support 
 {
-  // terminate() may be called recursively, so we need a mutex that can
-  // be locked recursively.
-  static Mutex mutex(Mutex::RECURSIVE);
+  void terminate()
+  {
+    // terminate() may be called recursively, so we need a mutex that can
+    // be locked recursively.
+    static Mutex mutex(Mutex::RECURSIVE);
 
-  // Make sure that one thread has exclusive access.
-  ScopedLock lock(mutex);
+    // Make sure that one thread has exclusive access.
+    ScopedLock lock(mutex);
  
-  // We need to safe-guard against recursive calls. E.g., we were called
-  // twice, because a rethrow was attempted without an active exception.
-  static bool terminating = false;
+    // We need to safe-guard against recursive calls. E.g., we were called
+    // twice, because a rethrow was attempted without an active exception.
+    static bool terminating = false;
 
-  if (!terminating) {
-    // This is the first time we were called. Make sure there was an active
-    // exception by trying to rethrow it. If that fails, std::terminate()
-    // will be called, again.
-    terminating = true;
-    try {
-      throw;
-    }
-    // Print detailed error information if a cl::Error was thrown.
-    catch (cl::Error& err) {
+    if (!terminating) {
+      // This is the first time we were called. Make sure there was an active
+      // exception by trying to rethrow it. If that fails, std::terminate()
+      // will be called, again.
+      terminating = true;
       try {
-        std::cerr << "cl::Error: " << err.what() << ": " 
-                  << errorMessage(err.err()) << std::endl;
-      } catch (...) {}
+        throw;
+      }
+      // Print detailed error information if a cl::Error was thrown.
+      catch (cl::Error& err) {
+        try {
+          std::cerr << "cl::Error: " << err.what() << ": " 
+                    << errorMessage(err.err()) << std::endl;
+        } catch (...) {}
+      }
+      // Catch all other exceptions, otherwise std::terminate() will call
+      // abort() immediately.
+      catch (...) {}
     }
-    // Catch all other exceptions, otherwise std::terminate() will call
-    // abort() immediately.
-    catch (...) {}
+    // Let the LOFAR Exception::terminate handler take it from here.
+    Exception::terminate();
   }
-  // Let the LOFAR Exception::terminate handler take it from here.
-  Exception::terminate();
 }
-
 
 } // namespace RTCP
 } // namespace LOFAR

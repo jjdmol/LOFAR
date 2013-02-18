@@ -26,7 +26,7 @@ using namespace LOFAR;
 using namespace LOFAR::RTCP;
 
 // Use our own terminate handler
-Exception::TerminateHandler t(RTCP::terminate);
+Exception::TerminateHandler t(OpenCL_Support::terminate);
 
 int main(int argc, char **argv)
 {
