@@ -67,6 +67,7 @@
 
 #include "Pipeline.h"
 #include "Pipelines/CorrelatorPipeline.h"
+#include "Pipelines/BeamFormerPipeline.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -119,44 +120,6 @@ namespace LOFAR {
 #endif
 
 
-   /*     class CorrelatorWorkQueue;
-
-        class CorrelatorPipeline : public Pipeline
-        {
-        public:
-            CorrelatorPipeline(const Parset &);
-
-            void		    doWork();
-
-        private:
-            friend class CorrelatorWorkQueue;
-
-            FilterBank		    filterBank;
-
-            cl::Program		    firFilterProgram, delayAndBandPassProgram, correlatorProgram;
-#if defined USE_NEW_CORRELATOR
-            PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlateTriangleCounter, correlateRectangleCounter, fftCounter;
-#else
-            PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlatorCounter, fftCounter;
-#endif
-            PerformanceCounter	    samplesCounter, visibilitiesCounter;
-        };
-*/
-
-        class BeamFormerPipeline : public Pipeline
-        {
-        public:
-            BeamFormerPipeline(const Parset &);
-
-            void		    doWork();
-
-            cl::Program		    intToFloatProgram, delayAndBandPassProgram, beamFormerProgram, transposeProgram, dedispersionChirpProgram;
-
-            PerformanceCounter	    intToFloatCounter, fftCounter, delayAndBandPassCounter, beamFormerCounter, transposeCounter, dedispersionForwardFFTcounter, dedispersionChirpCounter, dedispersionBackwardFFTcounter;
-            PerformanceCounter	    samplesCounter;
-        };
-
-
         class UHEP_Pipeline : public Pipeline
         {
         public:
@@ -168,41 +131,6 @@ namespace LOFAR {
             PerformanceCounter	    beamFormerCounter, transposeCounter, invFFTcounter, invFIRfilterCounter, triggerCounter;
             PerformanceCounter	    beamFormerWeightsCounter, samplesCounter;
         };
-
-
-
-        BeamFormerPipeline::BeamFormerPipeline(const Parset &ps)
-            :
-        Pipeline(ps),
-            intToFloatCounter("int-to-float"),
-            fftCounter("FFT"),
-            delayAndBandPassCounter("delay/bp"),
-            beamFormerCounter("beamformer"),
-            transposeCounter("transpose"),
-            dedispersionForwardFFTcounter("ddisp.fw.FFT"),
-            dedispersionChirpCounter("chirp"),
-            dedispersionBackwardFFTcounter("ddisp.bw.FFT"),
-            samplesCounter("samples")
-        {
-            double startTime = omp_get_wtime();
-
-#pragma omp parallel sections
-            {
-#pragma omp section
-                intToFloatProgram = createProgram("BeamFormer/IntToFloat.cl");
-#pragma omp section
-                delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
-#pragma omp section
-                beamFormerProgram = createProgram("BeamFormer/BeamFormer.cl");
-#pragma omp section
-                transposeProgram = createProgram("BeamFormer/Transpose.cl");
-#pragma omp section
-                dedispersionChirpProgram = createProgram("BeamFormer/Dedispersion.cl");
-            }
-
-            std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
-        }
-
 
         UHEP_Pipeline::UHEP_Pipeline(const Parset &ps)
             :
@@ -995,3 +923,4 @@ int main(int argc, char **argv)
 
     return 0;
 }
+

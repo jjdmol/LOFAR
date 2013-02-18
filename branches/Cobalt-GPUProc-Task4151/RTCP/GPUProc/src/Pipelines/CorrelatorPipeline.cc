@@ -7,9 +7,6 @@
 #include "OpenMP_Support.h"
 #include <iostream>
 
-//#include "Stream/Stream.h"
-//#include "Stream/NullStream.h"
-
 #include "CorrelatorPipeline.h"
 
 namespace LOFAR

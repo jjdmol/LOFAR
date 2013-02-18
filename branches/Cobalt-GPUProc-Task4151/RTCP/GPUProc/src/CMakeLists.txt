@@ -59,6 +59,7 @@ lofar_add_bin_program(RTCP_new
    Kernels/DedispersionBackwardFFTkernel.cc
    Pipeline.cc
    Pipelines/CorrelatorPipeline.cc
+   Pipelines/BeamFormerPipeline.cc
    )
    
 lofar_add_bin_program( RTCP_UnitTest 
