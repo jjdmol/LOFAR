@@ -3,6 +3,8 @@
 
 #include "lofar_config.h"    
 
+#include "CL/cl.hpp"
+
 #include "Common/LofarLogger.h"
 #include "global_defines.h"
 #include "Interface/Parset.h"
@@ -18,6 +20,7 @@
 #include "Pipelines/UHEP_Pipeline.h"
 #include "WorkQueue.h"
 
+#include "Kernels/UHEP_TriggerKernel.h"
 namespace LOFAR
 {
     namespace  RTCP 
