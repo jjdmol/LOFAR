@@ -60,6 +60,7 @@ lofar_add_bin_program(RTCP_new
    Pipeline.cc
    Pipelines/CorrelatorPipeline.cc
    Pipelines/BeamFormerPipeline.cc
+   Pipelines/UHEP_Pipeline.cc
    )
    
 lofar_add_bin_program( RTCP_UnitTest 

@@ -68,6 +68,7 @@
 #include "Pipeline.h"
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
+#include "Pipelines/UHEP_Pipeline.h"
 
 #if defined __linux__
 #include <sched.h>
@@ -119,48 +120,6 @@ namespace LOFAR {
 
 #endif
 
-
-        class UHEP_Pipeline : public Pipeline
-        {
-        public:
-            UHEP_Pipeline(const Parset &);
-
-            void		    doWork();
-
-            cl::Program		    beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
-            PerformanceCounter	    beamFormerCounter, transposeCounter, invFFTcounter, invFIRfilterCounter, triggerCounter;
-            PerformanceCounter	    beamFormerWeightsCounter, samplesCounter;
-        };
-
-        UHEP_Pipeline::UHEP_Pipeline(const Parset &ps)
-            :
-        Pipeline(ps),
-            beamFormerCounter("beamformer"),
-            transposeCounter("transpose"),
-            invFFTcounter("inv. FFT"),
-            invFIRfilterCounter("inv. FIR"),
-            triggerCounter("trigger"),
-            beamFormerWeightsCounter("BF weights"),
-            samplesCounter("samples")
-        {
-            double startTime = omp_get_wtime();
-
-#pragma omp parallel sections
-            {
-#pragma omp section
-                beamFormerProgram = createProgram("UHEP/BeamFormer.cl");
-#pragma omp section
-                transposeProgram = createProgram("UHEP/Transpose.cl");
-#pragma omp section
-                invFFTprogram = createProgram("UHEP/InvFFT.cl");
-#pragma omp section
-                invFIRfilterProgram = createProgram("UHEP/InvFIR.cl");
-#pragma omp section
-                triggerProgram = createProgram("UHEP/Trigger.cl");
-            }
-
-            std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
-        }
 
 
         class WorkQueue
