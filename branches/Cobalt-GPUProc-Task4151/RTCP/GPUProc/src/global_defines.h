@@ -13,6 +13,7 @@ namespace LOFAR
 #define USE_2X2
 #undef USE_INPUT_SECTION
         extern bool	 profiling;
+        extern unsigned nrGPUs;
 
     }
 }

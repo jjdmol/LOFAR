@@ -70,6 +70,8 @@
 #include "Pipelines/BeamFormerPipeline.h"
 #include "Pipelines/UHEP_Pipeline.h"
 
+#include "WorkQueue/WorkQueue.h
+
 #if defined __linux__
 #include <sched.h>
 #include <sys/time.h>
@@ -79,7 +81,7 @@ namespace LOFAR {
     namespace RTCP {
 
         extern bool profiling;  
-        unsigned nrGPUs;
+
 
 
 #undef USE_CUSTOM_FFT
@@ -121,19 +123,6 @@ namespace LOFAR {
 #endif
 
 
-
-        class WorkQueue
-        {
-        public:
-            WorkQueue(Pipeline &, unsigned queueNumber);
-
-            const unsigned	gpu;
-            cl::Device		&device;
-            cl::CommandQueue	queue;
-
-        protected:
-            const Parset	&ps;
-        };
 
 
         class CorrelatorWorkQueue : public WorkQueue
@@ -228,18 +217,6 @@ namespace LOFAR {
         };
 
 
-        WorkQueue::WorkQueue(Pipeline &pipeline, unsigned queueNumber)
-            :
-        gpu(queueNumber % nrGPUs),
-            device(pipeline.devices[gpu]),
-            ps(pipeline.ps)
-        {
-#if defined __linux__ && defined USE_B7015
-            set_affinity(gpu);
-#endif
-
-            queue = cl::CommandQueue(pipeline.context, device, profiling ? CL_QUEUE_PROFILING_ENABLE : 0);
-        }
 
 
         CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, unsigned queueNumber)
@@ -835,9 +812,7 @@ int main(int argc, char **argv)
         //}
         std::cout << "nr stations = " << ps.nrStations() << std::endl;        
 
-        // Select number of GPUs to run on
-        const char *str = getenv("NR_GPUS");
-        nrGPUs = str ? atoi(str) : 1;
+
 
 
         // use a switch to select between modes
