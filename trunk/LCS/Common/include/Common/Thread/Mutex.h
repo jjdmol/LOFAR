@@ -142,11 +142,16 @@ inline bool Mutex::trylock()
   int error = pthread_mutex_trylock(&mutex);
 
   switch (error) {
-    case 0     : return true;
+    case 0       : return true;
 
-    case EBUSY : return false;
+    case EBUSY   : return false;
 
-    default    : throw SystemCallException("pthread_mutex_trylock", error, THROW_ARGS);
+    // According to the POSIX standard only pthread_mutex_lock() can return
+    // EDEADLK. However, some Linux implementations also return EDEADLK when
+    // calling pthread_mutex_trylock() on a locked error-checking mutex.
+    case EDEADLK : return false;
+
+    default      : throw SystemCallException("pthread_mutex_trylock", error, THROW_ARGS);
   }
 #else
   return true;
