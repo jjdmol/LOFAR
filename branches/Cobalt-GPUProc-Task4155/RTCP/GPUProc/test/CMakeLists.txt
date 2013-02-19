@@ -5,4 +5,8 @@ include(LofarCTest)
 # Add project's source directory to -I path.
 include_directories(${PACKAGE_SOURCE_DIR}/src)
 
-#lofar_add_test(tDelayCompensation tDelayCompensation.cc)
+include_directories("/cm/shared/apps/UnitTest++")
+
+lofar_add_test(tDelayCompensation tDelayCompensation.cc)
+target_link_libraries(tDelayCompensation /cm/shared/apps/UnitTest++/libUnitTest++.a)
+
