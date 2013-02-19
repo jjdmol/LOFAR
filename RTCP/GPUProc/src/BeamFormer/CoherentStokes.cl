@@ -1,5 +1,5 @@
-__kernel void coherentStokes(__global void *restrict stokesDataPtr, 
-			     __global const void *restrict complexVoltagesPtr)
+__kernel void computeStokes(__global void *restrict stokesDataPtr, 
+			    __global const void *restrict complexVoltagesPtr)
 {
   typedef __global float (*StokesType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHANNEL / COHERENT_STOKES_TIME_INTEGRATION_FACTOR][NR_CHANNELS];
   typedef __global float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL / COHERENT_STOKES_TIME_INTEGRATION_FACTOR][COHERENT_STOKES_TIME_INTEGRATION_FACTOR][NR_TABS];

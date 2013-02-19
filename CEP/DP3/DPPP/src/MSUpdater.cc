@@ -35,14 +35,13 @@ namespace LOFAR {
   namespace DPPP {
 
     MSUpdater::MSUpdater (MSReader* reader, const ParameterSet& parset,
-                          const string& prefix)
+                          const string&)
       : itsReader      (reader),
         itsNrCorr      (reader->getInfo().ncorr()),
         itsNrChan      (reader->getInfo().nchan()),
         itsNrBl        (reader->getInfo().nbaselines()),
-        itsNrDone      (0)
+        itsNrTimes     (0)
     {
-      itsNrTimesFlush = parset.getUint (prefix+"flush", 0);
       NSTimer::StartStop sstime(itsTimer);
       MSWriter::writeHistory (reader->table(), parset);
     }
@@ -54,10 +53,7 @@ namespace LOFAR {
     {
       NSTimer::StartStop sstime(itsTimer);
       itsReader->putFlags (buf.getRowNrs(), buf.getFlags());
-      itsNrDone++;
-      if (itsNrTimesFlush > 0  &&  itsNrDone%itsNrTimesFlush == 0) {
-        itsReader->table().flush();
-      }
+      itsNrTimes++;
       return true;
     }
 

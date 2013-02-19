@@ -10,7 +10,7 @@ class RingCoordinates:
         self.dirtype  = dirtype
 
     def cos_adjust(self, offset):
-        if dirtype != "J2000" and dirtype != "B1950":
+        if self.dirtype != "J2000" and self.dirtype != "B1950":
           return offset
 
         # warp coordinates closer to the NCP

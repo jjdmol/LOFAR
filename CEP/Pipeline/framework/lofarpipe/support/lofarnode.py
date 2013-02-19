@@ -120,7 +120,7 @@ class LOFARnodeTCP(LOFARnode):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__try_connect(s)
         message = "GET %d" % self.job_id
-        s.sendall(struct.pack(">L", len(message)) + message)
+        s.send(struct.pack(">L", len(message)) + message)
         chunk = s.recv(4)
         slen = struct.unpack(">L", chunk)[0]
         chunk = s.recv(slen)
@@ -133,8 +133,10 @@ class LOFARnodeTCP(LOFARnode):
         Send the contents of self.outputs to the originating job dispatch
         server.
         """
+        print ("preparing to send pickle result/outputs: {0}".format(
+                                                                self.outputs))
         message = "PUT %d %s" % (self.job_id, pickle.dumps(self.outputs))
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__try_connect(s)
-        s.sendall(struct.pack(">L", len(message)) + message)
+        s.send(struct.pack(">L", len(message)) + message)

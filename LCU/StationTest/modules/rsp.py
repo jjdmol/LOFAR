@@ -1185,14 +1185,14 @@ def write_rad_settings(tc, msg, settings, rspId=['rsp0'], applev=21):
   """ 
   tc.appendLog(applev, '>>> RSP-%s write RAD settings (= 0x%X):' % (rspId, settings))
   # beamlet lane modes
-  for i in range(c_nof_lanes-1,-1,-1):
+  for i in range(c_nof_lanes):
     lane_mode = (settings >> (8*i)) & 0x3
     if   lane_mode==0: tc.appendLog(applev, '      lane(%d): beamlet  mode local' % i)
     elif lane_mode==1: tc.appendLog(applev, '      lane(%d): beamlet  mode disable' % i)
     elif lane_mode==2: tc.appendLog(applev, '      lane(%d): beamlet  mode combine' % i)
     else:              tc.appendLog(applev, '      lane(%d): beamlet  mode remote' % i)
   # crosslet lane modes
-  for i in range(c_nof_lanes-1,-1,-1):
+  for i in range(c_nof_lanes):
     lane_mode = (settings >> (8*i + 2)) & 0x3
     if   lane_mode==0: tc.appendLog(applev, '      lane(%d): crosslet mode local' % i)
     elif lane_mode==1: tc.appendLog(applev, '      lane(%d): crosslet mode disable' % i)
@@ -1233,14 +1233,14 @@ def read_rad_settings(tc, msg, rspId=['rsp0'], applev=21):
   settings = settings[0]
   tc.appendLog(applev, '>>> RSP-%s read RAD settings (= 0x%X):' % (rspId, settings))
   # beamlet lane modes
-  for i in range(c_nof_lanes-1,-1,-1):
+  for i in range(c_nof_lanes):
     lane_mode = (settings >> (8*i)) & 0x3
     if   lane_mode==0: tc.appendLog(applev, '      lane(%d): beamlet  mode local' % i)
     elif lane_mode==1: tc.appendLog(applev, '      lane(%d): beamlet  mode disable' % i)
     elif lane_mode==2: tc.appendLog(applev, '      lane(%d): beamlet  mode combine' % i)
     else:              tc.appendLog(applev, '      lane(%d): beamlet  mode remote' % i)
   # crosslet lane modes
-  for i in range(c_nof_lanes-1,-1,-1):
+  for i in range(c_nof_lanes):
     lane_mode = (settings >> (8*i + 2)) & 0x3
     if   lane_mode==0: tc.appendLog(applev, '      lane(%d): crosslet mode local' % i)
     elif lane_mode==1: tc.appendLog(applev, '      lane(%d): crosslet mode disable' % i)
