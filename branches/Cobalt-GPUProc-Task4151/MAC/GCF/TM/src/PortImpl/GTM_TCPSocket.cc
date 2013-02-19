@@ -104,8 +104,8 @@ ssize_t GTMTCPSocket::send(void* buf, size_t count)
 			if (errno == ECONNRESET) {
 				return (0);
 			}
-			if (errno != EINTR) {
-				LOG_WARN(LOFAR::formatString ( "send, error: %s", strerror(errno)));
+			if (errno != EINTR && errno != EAGAIN) {
+				LOG_WARN(LOFAR::formatString ( "send, error(%d): %s", errno, strerror(errno)));
 				return -1;
 			}
 		}
@@ -141,8 +141,8 @@ ssize_t GTMTCPSocket::recv(void* buf, size_t count, bool raw)
 		}
 
 		if (received == -1) {
-			if (errno != EINTR) {
-				LOG_WARN(formatString ( "recv, error: %s", strerror(errno)));
+			if (errno != EINTR && errno != EAGAIN) {
+				LOG_WARN(formatString ( "recv, error(%d): %s", errno, strerror(errno)));
 				return -1;
 			}
 		}

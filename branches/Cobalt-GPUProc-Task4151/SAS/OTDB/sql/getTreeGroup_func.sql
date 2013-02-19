@@ -29,7 +29,7 @@
 --             1: get all trees that are scheduled to start in the period: now till now+period
 --             2: get all trees with starttime <=now and stoptime > now ; period param is ignored
 --             3: get all trees with stoptime in the period: now-period till now
---             4: get all trees with stoptime < now and have state >= FINISHED
+--             4: get all trees with stoptime < now and have state >= APPROVED
 --
 -- With this function we can get the planned, active or finished trees from the database.
 --
@@ -49,7 +49,7 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 		TSapproved		CONSTANT	INT2 := 300;
 		TSscheduled		CONSTANT	INT2 := 400;
 		TSqueued		CONSTANT	INT2 := 500;
---		TScompleting	CONSTANT	INT2 := 900;
+		TScompleting	CONSTANT	INT2 := 900;
 		TSfinished		CONSTANT	INT2 := 1000;
 		TThierarchy		CONSTANT	INT2 := 30;
 		TCoperational	CONSTANT	INT2 := 3;
@@ -64,16 +64,14 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 	  ELSE
 	    IF $1 = 1 THEN
 		  vQuery := ' AND (t.state = ' || TSscheduled || ' OR t.state = ' || TSqueued || ') ';
---		  vQuery := vQuery || ' AND t.starttime < now()+interval ' || chr(39) || $2 || ' minutes' || chr(39);
 		  vQuery := vQuery || ' AND t.starttime >= now() AND t.starttime < now()+interval ' || chr(39) || $2 || ' minutes' || chr(39);
 	    ELSE 
 	  	  IF $1 = 2 THEN
-		    vQuery := ' AND t.starttime <= now() AND t.stoptime > now() ';
-		    vQuery := vQuery || ' AND t.state > ' || TSscheduled;
-		    vQuery := vQuery || ' AND t.state < ' || TSfinished;
+		    vQuery := ' AND t.state > ' || TSscheduled || ' AND t.state < ' || TScompleting;
+            vQuery := vQuery || ' AND t.stoptime>now()-interval ' || chr(39) || $2 || ' minutes' || chr(39);
 	      ELSE 
             IF $1 = 3 THEN
-              vQuery := ' AND t.state >= ' || TSfinished;
+              vQuery := ' AND t.state >= ' || TScompleting;
               vQuery := vQuery || ' AND t.stoptime > now()-interval ' || chr(39) || $2 || ' minutes' || chr(39);
               vSortOrder := 't.stoptime, t.treeID';
             ELSE

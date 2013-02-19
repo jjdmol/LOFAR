@@ -1083,6 +1083,45 @@ create_dp_file()
 	) >>${DESTDIR}/${DP_FILE}
 	fi
 
+	# The RCU.antenna point also needs to know the array of connected antennas
+	
+	if [ $NRRSPBOARDS -gt 0 ]; then
+	(
+		echo ""
+		echo "ElementName	TypeName	_original.._value	_original.._status"
+		echo "dummy" | awk -v nrRSPs=$NRRSPBOARDS '{
+			for (rcuNr = 0; rcuNr < nrRSPs*8; rcuNr++) {  
+				RSPboard=rcuNr/8
+				Subrack=RSPboard/4
+#if [ "${dbtype}" != "$2" ]; then
+				Cabinet=Subrack/2
+				antNr = rcuNr/2
+				hba = "HBA" 
+				if (antNr < 10) hba="HBA0"
+			        lbh = "LBA"
+				if (antNr < 100) lbh="LBA0"
+				if (antNr < 10) lbh="LBA00"
+			        lbl = "LBA"
+				if (antNr+48 < 100) lbl="LBA0"
+				if (antNr+48 < 10) lbl="LBA00"
+				
+				if (nrRSPs > 12) {
+                                        # foreign
+					printf "LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.antennas\tRCU\t\"LOFAR_PIC_%s%d\", \"LOFAR_PIC_%s%d\"	0x101\n",
+					Cabinet, Subrack, RSPboard, rcuNr, lbh, antNr, hba, antNr;
+				} else {
+				        # dutch
+					printf "LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d.antennas\tRCU\t\"LOFAR_PIC_%s%d\", \"LOFAR_PIC_%s%d\", \"LOFAR_PIC_%s%d\"	0x101\n",
+					Cabinet, Subrack, RSPboard, rcuNr, lbl, antNr+48, lbh, antNr, hba, antNr;					
+				}
+					
+			}
+		}'
+	    
+	) >>${DESTDIR}/${DP_FILE}
+	fi
+
+
 	# setup master point and archives 
 	# NOTE: THIS IS ADDED TO THE DataPointTYPES file!
 	prevdpt="abc"
@@ -1123,6 +1162,8 @@ create_dp_file()
 
 
 	done >>${DESTDIR}/${DPT_FILE}
+
+
 
 	echo "created: ${DESTDIR}/${DP_FILE}"
 }

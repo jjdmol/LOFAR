@@ -31,6 +31,9 @@ Attenuation				float
 nofOverflow				uint
 ADCStatistics.overflow	bool
 
+#needed to keep an array of connected antennas for the reset/set/alarm scripts
+antennas	stringArr
+
 # TBB proces info
 TBB.error				int
 TBB.mode				string

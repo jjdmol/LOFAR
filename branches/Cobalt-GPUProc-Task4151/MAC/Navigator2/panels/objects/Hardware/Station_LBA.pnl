@@ -3,7 +3,7 @@ V 11
 LANG:1 4 aLBA
 LANG:6 0 
 LANG:30 0 
-PANEL,-1 -1 241 145 N "_3DFace" 4
+PANEL,-1 -1 212 145 N "_3DFace" 4
 "$aNr"
 "$aX"
 "$aY"
@@ -24,7 +24,7 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
     aS+=\"0\";
     extrazero+=\"0\";
   }
-  string antennaDP=aS+curLBA;
+  antennaDP=aS+curLBA;
   string RCUX;
   string RCUY;
   dpGet(antennaDP+\".common.RCUX\",RCUX);
@@ -55,17 +55,17 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   string strColor   = \"yellow\";
   
   string strToolTip=\"Antenna: \"+extrazero+curLBA;
-  strToolTip += \" located on: Cabinet:\" + cabinet;
-  strToolTip += \" ->Subrack\" + subrack;
-  strToolTip += \" -> TBB\" + tbboard;
-  strToolTip += \" -> RSP\" + rspboard;
-  strToolTip += \" -> RCU\" + curXRCU + \" && RCU\" + curYRCU;
-  strToolTip += \"---------\";
-  strToolTip += \" (LBA\" + extrazero+curLBA + \")\";
+  strToolTip += \"<br> located on: Cabinet:\" + cabinet;
+  strToolTip += \"<br> ->Subrack\" + subrack;
+  strToolTip += \"<br> -> TBB\" + tbboard;
+  strToolTip += \"<br> -> RSP\" + rspboard;
+  strToolTip += \"<br> -> RCU\" + curXRCU + \" && RCU\" + curYRCU;
+  strToolTip += \"<br>---------\";
+  strToolTip += \"<br> (LBA\" + extrazero+curLBA + \")\";
 
-  strToolTip += \"\\n diff from centerOL:\" + $aX;
-  strToolTip += \"\\n diff from centerNB:\" + $aY;
-  strToolTip += \"\\n diff from centerH:\"  + $aZ;
+  strToolTip += \"<br> diff from centerOL:\" + $aX;
+  strToolTip += \"<br> diff from centerNB:\" + $aY;
+  strToolTip += \"<br> diff from centerH:\"  + $aZ;
     
   antennaHighlight.toolTipText  = strToolTip;
   aNr.toolTipText   = strToolTip;
@@ -150,6 +150,7 @@ string baseDPX;
 string baseDPY;
 string RCUXDP;
 string RCUYDP;
+string antennaDP=\"\";
 string extrazero=\"\";
 
 
@@ -191,7 +192,8 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent(\"Antenna\"+extrazero+curLBA,\"EventRightClick\");
+    navPanel_statePopup(antennaDP);
+//    navPanel_statePopup(\"LOFAR_PIC_HBA\"+extrazero+curLBA);
 }" 0
  2
 "CBRef" "1"

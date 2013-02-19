@@ -183,7 +183,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
-0  -2 -2 991 219
+0  -2 -2 991 202
 "main()
 {
   myTable.tableMode(TABLE_SELECT_BROWSE);
@@ -229,25 +229,25 @@ E
 1
 LANG:1 0 
 
-100 "Start Time" 9 1 0 "s" 1
+100 "Start Time" 12 1 0 "s" 1
 LANG:1 10 Start Time
 E
 1
 LANG:1 0 
 
-115 "Stop Time" 9 1 0 "s" 1
+150 "Stop Time" 12 1 0 "s" 1
 LANG:1 9 Stop Time
 E
 1
 LANG:1 0 
 
-115 "Station List" 46 1 0 "s" 1
+150 "Station List" 90 1 0 "s" 1
 LANG:1 12 Station List
 E
 1
 LANG:1 0 
 
-514 
+1000 
 18 18 10 10
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
