@@ -48,66 +48,38 @@ using namespace LOFAR;
 // are a no-op (!USE_THREADS)
 void test_simple(Mutex::Type type) {
   Mutex mutex(type);
- 
-  // lock + unlock must succeed
+  
   mutex.lock();
   mutex.unlock();
 
-  // trylock + unlock must succeed
   mutex.trylock();
   mutex.unlock();
 
   {
-    // ScopedLock must not block if mutex is available
     ScopedLock sl(mutex);
-  }
-}
-
-void relock_trylock(Mutex::Type type, Mutex &mutex) {
-  switch(type) {
-    default:
-      ASSERT( !mutex.trylock() );
-      break;
-
-    case Mutex::RECURSIVE:
-      // relocking using trylock works with a recursive lock
-      ASSERT( mutex.trylock() );
-      mutex.unlock();
-      break;
-
-    case Mutex::ERRORCHECK:
-      // mutex.trylock() can cause a dead-lock in the same thread,
-      // and throws an exception.
-
-      try {
-        mutex.trylock();
-
-        ASSERTSTR(false, "lock + trylock must fail on error checked mutex");
-      } catch (LOFAR::SystemCallException&) {
-      }
-      break;
   }
 }
 
 void test_trylock(Mutex::Type type) {
 #ifdef USE_THREADS
   Mutex mutex(type);
- 
-  // trylock + unlock must succeed for ALL types
+  
   ASSERT( mutex.trylock() );
   mutex.unlock();
 
-  // try lock + relocking
   mutex.lock();
-  relock_trylock(type, mutex);
+  if (type == Mutex::RECURSIVE)
+    ASSERT( mutex.trylock() );
+  else
+    ASSERT( !mutex.trylock() );
   mutex.unlock();
 
   {
-    // ScopedLock test
     ScopedLock sl(mutex);
-
-    // try relocking
-    relock_trylock(type, mutex);
+    if (type == Mutex::RECURSIVE)
+      ASSERT( mutex.trylock() );
+    else
+      ASSERT( !mutex.trylock() );
   }
 #else
   (void)type;
