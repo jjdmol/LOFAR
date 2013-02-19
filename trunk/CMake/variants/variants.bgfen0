@@ -3,7 +3,7 @@
 ## Host specific variants file. 
 ## Settings in this file extend or override those in the global variants file.
 ##
-## $Id: variants.dop131 13362 2009-05-29 15:32:43Z loose $
+## $Id$
 
 #set(CMAKE_SYSTEM_NAME BlueGeneP)
 
