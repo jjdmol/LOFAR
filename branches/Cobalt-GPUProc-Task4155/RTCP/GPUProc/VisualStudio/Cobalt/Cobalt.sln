@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cobalt", "Cobalt\Cobalt.vcxproj", "{FB15BE5B-F867-4067-A031-5312735B9241}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cobalt_test", "Cobalt_test\Cobalt_test.vcxproj", "{7DEF77B1-CEBD-451A-B4F1-5D3D70D61E3B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,6 +15,10 @@ Global
 		{FB15BE5B-F867-4067-A031-5312735B9241}.Debug|Win32.Build.0 = Debug|Win32
 		{FB15BE5B-F867-4067-A031-5312735B9241}.Release|Win32.ActiveCfg = Release|Win32
 		{FB15BE5B-F867-4067-A031-5312735B9241}.Release|Win32.Build.0 = Release|Win32
+		{7DEF77B1-CEBD-451A-B4F1-5D3D70D61E3B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7DEF77B1-CEBD-451A-B4F1-5D3D70D61E3B}.Debug|Win32.Build.0 = Debug|Win32
+		{7DEF77B1-CEBD-451A-B4F1-5D3D70D61E3B}.Release|Win32.ActiveCfg = Release|Win32
+		{7DEF77B1-CEBD-451A-B4F1-5D3D70D61E3B}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
