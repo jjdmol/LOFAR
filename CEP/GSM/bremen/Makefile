@@ -44,6 +44,9 @@ alltests:
 	@echo "PostgreSQL tests"
 	@nosetests --rednose --tc=monetdb:False tests/*.py src/*.py
 
+pgtests:
+	@nosetests --rednose --tc=monetdb:False tests/*.py src/*.py
+
 clean:
 	-rm -rf $(BUILDDIR)/*
 

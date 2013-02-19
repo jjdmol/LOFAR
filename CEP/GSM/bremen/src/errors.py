@@ -1,9 +1,12 @@
 #!/usr/bin/env python
+
+
 class GSMException(Exception):
     """
     Basic GSM exception class.
     """
     pass
+
 
 class SourceException(GSMException):
     """
@@ -11,11 +14,13 @@ class SourceException(GSMException):
     """
     pass
 
+
 class SourcePartMissingException(GSMException):
     """
     Required part of the source information is missing.
     """
     pass
+
 
 class ParsetContentError(GSMException):
     """
@@ -23,11 +28,13 @@ class ParsetContentError(GSMException):
     """
     pass
 
+
 class ImageStateError(GSMException):
     """
     Image cannot be processed: wrong state.
     """
     pass
+
 
 class SQLError(GSMException):
     """

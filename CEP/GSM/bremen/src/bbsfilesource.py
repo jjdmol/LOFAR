@@ -16,7 +16,7 @@ class GSMBBSFileSource(object):
     Reads source list from BBS file.
     """
     #Number of lines to be read in each iteration;
-    BLOCK_SIZE = 100
+    BLOCK_SIZE = 25000
 
     FIELD_NAMES = {
       'ra': 'ra',
