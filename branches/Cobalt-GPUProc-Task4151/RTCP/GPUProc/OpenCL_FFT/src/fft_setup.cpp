@@ -302,7 +302,7 @@ patch_kernel_source:
 		err = clGetDeviceInfo(devices[i], CL_DEVICE_TYPE, sizeof(device_type), &device_type, NULL);
 		ERR_MACRO(err);
 		
-		if(device_type == CL_DEVICE_TYPE_CPU || device_type == CL_DEVICE_TYPE_GPU)
+		if(device_type == CL_DEVICE_TYPE_CPU || device_type == CL_DEVICE_TYPE_GPU || CL_DEVICE_TYPE_ACCELERATOR)
 		{	
 			gpu_found = 1;
 	        //err = clBuildProgram(plan->program, 1, &devices[i], "-cl-mad-enable", NULL, NULL);
