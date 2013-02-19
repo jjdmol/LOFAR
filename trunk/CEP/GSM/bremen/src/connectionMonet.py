@@ -8,6 +8,7 @@ from src.unifiedConnection import UnifiedConnection
 from monetdb.mapi import logger as mapi_logger
 import logging
 
+
 class MonetConnection(UnifiedConnection):
     """
     Connection with logging.
