@@ -4,9 +4,17 @@
 #include "stdafx.h"
 #include <iostream>
 
+#include <UnitTest++.h>
+
+
+  TEST(FailSpectacularly)
+  {
+    CHECK(false);
+  }
+
 int _tmain(int argc, _TCHAR* argv[])
 {
-	return 0;
     std::cout<<"Hello Test" << std::endl;
+    return UnitTest::RunAllTests();
 }
 
