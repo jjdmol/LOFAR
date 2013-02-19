@@ -283,7 +283,8 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 		_buildProcessMap();		// reconstruct map for current processlist.(name,pid)
 
 		// Note: swlevel v1.6 20081229 (svn 12378) returns current level as return value.
-		int curLevel = system("swlevel >>/dev/null") >> 8;
+		int curLevel = abs((int8)(system("swlevel >>/dev/null") >> 8));
+
 		ASSERTSTR(curLevel >= 0, "Program 'swlevel' not in my execution path");
 		LOG_DEBUG_STR("Current level is " << curLevel);
 		itsOwnPropertySet->setValue(PN_SWM_SW_LEVEL, GCFPVInteger(curLevel));
