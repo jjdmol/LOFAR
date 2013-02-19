@@ -1,0 +1,85 @@
+//#  testprotocol.prot: Protocol definition to test the base functions
+//#
+//#  Copyright (C) 2006
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+
+autogen definitions protocol;
+
+description = "Protocol for testing the prtocol-programs";
+prefix = "TEST_PTC"; // for the signal names
+id = "63";
+
+// specify extra include files
+
+prelude = << PRELUDE_END
+
+// The following messages are defined in the servicebroker protocol
+//
+// TEST_IN   (uint16 seqnr, string question);
+// TEST_OUT  (uint16 seqnr, string answer);
+//
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+	signal = TEST_IN;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "uint16";
+	};
+	param = {
+		name = "question";
+		type = "string";
+	};
+};
+
+event = {
+	signal = TEST_OUT;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "uint16";
+	};
+	param = {
+		name = "answer";
+		type = "string";
+	};
+};
+
+error = {
+	id = NO;
+	msg = "No errors";
+};
+error = {
+	id = RANGE;
+	msg = "Illegal range specified";
+};
+error = {
+	id = WINDOWS;
+	msg = "You are using Windows";
+};
+
