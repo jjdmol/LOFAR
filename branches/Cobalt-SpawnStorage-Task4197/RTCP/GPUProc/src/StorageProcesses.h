@@ -46,12 +46,6 @@ class StorageProcess {
 
 /*
  * Manage a Storage_main process (RTCP/Storage). The control sequence is as follows:
- *
- * hostList = "OLAP.Storage.hosts"
- *
- * for(host in hostList):
- *   spawnThread("ssh host <storage process>")
- * (TODO)
  */
 
 class StorageProcesses {
@@ -59,10 +53,15 @@ public:
     StorageProcesses( const Parset &parset, const std::string &logPrefix );
     ~StorageProcesses();
 
+    // start the processes and control threads
     void start();
-    void stop( time_t deadline );
 
+    // start the FinalMetaDataGatherer process and forward the obtained
+    // meta data to the Storage processes. The deadline is an absolute time out.
     void forwardFinalMetaData( time_t deadline );
+
+    // stop the processes and control threads, given an absolute time out.
+    void stop( time_t deadline );
 
 private:
     const Parset			 &itsParset;

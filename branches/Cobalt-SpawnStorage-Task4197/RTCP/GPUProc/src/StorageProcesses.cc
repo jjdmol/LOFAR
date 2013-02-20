@@ -47,13 +47,16 @@ StorageProcess::StorageProcess( StorageProcesses &manager, const Parset &parset,
 
 StorageProcess::~StorageProcess()
 {
-  // cancel the control thread in case it is still active
-  itsThread->cancel();
+  // stop immediately
+  struct timespec immediately = { 0, 0 };
+  stop(immediately);
 }
 
 
 void StorageProcess::start()
 {
+  ASSERTSTR(!itsSSHconnection, "StorageProcess has already been started");
+
   std::string userName   = itsParset.getString("OLAP.Storage.userName");
   std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
@@ -90,7 +93,7 @@ void StorageProcess::start()
 void StorageProcess::stop(struct timespec deadline)
 {
   if (!itsSSHconnection) {
-    // never started
+    // not started
     return;
   }
 

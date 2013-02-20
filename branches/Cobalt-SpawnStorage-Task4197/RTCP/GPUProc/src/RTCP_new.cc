@@ -21,6 +21,7 @@
 #include "Kernel.h"
 #include "FFT_Kernel.h"
 #include "FFT_Plan.h"
+#include "StorageProcesses.h"
 
 #include "Kernels/FIR_FilterKernel.h"
 #include "Kernels/DelayAndBandPassKernel.h"
@@ -128,7 +129,8 @@ int main(int argc, char **argv)
 
         // Select number of GPUs to run on
 
-
+        // Spawn the output processes (only do this once globally)
+        StorageProcesses storageProcesses(ps, "");
 
         // use a switch to select between modes
         switch (option)
@@ -162,6 +164,15 @@ int main(int argc, char **argv)
         default:
             std::cout << "None of the types matched, do nothing" << std::endl;
         }
+
+        // COMPLETING stage
+        time_t completing_start = time(0);
+
+        // retrieve and forward final meta data
+        storageProcesses.forwardFinalMetaData(completing_start + 240);
+
+        // graceful exit
+        storageProcesses.stop(completing_start + 300);
     } 
     catch (cl::Error &error)
     {
