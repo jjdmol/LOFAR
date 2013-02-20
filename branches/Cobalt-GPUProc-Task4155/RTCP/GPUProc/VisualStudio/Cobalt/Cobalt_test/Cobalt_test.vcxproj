@@ -39,17 +39,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;C:\Program Files (x86)\UnitTest++\src</IncludePath>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;C:\Program Files (x86)\AMD APP\include;C:\Program Files (x86)\UnitTest++\src;..\..\..\src;..\..\..\test\fixture;C:\Program Files (x86)\boost\boost_1_41</IncludePath>
+    <LibraryPath>$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;C:\Program Files (x86)\boost\boost_1_41\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -76,18 +78,31 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\src\UnitTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\BeamFormerTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\BeamFormerTransposeTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\CoherentStokesTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\CorrelateRectangleTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\CorrelateTriangleTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\CorrelatorTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\DedispersionChirpTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\FFT_Test.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\IncoherentStokesTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\IntToFloatTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\UHEP_BeamFormerTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\UHEP_TransposeTest.h" />
+    <ClInclude Include="..\..\..\src\UnitTests\UHEP_TriggerTest.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\createProgram.cc" />
+    <ClCompile Include="..\..\..\src\PerformanceCounter.cc" />
     <ClCompile Include="Cobalt_test.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="C:\Program Files (x86)\UnitTest++\Debug\UnitTest++.vsnet2005.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

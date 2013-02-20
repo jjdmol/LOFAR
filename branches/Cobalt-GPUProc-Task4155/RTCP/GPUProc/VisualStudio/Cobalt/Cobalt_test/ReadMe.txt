@@ -2,39 +2,9 @@
     CONSOLE APPLICATION : Cobalt_test Project Overview
 ========================================================================
 
-AppWizard has created this Cobalt_test application for you.
+This Project needs the following resource files:
+1. OpenCL.lib and "CL/cl.hpp" installed with codecl (amd) and found in  "C:\Program Files (x86)\AMD APP"
 
-This file contains a summary of what you will find in each of the files that
-make up your Cobalt_test application.
+2. UnitTest++.h and a lib containing the build implementation http://unittest-cpp.sourceforge.net/ 
 
 
-Cobalt_test.vcxproj
-    This is the main project file for VC++ projects generated using an Application Wizard.
-    It contains information about the version of Visual C++ that generated the file, and
-    information about the platforms, configurations, and project features selected with the
-    Application Wizard.
-
-Cobalt_test.vcxproj.filters
-    This is the filters file for VC++ projects generated using an Application Wizard. 
-    It contains information about the association between the files in your project 
-    and the filters. This association is used in the IDE to show grouping of files with
-    similar extensions under a specific node (for e.g. ".cpp" files are associated with the
-    "Source Files" filter).
-
-Cobalt_test.cpp
-    This is the main application source file.
-
-/////////////////////////////////////////////////////////////////////////////
-Other standard files:
-
-StdAfx.h, StdAfx.cpp
-    These files are used to build a precompiled header (PCH) file
-    named Cobalt_test.pch and a precompiled types file named StdAfx.obj.
-
-/////////////////////////////////////////////////////////////////////////////
-Other notes:
-
-AppWizard uses "TODO:" comments to indicate parts of the source code you
-should add to or customize.
-
-/////////////////////////////////////////////////////////////////////////////

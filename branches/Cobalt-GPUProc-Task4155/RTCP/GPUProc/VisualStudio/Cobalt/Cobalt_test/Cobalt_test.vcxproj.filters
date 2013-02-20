@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\UnitTests">
+      <UniqueIdentifier>{3f0bee8a-54ac-43c9-9088-96c14005f864}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -24,6 +27,48 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\CorrelateRectangleTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\CorrelateTriangleTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\CorrelatorTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\DedispersionChirpTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\FFT_Test.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\IncoherentStokesTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\IntToFloatTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\UHEP_BeamFormerTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\UHEP_TransposeTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\UHEP_TriggerTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\BeamFormerTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\BeamFormerTransposeTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\UnitTests\CoherentStokesTest.h">
+      <Filter>Header Files\UnitTests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -32,10 +77,11 @@
     <ClCompile Include="Cobalt_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="C:\Program Files (x86)\UnitTest++\Debug\UnitTest++.vsnet2005.lib">
-      <Filter>Resource Files</Filter>
-    </Library>
+    <ClCompile Include="..\..\..\src\PerformanceCounter.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\createProgram.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

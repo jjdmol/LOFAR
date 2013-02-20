@@ -7,9 +7,9 @@
 #include <UnitTest++.h>
 
 
-  TEST(FailSpectacularly)
+TEST(SelfTest)
   {
-    CHECK(false);
+    CHECK(true);
   }
 
 int _tmain(int argc, _TCHAR* argv[])

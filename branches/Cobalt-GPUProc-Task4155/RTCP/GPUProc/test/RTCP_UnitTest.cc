@@ -8,16 +8,16 @@
 #include "Interface/Parset.h"
 #include "OpenCL_Support.h"
 
-#include "UnitTests/IncoherentStokesTest.h"
-#include "UnitTests/IntToFloatTest.h"
-#include "UnitTests/BeamFormerTransposeTest.h"
-#include "UnitTests/DedispersionChirpTest.h"
-#include "UnitTests/CoherentStokesTest.h"
-#include "UnitTests/UHEP_BeamFormerTest.h"
-#include "UnitTests/UHEP_TransposeTest.h"
-#include "UnitTests/BeamFormerTest.h"
-#include "UnitTests/CorrelateTriangleTest.h"
-#include "UnitTests/UHEP_TriggerTest.h"
+//#include "UnitTests/IncoherentStokesTest.h"
+//#include "UnitTests/IntToFloatTest.h"
+//#include "UnitTests/BeamFormerTransposeTest.h"
+//#include "UnitTests/DedispersionChirpTest.h"
+//#include "UnitTests/CoherentStokesTest.h"
+//#include "UnitTests/UHEP_BeamFormerTest.h"
+//#include "UnitTests/UHEP_TransposeTest.h"
+//#include "UnitTests/BeamFormerTest.h"
+//#include "UnitTests/CorrelateTriangleTest.h"
+//#include "UnitTests/UHEP_TriggerTest.h"
 //#include "UnitTests/CorrelateRectangleTest.h"
 //#include "UnitTests/CorrelatorTest.h"
 //#include "UnitTests/FFT_Test.h"
@@ -70,4 +70,5 @@ int main(int argc, char **argv)
 
     //return 0;
     return UnitTest::RunAllTests();
+    
 }
