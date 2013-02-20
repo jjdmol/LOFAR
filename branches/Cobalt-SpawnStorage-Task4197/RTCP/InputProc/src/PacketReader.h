@@ -3,7 +3,7 @@
 
 #include <Stream/Stream.h>
 #include <Interface/SmartPtr.h>
-#include <IONProc/RSP.h>
+#include "RSP.h"
 #include "BufferSettings.h"
 #include <string>
 

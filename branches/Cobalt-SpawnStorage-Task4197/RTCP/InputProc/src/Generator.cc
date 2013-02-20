@@ -6,7 +6,7 @@
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
 #include <Interface/Stream.h>
-#include <IONProc/WallClockTime.h>
+#include "WallClockTime.h"
 #include <boost/format.hpp>
 
 
