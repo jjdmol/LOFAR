@@ -34,6 +34,7 @@ lofar_add_bin_program( RTCP_UnitTest
    ${src_dir}/Kernels/UHEP_TransposeKernel.cc
    ${src_dir}/Kernels/UHEP_InvFFT_Kernel.cc
    ${src_dir}/Kernels/UHEP_InvFIR_Kernel.cc
-   ${src_dir}/Kernels/UHEP_TriggerKernel.cc
+   ${src_dir}/Kernels/UHEP_TriggerKernel.cc   
+   UnitTests/new_style_unittest.cc
   )
 target_link_libraries(RTCP_UnitTest /cm/shared/apps/UnitTest++/libUnitTest++.a)
