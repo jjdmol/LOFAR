@@ -1,7 +1,7 @@
 #include "lofar_config.h"
 
 #define __CL_ENABLE_EXCEPTIONS
-#include "backward/CL/cl.hpp"
+#include "CL/cl.hpp"
 
 #include <omp.h>
 
