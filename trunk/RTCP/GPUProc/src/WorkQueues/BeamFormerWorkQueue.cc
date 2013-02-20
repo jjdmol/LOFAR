@@ -92,7 +92,6 @@ namespace LOFAR
 
 #pragma omp for schedule(dynamic), nowait
                 for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) {
-                    try {
 #if 1
                         {
 #if defined USE_B7015
@@ -122,11 +121,6 @@ namespace LOFAR
 
                         //queue.enqueueReadBuffer(devComplexVoltages, CL_TRUE, 0, hostComplexVoltages.bytesize(), hostComplexVoltages.origin());
                         //dedispersedData.deviceToHost(CL_TRUE);
-                    } catch (cl::Error &error) {
-#pragma omp critical (cerr)
-                        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
-                        exit(1);
-                    }
                 }
             }
 
