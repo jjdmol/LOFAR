@@ -182,13 +182,7 @@ namespace LOFAR
 
 #pragma omp for schedule(dynamic), nowait, ordered
                 for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) {
-                    try {
                         doSubband(block, subband);
-                    } catch (cl::Error &error) {
-#pragma omp critical (cerr)
-                        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
-                        exit(1);
-                    }
                 }
             }
 
