@@ -5,4 +5,4 @@ include(LofarCTest)
 # Add project's source directory to -I path.
 include_directories(${PACKAGE_SOURCE_DIR}/src)
 
-#lofar_add_test(tDelayCompensation tDelayCompensation.cc)
+lofar_add_test(tSSH tSSH.cc)

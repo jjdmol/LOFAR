@@ -24,6 +24,8 @@ set(gpuproc_LIB_SRCS
   LogThread.cc
   OpenCL_Support.cc
   ReaderWriterSynchronization.cc
+  SSH.cc
+  StorageProcesses.cc
   #RTCP.cc
   
   UHEP/InvertedStationPPFWeights.cc)
