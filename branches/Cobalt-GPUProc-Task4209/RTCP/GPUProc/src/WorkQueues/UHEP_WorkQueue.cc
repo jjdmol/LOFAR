@@ -79,7 +79,6 @@ namespace LOFAR
 
 #pragma omp for schedule(dynamic), nowait
             for (unsigned block = 0; block < nrBlocks; block ++) {
-                try {
                     double currentTime = startTime + block * blockTime;
 
                     //#pragma omp single nowait // FIXME: why does the compiler complain here???
@@ -108,11 +107,6 @@ namespace LOFAR
                     trigger.enqueue(queue, pipeline.triggerCounter);
                     queue.finish(); // necessary to overlap I/O & computations ???
                     queue.enqueueReadBuffer(devTriggerInfo, CL_TRUE, 0, hostTriggerInfo.size() * sizeof(TriggerInfo), &hostTriggerInfo[0]);
-                } catch (cl::Error &error) {
-#pragma omp critical (cerr)
-                    std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
-                    exit(1);
-                }
             }
 
 #pragma omp barrier
