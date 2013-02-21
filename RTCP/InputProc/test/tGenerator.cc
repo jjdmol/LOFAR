@@ -68,7 +68,7 @@ int main( int, char **argv ) {
       // Read and verify the generated packets
 
       try {
-        PacketReader reader("", streamDescs[0], settings);
+        PacketReader reader("", streamDescs[0]);
 
         for(size_t nr = 0; nr < NUMPACKETS; ++nr) {
           struct RSP packet;
