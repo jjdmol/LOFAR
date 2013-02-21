@@ -6,6 +6,8 @@
 #include "OpenCL_Support.h"
 
 #include "Stream/Stream.h"
+#include "Stream/FileStream.h"
+#include "Stream/SharedMemoryStream.h"
 #include "Stream/NullStream.h"
 
 #include "Pipeline.h"
@@ -51,8 +53,14 @@ namespace LOFAR
                 bufferToGPUstreams[stat] = new NullStream;
 #endif
 
-            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++)
-                GPUtoStorageStreams[sb] = new NullStream;
+            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) 
+                try {
+                  GPUtoStorageStreams[sb] = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
+                } catch(InterfaceException &ex) {
+                  LOG_ERROR_STR("Caught exception, using null stream for subband " << sb << ": " << ex);
+
+                  GPUtoStorageStreams[sb] = new NullStream;
+                }
         }
 
 
