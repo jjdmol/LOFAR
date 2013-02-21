@@ -1,0 +1,34 @@
+#***************************************************************************
+# ZEPTOOS:zepto-info
+#      This file is part of ZeptoOS: The Small Linux for Big Computers.
+#      See www.mcs.anl.gov/zeptoos for more information.
+# ZEPTOOS:zepto-info
+#
+# ZEPTOOS:zepto-fillin
+#      $Id: zoid.map,v 1.2 2007/06/27 15:10:45 iskra Exp $
+#      ZeptoOS_Version: 1.2
+#      ZeptoOS_Heredity: FOSS_ORIG
+#      ZeptoOS_License: GPL
+# ZEPTOOS:zepto-fillin
+#
+# ZEPTOOS:zepto-gpl
+#       Copyright: Argonne National Laboratory, Department of Energy,
+#                  and UChicago Argonne, LLC.  2004, 2005, 2006, 2007
+#       ZeptoOS License: GPL
+#  
+#       This software is free.  See the file ZeptoOS/misc/license.GPL
+#       for complete details on your rights to copy, modify, and use this
+#       software.
+# ZEPTOOS:zepto-gpl
+#***************************************************************************
+
+{
+global:
+	__zoid_register_functions;
+	__zoid_calling_process_id;
+	__zoid_register_userbuf;
+	__zoid_send_output;
+	__zoid_allocate_buffer;
+	__zoid_alloc;
+	__zoid_free;
+};
