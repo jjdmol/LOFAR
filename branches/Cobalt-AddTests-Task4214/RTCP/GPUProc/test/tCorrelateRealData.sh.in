@@ -1,0 +1,41 @@
+#!/bin/bash
+# Tentative test script to run parsets and compare the output to that in the reference_output directory.
+# Obviously still contains too many hard-coded paths.
+
+BINDIR=@CMAKE_CURRENT_BINARY_DIR@
+
+PARSETS="
+tCorrelateRealData.1sec_1st_5sb_noflagging.parset
+tCorrelateRealData.3sec_1st_5sb.parset
+tCorrelateRealData.3sec_2st_5sb.parset
+"
+
+echo "Working directory is `pwd`"
+
+for PARSET in $PARSETS
+do
+  echo "Testing $PARSET"
+
+  RUNDIR=`pwd`
+  OUTDIR=`basename "${0}.output"`/$PARSET
+
+  (
+  # create output dir
+  mkdir -p $OUTDIR && cd $OUTDIR &&
+
+  # enable debugging
+  echo "Global 20" >> RTCP_new.debug &&
+
+  # run correlator
+  $BINDIR/RTCP_new $RUNDIR/$PARSET &&
+
+  # compare output
+  for f in *.MS
+  do
+    diff $f $RUNDIR/tCorrelateRealData.reference/$PARSET/$f || exit
+  done
+  ) &&
+
+  # toss output
+  rm -rf $OUTDIR
+done
