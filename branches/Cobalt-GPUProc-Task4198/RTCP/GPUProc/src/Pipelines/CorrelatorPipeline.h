@@ -22,6 +22,7 @@ namespace LOFAR
             CorrelatorPipeline(const Parset &);
 
             void		    doWork();
+            void        doWorkQueue(CorrelatorWorkQueue workQueue);
 
         private:
             friend class CorrelatorWorkQueue;

@@ -17,6 +17,16 @@
 #include "BandPass.h"
 #include "WorkQueue.h"
 
+#include "Kernels/IntToFloatKernel.h"
+#include "Kernels/Filter_FFT_Kernel.h"
+#include "Kernels/DelayAndBandPassKernel.h"
+#include "Kernels/BeamFormerKernel.h"
+#include "Kernels/BeamFormerTransposeKernel.h"
+#include "Kernels/DedispersionForwardFFTkernel.h"
+#include "Kernels/DedispersionBackwardFFTkernel.h"
+#include "Kernels/DedispersionChirpKernel.h"
+
+
 namespace LOFAR
 {
     namespace  RTCP 
@@ -40,6 +50,16 @@ namespace LOFAR
             cl::Buffer					   devComplexVoltages;
             MultiArraySharedBuffer<std::complex<float>, 4> transposedComplexVoltages;
             MultiArraySharedBuffer<float, 1>		   DMs;
+
+        private:
+            IntToFloatKernel intToFloatKernel;
+            Filter_FFT_Kernel fftKernel;
+            DelayAndBandPassKernel delayAndBandPassKernel;
+            BeamFormerKernel beamFormerKernel;
+            BeamFormerTransposeKernel transposeKernel;
+            DedispersionForwardFFTkernel dedispersionForwardFFTkernel;
+            DedispersionBackwardFFTkernel dedispersionBackwardFFTkernel;
+            DedispersionChirpKernel dedispersionChirpKernel;
         };
 
     }

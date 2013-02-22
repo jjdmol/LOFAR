@@ -7,8 +7,7 @@
 #include "OpenMP_Support.h"
 #include <algorithm>
 #include <iostream>
-#include "ApplCommon/PosixTime.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
+
 
 #include "Pipeline.h"
 #include "CorrelatorWorkQueue.h"
@@ -127,6 +126,13 @@ namespace LOFAR
                 pipeline.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
             }
 
+            // Moved from doWork() The delay data should be available before the kernels start.
+            // Queue processed ordered. This could main that the transfer is not nicely overlapped
+
+            delaysAtBegin.hostToDevice(CL_FALSE);
+            delaysAfterEnd.hostToDevice(CL_FALSE);
+            phaseOffsets.hostToDevice(CL_FALSE);
+
             if (ps.nrChannelsPerSubband() > 1) {
                 firFilterKernel.enqueue(queue, pipeline.firFilterCounter);
                 fftKernel.enqueue(queue, pipeline.fftCounter);
@@ -151,49 +157,5 @@ namespace LOFAR
 
             sendSubbandVisibilites(block, subband);
         }
-
-
-        void CorrelatorWorkQueue::doWork()
-        {
-            double startTime = ps.startTime(), currentTime, stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
-
-#pragma omp barrier
-
-            double executionStartTime = omp_get_wtime();
-            double lastTime = omp_get_wtime();
-
-            for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) {
-#pragma omp single nowait
-#pragma omp critical (cout)
-                std::cout << "block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << ", exec = " << omp_get_wtime() - lastTime << std::endl;
-                lastTime = omp_get_wtime();
-
-                memset(delaysAtBegin.origin(), 0, delaysAtBegin.bytesize());
-                memset(delaysAfterEnd.origin(), 0, delaysAfterEnd.bytesize());
-                memset(phaseOffsets.origin(), 0, phaseOffsets.bytesize());
-
-                // FIXME!!!
-                //if (ps.nrStations() >= 3)
-                //delaysAtBegin[0][2][0] = 1e-6, delaysAfterEnd[0][2][0] = 1.1e-6;
-
-                delaysAtBegin.hostToDevice(CL_FALSE);
-                delaysAfterEnd.hostToDevice(CL_FALSE);
-                phaseOffsets.hostToDevice(CL_FALSE);
-
-#pragma omp for schedule(dynamic), nowait, ordered
-                for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) {
-                        doSubband(block, subband);
-                }
-            }
-
-#pragma omp barrier
-
-#pragma omp master
-            if (!profiling)
-#pragma omp critical (cout)
-                std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
-        }
-
-
     }
 }
