@@ -31,31 +31,44 @@ then
   exit 3
 fi
 
-# Run tests
-for PARSET in $PARSETS
-do
+function test_parset {
+  PARSET=$1
+
   echo "Testing $PARSET"
 
   RUNDIR=`pwd`
   OUTDIR=`basename "${0}.in_output"`/$PARSET
 
   (
-  # create output dir
-  mkdir -p $OUTDIR && cd $OUTDIR &&
+    # create output dir
+    mkdir -p $OUTDIR &&
+    cd $OUTDIR &&
 
-  # enable debugging
-  echo "Global 20" >> RTCP_new.debug &&
+    # enable debugging
+    echo "Global 20" >> RTCP_new.debug &&
 
-  # run correlator
-  $BINDIR/RTCP_new $RUNDIR/$PARSET &&
+    # run correlator
+    $BINDIR/RTCP_new $RUNDIR/$PARSET &&
 
-  # compare output
-  for f in *.MS
-  do
-    diff $f $RUNDIR/tCorrelateRealData.in_reference/$PARSET/$f || exit 1
-  done
-  ) || exit 1
+    # compare output
+    for f in *.MS
+    do
+      ${srcdir}/cmpfloat.sh $f $RUNDIR/tCorrelateRealData.in_reference/$PARSET/$f || exit 1
+    done
+  ) || return 1
+
+  cd $RUNDIR
 
   # toss output
   rm -rf $OUTDIR
+}
+
+# Run tests
+for PARSET in $PARSETS
+do
+  if ! test_parset "$PARSET"
+  then
+    exit 1
+  fi
 done
+
