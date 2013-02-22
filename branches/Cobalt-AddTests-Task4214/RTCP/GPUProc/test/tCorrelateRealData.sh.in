@@ -2,12 +2,12 @@
 # Tentative test script to run parsets and compare the output to that in the reference_output directory.
 # Obviously still contains too many hard-coded paths.
 
-BINDIR=@CMAKE_CURRENT_BINARY_DIR@
+BINDIR=@CMAKE_CURRENT_BINARY_DIR@/../src
 
 PARSETS="
-tCorrelateRealData.1sec_1st_5sb_noflagging.parset
-tCorrelateRealData.3sec_1st_5sb.parset
-tCorrelateRealData.3sec_2st_5sb.parset
+tCorrelateRealData.sh.in_1sec_1st_5sb_noflagging.parset
+tCorrelateRealData.sh.in_3sec_1st_5sb.parset
+tCorrelateRealData.sh.in_3sec_2st_5sb.parset
 "
 
 echo "Working directory is `pwd`"
@@ -32,7 +32,7 @@ do
   # compare output
   for f in *.MS
   do
-    diff $f $RUNDIR/tCorrelateRealData.reference/$PARSET/$f || exit
+    diff $f $RUNDIR/tCorrelateRealData.sh.in_reference/$PARSET/$f || exit
   done
   ) &&
 
