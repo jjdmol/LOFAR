@@ -1,23 +1,50 @@
 #!/bin/bash
-# Tentative test script to run parsets and compare the output to that in the reference_output directory.
-# Obviously still contains too many hard-coded paths.
 
+# Run parsets and compare the output to that in the reference_output directory.
+
+# Where our binaries reside
 BINDIR=@CMAKE_CURRENT_BINARY_DIR@/../src
 
+# Parsets to test
 PARSETS="
 tCorrelateRealData.sh.in_1sec_1st_5sb_noflagging.parset
 tCorrelateRealData.sh.in_3sec_1st_5sb.parset
 tCorrelateRealData.sh.in_3sec_2st_5sb.parset
 "
 
+# Some host info
+echo "Running as `whoami`"
+echo "Running on `hostname`"
 echo "Working directory is `pwd`"
 
+# Check for GPU
+if lspci | grep VGA | grep -E "ATI|NVIDIA"
+then
+  GPUFOUND=1
+else
+  GPUFOUND=0
+fi
+
+if [ $GPUFOUND -ne 1 ]
+then
+  echo "No ATI/NVIDIA graphics cards detected -- aborting test."
+  exit 3
+fi
+
+# Check for input files
+if [ ! -e /var/scratch/mol/test_sets ]
+then
+  echo "No input files found -- aborting test."
+  exit 3
+fi
+
+# Run tests
 for PARSET in $PARSETS
 do
   echo "Testing $PARSET"
 
   RUNDIR=`pwd`
-  OUTDIR=`basename "${0}.output"`/$PARSET
+  OUTDIR=`basename "${0}.in_output"`/$PARSET
 
   (
   # create output dir
