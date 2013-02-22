@@ -44,29 +44,29 @@ int main(int argc, char **argv)
 
     Parset ps(argv[1]);
 
-    ////(CorrelatorTest)(ps);       //needs parset AARTFAAC!!
-    ////(CorrelateRectangleTest)(ps); //needs parset AARTFAAC!!
+    //(CorrelatorTest)(ps);       //needs parset AARTFAAC!!
+    //(CorrelateRectangleTest)(ps); //needs parset AARTFAAC!!
 
-    ////works with all parsets
-    ////Correlate unittest 
-    //(CorrelateTriangleTest)(ps);
+    //works with all parsets
+    //Correlate unittest 
+    (CorrelateTriangleTest)(ps);
 
-    //////UHEP unittest
-    //(UHEP_BeamFormerTest)(ps);
-    //(UHEP_TransposeTest)(ps);
-    //(UHEP_TriggerTest)(ps);
+    ////UHEP unittest
+    (UHEP_BeamFormerTest)(ps);
+    (UHEP_TransposeTest)(ps);
+    (UHEP_TriggerTest)(ps);
 
-    ////// beamformed unittest 
-    //(IncoherentStokesTest)(ps);
-    //(IntToFloatTest)(ps);
-    //(BeamFormerTest)(ps);
-    //(BeamFormerTransposeTest)(ps);
-    //(DedispersionChirpTest)(ps);
-    //(CoherentStokesTest)(ps);
+    //// beamformed unittest 
+    (IncoherentStokesTest)(ps);
+    (IntToFloatTest)(ps);
+    (BeamFormerTest)(ps);
+    (BeamFormerTransposeTest)(ps);
+    (DedispersionChirpTest)(ps);
+    (CoherentStokesTest)(ps);
 
-    //// dunno what test
-    ////(FFT_Test)(ps);  unknown test
-    ////the actual unittests!
+    // dunno what test
+    //(FFT_Test)(ps);  unknown test
+    //the actual unittests!
 
     //return 0;
     return UnitTest::RunAllTests();
