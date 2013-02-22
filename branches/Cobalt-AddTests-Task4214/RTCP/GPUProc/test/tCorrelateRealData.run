@@ -3,13 +3,13 @@
 # Run parsets and compare the output to that in the reference_output directory.
 
 # Where our binaries reside
-BINDIR=@CMAKE_CURRENT_BINARY_DIR@/../src
+BINDIR=`pwd`/../src
 
 # Parsets to test
 PARSETS="
-tCorrelateRealData.sh.in_1sec_1st_5sb_noflagging.parset
-tCorrelateRealData.sh.in_3sec_1st_5sb.parset
-tCorrelateRealData.sh.in_3sec_2st_5sb.parset
+tCorrelateRealData.in_1sec_1st_5sb_noflagging.parset
+tCorrelateRealData.in_3sec_1st_5sb.parset
+tCorrelateRealData.in_3sec_2st_5sb.parset
 "
 
 # Some host info
@@ -18,14 +18,7 @@ echo "Running on `hostname`"
 echo "Working directory is `pwd`"
 
 # Check for GPU
-if lspci | grep VGA | grep -E "ATI|NVIDIA"
-then
-  GPUFOUND=1
-else
-  GPUFOUND=0
-fi
-
-if [ $GPUFOUND -ne 1 ]
+if ! lspci | grep VGA | grep -E "ATI|NVIDIA"
 then
   echo "No ATI/NVIDIA graphics cards detected -- aborting test."
   exit 3
@@ -59,9 +52,9 @@ do
   # compare output
   for f in *.MS
   do
-    diff $f $RUNDIR/tCorrelateRealData.sh.in_reference/$PARSET/$f || exit
+    diff $f $RUNDIR/tCorrelateRealData.in_reference/$PARSET/$f || exit 1
   done
-  ) &&
+  ) || exit 1
 
   # toss output
   rm -rf $OUTDIR
