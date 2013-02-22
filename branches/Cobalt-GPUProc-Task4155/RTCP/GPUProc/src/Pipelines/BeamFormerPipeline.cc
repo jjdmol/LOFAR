@@ -50,14 +50,7 @@ namespace LOFAR
                 void BeamFormerPipeline::doWork()
         {
 #pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
-            try
-            {
                 BeamFormerWorkQueue(*this, omp_get_thread_num()).doWork();
-            } catch (cl::Error &error) {
-#pragma omp critical (cerr)
-                std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
-                exit(1);
-            }
         }
     }
 }

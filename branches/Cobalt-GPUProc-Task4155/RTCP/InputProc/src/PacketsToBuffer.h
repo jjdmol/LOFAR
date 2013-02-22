@@ -79,7 +79,7 @@ template<typename T> void PacketsToBuffer<T>::processBoard( size_t nr )
 
   try {
     LOG_INFO_STR( logPrefix << "Connecting to " << streamDescriptors[nr] );
-    readers[nr] = new PacketReader(logPrefix, streamDescriptors[nr], settings);
+    readers[nr] = new PacketReader(logPrefix, streamDescriptors[nr]);
 
     LOG_INFO_STR( logPrefix << "Connecting to shared memory buffer 0x" << std::hex << settings.dataKey );
     size_t firstBeamlet = settings.nrBeamlets / settings.nrBoards * nr;

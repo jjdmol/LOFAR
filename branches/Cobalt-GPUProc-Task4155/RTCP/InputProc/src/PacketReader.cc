@@ -10,10 +10,9 @@ namespace LOFAR {
 namespace RTCP {
 
 
-PacketReader::PacketReader( const std::string &logPrefix, const std::string &streamDescriptor, const struct BufferSettings &settings )
+PacketReader::PacketReader( const std::string &logPrefix, const std::string &streamDescriptor )
 :
   logPrefix(str(boost::format("%s [PacketReader] ") % logPrefix)),
-  settings(settings),
 
   nrReceived(0),
   nrBadSize(0),
@@ -74,7 +73,7 @@ bool PacketReader::readPacket( struct RSP &packet )
     ++nrBadData;
     return false;
   }
-
+/*
   // check whether the station configuration matches ours
   if (packet.clockMHz() * 1000000 != settings.station.clock
    || packet.bitMode() != settings.station.bitmode) {
@@ -87,7 +86,7 @@ bool PacketReader::readPacket( struct RSP &packet )
     ++nrBadMode;
     return false;
   }
-
+*/
   return true;
 }
 

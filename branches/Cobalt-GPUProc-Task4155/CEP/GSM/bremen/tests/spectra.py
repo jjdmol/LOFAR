@@ -1,12 +1,11 @@
 #!/usr/bin/python
 import unittest
 from math import log10, pow
-from src.spectra import polyval
 from numpy.testing import assert_array_almost_equal
 from stress.generator import FREQUENCY
 from src.gsmconnectionmanager import GSMConnectionManager
 from src.pipeline import GSMPipeline
-from src.spectra import Spectra
+from src.spectra import Spectra, polyval
 from tests.testlib import cleanup_db
 from tests.switchable import SwitchableTest
 

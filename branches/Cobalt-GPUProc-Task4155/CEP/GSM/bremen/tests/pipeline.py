@@ -56,12 +56,18 @@ select count(*)
 
 
     def test_N_to_N(self):
-        parset = TempParset('data/field_multy.dat', '150000000')
+        parset = TempParset('data/field_multy.dat', '160000000')
         self.pipeline.run_parset(parset)
         parset1 = TempParset('data/image4.dat', '160000000')
         self.pipeline.run_parset(parset1)
         parset1 = TempParset('data/image5.dat', '160000000')
         self.pipeline.run_parset(parset1)
+        res = self.pipeline.conn.exec_return("""
+select count(*)
+  from runningcatalog
+ where group_head_id > 0;""")
+        self.assertEquals(res, 2)
+
 
     def test_N_to_N_more(self):
         parset = TempParset('data/field_multy2.dat', '150000000')
