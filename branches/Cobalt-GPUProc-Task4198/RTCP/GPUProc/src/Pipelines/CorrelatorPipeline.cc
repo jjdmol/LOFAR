@@ -85,6 +85,50 @@ namespace LOFAR
             }
         }
 
+        //        void CorrelatorPipeline::receiveSubbandSamples(unsigned block, unsigned subband)
+//        {
+//            
+//
+//#ifdef USE_INPUT_SECTION
+//
+//#pragma omp parallel for
+//            for (unsigned stat = 0; stat < ps.nrStations(); stat ++) {
+//                Stream *stream = pipeline.bufferToGPUstreams[stat];
+//
+//                // read header
+//                struct BeamletBufferToComputeNode<i16complex>::header header;
+//                size_t subbandSize = inputSamples[stat].num_elements() * sizeof *inputSamples.origin();
+//
+//                stream->read(&header, sizeof header);
+//
+//                ASSERTSTR(subband == header.subband, "Expected subband " << subband << ", got subband " << header.subband);
+//                ASSERTSTR(subbandSize == header.nrSamples * header.sampleSize, "Expected " << subbandSize << " bytes, got " << header.nrSamples * header.sampleSize << " bytes (= " << header.nrSamples << " samples * " << header.sampleSize << " bytes/sample)");
+//
+//                // read subband
+//                stream->read(inputSamples[stat].origin(), subbandSize);
+//
+//                unsigned beam = ps.subbandToSAPmapping()[subband];
+//
+//                // read meta data
+//                SubbandMetaData metaData(1, header.nrDelays);
+//                metaData.read(stream);
+//
+//                // the first set of delays represents the central beam, which is the one we correlate
+//                struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
+//
+//                for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
+//                    delaysAtBegin[beam][stat][pol]  = beamInfo.delayAtBegin;
+//                    delaysAfterEnd[beam][stat][pol] = beamInfo.delayAfterEnd;
+//
+//                    phaseOffsets[beam][pol] = 0.0;
+//                }
+//            }
+//
+//#endif
+//
+//            
+//        }
+
         //This whole block should be parallel: this allows the thread to pick up a subband from the next block
         void CorrelatorPipeline::doWorkQueue(CorrelatorWorkQueue workQueue)
         {
@@ -106,6 +150,8 @@ namespace LOFAR
 #pragma omp for schedule(dynamic), nowait, ordered
                 for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) 
                 {
+                        inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
+                        inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
                         workQueue.doSubband(block, subband);
                 }
             }

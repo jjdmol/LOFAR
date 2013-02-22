@@ -60,52 +60,6 @@ namespace LOFAR
             }
         }
 
-
-        void CorrelatorWorkQueue::receiveSubbandSamples(unsigned block, unsigned subband)
-        {
-            pipeline.inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-
-#ifdef USE_INPUT_SECTION
-
-#pragma omp parallel for
-            for (unsigned stat = 0; stat < ps.nrStations(); stat ++) {
-                Stream *stream = pipeline.bufferToGPUstreams[stat];
-
-                // read header
-                struct BeamletBufferToComputeNode<i16complex>::header header;
-                size_t subbandSize = inputSamples[stat].num_elements() * sizeof *inputSamples.origin();
-
-                stream->read(&header, sizeof header);
-
-                ASSERTSTR(subband == header.subband, "Expected subband " << subband << ", got subband " << header.subband);
-                ASSERTSTR(subbandSize == header.nrSamples * header.sampleSize, "Expected " << subbandSize << " bytes, got " << header.nrSamples * header.sampleSize << " bytes (= " << header.nrSamples << " samples * " << header.sampleSize << " bytes/sample)");
-
-                // read subband
-                stream->read(inputSamples[stat].origin(), subbandSize);
-
-                unsigned beam = ps.subbandToSAPmapping()[subband];
-
-                // read meta data
-                SubbandMetaData metaData(1, header.nrDelays);
-                metaData.read(stream);
-
-                // the first set of delays represents the central beam, which is the one we correlate
-                struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
-
-                for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-                    delaysAtBegin[beam][stat][pol]  = beamInfo.delayAtBegin;
-                    delaysAfterEnd[beam][stat][pol] = beamInfo.delayAfterEnd;
-
-                    phaseOffsets[beam][pol] = 0.0;
-                }
-            }
-
-#endif
-
-            pipeline.inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
-        }
-
-
         void CorrelatorWorkQueue::sendSubbandVisibilites(unsigned block, unsigned subband)
         {
             pipeline.outputSynchronization.waitFor(block * ps.nrSubbands() + subband);
@@ -116,8 +70,6 @@ namespace LOFAR
 
         void CorrelatorWorkQueue::doSubband(unsigned block, unsigned subband)
         {
-            receiveSubbandSamples(block, subband);
-
             {
 #if defined USE_B7015
                 OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);

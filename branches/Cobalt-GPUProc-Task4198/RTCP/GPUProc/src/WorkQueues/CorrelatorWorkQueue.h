@@ -34,7 +34,7 @@ namespace LOFAR
 
             //private:
             void doSubband(unsigned block, unsigned subband);
-            void receiveSubbandSamples(unsigned block, unsigned subband);
+            //void receiveSubbandSamples(unsigned block, unsigned subband);
             void sendSubbandVisibilites(unsigned block, unsigned subband);
 
             CorrelatorPipeline	&pipeline;
