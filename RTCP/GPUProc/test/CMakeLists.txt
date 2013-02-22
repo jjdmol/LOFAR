@@ -8,6 +8,8 @@ include_directories(${PACKAGE_SOURCE_DIR}/src)
 
 include_directories("/cm/shared/apps/UnitTest++/src")
 
+lofar_add_test(tCorrelateRealData)
+
 #lofar_add_test(tDelayCompensation tDelayCompensation.cc)
 #target_link_libraries(tDelayCompensation /cm/shared/apps/UnitTest++/libUnitTest++.a)
 

@@ -6,6 +6,8 @@
 #include "OpenCL_Support.h"
 
 #include "Stream/Stream.h"
+#include "Stream/FileStream.h"
+#include "Stream/SharedMemoryStream.h"
 #include "Stream/NullStream.h"
 
 #include "Pipeline.h"
@@ -27,7 +29,6 @@ namespace LOFAR
         {
             createContext(context, devices);
 
-#ifdef USE_INPUT_SECTION
             for (unsigned stat = 0; stat < ps.nrStations(); stat ++) {
                 bufferToGPUstreams[stat] = new SharedMemoryStream;
 
@@ -46,13 +47,15 @@ namespace LOFAR
                     break;
                 }
             }
-#else
-            for (unsigned stat = 0; stat < ps.nrStations(); stat ++)
-                bufferToGPUstreams[stat] = new NullStream;
-#endif
 
-            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++)
-                GPUtoStorageStreams[sb] = new NullStream;
+            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) 
+                try {
+                  GPUtoStorageStreams[sb] = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
+                } catch(InterfaceException &ex) {
+                  LOG_ERROR_STR("Caught exception, using null stream for subband " << sb << ": " << ex);
+
+                  GPUtoStorageStreams[sb] = new NullStream;
+                }
         }
 
 
@@ -65,7 +68,7 @@ namespace LOFAR
         void Pipeline::sendNextBlock(unsigned station)
         {
             (void)station;
-#ifdef USE_INPUT_SECTION
+
             unsigned bitsPerSample = ps.nrBitsPerSample();
 
             Stream *stream = bufferToGPUstreams[station];
@@ -84,7 +87,6 @@ namespace LOFAR
                 stationInputs4[station].beamletBufferToComputeNode->process(stream);
                 break;
             }
-#endif
         }
 
     }
