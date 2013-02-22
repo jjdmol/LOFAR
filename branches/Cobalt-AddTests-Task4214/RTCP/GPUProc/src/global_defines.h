@@ -12,7 +12,6 @@
 #define NR_POLARIZATIONS	 2
 #define NR_TAPS			16
 #define USE_2X2
-#define USE_INPUT_SECTION
 #undef USE_CUSTOM_FFT
 #undef USE_TEST_DATA
 #undef USE_B7015
