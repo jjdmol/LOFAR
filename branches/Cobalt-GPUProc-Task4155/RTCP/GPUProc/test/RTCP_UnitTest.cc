@@ -8,21 +8,21 @@
 #include "Interface/Parset.h"
 #include "OpenCL_Support.h"
 
-//#include "UnitTests/IncoherentStokesTest.h"
-//#include "UnitTests/IntToFloatTest.h"
-//#include "UnitTests/BeamFormerTransposeTest.h"
-//#include "UnitTests/DedispersionChirpTest.h"
-//#include "UnitTests/CoherentStokesTest.h"
-//#include "UnitTests/UHEP_BeamFormerTest.h"
-//#include "UnitTests/UHEP_TransposeTest.h"
-//#include "UnitTests/BeamFormerTest.h"
-//#include "UnitTests/CorrelateTriangleTest.h"
-//#include "UnitTests/UHEP_TriggerTest.h"
-//#include "UnitTests/CorrelateRectangleTest.h"
-//#include "UnitTests/CorrelatorTest.h"
-//#include "UnitTests/FFT_Test.h"
+#include "UnitTests/IncoherentStokesTest.h"
+#include "UnitTests/IntToFloatTest.h"
+#include "UnitTests/BeamFormerTransposeTest.h"
+#include "UnitTests/DedispersionChirpTest.h"
+#include "UnitTests/CoherentStokesTest.h"
+#include "UnitTests/UHEP_BeamFormerTest.h"
+#include "UnitTests/UHEP_TransposeTest.h"
+#include "UnitTests/BeamFormerTest.h"
+#include "UnitTests/CorrelateTriangleTest.h"
+#include "UnitTests/UHEP_TriggerTest.h"
+#include "UnitTests/CorrelateRectangleTest.h"
+#include "UnitTests/CorrelatorTest.h"
+#include "UnitTests/FFT_Test.h"
 
-#include  <UnitTest++.h>
+//#include  <UnitTest++.h>  
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
     //(FFT_Test)(ps);  unknown test
     //the actual unittests!
 
-    //return 0;
-    return UnitTest::RunAllTests();
+    return 0;
+    //return UnitTest::RunAllTests();
     
 }
