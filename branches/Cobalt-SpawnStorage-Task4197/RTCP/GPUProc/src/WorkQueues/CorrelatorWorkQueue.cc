@@ -9,6 +9,7 @@
 #include <iostream>
 #include "ApplCommon/PosixTime.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include "Interface/CorrelatedData.h"
 
 #include "Pipeline.h"
 #include "CorrelatorWorkQueue.h"
@@ -106,7 +107,15 @@ namespace LOFAR
         void CorrelatorWorkQueue::sendSubbandVisibilites(unsigned block, unsigned subband)
         {
             pipeline.outputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-            pipeline.GPUtoStorageStreams[subband]->write(visibilities.origin(), visibilities.num_elements() * sizeof(std::complex<float>));
+
+            // Create an interface object to Storage around our visibilities
+            CorrelatedData data(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), visibilities.origin(), visibilities.num_elements());
+
+            // TODO: fill in weights
+
+            // Write the block to Storage
+            data.write(pipeline.GPUtoStorageStreams[subband].get(), true);
+
             pipeline.outputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
         }
 

@@ -3,6 +3,7 @@
 #include "Common/LofarLogger.h"
 #include "global_defines.h"
 #include "Interface/Parset.h"
+#include "Interface/Stream.h"
 #include "OpenCL_Support.h"
 
 #include "Stream/Stream.h"
@@ -50,8 +51,18 @@ namespace LOFAR
 
             for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) 
                 try {
-                  GPUtoStorageStreams[sb] = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
-                } catch(InterfaceException &ex) {
+                    if (ps.getHostName(CORRELATED_DATA, sb) == "") {
+                      // an empty host name means 'write to disk directly', to
+                      // make debugging easier for now
+                      GPUtoStorageStreams[sb] = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
+                    } else {
+                      // connect to the Storage_main process for this output
+                      const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, sb);
+
+                      // TODO: Create these connections asynchronously!
+                      GPUtoStorageStreams[sb] = createStream(desc, false, 0);
+                    }
+                } catch(Exception &ex) {
                   LOG_ERROR_STR("Caught exception, using null stream for subband " << sb << ": " << ex);
 
                   GPUtoStorageStreams[sb] = new NullStream;

@@ -38,7 +38,7 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
     {
     }
 
-    MultiDimArray(const ExtentList &extents, void *ptr, bool construct = true)
+    MultiDimArray(const ExtentList &extents, T *ptr, bool construct = true, Allocator &allocator = heapAllocator)
     :
       // Use 'placement new' to force initialisation through constructors if T is a class
 
