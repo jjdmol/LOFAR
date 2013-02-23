@@ -21,7 +21,10 @@ class StorageProcesses;
 
 class StorageProcess {
     public:
+      // user must call start()
       StorageProcess( StorageProcesses &manager, const Parset &parset, const std::string &logPrefix, int rank, const std::string &hostname );
+
+      // calls stop(0)
       ~StorageProcess();
 
       void start();
@@ -50,11 +53,11 @@ class StorageProcess {
 
 class StorageProcesses {
 public:
+    // calls start()
     StorageProcesses( const Parset &parset, const std::string &logPrefix );
-    ~StorageProcesses();
 
-    // start the processes and control threads
-    void start();
+    // calls stop(0)
+    ~StorageProcesses();
 
     // start the FinalMetaDataGatherer process and forward the obtained
     // meta data to the Storage processes. The deadline is an absolute time out.
@@ -71,8 +74,12 @@ private:
     FinalMetaData                        itsFinalMetaData;
     Semaphore                            itsFinalMetaDataAvailable;
 
+    // start the processes and control threads
+    void start();
+
     void finalMetaDataThread();
 
+    // to access itsFinalMetaDataAvailable
     friend class StorageProcess;
 };
 

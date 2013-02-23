@@ -66,7 +66,7 @@ void StorageProcess::start()
   if (getcwd(cwd, sizeof cwd) == 0)
     throw SystemCallException("getcwd", errno, THROW_ARGS);
 
-  std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u 2>&1")
+  std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u")
     % cwd
 #if defined USE_VALGRIND
     % "valgrind --leak-check=full "
@@ -135,6 +135,7 @@ StorageProcesses::StorageProcesses( const Parset &parset, const std::string &log
   itsParset(parset),
   itsLogPrefix(logPrefix)
 {
+  start();
 }
 
 StorageProcesses::~StorageProcesses()
@@ -142,7 +143,6 @@ StorageProcesses::~StorageProcesses()
   // never let any processes linger
   stop(0);
 }
-
 
 void StorageProcesses::start()
 {
