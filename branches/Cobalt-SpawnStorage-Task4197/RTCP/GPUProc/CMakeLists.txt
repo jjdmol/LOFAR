@@ -24,5 +24,9 @@ if(USE_VALGRIND)
   add_definitions(-DUSE_VALGRIND)
 endif(USE_VALGRIND)  
 
+if(USE_PATCHED_OPENCL_HEADERS)
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/backward)
+endif(USE_PATCHED_OPENCL_HEADERS)
+
 add_subdirectory(src)
 add_subdirectory(test)

@@ -18,9 +18,11 @@
 #include "UnitTests/BeamFormerTest.h"
 #include "UnitTests/CorrelateTriangleTest.h"
 #include "UnitTests/UHEP_TriggerTest.h"
-//#include "UnitTests/CorrelateRectangleTest.h"
-//#include "UnitTests/CorrelatorTest.h"
-//#include "UnitTests/FFT_Test.h"
+#include "UnitTests/CorrelateRectangleTest.h"
+#include "UnitTests/CorrelatorTest.h"
+#include "UnitTests/FFT_Test.h"
+
+//#include  <UnitTest++.h>  
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
@@ -67,4 +69,6 @@ int main(int argc, char **argv)
     //the actual unittests!
 
     return 0;
+    //return UnitTest::RunAllTests();
+    
 }

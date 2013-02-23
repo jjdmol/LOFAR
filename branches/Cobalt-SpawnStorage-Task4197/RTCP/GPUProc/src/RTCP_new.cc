@@ -6,6 +6,7 @@
 
 #include "OpenMP_Support.h"
 #include "Common/LofarLogger.h"
+#include "Common/Exception.h"
 #include <cstdlib>
 #include "Interface/Parset.h"
 #include <iostream>
@@ -51,6 +52,11 @@
 #include "WorkQueues/BeamFormerWorkQueue.h"
 #include "WorkQueues/UHEP_WorkQueue.h"
 
+using namespace LOFAR;
+using namespace LOFAR::RTCP;
+
+// Use our own terminate handler
+Exception::TerminateHandler t(OpenCL_Support::terminate);
 
 void usage(char **argv)
 {
@@ -104,9 +110,6 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    // Run the actual code in a try block
-    try 
-    {       
         // Parse the type of computation to perform
         // TODO: place holder enum for types of pipelines and unittest: Should we use propper argument parsing?
         SELECTPIPELINE option;
@@ -173,13 +176,6 @@ int main(int argc, char **argv)
 
         // graceful exit
         storageProcesses.stop(completing_start + 300);
-    } 
-    catch (cl::Error &error)
-    {
-#pragma omp critical (cerr)
-        std::cerr << "OpenCL error: " << error.what() << ": " << errorMessage(error.err()) << std::endl;
-        exit(1);
-    }
 
     return 0;
 }
