@@ -38,18 +38,20 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
     {
     }
 
-    MultiDimArray(const ExtentList &extents, T *ptr, bool construct = true, Allocator &allocator = heapAllocator)
+    MultiDimArray(const ExtentList &extents, T *ptr, bool construct = true)
     :
       // Use 'placement new' to force initialisation through constructors if T is a class
 
       // TODO: Not sure how to handle an exception raised by the constructor of T. The placement
       // delete[] will be called, but that's an empty stub.
       SuperType(construct ? new(ptr)T[nrElements(extents)] : ptr, extents),
-      allocator(&allocator),
+      allocator(0),
       allocated_num_elements(nrElements(extents)),
       alignment(alignment),
-      padToAlignment(padToAlignment)
+      padToAlignment(padToAlignment),
+      construct(construct)
     {
+      // NOTE: Elements are not destructed even if construct == true!
     }
 
     MultiDimArray(const ExtentList &extents, size_t alignment = defaultAlignment(), Allocator &allocator = heapAllocator, bool padToAlignment = false, bool construct = true)
@@ -82,9 +84,9 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
 
     ~MultiDimArray()
     {
-      if (allocator) { // resizeInplace will leave us without an allocator, but also destructs the elements itself
-        destructElements();
+      destructElements();
 
+      if (allocator) {
         allocator->deallocate(this->base_);
       }  
     }
@@ -144,7 +146,8 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
 
       // regenerate the metadata, and use it.
       // Our metadata will be freed due to the swap, but our data won't, because
-      // newArray.allocator == 0.
+      // newArray.allocator == 0. Nor will our data be destructed, because
+      // newArray.construct == false.
       MultiDimArray newArray(*this, extents);
       //std::swap(this->base_, newArray.base_);
       std::swap(this->storage_, newArray.storage_);
@@ -220,7 +223,7 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       allocated_num_elements(0),
       alignment(other.alignment),
       padToAlignment(other.padToAlignment),
-      construct(other.construct)
+      construct(false) // construction was done by an external source
     {
     }
 
