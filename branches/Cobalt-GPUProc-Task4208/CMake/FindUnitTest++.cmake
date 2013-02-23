@@ -32,10 +32,16 @@
 
 if(NOT UNITTEST++_FOUND)
 
-  find_path(UNITTEST++_INCLUDE_DIR UnitTest++.h
-    HINTS ${UNITTEST++_ROOT_DIR} PATH_SUFFIXES unittest++)
-  find_library(UNITTEST++_LIBRARY UnitTest++
-    HINTS ${UNITTEST++_ROOT_DIR} PATH_SUFFIXES lib)
+  find_path(UNITTEST++_INCLUDE_DIR 
+    NAMES unittest++/UnitTest++.h UnitTest++.h
+    HINTS ${UNITTEST++_ROOT_DIR}
+    PATH_SUFFIXES include src)
+
+  find_library(UNITTEST++_LIBRARY 
+    NAMES UnitTest++
+    HINTS ${UNITTEST++_ROOT_DIR} 
+    PATH_SUFFIXES lib)
+
   mark_as_advanced(UNITTEST++_INCLUDE_DIR UNITTEST++_LIBRARY)
 
   include(FindPackageHandleStandardArgs)
