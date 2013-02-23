@@ -4,6 +4,7 @@
 #include <Interface/Align.h>
 #include <Interface/Allocator.h>
 #include <Interface/Exceptions.h>
+#include <Common/LofarLogger.h>
 #include <boost/multi_array.hpp>
 
 #include <memory>
@@ -71,7 +72,7 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
 
     MultiDimArray(const MultiDimArray<T,DIM> &other)
     :
-      SuperType(other.num_elements_ ? allocate(other.num_elements_, other.alignment, *other.allocator, other.padToAlignment, other.construct) : 0, other.extent_list_),
+      SuperType(other.num_elements_ && other.allocator ? allocate(other.num_elements_, other.alignment, *other.allocator, other.padToAlignment, other.construct) : 0, other.extent_list_),
 //new(other.allocator->allocate(padToAlignment ? align(other.num_elements_ * sizeof(T), other.alignment) : other.num_elements_ * sizeof(T), other.alignment))T[other.num_elements_] : 0, other.extent_list_),
       allocator(other.allocator),
       allocated_num_elements(other.num_elements_),
@@ -79,6 +80,8 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       padToAlignment(other.padToAlignment),
       construct(true)
     {
+      ASSERTSTR(other.allocator, "Cannot copy MultiDimArray that does not have an allocator.");
+
       *this = other;
     }
 
@@ -107,8 +110,6 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
 
     void resize(const ExtentList &extents, size_t alignment, Allocator &allocator, bool padToAlignment = false, bool construct = true)
     {
-      destructElements();
-
       MultiDimArray newArray(extents, alignment, allocator, padToAlignment, construct);
       std::swap(this->base_, newArray.base_);
       std::swap(this->storage_, newArray.storage_);
@@ -127,6 +128,8 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
 
     void resize(const ExtentList &extents, size_t alignment = defaultAlignment())
     {
+      ASSERTSTR(allocator, "Cannot resize MultiDimArray that does not have an allocator.");
+
       resize(extents, alignment, *allocator);
     }
 
