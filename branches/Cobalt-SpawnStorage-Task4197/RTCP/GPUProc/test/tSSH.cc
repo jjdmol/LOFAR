@@ -1,6 +1,6 @@
 #include <lofar_config.h>
 
-#include <SSH.h>
+#include <Storage/SSH.h>
 #include <unistd.h>
 #include <time.h>
 #include <cstdlib>

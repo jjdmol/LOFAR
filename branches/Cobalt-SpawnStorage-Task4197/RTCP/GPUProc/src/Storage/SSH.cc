@@ -22,7 +22,7 @@
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
-#include <SSH.h>
+#include <Storage/SSH.h>
 
 #include <Common/Thread/Cancellation.h>
 #include <Common/Thread/Mutex.h>

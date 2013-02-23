@@ -1,6 +1,7 @@
 #include <lofar_config.h>
 
-#include <StorageProcesses.h>
+#include <Storage/StorageProcesses.h>
+#include <Storage/SSH.h>
 #include <time.h>
 #include <cstdlib>
 #include <cstdio>

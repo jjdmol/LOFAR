@@ -22,7 +22,7 @@
 #include "Kernel.h"
 #include "FFT_Kernel.h"
 #include "FFT_Plan.h"
-#include "StorageProcesses.h"
+#include "Storage/StorageProcesses.h"
 
 #include "Kernels/FIR_FilterKernel.h"
 #include "Kernels/DelayAndBandPassKernel.h"

@@ -8,7 +8,7 @@
 #include <Interface/SmartPtr.h>
 #include <Interface/Stream.h>
 #include <Interface/FinalMetaData.h>
-#include <SSH.h>
+#include <Storage/SSH.h>
 #include <string>
 #include <vector>
 

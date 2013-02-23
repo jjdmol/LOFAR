@@ -1,10 +1,9 @@
 #include "lofar_config.h"
-#include <StorageProcesses.h>
+#include <Storage/StorageProcesses.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <Common/Thread/Thread.h>
 #include <Stream/PortBroker.h>
-#include <SSH.h>
 #include <boost/format.hpp>
 
 namespace LOFAR {
