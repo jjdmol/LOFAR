@@ -1,4 +1,5 @@
-system success
+Debug: registered context Global=0
+Debug::loadLevels: error opening tSSH.debug
 stdout read [stdout]
 stderr read [stderr]
 Captured [capture stdout [stdout]

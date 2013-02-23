@@ -81,6 +81,7 @@ private:
 
 const char *explainLibSSH2Error( int error );
 const char *explainExitStatus( int exitstatus );
+bool discover_ssh_privkey(char *privkey, size_t buflen);
 
 } // namespace RTCP
 } // namespace LOFAR

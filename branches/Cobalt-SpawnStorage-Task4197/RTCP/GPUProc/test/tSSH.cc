@@ -8,13 +8,6 @@
 #include <Stream/SocketStream.h>
 #include <Common/LofarLogger.h>
 
-// some useful environment variables
-char *USER;
-char *HOME;
-
-// the existence of $HOME/.ssh/id_rsa is assumed,
-// as well as the fact that it can be used to
-// authenticate on localhost.
 char privkey[1024];
 
 using namespace LOFAR;
@@ -22,7 +15,7 @@ using namespace RTCP;
 
 
 void test_SSHconnection( const char *cmd, bool capture ) {
-#ifdef HAVE_LIBSSH2
+  const char *USER = getenv("USER");
   SSHconnection ssh("", "localhost", cmd, USER, privkey, capture);
 
   ssh.start();
@@ -35,24 +28,14 @@ void test_SSHconnection( const char *cmd, bool capture ) {
 
   if (capture)
     cout << "Captured [" << ssh.stdoutBuffer() << "]" << endl;
-#endif
 }
 
 int main() {
   INIT_LOGGER( "tSSH" );
 
-  USER = getenv("USER");
-  HOME = getenv("HOME");
-  snprintf(privkey, sizeof privkey, "%s/.ssh/id_rsa", HOME);
-
-  // can we even ssh to localhost?
-  char sshcmd[1024];
-  snprintf(sshcmd, sizeof sshcmd, "ssh %s@localhost -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o NoHostAuthenticationForLocalhost=yes -i %s echo system success", USER, privkey);
-  int ret = system(sshcmd);
-  if (ret < 0 || WEXITSTATUS(ret) != 0) {
-    // no -- mark this test as unrunnable and don't attempt to try with libssh then
+  // discover a working private key
+  if (!discover_ssh_privkey(privkey, sizeof privkey))
     return 3;
-  }  
 
   SSH_Init();
 

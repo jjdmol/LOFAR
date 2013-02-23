@@ -33,6 +33,8 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <cstdlib>
+#include <cstdio>
 
 #include <Scheduling.h>
 #include <Interface/SmartPtr.h>
@@ -443,7 +445,10 @@ void SSHconnection::commThread()
 #else
                 ScopedLock sl(coutMutex);
 #endif
-                cout << line[s] << endl;
+                if (s == 0)
+                  cout << line[s] << endl;
+                else
+                  cerr << line[s] << endl;
               }
             }
           }
@@ -657,6 +662,38 @@ const char *explainExitStatus( int exitstatus )
   }
 
   return explanation;
+}
+
+static bool ssh_works(const char *privkey) {
+  char *USER = getenv("USER");
+
+  char sshcmd[1024];
+  snprintf(sshcmd, sizeof sshcmd, "ssh %s@localhost -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o NoHostAuthenticationForLocalhost=yes -i %s /bin/true 2>/dev/null", USER, privkey);
+  int ret = system(sshcmd);
+  if (ret < 0 || WEXITSTATUS(ret) != 0) {
+    // no -- mark this test as unrunnable and don't attempt to try with libssh then
+    return false;
+  }  
+
+  return true;
+}
+
+bool discover_ssh_privkey(char *privkey, size_t buflen) {
+  char *HOME = getenv("HOME");
+
+  snprintf(privkey, buflen, "%s/.ssh/id_rsa", HOME);
+
+  if (ssh_works(privkey)) 
+    return true;
+
+  snprintf(privkey, buflen, "%s/.ssh/id_dsa", HOME);
+
+  if (ssh_works(privkey))
+    return true;
+
+  LOG_ERROR("Cannot find a working private key for SSH to localhost");
+
+  return false;
 }
 
 } // namespace RTCP
