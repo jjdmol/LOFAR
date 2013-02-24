@@ -30,6 +30,7 @@
 #include <Common/LofarLogger.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 #include <vector>
 #include <string>
 #include <sstream>
