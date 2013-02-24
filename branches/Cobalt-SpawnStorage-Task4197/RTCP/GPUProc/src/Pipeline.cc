@@ -26,7 +26,7 @@ namespace LOFAR
             stationInputs8(ps.nrStations()),
             stationInputs4(ps.nrStations()),
             bufferToGPUstreams(ps.nrStations()),
-            GPUtoStorageStreams(ps.nrSubbands())
+            outputs(ps.nrSubbands())
         {
             createContext(context, devices);
 
@@ -49,30 +49,55 @@ namespace LOFAR
                 }
             }
 
-            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) 
+            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
+                struct Output &output = outputs[sb];
+
                 try {
                     if (ps.getHostName(CORRELATED_DATA, sb) == "") {
                       // an empty host name means 'write to disk directly', to
                       // make debugging easier for now
-                      GPUtoStorageStreams[sb] = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
+                      output.stream = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
                     } else {
                       // connect to the Storage_main process for this output
                       const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, sb);
 
                       // TODO: Create these connections asynchronously!
-                      GPUtoStorageStreams[sb] = createStream(desc, false, 0);
+                      output.stream = createStream(desc, false, 0);
                     }
                 } catch(Exception &ex) {
                   LOG_ERROR_STR("Caught exception, using null stream for subband " << sb << ": " << ex);
 
-                  GPUtoStorageStreams[sb] = new NullStream;
+                  output.stream = new NullStream;
                 }
+            }
         }
 
 
         cl::Program Pipeline::createProgram(const char *sources)
         {
             return LOFAR::RTCP::createProgram(ps, context, devices, sources);
+        }
+
+
+        void Pipeline::sendOutput(unsigned block, unsigned subband, StreamableData &data)
+        {
+            struct Output &output = outputs[subband];
+
+            // Force blocks to be written in-order
+            output.sync.waitFor(block);
+
+            try {
+              // Try to write the data
+              data.write(output.stream.get(), true);
+            } catch (Stream::EndOfStreamException &ex) {
+              LOG_WARN_STR("Caught EndOfStream while writing data: " << ex);
+
+              // Prevent future warnings
+              output.stream = new NullStream;
+            }
+
+            // Allow the next block to be written
+            output.sync.advanceTo(block + 1);
         }
 
 

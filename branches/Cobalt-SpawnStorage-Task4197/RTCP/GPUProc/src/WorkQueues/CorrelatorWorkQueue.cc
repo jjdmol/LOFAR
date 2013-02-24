@@ -104,19 +104,19 @@ namespace LOFAR
         }
 
 
-        void CorrelatorWorkQueue::sendSubbandVisibilites(unsigned block, unsigned subband)
+        void CorrelatorWorkQueue::sendSubbandVisibilities(unsigned block, unsigned subband)
         {
-            pipeline.outputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-
             // Create an interface object to Storage around our visibilities
             CorrelatedData data(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), visibilities.origin(), visibilities.num_elements());
 
-            // TODO: fill in weights
+            // Add weights
+            // TODO: base weights on flags
+            for (size_t bl = 0; bl < data.itsNrBaselines; ++bl)
+              for (size_t ch = 0; ch < ps.nrChannelsPerSubband(); ++ch)
+                data.setNrValidSamples(bl, ch, ps.integrationSteps());
 
             // Write the block to Storage
-            data.write(pipeline.GPUtoStorageStreams[subband].get(), true);
-
-            pipeline.outputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
+            pipeline.sendOutput(block, subband, data);
         }
 
 
@@ -154,7 +154,7 @@ namespace LOFAR
                 pipeline.visibilitiesCounter.doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
             }
 
-            sendSubbandVisibilites(block, subband);
+            sendSubbandVisibilities(block, subband);
         }
 
 

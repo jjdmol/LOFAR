@@ -2,6 +2,7 @@
 #define GPUPROC_PIPELINECLASS_H
 #include "CL/cl.hpp"
 #include "Interface/Parset.h"
+#include "Interface/StreamableData.h"
 #include "OpenCL_Support.h"
 
 #include "global_defines.h"
@@ -48,15 +49,27 @@ namespace LOFAR
             std::vector<StationInput<i4complex> >  stationInputs4; // indexed by station
 
             std::vector<SmartPtr<Stream> >  bufferToGPUstreams; // indexed by station
-            std::vector<SmartPtr<Stream> >  GPUtoStorageStreams; // indexed by subband
-            SlidingPointer<uint64_t> inputSynchronization, outputSynchronization;
+
+            SlidingPointer<uint64_t> inputSynchronization;
 
 #if defined USE_B7015
             OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
 #endif
 
+            void sendOutput(unsigned block, unsigned subband, StreamableData &data);
             //private:
             void                    sendNextBlock(unsigned station);
+
+        private:
+            struct Output {
+              // stream to Storage process (or to disk)
+              SmartPtr<Stream> stream;
+
+              // synchronisation to write blocks in-order
+              SlidingPointer<size_t> sync;
+            };
+
+            std::vector<struct Output> outputs; // indexed by subband
         };
     }
 }
