@@ -17,7 +17,26 @@ namespace RTCP {
 
 class StorageProcesses;
 
-/* A single Storage process */
+/* A single Storage process.
+ *
+ * Storage is started as:
+ *     Storage_main observationID rank isBigEndian
+ *
+ * A Storage process is expected to follow the following protocol: 
+ *
+  // establish control connection
+  string resource = getStorageControlDescription(observationID, rank);
+  PortBroker::ServerStream stream(resource);
+
+  // read parset
+  Parset parset(&stream);
+
+  ... process observation ...
+
+  // read meta data
+  FinalMetaData finalMetaData;
+  finalMetaData.read(stream);
+ */
 
 class StorageProcess {
     public:
@@ -48,7 +67,30 @@ class StorageProcess {
 };
 
 /*
- * Manage a Storage_main process (RTCP/Storage). The control sequence is as follows:
+ * Manage a set of StorageProcess objects. The control sequence is as follows:
+ *
+ * 1. StorageProcess() creates and starts the StorageProcess objects from the
+ *    parset.
+ * 2. ... process observation ...
+ * 3. forwardFinalMetaData(deadline) starts the FinalMetaDataGatherer, reads the
+ *    final meta data and forwards it to the StorageProcess objects.
+ * 4. stop(deadline) stops the StorageProcesses with a termination period.
+ *
+ * FinalMetaDataGatherer is started as:
+ *     FinalMetaDataGatherer observationID
+ *
+ * A Storage process is expected to follow the following protocol: 
+ *
+  // establish control connection
+  string resource = getStorageControlDescription(observationID, -1);
+  PortBroker::ServerStream stream(resource);
+
+  // read parset
+  Parset parset(&stream);
+
+  // write meta data
+  FinalMetaData finalMetaData;
+  finalMetaData.write(stream);
  */
 
 class StorageProcesses {
