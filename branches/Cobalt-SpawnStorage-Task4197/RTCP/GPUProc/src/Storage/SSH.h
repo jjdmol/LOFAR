@@ -43,6 +43,10 @@ void SSH_Finalize();
 
 class SSHconnection {
 public:
+
+  // The number of seconds to wait to retry if establishing a connection fails.
+  static const unsigned RETRY_DELAY = 60;
+
   EXCEPTION_CLASS(SSHException, LOFAR::Exception);
 
   SSHconnection(const std::string &logPrefix, const std::string &hostname, const std::string &commandline, const std::string &username, const std::string &sshkey, bool captureStdout = false);

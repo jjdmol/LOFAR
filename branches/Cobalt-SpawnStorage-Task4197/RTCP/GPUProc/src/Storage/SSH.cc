@@ -191,11 +191,6 @@ LIBSSH2_SESSION *SSHconnection::open_session( FileDescriptorBasedStream &sock )
 
   if (rc) {
     LOG_ERROR_STR( itsLogPrefix << "Authentication by public key failed: " << rc << " (" << explainLibSSH2Error(rc) << ")");
-
-    // unrecoverable errors
-    if (rc == LIBSSH2_ERROR_FILE)
-      THROW(SSHException, "Error reading read key file " << itsSSHKey);
-
     return NULL;
   }
 
@@ -342,8 +337,10 @@ void SSHconnection::commThread()
 
       session = open_session(*sock);
 
-      if (!session.get())
+      if (!session.get()) {
+        sleep(RETRY_DELAY);
         continue;
+      }
 
       channel = open_channel(session, *sock);
 
@@ -351,6 +348,8 @@ void SSHconnection::commThread()
         close_session(session, *sock);
 
         session = 0;
+
+        sleep(RETRY_DELAY);
         continue;
       }
     }
