@@ -60,6 +60,15 @@ void StorageProcess::start()
   std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
 
+  if (sshKey == "") {
+    // No SSH key given -- try to discover it
+
+    char privkey[1024];
+
+    if (discover_ssh_privkey(privkey, sizeof privkey))
+      sshKey = privkey;
+  }
+
   char cwd[1024];
 
   if (getcwd(cwd, sizeof cwd) == 0)
