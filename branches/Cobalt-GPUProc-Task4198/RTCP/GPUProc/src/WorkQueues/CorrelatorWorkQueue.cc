@@ -15,13 +15,17 @@
 #include "BandPass.h"
 #include "Pipelines/CorrelatorPipelinePrograms.h"
 #include "Pipelines/CorrelatorPipelineCounters.h"
+#include "FilterBank.h"
 
 namespace LOFAR
 {
     namespace  RTCP 
     {     
-        CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, cl::Context context,
-            cl::Device		&device, unsigned gpuNumber, CorrelatorPipelinePrograms & programs, CorrelatorPipelineCounters & inputcounters)
+        CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline,
+            cl::Context context, cl::Device	&device, unsigned gpuNumber,
+            CorrelatorPipelinePrograms & programs, CorrelatorPipelineCounters & inputcounters,
+            FilterBank &filterBank
+            )
             :
         WorkQueue( context, device, gpuNumber, pipeline.ps),
             pipeline(pipeline),
@@ -50,7 +54,8 @@ namespace LOFAR
             correlatorKernel(ps, queue, programs.correlatorProgram, visibilities, devCorrectedData)
 #endif
         {
-            queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), pipeline.filterBank.getWeights().origin());
+          //counters = inputcounters;
+            queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), filterBank.getWeights().origin());
 
 #if 0
             size_t filteredDataSize = ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>);

@@ -19,6 +19,8 @@
 #include "Pipelines/CorrelatorPipelinePrograms.h"
 #include "Pipelines/CorrelatorPipelineCounters.h"
 
+#include "FilterBank.h"
+
 namespace LOFAR
 {
     namespace RTCP 
@@ -27,7 +29,8 @@ namespace LOFAR
         {
         public:
             CorrelatorWorkQueue(CorrelatorPipeline &,cl::Context context, cl::Device		&device, unsigned queueNumber,
-              CorrelatorPipelinePrograms &programs, CorrelatorPipelineCounters &counters );
+              CorrelatorPipelinePrograms &programs, CorrelatorPipelineCounters &counters,
+              FilterBank &filterBank);
 
             void doWork();
 

@@ -90,7 +90,7 @@ namespace LOFAR
 
                   doWorkQueue(CorrelatorWorkQueue(*this, context, 
                        devices[omp_get_thread_num() % nrGPUs], omp_get_thread_num() % nrGPUs,
-                       programs, counters));
+                       programs, counters, filterBank));
                 }
             }
         }
