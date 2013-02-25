@@ -13,9 +13,9 @@ namespace LOFAR
 {
     namespace  RTCP 
     {      
-                WorkQueue::WorkQueue(Pipeline &pipeline, cl::Context context, unsigned queueNumber, const Parset	&ps)
+                WorkQueue::WorkQueue(Pipeline &pipeline, cl::Context context, unsigned gpuNumber, const Parset	&ps)
             :
-        gpu(queueNumber % nrGPUs),
+        gpu(gpuNumber),
             device(pipeline.devices[gpu]),
             ps(ps)
         {
