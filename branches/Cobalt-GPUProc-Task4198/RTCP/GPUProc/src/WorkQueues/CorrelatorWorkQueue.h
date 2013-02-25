@@ -17,6 +17,7 @@
 #include "Kernels/CorrelatorKernel.h"
 
 #include "Pipelines/CorrelatorPipelinePrograms.h"
+#include "Pipelines/CorrelatorPipelineCounters.h"
 
 namespace LOFAR
 {
@@ -26,7 +27,7 @@ namespace LOFAR
         {
         public:
             CorrelatorWorkQueue(CorrelatorPipeline &,cl::Context context, cl::Device		&device, unsigned queueNumber,
-              CorrelatorPipelinePrograms programs);
+              CorrelatorPipelinePrograms &programs, CorrelatorPipelineCounters &counters );
 
             void doWork();
 
@@ -41,6 +42,7 @@ namespace LOFAR
             void sendSubbandVisibilites(unsigned block, unsigned subband);
 
             CorrelatorPipeline	&pipeline;
+            CorrelatorPipelineCounters &counters;
             cl::Buffer		devFIRweights;
             cl::Buffer		devBufferA, devBufferB;
             MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;

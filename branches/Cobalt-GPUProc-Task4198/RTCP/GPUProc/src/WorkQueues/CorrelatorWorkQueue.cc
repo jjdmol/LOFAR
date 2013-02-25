@@ -14,17 +14,18 @@
 #include "CorrelatorWorkQueue.h"
 #include "BandPass.h"
 #include "Pipelines/CorrelatorPipelinePrograms.h"
+#include "Pipelines/CorrelatorPipelineCounters.h"
 
 namespace LOFAR
 {
     namespace  RTCP 
     {     
         CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, cl::Context context,
-            cl::Device		&device, unsigned gpuNumber, CorrelatorPipelinePrograms programs)
+            cl::Device		&device, unsigned gpuNumber, CorrelatorPipelinePrograms & programs, CorrelatorPipelineCounters & inputcounters)
             :
         WorkQueue( context, device, gpuNumber, pipeline.ps),
             pipeline(pipeline),
-
+            counters(inputcounters),
             devFIRweights(context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
             devBufferA(context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
             devBufferB(context, CL_MEM_READ_WRITE, std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>), ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
@@ -78,7 +79,7 @@ namespace LOFAR
                 OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
                 inputSamples.hostToDevice(CL_TRUE);
-                pipeline.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
+                counters.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
             }
 
             // Moved from doWork() The delay data should be available before the kernels start.
@@ -89,16 +90,16 @@ namespace LOFAR
             phaseOffsets.hostToDevice(CL_FALSE);
 
             if (ps.nrChannelsPerSubband() > 1) {
-                firFilterKernel.enqueue(queue, pipeline.firFilterCounter);
-                fftKernel.enqueue(queue, pipeline.fftCounter);
+                firFilterKernel.enqueue(queue, counters.firFilterCounter);
+                fftKernel.enqueue(queue, counters.fftCounter);
             }
 
-            delayAndBandPassKernel.enqueue(queue, pipeline.delayAndBandPassCounter, subband);
+            delayAndBandPassKernel.enqueue(queue, counters.delayAndBandPassCounter, subband);
 #if defined USE_NEW_CORRELATOR
-            correlateTriangleKernel.enqueue(queue, pipeline.correlateTriangleCounter);
-            correlateRectangleKernel.enqueue(queue, pipeline.correlateRectangleCounter);
+            correlateTriangleKernel.enqueue(queue, counters.correlateTriangleCounter);
+            correlateRectangleKernel.enqueue(queue, counters.correlateRectangleCounter);
 #else
-            correlatorKernel.enqueue(queue, pipeline.correlatorCounter);
+            correlatorKernel.enqueue(queue, counters.correlatorCounter);
 #endif
             queue.finish();
 
@@ -107,7 +108,7 @@ namespace LOFAR
                 OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
 #endif
                 visibilities.deviceToHost(CL_TRUE);
-                pipeline.visibilitiesCounter.doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
+                counters.visibilitiesCounter.doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
             }
 
             sendSubbandVisibilites(block, subband);

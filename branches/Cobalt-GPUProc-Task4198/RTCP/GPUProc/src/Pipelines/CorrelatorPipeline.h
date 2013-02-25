@@ -10,6 +10,7 @@
 #include "FilterBank.h"
 #include "PerformanceCounter.h"
 #include "Pipelines/CorrelatorPipelinePrograms.h"
+#include "Pipelines/CorrelatorPipelineCounters.h"
 
 namespace LOFAR
 {
@@ -28,15 +29,15 @@ namespace LOFAR
         private:
             friend class CorrelatorWorkQueue;
 
-            FilterBank		    filterBank;
+            FilterBank		    filterBank;            
+            CorrelatorPipelineCounters counters;
             CorrelatorPipelinePrograms programs;
-
-#if defined USE_NEW_CORRELATOR
-            PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlateTriangleCounter, correlateRectangleCounter, fftCounter;
-#else
-            PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlatorCounter, fftCounter;
-#endif
-            PerformanceCounter	    samplesCounter, visibilitiesCounter;
+//#if defined USE_NEW_CORRELATOR
+//            PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlateTriangleCounter, correlateRectangleCounter, fftCounter;
+//#else
+//            PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlatorCounter, fftCounter;
+//#endif
+//            PerformanceCounter	    samplesCounter, visibilitiesCounter;
         };
 
     }

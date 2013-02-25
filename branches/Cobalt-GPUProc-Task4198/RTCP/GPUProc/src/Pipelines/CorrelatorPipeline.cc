@@ -12,8 +12,6 @@
 #include "CorrelatorPipeline.h"
 #include "WorkQueues/CorrelatorWorkQueue.h"
 
-#include "Pipelines/CorrelatorPipelinePrograms.h"
-
 namespace LOFAR
 {
     namespace RTCP 
@@ -23,19 +21,30 @@ namespace LOFAR
             :
         Pipeline(ps),
             filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER),
-            firFilterCounter("FIR filter"),
-            delayAndBandPassCounter("delay/bp"),
+            counters(
 #if defined USE_NEW_CORRELATOR
-            correlateTriangleCounter("cor.triangle"),
-            correlateRectangleCounter("cor.rectangle"),
+             "cor.triangle",
+             "cor.rectangle",
 #else
-            correlatorCounter("correlator"),
+            "correlator",
 #endif
-            fftCounter("FFT"),
-            samplesCounter("samples"),
-            visibilitiesCounter("visibilities")
+            "FIR filter", "delay/bp", "FFT", "samples", "visibilities")
         {
-            filterBank.negateWeights();
+
+//          counters.firFilterCounter = firFilterCounter;
+//          counters.delayAndBandPassCounter = delayAndBandPassCounter;
+//          counters.fftCounter = fftCounter;
+//          counters.samplesCounter = samplesCounter;
+//          counters.visibilitiesCounter = visibilitiesCounter;
+//#if defined USE_NEW_CORRELATOR
+//          counters.correlateTriangleCounter("cor.triangle");
+//            counters.correlateRectangleCounter("cor.rectangle");
+//#else
+//            counters.correlatorCounter("correlator");
+//#endif
+
+
+          filterBank.negateWeights();
 
             double startTime = omp_get_wtime();
 
@@ -81,7 +90,7 @@ namespace LOFAR
 
                   doWorkQueue(CorrelatorWorkQueue(*this, context, 
                        devices[omp_get_thread_num() % nrGPUs], omp_get_thread_num() % nrGPUs,
-                       programs));
+                       programs, counters));
                 }
             }
         }
@@ -168,4 +177,5 @@ namespace LOFAR
         }
     }
 }
+
 
