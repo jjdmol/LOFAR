@@ -56,20 +56,25 @@ namespace LOFAR
             OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
 #endif
 
-            void sendOutput(unsigned block, unsigned subband, StreamableData &data);
+            void doWork();
+
+            void writeOutput(unsigned block, unsigned subband, StreamableData &data);
             //private:
             void                    sendNextBlock(unsigned station);
 
         private:
             struct Output {
-              // stream to Storage process (or to disk)
+              // stream to Storage process (or to disk), with access mutex
               SmartPtr<Stream> stream;
+              SmartPtr<Mutex> streamMutex;
 
               // synchronisation to write blocks in-order
               SlidingPointer<size_t> sync;
             };
 
             std::vector<struct Output> outputs; // indexed by subband
+
+            void handleOutput();
         };
     }
 }

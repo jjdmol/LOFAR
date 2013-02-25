@@ -57,6 +57,9 @@ namespace LOFAR
 #pragma omp parallel sections
             {
 #pragma omp section
+              Pipeline::doWork();
+
+#pragma omp section
                 {
                     double startTime = ps.startTime(), stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
 

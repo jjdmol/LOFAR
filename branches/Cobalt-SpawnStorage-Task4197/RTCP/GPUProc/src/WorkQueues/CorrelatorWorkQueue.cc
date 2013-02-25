@@ -106,7 +106,7 @@ namespace LOFAR
 
         void CorrelatorWorkQueue::sendSubbandVisibilities(unsigned block, unsigned subband)
         {
-            // Create an interface object to Storage around our visibilities
+            // Create an data object to Storage around our visibilities
             CorrelatedData data(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), visibilities.origin(), visibilities.num_elements());
 
             // Add weights
@@ -116,7 +116,7 @@ namespace LOFAR
                 data.setNrValidSamples(bl, ch, ps.integrationSteps());
 
             // Write the block to Storage
-            pipeline.sendOutput(block, subband, data);
+            pipeline.writeOutput(block, subband, data);
         }
 
 
