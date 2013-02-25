@@ -14,6 +14,7 @@
 #include "OpenCL_Support.h"
 #include <cstdlib>
 #include <cstdio>
+#include <unistd.h>
 
 //functionality moved to individual sources
 #include "createProgram.h"
@@ -60,7 +61,10 @@ Exception::TerminateHandler t(OpenCL_Support::terminate);
 
 void usage(char **argv)
 {
-    std::cerr << "usage: " << argv[0] << " parset" <<  " [correlator|beam|UHEP]" << std::endl;
+    std::cerr << "usage: " << argv[0] << " parset" <<  " [-t correlator|beam|UHEP] [-p]" << std::endl;
+    std::cerr << std::endl;
+    std::cerr << "  -t: select pipeline type" << std::endl;
+    std::cerr << "  -p: enable profiling" << std::endl;
 }
 
 enum SELECTPIPELINE { correlator, beam, UHEP,unittest};
@@ -102,24 +106,34 @@ int main(int argc, char **argv)
     set_affinity(0); //something with processor affinity, define at start of rtcp
 #endif
 
+    SELECTPIPELINE option = correlator;
+    int opt;
 
-    // Display usage on incorrect number parameters
-    if (argc < 2)
-    {
-        usage(argv);
-        exit(1);
+    // parse all command-line options
+    while ((opt = getopt(argc, argv, "t:p")) != -1) {
+        switch (opt) {
+          case 't':
+            option = to_select_pipeline(optarg);
+            break;
+
+          case 'p':
+            profiling = true;
+            break;
+
+          default: /* '?' */
+            usage(argv);
+            exit(1);
+        }
     }
 
-        // Parse the type of computation to perform
-        // TODO: place holder enum for types of pipelines and unittest: Should we use propper argument parsing?
-        SELECTPIPELINE option;
-        if (argc == 3)
-            option = to_select_pipeline(argv[2]);
-        else
-            option = correlator;
+    // we expect a parset filename as an additional parameter
+    if (optind >= argc) {
+      usage(argv);
+      exit(1);
+    }
 
         // Create a parameters set object based on the inputs
-        Parset ps(argv[1]);
+        Parset ps(argv[optind]);
 
         // Set the number of stations: Code is currently non functional
         //bool set_num_stations = false;
@@ -140,28 +154,17 @@ int main(int argc, char **argv)
         {
         case correlator:
             std::cout << "We are in the correlator part of the code." << std::endl;
-            profiling = false; 
             CorrelatorPipeline(ps).doWork();
-
-            //profiling = true; 
-            //CorrelatorPipeline(ps).doWork();
             break;
 
         case beam:
             std::cout << "We are in the beam part of the code." << std::endl;
-            profiling = false; 
             BeamFormerPipeline(ps).doWork();
-
-            //profiling = true; 
-            //BeamFormerPipeline(ps).doWork();
             break;
 
         case UHEP:
             std::cout << "We are in the UHEP part of the code." << std::endl;
-            profiling = false;
             UHEP_Pipeline(ps).doWork();
-            //profiling = true;
-            //UHEP_Pipeline(ps).doWork();
             break;
 
         default:
