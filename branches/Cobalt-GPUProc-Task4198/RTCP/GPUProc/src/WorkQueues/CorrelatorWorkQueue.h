@@ -23,7 +23,7 @@ namespace LOFAR
         class CorrelatorWorkQueue : public WorkQueue
         {
         public:
-            CorrelatorWorkQueue(CorrelatorPipeline &, unsigned queueNumber);
+            CorrelatorWorkQueue(CorrelatorPipeline &,cl::Context context, unsigned queueNumber);
 
             void doWork();
 
