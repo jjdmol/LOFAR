@@ -52,7 +52,8 @@ namespace RTCP {
 Mutex coutMutex;
 #endif
 
-void free_session( LIBSSH2_SESSION *session )
+// free a LIBSSH2_SESSION object
+static void free_session( LIBSSH2_SESSION *session )
 {
   ScopedDelayCancellation dc;
 
@@ -62,7 +63,8 @@ void free_session( LIBSSH2_SESSION *session )
   libssh2_session_free(session);
 }
 
-void free_channel( LIBSSH2_CHANNEL *channel )
+// free a LIBSSH2_CHANNEL object
+static void free_channel( LIBSSH2_CHANNEL *channel )
 {
   ScopedDelayCancellation dc;
 
@@ -74,6 +76,127 @@ void free_channel( LIBSSH2_CHANNEL *channel )
 
 typedef SmartPtr<LIBSSH2_SESSION, SmartPtrFreeFunc<LIBSSH2_SESSION, free_session> > session_t;
 typedef SmartPtr<LIBSSH2_CHANNEL, SmartPtrFreeFunc<LIBSSH2_CHANNEL, free_channel> > channel_t;
+
+
+// Convert an SSH exit status to a string
+static const char *explainExitStatus( int exitstatus )
+{
+  const char *explanation;
+
+  switch (exitstatus) {
+    default:
+      explanation = "??";
+      break;
+
+    case 255:
+      explanation = "Network or authentication error";
+      break;
+    case 127:
+      explanation = "BASH: command/library not found";
+      break;
+    case 126:
+      explanation = "BASH: command found but could not be executed (wrong architecture?)";
+      break;
+
+    case 128 + SIGHUP:
+      explanation = "killed by SIGHUP";
+      break;
+    case 128 + SIGINT:
+      explanation = "killed by SIGINT (Ctrl-C)";
+      break;
+    case 128 + SIGQUIT:
+      explanation = "killed by SIGQUIT";
+      break;
+    case 128 + SIGILL:
+      explanation = "illegal instruction";
+      break;
+    case 128 + SIGABRT:
+      explanation = "killed by SIGABRT";
+      break;
+    case 128 + SIGKILL:
+      explanation = "killed by SIGKILL";
+      break;
+    case 128 + SIGSEGV:
+      explanation = "segmentation fault";
+      break;
+    case 128 + SIGPIPE:
+      explanation = "broken pipe";
+      break;
+    case 128 + SIGALRM:
+      explanation = "killed by SIGALRM";
+      break;
+    case 128 + SIGTERM:
+      explanation = "killed by SIGTERM";
+      break;
+  }
+
+  return explanation;
+}
+
+
+// Convert a LibSSH2 error code to a string
+static const char *explainLibSSH2Error( int error )
+{
+  const char *explanation;
+
+  switch(error) {
+    default:
+      explanation = "??";
+      break;
+
+      case LIBSSH2_ERROR_NONE:			        explanation ="LIBSSH2_ERROR_NONE"; break;
+      case LIBSSH2_ERROR_SOCKET_NONE:			explanation ="LIBSSH2_ERROR_SOCKET_NONE"; break;
+      case LIBSSH2_ERROR_BANNER_RECV:			explanation ="LIBSSH2_ERROR_BANNER_RECV"; break;
+      case LIBSSH2_ERROR_BANNER_SEND:			explanation ="LIBSSH2_ERROR_BANNER_SEND"; break;
+      case LIBSSH2_ERROR_INVALID_MAC:			explanation ="LIBSSH2_ERROR_INVALID_MAC"; break;
+      case LIBSSH2_ERROR_KEX_FAILURE:			explanation ="LIBSSH2_ERROR_KEX_FAILURE"; break;
+      case LIBSSH2_ERROR_ALLOC:			        explanation ="LIBSSH2_ERROR_ALLOC"; break;
+      case LIBSSH2_ERROR_SOCKET_SEND:			explanation ="LIBSSH2_ERROR_SOCKET_SEND"; break;
+      case LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE:		explanation ="LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE"; break;
+      case LIBSSH2_ERROR_TIMEOUT:			explanation ="LIBSSH2_ERROR_TIMEOUT"; break;
+      case LIBSSH2_ERROR_HOSTKEY_INIT:			explanation ="LIBSSH2_ERROR_HOSTKEY_INIT"; break;
+      case LIBSSH2_ERROR_HOSTKEY_SIGN:			explanation ="LIBSSH2_ERROR_HOSTKEY_SIGN"; break;
+      case LIBSSH2_ERROR_DECRYPT:			explanation ="LIBSSH2_ERROR_DECRYPT"; break;
+      case LIBSSH2_ERROR_SOCKET_DISCONNECT:		explanation ="LIBSSH2_ERROR_SOCKET_DISCONNECT"; break;
+      case LIBSSH2_ERROR_PROTO:			        explanation ="LIBSSH2_ERROR_PROTO"; break;
+      case LIBSSH2_ERROR_PASSWORD_EXPIRED:		explanation ="LIBSSH2_ERROR_PASSWORD_EXPIRED"; break;
+      case LIBSSH2_ERROR_FILE:			        explanation ="LIBSSH2_ERROR_FILE"; break;
+      case LIBSSH2_ERROR_METHOD_NONE:			explanation ="LIBSSH2_ERROR_METHOD_NONE"; break;
+      case LIBSSH2_ERROR_AUTHENTICATION_FAILED:		explanation ="LIBSSH2_ERROR_AUTHENTICATION_FAILED"; break;
+      //case LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED:	explanation ="LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED"; break;
+      case LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED:		explanation ="LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED"; break;
+      case LIBSSH2_ERROR_CHANNEL_OUTOFORDER:		explanation ="LIBSSH2_ERROR_CHANNEL_OUTOFORDER"; break;
+      case LIBSSH2_ERROR_CHANNEL_FAILURE:		explanation ="LIBSSH2_ERROR_CHANNEL_FAILURE"; break;
+      case LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED:	explanation ="LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED"; break;
+      case LIBSSH2_ERROR_CHANNEL_UNKNOWN:		explanation ="LIBSSH2_ERROR_CHANNEL_UNKNOWN"; break;
+      case LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED:	explanation ="LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED"; break;
+      case LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED:	explanation ="LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED"; break;
+      case LIBSSH2_ERROR_CHANNEL_CLOSED:		explanation ="LIBSSH2_ERROR_CHANNEL_CLOSED"; break;
+      case LIBSSH2_ERROR_CHANNEL_EOF_SENT:		explanation ="LIBSSH2_ERROR_CHANNEL_EOF_SENT"; break;
+      case LIBSSH2_ERROR_SCP_PROTOCOL:			explanation ="LIBSSH2_ERROR_SCP_PROTOCOL"; break;
+      case LIBSSH2_ERROR_ZLIB:			        explanation ="LIBSSH2_ERROR_ZLIB"; break;
+      case LIBSSH2_ERROR_SOCKET_TIMEOUT:		explanation ="LIBSSH2_ERROR_SOCKET_TIMEOUT"; break;
+      case LIBSSH2_ERROR_SFTP_PROTOCOL:			explanation ="LIBSSH2_ERROR_SFTP_PROTOCOL"; break;
+      case LIBSSH2_ERROR_REQUEST_DENIED:		explanation ="LIBSSH2_ERROR_REQUEST_DENIED"; break;
+      case LIBSSH2_ERROR_METHOD_NOT_SUPPORTED:		explanation ="LIBSSH2_ERROR_METHOD_NOT_SUPPORTED"; break;
+      case LIBSSH2_ERROR_INVAL:			        explanation ="LIBSSH2_ERROR_INVAL"; break;
+      case LIBSSH2_ERROR_INVALID_POLL_TYPE:		explanation ="LIBSSH2_ERROR_INVALID_POLL_TYPE"; break;
+      case LIBSSH2_ERROR_PUBLICKEY_PROTOCOL:		explanation ="LIBSSH2_ERROR_PUBLICKEY_PROTOCOL"; break;
+      case LIBSSH2_ERROR_EAGAIN:			explanation ="LIBSSH2_ERROR_EAGAIN"; break;
+      case LIBSSH2_ERROR_BUFFER_TOO_SMALL:		explanation ="LIBSSH2_ERROR_BUFFER_TOO_SMALL"; break;
+      case LIBSSH2_ERROR_BAD_USE:			explanation ="LIBSSH2_ERROR_BAD_USE"; break;
+      case LIBSSH2_ERROR_COMPRESS:			explanation ="LIBSSH2_ERROR_COMPRESS"; break;
+      case LIBSSH2_ERROR_OUT_OF_BOUNDARY:		explanation ="LIBSSH2_ERROR_OUT_OF_BOUNDARY"; break;
+      case LIBSSH2_ERROR_AGENT_PROTOCOL:		explanation ="LIBSSH2_ERROR_AGENT_PROTOCOL"; break;
+      case LIBSSH2_ERROR_SOCKET_RECV:			explanation ="LIBSSH2_ERROR_SOCKET_RECV"; break;
+      case LIBSSH2_ERROR_ENCRYPT:			explanation ="LIBSSH2_ERROR_ENCRYPT"; break;
+      case LIBSSH2_ERROR_BAD_SOCKET:			explanation ="LIBSSH2_ERROR_BAD_SOCKET"; break;
+//      case LIBSSH2_ERROR_KNOWN_HOSTS:			explanation ="LIBSSH2_ERROR_KNOWN_HOSTS"; break;
+      //case LIBSSH2_ERROR_BANNER_NONE:			explanation ="LIBSSH2_ERROR_BANNER_NONE"; break;
+  }
+
+  return explanation;
+}
 
 /*
  * Make sure we ScopedDelayCancellation around calls to libssh2 because
@@ -498,68 +621,6 @@ void SSHconnection::commThread()
 }
 
 
-const char *explainLibSSH2Error( int error )
-{
-  const char *explanation;
-
-  switch(error) {
-    default:
-      explanation = "??";
-      break;
-
-      case LIBSSH2_ERROR_NONE:			        explanation ="LIBSSH2_ERROR_NONE"; break;
-      case LIBSSH2_ERROR_SOCKET_NONE:			explanation ="LIBSSH2_ERROR_SOCKET_NONE"; break;
-      case LIBSSH2_ERROR_BANNER_RECV:			explanation ="LIBSSH2_ERROR_BANNER_RECV"; break;
-      case LIBSSH2_ERROR_BANNER_SEND:			explanation ="LIBSSH2_ERROR_BANNER_SEND"; break;
-      case LIBSSH2_ERROR_INVALID_MAC:			explanation ="LIBSSH2_ERROR_INVALID_MAC"; break;
-      case LIBSSH2_ERROR_KEX_FAILURE:			explanation ="LIBSSH2_ERROR_KEX_FAILURE"; break;
-      case LIBSSH2_ERROR_ALLOC:			        explanation ="LIBSSH2_ERROR_ALLOC"; break;
-      case LIBSSH2_ERROR_SOCKET_SEND:			explanation ="LIBSSH2_ERROR_SOCKET_SEND"; break;
-      case LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE:		explanation ="LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE"; break;
-      case LIBSSH2_ERROR_TIMEOUT:			explanation ="LIBSSH2_ERROR_TIMEOUT"; break;
-      case LIBSSH2_ERROR_HOSTKEY_INIT:			explanation ="LIBSSH2_ERROR_HOSTKEY_INIT"; break;
-      case LIBSSH2_ERROR_HOSTKEY_SIGN:			explanation ="LIBSSH2_ERROR_HOSTKEY_SIGN"; break;
-      case LIBSSH2_ERROR_DECRYPT:			explanation ="LIBSSH2_ERROR_DECRYPT"; break;
-      case LIBSSH2_ERROR_SOCKET_DISCONNECT:		explanation ="LIBSSH2_ERROR_SOCKET_DISCONNECT"; break;
-      case LIBSSH2_ERROR_PROTO:			        explanation ="LIBSSH2_ERROR_PROTO"; break;
-      case LIBSSH2_ERROR_PASSWORD_EXPIRED:		explanation ="LIBSSH2_ERROR_PASSWORD_EXPIRED"; break;
-      case LIBSSH2_ERROR_FILE:			        explanation ="LIBSSH2_ERROR_FILE"; break;
-      case LIBSSH2_ERROR_METHOD_NONE:			explanation ="LIBSSH2_ERROR_METHOD_NONE"; break;
-      case LIBSSH2_ERROR_AUTHENTICATION_FAILED:		explanation ="LIBSSH2_ERROR_AUTHENTICATION_FAILED"; break;
-      //case LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED:	explanation ="LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED"; break;
-      case LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED:		explanation ="LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED"; break;
-      case LIBSSH2_ERROR_CHANNEL_OUTOFORDER:		explanation ="LIBSSH2_ERROR_CHANNEL_OUTOFORDER"; break;
-      case LIBSSH2_ERROR_CHANNEL_FAILURE:		explanation ="LIBSSH2_ERROR_CHANNEL_FAILURE"; break;
-      case LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED:	explanation ="LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED"; break;
-      case LIBSSH2_ERROR_CHANNEL_UNKNOWN:		explanation ="LIBSSH2_ERROR_CHANNEL_UNKNOWN"; break;
-      case LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED:	explanation ="LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED"; break;
-      case LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED:	explanation ="LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED"; break;
-      case LIBSSH2_ERROR_CHANNEL_CLOSED:		explanation ="LIBSSH2_ERROR_CHANNEL_CLOSED"; break;
-      case LIBSSH2_ERROR_CHANNEL_EOF_SENT:		explanation ="LIBSSH2_ERROR_CHANNEL_EOF_SENT"; break;
-      case LIBSSH2_ERROR_SCP_PROTOCOL:			explanation ="LIBSSH2_ERROR_SCP_PROTOCOL"; break;
-      case LIBSSH2_ERROR_ZLIB:			        explanation ="LIBSSH2_ERROR_ZLIB"; break;
-      case LIBSSH2_ERROR_SOCKET_TIMEOUT:		explanation ="LIBSSH2_ERROR_SOCKET_TIMEOUT"; break;
-      case LIBSSH2_ERROR_SFTP_PROTOCOL:			explanation ="LIBSSH2_ERROR_SFTP_PROTOCOL"; break;
-      case LIBSSH2_ERROR_REQUEST_DENIED:		explanation ="LIBSSH2_ERROR_REQUEST_DENIED"; break;
-      case LIBSSH2_ERROR_METHOD_NOT_SUPPORTED:		explanation ="LIBSSH2_ERROR_METHOD_NOT_SUPPORTED"; break;
-      case LIBSSH2_ERROR_INVAL:			        explanation ="LIBSSH2_ERROR_INVAL"; break;
-      case LIBSSH2_ERROR_INVALID_POLL_TYPE:		explanation ="LIBSSH2_ERROR_INVALID_POLL_TYPE"; break;
-      case LIBSSH2_ERROR_PUBLICKEY_PROTOCOL:		explanation ="LIBSSH2_ERROR_PUBLICKEY_PROTOCOL"; break;
-      case LIBSSH2_ERROR_EAGAIN:			explanation ="LIBSSH2_ERROR_EAGAIN"; break;
-      case LIBSSH2_ERROR_BUFFER_TOO_SMALL:		explanation ="LIBSSH2_ERROR_BUFFER_TOO_SMALL"; break;
-      case LIBSSH2_ERROR_BAD_USE:			explanation ="LIBSSH2_ERROR_BAD_USE"; break;
-      case LIBSSH2_ERROR_COMPRESS:			explanation ="LIBSSH2_ERROR_COMPRESS"; break;
-      case LIBSSH2_ERROR_OUT_OF_BOUNDARY:		explanation ="LIBSSH2_ERROR_OUT_OF_BOUNDARY"; break;
-      case LIBSSH2_ERROR_AGENT_PROTOCOL:		explanation ="LIBSSH2_ERROR_AGENT_PROTOCOL"; break;
-      case LIBSSH2_ERROR_SOCKET_RECV:			explanation ="LIBSSH2_ERROR_SOCKET_RECV"; break;
-      case LIBSSH2_ERROR_ENCRYPT:			explanation ="LIBSSH2_ERROR_ENCRYPT"; break;
-      case LIBSSH2_ERROR_BAD_SOCKET:			explanation ="LIBSSH2_ERROR_BAD_SOCKET"; break;
-//      case LIBSSH2_ERROR_KNOWN_HOSTS:			explanation ="LIBSSH2_ERROR_KNOWN_HOSTS"; break;
-      //case LIBSSH2_ERROR_BANNER_NONE:			explanation ="LIBSSH2_ERROR_BANNER_NONE"; break;
-  }
-
-  return explanation;
-}
  
 std::vector< SmartPtr<Mutex> > openssl_mutexes;
 
@@ -610,76 +671,28 @@ void SSH_Finalize() {
 }
 
 
-const char *explainExitStatus( int exitstatus )
-{
-  const char *explanation;
-
-  switch (exitstatus) {
-    default:
-      explanation = "??";
-      break;
-
-    case 255:
-      explanation = "Network or authentication error";
-      break;
-    case 127:
-      explanation = "BASH: command/library not found";
-      break;
-    case 126:
-      explanation = "BASH: command found but could not be executed (wrong architecture?)";
-      break;
-
-    case 128 + SIGHUP:
-      explanation = "killed by SIGHUP";
-      break;
-    case 128 + SIGINT:
-      explanation = "killed by SIGINT (Ctrl-C)";
-      break;
-    case 128 + SIGQUIT:
-      explanation = "killed by SIGQUIT";
-      break;
-    case 128 + SIGILL:
-      explanation = "illegal instruction";
-      break;
-    case 128 + SIGABRT:
-      explanation = "killed by SIGABRT";
-      break;
-    case 128 + SIGKILL:
-      explanation = "killed by SIGKILL";
-      break;
-    case 128 + SIGSEGV:
-      explanation = "segmentation fault";
-      break;
-    case 128 + SIGPIPE:
-      explanation = "broken pipe";
-      break;
-    case 128 + SIGALRM:
-      explanation = "killed by SIGALRM";
-      break;
-    case 128 + SIGTERM:
-      explanation = "killed by SIGTERM";
-      break;
-  }
-
-  return explanation;
-}
-
+// Returns true if the given private-key file name works for "ssh localhost"
 static bool ssh_works(const char *privkey) {
   char *USER = getenv("USER");
+
+  ASSERTSTR(USER, "$USER not set");
 
   char sshcmd[1024];
   snprintf(sshcmd, sizeof sshcmd, "ssh %s@localhost -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o NoHostAuthenticationForLocalhost=yes -i %s /bin/true 2>/dev/null", USER, privkey);
   int ret = system(sshcmd);
+
   if (ret < 0 || WEXITSTATUS(ret) != 0) {
-    // no -- mark this test as unrunnable and don't attempt to try with libssh then
     return false;
   }  
 
   return true;
 }
 
+
 bool discover_ssh_privkey(char *privkey, size_t buflen) {
   char *HOME = getenv("HOME");
+
+  ASSERTSTR(HOME, "$HOME not set");
 
   snprintf(privkey, buflen, "%s/.ssh/id_rsa", HOME);
 

@@ -12,26 +12,6 @@ namespace RTCP {
 using namespace std;
 using boost::format;
 
-/*
- * Manage a Storage_main process (RTCP/Storage). The control sequence is as follows:
- *
- * hostList = "OLAP.Storage.hosts"
- *
- * 1. Create a StorageProcesses manager object:
- *      manager = StorageProcesses(parset, logprefix)
- * 2. Spawn all Storage processes:
- *      manager.start()
- *    Which will ssh to all hosts in hostList and start Storage_main,
- *    and establish a control channel to each.
- * 3. Let your application connect to whatever is indicated by
- *      getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)
- * 4. After the observation, generate and forward the final metadata by calling
- *      manager.forwardFinalMetaData( deadline )
- * 5. Optionally, wait for the Storage_main processes to finish with a given
- * deadline:
- *      manager.stop( deadline )
- */
-
 
 StorageProcess::StorageProcess( StorageProcesses &manager, const Parset &parset, const string &logPrefix, int rank, const string &hostname )
 :

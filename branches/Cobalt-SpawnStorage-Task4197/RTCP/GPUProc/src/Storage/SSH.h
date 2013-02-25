@@ -41,6 +41,7 @@ namespace RTCP {
 bool SSH_Init();
 void SSH_Finalize();
 
+// Sets up and maintains an SSH connection using LibSSH2.
 class SSHconnection {
 public:
 
@@ -83,8 +84,12 @@ private:
   void commThread();
 };
 
-const char *explainLibSSH2Error( int error );
-const char *explainExitStatus( int exitstatus );
+// Discover the file name to the .ssh private key,
+// and put it in privkey. Returns true if the private
+// key was found, and was usable for 'ssh localhost'.
+//
+// Note: This is an expensive operation, because system("ssh")
+// is spawned several times.
 bool discover_ssh_privkey(char *privkey, size_t buflen);
 
 } // namespace RTCP
