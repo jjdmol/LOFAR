@@ -6,7 +6,6 @@
 #include <complex>
 
 #include "global_defines.h"
-#include "Pipeline.h"
 
 #include "WorkQueue.h"
 #include "Pipelines/CorrelatorPipeline.h"
@@ -28,7 +27,7 @@ namespace LOFAR
         class CorrelatorWorkQueue : public WorkQueue
         {
         public:
-            CorrelatorWorkQueue(CorrelatorPipeline &,cl::Context context, cl::Device		&device, unsigned queueNumber,
+            CorrelatorWorkQueue(const Parset	&parset,cl::Context context, cl::Device		&device, unsigned queueNumber,
               CorrelatorPipelinePrograms &programs, CorrelatorPipelineCounters &counters,
               FilterBank &filterBank);
 
@@ -43,8 +42,6 @@ namespace LOFAR
             void doSubband(unsigned block, unsigned subband);
             //void receiveSubbandSamples(unsigned block, unsigned subband);
             //void sendSubbandVisibilites(unsigned block, unsigned subband);
-
-            CorrelatorPipeline	&pipeline;
             CorrelatorPipelineCounters &counters;
             cl::Buffer		devFIRweights;
             cl::Buffer		devBufferA, devBufferB;

@@ -9,26 +9,24 @@
 #include <algorithm>
 #include <iostream>
 
-
-#include "Pipeline.h"
 #include "CorrelatorWorkQueue.h"
 #include "BandPass.h"
 #include "Pipelines/CorrelatorPipelinePrograms.h"
 #include "Pipelines/CorrelatorPipelineCounters.h"
 #include "FilterBank.h"
+#include "Interface/Parset.h"
 
 namespace LOFAR
 {
     namespace  RTCP 
     {     
-        CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline,
+        CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset	&parset,
             cl::Context context, cl::Device	&device, unsigned gpuNumber,
             CorrelatorPipelinePrograms & programs, CorrelatorPipelineCounters & inputcounters,
             FilterBank &filterBank
             )
             :
-        WorkQueue( context, device, gpuNumber, pipeline.ps),
-            pipeline(pipeline),
+        WorkQueue( context, device, gpuNumber, parset),
             counters(inputcounters),
             devFIRweights(context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
             devBufferA(context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),

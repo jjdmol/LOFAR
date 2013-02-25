@@ -88,7 +88,7 @@ namespace LOFAR
                 {
 #                 pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
 
-                  doWorkQueue(CorrelatorWorkQueue(*this, context, 
+                  doWorkQueue(CorrelatorWorkQueue(ps, context, 
                        devices[omp_get_thread_num() % nrGPUs], omp_get_thread_num() % nrGPUs,
                        programs, counters, filterBank));
                 }
