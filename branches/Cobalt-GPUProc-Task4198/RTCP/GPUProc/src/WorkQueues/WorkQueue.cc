@@ -13,11 +13,11 @@ namespace LOFAR
 {
     namespace  RTCP 
     {      
-                WorkQueue::WorkQueue(Pipeline &pipeline, cl::Context context,const Parset	&ps, unsigned queueNumber)
+                WorkQueue::WorkQueue(Pipeline &pipeline, cl::Context context, unsigned queueNumber)
             :
         gpu(queueNumber % nrGPUs),
             device(pipeline.devices[gpu]),
-            ps(ps)
+            ps(pipeline.ps)
         {
 #if defined __linux__ && defined USE_B7015
             set_affinity(gpu);
