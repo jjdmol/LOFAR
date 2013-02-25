@@ -70,9 +70,12 @@ namespace LOFAR
       for (unsigned stat = 0; stat < ps.nrStations(); stat ++) {
         Stream *stream = pipeline.bufferToGPUstreams[stat];
 
+        // Get the byte-size of a single sample
+        size_t sizeof_sample = sizeof *inputSamples.origin();
+
         // read header
         struct BeamletBufferToComputeNode<i16complex>::header header;
-        size_t subbandSize = inputSamples[stat].num_elements() * sizeof *inputSamples.origin();
+        size_t subbandSize = inputSamples[stat].num_elements() * sizeof_sample;
 
         stream->read(&header, sizeof header);
 
@@ -88,7 +91,20 @@ namespace LOFAR
         SubbandMetaData metaData(1, header.nrDelays);
         metaData.read(stream);
 
-        // flag information is now in metaData.getFlags(0), flags indicate missing data sample indices
+        // Get the flags that indicate missing data samples as a vector of
+        // SparseSet::Ranges
+        SparseSet<unsigned>::Ranges flags = metaData.getFlags(0).getRanges();
+
+        // Calculate the number of bytes to skip when striding over the first
+        // dimension of inputSamples[stat]
+        size_t sizeof_stride = sizeof_sample * inputSamples[stat].strides()[0];
+
+        // iterate over the Range objects in the returned SparseSet.
+        for(SparseSet<unsigned>::const_iterator it = flags.begin(); 
+            it != flags.end(); ++it) {
+          size_t offset = sizeof_stride * it->begin;
+          size_t size = sizeof_stride * (it->end - it->begin);
+        }
 
         // the first set of delays represents the central beam, which is the one we correlate
         struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
