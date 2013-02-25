@@ -20,7 +20,7 @@ namespace LOFAR
     {     
         CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, cl::Context context, unsigned queueNumber)
             :
-        WorkQueue(pipeline, context, queueNumber),
+        WorkQueue(pipeline, context, queueNumber, pipeline.ps),
             pipeline(pipeline),
 
             devFIRweights(context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
