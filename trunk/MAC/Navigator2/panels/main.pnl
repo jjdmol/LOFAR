@@ -408,6 +408,7 @@ void addObservations() {
   string addPanelName    = \"objects/Observations/observation_smallCEPView.pnl\";
   //loop over list and prepare panel with all stations and swlevel objects   
   for (int i=1; i<= dynlen(observationsList); i++) {
+    if (!navFunct_isObservation(observationsList[i])) continue;
 
     observationRefNames[i]=\"stationObs\"+(i);
       

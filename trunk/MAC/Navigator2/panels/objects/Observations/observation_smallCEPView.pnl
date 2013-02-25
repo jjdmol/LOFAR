@@ -14,9 +14,7 @@ PANEL,-1 -1 1213 54 N "_3DFace" 1
   baseDP = claimManager_nameToRealName(observationDP); 
   
   if (navFunct_dpReachable(baseDP)) {
-    if (dpExists(baseDP)) {
-      showCEPinfo();
-    } else {
+    if (!dpExists(baseDP)) {
       observation_text.foreCol(\"Lofar_dpdoesnotexist\");
     }
   } else {
@@ -33,7 +31,7 @@ string observationName = \"\";
 string observationDP = \"\";
 string baseDP=\"\";
 
-string stationList;
+
 
 bool bDoubleClicked  = false;
 
@@ -71,15 +69,7 @@ void rClick(string name) {
 
 }                       
 
-void showCEPinfo() {
-  
-  dpGet(baseDP+\".stationList\",stationList);
-  if (stationList == \"\" || stationList == \"[]\") {
-    type_txt.text=\"P\";
-  } else {
-    type_txt.text=\"O\";
-  }    
-}" 0
+" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -164,25 +154,6 @@ E "main(int x, int y)
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 18 Observation1111111
-2 17
-"type_txt"
-""
-1 120 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-17 0 0 0 0 0
-E E E
-0
-1
-LANG:1 20 Observation/Pipeline
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 120 10 128 23
-0 2 2 "0s" 0 0 0 192 0 0  120 10 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 1 O
 0
 LAYER, 1 
 1
