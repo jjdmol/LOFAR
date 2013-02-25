@@ -26,6 +26,8 @@ StorageProcess::StorageProcess( StorageProcesses &manager, const Parset &parset,
 
 StorageProcess::~StorageProcess()
 {
+  ScopedDelayCancellation dc; // stop() is a cancellation point
+
   // stop immediately
   struct timespec immediately = { 0, 0 };
   stop(immediately);
@@ -47,8 +49,8 @@ void StorageProcess::stop(struct timespec deadline)
     return;
   }
 
-  itsThread->wait(deadline);
-  itsThread->cancel();
+  if (!itsThread->wait(deadline))
+    itsThread->cancel();
 }
 
 
@@ -105,8 +107,8 @@ void StorageProcess::controlThread()
 #endif
   );
 
-  SSHconnection ssh(itsLogPrefix, itsHostname, commandLine, userName, sshKey, 0);
-  ssh.start();
+  SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, sshKey, 0);
+  sshconn.start();
 
   // Connect control stream
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
@@ -126,7 +128,7 @@ void StorageProcess::controlThread()
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent final meta data");
 
   // Wait for Storage to finish properly
-  ssh.wait();
+  sshconn.wait();
 }
 
 
@@ -152,6 +154,7 @@ void StorageProcesses::start()
 
   LOG_DEBUG_STR(itsLogPrefix << "Starting " << itsStorageProcesses.size() << " Storage processes");
 
+  // Start all processes
   for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
     itsStorageProcesses[rank] = new StorageProcess(*this, itsParset, itsLogPrefix, rank, hostnames[rank]);
     itsStorageProcesses[rank]->start();
@@ -163,29 +166,12 @@ void StorageProcesses::stop( time_t deadline )
 {
   LOG_DEBUG_STR(itsLogPrefix << "Stopping storage processes");
 
-  size_t nrRunning = 0;
+  struct timespec deadline_ts = { deadline, 0 };
 
-  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
-    if (itsStorageProcesses[rank].get())
-      nrRunning++;
-
-  while(nrRunning > 0) {
-    for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
-      if (!itsStorageProcesses[rank].get())
-        continue;
-
-      if (itsStorageProcesses[rank]->isDone() || time(0) >= deadline) {
-        struct timespec immediately = { 0, 0 };
-
-        itsStorageProcesses[rank]->stop(immediately);
-        itsStorageProcesses[rank] = 0;
-
-        nrRunning--;
-      }
-    }  
-
-    if (nrRunning > 0)
-      sleep(1);
+  // Stop all processes
+  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
+    itsStorageProcesses[rank]->stop(deadline_ts);
+    itsStorageProcesses[rank] = 0;
   }
 
   itsStorageProcesses.clear();
@@ -200,17 +186,7 @@ void StorageProcesses::forwardFinalMetaData( time_t deadline )
 
   Thread thread(this, &StorageProcesses::finalMetaDataThread, itsLogPrefix + "[FinalMetaDataThread] ", 65536);
 
-  // abort the thread if deadline passes
-  try {
-    if (!thread.wait(deadline_ts)) {
-      LOG_WARN_STR(itsLogPrefix << "Cancelling FinalMetaDataThread");
-
-      thread.cancel();
-    }
-  } catch(...) {
-    thread.cancel();
-    throw;
-  }
+  thread.cancel(deadline_ts);
 }
 
 
