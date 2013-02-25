@@ -13,12 +13,14 @@
 #include "Pipeline.h"
 #include "CorrelatorWorkQueue.h"
 #include "BandPass.h"
+#include "Pipelines/CorrelatorPipelinePrograms.h"
 
 namespace LOFAR
 {
     namespace  RTCP 
     {     
-        CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, cl::Context context, cl::Device		&device, unsigned gpuNumber)
+        CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, cl::Context context,
+            cl::Device		&device, unsigned gpuNumber, CorrelatorPipelinePrograms programs)
             :
         WorkQueue( context, device, gpuNumber, pipeline.ps),
             pipeline(pipeline),
@@ -36,15 +38,15 @@ namespace LOFAR
             devFilteredData(devBufferB),
             devCorrectedData(devBufferA),
             visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, devBufferB),
-            firFilterKernel(ps, queue, pipeline.firFilterProgram, devFilteredData, inputSamples, devFIRweights),
+            firFilterKernel(ps, queue, programs.firFilterProgram, devFilteredData, inputSamples, devFIRweights),
 
             fftKernel(ps, context, devFilteredData),
-            delayAndBandPassKernel(ps, pipeline.delayAndBandPassProgram, devCorrectedData, devFilteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights),
+            delayAndBandPassKernel(ps, programs.delayAndBandPassProgram, devCorrectedData, devFilteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights),
 #if defined USE_NEW_CORRELATOR
-            correlateTriangleKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData),
-            correlateRectangleKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData)
+            correlateTriangleKernel(ps, queue, programs.correlatorProgram, visibilities, devCorrectedData),
+            correlateRectangleKernel(ps, queue, programs.correlatorProgram, visibilities, devCorrectedData)
 #else
-            correlatorKernel(ps, queue, pipeline.correlatorProgram, visibilities, devCorrectedData)
+            correlatorKernel(ps, queue, programs.correlatorProgram, visibilities, devCorrectedData)
 #endif
         {
             queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), pipeline.filterBank.getWeights().origin());

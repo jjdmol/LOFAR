@@ -9,6 +9,7 @@
 #include "Pipeline.h"
 #include "FilterBank.h"
 #include "PerformanceCounter.h"
+#include "Pipelines/CorrelatorPipelinePrograms.h"
 
 namespace LOFAR
 {
@@ -28,8 +29,8 @@ namespace LOFAR
             friend class CorrelatorWorkQueue;
 
             FilterBank		    filterBank;
+            CorrelatorPipelinePrograms programs;
 
-            cl::Program		    firFilterProgram, delayAndBandPassProgram, correlatorProgram;
 #if defined USE_NEW_CORRELATOR
             PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlateTriangleCounter, correlateRectangleCounter, fftCounter;
 #else

@@ -16,6 +16,8 @@
 #include "Kernels/DelayAndBandPassKernel.h"
 #include "Kernels/CorrelatorKernel.h"
 
+#include "Pipelines/CorrelatorPipelinePrograms.h"
+
 namespace LOFAR
 {
     namespace RTCP 
@@ -23,7 +25,8 @@ namespace LOFAR
         class CorrelatorWorkQueue : public WorkQueue
         {
         public:
-            CorrelatorWorkQueue(CorrelatorPipeline &,cl::Context context, cl::Device		&device, unsigned queueNumber);
+            CorrelatorWorkQueue(CorrelatorPipeline &,cl::Context context, cl::Device		&device, unsigned queueNumber,
+              CorrelatorPipelinePrograms programs);
 
             void doWork();
 

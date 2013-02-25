@@ -12,6 +12,8 @@
 #include "CorrelatorPipeline.h"
 #include "WorkQueues/CorrelatorWorkQueue.h"
 
+#include "Pipelines/CorrelatorPipelinePrograms.h"
+
 namespace LOFAR
 {
     namespace RTCP 
@@ -39,15 +41,12 @@ namespace LOFAR
 
             //#pragma omp parallel sections
             {
-                //#pragma omp section
-                firFilterProgram = createProgram("FIR.cl");
-                //#pragma omp section
-                delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
-                //#pragma omp section
+                programs.firFilterProgram = createProgram("FIR.cl");
+                programs.delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
 #if defined USE_NEW_CORRELATOR
-                correlatorProgram = createProgram("NewCorrelator.cl");
+                programs.correlatorProgram = createProgram("NewCorrelator.cl");
 #else
-                correlatorProgram = createProgram("Correlator.cl");
+                programs.correlatorProgram = createProgram("Correlator.cl");
 #endif
             }
 
@@ -81,7 +80,8 @@ namespace LOFAR
 #                 pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
 
                   doWorkQueue(CorrelatorWorkQueue(*this, context, 
-                       devices[omp_get_thread_num() % nrGPUs], omp_get_thread_num() % nrGPUs));
+                       devices[omp_get_thread_num() % nrGPUs], omp_get_thread_num() % nrGPUs,
+                       programs));
                 }
             }
         }
@@ -152,8 +152,10 @@ namespace LOFAR
                 for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) 
                 {
                         inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
+                        //receiveSubbandSamples
                         inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
                         workQueue.doSubband(block, subband);
+                        //target for send subband samples
                 }
             }
 
