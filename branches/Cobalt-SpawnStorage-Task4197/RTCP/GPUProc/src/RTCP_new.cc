@@ -143,8 +143,8 @@ int main(int argc, char **argv)
             profiling = false; 
             CorrelatorPipeline(ps).doWork();
 
-            profiling = true; 
-            CorrelatorPipeline(ps).doWork();
+            //profiling = true; 
+            //CorrelatorPipeline(ps).doWork();
             break;
 
         case beam:
@@ -152,16 +152,16 @@ int main(int argc, char **argv)
             profiling = false; 
             BeamFormerPipeline(ps).doWork();
 
-            profiling = true; 
-            BeamFormerPipeline(ps).doWork();
+            //profiling = true; 
+            //BeamFormerPipeline(ps).doWork();
             break;
 
         case UHEP:
             std::cout << "We are in the UHEP part of the code." << std::endl;
             profiling = false;
             UHEP_Pipeline(ps).doWork();
-            profiling = true;
-            UHEP_Pipeline(ps).doWork();
+            //profiling = true;
+            //UHEP_Pipeline(ps).doWork();
             break;
 
         default:
@@ -172,10 +172,12 @@ int main(int argc, char **argv)
         time_t completing_start = time(0);
 
         // retrieve and forward final meta data
-        storageProcesses.forwardFinalMetaData(completing_start + 240);
+        // TODO: Increase timeouts when FinalMetaDataGatherer starts working
+        // again
+        storageProcesses.forwardFinalMetaData(completing_start + 2);
 
         // graceful exit
-        storageProcesses.stop(completing_start + 300);
+        storageProcesses.stop(completing_start + 10);
 
     return 0;
 }
