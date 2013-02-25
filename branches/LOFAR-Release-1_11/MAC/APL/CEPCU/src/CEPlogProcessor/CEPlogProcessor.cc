@@ -98,7 +98,7 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsControlPort = new GCFTCPPort (*this, MAC_SVCMASK_CEPLOGCONTROL, GCFPortInterface::MSPP, 0);
     itsControlPort->setPortNumber(CEP_LOGPROC_CONTROL);
 
-    itsBufferSize     = globalParameterSet()->getInt("CEPlogProcessor.bufferSize", 1024);
+    itsBufferSize     = globalParameterSet()->getInt("CEPlogProcessor.bufferSize", 10240);
     itsNrInputBuffers = globalParameterSet()->getInt("CEPlogProcessor.nrInputBuffers", 64);
     itsNrIONodes      = globalParameterSet()->getInt("CEPlogProcessor.nrIONodes", 64);
     itsNrAdders       = globalParameterSet()->getInt("CEPlogProcessor.nrAdders", 10); // per io node
