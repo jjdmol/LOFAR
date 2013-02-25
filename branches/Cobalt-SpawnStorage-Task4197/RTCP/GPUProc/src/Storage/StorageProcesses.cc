@@ -13,13 +13,14 @@ using namespace std;
 using boost::format;
 
 
-StorageProcess::StorageProcess( StorageProcesses &manager, const Parset &parset, const string &logPrefix, int rank, const string &hostname )
+StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname, FinalMetaData &finalMetaData, Semaphore &finalMetaDataAvailable )
 :
-  itsManager(manager),
   itsParset(parset),
   itsLogPrefix(str(boost::format("%s [StorageWriter rank %2d host %s] ") % logPrefix % rank % hostname)),
   itsRank(rank),
-  itsHostname(hostname)
+  itsHostname(hostname),
+  itsFinalMetaData(finalMetaData),
+  itsFinalMetaDataAvailable(finalMetaDataAvailable)
 {
 }
 
@@ -121,10 +122,10 @@ void StorageProcess::controlThread()
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent parset");
 
   // Send final meta data once it is available
-  itsManager.itsFinalMetaDataAvailable.down();
+  itsFinalMetaDataAvailable.down();
 
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sending final meta data");
-  itsManager.itsFinalMetaData.write(stream);
+  itsFinalMetaData.write(stream);
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent final meta data");
 
   // Wait for Storage to finish properly
@@ -156,7 +157,7 @@ void StorageProcesses::start()
 
   // Start all processes
   for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
-    itsStorageProcesses[rank] = new StorageProcess(*this, itsParset, itsLogPrefix, rank, hostnames[rank]);
+    itsStorageProcesses[rank] = new StorageProcess(itsParset, itsLogPrefix, rank, hostnames[rank], itsFinalMetaData, itsFinalMetaDataAvailable);
     itsStorageProcesses[rank]->start();
   }  
 }

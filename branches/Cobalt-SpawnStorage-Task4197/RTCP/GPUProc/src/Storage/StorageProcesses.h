@@ -15,8 +15,6 @@
 namespace LOFAR {
 namespace RTCP {
 
-class StorageProcesses;
-
 /* A single Storage process.
  *
  * Storage is started as:
@@ -41,7 +39,7 @@ class StorageProcesses;
 class StorageProcess {
     public:
       // user must call start()
-      StorageProcess( StorageProcesses &manager, const Parset &parset, const std::string &logPrefix, int rank, const std::string &hostname );
+      StorageProcess( const Parset &parset, const std::string &logPrefix, int rank, const std::string &hostname, FinalMetaData &finalMetaData, Semaphore &finalMetaDataAvailable );
 
       // calls stop(0)
       ~StorageProcess();
@@ -53,13 +51,14 @@ class StorageProcess {
     private:
       void                               controlThread();
 
-      StorageProcesses                   &itsManager;
-
       const Parset &itsParset;
       const std::string itsLogPrefix;
 
       const int itsRank;
       const std::string itsHostname;
+
+      FinalMetaData                      &itsFinalMetaData;
+      Semaphore                          &itsFinalMetaDataAvailable;
 
       SmartPtr<Thread> itsThread;
 };
@@ -118,9 +117,6 @@ private:
     void start();
 
     void finalMetaDataThread();
-
-    // to access itsFinalMetaDataAvailable
-    friend class StorageProcess;
 };
 
 }
