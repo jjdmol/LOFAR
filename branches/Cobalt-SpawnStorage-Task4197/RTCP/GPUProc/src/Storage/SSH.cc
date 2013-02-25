@@ -53,7 +53,10 @@ Mutex coutMutex;
 #endif
 
 // free a LIBSSH2_SESSION object
-static void free_session( LIBSSH2_SESSION *session )
+//
+// This function cannot be declared static because we need
+// it as a template parameter.
+void free_session( LIBSSH2_SESSION *session )
 {
   ScopedDelayCancellation dc;
 
@@ -64,7 +67,10 @@ static void free_session( LIBSSH2_SESSION *session )
 }
 
 // free a LIBSSH2_CHANNEL object
-static void free_channel( LIBSSH2_CHANNEL *channel )
+//
+// This function cannot be declared static because we need
+// it as a template parameter.
+void free_channel( LIBSSH2_CHANNEL *channel )
 {
   ScopedDelayCancellation dc;
 
@@ -314,7 +320,7 @@ LIBSSH2_SESSION *SSHconnection::open_session( FileDescriptorBasedStream &sock )
   }
 
   if (rc) {
-    LOG_ERROR_STR( itsLogPrefix << "Authentication by public key failed: " << rc << " (" << explainLibSSH2Error(rc) << ")");
+    LOG_ERROR_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public key file '" << itsSSHKey << "' failed: " << rc << " (" << explainLibSSH2Error(rc) << ")");
     return NULL;
   }
 
@@ -696,13 +702,17 @@ bool discover_ssh_privkey(char *privkey, size_t buflen) {
 
   snprintf(privkey, buflen, "%s/.ssh/id_rsa", HOME);
 
-  if (ssh_works(privkey)) 
+  if (ssh_works(privkey)) {
+    LOG_DEBUG_STR("Private key file " << privkey << " works for ssh localhost.");
     return true;
+  }
 
   snprintf(privkey, buflen, "%s/.ssh/id_dsa", HOME);
 
-  if (ssh_works(privkey))
+  if (ssh_works(privkey)) {
+    LOG_DEBUG_STR("Private key file " << privkey << " works for ssh localhost.");
     return true;
+  }
 
   LOG_ERROR("Cannot find a working private key for SSH to localhost");
 
