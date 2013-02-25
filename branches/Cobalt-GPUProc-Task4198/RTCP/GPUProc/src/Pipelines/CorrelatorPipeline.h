@@ -23,7 +23,6 @@ namespace LOFAR
 
             void		    doWork();
             void        doWorkQueue(CorrelatorWorkQueue workQueue);
-            void        receiveSubbandSamples(CorrelatorWorkQueue workQueue, unsigned subband);
 
         private:
             friend class CorrelatorWorkQueue;

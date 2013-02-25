@@ -14,151 +14,155 @@
 
 namespace LOFAR
 {
-  namespace RTCP 
-  {
-
-    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
-      :
-    Pipeline(ps),
-      filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER),
-      firFilterCounter("FIR filter"),
-      delayAndBandPassCounter("delay/bp"),
-#if defined USE_NEW_CORRELATOR
-      correlateTriangleCounter("cor.triangle"),
-      correlateRectangleCounter("cor.rectangle"),
-#else
-      correlatorCounter("correlator"),
-#endif
-      fftCounter("FFT"),
-      samplesCounter("samples"),
-      visibilitiesCounter("visibilities")
+    namespace RTCP 
     {
-      filterBank.negateWeights();
 
-      double startTime = omp_get_wtime();
-
-      //#pragma omp parallel sections
-      {
-        //#pragma omp section
-        firFilterProgram = createProgram("FIR.cl");
-        //#pragma omp section
-        delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
-        //#pragma omp section
+        CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
+            :
+        Pipeline(ps),
+            filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER),
+            firFilterCounter("FIR filter"),
+            delayAndBandPassCounter("delay/bp"),
 #if defined USE_NEW_CORRELATOR
-        correlatorProgram = createProgram("NewCorrelator.cl");
+            correlateTriangleCounter("cor.triangle"),
+            correlateRectangleCounter("cor.rectangle"),
 #else
-        correlatorProgram = createProgram("Correlator.cl");
+            correlatorCounter("correlator"),
 #endif
-      }
-
-      std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
-    }
-
-    void CorrelatorPipeline::doWork()
-    {
-#     pragma omp parallel sections
-      {
-#       pragma omp section
+            fftCounter("FFT"),
+            samplesCounter("samples"),
+            visibilitiesCounter("visibilities")
         {
-          double startTime = ps.startTime(), stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
+            filterBank.negateWeights();
 
-          size_t nrStations = ps.nrStations();
+            double startTime = omp_get_wtime();
 
-#         pragma omp parallel for num_threads(nrStations)
-          for (size_t stat = 0; stat < nrStations; stat++) 
-          {
-            double currentTime;
+            //#pragma omp parallel sections
+            {
+                //#pragma omp section
+                firFilterProgram = createProgram("FIR.cl");
+                //#pragma omp section
+                delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
+                //#pragma omp section
+#if defined USE_NEW_CORRELATOR
+                correlatorProgram = createProgram("NewCorrelator.cl");
+#else
+                correlatorProgram = createProgram("Correlator.cl");
+#endif
+            }
+
+            std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
+        }
+
+        void CorrelatorPipeline::doWork()
+        {
+#           pragma omp parallel sections
+            {
+#               pragma omp section
+                {
+                    double startTime = ps.startTime(), stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
+
+                    size_t nrStations = ps.nrStations();
+
+#                   pragma omp parallel for num_threads(nrStations)
+                    for (size_t stat = 0; stat < nrStations; stat++) 
+                    {
+                        double currentTime;
+
+                        for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) 
+                        {
+                           sendNextBlock(stat);
+                        }
+                    }
+                }
+
+#               pragma omp section
+                {
+#                 pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
+
+                  doWorkQueue(CorrelatorWorkQueue(*this, omp_get_thread_num()));
+                }
+            }
+        }
+
+        //        void CorrelatorPipeline::receiveSubbandSamples(unsigned block, unsigned subband)
+//        {
+//            
+//
+//#ifdef USE_INPUT_SECTION
+//
+//#pragma omp parallel for
+//            for (unsigned stat = 0; stat < ps.nrStations(); stat ++) {
+//                Stream *stream = pipeline.bufferToGPUstreams[stat];
+//
+//                // read header
+//                struct BeamletBufferToComputeNode<i16complex>::header header;
+//                size_t subbandSize = inputSamples[stat].num_elements() * sizeof *inputSamples.origin();
+//
+//                stream->read(&header, sizeof header);
+//
+//                ASSERTSTR(subband == header.subband, "Expected subband " << subband << ", got subband " << header.subband);
+//                ASSERTSTR(subbandSize == header.nrSamples * header.sampleSize, "Expected " << subbandSize << " bytes, got " << header.nrSamples * header.sampleSize << " bytes (= " << header.nrSamples << " samples * " << header.sampleSize << " bytes/sample)");
+//
+//                // read subband
+//                stream->read(inputSamples[stat].origin(), subbandSize);
+//
+//                unsigned beam = ps.subbandToSAPmapping()[subband];
+//
+//                // read meta data
+//                SubbandMetaData metaData(1, header.nrDelays);
+//                metaData.read(stream);
+//
+//                // the first set of delays represents the central beam, which is the one we correlate
+//                struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
+//
+//                for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
+//                    delaysAtBegin[beam][stat][pol]  = beamInfo.delayAtBegin;
+//                    delaysAfterEnd[beam][stat][pol] = beamInfo.delayAfterEnd;
+//
+//                    phaseOffsets[beam][pol] = 0.0;
+//                }
+//            }
+//
+//#endif
+//
+//            
+//        }
+
+        //This whole block should be parallel: this allows the thread to pick up a subband from the next block
+        void CorrelatorPipeline::doWorkQueue(CorrelatorWorkQueue workQueue)
+        {
+            double startTime = ps.startTime(), currentTime, stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
+
+#pragma omp barrier
+
+            double executionStartTime = omp_get_wtime();
+            double lastTime = omp_get_wtime();
 
             for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) 
             {
-              sendNextBlock(stat);
+#pragma omp single nowait
+#pragma omp critical (cout)
+                std::cout << "block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << ", exec = " << omp_get_wtime() - lastTime << std::endl;
+                
+                lastTime = omp_get_wtime();
+
+#pragma omp for schedule(dynamic), nowait, ordered
+                for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) 
+                {
+                        inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
+                        inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
+                        workQueue.doSubband(block, subband);
+                }
             }
-          }
-        }
 
-#       pragma omp section
-        {
-#       pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
+#pragma omp barrier //Wait till all the queues are done working on the current block and subband
 
-          doWorkQueue(CorrelatorWorkQueue(*this, omp_get_thread_num()));
+#pragma omp master
+            if (!profiling)
+#pragma omp critical (cout)
+                std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
         }
-      }
     }
-
-    void CorrelatorPipeline::receiveSubbandSamples(CorrelatorWorkQueue workQueue, unsigned subband)
-    {
-#ifdef USE_INPUT_SECTION
-
-#     pragma omp parallel for
-      for (unsigned stat = 0; stat < ps.nrStations(); stat ++) {
-        Stream *stream = bufferToGPUstreams[stat];
-
-        // read header
-        struct BeamletBufferToComputeNode<i16complex>::header header;
-        size_t subbandSize = workQueue.inputSamples[stat].num_elements() * sizeof *workQueue.inputSamples.origin();
-
-        stream->read(&header, sizeof header);
-
-        ASSERTSTR(subband == header.subband, "Expected subband " << subband << ", got subband " << header.subband);
-        ASSERTSTR(subbandSize == header.nrSamples * header.sampleSize, "Expected " << subbandSize << " bytes, got " << header.nrSamples * header.sampleSize << " bytes (= " << header.nrSamples << " samples * " << header.sampleSize << " bytes/sample)");
-
-        // read subband
-        stream->read(workQueue.inputSamples[stat].origin(), subbandSize);
-
-        unsigned beam = ps.subbandToSAPmapping()[subband];
-
-        // read meta data
-        SubbandMetaData metaData(1, header.nrDelays);
-        metaData.read(stream);
-
-        // the first set of delays represents the central beam, which is the one we correlate
-        struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
-
-        for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-          workQueue.delaysAtBegin[beam][stat][pol]  = beamInfo.delayAtBegin;
-          workQueue.delaysAfterEnd[beam][stat][pol] = beamInfo.delayAfterEnd;
-
-          workQueue.phaseOffsets[beam][pol] = 0.0;
-        }
-      }
-#endif
-    }
-
-    //This whole block should be parallel: this allows the thread to pick up a subband from the next block
-    void CorrelatorPipeline::doWorkQueue(CorrelatorWorkQueue workQueue)
-    {
-      double startTime = ps.startTime(), currentTime, stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
-
-#     pragma omp barrier
-
-      double executionStartTime = omp_get_wtime();
-      double lastTime = omp_get_wtime();
-
-      for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) 
-      {
-#       pragma omp single nowait
-#       pragma omp critical (cout)
-        std::cout << "block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << ", exec = " << omp_get_wtime() - lastTime << std::endl;
-
-        lastTime = omp_get_wtime();
-
-#       pragma omp for schedule(dynamic), nowait, ordered
-        for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) 
-        {
-          inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-          receiveSubbandSamples(workQueue,  subband);
-          inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
-          workQueue.doSubband(block, subband);
-        }
-      }
-
-#     pragma omp barrier //Wait till all the queues are done working on the current block and subband
-
-#     pragma omp master
-      if (!profiling)
-#       pragma omp critical (cout)
-        std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
-    }
-  }
 }
 
