@@ -67,18 +67,18 @@ namespace LOFAR
 
 #           pragma omp parallel for num_threads(ps.nrSubbands())
             for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
-              struct Output &output = outputs[subband];
+              struct Output &output = outputs[sb];
 
-              ScopedLock sl(output.streamMutex);
+              ScopedLock sl(*output.streamMutex);
 
               try {
-                  if (ps.getHostName(CORRELATED_DATA, subband) == "") {
+                  if (ps.getHostName(CORRELATED_DATA, sb) == "") {
                     // an empty host name means 'write to disk directly', to
                     // make debugging easier for now
-                    output.stream = new FileStream(ps.getFileName(CORRELATED_DATA, subband), 0666);
+                    output.stream = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
                   } else {
                     // connect to the Storage_main process for this output
-                    const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, subband);
+                    const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, sb);
 
                     // TODO: Create these connections asynchronously!
                     output.stream = createStream(desc, false, 0);
@@ -110,7 +110,7 @@ namespace LOFAR
 
             // Try to write the data
             {
-              ScopedLock sl(output.streamMutex);
+              ScopedLock sl(*output.streamMutex);
 
               if (output.stream.get()) {
                 try {
