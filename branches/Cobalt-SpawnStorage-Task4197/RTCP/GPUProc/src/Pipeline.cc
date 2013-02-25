@@ -87,6 +87,9 @@ namespace LOFAR
             output.sync.waitFor(block);
 
             try {
+              // We do the ordering, so we set the sequence numbers
+              data.setSequenceNumber(block);
+
               // Try to write the data
               data.write(output.stream.get(), true);
             } catch (Stream::EndOfStreamException &ex) {
