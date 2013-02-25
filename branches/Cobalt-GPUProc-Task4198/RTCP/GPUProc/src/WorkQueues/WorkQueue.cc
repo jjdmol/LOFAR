@@ -6,17 +6,16 @@
 #include "Interface/Parset.h"
 #include "OpenCL_Support.h"
 
-#include "Pipeline.h"
 #include "WorkQueue.h"
 
 namespace LOFAR
 {
     namespace  RTCP 
     {      
-                WorkQueue::WorkQueue(Pipeline &pipeline, cl::Context context, unsigned gpuNumber, const Parset	&ps)
+                WorkQueue::WorkQueue(cl::Context context, cl::Device		&device, unsigned gpuNumber, const Parset	&ps)
             :
         gpu(gpuNumber),
-            device(pipeline.devices[gpu]),
+            device(device),
             ps(ps)
         {
 #if defined __linux__ && defined USE_B7015

@@ -18,9 +18,9 @@ namespace LOFAR
 {
     namespace  RTCP 
     {     
-        CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, cl::Context context, unsigned gpuNumber)
+        CorrelatorWorkQueue::CorrelatorWorkQueue(CorrelatorPipeline &pipeline, cl::Context context, cl::Device		&device, unsigned gpuNumber)
             :
-        WorkQueue(pipeline, context, gpuNumber, pipeline.ps),
+        WorkQueue( context, device, gpuNumber, pipeline.ps),
             pipeline(pipeline),
 
             devFIRweights(context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
