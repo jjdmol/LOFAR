@@ -40,7 +40,7 @@ InputThread::InputThread(const Parset &parset, OutputType outputType, unsigned s
   itsInputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)),
   itsFreeQueue(freeQueue),
   itsReceiveQueue(receiveQueue),
-  itsDeadline(parset.stopTime())
+  itsDeadline(parset.realTime() ? parset.stopTime() : 0)
 {
 }
 
