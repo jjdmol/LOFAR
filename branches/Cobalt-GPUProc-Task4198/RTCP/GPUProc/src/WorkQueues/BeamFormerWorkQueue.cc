@@ -28,9 +28,9 @@ namespace LOFAR
     namespace  RTCP 
     {     
         
-        BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline, unsigned queueNumber)
+        BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline, unsigned gpuNumber)
             :
-        WorkQueue(pipeline, pipeline.context, queueNumber % nrGPUs, pipeline.ps),
+        WorkQueue(pipeline, pipeline.context, gpuNumber, pipeline.ps),
             pipeline(pipeline),
             inputSamples(boost::extents[ps.nrStations()][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
             devFilteredData(pipeline.context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
