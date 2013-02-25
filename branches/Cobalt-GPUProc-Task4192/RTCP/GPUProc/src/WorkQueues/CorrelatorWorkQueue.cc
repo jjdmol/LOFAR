@@ -88,7 +88,8 @@ namespace LOFAR
         SubbandMetaData metaData(1, header.nrDelays);
         metaData.read(stream);
 
-        // flag information is now in metaData.getFlags(0), flags indicate missing data sample indices
+        // flag the input data.
+        flagInputData(stat, metaData);
 
         // the first set of delays represents the central beam, which is the one we correlate
         struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
@@ -110,6 +111,30 @@ namespace LOFAR
       pipeline.outputSynchronization.waitFor(block * ps.nrSubbands() + subband);
       pipeline.GPUtoStorageStreams[subband]->write(visibilities.origin(), visibilities.num_elements() * sizeof(std::complex<float>));
       pipeline.outputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
+    }
+
+
+    void CorrelatorWorkQueue::flagInputData(unsigned station, 
+                                            const SubbandMetaData& metaData)
+    {
+      // Get the flags that indicate missing data samples as a vector of
+      // SparseSet::Ranges
+      SparseSet<unsigned>::Ranges flags = metaData.getFlags(0).getRanges();
+
+      // Get the size of a sample in bytes.
+      size_t sizeof_sample = sizeof *inputSamples.origin();
+
+      // Calculate the number elements to skip when striding over the first
+      // dimension of inputSamples[station]
+      size_t stride = inputSamples[station].strides()[0];
+
+      // Zero the bytes in the input data for the flagged ranges.
+      for(SparseSet<unsigned>::const_iterator it = flags.begin(); 
+          it != flags.end(); ++it) {
+        void *offset = inputSamples[station].origin() + stride * it->begin;
+        size_t size = stride * (it->end - it->begin) * sizeof_sample;
+        memset(offset, 0, size);
+      }
     }
 
 
