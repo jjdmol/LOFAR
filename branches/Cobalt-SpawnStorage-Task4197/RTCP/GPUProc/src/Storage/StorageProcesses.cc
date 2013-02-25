@@ -34,8 +34,33 @@ StorageProcess::~StorageProcess()
 
 void StorageProcess::start()
 {
-  ASSERTSTR(!itsSSHconnection, "StorageProcess has already been started");
+  ASSERTSTR(!itsThread, "StorageProcess has already been started");
 
+  itsThread = new Thread(this, &StorageProcess::controlThread, itsLogPrefix + "[ControlThread] ", 65535);
+}
+
+
+void StorageProcess::stop(struct timespec deadline)
+{
+  if (!itsThread) {
+    // not started
+    return;
+  }
+
+  itsThread->wait(deadline);
+  itsThread->cancel();
+}
+
+
+bool StorageProcess::isDone()
+{
+  return itsThread->isDone();
+}
+
+
+void StorageProcess::controlThread()
+{
+  // Start Storage
   std::string userName   = itsParset.getString("OLAP.Storage.userName");
   std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
@@ -80,35 +105,10 @@ void StorageProcess::start()
 #endif
   );
 
-  itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey, 0);
-  itsSSHconnection->start();
+  SSHconnection ssh(itsLogPrefix, itsHostname, commandLine, userName, sshKey, 0);
+  ssh.start();
 
-  itsThread = new Thread(this, &StorageProcess::controlThread, itsLogPrefix + "[ControlThread] ", 65535);
-}
-
-
-void StorageProcess::stop(struct timespec deadline)
-{
-  if (!itsSSHconnection) {
-    // not started
-    return;
-  }
-
-  itsSSHconnection->wait(deadline);
-
-  itsThread->cancel();
-}
-
-
-bool StorageProcess::isDone()
-{
-  return itsSSHconnection->isDone();
-}
-
-
-void StorageProcess::controlThread()
-{
-  // Connect
+  // Connect control stream
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
   std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
   PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource, 0);
@@ -124,6 +124,9 @@ void StorageProcess::controlThread()
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sending final meta data");
   itsManager.itsFinalMetaData.write(stream);
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent final meta data");
+
+  // Wait for Storage to finish properly
+  ssh.wait();
 }
 
 

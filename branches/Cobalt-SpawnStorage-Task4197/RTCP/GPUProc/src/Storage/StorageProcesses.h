@@ -55,8 +55,6 @@ class StorageProcess {
 
       StorageProcesses                   &itsManager;
 
-      SmartPtr<SSHconnection>            itsSSHconnection;
-
       const Parset &itsParset;
       const std::string itsLogPrefix;
 
