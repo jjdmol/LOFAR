@@ -52,10 +52,12 @@ namespace RTCP {
 Mutex coutMutex;
 #endif
 
+// Prevent export of free_session and free_channel. They
+// cannot be made static as they are needed as a template
+// parameter.
+namespace {
+
 // free a LIBSSH2_SESSION object
-//
-// This function cannot be declared static because we need
-// it as a template parameter.
 void free_session( LIBSSH2_SESSION *session )
 {
   ScopedDelayCancellation dc;
@@ -67,9 +69,6 @@ void free_session( LIBSSH2_SESSION *session )
 }
 
 // free a LIBSSH2_CHANNEL object
-//
-// This function cannot be declared static because we need
-// it as a template parameter.
 void free_channel( LIBSSH2_CHANNEL *channel )
 {
   ScopedDelayCancellation dc;
@@ -82,6 +81,8 @@ void free_channel( LIBSSH2_CHANNEL *channel )
 
 typedef SmartPtr<LIBSSH2_SESSION, SmartPtrFreeFunc<LIBSSH2_SESSION, free_session> > session_t;
 typedef SmartPtr<LIBSSH2_CHANNEL, SmartPtrFreeFunc<LIBSSH2_CHANNEL, free_channel> > channel_t;
+
+}
 
 
 // Convert an SSH exit status to a string
