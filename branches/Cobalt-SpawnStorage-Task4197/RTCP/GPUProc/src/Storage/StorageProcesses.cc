@@ -40,6 +40,15 @@ void StorageProcess::start()
   std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
 
+  if (userName == "") {
+    // No username given -- use $USER
+    const char *USER = getenv("USER");
+
+    ASSERTSTR(USER, "$USER not set.");
+
+    userName = USER;
+  }
+
   if (sshKey == "") {
     // No SSH key given -- try to discover it
 
