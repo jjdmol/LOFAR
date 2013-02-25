@@ -13,7 +13,7 @@ namespace LOFAR
 {
     namespace  RTCP 
     {      
-                WorkQueue::WorkQueue(Pipeline &pipeline, unsigned queueNumber)
+                WorkQueue::WorkQueue(Pipeline &pipeline, cl::Context context, unsigned queueNumber)
             :
         gpu(queueNumber % nrGPUs),
             device(pipeline.devices[gpu]),
@@ -23,7 +23,7 @@ namespace LOFAR
             set_affinity(gpu);
 #endif
 
-            queue = cl::CommandQueue(pipeline.context, device, profiling ? CL_QUEUE_PROFILING_ENABLE : 0);
+            queue = cl::CommandQueue(context, device, profiling ? CL_QUEUE_PROFILING_ENABLE : 0);
         }
 
     }

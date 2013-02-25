@@ -14,7 +14,7 @@ namespace LOFAR
         class WorkQueue
         {
         public:
-            WorkQueue(Pipeline &, unsigned queueNumber);
+            WorkQueue(Pipeline &,cl::Context context, unsigned queueNumber);
 
             const unsigned	gpu;
             cl::Device		&device;
