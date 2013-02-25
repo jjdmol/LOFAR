@@ -88,6 +88,8 @@ namespace LOFAR
                 SubbandMetaData metaData(1, header.nrDelays);
                 metaData.read(stream);
 
+		// flag information is now in metaData.getFlags(0), flags indicate missing data sample indices
+
                 // the first set of delays represents the central beam, which is the one we correlate
                 struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
 
