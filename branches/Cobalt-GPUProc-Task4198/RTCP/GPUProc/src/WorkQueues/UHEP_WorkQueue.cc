@@ -28,7 +28,7 @@ namespace LOFAR
     {     
                 UHEP_WorkQueue::UHEP_WorkQueue(UHEP_Pipeline &pipeline, unsigned queueNumber)
             :
-        WorkQueue(pipeline, pipeline.context, queueNumber),
+        WorkQueue(pipeline, pipeline.context, pipeline.ps, queueNumber),
             pipeline(pipeline),
             hostInputSamples(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY),
             hostBeamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY),
