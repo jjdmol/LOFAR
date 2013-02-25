@@ -163,8 +163,14 @@ namespace LOFAR
                         inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
                         //receiveSubbandSamples
                         inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
+
                         workQueue.doSubband(block, subband);
-                        //target for send subband samples
+
+                        outputSynchronization.waitFor(block * ps.nrSubbands() + subband);
+                        GPUtoStorageStreams[subband]->write(workQueue.visibilities.origin(),
+                          workQueue.visibilities.num_elements() * sizeof(std::complex<float>));
+                        //workQueue.sendSubbandVisibilites(block, subband);
+                        outputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
                 }
             }
 
