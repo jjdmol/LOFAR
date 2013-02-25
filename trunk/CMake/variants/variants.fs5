@@ -11,3 +11,4 @@ option(USE_MPI       "Use MPI"       ON)
 
 set(CASACORE_ROOT_DIR /home/mol/root)
 set(LIBSSH2_ROOT_DIR /home/mol/root)
+set(UNITTEST++_ROOT_DIR /cm/shared/apps/UnitTest++)
