@@ -19,6 +19,7 @@
 #include "Pipelines/CorrelatorPipelineCounters.h"
 
 #include "FilterBank.h"
+#include <Interface/SubbandMetaData.h>
 
 namespace LOFAR
 {
@@ -38,7 +39,7 @@ namespace LOFAR
             void printTestOutput();
 #endif
 
-    private:
+    //private:
             void doSubband(unsigned block, unsigned subband);
             //void receiveSubbandSamples(unsigned block, unsigned subband);
             //void sendSubbandVisibilites(unsigned block, unsigned subband);
