@@ -5,7 +5,6 @@
 #include "OpenCL_Support.h"
 
 #include "global_defines.h"
-#include "Pipeline.h"
 
 namespace LOFAR
 {
@@ -14,7 +13,7 @@ namespace LOFAR
         class WorkQueue
         {
         public:
-            WorkQueue(Pipeline &, unsigned queueNumber);
+            WorkQueue(cl::Context &context, cl::Device		&device,  unsigned gpuNumber, const Parset	&ps);
 
             const unsigned	gpu;
             cl::Device		&device;

@@ -48,17 +48,21 @@
 // navFunct_fillStationLists                  : fill global lists with core/europe and remote stations
 // navFunct_findFirstOne                      : Returns the number of a given array that is true for a certain range
 // navFunct_formatInt                         : returns a string with the int preceeded by zeros
+// navFunct_getAddersForObservation           : returns all the Adders that are in use for an observation
 // navFunct_getArmFromStation                 : Returns the armposition code from a stationName
 // navFunct_getDPFromTypePath                 : Returns Dpname derived from currentDatapoint,typeList and chosen type
 // navFunct_getDynString                      : Returns a dynString from a dyn_dyn[index]
 // navFunct_getHBABitmap                      : get the HBABitmap from a given observation on a given station
+// navFunct_getInputBuffersForObservations    : returns all the InputBuffers that are in use for an observation
 // navFunct_getLBABitmap                      : get the LBABitmap from a given observation on a given station
+// navFunct_getLocusNodesForObservation       : returns all the LocusNOdes that are in use for an observation
 // navFunct_getLogColor                       : returns the color that belongs to a log level
 // navFunct_getLogLevel                       : returns the level from a logline
 // navFunct_getPathLessOne                    : Returns path less last leaf/node
 // navFunct_getReceiverBitmap                 : returns the stations receiverBitMap for a given observation
 // navFunct_getRingFromStation                : Returns the ringName from a stationName
 // navFunct_getStationFromDP                  : get the stationname out of a DP name (if any)
+// navFunct_getWritersForObservation          : returns all the writers that are in use for an observation
 // navFunct_giveFadedColor                    : returns faded color string between green and red depending on min,max and currentValue
 // navFunct_hardware2Obs                      : Looks if a piece of hardware maps to an observation
 // navFunct_inputBuf2CEPName                  : Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
@@ -324,18 +328,6 @@ void navFunct_updateObservations(string dp1, dyn_string active,
   g_observations[ "STATIONLIST" ]    = makeDynString();
   g_observations[ "SCHEDULE" ]       = makeDynString();
   
-  for (int i = 1; i<= dynlen(finished); i++) {
-    string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+finished[i]);
-    if (dp != "") {
-      iPos=dynAppend(g_observations[ "DP"          ] , dp);
-      dpGet(dp+".stationList",stationList);
-      
-      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+finished[i];
-      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
-      g_observations[ "SCHEDULE"       ][iPos]  = "finished";
-    }      
-  }
-
   for (int i = 1; i<= dynlen(active); i++) {
     string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+active[i]);
     if (dp != "") {
@@ -359,6 +351,19 @@ void navFunct_updateObservations(string dp1, dyn_string active,
       g_observations[ "SCHEDULE"       ][iPos]  = "planned";
     }      
   }
+
+  for (int i = 1; i<= dynlen(finished); i++) {
+    string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+finished[i]);
+    if (dp != "") {
+      iPos=dynAppend(g_observations[ "DP"          ] , dp);
+      dpGet(dp+".stationList",stationList);
+      
+      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+finished[i];
+      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
+      g_observations[ "SCHEDULE"       ][iPos]  = "finished";
+    }      
+  }
+
 
 
   // check if tabCtrl has a Panel loaded (indicating init has passed and panels are loaded)
@@ -1291,7 +1296,7 @@ void navFunct_fillObservationsList() {
         for (int j=1; j<= dynlen(stationList); j++) {
         
           //test if station is used in the observation
-          if ( navFunct_hardware2Obs(stationList[j], g_observations["NAME"][i],"Station",stationList[j],0)) {
+          if (navFunct_hardware2Obs(stationList[j], g_observations["NAME"][i],"Station",stationList[j],0)) {
             if (!dynContains(g_observationsList, shortObs)){
               dynAppend(g_observationsList,shortObs);
               found=true;
@@ -2270,17 +2275,128 @@ string navFunct_giveFadedColor(int minValue, int maxValue,int currentValue) {
 // ***************************
 bool navFunct_isObservation(string obsName) {
   bool isObs = true;
-  int iPos = dynContains( g_observations[ "NAME"         ], obsName );
+  int iPos = dynContains( g_observations[ "NAME"         ], "LOFAR_ObsSW_"+obsName );
    if (iPos <=0) {
-    LOG_ERROR("navFunct.ctl:navFunct_hardware2Obs|observation: "+ observation+" not in g_observations.");     
-    return flag;
+     LOG_ERROR("navFunct.ctl:navFunct_hardware2Obs|observation: "+ obsName+" not in g_observations.");     
+     isObs=false;
+     return isObs;
   }
   
   
-  dyn_string stations = navFunct_listToDynString(g_observations[ "STATIONLIST"    ][iPos]);  
+  dyn_string stations = navFunct_listToDynString(g_observations[ "STATIONLIST"    ][iPos]);
+
   if (dynlen(stations)< 1) {
     isObs=false;
   }
   
   return isObs;
+}
+
+
+// ***************************
+// navFunct_getInputBuffersForObservation
+// ***************************
+// obsName : the observation in question
+//
+// Returns a dyn_string containing all InputBuffers used by this observation
+// ***************************
+// 
+dyn_string navFunct_getInputBuffersForObservation(string obsName) {
+  string obsDP = claimManager_nameToRealName("LOFAR_ObsSW_"+obsName); 
+  string bgpApplDP = CEPDBName+obsDP+"_OnlineControl_BGPAppl";
+  
+  // get all ionodes used by this observation
+  dyn_string ioNodeList;
+  if (dpExists(bgpApplDP+".ioNodeList")) {
+    dpGet(bgpApplDP+".ioNodeList",ioNodeList);
+  }
+  
+  // and construct the InputBuffer DP from this list
+  dyn_string InputBuffers;
+  string extra = "";
+  
+  for (int i=1; i<=dynlen(ioNodeList);i++) {
+    if (i<10) {
+      extra = "0";
+    } else {
+      extra = "";
+    }
+  
+    string IBDP = "CCU001:LOFAR_PermSW_PSIONode"+extra+i+"_InputBuffer";
+    dynAppend(InputBuffers,IBDP);
+  }
+  return InputBuffers;
+}
+
+
+// ***************************
+// navFunct_getAddersForObservation
+// ***************************
+// obsName : the observation in question
+//
+// Returns a dyn_string containing all Adders used by this observation
+// ***************************
+// 
+dyn_string navFunct_getAddersForObservation(string obsName) {
+  //  we only need the number from the observation
+  if (strpos(obsName,"Observation") >= 0) {
+    strreplace(obsName,"Observation","");
+  }
+  dyn_string adders;
+  dyn_dyn_anytype tab;
+  string query="SELECT '_online.._value' FROM 'LOFAR_*_Adder*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
+  
+  dpQuery(query,tab);
+  for(int z=2;z<=dynlen(tab);z++) {
+    dynAppend(adders,dpSubStr(tab[z][1],DPSUB_SYS_DP));
+  }
+  return adders;
+}
+
+// ***************************
+// navFunct_getLocusNodesForObservation
+// ***************************
+// obsName : the observation in question
+//
+// Returns a dyn_int containing all LocusNodeNumbers used by this observation
+// ***************************
+// 
+dyn_int navFunct_getLocusNodesForObservation(string obsName) {
+
+  // The locusNodes have no observationName connected, but the adders know to 
+  // which locusnode they are connected, so we can collect these together with their locusnode point
+  dyn_string adders = navFunct_getAddersForObservation(obsName);
+  
+  dyn_int locusnodes;
+
+  for(int z=1;z<=dynlen(adders);z++) {
+    int ln;
+    dpGet(adders[z]+".locusNode",ln);
+    dynAppend(locusnodes,ln);
+  }
+  return locusnodes;
+}
+
+// ***************************
+// navFunct_getWritersForObservation
+// ***************************
+// obsName : the observation in question
+//
+// Returns a dyn_string containing all Writers used by this observation
+// ***************************
+// 
+dyn_string navFunct_getWritersForObservation(string obsName) {
+  //  we only need the number from the observation
+  if (strpos(obsName,"Observation") >= 0) {
+    strreplace(obsName,"Observation","");
+  }
+  dyn_string writers;
+  dyn_dyn_anytype tab;
+  string query="SELECT '_online.._value' FROM 'LOFAR_*_Writer*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
+  
+  dpQuery(query,tab);
+  for(int z=2;z<=dynlen(tab);z++) {
+    dynAppend(writers,dpSubStr(tab[z][1],DPSUB_SYS_DP));
+  }
+  return writers;
 }

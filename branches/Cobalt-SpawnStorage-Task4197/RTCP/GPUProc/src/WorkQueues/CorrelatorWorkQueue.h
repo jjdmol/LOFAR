@@ -1,20 +1,25 @@
 #ifndef GPUPROC_CORRELATORWORKQUEUE_H
 #define GPUPROC_CORRELATORWORKQUEUE_H
+
 #include "CL/cl.hpp"
 #include "Interface/Parset.h"
 #include "OpenCL_Support.h"
 #include <complex>
 
 #include "global_defines.h"
-#include "Pipeline.h"
 
 #include "WorkQueue.h"
-#include "Pipelines/CorrelatorPipeline.h"
 
 #include "Kernels/FIR_FilterKernel.h"
 #include "Kernels/Filter_FFT_Kernel.h"
 #include "Kernels/DelayAndBandPassKernel.h"
 #include "Kernels/CorrelatorKernel.h"
+
+#include "Pipelines/CorrelatorPipelinePrograms.h"
+#include "Pipelines/CorrelatorPipelineCounters.h"
+
+#include "FilterBank.h"
+#include <Interface/SubbandMetaData.h>
 
 namespace LOFAR
 {
@@ -23,7 +28,9 @@ namespace LOFAR
         class CorrelatorWorkQueue : public WorkQueue
         {
         public:
-            CorrelatorWorkQueue(CorrelatorPipeline &, unsigned queueNumber);
+            CorrelatorWorkQueue(const Parset	&parset,cl::Context &context, cl::Device		&device, unsigned queueNumber,
+              CorrelatorPipelinePrograms &programs, CorrelatorPipelineCounters &counters,
+              FilterBank &filterBank);
 
             void doWork();
 
@@ -32,12 +39,10 @@ namespace LOFAR
             void printTestOutput();
 #endif
 
-            //private:
+    //private:
             void doSubband(unsigned block, unsigned subband);
-            void receiveSubbandSamples(unsigned block, unsigned subband);
-            void sendSubbandVisibilities(unsigned block, unsigned subband);
 
-            CorrelatorPipeline	&pipeline;
+            CorrelatorPipelineCounters &counters;
             cl::Buffer		devFIRweights;
             cl::Buffer		devBufferA, devBufferB;
             MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
