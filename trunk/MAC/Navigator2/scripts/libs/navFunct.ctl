@@ -328,18 +328,6 @@ void navFunct_updateObservations(string dp1, dyn_string active,
   g_observations[ "STATIONLIST" ]    = makeDynString();
   g_observations[ "SCHEDULE" ]       = makeDynString();
   
-  for (int i = 1; i<= dynlen(finished); i++) {
-    string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+finished[i]);
-    if (dp != "") {
-      iPos=dynAppend(g_observations[ "DP"          ] , dp);
-      dpGet(dp+".stationList",stationList);
-      
-      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+finished[i];
-      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
-      g_observations[ "SCHEDULE"       ][iPos]  = "finished";
-    }      
-  }
-
   for (int i = 1; i<= dynlen(active); i++) {
     string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+active[i]);
     if (dp != "") {
@@ -363,6 +351,19 @@ void navFunct_updateObservations(string dp1, dyn_string active,
       g_observations[ "SCHEDULE"       ][iPos]  = "planned";
     }      
   }
+
+  for (int i = 1; i<= dynlen(finished); i++) {
+    string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+finished[i]);
+    if (dp != "") {
+      iPos=dynAppend(g_observations[ "DP"          ] , dp);
+      dpGet(dp+".stationList",stationList);
+      
+      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+finished[i];
+      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
+      g_observations[ "SCHEDULE"       ][iPos]  = "finished";
+    }      
+  }
+
 
 
   // check if tabCtrl has a Panel loaded (indicating init has passed and panels are loaded)
