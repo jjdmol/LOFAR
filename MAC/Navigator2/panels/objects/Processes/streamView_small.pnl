@@ -17,17 +17,15 @@ private void reload() {
   dyn_string inputBuffers = navFunct_getInputBuffersForObservation(observation);
 
   // change all found DP's to contain all the elements that contain the stream.percBad
-  dyn_string connectTo;
+  if (connected) {
+    dpDisconnect(\"streamCB\",connectTo);
+    dynClear(connectTo);
+  }
+
   for (int i=1; i<= dynlen(inputBuffers); i++) {
     dynAppend(connectTo,inputBuffers[i]+\".\"+stream+\".percBad:_online.._value\");
   }
     
-  if (connected) {
-    dpDisconnect(\"streamCB\",oldConnectTo);
-    dynClear(oldConnectTo);
-  }
-  
-  
   // check if the required datapoint for this view are enabled and accessible
   if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo)>0 ){
     if (dpConnect(\"streamCB\", connectTo) == -1) {
@@ -77,6 +75,7 @@ E "#uses \"navPanel.ctl\"
 
 string stream;
 string observation;
+dyn_string connectTo;
 bool connected = false;" 0
  2
 "CBRef" "1"
@@ -99,7 +98,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 0 0 24 14
+E E 0 1 1 2 1 E U  1 E 0 0 24 13
 0
 LAYER, 1 
 1
