@@ -1,5 +1,6 @@
 #ifndef GPUPROC_CORRELATORWORKQUEUE_H
 #define GPUPROC_CORRELATORWORKQUEUE_H
+
 #include "CL/cl.hpp"
 #include "Interface/Parset.h"
 #include "OpenCL_Support.h"
@@ -37,11 +38,14 @@ namespace LOFAR
             void printTestOutput();
 #endif
 
-            //private:
+    private:
             void doSubband(unsigned block, unsigned subband);
             //void receiveSubbandSamples(unsigned block, unsigned subband);
             //void sendSubbandVisibilites(unsigned block, unsigned subband);
             CorrelatorPipelineCounters &counters;
+      // Flag the input data of the given station using to the flags in the
+      // meta-data.
+      void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
             cl::Buffer		devFIRweights;
             cl::Buffer		devBufferA, devBufferB;
             MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
