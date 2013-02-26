@@ -14,7 +14,7 @@ PANEL,-1 -1 400 400 N "_3DFace" 2
 private void reload() {
   
   // get all the InputBuffers used by this observation
-  dyn_string inputBuffers = navFunct_getInputBuffersForObservation(observation);
+  inputBuffers = navFunct_getInputBuffersForObservation(observation);
 
   // change all found DP's to contain all the elements that contain the stream.percBad
   if (connected) {
@@ -49,10 +49,13 @@ void streamCB(dyn_string dps, dyn_float values)
   
   for (int i = 1; i<= dynlen(values); i++) {
     float val = values[i];
+    string dp = dps[i];
     if (val > 0.0) {
       color = \"Lofar_suspicious\";
       string station;
-      dpGet(dpSubStr(dps[i],DPSUB_SYS_DP)+\".stationName\",station);
+      int nr  = substr(dp,strpos(dp,\"PSIONode\")+8,2);
+      string IONodeDP = navFunct_IONode2DPName(nr);
+      dpGet(IONodeDP+\".usedStation\",station);
       toolTipText+=station+\"</t> :\"+val+\"<br>\";
       count++;
       if (val > 10.0) {
@@ -76,6 +79,7 @@ E "#uses \"navPanel.ctl\"
 string stream;
 string observation;
 dyn_string connectTo;
+dyn_string inputBuffers;
 bool connected = false;" 0
  2
 "CBRef" "1"
