@@ -26,7 +26,7 @@ namespace LOFAR
         class CorrelatorWorkQueue : public WorkQueue
         {
         public:
-            CorrelatorWorkQueue(const Parset	&parset,cl::Context context, cl::Device		&device, unsigned queueNumber,
+            CorrelatorWorkQueue(const Parset	&parset,cl::Context &context, cl::Device		&device, unsigned queueNumber,
               CorrelatorPipelinePrograms &programs, CorrelatorPipelineCounters &counters,
               FilterBank &filterBank);
 

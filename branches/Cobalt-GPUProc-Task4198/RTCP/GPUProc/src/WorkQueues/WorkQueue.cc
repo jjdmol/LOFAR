@@ -12,7 +12,7 @@ namespace LOFAR
 {
     namespace  RTCP 
     {      
-                WorkQueue::WorkQueue(cl::Context context, cl::Device		&device, unsigned gpuNumber, const Parset	&ps)
+                WorkQueue::WorkQueue(cl::Context &context, cl::Device		&device, unsigned gpuNumber, const Parset	&ps)
             :
         gpu(gpuNumber),
             device(device),

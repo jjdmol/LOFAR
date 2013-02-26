@@ -21,7 +21,7 @@ namespace LOFAR
     namespace  RTCP 
     {     
         CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset	&parset,
-            cl::Context context, cl::Device	&device, unsigned gpuNumber,
+            cl::Context &context, cl::Device	&device, unsigned gpuNumber,
             CorrelatorPipelinePrograms & programs, CorrelatorPipelineCounters & inputcounters,
             FilterBank &filterBank
             )
@@ -30,7 +30,9 @@ namespace LOFAR
             counters(inputcounters),
             devFIRweights(context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
             devBufferA(context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
-            devBufferB(context, CL_MEM_READ_WRITE, std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>), ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
+            devBufferB(context, CL_MEM_READ_WRITE,
+                       std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+                       ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
             bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
             delaysAtBegin(boost::extents[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
             delaysAfterEnd(boost::extents[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),

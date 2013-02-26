@@ -24,8 +24,8 @@ namespace LOFAR
             CorrelatorPipeline(const Parset &);
 
             void		    doWork();
-            void        doWorkQueue(CorrelatorWorkQueue workQueue);
-            void        receiveSubbandSamples(unsigned block, unsigned subband);
+            void        doWorkQueue(CorrelatorWorkQueue &workQueue);
+            void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband);
 
         private:
             friend class CorrelatorWorkQueue;

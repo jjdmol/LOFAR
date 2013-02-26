@@ -8,9 +8,12 @@
 #include <iostream>
 #include "ApplCommon/PosixTime.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include "Stream/Stream.h"
 
 #include "CorrelatorPipeline.h"
 #include "WorkQueues/CorrelatorWorkQueue.h"
+#include "BeamletBufferToComputeNode.h"
+#include <Interface/SubbandMetaData.h>
 
 namespace LOFAR
 {
@@ -82,31 +85,33 @@ namespace LOFAR
           // Start a set of workqueue, the number depending on the number of GPU's: 2 for each.
           // Each WorkQueue gets its own thread.
 #         pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
-          doWorkQueue(CorrelatorWorkQueue(ps,        // Configuration
+          {
+            CorrelatorWorkQueue queue(ps,        // Configuration
             context,                                 // Opencl context
             devices[omp_get_thread_num() % nrGPUs],  // The GPU this workQueue is connected to
             omp_get_thread_num() % nrGPUs,           // The GPU index
             programs,                                // The compiled kernels, const
             counters,                                // Performance counters, shared between queues!!!
-            filterBank));                            // The filter set to use. Const
+            filterBank);
+            doWorkQueue(queue);                            // The filter set to use. Const
+          }
         }
       }
     }
 
-    void CorrelatorPipeline::receiveSubbandSamples(unsigned block, unsigned subband)
+    void CorrelatorPipeline::receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
     {
-#ifdef USE_INPUT_SECTION
 
       // No specific parallelizations options needed: All synchronisation is performed outside
       // this function.
 #     pragma omp parallel for
       for (unsigned stat = 0; stat < ps.nrStations(); stat ++) 
       {
-        Stream *stream = pipeline.bufferToGPUstreams[stat];
+        Stream *stream = bufferToGPUstreams[stat];
 
         // read header
         struct BeamletBufferToComputeNode<i16complex>::header header;
-        size_t subbandSize = inputSamples[stat].num_elements() * sizeof *inputSamples.origin();
+        size_t subbandSize = workQueue.inputSamples[stat].num_elements() * sizeof *workQueue.inputSamples.origin();
 
         stream->read(&header, sizeof header);
 
@@ -114,7 +119,7 @@ namespace LOFAR
         ASSERTSTR(subbandSize == header.nrSamples * header.sampleSize, "Expected " << subbandSize << " bytes, got " << header.nrSamples * header.sampleSize << " bytes (= " << header.nrSamples << " samples * " << header.sampleSize << " bytes/sample)");
 
         // read subband
-        stream->read(inputSamples[stat].origin(), subbandSize);
+        stream->read(workQueue.inputSamples[stat].origin(), subbandSize);
 
         unsigned beam = ps.subbandToSAPmapping()[subband];
 
@@ -126,19 +131,18 @@ namespace LOFAR
         struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
 
         for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-          delaysAtBegin[beam][stat][pol]  = beamInfo.delayAtBegin;
-          delaysAfterEnd[beam][stat][pol] = beamInfo.delayAfterEnd;
+          workQueue.delaysAtBegin[beam][stat][pol]  = beamInfo.delayAtBegin;
+          workQueue.delaysAfterEnd[beam][stat][pol] = beamInfo.delayAfterEnd;
 
-          phaseOffsets[beam][pol] = 0.0;
+          workQueue.phaseOffsets[beam][pol] = 0.0;
         }
       }
 
-#endif
     }
 
 
     //This whole block should be parallel: this allows the thread to pick up a subband from the next block
-    void CorrelatorPipeline::doWorkQueue(CorrelatorWorkQueue workQueue) //todo: name is not correct
+    void CorrelatorPipeline::doWorkQueue(CorrelatorWorkQueue &workQueue) //todo: name is not correct
     {
       // get details regarding the observation from the parset. 
       double currentTime;                         // set in the block processing for loop
@@ -178,7 +182,7 @@ namespace LOFAR
         {
           // Each input block needs to be processed in order. Therefore wait for the correct block
           inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-          //receiveSubbandSamples
+          receiveSubbandSamples( workQueue,  block,  subband);
           // Advance the block index
           inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
 
