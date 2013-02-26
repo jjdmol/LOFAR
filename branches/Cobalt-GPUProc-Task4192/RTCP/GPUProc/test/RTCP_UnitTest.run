@@ -10,7 +10,8 @@ RTCP_UnitTest.parset.small-test
 # Check for GPU
 if ! lspci | grep VGA | grep -E "ATI|NVIDIA"
 then
-  echo "No ATI/NVIDIA graphics cards detected on `hostname` -- aborting test."
+  echo "No ATI/NVIDIA graphics cards detected on host `hostname`" \
+       "-- aborting test." >&2
   exit 3
 fi
 
