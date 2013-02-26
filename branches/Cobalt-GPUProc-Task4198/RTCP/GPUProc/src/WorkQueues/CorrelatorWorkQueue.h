@@ -8,7 +8,6 @@
 #include "global_defines.h"
 
 #include "WorkQueue.h"
-#include "Pipelines/CorrelatorPipeline.h"
 
 #include "Kernels/FIR_FilterKernel.h"
 #include "Kernels/Filter_FFT_Kernel.h"
