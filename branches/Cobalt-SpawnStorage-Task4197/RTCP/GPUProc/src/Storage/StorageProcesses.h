@@ -2,7 +2,7 @@
 #define LOFAR_RTCP_STORAGE_PROCESSES
  
 #include <sys/time.h>
-#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Trigger.h>
 #include <Common/Thread/Thread.h>
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
@@ -62,7 +62,7 @@ private:
 
     std::vector<SmartPtr<StorageProcess> > itsStorageProcesses;
     FinalMetaData                        itsFinalMetaData;
-    Semaphore                            itsFinalMetaDataAvailable;
+    Trigger                              itsFinalMetaDataAvailable;
 
     // start the processes and control threads
     void start();

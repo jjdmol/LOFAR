@@ -15,7 +15,7 @@ using namespace std;
 using boost::format;
 
 
-StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname, FinalMetaData &finalMetaData, Semaphore &finalMetaDataAvailable )
+StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname, FinalMetaData &finalMetaData, Trigger &finalMetaDataAvailable )
 :
   itsParset(parset),
   itsLogPrefix(str(boost::format("%s [StorageWriter rank %2d host %s] ") % logPrefix % rank % hostname)),
@@ -124,7 +124,7 @@ void StorageProcess::controlThread()
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent parset");
 
   // Send final meta data once it is available
-  itsFinalMetaDataAvailable.down();
+  itsFinalMetaDataAvailable.wait();
 
   LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sending final meta data");
   itsFinalMetaData.write(stream);

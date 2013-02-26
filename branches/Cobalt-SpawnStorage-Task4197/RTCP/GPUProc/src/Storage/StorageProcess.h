@@ -2,7 +2,7 @@
 #define LOFAR_RTCP_STORAGE_PROCESS
  
 #include <sys/time.h>
-#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Trigger.h>
 #include <Common/Thread/Thread.h>
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
@@ -36,7 +36,7 @@ namespace RTCP {
 class StorageProcess {
     public:
       // user must call start()
-      StorageProcess( const Parset &parset, const std::string &logPrefix, int rank, const std::string &hostname, FinalMetaData &finalMetaData, Semaphore &finalMetaDataAvailable );
+      StorageProcess( const Parset &parset, const std::string &logPrefix, int rank, const std::string &hostname, FinalMetaData &finalMetaData, Trigger &finalMetaDataAvailable );
 
       // calls stop(0)
       ~StorageProcess();
@@ -55,7 +55,7 @@ class StorageProcess {
       const std::string itsHostname;
 
       FinalMetaData                      &itsFinalMetaData;
-      Semaphore                          &itsFinalMetaDataAvailable;
+      Trigger                            &itsFinalMetaDataAvailable;
 
       SmartPtr<Thread> itsThread;
 };
