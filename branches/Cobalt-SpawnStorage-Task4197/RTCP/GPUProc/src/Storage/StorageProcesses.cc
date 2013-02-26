@@ -110,7 +110,7 @@ void StorageProcesses::finalMetaDataThread()
   LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] obtained final meta data");
 
   // Notify clients
-  itsFinalMetaDataAvailable.broadcast();
+  itsFinalMetaDataAvailable.trigger();
 
   // Wait for or end the remote process
   sshconn.wait();
