@@ -40,7 +40,7 @@ namespace LOFAR
 
       // Flag the input data of the given station using to the flags in the
       // meta-data.
-      void flagInputData(unsigned station, const SubbandMetaData& metaData);
+      void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
 
       CorrelatorPipeline	&pipeline;
       cl::Buffer		devFIRweights;

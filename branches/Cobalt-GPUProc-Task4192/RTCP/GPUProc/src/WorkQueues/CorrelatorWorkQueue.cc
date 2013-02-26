@@ -89,7 +89,7 @@ namespace LOFAR
         metaData.read(stream);
 
         // flag the input data.
-        flagInputData(stat, metaData);
+        flagInputSamples(stat, metaData);
 
         // the first set of delays represents the central beam, which is the one we correlate
         struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
@@ -114,8 +114,8 @@ namespace LOFAR
     }
 
 
-    void CorrelatorWorkQueue::flagInputData(unsigned station, 
-                                            const SubbandMetaData& metaData)
+    void CorrelatorWorkQueue::flagInputSamples(unsigned station, 
+                                               const SubbandMetaData& metaData)
     {
       // Get the flags that indicate missing data samples as a vector of
       // SparseSet::Ranges
@@ -124,14 +124,14 @@ namespace LOFAR
       // Get the size of a sample in bytes.
       size_t sizeof_sample = sizeof *inputSamples.origin();
 
-      // Calculate the number elements to skip when striding over the first
-      // dimension of inputSamples[station]
-      size_t stride = inputSamples[station].strides()[0];
+      // Calculate the number elements to skip when striding over the second
+      // dimension of inputSamples.
+      size_t stride = inputSamples[station][0].num_elements();
 
       // Zero the bytes in the input data for the flagged ranges.
       for(SparseSet<unsigned>::const_iterator it = flags.begin(); 
           it != flags.end(); ++it) {
-        void *offset = inputSamples[station].origin() + stride * it->begin;
+        void *offset = inputSamples[station][it->begin].origin();
         size_t size = stride * (it->end - it->begin) * sizeof_sample;
         memset(offset, 0, size);
       }
