@@ -88,7 +88,7 @@ namespace LOFAR
         SubbandMetaData metaData(1, header.nrDelays);
         metaData.read(stream);
 
-        // flag the input data.
+        // flag the input samples.
         flagInputSamples(stat, metaData);
 
         // the first set of delays represents the central beam, which is the one we correlate
