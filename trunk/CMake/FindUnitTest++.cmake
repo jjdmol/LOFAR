@@ -33,9 +33,9 @@
 if(NOT UNITTEST++_FOUND)
 
   find_path(UNITTEST++_INCLUDE_DIR 
-    NAMES UnitTest++.h
+    NAMES unittest++/UnitTest++.h UnitTest++.h
     HINTS ${UNITTEST++_ROOT_DIR}
-    PATH_SUFFIXES include/unittest++ src)
+    PATH_SUFFIXES include src)
 
   find_library(UNITTEST++_LIBRARY 
     NAMES UnitTest++
