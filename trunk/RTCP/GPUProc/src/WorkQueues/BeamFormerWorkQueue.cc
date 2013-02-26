@@ -28,9 +28,9 @@ namespace LOFAR
     namespace  RTCP 
     {     
         
-        BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline, unsigned queueNumber)
+        BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline, unsigned gpuNumber)
             :
-        WorkQueue(pipeline, queueNumber),
+        WorkQueue( pipeline.context,pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
             pipeline(pipeline),
             inputSamples(boost::extents[ps.nrStations()][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
             devFilteredData(pipeline.context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
@@ -43,7 +43,17 @@ namespace LOFAR
             devComplexVoltages(cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>))),
             //transposedComplexVoltages(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE)
             transposedComplexVoltages(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE),
-            DMs(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY)
+            DMs(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY),
+
+            intToFloatKernel(ps, queue, pipeline.intToFloatProgram, devFilteredData, inputSamples),
+            fftKernel(ps, pipeline.context, devFilteredData),
+            delayAndBandPassKernel(ps, pipeline.delayAndBandPassProgram, devCorrectedData, devFilteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights),
+            beamFormerKernel(ps, pipeline.beamFormerProgram, devComplexVoltages, devCorrectedData, beamFormerWeights),
+            transposeKernel(ps, pipeline.transposeProgram, transposedComplexVoltages, devComplexVoltages),
+            dedispersionForwardFFTkernel(ps, pipeline.context, transposedComplexVoltages),
+            dedispersionBackwardFFTkernel(ps, pipeline.context, transposedComplexVoltages),
+            dedispersionChirpKernel(ps, pipeline.dedispersionChirpProgram, queue, transposedComplexVoltages, DMs)
+
         {
             if (ps.correctBandPass()) {
                 BandPass::computeCorrectionFactors(bandPassCorrectionWeights.origin(), ps.nrChannelsPerSubband());
@@ -58,14 +68,6 @@ namespace LOFAR
             bandPassCorrectionWeights.hostToDevice(CL_TRUE);
             DMs.hostToDevice(CL_TRUE);
 
-            IntToFloatKernel intToFloatKernel(ps, queue, pipeline.intToFloatProgram, devFilteredData, inputSamples);
-            Filter_FFT_Kernel fftKernel(ps, pipeline.context, devFilteredData);
-            DelayAndBandPassKernel delayAndBandPassKernel(ps, pipeline.delayAndBandPassProgram, devCorrectedData, devFilteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights);
-            BeamFormerKernel beamFormerKernel(ps, pipeline.beamFormerProgram, devComplexVoltages, devCorrectedData, beamFormerWeights);
-            BeamFormerTransposeKernel transposeKernel(ps, pipeline.transposeProgram, transposedComplexVoltages, devComplexVoltages);
-            DedispersionForwardFFTkernel dedispersionForwardFFTkernel(ps, pipeline.context, transposedComplexVoltages);
-            DedispersionBackwardFFTkernel dedispersionBackwardFFTkernel(ps, pipeline.context, transposedComplexVoltages);
-            DedispersionChirpKernel dedispersionChirpKernel(ps, pipeline.dedispersionChirpProgram, queue, transposedComplexVoltages, DMs);
             double startTime = ps.startTime(), currentTime, stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
 
 #pragma omp barrier
@@ -131,8 +133,5 @@ namespace LOFAR
 #pragma omp critical (cout)
                 std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
         }
-
-
     }
-
 }

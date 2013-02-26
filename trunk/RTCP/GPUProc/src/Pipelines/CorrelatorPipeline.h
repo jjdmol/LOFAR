@@ -9,6 +9,8 @@
 #include "Pipeline.h"
 #include "FilterBank.h"
 #include "PerformanceCounter.h"
+#include "Pipelines/CorrelatorPipelinePrograms.h"
+#include "Pipelines/CorrelatorPipelineCounters.h"
 
 namespace LOFAR
 {
@@ -22,19 +24,21 @@ namespace LOFAR
             CorrelatorPipeline(const Parset &);
 
             void		    doWork();
+            void        doWorkQueue(CorrelatorWorkQueue &workQueue);
+            void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband);
 
         private:
             friend class CorrelatorWorkQueue;
 
-            FilterBank		    filterBank;
-
-            cl::Program		    firFilterProgram, delayAndBandPassProgram, correlatorProgram;
-#if defined USE_NEW_CORRELATOR
-            PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlateTriangleCounter, correlateRectangleCounter, fftCounter;
-#else
-            PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlatorCounter, fftCounter;
-#endif
-            PerformanceCounter	    samplesCounter, visibilitiesCounter;
+            FilterBank		    filterBank;            
+            CorrelatorPipelineCounters counters;
+            CorrelatorPipelinePrograms programs;
+//#if defined USE_NEW_CORRELATOR
+//            PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlateTriangleCounter, correlateRectangleCounter, fftCounter;
+//#else
+//            PerformanceCounter	    firFilterCounter, delayAndBandPassCounter, correlatorCounter, fftCounter;
+//#endif
+//            PerformanceCounter	    samplesCounter, visibilitiesCounter;
         };
 
     }

@@ -26,9 +26,9 @@ namespace LOFAR
 {
     namespace  RTCP 
     {     
-                UHEP_WorkQueue::UHEP_WorkQueue(UHEP_Pipeline &pipeline, unsigned queueNumber)
+                UHEP_WorkQueue::UHEP_WorkQueue(UHEP_Pipeline &pipeline, unsigned gpuNumber)
             :
-        WorkQueue(pipeline, queueNumber),
+        WorkQueue( pipeline.context, pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
             pipeline(pipeline),
             hostInputSamples(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY),
             hostBeamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY),

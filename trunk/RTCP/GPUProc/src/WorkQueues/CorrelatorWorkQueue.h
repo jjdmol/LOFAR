@@ -7,65 +7,69 @@
 #include <complex>
 
 #include "global_defines.h"
-#include "Pipeline.h"
 
 #include "WorkQueue.h"
-#include "Pipelines/CorrelatorPipeline.h"
 
 #include "Kernels/FIR_FilterKernel.h"
 #include "Kernels/Filter_FFT_Kernel.h"
 #include "Kernels/DelayAndBandPassKernel.h"
 #include "Kernels/CorrelatorKernel.h"
 
+#include "Pipelines/CorrelatorPipelinePrograms.h"
+#include "Pipelines/CorrelatorPipelineCounters.h"
+
+#include "FilterBank.h"
+#include <Interface/SubbandMetaData.h>
+
 namespace LOFAR
 {
-  namespace RTCP 
-  {
-    class CorrelatorWorkQueue : public WorkQueue
+    namespace RTCP 
     {
-    public:
-      CorrelatorWorkQueue(CorrelatorPipeline &, unsigned queueNumber);
+        class CorrelatorWorkQueue : public WorkQueue
+        {
+        public:
+            CorrelatorWorkQueue(const Parset	&parset,cl::Context &context, cl::Device		&device, unsigned queueNumber,
+              CorrelatorPipelinePrograms &programs, CorrelatorPipelineCounters &counters,
+              FilterBank &filterBank);
 
-      void doWork();
+            void doWork();
 
 #if defined USE_TEST_DATA
-      void setTestPattern();
-      void printTestOutput();
+            void setTestPattern();
+            void printTestOutput();
 #endif
 
-    private:
-      void doSubband(unsigned block, unsigned subband);
-      void receiveSubbandSamples(unsigned block, unsigned subband);
-      void sendSubbandVisibilites(unsigned block, unsigned subband);
-
+    //private:
+            void doSubband(unsigned block, unsigned subband);
+            //void receiveSubbandSamples(unsigned block, unsigned subband);
+            //void sendSubbandVisibilites(unsigned block, unsigned subband);
+            CorrelatorPipelineCounters &counters;
       // Flag the input data of the given station using to the flags in the
       // meta-data.
       void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
+            cl::Buffer		devFIRweights;
+            cl::Buffer		devBufferA, devBufferB;
+            MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
+            MultiArraySharedBuffer<float, 3> delaysAtBegin, delaysAfterEnd;
+            MultiArraySharedBuffer<float, 2> phaseOffsets;
+            MultiArraySharedBuffer<char, 4> inputSamples;
 
-      CorrelatorPipeline	&pipeline;
-      cl::Buffer		devFIRweights;
-      cl::Buffer		devBufferA, devBufferB;
-      MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
-      MultiArraySharedBuffer<float, 3> delaysAtBegin, delaysAfterEnd;
-      MultiArraySharedBuffer<float, 2> phaseOffsets;
-      MultiArraySharedBuffer<char, 4> inputSamples;
+            cl::Buffer		devFilteredData;
+            cl::Buffer		devCorrectedData;
 
-      cl::Buffer		devFilteredData;
-      cl::Buffer		devCorrectedData;
+            MultiArraySharedBuffer<std::complex<float>, 4> visibilities;
 
-      MultiArraySharedBuffer<std::complex<float>, 4> visibilities;
-
-      FIR_FilterKernel		firFilterKernel;
-      Filter_FFT_Kernel		fftKernel;
-      DelayAndBandPassKernel	delayAndBandPassKernel;
+            FIR_FilterKernel		firFilterKernel;
+            Filter_FFT_Kernel		fftKernel;
+            DelayAndBandPassKernel	delayAndBandPassKernel;
 #if defined USE_NEW_CORRELATOR
-      CorrelateTriangleKernel	correlateTriangleKernel;
-      CorrelateRectangleKernel	correlateRectangleKernel;
+            CorrelateTriangleKernel	correlateTriangleKernel;
+            CorrelateRectangleKernel	correlateRectangleKernel;
 #else
-      CorrelatorKernel		correlatorKernel;
+            CorrelatorKernel		correlatorKernel;
 #endif
-    };
+        };
 
-  }
+    }
 }
 #endif
