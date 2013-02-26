@@ -56,7 +56,7 @@ namespace LOFAR
             delaysAtBegin[0][2][0] = 1e-6, delaysAfterEnd[0][2][0] = 1.1e-6;
 
 #pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
-                UHEP_WorkQueue(*this, omp_get_thread_num()).doWork(&delaysAtBegin[0][0][0], &delaysAfterEnd[0][0][0], &phaseOffsets[0][0]);
+                UHEP_WorkQueue(*this, omp_get_thread_num()% nrGPUs).doWork(&delaysAtBegin[0][0][0], &delaysAfterEnd[0][0][0], &phaseOffsets[0][0]);
         }
 
         
