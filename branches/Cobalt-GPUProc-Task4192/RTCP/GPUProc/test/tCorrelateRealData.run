@@ -37,7 +37,7 @@ function test_parset {
   echo "Testing $PARSET"
 
   RUNDIR=`pwd`
-  OUTDIR=`basename "${0}.in_output"`/$PARSET
+  OUTDIR=`basename "${0%.run}.in_output"`/$PARSET
 
   (
     # create output dir
