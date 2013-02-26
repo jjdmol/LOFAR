@@ -25,6 +25,7 @@ set(gpuproc_LIB_SRCS
   OpenCL_Support.cc
   ReaderWriterSynchronization.cc
   Storage/SSH.cc
+  Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
   #RTCP.cc
   
