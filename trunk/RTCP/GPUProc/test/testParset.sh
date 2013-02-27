@@ -2,6 +2,8 @@
 
 # Run a parset and compare the output to that in the reference_output directory.
 
+BINDIR=`pwd`/../src
+
 # Some host info
 echo "Running as `whoami`"
 echo "Running on `hostname`"
@@ -43,7 +45,7 @@ OUTDIR=`basename "${0%.run}.in_output"`/$PARSET
   # compare output
   for f in *.MS
   do
-    ${srcdir}/cmpfloat.sh $f $RUNDIR/tCorrelateRealData.in_reference/$PARSET/$f || exit 1
+    ${srcdir}/cmpfloat.py $f $RUNDIR/tCorrelateRealData.in_reference/$PARSET/$f || exit 1
   done
 ) || exit 1
 
