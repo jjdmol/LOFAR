@@ -107,30 +107,6 @@ namespace LOFAR
     }
 
 
-        // flag the input samples.
-    void CorrelatorPipeline::flagInputSamples(CorrelatorWorkQueue &workQueue, unsigned station, 
-                                               const SubbandMetaData& metaData)
-    {
-      // Get the flags that indicate missing data samples as a vector of
-      // SparseSet::Ranges
-      SparseSet<unsigned>::Ranges flags = metaData.getFlags(0).getRanges();
-
-      // Get the size of a sample in bytes.
-      size_t sizeof_sample = sizeof *workQueue.inputSamples.origin();
-
-      // Calculate the number elements to skip when striding over the second
-      // dimension of inputSamples.
-      size_t stride = workQueue.inputSamples[station][0].num_elements();
-
-      // Zero the bytes in the input data for the flagged ranges.
-      for(SparseSet<unsigned>::const_iterator it = flags.begin(); 
-          it != flags.end(); ++it) {
-        void *offset = workQueue.inputSamples[station][it->begin].origin();
-        size_t size = stride * (it->end - it->begin) * sizeof_sample;
-        memset(offset, 0, size);
-      }
-    }
-
     void CorrelatorPipeline::receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
     {
 
