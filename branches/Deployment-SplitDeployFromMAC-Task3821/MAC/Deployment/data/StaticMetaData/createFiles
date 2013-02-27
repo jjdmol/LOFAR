@@ -545,9 +545,16 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
     """
     Copies the right AntennaArrays.conf file for this station
     """
-    # Copy file <stationname>-antennaarrays.conf> to
-    # /opt/lofar/etc/AntennaArray.conf
-    srcFile = dataDir + "/" + stationName.upper() + "-AntennaArrays.conf"
+    # There are three types of AntennaArrays file, depending on
+    # the type of station.
+    stationType=stationName[0:1].upper()
+    if stationType == "CS":
+        srcFile = dataDir + "/AntennaArrays_CS.conf"
+    elif stationType == "RS":
+        srcFile = dataDir + "/AntennaArrays_RS.conf"
+    else:
+        srcFile = dataDir + "/AntennaArrays_Int.conf"
+
     if (os.access(srcFile,os.F_OK) == False):
         print "Cannot find or open file ",srcFile," for creating AntennaArrays.conf"
         print "Will create AntennaArrays_default.conf instead"
@@ -557,91 +564,8 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
         destFile = resultDir + "/AntennaArrays.conf"
 
     command = "cp -f "+srcFile+ " " + destFile
-    #print command
     os.system(command)
 
-def createAntennaFieldFile(resultDir, stationName, dataDir):
-    """
-    Copies the right AntennaField.conf file for this station
-    """
-    # Copy file <stationname>-antennafield.conf> to
-    # /opt/lofar/etc/AntennaField.conf
-    srcFile = dataDir + "/" + stationName.upper() + "-AntennaField.conf"
-    if (os.access(srcFile,os.F_OK) == False):
-        print "Cannot find or open file ",srcFile," for creating AntennaField.conf"
-        print "Will create AntennaField_default.conf instead"
-        srcFile = dataDir + "/AntennaField_default.conf"
-        destFile= resultDir + "/AntennaField.conf"
-    else:
-        destFile = resultDir + "/AntennaField.conf"
-
-    command = "cp -f "+srcFile+ " " + destFile
-    #print command
-    os.system(command)
-
-def createCableDelaysFile(resultDir, stationName, dataDir):
-    """
-    Copies the right CableDelays.conf file for this station
-    """
-    # Copy file <stationname>-cabledelays.conf> to
-    # /opt/lofar/etc/CableDelays.conf
-    
-    # stationName is in lowercase!
-    srcFile = dataDir + "/" + stationName.upper() + "-CableDelays.conf"
-    if (os.access(srcFile,os.F_OK) == False):
-        print "Cannot find or open file ",srcFile," for creating CableDelays.conf"
-        print "Will create CableDelays_default.conf instead"
-        srcFile = dataDir + "/CableDelays_default.conf"
-        destFile= resultDir + "/CableDelays.conf"
-    else:
-        destFile = resultDir + "/CableDelays.conf"
-    
-    command = "cp -f "+srcFile+ " " + destFile
-    #print command
-    os.system(command)
-
-def createHBADeltasFile(resultDir, stationName, dataDir):
-    """
-    Copies the right HBADeltas.conf file for this station
-    """
-    # Copy file <stationname>-hbadeltas.conf> to
-    # /opt/lofar/etc/HBADeltas.conf
-    
-    # stationName is in lowercase!
-    srcFile = dataDir + "/" + stationName.upper() + "-HBADeltas.conf"
-    if (os.access(srcFile,os.F_OK) == False):
-        print "Cannot find or open file ",srcFile," for creating HBADeltas.conf"
-        print "Will create HBADeltas_default.conf instead"
-        srcFile = dataDir + "/HBADeltas_default.conf"
-        destFile= resultDir + "/HBADeltas.conf"
-    else:
-        destFile = resultDir + "/HBADeltas.conf"
-
-    command = "cp -f "+srcFile+ " " + destFile
-    #print command
-    os.system(command)
-
-def createiHBADeltasFile(resultDir, stationName, dataDir):
-    """
-    Copies the right iHBADeltas.conf file for this station
-    """
-    # Copy file <stationname>-iHBADeltas.conf> to
-    # /opt/lofar/etc/iHBADeltas.conf
-    
-    # stationName is in lowercase!
-    srcFile = dataDir + "/" + stationName.upper() + "-iHBADeltas.conf"
-    if (os.access(srcFile,os.F_OK) == False):
-        print "Cannot find or open file ",srcFile," for creating iHBADeltas.conf"
-        print "Will create iHBADeltas_default.conf instead"
-        srcFile = dataDir + "/iHBADeltas_default.conf"
-        destFile= resultDir + "/iHBADeltas.conf"
-    else:
-        destFile = resultDir + "/iHBADeltas.conf"
-
-    command = "cp -f "+srcFile+ " " + destFile
-    #print command
-    os.system(command)
-    
 def createHardwareMonitorFile(resultDir, stationName, dataDir):
     """
     Creates the right HardwareMonitor.conf file for this station
@@ -660,19 +584,7 @@ def createHardwareMonitorFile(resultDir, stationName, dataDir):
     outFile = os.open(resultDir+"/HardwareMonitor.conf", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, HWMconfig)
     os.close(outFile)
-    
-
-def de601Exceptions(resultDir, stationName, dataDir):
-    """
-    Handle exceptions for station de601 (Effelsberg)
-    """
-    if (stationName.lower() == "de601"):
-        srcFile = dataDir + "/../DE601-Attenuation.conf"
-        destFile= resultDir + "/Attenuation.conf"
-        command = "cp -f "+srcFile+ " " + destFile
-        #print command
-        os.system(command)
-      
+          
 # MAIN
 
 if (len(sys.argv) == 1):
@@ -746,12 +658,7 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" ):
                 createTBBDriverFile    (resultDir, stationName, dataDir)
                 createRemoteStationFile(resultDir, stationName, dataDir)
                 createAntennaArraysFile(resultDir, stationName, dataDir)
-#                createAntennaFieldFile (resultDir, stationName, dataDir)
-#                createCableDelaysFile  (resultDir, stationName, dataDir)
-#                createHBADeltasFile    (resultDir, stationName, dataDir)
-#                createiHBADeltasFile   (resultDir, stationName, dataDir)
                 createHardwareMonitorFile(resultDir, stationName, dataDir)
-#                de601Exceptions        (resultDir, stationName, dataDir)
     else:
         print "Cannot determine stationname"
         sys.exit(1)
@@ -798,12 +705,7 @@ else:
         createTBBDriverFile    (resultDir, stationName, dataDir)
         createRemoteStationFile(resultDir, stationName, dataDir)
         createAntennaArraysFile(resultDir, stationName, dataDir)
-#        createAntennaFieldFile (resultDir, stationName, dataDir)
-#        createCableDelaysFile  (resultDir, stationName, dataDir)
-#        createHBADeltasFile    (resultDir, stationName, dataDir)
-#        createiHBADeltasFile   (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
-#        de601Exceptions        (resultDir, stationName, dataDir)
         
 if len(warnings) > 0:
     print "The following warnings occured:"

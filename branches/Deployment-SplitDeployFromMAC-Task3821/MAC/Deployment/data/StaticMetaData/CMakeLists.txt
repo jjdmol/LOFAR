@@ -20,9 +20,7 @@ file(GLOB staticmeta_data
   *.test 
   *.dat 
   AntennaArrays/*.conf
-  AntennaPos/*.conf
   CableDelays/*.conf
-  HBADeltas/*.conf
   iHBADeltas/*.conf
   AntennaFields/*.conf
   TBBConnections.dat
