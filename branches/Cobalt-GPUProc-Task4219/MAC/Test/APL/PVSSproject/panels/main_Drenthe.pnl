@@ -1,0 +1,1488 @@
+V 10
+1
+LANG:1 0 
+PANEL,403 106 994 514 N "_3DFace" 0
+"main()
+{
+  startThread( \"Simulation\" );
+}
+
+float GetRandomValue(
+  float fOffset,
+  float fSwing
+)
+{
+  float fRandom;
+  float fValue;
+  
+  fRandom = rand();
+  
+//  DebugN( \"fRand1=\" + fRandom );
+  fRandom = fRandom / 32767.0;
+//  DebugN( \"fRand2=\" + fRandom );
+  fRandom *= fSwing;
+//  DebugN( \"fRand3=\" + fRandom );
+  fRandom -= (fSwing / 2.0);
+//  DebugN( \"fRand4=\" + fRandom );
+      
+  fValue = fOffset + fRandom;
+//  DebugN( \"fValue=\" + fValue);
+
+  return fValue;
+}
+void Simulation()
+{
+  float fRandom;
+  
+  srand();
+  
+  while(1 ){
+    delay( 3, 0 );
+  
+  
+    dpSet(  \"System1:Simulation.Arm1\", GetRandomValue( 60, 10 ));
+    dpSet(  \"System1:Simulation.Arm2\", GetRandomValue( 2, 2 ));
+    dpSet(  \"System1:Simulation.Arm3\", GetRandomValue( 30, 8 ));
+    dpSet(  \"System1:Simulation.Arm4\", GetRandomValue( 24.5, 10 ));
+    dpSet(  \"System1:Simulation.Arm5\", GetRandomValue( 60, 10 ));
+    dpSet(  \"System1:Simulation.Arm6\", GetRandomValue( 70, 10 ));
+
+    dpSet(  \"System1:Simulation.DSP\", GetRandomValue( 60, 10 ));
+    dpSet(  \"System1:Simulation.DISK\", GetRandomValue( 90, 8 ));
+    dpSet(  \"System1:Simulation.CPU\", GetRandomValue( 20, 6 ));
+    
+  }
+}" 0
+EE E E 1 -1 -1 0  470 496
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 224
+"Border6"
+""
+1 420 497 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+115 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 1 "pictures/test_kaart_ZW3.gif" -1 E 420 20 963 497
+7 216
+"Ellipse2"
+""
+1 690 256 E E E 1 E 1 E N "_WindowText" E N {153,153,153} E E
+ E E
+107 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  3 0 8 3E 690 256 140 195
+7 199
+"Ellipse1"
+""
+1 692 259 E E E 1 E 1 E N "_WindowText" E N {102,102,102} E E
+ E E
+90 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  3 0 8 1E 692 259 40 60
+1 119 30 "" 0
+0
+1 120 30 "" 4
+0
+1 121 30 "" 1
+0
+1 122 31 "" 0
+0
+1 123 31 "" 4
+0
+1 124 31 "" 1
+0
+1 125 32 "" 0
+0
+1 126 32 "" 4
+0
+1 127 32 "" 1
+0
+1 128 33 "" 0
+0
+1 129 33 "" 4
+0
+1 130 33 "" 1
+0
+1 131 34 "" 0
+0
+1 132 34 "" 4
+0
+1 133 34 "" 1
+0
+2 134
+"Text1"
+""
+1 30 190 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 192 76 211
+0 2 0 "s" 0 0 0 192 0 0  32 192
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm1:
+30 135
+"Frame1"
+""
+1 20 348 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+36 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 20 160 380 350
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Network status
+2 136
+"Text2"
+""
+1 30 216 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+37 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 218 76 237
+0 2 0 "s" 0 0 0 192 0 0  32 218
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm2:
+2 137
+"Text3"
+""
+1 30 242 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+38 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 244 76 263
+0 2 0 "s" 0 0 0 192 0 0  32 244
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm3:
+2 138
+"Text4"
+""
+1 30 268 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+39 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 270 76 289
+0 2 0 "s" 0 0 0 192 0 0  32 270
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm4:
+2 139
+"Text5"
+""
+1 30 294 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+40 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 296 76 315
+0 2 0 "s" 0 0 0 192 0 0  32 296
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm5:
+2 140
+"Text6"
+""
+1 30 320 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+41 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 322 76 341
+0 2 0 "s" 0 0 0 192 0 0  32 322
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Arm6:
+1 141 35 "" 0
+0
+1 142 35 "" 4
+0
+1 143 35 "" 1
+0
+30 144
+"Frame2"
+""
+1 20 179 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+43 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 20 160 380 180
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 Network status:
+30 145
+"Frame3"
+""
+1 20 478 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+44 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 20 370 380 480
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 25 Central processor status:
+1 146 36 "" 0
+0
+1 147 36 "" 4
+0
+1 148 36 "" 1
+0
+2 149
+"Text7"
+""
+1 30 450 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+46 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 452 71 471
+0 2 0 "s" 0 0 0 192 0 0  32 452
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 CPU:
+2 150
+"Text8"
+""
+1 30 430 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 432 76 451
+0 2 0 "s" 0 0 0 192 0 0  32 432
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 DISK:
+2 151
+"Text9"
+""
+1 30 410 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 412 71 431
+0 2 0 "s" 0 0 0 192 0 0  32 412
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 DSP:
+1 152 37 "" 0
+0
+1 153 37 "" 4
+0
+1 154 37 "" 1
+0
+1 155 38 "" 0
+0
+1 156 38 "" 4
+0
+1 157 38 "" 1
+0
+30 158
+"Frame4"
+""
+1 20 389 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+51 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 20 370 380 390
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 25 Central processor status:
+30 159
+"Frame5"
+""
+1 20 146 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+52 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 20 20 380 150
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Acquisition status:
+2 160
+"Text10"
+""
+1 30 50 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+53 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 52 161 71
+0 2 0 "s" 0 0 0 192 0 0  32 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Available stations:
+2 161
+"Text11"
+""
+1 30 80 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+54 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 82 194 101
+0 2 0 "s" 0 0 0 192 0 0  32 82
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 23 Non-available stations:
+2 162
+"Text12"
+""
+1 30 110 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+55 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 112 197 131
+0 2 0 "s" 0 0 0 192 0 0  32 112
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 22 Disconnected stations:
+6 193
+"Border8"
+""
+1 427 130 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+84 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 1 "pictures/kompas.gif" 16777215 E 427 44 515 131
+2 194
+"Text26"
+""
+1 466 33 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+85 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 468 35 476 47
+0 2 0 "s" 0 0 0 192 0 0  468 35
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 N
+2 195
+"Text27"
+""
+1 511 80 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 513 82 521 94
+0 2 0 "s" 0 0 0 192 0 0  513 82
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 E
+2 196
+"Text28"
+""
+1 421 80 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+87 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 423 82 431 94
+0 2 0 "s" 0 0 0 192 0 0  423 82
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 W
+2 197
+"Text29"
+""
+1 468 125 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+88 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 470 127 478 139
+0 2 0 "s" 0 0 0 192 0 0  470 127
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 S
+4 218
+"Line3"
+""
+1 690 260 E E E 1 E 1 E N "Lofar_device_active" E N "_Transparent" E E
+ E E
+109 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  480 490 690 260
+4 226
+"Line1"
+""
+1 958 240 E E E 1 E 1 E N "AESfgPending" E N "_Transparent" E E
+ E E
+116 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  690 260 960 240
+4 227
+"Line2"
+""
+1 770 20 E E E 1 E 1 E N "Lofar_device_active" E N "_Transparent" E E
+ E E
+117 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  690 260 770 20
+4 228
+"Line4"
+""
+1 770 260 E E E 1 E 1 E N "Lofar_device_active" E N "_Transparent" E E
+ E E
+118 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  770 490 690 260
+4 229
+"Line5"
+""
+1 690 120 E E E 1 E 1 E N "Lofar_device_active" E N "_Transparent" E E
+ E E
+119 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  690 260 430 120
+7 239
+"Ellipse3"
+""
+1 565 192 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+125 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 565 192 5 5
+7 240
+"Ellipse4"
+""
+1 595 209 E E E 1 E 1 E N "_WindowText" E N "Lofar_maintenance" E E
+ E E
+126 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 595 209 5 5
+7 241
+"Ellipse5"
+""
+1 620 222 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+127 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 620 222 5 5
+7 242
+"Ellipse6"
+""
+1 644 234 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+128 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 644 234 5 5
+7 243
+"Ellipse7"
+""
+1 496 156 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+129 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 496 156 5 5
+7 244
+"Ellipse8"
+""
+1 652 304 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+130 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 652 304 5 5
+7 245
+"Ellipse9"
+""
+1 632 324 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+131 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 632 324 5 5
+7 246
+"Ellipse10"
+""
+1 609 349 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+132 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 609 349 5 5
+7 247
+"Ellipse11"
+""
+1 586 373 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+133 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 586 373 5 5
+7 248
+"Ellipse12"
+""
+1 726 357 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+134 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 726 357 5 5
+7 249
+"Ellipse13"
+""
+1 735 390 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+135 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 735 390 5 5
+7 250
+"Ellipse14"
+""
+1 747 426 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+136 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 747 426 5 5
+7 251
+"Ellipse15"
+""
+1 768 486 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+137 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 768 486 5 5
+7 252
+"Ellipse16"
+""
+1 534 430 E E E 1 E 1 E N "_WindowText" E N "alarmKamGingUnq" E E
+ E E
+138 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 534 430 5 5
+7 253
+"Ellipse17"
+""
+1 711 193 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+139 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 711 193 5 5
+7 254
+"Ellipse18"
+""
+1 724 157 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+140 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 724 157 5 5
+7 255
+"Ellipse19"
+""
+1 748 81 E E E 1 E 1 E N "_WindowText" E N "Lofar_maintenance" E E
+ E E
+141 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 748 81 5 5
+7 256
+"Ellipse20"
+""
+1 736 123 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+142 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 736 123 5 5
+7 257
+"Ellipse21"
+""
+1 767 26 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+143 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 767 26 5 5
+7 258
+"Ellipse22"
+""
+1 737 256 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+144 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 737 256 5 5
+7 259
+"Ellipse23"
+""
+1 764 254 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+145 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 764 254 5 5
+7 260
+"Ellipse24"
+""
+1 794 252 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+146 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 794 252 5 5
+7 261
+"Ellipse25"
+""
+1 824 250 E E E 1 E 1 E N "_WindowText" E N "alarmKamGingUnq" E E
+ E E
+147 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 824 250 5 5
+7 262
+"Ellipse26"
+""
+1 904 244 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+148 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 904 244 5 5
+7 263
+"Ellipse27"
+""
+1 680 221 E E E 1 E 1 E N "_WindowText" E N "alarmKamGingUnq" E E
+ E E
+149 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 680 221 5 5
+7 264
+"Ellipse28"
+""
+1 710 221 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+150 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 710 221 5 5
+7 265
+"Ellipse29"
+""
+1 710 251 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+151 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 710 251 5 5
+7 266
+"Ellipse30"
+""
+1 670 251 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+152 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 670 251 5 5
+7 267
+"Ellipse31"
+""
+1 680 291 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+153 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 680 291 5 5
+7 268
+"Ellipse32"
+""
+1 711 286 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+154 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 711 286 5 5
+7 269
+"Ellipse33"
+""
+1 690 269 E E E 1 E 1 E N "_WindowText" E N "Lofar_maintenance" E E
+ E E
+155 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 690 269 5 5
+7 285
+"Ellipse35"
+""
+1 712 320 E E E 1 E 1 E N "_WindowText" E N "STD_device_uncertain" E E
+ E E
+159 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_childPanelOn();
+}
+
+EP_childPanelOn()
+{
+  RootPanelOn(\"Station.pnl\",
+      \"\",
+      makeDynString(\"\"));
+}
+
+// SimpleCtrlScript {EP_childPanelOn}
+// Function {RootPanelOn}
+// File {Station.pnl}
+// Panel {}
+// Parent {}
+// Module {}
+// OffsetX {0}
+// OffsetY {0}
+// SimpleCtrlScriptEnd {EP_childPanelOn}
+" 0
+ 0 1 1 0 1 E U  1 E 712 320 5 5
+2 286
+"Text13"
+""
+1 720 310 E E E 1 E 1 E N "_WindowText" E N "STD_device_uncertain" E E
+ E E
+160 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 722 312 777 328
+0 2 0 "s" 0 0 0 192 0 0  722 312
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Station_1
+2 288
+"Text14"
+""
+1 440 150 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+162 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 442 152 468 166
+0 2 0 "s" 0 0 0 192 0 0  442 152
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm5
+2 289
+"Text15"
+""
+1 728 22 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+163 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 730 24 756 38
+0 2 0 "s" 0 0 0 192 0 0  730 24
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm1
+2 290
+"Text16"
+""
+1 930 220 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+164 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 932 222 958 236
+0 2 0 "s" 0 0 0 192 0 0  932 222
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm2
+2 291
+"Text17"
+""
+1 730 477 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+165 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 732 479 758 493
+0 2 0 "s" 0 0 0 192 0 0  732 479
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm3
+2 292
+"Text18"
+""
+1 445 477 E E E 1 E 1 E N {255,255,255} E N "Lofar_background_dark" E E
+ E E
+166 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 447 479 473 493
+0 2 0 "s" 0 0 0 192 0 0  447 479
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Arm4
+14 163
+"TextField2"
+""
+1 210 40 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+56 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+208 38 362 68
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( dpSubStr( \"System1:Simulation.STATIONS_AVAILABLE:_online.._value\", DPSUB_DP_EL ) == \"\" )
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            \"System1:Simulation.STATIONS_AVAILABLE:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, int iNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, iNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:Simulation.STATIONS_AVAILABLE}
+// DPConfig {:_online.._value}
+// DPType {int}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+E
+14 164
+"TextField3"
+""
+1 210 70 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+57 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+208 68 362 98
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( dpSubStr( \"System1:Simulation.STATIONS_NON_AVAILABLE:_online.._value\", DPSUB_DP_EL ) == \"\" )
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            \"System1:Simulation.STATIONS_NON_AVAILABLE:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+EP_textFieldInCB(string dp, int iNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, iNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:Simulation.STATIONS_NON_AVAILABLE}
+// DPConfig {:_online.._value}
+// DPType {int}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+E
+14 165
+"TextField4"
+""
+1 210 100 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+58 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-1|-17,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+208 98 362 128
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( dpSubStr( \"System1:Simulation.STATIIONS_DISCONNECTED:_online.._value\", DPSUB_DP_EL ) == \"\" )
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            \"System1:Simulation.STATIIONS_DISCONNECTED:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+EP_textFieldInCB(string dp, int iNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, iNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:Simulation.STATIIONS_DISCONNECTED}
+// DPConfig {:_online.._value}
+// DPType {int}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+E
+13 287
+"Button3"
+""
+1 910 30 E E E 1 E 1 E N "_3DText" E N "STD_device_uncertain" E E
+ E E
+161 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+908 28 952 52
+T 
+1
+LANG:1 2 UP
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_childPanelOn();
+}
+
+EP_childPanelOn()
+{
+  RootPanelOn(\"main.pnl\",
+      \"NL\",
+      makeDynString(\"\"));
+}
+
+// SimpleCtrlScript {EP_childPanelOn}
+// Function {RootPanelOn}
+// File {main.pnl}
+// Panel {NL}
+// Parent {}
+// Module {}
+// OffsetX {0}
+// OffsetY {0}
+// SimpleCtrlScriptEnd {EP_childPanelOn}
+" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 30 "Group28"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 70 135 T 30 1 0 1  40 119  
+2
+"$DP""Simulation.Arm2"
+"$LIMIT""20"
+3 31 "Group30"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 70 160 T 31 1 0 1  40 121  
+2
+"$DP""Simulation.Arm3"
+"$LIMIT""20"
+3 32 "Group32"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 70 190 T 32 1 0 1  40 117  
+2
+"$DP""Simulation.Arm4"
+"$LIMIT""20"
+3 33 "Group34"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 70 220 T 33 1 0 1  40 113  
+2
+"$DP""Simulation.Arm5"
+"$LIMIT""20"
+3 34 "Group36"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 70 250 T 34 1 0 1  40 111  
+2
+"$DP""Simulation.Arm6"
+"$LIMIT""20"
+3 35 "Group38"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 100 358 T 42 1 0 1  10 -129  
+2
+"$DP""Simulation.Arm1"
+"$LIMIT""20"
+3 36 "Group40"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 100 267 T 45 1 0 1  10 219  
+2
+"$DP""Simulation.CPU"
+"$LIMIT""20"
+3 37 "Group42"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 100 440 T 49 1 0 1  10 26  
+2
+"$DP""Simulation.DISK"
+"$LIMIT""20"
+3 38 "Group44"
+"objects\\ProgressBar\\ProgressBar_WithDP_RedBlue.pnl" 100 420 T 50 1 0 1  10 26  
+2
+"$DP""Simulation.DSP"
+"$LIMIT""20"
+2 "Group12" 421 33 523 141
+5 197 196 195 194 193
+0
