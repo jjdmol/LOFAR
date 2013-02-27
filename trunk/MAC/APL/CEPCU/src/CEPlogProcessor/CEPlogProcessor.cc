@@ -98,7 +98,7 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsControlPort = new GCFTCPPort (*this, MAC_SVCMASK_CEPLOGCONTROL, GCFPortInterface::MSPP, 0);
     itsControlPort->setPortNumber(CEP_LOGPROC_CONTROL);
 
-    itsBufferSize     = globalParameterSet()->getInt("CEPlogProcessor.bufferSize", 1024);
+    itsBufferSize     = globalParameterSet()->getInt("CEPlogProcessor.bufferSize", 10240);
     itsNrInputBuffers = globalParameterSet()->getInt("CEPlogProcessor.nrInputBuffers", 64);
     itsNrIONodes      = globalParameterSet()->getInt("CEPlogProcessor.nrIONodes", 64);
     itsNrAdders       = globalParameterSet()->getInt("CEPlogProcessor.nrAdders", 10); // per io node
@@ -589,7 +589,7 @@ void CEPlogProcessor::_handleDataStream(GCFPortInterface*   port)
     LOG_DEBUG_STR("Read " << newBytes << " bytes.");
     stream.buffer->incTail( newBytes );
 
-    char lineBuf[1024];
+    char lineBuf[10240];
     while (stream.buffer->getLine( lineBuf, sizeof lineBuf )) {
       LOG_DEBUG_STR("Read log line '" << lineBuf << "'" );
       _processLogLine(lineBuf);

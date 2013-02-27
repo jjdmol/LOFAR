@@ -17,7 +17,7 @@ pollIntervalFinished= 5s	# update the list with finished observations
 
 # What period should (at max) be shown in the lists
 plannedPeriod		= 24h	# period you will see in the Navigator
-finishedPeriod		= 24h	# period you will see in the Navigator
+finishedPeriod		= 4h	# period you will see in the Navigator
 
 # Extra restriction to the length of the lists.
 # Remember that nrPlanned + nrActive + nrFinished <= 100

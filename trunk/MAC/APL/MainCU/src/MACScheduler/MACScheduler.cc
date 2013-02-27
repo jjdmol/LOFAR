@@ -417,14 +417,11 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		// observationController was started (or not)
 		CONTROLStartedEvent	msg(event);
 		if (msg.successful) {
-			LOG_DEBUG_STR("Start of " << msg.cntlrName << 
-						  " was successful, waiting for connection.");
+			LOG_DEBUG_STR("Start of " << msg.cntlrName << " was successful, waiting for connection.");
 		}
 		else {
-			LOG_ERROR_STR("Observation controller " << msg.cntlrName <<
-						  " could not be started");
-			LOG_INFO_STR("Observation is be removed from administration, " << 
-						 "restart will occur in next cycle");
+			LOG_ERROR_STR("Observation controller " << msg.cntlrName << " could not be started");
+			LOG_INFO_STR("Observation is be removed from administration, " << "restart will occur in next cycle");
 			itsControllerMap.erase(msg.cntlrName);
 		}
 		break;
@@ -439,13 +436,40 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		// in the SAS list again.
 		CMiter	theObs(itsControllerMap.find(conEvent.cntlrName));
 		if (theObs == itsControllerMap.end()) {
-			LOG_WARN_STR("Cannot find controller " << conEvent.cntlrName << 	
-						  ". Can't update the SAS database");
+			LOG_WARN_STR("Cannot find controller " << conEvent.cntlrName << ". Can't update the SAS database");
 			break;
 		}
 		OTDB::TreeMaintenance	tm(itsOTDBconnection);
 		TreeStateConv			tsc(itsOTDBconnection);
 		tm.setTreeState(theObs->second, tsc.get("queued"));
+		break;
+	}
+
+	case CONTROL_RESUMED: {
+		// update SAS database.
+		CONTROLResumedEvent		msg(event);
+		CMiter	theObs(itsControllerMap.find(msg.cntlrName));
+		if (theObs == itsControllerMap.end()) {
+			LOG_WARN_STR("Cannot find controller " << msg.cntlrName << ". Can't update the SAS database");
+			break;
+		}
+		OTDB::TreeMaintenance	tm(itsOTDBconnection);
+		TreeStateConv			tsc(itsOTDBconnection);
+		tm.setTreeState(theObs->second, tsc.get("active"));
+		break;
+	}
+
+	case CONTROL_SUSPENDED: {
+		// update SAS database.
+		CONTROLSuspendedEvent		msg(event);
+		CMiter	theObs(itsControllerMap.find(msg.cntlrName));
+		if (theObs == itsControllerMap.end()) {
+			LOG_WARN_STR("Cannot find controller " << msg.cntlrName << ". Can't update the SAS database");
+			break;
+		}
+		OTDB::TreeMaintenance	tm(itsOTDBconnection);
+		TreeStateConv			tsc(itsOTDBconnection);
+		tm.setTreeState(theObs->second, tsc.get("completing"));
 		break;
 	}
 
@@ -457,15 +481,14 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		// update SAS database.
 		CMiter	theObs(itsControllerMap.find(quitedEvent.cntlrName));
 		if (theObs == itsControllerMap.end()) {
-			LOG_WARN_STR("Cannot find controller " << quitedEvent.cntlrName << 	
-						  ". Can't update the SAS database");
+			LOG_WARN_STR("Cannot find controller " << quitedEvent.cntlrName << ". Can't update the SAS database");
 			break;
 		}
 		OTDB::TreeMaintenance	tm(itsOTDBconnection);
 		TreeStateConv			tsc(itsOTDBconnection);
 		// CT_RESULT_: MANUAL_REMOVED, MANUAL_ABORT, LOST_CONNECTION, NO_ERROR
 		if (quitedEvent.result == CT_RESULT_NO_ERROR) {
-			tm.setTreeState(theObs->second, tsc.get("completing"));
+			tm.setTreeState(theObs->second, tsc.get("finished"));
 		}
 		else {
 			tm.setTreeState(theObs->second, tsc.get("aborted"));
@@ -475,20 +498,6 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << " from activeList");
 		itsControllerMap.erase(quitedEvent.cntlrName);
 		break;
-	}
-
-	case CONTROL_RESUMED: {
-		// update SAS database.
-		CONTROLResumedEvent		msg(event);
-		CMiter	theObs(itsControllerMap.find(msg.cntlrName));
-		if (theObs == itsControllerMap.end()) {
-			LOG_WARN_STR("Cannot find controller " << msg.cntlrName << 	
-						  ". Can't update the SAS database");
-			break;
-		}
-		OTDB::TreeMaintenance	tm(itsOTDBconnection);
-		TreeStateConv			tsc(itsOTDBconnection);
-		tm.setTreeState(theObs->second, tsc.get("active"));
 	}
 
 	// NOTE: ignore all other CONTROL events, we are not interested in the
