@@ -28,6 +28,12 @@ namespace LOFAR
             void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband);
 
         private:
+      // Flag the input data of the given station using to the flags in the
+      // meta-data.
+          void flagInputSamples(CorrelatorWorkQueue &workQueue, 
+                                unsigned station, 
+                                const SubbandMetaData& metaData);
+
             friend class CorrelatorWorkQueue;
 
             FilterBank		    filterBank;            
