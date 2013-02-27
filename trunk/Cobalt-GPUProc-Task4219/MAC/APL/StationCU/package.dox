@@ -1,6 +1,0 @@
-// \ingroup APL
-// \defgroup StationCU Station Control Unit software
-//
-// The StationCU package contains all the controller that are specific
-// for the Stations.
-
