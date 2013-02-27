@@ -86,7 +86,8 @@ private:
 	OnlineControl(const OnlineControl&);
    	OnlineControl& operator=(const OnlineControl&);
 
-	uint32	_doBoot();
+	uint32	_startApplications();
+	void	_stopApplications();
 	void	_setupBGPmappingTables();
 	void   	_finishController	 (uint16_t 				result);
    	void	_handleDisconnect	 (GCFPortInterface& 	port);
@@ -109,6 +110,7 @@ private:
 	GCFITCPort*				itsParentPort;
 
 	GCFTimerPort*			itsTimerPort;
+	GCFTimerPort*			itsForcedQuitTimer;
 
 	GCFTCPPort*				itsLogControlPort;
 
@@ -128,6 +130,7 @@ private:
 	uint16					itsFinishTimerID;
 	bool					itsInFinishState;
 	bool					itsFeedbackAvailable;
+	double					itsForceTimeout;
 };
 
   };//CEPCU

@@ -357,86 +357,79 @@ bool sendControlResult(GCF::TM::GCFPortInterface&	port,
 					   uint16						result)
 {
 	switch (signal) {
+	case CONTROL_STARTED: {
+//		CONTROLStartedEvent	answer;
+//		answer.cntlrName = cntlrName;
+//		return (port.send(answer) > 0);
+	} break;
 	case CONTROL_CONNECT:
 	case CONTROL_CONNECTED: {
-			CONTROLConnectedEvent	answer;
-			answer.cntlrName = cntlrName;
-			answer.result	 = result;
-			return (port.send(answer) > 0);
-		}
-		break;
+		CONTROLConnectedEvent	answer;
+		answer.cntlrName = cntlrName;
+		answer.result	 = result;
+		return (port.send(answer) > 0);
+	} break;
 	case CONTROL_RESYNC:
 	case CONTROL_RESYNCED: {
-			CONTROLResyncedEvent	answer;
-			answer.cntlrName = cntlrName;
-			answer.result	 = result;
-			return (port.send(answer) > 0);
-			port.send(answer);
-		}
-		break;
+		CONTROLResyncedEvent	answer;
+		answer.cntlrName = cntlrName;
+		answer.result	 = result;
+		return (port.send(answer) > 0);
+	} break;
 	case CONTROL_SCHEDULE:
 	case CONTROL_SCHEDULED: {
-			CONTROLScheduledEvent	answer;
-			answer.cntlrName = cntlrName;
-			answer.result	 = result;
-			return (port.send(answer) > 0);
-		}
-		break;
+		CONTROLScheduledEvent	answer;
+		answer.cntlrName = cntlrName;
+		answer.result	 = result;
+		return (port.send(answer) > 0);
+	} break;
 	case CONTROL_CLAIM:
 	case CONTROL_CLAIMED: {
-			CONTROLClaimedEvent	answer;
-			answer.cntlrName = cntlrName;
-			answer.result	 = result;
-			return (port.send(answer) > 0);
-		}
-		break;
+		CONTROLClaimedEvent	answer;
+		answer.cntlrName = cntlrName;
+		answer.result	 = result;
+		return (port.send(answer) > 0);
+	} break;
 	case CONTROL_PREPARE:
 	case CONTROL_PREPARED: {
-			CONTROLPreparedEvent	answer;
-			answer.cntlrName = cntlrName;
-			answer.result	 = result;
-			return (port.send(answer) > 0);
-		}
-		break;
+		CONTROLPreparedEvent	answer;
+		answer.cntlrName = cntlrName;
+		answer.result	 = result;
+		return (port.send(answer) > 0);
+	} break;
 	case CONTROL_RESUME:
 	case CONTROL_RESUMED: {
-			CONTROLResumedEvent	answer;
-			answer.cntlrName = cntlrName;
-			answer.result	 = result;
-			return (port.send(answer) > 0);
-		}
-		break;
+		CONTROLResumedEvent	answer;
+		answer.cntlrName = cntlrName;
+		answer.result	 = result;
+		return (port.send(answer) > 0);
+	} break;
 	case CONTROL_SUSPEND:
 	case CONTROL_SUSPENDED: {
-			CONTROLSuspendedEvent	answer;
-			answer.cntlrName = cntlrName;
-			answer.result	 = result;
-			return (port.send(answer) > 0);
-		}
-		break;
+		CONTROLSuspendedEvent	answer;
+		answer.cntlrName = cntlrName;
+		answer.result	 = result;
+		return (port.send(answer) > 0);
+	} break;
 	case CONTROL_RELEASE:
 	case CONTROL_RELEASED: {
-			CONTROLReleasedEvent	answer;
-			answer.cntlrName = cntlrName;
-			answer.result	 = result;
-			return (port.send(answer) > 0);
-		}
-		break;
+		CONTROLReleasedEvent	answer;
+		answer.cntlrName = cntlrName;
+		answer.result	 = result;
+		return (port.send(answer) > 0);
+	} break;
 	case CONTROL_QUIT:
 	case CONTROL_QUITED: {
-			CONTROLQuitedEvent	answer;
-			answer.cntlrName = cntlrName;
-			answer.result	 = result;
-			return (port.send(answer) > 0);
-		}
-		break;
+		CONTROLQuitedEvent	answer;
+		answer.cntlrName = cntlrName;
+		answer.result	 = result;
+		return (port.send(answer) > 0);
+	} break;
 	default:
-		ASSERTSTR(false, 
-			formatString("State %04X is not supported by 'sendControlResult'", signal));
-
+		ASSERTSTR(false, formatString("State %04X is not supported by 'sendControlResult'", signal));
 	}
 
-        return false; // satisfy compiler        
+    return (false); // satisfy compiler        
 }
 
 
