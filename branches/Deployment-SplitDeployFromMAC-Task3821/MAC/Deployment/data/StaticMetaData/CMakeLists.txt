@@ -19,6 +19,7 @@ file(GLOB staticmeta_data
   *.tmpl 
   *.test 
   *.dat 
+  AntennaArrays/AntennaArrays*.conf
   TBBConnections.dat
   RSPConnections_CCU.dat)
 install(FILES
