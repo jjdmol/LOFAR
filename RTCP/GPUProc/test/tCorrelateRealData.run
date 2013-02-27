@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Run parsets and compare the output to that in the reference_output directory.
-
-# Where our binaries reside
-BINDIR=`pwd`/../src
-
 # Parsets to test
 PARSETS="
 tCorrelateRealData.in_1sec_1st_5sb_noflagging.parset
@@ -12,61 +7,10 @@ tCorrelateRealData.in_3sec_1st_5sb.parset
 tCorrelateRealData.in_3sec_2st_5sb.parset
 "
 
-# Some host info
-echo "Running as `whoami`"
-echo "Running on `hostname`"
-echo "Working directory is `pwd`"
-
-# Check for GPU
-if ! lspci | grep -E "VGA|3D" | grep -E "ATI|NVIDIA"
-then
-  echo "No ATI/NVIDIA graphics cards detected -- aborting test."
-  exit 3
-fi
-
-# Check for input files
-if [ ! -e /var/scratch/mol/test_sets ]
-then
-  echo "No input files found -- aborting test."
-  exit 3
-fi
-
-function test_parset {
-  PARSET=$1
-
-  echo "Testing $PARSET"
-
-  RUNDIR=`pwd`
-  OUTDIR=`basename "${0%.run}.in_output"`/$PARSET
-
-  (
-    # create output dir
-    mkdir -p $OUTDIR &&
-    cd $OUTDIR &&
-
-    # enable debugging
-    echo "Global 20" >> RTCP_new.debug &&
-
-    # run correlator
-    $BINDIR/RTCP_new $RUNDIR/$PARSET &&
-
-    # compare output
-    for f in *.MS
-    do
-      ${srcdir}/cmpfloat.sh $f $RUNDIR/tCorrelateRealData.in_reference/$PARSET/$f || exit 1
-    done
-  ) || return 1
-
-  cd $RUNDIR
-
-  # toss output
-  rm -rf $OUTDIR
-}
-
 # Run tests
 for PARSET in $PARSETS
 do
-  if ! test_parset "$PARSET"
+  if ! $srcdir/testParset.sh "$PARSET"
   then
     exit 1
   fi
