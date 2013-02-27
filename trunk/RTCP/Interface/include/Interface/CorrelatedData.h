@@ -19,6 +19,7 @@ class CorrelatedData : public StreamableData, public IntegratableData
 {
   public:
     CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator & = heapAllocator);
+    CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, std::complex<float> *visibilities, size_t nrVisibilities, Allocator & = heapAllocator);
 
     virtual IntegratableData &operator += (const IntegratableData &);
 
@@ -30,7 +31,7 @@ class CorrelatedData : public StreamableData, public IntegratableData
 
     MultiDimArray<fcomplex, 4>	visibilities; //[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]
 
-    unsigned			itsNrBytesPerNrValidSamples;
+    const unsigned			itsNrBytesPerNrValidSamples;
     Matrix<uint32_t>		itsNrValidSamples4; //[nrBaselines][nrChannels]
     Matrix<uint16_t>		itsNrValidSamples2; //[nrBaselines][nrChannels]
     Matrix<uint8_t>		itsNrValidSamples1; //[nrBaselines][nrChannels]
@@ -38,6 +39,9 @@ class CorrelatedData : public StreamableData, public IntegratableData
   protected:
     virtual void		readData(Stream *);
     virtual void		writeData(Stream *);
+
+  private:
+    void init(unsigned nrChannels, Allocator &allocator);
 };
 
 
@@ -48,7 +52,24 @@ inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, 
   visibilities(boost::extents[itsNrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], itsAlignment, allocator, true),
   itsNrBytesPerNrValidSamples(maxNrValidSamples < 256 ? 1 : maxNrValidSamples < 65536 ? 2 : 4)
 {
-  
+  init(nrChannels, allocator);
+}
+
+
+inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, std::complex<float> *visibilities, size_t nrVisibilities, Allocator &allocator)
+:
+  itsAlignment(512),
+  itsNrBaselines(nrStations * (nrStations + 1) / 2),
+  visibilities(boost::extents[itsNrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], visibilities, false),
+  itsNrBytesPerNrValidSamples(maxNrValidSamples < 256 ? 1 : maxNrValidSamples < 65536 ? 2 : 4)
+{
+  ASSERT(this->visibilities.num_elements() == nrVisibilities);
+
+  init(nrChannels, allocator); 
+}
+
+inline void CorrelatedData::init(unsigned nrChannels, Allocator &allocator)
+{
   switch (itsNrBytesPerNrValidSamples) {
     case 4 : itsNrValidSamples4.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator, true);
             break;
@@ -186,6 +207,7 @@ inline IntegratableData &CorrelatedData::operator += (const IntegratableData &ot
 
   return *this;
 }
+
 
 } // namespace RTCP
 } // namespace LOFAR

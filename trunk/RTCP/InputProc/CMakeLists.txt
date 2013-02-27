@@ -1,7 +1,7 @@
 # $Id: CMakeLists.txt 21382 2012-06-29 11:26:52Z mol $
 
 lofar_package(InputProc 1.0
-  DEPENDS Common Stream Interface IONProc)
+  DEPENDS Common Stream Interface)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time)

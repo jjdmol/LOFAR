@@ -6,6 +6,7 @@ include(LofarCTest)
 include_directories(${PACKAGE_SOURCE_DIR}/src)
 
 lofar_add_test(tGenerator tGenerator.cc)
+lofar_add_test(tRSP tRSP.cc)
 lofar_add_test(tRSPTimeStamp2 tRSPTimeStamp2.cc)
 lofar_add_test(tRanges tRanges.cc)
 lofar_add_test(tSampleBuffer tSampleBuffer.cc)

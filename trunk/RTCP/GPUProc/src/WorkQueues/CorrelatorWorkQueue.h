@@ -41,8 +41,7 @@ namespace LOFAR
 
     //private:
             void doSubband(unsigned block, unsigned subband);
-            //void receiveSubbandSamples(unsigned block, unsigned subband);
-            //void sendSubbandVisibilites(unsigned block, unsigned subband);
+
             CorrelatorPipelineCounters &counters;
             cl::Buffer		devFIRweights;
             cl::Buffer		devBufferA, devBufferB;

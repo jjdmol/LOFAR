@@ -69,13 +69,6 @@ namespace LOFAR
             }
         }
 
-        //void CorrelatorWorkQueue::sendSubbandVisibilites(unsigned block, unsigned subband)
-        //{
-        //    
-        //    pipeline.GPUtoStorageStreams[subband]->write(visibilities.origin(), visibilities.num_elements() * sizeof(std::complex<float>));
-        //    
-        //}
-
 
         void CorrelatorWorkQueue::doSubband(unsigned block, unsigned subband)
         {
@@ -115,8 +108,6 @@ namespace LOFAR
                 visibilities.deviceToHost(CL_TRUE);
                 counters.visibilitiesCounter.doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
             }
-
-            
         }
     }
 }

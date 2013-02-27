@@ -1,0 +1,28 @@
+12345 0 0
+----- Parset: 
+OLAP.FinalMetaDataGatherer.executable=/bin/echo
+OLAP.FinalMetaDataGatherer.host=localhost
+OLAP.FinalMetaDataGatherer.sshIdentityFile=/home/mol/.ssh/id_dsa
+OLAP.FinalMetaDataGatherer.userName=mol
+OLAP.Storage.hosts=[localhost]
+OLAP.Storage.msWriter=./DummyStorage
+OLAP.Storage.sshIdentityFile=/home/mol/.ssh/id_dsa
+OLAP.Storage.userName=mol
+Observation.ObsID=12345
+
+----- Parset: 
+OLAP.FinalMetaDataGatherer.executable=/bin/echo
+OLAP.FinalMetaDataGatherer.host=localhost
+OLAP.FinalMetaDataGatherer.sshIdentityFile=/home/mol/.ssh/id_dsa
+OLAP.FinalMetaDataGatherer.userName=mol
+OLAP.Storage.hosts=[localhost]
+OLAP.Storage.msWriter=./DummyStorage
+OLAP.Storage.sshIdentityFile=/home/mol/.ssh/id_dsa
+OLAP.Storage.userName=mol
+Observation.ObsID=12345
+
+FinalMetaData sent.
+----- FinalMetaData: 
+Broken RCUs at begin of obs: (CS001 LBA 2 2012-01-01 12:34), (RS205 HBA 1 2012-01-01 12:34) Broken RCUs during obs: (DE601 RCU 3 2012-01-01 12:34)
+FinalMetaData received and matches.
+12345

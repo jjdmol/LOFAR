@@ -19,8 +19,10 @@ lofar_add_library(gpuproc
   LogThread.cc
   OpenCL_Support.cc
   ReaderWriterSynchronization.cc
+  Storage/SSH.cc
+  Storage/StorageProcess.cc
+  Storage/StorageProcesses.cc
   UHEP/InvertedStationPPFWeights.cc)
-
 
 lofar_add_bin_program(RTCP RTCP.cc)
 lofar_add_bin_program(RTCP_new 

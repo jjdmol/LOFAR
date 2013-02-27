@@ -1,7 +1,7 @@
 #ifndef __GENERATOR__
 #define __GENERATOR__
 
-#include <IONProc/RSP.h>
+#include "RSP.h"
 #include "RSPBoards.h"
 #include "BufferSettings.h"
 #include <string>

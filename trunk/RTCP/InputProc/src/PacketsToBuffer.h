@@ -8,8 +8,8 @@
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
 #include <Interface/Stream.h>
-#include <IONProc/RSP.h>
-#include <IONProc/WallClockTime.h>
+#include "RSP.h"
+#include "WallClockTime.h"
 #include "SampleBuffer.h"
 #include "BufferSettings.h"
 #include "PacketReader.h"
