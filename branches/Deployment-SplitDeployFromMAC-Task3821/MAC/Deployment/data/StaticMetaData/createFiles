@@ -746,12 +746,12 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" ):
                 createTBBDriverFile    (resultDir, stationName, dataDir)
                 createRemoteStationFile(resultDir, stationName, dataDir)
                 createAntennaArraysFile(resultDir, stationName, dataDir)
-                createAntennaFieldFile (resultDir, stationName, dataDir)
-                createCableDelaysFile  (resultDir, stationName, dataDir)
-                createHBADeltasFile    (resultDir, stationName, dataDir)
-                createiHBADeltasFile   (resultDir, stationName, dataDir)
+#                createAntennaFieldFile (resultDir, stationName, dataDir)
+#                createCableDelaysFile  (resultDir, stationName, dataDir)
+#                createHBADeltasFile    (resultDir, stationName, dataDir)
+#                createiHBADeltasFile   (resultDir, stationName, dataDir)
                 createHardwareMonitorFile(resultDir, stationName, dataDir)
-                de601Exceptions        (resultDir, stationName, dataDir)
+#                de601Exceptions        (resultDir, stationName, dataDir)
     else:
         print "Cannot determine stationname"
         sys.exit(1)
@@ -798,12 +798,12 @@ else:
         createTBBDriverFile    (resultDir, stationName, dataDir)
         createRemoteStationFile(resultDir, stationName, dataDir)
         createAntennaArraysFile(resultDir, stationName, dataDir)
-        createAntennaFieldFile (resultDir, stationName, dataDir)
-        createCableDelaysFile  (resultDir, stationName, dataDir)
-        createHBADeltasFile    (resultDir, stationName, dataDir)
-        createiHBADeltasFile   (resultDir, stationName, dataDir)
+#        createAntennaFieldFile (resultDir, stationName, dataDir)
+#        createCableDelaysFile  (resultDir, stationName, dataDir)
+#        createHBADeltasFile    (resultDir, stationName, dataDir)
+#        createiHBADeltasFile   (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
-        de601Exceptions        (resultDir, stationName, dataDir)
+#        de601Exceptions        (resultDir, stationName, dataDir)
         
 if len(warnings) > 0:
     print "The following warnings occured:"
