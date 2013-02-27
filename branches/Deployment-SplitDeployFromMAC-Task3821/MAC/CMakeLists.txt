@@ -9,5 +9,5 @@ lofar_add_package(MACTools Tools)
 lofar_add_package(PVSS_Datapoints Deployment/data/PVSS)
 lofar_add_package(OTDB_Comps Deployment/data/OTDB)
 lofar_add_package(StaticMetaData Deployment/data/StaticMetaData)
-
+lofar_add_package(StationData Deployment/data/StationData)
 
