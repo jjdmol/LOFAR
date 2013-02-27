@@ -25,8 +25,6 @@
 
 #include <signal.h>
 #include <Common/StreamUtil.h>
-//#include <Common/lofar_vector.h>
-//#include <Common/lofar_string.h>
 #include <Common/ParameterSet.h>
 #include <Common/ParameterRecord.h>
 #include <Common/Exceptions.h>
@@ -35,8 +33,6 @@
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/MACServiceInfo.h>
-#include <MACIO/KVTLogger.h>
-#include <MACIO/KVT_Protocol.ph>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DP_Protocol.ph>
@@ -46,8 +42,6 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/CTState.h>
 #include <OTDB/TreeValue.h>
-#include <OTDB/TreeMaintenance.h>
-#include <OTDB/TreeStateConv.h>
 
 #include "PythonControl.h"
 #include "PVSSDatapointDefs.h"
@@ -59,8 +53,8 @@ using namespace boost::posix_time;
 
 namespace LOFAR {
 	using namespace APLCommon;
-	using namespace GCF::PVSS;
 	using namespace GCF::TM;
+	using namespace GCF::PVSS;
 	using namespace GCF::RTDB;
 	using namespace OTDB;
 	namespace CEPCU {
@@ -78,6 +72,7 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	itsParentControl	(0),
 	itsParentPort		(0),
 	itsTimerPort		(0),
+	itsForcedQuitTimer  (0),
 	itsListener			(0),
 	itsFeedbackListener	(0),					// QUICK FIX #3633
 	itsFeedbackPort		(0),					// QUICK FIX #3633
@@ -85,19 +80,13 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	itsPythonPort		(0),
 	itsState			(CTState::NOSTATE),
 	itsFeedbackFile     (""),
-	itsFeedbackWaittime (1.0),
-	itsKVTLoggerHost    ("")
-//	itsStopTimerID      (0)
+	itsForceTimeout		(3600.0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
 	// First readin our observation related config file.
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
 	globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
-
-	// Readin some parameters from the conf-file.
-	itsFeedbackWaittime = globalParameterSet()->getFloat ("FeedbackWaittime", 1.0);
-	itsKVTLoggerHost    = globalParameterSet()->getString("KVTLoggerHost", "localhost");
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
@@ -108,14 +97,17 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	// QUICK FIX #3633
 	itsFeedbackListener = new GCFTCPPort (*this, "Feedbacklistener", GCFPortInterface::MSPP, CONTROLLER_PROTOCOL);
 	ASSERTSTR(itsFeedbackListener, "Cannot allocate TCP port for feedback");
+	itsForcedQuitTimer = new GCFTimerPort(*this, "ForcedQuitTimer");
+	ASSERTSTR(itsForcedQuitTimer, "Cannot allocate emergency quit timer");
+	itsForceTimeout = globalParameterSet()->getTime("emergencyTimeout", 3600);
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
+	ASSERTSTR(itsTimerPort, "Cannot allocate the timer");
 
 	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 	registerProtocol (DP_PROTOCOL, 		   DP_PROTOCOL_STRINGS);
-	registerProtocol (KVT_PROTOCOL,		   KVT_PROTOCOL_STRINGS);
 }
 
 
@@ -144,15 +136,16 @@ void PythonControl::signalHandler(int	signum)
 	LOG_DEBUG (formatString("SIGNAL %d detected", signum));
 
 	if (thisPythonControl) {
-		thisPythonControl->finish();
+		thisPythonControl->finish(CT_RESULT_MANUAL_ABORT);
 	}
 }
 
 //
-// finish()
+// finish(result)
 //
-void PythonControl::finish()
+void PythonControl::finish(int result)
 {
+	itsFeedbackResult = result;
 	TRAN(PythonControl::finishing_state);
 }
 
@@ -229,22 +222,63 @@ bool PythonControl::_startPython(const string&	pythonProg,
 								myHostname(true).c_str(), parentService.c_str(), itsPythonName.c_str());
 	}
 	LOG_INFO_STR("About to start: " << startCmd);
-#if 1
 	FILE*	pipe = popen(startCmd.c_str(), "r");
 	if (!pipe) {
 		LOG_FATAL_STR("Couldn't execute '" << startCmd << ", errno = " << strerror(errno));
 		return (false);
 	}
+
 	LOG_INFO("Output of command: ...");
 	while (!feof(pipe)) {
 		char	buffer[1024];
 		LOG_INFO_STR(fgets(buffer, 1024, pipe));
 	}
 	LOG_INFO("... end of command output");
+
 	int	result = pclose(pipe);
-#else
-	int	result = system (startCmd.c_str());
-#endif
+	LOG_INFO_STR ("Result of command = " << result);
+
+	if (result == -1) {
+		return (false);
+	}
+	
+	return (true);
+}
+
+//
+// _stopPython(ObsNr, host)
+//
+bool PythonControl::_stopPython(int				obsID,
+							 	const string&	pythonHost)
+{
+	bool	onRemoteMachine(pythonHost != myHostname(false)  && pythonHost != myHostname(true));
+
+	// construct system command
+	string	stopCmd;
+	string	stopScript("stopPython.sh");
+
+	if (onRemoteMachine) {
+		stopCmd = formatString("ssh %s %s %s", pythonHost.c_str(), stopScript.c_str(), observationParset(obsID).c_str());
+	}
+	else {
+		stopCmd = formatString("%s %s", stopScript.c_str(), observationParset(obsID).c_str());
+	}
+
+	LOG_INFO_STR("About to start: " << stopCmd);
+	FILE*	pipe = popen(stopCmd.c_str(), "r");
+	if (!pipe) {
+		LOG_FATAL_STR("Couldn't execute '" << stopCmd << ", errno = " << strerror(errno));
+		return (false);
+	}
+
+	LOG_INFO("Output of command: ...");
+	while (!feof(pipe)) {
+		char	buffer[1024];
+		LOG_INFO_STR(fgets(buffer, 1024, pipe));
+	}
+	LOG_INFO("... end of command output");
+
+	int	result = pclose(pipe);
 	LOG_INFO_STR ("Result of command = " << result);
 
 	if (result == -1) {
@@ -331,7 +365,7 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event, GCFPortInterface
 				answer.cntlrName = msg.cntlrName;
 				answer.result    = CONTROL_LOST_CONN_ERR;
 				port.send(answer);
-				TRAN(PythonControl::finishing_state);
+				finish(CT_RESULT_PIPELINE_FAILED);
 				break;
 			}
 			LOG_DEBUG ("Started Python environment, going to waitForConnection state");
@@ -386,8 +420,8 @@ GCFEvent::TResult PythonControl::waitForConnection_state(GCFEvent& event, GCFPor
 		answer.cntlrName = itsMyName;
 		answer.result    = CONTROL_LOST_CONN_ERR;
 		itsParentPort->send(answer);
-		TRAN(PythonControl::finishing_state);
-	}
+		finish(CT_RESULT_PIPELINE_FAILED);
+	} break;
 
 	case F_EXIT:
 		itsTimerPort->cancelAllTimers();
@@ -445,6 +479,7 @@ GCFEvent::TResult PythonControl::waitForConnection_state(GCFEvent& event, GCFPor
 
 	return (status);
 }
+
 //
 // operational_state(event, port)
 //
@@ -507,10 +542,10 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 
 		if (!strcmp(buf, "ABORT")) {
 			itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
-			TRAN(PythonControl::finishing_state);
+			TRAN(PythonControl::completing_state);
 		}
 		else if (!strcmp(buf, "FINISHED")) {
-			TRAN(PythonControl::finishing_state);
+			TRAN(PythonControl::completing_state);
 		}
 		else {
 			LOG_ERROR_STR("Received command on feedback port unrecognized");
@@ -522,16 +557,11 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 		break;
 
 	case F_TIMER:  {
-//		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-//		if (timerEvent.id == itsStopTimerID) {
-//			LOG_DEBUG("StopTimer expired, starting QUIT sequence");
-//			startNewState(CTState::QUIT, ""/*options*/);
-//		}
-//		else {
-//			LOG_WARN_STR("Received unknown timer event");
-//		}
-	}
-	break;
+		if (&port == itsForcedQuitTimer) {
+			LOG_WARN("Aborting program on emergency timer!");
+			finish(CT_RESULT_EMERGENCY_TIMEOUT);
+		}
+	} break;
 
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 	case CONTROL_CONNECT: {
@@ -594,7 +624,7 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 				answer.cntlrName = msg.cntlrName;
 				answer.result    = CONTROL_LOST_CONN_ERR;
 				port.send(answer);
-				TRAN(PythonControl::finishing_state);
+				finish(CT_RESULT_PIPELINE_FAILED);
 				break;
 			}
 			// QUICK FIX #3633 END
@@ -631,15 +661,24 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 	}
 
 	case CONTROL_QUIT: {
+		itsForcedQuitTimer->setTimer(itsForceTimeout);
 		CONTROLQuitEvent		msg(event);
 		LOG_DEBUG_STR("Received QUIT(" << msg.cntlrName << ")");
 		if (itsChildCanCommunicate) {
 			itsPythonPort->send(msg);
 		}
 		else {
-			LOG_WARN("Sending FAKE Quit response and quiting application");
-//			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
-			TRAN(PythonControl::finishing_state);
+			LOG_WARN("Calling stopPython.sh and waiting for connection");
+			ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
+			string  myPrefix  (thePS->locateModule("PythonControl")+"PythonControl.");
+			string	pythonHost(thePS->getString(myPrefix+"pythonHost","@pythonHost@"));
+			bool stopOK = _stopPython(getObservationNr(getName()), realHostname(pythonHost));
+			if (!stopOK) {
+				LOG_ERROR("Failed to stop the Python environment.");
+				finish(CT_RESULT_PIPELINE_FAILED);
+				break;
+			}
+			// wait for ABORT or FINISHED message from python
 		}
 		break;
 	}
@@ -697,7 +736,7 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 //		msg.result = CT_RESULT_NO_ERROR;
 //		itsParentPort->send(msg);
 		LOG_INFO("Python environment has quited, quiting too.");
-		TRAN(PythonControl::finishing_state);
+		TRAN(PythonControl::completing_state);
 		break;
 	}
 
@@ -711,6 +750,39 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 }
 
 //
+// completing_state(event, port)
+//
+// Pickup Metadata feedbackfile is any and pass it to SAS
+//
+GCFEvent::TResult PythonControl::completing_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("completing:" << eventName(event) << "@" << port.getName());
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		// update PVSS
+#ifdef USE_PVSS_DATABASE
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("completing"));
+		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
+#endif
+		_passMetadatToOTDB();
+
+		TRAN(PythonControl::finishing_state);
+	} break;
+
+	case F_DISCONNECTED:
+		port.close();
+		break;
+	
+	default:
+		LOG_DEBUG("completing_state, default");
+		return (GCFEvent::NOT_HANDLED);
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
+//
 // finishing_state(event, port)
 //
 // Pickup Metadata feedbackfile is any and pass it to SAS
@@ -719,30 +791,25 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 {
 	LOG_DEBUG_STR ("finishing:" << eventName(event) << "@" << port.getName());
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-
 #ifdef USE_PVSS_DATABASE
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 #endif
-		// Give python environment time to construct the file
-		itsTimerPort->setTimer(itsFeedbackFile.empty() ? 3.0 : itsFeedbackWaittime);
-		break;
-	}
 
-	case F_TIMER: {
-		_passMetadatToOTDB();
 		CONTROLQuitedEvent		msg;
 		msg.cntlrName = itsMyName;
-		msg.result = itsFeedbackResult;
+		msg.result    = itsFeedbackResult;
 		itsParentPort->send(msg);
+		itsTimerPort->cancelAllTimers();
+		itsTimerPort->setTimer(1.0);	// give parent task time to process the message
+	} break;
+
+	case F_TIMER: 
 		GCFScheduler::instance()->stop();
 		break;
-	}
 
 	case F_DISCONNECTED:
 		port.close();
@@ -750,15 +817,14 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 	
 	default:
 		LOG_DEBUG("finishing_state, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
+		return (GCFEvent::NOT_HANDLED);
 	}
 
-	return (status);
+	return (GCFEvent::HANDLED);
 }
 
 //
-//		_passMetadatToOTDB();
+//	_passMetadatToOTDB();
 //
 void PythonControl::_passMetadatToOTDB()
 {
@@ -809,7 +875,7 @@ void PythonControl::_passMetadatToOTDB()
 		ParameterSet	metadata;
 		metadata.adoptFile(itsFeedbackFile);
 
-		// Loop over the parameterset and send the information to the KVTlogger.
+		// Loop over the parameterset and send the information to the SAS database
 		// During the transition phase from parameter-based to record-based storage in OTDB the
 		// nodenames ending in '_' are implemented both as parameter and as record.
 		ParameterSet::iterator		iter = metadata.begin();
@@ -850,11 +916,6 @@ void PythonControl::_passMetadatToOTDB()
 		}
 		LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
 	}
-
-	// finally report state to SAS
-	TreeMaintenance	tm(&conn);
-	TreeStateConv	tsc(&conn);
-	tm.setTreeState(obsID, tsc.get("finished"));
 }
 
 }; // CEPCU

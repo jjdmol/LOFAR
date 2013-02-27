@@ -67,12 +67,14 @@ public:
    	GCFEvent::TResult waitForConnection_state(GCFEvent& event, GCFPortInterface& port);
 	// Normal control mode. 
 	GCFEvent::TResult operational_state		 (GCFEvent& event, GCFPortInterface& port);
+	// Completing mode. 
+	GCFEvent::TResult completing_state		 (GCFEvent& event, GCFPortInterface& port);
 	// Finishing mode. 
 	GCFEvent::TResult finishing_state		 (GCFEvent& event, GCFPortInterface& port);
 	
 	// Interrupthandler for switching to finisingstate when exiting the program
 	static void signalHandler (int	signum);
-	void	    finish();
+	void	    finish		  (int	result);
 
 private:
 	// avoid defaultconstruction and copying
@@ -84,6 +86,8 @@ private:
 						  int			obsID,
 						  const string&	pythonHost,
 						  const string&	parentService);
+	bool 	_stopPython  ( int			obsID,
+						  const string&	pythonHost);
 	void	_databaseEventHandler(GCFEvent&				event);
 	void	_passMetadatToOTDB();
 
@@ -98,6 +102,7 @@ private:
 	GCFITCPort*				itsParentPort;
 
 	GCFTimerPort*			itsTimerPort;
+	GCFTimerPort*			itsForcedQuitTimer;
 
 	GCFTCPPort*				itsListener;
 
@@ -115,8 +120,7 @@ private:
 
 	// conf-file variables
 	string					itsFeedbackFile;
-	double					itsFeedbackWaittime;
-	string					itsKVTLoggerHost;
+	double					itsForceTimeout;
 };
 
   }  //CEPCU
