@@ -7,7 +7,7 @@ namespace LOFAR
 {
     namespace RTCP 
     {
-        bool	 profiling = true;
+        bool	 profiling = false;
         const char *str = getenv("NR_GPUS");
         unsigned nrGPUs = str ? atoi(str) : 1;
 

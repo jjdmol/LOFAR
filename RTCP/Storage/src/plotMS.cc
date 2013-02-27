@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
       } catch (Stream::EndOfStreamException &) {
         break;
       }
-      data->peerMagicNumber = 0xda7a0000; // fake wrong endianness to circumvent bug
+      //data->peerMagicNumber = 0xda7a0000; // fake wrong endianness to circumvent bug
       shouldSwap = data->shouldByteSwap();
 
       printf( "# valid samples: %u\n", data->nrValidSamples(baseline,channel));

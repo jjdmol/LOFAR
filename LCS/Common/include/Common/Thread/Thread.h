@@ -68,6 +68,7 @@ class Thread
 			  ~Thread(); // join a thread
 
     void		  cancel();
+    void		  cancel(const struct timespec &); // cancel if thread is not finished at deadline
 
     void		  wait();
     bool		  wait(const struct timespec &);
@@ -169,6 +170,19 @@ inline Thread::~Thread()
 inline void Thread::cancel()
 {
   (void)pthread_cancel(thread); // could return ESRCH ==> ignore
+}
+
+
+inline void Thread::cancel(const struct timespec &timespec)
+{
+  try {
+    if (!wait(timespec))
+      cancel();
+  } catch(...) {
+    // Guarantee cancel() will be called.
+    cancel();
+    throw;
+  }
 }
 
 

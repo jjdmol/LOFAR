@@ -3,6 +3,7 @@
 #include "Common/LofarLogger.h"
 #include "global_defines.h"
 #include "Interface/Parset.h"
+#include "Interface/Stream.h"
 #include "OpenCL_Support.h"
 
 #include "Stream/Stream.h"
@@ -25,7 +26,7 @@ namespace LOFAR
             stationInputs8(ps.nrStations()),
             stationInputs4(ps.nrStations()),
             bufferToGPUstreams(ps.nrStations()),
-            GPUtoStorageStreams(ps.nrSubbands())
+            outputs(ps.nrSubbands())
         {
             createContext(context, devices);
 
@@ -48,20 +49,86 @@ namespace LOFAR
                 }
             }
 
-            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) 
-                try {
-                  GPUtoStorageStreams[sb] = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
-                } catch(InterfaceException &ex) {
-                  LOG_ERROR_STR("Caught exception, using null stream for subband " << sb << ": " << ex);
+            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++)
+              outputs[sb].streamMutex = new Mutex;
+        }
 
-                  GPUtoStorageStreams[sb] = new NullStream;
-                }
+
+        void Pipeline::doWork()
+        {
+          handleOutput();
+        }
+
+
+        void Pipeline::handleOutput()
+        {
+            // Connect to all output streams in parallel, because some might
+            // block.
+
+#           pragma omp parallel for num_threads(ps.nrSubbands())
+            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
+              struct Output &output = outputs[sb];
+
+              ScopedLock sl(*output.streamMutex);
+
+              try {
+                  if (ps.getHostName(CORRELATED_DATA, sb) == "") {
+                    // an empty host name means 'write to disk directly', to
+                    // make debugging easier for now
+                    output.stream = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
+                  } else {
+                    // connect to the Storage_main process for this output
+                    const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, sb);
+
+                    // TODO: Create these connections asynchronously!
+                    output.stream = createStream(desc, false, 0);
+                  }
+              } catch(Exception &ex) {
+                LOG_ERROR_STR("Caught exception, using null stream for subband " << sb << ": " << ex);
+
+                output.stream = new NullStream;
+              }
+            }
         }
 
 
         cl::Program Pipeline::createProgram(const char *sources)
         {
             return LOFAR::RTCP::createProgram(ps, context, devices, sources);
+        }
+
+
+        void Pipeline::writeOutput(unsigned block, unsigned subband, StreamableData &data)
+        {
+            struct Output &output = outputs[subband];
+
+            // Force blocks to be written in-order
+            output.sync.waitFor(block);
+
+            // We do the ordering, so we set the sequence numbers
+            data.setSequenceNumber(block);
+
+            // Try to write the data
+            {
+              ScopedLock sl(*output.streamMutex);
+
+              if (output.stream.get()) {
+                try {
+                  data.write(output.stream.get(), true);
+                } catch (Stream::EndOfStreamException &ex) {
+                  LOG_WARN_STR("Caught EndOfStream while writing data: " << ex);
+
+                  // Prevent future warnings
+                  output.stream = new NullStream;
+                }
+              } else {
+                // stream was not set up yet -- discard block
+                LOG_WARN_STR("No output stream -- discarding subband " << subband << " block " << block);
+              }
+            }
+
+            // Allow the next block to be written
+            output.sync.advanceTo(block + 1);
         }
 
 

@@ -5,7 +5,7 @@
 #include <Stream/SocketStream.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/Stream.h>
-#include <IONProc/WallClockTime.h>
+#include "WallClockTime.h"
 #include "SharedMemory.h"
 #include "Ranges.h"
 #include "OMPThread.h"
