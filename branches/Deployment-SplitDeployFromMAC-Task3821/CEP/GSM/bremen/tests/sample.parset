@@ -1,0 +1,12 @@
+##############################
+# Lofar GSM input parset.    #
+##############################
+bbs_format = test
+source_lists = [ data/new_field.dat, data/new_field_dup.dat ]
+image_id = TheUniqueImageID
+image_date = ???
+frequency = 150000000 # in Hz
+pointing_ra = 123.33 # in degrees
+pointing_decl = 33.33 # in degrees
+beam_size = 1.00 # in degrees
+stokes = I
