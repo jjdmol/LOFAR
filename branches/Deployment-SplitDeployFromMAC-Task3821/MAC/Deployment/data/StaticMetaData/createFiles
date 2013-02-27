@@ -547,7 +547,7 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
     """
     # There are three types of AntennaArrays file, depending on
     # the type of station.
-    stationType=stationName[0:1].upper()
+    stationType=stationName[0:2].upper()
     if stationType == "CS":
         srcFile = dataDir + "/AntennaArrays_CS.conf"
     elif stationType == "RS":
