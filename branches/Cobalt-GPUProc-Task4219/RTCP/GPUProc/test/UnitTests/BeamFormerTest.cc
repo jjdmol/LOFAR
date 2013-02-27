@@ -1,5 +1,5 @@
   // test.cpp
-  #include <unittest++/UnitTest++.h>
+  #include <UnitTest++.h>
 
   TEST(FailSpectacularly2)
   {

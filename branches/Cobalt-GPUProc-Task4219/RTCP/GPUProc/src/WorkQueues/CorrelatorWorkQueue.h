@@ -41,12 +41,8 @@ namespace LOFAR
 
     //private:
             void doSubband(unsigned block, unsigned subband);
-            //void receiveSubbandSamples(unsigned block, unsigned subband);
-            //void sendSubbandVisibilites(unsigned block, unsigned subband);
+
             CorrelatorPipelineCounters &counters;
-      // Flag the input data of the given station using to the flags in the
-      // meta-data.
-      void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
             cl::Buffer		devFIRweights;
             cl::Buffer		devBufferA, devBufferB;
             MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;

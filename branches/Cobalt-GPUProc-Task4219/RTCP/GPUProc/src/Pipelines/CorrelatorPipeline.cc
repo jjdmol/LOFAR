@@ -3,6 +3,7 @@
 #include "Common/LofarLogger.h"
 #include "global_defines.h"
 #include "Interface/Parset.h"
+#include "Interface/CorrelatedData.h"
 #include "OpenCL_Support.h"
 #include "OpenMP_Support.h"
 #include <iostream>
@@ -60,6 +61,11 @@ namespace LOFAR
       //  The two sections in this function are done in parallel with a seperate set of threads.
 #     pragma omp parallel sections 
       {
+        // Allow the super class to do its work
+#       pragma omp section
+        Pipeline::doWork();
+
+        // Forward the input
 #       pragma omp section
         {
           double startTime = ps.startTime(), stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
@@ -80,6 +86,7 @@ namespace LOFAR
           }
         }
 
+        // Perform the calculations
 #       pragma omp section
         {
           // Start a set of workqueue, the number depending on the number of GPU's: 2 for each.
@@ -96,6 +103,31 @@ namespace LOFAR
             doWorkQueue(queue);                            // The filter set to use. Const
           }
         }
+      }
+    }
+
+
+        // flag the input samples.
+    void CorrelatorPipeline::flagInputSamples(CorrelatorWorkQueue &workQueue, unsigned station, 
+                                               const SubbandMetaData& metaData)
+    {
+      // Get the flags that indicate missing data samples as a vector of
+      // SparseSet::Ranges
+      SparseSet<unsigned>::Ranges flags = metaData.getFlags(0).getRanges();
+
+      // Get the size of a sample in bytes.
+      size_t sizeof_sample = sizeof *workQueue.inputSamples.origin();
+
+      // Calculate the number elements to skip when striding over the second
+      // dimension of inputSamples.
+      size_t stride = workQueue.inputSamples[station][0].num_elements();
+
+      // Zero the bytes in the input data for the flagged ranges.
+      for(SparseSet<unsigned>::const_iterator it = flags.begin(); 
+          it != flags.end(); ++it) {
+        void *offset = workQueue.inputSamples[station][it->begin].origin();
+        size_t size = stride * (it->end - it->begin) * sizeof_sample;
+        memset(offset, 0, size);
       }
     }
 
@@ -127,6 +159,9 @@ namespace LOFAR
         SubbandMetaData metaData(1, header.nrDelays);
         metaData.read(stream);
 
+        // flag the input data.
+        flagInputSamples(workQueue, stat, metaData);
+
         // the first set of delays represents the central beam, which is the one we correlate
         struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
 
@@ -138,6 +173,22 @@ namespace LOFAR
         }
       }
 
+    }
+
+
+    void CorrelatorPipeline::sendSubbandVisibilities(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
+    {
+      // Create an data object to Storage around our visibilities
+      CorrelatedData data(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), workQueue.visibilities.origin(), workQueue.visibilities.num_elements());
+
+      // Add weights
+      // TODO: base weights on flags
+      for (size_t bl = 0; bl < data.itsNrBaselines; ++bl)
+        for (size_t ch = 0; ch < ps.nrChannelsPerSubband(); ++ch)
+          data.setNrValidSamples(bl, ch, ps.integrationSteps());
+
+      // Write the block to Storage
+      writeOutput(block, subband, data);
     }
 
 
@@ -180,24 +231,17 @@ namespace LOFAR
 #       pragma omp for schedule(dynamic), nowait, ordered  // no parallel: this no new threads
         for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) 
         {
-          // Each input block needs to be processed in order. Therefore wait for the correct block
+          // Each input block is sent in order. Therefore wait for the correct block
           inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
           receiveSubbandSamples( workQueue,  block,  subband);
           // Advance the block index
           inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
 
-          // 
+          // Perform calculations
           workQueue.doSubband(block, subband);
 
-          // Output needs to be ordered: wait for the correct output block
-          outputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-          //Write gpu to storage
-          GPUtoStorageStreams[subband]->write(
-            workQueue.visibilities.origin(),
-            workQueue.visibilities.num_elements() * sizeof(std::complex<float>)
-            );
-          // Advance the output index
-          outputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
+          // Send output to Storage
+          sendSubbandVisibilities(workQueue, block, subband);
         }  // end pragma omp for 
 
       }
@@ -212,6 +256,32 @@ namespace LOFAR
 #       pragma omp critical (cout)
         std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
     }
+
+        // flag the input samples.
+    void CorrelatorPipeline::flagInputSamples(CorrelatorWorkQueue &workQueue,
+                                              unsigned station, 
+                                              const SubbandMetaData& metaData)
+    {
+      // Get the flags that indicate missing data samples as a vector of
+      // SparseSet::Ranges
+      SparseSet<unsigned>::Ranges flags = metaData.getFlags(0).getRanges();
+
+      // Get the size of a sample in bytes.
+      size_t sizeof_sample = sizeof *workQueue.inputSamples.origin();
+
+      // Calculate the number elements to skip when striding over the second
+      // dimension of inputSamples.
+      size_t stride = workQueue.inputSamples[station][0].num_elements();
+
+      // Zero the bytes in the input data for the flagged ranges.
+      for(SparseSet<unsigned>::const_iterator it = flags.begin(); 
+          it != flags.end(); ++it) {
+        void *offset = workQueue.inputSamples[station][it->begin].origin();
+        size_t size = stride * (it->end - it->begin) * sizeof_sample;
+        memset(offset, 0, size);
+      }
+    }
+
   }
 }
 

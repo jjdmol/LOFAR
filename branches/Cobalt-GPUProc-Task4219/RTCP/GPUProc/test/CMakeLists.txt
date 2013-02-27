@@ -3,6 +3,12 @@
 include(LofarCTest)
 
 lofar_add_test(tCorrelateRealData)
+lofar_add_test(tSSH tSSH.cc)
+
+lofar_add_bin_program(DummyStorage DummyStorage.cc)
+lofar_add_test(tStorageProcesses tStorageProcesses.cc)
+#lofar_add_test(tDelayCompensation tDelayCompensation.cc)
+#target_link_libraries(tDelayCompensation /cm/shared/apps/UnitTest++/libUnitTest++.a)
 
 lofar_find_package(UnitTest++)
 
