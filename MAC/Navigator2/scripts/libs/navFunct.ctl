@@ -1750,6 +1750,13 @@ void navFunct_fillStationLists() {
 //                                 "RS503","RS506","RS507","RS508","RS509");
 //  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608","FI609");
   europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608");
+  superTerpStations = makeDynString("CS002","CS003","CS004","CS005","CS006","CS007");
+  cs0nnCoreStations = makeDynString("CS001",
+                                    "CS011","CS013","CS017",
+                                    "CS021","CS024","CS026","CS028",
+                                    "CS030","CS031","CS032");
+  csx01CoreStations = makeDynString("CS101","CS201","CS301","CS401","CS501","CS103","CS302");
+  
 }
 
 

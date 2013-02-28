@@ -81,6 +81,9 @@ global string     panelSelection       = ""; // holds selected panel
 global dyn_string coreStations;
 global dyn_string remoteStations;
 global dyn_string europeStations;
+global dyn_string superTerpStations;
+global dyn_string cs0nnCoreStations;
+global dyn_string csx01CoreStations;
 
 
 //======================== Action Handlers =======================================
