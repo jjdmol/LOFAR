@@ -216,7 +216,7 @@ E E 0 1 1 1 1 E -1.5 0 1.5 180 -75 1 E 100 70 20 20
 2 3
 "stationName"
 ""
-1 10 65 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 3 0 0 0 0 0
 E E E
@@ -235,7 +235,7 @@ LANG:1 5 CS001
 2 4
 "hbaText"
 ""
-1 37 25 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 35 25 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 4 0 0 0 0 0
 E E E
@@ -245,8 +245,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 37 25 38 38
-0 2 2 "0s" 0 0 0 192 0 0  37 25 1
+E E 0 1 1 2 1 E U  0 E 35 25 36 38
+0 2 2 "0s" 0 0 0 192 0 0  35 25 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
@@ -254,7 +254,7 @@ LANG:1 0
 2 5
 "lbaText"
 ""
-1 10 25 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 0 25 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -264,8 +264,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 10 25 11 38
-0 2 2 "0s" 0 0 0 192 0 0  10 25 1
+E E 0 1 1 2 1 E U  0 E 0 25 1 38
+0 2 2 "0s" 0 0 0 192 0 0  0 25 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
