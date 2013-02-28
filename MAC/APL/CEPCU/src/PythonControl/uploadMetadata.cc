@@ -34,23 +34,24 @@ using namespace OTDB;
 
 int main(int argc, char* argv[])
 {
-	if (argc != 4) {
-		cout << "Syntax: " << argv[0] << " databasename treeID metadatafile" << endl;
-		return (0);
+	if (argc != 5) {
+		cout << "Syntax: " << argv[0] << " databasename hostname treeID metadatafile" << endl;
+		return (-1);
 	}
 
 	// read parameterset
 	ParameterSet	metadata;
-	metadata.adoptFile(argv[3]);
+	metadata.adoptFile(argv[4]);
 
 	// Connect to KVT logger
-	OTDBconnection	conn("paulus", "boskabouter", argv[1], "RS005");
+	OTDBconnection	conn("paulus", "boskabouter", argv[1], argv[2]);
 	if (!conn.connect()) {
-		cerr << "Cannot connect to database " << argv[1] << " TEST_SAS2 on machine RS005" << endl;
-		return (1);
+		cerr << "Cannot connect to database " << argv[1] << " on machine " << argv[2] << endl;
+		return (-2);
 	}
+	cout << "Connected to database " << argv[1] << " on machine " << argv[2] << endl;
 
-	TreeValue	tv(&conn, atoi(argv[2]));
+	TreeValue	tv(&conn, atoi(argv[3]));
 
 	// Loop over the parameterset and send the information to the KVTlogger.
 	// During the transition phase from parameter-based to record-based storage in OTDB the
@@ -92,7 +93,7 @@ int main(int argc, char* argv[])
 		iter++;
 		cout << endl;
 	}
-    cout << "Done" << endl;
-	return (1);
+    cout << "Done, wrote" << metadata.size() << " values to SAS" << endl;
+	return (0);
 }
 
