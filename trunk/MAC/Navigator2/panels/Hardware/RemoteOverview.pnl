@@ -95,33 +95,33 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 2 1 E U  1 E 430 350 112 112
-1 98 1 "" 0
+1 194 1 "" 0
 0
-1 99 1 "" 1
+1 195 1 "" 1
 0
-1 100 1 "" 2
+1 196 1 "" 2
 0
-1 101 1 "" 3
+1 197 1 "" 3
 0
-1 102 1 "" 7
+1 198 1 "" 7
 0
-1 103 1 "" 8
+1 199 1 "" 8
 0
-1 104 1 "" 9
+1 200 1 "" 9
 0
-1 105 1 "" 10
+1 201 1 "" 10
 0
-1 106 1 "" 11
+1 202 1 "" 11
 0
-1 107 1 "" 12
+1 203 1 "" 12
 0
-1 108 1 "" 13
+1 204 1 "" 13
 0
-1 109 1 "" 14
+1 205 1 "" 14
 0
-1 110 1 "" 15
+1 206 1 "" 15
 0
-1 111 1 "" 16
+1 207 1 "" 16
 0
 2 97
 "PRIMITIVE_TEXT8"
@@ -179,135 +179,135 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 1 2 1 2 1 E U  1 E 430 350 125 125
-1 230 2 "" 1
+1 208 2 "" 1
 0
-1 231 2 "" 2
+1 209 2 "" 2
 0
-1 232 2 "" 3
+1 210 2 "" 3
 0
-1 233 2 "" 4
+1 211 2 "" 4
 0
-1 234 2 "" 5
+1 212 2 "" 5
 0
-1 235 3 "" 1
+1 213 3 "" 1
 0
-1 236 3 "" 2
+1 214 3 "" 2
 0
-1 237 3 "" 3
+1 215 3 "" 3
 0
-1 238 3 "" 4
+1 216 3 "" 4
 0
-1 239 3 "" 5
+1 217 3 "" 5
 0
-1 240 4 "" 1
+1 218 4 "" 1
 0
-1 241 4 "" 2
+1 219 4 "" 2
 0
-1 242 4 "" 3
+1 220 4 "" 3
 0
-1 243 4 "" 4
+1 221 4 "" 4
 0
-1 244 4 "" 5
+1 222 4 "" 5
 0
-1 245 5 "" 1
+1 223 5 "" 1
 0
-1 246 5 "" 2
+1 224 5 "" 2
 0
-1 247 5 "" 3
+1 225 5 "" 3
 0
-1 248 5 "" 4
+1 226 5 "" 4
 0
-1 249 5 "" 5
+1 227 5 "" 5
 0
-1 250 6 "" 1
+1 228 6 "" 1
 0
-1 251 6 "" 2
+1 229 6 "" 2
 0
-1 252 6 "" 3
+1 230 6 "" 3
 0
-1 253 6 "" 4
+1 231 6 "" 4
 0
-1 254 6 "" 5
+1 232 6 "" 5
 0
-1 255 7 "" 1
+1 233 7 "" 1
 0
-1 256 7 "" 2
+1 234 7 "" 2
 0
-1 257 7 "" 3
+1 235 7 "" 3
 0
-1 258 7 "" 4
+1 236 7 "" 4
 0
-1 259 7 "" 5
+1 237 7 "" 5
 0
-1 260 8 "" 1
+1 238 8 "" 1
 0
-1 261 8 "" 2
+1 239 8 "" 2
 0
-1 262 8 "" 3
+1 240 8 "" 3
 0
-1 263 8 "" 4
+1 241 8 "" 4
 0
-1 264 8 "" 5
+1 242 8 "" 5
 0
-1 265 9 "" 1
+1 243 9 "" 1
 0
-1 266 9 "" 2
+1 244 9 "" 2
 0
-1 267 9 "" 3
+1 245 9 "" 3
 0
-1 268 9 "" 4
+1 246 9 "" 4
 0
-1 269 9 "" 5
+1 247 9 "" 5
 0
-1 270 10 "" 1
+1 248 10 "" 1
 0
-1 271 10 "" 2
+1 249 10 "" 2
 0
-1 272 10 "" 3
+1 250 10 "" 3
 0
-1 273 10 "" 4
+1 251 10 "" 4
 0
-1 274 10 "" 5
+1 252 10 "" 5
 0
-1 275 11 "" 1
+1 253 11 "" 1
 0
-1 276 11 "" 2
+1 254 11 "" 2
 0
-1 277 11 "" 3
+1 255 11 "" 3
 0
-1 278 11 "" 4
+1 256 11 "" 4
 0
-1 279 11 "" 5
+1 257 11 "" 5
 0
-1 280 12 "" 1
+1 258 12 "" 1
 0
-1 281 12 "" 2
+1 259 12 "" 2
 0
-1 282 12 "" 3
+1 260 12 "" 3
 0
-1 283 12 "" 4
+1 261 12 "" 4
 0
-1 284 12 "" 5
+1 262 12 "" 5
 0
-1 285 13 "" 1
+1 263 13 "" 1
 0
-1 286 13 "" 2
+1 264 13 "" 2
 0
-1 287 13 "" 3
+1 265 13 "" 3
 0
-1 288 13 "" 4
+1 266 13 "" 4
 0
-1 289 13 "" 5
+1 267 13 "" 5
 0
-1 290 14 "" 1
+1 268 14 "" 1
 0
-1 291 14 "" 2
+1 269 14 "" 2
 0
-1 292 14 "" 3
+1 270 14 "" 3
 0
-1 293 14 "" 4
+1 271 14 "" 4
 0
-1 294 14 "" 5
+1 272 14 "" 5
 0
 0
 LAYER, 1 
@@ -342,55 +342,55 @@ LANG:1 6 Layer8
 "objects\\Hardware\\antennaPercentage.pnl" 682 80 T 63 U 
 0
 3 2 "PANEL_REF2" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 250 200 T 90 U 
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 250 200 T 90 U 
 1
 "$station""RS406"
 3 3 "PANEL_REF3" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 150 140 T 91 U 
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 150 140 T 91 U 
 1
 "$station""RS407"
 3 4 "PANEL_REF4" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 30 80 T 92 U 
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 30 80 T 92 U 
 1
-"$station""RS408"
+"$station""RS409"
 3 5 "PANEL_REF5" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 430 150 T 93 1 0 1 0 -10
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 430 150 T 93 1 0 1 0 -10
 1
 "$station""RS503"
 3 6 "PANEL_REF6" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 480 70 T 94 U 
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 480 70 T 94 U 
 1
 "$station""RS508"
 3 7 "PANEL_REF7" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 540 0 T 95 U 
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 540 0 T 95 U 
 1
 "$station""RS509"
 3 8 "PANEL_REF8" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 600 250 T 96 1 0 1 -10 10
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 600 250 T 96 1 0 1 -10 10
 1
 "$station""RS106"
 3 9 "PANEL_REF9" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 550 450 T 97 U 
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 550 450 T 97 U 
 1
 "$station""RS205"
 3 10 "PANEL_REF10" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 640 550 T 98 U 
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 640 550 T 98 U 
 1
 "$station""RS208"
 3 11 "PANEL_REF11" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 260 430 T 99 U 
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 260 430 T 99 U 
 1
 "$station""RS305"
 3 12 "PANEL_REF12" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 190 500 T 100 U 
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 190 500 T 100 U 
 1
 "$station""RS306"
 3 13 "PANEL_REF13" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 110 580 T 101 1 0 1 10 -20
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 110 580 T 101 1 0 1 10 -20
 1
 "$station""RS307"
 3 14 "PANEL_REF14" -1
-"objects/Hardware\\LBA_HBAStatusView.pnl" 40 620 T 102 U 
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 40 620 T 102 U 
 1
 "$station""RS310"
 0
