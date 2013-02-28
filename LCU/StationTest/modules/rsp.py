@@ -610,6 +610,7 @@ def write_serdes_rx_delay(tc, msg, clkDelay=0, rspId=['rsp0'], applev=21):
     msg.packAddr(['rsp'], 'serdes', 'rxdelay')
     msg.packPayload([bit0],1)
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+    print 'rspctl --writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload)
   rspctl_write_sleep()
   
   
@@ -648,12 +649,13 @@ def read_serdes_rx_delay(tc, msg, rspId=['rsp0'], applev=21):
   clkDelay = -1
   msg.packAddr(['rsp'], 'serdes', 'rxdelay')
   readData = rspctl(tc, '--readblock=%s,%s,0,1' % (rspId[0][3:], msg.hexAddr))
+  print 'rspctl --readblock=%s,%s,0,1' % (rspId[0][3:], msg.hexAddr)
   msg.extractPayload(readData)
   clkDelay = msg.unpackPayload(1, '+')
   clkDelay = clkDelay[0]
   bit0 = clkDelay & 1
-  if bit0==0:  tc.appendLog(applev, '>>> RSP-$s, read SERDES rx_clk : default input delay' % rspId)
-  else:        tc.appendLog(applev, '>>> RSP-$s, read SERDES rx_clk : incremented input delay' % rspId)
+  if bit0==0:  tc.appendLog(applev, '>>> RSP-%s, read SERDES rx_clk : default input delay' % rspId)
+  else:        tc.appendLog(applev, '>>> RSP-%s, read SERDES rx_clk : incremented input delay' % rspId)
   return clkDelay
 
   
@@ -677,8 +679,8 @@ def read_serdes_tx_delay(tc, msg, rspId=['rsp0'], applev=21):
   clkDelay = msg.unpackPayload(1, '+')
   clkDelay = clkDelay[0]
   bit0 = clkDelay & 1
-  if bit0==0:  tc.appendLog(applev, '>>> RSP-$s, read SERDES tx_clk : default output delay' % rspId)
-  else:        tc.appendLog(applev, '>>> RSP-$s, read SERDES tx_clk : incremented output delay' % rspId)
+  if bit0==0:  tc.appendLog(applev, '>>> RSP-%s, read SERDES tx_clk : default output delay' % rspId)
+  else:        tc.appendLog(applev, '>>> RSP-%s, read SERDES tx_clk : incremented output delay' % rspId)
   return clkDelay
 
 
