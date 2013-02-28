@@ -18,6 +18,11 @@
   def write_cr_sync_delay(tc, msg, syncdelay=0, syncedge=0, blpId=['blp0'], rspId=['rsp0'])
   def read_cr_sync_delay(tc, msg, blpId=['blp0'], rspId=['rsp0'], applev=21)
 
+  def write_serdes_rx_delay(tc, msg, clkDelay=0, rspId=['rsp0'], applev=21)
+  def write_serdes_tx_delay(tc, msg, clkDelay=0, rspId=['rsp0'], applev=21)
+  def read_serdes_rx_delay(tc, msg, rspId=['rsp0'], applev=21)
+  def read_serdes_tx_delay(tc, msg, rspId=['rsp0'], applev=21)
+  
   def write_diag_bypass(tc, msg, bypass, blpId=['blp0'], rspId=['rsp0'], applev=21)
   def read_diag_bypass(tc, msg, blpId=['blp0'], rspId=['rsp0'], applev=21)
   def write_diag_selftest(tc, msg, selftest, blpId=['blp0'], rspId=['rsp0'], applev=21)
@@ -588,6 +593,94 @@ def read_cr_sync_delay(tc, msg, blpId=['blp0'], rspId=['rsp0'], applev=21):
     tc.appendLog(applev, '>>> RSP-%s, BLP-%-8s, read CR sync: incremented input delay, capture on falling edge' % (rspId, blpId))
   return syncdata
   
+
+def write_serdes_rx_delay(tc, msg, clkDelay=0, rspId=['rsp0'], applev=21):
+  """ SERDES write RX_CLK output delay
+  
+  Input:
+  - tc       = Testcase
+  - msg      = MepMessage
+  - rspId    = List of 'rsp#'
+  - clkDelay = Rx clock input delay
+               . bit 0 : '0' is reset to default delay, '1' is increment delay
+  Return: void
+  """
+  bit0 = clkDelay & 1
+  for ri in rspId:
+    msg.packAddr(['rsp'], 'serdes', 'rxdelay')
+    msg.packPayload([bit0],1)
+    rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+  rspctl_write_sleep()
+  
+  
+def write_serdes_tx_delay(tc, msg, clkDelay=0, rspId=['rsp0'], applev=21):
+  """ SERDES write TX_CLK input delay
+  
+  Input:
+  - tc       = Testcase
+  - msg      = MepMessage
+  - rspId    = List of 'rsp#'
+  - clkDelay = Tx clock output delay
+               . bit 0 : '0' is reset to default delay, '1' is increment delay
+  Return: void
+  """
+  bit0 = clkDelay & 1
+  for ri in rspId:
+    msg.packAddr(['rsp'], 'serdes', 'txdelay')
+    msg.packPayload([bit0],1)
+    rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+  rspctl_write_sleep()
+
+  
+def read_serdes_rx_delay(tc, msg, rspId=['rsp0'], applev=21):
+  """ SERDES read RX_CLK input delay
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - rspId  = List of one 'rsp#'
+  - applev = Append log level
+  Report:
+    tc appendlog messages are reported.
+  Return:
+  - clkDelay  = Rx clock input delay
+                 . bit 0 : '0' is default input delay, '1' is incremented delay
+  """
+  clkDelay = -1
+  msg.packAddr(['rsp'], 'serdes', 'rxdelay')
+  readData = rspctl(tc, '--readblock=%s,%s,0,1' % (rspId[0][3:], msg.hexAddr))
+  msg.extractPayload(readData)
+  clkDelay = msg.unpackPayload(1, '+')
+  clkDelay = clkDelay[0]
+  bit0 = clkDelay & 1
+  if bit0==0:  tc.appendLog(applev, '>>> RSP-$s, read SERDES rx_clk : default input delay' % rspId)
+  else:        tc.appendLog(applev, '>>> RSP-$s, read SERDES rx_clk : incremented input delay' % rspId)
+  return clkDelay
+
+  
+def read_serdes_tx_delay(tc, msg, rspId=['rsp0'], applev=21):
+  """ SERDES read TX_CLK output delay
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - rspId  = List of one 'rsp#'
+  - applev = Append log level
+  Report:
+    tc appendlog messages are reported.
+  Return:
+  - clkDelay  = Tx clock output delay
+                 . bit 0 : '0' is default output delay, '1' is incremented delay
+  """
+  clkDelay = -1
+  msg.packAddr(['rsp'], 'serdes', 'txdelay')
+  readData = rspctl(tc, '--readblock=%s,%s,0,1' % (rspId[0][3:], msg.hexAddr))
+  msg.extractPayload(readData)
+  clkDelay = msg.unpackPayload(1, '+')
+  clkDelay = clkDelay[0]
+  bit0 = clkDelay & 1
+  if bit0==0:  tc.appendLog(applev, '>>> RSP-$s, read SERDES tx_clk : default output delay' % rspId)
+  else:        tc.appendLog(applev, '>>> RSP-$s, read SERDES tx_clk : incremented output delay' % rspId)
+  return clkDelay
+
 
 def write_diag_bypass(tc, msg, bypass, blpId=['blp0'], rspId=['rsp0'], applev=21):
   """Write DIAG bypass register
