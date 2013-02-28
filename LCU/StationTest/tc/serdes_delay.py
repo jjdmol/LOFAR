@@ -29,11 +29,11 @@ tc.appendLog(11, '')
 if arg_read:
     # Read
     if clk_interface=='rx':
-        tc.appendLog(11, '>>> Read RX_CLK input delay status for RSP-%s.' % rspId
+        tc.appendLog(11, '>>> Read RX_CLK input delay status for RSP-%s.' % rspId)
         for ri in rspId:
             rsp.read_serdes_rx_delay(tc, msg, [ri])
     else:
-        tc.appendLog(11, '>>> Read TX_CLK output delay status for RSP-%s.' % rspId
+        tc.appendLog(11, '>>> Read TX_CLK output delay status for RSP-%s.' % rspId)
         for ri in rspId:
             rsp.read_serdes_tx_delay(tc, msg, [ri])
 else:
@@ -41,19 +41,19 @@ else:
     if clk_delay==0:
         # Reset delay
         if clk_interface=='rx':
-            tc.appendLog(11, '>>> RSP-%s: Reset RX_CLK input delay to default.' % rspId
+            tc.appendLog(11, '>>> RSP-%s: Reset RX_CLK input delay to default.' % rspId)
             rsp.write_serdes_rx_delay(tc, msg, 0, rspId)
         else:
-            tc.appendLog(11, '>>> RSP-%s: Reset TX_CLK output delay to default.' % rspId
+            tc.appendLog(11, '>>> RSP-%s: Reset TX_CLK output delay to default.' % rspId)
             rsp.write_serdes_tx_delay(tc, msg, 0, rspId)
     else:
         # Increment delay
         if clk_interface=='rx':
-            tc.appendLog(11, '>>> RSP-%s: Increment RX_CLK input delay %d times.' % (rspId, clk_delay)
+            tc.appendLog(11, '>>> RSP-%s: Increment RX_CLK input delay %d times.' % (rspId, clk_delay))
             for ri in range(clk_delay):
                 rsp.write_serdes_rx_delay(tc, msg, 1, rspId)
         else:
-            tc.appendLog(11, '>>> RSP-%s: Increment TX_CLK output delay %d times.' % (rspId, clk_delay)
+            tc.appendLog(11, '>>> RSP-%s: Increment TX_CLK output delay %d times.' % (rspId, clk_delay))
             for ri in range(clk_delay):
                 rsp.write_serdes_tx_delay(tc, msg, 1, rspId)
 tc.appendLog(11, '')
