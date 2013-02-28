@@ -10,6 +10,14 @@
 #
 # If it succeeds, it will remove the PID-file and return a zero exit status;
 # otherwise it will return a non-zero exit status.
+#
+# Exit statuses:
+#  -1: incorrect number of arguments supplied
+#   0: success; process was successfully killed 
+#   1: PID-file does not exist or is unreadable
+#   2: failed to send kill signal (no such process, or operation not permitted)
+#   3: process did not terminate within timeout period (30 seconds)
+#
 
 # Print usage message and exit with an error status.
 usage()
