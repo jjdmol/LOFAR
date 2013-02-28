@@ -82,3 +82,8 @@ if ! kill -0 $! 2> /dev/null; then
   exit 1
 fi
 
+# Record the process ID of the Python program in a file.
+pidFile="${LOFARROOT}/var/run/pipeline/$(basename ${parsetFile})/pid"
+mkdir -p "$(dirname ${pidFile})"
+echo "$!" > "${pidFile}"
+
