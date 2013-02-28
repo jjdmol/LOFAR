@@ -27,7 +27,7 @@ lofar_add_bin_program(PythonControl
   PythonControlMain.cc
   PythonControl.cc)
 
-lofar_add_executable(tMDparser tMDparser.cc)
+lofar_add_sbin_program(uploadMetadata uploadMetadata.cc)
 
 install(FILES
   PythonControl.conf
