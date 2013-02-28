@@ -1,4 +1,4 @@
-#!/bin/bash -l
+#!/bin/bash
 #
 # This script is called by MAC PythonControl to stop a pipeline.
 # Usage:
@@ -6,7 +6,7 @@
 #   stopPython.sh <observationID> 
 #
 # The script will try to kill the process with the PID that is stored in the
-# file ${LOFARROOT}/var/run/pipeline/<ObservationID>/pid
+# file /opt/lofar/var/run/pipeline/<ObservationID>/pid
 #
 # If it succeeds, it will remove the PID-file and return a zero exit status;
 # otherwise it will return a non-zero exit status.
@@ -32,22 +32,13 @@ error()
 # Check for correct number of input arguments.
 [[ $# -eq 1 ]] || usage
 
-# Log-file used for logging output of this script
-logFile=/opt/lofar/var/log/stopPython.log
+# Log-file used for logging output of this script.
+logFile="/opt/lofar/var/log/stopPython.log"
 
-# Make sure aliases are expanded, which is not the default for non-interactive
-# shells.
-shopt -s expand_aliases
+# File containing the ID of the process that must be killed.
+pidFile="/opt/lofar/var/run/pipeline/${1}/pid"
 
-# Initialize the environment. We will assume here that we can use the
-# Lofar Login Environment (LLE).
-use Lofar
-. $HOME/LOFAR_Task4204/installed/lofarinit.sh
-
-observationID="${1}"
-pidFile="${LOFARROOT}/var/run/pipeline/${observationID}/pid"
-
-# Check if the PID-file (still) exists.
+# Check if the PID-file exists.
 [[ -r ${pidFile} ]] || error 1 "${pidFile} does not exist or is unreadable"
 
 # Read the PID from the PID-file.
