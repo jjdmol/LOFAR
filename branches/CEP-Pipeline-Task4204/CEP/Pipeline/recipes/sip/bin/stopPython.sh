@@ -30,7 +30,7 @@ error()
 }
 
 # Check for correct number of input arguments.
-[[ $# -eq 1 ]] || usage
+[ $# -eq 1 ] || usage
 
 # Log-file used for logging output of this script.
 logFile="/opt/lofar/var/log/stopPython.log"
@@ -39,7 +39,7 @@ logFile="/opt/lofar/var/log/stopPython.log"
 pidFile="/opt/lofar/var/run/pipeline/${1}/pid"
 
 # Check if the PID-file exists.
-[[ -r ${pidFile} ]] || error 1 "${pidFile} does not exist or is unreadable"
+[ -r ${pidFile} ] || error 1 "${pidFile} does not exist or is unreadable"
 
 # Read the PID from the PID-file.
 pid=$(cat ${pidFile})
