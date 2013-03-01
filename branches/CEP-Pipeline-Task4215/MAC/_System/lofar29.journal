@@ -1,0 +1,31 @@
+Data 			Description
+20050510	Installed RedHat 9
+20050510	su: Installed e1000-5.2.39.tar.gz
+20050510  su: Conf: IP addr 10.87.2.129
+20050510  su: Installed compat-libstdc++-7.3-2.96.118 and compat-libstdc++-devel-7.3-2.96.118
+20050510	su: Installed kernel linux-2.4.21-NANO-SMP (build on lofar26) from now default OS in lilo
+20050510	su: Installed e1000-5.2.39.tar.gz again for linux-2.4.21-NANO-SMP
+20050510	su: Installed PVSS 3.0.1 SP 1 on default location
+20050511	su: Installed log4cplus1.0.2
+20050511	su: Installed boost_1_32_0.tar.gz (including bjam-3.1.7-1-linuxx86.tgz see installation instructions made by RB)
+20050512	su: mkdir /opt/lofar/bin /opt/lofar/etc /opt/lofar/pvssproj
+20050512  su: chmod a+w /opt/lofar/bin /opt/lofar/etc /opt/lofar/pvssproj
+20050512  su: added following lines to /etc/profile.d/pvss.sh:
+					export PVSSHOME=/opt/pvss/pvss2_v3.0
+					export LOFARHOME=/opt/lofar/pvssproj
+					export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PVSSHOME/bin:$PVSSHOME/api/lib.linux_RH90
+					export PATH=$PATH:$PVSSHOME/bin
+20050512  su: added following lines to /etc/profile.d/pvss.csh:
+					setenv PVSSHOME=/opt/pvss/pvss2_v3.0
+					setenv LOFARHOME=/opt/lofar/pvssproj
+					setenv LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PVSSHOME/bin:$PVSSHOME/api/lib.linux_RH90
+					setenv PATH=$PATH:$PVSSHOME/bin
+20050512	created pvssproj: STSLCU / loc: $LOFARHOME / sysname: STSLCU2 / sysnr: 2 / distributed: yes / disthosts: lofar26 3
+20050512	su: added following lines to /etc/hosts
+					10.87.2.126     lofar26 lofar26
+					10.87.2.128     lofar28.astron.nl lofar28
+					10.87.2.129     lofar29.astron.nl lofar29
+					10.87.2.130     lofar30.astron.nl lofar30
+20050513        su: ln -sf /usr/share/zoneinfo/CET /etc/localtime # set correct timezone
+200505013       created symlink /dev/pps0 -> /dev/ttyS0 for PPS input
+0050517        created /etc/sysconfig/network-scripts/ifcfg-eth1 to configure eth1 with ip-adres 192.168.1.29
