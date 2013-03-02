@@ -4,6 +4,7 @@
 #include <Interface/Allocator.h>
 #include <Interface/Exceptions.h>
 #include <Common/NewHandler.h>
+#include <Common/LofarLogger.h>
 
 #include <malloc.h>
 
@@ -51,13 +52,25 @@ void *HeapAllocator::allocate(size_t size, size_t alignment)
 {
   void *ptr;
 
+  // posix_memalign requires at least sizeof(void*) alignment, so
+  // provide an implementation for alignments 1 and 2.
+  if (alignment == 1) {
+    ptr = malloc(size);
+
+    if (!ptr)
+      THROW(BadAllocException,"HeapAllocator could not allocate " << size << " bytes");
+  } else {
+    ASSERT(alignment != 0);
+    ASSERT(alignment % sizeof(void*) == 0);
+
 #if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
-  if (posix_memalign(&ptr, alignment, size) != 0)
-    THROW(BadAllocException,"HeapAllocator could not allocate " << size << " bytes");
+    if (posix_memalign(&ptr, alignment, size) != 0)
+      THROW(BadAllocException,"HeapAllocator could not allocate " << size << " bytes");
 #else
-  if ((ptr = memalign(alignment, size)) == 0)
-    THROW(BadAllocException,"HeapAllocator could not allocate " << size << " bytes");
+    if ((ptr = memalign(alignment, size)) == 0)
+      THROW(BadAllocException,"HeapAllocator could not allocate " << size << " bytes");
 #endif
+  }
 
   return ptr;
 }
