@@ -18,8 +18,8 @@ namespace RTCP {
 class CorrelatedData : public StreamableData, public IntegratableData
 {
   public:
-    CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator & = heapAllocator);
-    CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, std::complex<float> *visibilities, size_t nrVisibilities, Allocator & = heapAllocator);
+    CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator & = heapAllocator, unsigned alignment = 512);
+    CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, std::complex<float> *visibilities, size_t nrVisibilities, Allocator & = heapAllocator, unsigned alignment = 512);
 
     virtual IntegratableData &operator += (const IntegratableData &);
 
@@ -45,9 +45,9 @@ class CorrelatedData : public StreamableData, public IntegratableData
 };
 
 
-inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator &allocator)
+inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator &allocator, unsigned alignment)
 :
-  itsAlignment(512),
+  itsAlignment(alignment),
   itsNrBaselines(nrStations * (nrStations + 1) / 2),
   visibilities(boost::extents[itsNrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], itsAlignment, allocator, true),
   itsNrBytesPerNrValidSamples(maxNrValidSamples < 256 ? 1 : maxNrValidSamples < 65536 ? 2 : 4)
@@ -56,9 +56,9 @@ inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, 
 }
 
 
-inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, std::complex<float> *visibilities, size_t nrVisibilities, Allocator &allocator)
+inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, std::complex<float> *visibilities, size_t nrVisibilities, Allocator &allocator, unsigned alignment)
 :
-  itsAlignment(512),
+  itsAlignment(alignment),
   itsNrBaselines(nrStations * (nrStations + 1) / 2),
   visibilities(boost::extents[itsNrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], visibilities, false),
   itsNrBytesPerNrValidSamples(maxNrValidSamples < 256 ? 1 : maxNrValidSamples < 65536 ? 2 : 4)
@@ -129,7 +129,7 @@ inline void CorrelatedData::readData(Stream *str)
 
 inline void CorrelatedData::writeData(Stream *str) 
 {
-  str->write(visibilities.origin(), align(visibilities.num_elements() * sizeof(fcomplex), itsAlignment));
+  str->write(visibilities.origin(), align(visibilities.num_elements() * sizeof *visibilities.origin(), itsAlignment));
 
   switch (itsNrBytesPerNrValidSamples) {
     case 4 : str->write(itsNrValidSamples4.origin(), align(itsNrValidSamples4.num_elements() * sizeof(uint32_t), itsAlignment));
