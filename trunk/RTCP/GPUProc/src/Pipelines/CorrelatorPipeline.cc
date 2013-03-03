@@ -14,7 +14,7 @@
 #include "CorrelatorPipeline.h"
 #include "WorkQueues/CorrelatorWorkQueue.h"
 #include "BeamletBufferToComputeNode.h"
-#include <Interface/SubbandMetaData.h>
+#include <SubbandMetaData.h>
 
 namespace LOFAR
 {
@@ -132,14 +132,14 @@ namespace LOFAR
         unsigned beam = ps.subbandToSAPmapping()[subband];
 
         // read meta data
-        SubbandMetaData metaData(1, header.nrDelays);
+        SubbandMetaData metaData(header.nrTABs);
         metaData.read(stream);
 
         // flag the input data.
         flagInputSamples(workQueue, stat, metaData);
 
-        // the first set of delays represents the central beam, which is the one we correlate
-        struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[0];
+        // extract delays for the station beam
+        struct SubbandMetaData::beamInfo &beamInfo = metaData.stationBeam;
 
         for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
           workQueue.delaysAtBegin[beam][stat][pol]  = beamInfo.delayAtBegin;
@@ -240,7 +240,7 @@ namespace LOFAR
     {
       // Get the flags that indicate missing data samples as a vector of
       // SparseSet::Ranges
-      SparseSet<unsigned>::Ranges flags = metaData.getFlags(0).getRanges();
+      SparseSet<unsigned>::Ranges flags = metaData.flags.getRanges();
 
       // Get the size of a sample in bytes.
       size_t sizeof_sample = sizeof *workQueue.inputSamples.origin();
