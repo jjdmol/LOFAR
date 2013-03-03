@@ -12,6 +12,9 @@ namespace RTCP {
 // There is a strict separation between a memory allocator and the physical
 // memory (arena) that it manages.
 
+/*
+ * Arena owns a chunk of memory for SparseSetAllocator to play in.
+ */
 class Arena
 {
   public:
@@ -26,6 +29,9 @@ class Arena
 };
 
 
+/*
+ * MallocedArena allocates memory using malloc.
+ */
 class MallocedArena : public Arena
 {
   public:
@@ -34,6 +40,10 @@ class MallocedArena : public Arena
 };
 
 
+/*
+ * FixedArena represents an externally allocated
+ * piece of memory.
+ */
 class FixedArena : public Arena
 {
   public:
@@ -41,6 +51,9 @@ class FixedArena : public Arena
 };
 
 
+/*
+ * An Allocator can both allocate and deallocate pointers.
+ */
 class Allocator
 {
   public:
@@ -70,6 +83,9 @@ class Allocator
 };
 
 
+/*
+ * Allocates memory on the heap.
+ */
 class HeapAllocator : public Allocator
 {
   public:
@@ -82,6 +98,10 @@ class HeapAllocator : public Allocator
 extern HeapAllocator heapAllocator;
 
 
+/*
+ * Allocates memory within an Arena, using a simple
+ * memory manager based on a SparseSet.
+ */
 class SparseSetAllocator : public Allocator
 {
   public:
