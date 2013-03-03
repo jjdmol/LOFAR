@@ -18,8 +18,6 @@ namespace RTCP {
 class Arena
 {
   public:
-    virtual	~Arena();
-
     void	*begin() const { return itsBegin; }
     size_t	size() const { return itsSize; }
   
@@ -32,11 +30,11 @@ class Arena
 /*
  * MallocedArena allocates memory using malloc.
  */
-class MallocedArena : public Arena
+class MallocedArena: public Arena
 {
   public:
 		MallocedArena(size_t size, size_t alignment);
-    virtual	~MallocedArena();
+    ~MallocedArena();
 };
 
 
@@ -101,6 +99,8 @@ extern HeapAllocator heapAllocator;
 /*
  * Allocates memory within an Arena, using a simple
  * memory manager based on a SparseSet.
+ *
+ * The allocator is deterministic.
  */
 class SparseSetAllocator : public Allocator
 {
