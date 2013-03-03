@@ -155,7 +155,7 @@ namespace LOFAR
     void CorrelatorPipeline::sendSubbandVisibilities(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
     {
       // Create an data object to Storage around our visibilities
-      CorrelatedData data(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), workQueue.visibilities.origin(), workQueue.visibilities.num_elements());
+      CorrelatedData data(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), workQueue.visibilities.origin(), workQueue.visibilities.num_elements(), heapAllocator, 1);
 
       // Add weights
       // TODO: base weights on flags
