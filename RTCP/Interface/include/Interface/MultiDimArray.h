@@ -261,11 +261,24 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
     }
 
   private:
-    // needs to be a pointer to be swappable in resize()
+    // All members need to be mutable to be able to swap them in resize()
+
+    // Allocator with which the array was allocated, or NULL if the memory
+    // was externally allocated.
     Allocator *allocator;
+
+    // Number of elements that were originally allocated.
     size_t    allocated_num_elements;
+
+    // Alignment for the first element.
     unsigned  alignment;
+
+    // If padToAlignment is true, the memory allocated is also padded towards
+    // the specified alignment.
     bool      padToAlignment;
+
+    // If construct is true, the elements have been constructed by us.
+    // If construct is false, the elements have been constructed externally.
     bool      construct;
 
     T *allocate(size_t nrElements, size_t alignment, Allocator &allocator, bool padToAlignment, bool construct) const {
