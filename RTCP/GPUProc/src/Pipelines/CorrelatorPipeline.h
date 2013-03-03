@@ -9,6 +9,7 @@
 #include "Pipeline.h"
 #include "FilterBank.h"
 #include "PerformanceCounter.h"
+#include "SubbandMetaData.h"
 #include "Pipelines/CorrelatorPipelinePrograms.h"
 #include "Pipelines/CorrelatorPipelineCounters.h"
 
