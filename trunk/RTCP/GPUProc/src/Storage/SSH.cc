@@ -657,18 +657,22 @@ bool SSH_Init() {
   CRYPTO_set_id_callback(&thread_id_callback);
   CRYPTO_set_locking_callback(&lock_callback);
 
+#if LIBSSH2_VERSION_NUM >= 0x010205
   // initialise libssh2
   int rc = libssh2_init(0);
 
   if (rc)
     return false;
+#endif
 
   return true;
 }
 
 void SSH_Finalize() {
+#if LIBSSH2_VERSION_NUM >= 0x010205
   // exit libssh2
   libssh2_exit();
+#endif
 
   // exit openssl
   CRYPTO_set_locking_callback(NULL);
