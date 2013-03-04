@@ -297,10 +297,17 @@ LIBSSH2_SESSION *SSHconnection::open_session( FileDescriptorBasedStream &sock )
   /* ... start it up. This will trade welcome banners, exchange keys,
    * and setup crypto, compression, and MAC layers
    */
+#if LIBSSH2_VERSION_NUM >= 0x010208
   while ((rc = libssh2_session_handshake(session, sock.fd)) ==
          LIBSSH2_ERROR_EAGAIN) {
     waitsocket(session, sock);
   }
+#else
+  while ((rc = libssh2_session_startup(session, sock.fd)) ==
+         LIBSSH2_ERROR_EAGAIN) {
+    waitsocket(session, sock);
+  }
+#endif
 
   /* NOTE: libssh2 now holds a copy of sock.fd, so don't invalidate it! */
 
@@ -610,8 +617,12 @@ void SSHconnection::commThread()
   if (rc == 0)
   {
     exitcode = libssh2_channel_get_exit_status(channel);
+#if LIBSSH2_VERSION_NUM >= 0x010402 // unknown
     libssh2_channel_get_exit_signal(channel, &exitsignal,
                                     NULL, NULL, NULL, NULL, NULL);
+#else
+    exitsignal = 0;
+#endif
   } else {
     exitcode = 127;
   }
