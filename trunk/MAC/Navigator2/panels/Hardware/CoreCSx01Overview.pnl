@@ -57,8 +57,34 @@ void reload() {
 ""0  1
 E "#uses \"navPanel.ctl\"
 string      baseDP   = \"\";
+bool    bDoubleClicked  = false;
 
-" 0
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {  
+    navPanel_setEvent(\"CoreCSx01\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  panelSelection=\"SuperTerpOverview.pnl\";
+  navPanel_setEvent(\"panelChoice:\"+panelSelection,\"ChangePanel\");
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"CoreCSx01\",\"EventRightClick\");
+}" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -67,6 +93,20 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
+7 193
+"ELLIPSE2"
+""
+1 455 405 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+81 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 1 2 1 2 1 E 1 0 1 11 -32 1 E 419 382 194 194
 6 6
 "Border3"
 ""
@@ -85,7 +125,15 @@ E E 0 1 1 0 1 E U  1 E 0 0 1008 744
 "ELLIPSE1"
 ""
 1 705 435 E E E 1 E 1 E N {0,0,0} E N {39,156,0,245} E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 62 0 0 0 0 0
 E E E
 0
@@ -94,7 +142,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 10 -30 1 E 420 380 137 137
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 1 10 -30 1 E 420 380 137 137
 1 194 1 "" 0
 0
 1 195 1 "" 1
@@ -146,7 +198,15 @@ LANG:1 19 Core Stations CSx01
 "PRIMITIVE_TEXT9"
 ""
 1 380 320 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 80 0 0 0 0 0
 E E E
 0
@@ -155,7 +215,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 380 320 474 368
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  0 E 380 320 474 368
 0 2 2 "0s" 0 0 0 192 0 0  380 320 2
 1
 LANG:1 35 MS Shell Dlg 2,14,-1,5,75,0,0,0,0,0
@@ -165,89 +229,89 @@ LANG:1 9 Superterp
 LANG:1 35 MS Shell Dlg 2,14,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 8    CS0nn
-7 193
-"ELLIPSE2"
-""
-1 455 405 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
- E E
-81 0 0 0 0 0
-E E E
+1 208 2 "" 6
 0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 1 2 1 2 1 E 1 0 1 10 -34 1 E 419 382 194 194
-1 208 2 "" 1
+1 209 2 "" 1
 0
-1 209 2 "" 2
+1 210 2 "" 2
 0
-1 210 2 "" 3
+1 211 2 "" 3
 0
-1 211 2 "" 4
+1 212 2 "" 4
 0
-1 212 2 "" 5
+1 213 2 "" 5
 0
-1 213 3 "" 1
+1 214 3 "" 6
 0
-1 214 3 "" 2
+1 215 3 "" 1
 0
-1 215 3 "" 3
+1 216 3 "" 2
 0
-1 216 3 "" 4
+1 217 3 "" 3
 0
-1 217 3 "" 5
+1 218 3 "" 4
 0
-1 218 4 "" 1
+1 219 3 "" 5
 0
-1 219 4 "" 2
+1 220 4 "" 6
 0
-1 220 4 "" 3
+1 221 4 "" 1
 0
-1 221 4 "" 4
+1 222 4 "" 2
 0
-1 222 4 "" 5
+1 223 4 "" 3
 0
-1 223 5 "" 1
+1 224 4 "" 4
 0
-1 224 5 "" 2
+1 225 4 "" 5
 0
-1 225 5 "" 3
+1 226 5 "" 6
 0
-1 226 5 "" 4
+1 227 5 "" 1
 0
-1 227 5 "" 5
+1 228 5 "" 2
 0
-1 228 6 "" 1
+1 229 5 "" 3
 0
-1 229 6 "" 2
+1 230 5 "" 4
 0
-1 230 6 "" 3
+1 231 5 "" 5
 0
-1 231 6 "" 4
+1 232 6 "" 6
 0
-1 232 6 "" 5
+1 233 6 "" 1
 0
-1 233 7 "" 1
+1 234 6 "" 2
 0
-1 234 7 "" 2
+1 235 6 "" 3
 0
-1 235 7 "" 3
+1 236 6 "" 4
 0
-1 236 7 "" 4
+1 237 6 "" 5
 0
-1 237 7 "" 5
+1 238 7 "" 6
 0
-1 238 8 "" 1
+1 239 7 "" 1
 0
-1 239 8 "" 2
+1 240 7 "" 2
 0
-1 240 8 "" 3
+1 241 7 "" 3
 0
-1 241 8 "" 4
+1 242 7 "" 4
 0
-1 242 8 "" 5
+1 243 7 "" 5
+0
+1 244 8 "" 6
+0
+1 245 8 "" 1
+0
+1 246 8 "" 2
+0
+1 247 8 "" 3
+0
+1 248 8 "" 4
+0
+1 249 8 "" 5
 0
 0
 LAYER, 1 
