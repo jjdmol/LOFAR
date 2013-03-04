@@ -153,7 +153,11 @@ static const char *explainLibSSH2Error( int error )
 
       case LIBSSH2_ERROR_NONE:			        explanation ="LIBSSH2_ERROR_NONE"; break;
       case LIBSSH2_ERROR_SOCKET_NONE:			explanation ="LIBSSH2_ERROR_SOCKET_NONE"; break;
+#if LIBSSH2_VERSION_NUM > 0x010207
       case LIBSSH2_ERROR_BANNER_RECV:			explanation ="LIBSSH2_ERROR_BANNER_RECV"; break;
+#else
+      case LIBSSH2_ERROR_BANNER_NONE:			explanation ="LIBSSH2_ERROR_BANNER_NONE"; break;
+#endif
       case LIBSSH2_ERROR_BANNER_SEND:			explanation ="LIBSSH2_ERROR_BANNER_SEND"; break;
       case LIBSSH2_ERROR_INVALID_MAC:			explanation ="LIBSSH2_ERROR_INVALID_MAC"; break;
       case LIBSSH2_ERROR_KEX_FAILURE:			explanation ="LIBSSH2_ERROR_KEX_FAILURE"; break;
