@@ -73,7 +73,7 @@ void dblClick() {
   // indicate this is a doubleClick
   bDoubleClicked = true;   
   
-  panelSelection=\"CoreCSx01Overview.pnl\";
+  panelSelection=\"SuperTerpOverview.pnl\";
   navPanel_setEvent(\"panelChoice:\"+panelSelection,\"ChangePanel\");
   
   // set delay to avoid click event will be triggered
@@ -305,7 +305,15 @@ LANG:1 19 Core Stations CS0nn
 "PRIMITIVE_TEXT9"
 ""
 1 386 354 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 80 0 0 0 0 0
 E E E
 0
@@ -314,7 +322,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 386 354 452 370
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  0 E 386 354 452 370
 0 2 2 "0s" 0 0 0 192 0 0  386 354 1
 1
 LANG:1 35 MS Shell Dlg 2,10,-1,5,75,0,0,0,0,0
