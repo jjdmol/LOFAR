@@ -73,7 +73,7 @@ void dblClick() {
   // indicate this is a doubleClick
   bDoubleClicked = true;   
   
-  panelSelection=\"SuperTerpOverview.pnl\";
+  panelSelection=\"CS0nnOverview.pnl\";
   navPanel_setEvent(\"panelChoice:\"+panelSelection,\"ChangePanel\");
   
   // set delay to avoid click event will be triggered
