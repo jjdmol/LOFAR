@@ -34,9 +34,9 @@
 #include <Interface/SmartPtr.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
-#include <BeamletBuffer.h>
-#include <InputThread.h>
-#include <RSP.h>
+#include <Input/BeamletBuffer.h>
+#include <Input/InputThread.h>
+#include <Input/RSP.h>
 #include <Scheduling.h>
 #include <Common/Thread/Cancellation.h>
 

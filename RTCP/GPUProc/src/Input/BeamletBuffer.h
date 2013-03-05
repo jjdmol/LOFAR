@@ -38,8 +38,8 @@
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
 #include <Interface/SparseSet.h>
-#include <LockedRanges.h>
-#include <ReaderWriterSynchronization.h>
+#include <Input/LockedRanges.h>
+#include <Input/ReaderWriterSynchronization.h>
 #include <Stream/Stream.h>
 #include <Common/Thread/Mutex.h>
 

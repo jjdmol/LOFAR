@@ -25,7 +25,7 @@
 
 #include <Interface/RSPTimeStamp.h>
 #include <SlidingPointer.h>
-#include <WallClockTime.h>
+#include <Input/WallClockTime.h>
 
 #include <pthread.h>
 

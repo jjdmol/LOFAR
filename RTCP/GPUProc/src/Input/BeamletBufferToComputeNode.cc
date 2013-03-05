@@ -28,10 +28,10 @@
 #include <Common/PrettyUnits.h>
 #include <Common/LofarLogger.h>
 #include <Stream/FixedBufferStream.h>
-#include <BeamletBufferToComputeNode.h>
-#include <BeamletBuffer.h>
-#include <ION_Allocator.h>
-#include <Scheduling.h>
+#include <Input/BeamletBufferToComputeNode.h>
+#include <Input/BeamletBuffer.h>
+#include <Input/ION_Allocator.h>
+#include <Input/Scheduling.h>
 #include <SubbandMetaData.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/CN_Command.h>
