@@ -13,7 +13,7 @@
 
 #include "CorrelatorPipeline.h"
 #include "WorkQueues/CorrelatorWorkQueue.h"
-#include "BeamletBufferToComputeNode.h"
+#include "Input/BeamletBufferToComputeNode.h"
 #include <SubbandMetaData.h>
 
 namespace LOFAR
