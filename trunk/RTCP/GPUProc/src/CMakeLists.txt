@@ -16,7 +16,6 @@ lofar_add_library(gpuproc
   Input/BeamletBufferToComputeNode.cc
   Input/InputSection.cc
   Input/InputThread.cc
-  Input/ION_Allocator.cc
   Input/LogThread.cc
   Input/ReaderWriterSynchronization.cc
   Storage/SSH.cc
