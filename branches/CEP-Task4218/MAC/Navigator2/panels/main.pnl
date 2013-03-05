@@ -402,8 +402,8 @@ void addStationView() {
 }
 
 void addObservations() {
-  int xPos_AddSymbol = 5; 
-  int yPos_AddSymbol = 565; 
+  int xPos_AddSymbol = 0; 
+  int yPos_AddSymbol = 585; 
   int ref = 1;
   string addPanelName    = \"objects/Observations/observation_smallCEPView.pnl\";
   //loop over list and prepare panel with all stations and swlevel objects   
@@ -808,12 +808,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 10 556 131 569
+E E 0 1 1 2 1 E U  0 E 10 556 200 569
 0 2 2 "0s" 0 0 0 192 0 0  10 556 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 20 CEP Observation View
+LANG:1 46 CEP View                               Streams
 2 44
 "PRIMITIVE_TEXT16"
 ""
@@ -890,6 +890,25 @@ E E 0 1 1 2 1 E U  0 E 745 10 792 23
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 7 HBA LBA
+2 48
+"PRIMITIVE_TEXT20"
+""
+1 10 572 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 10 572 292 585
+0 2 2 "0s" 0 0 0 192 0 0  10 572 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 80                                        0        1        2       3      dropping
 0
 LAYER, 1 
 1

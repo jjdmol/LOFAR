@@ -9,6 +9,8 @@ option(USE_LOG4CPLUS "Use Log4Cplus" OFF)
 option(USE_OPENMP    "Use OpenMP"    ON)
 option(USE_MPI       "Use MPI"       ON)
 
+set(ENV{OPENCL_INCLUDE} /cm/shared/apps/cuda41/toolkit/4.1.28/include)
 set(CASACORE_ROOT_DIR /home/mol/root)
 set(LIBSSH2_ROOT_DIR /home/mol/root)
+set(DAL_ROOT_DIR /home/mol/root)
 set(UNITTEST++_ROOT_DIR /cm/shared/apps/UnitTest++)

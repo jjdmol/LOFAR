@@ -142,7 +142,8 @@ public:
 								  uint32		depth);
 	// Get a list of nodes based on a namefragment. Use '%' as wildchar.
 	vector<OTDBnode> getItemList (treeIDType	aTreeID,
-								  const string&	aNameFragment);
+								  const string&	aNameFragment,
+								  bool			isRegex = false);
 
 	// Duplicates the given node (and its parameters and children)
 	// in the template database. The duplicate gets the new index.

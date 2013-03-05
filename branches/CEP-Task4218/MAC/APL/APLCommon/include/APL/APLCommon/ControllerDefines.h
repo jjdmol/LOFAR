@@ -58,6 +58,7 @@ enum
 	CT_RESULT_NO_PARSET,
 	CT_RESULT_UNKNOWN_OBSERVATION,
 	CT_RESULT_PIPELINE_FAILED,			// QUICK FIX #3633
+	CT_RESULT_EMERGENCY_TIMEOUT,
     CT_RESULT_UNSPECIFIED
 };
 
@@ -71,14 +72,14 @@ enum	{
 	CNTLRTYPE_OBSERVATIONCTRL,			// ObservationControl
 	CNTLRTYPE_ONLINECTRL,				// OnlineControl
 	CNTLRTYPE_OFFLINECTRL,				// OfflineControl
-	CNTLRTYPE_BEAMDIRECTIONCTRL,		// BeamDirectionControl
-	CNTLRTYPE_GROUPCTRL,				// RingControl
+	CNTLRTYPE_BEAMDIRECTIONCTRL,		// BeamDirectionControl		// not used
+	CNTLRTYPE_GROUPCTRL,				// RingControl				// not used
 	CNTLRTYPE_STATIONCTRL,				// StationControl
 	CNTLRTYPE_CLOCKCTRL,				// ClockControl
 	CNTLRTYPE_BEAMCTRL,					// BeamControl
 	CNTLRTYPE_CALIBRATIONCTRL,			// CalibrationControl
 	CNTLRTYPE_TBBCTRL,					// TBBControl
-	CNTLRTYPE_STATIONINFRACTRL,			// StationInfraControl
+	CNTLRTYPE_STATIONINFRACTRL,			// StationInfraControl		// not used
 	CNTLRTYPE_TESTCTRL,					// StationControl
 	
 	CNTLRTYPE_NR_TYPES					// should always be the last

@@ -2,7 +2,7 @@
 #define __RSPBOARDS__
 
 #include "BufferSettings.h"
-#include <IONProc/WallClockTime.h>
+#include "WallClockTime.h"
 #include <string>
 #include <vector>
 

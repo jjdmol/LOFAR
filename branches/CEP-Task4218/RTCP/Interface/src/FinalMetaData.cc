@@ -139,5 +139,39 @@ void FinalMetaData::read(Stream &s)
   StreamWriter< std::vector<struct BrokenRCU> >::read(s, brokenRCUsDuring);
 }
 
+std::ostream& operator<<(std::ostream& os, const struct FinalMetaData::BrokenRCU &rcu)
+{
+  os << "(" << rcu.station << " " << rcu.type << " " << rcu.seqnr << " " << rcu.time << ")";
+
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const FinalMetaData &finalMetaData)
+{
+  os << "Broken RCUs at begin of obs: ";
+
+  for (size_t i = 0; i < finalMetaData.brokenRCUsAtBegin.size(); i++) {
+    const struct FinalMetaData::BrokenRCU &rcu = finalMetaData.brokenRCUsAtBegin[i];
+
+    if (i > 0)
+      os << ", ";
+
+    os << rcu;
+  }
+
+  os << " Broken RCUs during obs: ";
+
+  for (size_t i = 0; i < finalMetaData.brokenRCUsDuring.size(); i++) {
+    const struct FinalMetaData::BrokenRCU &rcu = finalMetaData.brokenRCUsDuring[i];
+
+    if (i > 0)
+      os << ", ";
+
+    os << rcu;
+  }
+
+  return os;
+}
+
 }
 }

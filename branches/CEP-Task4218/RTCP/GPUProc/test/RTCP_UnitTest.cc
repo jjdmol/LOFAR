@@ -21,6 +21,7 @@
 #include "UnitTests/CorrelateRectangleTest.h"
 #include "UnitTests/CorrelatorTest.h"
 #include "UnitTests/FFT_Test.h"
+#include "UnitTests/FIR_FilterTest.h"
 
 //#include  <UnitTest++.h>  
 
@@ -43,6 +44,15 @@ int main(int argc, char **argv)
     }
 
     Parset ps(argv[1]);
+
+    // TODO: defines to vars + loop over val ranges.
+    std::cout << "Obs ps: nSt=" << ps.nrStations() << " nPol=" << NR_POLARIZATIONS
+              << " nSampPerCh=" << ps.nrSamplesPerChannel() << " nChPerSb="
+              << ps.nrChannelsPerSubband() << " nTaps=" << ps.nrPPFTaps()
+              << " nBitsPerSamp=" << ps.nrBitsPerSample() << std::endl;
+
+
+    (FIR_FilterTest)(ps);
 
     //(CorrelatorTest)(ps);       //needs parset AARTFAAC!!
     //(CorrelateRectangleTest)(ps); //needs parset AARTFAAC!!

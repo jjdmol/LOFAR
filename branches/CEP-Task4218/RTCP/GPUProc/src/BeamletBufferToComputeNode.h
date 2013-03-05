@@ -30,7 +30,6 @@
 #include <Interface/Parset.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
-#include <Interface/SubbandMetaData.h>
 #include <Stream/Stream.h>
 #include <BeamletBuffer.h>
 #include <Delays.h>
@@ -56,7 +55,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
       unsigned subband;
       size_t nrSamples;
       size_t sampleSize;
-      size_t nrDelays;
+      size_t nrTABs;
     };
   
     void			 process( Stream *stream );

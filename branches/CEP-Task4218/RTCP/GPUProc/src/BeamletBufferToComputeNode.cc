@@ -32,6 +32,7 @@
 #include <BeamletBuffer.h>
 #include <ION_Allocator.h>
 #include <Scheduling.h>
+#include <SubbandMetaData.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Mapping.h>
@@ -266,7 +267,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sen
   header.subband    = subband;
   header.nrSamples  = itsNrSamplesPerSubband + itsNrHistorySamples;
   header.sampleSize = NR_POLARIZATIONS * sizeof(SAMPLE_TYPE);
-  header.nrDelays   = itsNrTABs[beam] + 1;
+  header.nrTABs     = itsNrTABs[beam];
 
   // send header
   stream->write(&header, sizeof header);
@@ -275,11 +276,11 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sen
   itsBeamletBuffers[rspBoard]->sendUnalignedSubband(stream, rspSlot, beam);
 
   // send meta data
-  SubbandMetaData metaData(1, itsNrTABs[beam] + 1);
+  SubbandMetaData metaData(itsNrTABs[beam] + 1);
 
   if (itsNeedDelays) {
     for (unsigned p = 0; p < itsNrTABs[beam] + 1; p ++) {
-      struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(0)[p];
+      struct SubbandMetaData::beamInfo &beamInfo = (p == 0 ? metaData.stationBeam : metaData.TABs[p - 1]);
 
       beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
       beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
@@ -295,8 +296,7 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sen
     }
   }
 
-  metaData.alignmentShift(0) = 0;
-  metaData.setFlags(0, itsFlags[rspBoard][beam]);
+  metaData.flags = itsFlags[rspBoard][beam];
 
   metaData.write(stream);
 }

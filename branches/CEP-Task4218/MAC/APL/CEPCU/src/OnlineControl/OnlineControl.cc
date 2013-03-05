@@ -48,8 +48,6 @@
 #include "Response.h"
 #include "forkexec.h"
 #include <OTDB/TreeValue.h>			// << need to include this after OnlineControl! ???
-#include <OTDB/TreeMaintenance.h>
-#include <OTDB/TreeStateConv.h>
 #include "PVSSDatapointDefs.h"
 
 using namespace LOFAR::GCF::PVSS;
@@ -79,6 +77,7 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsParentControl	(0),
 	itsParentPort		(0),
 	itsTimerPort		(0),
+	itsForcedQuitTimer	(0),
 	itsLogControlPort	(0),
 	itsState			(CTState::NOSTATE),
 	itsFeedbackListener	(0),					// QUICK FIX #4022
@@ -91,7 +90,7 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsStopTimerID      (0),
 	itsFinishTimerID 	(0),
 	itsInFinishState	(false),
-	itsFeedbackAvailable(false)
+	itsForceTimeout		(3600.0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -110,13 +109,18 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
+	ASSERTSTR(itsTimerPort, "Can't allocate the timer!");
 
 	// Controlport to logprocessor
 	itsLogControlPort = new GCFTCPPort(*this, MAC_SVCMASK_CEPLOGCONTROL, GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+	ASSERTSTR(itsLogControlPort, "Can't allocate the logControlPort");
 
 	// QUICK FIX #4022
 	itsFeedbackListener = new GCFTCPPort (*this, "Feedbacklistener", GCFPortInterface::MSPP, CONTROLLER_PROTOCOL);
 	ASSERTSTR(itsFeedbackListener, "Cannot allocate TCP port for feedback");
+	itsForcedQuitTimer = new GCFTimerPort(*this, "EmergencyTimer");
+	ASSERTSTR(itsForcedQuitTimer, "Can't allocate the emergency timer!");
+	itsForceTimeout = globalParameterSet()->getTime("emergencyTimeout", 3600);
 
 	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
@@ -175,8 +179,7 @@ void OnlineControl::finish(int	result)
 void    OnlineControl::_setState(CTState::CTstateNr     newState)
 {
 	CTState		cts;
-	LOG_DEBUG_STR ("Going from state " << cts.name(itsState) << " to " 
-										<< cts.name(newState));
+	LOG_DEBUG_STR ("Going from state " << cts.name(itsState) << " to " << cts.name(newState));
 	itsState = newState;
 
 	// Update PVSS to inform operator.
@@ -238,8 +241,7 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, GCFPortInterface
 											 PST_ONLINE_CONTROL,
 											 PSAT_RW,
 											 this);
-		}
-		break;
+	} break;
 
 	case DP_CREATED: {
 		// NOTE: this function may be called DURING the construction of the PropertySet.
@@ -248,8 +250,7 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, GCFPortInterface
 		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
 		itsTimerPort->cancelAllTimers();
 		itsTimerPort->setTimer(0.1);
-		}
-		break;
+	} break;
 
 	case F_TIMER: {	// must be timer that PropSet is online.
 		// update PVSS.
@@ -259,8 +260,7 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, GCFPortInterface
 
    		LOG_DEBUG ("Going to create BGPAppl datapoint");
 		TRAN(OnlineControl::propset_state);				// go to next state.
-		}
-		break;
+	} break;
 
 	case F_CONNECTED:
 		break;
@@ -298,8 +298,7 @@ GCFEvent::TResult OnlineControl::propset_state(GCFEvent& event, GCFPortInterface
 											 PST_BGP_APPL,
 											 PSAT_RW,
 											 this);
-		}
-		break;
+	} break;
 
 	case DP_CREATED: {
 		// NOTE: this function may be called DURING the construction of the PropertySet.
@@ -308,8 +307,7 @@ GCFEvent::TResult OnlineControl::propset_state(GCFEvent& event, GCFPortInterface
 		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
 		itsTimerPort->cancelAllTimers();
 		itsTimerPort->setTimer(0.1);
-		}
-		break;
+	} break;
 
 	case F_TIMER: {	// must be timer that PropSet is online.
 		// start StopTimer for safety.
@@ -330,8 +328,7 @@ GCFEvent::TResult OnlineControl::propset_state(GCFEvent& event, GCFPortInterface
 
 		LOG_DEBUG ("Going to operational state");
 		TRAN(OnlineControl::active_state);				// go to next state.
-		}
-		break;
+	} break;
 
 	case F_CONNECTED:
 		break;
@@ -395,15 +392,15 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		if (timerEvent.id == itsStopTimerID) {
 			LOG_DEBUG("StopTimer expired, starting QUIT sequence");
 			itsStopTimerID = 0;
-			finish(itsFeedbackResult);
-//			itsFinishTimerID = itsTimerPort->setTimer(30.0);
+			_setState(CTState::QUIT);
+			_stopApplications();
+			itsForcedQuitTimer->setTimer(itsForceTimeout);
+			// wait for ABORT or FINISHED from applications or timer to expire.
 		}
-#if 0
-		else if (timerEvent.id == itsFinishTimerID) {
+		else if (&port == itsForcedQuitTimer) {
 			LOG_INFO("Forcing quit");
-			GCFScheduler::instance()->stop();
+			finish(CT_RESULT_EMERGENCY_TIMEOUT);
 		}
-#endif
 		else {
 			LOG_WARN_STR("Received unknown timer event");
 		}
@@ -422,7 +419,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		// execute this state
 		_setState(CTState::CONNECT);
 		_setupBGPmappingTables();
-		uint32 result = _doBoot();			// start ACC's and boot them
+		uint32 result = _startApplications();			// prep parset and call startBGP.sh
 		// respond to parent
 		sendControlResult(port, event.signal, msg.cntlrName, result);
 		if (result == CT_RESULT_NO_ERROR) {
@@ -483,99 +480,14 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		CONTROLQuitEvent		msg(event);
 		LOG_DEBUG_STR("Received QUIT(" << msg.cntlrName << ")");
 		_setState(CTState::QUIT);
-		finish(itsFeedbackResult);
+		_stopApplications();
+		itsForcedQuitTimer->setTimer(itsForceTimeout);
+		// wait for ABORT or FINISHED from applications or timer to expire.
 		break;
 	}
 
 	default:
 		LOG_DEBUG("active_state, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}
-
-	return (status);
-}
-
-//
-// finishing_state(event, port)
-//
-//
-GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
-{
-	LOG_INFO_STR ("finishing:" << eventName(event) << "@" << port.getName());
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
-	switch (event.signal) {
-	case F_ENTRY: {
-		if (itsInFinishState) {
-			LOG_WARN("Already in finish state, ignoring request");
-			return (status);
-		}
-		itsInFinishState = true;
-		itsTimerPort->cancelAllTimers();
-
-		// update PVSS
-		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("stopping"));
-		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
-
-		ParameterSet*	thePS  = globalParameterSet();		// shortcut to global PS.
-		uint32	obsID   = thePS->getUint32("Observation.ObsID");
-		vector<string> applList = thePS->getStringVector("applications");
-		for (size_t a = 0; a < applList.size(); a++) {
-			// Initialize basic variables
-			string 	applName  (applList[a]);
-			string	applPrefix(applName+".");
-			vector<string> procNames = thePS->getStringVector(applPrefix+"processes","[]");
-			string	procName = procNames[0];
-			string	accHost  = thePS->getString(applPrefix+"_hostname", "UNKNOWN_HOST");
-
-			// send stop to BGP
-			string stopCmd = formatString("ssh %s stopBGL.sh %s %d", 
-								accHost.c_str(),
-								procName.c_str(),
-								obsID);
-			LOG_INFO_STR("About to execute: " << stopCmd);
-			uint32	result = forkexec(stopCmd.c_str());
-			LOG_INFO_STR ("Result of command = " << result);
-		}
-
-		// construct system command for starting an inspection program to qualify the measured data
-		string  myPrefix    (thePS->locateModule("OnlineControl")+"OnlineControl.");
-		string	inspectProg (thePS->getString(myPrefix+"inspectionProgram",  "@inspectionProgram@"));
-		string	inspectHost (thePS->getString(myPrefix+"inspectionHost",     "@inspectionHost@"));
-		bool	onRemoteMachine(inspectHost != myHostname(false)  && inspectHost != myHostname(true));
-		string	startCmd;
-		if (onRemoteMachine) {
-			startCmd = formatString("ssh %s %s %d &", inspectHost.c_str(), inspectProg.c_str(), obsID);
-		}
-		else {
-			startCmd = formatString("%s %d &", inspectProg.c_str(), obsID);
-		}
-		LOG_INFO_STR("About to start: " << startCmd);
-		uint32	result = forkexec(startCmd.c_str());
-		LOG_INFO_STR ("Result of command = " << result);
-
-		if (itsFeedbackAvailable) {
-			TRAN(OnlineControl::completing_state);
-		}
-		break;
-	}
-
-	case F_ACCEPT_REQ: {
-		_handleAcceptRequest(port);
-	} break;
-
-	case F_DISCONNECTED: {
-		_handleDisconnect(port);
-	} break;
-
-	case F_DATAIN: {
-		_handleDataIn(port);		// may switch to completing state
-	} break;
-
-	default:
-		LOG_DEBUG("finishing_state, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -591,16 +503,48 @@ GCFEvent::TResult OnlineControl::completing_state(GCFEvent& event, GCFPortInterf
 {
 	LOG_INFO_STR ("completing:" << eventName(event) << "@" << port.getName());
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("completing"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
+		itsInFinishState = true;
 
 		_passMetadatToOTDB();
 
+		TRAN(OnlineControl::finishing_state);
+	} break;
+
+	case F_TIMER:
+		break;
+
+	case F_DISCONNECTED:
+		_handleDisconnect(port);
+		break;
+
+	case F_DATAIN:
+		_handleDataIn(port);
+		break;
+
+	default:
+		LOG_DEBUG("completing state default");
+		return (GCFEvent::NOT_HANDLED);
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
+//
+// finishing_state(event, port)
+//
+//
+GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_INFO_STR ("finishing:" << eventName(event) << "@" << port.getName());
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		// update PVSS
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 
@@ -608,7 +552,7 @@ GCFEvent::TResult OnlineControl::completing_state(GCFEvent& event, GCFPortInterf
 		msg.cntlrName = itsMyName;
 		msg.result = itsFeedbackResult;
 		itsParentPort->send(msg);
-
+		itsTimerPort->cancelAllTimers();
 		itsTimerPort->setTimer(0.3);
 	} break;
 
@@ -624,8 +568,11 @@ GCFEvent::TResult OnlineControl::completing_state(GCFEvent& event, GCFPortInterf
 		_handleDataIn(port);
 		break;
 
+	default:
+		LOG_DEBUG("finishing_state default");
+		return (GCFEvent::NOT_HANDLED);
 	}
-	return (status);
+	return (GCFEvent::HANDLED);
 }
 
 //
@@ -699,12 +646,12 @@ void OnlineControl::_setupBGPmappingTables()
 }
 
 //
-// _doBoot()
+// _startApplications()
 //
 // Create ParameterSets for all Applications the we have to manage, start all
 // ACC's and give them the boot command.
 //
-uint32 OnlineControl::_doBoot()
+uint32 OnlineControl::_startApplications()
 {
 	ParameterSet*	thePS  = globalParameterSet();		// shortcut to global PS.
 
@@ -787,6 +734,54 @@ uint32 OnlineControl::_doBoot()
 	return (result);
 }
 
+//
+// _stopApplications()
+//
+void OnlineControl::_stopApplications()
+{
+	if (itsInFinishState) {
+		LOG_INFO("Stop called twice, ignoring");
+		return;
+	}
+	itsInFinishState = true;
+
+	ParameterSet*	thePS  = globalParameterSet();		// shortcut to global PS.
+	uint32	obsID   = thePS->getUint32("Observation.ObsID");
+	vector<string> applList = thePS->getStringVector("applications");
+	for (size_t a = 0; a < applList.size(); a++) {
+		// Initialize basic variables
+		string 	applName  (applList[a]);
+		string	applPrefix(applName+".");
+		vector<string> procNames = thePS->getStringVector(applPrefix+"processes","[]");
+		string	procName = procNames[0];
+		string	accHost  = thePS->getString(applPrefix+"_hostname", "UNKNOWN_HOST");
+
+		// send stop to BGP
+		string stopCmd = formatString("ssh %s stopBGL.sh %s %d", 
+							accHost.c_str(),
+							procName.c_str(),
+							obsID);
+		LOG_INFO_STR("About to execute: " << stopCmd);
+		uint32	result = forkexec(stopCmd.c_str());
+		LOG_INFO_STR ("Result of command = " << result);
+	}
+
+	// construct system command for starting an inspection program to qualify the measured data
+	string  myPrefix    (thePS->locateModule("OnlineControl")+"OnlineControl.");
+	string	inspectProg (thePS->getString(myPrefix+"inspectionProgram",  "@inspectionProgram@"));
+	string	inspectHost (thePS->getString(myPrefix+"inspectionHost",     "@inspectionHost@"));
+	bool	onRemoteMachine(inspectHost != myHostname(false)  && inspectHost != myHostname(true));
+	string	startCmd;
+	if (onRemoteMachine) {
+		startCmd = formatString("ssh %s %s %d &", inspectHost.c_str(), inspectProg.c_str(), obsID);
+	}
+	else {
+		startCmd = formatString("%s %d &", inspectProg.c_str(), obsID);
+	}
+	LOG_INFO_STR("About to start: " << startCmd);
+	uint32	result = forkexec(startCmd.c_str());
+	LOG_INFO_STR ("Result of command = " << result);
+}
 
 //
 // _passMetadatToOTDB();
@@ -872,12 +867,6 @@ void OnlineControl::_passMetadatToOTDB()
 			LOG_FATAL(e.text());
 		}
 	}
-
-	// finally report state to SAS
-	sleep (60);			/// AAARRRRGGGHH, make 'sure' we are later than the ObservationControl. #4022
-	TreeMaintenance	tm(&conn);
-	TreeStateConv	tsc(&conn);
-	tm.setTreeState(obsID, tsc.get("finished"));
 }
 // -------------------- Application-order administration --------------------
 
@@ -928,22 +917,13 @@ void OnlineControl::_handleDataIn(GCFPortInterface& port)
 
 	if (!strcmp(buf, "ABORT")) {
 		itsFeedbackResult = CT_RESULT_PIPELINE_FAILED;
-		itsFeedbackAvailable = true;
+		TRAN(OnlineControl::completing_state);	// pass metadata
 	}
 	else if (!strcmp(buf, "FINISHED")) {
-		itsFeedbackAvailable = true;
+		TRAN(OnlineControl::completing_state);
 	}
 	else {
 		LOG_FATAL_STR("Received command on feedback port unrecognized");
-	}
-
-	if (itsFeedbackAvailable) {	// recognized command?
-		if (itsInFinishState) {	// already stopped BGP?
-			TRAN(OnlineControl::completing_state);	// pass metadata
-		}
-		else {
-			TRAN(OnlineControl::finishing_state);	// stop BGP first.
-		}
 	}
 }
 

@@ -25,6 +25,7 @@
 
 #include <Common/Thread/Condition.h>
 #include <Common/Thread/Mutex.h>
+#include <Common/LofarLogger.h>
 
 #include <set>
 
@@ -37,6 +38,7 @@ template <typename T> class SlidingPointer
 {
   public:
 	 SlidingPointer(T = 0);
+   SlidingPointer(const SlidingPointer &other);
 
     void advanceTo(T);
     void waitFor(T);
@@ -60,6 +62,13 @@ template <typename T> class SlidingPointer
 template <typename T> inline SlidingPointer<T>::SlidingPointer(T value)
 :
   itsValue(value)
+{
+}
+
+
+template <typename T> inline SlidingPointer<T>::SlidingPointer(const SlidingPointer &other)
+:
+  itsValue(other.itsValue)
 {
 }
 

@@ -328,18 +328,6 @@ void navFunct_updateObservations(string dp1, dyn_string active,
   g_observations[ "STATIONLIST" ]    = makeDynString();
   g_observations[ "SCHEDULE" ]       = makeDynString();
   
-  for (int i = 1; i<= dynlen(finished); i++) {
-    string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+finished[i]);
-    if (dp != "") {
-      iPos=dynAppend(g_observations[ "DP"          ] , dp);
-      dpGet(dp+".stationList",stationList);
-      
-      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+finished[i];
-      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
-      g_observations[ "SCHEDULE"       ][iPos]  = "finished";
-    }      
-  }
-
   for (int i = 1; i<= dynlen(active); i++) {
     string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+active[i]);
     if (dp != "") {
@@ -363,6 +351,19 @@ void navFunct_updateObservations(string dp1, dyn_string active,
       g_observations[ "SCHEDULE"       ][iPos]  = "planned";
     }      
   }
+
+  for (int i = 1; i<= dynlen(finished); i++) {
+    string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+finished[i]);
+    if (dp != "") {
+      iPos=dynAppend(g_observations[ "DP"          ] , dp);
+      dpGet(dp+".stationList",stationList);
+      
+      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+finished[i];
+      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
+      g_observations[ "SCHEDULE"       ][iPos]  = "finished";
+    }      
+  }
+
 
 
   // check if tabCtrl has a Panel loaded (indicating init has passed and panels are loaded)
@@ -1749,6 +1750,13 @@ void navFunct_fillStationLists() {
 //                                 "RS503","RS506","RS507","RS508","RS509");
 //  europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608","FI609");
   europeStations = makeDynString("DE601","DE602","DE603","DE604","DE605","FR606","SE607","UK608");
+  superTerpStations = makeDynString("CS002","CS003","CS004","CS005","CS006","CS007");
+  cs0nnCoreStations = makeDynString("CS001",
+                                    "CS011","CS013","CS017",
+                                    "CS021","CS024","CS026","CS028",
+                                    "CS030","CS031","CS032");
+  csx01CoreStations = makeDynString("CS101","CS201","CS301","CS401","CS501","CS103","CS302");
+  
 }
 
 

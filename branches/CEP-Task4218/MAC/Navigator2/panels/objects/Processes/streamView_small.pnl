@@ -14,20 +14,18 @@ PANEL,-1 -1 400 400 N "_3DFace" 2
 private void reload() {
   
   // get all the InputBuffers used by this observation
-  dyn_string inputBuffers = navFunct_getInputBuffersForObservation(observation);
+  inputBuffers = navFunct_getInputBuffersForObservation(observation);
 
   // change all found DP's to contain all the elements that contain the stream.percBad
-  dyn_string connectTo;
+  if (connected) {
+    dpDisconnect(\"streamCB\",connectTo);
+    dynClear(connectTo);
+  }
+
   for (int i=1; i<= dynlen(inputBuffers); i++) {
     dynAppend(connectTo,inputBuffers[i]+\".\"+stream+\".percBad:_online.._value\");
   }
     
-  if (connected) {
-    dpDisconnect(\"streamCB\",oldConnectTo);
-    dynClear(oldConnectTo);
-  }
-  
-  
   // check if the required datapoint for this view are enabled and accessible
   if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo)>0 ){
     if (dpConnect(\"streamCB\", connectTo) == -1) {
@@ -51,10 +49,13 @@ void streamCB(dyn_string dps, dyn_float values)
   
   for (int i = 1; i<= dynlen(values); i++) {
     float val = values[i];
+    string dp = dps[i];
     if (val > 0.0) {
       color = \"Lofar_suspicious\";
       string station;
-      dpGet(dpSubStr(dps[i],DPSUB_SYS_DP)+\".stationName\",station);
+      int nr  = substr(dp,strpos(dp,\"PSIONode\")+8,2);
+      string IONodeDP = navFunct_IONode2DPName(nr);
+      dpGet(IONodeDP+\".usedStation\",station);
       toolTipText+=station+\"</t> :\"+val+\"<br>\";
       count++;
       if (val > 10.0) {
@@ -77,6 +78,8 @@ E "#uses \"navPanel.ctl\"
 
 string stream;
 string observation;
+dyn_string connectTo;
+dyn_string inputBuffers;
 bool connected = false;" 0
  2
 "CBRef" "1"
@@ -99,7 +102,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 0 0 24 14
+E E 0 1 1 2 1 E U  1 E 0 0 24 13
 0
 LAYER, 1 
 1

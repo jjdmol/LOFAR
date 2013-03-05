@@ -50,7 +50,7 @@ namespace LOFAR
                 void BeamFormerPipeline::doWork()
         {
 #pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
-                BeamFormerWorkQueue(*this, omp_get_thread_num()).doWork();
+                BeamFormerWorkQueue(*this, omp_get_thread_num()% nrGPUs).doWork();
         }
     }
 }

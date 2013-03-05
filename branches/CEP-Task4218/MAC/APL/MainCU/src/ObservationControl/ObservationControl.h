@@ -160,6 +160,7 @@ private:
 	uint32					itsClaimTimer;
 	uint32					itsPrepareTimer;
 	uint32					itsStartTimer;
+	uint32					itsSuspendTimer;
 	uint32					itsStopTimer;
 	uint32					itsForcedQuitTimer;
 	uint32					itsHeartBeatTimer;

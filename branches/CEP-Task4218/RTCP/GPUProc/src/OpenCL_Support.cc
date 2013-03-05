@@ -140,7 +140,7 @@ cl::Program createProgram(cl::Context &context, std::vector<cl::Device> &devices
     std::string msg;
     program.getBuildInfo(devices[0], CL_PROGRAM_BUILD_LOG, &msg);
 #pragma omp critical (cout)
-    std::cout << msg;
+    std::cout << msg << std::endl;
   } catch (cl::Error &error) {
     if (strcmp(error.what(), "clBuildProgram") == 0) {
       std::string msg;

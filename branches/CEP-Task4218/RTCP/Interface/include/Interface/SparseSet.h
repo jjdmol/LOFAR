@@ -37,6 +37,10 @@
 
 namespace LOFAR {
 
+/*
+ * A SparseSet<T> represents a sorted vector of [from, to) pairs of type
+ * T representing a boolean presence.
+ */
 template <typename T> class SparseSet {
   public:
     struct range {
@@ -49,32 +53,58 @@ template <typename T> class SparseSet {
     typedef typename Ranges::iterator	    iterator;
     typedef typename Ranges::const_iterator const_iterator;
 
+    // Add `index' to the set.
     SparseSet<T> &include(T index);
+
+    // Add [first, last) to the set.
     SparseSet<T> &include(T first /* inclusive */, T last /* exclusive */);
 
+    // Remove `index' from the set.
     SparseSet<T> &exclude(T index);
+
+    // Remove [first, last) from the set.
     SparseSet<T> &exclude(T first /* inclusive */, T last /* exclusive */);
 
+    // Clear the set.
     SparseSet<T> &reset();
 
+    // Returns the number of elements in the set.
     T		 count() const;
+
+    // Returns true if `index' is in the set.
     bool	 test(T index) const;
 
+    // Return the union of two sets.
     SparseSet<T> operator | (const SparseSet<T> &) const;
     SparseSet<T> &operator |= (const SparseSet<T> &);
+
+    // Increase all indices in the set by `count'.
     SparseSet<T> &operator += (size_t count);
+
+    // Decrease all indices in the set by `count'.
     SparseSet<T> &operator -= (size_t count);
 
-    // Scale the ranges. Assumes T to be some integer type.
+    // Divide all indices by `shrinkFactor'. Fractions are rounded in favor
+    // of including more elements.
     SparseSet<T> &operator /= (size_t shrinkFactor);
 
+    // Return the inverse of the set, considering the [first, last) range.
+    // These parameters are needed because a SparseSet has no inherent
+    // knowledge of the set's boundaries.
     SparseSet<T> invert(T first, T last) const;
 
+    // Return the subset within [first, last).
     SparseSet<T> subset(T first, T last) const;
 
+    // Returns the range vector, useful for iteration.
     const Ranges &getRanges() const;
 
+    // Write the set to *ptr, using at most maxSize bytes.
+    // Returns the number of marshalled bytes, or -1
+    // if maxSize was too small.
     ssize_t marshall(void *ptr, size_t maxSize) const;
+
+    // Read the SparseSet from *ptr.
     void    unmarshall(const void *ptr);
 
   private:
