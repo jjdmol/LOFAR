@@ -34,7 +34,7 @@ namespace LOFAR
       MultiArraySharedBuffer<float, 3> delaysAfterEnd;
       MultiArraySharedBuffer<float, 2> phaseOffsets;
       MultiArraySharedBuffer<char, 4> inputSamples;
-      SparseSet<unsigned>::Ranges flags;
+      SparseSet<unsigned> flags;
 
       WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations, 
         size_t n_samples, size_t bytes_per_complex_sample, 

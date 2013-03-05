@@ -160,7 +160,7 @@ namespace LOFAR
     {
       // Get the flags that indicate missing data samples as a vector of
       // SparseSet::Ranges
-      flags = metaData.flags.getRanges();
+      flags = metaData.flags;
 
       // Get the size of a sample in bytes.
       size_t sizeof_sample = sizeof *inputSamples.origin();
@@ -170,8 +170,8 @@ namespace LOFAR
       size_t stride = inputSamples[station][0].num_elements();
 
       // Zero the bytes in the input data for the flagged ranges.
-      for(SparseSet<unsigned>::const_iterator it = flags.begin(); 
-          it != flags.end(); ++it) 
+      for(SparseSet<unsigned>::const_iterator it = flags.getRanges().begin(); 
+          it != flags.getRanges().end(); ++it) 
       {
         void *offset = inputSamples[station][it->begin].origin();
         size_t size = stride * (it->end - it->begin) * sizeof_sample;
