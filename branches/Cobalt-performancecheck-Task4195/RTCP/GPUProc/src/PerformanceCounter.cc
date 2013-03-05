@@ -3,6 +3,8 @@
 #define __CL_ENABLE_EXCEPTIONS
 #include "PerformanceCounter.h"
 
+#include <Common/LofarLogger.h>
+
 #include <global_defines.h>
 
 #include "CL/cl.hpp"
@@ -12,6 +14,8 @@
 
 #include "OpenMP_Support.h"
 #include "OpenCL_Support.h"
+
+using namespace std;
 
 namespace LOFAR
 {
@@ -23,58 +27,97 @@ namespace LOFAR
 
         PerformanceCounter::PerformanceCounter(const std::string &name)
             :
-        totalNrOperations(0),
-            totalNrBytesRead(0),
-            totalNrBytesWritten(0),
-            totalTime(0),
-            totalEvents(0),
-            name(name)
+            name(name),
+            nrActiveEvents(0)
         {
         }
 
 
         PerformanceCounter::~PerformanceCounter()
         {
-            if (totalTime > 0)
-#pragma omp critical (cout)
-                std::cout << std::setw(12) << name
-                << std::setprecision(3)
-                << ": avg. time = " << 1000 * totalTime / totalEvents << " ms, "
-                "GFLOP/s = " << totalNrOperations / totalTime / 1e9 << ", "
-                "R/W = " << totalNrBytesRead / totalTime / 1e9 << '+'
-                << totalNrBytesWritten / totalTime / 1e9 << '='
-                << (totalNrBytesRead + totalNrBytesWritten) / totalTime / 1e9 << " GB/s"
-                << std::endl;
+            // wait for all active events to finish
+            {
+               ScopedLock sl(mutex);
+
+               while (nrActiveEvents > 0)
+                 activeEventsLowered.wait(mutex);
+            }
+
+            // print final logs
+            logTotal();
         }
 
 
-        void PerformanceCounter::eventCompleteCallBack(cl_event ev, cl_int /*status*/, void *counter)
+        struct PerformanceCounter::figures PerformanceCounter::getTotal()
         {
+          ScopedLock sl(mutex);
+          
+          return total;
+        }
+
+
+        void PerformanceCounter::logTotal()
+        {
+          ScopedLock sl(mutex);
+
+          LOG_INFO_STR(
+              "Event " << name << ": "
+              << setprecision(3)
+              << "avg. time = " << 1000 * total.avrRuntime() << " ms, "
+              << "GFLOP/s = " << total.FLOPs() / 1e9 << ", "
+              << "read = " << total.readSpeed() / 1e9 << " GB/s, "
+              << "written = " << total.writeSpeed() / 1e9 << " GB/s, "
+              << "total I/O = " << (total.readSpeed() + total.writeSpeed()) / 1e9 << " GB/s");
+        }
+
+
+        void PerformanceCounter::eventCompleteCallBack(cl_event ev, cl_int /*status*/, void *userdata)
+        {
+            struct callBackArgs *args = static_cast<struct callBackArgs *>(userdata);
+
             try {
+                // extract performance information
                 cl::Event event(ev);
 
-                size_t queued = event.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+                size_t queued    = event.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
                 size_t submitted = event.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>();
-                size_t start = event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
-                size_t stop = event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
-                double seconds = (stop - start) / 1e9;
+                size_t start     = event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+                size_t stop      = event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
+                double seconds   = (stop - start) / 1e9;
 
-                if (seconds < 0 || seconds > 15)
-#pragma omp critical (cout)
-                    std::cout << "BAH! " << omp_get_thread_num() << ": " << queued << ' ' << submitted - queued << ' ' << start - queued << ' ' << stop - queued << std::endl;
+                // sanity checks
+                ASSERT(seconds >= 0);
+                ASSERTSTR(seconds < 15, "Kernel took " << seconds << " seconds to execute: thread " << omp_get_thread_num() << ": " << queued << ' ' << submitted - queued << ' ' << start - queued << ' ' << stop - queued);
 
-#pragma omp atomic
-                static_cast<PerformanceCounter *>(counter)->totalTime += seconds;
+                args->figures.runtime = seconds;
+
+                // add figures to total
+                {
+                  ScopedLock sl(args->this_->mutex);
+                  args->this_->total += args->figures;
+                }
 
                 // cl::~Event() decreases ref count
             } catch (cl::Error &error) {
-                // ignore errors in callback function (OpenCL library not exception safe)
+                // ignore errors in callBack function (OpenCL library not exception safe)
             }
+
+            // we're done -- release event and possibly signal destructor
+            {
+              ScopedLock sl(args->this_->mutex);
+              args->this_->nrActiveEvents--;
+              args->this_->activeEventsLowered.signal();
+            }
+
+            delete args;
         }
 
 
         void PerformanceCounter::doOperation(cl::Event &event, size_t nrOperations, size_t nrBytesRead, size_t nrBytesWritten)
         {
+            if (!profiling)
+              return;
+
             // reference count between C and C++ conversions is serously broken in C++ wrapper
             cl_event ev = event();
             cl_int error = clRetainEvent(ev);
@@ -82,18 +125,22 @@ namespace LOFAR
             if (error != CL_SUCCESS)
                 throw cl::Error(error, "clRetainEvent");
 
-            if (profiling) {
-                event.setCallback(CL_COMPLETE, &PerformanceCounter::eventCompleteCallBack, this);
+            // obtain run time information
+            struct callBackArgs *args = new callBackArgs;
+            args->this_ = this;
+            args->figures.nrOperations   = nrOperations;
+            args->figures.nrBytesRead    = nrBytesRead;
+            args->figures.nrBytesWritten = nrBytesWritten;
+            args->figures.runtime        = 0.0;
+            args->figures.nrEvents       = 1;
 
-#pragma omp atomic
-                totalNrOperations   += nrOperations;
-#pragma omp atomic
-                totalNrBytesRead    += nrBytesRead;
-#pragma omp atomic
-                totalNrBytesWritten += nrBytesWritten;
-#pragma omp atomic
-                ++ totalEvents;
+            {
+              // allocate event as active
+              ScopedLock sl(mutex);
+              nrActiveEvents++;
             }
+
+            event.setCallback(CL_COMPLETE, &PerformanceCounter::eventCompleteCallBack, args);
         }
 
     }
