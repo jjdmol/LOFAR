@@ -9,12 +9,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 lofar_add_library(gpuproc
   #Package__Version.cc
   BandPass.cc
-  Delays.cc
   FilterBank.cc
   OpenCL_Support.cc
   PerformanceCounter.cc
   Input/BeamletBuffer.cc
   Input/BeamletBufferToComputeNode.cc
+  Input/Delays.cc
   Input/InputSection.cc
   Input/InputThread.cc
   Input/LogThread.cc
