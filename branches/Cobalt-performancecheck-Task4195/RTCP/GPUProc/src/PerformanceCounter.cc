@@ -20,10 +20,6 @@ namespace LOFAR
 {
     namespace RTCP 
     {
-
-        extern bool	 profiling;
-
-
         PerformanceCounter::PerformanceCounter(const std::string &name, bool profiling)
             :
             name(name),

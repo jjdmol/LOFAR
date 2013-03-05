@@ -18,6 +18,7 @@ lofar_add_library(gpuproc
   ION_Allocator.cc
   LogThread.cc
   OpenCL_Support.cc
+  PerformanceCounter.cc
   ReaderWriterSynchronization.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc
