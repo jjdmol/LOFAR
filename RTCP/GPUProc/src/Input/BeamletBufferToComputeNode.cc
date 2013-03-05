@@ -30,7 +30,7 @@
 #include <Stream/FixedBufferStream.h>
 #include <Input/BeamletBufferToComputeNode.h>
 #include <Input/BeamletBuffer.h>
-#include <Input/Scheduling.h>
+#include <Scheduling.h>
 #include <SubbandMetaData.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/CN_Command.h>
