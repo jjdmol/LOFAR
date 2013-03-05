@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <LogThread.h>
+#include <Input/LogThread.h>
 #include <Scheduling.h>
 #include <Interface/PrintVector.h>
 #include <Common/LofarLogger.h>

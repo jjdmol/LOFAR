@@ -103,7 +103,7 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, INT4, INT4)
 -- Types:	OTDBnode
 --
 CREATE OR REPLACE FUNCTION getVHitemList(INT4, VARCHAR(120))
-  RETURNS SETOF OTDBnode AS '
+  RETURNS SETOF OTDBnode AS $$
     --  $Id$
 	DECLARE
 		vRecord		RECORD;
@@ -118,19 +118,59 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, VARCHAR(120))
 			   h.leaf,
 			   1::int2,
 			   h.value,
-			   \'\'::text -- n.description 
+			   ''::text -- n.description 
 		FROM   VIChierarchy h
  --			   TODO: join depends on leaf; see getNode function
  --			   INNER JOIN VICnodedef n ON n.nodeID = h.paramrefID
 		WHERE  h.treeID = $1
-	    AND	   h.name like $2 
+	    AND	   h.name LIKE $2
 		ORDER BY h.leaf, h.name, h.index
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
+--
+-- getVHitemListRegex (treeID, regexString)
+-- 
+-- Get a list of items.
+--
+-- Authorisation: none
+--
+-- Tables: 	picparamref		read
+--			pichierarchy	read
+--
+-- Types:	OTDBnode
+--
+CREATE OR REPLACE FUNCTION getVHitemListRegex(INT4, VARCHAR(120))
+  RETURNS SETOF OTDBnode AS $$
+    --  $Id$
+	DECLARE
+		vRecord		RECORD;
 
+	BEGIN
+	  FOR vRecord IN 
+	    SELECT h.nodeid,
+			   h.parentid, 
+			   h.paramrefid,
+			   h.name::VARCHAR(150), 
+			   h.index, 
+			   h.leaf,
+			   1::int2,
+			   h.value,
+			   ''::text -- n.description 
+		FROM   VIChierarchy h
+ --			   TODO: join depends on leaf; see getNode function
+ --			   INNER JOIN VICnodedef n ON n.nodeID = h.paramrefID
+		WHERE  h.treeID = $1
+	    AND	   h.name similar to ($2)
+		ORDER BY h.leaf, h.name, h.index
+	  LOOP
+		RETURN NEXT vRecord;
+	  END LOOP;
+	  RETURN;
+	END
+$$ LANGUAGE plpgsql;
 

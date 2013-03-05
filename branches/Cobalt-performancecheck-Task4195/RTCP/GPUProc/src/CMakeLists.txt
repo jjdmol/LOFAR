@@ -9,17 +9,16 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 lofar_add_library(gpuproc
   #Package__Version.cc
   BandPass.cc
-  BeamletBuffer.cc
-  BeamletBufferToComputeNode.cc
   Delays.cc
   FilterBank.cc
-  InputSection.cc
-  InputThread.cc
-  ION_Allocator.cc
-  LogThread.cc
   OpenCL_Support.cc
   PerformanceCounter.cc
-  ReaderWriterSynchronization.cc
+  Input/BeamletBuffer.cc
+  Input/BeamletBufferToComputeNode.cc
+  Input/InputSection.cc
+  Input/InputThread.cc
+  Input/LogThread.cc
+  Input/ReaderWriterSynchronization.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
@@ -29,7 +28,6 @@ lofar_add_bin_program(RTCP RTCP.cc)
 lofar_add_bin_program(RTCP_new 
    RTCP_new.cc
    createProgram.cc
-   PerformanceCounter.cc
    global_defines.cc
    UnitTest.cc 
    Kernel.cc

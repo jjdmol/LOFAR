@@ -6,8 +6,8 @@
 #include "OpenCL_Support.h"
 
 #include "global_defines.h"
-#include "InputSection.h"
-#include "BeamletBufferToComputeNode.h"
+#include "Input/InputSection.h"
+#include "Input/BeamletBufferToComputeNode.h"
 #include "createProgram.h"
 
 namespace LOFAR

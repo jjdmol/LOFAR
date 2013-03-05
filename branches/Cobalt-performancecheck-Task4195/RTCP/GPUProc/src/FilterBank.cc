@@ -94,7 +94,7 @@ void FilterBank::gaussian(int n, double a, double d[])
 
 // Compute the modified Bessel function I_0(x) for any real x.
 // This method was taken from the ROOT package, See http://root.cern.ch/root.
-// It was released undet the GNU LESSER GENERAL PUBLIC LICENSE Version 2.1
+// It was released under the GNU LESSER GENERAL PUBLIC LICENSE Version 2.1
 double FilterBank::besselI0(double x)
 {
   // Parameters of the polynomial approximation
@@ -443,6 +443,7 @@ void FilterBank::generate_filter()
   itsNegated = true;
 }
 #endif // USE_ORIGINAL_FILTER
+
 // In CEP, the first subband is from -98 KHz to 98 KHz, rather than from 0 to 195 KHz.
 // To avoid that the FFT outputs the channels in the wrong order (from 128 to
 // 255 followed by channels 0 to 127), we multiply each second FFT input by -1.
