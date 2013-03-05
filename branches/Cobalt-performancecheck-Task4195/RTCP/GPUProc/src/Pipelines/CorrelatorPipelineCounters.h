@@ -25,16 +25,16 @@ namespace LOFAR
       const std::string &visibilitiesCounterName)
       :
 #if defined USE_NEW_CORRELATOR
-      correlateTriangleCounter(correlateTriangleCounterName),
-      correlateRectangleCounter(correlateRectangleCounterName),
+      correlateTriangleCounter(correlateTriangleCounterName, profiling),
+      correlateRectangleCounter(correlateRectangleCounterName, profiling),
 #else
-      correlatorCounter(correlatorCounterName),
+      correlatorCounter(correlatorCounterName, profiling),
 #endif
-      firFilterCounter(firFilterCounterName),
-      delayAndBandPassCounter(delayAndBandPassCounterName),
-      fftCounter(fftCounterName),
-      samplesCounter(samplesCounterName),
-      visibilitiesCounter(visibilitiesCounterName)
+      firFilterCounter(firFilterCounterName, profiling),
+      delayAndBandPassCounter(delayAndBandPassCounterName, profiling),
+      fftCounter(fftCounterName, profiling),
+      samplesCounter(samplesCounterName, profiling),
+      visibilitiesCounter(visibilitiesCounterName, profiling)
       {};
 
 #if defined USE_NEW_CORRELATOR

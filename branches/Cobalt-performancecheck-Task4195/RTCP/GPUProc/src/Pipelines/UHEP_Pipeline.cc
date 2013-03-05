@@ -17,13 +17,13 @@ namespace LOFAR
         UHEP_Pipeline::UHEP_Pipeline(const Parset &ps)
             :
         Pipeline(ps),
-            beamFormerCounter("beamformer"),
-            transposeCounter("transpose"),
-            invFFTcounter("inv. FFT"),
-            invFIRfilterCounter("inv. FIR"),
-            triggerCounter("trigger"),
-            beamFormerWeightsCounter("BF weights"),
-            samplesCounter("samples")
+            beamFormerCounter("beamformer", profiling),
+            transposeCounter("transpose", profiling),
+            invFFTcounter("inv. FFT", profiling),
+            invFIRfilterCounter("inv. FIR", profiling),
+            triggerCounter("trigger", profiling),
+            beamFormerWeightsCounter("BF weights", profiling),
+            samplesCounter("samples", profiling)
         {
             double startTime = omp_get_wtime();
 

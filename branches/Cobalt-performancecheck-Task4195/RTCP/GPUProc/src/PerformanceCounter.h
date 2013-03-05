@@ -12,10 +12,14 @@ namespace LOFAR
         class PerformanceCounter
         {
         public:
-            PerformanceCounter(const std::string &name);
+            // Initialise the counter, giving it a name.
+            //
+            // If profiling == false, no actual performance statistics are
+            // gathered.
+            PerformanceCounter(const std::string &name, bool profiling);
             ~PerformanceCounter();
 
-            // register an operation. runtime will be determined by OpenCL, the
+            // register an operation covered by `event'. runtime will be determined by OpenCL, the
             // rest of the figures have to be provided.
             void doOperation(cl::Event &, size_t nrOperations, size_t nrBytesRead, size_t nrBytesWritten);
 
@@ -56,7 +60,10 @@ namespace LOFAR
             // name of counter, for logging purposes
             const std::string name;
 
-            // performance totals, plus lock
+            // whether we collect profiling information in the first place
+            const bool profiling;
+
+            // performance totals
             struct figures total;
 
             // number of events that still have a callback waiting

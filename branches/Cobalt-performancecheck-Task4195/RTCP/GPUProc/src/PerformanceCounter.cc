@@ -5,8 +5,6 @@
 
 #include <Common/LofarLogger.h>
 
-#include <global_defines.h>
-
 #include "CL/cl.hpp"
 
 #include <iomanip>
@@ -25,9 +23,10 @@ namespace LOFAR
         extern bool	 profiling;
 
 
-        PerformanceCounter::PerformanceCounter(const std::string &name)
+        PerformanceCounter::PerformanceCounter(const std::string &name, bool profiling)
             :
             name(name),
+            profiling(profiling),
             nrActiveEvents(0)
         {
         }
