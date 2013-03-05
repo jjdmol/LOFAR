@@ -1,6 +1,7 @@
 #include "lofar_config.h"
 #include "UnitTest.h"
 
+#include "global_defines.h"
 #include "Interface/Parset.h"
 #include "Interface/SmartPtr.h"
 #include "OpenCL_Support.h"
@@ -13,7 +14,7 @@ namespace LOFAR
 
         UnitTest::UnitTest(const Parset &ps, const char *programName)
             :
-        counter(programName != 0 ? programName : "test")
+        counter(programName != 0 ? programName : "test", profiling)
         {
             createContext(context, devices);
             queue = cl::CommandQueue(context, devices[0], CL_QUEUE_PROFILING_ENABLE);

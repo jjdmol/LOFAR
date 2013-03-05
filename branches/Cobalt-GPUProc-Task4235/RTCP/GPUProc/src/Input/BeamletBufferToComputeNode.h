@@ -31,8 +31,8 @@
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
 #include <Stream/Stream.h>
-#include <BeamletBuffer.h>
-#include <Delays.h>
+#include <Input/BeamletBuffer.h>
+#include <Input/Delays.h>
 
 #include <casa/Quanta/MVDirection.h>
 

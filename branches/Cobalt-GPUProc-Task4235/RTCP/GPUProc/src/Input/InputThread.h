@@ -34,8 +34,8 @@
 #include <Interface/SmartPtr.h>
 #include <Common/Thread/Thread.h>
 
-#include <BeamletBuffer.h>
-#include <LogThread.h>
+#include <Input/BeamletBuffer.h>
+#include <Input/LogThread.h>
 
 
 namespace LOFAR {

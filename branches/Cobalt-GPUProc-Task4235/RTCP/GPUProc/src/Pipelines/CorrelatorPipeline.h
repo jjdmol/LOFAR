@@ -11,7 +11,6 @@
 #include "PerformanceCounter.h"
 #include "SubbandMetaData.h"
 #include "Pipelines/CorrelatorPipelinePrograms.h"
-#include "Pipelines/CorrelatorPipelineCounters.h"
 
 namespace LOFAR
 {
@@ -33,7 +32,6 @@ namespace LOFAR
             friend class CorrelatorWorkQueue;
 
             FilterBank		    filterBank;            
-            CorrelatorPipelineCounters counters;
             CorrelatorPipelinePrograms programs;
 
         };

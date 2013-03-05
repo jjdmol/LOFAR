@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <InputSection.h>
+#include <Input/InputSection.h>
 #include <Stream/SocketStream.h>
 #include <Interface/Stream.h>
 

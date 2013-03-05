@@ -13,7 +13,7 @@
 
 #include "CorrelatorPipeline.h"
 #include "WorkQueues/CorrelatorWorkQueue.h"
-#include "BeamletBufferToComputeNode.h"
+#include "Input/BeamletBufferToComputeNode.h"
 #include <SubbandMetaData.h>
 
 namespace LOFAR
@@ -24,15 +24,7 @@ namespace LOFAR
     CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
       :
     Pipeline(ps),
-      filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER),
-      counters(
-#if defined USE_NEW_CORRELATOR
-      "cor.triangle",
-      "cor.rectangle",
-#else
-      "correlator",
-#endif
-      "FIR filter", "delay/bp", "FFT", "samples", "visibilities")
+      filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER)
     {
 
       filterBank.negateWeights();
@@ -89,6 +81,9 @@ namespace LOFAR
         // Perform the calculations
 #       pragma omp section
         {
+          // Keep track of performance totals
+          map<string, PerformanceCounter::figures> total_performance;
+
           // Start a set of workqueue, the number depending on the number of GPU's: 2 for each.
           // Each WorkQueue gets its own thread.
 #         pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
@@ -98,12 +93,30 @@ namespace LOFAR
                devices[omp_get_thread_num() % nrGPUs],  // The GPU this workQueue is connected to
                omp_get_thread_num() % nrGPUs,           // The GPU index
                programs,                                // The compiled kernels, const
+            filterBank);                             // The filter set to use. Const
+
+            // run the queue
+            doWorkQueue(queue);                            
+
+            // gather performance figures
+            for (map<string, SmartPtr<PerformanceCounter> >::iterator i = queue.counters.begin(); i != queue.counters.end(); ++i) {
+              const string &name = i->first;
+              PerformanceCounter *counter = i->second.get();
+
+              counter->waitForAllOperations();
+              total_performance[name] += counter->getTotal();
                counters,                                // Performance counters, shared between queues!!!
                filterBank);
 
             doWorkQueue(queue);                            // The filter set to use. Const
           }
         }
+
+          // Log all performance totals
+          for (map<string, PerformanceCounter::figures>::const_iterator i = total_performance.begin(); i != total_performance.end(); ++i) {
+            i->second.log();
+      }
+    }
       }
     }
 

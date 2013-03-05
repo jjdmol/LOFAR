@@ -16,7 +16,6 @@
 #include "Kernels/CorrelatorKernel.h"
 
 #include "Pipelines/CorrelatorPipelinePrograms.h"
-#include "Pipelines/CorrelatorPipelineCounters.h"
 
 #include "FilterBank.h"
 #include "SubbandMetaData.h"
@@ -59,12 +58,8 @@ namespace LOFAR
     class CorrelatorWorkQueue : public WorkQueue
     {
     public:
-      CorrelatorWorkQueue(const Parset	&parset,  
-        cl::Context &context,  // cl context
-        cl::Device &device,    // the gpu device
-        unsigned queueNumber,  //
-        CorrelatorPipelinePrograms &programs,  // container for opencl programs, used to build kernels
-        CorrelatorPipelineCounters &counters,  // performance counters
+            CorrelatorWorkQueue(const Parset	&parset,cl::Context &context, cl::Device		&device, unsigned queueNumber,
+              CorrelatorPipelinePrograms &programs,
         FilterBank &filterBank);
 
       void doWork();
