@@ -35,6 +35,8 @@
   
   def overwrite_rsr(tc, msg, procid='all', value=255, rspId=['rsp0'])
   def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21)
+  def write_rsr_timestamp(tc, msg, timestamp=0, timemode=1, fpgaId=['rsp'], rspId=['rsp0'], applev=21)
+  def read_rsr_timestamp(tc, msg, fpgaId=['rsp', 'blp0'], rspId=['rsp0'], applev=21)
   
   def write_rad_settings(tc, msg, settings, rspId=['rsp0'], applev=21)
   def read_rad_settings(tc, msg, rspId=['rsp0'], applev=21)
@@ -684,64 +686,70 @@ def read_serdes_tx_delay(tc, msg, rspId=['rsp0'], applev=21):
   return clkDelay
 
 
-def write_diag_bypass(tc, msg, bypass, blpId=['blp0'], rspId=['rsp0'], applev=21):
+def write_diag_bypass(tc, msg, bypass, fpgaId=['blp0'], rspId=['rsp0'], applev=21):
   """Write DIAG bypass register
   
   Input:
   - tc     = Testcase
   - msg    = MepMessage
   - bypass = Bypass enable word
-  - blpId  = List of ['blp#']
+  - fpgaId = List of ['rsp', 'blp#']
   - rspId  = List of ['rsp#']
   - applev = Append logging level
   Return: void
   """
-  tc.appendLog(applev, '>>> RSP-%s, BLP-%s, write DIAG bypass:' % (rspId, blpId))
-  tc.appendLog(applev, '      bit(0) : Bypass DC                     = %d' % ((bypass &  1    ) > 0))
-  tc.appendLog(applev, '      bit(1) : Bypass PFS                    = %d' % ((bypass & (1<<1)) > 0))
-  tc.appendLog(applev, '      bit(2) : Bypass PFT                    = %d' % ((bypass & (1<<2)) > 0))
-  tc.appendLog(applev, '      bit(3) : Bypass BF                     = %d' % ((bypass & (1<<3)) > 0))
-  tc.appendLog(applev, '      bit(4) : SI enable X                   = %d' % ((bypass & (1<<4)) > 0))
-  tc.appendLog(applev, '      bit(5) : SI enable Y                   = %d' % ((bypass & (1<<5)) > 0))
-  tc.appendLog(applev, '      bit(6) : DIAG result buffer use sync   = %d' % ((bypass & (1<<6)) > 0))
-  tc.appendLog(applev, '      bit(7) : DIAG result buffer use resync = %d' % ((bypass & (1<<7)) > 0))
-  tc.appendLog(applev, '      bit(8) : PFT switching disable         = %d' % ((bypass & (1<<8)) > 0))
+  tc.appendLog(applev, '>>> RSP-%s, BLP-%s, write DIAG bypass:' % (rspId, fpgaId))
+  tc.appendLog(applev, '      bit(0) : Bypass DC                      = %d' % ((bypass &  1    ) > 0))
+  tc.appendLog(applev, '      bit(1) : Bypass PFS                     = %d' % ((bypass & (1<<1)) > 0))
+  tc.appendLog(applev, '      bit(2) : Bypass PFT                     = %d' % ((bypass & (1<<2)) > 0))
+  tc.appendLog(applev, '      bit(3) : Bypass BF                      = %d' % ((bypass & (1<<3)) > 0))
+  tc.appendLog(applev, '      bit(4) : SI enable X                    = %d' % ((bypass & (1<<4)) > 0))
+  tc.appendLog(applev, '      bit(5) : SI enable Y                    = %d' % ((bypass & (1<<5)) > 0))
+  tc.appendLog(applev, '      bit(6) : DIAG result buffer use sync    = %d' % ((bypass & (1<<6)) > 0))
+  tc.appendLog(applev, '      bit(7) : DIAG result buffer use resync  = %d' % ((bypass & (1<<7)) > 0))
+  tc.appendLog(applev, '      bit(8) : PFT switching disable          = %d' % ((bypass & (1<<8)) > 0))
+  tc.appendLog(applev, '   bit(10:9) : DIAG result buffer for BM bank = %d' % ((bypass & (3<<9)) > 0))
+  tc.appendLog(applev, '     bit(11) : DIAG result buffer for BP      = %d' % ((bypass & (1<<11)) > 0))
+  tc.appendLog(applev, '     bit(12) : Page swap on system sync       = %d' % ((bypass & (1<<12)) > 0))
     
   for ri in rspId:
-    msg.packAddr(blpId, 'diag', 'bypass')
+    msg.packAddr(fpgaId, 'diag', 'bypass')
     msg.packPayload([bypass],2)
     rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
   rspctl_write_sleep()
   
 
-def read_diag_bypass(tc, msg, blpId=['blp0'], rspId=['rsp0'], applev=21):
+def read_diag_bypass(tc, msg, fpgaId=['blp0'], rspId=['rsp0'], applev=21):
   """Read DIAG bypass register
   
   Input:
   - tc     = Testcase
   - msg    = MepMessage
-  - blpId  = List of one 'blp#'
-  - rspId  = List of one 'rsp#'
+  - fpgaId = List of one ['rsp'] or ['blp#']
+  - rspId  = List of one ['rsp#']
   - applev = Append logging level
   Return:
   - bypass = Bypass bits
   """
-  msg.packAddr(blpId, 'diag', 'bypass')
+  msg.packAddr(fpgaId, 'diag', 'bypass')
   readData = rspctl(tc, '--readblock=%s,%s,0,2' % (rspId[0][3:], msg.hexAddr))
   msg.extractPayload(readData)
   bypass = msg.unpackPayload(2, '+')
   bypass = bypass[0]
   
-  tc.appendLog(applev, '>>> RSP-%s, BLP-%s, read DIAG bypass:' % (rspId, blpId))
-  tc.appendLog(applev, '      bit(0) : Bypass DC                     = %d' % ((bypass &  1    ) > 0))
-  tc.appendLog(applev, '      bit(1) : Bypass PFS                    = %d' % ((bypass & (1<<1)) > 0))
-  tc.appendLog(applev, '      bit(2) : Bypass PFT                    = %d' % ((bypass & (1<<2)) > 0))
-  tc.appendLog(applev, '      bit(3) : Bypass BF                     = %d' % ((bypass & (1<<3)) > 0))
-  tc.appendLog(applev, '      bit(4) : SI enable X                   = %d' % ((bypass & (1<<4)) > 0))
-  tc.appendLog(applev, '      bit(5) : SI enable Y                   = %d' % ((bypass & (1<<5)) > 0))
-  tc.appendLog(applev, '      bit(6) : DIAG result buffer use sync   = %d' % ((bypass & (1<<6)) > 0))
-  tc.appendLog(applev, '      bit(7) : DIAG result buffer use resync = %d' % ((bypass & (1<<7)) > 0))
-  tc.appendLog(applev, '      bit(8) : PFT switching disable         = %d' % ((bypass & (1<<8)) > 0))
+  tc.appendLog(applev, '>>> RSP-%s, BLP-%s, read DIAG bypass:' % (rspId, fpgaId))
+  tc.appendLog(applev, '      bit(0) : Bypass DC                      = %d' % ((bypass &  1    ) > 0))
+  tc.appendLog(applev, '      bit(1) : Bypass PFS                     = %d' % ((bypass & (1<<1)) > 0))
+  tc.appendLog(applev, '      bit(2) : Bypass PFT                     = %d' % ((bypass & (1<<2)) > 0))
+  tc.appendLog(applev, '      bit(3) : Bypass BF                      = %d' % ((bypass & (1<<3)) > 0))
+  tc.appendLog(applev, '      bit(4) : SI enable X                    = %d' % ((bypass & (1<<4)) > 0))
+  tc.appendLog(applev, '      bit(5) : SI enable Y                    = %d' % ((bypass & (1<<5)) > 0))
+  tc.appendLog(applev, '      bit(6) : DIAG result buffer use sync    = %d' % ((bypass & (1<<6)) > 0))
+  tc.appendLog(applev, '      bit(7) : DIAG result buffer use resync  = %d' % ((bypass & (1<<7)) > 0))
+  tc.appendLog(applev, '      bit(8) : PFT switching disable          = %d' % ((bypass & (1<<8)) > 0))
+  tc.appendLog(applev, '   bit(10:9) : DIAG result buffer for BM bank = %d' % ((bypass & (3<<9)) > 0))
+  tc.appendLog(applev, '     bit(11) : DIAG result buffer for BP      = %d' % ((bypass & (1<<11)) > 0))
+  tc.appendLog(applev, '     bit(12) : Page swap on system sync       = %d' % ((bypass & (1<<12)) > 0))
   return bypass
 
 
@@ -1264,6 +1272,82 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
     ret_rsp.append(ret)
   return ret_rsp
 
+
+def write_rsr_timestamp(tc, msg, timestamp=0, timemode=1, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
+  """RSR write timestamp and timestamp_mode
+
+  Input:
+  - tc        = Testcase
+  - msg       = MepMessage
+  - timestamp = Timestamp value
+  - timemode  = Timestamp mode (see read_rsr_timestamp for the available timestamp modes)
+  - fpgaId    = List of ['rsp', 'blp#']
+  - rspId     = List of 'rsp#' 
+  - applev    = Append log level
+  Report:
+    tc appendlog messages are reported.
+  Return: void
+  """ 
+  if timemode==1:
+      mode_str = 'reset to -1'
+  elif timemode==2:
+      mode_str = 'auto increment'
+  else:
+      mode_str = 'no change'
+  tc.appendLog(applev, '>>> RSP-%s, FPGA-%s write RSR timestamp = %d, behaviour at sync is %s):' % (rspId, timestamp, mode_str))
+  timedata=i2bbbb([timestamp])
+  timedata.append(timemode)
+  for ri in rspId:
+      msg.packAddr(fpgaId, 'rsr', 'timestamp')
+      msg.packPayload([timedata],1)
+      rspctl(tc, '--writeblock=%s,%s,0,%s' % (ri[3:], msg.hexAddr, msg.hexPayload))
+  rspctl_write_sleep()
+  
+  
+def read_rsr_timestamp(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
+  """RSR Timestamp
+
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - fpgaId = List of ['rsp', 'blp#']
+  - rspId  = List of ['rsp#']
+  - applev = Append log level
+  Report:  
+    tc appendlog messages are reported.
+  Return:
+  - read timestamp if all are equal else -1
+  """
+  fpgaTimestamps      = []
+  fpgaTimestamp_modes = []
+  for ri in rspId:
+      for fi in fpgaId:
+          read_mem(tc, msg, 'rsr', 'timestamp', 5, [fi], [ri], 'h', 1, 0)
+          msg.setOffset(0)
+          fpgaTimestamps.append(msg.readUnsigned(4))
+          fpgaTimestamp_modes.append(msg.readUnsigned(1))
+  index = 0
+  for ri in rspId:
+      for fi in fpgaId:
+          tc.appendLog(applev, '>>> RSR timestamps:')
+          tc.appendLog(applev, '    . RSP-%s, FPGA-%s : %d' % (ri, fi, fpgaTimestamps[index])
+  index = 0
+  for ri in rspId:
+      for fi in fpgaId:
+        tc.appendLog(applev, '>>> RSR timestamp behaviour at sync:')
+        if fpgaTimestamp_modes[index]==1:
+            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : reset to -1' % (ri, fi)
+        elif fpgaTimestamp_modes[index]==2:
+            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : auto increment' % (ri, fi)
+        else:
+            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : no change' % (ri, fi)
+      
+  ret = fpgaTimestamps[0]
+  for ti in fpgaTimestamps:
+      if ret != ti:
+          ret = -1
+  return ret
+  
 
 def write_rad_settings(tc, msg, settings, rspId=['rsp0'], applev=21):
   """RAD_BP write settings
