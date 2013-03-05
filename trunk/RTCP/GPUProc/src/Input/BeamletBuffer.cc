@@ -25,8 +25,8 @@
 
 #include <Interface/Align.h>
 #include <Interface/Exceptions.h>
-#include <BeamletBuffer.h>
-#include <RSP.h>
+#include <Input/BeamletBuffer.h>
+#include <Input/RSP.h>
 
 #include <boost/lexical_cast.hpp>
 #include <cstring>

@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Delays.h>
+#include <Input/Delays.h>
 #include <Scheduling.h>
 #include <Common/LofarLogger.h>
 #include <Common/PrettyUnits.h>

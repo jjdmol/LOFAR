@@ -32,9 +32,9 @@
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
 #include <Stream/Stream.h>
-#include <BeamletBuffer.h>
-#include <InputThread.h>
-#include <LogThread.h>
+#include <Input/BeamletBuffer.h>
+#include <Input/InputThread.h>
+#include <Input/LogThread.h>
 
 #include <boost/multi_array.hpp>
 #include <pthread.h>
