@@ -67,6 +67,7 @@ namespace LOFAR
 #else
             CorrelatorKernel		correlatorKernel;
 #endif
+            //std::vector< WorkQueueInputItem> workQueueInputItems;
         };
 
     }

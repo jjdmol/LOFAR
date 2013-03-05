@@ -108,50 +108,59 @@ namespace LOFAR
     }
 
 
-    void CorrelatorPipeline::receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
+    void CorrelatorPipeline::receiveSubbandSamples(
+         CorrelatorWorkQueue &workQueue, unsigned block,
+         unsigned subband)
     {
-
-      // No specific parallelizations options needed: All synchronisation is performed outside
-      // this function.
+      // Read the samples from the input stream in parallel
 #     pragma omp parallel for
-      for (unsigned stat = 0; stat < ps.nrStations(); stat ++) 
+      for (unsigned station = 0; station < ps.nrStations(); station ++) 
       {
-        Stream *stream = bufferToGPUstreams[stat];
+        // each input stream contains the data from a single station
+        Stream *inputStream = bufferToGPUstreams[station];      
 
-        
+        // create a header objects
+        BeamletBufferToComputeNode<i16complex>::header header_object;
+        size_t subbandSize = workQueue.inputSamples[station].num_elements() * sizeof *workQueue.inputSamples.origin();
 
-        // read header
-        BeamletBufferToComputeNode<i16complex>::header header;
-        size_t subbandSize = workQueue.inputSamples[stat].num_elements() * sizeof *workQueue.inputSamples.origin();
+        // fill it with the header data from the stream
+        inputStream->read(&header_object, sizeof header_object);
 
-        stream->read(&header, sizeof header);
+        // validate that the data to be received is of the correct size for the target buffer        
+        ASSERTSTR(subband == header_object.subband, 
+                  "Expected subband " << subband << ", got subband " 
+                                      << header_object.subband);
+        ASSERTSTR(subbandSize == header_object.nrSamples * header_object.sampleSize,
+                  "Expected " << subbandSize << " bytes, got " 
+                              << header_object.nrSamples * header_object.sampleSize 
+                              << " bytes (= " << header_object.nrSamples 
+                              << " samples * " << header_object.sampleSize 
+                              << " bytes/sample)");
 
-        ASSERTSTR(subband == header.subband, "Expected subband " << subband << ", got subband " << header.subband);
-        ASSERTSTR(subbandSize == header.nrSamples * header.sampleSize, "Expected " << subbandSize << " bytes, got " << header.nrSamples * header.sampleSize << " bytes (= " << header.nrSamples << " samples * " << header.sampleSize << " bytes/sample)");
-
-        // read subband
-        stream->read(workQueue.inputSamples[stat].origin(), subbandSize);
-
-        unsigned beam = ps.subbandToSAPmapping()[subband];
+        // read data into the shared buffer: This can be loaded into the gpu with a single command later on
+        inputStream->read(workQueue.inputSamples[station].origin(), subbandSize);
 
         // read meta data
-        SubbandMetaData metaData(header.nrTABs);
-        metaData.read(stream);
+        unsigned beamIdx = ps.subbandToSAPmapping()[subband];
+        // meta data object
+        SubbandMetaData metaData(header_object.nrTABs);
+        // fill it with from the stream
+        metaData.read(inputStream);
 
-        // flag the input data.
-        flagInputSamples(workQueue, stat, metaData);
+        // flag the input data, contained in the meta data
+        flagInputSamples(workQueue, station, metaData);
 
-        // extract delays for the station beam
-        struct SubbandMetaData::beamInfo &beamInfo = metaData.stationBeam;
-
+        // extract delays for the stationion beam
+        struct SubbandMetaData::beamInfo &beamInfo_object = metaData.stationBeam;
+        // assign the delays
         for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-          workQueue.delaysAtBegin[beam][stat][pol]  = beamInfo.delayAtBegin;
-          workQueue.delaysAfterEnd[beam][stat][pol] = beamInfo.delayAfterEnd;
-
-          workQueue.phaseOffsets[beam][pol] = 0.0;
+          workQueue.delaysAtBegin[beamIdx][station][pol]  = beamInfo_object.delayAtBegin;
+          workQueue.delaysAfterEnd[beamIdx][station][pol] = beamInfo_object.delayAfterEnd;
+          workQueue.phaseOffsets[beamIdx][pol] = 0.0;
         }
+
         WorkQueueInputItem inputItem(workQueue.inputSamples,
-          header, metaData);
+          header_object, metaData);
 
       }
 
