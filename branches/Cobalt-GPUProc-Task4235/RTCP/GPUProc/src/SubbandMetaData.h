@@ -38,15 +38,17 @@ struct SubbandMetaData
     SubbandMetaData(unsigned nrTABs);
 
     struct beamInfo {
-      float  delayAtBegin, delayAfterEnd;
-      double beamDirectionAtBegin[3], beamDirectionAfterEnd[3];
+      float delayAtBegin;
+      float delayAfterEnd;
+      double beamDirectionAtBegin[3];
+      double beamDirectionAfterEnd[3];
     };
 
     // delays for all directions
     beamInfo stationBeam;
     std::vector<beamInfo> TABs;
 
-    // flag set
+    // flag set. 
     SparseSet<unsigned> flags;
  
     void read(Stream *str);

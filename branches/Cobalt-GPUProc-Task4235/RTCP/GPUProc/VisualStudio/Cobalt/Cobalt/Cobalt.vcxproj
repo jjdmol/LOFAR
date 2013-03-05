@@ -39,6 +39,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;..\..\..\src;C:\Program Files (x86)\AMD APP\include;D:\Users\klijn\Code\Cluster\SVN subdirs\static_fixture;C:\Program Files (x86)\boost\boost_1_41</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -133,6 +134,7 @@
     <ClInclude Include="..\..\..\src\WorkQueues\CorrelatorWorkQueue.h" />
     <ClInclude Include="..\..\..\src\WorkQueues\UHEP_WorkQueue.h" />
     <ClInclude Include="..\..\..\src\WorkQueues\WorkQueue.h" />
+    <ClInclude Include="..\..\..\src\WorkQueues\WorkQueueInputItem.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
@@ -174,7 +176,6 @@
     <ClCompile Include="..\..\..\src\Pipelines\CorrelatorPipeline.cc" />
     <ClCompile Include="..\..\..\src\Pipelines\UHEP_Pipeline.cc" />
     <ClCompile Include="..\..\..\src\ReaderWriterSynchronization.cc" />
-    <ClCompile Include="..\..\..\src\RTCP.cc" />
     <ClCompile Include="..\..\..\src\RTCP_new.cc" />
     <ClCompile Include="..\..\..\src\RTCP_UnitTest.cc" />
     <ClCompile Include="..\..\..\src\Scheduling.cc" />
@@ -183,6 +184,7 @@
     <ClCompile Include="..\..\..\src\WorkQueues\CorrelatorWorkQueue.cc" />
     <ClCompile Include="..\..\..\src\WorkQueues\UHEP_WorkQueue.cc" />
     <ClCompile Include="..\..\..\src\WorkQueues\WorkQueue.cc" />
+    <ClCompile Include="..\..\..\src\WorkQueues\WorkQueueInputItem.cc" />
     <ClCompile Include="Cobalt.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

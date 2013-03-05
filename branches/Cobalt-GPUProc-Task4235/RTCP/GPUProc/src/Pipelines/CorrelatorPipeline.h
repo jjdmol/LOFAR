@@ -36,11 +36,6 @@ namespace LOFAR
             CorrelatorPipelineCounters counters;
             CorrelatorPipelinePrograms programs;
 
-
-      // Flag the input data of the given station using to the flags in the
-      // meta-data.
-      void flagInputSamples(CorrelatorWorkQueue &workQueue, unsigned station, const SubbandMetaData& metaData);
-
         };
 
     }

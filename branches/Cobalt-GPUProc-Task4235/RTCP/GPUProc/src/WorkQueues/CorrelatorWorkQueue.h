@@ -19,57 +19,85 @@
 #include "Pipelines/CorrelatorPipelineCounters.h"
 
 #include "FilterBank.h"
-#include <Interface/SubbandMetaData.h>
+#include "SubbandMetaData.h"
+#include "Stream/Stream.h"
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP 
+  {
+    struct WorkQueueInputData
     {
-        class CorrelatorWorkQueue : public WorkQueue
-        {
-        public:
-            CorrelatorWorkQueue(const Parset	&parset,cl::Context &context, cl::Device		&device, unsigned queueNumber,
-              CorrelatorPipelinePrograms &programs, CorrelatorPipelineCounters &counters,
-              FilterBank &filterBank);
+      // Inputs: received from data and meta data           
+      MultiArraySharedBuffer<float, 3> delaysAtBegin;
+      MultiArraySharedBuffer<float, 3> delaysAfterEnd;
+      MultiArraySharedBuffer<float, 2> phaseOffsets;
+      MultiArraySharedBuffer<char, 4> inputSamples;
+      
 
-            void doWork();
+      WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations, 
+        size_t n_samples, size_t bytes_per_complex_sample, 
+        cl::CommandQueue &queue, cl::Buffer &queue_buffer,
+        cl_mem_flags hostBufferFlags = CL_MEM_WRITE_ONLY,  // input therefore assume host write, device read
+        cl_mem_flags deviceBufferFlags = CL_MEM_READ_ONLY)
+        :
+        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
+        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
+        phaseOffsets(boost::extents[n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
+        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample], queue, hostBufferFlags, queue_buffer) // TODO: The size of the buffer is NOT validated
+      {}
 
-#if defined USE_TEST_DATA
-            void setTestPattern();
-            void printTestOutput();
-#endif
+      void read(Stream *inputStream, size_t station, unsigned subband, unsigned beamIdx);
 
-    //private:
-            void doSubband(unsigned block, unsigned subband);
+    private:
+      void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
 
-            // 
-            CorrelatorPipelineCounters &counters;
-            cl::Buffer		devFIRweights;
-            // Raw input buffer, to be mapped to a boost array
-            cl::Buffer		devBufferInput;
-            cl::Buffer	  devBufferB;
-            MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
-            MultiArraySharedBuffer<float, 3> delaysAtBegin, delaysAfterEnd;
-            MultiArraySharedBuffer<float, 2> phaseOffsets;
-            MultiArraySharedBuffer<char, 4> inputSamples;
 
-            cl::Buffer		devFilteredData;
-            cl::Buffer		devCorrectedData;
+    };
 
-            MultiArraySharedBuffer<std::complex<float>, 4> visibilities;
+    class CorrelatorWorkQueue : public WorkQueue
+    {
+    public:
+      CorrelatorWorkQueue(const Parset	&parset,  
+        cl::Context &context,  // cl context
+        cl::Device &device,    // the gpu device
+        unsigned queueNumber,  //
+        CorrelatorPipelinePrograms &programs,  // container for opencl programs, used to build kernels
+        CorrelatorPipelineCounters &counters,  // performance counters
+        FilterBank &filterBank);
 
-            FIR_FilterKernel		firFilterKernel;
-            Filter_FFT_Kernel		fftKernel;
-            DelayAndBandPassKernel	delayAndBandPassKernel;
+      void doWork();
+      void doSubband(unsigned block, unsigned subband);
+      //private:           
+      CorrelatorPipelineCounters &counters;
+
+      cl::Buffer		devFIRweights;
+      // Raw input buffer, to be mapped to a boost array
+      cl::Buffer		devCorrectedData;
+      cl::Buffer	  devFilteredData;
+
+      // static calculated/retrieved at the beginning
+      MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
+
+      // All input data collected in a single struct
+      WorkQueueInputData inputData;
+
+      // Output: received from the gpu and transfered from the metadata (flags)
+      MultiArraySharedBuffer<std::complex<float>, 4> visibilities;
+
+      // Compiled kernels
+      FIR_FilterKernel		firFilterKernel;
+      Filter_FFT_Kernel		fftKernel;
+      DelayAndBandPassKernel	delayAndBandPassKernel;
 #if defined USE_NEW_CORRELATOR
-            CorrelateTriangleKernel	correlateTriangleKernel;
-            CorrelateRectangleKernel	correlateRectangleKernel;
+      CorrelateTriangleKernel	correlateTriangleKernel;
+      CorrelateRectangleKernel	correlateRectangleKernel;
 #else
-            CorrelatorKernel		correlatorKernel;
+      CorrelatorKernel		correlatorKernel;
 #endif
-            //std::vector< WorkQueueInputItem> workQueueInputItems;
-        };
+      //std::vector< WorkQueueInputItem> workQueueInputItems;
+    };
 
-    }
+  }
 }
 #endif

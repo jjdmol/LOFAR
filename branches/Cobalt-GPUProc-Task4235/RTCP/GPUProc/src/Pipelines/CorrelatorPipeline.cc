@@ -15,7 +15,6 @@
 #include "WorkQueues/CorrelatorWorkQueue.h"
 #include "BeamletBufferToComputeNode.h"
 #include <SubbandMetaData.h>
-#include "WorkQueues/WorkQueueInputItem.h"
 
 namespace LOFAR
 {
@@ -94,13 +93,14 @@ namespace LOFAR
           // Each WorkQueue gets its own thread.
 #         pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
           {
-            CorrelatorWorkQueue queue(ps,        // Configuration
-            context,                                 // Opencl context
-            devices[omp_get_thread_num() % nrGPUs],  // The GPU this workQueue is connected to
-            omp_get_thread_num() % nrGPUs,           // The GPU index
-            programs,                                // The compiled kernels, const
-            counters,                                // Performance counters, shared between queues!!!
-            filterBank);
+            CorrelatorWorkQueue queue(ps,               // Configuration
+               context,                                 // Opencl context
+               devices[omp_get_thread_num() % nrGPUs],  // The GPU this workQueue is connected to
+               omp_get_thread_num() % nrGPUs,           // The GPU index
+               programs,                                // The compiled kernels, const
+               counters,                                // Performance counters, shared between queues!!!
+               filterBank);
+
             doWorkQueue(queue);                            // The filter set to use. Const
           }
         }
@@ -119,51 +119,9 @@ namespace LOFAR
         // each input stream contains the data from a single station
         Stream *inputStream = bufferToGPUstreams[station];      
 
-        // create a header objects
-        BeamletBufferToComputeNode<i16complex>::header header_object;
-        size_t subbandSize = workQueue.inputSamples[station].num_elements() * sizeof *workQueue.inputSamples.origin();
-
-        // fill it with the header data from the stream
-        inputStream->read(&header_object, sizeof header_object);
-
-        // validate that the data to be received is of the correct size for the target buffer        
-        ASSERTSTR(subband == header_object.subband, 
-                  "Expected subband " << subband << ", got subband " 
-                                      << header_object.subband);
-        ASSERTSTR(subbandSize == header_object.nrSamples * header_object.sampleSize,
-                  "Expected " << subbandSize << " bytes, got " 
-                              << header_object.nrSamples * header_object.sampleSize 
-                              << " bytes (= " << header_object.nrSamples 
-                              << " samples * " << header_object.sampleSize 
-                              << " bytes/sample)");
-
-        // read data into the shared buffer: This can be loaded into the gpu with a single command later on
-        inputStream->read(workQueue.inputSamples[station].origin(), subbandSize);
-
-        // read meta data
-        unsigned beamIdx = ps.subbandToSAPmapping()[subband];
-        // meta data object
-        SubbandMetaData metaData(header_object.nrTABs);
-        // fill it with from the stream
-        metaData.read(inputStream);
-
-        // flag the input data, contained in the meta data
-        flagInputSamples(workQueue, station, metaData);
-
-        // extract delays for the stationion beam
-        struct SubbandMetaData::beamInfo &beamInfo_object = metaData.stationBeam;
-        // assign the delays
-        for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-          workQueue.delaysAtBegin[beamIdx][station][pol]  = beamInfo_object.delayAtBegin;
-          workQueue.delaysAfterEnd[beamIdx][station][pol] = beamInfo_object.delayAfterEnd;
-          workQueue.phaseOffsets[beamIdx][pol] = 0.0;
-        }
-
-        WorkQueueInputItem inputItem(workQueue.inputSamples,
-          header_object, metaData);
-
+        // 
+        workQueue.inputData.read(inputStream, station, subband, ps.subbandToSAPmapping()[subband]);
       }
-
     }
 
 
@@ -247,32 +205,6 @@ namespace LOFAR
 #       pragma omp critical (cout)
         std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
     }
-
-        // flag the input samples.
-    void CorrelatorPipeline::flagInputSamples(CorrelatorWorkQueue &workQueue,
-                                              unsigned station, 
-                                              const SubbandMetaData& metaData)
-    {
-      // Get the flags that indicate missing data samples as a vector of
-      // SparseSet::Ranges
-      SparseSet<unsigned>::Ranges flags = metaData.flags.getRanges();
-
-      // Get the size of a sample in bytes.
-      size_t sizeof_sample = sizeof *workQueue.inputSamples.origin();
-
-      // Calculate the number elements to skip when striding over the second
-      // dimension of inputSamples.
-      size_t stride = workQueue.inputSamples[station][0].num_elements();
-
-      // Zero the bytes in the input data for the flagged ranges.
-      for(SparseSet<unsigned>::const_iterator it = flags.begin(); 
-          it != flags.end(); ++it) {
-        void *offset = workQueue.inputSamples[station][it->begin].origin();
-        size_t size = stride * (it->end - it->begin) * sizeof_sample;
-        memset(offset, 0, size);
-      }
-    }
-
   }
 }
 
