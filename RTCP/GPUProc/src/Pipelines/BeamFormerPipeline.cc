@@ -18,15 +18,15 @@ namespace LOFAR
         BeamFormerPipeline::BeamFormerPipeline(const Parset &ps)
             :
         Pipeline(ps),
-            intToFloatCounter("int-to-float"),
-            fftCounter("FFT"),
-            delayAndBandPassCounter("delay/bp"),
-            beamFormerCounter("beamformer"),
-            transposeCounter("transpose"),
-            dedispersionForwardFFTcounter("ddisp.fw.FFT"),
-            dedispersionChirpCounter("chirp"),
-            dedispersionBackwardFFTcounter("ddisp.bw.FFT"),
-            samplesCounter("samples")
+            intToFloatCounter("int-to-float", profiling),
+            fftCounter("FFT", profiling),
+            delayAndBandPassCounter("delay/bp", profiling),
+            beamFormerCounter("beamformer", profiling),
+            transposeCounter("transpose", profiling),
+            dedispersionForwardFFTcounter("ddisp.fw.FFT", profiling),
+            dedispersionChirpCounter("chirp", profiling),
+            dedispersionBackwardFFTcounter("ddisp.bw.FFT", profiling),
+            samplesCounter("samples", profiling)
         {
             double startTime = omp_get_wtime();
 

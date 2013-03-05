@@ -12,6 +12,7 @@ lofar_add_library(gpuproc
   Delays.cc
   FilterBank.cc
   OpenCL_Support.cc
+  PerformanceCounter.cc
   Input/BeamletBuffer.cc
   Input/BeamletBufferToComputeNode.cc
   Input/InputSection.cc
@@ -27,7 +28,6 @@ lofar_add_bin_program(RTCP RTCP.cc)
 lofar_add_bin_program(RTCP_new 
    RTCP_new.cc
    createProgram.cc
-   PerformanceCounter.cc
    global_defines.cc
    UnitTest.cc 
    Kernel.cc
