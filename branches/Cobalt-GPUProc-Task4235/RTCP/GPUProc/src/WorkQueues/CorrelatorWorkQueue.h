@@ -21,6 +21,7 @@
 #include "FilterBank.h"
 #include "SubbandMetaData.h"
 #include "Stream/Stream.h"
+#include <Interface/SparseSet.h>
 
 namespace LOFAR
 {
@@ -33,7 +34,7 @@ namespace LOFAR
       MultiArraySharedBuffer<float, 3> delaysAfterEnd;
       MultiArraySharedBuffer<float, 2> phaseOffsets;
       MultiArraySharedBuffer<char, 4> inputSamples;
-      
+      SparseSet<unsigned>::Ranges flags;
 
       WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations, 
         size_t n_samples, size_t bytes_per_complex_sample, 
@@ -46,13 +47,13 @@ namespace LOFAR
         phaseOffsets(boost::extents[n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
         inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample], queue, hostBufferFlags, queue_buffer) // TODO: The size of the buffer is NOT validated
       {}
-
+      
+      // Read for a station the data from the inputstream. 
+      // Perform the flagging of the data based on the just red meta data.
       void read(Stream *inputStream, size_t station, unsigned subband, unsigned beamIdx);
 
     private:
       void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
-
-
     };
 
     class CorrelatorWorkQueue : public WorkQueue

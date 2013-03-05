@@ -15,7 +15,6 @@
 #include "Pipelines/CorrelatorPipelinePrograms.h"
 #include "Pipelines/CorrelatorPipelineCounters.h"
 #include "FilterBank.h"
-#include "Interface/Parset.h"
 
 #include "BeamletBufferToComputeNode.h"
 #include "Common/LofarLogger.h"
@@ -161,7 +160,7 @@ namespace LOFAR
     {
       // Get the flags that indicate missing data samples as a vector of
       // SparseSet::Ranges
-      SparseSet<unsigned>::Ranges flags = metaData.flags.getRanges();
+      flags = metaData.flags.getRanges();
 
       // Get the size of a sample in bytes.
       size_t sizeof_sample = sizeof *inputSamples.origin();
