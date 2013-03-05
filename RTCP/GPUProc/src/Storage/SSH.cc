@@ -703,8 +703,11 @@ static bool ssh_works(const char *privkey) {
 
   ASSERTSTR(USER, "$USER not set");
 
+  // Test both whether the file exists and whether ssh approves its use. Note that
+  // some SSH configurations fall back to a different identity file if the specified
+  // one doesn't work, causing this test to erroneously succeed.
   char sshcmd[1024];
-  snprintf(sshcmd, sizeof sshcmd, "ssh %s@localhost -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o NoHostAuthenticationForLocalhost=yes -i %s /bin/true 2>/dev/null", USER, privkey);
+  snprintf(sshcmd, sizeof sshcmd, "test -f '%s' -a -r '%s' && ssh %s@localhost -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o NoHostAuthenticationForLocalhost=yes -i '%s' /bin/true 2>/dev/null", USER, privkey);
   int ret = system(sshcmd);
 
   if (ret < 0 || WEXITSTATUS(ret) != 0) {
