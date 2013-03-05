@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 
 
     (FIR_FilterTest)(ps);
-return 0;
+
     //(CorrelatorTest)(ps);       //needs parset AARTFAAC!!
     //(CorrelateRectangleTest)(ps); //needs parset AARTFAAC!!
 
