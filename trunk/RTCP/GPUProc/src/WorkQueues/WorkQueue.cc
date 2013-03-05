@@ -25,5 +25,11 @@ namespace LOFAR
             queue = cl::CommandQueue(context, device, profiling ? CL_QUEUE_PROFILING_ENABLE : 0);
         }
 
+
+        void WorkQueue::addCounter(const std::string &name)
+        {
+          counters[name] = new PerformanceCounter(name, profiling);
+        }
+
     }
 }

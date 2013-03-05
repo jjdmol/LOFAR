@@ -2,9 +2,12 @@
 #define GPUPROC_WORKQUEUE_H
 #include "CL/cl.hpp"
 #include "Interface/Parset.h"
+#include "Interface/SmartPtr.h"
+#include "PerformanceCounter.h"
 #include "OpenCL_Support.h"
 
-#include "global_defines.h"
+#include <string>
+#include <map>
 
 namespace LOFAR
 {
@@ -19,8 +22,12 @@ namespace LOFAR
             cl::Device		&device;
             cl::CommandQueue	queue;
 
+            std::map<std::string, SmartPtr<PerformanceCounter> > counters;
+
         protected:
             const Parset	&ps;
+
+            void addCounter(const std::string &name);
         };
 
     }

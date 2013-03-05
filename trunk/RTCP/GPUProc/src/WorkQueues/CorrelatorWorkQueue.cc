@@ -12,7 +12,6 @@
 #include "CorrelatorWorkQueue.h"
 #include "BandPass.h"
 #include "Pipelines/CorrelatorPipelinePrograms.h"
-#include "Pipelines/CorrelatorPipelineCounters.h"
 #include "FilterBank.h"
 #include "Interface/Parset.h"
 
@@ -22,12 +21,11 @@ namespace LOFAR
     {     
         CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset	&parset,
             cl::Context &context, cl::Device	&device, unsigned gpuNumber,
-            CorrelatorPipelinePrograms & programs, CorrelatorPipelineCounters & inputcounters,
+            CorrelatorPipelinePrograms & programs,
             FilterBank &filterBank
             )
             :
         WorkQueue( context, device, gpuNumber, parset),
-            counters(inputcounters),
             devFIRweights(context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
             devBufferA(context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
             devBufferB(context, CL_MEM_READ_WRITE,
@@ -54,7 +52,20 @@ namespace LOFAR
             correlatorKernel(ps, queue, programs.correlatorProgram, visibilities, devCorrectedData)
 #endif
         {
-          //counters = inputcounters;
+            // create all the counters
+#if defined USE_NEW_CORRELATOR
+            addCounter("cor.triangle");
+            addCounter("cor.rectangle");
+#else
+            addCounter("correlator");
+#endif
+
+            addCounter("FIR");
+            addCounter("delay/bp");
+            addCounter("FFT");
+            addCounter("samples");
+            addCounter("visibilities");
+
             queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), filterBank.getWeights().origin());
 
 #if 0
@@ -77,7 +88,7 @@ namespace LOFAR
                 OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
                 inputSamples.hostToDevice(CL_TRUE);
-                counters.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
+                counters["samples"]->doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
             }
 
             // Moved from doWork() The delay data should be available before the kernels start.
@@ -88,16 +99,16 @@ namespace LOFAR
             phaseOffsets.hostToDevice(CL_FALSE);
 
             if (ps.nrChannelsPerSubband() > 1) {
-                firFilterKernel.enqueue(queue, counters.firFilterCounter);
-                fftKernel.enqueue(queue, counters.fftCounter);
+                firFilterKernel.enqueue(queue, *counters["FIR"]);
+                fftKernel.enqueue(queue, *counters["FFT"]);
             }
 
-            delayAndBandPassKernel.enqueue(queue, counters.delayAndBandPassCounter, subband);
+            delayAndBandPassKernel.enqueue(queue, *counters["delay/bp"], subband);
 #if defined USE_NEW_CORRELATOR
-            correlateTriangleKernel.enqueue(queue, counters.correlateTriangleCounter);
-            correlateRectangleKernel.enqueue(queue, counters.correlateRectangleCounter);
+            correlateTriangleKernel.enqueue(queue, *counters["cor.triangle"]);
+            correlateRectangleKernel.enqueue(queue, *counters["cor.rectangle"]);
 #else
-            correlatorKernel.enqueue(queue, counters.correlatorCounter);
+            correlatorKernel.enqueue(queue, *counters["correlator"]);
 #endif
             queue.finish();
 
@@ -106,7 +117,7 @@ namespace LOFAR
                 OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
 #endif
                 visibilities.deviceToHost(CL_TRUE);
-                counters.visibilitiesCounter.doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
+                counters["visibilities"]->doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
             }
         }
     }
