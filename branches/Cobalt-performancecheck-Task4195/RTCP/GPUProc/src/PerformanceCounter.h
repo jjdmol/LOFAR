@@ -12,6 +12,12 @@ namespace LOFAR
         class PerformanceCounter
         {
         public:
+            // name of counter, for logging purposes
+            const std::string name;
+
+            // whether we collect profiling information in the first place
+            const bool profiling;
+
             // Initialise the counter, giving it a name.
             //
             // If profiling == false, no actual performance statistics are
@@ -48,7 +54,12 @@ namespace LOFAR
               double FLOPs() const      { return nrOperations/runtime; }
               double readSpeed() const  { return nrBytesRead/runtime; }
               double writeSpeed() const { return nrBytesWritten/runtime; }
+
+              std::string log() const;
             };
+
+            // Return once all scheduled operations have completed
+            void waitForAllOperations();
 
             // Return current running total figures
             struct figures getTotal();
@@ -57,12 +68,6 @@ namespace LOFAR
             void logTotal();
 
         private:
-            // name of counter, for logging purposes
-            const std::string name;
-
-            // whether we collect profiling information in the first place
-            const bool profiling;
-
             // performance totals
             struct figures total;
 

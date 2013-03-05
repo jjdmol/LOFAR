@@ -9,6 +9,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include "OpenMP_Support.h"
 #include "OpenCL_Support.h"
@@ -34,16 +35,18 @@ namespace LOFAR
 
         PerformanceCounter::~PerformanceCounter()
         {
-            // wait for all active events to finish
-            {
-               ScopedLock sl(mutex);
+            waitForAllOperations();
 
-               while (nrActiveEvents > 0)
-                 activeEventsLowered.wait(mutex);
-            }
+            LOG_INFO_STR("Event " << setw(20) << name << ": " << total.log());
+        }
 
-            // print final logs
-            logTotal();
+
+        void PerformanceCounter::waitForAllOperations()
+        {
+            ScopedLock sl(mutex);
+
+            while (nrActiveEvents > 0)
+                activeEventsLowered.wait(mutex);
         }
 
 
@@ -55,18 +58,18 @@ namespace LOFAR
         }
 
 
-        void PerformanceCounter::logTotal()
+        std::string PerformanceCounter::figures::log() const
         {
-          ScopedLock sl(mutex);
+          std::stringstream str;
+          str << setprecision(3)
+              << "n = " << nrEvents << " "
+              << "avg. time = " << 1000 * avrRuntime() << " ms, "
+              << "GFLOP/s = " << FLOPs() / 1e9 << ", "
+              << "read = " << readSpeed() / 1e9 << " GB/s, "
+              << "written = " << writeSpeed() / 1e9 << " GB/s, "
+              << "total I/O = " << (readSpeed() + writeSpeed()) / 1e9 << " GB/s";
 
-          LOG_INFO_STR(
-              "Event " << name << ": "
-              << setprecision(3)
-              << "avg. time = " << 1000 * total.avrRuntime() << " ms, "
-              << "GFLOP/s = " << total.FLOPs() / 1e9 << ", "
-              << "read = " << total.readSpeed() / 1e9 << " GB/s, "
-              << "written = " << total.writeSpeed() / 1e9 << " GB/s, "
-              << "total I/O = " << (total.readSpeed() + total.writeSpeed()) / 1e9 << " GB/s");
+          return str.str();
         }
 
 
