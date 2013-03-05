@@ -15,6 +15,7 @@
 #include "WorkQueues/CorrelatorWorkQueue.h"
 #include "BeamletBufferToComputeNode.h"
 #include <SubbandMetaData.h>
+#include "WorkQueues/WorkQueueInputItem.h"
 
 namespace LOFAR
 {
@@ -117,8 +118,10 @@ namespace LOFAR
       {
         Stream *stream = bufferToGPUstreams[stat];
 
+        
+
         // read header
-        struct BeamletBufferToComputeNode<i16complex>::header header;
+        BeamletBufferToComputeNode<i16complex>::header header;
         size_t subbandSize = workQueue.inputSamples[stat].num_elements() * sizeof *workQueue.inputSamples.origin();
 
         stream->read(&header, sizeof header);
@@ -147,6 +150,9 @@ namespace LOFAR
 
           workQueue.phaseOffsets[beam][pol] = 0.0;
         }
+        WorkQueueInputItem inputItem(workQueue.inputSamples,
+          header, metaData);
+
       }
 
     }

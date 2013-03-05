@@ -42,9 +42,12 @@ namespace LOFAR
     //private:
             void doSubband(unsigned block, unsigned subband);
 
+            // 
             CorrelatorPipelineCounters &counters;
             cl::Buffer		devFIRweights;
-            cl::Buffer		devBufferA, devBufferB;
+            // Raw input buffer, to be mapped to a boost array
+            cl::Buffer		devBufferInput;
+            cl::Buffer	  devBufferB;
             MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
             MultiArraySharedBuffer<float, 3> delaysAtBegin, delaysAfterEnd;
             MultiArraySharedBuffer<float, 2> phaseOffsets;
