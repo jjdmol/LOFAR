@@ -10,9 +10,6 @@ tCorrelateRealData.in_3sec_2st_5sb.parset
 # Run tests
 for PARSET in $PARSETS
 do
-  if ! $srcdir/testParset.sh "$PARSET"
-  then
-    exit 1
-  fi
+  $srcdir/testParset.sh "$PARSET" || exit $?
 done
 
