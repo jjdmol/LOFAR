@@ -99,7 +99,13 @@ namespace LOFAR
                                 for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
                                     if (filteredData[station][pol][sample + s][ch][0] != station * firWeights[ch][s]) {
                                         if (++nrErrors < 100) { // limit spam
-                                            std::cerr << "2a.filtered["<<station<<"]["<<pol<<"]["<<sample+s<<"]["<<ch<<"][0] (sample="<<sample<<" s="<<s<<") = " << filteredData[station][pol][sample + s][ch][0] << std::endl;
+                                            std::cerr << "2a.filtered["<<station<<"]["<<pol<<"]["<<sample+s<<"]["<<ch<<
+                                                "][0] (sample="<<sample<<" s="<<s<<") = " << filteredData[station][pol][sample + s][ch][0] << std::endl;
+                                        }
+                                    }
+                                    if (filteredData[station][pol][sample + s][ch][1] != 0.0f) {
+                                        if (++nrErrors < 100) {
+                                            std::cerr << "2a imag non-zero: " << filteredData[station][pol][sample + s][ch][1] << std::endl;
                                         }
                                     }
                                 }
@@ -107,9 +113,11 @@ namespace LOFAR
 
                             for ( ; s < 2 * ps.nrPPFTaps(); s++) {
                                 for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
-                                    if (filteredData[station][pol][sample + s][ch][0] != 0.0f) {
-                                        if (++nrErrors < 100) { // limit spam
-                                            std::cerr << "2b.filtered["<<station<<"]["<<pol<<"]["<<sample+s<<"]["<<ch<<"][0] (sample="<<sample<<" s="<<s<<") = " << filteredData[station][pol][sample + s][ch][0] << std::endl;
+                                    if (filteredData[station][pol][sample + s][ch][0] != 0.0f || filteredData[station][pol][sample + s][ch][1] != 0.0f) {
+                                        if (++nrErrors < 100) {
+                                            std::cerr << "2b.filtered["<<station<<"]["<<pol<<"]["<<sample+s<<"]["<<ch<<
+                                                "][0] (sample="<<sample<<" s="<<s<<") = " << filteredData[station][pol][sample + s][ch][0] <<
+                                                ", "<<filteredData[station][pol][sample + s][ch][1] << std::endl;
                                         }
                                     }
                                 }
@@ -164,12 +172,14 @@ namespace LOFAR
                                 // Expected sum must also be scaled by 2 and 3, because weights are real only.
                                 if (!equalsRelError(filteredData[station][pol][sample][ch][0], 2 * expectedSums[ch])) {
                                     if (++nrErrors < 100) { // limit spam
-                                        std::cerr << "3a.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<"][0] = " << filteredData[station][pol][sample][ch][0] << " 2*weight = " << 2*expectedSums[ch] << std::endl;
+                                        std::cerr << "3a.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
+                                            "][0] = " << filteredData[station][pol][sample][ch][0] << " 2*weight = " << 2*expectedSums[ch] << std::endl;
                                     }
                                 }
                                 if (!equalsRelError(filteredData[station][pol][sample][ch][1], 3 * expectedSums[ch])) {
-                                    if (++nrErrors < 100) { // limit spam
-                                        std::cerr << "3b.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<"][1] = " << filteredData[station][pol][sample][ch][1] << " 3*weight = " << 3*expectedSums[ch] << std::endl;
+                                    if (++nrErrors < 100) {
+                                        std::cerr << "3b.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
+                                            "][1] = " << filteredData[station][pol][sample][ch][1] << " 3*weight = " << 3*expectedSums[ch] << std::endl;
                                     }
                                 }
                             }
