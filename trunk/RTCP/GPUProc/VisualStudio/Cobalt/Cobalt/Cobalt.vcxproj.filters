@@ -216,6 +216,9 @@
     <ClInclude Include="..\..\..\src\WorkQueues\CorrelatorWorkQueue.h">
       <Filter>Header Files\WorkQueues</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\WorkQueues\WorkQueueInputItem.h">
+      <Filter>Header Files\WorkQueues</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -279,9 +282,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\ReaderWriterSynchronization.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\RTCP.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\RTCP_new.cc">
@@ -363,6 +363,9 @@
       <Filter>Source Files\WorkQueues</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\WorkQueues\CorrelatorWorkQueue.cc">
+      <Filter>Source Files\WorkQueues</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\WorkQueues\WorkQueueInputItem.cc">
       <Filter>Source Files\WorkQueues</Filter>
     </ClCompile>
   </ItemGroup>
