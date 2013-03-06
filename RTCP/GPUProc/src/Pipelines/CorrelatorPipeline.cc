@@ -88,11 +88,11 @@ namespace LOFAR
           // Each WorkQueue gets its own thread.
 #         pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
           {
-            CorrelatorWorkQueue queue(ps,        // Configuration
-            context,                                 // Opencl context
-            devices[omp_get_thread_num() % nrGPUs],  // The GPU this workQueue is connected to
-            omp_get_thread_num() % nrGPUs,           // The GPU index
-            programs,                                // The compiled kernels, const
+            CorrelatorWorkQueue queue(ps,               // Configuration
+               context,                                 // Opencl context
+               devices[omp_get_thread_num() % nrGPUs],  // The GPU this workQueue is connected to
+               omp_get_thread_num() % nrGPUs,           // The GPU index
+               programs,                                // The compiled kernels, const
             filterBank);                             // The filter set to use. Const
 
             // run the queue
@@ -105,60 +105,34 @@ namespace LOFAR
 
               counter->waitForAllOperations();
               total_performance[name] += counter->getTotal();
-            }
+
+
           }
+        }
 
           // Log all performance totals
           for (map<string, PerformanceCounter::figures>::const_iterator i = total_performance.begin(); i != total_performance.end(); ++i) {
             i->second.log();
-          }
-        }
+      }
+    }
       }
     }
 
 
-    void CorrelatorPipeline::receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
+    void CorrelatorPipeline::receiveSubbandSamples(
+         CorrelatorWorkQueue &workQueue, unsigned block,
+         unsigned subband)
     {
-
-      // No specific parallelizations options needed: All synchronisation is performed outside
-      // this function.
+      // Read the samples from the input stream in parallel
 #     pragma omp parallel for
-      for (unsigned stat = 0; stat < ps.nrStations(); stat ++) 
+      for (unsigned station = 0; station < ps.nrStations(); station ++) 
       {
-        Stream *stream = bufferToGPUstreams[stat];
+        // each input stream contains the data from a single station
+        Stream *inputStream = bufferToGPUstreams[station];      
 
-        // read header
-        struct BeamletBufferToComputeNode<i16complex>::header header;
-        size_t subbandSize = workQueue.inputSamples[stat].num_elements() * sizeof *workQueue.inputSamples.origin();
-
-        stream->read(&header, sizeof header);
-
-        ASSERTSTR(subband == header.subband, "Expected subband " << subband << ", got subband " << header.subband);
-        ASSERTSTR(subbandSize == header.nrSamples * header.sampleSize, "Expected " << subbandSize << " bytes, got " << header.nrSamples * header.sampleSize << " bytes (= " << header.nrSamples << " samples * " << header.sampleSize << " bytes/sample)");
-
-        // read subband
-        stream->read(workQueue.inputSamples[stat].origin(), subbandSize);
-
-        unsigned beam = ps.subbandToSAPmapping()[subband];
-
-        // read meta data
-        SubbandMetaData metaData(header.nrTABs);
-        metaData.read(stream);
-
-        // flag the input data.
-        flagInputSamples(workQueue, stat, metaData);
-
-        // extract delays for the station beam
-        struct SubbandMetaData::beamInfo &beamInfo = metaData.stationBeam;
-
-        for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++) {
-          workQueue.delaysAtBegin[beam][stat][pol]  = beamInfo.delayAtBegin;
-          workQueue.delaysAfterEnd[beam][stat][pol] = beamInfo.delayAfterEnd;
-
-          workQueue.phaseOffsets[beam][pol] = 0.0;
-        }
+        // 
+        workQueue.inputData.read(inputStream, station, subband, ps.subbandToSAPmapping()[subband]);
       }
-
     }
 
 
@@ -242,32 +216,6 @@ namespace LOFAR
 #       pragma omp critical (cout)
         std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
     }
-
-        // flag the input samples.
-    void CorrelatorPipeline::flagInputSamples(CorrelatorWorkQueue &workQueue,
-                                              unsigned station, 
-                                              const SubbandMetaData& metaData)
-    {
-      // Get the flags that indicate missing data samples as a vector of
-      // SparseSet::Ranges
-      SparseSet<unsigned>::Ranges flags = metaData.flags.getRanges();
-
-      // Get the size of a sample in bytes.
-      size_t sizeof_sample = sizeof *workQueue.inputSamples.origin();
-
-      // Calculate the number elements to skip when striding over the second
-      // dimension of inputSamples.
-      size_t stride = workQueue.inputSamples[station][0].num_elements();
-
-      // Zero the bytes in the input data for the flagged ranges.
-      for(SparseSet<unsigned>::const_iterator it = flags.begin(); 
-          it != flags.end(); ++it) {
-        void *offset = workQueue.inputSamples[station][it->begin].origin();
-        size_t size = stride * (it->end - it->begin) * sizeof_sample;
-        memset(offset, 0, size);
-      }
-    }
-
   }
 }
 
