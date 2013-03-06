@@ -156,21 +156,20 @@ namespace LOFAR
                 firFilterKernel.enqueue(queue, counter);
                 filteredData.deviceToHost(CL_TRUE);
 
-                const float epsilonf = 1.0E-3f; // guess
                 nrErrors = 0;
 				for (station = 0; station < ps.nrStations(); station++) {
 				    for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
                         for (sample = 0; sample < ps.nrSamplesPerChannel(); sample++) {
                             for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
                                 // Expected sum must also be scaled by 2 and 3, because weights are real only.
-                                if (std::abs(filteredData[station][pol][sample][ch][0] - 2 * expectedSums[ch]) >= epsilonf) {
+                                if (!equalsRelError(filteredData[station][pol][sample][ch][0], 2 * expectedSums[ch])) {
                                     if (++nrErrors < 100) { // limit spam
-                                        std::cerr << "3a.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<"][0] = " << filteredData[station][pol][sample][ch][0] << " weight = " << expectedSums[ch] << std::endl;
+                                        std::cerr << "3a.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<"][0] = " << filteredData[station][pol][sample][ch][0] << " 2*weight = " << 2*expectedSums[ch] << std::endl;
                                     }
                                 }
-                                if (std::abs(filteredData[station][pol][sample][ch][1] - 3 * expectedSums[ch]) >= epsilonf) {
+                                if (!equalsRelError(filteredData[station][pol][sample][ch][1], 3 * expectedSums[ch])) {
                                     if (++nrErrors < 100) { // limit spam
-                                        std::cerr << "3b.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<"][1] = " << filteredData[station][pol][sample][ch][1] << " weight = " << expectedSums[ch] << std::endl;
+                                        std::cerr << "3b.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<"][1] = " << filteredData[station][pol][sample][ch][1] << " 3*weight = " << 3*expectedSums[ch] << std::endl;
                                     }
                                 }
                             }
