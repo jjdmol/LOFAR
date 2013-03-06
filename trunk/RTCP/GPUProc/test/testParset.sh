@@ -2,6 +2,9 @@
 
 # Run a parset and compare the output to that in the reference_output directory.
 
+# Include some useful shell functions
+. $srcdir/testFuncs.sh
+
 BINDIR=`pwd`/../src
 
 # Some host info
@@ -10,11 +13,7 @@ echo "Running on `hostname`"
 echo "Working directory is `pwd`"
 
 # Check for GPU
-if ! lspci | grep -E "VGA|3D" | grep -E "ATI|NVIDIA"
-then
-  echo "No ATI/NVIDIA graphics cards detected -- aborting test."
-  exit 3
-fi
+haveGPU || exit 3
 
 # Check for input files
 if [ ! -e /var/scratch/mol/test_sets ]
