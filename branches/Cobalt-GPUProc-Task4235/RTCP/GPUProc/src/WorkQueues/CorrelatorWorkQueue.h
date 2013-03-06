@@ -65,7 +65,6 @@ namespace LOFAR
       void doWork();
       void doSubband(unsigned block, unsigned subband);
       //private:           
-      CorrelatorPipelineCounters &counters;
 
       cl::Buffer		devFIRweights;
       // Raw input buffer, to be mapped to a boost array

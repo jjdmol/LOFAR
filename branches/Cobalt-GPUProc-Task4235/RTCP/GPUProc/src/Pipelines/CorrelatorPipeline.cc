@@ -105,10 +105,8 @@ namespace LOFAR
 
               counter->waitForAllOperations();
               total_performance[name] += counter->getTotal();
-               counters,                                // Performance counters, shared between queues!!!
-               filterBank);
 
-            doWorkQueue(queue);                            // The filter set to use. Const
+
           }
         }
 

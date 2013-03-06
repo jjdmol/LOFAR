@@ -15,9 +15,8 @@
 #include "Pipelines/CorrelatorPipelinePrograms.h"
 #include "FilterBank.h"
 
-#include "BeamletBufferToComputeNode.h"
 #include "Common/LofarLogger.h"
-
+#include <Input/BeamletBufferToComputeNode.h>
 #include <SubbandMetaData.h>
 
 namespace LOFAR
