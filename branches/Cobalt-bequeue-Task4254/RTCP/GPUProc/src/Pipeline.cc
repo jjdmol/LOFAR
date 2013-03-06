@@ -49,8 +49,9 @@ namespace LOFAR
                 }
             }
 
-            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++)
-              outputs[sb].streamMutex = new Mutex;
+            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
+              outputs[sb].queue = new Queue< SmartPtr<StreamableData> >;
+            }
         }
 
 
@@ -62,32 +63,48 @@ namespace LOFAR
 
         void Pipeline::handleOutput()
         {
-            // Connect to all output streams in parallel, because some might
-            // block.
+            // Process to all output streams in parallel
 
 #           pragma omp parallel for num_threads(ps.nrSubbands())
             for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
               struct Output &output = outputs[sb];
 
-              ScopedLock sl(*output.streamMutex);
+              SmartPtr<Stream> outputStream;
 
               try {
+                  // Connect to output stream
                   if (ps.getHostName(CORRELATED_DATA, sb) == "") {
                     // an empty host name means 'write to disk directly', to
                     // make debugging easier for now
-                    output.stream = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
+                    outputStream = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
                   } else {
                     // connect to the Storage_main process for this output
                     const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, sb);
 
                     // TODO: Create these connections asynchronously!
-                    output.stream = createStream(desc, false, 0);
+                    outputStream = createStream(desc, false, 0);
+                  }
+
+                  // Process queue elements
+                  SmartPtr<StreamableData> data;
+
+                  while ((data = output.queue->remove()) != NULL) {
+                    data->write(outputStream.get(), true);
                   }
               } catch(Exception &ex) {
-                LOG_ERROR_STR("Caught exception, using null stream for subband " << sb << ": " << ex);
-
-                output.stream = new NullStream;
+                  LOG_ERROR_STR("Caught exception for output subband " << sb << ": " << ex);
               }
+            }
+        }
+
+
+        void Pipeline::noMoreOutput()
+        {
+            // We don't know how many blocks will come through, due to
+            // the best-effort queue, so we use a NULL pointer to
+            // signal end of processing.
+            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
+              outputs[sb].queue->append(NULL);
             }
         }
 
@@ -98,7 +115,7 @@ namespace LOFAR
         }
 
 
-        void Pipeline::writeOutput(unsigned block, unsigned subband, StreamableData &data)
+        void Pipeline::writeOutput(unsigned block, unsigned subband, StreamableData *data)
         {
             struct Output &output = outputs[subband];
 
@@ -106,25 +123,15 @@ namespace LOFAR
             output.sync.waitFor(block);
 
             // We do the ordering, so we set the sequence numbers
-            data.setSequenceNumber(block);
+            data->setSequenceNumber(block);
 
-            // Try to write the data
-            {
-              ScopedLock sl(*output.streamMutex);
-
-              if (output.stream.get()) {
-                try {
-                  data.write(output.stream.get(), true);
-                } catch (Stream::EndOfStreamException &ex) {
-                  LOG_WARN_STR("Caught EndOfStream while writing data: " << ex);
-
-                  // Prevent future warnings
-                  output.stream = new NullStream;
-                }
-              } else {
-                // stream was not set up yet -- discard block
-                LOG_WARN_STR("No output stream -- discarding subband " << subband << " block " << block);
-              }
+            // Append only in non-realtime mode or when the queue isn't
+            // clogged. TODO: Deal with clogging more properly,
+            // that is, earlier in the pipeline, and a metric other
+            // than a fixed number of blocks. For example, an amount
+            // of memory or time span.
+            if (!ps.realTime() || output.queue->size() < 10) {
+              output.queue->append(data);
             }
 
             // Allow the next block to be written

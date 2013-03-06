@@ -110,6 +110,9 @@ namespace LOFAR
           }
         }
 
+        // Signal end of data
+        noMoreOutput();
+
           // Log all performance totals
           for (map<string, PerformanceCounter::figures>::const_iterator i = total_performance.begin(); i != total_performance.end(); ++i) {
             i->second.log();
@@ -139,16 +142,22 @@ namespace LOFAR
     void CorrelatorPipeline::sendSubbandVisibilities(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
     {
       // Create an data object to Storage around our visibilities
-      CorrelatedData data(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), workQueue.visibilities.origin(), workQueue.visibilities.num_elements(), heapAllocator, 1);
+      SmartPtr<CorrelatedData> data = new CorrelatedData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 1);
 
-      // Add weights
+      // Copy visibilities
+      ASSERT(data->visibilities.num_elements() == workQueue.visibilities.num_elements());
+      memcpy(data->visibilities.origin(), workQueue.visibilities.origin(), workQueue.visibilities.bytesize());
+
+      // Set weights
       // TODO: base weights on flags
-      for (size_t bl = 0; bl < data.itsNrBaselines; ++bl)
-        for (size_t ch = 0; ch < ps.nrChannelsPerSubband(); ++ch)
-          data.setNrValidSamples(bl, ch, ps.integrationSteps());
+      size_t weight = ps.integrationSteps();
 
-      // Write the block to Storage
-      writeOutput(block, subband, data);
+      for (size_t bl = 0; bl < data->itsNrBaselines; ++bl)
+        for (size_t ch = 0; ch < ps.nrChannelsPerSubband(); ++ch)
+          data->setNrValidSamples(bl, ch, weight);
+
+      // Hand off the block to Storage
+      writeOutput(block, subband, data.release());
     }
 
 
