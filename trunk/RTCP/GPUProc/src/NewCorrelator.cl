@@ -1,11 +1,13 @@
+#include "math.cl"
+
 #define NR_STATIONS_PER_BLOCK	32
 #define NR_TIMES_PER_BLOCK	8
 
 #define NR_BASELINES		(NR_STATIONS * (NR_STATIONS + 1) / 2)
 
 
-typedef __global float4 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
-typedef __global float8 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
+typedef __global fcomplex2 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
+typedef __global fcomplex4 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
 
 
 __kernel
@@ -15,7 +17,7 @@ void correlateTriangleKernel(__global void *visibilitiesPtr,
   VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
-  __local float4 samples[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
+  __local fcomplex2 samples[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
   uint channel = get_global_id(2) + 1;
   uint block = get_global_id(1);
 
@@ -56,7 +58,7 @@ void correlateTriangleKernel(__global void *visibilitiesPtr,
 
 #pragma unroll 1
     for (uint time = 0; time < NR_TIMES_PER_BLOCK; time ++) {
-      float4 sample_0, sample_1, sample_A, sample_B;
+      fcomplex2 sample_0, sample_1, sample_A, sample_B;
 
       if (doCorrelate) {
         sample_0 = samples[0][time][statYoffset / 2];
@@ -115,8 +117,8 @@ void correlateRectangleKernel(__global void *visibilitiesPtr,
   VisibilitiesType  visibilities  = (VisibilitiesType)  visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
-  __local float4 samplesX[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
-  __local float4 samplesY[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
+  __local fcomplex2 samplesX[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
+  __local fcomplex2 samplesY[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
 
   uint block	 = get_global_id(1);
   uint blockX	 = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
@@ -149,8 +151,8 @@ void correlateRectangleKernel(__global void *visibilitiesPtr,
 
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += NR_TIMES_PER_BLOCK) {
     // load data into local memory
-    float4 sampleX = (*correctedData)[firstStationX + loadStat][channel][major + loadTime];
-    float4 sampleY;
+    fcomplex2 sampleX = (*correctedData)[firstStationX + loadStat][channel][major + loadTime];
+    fcomplex2 sampleY;
 
     if (doLoadY)
       sampleY = (*correctedData)[firstStationY + loadStat][channel][major + loadTime];
@@ -166,7 +168,7 @@ void correlateRectangleKernel(__global void *visibilitiesPtr,
 
 #pragma unroll 1
     for (uint time = 0; time < NR_TIMES_PER_BLOCK; time ++) {
-      float4 sample_0, sample_1, sample_A, sample_B;
+      fcomplex2 sample_0, sample_1, sample_A, sample_B;
 
       if (doCorrelateLower) {
         sample_0 = samplesY[0][time][statYoffset];
@@ -225,7 +227,7 @@ void correlateRectangleKernel(__global void *visibilitiesPtr,
 
 void correlateTriangle(VisibilitiesType visibilities,
 		       CorrectedDataType correctedData,
-		       __local float4 samples[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
+		       __local fcomplex2 samples[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
 		       uint block)
 {
   uint channel = get_global_id(2) + 1;
@@ -268,7 +270,7 @@ void correlateTriangle(VisibilitiesType visibilities,
 
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += NR_TIMES_PER_BLOCK) {
     // load data into local memory
-    float4 sample;
+    fcomplex2 sample;
 
     if (doLoad)
       sample = (*correctedData)[firstStation + loadStat][channel][major + loadTime];
@@ -283,10 +285,10 @@ void correlateTriangle(VisibilitiesType visibilities,
 #pragma unroll 1
     for (uint time = 0; time < NR_TIMES_PER_BLOCK; time ++) {
       if (doCorrelate) {
-        float4 sample_0 = samples[0][time][statYoffset / 2];
-        float4 sample_A = samples[0][time][statXoffset / 2];
-        float4 sample_B = samples[1][time][statXoffset / 2];
-        float4 sample_1 = samples[1][time][statYoffset / 2];
+        fcomplex2 sample_0 = samples[0][time][statYoffset / 2];
+        fcomplex2 sample_A = samples[0][time][statXoffset / 2];
+        fcomplex2 sample_B = samples[1][time][statXoffset / 2];
+        fcomplex2 sample_1 = samples[1][time][statYoffset / 2];
 
         vis_0A_r += sample_0.xxzz * sample_A.xzxz;
         vis_0A_i += sample_0.yyww * sample_A.xzxz;
@@ -308,7 +310,7 @@ void correlateTriangle(VisibilitiesType visibilities,
       }
 
       if (doAutoCorrelate) {
-        float4 sample_0 = samples[statYoffset % 2][time][statYoffset / 2];
+        fcomplex2 sample_0 = samples[statYoffset % 2][time][statYoffset / 2];
 	vis_0A_r.xyw += sample_0.xxz * sample_0.xzz;
 	vis_0A_i.y   += sample_0.y * sample_0.z;
 	vis_0A_r.xyw += sample_0.yyw * sample_0.yww;
@@ -316,8 +318,8 @@ void correlateTriangle(VisibilitiesType visibilities,
       }
 
       if (doNearAutoCorrelate) {
-        float4 sample_0 = samples[0][time][statYoffset / 2];
-        float4 sample_B = samples[1][time][statXoffset / 2];
+        fcomplex2 sample_0 = samples[0][time][statYoffset / 2];
+        fcomplex2 sample_B = samples[1][time][statXoffset / 2];
         vis_0B_r += sample_0.xxzz * sample_B.xzxz;
         vis_0B_i += sample_0.yyww * sample_B.xzxz;
         vis_0B_r += sample_0.yyww * sample_B.ywyw;
@@ -356,7 +358,7 @@ void correlateTriangle(VisibilitiesType visibilities,
 
 void correlateTriangle2(VisibilitiesType visibilities,
 			CorrectedDataType correctedData,
-			__local float4 samples[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
+			__local fcomplex2 samples[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
 			uint block
 )
 {
@@ -462,8 +464,8 @@ void correlateTriangle2(VisibilitiesType visibilities,
 
 void correlateRectangle(VisibilitiesType visibilities,
 			CorrectedDataType correctedData,
-			__local float4 samplesX[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
-			__local float4 samplesY[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
+			__local fcomplex2 samplesX[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
+			__local fcomplex2 samplesY[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
 			uint blockX,
 			uint blockY
 )
@@ -495,8 +497,8 @@ void correlateRectangle(VisibilitiesType visibilities,
 
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += NR_TIMES_PER_BLOCK) {
     // load data into local memory
-    float4 sampleX = (*correctedData)[firstStationX + loadStat][channel][major + loadTime];
-    float4 sampleY;
+    fcomplex2 sampleX = (*correctedData)[firstStationX + loadStat][channel][major + loadTime];
+    fcomplex2 sampleY;
 
     if (doLoadY)
       sampleY = (*correctedData)[firstStationY + loadStat][channel][major + loadTime];
@@ -512,7 +514,7 @@ void correlateRectangle(VisibilitiesType visibilities,
 
 #pragma unroll 1
     for (uint time = 0; time < NR_TIMES_PER_BLOCK; time ++) {
-      float4 sample_0, sample_1, sample_A, sample_B;
+      fcomplex2 sample_0, sample_1, sample_A, sample_B;
 
       if (doCorrelateLower) {
         sample_0 = samplesY[0][time][statYoffset];
@@ -572,8 +574,8 @@ __kernel __attribute__((reqd_work_group_size(NR_STATIONS_PER_BLOCK * NR_STATIONS
 void correlate(__global void *visibilitiesPtr,
 	       __global const void *correctedDataPtr)
 {
-  __local float4 samplesX[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
-  __local float4 samplesY[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
+  __local fcomplex2 samplesX[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
+  __local fcomplex2 samplesY[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
 
   uint block	 = get_global_id(1);
   uint blockX	 = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;

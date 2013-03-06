@@ -5,17 +5,17 @@
 #endif
 
 
-typedef __global float4 (*OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
+typedef __global fcomplex2 (*OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 #if NR_CHANNELS == 1
 #if NR_BITS_PER_SAMPLE == 16
-typedef __global short4 (*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND];
+typedef __global short_complex2 (*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND];
 #elif NR_BITS_PER_SAMPLE == 8
-typedef __global char4 (*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND];
+typedef __global char_complex2 (*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND];
 #else
 #error unsupport NR_BITS_PER_SAMPLE
 #endif
 #else
-typedef __global float2 (*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
+typedef __global fcomplex (*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 #endif
 typedef __global const float2 (*DelaysType)[NR_BEAMS][NR_STATIONS]; // 2 Polarizations; in seconds
 typedef __global const float2 (*PhaseOffsetsType)[NR_STATIONS]; // 2 Polarizations; in radians
@@ -40,7 +40,7 @@ __kernel void applyDelaysAndCorrectBandPass(__global void *correctedDataPtr,
 #if NR_CHANNELS > 1
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
 
-  __local float4 tmp[16][17]; // one too wide to allow coalesced reads
+  __local fcomplex2 tmp[16][17]; // one too wide to allow coalesced reads
 
   uint major	   = get_global_id(0) / 16;
   uint minor	   = get_global_id(0) % 16;
@@ -66,10 +66,10 @@ __kernel void applyDelaysAndCorrectBandPass(__global void *correctedDataPtr,
   float2 myPhiBegin = (phiBegin + major * deltaPhi) * frequency + (*phaseOffsets)[station];
   float2 myPhiDelta = 16 * deltaPhi * frequency;
 #endif
-  float2 vX = cexp(myPhiBegin.x);
-  float2 vY = cexp(myPhiBegin.y);
-  float2 dvX = cexp(myPhiDelta.x);
-  float2 dvY = cexp(myPhiDelta.y);
+  fcomplex vX = cexp(myPhiBegin.x);
+  fcomplex vY = cexp(myPhiBegin.y);
+  fcomplex dvX = cexp(myPhiDelta.x);
+  fcomplex dvY = cexp(myPhiDelta.y);
 #endif
 
 #if defined BANDPASS_CORRECTION
@@ -83,13 +83,13 @@ __kernel void applyDelaysAndCorrectBandPass(__global void *correctedDataPtr,
 
 #if NR_CHANNELS == 1
   for (uint time = get_local_id(0); time < NR_SAMPLES_PER_SUBBAND; time += get_local_size(0)) {
-    float4 samples = convert_float4((*inputData)[station][time]);
-    float2 sampleX = samples.xy;
-    float2 sampleY = samples.zw;
+    fcomplex2 samples = convert_float4((*inputData)[station][time]);
+    fcomplex sampleX = samples.s01;
+    fcomplex sampleY = samples.s23;
 #else
   for (uint time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16) {
-    float2 sampleX = (*inputData)[station][0][time + major][channel + minor];
-    float2 sampleY = (*inputData)[station][1][time + major][channel + minor];
+    fcomplex sampleX = (*inputData)[station][0][time + major][channel + minor];
+    fcomplex sampleY = (*inputData)[station][1][time + major][channel + minor];
 #endif
 
 #if defined DELAY_COMPENSATION
