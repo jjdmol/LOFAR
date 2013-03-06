@@ -141,23 +141,6 @@ namespace LOFAR
 
     void CorrelatorPipeline::sendSubbandVisibilities(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
     {
-      // Create an data object to Storage around our visibilities
-      SmartPtr<CorrelatedData> data = new CorrelatedData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 1);
-
-      // Copy visibilities
-      ASSERT(data->visibilities.num_elements() == workQueue.visibilities.num_elements());
-      memcpy(data->visibilities.origin(), workQueue.visibilities.origin(), workQueue.visibilities.bytesize());
-
-      // Set weights
-      // TODO: base weights on flags
-      size_t weight = ps.integrationSteps();
-
-      for (size_t bl = 0; bl < data->itsNrBaselines; ++bl)
-        for (size_t ch = 0; ch < ps.nrChannelsPerSubband(); ++ch)
-          data->setNrValidSamples(bl, ch, weight);
-
-      // Hand off the block to Storage
-      writeOutput(block, subband, data.release());
     }
 
 
@@ -200,19 +183,21 @@ namespace LOFAR
 #       pragma omp for schedule(dynamic), nowait, ordered  // no parallel: this no new threads
         for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) 
         {
+          // Create an data object to Storage around our visibilities
+          SmartPtr<CorrelatedData> output = new CorrelatedData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 1);
+
           // Each input block is sent in order. Therefore wait for the correct block
           inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-          receiveSubbandSamples( workQueue,  block,  subband);
+          receiveSubbandSamples(workQueue,  block,  subband);
           // Advance the block index
           inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
 
           // Perform calculations
-          workQueue.doSubband(block, subband);
+          workQueue.doSubband(block, subband, *output);
 
-          // Send output to Storage
-          sendSubbandVisibilities(workQueue, block, subband);
+          // Hand off the block to Storage
+          writeOutput(block, subband, output.release());
         }  // end pragma omp for 
-
       }
 
       //The omp for loop was nowait: We need a barier to assure that 
