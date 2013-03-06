@@ -31,6 +31,19 @@ namespace LOFAR
             cl::CommandQueue queue;
 
             PerformanceCounter counter;
+
+
+            /**
+             * Fuzzy compare of float val with ref.
+             *
+             * \param[in] val          value to test
+             * \param[in] ref          reference value to test against
+             * \param[in] epsilonf     max absolute difference.
+             *
+             * An epsilonf is actually computation dependent, but for our test cases, this is good (and broad) enough.
+             * Return true if val is close enough to ref, false otherwise (including if val or ref is NaN).
+             */
+            bool equalsRelError(float val, float ref, float epsilonf = 1.0e-5f) const;
         };
     }
 }

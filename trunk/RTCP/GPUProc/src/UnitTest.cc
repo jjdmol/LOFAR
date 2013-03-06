@@ -23,5 +23,9 @@ namespace LOFAR
                 program = createProgram(ps, context, devices, programName);
         }
 
+
+        bool UnitTest::equalsRelError(float val, float ref, float epsilonf) const {
+            return std::abs((val - ref) / ref) < epsilonf;
+        }
     }
 }
