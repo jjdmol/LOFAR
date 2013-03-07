@@ -165,14 +165,14 @@ namespace LOFAR
           // Log specific performance figures for regression tests at INFO level
           double wall_seconds = total_timers["CPU - total"]->getAverage();
           double gpu_seconds = counter_groups["compute"].runtime/nrGPUs;
-          double spin_seconds = total_timers["GPU - wait"]->getElapsed()/nrWorkQueues;
+          double spin_seconds = total_timers["GPU - wait"]->getAverage();
           double input_seconds = total_timers["CPU - input"]->getElapsed()/nrWorkQueues;
           double cpu_seconds = total_timers["CPU - compute"]->getElapsed()/nrWorkQueues;
           double output_seconds = total_timers["CPU - output"]->getElapsed()/nrWorkQueues;
 
           LOG_INFO_STR("Wall seconds spent processing        : " << fixed << setw(8) << setprecision(3) << wall_seconds);
           LOG_INFO_STR("GPU  seconds spent computing, per GPU: " << fixed << setw(8) << setprecision(3) << gpu_seconds);
-          LOG_INFO_STR("Spin seconds spent polling,    per WQ: " << fixed << setw(8) << setprecision(3) << spin_seconds);
+          LOG_INFO_STR("Spin seconds spent polling, per block: " << fixed << setw(8) << setprecision(3) << spin_seconds);
           LOG_INFO_STR("CPU  seconds spent on input,   per WQ: " << fixed << setw(8) << setprecision(3) << input_seconds);
           LOG_INFO_STR("CPU  seconds spent processing, per WQ: " << fixed << setw(8) << setprecision(3) << cpu_seconds);
           LOG_INFO_STR("CPU  seconds spent on output,  per WQ: " << fixed << setw(8) << setprecision(3) << output_seconds);
@@ -200,8 +200,6 @@ namespace LOFAR
 
     void CorrelatorPipeline::sendSubbandVisibilities(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
     {
-      return;
-
       // Create an data object to Storage around our visibilities
       CorrelatedData data(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), workQueue.visibilities.origin(), workQueue.visibilities.num_elements(), heapAllocator, 1);
 
