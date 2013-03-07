@@ -4,7 +4,9 @@ include(LofarCTest)
 
 lofar_add_test(tContext tContext.cc)
 lofar_add_test(tPerformanceCounter tPerformanceCounter.cc)
-lofar_add_test(tCorrelateRealData)
+lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging)
+lofar_add_test(tCorrelate_3sec_1st_5sb)
+lofar_add_test(tCorrelate_3sec_2st_5sb)
 
 lofar_add_test(tSSH tSSH.cc)
 lofar_add_bin_program(DummyStorage DummyStorage.cc)
