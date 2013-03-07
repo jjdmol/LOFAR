@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Parsets to test
+PARSETS="
+tCorrelateRealData.in_1sec_1st_5sb_noflagging.parset
+tCorrelateRealData.in_3sec_1st_5sb.parset
+tCorrelateRealData.in_3sec_2st_5sb.parset
+"
+
+# Run tests
+for PARSET in $PARSETS
+do
+  $srcdir/testParset.sh "$PARSET" || exit $?
+done
+
