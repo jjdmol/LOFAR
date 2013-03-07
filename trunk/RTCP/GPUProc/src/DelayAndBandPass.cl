@@ -5,31 +5,32 @@
 #endif
 
 
-typedef __global fcomplex2 (*OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
+typedef __global fcomplex2 (*restrict OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 #if NR_CHANNELS == 1
 #if NR_BITS_PER_SAMPLE == 16
-typedef __global short_complex2 (*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND];
+typedef __global short_complex2 (*restrict InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND];
 #elif NR_BITS_PER_SAMPLE == 8
-typedef __global char_complex2 (*InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND];
+typedef __global char_complex2 (*restrict InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND];
 #else
 #error unsupport NR_BITS_PER_SAMPLE
 #endif
 #else
-typedef __global fcomplex (*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
+typedef __global fcomplex (*restrict InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 #endif
-typedef __global const float2 (*DelaysType)[NR_BEAMS][NR_STATIONS]; // 2 Polarizations; in seconds
-typedef __global const float2 (*PhaseOffsetsType)[NR_STATIONS]; // 2 Polarizations; in radians
-typedef __global const float (*BandPassFactorsType)[NR_CHANNELS];
+typedef __global const float2 (*restrict DelaysType)[NR_BEAMS][NR_STATIONS]; // 2 Polarizations; in seconds
+typedef __global const float2 (*restrict PhaseOffsetsType)[NR_STATIONS]; // 2 Polarizations; in radians
+typedef __global const float (*restrict BandPassFactorsType)[NR_CHANNELS];
 
 
-__kernel void applyDelaysAndCorrectBandPass(__global void *correctedDataPtr,
-					    __global const void *filteredDataPtr,
-					    float subbandFrequency,
-					    unsigned beam,
-					    __global const void *delaysAtBeginPtr,
-					    __global const void *delaysAfterEndPtr,
-					    __global const void *phaseOffsetsPtr,
-					    __global const void *bandPassFactorsPtr)
+__kernel __attribute__((reqd_work_group_size(16 * 16, 1, 1)))
+void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
+				   __global const fcomplex *restrict filteredDataPtr,
+				   float subbandFrequency,
+				   unsigned beam,
+				   __global const float2 *restrict delaysAtBeginPtr,
+				   __global const float2 *restrict delaysAfterEndPtr,
+				   __global const float2 *restrict phaseOffsetsPtr,
+				   __global const float *restrict bandPassFactorsPtr)
 {
   OutputDataType outputData = (OutputDataType) correctedDataPtr;
   InputDataType inputData = (InputDataType) filteredDataPtr;
