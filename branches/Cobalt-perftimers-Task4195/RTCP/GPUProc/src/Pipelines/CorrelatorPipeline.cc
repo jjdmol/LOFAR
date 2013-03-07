@@ -98,8 +98,9 @@ namespace LOFAR
       for (map<string, PerformanceCounter::figures>::const_iterator i = total_counters.begin(); i != total_counters.end(); ++i) {
         LOG_DEBUG_STR(i->second.log(i->first));
       }
+
       for (map<string, SmartPtr<NSTimer> >::const_iterator i = total_timers.begin(); i != total_timers.end(); ++i) {
-        LOG_DEBUG_STR(i->second);
+        LOG_DEBUG_STR(*(i->second));
       }
 
       // Log all group totals at INFO level
