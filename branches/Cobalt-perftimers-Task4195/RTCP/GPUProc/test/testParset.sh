@@ -1,6 +1,11 @@
 #!/bin/bash
 
 # Run a parset and compare the output to that in the reference_output directory.
+# 
+# Syntax: testParset.sh parset [reference-output-directory]
+
+PARSET=$1
+REFDIR=$2
 
 # Include some useful shell functions
 . $srcdir/testFuncs.sh
@@ -21,8 +26,6 @@ then
   echo "No input files found -- aborting test."
   exit 3
 fi
-
-PARSET=$1
 
 echo "Testing $PARSET"
 
@@ -66,10 +69,13 @@ function parse_logs
   parse_logs performance_normal.txt performance_profiled.txt &&
 
   # compare output
-  for f in *.MS
-  do
-    ${srcdir}/cmpfloat.py $f $RUNDIR/tCorrelateRealData.in_reference/`basename "$PARSET"`/$f || exit 1
-  done
+  if [ "x" != "x$REFDIR" ]
+  then
+    for f in *.MS
+    do
+      ${srcdir}/cmpfloat.py $f $REFDIR/$f || exit 1
+    done
+  fi
 ) || exit 1
 
 cd $RUNDIR
