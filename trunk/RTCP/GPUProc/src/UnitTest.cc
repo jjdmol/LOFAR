@@ -1,4 +1,5 @@
 #include "lofar_config.h"
+#include <complex>
 #include "UnitTest.h"
 
 #include "global_defines.h"
@@ -24,8 +25,17 @@ namespace LOFAR
         }
 
 
-        bool UnitTest::equalsRelError(float val, float ref, float epsilonf) const {
-            return std::abs((val - ref) / ref) < epsilonf;
+        bool UnitTest::fpEquals(double val, double ref, double epsilon) const {
+            double err = std::abs(val - ref);
+            if (ref >= 1.0e-1) {
+                err /= ref; // prefer relative error cmp iff away from 0.0
+            }
+            return err < epsilon;
+        }
+
+        bool UnitTest::cfpEquals(std::complex<double> val, std::complex<double> ref, double epsilon) const {
+            return fpEquals(val.real(), ref.real(), epsilon) &&
+                   fpEquals(val.imag(), ref.imag(), epsilon);
         }
     }
 }

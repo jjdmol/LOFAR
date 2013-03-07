@@ -11,7 +11,7 @@ lofar_find_package(LibSSH2 REQUIRED)
 lofar_find_package(OpenSSL REQUIRED)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time)
 lofar_find_package(Casacore COMPONENTS measures REQUIRED)
-lofar_find_package(FFTW3 COMPONENTS single)
+lofar_find_package(FFTW3 COMPONENTS single double threads)  # 'double threads' for FFT unit test refs
 if(NOT FFTW3_FOUND)
   lofar_find_package(FFTW2 COMPONENTS single real)
   if(NOT FFTW2_FOUND)
@@ -27,6 +27,8 @@ endif(USE_VALGRIND)
 if(USE_PATCHED_OPENCL_HEADERS)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/backward)
 endif(USE_PATCHED_OPENCL_HEADERS)
+
+#include_directories(clAmdFft/include) # AMD OpenCL FFT
 
 add_subdirectory(src)
 add_subdirectory(test)
