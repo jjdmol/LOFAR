@@ -3,6 +3,7 @@
 #include "CL/cl.hpp"
 
 #include "Common/Thread/Queue.h"
+#include "Common/Thread/Semaphore.h"
 #include "Interface/Parset.h"
 #include "Interface/StreamableData.h"
 #include "OpenCL_Support.h"
@@ -76,10 +77,13 @@ namespace LOFAR
               SlidingPointer<size_t> sync;
 
               // output data queue
-              SmartPtr< Queue< SmartPtr<StreamableData> > > queue;
+              Queue< SmartPtr<StreamableData> > queue;
+
+              // semaphore holding the amount of free space in the queue
+              Semaphore queueSize;
             };
 
-            std::vector<struct Output> outputs; // indexed by subband
+            std::vector< SmartPtr<struct Output> > outputs; // indexed by subband
 
             void handleOutput();
         };

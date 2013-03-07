@@ -50,7 +50,11 @@ namespace LOFAR
             }
 
             for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
-              outputs[sb].queue = new Queue< SmartPtr<StreamableData> >;
+              outputs[sb] = new Output;
+
+              // Allow 10 blocks to be in the best-effort queue.
+              // TODO: make this dynamic based on memory or time
+              outputs[sb]->queueSize.up(10);
             }
         }
 
@@ -67,7 +71,7 @@ namespace LOFAR
 
 #           pragma omp parallel for num_threads(ps.nrSubbands())
             for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
-              struct Output &output = outputs[sb];
+              struct Output &output = *outputs[sb];
 
               SmartPtr<Stream> outputStream;
 
@@ -88,7 +92,11 @@ namespace LOFAR
                   // Process queue elements
                   SmartPtr<StreamableData> data;
 
-                  while ((data = output.queue->remove()) != NULL) {
+                  while ((data = output.queue.remove()) != NULL) {
+                    // Queue has space available again
+                    output.queueSize.up(1);
+
+                    // Write data to Storage
                     data->write(outputStream.get(), true);
                   }
               } catch(Exception &ex) {
@@ -104,7 +112,7 @@ namespace LOFAR
             // the best-effort queue, so we use a NULL pointer to
             // signal end of processing.
             for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
-              outputs[sb].queue->append(NULL);
+              outputs[sb]->queue.append(NULL);
             }
         }
 
@@ -117,7 +125,7 @@ namespace LOFAR
 
         void Pipeline::writeOutput(unsigned block, unsigned subband, StreamableData *data)
         {
-            struct Output &output = outputs[subband];
+            struct Output &output = *outputs[subband];
 
             // Force blocks to be written in-order
             output.sync.waitFor(block);
@@ -125,13 +133,18 @@ namespace LOFAR
             // We do the ordering, so we set the sequence numbers
             data->setSequenceNumber(block);
 
-            // Append only in non-realtime mode or when the queue isn't
-            // clogged. TODO: Deal with clogging more properly,
-            // that is, earlier in the pipeline, and a metric other
-            // than a fixed number of blocks. For example, an amount
-            // of memory or time span.
-            if (!ps.realTime() || output.queue->size() < 10) {
-              output.queue->append(data);
+            if (ps.realTime()) {
+              // real-time: append only when there is space available
+              if (output.queueSize.tryDown()) {
+                output.queue.append(data);
+              } else {
+                LOG_WARN_STR("Dropping block " << block << " of subband " << subband);
+              }
+            } else {
+              // non-real time: always append, wait if necessary
+              if (output.queueSize.down()) {
+                output.queue.append(data);
+              }
             }
 
             // Allow the next block to be written
