@@ -34,7 +34,7 @@ namespace LOFAR
 
         void WorkQueue::addTimer(const std::string &name)
         {
-          timers[name] = new NSTimer(name, true, true);
+          timers[name] = new NSTimer(name, false, false);
         }
 
     }
