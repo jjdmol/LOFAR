@@ -8,6 +8,16 @@ namespace LOFAR
 {
     namespace RTCP 
     {
+        /*
+         * Implements a best-effort queue. The queue has a maximum size,
+         * at which point further append()s are blocked until an item
+         * is removed. If `dropIfFull` is set, append() will not block,
+         * but discard the item instead.
+         *
+         * The noMore() function signals the end-of-stream, at which point
+         * an 0 or NULL element is inserted into the stream. The reader
+         * thus has to consider the value 0 as end-of-stream.
+         */
         template<typename T> class BestEffortQueue: public Queue<T>
         {
         public:
