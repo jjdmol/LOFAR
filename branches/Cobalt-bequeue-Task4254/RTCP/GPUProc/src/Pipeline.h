@@ -12,6 +12,7 @@
 #include "Input/InputSection.h"
 #include "Input/BeamletBufferToComputeNode.h"
 #include "createProgram.h"
+#include "BestEffortQueue.h"
 
 namespace LOFAR
 {
@@ -77,13 +78,10 @@ namespace LOFAR
               SlidingPointer<size_t> sync;
 
               // output data queue
-              Queue< SmartPtr<StreamableData> > queue;
-
-              // semaphore holding the amount of free space in the queue
-              Semaphore queueSize;
+              SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
             };
 
-            std::vector< SmartPtr<struct Output> > outputs; // indexed by subband
+            std::vector<struct Output> outputs; // indexed by subband
 
             void handleOutput();
         };
