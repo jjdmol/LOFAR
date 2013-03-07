@@ -112,7 +112,11 @@ namespace LOFAR
             // the best-effort queue, so we use a NULL pointer to
             // signal end of processing.
             for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
+              // let reader flush queue
               outputs[sb]->queue.append(NULL);
+
+              // prevent writer from appending
+              outputs[sb]->queueSize.noMore();
             }
         }
 
