@@ -138,8 +138,10 @@ enable-auto-props = yes
 *.bib = svn:eol-style=native
 *.bmp = svn:mime-type=image/bmp
 *.bz2 = svn:mime-type=application/x-bzip
+*.c = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.cc = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.cfg = svn:eol-style=native
+*.cl = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.cls = svn:eol-style=native
 *.cmake = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.comp = svn:eol-style=native;svn:keywords=Author Date Id Revision
@@ -147,7 +149,6 @@ enable-auto-props = yes
 *.cpp = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.csh = svn:eol-style=native;svn:executable;svn:keywords=Author Date Id Revision
 *.css = svn:eol-style=native
-*.c = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.cxx = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.doc = svn:mime-type=application/msword
 *.dox = svn:eol-style=native
