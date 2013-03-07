@@ -24,7 +24,7 @@ namespace LOFAR
             //
             // If profiling == false, no actual performance statistics are
             // gathered.
-            PerformanceCounter(const std::string &name, bool profiling);
+            PerformanceCounter(const std::string &name, bool profiling, bool logAtDestruction=false);
             ~PerformanceCounter();
 
             // register an operation covered by `event'. runtime will be determined by OpenCL, the
@@ -70,6 +70,10 @@ namespace LOFAR
             void logTotal();
 
         private:
+            // whether to log the performance when ~PerformanceCounter is
+            // called
+            const bool logAtDestruction;
+
             // performance totals
             struct figures total;
 

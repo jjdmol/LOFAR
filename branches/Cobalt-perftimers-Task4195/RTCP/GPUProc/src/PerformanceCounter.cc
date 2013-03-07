@@ -21,10 +21,11 @@ namespace LOFAR
 {
     namespace RTCP 
     {
-        PerformanceCounter::PerformanceCounter(const std::string &name, bool profiling)
+        PerformanceCounter::PerformanceCounter(const std::string &name, bool profiling, bool logAtDestruction)
             :
             name(name),
             profiling(profiling),
+            logAtDestruction(logAtDestruction),
             nrActiveEvents(0)
         {
         }
@@ -34,7 +35,9 @@ namespace LOFAR
         {
             waitForAllOperations();
 
-            LOG_INFO_STR("Event " << setw(20) << name << ": " << total.log());
+            if (logAtDestruction) {
+              LOG_INFO_STR(total.log(name));
+            }
         }
 
 
