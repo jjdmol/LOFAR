@@ -2,6 +2,7 @@
 #define GPUPROC_BESTEFFORTQUEUE_H
 
 #include "Common/Thread/Queue.h"
+#include "Common/Thread/Semaphore.h"
 
 namespace LOFAR
 {
@@ -19,7 +20,7 @@ namespace LOFAR
           // was dropped.
           bool append(T);
 
-          // Remove an element
+          // Remove an element -- 0 or NULL signals end-of-stream.
           T remove();
 
           // Signal end-of-stream.
@@ -31,6 +32,9 @@ namespace LOFAR
 
           // contains the amount of free space in the queue
           Semaphore freeSpace;
+
+          // true if the queue is being flushed
+          bool flushing;
         };
     }
 }
