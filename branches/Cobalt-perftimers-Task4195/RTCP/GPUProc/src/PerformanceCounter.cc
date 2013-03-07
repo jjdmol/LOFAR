@@ -4,6 +4,7 @@
 #include "PerformanceCounter.h"
 
 #include <Common/LofarLogger.h>
+#include <Common/PrettyUnits.h>
 
 #include "CL/cl.hpp"
 
@@ -54,12 +55,17 @@ namespace LOFAR
         }
 
 
-        std::string PerformanceCounter::figures::log() const
+        std::string PerformanceCounter::figures::log(const std::string &name) const
         {
           std::stringstream str;
-          str << setprecision(3)
-              << "n = " << nrEvents << " "
-              << "avg. time = " << 1000 * avrRuntime() << " ms, "
+
+          // Mimic output of NSTimer::print (in LCS/Common/Timer.cc)
+          str << left << setw(25) << name << ": " << right
+              << "avg = " << PrettyTime(avrRuntime()) << ", "
+              << "total = " << PrettyTime(runtime) << ", "
+              << "count = " << setw(9) << nrEvents << ", "
+
+              << setprecision(3)
               << "GFLOP/s = " << FLOPs() / 1e9 << ", "
               << "read = " << readSpeed() / 1e9 << " GB/s, "
               << "written = " << writeSpeed() / 1e9 << " GB/s, "

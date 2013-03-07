@@ -82,11 +82,15 @@ namespace LOFAR
 #       pragma omp section
         {
           // Keep track of performance totals
-          map<string, PerformanceCounter::figures> total_performance;
+          map<string, PerformanceCounter::figures> total_counters;
+          map<string, SmartPtr<NSTimer> > total_timers;
+          Mutex totalsMutex;
+
+          size_t nrWorkQueues = (profiling ? 1 : 2) * nrGPUs;
 
           // Start a set of workqueue, the number depending on the number of GPU's: 2 for each.
           // Each WorkQueue gets its own thread.
-#         pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
+#         pragma omp parallel num_threads(nrWorkQueues)
           {
             CorrelatorWorkQueue queue(ps,               // Configuration
                context,                                 // Opencl context
@@ -96,24 +100,82 @@ namespace LOFAR
             filterBank);                             // The filter set to use. Const
 
             // run the queue
-            doWorkQueue(queue);                            
+            queue.timers["CPU - total"]->start();
+            doWorkQueue(queue);
+            queue.timers["CPU - total"]->stop();
 
             // gather performance figures
-            for (map<string, SmartPtr<PerformanceCounter> >::iterator i = queue.counters.begin(); i != queue.counters.end(); ++i) {
-              const string &name = i->first;
-              PerformanceCounter *counter = i->second.get();
+            {
+              ScopedLock sl(totalsMutex);
 
-              counter->waitForAllOperations();
-              total_performance[name] += counter->getTotal();
+              for (map<string, SmartPtr<PerformanceCounter> >::iterator i = queue.counters.begin(); i != queue.counters.end(); ++i) {
 
+                const string &name = i->first;
+                PerformanceCounter *counter = i->second.get();
 
-          }
+                counter->waitForAllOperations();
+
+                total_counters[name] += counter->getTotal();
+              }
+
+              for (map<string, SmartPtr<NSTimer> >::iterator i = queue.timers.begin(); i != queue.timers.end(); ++i) {
+
+                const string &name = i->first;
+                NSTimer *timer = i->second.get();
+
+                if (!total_timers[name])
+                  total_timers[name] = new NSTimer(name, true, true);
+
+                *total_timers[name] += *timer;
+              }
+            }
         }
 
-          // Log all performance totals
-          for (map<string, PerformanceCounter::figures>::const_iterator i = total_performance.begin(); i != total_performance.end(); ++i) {
-            i->second.log();
+          // Group figures based on their prefix before " - ", so "compute - FIR"
+          // belongs to group "compute".
+          map<string, PerformanceCounter::figures> counter_groups;
+
+          for (map<string, PerformanceCounter::figures>::const_iterator i = total_counters.begin(); i != total_counters.end(); ++i) {
+            size_t n = i->first.find(" - ");
+
+            // discard counters without group
+            if (n == string::npos)
+              continue;
+
+            // determine group name
+            string group = i->first.substr(0, n);
+
+            // add to group
+            counter_groups[group] += i->second;
+          }
+
+          // Log all performance totals at DEBUG level
+          for (map<string, PerformanceCounter::figures>::const_iterator i = total_counters.begin(); i != total_counters.end(); ++i) {
+            LOG_DEBUG_STR(i->second.log(i->first));
+          }
+          for (map<string, SmartPtr<NSTimer> >::const_iterator i = total_timers.begin(); i != total_timers.end(); ++i) {
+            LOG_DEBUG_STR(i->second);
+          }
+
+          // Log all group totals at INFO level
+          for (map<string, PerformanceCounter::figures>::const_iterator i = counter_groups.begin(); i != counter_groups.end(); ++i) {
+            LOG_INFO_STR(i->second.log(i->first));
       }
+
+          // Log specific performance figures for regression tests at INFO level
+          double wall_seconds = total_timers["CPU - total"]->getAverage();
+          double gpu_seconds = counter_groups["compute"].runtime/nrGPUs;
+          double spin_seconds = total_timers["GPU - wait"]->getElapsed()/nrWorkQueues;
+          double input_seconds = total_timers["CPU - input"]->getElapsed()/nrWorkQueues;
+          double cpu_seconds = total_timers["CPU - compute"]->getElapsed()/nrWorkQueues;
+          double output_seconds = total_timers["CPU - output"]->getElapsed()/nrWorkQueues;
+
+          LOG_INFO_STR("Wall seconds spent processing        : " << fixed << setw(8) << setprecision(3) << wall_seconds);
+          LOG_INFO_STR("GPU  seconds spent computing, per GPU: " << fixed << setw(8) << setprecision(3) << gpu_seconds);
+          LOG_INFO_STR("Spin seconds spent polling,    per WQ: " << fixed << setw(8) << setprecision(3) << spin_seconds);
+          LOG_INFO_STR("CPU  seconds spent on input,   per WQ: " << fixed << setw(8) << setprecision(3) << input_seconds);
+          LOG_INFO_STR("CPU  seconds spent processing, per WQ: " << fixed << setw(8) << setprecision(3) << cpu_seconds);
+          LOG_INFO_STR("CPU  seconds spent on output,  per WQ: " << fixed << setw(8) << setprecision(3) << output_seconds);
     }
       }
     }
@@ -138,6 +200,8 @@ namespace LOFAR
 
     void CorrelatorPipeline::sendSubbandVisibilities(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
     {
+      return;
+
       // Create an data object to Storage around our visibilities
       CorrelatedData data(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), workQueue.visibilities.origin(), workQueue.visibilities.num_elements(), heapAllocator, 1);
 
@@ -192,16 +256,22 @@ namespace LOFAR
         for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) 
         {
           // Each input block is sent in order. Therefore wait for the correct block
+          workQueue.timers["CPU - input"]->start();
           inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
           receiveSubbandSamples( workQueue,  block,  subband);
           // Advance the block index
           inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
+          workQueue.timers["CPU - input"]->stop();
 
           // Perform calculations
+          workQueue.timers["CPU - compute"]->start();
           workQueue.doSubband(block, subband);
+          workQueue.timers["CPU - compute"]->stop();
 
           // Send output to Storage
+          workQueue.timers["CPU - output"]->start();
           sendSubbandVisibilities(workQueue, block, subband);
+          workQueue.timers["CPU - output"]->stop();
         }  // end pragma omp for 
 
       }

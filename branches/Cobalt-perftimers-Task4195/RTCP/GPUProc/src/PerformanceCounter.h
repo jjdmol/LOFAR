@@ -5,6 +5,8 @@
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Condition.h>
 
+#include <string>
+
 namespace LOFAR
 {
     namespace RTCP 
@@ -55,7 +57,7 @@ namespace LOFAR
               double readSpeed() const  { return nrBytesRead/runtime; }
               double writeSpeed() const { return nrBytesWritten/runtime; }
 
-              std::string log() const;
+              std::string log(const std::string &name = "timer") const;
             };
 
             // Return once all scheduled operations have completed
