@@ -174,9 +174,7 @@ namespace LOFAR
             filterBank);                             // The filter set to use. Const
 
             // run the queue
-            queue.timers["CPU - total"]->start();
             doWorkQueue(queue);
-            queue.timers["CPU - total"]->stop();
 
             // gather performance figures
             performance.addQueue(queue);
@@ -238,6 +236,8 @@ namespace LOFAR
       double executionStartTime = omp_get_wtime();
       double lastTime = omp_get_wtime(); 
 
+      workQueue.timers["CPU - total"]->start();
+
       // loop all available blocks. use the blocks to determine if we are within the valid observation times
       // This loop is not parallel
       for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block ++) 
@@ -261,8 +261,8 @@ namespace LOFAR
 #       pragma omp for schedule(dynamic), nowait, ordered  // no parallel: this no new threads
         for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) 
         {
-          // Each input block is sent in order. Therefore wait for the correct block
           workQueue.timers["CPU - input"]->start();
+          // Each input block is sent in order. Therefore wait for the correct block
           inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
           receiveSubbandSamples( workQueue,  block,  subband);
           // Advance the block index
@@ -281,6 +281,8 @@ namespace LOFAR
         }  // end pragma omp for 
 
       }
+
+      workQueue.timers["CPU - total"]->stop();
 
       //The omp for loop was nowait: We need a barier to assure that 
 #     pragma omp barrier 
