@@ -67,7 +67,7 @@ namespace LOFAR
         NSTimer *timer = i->second.get();
 
         if (!total_timers[name])
-          total_timers[name] = new NSTimer(name, true, true);
+          total_timers[name] = new NSTimer(name, false, false);
 
         *total_timers[name] += *timer;
       }
