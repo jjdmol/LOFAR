@@ -44,7 +44,6 @@ void SSH_Finalize();
 // Sets up and maintains an SSH connection using LibSSH2.
 class SSHconnection {
 public:
-
   // The number of seconds to wait to retry if establishing a connection fails.
   static const unsigned RETRY_DELAY = 60;
 
@@ -54,13 +53,24 @@ public:
 
   ~SSHconnection();
 
+  // Start connecting
   void start();
+
+  // Abort the connection
   void cancel();
+
+  // Wait for the connection to finish
   void wait();
   void wait( const struct timespec &deadline );
 
+  // Returns whether the connection is finished
   bool isDone();
 
+  // Returns whether the SSH session is (or was) connected succesfully to the
+  // remote SSH daemon.
+  bool connected() const;
+
+  // If stdout is captured, return the captured output
   std::string stdoutBuffer() const;
 
 private:
@@ -69,6 +79,8 @@ private:
   const string itsCommandLine;
   const string itsUserName;
   const string itsSSHKey;
+
+  bool itsConnected;
 
   SmartPtr<Thread> itsThread;
   const bool itsCaptureStdout;
