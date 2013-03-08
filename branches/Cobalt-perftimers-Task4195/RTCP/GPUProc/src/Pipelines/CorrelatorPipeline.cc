@@ -179,13 +179,12 @@ namespace LOFAR
             // gather performance figures
             performance.addQueue(queue);
           }
+          // Signal end of data
+          noMoreOutput();
 
           // log performance figures
           performance.log(nrWorkQueues);
         }
-
-        // Signal end of data
-        noMoreOutput();
       }
     }
 
