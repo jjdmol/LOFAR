@@ -3,6 +3,7 @@
 
 #include "CL/cl.hpp"
 #include "Interface/Parset.h"
+#include "Interface/CorrelatedData.h"
 #include "OpenCL_Support.h"
 #include <complex>
 
@@ -63,7 +64,7 @@ namespace LOFAR
         FilterBank &filterBank);
 
       void doWork();
-      void doSubband(unsigned block, unsigned subband);
+      void doSubband(unsigned block, unsigned subband, CorrelatedData &output);
       //private:           
 
       cl::Buffer		devFIRweights;
@@ -91,6 +92,8 @@ namespace LOFAR
       CorrelatorKernel		correlatorKernel;
 #endif
       //std::vector< WorkQueueInputItem> workQueueInputItems;
+    private:
+      void computeFlags(CorrelatedData &output);
     };
 
   }

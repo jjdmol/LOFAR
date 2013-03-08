@@ -2,6 +2,7 @@
 
 include(LofarCTest)
 
+lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tContext tContext.cc)
 lofar_add_test(tPerformanceCounter tPerformanceCounter.cc)
 lofar_add_test(tCorrelateRealData)
