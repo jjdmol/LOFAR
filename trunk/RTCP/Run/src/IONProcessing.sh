@@ -14,7 +14,7 @@ function start() {
   # use a fifo to avoid race conditions
   mkfifo "$PIDFILE"
 
-  (/bgsys/LOFAR/openmpi-ion/bin/mpirun -x CASARCFILES=`readlink -f $LOFARROOT`/etc/casarc -host "$PSETS"  --pernode -wd "$RUNDIR" "$IONPROC" "$ISPRODUCTION" 2>&1 &
+  (/bgsys/LOFAR/openmpi-ion/bin/mpirun -x LOFARROOT=`readlink -f $LOFARROOT` -host "$PSETS"  --pernode -wd "$RUNDIR" "$IONPROC" "$ISPRODUCTION" 2>&1 &
   echo $! > "$PIDFILE") | LOFAR/Logger.py $LOGPARAMS "$LOGDIR/IONProc.log" &
 
   PID=`cat $PIDFILE`
