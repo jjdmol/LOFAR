@@ -1,2 +1,0 @@
-#set(CASACORE_ROOT_DIR /opt/lofar/external/casacore)
-set(ENV{JAVA_HOME} /usr/lib64/jvm/java-1.6.0-openjdk-1.6.0)
