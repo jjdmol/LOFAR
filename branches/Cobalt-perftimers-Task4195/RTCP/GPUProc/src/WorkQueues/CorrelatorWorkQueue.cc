@@ -59,28 +59,30 @@ namespace LOFAR
             // create all the counters
       // Move the FIR filter weight to the GPU
 #if defined USE_NEW_CORRELATOR
-            addCounter("compute - cor.triangle");
-            addCounter("compute - cor.rectangle");
+      addCounter("compute - cor.triangle");
+      addCounter("compute - cor.rectangle");
 #else
-            addCounter("compute - correlator");
+      addCounter("compute - correlator");
 #endif
 
-            addCounter("compute - FIR");
-            addCounter("compute - delay/bp");
-            addCounter("compute - FFT");
-            addCounter("input - samples");
-            addCounter("output - visibilities");
+      addCounter("compute - FIR");
+      addCounter("compute - delay/bp");
+      addCounter("compute - FFT");
+      addCounter("input - samples");
+      addCounter("output - visibilities");
 
-            addTimer("CPU - total"); // used by CorrelatorPipeline
-            addTimer("CPU - input");
-            addTimer("CPU - output");
-            addTimer("CPU - compute");
+      // CPU timers are set by CorrelatorPipeline
+      addTimer("CPU - total");
+      addTimer("CPU - input");
+      addTimer("CPU - output");
+      addTimer("CPU - compute");
 
-            addTimer("GPU - total");
-            addTimer("GPU - input");
-            addTimer("GPU - output");
-            addTimer("GPU - compute");
-            addTimer("GPU - wait");
+      // GPU timers are set by us
+      addTimer("GPU - total");
+      addTimer("GPU - input");
+      addTimer("GPU - output");
+      addTimer("GPU - compute");
+      addTimer("GPU - wait");
 
       queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), filterBank.getWeights().origin());
 
