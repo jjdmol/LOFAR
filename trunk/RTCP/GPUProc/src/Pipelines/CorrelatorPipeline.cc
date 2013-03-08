@@ -7,6 +7,7 @@
 #include "OpenCL_Support.h"
 #include "OpenMP_Support.h"
 #include <iostream>
+#include <iomanip>
 #include "ApplCommon/PosixTime.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "Stream/Stream.h"
@@ -15,6 +16,8 @@
 #include "WorkQueues/CorrelatorWorkQueue.h"
 #include "Input/BeamletBufferToComputeNode.h"
 #include <SubbandMetaData.h>
+
+using namespace std;
 
 namespace LOFAR
 {
