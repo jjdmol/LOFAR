@@ -1,5 +1,28 @@
 #include "math.cl"
 
+/** @file
+ * This file contains an OpenCL implementation of the GPU kernel for the delay
+ * and bandpass correction.
+ *
+ * Usually, this kernel will be run after the polyphase filter kernel FIR.cl. In
+ * that case, the input data for this kernel is already in floating point format
+ * (@c NR_CHANNELS > 1). However, if this kernel is the first in row, then the
+ * input data is still in integer format (@c NR_CHANNELS == 1), and this kernel
+ * needs to do the integer-to-float conversion.
+ *
+ * @attention The following pre-processor variables must be supplied when
+ * compiling this program. Please take the pre-conditions for these variables
+ * into account:
+ * - @c NR_CHANNELS: 1 or a multiple of 16
+ * - if @c NR_CHANNELS == 1 (input data is in integer format):
+ *   - @c NR_BITS_PER_SAMPLE: 8 or 16
+ *   - @c NR_SAMPLES_PER_SUBBAND: a multiple of 16
+ * - if @c NR_CHANNELS > 1 (input data is in floating point format):
+ *   - @c NR_SAMPLES_PER_CHANNEL: a multiple of 16
+ * - @c NR_POLARIZATIONS: 2
+ * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
+ */
+
 #if NR_CHANNELS == 1
 #undef BANDPASS_CORRECTION
 #endif
@@ -22,6 +45,41 @@ typedef __global const float2 (*PhaseOffsetsType)[NR_STATIONS]; // 2 Polarizatio
 typedef __global const float (*BandPassFactorsType)[NR_CHANNELS];
 
 
+/**
+ * This kernel perfroms three operations on the input data:
+ * - Apply a fine delay by doing a per channel phase correction.
+ * - Apply a bandpass correction to compensate for the errors introduced by the
+ *   polyphase filter that produced the subbands. This error is deterministic,
+ *   hence it can be fully compensated for.
+ * - Transpose the data so that the time slices for each channel are placed
+ *   consecutively in memory.
+ * 
+ * @param[out] correctedDataPtr    pointer to output data of ::OutputDataType,
+ *                                 a 3D array [station][channel][sample]
+ *                                 of ::fcomplex2 (2 complex polarizations)
+ * @param[in]  filteredDataPtr     pointer to input data; this can either be a 
+ *                                 4D array [station][polarization][sample][channel]
+ *                                 of ::fcomplex, or a 2D array [station][subband]
+ *                                 of ::short_complex2 or ::char_complex2,
+ *                                 depending on the value of @c NR_CHANNELS
+ * @param[in]  subbandFrequency    center freqency of the subband
+ * @param[in]  beam                index number of the beam
+ * @param[in]  delaysAtBeginPtr    pointer to delay data of ::DelaysType,
+ *                                 a 2D array [beam][station] of float2 (real:
+ *                                 2 polarizations), containing delays in
+ *                                 seconds at begin of integration period
+ * @param[in]  delaysAfterEndPtr   pointer to delay data of ::DelaysType,
+ *                                 a 2D array [beam][station] of float2 (real:
+ *                                 2 polarizations), containing delays in
+ *                                 seconds after end of integration period
+ * @param[in]  phaseOffsetsPtr     pointer to phase offset data of 
+ *                                 ::PhaseOffsetsType, a 1D array [station] of
+ *                                 float2 (real: 2 polarizations), containing
+ *                                 phase offsets in radians
+ * @param[in]  bandPassFactorsPtr  pointer to bandpass correction data of
+ *                                 ::BandPassFactorsType, a 1D array [channel] of
+ *                                 float, containing bandpass correction factors
+ */
 __kernel void applyDelaysAndCorrectBandPass(__global void *correctedDataPtr,
 					    __global const void *filteredDataPtr,
 					    float subbandFrequency,
