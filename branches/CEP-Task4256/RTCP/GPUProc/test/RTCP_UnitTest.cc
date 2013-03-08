@@ -1,13 +1,16 @@
 #include "lofar_config.h"
-#include "Common/LofarLogger.h"
-#include "Common/Exception.h"
 
 #include <iostream>
-#include <omp.h>
+#define __CL_ENABLE_EXCEPTIONS
+#include <CL/cl.hpp>
 
+#include "Common/LofarLogger.h"
+#include "Common/Exception.h"
 #include "Interface/Parset.h"
+
 #include "OpenCL_Support.h"
 
+#include "UnitTest.h"
 #include "UnitTests/IncoherentStokesTest.h"
 #include "UnitTests/IntToFloatTest.h"
 #include "UnitTests/BeamFormerTransposeTest.h"
@@ -21,6 +24,7 @@
 #include "UnitTests/CorrelateRectangleTest.h"
 #include "UnitTests/CorrelatorTest.h"
 #include "UnitTests/FFT_Test.h"
+//#include "UnitTests/AMD_FFT_Test.h"
 #include "UnitTests/FIR_FilterTest.h"
 
 //#include  <UnitTest++.h>  
@@ -53,6 +57,8 @@ int main(int argc, char **argv)
 
 
     (FIR_FilterTest)(ps);
+    (FFT_Test)(ps);
+    //(AMD_FFT_Test)(ps);
 
     //(CorrelatorTest)(ps);       //needs parset AARTFAAC!!
     //(CorrelateRectangleTest)(ps); //needs parset AARTFAAC!!
@@ -74,8 +80,7 @@ int main(int argc, char **argv)
     (DedispersionChirpTest)(ps);
     (CoherentStokesTest)(ps);
 
-    // dunno what test
-    //(FFT_Test)(ps);  unknown test
+
     //the actual unittests!
 
     return 0;

@@ -20,7 +20,7 @@ if(UNITTEST++_FOUND)
   # Add project's source directory to -I path.
   include_directories(${_src_dir})
 
-  lofar_add_test(RTCP_UnitTest 
+  lofar_add_test(RTCP_UnitTest
     RTCP_UnitTest.cc
     UnitTests/new_style_unittest.cc
     ${_src_dir}/createProgram.cc
@@ -29,6 +29,9 @@ if(UNITTEST++_FOUND)
     ${_src_dir}/Kernel.cc
     ${_src_dir}/UnitTest.cc
     ${_src_dir}/Kernels/FIR_FilterKernel.cc
+    ${_src_dir}/Kernels/Filter_FFT_Kernel.cc
+    ${_src_dir}/Kernels/FFT_Kernel.cc
+    ${_src_dir}/Kernels/FFT_Plan.cc
     ${_src_dir}/Kernels/DelayAndBandPassKernel.cc
     ${_src_dir}/Kernels/CorrelatorKernel.cc
     ${_src_dir}/Kernels/IntToFloatKernel.cc
@@ -44,6 +47,7 @@ if(UNITTEST++_FOUND)
     ${_src_dir}/Kernels/UHEP_TriggerKernel.cc   
     ${_src_dir}/UHEP/InvertedStationPPFWeights.cc
     )
+
   #target_link_libraries(RTCP_UnitTest /cm/shared/apps/UnitTest++/libUnitTest++.a)
 
 endif(UNITTEST++_FOUND)

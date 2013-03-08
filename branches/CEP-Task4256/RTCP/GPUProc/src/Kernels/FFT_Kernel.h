@@ -17,7 +17,7 @@ namespace LOFAR
             FFT_Kernel(cl::Context &context, unsigned fftSize,
                 unsigned nrFFTs, bool forward, cl::Buffer &buffer);
             void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter);
-            
+
 
         private:
             unsigned	 nrFFTs, fftSize;
