@@ -206,11 +206,6 @@ namespace LOFAR
     }
 
 
-    void CorrelatorPipeline::sendSubbandVisibilities(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
-    {
-    }
-
-
     //This whole block should be parallel: this allows the thread to pick up a subband from the next block
     void CorrelatorPipeline::doWorkQueue(CorrelatorWorkQueue &workQueue) //todo: name is not correct
     {
