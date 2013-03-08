@@ -1,0 +1,8 @@
+#!/bin/bash
+TESTNAME=`basename "$0" | sed 's/[.][^.]*$//'`
+
+PARSET=$srcdir/"$TESTNAME".parset
+OUTPUT=$srcdir/"$TESTNAME".output
+
+$srcdir/testParset.sh "$PARSET" "$OUTPUT" || exit $?
+

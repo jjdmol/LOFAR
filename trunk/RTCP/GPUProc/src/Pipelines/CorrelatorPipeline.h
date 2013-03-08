@@ -2,6 +2,7 @@
 #define GPUPROC_CORRELATORPIPELINE_H
 #include "CL/cl.hpp"
 #include "Interface/Parset.h"
+#include "Common/Timer.h"
 #include "OpenCL_Support.h"
 
 #include "global_defines.h"
@@ -26,13 +27,21 @@ namespace LOFAR
             void		    doWork();
             void        doWorkQueue(CorrelatorWorkQueue &workQueue);
             void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband);
-            void        sendSubbandVisibilities(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband);
 
         private:
             friend class CorrelatorWorkQueue;
 
             FilterBank		    filterBank;            
             CorrelatorPipelinePrograms programs;
+
+            struct Performance {
+              map<string, PerformanceCounter::figures> total_counters;
+              map<string, SmartPtr<NSTimer> > total_timers;
+              Mutex totalsMutex;
+
+              void addQueue(CorrelatorWorkQueue &queue);
+              void log(size_t nrWorkQueues);
+            } performance;
 
         };
 

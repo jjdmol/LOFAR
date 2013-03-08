@@ -45,6 +45,85 @@ namespace LOFAR
       std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
     }
 
+    void CorrelatorPipeline::Performance::addQueue(CorrelatorWorkQueue &queue)
+    {
+      ScopedLock sl(totalsMutex);
+
+      // add performance counters
+      for (map<string, SmartPtr<PerformanceCounter> >::iterator i = queue.counters.begin(); i != queue.counters.end(); ++i) {
+
+        const string &name = i->first;
+        PerformanceCounter *counter = i->second.get();
+
+        counter->waitForAllOperations();
+
+        total_counters[name] += counter->getTotal();
+      }
+
+      // add timers
+      for (map<string, SmartPtr<NSTimer> >::iterator i = queue.timers.begin(); i != queue.timers.end(); ++i) {
+
+        const string &name = i->first;
+        NSTimer *timer = i->second.get();
+
+        if (!total_timers[name])
+          total_timers[name] = new NSTimer(name, false, false);
+
+        *total_timers[name] += *timer;
+      }
+    }
+
+
+    void CorrelatorPipeline::Performance::log(size_t nrWorkQueues)
+    {
+      // Group figures based on their prefix before " - ", so "compute - FIR"
+      // belongs to group "compute".
+      map<string, PerformanceCounter::figures> counter_groups;
+
+      for (map<string, PerformanceCounter::figures>::const_iterator i = total_counters.begin(); i != total_counters.end(); ++i) {
+        size_t n = i->first.find(" - ");
+
+        // discard counters without group
+        if (n == string::npos)
+          continue;
+
+        // determine group name
+        string group = i->first.substr(0, n);
+
+        // add to group
+        counter_groups[group] += i->second;
+      }
+
+      // Log all performance totals at DEBUG level
+      for (map<string, PerformanceCounter::figures>::const_iterator i = total_counters.begin(); i != total_counters.end(); ++i) {
+        LOG_DEBUG_STR(i->second.log(i->first));
+      }
+
+      for (map<string, SmartPtr<NSTimer> >::const_iterator i = total_timers.begin(); i != total_timers.end(); ++i) {
+        LOG_DEBUG_STR(*(i->second));
+      }
+
+      // Log all group totals at INFO level
+      for (map<string, PerformanceCounter::figures>::const_iterator i = counter_groups.begin(); i != counter_groups.end(); ++i) {
+        LOG_INFO_STR(i->second.log(i->first));
+      }
+
+      // Log specific performance figures for regression tests at INFO level
+      double wall_seconds = total_timers["CPU - total"]->getAverage();
+      double gpu_seconds = counter_groups["compute"].runtime/nrGPUs;
+      double spin_seconds = total_timers["GPU - wait"]->getAverage();
+      double input_seconds = total_timers["CPU - input"]->getElapsed()/nrWorkQueues;
+      double cpu_seconds = total_timers["CPU - compute"]->getElapsed()/nrWorkQueues;
+      double output_seconds = total_timers["CPU - output"]->getElapsed()/nrWorkQueues;
+
+      LOG_INFO_STR("Wall seconds spent processing        : " << fixed << setw(8) << setprecision(3) << wall_seconds);
+      LOG_INFO_STR("GPU  seconds spent computing, per GPU: " << fixed << setw(8) << setprecision(3) << gpu_seconds);
+      LOG_INFO_STR("Spin seconds spent polling, per block: " << fixed << setw(8) << setprecision(3) << spin_seconds);
+      LOG_INFO_STR("CPU  seconds spent on input,   per WQ: " << fixed << setw(8) << setprecision(3) << input_seconds);
+      LOG_INFO_STR("CPU  seconds spent processing, per WQ: " << fixed << setw(8) << setprecision(3) << cpu_seconds);
+      LOG_INFO_STR("CPU  seconds spent on output,  per WQ: " << fixed << setw(8) << setprecision(3) << output_seconds);
+    }
+
     void CorrelatorPipeline::doWork()
     {
       //sections = program segments defined by the following omp section directive
@@ -81,12 +160,11 @@ namespace LOFAR
         // Perform the calculations
 #       pragma omp section
         {
-          // Keep track of performance totals
-          map<string, PerformanceCounter::figures> total_performance;
+          size_t nrWorkQueues = (profiling ? 1 : 2) * nrGPUs;
 
           // Start a set of workqueue, the number depending on the number of GPU's: 2 for each.
           // Each WorkQueue gets its own thread.
-#         pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
+#         pragma omp parallel num_threads(nrWorkQueues)
           {
             CorrelatorWorkQueue queue(ps,               // Configuration
                context,                                 // Opencl context
@@ -96,28 +174,17 @@ namespace LOFAR
             filterBank);                             // The filter set to use. Const
 
             // run the queue
-            doWorkQueue(queue);                            
+            doWorkQueue(queue);
 
             // gather performance figures
-            for (map<string, SmartPtr<PerformanceCounter> >::iterator i = queue.counters.begin(); i != queue.counters.end(); ++i) {
-              const string &name = i->first;
-              PerformanceCounter *counter = i->second.get();
-
-              counter->waitForAllOperations();
-              total_performance[name] += counter->getTotal();
-
-
+            performance.addQueue(queue);
           }
+          // Signal end of data
+          noMoreOutput();
+
+          // log performance figures
+          performance.log(nrWorkQueues);
         }
-
-        // Signal end of data
-        noMoreOutput();
-
-          // Log all performance totals
-          for (map<string, PerformanceCounter::figures>::const_iterator i = total_performance.begin(); i != total_performance.end(); ++i) {
-            i->second.log();
-      }
-    }
       }
     }
 
@@ -139,11 +206,6 @@ namespace LOFAR
     }
 
 
-    void CorrelatorPipeline::sendSubbandVisibilities(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
-    {
-    }
-
-
     //This whole block should be parallel: this allows the thread to pick up a subband from the next block
     void CorrelatorPipeline::doWorkQueue(CorrelatorWorkQueue &workQueue) //todo: name is not correct
     {
@@ -159,6 +221,8 @@ namespace LOFAR
 #     pragma omp barrier
       double executionStartTime = omp_get_wtime();
       double lastTime = omp_get_wtime(); 
+
+      workQueue.timers["CPU - total"]->start();
 
       // loop all available blocks. use the blocks to determine if we are within the valid observation times
       // This loop is not parallel
@@ -186,19 +250,27 @@ namespace LOFAR
           // Create an data object to Storage around our visibilities
           SmartPtr<CorrelatedData> output = new CorrelatedData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 1);
 
+          workQueue.timers["CPU - input"]->start();
           // Each input block is sent in order. Therefore wait for the correct block
           inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
           receiveSubbandSamples(workQueue,  block,  subband);
           // Advance the block index
           inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
+          workQueue.timers["CPU - input"]->stop();
 
           // Perform calculations
+          workQueue.timers["CPU - compute"]->start();
           workQueue.doSubband(block, subband, *output);
+          workQueue.timers["CPU - compute"]->stop();
 
           // Hand off the block to Storage
+          workQueue.timers["CPU - output"]->start();
           writeOutput(block, subband, output.release());
+          workQueue.timers["CPU - output"]->stop();
         }  // end pragma omp for 
       }
+
+      workQueue.timers["CPU - total"]->stop();
 
       //The omp for loop was nowait: We need a barier to assure that 
 #     pragma omp barrier 
