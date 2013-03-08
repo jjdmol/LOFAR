@@ -31,5 +31,11 @@ namespace LOFAR
           counters[name] = new PerformanceCounter(name, profiling);
         }
 
+
+        void WorkQueue::addTimer(const std::string &name)
+        {
+          timers[name] = new NSTimer(name, false, false);
+        }
+
     }
 }

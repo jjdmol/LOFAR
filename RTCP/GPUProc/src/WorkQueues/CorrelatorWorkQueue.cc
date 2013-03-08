@@ -59,17 +59,30 @@ namespace LOFAR
             // create all the counters
       // Move the FIR filter weight to the GPU
 #if defined USE_NEW_CORRELATOR
-            addCounter("cor.triangle");
-            addCounter("cor.rectangle");
+      addCounter("compute - cor.triangle");
+      addCounter("compute - cor.rectangle");
 #else
-            addCounter("correlator");
+      addCounter("compute - correlator");
 #endif
 
-            addCounter("FIR");
-            addCounter("delay/bp");
-            addCounter("FFT");
-            addCounter("samples");
-            addCounter("visibilities");
+      addCounter("compute - FIR");
+      addCounter("compute - delay/bp");
+      addCounter("compute - FFT");
+      addCounter("input - samples");
+      addCounter("output - visibilities");
+
+      // CPU timers are set by CorrelatorPipeline
+      addTimer("CPU - total");
+      addTimer("CPU - input");
+      addTimer("CPU - output");
+      addTimer("CPU - compute");
+
+      // GPU timers are set by us
+      addTimer("GPU - total");
+      addTimer("GPU - input");
+      addTimer("GPU - output");
+      addTimer("GPU - compute");
+      addTimer("GPU - wait");
 
       queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), filterBank.getWeights().origin());
 
@@ -97,13 +110,21 @@ namespace LOFAR
 
     void CorrelatorWorkQueue::doSubband(unsigned block, unsigned subband, CorrelatedData &output)
     {
+      timers["GPU - total"]->start();
+
       {
+        timers["GPU - input"]->start();
+
 #if defined USE_B7015
         OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
         inputData.inputSamples.hostToDevice(CL_TRUE);
-        counters["samples"]->doOperation(inputData.inputSamples.event, 0, 0, inputData.inputSamples.bytesize());
+        counters["input - samples"]->doOperation(inputData.inputSamples.event, 0, 0, inputData.inputSamples.bytesize());
+
+        timers["GPU - input"]->stop();
       }
+
+      timers["GPU - compute"]->start();
 
       // Moved from doWork() The delay data should be available before the kernels start.
       // Queue processed ordered. This could main that the transfer is not nicely overlapped
@@ -113,16 +134,16 @@ namespace LOFAR
       inputData.phaseOffsets.hostToDevice(CL_FALSE);
 
       if (ps.nrChannelsPerSubband() > 1) {
-                firFilterKernel.enqueue(queue, *counters["FIR"]);
-                fftKernel.enqueue(queue, *counters["FFT"]);
+                firFilterKernel.enqueue(queue, *counters["compute - FIR"]);
+                fftKernel.enqueue(queue, *counters["compute - FFT"]);
       }
 
-            delayAndBandPassKernel.enqueue(queue, *counters["delay/bp"], subband);
+            delayAndBandPassKernel.enqueue(queue, *counters["compute - delay/bp"], subband);
 #if defined USE_NEW_CORRELATOR
-            correlateTriangleKernel.enqueue(queue, *counters["cor.triangle"]);
-            correlateRectangleKernel.enqueue(queue, *counters["cor.rectangle"]);
+            correlateTriangleKernel.enqueue(queue, *counters["compute - cor.triangle"]);
+            correlateRectangleKernel.enqueue(queue, *counters["compute - cor.rectangle"]);
 #else
-            correlatorKernel.enqueue(queue, *counters["correlator"]);
+            correlatorKernel.enqueue(queue, *counters["compute - correlator"]);
 #endif
 
       // ***** The GPU will be occupied for a while, do some calculations in the
@@ -132,15 +153,25 @@ namespace LOFAR
       computeFlags(output);
 
       // Wait for the GPU to finish.
+      timers["GPU - wait"]->start();
       queue.finish();
+      timers["GPU - wait"]->stop();
+
+      timers["GPU - compute"]->stop();
 
       {
+        timers["GPU - output"]->start();
+
 #if defined USE_B7015
         OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
 #endif
         visibilities.deviceToHost(CL_TRUE);
-                counters["visibilities"]->doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
+                counters["output - visibilities"]->doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
+
+        timers["GPU - output"]->stop();
       }
+
+      timers["GPU - total"]->stop();
 
       // Copy visibilities
       //output.visibilities = visibilities; <<-- TODO: get this working?

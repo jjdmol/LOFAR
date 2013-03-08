@@ -5,6 +5,8 @@
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Condition.h>
 
+#include <string>
+
 namespace LOFAR
 {
     namespace RTCP 
@@ -22,7 +24,7 @@ namespace LOFAR
             //
             // If profiling == false, no actual performance statistics are
             // gathered.
-            PerformanceCounter(const std::string &name, bool profiling);
+            PerformanceCounter(const std::string &name, bool profiling, bool logAtDestruction=false);
             ~PerformanceCounter();
 
             // register an operation covered by `event'. runtime will be determined by OpenCL, the
@@ -55,7 +57,7 @@ namespace LOFAR
               double readSpeed() const  { return nrBytesRead/runtime; }
               double writeSpeed() const { return nrBytesWritten/runtime; }
 
-              std::string log() const;
+              std::string log(const std::string &name = "timer") const;
             };
 
             // Return once all scheduled operations have completed
@@ -68,6 +70,10 @@ namespace LOFAR
             void logTotal();
 
         private:
+            // whether to log the performance when ~PerformanceCounter is
+            // called
+            const bool logAtDestruction;
+
             // performance totals
             struct figures total;
 

@@ -1,6 +1,7 @@
 #ifndef GPUPROC_WORKQUEUE_H
 #define GPUPROC_WORKQUEUE_H
 #include "CL/cl.hpp"
+#include "Common/Timer.h"
 #include "Interface/Parset.h"
 #include "Interface/SmartPtr.h"
 #include "PerformanceCounter.h"
@@ -23,11 +24,13 @@ namespace LOFAR
             cl::CommandQueue	queue;
 
             std::map<std::string, SmartPtr<PerformanceCounter> > counters;
+            std::map<std::string, SmartPtr<NSTimer> > timers;
 
         protected:
             const Parset	&ps;
 
             void addCounter(const std::string &name);
+            void addTimer(const std::string &name);
         };
 
     }
