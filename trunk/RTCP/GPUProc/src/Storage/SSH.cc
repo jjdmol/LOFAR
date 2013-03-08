@@ -142,71 +142,80 @@ static const char *explainExitStatus( int exitstatus )
 
 
 // Convert a LibSSH2 error code to a string
-static const char *explainLibSSH2Error( int error )
+static string explainLibSSH2Error( LIBSSH2_SESSION *session, int error )
 {
-  const char *explanation;
+  string error_str;
 
+  // convert error code
   switch(error) {
     default:
-      explanation = "??";
+      error_str = "??";
       break;
 
-      case LIBSSH2_ERROR_NONE:			        explanation ="LIBSSH2_ERROR_NONE"; break;
-      case LIBSSH2_ERROR_SOCKET_NONE:			explanation ="LIBSSH2_ERROR_SOCKET_NONE"; break;
+      case LIBSSH2_ERROR_NONE:			        error_str = "LIBSSH2_ERROR_NONE"; break;
+      case LIBSSH2_ERROR_SOCKET_NONE:			error_str = "LIBSSH2_ERROR_SOCKET_NONE"; break;
 #if LIBSSH2_VERSION_NUM > 0x010207
-      case LIBSSH2_ERROR_BANNER_RECV:			explanation ="LIBSSH2_ERROR_BANNER_RECV"; break;
+      case LIBSSH2_ERROR_BANNER_RECV:			error_str = "LIBSSH2_ERROR_BANNER_RECV"; break;
 #else
-      case LIBSSH2_ERROR_BANNER_NONE:			explanation ="LIBSSH2_ERROR_BANNER_NONE"; break;
+      case LIBSSH2_ERROR_BANNER_NONE:			error_str = "LIBSSH2_ERROR_BANNER_NONE"; break;
 #endif
-      case LIBSSH2_ERROR_BANNER_SEND:			explanation ="LIBSSH2_ERROR_BANNER_SEND"; break;
-      case LIBSSH2_ERROR_INVALID_MAC:			explanation ="LIBSSH2_ERROR_INVALID_MAC"; break;
-      case LIBSSH2_ERROR_KEX_FAILURE:			explanation ="LIBSSH2_ERROR_KEX_FAILURE"; break;
-      case LIBSSH2_ERROR_ALLOC:			        explanation ="LIBSSH2_ERROR_ALLOC"; break;
-      case LIBSSH2_ERROR_SOCKET_SEND:			explanation ="LIBSSH2_ERROR_SOCKET_SEND"; break;
-      case LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE:		explanation ="LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE"; break;
-      case LIBSSH2_ERROR_TIMEOUT:			explanation ="LIBSSH2_ERROR_TIMEOUT"; break;
-      case LIBSSH2_ERROR_HOSTKEY_INIT:			explanation ="LIBSSH2_ERROR_HOSTKEY_INIT"; break;
-      case LIBSSH2_ERROR_HOSTKEY_SIGN:			explanation ="LIBSSH2_ERROR_HOSTKEY_SIGN"; break;
-      case LIBSSH2_ERROR_DECRYPT:			explanation ="LIBSSH2_ERROR_DECRYPT"; break;
-      case LIBSSH2_ERROR_SOCKET_DISCONNECT:		explanation ="LIBSSH2_ERROR_SOCKET_DISCONNECT"; break;
-      case LIBSSH2_ERROR_PROTO:			        explanation ="LIBSSH2_ERROR_PROTO"; break;
-      case LIBSSH2_ERROR_PASSWORD_EXPIRED:		explanation ="LIBSSH2_ERROR_PASSWORD_EXPIRED"; break;
-      case LIBSSH2_ERROR_FILE:			        explanation ="LIBSSH2_ERROR_FILE"; break;
-      case LIBSSH2_ERROR_METHOD_NONE:			explanation ="LIBSSH2_ERROR_METHOD_NONE"; break;
-      case LIBSSH2_ERROR_AUTHENTICATION_FAILED:		explanation ="LIBSSH2_ERROR_AUTHENTICATION_FAILED"; break;
-      //case LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED:	explanation ="LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED"; break;
-      case LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED:		explanation ="LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED"; break;
-      case LIBSSH2_ERROR_CHANNEL_OUTOFORDER:		explanation ="LIBSSH2_ERROR_CHANNEL_OUTOFORDER"; break;
-      case LIBSSH2_ERROR_CHANNEL_FAILURE:		explanation ="LIBSSH2_ERROR_CHANNEL_FAILURE"; break;
-      case LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED:	explanation ="LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED"; break;
-      case LIBSSH2_ERROR_CHANNEL_UNKNOWN:		explanation ="LIBSSH2_ERROR_CHANNEL_UNKNOWN"; break;
-      case LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED:	explanation ="LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED"; break;
-      case LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED:	explanation ="LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED"; break;
-      case LIBSSH2_ERROR_CHANNEL_CLOSED:		explanation ="LIBSSH2_ERROR_CHANNEL_CLOSED"; break;
-      case LIBSSH2_ERROR_CHANNEL_EOF_SENT:		explanation ="LIBSSH2_ERROR_CHANNEL_EOF_SENT"; break;
-      case LIBSSH2_ERROR_SCP_PROTOCOL:			explanation ="LIBSSH2_ERROR_SCP_PROTOCOL"; break;
-      case LIBSSH2_ERROR_ZLIB:			        explanation ="LIBSSH2_ERROR_ZLIB"; break;
-      case LIBSSH2_ERROR_SOCKET_TIMEOUT:		explanation ="LIBSSH2_ERROR_SOCKET_TIMEOUT"; break;
-      case LIBSSH2_ERROR_SFTP_PROTOCOL:			explanation ="LIBSSH2_ERROR_SFTP_PROTOCOL"; break;
-      case LIBSSH2_ERROR_REQUEST_DENIED:		explanation ="LIBSSH2_ERROR_REQUEST_DENIED"; break;
-      case LIBSSH2_ERROR_METHOD_NOT_SUPPORTED:		explanation ="LIBSSH2_ERROR_METHOD_NOT_SUPPORTED"; break;
-      case LIBSSH2_ERROR_INVAL:			        explanation ="LIBSSH2_ERROR_INVAL"; break;
-      case LIBSSH2_ERROR_INVALID_POLL_TYPE:		explanation ="LIBSSH2_ERROR_INVALID_POLL_TYPE"; break;
-      case LIBSSH2_ERROR_PUBLICKEY_PROTOCOL:		explanation ="LIBSSH2_ERROR_PUBLICKEY_PROTOCOL"; break;
-      case LIBSSH2_ERROR_EAGAIN:			explanation ="LIBSSH2_ERROR_EAGAIN"; break;
-      case LIBSSH2_ERROR_BUFFER_TOO_SMALL:		explanation ="LIBSSH2_ERROR_BUFFER_TOO_SMALL"; break;
-      case LIBSSH2_ERROR_BAD_USE:			explanation ="LIBSSH2_ERROR_BAD_USE"; break;
-      case LIBSSH2_ERROR_COMPRESS:			explanation ="LIBSSH2_ERROR_COMPRESS"; break;
-      case LIBSSH2_ERROR_OUT_OF_BOUNDARY:		explanation ="LIBSSH2_ERROR_OUT_OF_BOUNDARY"; break;
-      case LIBSSH2_ERROR_AGENT_PROTOCOL:		explanation ="LIBSSH2_ERROR_AGENT_PROTOCOL"; break;
-      case LIBSSH2_ERROR_SOCKET_RECV:			explanation ="LIBSSH2_ERROR_SOCKET_RECV"; break;
-      case LIBSSH2_ERROR_ENCRYPT:			explanation ="LIBSSH2_ERROR_ENCRYPT"; break;
-      case LIBSSH2_ERROR_BAD_SOCKET:			explanation ="LIBSSH2_ERROR_BAD_SOCKET"; break;
-//      case LIBSSH2_ERROR_KNOWN_HOSTS:			explanation ="LIBSSH2_ERROR_KNOWN_HOSTS"; break;
-      //case LIBSSH2_ERROR_BANNER_NONE:			explanation ="LIBSSH2_ERROR_BANNER_NONE"; break;
+      case LIBSSH2_ERROR_BANNER_SEND:			error_str = "LIBSSH2_ERROR_BANNER_SEND"; break;
+      case LIBSSH2_ERROR_INVALID_MAC:			error_str = "LIBSSH2_ERROR_INVALID_MAC"; break;
+      case LIBSSH2_ERROR_KEX_FAILURE:			error_str = "LIBSSH2_ERROR_KEX_FAILURE"; break;
+      case LIBSSH2_ERROR_ALLOC:			        error_str = "LIBSSH2_ERROR_ALLOC"; break;
+      case LIBSSH2_ERROR_SOCKET_SEND:			error_str = "LIBSSH2_ERROR_SOCKET_SEND"; break;
+      case LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE:		error_str = "LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE"; break;
+      case LIBSSH2_ERROR_TIMEOUT:			error_str = "LIBSSH2_ERROR_TIMEOUT"; break;
+      case LIBSSH2_ERROR_HOSTKEY_INIT:			error_str = "LIBSSH2_ERROR_HOSTKEY_INIT"; break;
+      case LIBSSH2_ERROR_HOSTKEY_SIGN:			error_str = "LIBSSH2_ERROR_HOSTKEY_SIGN"; break;
+      case LIBSSH2_ERROR_DECRYPT:			error_str = "LIBSSH2_ERROR_DECRYPT"; break;
+      case LIBSSH2_ERROR_SOCKET_DISCONNECT:		error_str = "LIBSSH2_ERROR_SOCKET_DISCONNECT"; break;
+      case LIBSSH2_ERROR_PROTO:			        error_str = "LIBSSH2_ERROR_PROTO"; break;
+      case LIBSSH2_ERROR_PASSWORD_EXPIRED:		error_str = "LIBSSH2_ERROR_PASSWORD_EXPIRED"; break;
+      case LIBSSH2_ERROR_FILE:			        error_str = "LIBSSH2_ERROR_FILE"; break;
+      case LIBSSH2_ERROR_METHOD_NONE:			error_str = "LIBSSH2_ERROR_METHOD_NONE"; break;
+      case LIBSSH2_ERROR_AUTHENTICATION_FAILED:		error_str = "LIBSSH2_ERROR_AUTHENTICATION_FAILED"; break;
+      //case LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED:	error_str = "LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED"; break;
+      case LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED:		error_str = "LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED"; break;
+      case LIBSSH2_ERROR_CHANNEL_OUTOFORDER:		error_str = "LIBSSH2_ERROR_CHANNEL_OUTOFORDER"; break;
+      case LIBSSH2_ERROR_CHANNEL_FAILURE:		error_str = "LIBSSH2_ERROR_CHANNEL_FAILURE"; break;
+      case LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED:	error_str = "LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED"; break;
+      case LIBSSH2_ERROR_CHANNEL_UNKNOWN:		error_str = "LIBSSH2_ERROR_CHANNEL_UNKNOWN"; break;
+      case LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED:	error_str = "LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED"; break;
+      case LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED:	error_str = "LIBSSH2_ERROR_CHANNEL_PACKET_EXCEEDED"; break;
+      case LIBSSH2_ERROR_CHANNEL_CLOSED:		error_str = "LIBSSH2_ERROR_CHANNEL_CLOSED"; break;
+      case LIBSSH2_ERROR_CHANNEL_EOF_SENT:		error_str = "LIBSSH2_ERROR_CHANNEL_EOF_SENT"; break;
+      case LIBSSH2_ERROR_SCP_PROTOCOL:			error_str = "LIBSSH2_ERROR_SCP_PROTOCOL"; break;
+      case LIBSSH2_ERROR_ZLIB:			        error_str = "LIBSSH2_ERROR_ZLIB"; break;
+      case LIBSSH2_ERROR_SOCKET_TIMEOUT:		error_str = "LIBSSH2_ERROR_SOCKET_TIMEOUT"; break;
+      case LIBSSH2_ERROR_SFTP_PROTOCOL:			error_str = "LIBSSH2_ERROR_SFTP_PROTOCOL"; break;
+      case LIBSSH2_ERROR_REQUEST_DENIED:		error_str = "LIBSSH2_ERROR_REQUEST_DENIED"; break;
+      case LIBSSH2_ERROR_METHOD_NOT_SUPPORTED:		error_str = "LIBSSH2_ERROR_METHOD_NOT_SUPPORTED"; break;
+      case LIBSSH2_ERROR_INVAL:			        error_str = "LIBSSH2_ERROR_INVAL"; break;
+      case LIBSSH2_ERROR_INVALID_POLL_TYPE:		error_str = "LIBSSH2_ERROR_INVALID_POLL_TYPE"; break;
+      case LIBSSH2_ERROR_PUBLICKEY_PROTOCOL:		error_str = "LIBSSH2_ERROR_PUBLICKEY_PROTOCOL"; break;
+      case LIBSSH2_ERROR_EAGAIN:			error_str = "LIBSSH2_ERROR_EAGAIN"; break;
+      case LIBSSH2_ERROR_BUFFER_TOO_SMALL:		error_str = "LIBSSH2_ERROR_BUFFER_TOO_SMALL"; break;
+      case LIBSSH2_ERROR_BAD_USE:			error_str = "LIBSSH2_ERROR_BAD_USE"; break;
+      case LIBSSH2_ERROR_COMPRESS:			error_str = "LIBSSH2_ERROR_COMPRESS"; break;
+      case LIBSSH2_ERROR_OUT_OF_BOUNDARY:		error_str = "LIBSSH2_ERROR_OUT_OF_BOUNDARY"; break;
+      case LIBSSH2_ERROR_AGENT_PROTOCOL:		error_str = "LIBSSH2_ERROR_AGENT_PROTOCOL"; break;
+      case LIBSSH2_ERROR_SOCKET_RECV:			error_str = "LIBSSH2_ERROR_SOCKET_RECV"; break;
+      case LIBSSH2_ERROR_ENCRYPT:			error_str = "LIBSSH2_ERROR_ENCRYPT"; break;
+      case LIBSSH2_ERROR_BAD_SOCKET:			error_str = "LIBSSH2_ERROR_BAD_SOCKET"; break;
+//      case LIBSSH2_ERROR_KNOWN_HOSTS:			error_str = "LIBSSH2_ERROR_KNOWN_HOSTS"; break;
   }
 
-  return explanation;
+  // ask libssh2 for more info
+  if (session) {
+    char *errormsg = NULL;
+
+    libssh2_session_last_error(session, &errormsg, NULL, 0);
+
+    return error_str + ": " + errormsg;
+  }
+
+  return error_str;
 }
 
 /*
@@ -323,7 +332,7 @@ LIBSSH2_SESSION *SSHconnection::open_session( FileDescriptorBasedStream &sock )
   /* NOTE: libssh2 now holds a copy of sock.fd, so don't invalidate it! */
 
   if (rc) {
-    LOG_ERROR_STR( itsLogPrefix << "Failure establishing SSH session: " << rc << " (" << explainLibSSH2Error(rc) << ")");
+    LOG_ERROR_STR( itsLogPrefix << "Failure establishing SSH session: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
     return NULL;
   }
 
@@ -339,7 +348,7 @@ LIBSSH2_SESSION *SSHconnection::open_session( FileDescriptorBasedStream &sock )
   }
 
   if (rc) {
-    LOG_ERROR_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public key file '" << itsSSHKey << "' failed: " << rc << " (" << explainLibSSH2Error(rc) << ")");
+    LOG_ERROR_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public key file '" << itsSSHKey << "' failed: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
     return NULL;
   }
 
@@ -359,7 +368,7 @@ void SSHconnection::close_session( LIBSSH2_SESSION *session, FileDescriptorBased
 
   if (rc)
   {
-    LOG_ERROR_STR( itsLogPrefix << "Failure closing session: " << rc << " (" << explainLibSSH2Error(rc) << ")");
+    LOG_ERROR_STR( itsLogPrefix << "Failure closing session: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
     return;
   }
 }
@@ -399,7 +408,7 @@ void SSHconnection::close_channel( LIBSSH2_SESSION *session, LIBSSH2_CHANNEL *ch
 
   if (rc)
   {
-    LOG_ERROR_STR( itsLogPrefix << "Failure closing channel: " << rc << " (" << explainLibSSH2Error(rc) << ")");
+    LOG_ERROR_STR( itsLogPrefix << "Failure closing channel: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
     return;
   }
 }
@@ -516,7 +525,7 @@ void SSHconnection::commThread()
 
   if (rc)
   {
-    LOG_ERROR_STR( itsLogPrefix << "Failure starting remote command: " << rc << " (" << explainLibSSH2Error(rc) << ")");
+    LOG_ERROR_STR( itsLogPrefix << "Failure starting remote command: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
     return;
   }
 
@@ -603,7 +612,7 @@ void SSHconnection::commThread()
         } else {
           if( rc < 0 && rc != LIBSSH2_ERROR_EAGAIN ) {
             /* no need to output this for the EAGAIN case */
-            LOG_ERROR_STR( itsLogPrefix << "libssh2_channel_read_ex returned " << rc << " (" << explainLibSSH2Error(rc) << ") for channel " << s);
+            LOG_ERROR_STR( itsLogPrefix << "libssh2_channel_read_ex returned " << rc << " (" << explainLibSSH2Error(session, rc) << ") for channel " << s);
           }   
         }
       } while( rc > 0 );
