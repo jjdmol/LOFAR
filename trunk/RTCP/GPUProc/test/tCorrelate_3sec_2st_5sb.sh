@@ -1,4 +1,4 @@
 #!/bin/bash
-TESTNAME=`basename "$0" | sed 's/[.][^.]*$//'`
-./runctest.sh $TESTNAME > `basename "$0"`.log 2>&1
+TESTNAME=`basename "${0%%.sh}"`
+./runctest.sh $TESTNAME > $TESTNAME.log 2>&1
 
