@@ -1,6 +1,9 @@
 #ifndef GPUPROC_PIPELINECLASS_H
 #define GPUPROC_PIPELINECLASS_H
 #include "CL/cl.hpp"
+
+#include "Common/Thread/Queue.h"
+#include "Common/Thread/Semaphore.h"
 #include "Interface/Parset.h"
 #include "Interface/StreamableData.h"
 #include "OpenCL_Support.h"
@@ -9,6 +12,7 @@
 #include "Input/InputSection.h"
 #include "Input/BeamletBufferToComputeNode.h"
 #include "createProgram.h"
+#include "BestEffortQueue.h"
 
 namespace LOFAR
 {
@@ -58,18 +62,23 @@ namespace LOFAR
 
             void doWork();
 
-            void writeOutput(unsigned block, unsigned subband, StreamableData &data);
+            // Write an output block. Takes ownership of data, because the
+            // block will be kept in the background until it can be written.
+            void writeOutput(unsigned block, unsigned subband, StreamableData *data);
+
+            // signal that we've written all blocks (because we can drop some)
+            void noMoreOutput();
+
             //private:
             void                    sendNextBlock(unsigned station);
 
         private:
             struct Output {
-              // stream to Storage process (or to disk), with access mutex
-              SmartPtr<Stream> stream;
-              SmartPtr<Mutex> streamMutex;
-
               // synchronisation to write blocks in-order
               SlidingPointer<size_t> sync;
+
+              // output data queue
+              SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
             };
 
             std::vector<struct Output> outputs; // indexed by subband

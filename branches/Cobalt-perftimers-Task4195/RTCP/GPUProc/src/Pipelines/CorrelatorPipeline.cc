@@ -183,6 +183,9 @@ namespace LOFAR
           // log performance figures
           performance.log(nrWorkQueues);
         }
+
+        // Signal end of data
+        noMoreOutput();
       }
     }
 
@@ -206,17 +209,6 @@ namespace LOFAR
 
     void CorrelatorPipeline::sendSubbandVisibilities(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband)
     {
-      // Create an data object to Storage around our visibilities
-      CorrelatedData data(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), workQueue.visibilities.origin(), workQueue.visibilities.num_elements(), heapAllocator, 1);
-
-      // Add weights
-      // TODO: base weights on flags
-      for (size_t bl = 0; bl < data.itsNrBaselines; ++bl)
-        for (size_t ch = 0; ch < ps.nrChannelsPerSubband(); ++ch)
-          data.setNrValidSamples(bl, ch, ps.integrationSteps());
-
-      // Write the block to Storage
-      writeOutput(block, subband, data);
     }
 
 
@@ -261,25 +253,27 @@ namespace LOFAR
 #       pragma omp for schedule(dynamic), nowait, ordered  // no parallel: this no new threads
         for (unsigned subband = 0; subband < ps.nrSubbands(); subband ++) 
         {
+          // Create an data object to Storage around our visibilities
+          SmartPtr<CorrelatedData> output = new CorrelatedData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 1);
+
           workQueue.timers["CPU - input"]->start();
           // Each input block is sent in order. Therefore wait for the correct block
           inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-          receiveSubbandSamples( workQueue,  block,  subband);
+          receiveSubbandSamples(workQueue,  block,  subband);
           // Advance the block index
           inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
           workQueue.timers["CPU - input"]->stop();
 
           // Perform calculations
           workQueue.timers["CPU - compute"]->start();
-          workQueue.doSubband(block, subband);
+          workQueue.doSubband(block, subband, *output);
           workQueue.timers["CPU - compute"]->stop();
 
-          // Send output to Storage
+          // Hand off the block to Storage
           workQueue.timers["CPU - output"]->start();
-          sendSubbandVisibilities(workQueue, block, subband);
+          writeOutput(block, subband, output.release());
           workQueue.timers["CPU - output"]->stop();
         }  // end pragma omp for 
-
       }
 
       workQueue.timers["CPU - total"]->stop();

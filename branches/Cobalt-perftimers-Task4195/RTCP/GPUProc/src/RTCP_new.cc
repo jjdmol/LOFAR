@@ -1,31 +1,31 @@
 #include "lofar_config.h"
-#define __CL_ENABLE_EXCEPTIONS
-#include "CL/cl.hpp"
 
-#include <global_defines.h>
-
-#include "OpenMP_Support.h"
-#include "Common/LofarLogger.h"
-#include "Common/Exception.h"
-#include <cstdlib>
-#include "Interface/Parset.h"
-#include <iostream>
-#include <cstring>
-#include "OpenCL_Support.h"
 #include <cstdlib>
 #include <cstdio>
 #include <unistd.h>
+#include <cstring>
+#include <iostream>
+#include <omp.h>
+#define __CL_ENABLE_EXCEPTIONS
+#include <CL/cl.hpp>
+
+#include "global_defines.h"
+#include "OpenMP_Support.h"
+#include "OpenCL_Support.h"
+
+#include "Common/LofarLogger.h"
+#include "Common/Exception.h"
+#include "Interface/Parset.h"
 
 //functionality moved to individual sources
 #include "createProgram.h"
 #include "PerformanceCounter.h"
 #include "UnitTest.h"
-#include "Kernel.h"
-#include "FFT_Kernel.h"
-#include "FFT_Plan.h"
-#include "Storage/StorageProcesses.h"
 
+#include "Kernel.h"
 #include "Kernels/FIR_FilterKernel.h"
+#include "Kernels/FFT_Kernel.h"
+#include "Kernels/Filter_FFT_Kernel.h"
 #include "Kernels/DelayAndBandPassKernel.h"
 #include "Kernels/CorrelatorKernel.h"
 #include "Kernels/IntToFloatKernel.h"
@@ -39,7 +39,6 @@
 #include "Kernels/UHEP_InvFFT_Kernel.h"
 #include "Kernels/UHEP_InvFIR_Kernel.h"
 #include "Kernels/UHEP_TriggerKernel.h"
-#include "Kernels/Filter_FFT_Kernel.h"
 #include "Kernels/DedispersionForwardFFTkernel.h"
 #include "Kernels/DedispersionBackwardFFTkernel.h"
 
@@ -52,6 +51,8 @@
 #include "WorkQueues/CorrelatorWorkQueue.h"
 #include "WorkQueues/BeamFormerWorkQueue.h"
 #include "WorkQueues/UHEP_WorkQueue.h"
+
+#include "Storage/StorageProcesses.h"
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;

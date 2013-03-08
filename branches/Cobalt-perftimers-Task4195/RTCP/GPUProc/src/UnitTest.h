@@ -34,16 +34,23 @@ namespace LOFAR
 
 
             /**
-             * Fuzzy compare of float val with ref.
+             * Fuzzy compare of floating point value val with ref.
+             * Use absolute error around 0.0 (ref within epsilon), otherwise use relative error.
              *
              * \param[in] val          value to test
              * \param[in] ref          reference value to test against
-             * \param[in] epsilonf     max absolute difference.
+             * \param[in] epsilon      max absolute difference. Must be positive.
              *
-             * An epsilonf is actually computation dependent, but for our test cases, this is good (and broad) enough.
+             * A good epsilon depends on the computation, but pick something reasonable for our single precision tests and allow override.
+             *
              * Return true if val is close enough to ref, false otherwise (including if val or ref is NaN).
              */
-            bool equalsRelError(float val, float ref, float epsilonf = 1.0e-5f) const;
+            bool fpEquals(double val, double ref, double epsilon = 1.0e-5) const;
+
+            /**
+             * See fpEquals(), but for complex values.
+             */
+            bool cfpEquals(std::complex<double> val, std::complex<double> ref, double epsilon = 1.0e-5) const;
         };
     }
 }
