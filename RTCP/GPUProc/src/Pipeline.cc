@@ -49,8 +49,11 @@ namespace LOFAR
                 }
             }
 
-            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++)
-              outputs[sb].streamMutex = new Mutex;
+            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
+              // Allow 10 blocks to be in the best-effort queue.
+              // TODO: make this dynamic based on memory or time
+              outputs[sb].bequeue = new BestEffortQueue< SmartPtr<StreamableData> >(10, ps.realTime());
+            }
         }
 
 
@@ -62,32 +65,46 @@ namespace LOFAR
 
         void Pipeline::handleOutput()
         {
-            // Connect to all output streams in parallel, because some might
-            // block.
+            // Process to all output streams in parallel
 
 #           pragma omp parallel for num_threads(ps.nrSubbands())
             for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
               struct Output &output = outputs[sb];
 
-              ScopedLock sl(*output.streamMutex);
+              SmartPtr<Stream> outputStream;
 
               try {
+                  // Connect to output stream
                   if (ps.getHostName(CORRELATED_DATA, sb) == "") {
                     // an empty host name means 'write to disk directly', to
                     // make debugging easier for now
-                    output.stream = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
+                    outputStream = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
                   } else {
                     // connect to the Storage_main process for this output
                     const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, sb);
 
                     // TODO: Create these connections asynchronously!
-                    output.stream = createStream(desc, false, 0);
+                    outputStream = createStream(desc, false, 0);
+                  }
+
+                  // Process queue elements
+                  SmartPtr<StreamableData> data;
+
+                  while ((data = output.bequeue->remove()) != NULL) {
+                    // Write data to Storage
+                    data->write(outputStream.get(), true);
                   }
               } catch(Exception &ex) {
-                LOG_ERROR_STR("Caught exception, using null stream for subband " << sb << ": " << ex);
-
-                output.stream = new NullStream;
+                  LOG_ERROR_STR("Caught exception for output subband " << sb << ": " << ex);
               }
+            }
+        }
+
+
+        void Pipeline::noMoreOutput()
+        {
+            for (unsigned sb = 0; sb < ps.nrSubbands(); sb ++) {
+              outputs[sb].bequeue->noMore();
             }
         }
 
@@ -98,7 +115,7 @@ namespace LOFAR
         }
 
 
-        void Pipeline::writeOutput(unsigned block, unsigned subband, StreamableData &data)
+        void Pipeline::writeOutput(unsigned block, unsigned subband, StreamableData *data)
         {
             struct Output &output = outputs[subband];
 
@@ -106,25 +123,10 @@ namespace LOFAR
             output.sync.waitFor(block);
 
             // We do the ordering, so we set the sequence numbers
-            data.setSequenceNumber(block);
+            data->setSequenceNumber(block);
 
-            // Try to write the data
-            {
-              ScopedLock sl(*output.streamMutex);
-
-              if (output.stream.get()) {
-                try {
-                  data.write(output.stream.get(), true);
-                } catch (Stream::EndOfStreamException &ex) {
-                  LOG_WARN_STR("Caught EndOfStream while writing data: " << ex);
-
-                  // Prevent future warnings
-                  output.stream = new NullStream;
-                }
-              } else {
-                // stream was not set up yet -- discard block
-                LOG_WARN_STR("No output stream -- discarding subband " << subband << " block " << block);
-              }
+            if (!output.bequeue->append(data)) {
+              LOG_WARN_STR("Dropping block " << block << " of subband " << subband);
             }
 
             // Allow the next block to be written

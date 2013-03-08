@@ -81,7 +81,21 @@ namespace LOFAR
     }
 
 
-    void CorrelatorWorkQueue::doSubband(unsigned block, unsigned subband)
+    void CorrelatorWorkQueue::computeFlags(CorrelatedData &output)
+    {
+      // TODO: base weights on flags
+
+      // Just set the weights to the total number of samples
+      size_t weight = ps.integrationSteps();
+      size_t n_ch = ps.nrChannelsPerSubband();
+
+      for (size_t bl = 0; bl < output.itsNrBaselines; ++bl)
+        for (size_t ch = 0; ch < n_ch; ++ch)
+          output.setNrValidSamples(bl, ch, weight);
+    }
+
+
+    void CorrelatorWorkQueue::doSubband(unsigned block, unsigned subband, CorrelatedData &output)
     {
       {
 #if defined USE_B7015
@@ -110,6 +124,14 @@ namespace LOFAR
 #else
             correlatorKernel.enqueue(queue, *counters["correlator"]);
 #endif
+
+      // ***** The GPU will be occupied for a while, do some calculations in the
+      // background.
+
+      // Propagate the flags
+      computeFlags(output);
+
+      // Wait for the GPU to finish.
       queue.finish();
 
       {
@@ -119,6 +141,11 @@ namespace LOFAR
         visibilities.deviceToHost(CL_TRUE);
                 counters["visibilities"]->doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
       }
+
+      // Copy visibilities
+      //output.visibilities = visibilities; <<-- TODO: get this working?
+      ASSERT(output.visibilities.num_elements() == visibilities.num_elements());
+      memcpy(output.visibilities.origin(), visibilities.origin(), visibilities.bytesize());
     }
 
 
