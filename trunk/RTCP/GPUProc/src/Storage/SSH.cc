@@ -223,6 +223,7 @@ SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, co
   itsCommandLine(commandline),
   itsUserName(username),
   itsSSHKey(sshkey),
+  itsConnected(false),
   itsCaptureStdout(captureStdout)
 {
 }
@@ -244,6 +245,12 @@ void SSHconnection::start()
 bool SSHconnection::isDone()
 {
   return itsThread && itsThread->isDone();
+}
+
+
+bool SSHconnection::connected() const
+{
+  return itsConnected;
 }
 
 
@@ -471,33 +478,33 @@ void SSHconnection::commThread()
     /* Prevent cancellation from here on -- we manually insert cancellation points to avoid
        screwing up libssh2's internal administration. */
     {
-      ScopedDelayCancellation dc;
+      {
+        ScopedDelayCancellation dc;
 
-      Cancellation::point();
-
-      // TODO: add a delay if opening session or channel fails
-
-      session = open_session(*sock);
-
-      if (!session.get()) {
-        sleep(RETRY_DELAY);
-        continue;
+        session = open_session(*sock);
       }
 
-      channel = open_channel(session, *sock);
+      if (session.get()) {
+        ScopedDelayCancellation dc;
 
-      if (!channel.get()) {
+        channel = open_channel(session, *sock);
+
+        if (channel.get())
+          // success!
+          break;
+
         close_session(session, *sock);
 
         session = 0;
-
-        sleep(RETRY_DELAY);
-        continue;
       }
+
+      sleep(RETRY_DELAY);
     }
 
     break;
   }
+
+  itsConnected = true;
 
   LOG_DEBUG_STR( itsLogPrefix << "Starting remote command: " << itsCommandLine);
 
@@ -703,18 +710,16 @@ static bool ssh_works(const char *privkey) {
 
   ASSERTSTR(USER, "$USER not set");
 
-  // Test both whether the file exists and whether ssh approves its use. Note that
-  // some SSH configurations fall back to a different identity file if the specified
-  // one doesn't work, causing this test to erroneously succeed.
-  char sshcmd[1024];
-  snprintf(sshcmd, sizeof sshcmd, "test -f '%s' -a -r '%s' && ssh %s@localhost -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o NoHostAuthenticationForLocalhost=yes -i '%s' /bin/true 2>/dev/null", privkey, privkey, USER, privkey);
-  int ret = system(sshcmd);
+  // connect, running /bin/true
+  SSHconnection sshconn("", "localhost", "/bin/true", USER, privkey, true);
+  sshconn.start();
 
-  if (ret < 0 || WEXITSTATUS(ret) != 0) {
-    return false;
-  }  
+  // wait 5 seconds for connection to succeed
+  struct timespec deadline = { time(0) + 5, 0 };
+  sshconn.wait(deadline);
 
-  return true;
+  // return whether connection succeeded
+  return sshconn.connected();
 }
 
 
@@ -723,14 +728,14 @@ bool discover_ssh_privkey(char *privkey, size_t buflen) {
 
   ASSERTSTR(HOME, "$HOME not set");
 
-  snprintf(privkey, buflen, "%s/.ssh/id_rsa", HOME);
+  snprintf(privkey, buflen, "%s/.ssh/id_dsa", HOME);
 
   if (ssh_works(privkey)) {
     LOG_DEBUG_STR("Private key file " << privkey << " works for ssh localhost.");
     return true;
   }
 
-  snprintf(privkey, buflen, "%s/.ssh/id_dsa", HOME);
+  snprintf(privkey, buflen, "%s/.ssh/id_rsa", HOME);
 
   if (ssh_works(privkey)) {
     LOG_DEBUG_STR("Private key file " << privkey << " works for ssh localhost.");
