@@ -3,9 +3,9 @@
 #if NR_BITS_PER_SAMPLE == 16
 typedef short SampleType;
 #elif NR_BITS_PER_SAMPLE == 8
-typedef char SampleType;
+typedef signed char SampleType;
 #else
-#error unsupport NR_BITS_PER_SAMPLE
+#error unsupported NR_BITS_PER_SAMPLE
 #endif
 
 typedef __global SampleType (*SampledDataType)[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
@@ -13,6 +13,38 @@ typedef __global float (*FilteredDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAM
 typedef __global const float16 (*WeightsType)[NR_CHANNELS];
 
 
+/*!
+ * Applies the Finite Input Response filter defined by the weightsPtr array
+ * to the sampledDataPtr array. Output is written into the filteredDataPtr
+ * array. The filter works on complex numbers. The weights are real values only.
+ *
+ * Input values are first converted to (complex) float.
+ * The kernel also reorders the polarization dimension and expects the weights
+ * per channel in reverse order. If an FFT is applied afterwards, the weights
+ * of the odd channels are often supplied negated to get the resulting channels
+ * in increasing order of frequency.
+ *
+ * \param[out] filteredDataPtr         4D output array of floats
+ * \param[in]  samplesDataPtr          4D input array of signed chars or shorts
+ * \param[in]  weightsPtr              2D per-channel FIR filter coefficient array of floats (considering float16 as a dim)
+ *
+ * Pre-processor input symbols (some are tied to the execution configuration)
+ * - NR_STATIONS             >= 1: number of antenna fields
+ * - NR_TAPS                 1--16: number of filtering coefficients
+ * - NR_SAMPLES_PER_CHANNEL  a multiple of NR_TAPS: number of samples per channel
+ * - NR_BITS_PER_SAMPLE      8 or 16: number of bits of signed integral value type of samplesDataPtr (TODO: support 4)
+ * - NR_CHANNELS             a multiple of 16 and > 0: number of frequency channels per subband.
+ * - NR_POLARIZATIONS        >= 1 (1 or 2 for LOFAR)
+ *
+ * Execution configuration: (TODO: enforce using __attribute__ reqd_work_group_size)
+ * - Work dim == 2  (can be 1 iff NR_STATIONS == 1)
+ *     Inner dim: the channel, pol, real/imag the thread processes
+ *     Outer dim: the station the thread processes
+ * - Work group size: must divide global size, no other kernel restrictions
+ * - Global size: (NR_CHANNELS * NR_POLARIZATIONS * 2, NR_STATIONS)
+ *
+ *   TODO: convert complex dim to fcomplex (=float2 in math.cl) in device code and to complex<float> in host code.
+ */
 __kernel void FIR_filter(__global void *filteredDataPtr,
 			 __global const void *sampledDataPtr,
 			 __global const void *weightsPtr)
@@ -23,6 +55,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
 
   uint cpr     = get_global_id(0);
 #if 0
+  // Straight index calc for NR_CHANNELS == 1
   uint pol_ri  = cpr & 3;
   uint channel = cpr >> 2;
   uint ri      = cpr & 1;
