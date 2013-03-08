@@ -29,8 +29,7 @@ void emulateStorage()
   Parset parset(&stream);
   {
     ScopedLock sl(logMutex);
-    cout << "----- Parset: " << endl;
-    cout << parset << endl;
+    cout << "Storage: Parset received." << endl;
   }
 
   // read and print meta data
@@ -38,13 +37,11 @@ void emulateStorage()
   finalMetaData.read(stream);
   {
     ScopedLock sl(logMutex);
-    cout << "----- FinalMetaData: " << endl;
-    cout << finalMetaData << endl;
 
     ASSERT(finalMetaData.brokenRCUsAtBegin == origFinalMetaData.brokenRCUsAtBegin);
     ASSERT(finalMetaData.brokenRCUsDuring  == origFinalMetaData.brokenRCUsDuring);
 
-    cout << "FinalMetaData received and matches." << endl;
+    cout << "Storage: FinalMetaData received and matches." << endl;
   }
 }
 
@@ -58,8 +55,7 @@ void emulateFinalMetaDataGatherer()
   Parset parset(&stream);
   {
     ScopedLock sl(logMutex);
-    cout << "----- Parset: " << endl;
-    cout << parset << endl;
+    cout << "FinalMetaDataGatherer: Parset received." << endl;
   }
 
   // set and write meta data
@@ -70,7 +66,7 @@ void emulateFinalMetaDataGatherer()
 
   {
     ScopedLock sl(logMutex);
-    cout << "FinalMetaData sent." << endl;
+    cout << "FinalMetaDataGatherer: FinalMetaData sent." << endl;
   }
 }
 
