@@ -427,7 +427,7 @@ bool SSHconnection::waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStr
   fd_set *readfd = NULL;
   int dir;
 
-  timeout.tv_sec = 10;
+  timeout.tv_sec =  1;
   timeout.tv_usec = 0;
 
   FD_ZERO(&fd);
@@ -734,6 +734,9 @@ static bool ssh_works(const char *pubkey, const char *privkey) {
 
 
 bool discover_ssh_keys(char *pubkey, size_t pubkey_buflen, char *privkey, size_t privkey_buflen) {
+  ASSERT(pubkey_buflen > 0);
+  ASSERT(privkey_buflen > 0);
+
   char *HOME = getenv("HOME");
 
   ASSERTSTR(HOME, "$HOME not set");
@@ -742,11 +745,21 @@ bool discover_ssh_keys(char *pubkey, size_t pubkey_buflen, char *privkey, size_t
   for(unsigned attempt = 0; ; attempt++) {
     switch (attempt) {
       case 0:
-        snprintf(pubkey,  pubkey_buflen,  "%s/.ssh/id_dsa.pub", HOME);
+        pubkey[0] = 0;
         snprintf(privkey, privkey_buflen, "%s/.ssh/id_dsa",     HOME);
         break;
 
       case 1:
+        snprintf(pubkey,  pubkey_buflen,  "%s/.ssh/id_dsa.pub", HOME);
+        snprintf(privkey, privkey_buflen, "%s/.ssh/id_dsa",     HOME);
+        break;
+
+      case 2:
+        pubkey[0] = 0;
+        snprintf(privkey, privkey_buflen, "%s/.ssh/id_rsa",     HOME);
+        break;
+
+      case 3:
         snprintf(pubkey,  pubkey_buflen,  "%s/.ssh/id_rsa.pub", HOME);
         snprintf(privkey, privkey_buflen, "%s/.ssh/id_rsa",     HOME);
         break;
