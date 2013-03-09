@@ -225,13 +225,14 @@ static string explainLibSSH2Error( LIBSSH2_SESSION *session, int error )
  * Note that waitsocket() is a forced cancellation point.
  */
 
-SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &sshkey, bool captureStdout)
+SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &pubkey, const string &privkey, bool captureStdout)
 :
   itsLogPrefix(logPrefix),
   itsHostName(hostname),
   itsCommandLine(commandline),
   itsUserName(username),
-  itsSSHKey(sshkey),
+  itsPublicKey(pubkey),
+  itsPrivateKey(privkey),
   itsConnected(false),
   itsCaptureStdout(captureStdout)
 {
@@ -336,19 +337,19 @@ LIBSSH2_SESSION *SSHconnection::open_session( FileDescriptorBasedStream &sock )
     return NULL;
   }
 
-  /* Authenticate by public key */
+  /* Authenticate by public and/or private key */
   while ((rc = libssh2_userauth_publickey_fromfile(session,
-                      itsUserName.c_str(), // remote username
-                      NULL,                // public key filename
-                      itsSSHKey.c_str(),   // private key filename
-                      NULL                 // password
+                      itsUserName.c_str(),     // remote username
+                      itsPublicKey == "" ? NULL : itsPublicKey.c_str(),    // public key filename
+                      itsPrivateKey == "" ? NULL : itsPrivateKey.c_str(),   // private key filename
+                      NULL                     // password
                       )) ==
          LIBSSH2_ERROR_EAGAIN) {
     waitsocket(session, sock);
   }
 
   if (rc) {
-    LOG_ERROR_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public key file '" << itsSSHKey << "' failed: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
+    LOG_ERROR_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public/private keys '" << itsPublicKey << "'/'" << itsPrivateKey << "' failed: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
     return NULL;
   }
 
@@ -714,13 +715,13 @@ void SSH_Finalize() {
 
 
 // Returns true if the given private-key file name works for "ssh localhost"
-static bool ssh_works(const char *privkey) {
+static bool ssh_works(const char *pubkey, const char *privkey) {
   char *USER = getenv("USER");
 
   ASSERTSTR(USER, "$USER not set");
 
   // connect, running /bin/true
-  SSHconnection sshconn("", "localhost", "/bin/true", USER, privkey, true);
+  SSHconnection sshconn("", "localhost", "/bin/true", USER, pubkey, privkey, true);
   sshconn.start();
 
   // wait 5 seconds for connection to succeed
@@ -732,28 +733,36 @@ static bool ssh_works(const char *privkey) {
 }
 
 
-bool discover_ssh_privkey(char *privkey, size_t buflen) {
+bool discover_ssh_keys(char *pubkey, size_t pubkey_buflen, char *privkey, size_t privkey_buflen) {
   char *HOME = getenv("HOME");
 
   ASSERTSTR(HOME, "$HOME not set");
 
-  snprintf(privkey, buflen, "%s/.ssh/id_dsa", HOME);
+  // try several common keys
+  for(unsigned attempt = 0; ; attempt++) {
+    switch (attempt) {
+      case 0:
+        snprintf(pubkey,  pubkey_buflen,  "%s/.ssh/id_dsa.pub", HOME);
+        snprintf(privkey, privkey_buflen, "%s/.ssh/id_dsa",     HOME);
+        break;
 
-  if (ssh_works(privkey)) {
-    LOG_DEBUG_STR("Private key file " << privkey << " works for ssh localhost.");
-    return true;
+      case 1:
+        snprintf(pubkey,  pubkey_buflen,  "%s/.ssh/id_rsa.pub", HOME);
+        snprintf(privkey, privkey_buflen, "%s/.ssh/id_rsa",     HOME);
+        break;
+
+      default:
+        // ran out of attempts
+        LOG_ERROR("Cannot find a working public/private key for SSH to localhost");
+        return false;
+    }
+
+    // try key pair
+    if (ssh_works(pubkey, privkey)) {
+      LOG_DEBUG_STR("Key files '" << pubkey << "' and '" << privkey << "' work for ssh localhost.");
+      return true;
+    }
   }
-
-  snprintf(privkey, buflen, "%s/.ssh/id_rsa", HOME);
-
-  if (ssh_works(privkey)) {
-    LOG_DEBUG_STR("Private key file " << privkey << " works for ssh localhost.");
-    return true;
-  }
-
-  LOG_ERROR("Cannot find a working private key for SSH to localhost");
-
-  return false;
 }
 
 } // namespace RTCP

@@ -77,7 +77,8 @@ void StorageProcesses::finalMetaDataThread()
 {
   std::string hostName    = itsParset.getString("OLAP.FinalMetaDataGatherer.host");
   std::string userName    = itsParset.getString("OLAP.FinalMetaDataGatherer.userName");
-  std::string sshKey      = itsParset.getString("OLAP.FinalMetaDataGatherer.sshIdentityFile");
+  std::string pubKey      = itsParset.getString("OLAP.FinalMetaDataGatherer.sshPublicKey");
+  std::string privKey     = itsParset.getString("OLAP.FinalMetaDataGatherer.sshPrivateKey");
   std::string executable  = itsParset.getString("OLAP.FinalMetaDataGatherer.executable");
 
   char cwd[1024];
@@ -92,7 +93,7 @@ void StorageProcesses::finalMetaDataThread()
       );
 
   // Start the remote process
-  SSHconnection sshconn(itsLogPrefix + "[FinalMetaData] ", hostName, commandLine, userName, sshKey);
+  SSHconnection sshconn(itsLogPrefix + "[FinalMetaData] ", hostName, commandLine, userName, pubKey, privKey);
   sshconn.start();
 
   // Connect
