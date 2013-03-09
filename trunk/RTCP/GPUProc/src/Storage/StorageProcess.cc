@@ -67,7 +67,8 @@ void StorageProcess::controlThread()
 {
   // Start Storage
   std::string userName   = itsParset.getString("OLAP.Storage.userName");
-  std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
+  std::string pubKey     = itsParset.getString("OLAP.Storage.sshPublicKey");
+  std::string privKey    = itsParset.getString("OLAP.Storage.sshPrivateKey");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
 
   if (userName == "") {
@@ -79,13 +80,16 @@ void StorageProcess::controlThread()
     userName = USER;
   }
 
-  if (sshKey == "") {
-    // No SSH key given -- try to discover it
+  if (pubKey == "" && privKey == "") {
+    // No SSH keys given -- try to discover them
 
-    char privkey[1024];
+    char discover_pubkey[1024];
+    char discover_privkey[1024];
 
-    if (discover_ssh_privkey(privkey, sizeof privkey))
-      sshKey = privkey;
+    if (discover_ssh_keys(discover_pubkey, sizeof discover_pubkey, discover_privkey, sizeof discover_privkey)) {
+      pubKey  = discover_pubkey;
+      privKey = discover_privkey;
+    }
   }
 
   char cwd[1024];
@@ -110,7 +114,7 @@ void StorageProcess::controlThread()
 #endif
   );
 
-  SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, sshKey, 0);
+  SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, pubKey, privKey, 0);
   sshconn.start();
 
   // Connect control stream

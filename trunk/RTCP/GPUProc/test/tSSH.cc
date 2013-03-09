@@ -8,6 +8,7 @@
 #include <Stream/SocketStream.h>
 #include <Common/LofarLogger.h>
 
+char pubkey[1024];
 char privkey[1024];
 
 using namespace LOFAR;
@@ -16,7 +17,7 @@ using namespace RTCP;
 
 void test_SSHconnection( const char *cmd, bool capture ) {
   const char *USER = getenv("USER");
-  SSHconnection ssh("", "localhost", cmd, USER, privkey, capture);
+  SSHconnection ssh("", "localhost", cmd, USER, pubkey, privkey, capture);
 
   ssh.start();
 
@@ -34,7 +35,7 @@ int main() {
   INIT_LOGGER( "tSSH" );
 
   // discover a working private key
-  if (!discover_ssh_privkey(privkey, sizeof privkey))
+  if (!discover_ssh_keys(pubkey, sizeof pubkey, privkey, sizeof privkey))
     return 3;
 
   SSH_Init();

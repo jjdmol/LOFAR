@@ -9,6 +9,7 @@
 #include <Common/LofarLogger.h>
 #include <string>
 
+char pubkey[1024];
 char privkey[1024];
 
 using namespace LOFAR;
@@ -22,11 +23,12 @@ void test_simple() {
   const char *USER = getenv("USER");
   Parset p;
 
-  p.add("Observation.ObsID",            "12345");
-  p.add("OLAP.Storage.hosts",           "[localhost]");
-  p.add("OLAP.Storage.userName",        USER);
-  p.add("OLAP.Storage.sshIdentityFile", privkey);
-  p.add("OLAP.Storage.msWriter",        "/bin/echo");
+  p.add("Observation.ObsID",          "12345");
+  p.add("OLAP.Storage.hosts",         "[localhost]");
+  p.add("OLAP.Storage.userName",      USER);
+  p.add("OLAP.Storage.sshPublicKey",  pubkey);
+  p.add("OLAP.Storage.sshPrivateKey", privkey);
+  p.add("OLAP.Storage.msWriter",      "/bin/echo");
 
   {
     StorageProcesses sp(p, "");
@@ -46,11 +48,13 @@ void test_protocol() {
   p.add("Observation.ObsID",            "12345");
   p.add("OLAP.Storage.hosts",           "[localhost]");
   p.add("OLAP.Storage.userName",        USER);
-  p.add("OLAP.Storage.sshIdentityFile", privkey);
+  p.add("OLAP.Storage.sshPublicKey",    pubkey);
+  p.add("OLAP.Storage.sshPrivateKey",   privkey);
   p.add("OLAP.Storage.msWriter",        "./DummyStorage");
-  p.add("OLAP.FinalMetaDataGatherer.host",            "localhost");
-  p.add("OLAP.FinalMetaDataGatherer.userName",        USER);
-  p.add("OLAP.FinalMetaDataGatherer.sshIdentityFile", privkey);
+  p.add("OLAP.FinalMetaDataGatherer.host",          "localhost");
+  p.add("OLAP.FinalMetaDataGatherer.userName",      USER);
+  p.add("OLAP.FinalMetaDataGatherer.sshPublicKey",  pubkey);
+  p.add("OLAP.FinalMetaDataGatherer.sshPrivateKey", privkey);
 
   // DummyStorage already emulates the FinalMetaDataGatherer, so use a dummy
   // instead.
@@ -76,7 +80,7 @@ int main() {
   // prevent stalls
   alarm(60);
 
-  if (!discover_ssh_privkey(privkey, sizeof privkey))
+  if (!discover_ssh_keys(pubkey, sizeof pubkey, privkey, sizeof privkey))
     return 3;
 
   SSH_Init();

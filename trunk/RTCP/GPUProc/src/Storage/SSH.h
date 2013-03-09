@@ -49,7 +49,7 @@ public:
 
   EXCEPTION_CLASS(SSHException, LOFAR::Exception);
 
-  SSHconnection(const std::string &logPrefix, const std::string &hostname, const std::string &commandline, const std::string &username, const std::string &sshkey, bool captureStdout = false);
+  SSHconnection(const std::string &logPrefix, const std::string &hostname, const std::string &commandline, const std::string &username, const std::string &pubkey, const std::string &privkey, bool captureStdout = false);
 
   ~SSHconnection();
 
@@ -78,7 +78,8 @@ private:
   const string itsHostName;
   const string itsCommandLine;
   const string itsUserName;
-  const string itsSSHKey;
+  const string itsPublicKey;
+  const string itsPrivateKey;
 
   bool itsConnected;
 
@@ -96,13 +97,10 @@ private:
   void commThread();
 };
 
-// Discover the file name to the .ssh private key,
-// and put it in privkey. Returns true if the private
-// key was found, and was usable for 'ssh localhost'.
-//
-// Note: This is an expensive operation, because system("ssh")
-// is spawned several times.
-bool discover_ssh_privkey(char *privkey, size_t buflen);
+// Discover the file name to the .ssh public/private key files,
+// and put them in pubkey and privkey. Returns true if the files
+// were found, and were usable for SSHconnection to localhost:22.
+bool discover_ssh_keys(char *pubkey, size_t pubkey_buflen, char *privkey, size_t privkey_buflen);
 
 } // namespace RTCP
 } // namespace LOFAR
