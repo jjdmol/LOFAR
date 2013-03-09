@@ -25,7 +25,7 @@ template <typename T, size_t ALIGNMENT> class AlignedStdAllocator : public std::
 
     pointer allocate(size_type size, const_pointer /*hint*/ = 0)
     {
-      return static_cast<pointer>(heapAllocator.allocate(size, ALIGNMENT));
+      return static_cast<pointer>(heapAllocator.allocate(size * sizeof(T), ALIGNMENT));
     }
 
     void deallocate(pointer ptr, size_type /*size*/)
