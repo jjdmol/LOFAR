@@ -485,8 +485,8 @@ void SSHconnection::commThread()
 
     LOG_DEBUG_STR( itsLogPrefix << "Connected" );
 
-    /* Prevent cancellation from here on -- we manually insert cancellation points to avoid
-       screwing up libssh2's internal administration. */
+    /* Prevent cancellation in functions dealing with libssh2 internals, but
+     * NOT during sleep() */
     {
       {
         ScopedDelayCancellation dc;
@@ -638,7 +638,7 @@ void SSHconnection::commThread()
   if (rc == 0)
   {
     exitcode = libssh2_channel_get_exit_status(channel);
-#if LIBSSH2_VERSION_NUM >= 0x010402 // unknown
+#if LIBSSH2_VERSION_NUM >= 0x010208
     libssh2_channel_get_exit_signal(channel, &exitsignal,
                                     NULL, NULL, NULL, NULL, NULL);
 #else
