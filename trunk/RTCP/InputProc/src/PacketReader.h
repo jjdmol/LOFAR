@@ -1,6 +1,7 @@
 #ifndef __PACKETREADER__
 #define __PACKETREADER__
 
+#include <Common/Exception.h>
 #include <Stream/Stream.h>
 #include <Interface/SmartPtr.h>
 #include "RSP.h"
@@ -17,6 +18,8 @@ namespace RTCP {
  */
 class PacketReader {
 public:
+  EXCEPTION_CLASS(BadModeException, LOFAR::Exception);
+
   PacketReader( const std::string &logPrefix, Stream &inputStream );
 
   // Reads a packet from the input stream. Returns true if a packet was
@@ -25,7 +28,7 @@ public:
 
   // Reads a packet from the input stream, and validates it against the given
   // settings. Returns true if the packet was read and valid.
-  bool readPacket( struct RSP &packet, const struct BufferSettings &settings );
+  bool readPacket( struct RSP &packet, const struct BufferSettings &settings ) throw(BadModeException);
 
   // Logs (and resets) statistics about the packets read.
   void logStatistics();

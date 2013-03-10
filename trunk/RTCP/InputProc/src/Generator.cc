@@ -15,7 +15,9 @@ namespace RTCP {
 
 Generator::Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
 :
-  RSPBoards(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaField), settings, streamDescriptors),
+  RSPBoards(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaField), streamDescriptors.size()),
+  settings(settings),
+  streamDescriptors(streamDescriptors),
   nrSent(nrBoards, 0)
 {
   LOG_INFO_STR( logPrefix << "Initialised" );
@@ -27,9 +29,9 @@ void Generator::makePacket( size_t boardNr, struct RSP &packet, const TimeStamp 
   packet.header.version = 3; // we emulate BDI 6.0
 
   packet.header.sourceInfo1 =
-      (boardNr & 0x1F) | (settings.station.clock == 200 * 1000 * 1000 ? 1 << 7 : 0);
+      (boardNr & 0x1F) | (settings.station.clockMHz == 200 ? 1 << 7 : 0);
 
-  switch (settings.station.bitmode) {
+  switch (settings.station.bitMode) {
     case 16:
       packet.header.sourceInfo2 = 0;
       break;
@@ -57,8 +59,8 @@ void Generator::makePacket( size_t boardNr, struct RSP &packet, const TimeStamp 
   // verify whether the packet really reflects what we intended
   ASSERT(packet.rspBoard()     == boardNr);
   ASSERT(packet.payloadError() == false);
-  ASSERT(packet.bitMode()      == settings.station.bitmode);
-  ASSERT(packet.clockMHz()     == settings.station.clock / 1000000);
+  ASSERT(packet.bitMode()      == settings.station.bitMode);
+  ASSERT(packet.clockMHz()     == settings.station.clockMHz);
 }
 
 void Generator::processBoard( size_t nr )
@@ -71,7 +73,7 @@ void Generator::processBoard( size_t nr )
 
     LOG_INFO_STR( logPrefix << "Start" );
 
-    TimeStamp current(time(0L) + 1, 0, settings.station.clock);
+    TimeStamp current(time(0L) + 1, 0, settings.station.clockMHz * 1000000);
     for(;;) {
       struct RSP packet;
 

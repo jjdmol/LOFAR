@@ -1,118 +1,173 @@
-#ifndef __STATION__
-#define __STATION__
+#ifndef __PACKETSTOBUFFER__
+#define __PACKETSTOBUFFER__
 
 #include <Common/LofarLogger.h>
-#include <Common/LofarConstants.h>
 #include <Stream/Stream.h>
-#include <Stream/SocketStream.h>
-#include <Interface/RSPTimeStamp.h>
-#include <Interface/SmartPtr.h>
-#include <Interface/Stream.h>
 #include "RSP.h"
-#include "WallClockTime.h"
 #include "SampleBuffer.h"
 #include "BufferSettings.h"
 #include "PacketReader.h"
 #include "PacketWriter.h"
-#include "Ranges.h"
-#include "time.h"
 #include <boost/format.hpp>
 #include <string>
-#include <vector>
 #include <ios>
 
 namespace LOFAR {
 namespace RTCP {
 
-/* Receives station input and stores it in shared memory */
-
-template<typename T> class PacketsToBuffer: public RSPBoards {
+/* Receives station input and stores it in shared memory. */
+class PacketsToBuffer {
 public:
-  PacketsToBuffer( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
+  PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr );
+
+  // Process data for this board until interrupted or end of data. Auto-senses
+  // mode (bitmode & clock).
+  void process();
 
 protected:
-  // The buffer we'll write to
-  SampleBuffer<T> buffer;
+  const std::string logPrefix;
 
-  // Keep track of all readers and writers (for logging purposes)
-  std::vector< SmartPtr<PacketReader> > readers;
-  std::vector< SmartPtr<PacketWriter<T> > > writers;
+  // The input stream
+  Stream &inputStream;
 
-  // Process data for this board until interrupted or end of data
-  virtual void processBoard( size_t nr );
+  // What to receive
+  BufferSettings settings;
+  const unsigned boardNr;
 
-  // Log the statistics gathered since the previous call
-  virtual void logStatistics();
+private:
+  // Process data for this board until interrupted or end of data.
+  // `packet' is the receive buffer for packets. If a new mode is detected,
+  // `packet' is filled with the last read packet, and a BadModeException
+  // is thrown.
+  //
+  // If `writeGivenPacket' is true, the provided `packet' is written as well.
+  template<typename T> void process( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
 };
 
 
-template<typename T> PacketsToBuffer<T>::PacketsToBuffer( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
-:
-  RSPBoards(str(boost::format("[station %s %s] ") % settings.station.stationName % settings.station.antennaField), settings, streamDescriptors),
+class MultiPacketsToBuffer: public RSPBoards {
+public:
+  MultiPacketsToBuffer( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
+  :
+    RSPBoards("", streamDescriptors.size()),
+    settings(settings),
+    streamDescriptors(streamDescriptors)
+  {
+  }
 
-  buffer(settings, true),
-  readers(nrBoards, 0),
-  writers(nrBoards, 0)
+
+  virtual void processBoard( size_t boardNr ) {
+    SmartPtr<Stream> inputStream = createStream(streamDescriptors[boardNr], true);
+    PacketsToBuffer board(*inputStream, settings, boardNr);
+
+    board.process();
+  }
+
+
+  virtual void logStatistics() {
+    // TODO
+  }
+
+private:
+  const BufferSettings settings;
+  const std::vector<std::string> streamDescriptors;
+};
+
+PacketsToBuffer::PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr )
+:
+  logPrefix(str(boost::format("[station %s board %u] ") % settings.station % boardNr)),
+  inputStream(inputStream),
+  settings(settings),
+  boardNr(boardNr)
 {
   LOG_INFO_STR( logPrefix << "Initialised" );
 }
 
-template<typename T> void PacketsToBuffer<T>::processBoard( size_t nr )
+
+void PacketsToBuffer::process()
 {
-  const std::string logPrefix(str(boost::format("%s [board %u] ") % this->logPrefix % nr));
+  // Holder for packet
+  struct RSP packet;
+
+  // Whether packet has been read already
+  bool packetValid = false;
+
+  // Default mode
+
+  for(;;) {
+    try {
+      // Process packets based on (expected) bit mode
+      switch(settings.station.bitMode) {
+        case 16:
+          process<i16complex>(packet, packetValid);
+          break;
+
+        case 8:
+          process<i8complex>(packet, packetValid);
+          break;
+
+        case 4:
+          process<i4complex>(packet, packetValid);
+          break;
+      }
+
+      // process<>() exited gracefully, so we're done
+      break;
+    } catch (PacketReader::BadModeException &ex) {
+      // Mode switch detected
+      unsigned bitMode  = packet.bitMode();
+      unsigned clockMHz = packet.clockMHz();
+
+      LOG_INFO_STR( logPrefix << "Mode switch detected to " << clockMHz << " MHz, " << bitMode << " bit");
+
+      // update settings
+      settings.station.bitMode = bitMode;
+      settings.station.clockMHz = clockMHz;
+
+      // Process packet again
+      packetValid = true;
+    }
+  }
+}
+
+
+template<typename T> void PacketsToBuffer::process( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException)
+{
+  // Create input structures
+  PacketReader reader(logPrefix, inputStream);
+
+  // Create output structures
+  SampleBuffer<T> buffer(settings, true);
+  PacketWriter<T> writer(logPrefix, buffer, buffer.flags[boardNr], settings.nrBeamlets / settings.nrBoards * boardNr, settings);
 
   try {
-    // Create the reader
-    LOG_INFO_STR( logPrefix << "Connecting to " << streamDescriptors[nr] );
-    SmartPtr<Stream> inputStream = createStream(streamDescriptors[nr], true);
-    readers[nr] = new PacketReader(logPrefix, *inputStream);
-    PacketReader &reader = *readers[nr];
-
-    // Create the writer
-    LOG_INFO_STR( logPrefix << "Connecting to shared memory buffer 0x" << std::hex << settings.dataKey );
-    size_t firstBeamlet = settings.nrBeamlets / settings.nrBoards * nr;
-    writers[nr] = new PacketWriter<T>(logPrefix, buffer, buffer.flags[nr], firstBeamlet, settings);
-    PacketWriter<T> &writer = *writers[nr];
-
-    LOG_INFO_STR( logPrefix << "Start" );
+    // Process lingering packet from previous run, if any
+    if (writeGivenPacket)
+      writer.writePacket(packet);
 
     // Transport packets from reader to writer
-    struct RSP packet;
-
     for(;;)
       if (reader.readPacket(packet, settings))
         writer.writePacket(packet);
 
+  } catch (PacketReader::BadModeException &ex) {
+    // Packet has different clock or bitmode
+    throw;
   } catch (Stream::EndOfStreamException &ex) {
+    // Ran out of data
     LOG_INFO_STR( logPrefix << "End of stream");
+
   } catch (SystemCallException &ex) {
     if (ex.error == EINTR)
       LOG_INFO_STR( logPrefix << "Aborted: " << ex.what());
     else
       LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
+
   } catch (Exception &ex) {
     LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
   }
 
   LOG_INFO_STR( logPrefix << "End");
-}
-
-
-template<typename T> void PacketsToBuffer<T>::logStatistics()
-{
-  ASSERT(readers.size() == nrBoards);
-  ASSERT(writers.size() == nrBoards);
-
-  // Log statistics of all boards. Note that there could
-  // still be NULL pointers, assuming processBoards is running
-  // in parallel.
-  for (size_t nr = 0; nr < nrBoards; nr++) {
-    if (readers[nr].get())
-      readers[nr]->logStatistics();
-
-    if (writers[nr].get())
-      writers[nr]->logStatistics();
-  }
 }
 
 

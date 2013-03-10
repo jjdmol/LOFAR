@@ -8,12 +8,10 @@ namespace LOFAR {
 namespace RTCP {
 
 
-RSPBoards::RSPBoards( const std::string &logPrefix, const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
+RSPBoards::RSPBoards( const std::string &logPrefix, size_t nrBoards )
 :
   logPrefix(logPrefix),
-  settings(settings),
-  streamDescriptors(streamDescriptors),
-  nrBoards(streamDescriptors.size())
+  nrBoards(nrBoards)
 {
 }
 
