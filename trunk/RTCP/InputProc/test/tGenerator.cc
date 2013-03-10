@@ -3,6 +3,7 @@
 #include "PacketReader.h"
 #include "OMPThread.h"
 #include <Common/LofarLogger.h>
+#include <Interface/Stream.h>
 #include <vector>
 #include <string>
 #include <unistd.h>
@@ -68,7 +69,8 @@ int main( int, char **argv ) {
       // Read and verify the generated packets
 
       try {
-        PacketReader reader("", streamDescs[0]);
+        SmartPtr<Stream> inputStream = createStream(streamDescs[0], true);
+        PacketReader reader("", *inputStream);
 
         for(size_t nr = 0; nr < NUMPACKETS; ++nr) {
           struct RSP packet;
