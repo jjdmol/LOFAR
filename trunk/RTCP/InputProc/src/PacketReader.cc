@@ -32,9 +32,9 @@ PacketReader::PacketReader( const std::string &logPrefix, Stream &inputStream )
     const bool isUDP = asSocket.protocol == SocketStream::UDP;
 
     supportPartialReads = !isUDP;
-  } catch (std::bad_cast) {
+  } catch (std::bad_cast&) {
     // inputStream is not a SocketStream
-    supportPartialReads = false;
+    supportPartialReads = true;
   }
 }
 
