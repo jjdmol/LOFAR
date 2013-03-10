@@ -30,7 +30,7 @@ public:
     size_t wrapOffsets[1024];
 
     size_t nrBeamlets;
-    size_t flagsSize;
+    size_t metaDataSize;
   };
 
   union tag_t {
@@ -53,13 +53,13 @@ protected:
   std::vector<MPI_Request> requests;
   size_t nrRequests;
 
-  Matrix<char> flagsData;
+  Matrix<char> metaData;
 
   virtual void copyStart( const TimeStamp &from, const TimeStamp &to, const std::vector<size_t> &wrapOffsets );
   virtual void copy( const struct SampleBufferReader<T>::CopyInstructions &info );
   virtual void copyEnd( const TimeStamp &from, const TimeStamp &to );
 
-  size_t flagsSize() const {
+  size_t metaDataSize() const {
     return sizeof(uint32_t) + this->settings.nrFlagRanges * sizeof(int64) * 2;
   }
 };
@@ -71,7 +71,7 @@ template<typename T> MPISendStation<T>::MPISendStation( const struct BufferSetti
   destRank(destRank),
   requests(1 + beamlets.size() * 3, 0), // apart from the header, at most three transfers per beamlet: one or two for the samples, plus one for the flags
   nrRequests(0),
-  flagsData(this->buffer.flags.size(), flagsSize())
+  metaData(this->buffer.flags.size(), metaDataSize())
 {
 }
 
@@ -81,11 +81,11 @@ template<typename T> void MPISendStation<T>::copyStart( const TimeStamp &from, c
   Header header;
 
   // Copy static information
-  header.station     = this->settings.station;
-  header.from        = from;
-  header.to          = to;
-  header.nrBeamlets  = this->beamlets.size();
-  header.flagsSize   = this->flagsSize();
+  header.station      = this->settings.station;
+  header.from         = from;
+  header.to           = to;
+  header.nrBeamlets   = this->beamlets.size();
+  header.metaDataSize = this->metaDataSize();
 
   // Copy the wrapOffsets
   ASSERT(wrapOffsets.size() * sizeof wrapOffsets[0] <= sizeof header.wrapOffsets);
@@ -128,7 +128,7 @@ template<typename T> void MPISendStation<T>::copy( const struct SampleBufferRead
   }
 
   // Send flags
-  ssize_t numBytes = info.flags.marshall(&flagsData[info.beamlet][0], flagsSize());
+  ssize_t numBytes = info.flags.marshall(&metaData[info.beamlet][0], metaDataSize());
 
   ASSERT(numBytes >= 0);
 
@@ -139,7 +139,7 @@ template<typename T> void MPISendStation<T>::copy( const struct SampleBufferRead
   ASSERT(tag.value >= 0); // Silly MPI requirement
 
   int error = MPI_Isend(
-            (void*)&flagsData[info.beamlet][0], flagsSize(), MPI_CHAR,
+            (void*)&metaData[info.beamlet][0], metaDataSize(), MPI_CHAR,
             destRank, tag.value,
             MPI_COMM_WORLD, &requests[nrRequests++]);
 
@@ -187,6 +187,13 @@ template<typename T> class MPIReceiveStations {
 public:
   MPIReceiveStations( const struct BufferSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
 
+  struct Block {
+    MultiDimArray<T, 2> samples;                // [beamlet][sample]
+    MultiDimArray<SparseSet<int64>, 1> flags;   // [beamlet]
+  };
+
+  std::vector<struct Block> lastBlock; // [station]
+
   void receiveBlock();
 
 private:
@@ -196,20 +203,21 @@ private:
 public:
   const std::vector<size_t> beamlets;
   const size_t blockSize;
-  MultiDimArray<T, 3> samples;       // [station][beamlet][sample]
-  Matrix< SparseSet<int64> > flags;  // [station][beamlet]
 };
 
 
 template<typename T> MPIReceiveStations<T>::MPIReceiveStations( const struct BufferSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
 :
+  lastBlock(stationRanks.size()),
   settings(settings),
   stationRanks(stationRanks),
   beamlets(beamlets),
-  blockSize(blockSize), // TODO: nrHistorySamples support
-  samples(boost::extents[stationRanks.size()][beamlets.size()][blockSize], 128, heapAllocator, false, false),
-  flags(stationRanks.size(), beamlets.size())
+  blockSize(blockSize) // TODO: nrHistorySamples support
 {
+  for (size_t stat = 0; stat < stationRanks.size(); ++stat) {
+    lastBlock[stat].samples.resize(boost::extents[beamlets.size()][blockSize], 128, heapAllocator);
+    lastBlock[stat].flags.resize(boost::extents[beamlets.size()], 128, heapAllocator);
+  }
 }
 
 
@@ -237,7 +245,7 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
   }
 
   // Process stations in the order in which we receive the headers
-  Matrix< std::vector<char> > flagData(stationRanks.size(), beamlets.size()); // [station][beamlet][data]
+  Matrix< std::vector<char> > metaData(stationRanks.size(), beamlets.size()); // [station][beamlet][data]
 
   for (size_t i = 0; i < stationRanks.size(); ++i) {
     int stat;
@@ -272,7 +280,7 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
       ASSERT(tag.value >= 0); // Silly MPI requirement
 
       error = MPI_Irecv(
-          &samples[stat][beamlet][0], sizeof(T) * (wrapOffset ? wrapOffset : blockSize), MPI_CHAR,
+          &lastBlock[stat].samples[beamlet][0], sizeof(T) * (wrapOffset ? wrapOffset : blockSize), MPI_CHAR,
           rank, tag.value,
           MPI_COMM_WORLD, &requests[nrRequests++]);
 
@@ -284,7 +292,7 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
         ASSERT(tag.value >= 0); // Silly MPI requirement
 
         error = MPI_Irecv(
-            &samples[stat][beamlet][wrapOffset], sizeof(T) * (blockSize - wrapOffset), MPI_CHAR,
+            &lastBlock[stat].samples[beamlet][wrapOffset], sizeof(T) * (blockSize - wrapOffset), MPI_CHAR,
             rank, tag.value,
             MPI_COMM_WORLD, &requests[nrRequests++]);
 
@@ -297,10 +305,10 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
       tag.bits.beamlet = beamlet;
       ASSERT(tag.value >= 0); // Silly MPI requirement
 
-      flagData[stat][beamlet].resize(header.flagsSize);
+      metaData[stat][beamlet].resize(header.metaDataSize);
 
       error = MPI_Irecv(
-            &flagData[stat][0][0], header.flagsSize, MPI_CHAR,
+            &metaData[stat][0][0], header.metaDataSize, MPI_CHAR,
             rank, tag.value,
             MPI_COMM_WORLD, &requests[nrRequests++]);
 
@@ -316,10 +324,10 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
     ASSERT(error == MPI_SUCCESS);
   }
 
-  // Convert raw flagData to flags array
+  // Convert raw metaData to flags array
   for (size_t stat = 0; stat < stationRanks.size(); ++stat)
     for (size_t beamlet = 0; beamlet < beamlets.size(); ++beamlet)
-      flags[stat][beamlet].unmarshall(&flagData[stat][beamlet][0]);
+      lastBlock[stat].flags[beamlet].unmarshall(&metaData[stat][beamlet][0]);
 
 }
 
