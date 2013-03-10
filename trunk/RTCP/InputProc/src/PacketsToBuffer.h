@@ -15,13 +15,22 @@
 namespace LOFAR {
 namespace RTCP {
 
-/* Receives station input and stores it in shared memory. */
+/* Receives station input and stores it in shared memory.
+ *
+ * PacketsToBuffer creates a SampleBuffer based on the provided settings
+ * as well as the current clock and bit mode. The latter are auto-sensed
+ * from the received packets, which are read from the inputStream. The
+ * SampleBuffer is recreated if the clock or bit mode changes.
+ *
+ * The boardNr indicates the RSP board number for which the packets are
+ * received.
+ */
 class PacketsToBuffer {
 public:
   PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr );
 
   // Process data for this board until interrupted or end of data. Auto-senses
-  // mode (bitmode & clock).
+  // mode (bit mode & clock).
   void process();
 
 protected:
@@ -44,7 +53,10 @@ private:
   template<typename T> void process( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
 };
 
-
+/*
+ * MultiPacketsToBuffer processes data from multiple RSP boards in parallel,
+ * instantiating a PacketsToBuffer object for each.
+ */
 class MultiPacketsToBuffer: public RSPBoards {
 public:
   MultiPacketsToBuffer( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
@@ -55,7 +67,7 @@ public:
   {
   }
 
-
+protected:
   virtual void processBoard( size_t boardNr ) {
     SmartPtr<Stream> inputStream = createStream(streamDescriptors[boardNr], true);
     PacketsToBuffer board(*inputStream, settings, boardNr);

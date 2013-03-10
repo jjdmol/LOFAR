@@ -59,14 +59,16 @@ void PacketsToBuffer::process()
       break;
     } catch (PacketReader::BadModeException &ex) {
       // Mode switch detected
-      unsigned bitMode  = packet.bitMode();
-      unsigned clockMHz = packet.clockMHz();
+      unsigned bitMode    = packet.bitMode();
+      unsigned clockMHz   = packet.clockMHz();
+      unsigned nrBeamlets = packet.header.nrBeamlets;
 
-      LOG_INFO_STR( logPrefix << "Mode switch detected to " << clockMHz << " MHz, " << bitMode << " bit");
+      LOG_INFO_STR( logPrefix << "Mode switch detected to " << clockMHz << " MHz, " << bitMode << " bit, " << nrBeamlets << " beamlets");
 
       // update settings
       settings.station.bitMode = bitMode;
       settings.station.clockMHz = clockMHz;
+      settings.nrBeamletsPerBoard = nrBeamlets;
 
       // Process packet again
       packetValid = true;
@@ -82,7 +84,7 @@ template<typename T> void PacketsToBuffer::process( struct RSP &packet, bool wri
 
   // Create output structures
   SampleBuffer<T> buffer(settings, true);
-  PacketWriter<T> writer(logPrefix, buffer, buffer.flags[boardNr], settings.nrBeamlets / settings.nrBoards * boardNr, settings);
+  PacketWriter<T> writer(logPrefix, buffer, buffer.flags[boardNr], settings.nrBeamletsPerBoard * boardNr, settings);
 
   try {
     // Process lingering packet from previous run, if any

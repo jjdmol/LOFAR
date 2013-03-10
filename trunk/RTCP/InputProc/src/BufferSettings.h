@@ -20,7 +20,7 @@ private:
 public:
   struct StationID station;
 
-  unsigned nrBeamlets;
+  unsigned nrBeamletsPerBoard;
 
   size_t   nrSamples;
 
@@ -34,11 +34,11 @@ public:
   // read settings from shared memory, using the given stationID
   BufferSettings(struct StationID station);
 
-  size_t flagRange(unsigned beamlet) const { return beamlet / (nrBeamlets / nrFlagRanges); }
+  size_t flagIdx(unsigned beamlet) const { return beamlet / nrBeamletsPerBoard; }
 
   bool operator==(const struct BufferSettings &other) const {
     return station == other.station
-        && nrBeamlets == other.nrBeamlets 
+        && nrBeamletsPerBoard == other.nrBeamletsPerBoard
         && nrSamples == other.nrSamples
         && nrBoards == other.nrBoards
         && nrFlagRanges == other.nrFlagRanges

@@ -45,7 +45,7 @@ void Generator::makePacket( size_t boardNr, struct RSP &packet, const TimeStamp 
       break;
   }
 
-  packet.header.nrBeamlets = settings.nrBeamlets / settings.nrBoards;
+  packet.header.nrBeamlets = settings.nrBeamletsPerBoard;
   packet.header.nrBlocks = 16;
 
   packet.header.timestamp = timestamp.getSeqId();
