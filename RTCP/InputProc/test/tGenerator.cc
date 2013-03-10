@@ -74,7 +74,7 @@ int main( int, char **argv ) {
         for(size_t nr = 0; nr < NUMPACKETS; ++nr) {
           struct RSP packet;
 
-          if (!reader.readPacket(packet)) {
+          if (!reader.readPacket(packet, settings)) {
             reader.logStatistics();
 
             ASSERT(false);
