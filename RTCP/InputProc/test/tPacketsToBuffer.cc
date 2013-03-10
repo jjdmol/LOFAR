@@ -1,10 +1,9 @@
 #include <lofar_config.h>
+#include "Station/PacketsToBuffer.h"
 #include "SampleBuffer.h"
 #include "SampleType.h"
-#include "Station/PacketsToBuffer.h"
 #include <Common/LofarLogger.h>
 #include <Stream/FileStream.h>
-#include <vector>
 #include <string>
 #include <time.h>
 
@@ -26,15 +25,7 @@ template<typename T> void test( struct BufferSettings &settings, const std::stri
   PacketsToBuffer transfer(fs, settings, 0);
 
   // Do transfer
-  try {
-    transfer.process();
-  } catch(Exception &ex) {
-    LOG_FATAL_STR("Caught exception: " << ex);
-    return;
-  } catch(...) {
-    LOG_FATAL_STR("Caught exception");
-    return;
-  }
+  transfer.process();
 
   // There should be 32 samples in the buffer (16 per packet, 2 packets per
   // file).
