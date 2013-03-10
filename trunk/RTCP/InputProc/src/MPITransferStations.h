@@ -16,6 +16,9 @@ namespace LOFAR {
 
 Mutex MPIMutex;
 
+/*
+ * Sends a set of beamlets from the SHM buffer to one MPI node.
+ */
 template<typename T> class MPISendStation: public SampleBufferReader<T> {
 public:
   MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets, unsigned destRank );
@@ -151,6 +154,8 @@ template<typename T> void MPISendStation<T>::copyEnd( const TimeStamp &from, con
   int alldone = false;
   std::vector<MPI_Status> statusses(nrRequests);
 
+  // Poll until all transfers are finished. Note that we can't hold the
+  // MPIMutex lock, because multiple MPISendStation objects might be active.
   while (!alldone) {
     {
       ScopedLock sl(MPIMutex);
@@ -171,8 +176,12 @@ template<typename T> void MPISendStation<T>::copyEnd( const TimeStamp &from, con
 
 
 /*
- * Note: we need to receive all station data in one loop, because MPI wants to
+ * We receive all station data in one loop, because MPI wants to
  * have a single thread listening to all requests.
+ *
+ * This could be changed into one thread/station to overlap the data
+ * transfers between different blocks from different stations. However,
+ * such seems to require polling MPI_Testall loops like in MPISendStation.
  */
 template<typename T> class MPIReceiveStations {
 public:
