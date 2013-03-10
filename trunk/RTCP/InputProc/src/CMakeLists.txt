@@ -5,6 +5,7 @@ lofar_add_library(inputproc
   BufferSettings.cc
   Generator.cc
   PacketReader.cc
+  PacketsToBuffer.cc
   Ranges.cc
   SharedMemory.cc
   StationID.cc
