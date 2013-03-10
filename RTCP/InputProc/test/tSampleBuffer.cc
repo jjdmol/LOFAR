@@ -1,11 +1,9 @@
 #include <lofar_config.h>
 #include "SampleBuffer.h"
 #include "SampleType.h"
-#include "OMPThread.h"
 #include <Common/LofarLogger.h>
 #include <vector>
 #include <string>
-#include "omp.h"
 
 using namespace LOFAR;
 using namespace RTCP;
@@ -13,8 +11,10 @@ using namespace std;
 
 template<typename T> void test( struct BufferSettings &settings )
 {
+  // Should be able to create the buffer
   SampleBuffer< SampleType<T> > buffer_create(settings, true);
 
+  // Should be able to attach to created buffer
   SampleBuffer< SampleType<T> > buffer_read(settings, false);
 }
 

@@ -105,14 +105,17 @@ template<typename T> void PacketsToBuffer::process( struct RSP &packet, bool wri
     }
 
     // Transport packets from reader to writer
-    for(;;)
+    for(;;) {
       if (reader.readPacket(packet, settings)) {
         writer.writePacket(packet);
         logStatistics(reader, packet);
       }
+    }
+
   } catch (PacketReader::BadModeException &ex) {
     // Packet has different clock or bitmode
     throw;
+
   } catch (Stream::EndOfStreamException &ex) {
     // Ran out of data
     LOG_INFO_STR( logPrefix << "End of stream");

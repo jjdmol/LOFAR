@@ -3,7 +3,6 @@
 #include "SampleType.h"
 #include "Station/PacketReader.h"
 #include "Station/PacketWriter.h"
-#include "OMPThread.h"
 #include <Common/LofarLogger.h>
 #include <Stream/FileStream.h>
 #include <vector>

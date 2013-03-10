@@ -34,7 +34,7 @@ public:
   //
   // Throws BadModeException, if the packet was valid but did not correspond
   // to `settings'.
-  bool readPacket( struct RSP &packet, const struct BufferSettings &settings ) throw(BadModeException);
+  bool readPacket( struct RSP &packet, const struct BufferSettings &settings );
 
   // Logs (and resets) statistics about the packets read.
   void logStatistics();
