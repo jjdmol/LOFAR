@@ -11,12 +11,18 @@
 #include <vector>
 #include <string>
 
+// Use SampleBufferReader::copyNothing. Occasionally disabled in testing.
+#define ENABLE_COPYNOTHING
+
 using namespace LOFAR;
 using namespace RTCP;
 
 namespace LOFAR {
 namespace RTCP {
 
+/*
+ * An abstract class for the implementation of a reader for SampleBuffers.
+ */
 template<typename T> class SampleBufferReader {
 public:
   SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize );
@@ -31,36 +37,31 @@ protected:
   const TimeStamp from, to;
   const size_t blockSize;
 
-  /* process() will call one of these sequences:
-   *
-   * 1. copyNothing(from, to);
-   *
-   * 2. copyStart(from, to, 0);
-   *    foreach(beamlet)
-   *      copyBeamlet(beamlet, 0, from, .., ..);
-   *    foreach(board)
-   *      copyFlags(board, ..);
-   *    copyEnd();
-   *
-   * 3. copyStart(from, to, ..);
-   *    foreach(beamlet) {
-   *      copyBeamlet(beamlet, 0, from, .., ..);
-   *      copyBeamlet(beamlet, 1, .., .., ..);
-   *    }
-   *    foreach(board)
-   *      copyFlags(board, ..);
-   *    copyEnd();
-   *
-   * Two transfers are needed per beamlet if the requested
-   * range wraps around the end of the buffer.
-   */
+  struct CopyInstructions {
+    // Beamlet index
+    unsigned beamlet;
 
-  virtual void copyNothing( const TimeStamp &from, const TimeStamp &to ) { (void)from, (void)to; }
+    // Relevant time range
+    TimeStamp from;
+    TimeStamp to;
 
-  virtual void copyStart( const TimeStamp &from, const TimeStamp &to, size_t wrap ) { (void)from, (void)to, (void)wrap; }
-  virtual void copyBeamlet( unsigned beamlet, unsigned transfer, const TimeStamp &from_ts, const T* from, size_t nrSamples ) = 0;
-  virtual void copyFlags( unsigned board, const SparseSet<int64> &flags ) = 0;
-  virtual void copyEnd() {}
+    // Copy as one or two ranges of [from, to).
+    struct Range {
+      const T* from;
+      const T* to;
+    } ranges[2];
+
+    unsigned nrRanges;
+
+    // The flags for this range
+    SparseSet<int64> flags;
+  };
+
+  virtual ssize_t beamletOffset( unsigned beamlet, const TimeStamp &from, const TimeStamp &to ) { (void)beamlet; (void)from; (void)to; return 0; }
+
+  virtual void copyStart( const TimeStamp &from, const TimeStamp &to, const std::vector<size_t> &wrapOffsets ) { (void)from; (void)to; (void)wrapOffsets; }
+  virtual void copy( const struct CopyInstructions & ) {}
+  virtual void copyEnd( const TimeStamp &from, const TimeStamp &to ) { (void)from; (void)to; }
 
   void copy( const TimeStamp &from, const TimeStamp &to );
 
@@ -139,60 +140,83 @@ template<typename T> void SampleBufferReader<T>::process( double maxDelay )
   LOG_INFO("Done reading data");
 }
 
+
 template<typename T> void SampleBufferReader<T>::copy( const TimeStamp &from, const TimeStamp &to )
 {
   ASSERT( from < to );
   ASSERT( to - from < (int64)buffer.nrSamples );
 
-  const unsigned nrBoards = buffer.flags.size();
+  struct CopyInstructions info;
+  info.from = from;
+  info.to   = to;
 
-#if 0
-  // check whether there is any data at all
-  bool data = false;
+  // Determine the buffer offsets for all beamlets. Because beamlets can belong
+  // to different station beams, the offsets can differ per beamlet.
+  std::vector<ssize_t> beam_offsets(beamlets.size());
+  std::vector<size_t> from_offsets(beamlets.size());
+  std::vector<size_t> to_offsets(beamlets.size());
+  std::vector<size_t> wrap_offsets(beamlets.size());
 
-  for (unsigned b = 0; b < nrBoards; ++b)
-    if (buffer.flags[b].anythingBetween(from, to)) {
-      data = true;
-      break;
-    }
+  for (size_t i = 0; i < beamlets.size(); ++i) {
+    ssize_t offset = beamletOffset(i, from, to);
 
-  if (!data) {
-    copyNothing(from, to);
-    return;
+    beam_offsets[i] = offset;
+
+    // Determine the relevant offsets in the buffer
+    from_offsets[i] = (info.from + offset) % buffer.nrSamples;
+    to_offsets[i]   = (info.to   + offset) % buffer.nrSamples;
+
+    if (to_offsets[i] == 0)
+      to_offsets[i] = buffer.nrSamples;
+
+    // Determine whether we need to wrap around the end of the buffer
+    wrap_offsets[i] = from_offsets[i] < to_offsets[i] ? 0 : buffer.nrSamples - from_offsets[i];
+
   }
-#endif
 
-  // copy the beamlets
+  // Signal start of block
+  copyStart(from, to, wrap_offsets);
 
-  size_t from_offset = (int64)from % buffer.nrSamples;
-  size_t to_offset   = (int64)to % buffer.nrSamples;
-
-  if (to_offset == 0)
-    to_offset = buffer.nrSamples;
-
-  // wrap > 0 if we need to wrap around the end of the buffer
-  size_t wrap         = from_offset < to_offset ? 0 : buffer.nrSamples - from_offset;
-
-  copyStart(from, to, wrap);
-
+  // Copy all specified beamlets
   for (size_t i = 0; i < beamlets.size(); ++i) {
     unsigned nr = beamlets[i];
     const T* origin = &buffer.beamlets[nr][0];
 
-    if (wrap > 0) {
-      copyBeamlet( nr, 0, from, origin + from_offset, wrap );
-      copyBeamlet( nr, 1, from, origin,               to_offset );
+    ssize_t beam_offset = beam_offsets[i];
+    size_t from_offset = from_offsets[i];
+    size_t wrap_offset = wrap_offsets[i];
+    size_t to_offset   = to_offsets[i];
+
+    info.beamlet        = i;
+
+    if (wrap_offset > 0) {
+      // Copy as two parts
+      info.nrRanges = 2;
+
+      info.ranges[0].from = origin + from_offset;
+      info.ranges[0].to   = origin + wrap_offset;
+
+      info.ranges[1].from = origin;
+      info.ranges[1].to   = origin + to_offset;
     } else {
-      copyBeamlet( nr, 0, from, origin + from_offset, to_offset - from_offset );
+      // Copy as one part
+      info.nrRanges = 1;
+
+      info.ranges[0].from = origin + from_offset;
+      info.ranges[0].to   = origin + to_offset;
     }
+
+    // Add the flags (translate available packets to missing packets)
+    size_t flagRange = settings.flagRange(i);
+
+    info.flags = buffer.flags[flagRange].sparseSet(from + beam_offset, to + beam_offset).invert(from + beam_offset, to + beam_offset);
+
+    // Copy the beamlet
+    copy(info);
   }
 
-  // copy the flags
-
-  for (unsigned b = 0; b < nrBoards; ++b)
-    copyFlags( b, buffer.flags[b].sparseSet(from, to).invert(from, to) );
-
-  copyEnd();
+  // Signal end of block
+  copyEnd(from, to);
 }
 
 }
