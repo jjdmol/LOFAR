@@ -21,7 +21,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <RSP.h>
+#include <Station/RSP.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Common/LofarLogger.h>
 #include <Common/DataConvert.h>

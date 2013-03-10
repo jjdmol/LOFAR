@@ -1,14 +1,15 @@
 #include <lofar_config.h>
-#include "PacketsToBuffer.h"
+#include "Station/PacketsToBuffer.h"
+
 #include <Common/LofarLogger.h>
 #include <Interface/SmartPtr.h>
 #include <Interface/Stream.h>
 #include <Stream/Stream.h>
-#include "RSP.h"
 #include "SampleBuffer.h"
 #include "BufferSettings.h"
-#include "PacketReader.h"
-#include "PacketWriter.h"
+#include "Station/RSP.h"
+#include "Station/PacketReader.h"
+#include "Station/PacketWriter.h"
 #include <boost/format.hpp>
 #include <string>
 #include <ios>

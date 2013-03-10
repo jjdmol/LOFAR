@@ -4,11 +4,11 @@
 #include <Interface/SmartPtr.h>
 #include <Interface/Stream.h>
 #include <Stream/Stream.h>
-#include "RSP.h"
+#include "Station/RSP.h"
 #include "RSPBoards.h"
 #include "SampleBuffer.h"
 #include "BufferSettings.h"
-#include "PacketReader.h"
+#include "Station/PacketReader.h"
 #include <string>
 #include <ios>
 

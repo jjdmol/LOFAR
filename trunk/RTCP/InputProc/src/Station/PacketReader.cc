@@ -1,5 +1,6 @@
 #include <lofar_config.h>
-#include "PacketReader.h"
+#include "Station/PacketReader.h"
+
 #include <Common/LofarLogger.h>
 #include <Stream/SocketStream.h>
 #include <Interface/RSPTimeStamp.h>
