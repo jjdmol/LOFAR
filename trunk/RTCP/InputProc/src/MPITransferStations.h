@@ -1,6 +1,9 @@
 #ifndef __MPI_TRANSFERSTATIONS__
 #define __MPI_TRANSFERSTATIONS__
 
+#include <Common/LofarLogger.h>
+#include <Interface/MultiDimArray.h>
+#include <Interface/SparseSet.h>
 #include "SampleBufferReader.h"
 #include "BufferSettings.h"
 #include "mpi.h"
