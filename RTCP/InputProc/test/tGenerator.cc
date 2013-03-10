@@ -1,9 +1,9 @@
 #include <lofar_config.h>
-#include "Generator.h"
-#include "PacketReader.h"
-#include "OMPThread.h"
 #include <Common/LofarLogger.h>
 #include <Interface/Stream.h>
+#include "OMPThread.h"
+#include "Station/Generator.h"
+#include "Station/PacketReader.h"
 #include <vector>
 #include <string>
 #include <unistd.h>

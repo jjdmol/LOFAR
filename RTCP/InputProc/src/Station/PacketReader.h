@@ -4,7 +4,7 @@
 #include <Common/Exception.h>
 #include <Stream/Stream.h>
 #include <Interface/SmartPtr.h>
-#include "RSP.h"
+#include "Station/RSP.h"
 #include "BufferSettings.h"
 #include <string>
 

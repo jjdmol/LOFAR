@@ -16,8 +16,22 @@ namespace LOFAR {
 namespace RTCP {
 
 
+/*
+ * Maintains a sample buffer in shared memory, which can be created
+ * or attached to.
+ *
+ * The sample buffer contains the following information:
+ *
+ *   1. A copy of `settings', against which attaches are verified.
+ *   2. A beamlets matrix [subband][sample]
+ *   3. A flags vector [board]
+ *
+ * The IPC key used for the shared memory is settings.dataKey.
+ */
 template<typename T> class SampleBuffer {
 public:
+  // Create (create=true) or attach to (create=false) a sample buffer
+  // in shared memory.
   SampleBuffer( const struct BufferSettings &settings, bool create );
 
 private:
@@ -42,14 +56,14 @@ public:
   const size_t nrFlagRanges; // width of each flag range
 
   MultiDimArray<T,2>  beamlets; // [subband][sample]
-  std::vector<Ranges> flags;    // [rspboard]
+  std::vector<Ranges> flags;    // [board]
 };
 
 
 template<typename T> SampleBuffer<T>::SampleBuffer( const struct BufferSettings &_settings, bool create )
 :
   logPrefix(str(boost::format("[station %s %s board] [SampleBuffer] ") % _settings.station.stationName % _settings.station.antennaField)),
-  data(_settings.dataKey, dataSize(_settings), create ? SharedMemoryArena::CREATE_EXCL : SharedMemoryArena::READ),
+  data(_settings.dataKey, dataSize(_settings), create ? SharedMemoryArena::CREATE : SharedMemoryArena::READ),
   allocator(data),
   settings(initSettings(_settings, create)),
 

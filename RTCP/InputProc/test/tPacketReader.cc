@@ -1,5 +1,5 @@
 #include <lofar_config.h>
-#include <PacketReader.h>
+#include <Station/PacketReader.h>
 #include <Common/LofarLogger.h>
 #include <Stream/FileStream.h>
 

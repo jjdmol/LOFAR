@@ -1,5 +1,5 @@
 #include <lofar_config.h>
-#include "Generator.h"
+#include "Station/Generator.h"
 
 #include <Common/LofarLogger.h>
 #include <Stream/Stream.h>

@@ -14,8 +14,8 @@
 #include "SampleType.h"
 #include "SampleBuffer.h"
 #include "SampleBufferReader.h"
-#include "Generator.h"
-#include "PacketsToBuffer.h"
+#include "Station/Generator.h"
+#include "Station/PacketsToBuffer.h"
 #include "mpi.h"
 
 #include <vector>
@@ -31,7 +31,7 @@
 using namespace LOFAR;
 using namespace RTCP;
 
-#include "MPITransferStations.h"
+#include "Transpose/MPITransferStations.h"
 
 
 int main( int argc, char **argv )

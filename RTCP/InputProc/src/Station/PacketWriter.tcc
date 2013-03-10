@@ -2,10 +2,10 @@
 #include <Common/LofarConstants.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
-#include "RSP.h"
 #include "SampleBuffer.h"
 #include "BufferSettings.h"
 #include "Ranges.h"
+#include "Station/RSP.h"
 #include <boost/format.hpp>
 #include <string>
 #include <ios>
