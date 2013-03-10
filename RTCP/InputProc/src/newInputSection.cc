@@ -26,18 +26,12 @@
 #define DURATION 60 
 #define BLOCKSIZE 0.005
 #define NRSTATIONS 3
+#define NR_TAPS 16
 
 using namespace LOFAR;
 using namespace RTCP;
 
-//#define USE_RMA
-
-#ifdef USE_RMA
-Mutex MPIMutex;
-#include "obsolete/MPI_RMA.h"
-#else
 #include "MPITransferStations.h"
-#endif
 
 
 int main( int argc, char **argv )
@@ -47,7 +41,7 @@ int main( int argc, char **argv )
   typedef SampleType<i16complex> SampleT;
   const TimeStamp from(time(0L) + 1, 0, clock);
   const TimeStamp to(time(0L) + 1 + DURATION, 0, clock);
-  const size_t blockSize = BLOCKSIZE * clock / 1024;
+  const size_t blockSize = BLOCKSIZE * clock / 1024 + NR_TAPS;
   std::map<unsigned, std::vector<size_t> > beamlets;
 
   struct StationID stationID("RS106", "LBA", clock, 16);
@@ -74,11 +68,7 @@ int main( int argc, char **argv )
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
 
-#ifdef USE_RMA
   int nrStations = NRSTATIONS;
-#else
-  int nrStations = NRSTATIONS;
-#endif
 
   for (unsigned i = 0; i < 244; ++i)
     beamlets[nrStations + i % (nrHosts - nrStations)].push_back(i);
@@ -87,15 +77,6 @@ int main( int argc, char **argv )
     // receiver
     LOG_INFO_STR("Receiver " << rank << " starts, handling " << beamlets[rank].size() << " subbands from " << nrStations << " stations." );
 
-#ifdef USE_RMA
-    std::vector<struct BufferSettings> stations(nrStations, settings);
-
-    {
-      MPISharedBufferReader<SampleT> receiver(stations, from, to, blockSize, beamlets[rank]);
-
-      receiver.process(0.0);
-    }  
-#else
     std::vector<int> stationRanks(nrStations);
 
     for (size_t i = 0; i < stationRanks.size(); i++)
@@ -107,10 +88,12 @@ int main( int argc, char **argv )
       for(size_t block = 0; block < (to-from)/blockSize + 1; ++block) {
         receiver.receiveBlock();
 
+        // data is now in receiver.lastBlock
+
         //LOG_INFO_STR("Receiver " << rank << " received block " << block);
       }
-    }  
-#endif
+    }
+
     LOG_INFO_STR("Receiver " << rank << " done");
 
     MPI_Finalize();
@@ -148,18 +131,14 @@ int main( int argc, char **argv )
         struct BufferSettings s(stationID);
 
         LOG_INFO_STR("Detected " << s);
-#ifdef USE_RMA
-        MPISharedBuffer<SampleT> streamer(s);
-#else
         #pragma omp parallel for num_threads(nrHosts - nrStations)
         for (int i = nrStations; i < nrHosts; ++i) {
           LOG_INFO_STR("Connecting to receiver " << i );
-          MPISendStation< SampleT > streamer(s, from, to, blockSize, beamlets[i], i );
+          MPISendStation< SampleT > streamer(s, from, to, blockSize, NR_TAPS, beamlets[i], i );
 
           LOG_INFO_STR("Sending to receiver " << i );
           streamer.process( 0.0 );
         }
-#endif
       }
     }
   } else {
@@ -167,18 +146,14 @@ int main( int argc, char **argv )
       struct BufferSettings s(stationID);
 
       LOG_INFO_STR("Detected " << s);
-#ifdef USE_RMA
-      MPISharedBuffer<SampleT> streamer(s);
-#else
       #pragma omp parallel for num_threads(nrHosts - nrStations)
       for (int i = nrStations; i < nrHosts; ++i) {
         LOG_INFO_STR("Connecting to receiver " << i );
-        MPISendStation< SampleT > streamer(s, from, to, blockSize, beamlets[i], i );
+        MPISendStation< SampleT > streamer(s, from, to, blockSize, NR_TAPS, beamlets[i], i );
 
         LOG_INFO_STR("Sending to receiver " << i );
         streamer.process( 0.0 );
       }
-#endif
   }
 
   MPI_Finalize();
