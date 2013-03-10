@@ -27,7 +27,13 @@ public:
   bool readPacket( struct RSP &packet );
 
   // Reads a packet from the input stream, and validates it against the given
-  // settings. Returns true if the packet was read and valid.
+  // settings. Returns:
+  //
+  //   true, if the packet was read and valid.
+  //   false, if the packet was invalid.
+  //
+  // Throws BadModeException, if the packet was valid but did not correspond
+  // to `settings'.
   bool readPacket( struct RSP &packet, const struct BufferSettings &settings ) throw(BadModeException);
 
   // Logs (and resets) statistics about the packets read.

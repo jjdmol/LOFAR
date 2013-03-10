@@ -21,12 +21,12 @@ PacketsToBuffer::PacketsToBuffer( Stream &inputStream, const BufferSettings &set
 :
   logPrefix(str(boost::format("[station %s board %u] ") % settings.station % boardNr)),
   inputStream(inputStream),
+  lastlog_timestamp(0),
   settings(settings),
   boardNr(boardNr)
 {
   LOG_INFO_STR( logPrefix << "Initialised" );
 }
-
 
 
 void PacketsToBuffer::process()
@@ -77,6 +77,16 @@ void PacketsToBuffer::process()
 }
 
 
+void PacketsToBuffer::logStatistics( PacketReader &reader, const struct RSP &packet )
+{
+  if (packet.header.timestamp < lastlog_timestamp + LOG_INTERVAL) {
+    lastlog_timestamp = packet.header.timestamp;
+
+    reader.logStatistics();
+  }
+}
+
+
 template<typename T> void PacketsToBuffer::process( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException)
 {
   // Create input structures
@@ -88,14 +98,17 @@ template<typename T> void PacketsToBuffer::process( struct RSP &packet, bool wri
 
   try {
     // Process lingering packet from previous run, if any
-    if (writeGivenPacket)
+    if (writeGivenPacket) {
       writer.writePacket(packet);
+      logStatistics(reader, packet);
+    }
 
     // Transport packets from reader to writer
     for(;;)
-      if (reader.readPacket(packet, settings))
+      if (reader.readPacket(packet, settings)) {
         writer.writePacket(packet);
-
+        logStatistics(reader, packet);
+      }
   } catch (PacketReader::BadModeException &ex) {
     // Packet has different clock or bitmode
     throw;
@@ -117,6 +130,7 @@ template<typename T> void PacketsToBuffer::process( struct RSP &packet, bool wri
 }
 
 
+// Explcitly create the instances we use
 template void PacketsToBuffer::process< SampleType<i16complex> >( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
 template void PacketsToBuffer::process< SampleType<i8complex> >( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
 template void PacketsToBuffer::process< SampleType<i4complex> >( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
