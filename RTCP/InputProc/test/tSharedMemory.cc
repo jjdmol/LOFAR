@@ -34,8 +34,8 @@ public:
   }
 };
 
-int main( int, char **argv ) {
-  INIT_LOGGER( argv[0] );
+int main() {
+  INIT_LOGGER( "tSharedMemory" );
 
   /* Create a shared memory region */
   {
