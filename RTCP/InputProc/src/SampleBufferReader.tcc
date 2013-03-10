@@ -34,7 +34,7 @@ template<typename T> SampleBufferReader<T>::SampleBufferReader( const BufferSett
 
 template<typename T> void SampleBufferReader<T>::process( double maxDelay )
 {
-  const TimeStamp maxDelay_ts(static_cast<int64>(maxDelay * settings.station.clock / 1024) + blockSize, settings.station.clock);
+  const TimeStamp maxDelay_ts(static_cast<int64>(maxDelay * settings.station.clockMHz * 1000000 / 1024) + blockSize, settings.station.clockMHz * 1000000);
 
   const TimeStamp current(from);
   const size_t increment = blockSize - nrHistorySamples;

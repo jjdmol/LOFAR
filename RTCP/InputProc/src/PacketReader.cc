@@ -85,22 +85,23 @@ bool PacketReader::readPacket( struct RSP &packet )
 }
 
 
-bool PacketReader::readPacket( struct RSP &packet, const struct BufferSettings &settings )
+bool PacketReader::readPacket( struct RSP &packet, const struct BufferSettings &settings ) throw(PacketReader::BadModeException)
 {
   if (!readPacket(packet))
     return false;
 
   // check whether the station configuration matches the one given
-  if (packet.clockMHz() * 1000000 != settings.station.clock
-   || packet.bitMode() != settings.station.bitmode) {
+  if (packet.clockMHz() != settings.station.clockMHz
+   || packet.bitMode() != settings.station.bitMode) {
 
     if (!hadModeError) {
-      LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit), but should be mode (" << settings.station.clock / 1000000 << " MHz, " << settings.station.bitmode << " bit)");
+      LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit), but should be mode (" << settings.station.clockMHz << " MHz, " << settings.station.bitMode << " bit)");
       hadModeError = true;
     }
 
     ++nrBadMode;
-    return false;
+
+    THROW(BadModeException, "Packet has unexpected clock or bitmode settings");
   }
 
   return true;

@@ -51,7 +51,7 @@ int main( int argc, char **argv )
   settings.nrBeamlets = 244;
   settings.nrBoards = 4;
 
-  settings.nrSamples = (5 * stationID.clock / 1024);// & ~0xFL;
+  settings.nrSamples = (5 * stationID.clockMHz * 1000000 / 1024);// & ~0xFL;
   settings.nrFlagRanges = 64;
 
   settings.dataKey = stationID.hash();
@@ -111,7 +111,7 @@ int main( int argc, char **argv )
   inputStreams[3] = "udp:127.0.0.1:4349";
 
   if(rank == 0) {
-    PacketsToBuffer< SampleT > station( settings, inputStreams );
+    MultiPacketsToBuffer station( settings, inputStreams );
     Generator generator( settings, inputStreams );
 
     #pragma omp parallel sections num_threads(4)

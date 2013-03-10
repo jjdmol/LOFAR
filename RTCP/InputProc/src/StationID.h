@@ -12,10 +12,10 @@ struct StationID {
   char stationName[64];
   char antennaField[64];
 
-  unsigned clock;
-  unsigned bitmode;
+  unsigned clockMHz;
+  unsigned bitMode;
 
-  StationID( const std::string &stationName = "", const std::string &antennaField = "", unsigned clock = 200 * 1000 * 1000, unsigned bitmode = 16);
+  StationID( const std::string &stationName = "", const std::string &antennaField = "", unsigned clockMHz = 200, unsigned bitMode = 16);
 
   bool operator==(const struct StationID &other) const;
   bool operator!=(const struct StationID &other) const;

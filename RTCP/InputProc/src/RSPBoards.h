@@ -13,7 +13,7 @@ namespace RTCP {
 
 class RSPBoards {
 public:
-  RSPBoards( const std::string &logPrefix, const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
+  RSPBoards( const std::string &logPrefix, size_t nrBoards );
 
   void process();
 
@@ -21,8 +21,6 @@ public:
 
 protected:
   const std::string logPrefix;
-  const BufferSettings settings;
-  const std::vector<std::string> streamDescriptors;
   const size_t nrBoards;
 
   WallClockTime waiter;

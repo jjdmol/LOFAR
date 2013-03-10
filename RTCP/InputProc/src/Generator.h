@@ -17,6 +17,9 @@ public:
   Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
 
 protected:
+  const BufferSettings settings;
+  const std::vector<std::string> streamDescriptors;
+
   std::vector<size_t> nrSent;
 
   virtual void processBoard( size_t nr );

@@ -21,10 +21,10 @@ namespace LOFAR {
 namespace RTCP {
 
 
-StationID::StationID( const std::string &stationName, const std::string &antennaField, unsigned clock, unsigned bitmode)
+StationID::StationID( const std::string &stationName, const std::string &antennaField, unsigned clockMHz, unsigned bitMode)
 :
-  clock(clock),
-  bitmode(bitmode)
+  clockMHz(clockMHz),
+  bitMode(bitMode)
 {
   ASSERTSTR( stationName.size() < sizeof this->stationName, "Station name longer than " << (sizeof this->stationName - 1) << " characters.");
   ASSERTSTR( antennaField.size() < sizeof this->antennaField, "Antenna-set name longer than " << (sizeof this->antennaField - 1) << " characters.");
@@ -36,8 +36,8 @@ StationID::StationID( const std::string &stationName, const std::string &antenna
 bool StationID::operator==(const struct StationID &other) const {
   return !strncmp(stationName, other.stationName, sizeof stationName)
       && !strncmp(antennaField, other.antennaField, sizeof antennaField)
-      && clock == other.clock
-      && bitmode == other.bitmode;
+      && clockMHz == other.clockMHz
+      && bitMode == other.bitMode;
 }
 
 bool StationID::operator!=(const struct StationID &other) const {
@@ -50,7 +50,7 @@ uint32 StationID::hash() const {
   //
   // 0x0106020F
   //   \__||\||
-  //      || |\_ bitmode:       F  = 16-bit, 8 = 8-bit, 4 = 4-bit
+  //      || |\_ bit mode:      F  = 16-bit, 8 = 8-bit, 4 = 4-bit
   //      || \__ clock:         20 = 200 MHz, 16 = 160 MHz
   //      |\____ antenna field: 0 = HBA/HBA0/LBA, 1 = HBA1
   //      \_____ station ID:    0x0106 = RS106
@@ -75,18 +75,18 @@ uint32 StationID::hash() const {
   ASSERT( stationNr    < (1L << 16) );
   ASSERT( antennaFieldNr < (1L << 4)  );
 
-  ASSERT( clock/1000000 == 200 || clock/1000000 == 160 );
-  ASSERT( bitmode == 4 || bitmode == 8 || bitmode == 16 );
+  ASSERT( clockMHz == 200 || clockMHz == 160 );
+  ASSERT( bitMode == 4 || bitMode == 8 || bitMode == 16 );
 
   // derive the hash
-  unsigned clockNr = clock/1000000 == 200 ? 0x20 : 0x16;
-  unsigned bitmodeNr = bitmode == 16 ? 0xF : bitmode;
+  unsigned clockMHzNr = clockMHz == 200 ? 0x20 : 0x16;
+  unsigned bitModeNr = bitMode == 16 ? 0xF : bitMode;
 
-  return (stationNr << 16) + (antennaFieldNr << 12) + (clockNr << 4) + bitmodeNr;
+  return (stationNr << 16) + (antennaFieldNr << 12) + (clockMHzNr << 4) + bitModeNr;
 }
 
 std::ostream& operator<<( std::ostream &str, const struct StationID &s ) {
-  str << "station " << s.stationName << " antenna field " << s.antennaField << " clock " << s.clock/1000000 << " bitmode " << s.bitmode;
+  str << "station " << s.stationName << " antenna field " << s.antennaField << " clockMHz " << s.clockMHz << " bitMode " << s.bitMode;
 
   return str;
 }
