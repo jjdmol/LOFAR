@@ -17,9 +17,9 @@ using namespace std;
 template<typename T> void test( struct BufferSettings &settings, const std::string &filename )
 {
   SampleBuffer< SampleType<T> > buffer(settings, true);
-  PacketWriter< SampleType<T> > writer("", buffer, settings, 0);
+  PacketWriter< SampleType<T> > writer("", buffer, 0);
 
-  // Read packets from file, and write them into the buffer
+  // Read packets from file
   FileStream fs(filename);
   PacketReader reader("", fs);
 
