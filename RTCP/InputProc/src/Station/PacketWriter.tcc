@@ -14,13 +14,13 @@ namespace LOFAR {
 namespace RTCP {
 
 
-template<typename T> PacketWriter<T>::PacketWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, const struct BufferSettings &settings, unsigned boardNr )
+template<typename T> PacketWriter<T>::PacketWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, unsigned boardNr )
 :
   logPrefix(str(boost::format("%s [PacketWriter] ") % logPrefix)),
 
   buffer(buffer),
   flags(buffer.flags[boardNr]),
-  settings(settings),
+  settings(*buffer.settings),
   firstBeamlet(boardNr * settings.nrBeamletsPerBoard),
 
   nrWritten(0)

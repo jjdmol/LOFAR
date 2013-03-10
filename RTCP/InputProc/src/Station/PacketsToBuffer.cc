@@ -95,7 +95,7 @@ template<typename T> void PacketsToBuffer::process( struct RSP &packet, bool wri
 
   // Create output structures
   SampleBuffer<T> buffer(settings, true);
-  PacketWriter<T> writer(logPrefix, buffer, settings, boardNr);
+  PacketWriter<T> writer(logPrefix, buffer, boardNr);
 
   try {
     // Process lingering packet from previous run, if any
