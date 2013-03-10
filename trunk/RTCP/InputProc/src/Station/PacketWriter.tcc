@@ -26,10 +26,10 @@ template<typename T> PacketWriter<T>::PacketWriter( const std::string &logPrefix
   nrWritten(0)
 {
   // bitmode must coincide with our template
-  ASSERT( sizeof(T) == N_POL * 2 * settings.station.bitMode / 8 );
+  ASSERTSTR( sizeof(T) == N_POL * 2 * settings.station.bitMode / 8, "PacketWriter created with sample size " << sizeof(T) << " does not match station settings, which are in " << settings.station.bitMode << " bit mode" );
 
   // we must be able to fit our packets
-  ASSERT( firstBeamlet + settings.nrBeamletsPerBoard < settings.nrBoards * settings.nrBeamletsPerBoard );
+  ASSERT( firstBeamlet + settings.nrBeamletsPerBoard <= settings.nrBoards * settings.nrBeamletsPerBoard );
 }
 
 
@@ -41,7 +41,7 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   // should not exceed the number of beamlets we expect
   ASSERT( nrBeamlets <= settings.nrBeamletsPerBoard );
 
-  const TimeStamp timestamp(packet.header.timestamp, packet.header.blockSequenceNumber, settings.station.clockMHz * 1000000);
+  const TimeStamp timestamp = packet.timeStamp();
 
   // determine the time span when cast on the buffer
   const size_t from_offset = (int64)timestamp % settings.nrSamples;

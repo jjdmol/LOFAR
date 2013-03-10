@@ -24,13 +24,12 @@
 #define LOFAR_IONPROC_RSP_H
 
 #include <Common/LofarTypes.h>
+#include <Interface/RSPTimeStamp.h>
 #include <complex>
+#include <cstddef>
 
 namespace LOFAR {
 namespace RTCP {
-
-#include <cstddef>
-
 
 // WARNING: All data is in Little Endian format!
 //
@@ -137,6 +136,10 @@ struct RSP {
       case 0x1: return 8;
       case 0x2: return 4;
     }
+  }
+
+  TimeStamp timeStamp() const {
+    return TimeStamp(header.timestamp, header.blockSequenceNumber, clockMHz() * 1000000);
   }
 
   size_t packetSize() const {
