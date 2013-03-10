@@ -48,7 +48,7 @@ int main( int argc, char **argv )
   struct BufferSettings settings;
 
   settings.station = stationID;
-  settings.nrBeamlets = 244;
+  settings.nrBeamletsPerBoard = 61;
   settings.nrBoards = 4;
 
   settings.nrSamples = (5 * stationID.clockMHz * 1000000 / 1024);// & ~0xFL;

@@ -23,8 +23,10 @@ template<typename T> SampleBufferReader<T>::SampleBufferReader( const BufferSett
   blockSize(blockSize),
   nrHistorySamples(nrHistorySamples)
 {
+  size_t nrBeamlets = settings.nrBoards * settings.nrBeamletsPerBoard;
+
   for (size_t i = 0; i < beamlets.size(); ++i)
-    ASSERT( beamlets[i] < buffer.nrBeamlets );
+    ASSERT( beamlets[i] < nrBeamlets );
 
   ASSERT( blockSize > 0 );
   ASSERT( blockSize < settings.nrSamples );
@@ -149,9 +151,9 @@ template<typename T> void SampleBufferReader<T>::copy( const TimeStamp &from, co
     }
 
     // Add the flags (translate available packets to missing packets)
-    size_t flagRange = settings.flagRange(i);
+    size_t flagIdx = settings.flagIdx(i);
 
-    info.flags = buffer.flags[flagRange].sparseSet(from + beam_offset, to + beam_offset).invert(from + beam_offset, to + beam_offset);
+    info.flags = buffer.flags[flagIdx].sparseSet(from + beam_offset, to + beam_offset).invert(from + beam_offset, to + beam_offset);
 
     // Copy the beamlet
     copy(info);

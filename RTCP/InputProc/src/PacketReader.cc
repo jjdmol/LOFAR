@@ -90,12 +90,13 @@ bool PacketReader::readPacket( struct RSP &packet, const struct BufferSettings &
   if (!readPacket(packet))
     return false;
 
-  // check whether the station configuration matches the one given
+  // check whether the mode matches the one given
   if (packet.clockMHz() != settings.station.clockMHz
-   || packet.bitMode() != settings.station.bitMode) {
+   || packet.bitMode() != settings.station.bitMode
+   || packet.header.nrBeamlets != settings.nrBeamletsPerBoard) {
 
     if (!hadModeError) {
-      LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit), but should be mode (" << settings.station.clockMHz << " MHz, " << settings.station.bitMode << " bit)");
+      LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit, " << packet.header.nrBeamlets << " beamlets), but expected mode (" << settings.station.clockMHz << " MHz, " << settings.station.bitMode << " bit, " << settings.nrBeamletsPerBoard << " beamlets)");
       hadModeError = true;
     }
 

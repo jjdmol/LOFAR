@@ -30,13 +30,13 @@ private:
   static size_t dataSize( const struct BufferSettings &settings ) {
     return sizeof settings
          + settings.nrBoards * (Ranges::size(settings.nrFlagRanges) + 8)
-         + settings.nrBeamlets * (settings.nrSamples * sizeof(T) + 128);
+         + settings.nrBoards * settings.nrBeamletsPerBoard * (settings.nrSamples * sizeof(T) + 128);
   }
 
 public:
   struct BufferSettings *settings;
 
-  const size_t nrBeamlets;
+  const size_t nrBeamletsPerBoard;
   const size_t nrSamples;
   const size_t nrBoards;
   const size_t nrFlagRanges; // width of each flag range
@@ -53,12 +53,12 @@ template<typename T> SampleBuffer<T>::SampleBuffer( const struct BufferSettings 
   allocator(data),
   settings(initSettings(_settings, create)),
 
-  nrBeamlets(settings->nrBeamlets),
+  nrBeamletsPerBoard(settings->nrBeamletsPerBoard),
   nrSamples(settings->nrSamples),
   nrBoards(settings->nrBoards),
   nrFlagRanges(settings->nrFlagRanges),
 
-  beamlets(boost::extents[nrBeamlets][nrSamples], 128, allocator, false, false),
+  beamlets(boost::extents[nrBoards * nrBeamletsPerBoard][nrSamples], 128, allocator, false, false),
   flags(nrBoards)
 {
   for (size_t f = 0; f < flags.size(); f++) {
