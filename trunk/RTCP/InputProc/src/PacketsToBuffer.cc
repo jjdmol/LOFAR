@@ -43,15 +43,15 @@ void PacketsToBuffer::process()
       // Process packets based on (expected) bit mode
       switch(settings.station.bitMode) {
         case 16:
-          process<i16complex>(packet, packetValid);
+          process< SampleType<i16complex> >(packet, packetValid);
           break;
 
         case 8:
-          process<i8complex>(packet, packetValid);
+          process< SampleType<i8complex> >(packet, packetValid);
           break;
 
         case 4:
-          process<i4complex>(packet, packetValid);
+          process< SampleType<i4complex> >(packet, packetValid);
           break;
       }
 
@@ -115,9 +115,9 @@ template<typename T> void PacketsToBuffer::process( struct RSP &packet, bool wri
 }
 
 
-template void PacketsToBuffer::process<i16complex>( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
-template void PacketsToBuffer::process<i8complex>( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
-template void PacketsToBuffer::process<i4complex>( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
+template void PacketsToBuffer::process< SampleType<i16complex> >( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
+template void PacketsToBuffer::process< SampleType<i8complex> >( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
+template void PacketsToBuffer::process< SampleType<i4complex> >( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
 
 
 }
