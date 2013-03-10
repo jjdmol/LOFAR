@@ -2,6 +2,7 @@
 #define __MPI_TRANSFERSTATIONS__
 
 #include <Common/LofarLogger.h>
+#include <Common/Thread/Mutex.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/SparseSet.h>
 #include "SampleBufferReader.h"
@@ -12,6 +13,8 @@
 
 namespace LOFAR {
   namespace RTCP {
+
+Mutex MPIMutex;
 
 template<typename T> class MPISendStation: public SampleBufferReader<T> {
 public:
@@ -145,14 +148,14 @@ template<typename T> void MPISendStation<T>::copyEnd( const TimeStamp &from, con
 {
   (void)from; (void)to;
 
-  int flag = false;
+  int alldone = false;
   std::vector<MPI_Status> statusses(nrRequests);
 
-  while (!flag) {
+  while (!alldone) {
     {
       ScopedLock sl(MPIMutex);
 
-      int error = MPI_Testall(nrRequests, &requests[0], &flag, &statusses[0]);
+      int error = MPI_Testall(nrRequests, &requests[0], &alldone, &statusses[0]);
 
       ASSERT(error == MPI_SUCCESS);
     }

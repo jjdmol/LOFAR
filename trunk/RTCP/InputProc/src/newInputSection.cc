@@ -30,11 +30,10 @@
 using namespace LOFAR;
 using namespace RTCP;
 
-Mutex MPIMutex;
-
 //#define USE_RMA
 
 #ifdef USE_RMA
+Mutex MPIMutex;
 #include "obsolete/MPI_RMA.h"
 #else
 #include "MPITransferStations.h"
