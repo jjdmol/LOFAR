@@ -447,9 +447,9 @@ template<typename T> void MPISendStation<T>::copyEnd( const TimeStamp &from, con
  * Note: we need to receive all station data in one loop, because MPI wants to
  * have a single thread listening to all requests.
  */
-template<typename T> class MPIReceiveStation {
+template<typename T> class MPIReceiveStations {
 public:
-  MPIReceiveStation( const struct BufferSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
+  MPIReceiveStations( const struct BufferSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
 
   void receiveBlock();
 
@@ -465,7 +465,7 @@ public:
 };
 
 
-template<typename T> MPIReceiveStation<T>::MPIReceiveStation( const struct BufferSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
+template<typename T> MPIReceiveStations<T>::MPIReceiveStations( const struct BufferSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
 :
   settings(settings),
   stationRanks(stationRanks),
@@ -477,7 +477,7 @@ template<typename T> MPIReceiveStation<T>::MPIReceiveStation( const struct Buffe
 }
 
 
-template<typename T> void MPIReceiveStation<T>::receiveBlock()
+template<typename T> void MPIReceiveStations<T>::receiveBlock()
 {
   int error;
 
@@ -651,7 +651,7 @@ int main( int argc, char **argv )
       stationRanks[i] = i;
 
     {
-      MPIReceiveStation<SampleT> receiver(settings, stationRanks, beamlets[rank], blockSize);
+      MPIReceiveStations<SampleT> receiver(settings, stationRanks, beamlets[rank], blockSize);
 
       for(size_t block = 0; block < (to-from)/blockSize + 1; ++block) {
         receiver.receiveBlock();
