@@ -36,15 +36,14 @@ int main( int, char **argv ) {
 
   OMPThread::init();
 
-  unsigned clock = 200 * 1000 * 1000;
-  struct StationID stationID("RS106", "LBA", clock, 16);
+  struct StationID stationID("RS106", "LBA", 200, 16);
   struct BufferSettings settings;
 
   settings.station = stationID;
   settings.nrBeamlets = 61;
   settings.nrBoards = 1;
 
-  settings.nrSamples = (2 * stationID.clock / 1024);// & ~0xFL;
+  settings.nrSamples = (2 * stationID.clockMHz * 1000000 / 1024);// & ~0xFL;
   settings.nrFlagRanges = 64;
 
   settings.dataKey = 0x12345678;
