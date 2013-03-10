@@ -318,7 +318,7 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
 
   // Wait for all transfers to finish
   if (nrRequests > 0) {
-    std::vector<MPI_Status> statusses(requests.size());
+    std::vector<MPI_Status> statusses(nrRequests);
 
     error = MPI_Waitall(nrRequests, &requests[0], &statusses[0]);
     ASSERT(error == MPI_SUCCESS);
