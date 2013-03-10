@@ -34,6 +34,8 @@ public:
   // read settings from shared memory, using the given stationID
   BufferSettings(struct StationID station);
 
+  size_t flagRange(unsigned beamlet) const { return beamlet / (nrBeamlets / nrFlagRanges); }
+
   bool operator==(const struct BufferSettings &other) const {
     return station == other.station
         && nrBeamlets == other.nrBeamlets 

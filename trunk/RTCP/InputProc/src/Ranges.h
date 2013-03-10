@@ -30,18 +30,20 @@ public:
   Ranges( void *data, size_t numBytes, int64 minHistory, bool create );
   ~Ranges();
 
-  // remove [0,to)
+  // Remove [0,to)
   void excludeBefore( int64 to );
 
-  // add a range [from,to), and return whether the addition
+  // Add a range [from,to), and return whether the addition
   // was succesful.
   bool include( int64 from, int64 to );
 
-  // returns whether there is anything set in [first, last)
+  // Returns whether there is anything set in [first, last)
   bool anythingBetween( int64 first, int64 last ) const;
 
+  // Returns [first, last) as a SparseSet
   SparseSet<int64> sparseSet( int64 first, int64 last ) const;
 
+  // The size of a single [from,to) pair.
   static size_t elementSize() { return sizeof(struct Range); }
 
 private:
@@ -68,6 +70,7 @@ private:
   int64 minHistory;
 
 public:
+  // The size of this object for a given number of [from,to) pairs.
   static size_t size(size_t numElements) {
     return numElements * sizeof(struct Range);
   }

@@ -20,20 +20,27 @@ namespace LOFAR {
  *
  * To be able to use this class properly, please call
  * OMPThread::init() to clear the SIGHUP handler.
+ *
+ * Note: do NOT use this on threads which continue operating
+ * through omp 'nowait' parallelism, due to race conditions.
  */
 class OMPThread {
 public:
   OMPThread(): id(0), stopped(false) {}
 
+  // Register the current thread as killable
   void start() {
     id = pthread_self();
   }
 
+  // Unregister the current thread
   void stop() {
     id = 0;
     stopped = true;
   }
 
+  // Kill the registered thread. If no thread is registered,
+  // kill() will wait.
   void kill() {
     while (!stopped) {
       // interrupt blocking system calls (most notably, read())

@@ -7,7 +7,6 @@ namespace RTCP {
 
 std::ostream& operator<<( std::ostream &str, const Ranges &r )
 {
-  
   for (struct Ranges::Range *i = r.begin; i != r.end; ++i)
     if (i->to != 0)
       str << "[" << i->from << ", " << i->to << ") ";

@@ -19,19 +19,21 @@ RSPBoards::RSPBoards( const std::string &logPrefix, const BufferSettings &settin
 
 void RSPBoards::process()
 {
+  // References to all threads that will need aborting
   std::vector<OMPThread> threads(nrBoards * 2);
 
   ASSERT(nrBoards > 0);
 
   LOG_INFO_STR( logPrefix << "Start" );
 
-  #pragma omp parallel sections num_threads(3)
+# pragma omp parallel sections num_threads(3)
   {
-    #pragma omp section
+    // Board threads
+#   pragma omp section
     {
       // start all boards
       LOG_INFO_STR( logPrefix << "Starting all boards" );
-      #pragma omp parallel for num_threads(nrBoards)
+#     pragma omp parallel for num_threads(nrBoards)
       for (size_t i = 0; i < nrBoards; ++i) {
         OMPThread::ScopedRun sr(threads[i]);
   
@@ -46,17 +48,19 @@ void RSPBoards::process()
       stop();
     }
 
-    #pragma omp section
+    // Log threads
+#   pragma omp section
     {
       // start all log statistics
       LOG_INFO_STR( logPrefix << "Starting all log statistics" );
-      #pragma omp parallel for num_threads(nrBoards)
+#     pragma omp parallel for num_threads(nrBoards)
       for (size_t i = 0; i < nrBoards; ++i) {
         OMPThread::ScopedRun sr(threads[i + nrBoards]);
   
         try {
           for(;;) {
             if (usleep(999999) == -1 && errno == EINTR)
+              // got killed
               break;
 
             logStatistics();
@@ -67,7 +71,8 @@ void RSPBoards::process()
       }
     }
 
-    #pragma omp section
+    // Watcher thread
+#   pragma omp section
     {
       // wait until we have to stop
       LOG_INFO_STR( logPrefix << "Waiting for stop signal" );
@@ -75,7 +80,7 @@ void RSPBoards::process()
 
       // kill all boards
       LOG_INFO_STR( logPrefix << "Stopping all boards" );
-      #pragma omp parallel for num_threads(threads.size())
+#     pragma omp parallel for num_threads(threads.size())
       for (size_t i = 0; i < threads.size(); ++i)
         try {
           threads[i].kill();
