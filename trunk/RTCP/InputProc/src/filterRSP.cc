@@ -5,6 +5,8 @@
 #include <time.h>
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
+#include <Interface/Stream.h>
+#include <Interface/SmartPtr.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace LOFAR;
@@ -29,7 +31,8 @@ int main(int argc, char **argv)
   time_t from = parseTime(argv[1]);
   time_t to   = parseTime(argv[2]);
 
-  PacketReader reader("", "file:/dev/stdin");
+  SmartPtr<Stream> inputStream = createStream("file:/dev/stdin", true);
+  PacketReader reader("", *inputStream);
   struct RSP packet;
 
   try {
