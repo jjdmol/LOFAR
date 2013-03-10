@@ -25,7 +25,7 @@ namespace RTCP {
  */
 template<typename T> class SampleBufferReader {
 public:
-  SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize );
+  SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples = 0);
 
   void process( double maxDelay );
 
@@ -36,6 +36,10 @@ protected:
   const std::vector<size_t> beamlets;
   const TimeStamp from, to;
   const size_t blockSize;
+
+  // Number of samples to include before `from', to initialise the FIR taps,
+  // included in blockSize.
+  const size_t nrHistorySamples;
 
   struct CopyInstructions {
     // Beamlet index
@@ -70,7 +74,7 @@ private:
 };
 
 
-template<typename T> SampleBufferReader<T>::SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize )
+template<typename T> SampleBufferReader<T>::SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples )
 :
   settings(settings),
   buffer(settings, false),
@@ -78,7 +82,8 @@ template<typename T> SampleBufferReader<T>::SampleBufferReader( const BufferSett
   beamlets(beamlets),
   from(from),
   to(to),
-  blockSize(blockSize)
+  blockSize(blockSize),
+  nrHistorySamples(nrHistorySamples)
 {
   for (size_t i = 0; i < beamlets.size(); ++i)
     ASSERT( beamlets[i] < buffer.nrBeamlets );
@@ -91,38 +96,37 @@ template<typename T> SampleBufferReader<T>::SampleBufferReader( const BufferSett
 
 template<typename T> void SampleBufferReader<T>::process( double maxDelay )
 {
-  /*const TimeStamp maxDelay_ts(static_cast<int64>(maxDelay * settings.station.clock / 1024) + blockSize, settings.station.clock);
+  const TimeStamp maxDelay_ts(static_cast<int64>(maxDelay * settings.station.clock / 1024) + blockSize, settings.station.clock);
 
   const TimeStamp current(from);
+  const size_t increment = blockSize - nrHistorySamples;
 
-  for (TimeStamp current = from; current < to; current += blockSize) {
+  /*
+  for (TimeStamp current = from; current < to; current += increment) {
     // wait
     LOG_INFO_STR("Waiting until " << (current + maxDelay_ts) << " for " << current);
     waiter.waitUntil( current + maxDelay_ts );
 
     // read
     LOG_INFO_STR("Reading from " << current << " to " << (current + blockSize));
-    copy(current, current + blockSize);
+    copy(current - nrHistorySamples, current - nrHistorySamples + blockSize);
   }
 
   LOG_INFO("Done reading data");*/
-  const TimeStamp maxDelay_ts(static_cast<int64>(maxDelay * settings.station.clock / 1024) + blockSize, settings.station.clock);
-
-  const TimeStamp current(from);
 
   double totalwait = 0.0;
   unsigned totalnr = 0;
 
   double lastreport = MPI_Wtime();
 
-  for (TimeStamp current = from; current < to; current += blockSize) {
+  for (TimeStamp current = from; current < to; current += increment) {
     // wait
     waiter.waitUntil( current + maxDelay_ts );
 
     // read
     double bs = MPI_Wtime();
 
-    copy(current, current + blockSize);
+    copy(current - nrHistorySamples, current - nrHistorySamples + blockSize);
 
     totalwait += MPI_Wtime() - bs;
     totalnr++;

@@ -21,7 +21,7 @@ Mutex MPIMutex;
  */
 template<typename T> class MPISendStation: public SampleBufferReader<T> {
 public:
-  MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets, unsigned destRank );
+  MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples, const std::vector<size_t> &beamlets, unsigned destRank );
 
   struct Header {
     StationID station;
@@ -53,7 +53,7 @@ protected:
   std::vector<MPI_Request> requests;
   size_t nrRequests;
 
-  Matrix<char> metaData;
+  Matrix<char> metaData; // [beamlet][data]
 
   virtual void copyStart( const TimeStamp &from, const TimeStamp &to, const std::vector<size_t> &wrapOffsets );
   virtual void copy( const struct SampleBufferReader<T>::CopyInstructions &info );
@@ -65,9 +65,9 @@ protected:
 };
 
 
-template<typename T> MPISendStation<T>::MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets, unsigned destRank )
+template<typename T> MPISendStation<T>::MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples, const std::vector<size_t> &beamlets, unsigned destRank )
 :
-  SampleBufferReader<T>(settings, beamlets, from, to, blockSize),
+  SampleBufferReader<T>(settings, beamlets, from, to, blockSize, nrHistorySamples),
   destRank(destRank),
   requests(1 + beamlets.size() * 3, 0), // apart from the header, at most three transfers per beamlet: one or two for the samples, plus one for the flags
   nrRequests(0),
