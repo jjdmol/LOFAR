@@ -38,12 +38,16 @@ protected:
 
   // The input stream
   Stream &inputStream;
+  uint32 lastlog_timestamp;
 
   // What to receive
   BufferSettings settings;
   const unsigned boardNr;
 
 private:
+  // Log if the received packet is LOG_INTERVAL seconds older than the previous one.
+  static const uint32 LOG_INTERVAL = 10;
+
   // Process data for this board until interrupted or end of data.
   // `packet' is the receive buffer for packets. If a new mode is detected,
   // `packet' is filled with the last read packet, and a BadModeException
@@ -51,6 +55,9 @@ private:
   //
   // If `writeGivenPacket' is true, the provided `packet' is written as well.
   template<typename T> void process( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
+
+  // Triggers statistics logging every LOG_INTERVAL seconds
+  void logStatistics( PacketReader &reader, const struct RSP &packet );
 };
 
 /*
