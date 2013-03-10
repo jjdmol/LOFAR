@@ -86,7 +86,7 @@ bool PacketReader::readPacket( struct RSP &packet )
 }
 
 
-bool PacketReader::readPacket( struct RSP &packet, const struct BufferSettings &settings ) throw(PacketReader::BadModeException)
+bool PacketReader::readPacket( struct RSP &packet, const struct BufferSettings &settings )
 {
   if (!readPacket(packet))
     return false;
