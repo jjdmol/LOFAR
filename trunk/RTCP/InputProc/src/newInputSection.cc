@@ -47,7 +47,7 @@ int main( int argc, char **argv )
   struct StationID stationID("RS106", "LBA", clock, 16);
   struct BufferSettings settings(stationID, false);
 
-  settings.nrSamples = (5 * stationID.clockMHz * 1000000 / 1024);// & ~0xFL;
+  settings.setBufferSize(5.0);
 
   INIT_LOGGER(argv[0]);
 

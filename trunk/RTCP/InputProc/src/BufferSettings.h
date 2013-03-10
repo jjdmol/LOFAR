@@ -35,6 +35,9 @@ public:
   // if attach=false, set sane default values
   BufferSettings(const struct StationID &station, bool attach);
 
+  // Shortcut to set nrSamples to represent `seconds' of buffer.
+  void setBufferSize(double seconds);
+
   size_t flagIdx(unsigned beamlet) const { return beamlet / nrBeamletsPerBoard; }
 
   bool operator==(const struct BufferSettings &other) const {
