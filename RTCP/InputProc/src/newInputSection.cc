@@ -45,16 +45,9 @@ int main( int argc, char **argv )
   std::map<unsigned, std::vector<size_t> > beamlets;
 
   struct StationID stationID("RS106", "LBA", clock, 16);
-  struct BufferSettings settings;
-
-  settings.station = stationID;
-  settings.nrBeamletsPerBoard = 61;
-  settings.nrBoards = 4;
+  struct BufferSettings settings(stationID, false);
 
   settings.nrSamples = (5 * stationID.clockMHz * 1000000 / 1024);// & ~0xFL;
-  settings.nrFlagRanges = 64;
-
-  settings.dataKey = stationID.hash();
 
   INIT_LOGGER(argv[0]);
 
@@ -128,7 +121,7 @@ int main( int argc, char **argv )
       #pragma omp section
       {
         struct StationID lookup("RS106", "HBA0");
-        struct BufferSettings s(stationID);
+        struct BufferSettings s(stationID, true);
 
         LOG_INFO_STR("Detected " << s);
         #pragma omp parallel for num_threads(nrHosts - nrStations)
@@ -143,7 +136,7 @@ int main( int argc, char **argv )
     }
   } else {
       struct StationID lookup("RS106", "HBA0");
-      struct BufferSettings s(stationID);
+      struct BufferSettings s(stationID, true);
 
       LOG_INFO_STR("Detected " << s);
       #pragma omp parallel for num_threads(nrHosts - nrStations)

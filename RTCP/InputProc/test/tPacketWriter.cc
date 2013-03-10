@@ -78,15 +78,7 @@ int main() {
 
   // Fill a BufferSettings object
   struct StationID stationID("RS106", "LBA", 200, 16);
-  struct BufferSettings settings;
-
-  settings.station = stationID;
-  settings.nrBoards = 1;
-
-  settings.nrSamples = (2 * stationID.clockMHz * 1000000 / 1024);// & ~0xFL;
-  settings.nrFlagRanges = 64;
-
-  settings.dataKey = 0x12345678;
+  struct BufferSettings settings(stationID, false);
 
   // Test various modes
   LOG_INFO("Test 16-bit complex");

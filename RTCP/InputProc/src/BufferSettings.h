@@ -31,8 +31,9 @@ public:
 
   BufferSettings();
 
-  // read settings from shared memory, using the given stationID
-  BufferSettings(struct StationID station);
+  // if attach=true, read settings from shared memory, using the given stationID
+  // if attach=false, set sane default values
+  BufferSettings(const struct StationID &station, bool attach);
 
   size_t flagIdx(unsigned beamlet) const { return beamlet / nrBeamletsPerBoard; }
 
@@ -44,7 +45,10 @@ public:
         && nrFlagRanges == other.nrFlagRanges
         && dataKey == other.dataKey;
   }
+private:
 
+  // Derive sane values from the station field.
+  void deriveDefaultSettings();
 };
 
 std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s );

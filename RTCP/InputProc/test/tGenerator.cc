@@ -13,12 +13,8 @@ using namespace LOFAR;
 using namespace RTCP;
 using namespace std;
 
-// Duration of the test (seconds)
-#define DURATION 2
-
 // The number of packets to transmit (note: there are 16 time samples/packet)
 #define NUMPACKETS (200000000/1024/16)
-
 
 int main( int, char **argv ) {
   INIT_LOGGER( argv[0] );
@@ -34,16 +30,7 @@ int main( int, char **argv ) {
   vector<string> streamDescs(1, "tcp:localhost:54321");
 
   struct StationID stationID("RS106", "LBA", 200, 16);
-  struct BufferSettings settings;
-
-  settings.station = stationID;
-  settings.nrBeamletsPerBoard = 61;
-  settings.nrBoards = 1;
-
-  settings.nrSamples = (2 * stationID.clockMHz * 1000000 / 1024);// & ~0xFL;
-  settings.nrFlagRanges = 64;
-
-  settings.dataKey = stationID.hash();
+  struct BufferSettings settings(stationID, false);
 
   Generator g(settings, streamDescs);
 

@@ -13,18 +13,49 @@ BufferSettings::BufferSettings()
 {
 }
 
-BufferSettings::BufferSettings(struct StationID station)
+BufferSettings::BufferSettings(const struct StationID &station, bool attach)
 :
   version(currentVersion),
   station(station)
 {
-  do {
-    SharedStruct<struct BufferSettings> shm(station.hash(), false);
+  if (attach) {
+    do {
+      SharedStruct<struct BufferSettings> shm(station.hash(), false);
 
-    *this = shm.get();
-  } while (!valid());  
+      *this = shm.get();
+    } while (!valid());  
 
-  ASSERT( valid() );
+    ASSERT( valid() );
+  } else {
+    deriveDefaultSettings();
+  }
+}
+
+
+void BufferSettings::deriveDefaultSettings()
+{
+  switch (station.bitMode) {
+    default:
+    case 16:
+      nrBeamletsPerBoard = 61;
+      break;
+
+    case 8:
+      nrBeamletsPerBoard = 122;
+      break;
+
+    case 4:
+      nrBeamletsPerBoard = 244;
+      break;
+  }
+
+  // 1 second buffer
+  nrSamples = 1 * (station.clockMHz * 1000000) / 1024;
+
+  nrBoards = 4;
+  nrFlagRanges = 64;
+
+  dataKey = station.hash();
 }
 
 std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s ) {
