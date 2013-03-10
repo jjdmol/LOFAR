@@ -6,13 +6,16 @@
 #include <Interface/Stream.h>
 #include <boost/format.hpp>
 
+#include <typeinfo>
+
 namespace LOFAR {
 namespace RTCP {
 
 
-PacketReader::PacketReader( const std::string &logPrefix, const std::string &streamDescriptor )
+PacketReader::PacketReader( const std::string &logPrefix, Stream &inputStream )
 :
   logPrefix(str(boost::format("%s [PacketReader] ") % logPrefix)),
+  inputStream(inputStream),
 
   nrReceived(0),
   nrBadSize(0),
@@ -22,12 +25,17 @@ PacketReader::PacketReader( const std::string &logPrefix, const std::string &str
   hadSizeError(false),
   hadModeError(false)
 {
-  inputStream = createStream(streamDescriptor, true);
+  // Partial reads are not supported on UDP streams, because each read()
+  // will consume a full packet.
+  try {
+    SocketStream &asSocket = dynamic_cast<SocketStream &>(inputStream);
+    const bool isUDP = asSocket.protocol == SocketStream::UDP;
 
-  SocketStream *asSocket = dynamic_cast<SocketStream *>(inputStream.get());
-  bool isUDP = asSocket && asSocket->protocol == SocketStream::UDP;
-
-  supportPartialReads = !isUDP;
+    supportPartialReads = !isUDP;
+  } catch (std::bad_cast) {
+    // inputStream is not a SocketStream
+    supportPartialReads = false;
+  }
 }
 
 
@@ -35,15 +43,15 @@ bool PacketReader::readPacket( struct RSP &packet )
 {
   if (supportPartialReads) {
     // read header first
-    inputStream->read(&packet.header, sizeof packet.header);
+    inputStream.read(&packet.header, sizeof packet.header);
 
     // read rest of packet
-    inputStream->read(&packet.payload.data, packet.packetSize() - sizeof packet.header);
+    inputStream.read(&packet.payload.data, packet.packetSize() - sizeof packet.header);
 
     ++nrReceived;
   } else {
     // read full packet at once -- numbytes will tell us how much we've actually read
-    size_t numbytes = inputStream->tryRead(&packet, sizeof packet);
+    size_t numbytes = inputStream.tryRead(&packet, sizeof packet);
 
     ++nrReceived;
 
@@ -66,15 +74,23 @@ bool PacketReader::readPacket( struct RSP &packet )
     return false;
   }
 
-  // check sanity of packet
-
   // discard packets with errors
   if (packet.payloadError()) {
     ++nrBadData;
     return false;
   }
-/*
-  // check whether the station configuration matches ours
+
+  // everything is ok
+  return true;
+}
+
+
+bool PacketReader::readPacket( struct RSP &packet, const struct BufferSettings &settings )
+{
+  if (!readPacket(packet))
+    return false;
+
+  // check whether the station configuration matches the one given
   if (packet.clockMHz() * 1000000 != settings.station.clock
    || packet.bitMode() != settings.station.bitmode) {
 
@@ -86,7 +102,7 @@ bool PacketReader::readPacket( struct RSP &packet )
     ++nrBadMode;
     return false;
   }
-*/
+
   return true;
 }
 
