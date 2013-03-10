@@ -11,12 +11,6 @@ using namespace LOFAR;
 using namespace RTCP;
 using namespace std;
 
-// Duration of the test (seconds)
-#define DURATION 2
-
-// The number of packets to transmit (note: there are 16 time samples/packet)
-#define NUMPACKETS (200000000/1024/16)
-
 template<typename T> void test( struct BufferSettings &settings )
 {
   SampleBuffer< SampleType<T> > buffer_create(settings, true);
@@ -24,18 +18,13 @@ template<typename T> void test( struct BufferSettings &settings )
   SampleBuffer< SampleType<T> > buffer_read(settings, false);
 }
 
-
-int main( int, char **argv ) {
-  INIT_LOGGER( argv[0] );
+int main() {
+  INIT_LOGGER( "tSampleBuffer" );
 
   // Don't run forever if communication fails for some reason
   alarm(10);
 
-  omp_set_nested(true);
-  omp_set_num_threads(16);
-
-  OMPThread::init();
-
+  // Fill a BufferSettings object
   struct StationID stationID("RS106", "LBA", 200, 16);
   struct BufferSettings settings;
 
@@ -48,6 +37,7 @@ int main( int, char **argv ) {
 
   settings.dataKey = 0x12345678;
 
+  // Test various modes
   LOG_INFO("Test 16-bit complex");
   test<i16complex>(settings);
 
@@ -56,7 +46,6 @@ int main( int, char **argv ) {
 
   LOG_INFO("Test 4-bit complex");
   test<i4complex>(settings);
-
 
   return 0;
 }
