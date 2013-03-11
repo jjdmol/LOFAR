@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v2.min.js?2.9.4"></script>
+<title>Fisheye Distortion</title>
+<style>
+
+text {
+  font: 10px sans-serif;
+}
+
+.background {
+  fill: none;
+  pointer-events: all;
+}
+
+#chart2, #chart3 {
+  width: 600px;
+  height: 600px;
+  border: solid 1px #ccc;
+}
+#chart2 path, #chart3 line {
+  fill: none;
+  stroke: #333;
+}
+
+#chart3 line {
+  shape-rendering: crispEdges;
+}
+
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #fff;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+<h1>Fisheye Distortion</h1>
+
+
+<p id="chart3">
+
+
+<script>
+
+(function() {
+  d3.fisheye = {
+    scale: function(scaleType) // Fishscale factory, gets
+	{
+      return d3_fisheye_scale(scaleType(), 50, 1);
+    }
+  };
+
+  function d3_fisheye_scale(scale, cellsizer, focus_loc) 
+  {
+	// This function distorts the point location.
+	// This is a onedimensional distortion
+    function fisheye(point_value) 
+	{
+	  //alert(typeof point_value)
+	  // Transform the point value to a normalized location, this could be used to map to log
+      var point_location = scale(point_value)  
+
+	  // is the input line left of focus_location, Minus 50 to do..
+      var point_is_left_of_focus = point_location < (focus_loc - 50 )
+	  
+	  // Get the size of the image
+      var range = d3.extent(scale.range())	  
+      var min = range[0]  //Min of the image
+      var max = range[1]  //Max of the range
+	  
+	  var transformed_point
+	  if ( point_is_left_of_focus)
+		transformed_point = point_location
+	  else
+	    transformed_point = point_location + 100  // the 
+	  
+	  return transformed_point //point_location
+	  //----------------------------------------	
+	  //based on the distance of the input point to the focus
+	  // this set of functions returns a mutated location
+	  // 
+//	  var m
+	  //if (point_is_left_of_focus)
+	//	{m = focus_loc - min }
+	 // else
+	//	{m = max - focus_loc}
+     //  if (m == 0) m = max - min;
+
+	  // The function is wierd: it 	
+	   
+	  // Return the mutated location??
+      //return (point_is_left_of_focus ? -1 : 1) * m * (cellsizer + 1)
+	//					/
+     //        (cellsizer + (m / Math.abs(point_location - focus_loc))) 
+	//		 + focus_loc;
+	  //-------------------------------------
+	  
+    }
+
+    fisheye.distortion = function(new_cellsize) 
+	{
+      if (!arguments.length) return cellsizer;
+      cellsizer = new_cellsize;
+      return fisheye;
+    };
+
+    fisheye.focus = function(new_loc) {
+      if (!arguments.length) return focus_loc;
+      focus_loc = new_loc;
+      return fisheye;
+    };
+
+    fisheye.copy = function() {
+      return d3_fisheye_scale(scale.copy(), cellsizer, focus_loc);
+    };
+	// Parentclassc
+    fisheye.nice = scale.nice;
+    fisheye.ticks = scale.ticks;
+    fisheye.tickFormat = scale.tickFormat;
+    return d3.rebind(fisheye, scale, "domain", "range");
+  }
+})();
+
+(function chart3() {
+  var width = 600;
+  var height = 600;
+  var step = 5;
+
+  var width_outer = 100;
+  var width_inner = 50; 
+	  
+  var xSteps = d3.range(step, width - width_outer, step);
+  var ySteps = d3.range(step, height - width_outer, step);
+
+  var xFisheye = d3.fisheye.scale(d3.scale.identity).domain([0, width]).focus(width/2),
+      yFisheye = d3.fisheye.scale(d3.scale.identity).domain([0, height]).focus(height/2);
+
+  var svg = d3.select("#chart3").append("svg") // svg = Scalable Vector Graphics
+      .attr("width", width)
+      .attr("height", height)
+    .append("g")  // Dunno what it does. It is needed and used allot in examples
+//      .attr("transform", "translate(-.5,-.5)");  // move the zero point to the middle of the image??
+
+  svg.append("rect")
+      .attr("class", "background")
+      .attr("width", width)
+      .attr("height", height);
+
+  var xLine = svg.selectAll(".x") // Get all objects that are of class x (.x) this set can be empty.
+      .data(xSteps)               // Add xsteps as datapoints. To this set of objects
+    .enter().append("line")       // If an objects is new in this set. Add the objects as a line.  This should be a ...2d voxel  
+      .attr("class", "x")         // set the class class=x 
+      .attr("y2", height);        
+
+  var yLine = svg.selectAll(".y")
+      .data(ySteps)
+    .enter().append("line")
+      .attr("class", "y")
+      .attr("x2", width);
+
+  redraw();
+
+  svg.on("mousemove", function() {
+    var mouse = d3.mouse(this);
+    xFisheye.focus(mouse[0]);
+    yFisheye.focus(mouse[1]);
+    redraw();
+  });
+
+  function redraw() {
+    xLine.attr("x1", xFisheye).attr("x2", xFisheye);
+    yLine.attr("y1", yFisheye).attr("y2", yFisheye);
+  }
+})();
+
+
+</script>

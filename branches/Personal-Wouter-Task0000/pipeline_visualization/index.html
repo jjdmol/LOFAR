@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title>display.xml Example</title>
+   <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+   <style type="text/css">
+.chart div {
+   font: 10px sans-serif;
+   background-color: steelblue;
+   text-align: right;
+   padding: 3px;
+   margin: 1px;
+   color: white;
+ }
+    </style
+</head>
+<body>
+<div id="chart_id1" class="chart"></div>
+<script>
+
+//remove all non data nodes from the supplied xml tree and return a cleaned version
+function clean_xml_tree(xml_node)
+{
+	//create a deep copy of the tree
+	xml_copy = xml_node.cloneNode(true)
+	
+	if (node_list.childNodes.length==0)
+	{
+		return 
+	}
+	var xmldoc2 = document.implementation.createDocument(null, "root", null);
+	alert(xmldoc2);
+	cleaned_node_list = xmldoc2.createElement("cleaned");
+	
+	for (var i=0;i<raw_data_nodes.length;i++)
+	{
+		if(raw_data_nodes[i].nodeType == 1) // if text
+		{
+			//Create a deep copy with all properties and add to a cleaned list without
+			//any textual makeup: only content nodes
+		    cleaned_node_list.appendChild(raw_data_nodes[i].cloneNode(true));
+		}
+	}
+	return cleaned_node_list
+}
+
+
+// Load values.xml and pass the data to the anon-function
+d3.xml("values.xml", "application/xml", function(xml_id) {
+	raw_data_nodes = xml_id.documentElement.childNodes;
+	cleaned_node_list = xml_id.createElement("cleaned");
+	
+	for (var i=0;i<raw_data_nodes.length;i++)
+	{
+		if(raw_data_nodes[i].nodeType == 1) // if text
+		{
+			//Create a deep copy with all properties and add to a cleaned list without
+			//any textual makeup: only content nodes
+		    cleaned_node_list.appendChild(raw_data_nodes[i].cloneNode(true));
+		}
+	}
+	the_filtered_data = cleaned_node_list.childNodes
+	
+	var chart = d3.select("#chart_id1")
+		// Select all the div nodes
+		.selectAll("div")
+			// Now apply the data to the divs. If there are fewer nodes than data, the extra data elements form the enter selection
+			.data(the_filtered_data)
+
+	//  entering nodes to add
+	chart.enter().append("div")
+		.style("width", function(d) 
+			{
+				if (d.hasAttributes())
+				{
+					return d.getAttribute("duration") * 5 + "px"; 
+				}		
+			})
+		.text(function(d) 
+		{ 
+			if (d.hasAttributes())
+			{
+				return d.nodeName + " " +  d.getAttribute("duration");
+			}
+		});
+	
+	chart.exit().remove();
+});
+
+</script>
+</body>
+</html>

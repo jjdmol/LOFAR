@@ -100,7 +100,7 @@ if __name__ == '__main__':
     metric_str = "daily CPU"
     duration_str = "uptime"
         #one day images
-    target_path_format = target_path + "cpu_full_" # /tmp/cpu_full.png
+    target_path_format = target_path + "cpu_full" # /tmp/cpu_full.png
 
     day_average = calculate_and_write_metric_full_time_range(
                 "/tmp/locus_usage", target_path_format, metric_str, duration_str)

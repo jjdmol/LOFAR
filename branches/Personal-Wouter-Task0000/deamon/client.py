@@ -8,20 +8,14 @@ import select
 import time
 import sys
 
-
-buffer_size = 4096
-delay = 0.0001
-forward_to = ('smtp.das.ufsc.br', '25')
-
-class Forward:
+class SockedConnection:
     def __init__(self):
         self.forward = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    def start(self):
+    def start(self, host, port):
         try:
-
-            self.forward.connect(("localhost", 9090))
-            self.forward.send("")
+            self.forward.connect((host, port))
+            self.forward.send("VBLALAKLJHS")
             return self.forward
         except Exception, e:
             print e
@@ -29,5 +23,5 @@ class Forward:
 
 
 if __name__ == '__main__':
-        client = Forward().start()
+        client = SockedConnection().start('localhost', 9090)
 

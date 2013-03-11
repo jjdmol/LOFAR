@@ -1,100 +1,78 @@
 import math
 import sys
 
-if __name__ == "__main__":
-    source_list_1, source_list_2, image_1, image_2, max_delta = None, None, None, None, None
-    # Parse parameters from command line
-    error = False
-    try:
-        source_list_1, source_list_2, image_1, image_2 = sys.argv[1:5]
-    except:
-        print "usage: python {0} source_list_1_path "\
-            " source_list_2_path image_1_path image_2_path (max_delta type=float)".format(sys.argv[0])
-        sys.exit(1)
-
-    max_delta = None
-    try:
-        max_delta = float(sys.argv[6])
-    except:
-        max_delta = 0.0001
-
-    if not error:
-        image_equality = validate_image_equality(image_1, image_2, max_delta)
-        sourcelist_equality = validate_source_list_files(source_list_1, source_list_2, max_delta)
-        if not (image_equality and sourcelist_equality):
-            print "Regression test failed: exiting with exitstatus 1"
-            sys.exit(1)
-
-        print "Regression test Succeed!!"
-        sys.exit(0)
-
-
 def validate_image_equality(image_1_path, image_2_path, max_delta):
     import pyrap.images as pim
+
     # get the difference between the two images
     im = pim.image("{0} - {1}".format(image_1_path, image_2_path))
+    im.saveas("difference.IM2")
     # get the stats of the image
     stats_dict = im.statistics()
+    return_value = compare_image_statistics(stats_dict, max_delta)
+
+    if not return_value:
+        print "\n\n\n"
+        print "*"*30
+        print "Statistics of the produced image:"
+        im = pim.image("{0}".format(image_1_path))
+        stats_dict_single_image = im.statistics()
+        print stats_dict_single_image
+        print "\n\n\n"
+        print "Statistics of the compare image:"
+        im = pim.image("{0}".format(image_2_path))
+        stats_dict_single_image = im.statistics()
+        print stats_dict_single_image
+        print "\n\n\n"
+        print "difference between produced image and the baseline image:"
+        print "maximum delta: {0}".format(max_delta)
+        print stats_dict
+        print "*"*30
+
+    return return_value
 
 
 def _test_against_maxdelta(value, max_delta, name):
-    if value > max_delta:
-        print "Found '{0}' difference is larger then " \
-            "the maximum accepted delta: {1}".format(name, value)
+    if math.fabs(value) > max_delta:
+        print "Dif found: '{0}' difference >{2}<is larger then " \
+            "the maximum accepted delta: {1}".format(name, max_delta, value)
         return True
     return False
 
 def compare_image_statistics(stats_dict, max_delta=0.0001):
-    print "difference between target and produced image:"
-    print "maximum delta: {0}".format(max_delta)
-    print stats_dict
+
     return_value = False
     found_incorrect_datapoint = False
     for name, value in stats_dict.items():
 
         if name == "rms":
             found_incorrect_datapoint = _test_against_maxdelta(
-                float(value[0]), max_delta, name)
+                float(value[0]), max_delta * 300, name)
         elif name == "medabsdevmed":
             found_incorrect_datapoint = _test_against_maxdelta(
-                float(value[0]), max_delta, name)
+                float(value[0]), max_delta * 200, name)
         elif name == "minpos":
-            max_delta_local = max_delta * 10e5
-            datapoint0 = _test_against_maxdelta(
-                float(value[0][0]), max_delta_local, name)
-            datapoint1 = _test_against_maxdelta(
-                float(value[0][1]), max_delta_local, name)
-            datapoint2 = _test_against_maxdelta(
-                float(value[0][2]), max_delta_local, name)
-            datapoint3 = _test_against_maxdelta(
-                float(value[0][3]), max_delta_local, name)
-            found_incorrect_datapoint = datapoint0 or datapoint1 or datapoint2 or datapoint3
+            pass
+            # this min location might move 100 points while still being the same image
         elif name == "min":
             found_incorrect_datapoint = _test_against_maxdelta(
-                float(value[0]), max_delta, name)
+                float(value[0]), max_delta * 2000, name)
         elif name == "maxpos":
-            max_delta_local = max_delta * 10e5
-            datapoint0 = _test_against_maxdelta(
-                float(value[0][0]), max_delta_local, name)
-            datapoint1 = _test_against_maxdelta(
-                float(value[0][1]), max_delta_local, name)
-            datapoint2 = _test_against_maxdelta(
-                float(value[0][2]), max_delta_local, name)
-            datapoint3 = _test_against_maxdelta(
-                float(value[0][3]), max_delta_local, name)
-            found_incorrect_datapoint = datapoint0 or datapoint1 or datapoint2 or datapoint3
+            pass
+            # this max location might move 100 points while still being the same image
         elif name == "max":
             found_incorrect_datapoint = _test_against_maxdelta(
-                float(value[0]), max_delta, name)
+                float(value[0]), max_delta * 1500, name)
         elif name == "sum":
             found_incorrect_datapoint = _test_against_maxdelta(
-                float(value[0]), max_delta, name)
+                float(value[0]), max_delta * 200000, name)
         elif name == "quartile":
             found_incorrect_datapoint = _test_against_maxdelta(
-                float(value[0]), max_delta, name)
+                float(value[0]), max_delta * 4000, name)
         elif name == "sumsq":
-            found_incorrect_datapoint = _test_against_maxdelta(
-                float(value[0]), max_delta, name)
+            # tested with sum already
+            pass
+
         elif name == "median":
             found_incorrect_datapoint = _test_against_maxdelta(
                 float(value[0]), max_delta, name)
@@ -102,10 +80,10 @@ def compare_image_statistics(stats_dict, max_delta=0.0001):
             pass    # cannot be tested..
         elif name == "sigma":
             found_incorrect_datapoint = _test_against_maxdelta(
-                float(value[0]), max_delta, name)
+                float(value[0]), max_delta * 300, name)
         elif name == "mean":
             found_incorrect_datapoint = _test_against_maxdelta(
-                float(value[0]), max_delta, name)
+                float(value[0]), max_delta * 3, name)
 
         # if we found an incorrect datapoint in this run or with previous
         # results: results in true value if any comparison failed
@@ -139,7 +117,7 @@ def convert_sourcelist_as_string_to_data_array(source_list_as_string):
     entries_array = []
 
     #get the format line
-    format_line_entrie = source_list_lines[1]
+    format_line_entrie = source_list_lines[0]
 
     # get the format entries
     entries_array.append([format_line_entrie.split(",")[0].split("=")[1].strip()])
@@ -147,7 +125,8 @@ def convert_sourcelist_as_string_to_data_array(source_list_as_string):
         entries_array.append([entry.strip()])
 
     # scan all the lines for the actual data
-    for line in source_list_lines[2:]:
+
+    for line in sorted(source_list_lines[2:]):  # try sorting based on name (should work :P)
         # if empty
         if line == "":
             continue
@@ -168,9 +147,7 @@ def compare_sourcelist_data_arrays(data_array1, data_array2, max_delta=0.0001):
     Ugly function to compare two sourcelists.
     It needs major refactoring, but for a proof of concept it works
     """
-    print "comparing the following data arrays:"
-    easyprint_data_arrays(data_array1, data_array2)
-    print "*****************************************"
+    print "######################################################"
     found_incorrect_datapoint = False
     for (first_array, second_array) in zip(data_array1, data_array2):
 
@@ -184,15 +161,13 @@ def compare_sourcelist_data_arrays(data_array1, data_array2, max_delta=0.0001):
         if first_array[0] == "Name":
             for (entrie1, entrie2) in zip(first_array[1:], second_array[1:]):
                 if entrie1 != entrie2:
-                    easyprint_data_arrays(data_array1, data_array2)
-                    print "The sourcelist entrie names are not the same: {0} != {1}".format(entrie1, entrie2)
+                    print "The sourcelist entrie names are not the same: \n{0} !=\n {1}".format(entrie1, entrie2)
                     found_incorrect_datapoint = True
 
         # Hard check on equality of the type of the found sources
         elif first_array[0] == "Type":
             for (entrie1, entrie2) in zip(first_array[1:], second_array[1:]):
                 if entrie1 != entrie2:
-                    easyprint_data_arrays(data_array1, data_array2)
                     print "The sourcelist entrie types are not the same: {0} != {1}".format(entrie1, entrie2)
                     found_incorrect_datapoint = True
 
@@ -224,7 +199,7 @@ def compare_sourcelist_data_arrays(data_array1, data_array2, max_delta=0.0001):
             for (entrie1, entrie2) in zip(first_array[1:], second_array[1:]):
                 entrie1_as_float = float(entrie1)
                 entrie2_as_float = float(entrie2)
-                if  not math.fabs(entrie1_as_float - entrie2_as_float) < (max_delta * 1000):
+                if  not math.fabs(entrie1_as_float - entrie2_as_float) < (max_delta * 2000):
                     print "I's are not the same within max_delta {0} != {1}   max_delta_I = {2}  ".format(
                                 entrie1_as_float, entrie2_as_float, max_delta * 1000)
                     found_incorrect_datapoint = True
@@ -260,27 +235,27 @@ def compare_sourcelist_data_arrays(data_array1, data_array2, max_delta=0.0001):
             for (entrie1, entrie2) in zip(first_array[1:], second_array[1:]):
                 entrie1_as_float = float(entrie1)
                 entrie2_as_float = float(entrie2)
-                if  not math.fabs(entrie1_as_float - entrie2_as_float) < (max_delta * 100):
+                if  not math.fabs(entrie1_as_float - entrie2_as_float) < (max_delta * 60000):
                     print "MajorAxis's are not the same within max_delta {0} != {1}   max_delta_I = {2}  ".format(
-                                entrie1_as_float, entrie2_as_float, max_delta * 100)
+                                entrie1_as_float, entrie2_as_float, max_delta * 50000)
                     found_incorrect_datapoint = True
 
         elif first_array[0] == "MinorAxis":
             for (entrie1, entrie2) in zip(first_array[1:], second_array[1:]):
                 entrie1_as_float = float(entrie1)
                 entrie2_as_float = float(entrie2)
-                if  not math.fabs(entrie1_as_float - entrie2_as_float) < (max_delta * 100):
+                if  not math.fabs(entrie1_as_float - entrie2_as_float) < (max_delta * 30000):
                     print "MinorAxis's are not the same within max_delta {0} != {1}   max_delta_I = {2}  ".format(
-                                entrie1_as_float, entrie2_as_float, max_delta * 100)
+                                entrie1_as_float, entrie2_as_float, max_delta * 30000)
                     found_incorrect_datapoint = True
 
         elif first_array[0] == "Orientation":
             for (entrie1, entrie2) in zip(first_array[1:], second_array[1:]):
                 entrie1_as_float = float(entrie1)
                 entrie2_as_float = float(entrie2)
-                if  not math.fabs(entrie1_as_float - entrie2_as_float) < (max_delta * 100):
+                if  not math.fabs(entrie1_as_float - entrie2_as_float) < (max_delta * 70000):
                     print "Orientation's are not the same within max_delta {0} != {1}   max_delta_I = {2}  ".format(
-                                entrie1_as_float, entrie2_as_float, max_delta * 100)
+                                entrie1_as_float, entrie2_as_float, max_delta * 10000)
                     found_incorrect_datapoint = True
 
         elif first_array[0].split("=")[0].strip() == "ReferenceFrequency":
@@ -298,6 +273,13 @@ def compare_sourcelist_data_arrays(data_array1, data_array2, max_delta=0.0001):
             print "unknown format line entrie found: delta fails"
             print first_array[0]
             found_incorrect_datapoint = True
+
+    if found_incorrect_datapoint:
+        print "######################################################"
+        print "compared the following data arrays:"
+        easyprint_data_arrays(data_array1, data_array2)
+        print "######################################################"
+
 
     # return  inverse of found_incorrect_datapoint to signal delta test success   
     return not found_incorrect_datapoint
@@ -350,5 +332,37 @@ image_data = {'rms': [ 0.52093363], 'medabsdevmed': [ 0.27387491], 'minpos': [[1
 
 # print compare_image_statistics(image_data)
 
+
+
+if __name__ == "__main__":
+    source_list_1, source_list_2, image_1, image_2, max_delta = None, None, None, None, None
+    # Parse parameters from command line
+    error = False
+    try:
+        source_list_1, source_list_2, image_1, image_2 = sys.argv[1:5]
+    except:
+        print "usage: python {0} source_list_1_path "\
+            " source_list_2_path image_1_path image_2_path (max_delta type=float)".format(sys.argv[0])
+        sys.exit(1)
+
+    max_delta = None
+    try:
+        max_delta = float(sys.argv[5])
+    except:
+        max_delta = 0.0001
+
+    print "using max delta: {0}".format(max_delta)
+
+    if not error:
+        image_equality = validate_image_equality(image_1, image_2, max_delta)
+        sourcelist_equality = validate_source_list_files(source_list_1, source_list_2, max_delta)
+        if not (image_equality and sourcelist_equality):
+            print "Regression test failed: exiting with exitstatus 1"
+            print " image_equality: {0}".format(image_equality)
+            print " sourcelist_equality: {0}".format(sourcelist_equality)
+            sys.exit(1)
+
+        print "Regression test Succeed!!"
+        sys.exit(0)
 
 

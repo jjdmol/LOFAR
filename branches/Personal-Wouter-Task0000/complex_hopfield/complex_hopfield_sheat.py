@@ -28,12 +28,12 @@ def calculate_delta(weights, output, activation, external_input, parameter_v):
 def generate_random_input(n_patterns, n_neurons):
     patterns = []
     for idx in range(n_patterns):
-         pattern = numpy.ones((n_neurons), dtype=complex)
-         for idx_neuron in range(n_neurons):
-             if random.random() > 0.5:
-                 pattern[idx_neuron] = numpy.complex(-1)
+        pattern = numpy.ones((n_neurons), dtype=complex)
+        for idx_neuron in range(n_neurons):
+            if random.random() > 0.5:
+                pattern[idx_neuron] = numpy.complex(-1)
 
-         patterns.append(pattern[numpy.newaxis])
+        patterns.append(pattern[numpy.newaxis])
     return patterns
 
 
@@ -176,7 +176,6 @@ def display_weight_matrix(weights):
     print weights
     print len(weights)
 
-    import matplotlib.pyplot as plt
     fig = plt.figure()
     ax = fig.add_subplot(111)
     cax = ax.imshow(numpy.abs(weights))#, interpolation='nearest')
@@ -186,12 +185,6 @@ def display_weight_matrix(weights):
 
 
 if __name__ == "__main__":
-#    weights = numpy.load("c:\data\weight.array.npy")
-#    display_weight_matrix(weights)
-#
-#
-#
-#def back():
     n_neurons = 20 * 20
     n_side = int(round(sqrt(n_neurons)))
     n_patterns = 25
@@ -240,37 +233,4 @@ if __name__ == "__main__":
     slide_show_of_output(outputs_slices, n_side)
 
         #ax.imshow(pylab.real(q_slice))
-
-#    pylab.show()
-#
-#
-#    for idx in range(n_neurons):
-#        pylab.plot(t, outputs[idx])
-#
-#    pylab.show()
-#
-#
-#    #    print weights, output, delta, activation
-#    t2 = time.time()
-#    print (t1 - t2) * 1000
-
-
-
-
-
-    #a = complex(1, 2)
-    #
-    #b = numpy.array([a, a])
-    #
-    #c = numpy.zeros((4, 4), dtype=complex)
-    #print c
-    #print numpy.tanh(c)
-
-    #pattern[0][0] = numpy.complex(-1, 0)
-    #print pattern
-    ##print pattern
-    ##print numpy.dot(pattern.T, pattern)
-    #patterns = [pattern]
-    #print patterns
-    #learn_patterns(patterns, weights, n_neurons)
 

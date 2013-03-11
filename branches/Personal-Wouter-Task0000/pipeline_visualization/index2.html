@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Partition - Icicle</title>
+<style>
+
+.node {
+  fill: #ddd;
+  stroke: #fff;
+}
+
+.label {
+  font: 10px sans-serif;
+  text-anchor: middle;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var width = 960,
+    height = 500;
+
+var color = d3.scale.category20();
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var partition = d3.layout.partition()
+    .size([width, height])
+    .value(function(d) { return d.getAttribute("duration"); });
+
+//d3.json("values.json", function(error, root) {
+d3.xml("values.xml", "application/xml", function(xml_id) {
+	//raw_data_nodes = xml_id.documentElement.childNodes;
+  var nodes = partition.nodes(xml_id.documentElement);
+  //alert(nodes)
+  svg.selectAll(".node")
+      .data(nodes)
+    .enter().append("rect")
+      .attr("class", "node")
+      .attr("x", function(d) { return d.x; })
+      .attr("y", function(d) { return d.y; })
+      .attr("width", function(d) { return d.dx; })
+      .attr("height", function(d) { return d.dy; })
+      .style("fill", function(d) { return color((d.children ? d : d.parent).nodeName); });
+
+  svg.selectAll(".label")
+      .data(nodes.filter(function(d) { return d.dx > 6; }))
+    .enter().append("text")
+      .attr("class", "label")
+      .attr("dy", ".35em")
+      .attr("transform", function(d) { return "translate(" + (d.x + d.dx / 2) + "," + (d.y + d.dy / 2) + ")rotate(90)"; })
+      .text(function(d) { 
+	     if (d.nodeName == "job")
+		 {
+			return d.getAttribute("job_id")
+		 }
+	     return d.nodeName; });
+});
+
+</script>
+</body>
