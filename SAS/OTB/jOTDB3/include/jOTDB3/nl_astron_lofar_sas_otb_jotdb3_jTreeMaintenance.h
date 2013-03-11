@@ -209,6 +209,13 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_g
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    getItemList
+ * Signature: (ILjava/lang/String;Z)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getItemList__ILjava_lang_String_2Z (JNIEnv *env, jobject, jint, jstring, jboolean);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
  * Method:    dupNode
  * Signature: (IIS)I
  */
