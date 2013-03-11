@@ -1,5 +1,5 @@
 #include <lofar_config.h>
-#include "Ranges.h"
+#include "Buffer/Ranges.h"
 #include <Common/LofarLogger.h>
 #include <vector>
 

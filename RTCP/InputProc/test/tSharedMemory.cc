@@ -1,5 +1,5 @@
 #include <lofar_config.h>
-#include "SharedMemory.h"
+#include "Buffer/SharedMemory.h"
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Thread.h>
 #include <unistd.h>

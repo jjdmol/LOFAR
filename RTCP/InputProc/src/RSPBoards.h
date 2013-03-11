@@ -1,7 +1,7 @@
 #ifndef __RSPBOARDS__
 #define __RSPBOARDS__
 
-#include "BufferSettings.h"
+#include "Buffer/BufferSettings.h"
 #include "WallClockTime.h"
 #include <string>
 #include <vector>

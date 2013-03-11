@@ -2,9 +2,9 @@
 #define __PACKETWRITER__
 
 #include "Station/RSP.h"
-#include "SampleBuffer.h"
-#include "BufferSettings.h"
-#include "Ranges.h"
+#include "Buffer/SampleBuffer.h"
+#include "Buffer/BufferSettings.h"
+#include "Buffer/Ranges.h"
 #include <string>
 
 namespace LOFAR {

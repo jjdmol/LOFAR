@@ -2,8 +2,8 @@
 #define __BUFFERSETTINGS__
 
 #include <Common/LofarLogger.h>
-#include "SharedMemory.h"
-#include "StationID.h"
+#include "Buffer/SharedMemory.h"
+#include "Buffer/StationID.h"
 #include <ostream>
 
 namespace LOFAR {

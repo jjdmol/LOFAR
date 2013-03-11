@@ -5,7 +5,7 @@
 #include <Stream/Stream.h>
 #include <Interface/SmartPtr.h>
 #include "Station/RSP.h"
-#include "BufferSettings.h"
+#include "Buffer/BufferSettings.h"
 #include <string>
 
 namespace LOFAR {

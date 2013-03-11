@@ -1,6 +1,6 @@
 #include <lofar_config.h>
 #include "Station/PacketsToBuffer.h"
-#include "SampleBuffer.h"
+#include "Buffer/SampleBuffer.h"
 #include "SampleType.h"
 #include <Common/LofarLogger.h>
 #include <Stream/FileStream.h>

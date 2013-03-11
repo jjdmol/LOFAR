@@ -2,8 +2,8 @@
 #define __SAMPLEBUFFERREADER__
 
 #include <Interface/RSPTimeStamp.h>
-#include "BufferSettings.h"
-#include "SampleBuffer.h"
+#include "Buffer/BufferSettings.h"
+#include "Buffer/SampleBuffer.h"
 
 #include <vector>
 #include <string>

@@ -6,8 +6,8 @@
 #include <Stream/Stream.h>
 #include "Station/RSP.h"
 #include "RSPBoards.h"
-#include "SampleBuffer.h"
-#include "BufferSettings.h"
+#include "Buffer/SampleBuffer.h"
+#include "Buffer/BufferSettings.h"
 #include "Station/PacketReader.h"
 #include <string>
 #include <ios>
