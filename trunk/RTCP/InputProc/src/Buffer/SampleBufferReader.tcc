@@ -1,8 +1,8 @@
 #include <Common/LofarLogger.h>
 #include "WallClockTime.h"
 #include <Interface/RSPTimeStamp.h>
-#include "BufferSettings.h"
-#include "SampleBuffer.h"
+#include "Buffer/BufferSettings.h"
+#include "Buffer/SampleBuffer.h"
 
 #include <mpi.h>
 #include <vector>

@@ -1,5 +1,5 @@
 #include <lofar_config.h>
-#include "SampleBuffer.h"
+#include "Buffer/SampleBuffer.h"
 #include "SampleType.h"
 #include "Station/PacketReader.h"
 #include "Station/PacketWriter.h"

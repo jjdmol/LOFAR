@@ -4,9 +4,9 @@
 #include <Common/LofarLogger.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/Allocator.h>
-#include "BufferSettings.h"
-#include "SharedMemory.h"
-#include "Ranges.h"
+#include "Buffer/BufferSettings.h"
+#include "Buffer/SharedMemory.h"
+#include "Buffer/Ranges.h"
 #include "SampleType.h"
 #include <string>
 #include <vector>

@@ -1,6 +1,6 @@
 #include <lofar_config.h>
-#include "BufferSettings.h"
-#include "SharedMemory.h"
+#include "Buffer/BufferSettings.h"
+#include "Buffer/SharedMemory.h"
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {

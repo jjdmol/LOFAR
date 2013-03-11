@@ -2,8 +2,8 @@
 #include <Common/Thread/Mutex.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/SparseSet.h>
-#include "SampleBufferReader.h"
-#include "BufferSettings.h"
+#include "Buffer/SampleBufferReader.h"
+#include "Buffer/BufferSettings.h"
 #include "mpi.h"
 #include <pthread.h>
 

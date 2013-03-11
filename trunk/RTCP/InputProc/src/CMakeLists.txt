@@ -6,11 +6,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 lofar_add_library(inputproc
   Package__Version.cc
-  BufferSettings.cc
-  Ranges.cc
-  SharedMemory.cc
-  StationID.cc
   RSPBoards.cc
+  Buffer/BufferSettings.cc
+  Buffer/Ranges.cc
+  Buffer/SharedMemory.cc
+  Buffer/StationID.cc
   Station/Generator.cc
   Station/PacketReader.cc
   Station/PacketsToBuffer.cc

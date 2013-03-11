@@ -3,7 +3,7 @@
 
 #include "Station/RSP.h"
 #include "RSPBoards.h"
-#include "BufferSettings.h"
+#include "Buffer/BufferSettings.h"
 #include <string>
 #include <vector>
 
