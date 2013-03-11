@@ -193,7 +193,8 @@ public:
 
 	// Export all reported metadata from the given VIC tree
 	bool	exportMetadata (treeIDType			aTreeID,
-					  		const string&		filename);
+					  		const string&		filename,
+							bool				uniqKeys = true);
 
 	//# --- Finally some general tree maintenance ---
 	// Delete a tree (of any kind) from the database.
@@ -225,7 +226,8 @@ public:
 	// Set the scheduling times of the tree
 	bool	setSchedule(treeIDType		aTreeID,
 				        const string&	aStartTime,
-				        const string& 	aStopTime);
+				        const string& 	aStopTime,
+						bool			inTreeAlso = true);
 
 	// Whenever an error occurs in one the OTDB functions the message can
 	// be retrieved with this function.

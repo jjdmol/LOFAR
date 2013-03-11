@@ -69,6 +69,9 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO_STR("Creating metadatafile '" << filename << "'");
 		tm.exportMetadata(treeID, filename);
 
+		filename = formatString("MDdoubles%d.txt", treeID);
+		LOG_INFO_STR("Creating metadatafile '" << filename << "'");
+		tm.exportMetadata(treeID, filename, false);
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());
