@@ -879,7 +879,7 @@ void TBB_StreamWriter::correctSampleNr(TBB_Header& header) const {
 	 * At 160 MHz sample rate, an integer number of frames fits in a second (156250), so no correction is needed.
 	 */
 	if (header.sampleFreq == 200 && header.time & 1) {
-		header.sampleNr += header.nOfSamplesPerFrame / 2;
+		header.sampleNr += DEFAULT_TBB_TRANSIENT_NSAMPLES / 2;
 	}
 }
 
