@@ -23,20 +23,6 @@ PANEL,-1 -1 1010 745 N "_3DFace" 0
   dynAppend(stationList,ccu);                      
   dynAppend(stationList,mcu); 
  
-  string DP = MainDBName+\"LOFAR_PermSW_MACScheduler\";
-  
-
-  // check if the required datapoint for this view are enabled and accessible
-  if (dpExists(DP)) {
-    if (dpConnect(\"updateObservations\", DP +\".activeObservations:_online.._value\",
-                                        DP +\".activeObservations:_online.._invalid\") == -1) {
-      LOG_ERROR(\"main.pnl:main|Couldn't connect to: \"+DP);
-    }
-  } else {
-    if (!isStandalone()) LOG_ERROR(\"main.pnl:main|Couldn't find DP to connect to: \"+DP);
-  }	
- 
- 
   redraw();
 }
 
@@ -188,7 +174,7 @@ void redraw() {
   
   addStationView();
   
-  
+  redrawObservations();
  
  
   // trigger that the panel values are calculated and ready
@@ -210,7 +196,7 @@ void addSWLevels() {
   //loop over list and prepare panel with all stations and swlevel objects   
   for (int i=1; i<= dynlen(stationList); i++) {
 
-    SWLevelRefNames[i]=\"stationSW\"+(i);
+    SWLevelRefNames[ref]=\"stationSW\"+(ref);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
@@ -239,7 +225,7 @@ void addDatastreams() {
     //skip CCU and MCU machines
     if (strpos(stationList[i],\"MCU\") >=0 ||strpos(stationList[i],\"CCU\") >=0) continue;
 
-    datastreamRefNames[i]=\"datastream\"+(i);
+    datastreamRefNames[ref]=\"datastream\"+(ref);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
@@ -274,7 +260,7 @@ void addSWCtrlers() {
     } else {
       addPanelName    = \"objects/Processes/stationSWLevelView.pnl\";
     }
-    swCtrlRefNames[i]=\"swCtrl\"+(i);
+    swCtrlRefNames[ref]=\"swCtrl\"+(ref);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
@@ -382,7 +368,7 @@ void addStationView() {
     //skip CCU and MCU machines
     if (strpos(stationList[i],\"MCU\") >=0 ||strpos(stationList[i],\"CCU\") >=0) continue;
 
-    stationViewRefNames[i]=\"memAndHDD\"+(i);
+    stationViewRefNames[ref]=\"stationView\"+(ref);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
@@ -406,11 +392,12 @@ void addObservations() {
   int yPos_AddSymbol = 585; 
   int ref = 1;
   string addPanelName    = \"objects/Observations/observation_smallCEPView.pnl\";
+  dpget(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\",observationsList);
   //loop over list and prepare panel with all stations and swlevel objects   
   for (int i=1; i<= dynlen(observationsList); i++) {
     if (!navFunct_isObservation(observationsList[i])) continue;
 
-    observationRefNames[i]=\"stationObs\"+(i);
+    observationRefNames[ref]=\"stationObs\"+(ref);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
@@ -429,19 +416,6 @@ void addObservations() {
   }
 }
 
-updateObservations(string dp1, dyn_string obs,
-                   string dp2, bool invalid)
-{
-  
-  if (invalid) {
-    return;
-  }
-  
-  dynClear(observationsList);
-  observationsList = obs;
-  
-  redrawObservations();
-}
 " 0
  2
 "CBRef" "1"

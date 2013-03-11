@@ -1062,7 +1062,7 @@ bool navFunct_hardware2Obs(string stationName, string observation,
   // check if Observation is available in list and get the stationList and receiverBitmap 
   int iPos = dynContains( g_observations[ "NAME"         ], observation );
   if (iPos <=0) {
-    LOG_DEBUG("navFunct.ctl:navFunct_hardware2Obs|observation: "+ observation+" not in g_observations.");     
+    LOG_DEBUG("navFunct.ctl:navFunct_hardware2Obs|observation: "+ observation+" not in g_observations: "+g_observations["NAME"]);     
     return flag;
   }
   
@@ -1289,12 +1289,12 @@ void navFunct_fillObservationsList() {
       // involved, so we  do not need to look at more hardware, in other cases we have to look if at least one piece
       // of each hardwareType also is needed for the observation to decide if it needs 2b in the list
 
-      if ( dynlen(g_observations["NAME"]) < i) break;
       
       if (dynlen(stationList) > 1) {           
         // loop through stationList
         for (int j=1; j<= dynlen(stationList); j++) {
-        
+          // safe escape if map was updated while in this loop    
+          if ( dynlen(g_observations["NAME"]) < i || dynlen(stationList) < j) break;
           //test if station is used in the observation
           if (navFunct_hardware2Obs(stationList[j], g_observations["NAME"][i],"Station",stationList[j],0)) {
             if (!dynContains(g_observationsList, shortObs)){
