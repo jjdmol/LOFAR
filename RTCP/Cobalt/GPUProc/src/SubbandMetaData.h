@@ -23,7 +23,7 @@
 #ifndef LOFAR_INTERFACE_SUBBAND_META_DATA_H
 #define LOFAR_INTERFACE_SUBBAND_META_DATA_H
 
-#include <Interface/SparseSet.h>
+#include <CoInterface/SparseSet.h>
 #include <Common/LofarLogger.h>
 #include <Stream/Stream.h>
 #include <vector>

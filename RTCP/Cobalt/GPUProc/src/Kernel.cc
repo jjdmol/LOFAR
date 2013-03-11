@@ -2,7 +2,7 @@
 #include "Kernel.h"
 
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "PerformanceCounter.h"
 
 namespace LOFAR

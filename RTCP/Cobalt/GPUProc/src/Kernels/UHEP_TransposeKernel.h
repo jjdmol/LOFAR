@@ -1,7 +1,7 @@
 #ifndef GPUPROC_UHEP_TRANSPOSEKERNEL_H
 #define GPUPROC_UHEP_TRANSPOSEKERNEL_H
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 
 #include "global_defines.h"

@@ -2,8 +2,8 @@
 
 #include "Common/LofarLogger.h"
 #include "global_defines.h"
-#include "Interface/Parset.h"
-#include "Interface/CorrelatedData.h"
+#include "CoInterface/Parset.h"
+#include "CoInterface/CorrelatedData.h"
 #include "OpenCL_Support.h"
 #include "OpenMP_Support.h"
 #include <iostream>

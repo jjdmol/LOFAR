@@ -26,7 +26,7 @@
 //# Includes
 #include <Input/InputSection.h>
 #include <Stream/SocketStream.h>
-#include <Interface/Stream.h>
+#include <CoInterface/Stream.h>
 
 #include <boost/format.hpp>
 using boost::format;

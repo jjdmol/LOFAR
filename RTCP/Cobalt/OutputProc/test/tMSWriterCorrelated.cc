@@ -24,8 +24,8 @@
 
 #include <Common/LofarLogger.h>
 #include <OutputProc/MSWriterCorrelated.h>
-#include <Interface/DataFactory.h>
-#include <Interface/FinalMetaData.h>
+#include <CoInterface/DataFactory.h>
+#include <CoInterface/FinalMetaData.h>
 
 using namespace std;
 using namespace LOFAR;

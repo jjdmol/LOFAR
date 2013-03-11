@@ -3,7 +3,7 @@
 
 #include "Common/LofarLogger.h"
 #include "global_defines.h"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenMP_Support.h"
 #include <iostream>
 

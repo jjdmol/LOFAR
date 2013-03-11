@@ -3,7 +3,7 @@
 #include "FFT_Kernel.h"
 
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "PerformanceCounter.h"
 #include "OpenCL_Support.h"
 #include "FFT_Plan.h"

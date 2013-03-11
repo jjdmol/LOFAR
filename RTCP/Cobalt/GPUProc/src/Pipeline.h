@@ -4,8 +4,8 @@
 
 #include "Common/Thread/Queue.h"
 #include "Common/Thread/Semaphore.h"
-#include "Interface/Parset.h"
-#include "Interface/StreamableData.h"
+#include "CoInterface/Parset.h"
+#include "CoInterface/StreamableData.h"
 #include "OpenCL_Support.h"
 
 #include "global_defines.h"

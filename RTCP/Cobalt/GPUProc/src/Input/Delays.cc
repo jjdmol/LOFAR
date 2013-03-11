@@ -27,8 +27,8 @@
 #include <Scheduling.h>
 #include <Common/LofarLogger.h>
 #include <Common/PrettyUnits.h>
-#include <Interface/Exceptions.h>
-#include <Interface/BeamCoordinates.h>
+#include <CoInterface/Exceptions.h>
+#include <CoInterface/BeamCoordinates.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Cancellation.h>
 

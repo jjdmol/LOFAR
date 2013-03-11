@@ -23,8 +23,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Interface/Align.h>
-#include <Interface/Exceptions.h>
+#include <CoInterface/Align.h>
+#include <CoInterface/Exceptions.h>
 #include <Input/BeamletBuffer.h>
 #include <Input/RSP.h>
 

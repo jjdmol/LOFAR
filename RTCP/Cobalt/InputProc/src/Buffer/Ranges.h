@@ -1,7 +1,7 @@
 #ifndef RANGES
 #define RANGES
 
-#include <Interface/SparseSet.h>
+#include <CoInterface/SparseSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 

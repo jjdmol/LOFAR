@@ -3,7 +3,7 @@
 
 #include <Common/Exception.h>
 #include <Stream/Stream.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/SmartPtr.h>
 #include "Station/RSP.h"
 #include "Buffer/BufferSettings.h"
 #include <string>

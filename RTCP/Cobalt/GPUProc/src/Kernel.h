@@ -2,7 +2,7 @@
 #define GPUPROC_KERNEL_H
 
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "PerformanceCounter.h"
 
 namespace LOFAR

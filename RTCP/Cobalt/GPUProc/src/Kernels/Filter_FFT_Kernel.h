@@ -2,7 +2,7 @@
 #define GPUPROC_FILTER_FFT_KERNEL_H
 
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 #include "FFT_Kernel.h"
 

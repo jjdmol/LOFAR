@@ -3,7 +3,7 @@
 #include "lofar_config.h"
 
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 
 namespace LOFAR 
 {

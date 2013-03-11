@@ -25,7 +25,7 @@
 
 #include <Input/LogThread.h>
 #include <Scheduling.h>
-#include <Interface/PrintVector.h>
+#include <CoInterface/PrintVector.h>
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Cancellation.h>
 

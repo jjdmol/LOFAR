@@ -1,7 +1,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-#include <Interface/RSPTimeStamp.h>
+#include <CoInterface/RSPTimeStamp.h>
 
 using namespace LOFAR;
 using namespace RTCP;

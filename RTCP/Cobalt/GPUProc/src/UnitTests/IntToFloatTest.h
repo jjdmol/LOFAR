@@ -1,7 +1,7 @@
 #ifndef GPUPROC_INTTOFLOATTEST_H
 #define GPUPROC_INTTOFLOATTEST_H
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 #include "UnitTest.h"
 #include "global_defines.h"

@@ -1,7 +1,7 @@
 #ifndef GPUPROC_FIR_FILTERKERNEL_H
 #define GPUPROC_FIR_FILTERKERNEL_H
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 
 #include "Kernel.h"

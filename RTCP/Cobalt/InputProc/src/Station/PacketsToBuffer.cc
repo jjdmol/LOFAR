@@ -2,8 +2,8 @@
 #include "Station/PacketsToBuffer.h"
 
 #include <Common/LofarLogger.h>
-#include <Interface/SmartPtr.h>
-#include <Interface/Stream.h>
+#include <CoInterface/SmartPtr.h>
+#include <CoInterface/Stream.h>
 #include <Stream/Stream.h>
 #include "Buffer/SampleBuffer.h"
 #include "Buffer/BufferSettings.h"

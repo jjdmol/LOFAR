@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(OutputProc 1.0 DEPENDS Common ApplCommon Stream Interface MSLofar LofarStMan)
+lofar_package(OutputProc 1.0 DEPENDS Common ApplCommon Stream CoInterface MSLofar LofarStMan)
 
 include(LofarFindPackage)
 lofar_find_package(Casacore COMPONENTS casa ms tables REQUIRED)

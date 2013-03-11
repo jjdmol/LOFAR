@@ -24,7 +24,7 @@
 #define LOFAR_IONPROC_RSP_H
 
 #include <Common/LofarTypes.h>
-#include <Interface/RSPTimeStamp.h>
+#include <CoInterface/RSPTimeStamp.h>
 #include <complex>
 #include <cstddef>
 
@@ -50,8 +50,8 @@ struct RSP {
   // ----------------------------------------------------------------------
 
   struct Header {
-    // 2: Beamlet Data Interface 5.0
-    // 3: Beamlet Data Interface 6.0 (8- and 4-bit mode support)
+    // 2: Beamlet Data CoInterface 5.0
+    // 3: Beamlet Data CoInterface 6.0 (8- and 4-bit mode support)
     uint8  version;
 
     // bit (0=LSB)

@@ -30,7 +30,7 @@
 #include <Common/Exception.h>
 #include <Stream/FileDescriptorBasedStream.h>
 #include <libssh2.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/SmartPtr.h>
 #include <time.h>
 #include <string>
 #include <sstream>

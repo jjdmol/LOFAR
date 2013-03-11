@@ -1,7 +1,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
-#include <Interface/RSPTimeStamp.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/RSPTimeStamp.h>
+#include <CoInterface/SmartPtr.h>
 #include "Buffer/SampleBuffer.h"
 #include "Buffer/BufferSettings.h"
 #include "Buffer/Ranges.h"

@@ -1,7 +1,7 @@
 #ifndef GPUPROC_CORRELATETRIANGLETEST_H
 #define GPUPROC_CORRELATETRIANGLETEST_H
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 #include "UnitTest.h"
 #include "global_defines.h"

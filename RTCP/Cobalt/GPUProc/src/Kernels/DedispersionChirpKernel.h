@@ -1,7 +1,7 @@
 #ifndef GPUPROC_DEDISPERSIONCHIRPKERNEL_H
 #define GPUPROC_DEDISPERSIONCHIRPKERNEL_H
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 
 #include "global_defines.h"

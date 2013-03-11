@@ -10,8 +10,8 @@
 #define LOFAR_STORAGEFORMAT_H
 
 #include <Common/Thread/Mutex.h>
-#include <Interface/Parset.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
 
 #include <casa/aips.h>
 #include <casa/Utilities/DataType.h>

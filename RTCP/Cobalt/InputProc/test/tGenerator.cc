@@ -1,6 +1,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Interface/Stream.h>
+#include <CoInterface/Stream.h>
 #include "OMPThread.h"
 #include "Station/Generator.h"
 #include "Station/PacketReader.h"

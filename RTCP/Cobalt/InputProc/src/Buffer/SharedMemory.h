@@ -2,7 +2,7 @@
 #define SHARED_MEMORY
 
 #include <Common/Exception.h>
-#include <Interface/Allocator.h>
+#include <CoInterface/Allocator.h>
 
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -14,7 +14,7 @@ namespace RTCP {
 
 /*
  * A memory region manager for shared memory, to be used by
- * allocators defined in Interface/Allocator.h
+ * allocators defined in CoInterface/Allocator.h
  */
 class SharedMemoryArena: public FixedArena {
 public:

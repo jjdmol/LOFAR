@@ -28,7 +28,7 @@
 
 
 #include <Common/Thread/Thread.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/SmartPtr.h>
 
 #include <vector>
 #include <string>

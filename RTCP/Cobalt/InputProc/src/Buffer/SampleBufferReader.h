@@ -1,7 +1,7 @@
 #ifndef __SAMPLEBUFFERREADER__
 #define __SAMPLEBUFFERREADER__
 
-#include <Interface/RSPTimeStamp.h>
+#include <CoInterface/RSPTimeStamp.h>
 #include "Buffer/BufferSettings.h"
 #include "Buffer/SampleBuffer.h"
 

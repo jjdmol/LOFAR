@@ -32,11 +32,11 @@
 #include <Input/BeamletBuffer.h>
 #include <Scheduling.h>
 #include <SubbandMetaData.h>
-#include <Interface/AlignedStdAllocator.h>
-#include <Interface/CN_Command.h>
-#include <Interface/CN_Mapping.h>
-#include <Interface/Stream.h>
-#include <Interface/Exceptions.h>
+#include <CoInterface/AlignedStdAllocator.h>
+#include <CoInterface/CN_Command.h>
+#include <CoInterface/CN_Mapping.h>
+#include <CoInterface/Stream.h>
+#include <CoInterface/Exceptions.h>
 
 #include <sys/time.h>
 

@@ -1,7 +1,7 @@
 #ifndef GPUPROC_BEAMFORMERTRANSPOSETEST_H
 #define GPUPROC_BEAMFORMERTRANSPOSETEST_H
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 #include "UnitTest.h"
 #include "global_defines.h"

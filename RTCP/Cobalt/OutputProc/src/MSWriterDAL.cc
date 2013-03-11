@@ -35,7 +35,7 @@ using namespace dal;
 using namespace std;
 
 #include <Common/Thread/Mutex.h>
-#include <Interface/StreamableData.h>
+#include <CoInterface/StreamableData.h>
 #include <iostream>
 #include <sstream>
 #include <ctime>

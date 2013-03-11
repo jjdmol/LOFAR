@@ -28,7 +28,7 @@
 
 
 #include <Stream/FileStream.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/SmartPtr.h>
 #include <string>
 
 

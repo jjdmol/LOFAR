@@ -1,7 +1,7 @@
 #include "lofar_config.h"
 #include <Storage/StorageProcesses.h>
 #include <Storage/SSH.h>
-#include <Interface/Stream.h>
+#include <CoInterface/Stream.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <Common/Thread/Thread.h>

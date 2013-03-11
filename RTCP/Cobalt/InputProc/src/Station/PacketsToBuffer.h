@@ -1,8 +1,8 @@
 #ifndef __PACKETSTOBUFFER__
 #define __PACKETSTOBUFFER__
 
-#include <Interface/SmartPtr.h>
-#include <Interface/Stream.h>
+#include <CoInterface/SmartPtr.h>
+#include <CoInterface/Stream.h>
 #include <Stream/Stream.h>
 #include "Station/RSP.h"
 #include "RSPBoards.h"

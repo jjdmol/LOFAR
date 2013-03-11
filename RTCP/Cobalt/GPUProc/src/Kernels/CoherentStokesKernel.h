@@ -1,7 +1,7 @@
 #ifndef GPUPROC_COHERENTSTOKESEKERNEL_H
 #define GPUPROC_COHERENTSTOKESEKERNEL_H
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 
 #include "global_defines.h"

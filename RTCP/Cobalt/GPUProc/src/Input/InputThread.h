@@ -30,8 +30,8 @@
 
 //# Includes
 #include <Common/lofar_vector.h>
-#include <Interface/RSPTimeStamp.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/RSPTimeStamp.h>
+#include <CoInterface/SmartPtr.h>
 #include <Common/Thread/Thread.h>
 
 #include <Input/BeamletBuffer.h>

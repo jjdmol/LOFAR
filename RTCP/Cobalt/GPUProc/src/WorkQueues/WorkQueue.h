@@ -2,8 +2,8 @@
 #define GPUPROC_WORKQUEUE_H
 #include "CL/cl.hpp"
 #include "Common/Timer.h"
-#include "Interface/Parset.h"
-#include "Interface/SmartPtr.h"
+#include "CoInterface/Parset.h"
+#include "CoInterface/SmartPtr.h"
 #include "PerformanceCounter.h"
 #include "OpenCL_Support.h"
 

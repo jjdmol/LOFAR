@@ -25,10 +25,10 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Interface/OutputTypes.h>
-#include <Interface/Parset.h>
-#include <Interface/SmartPtr.h>
-#include <Interface/StreamableData.h>
+#include <CoInterface/OutputTypes.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
+#include <CoInterface/StreamableData.h>
 #include <Common/Thread/Queue.h>
 #include <Common/Thread/Thread.h>
 

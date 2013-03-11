@@ -3,7 +3,7 @@
 #include "Kernel.h"
 #include "IntToFloatKernel.h"
 
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 
 namespace LOFAR

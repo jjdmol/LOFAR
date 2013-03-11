@@ -1,7 +1,7 @@
 #include <lofar_config.h>
 #include <OutputProc/ExitOnClosedStdin.h>
 
-#include <Interface/Exceptions.h>
+#include <CoInterface/Exceptions.h>
 #include <Common/SystemCallException.h>
 #include <unistd.h>
 
