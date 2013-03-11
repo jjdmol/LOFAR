@@ -29,14 +29,14 @@ typedef __global const float16 (*WeightsType)[NR_CHANNELS];
  * \param[in]  weightsPtr              2D per-channel FIR filter coefficient array of floats (considering float16 as a dim)
  *
  * Pre-processor input symbols (some are tied to the execution configuration)
- * Symbol                  | Valid Values            | Description
- * ----------------------- | ----------------------- | -----------
- * NR_STATIONS             | >= 1                    | number of antenna fields
- * NR_TAPS                 | 1--16                   | number of FIR filtering coefficients
- * NR_SAMPLES_PER_CHANNEL  | multiple of NR_TAPS     | number of input samples per channel
- * NR_BITS_PER_SAMPLE      | 8 or 16                 | number of bits of signed integral value type of sampledDataPtr (TODO: support 4)
- * NR_CHANNELS             | multiple of 16 and > 0  | number of frequency channels per subband.
- * NR_POLARIZATIONS        | power of 2              | number of polarizations
+ * Symbol                  | Valid Values                | Description
+ * ----------------------- | --------------------------- | -----------
+ * NR_STATIONS             | >= 1                        | number of antenna fields
+ * NR_TAPS                 | 1--16                       | number of FIR filtering coefficients
+ * NR_SAMPLES_PER_CHANNEL  | multiple of NR_TAPS and > 0 | number of input samples per channel
+ * NR_BITS_PER_SAMPLE      | 8 or 16                     | number of bits of signed integral value type of sampledDataPtr (TODO: support 4)
+ * NR_CHANNELS             | multiple of 16 and > 0      | number of frequency channels per subband
+ * NR_POLARIZATIONS        | power of 2                  | number of polarizations
  *
  * Execution configuration: (TODO: enforce using __attribute__ reqd_work_group_size)
  * - Work dim == 2  (can be 1 iff NR_STATIONS == 1)
@@ -398,3 +398,4 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     (*filteredData)[station][pol][time + 15][channel][ri] = sum.sF;
   }
 }
+
