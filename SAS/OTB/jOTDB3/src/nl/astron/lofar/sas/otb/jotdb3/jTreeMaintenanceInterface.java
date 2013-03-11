@@ -110,6 +110,9 @@ public interface jTreeMaintenanceInterface extends Remote
     // Get a number of levels of children.
     public Vector<jOTDBnode> getItemList (int aTreeID, int topNode, int depth) throws RemoteException;
 
+    // Get a list of nodes based on a namefragment. aNameFragment can be a regex.
+    public Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment, boolean isRegex) throws RemoteException;
+
     // Get a list of nodes based on a namefragment. Use '%' as wildchar.
     public Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment) throws RemoteException;
 

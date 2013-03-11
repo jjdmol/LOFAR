@@ -145,6 +145,9 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     // Get a list of nodes based on a namefragment. Use '%' as wildchar.
     public native Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment) throws RemoteException;
 
+    // Get a list of nodes based on a namefragment. aNameFragment can be a regex.
+    public native Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment, boolean isRegex) throws RemoteException;
+
     // Duplicates the given node (and its parameters and children)
     // in the template database. The duplicate gets the new index.
     @Override

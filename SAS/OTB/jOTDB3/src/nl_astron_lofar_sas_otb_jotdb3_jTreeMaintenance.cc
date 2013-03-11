@@ -623,6 +623,43 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_g
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
  * Method:    getItemList
+ * Signature: (ILjava/lang/String;Z)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getItemList__ILjava_lang_String_2(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jstring aNameFragment, jbool isRegex) {
+
+  jobject itemVector(0);
+
+  const char* nf = env->GetStringUTFChars (aNameFragment, 0);
+  const string nameFragment (nf);
+  
+  try {
+    vector<OTDBnode> itemList = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->getItemList (aTreeID, nameFragment, isRegex);
+    vector<OTDBnode>::iterator itemIterator;
+  
+    // Construct java Vector
+    jclass class_Vector = env->FindClass("java/util/Vector");
+    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+    itemVector = env->NewObject(class_Vector, mid_Vector_cons);
+    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+  
+    for (itemIterator = itemList.begin(); itemIterator != itemList.end(); itemIterator++)
+      env->CallObjectMethod(itemVector, mid_Vector_add, convertOTDBnode (env, *itemIterator));
+  
+    env->ReleaseStringUTFChars (aNameFragment, nf);
+  
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::getItemList(" << aTreeID << "," << nameFragment << ") " << ex.what() << endl; 
+
+    env->ReleaseStringUTFChars (aNameFragment, nf);
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+  return itemVector;
+}
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    getItemList
  * Signature: (ILjava/lang/String;)Ljava/util/Vector;
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getItemList__ILjava_lang_String_2(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jstring aNameFragment) {
