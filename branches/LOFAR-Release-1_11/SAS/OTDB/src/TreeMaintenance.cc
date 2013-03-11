@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/ParameterSet.h>
 #include <Common/StringUtil.h>
 #include <Common/lofar_string.h>
 #include <fstream>
@@ -580,23 +581,29 @@ vector<OTDBnode> TreeMaintenance::getPICitemList (treeIDType	aTreeID,
 //
 // get a number of levels of children
 vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
-											   const string&	aNameFragment)
+											   const string&	aNameFragment,
+											   bool				isRegex)
 {
 	LOG_TRACE_FLOW_STR("TM:getItemList(" << aTreeID << "," 
-										 << aNameFragment << ")");
+										 << aNameFragment 
+										 << (isRegex ? "True" : "False") << ")");
 
 	// First resolve function to call
 	string		functionName;
+	string		regexFlag("");
 	OTDBtree	theTree = itsConn->getTreeInfo(aTreeID);
 	switch (theTree.type) {
 	case TThardware:
+		ASSERTSTR(isRegex == false, "Regex function not yet supported for PIC trees");
 		functionName = "getPICitemList";
 		break;
 	case TTtemplate:
+		ASSERTSTR(isRegex == false, "Regex function not yet supported for template trees");
 		functionName = "getVTitemList";
 		break;
 	case TTVHtree:
-		functionName = "getVHitemList";
+		functionName = isRegex ? "getVHitemListRegex" : "getVHitemList";
+		regexFlag    = isRegex ? ",'True'" : ",'False'";
 		break;
 	default:
 		ASSERTSTR(false, "Treetype " << theTree.type << " is unknown");
@@ -604,9 +611,8 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 
 	vector<OTDBnode>	resultVec;
 	// construct a query that calls a stored procedure.
-	string	query("SELECT * from " + functionName + "('" +
-					toString(aTreeID) + "','" +
-					aNameFragment + "')");
+	string	query = formatString("SELECT * from %s('%d','%s'%s)", aTreeID, aNameFragment.c_str(), regexFlag.c_str());
+	LOG_DEBUG_STR(query);
 	work	xAction(*(itsConn->getConn()), functionName);
 	try {
 		result res = xAction.exec(query);
@@ -1029,7 +1035,8 @@ bool TreeMaintenance::exportResultTree (treeIDType			aTreeID,
 // Export all Metadata of the given VIC tree
 //
 bool	TreeMaintenance::exportMetadata (treeIDType			aTreeID,
-										 const string&		filename)
+										 const string&		filename,
+										 bool				uniqKeys)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -1053,6 +1060,11 @@ bool	TreeMaintenance::exportMetadata (treeIDType			aTreeID,
 		// Get result
 		string		params;
 		res[0]["exportmetadata"].to(params);
+		if (uniqKeys) {
+			ParameterSet	somePS;
+			somePS.adoptBuffer(params);		// convert to Parser to get rid of the doubles
+			somePS.writeBuffer(params);		// back to our buffer again
+		}
 		outFile << params;
 		outFile.close();
 		return (true);
@@ -1329,12 +1341,13 @@ bool	TreeMaintenance::setDescription(treeIDType	aTreeID,
 }
 
 //
-// setSchedule(treeID, startTime, stopTime): bool
+// setSchedule(treeID, startTime, stopTime, inTreeAlso): bool
 //
 // Set the Executiontime of a tree
 bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 								     const string&	aStartTime,
-									 const string&	aStopTime)
+									 const string&	aStopTime,
+									 bool inTreeAlso)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -1348,11 +1361,12 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 	try {
 		// construct a query that calls a stored procedure.
 		result	res = xAction.exec(
-			formatString("SELECT setSchedule(%d,%d,'%s','%s')",
+			formatString("SELECT setSchedule(%d,%d,'%s','%s','%s')",
 				itsConn->getAuthToken(),
 				aTreeID,
 				aStartTime.c_str(),
-				aStopTime.c_str()));
+				aStopTime.c_str(),
+				inTreeAlso ? "true" : "false"));
 							
 		// Analyse result.
 		bool		succes;
