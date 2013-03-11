@@ -36,11 +36,11 @@
 #include <Common/lofar_vector.h>
 #include <ApplCommon/StationInfo.h>
 
-// Avoid 'using namespace' in headerfiles
+//# Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
 
-// \addtogroup package
+// \addtogroup ApplCommon
 // @{
 
 //# --- Forward Declarations ---
