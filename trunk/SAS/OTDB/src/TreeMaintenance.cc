@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/ParameterSet.h>
 #include <Common/StringUtil.h>
 #include <Common/lofar_string.h>
 #include <fstream>
@@ -1034,7 +1035,8 @@ bool TreeMaintenance::exportResultTree (treeIDType			aTreeID,
 // Export all Metadata of the given VIC tree
 //
 bool	TreeMaintenance::exportMetadata (treeIDType			aTreeID,
-										 const string&		filename)
+										 const string&		filename,
+										 bool				uniqKeys)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -1058,6 +1060,11 @@ bool	TreeMaintenance::exportMetadata (treeIDType			aTreeID,
 		// Get result
 		string		params;
 		res[0]["exportmetadata"].to(params);
+		if (uniqKeys) {
+			ParameterSet	somePS;
+			somePS.adoptBuffer(params);		// convert to Parser to get rid of the doubles
+			somePS.writeBuffer(params);		// back to our buffer again
+		}
 		outFile << params;
 		outFile.close();
 		return (true);
@@ -1334,12 +1341,13 @@ bool	TreeMaintenance::setDescription(treeIDType	aTreeID,
 }
 
 //
-// setSchedule(treeID, startTime, stopTime): bool
+// setSchedule(treeID, startTime, stopTime, inTreeAlso): bool
 //
 // Set the Executiontime of a tree
 bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 								     const string&	aStartTime,
-									 const string&	aStopTime)
+									 const string&	aStopTime,
+									 bool inTreeAlso)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -1353,11 +1361,12 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 	try {
 		// construct a query that calls a stored procedure.
 		result	res = xAction.exec(
-			formatString("SELECT setSchedule(%d,%d,'%s','%s')",
+			formatString("SELECT setSchedule(%d,%d,'%s','%s','%s')",
 				itsConn->getAuthToken(),
 				aTreeID,
 				aStartTime.c_str(),
-				aStopTime.c_str()));
+				aStopTime.c_str(),
+				inTreeAlso ? "true" : "false"));
 							
 		// Analyse result.
 		bool		succes;
