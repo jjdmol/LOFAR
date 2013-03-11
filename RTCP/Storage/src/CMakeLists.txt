@@ -20,17 +20,17 @@ lofar_add_library(storage
 #  TBB_Writer.cc
 )
 
-install(PROGRAMS
-  gnuplotMS.sh
-  DESTINATION bin)
+#install(PROGRAMS
+#  gnuplotMS.sh
+#  DESTINATION bin)
 
 install(FILES
   Storage_main.log_prop
   DESTINATION etc)
 
 lofar_add_bin_program(Storage_main Storage_main.cc)
-lofar_add_bin_program(createHeaders createHeaders.cc)
-lofar_add_bin_program(plotMS plotMS.cc)
+#lofar_add_bin_program(createHeaders createHeaders.cc)
+#lofar_add_bin_program(plotMS plotMS.cc)
 lofar_add_bin_program(versionstorage versionstorage.cc)
 #lofar_add_bin_program(TBB_Writer_main TBB_Writer_main.cc)
 
