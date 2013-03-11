@@ -1,7 +1,7 @@
 #ifndef GPUPROC_DELAYANDBANDPASSKERNEL_H
 #define GPUPROC_DELAYANDBANDPASSKERNEL_H
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 
 #include "Kernel.h"

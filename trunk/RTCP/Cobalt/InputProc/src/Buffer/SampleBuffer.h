@@ -2,8 +2,8 @@
 #define __SAMPLEBUFFER__
 
 #include <Common/LofarLogger.h>
-#include <Interface/MultiDimArray.h>
-#include <Interface/Allocator.h>
+#include <CoInterface/MultiDimArray.h>
+#include <CoInterface/Allocator.h>
 #include "Buffer/BufferSettings.h"
 #include "Buffer/SharedMemory.h"
 #include "Buffer/Ranges.h"

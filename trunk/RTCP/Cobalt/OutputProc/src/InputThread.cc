@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 #include <Common/Timer.h>
-#include <Interface/Stream.h>
+#include <CoInterface/Stream.h>
 #include <OutputProc/InputThread.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>

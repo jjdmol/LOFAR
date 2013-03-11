@@ -54,8 +54,8 @@
 #include <Common/StreamUtil.h>
 #include <ApplCommon/AntField.h>
 #include <Stream/SocketStream.h>
-#include <Interface/Exceptions.h>
-#include <Interface/Stream.h>
+#include <CoInterface/Exceptions.h>
+#include <CoInterface/Stream.h>
 
 #include <dal/lofar/StationNames.h>
 
@@ -531,7 +531,7 @@ SubbandInfo TBB_Station::getSubbandInfo(const Parset& parset) const {
 	if (operatingMode == TBB_SPECTRAL_MODE) {
 		vector<unsigned> tbbSubbandList(parset.getUint32Vector("Observation.TBB.TBBsetting.subbandList", true));
 		if (tbbSubbandList.empty() || tbbSubbandList.size() > MAX_TBB_SPECTRAL_NSAMPLES) {
-			throw InterfaceException("TBB: spectral mode selected, but empty or too long subband list provided");
+			throw CoInterfaceException("TBB: spectral mode selected, but empty or too long subband list provided");
 		}
 		sort(tbbSubbandList.begin(), tbbSubbandList.end());
 
@@ -547,7 +547,7 @@ SubbandInfo TBB_Station::getSubbandInfo(const Parset& parset) const {
 		for (unsigned i = 0; i < tbbSubbandList.size(); ++i) {
 			unsigned sbNr = tbbSubbandList[i];
 			if (sbNr >= RSP_NR_SUBBANDS) {
-				throw InterfaceException("TBB: indicated subband number too high");
+				throw CoInterfaceException("TBB: indicated subband number too high");
 			}
 			info.storageIndices[sbNr] = i;
 		}
@@ -987,7 +987,7 @@ void TBB_StreamWriter::mainInputLoop() {
 	Stream* stream;
 	try {
 		stream = createStream(itsInputStreamName, true);
-	} catch (Exception& exc) { // SystemCallException or InterfaceException (or TimeOutException)
+	} catch (Exception& exc) { // SystemCallException or CoInterfaceException (or TimeOutException)
 		LOG_WARN_STR(itsLogPrefix << exc);
 		itsInExitStatus = 1;
 		return;

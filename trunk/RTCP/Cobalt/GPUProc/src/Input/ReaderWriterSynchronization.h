@@ -23,7 +23,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Interface/RSPTimeStamp.h>
+#include <CoInterface/RSPTimeStamp.h>
 #include <SlidingPointer.h>
 #include <Input/WallClockTime.h>
 

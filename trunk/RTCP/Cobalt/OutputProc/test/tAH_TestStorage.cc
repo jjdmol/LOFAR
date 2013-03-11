@@ -26,8 +26,8 @@
 #include <Common/lofar_iostream.h> 
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
-#include <Interface/Parset.h>
-#include <Interface/Exceptions.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/Exceptions.h>
 #include <OutputProc/SubbandWriter.h>
 #include <OutputProc/Package__Version.h>
 

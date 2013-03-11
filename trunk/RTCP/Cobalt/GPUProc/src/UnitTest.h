@@ -4,7 +4,7 @@
 #include "CL/cl.hpp"
 
 #include "PerformanceCounter.h"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 
 namespace LOFAR
 {

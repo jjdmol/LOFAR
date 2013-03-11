@@ -3,8 +3,8 @@
 
 #include <Common/LofarLogger.h>
 #include <Stream/SocketStream.h>
-#include <Interface/RSPTimeStamp.h>
-#include <Interface/Stream.h>
+#include <CoInterface/RSPTimeStamp.h>
+#include <CoInterface/Stream.h>
 #include <boost/format.hpp>
 
 #include <typeinfo>

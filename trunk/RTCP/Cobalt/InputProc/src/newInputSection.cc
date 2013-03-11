@@ -3,8 +3,8 @@
 #include <Common/Thread/Mutex.h>
 #include <Stream/Stream.h>
 #include <Stream/SocketStream.h>
-#include <Interface/MultiDimArray.h>
-#include <Interface/Stream.h>
+#include <CoInterface/MultiDimArray.h>
+#include <CoInterface/Stream.h>
 #include "WallClockTime.h"
 #include "Buffer/SharedMemory.h"
 #include "Buffer/Ranges.h"

@@ -27,8 +27,8 @@
 #define LOFAR_STORAGE_MSWRITERCORRELATED_H
 
 #include <OutputProc/MSWriterFile.h>
-#include <Interface/Parset.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
 
 #include <string>
 #include <vector>

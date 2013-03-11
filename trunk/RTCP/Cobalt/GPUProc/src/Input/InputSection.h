@@ -29,8 +29,8 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <Interface/Parset.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
 #include <Stream/Stream.h>
 #include <Input/BeamletBuffer.h>
 #include <Input/InputThread.h>

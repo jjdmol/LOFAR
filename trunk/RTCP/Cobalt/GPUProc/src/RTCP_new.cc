@@ -15,7 +15,7 @@
 
 #include "Common/LofarLogger.h"
 #include "Common/Exception.h"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 
 //functionality moved to individual sources
 #include "createProgram.h"

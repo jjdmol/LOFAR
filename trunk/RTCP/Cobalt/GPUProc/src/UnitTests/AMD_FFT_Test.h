@@ -1,7 +1,7 @@
 #ifndef GPUPROC_AMD_FFT_TEST_H
 #define GPUPROC_AMD_FFT_TEST_H
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 #include "UnitTest.h"
 #include "global_defines.h"

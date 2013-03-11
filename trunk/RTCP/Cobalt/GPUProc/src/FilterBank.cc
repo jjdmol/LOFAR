@@ -3,8 +3,8 @@
 
 #include "FilterBank.h"
 #include "Common/LofarLogger.h"
-#include "Interface/Align.h"
-#include "Interface/Exceptions.h"
+#include "CoInterface/Align.h"
+#include "CoInterface/Exceptions.h"
 
 #include <cmath>
 #include <iostream>

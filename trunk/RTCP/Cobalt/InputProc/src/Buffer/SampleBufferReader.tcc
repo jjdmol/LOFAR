@@ -1,6 +1,6 @@
 #include <Common/LofarLogger.h>
 #include "WallClockTime.h"
-#include <Interface/RSPTimeStamp.h>
+#include <CoInterface/RSPTimeStamp.h>
 #include "Buffer/BufferSettings.h"
 #include "Buffer/SampleBuffer.h"
 

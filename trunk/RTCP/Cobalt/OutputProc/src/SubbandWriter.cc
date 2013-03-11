@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <Interface/DataFactory.h>
+#include <CoInterface/DataFactory.h>
 #include <OutputProc/SubbandWriter.h>
 
 

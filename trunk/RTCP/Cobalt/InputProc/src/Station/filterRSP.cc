@@ -5,8 +5,8 @@
 #include <time.h>
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
-#include <Interface/Stream.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/Stream.h>
+#include <CoInterface/SmartPtr.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace LOFAR;

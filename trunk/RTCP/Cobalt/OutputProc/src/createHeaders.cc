@@ -12,8 +12,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/CasaLogSink.h>
 #include <Common/Exceptions.h>
-#include <Interface/Exceptions.h>
-#include <Interface/Parset.h>
+#include <CoInterface/Exceptions.h>
+#include <CoInterface/Parset.h>
 #include <OutputProc/Package__Version.h>
 #include <OutputProc/OutputThread.h>
 

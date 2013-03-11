@@ -57,7 +57,7 @@
 #include <MSLofar/MSLofarObsColumns.h>
 #include <MSLofar/BeamTables.h>
 #include <LofarStMan/LofarStMan.h>
-#include <Interface/Exceptions.h>
+#include <CoInterface/Exceptions.h>
 
 
 using namespace casa;

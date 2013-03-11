@@ -25,7 +25,7 @@
 #ifdef HAVE_DAL
 
 #include <OutputProc/MSWriterDAL.h>
-#include <Interface/DataFactory.h>
+#include <CoInterface/DataFactory.h>
 
 using namespace std;
 using namespace LOFAR;

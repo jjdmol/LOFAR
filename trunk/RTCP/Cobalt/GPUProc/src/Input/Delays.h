@@ -30,10 +30,10 @@
 
 //# Includes
 #include <Common/Timer.h>
-#include <Interface/MultiDimArray.h>
-#include <Interface/Parset.h>
-#include <Interface/RSPTimeStamp.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/MultiDimArray.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/RSPTimeStamp.h>
+#include <CoInterface/SmartPtr.h>
 #include <Common/Thread/Semaphore.h>
 #include <Common/Thread/Thread.h>
 

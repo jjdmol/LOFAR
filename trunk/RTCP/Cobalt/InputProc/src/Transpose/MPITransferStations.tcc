@@ -1,7 +1,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Mutex.h>
-#include <Interface/MultiDimArray.h>
-#include <Interface/SparseSet.h>
+#include <CoInterface/MultiDimArray.h>
+#include <CoInterface/SparseSet.h>
 #include "Buffer/SampleBufferReader.h"
 #include "Buffer/BufferSettings.h"
 #include "mpi.h"

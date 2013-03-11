@@ -30,8 +30,8 @@
 #include <Common/LofarTypes.h>
 #include <Common/ParameterSet.h>
 
-#include <Interface/Parset.h>
-#include <Interface/StreamableData.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/StreamableData.h>
 #include <OutputProc/MSWriter.h>
 #include <OutputProc/MSWriterFile.h>
 

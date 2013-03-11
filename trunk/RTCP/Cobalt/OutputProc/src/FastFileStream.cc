@@ -24,8 +24,8 @@
 #include <lofar_config.h>
 
 #include <OutputProc/FastFileStream.h>
-#include <Interface/SmartPtr.h>
-#include <Interface/Exceptions.h>
+#include <CoInterface/SmartPtr.h>
+#include <CoInterface/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
 

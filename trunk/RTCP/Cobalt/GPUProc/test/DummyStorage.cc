@@ -1,8 +1,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Stream/PortBroker.h>
-#include <Interface/Stream.h>
-#include <Interface/FinalMetaData.h>
+#include <CoInterface/Stream.h>
+#include <CoInterface/FinalMetaData.h>
 #include <string>
 #include <iostream>
 #include <boost/lexical_cast.hpp>

@@ -3,9 +3,9 @@
 
 #include <Common/LofarLogger.h>
 #include <Stream/Stream.h>
-#include <Interface/RSPTimeStamp.h>
-#include <Interface/SmartPtr.h>
-#include <Interface/Stream.h>
+#include <CoInterface/RSPTimeStamp.h>
+#include <CoInterface/SmartPtr.h>
+#include <CoInterface/Stream.h>
 #include "WallClockTime.h"
 #include <boost/format.hpp>
 

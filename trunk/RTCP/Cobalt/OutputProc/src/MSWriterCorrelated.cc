@@ -21,7 +21,7 @@
 //#  $Id: $
 
 #include <lofar_config.h>
-#include <Interface/CorrelatedData.h>
+#include <CoInterface/CorrelatedData.h>
 #include <MSLofar/FailedTileInfo.h>
 #include <Common/SystemUtil.h>
 #include <OutputProc/MSWriterCorrelated.h>

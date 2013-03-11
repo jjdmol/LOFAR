@@ -3,7 +3,7 @@
 #include "DedispersionForwardFFTkernel.h"
 #include "FFT_Kernel.h"
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "OpenCL_Support.h"
 
 

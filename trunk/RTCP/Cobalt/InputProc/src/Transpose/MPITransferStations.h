@@ -1,8 +1,8 @@
 #ifndef __MPI_TRANSFERSTATIONS__
 #define __MPI_TRANSFERSTATIONS__
 
-#include <Interface/MultiDimArray.h>
-#include <Interface/SparseSet.h>
+#include <CoInterface/MultiDimArray.h>
+#include <CoInterface/SparseSet.h>
 #include "Buffer/SampleBufferReader.h"
 #include "Buffer/BufferSettings.h"
 #include "mpi.h"

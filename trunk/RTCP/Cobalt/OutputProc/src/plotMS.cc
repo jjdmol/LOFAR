@@ -12,9 +12,9 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Stream/FileStream.h>
-#include <Interface/Parset.h>
-#include <Interface/DataFactory.h>
-#include <Interface/CorrelatedData.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/DataFactory.h>
+#include <CoInterface/CorrelatedData.h>
 #include <Common/DataConvert.h>
 #include <Common/Exception.h>
 #include <string>

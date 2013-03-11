@@ -29,9 +29,9 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
 #include <Common/Timer.h>
-#include <Interface/AlignedStdAllocator.h>
-#include <Interface/Exceptions.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/AlignedStdAllocator.h>
+#include <CoInterface/Exceptions.h>
+#include <CoInterface/SmartPtr.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Input/BeamletBuffer.h>

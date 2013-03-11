@@ -3,8 +3,8 @@
 #include "UnitTest.h"
 
 #include "global_defines.h"
-#include "Interface/Parset.h"
-#include "Interface/SmartPtr.h"
+#include "CoInterface/Parset.h"
+#include "CoInterface/SmartPtr.h"
 #include "OpenCL_Support.h"
 #include "createProgram.h"
 

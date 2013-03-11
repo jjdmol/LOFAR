@@ -15,10 +15,10 @@
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
 #include <ApplCommon/Observation.h>
-#include <Interface/Exceptions.h>
-#include <Interface/Parset.h>
-#include <Interface/Stream.h>
-#include <Interface/FinalMetaData.h>
+#include <CoInterface/Exceptions.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/Stream.h>
+#include <CoInterface/FinalMetaData.h>
 #include <Common/Thread/Thread.h>
 #include <Stream/PortBroker.h>
 #include <OutputProc/SubbandWriter.h>

@@ -1,7 +1,7 @@
 #ifndef GPUPROC_CORRELATORPIPELINE_H
 #define GPUPROC_CORRELATORPIPELINE_H
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
+#include "CoInterface/Parset.h"
 #include "Common/Timer.h"
 #include "OpenCL_Support.h"
 

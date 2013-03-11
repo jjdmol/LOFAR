@@ -4,9 +4,9 @@
 #include <sys/time.h>
 #include <Common/Thread/Trigger.h>
 #include <Common/Thread/Thread.h>
-#include <Interface/Parset.h>
-#include <Interface/SmartPtr.h>
-#include <Interface/FinalMetaData.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
+#include <CoInterface/FinalMetaData.h>
 #include <string>
 
 namespace LOFAR {

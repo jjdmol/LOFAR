@@ -2,8 +2,8 @@
 #define GPUPROC_CORRELATORWORKQUEUE_H
 
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
-#include "Interface/CorrelatedData.h"
+#include "CoInterface/Parset.h"
+#include "CoInterface/CorrelatedData.h"
 #include "OpenCL_Support.h"
 #include <complex>
 
@@ -21,7 +21,7 @@
 #include "FilterBank.h"
 #include "SubbandMetaData.h"
 #include "Stream/Stream.h"
-#include <Interface/SparseSet.h>
+#include <CoInterface/SparseSet.h>
 
 namespace LOFAR
 {

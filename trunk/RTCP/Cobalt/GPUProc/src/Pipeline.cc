@@ -2,8 +2,8 @@
 
 #include "Common/LofarLogger.h"
 #include "global_defines.h"
-#include "Interface/Parset.h"
-#include "Interface/Stream.h"
+#include "CoInterface/Parset.h"
+#include "CoInterface/Stream.h"
 #include "OpenCL_Support.h"
 
 #include "Stream/Stream.h"

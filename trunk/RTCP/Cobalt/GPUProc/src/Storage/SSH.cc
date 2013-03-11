@@ -38,7 +38,7 @@
 #include <cstdio>
 
 #include <Scheduling.h>
-#include <Interface/SmartPtr.h>
+#include <CoInterface/SmartPtr.h>
 #include <sys/select.h>
 #include <Stream/SocketStream.h>
 #include <openssl/crypto.h>

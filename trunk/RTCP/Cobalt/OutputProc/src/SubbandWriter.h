@@ -23,11 +23,11 @@
 #ifndef LOFAR_STORAGE_SUBBANDWRITER_H
 #define LOFAR_STORAGE_SUBBANDWRITER_H
 
-#include <Interface/OutputTypes.h>
-#include <Interface/Parset.h>
-#include <Interface/SmartPtr.h>
-#include <Interface/StreamableData.h>
-#include <Interface/FinalMetaData.h>
+#include <CoInterface/OutputTypes.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
+#include <CoInterface/StreamableData.h>
+#include <CoInterface/FinalMetaData.h>
 #include <OutputProc/InputThread.h>
 #include <OutputProc/OutputThread.h>
 #include <Common/Thread/Queue.h>

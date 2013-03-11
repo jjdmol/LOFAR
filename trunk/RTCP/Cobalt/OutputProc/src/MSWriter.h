@@ -25,8 +25,8 @@
 #ifndef LOFAR_STORAGE_MSWRITER_H
 #define LOFAR_STORAGE_MSWRITER_H
 
-#include <Interface/StreamableData.h>
-#include <Interface/FinalMetaData.h>
+#include <CoInterface/StreamableData.h>
+#include <CoInterface/FinalMetaData.h>
 #include <Common/ParameterSet.h>
 
 namespace LOFAR {
