@@ -3,17 +3,17 @@
 #define NR_BASELINES	 (NR_STATIONS * (NR_STATIONS + 1) / 2)
 
 #if NR_STATIONS == 288
-#if defined NVIDIA_CUDA
-#define BLOCK_SIZE	 8
-#elif NR_SAMPLES_PER_CHANNEL % 6 == 0
-#define BLOCK_SIZE	 6
-#else
-#define BLOCK_SIZE	 4
-#endif
+#  if defined NVIDIA_CUDA
+#    define BLOCK_SIZE	 8
+#  elif NR_SAMPLES_PER_CHANNEL % 6 == 0
+#    define BLOCK_SIZE	 6
+#  else
+#    define BLOCK_SIZE	 4
+#  endif
 #elif NR_SAMPLES_PER_CHANNEL % 24 == 0
-#define BLOCK_SIZE	 24
+#  define BLOCK_SIZE	 24
 #else
-#define BLOCK_SIZE	 16
+#  define BLOCK_SIZE	 16
 #endif
 
 typedef __global fcomplex2 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
@@ -22,6 +22,39 @@ typedef __global fcomplex4 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
 
 //#pragma OPENCL EXTENSION cl_intel_printf : enable
 
+/*!
+ * Computes correlations between all pairs of stations (baselines) and X,Y
+ * polarizations. Also computes all station (and pol) auto-correlations.
+ *
+ * This correlator consists of various versions, correlate_NxN, that differ in
+ * used register block size. We have 1x1 (this kernel), 2x2, 3x3, and 4x4.
+ * Measure, then select the fastest for your platform.
+ *
+ * Beyond dozens of antenna fields (exact number depends on observation,
+ * software and hardware parameters), our kernels in NewCorrelator.cl are
+ * significantly faster than these correlator kernels.
+ *
+ * \param[out] visibilitiesPtr         2D output array of visibilities. Each visibility contains the 4 polarization pairs, XX, XY, YX, YY, each of complex float type.
+ * \param[in]  correctedDataPtr        3D input array of samples. Each sample contains the 2 polarizations X, Y, each of complex float type.
+ *
+ * Pre-processor input symbols (some are tied to the execution configuration)
+ * Symbol                  | Valid Values            | Description
+ * ----------------------- | ----------------------- | -----------
+ * NR_STATIONS             | >= 1                    | number of antenna fields
+ * NR_SAMPLES_PER_CHANNEL  | multiple of BLOCK_SIZE  | number of input samples per channel
+ * NR_CHANNELS             | > 1 (TODO: supp 1 ch)   | number of frequency channels per subband
+ * Note that for > 1 channels, NR_CHANNELS-1 channels are actually processed,
+ * because the second PPF has "corrupted" channel 0. (An inverse PPF can disambiguate.)
+ *
+ * Execution configuration:
+ * - Work dim == 2  (can be 1 iff NR_CHANNELS <= 2)
+ *     + Inner dim: the NxN baseline(s) the thread processes
+ *     + Outer dim: the channel the thread processes
+ * - Work group size: (no restrictions (but processes BLOCK_SIZE * NR_STATIONS), 1) \n
+ *   Each work group loads samples from all stations to do the NxN set of correlations
+ *   for one of the channels. Some threads in _NxN kernels do not write off-edge output.
+ * - Global size: (>= NR_BASELINES and a multiple of work group size, number of actually processed channels)
+ */
 __kernel void correlate(__global void *visibilitiesPtr,
 			__global const void *correctedDataPtr
 )
@@ -83,6 +116,9 @@ __kernel void correlate(__global void *visibilitiesPtr,
 }
 
 
+/*!
+ * See the correlate() kernel.
+ */
 __kernel void correlate_2x2(__global void *visibilitiesPtr,
 			    __global const void *correctedDataPtr
 )
@@ -180,6 +216,9 @@ __kernel void correlate_2x2(__global void *visibilitiesPtr,
 }
 
 
+/*!
+ * See the correlate() kernel.
+ */
 __kernel void correlate_3x3(__global void *visibilitiesPtr,
 			    __global const void *correctedDataPtr
 )
@@ -337,6 +376,9 @@ __kernel void correlate_3x3(__global void *visibilitiesPtr,
 }
 
 
+/*!
+ * See the correlate() kernel.
+ */
 __kernel void correlate_4x4(__global void *visibilitiesPtr,
 			    __global const void *correctedDataPtr
 )
@@ -573,3 +615,4 @@ __kernel void correlate_4x4(__global void *visibilitiesPtr,
     (*visibilities)[baseline][channel] = (fcomplex4) { vis_3D_r.x, vis_3D_i.x, vis_3D_r.y, vis_3D_i.y, vis_3D_r.z, vis_3D_i.z, vis_3D_r.w, vis_3D_i.w };
   }
 }
+
