@@ -323,8 +323,17 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    exportMetadata
  * Signature: (ILjava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportMetadata
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportMetadata__ILjava_lang_String_2
   (JNIEnv *, jobject, jint, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    exportMetadata
+ * Signature: (ILjava/lang/String;Z)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportMetadata__ILjava_lang_String_2Z
+ (JNIEnv *env, jobject, jint, jstring, jboolean);
+
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
@@ -379,8 +388,16 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    setSchedule
  * Signature: (ILjava/lang/String;Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setSchedule
-  (JNIEnv *, jobject, jint, jstring, jstring);
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setSchedule__ILjava_lang_String_2Ljava_lang_String_2
+ (JNIEnv *env, jobject, jint, jstring, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    setSchedule
+ * Signature: (ILjava/lang/String;Ljava/lang/String;Z)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setSchedule__ILjava_lang_String_2Ljava_lang_String_2Z
+ (JNIEnv *env, jobject, jint, jstring, jstring, jboolean);
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
