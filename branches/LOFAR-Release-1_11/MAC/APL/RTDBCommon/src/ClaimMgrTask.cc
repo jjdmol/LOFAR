@@ -237,26 +237,32 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 // NOTE: we are called here for every field!
 // CS001:ClaimManager.Request.NewObjectName
 // CS001:ClaimManager.Request.TypeName
-		if (itsObjectType.empty() || itsNameInAppl.empty()) {		// Data change must be ours
+		if (itsResolveState != RO_ASKED || itsObjectType.empty() || itsNameInAppl.empty()) {	// Data change must be ours
 			break;
 		}
 
 		DPChangedEvent	dpEvent(event);
 		LOG_DEBUG_STR("DP " << dpEvent.DPname << " changed");
-		if (dpEvent.DPname.find("response.newObjectName") != string::npos) {
-			string	fldContents(((GCFPVString*)(dpEvent.value._pValue))->getValue());
-			if (!fldContents.empty()) {
-				ASSERTSTR(fldContents == itsNameInAppl, "CM returned answer for request '" 
-							<< fldContents <<"' iso " << itsNameInAppl);
-				itsFieldsReceived++;
-			}
-		}
-		else if (dpEvent.DPname.find("response.DPName") != string::npos) {
+		if (dpEvent.DPname.find("response.DPName") != string::npos) {
 			itsResultDPname = ((GCFPVString*)(dpEvent.value._pValue))->getValue();
 			if (!itsResultDPname.empty()) {
-				itsFieldsReceived++;
+				itsFieldsReceived=1;		// DPname is ALWAYS before newObjectName
 			}
 		}
+		else if (dpEvent.DPname.find("response.newObjectName") != string::npos) {
+			string	fldContents(((GCFPVString*)(dpEvent.value._pValue))->getValue());
+			if (!fldContents.empty()) {
+				// if this was not our request reset our result counter
+				if (fldContents != itsNameInAppl) {
+					LOG_DEBUG_STR(fldContents << " is not our request, resetting respons counters");
+					itsFieldsReceived = 0;
+				}
+				else {
+					itsFieldsReceived++;
+				}
+			}
+		}
+
 		if (itsFieldsReceived >= 2) {
 			LOG_DEBUG_STR("ClaimMgr:" << itsNameInAppl << "=" << itsResultDPname);
 			// Report claimresult back to the user
