@@ -57,34 +57,6 @@ void reload() {
 ""0  1
 E "#uses \"navPanel.ctl\"
 string      baseDP   = \"\";
-bool    bDoubleClicked  = false;
-
-// routine for single mouse click
-void click() {
-  // set delay in case double click was meant
-  delay(0, 100); 
-  if (!bDoubleClicked) {  
-    navPanel_setEvent(\"CoreCS0nn\",\"EventClick\");
-  }
-}
-
-// routine for double mouse click
-void dblClick() {
-  // indicate this is a doubleClick
-  bDoubleClicked = true;   
-  
-  panelSelection=\"SuperTerpOverview.pnl\";
-  navPanel_setEvent(\"panelChoice:\"+panelSelection,\"ChangePanel\");
-  
-  // set delay to avoid click event will be triggered
-  delay(0, 500);
-  bDoubleClicked = false;  
-}
-
-// routine for right mouse click
-void rClick() {
-  navPanel_setEvent(\"CoreCS0nn\",\"EventRightClick\");
-}
 " 0
  2
 "CBRef" "1"
@@ -108,32 +80,6 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 0 0 1008 744
-7 52
-"ELLIPSE1"
-""
-1 705 435 E E E 1 E 1 E N {0,0,0} E N {39,156,0,245} E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
-62 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E 0.150898102559134 0 0.1421220350206896 313.6168376958106 298.176914766 1 E 705 435 285 285
 1 193 1 "" 0
 0
 1 194 1 "" 1
@@ -301,37 +247,16 @@ LANG:1 19 Core Stations CS0nn
 0
 1 266 11 "" 5
 0
-2 192
-"PRIMITIVE_TEXT9"
-""
-1 386 354 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
-80 0 0 0 0 0
-E E E
+1 267 12 "" 1
 0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 386 354 452 370
-0 2 2 "0s" 0 0 0 192 0 0  386 354 1
-1
-LANG:1 35 MS Shell Dlg 2,10,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 9 Superterp
+1 268 12 "" 2
+0
+1 269 12 "" 4
+0
+1 270 12 "" 5
+0
+1 271 12 "" 7
+0
 0
 LAYER, 1 
 1
@@ -404,4 +329,7 @@ LANG:1 6 Layer8
 "objects\\Hardware\\LBA_HBAStatusView.pnl" 710 270 T 79 1 0 1 0 10
 1
 "$station""CS026"
+3 12 "PANEL_REF12" -1
+"objects/Hardware\\superterpStatusView.pnl" 390 290 T 81 U 
+0
 0
