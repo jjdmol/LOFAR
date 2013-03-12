@@ -17,15 +17,15 @@ namespace LOFAR
 #if !defined USE_NEW_CORRELATOR
     CorrelatorKernel::CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
       :
-#if defined USE_4X4
+# if defined USE_4X4
       Kernel(ps, program, "correlate_4x4")
-#elif defined USE_3X3
+# elif defined USE_3X3
       Kernel(ps, program, "correlate_3x3")
-#elif defined USE_2X2
+# elif defined USE_2X2
       Kernel(ps, program, "correlate_2x2")
-#else
+# else
       Kernel(ps, program, "correlate")
-#endif
+# endif
     {
       setArg(0, devVisibilities);
       setArg(1, devCorrectedData);
@@ -41,18 +41,18 @@ namespace LOFAR
       else
         getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
 
-#if defined USE_4X4
+# if defined USE_4X4
       unsigned quartStations = (ps.nrStations() + 2) / 4;
       unsigned nrBlocks = quartStations * (quartStations + 1) / 2;
-#elif defined USE_3X3
+# elif defined USE_3X3
       unsigned thirdStations = (ps.nrStations() + 2) / 3;
       unsigned nrBlocks = thirdStations * (thirdStations + 1) / 2;
-#elif defined USE_2X2
+# elif defined USE_2X2
       unsigned halfStations = (ps.nrStations() + 1) / 2;
       unsigned nrBlocks = halfStations * (halfStations + 1) / 2;
-#else
+# else
       unsigned nrBlocks = ps.nrBaselines();
-#endif
+# endif
       unsigned nrPasses = (nrBlocks + maxNrThreads - 1) / maxNrThreads;
       unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
       nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
@@ -72,11 +72,11 @@ namespace LOFAR
 
     CorrelatorKernel::CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
       :
-#if defined USE_2X2
+# if defined USE_2X2
       Kernel(ps, program, "correlate")
-#else
-#error not implemented
-#endif
+# else
+#  error not implemented
+# endif
     {
       setArg(0, devVisibilities);
       setArg(1, devCorrectedData);
@@ -104,18 +104,18 @@ namespace LOFAR
 
     CorrelateRectangleKernel::CorrelateRectangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
       :
-#if defined USE_2X2
+# if defined USE_2X2
       Kernel(ps, program, "correlateRectangleKernel")
-#else
-#error not implemented
-#endif
+# else
+#  error not implemented
+# endif
     {
       setArg(0, devVisibilities);
       setArg(1, devCorrectedData);
 
       unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
       unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
-#pragma omp critical (cout)
+# pragma omp critical (cout)
       std::cout << "nrRectangles = " << nrRectangles << std::endl;
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
@@ -130,11 +130,11 @@ namespace LOFAR
 
     CorrelateTriangleKernel::CorrelateTriangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
       :
-#if defined USE_2X2
+# if defined USE_2X2
       Kernel(ps, program, "correlateTriangleKernel")
-#else
-#error not implemented
-#endif
+# else
+#  error not implemented
+# endif
     {
       setArg(0, devVisibilities);
       setArg(1, devCorrectedData);
@@ -146,7 +146,7 @@ namespace LOFAR
       getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
       unsigned nrThreads = align(nrMiniBlocks, preferredMultiple);
 
-#pragma omp critical (cout)
+# pragma omp critical (cout)
       std::cout << "nrTriangles = " << nrTriangles << ", nrMiniBlocks = " << nrMiniBlocks << ", nrThreads = " << nrThreads << std::endl;
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
