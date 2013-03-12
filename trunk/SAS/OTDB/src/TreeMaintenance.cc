@@ -590,7 +590,6 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 
 	// First resolve function to call
 	string		functionName;
-	string		regexFlag("");
 	OTDBtree	theTree = itsConn->getTreeInfo(aTreeID);
 	switch (theTree.type) {
 	case TThardware:
@@ -603,7 +602,6 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 		break;
 	case TTVHtree:
 		functionName = isRegex ? "getVHitemListRegex" : "getVHitemList";
-		regexFlag    = isRegex ? ",'True'" : ",'False'";
 		break;
 	default:
 		ASSERTSTR(false, "Treetype " << theTree.type << " is unknown");
@@ -611,7 +609,7 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 
 	vector<OTDBnode>	resultVec;
 	// construct a query that calls a stored procedure.
-	string	query = formatString("SELECT * from %s('%d','%s'%s)", functionName.c_str(), aTreeID, aNameFragment.c_str(), regexFlag.c_str());
+	string	query = formatString("SELECT * from %s('%d','%s')", functionName.c_str(), aTreeID, aNameFragment.c_str());
 	LOG_DEBUG_STR(query);
 	work	xAction(*(itsConn->getConn()), functionName);
 	try {
