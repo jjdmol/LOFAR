@@ -611,7 +611,7 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 
 	vector<OTDBnode>	resultVec;
 	// construct a query that calls a stored procedure.
-	string	query = formatString("SELECT * from %s('%d','%s'%s)", aTreeID, aNameFragment.c_str(), regexFlag.c_str());
+	string	query = formatString("SELECT * from %s('%d','%s'%s)", functionName.c_str(), aTreeID, aNameFragment.c_str(), regexFlag.c_str());
 	LOG_DEBUG_STR(query);
 	work	xAction(*(itsConn->getConn()), functionName);
 	try {
