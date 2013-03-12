@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Set srcdir if needed.
+# It might not be set if the .run file is executed directly instead of
+# by 'make check'.
+if [ "$srcdir" = "" ]; then
+  srcdir=../../../test
+fi
+
+# Create the ParmDB tables for tSubtract.
+$srcdir/makeDemoParmDBPred tSubtract
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+\rm -rf tSubtract_tmp.MS1
+if [ ! -d $LOFARDATAROOT/BBS2/demo3.MS_p1 ]; then
+  exit 3
+fi
+cp -r $LOFARDATAROOT/BBS2/demo3.MS_p1 tSubtract_tmp.MS1
+
+$LOFAR_CHECKTOOL ./tSubtract $USER tSubtract_tmp.MS1 tSubtract_tmp.demo_instr tSubtract_tmp.demo_sky
+status=$?
+exit $status
+
