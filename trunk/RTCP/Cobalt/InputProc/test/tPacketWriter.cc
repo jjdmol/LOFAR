@@ -82,6 +82,9 @@ int main()
   struct StationID stationID("RS106", "LBA", 200, 16);
   struct BufferSettings settings(stationID, false);
 
+  // Use a fixed key, so the test suite knows what to clean
+  settings.dataKey = 0x12345678;
+
   // Test various modes
   LOG_INFO("Test 16-bit complex");
   settings.station.bitMode = 16;

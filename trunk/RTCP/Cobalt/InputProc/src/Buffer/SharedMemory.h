@@ -43,10 +43,29 @@ namespace LOFAR
         return reinterpret_cast<T*>(reinterpret_cast<char*>(itsBegin) + offset);
       }
 
+      // Return the maximum size for shared-memory buffers,
+      // or 0 if the maximum could not be determined.
+      static size_t maxSize();
+
     private:
       const key_t key;
       const Mode mode;
       int shmid;
+
+      // Whether the memory region existed before we tried to create it.
+      bool preexisting;
+
+      // Try to open the region indicated by `this->key', and store the pointer
+      // in `itsBegin' on success. Used by the constructor.
+      //
+      // If timeout is false, no errors are silenced. If timeout is true,
+      // some errors are ignored to allow subsequent attempts.
+      //
+      // Returns:
+      //   true:  region was opened/created succesfully.
+      //   false: region does not exist (and open_flags do not contain CREATE).
+      //   throws SystemCallException: a system call failed.
+      bool open( int open_flags, int attach_flags, bool timeout);
     };
 
     /*
