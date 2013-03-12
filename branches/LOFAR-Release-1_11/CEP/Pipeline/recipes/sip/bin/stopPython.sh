@@ -3,13 +3,14 @@
 # This script is called by MAC PythonControl to stop a pipeline.
 # Usage:
 #
-#   stopPython.sh <observationID> 
+#   stopPython.sh <parsetFile> 
 #
-# The script will try to kill the process with the PID that is stored in the
-# file /opt/lofar/var/run/pipeline/<ObservationID>/pid
+# The script will try to kill the process that was started by startPython.sh
+# with <parsetFile> as argument. The PID of this process is stored in the file
+# /opt/lofar/var/run/pipeline/`basename <parsetFile>`/pid
 #
-# If it succeeds, it will remove the PID-file and return a zero exit status;
-# otherwise it will return a non-zero exit status.
+# If the script succeeds, it will remove the PID-file and return a zero exit
+# status; otherwise it will return a non-zero exit status.
 #
 # Exit statuses:
 #  -1: incorrect number of arguments supplied
@@ -22,7 +23,7 @@
 # Print usage message and exit with an error status.
 usage()
 {
-  echo "Usage: $0 <observationID>"
+  echo "Usage: $0 <parsetFile>"
   exit -1
 }
 
@@ -44,7 +45,7 @@ error()
 logFile="/opt/lofar/var/log/stopPython.log"
 
 # File containing the ID of the process that must be killed.
-pidFile="/opt/lofar/var/run/pipeline/${1}/pid"
+pidFile="/opt/lofar/var/run/pipeline/$(basename ${1})/pid"
 
 # Check if the PID-file exists.
 [ -r ${pidFile} ] || error 1 "${pidFile} does not exist or is unreadable"
