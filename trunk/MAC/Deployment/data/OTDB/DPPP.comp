@@ -143,7 +143,7 @@ par	targetsource     I	text -	10		0	""                              -	"Name of o
 par	subtractsources I	vtext -	10		0	'[]'                              -	"Names of the sources to subtract."
 par	modelsources I	vtext -	10		0	'[]'                              -	"Names of the sources to take into account when solving."
 par	othersources    I	 vtext -	10		0	'[]'                              -	"Names of the sources to project away when solving."
-par	ignoretarget    I	 bool -	10		0	T                               -	"Ignore target direction in demixing?"
+par	ignoretarget    I	 bool -	10		0	false                               -	"Ignore target direction in demixing?"
 #uses demixer:Solve         4.0.0  development 1                 'Solver attributes'
 
 node	uvwflagger	4.0.0	development	'node constraint'	"UVW flagger"
