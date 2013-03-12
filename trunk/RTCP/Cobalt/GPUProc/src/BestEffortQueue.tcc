@@ -62,7 +62,7 @@ template <typename T> inline void BestEffortQueue<T>::noMore()
   freeSpace.noMore();
 
   // signal end-of-stream to reader
-  Queue<T>::append(NULL);
+  Queue<T>::append(0);
 }
 
 
