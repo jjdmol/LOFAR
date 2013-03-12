@@ -82,7 +82,7 @@ event = {
 		// RCU control byte controls the setting of all
 		// RCU's for this subarray
 		name = "rcumode";
-		type = "int";
+		type = "int32";
 //		type = "RSP_Protocol::RCUSettings";
 //		userdefined;
 	};

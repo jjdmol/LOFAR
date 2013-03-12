@@ -368,7 +368,7 @@ event = {
 	};
 	param = {
 		name = "treeID";
-		type = "unsigned int";
+		type = "uint32";
 	};
 	param = {
 		name = "errorMsg";

@@ -258,7 +258,7 @@ event = {
 	};
 	param = {
 		name = "rank";
-		type = "int";
+		type = "int32";
 	};
 	param = {
 		name = "isLast";
@@ -285,7 +285,7 @@ event = {
 	};
 	param = {
 		name = "status";
-		type = "int";
+		type = "int32";
 	};
 };
 

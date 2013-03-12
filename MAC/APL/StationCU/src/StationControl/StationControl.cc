@@ -1314,17 +1314,17 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 				}
 			}
 		}
-LOG_DEBUG_STR("final receivers   =" << realReceivers);
-		// Write the corrected set back into the ParameterSetfile.
-		string prefix = theObsPS.locateModule("Observation") + "Observation.";
-		// save original under different name (using 'replace' is 'add' w. simplified testing)
-		theObsPS.replace(prefix+"originalReceiverList", theObs.receiverList);
-		// replace orignal
-		theObsPS.replace(prefix+"receiverList", bitset2CompactedArrayString(realReceivers));
-		// modify base parsetfile and my own parsetfile too, to prevent confusion
-		theObsPS.writeFile(observationParset(theObs.obsID));
-		theObsPS.writeFile(filename);
 	}
+LOG_DEBUG_STR("final receivers   =" << realReceivers);
+	// Write the corrected set back into the ParameterSetfile.
+	string prefix = theObsPS.locateModule("Observation") + "Observation.";
+	// save original under different name (using 'replace' is 'add' w. simplified testing)
+	theObsPS.replace(prefix+"originalReceiverList", theObs.receiverList);
+	// replace orignal
+	theObsPS.replace(prefix+"receiverList", bitset2CompactedArrayString(realReceivers));
+	// modify base parsetfile and my own parsetfile too, to prevent confusion
+	theObsPS.writeFile(observationParset(theObs.obsID));
+	theObsPS.writeFile(filename);
 	LOG_INFO_STR("Available receivers for observation " << theObs.obsID << ":" << 
 				string(realReceivers.to_string<char,char_traits<char>,allocator<char> >()));
 
