@@ -32,42 +32,47 @@
 #include <string>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-class FastFileStream : public FileStream
+namespace LOFAR
 {
-  public:
-    FastFileStream(const std::string &name, int flags, int mode); // rd/wr; create file
-						   
-    virtual size_t tryWrite(const void *ptr, size_t size);
-    virtual ~FastFileStream();
+  namespace RTCP
+  {
 
-    virtual void skip( size_t bytes );
+    class FastFileStream : public FileStream
+    {
+    public:
+      FastFileStream(const std::string &name, int flags, int mode); // rd/wr; create file
 
-    virtual size_t size();
+      virtual size_t tryWrite(const void *ptr, size_t size);
+      virtual ~FastFileStream();
 
-    // formally, the required alignment for O_DIRECT is determined by the file system
-    static const unsigned alignment = 512;
-  private:  
-    // writes the remainder, padded with zeros if needed. Returns the number of bytes written.
-    size_t writeRemainder();
+      virtual void skip( size_t bytes );
 
-    // we only support writing
-    virtual size_t tryRead(void *, size_t size) { return size; }
+      virtual size_t size();
 
-    // enlarge the buffer if needed
-    void ensureBuffer(size_t newsize);
+      // formally, the required alignment for O_DIRECT is determined by the file system
+      static const unsigned alignment = 512;
+    private:
+      // writes the remainder, padded with zeros if needed. Returns the number of bytes written.
+      size_t writeRemainder();
 
-    // use the FileStream to force these data to disk
-    void forceWrite(const void *ptr, size_t size);
+      // we only support writing
+      virtual size_t tryRead(void *, size_t size)
+      {
+        return size;
+      }
 
-    size_t bufsize;
-    SmartPtr<char, SmartPtrFree<char> > buffer;
-    size_t remainder;
-};
+      // enlarge the buffer if needed
+      void ensureBuffer(size_t newsize);
 
-}
+      // use the FileStream to force these data to disk
+      void forceWrite(const void *ptr, size_t size);
+
+      size_t bufsize;
+      SmartPtr<char, SmartPtrFree<char> > buffer;
+      size_t remainder;
+    };
+
+  }
 }
 
 #endif

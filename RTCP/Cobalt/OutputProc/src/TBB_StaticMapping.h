@@ -28,30 +28,32 @@
 #include <vector>
 #include <map>
 
-namespace LOFAR {
+namespace LOFAR
+{
 
-class TBB_StaticMapping {
-public:
-	TBB_StaticMapping();
+  class TBB_StaticMapping
+  {
+  public:
+    TBB_StaticMapping();
 
-	// These two throw a LOFAR::IOException if filename could not be opened.
-	explicit TBB_StaticMapping(const std::string& filename);
-	void parseStaticMapping(const std::string& filename);
+    // These two throw a LOFAR::IOException if filename could not be opened.
+    explicit TBB_StaticMapping(const std::string& filename);
+    void parseStaticMapping(const std::string& filename);
 
-	std::multimap<std::string, std::pair<std::string, std::string> >::const_iterator begin() const;
-	std::multimap<std::string, std::pair<std::string, std::string> >::const_iterator end() const;
-	size_t size() const;
-	bool empty() const;
-	std::vector<std::string> getStationNames(const std::string& nodeName) const;
-	std::vector<std::string> getBoardNames(const std::string& nodeName) const;
+    std::multimap<std::string, std::pair<std::string, std::string> >::const_iterator begin() const;
+    std::multimap<std::string, std::pair<std::string, std::string> >::const_iterator end() const;
+    size_t size() const;
+    bool empty() const;
+    std::vector<std::string> getStationNames(const std::string& nodeName) const;
+    std::vector<std::string> getBoardNames(const std::string& nodeName) const;
 
-private:
-	// Max line len in file is now 52, but need a bit more if >1 stations per dest node.
-	static const size_t parseBufSize = 256;
+  private:
+    // Max line len in file is now 52, but need a bit more if >1 stations per dest node.
+    static const size_t parseBufSize = 256;
 
-	// Maps from node name to (station name, board name).
-	std::multimap<std::string, std::pair<std::string, std::string> > itsMapping;
-};
+    // Maps from node name to (station name, board name).
+    std::multimap<std::string, std::pair<std::string, std::string> > itsMapping;
+  };
 
 
 } // ns LOFAR

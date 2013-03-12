@@ -9,9 +9,11 @@ using namespace RTCP;
 
 Semaphore semaphore;
 
-class A {
+class A
+{
 public:
-  void creator() {
+  void creator()
+  {
     sleep(1);
 
     SharedMemoryArena m( 0x12345678, 1024, SharedMemoryArena::CREATE, 0 );
@@ -22,7 +24,8 @@ public:
     semaphore.down();
   }
 
-  void reader() {
+  void reader()
+  {
     LOG_INFO("Waiting for memory area");
 
     SharedMemoryArena m( 0x12345678, 1024, SharedMemoryArena::READ, 2 );
@@ -34,7 +37,8 @@ public:
   }
 };
 
-int main() {
+int main()
+{
   INIT_LOGGER( "tSharedMemory" );
 
   /* Create a shared memory region */

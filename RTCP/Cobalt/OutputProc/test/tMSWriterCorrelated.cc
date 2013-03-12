@@ -37,7 +37,8 @@ const int bigEndian = 1;
 const int bigEndian = 0;
 #endif
 
-int main() {
+int main()
+{
   INIT_LOGGER("tMSWriterCorrelated");
 
   Parset parset("tMSWriterCorrelated.parset");
@@ -72,7 +73,7 @@ int main() {
     fmd.brokenRCUsAtBegin.push_back(rcu);
 
     writer.augment(fmd);
-  }  
+  }
 
   return 0;
 }

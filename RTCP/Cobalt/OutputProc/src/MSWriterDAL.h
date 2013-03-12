@@ -42,7 +42,8 @@ namespace LOFAR
 
   namespace RTCP
   {
-    template<typename T, unsigned DIM> class MSWriterDAL : public MSWriterFile
+    template<typename T, unsigned DIM>
+    class MSWriterDAL : public MSWriterFile
     {
     public:
       MSWriterDAL(const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian);

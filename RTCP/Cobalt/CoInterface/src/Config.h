@@ -25,7 +25,7 @@
 
 /* This is included by C++ and assembly files.  Do not put anything but
    constants here! */
-#define NR_POLARIZATIONS	   2
-#define NR_TAPS			   16
+#define NR_POLARIZATIONS           2
+#define NR_TAPS                    16
 
 #endif

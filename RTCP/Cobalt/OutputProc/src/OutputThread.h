@@ -38,47 +38,49 @@
 #include <vector>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-class OutputThread
+namespace LOFAR
 {
-  public:
-				     OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory = "");
-
-    void			     start();
-
-    // needed in createHeaders.cc
-    void           createMS();
-
-    void           augment(const FinalMetaData &finalMetaData);
-
-  private:
-    void			     checkForDroppedData(StreamableData *);
-    void			     doWork();
-    void			     cleanUp();
-    void			     mainLoop();
-
-    const Parset		     &itsParset;
-    const OutputType		     itsOutputType;
-    const unsigned		     itsStreamNr;
-    const bool			     itsIsBigEndian;
-    const std::string		     itsLogPrefix;
-    const bool                       itsCheckFakeData;
-    const std::string                itsTargetDirectory;
-
-    Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
-
-    unsigned		 	     itsBlocksWritten, itsBlocksDropped;
-    unsigned           itsNrExpectedBlocks;
-    unsigned			     itsNextSequenceNumber;
-    SmartPtr<MSWriter>		     itsWriter;
-    SmartPtr<Thread>		     itsThread;
-};
+  namespace RTCP
+  {
 
 
-} // namespace RTCP
+    class OutputThread
+    {
+    public:
+      OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory = "");
+
+      void                             start();
+
+      // needed in createHeaders.cc
+      void           createMS();
+
+      void           augment(const FinalMetaData &finalMetaData);
+
+    private:
+      void                             checkForDroppedData(StreamableData *);
+      void                             doWork();
+      void                             cleanUp();
+      void                             mainLoop();
+
+      const Parset                     &itsParset;
+      const OutputType itsOutputType;
+      const unsigned itsStreamNr;
+      const bool itsIsBigEndian;
+      const std::string itsLogPrefix;
+      const bool itsCheckFakeData;
+      const std::string itsTargetDirectory;
+
+      Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
+
+      unsigned itsBlocksWritten, itsBlocksDropped;
+      unsigned itsNrExpectedBlocks;
+      unsigned itsNextSequenceNumber;
+      SmartPtr<MSWriter>               itsWriter;
+      SmartPtr<Thread>                 itsThread;
+    };
+
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

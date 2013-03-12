@@ -10,16 +10,16 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class UHEP_InvFIR_Kernel : public Kernel
     {
-        class UHEP_InvFIR_Kernel : public Kernel
-        {
-        public:
-            UHEP_InvFIR_Kernel(const Parset &ps, cl::CommandQueue &queue, 
-                cl::Program &program, cl::Buffer &devInvFIRfilteredData, 
-                cl::Buffer &devFFTedData, cl::Buffer &devInvFIRfilterWeights);
-        };
+    public:
+      UHEP_InvFIR_Kernel(const Parset &ps, cl::CommandQueue &queue,
+                         cl::Program &program, cl::Buffer &devInvFIRfilteredData,
+                         cl::Buffer &devFFTedData, cl::Buffer &devInvFIRfilterWeights);
+    };
 
-    }
+  }
 }
 #endif

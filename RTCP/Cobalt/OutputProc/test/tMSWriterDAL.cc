@@ -37,7 +37,8 @@ const int bigEndian = 1;
 const int bigEndian = 0;
 #endif
 
-int main() {
+int main()
+{
   Parset parset("tMSWriterDAL.parset");
 
   {
@@ -48,14 +49,15 @@ int main() {
     writer.write(data);
 
     delete data;
-  }  
+  }
 
   return 0;
 }
 
 #else
 
-int main() {
+int main()
+{
   return 0;
 }
 #endif

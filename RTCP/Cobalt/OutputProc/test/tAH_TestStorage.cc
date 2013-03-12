@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/lofar_iostream.h> 
+#include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <CoInterface/Parset.h>
@@ -45,11 +45,11 @@ using namespace LOFAR::RTCP;
 int main(int argc, char *argv[])
 {
   std::string type = "brief";
-  Version::show<StorageVersion> (std::cout, "Storage", type);  
-  
+  Version::show<StorageVersion> (std::cout, "Storage", type);
+
   ConfigLocator aCL;
-  string        progName = basename(argv[0]);
-  string        logPropFile(progName + ".log_prop");
+  string progName = basename(argv[0]);
+  string logPropFile(progName + ".log_prop");
   INIT_LOGGER (aCL.locate(logPropFile).c_str());
   LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
 

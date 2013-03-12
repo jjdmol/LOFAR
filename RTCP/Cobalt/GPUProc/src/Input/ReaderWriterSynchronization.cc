@@ -1,4 +1,4 @@
-//# 
+//#
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,99 +26,101 @@
 #include <Input/ReaderWriterSynchronization.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-ReaderAndWriterSynchronization::~ReaderAndWriterSynchronization()
+namespace LOFAR
 {
-}
+  namespace RTCP
+  {
+
+
+    ReaderAndWriterSynchronization::~ReaderAndWriterSynchronization()
+    {
+    }
 
 
 
 
-SynchronizedReaderAndWriter::SynchronizedReaderAndWriter(unsigned bufferSize)
-:
-  itsBufferSize(bufferSize)
-{
-}
+    SynchronizedReaderAndWriter::SynchronizedReaderAndWriter(unsigned bufferSize)
+      :
+      itsBufferSize(bufferSize)
+    {
+    }
 
 
-SynchronizedReaderAndWriter::~SynchronizedReaderAndWriter()
-{
-}
+    SynchronizedReaderAndWriter::~SynchronizedReaderAndWriter()
+    {
+    }
 
 
-void SynchronizedReaderAndWriter::startRead(const TimeStamp &begin, const TimeStamp &end)
-{
-  itsReadPointer.advanceTo(begin);
-  itsWritePointer.waitFor(end);
-}
+    void SynchronizedReaderAndWriter::startRead(const TimeStamp &begin, const TimeStamp &end)
+    {
+      itsReadPointer.advanceTo(begin);
+      itsWritePointer.waitFor(end);
+    }
 
 
-void SynchronizedReaderAndWriter::finishedRead(const TimeStamp &advanceTo)
-{
-  itsReadPointer.advanceTo(advanceTo);
-}
+    void SynchronizedReaderAndWriter::finishedRead(const TimeStamp &advanceTo)
+    {
+      itsReadPointer.advanceTo(advanceTo);
+    }
 
 
-void SynchronizedReaderAndWriter::startWrite(const TimeStamp &begin, const TimeStamp &end)
-{
-  itsWritePointer.advanceTo(begin);
-  itsReadPointer.waitFor(end - itsBufferSize);
-}
+    void SynchronizedReaderAndWriter::startWrite(const TimeStamp &begin, const TimeStamp &end)
+    {
+      itsWritePointer.advanceTo(begin);
+      itsReadPointer.waitFor(end - itsBufferSize);
+    }
 
 
-void SynchronizedReaderAndWriter::finishedWrite(const TimeStamp &advanceTo)
-{
-  itsWritePointer.advanceTo(advanceTo);
-}
+    void SynchronizedReaderAndWriter::finishedWrite(const TimeStamp &advanceTo)
+    {
+      itsWritePointer.advanceTo(advanceTo);
+    }
 
 
-void SynchronizedReaderAndWriter::noMoreReading()
-{
-  // advance read pointer to infinity, to unblock thread that waits in startWrite
-  itsReadPointer.advanceTo(TimeStamp(0x7FFFFFFFFFFFFFFFLL)); // we only use this TimeStamp for comparison so clockSpeed does not matter
-}
+    void SynchronizedReaderAndWriter::noMoreReading()
+    {
+      // advance read pointer to infinity, to unblock thread that waits in startWrite
+      itsReadPointer.advanceTo(TimeStamp(0x7FFFFFFFFFFFFFFFLL)); // we only use this TimeStamp for comparison so clockSpeed does not matter
+    }
 
 
-void SynchronizedReaderAndWriter::noMoreWriting()
-{
-  itsWritePointer.advanceTo(TimeStamp(0x7FFFFFFFFFFFFFFFLL));
-}
+    void SynchronizedReaderAndWriter::noMoreWriting()
+    {
+      itsWritePointer.advanceTo(TimeStamp(0x7FFFFFFFFFFFFFFFLL));
+    }
 
 
-TimeSynchronizedReader::TimeSynchronizedReader(unsigned maximumNetworkLatency)
-:
-  itsMaximumNetworkLatency(maximumNetworkLatency)
-{
-}
+    TimeSynchronizedReader::TimeSynchronizedReader(unsigned maximumNetworkLatency)
+      :
+      itsMaximumNetworkLatency(maximumNetworkLatency)
+    {
+    }
 
 
-TimeSynchronizedReader::~TimeSynchronizedReader()
-{
-}
+    TimeSynchronizedReader::~TimeSynchronizedReader()
+    {
+    }
 
 
-void TimeSynchronizedReader::startRead(const TimeStamp & /*begin*/, const TimeStamp &end)
-{
-  itsWallClock.waitUntil(end + itsMaximumNetworkLatency);
-}
+    void TimeSynchronizedReader::startRead(const TimeStamp & /*begin*/, const TimeStamp &end)
+    {
+      itsWallClock.waitUntil(end + itsMaximumNetworkLatency);
+    }
 
 
-void TimeSynchronizedReader::finishedRead(const TimeStamp & /*advanceTo*/)
-{
-}
+    void TimeSynchronizedReader::finishedRead(const TimeStamp & /*advanceTo*/)
+    {
+    }
 
 
-void TimeSynchronizedReader::startWrite(const TimeStamp & /*begin*/, const TimeStamp & /*end*/)
-{
-}
+    void TimeSynchronizedReader::startWrite(const TimeStamp & /*begin*/, const TimeStamp & /*end*/)
+    {
+    }
 
 
-void TimeSynchronizedReader::finishedWrite(const TimeStamp & /*advanceTo*/)
-{
-}
+    void TimeSynchronizedReader::finishedWrite(const TimeStamp & /*advanceTo*/)
+    {
+    }
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR

@@ -13,7 +13,8 @@ using namespace LOFAR;
 using namespace RTCP;
 using namespace std;
 
-template<typename T> void test( struct BufferSettings &settings, const std::string &filename )
+template<typename T>
+void test( struct BufferSettings &settings, const std::string &filename )
 {
   SampleBuffer< SampleType<T> > buffer(settings, true);
   PacketWriter< SampleType<T> > writer("", buffer, 0);
@@ -70,7 +71,8 @@ template<typename T> void test( struct BufferSettings &settings, const std::stri
 }
 
 
-int main() {
+int main()
+{
   INIT_LOGGER( "tPacketWriter" );
 
   // Don't run forever if communication fails for some reason

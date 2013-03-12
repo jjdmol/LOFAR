@@ -8,14 +8,16 @@ using namespace RTCP;
 using namespace std;
 
 // test OpenCL context creation
-void test_create() {
+void test_create()
+{
   cl::Context context;
   vector<cl::Device> devices;
 
   createContext(context, devices);
 }
 
-int main() {
+int main()
+{
   INIT_LOGGER( "tContext" );
 
   test_create();

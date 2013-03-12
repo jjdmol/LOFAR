@@ -30,77 +30,87 @@
 
 using namespace std;
 
-namespace LOFAR {
+namespace LOFAR
+{
 
-TBB_StaticMapping::TBB_StaticMapping() {
-}
+  TBB_StaticMapping::TBB_StaticMapping()
+  {
+  }
 
-TBB_StaticMapping::TBB_StaticMapping(const string& filename) {
-	parseStaticMapping(filename);
-}
+  TBB_StaticMapping::TBB_StaticMapping(const string& filename)
+  {
+    parseStaticMapping(filename);
+  }
 
-void TBB_StaticMapping::parseStaticMapping(const string& filename) {
-	char buf[parseBufSize];
-	const string ws(" \t");
-	ifstream ifile(filename.c_str());
-	if (!ifile) {
-		throw IOException("Failed to open TBB static meta data file with station to node mapping");
-	}
+  void TBB_StaticMapping::parseStaticMapping(const string& filename)
+  {
+    char buf[parseBufSize];
+    const string ws(" \t");
+    ifstream ifile(filename.c_str());
+    if (!ifile) {
+      throw IOException("Failed to open TBB static meta data file with station to node mapping");
+    }
 
-	while (ifile.getline(buf, parseBufSize).good()) {
-		string sbuf(buf);
+    while (ifile.getline(buf, parseBufSize).good()) {
+      string sbuf(buf);
 
-		size_t pos = sbuf.find('#'); // line comments
-		sbuf = sbuf.substr(0, pos);
-		vector<string> tokens(StringUtil::tokenize(sbuf, ws));
+      size_t pos = sbuf.find('#');           // line comments
+      sbuf = sbuf.substr(0, pos);
+      vector<string> tokens(StringUtil::tokenize(sbuf, ws));
 
-		// We expect 3 tokens (columns): stationName (0), board (1), destNode (2); ignore other tokens and "empty" lines.
-		if (tokens.size() >= 3) {
-			itsMapping.insert(make_pair(tokens[2], make_pair(tokens[0], tokens[1])));
-		}
-	}
-}
+      // We expect 3 tokens (columns): stationName (0), board (1), destNode (2); ignore other tokens and "empty" lines.
+      if (tokens.size() >= 3) {
+        itsMapping.insert(make_pair(tokens[2], make_pair(tokens[0], tokens[1])));
+      }
+    }
+  }
 
-multimap<string, pair<string, string> >::const_iterator TBB_StaticMapping::begin() const {
-	return itsMapping.begin();
-}
+  multimap<string, pair<string, string> >::const_iterator TBB_StaticMapping::begin() const
+  {
+    return itsMapping.begin();
+  }
 
-multimap<string, pair<string, string> >::const_iterator TBB_StaticMapping::end() const {
-	return itsMapping.end();
-}
+  multimap<string, pair<string, string> >::const_iterator TBB_StaticMapping::end() const
+  {
+    return itsMapping.end();
+  }
 
-size_t TBB_StaticMapping::size() const {
-	return itsMapping.size();
-}
+  size_t TBB_StaticMapping::size() const
+  {
+    return itsMapping.size();
+  }
 
-bool TBB_StaticMapping::empty() const {
-	return itsMapping.empty();
-}
+  bool TBB_StaticMapping::empty() const
+  {
+    return itsMapping.empty();
+  }
 
-vector<string> TBB_StaticMapping::getStationNames(const string& nodeName) const {
-	vector<string> mapping;
+  vector<string> TBB_StaticMapping::getStationNames(const string& nodeName) const
+  {
+    vector<string> mapping;
 
-	for (pair<multimap<string, pair<string, string> >::const_iterator,
+    for (pair<multimap<string, pair<string, string> >::const_iterator,
               multimap<string, pair<string, string> >::const_iterator> iters(
-              itsMapping.equal_range(nodeName));
-			iters.first != iters.second; ++iters.first) {
-		mapping.push_back((*iters.first).second.first);
-	}
+           itsMapping.equal_range(nodeName));
+         iters.first != iters.second; ++iters.first) {
+      mapping.push_back((*iters.first).second.first);
+    }
 
-	return mapping;
-}
+    return mapping;
+  }
 
-vector<string> TBB_StaticMapping::getBoardNames(const string& nodeName) const {
-	vector<string> mapping;
+  vector<string> TBB_StaticMapping::getBoardNames(const string& nodeName) const
+  {
+    vector<string> mapping;
 
-	for (pair<multimap<string, pair<string, string> >::const_iterator,
+    for (pair<multimap<string, pair<string, string> >::const_iterator,
               multimap<string, pair<string, string> >::const_iterator> iters(
-              itsMapping.equal_range(nodeName));
-			iters.first != iters.second; ++iters.first) {
-		mapping.push_back((*iters.first).second.second);
-	}
+           itsMapping.equal_range(nodeName));
+         iters.first != iters.second; ++iters.first) {
+      mapping.push_back((*iters.first).second.second);
+    }
 
-	return mapping;
-}
+    return mapping;
+  }
 
 } // ns LOFAR

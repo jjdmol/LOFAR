@@ -4,18 +4,18 @@ typedef __global const float16 (*WeightsType)[1024];
 
 
 __kernel void invFIRfilter(__global void *invFIRredDataPtr,
-			   __global const void *invFFTedDataPtr,
-			   __global const void *weightsPtr)
+                           __global const void *invFFTedDataPtr,
+                           __global const void *weightsPtr)
 {
   InvFIRredDataType invFIRredData = (InvFIRredDataType) invFIRredDataPtr;
-  InvFFTedDataType  invFFTedData  = (InvFFTedDataType) invFFTedDataPtr;
-  WeightsType       weightsData   = (WeightsType) weightsPtr;
+  InvFFTedDataType invFFTedData = (InvFFTedDataType) invFFTedDataPtr;
+  WeightsType weightsData = (WeightsType) weightsPtr;
 
   uint sub_time = get_global_id(0);
-  uint pol	= get_global_id(1);
-  uint tab	= get_global_id(2);
+  uint pol = get_global_id(1);
+  uint tab = get_global_id(2);
 
-//#pragma OPENCL EXTENSION cl_amd_printf : enable
+  //#pragma OPENCL EXTENSION cl_amd_printf : enable
 
   const float16 weights = (*weightsData)[sub_time];
   float16 delayLine;
@@ -39,7 +39,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
 
   for (uint time = 0; time < NR_SAMPLES_PER_SUBBAND; time += NR_STATION_FILTER_TAPS) {
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 0][sub_time];
-    sum.s0  = weights.sF * delayLine.s0;
+    sum.s0 = weights.sF * delayLine.s0;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 1][sub_time];
     sum.s0 += weights.sE * delayLine.s1;
     sum.s0 += weights.sD * delayLine.s2;
@@ -58,7 +58,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.s0 += weights.s0 * delayLine.sF;
     (*invFIRredData)[tab][pol][time + 0][sub_time] = sum.s0;
 
-    sum.s1  = weights.sF * delayLine.s1;
+    sum.s1 = weights.sF * delayLine.s1;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 2][sub_time];
     sum.s1 += weights.sE * delayLine.s2;
     sum.s1 += weights.sD * delayLine.s3;
@@ -77,7 +77,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.s1 += weights.s0 * delayLine.s0;
     (*invFIRredData)[tab][pol][time + 1][sub_time] = sum.s1;
 
-    sum.s2  = weights.sF * delayLine.s2;
+    sum.s2 = weights.sF * delayLine.s2;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 3][sub_time];
     sum.s2 += weights.sE * delayLine.s3;
     sum.s2 += weights.sD * delayLine.s4;
@@ -96,7 +96,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.s2 += weights.s0 * delayLine.s1;
     (*invFIRredData)[tab][pol][time + 2][sub_time] = sum.s2;
 
-    sum.s3  = weights.sF * delayLine.s3;
+    sum.s3 = weights.sF * delayLine.s3;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 4][sub_time];
     sum.s3 += weights.sE * delayLine.s4;
     sum.s3 += weights.sD * delayLine.s5;
@@ -115,7 +115,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.s3 += weights.s0 * delayLine.s2;
     (*invFIRredData)[tab][pol][time + 3][sub_time] = sum.s3;
 
-    sum.s4  = weights.sF * delayLine.s4;
+    sum.s4 = weights.sF * delayLine.s4;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 5][sub_time];
     sum.s4 += weights.sE * delayLine.s5;
     sum.s4 += weights.sD * delayLine.s6;
@@ -134,7 +134,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.s4 += weights.s0 * delayLine.s3;
     (*invFIRredData)[tab][pol][time + 4][sub_time] = sum.s4;
 
-    sum.s5  = weights.sF * delayLine.s5;
+    sum.s5 = weights.sF * delayLine.s5;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 6][sub_time];
     sum.s5 += weights.sE * delayLine.s6;
     sum.s5 += weights.sD * delayLine.s7;
@@ -153,7 +153,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.s5 += weights.s0 * delayLine.s4;
     (*invFIRredData)[tab][pol][time + 5][sub_time] = sum.s5;
 
-    sum.s6  = weights.sF * delayLine.s6;
+    sum.s6 = weights.sF * delayLine.s6;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 7][sub_time];
     sum.s6 += weights.sE * delayLine.s7;
     sum.s6 += weights.sD * delayLine.s8;
@@ -172,7 +172,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.s6 += weights.s0 * delayLine.s5;
     (*invFIRredData)[tab][pol][time + 6][sub_time] = sum.s6;
 
-    sum.s7  = weights.sF * delayLine.s7;
+    sum.s7 = weights.sF * delayLine.s7;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 8][sub_time];
     sum.s7 += weights.sE * delayLine.s8;
     sum.s7 += weights.sD * delayLine.s9;
@@ -191,7 +191,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.s7 += weights.s0 * delayLine.s6;
     (*invFIRredData)[tab][pol][time + 7][sub_time] = sum.s7;
 
-    sum.s8  = weights.sF * delayLine.s8;
+    sum.s8 = weights.sF * delayLine.s8;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 9][sub_time];
     sum.s8 += weights.sE * delayLine.s9;
     sum.s8 += weights.sD * delayLine.sA;
@@ -210,7 +210,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.s8 += weights.s0 * delayLine.s7;
     (*invFIRredData)[tab][pol][time + 8][sub_time] = sum.s8;
 
-    sum.s9  = weights.sF * delayLine.s9;
+    sum.s9 = weights.sF * delayLine.s9;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 10][sub_time];
     sum.s9 += weights.sE * delayLine.sA;
     sum.s9 += weights.sD * delayLine.sB;
@@ -229,7 +229,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.s9 += weights.s0 * delayLine.s8;
     (*invFIRredData)[tab][pol][time + 9][sub_time] = sum.s9;
 
-    sum.sA  = weights.sF * delayLine.sA;
+    sum.sA = weights.sF * delayLine.sA;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 11][sub_time];
     sum.sA += weights.sE * delayLine.sB;
     sum.sA += weights.sD * delayLine.sC;
@@ -248,7 +248,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.sA += weights.s0 * delayLine.s9;
     (*invFIRredData)[tab][pol][time + 10][sub_time] = sum.sA;
 
-    sum.sB  = weights.sF * delayLine.sB;
+    sum.sB = weights.sF * delayLine.sB;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 12][sub_time];
     sum.sB += weights.sE * delayLine.sC;
     sum.sB += weights.sD * delayLine.sD;
@@ -267,7 +267,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.sB += weights.s0 * delayLine.sA;
     (*invFIRredData)[tab][pol][time + 11][sub_time] = sum.sB;
 
-    sum.sC  = weights.sF * delayLine.sC;
+    sum.sC = weights.sF * delayLine.sC;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 13][sub_time];
     sum.sC += weights.sE * delayLine.sD;
     sum.sC += weights.sD * delayLine.sE;
@@ -286,7 +286,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.sC += weights.s0 * delayLine.sB;
     (*invFIRredData)[tab][pol][time + 12][sub_time] = sum.sC;
 
-    sum.sD  = weights.sF * delayLine.sD;
+    sum.sD = weights.sF * delayLine.sD;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 14][sub_time];
     sum.sD += weights.sE * delayLine.sE;
     sum.sD += weights.sD * delayLine.sF;
@@ -305,7 +305,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.sD += weights.s0 * delayLine.sC;
     (*invFIRredData)[tab][pol][time + 13][sub_time] = sum.sD;
 
-    sum.sE  = weights.sF * delayLine.sE;
+    sum.sE = weights.sF * delayLine.sE;
     delayLine.sF = (*invFFTedData)[tab][pol][time + NR_STATION_FILTER_TAPS - 1 + 15][sub_time];
     sum.sE += weights.sE * delayLine.sF;
     sum.sE += weights.sD * delayLine.s0;
@@ -324,7 +324,7 @@ __kernel void invFIRfilter(__global void *invFIRredDataPtr,
     sum.sE += weights.s0 * delayLine.sD;
     (*invFIRredData)[tab][pol][time + 14][sub_time] = sum.sE;
 
-    sum.sF  = weights.sF * delayLine.sF;
+    sum.sF = weights.sF * delayLine.sF;
     sum.sF += weights.sE * delayLine.s0;
     sum.sF += weights.sD * delayLine.s1;
     sum.sF += weights.sC * delayLine.s2;

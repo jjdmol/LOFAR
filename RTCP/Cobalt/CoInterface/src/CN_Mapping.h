@@ -25,24 +25,26 @@
 #define LOFAR_INTERFACE_CN_MAPPING_H
 
 
-namespace LOFAR {
-namespace RTCP {
-
-class CN_Mapping
+namespace LOFAR
 {
-  public:
-    // Reshuffle cores within different psets differently, to make the transpose
-    // over the 3D-torus much more efficient.  Without reshuffling, transposing
-    // cores often communicate in the same line or plane in the torus, causing
-    // severe bottlenecks over a few links.  With reshuffling, there are more
-    // redundant links, significantly improving the bandwidth.  TODO: improve
-    // the reshuffling function further, to minimize transpose times.
+  namespace RTCP
+  {
 
-    static unsigned mapCoreOnPset(unsigned core, unsigned pset);
-    static unsigned reverseMapCoreOnPset(unsigned core, unsigned pset);
-};
+    class CN_Mapping
+    {
+    public:
+      // Reshuffle cores within different psets differently, to make the transpose
+      // over the 3D-torus much more efficient.  Without reshuffling, transposing
+      // cores often communicate in the same line or plane in the torus, causing
+      // severe bottlenecks over a few links.  With reshuffling, there are more
+      // redundant links, significantly improving the bandwidth.  TODO: improve
+      // the reshuffling function further, to minimize transpose times.
 
-} // namespace RTCP
+      static unsigned mapCoreOnPset(unsigned core, unsigned pset);
+      static unsigned reverseMapCoreOnPset(unsigned core, unsigned pset);
+    };
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

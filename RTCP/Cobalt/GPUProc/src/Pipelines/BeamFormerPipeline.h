@@ -11,20 +11,20 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class BeamFormerPipeline : public Pipeline
     {
-                class BeamFormerPipeline : public Pipeline
-        {
-        public:
-            BeamFormerPipeline(const Parset &);
+    public:
+      BeamFormerPipeline(const Parset &);
 
-            void		    doWork();
+      void                    doWork();
 
-            cl::Program		    intToFloatProgram, delayAndBandPassProgram, beamFormerProgram, transposeProgram, dedispersionChirpProgram;
+      cl::Program intToFloatProgram, delayAndBandPassProgram, beamFormerProgram, transposeProgram, dedispersionChirpProgram;
 
-            PerformanceCounter	    intToFloatCounter, fftCounter, delayAndBandPassCounter, beamFormerCounter, transposeCounter, dedispersionForwardFFTcounter, dedispersionChirpCounter, dedispersionBackwardFFTcounter;
-            PerformanceCounter	    samplesCounter;
-        };
-    }
+      PerformanceCounter intToFloatCounter, fftCounter, delayAndBandPassCounter, beamFormerCounter, transposeCounter, dedispersionForwardFFTcounter, dedispersionChirpCounter, dedispersionBackwardFFTcounter;
+      PerformanceCounter samplesCounter;
+    };
+  }
 }
-#endif 
+#endif

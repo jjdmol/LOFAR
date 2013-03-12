@@ -31,18 +31,20 @@
 using namespace std;
 using namespace dal;
 
-int main() {
+int main()
+{
   if (!check_hdf5_versions()) {
     cerr << "HDF5 version mismatch. DAL was compiled with " << version_hdf5_headers_dal() << ", our headers are " << version_hdf5_headers_current() << ", our library is " << version_hdf5() << endl;
     return 1;
   }
-  
+
   return 0;
 }
 
 #else
 
-int main() {
+int main()
+{
   return 0;
 }
 #endif

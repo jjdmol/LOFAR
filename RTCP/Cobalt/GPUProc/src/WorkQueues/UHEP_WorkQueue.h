@@ -1,7 +1,7 @@
 #ifndef GPUPROC_UHEP_RWORKQUEUE_H
 #define GPUPROC_UHEP_RWORKQUEUE_H
 
-#include "lofar_config.h"    
+#include "lofar_config.h"
 
 #include "CL/cl.hpp"
 
@@ -23,34 +23,34 @@
 #include "Kernels/UHEP_TriggerKernel.h"
 namespace LOFAR
 {
-    namespace  RTCP 
-    {     
-        class UHEP_WorkQueue : public WorkQueue
-        {
-        public:
-            UHEP_WorkQueue(UHEP_Pipeline &, unsigned queueNumber);
+  namespace  RTCP
+  {
+    class UHEP_WorkQueue : public WorkQueue
+    {
+    public:
+      UHEP_WorkQueue(UHEP_Pipeline &, unsigned queueNumber);
 
-            void doWork(const float *delaysAtBegin, const float *delaysAfterEnd, const float *phaseOffsets);
+      void doWork(const float *delaysAtBegin, const float *delaysAfterEnd, const float *phaseOffsets);
 
-            UHEP_Pipeline	&pipeline;
-            cl::Event		inputSamplesEvent, beamFormerWeightsEvent;
+      UHEP_Pipeline       &pipeline;
+      cl::Event inputSamplesEvent, beamFormerWeightsEvent;
 
-            cl::Buffer		devBuffers[2];
-            cl::Buffer		devInputSamples;
-            MultiArrayHostBuffer<char, 5> hostInputSamples;
+      cl::Buffer devBuffers[2];
+      cl::Buffer devInputSamples;
+      MultiArrayHostBuffer<char, 5> hostInputSamples;
 
-            cl::Buffer		devBeamFormerWeights;
-            MultiArrayHostBuffer<std::complex<float>, 3> hostBeamFormerWeights;
+      cl::Buffer devBeamFormerWeights;
+      MultiArrayHostBuffer<std::complex<float>, 3> hostBeamFormerWeights;
 
-            cl::Buffer		devComplexVoltages;
-            cl::Buffer		devReverseSubbandMapping;
-            cl::Buffer		devFFTedData;
-            cl::Buffer		devInvFIRfilteredData;
-            cl::Buffer		devInvFIRfilterWeights;
+      cl::Buffer devComplexVoltages;
+      cl::Buffer devReverseSubbandMapping;
+      cl::Buffer devFFTedData;
+      cl::Buffer devInvFIRfilteredData;
+      cl::Buffer devInvFIRfilterWeights;
 
-            cl::Buffer		devTriggerInfo;
-            VectorHostBuffer<TriggerInfo> hostTriggerInfo;
-        };
-    }
+      cl::Buffer devTriggerInfo;
+      VectorHostBuffer<TriggerInfo> hostTriggerInfo;
+    };
+  }
 }
 #endif

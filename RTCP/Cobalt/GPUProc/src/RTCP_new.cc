@@ -62,10 +62,10 @@ Exception::TerminateHandler t(OpenCL_Support::terminate);
 
 void usage(char **argv)
 {
-    std::cerr << "usage: " << argv[0] << " parset" <<  " [-t correlator|beam|UHEP] [-p]" << std::endl;
-    std::cerr << std::endl;
-    std::cerr << "  -t: select pipeline type" << std::endl;
-    std::cerr << "  -p: enable profiling" << std::endl;
+  std::cerr << "usage: " << argv[0] << " parset" << " [-t correlator|beam|UHEP] [-p]" << std::endl;
+  std::cerr << std::endl;
+  std::cerr << "  -t: select pipeline type" << std::endl;
+  std::cerr << "  -p: enable profiling" << std::endl;
 }
 
 enum SELECTPIPELINE { correlator, beam, UHEP,unittest};
@@ -73,116 +73,116 @@ enum SELECTPIPELINE { correlator, beam, UHEP,unittest};
 // Coverts the input argument from string to a valid 'function' name
 SELECTPIPELINE to_select_pipeline(char *argument)
 {
-    if (!strcmp(argument,"correlator")) 
-        return correlator;
+  if (!strcmp(argument,"correlator"))
+    return correlator;
 
-    if (!strcmp(argument,"beam")) 
-        return beam;
+  if (!strcmp(argument,"beam"))
+    return beam;
 
-    if (!strcmp(argument,"UHEP")) 
-        return UHEP;
+  if (!strcmp(argument,"UHEP"))
+    return UHEP;
 
-    std::cout << "incorrect third argument supplied." << std::endl;
-    exit(1);
+  std::cout << "incorrect third argument supplied." << std::endl;
+  exit(1);
 }
 
 int main(int argc, char **argv)
 {
-    //Allow usage of nested omp calls
-    omp_set_nested(true);
+  //Allow usage of nested omp calls
+  omp_set_nested(true);
 
-    using namespace LOFAR::RTCP;
+  using namespace LOFAR::RTCP;
 
-    INIT_LOGGER("RTCP");
-    std::cout << "running ..." << std::endl;
+  INIT_LOGGER("RTCP");
+  std::cout << "running ..." << std::endl;
 
-    // Set parts of the environment
-    if (setenv("DISPLAY", ":0", 1) < 0)
-    {
-        perror("error setting DISPLAY");
-        exit(1);
-    }
+  // Set parts of the environment
+  if (setenv("DISPLAY", ":0", 1) < 0)
+  {
+    perror("error setting DISPLAY");
+    exit(1);
+  }
 
 #if 0 && defined __linux__
-    set_affinity(0); //something with processor affinity, define at start of rtcp
+  set_affinity(0);   //something with processor affinity, define at start of rtcp
 #endif
 
-    SELECTPIPELINE option = correlator;
-    int opt;
+  SELECTPIPELINE option = correlator;
+  int opt;
 
-    // parse all command-line options
-    while ((opt = getopt(argc, argv, "t:p")) != -1) {
-        switch (opt) {
-          case 't':
-            option = to_select_pipeline(optarg);
-            break;
+  // parse all command-line options
+  while ((opt = getopt(argc, argv, "t:p")) != -1) {
+    switch (opt) {
+    case 't':
+      option = to_select_pipeline(optarg);
+      break;
 
-          case 'p':
-            profiling = true;
-            break;
+    case 'p':
+      profiling = true;
+      break;
 
-          default: /* '?' */
-            usage(argv);
-            exit(1);
-        }
-    }
-
-    // we expect a parset filename as an additional parameter
-    if (optind >= argc) {
+    default:       /* '?' */
       usage(argv);
       exit(1);
     }
+  }
 
-        // Create a parameters set object based on the inputs
-        Parset ps(argv[optind]);
+  // we expect a parset filename as an additional parameter
+  if (optind >= argc) {
+    usage(argv);
+    exit(1);
+  }
 
-        // Set the number of stations: Code is currently non functional
-        //bool set_num_stations = false;
-        //if (set_num_stations)
-        //{
-        //    const char *str = getenv("NR_STATIONS");
-        //    ps.nrStations() = str ? atoi(str) : 77;
-        //}
-        std::cout << "nr stations = " << ps.nrStations() << std::endl;        
+  // Create a parameters set object based on the inputs
+  Parset ps(argv[optind]);
 
-        // Select number of GPUs to run on
+  // Set the number of stations: Code is currently non functional
+  //bool set_num_stations = false;
+  //if (set_num_stations)
+  //{
+  //    const char *str = getenv("NR_STATIONS");
+  //    ps.nrStations() = str ? atoi(str) : 77;
+  //}
+  std::cout << "nr stations = " << ps.nrStations() << std::endl;
 
-        // Spawn the output processes (only do this once globally)
-        StorageProcesses storageProcesses(ps, "");
+  // Select number of GPUs to run on
 
-        // use a switch to select between modes
-        switch (option)
-        {
-        case correlator:
-            std::cout << "We are in the correlator part of the code." << std::endl;
-            CorrelatorPipeline(ps).doWork();
-            break;
+  // Spawn the output processes (only do this once globally)
+  StorageProcesses storageProcesses(ps, "");
 
-        case beam:
-            std::cout << "We are in the beam part of the code." << std::endl;
-            BeamFormerPipeline(ps).doWork();
-            break;
+  // use a switch to select between modes
+  switch (option)
+  {
+  case correlator:
+    std::cout << "We are in the correlator part of the code." << std::endl;
+    CorrelatorPipeline(ps).doWork();
+    break;
 
-        case UHEP:
-            std::cout << "We are in the UHEP part of the code." << std::endl;
-            UHEP_Pipeline(ps).doWork();
-            break;
+  case beam:
+    std::cout << "We are in the beam part of the code." << std::endl;
+    BeamFormerPipeline(ps).doWork();
+    break;
 
-        default:
-            std::cout << "None of the types matched, do nothing" << std::endl;
-        }
+  case UHEP:
+    std::cout << "We are in the UHEP part of the code." << std::endl;
+    UHEP_Pipeline(ps).doWork();
+    break;
 
-        // COMPLETING stage
-        time_t completing_start = time(0);
+  default:
+    std::cout << "None of the types matched, do nothing" << std::endl;
+  }
 
-        // retrieve and forward final meta data
-        // TODO: Increase timeouts when FinalMetaDataGatherer starts working
-        // again
-        storageProcesses.forwardFinalMetaData(completing_start + 2);
+  // COMPLETING stage
+  time_t completing_start = time(0);
 
-        // graceful exit
-        storageProcesses.stop(completing_start + 10);
+  // retrieve and forward final meta data
+  // TODO: Increase timeouts when FinalMetaDataGatherer starts working
+  // again
+  storageProcesses.forwardFinalMetaData(completing_start + 2);
 
-    return 0;
+  // graceful exit
+  storageProcesses.stop(completing_start + 10);
+
+  return 0;
 }
 

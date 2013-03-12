@@ -1,7 +1,7 @@
 #ifndef GPUPROC_BEAMFORMERWORKQUEUE_H
 #define GPUPROC_BEAMFORMERWORKQUEUE_H
 
-#include "lofar_config.h"    
+#include "lofar_config.h"
 
 #include "Common/LofarLogger.h"
 #include "global_defines.h"
@@ -29,39 +29,39 @@
 
 namespace LOFAR
 {
-    namespace  RTCP 
-    {     
-                class BeamFormerWorkQueue : public WorkQueue
-        {
-        public:
-            BeamFormerWorkQueue(BeamFormerPipeline &, unsigned queueNumber);
+  namespace  RTCP
+  {
+    class BeamFormerWorkQueue : public WorkQueue
+    {
+    public:
+      BeamFormerWorkQueue(BeamFormerPipeline &, unsigned queueNumber);
 
-            void doWork();
+      void doWork();
 
-            BeamFormerPipeline	&pipeline;
+      BeamFormerPipeline  &pipeline;
 
-            MultiArraySharedBuffer<char, 4>		   inputSamples;
-            cl::Buffer					   devFilteredData;
-            MultiArraySharedBuffer<float, 1>		   bandPassCorrectionWeights;
-            MultiArraySharedBuffer<float, 3>		   delaysAtBegin, delaysAfterEnd;
-            MultiArraySharedBuffer<float, 2>		   phaseOffsets;
-            cl::Buffer					   devCorrectedData;
-            MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights;
-            cl::Buffer					   devComplexVoltages;
-            MultiArraySharedBuffer<std::complex<float>, 4> transposedComplexVoltages;
-            MultiArraySharedBuffer<float, 1>		   DMs;
+      MultiArraySharedBuffer<char, 4>                inputSamples;
+      cl::Buffer devFilteredData;
+      MultiArraySharedBuffer<float, 1>               bandPassCorrectionWeights;
+      MultiArraySharedBuffer<float, 3>               delaysAtBegin, delaysAfterEnd;
+      MultiArraySharedBuffer<float, 2>               phaseOffsets;
+      cl::Buffer devCorrectedData;
+      MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights;
+      cl::Buffer devComplexVoltages;
+      MultiArraySharedBuffer<std::complex<float>, 4> transposedComplexVoltages;
+      MultiArraySharedBuffer<float, 1>               DMs;
 
-        private:
-            IntToFloatKernel intToFloatKernel;
-            Filter_FFT_Kernel fftKernel;
-            DelayAndBandPassKernel delayAndBandPassKernel;
-            BeamFormerKernel beamFormerKernel;
-            BeamFormerTransposeKernel transposeKernel;
-            DedispersionForwardFFTkernel dedispersionForwardFFTkernel;
-            DedispersionBackwardFFTkernel dedispersionBackwardFFTkernel;
-            DedispersionChirpKernel dedispersionChirpKernel;
-        };
+    private:
+      IntToFloatKernel intToFloatKernel;
+      Filter_FFT_Kernel fftKernel;
+      DelayAndBandPassKernel delayAndBandPassKernel;
+      BeamFormerKernel beamFormerKernel;
+      BeamFormerTransposeKernel transposeKernel;
+      DedispersionForwardFFTkernel dedispersionForwardFFTkernel;
+      DedispersionBackwardFFTkernel dedispersionBackwardFFTkernel;
+      DedispersionChirpKernel dedispersionChirpKernel;
+    };
 
-    }
+  }
 }
 #endif

@@ -31,57 +31,58 @@
 using namespace std;
 using namespace LOFAR;
 
-int main(int argc, char *argv[]) {
-	// Locate TBB connection mapping file.
-	// Select from either: argv[1], $LOFARROOT/etc/StaticMetaData/TBBConnections.dat, or ./TBBConnections.dat
-	string tbbMappingFilename;
-	if (argc > 1) {
-		tbbMappingFilename = argv[1];
-	} else {
-		const string defaultTbbMappingFilename("TBBConnections.dat");
-		char* lrpath = getenv("LOFARROOT");
-		if (lrpath != NULL) {
-			tbbMappingFilename = string(lrpath) + "/etc/StaticMetaData/";
-		}
-		tbbMappingFilename.append(defaultTbbMappingFilename);
-	}
+int main(int argc, char *argv[])
+{
+  // Locate TBB connection mapping file.
+  // Select from either: argv[1], $LOFARROOT/etc/StaticMetaData/TBBConnections.dat, or ./TBBConnections.dat
+  string tbbMappingFilename;
+  if (argc > 1) {
+    tbbMappingFilename = argv[1];
+  } else {
+    const string defaultTbbMappingFilename("TBBConnections.dat");
+    char* lrpath = getenv("LOFARROOT");
+    if (lrpath != NULL) {
+      tbbMappingFilename = string(lrpath) + "/etc/StaticMetaData/";
+    }
+    tbbMappingFilename.append(defaultTbbMappingFilename);
+  }
 
-	try {
-		// Open and read in.
-		TBB_StaticMapping tsm(tbbMappingFilename);
+  try {
+    // Open and read in.
+    TBB_StaticMapping tsm(tbbMappingFilename);
 
-		if (tsm.empty()) {
-			throw Exception("Opened tbb static mapping file, but list of station names is empty");
-		}
+    if (tsm.empty()) {
+      throw Exception("Opened tbb static mapping file, but list of station names is empty");
+    }
 
-		// Show all.
-		cout << "Found " << tsm.size() << " nodes with the following station and board names:" << endl;
-		for (multimap<string, pair<string, string> >::const_iterator it(tsm.begin()); it != tsm.end(); ++it) {
-			cout << "node: " << (*it).first << " -> (" << (*it).second.first << ", " << (*it).second.second << ")" << endl;
-		}
-	
-		// Select all station or board names mapped to a given node.
-		const string nodeName("locus029");
+    // Show all.
+    cout << "Found " << tsm.size() << " nodes with the following station and board names:" << endl;
+    for (multimap<string, pair<string, string> >::const_iterator it(tsm.begin()); it != tsm.end(); ++it) {
+      cout << "node: " << (*it).first << " -> (" << (*it).second.first << ", " << (*it).second.second << ")" << endl;
+    }
 
-		vector<string> stations(tsm.getStationNames(nodeName));
-		cout << nodeName << ": ";
-		for (unsigned i = 0; i < stations.size(); i++) {
-			cout << stations[i] << " ";
-		}
-		cout << endl;
+    // Select all station or board names mapped to a given node.
+    const string nodeName("locus029");
 
-		vector<string> boards(tsm.getBoardNames(nodeName));
-		cout << nodeName << ": ";
-		for (unsigned i = 0; i < boards.size(); i++) {
-			cout << boards[i] << " ";
-		}
-		cout << endl;
+    vector<string> stations(tsm.getStationNames(nodeName));
+    cout << nodeName << ": ";
+    for (unsigned i = 0; i < stations.size(); i++) {
+      cout << stations[i] << " ";
+    }
+    cout << endl;
 
-	} catch (Exception& exc) {
-		cerr << exc.what() << endl;
-		return 1;
-	}
+    vector<string> boards(tsm.getBoardNames(nodeName));
+    cout << nodeName << ": ";
+    for (unsigned i = 0; i < boards.size(); i++) {
+      cout << boards[i] << " ";
+    }
+    cout << endl;
 
-	return 0;
+  } catch (Exception& exc) {
+    cerr << exc.what() << endl;
+    return 1;
+  }
+
+  return 0;
 }
 

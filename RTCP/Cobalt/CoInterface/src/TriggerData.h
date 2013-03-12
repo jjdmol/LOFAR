@@ -5,24 +5,34 @@
 #include <CoInterface/StreamableData.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-class TriggerData: public StreamableData
+namespace LOFAR
 {
-  public:
-    TriggerData() : trigger(false) {}
-
-    bool trigger;
-
-  protected:  
-    virtual void readData(Stream *str) { str->read(&trigger, sizeof trigger); }
-    virtual void writeData(Stream *str) { str->write(&trigger, sizeof trigger); }
-};
+  namespace RTCP
+  {
 
 
-} // namespace RTCP
+    class TriggerData : public StreamableData
+    {
+    public:
+      TriggerData() : trigger(false)
+      {
+      }
+
+      bool trigger;
+
+    protected:
+      virtual void readData(Stream *str)
+      {
+        str->read(&trigger, sizeof trigger);
+      }
+      virtual void writeData(Stream *str)
+      {
+        str->write(&trigger, sizeof trigger);
+      }
+    };
+
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

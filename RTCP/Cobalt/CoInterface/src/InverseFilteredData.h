@@ -9,36 +9,38 @@
 #include <CoInterface/SparseSet.h>
 #include <CoInterface/StreamableData.h>
 
-namespace LOFAR {
-namespace RTCP {
-
-// This assumes the nrChannels == 1
-// We store the data for only 1 beam, 1 polarization.
-// nrSamplesPerIntegration is the original nrSamplesPerIntegration, and now becomes the "major time" index.
-// The stationFilterSize is the minor time index.
-
-class InverseFilteredData: public SampleData<float,1,1>
+namespace LOFAR
 {
-  public:
-    typedef SampleData<float,1,1> SuperType;
+  namespace RTCP
+  {
 
-    InverseFilteredData(unsigned nrSamplesPerIntegration, unsigned stationFilterSize);
+    // This assumes the nrChannels == 1
+    // We store the data for only 1 beam, 1 polarization.
+    // nrSamplesPerIntegration is the original nrSamplesPerIntegration, and now becomes the "major time" index.
+    // The stationFilterSize is the minor time index.
 
-  protected:
-    const unsigned              itsNrSamplesPerIntegration;
-    const unsigned              itsStationFilterSize;
-    
-};
+    class InverseFilteredData : public SampleData<float,1,1>
+    {
+    public:
+      typedef SampleData<float,1,1> SuperType;
 
-inline InverseFilteredData::InverseFilteredData(unsigned nrSamplesPerIntegration, unsigned stationFilterSize)
-:
-  SuperType::SampleData(boost::extents[nrSamplesPerIntegration*stationFilterSize], boost::extents[1]),
-  itsNrSamplesPerIntegration(nrSamplesPerIntegration),
-  itsStationFilterSize(stationFilterSize)
-{
-}
+      InverseFilteredData(unsigned nrSamplesPerIntegration, unsigned stationFilterSize);
 
-} // namespace RTCP
+    protected:
+      const unsigned itsNrSamplesPerIntegration;
+      const unsigned itsStationFilterSize;
+
+    };
+
+    inline InverseFilteredData::InverseFilteredData(unsigned nrSamplesPerIntegration, unsigned stationFilterSize)
+      :
+      SuperType::SampleData(boost::extents[nrSamplesPerIntegration * stationFilterSize], boost::extents[1]),
+      itsNrSamplesPerIntegration(nrSamplesPerIntegration),
+      itsStationFilterSize(stationFilterSize)
+    {
+    }
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

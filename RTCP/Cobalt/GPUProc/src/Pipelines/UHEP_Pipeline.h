@@ -12,21 +12,21 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+
+    class UHEP_Pipeline : public Pipeline
     {
+    public:
+      UHEP_Pipeline(const Parset &);
 
-        class UHEP_Pipeline : public Pipeline
-        {
-        public:
-            UHEP_Pipeline(const Parset &);
+      void                    doWork();
 
-            void		    doWork();
+      cl::Program beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
+      PerformanceCounter beamFormerCounter, transposeCounter, invFFTcounter, invFIRfilterCounter, triggerCounter;
+      PerformanceCounter beamFormerWeightsCounter, samplesCounter;
+    };
 
-            cl::Program		    beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
-            PerformanceCounter	    beamFormerCounter, transposeCounter, invFFTcounter, invFIRfilterCounter, triggerCounter;
-            PerformanceCounter	    beamFormerWeightsCounter, samplesCounter;
-        };
-
-    }
+  }
 }
 #endif

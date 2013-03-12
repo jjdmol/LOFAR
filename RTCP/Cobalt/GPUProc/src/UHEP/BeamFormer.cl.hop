@@ -18,24 +18,24 @@ float2 cmul(float2 a, float2 b)
 
 
 __kernel void complexVoltages(__global void *complexVoltagesPtr,
-			      __global const void *samplesPtr,
-			      __global const void *weightsPtr)
+                              __global const void *samplesPtr,
+                              __global const void *weightsPtr)
 {
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
-  SamplesType samples   = (SamplesType) samplesPtr;
-  WeightsType weights	= (WeightsType) weightsPtr;
+  SamplesType samples = (SamplesType) samplesPtr;
+  WeightsType weights = (WeightsType) weightsPtr;
 
 #if defined USE_WARP_SHUFFLE_INSN
-  uint first_tab	= 3 * get_local_id(1);
-  uint first_station	= 6 * get_local_id(0);
+  uint first_tab = 3 * get_local_id(1);
+  uint first_station = 6 * get_local_id(0);
 #else
-  uint pol		= get_local_id(0) & 1;
-  uint tab_group	= (get_local_id(0) >> 1) % (NR_TABS / 3);
-  uint station_group	= (get_local_id(0) >> 1) / (NR_TABS / 3);
-  uint first_tab	= 3 * tab_group;
-  uint first_station	= 6 * station_group;
+  uint pol = get_local_id(0) & 1;
+  uint tab_group = (get_local_id(0) >> 1) % (NR_TABS / 3);
+  uint station_group = (get_local_id(0) >> 1) / (NR_TABS / 3);
+  uint first_tab = 3 * tab_group;
+  uint first_station = 6 * station_group;
 #endif
-  uint subband		= get_global_id(1);
+  uint subband = get_global_id(1);
 
   bool lastGroupOfStations = first_station + 6 == NR_STATIONS;
 
@@ -73,7 +73,7 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
   }
 #endif
 
-  for (int time = 0 - station_group; time < (int) (NR_SAMPLES_PER_SUBBAND + NR_STATION_FILTER_TAPS - 1 + NR_STATIONS / 6 - 1 - station_group); time ++) {
+  for (int time = 0 - station_group; time < (int) (NR_SAMPLES_PER_SUBBAND + NR_STATION_FILTER_TAPS - 1 + NR_STATIONS / 6 - 1 - station_group); time++) {
     bool validTime = time >= 0 && time < NR_SAMPLES_PER_SUBBAND + NR_STATION_FILTER_TAPS - 1;
 
     if (validTime) {
@@ -96,18 +96,18 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
       sum_1 = local_sums[1][station_group][tab_group][pol];
       sum_2 = local_sums[2][station_group][tab_group][pol];
 #else
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_0.x) : "0" (sum_0.x));
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_0.y) : "0" (sum_0.y));
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_0.z) : "0" (sum_0.z));
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_0.w) : "0" (sum_0.w));
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_1.x) : "0" (sum_1.x));
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_1.y) : "0" (sum_1.y));
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_1.z) : "0" (sum_1.z));
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_1.w) : "0" (sum_1.w));
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_2.x) : "0" (sum_2.x));
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_2.y) : "0" (sum_2.y));
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_2.z) : "0" (sum_2.z));
-      asm("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_2.w) : "0" (sum_2.w));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_0.x) : "0" (sum_0.x));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_0.y) : "0" (sum_0.y));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_0.z) : "0" (sum_0.z));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_0.w) : "0" (sum_0.w));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_1.x) : "0" (sum_1.x));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_1.y) : "0" (sum_1.y));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_1.z) : "0" (sum_1.z));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_1.w) : "0" (sum_1.w));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_2.x) : "0" (sum_2.x));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_2.y) : "0" (sum_2.y));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_2.z) : "0" (sum_2.z));
+      asm ("shfl.up.b32 %0, %0, 1, 0x00;" : "=r" (sum_2.w) : "0" (sum_2.w));
 #endif
 
       sum_0 += weight_0_0.xx * sample_0;
@@ -165,14 +165,14 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
     if (validTime) {
 #endif
       if (lastGroupOfStations) {
-	(*complexVoltages)[subband][time][first_tab + 0][pol] = sum_0;
-	(*complexVoltages)[subband][time][first_tab + 1][pol] = sum_1;
-	(*complexVoltages)[subband][time][first_tab + 2][pol] = sum_2;
+        (*complexVoltages)[subband][time][first_tab + 0][pol] = sum_0;
+        (*complexVoltages)[subband][time][first_tab + 1][pol] = sum_1;
+        (*complexVoltages)[subband][time][first_tab + 2][pol] = sum_2;
 #if !defined USE_WARP_SHUFFLE_INSN
       } else {
-	local_sums[0][station_group + 1][tab_group][pol] = sum_0;
-	local_sums[1][station_group + 1][tab_group][pol] = sum_1;
-	local_sums[2][station_group + 1][tab_group][pol] = sum_2;
+        local_sums[0][station_group + 1][tab_group][pol] = sum_0;
+        local_sums[1][station_group + 1][tab_group][pol] = sum_1;
+        local_sums[2][station_group + 1][tab_group][pol] = sum_2;
 #endif
       }
     }

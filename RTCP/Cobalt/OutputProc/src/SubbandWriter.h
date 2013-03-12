@@ -35,28 +35,30 @@
 #include <string>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-class SubbandWriter
+namespace LOFAR
 {
-  public:
-    SubbandWriter(const Parset &, OutputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix);
-
-    void augment(const FinalMetaData &finalMetaData);
-
-  private:
-    static const unsigned	     maxReceiveQueueSize = 30;
-
-    Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
-
-    SmartPtr<InputThread>	     itsInputThread;
-    SmartPtr<OutputThread>	     itsOutputThread;
-};
+  namespace RTCP
+  {
 
 
-} // namespace RTCP
+    class SubbandWriter
+    {
+    public:
+      SubbandWriter(const Parset &, OutputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix);
+
+      void augment(const FinalMetaData &finalMetaData);
+
+    private:
+      static const unsigned maxReceiveQueueSize = 30;
+
+      Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
+
+      SmartPtr<InputThread>            itsInputThread;
+      SmartPtr<OutputThread>           itsOutputThread;
+    };
+
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

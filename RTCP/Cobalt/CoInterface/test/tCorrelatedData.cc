@@ -17,7 +17,7 @@ int main(void)
   NSTimer timer("addition", true, false);
 
   unsigned nr_maxsamples[] = { 255, 65535, 1000000 }; // encode using 1, 2, 4 bytes, respectively
-  unsigned nr_channels[]  = { 1, 16, 64, 256 };
+  unsigned nr_channels[] = { 1, 16, 64, 256 };
   unsigned nr_stations[] = { 1, 2, 3, 4, 5, 24 };
 
   for( unsigned s = 0; s < sizeof nr_maxsamples / sizeof nr_maxsamples[0]; ++s )
@@ -40,14 +40,14 @@ int main(void)
         for( unsigned i = 0; i < nbl; i++ ) {
           for( unsigned j = 0; j < nch; j++ ) {
             n++;
-            
-            data1.setNrValidSamples(i, j, (n*1) % (ns/2));
-            data2.setNrValidSamples(i, j, (n*2) % (ns/2));
-            data3.setNrValidSamples(i, j, ((n*1) % (ns/2)) + ((n*2) % (ns/2)));
+
+            data1.setNrValidSamples(i, j, (n * 1) % (ns / 2));
+            data2.setNrValidSamples(i, j, (n * 2) % (ns / 2));
+            data3.setNrValidSamples(i, j, ((n * 1) % (ns / 2)) + ((n * 2) % (ns / 2)));
 
             for( unsigned k = 0; k < 2; k++ ) {
               for( unsigned l = 0; l < 2; l++ ) {
-                data1.visibilities[i][j][k][l] =    1 * ((i + j) * 10 + k * 2 + l);
+                data1.visibilities[i][j][k][l] = 1 * ((i + j) * 10 + k * 2 + l);
                 data2.visibilities[i][j][k][l] = 1000 * ((i + j) * 10 + k * 2 + l);
                 data3.visibilities[i][j][k][l] = 1001 * ((i + j) * 10 + k * 2 + l);
               }

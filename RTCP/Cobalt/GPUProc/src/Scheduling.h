@@ -25,20 +25,22 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-namespace LOFAR {
-namespace RTCP {
+namespace LOFAR
+{
+  namespace RTCP
+  {
 
 #if defined HAVE_BGP_ION
-// Core 0 handles all ethernet and tree interrupts.  Do not run time-critical
-// threads on this core.
-extern void doNotRunOnCore0();
-extern void runOnCore0();
+    // Core 0 handles all ethernet and tree interrupts.  Do not run time-critical
+    // threads on this core.
+    extern void doNotRunOnCore0();
+    extern void runOnCore0();
 
-// set thread priority. 0 = normal, 1 - 99 = real time
-extern void setPriority(unsigned priority);
+    // set thread priority. 0 = normal, 1 - 99 = real time
+    extern void setPriority(unsigned priority);
 #endif
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif
