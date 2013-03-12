@@ -31,7 +31,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class LockedRanges
@@ -91,7 +91,7 @@ namespace LOFAR
       itsRangeUnlocked.broadcast();
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

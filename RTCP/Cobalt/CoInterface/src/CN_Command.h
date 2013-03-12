@@ -29,7 +29,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class CN_Command
@@ -105,7 +105,7 @@ namespace LOFAR
     }
 
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

@@ -21,7 +21,7 @@
 
 namespace LOFAR
 {
-  namespace  RTCP
+  namespace Cobalt
   {
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset       &parset,
                                              cl::Context &context, cl::Device  &device, unsigned gpuNumber,

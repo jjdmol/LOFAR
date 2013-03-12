@@ -8,7 +8,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     // There is a strict separation between a memory allocator and the physical
@@ -139,7 +139,7 @@ namespace LOFAR
       std::map<void *, size_t>    sizes;
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

@@ -38,7 +38,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 
@@ -202,5 +202,5 @@ namespace LOFAR
       //LOG_DEBUG("LogThread stopped");
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

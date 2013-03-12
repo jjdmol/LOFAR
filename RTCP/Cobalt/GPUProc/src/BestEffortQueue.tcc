@@ -2,7 +2,7 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+    namespace Cobalt 
     {
 
 template <typename T> inline BestEffortQueue<T>::BestEffortQueue(size_t maxSize, bool dropIfFull)

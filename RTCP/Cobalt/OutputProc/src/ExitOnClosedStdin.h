@@ -13,7 +13,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class ExitOnClosedStdin
@@ -27,7 +27,7 @@ namespace LOFAR
       Thread itsThread;
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

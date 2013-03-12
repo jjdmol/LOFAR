@@ -26,7 +26,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 #include <cstddef>
@@ -49,7 +49,7 @@ namespace LOFAR
       char data[8130];
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

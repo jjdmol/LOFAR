@@ -27,7 +27,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class CN_Mapping
@@ -44,7 +44,7 @@ namespace LOFAR
       static unsigned reverseMapCoreOnPset(unsigned core, unsigned pset);
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

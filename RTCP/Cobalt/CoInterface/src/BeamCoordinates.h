@@ -10,7 +10,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     // Beam coordinates are offsets for pencil beams (tied array beams) relative to the center

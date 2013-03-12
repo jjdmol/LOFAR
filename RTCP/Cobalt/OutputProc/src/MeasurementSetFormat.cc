@@ -64,7 +64,7 @@ using namespace casa;
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 
@@ -571,5 +571,5 @@ namespace LOFAR
     }
 
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namepsace LOFAR

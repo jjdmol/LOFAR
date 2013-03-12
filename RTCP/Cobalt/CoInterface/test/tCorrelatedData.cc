@@ -9,7 +9,7 @@
 
 
 using namespace LOFAR;
-using namespace LOFAR::RTCP;
+using namespace LOFAR::Cobalt;
 using namespace std;
 
 int main(void)

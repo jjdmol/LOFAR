@@ -49,7 +49,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class Transpose2;
@@ -377,7 +377,7 @@ namespace LOFAR
       const int phaseThreeCoreIndex;
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

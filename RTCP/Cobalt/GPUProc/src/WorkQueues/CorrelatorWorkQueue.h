@@ -25,7 +25,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     struct WorkQueueInputData
     {

@@ -9,7 +9,7 @@
 #include "Kernel.h"
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     class UHEP_TransposeKernel : public Kernel
     {

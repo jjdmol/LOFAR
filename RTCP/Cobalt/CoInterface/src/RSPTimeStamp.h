@@ -31,7 +31,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class TimeStamp
@@ -248,7 +248,7 @@ namespace LOFAR
       return itsTime != other.itsTime;
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 
 } // namespace LOFAR
 

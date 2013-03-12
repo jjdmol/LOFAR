@@ -568,7 +568,7 @@ int main(int argc, char* argv[]) {
 
 	// Config exceptions (opening or parsing) are fatal. Too bad we cannot have it in one type.
 	} catch (LOFAR::RTCP::InterfaceException& exc) {
-		LOG_FATAL_STR("TBB: Required RTCP parset key/values missing: " << exc);
+		LOG_FATAL_STR("TBB: Required parset key/values missing: " << exc);
 	} catch (LOFAR::APSException& exc) {
 		LOG_FATAL_STR("TBB: Parameterset error: " << exc);
 	} catch (LOFAR::RTCP::StorageException& exc) {

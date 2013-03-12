@@ -66,7 +66,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     using namespace std;
@@ -1271,6 +1271,6 @@ namespace LOFAR
       return itsStreamWriters[streamWriterNr]->getTimeoutStampSec();
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 

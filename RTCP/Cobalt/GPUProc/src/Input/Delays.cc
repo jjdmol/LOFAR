@@ -42,7 +42,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     using namespace casa;
@@ -311,5 +311,5 @@ namespace LOFAR
       itsPhasePositionDiff = phaseCentre - pRef;
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

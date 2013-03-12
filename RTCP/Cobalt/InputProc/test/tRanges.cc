@@ -4,7 +4,7 @@
 #include <vector>
 
 using namespace LOFAR;
-using namespace RTCP;
+using namespace Cobalt;
 using namespace std;
 
 int main( int, char **argv )

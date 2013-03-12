@@ -12,7 +12,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     DelayAndBandPassKernel::DelayAndBandPassKernel(const Parset &ps, cl::Program &program,
                                                    cl::Buffer &devCorrectedData, cl::Buffer &devFilteredData,

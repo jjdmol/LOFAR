@@ -18,7 +18,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     extern bool profiling;
     extern unsigned nrGPUs;

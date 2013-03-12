@@ -19,7 +19,7 @@ using namespace std;
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     PerformanceCounter::PerformanceCounter(const std::string &name, bool profiling, bool logAtDestruction)
       :

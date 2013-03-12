@@ -12,7 +12,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     UHEP_Pipeline::UHEP_Pipeline(const Parset &ps)
       :

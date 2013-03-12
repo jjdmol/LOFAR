@@ -7,7 +7,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     class Kernel : public cl::Kernel
     {

@@ -4,7 +4,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     std::ostream& operator<<( std::ostream &str, const Ranges &r )

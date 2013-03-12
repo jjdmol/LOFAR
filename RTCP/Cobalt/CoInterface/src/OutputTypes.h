@@ -3,7 +3,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     enum OutputType
@@ -29,7 +29,7 @@ namespace LOFAR
       return static_cast<OutputType>((outputType = static_cast<OutputType>(outputType + 1)) - 1);
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

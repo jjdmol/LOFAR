@@ -9,7 +9,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     DedispersionForwardFFTkernel::DedispersionForwardFFTkernel(const Parset &ps, cl::Context &context, cl::Buffer &buffer)
       :

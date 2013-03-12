@@ -27,7 +27,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 #if defined HAVE_BGP_ION
@@ -40,7 +40,7 @@ namespace LOFAR
     extern void setPriority(unsigned priority);
 #endif
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

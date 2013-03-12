@@ -47,7 +47,7 @@ using namespace std;
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 #ifndef HAVE_LOG4COUT
@@ -832,6 +832,6 @@ namespace LOFAR
       }
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 

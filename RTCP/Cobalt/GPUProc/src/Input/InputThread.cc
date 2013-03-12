@@ -47,7 +47,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 
@@ -208,5 +208,5 @@ namespace LOFAR
     template class InputThread<i8complex>;
     template class InputThread<i16complex>;
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

@@ -9,7 +9,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     // Polarizations are separated, otherwise the buffers do not fit in memory.
@@ -29,7 +29,7 @@ namespace LOFAR
     {
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

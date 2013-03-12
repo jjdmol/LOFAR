@@ -10,7 +10,7 @@
 
 namespace LOFAR
 {
-  namespace  RTCP
+  namespace Cobalt
   {
     WorkQueue::WorkQueue(cl::Context &context, cl::Device           &device, unsigned gpuNumber, const Parset       &ps)
       :

@@ -23,7 +23,7 @@
 #include "Kernels/UHEP_TriggerKernel.h"
 namespace LOFAR
 {
-  namespace  RTCP
+  namespace Cobalt
   {
     class UHEP_WorkQueue : public WorkQueue
     {

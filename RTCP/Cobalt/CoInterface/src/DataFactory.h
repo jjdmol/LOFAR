@@ -31,12 +31,12 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     StreamableData *newStreamableData(const Parset &, OutputType, int streamNr = -1, Allocator & = heapAllocator);
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

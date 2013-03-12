@@ -15,7 +15,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 
@@ -111,7 +111,7 @@ namespace LOFAR
 
     cl::Program Pipeline::createProgram(const char *sources)
     {
-      return LOFAR::RTCP::createProgram(ps, context, devices, sources);
+      return LOFAR::Cobalt::createProgram(ps, context, devices, sources);
     }
 
 

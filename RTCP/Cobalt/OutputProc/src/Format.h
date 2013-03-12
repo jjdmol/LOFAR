@@ -13,7 +13,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class Format
@@ -24,7 +24,7 @@ namespace LOFAR
       virtual void addSubband(const std::string MSname, unsigned subband, bool isBigEndian) = 0;
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

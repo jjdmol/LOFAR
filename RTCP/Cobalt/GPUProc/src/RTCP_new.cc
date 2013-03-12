@@ -55,7 +55,7 @@
 #include "Storage/StorageProcesses.h"
 
 using namespace LOFAR;
-using namespace LOFAR::RTCP;
+using namespace LOFAR::Cobalt;
 
 // Use our own terminate handler
 Exception::TerminateHandler t(OpenCL_Support::terminate);
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
   //Allow usage of nested omp calls
   omp_set_nested(true);
 
-  using namespace LOFAR::RTCP;
+  using namespace LOFAR::Cobalt;
 
   INIT_LOGGER("RTCP");
   LOG_INFO_STR("running ...");

@@ -16,7 +16,7 @@ using namespace std;
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     // Prevent multiple threads from creating/deleting the same region at the same
     // time.
