@@ -26,6 +26,8 @@ typedef __global fcomplex4 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
  * Computes correlations between all pairs of stations (baselines) and X,Y
  * polarizations. Also computes all station (and pol) auto-correlations.
  *
+ * We consider the output space shaped as a triangle of S*(S-1)/2 full
+ * correlations, plus S auto-correlations at the hypothenuse (S = NR_STATIONS).
  * This correlator consists of various versions, correlate_NxN, that differ in
  * used register block size. We have 1x1 (this kernel), 2x2, 3x3, and 4x4.
  * Measure, then select the fastest for your platform.
@@ -44,7 +46,8 @@ typedef __global fcomplex4 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
  * NR_SAMPLES_PER_CHANNEL  | multiple of BLOCK_SIZE  | number of input samples per channel
  * NR_CHANNELS             | > 1 (TODO: supp 1 ch)   | number of frequency channels per subband
  * Note that for > 1 channels, NR_CHANNELS-1 channels are actually processed,
- * because the second PPF has "corrupted" channel 0. (An inverse PPF can disambiguate.)
+ * because the second PPF has "corrupted" channel 0. (An inverse PPF can disambiguate.) \n
+ * Note that this kernel assumes (but does not use) NR_POLARIZATIONS == 2.
  *
  * Execution configuration:
  * - Work dim == 2  (can be 1 iff NR_CHANNELS <= 2)
