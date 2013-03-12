@@ -45,7 +45,7 @@ namespace LOFAR
 #endif
       }
 
-      std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
+      LOG_DEBUG_STR("compile time = " << omp_get_wtime() - startTime);
     }
 
     void CorrelatorPipeline::Performance::addQueue(CorrelatorWorkQueue &queue)
@@ -232,10 +232,9 @@ namespace LOFAR
       for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block++)
       {
 #       pragma omp single nowait    // Only a single thread should perform the cout
-#       pragma omp critical (cout)  // Only one cout statement application wide can be active at a single time.
-        std::cout << "block = " << block
+        LOG_INFO_STR("block = " << block
                   << ", time = " << to_simple_string(from_ustime_t(currentTime))  //current time
-                  << ", exec = " << omp_get_wtime() - lastTime << std::endl;      //
+                  << ", exec = " << omp_get_wtime() - lastTime);
 
         // Save the current time: This will be used to display the execution time for this block
         lastTime = omp_get_wtime();
@@ -282,8 +281,7 @@ namespace LOFAR
 #     pragma omp master
 
       if (!profiling)
-                       #       pragma omp critical (cout)
-        std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
+        LOG_INFO_STR("run time = " << omp_get_wtime() - executionStartTime);
     }
   }
 }

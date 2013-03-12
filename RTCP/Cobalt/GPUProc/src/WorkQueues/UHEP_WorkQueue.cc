@@ -82,8 +82,7 @@ namespace LOFAR
         double currentTime = startTime + block * blockTime;
 
         //#pragma omp single nowait // FIXME: why does the compiler complain here???
-#pragma omp critical (cout)
-        std::cout << "block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << std::endl;
+        LOG_INFO_STR("block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)));
 
 #if 0
         {
@@ -113,8 +112,7 @@ namespace LOFAR
 
 #pragma omp master
       if (!profiling)
-                             #pragma omp critical (cout)
-        std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
+        LOG_INFO_STR("run time = " << omp_get_wtime() - executionStartTime);
     }
 
 
