@@ -37,7 +37,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     bool SSH_Init();
@@ -105,7 +105,7 @@ namespace LOFAR
     // were found, and were usable for SSHconnection to localhost:22.
     bool discover_ssh_keys(char *pubkey, size_t pubkey_buflen, char *privkey, size_t privkey_buflen);
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 

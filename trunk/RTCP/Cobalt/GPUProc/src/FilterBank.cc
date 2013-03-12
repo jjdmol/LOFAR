@@ -24,7 +24,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 #if USE_ORIGINAL_FILTER
@@ -491,5 +491,5 @@ namespace LOFAR
       }
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

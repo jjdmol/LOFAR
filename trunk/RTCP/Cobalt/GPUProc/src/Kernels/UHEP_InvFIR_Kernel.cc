@@ -11,7 +11,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     UHEP_InvFIR_Kernel::UHEP_InvFIR_Kernel(const Parset &ps, cl::CommandQueue &queue,
                                            cl::Program &program, cl::Buffer &devInvFIRfilteredData, cl::Buffer &devFFTedData,

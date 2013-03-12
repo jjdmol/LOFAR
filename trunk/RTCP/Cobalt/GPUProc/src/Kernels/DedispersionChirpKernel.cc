@@ -11,7 +11,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     DedispersionChirpKernel::DedispersionChirpKernel(const Parset &ps, cl::Program &program, cl::CommandQueue &queue, cl::Buffer &buffer, cl::Buffer &DMs)
       :

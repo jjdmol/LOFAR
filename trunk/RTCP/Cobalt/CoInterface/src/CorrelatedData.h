@@ -14,7 +14,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class CorrelatedData : public StreamableData, public IntegratableData
@@ -214,7 +214,7 @@ namespace LOFAR
     }
 
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

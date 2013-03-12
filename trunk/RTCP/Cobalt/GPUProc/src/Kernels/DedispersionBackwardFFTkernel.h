@@ -8,7 +8,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     class DedispersionBackwardFFTkernel : public FFT_Kernel
     {

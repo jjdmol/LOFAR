@@ -11,7 +11,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     struct UHEP_TriggerTest : public UnitTest
     {

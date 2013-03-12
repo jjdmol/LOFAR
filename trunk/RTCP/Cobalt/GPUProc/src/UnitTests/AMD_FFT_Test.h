@@ -12,7 +12,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     struct AMD_FFT_Test : public UnitTest
     {

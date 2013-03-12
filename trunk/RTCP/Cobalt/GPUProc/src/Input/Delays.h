@@ -46,7 +46,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     // Speed of light in vacuum, in m/s.
@@ -162,7 +162,7 @@ namespace LOFAR
       SmartPtr<Thread>                    itsThread;
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

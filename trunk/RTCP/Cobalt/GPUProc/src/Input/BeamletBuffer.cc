@@ -38,7 +38,7 @@ using boost::format;
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     template<typename SAMPLE_TYPE>
@@ -431,5 +431,5 @@ namespace LOFAR
     template class BeamletBuffer<i8complex>;
     template class BeamletBuffer<i16complex>;
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

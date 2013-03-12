@@ -10,7 +10,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class FakeData
@@ -121,7 +121,7 @@ namespace LOFAR
       }
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

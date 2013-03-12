@@ -47,7 +47,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     static Mutex makeDirMutex;
@@ -308,5 +308,5 @@ namespace LOFAR
       cleanUp();
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

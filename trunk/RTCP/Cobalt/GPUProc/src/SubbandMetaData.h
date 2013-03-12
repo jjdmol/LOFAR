@@ -31,7 +31,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     struct SubbandMetaData
@@ -104,7 +104,7 @@ namespace LOFAR
       str->write(&flagsBuffer[0], flagsBuffer.size());
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

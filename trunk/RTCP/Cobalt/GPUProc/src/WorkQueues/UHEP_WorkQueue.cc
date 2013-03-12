@@ -24,7 +24,7 @@
 
 namespace LOFAR
 {
-  namespace  RTCP
+  namespace Cobalt
   {
     UHEP_WorkQueue::UHEP_WorkQueue(UHEP_Pipeline &pipeline, unsigned gpuNumber)
       :

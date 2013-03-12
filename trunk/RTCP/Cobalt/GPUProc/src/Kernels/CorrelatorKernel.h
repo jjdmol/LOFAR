@@ -10,7 +10,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 #if !defined USE_NEW_CORRELATOR
 

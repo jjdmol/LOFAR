@@ -6,7 +6,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     template <typename T, size_t ALIGNMENT>
@@ -38,7 +38,7 @@ namespace LOFAR
       }
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

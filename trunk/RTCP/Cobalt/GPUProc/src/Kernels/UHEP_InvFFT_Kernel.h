@@ -10,7 +10,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     class UHEP_InvFFT_Kernel : public Kernel
     {

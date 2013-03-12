@@ -29,7 +29,7 @@
 #define NR_TAPS 16
 
 using namespace LOFAR;
-using namespace RTCP;
+using namespace Cobalt;
 
 #include "Transpose/MPITransferStations.h"
 

@@ -10,7 +10,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     UHEP_TriggerKernel::UHEP_TriggerKernel(const Parset &ps, cl::Program &program, cl::Buffer &devTriggerInfo, cl::Buffer &devInvFIRfilteredData)
       :

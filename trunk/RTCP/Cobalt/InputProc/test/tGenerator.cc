@@ -10,7 +10,7 @@
 #include "omp.h"
 
 using namespace LOFAR;
-using namespace RTCP;
+using namespace Cobalt;
 using namespace std;
 
 // The number of packets to transmit (note: there are 16 time samples/packet)

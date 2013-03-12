@@ -29,7 +29,7 @@
 
 using namespace std;
 using namespace LOFAR;
-using namespace RTCP;
+using namespace Cobalt;
 
 #if defined WORDS_BIGENDIAN
 const int bigEndian = 1;

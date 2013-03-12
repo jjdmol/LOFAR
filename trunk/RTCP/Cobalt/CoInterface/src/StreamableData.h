@@ -15,7 +15,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     // Data which needs to be transported between CN, ION and Storage.
@@ -193,7 +193,7 @@ namespace LOFAR
       str->write(samples.origin(), samples.num_elements() * sizeof(T));
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

@@ -28,7 +28,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     // TODO: Export these functions to be globally available

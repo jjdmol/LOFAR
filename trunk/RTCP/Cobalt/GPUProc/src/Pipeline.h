@@ -16,7 +16,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     template <typename SAMPLE_TYPE>

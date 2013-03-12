@@ -13,7 +13,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     BeamFormerPipeline::BeamFormerPipeline(const Parset &ps)
       :

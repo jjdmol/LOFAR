@@ -7,7 +7,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     Kernel::Kernel(const Parset &ps, cl::Program &program, const char *name)
       :

@@ -30,7 +30,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     // WARNING: All data is in Little Endian format!
@@ -202,7 +202,7 @@ namespace LOFAR
       }
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

@@ -19,7 +19,7 @@ static size_t strnlen( const char *s, size_t maxlen )
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 

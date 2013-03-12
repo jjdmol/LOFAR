@@ -20,7 +20,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 
@@ -466,7 +466,7 @@ namespace LOFAR
       return str;
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

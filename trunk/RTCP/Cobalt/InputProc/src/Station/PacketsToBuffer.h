@@ -14,7 +14,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     /* Receives station input and stores it in shared memory.

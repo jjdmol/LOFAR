@@ -15,7 +15,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     struct FFT_Test : public UnitTest
     {

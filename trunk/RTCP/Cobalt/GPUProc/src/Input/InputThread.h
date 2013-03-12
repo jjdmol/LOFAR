@@ -40,7 +40,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     template<typename SAMPLE_TYPE>
@@ -75,7 +75,7 @@ namespace LOFAR
       SmartPtr<Thread>      itsThread;
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

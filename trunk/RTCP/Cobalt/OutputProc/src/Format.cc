@@ -10,12 +10,12 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     Format::~Format()
     {
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

@@ -4,7 +4,7 @@
 #include <Stream/FileStream.h>
 
 using namespace LOFAR;
-using namespace RTCP;
+using namespace Cobalt;
 
 void test(const std::string &filename, unsigned bitmode, unsigned nrPackets)
 {

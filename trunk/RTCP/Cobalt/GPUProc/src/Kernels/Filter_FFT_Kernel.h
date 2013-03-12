@@ -8,7 +8,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     class Filter_FFT_Kernel : public FFT_Kernel
     {

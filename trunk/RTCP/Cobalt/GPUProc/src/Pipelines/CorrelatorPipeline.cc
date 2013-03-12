@@ -21,7 +21,7 @@ using namespace std;
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)

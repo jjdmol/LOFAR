@@ -10,7 +10,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     FFT_Plan::FFT_Plan(cl::Context &context, unsigned fftSize)
     {

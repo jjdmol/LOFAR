@@ -30,7 +30,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     // C->HDF5 translations of native types (Storage endianness)

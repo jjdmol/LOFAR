@@ -29,7 +29,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     //
     // This exception will be thrown when an rtcp fails.
@@ -61,7 +61,7 @@ namespace LOFAR
     //
     EXCEPTION_CLASS(StorageException, RTCPException);
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

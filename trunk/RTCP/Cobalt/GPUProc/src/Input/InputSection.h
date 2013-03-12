@@ -43,7 +43,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     template <typename SAMPLE_TYPE>
@@ -69,7 +69,7 @@ namespace LOFAR
       std::vector<SmartPtr<InputThread<SAMPLE_TYPE> > >   itsInputThreads;
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

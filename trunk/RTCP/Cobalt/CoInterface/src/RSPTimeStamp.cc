@@ -25,7 +25,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     ostream &operator << (ostream &os, const TimeStamp &ts)
@@ -33,5 +33,5 @@ namespace LOFAR
       return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "]";
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

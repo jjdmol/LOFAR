@@ -49,7 +49,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     // define a "simple" type of which the size equals the size of two samples
@@ -132,7 +132,7 @@ namespace LOFAR
       return (time + itsOffset) % itsSize;
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

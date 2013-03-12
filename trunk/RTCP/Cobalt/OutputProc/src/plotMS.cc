@@ -28,7 +28,7 @@
 #include <casa/Containers/BlockIO.h>
 
 using namespace LOFAR;
-using namespace LOFAR::RTCP;
+using namespace LOFAR::Cobalt;
 using namespace std;
 
 using boost::format;

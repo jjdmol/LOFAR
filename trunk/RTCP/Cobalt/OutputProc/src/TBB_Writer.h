@@ -56,7 +56,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     /*
@@ -357,7 +357,7 @@ namespace LOFAR
       time_t getTimeoutStampSec(unsigned streamWriterNr) const;
     };
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif // LOFAR_STORAGE_TBB_WRITER_H

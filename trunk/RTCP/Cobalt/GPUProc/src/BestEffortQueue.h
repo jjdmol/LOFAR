@@ -6,7 +6,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     /*
      * Implements a best-effort queue. The queue has a maximum size,

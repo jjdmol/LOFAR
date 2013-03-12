@@ -8,7 +8,7 @@
 #include <pthread.h>
 
 namespace LOFAR {
-  namespace RTCP {
+  namespace Cobalt {
 
 Mutex MPIMutex;
 

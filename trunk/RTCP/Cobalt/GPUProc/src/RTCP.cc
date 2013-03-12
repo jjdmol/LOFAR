@@ -42,7 +42,7 @@
 #endif
 
 namespace LOFAR {
-namespace RTCP {
+namespace Cobalt {
 
 bool	 profiling = true;
 unsigned nrGPUs;
@@ -1082,7 +1082,7 @@ Pipeline::Pipeline(const Parset &ps)
 
 cl::Program Pipeline::createProgram(const char *sources)
 {
-  return LOFAR::RTCP::createProgram(ps, context, devices, sources);
+  return LOFAR::Cobalt::createProgram(ps, context, devices, sources);
 }
 
 
@@ -2301,14 +2301,14 @@ struct FFT_Test : public UnitTest
 #endif
 
 
-} // namespace RTCP
+} // namespace Cobalt
 } // namespace LOFAR
 
 int main(int argc, char **argv)
 {
   omp_set_nested(true);
 
-  using namespace LOFAR::RTCP;
+  using namespace LOFAR::Cobalt;
 
   INIT_LOGGER("RTCP");
 
