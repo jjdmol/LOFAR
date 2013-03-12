@@ -30,21 +30,23 @@
 #include <OutputProc/MSWriter.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-class MSWriterNull : public MSWriter
+namespace LOFAR
 {
-  public:
-		 MSWriterNull();
-		 ~MSWriterNull();
-
-    virtual void write(StreamableData *);
-};
+  namespace RTCP
+  {
 
 
-}
+    class MSWriterNull : public MSWriter
+    {
+    public:
+      MSWriterNull();
+      ~MSWriterNull();
+
+      virtual void write(StreamableData *);
+    };
+
+
+  }
 }
 
 #endif

@@ -1,4 +1,4 @@
-#define NR_CHANNELS_PER_BLOCK	4
+#define NR_CHANNELS_PER_BLOCK   4
 
 
 typedef __global float4 (*ComplexVoltagesType)[NR_TABS][NR_SAMPLES_PER_INTEGRATION][NR_CHANNELS];
@@ -13,16 +13,16 @@ float2 cmul(float2 a, float2 b)
 
 
 __kernel void complexVoltages(__global void *complexVoltagesPtr,
-			      __global const void *correctedDataPtr,
-			      __global const void *weightsPtr)
+                              __global const void *correctedDataPtr,
+                              __global const void *weightsPtr)
 {
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
-  CorrectedDataType   correctedData   = (CorrectedDataType) correctedDataPtr;
-  WeightsType	      weights	      = (WeightsType) weightsPtr;
+  CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
+  WeightsType weights = (WeightsType) weightsPtr;
 
-  uint first_tab	= 3 * get_global_id(0);
-  uint channel		= get_global_id(1);
-  uint first_station	= 4 * get_global_id(2);
+  uint first_tab = 3 * get_global_id(0);
+  uint channel = get_global_id(1);
+  uint first_station = 4 * get_global_id(2);
 
   float2 weight_0_0 = (*weights)[first_station + 0][channel][first_tab + 0];
   float2 weight_0_1 = (*weights)[first_station + 0][channel][first_tab + 1];
@@ -39,7 +39,7 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
 
   __local float4 local_sums[3][NR_STATIONS / 4][NR_CHANNELS_PER_BLOCK][NR_TABS / 3];
 
-  for (int time = 0 - first_station / 4; time < NR_SAMPLES_PER_INTEGRATION + NR_STATIONS - first_station / 4; time ++) {
+  for (int time = 0 - first_station / 4; time < NR_SAMPLES_PER_INTEGRATION + NR_STATIONS - first_station / 4; time++) {
     barrier(CLK_LOCAL_MEM_FENCE);
 
     float4 sum_0, sum_1, sum_2;

@@ -26,31 +26,35 @@
 #include <iostream>
 #include <vector>
 
-namespace LOFAR {
-namespace RTCP {
-
-template<typename T> inline std::ostream &operator << (std::ostream &str, const std::vector<T> &v)
+namespace LOFAR
 {
-  str << '[';
+  namespace RTCP
+  {
 
-  for (typename std::vector<T>::const_iterator it = v.begin(); it != v.end(); it ++) {
-    if (it != v.begin())
-      str << ',';
+    template<typename T>
+    inline std::ostream &operator << (std::ostream &str, const std::vector<T> &v)
+    {
+      str << '[';
 
-    str << *it;
-  }
-  
-  return str << ']';
-}
+      for (typename std::vector<T>::const_iterator it = v.begin(); it != v.end(); it++) {
+        if (it != v.begin())
+          str << ',';
+
+        str << *it;
+      }
+
+      return str << ']';
+    }
 
 
-template<typename T, typename U> inline std::ostream &operator << (std::ostream &str, const std::pair<T,U> &p)
-{
-  return str << '(' << p.first << ',' << p.second << ')';
-}
+    template<typename T, typename U>
+    inline std::ostream &operator << (std::ostream &str, const std::pair<T,U> &p)
+    {
+      return str << '(' << p.first << ',' << p.second << ')';
+    }
 
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

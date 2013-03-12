@@ -8,7 +8,8 @@ using namespace LOFAR;
 using namespace RTCP;
 using namespace std;
 
-void test_drop() {
+void test_drop()
+{
   // check if blocks are dropped if queue is full
   size_t queueSize = 10;
   BestEffortQueue<size_t> queue(queueSize, true);
@@ -32,7 +33,8 @@ void test_drop() {
   ASSERT(queue.empty());
 }
 
-void test_nondrop() {
+void test_nondrop()
+{
   size_t queueSize = 10;
   BestEffortQueue<size_t> queue(queueSize, false);
 
@@ -64,7 +66,8 @@ void test_nondrop() {
   ASSERT(queue.empty());
 }
 
-void test_nomore() {
+void test_nomore()
+{
   size_t queueSize = 10;
   BestEffortQueue<size_t> queue(queueSize, false);
 
@@ -92,7 +95,8 @@ void test_nomore() {
   ASSERT(!queue.append(1));
 }
 
-int main() {
+int main()
+{
   INIT_LOGGER( "tBestEffortQueue" );
 
   // abort program if code blocks

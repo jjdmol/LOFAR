@@ -15,16 +15,16 @@ typedef __global float2 (*WeightsType)[NR_STATIONS][NR_SUBBANDS][NR_TABS];
 
 
 __kernel void complexVoltages(__global void *complexVoltagesPtr,
-			      __global const void *samplesPtr,
-			      __global const void *weightsPtr)
+                              __global const void *samplesPtr,
+                              __global const void *weightsPtr)
 {
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
-  SamplesType samples   = (SamplesType) samplesPtr;
-  WeightsType weights	= (WeightsType) weightsPtr;
+  SamplesType samples = (SamplesType) samplesPtr;
+  WeightsType weights = (WeightsType) weightsPtr;
 
-  uint pol		= get_local_id(0);
-  uint tab		= get_local_id(1);
-  uint subband		= get_global_id(2);
+  uint pol = get_local_id(0);
+  uint tab = get_local_id(1);
+  uint subband = get_global_id(2);
 
   float2 sample;
   __local float2 local_samples[NR_STATIONS >= 24 ? 24 : NR_STATIONS][16][NR_POLARIZATIONS];
@@ -109,12 +109,12 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
       uint s = i / NR_POLARIZATIONS / 16;
 
       if (time + t < NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1)
-	local_samples[0][0][i] = convert_float2((*samples)[s][subband][time + t][p]);
+        local_samples[0][0][i] = convert_float2((*samples)[s][subband][time + t][p]);
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    for (uint t = 0; t < min(16U, (NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1 - time)); t ++) {
+    for (uint t = 0; t < min(16U, (NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1 - time)); t++) {
       float2 sum = 0;
 
 #if NR_STATIONS >= 1
@@ -348,12 +348,12 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
       uint s = i / NR_POLARIZATIONS / 16;
 
       if (time + t < NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1)
-	local_samples[0][0][i] = convert_float2((*samples)[24 + s][subband][time + t][p]);
+        local_samples[0][0][i] = convert_float2((*samples)[24 + s][subband][time + t][p]);
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    for (uint t = 0; t < min(16U, (NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1 - time)); t ++) {
+    for (uint t = 0; t < min(16U, (NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1 - time)); t++) {
       float2 sum = (*complexVoltages)[subband][time + t][tab][pol];
 
 #if NR_STATIONS >= 25

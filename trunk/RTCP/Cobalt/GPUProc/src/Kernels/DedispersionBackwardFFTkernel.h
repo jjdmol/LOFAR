@@ -8,15 +8,15 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class DedispersionBackwardFFTkernel : public FFT_Kernel
     {
-                class DedispersionBackwardFFTkernel : public FFT_Kernel
-        {
-        public:
-            DedispersionBackwardFFTkernel(const Parset &ps, cl::Context &context, cl::Buffer &buffer);
-                
-        };
-    }
+    public:
+      DedispersionBackwardFFTkernel(const Parset &ps, cl::Context &context, cl::Buffer &buffer);
+
+    };
+  }
 
 }
 #endif

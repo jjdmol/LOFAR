@@ -27,39 +27,41 @@
 #include <Common/Exceptions.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-  //
-  // This exception will be thrown when an rtcp fails.
-  //
-  EXCEPTION_CLASS(RTCPException, LOFAR::Exception);
+namespace LOFAR
+{
+  namespace RTCP
+  {
+    //
+    // This exception will be thrown when an rtcp fails.
+    //
+    EXCEPTION_CLASS(RTCPException, LOFAR::Exception);
 
-  //
-  // This exception will be thrown when an an CoInterface error occurs.
-  //
-  EXCEPTION_CLASS(CoInterfaceException, RTCPException);
+    //
+    // This exception will be thrown when an an CoInterface error occurs.
+    //
+    EXCEPTION_CLASS(CoInterfaceException, RTCPException);
 
-  //
-  // This exception will be thrown when an an IONProc error occurs.
-  //
-  EXCEPTION_CLASS(IONProcException, RTCPException);
+    //
+    // This exception will be thrown when an an IONProc error occurs.
+    //
+    EXCEPTION_CLASS(IONProcException, RTCPException);
 
-  //
-  // This exception will be thrown when an an CNProc error occurs.
-  //
-  EXCEPTION_CLASS(CNProcException, RTCPException);
+    //
+    // This exception will be thrown when an an CNProc error occurs.
+    //
+    EXCEPTION_CLASS(CNProcException, RTCPException);
 
-  //
-  // This exception will be thrown when an an GPUProc error occurs.
-  //
-  EXCEPTION_CLASS(GPUProcException, RTCPException);
+    //
+    // This exception will be thrown when an an GPUProc error occurs.
+    //
+    EXCEPTION_CLASS(GPUProcException, RTCPException);
 
-  //
-  // This exception will be thrown when an an Storage error occurs.
-  //
-  EXCEPTION_CLASS(StorageException, RTCPException);
+    //
+    // This exception will be thrown when an an Storage error occurs.
+    //
+    EXCEPTION_CLASS(StorageException, RTCPException);
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
-#endif 
+#endif

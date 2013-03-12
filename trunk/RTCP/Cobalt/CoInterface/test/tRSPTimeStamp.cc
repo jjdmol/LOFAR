@@ -30,7 +30,7 @@
 // start the test at INT32_MAX * SAMPLERATE
 #define TESTSTART static_cast<int64>(0x7fffffff * SAMPLERATE)
 // we don't want the test to take too long
-#define TESTEND   static_cast<int64>(0x7fffff00 * SAMPLERATE) 
+#define TESTEND   static_cast<int64>(0x7fffff00 * SAMPLERATE)
 
 using namespace LOFAR;
 using LOFAR::RTCP::TimeStamp;

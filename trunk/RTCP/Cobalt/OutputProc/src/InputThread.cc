@@ -30,70 +30,72 @@
 #include <Stream/SocketStream.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-InputThread::InputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix)
-:
-  itsLogPrefix(logPrefix + "[InputThread] "),
-  itsInputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)),
-  itsFreeQueue(freeQueue),
-  itsReceiveQueue(receiveQueue),
-  itsDeadline(parset.realTime() ? parset.stopTime() : 0)
+namespace LOFAR
 {
-}
+  namespace RTCP
+  {
 
 
-void InputThread::start()
-{
-  itsThread = new Thread(this, &InputThread::mainLoop, itsLogPrefix);
-}
-
-
-void InputThread::cancel()
-{
-  if (itsThread)
-    itsThread->cancel();
-}
-
-
-void InputThread::mainLoop()
-{
-  try {
-    LOG_INFO_STR(itsLogPrefix << "Creating connection from " << itsInputDescriptor << "..." );
-    SmartPtr<Stream> streamFromION(createStream(itsInputDescriptor, true, itsDeadline));
-    LOG_INFO_STR(itsLogPrefix << "Creating connection from " << itsInputDescriptor << ": done" );
-
-    // limit reads from NullStream to 10 blocks; otherwise unlimited
-    bool nullInput = dynamic_cast<NullStream *>(streamFromION.get()) != 0;
-
-    for (unsigned count = 0; !nullInput || count < 10; count ++) {
-      SmartPtr<StreamableData> data(itsFreeQueue.remove());
-
-      data->read(streamFromION, true);
-
-      if (nullInput)
-	data->setSequenceNumber(count);
-
-      LOG_DEBUG_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber());
-
-      itsReceiveQueue.append(data.release());
+    InputThread::InputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix)
+      :
+      itsLogPrefix(logPrefix + "[InputThread] "),
+      itsInputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)),
+      itsFreeQueue(freeQueue),
+      itsReceiveQueue(receiveQueue),
+      itsDeadline(parset.realTime() ? parset.stopTime() : 0)
+    {
     }
-  } catch (SocketStream::TimeOutException &) {
-    LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " timed out");
-  } catch (Stream::EndOfStreamException &) {
-    LOG_INFO_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " closed");
-  } catch (SystemCallException &ex) {
-    LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " failed: " << ex.text());
-  } catch (...) {
-    itsReceiveQueue.append(0); // no more data
-    throw;
-  }
-
-  itsReceiveQueue.append(0); // no more data
-}
 
 
-} // namespace RTCP
+    void InputThread::start()
+    {
+      itsThread = new Thread(this, &InputThread::mainLoop, itsLogPrefix);
+    }
+
+
+    void InputThread::cancel()
+    {
+      if (itsThread)
+        itsThread->cancel();
+    }
+
+
+    void InputThread::mainLoop()
+    {
+      try {
+        LOG_INFO_STR(itsLogPrefix << "Creating connection from " << itsInputDescriptor << "..." );
+        SmartPtr<Stream> streamFromION(createStream(itsInputDescriptor, true, itsDeadline));
+        LOG_INFO_STR(itsLogPrefix << "Creating connection from " << itsInputDescriptor << ": done" );
+
+        // limit reads from NullStream to 10 blocks; otherwise unlimited
+        bool nullInput = dynamic_cast<NullStream *>(streamFromION.get()) != 0;
+
+        for (unsigned count = 0; !nullInput || count < 10; count++) {
+          SmartPtr<StreamableData> data(itsFreeQueue.remove());
+
+          data->read(streamFromION, true);
+
+          if (nullInput)
+            data->setSequenceNumber(count);
+
+          LOG_DEBUG_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber());
+
+          itsReceiveQueue.append(data.release());
+        }
+      } catch (SocketStream::TimeOutException &) {
+        LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " timed out");
+      } catch (Stream::EndOfStreamException &) {
+        LOG_INFO_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " closed");
+      } catch (SystemCallException &ex) {
+        LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " failed: " << ex.text());
+      } catch (...) {
+        itsReceiveQueue.append(0); // no more data
+        throw;
+      }
+
+      itsReceiveQueue.append(0); // no more data
+    }
+
+
+  } // namespace RTCP
 } // namespace LOFAR

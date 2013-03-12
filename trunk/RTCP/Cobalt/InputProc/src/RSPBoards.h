@@ -6,31 +6,34 @@
 #include <string>
 #include <vector>
 
-namespace LOFAR {
-namespace RTCP {
+namespace LOFAR
+{
+  namespace RTCP
+  {
 
-/* A class that generates or processes a set of data streams of a station. */
+    /* A class that generates or processes a set of data streams of a station. */
 
-class RSPBoards {
-public:
-  RSPBoards( const std::string &logPrefix, size_t nrBoards );
+    class RSPBoards
+    {
+    public:
+      RSPBoards( const std::string &logPrefix, size_t nrBoards );
 
-  void process();
+      void process();
 
-  void stop();
+      void stop();
 
-protected:
-  const std::string logPrefix;
-  const size_t nrBoards;
+    protected:
+      const std::string logPrefix;
+      const size_t nrBoards;
 
-  WallClockTime waiter;
+      WallClockTime waiter;
 
-  virtual void processBoard( size_t nr ) = 0;
-  virtual void logStatistics() = 0;
-};
+      virtual void processBoard( size_t nr ) = 0;
+      virtual void logStatistics() = 0;
+    };
 
 
-}
+  }
 }
 
 #endif

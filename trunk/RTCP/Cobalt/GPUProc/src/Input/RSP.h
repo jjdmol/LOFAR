@@ -24,30 +24,32 @@
 #define LOFAR_GPUPROC_RSP_H
 
 
-namespace LOFAR {
-namespace RTCP {
+namespace LOFAR
+{
+  namespace RTCP
+  {
 
 #include <cstddef>
 
 
-// All data is in Little Endian format!
+    // All data is in Little Endian format!
 
-struct RSP {
-  struct Header {
-    uint8_t  version;
-    uint8_t  sourceInfo;
-    uint16_t configuration;
-    uint16_t station;
-    uint8_t  nrBeamlets;
-    uint8_t  nrBlocks;
-    uint32_t timestamp;
-    uint32_t blockSequenceNumber;
-  } header;
+    struct RSP {
+      struct Header {
+        uint8_t version;
+        uint8_t sourceInfo;
+        uint16_t configuration;
+        uint16_t station;
+        uint8_t nrBeamlets;
+        uint8_t nrBlocks;
+        uint32_t timestamp;
+        uint32_t blockSequenceNumber;
+      } header;
 
-  char       data[8130];
-};
+      char data[8130];
+    };
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

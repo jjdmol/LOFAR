@@ -23,7 +23,7 @@
 #include <string>
 #include <boost/format.hpp>
 
-#define DURATION 60 
+#define DURATION 60
 #define BLOCKSIZE 0.005
 #define NRSTATIONS 3
 #define NR_TAPS 16
@@ -36,7 +36,7 @@ using namespace RTCP;
 
 int main( int argc, char **argv )
 {
-  size_t clock = 200*1000*1000;
+  size_t clock = 200 * 1000 * 1000;
 
   typedef SampleType<i16complex> SampleT;
   const TimeStamp from(time(0L) + 1, 0, clock);
@@ -78,7 +78,7 @@ int main( int argc, char **argv )
     {
       MPIReceiveStations<SampleT> receiver(settings, stationRanks, beamlets[rank], blockSize);
 
-      for(size_t block = 0; block < (to-from)/blockSize + 1; ++block) {
+      for(size_t block = 0; block < (to - from) / blockSize + 1; ++block) {
         receiver.receiveBlock();
 
         // data is now in receiver.lastBlock
@@ -110,13 +110,19 @@ int main( int argc, char **argv )
     #pragma omp parallel sections num_threads(4)
     {
       #pragma omp section
-      { station.process(); }
+      { station.process();
+      }
 
       #pragma omp section
-      { generator.process(); }
+      { generator.process();
+      }
 
       #pragma omp section
-      { sleep(DURATION + 1); station.stop(); sleep(1); generator.stop(); }
+      { sleep(DURATION + 1);
+        station.stop();
+        sleep(1);
+        generator.stop();
+      }
 
       #pragma omp section
       {
@@ -135,18 +141,18 @@ int main( int argc, char **argv )
       }
     }
   } else {
-      struct StationID lookup("RS106", "HBA0");
-      struct BufferSettings s(stationID, true);
+    struct StationID lookup("RS106", "HBA0");
+    struct BufferSettings s(stationID, true);
 
-      LOG_INFO_STR("Detected " << s);
+    LOG_INFO_STR("Detected " << s);
       #pragma omp parallel for num_threads(nrHosts - nrStations)
-      for (int i = nrStations; i < nrHosts; ++i) {
-        LOG_INFO_STR("Connecting to receiver " << i );
-        MPISendStation< SampleT > streamer(s, from, to, blockSize, NR_TAPS, beamlets[i], i );
+    for (int i = nrStations; i < nrHosts; ++i) {
+      LOG_INFO_STR("Connecting to receiver " << i );
+      MPISendStation< SampleT > streamer(s, from, to, blockSize, NR_TAPS, beamlets[i], i );
 
-        LOG_INFO_STR("Sending to receiver " << i );
-        streamer.process( 0.0 );
-      }
+      LOG_INFO_STR("Sending to receiver " << i );
+      streamer.process( 0.0 );
+    }
   }
 
   MPI_Finalize();

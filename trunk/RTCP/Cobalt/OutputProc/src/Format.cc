@@ -8,12 +8,14 @@
 
 #include <OutputProc/Format.h>
 
-namespace LOFAR {
-namespace RTCP {
-
-Format::~Format()
+namespace LOFAR
 {
-}
+  namespace RTCP
+  {
 
-} // namespace RTCP
+    Format::~Format()
+    {
+    }
+
+  } // namespace RTCP
 } // namespace LOFAR

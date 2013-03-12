@@ -8,16 +8,16 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+
+    class DelayAndBandPassKernel : public Kernel
     {
+    public:
+      DelayAndBandPassKernel(const Parset &ps, cl::Program &program, cl::Buffer &devCorrectedData, cl::Buffer &devFilteredData, cl::Buffer &devDelaysAtBegin, cl::Buffer &devDelaysAfterEnd, cl::Buffer &devPhaseOffsets, cl::Buffer &devBandPassCorrectionWeights);
 
-        class DelayAndBandPassKernel : public Kernel
-        {
-        public:
-            DelayAndBandPassKernel(const Parset &ps, cl::Program &program, cl::Buffer &devCorrectedData, cl::Buffer &devFilteredData, cl::Buffer &devDelaysAtBegin, cl::Buffer &devDelaysAfterEnd, cl::Buffer &devPhaseOffsets, cl::Buffer &devBandPassCorrectionWeights);
-
-            void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, unsigned subband);
-        };
-    }
+      void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, unsigned subband);
+    };
+  }
 }
 #endif

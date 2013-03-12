@@ -14,9 +14,10 @@ using namespace RTCP;
 using namespace std;
 
 // The number of packets to transmit (note: there are 16 time samples/packet)
-#define NUMPACKETS (200000000/1024/16)
+#define NUMPACKETS (200000000 / 1024 / 16)
 
-int main( int, char **argv ) {
+int main( int, char **argv )
+{
   INIT_LOGGER( argv[0] );
 
   // Don't run forever if communication fails for some reason
@@ -51,7 +52,7 @@ int main( int, char **argv ) {
     }
 
     #pragma omp section
-    { 
+    {
       // Read and verify the generated packets
 
       try {

@@ -9,16 +9,16 @@
 #include "Kernel.h"
 namespace LOFAR
 {
-    namespace RTCP 
-    {
+  namespace RTCP
+  {
 
-        class CoherentStokesKernel : public Kernel
-        {
-        public:
-            CoherentStokesKernel(const Parset &ps, cl::Program &program, 
-                cl::Buffer &devStokesData, cl::Buffer &devComplexVoltages);
-                
-        };
-    }
+    class CoherentStokesKernel : public Kernel
+    {
+    public:
+      CoherentStokesKernel(const Parset &ps, cl::Program &program,
+                           cl::Buffer &devStokesData, cl::Buffer &devComplexVoltages);
+
+    };
+  }
 }
 #endif

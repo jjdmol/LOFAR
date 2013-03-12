@@ -15,7 +15,8 @@ using namespace LOFAR;
 using namespace RTCP;
 
 
-void test_SSHconnection( const char *cmd, bool capture ) {
+void test_SSHconnection( const char *cmd, bool capture )
+{
   const char *USER = getenv("USER");
   SSHconnection ssh("", "localhost", cmd, USER, pubkey, privkey, capture);
 
@@ -31,7 +32,8 @@ void test_SSHconnection( const char *cmd, bool capture ) {
     cout << "Captured [" << ssh.stdoutBuffer() << "]" << endl;
 }
 
-int main() {
+int main()
+{
   INIT_LOGGER( "tSSH" );
 
   // discover a working private key

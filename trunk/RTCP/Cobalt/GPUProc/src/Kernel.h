@@ -7,21 +7,21 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class Kernel : public cl::Kernel
     {
-        class Kernel : public cl::Kernel
-        {
-        public:
-            Kernel(const Parset &ps, cl::Program &program, const char *name);
-            
-            void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter);
-            
-        protected:
-            cl::Event	 event;
-            const Parset &ps;
-            cl::NDRange  globalWorkSize, localWorkSize;
-            size_t       nrOperations, nrBytesRead, nrBytesWritten;
-        };
-    }
+    public:
+      Kernel(const Parset &ps, cl::Program &program, const char *name);
+
+      void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter);
+
+    protected:
+      cl::Event event;
+      const Parset &ps;
+      cl::NDRange globalWorkSize, localWorkSize;
+      size_t nrOperations, nrBytesRead, nrBytesWritten;
+    };
+  }
 }
 #endif

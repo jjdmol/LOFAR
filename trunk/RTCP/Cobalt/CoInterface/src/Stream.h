@@ -29,21 +29,23 @@
 
 #include <string>
 
-namespace LOFAR {
-namespace RTCP {
+namespace LOFAR
+{
+  namespace RTCP
+  {
 
-// Create a stream from a descriptor
-Stream *createStream(const std::string &descriptor, bool asReader, time_t deadline = 0);
+    // Create a stream from a descriptor
+    Stream *createStream(const std::string &descriptor, bool asReader, time_t deadline = 0);
 
-// Return a string descriptor, for all supported streamTypes except FCNP
-std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned ionode, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel);
+    // Return a string descriptor, for all supported streamTypes except FCNP
+    std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned ionode, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel);
 
-uint16 storageBrokerPort(int observationID);
-std::string getStorageControlDescription(int observationID, int rank);
+    uint16 storageBrokerPort(int observationID);
+    std::string getStorageControlDescription(int observationID, int rank);
 
-std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr);
+    std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr);
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

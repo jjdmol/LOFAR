@@ -28,34 +28,36 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
-namespace LOFAR {
-namespace RTCP {
-
-
-MSWriterFile::MSWriterFile (const string &msName)
-:
- itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+namespace LOFAR
 {
-}
+  namespace RTCP
+  {
 
 
-MSWriterFile::~MSWriterFile()
-{
-}
+    MSWriterFile::MSWriterFile (const string &msName)
+      :
+      itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+    {
+    }
 
 
-void MSWriterFile::write(StreamableData *data)
-{
-  data->write(&itsFile, true, FastFileStream::alignment);
-}
+    MSWriterFile::~MSWriterFile()
+    {
+    }
 
 
-size_t MSWriterFile::getDataSize()
-{
-  return itsFile.size();
-}
+    void MSWriterFile::write(StreamableData *data)
+    {
+      data->write(&itsFile, true, FastFileStream::alignment);
+    }
 
 
-} // namespace RTCP
+    size_t MSWriterFile::getDataSize()
+    {
+      return itsFile.size();
+    }
+
+
+  } // namespace RTCP
 } // namespace LOFAR
 

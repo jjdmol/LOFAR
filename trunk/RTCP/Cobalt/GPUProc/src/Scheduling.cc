@@ -34,52 +34,54 @@
 #include <sched.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-void doNotRunOnCore0()
+namespace LOFAR
 {
-  cpu_set_t cpu_set;
+  namespace RTCP
+  {
 
-  CPU_ZERO(&cpu_set);
+    void doNotRunOnCore0()
+    {
+      cpu_set_t cpu_set;
 
-  for (unsigned cpu = 1; cpu < 4; cpu ++)
-    CPU_SET(cpu, &cpu_set);
+      CPU_ZERO(&cpu_set);
 
-  if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
-    LOG_WARN("sched_setaffinity failed");
-    perror("sched_setaffinity");
-  }
-}
+      for (unsigned cpu = 1; cpu < 4; cpu++)
+        CPU_SET(cpu, &cpu_set);
 
-
-void runOnCore0()
-{
-  cpu_set_t cpu_set;
-
-  CPU_ZERO(&cpu_set);
-  CPU_SET(0, &cpu_set);
-
-  if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
-    LOG_WARN("sched_setaffinity failed");
-    perror("sched_setaffinity");
-  }
-}
+      if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
+        LOG_WARN("sched_setaffinity failed");
+        perror("sched_setaffinity");
+      }
+    }
 
 
-void setPriority(unsigned priority)
-{
-  // priority 0: non-real time
-  // priority 1-99: real time
-  struct sched_param sched_param;
+    void runOnCore0()
+    {
+      cpu_set_t cpu_set;
 
-  sched_param.sched_priority = priority;
+      CPU_ZERO(&cpu_set);
+      CPU_SET(0, &cpu_set);
 
-  if (pthread_setschedparam(pthread_self(), priority ? SCHED_RR : SCHED_OTHER, &sched_param) < 0)
-    perror("pthread_setschedparam");
-}
+      if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
+        LOG_WARN("sched_setaffinity failed");
+        perror("sched_setaffinity");
+      }
+    }
 
-} // namespace RTCP
+
+    void setPriority(unsigned priority)
+    {
+      // priority 0: non-real time
+      // priority 1-99: real time
+      struct sched_param sched_param;
+
+      sched_param.sched_priority = priority;
+
+      if (pthread_setschedparam(pthread_self(), priority ? SCHED_RR : SCHED_OTHER, &sched_param) < 0)
+        perror("pthread_setschedparam");
+    }
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

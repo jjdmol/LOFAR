@@ -12,12 +12,14 @@ cl::Context context;
 vector<cl::Device> devices;
 
 // test a performance counter without events
-void test_simple() {
+void test_simple()
+{
   PerformanceCounter counter("test", true);
 }
 
 // test a single event
-void test_event() {
+void test_event()
+{
   PerformanceCounter counter("test", true);
 
   // create a buffer and a queue to send the buffer
@@ -43,7 +45,8 @@ void test_event() {
   ASSERT(total.runtime > 0.0);
 }
 
-int main() {
+int main()
+{
   INIT_LOGGER( "tPerformanceCounter" );
 
   createContext(context, devices);

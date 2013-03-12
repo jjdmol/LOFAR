@@ -1,9 +1,9 @@
 #include "math.cl"
 
-#define NR_STATIONS_PER_BLOCK	32
-#define NR_TIMES_PER_BLOCK	8
+#define NR_STATIONS_PER_BLOCK   32
+#define NR_TIMES_PER_BLOCK      8
 
-#define NR_BASELINES		(NR_STATIONS * (NR_STATIONS + 1) / 2)
+#define NR_BASELINES            (NR_STATIONS * (NR_STATIONS + 1) / 2)
 
 
 typedef __global fcomplex2 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
@@ -12,7 +12,7 @@ typedef __global fcomplex4 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
 
 __kernel
 void correlateTriangleKernel(__global void *visibilitiesPtr,
-			     __global const void *correctedDataPtr)
+                             __global const void *correctedDataPtr)
 {
   VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
@@ -57,7 +57,7 @@ void correlateTriangleKernel(__global void *visibilitiesPtr,
     barrier(CLK_LOCAL_MEM_FENCE);
 
 #pragma unroll 1
-    for (uint time = 0; time < NR_TIMES_PER_BLOCK; time ++) {
+    for (uint time = 0; time < NR_TIMES_PER_BLOCK; time++) {
       fcomplex2 sample_0, sample_1, sample_A, sample_B;
 
       if (doCorrelate) {
@@ -87,49 +87,49 @@ void correlateTriangleKernel(__global void *visibilitiesPtr,
     }
   }
 
-  int  statY = firstStation + statYoffset;
+  int statY = firstStation + statYoffset;
   uint statX = firstStation + statXoffset;
   uint baseline = (statX * (statX + 1) / 2) + statY;
 
   if (statXoffset < nrStationsThisBlock) {
-    (*visibilities)[baseline	        ][channel].even = vis_0A_r;
-    (*visibilities)[baseline	        ][channel].odd  = vis_0A_i;
+    (*visibilities)[baseline            ][channel].even = vis_0A_r;
+    (*visibilities)[baseline            ][channel].odd = vis_0A_i;
   }
 
   if (statXoffset < nrStationsThisBlock && statYoffset + 1 < nrStationsThisBlock) {
-    (*visibilities)[baseline	     + 1][channel].even = vis_1A_r;
-    (*visibilities)[baseline	     + 1][channel].odd  = vis_1A_i;
+    (*visibilities)[baseline + 1][channel].even = vis_1A_r;
+    (*visibilities)[baseline + 1][channel].odd = vis_1A_i;
   }
 
   if (statXoffset + 1 < nrStationsThisBlock) {
     (*visibilities)[baseline + statX + 1][channel].even = vis_0B_r;
-    (*visibilities)[baseline + statX + 1][channel].odd  = vis_0B_i;
+    (*visibilities)[baseline + statX + 1][channel].odd = vis_0B_i;
     (*visibilities)[baseline + statX + 2][channel].even = vis_1B_r;
-    (*visibilities)[baseline + statX + 2][channel].odd  = vis_1B_i;
+    (*visibilities)[baseline + statX + 2][channel].odd = vis_1B_i;
   }
 }
 
 
 __kernel __attribute__((reqd_work_group_size(NR_STATIONS_PER_BLOCK * NR_STATIONS_PER_BLOCK / 4, 1, 1)))
 void correlateRectangleKernel(__global void *visibilitiesPtr,
-	       __global const void *correctedDataPtr)
+                              __global const void *correctedDataPtr)
 {
-  VisibilitiesType  visibilities  = (VisibilitiesType)  visibilitiesPtr;
+  VisibilitiesType visibilities = (VisibilitiesType)  visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
   __local fcomplex2 samplesX[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
   __local fcomplex2 samplesY[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
 
-  uint block	 = get_global_id(1);
-  uint blockX	 = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
-  uint blockY	 = block - blockX * (blockX + 1) / 2;
+  uint block = get_global_id(1);
+  uint blockX = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
+  uint blockY = block - blockX * (blockX + 1) / 2;
 
 #if NR_STATIONS % NR_STATIONS_PER_BLOCK == 0
   uint firstStationX = (blockX + 1) * NR_STATIONS_PER_BLOCK;
   uint firstStationY = blockY * NR_STATIONS_PER_BLOCK;
 #else
   uint firstStationX = blockX * NR_STATIONS_PER_BLOCK + NR_STATIONS % NR_STATIONS_PER_BLOCK;
-  int  firstStationY = (blockY - 1) * NR_STATIONS_PER_BLOCK + NR_STATIONS % NR_STATIONS_PER_BLOCK;
+  int firstStationY = (blockY - 1) * NR_STATIONS_PER_BLOCK + NR_STATIONS % NR_STATIONS_PER_BLOCK;
 #endif
 
   uint statXoffset = get_local_id(0) / (NR_STATIONS_PER_BLOCK / 2);
@@ -145,7 +145,7 @@ void correlateRectangleKernel(__global void *visibilitiesPtr,
 
   bool doCorrelateLower = NR_STATIONS % NR_STATIONS_PER_BLOCK == 0 || (int) (firstStationY + 2 * statYoffset) >= 0;
   bool doCorrelateUpper = NR_STATIONS % NR_STATIONS_PER_BLOCK == 0 || (int) (firstStationY + 2 * statYoffset) >= -1;
-  bool doLoadY     = NR_STATIONS % NR_STATIONS_PER_BLOCK == 0 || (int) (firstStationY + loadStat) >= 0;
+  bool doLoadY = NR_STATIONS % NR_STATIONS_PER_BLOCK == 0 || (int) (firstStationY + loadStat) >= 0;
 
   uint channel = get_global_id(2) + 1;
 
@@ -167,7 +167,7 @@ void correlateRectangleKernel(__global void *visibilitiesPtr,
     barrier(CLK_LOCAL_MEM_FENCE);
 
 #pragma unroll 1
-    for (uint time = 0; time < NR_TIMES_PER_BLOCK; time ++) {
+    for (uint time = 0; time < NR_TIMES_PER_BLOCK; time++) {
       fcomplex2 sample_0, sample_1, sample_A, sample_B;
 
       if (doCorrelateLower) {
@@ -204,31 +204,31 @@ void correlateRectangleKernel(__global void *visibilitiesPtr,
     }
   }
 
-  int  statY = firstStationY + 2 * statYoffset;
+  int statY = firstStationY + 2 * statYoffset;
   uint statX = firstStationX + 2 * statXoffset;
   uint baseline = (statX * (statX + 1) / 2) + statY;
 
   if (doCorrelateLower) {
-    (*visibilities)[baseline	        ][channel].even = vis_0A_r;
-    (*visibilities)[baseline	        ][channel].odd  = vis_0A_i;
+    (*visibilities)[baseline            ][channel].even = vis_0A_r;
+    (*visibilities)[baseline            ][channel].odd = vis_0A_i;
     (*visibilities)[baseline + statX + 1][channel].even = vis_0B_r;
-    (*visibilities)[baseline + statX + 1][channel].odd  = vis_0B_i;
+    (*visibilities)[baseline + statX + 1][channel].odd = vis_0B_i;
   }
 
   if (doCorrelateUpper) {
-    (*visibilities)[baseline	     + 1][channel].even = vis_1A_r;
-    (*visibilities)[baseline	     + 1][channel].odd  = vis_1A_i;
+    (*visibilities)[baseline + 1][channel].even = vis_1A_r;
+    (*visibilities)[baseline + 1][channel].odd = vis_1A_i;
     (*visibilities)[baseline + statX + 2][channel].even = vis_1B_r;
-    (*visibilities)[baseline + statX + 2][channel].odd  = vis_1B_i;
+    (*visibilities)[baseline + statX + 2][channel].odd = vis_1B_i;
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void correlateTriangle(VisibilitiesType visibilities,
-		       CorrectedDataType correctedData,
-		       __local fcomplex2 samples[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
-		       uint block)
+                       CorrectedDataType correctedData,
+                       __local fcomplex2 samples[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
+                       uint block)
 {
   uint channel = get_global_id(2) + 1;
 
@@ -266,7 +266,7 @@ void correlateTriangle(VisibilitiesType visibilities,
   uint loadTime = get_local_id(0) % NR_TIMES_PER_BLOCK;
   uint loadStat = get_local_id(0) / NR_TIMES_PER_BLOCK;
 
-  bool doLoad     = NR_STATIONS % NR_STATIONS_PER_BLOCK == 0 || (int) (firstStation + loadStat) >= 0;
+  bool doLoad = NR_STATIONS % NR_STATIONS_PER_BLOCK == 0 || (int) (firstStation + loadStat) >= 0;
 
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += NR_TIMES_PER_BLOCK) {
     // load data into local memory
@@ -283,7 +283,7 @@ void correlateTriangle(VisibilitiesType visibilities,
     barrier(CLK_LOCAL_MEM_FENCE);
 
 #pragma unroll 1
-    for (uint time = 0; time < NR_TIMES_PER_BLOCK; time ++) {
+    for (uint time = 0; time < NR_TIMES_PER_BLOCK; time++) {
       if (doCorrelate) {
         fcomplex2 sample_0 = samples[0][time][statYoffset / 2];
         fcomplex2 sample_A = samples[0][time][statXoffset / 2];
@@ -311,10 +311,10 @@ void correlateTriangle(VisibilitiesType visibilities,
 
       if (doAutoCorrelate) {
         fcomplex2 sample_0 = samples[statYoffset % 2][time][statYoffset / 2];
-	vis_0A_r.xyw += sample_0.xxz * sample_0.xzz;
-	vis_0A_i.y   += sample_0.y * sample_0.z;
-	vis_0A_r.xyw += sample_0.yyw * sample_0.yww;
-	vis_0A_i.y   -= sample_0.x * sample_0.w;
+        vis_0A_r.xyw += sample_0.xxz * sample_0.xzz;
+        vis_0A_i.y += sample_0.y * sample_0.z;
+        vis_0A_r.xyw += sample_0.yyw * sample_0.yww;
+        vis_0A_i.y -= sample_0.x * sample_0.w;
       }
 
       if (doNearAutoCorrelate) {
@@ -333,34 +333,34 @@ void correlateTriangle(VisibilitiesType visibilities,
     vis_0A_i.z = -vis_0A_i.y;
   }
 
-  int  statY = firstStation + statYoffset;
+  int statY = firstStation + statYoffset;
   uint statX = firstStation + statXoffset;
   uint baseline = (statX * (statX + 1) / 2) + statY;
 
   if (doCorrelate || doAutoCorrelate) {
-    (*visibilities)[baseline	        ][channel].even = vis_0A_r;
-    (*visibilities)[baseline	        ][channel].odd  = vis_0A_i;
+    (*visibilities)[baseline            ][channel].even = vis_0A_r;
+    (*visibilities)[baseline            ][channel].odd = vis_0A_i;
   }
 
   if (doCorrelate || doNearAutoCorrelate) {
     (*visibilities)[baseline + statX + 1][channel].even = vis_0B_r;
-    (*visibilities)[baseline + statX + 1][channel].odd  = vis_0B_i;
+    (*visibilities)[baseline + statX + 1][channel].odd = vis_0B_i;
   }
 
   if (doCorrelate) {
-    (*visibilities)[baseline	     + 1][channel].even = vis_1A_r;
-    (*visibilities)[baseline	     + 1][channel].odd  = vis_1A_i;
+    (*visibilities)[baseline + 1][channel].even = vis_1A_r;
+    (*visibilities)[baseline + 1][channel].odd = vis_1A_i;
     (*visibilities)[baseline + statX + 2][channel].even = vis_1B_r;
-    (*visibilities)[baseline + statX + 2][channel].odd  = vis_1B_i;
+    (*visibilities)[baseline + statX + 2][channel].odd = vis_1B_i;
   }
 }
 
 
 void correlateTriangle2(VisibilitiesType visibilities,
-			CorrectedDataType correctedData,
-			__local fcomplex2 samples[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
-			uint block
-)
+                        CorrectedDataType correctedData,
+                        __local fcomplex2 samples[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
+                        uint block
+                        )
 {
   uint channel = get_global_id(2) + 1;
 
@@ -409,7 +409,7 @@ void correlateTriangle2(VisibilitiesType visibilities,
     barrier(CLK_LOCAL_MEM_FENCE);
 
 #pragma unroll 1
-    for (uint time = 0; time < NR_TIMES_PER_BLOCK; time ++) {
+    for (uint time = 0; time < NR_TIMES_PER_BLOCK; time++) {
       float4 sample_0, sample_1, sample_A, sample_B;
 
       if (doCorrelateLeft) {
@@ -439,36 +439,36 @@ void correlateTriangle2(VisibilitiesType visibilities,
     }
   }
 
-  int  statY = firstStation + statYoffset;
+  int statY = firstStation + statYoffset;
   uint statX = firstStation + statXoffset;
   uint baseline = (statX * (statX + 1) / 2) + statY;
 
   if (statXoffset < nrStationsThisBlock) {
-    (*visibilities)[baseline	        ][channel].even = vis_0A_r;
-    (*visibilities)[baseline	        ][channel].odd  = vis_0A_i;
+    (*visibilities)[baseline            ][channel].even = vis_0A_r;
+    (*visibilities)[baseline            ][channel].odd = vis_0A_i;
   }
 
   if (statXoffset < nrStationsThisBlock && statYoffset + 1 < nrStationsThisBlock) {
-    (*visibilities)[baseline	     + 1][channel].even = vis_1A_r;
-    (*visibilities)[baseline	     + 1][channel].odd  = vis_1A_i;
+    (*visibilities)[baseline + 1][channel].even = vis_1A_r;
+    (*visibilities)[baseline + 1][channel].odd = vis_1A_i;
   }
 
   if (statXoffset + 1 < nrStationsThisBlock) {
     (*visibilities)[baseline + statX + 1][channel].even = vis_0B_r;
-    (*visibilities)[baseline + statX + 1][channel].odd  = vis_0B_i;
+    (*visibilities)[baseline + statX + 1][channel].odd = vis_0B_i;
     (*visibilities)[baseline + statX + 2][channel].even = vis_1B_r;
-    (*visibilities)[baseline + statX + 2][channel].odd  = vis_1B_i;
+    (*visibilities)[baseline + statX + 2][channel].odd = vis_1B_i;
   }
 }
 
 
 void correlateRectangle(VisibilitiesType visibilities,
-			CorrectedDataType correctedData,
-			__local fcomplex2 samplesX[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
-			__local fcomplex2 samplesY[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
-			uint blockX,
-			uint blockY
-)
+                        CorrectedDataType correctedData,
+                        __local fcomplex2 samplesX[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
+                        __local fcomplex2 samplesY[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
+                        uint blockX,
+                        uint blockY
+                        )
 {
   uint channel = get_global_id(2) + 1;
 
@@ -477,7 +477,7 @@ void correlateRectangle(VisibilitiesType visibilities,
   uint firstStationY = blockY * NR_STATIONS_PER_BLOCK;
 #else
   uint firstStationX = (blockX - 1) * NR_STATIONS_PER_BLOCK + NR_STATIONS % NR_STATIONS_PER_BLOCK;
-  int  firstStationY = (blockY - 1) * NR_STATIONS_PER_BLOCK + NR_STATIONS % NR_STATIONS_PER_BLOCK;
+  int firstStationY = (blockY - 1) * NR_STATIONS_PER_BLOCK + NR_STATIONS % NR_STATIONS_PER_BLOCK;
 #endif
 
   uint statXoffset = get_local_id(0) / (NR_STATIONS_PER_BLOCK / 2);
@@ -493,7 +493,7 @@ void correlateRectangle(VisibilitiesType visibilities,
 
   bool doCorrelateLower = NR_STATIONS % NR_STATIONS_PER_BLOCK == 0 || (int) (firstStationY + 2 * statYoffset) >= 0;
   bool doCorrelateUpper = NR_STATIONS % NR_STATIONS_PER_BLOCK == 0 || (int) (firstStationY + 2 * statYoffset) >= -1;
-  bool doLoadY     = NR_STATIONS % NR_STATIONS_PER_BLOCK == 0 || (int) (firstStationY + loadStat) >= 0;
+  bool doLoadY = NR_STATIONS % NR_STATIONS_PER_BLOCK == 0 || (int) (firstStationY + loadStat) >= 0;
 
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += NR_TIMES_PER_BLOCK) {
     // load data into local memory
@@ -513,7 +513,7 @@ void correlateRectangle(VisibilitiesType visibilities,
     barrier(CLK_LOCAL_MEM_FENCE);
 
 #pragma unroll 1
-    for (uint time = 0; time < NR_TIMES_PER_BLOCK; time ++) {
+    for (uint time = 0; time < NR_TIMES_PER_BLOCK; time++) {
       fcomplex2 sample_0, sample_1, sample_A, sample_B;
 
       if (doCorrelateLower) {
@@ -550,36 +550,36 @@ void correlateRectangle(VisibilitiesType visibilities,
     }
   }
 
-  int  statY = firstStationY + 2 * statYoffset;
+  int statY = firstStationY + 2 * statYoffset;
   uint statX = firstStationX + 2 * statXoffset;
   uint baseline = (statX * (statX + 1) / 2) + statY;
 
   if (doCorrelateLower) {
-    (*visibilities)[baseline	        ][channel].even = vis_0A_r;
-    (*visibilities)[baseline	        ][channel].odd  = vis_0A_i;
+    (*visibilities)[baseline            ][channel].even = vis_0A_r;
+    (*visibilities)[baseline            ][channel].odd = vis_0A_i;
     (*visibilities)[baseline + statX + 1][channel].even = vis_0B_r;
-    (*visibilities)[baseline + statX + 1][channel].odd  = vis_0B_i;
+    (*visibilities)[baseline + statX + 1][channel].odd = vis_0B_i;
   }
 
   if (doCorrelateUpper) {
-    (*visibilities)[baseline	     + 1][channel].even = vis_1A_r;
-    (*visibilities)[baseline	     + 1][channel].odd  = vis_1A_i;
+    (*visibilities)[baseline + 1][channel].even = vis_1A_r;
+    (*visibilities)[baseline + 1][channel].odd = vis_1A_i;
     (*visibilities)[baseline + statX + 2][channel].even = vis_1B_r;
-    (*visibilities)[baseline + statX + 2][channel].odd  = vis_1B_i;
+    (*visibilities)[baseline + statX + 2][channel].odd = vis_1B_i;
   }
 }
 
 
 __kernel __attribute__((reqd_work_group_size(NR_STATIONS_PER_BLOCK * NR_STATIONS_PER_BLOCK / 4, 1, 1)))
 void correlate(__global void *visibilitiesPtr,
-	       __global const void *correctedDataPtr)
+               __global const void *correctedDataPtr)
 {
   __local fcomplex2 samplesX[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
   __local fcomplex2 samplesY[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1];
 
-  uint block	 = get_global_id(1);
-  uint blockX	 = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
-  uint blockY	 = block - blockX * (blockX + 1) / 2;
+  uint block = get_global_id(1);
+  uint blockX = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
+  uint blockY = block - blockX * (blockX + 1) / 2;
 
   if (blockX == blockY)
     correlateTriangle2((VisibilitiesType) visibilitiesPtr, (CorrectedDataType) correctedDataPtr, samplesX, blockX);

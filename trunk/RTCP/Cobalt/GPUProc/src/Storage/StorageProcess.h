@@ -1,6 +1,6 @@
 #ifndef LOFAR_RTCP_STORAGE_PROCESS
 #define LOFAR_RTCP_STORAGE_PROCESS
- 
+
 #include <sys/time.h>
 #include <Common/Thread/Trigger.h>
 #include <Common/Thread/Thread.h>
@@ -9,31 +9,34 @@
 #include <CoInterface/FinalMetaData.h>
 #include <string>
 
-namespace LOFAR {
-namespace RTCP {
+namespace LOFAR
+{
+  namespace RTCP
+  {
 
-/* A single Storage process.
- *
- * Storage is started as:
- *     Storage_main observationID rank isBigEndian
- *
- * A Storage process is expected to follow the following protocol: 
- *
-  // establish control connection
-  string resource = getStorageControlDescription(observationID, rank);
-  PortBroker::ServerStream stream(resource);
+    /* A single Storage process.
+     *
+     * Storage is started as:
+     *     Storage_main observationID rank isBigEndian
+     *
+     * A Storage process is expected to follow the following protocol:
+     *
+       // establish control connection
+       string resource = getStorageControlDescription(observationID, rank);
+       PortBroker::ServerStream stream(resource);
 
-  // read parset
-  Parset parset(&stream);
+       // read parset
+       Parset parset(&stream);
 
-  ... process observation ...
+       ... process observation ...
 
-  // read meta data
-  FinalMetaData finalMetaData;
-  finalMetaData.read(stream);
- */
+       // read meta data
+       FinalMetaData finalMetaData;
+       finalMetaData.read(stream);
+     */
 
-class StorageProcess {
+    class StorageProcess
+    {
     public:
       // user must call start()
       StorageProcess( const Parset &parset, const std::string &logPrefix, int rank, const std::string &hostname, FinalMetaData &finalMetaData, Trigger &finalMetaDataAvailable );
@@ -58,9 +61,9 @@ class StorageProcess {
       Trigger                            &itsFinalMetaDataAvailable;
 
       SmartPtr<Thread> itsThread;
-};
+    };
 
-}
+  }
 }
 
 #endif

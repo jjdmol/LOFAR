@@ -32,7 +32,8 @@ void test(const std::string &filename, unsigned bitmode, unsigned nrPackets)
   }
 }
 
-int main() {
+int main()
+{
   INIT_LOGGER("tPacketReader");
 
   test("tPacketReader.in_16bit", 16, 2);

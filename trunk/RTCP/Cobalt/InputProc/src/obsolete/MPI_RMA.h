@@ -1,6 +1,8 @@
 #define MULTIPLE_WINDOWS
 
-template<typename T> class MPISharedBuffer: public SampleBuffer<T> {
+template<typename T>
+class MPISharedBuffer : public SampleBuffer<T>
+{
 public:
   MPISharedBuffer( const struct BufferSettings &settings );
 
@@ -14,8 +16,9 @@ private:
 #endif
 };
 
-template<typename T> MPISharedBuffer<T>::MPISharedBuffer( const struct BufferSettings &settings )
-:
+template<typename T>
+MPISharedBuffer<T>::MPISharedBuffer( const struct BufferSettings &settings )
+  :
   SampleBuffer<T>(settings, false)
 #ifdef MULTIPLE_WINDOWS
   , beamlets_windows(NRSTATIONS)
@@ -34,22 +37,25 @@ template<typename T> MPISharedBuffer<T>::MPISharedBuffer( const struct BufferSet
 #endif
 }
 
-template<typename T> MPISharedBuffer<T>::~MPISharedBuffer()
+template<typename T>
+MPISharedBuffer<T>::~MPISharedBuffer()
 {
 #ifdef MULTIPLE_WINDOWS
   for (int i = 0; i < NRSTATIONS; ++i) {
     int error = MPI_Win_free(&beamlets_windows[i]);
-      
+
     ASSERT(error == MPI_SUCCESS);
   }
 #else
   int error = MPI_Win_free(&beamlets_window);
-    
+
   ASSERT(error == MPI_SUCCESS);
 #endif
 }
 
-template<typename T> class MPISharedBufferReader {
+template<typename T>
+class MPISharedBufferReader
+{
 public:
   MPISharedBufferReader( const std::vector<struct BufferSettings> &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets );
 
@@ -76,8 +82,9 @@ private:
   void copy( const TimeStamp &from, const TimeStamp &to );
 };
 
-template<typename T> MPISharedBufferReader<T>::MPISharedBufferReader( const std::vector<struct BufferSettings> &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets )
-:
+template<typename T>
+MPISharedBufferReader<T>::MPISharedBufferReader( const std::vector<struct BufferSettings> &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, const std::vector<size_t> &beamlets )
+  :
   settings(settings),
   from(from),
   to(to),
@@ -114,7 +121,8 @@ template<typename T> MPISharedBufferReader<T>::MPISharedBufferReader( const std:
 #endif
 }
 
-template<typename T> MPISharedBufferReader<T>::~MPISharedBufferReader()
+template<typename T>
+MPISharedBufferReader<T>::~MPISharedBufferReader()
 {
 #ifdef MULTIPLE_WINDOWS
   for (int i = 0; i < settings.size(); ++i) {
@@ -129,7 +137,8 @@ template<typename T> MPISharedBufferReader<T>::~MPISharedBufferReader()
 #endif
 }
 
-template<typename T> void MPISharedBufferReader<T>::process( double maxDelay )
+template<typename T>
+void MPISharedBufferReader<T>::process( double maxDelay )
 {
   const TimeStamp maxDelay_ts(static_cast<int64>(maxDelay * settings[0].station.clock / 1024) + blockSize, settings[0].station.clock);
 
@@ -155,7 +164,7 @@ template<typename T> void MPISharedBufferReader<T>::process( double maxDelay )
     totalnr++;
 
     if (bs - lastreport > 1.0) {
-      double mbps = (sizeof(T) * blockSize * beamlets.size() * 8) / (totalwait/totalnr) / 1e6;
+      double mbps = (sizeof(T) * blockSize * beamlets.size() * 8) / (totalwait / totalnr) / 1e6;
       lastreport = bs;
       totalwait = 0.0;
       totalnr = 0;
@@ -167,7 +176,8 @@ template<typename T> void MPISharedBufferReader<T>::process( double maxDelay )
   LOG_INFO("Done reading data");
 }
 
-template<typename T> void MPISharedBufferReader<T>::copy( const TimeStamp &from, const TimeStamp &to )
+template<typename T>
+void MPISharedBufferReader<T>::copy( const TimeStamp &from, const TimeStamp &to )
 {
   int error;
 
@@ -188,12 +198,12 @@ template<typename T> void MPISharedBufferReader<T>::copy( const TimeStamp &from,
     const struct BufferSettings settings = this->settings[s];
 
     size_t from_offset = (int64)from % settings.nrSamples;
-    size_t to_offset   = (int64)to % settings.nrSamples;
+    size_t to_offset = (int64)to % settings.nrSamples;
 
     if (to_offset == 0)
       to_offset = settings.nrSamples;
 
-    size_t wrap        = from_offset < to_offset ? 0 : settings.nrSamples - from_offset;
+    size_t wrap = from_offset < to_offset ? 0 : settings.nrSamples - from_offset;
 
     for (size_t i = 0; i < beamlets.size(); ++i) {
       unsigned nr = beamlets[i];

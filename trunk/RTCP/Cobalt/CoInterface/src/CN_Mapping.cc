@@ -22,37 +22,39 @@
 
 #include <CoInterface/CN_Mapping.h>
 
-namespace LOFAR {
-namespace RTCP {
-
-unsigned CN_Mapping::mapCoreOnPset(unsigned core, unsigned pset)
+namespace LOFAR
 {
+  namespace RTCP
+  {
+
+    unsigned CN_Mapping::mapCoreOnPset(unsigned core, unsigned pset)
+    {
 #if defined HAVE_BGP
-  //return core ^ ((pset & 0x1) << 2) ^ ((pset & 0x02) >> 1) ^ ((pset & 0x04) >> 1) ^ ((pset & 0x08)) ^ ((pset & 0x10) >> 1) ^ ((pset & 0x20) >> 3);
+      //return core ^ ((pset & 0x1) << 2) ^ ((pset & 0x02) >> 1) ^ ((pset & 0x04) >> 1) ^ ((pset & 0x08)) ^ ((pset & 0x10) >> 1) ^ ((pset & 0x20) >> 3);
 
-  // TODO: there may be better mappings for partitions larger than one rack
-  static unsigned char mapX[] = { 0, 12 };
-  static unsigned char mapY[] = { 0,  2, 10,  8 };
-  static unsigned char mapZ[] = { 0,  1,  3,  2,  6,  7,  5,  4 };
+      // TODO: there may be better mappings for partitions larger than one rack
+      static unsigned char mapX[] = { 0, 12 };
+      static unsigned char mapY[] = { 0,  2, 10,  8 };
+      static unsigned char mapZ[] = { 0,  1,  3,  2,  6,  7,  5,  4 };
 
-  return core ^
-	 mapX[((pset & 0x08) >> 3)] ^
-	 mapY[((pset & 0x01) >> 0) | ((pset & 0x10) >> 3)] ^
-	 mapZ[((pset & 0x03) >> 1) | ((pset & 0x20) >> 3)];
+      return core ^
+             mapX[((pset & 0x08) >> 3)] ^
+             mapY[((pset & 0x01) >> 0) | ((pset & 0x10) >> 3)] ^
+             mapZ[((pset & 0x03) >> 1) | ((pset & 0x20) >> 3)];
 
 #else
-  (void)pset;
+      (void)pset;
 
-  return core;
+      return core;
 #endif
-}
+    }
 
-unsigned CN_Mapping::reverseMapCoreOnPset(unsigned core, unsigned pset)
-{
-  // just the same function
-  return mapCoreOnPset(core, pset);
-}
+    unsigned CN_Mapping::reverseMapCoreOnPset(unsigned core, unsigned pset)
+    {
+      // just the same function
+      return mapCoreOnPset(core, pset);
+    }
 
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR

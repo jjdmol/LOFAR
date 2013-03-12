@@ -12,27 +12,27 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class WorkQueue
     {
-        class WorkQueue
-        {
-        public:
-            WorkQueue(cl::Context &context, cl::Device		&device,  unsigned gpuNumber, const Parset	&ps);
+    public:
+      WorkQueue(cl::Context &context, cl::Device          &device,  unsigned gpuNumber, const Parset      &ps);
 
-            const unsigned	gpu;
-            cl::Device		&device;
-            cl::CommandQueue	queue;
+      const unsigned gpu;
+      cl::Device          &device;
+      cl::CommandQueue queue;
 
-            std::map<std::string, SmartPtr<PerformanceCounter> > counters;
-            std::map<std::string, SmartPtr<NSTimer> > timers;
+      std::map<std::string, SmartPtr<PerformanceCounter> > counters;
+      std::map<std::string, SmartPtr<NSTimer> > timers;
 
-        protected:
-            const Parset	&ps;
+    protected:
+      const Parset        &ps;
 
-            void addCounter(const std::string &name);
-            void addTimer(const std::string &name);
-        };
+      void addCounter(const std::string &name);
+      void addTimer(const std::string &name);
+    };
 
-    }
+  }
 }
 #endif

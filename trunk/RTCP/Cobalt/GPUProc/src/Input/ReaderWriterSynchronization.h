@@ -30,64 +30,66 @@
 #include <pthread.h>
 
 
-namespace LOFAR {
-namespace RTCP {  
-
-
-class ReaderAndWriterSynchronization
+namespace LOFAR
 {
-  public:
-    virtual	 ~ReaderAndWriterSynchronization();
-
-    virtual void startRead(const TimeStamp &begin, const TimeStamp &end) = 0;
-    virtual void finishedRead(const TimeStamp &advanceTo) = 0;
-
-    virtual void startWrite(const TimeStamp &begin, const TimeStamp &end) = 0;
-    virtual void finishedWrite(const TimeStamp &advanceTo) = 0;
-};
+  namespace RTCP
+  {
 
 
-class SynchronizedReaderAndWriter : public ReaderAndWriterSynchronization
-{
-  public:
-		 SynchronizedReaderAndWriter(unsigned bufferSize);
-		 ~SynchronizedReaderAndWriter();
+    class ReaderAndWriterSynchronization
+    {
+    public:
+      virtual ~ReaderAndWriterSynchronization();
 
-    virtual void startRead(const TimeStamp &begin, const TimeStamp &end);
-    virtual void finishedRead(const TimeStamp &advanceTo);
+      virtual void startRead(const TimeStamp &begin, const TimeStamp &end) = 0;
+      virtual void finishedRead(const TimeStamp &advanceTo) = 0;
 
-    virtual void startWrite(const TimeStamp &begin, const TimeStamp &end);
-    virtual void finishedWrite(const TimeStamp &advanceTo);
-
-    void	 noMoreReading();
-    void	 noMoreWriting();
-    
-  private:
-    SlidingPointer<TimeStamp> itsReadPointer, itsWritePointer;
-    unsigned		      itsBufferSize;
-};
+      virtual void startWrite(const TimeStamp &begin, const TimeStamp &end) = 0;
+      virtual void finishedWrite(const TimeStamp &advanceTo) = 0;
+    };
 
 
-class TimeSynchronizedReader : public ReaderAndWriterSynchronization
-{
-  public:
-		  TimeSynchronizedReader(unsigned maximumNetworkLatency);
-		  ~TimeSynchronizedReader();
+    class SynchronizedReaderAndWriter : public ReaderAndWriterSynchronization
+    {
+    public:
+      SynchronizedReaderAndWriter(unsigned bufferSize);
+      ~SynchronizedReaderAndWriter();
 
-    virtual void  startRead(const TimeStamp &begin, const TimeStamp &end);
-    virtual void  finishedRead(const TimeStamp &advanceTo);
+      virtual void startRead(const TimeStamp &begin, const TimeStamp &end);
+      virtual void finishedRead(const TimeStamp &advanceTo);
 
-    virtual void  startWrite(const TimeStamp &begin, const TimeStamp &end);
-    virtual void  finishedWrite(const TimeStamp &advanceTo);
-    
-  private:
-    WallClockTime itsWallClock;
-    unsigned	  itsMaximumNetworkLatency;
-};
+      virtual void startWrite(const TimeStamp &begin, const TimeStamp &end);
+      virtual void finishedWrite(const TimeStamp &advanceTo);
+
+      void         noMoreReading();
+      void         noMoreWriting();
+
+    private:
+      SlidingPointer<TimeStamp> itsReadPointer, itsWritePointer;
+      unsigned itsBufferSize;
+    };
+
+
+    class TimeSynchronizedReader : public ReaderAndWriterSynchronization
+    {
+    public:
+      TimeSynchronizedReader(unsigned maximumNetworkLatency);
+      ~TimeSynchronizedReader();
+
+      virtual void  startRead(const TimeStamp &begin, const TimeStamp &end);
+      virtual void  finishedRead(const TimeStamp &advanceTo);
+
+      virtual void  startWrite(const TimeStamp &begin, const TimeStamp &end);
+      virtual void  finishedWrite(const TimeStamp &advanceTo);
+
+    private:
+      WallClockTime itsWallClock;
+      unsigned itsMaximumNetworkLatency;
+    };
 
 
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

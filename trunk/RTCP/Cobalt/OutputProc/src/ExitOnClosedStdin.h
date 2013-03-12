@@ -11,21 +11,23 @@
 
 #include <Common/Thread/Thread.h>
 
-namespace LOFAR {
-namespace RTCP {
-
-class ExitOnClosedStdin
+namespace LOFAR
 {
-  public:
-    ExitOnClosedStdin();
-    ~ExitOnClosedStdin();
+  namespace RTCP
+  {
 
-  private:
-    void   mainLoop();
-    Thread itsThread;
-};
+    class ExitOnClosedStdin
+    {
+    public:
+      ExitOnClosedStdin();
+      ~ExitOnClosedStdin();
 
-} // namespace RTCP
+    private:
+      void   mainLoop();
+      Thread itsThread;
+    };
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

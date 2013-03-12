@@ -8,10 +8,19 @@ using namespace boost;
 
 // A class that keeps track of the number of live objects.
 struct Object {
-  Object()  { val = nrObjects++; }
-  ~Object() { nrObjects--; }
+  Object()
+  {
+    val = nrObjects++;
+  }
+  ~Object()
+  {
+    nrObjects--;
+  }
 
-  bool operator==(const Object &other) const { return val == other.val; }
+  bool operator==(const Object &other) const
+  {
+    return val == other.val;
+  }
 
   static size_t nrObjects;
 
@@ -20,7 +29,8 @@ struct Object {
 
 size_t Object::nrObjects = 0;
 
-template<unsigned DIM> struct Tester {
+template<unsigned DIM>
+struct Tester {
   typedef MultiDimArray<Object,DIM> ArrayType;
   typedef typename ArrayType::ExtentList ExtentList;
 
@@ -31,7 +41,8 @@ template<unsigned DIM> struct Tester {
   void assert_live_elements(size_t n);
 };
 
-template<unsigned DIM> void Tester<DIM>::test(const Tester<DIM>::ExtentList &extents)
+template<unsigned DIM>
+void Tester<DIM>::test(const Tester<DIM>::ExtentList &extents)
 {
   size_t nrElements = ArrayType::nrElements(extents);
 
@@ -174,13 +185,15 @@ template<unsigned DIM> void Tester<DIM>::test(const Tester<DIM>::ExtentList &ext
   assert_live_elements(0);
 }
 
-template<unsigned DIM> void Tester<DIM>::half(Tester<DIM>::ExtentList &extents)
+template<unsigned DIM>
+void Tester<DIM>::half(Tester<DIM>::ExtentList &extents)
 {
   for (size_t i = 0; i < DIM; i++)
     extents.ranges_[i] = extents.ranges_[i].size() / 2;
 }
 
-template<unsigned DIM> void Tester<DIM>::assert_live_elements(size_t n)
+template<unsigned DIM>
+void Tester<DIM>::assert_live_elements(size_t n)
 {
   ASSERTSTR( Object::nrObjects == n, "Expected " << n << " live objects, but encountered " << Object::nrObjects );
 }
@@ -189,8 +202,16 @@ int main()
 {
   INIT_LOGGER("tMultiDimArray");
 
-  { Tester<1> tester; tester.test(extents[10]); }
-  { Tester<2> tester; tester.test(extents[10][10]); }
-  { Tester<3> tester; tester.test(extents[10][10][10]); }
-  { Tester<4> tester; tester.test(extents[10][10][10][10]); }
+  { Tester<1> tester;
+    tester.test(extents[10]);
+  }
+  { Tester<2> tester;
+    tester.test(extents[10][10]);
+  }
+  { Tester<3> tester;
+    tester.test(extents[10][10][10]);
+  }
+  { Tester<4> tester;
+    tester.test(extents[10][10][10][10]);
+  }
 }

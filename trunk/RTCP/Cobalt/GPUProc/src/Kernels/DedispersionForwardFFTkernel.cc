@@ -9,13 +9,13 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
-    {        
-            DedispersionForwardFFTkernel::DedispersionForwardFFTkernel(const Parset &ps, cl::Context &context, cl::Buffer &buffer)
-                :
-            FFT_Kernel(context, ps.dedispersionFFTsize(), ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize(), true, buffer)
-            {
-                ASSERT(ps.nrSamplesPerChannel() % ps.dedispersionFFTsize() == 0);
-            }
+  namespace RTCP
+  {
+    DedispersionForwardFFTkernel::DedispersionForwardFFTkernel(const Parset &ps, cl::Context &context, cl::Buffer &buffer)
+      :
+      FFT_Kernel(context, ps.dedispersionFFTsize(), ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize(), true, buffer)
+    {
+      ASSERT(ps.nrSamplesPerChannel() % ps.dedispersionFFTsize() == 0);
     }
+  }
 }

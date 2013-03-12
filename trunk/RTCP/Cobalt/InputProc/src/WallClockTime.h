@@ -31,78 +31,80 @@
 #include <time.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-class WallClockTime
+namespace LOFAR
 {
-  public:
-	      WallClockTime();
-
-    bool      waitUntil(const struct timespec &);
-    bool      waitUntil(time_t);
-    bool      waitUntil(const TimeStamp &);
-    void      waitForever();
-
-    void      cancelWait();
-
-  private:
-    Mutex     itsMutex;
-    Condition itsCondition;
-    bool      itsCancelled;
-};
+  namespace RTCP
+  {
 
 
-inline WallClockTime::WallClockTime()
-:
-  itsCancelled(false)
-{
-}
+    class WallClockTime
+    {
+    public:
+      WallClockTime();
+
+      bool      waitUntil(const struct timespec &);
+      bool waitUntil(time_t);
+      bool      waitUntil(const TimeStamp &);
+      void      waitForever();
+
+      void      cancelWait();
+
+    private:
+      Mutex itsMutex;
+      Condition itsCondition;
+      bool itsCancelled;
+    };
 
 
-inline bool WallClockTime::waitUntil(const struct timespec &timespec)
-{
-  ScopedLock scopedLock(itsMutex);
-
-  while (!itsCancelled && itsCondition.wait(itsMutex, timespec))
-    ;
-
-  return !itsCancelled;
-}
+    inline WallClockTime::WallClockTime()
+      :
+      itsCancelled(false)
+    {
+    }
 
 
-inline bool WallClockTime::waitUntil(time_t timestamp)
-{
-  struct timespec timespec = { timestamp, 0 };
+    inline bool WallClockTime::waitUntil(const struct timespec &timespec)
+    {
+      ScopedLock scopedLock(itsMutex);
 
-  return waitUntil(timespec);
-}
+      while (!itsCancelled && itsCondition.wait(itsMutex, timespec))
+        ;
 
-
-inline bool WallClockTime::waitUntil(const TimeStamp &timestamp)
-{
-  return waitUntil(static_cast<struct timespec>(timestamp));
-}
-
-inline void WallClockTime::waitForever()
-{
-  ScopedLock scopedLock(itsMutex);
-
-  while (!itsCancelled) 
-    itsCondition.wait(itsMutex);
-}
-
-inline void WallClockTime::cancelWait()
-{
-  ScopedLock scopedLock(itsMutex);
-
-  itsCancelled = true;
-  itsCondition.broadcast();
-}
+      return !itsCancelled;
+    }
 
 
-} // namespace RTCP
+    inline bool WallClockTime::waitUntil(time_t timestamp)
+    {
+      struct timespec timespec = { timestamp, 0 };
+
+      return waitUntil(timespec);
+    }
+
+
+    inline bool WallClockTime::waitUntil(const TimeStamp &timestamp)
+    {
+      return waitUntil(static_cast<struct timespec>(timestamp));
+    }
+
+    inline void WallClockTime::waitForever()
+    {
+      ScopedLock scopedLock(itsMutex);
+
+      while (!itsCancelled)
+        itsCondition.wait(itsMutex);
+    }
+
+    inline void WallClockTime::cancelWait()
+    {
+      ScopedLock scopedLock(itsMutex);
+
+      itsCancelled = true;
+      itsCondition.broadcast();
+    }
+
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

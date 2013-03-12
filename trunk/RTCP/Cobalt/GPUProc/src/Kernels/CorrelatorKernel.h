@@ -10,42 +10,42 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
-    {
+  namespace RTCP
+  {
 #if !defined USE_NEW_CORRELATOR
 
-        class CorrelatorKernel : public Kernel
-        {
-        public:
-            CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue,
-                cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
-        };
+    class CorrelatorKernel : public Kernel
+    {
+    public:
+      CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue,
+                       cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
+    };
 
 #else
 
-        class CorrelatorKernel : public Kernel
-        {
-        public:
-            CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
-               
-        };
+    class CorrelatorKernel : public Kernel
+    {
+    public:
+      CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
+                       cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
 
-        class CorrelateRectangleKernel : public Kernel
-        {
-        public:
-            CorrelateRectangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, 
-                cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
-        };
+    };
 
-        class CorrelateTriangleKernel : public Kernel
-        {
-        public:
-            CorrelateTriangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
-        };
+    class CorrelateRectangleKernel : public Kernel
+    {
+    public:
+      CorrelateRectangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
+                               cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
+    };
+
+    class CorrelateTriangleKernel : public Kernel
+    {
+    public:
+      CorrelateTriangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
+                              cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
+    };
 
 #endif
-    }
+  }
 }
 #endif
