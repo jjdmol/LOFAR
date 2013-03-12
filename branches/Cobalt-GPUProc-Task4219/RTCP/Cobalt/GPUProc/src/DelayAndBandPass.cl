@@ -53,11 +53,11 @@ typedef __global const float (*restrict BandPassFactorsType)[NR_CHANNELS];
  *   hence it can be fully compensated for.
  * - Transpose the data so that the time slices for each channel are placed
  *   consecutively in memory.
- * 
+ *
  * @param[out] correctedDataPtr    pointer to output data of ::OutputDataType,
  *                                 a 3D array [station][channel][sample]
  *                                 of ::fcomplex2 (2 complex polarizations)
- * @param[in]  filteredDataPtr     pointer to input data; this can either be a 
+ * @param[in]  filteredDataPtr     pointer to input data; this can either be a
  *                                 4D array [station][polarization][sample][channel]
  *                                 of ::fcomplex, or a 2D array [station][subband]
  *                                 of ::short_complex2 or ::char_complex2,
@@ -72,7 +72,7 @@ typedef __global const float (*restrict BandPassFactorsType)[NR_CHANNELS];
  *                                 a 2D array [beam][station] of float2 (real:
  *                                 2 polarizations), containing delays in
  *                                 seconds after end of integration period
- * @param[in]  phaseOffsetsPtr     pointer to phase offset data of 
+ * @param[in]  phaseOffsetsPtr     pointer to phase offset data of
  *                                 ::PhaseOffsetsType, a 1D array [station] of
  *                                 float2 (real: 2 polarizations), containing
  *                                 phase offsets in radians
@@ -82,13 +82,13 @@ typedef __global const float (*restrict BandPassFactorsType)[NR_CHANNELS];
  */
 __kernel __attribute__((reqd_work_group_size(16 * 16, 1, 1)))
 void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
-				   __global const fcomplex *restrict filteredDataPtr,
-				   float subbandFrequency,
-				   unsigned beam,
-				   __global const float2 *restrict delaysAtBeginPtr,
-				   __global const float2 *restrict delaysAfterEndPtr,
-				   __global const float2 *restrict phaseOffsetsPtr,
-				   __global const float *restrict bandPassFactorsPtr)
+                                   __global const fcomplex *restrict filteredDataPtr,
+                                   float subbandFrequency,
+                                   unsigned beam,
+                                   __global const float2 *restrict delaysAtBeginPtr,
+                                   __global const float2 *restrict delaysAfterEndPtr,
+                                   __global const float2 *restrict phaseOffsetsPtr,
+                                   __global const float *restrict bandPassFactorsPtr)
 {
   OutputDataType outputData = (OutputDataType) correctedDataPtr;
   InputDataType inputData = (InputDataType) filteredDataPtr;
@@ -101,11 +101,11 @@ void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
 
   __local fcomplex2 tmp[16][17]; // one too wide to allow coalesced reads
 
-  uint major	   = get_global_id(0) / 16;
-  uint minor	   = get_global_id(0) % 16;
-  uint channel	   = get_global_id(1) * 16;
+  uint major = get_global_id(0) / 16;
+  uint minor = get_global_id(0) % 16;
+  uint channel = get_global_id(1) * 16;
 #endif
-  uint station	   = get_global_id(2);
+  uint station = get_global_id(2);
 
 #if defined DELAY_COMPENSATION
 #if NR_CHANNELS == 1
@@ -116,7 +116,7 @@ void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
   float2 delayAtBegin = (*delaysAtBegin)[beam][station];
   float2 delayAfterEnd = (*delaysAfterEnd)[beam][station];
   float2 phiBegin = -2 * 3.1415926535f * delayAtBegin;
-  float2 phiEnd   = -2 * 3.1415926535f * delayAfterEnd;
+  float2 phiEnd = -2 * 3.1415926535f * delayAfterEnd;
   float2 deltaPhi = (phiEnd - phiBegin) / NR_SAMPLES_PER_CHANNEL;
 #if NR_CHANNELS == 1
   float2 myPhiBegin = (phiBegin + get_local_id(0) * deltaPhi) * frequency + (*phaseOffsets)[station];

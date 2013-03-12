@@ -34,47 +34,49 @@
 #include <string>
 #include <sys/time.h>
 
-namespace LOFAR {
-namespace RTCP {
-
-class LogThread
+namespace LOFAR
 {
-  public:
-    LogThread(unsigned nrRspBoards, std::string stationName);
-    ~LogThread();
+  namespace RTCP
+  {
 
-    void start();
+    class LogThread
+    {
+    public:
+      LogThread(unsigned nrRspBoards, std::string stationName);
+      ~LogThread();
 
-    struct Counters {
-      unsigned received, badTimeStamp, badSize;
-      unsigned pad[5]; // pad to cache line size to avoid false sharing 
-    };
+      void start();
 
-    std::vector<Counters> itsCounters;
+      struct Counters {
+        unsigned received, badTimeStamp, badSize;
+        unsigned pad[5]; // pad to cache line size to avoid false sharing
+      };
 
-  private:
-    void	mainLoop();
+      std::vector<Counters> itsCounters;
 
-    std::string itsStationName;
-  
-    SmartPtr<Thread>	itsThread;
+    private:
+      void        mainLoop();
+
+      std::string itsStationName;
+
+      SmartPtr<Thread>    itsThread;
 
 #if defined HAVE_BGP_ION
-    struct CPUload {
-      //unsigned long long user, system, interrupt, idle, idlePerCore[4];
-      unsigned long long user, system, interrupt, idle, idle0;
-    } previousLoad;
+      struct CPUload {
+        //unsigned long long user, system, interrupt, idle, idlePerCore[4];
+        unsigned long long user, system, interrupt, idle, idle0;
+      } previousLoad;
 
-    struct timeval previousTimeval;
+      struct timeval previousTimeval;
 
-    bool readCPUstats(struct CPUload &load);
-    void writeCPUstats(std::stringstream &str);
+      bool readCPUstats(struct CPUload &load);
+      void writeCPUstats(std::stringstream &str);
 #endif
-  };
+    };
 
-  // @}
+    // @}
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

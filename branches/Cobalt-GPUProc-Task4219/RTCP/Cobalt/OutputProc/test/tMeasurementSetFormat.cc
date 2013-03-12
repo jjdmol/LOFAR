@@ -28,7 +28,7 @@ int main()
   for( unsigned i = 0; i < sizeof suffixes / sizeof suffixes[0]; i++ ) {
     try {
       const string parsetName = string("tMeasurementSetFormat.parset") + suffixes[i];
-      const string msName     = string("tMeasurementSetFormat") + suffixes[i] + "_tmp.ms";
+      const string msName = string("tMeasurementSetFormat") + suffixes[i] + "_tmp.ms";
 
       LOG_DEBUG_STR("Testing " << parsetName);
 
@@ -38,7 +38,7 @@ int main()
       // Also create the data file, otherwise it is not a true table.
       ///FILE* file= fopen ("tMeasurementSetFormat_tmp.ms/f0data", "w");
       ///fclose (file);
-      RegularFileIO file(String(msName+"/table.f0data"),
+      RegularFileIO file(String(msName + "/table.f0data"),
                          ByteIO::New);
     } catch (LOFAR::Exception &err) {
       std::cerr << "LOFAR Exception detected: " << err << std::endl;

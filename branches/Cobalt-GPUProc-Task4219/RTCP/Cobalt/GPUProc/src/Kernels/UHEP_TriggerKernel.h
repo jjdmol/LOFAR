@@ -10,23 +10,23 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+
+
+    struct TriggerInfo {
+      float mean, variance, bestValue;
+      unsigned bestApproxIndex;
+    };
+
+    class UHEP_TriggerKernel : public Kernel
     {
+    public:
+      UHEP_TriggerKernel(const Parset &ps, cl::Program &program,
+                         cl::Buffer &devTriggerInfo, cl::Buffer &devInvFIRfilteredData);
 
+    };
 
-        struct TriggerInfo {
-            float	   mean, variance, bestValue;
-            unsigned bestApproxIndex;
-        };
-
-        class UHEP_TriggerKernel : public Kernel
-        {
-        public:
-            UHEP_TriggerKernel(const Parset &ps, cl::Program &program, 
-                cl::Buffer &devTriggerInfo, cl::Buffer &devInvFIRfilteredData);
-
-        };
-
-    }
+  }
 }
 #endif

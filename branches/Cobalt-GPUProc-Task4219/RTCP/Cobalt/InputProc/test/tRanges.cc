@@ -7,7 +7,8 @@ using namespace LOFAR;
 using namespace RTCP;
 using namespace std;
 
-int main( int, char **argv ) {
+int main( int, char **argv )
+{
   INIT_LOGGER( argv[0] );
 
   size_t clock = 200 * 1000 * 1000;

@@ -1,8 +1,8 @@
-  // test.cpp
+// test.cpp
   #include <UnitTest++.h>
 
-  TEST(FailSpectacularly2)
-  {
-    CHECK(true);
-  }
+TEST(FailSpectacularly2)
+{
+  CHECK(true);
+}
 

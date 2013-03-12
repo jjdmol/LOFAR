@@ -9,7 +9,8 @@ using namespace LOFAR;
 using namespace RTCP;
 using namespace std;
 
-template<typename T> void test( struct BufferSettings &settings )
+template<typename T>
+void test( struct BufferSettings &settings )
 {
   // Should be able to create the buffer
   SampleBuffer< SampleType<T> > buffer_create(settings, true);
@@ -18,7 +19,8 @@ template<typename T> void test( struct BufferSettings &settings )
   SampleBuffer< SampleType<T> > buffer_read(settings, false);
 }
 
-int main() {
+int main()
+{
   INIT_LOGGER( "tSampleBuffer" );
 
   // Don't run forever if communication fails for some reason

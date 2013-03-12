@@ -33,33 +33,35 @@
 #include <string>
 #include <vector>
 
-namespace LOFAR {
-namespace RTCP {
-
-
-class MSWriterCorrelated : public MSWriterFile
+namespace LOFAR
 {
-  public:
-    MSWriterCorrelated(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian);
-    ~MSWriterCorrelated();
-
-    virtual void write(StreamableData *data);
-    
-    virtual void augment(const FinalMetaData &finalMetaData);
-
-  protected:
-    const std::string itsLogPrefix;
-    const std::string itsMSname;
-    const Parset &itsParset;
-
-    SmartPtr<FileStream>	     itsSequenceNumbersFile;
-
-  private:
-    void makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian);
-};
+  namespace RTCP
+  {
 
 
-}
+    class MSWriterCorrelated : public MSWriterFile
+    {
+    public:
+      MSWriterCorrelated(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian);
+      ~MSWriterCorrelated();
+
+      virtual void write(StreamableData *data);
+
+      virtual void augment(const FinalMetaData &finalMetaData);
+
+    protected:
+      const std::string itsLogPrefix;
+      const std::string itsMSname;
+      const Parset &itsParset;
+
+      SmartPtr<FileStream>             itsSequenceNumbersFile;
+
+    private:
+      void makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian);
+    };
+
+
+  }
 }
 
 #endif

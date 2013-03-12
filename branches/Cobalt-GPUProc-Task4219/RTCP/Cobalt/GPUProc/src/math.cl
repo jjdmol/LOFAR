@@ -2,7 +2,7 @@ typedef float2 fcomplex;
 typedef float4 fcomplex2;
 typedef float8 fcomplex4;
 
-typedef char4  char_complex2;
+typedef char4 char_complex2;
 typedef short4 short_complex2;
 
 

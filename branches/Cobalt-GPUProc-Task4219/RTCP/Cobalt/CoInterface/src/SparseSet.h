@@ -35,22 +35,29 @@
 #include <vector>
 
 
-namespace LOFAR {
+namespace LOFAR
+{
 
-/*
- * A SparseSet<T> represents a sorted vector of [from, to) pairs of type
- * T representing a boolean presence.
- */
-template <typename T> class SparseSet {
+  /*
+   * A SparseSet<T> represents a sorted vector of [from, to) pairs of type
+   * T representing a boolean presence.
+   */
+  template <typename T>
+  class SparseSet
+  {
   public:
     struct range {
-      range() {}
-      range(T begin, T end) : begin(begin), end(end) {}
+      range()
+      {
+      }
+      range(T begin, T end) : begin(begin), end(end)
+      {
+      }
       T begin, end;
     };
 
-    typedef typename std::vector<range>	    Ranges;
-    typedef typename Ranges::iterator	    iterator;
+    typedef typename std::vector<range>     Ranges;
+    typedef typename Ranges::iterator iterator;
     typedef typename Ranges::const_iterator const_iterator;
 
     // Add `index' to the set.
@@ -69,10 +76,10 @@ template <typename T> class SparseSet {
     SparseSet<T> &reset();
 
     // Returns the number of elements in the set.
-    T		 count() const;
+    T            count() const;
 
     // Returns true if `index' is in the set.
-    bool	 test(T index) const;
+    bool         test(T index) const;
 
     // Return the union of two sets.
     SparseSet<T> operator | (const SparseSet<T> &) const;
@@ -113,267 +120,286 @@ template <typename T> class SparseSet {
     struct less {
       bool operator() (const range &x, const range &y)
       {
-	return x.end < y.begin;
+        return x.end < y.begin;
       }
     };
 
     struct less_equal {
       bool operator() (const range &x, const range &y)
       {
-	return x.end <= y.begin;
+        return x.end <= y.begin;
       }
     };
-};
+  };
 
-template <typename T> std::ostream &operator << (std::ostream &str, const SparseSet<T> &set);
-
-
-template <typename T> inline SparseSet<T> &SparseSet<T>::include(T index)
-{
-  return include(index, index + 1);
-}
+  template <typename T>
+  std::ostream &operator << (std::ostream &str, const SparseSet<T> &set);
 
 
-template <typename T> inline SparseSet<T> &SparseSet<T>::exclude(T index)
-{
-  return exclude(index, index + 1);
-}
-
-
-template <typename T> inline SparseSet<T> &SparseSet<T>::reset()
-{
-  ranges.resize(0);
-  return *this;
-}
-
-
-template <typename T> inline SparseSet<T> &SparseSet<T>::operator |= (const SparseSet<T> &other)
-{
-  ranges = (*this | other).ranges;
-  return *this;
-}
-
-
-template <typename T> inline SparseSet<T> SparseSet<T>::invert(T first, T last) const
-{
-  SparseSet<T> inverted;
-
-  for (const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
-    inverted.include(first, it->begin);
-    first = it->end;
+  template <typename T>
+  inline SparseSet<T> &SparseSet<T>::include(T index)
+  {
+    return include(index, index + 1);
   }
 
-  inverted.include(first, last);
 
-  return inverted;
-}
-
-
-template <typename T> inline SparseSet<T> SparseSet<T>::subset(T first, T last) const
-{
-  return SparseSet<T>(*this).exclude(last, ~0U).exclude(0, first);
-}
-
-
-//template <typename T> inline const std::vector<typename SparseSet<T>::range> &SparseSet<T>::getRanges() const
-template <typename T> inline const typename SparseSet<T>::Ranges &SparseSet<T>::getRanges() const
-{
-  return ranges;
-}
-
-
-template <typename T> SparseSet<T> &SparseSet<T>::include(T first, T last)
-{
-  if (first < last) {
-    // find two iterators that mark the first resp. last involved ranges
-    range r(first, last);
-    std::pair<iterator, iterator> iters = equal_range(ranges.begin(), ranges.end(), r, less());
-
-    if (iters.first == iters.second) {
-      // insert new tuple
-      ranges.insert(iters.first, r);
-    } else {
-      // combine with existing tuple(s)
-      iters.first->begin = std::min(first, iters.first->begin);
-      iters.first->end   = std::max(last , iters.second[-1].end);
-
-      ranges.erase(iters.first + 1, iters.second);
-    } 
+  template <typename T>
+  inline SparseSet<T> &SparseSet<T>::exclude(T index)
+  {
+    return exclude(index, index + 1);
   }
 
-  return *this;
-}
 
-
-template <typename T> SparseSet<T> &SparseSet<T>::exclude(T first, T last)
-{
-  if (first < last) {
-    // find two iterators that mark the first resp. last involved ranges
-    // unlike in include(), a range that is adjacent to first or last is not
-    // considered to be involved, hence the use of less_equal()
-    std::pair<iterator, iterator> iters = equal_range(ranges.begin(), ranges.end(), range(first, last), less_equal());
-
-    if (iters.first != iters.second) { // check if there are tuples involved
-      if (iters.second - iters.first == 1 && first > iters.first->begin && last < iters.first->end) {
-	// split tuple
-	range r(last, iters.first->end);
-	iters.first->end = first;
-	ranges.insert(iters.second, r);
-      } else {
-	// possibly erase tuples
-	if (first > iters.first->begin)
-	  (iters.first ++)->end = first; // adjust first tuple; do not erase
-
-	if (last < iters.second[-1].end)
-	  (-- iters.second)->begin = last; // adjust last tuple; do not erase
-
-	ranges.erase(iters.first, iters.second);
-      }
-    }
-  }
-
-  return *this;
-}
-
-
-template <typename T> T SparseSet<T>::count() const
-{
-  T count = 0;
-
-  for (const_iterator it = ranges.begin(); it != ranges.end(); it ++)
-    count += it->end - it->begin;
-
-  return count;
-}
-
-
-template <typename T> bool SparseSet<T>::test(T index) const
-{
-  const_iterator it = lower_bound(ranges.begin(), ranges.end(), range(index, index + 1), less_equal());
-  return it != ranges.end() && index >= it->begin;
-}
-
-
-template <typename T> SparseSet<T> SparseSet<T>::operator | (const SparseSet<T> &other) const
-{
-  // iterate with two iterators over both sets, comparing the ranges to decide
-  // what to do: include a range from the first set, include a range from the
-  // second set, or merge (multiple) ranges from both sets.
-
-  SparseSet<T> union_set;
-  const_iterator it1 = ranges.begin(), it2 = other.ranges.begin();
-
-  while (it1 != ranges.end() && it2 != other.ranges.end()) {
-    if (it1->end < it2->begin) {
-      union_set.ranges.push_back(*it1 ++); // no overlap; *it1 is the smallest
-    } else if (it2->end < it1->begin) {
-      union_set.ranges.push_back(*it2 ++); // no overlap; *it2 is the smallest
-    } else { // there is overlap, or it1 and it2 are contiguous
-      T new_begin = std::min(it1->begin, it2->begin);
-
-      // check if subsequent ranges from set1 and set2 must be joined as well
-      while (1) {
-	if (it1 + 1 != ranges.end() && it1[1].begin <= it2->end) {
-	  ++ it1;
-	} else if (it2 + 1 != other.ranges.end() && it2[1].begin <= it1->end) {
-	  ++ it2;
-	} else {
-	  break;
-	}
-      }
-
-      union_set.ranges.push_back(range(new_begin, std::max(it1->end, it2->end)));
-      ++ it1, ++ it2;
-    }
-  }
-
-  // possibly append the remainder of the set that we have not finished yet
-  union_set.ranges.insert(union_set.ranges.end(), it1, ranges.end());
-  union_set.ranges.insert(union_set.ranges.end(), it2, other.ranges.end());
-  return union_set;
-}
-
-
-template <typename T> SparseSet<T> &SparseSet<T>::operator += (size_t count)
-{
-  for (iterator it = ranges.begin(); it != ranges.end(); it ++)
-    it->begin += count, it->end += count;
-
-  return *this;
-}
-
-
-template <typename T> SparseSet<T> &SparseSet<T>::operator -= (size_t count)
-{
-  assert(ranges.size() == 0 || ranges[0].begin >= count);
-
-  for (iterator it = ranges.begin(); it != ranges.end(); it ++)
-    it->begin -= count, it->end -= count;
-
-  return *this;
-}
-
-template <typename T> SparseSet<T> &SparseSet<T>::operator /= (size_t shrinkFactor)
-{
-  iterator prev = ranges.end();
-
-  if (shrinkFactor == 1) {
-    /* nothing changes */
+  template <typename T>
+  inline SparseSet<T> &SparseSet<T>::reset()
+  {
+    ranges.resize(0);
     return *this;
   }
 
-  for (iterator it = ranges.begin(); it != ranges.end(); it ++) {
-    it->begin = static_cast<T>(floor(static_cast<double>(it->begin) / shrinkFactor));
-    it->end = static_cast<T>(ceil(static_cast<double>(it->end) / shrinkFactor));
 
-    /* The gap between two ranges might have disappeared. The ranges can
-       even overlap due to the differences in rounding. */
-    if (prev != ranges.end() && prev->end >= it->begin) {
-      /* combine tuples */
-      it->begin = prev->begin;
-
-      /* it would be invalidated by the erase, so reobtain it */
-      it = ranges.erase(prev);
-    }
-
-    prev = it;
+  template <typename T>
+  inline SparseSet<T> &SparseSet<T>::operator |= (const SparseSet<T> &other)
+  {
+    ranges = (*this | other).ranges;
+    return *this;
   }
 
-  return *this;
-}
+
+  template <typename T>
+  inline SparseSet<T> SparseSet<T>::invert(T first, T last) const
+  {
+    SparseSet<T> inverted;
+
+    for (const_iterator it = ranges.begin(); it != ranges.end(); it++) {
+      inverted.include(first, it->begin);
+      first = it->end;
+    }
+
+    inverted.include(first, last);
+
+    return inverted;
+  }
 
 
-template <typename T> ssize_t SparseSet<T>::marshall(void *ptr, size_t maxSize) const
-{
-  size_t size = sizeof(uint32_t) + ranges.size() * sizeof(range);
-
-  if (size > maxSize)
-    return -1;
-
-  * (uint32_t *) ptr = ranges.size();
-  memcpy((uint32_t *) ptr + 1, &ranges[0], ranges.size() * sizeof(range));
-
-  return size;
-}
+  template <typename T>
+  inline SparseSet<T> SparseSet<T>::subset(T first, T last) const
+  {
+    return SparseSet<T>(*this).exclude(last, ~0U).exclude(0, first);
+  }
 
 
-template <typename T> void SparseSet<T>::unmarshall(const void *ptr)
-{
-  ranges.resize(* (uint32_t *) ptr);
-  memcpy(&ranges[0], (uint32_t *) ptr + 1, ranges.size() * sizeof(range));
-}
+  //template <typename T> inline const std::vector<typename SparseSet<T>::range> &SparseSet<T>::getRanges() const
+  template <typename T>
+  inline const typename SparseSet<T>::Ranges & SparseSet<T>::getRanges() const
+  {
+    return ranges;
+  }
 
 
-template <typename T> std::ostream &operator << (std::ostream &str, const SparseSet<T> &set)
-{
-  for (typename SparseSet<T>::const_iterator it = set.getRanges().begin(); it != set.getRanges().end(); it ++)
-    if (it->end == it->begin + 1)
-      str << '[' << it->begin << "] ";
-    else
-      str << '[' << it->begin << ".." << it->end << "> ";
+  template <typename T>
+  SparseSet<T> &SparseSet<T>::include(T first, T last)
+  {
+    if (first < last) {
+      // find two iterators that mark the first resp. last involved ranges
+      range r(first, last);
+      std::pair<iterator, iterator> iters = equal_range(ranges.begin(), ranges.end(), r, less());
 
-  return str;
-}
+      if (iters.first == iters.second) {
+        // insert new tuple
+        ranges.insert(iters.first, r);
+      } else {
+        // combine with existing tuple(s)
+        iters.first->begin = std::min(first, iters.first->begin);
+        iters.first->end = std::max(last, iters.second[-1].end);
+
+        ranges.erase(iters.first + 1, iters.second);
+      }
+    }
+
+    return *this;
+  }
+
+
+  template <typename T>
+  SparseSet<T> &SparseSet<T>::exclude(T first, T last)
+  {
+    if (first < last) {
+      // find two iterators that mark the first resp. last involved ranges
+      // unlike in include(), a range that is adjacent to first or last is not
+      // considered to be involved, hence the use of less_equal()
+      std::pair<iterator, iterator> iters = equal_range(ranges.begin(), ranges.end(), range(first, last), less_equal());
+
+      if (iters.first != iters.second) { // check if there are tuples involved
+        if (iters.second - iters.first == 1 && first > iters.first->begin && last < iters.first->end) {
+          // split tuple
+          range r(last, iters.first->end);
+          iters.first->end = first;
+          ranges.insert(iters.second, r);
+        } else {
+          // possibly erase tuples
+          if (first > iters.first->begin)
+            (iters.first++)->end = first;  // adjust first tuple; do not erase
+
+          if (last < iters.second[-1].end)
+            (--iters.second)->begin = last;  // adjust last tuple; do not erase
+
+          ranges.erase(iters.first, iters.second);
+        }
+      }
+    }
+
+    return *this;
+  }
+
+
+  template <typename T>
+  T SparseSet<T>::count() const
+  {
+    T count = 0;
+
+    for (const_iterator it = ranges.begin(); it != ranges.end(); it++)
+      count += it->end - it->begin;
+
+    return count;
+  }
+
+
+  template <typename T>
+  bool SparseSet<T>::test(T index) const
+  {
+    const_iterator it = lower_bound(ranges.begin(), ranges.end(), range(index, index + 1), less_equal());
+    return it != ranges.end() && index >= it->begin;
+  }
+
+
+  template <typename T>
+  SparseSet<T> SparseSet<T>::operator | (const SparseSet<T> &other) const
+  {
+    // iterate with two iterators over both sets, comparing the ranges to decide
+    // what to do: include a range from the first set, include a range from the
+    // second set, or merge (multiple) ranges from both sets.
+
+    SparseSet<T> union_set;
+    const_iterator it1 = ranges.begin(), it2 = other.ranges.begin();
+
+    while (it1 != ranges.end() && it2 != other.ranges.end()) {
+      if (it1->end < it2->begin) {
+        union_set.ranges.push_back(*it1++); // no overlap; *it1 is the smallest
+      } else if (it2->end < it1->begin) {
+        union_set.ranges.push_back(*it2++); // no overlap; *it2 is the smallest
+      } else { // there is overlap, or it1 and it2 are contiguous
+        T new_begin = std::min(it1->begin, it2->begin);
+
+        // check if subsequent ranges from set1 and set2 must be joined as well
+        while (1) {
+          if (it1 + 1 != ranges.end() && it1[1].begin <= it2->end) {
+            ++it1;
+          } else if (it2 + 1 != other.ranges.end() && it2[1].begin <= it1->end) {
+            ++it2;
+          } else {
+            break;
+          }
+        }
+
+        union_set.ranges.push_back(range(new_begin, std::max(it1->end, it2->end)));
+        ++it1, ++it2;
+      }
+    }
+
+    // possibly append the remainder of the set that we have not finished yet
+    union_set.ranges.insert(union_set.ranges.end(), it1, ranges.end());
+    union_set.ranges.insert(union_set.ranges.end(), it2, other.ranges.end());
+    return union_set;
+  }
+
+
+  template <typename T>
+  SparseSet<T> &SparseSet<T>::operator += (size_t count)
+  {
+    for (iterator it = ranges.begin(); it != ranges.end(); it++)
+      it->begin += count, it->end += count;
+
+    return *this;
+  }
+
+
+  template <typename T>
+  SparseSet<T> &SparseSet<T>::operator -= (size_t count)
+  {
+    assert(ranges.size() == 0 || ranges[0].begin >= count);
+
+    for (iterator it = ranges.begin(); it != ranges.end(); it++)
+      it->begin -= count, it->end -= count;
+
+    return *this;
+  }
+
+  template <typename T>
+  SparseSet<T> &SparseSet<T>::operator /= (size_t shrinkFactor)
+  {
+    iterator prev = ranges.end();
+
+    if (shrinkFactor == 1) {
+      /* nothing changes */
+      return *this;
+    }
+
+    for (iterator it = ranges.begin(); it != ranges.end(); it++) {
+      it->begin = static_cast<T>(floor(static_cast<double>(it->begin) / shrinkFactor));
+      it->end = static_cast<T>(ceil(static_cast<double>(it->end) / shrinkFactor));
+
+      /* The gap between two ranges might have disappeared. The ranges can
+         even overlap due to the differences in rounding. */
+      if (prev != ranges.end() && prev->end >= it->begin) {
+        /* combine tuples */
+        it->begin = prev->begin;
+
+        /* it would be invalidated by the erase, so reobtain it */
+        it = ranges.erase(prev);
+      }
+
+      prev = it;
+    }
+
+    return *this;
+  }
+
+
+  template <typename T>
+  ssize_t SparseSet<T>::marshall(void *ptr, size_t maxSize) const
+  {
+    size_t size = sizeof(uint32_t) + ranges.size() * sizeof(range);
+
+    if (size > maxSize)
+      return -1;
+
+    *(uint32_t *) ptr = ranges.size();
+    memcpy((uint32_t *) ptr + 1, &ranges[0], ranges.size() * sizeof(range));
+
+    return size;
+  }
+
+
+  template <typename T>
+  void SparseSet<T>::unmarshall(const void *ptr)
+  {
+    ranges.resize(*(uint32_t *) ptr);
+    memcpy(&ranges[0], (uint32_t *) ptr + 1, ranges.size() * sizeof(range));
+  }
+
+
+  template <typename T>
+  std::ostream &operator << (std::ostream &str, const SparseSet<T> &set)
+  {
+    for (typename SparseSet<T>::const_iterator it = set.getRanges().begin(); it != set.getRanges().end(); it++)
+      if (it->end == it->begin + 1)
+        str << '[' << it->begin << "] ";
+      else
+        str << '[' << it->begin << ".." << it->end << "> ";
+
+    return str;
+  }
 
 } // namespace LOFAR
 

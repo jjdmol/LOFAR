@@ -29,12 +29,14 @@
 #include <CoInterface/StreamableData.h>
 
 
-namespace LOFAR {
-namespace RTCP {
+namespace LOFAR
+{
+  namespace RTCP
+  {
 
-StreamableData *newStreamableData(const Parset &, OutputType, int streamNr = -1, Allocator & = heapAllocator);
+    StreamableData *newStreamableData(const Parset &, OutputType, int streamNr = -1, Allocator & = heapAllocator);
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

@@ -38,41 +38,44 @@
 #include <Input/LogThread.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-template<typename SAMPLE_TYPE> class InputThread
+namespace LOFAR
 {
-  public:
-    struct ThreadArgs {
-      BeamletBuffer<SAMPLE_TYPE> *BBuffer;
-      Stream		  *stream; 
+  namespace RTCP
+  {
 
-      unsigned		  threadID;
-      unsigned		  nrTimesPerPacket;
-      unsigned		  nrSlotsPerPacket;
-      LogThread::Counters *packetCounters;
-      bool		  isRealTime;
-      TimeStamp		  startTime;
+    template<typename SAMPLE_TYPE>
+    class InputThread
+    {
+    public:
+      struct ThreadArgs {
+        BeamletBuffer<SAMPLE_TYPE> *BBuffer;
+        Stream              *stream;
 
-      std::string         logPrefix;
+        unsigned threadID;
+        unsigned nrTimesPerPacket;
+        unsigned nrSlotsPerPacket;
+        LogThread::Counters *packetCounters;
+        bool isRealTime;
+        TimeStamp startTime;
+
+        std::string logPrefix;
+      };
+
+      InputThread(ThreadArgs args);
+      ~InputThread();
+
+      void                  start();
+
+      static const unsigned packetBuffersSize = 128;
+
+    private:
+      void                  mainLoop();
+
+      ThreadArgs itsArgs;
+      SmartPtr<Thread>      itsThread;
     };
 
-			  InputThread(ThreadArgs args);
-			  ~InputThread();
-
-    void                  start();                      
-
-    static const unsigned packetBuffersSize = 128;
-
-  private:
-    void		  mainLoop();
-
-    ThreadArgs		  itsArgs;
-    SmartPtr<Thread>	  itsThread;
-};
-
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

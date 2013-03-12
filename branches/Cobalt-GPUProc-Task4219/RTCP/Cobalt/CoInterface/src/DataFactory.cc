@@ -30,32 +30,34 @@
 #include <CoInterface/TriggerData.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-StreamableData *newStreamableData(const Parset &parset, OutputType outputType, int streamNr, Allocator &allocator)
+namespace LOFAR
 {
-  switch (outputType) {
-    case CORRELATED_DATA   : return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), allocator);
+  namespace RTCP
+  {
 
-    case BEAM_FORMED_DATA  : {
-      const Transpose2 &beamFormLogic = parset.transposeLogic();
 
-      unsigned nrSubbands    = streamNr == -1 ? beamFormLogic.maxNrSubbands() : beamFormLogic.streamInfo[streamNr].subbands.size();
-      unsigned nrChannels    = streamNr == -1 ? beamFormLogic.maxNrChannels() : beamFormLogic.streamInfo[streamNr].nrChannels;
-      unsigned nrSamples     = streamNr == -1 ? beamFormLogic.maxNrSamples()  : beamFormLogic.streamInfo[streamNr].nrSamples;
+    StreamableData *newStreamableData(const Parset &parset, OutputType outputType, int streamNr, Allocator &allocator)
+    {
+      switch (outputType) {
+      case CORRELATED_DATA: return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), allocator);
 
-      return new FinalBeamFormedData(nrSamples, nrSubbands, nrChannels, allocator);
+      case BEAM_FORMED_DATA: {
+        const Transpose2 &beamFormLogic = parset.transposeLogic();
+
+        unsigned nrSubbands = streamNr == -1 ? beamFormLogic.maxNrSubbands() : beamFormLogic.streamInfo[streamNr].subbands.size();
+        unsigned nrChannels = streamNr == -1 ? beamFormLogic.maxNrChannels() : beamFormLogic.streamInfo[streamNr].nrChannels;
+        unsigned nrSamples = streamNr == -1 ? beamFormLogic.maxNrSamples()  : beamFormLogic.streamInfo[streamNr].nrSamples;
+
+        return new FinalBeamFormedData(nrSamples, nrSubbands, nrChannels, allocator);
+      }
+
+      case TRIGGER_DATA: return new TriggerData;
+
+      default: THROW(CoInterfaceException, "unsupported output type");
+      }
+
     }
 
-    case TRIGGER_DATA      : return new TriggerData;
 
-    default		   : THROW(CoInterfaceException, "unsupported output type");
-  }
-
-}
-
-
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR

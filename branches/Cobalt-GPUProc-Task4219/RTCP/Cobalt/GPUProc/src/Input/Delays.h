@@ -44,123 +44,125 @@
 #include <casa/Quanta/MVPosition.h>
 #include <casa/Quanta/MVEpoch.h>
 
-namespace LOFAR {
-namespace RTCP {
+namespace LOFAR
+{
+  namespace RTCP
+  {
 
     // Speed of light in vacuum, in m/s.
-const double speedOfLight = 299792458;
+    const double speedOfLight = 299792458;
 
-// Workholder for calculating the delay compensation that must be applied
-// per beam per station. We start by calculating the path length
-// difference for beam \f$\mathbf{b}_i\f$ between station \f$j\f$ at
-// position \f$\mathbf{p}_j\f$ and the reference station 0 at position
-// \f$\mathbf{p}_0\f$.
-// \f[
-//   d_{ij} - d_{i0} = \mathbf{b}_i \cdot \mathbf{p}_j 
-//                   - \mathbf{b}_i \cdot \mathbf{p}_0
-//                   = \mathbf{b}_i \cdot (\mathbf{p}_j - \mathbf{p}_0)
-// \f]
-// The choice of reference station is arbitrary, so we simply choose the
-// first station from the parameter set. From the equation above it is
-// clear that we can reduce the number of dot products if we precalculate
-// the position difference vectors \f$\mathbf{p}_j - \mathbf{p}_0$\f,
-// which we will store in \c			itsPositionDiffs.
-//
-// The geometrical delay is easily obtained by dividing the path length
-// difference by the speed of light in vacuum. We don't need to know the
-// speed of light in the atmosphere, because the AZEL directions that
-// we've calculated are valid for vacuum (only!). This is the delay that
-// must be compensated for.
-//
-// The calculated delay compensation must be split into a coarse (whole
-// sample) delay and a fine (subsample) delay.  The coarse delay will be
-// applied in the input section as a true time delay, by shifting the
-// input samples. The fine delay will be applied in the correlator as a
-// phase shift in each frequency channel.
-class Delays
-{
-  public:
-    Delays(const Parset &ps, const string &stationName, const TimeStamp &startTime);
-    ~Delays();
+    // Workholder for calculating the delay compensation that must be applied
+    // per beam per station. We start by calculating the path length
+    // difference for beam \f$\mathbf{b}_i\f$ between station \f$j\f$ at
+    // position \f$\mathbf{p}_j\f$ and the reference station 0 at position
+    // \f$\mathbf{p}_0\f$.
+    // \f[
+    //   d_{ij} - d_{i0} = \mathbf{b}_i \cdot \mathbf{p}_j
+    //                   - \mathbf{b}_i \cdot \mathbf{p}_0
+    //                   = \mathbf{b}_i \cdot (\mathbf{p}_j - \mathbf{p}_0)
+    // \f]
+    // The choice of reference station is arbitrary, so we simply choose the
+    // first station from the parameter set. From the equation above it is
+    // clear that we can reduce the number of dot products if we precalculate
+    // the position difference vectors \f$\mathbf{p}_j - \mathbf{p}_0$\f,
+    // which we will store in \c			itsPositionDiffs.
+    //
+    // The geometrical delay is easily obtained by dividing the path length
+    // difference by the speed of light in vacuum. We don't need to know the
+    // speed of light in the atmosphere, because the AZEL directions that
+    // we've calculated are valid for vacuum (only!). This is the delay that
+    // must be compensated for.
+    //
+    // The calculated delay compensation must be split into a coarse (whole
+    // sample) delay and a fine (subsample) delay.  The coarse delay will be
+    // applied in the input section as a true time delay, by shifting the
+    // input samples. The fine delay will be applied in the correlator as a
+    // phase shift in each frequency channel.
+    class Delays
+    {
+    public:
+      Delays(const Parset &ps, const string &stationName, const TimeStamp &startTime);
+      ~Delays();
 
-    void start();
+      void start();
 
-    // get the set of directions (ITRF) and delays for the beams, for the next CN integration time
-    // Both matrices must have dimensions [itsNrBeams][itsMaxNrTABs+1]
-    void getNextDelays(Matrix<casa::MVDirection> &directions, Matrix<double> &delays);
-    
-  private:
-    casa::MVEpoch			toUTC(int64 timeInSamples);
+      // get the set of directions (ITRF) and delays for the beams, for the next CN integration time
+      // Both matrices must have dimensions [itsNrBeams][itsMaxNrTABs+1]
+      void getNextDelays(Matrix<casa::MVDirection> &directions, Matrix<double> &delays);
 
-    void				init();
+    private:
+      casa::MVEpoch                       toUTC(int64 timeInSamples);
 
-    // do the delay compensation calculations in a separate thread to allow bulk
-    // calculations and to avoid blocking other threads
-    void				mainLoop();
+      void                                init();
 
-    const Parset			&itsParset;
+      // do the delay compensation calculations in a separate thread to allow bulk
+      // calculations and to avoid blocking other threads
+      void                                mainLoop();
 
-    volatile bool			stop;
+      const Parset                        &itsParset;
 
-    // the circular buffer to hold the moving beam directions for every second of data
-    Cube<casa::MVDirection>		itsBuffer;
-    size_t				head, tail;
+      volatile bool stop;
 
-    // two semaphores are used: one to trigger the producer that free space is available,
-    // another to trigger the consumer that data is available.
-    Semaphore				bufferFree, bufferUsed;
+      // the circular buffer to hold the moving beam directions for every second of data
+      Cube<casa::MVDirection>             itsBuffer;
+      size_t head, tail;
 
-    // the number of seconds to maintain in the buffer
-    static const size_t			bufferSize = 128;
+      // two semaphores are used: one to trigger the producer that free space is available,
+      // another to trigger the consumer that data is available.
+      Semaphore bufferFree, bufferUsed;
 
-    // the number of delays to calculate in a single run
-    const unsigned			itsNrCalcDelays;
+      // the number of seconds to maintain in the buffer
+      static const size_t bufferSize = 128;
 
-    // Get the source directions from the parameter file and initialize \c
-    // itsBeamDirections. Beam positions must be specified as
-    // <tt>(longitude, latitude, direction-type)</tt>. The direction angles
-    // are in radians; the direction type must be one of J2000, ITRF, or
-    // AZEL.
-    void setBeamDirections(const Parset &);
+      // the number of delays to calculate in a single run
+      const unsigned itsNrCalcDelays;
 
-    // Set the station to reference station position differences for
-    // all stations. CS002LBA is the reference station, even if it
-    // does not take part in the observation. The position
-    // differences are stored in \c itsPositionDiffs. In other
-    // words: we store \f$\mathbf{p}_j - \mathbf{p}_0\f$, where
-    // \f$\mathbf{p}_0\f$ is the position of the reference station
-    // and \f$\mathbf{p}_j\f$ is the position of station \f$j\f$.
-    void setPositionDiff(const Parset &);
+      // Get the source directions from the parameter file and initialize \c
+      // itsBeamDirections. Beam positions must be specified as
+      // <tt>(longitude, latitude, direction-type)</tt>. The direction angles
+      // are in radians; the direction type must be one of J2000, ITRF, or
+      // AZEL.
+      void setBeamDirections(const Parset &);
 
-    // Beam info.
-    const unsigned			itsNrBeams;
-    const unsigned			itsMaxNrTABs;
-    const std::vector<unsigned>		itsNrTABs;
-    Vector<casa::MDirection::Types>	itsDirectionTypes;
-    Matrix<casa::MVDirection>		itsBeamDirections; // [itsNrBeams][itsMaxNrTABs+1]
+      // Set the station to reference station position differences for
+      // all stations. CS002LBA is the reference station, even if it
+      // does not take part in the observation. The position
+      // differences are stored in \c itsPositionDiffs. In other
+      // words: we store \f$\mathbf{p}_j - \mathbf{p}_0\f$, where
+      // \f$\mathbf{p}_0\f$ is the position of the reference station
+      // and \f$\mathbf{p}_j\f$ is the position of station \f$j\f$.
+      void setPositionDiff(const Parset &);
 
-    // Sample timings.
-    const TimeStamp			itsStartTime;
-    const unsigned			itsNrSamplesPerSec;
-    const double			itsSampleDuration;
+      // Beam info.
+      const unsigned itsNrBeams;
+      const unsigned itsMaxNrTABs;
+      const std::vector<unsigned>         itsNrTABs;
+      Vector<casa::MDirection::Types>     itsDirectionTypes;
+      Matrix<casa::MVDirection>           itsBeamDirections; // [itsNrBeams][itsMaxNrTABs+1]
 
-    // Station Name.
-    const string			itsStationName;
-    casa::MeasFrame			itsFrame;
-    std::map<casa::MDirection::Types, casa::MDirection::Convert> itsConverters;
-    
-    // Station phase centre. 
-    casa::MPosition			itsPhaseCentre;
-    
-    // Station to reference station position difference vector.
-    casa::MVPosition			itsPhasePositionDiff;
-    
-    NSTimer				itsDelayTimer;
+      // Sample timings.
+      const TimeStamp itsStartTime;
+      const unsigned itsNrSamplesPerSec;
+      const double itsSampleDuration;
 
-    SmartPtr<Thread>			itsThread;
-};
+      // Station Name.
+      const string itsStationName;
+      casa::MeasFrame itsFrame;
+      std::map<casa::MDirection::Types, casa::MDirection::Convert> itsConverters;
 
-} // namespace RTCP
+      // Station phase centre.
+      casa::MPosition itsPhaseCentre;
+
+      // Station to reference station position difference vector.
+      casa::MVPosition itsPhasePositionDiff;
+
+      NSTimer itsDelayTimer;
+
+      SmartPtr<Thread>                    itsThread;
+    };
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

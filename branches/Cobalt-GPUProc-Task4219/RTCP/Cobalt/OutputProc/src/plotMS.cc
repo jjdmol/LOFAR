@@ -38,7 +38,8 @@ Exception::TerminateHandler t(Exception::terminate);
 
 bool shouldSwap = false;
 
-float power( fcomplex s ) {
+float power( fcomplex s )
+{
   float r = real(s);
   float i = imag(s);
 
@@ -47,7 +48,7 @@ float power( fcomplex s ) {
     byteSwap32(&i);
   }
 
-  return r*r + i*i;
+  return r * r + i * i;
 }
 
 static void usage(char *progname, int exitcode)
@@ -74,31 +75,31 @@ int main(int argc, char *argv[])
     int opt;
     const char *parset_filename = 0;
     const char *table_filename = "table.f0data";
-    const char *meta_filename  = "table.f0meta";
+    const char *meta_filename = "table.f0meta";
     const char *baselinestr = 0;
     unsigned baseline = 0;
     int channel = -1;
 
     while ((opt = getopt(argc, argv, "p:b:B:c:")) != -1) {
       switch (opt) {
-        case 'p':
-          parset_filename = strdup(optarg);
-          break;
+      case 'p':
+        parset_filename = strdup(optarg);
+        break;
 
-        case 'b':
-          baseline = atoi(optarg);
-          break;
+      case 'b':
+        baseline = atoi(optarg);
+        break;
 
-        case 'B':
-          baselinestr = strdup(optarg);
-          break;
+      case 'B':
+        baselinestr = strdup(optarg);
+        break;
 
-        case 'c':
-          channel = atoi(optarg);
-          break;
+      case 'c':
+        channel = atoi(optarg);
+        break;
 
-        default: /* '?' */
-          usage(argv[0], 1);
+      default:   /* '?' */
+        usage(argv[0], 1);
       }
     }
 
@@ -110,7 +111,7 @@ int main(int argc, char *argv[])
     CorrelatedData *data = dynamic_cast<CorrelatedData*>(newStreamableData(parset, CORRELATED_DATA));
 
     if (channel == -1)
-      channel = parset.nrChannelsPerSubband() == 1 ? 0 : 1; // default to first useful channel
+      channel = parset.nrChannelsPerSubband() == 1 ? 0 : 1;  // default to first useful channel
 
     ASSERT( data );
     ASSERT( channel >= 0 && (unsigned)channel < parset.nrChannelsPerSubband() );
@@ -137,26 +138,26 @@ int main(int argc, char *argv[])
       ASSERTSTR( station1index < stationNames.size(), "Could not find station " << specified_stations[0] );
       ASSERTSTR( station2index < stationNames.size(), "Could not find station " << specified_stations[1] );
 
-      for (baseline=0; baseline < itsAnt1.size(); baseline++) {
+      for (baseline = 0; baseline < itsAnt1.size(); baseline++) {
         if ((unsigned)itsAnt1[baseline] == station1index
-         && (unsigned)itsAnt2[baseline] == station2index)
-           break;
+            && (unsigned)itsAnt2[baseline] == station2index)
+          break;
 
         if ((unsigned)itsAnt2[baseline] == station1index
-         && (unsigned)itsAnt1[baseline] == station2index)
-           break;
-      }     
+            && (unsigned)itsAnt1[baseline] == station2index)
+          break;
+      }
     }
 
     ASSERTSTR( baseline < parset.nrBaselines(), "The specified baseline is not present in this measurement set." );
 
-    std::string firstStation  = stationNames[itsAnt1[baseline]];
+    std::string firstStation = stationNames[itsAnt1[baseline]];
     std::string secondStation = stationNames[itsAnt2[baseline]];
 
     printf( "# baseline %s - %s channel %d\n", firstStation.c_str(), secondStation.c_str(), channel);
     printf( "# observation %u\n", parset.observationID());
 
-    for(;;) {
+    for(;; ) {
       try {
         data->read(&datafile, true, 512);
       } catch (Stream::EndOfStreamException &) {
@@ -168,11 +169,11 @@ int main(int argc, char *argv[])
       printf( "# valid samples: %u\n", data->nrValidSamples(baseline,channel));
 
       printf( "%6d %10g %10g %10g %10g\n",
-        data->sequenceNumber(),
-        power( data->visibilities[baseline][channel][0][0] ),
-        power( data->visibilities[baseline][channel][0][1] ),
-        power( data->visibilities[baseline][channel][1][0] ),
-        power( data->visibilities[baseline][channel][1][1] ) );
+              data->sequenceNumber(),
+              power( data->visibilities[baseline][channel][0][0] ),
+              power( data->visibilities[baseline][channel][0][1] ),
+              power( data->visibilities[baseline][channel][1][0] ),
+              power( data->visibilities[baseline][channel][1][1] ) );
 
     }
 

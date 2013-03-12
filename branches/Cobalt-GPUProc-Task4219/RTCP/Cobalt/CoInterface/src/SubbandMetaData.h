@@ -34,144 +34,146 @@
 #include <cstring>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-// Note: struct must remain copyable to avoid ugly constructions when passing it around
-struct SubbandMetaData
+namespace LOFAR
 {
-  public:
-    SubbandMetaData(unsigned nrSubbands, unsigned nrBeams, Allocator &allocator = heapAllocator);
-    ~SubbandMetaData();
+  namespace RTCP
+  {
 
-    struct beamInfo {
-      float  delayAtBegin, delayAfterEnd;
-      double beamDirectionAtBegin[3], beamDirectionAfterEnd[3];
+    // Note: struct must remain copyable to avoid ugly constructions when passing it around
+    struct SubbandMetaData
+    {
+    public:
+      SubbandMetaData(unsigned nrSubbands, unsigned nrBeams, Allocator &allocator = heapAllocator);
+      ~SubbandMetaData();
+
+      struct beamInfo {
+        float delayAtBegin, delayAfterEnd;
+        double beamDirectionAtBegin[3], beamDirectionAfterEnd[3];
+      };
+
+      struct marshalledData {
+        unsigned char flagsBuffer[132];
+        unsigned alignmentShift;
+
+        // nrBeams elements will really be allocated, so this array needs to
+        // be the last element. Also, ISO C++ forbids zero-sized arrays, so we use size 1.
+        struct beamInfo beams[1];
+      };
+
+      SparseSet<unsigned> getFlags(unsigned subband) const;
+      void                setFlags(unsigned subband, const SparseSet<unsigned> &);
+
+      unsigned            alignmentShift(unsigned subband) const;
+      unsigned            &alignmentShift(unsigned subband);
+
+      struct beamInfo     *beams(unsigned subband) const;
+      struct beamInfo     *beams(unsigned subband);
+
+      struct marshalledData &subbandInfo(unsigned subband) const;
+      struct marshalledData &subbandInfo(unsigned subband);
+
+      void read(Stream *str);
+      void write(Stream *str) const;
+
+      // size of the information for one subband
+      const unsigned itsSubbandInfoSize;
+
+    private:
+      // size of the information for all subbands
+      const unsigned itsMarshalledDataSize;
+
+      // the pointer to all our data, which consists of struct marshalledData[itsNrSubbands],
+      // except for the fact that the elements are spaces apart more than sizeof(struct marshalledData)
+      // to make room for extra beams which are not defined in the marshalledData structure.
+      //
+      // Access elements through subbandInfo(subband).
+      char                *const itsMarshalledData;
+
+      Allocator           &itsAllocator;
     };
 
-    struct marshalledData {
-      unsigned char	flagsBuffer[132];
-      unsigned		alignmentShift;
 
-      // nrBeams elements will really be allocated, so this array needs to
-      // be the last element. Also, ISO C++ forbids zero-sized arrays, so we use size 1.
-      struct beamInfo   beams[1];
-    };
-
-    SparseSet<unsigned>	getFlags(unsigned subband) const;
-    void		setFlags(unsigned subband, const SparseSet<unsigned> &);
-
-    unsigned            alignmentShift(unsigned subband) const;
-    unsigned            &alignmentShift(unsigned subband);
-
-    struct beamInfo     *beams(unsigned subband) const;
-    struct beamInfo     *beams(unsigned subband);
-
-    struct marshalledData &subbandInfo(unsigned subband) const;
-    struct marshalledData &subbandInfo(unsigned subband);
- 
-    void read(Stream *str);
-    void write(Stream *str) const;
-
-    // size of the information for one subband
-    const unsigned      itsSubbandInfoSize;
-
- private:
-    // size of the information for all subbands
-    const unsigned      itsMarshalledDataSize;
-
-    // the pointer to all our data, which consists of struct marshalledData[itsNrSubbands],
-    // except for the fact that the elements are spaces apart more than sizeof(struct marshalledData)
-    // to make room for extra beams which are not defined in the marshalledData structure.
-    //
-    // Access elements through subbandInfo(subband).
-    char		*const itsMarshalledData;
-
-    Allocator           &itsAllocator;
-};
-
-
-inline SubbandMetaData::SubbandMetaData(unsigned nrSubbands, unsigned nrBeams, Allocator &allocator)
-: 
-  // Size of the data we need to allocate. Note that marshalledData already contains
-  // the size of one beamInfo.
-  itsSubbandInfoSize(sizeof(struct marshalledData) + (nrBeams - 1) * sizeof(struct beamInfo)),
-  itsMarshalledDataSize(align(nrSubbands * itsSubbandInfoSize, 16)),
-  itsMarshalledData(static_cast<char*>(allocator.allocate(itsMarshalledDataSize, 16))),
-  itsAllocator(allocator)
-{
+    inline SubbandMetaData::SubbandMetaData(unsigned nrSubbands, unsigned nrBeams, Allocator &allocator)
+      :
+      // Size of the data we need to allocate. Note that marshalledData already contains
+      // the size of one beamInfo.
+      itsSubbandInfoSize(sizeof(struct marshalledData) + (nrBeams - 1) * sizeof(struct beamInfo)),
+      itsMarshalledDataSize(align(nrSubbands * itsSubbandInfoSize, 16)),
+      itsMarshalledData(static_cast<char*>(allocator.allocate(itsMarshalledDataSize, 16))),
+      itsAllocator(allocator)
+    {
 #if defined USE_VALGRIND
-  memset(itsMarshalledData, 0, itsMarshalledDataSize);
+      memset(itsMarshalledData, 0, itsMarshalledDataSize);
 #endif
-}
+    }
 
-inline SubbandMetaData::~SubbandMetaData()
-{
-  itsAllocator.deallocate(itsMarshalledData);
-}
+    inline SubbandMetaData::~SubbandMetaData()
+    {
+      itsAllocator.deallocate(itsMarshalledData);
+    }
 
-inline SparseSet<unsigned> SubbandMetaData::getFlags(unsigned subband) const
-{
-  SparseSet<unsigned> flags;
+    inline SparseSet<unsigned> SubbandMetaData::getFlags(unsigned subband) const
+    {
+      SparseSet<unsigned> flags;
 
-  flags.unmarshall(subbandInfo(subband).flagsBuffer);
-  return flags;
-}
+      flags.unmarshall(subbandInfo(subband).flagsBuffer);
+      return flags;
+    }
 
-inline void SubbandMetaData::setFlags(unsigned subband, const SparseSet<unsigned> &flags)
-{
-  ssize_t size = flags.marshall(&subbandInfo(subband).flagsBuffer, sizeof subbandInfo(subband).flagsBuffer);
-  
-  assert(size >= 0);
-}
+    inline void SubbandMetaData::setFlags(unsigned subband, const SparseSet<unsigned> &flags)
+    {
+      ssize_t size = flags.marshall(&subbandInfo(subband).flagsBuffer, sizeof subbandInfo(subband).flagsBuffer);
 
-inline unsigned SubbandMetaData::alignmentShift(unsigned subband) const
-{
-  return subbandInfo(subband).alignmentShift;
-}
+      assert(size >= 0);
+    }
 
-inline unsigned &SubbandMetaData::alignmentShift(unsigned subband)
-{
-  return subbandInfo(subband).alignmentShift;
-}
+    inline unsigned SubbandMetaData::alignmentShift(unsigned subband) const
+    {
+      return subbandInfo(subband).alignmentShift;
+    }
 
-inline struct SubbandMetaData::beamInfo *SubbandMetaData::beams(unsigned subband) const
-{
-  return &subbandInfo(subband).beams[0];
-}
+    inline unsigned &SubbandMetaData::alignmentShift(unsigned subband)
+    {
+      return subbandInfo(subband).alignmentShift;
+    }
 
-inline struct SubbandMetaData::beamInfo *SubbandMetaData::beams(unsigned subband)
-{
-  return &subbandInfo(subband).beams[0];
-}
+    inline struct SubbandMetaData::beamInfo *SubbandMetaData::beams(unsigned subband) const
+    {
+      return &subbandInfo(subband).beams[0];
+    }
 
-inline struct SubbandMetaData::marshalledData &SubbandMetaData::subbandInfo(unsigned subband) const
-{
-  // calculate the array stride ourself, since C++ does not know the proper size of the marshalledData elements
-  return *reinterpret_cast<struct marshalledData*>(itsMarshalledData + (subband * itsSubbandInfoSize));
-}
+    inline struct SubbandMetaData::beamInfo *SubbandMetaData::beams(unsigned subband)
+    {
+      return &subbandInfo(subband).beams[0];
+    }
 
-inline struct SubbandMetaData::marshalledData &SubbandMetaData::subbandInfo(unsigned subband)
-{
-  // calculate the array stride ourself, since C++ does not know the proper size of the marshalledData elements
-  return *reinterpret_cast<struct marshalledData*>(itsMarshalledData + (subband * itsSubbandInfoSize));
-}
+    inline struct SubbandMetaData::marshalledData &SubbandMetaData::subbandInfo(unsigned subband) const
+    {
+      // calculate the array stride ourself, since C++ does not know the proper size of the marshalledData elements
+      return *reinterpret_cast<struct marshalledData*>(itsMarshalledData + (subband * itsSubbandInfoSize));
+    }
 
-inline void SubbandMetaData::read(Stream *str)
-{
-  // TODO: endianness
+    inline struct SubbandMetaData::marshalledData &SubbandMetaData::subbandInfo(unsigned subband)
+    {
+      // calculate the array stride ourself, since C++ does not know the proper size of the marshalledData elements
+      return *reinterpret_cast<struct marshalledData*>(itsMarshalledData + (subband * itsSubbandInfoSize));
+    }
 
-  str->read(itsMarshalledData, itsMarshalledDataSize);
-}
+    inline void SubbandMetaData::read(Stream *str)
+    {
+      // TODO: endianness
 
-inline void SubbandMetaData::write(Stream *str) const
-{
-  // TODO: endianness
+      str->read(itsMarshalledData, itsMarshalledDataSize);
+    }
 
-  str->write(itsMarshalledData, itsMarshalledDataSize);
-}
+    inline void SubbandMetaData::write(Stream *str) const
+    {
+      // TODO: endianness
 
-} // namespace RTCP
+      str->write(itsMarshalledData, itsMarshalledDataSize);
+    }
+
+  } // namespace RTCP
 } // namespace LOFAR
 
-#endif 
+#endif

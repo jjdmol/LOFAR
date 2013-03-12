@@ -29,67 +29,69 @@
 #include <Common/Thread/Mutex.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-class LockedRanges
+namespace LOFAR
 {
-  public:
-    LockedRanges(unsigned bufferSize);
+  namespace RTCP
+  {
 
-    void lock(unsigned begin, unsigned end);
-    void unlock(unsigned begin, unsigned end);
+    class LockedRanges
+    {
+    public:
+      LockedRanges(unsigned bufferSize);
 
-  private:
-    SparseSet<unsigned> itsLockedRanges;
-    Mutex		itsMutex;
-    Condition		itsRangeUnlocked;
-    const unsigned	itsBufferSize;
-};
+      void lock(unsigned begin, unsigned end);
+      void unlock(unsigned begin, unsigned end);
 
-
-inline LockedRanges::LockedRanges(unsigned bufferSize)
-:
-  itsBufferSize(bufferSize)
-{
-}
+    private:
+      SparseSet<unsigned> itsLockedRanges;
+      Mutex itsMutex;
+      Condition itsRangeUnlocked;
+      const unsigned itsBufferSize;
+    };
 
 
-inline void LockedRanges::lock(unsigned begin, unsigned end)
-{
-  ScopedLock scopedLock(itsMutex);
-
-  if (begin < end) {
-    while (itsLockedRanges.subset(begin, end).count() > 0) {
-      LOG_WARN_STR("Circular buffer: reader & writer try to use overlapping sections, range to lock = (" << begin << ", " << end << "), already locked = " << itsLockedRanges);
-      itsRangeUnlocked.wait(itsMutex);
+    inline LockedRanges::LockedRanges(unsigned bufferSize)
+      :
+      itsBufferSize(bufferSize)
+    {
     }
 
-    itsLockedRanges.include(begin, end);
-  } else {
-    while (itsLockedRanges.subset(begin, itsBufferSize).count() > 0 || itsLockedRanges.subset(0, end).count() > 0) {
-      LOG_WARN_STR("Circular buffer: reader & writer try to use overlapping sections, range to lock = (" << begin << ", " << end << "), already locked = " << itsLockedRanges);
-      itsRangeUnlocked.wait(itsMutex);
+
+    inline void LockedRanges::lock(unsigned begin, unsigned end)
+    {
+      ScopedLock scopedLock(itsMutex);
+
+      if (begin < end) {
+        while (itsLockedRanges.subset(begin, end).count() > 0) {
+          LOG_WARN_STR("Circular buffer: reader & writer try to use overlapping sections, range to lock = (" << begin << ", " << end << "), already locked = " << itsLockedRanges);
+          itsRangeUnlocked.wait(itsMutex);
+        }
+
+        itsLockedRanges.include(begin, end);
+      } else {
+        while (itsLockedRanges.subset(begin, itsBufferSize).count() > 0 || itsLockedRanges.subset(0, end).count() > 0) {
+          LOG_WARN_STR("Circular buffer: reader & writer try to use overlapping sections, range to lock = (" << begin << ", " << end << "), already locked = " << itsLockedRanges);
+          itsRangeUnlocked.wait(itsMutex);
+        }
+
+        itsLockedRanges.include(begin, itsBufferSize).include(0, end);
+      }
     }
 
-    itsLockedRanges.include(begin, itsBufferSize).include(0, end);
-  }
-}
 
+    inline void LockedRanges::unlock(unsigned begin, unsigned end)
+    {
+      ScopedLock scopedLock(itsMutex);
 
-inline void LockedRanges::unlock(unsigned begin, unsigned end)
-{
-  ScopedLock scopedLock(itsMutex);
-  
-  if (begin < end)
-    itsLockedRanges.exclude(begin, end);
-  else
-    itsLockedRanges.exclude(end, itsBufferSize).exclude(0, begin);
+      if (begin < end)
+        itsLockedRanges.exclude(begin, end);
+      else
+        itsLockedRanges.exclude(end, itsBufferSize).exclude(0, begin);
 
-  itsRangeUnlocked.broadcast();
-}
+      itsRangeUnlocked.broadcast();
+    }
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

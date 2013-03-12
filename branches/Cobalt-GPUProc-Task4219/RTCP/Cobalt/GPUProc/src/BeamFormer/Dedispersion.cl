@@ -14,7 +14,7 @@ typedef __global float2 (*BufferType)[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR
 
 
 __kernel void applyChirp(__global void *bufferPtr,
-			 __global float *DMs,
+                         __global float *DMs,
                          float subbandFrequency)
 {
   __local float local_DMs[NR_TABS];
@@ -23,7 +23,7 @@ __kernel void applyChirp(__global void *bufferPtr,
     local_DMs[i] = DMs[i] * 2.0f * (float) M_PI * 4.149e15f;
 
   barrier(CLK_LOCAL_MEM_FENCE);
-  
+
   BufferType buffer = (BufferType) bufferPtr;
 
   uint subChannel = get_global_id(0);
@@ -32,9 +32,9 @@ __kernel void applyChirp(__global void *bufferPtr,
 
 #if NR_CHANNELS > 1
   float subbandBaseFrequency = subbandFrequency - .5f * (float) SUBBAND_BANDWIDTH;
-  float channel0frequency    = subbandBaseFrequency + channel * CHANNEL_BANDWIDTH;
+  float channel0frequency = subbandBaseFrequency + channel * CHANNEL_BANDWIDTH;
 #else
-  float channel0frequency    = subbandFrequency;
+  float channel0frequency = subbandFrequency;
 #endif
 
   float binFrequency = subChannel * SUB_CHANNEL_BANDWIDTH;
@@ -46,13 +46,13 @@ __kernel void applyChirp(__global void *bufferPtr,
   float frequencyDiv = binFrequency / channel0frequency;
   float frequencyFac = frequencyDiv * frequencyDiv / (channel0frequency + binFrequency);
 
-  for (uint tab = 0; tab < NR_TABS; tab ++) {
+  for (uint tab = 0; tab < NR_TABS; tab++) {
     float DM = local_DMs[tab];
 
     /* if (DM > 0) */ {
       float2 sampleX = (*buffer)[tab][0][channel][time][subChannel];
       float2 sampleY = (*buffer)[tab][1][channel][time][subChannel];
-      float2 factor  = cexp(DM * frequencyFac) * taper;
+      float2 factor = cexp(DM * frequencyFac) * taper;
 
       (*buffer)[tab][0][channel][time][subChannel] = cmul(factor, sampleX);
       (*buffer)[tab][1][channel][time][subChannel] = cmul(factor, sampleY);

@@ -11,7 +11,8 @@ using namespace LOFAR;
 using namespace RTCP;
 using namespace std;
 
-template<typename T> void test( struct BufferSettings &settings, const std::string &filename )
+template<typename T>
+void test( struct BufferSettings &settings, const std::string &filename )
 {
   // Create the buffer to keep it around after transfer.process(), or there
   // will be no subscribers and transfer will delete the buffer automatically,
@@ -35,7 +36,8 @@ template<typename T> void test( struct BufferSettings &settings, const std::stri
 }
 
 
-int main() {
+int main()
+{
   INIT_LOGGER( "tPacketsToBuffer" );
 
   // Don't run forever if communication fails for some reason

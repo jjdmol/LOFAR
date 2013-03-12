@@ -30,74 +30,87 @@
 #include <set>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-template <typename T> class SlidingPointer
+namespace LOFAR
 {
-  public:
-	 SlidingPointer(T = 0);
-   SlidingPointer(const SlidingPointer &other);
+  namespace RTCP
+  {
 
-    void advanceTo(T);
-    void waitFor(T);
 
-  private:
-    struct WaitCondition {
-      WaitCondition(T value, std::set<WaitCondition *> &set) : value(value), set(set) { set.insert(this); }
-      ~WaitCondition() { set.erase(this); }
+    template <typename T>
+    class SlidingPointer
+    {
+    public:
+      SlidingPointer(T = 0);
+      SlidingPointer(const SlidingPointer &other);
 
-      T	        value;
-      Condition valueReached;
-      std::set<WaitCondition *> &set;
+      void advanceTo(T);
+      void waitFor(T);
+
+    private:
+      struct WaitCondition {
+        WaitCondition(T value, std::set<WaitCondition *> &set) : value(value), set(set)
+        {
+          set.insert(this);
+        }
+        ~WaitCondition()
+        {
+          set.erase(this);
+        }
+
+        T value;
+        Condition valueReached;
+        std::set<WaitCondition *> &set;
+      };
+
+      T itsValue;
+      Mutex itsMutex;
+      std::set<WaitCondition *> itsWaitList;
     };
 
-    T			      itsValue;
-    Mutex		      itsMutex;
-    std::set<WaitCondition *> itsWaitList;
-};
+
+    template <typename T>
+    inline SlidingPointer<T>::SlidingPointer(T value)
+      :
+      itsValue(value)
+    {
+    }
 
 
-template <typename T> inline SlidingPointer<T>::SlidingPointer(T value)
-:
-  itsValue(value)
-{
-}
+    template <typename T>
+    inline SlidingPointer<T>::SlidingPointer(const SlidingPointer &other)
+      :
+      itsValue(other.itsValue)
+    {
+    }
 
 
-template <typename T> inline SlidingPointer<T>::SlidingPointer(const SlidingPointer &other)
-:
-  itsValue(other.itsValue)
-{
-}
+    template <typename T>
+    inline void SlidingPointer<T>::advanceTo(T value)
+    {
+      ScopedLock lock(itsMutex);
+
+      if (value > itsValue) {
+        itsValue = value;
+
+        for (typename std::set<WaitCondition *>::iterator it = itsWaitList.begin(); it != itsWaitList.end(); it++)
+          if (value >= (*it)->value)
+            (*it)->valueReached.signal();
+      }
+    }
 
 
-template <typename T> inline void SlidingPointer<T>::advanceTo(T value)
-{
-  ScopedLock lock(itsMutex);
+    template <typename T>
+    inline void SlidingPointer<T>::waitFor(T value)
+    {
+      ScopedLock lock(itsMutex);
 
-  if (value > itsValue) {
-    itsValue = value;
+      while (itsValue < value) {
+        WaitCondition waitCondition(value, itsWaitList);
+        waitCondition.valueReached.wait(itsMutex);
+      }
+    }
 
-    for (typename std::set<WaitCondition *>::iterator it = itsWaitList.begin(); it != itsWaitList.end(); it ++)
-      if (value >= (*it)->value)
-	(*it)->valueReached.signal();
-  }
-}
-
-
-template <typename T> inline void SlidingPointer<T>::waitFor(T value)
-{
-  ScopedLock lock(itsMutex);
-
-  while (itsValue < value) {
-    WaitCondition waitCondition(value, itsWaitList);
-    waitCondition.valueReached.wait(itsMutex);
-  }
-}
-
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     cout << "parset: the filename of the parset to convert (parset must have been produced by RTCP/Run/src/LOFAR/Parset.py, aka an 'OLAP parset')." << endl;
     cout << "is_bigendian: 1 if data is written big endian (f.e. data comes from the BlueGene/P), 0 otherwise. Default: " << (int)isBigEndian << endl;
     return 1;
-  }  
+  }
 
 #if defined HAVE_LOG4CPLUS
   INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/createHeaders.log_prop");
@@ -57,10 +57,10 @@ int main(int argc, char *argv[])
     Parset parset(argv[1]);
     if (argc > 2) isBigEndian = boost::lexical_cast<bool>(argv[2]);
 
-    for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType ++) {
+    for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++) {
       const unsigned nrStreams = parset.nrStreams(outputType);
 
-      for (unsigned streamNr = 0; streamNr < nrStreams; streamNr ++) {
+      for (unsigned streamNr = 0; streamNr < nrStreams; streamNr++) {
         const string logPrefix = str(boost::format("[obs %u type %u stream %3u] ") % parset.observationID() % outputType % streamNr);
 
         try {
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
           LOG_WARN_STR(logPrefix << "Could not create header: " << ex.what());
         }
       }
-    }   
+    }
   } catch (Exception &ex) {
     LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
     return 1;

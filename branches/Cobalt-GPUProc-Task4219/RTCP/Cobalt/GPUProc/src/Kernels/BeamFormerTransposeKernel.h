@@ -10,15 +10,15 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class BeamFormerTransposeKernel : public Kernel
     {
-        class BeamFormerTransposeKernel : public Kernel
-        {
-        public:
-            BeamFormerTransposeKernel(const Parset &ps, cl::Program &program,
-                cl::Buffer &devTransposedData, cl::Buffer &devComplexVoltages);
+    public:
+      BeamFormerTransposeKernel(const Parset &ps, cl::Program &program,
+                                cl::Buffer &devTransposedData, cl::Buffer &devComplexVoltages);
 
-        };
-    }
+    };
+  }
 }
 #endif

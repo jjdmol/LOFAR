@@ -10,15 +10,15 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class IntToFloatKernel : public Kernel
     {
-                class IntToFloatKernel : public Kernel
-        {
-        public:
-            IntToFloatKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                cl::Buffer &devFilteredData, cl::Buffer &devInputSamples);
-        };
-    }
+    public:
+      IntToFloatKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
+                       cl::Buffer &devFilteredData, cl::Buffer &devInputSamples);
+    };
+  }
 
 }
 #endif

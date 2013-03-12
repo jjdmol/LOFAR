@@ -3,12 +3,12 @@ typedef __global float4 (*InputType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CH
 
 
 __kernel void incoherentStokes(__global void *restrict stokesPtr,
-			       __global const void *restrict inputPtr)
+                               __global const void *restrict inputPtr)
 {
   IncoherentStokesType stokes = (IncoherentStokesType) stokesPtr;
-  InputType	       input  = (InputType) inputPtr;
+  InputType input = (InputType) inputPtr;
 
-  uint time    = get_global_id(0);
+  uint time = get_global_id(0);
   uint channel = get_global_id(1);
 
   if (time >= NR_SAMPLES_PER_CHANNEL / INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR)
@@ -19,13 +19,13 @@ __kernel void incoherentStokes(__global void *restrict stokesPtr,
   float stokesQ = 0, halfStokesU = 0, halfStokesV = 0;
 #endif
 
-  for (uint station = 0; station < NR_STATIONS; station ++) {
-    for (uint t = 0; t < INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR; t ++) {
-      float4 sample  = (*input)[station][channel][time][t];
-      float2 X       = sample.xy;
-      float2 Y       = sample.zw;
-      float  powerX  = X.x * X.x + X.y * X.y;
-      float  powerY  = Y.x * Y.x + Y.y * Y.y;
+  for (uint station = 0; station < NR_STATIONS; station++) {
+    for (uint t = 0; t < INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR; t++) {
+      float4 sample = (*input)[station][channel][time][t];
+      float2 X = sample.xy;
+      float2 Y = sample.zw;
+      float powerX = X.x * X.x + X.y * X.y;
+      float powerY = Y.x * Y.x + Y.y * Y.y;
 
       stokesI += powerX + powerY;
 #if NR_INCOHERENT_STOKES == 4

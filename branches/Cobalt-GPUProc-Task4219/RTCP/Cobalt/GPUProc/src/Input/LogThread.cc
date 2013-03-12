@@ -36,168 +36,171 @@
 #include <unistd.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-// log from separate thread, since printing from a signal handler causes deadlocks
-
-LogThread::LogThread(unsigned nrRspBoards, std::string stationName)
-:
-  itsCounters(nrRspBoards),
-  itsStationName(stationName)
+namespace LOFAR
 {
-}
+  namespace RTCP
+  {
 
 
-void LogThread::start()
-{
-  itsThread = new Thread(this, &LogThread::mainLoop, "[LogThread] ", 65536);
-}
+    // log from separate thread, since printing from a signal handler causes deadlocks
+
+    LogThread::LogThread(unsigned nrRspBoards, std::string stationName)
+      :
+      itsCounters(nrRspBoards),
+      itsStationName(stationName)
+    {
+    }
 
 
-LogThread::~LogThread()
-{
-  if (itsThread)
-    itsThread->cancel();
+    void LogThread::start()
+    {
+      itsThread = new Thread(this, &LogThread::mainLoop, "[LogThread] ", 65536);
+    }
 
-  LOG_DEBUG_STR("[LogThread] finished");
-}
+
+    LogThread::~LogThread()
+    {
+      if (itsThread)
+        itsThread->cancel();
+
+      LOG_DEBUG_STR("[LogThread] finished");
+    }
 
 
 #if defined HAVE_BGP_ION
 
-bool LogThread::readCPUstats(struct CPUload &load)
-{
-  FILE *file = fopen("/proc/stat", "r");
-  int  retval;
+    bool LogThread::readCPUstats(struct CPUload &load)
+    {
+      FILE *file = fopen("/proc/stat", "r");
+      int retval;
 
-  if (file == 0)
-    return false;
+      if (file == 0)
+        return false;
 
-  // make sure the file is always closed -- even on cancellation (fscanf CAN be a cancellation point)
-  struct D {
-    ~D() {
-      fclose(file);
+      // make sure the file is always closed -- even on cancellation (fscanf CAN be a cancellation point)
+      struct D {
+        ~D()
+        {
+          fclose(file);
+        }
+
+        FILE *file;
+      } onDestruct = { file };
+      (void)onDestruct;
+
+      do
+        retval = fscanf(file, "cpu %llu %*u %llu %llu %*u %*u %llu %*u\n", &load.user, &load.system, &load.idle, &load.interrupt);
+      while (retval != 4 && retval != EOF);
+
+      do
+        retval = fscanf(file, "cpu0 %*u %*u %*u %llu %*u %*u %*u %*u\n", &load.idle0);
+      while (retval != 1 && retval != EOF);
+
+      return retval != EOF;
     }
 
-    FILE *file;
-  } onDestruct = { file };
-  (void)onDestruct;
 
-  do
-    retval = fscanf(file, "cpu %llu %*u %llu %llu %*u %*u %llu %*u\n", &load.user, &load.system, &load.idle, &load.interrupt);
-  while (retval != 4 && retval != EOF);
+    void LogThread::writeCPUstats(std::stringstream &str)
+    {
+      struct CPUload load;
+      struct timeval tv;
 
-  do
-    retval = fscanf(file, "cpu0 %*u %*u %*u %llu %*u %*u %*u %*u\n", &load.idle0);
-  while (retval != 1 && retval != EOF);
+      static size_t lowIdleCount = 0;
 
-  return retval != EOF;
-}
+      if (readCPUstats(load)) {
+        gettimeofday( &tv, 0 );
 
+        float timediff = (tv.tv_sec - previousTimeval.tv_sec) + (tv.tv_usec - previousTimeval.tv_usec) / 1.0e6;
 
-void LogThread::writeCPUstats(std::stringstream &str)
-{
-  struct CPUload load;
-  struct timeval tv;
+        unsigned idle0 = static_cast<unsigned>((load.idle0 - previousLoad.idle0) / timediff);
+        if (idle0 < 10)
+          lowIdleCount++;
+        else
+          lowIdleCount = 0;
 
-  static size_t lowIdleCount = 0;
+        // TODO: Don't print this error in non-realtime mode
+        if (lowIdleCount == 5)
+          LOG_ERROR("CPU load critical on core 0");
 
-  if (readCPUstats(load)) {
-    gettimeofday( &tv, 0 );
-
-    float timediff = (tv.tv_sec - previousTimeval.tv_sec) + (tv.tv_usec - previousTimeval.tv_usec)/1.0e6;
-
-    unsigned idle0 = static_cast<unsigned>((load.idle0 - previousLoad.idle0) / timediff);
-    if (idle0 < 10)
-      lowIdleCount++;
-    else
-      lowIdleCount = 0;
-
-    // TODO: Don't print this error in non-realtime mode
-    if (lowIdleCount == 5)
-      LOG_ERROR("CPU load critical on core 0");
-
-    //str << ", us/sy/in/id: ["
-    str << ", us/sy/in/id(0): ["
-	<< fixed << setprecision(0) 
-        << (unsigned(load.user	    - previousLoad.user)      + 2) / 4 / timediff << '/'
-	<< (unsigned(load.system    - previousLoad.system)    + 2) / 4 / timediff << '/'
-	<< (unsigned(load.interrupt - previousLoad.interrupt) + 2) / 4 / timediff << '/'
-	<< (unsigned(load.idle	    - previousLoad.idle)      + 2) / 4 / timediff << '('
-	<< idle0 << ")]";
+        //str << ", us/sy/in/id: ["
+        str << ", us/sy/in/id(0): ["
+            << fixed << setprecision(0)
+            << (unsigned(load.user - previousLoad.user) + 2) / 4 / timediff << '/'
+            << (unsigned(load.system - previousLoad.system) + 2) / 4 / timediff << '/'
+            << (unsigned(load.interrupt - previousLoad.interrupt) + 2) / 4 / timediff << '/'
+            << (unsigned(load.idle - previousLoad.idle) + 2) / 4 / timediff << '('
+            << idle0 << ")]";
 #if 0
-	<< "], id: ["
-	<< (unsigned(load.idlePerCore[0] - previousLoad.idlePerCore[0]) << '/'
+        << "], id: ["
+        << (unsigned(load.idlePerCore[0] - previousLoad.idlePerCore[0]) << '/'
 
-    for (unsigned cpu = 0; cpu < 4; cpu ++)
-      str << unsigned(load.idle[cpu] - previousLoad.idle[cpu])
-	  << (cpu == 3 ? ']' : ',');
+            for (unsigned cpu = 0; cpu < 4; cpu++)
+              str << unsigned(load.idle[cpu] - previousLoad.idle[cpu])
+              << (cpu == 3 ? ']' : ',');
 #endif
 
-    previousLoad = load;
-    previousTimeval = tv;
-  } else {
-    str << ", no CPU load info";
-  }
-}
+        previousLoad = load;
+        previousTimeval = tv;
+      } else {
+        str << ", no CPU load info";
+      }
+    }
 
 #endif
 
 
-void LogThread::mainLoop()
-{
+    void LogThread::mainLoop()
+    {
 #if defined HAVE_BGP_ION
-  //doNotRunOnCore0();
-  runOnCore0();
-  readCPUstats(previousLoad);
-  gettimeofday(&previousTimeval,0);
+      //doNotRunOnCore0();
+      runOnCore0();
+      readCPUstats(previousLoad);
+      gettimeofday(&previousTimeval,0);
 #endif
 
-  //LOG_DEBUG("LogThread running");
+      //LOG_DEBUG("LogThread running");
 
-  // non-atomic updates from other threads cause race conditions, but who cares
+      // non-atomic updates from other threads cause race conditions, but who cares
 
-  while (true) {
-    std::stringstream	  logStr;
-    std::vector<unsigned> counts(itsCounters.size());
+      while (true) {
+        std::stringstream logStr;
+        std::vector<unsigned> counts(itsCounters.size());
 
-    for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
-      counts[rsp]		= itsCounters[rsp].received;
-      itsCounters[rsp].received = 0;
-    }
+        for (unsigned rsp = 0; rsp < itsCounters.size(); rsp++) {
+          counts[rsp] = itsCounters[rsp].received;
+          itsCounters[rsp].received = 0;
+        }
 
-    logStr << "[station " << itsStationName << "] ";
+        logStr << "[station " << itsStationName << "] ";
 
-    logStr << "received packets = " << counts;
+        logStr << "received packets = " << counts;
 
-    for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
-      counts[rsp]	       = itsCounters[rsp].badSize;
-      itsCounters[rsp].badSize = 0;
-    }
+        for (unsigned rsp = 0; rsp < itsCounters.size(); rsp++) {
+          counts[rsp] = itsCounters[rsp].badSize;
+          itsCounters[rsp].badSize = 0;
+        }
 
-    if (static_cast<unsigned>(std::count(counts.begin(), counts.end(), 0U)) != counts.size())
-      logStr << ", bad size = " << counts;
+        if (static_cast<unsigned>(std::count(counts.begin(), counts.end(), 0U)) != counts.size())
+          logStr << ", bad size = " << counts;
 
-    for (unsigned rsp = 0; rsp < itsCounters.size(); rsp ++) {
-      counts[rsp]		    = itsCounters[rsp].badTimeStamp;
-      itsCounters[rsp].badTimeStamp = 0;
-    }
+        for (unsigned rsp = 0; rsp < itsCounters.size(); rsp++) {
+          counts[rsp] = itsCounters[rsp].badTimeStamp;
+          itsCounters[rsp].badTimeStamp = 0;
+        }
 
-    if (static_cast<unsigned>(std::count(counts.begin(), counts.end(), 0U)) != counts.size())
-      logStr << ", bad timestamps = " << counts;
+        if (static_cast<unsigned>(std::count(counts.begin(), counts.end(), 0U)) != counts.size())
+          logStr << ", bad timestamps = " << counts;
 
 #if defined HAVE_BGP_ION
-    writeCPUstats(logStr);
+        writeCPUstats(logStr);
 #endif
 
-    LOG_INFO_STR(logStr.str());
-    sleep(15);
-  }
+        LOG_INFO_STR(logStr.str());
+        sleep(15);
+      }
 
-  //LOG_DEBUG("LogThread stopped");
-}
+      //LOG_DEBUG("LogThread stopped");
+    }
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR

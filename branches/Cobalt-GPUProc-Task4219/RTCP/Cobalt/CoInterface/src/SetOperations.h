@@ -25,30 +25,34 @@
 
 #include <algorithm>
 
-namespace LOFAR {
-namespace RTCP {
-
-template <typename T> T operator & (T a, T b)
+namespace LOFAR
 {
-  sort(a.begin(), a.end());
-  sort(b.begin(), b.end());
+  namespace RTCP
+  {
 
-  T c(a.size() + b.size());
-  c.resize(set_intersection(a.begin(), a.end(), b.begin(), b.end(), c.begin()) - c.begin());
-  return c;
-}
+    template <typename T>
+    T operator & (T a, T b)
+    {
+      sort(a.begin(), a.end());
+      sort(b.begin(), b.end());
 
-template <typename T> T operator | (T a, T b)
-{
-  sort(a.begin(), a.end());
-  sort(b.begin(), b.end());
+      T c(a.size() + b.size());
+      c.resize(set_intersection(a.begin(), a.end(), b.begin(), b.end(), c.begin()) - c.begin());
+      return c;
+    }
 
-  T c(a.size() + b.size());
-  c.resize(set_union(a.begin(), a.end(), b.begin(), b.end(), c.begin()) - c.begin());
-  return c;
-}
+    template <typename T>
+    T operator | (T a, T b)
+    {
+      sort(a.begin(), a.end());
+      sort(b.begin(), b.end());
 
-} // namespace RTCP
+      T c(a.size() + b.size());
+      c.resize(set_union(a.begin(), a.end(), b.begin(), b.end(), c.begin()) - c.begin());
+      return c;
+    }
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

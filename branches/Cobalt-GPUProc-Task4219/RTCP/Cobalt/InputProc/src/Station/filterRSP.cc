@@ -29,14 +29,14 @@ int main(int argc, char **argv)
   }
 
   time_t from = parseTime(argv[1]);
-  time_t to   = parseTime(argv[2]);
+  time_t to = parseTime(argv[2]);
 
   SmartPtr<Stream> inputStream = createStream("file:/dev/stdin", true);
   PacketReader reader("", *inputStream);
   struct RSP packet;
 
   try {
-    for(;;) {
+    for(;; ) {
       if( reader.readPacket(packet) ) {
         if (packet.header.timestamp < from || packet.header.timestamp >= to)
           continue;

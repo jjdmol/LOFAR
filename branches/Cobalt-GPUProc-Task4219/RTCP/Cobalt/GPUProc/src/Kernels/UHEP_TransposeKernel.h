@@ -9,15 +9,15 @@
 #include "Kernel.h"
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class UHEP_TransposeKernel : public Kernel
     {
-        class UHEP_TransposeKernel : public Kernel
-        {
-        public:
-            UHEP_TransposeKernel(const Parset &ps, cl::Program &program,
-                cl::Buffer &devFFTedData, cl::Buffer &devComplexVoltages, cl::Buffer &devReverseSubbandMapping);
-        };
+    public:
+      UHEP_TransposeKernel(const Parset &ps, cl::Program &program,
+                           cl::Buffer &devFFTedData, cl::Buffer &devComplexVoltages, cl::Buffer &devReverseSubbandMapping);
+    };
 
-    }
+  }
 }
 #endif
