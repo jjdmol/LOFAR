@@ -40,7 +40,7 @@ private void reload() {
 
 private void fillLBASymbol() {
   
-  for (int i=1; i< dynlen(superTerp); i++) {
+  for (int i=1; i< dynlen(stations); i++) {
     string query = \"SELECT  '_online.._value', '_online.._invalid' FROM 'LOFAR_PIC_LBA*.status.state' REMOTE '\"+stations[i]+\"'\";
 
 
