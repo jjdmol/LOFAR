@@ -23,6 +23,8 @@ if(UNITTEST++_FOUND)
   # Add project's source directory to -I path.
   include_directories(${_src_dir})
 
+  lofar_add_test(tCorrelatorWorkQueue UnitTests/WorkQueues/CorrelatorWorkQueue.cc)
+  
   lofar_add_test(RTCP_UnitTest
     RTCP_UnitTest.cc
     UnitTests/new_style_unittest.cc
