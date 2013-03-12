@@ -94,7 +94,7 @@ int main(int argc, char **argv)
   using namespace LOFAR::RTCP;
 
   INIT_LOGGER("RTCP");
-  std::cout << "running ..." << std::endl;
+  LOG_INFO_STR("running ...");
 
   // Set parts of the environment
   if (setenv("DISPLAY", ":0", 1) < 0)
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
   //    const char *str = getenv("NR_STATIONS");
   //    ps.nrStations() = str ? atoi(str) : 77;
   //}
-  std::cout << "nr stations = " << ps.nrStations() << std::endl;
+  LOG_DEBUG_STR("nr stations = " << ps.nrStations());
 
   // Select number of GPUs to run on
 
@@ -154,22 +154,23 @@ int main(int argc, char **argv)
   switch (option)
   {
   case correlator:
-    std::cout << "We are in the correlator part of the code." << std::endl;
+    LOG_INFO_STR("Correlator pipeline selected");
     CorrelatorPipeline(ps).doWork();
     break;
 
   case beam:
-    std::cout << "We are in the beam part of the code." << std::endl;
+    LOG_INFO_STR("BeamFormer pipeline selected");
     BeamFormerPipeline(ps).doWork();
     break;
 
   case UHEP:
-    std::cout << "We are in the UHEP part of the code." << std::endl;
+    LOG_INFO_STR("UHEP pipeline selected");
     UHEP_Pipeline(ps).doWork();
     break;
 
   default:
-    std::cout << "None of the types matched, do nothing" << std::endl;
+    LOG_WARN_STR("No pipeline selected, do nothing");
+    break;
   }
 
   // COMPLETING stage

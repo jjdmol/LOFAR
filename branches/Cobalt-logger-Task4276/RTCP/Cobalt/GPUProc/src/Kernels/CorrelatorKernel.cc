@@ -5,6 +5,7 @@
 
 #include "global_defines.h"
 #include "CoInterface/Parset.h"
+#include "Common/LofarLogger.h"
 #include "OpenCL_Support.h"
 #include "iostream"
 #include <cmath>
@@ -56,7 +57,7 @@ namespace LOFAR
       unsigned nrPasses = (nrBlocks + maxNrThreads - 1) / maxNrThreads;
       unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
       nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
-      //std::cout << "nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads << std::endl;
+      //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
       globalWorkSize = cl::NDRange(nrPasses * nrThreads, nrUsableChannels);
@@ -83,13 +84,11 @@ namespace LOFAR
 
       unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
       unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
-      //#pragma omp critical (cout)
-      //std::cout << "nrRectangles = " << nrRectangles << std::endl;
+      //LOG_DEBUG_STR("nrRectangles = " << nrRectangles);
 
       unsigned nrBlocksPerSide = (ps.nrStations() + 2 * 16 - 1) / (2 * 16);
       unsigned nrBlocks = nrBlocksPerSide * (nrBlocksPerSide + 1) / 2;
-      //#pragma omp critical (cout)
-      //std::cout << "nrBlocks = " << nrBlocks << std::endl;
+      //LOG_DEBUG_STR("nrBlocks = " << nrBlocks);
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
       globalWorkSize = cl::NDRange(16 * 16, nrBlocks, nrUsableChannels);
@@ -115,8 +114,7 @@ namespace LOFAR
 
       unsigned nrRectanglesPerSide = (ps.nrStations() - 1) / (2 * 16);
       unsigned nrRectangles = nrRectanglesPerSide * (nrRectanglesPerSide + 1) / 2;
-# pragma omp critical (cout)
-      std::cout << "nrRectangles = " << nrRectangles << std::endl;
+      LOG_DEBUG_STR("nrRectangles = " << nrRectangles);
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
       globalWorkSize = cl::NDRange(16 * 16, nrRectangles, nrUsableChannels);
@@ -146,8 +144,7 @@ namespace LOFAR
       getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
       unsigned nrThreads = align(nrMiniBlocks, preferredMultiple);
 
-# pragma omp critical (cout)
-      std::cout << "nrTriangles = " << nrTriangles << ", nrMiniBlocks = " << nrMiniBlocks << ", nrThreads = " << nrThreads << std::endl;
+      LOG_DEBUG_STR("nrTriangles = " << nrTriangles << ", nrMiniBlocks = " << nrMiniBlocks << ", nrThreads = " << nrThreads);
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
       globalWorkSize = cl::NDRange(nrThreads, nrTriangles, nrUsableChannels);
