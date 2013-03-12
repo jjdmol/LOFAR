@@ -293,16 +293,7 @@ std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
 
 std::string Parset::getFileName(OutputType outputType, unsigned streamNr) const
 {
-  const std::string keyname = keyPrefix(outputType) + ".filenames";
-  if (!isDefined(keyname))
-    THROW(InterfaceException, "Could not find filename key: " << keyname);
-
-  const std::vector<std::string> filenames = getStringVector(keyname, true);
-
-  if (streamNr >= filenames.size())
-    THROW(InterfaceException, "Filename index out of bounds for key " << keyname << ": " << streamNr << " >= " << filenames.size());
-
-  return filenames[streamNr];
+  return getStringVector(keyPrefix(outputType) + ".filenames", true)[streamNr];
 }
 
 

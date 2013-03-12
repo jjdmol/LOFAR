@@ -1,4 +1,4 @@
-//# SocketStream.h: 
+///# SocketStream.h: 
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Institute for Radio Astronomy)

@@ -31,7 +31,7 @@ int main(void)
   //sset.include(7, 11).include(12, 15).include(17).include(20, 23);
   //std::cout << sset << '\n';
 
-  for (unsigned i = 0; i < 100; i ++) {
+  for (unsigned i = 0; i < 1000; i ++) {
     SparseSet<unsigned>	sset, sset_union;
     bitset<BITSET_SIZE> bset, bset_union;
 

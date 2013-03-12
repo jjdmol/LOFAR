@@ -3,14 +3,35 @@
 ## Host specific variants file. 
 ## Settings in this file extend or override those in the global variants file.
 ##
-## $Id$
+## $Id: variants.dop131 13362 2009-05-29 15:32:43Z loose $
 
-option(USE_LOG4CPLUS "Use Log4Cplus" OFF)
-option(USE_OPENMP    "Use OpenMP"    ON)
-option(USE_MPI       "Use MPI"       ON)
+#set(CMAKE_SYSTEM_NAME BlueGeneP)
 
-set(ENV{OPENCL_INCLUDE} /cm/shared/apps/cuda41/toolkit/4.1.28/include)
+# Define compiler suites.
+#list(APPEND LOFAR_COMPILER_SUITES GNUBGP)
+
+# Define build variants.
+#list(APPEND LOFAR_BUILD_VARIANTS CN ION)
+
+set(GNU_CXX_FLAGS "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas -DCLUSTER_SCHEDULING")
+
+# Options
+option(USE_HDF5      "Use HDF5"      OFF)
+option(USE_LOG4CPLUS            "Use Log4Cplus"               OFF)
+option(USE_MPI                  "Use MPI"                     ON)
+option(USE_OPENMP               "Use OpenMP"                  ON)
+option(USE_PQXX                 "Use libpqxx"                 OFF)
+
+# Host specific paths to third party packages
+set(BLA_VENDOR ACML)
+#set(CASACORE_ROOT_DIR /cm/shared/apps/casacore)
 set(CASACORE_ROOT_DIR /home/mol/root)
-set(LIBSSH2_ROOT_DIR /home/mol/root)
+#set(CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL ON)
 set(DAL_ROOT_DIR /home/mol/root)
-set(UNITTEST++_ROOT_DIR /cm/shared/apps/UnitTest++)
+set(FFTW3_ROOT_DIR /cm/shared/apps/fftw/gcc/64/3.2.2)
+#set(FFTW3F_LIBRARY /cm/shared/apps/fftw/gcc/64/3.2.2/lib/libfftw3f.a)
+#set(FFTW3_INCLUDE_DIR /cm/shared/apps/fftw/gcc/64/3.2.2/include)
+#set(HDF5_LIBRARIES /cm/shared/apps/hdf5/current)
+#set(HDF5_INCLUDE_DIRS /cm/shared/apps/hdf5/current/include)
+set(MPI_ROOT_DIR /cm/shared/apps/openmpi/gcc/64/current)
+#set(BOOST_LIBRARYDIR /globalhome/romein/lib.bgp)

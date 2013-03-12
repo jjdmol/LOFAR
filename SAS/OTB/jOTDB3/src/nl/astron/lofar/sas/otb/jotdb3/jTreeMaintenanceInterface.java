@@ -110,9 +110,6 @@ public interface jTreeMaintenanceInterface extends Remote
     // Get a number of levels of children.
     public Vector<jOTDBnode> getItemList (int aTreeID, int topNode, int depth) throws RemoteException;
 
-    // Get a list of nodes based on a namefragment. aNameFragment can be a regex.
-    public Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment, boolean isRegex) throws RemoteException;
-
     // Get a list of nodes based on a namefragment. Use '%' as wildchar.
     public Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment) throws RemoteException;
 
@@ -156,9 +153,6 @@ public interface jTreeMaintenanceInterface extends Remote
     // Export all reported metadata from the given VIC tree
     public boolean exportMetadata (int	aTreeID,String filename) throws RemoteException;
     
-    // Export all reported metadata from the given VIC tree
-    public boolean exportMetadata (int	aTreeID,String filename, boolean uniqueKeys) throws RemoteException;
-
     public boolean deleteTree (int aTreeID) throws RemoteException;
 
     // Retrieve the topNode of any tree
@@ -180,9 +174,6 @@ public interface jTreeMaintenanceInterface extends Remote
 
     // Set the scheduling times of the tree
     public boolean setSchedule(int aTreeID, String aStartTime,String aStopTime) throws RemoteException;
-
-    // Set the scheduling times of the tree
-    public boolean setSchedule(int aTreeID, String aStartTime,String aStopTime,boolean inTreeAlso) throws RemoteException;
 
     // Whenever an error occurs in one the OTDB functions the message can
     // be retrieved with this function.

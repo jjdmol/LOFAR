@@ -157,8 +157,6 @@ addLevel(int lvl,string changed)
 
   string toolTip = changed+\"<br>  level: \"+lvl;
   
-  if (lvl > 100) lvl = 256-lvl;
-  
   string lvlcolor=\"\";
   if (lvl == 0) {
     lvlcolor=\"red\";

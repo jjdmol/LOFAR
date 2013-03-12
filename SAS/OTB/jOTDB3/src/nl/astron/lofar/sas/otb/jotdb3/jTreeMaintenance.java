@@ -145,9 +145,6 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     // Get a list of nodes based on a namefragment. Use '%' as wildchar.
     public native Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment) throws RemoteException;
 
-    // Get a list of nodes based on a namefragment. aNameFragment can be a regex.
-    public native Vector<jOTDBnode> getItemList (int aTreeID, String aNameFragment, boolean isRegex) throws RemoteException;
-
     // Duplicates the given node (and its parameters and children)
     // in the template database. The duplicate gets the new index.
     @Override
@@ -202,10 +199,6 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     @Override
     public native boolean exportMetadata (int	aTreeID,String filename) throws RemoteException;
 
-    // Export all reported metadata from the given VIC tree
-    @Override
-    public native boolean exportMetadata (int	aTreeID,String filename, boolean uniqueKeys) throws RemoteException;
-
     //# --- Finally some general tree maintenance ---
     // Delete a tree (of any kind) from the database.
     @Override
@@ -243,10 +236,6 @@ public class jTreeMaintenance implements jTreeMaintenanceInterface
     // Set the scheduling times of the tree
     @Override
     public native boolean setSchedule(int aTreeID, String aStartTime,String aStopTime) throws RemoteException;
-
-    // Set the scheduling times of the tree
-    @Override
-    public native boolean setSchedule(int aTreeID, String aStartTime,String aStopTime,boolean inTreeAlso) throws RemoteException;
 
     // Whenever an error occurs in one the OTDB functions the message can
     // be retrieved with this function.

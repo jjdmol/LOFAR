@@ -84,7 +84,7 @@ SubRack				SRCK		S	N	LOFAR_PIC_@cabinet@_@subrack@
 RSPBoard			RSP		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@
 RCU				RCU		S	N	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@_@rcu@
 TBBoard				TBB		S	Y	LOFAR_PIC_@cabinet@_@subrack@_@TBBoard@
-LBAAntenna                      LBA             S       Y       LOFAR_PIC_@lbaantenna@
+LBAAntenna                      LBA             S       N       LOFAR_PIC_@lbaantenna@
 HBAAntenna                      HBA             S       N       LOFAR_PIC_@hbaantenna@
 StationInfo			STI		S	Y	LOFAR_PIC_StationInfo
 StnPermSW			-		S	N	LOFAR_PermSW

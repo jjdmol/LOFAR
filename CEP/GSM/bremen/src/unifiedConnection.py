@@ -4,12 +4,7 @@ import monetdb.sql as monetdb
 import psycopg2
 import logging
 from src.gsmlogger import get_gsm_logger
-from src.utils import raise_with_message
-try:
-    from monetdb.exceptions import OperationalError
-except ImportError:
-    # Older version
-    from monetdb.monetdb_exceptions import OperationalError
+from monetdb.monetdb_exceptions import OperationalError
 from monetdb.mapi import STATE_READY
 
 
@@ -89,7 +84,6 @@ class UnifiedConnection(object):
             self.start()
             self.log.debug(query.replace('\n', ' '))
             result = cursor.execute(query)
-            self.lastcount = result
         except Exception as oerr:
             self.log.error(query.replace('\n', ' '))
             self.log.error(oerr)
@@ -107,6 +101,7 @@ class UnifiedConnection(object):
         """
         cur = self.conn.cursor()
         result = self._execute_with_cursor(query, cur)
+        self.lastcount = result
         cur.close()
         return result
 
@@ -135,7 +130,7 @@ class UnifiedConnection(object):
         else:
             return True
 
-    def exec_return(self, query, single_column=True, default_message=None):
+    def exec_return(self, query, single_column=True):
         """
         Run a single query and return the first value from resultset.
         """
@@ -151,18 +146,10 @@ class UnifiedConnection(object):
                 result = cursor.fetchone()
         except (psycopg2.Error, monetdb.Error), exc:
             self.log.error("Failed on query: %s. Error: %s" % (query, exc))
-            if default_message:
-                raise_with_message(exc, default_message)
-            else:
-                raise_with_message(exc, 
-                           "Failed on query: %s. Error: %s" % (query, exc))
+            raise exc
         except TypeError, exc:
             self.log.error("Failed on query: %s. No data returned" % query)
-            if default_message:
-                raise_with_message(exc, default_message)
-            else:
-                raise_with_message(exc, 
-                           "Failed on query: %s. No data returned" % query)
+            raise exc
         finally:
             cursor.close()
         return result

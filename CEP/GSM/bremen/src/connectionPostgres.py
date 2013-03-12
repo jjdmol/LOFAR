@@ -58,16 +58,10 @@ class PgConnection(UnifiedConnection):
             self.conn.cursor().execute('BEGIN')
 
     def rollback(self):
-        """
-        Rollback transaction.
-        """
         self.log.debug('ROLLBACK')
         self.conn.rollback()
 
     def _get_lastcount(self, cursor):
-        """
-        Get rowcount of the last executed statement.
-        """
         if cursor.statusmessage.split()[0] == 'SELECT':
             return cursor.rowcount
         else:

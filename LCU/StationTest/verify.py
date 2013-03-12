@@ -67,8 +67,6 @@ verify.add_option('--rand', action='store_true', dest='rand',
   help='Use random data values')
 verify.add_option('--read', action='store_true', dest='read',
   help='Run the testcase read only')
-verify.add_option('--interface', type='string', dest='interface',
-  help='Interface: tx, rx', default='rx')
 verify.add_option('--pps_edge', type='string', dest='pps_edge',
   help='Capture PPS on rising or falling clock edge: r, f', default='r')
 verify.add_option('--pps_delay', type='int', dest='pps_delay',
@@ -151,7 +149,6 @@ for di in hexdata_str:
 arg_count               = v.opts.count
 arg_rand                = v.opts.rand
 arg_read                = v.opts.read
-arg_interface           = v.opts.interface
 arg_pps_edge            = v.opts.pps_edge
 arg_pps_delay           = v.opts.pps_delay
 arg_diag_mode           = v.opts.diag_mode

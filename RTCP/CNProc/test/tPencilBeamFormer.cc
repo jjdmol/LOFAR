@@ -48,13 +48,11 @@ Parset createParset()
   stationNames += "]";
 
   Parset p;
-  p.add("Observation.bandFilter",               "LBA_30_70");
   p.add("Observation.channelsPerSubband",       str(format("%u") % NRCHANNELS));
   p.add("OLAP.CNProc.integrationSteps",         str(format("%u") % NRSAMPLES));
   p.add("Observation.sampleClock",              "200");
   p.add("OLAP.storageStationNames",             stationNames);
-  p.add("Observation.subbandList",              str(format("[%u*100]") % NRSUBBANDS));
-  p.add("Observation.beamList",                 str(format("[%u*0]") % NRSUBBANDS));
+  p.add("Observation.beamList",                 "[0]");
   p.add("OLAP.tiedArrayStationNames",           "[]");
   p.add("OLAP.CNProc.tabList",                  "[]");
   p.add("Observation.Beam[0].nrTiedArrayBeams", str(format("%u") % NRPENCILBEAMS));
@@ -113,7 +111,7 @@ void test_flyseye() {
       ? NRPENCILBEAMS - b
       : BeamFormer::BEST_NRBEAMS;
 
-    f.formBeams( &m, &in, &out, 0, 0, b, nrBeams );
+    f.formBeams( &m, &in, &out, CENTERFREQUENCY, 0, b, nrBeams );
   }
 
   // check beamformed data
@@ -225,7 +223,7 @@ void test_beamformer() {
   for( unsigned b = 0; b < NRPENCILBEAMS; b += 3 ) {
     unsigned nrBeams = b + 3 >= NRPENCILBEAMS ? NRPENCILBEAMS - b : 3;
 
-    f.formBeams( &meta, &in, &out, 0, 0, b, nrBeams );
+    f.formBeams( &meta, &in, &out, CENTERFREQUENCY, 0, b, nrBeams );
   }
 /*
   // check beamformed data

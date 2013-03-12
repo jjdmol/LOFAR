@@ -37,7 +37,7 @@ insert into runs(status, user_id, process_id) values (0, '%s', '%s');
 """ % (pwd.getpwuid(os.getuid())[0], os.getpid())
 
 
-def makelistable(func):
+def makelistable(fn):
     """
     Allows passing a list instead of the first string parameter.
     @return: comma-separated results of calls with each value from
@@ -45,9 +45,9 @@ def makelistable(func):
     """
     def listablefn(vlist, *params):
         if isinstance(vlist, list):
-            return ','.join(func(col, *params) for col in vlist)
+            return ','.join(fn(col, *params) for col in vlist)
         else:
-            return func(vlist, *params)
+            return fn(vlist, *params)
     return listablefn
 
 
@@ -73,10 +73,11 @@ def get_assoc_r(runcat_alias, extract_alias):
     @param extract_alias: alias for extractedsources;
     """
     return """\
-    (({0}.wm_ra  - {1}.ra)*({0}.wm_ra  - {1}.ra ) * (1-{1}.z*{1}.z)
-          / ({0}.wm_ra_err * {0}.wm_ra_err + {1}.ra_err * {1}.ra_err + 1e-6))
+    (({0}.wm_ra * {0}.z - {1}.ra * {1}.z)
+          *({0}.wm_ra * {0}.z - {1}.ra * {1}.z
+          )/ ({0}.wm_ra_err * {0}.wm_ra_err + {1}.ra_err * {1}.ra_err))
         + (({0}.wm_decl - {1}.decl) * ({0}.wm_decl - {1}.decl)
-         / ({0}.wm_decl_err * {0}.wm_decl_err + {1}.decl_err * {1}.decl_err + 1e-6))
+         / ({0}.wm_decl_err * {0}.wm_decl_err + {1}.decl_err * {1}.decl_err))
 """.format(runcat_alias, extract_alias)
 
 

@@ -138,8 +138,6 @@ class MepMessage:
              ('cdo','iphdr') :      1,
              ('serdes','hdr') :     0,
              ('serdes','data') :    1,
-             ('serdes','rxdelay') : 2,
-             ('serdes','txdelay') : 3,
              ('cep','hdr') :        0,
              ('cep','data') :       1,
              ('lcu','hdr') :        0,

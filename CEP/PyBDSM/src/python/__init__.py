@@ -39,8 +39,8 @@ default_chain = [Op_readimage(),
                  Op_islands(),
                  Op_gausfit(),
                  Op_wavelet_atrous(),
-                 Op_shapelets(),
                  Op_gaul2srl(),
+                 Op_shapelets(),
                  Op_spectralindex(),
                  Op_polarisation(),
                  Op_make_residimage(),
@@ -59,11 +59,11 @@ def execute(chain, opts):
     from image import Image
     import mylogger
 
-    if 'quiet' in opts:
+    if opts.has_key('quiet'):
         quiet = opts['quiet']
     else:
         quiet = False
-    if 'debug' in opts:
+    if opts.has_key('debug'):
         debug = opts['debug']
     else:
         debug = False

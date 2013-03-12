@@ -323,64 +323,6 @@ void setStates(string datapoint,string element,int state,string message,bool for
       }
       dpSet(datapoint+".status.message",message);
       
-
-  
-      if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+datapoint);
-  
-      //  Since the antenna's are placed outside the regular path (LOFAR_PIC_HBA* and _LBA*)
-      // but in reality are connected to the RCU, we need to change the datapoint here to trigger the rcu's
-      if (strpos(datapoint,"_HBA") >= 0 || strpos(datapoint,"_LBA") >= 0 ) {
-    
-   
-        if (bDebug) DebugN("monitorStateChanges.ctl:setStates|Containing HBA or LBA: "+datapoint);
-    
-        if (bDebug) DebugN("monitorStateChanges.ctl:setStates|Containing pure: " + dpSubStr(datapoint,DPSUB_SYS_DP));
-
-        //Only take pure Antenna so skip HBA00.Element01 points)
-//        if (dpSubStr(datapoint,DPSUB_SYS_DP) == datapoint)  {
-
-          if (bDebug) DebugN("monitorStateChanges.ctl:setStates|pure antenna point");
-
-          // get the rcuX and rcuY points
-          string rcuXDP,XDP;
-          string rcuYDP,YDP;
-          dpGet(dpSubStr(datapoint,DPSUB_SYS_DP)+".common.RCUX",XDP);
-          dpGet(dpSubStr(datapoint,DPSUB_SYS_DP)+".common.RCUY",YDP);
-      
-
-  
-          rcuXDP = dpSubStr(XDP,DPSUB_DP);
-          rcuYDP = dpSubStr(YDP,DPSUB_DP);
-          if (bDebug) DebugN("monitorStateChanges.ctl:setStates|datapoint to set for X: "+rcuXDP);
-          if (bDebug) DebugN("monitorStateChanges.ctl:setStates|datapoint to set for Y: "+rcuYDP);
-
-          // since we have two possible attachments (X and Y to different RCU)
-          // set childState if needed, if succeeded set childState for one level less also
-          // continue while true
-      
-          dpSet(rcuXDP+".status.childState",state);
-          dp = navFunct_getPathLessOne(rcuXDP);
-          rcuXDP = dp;        
-
-          dpSet(rcuYDP+".status.childState",state);
-          dp = navFunct_getPathLessOne(rcuYDP);
-          rcuYDP = dp;        
-
-      
-          while ( setChildState(rcuXDP,state)) {
-            if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+rcuXDP);
-            dp = navFunct_getPathLessOne(rcuXDP);
-            rcuXDP=dp;
-          }
-
-          while ( setChildState(rcuYDP,state)) {
-            if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+rcuYDP);
-            dp = navFunct_getPathLessOne(rcuYDP);
-            rcuYDP=dp;
-          }
-  //      }  
-      }
-
     } else {
       if (bDebug) DebugN("monitorStateChanges.ctl:setStates|Equal value or state < 0, no need to set new state");
     }
@@ -392,6 +334,69 @@ void setStates(string datapoint,string element,int state,string message,bool for
   } else if (element != "status.childState") {
     DebugN("monitorStateChanges.ctl:setStates|Error. unknown element in stateChange trigger: ", element);
     return;
+  }
+
+  
+  if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+datapoint);
+  
+  //  Since the antenna's are placed outside the regular path (LOFAR_PIC_HBA* and _LBA*)
+  // but in reality are connected to the RCU, we need to change the datapoint here to trigger the rcu's
+  if (strpos(datapoint,"_HBA") >= 0 || strpos(datapoint,"_LBA") >= 0 ) {
+    
+   
+    if (bDebug) DebugN("monitorStateChanges.ctl:setStates|Containing HBA or LBA: "+datapoint);
+    
+    if (bDebug) DebugN("monitorStateChanges.ctl:setStates|Containing pure: " + dpSubStr(datapoint,DPSUB_SYS_DP));
+
+    //Only take pure Antenna so skip HBA00.Element01 points)
+    if (dpSubStr(datapoint,DPSUB_SYS_DP) == datapoint)  {
+
+      if (bDebug) DebugN("monitorStateChanges.ctl:setStates|pure antenna point");
+
+      // get the rcuX and rcuY points
+      string rcuXDP,XDP;
+      string rcuYDP,YDP;
+      dpGet(datapoint+".common.RCUX",XDP);
+      dpGet(datapoint+".common.RCUY",YDP);
+      
+
+  
+      rcuXDP = dpSubStr(XDP,DPSUB_DP);
+      rcuYDP = dpSubStr(YDP,DPSUB_DP);
+      if (bDebug) DebugN("monitorStateChanges.ctl:setStates|datapoint to set for X: "+rcuXDP);
+      if (bDebug) DebugN("monitorStateChanges.ctl:setStates|datapoint to set for Y: "+rcuYDP);
+
+      // since we have two possible attachments (X and Y to different RCU)
+  // set childState if needed, if succeeded set childState for one level less also
+  // continue while true
+      
+      int oldstate;
+      dpGet(rcuXDP+".status.childState",oldstate);
+      if (state > oldstate) {
+        dpSet(rcuXDP+".status.childState",state);
+        dp = navFunct_getPathLessOne(rcuXDP);
+        rcuXDP = dp;        
+      }
+      dpGet(rcuYDP+".status.childState",oldstate);
+      if (state > oldstate) {
+        dpSet(rcuYDP+".status.childState",state);
+        dp = navFunct_getPathLessOne(rcuYDP);
+        rcuYDP = dp;        
+      }
+
+      
+      while ( setChildState(rcuXDP,state)) {
+        if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+rcuXDP);
+        dp = navFunct_getPathLessOne(rcuXDP);
+        rcuXDP=dp;
+      }
+
+      while ( setChildState(rcuYDP,state)) {
+        if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+rcuYDP);
+        dp = navFunct_getPathLessOne(rcuYDP);
+        rcuYDP=dp;
+      }
+    }
   }
   
   // set childState if needed, if succeeded set childState for one level less also

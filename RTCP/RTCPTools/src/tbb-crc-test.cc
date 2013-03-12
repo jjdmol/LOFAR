@@ -2,7 +2,7 @@
  * Author: Alexander S. van Amesfoort, ASTRON
  * with code based on Python crc routines received from Gijs Schoonderbeek, ASTRON
  * Last-modified: July 2012
- * build: g++ -Wall -o tbb-crc-test tbb-crc-test.cc
+ * build: g++ -O3 -Wall -o tbb-crc-test tbb-crc-test.cpp
  */
 
 #include <stdint.h>

@@ -59,15 +59,13 @@ namespace LOFAR {
         itsNrTimes      (info.ntime()),
         // Input can already be averaged, so take that into account.
         itsNChanAvg     (reader->nchanAvgFullRes() * info.nchanAvg()),
-        itsNTimeAvg     (reader->ntimeAvgFullRes() * info.ntimeAvg()),
-        itsNrDone       (0)
+        itsNTimeAvg     (reader->ntimeAvgFullRes() * info.ntimeAvg())
     {
       NSTimer::StartStop sstime(itsTimer);
       // Get tile size (default 1024 KBytes).
       uint tileSize        = parset.getUint (prefix+"tilesize", 1024);
       uint tileNChan       = parset.getUint (prefix+"tilenchan", 0);
       itsOverwrite         = parset.getBool (prefix+"overwrite", false);
-      itsNrTimesFlush      = parset.getUint (prefix+"flush", 60);
       itsCopyCorrData      = parset.getBool (prefix+"copycorrecteddata", false);
       itsCopyModelData     = parset.getBool (prefix+"copymodeldata", false);
       itsWriteFullResFlags = parset.getBool (prefix+"writefullresflag", true);
@@ -108,11 +106,6 @@ namespace LOFAR {
       writeMeta (out, buf);
       // Now write the data and flags.
       writeData (out, buf);
-      // Flush if sufficient time slots are written.
-      itsNrDone++;
-      if (itsNrTimesFlush > 0  &&  itsNrDone%itsNrTimesFlush == 0) {
-        itsMS.flush();
-      }
       return true;
     }
 
@@ -548,7 +541,7 @@ namespace LOFAR {
       fillSca<Int> (0, out, "ARRAY_ID");
       fillSca<Int> (0, out, "OBSERVATION_ID");
       fillSca<Int> (0, out, "STATE_ID");
-      Array<Float> arr(IPosition(1, itsNrCorr));
+      Array<Float> arr(IPosition(1,4));
       arr = 1;
       fillArr<Float> (arr, out, "SIGMA");
       fillArr<Float> (arr, out, "WEIGHT");

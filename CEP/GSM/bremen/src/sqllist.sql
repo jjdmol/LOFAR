@@ -16,7 +16,7 @@ select 0, 1, {1}, '{0}' as imagename, 0,
 
 --#Cleanup
 delete from detections where run_id = [r];
---delete from temp_associations where image_id = [i];
+delete from temp_associations where image_id = [i];
 
 update runs
    set status = 1,
@@ -58,7 +58,6 @@ select [i], cast(floor(ldecl) as integer) as zone, lra, ldecl, lra_err, ldecl_er
                  g_pa_err = 0.0 or
                  g_major_err = 0.0 or
                  g_minor_err = 0.0 or
-                 g_major = 0.0 or
                  (im.bmaj is not null and g_major < im.bmaj) then 0
             else 1 end,
        g_minor, g_minor_err, g_major, g_major_err,
@@ -103,10 +102,7 @@ select image_id, zone, ra + 360.0, decl, ra_err, decl_err,
    and ra < 180;
 
 --#update flux_fraction
---Split flux in case of N-to-1 association.
---Old source is splitted proportionaly to fluxes of new detections.
---***for point sources only
---First calculate sum of the new fluxes
+--for point sources only
 update temp_associations
    set flux_fraction = (select sum(e.f_int)
                           from extractedsources e,
@@ -118,7 +114,6 @@ update temp_associations
    and image_id = [i]
    and lr_method < 3;
 
---Then calculate fractions
 update temp_associations
    set flux_fraction = (select e.f_int/ta.flux_fraction
                           from extractedsources e,

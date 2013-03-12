@@ -33,11 +33,11 @@
 #include <Common/lofar_map.h>
 #include <Common/LofarLogger.h>
 
-//# Avoid 'using namespace' in headerfiles
+// Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
 
-  // \addtogroup ApplCommon
+  // \addtogroup package
   // @{
 
   //# --- Forward Declarations ---

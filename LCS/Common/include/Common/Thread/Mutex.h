@@ -33,36 +33,16 @@ namespace LOFAR {
 class Mutex
 {
   public:
-    enum Type {
-#ifdef USE_THREADS
-      NORMAL = PTHREAD_MUTEX_NORMAL,
-      RECURSIVE = PTHREAD_MUTEX_RECURSIVE,
-      ERRORCHECK = PTHREAD_MUTEX_ERRORCHECK,
-      DEFAULT = PTHREAD_MUTEX_DEFAULT
-#else
-      NORMAL,
-      RECURSIVE,
-      ERRORCHECK,
-      DEFAULT
-#endif
-    };
-    
-    Mutex(Type type=DEFAULT);
-    ~Mutex();
+    Mutex(), ~Mutex();
 
-    void lock();
-    void unlock();
+    void lock(), unlock();
     bool trylock();
 
   private:
     friend class Condition;
 
-    Mutex(const Mutex&);
-    Mutex& operator=(const Mutex&);
-    
 #ifdef USE_THREADS    
     pthread_mutex_t mutex;
-    pthread_mutexattr_t mutexattr;
 #endif    
 };
 
@@ -81,24 +61,13 @@ class ScopedLock
 };
 
 
-inline Mutex::Mutex(Mutex::Type type)
+inline Mutex::Mutex()
 {
 #ifdef USE_THREADS
-  int error;
+  int error = pthread_mutex_init(&mutex, 0);
 
-  error = pthread_mutexattr_init(&mutexattr);
-  if (error != 0)
-    throw SystemCallException("pthread_mutexattr_init", error, THROW_ARGS);
-    
-  error = pthread_mutexattr_settype(&mutexattr, type);
-  if (error != 0)
-    throw SystemCallException("pthread_mutexattr_settype", error, THROW_ARGS);
-
-  error = pthread_mutex_init(&mutex, &mutexattr);
   if (error != 0)
     throw SystemCallException("pthread_mutex_init", error, THROW_ARGS);
-#else
-  (void)type;
 #endif    
 }
 
@@ -106,10 +75,9 @@ inline Mutex::Mutex(Mutex::Type type)
 inline Mutex::~Mutex()
 {
 #ifdef USE_THREADS
-  // We can't log any errors because the logger will also use this mutex
-  // class. So it's no use recording the return value.
+  // We can't log any errors because the logger will also use this mutex class.
+  // So it's no use recording the return value.
   (void)pthread_mutex_destroy(&mutex);
-  (void)pthread_mutexattr_destroy(&mutexattr);
 #endif    
 }
 
@@ -142,16 +110,11 @@ inline bool Mutex::trylock()
   int error = pthread_mutex_trylock(&mutex);
 
   switch (error) {
-    case 0       : return true;
+    case 0     : return true;
 
-    case EBUSY   : return false;
+    case EBUSY : return false;
 
-    // According to the POSIX standard only pthread_mutex_lock() can return
-    // EDEADLK. However, some Linux implementations also return EDEADLK when
-    // calling pthread_mutex_trylock() on a locked error-checking mutex.
-    case EDEADLK : return false;
-
-    default      : throw SystemCallException("pthread_mutex_trylock", error, THROW_ARGS);
+    default    : throw SystemCallException("pthread_mutex_trylock", error, THROW_ARGS);
   }
 #else
   return true;

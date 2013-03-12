@@ -34,7 +34,7 @@ if(NOT OPENCL_FOUND)
 
   # CentOS sets OPENCL_INCLUDE and OPENCL_LIB in the environment
 
-  find_path(OPENCL_INCLUDE_DIR "CL/cl.hpp" # Look specifically for the C++ API that we use
+  find_path(OPENCL_INCLUDE_DIR "CL/cl.h"
     HINTS ${OPENCL_ROOT_DIR} ENV OPENCL_INCLUDE PATH_SUFFIXES include)
   find_library(OPENCL_LIBRARY OpenCL
     HINTS ${OPENCL_ROOT_DIR} ENV OPENCL_LIB PATH_SUFFIXES lib)

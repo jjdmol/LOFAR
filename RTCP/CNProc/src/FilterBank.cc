@@ -10,7 +10,6 @@
 
 #include <Common/LofarLogger.h>
 #include <Interface/Align.h>
-#include <Interface/Exceptions.h>
 
 #if defined HAVE_FFTW3
 #include <fftw3.h>

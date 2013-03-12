@@ -1,4 +1,4 @@
-V 11
+V 10
 1
 LANG:1 0 
 PANEL,-1 -1 368 104 N "_3DFace" 1
@@ -44,13 +44,12 @@ void doEvent(string aDP, string value) {
     LOG_ERROR(\"Event.pnl:doEvent | Error splitting Event. value: \" + value);
     anEvent=\"?????\";
   }
-  
-  setValue(\"text_event\",\"text\",formatTime(\"%c\",getCurrentTime())+\" \"+anEvent);
+  setValue(\"text_event\",\"text\",anEvent);
   setValue(\"text_event\",\"backCol\",\"green\");
 }
 
 void doSelection(string aDP, string aSelection) {
-  setValue(\"text_selection\",\"text\",formatTime(\"%c\",getCurrentTime())+aSelection);
+  setValue(\"text_selection\",\"text\",aSelection);
   setValue(\"text_selection\",\"backCol\",\"green\");
 }
 " 0
@@ -84,8 +83,9 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 0 1 0 1 E 1 0 1.33333333333333 -10 -11.3333333333333 0 E 20 10 351 71
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0 1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
 LANG:1 13 View Selector
 2 1
 "PRIMITIVE_TEXT9"
@@ -100,11 +100,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E U  1 E 21 23 59 38
+E E 0 3 1 2 1 E U  1 E 21 23 59 39
 0 2 2 "0s" 0 0 0 192 0 0  21 23 1
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0 1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
 LANG:1 6 Event:
 2 2
 "PRIMITIVE_TEXT10"
@@ -119,11 +120,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E U  1 E 21 53 81 68
+E E 0 3 1 2 1 E U  1 E 21 53 81 69
 0 2 2 "0s" 0 0 0 192 0 0  21 53 1
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0 1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
 LANG:1 10 Selection:
 14 3
 "text_event"
@@ -138,8 +140,9 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  88 21 332 44
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 88 21 332 44
 3 "0s" 0 0 0 0 0 -1  "main()
 {
 	setValue(\"\",\"backCol\",\"_Window\");
@@ -158,8 +161,9 @@ LANG:1 0
 
 0
 1
-LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  88 50 332 73
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 88 50 332 73
 3 "0s" 0 0 0 0 0 -1  "main()
 {
     setValue(\"\",\"backCol\",\"_Window\");

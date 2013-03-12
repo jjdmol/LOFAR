@@ -23,6 +23,20 @@ PANEL,-1 -1 1010 745 N "_3DFace" 0
   dynAppend(stationList,ccu);                      
   dynAppend(stationList,mcu); 
  
+  string DP = MainDBName+\"LOFAR_PermSW_MACScheduler\";
+  
+
+  // check if the required datapoint for this view are enabled and accessible
+  if (dpExists(DP)) {
+    if (dpConnect(\"updateObservations\", DP +\".activeObservations:_online.._value\",
+                                        DP +\".activeObservations:_online.._invalid\") == -1) {
+      LOG_ERROR(\"main.pnl:main|Couldn't connect to: \"+DP);
+    }
+  } else {
+    if (!isStandalone()) LOG_ERROR(\"main.pnl:main|Couldn't find DP to connect to: \"+DP);
+  }	
+ 
+ 
   redraw();
 }
 
@@ -174,7 +188,7 @@ void redraw() {
   
   addStationView();
   
-  redrawObservations();
+  
  
  
   // trigger that the panel values are calculated and ready
@@ -196,7 +210,7 @@ void addSWLevels() {
   //loop over list and prepare panel with all stations and swlevel objects   
   for (int i=1; i<= dynlen(stationList); i++) {
 
-    SWLevelRefNames[ref]=\"stationSW\"+(ref);
+    SWLevelRefNames[i]=\"stationSW\"+(i);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
@@ -225,7 +239,7 @@ void addDatastreams() {
     //skip CCU and MCU machines
     if (strpos(stationList[i],\"MCU\") >=0 ||strpos(stationList[i],\"CCU\") >=0) continue;
 
-    datastreamRefNames[ref]=\"datastream\"+(ref);
+    datastreamRefNames[i]=\"datastream\"+(i);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
@@ -260,7 +274,7 @@ void addSWCtrlers() {
     } else {
       addPanelName    = \"objects/Processes/stationSWLevelView.pnl\";
     }
-    swCtrlRefNames[ref]=\"swCtrl\"+(ref);
+    swCtrlRefNames[i]=\"swCtrl\"+(i);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
@@ -368,7 +382,7 @@ void addStationView() {
     //skip CCU and MCU machines
     if (strpos(stationList[i],\"MCU\") >=0 ||strpos(stationList[i],\"CCU\") >=0) continue;
 
-    stationViewRefNames[ref]=\"stationView\"+(ref);
+    stationViewRefNames[i]=\"memAndHDD\"+(i);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
@@ -388,16 +402,14 @@ void addStationView() {
 }
 
 void addObservations() {
-  int xPos_AddSymbol = 0; 
-  int yPos_AddSymbol = 585; 
+  int xPos_AddSymbol = 5; 
+  int yPos_AddSymbol = 565; 
   int ref = 1;
   string addPanelName    = \"objects/Observations/observation_smallCEPView.pnl\";
-  dpget(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\",observationsList);
   //loop over list and prepare panel with all stations and swlevel objects   
   for (int i=1; i<= dynlen(observationsList); i++) {
-    if (!navFunct_isObservation(observationsList[i])) continue;
 
-    observationRefNames[ref]=\"stationObs\"+(ref);
+    observationRefNames[i]=\"stationObs\"+(i);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
@@ -416,6 +428,19 @@ void addObservations() {
   }
 }
 
+updateObservations(string dp1, dyn_string obs,
+                   string dp2, bool invalid)
+{
+  
+  if (invalid) {
+    return;
+  }
+  
+  dynClear(observationsList);
+  observationsList = obs;
+  
+  redrawObservations();
+}
 " 0
  2
 "CBRef" "1"
@@ -782,12 +807,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 10 556 200 569
+E E 0 1 1 2 1 E U  0 E 10 556 131 569
 0 2 2 "0s" 0 0 0 192 0 0  10 556 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 46 CEP View                               Streams
+LANG:1 20 CEP Observation View
 2 44
 "PRIMITIVE_TEXT16"
 ""
@@ -864,25 +889,6 @@ E E 0 1 1 2 1 E U  0 E 745 10 792 23
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 7 HBA LBA
-2 48
-"PRIMITIVE_TEXT20"
-""
-1 10 572 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-33 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 10 572 292 585
-0 2 2 "0s" 0 0 0 192 0 0  10 572 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 80                                        0        1        2       3      dropping
 0
 LAYER, 1 
 1

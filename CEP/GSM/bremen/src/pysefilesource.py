@@ -1,26 +1,22 @@
 import os.path
 import healpy as hp
+from copy import copy
 from math import radians
 import scipy as sp
 from src.errors import SourceException
+from src.gsmlogger import get_gsm_logger
 from src.bbsfilesource import GSMBBSFileSource
 
-
 class PySEFileSource(GSMBBSFileSource):
-    """
-    Reads source list from PySE output file.
-    """
-    BLOCK_SIZE = 1000
+    """ Class doc """
 
     def read_and_store_data(self, conn):
         """ Function doc """
-        if not os.path.isfile(self.filename):
-            raise SourceException('no file %s' % self.filename)
         header = open(self.filename, 'r').readline()
         data = sp.loadtxt(self.filename, delimiter=',', skiprows=1)
-        for fro, to in (('ra', 'lra'), ('dec', 'ldecl'),
-                        ('smaj', 'g_major'), ('smin', 'g_minor'), ('pa', 'g_pa'),
-                        ('int_flux', 'lf_int'), ('pk_flux', 'lf_peak') ):
+        for fro, to in ( ('ra', 'lra'), ('dec', 'ldecl'),
+                         ('smaj', 'g_major'), ('smin', 'g_minor'), ('pa', 'g_pa'),
+                         ('int_flux', 'lf_int'), ('pk_flux', 'lf_peak') ):
             header = header.replace(fro, to)
         sql_data = []
         # Switch off autocommit (if it is switched on) for better performance.

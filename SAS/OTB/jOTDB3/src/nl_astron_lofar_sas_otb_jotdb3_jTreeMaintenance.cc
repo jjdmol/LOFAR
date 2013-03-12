@@ -623,43 +623,6 @@ JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_g
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
  * Method:    getItemList
- * Signature: (ILjava/lang/String;Z)Ljava/util/Vector;
- */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getItemList__ILjava_lang_String_2Z(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jstring aNameFragment, jboolean isRegex) {
-
-  jobject itemVector(0);
-
-  const char* nf = env->GetStringUTFChars (aNameFragment, 0);
-  const string nameFragment (nf);
-  
-  try {
-    vector<OTDBnode> itemList = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->getItemList (aTreeID, nameFragment, isRegex);
-    vector<OTDBnode>::iterator itemIterator;
-  
-    // Construct java Vector
-    jclass class_Vector = env->FindClass("java/util/Vector");
-    jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
-    itemVector = env->NewObject(class_Vector, mid_Vector_cons);
-    jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
-  
-    for (itemIterator = itemList.begin(); itemIterator != itemList.end(); itemIterator++)
-      env->CallObjectMethod(itemVector, mid_Vector_add, convertOTDBnode (env, *itemIterator));
-  
-    env->ReleaseStringUTFChars (aNameFragment, nf);
-  
-  } catch (exception &ex) {
-    cout << "Exception during TreeMaintenance::getItemList(" << aTreeID << "," << nameFragment << ") " << ex.what() << endl; 
-
-    env->ReleaseStringUTFChars (aNameFragment, nf);
-    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
-  }
-
-  return itemVector;
-}
-
-/*
- * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
- * Method:    getItemList
  * Signature: (ILjava/lang/String;)Ljava/util/Vector;
  */
 JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_getItemList__ILjava_lang_String_2(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jstring aNameFragment) {
@@ -986,34 +949,12 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    exportMetadata
  * Signature: (ILjava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportMetadata__ILjava_lang_String_2 (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jstring aName) {
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportMetadata(JNIEnv *env, jobject jTreeMaintenance, jint treeID, jstring aName) {
   jboolean isCopy(0);
   jboolean succes(0);
   const char* name = env->GetStringUTFChars (aName, &isCopy);
   try {
     succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->exportMetadata (treeID, name);
-    env->ReleaseStringUTFChars (aName, name);
-  } catch (exception &ex) {
-    cout << "Exception during TreeMaintenance::exportMetadata(" << treeID << "," << name <<   ") "<< ex.what() << endl;
-    env->ReleaseStringUTFChars (aName, name);
-    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
-  }
-
-  return succes;
-}
-
-
-/*
- * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
- * Method:    exportMetadata
- * Signature: (ILjava/lang/String;Z)Z
- */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportMetadata__ILjava_lang_String_2Z (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jstring aName, jboolean uniqueKeys) {
-  jboolean isCopy(0);
-  jboolean succes(0);
-  const char* name = env->GetStringUTFChars (aName, &isCopy);
-  try {
-    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->exportMetadata (treeID, name, uniqueKeys);
     env->ReleaseStringUTFChars (aName, name);
   } catch (exception &ex) {
     cout << "Exception during TreeMaintenance::exportMetadata(" << treeID << "," << name <<   ") "<< ex.what() << endl;
@@ -1137,8 +1078,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    setSchedule
  * Signature: (ILjava/lang/String;Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setSchedule__ILjava_lang_String_2Ljava_lang_String_2 (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jstring aStartTime, jstring anEndTime) {
-
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setSchedule(JNIEnv *env, jobject jTreeMaintenance, jint treeID, jstring aStartTime, jstring anEndTime) {
   const char* bd = env->GetStringUTFChars (aStartTime, 0);
   const char* ed = env->GetStringUTFChars (anEndTime, 0);
   const string startTime (bd);
@@ -1146,30 +1086,6 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
   jboolean succes(0);
   try {
     succes= ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setSchedule(treeID,bd,ed);
-    env->ReleaseStringUTFChars (aStartTime, bd);
-    env->ReleaseStringUTFChars (anEndTime, ed);
-  } catch (exception &ex) {
-    cout << "Exception during TreeMaintenance::setSchedule(" << treeID << "," << bd << "," << ed <<  ") " << ex.what() << endl; 
-    env->ReleaseStringUTFChars (aStartTime, bd);
-    env->ReleaseStringUTFChars (anEndTime, ed);
-    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
-  }  
-  return succes;
-}
-
-/*
- * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
- * Method:    setSchedule
- * Signature: (ILjava/lang/String;Ljava/lang/String;Z)Z
- */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setSchedule__ILjava_lang_String_2Ljava_lang_String_2Z (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jstring aStartTime, jstring anEndTime, jboolean  inTreeAlso) {
-  const char* bd = env->GetStringUTFChars (aStartTime, 0);
-  const char* ed = env->GetStringUTFChars (anEndTime, 0);
-  const string startTime (bd);
-  const string endTime (ed);
-  jboolean succes(0);
-  try {
-    succes= ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setSchedule(treeID,bd,ed,inTreeAlso);
     env->ReleaseStringUTFChars (aStartTime, bd);
     env->ReleaseStringUTFChars (anEndTime, ed);
   } catch (exception &ex) {
