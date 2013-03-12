@@ -29,31 +29,55 @@ namespace LOFAR
                                              FilterBank &filterBank
                                              )
       :
-      WorkQueue( context, device, gpuNumber, parset),
-      devFIRweights(context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
-      devCorrectedData(context, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
-      devFilteredData(context, CL_MEM_READ_WRITE,
+      WorkQueue( context, device, gpuNumber, parset),     
+      devCorrectedData(context, 
+                       CL_MEM_READ_WRITE, 
+                       ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
+      devFilteredData(context,
+                      CL_MEM_READ_WRITE,
                       std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-                               ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
-      bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
+                      ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
 
       inputData(ps.nrBeams(),
                 ps.nrStations(),
                 NR_POLARIZATIONS,
-                (ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband(),
+                (ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband(),  //n_samples in a received datablock
                 ps.nrBytesPerComplexSample(),
                 queue,
                 devCorrectedData),
       visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, devFilteredData),
+      devFIRweights(context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
       firFilterKernel(ps, queue, programs.firFilterProgram, devFilteredData, inputData.inputSamples, devFIRweights),
-
       fftKernel(ps, context, devFilteredData),
-      delayAndBandPassKernel(ps, programs.delayAndBandPassProgram, devCorrectedData, devFilteredData, inputData.delaysAtBegin, inputData.delaysAfterEnd, inputData.phaseOffsets, bandPassCorrectionWeights),
+      bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()],
+                                queue,
+                                CL_MEM_WRITE_ONLY,
+                                CL_MEM_READ_ONLY),
+      delayAndBandPassKernel(ps, 
+                             programs.delayAndBandPassProgram, 
+                             devCorrectedData,
+                             devFilteredData, 
+                             inputData.delaysAtBegin,
+                             inputData.delaysAfterEnd,
+                             inputData.phaseOffsets,
+                             bandPassCorrectionWeights),
 #if defined USE_NEW_CORRELATOR
-      correlateTriangleKernel(ps, queue, programs.correlatorProgram, visibilities, devCorrectedData),
-      correlateRectangleKernel(ps, queue, programs.correlatorProgram, visibilities, devCorrectedData)
+      correlateTriangleKernel(ps, 
+                              queue, 
+                              programs.correlatorProgram,
+                              visibilities, 
+                              devCorrectedData),
+      correlateRectangleKernel(ps,
+                               queue,
+                               programs.correlatorProgram, 
+                               visibilities,
+                               devCorrectedData)
 #else
-      correlatorKernel(ps, queue, programs.correlatorProgram, visibilities, devCorrectedData)
+      correlatorKernel(ps,
+                       queue,
+                       programs.correlatorProgram,
+                       visibilities,
+                       devCorrectedData)
 #endif
     {
       // create all the counters

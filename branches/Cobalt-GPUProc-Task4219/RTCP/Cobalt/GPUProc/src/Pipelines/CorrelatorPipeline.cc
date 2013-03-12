@@ -193,7 +193,7 @@ namespace LOFAR
 
 
     void CorrelatorPipeline::receiveSubbandSamples(
-      CorrelatorWorkQueue &workQueue, unsigned block,
+      CorrelatorWorkQueue &workQueue,
       unsigned subband)
     {
       // Read the samples from the input stream in parallel
@@ -256,7 +256,7 @@ namespace LOFAR
           workQueue.timers["CPU - input"]->start();
           // Each input block is sent in order. Therefore wait for the correct block
           inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-          receiveSubbandSamples(workQueue,  block,  subband);
+          receiveSubbandSamples(workQueue,  subband);
           // Advance the block index
           inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
           workQueue.timers["CPU - input"]->stop();

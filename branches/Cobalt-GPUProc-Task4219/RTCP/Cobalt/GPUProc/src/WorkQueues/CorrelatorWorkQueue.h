@@ -60,31 +60,37 @@ namespace LOFAR
     class CorrelatorWorkQueue : public WorkQueue
     {
     public:
-      CorrelatorWorkQueue(const Parset    &parset,cl::Context &context, cl::Device                &device, unsigned queueNumber,
+      CorrelatorWorkQueue(const Parset &parset,cl::Context &context,
+                          cl::Device &device, unsigned queueNumber,
                           CorrelatorPipelinePrograms &programs,
                           FilterBank &filterBank);
 
-      void doWork();
+      // Correlate the data found in the input data buffer
       void doSubband(unsigned block, unsigned subband, CorrelatedData &output);
-      //private:
+      void computeFlags(CorrelatedData &output);
 
-      cl::Buffer devFIRweights;
-      // Raw input buffer, to be mapped to a boost array
+    private:
+
+
+      // Raw buffers, these are mapped with boost multiarrays 
+      // in the InputData class
       cl::Buffer devCorrectedData;
       cl::Buffer devFilteredData;
 
-      // static calculated/retrieved at the beginning
-      MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
-
+    public:
       // All input data collected in a single struct
       WorkQueueInputData inputData;
 
       // Output: received from the gpu and transfered from the metadata (flags)
       MultiArraySharedBuffer<std::complex<float>, 4> visibilities;
 
+    private:
       // Compiled kernels
+      cl::Buffer devFIRweights;
       FIR_FilterKernel firFilterKernel;
       Filter_FFT_Kernel fftKernel;
+       // static calculated/retrieved at the beginning 
+      MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
       DelayAndBandPassKernel delayAndBandPassKernel;
 #if defined USE_NEW_CORRELATOR
       CorrelateTriangleKernel correlateTriangleKernel;
@@ -92,11 +98,9 @@ namespace LOFAR
 #else
       CorrelatorKernel correlatorKernel;
 #endif
-      //std::vector< WorkQueueInputItem> workQueueInputItems;
-    private:
-      void computeFlags(CorrelatedData &output);
+     
     };
-
   }
 }
 #endif
+
