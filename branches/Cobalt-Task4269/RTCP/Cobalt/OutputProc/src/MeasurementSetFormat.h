@@ -26,57 +26,60 @@ namespace casa
 {
   class TableDesc;
   class MPosition;
-  template<class T> class Block;
+  template<class T>
+  class Block;
 }
 
 
-namespace LOFAR {
+namespace LOFAR
+{
   //# Forward Declarations
   class MSLofar;
 
-namespace RTCP {
+  namespace RTCP
+  {
 
-class MeasurementSetFormat : public Format
-{
-  public:
-	    MeasurementSetFormat(const Parset &, uint32 alignment = 1);
-    virtual ~MeasurementSetFormat();
+    class MeasurementSetFormat : public Format
+    {
+    public:
+      MeasurementSetFormat(const Parset &, uint32 alignment = 1);
+      virtual ~MeasurementSetFormat();
 
-    virtual void addSubband(const string MSname, unsigned subband, bool isBigEndian);
+      virtual void addSubband(const string MSname, unsigned subband, bool isBigEndian);
 
-    // casacore/measurementset mutex
-    static Mutex sharedMutex;
+      // casacore/measurementset mutex
+      static Mutex sharedMutex;
 
-  private:
-    const Parset &itsPS;
+    private:
+      const Parset &itsPS;
 
-    const vector<string> stationNames;
-    const vector<double> antPos;
+      const vector<string> stationNames;
+      const vector<double> antPos;
 
-    const unsigned itsNrAnt;
-    uint32 itsNrTimes;
+      const unsigned itsNrAnt;
+      uint32 itsNrTimes;
 
-    double itsStartTime;
-    double itsTimeStep;
+      double itsStartTime;
+      double itsTimeStep;
 
 
-    SmartPtr<MSLofar> itsMS;
+      SmartPtr<MSLofar> itsMS;
 
-    const uint32 itsAlignment;
+      const uint32 itsAlignment;
 
-    void createMSTables(const string &MSname, unsigned subband);
-    void createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian);
+      void createMSTables(const string &MSname, unsigned subband);
+      void createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian);
 
-    void fillFeed();
-    void fillAntenna(const casa::Block<casa::MPosition>& antMPos);
-    void fillField(unsigned subarray);
-    void fillPola();
-    void fillDataDesc();
-    void fillSpecWindow(unsigned subband);
-    void fillObs(unsigned subarray);
-    void fillHistory();
-};
+      void fillFeed();
+      void fillAntenna(const casa::Block<casa::MPosition>& antMPos);
+      void fillField(unsigned subarray);
+      void fillPola();
+      void fillDataDesc();
+      void fillSpecWindow(unsigned subband);
+      void fillObs(unsigned subarray);
+      void fillHistory();
+    };
 
-} //RTCP
+  } //RTCP
 } //LOFAR
 #endif // LOFAR_STORAGEFORMAT_H

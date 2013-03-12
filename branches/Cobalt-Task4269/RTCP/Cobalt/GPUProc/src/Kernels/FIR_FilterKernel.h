@@ -8,16 +8,16 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class FIR_FilterKernel : public Kernel
     {
-        class FIR_FilterKernel : public Kernel
-        {
-        public:
-            FIR_FilterKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                cl::Buffer &devFilteredData, cl::Buffer &devInputSamples,
-                cl::Buffer &devFIRweights);
-        };
-    }
+    public:
+      FIR_FilterKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
+                       cl::Buffer &devFilteredData, cl::Buffer &devInputSamples,
+                       cl::Buffer &devFIRweights);
+    };
+  }
 }
 
 #endif

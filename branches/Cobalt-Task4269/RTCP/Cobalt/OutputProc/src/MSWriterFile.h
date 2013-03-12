@@ -31,26 +31,28 @@
 #include <OutputProc/FastFileStream.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-class MSWriterFile : public MSWriter
+namespace LOFAR
 {
-  public:
-    MSWriterFile(const string &msName);
-    ~MSWriterFile();
-
-    virtual void write(StreamableData *data);
-
-    virtual size_t getDataSize();
-
-  protected:
-    FastFileStream	 itsFile;
-};
+  namespace RTCP
+  {
 
 
-}
+    class MSWriterFile : public MSWriter
+    {
+    public:
+      MSWriterFile(const string &msName);
+      ~MSWriterFile();
+
+      virtual void write(StreamableData *data);
+
+      virtual size_t getDataSize();
+
+    protected:
+      FastFileStream itsFile;
+    };
+
+
+  }
 }
 
 #endif

@@ -1,4 +1,4 @@
-#include "lofar_config.h"    
+#include "lofar_config.h"
 
 #include "Common/LofarLogger.h"
 #include "global_defines.h"
@@ -13,45 +13,45 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    BeamFormerPipeline::BeamFormerPipeline(const Parset &ps)
+      :
+      Pipeline(ps),
+      intToFloatCounter("int-to-float", profiling),
+      fftCounter("FFT", profiling),
+      delayAndBandPassCounter("delay/bp", profiling),
+      beamFormerCounter("beamformer", profiling),
+      transposeCounter("transpose", profiling),
+      dedispersionForwardFFTcounter("ddisp.fw.FFT", profiling),
+      dedispersionChirpCounter("chirp", profiling),
+      dedispersionBackwardFFTcounter("ddisp.bw.FFT", profiling),
+      samplesCounter("samples", profiling)
     {
-        BeamFormerPipeline::BeamFormerPipeline(const Parset &ps)
-            :
-        Pipeline(ps),
-            intToFloatCounter("int-to-float", profiling),
-            fftCounter("FFT", profiling),
-            delayAndBandPassCounter("delay/bp", profiling),
-            beamFormerCounter("beamformer", profiling),
-            transposeCounter("transpose", profiling),
-            dedispersionForwardFFTcounter("ddisp.fw.FFT", profiling),
-            dedispersionChirpCounter("chirp", profiling),
-            dedispersionBackwardFFTcounter("ddisp.bw.FFT", profiling),
-            samplesCounter("samples", profiling)
-        {
-            double startTime = omp_get_wtime();
+      double startTime = omp_get_wtime();
 
 #pragma omp parallel sections
-            {
+      {
 #pragma omp section
-                intToFloatProgram = createProgram("BeamFormer/IntToFloat.cl");
+        intToFloatProgram = createProgram("BeamFormer/IntToFloat.cl");
 #pragma omp section
-                delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
+        delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
 #pragma omp section
-                beamFormerProgram = createProgram("BeamFormer/BeamFormer.cl");
+        beamFormerProgram = createProgram("BeamFormer/BeamFormer.cl");
 #pragma omp section
-                transposeProgram = createProgram("BeamFormer/Transpose.cl");
+        transposeProgram = createProgram("BeamFormer/Transpose.cl");
 #pragma omp section
-                dedispersionChirpProgram = createProgram("BeamFormer/Dedispersion.cl");
-            }
+        dedispersionChirpProgram = createProgram("BeamFormer/Dedispersion.cl");
+      }
 
-            std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
-        }
-
-                void BeamFormerPipeline::doWork()
-        {
-#pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
-                BeamFormerWorkQueue(*this, omp_get_thread_num()% nrGPUs).doWork();
-        }
+      std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
     }
+
+    void BeamFormerPipeline::doWork()
+    {
+#pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
+      BeamFormerWorkQueue(*this, omp_get_thread_num() % nrGPUs).doWork();
+    }
+  }
 }
 

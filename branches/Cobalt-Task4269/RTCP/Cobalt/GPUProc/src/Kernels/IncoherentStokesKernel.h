@@ -10,16 +10,16 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+
+    class IncoherentStokesKernel : public Kernel
     {
+    public:
+      IncoherentStokesKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
+                             cl::Buffer &devIncoherentStokes, cl::Buffer &devInputSamples);
+    };
 
-        class IncoherentStokesKernel : public Kernel
-        {
-        public:
-            IncoherentStokesKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, 
-                cl::Buffer &devIncoherentStokes, cl::Buffer &devInputSamples);             
-        };
-
-    }
+  }
 }
 #endif

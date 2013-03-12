@@ -47,87 +47,92 @@
 #include <string>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-// define a "simple" type of which the size equals the size of two samples
-// (X and Y polarizations)
-
-
-template<typename SAMPLE_TYPE> class BeamletBuffer
+namespace LOFAR
 {
-  public:
-	     BeamletBuffer(const Parset &, const std::string &stationName, unsigned rspBoard);
+  namespace RTCP
+  {
 
-    void     writePacketData(const SAMPLE_TYPE *data, const TimeStamp &begin);
-    void     writeMultiplePackets(const void *rspData, const std::vector<TimeStamp> &);
-
-    void     startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements);
-    void     sendSubband(Stream *, unsigned subband, unsigned currentBeam) const;
-    void     sendUnalignedSubband(Stream *, unsigned subband, unsigned currentBeam) const;
-    unsigned alignmentShift(unsigned beam) const;
-    SparseSet<unsigned> readFlags(unsigned beam);
-    void     stopReadTransaction();
-
-    void     noMoreReading();
-    void     noMoreWriting();
-    
-    const static unsigned		  itsNrTimesPerPacket = 16;
-
-  private:
-    unsigned mapTime2Index(TimeStamp time) const;
-
-    std::string                           itsLogPrefix;
-
-    Mutex				  itsValidDataMutex;
-    SparseSet<TimeStamp>		  itsValidData;
-    unsigned				  itsRSPboard;
-    unsigned				  itsNrSubbands;
-    size_t				  itsPacketSize;
-    unsigned				  itsSize, itsHistorySize;
-    bool				  itsIsRealTime;
-    SmartPtr<SynchronizedReaderAndWriter> itsSynchronizedReaderWriter;
-    LockedRanges			  itsLockedRanges;
-    Cube<SAMPLE_TYPE>			  itsSBBuffers;
-    int					  itsOffset;
-    const static unsigned		  itsAlignment = 32 / (NR_POLARIZATIONS * sizeof(SAMPLE_TYPE));
-
-    // read internals
-    std::vector<TimeStamp>		  itsBegin, itsEnd;
-    std::vector<size_t>			  itsStartI, itsEndI;
-    size_t                                itsMinStartI, itsMaxEndI;
-    TimeStamp                             itsMinEnd;
-    Mutex				  itsReadMutex;
-
-    // write internals
-    void				  writePacket(SAMPLE_TYPE *dst, const SAMPLE_TYPE *src);
-    void				  updateValidData(const TimeStamp &begin, const TimeStamp &end);
-    void				  writeConsecutivePackets(unsigned count);
-    void				  resetCurrentTimeStamp(const TimeStamp &);
-
-    TimeStamp				  itsPreviousTimeStamp;
-    unsigned				  itsPreviousI;
-    TimeStamp				  itsCurrentTimeStamp;
-    unsigned				  itsCurrentI;
-    size_t				  itsStride;
-    const char				  *itsCurrentPacketPtr;
-
-    NSTimer				  itsReadTimer, itsWriteTimer;
-};
+    // define a "simple" type of which the size equals the size of two samples
+    // (X and Y polarizations)
 
 
-template<typename SAMPLE_TYPE> inline unsigned BeamletBuffer<SAMPLE_TYPE>::alignmentShift(unsigned beam) const
-{
-  return itsStartI[beam] % itsAlignment;
-}
+    template<typename SAMPLE_TYPE>
+    class BeamletBuffer
+    {
+    public:
+      BeamletBuffer(const Parset &, const std::string &stationName, unsigned rspBoard);
 
-template<typename SAMPLE_TYPE> inline unsigned BeamletBuffer<SAMPLE_TYPE>::mapTime2Index(TimeStamp time) const
-{ 
-  // TODO: this is very slow because of the %
-  return (time + itsOffset) % itsSize;
-}
+      void     writePacketData(const SAMPLE_TYPE *data, const TimeStamp &begin);
+      void     writeMultiplePackets(const void *rspData, const std::vector<TimeStamp> &);
 
-} // namespace RTCP
+      void     startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements);
+      void     sendSubband(Stream *, unsigned subband, unsigned currentBeam) const;
+      void     sendUnalignedSubband(Stream *, unsigned subband, unsigned currentBeam) const;
+      unsigned alignmentShift(unsigned beam) const;
+      SparseSet<unsigned> readFlags(unsigned beam);
+      void     stopReadTransaction();
+
+      void     noMoreReading();
+      void     noMoreWriting();
+
+      const static unsigned itsNrTimesPerPacket = 16;
+
+    private:
+      unsigned mapTime2Index(TimeStamp time) const;
+
+      std::string itsLogPrefix;
+
+      Mutex itsValidDataMutex;
+      SparseSet<TimeStamp>                  itsValidData;
+      unsigned itsRSPboard;
+      unsigned itsNrSubbands;
+      size_t itsPacketSize;
+      unsigned itsSize, itsHistorySize;
+      bool itsIsRealTime;
+      SmartPtr<SynchronizedReaderAndWriter> itsSynchronizedReaderWriter;
+      LockedRanges itsLockedRanges;
+      Cube<SAMPLE_TYPE>                     itsSBBuffers;
+      int itsOffset;
+      const static unsigned itsAlignment = 32 / (NR_POLARIZATIONS * sizeof(SAMPLE_TYPE));
+
+      // read internals
+      std::vector<TimeStamp>                itsBegin, itsEnd;
+      std::vector<size_t>                   itsStartI, itsEndI;
+      size_t itsMinStartI, itsMaxEndI;
+      TimeStamp itsMinEnd;
+      Mutex itsReadMutex;
+
+      // write internals
+      void                                  writePacket(SAMPLE_TYPE *dst, const SAMPLE_TYPE *src);
+      void                                  updateValidData(const TimeStamp &begin, const TimeStamp &end);
+      void                                  writeConsecutivePackets(unsigned count);
+      void                                  resetCurrentTimeStamp(const TimeStamp &);
+
+      TimeStamp itsPreviousTimeStamp;
+      unsigned itsPreviousI;
+      TimeStamp itsCurrentTimeStamp;
+      unsigned itsCurrentI;
+      size_t itsStride;
+      const char                            *itsCurrentPacketPtr;
+
+      NSTimer itsReadTimer, itsWriteTimer;
+    };
+
+
+    template<typename SAMPLE_TYPE>
+    inline unsigned BeamletBuffer<SAMPLE_TYPE>::alignmentShift(unsigned beam) const
+    {
+      return itsStartI[beam] % itsAlignment;
+    }
+
+    template<typename SAMPLE_TYPE>
+    inline unsigned BeamletBuffer<SAMPLE_TYPE>::mapTime2Index(TimeStamp time) const
+    {
+      // TODO: this is very slow because of the %
+      return (time + itsOffset) % itsSize;
+    }
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

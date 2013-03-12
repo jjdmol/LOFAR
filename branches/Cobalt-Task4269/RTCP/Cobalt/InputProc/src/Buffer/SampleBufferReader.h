@@ -8,63 +8,84 @@
 #include <vector>
 #include <string>
 
-namespace LOFAR {
-namespace RTCP {
+namespace LOFAR
+{
+  namespace RTCP
+  {
 
-/*
- * An abstract class for the implementation of a reader for SampleBuffers.
- */
-template<typename T> class SampleBufferReader {
-public:
-  SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples = 0);
+    /*
+     * An abstract class for the implementation of a reader for SampleBuffers.
+     */
+    template<typename T>
+    class SampleBufferReader
+    {
+    public:
+      SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples = 0);
 
-  void process( double maxDelay );
+      void process( double maxDelay );
 
-protected:
-  const BufferSettings settings;
-  SampleBuffer<T> buffer;
+    protected:
+      const BufferSettings settings;
+      SampleBuffer<T> buffer;
 
-  const std::vector<size_t> beamlets;
-  const TimeStamp from, to;
-  const size_t blockSize;
+      const std::vector<size_t> beamlets;
+      const TimeStamp from, to;
+      const size_t blockSize;
 
-  // Number of samples to include before `from', to initialise the FIR taps,
-  // included in blockSize.
-  const size_t nrHistorySamples;
+      // Number of samples to include before `from', to initialise the FIR taps,
+      // included in blockSize.
+      const size_t nrHistorySamples;
 
-  struct CopyInstructions {
-    // Beamlet index
-    unsigned beamlet;
+      struct CopyInstructions {
+        // Beamlet index
+        unsigned beamlet;
 
-    // Relevant time range
-    TimeStamp from;
-    TimeStamp to;
+        // Relevant time range
+        TimeStamp from;
+        TimeStamp to;
 
-    // Copy as one or two ranges of [from, to).
-    struct Range {
-      const T* from;
-      const T* to;
-    } ranges[2];
+        // Copy as one or two ranges of [from, to).
+        struct Range {
+          const T* from;
+          const T* to;
+        } ranges[2];
 
-    unsigned nrRanges;
+        unsigned nrRanges;
 
-    // The flags for this range
-    SparseSet<int64> flags;
-  };
+        // The flags for this range
+        SparseSet<int64> flags;
+      };
 
-  virtual ssize_t beamletOffset( unsigned beamlet, const TimeStamp &from, const TimeStamp &to ) { (void)beamlet; (void)from; (void)to; return 0; }
+      virtual ssize_t beamletOffset( unsigned beamlet, const TimeStamp &from, const TimeStamp &to )
+      {
+        (void)beamlet;
+        (void)from;
+        (void)to;
+        return 0;
+      }
 
-  virtual void copyStart( const TimeStamp &from, const TimeStamp &to, const std::vector<size_t> &wrapOffsets ) { (void)from; (void)to; (void)wrapOffsets; }
-  virtual void copy( const struct CopyInstructions & ) {}
-  virtual void copyEnd( const TimeStamp &from, const TimeStamp &to ) { (void)from; (void)to; }
+      virtual void copyStart( const TimeStamp &from, const TimeStamp &to, const std::vector<size_t> &wrapOffsets )
+      {
+        (void)from;
+        (void)to;
+        (void)wrapOffsets;
+      }
+      virtual void copy( const struct CopyInstructions & )
+      {
+      }
+      virtual void copyEnd( const TimeStamp &from, const TimeStamp &to )
+      {
+        (void)from;
+        (void)to;
+      }
 
-  void copy( const TimeStamp &from, const TimeStamp &to );
+      void copy( const TimeStamp &from, const TimeStamp &to );
 
-private:
-  WallClockTime waiter;
-};
+    private:
+      WallClockTime waiter;
+    };
 
-}
+  }
 }
 
 #include "SampleBufferReader.tcc"

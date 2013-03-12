@@ -15,17 +15,17 @@ typedef __global float (*WeightsType)[NR_STATIONS][NR_SUBBANDS][NR_TABS][2];
 
 
 __kernel void complexVoltages(__global void *complexVoltagesPtr,
-			      __global const void *samplesPtr,
-			      __global const void *weightsPtr)
+                              __global const void *samplesPtr,
+                              __global const void *weightsPtr)
 {
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
-  SamplesType samples   = (SamplesType) samplesPtr;
-  WeightsType weights	= (WeightsType) weightsPtr;
+  SamplesType samples = (SamplesType) samplesPtr;
+  WeightsType weights = (WeightsType) weightsPtr;
 
-  uint ri		= get_local_id(0) & 1;
-  uint pol		= get_local_id(0) >> 1;
-  uint tab		= get_local_id(1);
-  uint subband		= get_global_id(2);
+  uint ri = get_local_id(0) & 1;
+  uint pol = get_local_id(0) >> 1;
+  uint tab = get_local_id(1);
+  uint subband = get_global_id(2);
 
   float2 sample;
   __local float2 local_samples[NR_STATIONS][8][NR_POLARIZATIONS];
@@ -185,12 +185,12 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
       uint s = i / NR_POLARIZATIONS / 8;
 
       if (time + t < NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1)
-	local_samples[0][0][i] = convert_float2((*samples)[s][subband][time + t][p]);
+        local_samples[0][0][i] = convert_float2((*samples)[s][subband][time + t][p]);
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    for (uint t = 0; t < min(8U, (NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1 - time)); t ++) {
+    for (uint t = 0; t < min(8U, (NR_TIMES_PER_BLOCK + NR_STATION_FILTER_TAPS - 1 - time)); t++) {
       float2 sum = 0;
 
 #if NR_STATIONS >= 1
@@ -433,16 +433,16 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
 
 #if 0
       if (ri != 0)
-	local_tmp[tab][pol] = (float2) (-sum.y, sum.x);
+        local_tmp[tab][pol] = (float2) (-sum.y, sum.x);
 
       if (ri == 0)
-	(*complexVoltages)[subband][time + t][tab][pol] = sum + local_tmp[tab][pol];
+        (*complexVoltages)[subband][time + t][tab][pol] = sum + local_tmp[tab][pol];
 #else
       float2 other_sum;
-      asm("shfl.down.b32 %0, %1, 1, 0x1F;" : "=r" (other_sum.x) : "r" (sum.x));
-      asm("shfl.down.b32 %0, %1, 1, 0x1F;" : "=r" (other_sum.y) : "r" (sum.y));
+      asm ("shfl.down.b32 %0, %1, 1, 0x1F;" : "=r" (other_sum.x) : "r" (sum.x));
+      asm ("shfl.down.b32 %0, %1, 1, 0x1F;" : "=r" (other_sum.y) : "r" (sum.y));
       if (ri == 0)
-	(*complexVoltages)[subband][time + t][tab][pol] = sum + (float2) (-other_sum.y, other_sum.x);
+        (*complexVoltages)[subband][time + t][tab][pol] = sum + (float2) (-other_sum.y, other_sum.x);
 #endif
     }
 

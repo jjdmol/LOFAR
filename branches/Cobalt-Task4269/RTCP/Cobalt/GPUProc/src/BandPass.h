@@ -2,7 +2,8 @@
 #define BANDPASS_H
 
 
-namespace BandPass {
+namespace BandPass
+{
   void computeCorrectionFactors(float *factors, unsigned nrChannels);
 }
 

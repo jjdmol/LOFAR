@@ -1,4 +1,4 @@
-#define COMPLEX 2	// do not change
+#define COMPLEX 2       // do not change
 
 #if NR_BITS_PER_SAMPLE == 16
 typedef short SampleType;
@@ -48,29 +48,29 @@ typedef __global const float16 (*WeightsType)[NR_CHANNELS];
  * TODO: convert complex dim to fcomplex (=float2 in math.cl) in device code and to complex<float> in host code.
  */
 __kernel void FIR_filter(__global void *filteredDataPtr,
-			 __global const void *sampledDataPtr,
-			 __global const void *weightsPtr)
+                         __global const void *sampledDataPtr,
+                         __global const void *weightsPtr)
 {
-  SampledDataType  sampledData  = (SampledDataType) sampledDataPtr;
+  SampledDataType sampledData = (SampledDataType) sampledDataPtr;
   FilteredDataType filteredData = (FilteredDataType) filteredDataPtr;
-  WeightsType      weightsData  = (WeightsType) weightsPtr;
+  WeightsType weightsData = (WeightsType) weightsPtr;
 
-  uint cpr     = get_global_id(0);
+  uint cpr = get_global_id(0);
 #if 0
   // Straight index calc for NR_CHANNELS == 1
-  uint pol_ri  = cpr & 3;
+  uint pol_ri = cpr & 3;
   uint channel = cpr >> 2;
-  uint ri      = cpr & 1;
-  uint pol     = pol_ri >> 1;
+  uint ri = cpr & 1;
+  uint pol = pol_ri >> 1;
 #else
-  uint ri      = cpr & 1;
+  uint ri = cpr & 1;
   uint channel = (cpr >> 1) % NR_CHANNELS;
-  uint pol     = (cpr >> 1) / NR_CHANNELS;
-  uint pol_ri  = (pol << 1) | ri;
+  uint pol = (cpr >> 1) / NR_CHANNELS;
+  uint pol_ri = (pol << 1) | ri;
 #endif
   uint station = get_global_id(1);
 
-//#pragma OPENCL EXTENSION cl_amd_printf : enable
+  //#pragma OPENCL EXTENSION cl_amd_printf : enable
 
   const float16 weights = (*weightsData)[channel];
   float16 delayLine;
@@ -94,7 +94,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
 
   for (uint time = 0; time < NR_SAMPLES_PER_CHANNEL; time += NR_TAPS) {
     delayLine.sF = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 0][channel][pol_ri]);
-    sum.s0  = weights.sF * delayLine.s0;
+    sum.s0 = weights.sF * delayLine.s0;
     delayLine.s0 = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 1][channel][pol_ri]);
     sum.s0 += weights.sE * delayLine.s1;
     sum.s0 += weights.sD * delayLine.s2;
@@ -113,7 +113,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.s0 += weights.s0 * delayLine.sF;
     (*filteredData)[station][pol][time + 0][channel][ri] = sum.s0;
 
-    sum.s1  = weights.sF * delayLine.s1;
+    sum.s1 = weights.sF * delayLine.s1;
     delayLine.s1 = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 2][channel][pol_ri]);
     sum.s1 += weights.sE * delayLine.s2;
     sum.s1 += weights.sD * delayLine.s3;
@@ -132,7 +132,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.s1 += weights.s0 * delayLine.s0;
     (*filteredData)[station][pol][time + 1][channel][ri] = sum.s1;
 
-    sum.s2  = weights.sF * delayLine.s2;
+    sum.s2 = weights.sF * delayLine.s2;
     delayLine.s2 = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 3][channel][pol_ri]);
     sum.s2 += weights.sE * delayLine.s3;
     sum.s2 += weights.sD * delayLine.s4;
@@ -151,7 +151,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.s2 += weights.s0 * delayLine.s1;
     (*filteredData)[station][pol][time + 2][channel][ri] = sum.s2;
 
-    sum.s3  = weights.sF * delayLine.s3;
+    sum.s3 = weights.sF * delayLine.s3;
     delayLine.s3 = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 4][channel][pol_ri]);
     sum.s3 += weights.sE * delayLine.s4;
     sum.s3 += weights.sD * delayLine.s5;
@@ -170,7 +170,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.s3 += weights.s0 * delayLine.s2;
     (*filteredData)[station][pol][time + 3][channel][ri] = sum.s3;
 
-    sum.s4  = weights.sF * delayLine.s4;
+    sum.s4 = weights.sF * delayLine.s4;
     delayLine.s4 = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 5][channel][pol_ri]);
     sum.s4 += weights.sE * delayLine.s5;
     sum.s4 += weights.sD * delayLine.s6;
@@ -189,7 +189,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.s4 += weights.s0 * delayLine.s3;
     (*filteredData)[station][pol][time + 4][channel][ri] = sum.s4;
 
-    sum.s5  = weights.sF * delayLine.s5;
+    sum.s5 = weights.sF * delayLine.s5;
     delayLine.s5 = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 6][channel][pol_ri]);
     sum.s5 += weights.sE * delayLine.s6;
     sum.s5 += weights.sD * delayLine.s7;
@@ -208,7 +208,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.s5 += weights.s0 * delayLine.s4;
     (*filteredData)[station][pol][time + 5][channel][ri] = sum.s5;
 
-    sum.s6  = weights.sF * delayLine.s6;
+    sum.s6 = weights.sF * delayLine.s6;
     delayLine.s6 = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 7][channel][pol_ri]);
     sum.s6 += weights.sE * delayLine.s7;
     sum.s6 += weights.sD * delayLine.s8;
@@ -227,7 +227,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.s6 += weights.s0 * delayLine.s5;
     (*filteredData)[station][pol][time + 6][channel][ri] = sum.s6;
 
-    sum.s7  = weights.sF * delayLine.s7;
+    sum.s7 = weights.sF * delayLine.s7;
     delayLine.s7 = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 8][channel][pol_ri]);
     sum.s7 += weights.sE * delayLine.s8;
     sum.s7 += weights.sD * delayLine.s9;
@@ -246,7 +246,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.s7 += weights.s0 * delayLine.s6;
     (*filteredData)[station][pol][time + 7][channel][ri] = sum.s7;
 
-    sum.s8  = weights.sF * delayLine.s8;
+    sum.s8 = weights.sF * delayLine.s8;
     delayLine.s8 = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 9][channel][pol_ri]);
     sum.s8 += weights.sE * delayLine.s9;
     sum.s8 += weights.sD * delayLine.sA;
@@ -265,7 +265,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.s8 += weights.s0 * delayLine.s7;
     (*filteredData)[station][pol][time + 8][channel][ri] = sum.s8;
 
-    sum.s9  = weights.sF * delayLine.s9;
+    sum.s9 = weights.sF * delayLine.s9;
     delayLine.s9 = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 10][channel][pol_ri]);
     sum.s9 += weights.sE * delayLine.sA;
     sum.s9 += weights.sD * delayLine.sB;
@@ -284,7 +284,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.s9 += weights.s0 * delayLine.s8;
     (*filteredData)[station][pol][time + 9][channel][ri] = sum.s9;
 
-    sum.sA  = weights.sF * delayLine.sA;
+    sum.sA = weights.sF * delayLine.sA;
     delayLine.sA = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 11][channel][pol_ri]);
     sum.sA += weights.sE * delayLine.sB;
     sum.sA += weights.sD * delayLine.sC;
@@ -303,7 +303,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.sA += weights.s0 * delayLine.s9;
     (*filteredData)[station][pol][time + 10][channel][ri] = sum.sA;
 
-    sum.sB  = weights.sF * delayLine.sB;
+    sum.sB = weights.sF * delayLine.sB;
     delayLine.sB = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 12][channel][pol_ri]);
     sum.sB += weights.sE * delayLine.sC;
     sum.sB += weights.sD * delayLine.sD;
@@ -322,7 +322,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.sB += weights.s0 * delayLine.sA;
     (*filteredData)[station][pol][time + 11][channel][ri] = sum.sB;
 
-    sum.sC  = weights.sF * delayLine.sC;
+    sum.sC = weights.sF * delayLine.sC;
     delayLine.sC = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 13][channel][pol_ri]);
     sum.sC += weights.sE * delayLine.sD;
     sum.sC += weights.sD * delayLine.sE;
@@ -341,7 +341,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.sC += weights.s0 * delayLine.sB;
     (*filteredData)[station][pol][time + 12][channel][ri] = sum.sC;
 
-    sum.sD  = weights.sF * delayLine.sD;
+    sum.sD = weights.sF * delayLine.sD;
     delayLine.sD = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 14][channel][pol_ri]);
     sum.sD += weights.sE * delayLine.sE;
     sum.sD += weights.sD * delayLine.sF;
@@ -360,7 +360,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.sD += weights.s0 * delayLine.sC;
     (*filteredData)[station][pol][time + 13][channel][ri] = sum.sD;
 
-    sum.sE  = weights.sF * delayLine.sE;
+    sum.sE = weights.sF * delayLine.sE;
     delayLine.sE = convert_float((*sampledData)[station][time + NR_TAPS - 1 + 15][channel][pol_ri]);
     sum.sE += weights.sE * delayLine.sF;
     sum.sE += weights.sD * delayLine.s0;
@@ -379,7 +379,7 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
     sum.sE += weights.s0 * delayLine.sD;
     (*filteredData)[station][pol][time + 14][channel][ri] = sum.sE;
 
-    sum.sF  = weights.sF * delayLine.sF;
+    sum.sF = weights.sF * delayLine.sF;
     sum.sF += weights.sE * delayLine.s0;
     sum.sF += weights.sD * delayLine.s1;
     sum.sF += weights.sC * delayLine.s2;

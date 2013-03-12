@@ -15,36 +15,36 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class CorrelatorWorkQueue;
+
+    class CorrelatorPipeline : public Pipeline
     {
-        class CorrelatorWorkQueue;
+    public:
+      CorrelatorPipeline(const Parset &);
 
-        class CorrelatorPipeline : public Pipeline
-        {
-        public:
-            CorrelatorPipeline(const Parset &);
+      void                    doWork();
+      void        doWorkQueue(CorrelatorWorkQueue &workQueue);
+      void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband);
 
-            void		    doWork();
-            void        doWorkQueue(CorrelatorWorkQueue &workQueue);
-            void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned block, unsigned subband);
+    private:
+      friend class CorrelatorWorkQueue;
 
-        private:
-            friend class CorrelatorWorkQueue;
+      FilterBank filterBank;
+      CorrelatorPipelinePrograms programs;
 
-            FilterBank		    filterBank;            
-            CorrelatorPipelinePrograms programs;
+      struct Performance {
+        map<string, PerformanceCounter::figures> total_counters;
+        map<string, SmartPtr<NSTimer> > total_timers;
+        Mutex totalsMutex;
 
-            struct Performance {
-              map<string, PerformanceCounter::figures> total_counters;
-              map<string, SmartPtr<NSTimer> > total_timers;
-              Mutex totalsMutex;
+        void addQueue(CorrelatorWorkQueue &queue);
+        void log(size_t nrWorkQueues);
+      } performance;
 
-              void addQueue(CorrelatorWorkQueue &queue);
-              void log(size_t nrWorkQueues);
-            } performance;
+    };
 
-        };
-
-    }
+  }
 }
 #endif

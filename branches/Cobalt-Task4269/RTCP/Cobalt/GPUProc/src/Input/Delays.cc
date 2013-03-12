@@ -40,274 +40,276 @@
 #include <memory>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-using namespace casa;
-
-static LOFAR::Mutex casacoreMutex; // casacore is not thread safe
-
-//##----------------  Public methods  ----------------##//
-
-Delays::Delays(const Parset &parset, const string &stationName, const TimeStamp &startTime)
-:
-  itsParset(parset),
-  stop(false),
-  // we need an extra entry for the central beam
-  itsBuffer(bufferSize, parset.nrBeams(), parset.maxNrTABs() + 1),
-  head(0),
-  tail(0),
-  bufferFree(bufferSize),
-  bufferUsed(0),
-  itsNrCalcDelays(parset.nrCalcDelays()),
-  itsNrBeams(parset.nrBeams()),
-  itsMaxNrTABs(parset.maxNrTABs()),
-  itsNrTABs(parset.nrTABs()),
-  itsStartTime(startTime),
-  itsNrSamplesPerSec(parset.nrSamplesPerSubband()),
-  itsSampleDuration(parset.sampleDuration()),
-  itsStationName(stationName),
-  itsDelayTimer("delay producer", true, true)
+namespace LOFAR
 {
-}
+  namespace RTCP
+  {
+
+    using namespace casa;
+
+    static LOFAR::Mutex casacoreMutex; // casacore is not thread safe
+
+    //##----------------  Public methods  ----------------##//
+
+    Delays::Delays(const Parset &parset, const string &stationName, const TimeStamp &startTime)
+      :
+      itsParset(parset),
+      stop(false),
+      // we need an extra entry for the central beam
+      itsBuffer(bufferSize, parset.nrBeams(), parset.maxNrTABs() + 1),
+      head(0),
+      tail(0),
+      bufferFree(bufferSize),
+      bufferUsed(0),
+      itsNrCalcDelays(parset.nrCalcDelays()),
+      itsNrBeams(parset.nrBeams()),
+      itsMaxNrTABs(parset.maxNrTABs()),
+      itsNrTABs(parset.nrTABs()),
+      itsStartTime(startTime),
+      itsNrSamplesPerSec(parset.nrSamplesPerSubband()),
+      itsSampleDuration(parset.sampleDuration()),
+      itsStationName(stationName),
+      itsDelayTimer("delay producer", true, true)
+    {
+    }
 
 
-void Delays::start()
-{
-  itsThread = new Thread(this, &Delays::mainLoop, "[DelayCompensation] ");
-}
+    void Delays::start()
+    {
+      itsThread = new Thread(this, &Delays::mainLoop, "[DelayCompensation] ");
+    }
 
 
-Delays::~Delays()
-{
-  ScopedDelayCancellation dc; // Semaphores provide cancellation points
+    Delays::~Delays()
+    {
+      ScopedDelayCancellation dc; // Semaphores provide cancellation points
 
-  // trigger mainLoop and force it to stop
-  stop = true;
-  bufferFree.up(itsNrCalcDelays);
-}
-
-
-// convert a time in samples to a (day,fraction) pair in UTC in a CasaCore format
-MVEpoch Delays::toUTC(int64 timeInSamples)
-{
-  double utc_sec = (timeInSamples * itsSampleDuration) / MVEpoch::secInDay;
-  double day	 = floor(utc_sec);
-  double frac	 = utc_sec - day;
-
-  // (40587 modify Julian day number = 00:00:00 January 1, 1970, GMT)
-  return MVEpoch(day + 40587., frac);
-}
+      // trigger mainLoop and force it to stop
+      stop = true;
+      bufferFree.up(itsNrCalcDelays);
+    }
 
 
-void Delays::init()
-{
-  ScopedLock lock(casacoreMutex);
-  ScopedDelayCancellation dc;
+    // convert a time in samples to a (day,fraction) pair in UTC in a CasaCore format
+    MVEpoch Delays::toUTC(int64 timeInSamples)
+    {
+      double utc_sec = (timeInSamples * itsSampleDuration) / MVEpoch::secInDay;
+      double day = floor(utc_sec);
+      double frac = utc_sec - day;
 
-  setBeamDirections(itsParset);
-  setPositionDiff(itsParset);
-
-  // We need bufferSize to be a multiple of batchSize to avoid wraparounds in
-  // the middle of the batch calculations. This makes life a lot easier and there is no
-  // need to support other cases.
-
-  if (bufferSize % itsNrCalcDelays > 0)
-    THROW(GPUProcException, "nrCalcDelays (" << itsNrCalcDelays << ") must divide bufferSize (" << bufferSize << ")");
-
-  // Set an initial epoch for the itsFrame
-  itsFrame.set(MEpoch(toUTC(itsStartTime), MEpoch::UTC));
-
-  // Set the position for the itsFrame.
-  itsFrame.set(itsPhaseCentre);
-  
-  // Set-up the conversion engines, using reference direction ITRF.
-  for (unsigned beam = 0; beam < itsNrBeams; beam++) {
-    const casa::MDirection::Types &dirtype = itsDirectionTypes[beam];
-
-    if (itsConverters.find(dirtype) == itsConverters.end())
-      itsConverters[dirtype] = MDirection::Convert(dirtype, MDirection::Ref(MDirection::ITRF, itsFrame));
-  }
-}
+      // (40587 modify Julian day number = 00:00:00 January 1, 1970, GMT)
+      return MVEpoch(day + 40587., frac);
+    }
 
 
-void Delays::mainLoop()
-{
-#if defined HAVE_BGP_ION
-  doNotRunOnCore0();
-#endif
+    void Delays::init()
+    {
+      ScopedLock lock(casacoreMutex);
+      ScopedDelayCancellation dc;
 
-  LOG_DEBUG("Delay compensation thread running");
+      setBeamDirections(itsParset);
+      setPositionDiff(itsParset);
 
-#if defined HAVE_BGP_ION
-  runOnCore0();
-#endif
+      // We need bufferSize to be a multiple of batchSize to avoid wraparounds in
+      // the middle of the batch calculations. This makes life a lot easier and there is no
+      // need to support other cases.
 
-  init();
+      if (bufferSize % itsNrCalcDelays > 0)
+        THROW(GPUProcException, "nrCalcDelays (" << itsNrCalcDelays << ") must divide bufferSize (" << bufferSize << ")");
 
-  // the current time, in samples
-  int64 currentTime = itsStartTime;
+      // Set an initial epoch for the itsFrame
+      itsFrame.set(MEpoch(toUTC(itsStartTime), MEpoch::UTC));
 
-  try {
-    while (!stop) {
-      bufferFree.down(itsNrCalcDelays);
+      // Set the position for the itsFrame.
+      itsFrame.set(itsPhaseCentre);
 
-      itsDelayTimer.start();
+      // Set-up the conversion engines, using reference direction ITRF.
+      for (unsigned beam = 0; beam < itsNrBeams; beam++) {
+        const casa::MDirection::Types &dirtype = itsDirectionTypes[beam];
 
-      // Calculate itsNrCalcDelays seconds worth of delays. Technically, we do not have
-      // to calculate that many at the end of the run, but there is no need to
-      // prevent the few excess delays from being calculated.
-
-      {
-	ScopedLock lock(casacoreMutex);
-        ScopedDelayCancellation dc;
-
-	// For each given moment in time ...
-	for (uint i = 0; i < itsNrCalcDelays; i ++) {
-	  // Set the instant in time in the itsFrame (40587 modify Julian day number = 00:00:00 January 1, 1970, GMT)
-	  itsFrame.resetEpoch(toUTC(currentTime));
-
-	  // Check whether we will store results in a valid place
-	  ASSERTSTR(tail < bufferSize, tail << " < " << bufferSize);
-	  
-	  // For each given direction in the sky ...
-	  for (uint b = 0; b < itsNrBeams; b ++) {
-            MDirection::Convert &converter = itsConverters[itsDirectionTypes[b]];
-
-	    for (uint p = 0; p < itsNrTABs[b] + 1; p ++) {
-	      // Define the astronomical direction as a J2000 direction.
-	      MVDirection &sky = itsBeamDirections[b][p];
-
-	      // Convert this direction, using the conversion engine.
-	      MDirection dir = converter(sky);
-
-	      // Add to the return vector
-	      itsBuffer[tail][b][p] = dir.getValue();
-	    }
-	  }  
-
-	  // Advance time for the next calculation
-	  currentTime += itsNrSamplesPerSec;
-
-	  // Advance to the next result set.
-	  // since bufferSize % itsNrCalcDelays == 0, wrap
-	  // around can only occur between runs
-	  ++ tail;
-	}
+        if (itsConverters.find(dirtype) == itsConverters.end())
+          itsConverters[dirtype] = MDirection::Convert(dirtype, MDirection::Ref(MDirection::ITRF, itsFrame));
       }
-      // check for wrap around for the next run
-      if (tail >= bufferSize)
-	tail = 0;
-
-      itsDelayTimer.stop();
-
-      bufferUsed.up(itsNrCalcDelays);
     }
-  } catch (AipsError &ex) {
-    // trigger getNextDelays and force it to stop
-    stop = true;
-    bufferUsed.up(1);
-
-    THROW(GPUProcException, "AipsError: " << ex.what());
-  }
-
-  LOG_DEBUG("Delay compensation thread stopped");
-}
 
 
-void Delays::getNextDelays(Matrix<MVDirection> &directions, Matrix<double> &delays)
-{
-  ASSERTSTR(directions.num_elements() == itsNrBeams * (itsMaxNrTABs + 1),
-	    directions.num_elements() << " == " << itsNrBeams << "*" << (itsMaxNrTABs + 1));
+    void Delays::mainLoop()
+    {
+#if defined HAVE_BGP_ION
+      doNotRunOnCore0();
+#endif
 
-  ASSERTSTR(delays.num_elements() == itsNrBeams * (itsMaxNrTABs + 1),
-	    delays.num_elements() << " == " << itsNrBeams << "*" << (itsMaxNrTABs + 1));
+      LOG_DEBUG("Delay compensation thread running");
 
-  ASSERT(itsThread);
+#if defined HAVE_BGP_ION
+      runOnCore0();
+#endif
 
-  bufferUsed.down();
+      init();
 
-  if (stop)
-    THROW(GPUProcException, "Cannot obtain delays -- delay thread stopped running");
+      // the current time, in samples
+      int64 currentTime = itsStartTime;
 
-  // copy the directions at itsBuffer[head] into the provided buffer,
-  // and calculate the respective delays
-  for (unsigned b = 0; b < itsNrBeams; b ++) {
-    for (unsigned p = 0; p < itsNrTABs[b] + 1; p ++) {
-      const MVDirection &dir = itsBuffer[head][b][p];
+      try {
+        while (!stop) {
+          bufferFree.down(itsNrCalcDelays);
 
-      directions[b][p] = dir;
-      delays[b][p] = dir * itsPhasePositionDiff * (1.0 / speedOfLight);
-    }  
-  }
+          itsDelayTimer.start();
 
-  // increment the head pointer
-  if (++ head == bufferSize)
-    head = 0;
+          // Calculate itsNrCalcDelays seconds worth of delays. Technically, we do not have
+          // to calculate that many at the end of the run, but there is no need to
+          // prevent the few excess delays from being calculated.
 
-  bufferFree.up();
-}
+          {
+            ScopedLock lock(casacoreMutex);
+            ScopedDelayCancellation dc;
 
+            // For each given moment in time ...
+            for (uint i = 0; i < itsNrCalcDelays; i++) {
+              // Set the instant in time in the itsFrame (40587 modify Julian day number = 00:00:00 January 1, 1970, GMT)
+              itsFrame.resetEpoch(toUTC(currentTime));
 
-void Delays::setBeamDirections(const Parset &parset)
-{
-  // TODO: For now, we include pencil beams for all regular beams,
-  // and use the pencil beam offsets as offsets in J2000.
-  // To do the coordinates properly, the offsets should be applied
-  // in today's coordinates (JMEAN/JTRUE?), not J2000.
-  
-  itsBeamDirections.resize(itsNrBeams, itsMaxNrTABs + 1);
-  itsDirectionTypes.resize(itsNrBeams);
+              // Check whether we will store results in a valid place
+              ASSERTSTR(tail < bufferSize, tail << " < " << bufferSize);
 
-  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-    const string type = toUpper(parset.getBeamDirectionType(beam));
+              // For each given direction in the sky ...
+              for (uint b = 0; b < itsNrBeams; b++) {
+                MDirection::Convert &converter = itsConverters[itsDirectionTypes[b]];
 
-    if (!MDirection::getType(itsDirectionTypes[beam], type))
-      THROW(GPUProcException, "Beam direction type unknown: " << type);
-  }
+                for (uint p = 0; p < itsNrTABs[b] + 1; p++) {
+                  // Define the astronomical direction as a J2000 direction.
+                  MVDirection &sky = itsBeamDirections[b][p];
 
-  // Get the source directions from the parameter set. 
-  // Split the \a dir vector into separate Direction objects.
-  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
-    const vector<double> beamDir = parset.getBeamDirection(beam);
-    const BeamCoordinates& TABs = parset.TABs(beam);
+                  // Convert this direction, using the conversion engine.
+                  MDirection dir = converter(sky);
 
-    // add central beam coordinates for non-beamforming pipelines
-    itsBeamDirections[beam][0] = MVDirection(beamDir[0], beamDir[1]);
+                  // Add to the return vector
+                  itsBuffer[tail][b][p] = dir.getValue();
+                }
+              }
 
-    for (unsigned pencil = 0; pencil < itsNrTABs[beam]; pencil ++) {
-      // obtain pencil coordinate
-      const BeamCoord3D &pencilCoord = TABs[pencil];
+              // Advance time for the next calculation
+              currentTime += itsNrSamplesPerSec;
 
-      // apply angle modification
-      const double angle1 = beamDir[0] + pencilCoord[0];
-      const double angle2 = beamDir[1] + pencilCoord[1];
+              // Advance to the next result set.
+              // since bufferSize % itsNrCalcDelays == 0, wrap
+              // around can only occur between runs
+              ++tail;
+            }
+          }
+          // check for wrap around for the next run
+          if (tail >= bufferSize)
+            tail = 0;
 
-      // store beam
-      itsBeamDirections[beam][pencil + 1] = MVDirection(angle1, angle2);
+          itsDelayTimer.stop();
+
+          bufferUsed.up(itsNrCalcDelays);
+        }
+      } catch (AipsError &ex) {
+        // trigger getNextDelays and force it to stop
+        stop = true;
+        bufferUsed.up(1);
+
+        THROW(GPUProcException, "AipsError: " << ex.what());
+      }
+
+      LOG_DEBUG("Delay compensation thread stopped");
     }
-  }
-}
 
 
-void Delays::setPositionDiff(const Parset &parset)
-{
-  // Calculate the station to reference station position difference of apply station.
-  
-  // Station positions must be given in ITRF
-  string str = toUpper(parset.positionType());
+    void Delays::getNextDelays(Matrix<MVDirection> &directions, Matrix<double> &delays)
+    {
+      ASSERTSTR(directions.num_elements() == itsNrBeams * (itsMaxNrTABs + 1),
+                directions.num_elements() << " == " << itsNrBeams << "*" << (itsMaxNrTABs + 1));
 
-  if (str != "ITRF")
-    THROW(GPUProcException, "OLAP.DelayComp.positionType must be ITRF");
+      ASSERTSTR(delays.num_elements() == itsNrBeams * (itsMaxNrTABs + 1),
+                delays.num_elements() << " == " << itsNrBeams << "*" << (itsMaxNrTABs + 1));
 
-  // Get the antenna positions from the parameter set. The antenna
-  // positions are stored as one large vector of doubles.
-  const MVPosition pRef(parset.getRefPhaseCentre());
-  const MVPosition phaseCentre(parset.getPhaseCentreOf(itsStationName));
+      ASSERT(itsThread);
 
-  itsPhaseCentre = MPosition(phaseCentre, MPosition::ITRF);
-  itsPhasePositionDiff = phaseCentre - pRef;
-}
+      bufferUsed.down();
 
-} // namespace RTCP
+      if (stop)
+        THROW(GPUProcException, "Cannot obtain delays -- delay thread stopped running");
+
+      // copy the directions at itsBuffer[head] into the provided buffer,
+      // and calculate the respective delays
+      for (unsigned b = 0; b < itsNrBeams; b++) {
+        for (unsigned p = 0; p < itsNrTABs[b] + 1; p++) {
+          const MVDirection &dir = itsBuffer[head][b][p];
+
+          directions[b][p] = dir;
+          delays[b][p] = dir * itsPhasePositionDiff * (1.0 / speedOfLight);
+        }
+      }
+
+      // increment the head pointer
+      if (++head == bufferSize)
+        head = 0;
+
+      bufferFree.up();
+    }
+
+
+    void Delays::setBeamDirections(const Parset &parset)
+    {
+      // TODO: For now, we include pencil beams for all regular beams,
+      // and use the pencil beam offsets as offsets in J2000.
+      // To do the coordinates properly, the offsets should be applied
+      // in today's coordinates (JMEAN/JTRUE?), not J2000.
+
+      itsBeamDirections.resize(itsNrBeams, itsMaxNrTABs + 1);
+      itsDirectionTypes.resize(itsNrBeams);
+
+      for (unsigned beam = 0; beam < itsNrBeams; beam++) {
+        const string type = toUpper(parset.getBeamDirectionType(beam));
+
+        if (!MDirection::getType(itsDirectionTypes[beam], type))
+          THROW(GPUProcException, "Beam direction type unknown: " << type);
+      }
+
+      // Get the source directions from the parameter set.
+      // Split the \a dir vector into separate Direction objects.
+      for (unsigned beam = 0; beam < itsNrBeams; beam++) {
+        const vector<double> beamDir = parset.getBeamDirection(beam);
+        const BeamCoordinates& TABs = parset.TABs(beam);
+
+        // add central beam coordinates for non-beamforming pipelines
+        itsBeamDirections[beam][0] = MVDirection(beamDir[0], beamDir[1]);
+
+        for (unsigned pencil = 0; pencil < itsNrTABs[beam]; pencil++) {
+          // obtain pencil coordinate
+          const BeamCoord3D &pencilCoord = TABs[pencil];
+
+          // apply angle modification
+          const double angle1 = beamDir[0] + pencilCoord[0];
+          const double angle2 = beamDir[1] + pencilCoord[1];
+
+          // store beam
+          itsBeamDirections[beam][pencil + 1] = MVDirection(angle1, angle2);
+        }
+      }
+    }
+
+
+    void Delays::setPositionDiff(const Parset &parset)
+    {
+      // Calculate the station to reference station position difference of apply station.
+
+      // Station positions must be given in ITRF
+      string str = toUpper(parset.positionType());
+
+      if (str != "ITRF")
+        THROW(GPUProcException, "OLAP.DelayComp.positionType must be ITRF");
+
+      // Get the antenna positions from the parameter set. The antenna
+      // positions are stored as one large vector of doubles.
+      const MVPosition pRef(parset.getRefPhaseCentre());
+      const MVPosition phaseCentre(parset.getPhaseCentreOf(itsStationName));
+
+      itsPhaseCentre = MPosition(phaseCentre, MPosition::ITRF);
+      itsPhasePositionDiff = phaseCentre - pRef;
+    }
+
+  } // namespace RTCP
 } // namespace LOFAR

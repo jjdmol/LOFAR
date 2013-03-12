@@ -27,7 +27,7 @@
 //#include "UnitTests/AMD_FFT_Test.h"
 #include "UnitTests/FIR_FilterTest.h"
 
-//#include  <UnitTest++.h>  
+//#include  <UnitTest++.h>
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
@@ -38,52 +38,52 @@ Exception::TerminateHandler t(OpenCL_Support::terminate);
 int main(int argc, char **argv)
 {
 
-    INIT_LOGGER("RTCP");
-    std::cout << "running ..." << std::endl;
+  INIT_LOGGER("RTCP");
+  std::cout << "running ..." << std::endl;
 
-    if (argc < 2)
-    {
-        std::cerr << "usage: " << argv[0] << " parset" << std::endl;
-        return 1;
-    }
+  if (argc < 2)
+  {
+    std::cerr << "usage: " << argv[0] << " parset" << std::endl;
+    return 1;
+  }
 
-    Parset ps(argv[1]);
+  Parset ps(argv[1]);
 
-    // TODO: defines to vars + loop over val ranges.
-    std::cout << "Obs ps: nSt=" << ps.nrStations() << " nPol=" << NR_POLARIZATIONS
-              << " nSampPerCh=" << ps.nrSamplesPerChannel() << " nChPerSb="
-              << ps.nrChannelsPerSubband() << " nTaps=" << ps.nrPPFTaps()
-              << " nBitsPerSamp=" << ps.nrBitsPerSample() << std::endl;
-
-
-    (FIR_FilterTest)(ps);
-    (FFT_Test)(ps);
-    //(AMD_FFT_Test)(ps);
-
-    //(CorrelatorTest)(ps);       //needs parset AARTFAAC!!
-    //(CorrelateRectangleTest)(ps); //needs parset AARTFAAC!!
-
-    //works with all parsets
-    //Correlate unittest 
-    (CorrelateTriangleTest)(ps);
-
-    ////UHEP unittest
-    (UHEP_BeamFormerTest)(ps);
-    (UHEP_TransposeTest)(ps);
-    (UHEP_TriggerTest)(ps);
-
-    //// beamformed unittest 
-    (IncoherentStokesTest)(ps);
-    (IntToFloatTest)(ps);
-    (BeamFormerTest)(ps);
-    (BeamFormerTransposeTest)(ps);
-    (DedispersionChirpTest)(ps);
-    (CoherentStokesTest)(ps);
+  // TODO: defines to vars + loop over val ranges.
+  std::cout << "Obs ps: nSt=" << ps.nrStations() << " nPol=" << NR_POLARIZATIONS
+            << " nSampPerCh=" << ps.nrSamplesPerChannel() << " nChPerSb="
+            << ps.nrChannelsPerSubband() << " nTaps=" << ps.nrPPFTaps()
+            << " nBitsPerSamp=" << ps.nrBitsPerSample() << std::endl;
 
 
-    //the actual unittests!
+  (FIR_FilterTest)(ps);
+  (FFT_Test)(ps);
+  //(AMD_FFT_Test)(ps);
 
-    return 0;
-    //return UnitTest::RunAllTests();
-    
+  //(CorrelatorTest)(ps);       //needs parset AARTFAAC!!
+  //(CorrelateRectangleTest)(ps); //needs parset AARTFAAC!!
+
+  //works with all parsets
+  //Correlate unittest
+  (CorrelateTriangleTest)(ps);
+
+  ////UHEP unittest
+  (UHEP_BeamFormerTest)(ps);
+  (UHEP_TransposeTest)(ps);
+  (UHEP_TriggerTest)(ps);
+
+  //// beamformed unittest
+  (IncoherentStokesTest)(ps);
+  (IntToFloatTest)(ps);
+  (BeamFormerTest)(ps);
+  (BeamFormerTransposeTest)(ps);
+  (DedispersionChirpTest)(ps);
+  (CoherentStokesTest)(ps);
+
+
+  //the actual unittests!
+
+  return 0;
+  //return UnitTest::RunAllTests();
+
 }

@@ -5,7 +5,8 @@
 #include <Common/SystemCallException.h>
 #include <sys/epoll.h>
 
-class Poll: protected FileDescriptorBasedStream {
+class Poll : protected FileDescriptorBasedStream
+{
 public:
   Poll();
 

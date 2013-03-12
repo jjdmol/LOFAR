@@ -29,80 +29,82 @@
 #include <vector>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-struct SubbandMetaData
+namespace LOFAR
 {
-  public:
-    SubbandMetaData(unsigned nrTABs);
+  namespace RTCP
+  {
 
-    struct beamInfo {
-      float delayAtBegin;
-      float delayAfterEnd;
-      double beamDirectionAtBegin[3];
-      double beamDirectionAfterEnd[3];
+    struct SubbandMetaData
+    {
+    public:
+      SubbandMetaData(unsigned nrTABs);
+
+      struct beamInfo {
+        float delayAtBegin;
+        float delayAfterEnd;
+        double beamDirectionAtBegin[3];
+        double beamDirectionAfterEnd[3];
+      };
+
+      // delays for all directions
+      beamInfo stationBeam;
+      std::vector<beamInfo> TABs;
+
+      // flag set.
+      SparseSet<unsigned> flags;
+
+      void read(Stream *str);
+      void write(Stream *str) const;
+
+      static const size_t MAXFLAGSIZE = 132;
     };
 
-    // delays for all directions
-    beamInfo stationBeam;
-    std::vector<beamInfo> TABs;
 
-    // flag set. 
-    SparseSet<unsigned> flags;
- 
-    void read(Stream *str);
-    void write(Stream *str) const;
-
-    static const size_t MAXFLAGSIZE = 132;
-};
+    inline SubbandMetaData::SubbandMetaData(unsigned nrTABs)
+      :
+      TABs(nrTABs)
+    {
+    }
 
 
-inline SubbandMetaData::SubbandMetaData(unsigned nrTABs)
-: 
-  TABs(nrTABs)
-{
-}
+    inline void SubbandMetaData::read(Stream *str)
+    {
+      // read station beam
+      str->read(&stationBeam, sizeof stationBeam);
+
+      // read TABs
+      size_t nrTABs;
+      str->read(&nrTABs, sizeof nrTABs);
+      TABs.resize(nrTABs);
+      str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
+
+      // read flags
+      vector<char> flagsBuffer(MAXFLAGSIZE);
+      str->read(&flagsBuffer[0], flagsBuffer.size());
+      flags.unmarshall(&flagsBuffer[0]);
+    }
 
 
-inline void SubbandMetaData::read(Stream *str)
-{
-  // read station beam
-  str->read(&stationBeam, sizeof stationBeam);
+    inline void SubbandMetaData::write(Stream *str) const
+    {
+      // write station beam
+      str->write(&stationBeam, sizeof stationBeam);
 
-  // read TABs
-  size_t nrTABs;
-  str->read(&nrTABs, sizeof nrTABs);
-  TABs.resize(nrTABs);
-  str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
+      // write TABs
+      size_t nrTABs = TABs.size();
+      str->write(&nrTABs, sizeof nrTABs);
+      str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
 
-  // read flags
-  vector<char> flagsBuffer(MAXFLAGSIZE);
-  str->read(&flagsBuffer[0], flagsBuffer.size());
-  flags.unmarshall(&flagsBuffer[0]);
-}
+      // write flags
+      vector<char> flagsBuffer(MAXFLAGSIZE);
 
+      ssize_t size = flags.marshall(&flagsBuffer[0], flagsBuffer.size());
+      ASSERT(size >= 0);
 
-inline void SubbandMetaData::write(Stream *str) const
-{
-  // write station beam
-  str->write(&stationBeam, sizeof stationBeam);
+      str->write(&flagsBuffer[0], flagsBuffer.size());
+    }
 
-  // write TABs
-  size_t nrTABs = TABs.size();
-  str->write(&nrTABs, sizeof nrTABs);
-  str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
-
-  // write flags
-  vector<char> flagsBuffer(MAXFLAGSIZE);
-
-  ssize_t size = flags.marshall(&flagsBuffer[0], flagsBuffer.size());
-  ASSERT(size >= 0);
-
-  str->write(&flagsBuffer[0], flagsBuffer.size());
-}
-
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
-#endif 
+#endif

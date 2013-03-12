@@ -7,27 +7,29 @@
 #include <vector>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-// Polarizations are separated, otherwise the buffers do not fit in memory.
-
-class TransposedBeamFormedData: public SampleData<fcomplex,3,1>
+namespace LOFAR
 {
-  public:
-    typedef SampleData<fcomplex,3,1> SuperType;
+  namespace RTCP
+  {
 
-    TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration);
-};
+    // Polarizations are separated, otherwise the buffers do not fit in memory.
+
+    class TransposedBeamFormedData : public SampleData<fcomplex,3,1>
+    {
+    public:
+      typedef SampleData<fcomplex,3,1> SuperType;
+
+      TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration);
+    };
 
 
-inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration)
-:
-  SuperType(boost::extents[nrSubbands][nrChannels][nrSamplesPerIntegration | 2], boost::extents[1])
-{
-}
+    inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration)
+      :
+      SuperType(boost::extents[nrSubbands][nrChannels][nrSamplesPerIntegration | 2], boost::extents[1])
+    {
+    }
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

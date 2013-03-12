@@ -10,16 +10,16 @@ float2 cmul(float2 a, float2 b)
 
 
 __kernel void complexVoltages(__global void *complexVoltagesPtr,
-			      __global const void *correctedDataPtr,
-			      __global const void *weightsPtr)
+                              __global const void *correctedDataPtr,
+                              __global const void *weightsPtr)
 {
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
-  CorrectedDataType   correctedData   = (CorrectedDataType) correctedDataPtr;
-  WeightsType	      weights	      = (WeightsType) weightsPtr;
+  CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
+  WeightsType weights = (WeightsType) weightsPtr;
 
-  uint first_tab	= 3 * get_local_id(0);
-  uint first_station	= 6 * get_local_id(1);
-  uint channel		= get_global_id(2);
+  uint first_tab = 3 * get_local_id(0);
+  uint first_station = 6 * get_local_id(1);
+  uint channel = get_global_id(2);
 
   bool lastGroupOfStations = first_station + 6 == NR_STATIONS;
 
@@ -52,7 +52,7 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
     local_sums[2][0][get_local_id(0)] = (float4) { 0, 0, 0, 0 };
   }
 
-  for (int time = 0 - get_local_id(1); time < (int) (NR_TIMES_PER_BLOCK + NR_STATIONS / 6 - 1 - get_local_id(1)); time ++) {
+  for (int time = 0 - get_local_id(1); time < (int) (NR_TIMES_PER_BLOCK + NR_STATIONS / 6 - 1 - get_local_id(1)); time++) {
     bool validTime = time >= 0 && time < NR_TIMES_PER_BLOCK;
 
     if (validTime) {
@@ -120,13 +120,13 @@ __kernel void complexVoltages(__global void *complexVoltagesPtr,
 
     if (validTime) {
       if (lastGroupOfStations) {
-	(*complexVoltages)[channel][time][first_tab + 0] = sum_0;
-	(*complexVoltages)[channel][time][first_tab + 1] = sum_1;
-	(*complexVoltages)[channel][time][first_tab + 2] = sum_2;
+        (*complexVoltages)[channel][time][first_tab + 0] = sum_0;
+        (*complexVoltages)[channel][time][first_tab + 1] = sum_1;
+        (*complexVoltages)[channel][time][first_tab + 2] = sum_2;
       } else {
-	local_sums[0][get_local_id(1) + 1][get_local_id(0)] = sum_0;
-	local_sums[1][get_local_id(1) + 1][get_local_id(0)] = sum_1;
-	local_sums[2][get_local_id(1) + 1][get_local_id(0)] = sum_2;
+        local_sums[0][get_local_id(1) + 1][get_local_id(0)] = sum_0;
+        local_sums[1][get_local_id(1) + 1][get_local_id(0)] = sum_1;
+        local_sums[2][get_local_id(1) + 1][get_local_id(0)] = sum_2;
       }
     }
 

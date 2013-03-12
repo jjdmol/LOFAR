@@ -16,7 +16,8 @@ using namespace LOFAR;
 using namespace RTCP;
 using namespace std;
 
-void test_simple() {
+void test_simple()
+{
   // Test whether executing an application works. The
   // communication protocol after startup is ignored.
 
@@ -38,7 +39,8 @@ void test_simple() {
   }
 }
 
-void test_protocol() {
+void test_protocol()
+{
   // Test whether we follow the communication protocol
   // as expected by Storage_main.
 
@@ -74,7 +76,8 @@ void test_protocol() {
   }
 }
 
-int main() {
+int main()
+{
   INIT_LOGGER( "tStorageProcesses" );
 
   // prevent stalls

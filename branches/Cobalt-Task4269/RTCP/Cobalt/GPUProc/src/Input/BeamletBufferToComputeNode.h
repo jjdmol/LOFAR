@@ -1,4 +1,4 @@
-//#  BeamletBufferToComputeNode.h: Catch RSP ethernet frames and synchronize RSP inputs 
+//#  BeamletBufferToComputeNode.h: Catch RSP ethernet frames and synchronize RSP inputs
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -43,85 +43,92 @@
 #include <vector>
 
 
-namespace LOFAR {
-namespace RTCP {
+namespace LOFAR
+{
+  namespace RTCP
+  {
 
-template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
-  public:
-    BeamletBufferToComputeNode(const Parset &ps, const std::string &stationName, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned firstBlockNumber);
-    ~BeamletBufferToComputeNode();
+    template <typename SAMPLE_TYPE>
+    class BeamletBufferToComputeNode
+    {
+    public:
+      BeamletBufferToComputeNode(const Parset &ps, const std::string &stationName, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned firstBlockNumber);
+      ~BeamletBufferToComputeNode();
 
-    struct header {
-      unsigned subband;
-      size_t nrSamples;
-      size_t sampleSize;
-      size_t nrTABs;
+      struct header {
+        unsigned subband;
+        size_t nrSamples;
+        size_t sampleSize;
+        size_t nrTABs;
+      };
+
+      void                         process( Stream *stream );
+
+      TimeStamp                    getCurrentTimeStamp() const
+      {
+        return itsCurrentTimeStamp;
+      }
+
+    private:
+      static void                  limitFlagsLength(SparseSet<unsigned> &flags);
+
+      void                         computeDelays(), computeNextDelays();
+
+      void                         sendSubband( Stream *stream, unsigned subband );
+
+
+      void                         startTransaction();
+      void                         writeLogMessage() const;
+      void                         toStream( Stream *stream );
+      void                         stopTransaction();
+
+      std::string itsLogPrefix;
+
+      bool itsDelayCompensation;
+      bool itsCorrectClocks;
+      bool itsNeedDelays;
+      bool itsIsRealTime;
+      std::vector<unsigned>        itsSubbandToSAPmapping;
+      std::vector<unsigned>        itsSubbandToRSPboardMapping;
+      std::vector<unsigned>        itsSubbandToRSPslotMapping;
+
+      const Parset                 &itsPS;
+
+      TimeStamp itsCurrentTimeStamp;
+
+      Matrix<double>               itsDelaysAtBegin;
+      Matrix<double>               itsDelaysAfterEnd;
+      Matrix<casa::MVDirection>    itsBeamDirectionsAtBegin;
+      Matrix<casa::MVDirection>    itsBeamDirectionsAfterEnd;
+
+      unsigned itsMaxNetworkDelay;                   // in samples
+      unsigned itsNrSubbands;
+      unsigned itsNrSamplesPerSubband;
+      unsigned itsNrHistorySamples;
+      unsigned itsNrRSPboards;
+      unsigned itsNrBeams;
+      unsigned itsMaxNrTABs;
+      std::vector<unsigned>        itsNrTABs;
+
+      const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &itsBeamletBuffers;
+      SmartPtr<Delays>             itsDelays;
+      double itsSubbandBandwidth, itsSampleDuration;
+      double itsClockCorrectionTime;
+
+      std::vector<TimeStamp>       itsDelayedStamps;
+      std::vector<signed int>      itsSamplesDelay;
+      boost::multi_array<SparseSet<unsigned>, 2> itsFlags;
+
+      Matrix<float>                itsFineDelaysAtBegin, itsFineDelaysAfterEnd;
+
+      static const unsigned itsMaximumDelay = 1000;      // samples; roughly 1500 km
+      TimeStamp itsCorrelationStartTime;
+      WallClockTime itsWallClock;
+
+      NSTimer itsDelayTimer;
     };
-  
-    void			 process( Stream *stream );
 
-    TimeStamp                    getCurrentTimeStamp() const { return itsCurrentTimeStamp; }
-    
-  private:
-    static void			 limitFlagsLength(SparseSet<unsigned> &flags);
-
-    void			 computeDelays(), computeNextDelays();
-
-    void                         sendSubband( Stream *stream, unsigned subband );
-    
-
-    void			 startTransaction();
-    void			 writeLogMessage() const;
-    void			 toStream( Stream *stream );
-    void			 stopTransaction();
-
-    std::string                  itsLogPrefix;
-
-    bool			 itsDelayCompensation;
-    bool			 itsCorrectClocks;
-    bool			 itsNeedDelays;
-    bool			 itsIsRealTime;
-    std::vector<unsigned>	 itsSubbandToSAPmapping;
-    std::vector<unsigned>	 itsSubbandToRSPboardMapping;
-    std::vector<unsigned>	 itsSubbandToRSPslotMapping;
-
-    const Parset		 &itsPS;
-    
-    TimeStamp			 itsCurrentTimeStamp;
-   
-    Matrix<double>		 itsDelaysAtBegin;
-    Matrix<double>		 itsDelaysAfterEnd;
-    Matrix<casa::MVDirection>	 itsBeamDirectionsAtBegin;
-    Matrix<casa::MVDirection>	 itsBeamDirectionsAfterEnd;
-    
-    unsigned			 itsMaxNetworkDelay; // in samples
-    unsigned                     itsNrSubbands;
-    unsigned			 itsNrSamplesPerSubband;
-    unsigned			 itsNrHistorySamples;
-    unsigned			 itsNrRSPboards;
-    unsigned			 itsNrBeams;
-    unsigned			 itsMaxNrTABs;
-    std::vector<unsigned>	 itsNrTABs;
-
-    const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &itsBeamletBuffers;
-    SmartPtr<Delays>		 itsDelays;
-    double			 itsSubbandBandwidth, itsSampleDuration;
-    double			 itsClockCorrectionTime;
-
-    std::vector<TimeStamp>	 itsDelayedStamps;
-    std::vector<signed int>	 itsSamplesDelay;
-    boost::multi_array<SparseSet<unsigned>, 2> itsFlags;
-
-    Matrix<float>		 itsFineDelaysAtBegin, itsFineDelaysAfterEnd;
-
-    static const unsigned	 itsMaximumDelay = 1000; // samples; roughly 1500 km
-    TimeStamp			 itsCorrelationStartTime;
-    WallClockTime		 itsWallClock;
-
-    NSTimer			 itsDelayTimer;
-};
-
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

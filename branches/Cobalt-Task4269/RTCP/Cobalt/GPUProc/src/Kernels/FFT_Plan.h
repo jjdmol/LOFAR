@@ -9,16 +9,16 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
-    {
+  namespace RTCP
+  {
 
-        class FFT_Plan
-        {
-        public:
-            FFT_Plan(cl::Context &context, unsigned fftSize);
-            ~FFT_Plan();
-            clFFT_Plan plan;
-        };
-    }
+    class FFT_Plan
+    {
+    public:
+      FFT_Plan(cl::Context &context, unsigned fftSize);
+      ~FFT_Plan();
+      clFFT_Plan plan;
+    };
+  }
 }
 #endif

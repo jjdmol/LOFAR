@@ -25,25 +25,27 @@
 #include <OutputProc/MSWriterNull.h>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-
-MSWriterNull::MSWriterNull ()
+namespace LOFAR
 {
-}
+  namespace RTCP
+  {
 
 
-MSWriterNull::~MSWriterNull()
-{
-}
+    MSWriterNull::MSWriterNull ()
+    {
+    }
 
 
-void MSWriterNull::write(StreamableData *)
-{
-}
+    MSWriterNull::~MSWriterNull()
+    {
+    }
 
 
-} // namespace RTCP
+    void MSWriterNull::write(StreamableData *)
+    {
+    }
+
+
+  } // namespace RTCP
 } // namespace LOFAR
 

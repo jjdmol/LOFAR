@@ -1,19 +1,19 @@
 #include "math.cl"
 
-#define NR_BASELINES	 (NR_STATIONS * (NR_STATIONS + 1) / 2)
+#define NR_BASELINES     (NR_STATIONS * (NR_STATIONS + 1) / 2)
 
 #if NR_STATIONS == 288
 #if defined NVIDIA_CUDA
-#define BLOCK_SIZE	 8
+#define BLOCK_SIZE       8
 #elif NR_SAMPLES_PER_CHANNEL % 6 == 0
-#define BLOCK_SIZE	 6
+#define BLOCK_SIZE       6
 #else
-#define BLOCK_SIZE	 4
+#define BLOCK_SIZE       4
 #endif
 #elif NR_SAMPLES_PER_CHANNEL % 24 == 0
-#define BLOCK_SIZE	 24
+#define BLOCK_SIZE       24
 #else
-#define BLOCK_SIZE	 16
+#define BLOCK_SIZE       16
 #endif
 
 typedef __global fcomplex2 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
@@ -23,18 +23,18 @@ typedef __global fcomplex4 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
 //#pragma OPENCL EXTENSION cl_intel_printf : enable
 
 __kernel void correlate(__global void *visibilitiesPtr,
-			__global const void *correctedDataPtr
-)
+                        __global const void *correctedDataPtr
+                        )
 {
-  VisibilitiesType visibilities	= (VisibilitiesType) visibilitiesPtr;
+  VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
   __local float samples[4][BLOCK_SIZE][NR_STATIONS | 1]; // avoid power-of-2
 
-  uint baseline	    = get_global_id(0);
-  uint channel	    = get_global_id(1) + 1;
-  uint stat_0	    = convert_uint_rtz(sqrt(convert_float(8 * baseline + 1)) - 0.99999f) / 2;
-  uint stat_A	    = baseline - stat_0 * (stat_0 + 1) / 2;
+  uint baseline = get_global_id(0);
+  uint channel = get_global_id(1) + 1;
+  uint stat_0 = convert_uint_rtz(sqrt(convert_float(8 * baseline + 1)) - 0.99999f) / 2;
+  uint stat_A = baseline - stat_0 * (stat_0 + 1) / 2;
 
   float4 visR = (float4) 0, visI = (float4) 0;
 
@@ -56,8 +56,8 @@ __kernel void correlate(__global void *visibilitiesPtr,
 
     // compute correlations
     if (baseline < NR_BASELINES) {
-      for (uint time = 0; time < BLOCK_SIZE; time ++) {
-	fcomplex2 sample_1, sample_A;
+      for (uint time = 0; time < BLOCK_SIZE; time++) {
+        fcomplex2 sample_1, sample_A;
         sample_1.x = samples[0][time][stat_0];
         sample_1.y = samples[1][time][stat_0];
         sample_1.z = samples[2][time][stat_0];
@@ -67,10 +67,10 @@ __kernel void correlate(__global void *visibilitiesPtr,
         sample_A.z = samples[2][time][stat_A];
         sample_A.w = samples[3][time][stat_A];
 
-	visR += sample_1.xxzz * sample_A.xzxz;
-	visI += sample_1.yyww * sample_A.xzxz;
-	visR += sample_1.yyww * sample_A.ywyw;
-	visI -= sample_1.xxzz * sample_A.ywyw;
+        visR += sample_1.xxzz * sample_A.xzxz;
+        visI += sample_1.yyww * sample_A.xzxz;
+        visR += sample_1.yyww * sample_A.ywyw;
+        visI -= sample_1.xxzz * sample_A.ywyw;
       }
     }
 
@@ -84,21 +84,21 @@ __kernel void correlate(__global void *visibilitiesPtr,
 
 
 __kernel void correlate_2x2(__global void *visibilitiesPtr,
-			    __global const void *correctedDataPtr
-)
+                            __global const void *correctedDataPtr
+                            )
 {
-  VisibilitiesType visibilities	= (VisibilitiesType) visibilitiesPtr;
+  VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
   __local fcomplex2 samples[2][BLOCK_SIZE][(NR_STATIONS + 1) / 2 | 1]; // avoid power-of-2
 
-  uint channel	    = get_global_id(1) + 1;
-  uint block	    = get_global_id(0);
+  uint channel = get_global_id(1) + 1;
+  uint block = get_global_id(0);
 
-  uint x	    = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
-  uint y	    = block - x * (x + 1) / 2;
+  uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
+  uint y = block - x * (x + 1) / 2;
 
-  uint stat_A	    = 2 * x;
+  uint stat_A = 2 * x;
 
   bool compute_correlations = stat_A < NR_STATIONS;
 
@@ -120,29 +120,29 @@ __kernel void correlate_2x2(__global void *visibilitiesPtr,
     barrier(CLK_LOCAL_MEM_FENCE);
 
     if (compute_correlations) {
-      for (uint time = 0; time < BLOCK_SIZE; time ++) {
-	float4 sample_0 = samples[0][time][y];
-	float4 sample_A = samples[0][time][x];
-	float4 sample_B = samples[1][time][x];
-	float4 sample_1 = samples[1][time][y];
+      for (uint time = 0; time < BLOCK_SIZE; time++) {
+        float4 sample_0 = samples[0][time][y];
+        float4 sample_A = samples[0][time][x];
+        float4 sample_B = samples[1][time][x];
+        float4 sample_1 = samples[1][time][y];
 
-	vis_0A_r += sample_0.xxzz * sample_A.xzxz;
-	vis_0A_i += sample_0.yyww * sample_A.xzxz;
-	vis_0B_r += sample_0.xxzz * sample_B.xzxz;
-	vis_0B_i += sample_0.yyww * sample_B.xzxz;
-	vis_1A_r += sample_1.xxzz * sample_A.xzxz;
-	vis_1A_i += sample_1.yyww * sample_A.xzxz;
-	vis_1B_r += sample_1.xxzz * sample_B.xzxz;
-	vis_1B_i += sample_1.yyww * sample_B.xzxz;
+        vis_0A_r += sample_0.xxzz * sample_A.xzxz;
+        vis_0A_i += sample_0.yyww * sample_A.xzxz;
+        vis_0B_r += sample_0.xxzz * sample_B.xzxz;
+        vis_0B_i += sample_0.yyww * sample_B.xzxz;
+        vis_1A_r += sample_1.xxzz * sample_A.xzxz;
+        vis_1A_i += sample_1.yyww * sample_A.xzxz;
+        vis_1B_r += sample_1.xxzz * sample_B.xzxz;
+        vis_1B_i += sample_1.yyww * sample_B.xzxz;
 
-	vis_0A_r += sample_0.yyww * sample_A.ywyw;
-	vis_0A_i -= sample_0.xxzz * sample_A.ywyw;
-	vis_0B_r += sample_0.yyww * sample_B.ywyw;
-	vis_0B_i -= sample_0.xxzz * sample_B.ywyw;
-	vis_1A_r += sample_1.yyww * sample_A.ywyw;
-	vis_1A_i -= sample_1.xxzz * sample_A.ywyw;
-	vis_1B_r += sample_1.yyww * sample_B.ywyw;
-	vis_1B_i -= sample_1.xxzz * sample_B.ywyw;
+        vis_0A_r += sample_0.yyww * sample_A.ywyw;
+        vis_0A_i -= sample_0.xxzz * sample_A.ywyw;
+        vis_0B_r += sample_0.yyww * sample_B.ywyw;
+        vis_0B_i -= sample_0.xxzz * sample_B.ywyw;
+        vis_1A_r += sample_1.yyww * sample_A.ywyw;
+        vis_1A_i -= sample_1.xxzz * sample_A.ywyw;
+        vis_1B_r += sample_1.yyww * sample_B.ywyw;
+        vis_1B_i -= sample_1.xxzz * sample_B.ywyw;
       }
     }
 
@@ -150,9 +150,9 @@ __kernel void correlate_2x2(__global void *visibilitiesPtr,
   }
 
   // write visibilities
-  uint stat_0	    = 2 * y;
-  uint stat_1	    = stat_0 + 1;
-  uint stat_B	    = stat_A + 1;
+  uint stat_0 = 2 * y;
+  uint stat_1 = stat_0 + 1;
+  uint stat_B = stat_A + 1;
   bool do_baseline_0A = stat_A < NR_STATIONS;
   bool do_baseline_0B = stat_B < NR_STATIONS;
   bool do_baseline_1A = do_baseline_0A && stat_1 <= stat_A;
@@ -181,21 +181,21 @@ __kernel void correlate_2x2(__global void *visibilitiesPtr,
 
 
 __kernel void correlate_3x3(__global void *visibilitiesPtr,
-			    __global const void *correctedDataPtr
-)
+                            __global const void *correctedDataPtr
+                            )
 {
-  VisibilitiesType visibilities	= (VisibilitiesType) visibilitiesPtr;
+  VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
   __local fcomplex2 samples[3][BLOCK_SIZE][(NR_STATIONS + 2) / 3 | 1]; // avoid power-of-2
 
-  uint channel	    = get_global_id(1) + 1;
-  uint block	    = get_global_id(0);
+  uint channel = get_global_id(1) + 1;
+  uint block = get_global_id(0);
 
-  uint x	    = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
-  uint y	    = block - x * (x + 1) / 2;
+  uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
+  uint y = block - x * (x + 1) / 2;
 
-  uint stat_A	    = 3 * x;
+  uint stat_A = 3 * x;
 
   bool compute_correlations = stat_A < NR_STATIONS;
 
@@ -222,51 +222,51 @@ __kernel void correlate_3x3(__global void *visibilitiesPtr,
     barrier(CLK_LOCAL_MEM_FENCE);
 
     if (compute_correlations) {
-      for (uint time = 0; time < BLOCK_SIZE; time ++) {
-	fcomplex2 sample_0 = samples[0][time][y];
-	fcomplex2 sample_A = samples[0][time][x];
-	fcomplex2 sample_B = samples[1][time][x];
-	fcomplex2 sample_C = samples[2][time][x];
-	fcomplex2 sample_1 = samples[1][time][y];
-	fcomplex2 sample_2 = samples[2][time][y];
+      for (uint time = 0; time < BLOCK_SIZE; time++) {
+        fcomplex2 sample_0 = samples[0][time][y];
+        fcomplex2 sample_A = samples[0][time][x];
+        fcomplex2 sample_B = samples[1][time][x];
+        fcomplex2 sample_C = samples[2][time][x];
+        fcomplex2 sample_1 = samples[1][time][y];
+        fcomplex2 sample_2 = samples[2][time][y];
 
-	vis_0A_r += sample_0.xxzz * sample_A.xzxz;
-	vis_0A_i += sample_0.yyww * sample_A.xzxz;
-	vis_0B_r += sample_0.xxzz * sample_B.xzxz;
-	vis_0B_i += sample_0.yyww * sample_B.xzxz;
-	vis_0C_r += sample_0.xxzz * sample_C.xzxz;
-	vis_0C_i += sample_0.yyww * sample_C.xzxz;
-	vis_1A_r += sample_1.xxzz * sample_A.xzxz;
-	vis_1A_i += sample_1.yyww * sample_A.xzxz;
-	vis_1B_r += sample_1.xxzz * sample_B.xzxz;
-	vis_1B_i += sample_1.yyww * sample_B.xzxz;
-	vis_1C_r += sample_1.xxzz * sample_C.xzxz;
-	vis_1C_i += sample_1.yyww * sample_C.xzxz;
-	vis_2A_r += sample_2.xxzz * sample_A.xzxz;
-	vis_2A_i += sample_2.yyww * sample_A.xzxz;
-	vis_2B_r += sample_2.xxzz * sample_B.xzxz;
-	vis_2B_i += sample_2.yyww * sample_B.xzxz;
-	vis_2C_r += sample_2.xxzz * sample_C.xzxz;
-	vis_2C_i += sample_2.yyww * sample_C.xzxz;
+        vis_0A_r += sample_0.xxzz * sample_A.xzxz;
+        vis_0A_i += sample_0.yyww * sample_A.xzxz;
+        vis_0B_r += sample_0.xxzz * sample_B.xzxz;
+        vis_0B_i += sample_0.yyww * sample_B.xzxz;
+        vis_0C_r += sample_0.xxzz * sample_C.xzxz;
+        vis_0C_i += sample_0.yyww * sample_C.xzxz;
+        vis_1A_r += sample_1.xxzz * sample_A.xzxz;
+        vis_1A_i += sample_1.yyww * sample_A.xzxz;
+        vis_1B_r += sample_1.xxzz * sample_B.xzxz;
+        vis_1B_i += sample_1.yyww * sample_B.xzxz;
+        vis_1C_r += sample_1.xxzz * sample_C.xzxz;
+        vis_1C_i += sample_1.yyww * sample_C.xzxz;
+        vis_2A_r += sample_2.xxzz * sample_A.xzxz;
+        vis_2A_i += sample_2.yyww * sample_A.xzxz;
+        vis_2B_r += sample_2.xxzz * sample_B.xzxz;
+        vis_2B_i += sample_2.yyww * sample_B.xzxz;
+        vis_2C_r += sample_2.xxzz * sample_C.xzxz;
+        vis_2C_i += sample_2.yyww * sample_C.xzxz;
 
-	vis_0A_r += sample_0.yyww * sample_A.ywyw;
-	vis_0A_i -= sample_0.xxzz * sample_A.ywyw;
-	vis_0B_r += sample_0.yyww * sample_B.ywyw;
-	vis_0B_i -= sample_0.xxzz * sample_B.ywyw;
-	vis_0C_r += sample_0.yyww * sample_C.ywyw;
-	vis_0C_i -= sample_0.xxzz * sample_C.ywyw;
-	vis_1A_r += sample_1.yyww * sample_A.ywyw;
-	vis_1A_i -= sample_1.xxzz * sample_A.ywyw;
-	vis_1B_r += sample_1.yyww * sample_B.ywyw;
-	vis_1B_i -= sample_1.xxzz * sample_B.ywyw;
-	vis_1C_r += sample_1.yyww * sample_C.ywyw;
-	vis_1C_i -= sample_1.xxzz * sample_C.ywyw;
-	vis_2A_r += sample_2.yyww * sample_A.ywyw;
-	vis_2A_i -= sample_2.xxzz * sample_A.ywyw;
-	vis_2B_r += sample_2.yyww * sample_B.ywyw;
-	vis_2B_i -= sample_2.xxzz * sample_B.ywyw;
-	vis_2C_r += sample_2.yyww * sample_C.ywyw;
-	vis_2C_i -= sample_2.xxzz * sample_C.ywyw;
+        vis_0A_r += sample_0.yyww * sample_A.ywyw;
+        vis_0A_i -= sample_0.xxzz * sample_A.ywyw;
+        vis_0B_r += sample_0.yyww * sample_B.ywyw;
+        vis_0B_i -= sample_0.xxzz * sample_B.ywyw;
+        vis_0C_r += sample_0.yyww * sample_C.ywyw;
+        vis_0C_i -= sample_0.xxzz * sample_C.ywyw;
+        vis_1A_r += sample_1.yyww * sample_A.ywyw;
+        vis_1A_i -= sample_1.xxzz * sample_A.ywyw;
+        vis_1B_r += sample_1.yyww * sample_B.ywyw;
+        vis_1B_i -= sample_1.xxzz * sample_B.ywyw;
+        vis_1C_r += sample_1.yyww * sample_C.ywyw;
+        vis_1C_i -= sample_1.xxzz * sample_C.ywyw;
+        vis_2A_r += sample_2.yyww * sample_A.ywyw;
+        vis_2A_i -= sample_2.xxzz * sample_A.ywyw;
+        vis_2B_r += sample_2.yyww * sample_B.ywyw;
+        vis_2B_i -= sample_2.xxzz * sample_B.ywyw;
+        vis_2C_r += sample_2.yyww * sample_C.ywyw;
+        vis_2C_i -= sample_2.xxzz * sample_C.ywyw;
       }
     }
 
@@ -274,11 +274,11 @@ __kernel void correlate_3x3(__global void *visibilitiesPtr,
   }
 
   // write visibilities
-  uint stat_0	    = 3 * y;
-  uint stat_1	    = stat_0 + 1;
-  uint stat_2	    = stat_0 + 2;
-  uint stat_B	    = stat_A + 1;
-  uint stat_C	    = stat_A + 2;
+  uint stat_0 = 3 * y;
+  uint stat_1 = stat_0 + 1;
+  uint stat_2 = stat_0 + 2;
+  uint stat_B = stat_A + 1;
+  uint stat_C = stat_A + 2;
 
   bool do_baseline_0A = stat_0 < NR_STATIONS && stat_A < NR_STATIONS && stat_0 <= stat_A;
   bool do_baseline_0B = stat_0 < NR_STATIONS && stat_B < NR_STATIONS && stat_0 <= stat_B;
@@ -338,21 +338,21 @@ __kernel void correlate_3x3(__global void *visibilitiesPtr,
 
 
 __kernel void correlate_4x4(__global void *visibilitiesPtr,
-			    __global const void *correctedDataPtr
-)
+                            __global const void *correctedDataPtr
+                            )
 {
-  VisibilitiesType visibilities	= (VisibilitiesType) visibilitiesPtr;
+  VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
   __local fcomplex2 samples[4][BLOCK_SIZE][(NR_STATIONS + 3) / 4 | 1]; // avoid power-of-2
 
-  uint channel	    = get_global_id(1) + 1;
-  uint block	    = get_global_id(0);
+  uint channel = get_global_id(1) + 1;
+  uint block = get_global_id(0);
 
-  uint x	    = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
-  uint y	    = block - x * (x + 1) / 2;
+  uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
+  uint y = block - x * (x + 1) / 2;
 
-  uint stat_A	    = 4 * x;
+  uint stat_A = 4 * x;
 
   bool compute_correlations = stat_A < NR_STATIONS;
 
@@ -386,81 +386,81 @@ __kernel void correlate_4x4(__global void *visibilitiesPtr,
     barrier(CLK_LOCAL_MEM_FENCE);
 
     if (compute_correlations) {
-      for (uint time = 0; time < BLOCK_SIZE; time ++) {
-	fcomplex2 sample_0 = samples[0][time][y];
-	fcomplex2 sample_A = samples[0][time][x];
-	fcomplex2 sample_B = samples[1][time][x];
-	fcomplex2 sample_C = samples[2][time][x];
-	fcomplex2 sample_D = samples[3][time][x];
-	fcomplex2 sample_1 = samples[1][time][y];
-	fcomplex2 sample_2 = samples[2][time][y];
-	fcomplex2 sample_3 = samples[3][time][y];
+      for (uint time = 0; time < BLOCK_SIZE; time++) {
+        fcomplex2 sample_0 = samples[0][time][y];
+        fcomplex2 sample_A = samples[0][time][x];
+        fcomplex2 sample_B = samples[1][time][x];
+        fcomplex2 sample_C = samples[2][time][x];
+        fcomplex2 sample_D = samples[3][time][x];
+        fcomplex2 sample_1 = samples[1][time][y];
+        fcomplex2 sample_2 = samples[2][time][y];
+        fcomplex2 sample_3 = samples[3][time][y];
 
-	vis_0A_r += sample_0.xxzz * sample_A.xzxz;
-	vis_0A_i += sample_0.yyww * sample_A.xzxz;
-	vis_0B_r += sample_0.xxzz * sample_B.xzxz;
-	vis_0B_i += sample_0.yyww * sample_B.xzxz;
-	vis_0C_r += sample_0.xxzz * sample_C.xzxz;
-	vis_0C_i += sample_0.yyww * sample_C.xzxz;
-	vis_0D_r += sample_0.xxzz * sample_D.xzxz;
-	vis_0D_i += sample_0.yyww * sample_D.xzxz;
-	vis_1A_r += sample_1.xxzz * sample_A.xzxz;
-	vis_1A_i += sample_1.yyww * sample_A.xzxz;
-	vis_1B_r += sample_1.xxzz * sample_B.xzxz;
-	vis_1B_i += sample_1.yyww * sample_B.xzxz;
-	vis_1C_r += sample_1.xxzz * sample_C.xzxz;
-	vis_1C_i += sample_1.yyww * sample_C.xzxz;
-	vis_1D_r += sample_1.xxzz * sample_D.xzxz;
-	vis_1D_i += sample_1.yyww * sample_D.xzxz;
-	vis_2A_r += sample_2.xxzz * sample_A.xzxz;
-	vis_2A_i += sample_2.yyww * sample_A.xzxz;
-	vis_2B_r += sample_2.xxzz * sample_B.xzxz;
-	vis_2B_i += sample_2.yyww * sample_B.xzxz;
-	vis_2C_r += sample_2.xxzz * sample_C.xzxz;
-	vis_2C_i += sample_2.yyww * sample_C.xzxz;
-	vis_2D_r += sample_2.xxzz * sample_D.xzxz;
-	vis_2D_i += sample_2.yyww * sample_D.xzxz;
-	vis_3A_r += sample_3.xxzz * sample_A.xzxz;
-	vis_3A_i += sample_3.yyww * sample_A.xzxz;
-	vis_3B_r += sample_3.xxzz * sample_B.xzxz;
-	vis_3B_i += sample_3.yyww * sample_B.xzxz;
-	vis_3C_r += sample_3.xxzz * sample_C.xzxz;
-	vis_3C_i += sample_3.yyww * sample_C.xzxz;
-	vis_3D_r += sample_3.xxzz * sample_D.xzxz;
-	vis_3D_i += sample_3.yyww * sample_D.xzxz;
+        vis_0A_r += sample_0.xxzz * sample_A.xzxz;
+        vis_0A_i += sample_0.yyww * sample_A.xzxz;
+        vis_0B_r += sample_0.xxzz * sample_B.xzxz;
+        vis_0B_i += sample_0.yyww * sample_B.xzxz;
+        vis_0C_r += sample_0.xxzz * sample_C.xzxz;
+        vis_0C_i += sample_0.yyww * sample_C.xzxz;
+        vis_0D_r += sample_0.xxzz * sample_D.xzxz;
+        vis_0D_i += sample_0.yyww * sample_D.xzxz;
+        vis_1A_r += sample_1.xxzz * sample_A.xzxz;
+        vis_1A_i += sample_1.yyww * sample_A.xzxz;
+        vis_1B_r += sample_1.xxzz * sample_B.xzxz;
+        vis_1B_i += sample_1.yyww * sample_B.xzxz;
+        vis_1C_r += sample_1.xxzz * sample_C.xzxz;
+        vis_1C_i += sample_1.yyww * sample_C.xzxz;
+        vis_1D_r += sample_1.xxzz * sample_D.xzxz;
+        vis_1D_i += sample_1.yyww * sample_D.xzxz;
+        vis_2A_r += sample_2.xxzz * sample_A.xzxz;
+        vis_2A_i += sample_2.yyww * sample_A.xzxz;
+        vis_2B_r += sample_2.xxzz * sample_B.xzxz;
+        vis_2B_i += sample_2.yyww * sample_B.xzxz;
+        vis_2C_r += sample_2.xxzz * sample_C.xzxz;
+        vis_2C_i += sample_2.yyww * sample_C.xzxz;
+        vis_2D_r += sample_2.xxzz * sample_D.xzxz;
+        vis_2D_i += sample_2.yyww * sample_D.xzxz;
+        vis_3A_r += sample_3.xxzz * sample_A.xzxz;
+        vis_3A_i += sample_3.yyww * sample_A.xzxz;
+        vis_3B_r += sample_3.xxzz * sample_B.xzxz;
+        vis_3B_i += sample_3.yyww * sample_B.xzxz;
+        vis_3C_r += sample_3.xxzz * sample_C.xzxz;
+        vis_3C_i += sample_3.yyww * sample_C.xzxz;
+        vis_3D_r += sample_3.xxzz * sample_D.xzxz;
+        vis_3D_i += sample_3.yyww * sample_D.xzxz;
 
-	vis_0A_r += sample_0.yyww * sample_A.ywyw;
-	vis_0A_i -= sample_0.xxzz * sample_A.ywyw;
-	vis_0B_r += sample_0.yyww * sample_B.ywyw;
-	vis_0B_i -= sample_0.xxzz * sample_B.ywyw;
-	vis_0C_r += sample_0.yyww * sample_C.ywyw;
-	vis_0C_i -= sample_0.xxzz * sample_C.ywyw;
-	vis_0D_r += sample_0.yyww * sample_D.ywyw;
-	vis_0D_i -= sample_0.xxzz * sample_D.ywyw;
-	vis_1A_r += sample_1.yyww * sample_A.ywyw;
-	vis_1A_i -= sample_1.xxzz * sample_A.ywyw;
-	vis_1B_r += sample_1.yyww * sample_B.ywyw;
-	vis_1B_i -= sample_1.xxzz * sample_B.ywyw;
-	vis_1C_r += sample_1.yyww * sample_C.ywyw;
-	vis_1C_i -= sample_1.xxzz * sample_C.ywyw;
-	vis_1D_r += sample_1.yyww * sample_D.ywyw;
-	vis_1D_i -= sample_1.xxzz * sample_D.ywyw;
-	vis_2A_r += sample_2.yyww * sample_A.ywyw;
-	vis_2A_i -= sample_2.xxzz * sample_A.ywyw;
-	vis_2B_r += sample_2.yyww * sample_B.ywyw;
-	vis_2B_i -= sample_2.xxzz * sample_B.ywyw;
-	vis_2C_r += sample_2.yyww * sample_C.ywyw;
-	vis_2C_i -= sample_2.xxzz * sample_C.ywyw;
-	vis_2D_r += sample_2.yyww * sample_D.ywyw;
-	vis_2D_i -= sample_2.xxzz * sample_D.ywyw;
-	vis_3A_r += sample_3.yyww * sample_A.ywyw;
-	vis_3A_i -= sample_3.xxzz * sample_A.ywyw;
-	vis_3B_r += sample_3.yyww * sample_B.ywyw;
-	vis_3B_i -= sample_3.xxzz * sample_B.ywyw;
-	vis_3C_r += sample_3.yyww * sample_C.ywyw;
-	vis_3C_i -= sample_3.xxzz * sample_C.ywyw;
-	vis_3D_r += sample_3.yyww * sample_D.ywyw;
-	vis_3D_i -= sample_3.xxzz * sample_D.ywyw;
+        vis_0A_r += sample_0.yyww * sample_A.ywyw;
+        vis_0A_i -= sample_0.xxzz * sample_A.ywyw;
+        vis_0B_r += sample_0.yyww * sample_B.ywyw;
+        vis_0B_i -= sample_0.xxzz * sample_B.ywyw;
+        vis_0C_r += sample_0.yyww * sample_C.ywyw;
+        vis_0C_i -= sample_0.xxzz * sample_C.ywyw;
+        vis_0D_r += sample_0.yyww * sample_D.ywyw;
+        vis_0D_i -= sample_0.xxzz * sample_D.ywyw;
+        vis_1A_r += sample_1.yyww * sample_A.ywyw;
+        vis_1A_i -= sample_1.xxzz * sample_A.ywyw;
+        vis_1B_r += sample_1.yyww * sample_B.ywyw;
+        vis_1B_i -= sample_1.xxzz * sample_B.ywyw;
+        vis_1C_r += sample_1.yyww * sample_C.ywyw;
+        vis_1C_i -= sample_1.xxzz * sample_C.ywyw;
+        vis_1D_r += sample_1.yyww * sample_D.ywyw;
+        vis_1D_i -= sample_1.xxzz * sample_D.ywyw;
+        vis_2A_r += sample_2.yyww * sample_A.ywyw;
+        vis_2A_i -= sample_2.xxzz * sample_A.ywyw;
+        vis_2B_r += sample_2.yyww * sample_B.ywyw;
+        vis_2B_i -= sample_2.xxzz * sample_B.ywyw;
+        vis_2C_r += sample_2.yyww * sample_C.ywyw;
+        vis_2C_i -= sample_2.xxzz * sample_C.ywyw;
+        vis_2D_r += sample_2.yyww * sample_D.ywyw;
+        vis_2D_i -= sample_2.xxzz * sample_D.ywyw;
+        vis_3A_r += sample_3.yyww * sample_A.ywyw;
+        vis_3A_i -= sample_3.xxzz * sample_A.ywyw;
+        vis_3B_r += sample_3.yyww * sample_B.ywyw;
+        vis_3B_i -= sample_3.xxzz * sample_B.ywyw;
+        vis_3C_r += sample_3.yyww * sample_C.ywyw;
+        vis_3C_i -= sample_3.xxzz * sample_C.ywyw;
+        vis_3D_r += sample_3.yyww * sample_D.ywyw;
+        vis_3D_i -= sample_3.xxzz * sample_D.ywyw;
       }
     }
 
@@ -468,13 +468,13 @@ __kernel void correlate_4x4(__global void *visibilitiesPtr,
   }
 
   // write visibilities
-  uint stat_0	    = 4 * y;
-  uint stat_1	    = stat_0 + 1;
-  uint stat_2	    = stat_0 + 2;
-  uint stat_3	    = stat_0 + 3;
-  uint stat_B	    = stat_A + 1;
-  uint stat_C	    = stat_A + 2;
-  uint stat_D	    = stat_A + 3;
+  uint stat_0 = 4 * y;
+  uint stat_1 = stat_0 + 1;
+  uint stat_2 = stat_0 + 2;
+  uint stat_3 = stat_0 + 3;
+  uint stat_B = stat_A + 1;
+  uint stat_C = stat_A + 2;
+  uint stat_D = stat_A + 3;
 
   bool do_baseline_0A = stat_0 < NR_STATIONS && stat_A < NR_STATIONS && stat_0 <= stat_A;
   bool do_baseline_0B = stat_0 < NR_STATIONS && stat_B < NR_STATIONS && stat_0 <= stat_B;

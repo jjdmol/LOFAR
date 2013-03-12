@@ -1,6 +1,6 @@
 typedef __global struct {
   float mean, variance, bestValue;
-  uint  bestApproxIndex;
+  uint bestApproxIndex;
 } (*TriggerInfoType)[NR_TABS];
 
 typedef __global float (*InvFIRfilteredDataType)[NR_TABS][NR_POLARIZATIONS][16][16][NR_SAMPLES_PER_SUBBAND / 4][16];
@@ -10,10 +10,10 @@ typedef __global float (*InvFIRfilteredDataType)[NR_TABS][NR_POLARIZATIONS][16][
 float2 computeThreshold(__global const float *invFIRfilteredDataPtr)
 {
   float M = 0, S = 0;
-  uint  count = 0;
+  uint count = 0;
 
   for (uint i = get_local_id(0); i < sizeof(InvFIRfilteredDataType) / sizeof(float); i += get_local_size(0)) {
-    ++ count;
+    ++count;
     float sample = invFIRfilteredDataPtr[i];
     float t = sample - M;
     M += t / count;
@@ -26,7 +26,7 @@ float2 computeThreshold(__global const float *invFIRfilteredDataPtr)
 
   local_MS[get_local_id(0)] = (float2) (M, S);
 
-  for (uint i = get_local_size(0); (i >>= 1) != 0;) {
+  for (uint i = get_local_size(0); (i >>= 1) != 0; ) {
     barrier(CLK_LOCAL_MEM_FENCE);
 
     if (get_local_id(0) < i)
@@ -43,15 +43,15 @@ float2 computeThreshold(__global const float *invFIRfilteredDataPtr)
 
 
 __kernel void trigger(__global const void *triggerInfoPtr,
-		      __global const float *invFIRfilteredDataPtr)
+                      __global const float *invFIRfilteredDataPtr)
 {
-  TriggerInfoType	 triggerInfo = (TriggerInfoType) triggerInfoPtr;
+  TriggerInfoType triggerInfo = (TriggerInfoType) triggerInfoPtr;
   InvFIRfilteredDataType invFIRfilteredData = (InvFIRfilteredDataType) invFIRfilteredDataPtr;
 
   uint minor = get_local_id(0);
   uint major = get_local_id(1);
-  uint me    = 16 * major + minor;
-  uint tab   = get_global_id(2);
+  uint me = 16 * major + minor;
+  uint tab = get_global_id(2);
 
   float mean = 0, sumsqdiff = 0;
   float count = 0;
@@ -61,7 +61,7 @@ __kernel void trigger(__global const void *triggerInfoPtr,
     float16 f16[16][16];
     struct {
       float means[256], sumsqdiffs[256], values[256];
-      uint  approxIndices[256];
+      uint approxIndices[256];
     } best;
   } tmp;
 
@@ -71,11 +71,11 @@ __kernel void trigger(__global const void *triggerInfoPtr,
   float bestValue = 0;
   uint bestApproxIndex = 0;
 
-  for (uint time = 0; time < 1024 * NR_SAMPLES_PER_SUBBAND / 4096; time ++) {
-    for (uint i = 0; i < 16; i ++) {
+  for (uint time = 0; time < 1024 * NR_SAMPLES_PER_SUBBAND / 4096; time++) {
+    for (uint i = 0; i < 16; i++) {
       float sampleX = (*invFIRfilteredData)[tab][0][i][major][time][minor];
       float sampleY = (*invFIRfilteredData)[tab][1][i][major][time][minor];
-      float power   = sampleX * sampleX + sampleY * sampleY;
+      float power = sampleX * sampleX + sampleY * sampleY;
       tmp.f[i][major][minor] = power;
 
       count += 1.0f;
@@ -126,7 +126,7 @@ __kernel void trigger(__global const void *triggerInfoPtr,
   tmp.best.values[me] = bestValue;
   tmp.best.approxIndices[me] = bestApproxIndex;
 
-  for (uint i = 256; (i >>= 1) != 0;) {
+  for (uint i = 256; (i >>= 1) != 0; ) {
     if (me < i) {
       float meanA = tmp.best.means[me], meanB = tmp.best.means[me + i];
       float sumsqdiffA = tmp.best.sumsqdiffs[me], sumsqdiffB = tmp.best.sumsqdiffs[me + i];
@@ -136,8 +136,8 @@ __kernel void trigger(__global const void *triggerInfoPtr,
       count *= 2;
 
       if (tmp.best.values[me] < tmp.best.values[me + i]) {
-	tmp.best.values[me] = tmp.best.values[me + i];
-	tmp.best.approxIndices[me] = tmp.best.approxIndices[me + i];
+        tmp.best.values[me] = tmp.best.values[me + i];
+        tmp.best.approxIndices[me] = tmp.best.approxIndices[me + i];
       }
     }
 

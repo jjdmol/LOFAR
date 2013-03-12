@@ -27,83 +27,85 @@
 #include <string>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-class CN_Command
+namespace LOFAR
 {
-  public:
-    enum Command {
-      PREPROCESS = 0x406e7404,
-      PROCESS,
-      POSTPROCESS,
-      STOP,
-    };
-    
-		 CN_Command();
-		 CN_Command(enum Command, unsigned param = 0);
+  namespace RTCP
+  {
 
-    enum Command &value();
-    unsigned &param();
-
-    void	 read(Stream *);
-    void	 write(Stream *) const;
-
-    std::string  name() const;
-
-  private:
-    struct MarshalledData
+    class CN_Command
     {
-      enum Command value;
-      unsigned param;
-    } itsMarshalledData;
-};
+    public:
+      enum Command {
+        PREPROCESS = 0x406e7404,
+        PROCESS,
+        POSTPROCESS,
+        STOP,
+      };
+
+      CN_Command();
+      CN_Command(enum Command, unsigned param = 0);
+
+      enum Command &value();
+      unsigned &param();
+
+      void         read(Stream *);
+      void         write(Stream *) const;
+
+      std::string  name() const;
+
+    private:
+      struct MarshalledData
+      {
+        enum Command value;
+        unsigned param;
+      } itsMarshalledData;
+    };
 
 
-inline CN_Command::CN_Command()
-{
-}
+    inline CN_Command::CN_Command()
+    {
+    }
 
-inline CN_Command::CN_Command(enum Command value, unsigned param)
-{
-  itsMarshalledData.value = value;
-  itsMarshalledData.param = param;
-}
+    inline CN_Command::CN_Command(enum Command value, unsigned param)
+    {
+      itsMarshalledData.value = value;
+      itsMarshalledData.param = param;
+    }
 
-inline enum CN_Command::Command &CN_Command::value()
-{
-  return itsMarshalledData.value;
-}
+    inline enum CN_Command::Command &CN_Command::value()
+    {
+      return itsMarshalledData.value;
+    }
 
-inline unsigned &CN_Command::param()
-{
-  return itsMarshalledData.param;
-}
+    inline unsigned &CN_Command::param()
+    {
+      return itsMarshalledData.param;
+    }
 
-inline void CN_Command::read(Stream *str)
-{
-  str->read(&itsMarshalledData, sizeof itsMarshalledData);
-}
+    inline void CN_Command::read(Stream *str)
+    {
+      str->read(&itsMarshalledData, sizeof itsMarshalledData);
+    }
 
-inline void CN_Command::write(Stream *str) const
-{
-  str->write(&itsMarshalledData, sizeof itsMarshalledData);
-}
+    inline void CN_Command::write(Stream *str) const
+    {
+      str->write(&itsMarshalledData, sizeof itsMarshalledData);
+    }
 
-inline std::string CN_Command::name() const
-{
-  switch(itsMarshalledData.value) {
-    case PREPROCESS:  return "PREPROCESS";
-    case PROCESS:     return "PROCESS";
-    case POSTPROCESS: return "POSTPROCESS";
-    case STOP:        return "STOP";
-  }
+    inline std::string CN_Command::name() const
+    {
+      switch(itsMarshalledData.value) {
+      case PREPROCESS:  return "PREPROCESS";
+      case PROCESS:     return "PROCESS";
+      case POSTPROCESS: return "POSTPROCESS";
+      case STOP:        return "STOP";
+      }
 
-  return "BAD COMMAND";
-}
+      return "BAD COMMAND";
+    }
 
 
-} // namespace RTCP
+  } // namespace RTCP
 } // namespace LOFAR
 
-#endif 
+#endif

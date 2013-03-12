@@ -10,19 +10,19 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+
+    class DedispersionChirpKernel : public Kernel
     {
+    public:
+      DedispersionChirpKernel(const Parset &ps, cl::Program &program,
+                              cl::CommandQueue &queue, cl::Buffer &buffer, cl::Buffer &DMs);
 
-        class DedispersionChirpKernel : public Kernel
-        {
-        public:
-            DedispersionChirpKernel(const Parset &ps, cl::Program &program,
-                cl::CommandQueue &queue, cl::Buffer &buffer, cl::Buffer &DMs);
+      void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, double subbandFrequency);
 
-            void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, double subbandFrequency);
+    };
 
-        };
-
-    }
+  }
 }
 #endif

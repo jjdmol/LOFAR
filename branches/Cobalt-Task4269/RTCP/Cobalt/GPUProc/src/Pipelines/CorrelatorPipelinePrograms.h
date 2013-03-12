@@ -7,7 +7,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP 
+  namespace RTCP
   {
     struct CorrelatorPipelinePrograms
     {

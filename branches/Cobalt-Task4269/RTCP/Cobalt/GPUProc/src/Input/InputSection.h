@@ -1,4 +1,4 @@
-//#  InputSection.h: Catch RSP ethernet frames and synchronize RSP inputs 
+//#  InputSection.h: Catch RSP ethernet frames and synchronize RSP inputs
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #define LOFAR_GPUPROC_INPUTSECTION_H
 
 // \file
-// Catch RSP ethernet frames and synchronize RSP inputs 
+// Catch RSP ethernet frames and synchronize RSP inputs
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -41,32 +41,35 @@
 #include <vector>
 
 
-namespace LOFAR {
-namespace RTCP {
-
-template <typename SAMPLE_TYPE> class InputSection
+namespace LOFAR
 {
-  public:
-							InputSection(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
-							~InputSection();
-  
-    std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > itsBeamletBuffers;
+  namespace RTCP
+  {
 
-  private:
-    void						createInputStreams(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
-    void						createInputThreads(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
+    template <typename SAMPLE_TYPE>
+    class InputSection
+    {
+    public:
+      InputSection(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
+      ~InputSection();
 
-    std::string						itsLogPrefix;
+      std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > itsBeamletBuffers;
 
-    std::vector<SmartPtr<Stream > >			itsInputStreams;
-    
-    unsigned						itsNrRSPboards;
-   
-    SmartPtr<LogThread>					itsLogThread;
-    std::vector<SmartPtr<InputThread<SAMPLE_TYPE> > >	itsInputThreads;
-};
+    private:
+      void                                                createInputStreams(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
+      void                                                createInputThreads(const Parset &, const std::vector<Parset::StationRSPpair> &inputs);
 
-} // namespace RTCP
+      std::string itsLogPrefix;
+
+      std::vector<SmartPtr<Stream > >                     itsInputStreams;
+
+      unsigned itsNrRSPboards;
+
+      SmartPtr<LogThread>                                 itsLogThread;
+      std::vector<SmartPtr<InputThread<SAMPLE_TYPE> > >   itsInputThreads;
+    };
+
+  } // namespace RTCP
 } // namespace LOFAR
 
 #endif

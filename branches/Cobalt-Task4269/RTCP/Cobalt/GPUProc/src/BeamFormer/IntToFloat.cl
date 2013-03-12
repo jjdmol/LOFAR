@@ -11,10 +11,10 @@ typedef __global float2 (*ConvertedDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_S
 
 
 __kernel void intToFloat(__global void *restrict convertedDataPtr,
-			 __global const void *restrict sampledDataPtr)
+                         __global const void *restrict sampledDataPtr)
 {
   ConvertedDataType convertedData = (ConvertedDataType) convertedDataPtr;
-  SampledDataType   sampledData   = (SampledDataType) sampledDataPtr;
+  SampledDataType sampledData = (SampledDataType) sampledDataPtr;
 
   uint station = get_global_id(1);
 

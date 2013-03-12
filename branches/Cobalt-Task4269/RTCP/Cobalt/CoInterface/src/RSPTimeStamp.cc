@@ -23,13 +23,15 @@
 #include <CoInterface/RSPTimeStamp.h>
 #include <Common/lofar_iostream.h>
 
-namespace LOFAR {
-namespace RTCP {
-
-ostream &operator << (ostream &os, const TimeStamp &ts)
+namespace LOFAR
 {
-  return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "]";
-}
+  namespace RTCP
+  {
 
-} // namespace RTCP
+    ostream &operator << (ostream &os, const TimeStamp &ts)
+    {
+      return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "]";
+    }
+
+  } // namespace RTCP
 } // namespace LOFAR

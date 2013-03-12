@@ -10,14 +10,14 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class UHEP_BeamFormerKernel : public Kernel
     {
-        class UHEP_BeamFormerKernel : public Kernel
-        {
-        public:
-            UHEP_BeamFormerKernel(const Parset &ps, cl::Program &program, 
-                cl::Buffer &devComplexVoltages, cl::Buffer &devInputSamples, cl::Buffer &devBeamFormerWeights);
-        };
-    }
+    public:
+      UHEP_BeamFormerKernel(const Parset &ps, cl::Program &program,
+                            cl::Buffer &devComplexVoltages, cl::Buffer &devInputSamples, cl::Buffer &devBeamFormerWeights);
+    };
+  }
 }
 #endif

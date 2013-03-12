@@ -37,9 +37,11 @@ using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 
-class TempFile {
+class TempFile
+{
 public:
-  TempFile( const string &dirname = "/tmp/") {
+  TempFile( const string &dirname = "/tmp/")
+  {
     char templ[1024];
     snprintf(templ, sizeof templ, "%stFastFileStreamXXXXXX", dirname.c_str());
 
@@ -47,7 +49,8 @@ public:
 
     filename = templ;
   }
-  ~TempFile() {
+  ~TempFile()
+  {
     if (filename != "") {
       close(fd);
       (void)unlink(filename.c_str());
@@ -134,7 +137,8 @@ void test_skip( size_t bytes1, size_t skip, size_t bytes2 )
   assert(filesize(tmpfile.filename) == bytes1 + skip + bytes2);
 }
 
-int main() {
+int main()
+{
   const size_t blocksize = FastFileStream::alignment;
 
   // test write()

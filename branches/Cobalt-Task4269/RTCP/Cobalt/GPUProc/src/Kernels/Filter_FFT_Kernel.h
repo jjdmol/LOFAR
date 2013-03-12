@@ -8,16 +8,16 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+  namespace RTCP
+  {
+    class Filter_FFT_Kernel : public FFT_Kernel
     {
-        class Filter_FFT_Kernel : public FFT_Kernel
-        {
-        public:
-            Filter_FFT_Kernel(const Parset &ps, cl::Context &context,
-                cl::Buffer &devFilteredData);
+    public:
+      Filter_FFT_Kernel(const Parset &ps, cl::Context &context,
+                        cl::Buffer &devFilteredData);
 
-        };
+    };
 
-    }
+  }
 }
 #endif

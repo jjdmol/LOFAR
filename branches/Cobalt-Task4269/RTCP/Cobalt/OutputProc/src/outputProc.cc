@@ -83,9 +83,9 @@ int main(int argc, char *argv[])
 
     LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3]);
 
-    int				          observationID = boost::lexical_cast<int>(argv[1]);
-    unsigned				  myRank = boost::lexical_cast<unsigned>(argv[2]);
-    bool				  isBigEndian = boost::lexical_cast<bool>(argv[3]);
+    int observationID = boost::lexical_cast<int>(argv[1]);
+    unsigned myRank = boost::lexical_cast<unsigned>(argv[2]);
+    bool isBigEndian = boost::lexical_cast<bool>(argv[3]);
 
     setIOpriority();
     setRTpriority();
@@ -111,8 +111,8 @@ int main(int argc, char *argv[])
 
       vector<SmartPtr<SubbandWriter> > subbandWriters;
 
-      for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType ++) {
-        for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr ++) {
+      for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++) {
+        for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr++) {
           if (parset.getHostName(outputType, streamNr) == myHostName) {
             unsigned writerNr = 0;
 
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
             }
           }
         }
-      }   
+      }
 
       // Add final meta data (broken tile information, etc)
       // that is obtained after the end of an observation.
