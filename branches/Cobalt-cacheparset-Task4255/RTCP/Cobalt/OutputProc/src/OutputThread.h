@@ -67,7 +67,6 @@ namespace LOFAR
       const unsigned itsStreamNr;
       const bool itsIsBigEndian;
       const std::string itsLogPrefix;
-      const bool itsCheckFakeData;
       const std::string itsTargetDirectory;
 
       Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;

@@ -147,6 +147,7 @@ namespace LOFAR
 
       vector<string>   emptyVectorString;
       vector<unsigned> emptyVectorUnsigned;
+      vector<double>   emptyVectorDouble;
 
       // Generic information
       settings.realTime = getBool("OLAP.realTime", false);
@@ -163,9 +164,11 @@ namespace LOFAR
         settings.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
       }
 
-      settings.corrections.delayCompensation = getBool("OLAP.delayCompensation", true);
-      settings.corrections.bandPass          = getBool("OLAP.correctBandPass", true);
-      settings.corrections.clock             = getBool("OLAP.correctClocks", true);
+      settings.corrections.bandPass = getBool("OLAP.correctBandPass", true);
+      settings.corrections.clock    = getBool("OLAP.correctClocks", true);
+
+      settings.delayCompensation.enabled              = getBool("OLAP.delayCompensation", true);
+      settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
 
       // Station information
       settings.antennaSet = getString("Observation.antennaSet", "LBA");
@@ -201,6 +204,7 @@ namespace LOFAR
         sap.direction.type   = getString(str(boost::format("Observation.Beam[%u].directionType") % i), "J2000");
         sap.direction.angle1 = getDouble(str(boost::format("Observation.Beam[%u].angle1") % i), 0.0);
         sap.direction.angle2 = getDouble(str(boost::format("Observation.Beam[%u].angle2") % i), 0.0);
+        sap.target           = getString(str(boost::format("Observation.Beam[%u].target") % i), "");
       }
 
       settings.anaBeam.enabled = settings.antennaSet.substr(0,3) == "HBA";
@@ -528,7 +532,7 @@ namespace LOFAR
 
     std::vector<double> Parset::getRefPhaseCentre() const
     {
-      return getDoubleVector("Observation.referencePhaseCenter");
+      return cache.delayCompensation.referencePhaseCenter;
     }
 
 
@@ -545,9 +549,7 @@ namespace LOFAR
 
     string Parset::beamTarget(unsigned beam) const
     {
-      string key = str(boost::format("Observation.Beam[%u].target") % beam);
-
-      return getString(key, "");
+      return cache.SAPs[beam].target;
     }
 
 
@@ -723,16 +725,6 @@ namespace LOFAR
         names[station] = cache.stations[station].name;
 
       return names;
-    }
-
-    bool Parset::hasStorage() const
-    {
-      return getString("OLAP.OLAP_Conn.IONProc_Storage_Transport") != "NULL";
-    }
-
-    string Parset::getTransportType(const string& prefix) const
-    {
-      return getString(prefix + "_Transport");
     }
 
     unsigned Parset::nrStations() const
@@ -933,16 +925,6 @@ namespace LOFAR
       return getBool("OLAP.CNProc.onlinePostCorrelationFlaggingDetectBrokenStations", false);
     }
 
-    bool Parset::fakeInputData() const
-    {
-      return getBool("OLAP.CNProc.fakeInputData", false);
-    }
-
-    bool Parset::checkFakeInputData() const
-    {
-      return getBool("OLAP.CNProc.checkFakeInputData", false);
-    }
-
     double Parset::CNintegrationTime() const
     {
       return nrSamplesPerSubband() / subbandBandwidth();
@@ -1032,7 +1014,7 @@ namespace LOFAR
 
     bool Parset::delayCompensation() const
     {
-      return cache.corrections.delayCompensation;
+      return cache.delayCompensation.enabled;
     }
 
     unsigned Parset::nrCalcDelays() const

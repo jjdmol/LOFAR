@@ -87,15 +87,20 @@ namespace LOFAR
       unsigned nrBitsPerSample;
 
       struct Corrections {
-        // Whether geometric delays should be compensated for
-        bool delayCompensation;
-
         // Whether the station band pass should be corrected for
         bool bandPass;
 
         // Whether the station clock offsets should be corrected for
         bool clock;
       } corrections;
+
+      struct DelayCompensation {
+        // Whether geometric delays should be compensated for
+        bool enabled;
+
+        // The ITRF position to compensate delays to
+        std::vector<double> referencePhaseCenter;
+      } delayCompensation;
 
       /*
        * Station information
@@ -143,6 +148,9 @@ namespace LOFAR
       struct SAP {
         // Direction in which the SAP points
         struct Direction direction;
+
+        // Name of target
+        std::string target;
       };
 
       // All station beams
@@ -272,15 +280,12 @@ namespace LOFAR
       bool                        correctClocks() const;
       double                      clockCorrectionTime(const std::string &station) const;
       bool                        correctBandPass() const;
-      bool                        hasStorage() const;
       std::string                 stationName(int index) const;
       int                         stationIndex(const std::string &name) const;
       std::vector<std::string>    allStationNames() const;
       unsigned                    getLofarStManVersion() const;
       std::vector<unsigned>       phaseOnePsets() const;
       std::vector<unsigned>       tabList() const;
-
-      std::string                 getTransportType(const std::string &prefix) const;
 
       bool                        outputCorrelatedData() const;
       bool                        outputBeamFormedData() const;
@@ -303,9 +308,6 @@ namespace LOFAR
       std::string getHostName(OutputType, unsigned streamNr) const;
       std::string getFileName(OutputType, unsigned streamNr) const;
       std::string getDirectoryName(OutputType, unsigned streamNr) const;
-
-      bool                        fakeInputData() const;
-      bool                        checkFakeInputData() const;
 
       std::string                 coherentStokes() const;
       std::string                 incoherentStokes() const;
