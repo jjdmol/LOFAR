@@ -20,8 +20,18 @@ namespace LOFAR
     class CorrelatedData : public StreamableData, public IntegratableData
     {
     public:
-      CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator & = heapAllocator, unsigned alignment = 512);
-      CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, std::complex<float> *visibilities, size_t nrVisibilities, Allocator & = heapAllocator, unsigned alignment = 512);
+      CorrelatedData(unsigned nrStations, 
+                     unsigned nrChannels, 
+                     unsigned maxNrValidSamples, 
+                     Allocator & = heapAllocator, 
+                     unsigned alignment = 512);
+      CorrelatedData(unsigned nrStations, 
+                     unsigned nrChannels, 
+                     unsigned maxNrValidSamples,
+                     std::complex<float> *visibilities,
+                     size_t nrVisibilities,
+                     Allocator & = heapAllocator, 
+                     unsigned alignment = 512);
 
       virtual IntegratableData &operator += (const IntegratableData &);
 

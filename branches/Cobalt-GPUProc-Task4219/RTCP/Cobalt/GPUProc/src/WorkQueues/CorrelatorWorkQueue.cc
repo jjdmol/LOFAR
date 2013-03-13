@@ -24,10 +24,11 @@ namespace LOFAR
   namespace  RTCP
   {
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset       &parset,
-                                             cl::Context &context, cl::Device  &device, unsigned gpuNumber,
+                                             cl::Context &context,
+                                             cl::Device  &device,
+                                             unsigned gpuNumber,
                                              CorrelatorPipelinePrograms & programs,
-                                             FilterBank &filterBank
-                                             )
+                                             FilterBank &filterBank)
       :
       WorkQueue( context, device, gpuNumber, parset),     
       devCorrectedData(context, 
@@ -116,19 +117,90 @@ namespace LOFAR
         bandPassCorrectionWeights.hostToDevice(CL_TRUE);
       }
     }
+      
+      void calculate_the_flags(const Parset &parset)
+      {
+      }
+        ////An array to store the flags converted to channels
+        //// This is a temporary scratch container: should be changed to a list??
+        //MultiDimArray<SparseSet<unsigned>, parset.nrChannelsPerSubband()> flagsPerChanel(boost::extents[parset.nrStations()][parset.nrChannelsPerSubband()]);
+
+        //// Calculate the log thingy of the number of channels. This is needed to convert the 
+        //// ranges to the different channels
+        //unsigned logNrChannels;
+        //for (logNrChannels = 0; 1U << logNrChannels != logNrChannels; logNrChannels ++)
+        //  ;
+
+        //// now loop all stations
+        //for (unsigned stat = 0; stat < parset.nrStations(); stat ++) 
+        //{
+        //  // get the flag ranges
+        //  const SparseSet<unsigned>::Ranges &ranges = inputSamplesFlaggedRangesPerStation[stat];
+        //  // loop
+        //  for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) 
+        //  {
+        //    // Magic
+        //    unsigned begin = ps.nrChannelsPerSubband() == 1 ? it->begin : std::max(0, (signed) (it->begin >> logNrChannels) - NR_TAPS + 1);
+        //    unsigned end   = std::min(itsNrSamplesPerIntegration, ((it->end - 1) >> logNrChannels) + 1);
+
+        //    for (unsigned ch = 0; ch < itsNrChannels; ch++) 
+        //    {
+        //      flagsPerChanel[ch][stat].include(begin, end);
+        //    }
+        //  }
+        //}
+
+    //  // loop the stations
+    //  for (unsigned stat2 = 0; stat2 < ps.nrStations(); stat2 ++) 
+    //  {
+    //    for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) 
+    //    {
+    //      //TODO:  Calculate the station, should be moved to helper function
+    //      unsigned bl  =  stat2 * (stat2 + 1) / 2 + stat1 ; //baseline(stat1, stat2); This function should be moved to a helper class
+
+    //      // TODO: is this correct? jan-David please validate
+    //      unsigned nrSamplesPerIntegration = (ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband(); 
+
+    //      // If there is a single channel then the index 0 contains real data
+    //      if (ps.nrChannelsPerSubband() == 1) 
+    //      {                                            
+    //        //The number of invalid (flagged) samples is the union of the flagged samples in the two stations
+    //        unsigned nrValidSamples = nrSamplesPerIntegration -
+    //          (inputSamplesFlaggedRangesPerStation[stat1] |
+    //          inputSamplesFlaggedRangesPerStation[stat2]).count();
+    //        fractionFlaggedPerBaseline[bl][0] = double(nrValidSamples) / nrSamplesPerIntegration;        // This is a overloaded bitwise compare.
+    //      } 
+    //      else //otherwise the index 0 contains garbage
+    //      {
+    //        // channel 0 does not contain valid data
+    //        fractionFlaggedPerBaseline[bl][0] = 1.0; 
+
+    //        // TODO: is this channel needed for at the entry point we dont have channels??
+    //        for (unsigned ch = 1; ch < ps.nrChannelsPerSubband(); ch ++) 
+    //        {
+    //          unsigned nrValidSamples = nrSamplesPerIntegration -
+    //            (inputSamplesFlaggedRangesPerStation[stat1] |
+    //            inputSamplesFlaggedRangesPerStation[stat2]).count();
+    //          fractionFlaggedPerBaseline[bl][ch] = double(nrValidSamples) / nrSamplesPerIntegration;
+    //        }
+    //      }
+    //    }
 
 
-    void CorrelatorWorkQueue::computeFlags(CorrelatedData &output)
+    //}
+
+
+    void computeFlags(const Parset& parset,
+                      WorkQueueInputData& inputData,
+                      CorrelatedData &output)
     {
+      size_t nChannels = parset.nrChannelsPerSubband();
+      size_t nIntegrationSteps = parset.integrationSteps();
       // TODO: base weights on flags
-
-      // Just set the weights to the total number of samples
-      size_t weight = ps.integrationSteps();
-      size_t n_ch = ps.nrChannelsPerSubband();
-
+      // Just set the weights to the total number of samples     
       for (size_t bl = 0; bl < output.itsNrBaselines; ++bl)
-        for (size_t ch = 0; ch < n_ch; ++ch)
-          output.setNrValidSamples(bl, ch, weight);
+        for (size_t ch = 0; ch < nChannels; ++ch)
+          output.setNrValidSamples(bl, ch, nIntegrationSteps);
     }
 
 
@@ -174,7 +246,7 @@ namespace LOFAR
       // background.
 
       // Propagate the flags
-      computeFlags(output);
+      computeFlags(ps, inputData, output);
 
       // Wait for the GPU to finish.
       timers["GPU - wait"]->start();
@@ -198,9 +270,11 @@ namespace LOFAR
       timers["GPU - total"]->stop();
 
       // Copy visibilities
-      //output.visibilities = visibilities; <<-- TODO: get this working?
+      //output.visibilities = visibilities; <<-- TODO: get this working? Rather not: Make it an explicit copy so :
+      // output.visibilities.copyFrom(visibilities)
       ASSERT(output.visibilities.num_elements() == visibilities.num_elements());
       memcpy(output.visibilities.origin(), visibilities.origin(), visibilities.bytesize());
+      // The flags should be copied here also
     }
 
 
@@ -232,6 +306,10 @@ namespace LOFAR
       // fill it with from the stream
       metaData.read(inputStream);
 
+      // save the flags to the input_data object, to allow
+      // transfer to output
+      inputFlags[stationIdx] = metaData.flags;
+      
       // flag the input data, contained in the meta data
       flagInputSamples(stationIdx, metaData);
 
@@ -251,10 +329,6 @@ namespace LOFAR
     void WorkQueueInputData::flagInputSamples(unsigned station,
                                               const SubbandMetaData& metaData)
     {
-      // Get the flags that indicate missing data samples as a vector of
-      // SparseSet::Ranges
-      flags = metaData.flags;
-
       // Get the size of a sample in bytes.
       size_t sizeof_sample = sizeof *inputSamples.origin();
 
@@ -263,8 +337,8 @@ namespace LOFAR
       size_t stride = inputSamples[station][0].num_elements();
 
       // Zero the bytes in the input data for the flagged ranges.
-      for(SparseSet<unsigned>::const_iterator it = flags.getRanges().begin();
-          it != flags.getRanges().end(); ++it)
+      for(SparseSet<unsigned>::const_iterator it = metaData.flags.getRanges().begin();
+          it != metaData.flags.getRanges().end(); ++it)
       {
         void *offset = inputSamples[station][it->begin].origin();
         size_t size = stride * (it->end - it->begin) * sizeof_sample;

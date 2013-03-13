@@ -33,8 +33,12 @@ namespace LOFAR
       MultiArraySharedBuffer<float, 3> delaysAtBegin;
       MultiArraySharedBuffer<float, 3> delaysAfterEnd;
       MultiArraySharedBuffer<float, 2> phaseOffsets;
+
+      // inputdata with flagged data set to zero
       MultiArraySharedBuffer<char, 4> inputSamples;
-      SparseSet<unsigned> flags;
+
+      // The flags as received in the input
+      MultiDimArray<SparseSet<unsigned>,1> inputFlags;
 
       WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
                          size_t n_samples, size_t bytes_per_complex_sample,
@@ -45,7 +49,8 @@ namespace LOFAR
         delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
         delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
         phaseOffsets(boost::extents[n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
-        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample], queue, hostBufferFlags, queue_buffer) // TODO: The size of the buffer is NOT validated
+        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample], queue, hostBufferFlags, queue_buffer), // TODO: The size of the buffer is NOT validated
+        inputFlags(boost::extents[n_stations])
       {
       }
 
@@ -54,8 +59,15 @@ namespace LOFAR
       void read(Stream *inputStream, size_t station, unsigned subband, unsigned beamIdx);
 
     private:
+      // Set data to zero based on the flags in the meta data
       void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
     };
+
+    // Propagate the flags
+    void computeFlags(const Parset& parset,
+                      WorkQueueInputData &inputData,
+                      CorrelatedData &output);
+
 
     class CorrelatorWorkQueue : public WorkQueue
     {
@@ -66,19 +78,17 @@ namespace LOFAR
                           FilterBank &filterBank);
 
       // Correlate the data found in the input data buffer
-      void doSubband(unsigned block, unsigned subband, CorrelatedData &output);
-      void computeFlags(CorrelatedData &output);
+      void doSubband(unsigned block, unsigned subband, CorrelatedData &output);      
+
 
     private:
-
-
       // Raw buffers, these are mapped with boost multiarrays 
       // in the InputData class
       cl::Buffer devCorrectedData;
       cl::Buffer devFilteredData;
 
     public:
-      // All input data collected in a single struct
+      // All input data, flags and metadata collected in a single struct
       WorkQueueInputData inputData;
 
       // Output: received from the gpu and transfered from the metadata (flags)
@@ -103,4 +113,3 @@ namespace LOFAR
   }
 }
 #endif
-
