@@ -147,6 +147,7 @@ namespace LOFAR
       vector<unsigned> emptyVectorUnsigned;
 
       // Generic information
+      cache.realTime = getBool("OLAP.realTime", false);
       cache.observationID = getUint32("Observation.ObsID", 0);
       cache.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
       cache.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
@@ -1093,7 +1094,7 @@ namespace LOFAR
 
     bool Parset::realTime() const
     {
-      return getBool("OLAP.realTime");
+      return cache.realTime;
     }
 
     std::vector<unsigned> Parset::nrTABs() const

@@ -76,6 +76,10 @@ namespace LOFAR
          * Generic information
          */
 
+        // Whether the observation runs at real time. Non-real time
+        // observations are not allowed to lose data.
+        bool realTime;
+
         // The SAS/MAC observation number
         unsigned observationID;
 
