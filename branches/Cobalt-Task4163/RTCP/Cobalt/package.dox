@@ -1,0 +1,12 @@
+/**
+
+\ingroup LOFAR
+\defgroup Cobalt 
+
+This package will become the new Real-Time Central Processing (RTCP) package.
+It contains the software packages that are responsible for the real-time
+processing of %LOFAR data that arrives at the central processor from the
+different %LOFAR stations. This can be, e.g., correlation for the Standard
+Imaging mode, or beam-forming for the Pulsar mode.
+
+*/
