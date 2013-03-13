@@ -204,6 +204,9 @@ namespace LOFAR
       };
 
       struct Correlator correlator;
+
+      // Returns the Nyquist zone number based on `bandFilter'.
+      unsigned nyquistZone() const;
     };
 
 
@@ -338,7 +341,6 @@ namespace LOFAR
       std::vector<unsigned>       subbandList() const;
       unsigned                    nrSubbands() const;
       unsigned                    nrSubbandsPerSAP(unsigned sap) const;
-      unsigned                    nyquistZone() const;
 
       std::vector<unsigned>       subbandToSAPmapping() const;
       std::vector<double>         subbandToFrequencyMapping() const;

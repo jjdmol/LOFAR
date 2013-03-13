@@ -65,6 +65,25 @@ namespace LOFAR
     };
 
 
+    unsigned ObservationSettings::nyquistZone() const
+    {
+      if (bandFilter == "LBA_10_70" ||
+          bandFilter == "LBA_30_70" ||
+          bandFilter == "LBA_10_90" ||
+          bandFilter == "LBA_30_90" )
+        return 1;
+
+      if (bandFilter == "HBA_110_190")
+        return 2;
+
+      if (bandFilter == "HBA_170_230" ||
+          bandFilter == "HBA_210_250")
+        return 3;
+
+      THROW(CoInterfaceException, std::string("unknown band filter \"" + bandFilter + '"'));
+    }
+
+
     Parset::Parset()
     {
     }
@@ -220,7 +239,7 @@ namespace LOFAR
       size_t nrSubbands = subbandList.size();
 
       settings.subbands.resize(nrSubbands);
-      unsigned subbandOffset = 512 * (nyquistZone() - 1);
+      unsigned subbandOffset = 512 * (settings.nyquistZone() - 1);
       for (unsigned i = 0; i < nrSubbands; ++i) {
         struct ObservationSettings::Subband &subband = settings.subbands[i];
 
@@ -425,26 +444,6 @@ namespace LOFAR
     size_t Parset::nrBytesPerComplexSample() const
     {
       return 2 * nrBitsPerSample() / 8;
-    }
-
-    unsigned Parset::nyquistZone() const
-    {
-      std::string bandFilter = cache.bandFilter;
-
-      if (bandFilter == "LBA_10_70" ||
-          bandFilter == "LBA_30_70" ||
-          bandFilter == "LBA_10_90" ||
-          bandFilter == "LBA_30_90" )
-        return 1;
-
-      if (bandFilter == "HBA_110_190")
-        return 2;
-
-      if (bandFilter == "HBA_170_230" ||
-          bandFilter == "HBA_210_250")
-        return 3;
-
-      THROW(CoInterfaceException, std::string("unknown band filter \"" + bandFilter + '"'));
     }
 
 
