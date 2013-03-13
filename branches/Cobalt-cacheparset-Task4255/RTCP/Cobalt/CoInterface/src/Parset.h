@@ -67,6 +67,10 @@ namespace LOFAR
       Parset(const std::string &name);
       Parset(Stream *);
 
+      // Fill the cache based on the ParameterSet keys.
+      // Call this if keys are added or changed.
+      void updateCache();
+
       struct Cache {
         /*
          * Station information
@@ -99,9 +103,6 @@ namespace LOFAR
         // The station clock, in MHz (200 or 160)
         unsigned clockMHz;
       } cache;
-
-      // Fill the cache based on the ParameterSet keys
-      void updateCache();
 
       std::string                 name() const;
       void                        check() const;

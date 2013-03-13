@@ -140,6 +140,9 @@ namespace LOFAR
     
     void Parset::updateCache()
     {
+      // NOTE: Make sure that all keys have defaults, to make test parsets
+      // a lot shorter.
+
       vector<string>   emptyVectorString;
       vector<unsigned> emptyVectorUnsigned;
 
