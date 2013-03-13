@@ -371,7 +371,7 @@ namespace LOFAR
 
     unsigned Parset::nyquistZone() const
     {
-      std::string bandFilter = getString("Observation.bandFilter");
+      std::string bandFilter = getString("Observation.bandFilter", "LBA_30_70");
 
       if (bandFilter == "LBA_10_70" ||
           bandFilter == "LBA_30_70" ||
