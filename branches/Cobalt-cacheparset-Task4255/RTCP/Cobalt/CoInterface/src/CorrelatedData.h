@@ -7,7 +7,6 @@
 #include <CoInterface/Allocator.h>
 #include <CoInterface/Config.h>
 #include <CoInterface/StreamableData.h>
-#include <CoInterface/BGPAsm.h>
 #include <CoInterface/MultiDimArray.h>
 #include <Stream/Stream.h>
 
