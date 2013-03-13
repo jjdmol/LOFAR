@@ -94,6 +94,17 @@ namespace LOFAR
         // The number of bits in each input sample (16, 8, or 4)
         unsigned nrBitsPerSample;
 
+        struct Corrections {
+          // Whether geometric delays should be compensated for
+          bool delayCompensation;
+
+          // Whether the station band pass should be corrected for
+          bool bandPass;
+
+          // Whether the station clock offsets should be corrected for
+          bool clock;
+        } corrections;
+
         /*
          * Station information
          */
@@ -114,6 +125,12 @@ namespace LOFAR
           // The phase center for which the station beams are corrected, in
           // ITRF [x,y,z].
           std::vector<double> phaseCenter;
+
+          // The RSP board to which each subband is mapped
+          std::vector<unsigned> rspBoardMap; // [subband]
+
+          // The RSP slot to which each subband is mapped
+          std::vector<unsigned> rspSlotMap;  // [subband]
         };
 
         // All stations specified as input
@@ -294,7 +311,6 @@ namespace LOFAR
 
       unsigned                    nrBeams() const;
       std::string                 beamTarget(unsigned beam) const;
-      double                      beamDuration(unsigned beam) const;
 
       unsigned                    nrTABs(unsigned beam) const;
       std::vector<unsigned>       nrTABs() const;

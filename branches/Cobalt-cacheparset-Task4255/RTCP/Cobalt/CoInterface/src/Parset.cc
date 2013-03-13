@@ -160,6 +160,10 @@ namespace LOFAR
         cache.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
       }
 
+      cache.corrections.delayCompensation = getBool("OLAP.delayCompensation", true);
+      cache.corrections.bandPass          = getBool("OLAP.correctBandPass", true);
+      cache.corrections.clock             = getBool("OLAP.correctClocks", true);
+
       // Station information
       cache.antennaSet = getString("Observation.antennaSet", "LBA");
       cache.bandFilter = getString("Observation.bandFilter", "LBA_30_70");
@@ -173,7 +177,15 @@ namespace LOFAR
 
         station.name            = stationNames[i];
         station.clockCorrection = getDouble(str(boost::format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
-        station.phaseCenter     = getDoubleVector(str(boost::format("PIC.Core.%s.phaseCenter") % station.name));
+        station.phaseCenter     = getDoubleVector(str(boost::format("PIC.Core.%s.phaseCenter") % station.name), true);
+
+        string key = std::string(str(boost::format("Observation.Dataslots.%s.RSPBoardList") % station.name));
+        if (!isDefined(key)) key = "Observation.rspBoardList";
+        station.rspBoardMap = getUint32Vector(key, true);
+
+        key = std::string(str(boost::format("Observation.Dataslots.%s.DataslotList") % station.name));
+        if (!isDefined(key)) key = "Observation.rspSlotList";
+        station.rspSlotMap = getUint32Vector(key, true);
       }
 
       // Pointing information
@@ -334,12 +346,7 @@ namespace LOFAR
 
     bool Parset::correctClocks() const
     {
-      if (!isDefined("OLAP.correctClocks")) {
-        LOG_WARN("\"OLAP.correctClocks\" should really be defined in the parset --- assuming FALSE");
-        return false;
-      } else {
-        return getBool("OLAP.correctClocks");
-      }
+      return cache.corrections.clock;
     }
 
 
@@ -428,12 +435,7 @@ namespace LOFAR
 
     unsigned Parset::nrBeams() const
     {
-      std::vector<unsigned> sapMapping = subbandToSAPmapping();
-
-      if (sapMapping.empty())
-        return 0;
-
-      return *std::max_element(sapMapping.begin(), sapMapping.end()) + 1;
+      return cache.SAPs.size();
     }
 
 
@@ -537,18 +539,6 @@ namespace LOFAR
       return getString(key, "");
     }
 
-    double Parset::beamDuration(unsigned beam) const
-    {
-      string key = str(boost::format("Observation.Beam[%u].duration") % beam);
-      double val = getDouble(key, 0.0);
-
-      // a sane default
-      if (val == 0.0)
-        val = stopTime() - startTime();
-
-      return val;
-    }
-
 
     std::vector<double> Parset::getTAB(unsigned beam, unsigned pencil) const
     {
@@ -641,57 +631,13 @@ namespace LOFAR
 
     vector<unsigned> Parset::subbandToRSPboardMapping(const string &stationName) const
     {
-      std::string key = std::string("Observation.Dataslots.") + stationName + ".RSPBoardList";
-
-      if (!isDefined(key)) {
-        //LOG_WARN_STR('"' << key << "\" not defined, trying \"Observation.rspBoardList\"");
-        key = "Observation.rspBoardList";
-      }
-
-      if (!isDefined(key)) {
-        LOG_WARN_STR('"' << key << "\" not defined, falling back to default");
-
-        /* Map the subbands linearly onto the RSP boards */
-        size_t n = nrSubbands();
-        size_t beamletsPerRSP = maxBeamletsPerRSP(nrBitsPerSample());
-
-        vector<unsigned> rspBoards(n);
-
-        for (size_t i = 0; i < n; i++)
-          rspBoards[i] = i / beamletsPerRSP;
-
-        return rspBoards;
-      }
-
-      return getUint32Vector(key, true);
+      return cache.stations[stationIndex(stationName)].rspBoardMap;
     }
 
 
     vector<unsigned> Parset::subbandToRSPslotMapping(const string &stationName) const
     {
-      std::string key = std::string("Observation.Dataslots.") + stationName + ".DataslotList";
-
-      if (!isDefined(key)) {
-        //LOG_WARN_STR('"' << key << "\" not defined, trying \"Observation.rspSlotList\"");
-        key = "Observation.rspSlotList";
-      }
-
-      if (!isDefined(key)) {
-        LOG_WARN_STR('"' << key << "\" not defined, falling back to default");
-
-        /* Map the subbands linearly onto the RSP boards */
-        size_t n = nrSubbands();
-        size_t beamletsPerRSP = maxBeamletsPerRSP(nrBitsPerSample());
-
-        vector<unsigned> rspSlots(n);
-
-        for (size_t i = 0; i < n; i++)
-          rspSlots[i] = i % beamletsPerRSP;
-
-        return rspSlots;
-      }
-
-      return getUint32Vector(key, true);
+      return cache.stations[stationIndex(stationName)].rspSlotMap;
     }
 
     double Parset::getTime(const std::string &name, const std::string &defaultValue) const
@@ -1075,7 +1021,7 @@ namespace LOFAR
 
     bool Parset::delayCompensation() const
     {
-      return getBool("OLAP.delayCompensation", true);
+      return cache.corrections.delayCompensation;
     }
 
     unsigned Parset::nrCalcDelays() const
@@ -1095,7 +1041,7 @@ namespace LOFAR
 
     bool Parset::correctBandPass() const
     {
-      return getBool("OLAP.correctBandPass");
+      return cache.corrections.bandPass;
     }
 
     unsigned Parset::getLofarStManVersion() const
