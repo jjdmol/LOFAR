@@ -209,6 +209,10 @@ namespace LOFAR
       Parset(const std::string &name);
       Parset(Stream *);
 
+
+      // Transform the parset into an ObservationSettings object
+      struct ObservationSettings observationSettings() const;
+
       // Fill the cache based on the ParameterSet keys.
       // Call this if keys are added or changed.
       void updateCache();

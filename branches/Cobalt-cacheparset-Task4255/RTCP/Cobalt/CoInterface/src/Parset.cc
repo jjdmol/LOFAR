@@ -137,9 +137,11 @@ namespace LOFAR
       stream->write(buffer.data(), size);
     }
 
-    
-    void Parset::updateCache()
+
+    struct ObservationSettings Parset::observationSettings() const
     {
+      struct ObservationSettings settings;
+
       // NOTE: Make sure that all keys have defaults, to make test parsets
       // a lot shorter.
 
@@ -147,34 +149,34 @@ namespace LOFAR
       vector<unsigned> emptyVectorUnsigned;
 
       // Generic information
-      cache.realTime = getBool("OLAP.realTime", false);
-      cache.observationID = getUint32("Observation.ObsID", 0);
-      cache.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
-      cache.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
-      cache.clockMHz = getUint32("Observation.sampleClock", 200);
-      cache.subbandWidth = 1.0 * cache.clockMHz * 1000000 / 1024;
+      settings.realTime = getBool("OLAP.realTime", false);
+      settings.observationID = getUint32("Observation.ObsID", 0);
+      settings.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
+      settings.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
+      settings.clockMHz = getUint32("Observation.sampleClock", 200);
+      settings.subbandWidth = 1.0 * settings.clockMHz * 1000000 / 1024;
 
       if (isDefined("Observation.nrBitsPerSample")) {
-        cache.nrBitsPerSample = getUint32("Observation.nrBitsPerSample", 16);
+        settings.nrBitsPerSample = getUint32("Observation.nrBitsPerSample", 16);
       } else {
         LOG_WARN("Using depricatdd OLAP.nrBitsPerSample. Please replace by Observation.nrBitsPerSample");
-        cache.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
+        settings.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
       }
 
-      cache.corrections.delayCompensation = getBool("OLAP.delayCompensation", true);
-      cache.corrections.bandPass          = getBool("OLAP.correctBandPass", true);
-      cache.corrections.clock             = getBool("OLAP.correctClocks", true);
+      settings.corrections.delayCompensation = getBool("OLAP.delayCompensation", true);
+      settings.corrections.bandPass          = getBool("OLAP.correctBandPass", true);
+      settings.corrections.clock             = getBool("OLAP.correctClocks", true);
 
       // Station information
-      cache.antennaSet = getString("Observation.antennaSet", "LBA");
-      cache.bandFilter = getString("Observation.bandFilter", "LBA_30_70");
+      settings.antennaSet = getString("Observation.antennaSet", "LBA");
+      settings.bandFilter = getString("Observation.bandFilter", "LBA_30_70");
 
       vector<string> stationNames = getStringVector("OLAP.storageStationNames", emptyVectorString, true);
       size_t nrStations = stationNames.size();
 
-      cache.stations.resize(nrStations);
+      settings.stations.resize(nrStations);
       for (unsigned i = 0; i < nrStations; ++i) {
-        struct ObservationSettings::Station &station = cache.stations[i];
+        struct ObservationSettings::Station &station = settings.stations[i];
 
         station.name            = stationNames[i];
         station.clockCorrection = getDouble(str(boost::format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
@@ -192,20 +194,20 @@ namespace LOFAR
       // Pointing information
       size_t nrSAPs = getUint32("Observation.nrBeams", 1);
       
-      cache.SAPs.resize(nrSAPs);
+      settings.SAPs.resize(nrSAPs);
       for (unsigned i = 0; i < nrSAPs; ++i) {
-        struct ObservationSettings::SAP &sap = cache.SAPs[i];
+        struct ObservationSettings::SAP &sap = settings.SAPs[i];
 
         sap.direction.type   = getString(str(boost::format("Observation.Beam[%u].directionType") % i), "J2000");
         sap.direction.angle1 = getDouble(str(boost::format("Observation.Beam[%u].angle1") % i), 0.0);
         sap.direction.angle2 = getDouble(str(boost::format("Observation.Beam[%u].angle2") % i), 0.0);
       }
 
-      cache.anaBeam.enabled = cache.antennaSet.substr(0,3) == "HBA";
-      if (cache.anaBeam.enabled) {
-        cache.anaBeam.direction.type   = getString("Observation.AnaBeam[0].directionType", "J2000");
-        cache.anaBeam.direction.angle1 = getDouble("Observation.AnaBeam[0].angle1", 0.0);
-        cache.anaBeam.direction.angle2 = getDouble("Observation.AnaBeam[0].angle2", 0.0);
+      settings.anaBeam.enabled = settings.antennaSet.substr(0,3) == "HBA";
+      if (settings.anaBeam.enabled) {
+        settings.anaBeam.direction.type   = getString("Observation.AnaBeam[0].directionType", "J2000");
+        settings.anaBeam.direction.angle1 = getDouble("Observation.AnaBeam[0].angle1", 0.0);
+        settings.anaBeam.direction.angle2 = getDouble("Observation.AnaBeam[0].angle2", 0.0);
       }
 
       // Spectral resolution information
@@ -213,23 +215,31 @@ namespace LOFAR
       vector<unsigned> sapList     = getUint32Vector("Observation.beamList",    emptyVectorUnsigned, true);
       size_t nrSubbands = subbandList.size();
 
-      cache.subbands.resize(nrSubbands);
+      settings.subbands.resize(nrSubbands);
       unsigned subbandOffset = 512 * (nyquistZone() - 1);
       for (unsigned i = 0; i < nrSubbands; ++i) {
-        struct ObservationSettings::Subband &subband = cache.subbands[i];
+        struct ObservationSettings::Subband &subband = settings.subbands[i];
 
         subband.idx              = i;
         subband.stationIdx       = subbandList[i];
         subband.SAP              = sapList[i];
-        subband.centralFrequency = cache.subbandWidth * (subband.stationIdx + subbandOffset);
+        subband.centralFrequency = settings.subbandWidth * (subband.stationIdx + subbandOffset);
       }
 
       // Correlator pipeline information
-      cache.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
-      if (cache.correlator.enabled) {
-        cache.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
-        cache.correlator.channelWidth = cache.subbandWidth / cache.correlator.nrChannels;
+      settings.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
+      if (settings.correlator.enabled) {
+        settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
+        settings.correlator.channelWidth = settings.subbandWidth / settings.correlator.nrChannels;
       }
+
+      return settings;
+    }
+
+
+    void Parset::updateCache()
+    {
+      cache = observationSettings();
     }
 
 
