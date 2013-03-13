@@ -140,23 +140,26 @@ namespace LOFAR
     
     void Parset::updateCache()
     {
+      vector<string>   emptyVectorString;
+      vector<unsigned> emptyVectorUnsigned;
+
       // Station information
-      cache.stationNames = getStringVector("OLAP.storageStationNames", true);
+      cache.stationNames = getStringVector("OLAP.storageStationNames", emptyVectorString, true);
 
       // Dynamic range information
       if (isDefined("Observation.nrBitsPerSample")) {
-        cache.nrBitsPerSample = getUint32("Observation.nrBitsPerSample");
+        cache.nrBitsPerSample = getUint32("Observation.nrBitsPerSample", 16);
       } else {
         LOG_WARN("Using depricatdd OLAP.nrBitsPerSample. Please replace by Observation.nrBitsPerSample");
-        cache.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample");
+        cache.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
       }
 
       // Spectral resolution information
-      cache.subbands = getUint32Vector("Observation.subbandList", true);
-      cache.SAPs     = getUint32Vector("Observation.beamList",    true);
+      cache.subbands = getUint32Vector("Observation.subbandList", emptyVectorUnsigned, true);
+      cache.SAPs     = getUint32Vector("Observation.beamList",    emptyVectorUnsigned, true);
 
       // Temporal resolution information
-      cache.clockMHz = getUint32("Observation.sampleClock");
+      cache.clockMHz = getUint32("Observation.sampleClock", 200);
     }
 
 
