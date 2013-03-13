@@ -33,8 +33,8 @@
 #include <Scheduling.h>
 #include <SubbandMetaData.h>
 #include <CoInterface/AlignedStdAllocator.h>
-#include <CoInterface/CN_Command.h>
-#include <CoInterface/CN_Mapping.h>
+#include <Input/CN_Command.h>
+#include <Input/CN_Mapping.h>
 #include <CoInterface/Stream.h>
 #include <CoInterface/Exceptions.h>
 

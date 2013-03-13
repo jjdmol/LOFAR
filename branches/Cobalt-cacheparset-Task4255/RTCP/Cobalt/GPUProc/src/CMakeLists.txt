@@ -14,6 +14,7 @@ lofar_add_library(gpuproc
   PerformanceCounter.cc
   Input/BeamletBuffer.cc
   Input/BeamletBufferToComputeNode.cc
+  Input/CN_Mapping.cc
   Input/Delays.cc
   Input/InputSection.cc
   Input/InputThread.cc

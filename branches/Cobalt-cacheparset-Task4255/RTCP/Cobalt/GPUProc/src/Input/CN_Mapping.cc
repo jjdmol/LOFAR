@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <CoInterface/CN_Mapping.h>
+#include <Input/CN_Mapping.h>
 
 namespace LOFAR
 {
