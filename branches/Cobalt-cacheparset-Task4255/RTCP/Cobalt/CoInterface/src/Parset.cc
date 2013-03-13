@@ -151,6 +151,7 @@ namespace LOFAR
       cache.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
       cache.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
       cache.clockMHz = getUint32("Observation.sampleClock", 200);
+      cache.subbandWidth = 1.0 * cache.clockMHz * 1000000 / 1024;
 
       if (isDefined("Observation.nrBitsPerSample")) {
         cache.nrBitsPerSample = getUint32("Observation.nrBitsPerSample", 16);
@@ -170,8 +171,9 @@ namespace LOFAR
       for (unsigned i = 0; i < nrStations; ++i) {
         struct Cache::Station &station = cache.stations[i];
 
-        station.name        = stationNames[i];
-        station.phaseCenter = getDoubleVector(str(boost::format("PIC.Core.%s.phaseCenter") % station.name));
+        station.name            = stationNames[i];
+        station.clockCorrection = getDouble(str(boost::format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
+        station.phaseCenter     = getDoubleVector(str(boost::format("PIC.Core.%s.phaseCenter") % station.name));
       }
 
       // Pointing information
@@ -186,11 +188,11 @@ namespace LOFAR
         sap.direction.angle2 = getDouble(str(boost::format("Observation.Beam[%u].angle2") % i), 0.0);
       }
 
-      cache.haveAnaBeam = cache.antennaSet.substr(0,3) == "HBA";
-      if (cache.haveAnaBeam) {
-        cache.anaBeam.type   = getString("Observation.AnaBeam[0].directionType", "J2000");
-        cache.anaBeam.angle1 = getDouble("Observation.AnaBeam[0].angle1", 0.0);
-        cache.anaBeam.angle2 = getDouble("Observation.AnaBeam[0].angle2", 0.0);
+      cache.anaBeam.enabled = cache.antennaSet.substr(0,3) == "HBA";
+      if (cache.anaBeam.enabled) {
+        cache.anaBeam.direction.type   = getString("Observation.AnaBeam[0].directionType", "J2000");
+        cache.anaBeam.direction.angle1 = getDouble("Observation.AnaBeam[0].angle1", 0.0);
+        cache.anaBeam.direction.angle2 = getDouble("Observation.AnaBeam[0].angle2", 0.0);
       }
 
       // Spectral resolution information
@@ -206,7 +208,14 @@ namespace LOFAR
         subband.idx              = i;
         subband.stationIdx       = subbandList[i];
         subband.SAP              = sapList[i];
-        subband.centralFrequency = subbandBandwidth() * (subband.stationIdx + subbandOffset);
+        subband.centralFrequency = cache.subbandWidth * (subband.stationIdx + subbandOffset);
+      }
+
+      // Correlator pipeline information
+      cache.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
+      if (cache.correlator.enabled) {
+        cache.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
+        cache.correlator.channelWidth = cache.subbandWidth / cache.correlator.nrChannels;
       }
     }
 
@@ -609,7 +618,7 @@ namespace LOFAR
 
     bool Parset::haveAnaBeam() const
     {
-      return cache.haveAnaBeam;
+      return cache.anaBeam.enabled;
     }
 
 
@@ -617,8 +626,8 @@ namespace LOFAR
     {
       std::vector<double> anaBeamDirections(2);
 
-      anaBeamDirections[0] = cache.anaBeam.angle1;
-      anaBeamDirections[1] = cache.anaBeam.angle2;
+      anaBeamDirections[0] = cache.anaBeam.direction.angle1;
+      anaBeamDirections[1] = cache.anaBeam.direction.angle2;
 
       return anaBeamDirections;
     }
@@ -626,7 +635,7 @@ namespace LOFAR
 
     std::string Parset::getAnaBeamDirectionType() const
     {
-      return cache.anaBeam.type;
+      return cache.anaBeam.direction.type;
     }
 
 
@@ -823,7 +832,7 @@ namespace LOFAR
 
     double Parset::subbandBandwidth() const
     {
-      return 1.0 * clockSpeed() / 1024;
+      return cache.subbandWidth;
     }
 
     double Parset::sampleDuration() const
@@ -898,7 +907,7 @@ namespace LOFAR
 
     bool Parset::outputCorrelatedData() const
     {
-      return getBool("Observation.DataProducts.Output_Correlated.enabled", false);
+      return cache.correlator.enabled;
     }
 
     bool Parset::outputBeamFormedData() const
@@ -1061,7 +1070,7 @@ namespace LOFAR
 
     double Parset::channelWidth() const
     {
-      return subbandBandwidth() / nrChannelsPerSubband();
+      return cache.correlator.channelWidth;
     }
 
     bool Parset::delayCompensation() const
@@ -1081,7 +1090,7 @@ namespace LOFAR
 
     double Parset::clockCorrectionTime(const std::string &station) const
     {
-      return getDouble(std::string("PIC.Core.") + station + ".clockCorrectionTime",0.0);
+      return cache.stations[stationIndex(station)].clockCorrection;
     }
 
     bool Parset::correctBandPass() const

@@ -88,6 +88,9 @@ namespace LOFAR
         // The station clock, in MHz (200 or 160)
         unsigned clockMHz;
 
+        // The bandwidth of a single subband, in Hz
+        double subbandWidth;
+
         // The number of bits in each input sample (16, 8, or 4)
         unsigned nrBitsPerSample;
 
@@ -104,6 +107,9 @@ namespace LOFAR
         struct Station {
           // The name of the station (CS001LBA, etc)
           std::string name;
+
+          // Correction on the station clock, in seconds
+          double clockCorrection;
 
           // The phase center for which the station beams are corrected, in
           // ITRF [x,y,z].
@@ -133,11 +139,16 @@ namespace LOFAR
         // All station beams
         std::vector<struct SAP> SAPs;
 
-        // Whether the observation employs an analog beam
-        bool haveAnaBeam;
+        struct AnaBeam {
+          // Whether the observation employs an analog beam
+          bool enabled;
 
-        // The direction of the analog beam
-        struct Direction anaBeam;
+          // Direction in which the analog beam points
+          struct Direction direction;
+        };
+
+        // The analog beam, if any
+        struct AnaBeam anaBeam;
 
         /*
          * Spectral resolution information
@@ -159,6 +170,23 @@ namespace LOFAR
 
         // The list of subbands
         std::vector<struct Subband> subbands;
+
+        /*
+         * Correlator pipeline information
+         */
+
+        struct Correlator {
+          // Whether to output correlated data
+          bool enabled;
+
+          // Number of requested frequency channels per subband
+          unsigned nrChannels;
+
+          // The bandwidth of a single channel, in Hz
+          double channelWidth;
+        };
+
+        struct Correlator correlator;
 
       } cache;
 
