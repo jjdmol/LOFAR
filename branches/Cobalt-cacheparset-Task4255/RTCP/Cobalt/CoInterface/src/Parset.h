@@ -73,35 +73,57 @@ namespace LOFAR
 
       struct Cache {
         /*
-         * Station information
+         * Generic information
          */
 
-        // The names of all stations ("CS001LBA", etc) used as input
-        std::vector<std::string> stationNames;
+        // The SAS/MAC observation number
+        unsigned observationID;
 
-        /*
-         * Dynamic range information
-         */
+        // Specified observation start time, in seconds since 1970.
+        double startTime;
+
+        // Specified observation stop time, in seconds since 1970.
+        double stopTime;
+
+        // The station clock, in MHz (200 or 160)
+        unsigned clockMHz;
 
         // The number of bits in each input sample (16, 8, or 4)
         unsigned nrBitsPerSample;
 
         /*
+         * Station information
+         */
+
+        struct Station {
+          // The name of the station ("CS001LBA", etc)
+          std::string name;
+        };
+
+        // All stations specified as input
+        std::vector<struct Station> stations;
+
+        /*
          * Spectral resolution information
          */
 
-        // The list of subbands (f.e. [100..343])
-        std::vector<unsigned> subbands;
+        struct Subband {
+          // Index (f.e. 0..243)
+          unsigned idx;
 
-        // For each subband, to which SAP it belongs (f.e. [244*0])
-        std::vector<unsigned> SAPs;
+          // Index at station (f.e. 100..343)
+          unsigned stationIdx;
 
-        /*
-         * Temporal resolution information
-         */
+          // SAP number
+          unsigned SAP;
 
-        // The station clock, in MHz (200 or 160)
-        unsigned clockMHz;
+          // Central frequency (Hz)
+          double centralFrequency;
+        };
+
+        // The list of subbands
+        std::vector<struct Subband> subbands;
+
       } cache;
 
       std::string                 name() const;
@@ -274,7 +296,7 @@ namespace LOFAR
       std::vector<double>         getTAB(unsigned beam, unsigned pencil) const;
 
       void                        addPosition(string stName);
-      double                      getTime(const char *name) const;
+      double                      getTime(const std::string &name, const std::string &defaultValue) const;
       static int                  findIndex(unsigned pset, const vector<unsigned> &psets);
 
       std::vector<double>         centroidPos(const string &stations) const;

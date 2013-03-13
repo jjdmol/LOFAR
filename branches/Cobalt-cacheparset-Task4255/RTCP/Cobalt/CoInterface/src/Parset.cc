@@ -146,10 +146,12 @@ namespace LOFAR
       vector<string>   emptyVectorString;
       vector<unsigned> emptyVectorUnsigned;
 
-      // Station information
-      cache.stationNames = getStringVector("OLAP.storageStationNames", emptyVectorString, true);
+      // Generic information
+      cache.observationID = getUint32("Observation.ObsID", 0);
+      cache.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
+      cache.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
+      cache.clockMHz = getUint32("Observation.sampleClock", 200);
 
-      // Dynamic range information
       if (isDefined("Observation.nrBitsPerSample")) {
         cache.nrBitsPerSample = getUint32("Observation.nrBitsPerSample", 16);
       } else {
@@ -157,12 +159,28 @@ namespace LOFAR
         cache.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
       }
 
-      // Spectral resolution information
-      cache.subbands = getUint32Vector("Observation.subbandList", emptyVectorUnsigned, true);
-      cache.SAPs     = getUint32Vector("Observation.beamList",    emptyVectorUnsigned, true);
+      // Station information
+      vector<string> stationNames = getStringVector("OLAP.storageStationNames", emptyVectorString, true);
+      size_t nrStations = stationNames.size();
 
-      // Temporal resolution information
-      cache.clockMHz = getUint32("Observation.sampleClock", 200);
+      cache.stations.resize(nrStations);
+      for (unsigned station = 0; station < nrStations; ++station) {
+        cache.stations[station].name = stationNames[station];
+      }
+
+      // Spectral resolution information
+      vector<unsigned> subbandList = getUint32Vector("Observation.subbandList", emptyVectorUnsigned, true);
+      vector<unsigned> sapList     = getUint32Vector("Observation.beamList",    emptyVectorUnsigned, true);
+      size_t nrSubbands = subbandList.size();
+
+      cache.subbands.resize(nrSubbands);
+      unsigned subbandOffset = 512 * (nyquistZone() - 1);
+      for (unsigned subband = 0; subband < nrSubbands; ++subband) {
+        cache.subbands[subband].idx              = subband;
+        cache.subbands[subband].stationIdx       = subbandList[subband];
+        cache.subbands[subband].SAP              = sapList[subband];
+        cache.subbands[subband].centralFrequency = subbandBandwidth() * (subbandList[subband] + subbandOffset);
+      }
     }
 
 
@@ -385,15 +403,23 @@ namespace LOFAR
 
     std::vector<double> Parset::subbandToFrequencyMapping() const
     {
-      unsigned subbandOffset = 512 * (nyquistZone() - 1);
+      vector<double> freqs(nrSubbands());
 
-      std::vector<unsigned> subbandIds = getUint32Vector("Observation.subbandList", true);
-      std::vector<double>   subbandFreqs(subbandIds.size());
+      for (unsigned subband = 0; subband < freqs.size(); ++subband)
+        freqs[subband] = cache.subbands[subband].centralFrequency;
 
-      for (unsigned subband = 0; subband < subbandIds.size(); subband++)
-        subbandFreqs[subband] = subbandBandwidth() * (subbandIds[subband] + subbandOffset);
+      return freqs;
+    }
 
-      return subbandFreqs;
+
+    std::vector<unsigned> Parset::subbandToSAPmapping() const
+    {
+      vector<unsigned> saps(nrSubbands());
+
+      for (unsigned subband = 0; subband < saps.size(); ++subband)
+        saps[subband] = cache.subbands[subband].SAP;
+
+      return saps;
     }
 
 
@@ -646,9 +672,9 @@ namespace LOFAR
       return index != psets.size() ? static_cast<int>(index) : -1;
     }
 
-    double Parset::getTime(const char *name) const
+    double Parset::getTime(const std::string &name, const std::string &defaultValue) const
     {
-      return to_time_t(boost::posix_time::time_from_string(getString(name)));
+      return to_time_t(boost::posix_time::time_from_string(getString(name, defaultValue)));
     }
 
     unsigned Parset::nrTABs(unsigned beam) const
@@ -672,17 +698,17 @@ namespace LOFAR
 
     unsigned Parset::observationID() const
     {
-      return getUint32("Observation.ObsID");
+      return cache.observationID;
     }
 
     double Parset::startTime() const
     {
-      return getTime("Observation.startTime");
+      return cache.startTime;
     }
 
     double Parset::stopTime() const
     {
-      return getTime("Observation.stopTime");
+      return cache.stopTime;
     }
 
     unsigned Parset::nrCorrelatedBlocks() const
@@ -697,7 +723,7 @@ namespace LOFAR
 
     string Parset::stationName(int index) const
     {
-      return allStationNames()[index];
+      return cache.stations[index].name;
     }
 
     int Parset::stationIndex(const std::string &name) const
@@ -712,7 +738,12 @@ namespace LOFAR
 
     std::vector<std::string> Parset::allStationNames() const
     {
-      return cache.stationNames;
+      vector<string> names(nrStations());
+
+      for (unsigned station = 0; station < names.size(); ++station)
+        names[station] = cache.stations[station].name;
+
+      return names;
     }
 
     bool Parset::hasStorage() const
@@ -727,7 +758,7 @@ namespace LOFAR
 
     unsigned Parset::nrStations() const
     {
-      return cache.stationNames.size();
+      return cache.stations.size();
     }
 
     unsigned Parset::nrTabStations() const
@@ -740,7 +771,7 @@ namespace LOFAR
       std::vector<string> tabStations = getStringVector("OLAP.tiedArrayStationNames",true);
 
       if (tabStations.empty())
-        return cache.stationNames;
+        return allStationNames();
       else
         return tabStations;
     }
@@ -995,7 +1026,12 @@ namespace LOFAR
 
     vector<unsigned> Parset::subbandList() const
     {
-      return cache.subbands;
+      vector<unsigned> nrs(nrSubbands());
+
+      for (unsigned subband = 0; subband < nrs.size(); ++subband)
+        nrs[subband] = cache.subbands[subband].stationIdx;
+
+      return nrs;
     }
 
     unsigned Parset::nrSubbands() const
@@ -1008,11 +1044,6 @@ namespace LOFAR
       std::vector<unsigned> mapping = subbandToSAPmapping();
 
       return std::count(mapping.begin(), mapping.end(), sap);
-    }
-
-    std::vector<unsigned> Parset::subbandToSAPmapping() const
-    {
-      return cache.SAPs;
     }
 
     double Parset::channelWidth() const
