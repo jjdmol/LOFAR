@@ -737,15 +737,6 @@ namespace LOFAR
       return *itsTransposeLogic;
     }
 
-    const CN_Transpose2 &Parset::CN_transposeLogic( unsigned pset, unsigned core ) const
-    {
-      if (!itsCN_TransposeLogic)
-        itsCN_TransposeLogic = new CN_Transpose2(*this, pset, core);
-
-      return *itsCN_TransposeLogic;
-    }
-
-
     unsigned Parset::observationID() const
     {
       return getUint32("Observation.ObsID");
@@ -1559,52 +1550,6 @@ namespace LOFAR
 
       return infoset;
     }
-
-    CN_Transpose2::CN_Transpose2( const Parset &parset, unsigned myPset, unsigned myCore )
-      :
-      Transpose2( parset ),
-      myPset( myPset ),
-      myCore( myCore ),
-
-      phaseTwoPsetIndex( parset.phaseTwoPsetIndex(myPset) ),
-      phaseTwoCoreIndex( parset.phaseTwoCoreIndex(myCore) ),
-      phaseThreePsetIndex( parset.phaseThreePsetIndex(myPset) ),
-      phaseThreeCoreIndex( parset.phaseThreeCoreIndex(myCore) )
-    {
-    }
-
-    int CN_Transpose2::myStream( unsigned block ) const
-    {
-      unsigned first = phaseThreePsetIndex * nrStreamsPerPset;
-      unsigned blockShift = (phaseThreeGroupSize() * block) % nrPhaseThreeCores;
-      unsigned relative = (nrPhaseThreeCores + phaseThreeCoreIndex - blockShift) % nrPhaseThreeCores;
-
-      // such a stream does not exist
-      if (first + relative >= nrStreams())
-        return -1;
-
-      // we could handle this stream, but it's handled by a subsequent pset
-      if (relative >= nrStreamsPerPset)
-        return -1;
-
-      return first + relative;
-    }
-
-    unsigned CN_Transpose2::myPart( unsigned subband, bool coherent ) const
-    {
-      for (unsigned i = 0; i < streamInfo.size(); i++) {
-        const struct StreamInfo &info = streamInfo[i];
-
-        if ( info.coherent == coherent
-             && info.subbands[0] <= subband
-             && info.subbands[info.subbands.size() - 1] >= subband )
-          return info.part;
-      }
-
-      // we reach this point if there are no beams of this coherency
-      return 0;
-    }
-
 
   } // namespace RTCP
 } // namespace LOFAR

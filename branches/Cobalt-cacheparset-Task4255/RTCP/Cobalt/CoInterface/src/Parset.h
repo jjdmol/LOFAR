@@ -53,7 +53,6 @@ namespace LOFAR
   {
 
     class Transpose2;
-    class CN_Transpose2;
 
     enum StokesType { STOKES_I = 0, STOKES_IQUV, STOKES_XXYY, INVALID_STOKES = -1 };
 
@@ -247,7 +246,6 @@ namespace LOFAR
       std::string                 HBADeltasDir() const;
 
       const Transpose2            &transposeLogic() const;
-      const CN_Transpose2         &CN_transposeLogic( unsigned pset, unsigned core ) const;
 
     private:
       const std::string itsName;
@@ -255,7 +253,6 @@ namespace LOFAR
       mutable std::string itsWriteCache;
 
       mutable SmartPtr<const Transpose2>     itsTransposeLogic;
-      mutable SmartPtr<const CN_Transpose2>  itsCN_TransposeLogic;
 
       void                        checkVectorLength(const std::string &key, unsigned expectedSize) const;
       void                        checkInputConsistency() const;
@@ -355,26 +352,6 @@ namespace LOFAR
 
     private:
       std::vector<struct StreamInfo> generateStreamInfo( const Parset &parset ) const;
-    };
-
-    class CN_Transpose2 : public Transpose2
-    {
-    public:
-      CN_Transpose2( const Parset &parset, unsigned myPset, unsigned myCore );
-
-      // the stream to process on (myPset, myCore)
-      int myStream( unsigned block ) const;
-
-      // the part number of a subband with an absolute index
-      unsigned myPart( unsigned subband, bool coherent ) const;
-
-      const unsigned myPset;
-      const unsigned myCore;
-
-      const int phaseTwoPsetIndex;
-      const int phaseTwoCoreIndex;
-      const int phaseThreePsetIndex;
-      const int phaseThreeCoreIndex;
     };
 
   } // namespace RTCP
