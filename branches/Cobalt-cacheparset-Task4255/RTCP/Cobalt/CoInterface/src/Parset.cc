@@ -240,9 +240,6 @@ namespace LOFAR
 
       if (outputThisType(BEAM_FORMED_DATA) || outputThisType(TRIGGER_DATA)) {
         // second transpose is performed
-
-        if (nrSubbands() > phaseTwoPsets().size() * phaseOneTwoCores().size() )
-          THROW(CoInterfaceException, "For the second transpose to function, there need to be at least nrSubbands cores in phase 2 (requested: " << nrSubbands() << " subbands on " << (phaseTwoPsets().size() * phaseOneTwoCores().size()) << " cores)");
       }
 
       // check whether the beam forming parameters are valid
@@ -347,26 +344,6 @@ namespace LOFAR
       case TRIGGER_DATA:      return transposeLogic().nrStreams();
       default:                 THROW(CoInterfaceException, "Unknown output type");
       }
-    }
-
-
-    unsigned Parset::maxNrStreamsPerPset(OutputType outputType, bool force) const
-    {
-      unsigned nrOutputStreams = nrStreams(outputType, force);
-      unsigned nrPsets;
-
-      switch (outputType) {
-      case CORRELATED_DATA:   nrPsets = phaseTwoPsets().size();
-        break;
-
-      case BEAM_FORMED_DATA:        // FALL THROUGH
-      case TRIGGER_DATA:      nrPsets = phaseThreePsets().size();
-        break;
-
-      default:                 THROW(CoInterfaceException, "Unknown output type");
-      }
-
-      return nrPsets == 0 ? 0 : (nrOutputStreams + nrPsets - 1) / nrPsets;
     }
 
     size_t Parset::nrBytesPerComplexSample() const
@@ -603,71 +580,6 @@ namespace LOFAR
     std::string Parset::getAnaBeamDirectionType() const
     {
       return getString("Observation.AnaBeam[0].directionType");
-    }
-
-
-    std::vector<unsigned> Parset::usedCoresInPset() const
-    {
-      return phaseOneTwoCores() | phaseThreeCores();
-    }
-
-
-    std::vector<unsigned> Parset::usedPsets() const
-    {
-      return phaseOnePsets() | phaseTwoPsets() | phaseThreePsets();
-    }
-
-
-    bool Parset::phaseThreeDisjunct() const
-    {
-      return (phaseOneTwoCores() & phaseThreeCores()).empty() && ((phaseOnePsets() | phaseTwoPsets()) & phaseThreePsets()).empty();
-    }
-
-
-    bool Parset::disjointCores(const Parset &otherParset, std::stringstream &error) const
-    {
-      // return false if jobs (partially) use same cores within psets
-
-      std::vector<unsigned> overlappingPsets = usedPsets() & otherParset.usedPsets();
-      std::vector<unsigned> overlappingCores = usedCoresInPset() & otherParset.usedCoresInPset();
-
-      if (overlappingPsets.empty() || overlappingCores.empty())
-        return true;
-
-      error << "cores " << overlappingCores << " within psets " << overlappingPsets << " overlap;";
-      return false;
-    }
-
-
-    bool Parset::compatibleInputSection(const Parset &otherParset, std::stringstream &error) const
-    {
-      bool overlappingStations = !(phaseOnePsets() & otherParset.phaseOnePsets()).empty();
-      bool good = true;
-
-      if (overlappingStations) {
-        if (nrBitsPerSample() != otherParset.nrBitsPerSample()) {
-          error << " uses " << nrBitsPerSample() << " instead of " << otherParset.nrBitsPerSample() << " bits;";
-          good = false;
-        }
-
-        if (clockSpeed() != otherParset.clockSpeed()) {
-          error << " uses " << clockSpeed() / 1e6 << " instead of " << otherParset.clockSpeed() / 1e6 << " MHz clock;";
-          good = false;
-        }
-
-        if (nrSlotsInFrame() != otherParset.nrSlotsInFrame()) {
-          error << " uses " << nrSlotsInFrame() << " instead of " << otherParset.nrSlotsInFrame() << " slots per frame;";
-          good = false;
-        }
-      }
-
-      return good;
-    }
-
-
-    bool Parset::conflictingResources(const Parset &otherParset, std::stringstream &error) const
-    {
-      return !disjointCores(otherParset, error) | !compatibleInputSection(otherParset, error); // no McCarthy evaluation
     }
 
 
@@ -940,11 +852,6 @@ namespace LOFAR
       return getString("OLAP.CNProc_IncoherentStokes.which");
     }
 
-    bool Parset::outputFilteredData() const
-    {
-      return getBool("Observation.DataProducts.Output_FilteredData.enabled", false);
-    }
-
     bool Parset::outputCorrelatedData() const
     {
       return getBool("Observation.DataProducts.Output_Correlated.enabled", false);
@@ -1066,14 +973,6 @@ namespace LOFAR
       return (unsigned) (getDouble("OLAP.maxNetworkDelay", 0.25) * subbandBandwidth());
     }
 
-    unsigned Parset::nrSubbandsPerPset() const
-    {
-      unsigned psets = phaseTwoPsets().size();
-      unsigned subbands = nrSubbands();
-
-      return (psets == 0 ? 0 : subbands + psets - 1) / psets;
-    }
-
     unsigned Parset::coherentStokesNrSubbandsPerFile() const
     {
       return std::min( getUint32("OLAP.CNProc_CoherentStokes.subbandsPerFile"), nrSubbands() );
@@ -1084,11 +983,6 @@ namespace LOFAR
       return std::min( getUint32("OLAP.CNProc_IncoherentStokes.subbandsPerFile"), nrSubbands() );
     }
 
-    unsigned Parset::nrPhase3StreamsPerPset() const
-    {
-      return maxNrStreamsPerPset(BEAM_FORMED_DATA) + maxNrStreamsPerPset(TRIGGER_DATA);
-    }
-
     unsigned Parset::nrPPFTaps() const
     {
       return getUint32("OLAP.CNProc.nrPPFTaps");
@@ -1097,21 +991,6 @@ namespace LOFAR
     unsigned Parset::nrChannelsPerSubband() const
     {
       return getUint32("Observation.channelsPerSubband");
-    }
-
-    std::vector<unsigned> Parset::phaseOneTwoCores() const
-    {
-      return getUint32Vector("OLAP.CNProc.phaseOneTwoCores", true);
-    }
-
-    std::vector<unsigned> Parset::phaseThreeCores() const
-    {
-      return getUint32Vector("OLAP.CNProc.phaseThreeCores",true);
-    }
-
-    unsigned Parset::nrCoresPerPset() const
-    {
-      return usedCoresInPset().size();
     }
 
     vector<unsigned> Parset::subbandList() const
@@ -1166,11 +1045,6 @@ namespace LOFAR
       return getBool("OLAP.correctBandPass");
     }
 
-    unsigned Parset::nrPsetsPerStorage() const
-    {
-      return getUint32("OLAP.psetsPerStorage");
-    }
-
     unsigned Parset::getLofarStManVersion() const
     {
       return getUint32("OLAP.LofarStManVersion", 2);
@@ -1181,61 +1055,9 @@ namespace LOFAR
       return getUint32Vector("OLAP.CNProc.phaseOnePsets",true);
     }
 
-    vector<unsigned> Parset::phaseTwoPsets() const
-    {
-      return getUint32Vector("OLAP.CNProc.phaseTwoPsets",true);
-    }
-
-    vector<unsigned> Parset::phaseThreePsets() const
-    {
-      return getUint32Vector("OLAP.CNProc.phaseThreePsets",true);
-    }
-
-    unsigned Parset::totalNrPsets() const
-    {
-      const std::string key = "OLAP.IONProc.psetList";
-
-      if (isDefined(key)) {
-        return getStringVector(key,true).size();
-      } else {
-        LOG_WARN_STR( "Missing key " << key << ", using the used psets as a fallback");
-        return usedPsets().size();
-      }
-    }
-
     vector<unsigned> Parset::tabList() const
     {
       return getUint32Vector("OLAP.CNProc.tabList",true);
-    }
-
-    int Parset::phaseOnePsetIndex(unsigned pset) const
-    {
-      return findIndex(pset, phaseOnePsets());
-    }
-
-    int Parset::phaseTwoPsetIndex(unsigned pset) const
-    {
-      return findIndex(pset, phaseTwoPsets());
-    }
-
-    int Parset::phaseThreePsetIndex(unsigned pset) const
-    {
-      return findIndex(pset, phaseThreePsets());
-    }
-
-    int Parset::phaseOneCoreIndex(unsigned core) const
-    {
-      return findIndex(core, phaseOneTwoCores());
-    }
-
-    int Parset::phaseTwoCoreIndex(unsigned core) const
-    {
-      return findIndex(core, phaseOneTwoCores());
-    }
-
-    int Parset::phaseThreeCoreIndex(unsigned core) const
-    {
-      return findIndex(core, phaseThreeCores());
     }
 
     double Parset::channel0Frequency(size_t subband) const
@@ -1348,15 +1170,8 @@ namespace LOFAR
       LOG_DEBUG_STR( "Stream " << stream << " is sap " << sap << " beam " << beam << " stokes " << stokes << " part " << part << " consisting of subbands " << subbands );
     }
 
-    static unsigned divideRoundUp( unsigned a, unsigned b )
-    {
-      return b == 0 ? 0 : (a + b - 1) / b;
-    }
-
     Transpose2::Transpose2( const Parset &parset )
       :
-      phaseThreeDisjunct( parset.phaseThreeDisjunct() ),
-
       nrChannels( parset.nrChannelsPerSubband() ),
       nrCoherentChannels( parset.coherentStokesChannelsPerSubband() ),
       nrIncoherentChannels( parset.incoherentStokesChannelsPerSubband() ),
@@ -1367,15 +1182,7 @@ namespace LOFAR
       nrBeams( parset.totalNrTABs() ),
       coherentNrSubbandsPerFile( parset.coherentStokesNrSubbandsPerFile() ),
       incoherentNrSubbandsPerFile( parset.incoherentStokesNrSubbandsPerFile() ),
-
-      nrPhaseTwoPsets( parset.phaseTwoPsets().size() ),
-      nrPhaseTwoCores( parset.phaseOneTwoCores().size() ),
-      nrPhaseThreePsets( parset.phaseThreePsets().size() ),
-      nrPhaseThreeCores( parset.phaseThreeCores().size() ),
-
-      nrSubbandsPerPset( parset.nrSubbandsPerPset() ),
-      streamInfo( generateStreamInfo(parset) ),
-      nrStreamsPerPset( divideRoundUp( nrStreams(), parset.phaseThreePsets().size() ) )
+      streamInfo( generateStreamInfo(parset) )
     {
     }
 
@@ -1457,33 +1264,6 @@ namespace LOFAR
       const StreamInfo &info = streamInfo[stream];
 
       return (size_t)info.nrChannels * (info.nrSamples | 2) * sizeof(float);
-    }
-
-    unsigned Transpose2::sourceCore( unsigned subband, unsigned block ) const
-    {
-      return (block * nrSubbandsPerPset + subband % nrSubbandsPerPset) % nrPhaseTwoCores;
-    }
-
-    unsigned Transpose2::sourcePset( unsigned subband, unsigned block ) const
-    {
-      (void)block;
-      return subband / nrSubbandsPerPset;
-    }
-
-    unsigned Transpose2::destCore( unsigned stream, unsigned block ) const
-    {
-      return (block * phaseThreeGroupSize() + stream % nrStreamsPerPset) % nrPhaseThreeCores;
-    }
-
-    unsigned Transpose2::destPset( unsigned stream, unsigned block ) const
-    {
-      (void)block;
-      return stream / nrStreamsPerPset;
-    }
-
-    unsigned Transpose2::phaseThreeGroupSize() const
-    {
-      return phaseThreeDisjunct ? nrStreamsPerPset : nrSubbandsPerPset;
     }
 
 

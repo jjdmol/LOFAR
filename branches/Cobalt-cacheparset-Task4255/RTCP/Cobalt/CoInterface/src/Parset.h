@@ -145,18 +145,12 @@ namespace LOFAR
       double                      IONintegrationTime() const;
       unsigned                    nrSamplesPerChannel() const;
       unsigned                    nrSamplesPerSubband() const;
-      unsigned                    nrSubbandsPerPset() const;
-      unsigned                    nrPhase3StreamsPerPset() const;
       unsigned                    nrHistorySamples() const;
       unsigned                    nrSamplesToCNProc() const;
       unsigned                    inputBufferSize() const; // in samples
       unsigned                    maxNetworkDelay() const;
       unsigned                    nrPPFTaps() const;
       unsigned                    nrChannelsPerSubband() const;
-      unsigned                    nrCoresPerPset() const;
-      std::vector<unsigned>       usedCoresInPset() const;
-      std::vector<unsigned>       phaseOneTwoCores() const;
-      std::vector<unsigned>       phaseThreeCores() const;
       double                      channelWidth() const;
       bool                        delayCompensation() const;
       unsigned                    nrCalcDelays() const;
@@ -167,27 +161,12 @@ namespace LOFAR
       std::string                 stationName(int index) const;
       int                         stationIndex(const std::string &name) const;
       std::vector<std::string>    allStationNames() const;
-      unsigned                    nrPsetsPerStorage() const;
       unsigned                    getLofarStManVersion() const;
       std::vector<unsigned>       phaseOnePsets() const;
-      std::vector<unsigned>       phaseTwoPsets() const;
-      std::vector<unsigned>       phaseThreePsets() const;
-      std::vector<unsigned>       usedPsets() const; // union of phasePsets
-      unsigned                    totalNrPsets() const; // nr psets in the partition
-      bool                        phaseThreeDisjunct() const; // if phase 3 does not overlap with phase 1 or 2 in psets or cores
       std::vector<unsigned>       tabList() const;
-      bool                        conflictingResources(const Parset &otherParset, std::stringstream &error) const;
-
-      int                         phaseOnePsetIndex(unsigned pset) const;
-      int                         phaseTwoPsetIndex(unsigned pset) const;
-      int                         phaseThreePsetIndex(unsigned pset) const;
-      int                         phaseOneCoreIndex(unsigned core) const;
-      int                         phaseTwoCoreIndex(unsigned core) const;
-      int                         phaseThreeCoreIndex(unsigned core) const;
 
       std::string                 getTransportType(const std::string &prefix) const;
 
-      bool                        outputFilteredData() const;
       bool                        outputCorrelatedData() const;
       bool                        outputBeamFormedData() const;
       bool                        outputTrigger() const;
@@ -205,7 +184,6 @@ namespace LOFAR
       std::string                 onlinePostCorrelationFlaggingStatisticsType(std::string defaultVal) const;
 
       unsigned nrStreams(OutputType, bool force = false) const;
-      unsigned maxNrStreamsPerPset(OutputType, bool force = false) const;
       static std::string keyPrefix(OutputType);
       std::string getHostName(OutputType, unsigned streamNr) const;
       std::string getFileName(OutputType, unsigned streamNr) const;
@@ -300,9 +278,6 @@ namespace LOFAR
       static int                  findIndex(unsigned pset, const vector<unsigned> &psets);
 
       std::vector<double>         centroidPos(const string &stations) const;
-
-      bool                        compatibleInputSection(const Parset &otherParset, std::stringstream &error) const;
-      bool                        disjointCores(const Parset &, std::stringstream &error) const;
     };
 
     //
@@ -349,21 +324,6 @@ namespace LOFAR
 
       size_t subbandSize( unsigned stream ) const;
 
-      // the pset/core which processes a certain block of a certain subband
-      // note: AsyncTransposeBeams applied the mapping of phaseThreePsets
-      unsigned sourceCore( unsigned subband, unsigned block ) const;
-      unsigned sourcePset( unsigned subband, unsigned block ) const;
-
-      // the pset/core which processes a certain block of a certain stream
-      // note: AsyncTransposeBeams applied the mapping of phaseTwoPsets
-      unsigned destCore( unsigned stream, unsigned block ) const;
-      unsigned destPset( unsigned stream, unsigned block ) const;
-
-      // if phase2 == phase3, each block in phase3 is processed by more cores (more cores idle to align phases 2 and 3)
-      unsigned phaseThreeGroupSize() const;
-
-      const bool phaseThreeDisjunct;
-
       const unsigned nrChannels;
       const unsigned nrCoherentChannels;
       const unsigned nrIncoherentChannels;
@@ -375,16 +335,7 @@ namespace LOFAR
       const unsigned coherentNrSubbandsPerFile;
       const unsigned incoherentNrSubbandsPerFile;
 
-      const unsigned nrPhaseTwoPsets;
-      const unsigned nrPhaseTwoCores;
-      const unsigned nrPhaseThreePsets;
-      const unsigned nrPhaseThreeCores;
-
-      const unsigned nrSubbandsPerPset;
-
       const std::vector<struct StreamInfo> streamInfo;
-
-      const unsigned nrStreamsPerPset;
 
     private:
       std::vector<struct StreamInfo> generateStreamInfo( const Parset &parset ) const;

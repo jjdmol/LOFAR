@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     PortBroker::ServerStream controlStream(resource);
 
     Parset parset(&controlStream);
-    Observation obs(&parset, false, parset.totalNrPsets());
+    Observation obs(&parset, false, 64); // FIXME: assume 64 psets, because Observation still deals with BG/P
 
     vector<string> hostnames = parset.getStringVector("OLAP.Storage.hosts", true);
     ASSERT(myRank < hostnames.size());
