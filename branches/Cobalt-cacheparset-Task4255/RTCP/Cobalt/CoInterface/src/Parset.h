@@ -114,6 +114,32 @@ namespace LOFAR
         std::vector<struct Station> stations;
 
         /*
+         * Pointing information
+         */
+        struct Direction {
+          // Coordinate type (J2000, etc)
+          std::string type;
+
+          // Two angles within the coordinate type (RA/DEC, etc)
+          double angle1;
+          double angle2;
+        };
+
+        struct SAP {
+          // Direction in which the SAP points
+          struct Direction direction;
+        };
+
+        // All station beams
+        std::vector<struct SAP> SAPs;
+
+        // Whether the observation employs an analog beam
+        bool haveAnaBeam;
+
+        // The direction of the analog beam
+        struct Direction anaBeam;
+
+        /*
          * Spectral resolution information
          */
 

@@ -174,6 +174,25 @@ namespace LOFAR
         station.phaseCenter = getDoubleVector(str(boost::format("PIC.Core.%s.phaseCenter") % station.name));
       }
 
+      // Pointing information
+      size_t nrSAPs = getUint32("Observation.nrBeams", 1);
+      
+      cache.SAPs.resize(nrSAPs);
+      for (unsigned i = 0; i < nrSAPs; ++i) {
+        struct Cache::SAP &sap = cache.SAPs[i];
+
+        sap.direction.type   = getString(str(boost::format("Observation.Beam[%u].directionType") % i), "J2000");
+        sap.direction.angle1 = getDouble(str(boost::format("Observation.Beam[%u].angle1") % i), 0.0);
+        sap.direction.angle2 = getDouble(str(boost::format("Observation.Beam[%u].angle2") % i), 0.0);
+      }
+
+      cache.haveAnaBeam = cache.antennaSet.substr(0,3) == "HBA";
+      if (cache.haveAnaBeam) {
+        cache.anaBeam.type   = getString("Observation.AnaBeam[0].directionType", "J2000");
+        cache.anaBeam.angle1 = getDouble("Observation.AnaBeam[0].angle1", 0.0);
+        cache.anaBeam.angle2 = getDouble("Observation.AnaBeam[0].angle2", 0.0);
+      }
+
       // Spectral resolution information
       vector<unsigned> subbandList = getUint32Vector("Observation.subbandList", emptyVectorUnsigned, true);
       vector<unsigned> sapList     = getUint32Vector("Observation.beamList",    emptyVectorUnsigned, true);
@@ -575,8 +594,8 @@ namespace LOFAR
     {
       std::vector<double> beamDirs(2);
 
-      beamDirs[0] = getDouble(str(boost::format("Observation.Beam[%u].angle1") % beam));
-      beamDirs[1] = getDouble(str(boost::format("Observation.Beam[%u].angle2") % beam));
+      beamDirs[0] = cache.SAPs[beam].direction.angle1;
+      beamDirs[1] = cache.SAPs[beam].direction.angle2;
 
       return beamDirs;
     }
@@ -584,19 +603,13 @@ namespace LOFAR
 
     std::string Parset::getBeamDirectionType(unsigned beam) const
     {
-      char buf[50];
-      string beamDirType;
-
-      snprintf(buf, sizeof buf, "Observation.Beam[%d].directionType", beam);
-      beamDirType = getString(buf);
-
-      return beamDirType;
+      return cache.SAPs[beam].direction.type;
     }
 
 
     bool Parset::haveAnaBeam() const
     {
-      return antennaSet().substr(0,3) == "HBA";
+      return cache.haveAnaBeam;
     }
 
 
@@ -604,8 +617,8 @@ namespace LOFAR
     {
       std::vector<double> anaBeamDirections(2);
 
-      anaBeamDirections[0] = getDouble("Observation.AnaBeam[0].angle1");
-      anaBeamDirections[1] = getDouble("Observation.AnaBeam[0].angle2");
+      anaBeamDirections[0] = cache.anaBeam.angle1;
+      anaBeamDirections[1] = cache.anaBeam.angle2;
 
       return anaBeamDirections;
     }
@@ -613,7 +626,7 @@ namespace LOFAR
 
     std::string Parset::getAnaBeamDirectionType() const
     {
-      return getString("Observation.AnaBeam[0].directionType");
+      return cache.anaBeam.type;
     }
 
 
