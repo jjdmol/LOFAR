@@ -67,6 +67,41 @@ namespace LOFAR
       Parset(const std::string &name);
       Parset(Stream *);
 
+      struct Cache {
+        /*
+         * Station information
+         */
+
+        // The names of all stations ("CS001LBA", etc) used as input
+        std::vector<std::string> stationNames;
+
+        /*
+         * Dynamic range information
+         */
+
+        // The number of bits in each input sample (16, 8, or 4)
+        unsigned nrBitsPerSample;
+
+        /*
+         * Spectral resolution information
+         */
+
+        // The list of subbands (f.e. [100..343])
+        std::vector<unsigned> subbands;
+
+        // For each subband, to which SAP it belongs (f.e. [244*0])
+        std::vector<unsigned> SAPs;
+
+        /*
+         * Temporal resolution information
+         */
+
+        // The station clock, in MHz (200 or 160)
+        unsigned clockMHz;
+      } cache;
+
+      // Fill the cache based on the ParameterSet keys
+      void updateCache();
 
       std::string                 name() const;
       void                        check() const;

@@ -77,11 +77,14 @@ namespace LOFAR
     {
       // we check the parset once we can communicate any errors
       //check();
+
+      updateCache();
     }
 
 
     Parset::Parset(Stream *stream)
     {
+      // Read size
       uint64 size;
       stream->read(&size, sizeof size);
 
@@ -89,12 +92,17 @@ namespace LOFAR
       dataConvert(LittleEndian, &size, 1);
 #endif
 
+      // Read data
       std::vector<char> tmp(size + 1);
       stream->read(&tmp[0], size);
       tmp[size] = '\0';
 
+      // Add data to parset
       std::string buffer(&tmp[0], size);
       adoptBuffer(buffer);
+
+      // Update the cache
+      updateCache();
     }
 
 
@@ -129,6 +137,28 @@ namespace LOFAR
       stream->write(buffer.data(), size);
     }
 
+    
+    void Parset::updateCache()
+    {
+      // Station information
+      cache.stationNames = getStringVector("OLAP.storageStationNames", true);
+
+      // Dynamic range information
+      if (isDefined("Observation.nrBitsPerSample")) {
+        cache.nrBitsPerSample = getUint32("Observation.nrBitsPerSample");
+      } else {
+        LOG_WARN("Using depricatdd OLAP.nrBitsPerSample. Please replace by Observation.nrBitsPerSample");
+        cache.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample");
+      }
+
+      // Spectral resolution information
+      cache.subbands = getUint32Vector("Observation.subbandList", true);
+      cache.SAPs     = getUint32Vector("Observation.beamList",    true);
+
+      // Temporal resolution information
+      cache.clockMHz = getUint32("Observation.sampleClock");
+    }
+
 
     void Parset::checkVectorLength(const std::string &key, unsigned expectedSize) const
     {
@@ -137,20 +167,6 @@ namespace LOFAR
       if (actualSize != expectedSize)
         THROW(CoInterfaceException, "Key \"" << string(key) << "\" contains wrong number of entries (expected: " << expectedSize << ", actual: " << actualSize << ')');
     }
-
-
-#if 0
-    void Parset::checkPsetAndCoreConfiguration() const
-    {
-      std::vector<unsigned> phaseOnePsets = phaseOnePsets();
-      std::vector<unsigned> phaseTwoPsets = phaseTwoPsets();
-      std::vector<unsigned> phaseThreePsets = phaseThreePsets();
-      std::vector<unsigned> phaseOneTwoCores = phaseOneTwoCores();
-      std::vector<unsigned> phaseThreeCores = phaseThreeCores();
-
-      if (phaseOnePsets.size() == 0 ||
-          }
-#endif
 
 
     void Parset::checkInputConsistency() const
@@ -201,7 +217,6 @@ namespace LOFAR
 
     void Parset::check() const
     {
-      //checkPsetAndCoreConfiguration();
       checkInputConsistency();
       checkVectorLength("Observation.beamList", nrSubbands());
 
@@ -779,7 +794,7 @@ namespace LOFAR
 
     std::vector<std::string> Parset::allStationNames() const
     {
-      return getStringVector("OLAP.storageStationNames",true);
+      return cache.stationNames;
     }
 
     bool Parset::hasStorage() const
@@ -794,7 +809,7 @@ namespace LOFAR
 
     unsigned Parset::nrStations() const
     {
-      return allStationNames().size();
+      return cache.stationNames.size();
     }
 
     unsigned Parset::nrTabStations() const
@@ -807,7 +822,7 @@ namespace LOFAR
       std::vector<string> tabStations = getStringVector("OLAP.tiedArrayStationNames",true);
 
       if (tabStations.empty())
-        return getStringVector("OLAP.storageStationNames",true);
+        return cache.stationNames;
       else
         return tabStations;
     }
@@ -841,7 +856,7 @@ namespace LOFAR
 
     unsigned Parset::clockSpeed() const
     {
-      return getUint32("Observation.sampleClock") * 1000000;
+      return cache.clockMHz * 1000000;
     }
 
     double Parset::subbandBandwidth() const
@@ -861,16 +876,7 @@ namespace LOFAR
 
     unsigned Parset::nrBitsPerSample() const
     {
-      const std::string key = "Observation.nrBitsPerSample";
-
-      if (isDefined(key)) {
-        return getUint32(key);
-      } else {
-#ifndef HAVE_BGP_CN
-        LOG_WARN_STR( "Missing key " << key << ", using the depricated key OLAP.nrBitsPerSample");
-#endif
-        return getUint32("OLAP.nrBitsPerSample", 16);
-      }
+      return cache.nrBitsPerSample;
     }
 
     unsigned Parset::CNintegrationSteps() const
@@ -1104,12 +1110,12 @@ namespace LOFAR
 
     vector<unsigned> Parset::subbandList() const
     {
-      return getUint32Vector("Observation.subbandList",true);
+      return cache.subbands;
     }
 
     unsigned Parset::nrSubbands() const
     {
-      return getUint32Vector("Observation.subbandList",true).size();
+      return cache.subbands.size();
     }
 
     unsigned Parset::nrSubbandsPerSAP(unsigned sap) const
@@ -1121,7 +1127,7 @@ namespace LOFAR
 
     std::vector<unsigned> Parset::subbandToSAPmapping() const
     {
-      return getUint32Vector("Observation.beamList",true);
+      return cache.SAPs;
     }
 
     double Parset::channelWidth() const
