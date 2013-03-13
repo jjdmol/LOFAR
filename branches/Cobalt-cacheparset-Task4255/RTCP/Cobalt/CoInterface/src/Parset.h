@@ -56,6 +56,148 @@ namespace LOFAR
 
     enum StokesType { STOKES_I = 0, STOKES_IQUV, STOKES_XXYY, INVALID_STOKES = -1 };
 
+    // All settings relevant for an observation (well, it should become that,
+    // we don't copy all Parset values yet!).
+ 
+    struct ObservationSettings {
+      /*
+       * Generic information
+       */
+
+      // Whether the observation runs at real time. Non-real time
+      // observations are not allowed to lose data.
+      bool realTime;
+
+      // The SAS/MAC observation number
+      unsigned observationID;
+
+      // Specified observation start time, in seconds since 1970.
+      double startTime;
+
+      // Specified observation stop time, in seconds since 1970.
+      double stopTime;
+
+      // The station clock, in MHz (200 or 160)
+      unsigned clockMHz;
+
+      // The bandwidth of a single subband, in Hz
+      double subbandWidth;
+
+      // The number of bits in each input sample (16, 8, or 4)
+      unsigned nrBitsPerSample;
+
+      struct Corrections {
+        // Whether geometric delays should be compensated for
+        bool delayCompensation;
+
+        // Whether the station band pass should be corrected for
+        bool bandPass;
+
+        // Whether the station clock offsets should be corrected for
+        bool clock;
+      } corrections;
+
+      /*
+       * Station information
+       */
+
+      // The selected antenna set (LBA, HBA_DUAL, HBA_ZERO, etc)
+      std::string antennaSet;
+
+      // The selected band filter (LBA_30_70, etc)
+      std::string bandFilter;
+
+      struct Station {
+        // The name of the station (CS001LBA, etc)
+        std::string name;
+
+        // Correction on the station clock, in seconds
+        double clockCorrection;
+
+        // The phase center for which the station beams are corrected, in
+        // ITRF [x,y,z].
+        std::vector<double> phaseCenter;
+
+        // The RSP board to which each subband is mapped
+        std::vector<unsigned> rspBoardMap; // [subband]
+
+        // The RSP slot to which each subband is mapped
+        std::vector<unsigned> rspSlotMap;  // [subband]
+      };
+
+      // All stations specified as input
+      std::vector<struct Station> stations;
+
+      /*
+       * Pointing information
+       */
+      struct Direction {
+        // Coordinate type (J2000, etc)
+        std::string type;
+
+        // Two angles within the coordinate type (RA/DEC, etc)
+        double angle1;
+        double angle2;
+      };
+
+      struct SAP {
+        // Direction in which the SAP points
+        struct Direction direction;
+      };
+
+      // All station beams
+      std::vector<struct SAP> SAPs;
+
+      struct AnaBeam {
+        // Whether the observation employs an analog beam
+        bool enabled;
+
+        // Direction in which the analog beam points
+        struct Direction direction;
+      };
+
+      // The analog beam, if any
+      struct AnaBeam anaBeam;
+
+      /*
+       * Spectral resolution information
+       */
+
+      struct Subband {
+        // Index (f.e. 0..243)
+        unsigned idx;
+
+        // Index at station (f.e. 100..343)
+        unsigned stationIdx;
+
+        // SAP number
+        unsigned SAP;
+
+        // Central frequency (Hz)
+        double centralFrequency;
+      };
+
+      // The list of subbands
+      std::vector<struct Subband> subbands;
+
+      /*
+       * Correlator pipeline information
+       */
+
+      struct Correlator {
+        // Whether to output correlated data
+        bool enabled;
+
+        // Number of requested frequency channels per subband
+        unsigned nrChannels;
+
+        // The bandwidth of a single channel, in Hz
+        double channelWidth;
+      };
+
+      struct Correlator correlator;
+    };
+
 
     // The Parset class is a public struct that can be used as base-class
     // for holding Parset related information.
@@ -71,145 +213,7 @@ namespace LOFAR
       // Call this if keys are added or changed.
       void updateCache();
 
-      struct Cache {
-        /*
-         * Generic information
-         */
-
-        // Whether the observation runs at real time. Non-real time
-        // observations are not allowed to lose data.
-        bool realTime;
-
-        // The SAS/MAC observation number
-        unsigned observationID;
-
-        // Specified observation start time, in seconds since 1970.
-        double startTime;
-
-        // Specified observation stop time, in seconds since 1970.
-        double stopTime;
-
-        // The station clock, in MHz (200 or 160)
-        unsigned clockMHz;
-
-        // The bandwidth of a single subband, in Hz
-        double subbandWidth;
-
-        // The number of bits in each input sample (16, 8, or 4)
-        unsigned nrBitsPerSample;
-
-        struct Corrections {
-          // Whether geometric delays should be compensated for
-          bool delayCompensation;
-
-          // Whether the station band pass should be corrected for
-          bool bandPass;
-
-          // Whether the station clock offsets should be corrected for
-          bool clock;
-        } corrections;
-
-        /*
-         * Station information
-         */
-
-        // The selected antenna set (LBA, HBA_DUAL, HBA_ZERO, etc)
-        std::string antennaSet;
-
-        // The selected band filter (LBA_30_70, etc)
-        std::string bandFilter;
-
-        struct Station {
-          // The name of the station (CS001LBA, etc)
-          std::string name;
-
-          // Correction on the station clock, in seconds
-          double clockCorrection;
-
-          // The phase center for which the station beams are corrected, in
-          // ITRF [x,y,z].
-          std::vector<double> phaseCenter;
-
-          // The RSP board to which each subband is mapped
-          std::vector<unsigned> rspBoardMap; // [subband]
-
-          // The RSP slot to which each subband is mapped
-          std::vector<unsigned> rspSlotMap;  // [subband]
-        };
-
-        // All stations specified as input
-        std::vector<struct Station> stations;
-
-        /*
-         * Pointing information
-         */
-        struct Direction {
-          // Coordinate type (J2000, etc)
-          std::string type;
-
-          // Two angles within the coordinate type (RA/DEC, etc)
-          double angle1;
-          double angle2;
-        };
-
-        struct SAP {
-          // Direction in which the SAP points
-          struct Direction direction;
-        };
-
-        // All station beams
-        std::vector<struct SAP> SAPs;
-
-        struct AnaBeam {
-          // Whether the observation employs an analog beam
-          bool enabled;
-
-          // Direction in which the analog beam points
-          struct Direction direction;
-        };
-
-        // The analog beam, if any
-        struct AnaBeam anaBeam;
-
-        /*
-         * Spectral resolution information
-         */
-
-        struct Subband {
-          // Index (f.e. 0..243)
-          unsigned idx;
-
-          // Index at station (f.e. 100..343)
-          unsigned stationIdx;
-
-          // SAP number
-          unsigned SAP;
-
-          // Central frequency (Hz)
-          double centralFrequency;
-        };
-
-        // The list of subbands
-        std::vector<struct Subband> subbands;
-
-        /*
-         * Correlator pipeline information
-         */
-
-        struct Correlator {
-          // Whether to output correlated data
-          bool enabled;
-
-          // Number of requested frequency channels per subband
-          unsigned nrChannels;
-
-          // The bandwidth of a single channel, in Hz
-          double channelWidth;
-        };
-
-        struct Correlator correlator;
-
-      } cache;
+      struct ObservationSettings cache;
 
       std::string                 name() const;
       void                        check() const;

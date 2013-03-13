@@ -174,7 +174,7 @@ namespace LOFAR
 
       cache.stations.resize(nrStations);
       for (unsigned i = 0; i < nrStations; ++i) {
-        struct Cache::Station &station = cache.stations[i];
+        struct ObservationSettings::Station &station = cache.stations[i];
 
         station.name            = stationNames[i];
         station.clockCorrection = getDouble(str(boost::format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
@@ -194,7 +194,7 @@ namespace LOFAR
       
       cache.SAPs.resize(nrSAPs);
       for (unsigned i = 0; i < nrSAPs; ++i) {
-        struct Cache::SAP &sap = cache.SAPs[i];
+        struct ObservationSettings::SAP &sap = cache.SAPs[i];
 
         sap.direction.type   = getString(str(boost::format("Observation.Beam[%u].directionType") % i), "J2000");
         sap.direction.angle1 = getDouble(str(boost::format("Observation.Beam[%u].angle1") % i), 0.0);
@@ -216,7 +216,7 @@ namespace LOFAR
       cache.subbands.resize(nrSubbands);
       unsigned subbandOffset = 512 * (nyquistZone() - 1);
       for (unsigned i = 0; i < nrSubbands; ++i) {
-        struct Cache::Subband &subband = cache.subbands[i];
+        struct ObservationSettings::Subband &subband = cache.subbands[i];
 
         subband.idx              = i;
         subband.stationIdx       = subbandList[i];
