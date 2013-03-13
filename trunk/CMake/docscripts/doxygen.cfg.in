@@ -20,8 +20,12 @@ ALPHABETICAL_INDEX      = YES
 COLS_IN_ALPHA_INDEX     = 3
 ENUM_VALUES_PER_LINE    = 1
 GENERATE_LATEX          = NO
+MACRO_EXPANSION         = YES
+EXPAND_ONLY_PREDEF      = YES
 PREDEFINED              = DOXYGEN_SHOULD_SKIP_THIS \
                           BOOST_PP_IS_ITERATING \
+                          restrict= \
+                          __attribute__(x)= \
                           @DOXYGEN_PREDEFINED@
 ALLEXTERNALS            = YES
 CLASS_GRAPH             = YES
