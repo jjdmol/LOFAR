@@ -95,9 +95,19 @@ namespace LOFAR
          * Station information
          */
 
+        // The selected antenna set (LBA, HBA_DUAL, HBA_ZERO, etc)
+        std::string antennaSet;
+
+        // The selected band filter (LBA_30_70, etc)
+        std::string bandFilter;
+
         struct Station {
-          // The name of the station ("CS001LBA", etc)
+          // The name of the station (CS001LBA, etc)
           std::string name;
+
+          // The phase center for which the station beams are corrected, in
+          // ITRF [x,y,z].
+          std::vector<double> phaseCenter;
         };
 
         // All stations specified as input
@@ -297,7 +307,6 @@ namespace LOFAR
 
       void                        addPosition(string stName);
       double                      getTime(const std::string &name, const std::string &defaultValue) const;
-      static int                  findIndex(unsigned pset, const vector<unsigned> &psets);
 
       std::vector<double>         centroidPos(const string &stations) const;
     };

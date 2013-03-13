@@ -160,12 +160,18 @@ namespace LOFAR
       }
 
       // Station information
+      cache.antennaSet = getString("Observation.antennaSet", "LBA");
+      cache.bandFilter = getString("Observation.bandFilter", "LBA_30_70");
+
       vector<string> stationNames = getStringVector("OLAP.storageStationNames", emptyVectorString, true);
       size_t nrStations = stationNames.size();
 
       cache.stations.resize(nrStations);
-      for (unsigned station = 0; station < nrStations; ++station) {
-        cache.stations[station].name = stationNames[station];
+      for (unsigned i = 0; i < nrStations; ++i) {
+        struct Cache::Station &station = cache.stations[i];
+
+        station.name        = stationNames[i];
+        station.phaseCenter = getDoubleVector(str(boost::format("PIC.Core.%s.phaseCenter") % station.name));
       }
 
       // Spectral resolution information
@@ -175,11 +181,13 @@ namespace LOFAR
 
       cache.subbands.resize(nrSubbands);
       unsigned subbandOffset = 512 * (nyquistZone() - 1);
-      for (unsigned subband = 0; subband < nrSubbands; ++subband) {
-        cache.subbands[subband].idx              = subband;
-        cache.subbands[subband].stationIdx       = subbandList[subband];
-        cache.subbands[subband].SAP              = sapList[subband];
-        cache.subbands[subband].centralFrequency = subbandBandwidth() * (subbandList[subband] + subbandOffset);
+      for (unsigned i = 0; i < nrSubbands; ++i) {
+        struct Cache::Subband &subband = cache.subbands[i];
+
+        subband.idx              = i;
+        subband.stationIdx       = subbandList[i];
+        subband.SAP              = sapList[i];
+        subband.centralFrequency = subbandBandwidth() * (subband.stationIdx + subbandOffset);
       }
     }
 
@@ -371,7 +379,7 @@ namespace LOFAR
 
     unsigned Parset::nyquistZone() const
     {
-      std::string bandFilter = getString("Observation.bandFilter", "LBA_30_70");
+      std::string bandFilter = cache.bandFilter;
 
       if (bandFilter == "LBA_10_70" ||
           bandFilter == "LBA_30_70" ||
@@ -485,7 +493,7 @@ namespace LOFAR
 
     std::vector<double> Parset::getPhaseCentreOf(const string &name) const
     {
-      return getDoubleVector(str(boost::format("PIC.Core.%s.phaseCenter") % name));
+      return cache.stations[stationIndex(name)].phaseCenter;
     }
     /*
        std::vector<double> Parset::getPhaseCorrection(const string &name, char pol) const
@@ -662,14 +670,6 @@ namespace LOFAR
       }
 
       return getUint32Vector(key, true);
-    }
-
-
-    int Parset::findIndex(unsigned pset, const vector<unsigned> &psets)
-    {
-      unsigned index = std::find(psets.begin(), psets.end(), pset) - psets.begin();
-
-      return index != psets.size() ? static_cast<int>(index) : -1;
     }
 
     double Parset::getTime(const std::string &name, const std::string &defaultValue) const
@@ -1168,12 +1168,12 @@ namespace LOFAR
 
     string Parset::bandFilter() const
     {
-      return getString("Observation.bandFilter");
+      return cache.bandFilter;
     }
 
     string Parset::antennaSet() const
     {
-      return getString("Observation.antennaSet");
+      return cache.antennaSet;
     }
 
     string Parset::PVSS_TempObsName() const
