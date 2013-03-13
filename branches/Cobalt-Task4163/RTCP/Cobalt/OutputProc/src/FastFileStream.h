@@ -34,7 +34,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class FastFileStream : public FileStream

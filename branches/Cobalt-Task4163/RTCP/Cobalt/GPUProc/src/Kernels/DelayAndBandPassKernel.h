@@ -8,7 +8,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class DelayAndBandPassKernel : public Kernel

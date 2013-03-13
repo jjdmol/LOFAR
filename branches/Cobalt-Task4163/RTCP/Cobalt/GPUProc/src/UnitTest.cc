@@ -10,7 +10,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     UnitTest::UnitTest(const Parset &ps, const char *programName)

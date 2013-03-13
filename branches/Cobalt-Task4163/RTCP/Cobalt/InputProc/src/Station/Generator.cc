@@ -12,7 +12,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     Generator::Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )

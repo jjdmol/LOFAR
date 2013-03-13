@@ -36,7 +36,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class LogThread
@@ -76,7 +76,7 @@ namespace LOFAR
 
     // @}
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

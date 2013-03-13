@@ -36,7 +36,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     // Note: struct must remain copyable to avoid ugly constructions when passing it around
@@ -173,7 +173,7 @@ namespace LOFAR
       str->write(itsMarshalledData, itsMarshalledDataSize);
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

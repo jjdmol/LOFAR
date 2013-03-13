@@ -11,7 +11,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class FilteredData : public SampleData<fcomplex, 4, 2>
@@ -44,7 +44,7 @@ namespace LOFAR
       }
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

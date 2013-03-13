@@ -12,7 +12,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     UHEP_Pipeline::UHEP_Pipeline(const Parset &ps)
       :
@@ -41,7 +41,7 @@ namespace LOFAR
         triggerProgram = createProgram("UHEP/Trigger.cl");
       }
 
-      std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
+      LOG_DEBUG_STR("compile time = " << omp_get_wtime() - startTime);
     }
 
     void UHEP_Pipeline::doWork()

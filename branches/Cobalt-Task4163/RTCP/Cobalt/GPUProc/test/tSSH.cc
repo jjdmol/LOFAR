@@ -12,7 +12,7 @@ char pubkey[1024];
 char privkey[1024];
 
 using namespace LOFAR;
-using namespace RTCP;
+using namespace Cobalt;
 
 
 void test_SSHconnection( const char *cmd, bool capture )

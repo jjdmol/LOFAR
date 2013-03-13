@@ -24,7 +24,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     unsigned CN_Mapping::mapCoreOnPset(unsigned core, unsigned pset)
@@ -56,5 +56,5 @@ namespace LOFAR
     }
 
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

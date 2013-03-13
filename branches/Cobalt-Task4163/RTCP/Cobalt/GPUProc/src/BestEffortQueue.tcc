@@ -2,7 +2,7 @@
 
 namespace LOFAR
 {
-    namespace RTCP 
+    namespace Cobalt 
     {
 
 template <typename T> inline BestEffortQueue<T>::BestEffortQueue(size_t maxSize, bool dropIfFull)
@@ -62,7 +62,7 @@ template <typename T> inline void BestEffortQueue<T>::noMore()
   freeSpace.noMore();
 
   // signal end-of-stream to reader
-  Queue<T>::append(NULL);
+  Queue<T>::append(0);
 }
 
 

@@ -35,7 +35,7 @@
 
 using namespace std;
 using namespace LOFAR;
-using namespace LOFAR::RTCP;
+using namespace LOFAR::Cobalt;
 
 class TempFile
 {

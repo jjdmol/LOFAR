@@ -13,7 +13,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     BeamFormerPipeline::BeamFormerPipeline(const Parset &ps)
       :
@@ -44,7 +44,7 @@ namespace LOFAR
         dedispersionChirpProgram = createProgram("BeamFormer/Dedispersion.cl");
       }
 
-      std::cout << "compile time = " << omp_get_wtime() - startTime << std::endl;
+      LOG_DEBUG_STR("compile time = " << omp_get_wtime() - startTime);
     }
 
     void BeamFormerPipeline::doWork()

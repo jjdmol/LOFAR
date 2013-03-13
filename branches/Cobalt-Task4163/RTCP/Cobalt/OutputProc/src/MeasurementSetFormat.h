@@ -36,7 +36,7 @@ namespace LOFAR
   //# Forward Declarations
   class MSLofar;
 
-  namespace RTCP
+  namespace Cobalt
   {
 
     class MeasurementSetFormat : public Format
@@ -80,6 +80,6 @@ namespace LOFAR
       void fillHistory();
     };
 
-  } //RTCP
-} //LOFAR
+  } // namespace Cobalt
+} // namespace LOFAR
 #endif // LOFAR_STORAGEFORMAT_H

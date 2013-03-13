@@ -21,7 +21,7 @@
 
 namespace LOFAR
 {
-  namespace  RTCP
+  namespace Cobalt
   {
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset       &parset,
                                              cl::Context &context, cl::Device  &device, unsigned gpuNumber,
@@ -108,7 +108,7 @@ namespace LOFAR
     }
 
 
-    void CorrelatorWorkQueue::doSubband(unsigned block, unsigned subband, CorrelatedData &output)
+    void CorrelatorWorkQueue::doSubband(unsigned subband, CorrelatedData &output)
     {
       timers["GPU - total"]->start();
 

@@ -11,10 +11,11 @@
 
 #include <Common/Thread/Mutex.h>
 #include <Common/Exception.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     std::string errorMessage(cl_int error)
@@ -93,7 +94,7 @@ namespace LOFAR
         else if (strcmp(deviceType, "CPU") == 0)
           type = CL_DEVICE_TYPE_CPU;
         else
-          std::cerr << "warning: unrecognized device type" << std::endl;
+          LOG_ERROR_STR("Unrecognized device type: " << deviceType);
       }
 
       const char *deviceName = getenv("DEVICE");
@@ -102,10 +103,10 @@ namespace LOFAR
       cl::Platform::get(&platforms);
 
       for (std::vector<cl::Platform>::iterator platform = platforms.begin(); platform != platforms.end(); platform++) {
-        std::cout << "Platform profile: " << platform->getInfo<CL_PLATFORM_PROFILE>() << std::endl;
-        std::cout << "Platform name: " << platform->getInfo<CL_PLATFORM_NAME>() << std::endl;
-        std::cout << "Platform version: " << platform->getInfo<CL_PLATFORM_VERSION>() << std::endl;
-        std::cout << "Platform extensions: " << platform->getInfo<CL_PLATFORM_EXTENSIONS>() << std::endl;
+        LOG_INFO_STR("Platform profile: " << platform->getInfo<CL_PLATFORM_PROFILE>());
+        LOG_INFO_STR("Platform name: " << platform->getInfo<CL_PLATFORM_NAME>());
+        LOG_INFO_STR("Platform version: " << platform->getInfo<CL_PLATFORM_VERSION>());
+        LOG_INFO_STR("Platform extensions: " << platform->getInfo<CL_PLATFORM_EXTENSIONS>());
       }
 
       for (std::vector<cl::Platform>::iterator platform = platforms.begin(); platform != platforms.end(); platform++) {
@@ -118,8 +119,8 @@ namespace LOFAR
                 devices.erase(device);
 
           for (std::vector<cl::Device>::iterator device = devices.begin(); device != devices.end(); device++) {
-            std::cout << "device: " << device->getInfo<CL_DEVICE_NAME>() << std::endl;
-            std::cout << "max mem: " << device->getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>() << std::endl;
+            LOG_INFO_STR("Device: " << device->getInfo<CL_DEVICE_NAME>());
+            LOG_INFO_STR("Max mem: " << device->getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>()/1024/1024 << " MByte");
           }
 
           cl_context_properties cps[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties)(*platform)(), 0 };
@@ -128,7 +129,7 @@ namespace LOFAR
         }
       }
 
-      std::cerr << "Platform not found" << std::endl;
+      LOG_FATAL_STR("Platform not found: " << platformName);
       exit(1);
     }
 
@@ -143,14 +144,14 @@ namespace LOFAR
         program.build(devices, args);
         std::string msg;
         program.getBuildInfo(devices[0], CL_PROGRAM_BUILD_LOG, &msg);
-#pragma omp critical (cout)
-        std::cout << msg << std::endl;
+
+        LOG_INFO(msg);
       } catch (cl::Error &error) {
         if (strcmp(error.what(), "clBuildProgram") == 0) {
           std::string msg;
           program.getBuildInfo(devices[0], CL_PROGRAM_BUILD_LOG, &msg);
-#pragma omp critical (cerr)
-          std::cerr << msg << std::endl;
+
+          LOG_FATAL(msg);
           exit(1);
         } else {
           throw;
@@ -229,5 +230,5 @@ namespace LOFAR
       }
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

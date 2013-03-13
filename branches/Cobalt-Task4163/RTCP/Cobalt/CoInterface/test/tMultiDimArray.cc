@@ -3,7 +3,7 @@
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;
-using namespace RTCP;
+using namespace Cobalt;
 using namespace boost;
 
 // A class that keeps track of the number of live objects.

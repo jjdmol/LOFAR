@@ -40,7 +40,7 @@
 namespace LOFAR
 {
 
-  namespace RTCP
+  namespace Cobalt
   {
     template<typename T, unsigned DIM>
     class MSWriterDAL : public MSWriterFile

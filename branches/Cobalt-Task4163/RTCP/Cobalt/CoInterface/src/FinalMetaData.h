@@ -9,7 +9,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     class FinalMetaData
@@ -45,7 +45,7 @@ namespace LOFAR
 
     std::ostream& operator<<(std::ostream& os, const FinalMetaData &finalMetaData);
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

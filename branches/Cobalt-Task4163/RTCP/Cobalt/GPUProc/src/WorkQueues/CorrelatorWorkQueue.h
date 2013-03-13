@@ -25,7 +25,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     struct WorkQueueInputData
     {
@@ -65,7 +65,7 @@ namespace LOFAR
                           FilterBank &filterBank);
 
       void doWork();
-      void doSubband(unsigned block, unsigned subband, CorrelatedData &output);
+      void doSubband(unsigned subband, CorrelatedData &output);
       //private:
 
       cl::Buffer devFIRweights;

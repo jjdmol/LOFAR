@@ -46,7 +46,7 @@ using namespace std;
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     Stream *createStream(const string &descriptor, bool asServer, time_t deadline)
@@ -149,5 +149,5 @@ namespace LOFAR
       }
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

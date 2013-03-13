@@ -11,7 +11,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     /*
@@ -108,7 +108,7 @@ namespace LOFAR
       samples.resizeInplace(boost::extents[nrSamples | 2][nrSubbands][nrChannels]);
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

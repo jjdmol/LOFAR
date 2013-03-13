@@ -7,7 +7,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     extern "C" {
@@ -90,7 +90,7 @@ namespace LOFAR
       _add_4_single_precision_vectors( dst, dst,  src5, src6, src7, count );
     }
 
-  } // namespace LOFAR::RTCP
+  } // namespace LOFAR::Cobalt
 } // namespace LOFAR
 
 #endif

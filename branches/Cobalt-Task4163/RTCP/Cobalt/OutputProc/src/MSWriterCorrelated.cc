@@ -41,7 +41,7 @@ using namespace casa;
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian)
@@ -186,6 +186,6 @@ namespace LOFAR
     }
 
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 

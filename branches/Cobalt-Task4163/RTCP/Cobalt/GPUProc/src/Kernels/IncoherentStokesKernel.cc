@@ -10,7 +10,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     IncoherentStokesKernel::IncoherentStokesKernel(const Parset &ps, cl::CommandQueue &queue,
                                                    cl::Program &program, cl::Buffer &devIncoherentStokes, cl::Buffer &devInputSamples)

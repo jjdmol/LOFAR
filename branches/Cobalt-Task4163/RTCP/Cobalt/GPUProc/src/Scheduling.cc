@@ -36,7 +36,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     void doNotRunOnCore0()
@@ -81,7 +81,7 @@ namespace LOFAR
         perror("pthread_setschedparam");
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

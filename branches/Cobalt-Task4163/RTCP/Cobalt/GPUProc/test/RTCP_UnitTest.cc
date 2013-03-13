@@ -30,7 +30,7 @@
 //#include  <UnitTest++.h>
 
 using namespace LOFAR;
-using namespace LOFAR::RTCP;
+using namespace LOFAR::Cobalt;
 
 // Use our own terminate handler
 Exception::TerminateHandler t(OpenCL_Support::terminate);

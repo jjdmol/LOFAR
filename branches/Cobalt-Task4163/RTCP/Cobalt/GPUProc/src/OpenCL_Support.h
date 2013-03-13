@@ -10,7 +10,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     extern std::string errorMessage(cl_int error);
@@ -248,7 +248,7 @@ namespace LOFAR
       void terminate();
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif

@@ -14,7 +14,7 @@
 #include <casa/IO/RegularFileIO.h>
 
 using namespace LOFAR;
-using namespace LOFAR::RTCP;
+using namespace LOFAR::Cobalt;
 using namespace casa;
 using namespace std;
 

@@ -88,7 +88,7 @@ static string forceextension( const string filename, const string extension )
 namespace LOFAR
 {
 
-  namespace RTCP
+  namespace Cobalt
   {
     // Prevent concurrent access to HDF5, which may not be compiled thread-safe. The Thread-safe version
     // uses global locks too anyway.
@@ -612,6 +612,6 @@ namespace LOFAR
     // specialisation for FinalBeamFormedData
     template class MSWriterDAL<float,3>;
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 

@@ -33,7 +33,7 @@
 #define TESTEND   static_cast<int64>(0x7fffff00 * SAMPLERATE)
 
 using namespace LOFAR;
-using LOFAR::RTCP::TimeStamp;
+using LOFAR::Cobalt::TimeStamp;
 
 int main()
 {

@@ -5,7 +5,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     bool profiling = false;
     const char *str = getenv("NR_GPUS");

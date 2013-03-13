@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 using namespace LOFAR;
-using namespace RTCP;
+using namespace Cobalt;
 using namespace std;
 
 void test_drop()

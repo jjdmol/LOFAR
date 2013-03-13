@@ -33,7 +33,7 @@ using boost::format;
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 
@@ -130,5 +130,5 @@ namespace LOFAR
     template class InputSection<i8complex>;
     template class InputSection<i16complex>;
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

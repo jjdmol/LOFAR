@@ -25,7 +25,7 @@
 
 namespace LOFAR
 {
-  namespace  RTCP
+  namespace Cobalt
   {
 
     BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline, unsigned gpuNumber)
@@ -76,8 +76,7 @@ namespace LOFAR
 
       for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block++) {
 #pragma omp single nowait
-#pragma omp critical (cout)
-        std::cout << "block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)) << std::endl;
+        LOG_INFO_STR("block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)));
 
         memset(delaysAtBegin.origin(), 0, delaysAtBegin.bytesize());
         memset(delaysAfterEnd.origin(), 0, delaysAfterEnd.bytesize());
@@ -130,8 +129,7 @@ namespace LOFAR
 
 #pragma omp master
       if (!profiling)
-                             #pragma omp critical (cout)
-        std::cout << "run time = " << omp_get_wtime() - executionStartTime << std::endl;
+        LOG_INFO_STR("run time = " << omp_get_wtime() - executionStartTime);
     }
   }
 }

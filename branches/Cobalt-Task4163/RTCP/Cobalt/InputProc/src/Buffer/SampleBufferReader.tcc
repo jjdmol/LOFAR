@@ -9,7 +9,7 @@
 #include <string>
 
 namespace LOFAR {
-namespace RTCP {
+namespace Cobalt {
 
 
 template<typename T> SampleBufferReader<T>::SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples )

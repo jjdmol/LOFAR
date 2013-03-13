@@ -1,6 +1,6 @@
 /**
 
-\ingroup RTCP
+\ingroup Cobalt
 \defgroup GPUProc
 
 The GPU Processing package (GPUProc) contains code for the "new" correlator and

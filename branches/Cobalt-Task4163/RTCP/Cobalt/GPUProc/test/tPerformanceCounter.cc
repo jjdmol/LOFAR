@@ -5,7 +5,7 @@
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;
-using namespace RTCP;
+using namespace Cobalt;
 using namespace std;
 
 cl::Context context;

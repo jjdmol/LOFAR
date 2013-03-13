@@ -10,7 +10,7 @@
 #include <time.h>
 
 using namespace LOFAR;
-using namespace RTCP;
+using namespace Cobalt;
 using namespace std;
 
 template<typename T>

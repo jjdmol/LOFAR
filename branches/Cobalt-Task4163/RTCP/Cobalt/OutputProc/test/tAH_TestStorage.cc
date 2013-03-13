@@ -39,7 +39,7 @@
 
 
 using namespace LOFAR;
-using namespace LOFAR::RTCP;
+using namespace LOFAR::Cobalt;
 
 
 int main(int argc, char *argv[])

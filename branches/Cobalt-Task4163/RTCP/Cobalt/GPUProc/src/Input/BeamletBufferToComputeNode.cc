@@ -49,7 +49,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 
@@ -369,5 +369,5 @@ namespace LOFAR
     template class BeamletBufferToComputeNode<i8complex>;
     template class BeamletBufferToComputeNode<i16complex>;
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR

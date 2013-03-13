@@ -31,7 +31,7 @@
 #include <iostream>
 
 using namespace LOFAR;
-using namespace LOFAR::RTCP;
+using namespace LOFAR::Cobalt;
 using namespace std;
 
 void report( const string &filename )

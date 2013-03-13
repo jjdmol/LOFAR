@@ -11,7 +11,7 @@
 #include <ios>
 
 namespace LOFAR {
-namespace RTCP {
+namespace Cobalt {
 
 
 template<typename T> PacketWriter<T>::PacketWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, unsigned boardNr )

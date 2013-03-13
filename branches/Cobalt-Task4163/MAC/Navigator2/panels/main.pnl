@@ -44,6 +44,7 @@ void doAction(string aDP, string anAction) {
   // Reload
   if (actionString[1] == \"Reload\") {
     redraw();
+    redrawObservations();
     return;
   } else if (actionString[1] == \"DistChanged\") {
     redraw();
@@ -173,9 +174,6 @@ void redraw() {
   addMemAndHDD();
   
   addStationView();
-  
-  redrawObservations();
- 
  
   // trigger that the panel values are calculated and ready
   dynClear(highlight);
@@ -392,7 +390,7 @@ void addObservations() {
   int yPos_AddSymbol = 585; 
   int ref = 1;
   string addPanelName    = \"objects/Observations/observation_smallCEPView.pnl\";
-  dpget(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\",observationsList);
+  dpGet(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\",observationsList);
   //loop over list and prepare panel with all stations and swlevel objects   
   for (int i=1; i<= dynlen(observationsList); i++) {
     if (!navFunct_isObservation(observationsList[i])) continue;

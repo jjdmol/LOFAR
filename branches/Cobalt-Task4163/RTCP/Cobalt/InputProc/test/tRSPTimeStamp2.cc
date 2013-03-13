@@ -4,7 +4,7 @@
 #include <CoInterface/RSPTimeStamp.h>
 
 using namespace LOFAR;
-using namespace RTCP;
+using namespace Cobalt;
 
 int main( int, char **argv )
 {

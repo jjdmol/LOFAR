@@ -23,7 +23,7 @@
 #include <boost/lexical_cast.hpp>
 
 using namespace LOFAR;
-using namespace LOFAR::RTCP;
+using namespace LOFAR::Cobalt;
 using namespace std;
 
 // Use a terminate handler that can produce a backtrace.

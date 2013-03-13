@@ -11,7 +11,7 @@
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     enum WindowType { HAMMING, BLACKMAN, GAUSSIAN, KAISER, PREDEFINED_FILTER };
@@ -110,7 +110,7 @@ namespace LOFAR
       return itsNegated;
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif
