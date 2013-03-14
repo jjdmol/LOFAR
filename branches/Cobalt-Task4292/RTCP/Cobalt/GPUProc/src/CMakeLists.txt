@@ -60,4 +60,4 @@ lofar_add_library(gpuproc
   WorkQueues/UHEP_WorkQueue.cc
   WorkQueues/WorkQueue.cc)
 
-lofar_add_bin_program(RTCP_new RTCP_new.cc)
+lofar_add_bin_program(rtcp rtcp.cc)
