@@ -410,11 +410,11 @@ namespace LOFAR
       // Transform the parset into an ObservationSettings object
       struct ObservationSettings observationSettings() const;
 
-      // Fill the cache based on the ParameterSet keys.
+      // Fill the settings based on the ParameterSet keys.
       // Call this if keys are added or changed.
-      void updateCache();
+      void updateSettings();
 
-      struct ObservationSettings cache;
+      struct ObservationSettings settings;
 
       std::string                 name() const;
       void                        check() const;

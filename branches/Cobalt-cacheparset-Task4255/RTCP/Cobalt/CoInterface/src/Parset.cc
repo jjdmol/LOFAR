@@ -97,7 +97,7 @@ namespace LOFAR
       // we check the parset once we can communicate any errors
       //check();
 
-      updateCache();
+      updateSettings();
     }
 
 
@@ -120,14 +120,14 @@ namespace LOFAR
       std::string buffer(&tmp[0], size);
       adoptBuffer(buffer);
 
-      // Update the cache
-      updateCache();
+      // Update the settings
+      updateSettings();
     }
 
 
     void Parset::write(Stream *stream) const
     {
-      // stream == NULL fills the cache,
+      // stream == NULL fills the settings,
       // causing subsequent write()s to use it
       bool readCache = !itsWriteCache.empty();
       bool writeCache = !stream;
@@ -139,7 +139,7 @@ namespace LOFAR
         writeBuffer(buffer);
 
       if (!stream) {
-        // we only filled the cache
+        // we only filled the settings
         return;
       }
 
@@ -364,9 +364,9 @@ namespace LOFAR
       return 1.0 * nrSamplesPerChannel * nrBlocksPerIntegration / channelWidth;
     }
 
-    void Parset::updateCache()
+    void Parset::updateSettings()
     {
-      cache = observationSettings();
+      settings = observationSettings();
     }
 
 
@@ -484,7 +484,7 @@ namespace LOFAR
 
     bool Parset::correctClocks() const
     {
-      return cache.corrections.clock;
+      return settings.corrections.clock;
     }
 
 
@@ -553,7 +553,7 @@ namespace LOFAR
 
     unsigned Parset::nrBeams() const
     {
-      return cache.SAPs.size();
+      return settings.SAPs.size();
     }
 
 
@@ -562,7 +562,7 @@ namespace LOFAR
       vector<double> freqs(nrSubbands());
 
       for (unsigned subband = 0; subband < freqs.size(); ++subband)
-        freqs[subband] = cache.subbands[subband].centralFrequency;
+        freqs[subband] = settings.subbands[subband].centralFrequency;
 
       return freqs;
     }
@@ -573,7 +573,7 @@ namespace LOFAR
       vector<unsigned> saps(nrSubbands());
 
       for (unsigned subband = 0; subband < saps.size(); ++subband)
-        saps[subband] = cache.subbands[subband].SAP;
+        saps[subband] = settings.subbands[subband].SAP;
 
       return saps;
     }
@@ -635,13 +635,13 @@ namespace LOFAR
 
     std::vector<double> Parset::getRefPhaseCentre() const
     {
-      return cache.delayCompensation.referencePhaseCenter;
+      return settings.delayCompensation.referencePhaseCenter;
     }
 
 
     std::vector<double> Parset::getPhaseCentreOf(const string &name) const
     {
-      return cache.stations[stationIndex(name)].phaseCenter;
+      return settings.stations[stationIndex(name)].phaseCenter;
     }
     /*
        std::vector<double> Parset::getPhaseCorrection(const string &name, char pol) const
@@ -652,7 +652,7 @@ namespace LOFAR
 
     string Parset::beamTarget(unsigned beam) const
     {
-      return cache.SAPs[beam].target;
+      return settings.SAPs[beam].target;
     }
 
 
@@ -660,8 +660,8 @@ namespace LOFAR
     {
       std::vector<double> TAB(2);
 
-      TAB[0] = cache.beamFormer.SAPs[beam].TABs[pencil].directionDelta.angle1;
-      TAB[1] = cache.beamFormer.SAPs[beam].TABs[pencil].directionDelta.angle2;
+      TAB[0] = settings.beamFormer.SAPs[beam].TABs[pencil].directionDelta.angle1;
+      TAB[1] = settings.beamFormer.SAPs[beam].TABs[pencil].directionDelta.angle2;
 
       return TAB;
     }
@@ -669,22 +669,22 @@ namespace LOFAR
 
     bool Parset::isCoherent(unsigned beam, unsigned pencil) const
     {
-      return cache.beamFormer.SAPs[beam].TABs[pencil].coherent;
+      return settings.beamFormer.SAPs[beam].TABs[pencil].coherent;
     }
 
 
     double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
     {
-      if (!cache.corrections.dedisperse)
+      if (!settings.corrections.dedisperse)
         return 0.0;
 
-      return cache.beamFormer.SAPs[beam].TABs[pencil].dispersionMeasure;
+      return settings.beamFormer.SAPs[beam].TABs[pencil].dispersionMeasure;
     }
 
 
     std::vector<string> Parset::TABStationList(unsigned beam, unsigned pencil, bool raw) const
     {
-      // can't use cache until 'raw' is supported, which is needed to
+      // can't use settings until 'raw' is supported, which is needed to
       // distinguish between fly's eye mode with one station, and coherent
       // addition with one station
       string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].stationList") % beam % pencil);
@@ -708,8 +708,8 @@ namespace LOFAR
     {
       std::vector<double> beamDirs(2);
 
-      beamDirs[0] = cache.SAPs[beam].direction.angle1;
-      beamDirs[1] = cache.SAPs[beam].direction.angle2;
+      beamDirs[0] = settings.SAPs[beam].direction.angle1;
+      beamDirs[1] = settings.SAPs[beam].direction.angle2;
 
       return beamDirs;
     }
@@ -717,13 +717,13 @@ namespace LOFAR
 
     std::string Parset::getBeamDirectionType(unsigned beam) const
     {
-      return cache.SAPs[beam].direction.type;
+      return settings.SAPs[beam].direction.type;
     }
 
 
     bool Parset::haveAnaBeam() const
     {
-      return cache.anaBeam.enabled;
+      return settings.anaBeam.enabled;
     }
 
 
@@ -731,8 +731,8 @@ namespace LOFAR
     {
       std::vector<double> anaBeamDirections(2);
 
-      anaBeamDirections[0] = cache.anaBeam.direction.angle1;
-      anaBeamDirections[1] = cache.anaBeam.direction.angle2;
+      anaBeamDirections[0] = settings.anaBeam.direction.angle1;
+      anaBeamDirections[1] = settings.anaBeam.direction.angle2;
 
       return anaBeamDirections;
     }
@@ -740,19 +740,19 @@ namespace LOFAR
 
     std::string Parset::getAnaBeamDirectionType() const
     {
-      return cache.anaBeam.direction.type;
+      return settings.anaBeam.direction.type;
     }
 
 
     vector<unsigned> Parset::subbandToRSPboardMapping(const string &stationName) const
     {
-      return cache.stations[stationIndex(stationName)].rspBoardMap;
+      return settings.stations[stationIndex(stationName)].rspBoardMap;
     }
 
 
     vector<unsigned> Parset::subbandToRSPslotMapping(const string &stationName) const
     {
-      return cache.stations[stationIndex(stationName)].rspSlotMap;
+      return settings.stations[stationIndex(stationName)].rspSlotMap;
     }
 
     double Parset::getTime(const std::string &name, const std::string &defaultValue) const
@@ -762,7 +762,7 @@ namespace LOFAR
 
     unsigned Parset::nrTABs(unsigned beam) const
     {
-      return cache.beamFormer.SAPs[beam].TABs.size();
+      return settings.beamFormer.SAPs[beam].TABs.size();
     }
 
     std::string Parset::name() const
@@ -780,22 +780,22 @@ namespace LOFAR
 
     unsigned Parset::observationID() const
     {
-      return cache.observationID;
+      return settings.observationID;
     }
 
     double Parset::startTime() const
     {
-      return cache.startTime;
+      return settings.startTime;
     }
 
     double Parset::stopTime() const
     {
-      return cache.stopTime;
+      return settings.stopTime;
     }
 
     unsigned Parset::nrCorrelatedBlocks() const
     {
-      return cache.correlator.nrBlocksPerObservation;
+      return settings.correlator.nrBlocksPerObservation;
     }
 
     unsigned Parset::nrBeamFormedBlocks() const
@@ -805,7 +805,7 @@ namespace LOFAR
 
     string Parset::stationName(int index) const
     {
-      return cache.stations[index].name;
+      return settings.stations[index].name;
     }
 
     int Parset::stationIndex(const std::string &name) const
@@ -823,14 +823,14 @@ namespace LOFAR
       vector<string> names(nrStations());
 
       for (unsigned station = 0; station < names.size(); ++station)
-        names[station] = cache.stations[station].name;
+        names[station] = settings.stations[station].name;
 
       return names;
     }
 
     unsigned Parset::nrStations() const
     {
-      return cache.stations.size();
+      return settings.stations.size();
     }
 
     unsigned Parset::nrTabStations() const
@@ -877,12 +877,12 @@ namespace LOFAR
 
     unsigned Parset::clockSpeed() const
     {
-      return cache.clockMHz * 1000000;
+      return settings.clockMHz * 1000000;
     }
 
     double Parset::subbandBandwidth() const
     {
-      return cache.subbandWidth();
+      return settings.subbandWidth();
     }
 
     double Parset::sampleDuration() const
@@ -897,17 +897,17 @@ namespace LOFAR
 
     unsigned Parset::nrBitsPerSample() const
     {
-      return cache.nrBitsPerSample;
+      return settings.nrBitsPerSample;
     }
 
     unsigned Parset::CNintegrationSteps() const
     {
-      return cache.correlator.nrSamplesPerChannel;
+      return settings.correlator.nrSamplesPerChannel;
     }
 
     unsigned Parset::IONintegrationSteps() const
     {
-      return cache.correlator.nrBlocksPerIntegration;
+      return settings.correlator.nrBlocksPerIntegration;
     }
 
     unsigned Parset::integrationSteps() const
@@ -917,22 +917,22 @@ namespace LOFAR
 
     unsigned Parset::coherentStokesTimeIntegrationFactor() const
     {
-      return cache.beamFormer.coherentSettings.timeIntegrationFactor;
+      return settings.beamFormer.coherentSettings.timeIntegrationFactor;
     }
 
     unsigned Parset::incoherentStokesTimeIntegrationFactor() const
     {
-      return cache.beamFormer.incoherentSettings.timeIntegrationFactor;
+      return settings.beamFormer.incoherentSettings.timeIntegrationFactor;
     }
 
     unsigned Parset::coherentStokesChannelsPerSubband() const
     {
-      return cache.beamFormer.coherentSettings.nrChannels;
+      return settings.beamFormer.coherentSettings.nrChannels;
     }
 
     unsigned Parset::incoherentStokesChannelsPerSubband() const
     {
-      return cache.beamFormer.incoherentSettings.nrChannels;
+      return settings.beamFormer.incoherentSettings.nrChannels;
     }
 
     std::string Parset::coherentStokes() const
@@ -947,12 +947,12 @@ namespace LOFAR
 
     bool Parset::outputCorrelatedData() const
     {
-      return cache.correlator.enabled;
+      return settings.correlator.enabled;
     }
 
     bool Parset::outputBeamFormedData() const
     {
-      return cache.beamFormer.enabled;
+      return settings.beamFormer.enabled;
     }
 
     bool Parset::outputTrigger() const
@@ -1023,17 +1023,17 @@ namespace LOFAR
 
     double Parset::IONintegrationTime() const
     {
-      return cache.correlator.integrationTime();
+      return settings.correlator.integrationTime();
     }
 
     unsigned Parset::nrSamplesPerSubband() const
     {
-      return cache.nrSamplesPerSubband();
+      return settings.nrSamplesPerSubband();
     }
 
     unsigned Parset::nrSamplesPerChannel() const
     {
-      return cache.correlator.nrSamplesPerChannel;
+      return settings.correlator.nrSamplesPerChannel;
     }
 
     unsigned Parset::nrHistorySamples() const
@@ -1058,12 +1058,12 @@ namespace LOFAR
 
     unsigned Parset::coherentStokesNrSubbandsPerFile() const
     {
-      return std::min( cache.beamFormer.coherentSettings.nrSubbandsPerFile, nrSubbands() );
+      return std::min( settings.beamFormer.coherentSettings.nrSubbandsPerFile, nrSubbands() );
     }
 
     unsigned Parset::incoherentStokesNrSubbandsPerFile() const
     {
-      return std::min( cache.beamFormer.incoherentSettings.nrSubbandsPerFile, nrSubbands() );
+      return std::min( settings.beamFormer.incoherentSettings.nrSubbandsPerFile, nrSubbands() );
     }
 
     unsigned Parset::nrPPFTaps() const
@@ -1073,7 +1073,7 @@ namespace LOFAR
 
     unsigned Parset::nrChannelsPerSubband() const
     {
-      return cache.correlator.nrChannels;
+      return settings.correlator.nrChannels;
     }
 
     vector<unsigned> Parset::subbandList() const
@@ -1081,14 +1081,14 @@ namespace LOFAR
       vector<unsigned> nrs(nrSubbands());
 
       for (unsigned subband = 0; subband < nrs.size(); ++subband)
-        nrs[subband] = cache.subbands[subband].stationIdx;
+        nrs[subband] = settings.subbands[subband].stationIdx;
 
       return nrs;
     }
 
     size_t Parset::nrSubbands() const
     {
-      return cache.subbands.size();
+      return settings.subbands.size();
     }
 
     unsigned Parset::nrSubbandsPerSAP(unsigned sap) const
@@ -1100,12 +1100,12 @@ namespace LOFAR
 
     double Parset::channelWidth() const
     {
-      return cache.correlator.channelWidth;
+      return settings.correlator.channelWidth;
     }
 
     bool Parset::delayCompensation() const
     {
-      return cache.delayCompensation.enabled;
+      return settings.delayCompensation.enabled;
     }
 
     unsigned Parset::nrCalcDelays() const
@@ -1120,12 +1120,12 @@ namespace LOFAR
 
     double Parset::clockCorrectionTime(const std::string &station) const
     {
-      return cache.stations[stationIndex(station)].clockCorrection;
+      return settings.stations[stationIndex(station)].clockCorrection;
     }
 
     bool Parset::correctBandPass() const
     {
-      return cache.corrections.bandPass;
+      return settings.corrections.bandPass;
     }
 
     unsigned Parset::getLofarStManVersion() const
@@ -1177,7 +1177,7 @@ namespace LOFAR
 
     bool Parset::realTime() const
     {
-      return cache.realTime;
+      return settings.realTime;
     }
 
     std::vector<unsigned> Parset::nrTABs() const
@@ -1213,12 +1213,12 @@ namespace LOFAR
 
     string Parset::bandFilter() const
     {
-      return cache.bandFilter;
+      return settings.bandFilter;
     }
 
     string Parset::antennaSet() const
     {
-      return cache.antennaSet;
+      return settings.antennaSet;
     }
 
     string Parset::PVSS_TempObsName() const
@@ -1248,12 +1248,6 @@ namespace LOFAR
 
     Transpose2::Transpose2( const Parset &parset )
       :
-      //nrChannels( parset.nrChannelsPerSubband() ),
-      //nrCoherentChannels( parset.coherentStokesChannelsPerSubband() ),
-      //nrIncoherentChannels( parset.incoherentStokesChannelsPerSubband() ),
-      //nrSamples( parset.CNintegrationSteps() ),
-      //coherentTimeIntFactor( parset.coherentStokesTimeIntegrationFactor() ),
-      //incoherentTimeIntFactor( parset.incoherentStokesTimeIntegrationFactor() ),
 
       streamInfo( generateStreamInfo(parset) )
     {
@@ -1344,7 +1338,7 @@ namespace LOFAR
     {
       // get all info from parset, since we will be called while constructing our members
 
-      // ParameterSets are SLOW, so cache any info we need repeatedly
+      // ParameterSets are SLOW, so settings any info we need repeatedly
 
       std::vector<struct StreamInfo> infoset;
       const std::vector<unsigned> sapMapping = parset.subbandToSAPmapping();
