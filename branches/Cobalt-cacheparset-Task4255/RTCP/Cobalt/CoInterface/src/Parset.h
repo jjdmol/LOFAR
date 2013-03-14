@@ -360,6 +360,11 @@ namespace LOFAR
           // key: *.which
           StokesType type;
 
+          // The number of stokes to output
+          //
+          // set to: nrStokes(type)
+          unsigned nrStokes;
+
           // The requested number of channels
           //
           // key: *.channelsPerSubband
@@ -447,12 +452,15 @@ namespace LOFAR
       unsigned                    CNintegrationSteps() const;
       unsigned                    IONintegrationSteps() const;
       unsigned                    integrationSteps() const;
+  
       unsigned                    coherentStokesTimeIntegrationFactor() const;
-      unsigned                    coherentStokesNrSubbandsPerFile() const;
       unsigned                    incoherentStokesTimeIntegrationFactor() const;
+      /*
+      unsigned                    coherentStokesNrSubbandsPerFile() const;
       unsigned                    coherentStokesChannelsPerSubband() const;
       unsigned                    incoherentStokesChannelsPerSubband() const;
       unsigned                    incoherentStokesNrSubbandsPerFile() const;
+      */
       double                      CNintegrationTime() const;
       double                      IONintegrationTime() const;
       unsigned                    nrSamplesPerChannel() const;
@@ -497,19 +505,20 @@ namespace LOFAR
       std::string getHostName(OutputType, unsigned streamNr) const;
       std::string getFileName(OutputType, unsigned streamNr) const;
       std::string getDirectoryName(OutputType, unsigned streamNr) const;
-
+/*
       std::string                 coherentStokes() const;
       std::string                 incoherentStokes() const;
+*/
       std::string                 bandFilter() const;
       std::string                 antennaSet() const;
 
       size_t          nrCoherentStokes() const
       {
-        return coherentStokes().size();
+        return settings.beamFormer.coherentSettings.nrStokes;
       }
       size_t          nrIncoherentStokes() const
       {
-        return incoherentStokes().size();
+        return settings.beamFormer.incoherentSettings.nrStokes;
       }
 
       unsigned                    nrBeams() const;

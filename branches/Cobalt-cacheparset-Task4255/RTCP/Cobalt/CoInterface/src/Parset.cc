@@ -62,7 +62,24 @@ namespace LOFAR
         return STOKES_XXYY;
 
       return INVALID_STOKES;
-    };
+    }
+
+
+    static size_t nrStokes( StokesType type)
+    {
+      switch(type) {
+        case STOKES_I:
+          return 1;
+
+        case STOKES_IQUV:
+        case STOKES_XXYY:
+          return 4;
+
+        case INVALID_STOKES:
+        default:
+          return 0;
+      }
+    }
 
 
     unsigned ObservationSettings::nyquistZone() const
@@ -335,6 +352,7 @@ namespace LOFAR
 
           // Obtain settings of selected stokes
           set->type = stokesType(getString(prefix + ".which", "I"));
+          set->nrStokes = nrStokes(set->type);
           set->nrChannels = getUint32(prefix + ".channelsPerSubband", 0);
           if (set->nrChannels == 0) {
             // apply default
@@ -925,26 +943,6 @@ namespace LOFAR
       return settings.beamFormer.incoherentSettings.timeIntegrationFactor;
     }
 
-    unsigned Parset::coherentStokesChannelsPerSubband() const
-    {
-      return settings.beamFormer.coherentSettings.nrChannels;
-    }
-
-    unsigned Parset::incoherentStokesChannelsPerSubband() const
-    {
-      return settings.beamFormer.incoherentSettings.nrChannels;
-    }
-
-    std::string Parset::coherentStokes() const
-    {
-      return getString("OLAP.CNProc_CoherentStokes.which");
-    }
-
-    std::string Parset::incoherentStokes() const
-    {
-      return getString("OLAP.CNProc_IncoherentStokes.which");
-    }
-
     bool Parset::outputCorrelatedData() const
     {
       return settings.correlator.enabled;
@@ -1055,7 +1053,7 @@ namespace LOFAR
     {
       return (unsigned) (getDouble("OLAP.maxNetworkDelay", 0.25) * subbandBandwidth());
     }
-
+/*
     unsigned Parset::coherentStokesNrSubbandsPerFile() const
     {
       return std::min( settings.beamFormer.coherentSettings.nrSubbandsPerFile, nrSubbands() );
@@ -1065,7 +1063,7 @@ namespace LOFAR
     {
       return std::min( settings.beamFormer.incoherentSettings.nrSubbandsPerFile, nrSubbands() );
     }
-
+*/
     unsigned Parset::nrPPFTaps() const
     {
       return getUint32("OLAP.CNProc.nrPPFTaps");
@@ -1341,21 +1339,8 @@ namespace LOFAR
       // ParameterSets are SLOW, so settings any info we need repeatedly
 
       std::vector<struct StreamInfo> infoset;
-      const std::vector<unsigned> sapMapping = parset.subbandToSAPmapping();
-      const unsigned nrSAPs = parset.nrBeams();
-      const unsigned nrSubbands = parset.nrSubbands();
-      const unsigned nrCoherentSubbandsPerFile = parset.coherentStokesNrSubbandsPerFile();
-      const unsigned nrIncoherentSubbandsPerFile = parset.incoherentStokesNrSubbandsPerFile();
-
-      const unsigned nrCoherentStokes = parset.coherentStokes().size();
-      const StokesType coherentType = stokesType( parset.coherentStokes() );
-      const unsigned nrCoherentChannels = parset.coherentStokesChannelsPerSubband();
-      const unsigned nrCoherentTimeIntFactor = parset.coherentStokesTimeIntegrationFactor();
-
-      const unsigned nrIncoherentStokes = parset.incoherentStokes().size();
-      const StokesType incoherentType = stokesType( parset.incoherentStokes() );
-      const unsigned nrIncoherentChannels = parset.incoherentStokesChannelsPerSubband();
-      const unsigned nrIncoherentTimeIntFactor = parset.incoherentStokesTimeIntegrationFactor();
+      const unsigned nrSAPs = parset.settings.SAPs.size();
+      const unsigned nrSubbands = parset.settings.subbands.size();
 
       const unsigned nrSamples = parset.CNintegrationSteps();
 
@@ -1370,23 +1355,26 @@ namespace LOFAR
         std::vector<unsigned> sapSubbands;
 
         for (unsigned sb = 0; sb < nrSubbands; sb++)
-          if (sapMapping[sb] == sap)
+          if (parset.settings.subbands[sb].SAP == sap)
             sapSubbands.push_back(sb);
 
         for (unsigned beam = 0; beam < nrBeams; beam++) {
           info.beam = beam;
 
-          const bool coherent = parset.isCoherent(sap, beam);
-          const unsigned nrStokes = coherent ? nrCoherentStokes : nrIncoherentStokes;
+          const bool coherent = parset.settings.beamFormer.SAPs[sap].TABs[beam].coherent;
+          const ObservationSettings::BeamFormer::StokesSettings &set =
+              coherent ? parset.settings.beamFormer.coherentSettings
+                       : parset.settings.beamFormer.incoherentSettings;
+          const unsigned nrStokes = set.nrStokes;
 
           info.coherent = coherent;
-          info.nrChannels = coherent ? nrCoherentChannels : nrIncoherentChannels;
-          info.timeIntFactor = coherent ? nrCoherentTimeIntFactor : nrIncoherentTimeIntFactor;
-          info.nrStokes = nrStokes;
-          info.stokesType = coherent ? coherentType : incoherentType;
+          info.nrChannels = set.nrChannels;
+          info.timeIntFactor = set.timeIntegrationFactor;
+          info.nrStokes = set.nrStokes;
+          info.stokesType = set.type;
           info.nrSamples = nrSamples / info.timeIntFactor;
 
-          const unsigned nrSubbandsPerFile = coherent ? nrCoherentSubbandsPerFile : nrIncoherentSubbandsPerFile;
+          const unsigned nrSubbandsPerFile = set.nrSubbandsPerFile;
 
           for (unsigned stokes = 0; stokes < nrStokes; stokes++) {
             info.stokes = stokes;
