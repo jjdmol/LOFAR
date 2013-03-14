@@ -272,9 +272,9 @@ void RSPReader::ReadForStatistics(unsigned beamletCount)
 {
 	long unsigned timesteps = TimeStepCount(beamletCount);
 	long unsigned stepSize = 1024;
-	BeamletStatistics
-		statistics[beamletCount],
-		timeStartStatistics[beamletCount];
+        std::vector<BeamletStatistics>
+          statistics(beamletCount),
+          timeStartStatistics(beamletCount);
 
 	std::ofstream *statFile[beamletCount];
 	for(unsigned i=0;i<beamletCount;++i)

@@ -15,7 +15,7 @@ struct NewStarEntry
 	double PA, SI, RM, reserved;
 };
 
-bool readEntry(istream &stream, class NewStarEntry &output)
+bool readEntry(istream &stream, struct NewStarEntry &output)
 {
 	string token;
 	stream >> token;

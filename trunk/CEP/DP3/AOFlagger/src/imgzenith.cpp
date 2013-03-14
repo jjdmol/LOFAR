@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 	casa::Table antennaTable(table.antenna());
 	casa::MPosition::ROScalarColumn antPositionColumn(antennaTable, "POSITION");
 	casa::ROScalarColumn<casa::String> antNameColumn(antennaTable, "NAME");
-	casa::MPosition antennaPositions[antennaTable.nrow()];
+        std::vector<casa::MPosition> antennaPositions(antennaTable.nrow());
 	for(unsigned i = 0;i<antennaTable.nrow();++i)
 	{
 		antennaPositions[i] = antPositionColumn(i);
