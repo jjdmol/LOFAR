@@ -309,6 +309,12 @@ namespace LOFAR
             settings.correlator.stations[tabList[i]].inputStations.push_back(i);
           }
         }
+
+        // Files to output
+        settings.correlator.files.resize(nrSubbands);
+        for (size_t i = 0; i < nrSubbands; ++i) {
+          settings.correlator.files[i].location = getFileLocation("Correlated", i);
+        }
       }
 
       /* ===============================
@@ -419,6 +425,21 @@ namespace LOFAR
 
     double ObservationSettings::Correlator::integrationTime() const {
       return 1.0 * nrSamplesPerChannel * nrBlocksPerIntegration / channelWidth;
+    }
+
+    struct ObservationSettings::FileLocation Parset::getFileLocation(const std::string outputType, unsigned idx) const {
+      const string prefix = "Observation.DataProducts.Output_" + outputType;
+
+      vector<string> empty;
+      vector<string> filenames = getStringVector(prefix + ".filenames", empty, true);
+      vector<string> locations = getStringVector(prefix + ".locations", empty, true);
+
+      ObservationSettings::FileLocation location;
+      location.filename  = filenames[idx];
+      location.host      = StringUtil::split(locations[idx], ':')[0];
+      location.directory = StringUtil::split(locations[idx], ':')[1];
+
+      return location;
     }
 
     void Parset::updateSettings()
@@ -564,12 +585,18 @@ namespace LOFAR
 
     std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
     {
+      if (outputType == CORRELATED_DATA)
+        return settings.correlator.files[streamNr].location.host;
+
       return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[0];
     }
 
 
     std::string Parset::getFileName(OutputType outputType, unsigned streamNr) const
     {
+      if (outputType == CORRELATED_DATA)
+        return settings.correlator.files[streamNr].location.filename;
+
       const std::string keyname = keyPrefix(outputType) + ".filenames";
       if (!isDefined(keyname))
         THROW(CoInterfaceException, "Could not find filename key: " << keyname);
@@ -585,6 +612,9 @@ namespace LOFAR
 
     std::string Parset::getDirectoryName(OutputType outputType, unsigned streamNr) const
     {
+      if (outputType == CORRELATED_DATA)
+        return settings.correlator.files[streamNr].location.directory;
+
       return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[1];
     }
 

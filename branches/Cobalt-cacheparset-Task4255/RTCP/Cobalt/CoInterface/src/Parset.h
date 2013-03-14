@@ -263,6 +263,12 @@ namespace LOFAR
       // length: len(Observation.subbandList)
       std::vector<struct Subband> subbands;
 
+      struct FileLocation {
+        string host;
+        string directory;
+        string filename;
+      };
+
       /* ===============================
        * Correlator pipeline information
        * ===============================
@@ -322,6 +328,13 @@ namespace LOFAR
         // The aim is to output this list of stations instead of the
         // ones used for input.
         std::vector<struct Station> stations;
+
+        struct File {
+          struct FileLocation location;
+        };
+
+        // The list of files to write, indexed by subband
+        std::vector<struct File> files; // [subband]
       };
 
       struct Correlator correlator;
@@ -418,6 +431,7 @@ namespace LOFAR
 
       // Returns the Nyquist zone number based on bandFilter.
       unsigned nyquistZone() const;
+
     };
 
 
@@ -601,6 +615,8 @@ namespace LOFAR
       double                      getTime(const std::string &name, const std::string &defaultValue) const;
 
       std::vector<double>         centroidPos(const string &stations) const;
+
+      struct ObservationSettings::FileLocation         getFileLocation(const std::string outputType, unsigned idx) const;
     };
 
     //
