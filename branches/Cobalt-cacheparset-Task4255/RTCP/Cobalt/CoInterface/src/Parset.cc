@@ -992,6 +992,7 @@ namespace LOFAR
       return getBool(keyPrefix(outputType) + ".enabled", false);
     }
 
+#if 0
     bool Parset::onlineFlagging() const
     {
       return getBool("OLAP.CNProc.onlineFlagging", false);
@@ -1042,6 +1043,7 @@ namespace LOFAR
     {
       return getBool("OLAP.CNProc.onlinePostCorrelationFlaggingDetectBrokenStations", false);
     }
+#endif
 
     double Parset::CNintegrationTime() const
     {
@@ -1082,17 +1084,7 @@ namespace LOFAR
     {
       return (unsigned) (getDouble("OLAP.maxNetworkDelay", 0.25) * subbandBandwidth());
     }
-/*
-    unsigned Parset::coherentStokesNrSubbandsPerFile() const
-    {
-      return std::min( settings.beamFormer.coherentSettings.nrSubbandsPerFile, nrSubbands() );
-    }
 
-    unsigned Parset::incoherentStokesNrSubbandsPerFile() const
-    {
-      return std::min( settings.beamFormer.incoherentSettings.nrSubbandsPerFile, nrSubbands() );
-    }
-*/
     unsigned Parset::nrPPFTaps() const
     {
       return getUint32("OLAP.CNProc.nrPPFTaps");
@@ -1116,13 +1108,6 @@ namespace LOFAR
     size_t Parset::nrSubbands() const
     {
       return settings.subbands.size();
-    }
-
-    unsigned Parset::nrSubbandsPerSAP(unsigned sap) const
-    {
-      std::vector<unsigned> mapping = subbandToSAPmapping();
-
-      return std::count(mapping.begin(), mapping.end(), sap);
     }
 
     double Parset::channelWidth() const

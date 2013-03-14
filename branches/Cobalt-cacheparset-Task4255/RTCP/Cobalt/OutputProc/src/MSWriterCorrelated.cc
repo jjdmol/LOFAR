@@ -63,6 +63,7 @@ namespace LOFAR
         }
       }
 
+#if 0
       // derive baseline names
       std::vector<std::string> stationNames = parset.mergedStationNames();
       std::vector<std::string> baselineNames(parset.nrBaselines());
@@ -76,6 +77,7 @@ namespace LOFAR
       for(unsigned s1 = 0; s1 < nrStations; s1++)
         for(unsigned s2 = 0; s2 <= s1; s2++)
           baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
+#endif
 
       const vector<unsigned> subbands = itsParset.subbandList();
       const vector<unsigned> SAPs = itsParset.subbandToSAPmapping();

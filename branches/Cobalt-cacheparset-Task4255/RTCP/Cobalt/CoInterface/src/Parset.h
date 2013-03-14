@@ -503,6 +503,7 @@ namespace LOFAR
       bool                        outputTrigger() const;
       bool outputThisType(OutputType) const;
 
+#if 0
       bool                        onlineFlagging() const;
       bool                        onlinePreCorrelationFlagging() const;
       bool                        onlinePreCorrelationNoChannelsFlagging() const;
@@ -513,6 +514,7 @@ namespace LOFAR
       std::string                 onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const;
       std::string                 onlinePostCorrelationFlaggingType(std::string defaultVal) const;
       std::string                 onlinePostCorrelationFlaggingStatisticsType(std::string defaultVal) const;
+#endif
 
       unsigned nrStreams(OutputType, bool force = false) const;
       static std::string keyPrefix(OutputType);
@@ -545,7 +547,6 @@ namespace LOFAR
 
       std::vector<unsigned>       subbandList() const;
       size_t                      nrSubbands() const;
-      unsigned                    nrSubbandsPerSAP(unsigned sap) const;
 
       std::vector<unsigned>       subbandToSAPmapping() const;
       std::vector<double>         subbandToFrequencyMapping() const;
