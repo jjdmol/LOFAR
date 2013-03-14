@@ -174,7 +174,6 @@ namespace LOFAR
       settings.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
       settings.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
       settings.clockMHz = getUint32("Observation.sampleClock", 200);
-      settings.subbandWidth = 1.0 * settings.clockMHz * 1000000 / 1024;
 
       if (isDefined("Observation.nrBitsPerSample")) {
         settings.nrBitsPerSample = getUint32("Observation.nrBitsPerSample", 16);
@@ -246,19 +245,33 @@ namespace LOFAR
         subband.idx              = i;
         subband.stationIdx       = subbandList[i];
         subband.SAP              = sapList[i];
-        subband.centralFrequency = settings.subbandWidth * (subband.stationIdx + subbandOffset);
+        subband.centralFrequency = settings.subbandWidth() * (subband.stationIdx + subbandOffset);
       }
 
       // Correlator pipeline information
       settings.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
-      if (settings.correlator.enabled) {
+      if (settings.correlator.enabled || true) { // for now, always fill in correlator values, since they're still used outside the correlator to determine the block size, etc
         settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
-        settings.correlator.channelWidth = settings.subbandWidth / settings.correlator.nrChannels;
+        settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
+        settings.correlator.nrSamplesPerChannel = getUint32("OLAP.CNProc.integrationSteps", 3052);
+        settings.correlator.nrBlocksPerIntegration = getUint32("OLAP.IONProc.integrationSteps", 1);
+        settings.correlator.nrBlocksPerObservation = static_cast<size_t>(floor((settings.stopTime - settings.startTime) / settings.correlator.integrationTime()));
       }
 
       return settings;
     }
 
+    double ObservationSettings::subbandWidth() const {
+      return 1.0 * clockMHz * 1000000 / 1024;
+    }
+
+    size_t ObservationSettings::nrSamplesPerSubband() const {
+      return correlator.nrChannels * correlator.nrSamplesPerChannel;
+    }
+
+    double ObservationSettings::Correlator::integrationTime() const {
+      return 1.0 * nrSamplesPerChannel * nrBlocksPerIntegration / channelWidth;
+    }
 
     void Parset::updateCache()
     {
@@ -693,7 +706,7 @@ namespace LOFAR
 
     unsigned Parset::nrCorrelatedBlocks() const
     {
-      return static_cast<unsigned>(floor( (stopTime() - startTime()) / IONintegrationTime()));
+      return cache.correlator.nrBlocksPerObservation;
     }
 
     unsigned Parset::nrBeamFormedBlocks() const
@@ -780,7 +793,7 @@ namespace LOFAR
 
     double Parset::subbandBandwidth() const
     {
-      return cache.subbandWidth;
+      return cache.subbandWidth();
     }
 
     double Parset::sampleDuration() const
@@ -800,12 +813,12 @@ namespace LOFAR
 
     unsigned Parset::CNintegrationSteps() const
     {
-      return getUint32("OLAP.CNProc.integrationSteps");
+      return cache.correlator.nrSamplesPerChannel;
     }
 
     unsigned Parset::IONintegrationSteps() const
     {
-      return getUint32("OLAP.IONProc.integrationSteps");
+      return cache.correlator.nrBlocksPerIntegration;
     }
 
     unsigned Parset::integrationSteps() const
@@ -931,17 +944,17 @@ namespace LOFAR
 
     double Parset::IONintegrationTime() const
     {
-      return CNintegrationTime() * IONintegrationSteps();
+      return cache.correlator.integrationTime();
     }
 
     unsigned Parset::nrSamplesPerSubband() const
     {
-      return CNintegrationSteps() * nrChannelsPerSubband();
+      return cache.nrSamplesPerSubband();
     }
 
     unsigned Parset::nrSamplesPerChannel() const
     {
-      return CNintegrationSteps();
+      return cache.correlator.nrSamplesPerChannel;
     }
 
     unsigned Parset::nrHistorySamples() const
@@ -981,7 +994,7 @@ namespace LOFAR
 
     unsigned Parset::nrChannelsPerSubband() const
     {
-      return getUint32("Observation.channelsPerSubband");
+      return cache.correlator.nrChannels;
     }
 
     vector<unsigned> Parset::subbandList() const

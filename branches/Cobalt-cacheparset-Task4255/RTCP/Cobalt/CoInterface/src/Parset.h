@@ -66,71 +66,116 @@ namespace LOFAR
 
       // Whether the observation runs at real time. Non-real time
       // observations are not allowed to lose data.
+      //
+      // key: OLAP.realTime
       bool realTime;
 
       // The SAS/MAC observation number
+      //
+      // key: Observation.ObsID
       unsigned observationID;
 
       // Specified observation start time, in seconds since 1970.
+      //
+      // key: Observation.startTime
       double startTime;
 
       // Specified observation stop time, in seconds since 1970.
+      //
+      // key: Observation.stopTime
       double stopTime;
 
       // The station clock, in MHz (200 or 160)
+      //
+      // key: Observation.sampleClock
       unsigned clockMHz;
 
       // The bandwidth of a single subband, in Hz
-      double subbandWidth;
+      double subbandWidth() const;
+
+      // The number of samples in one block of one subband.
+      size_t nrSamplesPerSubband() const;
 
       // The number of bits in each input sample (16, 8, or 4)
+      //
+      // key: Observation.nrBitsPerSample
       unsigned nrBitsPerSample;
 
       struct Corrections {
         // Whether the station band pass should be corrected for
+        //
+        // key: OLAP.correctBandPass
         bool bandPass;
 
         // Whether the station clock offsets should be corrected for
+        //
+        // key: OLAP.correctClocks
         bool clock;
-      } corrections;
+      };
+      
+      struct Corrections corrections;
 
       struct DelayCompensation {
         // Whether geometric delays should be compensated for
+        //
+        // key: OLAP.delayCompensation
         bool enabled;
 
         // The ITRF position to compensate delays to
+        //
+        // key: Observation.referencePhaseCenter
         std::vector<double> referencePhaseCenter;
-      } delayCompensation;
+      };
+      
+      struct DelayCompensation delayCompensation;
 
       /*
        * Station information
        */
 
       // The selected antenna set (LBA, HBA_DUAL, HBA_ZERO, etc)
+      //
+      // key: Observation.antennaSet
       std::string antennaSet;
 
       // The selected band filter (LBA_30_70, etc)
+      //
+      // key: Observation.bandFilter
       std::string bandFilter;
 
       struct Station {
         // The name of the station (CS001LBA, etc)
+        //
+        // key: OLAP.storageStationNames[stationIdx]
         std::string name;
 
         // Correction on the station clock, in seconds
+        //
+        // key: PIC.Core.CS001LBA.clockCorrectionTime
         double clockCorrection;
 
         // The phase center for which the station beams are corrected, in
         // ITRF [x,y,z].
+        //
+        // key: PIC.Core.CS001LBA.phaseCenter
         std::vector<double> phaseCenter;
 
         // The RSP board to which each subband is mapped
+        //
+        // key: Observation.Dataslots.CS001LBA.RSPBoardList
+        //  or: Observation.rspBoardList
         std::vector<unsigned> rspBoardMap; // [subband]
 
         // The RSP slot to which each subband is mapped
+        //
+        // key: Observation.Dataslots.CS001LBA.DataslotList
+        //  or: Observation.rspSlotList
         std::vector<unsigned> rspSlotMap;  // [subband]
       };
 
       // All stations specified as input
+      //
+      // length: len(OLAP.storageStationNames)
       std::vector<struct Station> stations;
 
       /*
@@ -138,29 +183,44 @@ namespace LOFAR
        */
       struct Direction {
         // Coordinate type (J2000, etc)
+        //
+        // key: *.directionType
         std::string type;
 
         // Two angles within the coordinate type (RA/DEC, etc)
+        //
+        // key: *.angle1
+        // key: *.angle2
         double angle1;
         double angle2;
       };
 
       struct SAP {
         // Direction in which the SAP points
+        //
+        // key: Observation.Beam[sapIdx].*
         struct Direction direction;
 
         // Name of target
+        //
+        // key: Observation.Beam[sapIdx].target
         std::string target;
       };
 
       // All station beams
+      //
+      // length: Observation.nrBeams
       std::vector<struct SAP> SAPs;
 
       struct AnaBeam {
         // Whether the observation employs an analog beam
+        //
+        // key: Observation.antennaSet starts with "HBA"
         bool enabled;
 
         // Direction in which the analog beam points
+        //
+        // key: Observation.AnaBeam[0].*
         struct Direction direction;
       };
 
@@ -173,19 +233,29 @@ namespace LOFAR
 
       struct Subband {
         // Index (f.e. 0..243)
+        //
+        // set to: equals the index in the subbands vector
         unsigned idx;
 
         // Index at station (f.e. 100..343)
+        //
+        // key: Observation.subbandList[idx]
         unsigned stationIdx;
 
         // SAP number
+        //
+        // key: Observation.beamList[idx]
         unsigned SAP;
 
         // Central frequency (Hz)
+        //
+        // set to: subbandWidth() * (512 * (nyquistZone() - 1) + stationIdx)
         double centralFrequency;
       };
 
       // The list of subbands
+      //
+      // length: len(Observation.subbandList)
       std::vector<struct Subband> subbands;
 
       /*
@@ -194,18 +264,43 @@ namespace LOFAR
 
       struct Correlator {
         // Whether to output correlated data
+        //
+        // key: Observation.DataProducts.Output_Correlated.enabled
         bool enabled;
 
         // Number of requested frequency channels per subband
+        //
+        // key: Observation.channelsPerSubband
         unsigned nrChannels;
 
         // The bandwidth of a single channel, in Hz
+        //
+        // set to: subbandWidth() / nrChannels
         double channelWidth;
+
+        // The number of samples in one block of one channel.
+        //
+        // key: OLAP.CNProc.integrationSteps
+        size_t nrSamplesPerChannel;
+
+        // The number of blocks to integrate to obtain the final
+        // integration time.
+        //
+        // key: OLAP.IONProc.integrationSteps
+        size_t nrBlocksPerIntegration;
+
+        // The total integration time of all blocks, in seconds.
+        double integrationTime() const;
+
+        // The number of blocks in this observation.
+        //
+        // set to: floor((stopTime - startTime) / integrationTime())
+        size_t nrBlocksPerObservation;
       };
 
       struct Correlator correlator;
 
-      // Returns the Nyquist zone number based on `bandFilter'.
+      // Returns the Nyquist zone number based on bandFilter.
       unsigned nyquistZone() const;
     };
 
