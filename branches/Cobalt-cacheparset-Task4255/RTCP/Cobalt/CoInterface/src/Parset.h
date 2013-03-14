@@ -263,8 +263,9 @@ namespace LOFAR
       // length: len(Observation.subbandList)
       std::vector<struct Subband> subbands;
 
-      /*
+      /* ===============================
        * Correlator pipeline information
+       * ===============================
        */
 
       struct Correlator {
@@ -304,6 +305,11 @@ namespace LOFAR
       };
 
       struct Correlator correlator;
+
+      /* ===============================
+       * Beamformer pipeline information
+       * ===============================
+       */
 
       struct BeamFormer {
         // Whether beam forming was requested.
@@ -511,7 +517,6 @@ namespace LOFAR
 
       unsigned                    nrTABs(unsigned beam) const;
       std::vector<unsigned>       nrTABs() const;
-      unsigned                    totalNrTABs() const;
       unsigned                    maxNrTABs() const;
       bool                        isCoherent(unsigned beam, unsigned pencil) const;
       BeamCoordinates             TABs(unsigned beam) const;
@@ -620,17 +625,6 @@ namespace LOFAR
       unsigned maxNrSamples() const;
 
       size_t subbandSize( unsigned stream ) const;
-
-      const unsigned nrChannels;
-      const unsigned nrCoherentChannels;
-      const unsigned nrIncoherentChannels;
-      const unsigned nrSamples;
-      const unsigned coherentTimeIntFactor;
-      const unsigned incoherentTimeIntFactor;
-
-      const unsigned nrBeams;
-      const unsigned coherentNrSubbandsPerFile;
-      const unsigned incoherentNrSubbandsPerFile;
 
       const std::vector<struct StreamInfo> streamInfo;
 

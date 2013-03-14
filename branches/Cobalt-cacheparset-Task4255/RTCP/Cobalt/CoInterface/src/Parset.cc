@@ -1190,13 +1190,6 @@ namespace LOFAR
       return counts;
     }
 
-    unsigned Parset::totalNrTABs() const
-    {
-      std::vector<unsigned> beams = nrTABs();
-
-      return std::accumulate(beams.begin(), beams.end(), 0);
-    }
-
     unsigned Parset::maxNrTABs() const
     {
       std::vector<unsigned> beams = nrTABs();
@@ -1255,16 +1248,13 @@ namespace LOFAR
 
     Transpose2::Transpose2( const Parset &parset )
       :
-      nrChannels( parset.nrChannelsPerSubband() ),
-      nrCoherentChannels( parset.coherentStokesChannelsPerSubband() ),
-      nrIncoherentChannels( parset.incoherentStokesChannelsPerSubband() ),
-      nrSamples( parset.CNintegrationSteps() ),
-      coherentTimeIntFactor( parset.coherentStokesTimeIntegrationFactor() ),
-      incoherentTimeIntFactor( parset.incoherentStokesTimeIntegrationFactor() ),
+      //nrChannels( parset.nrChannelsPerSubband() ),
+      //nrCoherentChannels( parset.coherentStokesChannelsPerSubband() ),
+      //nrIncoherentChannels( parset.incoherentStokesChannelsPerSubband() ),
+      //nrSamples( parset.CNintegrationSteps() ),
+      //coherentTimeIntFactor( parset.coherentStokesTimeIntegrationFactor() ),
+      //incoherentTimeIntFactor( parset.incoherentStokesTimeIntegrationFactor() ),
 
-      nrBeams( parset.totalNrTABs() ),
-      coherentNrSubbandsPerFile( parset.coherentStokesNrSubbandsPerFile() ),
-      incoherentNrSubbandsPerFile( parset.incoherentStokesNrSubbandsPerFile() ),
       streamInfo( generateStreamInfo(parset) )
     {
     }
