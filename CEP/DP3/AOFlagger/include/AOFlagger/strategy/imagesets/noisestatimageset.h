@@ -238,7 +238,7 @@ namespace rfiStrategy {
 			static void MergeInTime(TimeFrequencyData &data, TimeFrequencyMetaDataPtr metaData)
 			{
 				Mask2DPtr mask = Mask2D::CreateCopy(data.GetSingleMask());
-				Image2DPtr images[data.ImageCount()];
+                                std::vector<Image2DPtr> images(data.ImageCount());
 				for(unsigned i=0;i<data.ImageCount();++i)
 					images[i] = Image2D::CreateCopy(data.GetImage(i));
 				bool hasObsTimes = metaData != 0;
@@ -311,7 +311,7 @@ namespace rfiStrategy {
 				
 				// Remove the timesteps
 				unsigned newWidth = data.ImageWidth() - removedColumns.size();
-				Image2DPtr resizedImages[data.ImageCount()];
+                                std::vector<Image2DPtr> resizedImages(data.ImageCount());
 				for(unsigned i=0;i<data.ImageCount();++i)
 				{
 					resizedImages[i] = Image2D::CreateUnsetImagePtr(newWidth, data.ImageHeight());
