@@ -323,7 +323,7 @@ namespace LOFAR
        */
 
       settings.beamFormer.enabled = getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
-      if (settings.beamFormer.enabled) {
+      if (settings.beamFormer.enabled || true) { // for now, the values below are also used even if no beam forming is performed
         settings.beamFormer.SAPs.resize(nrSAPs);
 
         for (unsigned i = 0; i < nrSAPs; ++i) {
