@@ -24,20 +24,20 @@ namespace LOFAR
   namespace  RTCP
   {
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset       &parset,
-                                             cl::Context &context,
-                                             cl::Device  &device,
-                                             unsigned gpuNumber,
-                                             CorrelatorPipelinePrograms & programs,
-                                             FilterBank &filterBank)
+      cl::Context &context,
+      cl::Device  &device,
+      unsigned gpuNumber,
+      CorrelatorPipelinePrograms & programs,
+      FilterBank &filterBank)
       :
-      WorkQueue( context, device, gpuNumber, parset),     
+    WorkQueue( context, device, gpuNumber, parset),     
       devCorrectedData(context, 
                        CL_MEM_READ_WRITE, 
                        ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
-      devFilteredData(context,
-                      CL_MEM_READ_WRITE,
-                      std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-                      ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
+     devFilteredData(context,
+                     CL_MEM_READ_WRITE,
+                     std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+                     ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
 
       inputData(ps.nrBeams(),
                 ps.nrStations(),
@@ -46,22 +46,22 @@ namespace LOFAR
                 ps.nrBytesPerComplexSample(),
                 queue,
                 devCorrectedData),
-      visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, devFilteredData),
-      devFIRweights(context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
-      firFilterKernel(ps, queue, programs.firFilterProgram, devFilteredData, inputData.inputSamples, devFIRweights),
-      fftKernel(ps, context, devFilteredData),
-      bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()],
-                                queue,
-                                CL_MEM_WRITE_ONLY,
-                                CL_MEM_READ_ONLY),
-      delayAndBandPassKernel(ps, 
-                             programs.delayAndBandPassProgram, 
-                             devCorrectedData,
-                             devFilteredData, 
-                             inputData.delaysAtBegin,
-                             inputData.delaysAfterEnd,
-                             inputData.phaseOffsets,
-                             bandPassCorrectionWeights),
+     visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, devFilteredData),
+     devFIRweights(context, CL_MEM_READ_ONLY, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
+     firFilterKernel(ps, queue, programs.firFilterProgram, devFilteredData, inputData.inputSamples, devFIRweights),
+     fftKernel(ps, context, devFilteredData),
+     bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()],
+                               queue,
+                              CL_MEM_WRITE_ONLY,
+                             CL_MEM_READ_ONLY),
+     delayAndBandPassKernel(ps, 
+                            programs.delayAndBandPassProgram, 
+                            devCorrectedData,
+                            devFilteredData, 
+                            inputData.delaysAtBegin,
+                            inputData.delaysAfterEnd,
+                            inputData.phaseOffsets,
+                            bandPassCorrectionWeights),
 #if defined USE_NEW_CORRELATOR
       correlateTriangleKernel(ps, 
                               queue, 
@@ -78,7 +78,7 @@ namespace LOFAR
                        queue,
                        programs.correlatorProgram,
                        visibilities,
-                       devCorrectedData)
+                        devCorrectedData)
 #endif
     {
       // create all the counters
@@ -117,82 +117,178 @@ namespace LOFAR
         bandPassCorrectionWeights.hostToDevice(CL_TRUE);
       }
     }
-      
-      void calculate_the_flags(const Parset &parset)
+
+    // Get the log2 of the supplied number
+    unsigned get2LogOfNrChannels(unsigned nrChannels)
+    {
+      // Assure that the nrChannels is more then zero: never ending loop 
+      ASSERT(powerOfTwo(nrChannels));
+
+      unsigned logNrChannels;
+      for (logNrChannels = 0; 1U << logNrChannels != nrChannels;
+        logNrChannels ++)
+      {;} // do nothing, the creation of the log is a side effect of the for loop
+
+      //Alternative solution snipped:
+      //int targetlevel = 0;
+      //while (index >>= 1) ++targetlevel; 
+      return logNrChannels;
+    }
+
+    void propagateFlagsToOutput(
+      Parset const &parset,
+      MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
+      CorrelatedData &output)
+    {   
+      unsigned numberOfChannels = parset.nrChannelsPerSubband();
+
+      // Object for storing transformed flags
+      MultiDimArray<SparseSet<unsigned>, 2> flagsPerChanel(
+        boost::extents[numberOfChannels][parset.nrStations()]);
+
+      // First transform the flags to channel flags: taking in account 
+      // reduced resolution in time and the size of the filter
+      convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
+
+      // Calculate the number of flafs per baseline and assign to
+      // output object.
+      calculateAndSetNumberOfFlaggedSamples(parset, flagsPerChanel,
+                                            output);
+
+      // now perform weighting of the data based on the number of
+      // valid samples
+      applyFractionOfFlaggedSamplesOnVisibilities(parset, output);    
+    }
+
+    void convertFlagsToChannelFlags(Parset const &parset,
+      MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
+      MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChanel)
+    {
+      unsigned numberOfChannels = parset.nrChannelsPerSubband();
+      unsigned log2NrChannels = get2LogOfNrChannels(numberOfChannels);
+      //Convert the flags per sample to flags per channel
+      for (unsigned station = 0; station < parset.nrStations(); station ++) 
       {
+        // get the flag ranges
+        const SparseSet<unsigned>::Ranges &ranges = inputFlags[station].getRanges();
+        for (SparseSet<unsigned>::const_iterator it = ranges.begin();
+          it != ranges.end(); it ++) 
+        {
+          unsigned begin_idx;
+          unsigned end_idx;
+          if (numberOfChannels == 1)  // if number of channels == 1
+          { //do nothing, just take the ranges as supplied
+            begin_idx = it->begin; 
+            end_idx = std::min(parset.nrSamplesPerChannel(), it->end );
+          }
+          else
+          {
+            //Never flag before the start of the time range               
+            // use bitshift to divide to the number of channels. 
+            //NR_TAPS is the width of the filter: a flagged sample in this 
+            //time range corrupts all the data. All flags in this range
+            // result in a begin == 0
+            begin_idx = std::max(0, 
+              (signed) (it->begin >> log2NrChannels) - NR_TAPS + 1);
+            // bitshift divide
+            // TODO: is the min still needed?
+            end_idx = std::min(parset.nrSamplesPerChannel() + 1, 
+              ((it->end - 1) >> log2NrChannels) + 1);
+          }
+
+          // Now copy the transformed ranges to the channelflags
+          for (unsigned ch = 0; ch < numberOfChannels; ch++) 
+          {
+            flagsPerChanel[ch][station].include(begin_idx, end_idx);
+          }
+        }
       }
-        ////An array to store the flags converted to channels
-        //// This is a temporary scratch container: should be changed to a list??
-        //MultiDimArray<SparseSet<unsigned>, parset.nrChannelsPerSubband()> flagsPerChanel(boost::extents[parset.nrStations()][parset.nrChannelsPerSubband()]);
+    }
 
-        //// Calculate the log thingy of the number of channels. This is needed to convert the 
-        //// ranges to the different channels
-        //unsigned logNrChannels;
-        //for (logNrChannels = 0; 1U << logNrChannels != logNrChannels; logNrChannels ++)
-        //  ;
+    void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
+      MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChanel,
+      CorrelatedData &output)
+    {
+      // loop the stations
+      for (unsigned stat2 = 0; stat2 < parset.nrStations(); stat2 ++) 
+      {
+        for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) 
+        {
+          //TODO:  Calculate the station, should be moved to helper function
+          unsigned bl  =  stat2 * (stat2 + 1) / 2 + stat1 ; //baseline(stat1, stat2); This function should be moved to a helper class
 
-        //// now loop all stations
-        //for (unsigned stat = 0; stat < parset.nrStations(); stat ++) 
-        //{
-        //  // get the flag ranges
-        //  const SparseSet<unsigned>::Ranges &ranges = inputSamplesFlaggedRangesPerStation[stat];
-        //  // loop
-        //  for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) 
-        //  {
-        //    // Magic
-        //    unsigned begin = ps.nrChannelsPerSubband() == 1 ? it->begin : std::max(0, (signed) (it->begin >> logNrChannels) - NR_TAPS + 1);
-        //    unsigned end   = std::min(itsNrSamplesPerIntegration, ((it->end - 1) >> logNrChannels) + 1);
+          // TODO: is this correct? jan-David please validate
+          //unsigned nrSamplesPerIntegration = (ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband(); 
+          unsigned nrSamplesPerIntegration = parset.nrSamplesPerSubband();
+          // If there is a single channel then the index 0 contains real data
+          if (parset.nrChannelsPerSubband() == 1) 
+          {                                            
+            //The number of invalid (flagged) samples is the union of the flagged samples in the two stations
+            unsigned nrValidSamples = nrSamplesPerIntegration -
+              (flagsPerChanel[0][stat1] | flagsPerChanel[0][stat2]).count();
 
-        //    for (unsigned ch = 0; ch < itsNrChannels; ch++) 
-        //    {
-        //      flagsPerChanel[ch][stat].include(begin, end);
-        //    }
-        //  }
-        //}
+            // Moet worden toegekend op de correlated dataobject
+            output.setNrValidSamples(bl, 0, nrValidSamples);      
+          } 
+          else 
+          {
+            // channel 0 does not contain valid data
+            output.setNrValidSamples(bl, 0, 0);  //channel zero, has zero valid samples
 
-    //  // loop the stations
-    //  for (unsigned stat2 = 0; stat2 < ps.nrStations(); stat2 ++) 
-    //  {
-    //    for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) 
-    //    {
-    //      //TODO:  Calculate the station, should be moved to helper function
-    //      unsigned bl  =  stat2 * (stat2 + 1) / 2 + stat1 ; //baseline(stat1, stat2); This function should be moved to a helper class
+            for(unsigned ch = 1; ch < parset.nrChannelsPerSubband(); ch ++) 
+            {
+              // valid samples is total number of samples minus the union of the
+              // Two stations.
+              unsigned nrValidSamples = nrSamplesPerIntegration -
+                (flagsPerChanel[ch][stat1] | flagsPerChanel[ch][stat2]).count();
 
-    //      // TODO: is this correct? jan-David please validate
-    //      unsigned nrSamplesPerIntegration = (ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband(); 
+              output.setNrValidSamples(bl,ch,nrValidSamples);
+            }
+          }
+        }
+      }
+    }
 
-    //      // If there is a single channel then the index 0 contains real data
-    //      if (ps.nrChannelsPerSubband() == 1) 
-    //      {                                            
-    //        //The number of invalid (flagged) samples is the union of the flagged samples in the two stations
-    //        unsigned nrValidSamples = nrSamplesPerIntegration -
-    //          (inputSamplesFlaggedRangesPerStation[stat1] |
-    //          inputSamplesFlaggedRangesPerStation[stat2]).count();
-    //        fractionFlaggedPerBaseline[bl][0] = double(nrValidSamples) / nrSamplesPerIntegration;        // This is a overloaded bitwise compare.
-    //      } 
-    //      else //otherwise the index 0 contains garbage
-    //      {
-    //        // channel 0 does not contain valid data
-    //        fractionFlaggedPerBaseline[bl][0] = 1.0; 
+    void applyWeightingToAllPolarizations(unsigned baseline, 
+        unsigned channel, float weight, CorrelatedData &output)
+    { // TODO: inline???
+      for(unsigned idx_polarization_1 = 0; idx_polarization_1 < NR_POLARIZATIONS; ++idx_polarization_1)
+        for(unsigned idx_polarization_2 = 0; idx_polarization_2 < NR_POLARIZATIONS; ++idx_polarization_2)
+          output.visibilities[baseline][channel][idx_polarization_1][idx_polarization_2] *= weight;
+    }
 
-    //        // TODO: is this channel needed for at the entry point we dont have channels??
-    //        for (unsigned ch = 1; ch < ps.nrChannelsPerSubband(); ch ++) 
-    //        {
-    //          unsigned nrValidSamples = nrSamplesPerIntegration -
-    //            (inputSamplesFlaggedRangesPerStation[stat1] |
-    //            inputSamplesFlaggedRangesPerStation[stat2]).count();
-    //          fractionFlaggedPerBaseline[bl][ch] = double(nrValidSamples) / nrSamplesPerIntegration;
-    //        }
-    //      }
-    //    }
+    void applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
+        CorrelatedData &output)
+    {
+      unsigned nrSamplesPerIntegration = parset.nrSamplesPerSubband();
+      for (unsigned stat2 = 0; stat2 < parset.nrStations(); stat2 ++) 
+      {
+        for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) 
+        {
+          unsigned bl  =  stat2 * (stat2 + 1) / 2 + stat1 ; //baseline(stat1, stat2); This function should be moved to a helper class
+          unsigned start_channel_idx = 0;
+          // If there are more then 1 channels set chanel zero 
+          if (parset.nrChannelsPerSubband() > 1) 
+          {
+            start_channel_idx = 1; // start calculating the weights at 1
+            applyWeightingToAllPolarizations(bl,0,0,output);  
+          }
+          // calculate the weights for the channels
+          for(unsigned ch = start_channel_idx; ch < parset.nrChannelsPerSubband(); ch ++) 
+          {
+            unsigned nrValidSamples = output.nrValidSamples(bl, ch);
+            // If all samples flagged weights is zero
+            float weight = nrValidSamples ? 1e-6f/nrValidSamples : 0;  
 
-
-    //}
-
+            applyWeightingToAllPolarizations(bl,ch,weight,output);
+          }
+        }
+      }
+    }
 
     void computeFlags(const Parset& parset,
-                      WorkQueueInputData& inputData,
-                      CorrelatedData &output)
+      WorkQueueInputData& inputData,
+      CorrelatedData &output)
     {
       size_t nChannels = parset.nrChannelsPerSubband();
       size_t nIntegrationSteps = parset.integrationSteps();
@@ -289,14 +385,14 @@ namespace LOFAR
 
       // validate that the data to be received is of the correct size for the target buffer
       ASSERTSTR(subband == header_object.subband,
-                "Expected subband " << subband << ", got subband "
-                                    << header_object.subband);
+        "Expected subband " << subband << ", got subband "
+        << header_object.subband);
       ASSERTSTR(subbandSize == header_object.nrSamples * header_object.sampleSize,
-                "Expected " << subbandSize << " bytes, got "
-                            << header_object.nrSamples * header_object.sampleSize
-                            << " bytes (= " << header_object.nrSamples
-                            << " samples * " << header_object.sampleSize
-                            << " bytes/sample)");
+        "Expected " << subbandSize << " bytes, got "
+        << header_object.nrSamples * header_object.sampleSize
+        << " bytes (= " << header_object.nrSamples
+        << " samples * " << header_object.sampleSize
+        << " bytes/sample)");
 
       // read data into the shared buffer: This can be loaded into the gpu with a single command later on
       inputStream->read(inputSamples[stationIdx].origin(), subbandSize);
@@ -309,7 +405,7 @@ namespace LOFAR
       // save the flags to the input_data object, to allow
       // transfer to output
       inputFlags[stationIdx] = metaData.flags;
-      
+
       // flag the input data, contained in the meta data
       flagInputSamples(stationIdx, metaData);
 
@@ -327,7 +423,7 @@ namespace LOFAR
 
     // flag the input samples.
     void WorkQueueInputData::flagInputSamples(unsigned station,
-                                              const SubbandMetaData& metaData)
+      const SubbandMetaData& metaData)
     {
       // Get the size of a sample in bytes.
       size_t sizeof_sample = sizeof *inputSamples.origin();
@@ -338,7 +434,7 @@ namespace LOFAR
 
       // Zero the bytes in the input data for the flagged ranges.
       for(SparseSet<unsigned>::const_iterator it = metaData.flags.getRanges().begin();
-          it != metaData.flags.getRanges().end(); ++it)
+        it != metaData.flags.getRanges().end(); ++it)
       {
         void *offset = inputSamples[station][it->begin].origin();
         size_t size = stride * (it->end - it->begin) * sizeof_sample;

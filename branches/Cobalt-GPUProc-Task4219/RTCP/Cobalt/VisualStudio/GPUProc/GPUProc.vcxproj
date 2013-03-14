@@ -151,7 +151,6 @@
     <ClCompile Include="..\..\GPUProc\src\Pipelines\BeamFormerPipeline.cc" />
     <ClCompile Include="..\..\GPUProc\src\Pipelines\CorrelatorPipeline.cc" />
     <ClCompile Include="..\..\GPUProc\src\Pipelines\UHEP_Pipeline.cc" />
-    <ClCompile Include="..\..\GPUProc\src\RTCP.cc" />
     <ClCompile Include="..\..\GPUProc\src\RTCP_new.cc" />
     <ClCompile Include="..\..\GPUProc\src\Scheduling.cc" />
     <ClCompile Include="..\..\GPUProc\src\Storage\SSH.cc" />
@@ -193,7 +192,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;..\..\..\static_fixture;..\..\;..\symbolic_links;C:\Program Files (x86)\boost\boost_1_41;C:\Program Files (x86)\AMD APP\include</IncludePath>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;..\..\..\static_fixture;..\..\;..\symbolic_links;..\symbolic_links\GPUProc;C:\Program Files (x86)\boost\boost_1_41;C:\Program Files (x86)\AMD APP\include</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

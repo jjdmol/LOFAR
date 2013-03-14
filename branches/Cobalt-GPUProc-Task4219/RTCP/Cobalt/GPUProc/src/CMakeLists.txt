@@ -22,12 +22,8 @@ lofar_add_library(gpuproc
   Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
-  UHEP/InvertedStationPPFWeights.cc)
-
-#lofar_add_bin_program(RTCP RTCP.cc)
-lofar_add_bin_program(RTCP_new 
-   RTCP_new.cc
-   createProgram.cc
+  UHEP/InvertedStationPPFWeights.cc
+  createProgram.cc
    global_defines.cc
    UnitTest.cc 
    Kernel.cc
@@ -58,3 +54,6 @@ lofar_add_bin_program(RTCP_new
    WorkQueues/CorrelatorWorkQueue.cc
    WorkQueues/BeamFormerWorkQueue.cc
    WorkQueues/UHEP_WorkQueue.cc)
+
+lofar_add_bin_program(RTCP_new 
+   RTCP_new.cc)

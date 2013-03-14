@@ -27,8 +27,9 @@ namespace LOFAR
 {
   namespace RTCP
   {
-    struct WorkQueueInputData
+    class WorkQueueInputData
     {
+    public:
       // Inputs: received from data and meta data
       MultiArraySharedBuffer<float, 3> delaysAtBegin;
       MultiArraySharedBuffer<float, 3> delaysAfterEnd;
@@ -63,10 +64,25 @@ namespace LOFAR
       void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
     };
 
+
     // Propagate the flags
-    void computeFlags(const Parset& parset,
-                      WorkQueueInputData &inputData,
-                      CorrelatedData &output);
+    unsigned get2LogOfNrChannels(unsigned nrChannels);
+    void propagateFlagsToOutput(Parset const & parset,
+        MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
+        CorrelatedData &output);
+    void convertFlagsToChannelFlags(Parset const &parset,
+        MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
+        MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChanel);
+
+    void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
+        MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChanel,
+        CorrelatedData &output);
+
+    void applyWeightingToAllPolarizations(unsigned baseline, 
+        unsigned channel, float weight, CorrelatedData &output);
+
+    void applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
+        CorrelatedData &output);
 
 
     class CorrelatorWorkQueue : public WorkQueue
