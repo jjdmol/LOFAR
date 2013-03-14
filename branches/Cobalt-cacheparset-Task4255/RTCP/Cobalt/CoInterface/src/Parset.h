@@ -302,6 +302,26 @@ namespace LOFAR
         //
         // set to: floor((stopTime - startTime) / integrationTime())
         size_t nrBlocksPerObservation;
+
+        struct Station {
+          // The name of this (super)station
+          //
+          // key: OLAP.tiedArrayStationNames
+          std::string name;
+
+          // The list of (input) stations indices to sum for this station
+          //
+          // key: OLAP.CNProc.tabList
+          std::vector<size_t> inputStations;
+        };
+
+        // Super-station beam former. NOTE: Not yet supported!! Only
+        // here to register how the parset keys work. Until then, this
+        // array is the same as the (input) stations array above.
+        //
+        // The aim is to output this list of stations instead of the
+        // ones used for input.
+        std::vector<struct Station> stations;
       };
 
       struct Correlator correlator;
@@ -339,7 +359,7 @@ namespace LOFAR
           //
           // key: Observation.Beam[sap].TiedArrayBeam[tab].stationList
           // (note: the key contains station names, not indices)
-          std::vector<size_t> stationList;
+          std::vector<size_t> stations;
         };
 
         struct SAP {
@@ -455,12 +475,7 @@ namespace LOFAR
   
       unsigned                    coherentStokesTimeIntegrationFactor() const;
       unsigned                    incoherentStokesTimeIntegrationFactor() const;
-      /*
-      unsigned                    coherentStokesNrSubbandsPerFile() const;
-      unsigned                    coherentStokesChannelsPerSubband() const;
-      unsigned                    incoherentStokesChannelsPerSubband() const;
-      unsigned                    incoherentStokesNrSubbandsPerFile() const;
-      */
+
       double                      CNintegrationTime() const;
       double                      IONintegrationTime() const;
       unsigned                    nrSamplesPerChannel() const;
@@ -482,7 +497,6 @@ namespace LOFAR
       std::vector<std::string>    allStationNames() const;
       unsigned                    getLofarStManVersion() const;
       std::vector<unsigned>       phaseOnePsets() const;
-      std::vector<unsigned>       tabList() const;
 
       bool                        outputCorrelatedData() const;
       bool                        outputBeamFormedData() const;
@@ -505,10 +519,7 @@ namespace LOFAR
       std::string getHostName(OutputType, unsigned streamNr) const;
       std::string getFileName(OutputType, unsigned streamNr) const;
       std::string getDirectoryName(OutputType, unsigned streamNr) const;
-/*
-      std::string                 coherentStokes() const;
-      std::string                 incoherentStokes() const;
-*/
+
       std::string                 bandFilter() const;
       std::string                 antennaSet() const;
 

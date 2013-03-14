@@ -266,7 +266,11 @@ namespace LOFAR
         subband.centralFrequency = settings.subbandWidth() * (subband.stationIdx + subbandOffset);
       }
 
-      // Correlator pipeline information
+      /* ===============================
+       * Correlator pipeline information
+       * ===============================
+       */
+
       settings.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
       if (settings.correlator.enabled || true) { // for now, always fill in correlator values, since they're still used outside the correlator to determine the block size, etc
         settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
@@ -274,9 +278,44 @@ namespace LOFAR
         settings.correlator.nrSamplesPerChannel = getUint32("OLAP.CNProc.integrationSteps", 3052);
         settings.correlator.nrBlocksPerIntegration = getUint32("OLAP.IONProc.integrationSteps", 1);
         settings.correlator.nrBlocksPerObservation = static_cast<size_t>(floor((settings.stopTime - settings.startTime) / settings.correlator.integrationTime()));
+
+        // super-station beam former
+
+        // OLAP.CNProc.tabList[i] = j <=> superstation j contains (input) station i
+        vector<unsigned> tabList = getUint32Vector("OLAP.CNProc.tabList", emptyVectorUnsigned, true);
+
+        // Names for all superstations, including those that are simple copies
+        // of (input) stations.
+        vector<string> tabNames = getStringVector("OLAP.tiedArrayStationNames", emptyVectorString, true);
+
+        if (tabList.empty()) {
+          // default: input station list = output station list
+          settings.correlator.stations.resize(settings.stations.size());
+          for (size_t i = 0; i < settings.correlator.stations.size(); ++i) {
+            struct ObservationSettings::Correlator::Station &station = settings.correlator.stations[i];
+
+            station.name = settings.stations[i].name;
+            station.inputStations = vector<size_t>(1, i);
+          }
+        } else {
+          // process super-station beam former list
+          settings.correlator.stations.resize(tabList.size());
+          for (size_t i = 0; i < settings.correlator.stations.size(); ++i) {
+            struct ObservationSettings::Correlator::Station &station = settings.correlator.stations[i];
+
+            station.name = tabNames[i];
+          }
+          for (size_t i = 0; i < tabList.size(); ++i) {
+            settings.correlator.stations[tabList[i]].inputStations.push_back(i);
+          }
+        }
       }
 
-      // Beam-former pipeline information
+      /* ===============================
+       * Beamformer pipeline information
+       * ===============================
+       */
+
       settings.beamFormer.enabled = getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
       if (settings.beamFormer.enabled) {
         settings.beamFormer.SAPs.resize(nrSAPs);
@@ -299,25 +338,25 @@ namespace LOFAR
             tab.coherent          = getBool(prefix + ".coherent", true);
             tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
 
-            const vector<string> stationList = getStringVector(prefix + ".stationList", emptyVectorString, true);
+            const vector<string> stations = getStringVector(prefix + ".stationList", emptyVectorString, true);
 
-            if (stationList.empty()) {
+            if (stations.empty()) {
               // default: add all stations
-              tab.stationList.reserve(settings.stations.size());
+              tab.stations.reserve(settings.stations.size());
               for (unsigned t = 0; t < settings.stations.size(); ++t) {
-                tab.stationList.push_back(t);
+                tab.stations.push_back(t);
               }
             } else {
               // if stations are given, look them up and record the indices
-              tab.stationList.reserve(stationList.size());
-              for (unsigned s = 0; s < stationList.size(); ++s) {
-                const string &name = stationList[s];
+              tab.stations.reserve(stations.size());
+              for (unsigned s = 0; s < stations.size(); ++s) {
+                const string &name = stations[s];
 
                 // lookup name in the stations list
                 for (unsigned t = 0; t < settings.stations.size(); ++t) {
                   if (name == settings.stations[t].name) {
                     // found
-                    tab.stationList.push_back(t);
+                    tab.stations.push_back(t);
                     break;
                   }
                 }
@@ -853,37 +892,27 @@ namespace LOFAR
 
     unsigned Parset::nrTabStations() const
     {
-      return getStringVector("OLAP.tiedArrayStationNames",true).size();
+      return settings.correlator.stations.size();
     }
 
     std::vector<std::string> Parset::mergedStationNames() const
     {
-      std::vector<string> tabStations = getStringVector("OLAP.tiedArrayStationNames",true);
+      std::vector<string> tabStations;
 
-      if (tabStations.empty())
-        return allStationNames();
-      else
-        return tabStations;
+      for (size_t i = 0; i < settings.correlator.stations.size(); ++i)
+        tabStations.push_back(settings.correlator.stations[i].name);
+
+      return tabStations;
     }
 
     unsigned Parset::nrMergedStations() const
     {
-      const std::vector<unsigned> list = tabList();
-
-      if (list.empty())
-        return nrStations();
-
-      return *std::max_element( list.begin(), list.end() ) + 1;
+      return settings.correlator.stations.size();
     }
 
     unsigned Parset::nrBaselines() const
     {
-      unsigned stations;
-
-      if (nrTabStations() > 0)
-        stations = nrTabStations();
-      else
-        stations = nrStations();
+      size_t stations = settings.correlator.stations.size();
 
       return stations * (stations + 1) / 2;
     }
@@ -1134,11 +1163,6 @@ namespace LOFAR
     vector<unsigned> Parset::phaseOnePsets() const
     {
       return getUint32Vector("OLAP.CNProc.phaseOnePsets",true);
-    }
-
-    vector<unsigned> Parset::tabList() const
-    {
-      return getUint32Vector("OLAP.CNProc.tabList",true);
     }
 
     double Parset::channel0Frequency(size_t subband) const
