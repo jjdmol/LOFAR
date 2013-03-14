@@ -111,6 +111,11 @@ namespace LOFAR
         //
         // key: OLAP.correctClocks
         bool clock;
+
+        // Whether to dedisperse tied-array beams
+        //
+        // key: OLAP.coherentDedisperseChannels
+        bool dedisperse;
       };
       
       struct Corrections corrections;
@@ -300,6 +305,86 @@ namespace LOFAR
 
       struct Correlator correlator;
 
+      struct BeamFormer {
+        // Whether beam forming was requested.
+        //
+        // key: Observation.DataProducts.Output_Beamformed.enabled
+        bool enabled;
+
+        struct TAB {
+          // The direction in wich the TAB points, relative
+          // to the SAP's coordinates
+          //
+          // key: Observation.Beam[sap].TiedArrayBeam[tab].*
+          struct Direction directionDelta;
+
+          // Whether the beam is coherent (or incoherent)
+          //
+          // key: Observation.Beam[sap].TiedArrayBeam[tab].coherent
+          bool coherent;
+
+          // The DM with which to dedisperse this beam, or
+          // 0.0 for no dedispersion.
+          //
+          // key: Observation.Beam[sap].TiedArrayBeam[tab].dispersionMeasure
+          double dispersionMeasure;
+
+          // The list of station indices to use for beam forming.
+          //
+          // key: Observation.Beam[sap].TiedArrayBeam[tab].stationList
+          // (note: the key contains station names, not indices)
+          std::vector<size_t> stationList;
+        };
+
+        struct SAP {
+          // The TABs to form in this SAP
+          //
+          // size: Observation.Beam[sap].nrTiedArrayBeams
+          std::vector<struct TAB> TABs;
+        };
+
+        // All SAPs, with information about the TABs to form.
+        //
+        // size: len(Observation.nrBeams)
+        std::vector<struct SAP> SAPs;
+
+        struct StokesSettings {
+          // The type of stokes to output
+          //
+          // key: *.which
+          StokesType type;
+
+          // The requested number of channels
+          //
+          // key: *.channelsPerSubband
+          unsigned nrChannels;
+
+          // The number of samples that need
+          // to be integrated temporally, per channel.
+          //
+          // key: *.timeIntegrationFactor
+          size_t timeIntegrationFactor;
+
+          // The number of subbands to store in each file.
+          // The last file can have fewer subbands.
+          //
+          // key: *.subbandsPerFile
+          size_t nrSubbandsPerFile;
+        };
+
+        // Settings for Coherent Stokes output
+        //
+        // key: OLAP.CNProc_CoherentStokes.*
+        struct StokesSettings coherentSettings;
+
+        // Settings for Incoherent Stokes output
+        //
+        // key: OLAP.CNProc_IncoherentStokes.*
+        struct StokesSettings incoherentSettings;
+      };
+
+      struct BeamFormer beamFormer;
+
       // Returns the Nyquist zone number based on bandFilter.
       unsigned nyquistZone() const;
     };
@@ -434,7 +519,7 @@ namespace LOFAR
       std::vector<std::string>    TABStationList(unsigned beam = 0,unsigned pencil = 0, bool raw = false) const;
 
       std::vector<unsigned>       subbandList() const;
-      unsigned                    nrSubbands() const;
+      size_t                      nrSubbands() const;
       unsigned                    nrSubbandsPerSAP(unsigned sap) const;
 
       std::vector<unsigned>       subbandToSAPmapping() const;

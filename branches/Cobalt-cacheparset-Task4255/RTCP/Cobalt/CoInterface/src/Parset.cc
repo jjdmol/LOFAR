@@ -182,8 +182,9 @@ namespace LOFAR
         settings.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
       }
 
-      settings.corrections.bandPass = getBool("OLAP.correctBandPass", true);
-      settings.corrections.clock    = getBool("OLAP.correctClocks", true);
+      settings.corrections.bandPass   = getBool("OLAP.correctBandPass", true);
+      settings.corrections.clock      = getBool("OLAP.correctClocks", true);
+      settings.corrections.dedisperse = getBool("OLAP.coherentDedisperseChannels", true);
 
       settings.delayCompensation.enabled              = getBool("OLAP.delayCompensation", true);
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
@@ -256,6 +257,96 @@ namespace LOFAR
         settings.correlator.nrSamplesPerChannel = getUint32("OLAP.CNProc.integrationSteps", 3052);
         settings.correlator.nrBlocksPerIntegration = getUint32("OLAP.IONProc.integrationSteps", 1);
         settings.correlator.nrBlocksPerObservation = static_cast<size_t>(floor((settings.stopTime - settings.startTime) / settings.correlator.integrationTime()));
+      }
+
+      // Beam-former pipeline information
+      settings.beamFormer.enabled = getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
+      if (settings.beamFormer.enabled) {
+        settings.beamFormer.SAPs.resize(nrSAPs);
+
+        for (unsigned i = 0; i < nrSAPs; ++i) {
+          struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
+
+          size_t nrTABs = getUint32(str(boost::format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
+
+          sap.TABs.resize(nrTABs);
+          for (unsigned j = 0; j < nrTABs; ++j) {
+            struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
+
+            const string prefix = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+
+            tab.directionDelta.type    = getString(prefix + ".directionType", "J2000");
+            tab.directionDelta.angle1  = getDouble(prefix + ".angle1", 0.0);
+            tab.directionDelta.angle2  = getDouble(prefix + ".angle2", 0.0);
+
+            tab.coherent          = getBool(prefix + ".coherent", true);
+            tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
+
+            const vector<string> stationList = getStringVector(prefix + ".stationList", emptyVectorString, true);
+
+            if (stationList.empty()) {
+              // default: add all stations
+              tab.stationList.reserve(settings.stations.size());
+              for (unsigned t = 0; t < settings.stations.size(); ++t) {
+                tab.stationList.push_back(t);
+              }
+            } else {
+              // if stations are given, look them up and record the indices
+              tab.stationList.reserve(stationList.size());
+              for (unsigned s = 0; s < stationList.size(); ++s) {
+                const string &name = stationList[s];
+
+                // lookup name in the stations list
+                for (unsigned t = 0; t < settings.stations.size(); ++t) {
+                  if (name == settings.stations[t].name) {
+                    // found
+                    tab.stationList.push_back(t);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        for (unsigned i = 0; i < 2; ++i) {
+          // Set coherent and incoherent Stokes settings by
+          // iterating twice.
+
+          string prefix = "";
+          struct ObservationSettings::BeamFormer::StokesSettings *set = 0;
+          
+          // Select coherent or incoherent for this iteration
+          switch(i) {
+            case 0:
+              prefix = "OLAP.CNProc_CoherentStokes";
+              set = &settings.beamFormer.coherentSettings;
+              break;
+
+            case 1:
+              prefix = "OLAP.CNProc_IncoherentStokes";
+              set = &settings.beamFormer.incoherentSettings;
+              break;
+
+            default:
+              ASSERT(false);
+              break;
+          }
+
+          // Obtain settings of selected stokes
+          set->type = stokesType(getString(prefix + ".which", "I"));
+          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 0);
+          if (set->nrChannels == 0) {
+            // apply default
+            set->nrChannels = settings.correlator.nrChannels;
+          }
+          set->timeIntegrationFactor = getUint32(prefix + ".timeIntegrationFactor", 1);
+          set->nrSubbandsPerFile = getUint32(prefix + ".subbandsPerFile", 0);
+          if (set->nrSubbandsPerFile == 0) {
+            // apply default
+            set->nrSubbandsPerFile = settings.subbands.size();
+          }
+        }
       }
 
       return settings;
@@ -569,8 +660,8 @@ namespace LOFAR
     {
       std::vector<double> TAB(2);
 
-      TAB[0] = getDouble(str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].angle1") % beam % pencil));
-      TAB[1] = getDouble(str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].angle2") % beam % pencil));
+      TAB[0] = cache.beamFormer.SAPs[beam].TABs[pencil].directionDelta.angle1;
+      TAB[1] = cache.beamFormer.SAPs[beam].TABs[pencil].directionDelta.angle2;
 
       return TAB;
     }
@@ -578,25 +669,24 @@ namespace LOFAR
 
     bool Parset::isCoherent(unsigned beam, unsigned pencil) const
     {
-      string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].coherent") % beam % pencil);
-
-      return getBool(key, true);
+      return cache.beamFormer.SAPs[beam].TABs[pencil].coherent;
     }
 
 
     double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
     {
-      if (!getBool("OLAP.coherentDedisperseChannels",true))
+      if (!cache.corrections.dedisperse)
         return 0.0;
 
-      string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].dispersionMeasure") % beam % pencil);
-
-      return getDouble(key, 0.0);
+      return cache.beamFormer.SAPs[beam].TABs[pencil].dispersionMeasure;
     }
 
 
     std::vector<string> Parset::TABStationList(unsigned beam, unsigned pencil, bool raw) const
     {
+      // can't use cache until 'raw' is supported, which is needed to
+      // distinguish between fly's eye mode with one station, and coherent
+      // addition with one station
       string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].stationList") % beam % pencil);
       std::vector<string> stations;
 
@@ -672,8 +762,7 @@ namespace LOFAR
 
     unsigned Parset::nrTABs(unsigned beam) const
     {
-      using boost::format;
-      return getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % beam));
+      return cache.beamFormer.SAPs[beam].TABs.size();
     }
 
     std::string Parset::name() const
@@ -828,32 +917,22 @@ namespace LOFAR
 
     unsigned Parset::coherentStokesTimeIntegrationFactor() const
     {
-      return getUint32("OLAP.CNProc_CoherentStokes.timeIntegrationFactor");
+      return cache.beamFormer.coherentSettings.timeIntegrationFactor;
     }
 
     unsigned Parset::incoherentStokesTimeIntegrationFactor() const
     {
-      return getUint32("OLAP.CNProc_IncoherentStokes.timeIntegrationFactor");
+      return cache.beamFormer.incoherentSettings.timeIntegrationFactor;
     }
 
     unsigned Parset::coherentStokesChannelsPerSubband() const
     {
-      unsigned numch = getUint32("OLAP.CNProc_CoherentStokes.channelsPerSubband");
-
-      if (numch == 0)
-        return nrChannelsPerSubband();
-      else
-        return numch;
+      return cache.beamFormer.coherentSettings.nrChannels;
     }
 
     unsigned Parset::incoherentStokesChannelsPerSubband() const
     {
-      unsigned numch = getUint32("OLAP.CNProc_IncoherentStokes.channelsPerSubband");
-
-      if (numch == 0)
-        return nrChannelsPerSubband();
-      else
-        return numch;
+      return cache.beamFormer.incoherentSettings.nrChannels;
     }
 
     std::string Parset::coherentStokes() const
@@ -873,7 +952,7 @@ namespace LOFAR
 
     bool Parset::outputBeamFormedData() const
     {
-      return getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
+      return cache.beamFormer.enabled;
     }
 
     bool Parset::outputTrigger() const
@@ -979,12 +1058,12 @@ namespace LOFAR
 
     unsigned Parset::coherentStokesNrSubbandsPerFile() const
     {
-      return std::min( getUint32("OLAP.CNProc_CoherentStokes.subbandsPerFile"), nrSubbands() );
+      return std::min( cache.beamFormer.coherentSettings.nrSubbandsPerFile, nrSubbands() );
     }
 
     unsigned Parset::incoherentStokesNrSubbandsPerFile() const
     {
-      return std::min( getUint32("OLAP.CNProc_IncoherentStokes.subbandsPerFile"), nrSubbands() );
+      return std::min( cache.beamFormer.incoherentSettings.nrSubbandsPerFile, nrSubbands() );
     }
 
     unsigned Parset::nrPPFTaps() const
@@ -1007,7 +1086,7 @@ namespace LOFAR
       return nrs;
     }
 
-    unsigned Parset::nrSubbands() const
+    size_t Parset::nrSubbands() const
     {
       return cache.subbands.size();
     }
