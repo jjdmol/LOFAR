@@ -68,7 +68,12 @@ int main(int argc, char *argv[])
           Queue<SmartPtr<StreamableData> > queue;
 
           OutputThread ot(parset, outputType, streamNr, queue, queue, logPrefix, isBigEndian, ".");
+
+          // create measurement set
           ot.createMS();
+
+          // output LTA feedback
+          ot.cleanUp();
         } catch (Exception &ex) {
           LOG_WARN_STR(logPrefix << "Could not create header: " << ex);
         } catch (exception &ex) {
@@ -76,6 +81,17 @@ int main(int argc, char *argv[])
         }
       }
     }   
+
+    // taken from IONProc/src/Job.cc
+    // Augment the LTA feedback logging
+    {
+      ParameterSet feedbackLTA;
+      feedbackLTA.add("Observation.DataProducts.nrOfOutput_Beamformed_", str(boost::format("%u") % parset.nrStreams(BEAM_FORMED_DATA)));
+      feedbackLTA.add("Observation.DataProducts.nrOfOutput_Correlated_", str(boost::format("%u") % parset.nrStreams(CORRELATED_DATA)));
+
+      for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)
+        LOG_INFO_STR("[obs " << parset.observationID() << "] LTA FEEDBACK: " << i->first << " = " << i->second);
+    }  
   } catch (Exception &ex) {
     LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
     return 1;
