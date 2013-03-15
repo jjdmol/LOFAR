@@ -82,7 +82,8 @@ MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std:
   itsConfiguration.add("fileFormat",           "AIPS++/CASA");
   itsConfiguration.add("filename",             LOFAR::basename(msName));
   itsConfiguration.add("size",                 "0");
-  itsConfiguration.add("location",             parset.getHostName(CORRELATED_DATA, subbandIndex) + ":" + LOFAR::dirname(msName));
+  //itsConfiguration.add("location",             parset.getHostName(CORRELATED_DATA, subbandIndex) + ":" + LOFAR::dirname(msName));
+  itsConfiguration.add("location",             parset.getHostName(CORRELATED_DATA, subbandIndex) + ":" + parset.getDirectoryName(CORRELATED_DATA, subbandIndex));
 
   itsConfiguration.add("percentageWritten",    "0");
   itsConfiguration.add("startTime",            parset.getString("Observation.startTime"));
