@@ -443,7 +443,8 @@ void SSHconnection::commThread()
 #else
                 ScopedLock sl(coutMutex);
 #endif
-                cout << line[s] << endl;
+		// use clog, just like log4cout
+                clog << line[s] << endl;
               }
             }
           }
