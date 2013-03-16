@@ -148,6 +148,9 @@ namespace LOFAR
       // key: Observation.bandFilter
       std::string bandFilter;
 
+      // The number of subbands in each RSP packet (depricated)
+      unsigned nrSlotsInFrame;
+
       struct Station {
         // The name of the station (CS001LBA, etc)
         //
@@ -425,6 +428,12 @@ namespace LOFAR
         //
         // key: OLAP.CNProc_IncoherentStokes.*
         struct StokesSettings incoherentSettings;
+
+
+        // Size of FFT for coherent dedispersion
+        //
+        // key: OLAP.CNProc.dedispersionFFTsize
+        size_t dedispersionFFTsize;
       };
 
       struct BeamFormer beamFormer;

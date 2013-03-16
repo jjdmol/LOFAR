@@ -207,8 +207,9 @@ namespace LOFAR
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
 
       // Station information
-      settings.antennaSet = getString("Observation.antennaSet", "LBA");
-      settings.bandFilter = getString("Observation.bandFilter", "LBA_30_70");
+      settings.antennaSet     = getString("Observation.antennaSet", "LBA");
+      settings.bandFilter     = getString("Observation.bandFilter", "LBA_30_70");
+      settings.nrSlotsInFrame = getUint32("Observation.nrSlotsInFrame", maxBeamletsPerRSP(settings.nrBitsPerSample));
 
       vector<string> stationNames = getStringVector("OLAP.storageStationNames", emptyVectorString, true);
       size_t nrStations = stationNames.size();
@@ -410,6 +411,8 @@ namespace LOFAR
             set->nrSubbandsPerFile = settings.subbands.size();
           }
         }
+
+        settings.beamFormer.dedispersionFFTsize = getUint32("OLAP.CNProc.dedispersionFFTsize", settings.correlator.nrSamplesPerChannel);
       }
 
       return settings;
@@ -1152,12 +1155,12 @@ namespace LOFAR
 
     unsigned Parset::nrCalcDelays() const
     {
-      return getUint32("OLAP.DelayComp.nrCalcDelays", 16);
+      return 16;
     }
 
     string Parset::positionType() const
     {
-      return getString("OLAP.DelayComp.positionType", "ITRF");
+      return "ITRF";
     }
 
     double Parset::clockCorrectionTime(const std::string &station) const
@@ -1195,16 +1198,7 @@ namespace LOFAR
 
     unsigned Parset::nrSlotsInFrame() const
     {
-      unsigned nrSlots = 0;
-
-      nrSlots = getUint32("Observation.nrSlotsInFrame", 0);
-
-      if (nrSlots == 0) {
-        // return default
-        return maxBeamletsPerRSP(nrBitsPerSample());
-      }
-
-      return nrSlots;
+      return settings.nrSlotsInFrame;
     }
 
     string Parset::partitionName() const
