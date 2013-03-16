@@ -18,3 +18,4 @@ lofar_add_library(inputproc
 
 lofar_add_bin_program(newInputSection newInputSection.cc)
 lofar_add_bin_program(filterRSP Station/filterRSP.cc)
+lofar_add_bin_program(printRSP Station/printRSP.cc)
