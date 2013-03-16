@@ -1,6 +1,31 @@
-#include "lofar_config.h"
+/* BandPass.cc
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
-#include <BandPass.h>
+#include <lofar_config.h>
+
+#include "BandPass.h"
+
+#include <vector>
+#include <complex>
+#include <cmath>
 
 #if defined HAVE_FFTW3
 #include <fftw3.h>
@@ -13,11 +38,12 @@
 #define STATION_FILTER_LENGTH 16384 // Number of filter taps of the station filters.
 #define STATION_FFT_SIZE 1024 // The size of the FFT that the station filter does
 
-#include <complex>
-#include <vector>
-
-namespace BandPass
+namespace LOFAR
 {
+  namespace Cobalt
+  {
+    namespace BandPass
+    {
 
 
   static const float stationFilterConstants[] =
@@ -2129,7 +2155,10 @@ namespace BandPass
     }
   }
 
-} // namespace BandPass
+
+    } // namespace BandPass
+  } // namespace Cobalt
+} // namespace LOFAR
 
 
 #if 0
@@ -2140,3 +2169,4 @@ int main()
   return 0;
 }
 #endif
+

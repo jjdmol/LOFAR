@@ -1,54 +1,65 @@
-//#  Storage_main.cc:
-//#
-//#  Copyright (C) 2002-2004
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  $Id$
+/* outputProc.cc
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id$
+ */
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
+
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <sys/select.h>
+#include <unistd.h>
+#include <libgen.h>
+
+#include <string>
+#include <vector>
+#include <stdexcept>
+#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
+
+#if defined HAVE_MPI
+#include <mpi.h>
+#endif
 
 #include <Common/LofarLogger.h>
 #include <Common/CasaLogSink.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
+#include <Common/Thread/Thread.h>
 #include <ApplCommon/Observation.h>
+#include <Stream/PortBroker.h>
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
 #include <CoInterface/FinalMetaData.h>
-#include <Common/Thread/Thread.h>
-#include <Stream/PortBroker.h>
-#include <OutputProc/SubbandWriter.h>
-#include <OutputProc/IOPriority.h>
 #include <OutputProc/Package__Version.h>
-
-#if defined HAVE_MPI
-#include <mpi.h>
-#endif
-
-#include <sys/select.h>
-#include <unistd.h>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <libgen.h>
-
-#include <stdexcept>
-#include <string>
-#include <vector>
-
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
-
+#include "SubbandWriter.h"
+#include "IOPriority.h"
 
 // install a new handler to produce backtraces for bad_alloc
 LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
 using namespace LOFAR;
-using namespace LOFAR::RTCP;
+using namespace LOFAR::Cobalt;
 using namespace std;
 
 // Use a terminate handler that can produce a backtrace.
@@ -161,3 +172,4 @@ int main(int argc, char *argv[])
   LOG_INFO_STR("[obs unknown] Program end");
   return 0;
 }
+

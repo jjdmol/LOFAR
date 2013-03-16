@@ -1,3 +1,24 @@
+/* Correlator.cl
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
+
 #include "math.cl"
 
 #define NR_BASELINES     (NR_STATIONS * (NR_STATIONS + 1) / 2)
@@ -26,6 +47,8 @@ typedef __global fcomplex4 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
  * Computes correlations between all pairs of stations (baselines) and X,Y
  * polarizations. Also computes all station (and pol) auto-correlations.
  *
+ * We consider the output space shaped as a triangle of S*(S-1)/2 full
+ * correlations, plus S auto-correlations at the hypothenuse (S = NR_STATIONS).
  * This correlator consists of various versions, correlate_NxN, that differ in
  * used register block size. We have 1x1 (this kernel), 2x2, 3x3, and 4x4.
  * Measure, then select the fastest for your platform.
@@ -44,7 +67,8 @@ typedef __global fcomplex4 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
  * NR_SAMPLES_PER_CHANNEL  | multiple of BLOCK_SIZE  | number of input samples per channel
  * NR_CHANNELS             | > 1 (TODO: supp 1 ch)   | number of frequency channels per subband
  * Note that for > 1 channels, NR_CHANNELS-1 channels are actually processed,
- * because the second PPF has "corrupted" channel 0. (An inverse PPF can disambiguate.)
+ * because the second PPF has "corrupted" channel 0. (An inverse PPF can disambiguate.) \n
+ * Note that this kernel assumes (but does not use) NR_POLARIZATIONS == 2.
  *
  * Execution configuration:
  * - Work dim == 2  (can be 1 iff NR_CHANNELS <= 2)

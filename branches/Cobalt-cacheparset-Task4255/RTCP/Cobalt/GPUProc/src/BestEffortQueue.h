@@ -1,12 +1,33 @@
-#ifndef GPUPROC_BESTEFFORTQUEUE_H
-#define GPUPROC_BESTEFFORTQUEUE_H
+/* BestEffortQueue.h
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
-#include "Common/Thread/Queue.h"
-#include "Common/Thread/Semaphore.h"
+#ifndef LOFAR_GPUPROC_BEST_EFFORT_QUEUE_H
+#define LOFAR_GPUPROC_BEST_EFFORT_QUEUE_H
+
+#include <Common/Thread/Queue.h>
+#include <Common/Thread/Semaphore.h>
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
     /*
      * Implements a best-effort queue. The queue has a maximum size,
@@ -50,6 +71,7 @@ namespace LOFAR
   }
 }
 
-#include "BestEffortQueue.tcc"
+#include <BestEffortQueue.tcc>
 
 #endif
+

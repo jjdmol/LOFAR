@@ -1,3 +1,24 @@
+/* NewCorrelator.cl
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
+
 #include "math.cl"
 
 #define NR_STATIONS_PER_BLOCK   32
@@ -10,6 +31,9 @@ typedef __global fcomplex2 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAM
 typedef __global fcomplex4 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
 
 
+/*!
+ * Correlate one triangle. Only used in unit test, though similar to sub-routine used below.
+ */
 __kernel
 void correlateTriangleKernel(__global void *visibilitiesPtr,
                              __global const void *correctedDataPtr)
@@ -110,6 +134,9 @@ void correlateTriangleKernel(__global void *visibilitiesPtr,
 }
 
 
+/*!
+ * Correlate one rectangle. Only used in unit test, though similar to sub-routine used below.
+ */
 __kernel __attribute__((reqd_work_group_size(NR_STATIONS_PER_BLOCK * NR_STATIONS_PER_BLOCK / 4, 1, 1)))
 void correlateRectangleKernel(__global void *visibilitiesPtr,
                               __global const void *correctedDataPtr)
@@ -225,6 +252,9 @@ void correlateRectangleKernel(__global void *visibilitiesPtr,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/*!
+ * unused in favor of correlateTriangle2().
+ */
 void correlateTriangle(VisibilitiesType visibilities,
                        CorrectedDataType correctedData,
                        __local fcomplex2 samples[2][NR_TIMES_PER_BLOCK][NR_STATIONS_PER_BLOCK / 2 | 1],
@@ -570,6 +600,45 @@ void correlateRectangle(VisibilitiesType visibilities,
 }
 
 
+/*!
+ * Computes correlations between all pairs of stations (baselines) and X,Y
+ * polarizations. Also computes all station (and pol) auto-correlations.
+ *
+ * We consider the output space shaped as a triangle of S*(S-1)/2 full
+ * correlations, plus S auto-correlations at the hypothenuse (S = NR_STATIONS).
+ * With this correlator, the space is divided into blocks of N/2 x N/2 (with
+ * N = NR_STATIONS_PER_BLOCK) correlations. Each work group works on a block
+ * (may have partial output) and only loads samples from the stations along its
+ * two edges.
+ *
+ * This scheme is favorable when the number of stations exceeds the dozens.
+ * For small problem sizes (up to dozens of stations (standard LOFAR, usually))
+ * (exact number depends on observation, software and hardware parameters),
+ * our kernels in Correlator.cl may be significantly faster than this
+ * correlator. This implementation shines especially on LOFAR AARTFAAC's
+ * 288 input antenna streams.
+ *
+ * \param[out] visibilitiesPtr         2D output array of visibilities. Each visibility contains the 4 polarization pairs, XX, XY, YX, YY, each of complex float type.
+ * \param[in]  correctedDataPtr        3D input array of samples. Each sample contains the 2 polarizations X, Y, each of complex float type.
+ *
+ * Pre-processor input symbols (some are tied to the execution configuration)
+ * Symbol                  | Valid Values                    | Description
+ * ----------------------- | ------------------------------- | -----------
+ * NR_STATIONS             | >= 1                            | number of antenna fields
+ * NR_SAMPLES_PER_CHANNEL  | multiple of NR_TIMES_PER_BLOCK  | number of input samples per channel
+ * NR_CHANNELS             | > 1 (TODO: supp 1 ch)           | number of frequency channels per subband
+ * Note that for > 1 channels, NR_CHANNELS-1 channels are actually processed,
+ * because the second PPF has "corrupted" channel 0. (An inverse PPF can disambiguate.) \n
+ * Note that this kernel assumes (but does not use) NR_POLARIZATIONS == 2.
+ *
+ * Execution configuration:
+ * - Work dim == 3  (can be 1 iff NR_CHANNELS <= 2)
+ *     + Inner dim: the baseline the thread processes
+ *     + Middle dim: the block number the work group of the thread processes
+ *     + Outer dim: the channel the thread processes
+ * - Work group size: (N/2 * N/2, 1, 1) with N = NR_STATIONS_PER_BLOCK \n
+ * - Global size: (N/2 * N/2, number of blocks (full and partial), number of actually processed channels)
+ */
 __kernel __attribute__((reqd_work_group_size(NR_STATIONS_PER_BLOCK * NR_STATIONS_PER_BLOCK / 4, 1, 1)))
 void correlate(__global void *visibilitiesPtr,
                __global const void *correctedDataPtr)
@@ -586,3 +655,4 @@ void correlate(__global void *visibilitiesPtr,
   else
     correlateRectangle((VisibilitiesType) visibilitiesPtr, (CorrectedDataType) correctedDataPtr, samplesX, samplesY, blockX, blockY);
 }
+

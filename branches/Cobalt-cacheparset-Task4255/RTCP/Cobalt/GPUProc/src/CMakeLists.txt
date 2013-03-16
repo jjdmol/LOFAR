@@ -2,6 +2,11 @@
 
 include(LofarPackageVersion)
 
+# Create symbolic link to include directory.
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
+
 # Add current source directory to -I path. This is needed because GPUProc uses
 # angle brackets for internal header files, instead of quotes.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -9,9 +14,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 lofar_add_library(gpuproc
   #Package__Version.cc
   BandPass.cc
+  createProgram.cc
   FilterBank.cc
-  OpenCL_Support.cc
-  PerformanceCounter.cc
+  global_defines.cc
   Input/BeamletBuffer.cc
   Input/BeamletBufferToComputeNode.cc
   Input/CN_Mapping.cc
@@ -20,42 +25,40 @@ lofar_add_library(gpuproc
   Input/InputThread.cc
   Input/LogThread.cc
   Input/ReaderWriterSynchronization.cc
+  Kernel.cc
+  Kernels/BeamFormerKernel.cc
+  Kernels/BeamFormerTransposeKernel.cc
+  Kernels/CoherentStokesKernel.cc
+  Kernels/CorrelatorKernel.cc
+  Kernels/DedispersionBackwardFFTkernel.cc
+  Kernels/DedispersionChirpKernel.cc
+  Kernels/DedispersionForwardFFTkernel.cc
+  Kernels/DelayAndBandPassKernel.cc
+  Kernels/FFT_Kernel.cc
+  Kernels/FFT_Plan.cc
+  Kernels/Filter_FFT_Kernel.cc
+  Kernels/FIR_FilterKernel.cc
+  Kernels/IncoherentStokesKernel.cc
+  Kernels/IntToFloatKernel.cc
+  Kernels/UHEP_BeamFormerKernel.cc
+  Kernels/UHEP_InvFFT_Kernel.cc
+  Kernels/UHEP_InvFIR_Kernel.cc
+  Kernels/UHEP_TransposeKernel.cc
+  Kernels/UHEP_TriggerKernel.cc
+  OpenCL_Support.cc
+  PerformanceCounter.cc
+  Pipeline.cc
+  Pipelines/BeamFormerPipeline.cc
+  Pipelines/CorrelatorPipeline.cc
+  Pipelines/UHEP_Pipeline.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
-  UHEP/InvertedStationPPFWeights.cc)
+  UHEP/InvertedStationPPFWeights.cc
+  UnitTest.cc 
+  WorkQueues/BeamFormerWorkQueue.cc
+  WorkQueues/CorrelatorWorkQueue.cc
+  WorkQueues/UHEP_WorkQueue.cc
+  WorkQueues/WorkQueue.cc)
 
-lofar_add_bin_program(RTCP RTCP.cc)
-lofar_add_bin_program(RTCP_new 
-   RTCP_new.cc
-   createProgram.cc
-   global_defines.cc
-   UnitTest.cc 
-   Kernel.cc
-   Kernels/FIR_FilterKernel.cc
-   Kernels/DelayAndBandPassKernel.cc
-   Kernels/CorrelatorKernel.cc
-   Kernels/IntToFloatKernel.cc
-   Kernels/IncoherentStokesKernel.cc
-   Kernels/BeamFormerKernel.cc
-   Kernels/BeamFormerTransposeKernel.cc
-   Kernels/DedispersionChirpKernel.cc
-   Kernels/CoherentStokesKernel.cc
-   Kernels/UHEP_BeamFormerKernel.cc
-   Kernels/UHEP_TransposeKernel.cc
-   Kernels/UHEP_InvFFT_Kernel.cc
-   Kernels/UHEP_InvFIR_Kernel.cc
-   Kernels/UHEP_TriggerKernel.cc
-   Kernels/FFT_Kernel.cc
-   Kernels/FFT_Plan.cc
-   Kernels/Filter_FFT_Kernel.cc
-   Kernels/DedispersionForwardFFTkernel.cc
-   Kernels/DedispersionBackwardFFTkernel.cc
-   Pipeline.cc
-   Pipelines/CorrelatorPipeline.cc
-   Pipelines/BeamFormerPipeline.cc
-   Pipelines/UHEP_Pipeline.cc
-   WorkQueues/WorkQueue.cc
-   WorkQueues/CorrelatorWorkQueue.cc
-   WorkQueues/BeamFormerWorkQueue.cc
-   WorkQueues/UHEP_WorkQueue.cc)
+lofar_add_bin_program(rtcp rtcp.cc)

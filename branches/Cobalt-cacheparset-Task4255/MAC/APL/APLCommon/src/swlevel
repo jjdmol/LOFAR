@@ -259,10 +259,12 @@ status_prog()
 {
 	echo
 	echo Status of all software level:
+	highest_level_running=0
 	prevlevel=1
 	list=( `cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' ` )
 	for line in ${list[@]}
 	do
+	        # expected process and swlevel it should run in
 		levelnr=`echo $line | cut -d":" -f1`
 		prog=`echo $line | cut -d":" -f6`
                 pid=("")
@@ -283,6 +285,8 @@ status_prog()
 			$BINDIR/${prog}.sh status $levelnr
 			continue
 		fi
+
+		# find out the processID of the possibly (running) process
 		obsid=()
 		/sbin/pidof ${prog} 1>/dev/null 2>&1
 		if [ $? -eq 0 ]; then
@@ -293,6 +297,10 @@ status_prog()
 			  obsid[i]=`ps -p $apid --no-heading -o command | awk -F{ '{print $2}' | awk -F} '{print $1}'`
 			  i=$i+1
 			done
+			# If a program is running in a level higher than the level
+			# that should be active, raise the active level to indicate
+			# this.
+			highest_level_running=$levelnr
 		else
 			pid="DOWN"
 		fi
@@ -425,9 +433,14 @@ show_level()
         if [ -e /tmp/level.admin ]; then
           level=`cat /tmp/level.admin`
           status_prog >& /dev/null
+          if [ $highest_level_running -gt $level ]; then 
+	    level=$highest_level_running
+            status_prog >& /dev/null
+          fi            
           if [ "$missing" != "" ]; then
             let level=0-$level
           fi 
+
 	  if [ "$1" != "S" ]; then
 	     echo -n "Currently set level is "
 	  fi

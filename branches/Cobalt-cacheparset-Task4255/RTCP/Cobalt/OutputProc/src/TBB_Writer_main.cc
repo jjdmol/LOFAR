@@ -45,16 +45,17 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <OutputProc/TBB_Writer.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/NewHandler.h>
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/AntField.h>
 #include <CoInterface/Exceptions.h>
-#include <OutputProc/IOPriority.h>
 
 #include <dal/lofar/StationNames.h>
+
+#include "TBB_Writer.h"
+#include "IOPriority.h"
 
 #define TBB_DEFAULT_BASE_PORT   0x7bb0  // i.e. tbb0
 #define TBB_DEFAULT_LAST_PORT   0x7bbb  // 0x7bbf for NL, 0x7bbb for int'l stations
@@ -206,15 +207,15 @@ static int antSetName2AntFieldIndex(const string& antSetName)
   } else if (strncmp(antSetName.c_str(), "HBA", sizeof("HBA") - 1) == 0) {
     idx = LOFAR::AntField::HBA_IDX;
   } else {
-    throw LOFAR::RTCP::StorageException("unknown antenna set name");
+    throw LOFAR::Cobalt::StorageException("unknown antenna set name");
   }
 
   return idx;
 }
 
-static LOFAR::RTCP::StationMetaDataMap getExternalStationMetaData(const LOFAR::RTCP::Parset& parset, const string& antFieldDir)
+static LOFAR::Cobalt::StationMetaDataMap getExternalStationMetaData(const LOFAR::Cobalt::Parset& parset, const string& antFieldDir)
 {
-  LOFAR::RTCP::StationMetaDataMap stMdMap;
+  LOFAR::Cobalt::StationMetaDataMap stMdMap;
 
   try {
     // Find path to antenna field files. If not a prog arg, try via $LOFARROOT, else via parset.
@@ -247,7 +248,7 @@ static LOFAR::RTCP::StationMetaDataMap getExternalStationMetaData(const LOFAR::R
 
       // Compute absolute antenna positions from centre + relative.
       // See AntField.h in ApplCommon for the AFArray typedef and contents (first is shape, second is values).
-      LOFAR::RTCP::StationMetaData stMetaData;
+      LOFAR::Cobalt::StationMetaData stMetaData;
       stMetaData.available = true;
       stMetaData.antPositions = antField.AntPos(fieldIdx).second;
       for (size_t i = 0; i < stMetaData.antPositions.size(); i += 3) {
@@ -264,14 +265,14 @@ static LOFAR::RTCP::StationMetaDataMap getExternalStationMetaData(const LOFAR::R
   } catch (LOFAR::AssertError& exc) {
     // Throwing AssertError already sends a message to the logger.
   } catch (dal::DALValueError& exc) {
-    throw LOFAR::RTCP::StorageException(exc.what());
+    throw LOFAR::Cobalt::StorageException(exc.what());
   }
 
   return stMdMap;
 }
 
-static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::RTCP::Parset& parset,
-                     const LOFAR::RTCP::StationMetaDataMap& stMdMap, struct progArgs& args)
+static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::Cobalt::Parset& parset,
+                     const LOFAR::Cobalt::StationMetaDataMap& stMdMap, struct progArgs& args)
 {
   string logPrefix("TBB obs " + LOFAR::formatString("%u", parset.observationID()) + ": ");
 
@@ -279,7 +280,7 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::RTCP::
   int err = 1;
   try {
     // When this obj goes out of scope, worker threads are cancelled and joined with.
-    LOFAR::RTCP::TBB_Writer writer(inputStreamNames, parset, stMdMap, args.outputDir, logPrefix, thrExitStatus);
+    LOFAR::Cobalt::TBB_Writer writer(inputStreamNames, parset, stMdMap, args.outputDir, logPrefix, thrExitStatus);
 
     /*
      * We don't know how much data comes in, so cancel workers when all are idle for a while (timeoutVal).
@@ -527,7 +528,7 @@ int main(int argc, char* argv[])
     {
       char *dirc = strdup(argv0);                   // dirname() may clobber its arg
       if (dirc != NULL) {
-        INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/Storage_main.log_prop");
+        INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/outputProc.log_prop");
         free(dirc);
       }
     }
@@ -568,8 +569,8 @@ int main(int argc, char* argv[])
 
   err = 1;
   try {
-    LOFAR::RTCP::Parset parset(args.parsetFilename);
-    LOFAR::RTCP::StationMetaDataMap stMdMap(getExternalStationMetaData(parset, args.antFieldDir));
+    LOFAR::Cobalt::Parset parset(args.parsetFilename);
+    LOFAR::Cobalt::StationMetaDataMap stMdMap(getExternalStationMetaData(parset, args.antFieldDir));
 
     err = 0;
     do {
@@ -580,11 +581,11 @@ int main(int argc, char* argv[])
     }
 
     // Config exceptions (opening or parsing) are fatal. Too bad we cannot have it in one type.
-  } catch (LOFAR::RTCP::CoInterfaceException& exc) {
-    LOG_FATAL_STR("TBB: Required RTCP parset key/values missing: " << exc);
+  } catch (LOFAR::Cobalt::CoInterfaceException& exc) {
+    LOG_FATAL_STR("TBB: Required parset key/values missing: " << exc);
   } catch (LOFAR::APSException& exc) {
     LOG_FATAL_STR("TBB: Parameterset error: " << exc);
-  } catch (LOFAR::RTCP::StorageException& exc) {
+  } catch (LOFAR::Cobalt::StorageException& exc) {
     LOG_FATAL_STR("TBB: Antenna field files: " << exc);
   }
 

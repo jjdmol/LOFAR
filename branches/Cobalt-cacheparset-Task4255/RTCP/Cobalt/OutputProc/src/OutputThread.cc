@@ -1,53 +1,55 @@
-//#  OutputThread.cc:
-//#
-//#  Copyright (C) 2008
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id: OutputThread.cc 14194 2009-10-06 09:54:51Z romein $
+/* OutputThread.cc:
+ * Copyright (C) 2009-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/StringUtil.h>
-#include <OutputProc/MSWriterFile.h>
-#include <OutputProc/MSWriterCorrelated.h>
-#include <OutputProc/MSWriterDAL.h>
-#include <OutputProc/MSWriterNull.h>
-#include <OutputProc/OutputThread.h>
-#include <Common/Thread/Semaphore.h>
-#include <Common/Thread/Cancellation.h>
+#include "OutputThread.h"
 
+#include <cerrno>
+#include <ctime>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <iomanip>
 #include <boost/format.hpp>
 
-#include <errno.h>
-#include <iomanip>
-#include <time.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <Common/StringUtil.h>
+#include <Common/SystemCallException.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Cancellation.h>
 
 #if defined HAVE_AIPSPP
 #include <casa/Exceptions/Error.h>
 #endif
 
+#include "MSWriterFile.h"
+#include "MSWriterCorrelated.h"
+#include "MSWriterDAL.h"
+#include "MSWriterNull.h"
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     static Mutex makeDirMutex;
@@ -307,5 +309,6 @@ namespace LOFAR
       cleanUp();
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
+

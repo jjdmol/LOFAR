@@ -1,24 +1,23 @@
-//#  BeamletBufferToComputeNode.cc: Catch RSP ethernet frames and synchronize RSP inputs
-//#
-//#  Copyright (C) 2006
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id: BeamletBufferToComputeNode.cc 23213 2012-12-07 13:00:09Z loose $
+/* BeamletBufferToComputeNode.cc: Catch RSP ethernet frames and synchronize RSP inputs
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -33,23 +32,26 @@
 #include <Scheduling.h>
 #include <SubbandMetaData.h>
 #include <CoInterface/AlignedStdAllocator.h>
-#include <Input/CN_Command.h>
-#include <Input/CN_Mapping.h>
 #include <CoInterface/Stream.h>
 #include <CoInterface/Exceptions.h>
 
 #include <sys/time.h>
-
 #include <cstdio>
 #include <stdexcept>
 #include <iomanip>
-
 #include <boost/format.hpp>
 
+#include <Common/LofarTypes.h>
+#include <Common/Timer.h>
+#include <Common/PrettyUnits.h>
+#include <Common/LofarLogger.h>
+
+#include <Scheduling.h>
+#include <SubbandMetaData.h>
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
 
@@ -369,5 +371,6 @@ namespace LOFAR
     template class BeamletBufferToComputeNode<i8complex>;
     template class BeamletBufferToComputeNode<i16complex>;
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
+

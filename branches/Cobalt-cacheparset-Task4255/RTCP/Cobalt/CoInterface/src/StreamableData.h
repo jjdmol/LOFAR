@@ -1,21 +1,40 @@
+/* StreamableData.h
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
+
 #ifndef LOFAR_INTERFACE_STREAMABLE_DATA_H
 #define LOFAR_INTERFACE_STREAMABLE_DATA_H
 
-#include <Stream/Stream.h>
-#include <Common/LofarLogger.h>
+#include <cstring>
+
 #include <Common/LofarTypes.h>
+#include <Common/DataConvert.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/SparseSet.h>
 #include <CoInterface/Allocator.h>
-#include <CoInterface/Align.h>
-#include <Common/DataConvert.h>
-
-#include <cstring>
+#include <Stream/Stream.h>
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     // Data which needs to be transported between CN, ION and Storage.
@@ -156,7 +175,7 @@ namespace LOFAR
         uint32_t          &seqNo = *reinterpret_cast<uint32_t *>(&header[sizeof(uint32_t)]);
 
 #if defined USE_VALGRIND
-        memset(&header[0], 0, header.size());
+        std::memset(&header[0], 0, header.size());
 #endif
 
         magicValue = peerMagicNumber;
@@ -193,7 +212,8 @@ namespace LOFAR
       str->write(samples.origin(), samples.num_elements() * sizeof(T));
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
 
 #endif
+

@@ -1,9 +1,10 @@
-#ifndef __OMPTHREAD__
-#define __OMPTHREAD__
+#ifndef LOFAR_INPUT_PROC_OMP_THREAD_H 
+#define LOFAR_INPUT_PROC_OMP_THREAD_H
 
+#include <ctime>
+#include <csignal>
 #include <pthread.h>
-#include <time.h>
-#include <signal.h>
+
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
 

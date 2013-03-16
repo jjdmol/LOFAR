@@ -1,59 +1,58 @@
-//#  Stream.cc: one line descriptor
-//#
-//#  Copyright (C) 2006
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id: Stream.cc 16396 2010-09-27 12:12:24Z mol $
+/* Stream.cc
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
 //# Includes
+#include <CoInterface/Stream.h>
+
+#include <ctime>
+#include <vector>
+#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
 #include <CoInterface/Exceptions.h>
-#include <CoInterface/Stream.h>
-#include <Common/StringUtil.h>
-
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <Stream/PortBroker.h>
 #include <Stream/NamedPipeStream.h>
 
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
-
-#include <time.h>
-#include <vector>
 
 using boost::format;
 using namespace std;
 
 namespace LOFAR
 {
-  namespace RTCP
+  namespace Cobalt
   {
 
     Stream *createStream(const string &descriptor, bool asServer, time_t deadline)
     {
       vector<string> split = StringUtil::split(descriptor, ':');
 
-      if (deadline > 0 && deadline <= time(0))
+      if (deadline > 0 && deadline <= std::time(0))
         THROW(SocketStream::TimeOutException, "Deadline already passed at start");
 
       if (descriptor == "null:")
@@ -149,5 +148,6 @@ namespace LOFAR
       }
     }
 
-  } // namespace RTCP
+  } // namespace Cobalt
 } // namespace LOFAR
+
