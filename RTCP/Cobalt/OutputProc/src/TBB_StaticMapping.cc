@@ -1,38 +1,39 @@
-//# TBB_StaticMapping.cc: read out the TBB static station-node mapping
-//#
-//# Copyright (C) 2012
-//# ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id: TBB_StaticMapping.cc 3375 2012-03-12 20:01:54Z amesfoort $
+/* TBB_StaticMapping.cc: read out the TBB static station-node mapping
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
-#include <OutputProc/TBB_StaticMapping.h>
-#include <Common/StringUtil.h>
-#include <Common/Exceptions.h>
+#include "TBB_StaticMapping.h"
 
 #include <fstream>
+
+#include <Common/StringUtil.h>
+#include <Common/Exceptions.h>
 
 using namespace std;
 
 namespace LOFAR
 {
-
+namespace Cobalt
+{
   TBB_StaticMapping::TBB_StaticMapping()
   {
   }
@@ -113,4 +114,6 @@ namespace LOFAR
     return mapping;
   }
 
-} // ns LOFAR
+} // namespace Cobalt
+} // namespace LOFAR
+

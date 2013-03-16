@@ -45,16 +45,17 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <OutputProc/TBB_Writer.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/NewHandler.h>
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/AntField.h>
 #include <CoInterface/Exceptions.h>
-#include <OutputProc/IOPriority.h>
 
 #include <dal/lofar/StationNames.h>
+
+#include "TBB_Writer.h"
+#include "IOPriority.h"
 
 #define TBB_DEFAULT_BASE_PORT   0x7bb0  // i.e. tbb0
 #define TBB_DEFAULT_LAST_PORT   0x7bbb  // 0x7bbf for NL, 0x7bbb for int'l stations
@@ -527,7 +528,7 @@ int main(int argc, char* argv[])
     {
       char *dirc = strdup(argv0);                   // dirname() may clobber its arg
       if (dirc != NULL) {
-        INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/Storage_main.log_prop");
+        INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/outputProc.log_prop");
         free(dirc);
       }
     }

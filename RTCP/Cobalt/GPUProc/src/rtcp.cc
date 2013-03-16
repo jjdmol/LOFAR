@@ -1,57 +1,44 @@
-#include "lofar_config.h"
+/* rtcp.cc: Real-Time Central Processor application, GPU cluster version
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
+
+#include <lofar_config.h>
 
 #include <cstdlib>
 #include <cstdio>
-#include <unistd.h>
 #include <cstring>
+#include <ctime>
+#include <unistd.h>
 #include <iostream>
 #include <omp.h>
-#define __CL_ENABLE_EXCEPTIONS
-#include <CL/cl.hpp>
-
-#include "global_defines.h"
-#include "OpenMP_Support.h"
-#include "OpenCL_Support.h"
 
 #include "Common/LofarLogger.h"
 #include "Common/Exception.h"
 #include "CoInterface/Parset.h"
 
-//functionality moved to individual sources
-#include "createProgram.h"
-#include "PerformanceCounter.h"
-#include "UnitTest.h"
-
-#include "Kernel.h"
-#include "Kernels/FIR_FilterKernel.h"
-#include "Kernels/FFT_Kernel.h"
-#include "Kernels/Filter_FFT_Kernel.h"
-#include "Kernels/DelayAndBandPassKernel.h"
-#include "Kernels/CorrelatorKernel.h"
-#include "Kernels/IntToFloatKernel.h"
-#include "Kernels/IncoherentStokesKernel.h"
-#include "Kernels/BeamFormerKernel.h"
-#include "Kernels/BeamFormerTransposeKernel.h"
-#include "Kernels/DedispersionChirpKernel.h"
-#include "Kernels/CoherentStokesKernel.h"
-#include "Kernels/UHEP_BeamFormerKernel.h"
-#include "Kernels/UHEP_TransposeKernel.h"
-#include "Kernels/UHEP_InvFFT_Kernel.h"
-#include "Kernels/UHEP_InvFIR_Kernel.h"
-#include "Kernels/UHEP_TriggerKernel.h"
-#include "Kernels/DedispersionForwardFFTkernel.h"
-#include "Kernels/DedispersionBackwardFFTkernel.h"
-
-#include "Pipeline.h"
+#include "global_defines.h"
+#include "OpenMP_Support.h"
+#include "OpenCL_Support.h"
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
 #include "Pipelines/UHEP_Pipeline.h"
-
-#include "WorkQueues/WorkQueue.h"
-#include "WorkQueues/CorrelatorWorkQueue.h"
-#include "WorkQueues/BeamFormerWorkQueue.h"
-#include "WorkQueues/UHEP_WorkQueue.h"
-
 #include "Storage/StorageProcesses.h"
 
 using namespace LOFAR;

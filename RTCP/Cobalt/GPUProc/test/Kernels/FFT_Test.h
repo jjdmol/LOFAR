@@ -1,17 +1,35 @@
+/* FFT_Test.h
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
+
 #ifndef GPUPROC_FFT_TEST_H
 #define GPUPROC_FFT_TEST_H
-#include "CoInterface/Parset.h"
-#include "OpenCL_Support.h"
-#include "UnitTest.h"
-#include "global_defines.h"
-#include <complex>
-#include "Kernel.h"
-#include <iostream>
+
 #include <cstdlib>
 #include <sys/time.h>
-#include <fftw3.h>
 #include <cmath>
-#include "Kernels/FFT_Kernel.h"
+#include <cassert>
+#include <fftw3.h>
+
+#include <UnitTest.h>
+#include <Kernels/FFT_Kernel.h>
 
 namespace LOFAR
 {
@@ -51,7 +69,7 @@ namespace LOFAR
           // Check for constant function in transfer domain. All real values 1.0 (like fftw, scaled). All imag must be 0.0.
           for (unsigned i = 0; i < fftSize; i++) {
             if (inout[i] != 1.0f) {
-              if (++nrErrors < 100) {           // limit spam
+              if (++nrErrors < 100) { // limit spam
                 std::cerr << "fwd: " << i << ':' << inout[i] << std::endl;
               }
             }
@@ -86,7 +104,7 @@ namespace LOFAR
         // Test 2: Shifted impulse
         {
           nrErrors = 0;
-          const double epsilon = 1.0e-4;       // bigger epsilon than default for test 2
+          const double epsilon = 1.0e-4; // bigger epsilon than default for test 2
           memset(inout.origin(), 0, inout.num_elements() * sizeof(std::complex<float>));
 
           inout[1] = 1.0f;
@@ -141,7 +159,7 @@ namespace LOFAR
         {
           nrErrors = 0;
 
-          const double epsilon = 1.0e-3;       // much bigger epsilon for test 3
+          const double epsilon = 1.0e-3; // much bigger epsilon for test 3
 
           struct timeval tv = {0, 0};
           gettimeofday(&tv, NULL);
@@ -259,7 +277,7 @@ namespace LOFAR
           return false;
         }
 
-        fftw_plan_with_nthreads(4);         // use up to 4 threads (don't care about test performance, but be impatient anyway...)
+        fftw_plan_with_nthreads(4); // use up to 4 threads (don't care about test performance, but be impatient anyway...)
 
         // Use FFTW_ESTIMATE: we need reference output, so don't care about runtime speed.
         *fwdPlan = fftw_plan_many_dft(1, &fftSize, nrFFTs,         // int rank, const int *n (=dims), int howmany,
@@ -297,5 +315,6 @@ namespace LOFAR
     };
   }
 }
+
 #endif
 

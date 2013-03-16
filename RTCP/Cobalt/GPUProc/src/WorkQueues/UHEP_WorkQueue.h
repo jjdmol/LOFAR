@@ -1,26 +1,38 @@
-#ifndef GPUPROC_UHEP_RWORKQUEUE_H
-#define GPUPROC_UHEP_RWORKQUEUE_H
+/* UHEP_WorkQueue.h
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
-#include "lofar_config.h"
+#ifndef LOFAR_GPUPROC_UHEP_WORKQUEUE_H
+#define LOFAR_GPUPROC_UHEP_WORKQUEUE_H
 
-#include "CL/cl.hpp"
-
-#include "Common/LofarLogger.h"
-#include "global_defines.h"
-#include "CoInterface/Parset.h"
-#include "OpenCL_Support.h"
-#include "OpenMP_Support.h"
-#include <algorithm>
-#include <iostream>
 #include <complex>
-#include "ApplCommon/PosixTime.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "BandPass.h"
-#include "Pipelines/UHEP_Pipeline.h"
+#include <Common/LofarLogger.h>
+#include <CoInterface/Parset.h>
+
+#include <global_defines.h>
+#include <OpenCL_Support.h>
+#include <Pipelines/UHEP_Pipeline.h>
+#include <Kernels/UHEP_TriggerKernel.h>
 #include "WorkQueue.h"
 
-#include "Kernels/UHEP_TriggerKernel.h"
 namespace LOFAR
 {
   namespace Cobalt
@@ -53,4 +65,6 @@ namespace LOFAR
     };
   }
 }
+
 #endif
+

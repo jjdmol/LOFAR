@@ -1,26 +1,44 @@
-//#  createHeaders.cc: Generates all .h5/.MS files given a (OLAP) parset
-//#
-//#  Copyright (C) 2002-2004
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  $Id: createHeaders.cc 21558 2012-07-12 09:35:39Z mol $
+/* createHeaders.cc: Generates all .h5/.MS files given a (OLAP) parset
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include <cstdlib>
+#include <string>
+#include <iostream>
+#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include <Common/LofarLogger.h>
 #include <Common/CasaLogSink.h>
 #include <Common/Exceptions.h>
+#include <Common/Thread/Queue.h>
 #include <CoInterface/Exceptions.h>
+#include <CoInterface/OutputTypes.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/StreamableData.h>
+#include <CoInterface/SmartPtr.h>
 #include <OutputProc/Package__Version.h>
-#include <OutputProc/OutputThread.h>
-
-#include <string>
-
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
+#include "OutputThread.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -84,3 +102,4 @@ int main(int argc, char *argv[])
   LOG_INFO_STR("[obs unknown] Program end");
   return 0;
 }
+

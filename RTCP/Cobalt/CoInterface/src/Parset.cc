@@ -1,47 +1,47 @@
-//#  Parset.cc: one line description
-//#
-//#  Copyright (C) 2006
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id$
+/* Parset.cc
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id$
+ */
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
+
+#include <CoInterface/Parset.h>
+
+#include <cstdio>
+#include <set>
+#include <boost/format.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Common/DataConvert.h>
 #include <Common/LofarBitModeInfo.h>
 #include <ApplCommon/PosixTime.h>
-#include <CoInterface/Parset.h>
-#include <CoInterface/SmartPtr.h>
+#include <CoInterface/OutputTypes.h>
+#include <CoInterface/Config.h>
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/PrintVector.h>
 #include <CoInterface/SetOperations.h>
-
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/format.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string.hpp>
-
-#include <cstdio>
-#include <set>
 
 
 namespace LOFAR
@@ -1608,3 +1608,4 @@ namespace LOFAR
 
   } // namespace Cobalt
 } // namespace LOFAR
+

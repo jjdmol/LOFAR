@@ -1,34 +1,37 @@
-//#  InputSection.cc: Catch RSP ethernet frames and synchronize RSP inputs
-//#
-//#  Copyright (C) 2006
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id: InputSection.cc 23195 2012-12-06 16:01:41Z mol $
+/* InputSection.cc: Catch RSP ethernet frames and synchronize RSP inputs
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
 //# Includes
-#include <Input/InputSection.h>
+#include "InputSection.h"
+
+#include <boost/format.hpp>
+
+#include <Common/lofar_complex.h>
+#include <Common/LofarLogger.h>
 #include <Stream/SocketStream.h>
 #include <CoInterface/Stream.h>
 
-#include <boost/format.hpp>
 using boost::format;
 
 namespace LOFAR
@@ -42,7 +45,7 @@ namespace LOFAR
     {
       ASSERT(inputs.size() > 0);
 
-      string stationName = inputs[0].station;
+      std::string stationName = inputs[0].station;
       itsNrRSPboards = inputs.size();
 
       itsLogPrefix = str(format("[station %s] ") % stationName);
@@ -132,3 +135,4 @@ namespace LOFAR
 
   } // namespace Cobalt
 } // namespace LOFAR
+

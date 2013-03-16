@@ -1,4 +1,4 @@
-/* IntToFloatKernel.h
+/* opencl-incl.h: portable OpenCL header include with our option(s)
  * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
  * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
  *
@@ -16,30 +16,20 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: $
+ * $Id$
  */
 
-#ifndef LOFAR_GPUPROC_INT_TO_FLOAT_KERNEL_H
-#define LOFAR_GPUPROC_INT_TO_FLOAT_KERNEL_H
+#ifndef LOFAR_GPUPROC_OPENCL_INCL_H
+#define LOFAR_GPUPROC_OPENCL_INCL_H
 
-#include <CoInterface/Parset.h>
+// OpenCL include option(s)
+#define __CL_ENABLE_EXCEPTIONS
 
-#include <Kernel.h>
-#include <opencl-incl.h>
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    class IntToFloatKernel : public Kernel
-    {
-    public:
-      IntToFloatKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                       cl::Buffer &devFilteredData, cl::Buffer &devInputSamples);
-    };
-  }
-
-}
+#if defined(__APPLE__) || defined(__MACOSX)
+# include <OpenCL/cl.hpp>
+#else
+# include <CL/cl.hpp>
+#endif
 
 #endif
 
