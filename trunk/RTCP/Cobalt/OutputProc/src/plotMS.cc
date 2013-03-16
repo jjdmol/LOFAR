@@ -1,27 +1,43 @@
-//#  Plot_MS.cc:
-//#
-//#  Copyright (C) 2002-2004
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  $Id: Storage_main.cc 18363 2011-06-30 13:06:44Z mol $
+/* plotMS.cc
+ * Copyright (C) 2011-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include <cstdlib>
+#include <cstdio>
+#include <unistd.h>
+#include <string>
+#include <vector>
+#include <boost/format.hpp>
+
+#include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 #include <Common/StringUtil.h>
+#include <Common/DataConvert.h>
 #include <Stream/FileStream.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/DataFactory.h>
 #include <CoInterface/CorrelatedData.h>
-#include <Common/DataConvert.h>
-#include <Common/Exception.h>
-#include <string>
-#include <cstdio>
-#include <cstdlib>
-#include <unistd.h>
-#include <boost/format.hpp>
 
 #include <casa/IO/AipsIO.h>
 #include <casa/Containers/Block.h>
@@ -187,3 +203,4 @@ int main(int argc, char *argv[])
 
   return 0;
 }
+

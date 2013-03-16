@@ -1,39 +1,38 @@
-//#  SSH.h
-//#
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id: SSH.h 15296 2010-03-24 10:19:41Z mol $
-
+/* SSH.h
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#ifndef LOFAR_RTCP_SSH_H
-#define LOFAR_RTCP_SSH_H
+#ifndef LOFAR_GPUPROC_SSH_H
+#define LOFAR_GPUPROC_SSH_H
 
+#include <ctime>
 #include <string>
+#include <sstream>
+#include <libssh2.h>
 
 #include <Common/Thread/Thread.h>
 #include <Common/Exception.h>
 #include <Stream/FileDescriptorBasedStream.h>
-#include <libssh2.h>
 #include <CoInterface/SmartPtr.h>
-#include <time.h>
-#include <string>
-#include <sstream>
 
 namespace LOFAR
 {
@@ -77,12 +76,12 @@ namespace LOFAR
       std::string stdoutBuffer() const;
 
     private:
-      const string itsLogPrefix;
-      const string itsHostName;
-      const string itsCommandLine;
-      const string itsUserName;
-      const string itsPublicKey;
-      const string itsPrivateKey;
+      const std::string itsLogPrefix;
+      const std::string itsHostName;
+      const std::string itsCommandLine;
+      const std::string itsUserName;
+      const std::string itsPublicKey;
+      const std::string itsPrivateKey;
 
       bool itsConnected;
 
@@ -108,5 +107,5 @@ namespace LOFAR
   } // namespace Cobalt
 } // namespace LOFAR
 
-
 #endif
+

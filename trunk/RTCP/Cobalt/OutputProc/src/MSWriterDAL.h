@@ -1,41 +1,36 @@
-//  MSMriterDAL.h: implementation of MSWriter using the DAL to write HDF5
-//
-//  Copyright (C) 2011
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id: MSWriterDAL.h 11891 2011-10-14 13:43:51Z gels $
-//
-//////////////////////////////////////////////////////////////////////
-
+/* MSMriterDAL.h: implementation of MSWriter using the DAL to write HDF5
+ * Copyright (C) 2011-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #ifndef LOFAR_STORAGE_MSWRITERDAL_H
 #define LOFAR_STORAGE_MSWRITERDAL_H
 
 //# Includes
+#include <string>
+
 #include <Common/LofarTypes.h>
 #include <Common/ParameterSet.h>
-
 #include <CoInterface/Parset.h>
 #include <CoInterface/StreamableData.h>
-#include <OutputProc/MSWriter.h>
-#include <OutputProc/MSWriterFile.h>
-
-#include <vector>
+#include "MSWriter.h"
+#include "MSWriterFile.h"
 
 namespace LOFAR
 {
@@ -46,7 +41,7 @@ namespace LOFAR
     class MSWriterDAL : public MSWriterFile
     {
     public:
-      MSWriterDAL(const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian);
+      MSWriterDAL(const std::string &filename, const Parset &parset, unsigned fileno, bool isBigEndian);
       ~MSWriterDAL();
       virtual void write(StreamableData *data);
     private:
@@ -63,3 +58,4 @@ namespace LOFAR
 }
 
 #endif
+

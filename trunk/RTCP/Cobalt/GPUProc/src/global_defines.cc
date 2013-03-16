@@ -1,7 +1,33 @@
-#include "lofar_config.h"
-#include <stdlib.h>
-#include "CL/cl.hpp"
+/* global_defines.cc
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
+#include <lofar_config.h>
+
+#include "global_defines.h"
+
+#include <cstdlib>
 #include <cstdio>
+
+#if defined __linux__
+#include <sched.h>
+#endif
 
 namespace LOFAR
 {
@@ -11,7 +37,7 @@ namespace LOFAR
     const char *str = getenv("NR_GPUS");
     unsigned nrGPUs = str ? atoi(str) : 1;
 
-        #if defined __linux__
+#if defined __linux__
 
     inline void set_affinity(unsigned device)
     {
@@ -43,6 +69,10 @@ namespace LOFAR
         perror("sched_setaffinity");
     }
 
-#endif
+#else
+  inline void set_affinity(unsigned device) { }
+#endif // __linux__
+
   }
 }
+

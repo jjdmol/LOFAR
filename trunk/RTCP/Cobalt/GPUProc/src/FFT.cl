@@ -280,3 +280,4 @@ __kernel void \
   in_out[128] = a2;
   in_out[192] = a3;
 }
+

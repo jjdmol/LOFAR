@@ -1,21 +1,39 @@
-#include "lofar_config.h"
+/* CorrelatorPipeline.cc
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
-#include "Common/LofarLogger.h"
-#include "global_defines.h"
-#include "CoInterface/Parset.h"
-#include "CoInterface/CorrelatedData.h"
-#include "OpenCL_Support.h"
-#include "OpenMP_Support.h"
-#include <iostream>
-#include <iomanip>
-#include "ApplCommon/PosixTime.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include "Stream/Stream.h"
+#include <lofar_config.h>
 
 #include "CorrelatorPipeline.h"
-#include "WorkQueues/CorrelatorWorkQueue.h"
-#include "Input/BeamletBufferToComputeNode.h"
-#include <SubbandMetaData.h>
+
+#include <iomanip>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+#include <Common/LofarLogger.h>
+#include <ApplCommon/PosixTime.h>
+#include <Stream/Stream.h>
+#include <CoInterface/CorrelatedData.h>
+
+#include <OpenMP_Support.h>
+#include <createProgram.h>
+#include <WorkQueues/CorrelatorWorkQueue.h>
 
 using namespace std;
 
@@ -284,5 +302,4 @@ namespace LOFAR
     }
   }
 }
-
 
