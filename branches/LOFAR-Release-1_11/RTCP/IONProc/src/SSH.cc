@@ -45,6 +45,11 @@ using namespace std;
 namespace LOFAR {
 namespace RTCP {
 
+// HAVE_LOG4COUT is not defined, but derived
+#if !defined HAVE_LOG4CPLUS && !defined HAVE_LOG4CXX
+#define HAVE_LOG4COUT
+#endif
+
 #ifndef HAVE_LOG4COUT
 Mutex coutMutex;
 #endif
