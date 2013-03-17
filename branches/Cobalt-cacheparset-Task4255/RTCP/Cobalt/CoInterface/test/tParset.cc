@@ -557,6 +557,8 @@ SUITE(correlator) {
     CHECK_EQUAL(42U, ps.IONintegrationSteps());
   }
 
+  /* TODO: test super-station beam former */
+
   SUITE(files) {
     TEST(filenames_mandatory) {
       Parset ps;
