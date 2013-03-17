@@ -257,38 +257,38 @@ TEST(bandFilter) {
 }
 
 SUITE(stations) {
-  TEST(name_phasecenter) {
+  TEST(nr) {
     for (size_t nrStations = 0; nrStations <= 80; ++nrStations) {
-      Parset ps;
-
-      // add required keys we don't test here
-      ps.add("Observation.rspBoardList", "[]");
-      ps.add("Observation.rspSlotList", "[]");
-
-      // add stations
-      vector<string> stationNames;
-
-      for (size_t st = 0; st < nrStations; ++st) {
-        const string name = str(format("CS%03uLBA") % st);
-
-        stationNames.push_back(name);
-
-        ps.add(str(format("PIC.Core.%s.phaseCenter") % name), str(format("[%f, %f, %f]") % (st + 0.1) % (st + 0.2) % (st + 0.3)));
-      }
-
-      ps.add("OLAP.storageStationNames", toStr(stationNames));
-      ps.updateSettings();
+      // set
+      MAKEPS("OLAP.storageStationNames", str(format("[%u*foo]") % nrStations));
 
       // verify settings
       CHECK_EQUAL(nrStations, ps.settings.stations.size());
-      for (size_t st = 0; st < nrStations; ++st) {
-        CHECK_EQUAL(stationNames[st], ps.settings.stations[st].name);
-        CHECK_EQUAL(3U, ps.settings.stations[st].phaseCenter.size());
-        CHECK_CLOSE(st + 0.1, ps.settings.stations[st].phaseCenter[0], 0.01);
-        CHECK_CLOSE(st + 0.2, ps.settings.stations[st].phaseCenter[1], 0.01);
-        CHECK_CLOSE(st + 0.3, ps.settings.stations[st].phaseCenter[2], 0.01);
-      }
     }
+  }
+
+  TEST(name) {
+    // set -- test two stations to verify that the names differ.
+    MAKEPS("OLAP.storageStationNames", "[CS001LBA, CS002LBA]");
+
+    // verify settings
+    CHECK_EQUAL("CS001LBA", ps.settings.stations[0].name);
+    CHECK_EQUAL("CS002LBA", ps.settings.stations[1].name);
+  }
+
+  TEST(phasecenter) {
+    Parset ps;
+
+    // set
+    ps.add("OLAP.storageStationNames", "[CS001LBA]");
+    ps.add("PIC.Core.CS001LBA.phaseCenter", "[1.0, 2.0, 3.0]");
+    ps.updateSettings();
+
+    // verify settings
+    CHECK_EQUAL(3U, ps.settings.stations[0].phaseCenter.size());
+    CHECK_CLOSE(1.0, ps.settings.stations[0].phaseCenter[0], 0.01);
+    CHECK_CLOSE(2.0, ps.settings.stations[0].phaseCenter[1], 0.01);
+    CHECK_CLOSE(3.0, ps.settings.stations[0].phaseCenter[2], 0.01);
   }
 
   TEST(default_map) {
@@ -308,50 +308,63 @@ SUITE(stations) {
     CHECK_EQUAL(2U, ps.settings.stations[0].rspSlotMap[0]);
   }
 
-  TEST(rspBoardMap_rspSlotMap) {
-    for (size_t nrStations = 0; nrStations <= 2; ++nrStations) {
-      for (size_t nrSubbands = 0; nrSubbands <= 244; ++nrSubbands) {
-        Parset ps;
+  TEST(station_map) {
+    Parset ps;
 
-        // generate unique board/slot lists for each station
-        vector<vector<unsigned> > boardLists(nrStations);
-        vector<vector<unsigned> > slotLists(nrStations);
+    // add a station and station-specific board/slot lists
+    ps.add("OLAP.storageStationNames", "[CS001LBA]");
+    ps.add("Observation.Dataslots.CS001LBA.RSPBoardList", "[1]");
+    ps.add("Observation.Dataslots.CS001LBA.DataslotList", "[2]");
+    ps.updateSettings();
 
-        for (size_t st = 0; st < nrStations; ++st) {
-          boardLists[st].resize(nrSubbands);
-          slotLists[st].resize(nrSubbands);
+    // verify settings
+    CHECK_EQUAL(1U, ps.settings.stations.size());
+    CHECK_EQUAL(1U, ps.settings.stations[0].rspBoardMap.size());
+    CHECK_EQUAL(1U, ps.settings.stations[0].rspBoardMap[0]);
+    CHECK_EQUAL(1U, ps.settings.stations[0].rspSlotMap.size());
+    CHECK_EQUAL(2U, ps.settings.stations[0].rspSlotMap[0]);
+  }
+}
 
-          for (unsigned sb = 0; sb < nrSubbands; ++sb ) {
-            boardLists[st][sb] = (sb+st) / 62;
-            slotLists[st][sb]  = (sb+st) % 62;
-          }
-        }
+SUITE(SAPs) {
+  TEST(nr) {
+    Parset ps;
 
-        // add stations
-        vector<string> stationNames;
+    for (size_t nrSAPs = 1; nrSAPs < 3; ++nrSAPs) {
+      MAKEPS("Observation.nrBeams", str(format("%u") % nrSAPs));
 
-        for (size_t st = 0; st < nrStations; ++st) {
-          const string name = str(format("CS%03uLBA") % st);
-
-          stationNames.push_back(name);
-
-          ps.add(str(format("Observation.Dataslots.%s.RSPBoardList") % name),  toStr(boardLists[st]));
-          ps.add(str(format("Observation.Dataslots.%s.DataslotList")  % name), toStr(slotLists[st]));
-        }
-
-        ps.add("OLAP.storageStationNames", toStr(stationNames));
-        ps.updateSettings();
-
-        // verify settings
-        CHECK_EQUAL(nrStations, ps.settings.stations.size());
-        for (size_t st = 0; st < nrStations; ++st) {
-          CHECK_EQUAL(nrSubbands,           ps.settings.stations[st].rspBoardMap.size());
-          CHECK_ARRAY_EQUAL(boardLists[st], ps.settings.stations[st].rspBoardMap, nrSubbands);
-          CHECK_EQUAL(nrSubbands,           ps.settings.stations[st].rspSlotMap.size());
-          CHECK_ARRAY_EQUAL(slotLists[st],  ps.settings.stations[st].rspSlotMap, nrSubbands);
-        }
-      }
+      CHECK_EQUAL(nrSAPs, ps.settings.SAPs.size());
     }
+  }
+
+  TEST(target) {
+    Parset ps;
+
+    // set
+    ps.add("Observation.nrBeams", "1");
+    ps.add("Observation.Beam[0].target", "target");
+
+    ps.updateSettings();
+
+    // verify settings
+    CHECK_EQUAL("target", ps.settings.SAPs[0].target);
+  }
+
+  TEST(direction) {
+    Parset ps;
+
+    // set
+    ps.add("Observation.nrBeams", "1");
+    ps.add("Observation.Beam[0].angle1", "1.0");
+    ps.add("Observation.Beam[0].angle2", "2.0");
+    ps.add("Observation.Beam[0].directionType", "AZEL");
+
+    ps.updateSettings();
+
+    // verify settings
+    CHECK_CLOSE(1.0,    ps.settings.SAPs[0].direction.angle1, 0.1);
+    CHECK_CLOSE(2.0,    ps.settings.SAPs[0].direction.angle2, 0.1);
+    CHECK_EQUAL("AZEL", ps.settings.SAPs[0].direction.type);
   }
 }
 

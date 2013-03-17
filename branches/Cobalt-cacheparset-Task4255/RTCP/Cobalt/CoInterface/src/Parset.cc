@@ -224,11 +224,11 @@ namespace LOFAR
 
         string key = std::string(str(boost::format("Observation.Dataslots.%s.RSPBoardList") % station.name));
         if (!isDefined(key)) key = "Observation.rspBoardList";
-        station.rspBoardMap = getUint32Vector(key, true);
+        station.rspBoardMap = getUint32Vector(key, emptyVectorUnsigned, true);
 
         key = std::string(str(boost::format("Observation.Dataslots.%s.DataslotList") % station.name));
         if (!isDefined(key)) key = "Observation.rspSlotList";
-        station.rspSlotMap = getUint32Vector(key, true);
+        station.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
       }
 
       // Pointing information
