@@ -268,7 +268,7 @@ SUITE(stations) {
   }
 
   TEST(name) {
-    // set -- test two stations to verify that the names differ.
+    // set
     MAKEPS("OLAP.storageStationNames", "[CS001LBA, CS002LBA]");
 
     // verify settings
@@ -276,7 +276,7 @@ SUITE(stations) {
     CHECK_EQUAL("CS002LBA", ps.settings.stations[1].name);
   }
 
-  TEST(phasecenter) {
+  TEST(phaseCenter) {
     Parset ps;
 
     // set
@@ -330,7 +330,7 @@ SUITE(SAPs) {
   TEST(nr) {
     Parset ps;
 
-    for (size_t nrSAPs = 1; nrSAPs < 3; ++nrSAPs) {
+    for (size_t nrSAPs = 1; nrSAPs < 244; ++nrSAPs) {
       MAKEPS("Observation.nrBeams", str(format("%u") % nrSAPs));
 
       CHECK_EQUAL(nrSAPs, ps.settings.SAPs.size());
@@ -341,13 +341,15 @@ SUITE(SAPs) {
     Parset ps;
 
     // set
-    ps.add("Observation.nrBeams", "1");
-    ps.add("Observation.Beam[0].target", "target");
+    ps.add("Observation.nrBeams", "2");
+    ps.add("Observation.Beam[0].target", "target 1");
+    ps.add("Observation.Beam[1].target", "target 2");
 
     ps.updateSettings();
 
     // verify settings
-    CHECK_EQUAL("target", ps.settings.SAPs[0].target);
+    CHECK_EQUAL("target 1", ps.settings.SAPs[0].target);
+    CHECK_EQUAL("target 2", ps.settings.SAPs[1].target);
   }
 
   TEST(direction) {
@@ -365,6 +367,278 @@ SUITE(SAPs) {
     CHECK_CLOSE(1.0,    ps.settings.SAPs[0].direction.angle1, 0.1);
     CHECK_CLOSE(2.0,    ps.settings.SAPs[0].direction.angle2, 0.1);
     CHECK_EQUAL("AZEL", ps.settings.SAPs[0].direction.type);
+  }
+}
+
+SUITE(anaBeam) {
+  TEST(enabled) {
+    TESTBOOL {
+      MAKEPS("Observation.antennaSet", val ? "HBA_ZERO" : "LBA_INNER");
+
+      CHECK_EQUAL(val, ps.settings.anaBeam.enabled);
+    }
+  }
+
+  TEST(direction) {
+    Parset ps;
+
+    // set
+    ps.add("Observation.antennaSet", "HBA_INNER");
+    ps.add("Observation.AnaBeam[0].angle1", "1.0");
+    ps.add("Observation.AnaBeam[0].angle2", "2.0");
+    ps.add("Observation.AnaBeam[0].directionType", "AZEL");
+
+    ps.updateSettings();
+
+    // verify settings
+    CHECK_CLOSE(1.0,    ps.settings.anaBeam.direction.angle1, 0.1);
+    CHECK_CLOSE(2.0,    ps.settings.anaBeam.direction.angle2, 0.1);
+    CHECK_EQUAL("AZEL", ps.settings.anaBeam.direction.type);
+  }
+}
+
+SUITE(subbands) {
+  TEST(beamList_mandatory) {
+    Parset ps;
+
+    // add subbandList
+    ps.add("Observation.subbandList", "[0]");
+
+    // without beamList, this should throw
+    CHECK_THROW(ps.updateSettings(), CoInterfaceException);
+
+    // add beamList
+    ps.add("Observation.beamList", "[0]");
+
+    // should be OK now
+    ps.updateSettings();
+  }
+
+  TEST(nr) {
+    for (size_t nrSubbands = 0; nrSubbands < 244; ++nrSubbands) {
+      Parset ps;
+
+      // add subbands
+      ps.add("Observation.subbandList", str(format("[%u*42]") % nrSubbands));
+      ps.add("Observation.beamList",    str(format("[%u*0]") % nrSubbands));
+      ps.updateSettings();
+
+      // verify settings
+      CHECK_EQUAL(nrSubbands, ps.settings.subbands.size());
+    }
+  }
+
+  TEST(idx_stationIdx) {
+    Parset ps;
+
+    // set
+    ps.add("Observation.subbandList", "[42]");
+    ps.add("Observation.beamList",    "[0]");
+    ps.updateSettings();
+
+    // verify settings
+    CHECK_EQUAL(0U,  ps.settings.subbands[0].idx);
+    CHECK_EQUAL(42U, ps.settings.subbands[0].stationIdx);
+  }
+
+  TEST(SAP) {
+    Parset ps;
+
+    // set -- note: for now, omitting actual SAP specifications is allowed
+    ps.add("Observation.subbandList", "[1]");
+    ps.add("Observation.beamList",    "[1]");
+    ps.updateSettings();
+
+    // verify settings
+    CHECK_EQUAL(1U, ps.settings.subbands[0].SAP);
+  }
+
+  TEST(centralFrequency) {
+    // test for both 200 and 160 MHz clocks,
+    // and for all three Nyquist zones.
+
+    map<unsigned, string> bandFilters;
+    bandFilters[1] = "LBA_10_90";
+    bandFilters[2] = "HBA_110_190";
+    bandFilters[3] = "HBA_170_230";
+
+    for (unsigned clocks = 0; clocks < 2; ++clocks) {
+      unsigned clock = clocks == 0 ? 200 : 160;
+
+      for (unsigned zones = 0; zones < 3; ++zones) {
+        unsigned nyquistZone = zones + 1;
+
+        Parset ps;
+
+        // set
+        ps.add("Observation.sampleClock", str(format("%u") % clock));
+        ps.add("Observation.bandFilter",  bandFilters[nyquistZone]);
+        ps.add("Observation.subbandList", "[0..511]");
+        ps.add("Observation.beamList",    "[512*0]");
+        ps.updateSettings();
+
+        // verify settings
+        for (unsigned sb = 0; sb < 512; ++sb) {
+          CHECK_CLOSE(ps.settings.subbandWidth() * (512 * (nyquistZone - 1) + sb), ps.settings.subbands[sb].centralFrequency, 0.001);
+        }
+      }
+    }
+  }
+}
+
+/*
+ * Test correlator pipeline settings.
+ */
+
+SUITE(correlator) {
+  TEST(enabled) {
+    TESTBOOL {
+      MAKEPS("Observation.DataProducts.Output_Correlated.enabled", valstr);
+
+      CHECK_EQUAL(val, ps.settings.correlator.enabled);
+    }
+  }
+
+  TEST(nrChannels) {
+    // for now, nrChannels is also defined if the correlator is disabled
+    TESTBOOL {
+      Parset ps;
+
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", valstr);
+      ps.add("Observation.channelsPerSubband", "256");
+      ps.updateSettings();
+
+      CHECK_EQUAL(256U, ps.settings.correlator.nrChannels);
+      CHECK_EQUAL(256U, ps.nrChannelsPerSubband());
+    }
+  }
+
+  TEST(channelWidth) {
+    // for now, channelWidth is also defined if the correlator is disabled
+    TESTBOOL {
+      // validate all powers of 2 in [1, 4096]
+      for (size_t nrChannels = 1; nrChannels <= 4096; nrChannels <<= 1) {
+        Parset ps;
+
+        ps.add("Observation.DataProducts.Output_Correlated.enabled", valstr);
+        ps.add("Observation.channelsPerSubband", str(format("%u") % nrChannels));
+        ps.updateSettings();
+
+        CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.settings.correlator.channelWidth, 0.00001);
+        CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.channelWidth(), 0.00001);
+      }
+    }
+  }
+
+  TEST(nrSamplesPerChannel) {
+    Parset ps;
+    
+    // set
+    ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+    ps.add("OLAP.CNProc.integrationSteps", "42");
+    ps.updateSettings();
+
+    // verify settings
+    CHECK_EQUAL(42U, ps.settings.correlator.nrSamplesPerChannel);
+    CHECK_EQUAL(42U, ps.CNintegrationSteps());
+    CHECK_EQUAL(42U, ps.nrSamplesPerChannel());
+  }
+
+  TEST(nrBlocksPerIntegration) {
+    Parset ps;
+    
+    // set
+    ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+    ps.add("OLAP.IONProc.integrationSteps", "42");
+    ps.updateSettings();
+
+    // verify settings
+    CHECK_EQUAL(42U, ps.settings.correlator.nrBlocksPerIntegration);
+    CHECK_EQUAL(42U, ps.IONintegrationSteps());
+  }
+
+  SUITE(files) {
+    TEST(filenames_mandatory) {
+      Parset ps;
+      
+      // set
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.add("Observation.subbandList", "[0]");
+      ps.add("Observation.beamList",    "[0]");
+      ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
+
+      // forget filenames == throw
+      CHECK_THROW(ps.updateSettings(), CoInterfaceException);
+
+      // add filenames
+      ps.add("Observation.DataProducts.Output_Correlated.filenames", "[SB000.MS]");
+
+      // should be OK now
+      ps.updateSettings();
+    }
+
+    TEST(locations_mandatory) {
+      Parset ps;
+      
+      // set
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.add("Observation.subbandList", "[0]");
+      ps.add("Observation.beamList",    "[0]");
+      ps.add("Observation.DataProducts.Output_Correlated.filenames", "[SB000.MS]");
+
+      // forget locations == throw
+      CHECK_THROW(ps.updateSettings(), CoInterfaceException);
+
+      // add locations
+      ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
+
+      // should be OK now
+      ps.updateSettings();
+    }
+
+    TEST(nr) {
+      // this test is expensive, so select a few values to test
+      vector<size_t> testNrSubbands;
+      testNrSubbands.push_back(0);
+      testNrSubbands.push_back(1);
+      testNrSubbands.push_back(2);
+      testNrSubbands.push_back(61);
+      testNrSubbands.push_back(122);
+      testNrSubbands.push_back(244);
+
+      for (size_t i = 0; i < testNrSubbands.size(); ++i) {
+        size_t nrSubbands = testNrSubbands[i];
+        Parset ps;
+
+        // set
+        ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+        ps.add("Observation.subbandList", str(format("[%u*42]") % nrSubbands));
+        ps.add("Observation.beamList",    str(format("[%u*0]") % nrSubbands));
+        ps.add("Observation.DataProducts.Output_Correlated.filenames", str(format("[%u*SBxxx.MS]") % nrSubbands));
+        ps.add("Observation.DataProducts.Output_Correlated.locations", str(format("[%u*localhost:.]") % nrSubbands));
+        ps.updateSettings();
+
+        // verify settings
+        CHECK_EQUAL(nrSubbands, ps.settings.correlator.files.size());
+      }
+    }
+
+    TEST(location) {
+      Parset ps;
+
+      // set
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.add("Observation.subbandList", "[0]");
+      ps.add("Observation.beamList",    "[0]");
+      ps.add("Observation.DataProducts.Output_Correlated.filenames", "[SB000.MS]");
+      ps.add("Observation.DataProducts.Output_Correlated.locations", "[host:/dir]");
+      ps.updateSettings();
+
+      // verify settings
+      CHECK_EQUAL("SB000.MS", ps.settings.correlator.files[0].location.filename);
+      CHECK_EQUAL("host",     ps.settings.correlator.files[0].location.host);
+      CHECK_EQUAL("/dir",     ps.settings.correlator.files[0].location.directory);
+    }
   }
 }
 

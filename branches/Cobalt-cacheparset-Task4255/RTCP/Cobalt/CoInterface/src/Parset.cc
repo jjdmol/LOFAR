@@ -256,6 +256,10 @@ namespace LOFAR
       vector<unsigned> sapList     = getUint32Vector("Observation.beamList",    emptyVectorUnsigned, true);
       size_t nrSubbands = subbandList.size();
 
+      if (sapList.size() != nrSubbands) {
+        THROW(CoInterfaceException, "len(Observation.beamList) != len(Observation.subbandList)");
+      }
+
       settings.subbands.resize(nrSubbands);
       unsigned subbandOffset = 512 * (settings.nyquistZone() - 1);
       for (unsigned i = 0; i < nrSubbands; ++i) {
@@ -311,10 +315,12 @@ namespace LOFAR
           }
         }
 
-        // Files to output
-        settings.correlator.files.resize(nrSubbands);
-        for (size_t i = 0; i < nrSubbands; ++i) {
-          settings.correlator.files[i].location = getFileLocation("Correlated", i);
+        if (settings.correlator.enabled) {
+          // Files to output
+          settings.correlator.files.resize(nrSubbands);
+          for (size_t i = 0; i < nrSubbands; ++i) {
+            settings.correlator.files[i].location = getFileLocation("Correlated", i);
+          }
         }
       }
 
@@ -431,16 +437,31 @@ namespace LOFAR
     }
 
     struct ObservationSettings::FileLocation Parset::getFileLocation(const std::string outputType, unsigned idx) const {
+      //
       const string prefix = "Observation.DataProducts.Output_" + outputType;
 
       vector<string> empty;
       vector<string> filenames = getStringVector(prefix + ".filenames", empty, true);
       vector<string> locations = getStringVector(prefix + ".locations", empty, true);
 
+      if (idx >= filenames.size()) {
+        THROW(CoInterfaceException, "Invalid index for " << prefix << ".filenames: " << idx);
+      }
+
+      if (idx >= locations.size()) {
+        THROW(CoInterfaceException, "Invalid index for " << prefix << ".locations: " << idx);
+      }
+
+      vector<string> host_dir = StringUtil::split(locations[idx], ':');
+
+      if (host_dir.size() != 2) {
+        THROW(CoInterfaceException, "Location must adhere to 'host:directory' in " << prefix << ".locations: " << locations[idx]);
+      }
+
       ObservationSettings::FileLocation location;
       location.filename  = filenames[idx];
-      location.host      = StringUtil::split(locations[idx], ':')[0];
-      location.directory = StringUtil::split(locations[idx], ':')[1];
+      location.host      = host_dir[0];
+      location.directory = host_dir[1];
 
       return location;
     }
