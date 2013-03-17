@@ -27,10 +27,13 @@
 #include <UnitTest++.h>
 #include <vector>
 #include <string>
+#include <sstream>
+#include <boost/format.hpp>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
+using boost::format;
 
 // macro to create a Parset out of one key/value pair
 #define MAKEPS(key, value) \
@@ -56,6 +59,16 @@ vector<unsigned> sequence(size_t n) {
   }
 
   return result;
+}
+
+// convert a vector to a string
+template<typename T> string toStr( const vector<T> &v )
+{
+  stringstream sstr;
+
+  sstr << v;
+
+  return sstr.str();
 }
 
 /*
@@ -240,6 +253,88 @@ TEST(bandFilter) {
     CHECK_EQUAL(i->first, ps.bandFilter());
     
     CHECK_EQUAL(i->second, ps.settings.nyquistZone());
+  }
+}
+
+SUITE(stations) {
+  TEST(name_phasecenter) {
+    for (size_t nrStations = 0; nrStations <= 80; ++nrStations) {
+      Parset ps;
+
+      // add required keys we don't test here
+      ps.add("Observation.rspBoardList", "[]");
+      ps.add("Observation.rspSlotList", "[]");
+
+      // add stations
+      vector<string> stationNames;
+
+      for (size_t st = 0; st < nrStations; ++st) {
+        const string name = str(format("CS%03uLBA") % st);
+
+        stationNames.push_back(name);
+
+        ps.add(str(format("PIC.Core.%s.phaseCenter") % name), str(format("[%f, %f, %f]") % (st + 0.1) % (st + 0.2) % (st + 0.3)));
+      }
+
+      ps.add("OLAP.storageStationNames", toStr(stationNames));
+      ps.updateSettings();
+
+      // verify settings
+      CHECK_EQUAL(nrStations, ps.settings.stations.size());
+      for (size_t st = 0; st < nrStations; ++st) {
+        CHECK_EQUAL(stationNames[st], ps.settings.stations[st].name);
+        CHECK_EQUAL(3U, ps.settings.stations[st].phaseCenter.size());
+        CHECK_CLOSE(st + 0.1, ps.settings.stations[st].phaseCenter[0], 0.01);
+        CHECK_CLOSE(st + 0.2, ps.settings.stations[st].phaseCenter[1], 0.01);
+        CHECK_CLOSE(st + 0.3, ps.settings.stations[st].phaseCenter[2], 0.01);
+      }
+    }
+  }
+
+  TEST(rspBoardMap_rspSlotMap) {
+    for (size_t nrStations = 0; nrStations <= 2; ++nrStations) {
+      for (size_t nrSubbands = 0; nrSubbands <= 244; ++nrSubbands) {
+        Parset ps;
+
+        // generate board/slot lists
+        vector<unsigned> boardList(nrSubbands);
+        vector<unsigned> slotList(nrSubbands);
+
+        for (unsigned sb = 0; sb < nrSubbands; ++sb ) {
+          boardList[sb] = sb / 62;
+          slotList[sb]  = sb % 62;
+        }
+
+        // fall-back values, shouldn't occur
+        ps.add("Observation.rspBoardList", toStr(zeroes(nrSubbands)));
+        ps.add("Observation.rspSlotList",  toStr(zeroes(nrSubbands)));
+
+        // add stations
+        vector<string> stationNames;
+
+        for (size_t st = 0; st < nrStations; ++st) {
+          const string name = str(format("CS%03uLBA") % st);
+
+          stationNames.push_back(name);
+
+          ps.add(str(format("PIC.Core.%s.phaseCenter")  % name),  "[0, 0, 0]");
+          ps.add(str(format("Observation.Dataslots.%s.RSPBoardList") % name),  toStr(boardList));
+          ps.add(str(format("Observation.Dataslots.%s.DataslotList")  % name), toStr(slotList));
+        }
+
+        ps.add("OLAP.storageStationNames", toStr(stationNames));
+        ps.updateSettings();
+
+        // verify settings
+        CHECK_EQUAL(nrStations, ps.settings.stations.size());
+        for (size_t st = 0; st < nrStations; ++st) {
+          CHECK_EQUAL(nrSubbands,      ps.settings.stations[st].rspBoardMap.size());
+          CHECK_ARRAY_EQUAL(boardList, ps.settings.stations[st].rspBoardMap, nrSubbands);
+          CHECK_EQUAL(nrSubbands,      ps.settings.stations[st].rspSlotMap.size());
+          CHECK_ARRAY_EQUAL(slotList,  ps.settings.stations[st].rspSlotMap, nrSubbands);
+        }
+      }
+    }
   }
 }
 
