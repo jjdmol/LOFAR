@@ -24,13 +24,13 @@
 
 #include <Common/lofar_complex.h>
 #include <Common/DataConvert.h>
+#include <Stream/Stream.h>
 #include <CoInterface/Align.h>
 #include <CoInterface/Allocator.h>
 #include <CoInterface/Config.h>
 #include <CoInterface/StreamableData.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/OutputTypes.h>
-#include <Stream/Stream.h>
 
 
 namespace LOFAR

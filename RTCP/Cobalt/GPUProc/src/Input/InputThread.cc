@@ -22,6 +22,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include "InputThread.h"
+
 //# Includes
 #include <cstddef>
 #include <vector>
@@ -39,7 +41,6 @@
 #include <CoInterface/Exceptions.h>
 
 #include <Scheduling.h>
-#include "InputThread.h"
 #include "RSP.h"
 
 namespace LOFAR

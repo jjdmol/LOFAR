@@ -36,10 +36,10 @@
 #include <Common/ParameterSet.h>
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
+#include <Stream/Stream.h>
 #include <CoInterface/BeamCoordinates.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/SmartPtr.h>
-#include <Stream/Stream.h>
 
 
 namespace LOFAR
