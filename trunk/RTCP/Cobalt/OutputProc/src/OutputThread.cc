@@ -107,7 +107,6 @@ namespace LOFAR
       itsStreamNr(streamNr),
       itsIsBigEndian(isBigEndian),
       itsLogPrefix(logPrefix + "[OutputThread] "),
-      itsCheckFakeData(parset.checkFakeInputData()),
       itsTargetDirectory(targetDirectory),
       itsFreeQueue(freeQueue),
       itsReceiveQueue(receiveQueue),
