@@ -25,9 +25,9 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Common/LofarLogger.h>
-#include <CoInterface/SparseSet.h>
 #include <Common/Thread/Condition.h>
 #include <Common/Thread/Mutex.h>
+#include <CoInterface/SparseSet.h>
 
 
 namespace LOFAR
