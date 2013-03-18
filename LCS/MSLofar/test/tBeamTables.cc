@@ -84,7 +84,8 @@ void testBM (const string& antSet,
     // Optionally add OBSERVATION table.
     if (makeObs) {
       TableDesc td;
-      td.addColumn (ArrayColumnDesc<Double> ("TIME_RANGE", IPosition(1,2)));
+      td.addColumn (ArrayColumnDesc<Double> ("TIME_RANGE", IPosition(1,2),
+					     ColumnDesc::FixedShape));
       TableQuantumDesc tq(td, "TIME_RANGE", Unit("s"));
       tq.write (td);
       SetupNewTable stab3("tBeamTables_tmp.ms/OBSERVATION",
