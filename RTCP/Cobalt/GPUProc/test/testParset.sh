@@ -57,13 +57,12 @@ function parse_logs
   cd $OUTDIR &&
 
   # enable debugging
-  echo "Global 20" >> RTCP_new.debug &&
-  echo "Global 20" >> RTCP.debug &&
+  echo "Global 20" >> rtcp.debug &&
 
   # run correlator -- without profiling
-  $BINDIR/RTCP_new $PARSET > performance_normal.txt 2>&1 &&
+  $BINDIR/rtcp $PARSET > performance_normal.txt 2>&1 &&
   # run correlator -- with profiling
-  $BINDIR/RTCP_new -p $PARSET > performance_profiled.txt 2>&1 &&
+  $BINDIR/rtcp -p $PARSET > performance_profiled.txt 2>&1 &&
 
   # check logs
   parse_logs performance_normal.txt performance_profiled.txt &&
