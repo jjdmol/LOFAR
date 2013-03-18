@@ -161,6 +161,16 @@ SUITE(nrBitsPerSample) {
   }
 }
 
+TEST(nrPolarisations) {
+  for (size_t nPol = 1; nPol < 3; ++nPol) {
+    MAKEPS("Observation.nrPolarisations", str(format("%u") % nPol));
+
+    CHECK_EQUAL(nPol,        ps.settings.nrPolarisations);
+    CHECK_EQUAL(nPol * nPol, ps.settings.nrCrossPolarisations());
+    CHECK_EQUAL(nPol * nPol, ps.nrCrossPolarisations());
+  }
+}
+
 SUITE(corrections) {
   TEST(bandPass) {
     TESTBOOL {
@@ -210,6 +220,13 @@ SUITE(delayCompensation) {
       CHECK_ARRAY_CLOSE(refPhaseCenter, ps.settings.delayCompensation.referencePhaseCenter, 3, 0.001);
       CHECK_ARRAY_CLOSE(refPhaseCenter, ps.getRefPhaseCentre(), 3, 0.001);
   }
+}
+
+TEST(nrPPFTaps) {
+  MAKEPS("OLAP.CNProc.nrPPFTaps", "42");
+
+  CHECK_EQUAL(42, ps.settings.nrPPFTaps);
+  CHECK_EQUAL(42, ps.nrPPFTaps());
 }
 
 /*
@@ -643,6 +660,10 @@ SUITE(correlator) {
     }
   }
 }
+
+/*
+ * TODO: Test beam former pipeline settings.
+ */
 
 /*
  * ===============================================

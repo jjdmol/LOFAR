@@ -96,6 +96,15 @@ namespace LOFAR
       // key: Observation.nrBitsPerSample
       unsigned nrBitsPerSample;
 
+      // The number of polarisations. Values other than 2 are
+      // not supported.
+      //
+      // key: Observation.nrPolarisations
+      unsigned nrPolarisations;
+
+      // The number of cross polarisations.
+      unsigned nrCrossPolarisations() const;
+
       struct Corrections {
         // Whether the station band pass should be corrected for
         //
@@ -128,6 +137,11 @@ namespace LOFAR
       };
       
       struct DelayCompensation delayCompensation;
+
+      // Number of PPF taps. Expected to be 16.
+      //
+      // key: OLAP.CNProc.nrPPFTaps;
+      unsigned nrPPFTaps;
 
       /*
        * Station information

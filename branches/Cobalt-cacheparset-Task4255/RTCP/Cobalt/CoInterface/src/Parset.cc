@@ -199,12 +199,16 @@ namespace LOFAR
         settings.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
       }
 
+      settings.nrPolarisations = getUint32("Observation.nrPolarisations", 2);
+
       settings.corrections.bandPass   = getBool("OLAP.correctBandPass", true);
       settings.corrections.clock      = getBool("OLAP.correctClocks", true);
       settings.corrections.dedisperse = getBool("OLAP.coherentDedisperseChannels", true);
 
       settings.delayCompensation.enabled              = getBool("OLAP.delayCompensation", true);
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
+
+      settings.nrPPFTaps = getUint32("OLAP.CNProc.nrPPFTaps", 16);
 
       // Station information
       settings.antennaSet     = getString("Observation.antennaSet", "LBA");
@@ -426,6 +430,10 @@ namespace LOFAR
 
     double ObservationSettings::subbandWidth() const {
       return 1.0 * clockMHz * 1000000 / 1024;
+    }
+
+    unsigned ObservationSettings::nrCrossPolarisations() const {
+      return nrPolarisations * nrPolarisations;
     }
 
     size_t ObservationSettings::nrSamplesPerSubband() const {
@@ -973,7 +981,7 @@ namespace LOFAR
 
     unsigned Parset::nrCrossPolarisations() const
     {
-      return (getUint32("Observation.nrPolarisations") * getUint32("Observation.nrPolarisations"));
+      return settings.nrCrossPolarisations();
     }
 
     unsigned Parset::clockSpeed() const
@@ -993,7 +1001,7 @@ namespace LOFAR
 
     unsigned Parset::dedispersionFFTsize() const
     {
-      return isDefined("OLAP.CNProc.dedispersionFFTsize") ? getUint32("OLAP.CNProc.dedispersionFFTsize") : CNintegrationSteps();
+      return settings.beamFormer.dedispersionFFTsize;
     }
 
     unsigned Parset::nrBitsPerSample() const
@@ -1141,7 +1149,7 @@ namespace LOFAR
 
     unsigned Parset::nrPPFTaps() const
     {
-      return getUint32("OLAP.CNProc.nrPPFTaps");
+      return settings.nrPPFTaps;
     }
 
     unsigned Parset::nrChannelsPerSubband() const
