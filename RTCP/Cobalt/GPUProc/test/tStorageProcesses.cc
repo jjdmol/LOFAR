@@ -54,6 +54,7 @@ void test_simple()
   p.add("OLAP.Storage.sshPublicKey",  pubkey);
   p.add("OLAP.Storage.sshPrivateKey", privkey);
   p.add("OLAP.Storage.msWriter",      "/bin/echo");
+  p.updateSettings();
 
   {
     StorageProcesses sp(p, "");
@@ -85,6 +86,7 @@ void test_protocol()
   // DummyStorage already emulates the FinalMetaDataGatherer, so use a dummy
   // instead.
   p.add("OLAP.FinalMetaDataGatherer.executable",      "/bin/echo");
+  p.updateSettings();
 
   {
     StorageProcesses sp(p, "");
