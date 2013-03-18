@@ -1459,7 +1459,6 @@ namespace LOFAR
 
       return infoset;
     }
-
   } // namespace Cobalt
 } // namespace LOFAR
 

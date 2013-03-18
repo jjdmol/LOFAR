@@ -22,18 +22,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-//# Includes
-#include <Common/Timer.h>
-#include <Common/PrettyUnits.h>
-#include <Common/LofarLogger.h>
-#include <Stream/FixedBufferStream.h>
-#include <Input/BeamletBufferToComputeNode.h>
-#include <Input/BeamletBuffer.h>
-#include <Scheduling.h>
-#include <SubbandMetaData.h>
-#include <CoInterface/AlignedStdAllocator.h>
-#include <CoInterface/Stream.h>
-#include <CoInterface/Exceptions.h>
+#include "BeamletBufferToComputeNode.h"
 
 #include <sys/time.h>
 #include <cstdio>
