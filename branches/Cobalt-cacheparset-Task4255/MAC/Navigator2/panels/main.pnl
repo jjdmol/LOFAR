@@ -24,6 +24,7 @@ PANEL,-1 -1 1010 745 N "_3DFace" 0
   dynAppend(stationList,mcu); 
  
   redraw();
+  redrawObservations();
 }
 
 
@@ -390,7 +391,7 @@ void addObservations() {
   int yPos_AddSymbol = 585; 
   int ref = 1;
   string addPanelName    = \"objects/Observations/observation_smallCEPView.pnl\";
-  dpGet(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\",observationsList);
+  int i = dpGet(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\",observationsList);
   //loop over list and prepare panel with all stations and swlevel objects   
   for (int i=1; i<= dynlen(observationsList); i++) {
     if (!navFunct_isObservation(observationsList[i])) continue;

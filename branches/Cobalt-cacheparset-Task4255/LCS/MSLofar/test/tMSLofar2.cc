@@ -223,7 +223,7 @@ uInt tConstructors(const String& msName)
 {
     uInt errCount = 0;
     // test default constructor
-    MSLofar tms0();
+    MSLofar tms0;
 
     // existing table on disk, with correct type
     MSLofar tms1(msName);
@@ -279,7 +279,7 @@ uInt tConstructors(const String& msName)
     {
       // Test MSAntenna constructors, as test of all MSTable derived classes
       // Test default constructor
-      MSAntenna msant1();
+      MSAntenna msant1;
       
       // make two tableDescs
       {
