@@ -727,23 +727,17 @@ namespace LOFAR
 
     vector<double> Parset::positions() const
     {
-      vector<string> stNames;
       vector<double> pos, list;
-      unsigned nStations;
 
-      if (nrTabStations() > 0) {
-        stNames = getStringVector("OLAP.tiedArrayStationNames", true);
-        nStations = nrTabStations();
-      } else {
-        stNames = getStringVector("OLAP.storageStationNames", true);
-        nStations = nrStations();
-      }
+      const vector<ObservationSettings::Correlator::Station> &stations = settings.correlator.stations;
 
-      for (uint i = 0; i < nStations; i++) {
-        if (stNames[i].find("+") != string::npos)
-          pos = centroidPos(stNames[i]);
+      for (size_t i = 0; i < stations.size(); i++) {
+        const string &name = stations[i].name;
+
+        if (name.find("+") != string::npos)
+          pos = centroidPos(name); // super station
         else
-          pos = getDoubleVector("PIC.Core." + stNames[i] + ".position");
+          pos = getDoubleVector("PIC.Core." + name + ".position");
 
         list.insert(list.end(), pos.begin(), pos.end());
       }
