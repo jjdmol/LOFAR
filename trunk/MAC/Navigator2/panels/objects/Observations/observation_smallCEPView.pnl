@@ -164,6 +164,8 @@ LANG:1 18 Observation1111111
 0
 1 21 4 "" 0
 0
+1 23 5 "" 0
+0
 0
 LAYER, 1 
 1
@@ -214,7 +216,11 @@ LANG:1 0
 "$observation""$observation"
 "$streamNr""3"
 3 4 "PANEL_REF4" -1
-"objects/Processes\\adderView_small.pnl" 250 10 T 19 U 
+"objects\\Processes\\adderView_small.pnl" 250 10 T 19 1 0 1 5 0
+1
+"$observation""$observation"
+3 5 "PANEL_REF5" -1
+"objects/Processes\\writerDroppedl.pnl" 290 10 T 20 1 0 1 30 0
 1
 "$observation""$observation"
 0

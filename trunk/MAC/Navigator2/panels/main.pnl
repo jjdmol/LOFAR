@@ -876,12 +876,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 10 572 292 585
+E E 0 1 1 2 1 E U  0 E 10 572 363 585
 0 2 2 "0s" 0 0 0 192 0 0  10 572 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 80                                        0        1        2       3      dropping
+LANG:1 95                                        0        1        2       3      dropping        dropped
 0
 LAYER, 1 
 1
