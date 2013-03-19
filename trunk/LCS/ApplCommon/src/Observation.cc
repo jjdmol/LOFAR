@@ -349,11 +349,154 @@ Observation::Observation(const ParameterSet*		aParSet,
 			}
 		}
 
+    // =========================================
+    // Collapse CoherentStokes and IncoherentStokes nto Beamformed, as RTCP
+    // expects.
+    // =========================================
+    //
+    bool flysEye = aParSet->getBool(olapprefix+"PencilInfo.flysEye", false);
+
+    // Count #stations; HBA_DUAL core stations count twice
+    vector<string> stations = aParSet->getStringVector(prefix+"VirtualInstrument.stationList", true);
+    bool isHBAdual = aParSet->getString(prefix+"antennaSet").substr(0,8) == "HBA_DUAL";
+    size_t nrStations = 0;
+    if (isHBAdual) {
+      for (size_t s = 0; s < stations.size(); ++s) {
+        if (stations[s].substr(0,2) == "CS")
+          nrStations += 2;
+        else
+          nrStations += 1;
+      }
+    } else {
+      nrStations = stations.size();
+    }
+
+    unsigned nrCoherentStokes = aParSet->getString(olapprefix+"CNProc_CoherentStokes.which", "").size();
+    unsigned nrCoherentSubbandsPerFile = aParSet->getUint32(olapprefix+"CNProc_CoherentStokes.subbandsPerFile", 1024);
+    unsigned nrIncoherentStokes = aParSet->getString(olapprefix+"CNProc_IncoherentStokes.which", "").size();
+    unsigned nrIncoherentSubbandsPerFile = aParSet->getUint32(olapprefix+"CNProc_IncoherentStokes.subbandsPerFile", 1024);
+
+    // obtain file/location lists
+    vector<string> empty;
+    vector<string> bfFiles     = aParSet->getStringVector(prefix+"DataProducts.Output_Beamformed.filenames", empty, true);
+    vector<string> bfLocations = aParSet->getStringVector(prefix+"DataProducts.Output_Beamformed.locations", empty, true);
+    vector<string> csFiles     = aParSet->getStringVector(prefix+"DataProducts.Output_CoherentStokes.filenames", empty, true);
+    vector<string> csLocations = aParSet->getStringVector(prefix+"DataProducts.Output_CoherentStokes.locations", empty, true);
+    vector<string> isFiles     = aParSet->getStringVector(prefix+"DataProducts.Output_IncoherentStokes.filenames", empty, true);
+    vector<string> isLocations = aParSet->getStringVector(prefix+"DataProducts.Output_IncoherentStokes.locations", empty, true);
+
+    LOG_DEBUG_STR("nr bf files: " << bfFiles.size());
+    LOG_DEBUG_STR("nr cs files: " << csFiles.size());
+    LOG_DEBUG_STR("nr is files: " << isFiles.size());
+
+    // erase lists of not enabled outputs
+	  if(!aParSet->getBool(prefix+"DataProducts.Output_Beamformed.enabled", false)) {
+      bfFiles.clear();
+      bfLocations.clear();
+    }
+	  if(!aParSet->getBool(prefix+"DataProducts.Output_CoherentStokes.enabled", false)) {
+      csFiles.clear();
+      csLocations.clear();
+    }
+	  if(!aParSet->getBool(prefix+"DataProducts.Output_IncoherentStokes.enabled", false)) {
+      isFiles.clear();
+      isLocations.clear();
+    }
+
+    // chose the right coherent stokes set
+    if(aParSet->getString(olapprefix+"CNProc_CoherentStokes.which", "") == "XXYY") {
+      csFiles = bfFiles;
+      csLocations = bfLocations;
+    }
+
+    // erase the target list
+    bfFiles.clear();
+    bfLocations.clear();
+
+    // set indices to scan the coherent and incoherent lists
+    size_t coherentIdx = 0;
+    size_t incoherentIdx = 0;
+
+    // iterate over the beams and tied array beams to reconstruct the
+    // Beamformed lists.
+    if (csFiles.size() > 0 || isFiles.size() > 0 ) {
+      for (unsigned b = 0; b < beams.size(); ++b) {
+        Beam &beam = beams[b];
+
+        // skip duplicate beams in dual mode
+		    if (beam.name.find("_1") != string::npos)
+            continue;
+
+        size_t nrSubbands = beam.subbands.size();
+
+        // number of files we'll create per TAB
+        size_t nrCoherentFiles = (int)ceil(1.0 * nrSubbands / nrCoherentSubbandsPerFile) * nrCoherentStokes;
+        size_t nrIncoherentFiles = (int)ceil(1.0 * nrSubbands / nrIncoherentSubbandsPerFile) * nrIncoherentStokes;
+
+        LOG_DEBUG_STR("beam " << b << " has " << nrCoherentFiles << " files/cs and " << nrIncoherentFiles << " files/is");
+
+        // process in defined order: 1. manual 2. rings 3. fly's eye
+
+        // manual TABs
+        LOG_DEBUG_STR("beam " << b << " has " << beam.TABs.size() << " manual TABs");
+        for (unsigned t = 0; t < beam.TABs.size(); ++t) {
+          TiedArrayBeam &tab = beam.TABs[t];
+
+          if (tab.coherent) {
+            for (unsigned f = 0; f < nrCoherentFiles; ++f) {
+              bfFiles.push_back(csFiles[coherentIdx]);
+              bfLocations.push_back(csLocations[coherentIdx]);
+              coherentIdx++;
+            }
+          } else {
+            for (unsigned f = 0; f < nrIncoherentFiles; ++f) {
+              bfFiles.push_back(isFiles[incoherentIdx]);
+              bfLocations.push_back(isLocations[incoherentIdx]);
+              incoherentIdx++;
+            }
+          }
+
+        }
+
+        // ring TABs
+        if (beam.nrTABrings > 0) {
+          // for (n-1) rings, we get 3n(n-1) + 1 tabs
+          size_t n = beam.nrTABrings + 1;
+          size_t nrRingTABs = 3 * n * (n-1) + 1;
+
+          LOG_DEBUG_STR("beam " << b << " has " << nrRingTABs << " ring TABs");
+
+          for (unsigned t = 0; t < nrRingTABs; ++t) {
+            // ring TABs are always coherent
+            for (unsigned f = 0; f < nrCoherentFiles; ++f) {
+              bfFiles.push_back(csFiles[coherentIdx]);
+              bfLocations.push_back(csLocations[coherentIdx]);
+              coherentIdx++;
+            }
+          }
+        }
+
+        // fly's eye
+        if (flysEye) {
+          LOG_DEBUG_STR("beam " << b << " has " << nrStations << " fly's eye TABs");
+          for (unsigned t = 0; t < nrStations; ++t) {
+            // fly's eye TABs are always coherent
+            for (unsigned f = 0; f < nrCoherentFiles; ++f) {
+              bfFiles.push_back(csFiles[coherentIdx]);
+              bfLocations.push_back(csLocations[coherentIdx]);
+              coherentIdx++;
+            }
+          }
+        }
+      }
+    }
+
 		std::map<unsigned,    unsigned> filesPerIONode;
 		std::map<std::string, unsigned> filesPerStorage;
 
 		for (size_t d = 0; d < nrDataProducts; d ++) {
-			bool enabled = aParSet->getBool(prefix+str(format("DataProducts.Output_%s.enabled") % dataProductNames[d]), false);
+      // if beam formed (d==0), use calculated list
+			bool enabled = d == 0 ? bfFiles.size() > 0 : aParSet->getBool(prefix+str(format("DataProducts.Output_%s.enabled") % dataProductNames[d]), false);
 
 			if (!enabled)
 				continue;
@@ -369,8 +512,8 @@ Observation::Observation(const ParameterSet*		aParSet,
 			// pset, and then proceed to fill up the I/O nodes starting from
 			// the first pset. Each data product is treated individually.
 
-			vector<string> filenames = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.filenames") % dataProductNames[d]), true);
-			vector<string> locations = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]), true);
+			vector<string> filenames = d == 0 ? bfFiles : aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.filenames") % dataProductNames[d]), true);
+			vector<string> locations = d == 0 ? bfLocations : aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]), true);
 			vector<unsigned> &psets = dataProductPhases[d] == 2 ? phaseTwoPsets : phaseThreePsets;
 
 			ASSERTSTR(filenames.size() == locations.size(), "Parset provides " << filenames.size() << " filenames but only " << locations.size() << " locations.");
@@ -776,6 +919,21 @@ ostream& Observation::print (ostream&	os) const
 			os << formatString("anaBeam[%d].pointing[%d]: %f, %f, %s\n", b, p, pt->angle1, pt->angle2, pt->directionType.c_str());
 		}
 	}
+
+  os << "nrStreamsToStorage: " << streamsToStorage.size() << endl;
+	for (size_t	s(0) ; s < streamsToStorage.size(); s++) {
+    const StreamToStorage &str = streamsToStorage[s];
+
+    os << "streamsToStorage[" << s << "].dataProduct:     " << str.dataProduct << endl;
+    os << "streamsToStorage[" << s << "].dataProductNr:   " << str.dataProductNr << endl;
+    os << "streamsToStorage[" << s << "].streamNr:        " << str.streamNr << endl;
+    os << "streamsToStorage[" << s << "].filename:        " << str.filename << endl;
+    os << "streamsToStorage[" << s << "].sourcePset:      " << str.sourcePset << endl;
+    os << "streamsToStorage[" << s << "].destStorageNode: " << str.destStorageNode << endl;
+    os << "streamsToStorage[" << s << "].destDirectory:   " << str.destDirectory << endl;
+    os << "streamsToStorage[" << s << "].adderNr:         " << str.adderNr << endl;
+    os << "streamsToStorage[" << s << "].writerNr:        " << str.writerNr << endl;
+  }
 
 	return (os);
 }
