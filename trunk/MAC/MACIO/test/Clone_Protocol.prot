@@ -22,11 +22,11 @@ event = {
 	dir = IN;
 	param = {
 		name = "uInt";
-		type = "unsigned int";
+		type = "uint32";
 	};
 	param = {
 		name = "Int";
-		type = "int";
+		type = "int32";
 	};
 	param = {
 		name = "Double";
