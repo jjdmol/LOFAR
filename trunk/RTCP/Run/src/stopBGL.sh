@@ -18,4 +18,4 @@ OBSID=$2
 # an observation. Sleep a bit so that OLAP can temrinate on its own
 # in the latter case.
 
-opt/lofar/bin/commandOLAP.py -P $PARTITION cancel $OBSID
+/opt/lofar/bin/commandOLAP.py -P $PARTITION cancel $OBSID
