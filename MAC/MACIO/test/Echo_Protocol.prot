@@ -21,7 +21,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "seqnr";
-		type = "unsigned int";
+		type = "uint32";
 	};
 	param = {
 		name = "ping_time";
@@ -34,7 +34,7 @@ event = {
 	dir = OUT;
 	param = {
 		name = "seqnr";
-		type = "unsigned int";
+		type = "uint32";
 	};
 	param = {
 		name = "ping_time";
@@ -52,6 +52,6 @@ event = {
   noheader;
   param = {
     name = clockpulse;
-    type = char;
+    type = "char";
   };
 };
