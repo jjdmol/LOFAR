@@ -81,6 +81,10 @@ namespace LOFAR
         SparseSet<int64> flags;
       };
 
+      /*
+       * Provide the offset in samples for a certain beamlet, based on the
+       * geometric delays for the respective subband.
+       */
       virtual ssize_t beamletOffset( unsigned beamlet, const TimeStamp &from, const TimeStamp &to )
       {
         (void)beamlet;
@@ -89,25 +93,36 @@ namespace LOFAR
         return 0;
       }
 
+      /*
+       * Setup the copying of one block.
+       */
       virtual void copyStart( const TimeStamp &from, const TimeStamp &to, const std::vector<size_t> &wrapOffsets )
       {
         (void)from;
         (void)to;
         (void)wrapOffsets;
       }
+
+      /*
+       * Copy one block.
+       */
       virtual void copy( const struct CopyInstructions & )
       {
       }
+
+      /*
+       * Tear down the copying of one block.
+       */
       virtual void copyEnd( const TimeStamp &from, const TimeStamp &to )
       {
         (void)from;
         (void)to;
       }
 
-      void copy( const TimeStamp &from, const TimeStamp &to );
-
     private:
       WallClockTime waiter;
+
+      void copy( const TimeStamp &from, const TimeStamp &to );
     };
 
   }
