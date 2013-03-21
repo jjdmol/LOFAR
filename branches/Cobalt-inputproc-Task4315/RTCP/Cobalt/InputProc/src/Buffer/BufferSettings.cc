@@ -59,6 +59,8 @@ namespace LOFAR
 
     void BufferSettings::deriveDefaultSettings()
     {
+      sync = false;
+
       switch (station.bitMode) {
       default:
       case 16:

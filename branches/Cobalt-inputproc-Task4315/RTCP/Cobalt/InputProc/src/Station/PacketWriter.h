@@ -44,6 +44,7 @@ namespace LOFAR
     {
     public:
       PacketWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, unsigned boardNr );
+      ~PacketWriter();
 
       // Write a packet to the SampleBuffer
       void writePacket( const struct RSP &packet );
@@ -54,7 +55,7 @@ namespace LOFAR
       const std::string logPrefix;
 
       SampleBuffer<T> &buffer;
-      Ranges &flags;
+      typename SampleBuffer<T>::Board &board;
       const struct BufferSettings &settings;
       const size_t firstBeamlet;
 

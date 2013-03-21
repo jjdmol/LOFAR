@@ -69,7 +69,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
     // Check whether the packet is in the buffer
 
     // Check the flags
-    SparseSet<int64> available = buffer.flags[0].sparseSet((int64)packet.timeStamp(), (int64)packet.timeStamp() + packet.header.nrBlocks);
+    SparseSet<int64> available = buffer.boards[0].flags.sparseSet((int64)packet.timeStamp(), (int64)packet.timeStamp() + packet.header.nrBlocks);
     ASSERT(available.count() == packet.header.nrBlocks);
 
     // Check the data
@@ -95,7 +95,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
 
   // There should be only nrValidSamples samples in the buffer, nothing more
   int64 now = (int64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
-  SparseSet<int64> available = buffer.flags[0].sparseSet(0, now);
+  SparseSet<int64> available = buffer.boards[0].flags.sparseSet(0, now);
   ASSERT((size_t)available.count() == nrValidSamples);
 }
 

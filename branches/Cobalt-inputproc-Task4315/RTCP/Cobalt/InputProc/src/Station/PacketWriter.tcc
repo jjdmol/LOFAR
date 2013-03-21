@@ -36,7 +36,7 @@ template<typename T> PacketWriter<T>::PacketWriter( const std::string &logPrefix
   logPrefix(str(boost::format("%s [PacketWriter] ") % logPrefix)),
 
   buffer(buffer),
-  flags(buffer.flags[boardNr]),
+  board(buffer.boards[boardNr]),
   settings(*buffer.settings),
   firstBeamlet(boardNr * settings.nrBeamletsPerBoard),
 
@@ -49,6 +49,12 @@ template<typename T> PacketWriter<T>::PacketWriter( const std::string &logPrefix
   ASSERT( firstBeamlet + settings.nrBeamletsPerBoard <= settings.nrBoards * settings.nrBeamletsPerBoard );
 }
 
+template<typename T> PacketWriter<T>::~PacketWriter()
+{
+  // we won't write anymore
+  board.noMoreWriting();
+}
+
 
 template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet )
 {
@@ -58,11 +64,12 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   // should not exceed the number of beamlets we expect
   ASSERT( nrBeamlets <= settings.nrBeamletsPerBoard );
 
-  const TimeStamp timestamp = packet.timeStamp();
+  const TimeStamp begin = packet.timeStamp();
+  const TimeStamp end   = begin + nrTimeslots;
 
   // determine the time span when cast on the buffer
-  const size_t from_offset = (int64)timestamp % settings.nrSamples;
-  size_t to_offset = ((int64)timestamp + nrTimeslots) % settings.nrSamples;
+  const size_t from_offset = (int64)begin % settings.nrSamples;
+  size_t to_offset = ((int64)end) % settings.nrSamples;
 
   if (to_offset == 0)
     to_offset = settings.nrSamples;
@@ -73,8 +80,9 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
    * Make sure the buffer and flags are always consistent.
    */
 
-  // mark data we overwrite as invalid
-  flags.excludeBefore(timestamp + nrTimeslots - settings.nrSamples);
+  // signal write intent, to sync with reader in non-realtime mode and
+  // to invalidate old data we're about to overwrite.
+  board.startWrite(begin, end);
 
   // transpose
   const T *beamlets = reinterpret_cast<const T*>(&packet.payload.data);
@@ -95,7 +103,10 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   }
 
   // mark as valid
-  flags.include(timestamp, timestamp + nrTimeslots);
+  board.flags.include(begin, end);
+
+  // signal end of write
+  board.stopWrite(end);
 
   ++nrWritten;
 }

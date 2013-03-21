@@ -36,7 +36,7 @@ template<typename T> MPISendStation<T>::MPISendStation( const struct BufferSetti
   destRank(destRank),
   requests(1 + beamlets.size() * 3, 0), // apart from the header, at most three transfers per beamlet: one or two for the samples, plus one for the flags
   nrRequests(0),
-  metaData(this->buffer.flags.size(), metaDataSize())
+  metaData(this->buffer.nrBoards, metaDataSize())
 {
 }
 

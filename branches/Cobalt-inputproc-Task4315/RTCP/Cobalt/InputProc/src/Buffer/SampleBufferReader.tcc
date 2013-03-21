@@ -96,6 +96,10 @@ template<typename T> void SampleBufferReader<T>::process( double maxDelay )
     }
   }
 
+  for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = buffer.boards.begin(); board != buffer.boards.end(); ++board ) {
+    (*board).noMoreReading();
+  }
+
   LOG_INFO("Done reading data");
 }
 
@@ -133,6 +137,11 @@ template<typename T> void SampleBufferReader<T>::copy( const TimeStamp &from, co
 
   }
 
+  // Signal read intent on all buffers
+  for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = buffer.boards.begin(); board != buffer.boards.end(); ++board ) {
+    (*board).startRead(from, to);
+  }
+
   // Signal start of block
   copyStart(from, to, wrap_offsets);
 
@@ -166,9 +175,9 @@ template<typename T> void SampleBufferReader<T>::copy( const TimeStamp &from, co
     }
 
     // Add the flags (translate available packets to missing packets)
-    size_t flagIdx = settings.flagIdx(i);
+    size_t boardIdx = settings.boardIndex(i);
 
-    info.flags = buffer.flags[flagIdx].sparseSet(from + beam_offset, to + beam_offset).invert(from + beam_offset, to + beam_offset);
+    info.flags = buffer.boards[boardIdx].flags.sparseSet(from + beam_offset, to + beam_offset).invert(from + beam_offset, to + beam_offset);
 
     // Copy the beamlet
     copy(info);
@@ -176,6 +185,12 @@ template<typename T> void SampleBufferReader<T>::copy( const TimeStamp &from, co
 
   // Signal end of block
   copyEnd(from, to);
+
+  // Signal end of read intent on all buffers, reserving nrHistorySamples for the
+  // next read.
+  for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = buffer.boards.begin(); board != buffer.boards.end(); ++board ) {
+    (*board).stopRead(to - nrHistorySamples);
+  }
 }
 
 }
