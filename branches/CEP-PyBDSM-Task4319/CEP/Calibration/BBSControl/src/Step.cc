@@ -148,6 +148,10 @@ namespace LOFAR
         toString(itsModelConfig.useGain()));
       ps.add(prefix + "Model.TEC.Enable",
         toString(itsModelConfig.useTEC()));
+      ps.add(prefix + "Model.CommonRotation.Enable",
+        toString(itsModelConfig.useCommonRotation()));
+      ps.add(prefix + "Model.CommonScalarPhase.Enable",
+        toString(itsModelConfig.useCommonScalarPhase()));
       ps.add(prefix + "Model.DirectionalGain.Enable",
         toString(itsModelConfig.useDirectionalGain()));
 
@@ -223,6 +227,13 @@ namespace LOFAR
       itsModelConfig.setTEC(ps.getBool("Model.TEC.Enable",
         itsModelConfig.useTEC()));
 
+      itsModelConfig.setCommonRotation(ps.getBool("Model.CommonRotation.Enable",
+        itsModelConfig.useCommonRotation()));
+
+      itsModelConfig.setCommonScalarPhase
+        (ps.getBool("Model.CommonScalarPhase.Enable",
+          itsModelConfig.useCommonScalarPhase()));
+
       itsModelConfig.setDirectionalGain
         (ps.getBool("Model.DirectionalGain.Enable",
           itsModelConfig.useDirectionalGain()));
@@ -256,19 +267,17 @@ namespace LOFAR
       }
 
       itsModelConfig.setDirectionalTEC(ps.getBool("Model.DirectionalTEC.Enable",
-          itsModelConfig.useDirectionalTEC()));
+        itsModelConfig.useDirectionalTEC()));
 
       itsModelConfig.setFaradayRotation
         (ps.getBool("Model.FaradayRotation.Enable",
           itsModelConfig.useFaradayRotation()));
 
-      itsModelConfig.setRotation
-        (ps.getBool("Model.Rotation.Enable",
-          itsModelConfig.useRotation()));
+      itsModelConfig.setRotation(ps.getBool("Model.Rotation.Enable",
+        itsModelConfig.useRotation()));
 
-      itsModelConfig.setScalarPhase
-        (ps.getBool("Model.ScalarPhase.Enable",
-          itsModelConfig.useScalarPhase()));
+      itsModelConfig.setScalarPhase(ps.getBool("Model.ScalarPhase.Enable",
+        itsModelConfig.useScalarPhase()));
 
       if(ps.getBool("Model.Ionosphere.Enable", itsModelConfig.useIonosphere()))
       {

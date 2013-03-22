@@ -105,6 +105,20 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
             itsExpr[i] = compose(itsExpr[i],
                 makeTECExpr(itsScope, instrument->station(i)));
         }
+
+        // Direction independent polarization rotation.
+        if(config.useCommonRotation())
+        {
+            itsExpr[i] = compose(itsExpr[i],
+                makeCommonRotationExpr(itsScope, instrument->station(i)));
+        }
+
+        // Direction independent scalar phase.
+        if(config.useCommonScalarPhase())
+        {
+            itsExpr[i] = compose(itsExpr[i],
+                makeCommonScalarPhaseExpr(itsScope, instrument->station(i)));
+        }
     }
 
     // Direction dependent effects (DDE).
@@ -145,11 +159,13 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 " observation.");
 
             if(config.useDirectionalGain() || config.useDirectionalTEC()
-                || config.useFaradayRotation())
+                || config.useFaradayRotation() || config.useRotation()
+                || config.useScalarPhase())
             {
                 THROW(BBSKernelException, "Cannot correct for DirectionalGain,"
-                    " DirectionalTEC, and/or FaradayRotation when correcting"
-                    " for the (unnamed) phase reference direction.");
+                    " DirectionalTEC, FaradayRotation, Rotation, and / or"
+                    " ScalarPhase when correcting for the (unnamed) phase"
+                    " reference direction.");
             }
 
             // Phase reference position on the sky.

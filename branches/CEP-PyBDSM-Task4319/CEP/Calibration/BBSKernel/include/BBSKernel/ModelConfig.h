@@ -141,6 +141,12 @@ public:
     bool useTEC() const;
     void setTEC(bool value = true);
 
+    bool useCommonRotation() const;
+    void setCommonRotation(bool value = true);
+
+    bool useCommonScalarPhase() const;
+    void setCommonScalarPhase(bool value = true);
+
     bool useDirectionalGain() const;
     void setDirectionalGain(bool value = true);
 
@@ -189,14 +195,16 @@ private:
         BANDPASS,
         CLOCK,
         GAIN,
-        SCALAR_PHASE,
         TEC,
+        COMMON_ROTATION,
+        COMMON_SCALAR_PHASE,
         DIRECTIONAL_GAIN,
         ELEVATION_CUT,
         BEAM,
         DIRECTIONAL_TEC,
         FARADAY_ROTATION,
         ROTATION,
+        SCALAR_PHASE,
         IONOSPHERE,
         FLAGGER,
         CACHE,
