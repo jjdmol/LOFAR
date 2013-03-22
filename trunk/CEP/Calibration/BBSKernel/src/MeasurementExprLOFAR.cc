@@ -326,6 +326,20 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
                 makeTECExpr(itsScope, instrument->station(i)));
         }
 
+        // Direction independent polarization rotation.
+        if(config.useCommonRotation())
+        {
+            exprDIE[i] = compose(exprDIE[i],
+                makeCommonRotationExpr(itsScope, instrument->station(i)));
+        }
+
+        // Direction independent scalar phase.
+        if(config.useCommonScalarPhase())
+        {
+            exprDIE[i] = compose(exprDIE[i],
+                makeCommonScalarPhaseExpr(itsScope, instrument->station(i)));
+        }
+
         // Convert from linear to circular-RL polarization. It is assumed that
         // for telescopes other than LOFAR, the polarization of the data is the
         // same as the polarization of the antennae.
@@ -385,7 +399,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
     Expr<JonesMatrix>::Ptr H(new LinearToCircularRL());
 
     const bool haveDIE = config.useClock() || config.useBandpass()
-        || config.useGain() || config.useTEC();
+        || config.useGain() || config.useTEC() || config.useCommonRotation()
+        || config.useCommonScalarPhase();
 
     const bool circular = buffer->isCircular();
     const bool isLOFAR = (instrument->name() == "LOFAR");
@@ -428,6 +443,20 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         {
             stationExpr[i] = compose(stationExpr[i],
                 makeTECExpr(itsScope, instrument->station(i)));
+        }
+
+        // Direction independent polarization rotation.
+        if(config.useCommonRotation())
+        {
+            stationExpr[i] = compose(stationExpr[i],
+                makeCommonRotationExpr(itsScope, instrument->station(i)));
+        }
+
+        // Direction independent scalar phase.
+        if(config.useCommonScalarPhase())
+        {
+            stationExpr[i] = compose(stationExpr[i],
+                makeCommonScalarPhaseExpr(itsScope, instrument->station(i)));
         }
 
         // Convert from linear to circular-RL polarization. It is assumed that
@@ -490,11 +519,13 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 " observation.");
 
             if(config.useDirectionalGain() || config.useDirectionalTEC()
-                || config.useFaradayRotation())
+                || config.useFaradayRotation() || config.useRotation()
+                || config.useScalarPhase())
             {
                 THROW(BBSKernelException, "Cannot correct for DirectionalGain,"
-                    " DirectionalTEC, and/or FaradayRotation when correcting"
-                    " for the (unnamed) phase reference direction.");
+                    " DirectionalTEC, FaradayRotation, Rotation, and / or"
+                    " ScalarPhase when correcting for the (unnamed) phase"
+                    " reference direction.");
             }
 
             // Phase reference position on the sky.

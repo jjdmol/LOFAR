@@ -181,6 +181,26 @@ makeTECExpr(Scope &scope,
 }
 
 Expr<JonesMatrix>::Ptr
+makeCommonRotationExpr(Scope &scope,
+    const Station::ConstPtr &station)
+{
+    ExprParm::Ptr chi = scope(INSTRUMENT, "CommonRotationAngle:"
+        + station->name());
+
+    return Expr<JonesMatrix>::Ptr(new Rotation(chi));
+}
+
+Expr<Scalar>::Ptr
+makeCommonScalarPhaseExpr(Scope &scope,
+    const Station::ConstPtr &station)
+{
+    ExprParm::Ptr phi = scope(INSTRUMENT, "CommonScalarPhase:"
+        + station->name());
+
+    return Expr<Scalar>::Ptr(new AsPhasor(phi));
+}
+
+Expr<JonesMatrix>::Ptr
 makeDirectionalGainExpr(Scope &scope,
     const Station::ConstPtr &station,
     const string &patch,

@@ -231,6 +231,16 @@ bool ModelConfig::useTEC() const
     return itsModelOptions[TEC];
 }
 
+bool ModelConfig::useCommonRotation() const
+{
+    return itsModelOptions[COMMON_ROTATION];
+}
+
+bool ModelConfig::useCommonScalarPhase() const
+{
+    return itsModelOptions[COMMON_SCALAR_PHASE];
+}
+
 bool ModelConfig::useDirectionalGain() const
 {
     return itsModelOptions[DIRECTIONAL_GAIN];
@@ -324,6 +334,16 @@ void ModelConfig::setGain(bool value)
 void ModelConfig::setTEC(bool value)
 {
     itsModelOptions[TEC] = value;
+}
+
+void ModelConfig::setCommonRotation(bool value)
+{
+    itsModelOptions[COMMON_ROTATION] = value;
+}
+
+void ModelConfig::setCommonScalarPhase(bool value)
+{
+    itsModelOptions[COMMON_SCALAR_PHASE] = value;
 }
 
 void ModelConfig::setDirectionalGain(bool value)
@@ -468,6 +488,10 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useGain() << noboolalpha;
     out << endl << indent << "TEC enabled: " << boolalpha
         << obj.useTEC() << noboolalpha;
+    out << endl << indent << "Common rotation enabled: " << boolalpha
+        << obj.useCommonRotation() << noboolalpha;
+    out << endl << indent << "Common scalar phase enabled: " << boolalpha
+        << obj.useCommonScalarPhase() << noboolalpha;
     out << endl << indent << "Direction dependent gain enabled: " << boolalpha
         << obj.useDirectionalGain() << noboolalpha;
 
