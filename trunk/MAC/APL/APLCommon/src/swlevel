@@ -585,7 +585,9 @@ cd ${BINDIR}
 goto_level $level
 cd ${cwd}
 status_prog
-
+if [ $highest_level_running -gt $level ]; then 
+  echo "Could not go to level $level. Level is $highest_level_running"
+fi
 # save for later
 echo $level > /tmp/level.admin
 date=`date +%Y-%m-%d\ %H:%M:%S`
