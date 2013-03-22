@@ -15,6 +15,7 @@ endif(UNITTEST++_FOUND)
 lofar_add_test(tRSP tRSP.cc)
 lofar_add_test(tRSPTimeStamp2 tRSPTimeStamp2.cc)
 lofar_add_test(tPacketReader tPacketReader.cc)
+lofar_add_test(tPacketFactory tPacketFactory.cc)
 lofar_add_test(tGenerator tGenerator.cc)
 
 lofar_add_test(tPacketWriter tPacketWriter.cc)

@@ -30,6 +30,7 @@
 #include <CoInterface/Stream.h>
 
 #include <OMPThread.h>
+#include <Station/PacketFactory.h>
 #include <Station/Generator.h>
 #include <Station/PacketReader.h>
 
@@ -57,7 +58,8 @@ int main( int, char **argv )
   struct StationID stationID("RS106", "LBA", 200, 16);
   struct BufferSettings settings(stationID, false);
 
-  Generator g(settings, streamDescs);
+  PacketFactory factory(settings);
+  Generator g(settings, streamDescs, factory);
 
   bool error = false;
 
