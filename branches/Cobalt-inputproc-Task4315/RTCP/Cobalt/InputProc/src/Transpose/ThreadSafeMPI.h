@@ -28,6 +28,7 @@
 #include <Common/Thread/Semaphore.h>
 
 #include <mpi.h>
+#include <limits.h>
 
 #include <map>
 
@@ -68,6 +69,7 @@ public:
   bool wait( const MPI_Request &request );
 
 private:
+  static const int INTERNAL_COMM_TAG = INT_MAX;
   volatile bool done;
 
   Mutex requestsMutex;
@@ -81,7 +83,9 @@ private:
 
   void addRequest( const MPI_Request &request, Semaphore *semaphore );
 
-  void handleAny();
+  // Tests for completed requests. Returns the number of requests
+  // that finished.
+  int handleAny();
 };
 
 /*

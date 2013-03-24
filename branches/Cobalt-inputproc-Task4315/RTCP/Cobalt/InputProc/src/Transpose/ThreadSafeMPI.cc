@@ -66,15 +66,11 @@ bool MPIRequestManager::wait( const MPI_Request &request ) {
   return doneWaiting.down();
 }
 
-
 void MPIRequestManager::process() {
   LOG_DEBUG_STR("[MPIRequestManager] Process begin");
 
   // If done, empty the queue.
   while(!done ||!empty()) {
-    // don't occupy CPU indefinitely
-    pthread_yield();
-
     // wait for at least one pending request
     {
       ScopedLock sl(requestsMutex);
@@ -83,11 +79,17 @@ void MPIRequestManager::process() {
         //LOG_DEBUG_STR("[MPIRequestManager] Waiting for requests");
         requestAdded.wait(requestsMutex);
       }
+
+      if (empty())
+        break;
     }
 
-    // handle any finished request
-    if (!empty()) {
-      handleAny();
+    if(handleAny() == 0) {
+      /*
+       * SPIN
+       */
+
+      pthread_yield();
     }
   }
 
@@ -114,7 +116,7 @@ void MPIRequestManager::addRequest( const MPI_Request &request, Semaphore *semap
 }
 
 
-void MPIRequestManager::handleAny() {
+int MPIRequestManager::handleAny() {
   ScopedLock sl(MPIMutex);
 
   // Convert the requests map to a vector of request identifiers
@@ -158,10 +160,12 @@ void MPIRequestManager::handleAny() {
     requests.erase(ids[readyIdx]);
 
     if (result) {
-      // Wake up client
+      // signal client
       result->up();
     }
   }
+
+  return readyCount;
 }
 
 
