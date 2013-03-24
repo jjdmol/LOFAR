@@ -22,17 +22,8 @@
 #include <pthread.h>
 
 #include <Common/LofarLogger.h>
-#include <Common/Singleton.h>
-#include <Common/Thread/Mutex.h>
-#include <Common/Thread/Condition.h>
-#include <Common/Thread/Semaphore.h>
-
-#include "ThreadSafeMPI.h"
 
 #include <boost/format.hpp>
-
-// Send headers asynchroneously (disable for debugging)
-#define SEND_HEADERS_ASYNC
 
 using namespace std;
 
@@ -80,6 +71,70 @@ template<typename K, typename V> std::map<V, std::vector<K> > inverse( const std
 }
 
 
+// Wait for any request to finish. Returns the index of the request that
+// finished. Finished requests are set to MPI_REQUEST_NULL and ignored in
+// subsequent calls.
+static int waitAny( std::vector<MPI_Request> &requests )
+{
+  int idx;
+
+  // Wait for any header request to finish
+  // NOTE: MPI_Waitany will overwrite completed entries with
+  // MPI_REQUEST_NULL.
+  int error = MPI_Waitany(requests.size(), &requests[0], &idx, MPI_STATUS_IGNORE);
+  ASSERT(error == MPI_SUCCESS);
+
+  ASSERT(idx != MPI_UNDEFINED);
+  ASSERT(requests[idx] == MPI_REQUEST_NULL);
+
+  return idx;
+}
+
+
+// Wait for all given requests to finish. Finished requests are set to
+// MPI_REQUEST_NULL and ignored in subsequent calls.
+static void waitAll( std::vector<MPI_Request> &requests )
+{
+  if (requests.size() > 0) {
+    // NOTE: MPI_Waitall will write MPI_REQUEST_NULL into requests array.
+    int error = MPI_Waitall(requests.size(), &requests[0], MPI_STATUS_IGNORE);
+    ASSERT(error == MPI_SUCCESS);
+  }
+}
+
+/*
+ * A guarded version of MPI_Isend with fewer parameters.
+ */
+static MPI_Request Guarded_MPI_Isend(void *ptr, size_t numBytes, int destRank, int tag) {
+  ASSERT(tag >= 0); // Silly MPI requirement
+
+  MPI_Request request;
+
+  int error;
+
+  error = ::MPI_Isend(ptr, numBytes, MPI_CHAR, destRank, tag, MPI_COMM_WORLD, &request);
+  ASSERT(error == MPI_SUCCESS);
+
+  return request;
+}
+
+/*
+ * A guarded version of MPI_Irecv with fewer parameters.
+ */
+static MPI_Request Guarded_MPI_Irecv(void *ptr, size_t numBytes, int srcRank, int tag) {
+  ASSERT(tag >= 0); // Silly MPI requirement
+
+  MPI_Request request;
+
+  int error;
+
+  error = ::MPI_Irecv(ptr, numBytes, MPI_CHAR, srcRank, tag, MPI_COMM_WORLD, &request);
+  ASSERT(error == MPI_SUCCESS);
+
+  return request;
+}
+
+
 template<typename T> MPISendStation<T>::MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples, const std::map<size_t, int> &beamletDistribution )
 :
   SampleBufferReader<T>(settings, keys(beamletDistribution), from, to, blockSize, nrHistorySamples),
@@ -117,20 +172,14 @@ template<typename T> MPI_Request MPISendStation<T>::sendHeader( int rank, Header
   union tag_t tag;
   tag.bits.type     = CONTROL;
 
-#ifdef SEND_HEADERS_ASYNC
-  return ThreadSafeMPI::MPI_Isend(&header, sizeof header, rank, tag.value);
-#else
-  ThreadSafeMPI::MPI_Send(&header, sizeof header, rank, tag.value);
-  return 0;
-#endif
+  return Guarded_MPI_Isend(&header, sizeof header, rank, tag.value);
 }
 
-template<typename T> void MPISendStation<T>::sendData( int rank, unsigned beamlet, const struct SampleBufferReader<T>::CopyInstructions::Beamlet &ib )
+template<typename T> unsigned MPISendStation<T>::sendData( int rank, unsigned beamlet, const struct SampleBufferReader<T>::CopyInstructions::Beamlet &ib, MPI_Request requests[2] )
 {
   LOG_DEBUG_STR(logPrefix << "Sending beamlet " << beamlet << " to rank " << rank << " using " << ib.nrRanges << " transfers");
 
   // Send beamlet using 1 or 2 transfers
-# pragma omp parallel for num_threads(ib.nrRanges)
   for(unsigned transfer = 0; transfer < ib.nrRanges; ++transfer) {
     union tag_t tag;
 
@@ -143,11 +192,13 @@ template<typename T> void MPISendStation<T>::sendData( int rank, unsigned beamle
 
     ASSERT( from < to ); // There must be data to send, or MPI will error
 
-    ThreadSafeMPI::MPI_Send((void*)from, (to - from) * sizeof(T), rank, tag.value);
+    requests[transfer] = Guarded_MPI_Isend((void*)from, (to - from) * sizeof(T), rank, tag.value);
   }
+
+  return ib.nrRanges;
 }
 
-template<typename T> void MPISendStation<T>::sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags )
+template<typename T> MPI_Request MPISendStation<T>::sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags )
 {
   //LOG_DEBUG_STR("Sending flags to rank " << rank);
 
@@ -160,33 +211,32 @@ template<typename T> void MPISendStation<T>::sendFlags( int rank, unsigned beaml
   tag.bits.type     = FLAGS;
   tag.bits.beamlet  = beamlet;
 
-  ThreadSafeMPI::MPI_Send(&metaData[0], metaData.size(), rank, tag.value);
+  return Guarded_MPI_Isend(&metaData[0], metaData.size(), rank, tag.value);
 }
 
 
 template<typename T> void MPISendStation<T>::sendBlock( const struct SampleBufferReader<T>::CopyInstructions &info )
 {
   /*
-   * SEND HEADER (ASYNC)
+   * SEND HEADERS (ASYNC)
    */
 
   std::map<int, Header> headers;
-  std::map<int, MPI_Request> headerRequests;
+  std::vector<MPI_Request> headerRequests;
 
-  // No need for parallellisation since we only post the sends
   for(std::set<int>::const_iterator i = targetRanks.begin(); i != targetRanks.end(); ++i) {
     int rank = *i;
 
-    headerRequests[rank] = sendHeader(rank, headers[rank], info);
+    headerRequests.push_back(sendHeader(rank, headers[rank], info));
   }
   
   /*
-   * SEND PAYLOAD
+   * SEND PAYLOADS
    */
+  std::vector<SparseSet<int64> > currentFlags(info.beamlets.size());
+  std::vector<MPI_Request> beamletRequests(info.beamlets.size() * 2, MPI_REQUEST_NULL); // [beamlet][transfer]
+  size_t nrBeamletRequests = 0;
 
-  // Send beamlets to all nodes in parallel, so for each beamlet the flags
-  // can be send immediately after.
-# pragma omp parallel for num_threads(info.beamlets.size())
   for(size_t beamlet = 0; beamlet < info.beamlets.size(); ++beamlet) {
     const struct SampleBufferReader<T>::CopyInstructions::Beamlet &ib = info.beamlets[beamlet];
     const int rank = beamletDistribution.at(beamlet);
@@ -195,40 +245,63 @@ template<typename T> void MPISendStation<T>::sendBlock( const struct SampleBuffe
      * OBTAIN FLAGS BEFORE DATA IS SENT
      */
 
-    SparseSet<int64> flagsBefore = flags(info, beamlet);
+    currentFlags[beamlet] = flags(info, beamlet);
 
     /*
      * SEND BEAMLETS
      */
 
-    sendData(rank, beamlet, ib);
-
-    /*
-     * OBTAIN FLAGS AFTER DATA IS SENT
-     */
-
-    SparseSet<int64> flagsAfter = flags(info, beamlet);
-
-    /*
-     * SEND FLAGS
-     */
-
-    // The only valid samples are those that existed both
-    // before and after the transfer.
-    sendFlags(rank, beamlet, flagsBefore & flagsAfter);
+    nrBeamletRequests += sendData(rank, beamlet, ib, &beamletRequests[beamlet * 2]);
   }
 
   /*
-   * WRAP UP ASYNC HEADER SEND
+   * SEND FLAGS
    */
 
-  // No need for parallellisation, because all sends should be done by now. We do
-  // need to make sure though, because the Headers will soon go out of scope.
-#ifdef SEND_HEADERS_ASYNC
-  for(std::map<int, MPI_Request>::const_iterator i = headerRequests.begin(); i != headerRequests.end(); ++i) {
-    ThreadSafeMPI::MPI_Wait(i->second);
+  std::vector<MPI_Request> flagRequests(info.beamlets.size());
+
+  for(size_t b = 0; b < nrBeamletRequests; ++b) {
+    const size_t sendIdx = waitAny(beamletRequests);
+    const size_t beamlet  = sendIdx / 2;
+    const size_t transfer = sendIdx % 2;
+    const size_t nrTransfers = info.beamlets[beamlet].nrRanges;
+
+    // waitAny sets finished requests to MPI_REQUEST_NULL in our array.
+    if (nrTransfers == 1 || beamletRequests[beamlet * 2 + (1 - transfer)] == MPI_REQUEST_NULL) {
+      /*
+       * SEND FLAGS FOR BEAMLET
+       */
+
+      const int rank = beamletDistribution.at(beamlet);
+
+      /*
+       * OBTAIN FLAGS AFTER DATA IS SENT
+       */
+
+      // The only valid samples are those that existed both
+      // before and after the transfer.
+      SparseSet<int64> flagsAfter = flags(info, beamlet);
+      currentFlags[beamlet] &= flagsAfter;
+
+      /*
+       * SEND FLAGS
+       */
+      flagRequests[beamlet] = sendFlags(rank, beamlet, currentFlags[beamlet]);
+    }
   }
-#endif
+
+  /*
+   * WRAP UP ASYNC SENDS
+   */
+
+  // Collect all requests
+  std::vector<MPI_Request> allRequests(headerRequests.size() + flagRequests.size());
+  std::vector<MPI_Request>::iterator curPos = allRequests.begin();
+  curPos = std::copy(headerRequests.begin(), headerRequests.end(), curPos);
+  curPos = std::copy(flagRequests.begin(), flagRequests.end(), curPos);
+
+  // Wait on them all
+  waitAll(allRequests);
 }
 
 
@@ -249,95 +322,36 @@ template<typename T> MPIReceiveStations<T>::MPIReceiveStations( const std::vecto
 
 template<typename T> MPI_Request MPIReceiveStations<T>::receiveHeader( int rank, struct MPISendStation<T>::Header &header )
 {
-  MPI_Request request;
-
   typename MPISendStation<T>::tag_t tag;
 
   // receive the header
   tag.bits.type = MPISendStation<T>::CONTROL;
-  ASSERT(tag.value >= 0); // Silly MPI requirement
 
-#ifdef SEND_HEADERS_ASYNC
-  int error = MPI_Irecv(&header, sizeof header, MPI_CHAR, rank, tag.value, MPI_COMM_WORLD, &request);
-  ASSERT(error == MPI_SUCCESS);
-
-  return request;
-#else
-  (void)request;
-  int error = MPI_Recv(&header, sizeof header, MPI_CHAR, rank, tag.value, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  ASSERT(error == MPI_SUCCESS);
-
-  return 0;
-#endif
+  return Guarded_MPI_Irecv(&header, sizeof header, rank, tag.value);
 }
 
 
 template<typename T> MPI_Request MPIReceiveStations<T>::receiveBeamlet( int rank, size_t beamlet, int transfer, T *from, size_t nrSamples )
 {
-  MPI_Request request;
-
   typename MPISendStation<T>::tag_t tag;
   tag.bits.type    = MPISendStation<T>::BEAMLET;
   tag.bits.beamlet = beamlet;
   tag.bits.transfer = transfer;
-  ASSERT(tag.value >= 0); // Silly MPI requirement
 
-  int error = MPI_Irecv(
-      from, nrSamples * sizeof(T), MPI_CHAR,
-      rank, tag.value,
-      MPI_COMM_WORLD, &request);
-
-  ASSERT(error == MPI_SUCCESS);
-
-  return request;
+  return Guarded_MPI_Irecv(from, nrSamples * sizeof(T), rank, tag.value);
 }
 
 
 template<typename T> MPI_Request MPIReceiveStations<T>::receiveFlags( int rank, size_t beamlet, std::vector<char> &buffer )
 {
-  MPI_Request request;
-
   typename MPISendStation<T>::tag_t tag;
   tag.bits.type    = MPISendStation<T>::FLAGS;
   tag.bits.beamlet = beamlet;
-  ASSERT(tag.value >= 0); // Silly MPI requirement
 
-  int error = MPI_Irecv(
-        &buffer[0], buffer.size(), MPI_CHAR,
-        rank, tag.value,
-        MPI_COMM_WORLD, &request);
-
-  ASSERT(error == MPI_SUCCESS);
-
-  return request;
+  return Guarded_MPI_Irecv(&buffer[0], buffer.size(), rank, tag.value);
 }
 
 
-template<typename T> int MPIReceiveStations<T>::waitAny( std::vector<MPI_Request> &requests )
-{
-  int idx;
-
-  // Wait for any header request to finish
-  // NOTE: MPI_Waitany will overwrite completed entries with
-  // MPI_REQUEST_NULL.
-  int error = MPI_Waitany(requests.size(), &requests[0], &idx, MPI_STATUS_IGNORE);
-  ASSERT(error == MPI_SUCCESS);
-
-  ASSERT(idx != MPI_UNDEFINED);
-  ASSERT(requests[idx] == MPI_REQUEST_NULL);
-
-  return idx;
-}
-
-
-template<typename T> void MPIReceiveStations<T>::waitAll( std::vector<MPI_Request> &requests )
-{
-  if (requests.size() > 0) {
-    // NOTE: MPI_Waitall will write MPI_REQUEST_NULL into requests array.
-    int error = MPI_Waitall(requests.size(), &requests[0], MPI_STATUS_IGNORE);
-    ASSERT(error == MPI_SUCCESS);
-  }
-}
 
 
 template<typename T> void MPIReceiveStations<T>::receiveBlock()
@@ -372,11 +386,7 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
     LOG_DEBUG_STR(logPrefix << "Waiting for headers");
 
     // Wait for any header request to finish
-#ifdef SEND_HEADERS_ASYNC
     int stat = waitAny(header_requests);
-#else
-    int stat = i;
-#endif
     int rank = stationRanks[stat];
 
     /*

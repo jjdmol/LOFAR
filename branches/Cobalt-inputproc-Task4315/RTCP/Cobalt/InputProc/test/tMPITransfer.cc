@@ -113,11 +113,6 @@ void sender()
     { station.process();
     }
 
-    // Start a circular buffer
-    #pragma omp section
-    { Singleton<ThreadSafeMPI::MPIRequestManager>::instance().process();
-    }
-
     // Send data to receivers
     #pragma omp section
     {
@@ -132,7 +127,6 @@ void sender()
 
       generator.stop();
       station.stop();
-      Singleton<ThreadSafeMPI::MPIRequestManager>::instance().stop();
     }
   }
 }

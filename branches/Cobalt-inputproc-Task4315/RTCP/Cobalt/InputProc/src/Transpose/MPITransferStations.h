@@ -44,6 +44,11 @@ namespace LOFAR
 
     /*
      * Sends a set of beamlets from the SHM buffer to all receiving MPI nodes.
+     * Blocks are sent in a sequential fashion: a block must be received
+     * completely before the next one is sent. Performance is barely affected,
+     * because the output to all nodes has to go through a shared pipe (IB
+     * port). We thus cannot really start sending to the first node earlier if
+     * we're not yet done sending to other nodes.
      */
     template<typename T>
     class MPISendStation : public SampleBufferReader<T>
@@ -117,11 +122,12 @@ namespace LOFAR
       // Construct and send a header to the given rank (async).
       MPI_Request sendHeader( int rank, Header &header, const struct SampleBufferReader<T>::CopyInstructions &info );
 
-      // Send beamlet data (in 1 or 2 transfers) to the given rank (sync).
-      void sendData( int rank, unsigned beamlet, const struct SampleBufferReader<T>::CopyInstructions::Beamlet &ib );
+      // Send beamlet data (in 1 or 2 transfers) to the given rank (async).
+      // Returns the number of MPI_Requests made.
+      unsigned sendData( int rank, unsigned beamlet, const struct SampleBufferReader<T>::CopyInstructions::Beamlet &ib, MPI_Request requests[2] );
 
-      // Send flags data to the given rank (sync).
-      void sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags );
+      // Send flags data to the given rank (async).
+      MPI_Request sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags );
     };
 
 
@@ -165,15 +171,6 @@ namespace LOFAR
 
       // Receive marshalled flags (async) from the given rank.
       MPI_Request receiveFlags( int rank, size_t beamlet, std::vector<char> &buffer );
-
-      // Wait for any request to finish. Returns the index of the request that
-      // finished. Finished requests are set to MPI_REQUEST_NULL and ignored in
-      // subsequent calls.
-      int waitAny( std::vector<MPI_Request> &requests );
-
-      // Wait for all given requests to finish. Finished requests are set to
-      // MPI_REQUEST_NULL and ignored in subsequent calls.
-      void waitAll( std::vector<MPI_Request> &requests );
     };
 
 
