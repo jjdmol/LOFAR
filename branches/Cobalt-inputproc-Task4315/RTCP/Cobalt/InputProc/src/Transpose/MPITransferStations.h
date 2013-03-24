@@ -54,7 +54,7 @@ namespace LOFAR
     class MPISendStation : public SampleBufferReader<T>
     {
     public:
-      MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples, const std::map<size_t, int> &beamletDistribution );
+      MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples, const std::map<size_t, int> &beamletDistribution );
 
       // Header which prefixes each block. Contains identification information
       // for verification purposes, as well as the sizes of the data that
@@ -84,9 +84,10 @@ namespace LOFAR
 
       union tag_t {
         struct {
-          unsigned type : 2;
-          unsigned beamlet : 10;
-          unsigned transfer : 1;
+          unsigned type     :  2;
+          unsigned station  :  8;
+          unsigned beamlet  : 10;
+          unsigned transfer :  1;
         } bits;
 
         int value;
@@ -107,6 +108,9 @@ namespace LOFAR
 
     private:
       const std::string logPrefix;
+
+      // Station number in observation [0..nrStations)
+      const size_t stationIdx;
 
       // To which rank to send each beamlet:
       //   beamletDistribution[beamlet] = rank
@@ -164,13 +168,13 @@ namespace LOFAR
       const size_t blockSize;
 
       // Receive a header (async) from the given rank.
-      MPI_Request receiveHeader( int rank, struct MPISendStation<T>::Header &header );
+      MPI_Request receiveHeader( size_t station, struct MPISendStation<T>::Header &header );
 
       // Receive beamlet data (async) from the given rank.
-      MPI_Request receiveBeamlet( int rank, size_t beamlet, int transfer, T *from, size_t nrSamples );
+      MPI_Request receiveBeamlet( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples );
 
       // Receive marshalled flags (async) from the given rank.
-      MPI_Request receiveFlags( int rank, size_t beamlet, std::vector<char> &buffer );
+      MPI_Request receiveFlags( size_t station, size_t beamlet, std::vector<char> &buffer );
     };
 
 

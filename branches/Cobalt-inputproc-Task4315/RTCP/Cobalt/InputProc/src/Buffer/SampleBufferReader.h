@@ -77,16 +77,18 @@ namespace LOFAR
 
           // The offset at which the data is accessed.
           ssize_t offset;
+
+          SparseSet<int64> flagsAtBegin;
         };
 
-        std::vector<struct Beamlet> beamlets;
+        std::vector<struct Beamlet> beamlets; // [beamlet]
       };
 
       /*
        * Read the flags for a specific beamlet. Readers should read the flags
        * before and after reading the data. The valid data is then indicated by
        * the intersection of both sets (flagsBefore & flagsAfter).
-       */
+      */
       SparseSet<int64> flags( const struct CopyInstructions &, unsigned beamlet );
 
       /*

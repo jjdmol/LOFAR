@@ -153,18 +153,14 @@ template<typename T> void SampleBufferReader<T>::sendBlock( const TimeStamp &fro
       ib.ranges[0].from = origin + from_offset;
       ib.ranges[0].to   = origin + to_offset;
     }
+
+    ib.flagsAtBegin = flags(info, b);
   }
 
   // Signal read intent on all buffers
   for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = buffer.boards.begin(); board != buffer.boards.end(); ++board ) {
     (*board).startRead(from, to);
   }
-
-  // TODO:
-    // Add the flags (translate available packets to missing packets)
-    //size_t boardIdx = settings.boardIndex(i);
-
-    //info.flags = buffer.boards[boardIdx].flags.sparseSet(from + beam_offset, to + beam_offset).invert(from + beam_offset, to + beam_offset);
 
   sendBlock(info);
 

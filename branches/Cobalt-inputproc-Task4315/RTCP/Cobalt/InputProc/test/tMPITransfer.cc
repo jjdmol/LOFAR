@@ -120,7 +120,7 @@ void sender()
 
       LOG_INFO_STR("Detected " << s);
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
-      MPISendStation< SampleT > streamer(s, from, to, blockSize, NR_TAPS, beamletDistribution);
+      MPISendStation< SampleT > streamer(s, rank, from, to, blockSize, NR_TAPS, beamletDistribution);
 
       LOG_INFO_STR("Sending to receivers");
       streamer.process( 0.0 );
