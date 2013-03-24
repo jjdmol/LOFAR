@@ -15,6 +15,7 @@ lofar_add_library(inputproc
   Station/PacketFactory.cc
   Station/PacketReader.cc
   Station/PacketsToBuffer.cc
+  Transpose/ThreadSafeMPI.cc
   )
 
 lofar_add_bin_program(filterRSP Station/filterRSP.cc)
