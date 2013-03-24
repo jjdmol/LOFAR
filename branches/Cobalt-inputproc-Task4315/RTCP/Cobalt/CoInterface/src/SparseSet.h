@@ -82,6 +82,10 @@ namespace LOFAR
     SparseSet<T> operator | (const SparseSet<T> &) const;
     SparseSet<T> &operator |= (const SparseSet<T> &);
 
+    // Return the intersection of two sets.
+    SparseSet<T> operator & (const SparseSet<T> &) const;
+    SparseSet<T> &operator &= (const SparseSet<T> &);
+
     // Increase all indices in the set by `count'.
     SparseSet<T> &operator += (size_t count);
 
@@ -159,6 +163,14 @@ namespace LOFAR
   inline SparseSet<T> &SparseSet<T>::operator |= (const SparseSet<T> &other)
   {
     ranges = (*this | other).ranges;
+    return *this;
+  }
+
+
+  template <typename T>
+  inline SparseSet<T> &SparseSet<T>::operator &= (const SparseSet<T> &other)
+  {
+    ranges = (*this & other).ranges;
     return *this;
   }
 
@@ -308,6 +320,37 @@ namespace LOFAR
     union_set.ranges.insert(union_set.ranges.end(), it1, ranges.end());
     union_set.ranges.insert(union_set.ranges.end(), it2, other.ranges.end());
     return union_set;
+  }
+
+
+  template <typename T>
+  SparseSet<T> SparseSet<T>::operator & (const SparseSet<T> &other) const
+  {
+    SparseSet<T> intersection_set;
+    const_iterator it1 = ranges.begin(), it2 = other.ranges.begin();
+
+    while (it1 != ranges.end() && it2 != other.ranges.end()) {
+      if (it1->end < it2->begin) {
+        // no overlap; *it1 is the smallest
+        ++it1;
+      } else if (it2->end < it1->begin) {
+        // no overlap; *it2 is the smallest
+        ++it2;
+      } else { // there is overlap, or it1 and it2 are contiguous
+        intersection_set.ranges.push_back(range(std::max(it1->begin, it2->begin), std::min(it1->end, it2->end)));
+
+        // continue with earliest end, as multiple ranges may overlap
+        // with the latest end.
+        if (it1->end < it2->end)
+          ++it1;
+        else
+          ++it2;
+      }
+    }
+
+    // ignore the remainder of the set that we have not finished yet
+
+    return intersection_set;
   }
 
 

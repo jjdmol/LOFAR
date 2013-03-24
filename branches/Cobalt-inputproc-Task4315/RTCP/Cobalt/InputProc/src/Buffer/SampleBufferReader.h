@@ -62,24 +62,32 @@ namespace LOFAR
       const size_t nrHistorySamples;
 
       struct CopyInstructions {
-        // Beamlet index
-        unsigned beamlet;
-
         // Relevant time range
         TimeStamp from;
         TimeStamp to;
 
-        // Copy as one or two ranges of [from, to).
-        struct Range {
-          const T* from;
-          const T* to;
-        } ranges[2];
+        struct Beamlet {
+          // Copy as one or two ranges of [from, to).
+          struct Range {
+            const T* from;
+            const T* to;
+          } ranges[2];
 
-        unsigned nrRanges;
+          unsigned nrRanges;
 
-        // The flags for this range
-        SparseSet<int64> flags;
+          // The offset at which the data is accessed.
+          ssize_t offset;
+        };
+
+        std::vector<struct Beamlet> beamlets;
       };
+
+      /*
+       * Read the flags for a specific beamlet. Readers should read the flags
+       * before and after reading the data. The valid data is then indicated by
+       * the intersection of both sets (flagsBefore & flagsAfter).
+       */
+      SparseSet<int64> flags( const struct CopyInstructions &, unsigned beamlet );
 
       /*
        * Provide the offset in samples for a certain beamlet, based on the
@@ -94,35 +102,16 @@ namespace LOFAR
       }
 
       /*
-       * Setup the copying of one block.
-       */
-      virtual void copyStart( const TimeStamp &from, const TimeStamp &to, const std::vector<size_t> &wrapOffsets )
-      {
-        (void)from;
-        (void)to;
-        (void)wrapOffsets;
-      }
-
-      /*
        * Copy one block.
        */
-      virtual void copy( const struct CopyInstructions & )
+      virtual void sendBlock( const struct CopyInstructions & )
       {
-      }
-
-      /*
-       * Tear down the copying of one block.
-       */
-      virtual void copyEnd( const TimeStamp &from, const TimeStamp &to )
-      {
-        (void)from;
-        (void)to;
       }
 
     private:
       WallClockTime waiter;
 
-      void copy( const TimeStamp &from, const TimeStamp &to );
+      void sendBlock( const TimeStamp &from, const TimeStamp &to );
     };
 
   }

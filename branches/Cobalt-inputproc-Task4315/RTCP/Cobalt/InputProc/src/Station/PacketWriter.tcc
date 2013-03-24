@@ -68,8 +68,8 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   const TimeStamp end   = begin + nrTimeslots;
 
   // determine the time span when cast on the buffer
-  const size_t from_offset = (int64)begin % settings.nrSamples;
-  size_t to_offset = ((int64)end) % settings.nrSamples;
+  const size_t from_offset = buffer.offset(begin);
+  size_t to_offset = buffer.offset(end);
 
   if (to_offset == 0)
     to_offset = settings.nrSamples;

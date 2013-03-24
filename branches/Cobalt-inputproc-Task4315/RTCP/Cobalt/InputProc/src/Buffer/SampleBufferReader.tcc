@@ -45,6 +45,7 @@ template<typename T> SampleBufferReader<T>::SampleBufferReader( const BufferSett
 
   ASSERT( blockSize > 0 );
   ASSERT( blockSize < settings.nrSamples );
+  ASSERT( blockSize > nrHistorySamples );
   ASSERT( from < to );
 }
 
@@ -56,19 +57,17 @@ template<typename T> void SampleBufferReader<T>::process( double maxDelay )
   const TimeStamp current(from);
   const size_t increment = blockSize - nrHistorySamples;
 
-  /*
-  for (TimeStamp current = from; current < to; current += increment) {
+#if 1
+  for (TimeStamp current = from; current + blockSize < to; current += increment) {
     // wait
     LOG_INFO_STR("Waiting until " << (current + maxDelay_ts) << " for " << current);
     waiter.waitUntil( current + maxDelay_ts );
 
     // read
     LOG_INFO_STR("Reading from " << current << " to " << (current + blockSize));
-    copy(current - nrHistorySamples, current - nrHistorySamples + blockSize);
+    sendBlock(current - nrHistorySamples, current - nrHistorySamples + blockSize);
   }
-
-  LOG_INFO("Done reading data");*/
-
+#else
   double totalwait = 0.0;
   unsigned totalnr = 0;
 
@@ -81,7 +80,7 @@ template<typename T> void SampleBufferReader<T>::process( double maxDelay )
     // read
     double bs = MPI_Wtime();
 
-    copy(current - nrHistorySamples, current - nrHistorySamples + blockSize);
+    sendBlock(current - nrHistorySamples, current - nrHistorySamples + blockSize);
 
     totalwait += MPI_Wtime() - bs;
     totalnr++;
@@ -95,6 +94,7 @@ template<typename T> void SampleBufferReader<T>::process( double maxDelay )
       LOG_INFO_STR("Reading speed: " << mbps << " Mbit/s");
     }
   }
+#endif
 
   for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = buffer.boards.begin(); board != buffer.boards.end(); ++board ) {
     (*board).noMoreReading();
@@ -104,37 +104,55 @@ template<typename T> void SampleBufferReader<T>::process( double maxDelay )
 }
 
 
-template<typename T> void SampleBufferReader<T>::copy( const TimeStamp &from, const TimeStamp &to )
+template<typename T> void SampleBufferReader<T>::sendBlock( const TimeStamp &from, const TimeStamp &to )
 {
   ASSERT( from < to );
   ASSERT( to - from < (int64)buffer.nrSamples );
 
+  // Create instructions for copying this block
   struct CopyInstructions info;
   info.from = from;
   info.to   = to;
-
-  // Determine the buffer offsets for all beamlets. Because beamlets can belong
-  // to different station beams, the offsets can differ per beamlet.
-  std::vector<ssize_t> beam_offsets(beamlets.size());
-  std::vector<size_t> from_offsets(beamlets.size());
-  std::vector<size_t> to_offsets(beamlets.size());
-  std::vector<size_t> wrap_offsets(beamlets.size());
+  info.beamlets.resize(beamlets.size());
 
   for (size_t i = 0; i < beamlets.size(); ++i) {
+    unsigned b = beamlets[i];
+    struct CopyInstructions::Beamlet &ib = info.beamlets[i];
+    
+    // Determine the offset with which this beamlet is read (likely based on
+    // the relevant station beam).
     ssize_t offset = beamletOffset(i, from, to);
 
-    beam_offsets[i] = offset;
+    ib.offset = offset;
 
     // Determine the relevant offsets in the buffer
-    from_offsets[i] = (info.from + offset) % buffer.nrSamples;
-    to_offsets[i]   = (info.to   + offset) % buffer.nrSamples;
+    size_t from_offset = buffer.offset(info.from + offset);
+    size_t to_offset   = buffer.offset(info.to   + offset);
 
-    if (to_offsets[i] == 0)
-      to_offsets[i] = buffer.nrSamples;
+    if (to_offset == 0)
+      to_offset = buffer.nrSamples;
 
     // Determine whether we need to wrap around the end of the buffer
-    wrap_offsets[i] = from_offsets[i] < to_offsets[i] ? 0 : buffer.nrSamples - from_offsets[i];
+    size_t wrap_offset = from_offset < to_offset ? 0 : buffer.nrSamples - from_offset;
 
+    const T* origin = &buffer.beamlets[b][0];
+
+    if (wrap_offset > 0) {
+      // Copy as two parts
+      ib.nrRanges = 2;
+
+      ib.ranges[0].from = origin + from_offset;
+      ib.ranges[0].to   = origin + buffer.nrSamples;
+
+      ib.ranges[1].from = origin;
+      ib.ranges[1].to   = origin + to_offset;
+    } else {
+      // Copy as one part
+      ib.nrRanges = 1;
+
+      ib.ranges[0].from = origin + from_offset;
+      ib.ranges[0].to   = origin + to_offset;
+    }
   }
 
   // Signal read intent on all buffers
@@ -142,55 +160,31 @@ template<typename T> void SampleBufferReader<T>::copy( const TimeStamp &from, co
     (*board).startRead(from, to);
   }
 
-  // Signal start of block
-  copyStart(from, to, wrap_offsets);
-
-  // Copy all specified beamlets
-  for (size_t i = 0; i < beamlets.size(); ++i) {
-    unsigned nr = beamlets[i];
-    const T* origin = &buffer.beamlets[nr][0];
-
-    ssize_t beam_offset = beam_offsets[i];
-    size_t from_offset = from_offsets[i];
-    size_t wrap_offset = wrap_offsets[i];
-    size_t to_offset   = to_offsets[i];
-
-    info.beamlet        = i;
-
-    if (wrap_offset > 0) {
-      // Copy as two parts
-      info.nrRanges = 2;
-
-      info.ranges[0].from = origin + from_offset;
-      info.ranges[0].to   = origin + wrap_offset;
-
-      info.ranges[1].from = origin;
-      info.ranges[1].to   = origin + to_offset;
-    } else {
-      // Copy as one part
-      info.nrRanges = 1;
-
-      info.ranges[0].from = origin + from_offset;
-      info.ranges[0].to   = origin + to_offset;
-    }
-
+  // TODO:
     // Add the flags (translate available packets to missing packets)
-    size_t boardIdx = settings.boardIndex(i);
+    //size_t boardIdx = settings.boardIndex(i);
 
-    info.flags = buffer.boards[boardIdx].flags.sparseSet(from + beam_offset, to + beam_offset).invert(from + beam_offset, to + beam_offset);
+    //info.flags = buffer.boards[boardIdx].flags.sparseSet(from + beam_offset, to + beam_offset).invert(from + beam_offset, to + beam_offset);
 
-    // Copy the beamlet
-    copy(info);
-  }
-
-  // Signal end of block
-  copyEnd(from, to);
+  sendBlock(info);
 
   // Signal end of read intent on all buffers, reserving nrHistorySamples for the
   // next read.
   for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = buffer.boards.begin(); board != buffer.boards.end(); ++board ) {
     (*board).stopRead(to - nrHistorySamples);
   }
+}
+
+
+template<typename T> SparseSet<int64> SampleBufferReader<T>::flags( const struct CopyInstructions &info, unsigned beamlet )
+{
+  // Determine corresponding RSP board
+  size_t boardIdx = settings.boardIndex(beamlet);
+
+  ssize_t beam_offset = info.beamlets[beamlet].offset;
+
+  // Translate available packets to missing packets.
+  return buffer.boards[boardIdx].flags.sparseSet(info.from + beam_offset, info.to + beam_offset).invert(info.from + beam_offset, info.to + beam_offset);
 }
 
 }

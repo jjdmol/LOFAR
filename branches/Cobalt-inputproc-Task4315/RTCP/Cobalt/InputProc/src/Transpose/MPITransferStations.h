@@ -33,6 +33,10 @@
 #include <Buffer/SampleBufferReader.h>
 #include <Buffer/BufferSettings.h>
 
+#include <map>
+#include <set>
+#include <vector>
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -45,7 +49,7 @@ namespace LOFAR
     class MPISendStation : public SampleBufferReader<T>
     {
     public:
-      MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples, const std::vector<size_t> &beamlets, unsigned destRank );
+      MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples, const std::map<size_t, int> &beamletDistribution );
 
       struct Header {
         StationID station;
@@ -73,21 +77,22 @@ namespace LOFAR
       enum tag_types { CONTROL = 0, BEAMLET = 1, FLAGS = 2 };
 
     protected:
-      const unsigned destRank;
-
-      std::vector<MPI_Request> requests;
-      size_t nrRequests;
-
-      Matrix<char> metaData; // [beamlet][data]
-
-      virtual void copyStart( const TimeStamp &from, const TimeStamp &to, const std::vector<size_t> &wrapOffsets );
-      virtual void copy( const struct SampleBufferReader<T>::CopyInstructions &info );
-      virtual void copyEnd( const TimeStamp &from, const TimeStamp &to );
+      virtual void sendBlock( const struct SampleBufferReader<T>::CopyInstructions &info );
 
       size_t metaDataSize() const
       {
         return sizeof(uint32_t) + this->settings.nrFlagRanges * sizeof(int64) * 2;
       }
+
+    private:
+      const std::string logPrefix;
+      const std::map<size_t, int> beamletDistribution;
+      const std::set<int> targetRanks;
+      const std::map<int, std::vector<size_t> > beamletsOfTarget;
+
+      MPI_Request sendHeader( int rank, Header &header, const struct SampleBufferReader<T>::CopyInstructions &info );
+      void sendData( int rank, unsigned beamlet, const struct SampleBufferReader<T>::CopyInstructions::Beamlet &ib );
+      void sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags );
     };
 
 
@@ -103,7 +108,7 @@ namespace LOFAR
     class MPIReceiveStations
     {
     public:
-      MPIReceiveStations( const struct BufferSettings &settings, const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
+      MPIReceiveStations( const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
 
       struct Block {
         MultiDimArray<T, 2> samples;            // [beamlet][sample]
@@ -116,12 +121,19 @@ namespace LOFAR
       void receiveBlock();
 
     private:
-      const struct BufferSettings settings;
+      const std::string logPrefix;
       const std::vector<int> stationRanks;
 
     public:
       const std::vector<size_t> beamlets;
       const size_t blockSize;
+
+      MPI_Request receiveHeader( int rank, struct MPISendStation<T>::Header &header );
+      MPI_Request receiveBeamlet( int rank, size_t beamlet, int transfer, T *from, size_t nrSamples );
+      MPI_Request receiveFlags( int rank, size_t beamlet, std::vector<char> &buffer );
+
+      int waitAny( std::vector<MPI_Request> &requests );
+      void waitAll( std::vector<MPI_Request> &requests );
     };
 
 

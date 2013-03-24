@@ -1,4 +1,4 @@
-/* Generator.h
+/* PacketFactory.h
  * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
  * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
  *
@@ -19,41 +19,43 @@
  * $Id: $
  */
 
-#ifndef LOFAR_INPUT_PROC_GENERATOR_H
-#define LOFAR_INPUT_PROC_GENERATOR_H
+#ifndef LOFAR_INPUT_PROC_PACKETFACTORY_H
+#define LOFAR_INPUT_PROC_PACKETFACTORY_H
 
-#include <string>
-#include <vector>
-
+#include <Buffer/BufferSettings.h>
 #include <CoInterface/RSPTimeStamp.h>
 
-#include <RSPBoards.h>
-#include <Buffer/BufferSettings.h>
-
-#include "PacketFactory.h"
 #include "RSP.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
+    /* Generate RSP packets */
 
-    /* Generate station input data */
-
-    class Generator : public RSPBoards
+    class PacketFactory
     {
     public:
-      Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors, PacketFactory &packetFactory );
+      PacketFactory( const BufferSettings &settings );
+      virtual ~PacketFactory();
+
+      /*
+       * Fill an RSP packet for a certain RSP board and time stamp.
+       */
+      virtual void makePacket( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr);
 
     protected:
-      const BufferSettings settings;
-      const std::vector<std::string> streamDescriptors;
-      PacketFactory &packetFactory;
+      const BufferSettings &settings;
 
-      std::vector<size_t> nrSent;
+      /*
+       * Fill packet.header.
+       */
+      virtual void makeHeader( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr);
 
-      virtual void processBoard( size_t nr );
-      virtual void logStatistics();
+      /*
+       * Fill packet.payload. Called after makeHeader().
+       */
+      virtual void makePayload( struct RSP &packet );
     };
 
   }

@@ -90,6 +90,8 @@ namespace LOFAR
 
       MultiDimArray<T,2>  beamlets; // [subband][sample]
 
+      size_t offset( const TimeStamp &timestamp ) const { return (int64)timestamp % nrSamples; }
+
       class Board {
       public:
         Board( SampleBuffer<T> &buffer );
