@@ -1,0 +1,6 @@
+#!/bin/sh
+mpirun -host localhost -np 1 tThreadSafeMPI &&
+mpirun -host localhost -np 2 tThreadSafeMPI &&
+mpirun -host localhost -np 3 tThreadSafeMPI &&
+mpirun -host localhost -np 4 tThreadSafeMPI
+

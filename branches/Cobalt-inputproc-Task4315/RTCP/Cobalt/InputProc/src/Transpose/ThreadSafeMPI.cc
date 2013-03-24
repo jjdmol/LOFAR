@@ -68,7 +68,10 @@ bool MPIRequestManager::wait( const MPI_Request &request ) {
 
 
 void MPIRequestManager::process() {
-  while(!done) {
+  LOG_DEBUG_STR("[MPIRequestManager] Process begin");
+
+  // If done, empty the queue.
+  while(!done ||!empty()) {
     // don't occupy CPU indefinitely
     pthread_yield();
 
@@ -77,6 +80,7 @@ void MPIRequestManager::process() {
       ScopedLock sl(requestsMutex);
 
       while(!done && empty()) {
+        //LOG_DEBUG_STR("[MPIRequestManager] Waiting for requests");
         requestAdded.wait(requestsMutex);
       }
     }
@@ -86,11 +90,16 @@ void MPIRequestManager::process() {
       handleAny();
     }
   }
+
+  LOG_DEBUG_STR("[MPIRequestManager] Process end");
 }
 
 
 void MPIRequestManager::addRequest( const MPI_Request &request, Semaphore *semaphore ) {
   ScopedLock sl(requestsMutex);
+
+  // Can't add requests if finishing up.
+  ASSERT(!done);
 
   // MPI_REQUEST_NULL is used to signal a completed request.
   ASSERT(request != MPI_REQUEST_NULL);
