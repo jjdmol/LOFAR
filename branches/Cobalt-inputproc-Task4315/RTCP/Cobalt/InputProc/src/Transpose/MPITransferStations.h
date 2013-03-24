@@ -43,7 +43,7 @@ namespace LOFAR
   {
 
     /*
-     * Sends a set of beamlets from the SHM buffer to one MPI node.
+     * Sends a set of beamlets from the SHM buffer to all receiving MPI nodes.
      */
     template<typename T>
     class MPISendStation : public SampleBufferReader<T>
@@ -51,13 +51,29 @@ namespace LOFAR
     public:
       MPISendStation( const struct BufferSettings &settings, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples, const std::map<size_t, int> &beamletDistribution );
 
+      // Header which prefixes each block. Contains identification information
+      // for verification purposes, as well as the sizes of the data that
+      // follow.
       struct Header {
+        // Originating station
         StationID station;
 
+        // Block will span [from,to)
         int64 from, to;
-        size_t wrapOffsets[1024];
 
+        // At which offset the data will be wrapped. If:
+        //
+        //   =0: the data will be sent in 1 transfer:
+        //          1. a block of `to - from' samples
+        //   >0: the data will be sent in 2 transfers:
+        //          1. a block of `wrapOffsets[x]' samples
+        //          2. a block of `(to - from) - wrapOffsets[x]' samples
+        size_t wrapOffsets[1024]; // [beamlet]
+
+        // Number of beamlets that will be sent
         size_t nrBeamlets;
+
+        // Size of the marshalled flags
         size_t metaDataSize;
       };
 
@@ -86,12 +102,25 @@ namespace LOFAR
 
     private:
       const std::string logPrefix;
+
+      // To which rank to send each beamlet:
+      //   beamletDistribution[beamlet] = rank
       const std::map<size_t, int> beamletDistribution;
+
+      // The ranks to which to send beamlets.
       const std::set<int> targetRanks;
+
+      // The beamlets to send to each rank:
+      //   beamletsOfTarget[rank] = [beamlet, beamlet, ...]
       const std::map<int, std::vector<size_t> > beamletsOfTarget;
 
+      // Construct and send a header to the given rank (async).
       MPI_Request sendHeader( int rank, Header &header, const struct SampleBufferReader<T>::CopyInstructions &info );
+
+      // Send beamlet data (in 1 or 2 transfers) to the given rank (sync).
       void sendData( int rank, unsigned beamlet, const struct SampleBufferReader<T>::CopyInstructions::Beamlet &ib );
+
+      // Send flags data to the given rank (sync).
       void sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags );
     };
 
@@ -128,11 +157,22 @@ namespace LOFAR
       const std::vector<size_t> beamlets;
       const size_t blockSize;
 
+      // Receive a header (async) from the given rank.
       MPI_Request receiveHeader( int rank, struct MPISendStation<T>::Header &header );
+
+      // Receive beamlet data (async) from the given rank.
       MPI_Request receiveBeamlet( int rank, size_t beamlet, int transfer, T *from, size_t nrSamples );
+
+      // Receive marshalled flags (async) from the given rank.
       MPI_Request receiveFlags( int rank, size_t beamlet, std::vector<char> &buffer );
 
+      // Wait for any request to finish. Returns the index of the request that
+      // finished. Finished requests are set to MPI_REQUEST_NULL and ignored in
+      // subsequent calls.
       int waitAny( std::vector<MPI_Request> &requests );
+
+      // Wait for all given requests to finish. Finished requests are set to
+      // MPI_REQUEST_NULL and ignored in subsequent calls.
       void waitAll( std::vector<MPI_Request> &requests );
     };
 

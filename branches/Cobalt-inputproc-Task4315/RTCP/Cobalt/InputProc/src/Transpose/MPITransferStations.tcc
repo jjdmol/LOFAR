@@ -560,6 +560,10 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
   std::vector<MPI_Request> requests(beamlets.size() * 3 * stationRanks.size(), MPI_REQUEST_NULL);
   size_t nrRequests = 0;
 
+  /*
+   * RECEIVE HEADERS (ASYNC)
+   */
+
   // Post receives for all headers
   std::vector<MPI_Request> header_requests(stationRanks.size(), MPI_REQUEST_NULL);
   std::vector<struct MPISendStation<T>::Header> headers(stationRanks.size());
@@ -576,8 +580,7 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
 
   for (size_t i = 0; i < stationRanks.size(); ++i) {
     /*
-     * For each station, receive its header, and post the relevant sample and
-     * flag Irecvs.
+     * WAIT FOR ANY HEADER
      */
 
     LOG_DEBUG_STR(logPrefix << "Waiting for headers");
@@ -590,7 +593,10 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
 #endif
     int rank = stationRanks[stat];
 
-    // Check the header
+    /*
+     * CHECK HEADER
+     */
+
     const struct MPISendStation<T>::Header &header = headers[stat];
 
     LOG_DEBUG_STR(logPrefix << "Received header from rank " << rank);
@@ -598,10 +604,14 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
     ASSERT(header.to - header.from == (int64)blockSize);
     ASSERTSTR(header.nrBeamlets == beamlets.size(), "Got " << header.nrBeamlets << " beamlets, but expected " << beamlets.size());
 
-    // Post receives for the samples
+    // Post receives for all beamlets from this station
     for (size_t beamletIdx = 0; beamletIdx < header.nrBeamlets; ++beamletIdx) {
       const size_t beamlet = beamlets[beamletIdx];
       const size_t wrapOffset = header.wrapOffsets[beamletIdx];
+
+      /*
+       * RECEIVE BEAMLET (ASYNC)
+       */
 
       LOG_DEBUG_STR(logPrefix << "Receiving beamlet " << beamlet << " from rank " << rank << " using " << (wrapOffset > 0 ? 2 : 1) << " transfers");
 
@@ -613,21 +623,30 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
         requests[nrRequests++] = receiveBeamlet(rank, beamlet, 1, &lastBlock[stat].samples[beamletIdx][wrapOffset], blockSize - wrapOffset);
       }
 
-      // Flags transfer
+      /*
+       * RECEIVE FLAGS (ASYNC)
+       */
+
       metaData[stat][beamletIdx].resize(header.metaDataSize);
       requests[nrRequests++] = receiveFlags(rank, beamlet, metaData[stat][beamletIdx]);
     }
   }
 
-  // Wait for all transfers to finish
+  /*
+   * WAIT FOR ALL DATA TO ARRIVE
+   */
+
   requests.resize(nrRequests);
   waitAll(requests);
+
+  /*
+   * PROCESS DATA
+   */
 
   // Convert raw metaData to flags array
   for (size_t stat = 0; stat < stationRanks.size(); ++stat)
     for (size_t beamlet = 0; beamlet < beamlets.size(); ++beamlet)
       lastBlock[stat].flags[beamlet].unmarshall(&metaData[stat][beamlet][0]);
-
 }
 
 }
