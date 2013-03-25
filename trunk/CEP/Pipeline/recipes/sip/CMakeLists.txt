@@ -55,6 +55,7 @@ install(PROGRAMS
   bin/imaging_pipeline.py
   bin/startPython.sh
   bin/startPythonVersion.sh
+  bin/stopPython.sh
   external/bad_station_detection/asciistats.py
   external/bad_station_detection/statsplot.py
   DESTINATION bin)

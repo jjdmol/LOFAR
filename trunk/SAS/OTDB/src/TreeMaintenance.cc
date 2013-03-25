@@ -601,8 +601,7 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 		functionName = "getVTitemList";
 		break;
 	case TTVHtree:
-		functionName = isRegex ? "getVHitemListRegex" : "getVHitemList";
-		break;
+		functionName = isRegex ? "getVHitemListRegex" : "getVHitemList";		break;
 	default:
 		ASSERTSTR(false, "Treetype " << theTree.type << " is unknown");
 	}
