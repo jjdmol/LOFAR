@@ -9,15 +9,15 @@
   <parent>
     <groupId>nl.astron.lofar.sas.otb</groupId>
     <artifactId>otb-parent</artifactId>
-    <version>1.13.0</version>
+    <version>1.14.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>jRSP</artifactId>
 
   <!-- Specification for the SCM used by the project, such as CVS, Subversion, etc. -->
   <scm>
-    <connection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.sas.otb.otb-parent-1.13.0/jRSP</connection>
-    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/tags/Maven-Release-nl.astron.lofar.sas.otb.otb-parent-1.13.0/jRSP</developerConnection>
+    <connection>scm:svn:https://svn.astron.nl/LOFAR/trunk/SAS/OTB/jRSP</connection>
+    <developerConnection>scm:svn:https://svn.astron.nl/LOFAR/trunk/SAS/OTB/jRSP</developerConnection>
   </scm>
 
 
