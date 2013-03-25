@@ -59,9 +59,11 @@ template<typename T> void SampleBufferReader<T>::process( double maxDelay )
 
 #if 1
   for (TimeStamp current = from; current + blockSize < to; current += increment) {
-    // wait
-    LOG_INFO_STR("Waiting until " << (current + maxDelay_ts) << " for " << current);
-    waiter.waitUntil( current + maxDelay_ts );
+    // wait (but only in real-time mode)
+    if (!buffer.sync) {
+      LOG_INFO_STR("Waiting until " << (current + maxDelay_ts) << " for " << current);
+      waiter.waitUntil( current + maxDelay_ts );
+    }
 
     // read
     LOG_INFO_STR("Reading from " << current << " to " << (current + blockSize));
@@ -104,7 +106,7 @@ template<typename T> void SampleBufferReader<T>::process( double maxDelay )
 }
 
 
-template<typename T> void SampleBufferReader<T>::sendBlock( const TimeStamp &from, const TimeStamp &to )
+template<typename T> struct SampleBufferReader<T>::CopyInstructions SampleBufferReader<T>::getCopyInstructions( const TimeStamp &from, const TimeStamp &to )
 {
   ASSERT( from < to );
   ASSERT( to - from < (int64)buffer.nrSamples );
@@ -126,8 +128,8 @@ template<typename T> void SampleBufferReader<T>::sendBlock( const TimeStamp &fro
     ib.offset = offset;
 
     // Determine the relevant offsets in the buffer
-    size_t from_offset = buffer.offset(info.from + offset);
-    size_t to_offset   = buffer.offset(info.to   + offset);
+    size_t from_offset = buffer.offset(from + offset);
+    size_t to_offset   = buffer.offset(to   + offset);
 
     if (to_offset == 0)
       to_offset = buffer.nrSamples;
@@ -157,10 +159,18 @@ template<typename T> void SampleBufferReader<T>::sendBlock( const TimeStamp &fro
     ib.flagsAtBegin = flags(info, b);
   }
 
+  return info;
+}
+
+
+template<typename T> void SampleBufferReader<T>::sendBlock( const TimeStamp &from, const TimeStamp &to )
+{
   // Signal read intent on all buffers
   for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = buffer.boards.begin(); board != buffer.boards.end(); ++board ) {
     (*board).startRead(from, to);
   }
+
+  struct CopyInstructions info = getCopyInstructions(from, to);
 
   sendBlock(info);
 

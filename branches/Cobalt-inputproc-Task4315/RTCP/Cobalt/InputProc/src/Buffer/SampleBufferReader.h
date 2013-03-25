@@ -113,6 +113,8 @@ namespace LOFAR
     private:
       WallClockTime waiter;
 
+      struct CopyInstructions getCopyInstructions( const TimeStamp &from, const TimeStamp &to );
+
       void sendBlock( const TimeStamp &from, const TimeStamp &to );
     };
 
