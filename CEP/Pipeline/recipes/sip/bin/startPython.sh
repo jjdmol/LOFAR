@@ -1,7 +1,7 @@
 #!/bin/bash -l
 #
-# This script is started by the MAC Python Controller using the following
-# parameters:
+# This script is called by MAC PythonControl to start a pipeline, using the
+# following parameters:
 #
 #   <pythonProgram> <parsetname> <3 fields with communication settings> 
 #
@@ -81,4 +81,9 @@ if ! kill -0 $! 2> /dev/null; then
   echo "$(date): FATAL ERROR: ${pythonProgram} died unexpectedly."
   exit 1
 fi
+
+# Record the process ID of the Python program in a file.
+pidFile="${LOFARROOT}/var/run/pipeline/$(basename ${parsetFile})/pid"
+mkdir -p "$(dirname ${pidFile})"
+echo "$!" > "${pidFile}"
 
