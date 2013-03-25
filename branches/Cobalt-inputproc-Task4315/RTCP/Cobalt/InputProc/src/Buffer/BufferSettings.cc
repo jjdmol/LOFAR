@@ -80,7 +80,7 @@ namespace LOFAR
       setBufferSize(1.0);
 
       nrBoards = 4;
-      nrFlagRanges = 64;
+      nrAvailableRanges = 64;
 
       dataKey = station.hash();
     }

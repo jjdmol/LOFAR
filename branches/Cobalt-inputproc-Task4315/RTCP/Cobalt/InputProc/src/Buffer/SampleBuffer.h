@@ -86,7 +86,7 @@ namespace LOFAR
       const size_t nrBeamletsPerBoard;
       const size_t nrSamples;
       const size_t nrBoards;
-      const size_t nrFlagRanges; // width of each flag range
+      const size_t nrAvailableRanges; // width of each available range
 
       MultiDimArray<T,2>  beamlets; // [subband][sample]
 
@@ -96,7 +96,7 @@ namespace LOFAR
       public:
         Board( SampleBuffer<T> &buffer );
 
-        Ranges flags;
+        Ranges available;
 
         // Signal start of write intent for data in [begin, end). The flags will be updated
         // for any data that will be overwritten, but not set for any data that is

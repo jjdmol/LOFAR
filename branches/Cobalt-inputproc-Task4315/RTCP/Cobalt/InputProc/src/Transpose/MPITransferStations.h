@@ -103,7 +103,7 @@ namespace LOFAR
 
       size_t metaDataSize() const
       {
-        return sizeof(uint32_t) + this->settings.nrFlagRanges * sizeof(int64) * 2;
+        return SparseSet<int64>::marshallSize(this->settings.nrAvailableRanges);
       }
 
     private:

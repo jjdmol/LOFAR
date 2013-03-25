@@ -180,7 +180,7 @@ template<typename T> SparseSet<int64> SampleBufferReader<T>::flags( const struct
   ssize_t beam_offset = info.beamlets[beamlet].offset;
 
   // Translate available packets to missing packets.
-  return buffer.boards[boardIdx].flags.sparseSet(info.from + beam_offset, info.to + beam_offset).invert(info.from + beam_offset, info.to + beam_offset);
+  return buffer.boards[boardIdx].available.sparseSet(info.from + beam_offset, info.to + beam_offset).invert(info.from + beam_offset, info.to + beam_offset);
 }
 
 }

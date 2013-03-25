@@ -54,7 +54,7 @@ namespace LOFAR
       size_t nrSamples;
 
       unsigned nrBoards;
-      size_t nrFlagRanges;
+      size_t nrAvailableRanges;
 
       key_t dataKey;
 
@@ -79,7 +79,7 @@ namespace LOFAR
                && nrBeamletsPerBoard == other.nrBeamletsPerBoard
                && nrSamples == other.nrSamples
                && nrBoards == other.nrBoards
-               && nrFlagRanges == other.nrFlagRanges
+               && nrAvailableRanges == other.nrAvailableRanges
                && dataKey == other.dataKey;
       }
     private:

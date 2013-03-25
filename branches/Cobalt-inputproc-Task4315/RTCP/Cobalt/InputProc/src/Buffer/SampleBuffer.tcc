@@ -18,7 +18,7 @@ namespace LOFAR
     size_t SampleBuffer<T>::dataSize( const struct BufferSettings &settings )
     {
       return sizeof settings
-             + settings.nrBoards * (Ranges::size(settings.nrFlagRanges) + 8)
+             + settings.nrBoards * (Ranges::size(settings.nrAvailableRanges) + 8)
              + settings.nrBoards * settings.nrBeamletsPerBoard * (settings.nrSamples * sizeof(T) + 128);
     }
 
@@ -35,15 +35,15 @@ namespace LOFAR
       nrBeamletsPerBoard(settings->nrBeamletsPerBoard),
       nrSamples(settings->nrSamples),
       nrBoards(settings->nrBoards),
-      nrFlagRanges(settings->nrFlagRanges),
+      nrAvailableRanges(settings->nrAvailableRanges),
 
       beamlets(boost::extents[nrBoards * nrBeamletsPerBoard][nrSamples], 128, allocator, false, false),
       boards(nrBoards, Board(*this))
     {
       for (size_t b = 0; b < boards.size(); b++) {
-        size_t numBytes = Ranges::size(nrFlagRanges);
+        size_t numBytes = Ranges::size(nrAvailableRanges);
 
-        boards[b].flags = Ranges(static_cast<int64*>(allocator.allocate(numBytes, 8)), numBytes, nrSamples, create);
+        boards[b].available = Ranges(static_cast<int64*>(allocator.allocate(numBytes, 8)), numBytes, nrSamples, create);
       }
 
       LOG_INFO_STR( logPrefix << "Initialised" );
@@ -126,7 +126,7 @@ namespace LOFAR
       }
 
       // Mark overwritten range (and everything before it to prevent a mix) as invalid
-      flags.excludeBefore(end - buffer.settings->nrSamples);
+      available.excludeBefore(end - buffer.settings->nrSamples);
     }
 
 

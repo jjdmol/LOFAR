@@ -77,7 +77,7 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   const size_t wrap = from_offset < to_offset ? 0 : settings.nrSamples - from_offset;
 
   /*
-   * Make sure the buffer and flags are always consistent.
+   * Make sure the buffer and available ranges are always consistent.
    */
 
   // signal write intent, to sync with reader in non-realtime mode and
@@ -103,7 +103,7 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   }
 
   // mark as valid
-  board.flags.include(begin, end);
+  board.available.include(begin, end);
 
   // signal end of write
   board.stopWrite(end);
