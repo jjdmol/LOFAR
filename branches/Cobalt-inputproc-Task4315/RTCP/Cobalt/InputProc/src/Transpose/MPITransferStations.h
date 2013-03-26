@@ -50,12 +50,12 @@ namespace LOFAR
      * port). We thus cannot really start sending to the first node earlier if
      * we're not yet done sending to other nodes.
      */
-    template<typename T>
     class MPISendStation
     {
     public:
       MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const std::map<size_t, int> &beamletDistribution );
 
+      template<typename T>
       void sendBlock( const struct SampleBufferReader<T>::Block &block );
 
       // Header which prefixes each block. Contains identification information
@@ -125,10 +125,12 @@ namespace LOFAR
       const std::map<int, std::vector<size_t> > beamletsOfTarget;
 
       // Construct and send a header to the given rank (async).
+      template<typename T>
       MPI_Request sendHeader( int rank, Header &header, const struct SampleBufferReader<T>::Block &block );
 
       // Send beamlet data (in 1 or 2 transfers) to the given rank (async).
       // Returns the number of MPI_Requests made.
+      template<typename T>
       unsigned sendData( int rank, unsigned beamlet, const struct SampleBufferReader<T>::Block::Beamlet &ib, MPI_Request requests[2] );
 
       // Send flags data to the given rank (async).
@@ -144,21 +146,19 @@ namespace LOFAR
      * transfers between different blocks from different stations. However,
      * such seems to require polling MPI_Testall loops like in MPISendStation.
      */
-    template<typename T>
     class MPIReceiveStations
     {
     public:
       MPIReceiveStations( const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
 
-      struct Block {
-        MultiDimArray<T, 2> samples;            // [beamlet][sample]
-        MultiDimArray<SparseSet<int64>, 1> flags; // [beamlet]
+      template<typename T>
+      struct Beamlet {
+        std::vector<T>   samples;
+        SparseSet<int64> flags;
       };
 
-      std::vector<struct Block> lastBlock; // [station]
-
-      // Fill lastBlock with the next block
-      void receiveBlock();
+      template<typename T>
+      void receiveBlock( MultiDimArray< struct Beamlet<T>, 2 > &block ); // block[station][beamlet]
 
     private:
       const std::string logPrefix;
@@ -169,9 +169,10 @@ namespace LOFAR
       const size_t blockSize;
 
       // Receive a header (async) from the given rank.
-      MPI_Request receiveHeader( size_t station, struct MPISendStation<T>::Header &header );
+      MPI_Request receiveHeader( size_t station, struct MPISendStation::Header &header );
 
       // Receive beamlet data (async) from the given rank.
+      template<typename T>
       MPI_Request receiveBeamlet( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples );
 
       // Receive marshalled flags (async) from the given rank.

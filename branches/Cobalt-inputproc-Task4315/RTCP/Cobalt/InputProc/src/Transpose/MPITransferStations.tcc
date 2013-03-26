@@ -135,7 +135,7 @@ static MPI_Request Guarded_MPI_Irecv(void *ptr, size_t numBytes, int srcRank, in
 }
 
 
-template<typename T> MPISendStation<T>::MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const std::map<size_t, int> &beamletDistribution )
+MPISendStation::MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const std::map<size_t, int> &beamletDistribution )
 :
   logPrefix(str(boost::format("[station %s] [MPISendStation] ") % settings.station.stationName)),
   settings(settings),
@@ -147,7 +147,7 @@ template<typename T> MPISendStation<T>::MPISendStation( const struct BufferSetti
   LOG_INFO_STR(logPrefix << "Initialised");
 }
 
-template<typename T> MPI_Request MPISendStation<T>::sendHeader( int rank, Header &header, const struct SampleBufferReader<T>::Block &block )
+template<typename T> MPI_Request MPISendStation::sendHeader( int rank, Header &header, const struct SampleBufferReader<T>::Block &block )
 {
   LOG_DEBUG_STR(logPrefix << "Sending header to rank " << rank);
 
@@ -178,7 +178,7 @@ template<typename T> MPI_Request MPISendStation<T>::sendHeader( int rank, Header
 }
 
 
-template<typename T> unsigned MPISendStation<T>::sendData( int rank, unsigned beamlet, const struct SampleBufferReader<T>::Block::Beamlet &ib, MPI_Request requests[2] )
+template<typename T> unsigned MPISendStation::sendData( int rank, unsigned beamlet, const struct SampleBufferReader<T>::Block::Beamlet &ib, MPI_Request requests[2] )
 {
   LOG_DEBUG_STR(logPrefix << "Sending beamlet " << beamlet << " to rank " << rank << " using " << ib.nrRanges << " transfers");
 
@@ -203,7 +203,7 @@ template<typename T> unsigned MPISendStation<T>::sendData( int rank, unsigned be
 }
 
 
-template<typename T> MPI_Request MPISendStation<T>::sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags )
+MPI_Request MPISendStation::sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags )
 {
   //LOG_DEBUG_STR("Sending flags to rank " << rank);
 
@@ -221,7 +221,7 @@ template<typename T> MPI_Request MPISendStation<T>::sendFlags( int rank, unsigne
 }
 
 
-template<typename T> void MPISendStation<T>::sendBlock( const struct SampleBufferReader<T>::Block &block )
+template<typename T> void MPISendStation::sendBlock( const struct SampleBufferReader<T>::Block &block )
 {
   /*
    * SEND HEADERS (ASYNC)
@@ -233,7 +233,7 @@ template<typename T> void MPISendStation<T>::sendBlock( const struct SampleBuffe
   for(std::set<int>::const_iterator i = targetRanks.begin(); i != targetRanks.end(); ++i) {
     int rank = *i;
 
-    headerRequests.push_back(sendHeader(rank, headers[rank], block));
+    headerRequests.push_back(sendHeader<T>(rank, headers[rank], block));
   }
   
   /*
@@ -250,7 +250,7 @@ template<typename T> void MPISendStation<T>::sendBlock( const struct SampleBuffe
      * SEND BEAMLETS
      */
 
-    nrBeamletRequests += sendData(rank, beamletIdx, ib, &beamletRequests[beamletIdx * 2]);
+    nrBeamletRequests += sendData<T>(rank, beamletIdx, ib, &beamletRequests[beamletIdx * 2]);
   }
 
   /*
@@ -304,37 +304,32 @@ template<typename T> void MPISendStation<T>::sendBlock( const struct SampleBuffe
 }
 
 
-template<typename T> MPIReceiveStations<T>::MPIReceiveStations( const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
+MPIReceiveStations::MPIReceiveStations( const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
 :
-  lastBlock(stationRanks.size()),
   logPrefix(str(boost::format("[beamlets %u..%u (%u)] [MPIReceiveStations] ") % beamlets[0] % beamlets[beamlets.size()-1] % beamlets.size())),
   stationRanks(stationRanks),
   beamlets(beamlets),
   blockSize(blockSize)
 {
-  for (size_t stat = 0; stat < stationRanks.size(); ++stat) {
-    lastBlock[stat].samples.resize(boost::extents[beamlets.size()][blockSize], 128, heapAllocator);
-    lastBlock[stat].flags.resize(boost::extents[beamlets.size()], 128, heapAllocator);
-  }
 }
 
 
-template<typename T> MPI_Request MPIReceiveStations<T>::receiveHeader( size_t station, struct MPISendStation<T>::Header &header )
+MPI_Request MPIReceiveStations::receiveHeader( size_t station, struct MPISendStation::Header &header )
 {
-  typename MPISendStation<T>::tag_t tag;
+  MPISendStation::tag_t tag;
 
   // receive the header
-  tag.bits.type    = MPISendStation<T>::CONTROL;
+  tag.bits.type    = MPISendStation::CONTROL;
   tag.bits.station = station;
 
   return Guarded_MPI_Irecv(&header, sizeof header, stationRanks[station], tag.value);
 }
 
 
-template<typename T> MPI_Request MPIReceiveStations<T>::receiveBeamlet( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples )
+template<typename T> MPI_Request MPIReceiveStations::receiveBeamlet( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples )
 {
-  typename MPISendStation<T>::tag_t tag;
-  tag.bits.type    = MPISendStation<T>::BEAMLET;
+  typename MPISendStation::tag_t tag;
+  tag.bits.type    = MPISendStation::BEAMLET;
   tag.bits.station = station;
   tag.bits.beamlet = beamlet;
   tag.bits.transfer = transfer;
@@ -343,10 +338,10 @@ template<typename T> MPI_Request MPIReceiveStations<T>::receiveBeamlet( size_t s
 }
 
 
-template<typename T> MPI_Request MPIReceiveStations<T>::receiveFlags( size_t station, size_t beamlet, std::vector<char> &buffer )
+MPI_Request MPIReceiveStations::receiveFlags( size_t station, size_t beamlet, std::vector<char> &buffer )
 {
-  typename MPISendStation<T>::tag_t tag;
-  tag.bits.type    = MPISendStation<T>::FLAGS;
+  MPISendStation::tag_t tag;
+  tag.bits.type    = MPISendStation::FLAGS;
   tag.bits.station = station;
   tag.bits.beamlet = beamlet;
 
@@ -354,7 +349,7 @@ template<typename T> MPI_Request MPIReceiveStations<T>::receiveFlags( size_t sta
 }
 
 
-template<typename T> void MPIReceiveStations<T>::receiveBlock()
+template<typename T> void MPIReceiveStations::receiveBlock( MultiDimArray<struct MPIReceiveStations::Beamlet<T>, 2> &block )
 {
   // All requests except the headers
   std::vector<MPI_Request> requests(beamlets.size() * 3 * stationRanks.size(), MPI_REQUEST_NULL);
@@ -366,7 +361,7 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
 
   // Post receives for all headers
   std::vector<MPI_Request> header_requests(stationRanks.size(), MPI_REQUEST_NULL);
-  std::vector<struct MPISendStation<T>::Header> headers(stationRanks.size());
+  std::vector<struct MPISendStation::Header> headers(stationRanks.size());
 
   for (size_t stat = 0; stat < stationRanks.size(); ++stat) {
     LOG_DEBUG_STR(logPrefix << "Posting receive for header from rank " << stationRanks[stat]);
@@ -393,7 +388,7 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
      * CHECK HEADER
      */
 
-    const struct MPISendStation<T>::Header &header = headers[stat];
+    const struct MPISendStation::Header &header = headers[stat];
 
     LOG_DEBUG_STR(logPrefix << "Received header from rank " << rank);
 
@@ -412,11 +407,11 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
       LOG_DEBUG_STR(logPrefix << "Receiving beamlet " << beamlet << " from rank " << rank << " using " << (wrapOffset > 0 ? 2 : 1) << " transfers");
 
       // First sample transfer
-      requests[nrRequests++] = receiveBeamlet(stat, beamlet, 0, &lastBlock[stat].samples[beamletIdx][0], wrapOffset ? wrapOffset : blockSize);
+      requests[nrRequests++] = receiveBeamlet<T>(stat, beamlet, 0, &block[stat][beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize);
 
       // Second sample transfer
       if (wrapOffset > 0) {
-        requests[nrRequests++] = receiveBeamlet(stat, beamlet, 1, &lastBlock[stat].samples[beamletIdx][wrapOffset], blockSize - wrapOffset);
+        requests[nrRequests++] = receiveBeamlet<T>(stat, beamlet, 1, &block[stat][beamletIdx].samples[wrapOffset], blockSize - wrapOffset);
       }
 
       /*
@@ -441,8 +436,8 @@ template<typename T> void MPIReceiveStations<T>::receiveBlock()
 
   // Convert raw metaData to flags array
   for (size_t stat = 0; stat < stationRanks.size(); ++stat)
-    for (size_t beamlet = 0; beamlet < beamlets.size(); ++beamlet)
-      lastBlock[stat].flags[beamlet].unmarshall(&metaData[stat][beamlet][0]);
+    for (size_t beamletIdx = 0; beamletIdx < beamlets.size(); ++beamletIdx)
+      block[stat][beamletIdx].flags.unmarshall(&metaData[stat][beamletIdx][0]);
 }
 
 }
