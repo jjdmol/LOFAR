@@ -18,6 +18,7 @@ import xml.dom.minidom as xml
 
 from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.utilities import spawn_process
+from lofarpipe.support.lofarexceptions import PipelineQuit
 from lofarpipe.support.jobserver import job_server
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.xmllogging import add_child
@@ -326,6 +327,9 @@ class RemoteCommandRecipeMixIn(object):
                     )
                 )
             threadwatcher(threadpool, self.logger, killswitch)
+
+        if killswitch.isSet():
+            raise PipelineQuit()
 
         # Add information regarding specific nodes to an xml node.
         self.logger.debug("Adding node_logging_information")

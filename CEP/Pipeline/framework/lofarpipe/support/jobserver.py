@@ -19,6 +19,7 @@ import Queue
 import SocketServer
 import cPickle as pickle
 
+from lofarpipe.support.lofarexceptions import PipelineQuit
 from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.utilities import spawn_process
 
@@ -168,6 +169,6 @@ def job_server(logger, jobpool, error):
         yield jobserver.server_address
     except KeyboardInterrupt:
         jobserver.stop()
-        raise
+        raise PipelineQuit()
     jobserver.stop()
     [handler.flush() for handler in logger.handlers]
