@@ -62,9 +62,9 @@ namespace LOFAR
       //   The station index within this observation.
       // beamletDistribution
       //   The distribution of beamlets:
-      //     key   = beamletIdx
-      //     value = receiver MPI rank
-      MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const std::map<size_t, int> &beamletDistribution );
+      //     key   = receiver MPI rank
+      //     value = beamlets to send
+      MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const std::map<int, std::vector<size_t> > &beamletDistribution );
 
       // Send one block. The caller is responsible for matching the number of
       // posted receiveBlocks.
@@ -84,16 +84,18 @@ namespace LOFAR
       // Station number in observation [0..nrStations)
       const size_t stationIdx;
 
-      // To which rank to send each beamlet:
-      //   beamletDistribution[beamlet] = rank
-      const std::map<size_t, int> beamletDistribution;
+      // Which beamlets to send to which rank:
+      //   beamletDistribution[rank] = beamlets
+      const std::map<int, std::vector<size_t> > beamletDistribution;
 
-      // The ranks to which to send beamlets.
-      const std::set<int> targetRanks;
+      // Ranks to send data to
+      const std::vector<int> targetRanks;
 
-      // The beamlets to send to each rank:
-      //   beamletsOfTarget[rank] = [beamlet, beamlet, ...]
-      const std::map<int, std::vector<size_t> > beamletsOfTarget;
+      // The rank to which to send each beamlet.
+      const std::map<size_t, int> beamletTargets;
+
+      // Cache for the headers to send
+      std::map<int, MPIProtocol::Header> headers;
 
       // Construct and send a header to the given rank (async).
       template<typename T>

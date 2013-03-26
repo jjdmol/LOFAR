@@ -37,16 +37,35 @@ namespace LOFAR {
 
   namespace Cobalt {
 
-    MPISendStation::MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const std::map<size_t, int> &beamletDistribution )
+    MPISendStation::MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const std::map<int, std::vector<size_t> > &beamletDistribution )
     :
       logPrefix(str(boost::format("[station %s] [MPISendStation] ") % settings.station.stationName)),
       settings(settings),
       stationIdx(stationIdx),
       beamletDistribution(beamletDistribution),
-      targetRanks(values(beamletDistribution)),
-      beamletsOfTarget(inverse(beamletDistribution))
+      targetRanks(keys(beamletDistribution)),
+      beamletTargets(inverse(beamletDistribution))
     {
       LOG_INFO_STR(logPrefix << "Initialised");
+
+      // Set static header info
+      for(std::vector<int>::const_iterator rank = targetRanks.begin(); rank != targetRanks.end(); ++rank) {
+        headers[*rank].station      = this->settings.station;
+        headers[*rank].metaDataSize = this->metaDataSize();
+      }
+
+      // Set beamlet info
+      for(std::map<int, std::vector<size_t> >::const_iterator dest = beamletDistribution.begin(); dest != beamletDistribution.end(); ++dest) {
+        const int rank = dest->first;
+        const std::vector<size_t> &beamlets = dest->second;
+
+        Header &header = headers[rank];
+
+        header.nrBeamlets = beamlets.size();
+        ASSERT(header.nrBeamlets < sizeof header.beamlets / sizeof header.beamlets[0]);
+
+        std::copy(beamlets.begin(), beamlets.end(), &header.beamlets[0]);
+      }
     }
 
     template<typename T>
@@ -54,22 +73,18 @@ namespace LOFAR {
     {
       LOG_DEBUG_STR(logPrefix << "Sending header to rank " << rank);
 
-      const std::vector<size_t> &beamlets = beamletsOfTarget.at(rank);
-
-      // Copy static blockrmation
-      header.station      = this->settings.station;
+      // Copy dynamic header info
       header.from         = block.from;
       header.to           = block.to;
-      header.nrBeamlets   = beamlets.size();
-      header.metaDataSize = this->metaDataSize();
 
-      // Copy the wrapOffsets
-      ASSERT(beamlets.size() <= sizeof header.wrapOffsets / sizeof header.wrapOffsets[0]);
+      // Copy the beam-specific data
+      ASSERT(header.nrBeamlets <= sizeof header.wrapOffsets / sizeof header.wrapOffsets[0]);
 
-      for(unsigned beamletIdx = 0; beamletIdx < beamlets.size(); ++beamletIdx) {
-        const struct BlockReader<T>::Block::Beamlet &ib = block.beamlets[beamlets[beamletIdx]];
+      for(size_t i = 0; i < header.nrBeamlets; ++i) {
+        size_t beamletIdx = header.beamlets[i];
+        const struct BlockReader<T>::Block::Beamlet &ib = block.beamlets[beamletIdx];
 
-        header.wrapOffsets[beamletIdx] = ib.nrRanges == 1 ? 0 : ib.ranges[0].to - ib.ranges[0].from;
+        header.wrapOffsets[i] = ib.nrRanges == 1 ? 0 : ib.ranges[0].to - ib.ranges[0].from;
       }
 
       // Send the actual header
@@ -129,31 +144,28 @@ namespace LOFAR {
     void MPISendStation::sendBlock( const struct BlockReader<T>::Block &block )
     {
       /*
-       * SEND HEADERS (ASYNC)
+       * SEND HEADERS
        */
 
-      std::map<int, Header> headers;
       std::vector<MPI_Request> headerRequests;
 
-      for(std::set<int>::const_iterator i = targetRanks.begin(); i != targetRanks.end(); ++i) {
-        int rank = *i;
-
-        headerRequests.push_back(sendHeader<T>(rank, headers[rank], block));
+      for(std::vector<int>::const_iterator rank = targetRanks.begin(); rank != targetRanks.end(); ++rank) {
+        headerRequests.push_back(sendHeader<T>(*rank, headers[*rank], block));
       }
-      
+
       /*
-       * SEND PAYLOADS
+       * SEND BEAMLETS
        */
       std::vector<MPI_Request> beamletRequests(block.beamlets.size() * 2, MPI_REQUEST_NULL); // [beamlet][transfer]
       size_t nrBeamletRequests = 0;
+      for(std::map<size_t, int>::const_iterator dest = beamletTargets.begin(); dest != beamletTargets.end(); ++dest) {
+        const size_t beamletIdx = dest->first;
+        const int rank = dest->second;
 
-      for(size_t beamletIdx = 0; beamletIdx < block.beamlets.size(); ++beamletIdx) {
+        ASSERTSTR(beamletIdx < block.beamlets.size(), "Want to send beamlet #" << beamletIdx << " but block only contains " << block.beamlets.size() << " beamlets");
+
+        // Send beamlet
         const struct BlockReader<T>::Block::Beamlet &ib = block.beamlets[beamletIdx];
-        const int rank = beamletDistribution.at(beamletIdx);
-
-        /*
-         * SEND BEAMLETS
-         */
 
         nrBeamletRequests += sendData<T>(rank, beamletIdx, ib, &beamletRequests[beamletIdx * 2]);
       }
@@ -165,19 +177,19 @@ namespace LOFAR {
       std::vector<MPI_Request> flagRequests;
 
       for(size_t b = 0; b < nrBeamletRequests; ++b) {
-        const size_t sendIdx = waitAny(beamletRequests);
-        const size_t beamletIdx  = sendIdx / 2;
-        const size_t transfer    = sendIdx % 2;
+        const size_t sendIdx           = waitAny(beamletRequests);
+        const size_t globalBeamletIdx  = sendIdx / 2;
+        const size_t transfer          = sendIdx % 2;
 
-        const struct BlockReader<T>::Block::Beamlet &ib = block.beamlets[beamletIdx];
+        const struct BlockReader<T>::Block::Beamlet &ib = block.beamlets[globalBeamletIdx];
 
         // waitAny sets finished requests to MPI_REQUEST_NULL in our array.
-        if (ib.nrRanges == 1 || beamletRequests[beamletIdx * 2 + (1 - transfer)] == MPI_REQUEST_NULL) {
+        if (ib.nrRanges == 1 || beamletRequests[globalBeamletIdx * 2 + (1 - transfer)] == MPI_REQUEST_NULL) {
           /*
            * SEND FLAGS FOR BEAMLET
            */
 
-          const int rank = beamletDistribution.at(beamletIdx);
+          const int rank = beamletTargets.at(globalBeamletIdx);
 
           /*
            * OBTAIN FLAGS AFTER DATA IS SENT
@@ -185,12 +197,12 @@ namespace LOFAR {
 
           // The only valid samples are those that existed both
           // before and after the transfer.
-          SparseSet<int64> finalFlags = ib.flagsAtBegin & block.flags(beamletIdx);
+          SparseSet<int64> finalFlags = ib.flagsAtBegin & block.flags(globalBeamletIdx);
 
           /*
            * SEND FLAGS
            */
-          flagRequests.push_back(sendFlags(rank, beamletIdx, finalFlags));
+          flagRequests.push_back(sendFlags(rank, globalBeamletIdx, finalFlags));
         }
       }
 

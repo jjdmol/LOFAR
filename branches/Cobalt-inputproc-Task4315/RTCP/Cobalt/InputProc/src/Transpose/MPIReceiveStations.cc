@@ -133,6 +133,8 @@ namespace LOFAR {
           const size_t beamlet = beamlets[beamletIdx];
           const size_t wrapOffset = header.wrapOffsets[beamletIdx];
 
+          ASSERTSTR(header.beamlets[beamletIdx] == beamlet, "Got beamlet " << header.beamlets[beamletIdx] << ", but expected beamlet " << beamlet);
+
           /*
            * RECEIVE BEAMLET (ASYNC)
            */

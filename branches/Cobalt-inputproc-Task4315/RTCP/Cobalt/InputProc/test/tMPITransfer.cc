@@ -68,8 +68,7 @@ typedef SampleType<i16complex> SampleT;
 const TimeStamp from(time(0L) + 5, 0, clockHz);
 const TimeStamp to(time(0L) + 5 + DURATION, 0, clockHz);
 const size_t blockSize = BLOCKSIZE * clockHz / 1024;
-map<unsigned, vector<size_t> > beamlets;
-map<size_t, int> beamletDistribution;
+map<int, std::vector<size_t> > beamletDistribution;
 
 // Rank in MPI set of hosts
 int rank;
@@ -121,7 +120,7 @@ void sender()
 
       LOG_INFO_STR("Detected " << s);
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
-      BlockReader<SampleT> reader(s, keys(beamletDistribution), 0.1);
+      BlockReader<SampleT> reader(s, values(beamletDistribution), 0.1);
       MPISendStation sender(s, rank, beamletDistribution);
 
       LOG_INFO_STR("Sending to receivers");
@@ -139,51 +138,47 @@ void sender()
 
 void receiver()
 {
-  int receiverNr = rank - nrStations;
-
-  LOG_INFO_STR("Receiver node " << rank << " starts, handling " << beamlets[receiverNr].size() << " subbands from " << nrStations << " stations." );
-  LOG_INFO_STR("Connecting to senders to receive " << from << " to " << to);
+  const std::vector<size_t> &beamlets = beamletDistribution[rank];
+  const size_t nrBeamlets = beamlets.size();
 
   std::vector<int> stationRanks(nrStations);
 
   for (size_t i = 0; i < stationRanks.size(); i++)
     stationRanks[i] = i;
 
-  {
-    MPIReceiveStations receiver(stationRanks, beamlets[receiverNr], blockSize);
-    const size_t nrStations = stationRanks.size();
-    const size_t nrBeamlets = beamlets[receiverNr].size();
+  LOG_INFO_STR("Receiver node " << rank << " starts, handling " << beamlets.size() << " subbands from " << nrStations << " stations." );
+  LOG_INFO_STR("Connecting to senders to receive " << from << " to " << to);
 
-    MultiDimArray<struct MPIReceiveStations::Beamlet<SampleT>, 2> block(boost::extents[nrStations][nrBeamlets]);
 
-    for (size_t s = 0; s < nrStations; ++s) {
+  MPIReceiveStations receiver(stationRanks, beamlets, blockSize);
+
+  MultiDimArray<struct MPIReceiveStations::Beamlet<SampleT>, 2> block(boost::extents[nrStations][nrBeamlets]);
+
+  for (int s = 0; s < nrStations; ++s) {
+    for (size_t b = 0; b < nrBeamlets; ++b) {
+      block[s][b].samples.resize(blockSize);
+    }
+  }
+
+  size_t blockIdx = 0;
+
+  for(TimeStamp current = from; current + blockSize < to; current += blockSize) {
+    receiver.receiveBlock<SampleT>(block);
+
+    // calculate flagging average
+    const size_t nrSamples = nrStations * nrBeamlets * blockSize;
+    size_t nrFlaggedSamples = 0;
+
+    for (int s = 0; s < nrStations; ++s) {
       for (size_t b = 0; b < nrBeamlets; ++b) {
-        block[s][b].samples.resize(blockSize);
+        nrFlaggedSamples = block[s][b].flags.count();
       }
     }
 
-    size_t blockIdx = 0;
+    float flagPerc = 100.0f * nrFlaggedSamples / nrSamples;
 
-    for(TimeStamp current = from; current + blockSize < to; current += blockSize) {
-      receiver.receiveBlock<SampleT>(block);
-
-      // data is now in receiver.lastBlock
-
-      // calculate flagging average
-      const size_t nrSamples = nrStations * nrBeamlets * blockSize;
-      size_t nrFlaggedSamples = 0;
-
-      for (size_t s = 0; s < nrStations; ++s) {
-        for (size_t b = 0; b < nrBeamlets; ++b) {
-          nrFlaggedSamples = block[s][b].flags.count();
-        }
-      }
-
-      float flagPerc = 100.0f * nrFlaggedSamples / nrSamples;
-
-      LOG_INFO_STR("Receiver " << rank << " received block " << blockIdx << " flags: " << flagPerc << "%" );
-      ++blockIdx;
-    }
+    LOG_INFO_STR("Receiver " << rank << " received block " << blockIdx << " flags: " << flagPerc << "%" );
+    ++blockIdx;
   }
 
   LOG_INFO_STR("Receiver " << rank << " done");
@@ -212,9 +207,13 @@ int main( int argc, char **argv )
   nrReceivers = nrHosts - nrStations;
 
   // Divide the subbands over the receivers
+  // Make sure not to use the identity list to detect
+  // mixups of stationBeamlet and beamletIdx.
   for (unsigned i = 0; i < NRBEAMLETS; ++i) {
-    beamlets[i % nrReceivers].push_back(i);
-    beamletDistribution[i] = nrStations + i % nrReceivers;
+    unsigned stationBeamlet = NRBEAMLETS - i - 1;
+    int receiverNr = i % nrReceivers;
+
+    beamletDistribution[nrStations + receiverNr].push_back(stationBeamlet);
   }
 
   if (rank < nrStations) {

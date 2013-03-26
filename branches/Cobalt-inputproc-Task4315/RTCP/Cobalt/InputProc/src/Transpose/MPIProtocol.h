@@ -41,6 +41,12 @@ namespace LOFAR
         // Block will span [from,to)
         int64 from, to;
 
+        // Number of beamlets that will be sent
+        size_t nrBeamlets;
+
+        // The set of beamlets that will be sent
+        unsigned beamlets[1024]; // [beamlet]
+
         // At which offset the data will be wrapped. If:
         //
         //   =0: the data will be sent in 1 transfer:
@@ -49,9 +55,6 @@ namespace LOFAR
         //          1. a block of `wrapOffsets[x]' samples
         //          2. a block of `(to - from) - wrapOffsets[x]' samples
         size_t wrapOffsets[1024]; // [beamlet]
-
-        // Number of beamlets that will be sent
-        size_t nrBeamlets;
 
         // Size of the marshalled flags
         size_t metaDataSize;
