@@ -10,7 +10,7 @@
   <parent>
     <groupId>nl.astron.lofar.sas.otb</groupId>
     <artifactId>otb-parent</artifactId>
-    <version>1.14.0-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>jOTDB3</artifactId>
