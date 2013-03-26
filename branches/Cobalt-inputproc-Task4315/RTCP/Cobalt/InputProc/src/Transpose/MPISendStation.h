@@ -63,7 +63,7 @@ namespace LOFAR
       // beamletDistribution
       //   The distribution of beamlets:
       //     key   = receiver MPI rank
-      //     value = beamlets to send
+      //     value = beamlets to send in [0, ps.nrSubbands())
       MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const std::map<int, std::vector<size_t> > &beamletDistribution );
 
       // Send one block. The caller is responsible for matching the number of

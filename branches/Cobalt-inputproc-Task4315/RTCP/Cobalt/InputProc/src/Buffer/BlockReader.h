@@ -47,8 +47,11 @@ namespace LOFAR
     public:
       // Initialise a block delivery system for the given buffer and beamlets.
       //
-      // maxDelay is the time (seconds) to wait for data to arrive (in
-      // real-time mode).
+      // beamlets:
+      //   the set of station beamlets to send, out of
+      //   [0, settings.nrBeamletsPerBoard * settings.nrBoards)
+      // maxDelay:
+      //   the time (seconds) to wait for data to arrive (in real-time mode).
       BlockReader( const BufferSettings &settings, const std::vector<size_t> beamlets, double maxDelay = 0.0 );
       ~BlockReader();
 

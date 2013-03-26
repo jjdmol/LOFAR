@@ -48,6 +48,9 @@ namespace LOFAR {
     {
       LOG_INFO_STR(logPrefix << "Initialised");
 
+      // Check whether we send each subband to at most one node
+      ASSERT(beamletTargets.size() == values(beamletDistribution).size());
+
       // Set static header info
       for(std::vector<int>::const_iterator rank = targetRanks.begin(); rank != targetRanks.end(); ++rank) {
         headers[*rank].station      = this->settings.station;
