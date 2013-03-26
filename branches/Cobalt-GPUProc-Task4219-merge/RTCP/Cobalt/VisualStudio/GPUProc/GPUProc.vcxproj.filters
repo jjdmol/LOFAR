@@ -457,9 +457,6 @@
     <ClCompile Include="..\..\GPUProc\src\Pipeline.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\RTCP.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\GPUProc\src\RTCP_new.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
