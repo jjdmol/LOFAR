@@ -279,7 +279,7 @@ class msss_calibrator_pipeline(control):
                 skymodel=os.path.join(
                     self.config.get('DEFAULT', 'lofarroot'),
                     'share', 'pipeline', 'skymodels',
-                    py_parset.getString('Calibration.CalibratorSource') +
+                    py_parset.getString('Calibration.SkyModel') +
                         '.skymodel'),
                 mapfile=os.path.join(mapfile_dir, 'bbs.sourcedb.mapfile'),
                 suffix='.bbs.sourcedb')['mapfile']
