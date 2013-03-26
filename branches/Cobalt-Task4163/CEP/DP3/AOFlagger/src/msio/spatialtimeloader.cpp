@@ -50,11 +50,11 @@ TimeFrequencyData SpatialTimeLoader::Load(unsigned channelIndex, bool fringeStop
 	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
 	casa::ROArrayColumn<casa::Complex> dataColumn(table, "DATA");
 
-	Image2DPtr
-		realImages[_polarizationCount],
-		imagImages[_polarizationCount];
-	Mask2DPtr
-		masks[_polarizationCount];
+        std::vector<Image2DPtr>
+                realImages(_polarizationCount),
+                imagImages(_polarizationCount);
+        std::vector<Mask2DPtr>
+                masks(_polarizationCount);
 	for(unsigned p=0;p<_polarizationCount;++p)
 	{
 		realImages[p] = Image2D::CreateUnsetImagePtr(_timestepsCount, baselineCount);

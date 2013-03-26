@@ -23,6 +23,12 @@
  * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
  */
 
+/** 
+ * @ingroup GPUProc
+ * @addtogroup GPUKernels 
+ * @{
+ */
+
 #if NR_CHANNELS == 1
 #undef BANDPASS_CORRECTION
 #endif
@@ -172,3 +178,5 @@ void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
 #endif
   }
 }
+
+/** @} */

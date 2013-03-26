@@ -1,7 +1,7 @@
 /**
 
-\ingroup Cobalt
-\defgroup GPUProc
+@ingroup Cobalt
+@defgroup GPUProc
 
 The GPU Processing package (GPUProc) contains code for the "new" correlator and
 beam-former, which run on a compute cluster equipped with GPU cards. This
@@ -9,3 +9,9 @@ packages replaces the RTCP packages that contain software for the on-line
 processing on the BlueGene/P.
 
 */
+
+/** @{ */
+
+/** @defgroup GPUKernels OpenCL kernels */
+
+/** @} */

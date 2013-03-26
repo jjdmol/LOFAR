@@ -46,7 +46,7 @@ void addFits(Image2D *red, Image2D *green, Image2D *blue, Image2D *mono, const s
 void HLStoRGB(long double hue,long double lum,long double sat,long double &red,long double &green, long double &blue);
 void WLtoRGB(long double wavelength,long double &red,long double &green, long double &blue);
 inline void ScaledWLtoRGB(long double position,long double &red,long double &green, long double &blue)
-{ return WLtoRGB(position*400.0+400.0,red,green,blue); }
+{ return WLtoRGB(position*300.0+400.0,red,green,blue); }
 void ReportRMS(Image2D *image);
 
 int main(int argc, char *argv[])
@@ -470,7 +470,7 @@ void WLtoRGB(long double wavelength,long double &red,long double &green, long do
    green = 0.0;
    blue = 0.0;
   } else {
-   red = 0.0;
+   red = 1.0;
    green = 0.0;
    blue = 0.0;
   }
@@ -488,6 +488,12 @@ void WLtoRGB(long double wavelength,long double &red,long double &green, long do
 		red *= factor;
 		green *= factor;
 		blue *= factor;
+  } else if(wavelength >= 780.0) {
+    long double factor;
+    factor = 0.3;
+    red *= factor;
+    green *= factor;
+    blue *= factor;
   } else {
 		red = 0.0;
 		green = 0.0;

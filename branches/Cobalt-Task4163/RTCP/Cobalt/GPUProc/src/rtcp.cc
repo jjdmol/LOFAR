@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
   using namespace LOFAR::Cobalt;
 
-  INIT_LOGGER("RTCP");
+  INIT_LOGGER("rtcp");
   LOG_INFO_STR("running ...");
 
   // Set parts of the environment

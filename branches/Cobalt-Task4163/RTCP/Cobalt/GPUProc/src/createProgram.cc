@@ -8,6 +8,7 @@
 
 #include "CoInterface/Parset.h"
 #include "Common/SystemUtil.h"
+#include <Common/LofarLogger.h>
 
 #include <global_defines.h>
 
@@ -58,6 +59,10 @@ namespace LOFAR
         args << " -DBANDPASS_CORRECTION";
 
       args << " -DDEDISPERSION_FFT_SIZE=" << ps.dedispersionFFTsize();
+
+      LOG_DEBUG_STR("Creating CL-program: " 
+                    << dirname(__FILE__).append("/").append(sources)
+                    << "\n  args: " << args.str());
       return createProgram(context, devices, dirname(__FILE__).append("/").append(sources).c_str(), args.str().c_str());
     }
   }
