@@ -22,10 +22,8 @@
 
 #include "UHEP_WorkQueue.h"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include <Common/LofarLogger.h>
-#include "ApplCommon/PosixTime.h"
+#include <ApplCommon/PosixTime.h>
 #include <CoInterface/Parset.h>
 
 #include <global_defines.h>
