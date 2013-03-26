@@ -70,6 +70,8 @@ const TimeStamp to(time(0L) + 5 + DURATION, 0, clockHz);
 const size_t blockSize = BLOCKSIZE * clockHz / 1024;
 map<int, std::vector<size_t> > beamletDistribution;
 
+std::vector<char> metaDataBlob(100, 42);
+
 // Rank in MPI set of hosts
 int rank;
 
@@ -127,7 +129,7 @@ void sender()
       for (TimeStamp current = from; current + blockSize < to; current += blockSize) {
         SmartPtr<struct BlockReader<SampleT>::Block> block(reader.block(current, current + blockSize, std::vector<ssize_t>(values(beamletDistribution).size(), 0)));
 
-        sender.sendBlock<SampleT>(*block, std::vector<char>());
+        sender.sendBlock<SampleT>(*block, metaDataBlob);
       }
 
       generator.stop();
@@ -166,6 +168,11 @@ void receiver()
 
   for(TimeStamp current = from; current + blockSize < to; current += blockSize) {
     receiver.receiveBlock<SampleT>(blocks);
+
+    // validate meta data
+    for (int s = 0; s < nrStations; ++s) {
+      ASSERT(blocks[s].metaDataBlob == metaDataBlob);
+    }
 
     // calculate flagging average
     const size_t nrSamples = nrStations * nrBeamlets * blockSize;
