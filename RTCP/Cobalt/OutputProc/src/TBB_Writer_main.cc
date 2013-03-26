@@ -1,29 +1,21 @@
-/* TBB_Writer_main.cc
- *
- * LOFAR Transient Buffer Boards (TBB) Data Writer  Copyright (C) 2012
- * ASTRON (Netherlands Institute for Radio Astronomy)
- * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with the LOFAR software suite.  If not, see <http://www.gnu.org/licenses/>.
- *
- * $Id: TBB_Writer_main.cc 17261 2012-09-07 18:58:53Z amesfoort $
- */
-
-/* @author Alexander S. van Amesfoort
- * Parts derived from the BF writer written by Jan David Mol, and from
- * TBB writers written by Lars Baehren, Andreas Horneffer, and Joseph Masters.
- */
+//# TBB_Writer_main.cc: LOFAR Transient Buffer Boards (TBB) Data Writer
+//# Copyright (C) 2012  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands.
+//#
+//# This program is free software: you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# This program is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite.  If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id: TBB_Writer_main.cc 17261 2012-09-07 18:58:53Z amesfoort $
 
 #include <lofar_config.h>               // before any other include
 
