@@ -26,6 +26,7 @@
 #include <vector>
 
 #include <CoInterface/RSPTimeStamp.h>
+#include <CoInterface/SmartPtr.h>
 
 #include <WallClockTime.h>
 
@@ -37,7 +38,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
     /*
      * An abstract class for the implementation of a reader for SampleBuffers.
      */
@@ -45,28 +45,25 @@ namespace LOFAR
     class SampleBufferReader
     {
     public:
-      SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples = 0);
+      // Initialise a block delivery system for the given buffer and beamlets.
+      //
+      // maxDelay is the time (seconds) to wait for data to arrive (in
+      // real-time mode).
+      SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, double maxDelay = 0.0 );
+      ~SampleBufferReader();
 
-      void process( double maxDelay );
+      struct Block {
+      private:
+        SampleBufferReader<T> &reader;
 
-    protected:
-      const BufferSettings settings;
-      SampleBuffer<T> buffer;
-
-      const std::vector<size_t> beamlets;
-      const TimeStamp from, to;
-      const size_t blockSize;
-
-      // Number of samples to include before `from', to initialise the FIR taps,
-      // included in blockSize.
-      const size_t nrHistorySamples;
-
-      struct CopyInstructions {
-        // Relevant time range
+      public:
         TimeStamp from;
         TimeStamp to;
 
         struct Beamlet {
+          // Actual beamlet number on station
+          unsigned stationBeamlet;
+
           // Copy as one or two ranges of [from, to).
           struct Range {
             const T* from;
@@ -82,40 +79,51 @@ namespace LOFAR
         };
 
         std::vector<struct Beamlet> beamlets; // [beamlet]
+
+        /*
+         * Read the flags for a specific beamlet. Readers should read the flags
+         * after reading the data. The valid data is then indicated by
+         * the intersection of (beamlets[i].flagsAtBegin & flags(i))
+        */
+        SparseSet<int64> flags( size_t beamletIdx ) const;
+
+        ~Block();
+
+      private:
+        Block(SampleBufferReader<T> &reader, const TimeStamp &from, const TimeStamp &to);
+        Block(const Block&);
+
+        struct Beamlet getBeamlet( size_t beamletIdx );
+
+        friend class SampleBufferReader<T>;
       };
 
-      /*
-       * Read the flags for a specific beamlet. Readers should read the flags
-       * before and after reading the data. The valid data is then indicated by
-       * the intersection of both sets (flagsBefore & flagsAfter).
-      */
-      SparseSet<int64> flags( const struct CopyInstructions &, unsigned beamlet );
+      SmartPtr<struct Block> block( const TimeStamp &from, const TimeStamp &to );
+
+    protected:
+      const BufferSettings settings;
+      SampleBuffer<T> buffer;
+
+      const std::vector<size_t> beamlets;
 
       /*
        * Provide the offset in samples for a certain beamlet, based on the
        * geometric delays for the respective subband.
        */
-      virtual ssize_t beamletOffset( unsigned beamlet, const TimeStamp &from, const TimeStamp &to )
+      virtual ssize_t beamletOffset( size_t beamletIdx, const TimeStamp &from, const TimeStamp &to )
       {
-        (void)beamlet;
+        (void)beamletIdx;
         (void)from;
         (void)to;
         return 0;
       }
 
-      /*
-       * Copy one block.
-       */
-      virtual void sendBlock( const struct CopyInstructions & )
-      {
-      }
+      friend class Block;
 
     private:
+      const TimeStamp maxDelay;
+
       WallClockTime waiter;
-
-      struct CopyInstructions getCopyInstructions( const TimeStamp &from, const TimeStamp &to );
-
-      void sendBlock( const TimeStamp &from, const TimeStamp &to );
     };
 
   }

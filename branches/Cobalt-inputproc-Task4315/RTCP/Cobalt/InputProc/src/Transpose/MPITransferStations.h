@@ -51,10 +51,12 @@ namespace LOFAR
      * we're not yet done sending to other nodes.
      */
     template<typename T>
-    class MPISendStation : public SampleBufferReader<T>
+    class MPISendStation
     {
     public:
-      MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const TimeStamp &from, const TimeStamp &to, size_t blockSize, size_t nrHistorySamples, const std::map<size_t, int> &beamletDistribution );
+      MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const std::map<size_t, int> &beamletDistribution );
+
+      void sendBlock( const struct SampleBufferReader<T>::Block &block );
 
       // Header which prefixes each block. Contains identification information
       // for verification purposes, as well as the sizes of the data that
@@ -99,8 +101,6 @@ namespace LOFAR
       enum tag_types { CONTROL = 0, BEAMLET = 1, FLAGS = 2 };
 
     protected:
-      virtual void sendBlock( const struct SampleBufferReader<T>::CopyInstructions &info );
-
       size_t metaDataSize() const
       {
         return SparseSet<int64>::marshallSize(this->settings.nrAvailableRanges);
@@ -108,6 +108,7 @@ namespace LOFAR
 
     private:
       const std::string logPrefix;
+      const BufferSettings &settings;
 
       // Station number in observation [0..nrStations)
       const size_t stationIdx;
@@ -124,11 +125,11 @@ namespace LOFAR
       const std::map<int, std::vector<size_t> > beamletsOfTarget;
 
       // Construct and send a header to the given rank (async).
-      MPI_Request sendHeader( int rank, Header &header, const struct SampleBufferReader<T>::CopyInstructions &info );
+      MPI_Request sendHeader( int rank, Header &header, const struct SampleBufferReader<T>::Block &block );
 
       // Send beamlet data (in 1 or 2 transfers) to the given rank (async).
       // Returns the number of MPI_Requests made.
-      unsigned sendData( int rank, unsigned beamlet, const struct SampleBufferReader<T>::CopyInstructions::Beamlet &ib, MPI_Request requests[2] );
+      unsigned sendData( int rank, unsigned beamlet, const struct SampleBufferReader<T>::Block::Beamlet &ib, MPI_Request requests[2] );
 
       // Send flags data to the given rank (async).
       MPI_Request sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags );

@@ -54,7 +54,6 @@
 #define BLOCKSIZE 0.2
 #define NRSTATIONS 3
 #define NRBEAMLETS 4
-#define NR_TAPS 16
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -66,7 +65,7 @@ const size_t clockHz = clockMHz * 1000 * 1000;
 typedef SampleType<i16complex> SampleT;
 const TimeStamp from(time(0L) + 5, 0, clockHz);
 const TimeStamp to(time(0L) + 5 + DURATION, 0, clockHz);
-const size_t blockSize = BLOCKSIZE * clockHz / 1024 + NR_TAPS;
+const size_t blockSize = BLOCKSIZE * clockHz / 1024;
 map<unsigned, vector<size_t> > beamlets;
 map<size_t, int> beamletDistribution;
 
@@ -120,10 +119,15 @@ void sender()
 
       LOG_INFO_STR("Detected " << s);
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
-      MPISendStation< SampleT > streamer(s, rank, from, to, blockSize, NR_TAPS, beamletDistribution);
+      SampleBufferReader<SampleT> reader(s, keys(beamletDistribution), 0.1);
+      MPISendStation<SampleT> sender(s, rank, beamletDistribution);
 
       LOG_INFO_STR("Sending to receivers");
-      streamer.process( 0.0 );
+      for (TimeStamp current = from; current + blockSize < to; current += blockSize) {
+        SmartPtr<struct SampleBufferReader<SampleT>::Block> block(reader.block(current, current + blockSize));
+
+        sender.sendBlock(*block);
+      }
 
       generator.stop();
       station.stop();

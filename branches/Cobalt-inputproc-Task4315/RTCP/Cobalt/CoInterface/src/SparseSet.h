@@ -107,6 +107,10 @@ namespace LOFAR
     // Returns the range vector, useful for iteration.
     const Ranges &getRanges() const;
 
+    // Returns the number of bytes to marshall the given
+    // number of ranges.
+    static size_t marshallSize(size_t nrRanges);
+
     // Write the set to *ptr, using at most maxSize bytes.
     // Returns the number of marshalled bytes, or -1
     // if maxSize was too small.
@@ -405,11 +409,17 @@ namespace LOFAR
     return *this;
   }
 
+  template <typename T>
+  size_t SparseSet<T>::marshallSize(size_t nrRanges)
+  {
+    return sizeof(uint32_t) + nrRanges * sizeof(range);
+  }
+
 
   template <typename T>
   ssize_t SparseSet<T>::marshall(void *ptr, size_t maxSize) const
   {
-    size_t size = sizeof(uint32_t) + ranges.size() * sizeof(range);
+    size_t size = marshallSize(ranges.size());
 
     if (size > maxSize)
       return -1;
