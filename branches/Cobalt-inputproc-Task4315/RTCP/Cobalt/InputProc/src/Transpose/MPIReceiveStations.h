@@ -82,7 +82,7 @@ namespace LOFAR
 
       // Receive beamlet data (async) from the given rank.
       template<typename T>
-      MPI_Request receiveBeamlet( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples );
+      MPI_Request receiveData( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples );
 
       // Receive marshalled flags and metadata (async) from the given rank.
       MPI_Request receiveFlags( size_t station, size_t beamlet, std::vector<char> &buffer );

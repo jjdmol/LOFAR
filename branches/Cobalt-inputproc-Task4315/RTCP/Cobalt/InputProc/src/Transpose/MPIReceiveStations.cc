@@ -56,7 +56,7 @@ namespace LOFAR {
 
 
     template<typename T>
-    MPI_Request MPIReceiveStations::receiveBeamlet( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples )
+    MPI_Request MPIReceiveStations::receiveData( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples )
     {
       tag_t tag;
       tag.bits.type    = BEAMLET;
@@ -142,11 +142,11 @@ namespace LOFAR {
           LOG_DEBUG_STR(logPrefix << "Receiving beamlet " << beamlet << " from rank " << rank << " using " << (wrapOffset > 0 ? 2 : 1) << " transfers");
 
           // First sample transfer
-          requests.push_back(receiveBeamlet<T>(stat, beamlet, 0, &blocks[stat].beamlets[beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize));
+          requests.push_back(receiveData<T>(stat, beamlet, 0, &blocks[stat].beamlets[beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize));
 
           // Second sample transfer
           if (wrapOffset > 0) {
-            requests.push_back(receiveBeamlet<T>(stat, beamlet, 1, &blocks[stat].beamlets[beamletIdx].samples[wrapOffset], blockSize - wrapOffset));
+            requests.push_back(receiveData<T>(stat, beamlet, 1, &blocks[stat].beamlets[beamletIdx].samples[wrapOffset], blockSize - wrapOffset));
           }
 
           /*
@@ -185,7 +185,7 @@ namespace LOFAR {
 
     // Create all necessary instantiations
 #define INSTANTIATE(T) \
-    template MPI_Request MPIReceiveStations::receiveBeamlet<T>( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples ); \
+    template MPI_Request MPIReceiveStations::receiveData<T>( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples ); \
     template void MPIReceiveStations::receiveBlock<T>( std::vector< struct MPIReceiveStations::Block<T> > &blocks );
 
     INSTANTIATE(SampleType<i4complex>);

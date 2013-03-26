@@ -114,7 +114,7 @@ TEST(Data_OneTransfer) {
   
   unsigned nrTransfers = sender->sendData<SampleT>(rank, 42, ib, &requests[0]);
   CHECK_EQUAL(1U, nrTransfers);
-  requests[1] = receiver->receiveBeamlet<SampleT>(0, 42, 0, &data_out[0], data_out.size());
+  requests[1] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], data_out.size());
 
   // Wait for results
   waitAll(requests);
@@ -151,8 +151,8 @@ TEST(Data_TwoTransfers) {
   
   unsigned nrTransfers = sender->sendData<SampleT>(rank, 42, ib, &requests[0]);
   CHECK_EQUAL(2U, nrTransfers);
-  requests[2] = receiver->receiveBeamlet<SampleT>(0, 42, 0, &data_out[0], blockSize/2);
-  requests[3] = receiver->receiveBeamlet<SampleT>(0, 42, 1, &data_out[blockSize/2], blockSize/2);
+  requests[2] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], blockSize/2);
+  requests[3] = receiver->receiveData<SampleT>(0, 42, 1, &data_out[blockSize/2], blockSize/2);
 
   // Wait for results
   waitAll(requests);
