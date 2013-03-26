@@ -1,38 +1,38 @@
-//#  BeamletBuffer.cc: one line description
+//# BeamletBuffer.cc
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//#  Copyright (C) 2006
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
 //#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
 //#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id: BeamletBuffer.cc 18226 2011-06-09 12:56:47Z romein $
+//# $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <CoInterface/Align.h>
-#include <CoInterface/Exceptions.h>
-#include <Input/BeamletBuffer.h>
-#include <Input/RSP.h>
+#include "BeamletBuffer.h"
 
-#include <boost/lexical_cast.hpp>
 #include <cstring>
 #include <stdexcept>
-
+#include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
+
+#include <CoInterface/Align.h>
+#include <CoInterface/Exceptions.h>
+
+#include "RSP.h"
+
 using boost::format;
 
 
@@ -433,3 +433,4 @@ namespace LOFAR
 
   } // namespace Cobalt
 } // namespace LOFAR
+

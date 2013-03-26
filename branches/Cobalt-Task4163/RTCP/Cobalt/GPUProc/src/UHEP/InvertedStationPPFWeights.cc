@@ -1,3 +1,27 @@
+//# InvertedStationPPFWeights.cc
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id$
+
+#include <lofar_config.h>
+
+#include "InvertedStationPPFWeights.h"
+
 int reverseSubbandMapping[512] = {
   -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
   -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
@@ -4164,3 +4188,4 @@ extern const float invertedStationPPFWeights[1024][16] __attribute__ ((aligned(3
     0.004012019600, -0.003163333400,  0.001927602200, -0.000353662500,
     -0.001402398400,  0.003168136400, -0.003308169600, -0.000179151700}
 };
+

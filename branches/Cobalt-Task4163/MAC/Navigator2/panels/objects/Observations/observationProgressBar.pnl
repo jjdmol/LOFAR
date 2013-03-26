@@ -1,0 +1,295 @@
+V 11
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 638 94 N "_3DFace" 1
+"$observation"
+"main()
+{
+  observation = $observation;
+  setValue(\"exceeding\",\"backCol\",\"green\");
+  
+  // update screen every 60 seconds
+  while (true) {
+    reload(observation);
+    delay(60);
+  }
+}
+
+void update(int number, string text)
+{
+  int nr = number;
+  if (number > 100) number = 100;
+  
+  setMultiValue(\"avail31\",\"scale\",number/100.0,1,
+                \"avail32\",\"scale\",number/100.0,1,
+                \"used31\",\"scale\",1-number/100.0,1,
+                \"used32\",\"scale\",1-number/100.0,1,
+                \"progressValue\",\"text\",nr+\"  %\");
+  
+  setMultiValue(\"avail31\",\"toolTipText\",text,
+                \"avail32\",\"toolTipText\",text,
+                \"used31\",\"toolTipText\",text,
+                \"used32\",\"toolTipText\",text,
+                \"progressValue\",\"toolTipText\",text);
+  
+     
+}
+  
+void reload(string selection)
+{
+
+  string toolText=\"\";
+  float percentDone=0;
+  
+  int startpos =strpos(selection,\"Observation\");
+
+  if ( startpos < 0) return;
+  string obsName = \"LOFAR_ObsSW_\"+substr(selection,startpos);
+  
+  string obsDP=MainDBName+claimManager_nameToRealName(obsName);
+  
+  // find  starttime and endtime and current time and calculate %done
+  
+  string sStart, sStop;
+  time start,stop;
+  dpGet(obsDP+\".startTime\",sStart);
+  dpGet(obsDP+\".stopTime\",sStop);
+  if (!navFunct_lofarDate2PVSSDate(sStart,start)) {
+    LOG_DEBUG(\"observationProgressBar.pnl:reload|illegal startTime: \"+sStart);
+  // change progressBar
+  dpSet(PROGRESSBARACTIONDP,\"Update|\"+percentDone+\"|\"+toolText);
+      return;
+    }
+  if (!navFunct_lofarDate2PVSSDate(sStop,stop))  {
+      LOG_DEBUG(\"observationProgressBar.pnl:reload|illegal stopTime: \"+sStop);
+      return;
+    }
+  
+  setValue(\"startTimeText\",\"text\",sStart);
+  setValue(\"stopTimeText\",\"text\",sStop);
+  LOG_DEBUG(\"observationProgressBar.pnl:reload| start: \"+start);  
+  LOG_DEBUG(\"observationProgressBar.pnl:reload| stop:\" +stop);
+
+    
+  int duration=period(stop) - period(start);
+
+  LOG_DEBUG(\"observationProgressBar.pnl:reload| Duration: \"+duration);
+  
+  float percent=duration/100;
+  LOG_DEBUG(\"observationProgressBar.pnl:reload| percent: \"+percent);  
+
+  int finished=period(getCurrentTime())-period(start);
+  
+  LOG_DEBUG(\"observationProgressBar.pnl:reload| finished: \"+finished);  
+  
+  if (percent > 0) {
+    percentDone = finished/percent;
+  }
+
+  if (percentDone > 100) {
+    setValue(\"exceeding\",\"backCol\",\"red\");
+  } else if (percentDone < 0) {
+    percentDone=0;
+  }
+  LOG_DEBUG(\"observationProgressBar.pnl:reload| PercentDone: \"+percentDone);
+  // change progressBar
+  update(percentDone,toolText);  
+}
+" 0
+ E E E E 1 0 0 0  210 10
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string observation;" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+10 2
+"avail31"
+""
+1 210 10 E E E 1 E 1 E N "STD_border_dark" E N "STD_available" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E -1.495 8.572527594031471e-017 -1.830846964725293e-016 -0.7 463.9500000000002 31 1 E 4 10 10
+10 30
+210 30
+210 10
+ 0
+10 3
+"avail32"
+""
+1 210 30 E E E 1 E 1 E N "STD_border_light" E N "STD_available" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E -1.495 -8.572527594031471e-017 1.830846964725293e-016 -0.7 463.9500000000002 31 1 E 3 10 30
+10 10
+210 10
+ 0
+10 0
+"used32"
+""
+1 10 30 E E E 1 E 1 E N "STD_border_light" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E -1.495 -8.572527594031471e-017 1.830846964725293e-016 -0.7 463.9500000000001 31 0 E 3 10 30
+10 10
+210 10
+ 0
+10 1
+"used31"
+""
+1 10 10 E E E 1 E 1 E N "STD_border_dark" E N "STD_used" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  
+  float x,y;
+  
+  getValue(\"\",\"position\",x,y);
+  addSymbol(myModuleName(), myPanelName(), \"objects/STD_INFOS/minitext_t_l.pnl\",\"mt1\",makeDynString(\"$s_txt:\"),x,y,0,1,1);
+  
+}" 0
+ E 0 1 1 0 1 E -1.495 8.572527594031471e-017 -1.830846964725293e-016 -0.7 463.9500000000002 31 1 E 4 10 10
+10 30
+210 30
+210 10
+ 0
+2 5
+"progressValue"
+""
+1 415 3.795847750865054 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1.301038062283737 85 -9.214532871972317 1 E 200 14 201 27
+0 2 2 "0s" 0 0 0 192 0 0  200 14 1
+1
+LANG:1 32 MS Shell Dlg,7,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 0 
+2 7
+"startTimeText"
+""
+1 7 11 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 7 11 52 24
+0 2 2 "0s" 0 0 0 192 0 0  7 11 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 9 startTime
+2 8
+"stopTimeText"
+""
+1 460 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 460 10 503 23
+0 2 2 "0s" 0 0 0 192 0 0  460 10 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 8 stopTime
+6 9
+"exceeding"
+""
+1 460 10 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 120 0 1 E 470 10 484 24
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

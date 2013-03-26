@@ -51,13 +51,13 @@ class OutputThread
 
     // needed in createHeaders.cc
     void           createMS();
+    void			     cleanUp();
 
     void           augment(const FinalMetaData &finalMetaData);
 
   private:
     void			     checkForDroppedData(StreamableData *);
     void			     doWork();
-    void			     cleanUp();
     void			     mainLoop();
 
     const Parset		     &itsParset;

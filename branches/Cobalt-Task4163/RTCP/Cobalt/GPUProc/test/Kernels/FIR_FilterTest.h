@@ -1,13 +1,29 @@
+//# FIR_FilterTest.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id$
+
 #ifndef GPUPROC_FIR_FILTERTEST_H
 #define GPUPROC_FIR_FILTERTEST_H
-#include "CL/cl.hpp"
-#include "CoInterface/Parset.h"
-#include "OpenCL_Support.h"
-#include "UnitTest.h"
-#include "global_defines.h"
-#include <complex>
-#include "FilterBank.h"
-#include "Kernels/FIR_FilterKernel.h"
+
+#include <UnitTest.h>
+#include <FilterBank.h>
+#include <Kernels/FIR_FilterKernel.h>
 
 namespace LOFAR
 {
@@ -38,7 +54,7 @@ namespace LOFAR
 
         // Test 1: Single impulse test on single non-zero weight
         station = ch = pol = 0;
-        sample = ps.nrPPFTaps() - 1;         // skip FIR init samples
+        sample = ps.nrPPFTaps() - 1; // skip FIR init samples
         firWeights.origin()[0] = 2.0f;
         inputSamples[station][sample][ch][pol][0] = 3;
 
@@ -98,7 +114,7 @@ namespace LOFAR
               for (s = 0; s < ps.nrPPFTaps(); s++) {
                 for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
                   if (filteredData[station][pol][sample + s][ch][0] != station * firWeights[ch][s]) {
-                    if (++nrErrors < 100) {                     // limit spam
+                    if (++nrErrors < 100) { // limit spam
                       std::cerr << "2a.filtered[" << station << "][" << pol << "][" << sample + s << "][" << ch <<
                       "][0] (sample=" << sample << " s=" << s << ") = " << filteredData[station][pol][sample + s][ch][0] << std::endl;
                     }
@@ -152,8 +168,8 @@ namespace LOFAR
           for (sample = 0; sample < ps.nrPPFTaps() - 1 + ps.nrSamplesPerChannel(); sample++) {
             for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
               for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-                inputSamples[station][sample][ch][pol][0] = 2;                 // real
-                inputSamples[station][sample][ch][pol][1] = 3;                 // imag
+                inputSamples[station][sample][ch][pol][0] = 2; // real
+                inputSamples[station][sample][ch][pol][1] = 3; // imag
               }
             }
           }
@@ -171,7 +187,7 @@ namespace LOFAR
               for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
                 // Expected sum must also be scaled by 2 and 3, because weights are real only.
                 if (!fpEquals(filteredData[station][pol][sample][ch][0], 2 * expectedSums[ch])) {
-                  if (++nrErrors < 100) {                   // limit spam
+                  if (++nrErrors < 100) { // limit spam
                     std::cerr << "3a.filtered[" << station << "][" << pol << "][" << sample << "][" << ch <<
                     "][0] = " << filteredData[station][pol][sample][ch][0] << " 2*weight = " << 2 * expectedSums[ch] << std::endl;
                   }
@@ -200,5 +216,6 @@ namespace LOFAR
     };
   }
 }
+
 #endif
 

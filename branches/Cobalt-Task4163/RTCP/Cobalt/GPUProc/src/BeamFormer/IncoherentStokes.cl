@@ -1,3 +1,23 @@
+//# IncoherentStokes.cl
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id$
+
 typedef __global float (*IncoherentStokesType)[NR_INCOHERENT_STOKES][NR_SAMPLES_PER_CHANNEL / INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR][NR_CHANNELS];
 typedef __global float4 (*InputType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL / INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR][INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR];
 
@@ -43,3 +63,4 @@ __kernel void incoherentStokes(__global void *restrict stokesPtr,
   (*stokes)[3][time][channel] = 2 * halfStokesV;
 #endif
 }
+

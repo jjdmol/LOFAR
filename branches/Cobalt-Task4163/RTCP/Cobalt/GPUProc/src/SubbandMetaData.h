@@ -1,33 +1,31 @@
-//# SubbandMetaData.h:
+//# SubbandMetaData.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//#  Copyright (C) 2007
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
 //#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
 //#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id$
+//# $Id$
 
 #ifndef LOFAR_INTERFACE_SUBBAND_META_DATA_H
 #define LOFAR_INTERFACE_SUBBAND_META_DATA_H
 
-#include <CoInterface/SparseSet.h>
-#include <Common/LofarLogger.h>
-#include <Stream/Stream.h>
 #include <vector>
 
+#include <Common/LofarLogger.h>
+#include <Stream/Stream.h>
+#include <CoInterface/SparseSet.h>
 
 namespace LOFAR
 {
@@ -79,7 +77,7 @@ namespace LOFAR
       str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
 
       // read flags
-      vector<char> flagsBuffer(MAXFLAGSIZE);
+      std::vector<char> flagsBuffer(MAXFLAGSIZE);
       str->read(&flagsBuffer[0], flagsBuffer.size());
       flags.unmarshall(&flagsBuffer[0]);
     }
@@ -96,7 +94,7 @@ namespace LOFAR
       str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
 
       // write flags
-      vector<char> flagsBuffer(MAXFLAGSIZE);
+      std::vector<char> flagsBuffer(MAXFLAGSIZE);
 
       ssize_t size = flags.marshall(&flagsBuffer[0], flagsBuffer.size());
       ASSERT(size >= 0);
@@ -108,3 +106,4 @@ namespace LOFAR
 } // namespace LOFAR
 
 #endif
+

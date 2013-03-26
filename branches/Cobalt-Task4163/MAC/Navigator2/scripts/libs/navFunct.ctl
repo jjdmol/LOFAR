@@ -1288,7 +1288,7 @@ void navFunct_fillObservationsList() {
       // If we are have more entries in the station list we assume we are looking at a panel that has only stations
       // involved, so we  do not need to look at more hardware, in other cases we have to look if at least one piece
       // of each hardwareType also is needed for the observation to decide if it needs 2b in the list
-
+      if ( dynlen(g_observations["NAME"]) < i) break;
       
       if (dynlen(stationList) > 1) {           
         // loop through stationList

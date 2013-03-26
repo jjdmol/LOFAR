@@ -1,43 +1,40 @@
-//#  Delays.cc: Workholder for the delay compensation.
+//# Delays.cc: Workholder for the delay compensation.
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//#  Copyright (C) 2006
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
 //#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
 //#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id: Delays.cc 23195 2012-12-06 16:01:41Z mol $
+//# $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Input/Delays.h>
-#include <Scheduling.h>
+#include "Delays.h"
+
 #include <Common/LofarLogger.h>
 #include <Common/PrettyUnits.h>
-#include <CoInterface/Exceptions.h>
-#include <CoInterface/BeamCoordinates.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Cancellation.h>
+#include <CoInterface/Exceptions.h>
+#include <CoInterface/BeamCoordinates.h>
+
+#include <Scheduling.h>
 
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCDirection.h>
 #include <casa/Exceptions/Error.h>
-
-#include <pthread.h>
-#include <memory>
 
 
 namespace LOFAR
@@ -51,7 +48,7 @@ namespace LOFAR
 
     //##----------------  Public methods  ----------------##//
 
-    Delays::Delays(const Parset &parset, const string &stationName, const TimeStamp &startTime)
+    Delays::Delays(const Parset &parset, const std::string &stationName, const TimeStamp &startTime)
       :
       itsParset(parset),
       stop(false),
@@ -262,7 +259,7 @@ namespace LOFAR
       itsDirectionTypes.resize(itsNrBeams);
 
       for (unsigned beam = 0; beam < itsNrBeams; beam++) {
-        const string type = toUpper(parset.getBeamDirectionType(beam));
+        const std::string type = toUpper(parset.getBeamDirectionType(beam));
 
         if (!MDirection::getType(itsDirectionTypes[beam], type))
           THROW(GPUProcException, "Beam direction type unknown: " << type);
@@ -271,7 +268,7 @@ namespace LOFAR
       // Get the source directions from the parameter set.
       // Split the \a dir vector into separate Direction objects.
       for (unsigned beam = 0; beam < itsNrBeams; beam++) {
-        const vector<double> beamDir = parset.getBeamDirection(beam);
+        const std::vector<double> beamDir = parset.getBeamDirection(beam);
         const BeamCoordinates& TABs = parset.TABs(beam);
 
         // add central beam coordinates for non-beamforming pipelines
@@ -297,7 +294,7 @@ namespace LOFAR
       // Calculate the station to reference station position difference of apply station.
 
       // Station positions must be given in ITRF
-      string str = toUpper(parset.positionType());
+      std::string str = toUpper(parset.positionType());
 
       if (str != "ITRF")
         THROW(GPUProcException, "OLAP.DelayComp.positionType must be ITRF");
@@ -313,3 +310,4 @@ namespace LOFAR
 
   } // namespace Cobalt
 } // namespace LOFAR
+

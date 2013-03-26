@@ -122,29 +122,31 @@ namespace LOFAR {
       vector<double> extraFactors(nant, 1.);
       if (itsScaleSize  ||  !itsScaleSizeGiven) {
         fillSizeScaleFactors (nNominal, extraFactors);
+	ASSERTSTR (extraFactors.size() == nant,
+		   "Maybe stations have been added before doing the scaling; "
+		   "that should not be done");
       }
       // Find the scale factors for each station.
       // The first matching regex is used.
       // The nr of tiles in use gives an extra scale factor.
-      vector<vector<double> > factors;
-      factors.reserve (nant);
+      itsStationFactors.reserve (nant);
       for (uint i=0; i<nant; ++i) {
         for (uint j=0; j<stationRegex.size(); ++j) {
           if (infoIn.antennaNames()[i].matches (stationRegex[j])) {
-            factors.push_back (scaleVec[j]);
+            itsStationFactors.push_back (scaleVec[j]);
             // If needed, scale with the nr of dipoles/tiles actually used.
-            // Do that is explicitly told so or if default coeffs are used.
+            // Do that if explicitly told so or if default coeffs are used.
             if (itsScaleSize  ||
                 (!itsScaleSizeGiven  &&  j == stationRegex.size()-1)) {
-              for (uint k=0; k<factors[i].size(); ++k) {
-                factors[i][k] *= extraFactors[i];
+              for (uint k=0; k<itsStationFactors[i].size(); ++k) {
+                itsStationFactors[i][k] *= extraFactors[i];
               }
             }
             break;
           }
         }
       }
-      ASSERT (factors.size() == nant);
+      ASSERT (itsStationFactors.size() == nant);
       // Now calculate the factors per baseline,freq,pol.
       uint nb = infoIn.nbaselines();
       uint nf = freqs.size();
@@ -152,8 +154,8 @@ namespace LOFAR {
       itsFactors.resize (nc, nf, nb);
       double* factPtr = itsFactors.data();
       for (uint i=0; i<nb; ++i) {
-        const vector<double>& f1 = factors[infoIn.getAnt1()[i]];
-        const vector<double>& f2 = factors[infoIn.getAnt2()[i]];
+        const vector<double>& f1 = itsStationFactors[infoIn.getAnt1()[i]];
+        const vector<double>& f2 = itsStationFactors[infoIn.getAnt2()[i]];
         for (uint j=0; j<nf; ++j) {
           double fact = sqrt(f1[j] * f2[j]);
           for (uint k=0; k<nc; ++k) {
@@ -178,6 +180,11 @@ namespace LOFAR {
            << False;
       }
       os << endl;
+      os << "  Scale factors per station/frequency:" << endl;
+      for (uint i=0; i<itsStationFactors.size(); ++i) {
+        os << "   " << getInfo().antennaNames()[i] << ' '
+           << itsStationFactors[i] << endl;
+      }
     }
 
     void ScaleData::showTimings (std::ostream& os, double duration) const
@@ -219,7 +226,10 @@ namespace LOFAR {
                  "ScaleData: subtable LOFAR_ANTENNA_FIELD is missing, but "
                  "is needed unless scalesize=false is given");
       Table tab(ms.keywordSet().asTable ("LOFAR_ANTENNA_FIELD"));
-      uint nant = getInfo().antennaNames().size();
+      // Get nr of antennae from the table to be sure it matches the
+      // contents of LOFAR_ANTENNA_FIELD. Later it is checked if it matches
+      // the actual nr of antennae.
+      uint nant = ms.keywordSet().asTable("ANTENNA").nrow();
       fact.resize (nant);
       for (uint i=0; i<nant; ++i) {
         fact[i] = 0;
@@ -229,7 +239,7 @@ namespace LOFAR {
       ROScalarColumn<Int> antId (tab, "ANTENNA_ID");
       ROArrayColumn<Bool> elemFlag (tab, "ELEMENT_FLAG");
       for (uint i=0; i<tab.nrow(); ++i) {
-        fact[antId(i)] += nfalse(elemFlag(i));
+        fact[antId(i)] += 0.5*nfalse(elemFlag(i));  // X and Y are separate
       }
       // Determine the scale factor.
       for (uint i=0; i<nant; ++i) {

@@ -319,12 +319,12 @@ class Op_wavelet_atrous(Op):
         opts['mean_map'] = img.opts.mean_map
         opts['thresh_isl'] = 3.0
         opts['minpix_isl'] = 6
-#        opts['takemeanclip'] = False
         opts['savefits_rmsim'] = False
         opts['savefits_meanim'] = False
         opts['savefits_rankim'] = False
         opts['savefits_normim'] = False
         opts['polarisation_do'] = False
+        opts['aperture'] = None
         opts['group_by_isl'] = img.opts.group_by_isl
         opts['quiet'] = img.opts.quiet
 
@@ -363,8 +363,14 @@ class Op_wavelet_atrous(Op):
         wimg.parentname = img.filename
         wimg.filename = img.filename + name
         wimg.imagename = img.imagename + name + '.pybdsm'
-        wimg.pix2sky = img.pix2sky; wimg.sky2pix = img.sky2pix; wimg.pix2beam = img.pix2beam
-        wimg.beam2pix = img.beam2pix; wimg.pix2coord = img.pix2coord; wimg.beam = img.beam
+        wimg.pix2sky = img.pix2sky
+        wimg.sky2pix = img.sky2pix
+        wimg.pix2beam = img.pix2beam
+        wimg.beam2pix = img.beam2pix
+        wimg.pix2gaus = img.pix2gaus
+        wimg.gaus2pix = img.gaus2pix
+        wimg.pix2coord = img.pix2coord
+        wimg.beam = img.beam
         mask = img.mask
         wimg.masked = img.masked
         wimg.mask = mask

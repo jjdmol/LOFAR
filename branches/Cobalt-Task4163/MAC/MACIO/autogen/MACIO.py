@@ -80,17 +80,23 @@ def packArray(value, fixedlen=0):
     else:
       vLen = len(value)
     format = "=%ds" % vLen
-    print "packSize=", vLen
     buffer = struct.pack(format, value)
     return buffer
 
 def unpackArray(buffer, itemlen, count):
     "Unpack an array from the buffer"
     vLen = itemlen * count
-    print "unpackSize=", vLen
     format = "=%ds" % vLen
     value = struct.unpack(format, buffer[0:vLen])[0]
     return value
+
+def recvEvent(tcpsocket):
+    "Wait for a message to receive on the given socket"
+    buffer = tcpsocket.recv(GCFEvent.sizePackedGCFEvent)
+    (signal, length) = struct.unpack('=HI', buffer)
+    if length > 0:
+      buffer += tcpsocket.recv(length)
+    return buffer
 
 #
 # Protocol knowledge

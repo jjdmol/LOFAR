@@ -1,8 +1,6 @@
 //# tTBB_StaticMapping.cc
-//#
-//# Copyright (C) 2012
-//# ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
 //# The LOFAR software suite is free software: you can redistribute it and/or
@@ -18,11 +16,14 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: tTBB_StaticMapping.cc 2465 2012-02-28 14:24:54Z amesfoort $
+//# $Id$
 
 #include <lofar_config.h>
 
 #include <cstdlib>
+#include <string>
+#include <vector>
+#include <map>
 #include <iostream>
 
 #include <Common/Exceptions.h>
@@ -30,6 +31,7 @@
 
 using namespace std;
 using namespace LOFAR;
+using namespace LOFAR::Cobalt;
 
 int main(int argc, char *argv[])
 {

@@ -1,18 +1,46 @@
-#ifndef GPUPROC_PIPELINECLASS_H
-#define GPUPROC_PIPELINECLASS_H
-#include "CL/cl.hpp"
+//# Pipeline.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id$
 
-#include "Common/Thread/Queue.h"
-#include "Common/Thread/Semaphore.h"
-#include "CoInterface/Parset.h"
-#include "CoInterface/StreamableData.h"
-#include "OpenCL_Support.h"
+#ifndef LOFAR_GPUPROC_PIPELINE_H
+#define LOFAR_GPUPROC_PIPELINE_H
 
-#include "global_defines.h"
+#include <string>
+#include <vector>
+
+#include <Common/LofarTypes.h>
+#include <Common/Thread/Queue.h>
+#include <Common/Thread/Semaphore.h>
+#include <Stream/Stream.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/StreamableData.h>
+#include <CoInterface/SmartPtr.h>
+
 #include "Input/InputSection.h"
 #include "Input/BeamletBufferToComputeNode.h"
+#include "global_defines.h"
+#include "OpenMP_Support.h"
+#include "opencl-incl.h"
 #include "createProgram.h"
 #include "BestEffortQueue.h"
+#include "SlidingPointer.h"
+
 
 namespace LOFAR
 {
@@ -89,4 +117,6 @@ namespace LOFAR
     };
   }
 }
+
 #endif
+

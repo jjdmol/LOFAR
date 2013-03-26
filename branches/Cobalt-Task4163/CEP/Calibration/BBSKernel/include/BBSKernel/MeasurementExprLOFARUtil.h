@@ -88,6 +88,14 @@ Expr<JonesMatrix>::Ptr
 makeTECExpr(Scope &scope,
     const Station::ConstPtr &station);
 
+Expr<JonesMatrix>::Ptr
+makeCommonRotationExpr(Scope &scope,
+    const Station::ConstPtr &station);
+
+Expr<Scalar>::Ptr
+makeCommonScalarPhaseExpr(Scope &scope,
+    const Station::ConstPtr &station);
+
 // Direction dependent effects.
 Expr<JonesMatrix>::Ptr
 makeDirectionalGainExpr(Scope &scope,

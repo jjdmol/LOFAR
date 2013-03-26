@@ -1,27 +1,54 @@
+//# newInputSection.cc
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id$
+
 #include <lofar_config.h>
+
+#include <string>
+#include <vector>
+#include <map>
+#include <omp.h>
+#if defined HAVE_MPI
+#include <mpi.h>
+#else
+#error Cannot build input section without HAVE_MPI
+#endif
+#include <boost/format.hpp>
+
+#include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Mutex.h>
-#include <Stream/Stream.h>
-#include <Stream/SocketStream.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Stream.h>
-#include "WallClockTime.h"
-#include "Buffer/SharedMemory.h"
-#include "Buffer/Ranges.h"
+#include <CoInterface/RSPTimeStamp.h>
+#include <Stream/Stream.h>
+#include <Stream/SocketStream.h>
+
 #include "OMPThread.h"
+#include "SampleType.h"
+#include "WallClockTime.h"
 #include "Buffer/StationID.h"
 #include "Buffer/BufferSettings.h"
-#include "SampleType.h"
-#include "Buffer/SampleBuffer.h"
-#include "Buffer/SampleBufferReader.h"
 #include "Station/Generator.h"
 #include "Station/PacketsToBuffer.h"
-#include "mpi.h"
+#include "Transpose/MPITransferStations.h"
 
-#include <vector>
-#include <omp.h>
-#include <string>
-#include <boost/format.hpp>
 
 #define DURATION 60
 #define BLOCKSIZE 0.005
@@ -30,8 +57,6 @@
 
 using namespace LOFAR;
 using namespace Cobalt;
-
-#include "Transpose/MPITransferStations.h"
 
 
 int main( int argc, char **argv )
@@ -157,3 +182,4 @@ int main( int argc, char **argv )
 
   MPI_Finalize();
 }
+

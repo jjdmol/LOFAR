@@ -1,15 +1,37 @@
-#ifndef LOFAR_RTCP_STORAGE_PROCESSES
-#define LOFAR_RTCP_STORAGE_PROCESSES
+//# StorageProcesses.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id$
+
+#ifndef LOFAR_GPUPROC_STORAGE_PROCESSES
+#define LOFAR_GPUPROC_STORAGE_PROCESSES
 
 #include <sys/time.h>
-#include <Common/Thread/Trigger.h>
+#include <string>
+#include <vector>
+
 #include <Common/Thread/Thread.h>
+#include <Common/Thread/Trigger.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/FinalMetaData.h>
-#include <Storage/StorageProcess.h>
-#include <string>
-#include <vector>
+
+#include "StorageProcess.h"
 
 namespace LOFAR
 {
@@ -32,7 +54,7 @@ namespace LOFAR
      * A Storage process is expected to follow the following protocol:
      *
        // establish control connection
-       string resource = getStorageControlDescription(observationID, -1);
+       std::string resource = getStorageControlDescription(observationID, -1);
        PortBroker::ServerStream stream(resource);
 
        // read parset
@@ -77,3 +99,4 @@ namespace LOFAR
 }
 
 #endif
+

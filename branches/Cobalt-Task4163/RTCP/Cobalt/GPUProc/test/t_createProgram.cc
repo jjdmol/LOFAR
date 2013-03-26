@@ -1,3 +1,5 @@
+#include <lofar_config.h>
+
 #include <GPUProc/createProgram.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/OpenCL_Support.h>

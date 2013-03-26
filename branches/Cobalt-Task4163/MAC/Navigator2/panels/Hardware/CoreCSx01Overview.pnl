@@ -57,34 +57,7 @@ void reload() {
 ""0  1
 E "#uses \"navPanel.ctl\"
 string      baseDP   = \"\";
-bool    bDoubleClicked  = false;
-
-// routine for single mouse click
-void click() {
-  // set delay in case double click was meant
-  delay(0, 100); 
-  if (!bDoubleClicked) {  
-    navPanel_setEvent(\"CoreCSx01\",\"EventClick\");
-  }
-}
-
-// routine for double mouse click
-void dblClick() {
-  // indicate this is a doubleClick
-  bDoubleClicked = true;   
-  
-  panelSelection=\"CS0nnOverview.pnl\";
-  navPanel_setEvent(\"panelChoice:\"+panelSelection,\"ChangePanel\");
-  
-  // set delay to avoid click event will be triggered
-  delay(0, 500);
-  bDoubleClicked = false;  
-}
-
-// routine for right mouse click
-void rClick() {
-  navPanel_setEvent(\"CoreCSx01\",\"EventRightClick\");
-}" 0
+" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -121,32 +94,6 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 0 0 1008 744
-7 52
-"ELLIPSE1"
-""
-1 705 435 E E E 1 E 1 E N {0,0,0} E N {39,156,0,245} E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
-62 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E 1 0 1 10 -30 1 E 420 380 137 137
 1 194 1 "" 0
 0
 1 195 1 "" 1
@@ -194,41 +141,6 @@ E E 0 1 1 2 1 E U  0 E 20 20 260 53
 LANG:1 35 MS Shell Dlg 2,20,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 19 Core Stations CSx01
-2 192
-"PRIMITIVE_TEXT9"
-""
-1 380 320 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
-80 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 380 320 474 368
-0 2 2 "0s" 0 0 0 192 0 0  380 320 2
-1
-LANG:1 35 MS Shell Dlg 2,14,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 9 Superterp
-1
-LANG:1 35 MS Shell Dlg 2,14,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 8    CS0nn
 1 208 2 "" 6
 0
 1 209 2 "" 1
@@ -313,6 +225,16 @@ LANG:1 8    CS0nn
 0
 1 249 8 "" 5
 0
+1 255 9 "" 1
+0
+1 256 9 "" 2
+0
+1 257 9 "" 4
+0
+1 258 9 "" 5
+0
+1 259 9 "" 7
+0
 0
 LAYER, 1 
 1
@@ -373,4 +295,7 @@ LANG:1 6 Layer8
 "objects\\Hardware\\LBA_HBAStatusView.pnl" 650 140 T 89 1 0 1 0 -40
 1
 "$station""CS103"
+3 9 "PANEL_REF9" -1
+"objects/Hardware\\CS0nnStatusView.pnl" 280 220 T 91 1 0 1 15 -5
+0
 0
