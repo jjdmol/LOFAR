@@ -15,7 +15,6 @@ lofar_add_library(inputproc
   Station/PacketFactory.cc
   Station/PacketReader.cc
   Station/PacketsToBuffer.cc
-  Transpose/ThreadSafeMPI.cc
   Transpose/MPISendStation.cc
   Transpose/MPIReceiveStations.cc
   Transpose/MPIUtil.cc
