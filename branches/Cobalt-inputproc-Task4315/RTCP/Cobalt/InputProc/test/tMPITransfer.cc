@@ -120,13 +120,13 @@ void sender()
       LOG_INFO_STR("Detected " << s);
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
       SampleBufferReader<SampleT> reader(s, keys(beamletDistribution), 0.1);
-      MPISendStation<SampleT> sender(s, rank, beamletDistribution);
+      MPISendStation sender(s, rank, beamletDistribution);
 
       LOG_INFO_STR("Sending to receivers");
       for (TimeStamp current = from; current + blockSize < to; current += blockSize) {
         SmartPtr<struct SampleBufferReader<SampleT>::Block> block(reader.block(current, current + blockSize));
 
-        sender.sendBlock(*block);
+        sender.sendBlock<SampleT>(*block);
       }
 
       generator.stop();
@@ -148,31 +148,39 @@ void receiver()
     stationRanks[i] = i;
 
   {
-    MPIReceiveStations<SampleT> receiver(stationRanks, beamlets[receiverNr], blockSize);
+    MPIReceiveStations receiver(stationRanks, beamlets[receiverNr], blockSize);
+    const size_t nrStations = stationRanks.size();
+    const size_t nrBeamlets = beamlets[receiverNr].size();
 
-    size_t block = 0;
+    MultiDimArray<struct MPIReceiveStations::Beamlet<SampleT>, 2> block(boost::extents[nrStations][nrBeamlets]);
+
+    for (size_t s = 0; s < nrStations; ++s) {
+      for (size_t b = 0; b < nrBeamlets; ++b) {
+        block[s][b].samples.resize(blockSize);
+      }
+    }
+
+    size_t blockIdx = 0;
 
     for(TimeStamp current = from; current + blockSize < to; current += blockSize) {
-      receiver.receiveBlock();
+      receiver.receiveBlock<SampleT>(block);
 
       // data is now in receiver.lastBlock
 
       // calculate flagging average
-      const size_t nrStations = stationRanks.size();
-      const size_t nrBeamlets = beamlets[receiverNr].size();
       const size_t nrSamples = nrStations * nrBeamlets * blockSize;
       size_t nrFlaggedSamples = 0;
 
       for (size_t s = 0; s < nrStations; ++s) {
         for (size_t b = 0; b < nrBeamlets; ++b) {
-          nrFlaggedSamples = receiver.lastBlock[s].flags[b].count();
+          nrFlaggedSamples = block[s][b].flags.count();
         }
       }
 
       float flagPerc = 100.0f * nrFlaggedSamples / nrSamples;
 
-      LOG_INFO_STR("Receiver " << rank << " received block " << block << " flags: " << flagPerc << "%" );
-      ++block;
+      LOG_INFO_STR("Receiver " << rank << " received block " << blockIdx << " flags: " << flagPerc << "%" );
+      ++blockIdx;
     }
   }
 
