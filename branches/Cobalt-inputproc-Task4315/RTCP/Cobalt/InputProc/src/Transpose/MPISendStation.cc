@@ -31,6 +31,7 @@
 #include <boost/format.hpp>
 
 using namespace std;
+using namespace LOFAR::Cobalt::MPIProtocol;
 
 namespace LOFAR {
 

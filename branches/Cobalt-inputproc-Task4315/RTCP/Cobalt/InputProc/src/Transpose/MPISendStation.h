@@ -31,6 +31,7 @@
 
 #include <Buffer/SampleBufferReader.h>
 #include <Buffer/BufferSettings.h>
+#include "MPIProtocol.h"
 
 #include <map>
 #include <set>
@@ -42,7 +43,7 @@ namespace LOFAR
   {
 
     /*
-     * Sends a set of beamlets from the SHM buffer to all receiving MPI nodes.
+     * Sends a block of beamlets from a SampleBufferReader to all receiving MPI nodes.
      * Blocks are sent in a sequential fashion: a block must be received
      * completely before the next one is sent. Performance is barely affected,
      * because the output to all nodes has to go through a shared pipe (IB
@@ -52,52 +53,23 @@ namespace LOFAR
     class MPISendStation
     {
     public:
+      // Create a sender of blocks over MPI.
+      //
+      // settings
+      //   The station to send info from.
+      //
+      // stationIdx
+      //   The station index within this observation.
+      // beamletDistribution
+      //   The distribution of beamlets:
+      //     key   = beamletIdx
+      //     value = receiver MPI rank
       MPISendStation( const struct BufferSettings &settings, size_t stationIdx, const std::map<size_t, int> &beamletDistribution );
 
+      // Send one block. The caller is responsible for matching the number of
+      // posted receiveBlocks.
       template<typename T>
       void sendBlock( const struct SampleBufferReader<T>::Block &block );
-
-      // Header which prefixes each block. Contains identification information
-      // for verification purposes, as well as the sizes of the data that
-      // follow.
-      struct Header {
-        // Originating station
-        StationID station;
-
-        // Block will span [from,to)
-        int64 from, to;
-
-        // At which offset the data will be wrapped. If:
-        //
-        //   =0: the data will be sent in 1 transfer:
-        //          1. a block of `to - from' samples
-        //   >0: the data will be sent in 2 transfers:
-        //          1. a block of `wrapOffsets[x]' samples
-        //          2. a block of `(to - from) - wrapOffsets[x]' samples
-        size_t wrapOffsets[1024]; // [beamlet]
-
-        // Number of beamlets that will be sent
-        size_t nrBeamlets;
-
-        // Size of the marshalled flags
-        size_t metaDataSize;
-      };
-
-      union tag_t {
-        struct {
-          unsigned type     :  2;
-          unsigned station  :  8;
-          unsigned beamlet  : 10;
-          unsigned transfer :  1;
-        } bits;
-
-        int value;
-
-        tag_t() : value(0) {
-        }
-      };
-
-      enum tag_types { CONTROL = 0, BEAMLET = 1, FLAGS = 2 };
 
     protected:
       size_t metaDataSize() const
@@ -125,7 +97,7 @@ namespace LOFAR
 
       // Construct and send a header to the given rank (async).
       template<typename T>
-      MPI_Request sendHeader( int rank, Header &header, const struct SampleBufferReader<T>::Block &block );
+      MPI_Request sendHeader( int rank, MPIProtocol::Header &header, const struct SampleBufferReader<T>::Block &block );
 
       // Send beamlet data (in 1 or 2 transfers) to the given rank (async).
       // Returns the number of MPI_Requests made.
