@@ -8,10 +8,10 @@ PANEL,-1 -1 638 94 N "_3DFace" 1
   observation = $observation;
   setValue(\"exceeding\",\"backCol\",\"green\");
   
-  // update screen every 60 seconds
+  // update screen every 15 seconds
   while (true) {
     reload(observation);
-    delay(60);
+    delay(30);
   }
 }
 
@@ -195,7 +195,7 @@ LANG:0 0
 2 5
 "progressValue"
 ""
-1 415 3.795847750865054 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 500 -4.275990469462766 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 E E E
