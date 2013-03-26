@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 typedef float2 fcomplex;
 typedef float4 fcomplex2;

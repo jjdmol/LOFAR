@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 typedef __global float (*IncoherentStokesType)[NR_INCOHERENT_STOKES][NR_SAMPLES_PER_CHANNEL / INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR][NR_CHANNELS];
 typedef __global float4 (*InputType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL / INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR][INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR];

@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #define MAX(A,B) ((A)>(B) ? (A) : (B))
 #define NR_PASSES MAX((NR_STATIONS + 6) / 16, 1) // gives best results on GTX 680
