@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: TBB_Writer.h 14188 2012-09-07 15:41:22Z amesfoort $
+//# $Id$
 
 #ifndef LOFAR_STORAGE_TBB_WRITER_H
 #define LOFAR_STORAGE_TBB_WRITER_H 1

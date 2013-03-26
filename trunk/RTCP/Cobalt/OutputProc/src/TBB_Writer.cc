@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: TBB_Writer.cc 47912 2012-09-07 11:54:53Z amesfoort $
+//# $Id$
 
 #include <lofar_config.h>
 

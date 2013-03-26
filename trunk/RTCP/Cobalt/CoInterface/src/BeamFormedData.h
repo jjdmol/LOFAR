@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: BeamFormedData.h 24239 2013-03-12 18:40:13Z amesfoort $
+//# $Id$
 
 #ifndef LOFAR_INTERFACE_BEAMFORMED_DATA_H
 #define LOFAR_INTERFACE_BEAMFORMED_DATA_H

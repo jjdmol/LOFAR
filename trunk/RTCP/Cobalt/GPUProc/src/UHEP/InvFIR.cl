@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 typedef __global float (*InvFIRredDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_SUBBAND][1024];
 typedef __global float (*InvFFTedDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_SUBBAND + NR_STATION_FILTER_TAPS - 1][1024];
