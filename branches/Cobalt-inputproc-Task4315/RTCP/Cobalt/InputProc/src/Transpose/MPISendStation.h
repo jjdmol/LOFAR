@@ -1,4 +1,4 @@
-/* MPITransferStations.h
+/* MPISendStation.h
  * Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
  * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
  *
@@ -19,10 +19,9 @@
  * $Id: $
  */
 
-#ifndef LOFAR_INPUT_PROC_MPI_TRANSFER_STATIONS_H
-#define LOFAR_INPUT_PROC_MPI_TRANSFER_STATIONS_H
+#ifndef LOFAR_INPUT_PROC_MPI_SEND_STATIONS_H
+#define LOFAR_INPUT_PROC_MPI_SEND_STATIONS_H
 
-#include <vector>
 #include <mpi.h>
 
 #include <Common/LofarTypes.h>
@@ -136,49 +135,6 @@ namespace LOFAR
       // Send flags data to the given rank (async).
       MPI_Request sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags );
     };
-
-
-    /*
-     * We receive all station data in one loop, because MPI wants to
-     * have a single thread listening to all requests.
-     *
-     * This could be changed into one thread/station to overlap the data
-     * transfers between different blocks from different stations. However,
-     * such seems to require polling MPI_Testall loops like in MPISendStation.
-     */
-    class MPIReceiveStations
-    {
-    public:
-      MPIReceiveStations( const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
-
-      template<typename T>
-      struct Beamlet {
-        std::vector<T>   samples;
-        SparseSet<int64> flags;
-      };
-
-      template<typename T>
-      void receiveBlock( MultiDimArray< struct Beamlet<T>, 2 > &block ); // block[station][beamlet]
-
-    private:
-      const std::string logPrefix;
-      const std::vector<int> stationRanks;
-
-    public:
-      const std::vector<size_t> beamlets;
-      const size_t blockSize;
-
-      // Receive a header (async) from the given rank.
-      MPI_Request receiveHeader( size_t station, struct MPISendStation::Header &header );
-
-      // Receive beamlet data (async) from the given rank.
-      template<typename T>
-      MPI_Request receiveBeamlet( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples );
-
-      // Receive marshalled flags (async) from the given rank.
-      MPI_Request receiveFlags( size_t station, size_t beamlet, std::vector<char> &buffer );
-    };
-
 
   }
 }

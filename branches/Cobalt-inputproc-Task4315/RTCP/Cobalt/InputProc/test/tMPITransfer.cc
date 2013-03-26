@@ -45,7 +45,8 @@
 #include "Station/PacketFactory.h"
 #include "Station/Generator.h"
 #include "Station/PacketsToBuffer.h"
-#include "Transpose/MPITransferStations.h"
+#include "Transpose/MPIReceiveStations.h"
+#include "Transpose/MPISendStation.h"
 #include "Transpose/MapUtil.h"
 
 #include <map>
