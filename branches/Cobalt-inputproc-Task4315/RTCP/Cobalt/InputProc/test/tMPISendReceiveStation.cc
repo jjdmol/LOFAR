@@ -57,9 +57,15 @@ int rank;
 // Number of MPI hosts
 int nrHosts;
 
+// Common transfer objects
 SmartPtr<MPISendStation> sender;
 SmartPtr<MPIReceiveStations> receiver;
 
+// Create structures for data tests
+const size_t blockSize = 1024;
+
+vector<SampleT> data_in(blockSize);
+vector<SampleT> data_out(blockSize);
 
 TEST(Flags) {
   // Create structures for input and output
@@ -90,18 +96,7 @@ TEST(Flags) {
 
 
 TEST(Data_OneTransfer) {
-  // Create structures for input and output
-  const size_t blockSize = 1024;
-
   struct BlockReader<SampleT>::Block::Beamlet ib;
-  vector<SampleT> data_in(blockSize);
-  vector<SampleT> data_out(blockSize);
-
-  // Fill input
-  for (size_t i = 0; i < data_in.size(); ++i) {
-    data_in[i].x = i16complex(rank, i);
-    data_in[i].y = i16complex(1000 + rank, 1000 + i);
-  }
 
   ib.stationBeamlet = 0;
   ib.ranges[0].from = &data_in[0];
@@ -125,18 +120,7 @@ TEST(Data_OneTransfer) {
 
 
 TEST(Data_TwoTransfers) {
-  // Create structures for input and output
-  const size_t blockSize = 1024;
-
   struct BlockReader<SampleT>::Block::Beamlet ib;
-  vector<SampleT> data_in(blockSize);
-  vector<SampleT> data_out(blockSize);
-
-  // Fill input
-  for (size_t i = 0; i < data_in.size(); ++i) {
-    data_in[i].x = i16complex(rank, i);
-    data_in[i].y = i16complex(1000 + rank, 1000 + i);
-  }
 
   ib.stationBeamlet = 0;
   ib.ranges[0].from = &data_in[0];
@@ -188,6 +172,12 @@ int main( int argc, char **argv )
 
   sender = new MPISendStation(settings, 0, beamletDistribution);
   receiver = new MPIReceiveStations(std::vector<int>(1,rank), beamletDistribution[rank], blockSize);
+
+  // Fill input
+  for (size_t i = 0; i < data_in.size(); ++i) {
+    data_in[i].x = i16complex(rank, i);
+    data_in[i].y = i16complex(1000 + rank, 1000 + i);
+  }
 
   // Run tests
   int result = UnitTest::RunAllTests();
