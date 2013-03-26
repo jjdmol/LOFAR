@@ -1,0 +1,15 @@
+export serverDir=/opt/sas/server
+export clientDir=/opt/sas/client
+export JAVAHOME=/usr/java/jdk1.6.0_07
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$serverDir
+
+serverpid=0
+ps -ef | grep -v grep | grep java | grep 11510 2>&1 1>/dev/null
+if [ $? -ne 0 ]; then
+        $JAVAHOME/bin/java -jar $serverDir/jOTDB3.jar sas001.control.lofar sas001.control.lofar 11510 11511 &
+    serverpid=$!
+fi
+
+
+$JAVAHOME/bin/java -jar $clientDir/OTB.jar -p 11510
+
