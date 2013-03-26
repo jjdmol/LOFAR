@@ -49,8 +49,14 @@ namespace LOFAR
 
       template<typename T>
       struct Beamlet {
-        std::vector<T>   samples;
-        SparseSet<int64> flags;
+        std::vector<T>    samples;
+        SparseSet<int64>  flags;
+      };
+
+      template<typename T>
+      struct Block {
+        std::vector< struct Beamlet<T> > beamlets; // [beamlet]
+        std::vector<char> metaDataBlob;
       };
 
       // Receive the next block. The `block' parameter is a structure allocated
@@ -61,7 +67,7 @@ namespace LOFAR
       // It is the callers responsibility to call receiveBlock exactly as often
       // as sendBlock is called by the stations.
       template<typename T>
-      void receiveBlock( MultiDimArray< struct Beamlet<T>, 2 > &block ); // block[station][beamlet]
+      void receiveBlock( std::vector< struct Block<T> > &blocks );
 
     private:
       const std::string logPrefix;
@@ -78,7 +84,7 @@ namespace LOFAR
       template<typename T>
       MPI_Request receiveBeamlet( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples );
 
-      // Receive marshalled flags (async) from the given rank.
+      // Receive marshalled flags and metadata (async) from the given rank.
       MPI_Request receiveFlags( size_t station, size_t beamlet, std::vector<char> &buffer );
     };
 

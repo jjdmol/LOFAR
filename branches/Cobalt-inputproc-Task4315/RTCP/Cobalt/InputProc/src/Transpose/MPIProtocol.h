@@ -57,7 +57,11 @@ namespace LOFAR
         size_t wrapOffsets[1024]; // [beamlet]
 
         // Size of the marshalled flags
-        size_t metaDataSize;
+        size_t flagsSize;
+
+        // The metaData blob
+        size_t metaDataBlobSize;
+        char metaDataBlob[4096];
       };
 
       enum tag_types { CONTROL = 0, BEAMLET = 1, FLAGS = 2 };

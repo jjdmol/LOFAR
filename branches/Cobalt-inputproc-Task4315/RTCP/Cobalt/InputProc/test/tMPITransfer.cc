@@ -127,7 +127,7 @@ void sender()
       for (TimeStamp current = from; current + blockSize < to; current += blockSize) {
         SmartPtr<struct BlockReader<SampleT>::Block> block(reader.block(current, current + blockSize, std::vector<ssize_t>(values(beamletDistribution).size(), 0)));
 
-        sender.sendBlock<SampleT>(*block);
+        sender.sendBlock<SampleT>(*block, std::vector<char>());
       }
 
       generator.stop();
@@ -152,18 +152,20 @@ void receiver()
 
   MPIReceiveStations receiver(stationRanks, beamlets, blockSize);
 
-  MultiDimArray<struct MPIReceiveStations::Beamlet<SampleT>, 2> block(boost::extents[nrStations][nrBeamlets]);
+  std::vector< struct MPIReceiveStations::Block<SampleT> > blocks(nrStations);
 
   for (int s = 0; s < nrStations; ++s) {
+    blocks[s].beamlets.resize(nrBeamlets);
+
     for (size_t b = 0; b < nrBeamlets; ++b) {
-      block[s][b].samples.resize(blockSize);
+      blocks[s].beamlets[b].samples.resize(blockSize);
     }
   }
 
   size_t blockIdx = 0;
 
   for(TimeStamp current = from; current + blockSize < to; current += blockSize) {
-    receiver.receiveBlock<SampleT>(block);
+    receiver.receiveBlock<SampleT>(blocks);
 
     // calculate flagging average
     const size_t nrSamples = nrStations * nrBeamlets * blockSize;
@@ -171,7 +173,7 @@ void receiver()
 
     for (int s = 0; s < nrStations; ++s) {
       for (size_t b = 0; b < nrBeamlets; ++b) {
-        nrFlaggedSamples = block[s][b].flags.count();
+        nrFlaggedSamples = blocks[s].beamlets[b].flags.count();
       }
     }
 

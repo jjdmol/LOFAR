@@ -80,8 +80,10 @@ namespace LOFAR {
 
 
     template<typename T>
-    void MPIReceiveStations::receiveBlock( MultiDimArray<struct MPIReceiveStations::Beamlet<T>, 2> &block )
+    void MPIReceiveStations::receiveBlock( std::vector< struct MPIReceiveStations::Block<T> > &blocks )
     {
+      ASSERT(blocks.size() == stationRanks.size());
+
       // All requests except the headers
       std::vector<MPI_Request> requests;
 
@@ -101,7 +103,7 @@ namespace LOFAR {
       }
 
       // Process stations in the order in which we receive the headers
-      Matrix< std::vector<char> > metaData(stationRanks.size(), beamlets.size()); // [station][beamlet][data]
+      Matrix< std::vector<char> > flagsBlobs(stationRanks.size(), beamlets.size()); // [station][beamlet][data]
 
       for (size_t i = 0; i < stationRanks.size(); ++i) {
         /*
@@ -140,19 +142,19 @@ namespace LOFAR {
           LOG_DEBUG_STR(logPrefix << "Receiving beamlet " << beamlet << " from rank " << rank << " using " << (wrapOffset > 0 ? 2 : 1) << " transfers");
 
           // First sample transfer
-          requests.push_back(receiveBeamlet<T>(stat, beamlet, 0, &block[stat][beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize));
+          requests.push_back(receiveBeamlet<T>(stat, beamlet, 0, &blocks[stat].beamlets[beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize));
 
           // Second sample transfer
           if (wrapOffset > 0) {
-            requests.push_back(receiveBeamlet<T>(stat, beamlet, 1, &block[stat][beamletIdx].samples[wrapOffset], blockSize - wrapOffset));
+            requests.push_back(receiveBeamlet<T>(stat, beamlet, 1, &blocks[stat].beamlets[beamletIdx].samples[wrapOffset], blockSize - wrapOffset));
           }
 
           /*
            * RECEIVE FLAGS (ASYNC)
            */
 
-          metaData[stat][beamletIdx].resize(header.metaDataSize);
-          requests.push_back(receiveFlags(stat, beamlet, metaData[stat][beamletIdx]));
+          flagsBlobs[stat][beamletIdx].resize(header.flagsSize);
+          requests.push_back(receiveFlags(stat, beamlet, flagsBlobs[stat][beamletIdx]));
         }
       }
 
@@ -166,16 +168,25 @@ namespace LOFAR {
        * PROCESS DATA
        */
 
-      // Convert raw metaData to flags array
-      for (size_t stat = 0; stat < stationRanks.size(); ++stat)
-        for (size_t beamletIdx = 0; beamletIdx < beamlets.size(); ++beamletIdx)
-          block[stat][beamletIdx].flags.unmarshall(&metaData[stat][beamletIdx][0]);
+      for (size_t stat = 0; stat < stationRanks.size(); ++stat) {
+        const Header &header = headers[stat];
+
+        // Convert the flags array
+        for (size_t beamletIdx = 0; beamletIdx < beamlets.size(); ++beamletIdx) {
+          const std::vector<char> &flagsBlob = flagsBlobs[stat][beamletIdx];
+
+          blocks[stat].beamlets[beamletIdx].flags.unmarshall(&flagsBlob[0]);
+        }
+
+        // Copy the metaData blob
+        blocks[stat].metaDataBlob = std::vector<char>(&header.metaDataBlob[0], &header.metaDataBlob[header.metaDataBlobSize]);
+      }
     }
 
     // Create all necessary instantiations
 #define INSTANTIATE(T) \
     template MPI_Request MPIReceiveStations::receiveBeamlet<T>( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples ); \
-    template void MPIReceiveStations::receiveBlock<T>( MultiDimArray<struct MPIReceiveStations::Beamlet<T>, 2> &block );
+    template void MPIReceiveStations::receiveBlock<T>( std::vector< struct MPIReceiveStations::Block<T> > &blocks );
 
     INSTANTIATE(SampleType<i4complex>);
     INSTANTIATE(SampleType<i8complex>);

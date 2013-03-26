@@ -69,10 +69,10 @@ namespace LOFAR
       // Send one block. The caller is responsible for matching the number of
       // posted receiveBlocks.
       template<typename T>
-      void sendBlock( const struct BlockReader<T>::Block &block );
+      void sendBlock( const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob );
 
     protected:
-      size_t metaDataSize() const
+      size_t flagsSize() const
       {
         return SparseSet<int64>::marshallSize(this->settings.nrAvailableRanges);
       }
@@ -99,7 +99,7 @@ namespace LOFAR
 
       // Construct and send a header to the given rank (async).
       template<typename T>
-      MPI_Request sendHeader( int rank, MPIProtocol::Header &header, const struct BlockReader<T>::Block &block );
+      MPI_Request sendHeader( int rank, MPIProtocol::Header &header, const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob );
 
       // Send beamlet data (in 1 or 2 transfers) to the given rank (async).
       // Returns the number of MPI_Requests made.

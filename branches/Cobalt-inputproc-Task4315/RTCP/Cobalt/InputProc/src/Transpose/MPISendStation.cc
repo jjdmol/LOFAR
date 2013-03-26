@@ -53,8 +53,8 @@ namespace LOFAR {
 
       // Set static header info
       for(std::vector<int>::const_iterator rank = targetRanks.begin(); rank != targetRanks.end(); ++rank) {
-        headers[*rank].station      = this->settings.station;
-        headers[*rank].metaDataSize = this->metaDataSize();
+        headers[*rank].station   = this->settings.station;
+        headers[*rank].flagsSize = this->flagsSize();
       }
 
       // Set beamlet info
@@ -72,13 +72,13 @@ namespace LOFAR {
     }
 
     template<typename T>
-    MPI_Request MPISendStation::sendHeader( int rank, Header &header, const struct BlockReader<T>::Block &block )
+    MPI_Request MPISendStation::sendHeader( int rank, Header &header, const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob )
     {
       LOG_DEBUG_STR(logPrefix << "Sending header to rank " << rank);
 
       // Copy dynamic header info
-      header.from         = block.from;
-      header.to           = block.to;
+      header.from             = block.from;
+      header.to               = block.to;
 
       // Copy the beam-specific data
       ASSERT(header.nrBeamlets <= sizeof header.wrapOffsets / sizeof header.wrapOffsets[0]);
@@ -89,6 +89,12 @@ namespace LOFAR {
 
         header.wrapOffsets[i] = ib.nrRanges == 1 ? 0 : ib.ranges[0].to - ib.ranges[0].from;
       }
+
+      // Copy the meta data
+      ASSERT(metaDataBlob.size() <= sizeof header.metaDataBlob);
+
+      header.metaDataBlobSize = metaDataBlob.size();
+      std::copy(metaDataBlob.begin(), metaDataBlob.end(), header.metaDataBlob);
 
       // Send the actual header
       union tag_t tag;
@@ -129,22 +135,24 @@ namespace LOFAR {
     {
       //LOG_DEBUG_STR("Sending flags to rank " << rank);
 
-      std::vector<char> metaData(metaDataSize());
+      // Marshall flags to a buffer
+      std::vector<char> flagsBlob(flagsSize());
 
-      ssize_t numBytes = flags.marshall(&metaData[0], metaData.size());
+      ssize_t numBytes = flags.marshall(&flagsBlob[0], flagsBlob.size());
       ASSERT(numBytes >= 0);
 
+      // Send them
       union tag_t tag;
       tag.bits.type     = FLAGS;
       tag.bits.station  = stationIdx;
       tag.bits.beamlet  = beamlet;
 
-      return Guarded_MPI_Isend(&metaData[0], metaData.size(), rank, tag.value);
+      return Guarded_MPI_Isend(&flagsBlob[0], flagsBlob.size(), rank, tag.value);
     }
 
 
     template<typename T>
-    void MPISendStation::sendBlock( const struct BlockReader<T>::Block &block )
+    void MPISendStation::sendBlock( const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob )
     {
       /*
        * SEND HEADERS
@@ -153,7 +161,7 @@ namespace LOFAR {
       std::vector<MPI_Request> headerRequests;
 
       for(std::vector<int>::const_iterator rank = targetRanks.begin(); rank != targetRanks.end(); ++rank) {
-        headerRequests.push_back(sendHeader<T>(*rank, headers[*rank], block));
+        headerRequests.push_back(sendHeader<T>(*rank, headers[*rank], block, metaDataBlob));
       }
 
       /*
@@ -174,7 +182,7 @@ namespace LOFAR {
       }
 
       /*
-       * SEND FLAGS
+       * SEND METADATA
        */
 
       std::vector<MPI_Request> flagRequests;
@@ -225,9 +233,9 @@ namespace LOFAR {
 
     // Create all necessary instantiations
 #define INSTANTIATE(T) \
-      template MPI_Request MPISendStation::sendHeader<T>( int rank, Header &header, const struct BlockReader<T>::Block &block ); \
+      template MPI_Request MPISendStation::sendHeader<T>( int rank, Header &header, const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob ); \
       template unsigned MPISendStation::sendData<T>( int rank, unsigned beamlet, const struct BlockReader<T>::Block::Beamlet &ib, MPI_Request requests[2] ); \
-      template void MPISendStation::sendBlock<T>( const struct BlockReader<T>::Block &block );
+      template void MPISendStation::sendBlock<T>( const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob );
 
     INSTANTIATE(SampleType<i4complex>);
     INSTANTIATE(SampleType<i8complex>);
