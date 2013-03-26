@@ -65,7 +65,6 @@ SmartPtr<MPIReceiveStations> receiver;
 const size_t blockSize = 1024;
 
 vector<SampleT> data_in(blockSize);
-vector<SampleT> data_out(blockSize);
 
 TEST(Flags) {
   // Create structures for input and output
@@ -97,6 +96,7 @@ TEST(Flags) {
 
 TEST(Data_OneTransfer) {
   struct BlockReader<SampleT>::Block::Beamlet ib;
+  vector<SampleT> data_out(blockSize);
 
   ib.stationBeamlet = 0;
   ib.ranges[0].from = &data_in[0];
@@ -121,6 +121,7 @@ TEST(Data_OneTransfer) {
 
 TEST(Data_TwoTransfers) {
   struct BlockReader<SampleT>::Block::Beamlet ib;
+  vector<SampleT> data_out(blockSize);
 
   ib.stationBeamlet = 0;
   ib.ranges[0].from = &data_in[0];
