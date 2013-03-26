@@ -166,6 +166,20 @@ LANG:1 18 Observation1111111
 0
 1 23 5 "" 0
 0
+1 24 6 "" 2
+0
+1 25 6 "" 3
+0
+1 26 6 "" 0
+0
+1 27 6 "" 1
+0
+1 28 6 "" 5
+0
+1 29 6 "" 7
+0
+1 30 6 "" 8
+0
 0
 LAYER, 1 
 1
@@ -221,6 +235,10 @@ LANG:1 0
 "$observation""$observation"
 3 5 "PANEL_REF5" -1
 "objects/Processes\\writerDroppedl.pnl" 290 10 T 20 1 0 1 30 0
+1
+"$observation""$observation"
+3 6 "PANEL_REF6" -1
+"objects/Observations\\observationProgressBar.pnl" 575 11 T 21 1 0 1 0 -1
 1
 "$observation""$observation"
 0

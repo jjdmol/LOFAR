@@ -2272,7 +2272,6 @@ string navFunct_giveFadedColor(int minValue, int maxValue,int currentValue) {
   color="{"+r+","+g+","+b+"}";
   return color;
 }
-<<<<<<< .working
 
 // ***************************
 // navFunct_isObservation
