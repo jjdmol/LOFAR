@@ -247,7 +247,7 @@ class ComputeJob(object):
         # after node returned.
         # add the duration of
         time_info_end = time.time()
-        self.results["duration"] = str(time_info_end - time_info_start)
+        self.results["job_duration"] = str(time_info_end - time_info_start)
         self.results['returncode'] = process.returncode
 
         logger.debug("compute.dispatch results job {0}: {1}".format(
@@ -333,11 +333,11 @@ class RemoteCommandRecipeMixIn(object):
         node_durations = local_document.createElement("nodes")
         for job_id, job in enumerate(jobs):
             # Test if the duration is there
-            if "duration" in job.results:
+            if "job_duration" in job.results:
                 child_node_duration = add_child(node_durations, "job")
                 child_node_duration.setAttribute("job_id", str(job_id))
                 child_node_duration.setAttribute("duration",
-                     str(job.results["duration"]))
+                     str(job.results["job_duration"]))
                 # return code if present (Not there on error
                 if "returncode" in job.results:
                     child_node_duration.setAttribute(
