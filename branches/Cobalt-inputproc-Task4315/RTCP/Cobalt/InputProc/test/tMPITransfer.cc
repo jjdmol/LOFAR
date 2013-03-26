@@ -121,12 +121,12 @@ void sender()
 
       LOG_INFO_STR("Detected " << s);
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
-      SampleBufferReader<SampleT> reader(s, keys(beamletDistribution), 0.1);
+      BlockReader<SampleT> reader(s, keys(beamletDistribution), 0.1);
       MPISendStation sender(s, rank, beamletDistribution);
 
       LOG_INFO_STR("Sending to receivers");
       for (TimeStamp current = from; current + blockSize < to; current += blockSize) {
-        SmartPtr<struct SampleBufferReader<SampleT>::Block> block(reader.block(current, current + blockSize));
+        SmartPtr<struct BlockReader<SampleT>::Block> block(reader.block(current, current + blockSize));
 
         sender.sendBlock<SampleT>(*block);
       }

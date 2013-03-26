@@ -1,4 +1,4 @@
-/* SampleBufferReader.h
+/* BlockReader.h
  * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
  * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
  *
@@ -42,19 +42,19 @@ namespace LOFAR
      * An abstract class for the implementation of a reader for SampleBuffers.
      */
     template<typename T>
-    class SampleBufferReader
+    class BlockReader
     {
     public:
       // Initialise a block delivery system for the given buffer and beamlets.
       //
       // maxDelay is the time (seconds) to wait for data to arrive (in
       // real-time mode).
-      SampleBufferReader( const BufferSettings &settings, const std::vector<size_t> beamlets, double maxDelay = 0.0 );
-      ~SampleBufferReader();
+      BlockReader( const BufferSettings &settings, const std::vector<size_t> beamlets, double maxDelay = 0.0 );
+      ~BlockReader();
 
       struct Block {
       private:
-        SampleBufferReader<T> &reader;
+        BlockReader<T> &reader;
 
       public:
         TimeStamp from;
@@ -90,12 +90,12 @@ namespace LOFAR
         ~Block();
 
       private:
-        Block(SampleBufferReader<T> &reader, const TimeStamp &from, const TimeStamp &to);
+        Block(BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to);
         Block(const Block&);
 
         struct Beamlet getBeamlet( size_t beamletIdx );
 
-        friend class SampleBufferReader<T>;
+        friend class BlockReader<T>;
       };
 
       SmartPtr<struct Block> block( const TimeStamp &from, const TimeStamp &to );
@@ -129,7 +129,7 @@ namespace LOFAR
   }
 }
 
-#include "SampleBufferReader.tcc"
+#include "BlockReader.tcc"
 
 #endif
 

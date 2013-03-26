@@ -57,12 +57,21 @@ namespace LOFAR
         size_t metaDataSize;
       };
 
-      // Tag which identifies each block.
+      enum tag_types { CONTROL = 0, BEAMLET = 1, FLAGS = 2 };
+
+      // MPI tag which identifies each block.
       union tag_t {
         struct {
+          // One of tag_types
           unsigned type     :  2;
+
+          // Station index
           unsigned station  :  8;
+
+          // Beamlet index
           unsigned beamlet  : 10;
+
+          // Transfer number for data
           unsigned transfer :  1;
         } bits;
 
@@ -71,8 +80,6 @@ namespace LOFAR
         tag_t() : value(0) {
         }
       };
-
-      enum tag_types { CONTROL = 0, BEAMLET = 1, FLAGS = 2 };
 
     }
   }
