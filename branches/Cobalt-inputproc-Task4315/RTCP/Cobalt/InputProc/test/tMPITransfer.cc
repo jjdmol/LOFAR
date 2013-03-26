@@ -46,6 +46,7 @@
 #include "Station/Generator.h"
 #include "Station/PacketsToBuffer.h"
 #include "Transpose/MPITransferStations.h"
+#include "Transpose/MapUtil.h"
 
 #include <map>
 #include <vector>

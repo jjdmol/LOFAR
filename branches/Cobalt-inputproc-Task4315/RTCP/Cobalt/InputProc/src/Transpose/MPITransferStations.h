@@ -183,7 +183,5 @@ namespace LOFAR
   }
 }
 
-#include "MPITransferStations.tcc"
-
 #endif
 

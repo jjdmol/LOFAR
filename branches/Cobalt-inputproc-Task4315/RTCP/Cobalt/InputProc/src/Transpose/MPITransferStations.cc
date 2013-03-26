@@ -1,4 +1,4 @@
-/* MPITransferStations.tcc
+/* MPITransferStations.cc
  * Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
  * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
  *
@@ -19,7 +19,11 @@
  * $Id: $
  */
 
-#include <pthread.h>
+#include <lofar_config.h>
+#include "MPITransferStations.h"
+#include "MapUtil.h"
+
+#include <SampleType.h>
 
 #include <Common/LofarLogger.h>
 
@@ -29,46 +33,6 @@ using namespace std;
 
 namespace LOFAR {
   namespace Cobalt {
-
-
-// Returns the keys of an std::map.
-template<typename K, typename V> std::vector<K> keys( const std::map<K, V> &m )
-{
-  std::vector<K> keys;
-
-  keys.reserve(m.size());
-  for (typename std::map<K,V>::const_iterator i = m.begin(); i != m.end(); ++i) {
-    keys.push_back(i->first);
-  }
-
-  return keys;
-}
-
-
-// Returns the set of unique values of an std::map.
-template<typename K, typename V> std::set<V> values( const std::map<K, V> &m )
-{
-  std::set<V> values;
-
-  for (typename std::map<K,V>::const_iterator i = m.begin(); i != m.end(); ++i) {
-    values.insert(i->second);
-  }
-
-  return values;
-}
-
-
-// Returns the inverse of an std::map.
-template<typename K, typename V> std::map<V, std::vector<K> > inverse( const std::map<K, V> &m )
-{
-  std::map<V, std::vector<K> > inverse;
-
-  for (typename std::map<K,V>::const_iterator i = m.begin(); i != m.end(); ++i) {
-    inverse[i->second].push_back(i->first);
-  }
-
-  return inverse;
-}
 
 
 // Wait for any request to finish. Returns the index of the request that
@@ -439,6 +403,17 @@ template<typename T> void MPIReceiveStations::receiveBlock( MultiDimArray<struct
     for (size_t beamletIdx = 0; beamletIdx < beamlets.size(); ++beamletIdx)
       block[stat][beamletIdx].flags.unmarshall(&metaData[stat][beamletIdx][0]);
 }
+
+#define INSTANTIATE(T) \
+  template MPI_Request MPISendStation::sendHeader<T>( int rank, Header &header, const struct SampleBufferReader<T>::Block &block ); \
+  template unsigned MPISendStation::sendData<T>( int rank, unsigned beamlet, const struct SampleBufferReader<T>::Block::Beamlet &ib, MPI_Request requests[2] ); \
+  template void MPISendStation::sendBlock<T>( const struct SampleBufferReader<T>::Block &block ); \
+  template MPI_Request MPIReceiveStations::receiveBeamlet<T>( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples ); \
+  template void MPIReceiveStations::receiveBlock<T>( MultiDimArray<struct MPIReceiveStations::Beamlet<T>, 2> &block );
+
+INSTANTIATE(SampleType<i4complex>);
+INSTANTIATE(SampleType<i8complex>);
+INSTANTIATE(SampleType<i16complex>);
 
 }
 }
