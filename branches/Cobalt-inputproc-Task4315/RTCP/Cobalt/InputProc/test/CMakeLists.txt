@@ -23,6 +23,7 @@ lofar_add_test(tPacketsToBuffer tPacketsToBuffer.cc)
 
 if(UNITTEST++_FOUND)
   lofar_add_test(tBlockReader tBlockReader.cc)
+  lofar_add_test(tMPISendReceiveStation tMPISendReceiveStation.cc)
 endif(UNITTEST++_FOUND)
 
 lofar_add_test(tMPITransfer tMPITransfer.cc)

@@ -78,6 +78,10 @@ namespace LOFAR
     // Returns true if `index' is in the set.
     bool         test(T index) const;
 
+    // Compare two sets.
+    bool operator == (const SparseSet<T> &) const;
+    bool operator != (const SparseSet<T> &) const;
+
     // Return the union of two sets.
     SparseSet<T> operator | (const SparseSet<T> &) const;
     SparseSet<T> &operator |= (const SparseSet<T> &);
@@ -283,6 +287,29 @@ namespace LOFAR
   {
     const_iterator it = lower_bound(ranges.begin(), ranges.end(), range(index, index + 1), less_equal());
     return it != ranges.end() && index >= it->begin;
+  }
+
+
+  template <typename T>
+  bool SparseSet<T>::operator == (const SparseSet<T> &other) const
+  {
+    const_iterator it1, it2;
+
+    for (it1 = ranges.begin(), it2 = other.ranges.begin();
+         it1 != ranges.end() && it2 != other.ranges.end();
+         ++it1, ++it2) {
+      if (it1->begin != it2->begin || it1->end != it2->end)
+        return false;
+    }
+
+    return it1 == ranges.end() && it2 == other.ranges.end();
+  }
+
+
+  template <typename T>
+  bool SparseSet<T>::operator != (const SparseSet<T> &other) const
+  {
+    return !(*this == other);
   }
 
 

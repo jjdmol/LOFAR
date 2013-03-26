@@ -71,12 +71,6 @@ namespace LOFAR
       template<typename T>
       void sendBlock( const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob );
 
-    protected:
-      size_t flagsSize() const
-      {
-        return SparseSet<int64>::marshallSize(this->settings.nrAvailableRanges);
-      }
-
     private:
       const std::string logPrefix;
       const BufferSettings &settings;
@@ -97,6 +91,8 @@ namespace LOFAR
       // Cache for the headers to send
       std::map<int, MPIProtocol::Header> headers;
 
+    public:
+
       // Construct and send a header to the given rank (async).
       template<typename T>
       MPI_Request sendHeader( int rank, MPIProtocol::Header &header, const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob );
@@ -108,6 +104,11 @@ namespace LOFAR
 
       // Send flags data to the given rank (async).
       MPI_Request sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags );
+
+      size_t flagsSize() const
+      {
+        return SparseSet<int64>::marshallSize(this->settings.nrAvailableRanges);
+      }
     };
 
   }
