@@ -864,7 +864,7 @@ LANG:1 7 HBA LBA
 2 48
 "PRIMITIVE_TEXT20"
 ""
-1 10 572 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 11.98879551820728 570 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 33 0 0 0 0 0
 E E E
@@ -874,12 +874,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 10 572 363 585
-0 2 2 "0s" 0 0 0 192 0 0  10 572 1
+E E 0 1 1 2 1 E 0.9943977591036415 0 1 2.044817927170861 0 0 E 10 570 1003 583
+0 2 2 "0s" 0 0 0 192 0 0  10 570 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 95                                        0        1        2       3      dropping        dropped
+LANG:1 270                                        0        1        2       3      dropping        dropped   startTime                                                                   progress                                                  StopTime                     Exceeding
 0
 LAYER, 1 
 1
