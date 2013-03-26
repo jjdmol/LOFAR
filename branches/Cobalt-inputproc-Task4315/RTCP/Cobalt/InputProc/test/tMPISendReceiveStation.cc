@@ -45,6 +45,8 @@ using namespace LOFAR;
 using namespace Cobalt;
 using namespace std;
 
+using boost::format;
+
 
 typedef SampleType<i16complex> SampleT;
 std::vector<char> metaDataBlob(100, 42);
@@ -63,8 +65,9 @@ TEST(Flags) {
   // Create structures for input and output
   SparseSet<int64> flags_in;
   SparseSet<int64> flags_out;
-  vector<char> flags_out_buffer(sender.flagsSize());
+  vector<char> flags_out_buffer(sender->flagsSize());
 
+  // Fill input
   flags_in.include(10, 20);
   flags_in.include(30, 40);
   flags_in += rank; // make flags unique
@@ -72,8 +75,8 @@ TEST(Flags) {
   // Post requests
   vector<MPI_Request> requests(2);
   
-  requests[0] = sender.sendFlags(rank, 42, flags_in);
-  requests[1] = receiver.receiveFlags(0, 42, flags_out_buffer);
+  requests[0] = sender->sendFlags(rank, 42, flags_in);
+  requests[1] = receiver->receiveFlags(0, 42, flags_out_buffer);
 
   // Wait for results
   waitAll(requests);
@@ -83,6 +86,79 @@ TEST(Flags) {
 
   // Validate results
   CHECK_EQUAL(flags_in, flags_out);
+}
+
+
+TEST(Data_OneTransfer) {
+  // Create structures for input and output
+  const size_t blockSize = 1024;
+
+  struct BlockReader<SampleT>::Block::Beamlet ib;
+  vector<SampleT> data_in(blockSize);
+  vector<SampleT> data_out(blockSize);
+
+  // Fill input
+  for (size_t i = 0; i < data_in.size(); ++i) {
+    data_in[i].x = i16complex(rank, i);
+    data_in[i].y = i16complex(1000 + rank, 1000 + i);
+  }
+
+  ib.stationBeamlet = 0;
+  ib.ranges[0].from = &data_in[0];
+  ib.ranges[0].to   = &data_in[blockSize];
+  ib.nrRanges       = 1;
+  ib.offset         = 0;
+
+  // Post requests
+  vector<MPI_Request> requests(2);
+  
+  unsigned nrTransfers = sender->sendData<SampleT>(rank, 42, ib, &requests[0]);
+  CHECK_EQUAL(1U, nrTransfers);
+  requests[1] = receiver->receiveBeamlet<SampleT>(0, 42, 0, &data_out[0], data_out.size());
+
+  // Wait for results
+  waitAll(requests);
+
+  // Validate results
+  CHECK(data_in == data_out);
+}
+
+
+TEST(Data_TwoTransfers) {
+  // Create structures for input and output
+  const size_t blockSize = 1024;
+
+  struct BlockReader<SampleT>::Block::Beamlet ib;
+  vector<SampleT> data_in(blockSize);
+  vector<SampleT> data_out(blockSize);
+
+  // Fill input
+  for (size_t i = 0; i < data_in.size(); ++i) {
+    data_in[i].x = i16complex(rank, i);
+    data_in[i].y = i16complex(1000 + rank, 1000 + i);
+  }
+
+  ib.stationBeamlet = 0;
+  ib.ranges[0].from = &data_in[0];
+  ib.ranges[0].to   = &data_in[blockSize/2];
+  ib.ranges[1].from = &data_in[blockSize/2];
+  ib.ranges[1].to   = &data_in[blockSize];
+  ib.nrRanges       = 2;
+  ib.offset         = 0;
+
+  // Post requests
+  vector<MPI_Request> requests(4);
+  
+  unsigned nrTransfers = sender->sendData<SampleT>(rank, 42, ib, &requests[0]);
+  CHECK_EQUAL(2U, nrTransfers);
+  requests[2] = receiver->receiveBeamlet<SampleT>(0, 42, 0, &data_out[0], blockSize/2);
+  requests[3] = receiver->receiveBeamlet<SampleT>(0, 42, 1, &data_out[blockSize/2], blockSize/2);
+
+  // Wait for results
+  waitAll(requests);
+
+  // Validate results
+  CHECK(data_in == data_out);
 }
 
 
