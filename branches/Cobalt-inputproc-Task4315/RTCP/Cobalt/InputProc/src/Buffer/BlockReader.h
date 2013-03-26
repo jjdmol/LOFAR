@@ -48,7 +48,7 @@ namespace LOFAR
       // Initialise a block delivery system for the given buffer and beamlets.
       //
       // beamlets:
-      //   the set of station beamlets to send, out of
+      //   the set of station beamlets to read, out of
       //   [0, settings.nrBeamletsPerBoard * settings.nrBoards)
       // maxDelay:
       //   the time (seconds) to wait for data to arrive (in real-time mode).
@@ -93,33 +93,21 @@ namespace LOFAR
         ~Block();
 
       private:
-        Block(BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to);
-        Block(const Block&);
+        Block( BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets );
+        Block( const Block& );
 
-        struct Beamlet getBeamlet( size_t beamletIdx );
+        struct Beamlet getBeamlet( size_t beamletIdx, ssize_t offset );
 
         friend class BlockReader<T>;
       };
 
-      SmartPtr<struct Block> block( const TimeStamp &from, const TimeStamp &to );
+      SmartPtr<struct Block> block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets );
 
     protected:
       const BufferSettings settings;
       SampleBuffer<T> buffer;
 
       const std::vector<size_t> beamlets;
-
-      /*
-       * Provide the offset in samples for a certain beamlet, based on the
-       * geometric delays for the respective subband.
-       */
-      virtual ssize_t beamletOffset( size_t beamletIdx, const TimeStamp &from, const TimeStamp &to )
-      {
-        (void)beamletIdx;
-        (void)from;
-        (void)to;
-        return 0;
-      }
 
       friend class Block;
 

@@ -62,7 +62,7 @@ TEST(Basic) {
       const TimeStamp from(0, 0, settings.station.clockMHz * 1000000);
       const TimeStamp to(from + 10 * blockSize);
       for (TimeStamp current = from; current + blockSize < to; current += blockSize) {
-        SmartPtr<struct BlockReader< SampleType<i16complex> >::Block> block(reader.block(current, current + blockSize));
+        SmartPtr<struct BlockReader< SampleType<i16complex> >::Block> block(reader.block(current, current + blockSize, std::vector<ssize_t>(nrBeamlets, 0)));
 
         // Validate the block
         ASSERT(block->beamlets.size() == beamlets.size());
@@ -131,7 +131,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
   BlockReader< SampleType<T> > reader(settings, beamlets);
 
   // Read the block, plus 16 unavailable samples
-  SmartPtr<struct BlockReader< SampleType<T> >::Block> block(reader.block(from, from + available.count() + 16));
+  SmartPtr<struct BlockReader< SampleType<T> >::Block> block(reader.block(from, from + available.count() + 16, std::vector<ssize_t>(beamlets.size(),0)));
 
   // Validate the block
   for (size_t b = 0; b < beamlets.size(); ++b) {

@@ -35,7 +35,7 @@ using namespace LOFAR::Cobalt::MPIProtocol;
 namespace LOFAR {
   namespace Cobalt {
 
-    MPIReceiveStations::MPIReceiveStations( const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
+    MPIReceiveStations::MPIReceiveStations( const std::vector<int> &stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
     :
       logPrefix(str(boost::format("[beamlets %u..%u (%u)] [MPIReceiveStations] ") % beamlets[0] % beamlets[beamlets.size()-1] % beamlets.size())),
       stationRanks(stationRanks),
@@ -48,8 +48,6 @@ namespace LOFAR {
     MPI_Request MPIReceiveStations::receiveHeader( size_t station, struct MPIProtocol::Header &header )
     {
       tag_t tag;
-
-      // receive the header
       tag.bits.type    = CONTROL;
       tag.bits.station = station;
 
@@ -85,8 +83,7 @@ namespace LOFAR {
     void MPIReceiveStations::receiveBlock( MultiDimArray<struct MPIReceiveStations::Beamlet<T>, 2> &block )
     {
       // All requests except the headers
-      std::vector<MPI_Request> requests(beamlets.size() * 3 * stationRanks.size(), MPI_REQUEST_NULL);
-      size_t nrRequests = 0;
+      std::vector<MPI_Request> requests;
 
       /*
        * RECEIVE HEADERS (ASYNC)
@@ -134,6 +131,7 @@ namespace LOFAR {
           const size_t wrapOffset = header.wrapOffsets[beamletIdx];
 
           ASSERTSTR(header.beamlets[beamletIdx] == beamlet, "Got beamlet " << header.beamlets[beamletIdx] << ", but expected beamlet " << beamlet);
+          ASSERT(wrapOffset < blockSize);
 
           /*
            * RECEIVE BEAMLET (ASYNC)
@@ -142,11 +140,11 @@ namespace LOFAR {
           LOG_DEBUG_STR(logPrefix << "Receiving beamlet " << beamlet << " from rank " << rank << " using " << (wrapOffset > 0 ? 2 : 1) << " transfers");
 
           // First sample transfer
-          requests[nrRequests++] = receiveBeamlet<T>(stat, beamlet, 0, &block[stat][beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize);
+          requests.push_back(receiveBeamlet<T>(stat, beamlet, 0, &block[stat][beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize));
 
           // Second sample transfer
           if (wrapOffset > 0) {
-            requests[nrRequests++] = receiveBeamlet<T>(stat, beamlet, 1, &block[stat][beamletIdx].samples[wrapOffset], blockSize - wrapOffset);
+            requests.push_back(receiveBeamlet<T>(stat, beamlet, 1, &block[stat][beamletIdx].samples[wrapOffset], blockSize - wrapOffset));
           }
 
           /*
@@ -154,7 +152,7 @@ namespace LOFAR {
            */
 
           metaData[stat][beamletIdx].resize(header.metaDataSize);
-          requests[nrRequests++] = receiveFlags(stat, beamlet, metaData[stat][beamletIdx]);
+          requests.push_back(receiveFlags(stat, beamlet, metaData[stat][beamletIdx]));
         }
       }
 
@@ -162,7 +160,6 @@ namespace LOFAR {
        * WAIT FOR ALL DATA TO ARRIVE
        */
 
-      requests.resize(nrRequests);
       waitAll(requests);
 
       /*

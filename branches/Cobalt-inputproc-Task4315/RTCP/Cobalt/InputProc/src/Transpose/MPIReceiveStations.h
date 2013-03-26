@@ -45,7 +45,7 @@ namespace LOFAR
     public:
       // Set up a receiver for the given stations and beamlets, receiving
       // blocks of the given size.
-      MPIReceiveStations( const std::vector<int> stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
+      MPIReceiveStations( const std::vector<int> &stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
 
       template<typename T>
       struct Beamlet {

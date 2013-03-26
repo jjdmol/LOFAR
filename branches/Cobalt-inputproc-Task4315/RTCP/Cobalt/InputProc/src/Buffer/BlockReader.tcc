@@ -70,16 +70,18 @@ namespace LOFAR {
 
 
     template<typename T>
-    BlockReader<T>::Block::Block( BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to )
+    BlockReader<T>::Block::Block( BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
     :
       reader(reader),
       from(from),
       to(to),
       beamlets(reader.beamlets.size())
     {
+      ASSERT(beamletOffsets.size() == beamlets.size());
+
       // fill static beamlet info
       for (size_t i = 0; i < beamlets.size(); ++i) {
-        beamlets[i] = getBeamlet(i);
+        beamlets[i] = getBeamlet(i, beamletOffsets[i]);
       }
 
       // signal read intent on all buffers
@@ -95,7 +97,7 @@ namespace LOFAR {
 
 
     template<typename T>
-    struct BlockReader<T>::Block::Beamlet BlockReader<T>::Block::getBeamlet( size_t beamletIdx )
+    struct BlockReader<T>::Block::Beamlet BlockReader<T>::Block::getBeamlet( size_t beamletIdx, ssize_t offset )
     {
       // Create instructions for copying this beamlet
       struct Beamlet b;
@@ -103,10 +105,7 @@ namespace LOFAR {
       // Cache the actual beam number at the station
       b.stationBeamlet = reader.beamlets[beamletIdx];
       
-      // Determine the offset with which this beamlet is read (likely based on
-      // the relevant station beam).
-      ssize_t offset = reader.beamletOffset(beamletIdx, from, to);
-
+      // Store the sample offset with which this beamlet is read
       b.offset = offset;
 
       // Determine the relevant offsets in the buffer
@@ -153,7 +152,7 @@ namespace LOFAR {
 
 
     template<typename T>
-    SmartPtr<typename BlockReader<T>::Block> BlockReader<T>::block( const TimeStamp &from, const TimeStamp &to )
+    SmartPtr<typename BlockReader<T>::Block> BlockReader<T>::block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
     {
       ASSERT( to - from < (int64)buffer.nrSamples );
 
@@ -163,7 +162,7 @@ namespace LOFAR {
         waiter.waitUntil(to + maxDelay);
       }
 
-      return new Block(*this, from, to);
+      return new Block(*this, from, to, beamletOffsets);
     }
 
   }
