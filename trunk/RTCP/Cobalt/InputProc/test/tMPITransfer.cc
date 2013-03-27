@@ -70,6 +70,7 @@ const TimeStamp from(time(0L) + 5, 0, clockHz);
 const TimeStamp to(time(0L) + 5 + DURATION, 0, clockHz);
 const size_t blockSize = BLOCKSIZE * clockHz / 1024;
 map<int, std::vector<size_t> > beamletDistribution;
+const size_t nrHistorySamples = 16;
 
 std::vector<char> metaDataBlob(100, 42);
 
@@ -123,7 +124,7 @@ void sender()
 
       LOG_INFO_STR("Detected " << s);
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
-      BlockReader<SampleT> reader(s, values(beamletDistribution), 0.1);
+      BlockReader<SampleT> reader(s, values(beamletDistribution), nrHistorySamples, 0.1);
       MPISendStation sender(s, rank, beamletDistribution);
 
       LOG_INFO_STR("Sending to receivers");
@@ -152,19 +153,20 @@ void receiver()
   LOG_INFO_STR("Receiver node " << rank << " starts, handling " << beamlets.size() << " subbands from " << nrStations << " stations." );
   LOG_INFO_STR("Connecting to senders to receive " << from << " to " << to);
 
+  MPIReceiveStations receiver(stationRanks, beamlets, blockSize + nrHistorySamples);
 
-  MPIReceiveStations receiver(stationRanks, beamlets, blockSize);
-
+  // create blocks -- they all have to be the right size already
   std::vector< struct MPIReceiveStations::Block<SampleT> > blocks(nrStations);
 
   for (int s = 0; s < nrStations; ++s) {
     blocks[s].beamlets.resize(nrBeamlets);
 
     for (size_t b = 0; b < nrBeamlets; ++b) {
-      blocks[s].beamlets[b].samples.resize(blockSize);
+      blocks[s].beamlets[b].samples.resize(blockSize + nrHistorySamples);
     }
   }
 
+  // start transfer
   size_t blockIdx = 0;
 
   for(TimeStamp current = from; current + blockSize < to; current += blockSize) {
@@ -176,7 +178,7 @@ void receiver()
     }
 
     // calculate flagging average
-    const size_t nrSamples = nrStations * nrBeamlets * blockSize;
+    const size_t nrSamples = nrStations * nrBeamlets * (blockSize + nrHistorySamples);
     size_t nrFlaggedSamples = 0;
 
     for (int s = 0; s < nrStations; ++s) {

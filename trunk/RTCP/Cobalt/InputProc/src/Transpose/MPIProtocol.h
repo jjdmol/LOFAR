@@ -41,6 +41,9 @@ namespace LOFAR
         // Block will span [from,to)
         int64 from, to;
 
+        // Block is prefixed by past samples (before `from')
+        size_t nrHistorySamples;
+
         // Number of beamlets that will be sent
         size_t nrBeamlets;
 
@@ -64,6 +67,8 @@ namespace LOFAR
         char metaDataBlob[4096];
 
         std::vector<char> getMetaDataBlob() const {
+          ASSERT( metaDataBlobSize <= sizeof metaDataBlob );
+
           return std::vector<char>(&metaDataBlob[0], &metaDataBlob[metaDataBlobSize]);
         }
       };

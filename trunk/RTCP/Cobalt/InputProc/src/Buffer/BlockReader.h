@@ -53,7 +53,7 @@ namespace LOFAR
       //   [0, settings.nrBeamletsPerBoard * settings.nrBoards)
       // maxDelay:
       //   the time (seconds) to wait for data to arrive (in real-time mode).
-      BlockReader( const BufferSettings &settings, const std::vector<size_t> beamlets, double maxDelay = 0.0 );
+      BlockReader( const BufferSettings &settings, const std::vector<size_t> beamlets, size_t nrHistorySamples = 0, double maxDelay = 0.0 );
       ~BlockReader();
 
       struct LockedBlock: public Block<T> {
@@ -84,13 +84,14 @@ namespace LOFAR
       SampleBuffer<T> buffer;
 
       const std::vector<size_t> beamlets;
-
-      friend class LockedBlock;
+      const size_t nrHistorySamples;
 
     private:
       const TimeStamp maxDelay;
 
       WallClockTime waiter;
+
+      friend class LockedBlock;
     };
 
   }

@@ -28,12 +28,13 @@ namespace LOFAR {
   namespace Cobalt {
 
     template<typename T>
-    BlockReader<T>::BlockReader( const BufferSettings &settings, const std::vector<size_t> beamlets, double maxDelay )
+    BlockReader<T>::BlockReader( const BufferSettings &settings, const std::vector<size_t> beamlets, size_t nrHistorySamples, double maxDelay )
     :
       settings(settings),
       buffer(settings, false),
 
       beamlets(beamlets),
+      nrHistorySamples(nrHistorySamples),
       maxDelay(static_cast<int64>(maxDelay * settings.station.clockMHz * 1000000 / 1024), settings.station.clockMHz * 1000000)
     {
       // Check whether the selected beamlets exist
@@ -111,11 +112,15 @@ namespace LOFAR {
       // Store the sample offset with which this beamlet is read
       b.offset = offset;
 
-      // Determine the relevant offsets in the buffer
-      size_t from_offset = reader.buffer.offset(this->from + offset);
+      // Determine the relevant offsets in the buffer, processing:
+      //   offset: the shift applied to compensate geometric delays (etc)
+      //   reader.nrHistorySamples: the number of past samples to include (for
+      //                            PPF initialisation)
+      size_t from_offset = reader.buffer.offset(this->from + offset - reader.nrHistorySamples);
       size_t to_offset   = reader.buffer.offset(this->to   + offset);
 
       if (to_offset == 0)
+        // we need the other end, actually
         to_offset = reader.buffer.nrSamples;
 
       // Determine whether we need to wrap around the end of the buffer
@@ -149,7 +154,8 @@ namespace LOFAR {
     {
       // Signal end of read intent on all buffers
       for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = reader.buffer.boards.begin(); board != reader.buffer.boards.end(); ++board ) {
-        (*board).stopRead(this->to);
+        // Unlock data, saving nrHistorySamples for the next block
+        (*board).stopRead(this->to - reader.nrHistorySamples);
       }
     }
 
