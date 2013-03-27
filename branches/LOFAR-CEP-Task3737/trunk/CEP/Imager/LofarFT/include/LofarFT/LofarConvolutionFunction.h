@@ -177,6 +177,18 @@ namespace LOFAR
 					 vector< vector < Matrix<Complex> > > & StackMuellerNew,
 					 Int ImposeSupport, Bool UseWTerm);
 
+    LofarCFStore makeConvolutionFunction(uInt threadId,
+                                         uInt stationA, uInt stationB,
+                                         Double time, Double w,
+                                         const Matrix<bool>& Mask_Mueller,
+                                         bool degridding_step,
+                                         double Append_average_PB_CF,
+                                         Matrix<Complex>& Stack_PB_CF,
+                                         double& sum_weight_square,
+					 Vector<uInt> ChanBlock, Int TaylorTerm, double RefFreq,
+					 vector< vector < Matrix<Complex> > > & StackMuellerNew,
+					 Int ImposeSupport, Bool UseWTerm);
+
     LofarCFStore makeConvolutionFunctionAterm(uInt stationA, uInt stationB,
                                          Double time, Double w,
                                          const Matrix<bool>& Mask_Mueller,
@@ -218,7 +230,7 @@ namespace LOFAR
     void SumGridsOMP(Array<Complex>& grid, const vector< Array<Complex> >& GridToAdd0 , uInt PolNumIn, uInt PolNumOut);
     void SumGridsOMP(Array<Complex>& grid, const Array<Complex> & GridToAdd0 , uInt PolNumIn, uInt PolNumOut);
 
-    
+
     // Returns the average Primary Beam from the disk
     Matrix<float> Give_avg_pb();
 
@@ -233,7 +245,7 @@ namespace LOFAR
     Matrix<Complex> zero_padding(const Matrix<Complex>& Image, int Npixel_Out);
     Matrix<Complex> zero_padding(const Matrix<Complex>& Image, Matrix<Complex>& Image_Enlarged, bool tozero);
 
-    
+
 
     // Get the W scale.
     const WScale& wScale() const
@@ -301,13 +313,13 @@ namespace LOFAR
 	  }
 	}
 	//itsVectorMasksDegridElement.push_back(Mask);
-	
+
 	store(Mask,MaskName);
 	//cout<<"... Done Making Masks ..."<<endl;
       }
     }
 
-    
+
     void MakeVectorMaskWplanes( const Array<Complex>& gridin, Int NumTime, Int NumWplane)
     {
       String MaskName("JAWS_products/Mask.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim");
@@ -345,7 +357,7 @@ namespace LOFAR
 	MaskName="JAWS_products/MaskGrid.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim";
 	File MaskFilein(MaskName);
 	MaskFile=MaskFilein;
-	} 
+	}
       if(MaskType==1){
 	MaskName="JAWS_products/MaskDeGrid.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim";
 	File MaskFilein(MaskName);
@@ -397,7 +409,7 @@ namespace LOFAR
 	if(MaskType==2){
 	  itsVecMasksNewElement.push_back(Mask);
 	}
-	
+
     	//cout<<"... Done Making Masks ... t="<<NumTime<<" w="<<NumWplane+m_nWPlanes<<" npix="<<Nnonzero<<endl;
       }
     }
@@ -432,9 +444,9 @@ namespace LOFAR
 	  }
       }
       itsFilledVectorMasks=true;
-      
+
     }
-      
+
     void ReadMaskDegridW()
     {
       initStoreMasks();
@@ -442,7 +454,7 @@ namespace LOFAR
       Int Wc(0);
       for(Int Tnum=0;Tnum<NBigChunks;++Tnum){
 	for(Int Wnum=0;Wnum<2*m_nWPlanes;++Wnum){
-	
+
 	  Int Wsearch(Wnum-m_nWPlanes);
 	  String MaskName("JAWS_products/Mask.T"+String::toString(Tnum)+".W"+String::toString(Wsearch)+".boolim");
 	  File MaskFile(MaskName);
@@ -457,7 +469,7 @@ namespace LOFAR
 	}
       }
       itsFilledVectorMasks=true;
-      
+
     }
 
     void ReadMaskDegridWNew()
@@ -476,7 +488,7 @@ namespace LOFAR
 
       for(Int Tnum=0;Tnum<NBigChunks;++Tnum){
 	for(Int Wnum=0;Wnum<2*m_nWPlanes;++Wnum){
-	
+
 	  Int Wsearch(Wnum-m_nWPlanes);
 	  String MaskName("JAWS_products/MaskGrid.T"+String::toString(Tnum)+".W"+String::toString(Wsearch)+".boolim");
 	  File MaskFile(MaskName);
@@ -514,13 +526,15 @@ namespace LOFAR
       }
       //cout<<"... deon reading masks degrid"<<endl;
       itsFilledVectorMasks=true;
-      
+
     }
-      
+
       Bool VectorMaskIsFilled(){return itsFilledVectorMasks;}
     void normalized_fft (Matrix<Complex>&, bool toFreq=true);
-    void normalized_fft_parallel(Matrix<Complex> &im, bool toFreq=true);
     void normalized_fft (PrecTimer& timer, Matrix<Complex>&, bool toFreq=true);
+    void normalized_fft (uInt threadId, Matrix<Complex>&, bool toFreq=true);
+    void normalized_fft (uInt threadId, PrecTimer& timer, Matrix<Complex>&, bool toFreq=true);
+    void normalized_fft_parallel(Matrix<Complex> &im, bool toFreq=true);
 
     Vector< Double >    list_freq_spw;
     Vector< Double >    list_freq_chanBlock;
@@ -679,7 +693,7 @@ namespace LOFAR
 	  //gridInPtr++;
 	}
       }
-      
+
     }
 
     void ConvolveGer( const Matrix<Complex>& gridin, Matrix<Complex>& gridout,
@@ -730,7 +744,7 @@ namespace LOFAR
 	inPtr += Support;
       }
     }
-    
+
     void ConvolveArrayArray( const Array<Complex>& gridin, Array<Complex>& gridout,
 			   const Matrix<Complex>& ConvFunc)
     {
@@ -762,7 +776,7 @@ namespace LOFAR
 
       }
     }
-    
+
 
 
     void ConvolveGerArrayMask( const Array<Complex>& gridin, Int ConvPol, Matrix<Complex>& gridout,
@@ -792,9 +806,9 @@ namespace LOFAR
 	MaskPtr += Support;
       }
     }
-    
-    
-    
+
+
+
     // Linear interpolation
     template <typename T>
     Matrix< T > LinearInterpol2(Matrix<T> ImageIn, Int  NpixOut)
@@ -830,7 +844,7 @@ namespace LOFAR
       coordinate = m_coordinates;
       Double aPixelAngSize = min(m_pixelSizeSpheroidal,
 				 estimateAResolution(m_shape, m_coordinates, station_diameter));
-      
+
       Double pixelSize = abs(m_coordinates.increment()[0]);
       Double imageDiameter = pixelSize * m_shape(0);
       Int nPixelsConv = imageDiameter / aPixelAngSize;

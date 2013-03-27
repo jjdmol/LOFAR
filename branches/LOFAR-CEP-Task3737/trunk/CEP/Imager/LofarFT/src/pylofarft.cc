@@ -36,9 +36,9 @@ class LofarVBStoreProxy {
 //   LofarVBStoreProxy():dopsf_p(False) {};
 //   ~LofarVBStoreProxy() {};
 public:
-  
+
   LofarVBStoreProxy() : itsLofarVBStore(LofarVBStore()) {}
-  
+
   LofarVBStoreProxy(LofarVBStore vbs) : itsLofarVBStore(vbs) {}
 
   Int get_nRow() {
@@ -47,49 +47,49 @@ public:
   void set_nRow(Int v) {
     itsLofarVBStore.nRow_p = v;
   }
-  
+
   Int get_beginRow() {
     return itsLofarVBStore.beginRow_p;
   }
   void set_beginRow(Int v) {
     itsLofarVBStore.beginRow_p = v;
   }
-  
+
   Int get_endRow() {
     return itsLofarVBStore.endRow_p;
   }
   void set_endRow(Int v) {
     itsLofarVBStore.endRow_p = v;
   }
-  
+
   ValueHolder get_uvw() const {
     return ValueHolder(itsLofarVBStore.uvw_p);
   }
   void set_uvw(ValueHolder v) {
     itsLofarVBStore.uvw_p = v.asArrayDouble();
   }
-  
+
   ValueHolder get_selection() const {
     return ValueHolder(itsLofarVBStore.selection_p);
   }
   void set_selection(ValueHolder v) {
     itsLofarVBStore.selection_p = v.asArrayuInt();
   }
-  
+
   ValueHolder get_rowFlag() const {
     return ValueHolder(itsLofarVBStore.rowFlag_p);
   }
   void set_rowFlag(const ValueHolder v) {
     itsLofarVBStore.rowFlag_p = v.asArrayBool();
   }
-  
+
   ValueHolder get_flagCube() const {
     return ValueHolder(itsLofarVBStore.flagCube_p);
   }
   void set_flagCube(const ValueHolder v) {
     itsLofarVBStore.flagCube_p = v.asArrayBool();
   }
-  
+
   ValueHolder get_imagingWeight() const {
     return ValueHolder(itsLofarVBStore.imagingWeight_p);
   }
@@ -117,7 +117,7 @@ public:
   void set_correctedCube(ValueHolder v) {
     itsLofarVBStore.correctedCube_p = v.asArrayComplex();
   }
- 
+
   ValueHolder get_freq() const {
     return ValueHolder(itsLofarVBStore.freq_p);
   }
@@ -167,7 +167,7 @@ BOOST_PYTHON_MODULE(pylofarft)
     .add_property("dopsf", &LofarVBStoreProxy::get_dopsf, &LofarVBStoreProxy::set_dopsf)
     .add_property("useCorrected", &LofarVBStoreProxy::get_useCorrected, &LofarVBStoreProxy::set_useCorrected)
   ;
-  
+
   class_<LOFAR::LofarCFStore> ("LofarCFStore", "Nothing to see here, move along!")
   ;
 
@@ -186,23 +186,29 @@ BOOST_PYTHON_MODULE(pylofarft)
     .add_property("visCube", &LOFAR::VisBufferProxy::get_visCube)
     .add_property("polFrame", &LOFAR::VisBufferProxy::get_polFrame)
   ;
-  
+
   class_<casa::VisSet> ("VisSet", no_init)
     .add_property("msname", &casa::VisSet::msName)
   ;
-  
+
   class_<LOFAR::ROVisibilityIteratorProxy> ("_ROVisibilityIterator", init<LOFAR::ROVisibilityIteratorProxy&>())
     .def("ms", &LOFAR::ROVisibilityIteratorProxy::ms)
     .def("__iter__", &LOFAR::ROVisibilityIteratorProxy::iter, return_value_policy<reference_existing_object>())
     .def("next", &LOFAR::ROVisibilityIteratorProxy::next)
   ;
-  
-  class_<LOFAR::LofarConvolutionFunction> ("LofarConvolutionFunction", 
-    init<IPosition&, DirectionCoordinate&, MeasurementSet&, uInt, double, uInt, Int, Int, String&, Bool, Bool, int, 
-      Record&, vector< vector< vector < Matrix<Complex> > > > &>())
-    .def("makeConvolutionFunction", &LOFAR::LofarConvolutionFunction::makeConvolutionFunction)
+
+  LOFAR::LofarCFStore (LOFAR::LofarConvolutionFunction::*makeCF)(uInt, uInt,
+    Double, Double, const Matrix<bool>&, bool, double, Matrix<Complex>&,
+    double&, Vector<uInt>, Int, double, vector< vector < Matrix<Complex> > >&,
+    Int, Bool) = &LOFAR::LofarConvolutionFunction::makeConvolutionFunction;
+
+  class_<LOFAR::LofarConvolutionFunction> ("LofarConvolutionFunction",
+    init<IPosition&, DirectionCoordinate&, MeasurementSet&, uInt, double, uInt,
+      Int, Int, String&, Bool, Bool, int, Record&,
+      vector< vector< vector < Matrix<Complex> > > > &>())
+    .def("makeConvolutionFunction", makeCF);
   ;
-  
+
   class_<LOFAR::VisibilityResamplerProxy> ("VisibilityResampler")
   ;
 
@@ -226,22 +232,19 @@ BOOST_PYTHON_MODULE(pylofarft)
     .value("PSF", FTMachine::PSF)
     .value("COVERAGE", FTMachine::COVERAGE)
     .value("N_types", FTMachine::N_types)
-    .value("DEFAULT", FTMachine::DEFAULT)      
+    .value("DEFAULT", FTMachine::DEFAULT)
   ;
 
   enum_<SkyModel::PolRep>("PolRep")
     .value("CIRCULAR", SkyModel::CIRCULAR)
     .value("LINEAR", SkyModel::LINEAR)
   ;
-  
+
   enum_<MSIter::PolFrame> ("PolFrame")
     .value("Circular", MSIter::Circular)
     .value("Linear", MSIter::Linear)
   ;
-  
-  def("changeCStokesRep", changeCStokesRep); 
-  
+
+  def("changeCStokesRep", changeCStokesRep);
+
 }
-
-  
-
