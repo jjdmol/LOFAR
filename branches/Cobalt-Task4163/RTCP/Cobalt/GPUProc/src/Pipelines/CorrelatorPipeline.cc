@@ -23,7 +23,6 @@
 #include "CorrelatorPipeline.h"
 
 #include <iomanip>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
