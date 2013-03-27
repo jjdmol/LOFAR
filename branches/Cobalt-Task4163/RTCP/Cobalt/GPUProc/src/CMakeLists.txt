@@ -55,7 +55,6 @@ lofar_add_library(gpuproc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
   UHEP/InvertedStationPPFWeights.cc
-  UnitTest.cc 
   WorkQueues/BeamFormerWorkQueue.cc
   WorkQueues/CorrelatorWorkQueue.cc
   WorkQueues/UHEP_WorkQueue.cc
