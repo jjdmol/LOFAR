@@ -18,6 +18,14 @@
 //#
 //# $Id$
 
+/*! @file */
+
+/*! 
+ * @ingroup GPUProc
+ * @addtogroup GPUKernels 
+ * @{
+ */
+
 #define COMPLEX 2       // do not change
 
 #if NR_BITS_PER_SAMPLE == 16
@@ -419,3 +427,4 @@ __kernel void FIR_filter(__global void *filteredDataPtr,
   }
 }
 
+/*! @} */

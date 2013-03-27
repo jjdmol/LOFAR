@@ -20,7 +20,7 @@
 
 #include "math.cl"
 
-/** @file
+/*! @file
  * This file contains an OpenCL implementation of the GPU kernel for the delay
  * and bandpass correction.
  *
@@ -43,7 +43,7 @@
  * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
  */
 
-/** 
+/*! 
  * @ingroup GPUProc
  * @addtogroup GPUKernels 
  * @{
@@ -199,4 +199,4 @@ void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
   }
 }
 
-/** @} */
+/*! @} */

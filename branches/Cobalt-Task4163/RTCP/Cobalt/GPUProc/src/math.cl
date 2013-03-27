@@ -18,6 +18,14 @@
 //#
 //# $Id$
 
+/*! @file */
+
+/** 
+ * @ingroup GPUProc
+ * @addtogroup GPUKernels 
+ * @{
+ */
+
 typedef float2 fcomplex;
 typedef float4 fcomplex2;
 typedef float8 fcomplex4;
@@ -37,3 +45,4 @@ fcomplex cexp(float ang)
   return (fcomplex) (native_cos(ang), native_sin(ang));
 }
 
+/** @} */

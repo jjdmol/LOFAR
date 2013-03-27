@@ -1,7 +1,7 @@
 /**
 
 \ingroup LOFAR
-\defgroup Cobalt 
+\defgroup Cobalt Cobalt
 
 This package will become the new Real-Time Central Processing (RTCP) package.
 It contains the software packages that are responsible for the real-time
