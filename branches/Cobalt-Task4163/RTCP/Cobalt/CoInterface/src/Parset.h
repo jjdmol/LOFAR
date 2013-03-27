@@ -156,7 +156,7 @@ namespace LOFAR
       // key: Observation.bandFilter
       std::string bandFilter;
 
-      // The number of subbands in each RSP packet (depricated)
+      // The number of subbands in each RSP packet (deprecated)
       unsigned nrSlotsInFrame;
 
       struct Station {
