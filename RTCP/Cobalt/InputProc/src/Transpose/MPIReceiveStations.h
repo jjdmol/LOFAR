@@ -45,6 +45,18 @@ namespace LOFAR
     public:
       // Set up a receiver for the given stations and beamlets, receiving
       // blocks of the given size.
+      //
+      // stationRanks:
+      //   The rank of each station. MPI Nodes that host multiple stations
+      //   occur multiple times in the list, making len(stationRanks) ==
+      //   nrStations.
+      //
+      // beamlets:
+      //   The list of beamlets to receive out of [0, nrBeamlets) w.r.t. the
+      //   observation.
+      //
+      // blockSize:
+      //   The number of samples in each block. Includes nrHistorySamples.
       MPIReceiveStations( const std::vector<int> &stationRanks, const std::vector<size_t> &beamlets, size_t blockSize );
 
       template<typename T>

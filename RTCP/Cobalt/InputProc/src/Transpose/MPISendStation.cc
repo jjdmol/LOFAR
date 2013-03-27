@@ -53,8 +53,8 @@ namespace LOFAR {
 
       // Set static header info
       for(std::vector<int>::const_iterator rank = targetRanks.begin(); rank != targetRanks.end(); ++rank) {
-        headers[*rank].station   = this->settings.station;
-        headers[*rank].flagsSize = this->flagsSize();
+        headers[*rank].station   = settings.station;
+        headers[*rank].flagsSize = flagsSize();
       }
 
       // Set beamlet info

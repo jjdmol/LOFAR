@@ -124,7 +124,6 @@ namespace LOFAR {
 
         LOG_DEBUG_STR(logPrefix << "Received header from rank " << rank);
 
-        ASSERT(header.to - header.from == (int64)blockSize);
         ASSERTSTR(header.nrBeamlets == beamlets.size(), "Got " << header.nrBeamlets << " beamlets, but expected " << beamlets.size());
 
         // Post receives for all beamlets from this station
