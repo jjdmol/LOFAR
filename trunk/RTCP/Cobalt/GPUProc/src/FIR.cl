@@ -23,7 +23,7 @@
 #if NR_BITS_PER_SAMPLE == 16
 typedef short SampleType;
 #elif NR_BITS_PER_SAMPLE == 8
-typedef signed char SampleType;
+typedef char SampleType;
 #else
 #error unsupported NR_BITS_PER_SAMPLE
 #endif
