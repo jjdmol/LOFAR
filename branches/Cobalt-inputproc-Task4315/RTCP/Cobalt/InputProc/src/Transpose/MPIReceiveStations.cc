@@ -179,7 +179,7 @@ namespace LOFAR {
         }
 
         // Copy the metaData blob
-        blocks[stat].metaDataBlob = std::vector<char>(&header.metaDataBlob[0], &header.metaDataBlob[header.metaDataBlobSize]);
+        blocks[stat].metaDataBlob = header.getMetaDataBlob();
       }
     }
 

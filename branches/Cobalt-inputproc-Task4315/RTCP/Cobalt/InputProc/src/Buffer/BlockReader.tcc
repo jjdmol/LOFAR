@@ -55,9 +55,9 @@ namespace LOFAR {
 
 
     template<typename T>
-    SparseSet<int64> BlockReader<T>::Block::flags( size_t beamletIdx ) const
+    SparseSet<int64> BlockReader<T>::LockedBlock::flags( size_t beamletIdx ) const
     {
-      const BlockReader<T>::Block::Beamlet &ib = beamlets[beamletIdx];
+      const struct Block<T>::Beamlet &ib = this->beamlets[beamletIdx];
 
       // Determine corresponding RSP board
       size_t boardIdx = reader.settings.boardIndex(ib.stationBeamlet);
@@ -65,39 +65,42 @@ namespace LOFAR {
       ssize_t beam_offset = ib.offset;
 
       // Translate available packets to missing packets.
-      return reader.buffer.boards[boardIdx].available.sparseSet(from + beam_offset, to + beam_offset).invert(from + beam_offset, to + beam_offset);
+      const TimeStamp from = this->from + beam_offset;
+      const TimeStamp to   = this->to   + beam_offset;
+      return reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
     }
 
 
     template<typename T>
-    BlockReader<T>::Block::Block( BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
+    BlockReader<T>::LockedBlock::LockedBlock( BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
     :
-      reader(reader),
-      from(from),
-      to(to),
-      beamlets(reader.beamlets.size())
+      reader(reader)
     {
-      ASSERT(beamletOffsets.size() == beamlets.size());
+      this->from = from;
+      this->to   = to;
+
+      ASSERT(beamletOffsets.size() == reader.beamlets.size());
 
       // fill static beamlet info
-      for (size_t i = 0; i < beamlets.size(); ++i) {
-        beamlets[i] = getBeamlet(i, beamletOffsets[i]);
+      this->beamlets.resize(reader.beamlets.size());
+      for (size_t i = 0; i < this->beamlets.size(); ++i) {
+        this->beamlets[i] = getBeamlet(i, beamletOffsets[i]);
       }
 
       // signal read intent on all buffers
       for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = reader.buffer.boards.begin(); board != reader.buffer.boards.end(); ++board ) {
-        (*board).startRead(from, to);
+        (*board).startRead(this->from, this->to);
       }
 
       // record initial flags
-      for (size_t i = 0; i < beamlets.size(); ++i) {
-        beamlets[i].flagsAtBegin = flags(i);
+      for (size_t i = 0; i < this->beamlets.size(); ++i) {
+        this->beamlets[i].flagsAtBegin = flags(i);
       }
     }
 
 
     template<typename T>
-    struct BlockReader<T>::Block::Beamlet BlockReader<T>::Block::getBeamlet( size_t beamletIdx, ssize_t offset )
+    struct Block<T>::Beamlet BlockReader<T>::LockedBlock::getBeamlet( size_t beamletIdx, ssize_t offset )
     {
       // Create instructions for copying this beamlet
       struct Beamlet b;
@@ -109,8 +112,8 @@ namespace LOFAR {
       b.offset = offset;
 
       // Determine the relevant offsets in the buffer
-      size_t from_offset = reader.buffer.offset(from + offset);
-      size_t to_offset   = reader.buffer.offset(to   + offset);
+      size_t from_offset = reader.buffer.offset(this->from + offset);
+      size_t to_offset   = reader.buffer.offset(this->to   + offset);
 
       if (to_offset == 0)
         to_offset = reader.buffer.nrSamples;
@@ -142,17 +145,17 @@ namespace LOFAR {
 
 
     template<typename T>
-    BlockReader<T>::Block::~Block()
+    BlockReader<T>::LockedBlock::~LockedBlock()
     {
       // Signal end of read intent on all buffers
       for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = reader.buffer.boards.begin(); board != reader.buffer.boards.end(); ++board ) {
-        (*board).stopRead(to);
+        (*board).stopRead(this->to);
       }
     }
 
 
     template<typename T>
-    SmartPtr<typename BlockReader<T>::Block> BlockReader<T>::block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
+    SmartPtr<typename BlockReader<T>::LockedBlock> BlockReader<T>::block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
     {
       ASSERT( to - from < (int64)buffer.nrSamples );
 
@@ -162,7 +165,7 @@ namespace LOFAR {
         waiter.waitUntil(to + maxDelay);
       }
 
-      return new Block(*this, from, to, beamletOffsets);
+      return new LockedBlock(*this, from, to, beamletOffsets);
     }
 
   }

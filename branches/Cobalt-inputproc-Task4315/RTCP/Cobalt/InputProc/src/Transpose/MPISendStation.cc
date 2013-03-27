@@ -72,7 +72,7 @@ namespace LOFAR {
     }
 
     template<typename T>
-    MPI_Request MPISendStation::sendHeader( int rank, Header &header, const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob )
+    MPI_Request MPISendStation::sendHeader( int rank, Header &header, const struct Block<T> &block, const std::vector<char> &metaDataBlob )
     {
       LOG_DEBUG_STR(logPrefix << "Sending header to rank " << rank);
 
@@ -85,7 +85,7 @@ namespace LOFAR {
 
       for(size_t i = 0; i < header.nrBeamlets; ++i) {
         size_t beamletIdx = header.beamlets[i];
-        const struct BlockReader<T>::Block::Beamlet &ib = block.beamlets[beamletIdx];
+        const struct Block<T>::Beamlet &ib = block.beamlets[beamletIdx];
 
         header.wrapOffsets[i] = ib.nrRanges == 1 ? 0 : ib.ranges[0].to - ib.ranges[0].from;
       }
@@ -106,7 +106,7 @@ namespace LOFAR {
 
 
     template<typename T>
-    unsigned MPISendStation::sendData( int rank, unsigned beamlet, const struct BlockReader<T>::Block::Beamlet &ib, MPI_Request requests[2] )
+    unsigned MPISendStation::sendData( int rank, unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] )
     {
       LOG_DEBUG_STR(logPrefix << "Sending beamlet " << beamlet << " to rank " << rank << " using " << ib.nrRanges << " transfers");
 
@@ -152,7 +152,7 @@ namespace LOFAR {
 
 
     template<typename T>
-    void MPISendStation::sendBlock( const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob )
+    void MPISendStation::sendBlock( const struct Block<T> &block, const std::vector<char> &metaDataBlob )
     {
       /*
        * SEND HEADERS
@@ -176,7 +176,7 @@ namespace LOFAR {
         ASSERTSTR(beamletIdx < block.beamlets.size(), "Want to send beamlet #" << beamletIdx << " but block only contains " << block.beamlets.size() << " beamlets");
 
         // Send beamlet
-        const struct BlockReader<T>::Block::Beamlet &ib = block.beamlets[beamletIdx];
+        const struct Block<T>::Beamlet &ib = block.beamlets[beamletIdx];
 
         nrBeamletRequests += sendData<T>(rank, beamletIdx, ib, &beamletRequests[beamletIdx * 2]);
       }
@@ -192,7 +192,7 @@ namespace LOFAR {
         const size_t globalBeamletIdx  = sendIdx / 2;
         const size_t transfer          = sendIdx % 2;
 
-        const struct BlockReader<T>::Block::Beamlet &ib = block.beamlets[globalBeamletIdx];
+        const struct Block<T>::Beamlet &ib = block.beamlets[globalBeamletIdx];
 
         // waitAny sets finished requests to MPI_REQUEST_NULL in our array.
         if (ib.nrRanges == 1 || beamletRequests[globalBeamletIdx * 2 + (1 - transfer)] == MPI_REQUEST_NULL) {
@@ -233,9 +233,9 @@ namespace LOFAR {
 
     // Create all necessary instantiations
 #define INSTANTIATE(T) \
-      template MPI_Request MPISendStation::sendHeader<T>( int rank, Header &header, const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob ); \
-      template unsigned MPISendStation::sendData<T>( int rank, unsigned beamlet, const struct BlockReader<T>::Block::Beamlet &ib, MPI_Request requests[2] ); \
-      template void MPISendStation::sendBlock<T>( const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob );
+      template MPI_Request MPISendStation::sendHeader<T>( int rank, Header &header, const struct Block<T> &block, const std::vector<char> &metaDataBlob ); \
+      template unsigned MPISendStation::sendData<T>( int rank, unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] ); \
+      template void MPISendStation::sendBlock<T>( const struct Block<T> &block, const std::vector<char> &metaDataBlob );
 
     INSTANTIATE(SampleType<i4complex>);
     INSTANTIATE(SampleType<i8complex>);

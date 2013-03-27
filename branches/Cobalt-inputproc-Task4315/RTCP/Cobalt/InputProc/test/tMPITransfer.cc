@@ -42,6 +42,7 @@
 #include "SampleType.h"
 #include "Buffer/StationID.h"
 #include "Buffer/BufferSettings.h"
+#include "Buffer/BlockReader.h"
 #include "Station/PacketFactory.h"
 #include "Station/Generator.h"
 #include "Station/PacketsToBuffer.h"
@@ -127,7 +128,7 @@ void sender()
 
       LOG_INFO_STR("Sending to receivers");
       for (TimeStamp current = from; current + blockSize < to; current += blockSize) {
-        SmartPtr<struct BlockReader<SampleT>::Block> block(reader.block(current, current + blockSize, std::vector<ssize_t>(values(beamletDistribution).size(), 0)));
+        SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + blockSize, std::vector<ssize_t>(values(beamletDistribution).size(), 0)));
 
         sender.sendBlock<SampleT>(*block, metaDataBlob);
       }

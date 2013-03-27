@@ -19,8 +19,8 @@
  * $Id: $
  */
 
-#ifndef LOFAR_INPUT_PROC_SAMPLE_BUFFER_READER_H
-#define LOFAR_INPUT_PROC_SAMPLE_BUFFER_READER_H
+#ifndef LOFAR_INPUT_PROC_BLOCK_READER_H
+#define LOFAR_INPUT_PROC_BLOCK_READER_H
 
 #include <string>
 #include <vector>
@@ -32,6 +32,7 @@
 
 #include "BufferSettings.h"
 #include "SampleBuffer.h"
+#include "Block.h"
 
 
 namespace LOFAR
@@ -55,53 +56,28 @@ namespace LOFAR
       BlockReader( const BufferSettings &settings, const std::vector<size_t> beamlets, double maxDelay = 0.0 );
       ~BlockReader();
 
-      struct Block {
-      private:
-        BlockReader<T> &reader;
-
-      public:
-        TimeStamp from;
-        TimeStamp to;
-
-        struct Beamlet {
-          // Actual beamlet number on station
-          unsigned stationBeamlet;
-
-          // Copy as one or two ranges of [from, to).
-          struct Range {
-            const T* from;
-            const T* to;
-          } ranges[2];
-
-          unsigned nrRanges;
-
-          // The offset at which the data is accessed.
-          ssize_t offset;
-
-          SparseSet<int64> flagsAtBegin;
-        };
-
-        std::vector<struct Beamlet> beamlets; // [beamlet]
+      struct LockedBlock: public Block<T> {
+        virtual ~LockedBlock();
 
         /*
          * Read the flags for a specific beamlet. Readers should read the flags
          * after reading the data. The valid data is then indicated by
          * the intersection of (beamlets[i].flagsAtBegin & flags(i))
         */
-        SparseSet<int64> flags( size_t beamletIdx ) const;
-
-        ~Block();
+        virtual SparseSet<int64> flags( size_t beamletIdx ) const;
 
       private:
-        Block( BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets );
-        Block( const Block& );
+        LockedBlock( BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets );
+        LockedBlock( const LockedBlock& );
 
-        struct Beamlet getBeamlet( size_t beamletIdx, ssize_t offset );
+        BlockReader<T> &reader;
+
+        struct Block<T>::Beamlet getBeamlet( size_t beamletIdx, ssize_t offset );
 
         friend class BlockReader<T>;
       };
 
-      SmartPtr<struct Block> block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets );
+      SmartPtr<struct LockedBlock> block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets );
 
     protected:
       const BufferSettings settings;
@@ -109,7 +85,7 @@ namespace LOFAR
 
       const std::vector<size_t> beamlets;
 
-      friend class Block;
+      friend class LockedBlock;
 
     private:
       const TimeStamp maxDelay;

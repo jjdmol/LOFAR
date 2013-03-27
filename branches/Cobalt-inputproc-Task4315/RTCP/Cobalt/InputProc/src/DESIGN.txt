@@ -14,7 +14,7 @@ The extended data flow between classes is as follows:
    V
 [Station/PacketReader]            PacketReader: reads RSP packets from any Stream
    |
-  L1 cache
+  L1 cache [Station/RSP]
    |
    V
 [Station/PacketWriter]            PacketWriter: writes RSP packets into a

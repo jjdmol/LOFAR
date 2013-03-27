@@ -30,6 +30,7 @@
 
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
+#include <CoInterface/SmartPtr.h>
 
 #include "SampleType.h"
 #include "Transpose/MPIReceiveStations.h"
@@ -66,6 +67,116 @@ const size_t blockSize = 1024;
 
 vector<SampleT> data_in(blockSize);
 
+
+TEST(Header) {
+  struct Block<SampleT> block;
+
+  block.from = TimeStamp(1, 2);
+  block.to   = TimeStamp(3, 4);
+
+  for (size_t b = 0; b < 10; ++b) {
+    struct Block<SampleT>::Beamlet ib;
+
+    ib.stationBeamlet = b;
+    ib.ranges[0].from = &data_in[b];
+    ib.ranges[0].to   = &data_in[blockSize/2];
+    ib.ranges[1].from = &data_in[blockSize/2];
+    ib.ranges[1].to   = &data_in[blockSize];
+    ib.nrRanges       = 2;
+    ib.offset         = b;
+
+    block.beamlets.push_back(ib);
+  }
+
+  MPIProtocol::Header header_in;
+  MPIProtocol::Header header_out;
+
+  std::vector<char> metaDataBlob_in(100, 42);
+  std::vector<char> metaDataBlob_out;
+
+  // NOTE: Headers are already partially filled by MPISendStation constructor,
+  // so we need to do some filling as well
+  header_in.nrBeamlets = block.beamlets.size();
+  for (size_t b = 0; b < block.beamlets.size(); ++b) {
+    header_in.beamlets[b] = b;
+  }
+
+  // Post requests
+  vector<MPI_Request> requests(2);
+  
+  requests[0] = sender->sendHeader<SampleT>(rank, header_in, block, metaDataBlob_in);
+  requests[1] = receiver->receiveHeader(0, header_out);
+
+  // Wait for results
+  waitAll(requests);
+
+  metaDataBlob_out = header_out.getMetaDataBlob();
+
+  // Validate results
+  CHECK(metaDataBlob_in == metaDataBlob_out);
+  CHECK_EQUAL(header_in.from,       header_out.from);
+  CHECK_EQUAL(header_in.to,         header_out.to);
+  CHECK_EQUAL(header_in.nrBeamlets, header_out.nrBeamlets);
+
+  for (size_t b = 0; b < block.beamlets.size(); ++b) {
+    CHECK_EQUAL(blockSize/2 - b, header_out.wrapOffsets[b]);
+  }
+}
+
+
+TEST(Data_OneTransfer) {
+  struct Block<SampleT>::Beamlet ib;
+  vector<SampleT> data_out(blockSize);
+
+  ib.stationBeamlet = 0;
+  ib.ranges[0].from = &data_in[0];
+  ib.ranges[0].to   = &data_in[blockSize];
+  ib.nrRanges       = 1;
+  ib.offset         = 0;
+
+  // Post requests
+  vector<MPI_Request> requests(2);
+  
+  unsigned nrTransfers = sender->sendData<SampleT>(rank, 42, ib, &requests[0]);
+  CHECK_EQUAL(1U, nrTransfers);
+  requests[1] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], data_out.size());
+
+  // Wait for results
+  waitAll(requests);
+
+  // Validate results
+  CHECK(data_in == data_out);
+}
+
+
+TEST(Data_TwoTransfers) {
+  struct Block<SampleT>::Beamlet ib;
+  vector<SampleT> data_out(blockSize);
+
+  ib.stationBeamlet = 0;
+  ib.ranges[0].from = &data_in[0];
+  ib.ranges[0].to   = &data_in[blockSize/2];
+  ib.ranges[1].from = &data_in[blockSize/2];
+  ib.ranges[1].to   = &data_in[blockSize];
+  ib.nrRanges       = 2;
+  ib.offset         = 0;
+
+  // Post requests
+  vector<MPI_Request> requests(4);
+  
+  unsigned nrTransfers = sender->sendData<SampleT>(rank, 42, ib, &requests[0]);
+  CHECK_EQUAL(2U, nrTransfers);
+  requests[2] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], blockSize/2);
+  requests[3] = receiver->receiveData<SampleT>(0, 42, 1, &data_out[blockSize/2], blockSize/2);
+
+  // Wait for results
+  waitAll(requests);
+
+  // Validate results
+  CHECK(data_in == data_out);
+}
+
+
 TEST(Flags) {
   // Create structures for input and output
   SparseSet<int64> flags_in;
@@ -91,59 +202,6 @@ TEST(Flags) {
 
   // Validate results
   CHECK_EQUAL(flags_in, flags_out);
-}
-
-
-TEST(Data_OneTransfer) {
-  struct BlockReader<SampleT>::Block::Beamlet ib;
-  vector<SampleT> data_out(blockSize);
-
-  ib.stationBeamlet = 0;
-  ib.ranges[0].from = &data_in[0];
-  ib.ranges[0].to   = &data_in[blockSize];
-  ib.nrRanges       = 1;
-  ib.offset         = 0;
-
-  // Post requests
-  vector<MPI_Request> requests(2);
-  
-  unsigned nrTransfers = sender->sendData<SampleT>(rank, 42, ib, &requests[0]);
-  CHECK_EQUAL(1U, nrTransfers);
-  requests[1] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], data_out.size());
-
-  // Wait for results
-  waitAll(requests);
-
-  // Validate results
-  CHECK(data_in == data_out);
-}
-
-
-TEST(Data_TwoTransfers) {
-  struct BlockReader<SampleT>::Block::Beamlet ib;
-  vector<SampleT> data_out(blockSize);
-
-  ib.stationBeamlet = 0;
-  ib.ranges[0].from = &data_in[0];
-  ib.ranges[0].to   = &data_in[blockSize/2];
-  ib.ranges[1].from = &data_in[blockSize/2];
-  ib.ranges[1].to   = &data_in[blockSize];
-  ib.nrRanges       = 2;
-  ib.offset         = 0;
-
-  // Post requests
-  vector<MPI_Request> requests(4);
-  
-  unsigned nrTransfers = sender->sendData<SampleT>(rank, 42, ib, &requests[0]);
-  CHECK_EQUAL(2U, nrTransfers);
-  requests[2] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], blockSize/2);
-  requests[3] = receiver->receiveData<SampleT>(0, 42, 1, &data_out[blockSize/2], blockSize/2);
-
-  // Wait for results
-  waitAll(requests);
-
-  // Validate results
-  CHECK(data_in == data_out);
 }
 
 

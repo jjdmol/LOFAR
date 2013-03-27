@@ -29,7 +29,7 @@
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/SparseSet.h>
 
-#include <Buffer/BlockReader.h>
+#include <Buffer/Block.h>
 #include <Buffer/BufferSettings.h>
 #include "MPIProtocol.h"
 
@@ -43,7 +43,7 @@ namespace LOFAR
   {
 
     /*
-     * Sends a block of beamlets from a BlockReader to all receiving MPI nodes.
+     * Sends a Block of beamlets to all receiving MPI nodes.
      * Blocks are sent in a sequential fashion: a block must be received
      * completely before the next one is sent. Performance is barely affected,
      * because the output to all nodes has to go through a shared pipe (IB
@@ -69,7 +69,7 @@ namespace LOFAR
       // Send one block. The caller is responsible for matching the number of
       // posted receiveBlocks.
       template<typename T>
-      void sendBlock( const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob );
+      void sendBlock( const struct Block<T> &block, const std::vector<char> &metaDataBlob );
 
     private:
       const std::string logPrefix;
@@ -92,15 +92,14 @@ namespace LOFAR
       std::map<int, MPIProtocol::Header> headers;
 
     public:
-
       // Construct and send a header to the given rank (async).
       template<typename T>
-      MPI_Request sendHeader( int rank, MPIProtocol::Header &header, const struct BlockReader<T>::Block &block, const std::vector<char> &metaDataBlob );
+      MPI_Request sendHeader( int rank, MPIProtocol::Header &header, const struct Block<T> &block, const std::vector<char> &metaDataBlob );
 
       // Send beamlet data (in 1 or 2 transfers) to the given rank (async).
       // Returns the number of MPI_Requests made.
       template<typename T>
-      unsigned sendData( int rank, unsigned beamlet, const struct BlockReader<T>::Block::Beamlet &ib, MPI_Request requests[2] );
+      unsigned sendData( int rank, unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] );
 
       // Send flags data to the given rank (async).
       MPI_Request sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags );

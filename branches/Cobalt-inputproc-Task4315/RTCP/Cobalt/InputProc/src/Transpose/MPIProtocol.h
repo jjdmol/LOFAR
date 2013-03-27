@@ -62,6 +62,10 @@ namespace LOFAR
         // The metaData blob
         size_t metaDataBlobSize;
         char metaDataBlob[4096];
+
+        std::vector<char> getMetaDataBlob() const {
+          return std::vector<char>(&metaDataBlob[0], &metaDataBlob[metaDataBlobSize]);
+        }
       };
 
       enum tag_types { CONTROL = 0, BEAMLET = 1, FLAGS = 2 };
