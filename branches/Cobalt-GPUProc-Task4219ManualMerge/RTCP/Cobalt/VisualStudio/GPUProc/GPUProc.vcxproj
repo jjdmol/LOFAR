@@ -163,6 +163,7 @@
     <ClCompile Include="..\..\GPUProc\src\WorkQueues\CorrelatorWorkQueue.cc" />
     <ClCompile Include="..\..\GPUProc\src\WorkQueues\UHEP_WorkQueue.cc" />
     <ClCompile Include="..\..\GPUProc\src\WorkQueues\WorkQueue.cc" />
+    <ClCompile Include="..\..\GPUProc\test\UnitTests\WorkQueues\CorrelatorWorkQueue.cc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B9AD2D71-5575-4DB1-853F-AC01BE137E85}</ProjectGuid>
@@ -193,7 +194,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;..\..\..\static_fixture;..\..\;..\symbolic_links;C:\Program Files (x86)\boost\boost_1_41;C:\Program Files (x86)\AMD APP\include</IncludePath>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;..\..\..\static_fixture;..\..\;..\symbolic_links;C:\Program Files (x86)\boost\boost_1_41;C:\Program Files (x86)\AMD APP\include;..\symbolic_links\GPUProc;..\..\..\static_fixture\UnitTest++</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
