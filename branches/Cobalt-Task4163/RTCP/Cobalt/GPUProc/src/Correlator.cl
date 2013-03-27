@@ -20,6 +20,14 @@
 
 #include "math.cl"
 
+/*! @file */
+
+/*! 
+ * @ingroup GPUProc
+ * @addtogroup GPUKernels 
+ * @{
+ */
+
 #define NR_BASELINES     (NR_STATIONS * (NR_STATIONS + 1) / 2)
 
 #if NR_STATIONS == 288
@@ -639,3 +647,4 @@ __kernel void correlate_4x4(__global void *visibilitiesPtr,
   }
 }
 
+/*! @} */

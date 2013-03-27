@@ -18,13 +18,20 @@
 //#
 //# $Id$
 
+/*! @file */
+
 #include "math.cl"
+
+/*! 
+ * @ingroup GPUProc
+ * @addtogroup GPUKernels 
+ * @{
+ */
 
 #define NR_STATIONS_PER_BLOCK   32
 #define NR_TIMES_PER_BLOCK      8
 
 #define NR_BASELINES            (NR_STATIONS * (NR_STATIONS + 1) / 2)
-
 
 typedef __global fcomplex2 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 typedef __global fcomplex4 (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS];
@@ -655,3 +662,4 @@ void correlate(__global void *visibilitiesPtr,
     correlateRectangle((VisibilitiesType) visibilitiesPtr, (CorrectedDataType) correctedDataPtr, samplesX, samplesY, blockX, blockY);
 }
 
+/*! @} */

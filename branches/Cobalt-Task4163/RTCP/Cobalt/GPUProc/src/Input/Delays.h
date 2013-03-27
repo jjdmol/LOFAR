@@ -67,7 +67,7 @@ namespace LOFAR
     // The choice of reference station is arbitrary, so we simply choose the
     // first station from the parameter set. From the equation above it is
     // clear that we can reduce the number of dot products if we precalculate
-    // the position difference vectors \f$\mathbf{p}_j - \mathbf{p}_0$\f,
+    // the position difference vectors \f$\mathbf{p}_j - \mathbf{p}_0\f$,
     // which we will store in \c			itsPositionDiffs.
     //
     // The geometrical delay is easily obtained by dividing the path length
