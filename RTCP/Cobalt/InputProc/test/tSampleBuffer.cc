@@ -58,6 +58,10 @@ int main()
   // Use a fixed key, so the test suite knows what to clean
   settings.dataKey = 0x12345678;
 
+  // Limit the array in size to work on systems with only 32MB SHM
+  settings.nrBoards = 1;
+  settings.setBufferSize(0.1);
+
   // Test various modes
   LOG_INFO("Test 16-bit complex");
   test<i16complex>(settings);

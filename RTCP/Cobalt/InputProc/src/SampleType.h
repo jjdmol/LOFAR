@@ -34,6 +34,14 @@ namespace LOFAR
     template<typename T>
     struct SampleType {
       T x, y;
+
+      bool operator == (const struct SampleType &other) const {
+        return x == other.x && y == other.y;
+      }
+
+      bool operator != (const struct SampleType &other) const {
+        return !(*this == other);
+      }
     };
 
     template struct SampleType<i16complex>;

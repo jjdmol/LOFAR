@@ -29,6 +29,7 @@
 #include <RSPBoards.h>
 #include <Buffer/BufferSettings.h>
 
+#include "PacketFactory.h"
 #include "RSP.h"
 
 namespace LOFAR
@@ -41,18 +42,17 @@ namespace LOFAR
     class Generator : public RSPBoards
     {
     public:
-      Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors );
+      Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors, PacketFactory &packetFactory );
 
     protected:
       const BufferSettings settings;
       const std::vector<std::string> streamDescriptors;
+      PacketFactory &packetFactory;
 
       std::vector<size_t> nrSent;
 
       virtual void processBoard( size_t nr );
       virtual void logStatistics();
-
-      virtual void makePacket( size_t boardNr, struct RSP &packet, const TimeStamp &timestamp );
     };
 
   }

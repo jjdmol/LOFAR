@@ -35,55 +35,17 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    Generator::Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
+    Generator::Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors, PacketFactory &packetFactory )
       :
       RSPBoards(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaField), streamDescriptors.size()),
       settings(settings),
       streamDescriptors(streamDescriptors),
+      packetFactory(packetFactory),
       nrSent(nrBoards, 0)
     {
       LOG_INFO_STR( logPrefix << "Initialised" );
     }
 
-    void Generator::makePacket( size_t boardNr, struct RSP &packet, const TimeStamp &timestamp )
-    {
-      // configure the packet header
-      packet.header.version = 3; // we emulate BDI 6.0
-
-      packet.header.sourceInfo1 =
-        (boardNr & 0x1F) | (settings.station.clockMHz == 200 ? 1 << 7 : 0);
-
-      switch (settings.station.bitMode) {
-      case 16:
-        packet.header.sourceInfo2 = 0;
-        break;
-
-      case 8:
-        packet.header.sourceInfo2 = 1;
-        break;
-
-      case 4:
-        packet.header.sourceInfo2 = 2;
-        break;
-      }
-
-      packet.header.nrBeamlets = settings.nrBeamletsPerBoard;
-      packet.header.nrBlocks = 16;
-
-      packet.header.timestamp = timestamp.getSeqId();
-      packet.header.blockSequenceNumber = timestamp.getBlockId();
-
-      // insert data that is different for each packet
-      int64 data = timestamp;
-
-      memset(packet.payload.data, data & 0xFF, sizeof packet.payload.data);
-
-      // verify whether the packet really reflects what we intended
-      ASSERT(packet.rspBoard()     == boardNr);
-      ASSERT(packet.payloadError() == false);
-      ASSERT(packet.bitMode()      == settings.station.bitMode);
-      ASSERT(packet.clockMHz()     == settings.station.clockMHz);
-    }
 
     void Generator::processBoard( size_t nr )
     {
@@ -100,9 +62,7 @@ namespace LOFAR
           struct RSP packet;
 
           // generate packet
-          makePacket( nr, packet, current );
-
-          ASSERT(packet.packetSize() <= sizeof packet);
+          packetFactory.makePacket( packet, current, nr );
 
           // wait until it is due
           if (!waiter.waitUntil(current))

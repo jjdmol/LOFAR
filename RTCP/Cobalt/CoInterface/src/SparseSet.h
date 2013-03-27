@@ -77,9 +77,17 @@ namespace LOFAR
     // Returns true if `index' is in the set.
     bool         test(T index) const;
 
+    // Compare two sets.
+    bool operator == (const SparseSet<T> &) const;
+    bool operator != (const SparseSet<T> &) const;
+
     // Return the union of two sets.
     SparseSet<T> operator | (const SparseSet<T> &) const;
     SparseSet<T> &operator |= (const SparseSet<T> &);
+
+    // Return the intersection of two sets.
+    SparseSet<T> operator & (const SparseSet<T> &) const;
+    SparseSet<T> &operator &= (const SparseSet<T> &);
 
     // Increase all indices in the set by `count'.
     SparseSet<T> &operator += (size_t count);
@@ -101,6 +109,10 @@ namespace LOFAR
 
     // Returns the range vector, useful for iteration.
     const Ranges &getRanges() const;
+
+    // Returns the number of bytes to marshall the given
+    // number of ranges.
+    static size_t marshallSize(size_t nrRanges);
 
     // Write the set to *ptr, using at most maxSize bytes.
     // Returns the number of marshalled bytes, or -1
@@ -158,6 +170,14 @@ namespace LOFAR
   inline SparseSet<T> &SparseSet<T>::operator |= (const SparseSet<T> &other)
   {
     ranges = (*this | other).ranges;
+    return *this;
+  }
+
+
+  template <typename T>
+  inline SparseSet<T> &SparseSet<T>::operator &= (const SparseSet<T> &other)
+  {
+    ranges = (*this & other).ranges;
     return *this;
   }
 
@@ -270,6 +290,29 @@ namespace LOFAR
 
 
   template <typename T>
+  bool SparseSet<T>::operator == (const SparseSet<T> &other) const
+  {
+    const_iterator it1, it2;
+
+    for (it1 = ranges.begin(), it2 = other.ranges.begin();
+         it1 != ranges.end() && it2 != other.ranges.end();
+         ++it1, ++it2) {
+      if (it1->begin != it2->begin || it1->end != it2->end)
+        return false;
+    }
+
+    return it1 == ranges.end() && it2 == other.ranges.end();
+  }
+
+
+  template <typename T>
+  bool SparseSet<T>::operator != (const SparseSet<T> &other) const
+  {
+    return !(*this == other);
+  }
+
+
+  template <typename T>
   SparseSet<T> SparseSet<T>::operator | (const SparseSet<T> &other) const
   {
     // iterate with two iterators over both sets, comparing the ranges to decide
@@ -307,6 +350,37 @@ namespace LOFAR
     union_set.ranges.insert(union_set.ranges.end(), it1, ranges.end());
     union_set.ranges.insert(union_set.ranges.end(), it2, other.ranges.end());
     return union_set;
+  }
+
+
+  template <typename T>
+  SparseSet<T> SparseSet<T>::operator & (const SparseSet<T> &other) const
+  {
+    SparseSet<T> intersection_set;
+    const_iterator it1 = ranges.begin(), it2 = other.ranges.begin();
+
+    while (it1 != ranges.end() && it2 != other.ranges.end()) {
+      if (it1->end < it2->begin) {
+        // no overlap; *it1 is the smallest
+        ++it1;
+      } else if (it2->end < it1->begin) {
+        // no overlap; *it2 is the smallest
+        ++it2;
+      } else { // there is overlap, or it1 and it2 are contiguous
+        intersection_set.ranges.push_back(range(std::max(it1->begin, it2->begin), std::min(it1->end, it2->end)));
+
+        // continue with earliest end, as multiple ranges may overlap
+        // with the latest end.
+        if (it1->end < it2->end)
+          ++it1;
+        else
+          ++it2;
+      }
+    }
+
+    // ignore the remainder of the set that we have not finished yet
+
+    return intersection_set;
   }
 
 
@@ -361,11 +435,17 @@ namespace LOFAR
     return *this;
   }
 
+  template <typename T>
+  size_t SparseSet<T>::marshallSize(size_t nrRanges)
+  {
+    return sizeof(uint32_t) + nrRanges * sizeof(range);
+  }
+
 
   template <typename T>
   ssize_t SparseSet<T>::marshall(void *ptr, size_t maxSize) const
   {
-    size_t size = sizeof(uint32_t) + ranges.size() * sizeof(range);
+    size_t size = marshallSize(ranges.size());
 
     if (size > maxSize)
       return -1;

@@ -12,10 +12,13 @@ lofar_add_library(inputproc
   Buffer/SharedMemory.cc
   Buffer/StationID.cc
   Station/Generator.cc
+  Station/PacketFactory.cc
   Station/PacketReader.cc
   Station/PacketsToBuffer.cc
+  Transpose/MPISendStation.cc
+  Transpose/MPIReceiveStations.cc
+  Transpose/MPIUtil.cc
   )
 
-lofar_add_bin_program(newInputSection newInputSection.cc)
 lofar_add_bin_program(filterRSP Station/filterRSP.cc)
 lofar_add_bin_program(printRSP Station/printRSP.cc)
