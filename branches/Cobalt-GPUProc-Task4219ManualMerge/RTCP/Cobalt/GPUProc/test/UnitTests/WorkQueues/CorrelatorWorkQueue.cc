@@ -10,29 +10,107 @@
 #include <CoInterface/MultiDimArray.h>
 #include <complex>
 
-using namespace LOFAR::RTCP;
+using namespace LOFAR::Cobalt;
 
-TEST(CorrelatorWorkQueueComputeFlags)
+TEST(propagateFlagsToOutput)
 {
   // Create a parset with the needed parameters
   Parset parset;
-  parset.add("Observation.channelsPerSubband","64"); 
-  parset.add("OLAP.IONProc.integrationSteps", "3072");  // both are needed?
-  parset.add("OLAP.CNProc.integrationSteps", "3072");   // both are needed? Is there a check in the parset that assures equality?
+  parset.add("Observation.channelsPerSubband","4"); //not to large a number of subbands, else the integration steps gets big
+  parset.add("OLAP.IONProc.integrationSteps", "1");  
+  parset.add("OLAP.CNProc.integrationSteps", "1024");   //samples per channel 
   
-  parset.add("OLAP.storageStationNames", "[RS106HBA]"); // Number of names here sets the number of stations.
+  parset.add("OLAP.storageStationNames", "[RS102HBA, RS103HBA, RS104HBA, RS105HBA]"); // Number of names here sets the number of stations.
+  parset.updateSettings();
+  unsigned number_of_baselines = (parset.nrStations() * 1.0 * (parset.nrStations() + 1)) / 2;
 
   // Input flags: an array of sparseset
   MultiDimArray<LOFAR::SparseSet<unsigned>, 1> inputFlags(boost::extents[parset.nrStations()]);
-
+  // Set some flags
+  inputFlags[2].include(100, 101);    // A. a single sample flagged in station 3
+  inputFlags[3].include(500, 501);  // B. a single sample flagged is station 4
+  
+  // The output data to be flagged
   CorrelatedData output(parset.nrStations(), 
                      parset.nrChannelsPerSubband(), 
                      parset.integrationSteps());
 
-  //propageFlags
+  // The content ergo the visibilities should be 1, this allows us to validate the weighting
+  //assign all values 1 pol 0
+  for(unsigned idx_baseline = 0; idx_baseline < number_of_baselines; ++idx_baseline)
+    for(unsigned idx_channel = 0; idx_channel < parset.nrChannelsPerSubband(); ++idx_channel)    
+      for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
+        for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2)    
+           output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
+
+
+
+  // *********************************************************************************************
+  //propageFlags: exercise the functionality
   propagateFlagsToOutput(parset, inputFlags, output);
-  //computeFlags
-  CHECK(true);
+
+  // now perform weighting of the data based on the number of valid samples
+  applyFractionOfFlaggedSamplesOnVisibilities(parset, output);  
+  // *********************************************************************************************
+
+  // Now validate the functionality:
+  // 1. Channel zero all zero, there are more then 1 channels: fft fills channel 0 with garbage
+  for(unsigned idx_baseline = 0; idx_baseline < number_of_baselines; ++idx_baseline)
+    for(unsigned idx_channel = 0; idx_channel < 1; ++idx_channel)    //validate channel zero
+      for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
+        for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
+          CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2]);
+
+  // 2. station zero and one have no flags, the baselines for these station should be default 
+  float weight_of_unflagged_sample = 1e-6f/1024; // default weighting / number of samples
+  for(unsigned idx_baseline = 0; idx_baseline < 3; ++idx_baseline)  //bl 0-3 are 0.0 1.0 and 1.1
+    for(unsigned idx_channel = 1; idx_channel < 4; ++idx_channel)    //validate channel ONE and higher
+      for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
+        for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
+           CHECK_CLOSE(weight_of_unflagged_sample,
+                      output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
+                      1e-18f);  // float compare with this delta
+
+  // 3. Now check the weights for bl 4 to 6: flagging should be a single flagged sample on the input
+  // only a single point in time is flagged should result in weight_of_single_sample
+  float weight_of_single_sample = 1e-6f/(1024 - 1 * NR_TAPS);  // 1 * filter width
+  for(unsigned idx_baseline = 3; idx_baseline < 6; ++idx_baseline)
+    for(unsigned idx_channel = 1; idx_channel < 4; ++idx_channel)    //validate channel ONE and higher
+      for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
+        for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
+          CHECK_CLOSE(weight_of_single_sample,
+                      output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
+                      1e-18f);  // float compare with this delta
+
+    // 3. Now check the weights for bl 4 to 6: flagging should be a single flagged sample on the input from station 3
+  // only a single point in time is flagged should result in weight_of_single_sample
+  for(unsigned idx_baseline = 6; idx_baseline < 8; ++idx_baseline)
+    for(unsigned idx_channel = 1; idx_channel < 4; ++idx_channel)    //validate channel ONE and higher
+      for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
+        for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
+          CHECK_CLOSE(weight_of_single_sample,
+                      output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
+                      1e-18f);  // float compare with this delta
+
+  // station 2 and 3: two samples
+  float weight_of_two_sample = 1e-6f/(1024 - 2 * NR_TAPS);  // 1 * filter width
+  for(unsigned idx_baseline = 8; idx_baseline < 9; ++idx_baseline)
+    for(unsigned idx_channel = 1; idx_channel < 4; ++idx_channel)    //validate channel ONE and higher
+      for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
+        for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
+          CHECK_CLOSE(weight_of_two_sample,
+                      output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
+                      1e-18f);  // float compare with this delta
+
+    // station 3 and auto 3: 1 sample
+  for(unsigned idx_baseline = 9; idx_baseline < 10; ++idx_baseline)
+    for(unsigned idx_channel = 1; idx_channel < 4; ++idx_channel)    //validate channel ONE and higher
+      for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
+        for(unsigned idx_pol2 = 0; idx_pol2 < NR_POLARIZATIONS; ++idx_pol2) 
+          CHECK_CLOSE(weight_of_single_sample,
+                      output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2].real(),
+                      1e-18f);  // float compare with this delta
+ 
 }
 
 TEST(getLogOfNrChannels)
@@ -54,11 +132,14 @@ TEST(convertFlagsToChannelFlags)
   parset.add("OLAP.CNProc.integrationSteps", "256");   //samples per channel 
   
   parset.add("OLAP.storageStationNames", "[RS106HBA, RS105HBA]"); // Number of names here sets the number of stations.
-
+  parset.updateSettings();
+  
   // Input flags: an array of sparseset
   MultiDimArray<LOFAR::SparseSet<unsigned>, 1> inputFlags(boost::extents[parset.nrStations()]);
 
-  // Insert some flag ranges
+  //// Insert some flag ranges
+  //std::cout << "inputFlags.size(): " << inputFlags.size() << std::endl;
+  //std::cout << "parset.nrStations(): " << parset.nrStations() << std::endl;
   inputFlags[0].include(62, 63);    // A. should result in channelflag (0,16) due to the filter width
   inputFlags[0].include(128, 129);  // B. Outside of the begin range result: (128 / 4) - 16 + 1 = 17 end 33
   inputFlags[0].include(255, 522);  // C. Flag all large ranges (48, 131)
@@ -96,6 +177,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples4Channels)
   parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
   
   parset.add("OLAP.storageStationNames", "[RS106HBA, RS107HBA]"); // Number of names here sets the number of stations.
+  parset.updateSettings();
 
   // Input flags: an array of sparseset
   MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChanel(
@@ -115,9 +197,9 @@ TEST(calculateAndSetNumberOfFlaggedSamples4Channels)
   
   // Now check that the flags are correctly set in the ouput object
 
-  CHECK_EQUAL(1013u, output.nrValidSamples(0,1)); // 11 flagged in station 1
-  CHECK_EQUAL(1004u, output.nrValidSamples(1,1)); // The union is 11+9 == 20 flagged
-  CHECK_EQUAL(1015u, output.nrValidSamples(2,1)); // 9 flagged in station 2
+  CHECK_EQUAL(256u - 11u, output.nrValidSamples(0,1)); // 11 flagged in station 1
+  CHECK_EQUAL(256u - 20u, output.nrValidSamples(1,1)); // The union is 11+9 == 20 flagged
+  CHECK_EQUAL(256u - 9u, output.nrValidSamples(2,1)); // 9 flagged in station 2
  
   // Channel zero should always be all flagged
   CHECK_EQUAL(0u, output.nrValidSamples(0,0)); // all flagged in station 2
@@ -135,7 +217,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples1Channels)
   parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
   
   parset.add("OLAP.storageStationNames", "[RS106HBA, RS107HBA]"); // Number of names here sets the number of stations.
-
+  parset.updateSettings();
   // Input flags: an array of sparseset
   MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChanel(
           boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
@@ -168,7 +250,7 @@ TEST(applyFractionOfFlaggedSamplesOnVisibilities)
   parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
   
   parset.add("OLAP.storageStationNames", "[RS106HBA, RS107HBA]"); // Number of names here sets the number of stations.
-
+  parset.updateSettings();
   // Create correlated data object
   CorrelatedData output(parset.nrStations(), 
                      parset.nrChannelsPerSubband(), 
@@ -217,7 +299,7 @@ TEST(applyWeightingToAllPolarizations)
   parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
   
   parset.add("OLAP.storageStationNames", "[RS106HBA, RS107HBA]"); // Number of names here sets the number of stations.
-
+  parset.updateSettings();
    // Output object
   CorrelatedData output(parset.nrStations(), 
                         parset.nrChannelsPerSubband(), 
@@ -247,3 +329,4 @@ int main()
 {
   return UnitTest::RunAllTests();
 }
+
