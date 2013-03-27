@@ -49,6 +49,14 @@ function parse_logs
   GPUUSAGE=`echo "scale=0;100*$GPUCOST/$WALLTIME" | bc -l`
   echo "Total processing time: $WALLTIME s"
   echo "GPU usage            : $GPUUSAGE %"
+
+  if [ "$GPUUSAGE" -lt 90 ]
+  then
+    echo "ERROR: GPU usage < 90% -- considering test a failure."
+    return 1
+  fi
+
+  return 0
 }
 
 (
@@ -64,17 +72,22 @@ function parse_logs
   # run correlator -- with profiling
   $BINDIR/rtcp -p $PARSET > performance_profiled.txt 2>&1 &&
 
-  # check logs
-  parse_logs performance_normal.txt performance_profiled.txt &&
-
   # compare output
   if [ "x" != "x$REFDIR" ]
   then
+    # create script to accept output (ie. copy it to the source dir for check in)
+    echo "#!/bin/bash
+    cp `pwd`/*.MS $REFDIR" > accept_output
+    chmod a+x accept_output
+
     for f in *.MS
     do
       ${srcdir}/cmpfloat.py $f $REFDIR/$f || exit 1
     done
-  fi
+  fi &&
+
+  # check logs
+  parse_logs performance_normal.txt performance_profiled.txt
 ) || exit 1
 
 cd $RUNDIR
