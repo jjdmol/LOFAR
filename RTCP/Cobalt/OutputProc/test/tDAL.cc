@@ -25,10 +25,11 @@
 
 #ifdef HAVE_DAL
 #include <dal/dal_version.h>
+
+using namespace dal;
 #endif
 
 using namespace std;
-using namespace dal;
 
 int main()
 {
