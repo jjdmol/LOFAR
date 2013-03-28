@@ -28,7 +28,7 @@
 #include <fftw3.h>
 
 #include <UnitTest.h>
-#include <Kernels/FFT_Kernel.h>
+#include <GPUProc/Kernels/FFT_Kernel.h>
 
 namespace LOFAR
 {

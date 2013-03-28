@@ -27,8 +27,8 @@
 #include <Common/Exception.h>
 #include <CoInterface/Parset.h>
 
-#include <global_defines.h>
-#include <OpenCL_Support.h>
+#include <GPUProc/global_defines.h>
+#include <GPUProc/OpenCL_Support.h>
 
 #include <UnitTest.h>
 #include "Kernels/IncoherentStokesTest.h"

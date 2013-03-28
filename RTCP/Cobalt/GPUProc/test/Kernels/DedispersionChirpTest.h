@@ -22,7 +22,7 @@
 #define GPUPROC_DEDISPERSIONCHIRPTEST_H
 
 #include <UnitTest.h>
-#include <Kernels/DedispersionChirpKernel.h>
+#include <GPUProc/Kernels/DedispersionChirpKernel.h>
 
 namespace LOFAR
 {

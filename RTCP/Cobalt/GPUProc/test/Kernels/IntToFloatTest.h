@@ -22,7 +22,7 @@
 #define GPUPROC_INTTOFLOATTEST_H
 
 #include <UnitTest.h>
-#include <Kernels/IntToFloatKernel.h>
+#include <GPUProc/Kernels/IntToFloatKernel.h>
 
 namespace LOFAR
 {

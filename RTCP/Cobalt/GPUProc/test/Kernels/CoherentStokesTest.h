@@ -22,7 +22,7 @@
 #define GPUPROC_COHERENTSTOKESTEST_H
 
 #include <UnitTest.h>
-#include <Kernels/CoherentStokesKernel.h>
+#include <GPUProc/Kernels/CoherentStokesKernel.h>
 
 namespace LOFAR
 {

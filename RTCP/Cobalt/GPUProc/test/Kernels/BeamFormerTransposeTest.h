@@ -22,7 +22,7 @@
 #define GPUPROC_BEAMFORMERTRANSPOSETEST_H
 
 #include <UnitTest.h>
-#include <Kernels/BeamFormerTransposeKernel.h>
+#include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
 
 namespace LOFAR
 {

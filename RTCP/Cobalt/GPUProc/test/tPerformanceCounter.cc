@@ -23,8 +23,8 @@
 #include <vector>
 #include <Common/LofarLogger.h>
 
-#include <OpenCL_Support.h>
-#include <PerformanceCounter.h>
+#include <GPUProc/OpenCL_Support.h>
+#include <GPUProc/PerformanceCounter.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
