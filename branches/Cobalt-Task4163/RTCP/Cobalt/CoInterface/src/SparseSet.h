@@ -185,7 +185,7 @@ namespace LOFAR
   }
 
 
-  //template <typename T> inline const std::vector<typename SparseSet<T>::range> &SparseSet<T>::getRanges() const
+  //#template <typename T> inline const std::vector<typename SparseSet<T>::range> &SparseSet<T>::getRanges() const
   template <typename T>
   inline const typename SparseSet<T>::Ranges & SparseSet<T>::getRanges() const
   {
