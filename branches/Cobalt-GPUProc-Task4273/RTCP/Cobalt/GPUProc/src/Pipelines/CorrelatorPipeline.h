@@ -33,6 +33,7 @@
 #include <GPUProc/Pipeline.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/FilterBank.h>
+#include <GPUProc/WorkQueues/WorkQueue.h>
 #include "CorrelatorPipelinePrograms.h"
 
 namespace LOFAR
@@ -51,8 +52,6 @@ namespace LOFAR
       void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned subband);
 
     private:
-      friend class CorrelatorWorkQueue;
-
       FilterBank filterBank;
       CorrelatorPipelinePrograms programs;
 
@@ -61,7 +60,7 @@ namespace LOFAR
         std::map<std::string, SmartPtr<NSTimer> > total_timers;
         Mutex totalsMutex;
 
-        void addQueue(CorrelatorWorkQueue &queue);
+        void addQueue(WorkQueue &queue);
         void log(size_t nrWorkQueues);
       } performance;
 

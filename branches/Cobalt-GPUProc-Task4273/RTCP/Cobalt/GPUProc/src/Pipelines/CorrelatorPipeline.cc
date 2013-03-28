@@ -32,7 +32,7 @@
 #include <GPUProc/OpenMP_Support.h>
 #include <GPUProc/createProgram.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
-
+#include <GPUProc/WorkQueues/WorkQueue.h>
 using namespace std;
 
 namespace LOFAR
@@ -64,7 +64,7 @@ namespace LOFAR
       LOG_DEBUG_STR("compile time = " << omp_get_wtime() - startTime);
     }
 
-    void CorrelatorPipeline::Performance::addQueue(CorrelatorWorkQueue &queue)
+    void CorrelatorPipeline::Performance::addQueue(WorkQueue &queue)
     {
       ScopedLock sl(totalsMutex);
 
