@@ -2,10 +2,37 @@
 
 # Run a parset and compare the output to that in the reference_output directory.
 # 
-# Syntax: testParset.sh parset [reference-output-directory]
+# Syntax: testParset.sh parset [-r reference-output-directory] [-g minimal-gpu-efficiency]
+
+# Set defaults for options
+REFDIR=
+GPUEFFICIENCY=0
+
+# Parse options
+while getopts "r:g:" opt
+do
+  case $opt in
+    r)
+      REFDIR=$OPTARG
+      ;;
+
+    g)
+      GPUEFFICIENCY=$OPTARG
+      ;;
+
+    \?)
+      echo "Invalid option: -$OPTARG"
+      exit 1
+      ;;
+
+    :)
+      echo "Option needs argument: -$OPTARG"
+      exit 1
+      ;;
+  esac
+done
 
 PARSET=$1
-REFDIR=$2
 
 # Include some useful shell functions
 . $srcdir/testFuncs.sh
@@ -30,7 +57,7 @@ fi
 echo "Testing $PARSET"
 
 RUNDIR=`pwd`
-OUTDIR=`basename "${0%.run}.in_output"`/`basename "$PARSET"`
+OUTDIR=`basename "${PARSET%.parset}.in_output"`
 
 function parse_logs
 {
@@ -50,9 +77,9 @@ function parse_logs
   echo "Total processing time: $WALLTIME s"
   echo "GPU usage            : $GPUUSAGE %"
 
-  if [ "$GPUUSAGE" -lt 90 ]
+  if [ "$GPUUSAGE" -lt $GPUEFFICIENCY ]
   then
-    echo "ERROR: GPU usage < 90% -- considering test a failure."
+    echo "ERROR: GPU usage < $GPUEFFICIENCY% -- considering test a failure."
     return 1
   fi
 
