@@ -59,6 +59,7 @@ int rank;
 int nrHosts;
 
 // Common transfer objects
+map<int, std::vector<size_t> > beamletDistribution;
 SmartPtr<MPISendStation> sender;
 SmartPtr<MPIReceiveStations> receiver;
 
@@ -205,6 +206,64 @@ TEST(Flags) {
 }
 
 
+TEST(Block_OneStation) {
+  struct Block<SampleT> block_in;
+  std::vector<char> metaDataBlob_in(100, 42);
+
+  size_t nrStations = 1;
+  size_t nrBeamlets = beamletDistribution[0].size();
+
+  vector< struct MPIReceiveStations::Block<SampleT> > blocks_out;
+  std::vector<char> metaDataBlob_out;
+
+  block_in.from = TimeStamp(1, 2);
+  block_in.to   = TimeStamp(3, 4);
+
+  for (size_t b = 0; b < nrBeamlets; ++b) {
+    struct Block<SampleT>::Beamlet ib;
+
+    ib.stationBeamlet = b;
+
+    ib.ranges[0].from = &data_in[0];
+    ib.ranges[0].to   = &data_in[blockSize/2];
+    ib.ranges[1].from = &data_in[blockSize/2];
+    ib.ranges[1].to   = &data_in[blockSize];
+    ib.nrRanges       = 2;
+    ib.offset         = 0;
+
+    block_in.beamlets.push_back(ib);
+  }
+
+  // create blocks_out -- they all have to be the right size already
+  blocks_out.resize(nrStations);
+
+  for (size_t s = 0; s < nrStations; ++s) {
+    blocks_out[s].beamlets.resize(nrBeamlets);
+
+    for (size_t b = 0; b < nrBeamlets; ++b) {
+      blocks_out[s].beamlets[b].samples.resize(blockSize);
+    }
+  }
+
+  // Run requests
+#pragma omp parallel sections
+  {
+#pragma omp section
+    sender->sendBlock<SampleT>(block_in, metaDataBlob_in);
+#pragma omp section
+    receiver->receiveBlock<SampleT>(blocks_out);
+  }
+
+  // Validate results
+  CHECK(metaDataBlob_in == blocks_out[0].metaDataBlob);
+
+  for (size_t b = 0; b < nrBeamlets; ++b) {
+    CHECK_EQUAL(data_in[0], blocks_out[0].beamlets[b].samples[0]);
+    CHECK(data_in == blocks_out[0].beamlets[b].samples);
+  }
+}
+
+
 int main( int argc, char **argv )
 {
   INIT_LOGGER( "tMPISendReceiveStation" );
@@ -226,8 +285,9 @@ int main( int argc, char **argv )
 
   size_t blockSize = 1024;
 
-  map<int, std::vector<size_t> > beamletDistribution;
-  beamletDistribution[rank] = std::vector<size_t>(1,0);
+  beamletDistribution[rank].push_back(0);
+  beamletDistribution[rank].push_back(1);
+  beamletDistribution[rank].push_back(2);
 
   sender = new MPISendStation(settings, 0, beamletDistribution);
   receiver = new MPIReceiveStations(std::vector<int>(1,rank), beamletDistribution[rank], blockSize);
