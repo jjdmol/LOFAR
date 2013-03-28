@@ -28,15 +28,15 @@
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/SparseSet.h>
 
-#include <global_defines.h>
-#include <OpenCL_Support.h>
-#include <FilterBank.h>
-#include <SubbandMetaData.h>
-#include <Pipelines/CorrelatorPipelinePrograms.h>
-#include <Kernels/FIR_FilterKernel.h>
-#include <Kernels/Filter_FFT_Kernel.h>
-#include <Kernels/DelayAndBandPassKernel.h>
-#include <Kernels/CorrelatorKernel.h>
+#include <GPUProc/global_defines.h>
+#include <GPUProc/OpenCL_Support.h>
+#include <GPUProc/FilterBank.h>
+#include <GPUProc/SubbandMetaData.h>
+#include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
+#include <GPUProc/Kernels/FIR_FilterKernel.h>
+#include <GPUProc/Kernels/Filter_FFT_Kernel.h>
+#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
+#include <GPUProc/Kernels/CorrelatorKernel.h>
 
 #include "WorkQueue.h"
 

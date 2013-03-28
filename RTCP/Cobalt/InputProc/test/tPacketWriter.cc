@@ -29,13 +29,13 @@
 #include <Stream/FileStream.h>
 #include <CoInterface/SparseSet.h>
 
-#include <SampleType.h>
-#include <Buffer/StationID.h>
-#include <Buffer/SampleBuffer.h>
-#include <Buffer/BufferSettings.h>
-#include <Station/PacketReader.h>
-#include <Station/PacketWriter.h>
-#include <Station/RSP.h>
+#include <InputProc/SampleType.h>
+#include <InputProc/Buffer/StationID.h>
+#include <InputProc/Buffer/SampleBuffer.h>
+#include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Station/PacketReader.h>
+#include <InputProc/Station/PacketWriter.h>
+#include <InputProc/Station/RSP.h>
 
 using namespace LOFAR;
 using namespace Cobalt;

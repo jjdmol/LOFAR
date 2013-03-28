@@ -24,10 +24,10 @@
 
 #include <Common/LofarLogger.h>
 
-#include <global_defines.h>
-#include <OpenMP_Support.h>
-#include <createProgram.h>
-#include <WorkQueues/UHEP_WorkQueue.h>
+#include <GPUProc/global_defines.h>
+#include <GPUProc/OpenMP_Support.h>
+#include <GPUProc/createProgram.h>
+#include <GPUProc/WorkQueues/UHEP_WorkQueue.h>
 
 namespace LOFAR
 {

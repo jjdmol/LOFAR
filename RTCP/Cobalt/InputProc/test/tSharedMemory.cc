@@ -26,7 +26,7 @@
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Semaphore.h>
 
-#include <Buffer/SharedMemory.h>
+#include <InputProc/Buffer/SharedMemory.h>
 
 using namespace LOFAR;
 using namespace Cobalt;

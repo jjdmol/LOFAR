@@ -29,9 +29,9 @@
 #include <Stream/Stream.h>
 #include <CoInterface/CorrelatedData.h>
 
-#include <OpenMP_Support.h>
-#include <createProgram.h>
-#include <WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/OpenMP_Support.h>
+#include <GPUProc/createProgram.h>
+#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 
 using namespace std;
 

@@ -28,8 +28,8 @@
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/Stream.h>
 
-#include <RSPBoards.h>
-#include <Buffer/BufferSettings.h>
+#include <InputProc/RSPBoards.h>
+#include <InputProc/Buffer/BufferSettings.h>
 
 #include "RSP.h"
 #include "PacketReader.h"

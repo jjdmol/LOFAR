@@ -26,15 +26,15 @@
 #include <ApplCommon/PosixTime.h>
 #include <CoInterface/Parset.h>
 
-#include <global_defines.h>
-#include <OpenMP_Support.h>
+#include <GPUProc/global_defines.h>
+#include <GPUProc/OpenMP_Support.h>
 
-#include <UHEP/InvertedStationPPFWeights.h>
-#include <Kernels/UHEP_TransposeKernel.h>
-#include <Kernels/UHEP_InvFFT_Kernel.h>
-#include <Kernels/UHEP_InvFIR_Kernel.h>
-#include <Kernels/UHEP_TriggerKernel.h>
-#include <Kernels/UHEP_BeamFormerKernel.h>
+#include <GPUProc/UHEP/InvertedStationPPFWeights.h>
+#include <GPUProc/Kernels/UHEP_TransposeKernel.h>
+#include <GPUProc/Kernels/UHEP_InvFFT_Kernel.h>
+#include <GPUProc/Kernels/UHEP_InvFIR_Kernel.h>
+#include <GPUProc/Kernels/UHEP_TriggerKernel.h>
+#include <GPUProc/Kernels/UHEP_BeamFormerKernel.h>
 
 #include "WorkQueue.h"
 

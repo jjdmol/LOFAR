@@ -38,17 +38,17 @@
 #include <Stream/Stream.h>
 #include <Stream/SocketStream.h>
 
-#include "OMPThread.h"
-#include "SampleType.h"
-#include "Buffer/StationID.h"
-#include "Buffer/BufferSettings.h"
-#include "Buffer/BlockReader.h"
-#include "Station/PacketFactory.h"
-#include "Station/Generator.h"
-#include "Station/PacketsToBuffer.h"
-#include "Transpose/MPIReceiveStations.h"
-#include "Transpose/MPISendStation.h"
-#include "Transpose/MapUtil.h"
+#include <InputProc/OMPThread.h>
+#include <InputProc/SampleType.h>
+#include <InputProc/Buffer/StationID.h>
+#include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Buffer/BlockReader.h>
+#include <InputProc/Station/PacketFactory.h>
+#include <InputProc/Station/Generator.h>
+#include <InputProc/Station/PacketsToBuffer.h>
+#include <InputProc/Transpose/MPIReceiveStations.h>
+#include <InputProc/Transpose/MPISendStation.h>
+#include <InputProc/Transpose/MapUtil.h>
 
 #include <map>
 #include <vector>

@@ -104,7 +104,7 @@ namespace LOFAR {
     struct Block<T>::Beamlet BlockReader<T>::LockedBlock::getBeamlet( size_t beamletIdx, ssize_t offset )
     {
       // Create instructions for copying this beamlet
-      struct Beamlet b;
+      typename Block<T>::Beamlet b;
 
       // Cache the actual beam number at the station
       b.stationBeamlet = reader.beamlets[beamletIdx];

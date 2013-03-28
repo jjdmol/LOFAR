@@ -23,9 +23,9 @@
 
 #include <CoInterface/Parset.h>
 
-#include <Kernel.h>
-#include <global_defines.h>
-#include <opencl-incl.h>
+#include <GPUProc/Kernel.h>
+#include <GPUProc/global_defines.h>
+#include <GPUProc/opencl-incl.h>
 
 namespace LOFAR
 {

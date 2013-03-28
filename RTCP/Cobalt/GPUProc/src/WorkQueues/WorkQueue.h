@@ -27,8 +27,8 @@
 #include <Common/Timer.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
-#include <PerformanceCounter.h>
-#include <opencl-incl.h>
+#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/opencl-incl.h>
 
 namespace LOFAR
 {

@@ -23,7 +23,7 @@
 #define LOFAR_INPUT_PROC_MPI_PROTOCOL_H
 
 #include <Common/LofarTypes.h>
-#include <Buffer/BufferSettings.h>
+#include <InputProc/Buffer/BufferSettings.h>
 
 namespace LOFAR
 {

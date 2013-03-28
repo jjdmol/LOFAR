@@ -26,8 +26,8 @@
 
 #include <CoInterface/RSPTimeStamp.h>
 
-#include <RSPBoards.h>
-#include <Buffer/BufferSettings.h>
+#include <InputProc/RSPBoards.h>
+#include <InputProc/Buffer/BufferSettings.h>
 
 #include "PacketFactory.h"
 #include "RSP.h"

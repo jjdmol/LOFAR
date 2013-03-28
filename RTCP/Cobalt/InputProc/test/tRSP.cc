@@ -29,7 +29,7 @@
 #include <Stream/FileStream.h>
 #include <CoInterface/RSPTimeStamp.h>
 
-#include <Station/RSP.h>
+#include <InputProc/Station/RSP.h>
 
 
 using namespace LOFAR;

@@ -25,10 +25,10 @@
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 
-#include <SampleType.h>
-#include <Buffer/StationID.h>
-#include <Buffer/SampleBuffer.h>
-#include <Buffer/BufferSettings.h>
+#include <InputProc/SampleType.h>
+#include <InputProc/Buffer/StationID.h>
+#include <InputProc/Buffer/SampleBuffer.h>
+#include <InputProc/Buffer/BufferSettings.h>
 
 using namespace LOFAR;
 using namespace Cobalt;

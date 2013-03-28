@@ -32,10 +32,10 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/SmartPtr.h>
 
-#include "SampleType.h"
-#include "Transpose/MPIReceiveStations.h"
-#include "Transpose/MPISendStation.h"
-#include "Transpose/MPIUtil.h"
+#include <InputProc/SampleType.h>
+#include <InputProc/Transpose/MPIReceiveStations.h>
+#include <InputProc/Transpose/MPISendStation.h>
+#include <InputProc/Transpose/MPIUtil.h>
 
 #include <UnitTest++.h>
 

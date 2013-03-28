@@ -24,9 +24,9 @@
 #include <cstring>
 #include <string>
 
-#include <Buffer/SampleBuffer.h>
-#include <Buffer/BufferSettings.h>
-#include <Buffer/Ranges.h>
+#include <InputProc/Buffer/SampleBuffer.h>
+#include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Buffer/Ranges.h>
 
 #include "RSP.h"
 

@@ -28,10 +28,10 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Stream.h>
 
-#include <OMPThread.h>
-#include <Station/PacketFactory.h>
-#include <Station/Generator.h>
-#include <Station/PacketReader.h>
+#include <InputProc/OMPThread.h>
+#include <InputProc/Station/PacketFactory.h>
+#include <InputProc/Station/Generator.h>
+#include <InputProc/Station/PacketReader.h>
 
 using namespace LOFAR;
 using namespace Cobalt;

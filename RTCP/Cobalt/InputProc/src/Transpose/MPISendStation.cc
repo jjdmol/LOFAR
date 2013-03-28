@@ -24,7 +24,7 @@
 #include "MapUtil.h"
 #include "MPIUtil.h"
 
-#include <SampleType.h>
+#include <InputProc/SampleType.h>
 
 #include <Common/LofarLogger.h>
 

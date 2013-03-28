@@ -28,11 +28,11 @@
 #include <CoInterface/RSPTimeStamp.h>
 #include <CoInterface/SmartPtr.h>
 
-#include <WallClockTime.h>
+#include <InputProc/WallClockTime.h>
 
-#include "BufferSettings.h"
-#include "SampleBuffer.h"
-#include "Block.h"
+#include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Buffer/SampleBuffer.h>
+#include <InputProc/Buffer/Block.h>
 
 
 namespace LOFAR
@@ -97,7 +97,7 @@ namespace LOFAR
   }
 }
 
-#include "BlockReader.tcc"
+#include <InputProc/Buffer/BlockReader.tcc>
 
 #endif
 
