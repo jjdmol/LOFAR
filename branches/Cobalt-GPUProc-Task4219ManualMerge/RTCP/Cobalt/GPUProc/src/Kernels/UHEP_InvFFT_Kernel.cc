@@ -24,7 +24,7 @@
 
 #include <Common/lofar_complex.h>
 
-#include <global_defines.h>
+#include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {

@@ -26,9 +26,9 @@
 #include <ApplCommon/PosixTime.h>
 #include <CoInterface/Parset.h>
 
-#include <global_defines.h>
-#include <OpenMP_Support.h>
-#include <OpenCL_Support.h>
+#include <GPUProc/global_defines.h>
+#include <GPUProc/OpenMP_Support.h>
+#include <GPUProc/OpenCL_Support.h>
 
 namespace LOFAR
 {

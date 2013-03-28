@@ -27,10 +27,10 @@
 
 #include <Common/LofarLogger.h>
 
-#include <OpenMP_Support.h>
-#include <BandPass.h>
-#include <Pipelines/CorrelatorPipelinePrograms.h>
-#include <Input/BeamletBufferToComputeNode.h>
+#include <GPUProc/OpenMP_Support.h>
+#include <GPUProc/BandPass.h>
+#include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
+#include <GPUProc/Input/BeamletBufferToComputeNode.h>
 
 namespace LOFAR
 {

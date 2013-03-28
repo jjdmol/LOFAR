@@ -26,7 +26,9 @@
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Semaphore.h>
 
-#include <Buffer/SharedMemory.h>
+#include <InputProc/Buffer/SharedMemory.h>
+
+#define DATAKEY 0x10000006
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -40,7 +42,7 @@ public:
   {
     sleep(1);
 
-    SharedMemoryArena m( 0x12345678, 1024, SharedMemoryArena::CREATE, 0 );
+    SharedMemoryArena m( DATAKEY, 1024, SharedMemoryArena::CREATE, 0 );
 
     LOG_INFO("Memory area created");
 
@@ -52,7 +54,7 @@ public:
   {
     LOG_INFO("Waiting for memory area");
 
-    SharedMemoryArena m( 0x12345678, 1024, SharedMemoryArena::READ, 2 );
+    SharedMemoryArena m( DATAKEY, 1024, SharedMemoryArena::READ, 2 );
 
     LOG_INFO("Memory area attached");
 
@@ -69,16 +71,16 @@ int main()
   {
     LOG_INFO("Create shared memory region");
 
-    SharedMemoryArena m( 0x12345678, 1024, SharedMemoryArena::CREATE, 0 );
+    SharedMemoryArena m( DATAKEY, 1024, SharedMemoryArena::CREATE, 0 );
   }
 
   /* Create a shared memory region and access it */
   {
     LOG_INFO("Create shared memory region and access it");
 
-    SharedMemoryArena x( 0x12345678, 1024, SharedMemoryArena::CREATE, 0 );
+    SharedMemoryArena x( DATAKEY, 1024, SharedMemoryArena::CREATE, 0 );
 
-    SharedMemoryArena y( 0x12345678, 1024, SharedMemoryArena::READ, 0 );
+    SharedMemoryArena y( DATAKEY, 1024, SharedMemoryArena::READ, 0 );
   }
 
   /* Access a non-existing shared memory region */
@@ -88,7 +90,7 @@ int main()
     bool caught_exception = false;
 
     try {
-      SharedMemoryArena y( 0x12345678, 1024, SharedMemoryArena::READ, 0 );
+      SharedMemoryArena y( DATAKEY, 1024, SharedMemoryArena::READ, 0 );
     } catch(SystemCallException &e) {
       caught_exception = true;
     }
@@ -103,7 +105,7 @@ int main()
     bool caught_exception = false;
 
     try {
-      SharedMemoryArena y( 0x12345678, 1024, SharedMemoryArena::READ, 1 );
+      SharedMemoryArena y( DATAKEY, 1024, SharedMemoryArena::READ, 1 );
     } catch(SharedMemoryArena::TimeOutException &e) {
       caught_exception = true;
     }
@@ -130,9 +132,9 @@ int main()
   {
     LOG_INFO("Checking memory access through SharedStruct");
 
-    SharedStruct<int> writer( 0x12345678, true, 0 );
+    SharedStruct<int> writer( DATAKEY, true, 0 );
 
-    SharedStruct<int> reader( 0x12345678, false, 0 );
+    SharedStruct<int> reader( DATAKEY, false, 0 );
 
     writer.get() = 42;
     ASSERT( reader.get() == 42 );

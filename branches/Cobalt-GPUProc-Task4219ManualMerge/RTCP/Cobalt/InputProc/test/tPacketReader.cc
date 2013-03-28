@@ -25,8 +25,8 @@
 #include <Common/LofarLogger.h>
 #include <Stream/FileStream.h>
 
-#include <Station/PacketReader.h>
-#include <Station/RSP.h>
+#include <InputProc/Station/PacketReader.h>
+#include <InputProc/Station/RSP.h>
 
 using namespace LOFAR;
 using namespace Cobalt;

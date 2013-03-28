@@ -23,8 +23,8 @@
 
 #include <CoInterface/Parset.h>
 
-#include <opencl-incl.h>
-#include <PerformanceCounter.h>
+#include <GPUProc/opencl-incl.h>
+#include <GPUProc/PerformanceCounter.h>
 #include "FFT_Plan.h"
 
 namespace LOFAR

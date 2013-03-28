@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <PLC/PCCmd.h>
-#include <APCmdImpl.h>
+#include "APCmdImpl.h"
 #include <Common/lofar_tribool.h>
 
 namespace LOFAR {

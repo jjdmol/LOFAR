@@ -39,7 +39,7 @@
 #include <CoInterface/AlignedStdAllocator.h>
 #include <CoInterface/Exceptions.h>
 
-#include <Scheduling.h>
+#include <GPUProc/Scheduling.h>
 #include "RSP.h"
 
 namespace LOFAR

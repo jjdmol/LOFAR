@@ -24,7 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include "FFT_Kernel.h"
-#include <opencl-incl.h>
+#include <GPUProc/opencl-incl.h>
 
 namespace LOFAR
 {

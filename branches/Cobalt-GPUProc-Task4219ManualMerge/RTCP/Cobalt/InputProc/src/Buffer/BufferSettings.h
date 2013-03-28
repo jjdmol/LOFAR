@@ -45,12 +45,15 @@ namespace LOFAR
     public:
       struct StationID station;
 
+      // true: sync reader and writer, useful in real-time mode
+      bool sync;
+
       unsigned nrBeamletsPerBoard;
 
       size_t nrSamples;
 
       unsigned nrBoards;
-      size_t nrFlagRanges;
+      size_t nrAvailableRanges;
 
       key_t dataKey;
 
@@ -63,7 +66,7 @@ namespace LOFAR
       // Shortcut to set nrSamples to represent `seconds' of buffer.
       void setBufferSize(double seconds);
 
-      size_t flagIdx(unsigned beamlet) const
+      size_t boardIndex(unsigned beamlet) const
       {
         return beamlet / nrBeamletsPerBoard;
       }
@@ -71,10 +74,11 @@ namespace LOFAR
       bool operator==(const struct BufferSettings &other) const
       {
         return station == other.station
+               && sync == other.sync
                && nrBeamletsPerBoard == other.nrBeamletsPerBoard
                && nrSamples == other.nrSamples
                && nrBoards == other.nrBoards
-               && nrFlagRanges == other.nrFlagRanges
+               && nrAvailableRanges == other.nrAvailableRanges
                && dataKey == other.dataKey;
       }
     private:

@@ -30,7 +30,7 @@
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/BeamCoordinates.h>
 
-#include <Scheduling.h>
+#include <GPUProc/Scheduling.h>
 
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCDirection.h>

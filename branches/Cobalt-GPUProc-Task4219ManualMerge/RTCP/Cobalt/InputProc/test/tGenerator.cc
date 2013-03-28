@@ -28,9 +28,10 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Stream.h>
 
-#include <OMPThread.h>
-#include <Station/Generator.h>
-#include <Station/PacketReader.h>
+#include <InputProc/OMPThread.h>
+#include <InputProc/Station/PacketFactory.h>
+#include <InputProc/Station/Generator.h>
+#include <InputProc/Station/PacketReader.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -56,7 +57,8 @@ int main( int, char **argv )
   struct StationID stationID("RS106", "LBA", 200, 16);
   struct BufferSettings settings(stationID, false);
 
-  Generator g(settings, streamDescs);
+  PacketFactory factory(settings);
+  Generator g(settings, streamDescs, factory);
 
   bool error = false;
 

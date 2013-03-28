@@ -27,9 +27,9 @@
 #include <Common/LofarLogger.h>
 #include <Stream/FileStream.h>
 
-#include <SampleType.h>
-#include <Station/PacketsToBuffer.h>
-#include <Buffer/SampleBuffer.h>
+#include <InputProc/SampleType.h>
+#include <InputProc/Station/PacketsToBuffer.h>
+#include <InputProc/Buffer/SampleBuffer.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -55,7 +55,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
   // There should be 32 samples in the buffer (16 per packet, 2 packets per
   // file).
   int64 now = (int64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
-  SparseSet<int64> available = buffer.flags[0].sparseSet(0, now);
+  SparseSet<int64> available = buffer.boards[0].available.sparseSet(0, now);
   ASSERT((size_t)available.count() == 32);
 }
 
@@ -72,7 +72,11 @@ int main()
   struct BufferSettings settings(stationID, false);
 
   // Use a fixed key, so the test suite knows what to clean
-  settings.dataKey = 0x12345678;
+  settings.dataKey = 0x10000002;
+
+  // Limit the array in size to work on systems with only 32MB SHM
+  settings.nrBoards = 1;
+  settings.setBufferSize(0.1);
 
   // Test various modes
   LOG_INFO("Test 16-bit complex");

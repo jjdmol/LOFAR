@@ -25,10 +25,10 @@
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 
-#include <SampleType.h>
-#include <Buffer/StationID.h>
-#include <Buffer/SampleBuffer.h>
-#include <Buffer/BufferSettings.h>
+#include <InputProc/SampleType.h>
+#include <InputProc/Buffer/StationID.h>
+#include <InputProc/Buffer/SampleBuffer.h>
+#include <InputProc/Buffer/BufferSettings.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -56,7 +56,11 @@ int main()
   struct BufferSettings settings(stationID, false);
 
   // Use a fixed key, so the test suite knows what to clean
-  settings.dataKey = 0x12345678;
+  settings.dataKey = 0x10000004;
+
+  // Limit the array in size to work on systems with only 32MB SHM
+  settings.nrBoards = 1;
+  settings.setBufferSize(0.1);
 
   // Test various modes
   LOG_INFO("Test 16-bit complex");

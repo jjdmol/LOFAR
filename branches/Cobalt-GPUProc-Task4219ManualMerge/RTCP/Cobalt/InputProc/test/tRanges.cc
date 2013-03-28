@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/SparseSet.h>
 
-#include <Buffer/Ranges.h>
+#include <InputProc/Buffer/Ranges.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
