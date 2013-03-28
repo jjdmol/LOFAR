@@ -111,7 +111,7 @@ int main()
   struct BufferSettings settings(stationID, false);
 
   // Use a fixed key, so the test suite knows what to clean
-  settings.dataKey = 0x12345678;
+  settings.dataKey = 0x10000003;
 
   // Limit the array in size to work on systems with only 32MB SHM
   settings.nrBoards = 1;
