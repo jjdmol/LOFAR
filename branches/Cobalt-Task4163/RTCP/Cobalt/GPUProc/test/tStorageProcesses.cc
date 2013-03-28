@@ -29,8 +29,8 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 
-#include <Storage/StorageProcesses.h>
-#include <Storage/SSH.h>
+#include <GPUProc/Storage/StorageProcesses.h>
+#include <GPUProc/Storage/SSH.h>
 
 char pubkey[1024];
 char privkey[1024];

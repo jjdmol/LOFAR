@@ -31,7 +31,7 @@
 #include <Common/Thread/Cancellation.h>
 #include <CoInterface/PrintVector.h>
 
-#include <Scheduling.h>
+#include <GPUProc/Scheduling.h>
 
 namespace LOFAR
 {

@@ -26,10 +26,10 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 
-#include <global_defines.h>
-#include <OpenCL_Support.h>
-#include <Pipelines/UHEP_Pipeline.h>
-#include <Kernels/UHEP_TriggerKernel.h>
+#include <GPUProc/global_defines.h>
+#include <GPUProc/OpenCL_Support.h>
+#include <GPUProc/Pipelines/UHEP_Pipeline.h>
+#include <GPUProc/Kernels/UHEP_TriggerKernel.h>
 #include "WorkQueue.h"
 
 namespace LOFAR

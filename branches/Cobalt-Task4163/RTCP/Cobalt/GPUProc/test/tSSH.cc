@@ -28,7 +28,7 @@
 #include <Common/LofarLogger.h>
 #include <Stream/SocketStream.h>
 
-#include <Storage/SSH.h>
+#include <GPUProc/Storage/SSH.h>
 
 char pubkey[1024];
 char privkey[1024];

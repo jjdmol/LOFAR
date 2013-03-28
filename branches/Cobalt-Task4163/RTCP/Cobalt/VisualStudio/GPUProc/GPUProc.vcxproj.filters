@@ -40,6 +40,9 @@
     <Filter Include="WorkQueues">
       <UniqueIdentifier>{9f472bc4-e2fc-4254-9dac-61c3cb5f1822}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTests\WorkQueues">
+      <UniqueIdentifier>{33c4b88a-3bfe-491e-bd6b-172a3d3310d4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\Correlator.cl" />
@@ -471,6 +474,9 @@
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\src\BandPass.cc">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\UnitTests\WorkQueues\CorrelatorWorkQueue.cc">
+      <Filter>UnitTests\WorkQueues</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

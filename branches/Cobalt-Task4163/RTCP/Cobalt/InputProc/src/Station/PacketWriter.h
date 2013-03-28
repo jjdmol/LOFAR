@@ -24,9 +24,9 @@
 #include <cstring>
 #include <string>
 
-#include <Buffer/SampleBuffer.h>
-#include <Buffer/BufferSettings.h>
-#include <Buffer/Ranges.h>
+#include <InputProc/Buffer/SampleBuffer.h>
+#include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Buffer/Ranges.h>
 
 #include "RSP.h"
 
@@ -43,6 +43,7 @@ namespace LOFAR
     {
     public:
       PacketWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, unsigned boardNr );
+      ~PacketWriter();
 
       // Write a packet to the SampleBuffer
       void writePacket( const struct RSP &packet );
@@ -53,7 +54,7 @@ namespace LOFAR
       const std::string logPrefix;
 
       SampleBuffer<T> &buffer;
-      Ranges &flags;
+      typename SampleBuffer<T>::Board &board;
       const struct BufferSettings &settings;
       const size_t firstBeamlet;
 

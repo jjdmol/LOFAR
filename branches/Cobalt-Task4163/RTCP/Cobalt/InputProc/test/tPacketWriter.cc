@@ -29,13 +29,13 @@
 #include <Stream/FileStream.h>
 #include <CoInterface/SparseSet.h>
 
-#include <SampleType.h>
-#include <Buffer/StationID.h>
-#include <Buffer/SampleBuffer.h>
-#include <Buffer/BufferSettings.h>
-#include <Station/PacketReader.h>
-#include <Station/PacketWriter.h>
-#include <Station/RSP.h>
+#include <InputProc/SampleType.h>
+#include <InputProc/Buffer/StationID.h>
+#include <InputProc/Buffer/SampleBuffer.h>
+#include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Station/PacketReader.h>
+#include <InputProc/Station/PacketWriter.h>
+#include <InputProc/Station/RSP.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -68,7 +68,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
     // Check whether the packet is in the buffer
 
     // Check the flags
-    SparseSet<int64> available = buffer.flags[0].sparseSet((int64)packet.timeStamp(), (int64)packet.timeStamp() + packet.header.nrBlocks);
+    SparseSet<int64> available = buffer.boards[0].available.sparseSet((int64)packet.timeStamp(), (int64)packet.timeStamp() + packet.header.nrBlocks);
     ASSERT(available.count() == packet.header.nrBlocks);
 
     // Check the data
@@ -94,7 +94,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
 
   // There should be only nrValidSamples samples in the buffer, nothing more
   int64 now = (int64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
-  SparseSet<int64> available = buffer.flags[0].sparseSet(0, now);
+  SparseSet<int64> available = buffer.boards[0].available.sparseSet(0, now);
   ASSERT((size_t)available.count() == nrValidSamples);
 }
 
@@ -111,7 +111,11 @@ int main()
   struct BufferSettings settings(stationID, false);
 
   // Use a fixed key, so the test suite knows what to clean
-  settings.dataKey = 0x12345678;
+  settings.dataKey = 0x10000003;
+
+  // Limit the array in size to work on systems with only 32MB SHM
+  settings.nrBoards = 1;
+  settings.setBufferSize(0.1);
 
   // Test various modes
   LOG_INFO("Test 16-bit complex");

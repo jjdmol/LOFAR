@@ -2,10 +2,9 @@
 
 include(LofarCTest)
 
-# Add project's source directory to -I path.
-# This is needed, because the way that header files are currently included by
-# the different test programs is broken.
-include_directories(${PACKAGE_SOURCE_DIR}/src)
+# Add current source directory to -I path. This is needed because some
+# source files and headers in subdirectories include UnitTest.h
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tContext tContext.cc)
@@ -21,6 +20,9 @@ lofar_add_test(tStorageProcesses tStorageProcesses.cc)
 #lofar_add_test(tDelayCompensation tDelayCompensation.cc)
 lofar_add_test(RTCP_UnitTest RTCP_UnitTest.cc UnitTest.cc)
 
-#lofar_find_package(UnitTest++)
-#if(UNITTEST++_FOUND)
-#endif(UNITTEST++_FOUND)
+lofar_find_package(UnitTest++)
+if(UNITTEST++_FOUND)
+  lofar_add_test(tCorrelatorWorkQueue 
+    UnitTests/WorkQueues/CorrelatorWorkQueue.cc
+    UnitTests/new_style_unittest.cc)
+endif(UNITTEST++_FOUND)

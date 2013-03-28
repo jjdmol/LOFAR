@@ -23,7 +23,7 @@
 #include <vector>
 #include <Common/LofarLogger.h>
 
-#include <OpenCL_Support.h>
+#include <GPUProc/OpenCL_Support.h>
 
 using namespace LOFAR;
 using namespace Cobalt;

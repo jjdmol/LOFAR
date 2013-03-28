@@ -22,8 +22,8 @@
 #define GPUPROC_UHEP_TRANSPOSETEST_H
 
 #include <UnitTest.h>
-#include <Kernels/UHEP_TransposeKernel.h>
-#include <UHEP/InvertedStationPPFWeights.h> // reverseSubbandMapping
+#include <GPUProc/Kernels/UHEP_TransposeKernel.h>
+#include <GPUProc/UHEP/InvertedStationPPFWeights.h> // reverseSubbandMapping
 
 namespace LOFAR
 {

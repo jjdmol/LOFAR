@@ -26,8 +26,8 @@
 
 #include <Common/LofarLogger.h>
 
-#include <SampleType.h>
-#include <Buffer/SampleBuffer.h>
+#include <InputProc/SampleType.h>
+#include <InputProc/Buffer/SampleBuffer.h>
 
 #include "PacketWriter.h"
 
@@ -39,7 +39,7 @@ namespace LOFAR
 
     PacketsToBuffer::PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr )
       :
-      logPrefix(str(boost::format("[station %s board %u] ") % settings.station % boardNr)),
+      logPrefix(str(boost::format("[station %s board %u] [PacketsToBuffer] ") % settings.station.stationName % boardNr)),
       inputStream(inputStream),
       lastlog_timestamp(0),
       settings(settings),

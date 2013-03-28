@@ -36,7 +36,7 @@ int main()
 #include <Common/LofarLogger.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>
-#include <DH_Socket.h>
+#include "DH_Socket.h"
 
 using namespace LOFAR;
 

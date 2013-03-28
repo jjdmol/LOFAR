@@ -22,8 +22,8 @@
 #define GPUPROC_FIR_FILTERTEST_H
 
 #include <UnitTest.h>
-#include <FilterBank.h>
-#include <Kernels/FIR_FilterKernel.h>
+#include <GPUProc/FilterBank.h>
+#include <GPUProc/Kernels/FIR_FilterKernel.h>
 
 namespace LOFAR
 {

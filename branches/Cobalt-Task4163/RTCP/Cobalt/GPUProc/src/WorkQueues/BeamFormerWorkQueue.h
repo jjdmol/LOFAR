@@ -26,18 +26,18 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 
-#include <OpenCL_Support.h>
-#include <BandPass.h>
-#include <Pipelines/BeamFormerPipeline.h>
+#include <GPUProc/OpenCL_Support.h>
+#include <GPUProc/BandPass.h>
+#include <GPUProc/Pipelines/BeamFormerPipeline.h>
 
-#include <Kernels/IntToFloatKernel.h>
-#include <Kernels/Filter_FFT_Kernel.h>
-#include <Kernels/DelayAndBandPassKernel.h>
-#include <Kernels/BeamFormerKernel.h>
-#include <Kernels/BeamFormerTransposeKernel.h>
-#include <Kernels/DedispersionForwardFFTkernel.h>
-#include <Kernels/DedispersionBackwardFFTkernel.h>
-#include <Kernels/DedispersionChirpKernel.h>
+#include <GPUProc/Kernels/IntToFloatKernel.h>
+#include <GPUProc/Kernels/Filter_FFT_Kernel.h>
+#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
+#include <GPUProc/Kernels/BeamFormerKernel.h>
+#include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
+#include <GPUProc/Kernels/DedispersionForwardFFTkernel.h>
+#include <GPUProc/Kernels/DedispersionBackwardFFTkernel.h>
+#include <GPUProc/Kernels/DedispersionChirpKernel.h>
 
 #include "WorkQueue.h"
 

@@ -23,8 +23,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <DH_Example.h>
-#include <DH_ExampleExtra.h>
+#include "DH_Example.h"
+#include "DH_ExampleExtra.h"
 #include <Transport/TH_Mem.h>
 #include <Transport/Connection.h>
 #include <Blob/BlobOStream.h>

@@ -36,7 +36,7 @@
 #include <Common/Thread/Cancellation.h>
 #include <Common/Thread/Mutex.h>
 #include <Stream/SocketStream.h>
-#include <Scheduling.h>
+#include <GPUProc/Scheduling.h>
 
 using namespace std;
 

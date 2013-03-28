@@ -21,7 +21,7 @@
 #ifndef LOFAR_GPUPROC_CORRELATOR_PIPELINE_PROGRAMS_H
 #define LOFAR_GPUPROC_CORRELATOR_PIPELINE_PROGRAMS_H
 
-#include <opencl-incl.h>
+#include <GPUProc/opencl-incl.h>
 
 namespace LOFAR
 {
