@@ -22,9 +22,9 @@
 
 #include "UnitTest.h"
 
-#include "global_defines.h"
-#include "OpenCL_Support.h"
-#include "createProgram.h"
+#include <GPUProc/global_defines.h>
+#include <GPUProc/OpenCL_Support.h>
+#include <GPUProc/createProgram.h>
 
 namespace LOFAR
 {

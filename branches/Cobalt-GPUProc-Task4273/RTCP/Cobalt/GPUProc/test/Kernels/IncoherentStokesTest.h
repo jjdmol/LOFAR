@@ -22,7 +22,7 @@
 #define GPUPROC_INCOHERENTSTOKESTEST_H
 
 #include <UnitTest.h>
-#include <Kernels/IncoherentStokesKernel.h>
+#include <GPUProc/Kernels/IncoherentStokesKernel.h>
 
 namespace LOFAR
 {

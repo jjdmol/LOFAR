@@ -21,6 +21,8 @@
 #ifndef LOFAR_STORAGE_MSWRITERDAL_H
 #define LOFAR_STORAGE_MSWRITERDAL_H
 
+#ifdef HAVE_DAL
+
 //# Includes
 #include <string>
 
@@ -55,6 +57,8 @@ namespace LOFAR
     };
   }
 }
+
+#endif
 
 #endif
 

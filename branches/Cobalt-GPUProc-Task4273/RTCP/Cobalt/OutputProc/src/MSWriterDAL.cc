@@ -18,6 +18,8 @@
 //#
 //# $Id$
 
+#ifdef HAVE_DAL
+
 #include <lofar_config.h>
 
 #include "MSWriterDAL.h"
@@ -610,4 +612,6 @@ namespace LOFAR
 
   } // namespace Cobalt
 } // namespace LOFAR
+
+#endif
 

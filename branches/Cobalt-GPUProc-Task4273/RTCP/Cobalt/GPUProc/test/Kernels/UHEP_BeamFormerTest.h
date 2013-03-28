@@ -22,7 +22,7 @@
 #define GPUPROC_UHEP_BEAMFORMERTEST_H
 
 #include <UnitTest.h>
-#include <Kernels/UHEP_BeamFormerKernel.h>
+#include <GPUProc/Kernels/UHEP_BeamFormerKernel.h>
 
 namespace LOFAR
 {

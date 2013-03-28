@@ -46,7 +46,7 @@ namespace LOFAR
       void augment(const FinalMetaData &finalMetaData);
 
     private:
-      static const unsigned maxReceiveQueueSize = 30;
+      static const unsigned maxReceiveQueueSize = 3;
 
       Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
 

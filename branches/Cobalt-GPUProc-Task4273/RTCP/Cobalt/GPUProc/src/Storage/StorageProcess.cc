@@ -93,10 +93,10 @@ namespace LOFAR
     void StorageProcess::controlThread()
     {
       // Start Storage
-      std::string userName = itsParset.getString("OLAP.Storage.userName");
-      std::string pubKey = itsParset.getString("OLAP.Storage.sshPublicKey");
-      std::string privKey = itsParset.getString("OLAP.Storage.sshPrivateKey");
-      std::string executable = itsParset.getString("OLAP.Storage.msWriter");
+      std::string userName = itsParset.getString("OLAP.Storage.userName", "");
+      std::string pubKey = itsParset.getString("OLAP.Storage.sshPublicKey", "");
+      std::string privKey = itsParset.getString("OLAP.Storage.sshPrivateKey", "");
+      std::string executable = itsParset.getString("OLAP.Storage.msWriter", "outputProc");
 
       if (userName == "") {
         // No username given -- use $USER

@@ -1,6 +1,6 @@
 #include "lofar_config.h"
 
-#include <WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 
 #include <UnitTest++.h>
 #include <iostream>

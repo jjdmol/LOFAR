@@ -22,7 +22,7 @@
 #define GPUPROC_UHEP_TRIGGERTEST_H
 
 #include <UnitTest.h>
-#include <Kernels/UHEP_TriggerKernel.h>
+#include <GPUProc/Kernels/UHEP_TriggerKernel.h>
 
 namespace LOFAR
 {
