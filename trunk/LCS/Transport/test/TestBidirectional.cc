@@ -25,9 +25,9 @@
 
 #include <iostream>
 
+#include "DH_Example.h"
 #include <Transport/TH_Mem.h>
 #include <Transport/Connection.h>
-#include <DH_Example.h>
 
 using namespace LOFAR;
 
