@@ -23,9 +23,9 @@
 
 #include <CoInterface/Parset.h>
 
-#include <Kernel.h>
-#include <opencl-incl.h>
-#include <PerformanceCounter.h>
+#include <GPUProc/Kernel.h>
+#include <GPUProc/opencl-incl.h>
+#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {

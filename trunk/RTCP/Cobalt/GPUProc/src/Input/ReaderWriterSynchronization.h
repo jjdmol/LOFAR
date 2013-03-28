@@ -25,7 +25,7 @@
 
 #include <CoInterface/RSPTimeStamp.h>
 
-#include <SlidingPointer.h>
+#include <GPUProc/SlidingPointer.h>
 #include "WallClockTime.h"
 
 namespace LOFAR

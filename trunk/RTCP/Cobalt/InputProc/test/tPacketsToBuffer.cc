@@ -27,9 +27,9 @@
 #include <Common/LofarLogger.h>
 #include <Stream/FileStream.h>
 
-#include <SampleType.h>
-#include <Station/PacketsToBuffer.h>
-#include <Buffer/SampleBuffer.h>
+#include <InputProc/SampleType.h>
+#include <InputProc/Station/PacketsToBuffer.h>
+#include <InputProc/Buffer/SampleBuffer.h>
 
 using namespace LOFAR;
 using namespace Cobalt;

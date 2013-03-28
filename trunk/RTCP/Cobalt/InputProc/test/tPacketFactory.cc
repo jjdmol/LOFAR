@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <Buffer/BufferSettings.h>
-#include <Station/PacketFactory.h>
+#include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Station/PacketFactory.h>
 #include <time.h>
 
 using namespace LOFAR;

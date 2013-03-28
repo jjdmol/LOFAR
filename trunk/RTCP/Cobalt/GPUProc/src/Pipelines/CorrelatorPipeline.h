@@ -29,10 +29,10 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 
-#include <opencl-incl.h>
-#include <Pipeline.h>
-#include <PerformanceCounter.h>
-#include <FilterBank.h>
+#include <GPUProc/opencl-incl.h>
+#include <GPUProc/Pipeline.h>
+#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/FilterBank.h>
 #include "CorrelatorPipelinePrograms.h"
 
 namespace LOFAR

@@ -29,8 +29,8 @@
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/SparseSet.h>
 
-#include <Buffer/Block.h>
-#include <Buffer/BufferSettings.h>
+#include <InputProc/Buffer/Block.h>
+#include <InputProc/Buffer/BufferSettings.h>
 #include "MPIProtocol.h"
 
 #include <map>

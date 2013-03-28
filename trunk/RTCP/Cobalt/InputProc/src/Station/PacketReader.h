@@ -26,7 +26,7 @@
 #include <Common/Exception.h>
 #include <Stream/Stream.h>
 
-#include <Buffer/BufferSettings.h>
+#include <InputProc/Buffer/BufferSettings.h>
 
 #include "RSP.h"
 

@@ -2,9 +2,6 @@
 
 include(LofarCTest)
 
-# Add project's source directory to -I path.
-include_directories(${PACKAGE_SOURCE_DIR}/src)
-
 lofar_add_test(tRanges tRanges.cc)
 lofar_add_test(tSharedMemory tSharedMemory.cc)
 lofar_add_test(tSampleBuffer tSampleBuffer.cc)

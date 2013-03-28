@@ -34,8 +34,8 @@
 #include <Common/PrettyUnits.h>
 #include <Common/LofarLogger.h>
 
-#include <Scheduling.h>
-#include <SubbandMetaData.h>
+#include <GPUProc/Scheduling.h>
+#include <GPUProc/SubbandMetaData.h>
 
 namespace LOFAR
 {

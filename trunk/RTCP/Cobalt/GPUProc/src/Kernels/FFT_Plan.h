@@ -23,8 +23,8 @@
 
 #include <CoInterface/Parset.h>
 
-#include <opencl-incl.h>
-#include <OpenCL_Support.h>
+#include <GPUProc/opencl-incl.h>
+#include <GPUProc/OpenCL_Support.h>
 #include <OpenCL_FFT/clFFT.h>
 
 namespace LOFAR

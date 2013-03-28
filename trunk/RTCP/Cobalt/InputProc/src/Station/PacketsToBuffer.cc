@@ -26,8 +26,8 @@
 
 #include <Common/LofarLogger.h>
 
-#include <SampleType.h>
-#include <Buffer/SampleBuffer.h>
+#include <InputProc/SampleType.h>
+#include <InputProc/Buffer/SampleBuffer.h>
 
 #include "PacketWriter.h"
 
