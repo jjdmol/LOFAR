@@ -26,7 +26,6 @@
 
 #include <Common/LofarTypes.h>
 #include <Common/Thread/Queue.h>
-#include <Common/Thread/Semaphore.h>
 #include <Stream/Stream.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/StreamableData.h>
@@ -40,7 +39,8 @@
 #include "createProgram.h"
 #include "BestEffortQueue.h"
 #include "SlidingPointer.h"
-
+#include "WorkQueues/WorkQueue.h"
+#include "PerformanceCounter.h"
 
 namespace LOFAR
 {
@@ -102,6 +102,19 @@ namespace LOFAR
       //private:
       void                    sendNextBlock(unsigned station);
 
+      
+    protected:
+      // combines all functionality needed for getting the total from a set of counters
+      struct Performance {
+        std::map<std::string, PerformanceCounter::figures> total_counters;
+        std::map<std::string, SmartPtr<NSTimer> > total_timers;
+        // lock on the shared data
+        Mutex totalsMutex;
+        // add the counter in this queue
+        void addQueue(WorkQueue &queue);
+        // Print a logline with results
+        void log(size_t nrWorkQueues);
+      } performance;
     private:
       struct Output {
         // synchronisation to write blocks in-order

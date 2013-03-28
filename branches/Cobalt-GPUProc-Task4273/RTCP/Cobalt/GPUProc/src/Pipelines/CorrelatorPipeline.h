@@ -21,19 +21,11 @@
 #ifndef LOFAR_GPUPROC_CORRELATOR_PIPELINE_H
 #define LOFAR_GPUPROC_CORRELATOR_PIPELINE_H
 
-#include <string>
-#include <map>
-
-#include <Common/Timer.h>
-#include <Common/Thread/Mutex.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/SmartPtr.h>
 
 #include <GPUProc/opencl-incl.h>
 #include <GPUProc/Pipeline.h>
-#include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/FilterBank.h>
-#include <GPUProc/WorkQueues/WorkQueue.h>
 #include "CorrelatorPipelinePrograms.h"
 
 namespace LOFAR
@@ -42,32 +34,29 @@ namespace LOFAR
   {
     class CorrelatorWorkQueue;
 
+    // Correlator pipeline, connect input, GPUWorkQueues and output in a parallel (OMP).
+    // Connect all parts of the pipeline together: set up connections with the input stream
+    // each in a seperate thread. Start 2 WorkQueues for each GPU in the system.
+    // The WorkQueue are then filled with data from the stream. And started to 
+    // work. After all data is collected the output is written, again all parallel.
+    // This class contains most CPU side parallelism.
+    // It also contains two 'data' members that are shared between queues
     class CorrelatorPipeline : public Pipeline
     {
     public:
       CorrelatorPipeline(const Parset &);
 
-      void                    doWork();
+      // per thread/station start up the input create 2 WorkQueue for each available GPU
+      void        doWork();
+      // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void        doWorkQueue(CorrelatorWorkQueue &workQueue);
+      // Read for a subband the data from the station steams, and put in shared memory
       void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned subband);
 
     private:
       FilterBank filterBank;
       CorrelatorPipelinePrograms programs;
-
-      struct Performance {
-        std::map<std::string, PerformanceCounter::figures> total_counters;
-        std::map<std::string, SmartPtr<NSTimer> > total_timers;
-        Mutex totalsMutex;
-
-        void addQueue(WorkQueue &queue);
-        void log(size_t nrWorkQueues);
-      } performance;
-
     };
-
   }
 }
-
 #endif
-
