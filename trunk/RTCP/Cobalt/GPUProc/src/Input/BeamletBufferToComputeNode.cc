@@ -276,7 +276,7 @@ namespace LOFAR
       itsBeamletBuffers[rspBoard]->sendUnalignedSubband(stream, rspSlot, beam);
 
       // send meta data
-      SubbandMetaData metaData(itsNrTABs[beam] + 1);
+      SubbandMetaData metaData(itsNrTABs[beam]);
 
       if (itsNeedDelays) {
         for (unsigned p = 0; p < itsNrTABs[beam] + 1; p++) {
