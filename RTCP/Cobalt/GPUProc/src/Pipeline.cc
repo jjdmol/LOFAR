@@ -23,6 +23,7 @@
 #include "Pipeline.h"
 
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iomanip.h>
 #include <Stream/FileStream.h>
 #include <Stream/SharedMemoryStream.h>
 #include <Stream/NullStream.h>
