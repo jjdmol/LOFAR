@@ -21,6 +21,7 @@
 #ifndef LOFAR_GPUPROC_CORRELATOR_WORKQUEUE_H
 #define LOFAR_GPUPROC_CORRELATOR_WORKQUEUE_H
 
+// @file
 #include <complex>
 
 #include <Stream/Stream.h>
@@ -44,19 +45,27 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    struct WorkQueueInputData
+    // 
+    //   Collect all inputData for the correlatorWorkQueue item:
+    //    \arg inputsamples
+    //    \arg delays
+    //    \arg phaseOffSets
+    //    \arg flags
+    // It also contains a read function parsing all this data from an input stream.   
+    class WorkQueueInputData
     {
-      // Inputs: received from data and meta data
-      MultiArraySharedBuffer<float, 3> delaysAtBegin;
-      MultiArraySharedBuffer<float, 3> delaysAfterEnd;
-      MultiArraySharedBuffer<float, 2> phaseOffsets;
+      public:      
+      MultiArraySharedBuffer<float, 3> delaysAtBegin; //!< Whole sample delays at the start of the workitem      
+      MultiArraySharedBuffer<float, 3> delaysAfterEnd;//!< Whole sample delays at the end of the workitem      
+      MultiArraySharedBuffer<float, 2> phaseOffsets;  //!< Remainder of delays
 
       // inputdata with flagged data set to zero
       MultiArraySharedBuffer<char, 4> inputSamples;
 
-      // The flags as received in the input
+      // The input flags
       MultiDimArray<SparseSet<unsigned>,1> inputFlags;
 
+      // Create the inputData object we need shared host/device memory on the supplied devicequeue
       WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
                          size_t n_samples, size_t bytes_per_complex_sample,
                          cl::CommandQueue &queue, cl::Buffer &queue_buffer,
@@ -71,35 +80,53 @@ namespace LOFAR
       {
       }
 
-      // Read for a station the data from the inputstream.
-      // Perform the flagging of the data based on the just red meta data.
+      // Read for \c station the data and metadata from the \c inputstream, set flagged samples zero.
       void read(Stream *inputStream, size_t station, unsigned subband, unsigned beamIdx);
 
     private:
+      // set all flagged inputSamples to zero.
       void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
     };
 
-        // Propagate the flags
-    unsigned get2LogOfNrChannels(unsigned nrChannels);
-    void propagateFlagsToOutput(Parset const & parset,
-        MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-        CorrelatedData &output);
-    void convertFlagsToChannelFlags(Parset const &parset,
-        MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-        MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChanel);
-
-    void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
-        MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChanel,
-        CorrelatedData &output);
-
-    void applyWeightingToAllPolarizations(unsigned baseline, 
-        unsigned channel, float weight, CorrelatedData &output);
-
-    void applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
-        CorrelatedData &output);
-
     class CorrelatorWorkQueue : public WorkQueue
     {
+    public:
+      // Collection of functions to tranfer the input flags to the output.
+      // \c propagateFlagsToOutput can be called parallel to the kernels.
+      // After the data is copied from the the shared buffer 
+      // \c applyFractionOfFlaggedSamplesOnVisibilities can be used to weight
+      // the visibilities 
+      class flagFunctions
+      {
+      public:
+        // 1. Convert input flags to channel flags, calculate the amount flagged samples and save this in output
+        static void propagateFlagsToOutput(Parset const & parset,
+          MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
+          CorrelatedData &output) ;
+
+        // 2. Calculate the weight based on the number of flags and apply this weighting to all output values
+        static void applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
+          CorrelatedData &output);
+
+        // 1.1Convert the flags per station to channel flags, change time scale if nchannel > 1
+        static void convertFlagsToChannelFlags(Parset const &parset,
+          MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
+          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChanel);
+
+        // 1.2calculate the number of flagged samples and set this on the output dataproduct
+        // This function is aware of the used filter width a corrects for this.
+        static void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
+          MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChanel,
+          CorrelatedData &output);
+
+        // 1.3 Get the LOG2 of the input. Used to speed up devisions by 2
+        static unsigned get2LogOfNrChannels(unsigned nrChannels);
+
+        // 2.1 Apply the supplied weight to the complex values in the channel and baseline
+        static void applyWeightingToAllPolarizations(unsigned baseline, 
+          unsigned channel, float weight, CorrelatedData &output);
+      };
+
     public:
       CorrelatorWorkQueue(const Parset &parset,cl::Context &context,
                           cl::Device &device, unsigned queueNumber,
@@ -119,7 +146,7 @@ namespace LOFAR
       // All input data collected in a single struct
       WorkQueueInputData inputData;
 
-      // Output: received from the gpu and transfered from the metadata (flags)
+      // Output data object, content received from the gpu or metadata (flags)
       MultiArraySharedBuffer<std::complex<float>, 4> visibilities;
 
     private:

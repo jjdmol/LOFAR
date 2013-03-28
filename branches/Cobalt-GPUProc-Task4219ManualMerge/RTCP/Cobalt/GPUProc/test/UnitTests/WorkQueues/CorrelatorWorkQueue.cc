@@ -47,10 +47,10 @@ TEST(propagateFlagsToOutput)
 
   // *********************************************************************************************
   //propageFlags: exercise the functionality
-  propagateFlagsToOutput(parset, inputFlags, output);
+  CorrelatorWorkQueue::flagFunctions::propagateFlagsToOutput(parset, inputFlags, output);
 
   // now perform weighting of the data based on the number of valid samples
-  applyFractionOfFlaggedSamplesOnVisibilities(parset, output);  
+  CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities(parset, output);  
   // *********************************************************************************************
 
   // Now validate the functionality:
@@ -115,9 +115,9 @@ TEST(propagateFlagsToOutput)
 
 TEST(getLogOfNrChannels)
 {
-  CHECK_EQUAL(6u, get2LogOfNrChannels(64));
-  CHECK_EQUAL(7u, get2LogOfNrChannels(128));
-  CHECK_EQUAL(0u, get2LogOfNrChannels(1));
+  CHECK_EQUAL(6u, CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(64));
+  CHECK_EQUAL(7u, CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(128));
+  CHECK_EQUAL(0u, CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(1));
 
   //cant take 2log of zero: raise exception
   //CHECK_THROW(get2LogOfNrChannels(0), LOFAR::AssertError);
@@ -151,7 +151,7 @@ TEST(convertFlagsToChannelFlags)
           boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
 
   // ****** perform the translation
-  convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
+  CorrelatorWorkQueue::flagFunctions::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
   // ******
 
   //validate the corner cases
@@ -193,7 +193,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples4Channels)
   flagsPerChanel[1][1].include(111,120);//E. second station flags
   
   //propageFlags
-  calculateAndSetNumberOfFlaggedSamples(parset, flagsPerChanel, output);
+  CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
 
@@ -232,7 +232,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples1Channels)
   flagsPerChanel[0][1].include(111,120);//E. second station flags
   
   //propageFlags
-  calculateAndSetNumberOfFlaggedSamples(parset, flagsPerChanel, output);
+  CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
   // channel is 1 so no time resolution loss!!
@@ -269,7 +269,7 @@ TEST(applyFractionOfFlaggedSamplesOnVisibilities)
   output.setNrValidSamples(0,1,n_valid_samples); //baseline 0, channel 1
   output.setNrValidSamples(1,1,256); //baseline 1, channel 1
   output.setNrValidSamples(2,1,0); //baseline 0, channel 1
-  applyFractionOfFlaggedSamplesOnVisibilities(parset, output);
+  CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities(parset, output);
 
   // 4 channels: therefore the chanel zero should be zero
   CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[0][0][0][0]);
@@ -314,7 +314,7 @@ TEST(applyWeightingToAllPolarizations)
            output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
         
   //  multiply all polarization in sb 0 channel 0 with 0,5
-  applyWeightingToAllPolarizations(0,0,0.5,output);
+  CorrelatorWorkQueue::flagFunctions::applyWeightingToAllPolarizations(0,0,0.5,output);
 
   //sb 0 should be (0.5, 0)
   CHECK_EQUAL(std::complex<float>(0.5,0),  
