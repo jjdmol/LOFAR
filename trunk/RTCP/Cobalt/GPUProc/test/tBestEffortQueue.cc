@@ -24,8 +24,8 @@
 
 #include <Common/LofarLogger.h>
 
-#include <opencl-incl.h>
-#include <BestEffortQueue.h>
+#include <GPUProc/opencl-incl.h>
+#include <GPUProc/BestEffortQueue.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
