@@ -52,7 +52,6 @@ namespace LOFAR
       void addCounter(const std::string &name);
       void addTimer(const std::string &name);
     };
-
   }
 }
 

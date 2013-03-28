@@ -26,6 +26,7 @@
 
 #include <GPUProc/global_defines.h>
 
+
 namespace LOFAR
 {
   namespace Cobalt
