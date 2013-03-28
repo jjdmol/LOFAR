@@ -143,9 +143,11 @@ namespace LOFAR
           itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr, itsIsBigEndian);
           break;
 
+#ifdef HAVE_DAL
         case BEAM_FORMED_DATA:
           itsWriter = new MSWriterDAL<float,3>(path, itsParset, itsStreamNr, itsIsBigEndian);
           break;
+#endif
 
         default:
           itsWriter = new MSWriterFile(path);
