@@ -20,6 +20,19 @@ lofar_add_test(tStorageProcesses tStorageProcesses.cc)
 #lofar_add_test(tDelayCompensation tDelayCompensation.cc)
 lofar_add_test(RTCP_UnitTest RTCP_UnitTest.cc)
 
-#lofar_find_package(UnitTest++)
-#if(UNITTEST++_FOUND)
-#endif(UNITTEST++_FOUND)
+lofar_find_package(UnitTest++)
+
+if(UNITTEST++_FOUND)
+  set(_src_dir ${PACKAGE_SOURCE_DIR}/src)
+
+  # Add project's source directory to -I path.
+  include_directories(${_src_dir})
+
+  lofar_add_test(tCorrelatorWorkQueue 
+                 UnitTests/WorkQueues/CorrelatorWorkQueue.cc
+				 UnitTests/new_style_unittest.cc
+				 )
+
+  #target_link_libraries(RTCP_UnitTest /cm/shared/apps/UnitTest++/libUnitTest++.a)
+
+endif(UNITTEST++_FOUND)

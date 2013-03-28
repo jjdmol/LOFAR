@@ -77,6 +77,7 @@ namespace LOFAR
 
       for(unsigned s1 = 0; s1 < nrStations; s1++)
         for(unsigned s2 = 0; s2 <= s1; s2++)
+          //bl = s1 * (s1 + 1) / 2 + stat2 ;
           baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
 #endif
 
