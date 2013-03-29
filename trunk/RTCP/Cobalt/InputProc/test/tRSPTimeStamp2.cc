@@ -36,7 +36,7 @@ int main( int, char **argv )
   {
     TimeStamp ts(0, 0, clock);
 
-    for (int64 i = 0; i < clock * 3; ++i, ++ts) {
+    for (int64 i = 0; i < clock * 3; i += 100, ts += 100) {
       #define REPORT "(ts == " << ts << ", i == " << i << ")"
 
       ASSERTSTR( (int64)ts == i, REPORT );
