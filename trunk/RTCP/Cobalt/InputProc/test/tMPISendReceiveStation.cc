@@ -70,6 +70,8 @@ vector<SampleT> data_in(blockSize);
 
 
 TEST(Header) {
+  LOG_INFO_STR("Header");
+
   struct Block<SampleT> block;
 
   block.from = TimeStamp(1, 2);
@@ -103,29 +105,36 @@ TEST(Header) {
   }
 
   // Post requests
-  vector<MPI_Request> requests(2);
-  
-  requests[0] = sender->sendHeader<SampleT>(rank, header_in, block, metaDataBlob_in);
-  requests[1] = receiver->receiveHeader(0, header_out);
+  vector<MPI_Request> requests(1);
+ 
+  if (rank == 0) {
+    requests[0] = sender->sendHeader<SampleT>(1, header_in, block, metaDataBlob_in);
+  } else {
+    requests[0] = receiver->receiveHeader(0, header_out);
+  }
 
   // Wait for results
   waitAll(requests);
 
-  metaDataBlob_out = header_out.getMetaDataBlob();
+  if (rank == 1) {
+    metaDataBlob_out = header_out.getMetaDataBlob();
 
-  // Validate results
-  CHECK(metaDataBlob_in == metaDataBlob_out);
-  CHECK_EQUAL(header_in.from,       header_out.from);
-  CHECK_EQUAL(header_in.to,         header_out.to);
-  CHECK_EQUAL(header_in.nrBeamlets, header_out.nrBeamlets);
+    // Validate results
+    CHECK(metaDataBlob_in == metaDataBlob_out);
+    CHECK_EQUAL((int64)block.from,       header_out.from);
+    CHECK_EQUAL((int64)block.to,         header_out.to);
+    CHECK_EQUAL(block.beamlets.size(),   header_out.nrBeamlets);
 
-  for (size_t b = 0; b < block.beamlets.size(); ++b) {
-    CHECK_EQUAL(blockSize/2 - b, header_out.wrapOffsets[b]);
+    for (size_t b = 0; b < block.beamlets.size(); ++b) {
+      CHECK_EQUAL(blockSize/2 - b, header_out.wrapOffsets[b]);
+    }
   }
 }
 
 
 TEST(Data_OneTransfer) {
+  LOG_INFO_STR("Data_OneTransfer");
+
   struct Block<SampleT>::Beamlet ib;
   vector<SampleT> data_out(blockSize);
 
@@ -136,21 +145,28 @@ TEST(Data_OneTransfer) {
   ib.offset         = 0;
 
   // Post requests
-  vector<MPI_Request> requests(2);
-  
-  unsigned nrTransfers = sender->sendData<SampleT>(rank, 42, ib, &requests[0]);
-  CHECK_EQUAL(1U, nrTransfers);
-  requests[1] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], data_out.size());
+  vector<MPI_Request> requests(1);
+
+  if (rank == 0) {
+    unsigned nrTransfers = sender->sendData<SampleT>(1, 42, ib, &requests[0]);
+    CHECK_EQUAL(1U, nrTransfers);
+  } else {
+    requests[0] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], data_out.size());
+  }
 
   // Wait for results
   waitAll(requests);
 
-  // Validate results
-  CHECK(data_in == data_out);
+  if (rank == 1) {
+    // Validate results
+    CHECK(data_in == data_out);
+  }
 }
 
 
 TEST(Data_TwoTransfers) {
+  LOG_INFO_STR("Data_TwoTransfers");
+
   struct Block<SampleT>::Beamlet ib;
   vector<SampleT> data_out(blockSize);
 
@@ -163,22 +179,29 @@ TEST(Data_TwoTransfers) {
   ib.offset         = 0;
 
   // Post requests
-  vector<MPI_Request> requests(4);
-  
-  unsigned nrTransfers = sender->sendData<SampleT>(rank, 42, ib, &requests[0]);
-  CHECK_EQUAL(2U, nrTransfers);
-  requests[2] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], blockSize/2);
-  requests[3] = receiver->receiveData<SampleT>(0, 42, 1, &data_out[blockSize/2], blockSize/2);
+  vector<MPI_Request> requests(2);
+ 
+  if (rank == 0) {
+    unsigned nrTransfers = sender->sendData<SampleT>(1, 42, ib, &requests[0]);
+    CHECK_EQUAL(2U, nrTransfers);
+  } else {
+    requests[0] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], blockSize/2);
+    requests[1] = receiver->receiveData<SampleT>(0, 42, 1, &data_out[blockSize/2], blockSize/2);
+  }
 
   // Wait for results
   waitAll(requests);
 
-  // Validate results
-  CHECK(data_in == data_out);
+  if (rank == 1) {
+    // Validate results
+    CHECK(data_in == data_out);
+  }
 }
 
 
 TEST(Flags) {
+  LOG_INFO_STR("Flags");
+
   // Create structures for input and output
   SparseSet<int64> flags_in;
   SparseSet<int64> flags_out;
@@ -187,31 +210,37 @@ TEST(Flags) {
   // Fill input
   flags_in.include(10, 20);
   flags_in.include(30, 40);
-  flags_in += rank; // make flags unique
 
   // Post requests
-  vector<MPI_Request> requests(2);
-  
-  requests[0] = sender->sendFlags(rank, 42, flags_in);
-  requests[1] = receiver->receiveFlags(0, 42, flags_out_buffer);
+  vector<MPI_Request> requests(1);
+ 
+  if (rank == 0) {
+    requests[0] = sender->sendFlags(1, 42, flags_in);
+  } else {
+    requests[0] = receiver->receiveFlags(0, 42, flags_out_buffer);
+  }
 
   // Wait for results
   waitAll(requests);
 
-  // Process results
-  flags_out.unmarshall(&flags_out_buffer[0]);
+  if (rank == 1) {
+    // Process results
+    flags_out.unmarshall(&flags_out_buffer[0]);
 
-  // Validate results
-  CHECK_EQUAL(flags_in, flags_out);
+    // Validate results
+    CHECK_EQUAL(flags_in, flags_out);
+  }
 }
 
 
 TEST(Block_OneStation) {
+  LOG_INFO_STR("Block_OneStation");
+
   struct Block<SampleT> block_in;
   std::vector<char> metaDataBlob_in(100, 42);
 
   size_t nrStations = 1;
-  size_t nrBeamlets = beamletDistribution[0].size();
+  size_t nrBeamlets = beamletDistribution[1].size();
 
   vector< struct MPIReceiveStations::Block<SampleT> > blocks_out;
   std::vector<char> metaDataBlob_out;
@@ -245,21 +274,24 @@ TEST(Block_OneStation) {
     }
   }
 
-  // Run requests
-#pragma omp parallel sections
-  {
-#pragma omp section
+  if (rank == 0) {
+    // sender
     sender->sendBlock<SampleT>(block_in, metaDataBlob_in);
-#pragma omp section
+  } else {
+    // receiver
     receiver->receiveBlock<SampleT>(blocks_out);
   }
 
-  // Validate results
-  CHECK(metaDataBlob_in == blocks_out[0].metaDataBlob);
+  LOG_INFO_STR("Block transferred");
 
-  for (size_t b = 0; b < nrBeamlets; ++b) {
-    CHECK_EQUAL(data_in[0], blocks_out[0].beamlets[b].samples[0]);
-    CHECK(data_in == blocks_out[0].beamlets[b].samples);
+  if (rank == 1) {
+    // Validate results
+    CHECK(metaDataBlob_in == blocks_out[0].metaDataBlob);
+
+    for (size_t b = 0; b < nrBeamlets; ++b) {
+      CHECK_EQUAL(data_in[0], blocks_out[0].beamlets[b].samples[0]);
+      CHECK(data_in == blocks_out[0].beamlets[b].samples);
+    }
   }
 }
 
@@ -285,17 +317,20 @@ int main( int argc, char **argv )
 
   size_t blockSize = 1024;
 
-  beamletDistribution[rank].push_back(0);
-  beamletDistribution[rank].push_back(1);
-  beamletDistribution[rank].push_back(2);
+  // Rank 0 is the sender, rank 1 is the receiver
+  ASSERT(nrHosts == 2);
+
+  beamletDistribution[1].push_back(0);
+  beamletDistribution[1].push_back(1);
+  beamletDistribution[1].push_back(2);
 
   sender = new MPISendStation(settings, 0, beamletDistribution);
-  receiver = new MPIReceiveStations(std::vector<int>(1,rank), beamletDistribution[rank], blockSize);
+  receiver = new MPIReceiveStations(std::vector<int>(1,0), beamletDistribution[1], blockSize);
 
   // Fill input
   for (size_t i = 0; i < data_in.size(); ++i) {
-    data_in[i].x = i16complex(rank, i);
-    data_in[i].y = i16complex(1000 + rank, 1000 + i);
+    data_in[i].x = i16complex(0,    i);
+    data_in[i].y = i16complex(1000, 1000 + i);
   }
 
   // Run tests
