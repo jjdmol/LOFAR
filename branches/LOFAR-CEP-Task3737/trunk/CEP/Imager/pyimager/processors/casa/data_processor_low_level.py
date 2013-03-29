@@ -15,7 +15,7 @@ class DataProcessorLowLevel:
 
         # Defaults from awimager.
         parms = {}
-        parms["wmax"] = options["wmax"]
+        parms["wmax"] = options["w_max"]
         parms["mueller.grid"] = numpy.ones((4, 4), dtype=bool)
         parms["mueller.degrid"] = numpy.ones((4, 4), dtype=bool)
         parms["verbose"] = 0                # 1, 2 for more output

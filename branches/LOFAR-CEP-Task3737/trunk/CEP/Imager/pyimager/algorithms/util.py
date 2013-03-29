@@ -40,7 +40,7 @@ def show_image(data, title=None):
     vmin = numpy.min(data)
     vmax = numpy.max(data)
     for k, ax in zip(range(4), axes.flat):
-        __im = ax.imshow(data[k,:,:], origin="lower", interpolation="nearest", \
+        __im = ax.imshow(data[k], origin="lower", interpolation="nearest", \
             cmap="bone", vmin=vmin, vmax=vmax) # aspect="auto")
         __im.axes.get_xaxis().set_visible(False)
         __im.axes.get_yaxis().set_visible(False)

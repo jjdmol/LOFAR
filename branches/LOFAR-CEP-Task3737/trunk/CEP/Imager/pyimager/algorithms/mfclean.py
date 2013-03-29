@@ -13,7 +13,7 @@ import lofar.pyimager.processors as processors
 import util
 
 class BeamParameters:
-    def __init__(self, major_axis = 1.0, minor_axis = 1.0, \
+    def __init__(self, major_axis = 1.0, minor_axis = 1.0,
         position_angle = 0.0):
 
         self._major = abs(major_axis)
@@ -38,13 +38,13 @@ class BeamParameters:
     def _position_angle(self):
         return self._angle
 
-    major_axis = property(_major_axis, _set_major_axis, \
+    major_axis = property(_major_axis, _set_major_axis,
         doc="Major axis size (rad).")
 
-    minor_axis = property(_minor_axis, _set_minor_axis, \
+    minor_axis = property(_minor_axis, _set_minor_axis,
         doc="Minor axis size (rad).")
 
-    position_angle = property(_position_angle, _set_position_angle, \
+    position_angle = property(_position_angle, _set_position_angle,
         doc="Position angle (rad).")
 
 def max_outer(image, distance):
@@ -123,8 +123,8 @@ def validate_psf(csys, psf, beam):
         increment = numpy.abs(numpy.min(csys.get_increment()[2]))
         assert(csys.get_unit()[2] == ["rad", "rad"])
         if increment > 0.0:
-            distance = max(distance, \
-                int(numpy.ceil(max(beam[i].major_axis / increment, \
+            distance = max(distance,
+                int(numpy.ceil(max(beam[i].major_axis / increment,
                 beam[i].minor_axis / increment))))
 
         # TODO: psf_patch_size will always be set based on the distance computed
@@ -190,7 +190,7 @@ def restore_image(csys, image, residual, beam):
         major = beam.major_axis * 180.0 * 3600.0 / numpy.pi
         minor = beam.minor_axis * 180.0 * 3600.0 / numpy.pi
         pa = beam.position_angle * 180.0 / numpy.pi
-        restored = lofar.casaimwrap.convolveWithBeam(csys, image, major, \
+        restored = lofar.casaimwrap.convolve_with_beam(csys, image, major,
             minor, pa)
     else:
         restored = numpy.copy(image)
@@ -207,11 +207,11 @@ def mfclean(options):
     max_baseline = options.max_baseline if options.max_baseline > 0.0 else \
         10000.0
     processor_options = {}
-    processor_options["wmax"] = max_baseline
+    processor_options["w_max"] = max_baseline
     processor_options["padding"] = 1.0
     processor_options["image"] = options.image
-
-    processor = processors.create_data_processor(options.processor, \
+    processor_options["threads"] = options.threads
+    processor = processors.create_data_processor(options.processor,
         options.ms, processor_options)
 
     channel_freq = processor.channel_frequency()
@@ -225,14 +225,14 @@ def mfclean(options):
     # just multiply estimated FOV by 2.0.
     image_size *= 2.0
 
-    (n_px, delta_px) = util.image_configuration(image_size, max_freq, \
+    (n_px, delta_px) = util.image_configuration(image_size, max_freq,
         max_baseline)
 
     util.notice("image configuration:")
     util.notice("    size: %d x %d pixel" % (n_px, n_px))
-    util.notice("    angular size: %.2f deg" \
+    util.notice("    angular size: %.2f deg"
         % (image_size * 180.0 / numpy.pi))
-    util.notice("    angular resolution @ 3 pixel/beam: %.2f arcsec/pixel" \
+    util.notice("    angular resolution @ 3 pixel/beam: %.2f arcsec/pixel"
         % (3600.0 * delta_px * 180.0 / numpy.pi))
 
     if n_px > 750:
@@ -242,8 +242,8 @@ def mfclean(options):
     # TODO: Need to implement support for multiple channel images. Currently,
     # all data channels are combined into a single MFS image per correlation.
     image_shape = (1, 4, n_px, n_px)
-    image_coordinates = pyrap.images.coordinates.coordinatesystem( \
-        lofar.casaimwrap.makeCoordinateSystem(image_shape[2:], [delta_px, \
+    image_coordinates = pyrap.images.coordinates.coordinatesystem(
+        lofar.casaimwrap.make_coordinate_system(image_shape[2:], [delta_px,
         delta_px], processor.phase_reference(), channel_freq, channel_width))
 
     n_model = 1
@@ -263,15 +263,16 @@ def mfclean(options):
     beam = [None for i in range(n_model)]
     for i in range(n_model):
         psf[i] = processor.point_spread_function(image_coordinates, image_shape)
-        fit = lofar.casaimwrap.fitGaussianPSF(image_coordinates.dict(), psf[i])
+        fit = lofar.casaimwrap.fit_gaussian_psf(image_coordinates.dict(),
+            psf[i])
         assert(fit["ok"])
 
-        beam[i] = BeamParameters((fit["major"] * numpy.pi) / (3600.0 * 180.0), \
-            (fit["minor"] * numpy.pi) / (3600.0 * 180.0), (fit["angle"] \
+        beam[i] = BeamParameters((fit["major"] * numpy.pi) / (3600.0 * 180.0),
+            (fit["minor"] * numpy.pi) / (3600.0 * 180.0), (fit["angle"]
             * numpy.pi) / 180.0)
 
         util.notice("model %d/%d: major axis: %f arcsec, minor axis: %f arcsec,"
-            " position angle: %f deg" % (i, n_model - 1, abs(fit["major"]), \
+            " position angle: %f deg" % (i, n_model - 1, abs(fit["major"]),
             abs(fit["minor"]), fit["angle"]))
 
     # Validate PSFs.
@@ -279,7 +280,7 @@ def mfclean(options):
         validate_psf(image_coordinates, psf, beam)
     clark_options["psf_patch_size"] = psf_patch_size
 
-    updated = [True for i in range(n_model)]
+    updated = [False for i in range(n_model)]
     weight = [None for i in range(n_model)]
     model = [numpy.zeros(image_shape) for i in range(n_model)]
     delta = [numpy.zeros(image_shape) for i in range(n_model)]
@@ -300,7 +301,7 @@ def mfclean(options):
     previous_absmax = 1e30
 
     while absmax >= options.threshold and numpy.max(iterations) \
-        < options.iterations and any(updated):
+        < options.iterations and (cycle == 0 or any(updated)):
 
         util.notice(">> starting major cycle: %d <<" % cycle)
 
@@ -314,11 +315,20 @@ def mfclean(options):
         # TODO: If n_models > 1, need to compute residuals from the sum of
         # the degridded visibilities (see LofarCubeSkyEquation.cc).
         assert(n_model == 1)
-        for i in range(n_model):
-            if updated[i]:
-                residual[i], weight[i] = processor.residual(image_coordinates, \
-                    model[i], processors.Normalization.FLAT_NOISE, \
-                    processors.Normalization.FLAT_NOISE)
+        if cycle == 0:
+            # Assuming the initial models are zero, the residual visibilities
+            # equal the observed visibilities and therefore we only need to
+            # grid them.
+            for i in range(n_model):
+                residual[i], weight[i] = processor.grid(image_coordinates,
+                    image_shape, processors.Normalization.FLAT_NOISE)
+        else:
+            for i in range(n_model):
+                if updated[i]:
+                    residual[i], weight[i] = \
+                        processor.residual(image_coordinates, model[i],
+                            processors.Normalization.FLAT_NOISE,
+                            processors.Normalization.FLAT_NOISE)
                 updated[i] = False
 
         # Compute residual statistics.
@@ -326,7 +336,7 @@ def mfclean(options):
 
         # Print some statistics.
         for i in range(n_model):
-            util.notice("model %d/%d: min residual: %f, max residual: %f" \
+            util.notice("model %d/%d: min residual: %f, max residual: %f"
                 % (i, n_model - 1, resmin[i], resmax[i]))
         util.notice("peak residual: %f" % absmax)
 
@@ -352,7 +362,7 @@ def mfclean(options):
             max_weight = 0.0
             for i in range(n_model):
                 max_weight = max(max_weight, numpy.max(weight[i]))
-            util.notice("maximum sensitivity: %f Jy/beam" % (1.0 \
+            util.notice("maximum sensitivity: %f Jy/beam" % (1.0
                 / numpy.sqrt(max_weight)))
 
         # Comment from CASA source code:
@@ -369,7 +379,7 @@ def mfclean(options):
         # cycleMaxPsfFraction_p : scale factor as a fraction of the PSF peak
         #                                    must be 0.0 < xx < 1.0 (obviously)
         #                                    Default : 0.8
-        fraction_of_psf = min(options.cycle_max_psf_fraction, \
+        fraction_of_psf = min(options.cycle_max_psf_fraction,
             options.cycle_factor * max_sidelobe)
 
         if fraction_of_psf > 0.8:
@@ -379,7 +389,7 @@ def mfclean(options):
             fraction_of_psf = 0.8   # painfully slow!
 
         # Update cycle threshold.
-        cycle_threshold = max(0.95 * options.threshold, fraction_of_psf \
+        cycle_threshold = max(0.95 * options.threshold, fraction_of_psf
             * absmax)
         clark_options["cycle_threshold"] = cycle_threshold
 
@@ -390,7 +400,7 @@ def mfclean(options):
         util.notice("starting minor cycle...")
         for i in range(n_model):
             if max(abs(resmin[i]), abs(resmax[i])) < cycle_threshold:
-                util.notice("model %d/%d: peak residual below threshold" \
+                util.notice("model %d/%d: peak residual below threshold"
                     % (i, n_model - 1))
                 continue
 
@@ -407,10 +417,10 @@ def mfclean(options):
                     # TODO: The value of max_weight is only updated during
                     # cycle 0. Is this correct?
                     #
-                    assert(len(weight[i].shape) == 2 \
+                    assert(len(weight[i].shape) == 2
                         and weight[i].shape[:2] == residual[i].shape[:2])
 
-                    plane_weight = numpy.sqrt(weight[i][ch, cr_slice] \
+                    plane_weight = numpy.sqrt(weight[i][ch, cr_slice]
                         / max_weight)
                     if numpy.any(plane_weight > 0.01):
                         weight_mask = numpy.ones((residual[i].shape[2:]))
@@ -426,8 +436,8 @@ def mfclean(options):
                     # We only want the PSF for the first polarization so we
                     # iterate over polarization LAST.
                     #
-                    result = lofar.casaimwrap.clarkClean(psf[i][ch,0,:,:], \
-                        residual[i][ch,cr_slice,:,:], weight_mask, \
+                    result = lofar.casaimwrap.clark_clean(psf[i][ch,0,:,:],
+                        residual[i][ch,cr_slice,:,:], weight_mask,
                         iterations[i,cr,ch], clark_options)
 
                     if result["iterations"] > iterations[i,cr,ch]:
@@ -437,9 +447,9 @@ def mfclean(options):
                     else:
                         assert(numpy.all(result["delta"] == 0.0))
 
-                util.notice("model %d/%d: stokes: %s, cleaned: %f Jy, " \
-                    "iterations per channel: %s" % (i, n_model - 1, \
-                    stokes[cr], numpy.sum(delta[i][ch,cr_slice,:,:]), \
+                util.notice("model %d/%d: stokes: %s, cleaned: %f Jy, "
+                    "iterations per channel: %s" % (i, n_model - 1,
+                    stokes[cr], numpy.sum(delta[i][ch,cr_slice,:,:]),
                     str(iterations[i,cr,:])))
 
         # Update model images if required.
@@ -454,14 +464,14 @@ def mfclean(options):
         util.notice("finalizing residual images for all fields...")
         for i in range(n_model):
             if updated[i]:
-                residual[i], weight[i] = processor.residual(image_coordinates, \
-                    model[i], processors.Normalization.FLAT_NOISE, \
+                residual[i], weight[i] = processor.residual(image_coordinates,
+                    model[i], processors.Normalization.FLAT_NOISE,
                     processors.Normalization.FLAT_NOISE)
         (absmax, resmin, resmax) = max_field(residual, weight)
 
         # Print some statistics.
         for i in range(n_model):
-            util.notice("model %d/%d: min residual: %f, max residual: %f" \
+            util.notice("model %d/%d: min residual: %f, max residual: %f"
                 % (i, n_model - 1, resmin[i], resmax[i]))
         util.notice("peak residual: %f" % absmax)
     else:
@@ -469,42 +479,42 @@ def mfclean(options):
 
     # Store output images.
     util.notice("storing average response...")
-    util.store_image(options.image + ".response", image_coordinates, \
+    util.store_image(options.image + ".response", image_coordinates,
         processor.response(image_coordinates, image_shape))
 
     util.notice("storing model images...")
     for i in range(n_model):
-        util.store_image(options.image + ".model.flat_noise", \
+        util.store_image(options.image + ".model.flat_noise",
             image_coordinates, model[i])
-        util.store_image(options.image + ".model", image_coordinates, \
-            processor.normalize(image_coordinates, model[i], \
-            processors.Normalization.FLAT_NOISE, \
+        util.store_image(options.image + ".model", image_coordinates,
+            processor.normalize(image_coordinates, model[i],
+            processors.Normalization.FLAT_NOISE,
             processors.Normalization.FLAT_GAIN))
 
     util.notice("storing residual images...")
     for i in range(n_model):
-        util.store_image(options.image + ".residual.flat_noise", \
+        util.store_image(options.image + ".residual.flat_noise",
             image_coordinates, residual[i])
-        util.store_image(options.image + ".residual", image_coordinates, \
-            processor.normalize(image_coordinates, residual[i], \
-            processors.Normalization.FLAT_NOISE, \
+        util.store_image(options.image + ".residual", image_coordinates,
+            processor.normalize(image_coordinates, residual[i],
+            processors.Normalization.FLAT_NOISE,
             processors.Normalization.FLAT_GAIN))
 
     util.notice("storing restored images...")
     for i in range(n_model):
-        restored = restore_image(image_coordinates.dict(), model[i], \
+        restored = restore_image(image_coordinates.dict(), model[i],
             residual[i], beam[i])
 
-        util.store_image(options.image + ".restored.flat_noise", \
+        util.store_image(options.image + ".restored.flat_noise",
             image_coordinates, restored)
-        util.store_image(options.image, image_coordinates, \
-            processor.normalize(image_coordinates, restored, \
-            processors.Normalization.FLAT_NOISE, \
+        util.store_image(options.image, image_coordinates,
+            processor.normalize(image_coordinates, restored,
+            processors.Normalization.FLAT_NOISE,
             processors.Normalization.FLAT_GAIN))
 
     # Print some statistics.
     for i in range(n_model):
-        util.notice("model %d/%d: clean flux: %f, residual rms: %f" % (i, \
+        util.notice("model %d/%d: clean flux: %f, residual rms: %f" % (i,
             n_model - 1, numpy.sum(model[i]), numpy.std(residual[i])))
 
     if diverged:
@@ -512,11 +522,11 @@ def mfclean(options):
     elif absmax < options.threshold:
         util.notice("clean converged.")
     else:
-        util.warning("clean did not reach threshold: %f Jy." \
+        util.warning("clean did not reach threshold: %f Jy."
             % options.threshold)
 
     util.show_image(residual[0][0,:,:,:], "final residual")
-    restored = restore_image(image_coordinates.dict(), model[0], residual[0], \
+    restored = restore_image(image_coordinates.dict(), model[0], residual[0],
         beam[0])
     util.show_image(restored[0,:,:,:], "restored image")
     matplotlib.pyplot.show()
