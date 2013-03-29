@@ -334,6 +334,7 @@ namespace LOFAR
         // wait for the deadline for these data
         itsCorrelationStartTime = itsCurrentTimeStamp + itsNrSamplesPerSubband + itsMaxNetworkDelay + itsMaximumDelay;
 
+        LOG_DEBUG_STR("Waiting until " << itsCorrelationStartTime);
         itsWallClock.waitUntil(itsCorrelationStartTime);
       }
 
