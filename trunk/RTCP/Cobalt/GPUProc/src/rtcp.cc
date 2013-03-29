@@ -40,6 +40,8 @@
 #include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 
+#include <cstdlib>
+
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
@@ -74,6 +76,9 @@ SELECTPIPELINE to_select_pipeline(char *argument)
 
 int main(int argc, char **argv)
 {
+  // Make sure all time is dealt with and reported in UTC
+  setenv("TZ", "UTC", 1);
+
   //Allow usage of nested omp calls
   omp_set_nested(true);
 
