@@ -354,6 +354,8 @@ namespace LOFAR
       correlatorKernel.enqueue(queue, *counters["compute - correlator"]);
 #endif
 
+      queue.flush();
+
       // ***** The GPU will be occupied for a while, do some calculations in the
       // background.
 
