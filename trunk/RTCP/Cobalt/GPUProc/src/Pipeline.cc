@@ -145,6 +145,8 @@ namespace LOFAR
 
       if (!output.bequeue->append(data)) {
         LOG_WARN_STR("Dropping block " << block << " of subband " << subband);
+
+        delete data;
       }
 
       // Allow the next block to be written
