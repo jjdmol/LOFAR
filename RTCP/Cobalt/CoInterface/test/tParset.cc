@@ -224,8 +224,8 @@ SUITE(delayCompensation) {
 TEST(nrPPFTaps) {
   MAKEPS("OLAP.CNProc.nrPPFTaps", "42");
 
-  CHECK_EQUAL(42, ps.settings.nrPPFTaps);
-  CHECK_EQUAL(42, ps.nrPPFTaps());
+  CHECK_EQUAL(42U, ps.settings.nrPPFTaps);
+  CHECK_EQUAL(42U, ps.nrPPFTaps());
 }
 
 /*
