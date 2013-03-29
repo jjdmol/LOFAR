@@ -18,9 +18,9 @@
 //#
 //# $Id$
 
-#ifdef HAVE_DAL
-
 #include <lofar_config.h>
+
+#ifdef HAVE_DAL
 
 #include "MSWriterDAL.h"
 
