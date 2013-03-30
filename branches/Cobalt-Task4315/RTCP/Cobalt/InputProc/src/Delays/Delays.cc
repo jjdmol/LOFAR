@@ -110,7 +110,7 @@ namespace LOFAR
       // need to support other cases.
 
       if (bufferSize % itsNrCalcDelays > 0)
-        THROW(GPUProcException, "nrCalcDelays (" << itsNrCalcDelays << ") must divide bufferSize (" << bufferSize << ")");
+        THROW(Exception, "nrCalcDelays (" << itsNrCalcDelays << ") must divide bufferSize (" << bufferSize << ")");
 
       // Set an initial epoch for the itsFrame
       itsFrame.set(MEpoch(toUTC(itsStartTime), MEpoch::UTC));
@@ -284,12 +284,6 @@ namespace LOFAR
     void Delays::setPositionDiff(const Parset &parset)
     {
       // Calculate the station to reference station position difference of apply station.
-
-      // Station positions must be given in ITRF
-      std::string str = toUpper(parset.positionType());
-
-      if (str != "ITRF")
-        THROW(GPUProcException, "OLAP.DelayComp.positionType must be ITRF");
 
       // Get the antenna positions from the parameter set. The antenna
       // positions are stored as one large vector of doubles.
