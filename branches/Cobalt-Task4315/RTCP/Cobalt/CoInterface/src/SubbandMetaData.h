@@ -35,7 +35,9 @@ namespace LOFAR
     struct SubbandMetaData
     {
     public:
-      SubbandMetaData(unsigned nrTABs);
+      typedef SparseSet<unsigned> flags_type;
+
+      SubbandMetaData(size_t nrTABs = 0);
 
       struct beamInfo {
         float delayAtBegin;
@@ -45,11 +47,11 @@ namespace LOFAR
       };
 
       // delays for all directions
-      beamInfo stationBeam;
-      std::vector<beamInfo> TABs;
+      struct beamInfo stationBeam;
+      std::vector<struct beamInfo> TABs;
 
       // flag set.
-      SparseSet<unsigned> flags;
+      flags_type flags;
 
       void read(Stream *str);
       void write(Stream *str) const;
@@ -58,7 +60,7 @@ namespace LOFAR
     };
 
 
-    inline SubbandMetaData::SubbandMetaData(unsigned nrTABs)
+    inline SubbandMetaData::SubbandMetaData(size_t nrTABs)
       :
       TABs(nrTABs)
     {

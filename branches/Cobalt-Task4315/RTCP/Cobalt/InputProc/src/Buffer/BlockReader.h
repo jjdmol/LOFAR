@@ -66,7 +66,7 @@ namespace LOFAR
          * after reading the data. The valid data is then indicated by
          * the intersection of (beamlets[i].flagsAtBegin & flags(i))
         */
-        virtual BufferSettings::flags_type flags( size_t beamletIdx ) const;
+        virtual SubbandMetaData::flags_type flags( size_t beamletIdx ) const;
 
       private:
         LockedBlock( BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets );

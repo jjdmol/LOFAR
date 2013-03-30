@@ -36,7 +36,6 @@
 #include <Common/Thread/Cancellation.h>
 #include <Common/Thread/Mutex.h>
 #include <Stream/SocketStream.h>
-#include <GPUProc/Scheduling.h>
 
 using namespace std;
 
@@ -502,12 +501,6 @@ namespace LOFAR
 
     void SSHconnection::commThread()
     {
-#if defined HAVE_BGP_ION
-      doNotRunOnCore0();
-      //runOnCore0();
-      //nice(19);
-#endif
-
       int rc;
       int exitcode;
       char *exitsignal = 0;

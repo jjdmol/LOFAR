@@ -94,9 +94,6 @@ TEST(Header) {
   MPIProtocol::Header header_in;
   MPIProtocol::Header header_out;
 
-  std::vector<char> metaDataBlob_in(100, 42);
-  std::vector<char> metaDataBlob_out;
-
   // NOTE: Headers are already partially filled by MPISendStation constructor,
   // so we need to do some filling as well
   header_in.nrBeamlets = block.beamlets.size();
@@ -108,7 +105,7 @@ TEST(Header) {
   vector<MPI_Request> requests(1);
  
   if (rank == 0) {
-    requests[0] = sender->sendHeader<SampleT>(1, header_in, block, metaDataBlob_in);
+    requests[0] = sender->sendHeader<SampleT>(1, header_in, block);
   } else {
     requests[0] = receiver->receiveHeader(0, header_out);
   }
@@ -117,10 +114,7 @@ TEST(Header) {
   waitAll(requests);
 
   if (rank == 1) {
-    metaDataBlob_out = header_out.getMetaDataBlob();
-
     // Validate results
-    CHECK(metaDataBlob_in == metaDataBlob_out);
     CHECK_EQUAL((int64)block.from,       header_out.from);
     CHECK_EQUAL((int64)block.to,         header_out.to);
     CHECK_EQUAL(block.beamlets.size(),   header_out.nrBeamlets);
@@ -199,25 +193,28 @@ TEST(Data_TwoTransfers) {
 }
 
 
-TEST(Flags) {
-  LOG_INFO_STR("Flags");
+TEST(MetaData) {
+  LOG_INFO_STR("MetaData");
 
   // Create structures for input and output
-  BufferSettings::flags_type flags_in;
-  BufferSettings::flags_type flags_out;
-  vector<char> flags_out_buffer(sender->flagsSize());
+  SubbandMetaData metaData_in;
+  SubbandMetaData metaData_out;
+
+  MPIProtocol::MetaData mdBuf_in;
+  MPIProtocol::MetaData mdBuf_out;
 
   // Fill input
-  flags_in.include(10, 20);
-  flags_in.include(30, 40);
+  metaData_in.flags.include(10, 20);
+  metaData_in.flags.include(30, 40);
+  mdBuf_in = metaData_in;
 
   // Post requests
   vector<MPI_Request> requests(1);
  
   if (rank == 0) {
-    requests[0] = sender->sendFlags(1, 42, flags_in);
+    requests[0] = sender->sendMetaData(1, 42, mdBuf_in);
   } else {
-    requests[0] = receiver->receiveFlags(0, 42, flags_out_buffer);
+    requests[0] = receiver->receiveMetaData(0, 42, mdBuf_out);
   }
 
   // Wait for results
@@ -225,10 +222,10 @@ TEST(Flags) {
 
   if (rank == 1) {
     // Process results
-    flags_out.unmarshall(&flags_out_buffer[0]);
+    metaData_out = mdBuf_out;
 
     // Validate results
-    CHECK_EQUAL(flags_in, flags_out);
+    CHECK_EQUAL(metaData_in.flags, metaData_out.flags);
   }
 }
 
@@ -237,14 +234,15 @@ TEST(Block_OneStation) {
   LOG_INFO_STR("Block_OneStation");
 
   struct Block<SampleT> block_in;
-  std::vector<char> metaDataBlob_in(100, 42);
+  SubbandMetaData metaData_in;
+
+  vector< struct MPIReceiveStations::Block<SampleT> > blocks_out;
+  SubbandMetaData metaData_out;
 
   size_t nrStations = 1;
   size_t nrBeamlets = beamletDistribution[1].size();
 
-  vector< struct MPIReceiveStations::Block<SampleT> > blocks_out;
-  std::vector<char> metaDataBlob_out;
-
+  // Fill input
   block_in.from = TimeStamp(1, 2);
   block_in.to   = TimeStamp(3, 4);
 
@@ -259,6 +257,9 @@ TEST(Block_OneStation) {
     ib.ranges[1].to   = &data_in[blockSize];
     ib.nrRanges       = 2;
     ib.offset         = 0;
+
+    ib.flagsAtBegin.include(10, 20);
+    ib.flagsAtBegin.include(30, 40);
 
     block_in.beamlets.push_back(ib);
   }
@@ -276,7 +277,8 @@ TEST(Block_OneStation) {
 
   if (rank == 0) {
     // sender
-    sender->sendBlock<SampleT>(block_in, metaDataBlob_in);
+    std::vector<SubbandMetaData> metaDatas(nrBeamlets, metaData_in);
+    sender->sendBlock<SampleT>(block_in, metaDatas);
   } else {
     // receiver
     receiver->receiveBlock<SampleT>(blocks_out);
@@ -286,11 +288,11 @@ TEST(Block_OneStation) {
 
   if (rank == 1) {
     // Validate results
-    CHECK(metaDataBlob_in == blocks_out[0].metaDataBlob);
-
     for (size_t b = 0; b < nrBeamlets; ++b) {
       CHECK_EQUAL(data_in[0], blocks_out[0].beamlets[b].samples[0]);
       CHECK(data_in == blocks_out[0].beamlets[b].samples);
+
+      CHECK_EQUAL(block_in.beamlets[b].flagsAtBegin, blocks_out[0].beamlets[b].metaData.flags);
     }
   }
 }

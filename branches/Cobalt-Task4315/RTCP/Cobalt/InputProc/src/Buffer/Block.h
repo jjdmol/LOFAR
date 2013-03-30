@@ -25,7 +25,7 @@
 #include <vector>
 
 #include <CoInterface/RSPTimeStamp.h>
-#include <InputProc/Buffer/BufferSettings.h>
+#include <CoInterface/SubbandMetaData.h>
 
 namespace LOFAR
 {
@@ -59,7 +59,8 @@ namespace LOFAR
         // The offset at which the data is accessed.
         ssize_t offset;
 
-        BufferSettings::flags_type flagsAtBegin;
+        // The flags, with indices local to this block
+        SubbandMetaData::flags_type flagsAtBegin;
       };
 
       std::vector<struct Beamlet> beamlets; // [beamlet]
@@ -67,9 +68,9 @@ namespace LOFAR
       /*
        * Read the flags for a specific beamlet. Readers should read the flags
        * after reading the data. The valid data is then indicated by
-       * the intersection of (beamlets[i].flagsAtBegin & flags(i))
+       * the union of (beamlets[i].flagsAtBegin | flags(i))
        */
-      virtual BufferSettings::flags_type flags( size_t beamletIdx ) const {
+      virtual SubbandMetaData::flags_type flags( size_t beamletIdx ) const {
         return beamlets[beamletIdx].flagsAtBegin;
       }
     };

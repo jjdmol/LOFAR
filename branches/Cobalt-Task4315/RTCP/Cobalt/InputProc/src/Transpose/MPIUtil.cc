@@ -34,14 +34,14 @@ namespace LOFAR {
     }
 
 
-    MPI_Request Guarded_MPI_Isend(void *ptr, size_t numBytes, int destRank, int tag) {
+    MPI_Request Guarded_MPI_Isend(const void *ptr, size_t numBytes, int destRank, int tag) {
       ASSERT(tag >= 0); // Silly MPI requirement
 
       MPI_Request request;
 
       int error;
 
-      error = ::MPI_Isend(ptr, numBytes, MPI_CHAR, destRank, tag, MPI_COMM_WORLD, &request);
+      error = ::MPI_Isend(const_cast<void*>(ptr), numBytes, MPI_CHAR, destRank, tag, MPI_COMM_WORLD, &request);
       ASSERT(error == MPI_SUCCESS);
 
       return request;

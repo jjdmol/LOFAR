@@ -97,6 +97,9 @@ namespace LOFAR
 
         Ranges available;
 
+        // Signal that there will be no reads before the given epoch
+        void noReadBefore( const TimeStamp &epoch );
+
         // Signal start of write intent for data in [begin, end). The flags will be updated
         // for any data that will be overwritten, but not set for any data that is
         // written.

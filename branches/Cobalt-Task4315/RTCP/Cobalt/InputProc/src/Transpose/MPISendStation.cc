@@ -53,8 +53,7 @@ namespace LOFAR {
 
       // Set static header info
       for(std::vector<int>::const_iterator rank = targetRanks.begin(); rank != targetRanks.end(); ++rank) {
-        headers[*rank].station   = settings.station;
-        headers[*rank].flagsSize = flagsSize();
+        headers[*rank].station      = settings.station;
       }
 
       // Set beamlet info
@@ -72,7 +71,7 @@ namespace LOFAR {
     }
 
     template<typename T>
-    MPI_Request MPISendStation::sendHeader( int rank, Header &header, const struct Block<T> &block, const std::vector<char> &metaDataBlob )
+    MPI_Request MPISendStation::sendHeader( int rank, struct MPIProtocol::Header &header, const struct Block<T> &block )
     {
       LOG_DEBUG_STR(logPrefix << "Sending header to rank " << rank);
 
@@ -89,12 +88,6 @@ namespace LOFAR {
 
         header.wrapOffsets[i] = ib.nrRanges == 1 ? 0 : ib.ranges[0].to - ib.ranges[0].from;
       }
-
-      // Copy the meta data
-      ASSERT(metaDataBlob.size() <= sizeof header.metaDataBlob);
-
-      header.metaDataBlobSize = metaDataBlob.size();
-      std::copy(metaDataBlob.begin(), metaDataBlob.end(), header.metaDataBlob);
 
       // Send the actual header
       union tag_t tag;
@@ -131,29 +124,24 @@ namespace LOFAR {
     }
 
 
-    MPI_Request MPISendStation::sendFlags( int rank, unsigned beamlet, const BufferSettings::flags_type &flags )
+    MPI_Request MPISendStation::sendMetaData( int rank, unsigned beamlet, const struct MPIProtocol::MetaData &metaData )
     {
       //LOG_DEBUG_STR("Sending flags to rank " << rank);
 
-      // Marshall flags to a buffer
-      std::vector<char> flagsBlob(flagsSize());
-
-      ssize_t numBytes = flags.marshall(&flagsBlob[0], flagsBlob.size());
-      ASSERT(numBytes >= 0);
-
-      // Send them
       union tag_t tag;
-      tag.bits.type     = FLAGS;
+      tag.bits.type     = METADATA;
       tag.bits.station  = stationIdx;
       tag.bits.beamlet  = beamlet;
 
-      return Guarded_MPI_Isend(&flagsBlob[0], flagsBlob.size(), rank, tag.value);
+      return Guarded_MPI_Isend(&metaData, sizeof metaData, rank, tag.value);
     }
 
 
     template<typename T>
-    void MPISendStation::sendBlock( const struct Block<T> &block, const std::vector<char> &metaDataBlob )
+    void MPISendStation::sendBlock( const struct Block<T> &block, std::vector<SubbandMetaData> &metaData )
     {
+      ASSERT(metaData.size() == block.beamlets.size());
+
       /*
        * SEND HEADERS
        */
@@ -161,7 +149,7 @@ namespace LOFAR {
       std::vector<MPI_Request> headerRequests;
 
       for(std::vector<int>::const_iterator rank = targetRanks.begin(); rank != targetRanks.end(); ++rank) {
-        headerRequests.push_back(sendHeader<T>(*rank, headers[*rank], block, metaDataBlob));
+        headerRequests.push_back(sendHeader<T>(*rank, headers[*rank], block));
       }
 
       /*
@@ -185,7 +173,8 @@ namespace LOFAR {
        * SEND METADATA
        */
 
-      std::vector<MPI_Request> flagRequests;
+      std::vector<MPI_Request> metaDataRequests;
+      std::vector<struct MetaData> metaDataBuffers(block.beamlets.size());
 
       for(size_t b = 0; b < nrBeamletRequests; ++b) {
         const size_t sendIdx           = waitAny(beamletRequests);
@@ -208,12 +197,17 @@ namespace LOFAR {
 
           // The only valid samples are those that existed both
           // before and after the transfer.
-          BufferSettings::flags_type finalFlags = ib.flagsAtBegin & block.flags(globalBeamletIdx);
+
+          SubbandMetaData &md = metaData[globalBeamletIdx];
+          md.flags = block.beamlets[globalBeamletIdx].flagsAtBegin | block.flags(globalBeamletIdx);
+
+          struct MetaData &buffer = metaDataBuffers[globalBeamletIdx];
+          buffer = md;
 
           /*
            * SEND FLAGS
            */
-          flagRequests.push_back(sendFlags(rank, globalBeamletIdx, finalFlags));
+          metaDataRequests.push_back(sendMetaData(rank, globalBeamletIdx, buffer));
         }
       }
 
@@ -222,10 +216,10 @@ namespace LOFAR {
        */
 
       // Collect all requests
-      std::vector<MPI_Request> allRequests(headerRequests.size() + flagRequests.size());
+      std::vector<MPI_Request> allRequests(headerRequests.size() + metaDataRequests.size());
       std::vector<MPI_Request>::iterator curPos = allRequests.begin();
       curPos = std::copy(headerRequests.begin(), headerRequests.end(), curPos);
-      curPos = std::copy(flagRequests.begin(), flagRequests.end(), curPos);
+      curPos = std::copy(metaDataRequests.begin(), metaDataRequests.end(), curPos);
 
       // Wait on them all
       waitAll(allRequests);
@@ -233,9 +227,9 @@ namespace LOFAR {
 
     // Create all necessary instantiations
 #define INSTANTIATE(T) \
-      template MPI_Request MPISendStation::sendHeader<T>( int rank, Header &header, const struct Block<T> &block, const std::vector<char> &metaDataBlob ); \
+      template MPI_Request MPISendStation::sendHeader<T>( int rank, struct MPIProtocol::Header &header, const struct Block<T> &block ); \
       template unsigned MPISendStation::sendData<T>( int rank, unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] ); \
-      template void MPISendStation::sendBlock<T>( const struct Block<T> &block, const std::vector<char> &metaDataBlob );
+      template void MPISendStation::sendBlock<T>( const struct Block<T> &block, std::vector<SubbandMetaData> &metaData );
 
     INSTANTIATE(SampleType<i4complex>);
     INSTANTIATE(SampleType<i8complex>);

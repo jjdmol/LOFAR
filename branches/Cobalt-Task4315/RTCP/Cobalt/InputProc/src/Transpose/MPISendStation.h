@@ -27,6 +27,7 @@
 #include <Common/LofarTypes.h>
 #include <CoInterface/RSPTimeStamp.h>
 #include <CoInterface/MultiDimArray.h>
+#include <CoInterface/SubbandMetaData.h>
 
 #include <InputProc/Buffer/Block.h>
 #include <InputProc/Buffer/BufferSettings.h>
@@ -68,7 +69,7 @@ namespace LOFAR
       // Send one block. The caller is responsible for matching the number of
       // posted receiveBlocks.
       template<typename T>
-      void sendBlock( const struct Block<T> &block, const std::vector<char> &metaDataBlob );
+      void sendBlock( const struct Block<T> &block, std::vector<SubbandMetaData> &metaData );
 
     private:
       const std::string logPrefix;
@@ -93,7 +94,7 @@ namespace LOFAR
     public:
       // Construct and send a header to the given rank (async).
       template<typename T>
-      MPI_Request sendHeader( int rank, MPIProtocol::Header &header, const struct Block<T> &block, const std::vector<char> &metaDataBlob );
+      MPI_Request sendHeader( int rank, struct MPIProtocol::Header &header, const struct Block<T> &block );
 
       // Send beamlet data (in 1 or 2 transfers) to the given rank (async).
       // Returns the number of MPI_Requests made.
@@ -101,12 +102,7 @@ namespace LOFAR
       unsigned sendData( int rank, unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] );
 
       // Send flags data to the given rank (async).
-      MPI_Request sendFlags( int rank, unsigned beamlet, const BufferSettings::flags_type &flags );
-
-      size_t flagsSize() const
-      {
-        return BufferSettings::flags_type::marshallSize(this->settings.nrAvailableRanges);
-      }
+      MPI_Request sendMetaData( int rank, unsigned beamlet, const struct MPIProtocol::MetaData &metaData );
     };
 
   }

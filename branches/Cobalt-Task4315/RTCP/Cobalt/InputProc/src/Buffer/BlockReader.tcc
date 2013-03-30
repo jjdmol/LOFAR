@@ -56,7 +56,7 @@ namespace LOFAR {
 
 
     template<typename T>
-    BufferSettings::flags_type BlockReader<T>::LockedBlock::flags( size_t beamletIdx ) const
+    SubbandMetaData::flags_type BlockReader<T>::LockedBlock::flags( size_t beamletIdx ) const
     {
       const struct Block<T>::Beamlet &ib = this->beamlets[beamletIdx];
 
@@ -68,12 +68,15 @@ namespace LOFAR {
       // Translate available samples to missing samples.
       const BufferSettings::range_type from = this->from + beam_offset;
       const BufferSettings::range_type to   = this->to   + beam_offset;
-      BufferSettings::flags_type flags = reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
+      BufferSettings::flags_type bufferFlags = reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
 
-      // Global -> local indices
-      flags -= from;
+      // Convert from global to local indices and types
+      SubbandMetaData::flags_type blockFlags;
+      for (BufferSettings::flags_type::const_iterator it = bufferFlags.getRanges().begin(); it != bufferFlags.getRanges().end(); it++) {
+        blockFlags.include(it->begin - from, it->end - from);
+      }
 
-      return flags;
+      return blockFlags;
     }
 
 
@@ -157,6 +160,8 @@ namespace LOFAR {
     template<typename T>
     BlockReader<T>::LockedBlock::~LockedBlock()
     {
+      ASSERT((uint64)this->to > reader.nrHistorySamples);
+
       // Signal end of read intent on all buffers
       for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = reader.buffer.boards.begin(); board != reader.buffer.boards.end(); ++board ) {
         // Unlock data, saving nrHistorySamples for the next block

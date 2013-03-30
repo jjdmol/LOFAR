@@ -72,7 +72,7 @@ const size_t blockSize = BLOCKSIZE * clockHz / 1024;
 map<int, std::vector<size_t> > beamletDistribution;
 const size_t nrHistorySamples = 16;
 
-std::vector<char> metaDataBlob(100, 42);
+SubbandMetaData metaData;
 
 // Rank in MPI set of hosts
 int rank;
@@ -131,7 +131,9 @@ void sender()
       for (TimeStamp current = from; current + blockSize < to; current += blockSize) {
         SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + blockSize, std::vector<ssize_t>(values(beamletDistribution).size(), 0)));
 
-        sender.sendBlock<SampleT>(*block, metaDataBlob);
+        std::vector<SubbandMetaData> metaDatas(block->beamlets.size(), metaData);
+
+        sender.sendBlock<SampleT>(*block, metaDatas);
       }
 
       generator.stop();
@@ -174,7 +176,9 @@ void receiver()
 
     // validate meta data
     for (int s = 0; s < nrStations; ++s) {
-      ASSERT(blocks[s].metaDataBlob == metaDataBlob);
+      for (size_t b = 0; b < nrBeamlets; ++b) {
+        ASSERT(blocks[s].beamlets[b].metaData.flags == metaData.flags);
+      }
     }
 
     // calculate flagging average
@@ -183,7 +187,7 @@ void receiver()
 
     for (int s = 0; s < nrStations; ++s) {
       for (size_t b = 0; b < nrBeamlets; ++b) {
-        nrFlaggedSamples = blocks[s].beamlets[b].flags.count();
+        nrFlaggedSamples = blocks[s].beamlets[b].metaData.flags.count();
       }
     }
 

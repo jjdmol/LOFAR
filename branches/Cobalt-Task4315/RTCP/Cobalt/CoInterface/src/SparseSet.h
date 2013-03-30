@@ -56,6 +56,9 @@ namespace LOFAR
     typedef typename Ranges::iterator iterator;
     typedef typename Ranges::const_iterator const_iterator;
 
+    // Convert types.
+    template <typename U> SparseSet<T> &operator=(const SparseSet<U> &other);
+
     // Add `index' to the set.
     SparseSet<T> &include(T index);
 
@@ -90,10 +93,10 @@ namespace LOFAR
     SparseSet<T> &operator &= (const SparseSet<T> &);
 
     // Increase all indices in the set by `count'.
-    SparseSet<T> &operator += (size_t count);
+    SparseSet<T> &operator += (T count);
 
     // Decrease all indices in the set by `count'.
-    SparseSet<T> &operator -= (size_t count);
+    SparseSet<T> &operator -= (T count);
 
     // Divide all indices by `shrinkFactor'. Fractions are rounded in favor
     // of including more elements.
@@ -385,7 +388,7 @@ namespace LOFAR
 
 
   template <typename T>
-  SparseSet<T> &SparseSet<T>::operator += (size_t count)
+  SparseSet<T> &SparseSet<T>::operator += (T count)
   {
     for (iterator it = ranges.begin(); it != ranges.end(); it++)
       it->begin += count, it->end += count;
@@ -395,7 +398,7 @@ namespace LOFAR
 
 
   template <typename T>
-  SparseSet<T> &SparseSet<T>::operator -= (size_t count)
+  SparseSet<T> &SparseSet<T>::operator -= (T count)
   {
     assert(ranges.size() == 0 || ranges[0].begin >= count);
 
