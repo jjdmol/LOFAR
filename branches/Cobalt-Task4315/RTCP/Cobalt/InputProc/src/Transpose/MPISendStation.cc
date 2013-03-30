@@ -131,7 +131,7 @@ namespace LOFAR {
     }
 
 
-    MPI_Request MPISendStation::sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags )
+    MPI_Request MPISendStation::sendFlags( int rank, unsigned beamlet, const SparseSet<uint64> &flags )
     {
       //LOG_DEBUG_STR("Sending flags to rank " << rank);
 
@@ -208,7 +208,7 @@ namespace LOFAR {
 
           // The only valid samples are those that existed both
           // before and after the transfer.
-          SparseSet<int64> finalFlags = ib.flagsAtBegin & block.flags(globalBeamletIdx);
+          SparseSet<uint64> finalFlags = ib.flagsAtBegin & block.flags(globalBeamletIdx);
 
           /*
            * SEND FLAGS

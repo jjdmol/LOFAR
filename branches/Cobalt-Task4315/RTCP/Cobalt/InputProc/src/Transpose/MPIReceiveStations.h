@@ -62,7 +62,7 @@ namespace LOFAR
       template<typename T>
       struct Beamlet {
         std::vector<T>    samples;
-        SparseSet<int64>  flags;
+        SparseSet<uint64> flags;
       };
 
       template<typename T>

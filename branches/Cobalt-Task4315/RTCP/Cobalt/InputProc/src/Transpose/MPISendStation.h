@@ -102,11 +102,11 @@ namespace LOFAR
       unsigned sendData( int rank, unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] );
 
       // Send flags data to the given rank (async).
-      MPI_Request sendFlags( int rank, unsigned beamlet, const SparseSet<int64> &flags );
+      MPI_Request sendFlags( int rank, unsigned beamlet, const SparseSet<uint64> &flags );
 
       size_t flagsSize() const
       {
-        return SparseSet<int64>::marshallSize(this->settings.nrAvailableRanges);
+        return SparseSet<uint64>::marshallSize(this->settings.nrAvailableRanges);
       }
     };
 

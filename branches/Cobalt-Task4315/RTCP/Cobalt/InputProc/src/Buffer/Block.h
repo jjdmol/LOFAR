@@ -59,7 +59,7 @@ namespace LOFAR
         // The offset at which the data is accessed.
         ssize_t offset;
 
-        SparseSet<int64> flagsAtBegin;
+        SparseSet<uint64> flagsAtBegin;
       };
 
       std::vector<struct Beamlet> beamlets; // [beamlet]
@@ -69,7 +69,7 @@ namespace LOFAR
        * after reading the data. The valid data is then indicated by
        * the intersection of (beamlets[i].flagsAtBegin & flags(i))
        */
-      virtual SparseSet<int64> flags( size_t beamletIdx ) const {
+      virtual SparseSet<uint64> flags( size_t beamletIdx ) const {
         return beamlets[beamletIdx].flagsAtBegin;
       }
     };

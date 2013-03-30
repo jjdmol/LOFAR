@@ -56,6 +56,8 @@ namespace LOFAR
       BlockReader( const BufferSettings &settings, const std::vector<size_t> beamlets, size_t nrHistorySamples = 0, double maxDelay = 0.0 );
       ~BlockReader();
 
+      // The LockedBlock locks the SampleBuffer for reading until destruction,
+      // allowing non-real-time operation.
       struct LockedBlock: public Block<T> {
         virtual ~LockedBlock();
 
@@ -64,7 +66,7 @@ namespace LOFAR
          * after reading the data. The valid data is then indicated by
          * the intersection of (beamlets[i].flagsAtBegin & flags(i))
         */
-        virtual SparseSet<int64> flags( size_t beamletIdx ) const;
+        virtual SparseSet<uint64> flags( size_t beamletIdx ) const;
 
       private:
         LockedBlock( BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets );
@@ -77,6 +79,8 @@ namespace LOFAR
         friend class BlockReader<T>;
       };
 
+      // Returns information for copying the block [from - nrHistorySamples - offset, to - offset).
+      // The Block's from and to fields do not take the offset into account.
       SmartPtr<struct LockedBlock> block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets );
 
     protected:

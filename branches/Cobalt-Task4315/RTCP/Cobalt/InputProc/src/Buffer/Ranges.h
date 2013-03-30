@@ -33,7 +33,7 @@ namespace LOFAR
   {
 
     //
-    // Thread-safe, lock-free set of int64 [from,to) ranges.
+    // Thread-safe, lock-free set of uint64 [from,to) ranges.
     //
     // This implementation is thread safe for one writer and any number
     // of readers.
@@ -50,21 +50,21 @@ namespace LOFAR
     {
     public:
       Ranges();
-      Ranges( void *data, size_t numBytes, int64 minHistory, bool create );
+      Ranges( void *data, size_t numBytes, uint64 minHistory, bool create );
       ~Ranges();
 
       // Remove [0,to)
-      void excludeBefore( int64 to );
+      void excludeBefore( uint64 to );
 
       // Add a range [from,to), and return whether the addition
       // was succesful.
-      bool include( int64 from, int64 to );
+      bool include( uint64 from, uint64 to );
 
       // Returns whether there is anything set in [first, last)
-      bool anythingBetween( int64 first, int64 last ) const;
+      bool anythingBetween( uint64 first, uint64 last ) const;
 
       // Returns [first, last) as a SparseSet
-      SparseSet<int64> sparseSet( int64 first, int64 last ) const;
+      SparseSet<uint64> sparseSet( uint64 first, uint64 last ) const;
 
       // The size of a single [from,to) pair.
       static size_t elementSize()
@@ -79,7 +79,7 @@ namespace LOFAR
         // from <  to   : a valid range
         // from >= to   : invalid range (being written)
         // from = to = 0: an unused range
-        volatile int64 from, to;
+        volatile uint64 from, to;
 
         Range() : from(0), to(0)
         {
@@ -95,7 +95,7 @@ namespace LOFAR
 
       // minimal history to maintain (samples newer than this
       // will be maintained in favour of newly added ranges)
-      int64 minHistory;
+      uint64 minHistory;
 
     public:
       // The size of this object for a given number of [from,to) pairs.

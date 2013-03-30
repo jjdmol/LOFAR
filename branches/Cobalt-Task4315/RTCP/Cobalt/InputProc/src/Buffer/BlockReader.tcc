@@ -56,7 +56,7 @@ namespace LOFAR {
 
 
     template<typename T>
-    SparseSet<int64> BlockReader<T>::LockedBlock::flags( size_t beamletIdx ) const
+    SparseSet<uint64> BlockReader<T>::LockedBlock::flags( size_t beamletIdx ) const
     {
       const struct Block<T>::Beamlet &ib = this->beamlets[beamletIdx];
 
@@ -65,10 +65,15 @@ namespace LOFAR {
 
       ssize_t beam_offset = ib.offset;
 
-      // Translate available packets to missing packets.
-      const TimeStamp from = this->from + beam_offset;
-      const TimeStamp to   = this->to   + beam_offset;
-      return reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
+      // Translate available samples to missing samples.
+      const uint64 from = this->from + beam_offset;
+      const uint64 to   = this->to   + beam_offset;
+      SparseSet<uint64> flags = reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
+
+      // Global -> local indices
+      flags -= from;
+
+      return flags;
     }
 
 
@@ -116,7 +121,7 @@ namespace LOFAR {
       //   offset: the shift applied to compensate geometric delays (etc)
       //   reader.nrHistorySamples: the number of past samples to include (for
       //                            PPF initialisation)
-      size_t from_offset = reader.buffer.offset(this->from + offset - reader.nrHistorySamples);
+      size_t from_offset = reader.buffer.offset(this->from + offset);
       size_t to_offset   = reader.buffer.offset(this->to   + offset);
 
       if (to_offset == 0)
@@ -163,7 +168,8 @@ namespace LOFAR {
     template<typename T>
     SmartPtr<typename BlockReader<T>::LockedBlock> BlockReader<T>::block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
     {
-      ASSERT( to - from < (int64)buffer.nrSamples );
+      ASSERT( to > from );
+      ASSERT( to - from < buffer.nrSamples );
 
       // wait for block start (but only in real-time mode)
       if (!buffer.sync) {
@@ -171,7 +177,7 @@ namespace LOFAR {
         waiter.waitUntil(to + maxDelay);
       }
 
-      return new LockedBlock(*this, from, to, beamletOffsets);
+      return new LockedBlock(*this, from - nrHistorySamples, to, beamletOffsets);
     }
 
   }

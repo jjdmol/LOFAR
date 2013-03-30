@@ -203,8 +203,8 @@ TEST(Flags) {
   LOG_INFO_STR("Flags");
 
   // Create structures for input and output
-  SparseSet<int64> flags_in;
-  SparseSet<int64> flags_out;
+  SparseSet<uint64> flags_in;
+  SparseSet<uint64> flags_out;
   vector<char> flags_out_buffer(sender->flagsSize());
 
   // Fill input
