@@ -26,7 +26,6 @@
 
 #include <Common/LofarTypes.h>
 #include <CoInterface/MultiDimArray.h>
-#include <CoInterface/SparseSet.h>
 
 #include "MPIProtocol.h"
 
@@ -61,8 +60,8 @@ namespace LOFAR
 
       template<typename T>
       struct Beamlet {
-        std::vector<T>    samples;
-        SparseSet<uint64> flags;
+        std::vector<T>            samples;
+        BufferSettings::flags_type flags;
       };
 
       template<typename T>

@@ -118,8 +118,8 @@ void test( struct BufferSettings &settings, const std::string &filename )
   transfer.process();
 
   // Determine the timestamps of the packets we've just written
-  uint64 now = (uint64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
-  SparseSet<uint64> available = buffer.boards[0].available.sparseSet(0, now);
+  BufferSettings::range_type now = (uint64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
+  BufferSettings::flags_type  available = buffer.boards[0].available.sparseSet(0, now);
 
   const TimeStamp from(available.getRanges()[0].begin, settings.station.clockMHz * 1000000);
 

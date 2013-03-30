@@ -30,7 +30,6 @@ namespace LOFAR
   namespace Cobalt
   {
     namespace MPIProtocol {
-
       // Header which prefixes each block. Contains identification information
       // for verification purposes, as well as the sizes of the data that
       // follow.

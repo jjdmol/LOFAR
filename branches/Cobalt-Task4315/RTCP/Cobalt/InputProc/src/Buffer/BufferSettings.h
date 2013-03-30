@@ -24,6 +24,8 @@
 #include <ostream>
 
 #include <Common/LofarLogger.h>
+#include <Common/LofarTypes.h>
+#include <CoInterface/SparseSet.h>
 #include "StationID.h"
 
 namespace LOFAR
@@ -43,6 +45,9 @@ namespace LOFAR
       }
 
     public:
+      typedef uint64 range_type;
+      typedef SparseSet<range_type> flags_type;
+
       struct StationID station;
 
       // true: sync reader and writer, useful in real-time mode

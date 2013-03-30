@@ -27,7 +27,6 @@
 #include <Common/LofarTypes.h>
 #include <CoInterface/RSPTimeStamp.h>
 #include <CoInterface/MultiDimArray.h>
-#include <CoInterface/SparseSet.h>
 
 #include <InputProc/Buffer/Block.h>
 #include <InputProc/Buffer/BufferSettings.h>
@@ -102,11 +101,11 @@ namespace LOFAR
       unsigned sendData( int rank, unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] );
 
       // Send flags data to the given rank (async).
-      MPI_Request sendFlags( int rank, unsigned beamlet, const SparseSet<uint64> &flags );
+      MPI_Request sendFlags( int rank, unsigned beamlet, const BufferSettings::flags_type &flags );
 
       size_t flagsSize() const
       {
-        return SparseSet<uint64>::marshallSize(this->settings.nrAvailableRanges);
+        return BufferSettings::flags_type::marshallSize(this->settings.nrAvailableRanges);
       }
     };
 

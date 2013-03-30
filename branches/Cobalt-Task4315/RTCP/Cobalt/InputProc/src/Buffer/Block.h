@@ -25,7 +25,7 @@
 #include <vector>
 
 #include <CoInterface/RSPTimeStamp.h>
-#include <CoInterface/SparseSet.h>
+#include <InputProc/Buffer/BufferSettings.h>
 
 namespace LOFAR
 {
@@ -59,7 +59,7 @@ namespace LOFAR
         // The offset at which the data is accessed.
         ssize_t offset;
 
-        SparseSet<uint64> flagsAtBegin;
+        BufferSettings::flags_type flagsAtBegin;
       };
 
       std::vector<struct Beamlet> beamlets; // [beamlet]
@@ -69,7 +69,7 @@ namespace LOFAR
        * after reading the data. The valid data is then indicated by
        * the intersection of (beamlets[i].flagsAtBegin & flags(i))
        */
-      virtual SparseSet<uint64> flags( size_t beamletIdx ) const {
+      virtual BufferSettings::flags_type flags( size_t beamletIdx ) const {
         return beamlets[beamletIdx].flagsAtBegin;
       }
     };

@@ -56,7 +56,7 @@ namespace LOFAR {
 
 
     template<typename T>
-    SparseSet<uint64> BlockReader<T>::LockedBlock::flags( size_t beamletIdx ) const
+    BufferSettings::flags_type BlockReader<T>::LockedBlock::flags( size_t beamletIdx ) const
     {
       const struct Block<T>::Beamlet &ib = this->beamlets[beamletIdx];
 
@@ -66,9 +66,9 @@ namespace LOFAR {
       ssize_t beam_offset = ib.offset;
 
       // Translate available samples to missing samples.
-      const uint64 from = this->from + beam_offset;
-      const uint64 to   = this->to   + beam_offset;
-      SparseSet<uint64> flags = reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
+      const BufferSettings::range_type from = this->from + beam_offset;
+      const BufferSettings::range_type to   = this->to   + beam_offset;
+      BufferSettings::flags_type flags = reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
 
       // Global -> local indices
       flags -= from;

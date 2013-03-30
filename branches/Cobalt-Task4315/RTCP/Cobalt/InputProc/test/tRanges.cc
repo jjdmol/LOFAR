@@ -24,7 +24,6 @@
 
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
-#include <CoInterface/SparseSet.h>
 
 #include <InputProc/Buffer/Ranges.h>
 
@@ -62,7 +61,7 @@ int main( int, char **argv )
 
     /* r == [10,20) + [30,40) */
 
-    SparseSet<uint64> s(r.sparseSet(0,100));
+    BufferSettings::flags_type s(r.sparseSet(0,100));
     ASSERT(!s.test(9));
     ASSERT(s.test(10));
     ASSERT(s.test(11));
@@ -74,7 +73,7 @@ int main( int, char **argv )
     ASSERT(s.test(39));
     ASSERT(!s.test(40));
 
-    SparseSet<uint64> s2(r.sparseSet(15,35));
+    BufferSettings::flags_type s2(r.sparseSet(15,35));
     ASSERT(!s2.test(14));
     ASSERT(s2.test(15));
     ASSERT(s2.test(19));
