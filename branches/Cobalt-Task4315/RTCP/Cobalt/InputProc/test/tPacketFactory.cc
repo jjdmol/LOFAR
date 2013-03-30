@@ -59,7 +59,7 @@ void test()
   }
 }
 
-int main( int, char **argv )
+int main( int, char ** )
 {
   INIT_LOGGER( "tPacketFactory" );
 
