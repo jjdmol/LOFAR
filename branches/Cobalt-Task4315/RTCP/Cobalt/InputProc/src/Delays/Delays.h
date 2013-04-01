@@ -85,7 +85,7 @@ namespace LOFAR
     class Delays
     {
     public:
-      Delays(const Parset &ps, const std::string &stationName, const TimeStamp &startTime);
+      Delays(const Parset &ps, const std::string &stationName, const TimeStamp &startTime, size_t blockSize);
       ~Delays();
 
       void start();
@@ -107,6 +107,11 @@ namespace LOFAR
       void getNextDelays( AllDelays &result );
 
     private:
+      const Parset                        &parset;
+      const std::string itsStationName;
+      const TimeStamp itsStartTime;
+      const size_t blockSize;
+
       casa::MVEpoch                       toUTC( const TimeStamp &timeStamp ) const;
 
       void                                init();
@@ -114,8 +119,6 @@ namespace LOFAR
       // do the delay compensation calculations in a separate thread to allow bulk
       // calculations and to avoid blocking other threads
       void                                mainLoop();
-
-      const Parset                        &parset;
 
       volatile bool stop;
 
@@ -141,12 +144,6 @@ namespace LOFAR
       // another to trigger the consumer that data is available.
       Semaphore bufferFree, bufferUsed;
 
-      // Sample timings.
-      const TimeStamp itsStartTime;
-      const size_t blockSize;
-
-      // Station Name.
-      const std::string itsStationName;
       casa::MeasFrame itsFrame;
 
       std::vector<casa::MDirection::Types> itsDirectionTypes; // [sap]

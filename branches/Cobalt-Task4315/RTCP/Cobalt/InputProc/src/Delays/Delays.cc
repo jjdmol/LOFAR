@@ -46,9 +46,13 @@ namespace LOFAR
 
     //##----------------  Public methods  ----------------##//
 
-    Delays::Delays(const Parset &parset, const std::string &stationName, const TimeStamp &startTime)
+    Delays::Delays(const Parset &parset, const std::string &stationName, const TimeStamp &startTime, size_t blockSize)
       :
       parset(parset),
+      itsStationName(stationName),
+      itsStartTime(startTime),
+      blockSize(blockSize),
+
       stop(false),
       // we need an extra entry for the central beam
       itsBuffer(bufferSize),
@@ -56,9 +60,6 @@ namespace LOFAR
       tail(0),
       bufferFree(bufferSize),
       bufferUsed(0),
-      itsStartTime(startTime),
-      blockSize(parset.nrSamplesPerSubband()),
-      itsStationName(stationName),
       itsDelayTimer("delay producer", true, true)
     {
     }
