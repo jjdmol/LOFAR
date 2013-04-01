@@ -202,7 +202,7 @@ namespace LOFAR
 
     inline double TimeStamp::getSeconds() const
     {
-      return itsTime * 1024 / itsClockSpeed;
+      return 1.0 * itsTime * 1024 / itsClockSpeed;
     }
 
     inline TimeStamp::operator uint64 () const
