@@ -70,6 +70,7 @@ namespace LOFAR
       bool operator != (const TimeStamp &) const;
       bool operator !  () const;
 
+      double getSeconds() const;
       operator uint64 () const;
       operator struct timespec () const;
 
@@ -199,6 +200,11 @@ namespace LOFAR
       return itsTime == 0;
     }
 
+    inline double TimeStamp::getSeconds() const
+    {
+      return itsTime * 1024 / itsClockSpeed;
+    }
+
     inline TimeStamp::operator uint64 () const
     {
       return itsTime;
@@ -206,7 +212,7 @@ namespace LOFAR
 
     inline TimeStamp::operator struct timespec () const
     {
-      uint64 ns = (uint64) (itsTime * 1024 * 1e9 / itsClockSpeed);
+      uint64 ns = (uint64) (getSeconds() * 1e9);
       struct timespec ts;
 
       ts.tv_sec = ns / 1000000000ULL;

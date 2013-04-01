@@ -90,12 +90,24 @@ namespace LOFAR
 
       void start();
 
-      // get the set of directions (ITRF) and delays for the beams, for the next CN integration time
-      // Both matrices must have dimensions [itsNrBeams][itsMaxNrTABs+1]
-      void getNextDelays(Matrix<casa::MVDirection> &directions, Matrix<double> &delays);
+      // Output structures for adjusted directions and delays
+      struct Delay {
+        casa::MVDirection direction;
+        double            delay;
+      };
+
+      struct BeamDelays {
+        struct Delay              SAP;
+        std::vector<struct Delay> TABs;
+      };
+
+      typedef std::vector<struct BeamDelays> AllDelays;
+
+      // Get the set of directions (ITRF) and delays for the beams
+      void getNextDelays( AllDelays &result );
 
     private:
-      casa::MVEpoch                       toUTC(int64 timeInSamples);
+      casa::MVEpoch                       toUTC( const TimeStamp &timeStamp ) const;
 
       void                                init();
 
@@ -103,66 +115,42 @@ namespace LOFAR
       // calculations and to avoid blocking other threads
       void                                mainLoop();
 
-      const Parset                        &itsParset;
+      const Parset                        &parset;
 
       volatile bool stop;
 
+      // the number of seconds to maintain in the buffer, must be a multiple of
+      // nrCalcDelays.
+      static const size_t bufferSize = 128;
+
+      // the number of delays to calculate in a single run
+      static const size_t nrCalcDelays = 16;
+
+      // Converts a sky direction to a direction and delay
+      struct Delay convert( casa::MDirection::Convert &converter, const casa::MVDirection &direction ) const;
+
+      // Computes the delays for a specific moment in time and stores them
+      // in `result'.
+      void calcDelays( const TimeStamp &timeStamp, AllDelays &result );
+
       // the circular buffer to hold the moving beam directions for every second of data
-      Cube<casa::MVDirection>             itsBuffer;
+      std::vector<AllDelays> itsBuffer;
       size_t head, tail;
 
       // two semaphores are used: one to trigger the producer that free space is available,
       // another to trigger the consumer that data is available.
       Semaphore bufferFree, bufferUsed;
 
-      // the number of seconds to maintain in the buffer
-      static const size_t bufferSize = 128;
-
-      // the number of delays to calculate in a single run
-      const unsigned itsNrCalcDelays;
-
-      // Get the source directions from the parameter file and initialize \c
-      // itsBeamDirections. Beam positions must be specified as
-      // <tt>(longitude, latitude, direction-type)</tt>. The direction angles
-      // are in radians; the direction type must be one of J2000, ITRF, or
-      // AZEL.
-      void setBeamDirections(const Parset &);
-
-      // Set the station to reference station position differences for
-      // all stations. CS002LBA is the reference station, even if it
-      // does not take part in the observation. The position
-      // differences are stored in \c itsPositionDiffs. In other
-      // words: we store \f$\mathbf{p}_j - \mathbf{p}_0\f$, where
-      // \f$\mathbf{p}_0\f$ is the position of the reference station
-      // and \f$\mathbf{p}_j\f$ is the position of station \f$j\f$.
-      void setPositionDiff(const Parset &);
-
-      // Beam info.
-      const unsigned itsNrBeams;
-      const unsigned itsMaxNrTABs;
-      const std::vector<unsigned>         itsNrTABs;
-
-      struct BeamDirection {
-        casa::MVDirection              SAP;
-        std::vector<casa::MVDirection> TABs;
-
-        casa::MDirection::Types        type;
-      };
-
-      std::vector<struct BeamDirection>   itsDirections; // [itsNrBeams]
-
       // Sample timings.
       const TimeStamp itsStartTime;
-      const unsigned itsNrSamplesPerSec;
-      const double itsSampleDuration;
+      const size_t blockSize;
 
       // Station Name.
       const std::string itsStationName;
       casa::MeasFrame itsFrame;
-      std::map<casa::MDirection::Types, casa::MDirection::Convert> itsConverters;
 
-      // Station phase centre.
-      casa::MPosition itsPhaseCentre;
+      std::vector<casa::MDirection::Types> itsDirectionTypes; // [sap]
+      std::map<casa::MDirection::Types, casa::MDirection::Convert> itsConverters; // [type]
 
       // Station to reference station position difference vector.
       casa::MVPosition itsPhasePositionDiff;
