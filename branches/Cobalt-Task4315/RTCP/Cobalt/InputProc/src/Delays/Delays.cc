@@ -24,11 +24,9 @@
 #include "Delays.h"
 
 #include <Common/LofarLogger.h>
-#include <Common/PrettyUnits.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Cancellation.h>
 #include <CoInterface/Exceptions.h>
-#include <CoInterface/BeamCoordinates.h>
 
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCDirection.h>
@@ -82,9 +80,9 @@ namespace LOFAR
 
 
     // convert a time in samples to a (day,fraction) pair in UTC in a CasaCore format
-    MVEpoch Delays::toUTC(const TimeStamp &timeStamp) const
+    MVEpoch Delays::toUTC(const TimeStamp &timestamp) const
     {
-      double utc_sec = timeStamp.getSeconds() / MVEpoch::secInDay;
+      double utc_sec = timestamp.getSeconds() / MVEpoch::secInDay;
       double day = floor(utc_sec);
       double frac = utc_sec - day;
 
@@ -141,9 +139,9 @@ namespace LOFAR
     }
 
 
-    void Delays::calcDelays( const TimeStamp &timeStamp, AllDelays &result ) {
+    void Delays::calcDelays( const TimeStamp &timestamp, AllDelays &result ) {
       // Set the instant in time in the itsFrame
-      itsFrame.resetEpoch(toUTC(timeStamp));
+      itsFrame.resetEpoch(toUTC(timestamp));
 
       // Convert directions for all beams
       result.resize(parset.settings.SAPs.size());

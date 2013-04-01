@@ -112,7 +112,7 @@ namespace LOFAR
       const TimeStamp itsStartTime;
       const size_t blockSize;
 
-      casa::MVEpoch                       toUTC( const TimeStamp &timeStamp ) const;
+      casa::MVEpoch                       toUTC( const TimeStamp &timestamp ) const;
 
       void                                init();
 
@@ -134,7 +134,7 @@ namespace LOFAR
 
       // Computes the delays for a specific moment in time and stores them
       // in `result'.
-      void calcDelays( const TimeStamp &timeStamp, AllDelays &result );
+      void calcDelays( const TimeStamp &timestamp, AllDelays &result );
 
       // the circular buffer to hold the moving beam directions for every second of data
       std::vector<AllDelays> itsBuffer;
