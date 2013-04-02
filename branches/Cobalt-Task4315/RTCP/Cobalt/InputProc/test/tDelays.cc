@@ -32,7 +32,9 @@ using namespace LOFAR;
 using namespace Cobalt;
 using namespace std;
 
-TEST(Basic) {
+const size_t dayOfSamples = 24UL * 3600 * 192315;
+
+TEST(Tracking) {
   Parset ps;
 
   ps.add( "Observation.referencePhaseCenter", "[0, 0, 0]" ); // center of earth
@@ -40,20 +42,75 @@ TEST(Basic) {
   ps.add( "OLAP.storageStationNames", "[STATION]" );
 
   ps.add( "Observation.nrBeams", "1" );
-  ps.add( "Observation.Beam[0].directionType", "AZEL" );
+  ps.add( "Observation.Beam[0].directionType", "J2000" );
   ps.add( "Observation.Beam[0].angle1", "0" );
   ps.add( "Observation.Beam[0].angle2", "0" );
   ps.add( "Observation.Beam[0].nrTiedArrayBeams", "0" );
   ps.updateSettings();
 
   // blockSize is ~1s
-  Delays delays(ps, "STATION", TimeStamp(time(0), 0, 200000000), 192315);
+  Delays delays(ps, "STATION", TimeStamp(time(0), 0, 200000000), dayOfSamples);
+  delays.start();
+
+  Delays::AllDelays delaySet, prevDelaySet;
+
+  for (size_t block = 0; block < 1024; ++block) {
+    delays.getNextDelays(delaySet);
+
+    // There must be exactly one SAP
+    CHECK_EQUAL(1U, delaySet.size());
+    CHECK_EQUAL(0U, delaySet[0].TABs.size());
+
+    // Delays must change over time
+    if (block > 0) {
+      CHECK(delaySet[0].SAP.delay != prevDelaySet[0].SAP.delay);
+    }
+
+    prevDelaySet = delaySet;
+  }
+}
+
+TEST(TiedArrayBeam) {
+  Parset ps;
+
+  ps.add( "Observation.DataProducts.Output_Beamformed.enabled", "true" );
+
+  ps.add( "Observation.referencePhaseCenter", "[0, 0, 0]" ); // center of earth
+  ps.add( "PIC.Core.STATION.phaseCenter", "[0, 0, 299792458]" ); // 1 lightsecond away from earth center
+  ps.add( "OLAP.storageStationNames", "[STATION]" );
+
+  // Delays for SAP 0 and TAB 0 of SAP 1 should be equal
+  ps.add( "Observation.nrBeams", "2" );
+  ps.add( "Observation.Beam[0].directionType", "J2000" );
+  ps.add( "Observation.Beam[0].angle1", "1" );
+  ps.add( "Observation.Beam[0].angle2", "1" );
+  ps.add( "Observation.Beam[0].nrTiedArrayBeams", "0" );
+  ps.add( "Observation.Beam[1].directionType", "J2000" );
+  ps.add( "Observation.Beam[1].angle1", "1" );
+  ps.add( "Observation.Beam[1].angle2", "0" );
+  ps.add( "Observation.Beam[1].nrTiedArrayBeams", "1" );
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].directionType", "J2000" );
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle1", "0" );
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle2", "1" );
+  ps.updateSettings();
+
+  // blockSize is ~1s
+  Delays delays(ps, "STATION", TimeStamp(time(0), 0, 200000000), dayOfSamples);
   delays.start();
 
   Delays::AllDelays delaySet;
 
-  for (size_t block = 0; block < 1024; ++block)
+  for (size_t block = 0; block < 10; ++block) {
     delays.getNextDelays(delaySet);
+
+    // check dimensions of result
+    CHECK_EQUAL(2U, delaySet.size());
+    CHECK_EQUAL(0U, delaySet[0].TABs.size());
+    CHECK_EQUAL(1U, delaySet[1].TABs.size());
+
+    // check values
+    CHECK_CLOSE(delaySet[0].SAP.delay, delaySet[1].TABs[0].delay, 0.00001);
+  }
 }
 
 
