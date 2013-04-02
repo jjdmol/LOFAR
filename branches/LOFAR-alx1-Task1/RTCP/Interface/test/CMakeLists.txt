@@ -1,8 +1,0 @@
-# $Id$
-
-include(LofarCTest)
-
-lofar_add_test(tCorrelatedData tCorrelatedData.cc)
-lofar_add_test(tMultiDimArray tMultiDimArray.cc)
-lofar_add_test(tSparseSet tSparseSet.cc)
-lofar_add_test(tRSPTimeStamp tRSPTimeStamp.cc)
