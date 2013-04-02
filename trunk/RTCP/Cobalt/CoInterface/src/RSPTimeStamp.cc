@@ -24,6 +24,8 @@
 
 #include <Common/lofar_iostream.h>
 
+#include <time.h>
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -31,7 +33,15 @@ namespace LOFAR
 
     ostream &operator << (ostream &os, const TimeStamp &ts)
     {
-      return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "]";
+      char   buf[26];
+      time_t seconds = ts.getSeqId();
+      struct tm tm;
+
+      gmtime_r(&seconds, &tm);
+      size_t len = strftime(buf, sizeof buf, "%F %T", &tm);
+      buf[len] = '\0';
+
+      return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "] = " << buf << " UTC";
     }
 
   } // namespace Cobalt
