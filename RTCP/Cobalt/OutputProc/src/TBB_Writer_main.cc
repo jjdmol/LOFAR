@@ -97,9 +97,9 @@ static void setTermSigsHandler()
   sa.sa_handler = termSigsHandler;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = 0;
-  int err = sigaction(SIGINT,  &sa, NULL);       // keyb INT (typically Ctrl-C)
+  int err = sigaction(SIGINT,  &sa, NULL); // keyb INT (typically Ctrl-C)
   err |= sigaction(SIGTERM, &sa, NULL);
-  err |= sigaction(SIGALRM, &sa, NULL);          // for setitimer(); don't use sleep(3) and friends
+  err |= sigaction(SIGALRM, &sa, NULL);    // for setitimer(); don't use sleep(3) and friends
   if (err != 0) {
     LOG_WARN("TBB: Failed to register SIGINT/SIGTERM handler to allow manual, early, graceful program termination.");
   }
@@ -111,9 +111,9 @@ static vector<string> getTBB_InputStreamNames(const string& input, uint16_t port
   try {
     LOFAR::StationConfig stConf;
     nTbbBoards = stConf.nrTBBs;
-  } catch (LOFAR::AssertError& ) {       // config file not found
+  } catch (LOFAR::AssertError& ) { // config file not found
     LOG_DEBUG_STR("Falling back to at most " << TBB_DEFAULT_LAST_PORT - TBB_DEFAULT_BASE_PORT + 1 << " input streams (1 per board)");
-    nTbbBoards = TBB_DEFAULT_LAST_PORT - TBB_DEFAULT_BASE_PORT + 1;             // fallback
+    nTbbBoards = TBB_DEFAULT_LAST_PORT - TBB_DEFAULT_BASE_PORT + 1; // fallback
   }
 
   vector<string> allInputStreamNames;
@@ -123,17 +123,17 @@ static vector<string> getTBB_InputStreamNames(const string& input, uint16_t port
       string streamName(input + ":0.0.0.0:" + LOFAR::formatString("%hu", port));
       allInputStreamNames.push_back(streamName);
     }
-  } else {       // file or named pipe input
+  } else { // file or named pipe input
     size_t colonPos = input.find(':');
     if (colonPos == string::npos) {
       return allInputStreamNames;
     }
     size_t placeholderPos = input.find_last_of('%');
-    if (placeholderPos == string::npos) {             // single input, no expansion needed
+    if (placeholderPos == string::npos) { // single input, no expansion needed
       if (access(input.c_str() + colonPos + 1, R_OK) == 0) {
         allInputStreamNames.push_back(input);
       }
-    } else {             // expand e.g. file:x%y-%.raw into {file:x%y-0.raw, file:x%y-1.raw, ..., file:x%y-11.raw}
+    } else { // expand e.g. file:x%y-%.raw into {file:x%y-0.raw, file:x%y-1.raw, ..., file:x%y-11.raw}
       for (int i = 0; i < nTbbBoards; ++i) {
         string streamName(input);
         streamName.replace(placeholderPos, 1, LOFAR::formatString("%u", i));
@@ -217,8 +217,8 @@ static LOFAR::Cobalt::StationMetaDataMap getExternalStationMetaData(const LOFAR:
       char* lrpath = getenv("LOFARROOT");
       if (lrpath != NULL) {
         antFieldPath = string(lrpath) + "/etc/StaticMetaData/";
-      } else {                   // parset typically gives "/data/home/lofarsys/production/lofar/etc/StaticMetaData"
-        antFieldPath = parset.AntennaFieldsDir();                         // doesn't quite do what its name suggests, so append a component
+      } else { // parset typically gives "/data/home/lofarsys/production/lofar/etc/StaticMetaData"
+        antFieldPath = parset.AntennaFieldsDir(); // doesn't quite do what its name suggests, so append a component
         if (!antFieldPath.empty()) {
           antFieldPath.push_back('/');
         }
@@ -232,7 +232,7 @@ static LOFAR::Cobalt::StationMetaDataMap getExternalStationMetaData(const LOFAR:
     for (vector<string>::const_iterator it(stationNames.begin());
          it != stationNames.end(); ++it) {
 
-      string stName(it->substr(0, sizeof("CS001") - 1));                 // drop any "HBA0"-like suffix
+      string stName(it->substr(0, sizeof("CS001") - 1)); // drop any "HBA0"-like suffix
       string antFieldFilename(antFieldPath + stName + "-AntennaField.conf");
 
       // Tries to locate the filename if no abs path is given, else throws AssertError exc.
@@ -285,12 +285,12 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::Cobalt
       throw LOFAR::SystemCallException("setitimer", errno, THROW_ARGS);
     }
 
-    bool anyFrameReceived = false;             // don't quit if there is no data immediately after starting
+    bool anyFrameReceived = false; // don't quit if there is no data immediately after starting
     size_t nrWorkersDone;
     do {
       pause();
-      if (sigint_seen) {                   // typically Ctrl-C
-        args.keepRunning = false;                         // for main(), not for worker threads
+      if (sigint_seen) { // typically Ctrl-C
+        args.keepRunning = false; // for main(), not for worker threads
         break;
       }
 
@@ -376,14 +376,14 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
   int status = 0;
 
   // Default values
-  args->parsetFilename = "";            // there is no default parset filename, so not passing it is fatal
-  args->stCalTablesDir = "";            // idem, but otherwise, retrieve from svn and not fatal
-  args->antFieldDir = "";               // idem, but otherwise, detect and not fatal
+  args->parsetFilename = "";    // there is no default parset filename, so not passing it is fatal
+  args->stCalTablesDir = "";    // idem, but otherwise, retrieve from svn and not fatal
+  args->antFieldDir = "";       // idem, but otherwise, detect and not fatal
 
   args->outputDir = "";
   args->input = "udp";
   args->port = TBB_DEFAULT_BASE_PORT;
-  args->timeoutVal.tv_sec = 10;       // after this default of inactivity cancel all input threads and close output files
+  args->timeoutVal.tv_sec = 10; // after this default of inactivity cancel all input threads and close output files
   args->timeoutVal.tv_usec = 0;
   args->keepRunning = true;
 
@@ -391,11 +391,11 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
     // NOTE: If you change this, then also change the code below AND the printUsage() code above!
     // {const char *name, int has_arg, int *flag, int val}
     {"parset",         required_argument, NULL, 'p'},
-    {"stcaltablesdir", required_argument, NULL, 'c'},             // station calibration tables
-    {"antfielddir",    required_argument, NULL, 'a'},             // antenna field info
+    {"stcaltablesdir", required_argument, NULL, 'c'}, // station calibration tables
+    {"antfielddir",    required_argument, NULL, 'a'}, // antenna field info
     {"outputdir",      required_argument, NULL, 'o'},
     {"input",          required_argument, NULL, 'i'},
-    {"portbase",       required_argument, NULL, 'b'},             // port (b)ase
+    {"portbase",       required_argument, NULL, 'b'}, // port (b)ase
     {"timeout",        required_argument, NULL, 't'},
 
     {"keeprunning",    optional_argument, NULL, 'k'},
@@ -406,7 +406,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
     {NULL, 0, NULL, 0}
   };
 
-  opterr = 0;       // prevent error printing to stderr by getopt_long()
+  opterr = 0; // prevent error printing to stderr by getopt_long()
   int opt, err;
   while ((opt = getopt_long(argc, argv, "hvs:a:o:p:b:t:k::", long_opts, NULL)) != -1) {
     switch (opt) {
@@ -457,7 +457,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
       try {
         args->port = boost::lexical_cast<uint16_t>(optarg);
         if (args->port > 65536 - (TBB_DEFAULT_LAST_PORT - TBB_DEFAULT_BASE_PORT)) {
-          throw boost::bad_lexical_cast();                               // abuse exc type to have single catch
+          throw boost::bad_lexical_cast(); // abuse exc type to have single catch
         }
       } catch (boost::bad_lexical_cast& /*exc*/) {
         LOG_FATAL_STR("TBB: Invalid port argument value: " << optarg);
@@ -490,7 +490,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
         status = 2;
       }
       break;
-    default:             // '?'
+    default: // '?'
       LOG_FATAL_STR("TBB: Invalid program argument or missing argument value: " << argv[optind - 1]);
       status = 1;
     }
@@ -500,7 +500,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args)
     ostringstream oss;
     oss << "TBB: Failed to recognize arguments:";
     while (optind < argc) {
-      oss << " " << argv[optind++];                   // good enough
+      oss << " " << argv[optind++]; // good enough
     }
     LOG_FATAL_STR(oss.str());
     status = 1;
@@ -518,7 +518,7 @@ int main(int argc, char* argv[])
   struct Log {
     Log(const char* argv0)
     {
-      char *dirc = strdup(argv0);                   // dirname() may clobber its arg
+      char *dirc = strdup(argv0); // dirname() may clobber its arg
       if (dirc != NULL) {
         INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/outputProc.log_prop");
         free(dirc);
@@ -527,7 +527,7 @@ int main(int argc, char* argv[])
 
     ~Log()
     {
-      LOGGER_EXIT_THREAD();                   // destroys NDC created by INIT_LOGGER()
+      LOGGER_EXIT_THREAD(); // destroys NDC created by INIT_LOGGER()
     }
   } logger(argv[0]);
 #endif
@@ -555,9 +555,9 @@ int main(int argc, char* argv[])
   retrieveStationCalTables(args.stCalTablesDir);
 
   // We don't run alone, so try to increase the QoS we get from the OS to decrease the chance of data loss.
-  setIOpriority();       // reqs CAP_SYS_NICE or CAP_SYS_ADMIN
-  setRTpriority();       // reqs CAP_SYS_NICE
-  lockInMemory();        // reqs CAP_IPC_LOCK
+  setIOpriority(); // reqs CAP_SYS_NICE or CAP_SYS_ADMIN
+  setRTpriority(); // reqs CAP_SYS_NICE
+  lockInMemory();  // reqs CAP_IPC_LOCK
 
   err = 1;
   try {
@@ -568,7 +568,7 @@ int main(int argc, char* argv[])
     do {
       err += doTBB_Run(inputStreamNames, parset, stMdMap, args);
     } while (args.keepRunning && err < 1000);
-    if (err == 1000) {             // Nr of dumps per obs was estimated to fit in 3 digits.
+    if (err == 1000) { // Nr of dumps per obs was estimated to fit in 3 digits.
       LOG_FATAL("TBB: Reached max nr of errors seen. Shutting down to avoid filling up storage with logging crap.");
     }
 
