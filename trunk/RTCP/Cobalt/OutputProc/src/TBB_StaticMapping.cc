@@ -33,6 +33,7 @@ namespace LOFAR
 {
 namespace Cobalt
 {
+
   TBB_StaticMapping::TBB_StaticMapping()
   {
   }
@@ -90,9 +91,10 @@ namespace Cobalt
     vector<string> mapping;
 
     for (pair<multimap<string, pair<string, string> >::const_iterator,
-              multimap<string, pair<string, string> >::const_iterator> iters(
-           itsMapping.equal_range(nodeName));
-         iters.first != iters.second; ++iters.first) {
+         multimap<string, pair<string, string> >::const_iterator> iters(
+         itsMapping.equal_range(nodeName));
+         iters.first != iters.second; ++iters.first)
+    {
       mapping.push_back((*iters.first).second.first);
     }
 
@@ -104,9 +106,10 @@ namespace Cobalt
     vector<string> mapping;
 
     for (pair<multimap<string, pair<string, string> >::const_iterator,
-              multimap<string, pair<string, string> >::const_iterator> iters(
-           itsMapping.equal_range(nodeName));
-         iters.first != iters.second; ++iters.first) {
+         multimap<string, pair<string, string> >::const_iterator> iters(
+         itsMapping.equal_range(nodeName));
+         iters.first != iters.second; ++iters.first)
+    {
       mapping.push_back((*iters.first).second.second);
     }
 

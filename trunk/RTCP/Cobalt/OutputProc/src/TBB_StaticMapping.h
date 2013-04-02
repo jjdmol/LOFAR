@@ -30,6 +30,7 @@ namespace LOFAR
 {
 namespace Cobalt
 {
+
   class TBB_StaticMapping
   {
   public:
