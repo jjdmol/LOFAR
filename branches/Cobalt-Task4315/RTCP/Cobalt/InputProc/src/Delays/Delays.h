@@ -40,12 +40,14 @@
 #include <CoInterface/RSPTimeStamp.h>
 #include <CoInterface/SmartPtr.h>
 
+#ifdef HAVE_CASACORE
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <casa/Quanta/MVDirection.h>
 #include <casa/Quanta/MVPosition.h>
 #include <casa/Quanta/MVEpoch.h>
+#endif
 
 namespace LOFAR
 {
@@ -92,8 +94,8 @@ namespace LOFAR
 
       // Output structures for adjusted directions and delays
       struct Delay {
-        casa::MVDirection direction;
-        double            delay;
+        double  direction[3];
+        double  delay;
       };
 
       struct BeamDelays {
@@ -112,10 +114,6 @@ namespace LOFAR
       const TimeStamp itsStartTime;
       const size_t blockSize;
 
-      casa::MVEpoch                       toUTC( const TimeStamp &timestamp ) const;
-
-      void                                init();
-
       // do the delay compensation calculations in a separate thread to allow bulk
       // calculations and to avoid blocking other threads
       void                                mainLoop();
@@ -129,13 +127,6 @@ namespace LOFAR
       // the number of delays to calculate in a single run
       static const size_t nrCalcDelays = 16;
 
-      // Converts a sky direction to a direction and delay
-      struct Delay convert( casa::MDirection::Convert &converter, const casa::MVDirection &direction ) const;
-
-      // Computes the delays for a specific moment in time and stores them
-      // in `result'.
-      void calcDelays( const TimeStamp &timestamp, AllDelays &result );
-
       // the circular buffer to hold the moving beam directions for every second of data
       std::vector<AllDelays> itsBuffer;
       size_t head, tail;
@@ -144,6 +135,22 @@ namespace LOFAR
       // another to trigger the consumer that data is available.
       Semaphore bufferFree, bufferUsed;
 
+      // Resize the given delay set to the right proportions.
+      void setAllDelaysSize( AllDelays &result ) const;
+
+      // Initialise computing/converting engines
+      void init();
+
+      // Computes the delays for a specific moment in time and stores them
+      // in `result'.
+      void calcDelays( const TimeStamp &timestamp, AllDelays &result );
+
+#ifdef HAVE_CASACORE
+      casa::MVEpoch                       toUTC( const TimeStamp &timestamp ) const;
+
+      // Converts a sky direction to a direction and delay
+      struct Delay convert( casa::MDirection::Convert &converter, const casa::MVDirection &direction ) const;
+
       casa::MeasFrame itsFrame;
 
       std::vector<casa::MDirection::Types> itsDirectionTypes; // [sap]
@@ -151,6 +158,7 @@ namespace LOFAR
 
       // Station to reference station position difference vector.
       casa::MVPosition itsPhasePositionDiff;
+#endif
 
       NSTimer itsDelayTimer;
 

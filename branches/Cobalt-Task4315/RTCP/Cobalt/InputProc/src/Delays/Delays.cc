@@ -38,10 +38,6 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    using namespace casa;
-
-    static LOFAR::Mutex casacoreMutex; // casacore is not thread safe
-
     //##----------------  Public methods  ----------------##//
 
     Delays::Delays(const Parset &parset, const std::string &stationName, const TimeStamp &startTime, size_t blockSize)
@@ -78,6 +74,24 @@ namespace LOFAR
       bufferFree.up(nrCalcDelays);
     }
 
+
+    void Delays::setAllDelaysSize( AllDelays &result ) const {
+        result.resize(parset.settings.SAPs.size());
+
+        for (size_t sap = 0; sap < parset.settings.SAPs.size(); ++sap) {
+          if (parset.settings.beamFormer.enabled) {
+            const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
+
+            result[sap].TABs.resize(bfSap.TABs.size());
+          }
+        }
+    }
+
+
+#ifdef HAVE_CASACORE
+    using namespace casa;
+
+    static LOFAR::Mutex casacoreMutex; // casacore is not thread safe
 
     // convert a time in samples to a (day,fraction) pair in UTC in a CasaCore format
     MVEpoch Delays::toUTC(const TimeStamp &timestamp) const
@@ -132,42 +146,60 @@ namespace LOFAR
     struct Delays::Delay Delays::convert( casa::MDirection::Convert &converter, const casa::MVDirection &direction ) const {
       struct Delay d;
 
-       d.direction = converter(direction).getValue();
-       d.delay     = d.direction * itsPhasePositionDiff * (1.0 / speedOfLight);
+      MVDirection casaDir = converter(direction).getValue();
 
-       return d;
+      // Compute direction and convert it 
+      casa::Vector<double> dir = casaDir.getValue();
+      std::copy(dir.begin(), dir.end(), d.direction);
+
+      d.delay = casaDir * itsPhasePositionDiff * (1.0 / speedOfLight);
+
+      return d;
     }
 
 
     void Delays::calcDelays( const TimeStamp &timestamp, AllDelays &result ) {
-      // Set the instant in time in the itsFrame
-      itsFrame.resetEpoch(toUTC(timestamp));
+      try {
+        ScopedLock lock(casacoreMutex);
+        ScopedDelayCancellation dc;
 
-      // Convert directions for all beams
-      result.resize(parset.settings.SAPs.size());
+        // Set the instant in time in the itsFrame
+        itsFrame.resetEpoch(toUTC(timestamp));
 
-      for (size_t sap = 0; sap < parset.settings.SAPs.size(); ++sap) {
-        const struct ObservationSettings::SAP &sapInfo = parset.settings.SAPs[sap];
+        // Convert directions for all beams
+        for (size_t sap = 0; sap < parset.settings.SAPs.size(); ++sap) {
+          const struct ObservationSettings::SAP &sapInfo = parset.settings.SAPs[sap];
 
-        // Fetch the relevant convert engine
-        MDirection::Convert &converter = itsConverters[itsDirectionTypes[sap]];
+          // Fetch the relevant convert engine
+          MDirection::Convert &converter = itsConverters[itsDirectionTypes[sap]];
 
-        // Convert the SAP directions using the convert engine
-        result[sap].SAP = convert(converter, MVDirection(sapInfo.direction.angle1, sapInfo.direction.angle2));
+          // Convert the SAP directions using the convert engine
+          result[sap].SAP = convert(converter, MVDirection(sapInfo.direction.angle1, sapInfo.direction.angle2));
 
-        if (parset.settings.beamFormer.enabled) {
-          // Convert the TAB directions using the convert engine
-          const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
-          result[sap].TABs.resize(bfSap.TABs.size());
-          for (size_t tab = 0; tab < bfSap.TABs.size(); tab++) {
-            const MVDirection dir(sapInfo.direction.angle1 + bfSap.TABs[tab].directionDelta.angle1,
-                                  sapInfo.direction.angle2 + bfSap.TABs[tab].directionDelta.angle2);
+          if (parset.settings.beamFormer.enabled) {
+            // Convert the TAB directions using the convert engine
+            const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
+            for (size_t tab = 0; tab < bfSap.TABs.size(); tab++) {
+              const MVDirection dir(sapInfo.direction.angle1 + bfSap.TABs[tab].directionDelta.angle1,
+                                    sapInfo.direction.angle2 + bfSap.TABs[tab].directionDelta.angle2);
 
-            result[sap].TABs[tab] = convert(converter, dir);
+              result[sap].TABs[tab] = convert(converter, dir);
+            }
           }
         }
+      } catch (AipsError &ex) {
+        THROW(Exception, "AipsError: " << ex.what());
       }
     }
+#else
+    void Delays::init() {
+    }
+
+    void Delays::calcDelays( const TimeStamp &timestamp, AllDelays &result ) {
+      (void)timestamp;
+      (void)result;
+    }
+#endif
 
 
     void Delays::mainLoop()
@@ -190,14 +222,12 @@ namespace LOFAR
           // prevent the few excess delays from being calculated.
 
           {
-            ScopedLock lock(casacoreMutex);
-            ScopedDelayCancellation dc;
-
             for (size_t i = 0; i < nrCalcDelays; i++) {
               // Check whether we will store results in a valid place
               ASSERTSTR(tail < bufferSize, tail << " < " << bufferSize);
 
               // Calculate the delays and store them in itsBuffer[tail]
+              setAllDelaysSize(itsBuffer[tail]);
               calcDelays(currentTime, itsBuffer[tail]);
 
               // Advance time for the next calculation
@@ -218,12 +248,12 @@ namespace LOFAR
 
           bufferUsed.up(nrCalcDelays);
         }
-      } catch (AipsError &ex) {
+      } catch (Exception &ex) {
         // trigger getNextDelays and force it to stop
         stop = true;
         bufferUsed.up(1);
 
-        THROW(Exception, "AipsError: " << ex.what());
+        throw;
       }
 
       LOG_DEBUG("Delay compensation thread stopped");

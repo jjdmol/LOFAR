@@ -61,10 +61,12 @@ TEST(Tracking) {
     CHECK_EQUAL(1U, delaySet.size());
     CHECK_EQUAL(0U, delaySet[0].TABs.size());
 
+#ifdef HAVE_CASACORE
     // Delays must change over time
     if (block > 0) {
       CHECK(delaySet[0].SAP.delay != prevDelaySet[0].SAP.delay);
     }
+#endif
 
     prevDelaySet = delaySet;
   }
