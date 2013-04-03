@@ -1,5 +1,5 @@
 //# TBB_Writer.h
-//# Copyright (C) 2012  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -31,7 +31,7 @@
 
 #include <Common/LofarTypes.h>
 #ifndef USE_THREADS
-#error The TBB writer needs USE_THREADS to operate. You can also define it by hand and link to the right LOFAR lib(s).
+#error The TBB writer needs USE_THREADS to build and operate. You can also define it by hand and link to the right LOFAR lib(s).
 #endif
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Queue.h>
@@ -49,7 +49,9 @@
 #warning TBB_Writer version not derived from the cmake build system, but hard-coded using the TBB_WRITER_VERSION symbol.
 #endif
 
+#ifdef HAVE_DAL
 #include <dal/lofar/TBB_File.h>
+#endif
 
 namespace LOFAR
 {
@@ -150,6 +152,7 @@ namespace LOFAR
     };
 
 
+#ifdef HAVE_DAL
     class TBB_Dipole
     {
       LOFAR::FileStream*       itsRawOut;
@@ -356,6 +359,8 @@ namespace LOFAR
 
   } // namespace Cobalt
 } // namespace LOFAR
+
+#endif // HAVE_DAL
 
 #endif // LOFAR_STORAGE_TBB_WRITER_H
 

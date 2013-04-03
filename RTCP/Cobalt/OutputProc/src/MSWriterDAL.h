@@ -58,7 +58,7 @@ namespace LOFAR
   }
 }
 
-#endif
+#endif // HAVE_DAL
 
 #endif
 
