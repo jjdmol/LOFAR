@@ -96,11 +96,25 @@ namespace LOFAR
       struct Delay {
         double  direction[3];
         double  delay;
+
+        bool operator==(const Delay &other) const {
+          return direction[0] == other.direction[0] &&
+                 direction[1] == other.direction[1] &&
+                 direction[2] == other.direction[2] &&
+                 delay == other.delay;
+        }
       };
 
       struct BeamDelays {
         struct Delay              SAP;
         std::vector<struct Delay> TABs;
+
+        void read( Stream *str );
+        void write( Stream *str ) const;
+
+        bool operator==(const BeamDelays &other) const {
+          return SAP == other.SAP && TABs == other.TABs;
+        }
       };
 
       class AllDelays {
@@ -109,6 +123,13 @@ namespace LOFAR
 
         // All delays for all SAPs (and their TABs)
         std::vector<struct BeamDelays> SAPs;
+
+        void read( Stream *str );
+        void write( Stream *str ) const;
+
+        bool operator==(const AllDelays &other) const {
+          return SAPs == other.SAPs;
+        }
 
       private:
         // Don't allow construction with illegal dimensions

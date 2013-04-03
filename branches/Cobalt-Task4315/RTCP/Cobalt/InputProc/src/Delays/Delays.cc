@@ -75,6 +75,28 @@ namespace LOFAR
     }
 
 
+    void Delays::BeamDelays::read( Stream *str ) {
+      size_t nrTABs;
+
+      str->read(&SAP, sizeof SAP);
+
+      str->read(&nrTABs, sizeof nrTABs);
+      ASSERT(nrTABs == TABs.size());
+
+      str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
+    }
+
+
+    void Delays::BeamDelays::write( Stream *str ) const {
+      size_t nrTABs = TABs.size();
+
+      str->write(&SAP, sizeof SAP);
+
+      str->write(&nrTABs, sizeof nrTABs);
+      str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
+    }
+
+
     Delays::AllDelays::AllDelays( const Parset &parset ) {
         SAPs.resize(parset.settings.SAPs.size());
 
@@ -85,6 +107,29 @@ namespace LOFAR
             SAPs[sap].TABs.resize(bfSap.TABs.size());
           }
         }
+    }
+
+
+    void Delays::AllDelays::read( Stream *str ) {
+      size_t nrSAPs;
+
+      str->read(&nrSAPs, sizeof nrSAPs);
+      ASSERT(nrSAPs == SAPs.size());
+
+      for (size_t n = 0; n < SAPs.size(); ++n) {
+        SAPs[n].read(str);
+      }
+    }
+
+
+    void Delays::AllDelays::write( Stream *str ) const {
+      size_t nrSAPs = SAPs.size();
+
+      str->write(&nrSAPs, sizeof nrSAPs);
+
+      for (size_t n = 0; n < SAPs.size(); ++n) {
+        SAPs[n].write(str);
+      }
     }
 
 
