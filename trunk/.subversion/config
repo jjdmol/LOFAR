@@ -150,6 +150,7 @@ enable-auto-props = yes
 *.csh = svn:eol-style=native;svn:executable;svn:keywords=Author Date Id Revision
 *.css = svn:eol-style=native
 *.cu = svn:eol-style=native;svn:keywords=Author Date Id Revision
+*.cuh = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.cxx = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.doc = svn:mime-type=application/msword
 *.dox = svn:eol-style=native
