@@ -103,13 +103,23 @@ namespace LOFAR
         std::vector<struct Delay> TABs;
       };
 
-      typedef std::vector<struct BeamDelays> AllDelays;
+      class AllDelays {
+      public:
+        AllDelays(const Parset &ps);
+
+        // All delays for all SAPs (and their TABs)
+        std::vector<struct BeamDelays> SAPs;
+
+      private:
+        // Don't allow construction with illegal dimensions
+        AllDelays();
+      };
 
       // Get the set of directions (ITRF) and delays for the beams
       void getNextDelays( AllDelays &result );
 
     private:
-      const Parset                        &parset;
+      const Parset &parset;
       const std::string itsStationName;
       const TimeStamp itsStartTime;
       const size_t blockSize;

@@ -49,7 +49,7 @@ namespace LOFAR
 
       stop(false),
       // we need an extra entry for the central beam
-      itsBuffer(bufferSize),
+      itsBuffer(bufferSize, AllDelays(parset)),
       head(0),
       tail(0),
       bufferFree(bufferSize),
@@ -75,14 +75,14 @@ namespace LOFAR
     }
 
 
-    void Delays::setAllDelaysSize( AllDelays &result ) const {
-        result.resize(parset.settings.SAPs.size());
+    Delays::AllDelays::AllDelays( const Parset &parset ) {
+        SAPs.resize(parset.settings.SAPs.size());
 
         for (size_t sap = 0; sap < parset.settings.SAPs.size(); ++sap) {
           if (parset.settings.beamFormer.enabled) {
             const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
 
-            result[sap].TABs.resize(bfSap.TABs.size());
+            SAPs[sap].TABs.resize(bfSap.TABs.size());
           }
         }
     }
@@ -174,7 +174,7 @@ namespace LOFAR
           MDirection::Convert &converter = itsConverters[itsDirectionTypes[sap]];
 
           // Convert the SAP directions using the convert engine
-          result[sap].SAP = convert(converter, MVDirection(sapInfo.direction.angle1, sapInfo.direction.angle2));
+          result.SAPs[sap].SAP = convert(converter, MVDirection(sapInfo.direction.angle1, sapInfo.direction.angle2));
 
           if (parset.settings.beamFormer.enabled) {
             // Convert the TAB directions using the convert engine
@@ -183,7 +183,7 @@ namespace LOFAR
               const MVDirection dir(sapInfo.direction.angle1 + bfSap.TABs[tab].directionDelta.angle1,
                                     sapInfo.direction.angle2 + bfSap.TABs[tab].directionDelta.angle2);
 
-              result[sap].TABs[tab] = convert(converter, dir);
+              result.SAPs[sap].TABs[tab] = convert(converter, dir);
             }
           }
         }
@@ -227,7 +227,6 @@ namespace LOFAR
               ASSERTSTR(tail < bufferSize, tail << " < " << bufferSize);
 
               // Calculate the delays and store them in itsBuffer[tail]
-              setAllDelaysSize(itsBuffer[tail]);
               calcDelays(currentTime, itsBuffer[tail]);
 
               // Advance time for the next calculation

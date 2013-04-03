@@ -52,19 +52,19 @@ TEST(Tracking) {
   Delays delays(ps, "STATION", TimeStamp(time(0), 0, 200000000), dayOfSamples);
   delays.start();
 
-  Delays::AllDelays delaySet, prevDelaySet;
+  Delays::AllDelays delaySet(ps), prevDelaySet(ps);
 
   for (size_t block = 0; block < 1024; ++block) {
     delays.getNextDelays(delaySet);
 
     // There must be exactly one SAP
-    CHECK_EQUAL(1U, delaySet.size());
-    CHECK_EQUAL(0U, delaySet[0].TABs.size());
+    CHECK_EQUAL(1U, delaySet.SAPs.size());
+    CHECK_EQUAL(0U, delaySet.SAPs[0].TABs.size());
 
 #ifdef HAVE_CASACORE
     // Delays must change over time
     if (block > 0) {
-      CHECK(delaySet[0].SAP.delay != prevDelaySet[0].SAP.delay);
+      CHECK(delaySet.SAPs[0].SAP.delay != prevDelaySet.SAPs[0].SAP.delay);
     }
 #endif
 
@@ -100,18 +100,18 @@ TEST(TiedArrayBeam) {
   Delays delays(ps, "STATION", TimeStamp(time(0), 0, 200000000), dayOfSamples);
   delays.start();
 
-  Delays::AllDelays delaySet;
+  Delays::AllDelays delaySet(ps);
 
   for (size_t block = 0; block < 10; ++block) {
     delays.getNextDelays(delaySet);
 
     // check dimensions of result
-    CHECK_EQUAL(2U, delaySet.size());
-    CHECK_EQUAL(0U, delaySet[0].TABs.size());
-    CHECK_EQUAL(1U, delaySet[1].TABs.size());
+    CHECK_EQUAL(2U, delaySet.SAPs.size());
+    CHECK_EQUAL(0U, delaySet.SAPs[0].TABs.size());
+    CHECK_EQUAL(1U, delaySet.SAPs[1].TABs.size());
 
     // check values
-    CHECK_CLOSE(delaySet[0].SAP.delay, delaySet[1].TABs[0].delay, 0.00001);
+    CHECK_CLOSE(delaySet.SAPs[0].SAP.delay, delaySet.SAPs[1].TABs[0].delay, 0.00001);
   }
 }
 
