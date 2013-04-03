@@ -613,5 +613,5 @@ namespace LOFAR
   } // namespace Cobalt
 } // namespace LOFAR
 
-#endif
+#endif // HAVE_DAL
 

@@ -1,5 +1,5 @@
 //# TBB_Writer.cc: Write TBB data into an HDF5 file
-//# Copyright (C) 2012  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -19,6 +19,8 @@
 //# $Id$
 
 #include <lofar_config.h>
+
+#ifdef HAVE_DAL
 
 #define _FILE_OFFSET_BITS 64
 #include <cstddef>
@@ -89,7 +91,7 @@ namespace LOFAR
       return string(&date[0]);
     }
 
-    // FileStream doesn't do pwrite(2).
+    // FileStream doesn't do pwrite(2). Nobody else needs it, so define it here, but in the same way.
     static size_t tryPWrite(int fd, const void *ptr, size_t size, off_t offset)
     {
       ssize_t bytes = ::pwrite(fd, ptr, size, offset);
@@ -1270,4 +1272,6 @@ namespace LOFAR
 
   } // namespace Cobalt
 } // namespace LOFAR
+
+#endif // HAVE_DAL
 
