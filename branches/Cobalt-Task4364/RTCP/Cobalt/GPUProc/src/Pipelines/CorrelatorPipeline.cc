@@ -127,16 +127,20 @@ namespace LOFAR
     void CorrelatorPipeline::receiveSubbandSamples(
       CorrelatorWorkQueue &workQueue, unsigned subband)
     {
+      SmartPtr<WorkQueueInputData> inputData(workQueue.inputPool.free.remove());
+
       // Read the samples from the input stream in parallel
 #     pragma omp parallel for
       for (unsigned station = 0; station < ps.nrStations(); station++)
       {
+
         // each input stream contains the data from a single station
         Stream *inputStream = bufferToGPUstreams[station];
 
-        //
-        workQueue.inputData.read(inputStream, station, subband, ps.subbandToSAPmapping()[subband]);
+        inputData->read(inputStream, station, subband, ps.subbandToSAPmapping()[subband]);
       }
+
+      workQueue.inputPool.filled.append(inputData);
     }
 
 

@@ -36,6 +36,19 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    /* The data travels as follows:
+     *
+     * [input]  -> devInput.inputSamples
+     *             -> firFilterKernel
+     *          -> devFilteredData
+     *             -> fftKernel
+     *          -> devFilteredData
+     *             -> delayAndBandPassKernel
+     *          -> devInput.inputSamples
+     *             -> correlatorKernel
+     *          -> devFilteredData = visibilities
+     * [output] <-
+     */
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset       &parset,
       cl::Context &context, 
       cl::Device  &device,
@@ -45,20 +58,24 @@ namespace LOFAR
                                              )
       :
     WorkQueue( context, device, gpuNumber, parset),     
-      devCorrectedData(queue,
-                       CL_MEM_READ_WRITE, 
-                       ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
-      devFilteredData(queue,
-                      CL_MEM_READ_WRITE,
-                      std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-                               ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
-      inputData(ps.nrBeams(),
+      devInput(ps.nrBeams(),
                 ps.nrStations(),
                 NR_POLARIZATIONS,
                 (ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband(),
                 ps.nrBytesPerComplexSample(),
                 queue,
-                devCorrectedData),
+
+                // reserve enough space in inputSamples for the output of
+                // the delayAndBandPassKernel.
+                ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
+      devFilteredData(queue,
+                      CL_MEM_READ_WRITE,
+
+                      // reserve enough space for the output of the
+                      // firFilterKernel,
+                      std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+                      // and the correlatorKernel.
+                               ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
       visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], CL_MEM_READ_ONLY, devFilteredData),
       devFIRweights(queue,
                     CL_MEM_READ_ONLY,
@@ -67,7 +84,7 @@ namespace LOFAR
                       queue,
                       programs.firFilterProgram,
                       devFilteredData,
-                      inputData.inputSamples,
+                      devInput.inputSamples,
                       devFIRweights),
       fftKernel(ps,
                 context,
@@ -78,31 +95,42 @@ namespace LOFAR
                                 CL_MEM_READ_ONLY),
       delayAndBandPassKernel(ps,
                              programs.delayAndBandPassProgram,
-                             devCorrectedData,
+                             devInput.inputSamples,
                              devFilteredData,
-                             inputData.delaysAtBegin,
-                             inputData.delaysAfterEnd,
-                             inputData.phaseOffsets,
+                             devInput.delaysAtBegin,
+                             devInput.delaysAfterEnd,
+                             devInput.phaseOffsets,
                              bandPassCorrectionWeights),
 #if defined USE_NEW_CORRELATOR
       correlateTriangleKernel(ps,
                               queue,
                               programs.correlatorProgram,
                               visibilities,
-                              devCorrectedData),
-                              correlateRectangleKernel(ps,
+                              devInput.inputSamples),
+      correlateRectangleKernel(ps,
                               queue,
                               programs.correlatorProgram, 
                               visibilities, 
-                              devCorrectedData)
+                              devInput.inputSamples)
 #else
       correlatorKernel(ps,
                        queue, 
                        programs.correlatorProgram, 
                        visibilities, 
-                       devCorrectedData)
+                       devInput.inputSamples)
 #endif
     {
+      // put enough objects in the inputPool to operate
+      for(size_t i = 0; i < 2; ++i) {
+        inputPool.free.append(new WorkQueueInputData(
+                ps.nrBeams(),
+                ps.nrStations(),
+                NR_POLARIZATIONS,
+                (ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband(),
+                ps.nrBytesPerComplexSample(),
+                devInput));
+      }
+
       // create all the counters
       // Move the FIR filter weight to the GPU
 #if defined USE_NEW_CORRELATOR
@@ -320,14 +348,17 @@ namespace LOFAR
     {
       timers["GPU - total"]->start();
 
+      // Get new host input data
+      SmartPtr<WorkQueueInputData> inputData(inputPool.filled.remove());
+
       {
         timers["GPU - input"]->start();
 
 #if defined USE_B7015
         OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
-        inputData.inputSamples.hostToDevice(CL_TRUE);
-        counters["input - samples"]->doOperation(inputData.inputSamples.deviceBuffer.event, 0, 0, inputData.inputSamples.bytesize());
+        inputData->inputSamples.hostToDevice(CL_TRUE);
+        counters["input - samples"]->doOperation(inputData->inputSamples.deviceBuffer.event, 0, 0, inputData->inputSamples.bytesize());
 
         timers["GPU - input"]->stop();
       }
@@ -337,9 +368,9 @@ namespace LOFAR
       // Moved from doWork() The delay data should be available before the kernels start.
       // Queue processed ordered. This could main that the transfer is not nicely overlapped
 
-      inputData.delaysAtBegin.hostToDevice(CL_FALSE);
-      inputData.delaysAfterEnd.hostToDevice(CL_FALSE);
-      inputData.phaseOffsets.hostToDevice(CL_FALSE);
+      inputData->delaysAtBegin.hostToDevice(CL_FALSE);
+      inputData->delaysAfterEnd.hostToDevice(CL_FALSE);
+      inputData->phaseOffsets.hostToDevice(CL_FALSE);
 
       if (ps.nrChannelsPerSubband() > 1) {
         firFilterKernel.enqueue(queue, *counters["compute - FIR"]);
@@ -360,7 +391,7 @@ namespace LOFAR
       // background.
 
       // Propagate the flags.
-      flagFunctions::propagateFlagsToOutput(ps, inputData.inputFlags, output);
+      flagFunctions::propagateFlagsToOutput(ps, inputData->inputFlags, output);
 
       // Wait for the GPU to finish.
       timers["GPU - wait"]->start();
@@ -368,6 +399,9 @@ namespace LOFAR
       timers["GPU - wait"]->stop();
 
       timers["GPU - compute"]->stop();
+
+      // Finished with host input data
+      inputPool.free.append(inputData);
 
       {
         timers["GPU - output"]->start();
@@ -384,11 +418,6 @@ namespace LOFAR
       }
 
       timers["GPU - total"]->stop();
-
-      //output.visibilities = visibilities; <<-- TODO: get this working? Rather not: Make it an explicit copy so :
-      // output.visibilities.copyFrom(visibilities)
-      ASSERT(output.visibilities.num_elements() == visibilities.num_elements());
-      memcpy(output.visibilities.origin(), visibilities.origin(), visibilities.bytesize());
 
       // The flags are alrady copied to the correct location
       // now the flagged amount should be applied to the visibilities
