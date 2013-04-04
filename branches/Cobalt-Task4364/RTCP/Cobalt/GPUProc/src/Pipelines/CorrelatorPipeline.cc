@@ -63,6 +63,19 @@ namespace LOFAR
 
     void CorrelatorPipeline::doWork()
     {
+      size_t nrWorkQueues = (profiling ? 1 : 2) * nrGPUs;
+      vector< SmartPtr<CorrelatorWorkQueue> > workQueues(nrWorkQueues);
+
+      for (size_t i = 0; i < workQueues.size(); ++i) {
+        workQueues[i] = new CorrelatorWorkQueue(ps,               // Configuration
+                                      context,          // Opencl context
+                                      devices[i % nrGPUs], // The GPU this workQueue is connected to
+                                      i % nrGPUs, // The GPU index
+                                      programs,         // The compiled kernels, const
+                                      filterBank);   // The filter set to use. Const
+      }
+
+
       //sections = program segments defined by the following omp section directive
       //           are distributed for parallel execution among available threads
       //parallel = directive explicitly instructs the compiler to parallelize the chosen block of code.
@@ -95,32 +108,28 @@ namespace LOFAR
         // Perform the calculations
 #       pragma omp section
         {
-          size_t nrWorkQueues = (profiling ? 1 : 2) * nrGPUs;
-
           // Start a set of workqueue, the number depending on the number of GPU's: 2 for each.
           // Each WorkQueue gets its own thread.
 #         pragma omp parallel num_threads(nrWorkQueues)
           {
-            CorrelatorWorkQueue queue(ps,               // Configuration
-                                      context,          // Opencl context
-                                      devices[omp_get_thread_num() % nrGPUs], // The GPU this workQueue is connected to
-                                      omp_get_thread_num() % nrGPUs, // The GPU index
-                                      programs,         // The compiled kernels, const
-                                      filterBank);   // The filter set to use. Const
+            CorrelatorWorkQueue &queue = *workQueues[omp_get_thread_num() % workQueues.size()];
 
             // run the queue
             doWorkQueue(queue);
-
-            // gather performance figures
-            performance.addQueue(queue);
           }
+
           // Signal end of data
           noMoreOutput();
-
-          // log performance figures
-          performance.log(nrWorkQueues);
         }
       }
+
+      // gather performance figures
+      for (size_t i = 0; i < workQueues.size(); ++i ) {
+        performance.addQueue(*workQueues[i]);
+      }
+
+      // log performance figures
+      performance.log(workQueues.size());
     }
 
 
@@ -184,26 +193,30 @@ namespace LOFAR
 #       pragma omp for schedule(dynamic), nowait, ordered  // no parallel: this no new threads
         for (unsigned subband = 0; subband < ps.nrSubbands(); subband++)
         {
-          // Create an data object to Storage around our visibilities
-          SmartPtr<CorrelatedData> output = new CorrelatedData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 1);
+          {
+            workQueue.timers["CPU - input"]->start();
+            // Each input block is sent in order. Therefore wait for the correct block
+            inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
+            receiveSubbandSamples(workQueue, subband);
+            // Advance the block index
+            inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
+            workQueue.timers["CPU - input"]->stop();
+          }
 
-          workQueue.timers["CPU - input"]->start();
-          // Each input block is sent in order. Therefore wait for the correct block
-          inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-          receiveSubbandSamples(workQueue, subband);
-          // Advance the block index
-          inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
-          workQueue.timers["CPU - input"]->stop();
+          {
+            // Create an data object to Storage around our visibilities
+            SmartPtr<CorrelatedData> output = new CorrelatedData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 1);
 
-          // Perform calculations
-          workQueue.timers["CPU - compute"]->start();
-          workQueue.doSubband(subband, *output);
-          workQueue.timers["CPU - compute"]->stop();
+            // Perform calculations
+            workQueue.timers["CPU - compute"]->start();
+            workQueue.doSubband(subband, *output);
+            workQueue.timers["CPU - compute"]->stop();
 
-          // Hand off the block to Storage
-          workQueue.timers["CPU - output"]->start();
-          writeOutput(block, subband, output.release());
-          workQueue.timers["CPU - output"]->stop();
+            // Hand off the block to Storage
+            workQueue.timers["CPU - output"]->start();
+            writeOutput(block, subband, output.release());
+            workQueue.timers["CPU - output"]->stop();
+          }
         }  // end pragma omp for
       }
 
