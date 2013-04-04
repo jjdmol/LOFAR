@@ -35,6 +35,7 @@ namespace LOFAR
     extern void createContext(cl::Context &, std::vector<cl::Device> &);
     extern cl::Program createProgram(cl::Context &, std::vector<cl::Device> &, const char *sources, const char *args);
 
+    // A buffer on the GPU (device), to which CPU (host) buffers can be attached.
     class DeviceBuffer
     {
     public:
@@ -55,29 +56,24 @@ namespace LOFAR
       // Stores transfer information
       cl::Event event;
 
-      // Convert the cl_mem_flags to cl_map_flags
-      static cl_map_flags map_flags(cl_mem_flags flags) {
-        return flags & CL_MEM_READ_WRITE ? CL_MAP_READ | CL_MAP_WRITE
-             : flags & CL_MEM_READ_ONLY  ? CL_MAP_READ
-             : flags & CL_MEM_WRITE_ONLY ? CL_MAP_WRITE
-             : 0;
-      }
-
       operator cl::Buffer & ()
       {
         return buffer;
       }
 
+      // Copies data to the GPU
       void hostToDevice(void *ptr, size_t size, bool synchronous = false)
       {
         queue.enqueueWriteBuffer(buffer, synchronous ? CL_TRUE : CL_FALSE, 0, size, ptr, 0, &event);
       }
 
+      // Copies data from the GPU
       void deviceToHost(void *ptr, size_t size, bool synchronous = false)
       {
         queue.enqueueReadBuffer(buffer, synchronous ? CL_TRUE : CL_FALSE, 0, size, ptr, 0, &event);
       }
 
+      // Allocates a buffer for transfer with the GPU
       void *allocateHostBuffer( size_t size, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE )
       {
         // Should fit
@@ -86,18 +82,29 @@ namespace LOFAR
         return queue.enqueueMapBuffer(buffer, CL_TRUE, map_flags(hostBufferFlags), 0, size);
       }
 
+      // Deallocates a buffer for transfer with the GPU
       void deallocateHostBuffer( void *ptr )
       {
         queue.enqueueUnmapMemObject(buffer, ptr);
       }
+
+    private:
+      // Convert the cl_mem_flags to cl_map_flags
+      static cl_map_flags map_flags(cl_mem_flags flags) {
+        return flags & CL_MEM_READ_WRITE ? CL_MAP_READ | CL_MAP_WRITE
+             : flags & CL_MEM_READ_ONLY  ? CL_MAP_READ
+             : flags & CL_MEM_WRITE_ONLY ? CL_MAP_WRITE
+             : 0;
+      }
     };
 
+    // A buffer on the CPU (host), attached to a buffer on the GPU (device)
     class HostBuffer
     {
     public:
-      HostBuffer( DeviceBuffer &device, size_t size, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE )
+      HostBuffer( DeviceBuffer &deviceBuffer, size_t size, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE )
       :
-        deviceBuffer(device),
+        deviceBuffer(deviceBuffer),
         ptr(deviceBuffer.allocateHostBuffer(size, hostBufferFlags)),
         size(size)
       {
@@ -118,12 +125,18 @@ namespace LOFAR
         deviceBuffer.deviceToHost(ptr, size, synchronous);
       }
 
-    protected:
       DeviceBuffer &deviceBuffer;
+
+      operator cl::Buffer& () {
+        return deviceBuffer;
+      }
+
+    protected:
       void * const ptr;
       const size_t size;
     };
 
+    // A MultiDimArray allocated as a HostBuffer
     template <typename T, size_t DIM>
     class MultiArrayHostBuffer : public HostBuffer, public MultiDimArray<T, DIM>
     {
@@ -132,8 +145,7 @@ namespace LOFAR
       MultiArrayHostBuffer(const ExtentList &extents, cl_mem_flags hostBufferFlags, DeviceBuffer &deviceBuffer)
       :
         HostBuffer(deviceBuffer, nrElements(extents) * sizeof(T), hostBufferFlags),
-        MultiDimArray<T,DIM>(extents, static_cast<T*>(ptr), true),
-        deviceBuffer(deviceBuffer)
+        MultiDimArray<T,DIM>(extents, static_cast<T*>(ptr), true)
       {
       }
 
@@ -141,14 +153,9 @@ namespace LOFAR
       {
         return this->num_elements() * sizeof(T);
       }
-
-      DeviceBuffer &deviceBuffer;
-
-      operator cl::Buffer& () {
-        return deviceBuffer;
-      }
     };
 
+    // A 1:1 buffer on CPU and GPU
     template <typename T, size_t DIM>
     class MultiArraySharedBuffer : public DeviceBuffer, public MultiArrayHostBuffer<T, DIM>
     {
@@ -161,14 +168,10 @@ namespace LOFAR
       {
       }
 
+      // Select the desired interface
       using HostBuffer::hostToDevice;
       using HostBuffer::deviceToHost;
-
       using DeviceBuffer::operator cl::Buffer&;
-
-    private:
-      using DeviceBuffer::hostToDevice;
-      using DeviceBuffer::deviceToHost;
     };
 
     namespace OpenCL_Support
