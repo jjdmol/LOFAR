@@ -50,7 +50,7 @@ TEST(Tracking) {
   ps.updateSettings();
 
   // blockSize is ~1s
-  Delays delays(ps, "STATION", TimeStamp(time(0), 0, 200000000), dayOfSamples);
+  Delays delays(ps, 0, TimeStamp(time(0), 0, 200000000), dayOfSamples);
   delays.start();
 
   Delays::AllDelays delaySet(ps), prevDelaySet(ps);
@@ -98,7 +98,7 @@ TEST(TiedArrayBeam) {
   ps.updateSettings();
 
   // blockSize is ~1s
-  Delays delays(ps, "STATION", TimeStamp(time(0), 0, 200000000), dayOfSamples);
+  Delays delays(ps, 0, TimeStamp(time(0), 0, 200000000), dayOfSamples);
   delays.start();
 
   Delays::AllDelays delaySet(ps);

@@ -40,28 +40,28 @@ namespace LOFAR
 
     //##----------------  Public methods  ----------------##//
 
-    Delays::Delays(const Parset &parset, const std::string &stationName, const TimeStamp &startTime, size_t blockSize)
+    Delays::Delays(const Parset &parset, size_t stationIdx, const TimeStamp &from, size_t increment)
       :
       parset(parset),
-      itsStationName(stationName),
-      itsStartTime(startTime),
-      blockSize(blockSize),
+      stationIdx(stationIdx),
+      from(from),
+      increment(increment),
 
       stop(false),
       // we need an extra entry for the central beam
-      itsBuffer(bufferSize, AllDelays(parset)),
+      buffer(bufferSize, AllDelays(parset)),
       head(0),
       tail(0),
       bufferFree(bufferSize),
       bufferUsed(0),
-      itsDelayTimer("delay producer", true, true)
+      delayTimer("delay producer", true, true)
     {
     }
 
 
     void Delays::start()
     {
-      itsThread = new Thread(this, &Delays::mainLoop, "[DelayCompensation] ");
+      thread = new Thread(this, &Delays::mainLoop, "[DelayCompensation] ");
     }
 
 
@@ -161,29 +161,29 @@ namespace LOFAR
 
       ASSERT(bufferSize % nrCalcDelays == 0);
 
-      // Set an initial epoch for the itsFrame
-      itsFrame.set(MEpoch(toUTC(itsStartTime), MEpoch::UTC));
+      // Set an initial epoch for the frame
+      frame.set(MEpoch(toUTC(from), MEpoch::UTC));
 
-      // Set the position for the itsFrame.
-      const MVPosition phaseCentre(parset.getPhaseCentreOf(itsStationName));
-      itsFrame.set(MPosition(phaseCentre, MPosition::ITRF));
+      // Set the position for the frame.
+      const MVPosition phaseCenter(parset.settings.stations[stationIdx].phaseCenter);
+      frame.set(MPosition(phaseCenter, MPosition::ITRF));
 
       // Cache the difference with CS002LBA
-      const MVPosition pRef(parset.getRefPhaseCentre());
-      itsPhasePositionDiff = phaseCentre - pRef;
+      const MVPosition pRef(parset.settings.delayCompensation.referencePhaseCenter);
+      phasePositionDiff = phaseCenter - pRef;
 
       // Set-up the direction cache and conversion engines, using reference direction ITRF.
-      itsDirectionTypes.resize(parset.settings.SAPs.size());
+      directionTypes.resize(parset.settings.SAPs.size());
 
       for (size_t sap = 0; sap < parset.settings.SAPs.size(); sap++) {
         const std::string typeName = toUpper(parset.settings.SAPs[sap].direction.type);
-        MDirection::Types &casaType = itsDirectionTypes[sap];
+        MDirection::Types &casaType = directionTypes[sap];
 
         if (!MDirection::getType(casaType, typeName))
           THROW(Exception, "Beam direction type unknown: " << typeName);
 
-        if (itsConverters.find(casaType) == itsConverters.end())
-          itsConverters[casaType] = MDirection::Convert(casaType, MDirection::Ref(MDirection::ITRF, itsFrame));
+        if (converters.find(casaType) == converters.end())
+          converters[casaType] = MDirection::Convert(casaType, MDirection::Ref(MDirection::ITRF, frame));
       }
     }
 
@@ -197,7 +197,7 @@ namespace LOFAR
       casa::Vector<double> dir = casaDir.getValue();
       std::copy(dir.begin(), dir.end(), d.direction);
 
-      d.delay = casaDir * itsPhasePositionDiff * (1.0 / speedOfLight);
+      d.delay = casaDir * phasePositionDiff * (1.0 / speedOfLight);
 
       return d;
     }
@@ -208,15 +208,15 @@ namespace LOFAR
         ScopedLock lock(casacoreMutex);
         ScopedDelayCancellation dc;
 
-        // Set the instant in time in the itsFrame
-        itsFrame.resetEpoch(toUTC(timestamp));
+        // Set the instant in time in the frame
+        frame.resetEpoch(toUTC(timestamp));
 
         // Convert directions for all beams
         for (size_t sap = 0; sap < parset.settings.SAPs.size(); ++sap) {
           const struct ObservationSettings::SAP &sapInfo = parset.settings.SAPs[sap];
 
           // Fetch the relevant convert engine
-          MDirection::Convert &converter = itsConverters[itsDirectionTypes[sap]];
+          MDirection::Convert &converter = converters[directionTypes[sap]];
 
           // Convert the SAP directions using the convert engine
           result.SAPs[sap].SAP = convert(converter, MVDirection(sapInfo.direction.angle1, sapInfo.direction.angle2));
@@ -254,13 +254,13 @@ namespace LOFAR
       init();
 
       // the current time, in samples
-      TimeStamp currentTime = itsStartTime;
+      TimeStamp currentTime = from;
 
       try {
         while (!stop) {
           bufferFree.down(nrCalcDelays);
 
-          itsDelayTimer.start();
+          delayTimer.start();
 
           // Calculate nrCalcDelays seconds worth of delays. Technically, we do not have
           // to calculate that many at the end of the run, but there is no need to
@@ -271,11 +271,11 @@ namespace LOFAR
               // Check whether we will store results in a valid place
               ASSERTSTR(tail < bufferSize, tail << " < " << bufferSize);
 
-              // Calculate the delays and store them in itsBuffer[tail]
-              calcDelays(currentTime, itsBuffer[tail]);
+              // Calculate the delays and store them in buffer[tail]
+              calcDelays(currentTime, buffer[tail]);
 
               // Advance time for the next calculation
-              currentTime += blockSize;
+              currentTime += increment;
 
               // Advance to the next result set.
               // since bufferSize % nrCalcDelays == 0, wrap
@@ -288,7 +288,7 @@ namespace LOFAR
           if (tail >= bufferSize)
             tail = 0;
 
-          itsDelayTimer.stop();
+          delayTimer.stop();
 
           bufferUsed.up(nrCalcDelays);
         }
@@ -306,15 +306,15 @@ namespace LOFAR
 
     void Delays::getNextDelays( AllDelays &result )
     {
-      ASSERT(itsThread);
+      ASSERT(thread);
 
       bufferUsed.down();
 
       if (stop)
         THROW(Exception, "Cannot obtain delays -- delay thread stopped running");
 
-      // copy the directions at itsBuffer[head]
-      result = itsBuffer[head];
+      // copy the directions at buffer[head]
+      result = buffer[head];
 
       // increment the head pointer
       if (++head == bufferSize)

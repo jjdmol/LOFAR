@@ -87,7 +87,7 @@ namespace LOFAR
     class Delays
     {
     public:
-      Delays(const Parset &ps, const std::string &stationName, const TimeStamp &startTime, size_t blockSize);
+      Delays(const Parset &ps, size_t stationIdx, const TimeStamp &from, size_t increment);
       ~Delays();
 
       void start();
@@ -141,9 +141,9 @@ namespace LOFAR
 
     private:
       const Parset &parset;
-      const std::string itsStationName;
-      const TimeStamp itsStartTime;
-      const size_t blockSize;
+      const size_t stationIdx;
+      const TimeStamp from;
+      const size_t increment;
 
       // do the delay compensation calculations in a separate thread to allow bulk
       // calculations and to avoid blocking other threads
@@ -159,7 +159,7 @@ namespace LOFAR
       static const size_t nrCalcDelays = 16;
 
       // the circular buffer to hold the moving beam directions for every second of data
-      std::vector<AllDelays> itsBuffer;
+      std::vector<AllDelays> buffer;
       size_t head, tail;
 
       // two semaphores are used: one to trigger the producer that free space is available,
@@ -182,18 +182,18 @@ namespace LOFAR
       // Converts a sky direction to a direction and delay
       struct Delay convert( casa::MDirection::Convert &converter, const casa::MVDirection &direction ) const;
 
-      casa::MeasFrame itsFrame;
+      casa::MeasFrame frame;
 
-      std::vector<casa::MDirection::Types> itsDirectionTypes; // [sap]
-      std::map<casa::MDirection::Types, casa::MDirection::Convert> itsConverters; // [type]
+      std::vector<casa::MDirection::Types> directionTypes; // [sap]
+      std::map<casa::MDirection::Types, casa::MDirection::Convert> converters; // [type]
 
       // Station to reference station position difference vector.
-      casa::MVPosition itsPhasePositionDiff;
+      casa::MVPosition phasePositionDiff;
 #endif
 
-      NSTimer itsDelayTimer;
+      NSTimer delayTimer;
 
-      SmartPtr<Thread>                    itsThread;
+      SmartPtr<Thread>                    thread;
     };
 
   } // namespace Cobalt
