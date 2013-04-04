@@ -31,8 +31,6 @@
 #include <Common/Thread/Cancellation.h>
 #include <CoInterface/PrintVector.h>
 
-#include <GPUProc/Scheduling.h>
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -149,8 +147,6 @@ namespace LOFAR
     void LogThread::mainLoop()
     {
 #if defined HAVE_BGP_ION
-      //doNotRunOnCore0();
-      runOnCore0();
       readCPUstats(previousLoad);
       gettimeofday(&previousTimeval,0);
 #endif

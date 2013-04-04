@@ -26,7 +26,6 @@
 
 #include <Common/LofarTypes.h>
 #include <CoInterface/MultiDimArray.h>
-#include <CoInterface/SparseSet.h>
 
 #include "MPIProtocol.h"
 
@@ -61,14 +60,13 @@ namespace LOFAR
 
       template<typename T>
       struct Beamlet {
-        std::vector<T>    samples;
-        SparseSet<int64>  flags;
+        std::vector<T>  samples;
+        SubbandMetaData metaData;
       };
 
       template<typename T>
       struct Block {
         std::vector< struct Beamlet<T> > beamlets; // [beamlet]
-        std::vector<char> metaDataBlob;
       };
 
       // Receive the next block. The `block' parameter is a structure allocated
@@ -97,7 +95,7 @@ namespace LOFAR
       MPI_Request receiveData( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples );
 
       // Receive marshalled flags and metadata (async) from the given rank.
-      MPI_Request receiveFlags( size_t station, size_t beamlet, std::vector<char> &buffer );
+      MPI_Request receiveMetaData( size_t station, size_t beamlet, struct MPIProtocol::MetaData &metaData );
     };
 
   }

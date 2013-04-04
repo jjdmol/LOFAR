@@ -97,6 +97,9 @@ namespace LOFAR
 
         Ranges available;
 
+        // Signal that there will be no reads before the given epoch
+        void noReadBefore( const TimeStamp &epoch );
+
         // Signal start of write intent for data in [begin, end). The flags will be updated
         // for any data that will be overwritten, but not set for any data that is
         // written.
@@ -124,8 +127,8 @@ namespace LOFAR
         // Read/write pointers to keep readers and writers in sync
         // if buffer.sync == true. The pointers assume that data will both be read
         // and written in-order.
-        SlidingPointer<int64> readPtr;
-        SlidingPointer<int64> writePtr;
+        SlidingPointer<BufferSettings::range_type> readPtr;
+        SlidingPointer<BufferSettings::range_type> writePtr;
       };
 
       std::vector<Board> boards;

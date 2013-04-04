@@ -34,8 +34,7 @@
 #include <Common/PrettyUnits.h>
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/Scheduling.h>
-#include <GPUProc/SubbandMetaData.h>
+#include <CoInterface/SubbandMetaData.h>
 
 namespace LOFAR
 {
@@ -113,11 +112,6 @@ namespace LOFAR
       itsFineDelaysAtBegin.resize(itsNrBeams, itsMaxNrTABs + 1);
       itsFineDelaysAfterEnd.resize(itsNrBeams, itsMaxNrTABs + 1);
       itsFlags.resize(boost::extents[itsNrRSPboards][itsNrBeams]);
-
-#if defined HAVE_BGP_ION // FIXME: not in preprocess
-      doNotRunOnCore0();
-      setPriority(3);
-#endif
     }
 
 

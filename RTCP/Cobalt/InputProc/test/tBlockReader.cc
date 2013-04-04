@@ -93,7 +93,7 @@ TEST(Basic) {
           }
           
           // No samples should be available
-          CHECK_EQUAL((int64)blockSize, ib.flagsAtBegin.count());
+          CHECK_EQUAL((uint64)blockSize, ib.flagsAtBegin.count());
         }
       }
     }
@@ -118,8 +118,8 @@ void test( struct BufferSettings &settings, const std::string &filename )
   transfer.process();
 
   // Determine the timestamps of the packets we've just written
-  int64 now = (int64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
-  SparseSet<int64> available = buffer.boards[0].available.sparseSet(0, now);
+  BufferSettings::range_type now = (uint64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
+  BufferSettings::flags_type  available = buffer.boards[0].available.sparseSet(0, now);
 
   const TimeStamp from(available.getRanges()[0].begin, settings.station.clockMHz * 1000000);
 

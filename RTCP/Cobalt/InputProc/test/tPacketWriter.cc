@@ -27,7 +27,6 @@
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 #include <Stream/FileStream.h>
-#include <CoInterface/SparseSet.h>
 
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/StationID.h>
@@ -68,7 +67,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
     // Check whether the packet is in the buffer
 
     // Check the flags
-    SparseSet<int64> available = buffer.boards[0].available.sparseSet((int64)packet.timeStamp(), (int64)packet.timeStamp() + packet.header.nrBlocks);
+    BufferSettings::flags_type available = buffer.boards[0].available.sparseSet(packet.timeStamp(), packet.timeStamp() + packet.header.nrBlocks);
     ASSERT(available.count() == packet.header.nrBlocks);
 
     // Check the data
@@ -80,7 +79,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
 
         // Obtain the buffer's sample
         // Note: we're the 0th board, so beamlet indices are also absolute
-        int64 timestamp = packet.timeStamp() + sample;
+        uint64 timestamp = packet.timeStamp() + sample;
         SampleType<T> buf = buffer.beamlets[beamlet][timestamp % settings.nrSamples];
 
         // Compare them
@@ -93,8 +92,8 @@ void test( struct BufferSettings &settings, const std::string &filename )
   }
 
   // There should be only nrValidSamples samples in the buffer, nothing more
-  int64 now = (int64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
-  SparseSet<int64> available = buffer.boards[0].available.sparseSet(0, now);
+  BufferSettings::range_type now = (uint64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
+  BufferSettings::flags_type  available = buffer.boards[0].available.sparseSet(0, now);
   ASSERT((size_t)available.count() == nrValidSamples);
 }
 

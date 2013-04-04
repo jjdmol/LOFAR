@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 #if defined HAVE_LOG4CPLUS
   char *dirc = strdup(argv[0]);
 
-  INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/Storage_main.log_prop");
+  INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/outputProc.log_prop");
 
   free(dirc);
 #elif defined HAVE_LOG4CXX
@@ -79,10 +79,12 @@ int main(int argc, char *argv[])
   Context::initialize();
   setLevel("Global",8);
 #else
-  INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 2 ? atoi(argv[2]) : -1)));
+  INIT_LOGGER_WITH_SYSINFO(str(boost::format("OutputProc@%02d") % (argc > 2 ? atoi(argv[2]) : -1)));
 #endif
 
   CasaLogSink::attach();
+
+  string obsLogPrefix = "[obs unknown] ";
 
   try {
     if (argc != 4)
@@ -114,7 +116,7 @@ int main(int argc, char *argv[])
     ASSERT(myRank < hostnames.size());
     string myHostName = hostnames[myRank];
 
-    string obsLogPrefix = str(boost::format("[obs %u] ") % parset.observationID());
+    obsLogPrefix = str(boost::format("[obs %u] ") % parset.observationID());
 
     {
       // make sure "parset" stays in scope for the lifetime of the SubbandWriters
@@ -164,11 +166,11 @@ int main(int argc, char *argv[])
         }
     }
   } catch (Exception &ex) {
-    LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
+    LOG_FATAL_STR(obsLogPrefix << "Caught Exception: " << ex);
     return 1;
   }
 
-  LOG_INFO_STR("[obs unknown] Program end");
+  LOG_INFO_STR(obsLogPrefix << "Program end");
   return 0;
 }
 

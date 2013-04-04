@@ -28,11 +28,11 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/SparseSet.h>
+#include <CoInterface/SubbandMetaData.h>
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenCL_Support.h>
 #include <GPUProc/FilterBank.h>
-#include <GPUProc/SubbandMetaData.h>
 #include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/Filter_FFT_Kernel.h>

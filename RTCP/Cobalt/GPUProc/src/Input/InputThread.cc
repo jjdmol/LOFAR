@@ -39,7 +39,6 @@
 #include <CoInterface/AlignedStdAllocator.h>
 #include <CoInterface/Exceptions.h>
 
-#include <GPUProc/Scheduling.h>
 #include "RSP.h"
 
 namespace LOFAR
@@ -77,17 +76,6 @@ namespace LOFAR
     template <typename SAMPLE_TYPE>
     void InputThread<SAMPLE_TYPE>::mainLoop()
     {
-#if 0 && defined HAVE_BGP_ION
-      if (0 && itsArgs.threadID == 0)
-        runOnCore0();
-      else
-        doNotRunOnCore0();
-#endif
-
-#if 1 && defined HAVE_BGP_ION
-      doNotRunOnCore0();
-#endif
-
       const unsigned maxNrPackets = 128;
       TimeStamp actualstamp = itsArgs.startTime - itsArgs.nrTimesPerPacket;
       unsigned packetSize = sizeof(struct RSP::Header) + itsArgs.nrSlotsPerPacket * itsArgs.nrTimesPerPacket * NR_POLARIZATIONS * sizeof(SAMPLE_TYPE);
