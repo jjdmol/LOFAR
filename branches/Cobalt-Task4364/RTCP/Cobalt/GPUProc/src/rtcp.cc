@@ -37,7 +37,7 @@
 #include "OpenCL_Support.h"
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
-#include "Pipelines/UHEP_Pipeline.h"
+//#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 
 #include <cstdlib>
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
 
   case UHEP:
     LOG_INFO_STR("UHEP pipeline selected");
-    UHEP_Pipeline(ps).doWork();
+    //UHEP_Pipeline(ps).doWork();
     break;
 
   default:
