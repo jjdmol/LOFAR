@@ -89,6 +89,9 @@ namespace LOFAR
       }
 
     private:
+      // Can't copy cl::Buffer
+      DeviceBuffer(const DeviceBuffer &other);
+
       // Convert the cl_mem_flags to cl_map_flags
       static cl_map_flags map_flags(cl_mem_flags flags) {
         return flags & CL_MEM_READ_WRITE ? CL_MAP_READ | CL_MAP_WRITE
@@ -134,6 +137,11 @@ namespace LOFAR
     protected:
       void * const ptr;
       const size_t size;
+
+    private:
+      // Copying is expensive (requires allocation),
+      // so forbid it to prevent accidental copying.
+      HostBuffer(const HostBuffer &other);
     };
 
     // A MultiDimArray allocated as a HostBuffer
