@@ -64,19 +64,22 @@ namespace LOFAR
       // Copies data to the GPU
       void hostToDevice(void *ptr, size_t size, bool synchronous = false)
       {
+        ASSERT(size <= this->size);
+
         queue.enqueueWriteBuffer(buffer, synchronous ? CL_TRUE : CL_FALSE, 0, size, ptr, 0, &event);
       }
 
       // Copies data from the GPU
       void deviceToHost(void *ptr, size_t size, bool synchronous = false)
       {
+        ASSERT(size <= this->size);
+
         queue.enqueueReadBuffer(buffer, synchronous ? CL_TRUE : CL_FALSE, 0, size, ptr, 0, &event);
       }
 
       // Allocates a buffer for transfer with the GPU
       void *allocateHostBuffer( size_t size, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE )
       {
-        // Should fit
         ASSERT(size <= this->size);
 
         return queue.enqueueMapBuffer(buffer, CL_TRUE, map_flags(hostBufferFlags), 0, size);
