@@ -25,7 +25,7 @@
 
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
-#include <CoInterface/SparseSet.h>
+#include "BufferSettings.h"
 
 namespace LOFAR
 {
@@ -33,7 +33,7 @@ namespace LOFAR
   {
 
     //
-    // Thread-safe, lock-free set of int64 [from,to) ranges.
+    // Thread-safe, lock-free set of value_type [from,to) ranges.
     //
     // This implementation is thread safe for one writer and any number
     // of readers.
@@ -49,22 +49,24 @@ namespace LOFAR
     class Ranges
     {
     public:
+      typedef BufferSettings::range_type value_type;
+
       Ranges();
-      Ranges( void *data, size_t numBytes, int64 minHistory, bool create );
+      Ranges( void *data, size_t numBytes, value_type minHistory, bool create );
       ~Ranges();
 
       // Remove [0,to)
-      void excludeBefore( int64 to );
+      void excludeBefore( value_type to );
 
       // Add a range [from,to), and return whether the addition
       // was succesful.
-      bool include( int64 from, int64 to );
+      bool include( value_type from, value_type to );
 
       // Returns whether there is anything set in [first, last)
-      bool anythingBetween( int64 first, int64 last ) const;
+      bool anythingBetween( value_type first, value_type last ) const;
 
       // Returns [first, last) as a SparseSet
-      SparseSet<int64> sparseSet( int64 first, int64 last ) const;
+      BufferSettings::flags_type sparseSet( value_type first, value_type last ) const;
 
       // The size of a single [from,to) pair.
       static size_t elementSize()
@@ -79,7 +81,7 @@ namespace LOFAR
         // from <  to   : a valid range
         // from >= to   : invalid range (being written)
         // from = to = 0: an unused range
-        volatile int64 from, to;
+        volatile value_type from, to;
 
         Range() : from(0), to(0)
         {
@@ -95,7 +97,7 @@ namespace LOFAR
 
       // minimal history to maintain (samples newer than this
       // will be maintained in favour of newly added ranges)
-      int64 minHistory;
+      value_type minHistory;
 
     public:
       // The size of this object for a given number of [from,to) pairs.

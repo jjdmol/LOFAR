@@ -35,18 +35,16 @@ using namespace std;
 
 vector<char> buffer;
 
-FixedBufferStream *createStream(size_t numbytes)
+void createStream(size_t numbytes)
 {
   buffer.resize(numbytes);
 
   for (size_t i = 0; i < numbytes; ++i)
     buffer[i] = 0;
-
-  return new FixedBufferStream(&buffer[0], numbytes);
 }
 
 
-void testWrite(FixedBufferStream *s, size_t numbytes)
+void testWrite(FixedBufferStream &s, size_t numbytes)
 {
   vector<char> buf_in(numbytes, 0);
 
@@ -55,17 +53,17 @@ void testWrite(FixedBufferStream *s, size_t numbytes)
   for (size_t i = 0; i < numbytes; i++)
     buf_in[i] = (writeCounter++) % 128;
 
-  s->write(&buf_in[0], numbytes);
+  s.write(&buf_in[0], numbytes);
 }
 
 
-void testRead(FixedBufferStream *s, size_t numbytes)
+void testRead(FixedBufferStream &s, size_t numbytes)
 {
   vector<char> buf_out(numbytes, 0);
 
   static size_t readCounter = 0;
 
-  s->read(&buf_out[0], numbytes);
+  s.read(&buf_out[0], numbytes);
 
   for (size_t i = 0; i < numbytes; i++) {
     char val = (readCounter++) % 128;
@@ -80,34 +78,37 @@ int main(int /*argc*/, const char* argv[])
   try {
     alarm(30);
 
-    FixedBufferStream *s = createStream(1000);
+    createStream(1000);
+
+    FixedBufferStream rs(&buffer[0], buffer.size());
+    FixedBufferStream ws(&buffer[0], buffer.size());
 
     // 1 write, 1 read
-    testWrite(s, 100);
-    testRead(s, 100);
+    testWrite(ws, 100);
+    testRead(rs, 100);
 
     // 1 write, 2 reads
-    testWrite(s, 200);
-    testRead(s, 100);
-    testRead(s, 100);
+    testWrite(ws, 200);
+    testRead(rs, 100);
+    testRead(rs, 100);
 
     // 2 writes, 1 read
-    testWrite(s, 100);
-    testWrite(s, 100);
-    testRead(s, 200);
+    testWrite(ws, 100);
+    testWrite(ws, 100);
+    testRead(rs, 200);
 
     // 3 writes, 2 reads
-    testWrite(s, 100);
-    testWrite(s, 100);
-    testWrite(s, 100);
-    testRead(s, 250);
-    testRead(s, 50);
+    testWrite(ws, 100);
+    testWrite(ws, 100);
+    testWrite(ws, 100);
+    testRead(rs, 250);
+    testRead(rs, 50);
 
     // write beyond EOB
     bool EOB = false;
 
     try {
-      testWrite(s, 500);
+      testWrite(ws, 500);
     } catch(Stream::EndOfStreamException &e) {
       EOB = true;
     }
@@ -118,14 +119,12 @@ int main(int /*argc*/, const char* argv[])
     EOB = false;
 
     try {
-      testRead(s, 500);
+      testRead(rs, 500);
     } catch(Stream::EndOfStreamException &e) {
       EOB = true;
     }
 
     ASSERTSTR(EOB, "Expected to read beyond EOB");
-
-    delete s;
   } catch (Exception& e) {
     LOG_ERROR_STR(e);
     return 1;

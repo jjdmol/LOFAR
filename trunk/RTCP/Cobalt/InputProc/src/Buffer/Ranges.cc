@@ -51,7 +51,7 @@ namespace LOFAR
     {
     }
 
-    Ranges::Ranges( void *data, size_t numBytes, int64 minHistory, bool create )
+    Ranges::Ranges( void *data, size_t numBytes, value_type minHistory, bool create )
       :
       create(create),
       len(numBytes / sizeof *ranges),
@@ -71,7 +71,7 @@ namespace LOFAR
           i->~Range();
     }
 
-    void Ranges::excludeBefore( int64 to )
+    void Ranges::excludeBefore( value_type to )
     {
       for (struct Range *i = begin; i != end; ++i) {
         if (i->to <= to) {
@@ -88,7 +88,7 @@ namespace LOFAR
       }
     }
 
-    bool Ranges::include( int64 from, int64 to )
+    bool Ranges::include( value_type from, value_type to )
     {
       ASSERTSTR( from < to, from << " < " << to );
       ASSERTSTR( from >= head->to, from << " >= " << head->to );
@@ -122,12 +122,12 @@ namespace LOFAR
       return false;
     }
 
-    bool Ranges::anythingBetween( int64 first, int64 last ) const
+    bool Ranges::anythingBetween( value_type first, value_type last ) const
     {
       for(struct Range *i = begin; i != end; ++i) {
         // read in same order as writes occur
-        int64 from = i->from;
-        int64 to = i->to;
+        value_type from = i->from;
+        value_type to = i->to;
 
         if (to == 0) {
           // unused
@@ -149,17 +149,17 @@ namespace LOFAR
       return false;
     }
 
-    SparseSet<int64> Ranges::sparseSet( int64 first, int64 last ) const
+    BufferSettings::flags_type Ranges::sparseSet( value_type first, value_type last ) const
     {
-      SparseSet<int64> result;
+      BufferSettings::flags_type result;
 
       if (first >= last)
         return result;
 
       for(struct Range *i = begin; i != end; ++i) {
         // read in same order as writes occur
-        int64 from = i->from;
-        int64 to = i->to;
+        value_type from = i->from;
+        value_type to = i->to;
 
         if (to == 0) {
           // unused

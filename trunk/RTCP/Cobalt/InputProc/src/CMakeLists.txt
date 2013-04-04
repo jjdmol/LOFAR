@@ -12,6 +12,7 @@ lofar_add_library(inputproc
   Buffer/Ranges.cc
   Buffer/SharedMemory.cc
   Buffer/StationID.cc
+  Delays/Delays.cc
   Station/Generator.cc
   Station/PacketFactory.cc
   Station/PacketReader.cc

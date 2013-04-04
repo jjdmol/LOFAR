@@ -21,7 +21,7 @@ namespace LOFAR {
     /*
      * A guarded version of MPI_Isend with fewer parameters.
      */
-    MPI_Request Guarded_MPI_Isend(void *ptr, size_t numBytes, int destRank, int tag);
+    MPI_Request Guarded_MPI_Isend(const void *ptr, size_t numBytes, int destRank, int tag);
 
     /*
      * A guarded version of MPI_Irecv with fewer parameters.

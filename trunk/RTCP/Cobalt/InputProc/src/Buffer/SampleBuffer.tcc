@@ -78,12 +78,22 @@ namespace LOFAR
 
 
     template<typename T>
-    void SampleBuffer<T>::Board::startRead( const TimeStamp &begin, const TimeStamp &end )
+    void SampleBuffer<T>::Board::noReadBefore( const TimeStamp &epoch )
     {
       if (buffer.sync) {
-        // Free up read intent up until `begin'.
-        readPtr.advanceTo(begin);
+        // Free up read intent up until `epoch'.
+        readPtr.advanceTo(epoch);
+      }
+    }
 
+
+    template<typename T>
+    void SampleBuffer<T>::Board::startRead( const TimeStamp &begin, const TimeStamp &end )
+    {
+      // Free up read intent up until `begin'.
+      noReadBefore(begin);
+
+      if (buffer.sync) {
         // Wait for writer to finish writing until `end'.
         writePtr.waitFor(end);
       }
@@ -93,29 +103,27 @@ namespace LOFAR
     template<typename T>
     void SampleBuffer<T>::Board::stopRead( const TimeStamp &end )
     {
-      if (buffer.sync) {
-        // Signal we're done reading
-        readPtr.advanceTo(end);
-      }
+      // Signal we're done reading
+      noReadBefore(end);
     }
 
 
     template<typename T>
     void SampleBuffer<T>::Board::noMoreReading()
     {
-      if (buffer.sync) {
-        // Signal we're done reading
+      // Signal we're done reading
 
-        // Put the readPtr into the far future.
-        // We only use this TimeStamp for comparison so clockSpeed does not matter.
-        readPtr.advanceTo(TimeStamp(0x7FFFFFFFFFFFFFFFLL));
-      }
+      // Put the readPtr into the far future.
+      // We only use this TimeStamp for comparison so clockSpeed does not matter.
+      noReadBefore(TimeStamp(0xFFFFFFFFFFFFFFFFULL));
     }
 
 
     template<typename T>
     void SampleBuffer<T>::Board::startWrite( const TimeStamp &begin, const TimeStamp &end )
     {
+      ASSERT((uint64)end > buffer.settings->nrSamples);
+
       if (buffer.sync) {
         // Signal write intent, to let reader know we don't have data older than
         // this.
@@ -148,7 +156,7 @@ namespace LOFAR
 
         // Put the writePtr into the far future.
         // We only use this TimeStamp for comparison so clockSpeed does not matter.
-        writePtr.advanceTo(TimeStamp(0x7FFFFFFFFFFFFFFFLL));
+        writePtr.advanceTo(TimeStamp(0xFFFFFFFFFFFFFFFFULL));
       }
     }
   }
