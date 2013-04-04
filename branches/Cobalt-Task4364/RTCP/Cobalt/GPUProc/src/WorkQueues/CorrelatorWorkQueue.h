@@ -60,7 +60,7 @@ namespace LOFAR
       MultiArraySharedBuffer<float, 2> phaseOffsets;  //!< Remainder of delays
 
       // inputdata with flagged data set to zero
-      MultiArraySharedBuffer<char, 4> inputSamples;
+      MultiArrayHostBuffer<char, 4> inputSamples;
 
       // The input flags
       MultiDimArray<SparseSet<unsigned>,1> inputFlags;
@@ -68,14 +68,14 @@ namespace LOFAR
       // Create the inputData object we need shared host/device memory on the supplied devicequeue
       WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
                          size_t n_samples, size_t bytes_per_complex_sample,
-                         cl::CommandQueue &queue, cl::Buffer &queue_buffer,
-                         cl_mem_flags hostBufferFlags = CL_MEM_WRITE_ONLY, // input therefore assume host write, device read
+                         cl::CommandQueue &queue, DeviceBuffer &inputSamplesBuffer,
+                         cl_mem_flags hostBufferFlags = CL_MEM_WRITE_ONLY,
                          cl_mem_flags deviceBufferFlags = CL_MEM_READ_ONLY)
         :
-        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
-        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
-        phaseOffsets(boost::extents[n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
-        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample], queue, hostBufferFlags, queue_buffer), // TODO: The size of the buffer is NOT validated
+        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations], queue, deviceBufferFlags),
+        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations], queue, deviceBufferFlags),
+        phaseOffsets(boost::extents[n_stations][n_polarizations], queue, deviceBufferFlags),
+        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample], hostBufferFlags, inputSamplesBuffer), // TODO: The size of the buffer is NOT validated
         inputFlags(boost::extents[n_stations])
       {
       }
@@ -139,19 +139,19 @@ namespace LOFAR
     private:
       // Raw buffers, these are mapped with boost multiarrays 
       // in the InputData class
-      cl::Buffer devCorrectedData;
-      cl::Buffer devFilteredData;
+      DeviceBuffer devCorrectedData;
+      DeviceBuffer devFilteredData;
 
     public:
       // All input data collected in a single struct
       WorkQueueInputData inputData;
 
       // Output data object, content received from the gpu or metadata (flags)
-      MultiArraySharedBuffer<std::complex<float>, 4> visibilities;
+      MultiArrayHostBuffer<std::complex<float>, 4> visibilities;
 
     private:
       // Compiled kernels
-      cl::Buffer devFIRweights;
+      DeviceBuffer devFIRweights;
       FIR_FilterKernel firFilterKernel;
       Filter_FFT_Kernel fftKernel;
       MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;

@@ -45,10 +45,10 @@ namespace LOFAR
                                              )
       :
     WorkQueue( context, device, gpuNumber, parset),     
-      devCorrectedData(context,
+      devCorrectedData(queue,
                        CL_MEM_READ_WRITE, 
                        ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
-      devFilteredData(context,
+      devFilteredData(queue,
                       CL_MEM_READ_WRITE,
                       std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
                                ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
@@ -59,8 +59,8 @@ namespace LOFAR
                 ps.nrBytesPerComplexSample(),
                 queue,
                 devCorrectedData),
-      visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], queue, CL_MEM_READ_ONLY, devFilteredData),
-      devFIRweights(context,
+      visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], CL_MEM_READ_ONLY, devFilteredData),
+      devFIRweights(queue,
                     CL_MEM_READ_ONLY,
                     ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
       firFilterKernel(ps,
@@ -327,7 +327,7 @@ namespace LOFAR
         OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
         inputData.inputSamples.hostToDevice(CL_TRUE);
-        counters["input - samples"]->doOperation(inputData.inputSamples.event, 0, 0, inputData.inputSamples.bytesize());
+        counters["input - samples"]->doOperation(inputData.inputSamples.deviceBuffer.event, 0, 0, inputData.inputSamples.bytesize());
 
         timers["GPU - input"]->stop();
       }
@@ -378,7 +378,7 @@ namespace LOFAR
         visibilities.deviceToHost(CL_TRUE);
         // now perform weighting of the data based on the number of valid samples
 
-        counters["output - visibilities"]->doOperation(visibilities.event, 0, visibilities.bytesize(), 0);
+        counters["output - visibilities"]->doOperation(visibilities.deviceBuffer.event, 0, visibilities.bytesize(), 0);
 
         timers["GPU - output"]->stop();
       }
