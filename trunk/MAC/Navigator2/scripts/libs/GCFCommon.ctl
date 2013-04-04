@@ -177,7 +177,8 @@ int getStateNumber(string aState) {
 void showSelfState(string aDP) {
   	// check if the required datapoint for this view are accessible
   	if (dpExists(aDP+".status.state")) {
-          if (dpConnect("updateSelfState",aDP + ".status.state", 
+          if (dpConnect("updateSelfState",aDP + ".status.state",
+                        aDP + ".status.message", 
                         aDP + ".status.state:_online.._invalid")==-1) {
             setValue("selfState.light","backCol","Lofar_invalid");
           }
@@ -247,7 +248,9 @@ updateChildState(string dp1, int state, string dp2, bool invalid) {
 //
 // Added 3-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
-updateSelfState(string dp1, int state, string dp2, bool invalid) {
+updateSelfState(string dp1, int state, 
+                string dp2, string msg,
+                string dp3, bool invalid) {
   	string SymbolCol;
 
   	if (invalid) {
@@ -261,6 +264,9 @@ updateSelfState(string dp1, int state, string dp2, bool invalid) {
       	  SymbolCol = getStateColor(state);
   	}
   	setValue("selfState.light", "backCol", SymbolCol);
+
+   string tooltip = "Last status message: "+msg;
+   setValue("light","toolTipText",tooltip);
 }
 
 bool waitInitProcess(string procName) {

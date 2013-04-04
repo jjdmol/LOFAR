@@ -246,7 +246,9 @@ updateChildState(string dp1, int state, string dp2, bool invalid) {
 //
 // Added 3-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
-updateSelfState(string dp1, int state, string dp2, bool invalid) {
+updateSelfState(string dp1, int state, 
+                string dp2, string msg,
+                string dp3, bool invalid) {
   	string SymbolCol;
 
   	if (invalid) {
@@ -260,7 +262,11 @@ updateSelfState(string dp1, int state, string dp2, bool invalid) {
       	  SymbolCol = getStateColor(state);
   	}
   	setValue("selfState.light", "backCol", SymbolCol);
+
+   string tooltip = "Last status message: "+msg;
+   setValue("light","toolTipText",tooltip);
 }
+
 
 bool waitInitProcess(string procName) {
   //delay while procName != g_initProcess

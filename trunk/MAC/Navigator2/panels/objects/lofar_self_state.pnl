@@ -1,11 +1,12 @@
-V 10
+V 11
 1
 LANG:1 16 Lofar Self State
-PANEL,-1 -1 170 141 N "_3DFace" 0
+PANEL,-1 -1 151 141 N "_3DFace" 0
 "main()
 {  
+  //get the baseDP
   getValue(\"light\",\"toolTipText\",baseDP);
-  LOG_DEBUG(\"lofar_self_state.pnl:main|toolTipText: \"+baseDP);
+
 }" 0
  E E "main()
 {
@@ -16,11 +17,7 @@ PANEL,-1 -1 170 141 N "_3DFace" 0
 E "#uses \"navPanel.ctl\"
 string baseDP=\"\";
 
-
-
-
 void rClick() {
-  getValue(\"light\",\"toolTipText\",baseDP);
   navPanel_statePopup(baseDP);
 }" 0
  2
