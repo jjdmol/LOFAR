@@ -42,6 +42,9 @@ using namespace std;
 SmartPtr< SampleBuffer< SampleType<i16complex> > > buffer;
 SampleBuffer< SampleType<i16complex> >::Board *board;
 
+// Offset to prevent diving into negative timestamps
+#define EPOCH 1000000
+
 /*
  * (Re)initialise the global board variable.
  */
@@ -64,6 +67,8 @@ void initBoard()
   // Create the buffer
   buffer = new SampleBuffer< SampleType<i16complex> >(settings, true);
   board = &buffer->boards[0];
+
+  board->noReadBefore(TimeStamp(EPOCH));
 };
 
 /*
@@ -73,12 +78,12 @@ TEST(OneBlock_InOrder) {
   initBoard();
 
   // if we write first, reader should succeed immediately
-  board->startWrite(TimeStamp(10), TimeStamp(20));
-  board->stopWrite(TimeStamp(20));
+  board->startWrite(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
+  board->stopWrite(TimeStamp(EPOCH + 20));
 
   // reading should fall through now
-  board->startRead(TimeStamp(10), TimeStamp(20));
-  board->stopRead(TimeStamp(20));
+  board->startRead(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
+  board->stopRead(TimeStamp(EPOCH + 20));
 }
 
 /*
@@ -94,21 +99,21 @@ TEST(OneBlock_OutOfOrder) {
 #   pragma omp section
     {
       // Start reading -- should block on writer
-      board->startRead(TimeStamp(10), TimeStamp(20));
+      board->startRead(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
       CHECK_EQUAL(true, writtenBlock);
-      board->stopRead(TimeStamp(20));
+      board->stopRead(TimeStamp(EPOCH + 20));
     }
 
 #   pragma omp section
     {
       // Start writing
-      board->startWrite(TimeStamp(10), TimeStamp(20));
+      board->startWrite(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
 
       // Try to make sure that reader is waiting
       usleep(2000);
 
       writtenBlock = true;
-      board->stopWrite(TimeStamp(20));
+      board->stopWrite(TimeStamp(EPOCH + 20));
     }
   }
 }
@@ -130,27 +135,27 @@ TEST(Overwrite) {
       usleep(2000);
 
       // Start reading -- should block on first block
-      board->startRead(TimeStamp(10), TimeStamp(20));
+      board->startRead(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
       CHECK_EQUAL(1U, writtenBlock);
-      board->stopRead(TimeStamp(20));
+      board->stopRead(TimeStamp(EPOCH + 20));
 
       // Now the old data is released, and the new will be written
-      board->startRead(TimeStamp(10 + buffer->nrSamples), TimeStamp(20 + buffer->nrSamples));
+      board->startRead(TimeStamp(EPOCH + 10 + buffer->nrSamples), TimeStamp(EPOCH + 20 + buffer->nrSamples));
       CHECK_EQUAL(2U, writtenBlock);
-      board->stopRead(TimeStamp(20 + buffer->nrSamples));
+      board->stopRead(TimeStamp(EPOCH + 20 + buffer->nrSamples));
     }
 
 #   pragma omp section
     {
       // Start writing
-      board->startWrite(TimeStamp(10), TimeStamp(20));
+      board->startWrite(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
       writtenBlock = 1;
-      board->stopWrite(TimeStamp(20));
+      board->stopWrite(TimeStamp(EPOCH + 20));
 
       // Start overwriting
-      board->startWrite(TimeStamp(10 + buffer->nrSamples), TimeStamp(20 + buffer->nrSamples));
+      board->startWrite(TimeStamp(EPOCH + 10 + buffer->nrSamples), TimeStamp(EPOCH + 20 + buffer->nrSamples));
       writtenBlock = 2;
-      board->stopWrite(TimeStamp(20 + buffer->nrSamples));
+      board->stopWrite(TimeStamp(EPOCH + 20 + buffer->nrSamples));
     }
   }
 }
@@ -162,12 +167,12 @@ TEST(SkipBegin) {
   initBoard();
 
   // write 20-30
-  board->startWrite(TimeStamp(20), TimeStamp(30));
-  board->stopWrite(TimeStamp(30));
+  board->startWrite(TimeStamp(EPOCH + 20), TimeStamp(EPOCH + 30));
+  board->stopWrite(TimeStamp(EPOCH + 30));
 
   // reading 10-20 should be possible now
-  board->startRead(TimeStamp(10), TimeStamp(20));
-  board->stopRead(TimeStamp(20));
+  board->startRead(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
+  board->stopRead(TimeStamp(EPOCH + 20));
 }
 
 /*
@@ -177,16 +182,16 @@ TEST(SkipMiddle) {
   initBoard();
 
   // write begin part
-  board->startWrite(TimeStamp(10), TimeStamp(20));
-  board->stopWrite(TimeStamp(20));
+  board->startWrite(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
+  board->stopWrite(TimeStamp(EPOCH + 20));
 
   // write end part
-  board->startWrite(TimeStamp(30), TimeStamp(40));
-  board->stopWrite(TimeStamp(40));
+  board->startWrite(TimeStamp(EPOCH + 30), TimeStamp(EPOCH + 40));
+  board->stopWrite(TimeStamp(EPOCH + 40));
 
   // reading middle should be possible now
-  board->startRead(TimeStamp(20), TimeStamp(30));
-  board->stopRead(TimeStamp(30));
+  board->startRead(TimeStamp(EPOCH + 20), TimeStamp(EPOCH + 30));
+  board->stopRead(TimeStamp(EPOCH + 30));
 }
 
 
@@ -197,15 +202,15 @@ TEST(noMoreReading) {
   initBoard();
 
   // write something
-  board->startWrite(TimeStamp(10), TimeStamp(20));
-  board->stopWrite(TimeStamp(20));
+  board->startWrite(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
+  board->stopWrite(TimeStamp(EPOCH + 20));
 
   // signal end of reading
   board->noMoreReading();
 
   // overwrite the same data, which is allowed if there are no readers
-  board->startWrite(TimeStamp(10 + buffer->nrSamples), TimeStamp(20 + buffer->nrSamples));
-  board->stopWrite(TimeStamp(20 + buffer->nrSamples));
+  board->startWrite(TimeStamp(EPOCH + 10 + buffer->nrSamples), TimeStamp(EPOCH + 20 + buffer->nrSamples));
+  board->stopWrite(TimeStamp(EPOCH + 20 + buffer->nrSamples));
 }
 
 
@@ -218,8 +223,8 @@ TEST(noMoreWriting) {
   board->noMoreWriting();
 
   // reading should fall through now
-  board->startRead(TimeStamp(10), TimeStamp(20));
-  board->stopRead(TimeStamp(20));
+  board->startRead(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
+  board->stopRead(TimeStamp(EPOCH + 20));
 }
 
 int main()

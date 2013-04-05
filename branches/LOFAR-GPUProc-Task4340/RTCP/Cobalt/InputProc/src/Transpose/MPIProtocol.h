@@ -23,6 +23,8 @@
 #define LOFAR_INPUT_PROC_MPI_PROTOCOL_H
 
 #include <Common/LofarTypes.h>
+#include <Stream/FixedBufferStream.h>
+#include <CoInterface/SubbandMetaData.h>
 #include <InputProc/Buffer/BufferSettings.h>
 
 namespace LOFAR
@@ -30,7 +32,6 @@ namespace LOFAR
   namespace Cobalt
   {
     namespace MPIProtocol {
-
       // Header which prefixes each block. Contains identification information
       // for verification purposes, as well as the sizes of the data that
       // follow.
@@ -58,22 +59,29 @@ namespace LOFAR
         //          1. a block of `wrapOffsets[x]' samples
         //          2. a block of `(to - from) - wrapOffsets[x]' samples
         size_t wrapOffsets[1024]; // [beamlet]
+      };
 
-        // Size of the marshalled flags
-        size_t flagsSize;
-
+      struct MetaData {
         // The metaData blob
-        size_t metaDataBlobSize;
-        char metaDataBlob[4096];
+        char blob[4096];
 
-        std::vector<char> getMetaDataBlob() const {
-          ASSERT( metaDataBlobSize <= sizeof metaDataBlob );
+        struct MetaData &operator=(const SubbandMetaData &metaData) {
+          FixedBufferStream str(blob, sizeof blob);
+          metaData.write(&str);
+          return *this;
+        }
 
-          return std::vector<char>(&metaDataBlob[0], &metaDataBlob[metaDataBlobSize]);
+        operator SubbandMetaData() {
+          SubbandMetaData metaData;
+
+          FixedBufferStream str(blob, sizeof blob);
+          metaData.read(&str);
+
+          return metaData;
         }
       };
 
-      enum tag_types { CONTROL = 0, BEAMLET = 1, FLAGS = 2 };
+      enum tag_types { CONTROL = 0, BEAMLET = 1, METADATA = 2 };
 
       // MPI tag which identifies each block.
       union tag_t {

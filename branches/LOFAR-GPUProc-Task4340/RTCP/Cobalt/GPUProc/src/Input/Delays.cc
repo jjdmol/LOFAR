@@ -30,8 +30,6 @@
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/BeamCoordinates.h>
 
-#include <GPUProc/Scheduling.h>
-
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCDirection.h>
 #include <casa/Exceptions/Error.h>
@@ -132,15 +130,7 @@ namespace LOFAR
 
     void Delays::mainLoop()
     {
-#if defined HAVE_BGP_ION
-      doNotRunOnCore0();
-#endif
-
       LOG_DEBUG("Delay compensation thread running");
-
-#if defined HAVE_BGP_ION
-      runOnCore0();
-#endif
 
       init();
 

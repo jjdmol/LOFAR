@@ -1,5 +1,5 @@
 //# TBB_Writer_main.cc: LOFAR Transient Buffer Boards (TBB) Data Writer
-//# Copyright (C) 2012  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands.
 //#
 //# This program is free software: you can redistribute it and/or modify
@@ -44,7 +44,11 @@
 #include <ApplCommon/AntField.h>
 #include <CoInterface/Exceptions.h>
 
-#include <dal/lofar/StationNames.h>
+#ifdef HAVE_DAL
+#  include <dal/lofar/StationNames.h>
+#else // some builds only need BF MS output, so do not block the build without DAL
+#  warning The TBB writer may be built without DAL, but will not write any output
+#endif
 
 #include "TBB_Writer.h"
 #include "IOPriority.h"
@@ -252,12 +256,16 @@ static LOFAR::Cobalt::StationMetaDataMap getExternalStationMetaData(const LOFAR:
       stMetaData.normalVector = antField.normVector(fieldIdx).second;
       stMetaData.rotationMatrix = antField.rotationMatrix(fieldIdx).second;
 
+#ifdef HAVE_DAL
       stMdMap.insert(make_pair(dal::stationNameToID(stName), stMetaData));
+#endif
     }
   } catch (LOFAR::AssertError& exc) {
     // Throwing AssertError already sends a message to the logger.
+#ifdef HAVE_DAL
   } catch (dal::DALValueError& exc) {
     throw LOFAR::Cobalt::StorageException(exc.what());
+#endif
   }
 
   return stMdMap;
@@ -271,8 +279,13 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::Cobalt
   vector<int> thrExitStatus(2 * inputStreamNames.size(), 0);
   int err = 1;
   try {
+#ifdef HAVE_DAL
     // When this obj goes out of scope, worker threads are cancelled and joined with.
     LOFAR::Cobalt::TBB_Writer writer(inputStreamNames, parset, stMdMap, args.outputDir, logPrefix, thrExitStatus);
+#else
+    // Allow building without DAL (some users don't need TBB_Writer), but bail if run.
+    throw LOFAR::APSException("TBB_Writer needs but was not built with DAL");
+#endif
 
     /*
      * We don't know how much data comes in, so cancel workers when all are idle for a while (timeoutVal).

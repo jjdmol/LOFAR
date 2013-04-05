@@ -54,9 +54,9 @@ void test( struct BufferSettings &settings, const std::string &filename )
 
   // There should be 32 samples in the buffer (16 per packet, 2 packets per
   // file).
-  int64 now = (int64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
-  SparseSet<int64> available = buffer.boards[0].available.sparseSet(0, now);
-  ASSERT((size_t)available.count() == 32);
+  BufferSettings::range_type now = TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
+  BufferSettings::flags_type available = buffer.boards[0].available.sparseSet(0, now);
+  ASSERT(available.count() == 32);
 }
 
 

@@ -68,14 +68,14 @@ namespace LOFAR {
     }
 
 
-    MPI_Request MPIReceiveStations::receiveFlags( size_t station, size_t beamlet, std::vector<char> &buffer )
+    MPI_Request MPIReceiveStations::receiveMetaData( size_t station, size_t beamlet, struct MetaData &metaData )
     {
       tag_t tag;
-      tag.bits.type    = FLAGS;
+      tag.bits.type    = METADATA;
       tag.bits.station = station;
       tag.bits.beamlet = beamlet;
 
-      return Guarded_MPI_Irecv(&buffer[0], buffer.size(), stationRanks[station], tag.value);
+      return Guarded_MPI_Irecv(&metaData, sizeof metaData, stationRanks[station], tag.value);
     }
 
 
@@ -103,7 +103,7 @@ namespace LOFAR {
       }
 
       // Process stations in the order in which we receive the headers
-      Matrix< std::vector<char> > flagsBlobs(stationRanks.size(), beamlets.size()); // [station][beamlet][data]
+      Matrix<struct MetaData> metaData(stationRanks.size(), beamlets.size()); // [station][beamlet]
 
       for (size_t i = 0; i < stationRanks.size(); ++i) {
         /*
@@ -152,8 +152,7 @@ namespace LOFAR {
            * RECEIVE FLAGS (ASYNC)
            */
 
-          flagsBlobs[stat][beamletIdx].resize(header.flagsSize);
-          requests.push_back(receiveFlags(stat, beamlet, flagsBlobs[stat][beamletIdx]));
+          requests.push_back(receiveMetaData(stat, beamlet, metaData[stat][beamletIdx]));
         }
       }
 
@@ -168,17 +167,10 @@ namespace LOFAR {
        */
 
       for (size_t stat = 0; stat < stationRanks.size(); ++stat) {
-        const Header &header = headers[stat];
-
         // Convert the flags array
         for (size_t beamletIdx = 0; beamletIdx < beamlets.size(); ++beamletIdx) {
-          const std::vector<char> &flagsBlob = flagsBlobs[stat][beamletIdx];
-
-          blocks[stat].beamlets[beamletIdx].flags.unmarshall(&flagsBlob[0]);
+          blocks[stat].beamlets[beamletIdx].metaData = metaData[stat][beamletIdx];
         }
-
-        // Copy the metaData blob
-        blocks[stat].metaDataBlob = header.getMetaDataBlob();
       }
     }
 

@@ -105,6 +105,9 @@
 /* Define if BOOST component date_time is installed */
 #cmakedefine HAVE_BOOST_DATE_TIME 1
 
+/* Define if CASACORE is installed with the requested components */
+#cmakedefine HAVE_CASACORE 1
+
 /* Define if DAL is installed */
 #cmakedefine HAVE_DAL
 
