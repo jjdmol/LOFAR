@@ -51,7 +51,7 @@ namespace LOFAR
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void        doWorkQueue(CorrelatorWorkQueue &workQueue);
       // Read for a subband the data from the station steams, and put in shared memory
-      void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, unsigned subband);
+      void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, size_t block, unsigned subband);
 
     private:
       FilterBank filterBank;

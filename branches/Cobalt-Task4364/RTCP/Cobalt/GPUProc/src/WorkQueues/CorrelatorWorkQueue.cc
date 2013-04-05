@@ -344,12 +344,12 @@ namespace LOFAR
           output.setNrValidSamples(bl, ch, nIntegrationSteps);
     }
 
-    void CorrelatorWorkQueue::doSubband(unsigned subband, CorrelatedData &output)
+    void CorrelatorWorkQueue::doSubband(WorkQueueInputData &input, CorrelatedData &output)
     {
       timers["GPU - total"]->start();
 
-      // Get new host input data
-      SmartPtr<WorkQueueInputData> inputData(inputPool.filled.remove());
+      size_t block     = input.block;
+      unsigned subband = input.subband;
 
       {
         timers["GPU - input"]->start();
@@ -357,8 +357,8 @@ namespace LOFAR
 #if defined USE_B7015
         OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
-        inputData->inputSamples.hostToDevice(CL_TRUE);
-        counters["input - samples"]->doOperation(inputData->inputSamples.deviceBuffer.event, 0, 0, inputData->inputSamples.bytesize());
+        input.inputSamples.hostToDevice(CL_TRUE);
+        counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
 
         timers["GPU - input"]->stop();
       }
@@ -368,9 +368,9 @@ namespace LOFAR
       // Moved from doWork() The delay data should be available before the kernels start.
       // Queue processed ordered. This could main that the transfer is not nicely overlapped
 
-      inputData->delaysAtBegin.hostToDevice(CL_FALSE);
-      inputData->delaysAfterEnd.hostToDevice(CL_FALSE);
-      inputData->phaseOffsets.hostToDevice(CL_FALSE);
+      input.delaysAtBegin.hostToDevice(CL_FALSE);
+      input.delaysAfterEnd.hostToDevice(CL_FALSE);
+      input.phaseOffsets.hostToDevice(CL_FALSE);
 
       if (ps.nrChannelsPerSubband() > 1) {
         firFilterKernel.enqueue(queue, *counters["compute - FIR"]);
@@ -391,7 +391,7 @@ namespace LOFAR
       // background.
 
       // Propagate the flags.
-      flagFunctions::propagateFlagsToOutput(ps, inputData->inputFlags, output);
+      flagFunctions::propagateFlagsToOutput(ps, input.inputFlags, output);
 
       // Wait for the GPU to finish.
       timers["GPU - wait"]->start();
@@ -399,9 +399,6 @@ namespace LOFAR
       timers["GPU - wait"]->stop();
 
       timers["GPU - compute"]->stop();
-
-      // Finished with host input data
-      inputPool.free.append(inputData);
 
       {
         timers["GPU - output"]->start();

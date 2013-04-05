@@ -91,6 +91,12 @@ namespace LOFAR
         }
       };
 
+      // Relevant block
+      size_t block;
+
+      // Relevant subband
+      unsigned subband;
+
       MultiArrayHostBuffer<float, 3> delaysAtBegin; //!< Whole sample delays at the start of the workitem      
       MultiArrayHostBuffer<float, 3> delaysAfterEnd;//!< Whole sample delays at the end of the workitem      
       MultiArrayHostBuffer<float, 2> phaseOffsets;  //!< Remainder of delays
@@ -169,7 +175,7 @@ namespace LOFAR
                           FilterBank &filterBank);
 
       // Correlate the data found in the input data buffer
-      void doSubband(unsigned subband, CorrelatedData &output);
+      void doSubband(WorkQueueInputData &input, CorrelatedData &output);
       
     private:
       // Raw buffers, these are mapped with boost multiarrays 

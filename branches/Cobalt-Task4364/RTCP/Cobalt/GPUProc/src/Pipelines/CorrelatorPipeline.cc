@@ -75,6 +75,11 @@ namespace LOFAR
                                       filterBank);   // The filter set to use. Const
       }
 
+      double startTime = ps.startTime();
+      double stopTime = ps.stopTime();
+      double blockTime = ps.CNintegrationTime();
+
+      size_t nrBlocks = floor((stopTime - startTime) / blockTime);
 
       //sections = program segments defined by the following omp section directive
       //           are distributed for parallel execution among available threads
@@ -86,26 +91,28 @@ namespace LOFAR
 #       pragma omp section
         Pipeline::doWork();
 
-        // Forward the input
+        /*
+         * CIRCULAR BUFFER -> STATION STREAMS
+         *
+         * Handles one block per station.
+         */
 #       pragma omp section
         {
-          double startTime = ps.startTime(), stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
-
           size_t nrStations = ps.nrStations();
           // The data from the input buffer to the input stream is run in a seperate thread
 #         pragma omp parallel for num_threads(nrStations)
-          for (size_t stat = 0; stat < nrStations; stat++)
-          {
-            double currentTime;
-            for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block++)
-            {
-              // TODO: Connect the input buffer to the input stream, is this correct description??
+          for (size_t stat = 0; stat < nrStations; stat++) {
+            for (size_t block = 0; block < nrBlocks; block++) {
               sendNextBlock(stat);
             }
           }
         }
 
-        // Perform the calculations
+        /*
+         * STATION STREAMS -> WORKQUEUE INPUTPOOL
+         *
+         * Collects one subband of all stations.
+         */
 #       pragma omp section
         {
           // Start a set of workqueue, the number depending on the number of GPU's: 2 for each.
@@ -114,11 +121,43 @@ namespace LOFAR
           {
             CorrelatorWorkQueue &queue = *workQueues[omp_get_thread_num() % workQueues.size()];
 
+            for (size_t block = 0; block < nrBlocks; block++) {
+              // process each subband in a seperate omp tread
+              // This is the main loop.
+              // Get data from an input, send to the gpu, process, assign to the output.
+              // schedule(dynamic) = the iterations requiring varying, or even unpredictable, amounts of work.
+              // nowait = Use this clause to avoid the implied barrier at the end of the for directive.
+              //          Threads do not synchronize at the end of the parallel loop.
+              // ordered =  Specifies that the iterations of the loop must be executed as they would be in a serial program
+#             pragma omp for schedule(dynamic), nowait, ordered  // no parallel: this no new threads
+              for (unsigned subband = 0; subband < ps.nrSubbands(); subband++) {
+                receiveSubbandSamples(queue, block, subband);
+              }
+            }
+
+            // Signal end of input
+            queue.inputPool.filled.append(NULL);
+
+#           pragma omp barrier
+          }
+        }
+
+        /*
+         * WORKQUEUE INPUTPOOL -> WORKQUEUE OUTPUTPOOL
+         *
+         * Perform calculations, one thread per workQueue.
+         */
+#       pragma omp section
+        {
+#         pragma omp parallel for num_threads(workQueues.size())
+          for (size_t i = 0; i < workQueues.size(); ++i) {
+            CorrelatorWorkQueue &queue = *workQueues[i];
+
             // run the queue
             doWorkQueue(queue);
           }
 
-          // Signal end of data
+          // Signal end of output
           noMoreOutput();
         }
       }
@@ -134,9 +173,18 @@ namespace LOFAR
 
 
     void CorrelatorPipeline::receiveSubbandSamples(
-      CorrelatorWorkQueue &workQueue, unsigned subband)
+      CorrelatorWorkQueue &workQueue, size_t block, unsigned subband)
     {
+      // Fetch the next input object to fill
       SmartPtr<WorkQueueInputData> inputData(workQueue.inputPool.free.remove());
+
+      inputData->block   = block;
+      inputData->subband = subband;
+
+      // Wait for previous data to be read
+      inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
+
+      workQueue.timers["CPU - input"]->start();
 
       // Read the samples from the input stream in parallel
 #     pragma omp parallel for
@@ -149,6 +197,12 @@ namespace LOFAR
         inputData->read(inputStream, station, subband, ps.subbandToSAPmapping()[subband]);
       }
 
+      workQueue.timers["CPU - input"]->stop();
+
+      // Advance the block index
+      inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
+
+      // Register this block as workQueue input
       workQueue.inputPool.filled.append(inputData);
     }
 
@@ -156,25 +210,38 @@ namespace LOFAR
     //This whole block should be parallel: this allows the thread to pick up a subband from the next block
     void CorrelatorPipeline::doWorkQueue(CorrelatorWorkQueue &workQueue) //todo: name is not correct
     {
-      // get details regarding the observation from the parset.
-      double currentTime;                         // set in the block processing for loop
-      double startTime = ps.startTime();          // start of the observation
-      double stopTime = ps.stopTime();            // end of the observation
-      double blockTime = ps.CNintegrationTime();  // Total integration time: How big a timeslot should be integrated
-
-      // wait until all other threads in this section reach the same point:
-      // This is the start of the work. We need a barier because not all WorkQueue objects might be created at once,
-      // each is  created in a seperate (OMP) Tread.
-#     pragma omp barrier
-      double executionStartTime = omp_get_wtime();
+#if 0
       double lastTime = omp_get_wtime();
+#endif
 
-      workQueue.timers["CPU - total"]->start();
+      SmartPtr<WorkQueueInputData> input;
 
-      // loop all available blocks. use the blocks to determine if we are within the valid observation times
-      // This loop is not parallel
-      for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block++)
-      {
+      while ((input = workQueue.inputPool.filled.remove()) != NULL) {
+        workQueue.timers["CPU - total"]->start();
+
+        size_t block     = input->block;
+        unsigned subband = input->subband;
+
+        // Create an data object to Storage around our visibilities
+        SmartPtr<CorrelatedData> output = new CorrelatedData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 1);
+
+        // Perform calculations
+        workQueue.timers["CPU - compute"]->start();
+        workQueue.doSubband(*input, *output);
+        workQueue.timers["CPU - compute"]->stop();
+
+        // Give back input data for a refill
+        workQueue.inputPool.free.append(input);
+
+        // Hand off the block to Storage
+        workQueue.timers["CPU - output"]->start();
+        writeOutput(block, subband, output.release());
+        workQueue.timers["CPU - output"]->stop();
+
+        workQueue.timers["CPU - total"]->stop();
+      }
+
+#if 0
 #       pragma omp single nowait    // Only a single thread should perform the cout
         LOG_INFO_STR("block = " << block
                   << ", time = " << to_simple_string(from_ustime_t(currentTime))  //current time
@@ -182,54 +249,7 @@ namespace LOFAR
 
         // Save the current time: This will be used to display the execution time for this block
         lastTime = omp_get_wtime();
-
-        // process each subband in a seperate omp tread
-        // This is the main loop.
-        // Get data from an input, send to the gpu, process, assign to the output.
-        // schedule(dynamic) = the iterations requiring varying, or even unpredictable, amounts of work.
-        // nowait = Use this clause to avoid the implied barrier at the end of the for directive.
-        //          Threads do not synchronize at the end of the parallel loop.
-        // ordered =  Specifies that the iterations of the loop must be executed as they would be in a serial program
-#       pragma omp for schedule(dynamic), nowait, ordered  // no parallel: this no new threads
-        for (unsigned subband = 0; subband < ps.nrSubbands(); subband++)
-        {
-          {
-            workQueue.timers["CPU - input"]->start();
-            // Each input block is sent in order. Therefore wait for the correct block
-            inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-            receiveSubbandSamples(workQueue, subband);
-            // Advance the block index
-            inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
-            workQueue.timers["CPU - input"]->stop();
-          }
-
-          {
-            // Create an data object to Storage around our visibilities
-            SmartPtr<CorrelatedData> output = new CorrelatedData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 1);
-
-            // Perform calculations
-            workQueue.timers["CPU - compute"]->start();
-            workQueue.doSubband(subband, *output);
-            workQueue.timers["CPU - compute"]->stop();
-
-            // Hand off the block to Storage
-            workQueue.timers["CPU - output"]->start();
-            writeOutput(block, subband, output.release());
-            workQueue.timers["CPU - output"]->stop();
-          }
-        }  // end pragma omp for
-      }
-
-      workQueue.timers["CPU - total"]->stop();
-
-      //The omp for loop was nowait: We need a barier to assure that
-#     pragma omp barrier
-
-      //master = a section of code that must be run only by the master thread.
-#     pragma omp master
-
-      if (!profiling)
-        LOG_INFO_STR("run time = " << omp_get_wtime() - executionStartTime);
+#endif
     }
   }
 }
