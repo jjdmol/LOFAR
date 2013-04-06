@@ -34,33 +34,20 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    // This exception class can be used to translate a CUDA error into a
-    // %LOFAR exception.
-    class CUDAException : public Exception
-    {
-    public:
-      CUDAException(const std::string &text, cudaError_t error,
-                    const std::string &file = "", int line = 0,
-                    const std::string &func = "", Backtrace *bt = 0);
-			
-      virtual ~CUDAException() throw();
-      virtual const std::string &type() const;
-    };
+    // Exception class to translate a CUDA error into a %LOFAR exception.
+    EXCEPTION_CLASS(CUDAException, Exception);
 
   } // namespace Cobalt
 
 } // namespace LOFAR
 
-// A handy macro that calls an arbitrary CUDA runtime function and throws a
-// CUDAException if the call fails.
-#define CUDA_CALL(...)                                                  \
+// Macro to call a CUDA runtime function and throw a CUDAException if it fails.
+#define CUDA_CALL(func)                                                 \
   do {                                                                  \
-    __VA_ARGS__;                                                        \
-    cudaError_t err = cudaGetLastError();                               \
-    if (err != cudaSuccess) {                                           \
-      throw LOFAR::Cobalt::CUDAException(#__VA_ARGS__, err, THROW_ARGS); \
+    if (func != cudaSuccess) {                                          \
+      THROW (LOFAR::Cobalt::CUDAException,                              \
+             #func << ": " << cudaGetErrorString(func));                \
     }                                                                   \
   } while(0)
-
 
 #endif
