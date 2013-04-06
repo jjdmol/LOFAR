@@ -44,9 +44,10 @@ namespace LOFAR
 // Macro to call a CUDA runtime function and throw a CUDAException if it fails.
 #define CUDA_CALL(func)                                                 \
   do {                                                                  \
-    if (func != cudaSuccess) {                                          \
+    cudaError_t err = func;                                             \
+    if (err != cudaSuccess) {                                           \
       THROW (LOFAR::Cobalt::CUDAException,                              \
-             #func << ": " << cudaGetErrorString(func));                \
+             #func << ": " << cudaGetErrorString(err));                 \
     }                                                                   \
   } while(0)
 
