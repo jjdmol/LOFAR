@@ -76,7 +76,6 @@ namespace LOFAR
                       std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
                       // and the correlatorKernel.
                                ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
-      visibilities(boost::extents[ps.nrBaselines()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][NR_POLARIZATIONS], CL_MEM_READ_ONLY, devFilteredData),
       devFIRweights(queue,
                     CL_MEM_READ_ONLY,
                     ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
@@ -105,18 +104,18 @@ namespace LOFAR
       correlateTriangleKernel(ps,
                               queue,
                               programs.correlatorProgram,
-                              visibilities,
+                              devFilteredData,
                               devInput.inputSamples),
       correlateRectangleKernel(ps,
                               queue,
                               programs.correlatorProgram, 
-                              visibilities, 
+                              devFilteredData, 
                               devInput.inputSamples)
 #else
       correlatorKernel(ps,
                        queue, 
                        programs.correlatorProgram, 
-                       visibilities, 
+                       devFilteredData, 
                        devInput.inputSamples)
 #endif
     {
@@ -129,6 +128,16 @@ namespace LOFAR
                 (ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband(),
                 ps.nrBytesPerComplexSample(),
                 devInput));
+      }
+
+      // put enough objects in the outputPool to operate
+      for(size_t i = 0; i < 2; ++i) {
+        outputPool.free.append(new CorrelatedDataHostBuffer(
+                ps.nrStations(),
+                ps.nrChannelsPerSubband(),
+                ps.integrationSteps(),
+                devFilteredData,
+                *this));
       }
 
       // create all the counters
@@ -331,20 +340,8 @@ namespace LOFAR
       }
     }
 
-    void computeFlags(const Parset& parset,
-      WorkQueueInputData& inputData,
-      CorrelatedData &output)
-    {
-      size_t nChannels = parset.nrChannelsPerSubband();
-      size_t nIntegrationSteps = parset.integrationSteps();
-      // TODO: base weights on flags
-      // Just set the weights to the total number of samples     
-      for (size_t bl = 0; bl < output.itsNrBaselines; ++bl)
-        for (size_t ch = 0; ch < nChannels; ++ch)
-          output.setNrValidSamples(bl, ch, nIntegrationSteps);
-    }
 
-    void CorrelatorWorkQueue::doSubband(WorkQueueInputData &input, CorrelatedData &output)
+    void CorrelatorWorkQueue::doSubband(WorkQueueInputData &input, CorrelatedDataHostBuffer &output)
     {
       timers["GPU - total"]->start();
 
@@ -368,6 +365,7 @@ namespace LOFAR
       // Moved from doWork() The delay data should be available before the kernels start.
       // Queue processed ordered. This could main that the transfer is not nicely overlapped
 
+      // TODO: Only transfer if different SAP or block
       input.delaysAtBegin.hostToDevice(CL_FALSE);
       input.delaysAfterEnd.hostToDevice(CL_FALSE);
       input.phaseOffsets.hostToDevice(CL_FALSE);
@@ -406,10 +404,10 @@ namespace LOFAR
 #if defined USE_B7015
         OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
 #endif
-        visibilities.deviceToHost(CL_TRUE);
+        output.deviceToHost(CL_TRUE);
         // now perform weighting of the data based on the number of valid samples
 
-        counters["output - visibilities"]->doOperation(visibilities.deviceBuffer.event, 0, visibilities.bytesize(), 0);
+        counters["output - visibilities"]->doOperation(output.deviceBuffer.event, 0, output.bytesize(), 0);
 
         timers["GPU - output"]->stop();
       }

@@ -27,7 +27,10 @@
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
 #include <Stream/Stream.h>
+#include <Stream/FileStream.h>
+#include <Stream/NullStream.h>
 #include <CoInterface/CorrelatedData.h>
+#include <CoInterface/Stream.h>
 
 #include <GPUProc/OpenMP_Support.h>
 #include <GPUProc/createProgram.h>
@@ -43,6 +46,7 @@ namespace LOFAR
     CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
       :
       Pipeline(ps),
+      subbandPool(ps.nrSubbands()),
       filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER)
     {
       filterBank.negateWeights();
@@ -75,6 +79,12 @@ namespace LOFAR
                                       filterBank);   // The filter set to use. Const
       }
 
+      for (unsigned sb = 0; sb < ps.nrSubbands(); sb++) {
+        // Allow 10 blocks to be in the best-effort queue.
+        // TODO: make this dynamic based on memory or time
+        subbandPool[sb].bequeue = new BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> >(10, ps.realTime());
+      }
+
       double startTime = ps.startTime();
       double stopTime = ps.stopTime();
       double blockTime = ps.CNintegrationTime();
@@ -87,10 +97,6 @@ namespace LOFAR
       //  The two sections in this function are done in parallel with a seperate set of threads.
 #     pragma omp parallel sections
       {
-        // Allow the super class to do its work
-#       pragma omp section
-        Pipeline::doWork();
-
         /*
          * CIRCULAR BUFFER -> STATION STREAMS
          *
@@ -115,9 +121,8 @@ namespace LOFAR
          */
 #       pragma omp section
         {
-          // Start a set of workqueue, the number depending on the number of GPU's: 2 for each.
-          // Each WorkQueue gets its own thread.
-#         pragma omp parallel num_threads(nrWorkQueues)
+          // Let the queues pick up work as soon as they're ready.
+#         pragma omp parallel num_threads(workQueues.size())
           {
             CorrelatorWorkQueue &queue = *workQueues[omp_get_thread_num() % workQueues.size()];
 
@@ -137,13 +142,11 @@ namespace LOFAR
 
             // Signal end of input
             queue.inputPool.filled.append(NULL);
-
-#           pragma omp barrier
           }
         }
 
         /*
-         * WORKQUEUE INPUTPOOL -> WORKQUEUE OUTPUTPOOL
+         * WORKQUEUE INPUTPOOL -> SUBBANDPOOL
          *
          * Perform calculations, one thread per workQueue.
          */
@@ -154,11 +157,25 @@ namespace LOFAR
             CorrelatorWorkQueue &queue = *workQueues[i];
 
             // run the queue
-            doWorkQueue(queue);
+            processSubbands(queue);
           }
 
           // Signal end of output
-          noMoreOutput();
+          for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+            subbandPool[subband].bequeue->noMore();
+          }
+        }
+
+        /*
+         * SUBBANDPOOL -> STORAGE STREAMS
+         */
+#       pragma omp section
+        {
+#         pragma omp parallel for num_threads(ps.nrSubbands())
+          for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+            // write subband to Storage
+            writeSubband(subband);
+          }
         }
       }
 
@@ -204,11 +221,11 @@ namespace LOFAR
 
       // Register this block as workQueue input
       workQueue.inputPool.filled.append(inputData);
+      ASSERT(!inputData);
     }
 
 
-    //This whole block should be parallel: this allows the thread to pick up a subband from the next block
-    void CorrelatorPipeline::doWorkQueue(CorrelatorWorkQueue &workQueue) //todo: name is not correct
+    void CorrelatorPipeline::processSubbands(CorrelatorWorkQueue &workQueue)
     {
 #if 0
       double lastTime = omp_get_wtime();
@@ -222,21 +239,36 @@ namespace LOFAR
         size_t block     = input->block;
         unsigned subband = input->subband;
 
-        // Create an data object to Storage around our visibilities
-        SmartPtr<CorrelatedData> output = new CorrelatedData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 1);
+        // Also fetch an output object to store results
+        SmartPtr<CorrelatedDataHostBuffer> output = workQueue.outputPool.free.remove();
+
+        ASSERT(output != NULL); // Only we signal end-of-data, so we should never receive it
 
         // Perform calculations
         workQueue.timers["CPU - compute"]->start();
         workQueue.doSubband(*input, *output);
         workQueue.timers["CPU - compute"]->stop();
 
+        // Hand off output, force in-order as Storage expects it that way
+        subbandPool[subband].sync.waitFor(block);
+
+        // We do the ordering, so we set the sequence numbers
+        output->setSequenceNumber(block);
+
+        if (!subbandPool[subband].bequeue->append(output)) {
+          LOG_WARN_STR("Dropping subband " << subband << " block " << block);
+
+          // Give back to queue
+          workQueue.outputPool.filled.append(output);
+        }
+
+        ASSERT(!output);
+
+        subbandPool[subband].sync.advanceTo(block + 1);
+
         // Give back input data for a refill
         workQueue.inputPool.free.append(input);
-
-        // Hand off the block to Storage
-        workQueue.timers["CPU - output"]->start();
-        writeOutput(block, subband, output.release());
-        workQueue.timers["CPU - output"]->stop();
+        ASSERT(!input);
 
         workQueue.timers["CPU - total"]->stop();
       }
@@ -251,6 +283,50 @@ namespace LOFAR
         lastTime = omp_get_wtime();
 #endif
     }
+
+
+    void CorrelatorPipeline::writeSubband( unsigned subband )
+    {
+      SmartPtr<Stream> outputStream;
+
+      try {
+        // Connect to output stream
+        if (ps.getHostName(CORRELATED_DATA, subband) == "") {
+          // an empty host name means 'write to disk directly', to
+          // make debugging easier for now
+          outputStream = new FileStream(ps.getFileName(CORRELATED_DATA, subband), 0666);
+        } else {
+          // connect to the Storage_main process for this output
+          const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, subband);
+
+          outputStream = createStream(desc, false, 0);
+        }
+      } catch(Exception &ex) {
+        LOG_ERROR_STR("Dropping rest of subband " << subband << ": " << ex);
+
+        outputStream = new NullStream;
+      }
+
+      SmartPtr<CorrelatedDataHostBuffer> output;
+
+      // Process pool elements
+      while ((output = subbandPool[subband].bequeue->remove()) != NULL) {
+        try {
+          output->write(outputStream.get(), true);
+        } catch(Exception &ex) {
+          LOG_ERROR_STR("Dropping rest of subband " << subband << ": " << ex);
+
+          outputStream = new NullStream;
+        }
+
+        // Hand the object back to the workQueue it originally came from
+        CorrelatorWorkQueue &queue = output->queue;
+        queue.outputPool.free.append(output);
+
+        ASSERT(!output);
+      }
+    }
+
   }
 }
 

@@ -24,16 +24,16 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/opencl-incl.h>
+#include <GPUProc/BestEffortQueue.h>
 #include <GPUProc/Pipeline.h>
 #include <GPUProc/FilterBank.h>
+#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 #include "CorrelatorPipelinePrograms.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class CorrelatorWorkQueue;
-
     // Correlator pipeline, connect input, GPUWorkQueues and output in a parallel (OMP).
     // Connect all parts of the pipeline together: set up connections with the input stream
     // each in a seperate thread. Start 2 WorkQueues for each GPU in the system.
@@ -48,12 +48,27 @@ namespace LOFAR
 
       // per thread/station start up the input create 2 WorkQueue for each available GPU
       void        doWork();
+
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void        doWorkQueue(CorrelatorWorkQueue &workQueue);
+
+      void        processSubbands(CorrelatorWorkQueue &workQueue);
+      void        writeSubband(unsigned subband);
+
       // Read for a subband the data from the station steams, and put in shared memory
       void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, size_t block, unsigned subband);
 
     private:
+      struct Output {
+        // synchronisation to write blocks in-order
+        SlidingPointer<size_t> sync;
+
+        // output data queue
+        SmartPtr< BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> > > bequeue;
+      };
+
+      std::vector<struct Output> subbandPool;  // [subband]
+
       FilterBank filterBank;
       CorrelatorPipelinePrograms programs;
     };

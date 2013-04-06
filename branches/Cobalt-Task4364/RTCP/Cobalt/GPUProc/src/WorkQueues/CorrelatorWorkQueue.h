@@ -47,6 +47,8 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    class CorrelatorWorkQueue;
+
     // The pool operates using a 'free' and a 'filled' queue to cycle through buffers. Producers
     // move elements free->filled, and consumers move elements filled->free.
     template <typename T>
@@ -56,6 +58,24 @@ namespace LOFAR
 
       Queue< SmartPtr<element_type> > free;
       Queue< SmartPtr<element_type> > filled;
+    };
+
+    // A CorrelatedData object tied to a HostBuffer
+    class CorrelatedDataHostBuffer: public MultiArrayHostBuffer<fcomplex, 4>, public CorrelatedData
+    {
+    public:
+      CorrelatedDataHostBuffer(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, DeviceBuffer &deviceBuffer, CorrelatorWorkQueue &queue) 
+      :
+        MultiArrayHostBuffer<fcomplex, 4>(boost::extents[nrStations * (nrStations + 1) / 2][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], CL_MEM_WRITE_ONLY, deviceBuffer),
+        CorrelatedData(nrStations, nrChannels, maxNrValidSamples, this->origin(), this->num_elements(), heapAllocator, 1),
+        queue(queue)
+      {
+      }
+
+      CorrelatorWorkQueue &queue;
+    private:
+      CorrelatedDataHostBuffer();
+      CorrelatedDataHostBuffer(const CorrelatedDataHostBuffer &);
     };
 
     // 
@@ -175,7 +195,7 @@ namespace LOFAR
                           FilterBank &filterBank);
 
       // Correlate the data found in the input data buffer
-      void doSubband(WorkQueueInputData &input, CorrelatedData &output);
+      void doSubband(WorkQueueInputData &input, CorrelatedDataHostBuffer &output);
       
     private:
       // Raw buffers, these are mapped with boost multiarrays 
@@ -185,11 +205,13 @@ namespace LOFAR
       DeviceBuffer devFilteredData;
 
     public:
-      // All input data collected in a single struct
+      // A pool of input data, to allow items to be filled and
+      // computed on in parallel.
       Pool<WorkQueueInputData> inputPool;
 
-      // the visibilities 
-      MultiArrayHostBuffer<std::complex<float>, 4> visibilities;
+      // A pool of output data, to allow items to be filled
+      // and written in parallel.
+      Pool<CorrelatedDataHostBuffer> outputPool;
 
     private:
       // Compiled kernels
