@@ -30,6 +30,7 @@
 #include <CoInterface/Stream.h>
 
 #include "OpenCL_Support.h"
+#include "createProgram.h"
 
 namespace LOFAR
 {

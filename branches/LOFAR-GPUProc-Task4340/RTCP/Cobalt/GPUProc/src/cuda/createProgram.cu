@@ -1,0 +1,194 @@
+//# createProgram.cu
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id$
+
+#include <lofar_config.h>
+
+#include "createProgram.h"
+
+#include <cstdlib>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/fcntl.h>
+#include <unistd.h>
+#include <cstring>
+#include <cerrno>
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+
+#include <Common/SystemUtil.h>
+#include <Common/SystemCallException.h>
+#include <Stream/FileStream.h>
+
+#include <global_defines.h>
+#include "cuda_config.h"
+
+namespace LOFAR
+{
+  namespace Cobalt
+  {
+    using namespace std;
+
+    ModuleShPtr createProgram(const Parset &ps, cu::Context &context, vector<string> &targets, const char *sources)
+    {
+      string cudaCompiler(CUDA_TOOLKIT_ROOT_DIR);
+      if (!cudaCompiler.empty()) {
+        cudaCompiler += "/bin/nvcc";
+      }
+      if (::access(cudaCompiler.c_str(), X_OK) == -1) {
+        cudaCompiler = "nvcc"; // try through PATH
+      }
+
+      bool debug = false; // TODO: wire up to program arg or 
+
+      stringstream cmd(cudaCompiler);
+      cmd << " --ptx";                         // Request intermediate format (ptx) as output. We may want to view or stir it.
+      cmd << " -I" << dirname(__FILE__);       // TODO: move kernel sources to their own dir
+      cmd << (debug ? " -G --source-in-ptx" : "");
+      cmd << " -m32"                           // -m64 (default) takes extra regs for a ptr
+      // use opt level 99
+      cmd << " --gpu-architecture compute_30"; // TODO: incorrectly assumes one, single virt arch
+      //cmd << " --maxrregcount 63;" // probably only effective for backend compilation below
+      cmd << " --use_fast_math";
+
+      cmd << " -DNVIDIA_CUDA"; // left-over from OpenCL for Correlator.cl/.cu
+      //cmd << " -DUSE_FLOAT4_IN_CORRELATOR"; // on "GeForce GTX 680"
+      cmd << " -DNR_BITS_PER_SAMPLE=" << ps.nrBitsPerSample();
+      cmd << " -DSUBBAND_BANDWIDTH=" << std::setprecision(7) << ps.subbandBandwidth() << 'f';
+      cmd << " -DNR_SUBBANDS=" << ps.nrSubbands();
+      cmd << " -DNR_CHANNELS=" << ps.nrChannelsPerSubband();
+      cmd << " -DNR_STATIONS=" << ps.nrStations();
+      cmd << " -DNR_SAMPLES_PER_CHANNEL=" << ps.nrSamplesPerChannel();
+      cmd << " -DNR_SAMPLES_PER_SUBBAND=" << ps.nrSamplesPerSubband();
+      cmd << " -DNR_BEAMS=" << ps.nrBeams();
+      cmd << " -DNR_TABS=" << ps.nrTABs(0);
+      cmd << " -DNR_COHERENT_STOKES=" << ps.nrCoherentStokes();
+      cmd << " -DNR_INCOHERENT_STOKES=" << ps.nrIncoherentStokes();
+      cmd << " -DCOHERENT_STOKES_TIME_INTEGRATION_FACTOR=" << ps.coherentStokesTimeIntegrationFactor();
+      cmd << " -DINCOHERENT_STOKES_TIME_INTEGRATION_FACTOR=" << ps.incoherentStokesTimeIntegrationFactor();
+      cmd << " -DNR_POLARIZATIONS=" << NR_POLARIZATIONS;
+      cmd << " -DNR_TAPS=" << NR_TAPS;
+      cmd << " -DNR_STATION_FILTER_TAPS=" << NR_STATION_FILTER_TAPS;
+      if (ps.delayCompensation()) {
+        cmd << " -DDELAY_COMPENSATION";
+      }
+      if (ps.correctBandPass()) {
+        cmd << " -DBANDPASS_CORRECTION";
+      }
+      cmd << " -DDEDISPERSION_FFT_SIZE=" << ps.dedispersionFFTsize();
+
+      static bool printCudaCompileCommand = false; // TODO: -> LOG_ONCE()/WARN_ONCE()/similar; don't care about races
+      if (!printCudaCompileCommand) {
+          printCudaCompileCommand = true;
+          cout << "CUDA compilation to ptx command: " << compileCommand << endl;
+      }
+
+      // Derive output filename from input filename by replacing the extension.
+      string outputFilename(inputFilename);
+      size_t idx = outputFilename.find_last_of('.');
+      if (idx != string::npos) {
+        outputFilename.resize(idx);
+      }
+      outputFilename += ".ptx"; // output filename to be overwritten
+
+      int rv;
+      if ((rv = std::system(compileCommand + " " + inputFilename)) != 0) { // blocking. If it takes too long, rewrite building all kernels at once. TODO: output goes to stdout/stderr -> collect it for proper logging
+        throw SystemCallException("system", std::errno, THROW_ARGS);
+      }
+
+// TODO: separate function!!!
+      // Compile ptx further.
+      // To pass build flags, we need to pass a buffer, so read in the file.
+      FileStream file(outputFilename, O_RDONLY);
+      vector<char> buf(file.size());
+      file.read(&buf[0], buf.size());
+
+      vector<cu::CUjit_options> options;
+      vector<void*> optionValues; // TODO: get rid of void ptr in cuwrapper.cuh and here: dyn alloced mem leak on error
+
+#if 0
+      unsigned int maxRegs = 63; // TODO: write this up
+      options.push_back(CU_JIT_MAX_REGISTERS);
+      optionValues.push_back(&maxRegs);
+
+      unsigned int thrPerBlk = 256; // input and output val
+      options.push_back(CU_JIT_THREADS_PER_BLOCK);
+      optionValues.push_back(&thrPerBlk); // can be read back
+#endif
+
+      unsigned int infoLogSize  = 256; // input and output val
+      unsigned int errorLogSize = 256; // idem (hence not the a single var or const)
+
+      char infoLog[infoLogSize];
+      options.push_back(CU_JIT_INFO_LOG_BUFFER);
+      optionValues.push_back(infoLog);
+
+      options.push_back(CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES);
+      optionValues.push_back(&infoLogSize);
+
+      char errorLog[errorLogSize];
+      options.push_back(CU_JIT_ERROR_LOG_BUFFER);
+      optionValues.push_back(errorLog);
+
+      options.push_back(CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES);
+      optionValues.push_back(&errorLogSize);
+
+      float jitWallTime = 0.0f; // output val (init it anyway), in milliseconds
+      options.push_back(CU_JIT_WALL_TIME);
+      optionValues.push_back(&jitWallTime);
+
+#if 0
+      unsigned int optLvl = 4; // 0-4, default 4
+      options.push_back(CU_JIT_OPTIMIZATION_LEVEL);
+      optionValues.push_back(&optLvl);
+
+      options.push_back(CU_JIT_TARGET_FROM_CUCONTEXT);
+      optionValues.push_back(NULL); // no option value, but I suppose the array needs a placeholder
+#endif
+
+      cu::CUjit_target_enum target = CU_TARGET_COMPUTE_30; // TODO: determine val from auto-detect or whatever
+      options.push_back(CU_JIT_TARGET);
+      optionValues.push_back(&target);
+
+#if 0
+      cu::CUjit_fallback_enum fallback = CU_PREFER_PTX;
+      options.push_back(CU_JIT_FALLBACK_STRATEGY);
+      optionValues.push_back(&fallback);
+#endif
+
+      ModuleShPtr module;
+      //CUModule module(buf, options, optionValues);
+      try {
+        module = new cu::Module(buf, options, optionValues);
+        cout << "Build info for '" << outputFilename << "' (" << jitWallTime << " us):" << endl << infoLog << endl;
+      } catch (CudaException& exc) {
+        cerr << "Build errors for '" << outputFilename << "' (" << jitWallTime << " us):" << endl << errorLog << endl;
+        throw;
+      }
+
+      return module;
+//return createProgram(context, devices, dirname(__FILE__).append("/").append(sources).c_str(), args.str().c_str());
+    }
+
+
+  } // namespace Cobalt
+} // namespace LOFAR
+

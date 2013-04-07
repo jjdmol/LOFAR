@@ -36,7 +36,6 @@
 #include "global_defines.h"
 #include "OpenMP_Support.h"
 #include "opencl-incl.h"
-#include "createProgram.h"
 #include "BestEffortQueue.h"
 #include "SlidingPointer.h"
 #include "WorkQueues/WorkQueue.h"

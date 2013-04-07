@@ -56,4 +56,25 @@ lofar_add_library(gpuproc
   WorkQueues/UHEP_WorkQueue.cc
   WorkQueues/WorkQueue.cc)
 
-lofar_add_bin_program(rtcp rtcp.cc)
+if(USE_CUDA)
+  configure_file (
+    "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/config.h"  # no need to install this header
+  )
+
+  cuda_add_executable(rtcp rtcp.cc)
+  cuda_add_cufft_to_target(rtcp)
+#  lofar_add_cuda_bin_program(rtcp rtcp.cc)
+
+  install(FILES
+    rtcp
+    DESTINATION bin)
+endif(USE_CUDA)
+
+if(USE_OPENCL)
+  lofar_add_bin_program(rtcp_ocl rtcp.cc)
+
+  install(FILES
+    rtcp_ocl
+    DESTINATION bin)
+endif(USE_OPENCL)

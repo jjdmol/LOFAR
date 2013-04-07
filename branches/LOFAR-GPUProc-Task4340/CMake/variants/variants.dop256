@@ -1,1 +1,5 @@
-variants.dop282
+option(USE_MPI       "Use MPI"       ON)
+option(USE_OPENMP    "Use OpenMP"    ON)
+
+set(GNU_COMPILE_DEFINITIONS -DCL_USE_DEPRECATED_OPENCL_1_1_APIS)
+

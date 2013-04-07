@@ -1,0 +1,17 @@
+$Id$
+
+GPUProc OpenCL/CUDA Type Correspondence
+=======================================
+
+OpenCL            CUDA (cuwrapper.h)
+-----------------------------------------
+cl::Context       cu::Context
+cl::Program       cu::Module
+cl::Kernel        cu::Function
+cl::Buffer        cu::HostMemory, cu::DeviceMemory
+cl::Error         cu::Error
+cl::Device        cu::Device
+cl::Event         cu::Event
+cl::CommandQueue  cu::Stream
+-----------------------------------------
+

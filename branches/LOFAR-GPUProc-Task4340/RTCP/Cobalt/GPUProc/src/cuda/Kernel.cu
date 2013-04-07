@@ -1,4 +1,4 @@
-//# CorrelatorPipelinePrograms.h
+//# Kernel.cu
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,24 +18,34 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CORRELATOR_PIPELINE_PROGRAMS_H
-#define LOFAR_GPUPROC_CORRELATOR_PIPELINE_PROGRAMS_H
+#include <lofar_config.h>
 
-#include <GPUProc/opencl-incl.h>
+#include "Kernel.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    struct CorrelatorPipelinePrograms
+    //Kernel::Kernel(const Parset &ps, cl::Program &program, const char *name)
+    Kernel(const Parset &ps, cu::Module& module, const char *name)
+      :
+      //cl::Kernel(program, name),
+      //Function(module, name),
+      ps(ps)
     {
-      cl::Program firFilterProgram;
-      //cl::Program fftProgram; // fft kernel apparently does not need a program...
-      cl::Program delayAndBandPassProgram;
-      cl::Program correlatorProgram;
-    };
+    }
+
+    void Kernel::enqueue(cl::CommandQueue &queue, PerformanceCounter &counter)
+    {
+      // AMD complains if we submit 0-sized work
+      for (unsigned dim = 0; dim < globalWorkSize.dimensions(); dim++)
+        if (globalWorkSize[dim] == 0)
+          return;
+
+      queue.enqueueNDRangeKernel(*this, cl::NullRange, globalWorkSize, localWorkSize, 0, &event);
+      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
+    }
+
   }
 }
-
-#endif
 
