@@ -49,14 +49,20 @@ namespace LOFAR
       // per thread/station start up the input create 2 WorkQueue for each available GPU
       void        doWork();
 
+      // Read for a subband the data from the station steams, and put in shared memory
+      void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, size_t block, unsigned subband);
+
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void        doWorkQueue(CorrelatorWorkQueue &workQueue);
 
+      // process subbands on the GPU
       void        processSubbands(CorrelatorWorkQueue &workQueue);
-      void        writeSubband(unsigned subband);
 
-      // Read for a subband the data from the station steams, and put in shared memory
-      void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, size_t block, unsigned subband);
+      // postprocess subbands on the CPU
+      void        postprocessSubbands(CorrelatorWorkQueue &workQueue);
+
+      // send subbands to Storage
+      void        writeSubband(unsigned subband);
 
     private:
       struct Output {

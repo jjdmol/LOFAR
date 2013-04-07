@@ -86,7 +86,7 @@ int main(void)
         for( unsigned i = 0; i < nbl; i++ ) {
           for( unsigned j = 0; j < nch; j++ ) {
             //cout << data1.nrValidSamples(i, j) << " == " << data3.nrValidSamples(i, j) << endl;
-            assert(data1.nrValidSamples(i, j) == data3.nrValidSamples(i, j));
+            assert(data1.getNrValidSamples(i, j) == data3.getNrValidSamples(i, j));
 
             for( unsigned k = 0; k < 2; k++ ) {
               for( unsigned l = 0; l < 2; l++ ) {

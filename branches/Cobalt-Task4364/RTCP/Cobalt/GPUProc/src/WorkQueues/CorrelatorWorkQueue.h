@@ -112,6 +112,10 @@ namespace LOFAR
       {
       }
 
+      // Annotation required, as we'll loose track of the exact order
+      size_t block;
+      unsigned subband;
+
       CorrelatorWorkQueue &queue;
 
     private:
@@ -207,7 +211,7 @@ namespace LOFAR
           CorrelatedData &output) ;
 
         // 2. Calculate the weight based on the number of flags and apply this weighting to all output values
-        static void applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
+        template<typename T> static void applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
           CorrelatedData &output);
 
         // 1.1Convert the flags per station to channel flags, change time scale if nchannel > 1
@@ -217,7 +221,7 @@ namespace LOFAR
 
         // 1.2calculate the number of flagged samples and set this on the output dataproduct
         // This function is aware of the used filter width a corrects for this.
-        static void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
+        template<typename T> static void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
           MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
           CorrelatedData &output);
 
@@ -236,7 +240,10 @@ namespace LOFAR
                           FilterBank &filterBank);
 
       // Correlate the data found in the input data buffer
-      void doSubband(WorkQueueInputData &input, CorrelatedDataHostBuffer &output);
+      void processSubband(WorkQueueInputData &input, CorrelatedDataHostBuffer &output);
+
+      // Do post processing on the CPU
+      void postprocessSubband(CorrelatedDataHostBuffer &output);
       
     private:
       // Raw buffers, these are mapped with boost multiarrays 

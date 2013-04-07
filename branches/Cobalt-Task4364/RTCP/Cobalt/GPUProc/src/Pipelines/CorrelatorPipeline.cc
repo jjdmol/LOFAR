@@ -146,9 +146,9 @@ namespace LOFAR
         }
 
         /*
-         * WORKQUEUE INPUTPOOL -> SUBBANDPOOL
+         * WORKQUEUE INPUTPOOL -> WORKQUEUE OUTPUTPOOL
          *
-         * Perform calculations, one thread per workQueue.
+         * Perform GPU processing, one thread per workQueue.
          */
 #       pragma omp section
         {
@@ -158,6 +158,25 @@ namespace LOFAR
 
             // run the queue
             processSubbands(queue);
+
+            // Signal end of output
+            queue.outputPool.filled.append(NULL);
+          }
+        }
+
+        /*
+         * WORKQUEUE OUTPUTPOOL -> SUBBANDPOOL
+         *
+         * Perform post-processing, one thread per workQueue.
+         */
+#       pragma omp section
+        {
+#         pragma omp parallel for num_threads(workQueues.size())
+          for (size_t i = 0; i < workQueues.size(); ++i) {
+            CorrelatorWorkQueue &queue = *workQueues[i];
+
+            // run the queue
+            postprocessSubbands(queue);
           }
 
           // Signal end of output
@@ -237,18 +256,55 @@ namespace LOFAR
       while ((input = workQueue.inputPool.filled.remove()) != NULL) {
         workQueue.timers["CPU - total"]->start();
 
-        size_t block     = input->block;
-        unsigned subband = input->subband;
-
         // Also fetch an output object to store results
         SmartPtr<CorrelatedDataHostBuffer> output = workQueue.outputPool.free.remove();
-
         ASSERT(output != NULL); // Only we signal end-of-data, so we should never receive it
+
+        output->block = input->block;
+        output->subband = input->subband;
 
         // Perform calculations
         workQueue.timers["CPU - compute"]->start();
-        workQueue.doSubband(*input, *output);
+        workQueue.processSubband(*input, *output);
         workQueue.timers["CPU - compute"]->stop();
+
+        // Hand off output to post processing
+        workQueue.outputPool.filled.append(output);
+        ASSERT(!output);
+
+        // Give back input data for a refill
+        workQueue.inputPool.free.append(input);
+        ASSERT(!input);
+
+        workQueue.timers["CPU - total"]->stop();
+      }
+
+#if 0
+#       pragma omp single nowait    // Only a single thread should perform the cout
+        LOG_INFO_STR("block = " << block
+                  << ", time = " << to_simple_string(from_ustime_t(currentTime))  //current time
+                  << ", exec = " << omp_get_wtime() - lastTime);
+
+        // Save the current time: This will be used to display the execution time for this block
+        lastTime = omp_get_wtime();
+#endif
+    }
+
+
+    void CorrelatorPipeline::postprocessSubbands(CorrelatorWorkQueue &workQueue)
+    {
+#if 0
+      double lastTime = omp_get_wtime();
+#endif
+
+      SmartPtr<CorrelatedDataHostBuffer> output;
+
+      // Keep fetching input objects until end-of-input
+      while ((output = workQueue.outputPool.filled.remove()) != NULL) {
+        size_t block = output->block;
+        unsigned subband = output->subband;
+
+        workQueue.postprocessSubband(*output);
 
         // Hand off output, force in-order as Storage expects it that way
         subbandPool[subband].sync.waitFor(block);
@@ -263,15 +319,10 @@ namespace LOFAR
           workQueue.outputPool.free.append(output);
         }
 
-        ASSERT(!output);
-
+        // Allow next block to be written
         subbandPool[subband].sync.advanceTo(block + 1);
 
-        // Give back input data for a refill
-        workQueue.inputPool.free.append(input);
-        ASSERT(!input);
-
-        workQueue.timers["CPU - total"]->stop();
+        ASSERT(!output);
       }
 
 #if 0
@@ -312,6 +363,9 @@ namespace LOFAR
 
       // Process pool elements until end-of-output
       while ((output = subbandPool[subband].bequeue->remove()) != NULL) {
+        CorrelatorWorkQueue &queue = output->queue; // cache queue object, because `output' will be destroyed
+
+        // Write block to disk 
         try {
           output->write(outputStream.get(), true);
         } catch(Exception &ex) {
@@ -321,7 +375,6 @@ namespace LOFAR
         }
 
         // Hand the object back to the workQueue it originally came from
-        CorrelatorWorkQueue &queue = output->queue; // cache queue object, because `output' will be destroyed
         queue.outputPool.free.append(output);
 
         ASSERT(!output);
