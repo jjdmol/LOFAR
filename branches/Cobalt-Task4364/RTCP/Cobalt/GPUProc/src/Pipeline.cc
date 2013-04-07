@@ -164,9 +164,9 @@ namespace LOFAR
       double wall_seconds = total_timers["CPU - total"]->getAverage();
       double gpu_seconds = counter_groups["compute"].runtime / nrGPUs;
       double spin_seconds = total_timers["GPU - wait"]->getAverage();
-      double input_seconds = total_timers["CPU - input"]->getElapsed() / nrWorkQueues;
+      double input_seconds = total_timers["CPU - read input"]->getElapsed() / nrWorkQueues;
       double cpu_seconds = total_timers["CPU - compute"]->getElapsed() / nrWorkQueues;
-      double output_seconds = total_timers["CPU - output"]->getElapsed() / nrWorkQueues;
+      double output_seconds = total_timers["CPU - write output"]->getElapsed() / nrWorkQueues;
 
       LOG_INFO_STR("Wall seconds spent processing        : " << fixed << setw(8) << setprecision(3) << wall_seconds);
       LOG_INFO_STR("GPU  seconds spent computing, per GPU: " << fixed << setw(8) << setprecision(3) << gpu_seconds);

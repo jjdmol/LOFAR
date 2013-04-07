@@ -217,10 +217,17 @@ namespace LOFAR
       inputData->block   = block;
       inputData->subband = subband;
 
+      if (subband == 0) {
+        LOG_INFO_STR("[block " << block << "] Reading input samples");
+      }
+
       // Wait for previous data to be read
       inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
 
-      workQueue.timers["CPU - input"]->start();
+      // Block 0 may take a while to arrive if we start early
+      if (block > 0) {
+        workQueue.timers["CPU - read input"]->start();
+      }
 
       // Read the samples from the input stream in parallel
 #     pragma omp parallel for
@@ -231,9 +238,15 @@ namespace LOFAR
         Stream *inputStream = bufferToGPUstreams[station];
 
         inputData->read(inputStream, station, subband, ps.subbandToSAPmapping()[subband]);
+
+        if (subband == 0) {
+          LOG_DEBUG_STR("[block " << block << "] Read input from station " << station);
+        }
       }
 
-      workQueue.timers["CPU - input"]->stop();
+      if (block > 0) {
+        workQueue.timers["CPU - read input"]->stop();
+      }
 
       // Advance the block index
       inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
@@ -241,32 +254,37 @@ namespace LOFAR
       // Register this block as workQueue input
       workQueue.inputPool.filled.append(inputData);
       ASSERT(!inputData);
+
+      if (subband == 0) {
+        LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
+      }
     }
 
 
     void CorrelatorPipeline::processSubbands(CorrelatorWorkQueue &workQueue)
     {
-#if 0
-      double lastTime = omp_get_wtime();
-#endif
-
       SmartPtr<WorkQueueInputData> input;
 
       // Keep fetching input objects until end-of-input
       while ((input = workQueue.inputPool.filled.remove()) != NULL) {
-        workQueue.timers["CPU - total"]->start();
+        size_t block = input->block;
+        unsigned subband = input->subband;
+
+        if (subband == 0) {
+          LOG_INFO_STR("[block " << block << "] Processing start");
+        }
 
         // Also fetch an output object to store results
         SmartPtr<CorrelatedDataHostBuffer> output = workQueue.outputPool.free.remove();
         ASSERT(output != NULL); // Only we signal end-of-data, so we should never receive it
 
-        output->block = input->block;
-        output->subband = input->subband;
+        output->block = block;
+        output->subband = subband;
 
         // Perform calculations
-        workQueue.timers["CPU - compute"]->start();
+        workQueue.timers["CPU - process"]->start();
         workQueue.processSubband(*input, *output);
-        workQueue.timers["CPU - compute"]->stop();
+        workQueue.timers["CPU - process"]->stop();
 
         // Hand off output to post processing
         workQueue.outputPool.filled.append(output);
@@ -276,35 +294,29 @@ namespace LOFAR
         workQueue.inputPool.free.append(input);
         ASSERT(!input);
 
-        workQueue.timers["CPU - total"]->stop();
+        if (subband == 0) {
+          LOG_DEBUG_STR("[block " << block << "] Forwarded output to post processing");
+        }
       }
-
-#if 0
-#       pragma omp single nowait    // Only a single thread should perform the cout
-        LOG_INFO_STR("block = " << block
-                  << ", time = " << to_simple_string(from_ustime_t(currentTime))  //current time
-                  << ", exec = " << omp_get_wtime() - lastTime);
-
-        // Save the current time: This will be used to display the execution time for this block
-        lastTime = omp_get_wtime();
-#endif
     }
 
 
     void CorrelatorPipeline::postprocessSubbands(CorrelatorWorkQueue &workQueue)
     {
-#if 0
-      double lastTime = omp_get_wtime();
-#endif
-
       SmartPtr<CorrelatedDataHostBuffer> output;
 
-      // Keep fetching input objects until end-of-input
+      // Keep fetching output objects until end-of-output
       while ((output = workQueue.outputPool.filled.remove()) != NULL) {
         size_t block = output->block;
         unsigned subband = output->subband;
 
+        if (subband == 0) {
+          LOG_INFO_STR("[block " << block << "] Post processing start");
+        }
+
+        workQueue.timers["CPU - postprocess"]->start();
         workQueue.postprocessSubband(*output);
+        workQueue.timers["CPU - postprocess"]->stop();
 
         // Hand off output, force in-order as Storage expects it that way
         subbandPool[subband].sync.waitFor(block);
@@ -313,7 +325,7 @@ namespace LOFAR
         output->setSequenceNumber(block);
 
         if (!subbandPool[subband].bequeue->append(output)) {
-          LOG_WARN_STR("Dropping subband " << subband << " block " << block);
+          LOG_WARN_STR("[block " << block << "] Dropped for subband " << subband);
 
           // Give back to queue
           workQueue.outputPool.free.append(output);
@@ -323,17 +335,11 @@ namespace LOFAR
         subbandPool[subband].sync.advanceTo(block + 1);
 
         ASSERT(!output);
+
+        if (subband == 0) {
+          LOG_DEBUG_STR("[block " << block << "] Forwarded output to writer");
+        }
       }
-
-#if 0
-#       pragma omp single nowait    // Only a single thread should perform the cout
-        LOG_INFO_STR("block = " << block
-                  << ", time = " << to_simple_string(from_ustime_t(currentTime))  //current time
-                  << ", exec = " << omp_get_wtime() - lastTime);
-
-        // Save the current time: This will be used to display the execution time for this block
-        lastTime = omp_get_wtime();
-#endif
     }
 
 
@@ -363,7 +369,14 @@ namespace LOFAR
 
       // Process pool elements until end-of-output
       while ((output = subbandPool[subband].bequeue->remove()) != NULL) {
+        size_t block = output->block;
+        unsigned subband = output->subband;
+
         CorrelatorWorkQueue &queue = output->queue; // cache queue object, because `output' will be destroyed
+
+        if (subband == 0) {
+          LOG_INFO_STR("[block " << block << "] Writing start");
+        }
 
         // Write block to disk 
         try {
@@ -378,6 +391,10 @@ namespace LOFAR
         queue.outputPool.free.append(output);
 
         ASSERT(!output);
+
+        if (subband == 0) {
+          LOG_INFO_STR("[block " << block << "] Done");
+        }
       }
     }
 

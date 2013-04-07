@@ -57,7 +57,9 @@ namespace LOFAR
                                              FilterBank &filterBank
                                              )
       :
-    WorkQueue( context, device, gpuNumber, parset),     
+    WorkQueue( context, device, gpuNumber, parset),
+      prevBlock(-1),
+      prevSAP(-1),
       devInput(ps.nrBeams(),
                 ps.nrStations(),
                 NR_POLARIZATIONS,
@@ -156,10 +158,9 @@ namespace LOFAR
       addCounter("output - visibilities");
 
       // CPU timers are set by CorrelatorPipeline
-      addTimer("CPU - total");
-      addTimer("CPU - input");
-      addTimer("CPU - output");
-      addTimer("CPU - compute");
+      addTimer("CPU - read input");
+      addTimer("CPU - process");
+      addTimer("CPU - postprocess");
 
       // GPU timers are set by us
       addTimer("GPU - total");
@@ -383,6 +384,7 @@ namespace LOFAR
     {
       timers["GPU - total"]->start();
 
+      size_t block = input.block;
       unsigned subband = input.subband;
 
       {
@@ -402,10 +404,17 @@ namespace LOFAR
       // Moved from doWork() The delay data should be available before the kernels start.
       // Queue processed ordered. This could main that the transfer is not nicely overlapped
 
-      // TODO: Only transfer if different SAP or block
-      input.delaysAtBegin.hostToDevice(CL_FALSE);
-      input.delaysAfterEnd.hostToDevice(CL_FALSE);
-      input.phaseOffsets.hostToDevice(CL_FALSE);
+      unsigned SAP = ps.subbandToSAPmapping()[subband];
+
+      // Only upload delays if they changed w.r.t. the previous subband
+      if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
+        input.delaysAtBegin.hostToDevice(CL_FALSE);
+        input.delaysAfterEnd.hostToDevice(CL_FALSE);
+        input.phaseOffsets.hostToDevice(CL_FALSE);
+
+        prevSAP = SAP;
+        prevBlock = block;
+      }
 
       if (ps.nrChannelsPerSubband() > 1) {
         firFilterKernel.enqueue(queue, *counters["compute - FIR"]);

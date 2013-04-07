@@ -246,6 +246,12 @@ namespace LOFAR
       void postprocessSubband(CorrelatedDataHostBuffer &output);
       
     private:
+      // The previously processed SAP/block, or -1 if nothing has been
+      // processed yet. Used in order to determine if new delays have
+      // to be uploaded.
+      ssize_t prevBlock;
+      signed int prevSAP;
+
       // Raw buffers, these are mapped with boost multiarrays 
       // in the InputData class
       WorkQueueInputData::DeviceBuffers devInput;
