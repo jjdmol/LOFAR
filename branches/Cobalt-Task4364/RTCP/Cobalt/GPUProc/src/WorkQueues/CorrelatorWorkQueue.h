@@ -47,6 +47,44 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    /*
+     * The CorrelatorWorkQueue does the following transformation:
+     *   WorkQueueInputData -> CorrelatedDataHostBuffer
+     *
+     * The WorkQueueInputData represents one block of one subband
+     * of input data, and the CorrelatedDataHostBuffer the complex
+     * visibilities of such a block.
+     *
+     * For both input and output, a fixed set of objects is created,
+     * tied to the GPU specific for the WorkQueue, for increased
+     * performance. The objects are recycled by using Pool objects.
+     *
+     * The data flows as follows:
+     *
+     *   // Fetch the next input object to fill
+     *   SmartPtr<WorkQueueInputData> input = queue.inputPool.free.remove();
+     *
+     *   // Provide input
+     *   receiveInput(input);
+     *
+     *   // Annotate input
+     *   input->block = block;
+     *   input->subband = subband;
+     *
+     *   // Fetch the next output object to fill
+     *   SmartPtr<CorrelatedDataHostBuffer> output = queue.outputPool.free.remove();
+     *
+     *   // Process block
+     *   queue.doSubband(input, output);
+     *
+     *   // Give back input and output objects to queue
+     *   queue.inputPool.free.append(input);
+     *   queue.outputPool.free.append(output);
+     *
+     *   The queue.inputPool.filled and queue.outputPool.filled can be used to
+     *   temporarily store filled input and output objects. Such is needed to
+     *   obtain parallellism (i.e. read/process/write in separate threads).
+     */
     class CorrelatorWorkQueue;
 
     // The pool operates using a 'free' and a 'filled' queue to cycle through buffers. Producers
@@ -60,7 +98,9 @@ namespace LOFAR
       Queue< SmartPtr<element_type> > filled;
     };
 
-    // A CorrelatedData object tied to a HostBuffer
+    // A CorrelatedData object tied to a HostBuffer and WorkQueue. Such links
+    // are needed for performance -- the visibilities are stored in a buffer
+    // directly linked to the GPU output buffer.
     class CorrelatedDataHostBuffer: public MultiArrayHostBuffer<fcomplex, 4>, public CorrelatedData
     {
     public:
@@ -73,6 +113,7 @@ namespace LOFAR
       }
 
       CorrelatorWorkQueue &queue;
+
     private:
       CorrelatedDataHostBuffer();
       CorrelatedDataHostBuffer(const CorrelatedDataHostBuffer &);

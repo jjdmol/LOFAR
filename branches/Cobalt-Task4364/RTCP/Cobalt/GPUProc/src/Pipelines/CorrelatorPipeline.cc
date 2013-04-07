@@ -167,7 +167,7 @@ namespace LOFAR
         }
 
         /*
-         * SUBBANDPOOL -> STORAGE STREAMS
+         * SUBBANDPOOL -> STORAGE STREAMS (best effort)
          */
 #       pragma omp section
         {
@@ -233,6 +233,7 @@ namespace LOFAR
 
       SmartPtr<WorkQueueInputData> input;
 
+      // Keep fetching input objects until end-of-input
       while ((input = workQueue.inputPool.filled.remove()) != NULL) {
         workQueue.timers["CPU - total"]->start();
 
@@ -259,7 +260,7 @@ namespace LOFAR
           LOG_WARN_STR("Dropping subband " << subband << " block " << block);
 
           // Give back to queue
-          workQueue.outputPool.filled.append(output);
+          workQueue.outputPool.free.append(output);
         }
 
         ASSERT(!output);
@@ -289,8 +290,8 @@ namespace LOFAR
     {
       SmartPtr<Stream> outputStream;
 
+      // Connect to output stream
       try {
-        // Connect to output stream
         if (ps.getHostName(CORRELATED_DATA, subband) == "") {
           // an empty host name means 'write to disk directly', to
           // make debugging easier for now
@@ -309,7 +310,7 @@ namespace LOFAR
 
       SmartPtr<CorrelatedDataHostBuffer> output;
 
-      // Process pool elements
+      // Process pool elements until end-of-output
       while ((output = subbandPool[subband].bequeue->remove()) != NULL) {
         try {
           output->write(outputStream.get(), true);
@@ -320,7 +321,7 @@ namespace LOFAR
         }
 
         // Hand the object back to the workQueue it originally came from
-        CorrelatorWorkQueue &queue = output->queue;
+        CorrelatorWorkQueue &queue = output->queue; // cache queue object, because `output' will be destroyed
         queue.outputPool.free.append(output);
 
         ASSERT(!output);
