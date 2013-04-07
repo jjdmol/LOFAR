@@ -352,24 +352,20 @@ namespace LOFAR
     template<typename T> void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
       CorrelatedData &output)
     {
-      for (unsigned stat2 = 0; stat2 < parset.nrStations(); stat2 ++) {
-        for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) {
-          unsigned bl = baseline(stat1, stat2);
+      for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl) {
+        // Calculate the weights for the channels
+        //
+        // Channel 0 is already flagged according to specs, so we can simply
+        // include it both for 1 and >1 channels/subband.
+        for(unsigned ch = 0; ch < parset.nrChannelsPerSubband(); ch ++) 
+        {
+          T nrValidSamples = output.nrValidSamples<T>(bl, ch);
 
-          // Calculate the weights for the channels
-          //
-          // Channel 0 is already flagged according to specs, so we can simply
-          // include it both for 1 and >1 channels/subband.
-          for(unsigned ch = 0; ch < parset.nrChannelsPerSubband(); ch ++) 
-          {
-            T nrValidSamples = output.nrValidSamples<T>(bl, ch);
+          // If all samples flagged weights is zero
+          // TODO: make a lookup table for the expensive division
+          float weight = nrValidSamples ? 1e-6f / nrValidSamples : 0;  
 
-            // If all samples flagged weights is zero
-            // TODO: make a lookup table for the expensive division
-            float weight = nrValidSamples ? 1e-6f / nrValidSamples : 0;  
-
-            applyWeightingToAllPolarizations(bl, ch, weight, output);
-          }
+          applyWeightingToAllPolarizations(bl, ch, weight, output);
         }
       }
     }
