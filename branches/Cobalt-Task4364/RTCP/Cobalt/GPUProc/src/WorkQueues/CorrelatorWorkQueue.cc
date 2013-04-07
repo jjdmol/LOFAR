@@ -202,22 +202,22 @@ namespace LOFAR
       unsigned numberOfChannels = parset.nrChannelsPerSubband();
 
       // Object for storing transformed flags
-      MultiDimArray<SparseSet<unsigned>, 2> flagsPerChanel(
+      MultiDimArray<SparseSet<unsigned>, 2> flagsPerChannel(
         boost::extents[numberOfChannels][parset.nrStations()]);
 
       // First transform the flags to channel flags: taking in account 
       // reduced resolution in time and the size of the filter
-      convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
+      convertFlagsToChannelFlags(parset, inputFlags, flagsPerChannel);
 
       // Calculate the number of flafs per baseline and assign to
       // output object.
-      calculateAndSetNumberOfFlaggedSamples(parset, flagsPerChanel,
+      calculateAndSetNumberOfFlaggedSamples(parset, flagsPerChannel,
         output);
     }
 
     void CorrelatorWorkQueue::flagFunctions::convertFlagsToChannelFlags(Parset const &parset,
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-      MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChanel)
+      MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChannel)
     {
       unsigned numberOfChannels = parset.nrChannelsPerSubband();
       unsigned log2NrChannels = get2LogOfNrChannels(numberOfChannels);
@@ -254,7 +254,7 @@ namespace LOFAR
           // Now copy the transformed ranges to the channelflags
           for (unsigned ch = 0; ch < numberOfChannels; ch++) 
           {
-            flagsPerChanel[ch][station].include(begin_idx, end_idx);
+            flagsPerChannel[ch][station].include(begin_idx, end_idx);
           }
         }
       }
@@ -262,7 +262,7 @@ namespace LOFAR
 
     void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples(
       Parset const &parset,
-      MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChanel,
+      MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output)
     {
       // loop the stations
@@ -279,7 +279,7 @@ namespace LOFAR
           {                                            
             //The number of invalid (flagged) samples is the union of the flagged samples in the two stations
             unsigned nrValidSamples = nrSamplesPerIntegration -
-              (flagsPerChanel[0][stat1] | flagsPerChanel[0][stat2]).count();
+              (flagsPerChannel[0][stat1] | flagsPerChannel[0][stat2]).count();
 
             // Moet worden toegekend op de correlated dataobject
             output.setNrValidSamples(bl, 0, nrValidSamples);      
@@ -294,7 +294,7 @@ namespace LOFAR
               // valid samples is total number of samples minus the union of the
               // Two stations.
               unsigned nrValidSamples = nrSamplesPerIntegration -
-                (flagsPerChanel[ch][stat1] | flagsPerChanel[ch][stat2]).count();
+                (flagsPerChannel[ch][stat1] | flagsPerChannel[ch][stat2]).count();
 
               output.setNrValidSamples(bl,ch,nrValidSamples);
             }

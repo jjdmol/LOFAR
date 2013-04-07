@@ -213,12 +213,12 @@ namespace LOFAR
         // 1.1Convert the flags per station to channel flags, change time scale if nchannel > 1
         static void convertFlagsToChannelFlags(Parset const &parset,
           MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChanel);
+          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
 
         // 1.2calculate the number of flagged samples and set this on the output dataproduct
         // This function is aware of the used filter width a corrects for this.
         static void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
-          MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChanel,
+          MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
           CorrelatedData &output);
 
         // 1.3 Get the LOG2 of the input. Used to speed up devisions by 2
