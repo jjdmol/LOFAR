@@ -21,29 +21,27 @@
 #ifndef LOFAR_GPUPROC_CUDA_CONFIG_H
 #define LOFAR_GPUPROC_CUDA_CONFIG_H
 
-// Note: even if CUDA is detected, some of these symbols may be empty. Disabled.
-//#define CUDA_VERSION_MAJOR     @CUDA_VERSION_MAJOR@
-//#define CUDA_VERSION_MINOR     @CUDA_VERSION_MINOR@
-
-// Note that this is the version as detected at CMake time. As defined, it ends up as a double, e.g. 5.0
-#define CUDA_VERSION           @CUDA_VERSION@
-
-//#define CUDA_VERSION_STRING    "@CUDA_VERSION_STRING@"
-
+// Note: even if CUDA is detected, some of these symbols may be empty.
+// Also note that these correspond to the version as detected at CMake time.
+#define CUDA_VERSION_MAJOR     @CUDA_VERSION_MAJOR@
+#define CUDA_VERSION_MINOR     @CUDA_VERSION_MINOR@
+//#define CUDA_VERSION           @CUDA_VERSION@
+#define CUDA_VERSION_STRING    "@CUDA_VERSION_STRING@"
 #define CUDA_TOOLKIT_ROOT_DIR  "@CUDA_TOOLKIT_ROOT_DIR@"
 
-// Is set. If N/A, it is set to "CUDA_SDK_ROOT_DIR-NOTFOUND". But you probably don't want to use this anyway, see FindCUDA.cmake
-//#define CUDA_SDK_ROOT_DIR      "@CUDA_SDK_ROOT_DIR@"
+// CUDA_SDK_ROOT_DIR is set to set to "CUDA_SDK_ROOT_DIR-NOTFOUND" if N/A.
+// But you probably do not want to use this anyway, see FindCUDA.cmake
+#define CUDA_SDK_ROOT_DIR      "@CUDA_SDK_ROOT_DIR@"
 
-//#define CUDA_INCLUDE_DIRS      "@CUDA_INCLUDE_DIRS@"
-//#define CUDA_LIBRARIES         "@CUDA_LIBRARIES@"
-//#define CUDA_CUFFT_LIBRARIES   "@CUDA_CUFFT_LIBRARIES@"
-//#define CUDA_CUBLAS_LIBRARIES  "@CUDA_CUBLAS_LIBRARIES@"
-//#define CUDA_curand_LIBRARY    "@CUDA_curand_LIBRARY@"
-//#define CUDA_cusparse_LIBRARY  "@CUDA_cusparse_LIBRARY@"
-//#define CUDA_npp_LIBRARY       "@CUDA_npp_LIBRARY@"
-//#define CUDA_nvcuvenc_LIBRARY  "@CUDA_nvcuvenc_LIBRARY@"
-//#define CUDA_nvcuvid_LIBRARY   "@CUDA_nvcuvid_LIBRARY@"
+#define CUDA_INCLUDE_DIRS      "@CUDA_INCLUDE_DIRS@"
+#define CUDA_LIBRARIES         "@CUDA_LIBRARIES@"
+#define CUDA_CUFFT_LIBRARIES   "@CUDA_CUFFT_LIBRARIES@"
+#define CUDA_CUBLAS_LIBRARIES  "@CUDA_CUBLAS_LIBRARIES@"
+#define CUDA_curand_LIBRARY    "@CUDA_curand_LIBRARY@"
+#define CUDA_cusparse_LIBRARY  "@CUDA_cusparse_LIBRARY@"
+#define CUDA_npp_LIBRARY       "@CUDA_npp_LIBRARY@"
+#define CUDA_nvcuvenc_LIBRARY  "@CUDA_nvcuvenc_LIBRARY@"
+#define CUDA_nvcuvid_LIBRARY   "@CUDA_nvcuvid_LIBRARY@"
 
 #endif
 

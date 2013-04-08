@@ -1,55 +1,53 @@
 # $Id: CMakeLists.txt 16350 2010-09-20 13:14:52Z nieuwpoort $
 
-lofar_package(GPUProc 1.0 DEPENDS Common Stream ApplCommon CoInterface)
+# We need at least CMake 2.8 for CUDA support
+cmake_minimum_required(VERSION 2.8)
 
-#add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
+lofar_package(GPUProc 1.0 DEPENDS Common Stream ApplCommon CoInterface OpenCL_FFT)
+
+# Handle options USE_CUDA and USE_OPENCL.
+if(NOT USE_CUDA AND NOT USE_OPENCL)
+  message(FATAL_ERROR
+    "You need to enable USE_CUDA or USE_OPENCL to build ${PACKAGE_NAME}. "
+    "Please check your variants file!")
+endif()
+
+if(USE_CUDA)
+  lofar_find_package(CUDA 4.1 REQUIRED)
+
+  if(0)  # for dev to see what is available how; disabled to reduce spam
+  message(STATUS "CUDA_FOUND = ${CUDA_FOUND}")
+  message(STATUS "CUDA_VERSION_MAJOR = ${CUDA_VERSION_MAJOR}")
+  message(STATUS "CUDA_VERSION_MINOR = ${CUDA_VERSION_MINOR}")
+  message(STATUS "CUDA_VERSION = ${CUDA_VERSION}") # sometimes avail if CUDA_VERSION_STRING is not
+  message(STATUS "CUDA_VERSION_STRING = ${CUDA_VERSION_STRING}")
+  message(STATUS "CUDA_TOOLKIT_ROOT_DIR = ${CUDA_TOOLKIT_ROOT_DIR}")
+  message(STATUS "CUDA_SDK_ROOT_DIR = ${CUDA_SDK_ROOT_DIR}")
+  message(STATUS "CUDA_INCLUDE_DIRS = ${CUDA_INCLUDE_DIRS}")
+  message(STATUS "CUDA_LIBRARIES = ${CUDA_LIBRARIES}")
+  message(STATUS "CUDA_CUFFT_LIBRARIES = ${CUDA_CUFFT_LIBRARIES}")
+  message(STATUS "CUDA_CUBLAS_LIBRARIES = ${CUDA_CUBLAS_LIBRARIES}")
+  message(STATUS "CUDA_curand_LIBRARY = ${CUDA_curand_LIBRARY}")
+  message(STATUS "CUDA_cusparse_LIBRARY = ${CUDA_cusparse_LIBRARY}")
+  message(STATUS "CUDA_npp_LIBRARY = ${CUDA_npp_LIBRARY}")
+  message(STATUS "CUDA_nvcuvenc_LIBRARY = ${CUDA_nvcuvenc_LIBRARY}")
+  message(STATUS "CUDA_nvcuvid_LIBRARY = ${CUDA_nvcuvid_LIBRARY}")
+  endif()
+endif()
+
+endif()
+
+if(USE_OPENCL)
+  lofar_find_package(OpenCL REQUIRED)
+endif()
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(OpenMP REQUIRED)
-
-if(USE_CUDA)
-  lofar_find_package(CUDA 4.1 REQUIRED)
-  add_definitions(-DUSE_CUDA)
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/cuda)
-
-  set(HAVE_CUDA ON)
-
-  #message("CUDA_FOUND              = ${CUDA_FOUND}")
-  #message("CUDA_VERSION            = ${CUDA_VERSION}")
-  #message("CUDA_TOOLKIT_ROOT_DIR   = ${CUDA_TOOLKIT_ROOT_DIR}")
-  #message("CUDA_SDK_ROOT_DIR       = ${CUDA_SDK_ROOT_DIR}")  # if N/A, CUDA_SDK_ROOT_DIR-NOTFOUND
-
-  # These are not set with cmake 2.8.9 detecting CUDA 5.0 for some reason. Maybe elsewhere?
-  #message("CUDA_VERSION_MAJOR      = ${CUDA_VERSION_MAJOR}")
-  #message("CUDA_VERSION_MINOR      = ${CUDA_VERSION_MINOR}")
-  #message("CUDA_VERSION_STRING     = ${CUDA_VERSION_STRING}")
-  #message("CUDA_INCLUDE_DIRS       = ${CUDA_INCLUDE_DIRS}")
-  #message("CUDA_LIBRARIES          = ${CUDA_LIBRARIES}")
-  #message("CUDA_CUFFT_LIBRARIES    = ${CUDA_CUFFT_LIBRARIES}")
-  #message("CUDA_CUBLAS_LIBRARIES   = ${CUDA_CUBLAS_LIBRARIES}")
-else(USE_CUDA)
-  set(HAVE_CUDA OFF)
-endif(USE_CUDA)
-
-if(USE_OPENCL)
-  lofar_add_package(OpenCL_FFT)  # extra dep of GPUProc
-  lofar_find_package(OpenCL REQUIRED)
-  add_definitions(-DUSE_OPENCL) # USE_CUDA still active? idem for include dir
-  
-  if(USE_PATCHED_OPENCL_HEADERS)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/backward)
-  endif(USE_PATCHED_OPENCL_HEADERS)
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/opencl)
-  #include_directories(clAmdFft/include) # AMD OpenCL FFT
-
-  set(HAVE_OPENCL ON)
-else(USE_OPENCL)
-  set(HAVE_OPENCL OFF)
-endif(USE_OPENCL)
 lofar_find_package(LibSSH2 REQUIRED)
 lofar_find_package(OpenSSL REQUIRED)
-lofar_find_package(Boost REQUIRED COMPONENTS date_time)
+lofar_find_package(Boost REQUIRED)
+#add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
 lofar_find_package(Casacore COMPONENTS measures REQUIRED)
 lofar_find_package(FFTW3 COMPONENTS single double threads)  # 'double threads' for FFT unit test refs
 if(NOT FFTW3_FOUND)
@@ -59,10 +57,14 @@ if(NOT FFTW3_FOUND)
   endif(NOT FFTW2_FOUND)
 endif(NOT FFTW3_FOUND)
 
-lofar_find_package(Valgrind)
 if(USE_VALGRIND)
-  add_definitions(-DUSE_VALGRIND)
-endif(USE_VALGRIND)  
+  lofar_find_package(Valgrind)
+  if(VALGRIND_FOUND)
+    add_definitions(-DUSE_VALGRIND)
+  else()
+    message(WARNING "USE_VALGRIND requested, but not found!")
+  endif()
+endif()  
 
 add_subdirectory(src)
 add_subdirectory(test)

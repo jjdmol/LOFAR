@@ -25,4 +25,9 @@ if(UNITTEST++_FOUND)
   lofar_add_test(tCorrelatorWorkQueue 
     UnitTests/WorkQueues/CorrelatorWorkQueue.cc
     UnitTests/new_style_unittest.cc)
-endif(UNITTEST++_FOUND)
+endif()
+
+if(USE_CUDA)
+  add_subdirectory(cuda)
+endif()
+
