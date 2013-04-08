@@ -9,7 +9,6 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 lofar_add_library(cudasupport
   Package__Version.cc
-  CUDAException.cc
 )
 
 lofar_add_bin_program(versioncudasupport versioncudasupport.cc)
