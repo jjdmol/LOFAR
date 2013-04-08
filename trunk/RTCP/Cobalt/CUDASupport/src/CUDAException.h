@@ -28,7 +28,7 @@
 
 //# Includes
 #include <Common/Exception.h>
-#include <driver_types.h>
+#include <cuda_runtime_api.h>
 
 namespace LOFAR
 {
