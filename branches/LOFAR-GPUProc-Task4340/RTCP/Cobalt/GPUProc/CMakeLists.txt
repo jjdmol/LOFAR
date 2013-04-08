@@ -49,13 +49,7 @@ lofar_find_package(OpenSSL REQUIRED)
 lofar_find_package(Boost REQUIRED)
 #add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
 lofar_find_package(Casacore COMPONENTS measures REQUIRED)
-lofar_find_package(FFTW3 COMPONENTS single double threads)  # 'double threads' for FFT unit test refs
-if(NOT FFTW3_FOUND)
-  lofar_find_package(FFTW2 COMPONENTS single real)
-  if(NOT FFTW2_FOUND)
-    message(SEND_ERROR "Should have FFTW3 or FFTW2 installed.")
-  endif(NOT FFTW2_FOUND)
-endif(NOT FFTW3_FOUND)
+lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)  # 'double threads' for FFT unit test refs
 
 if(USE_VALGRIND)
   lofar_find_package(Valgrind)

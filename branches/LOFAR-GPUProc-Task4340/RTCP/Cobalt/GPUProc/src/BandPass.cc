@@ -26,13 +26,7 @@
 #include <complex>
 #include <cmath>
 
-#if defined HAVE_FFTW3
 #include <fftw3.h>
-#elif defined HAVE_FFTW2
-#include <fftw.h>
-#else
-#error Should have FFTW3 or FFTW2 installed
-#endif
 
 #define STATION_FILTER_LENGTH 16384 // Number of filter taps of the station filters.
 #define STATION_FFT_SIZE 1024 // The size of the FFT that the station filter does
@@ -2117,17 +2111,9 @@ namespace LOFAR
     // it is not worth to use the more complex R2C FFTW method
     std::vector<std::complex<float> > in(fftSize), out(fftSize);
 
-#if defined HAVE_FFTW3
     fftwf_plan plan;
 #pragma omp critical (FFTW)
     plan = fftwf_plan_dft_1d(fftSize, reinterpret_cast<fftwf_complex *>(&in[0]), reinterpret_cast<fftwf_complex *>(&out[0]), FFTW_FORWARD, FFTW_ESTIMATE);
-#elif defined HAVE_FFTW2
-    fftw_plan plan;
-#pragma omp critical (FFTW)
-    plan = fftw_create_plan(fftSize, FFTW_FORWARD, FFTW_ESTIMATE);
-#else
-#error need FFTW2 or FFTW3
-#endif
 
     for (unsigned i = 0; i < STATION_FILTER_LENGTH; i++)
       in[i] = stationFilterConstants[i];
@@ -2135,15 +2121,9 @@ namespace LOFAR
     for (unsigned i = STATION_FILTER_LENGTH; i < fftSize; i++)
       in[i] = 0;
 
-#if defined HAVE_FFTW3
     fftwf_execute(plan);
 #pragma omp critical (FFTW)
     fftwf_destroy_plan(plan);
-#elif defined HAVE_FFTW2
-    fftw_one(plan, reinterpret_cast<fftw_complex *>(&in[0]), reinterpret_cast<fftw_complex *>(&out[0]));
-#pragma omp critical (FFTW)
-    fftw_destroy_plan(plan);
-#endif
 
     for (unsigned i = 0; i < nrChannels; i++) {
       const std::complex<float> m = out[(i - nrChannels / 2) % fftSize];
