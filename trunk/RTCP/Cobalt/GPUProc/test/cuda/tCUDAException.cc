@@ -1,6 +1,6 @@
 #include <lofar_config.h>
 
-#include <CUDASupport/CUDAException.h>
+#include <GPUProc/cuda/CUDAException.h>
 #include <iostream>
 
 using namespace LOFAR::Cobalt;
