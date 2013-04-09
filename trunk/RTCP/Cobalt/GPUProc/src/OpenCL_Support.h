@@ -21,8 +21,8 @@
 #ifndef LOFAR_GPUPROC_OPENCL_SUPPORT_H
 #define LOFAR_GPUPROC_OPENCL_SUPPORT_H
 
-#include <vector>
-#include <boost/multi_array.hpp>
+#include <CoInterface/Allocator.h>
+#include <CoInterface/MultiDimArray.h>
 
 #include "opencl-incl.h"
 
@@ -35,127 +35,128 @@ namespace LOFAR
     extern void createContext(cl::Context &, std::vector<cl::Device> &);
     extern cl::Program createProgram(cl::Context &, std::vector<cl::Device> &, const char *sources, const char *args);
 
-
-    template <class T>
-    class HostBufferAllocator
+    // A buffer on the GPU (device), to which CPU (host) buffers can be attached.
+    class DeviceBuffer
     {
     public:
-      // type definitions
-      typedef T value_type;
-      typedef T              *pointer;
-      typedef const T        *const_pointer;
-      typedef T              &reference;
-      typedef const T        &const_reference;
-      typedef std::size_t size_type;
-      typedef std::ptrdiff_t difference_type;
-
-      // rebind allocator to type U
-      template <class U>
-      struct rebind {
-        typedef HostBufferAllocator<U> other;
-      };
-
-      // return address of values
-      pointer address(reference value) const
-      {
-        return &value;
-      }
-
-      const_pointer address(const_reference value) const
-      {
-        return &value;
-      }
-
-      // constructors and destructor
-      // - nothing to do because the allocator has no state
-      HostBufferAllocator(cl::CommandQueue &queue, cl_mem_flags flags = CL_MEM_READ_WRITE) throw()
-        :
+      DeviceBuffer( cl::CommandQueue &queue, cl_mem_flags flags, size_t size )
+      :
+        size(size),
         queue(queue),
-        flags(flags)
+        flags(flags),
+        buffer(queue.getInfo<CL_QUEUE_CONTEXT>(), flags | CL_MEM_ALLOC_HOST_PTR, size)
       {
       }
 
-      HostBufferAllocator(const HostBufferAllocator &other) throw()
-        :
-        queue(other.queue),
-        flags(other.flags)
+      const size_t size;
+      cl::CommandQueue &queue;
+      const cl_mem_flags flags;
+      cl::Buffer buffer;
+
+      // Stores transfer information
+      cl::Event event;
+
+      operator cl::Buffer & ()
       {
+        return buffer;
       }
 
-      template <class U>
-      HostBufferAllocator(const HostBufferAllocator<U> &other) throw()
-        :
-        queue(other.queue),
-        flags(other.flags)
+      // Copies data to the GPU
+      void hostToDevice(void *ptr, size_t size, bool synchronous = false)
       {
+        ASSERT(size <= this->size);
+
+        queue.enqueueWriteBuffer(buffer, synchronous ? CL_TRUE : CL_FALSE, 0, size, ptr, 0, &event);
       }
 
-      ~HostBufferAllocator() throw()
+      // Copies data from the GPU
+      void deviceToHost(void *ptr, size_t size, bool synchronous = false)
       {
+        ASSERT(size <= this->size);
+
+        queue.enqueueReadBuffer(buffer, synchronous ? CL_TRUE : CL_FALSE, 0, size, ptr, 0, &event);
       }
 
-      // return maximum number of elements that can be allocated
-      size_type max_size() const throw()
+      // Allocates a buffer for transfer with the GPU
+      void *allocateHostBuffer( size_t size, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE )
       {
-        return queue.getInfo<CL_QUEUE_DEVICE>().getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>() / sizeof(T);
+        ASSERT(size <= this->size);
+
+        return queue.enqueueMapBuffer(buffer, CL_TRUE, map_flags(hostBufferFlags), 0, size);
       }
 
-      // allocate but don't initialize num elements of type T
-      pointer allocate(size_type num, const void * = 0)
-      {
-        buffer = cl::Buffer(queue.getInfo<CL_QUEUE_CONTEXT>(), flags | CL_MEM_ALLOC_HOST_PTR, num * sizeof(T));
-        return static_cast<pointer>(queue.enqueueMapBuffer(buffer, CL_TRUE, flags & CL_MEM_READ_WRITE ? CL_MAP_READ | CL_MAP_WRITE : flags & CL_MEM_READ_ONLY ? CL_MAP_READ : flags & CL_MEM_WRITE_ONLY ? CL_MAP_WRITE : 0, 0, num * sizeof(T)));
-      }
-
-      // deallocate storage p of deleted elements
-      void deallocate(pointer ptr, size_type /*num*/)
+      // Deallocates a buffer for transfer with the GPU
+      void deallocateHostBuffer( void *ptr )
       {
         queue.enqueueUnmapMemObject(buffer, ptr);
       }
 
-      // initialize elements of allocated storage p with value value
-      void construct(pointer p, const T& value)
-      {
-        // initialize memory with placement new
-        new ((void *) p)T(value);
-      }
+    private:
+      // Can't copy cl::Buffer
+      DeviceBuffer(const DeviceBuffer &other);
 
-      // destroy elements of initialized storage p
-      void destroy(pointer p)
-      {
-        // destroy objects by calling their destructor
-        p->~T();
+      // Convert the cl_mem_flags to cl_map_flags
+      static cl_map_flags map_flags(cl_mem_flags flags) {
+        return flags & CL_MEM_READ_WRITE ? CL_MAP_READ | CL_MAP_WRITE
+             : flags & CL_MEM_READ_ONLY  ? CL_MAP_READ
+             : flags & CL_MEM_WRITE_ONLY ? CL_MAP_WRITE
+             : 0;
       }
-
-      cl::CommandQueue queue;
-      cl_mem_flags flags;
-      cl::Buffer buffer;
     };
 
-    //
-    // return that all specializations of this allocator are interchangeable
-    template <class T1, class T2>
-    bool operator == (const HostBufferAllocator<T1> &, const HostBufferAllocator<T2> &) throw()
+    // A buffer on the CPU (host), attached to a buffer on the GPU (device)
+    class HostBuffer
     {
-      return true;
-    }
+    public:
+      HostBuffer( DeviceBuffer &deviceBuffer, size_t size, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE )
+      :
+        deviceBuffer(deviceBuffer),
+        ptr(deviceBuffer.allocateHostBuffer(size, hostBufferFlags)),
+        size(size)
+      {
+      }
 
+      ~HostBuffer()
+      {
+        deviceBuffer.deallocateHostBuffer(ptr);
+      }
 
-    template <class T1, class T2>
-    bool operator != (const HostBufferAllocator<T1> &, const HostBufferAllocator<T2> &) throw()
-    {
-      return false;
-    }
+      void hostToDevice(bool synchronous = false)
+      {
+        deviceBuffer.hostToDevice(ptr, size, synchronous);
+      }
 
+      void deviceToHost(bool synchronous = false)
+      {
+        deviceBuffer.deviceToHost(ptr, size, synchronous);
+      }
 
-    template <typename T, std::size_t DIM>
-    class MultiArrayHostBuffer : public boost::multi_array<T, DIM, HostBufferAllocator<T> >
+      DeviceBuffer &deviceBuffer;
+
+      operator cl::Buffer& () {
+        return deviceBuffer;
+      }
+
+    protected:
+      void * const ptr;
+      const size_t size;
+
+    private:
+      // Copying is expensive (requires allocation),
+      // so forbid it to prevent accidental copying.
+      HostBuffer(const HostBuffer &other);
+    };
+
+    // A MultiDimArray allocated as a HostBuffer
+    template <typename T, size_t DIM>
+    class MultiArrayHostBuffer : public HostBuffer, public MultiDimArray<T, DIM>
     {
     public:
       template <typename ExtentList>
-      MultiArrayHostBuffer(const ExtentList &extents, cl::CommandQueue &queue, cl_mem_flags flags)
-        :
-        boost::multi_array<T, DIM, HostBufferAllocator<T> >(extents, boost::c_storage_order(), HostBufferAllocator<T>(queue, flags))
+      MultiArrayHostBuffer(const ExtentList &extents, cl_mem_flags hostBufferFlags, DeviceBuffer &deviceBuffer)
+      :
+        HostBuffer(deviceBuffer, nrElements(extents) * sizeof(T), hostBufferFlags),
+        MultiDimArray<T,DIM>(extents, static_cast<T*>(ptr), true)
       {
       }
 
@@ -165,96 +166,24 @@ namespace LOFAR
       }
     };
 
-
-    template <typename T>
-    class VectorHostBuffer : public std::vector<T, HostBufferAllocator<T> >
-    {
-    public:
-      VectorHostBuffer(size_t size, cl::CommandQueue &queue, cl_mem_flags flags)
-        :
-        std::vector<T, HostBufferAllocator<T> >(size, T(), HostBufferAllocator<T>(queue, flags))
-      {
-      }
-    };
-
-
-#if 0
-    template <typename T, std::size_t DIM>
-    class MultiArraySharedBuffer
+    // A 1:1 buffer on CPU and GPU
+    template <typename T, size_t DIM>
+    class MultiArraySharedBuffer : public DeviceBuffer, public MultiArrayHostBuffer<T, DIM>
     {
     public:
       template <typename ExtentList>
-      MultiArraySharedBuffer(const ExtentList &extents, cl::CommandQueue &queue, cl_mem_flags hostBufferFlags, cl_mem_flags deviceBufferFlags)
+      MultiArraySharedBuffer(const ExtentList &extents, cl::CommandQueue &queue, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE, cl_mem_flags deviceBufferFlags = CL_MEM_READ_WRITE)
         :
-        hostBuffer(extents, queue, hostBufferFlags),
-        deviceBuffer(queue.getInfo<CL_QUEUE_CONTEXT>(), deviceBufferFlags, hostBuffer.num_elements() * sizeof(T)),
-        queue(queue)
+        DeviceBuffer(queue, deviceBufferFlags, nrElements(extents) * sizeof(T)),
+        MultiArrayHostBuffer<T, DIM>(extents, hostBufferFlags, *this)
       {
       }
 
-      void hostToGPU(cl_bool synchronous = CL_FALSE)
-      {
-        queue.enqueueWriteBuffer(deviceBuffer, synchronous, 0, hostBuffer.num_elements() * sizeof(T), hostBuffer.origin(), 0, &event);
-      }
-
-      void GPUtoHost(cl_bool synchronous = CL_FALSE)
-      {
-        queue.enqueueReadBuffer(deviceBuffer, synchronous, 0, hostBuffer.num_elements() * sizeof(T), hostBuffer.origin(), 0, &event);
-      }
-
-      operator cl::Buffer & ()
-      {
-        return deviceBuffer;
-      }
-
-      MultiArrayHostBuffer<T, DIM> hostBuffer;
-      cl::Buffer deviceBuffer;
-      cl::CommandQueue queue;
-      cl::Event event;
+      // Select the desired interface
+      using HostBuffer::hostToDevice;
+      using HostBuffer::deviceToHost;
+      using DeviceBuffer::operator cl::Buffer&;
     };
-#else
-    template <typename T, std::size_t DIM>
-    class MultiArraySharedBuffer : public MultiArrayHostBuffer<T, DIM>
-    {
-    public:
-      template <typename ExtentList>
-      MultiArraySharedBuffer(const ExtentList &extents, cl::CommandQueue &queue, cl_mem_flags hostBufferFlags, cl_mem_flags deviceBufferFlags)
-        :
-        MultiArrayHostBuffer<T, DIM>(extents, queue, hostBufferFlags),
-        deviceBuffer(queue.getInfo<CL_QUEUE_CONTEXT>(), deviceBufferFlags, this->bytesize()),
-        queue(queue)
-      {
-      }
-
-      template <typename ExtentList>
-      MultiArraySharedBuffer(const ExtentList &extents, cl::CommandQueue &queue, cl_mem_flags hostBufferFlags, cl::Buffer &devBuffer)
-        :
-        MultiArrayHostBuffer<T, DIM>(extents, queue, hostBufferFlags),
-        deviceBuffer(devBuffer),
-        queue(queue)
-      {
-      }
-
-      void hostToDevice(cl_bool synchronous = CL_FALSE)
-      {
-        queue.enqueueWriteBuffer(deviceBuffer, synchronous, 0, this->bytesize(), this->origin(), 0, &event);
-      }
-
-      void deviceToHost(cl_bool synchronous = CL_FALSE)
-      {
-        queue.enqueueReadBuffer(deviceBuffer, synchronous, 0, this->bytesize(), this->origin(), 0, &event);
-      }
-
-      operator cl::Buffer & ()
-      {
-        return deviceBuffer;
-      }
-
-      cl::Buffer deviceBuffer;
-      cl::CommandQueue queue;
-      cl::Event event;
-    };
-#endif
 
     namespace OpenCL_Support
     {

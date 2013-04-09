@@ -36,11 +36,11 @@
 #include "Kernels/BeamFormerTransposeTest.h"
 #include "Kernels/DedispersionChirpTest.h"
 #include "Kernels/CoherentStokesTest.h"
-#include "Kernels/UHEP_BeamFormerTest.h"
-#include "Kernels/UHEP_TransposeTest.h"
+//#include "Kernels/UHEP_BeamFormerTest.h"
+//#include "Kernels/UHEP_TransposeTest.h"
 #include "Kernels/BeamFormerTest.h"
 #include "Kernels/CorrelateTriangleTest.h"
-#include "Kernels/UHEP_TriggerTest.h"
+//#include "Kernels/UHEP_TriggerTest.h"
 #include "Kernels/CorrelateRectangleTest.h"
 #include "Kernels/CorrelatorTest.h"
 #include "Kernels/FFT_Test.h"
@@ -91,9 +91,9 @@ int main(int argc, char **argv)
   (CoherentStokesTest)(ps);
 
   // UHEP unittest
-  (UHEP_BeamFormerTest)(ps);
-  (UHEP_TransposeTest)(ps);
-  (UHEP_TriggerTest)(ps);
+  //(UHEP_BeamFormerTest)(ps);
+  //(UHEP_TransposeTest)(ps);
+  //(UHEP_TriggerTest)(ps);
 
   //return UnitTest::RunAllTests();
   return 0;

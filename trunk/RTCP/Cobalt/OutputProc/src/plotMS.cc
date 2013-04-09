@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
       //data->peerMagicNumber = 0xda7a0000; // fake wrong endianness to circumvent bug
       shouldSwap = data->shouldByteSwap();
 
-      printf( "# valid samples: %u\n", data->nrValidSamples(baseline,channel));
+      printf( "# valid samples: %u\n", data->getNrValidSamples(baseline,channel));
 
       printf( "%6d %10g %10g %10g %10g\n",
               data->sequenceNumber(),

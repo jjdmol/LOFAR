@@ -18,7 +18,7 @@
 //#
 //# $Id$
 
-__kernel void coherentStokes(__global void//#restrict stokesDataPtr,
+__kernel void coherentStokes(__global void *restrict stokesDataPtr,
                              __global const void *restrict complexVoltagesPtr)
 {
   typedef __global float (*StokesType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHANNEL / COHERENT_STOKES_TIME_INTEGRATION_FACTOR][NR_CHANNELS];
