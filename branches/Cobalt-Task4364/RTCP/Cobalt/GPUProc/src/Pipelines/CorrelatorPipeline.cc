@@ -157,7 +157,9 @@ namespace LOFAR
             CorrelatorWorkQueue &queue = *workQueues[i];
 
             // run the queue
+            queue.timers["CPU - total"]->start();
             processSubbands(queue);
+            queue.timers["CPU - total"]->stop();
 
             // Signal end of output
             queue.outputPool.filled.append(NULL);

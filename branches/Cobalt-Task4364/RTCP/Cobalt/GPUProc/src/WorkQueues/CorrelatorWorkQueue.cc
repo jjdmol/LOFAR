@@ -161,6 +161,7 @@ namespace LOFAR
       addTimer("CPU - read input");
       addTimer("CPU - process");
       addTimer("CPU - postprocess");
+      addTimer("CPU - total");
 
       // GPU timers are set by us
       addTimer("GPU - total");
