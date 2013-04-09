@@ -55,13 +55,13 @@ namespace LOFAR
       BeamFormerPipeline  &pipeline;
 
       MultiArraySharedBuffer<char, 4>                inputSamples;
-      cl::Buffer devFilteredData;
+      DeviceBuffer devFilteredData;
       MultiArraySharedBuffer<float, 1>               bandPassCorrectionWeights;
       MultiArraySharedBuffer<float, 3>               delaysAtBegin, delaysAfterEnd;
       MultiArraySharedBuffer<float, 2>               phaseOffsets;
-      cl::Buffer devCorrectedData;
+      DeviceBuffer devCorrectedData;
       MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights;
-      cl::Buffer devComplexVoltages;
+      DeviceBuffer devComplexVoltages;
       MultiArraySharedBuffer<std::complex<float>, 4> transposedComplexVoltages;
       MultiArraySharedBuffer<float, 1>               DMs;
 

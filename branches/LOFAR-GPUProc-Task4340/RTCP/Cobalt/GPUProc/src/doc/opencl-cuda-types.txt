@@ -13,5 +13,7 @@ cl::Error         cu::Error
 cl::Device        cu::Device
 cl::Event         cu::Event
 cl::CommandQueue  cu::Stream
+cl::NDRange       dim3
+cl::Platform      -
 -----------------------------------------
 

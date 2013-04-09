@@ -186,7 +186,7 @@ namespace cu {
 	checkCudaCall(cuModuleLoadData(&_module, data));
       }
 
-      Module(const void *data, std::vector<CUjit_option>& options, std::vector<void*> optionValues) // TODO: get rid of void*
+      Module(const void *data, std::vector<CUjit_option>& options, std::vector<void*> optionValues)
       {
         checkCudaCall(cuModuleLoadDataEx(&_module, data, options.size(), &options[0], &optionValues[0]));
       }

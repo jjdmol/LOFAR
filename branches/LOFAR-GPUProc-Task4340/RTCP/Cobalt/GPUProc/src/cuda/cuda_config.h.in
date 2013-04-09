@@ -21,7 +21,7 @@
 #ifndef LOFAR_GPUPROC_CUDA_CONFIG_H
 #define LOFAR_GPUPROC_CUDA_CONFIG_H
 
-// Note: even if CUDA is detected, some of these symbols may be empty.
+// Note: even if CUDA is found by cmake, some of these symbols may be empty.
 // Also note that these correspond to the version as detected at CMake time.
 #define CUDA_VERSION_MAJOR     @CUDA_VERSION_MAJOR@
 #define CUDA_VERSION_MINOR     @CUDA_VERSION_MINOR@
@@ -30,7 +30,7 @@
 #define CUDA_TOOLKIT_ROOT_DIR  "@CUDA_TOOLKIT_ROOT_DIR@"
 
 // CUDA_SDK_ROOT_DIR is set to set to "CUDA_SDK_ROOT_DIR-NOTFOUND" if N/A.
-// But you probably do not want to use this anyway, see FindCUDA.cmake
+// But you probably do not want to use this symbol anyway, see FindCUDA.cmake
 #define CUDA_SDK_ROOT_DIR      "@CUDA_SDK_ROOT_DIR@"
 
 #define CUDA_INCLUDE_DIRS      "@CUDA_INCLUDE_DIRS@"

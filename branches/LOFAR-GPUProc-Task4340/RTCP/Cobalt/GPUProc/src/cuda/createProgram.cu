@@ -39,7 +39,8 @@
 #include <Stream/FileStream.h>
 
 #include <global_defines.h>
-#include "cuda_config.h"
+
+#define BUILD_MAX_LOG_SIZE	4095
 
 namespace LOFAR
 {
@@ -65,6 +66,7 @@ namespace LOFAR
       cmd << (debug ? " -G --source-in-ptx" : "");
       cmd << " -m32"                           // -m64 (default) takes extra regs for a ptr
       // use opt level 99
+      // -Ox is only for host code. Opt backend compilation below.
       cmd << " --gpu-architecture compute_30"; // TODO: incorrectly assumes one, single virt arch
       //cmd << " --maxrregcount 63;" // probably only effective for backend compilation below
       cmd << " --use_fast_math";
@@ -121,8 +123,13 @@ namespace LOFAR
       vector<char> buf(file.size());
       file.read(&buf[0], buf.size());
 
+      /*
+       * JIT compilation options.
+       * Note: need to pass a void* with option vals. Preferably, do not alloc dyn (mem leaks on exc).
+       * Instead, use local vars for small variables and vector<char> xxx; passing &xxx[0] for output 'strings'.
+       */
       vector<cu::CUjit_options> options;
-      vector<void*> optionValues; // TODO: get rid of void ptr in cuwrapper.cuh and here: dyn alloced mem leak on error
+      vector<void*> optionValues;
 
 #if 0
       unsigned int maxRegs = 63; // TODO: write this up
@@ -134,19 +141,19 @@ namespace LOFAR
       optionValues.push_back(&thrPerBlk); // can be read back
 #endif
 
-      unsigned int infoLogSize  = 256; // input and output val
-      unsigned int errorLogSize = 256; // idem (hence not the a single var or const)
+      unsigned int infoLogSize  = BUILD_MAX_LOG_SIZE + 1; // input and output var for JIT compiler
+      unsigned int errorLogSize = BUILD_MAX_LOG_SIZE + 1; // idem (hence not the a single var or const)
 
-      char infoLog[infoLogSize];
+      vector<char> infoLog(infoLogSize);
       options.push_back(CU_JIT_INFO_LOG_BUFFER);
-      optionValues.push_back(infoLog);
+      optionValues.push_back(&infoLog[0]);
 
       options.push_back(CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES);
       optionValues.push_back(&infoLogSize);
 
-      char errorLog[errorLogSize];
+      vector<char> errorLog(errorLogSize);
       options.push_back(CU_JIT_ERROR_LOG_BUFFER);
-      optionValues.push_back(errorLog);
+      optionValues.push_back(&errorLog[0]);
 
       options.push_back(CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES);
       optionValues.push_back(&errorLogSize);
@@ -178,16 +185,23 @@ namespace LOFAR
       //CUModule module(buf, options, optionValues);
       try {
         module = new cu::Module(buf, options, optionValues);
-        cout << "Build info for '" << outputFilename << "' (" << jitWallTime << " us):" << endl << infoLog << endl;
+        if (infoLogSize > infoLog.size()) { // zero-term log and guard against bogus JIT opt val output
+          infoLogSize = infoLog.size();
+        }
+        infoLog[infoLogSize - 1] = '\0';
+        cout << "Build info for '" << outputFilename << "' (" << jitWallTime << " us):" << endl << &infoLog[0] << endl;
       } catch (CudaException& exc) {
-        cerr << "Build errors for '" << outputFilename << "' (" << jitWallTime << " us):" << endl << errorLog << endl;
+        if (errorLogSize > errorLog.size()) { // idem
+          errorLogSize = errorLog.size();
+        }
+        errorLog[errorLogSize - 1] = '\0';
+        cerr << "Build errors for '" << outputFilename << "' (" << jitWallTime << " us):" << endl << &errorLog[0] << endl;
         throw;
       }
 
       return module;
 //return createProgram(context, devices, dirname(__FILE__).append("/").append(sources).c_str(), args.str().c_str());
     }
-
 
   } // namespace Cobalt
 } // namespace LOFAR

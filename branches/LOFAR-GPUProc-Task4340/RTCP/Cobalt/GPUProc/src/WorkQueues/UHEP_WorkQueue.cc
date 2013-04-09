@@ -48,7 +48,7 @@ namespace LOFAR
       pipeline(pipeline),
       hostInputSamples(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY),
       hostBeamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY),
-      hostTriggerInfo(ps.nrTABs(0), queue, CL_MEM_READ_ONLY)
+      hostTriggerInfo(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY)
     {
       size_t inputSamplesSize = ps.nrStations() * ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
       size_t complexVoltagesSize = ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);
@@ -121,7 +121,7 @@ namespace LOFAR
         invFIR.enqueue(queue, pipeline.invFIRfilterCounter);
         trigger.enqueue(queue, pipeline.triggerCounter);
         queue.finish();             // necessary to overlap I/O & computations ???
-        queue.enqueueReadBuffer(devTriggerInfo, CL_TRUE, 0, hostTriggerInfo.size() * sizeof(TriggerInfo), &hostTriggerInfo[0]);
+        queue.enqueueReadBuffer(devTriggerInfo, CL_TRUE, 0, hostTriggerInfo.bytesize(), hostTriggerInfo.origin());
       }
 
 #pragma omp barrier

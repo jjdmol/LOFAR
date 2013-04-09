@@ -27,7 +27,10 @@
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
 #include <Stream/Stream.h>
+#include <Stream/FileStream.h>
+#include <Stream/NullStream.h>
 #include <CoInterface/CorrelatedData.h>
+#include <CoInterface/Stream.h>
 
 #include <GPUProc/OpenMP_Support.h>
 #include <GPUProc/createProgram.h>
@@ -43,6 +46,7 @@ namespace LOFAR
     CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
       :
       Pipeline(ps),
+      subbandPool(ps.nrSubbands()),
       filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER)
     {
       filterBank.negateWeights();
@@ -63,157 +67,339 @@ namespace LOFAR
 
     void CorrelatorPipeline::doWork()
     {
+      size_t nrWorkQueues = (profiling ? 1 : 2) * nrGPUs;
+      vector< SmartPtr<CorrelatorWorkQueue> > workQueues(nrWorkQueues);
+
+      for (size_t i = 0; i < workQueues.size(); ++i) {
+        workQueues[i] = new CorrelatorWorkQueue(ps,               // Configuration
+                                      context,          // Opencl context
+                                      devices[i % nrGPUs], // The GPU this workQueue is connected to
+                                      i % nrGPUs, // The GPU index
+                                      programs,         // The compiled kernels, const
+                                      filterBank);   // The filter set to use. Const
+      }
+
+      for (unsigned sb = 0; sb < ps.nrSubbands(); sb++) {
+        // Allow 10 blocks to be in the best-effort queue.
+        // TODO: make this dynamic based on memory or time
+        subbandPool[sb].bequeue = new BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> >(10, ps.realTime());
+      }
+
+      double startTime = ps.startTime();
+      double stopTime = ps.stopTime();
+      double blockTime = ps.CNintegrationTime();
+
+      size_t nrBlocks = floor((stopTime - startTime) / blockTime);
+
       //sections = program segments defined by the following omp section directive
       //           are distributed for parallel execution among available threads
       //parallel = directive explicitly instructs the compiler to parallelize the chosen block of code.
       //  The two sections in this function are done in parallel with a seperate set of threads.
 #     pragma omp parallel sections
       {
-        // Allow the super class to do its work
-#       pragma omp section
-        Pipeline::doWork();
-
-        // Forward the input
+        /*
+         * CIRCULAR BUFFER -> STATION STREAMS
+         *
+         * Handles one block per station.
+         */
 #       pragma omp section
         {
-          double startTime = ps.startTime(), stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
-
           size_t nrStations = ps.nrStations();
           // The data from the input buffer to the input stream is run in a seperate thread
 #         pragma omp parallel for num_threads(nrStations)
-          for (size_t stat = 0; stat < nrStations; stat++)
-          {
-            double currentTime;
-            for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block++)
-            {
-              // TODO: Connect the input buffer to the input stream, is this correct description??
+          for (size_t stat = 0; stat < nrStations; stat++) {
+            for (size_t block = 0; block < nrBlocks; block++) {
               sendNextBlock(stat);
             }
           }
         }
 
-        // Perform the calculations
+        /*
+         * STATION STREAMS -> WORKQUEUE INPUTPOOL
+         *
+         * Collects one subband of all stations.
+         */
 #       pragma omp section
         {
-          size_t nrWorkQueues = (profiling ? 1 : 2) * nrGPUs;
-
-          // Start a set of workqueue, the number depending on the number of GPU's: 2 for each.
-          // Each WorkQueue gets its own thread.
-#         pragma omp parallel num_threads(nrWorkQueues)
+          // Let the queues pick up work as soon as they're ready.
+#         pragma omp parallel num_threads(workQueues.size())
           {
-            CorrelatorWorkQueue queue(ps,               // Configuration
-                                      context,          // Opencl context
-                                      devices[omp_get_thread_num() % nrGPUs], // The GPU this workQueue is connected to
-                                      omp_get_thread_num() % nrGPUs, // The GPU index
-                                      programs,         // The compiled kernels, const
-                                      filterBank);   // The filter set to use. Const
+            CorrelatorWorkQueue &queue = *workQueues[omp_get_thread_num() % workQueues.size()];
+
+            for (size_t block = 0; block < nrBlocks; block++) {
+              // process each subband in a seperate omp tread
+              // This is the main loop.
+              // Get data from an input, send to the gpu, process, assign to the output.
+              // schedule(dynamic) = the iterations requiring varying, or even unpredictable, amounts of work.
+              // nowait = Use this clause to avoid the implied barrier at the end of the for directive.
+              //          Threads do not synchronize at the end of the parallel loop.
+              // ordered =  Specifies that the iterations of the loop must be executed as they would be in a serial program
+#             pragma omp for schedule(dynamic), nowait, ordered  // no parallel: this no new threads
+              for (unsigned subband = 0; subband < ps.nrSubbands(); subband++) {
+                receiveSubbandSamples(queue, block, subband);
+              }
+            }
+
+            // Signal end of input
+            queue.inputPool.filled.append(NULL);
+          }
+        }
+
+        /*
+         * WORKQUEUE INPUTPOOL -> WORKQUEUE OUTPUTPOOL
+         *
+         * Perform GPU processing, one thread per workQueue.
+         */
+#       pragma omp section
+        {
+#         pragma omp parallel for num_threads(workQueues.size())
+          for (size_t i = 0; i < workQueues.size(); ++i) {
+            CorrelatorWorkQueue &queue = *workQueues[i];
 
             // run the queue
-            doWorkQueue(queue);
+            queue.timers["CPU - total"]->start();
+            processSubbands(queue);
+            queue.timers["CPU - total"]->stop();
 
-            // gather performance figures
-            performance.addQueue(queue);
+            // Signal end of output
+            queue.outputPool.filled.append(NULL);
           }
-          // Signal end of data
-          noMoreOutput();
+        }
 
-          // log performance figures
-          performance.log(nrWorkQueues);
+        /*
+         * WORKQUEUE OUTPUTPOOL -> SUBBANDPOOL
+         *
+         * Perform post-processing, one thread per workQueue.
+         */
+#       pragma omp section
+        {
+#         pragma omp parallel for num_threads(workQueues.size())
+          for (size_t i = 0; i < workQueues.size(); ++i) {
+            CorrelatorWorkQueue &queue = *workQueues[i];
+
+            // run the queue
+            postprocessSubbands(queue);
+          }
+
+          // Signal end of output
+          for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+            subbandPool[subband].bequeue->noMore();
+          }
+        }
+
+        /*
+         * SUBBANDPOOL -> STORAGE STREAMS (best effort)
+         */
+#       pragma omp section
+        {
+#         pragma omp parallel for num_threads(ps.nrSubbands())
+          for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+            // write subband to Storage
+            writeSubband(subband);
+          }
+        }
+      }
+
+      // gather performance figures
+      for (size_t i = 0; i < workQueues.size(); ++i ) {
+        performance.addQueue(*workQueues[i]);
+      }
+
+      // log performance figures
+      performance.log(workQueues.size());
+    }
+
+
+    void CorrelatorPipeline::receiveSubbandSamples(
+      CorrelatorWorkQueue &workQueue, size_t block, unsigned subband)
+    {
+      // Fetch the next input object to fill
+      SmartPtr<WorkQueueInputData> inputData(workQueue.inputPool.free.remove());
+
+      inputData->block   = block;
+      inputData->subband = subband;
+
+      if (subband == 0) {
+        LOG_INFO_STR("[block " << block << "] Reading input samples");
+      }
+
+      // Wait for previous data to be read
+      inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
+
+      // Block 0 may take a while to arrive if we start early
+      if (block > 0) {
+        workQueue.timers["CPU - read input"]->start();
+      }
+
+      // Read the samples from the input stream in parallel
+#     pragma omp parallel for
+      for (unsigned station = 0; station < ps.nrStations(); station++)
+      {
+
+        // each input stream contains the data from a single station
+        Stream *inputStream = bufferToGPUstreams[station];
+
+        inputData->read(inputStream, station, subband, ps.subbandToSAPmapping()[subband]);
+
+        if (subband == 0) {
+          LOG_DEBUG_STR("[block " << block << "] Read input from station " << station);
+        }
+      }
+
+      if (block > 0) {
+        workQueue.timers["CPU - read input"]->stop();
+      }
+
+      // Advance the block index
+      inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
+
+      // Register this block as workQueue input
+      workQueue.inputPool.filled.append(inputData);
+      ASSERT(!inputData);
+
+      if (subband == 0) {
+        LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
+      }
+    }
+
+
+    void CorrelatorPipeline::processSubbands(CorrelatorWorkQueue &workQueue)
+    {
+      SmartPtr<WorkQueueInputData> input;
+
+      // Keep fetching input objects until end-of-input
+      while ((input = workQueue.inputPool.filled.remove()) != NULL) {
+        size_t block = input->block;
+        unsigned subband = input->subband;
+
+        if (subband == 0) {
+          LOG_INFO_STR("[block " << block << "] Processing start");
+        }
+
+        // Also fetch an output object to store results
+        SmartPtr<CorrelatedDataHostBuffer> output = workQueue.outputPool.free.remove();
+        ASSERT(output != NULL); // Only we signal end-of-data, so we should never receive it
+
+        output->block = block;
+        output->subband = subband;
+
+        // Perform calculations
+        workQueue.timers["CPU - process"]->start();
+        workQueue.processSubband(*input, *output);
+        workQueue.timers["CPU - process"]->stop();
+
+        // Hand off output to post processing
+        workQueue.outputPool.filled.append(output);
+        ASSERT(!output);
+
+        // Give back input data for a refill
+        workQueue.inputPool.free.append(input);
+        ASSERT(!input);
+
+        if (subband == 0) {
+          LOG_DEBUG_STR("[block " << block << "] Forwarded output to post processing");
         }
       }
     }
 
 
-    void CorrelatorPipeline::receiveSubbandSamples(
-      CorrelatorWorkQueue &workQueue, unsigned subband)
+    void CorrelatorPipeline::postprocessSubbands(CorrelatorWorkQueue &workQueue)
     {
-      // Read the samples from the input stream in parallel
-#     pragma omp parallel for
-      for (unsigned station = 0; station < ps.nrStations(); station++)
-      {
-        // each input stream contains the data from a single station
-        Stream *inputStream = bufferToGPUstreams[station];
+      SmartPtr<CorrelatedDataHostBuffer> output;
 
-        //
-        workQueue.inputData.read(inputStream, station, subband, ps.subbandToSAPmapping()[subband]);
+      // Keep fetching output objects until end-of-output
+      while ((output = workQueue.outputPool.filled.remove()) != NULL) {
+        size_t block = output->block;
+        unsigned subband = output->subband;
+
+        if (subband == 0) {
+          LOG_INFO_STR("[block " << block << "] Post processing start");
+        }
+
+        workQueue.timers["CPU - postprocess"]->start();
+        workQueue.postprocessSubband(*output);
+        workQueue.timers["CPU - postprocess"]->stop();
+
+        // Hand off output, force in-order as Storage expects it that way
+        subbandPool[subband].sync.waitFor(block);
+
+        // We do the ordering, so we set the sequence numbers
+        output->setSequenceNumber(block);
+
+        if (!subbandPool[subband].bequeue->append(output)) {
+          LOG_WARN_STR("[block " << block << "] Dropped for subband " << subband);
+
+          // Give back to queue
+          workQueue.outputPool.free.append(output);
+        }
+
+        // Allow next block to be written
+        subbandPool[subband].sync.advanceTo(block + 1);
+
+        ASSERT(!output);
+
+        if (subband == 0) {
+          LOG_DEBUG_STR("[block " << block << "] Forwarded output to writer");
+        }
       }
     }
 
 
-    //This whole block should be parallel: this allows the thread to pick up a subband from the next block
-    void CorrelatorPipeline::doWorkQueue(CorrelatorWorkQueue &workQueue) //todo: name is not correct
+    void CorrelatorPipeline::writeSubband( unsigned subband )
     {
-      // get details regarding the observation from the parset.
-      double currentTime;                         // set in the block processing for loop
-      double startTime = ps.startTime();          // start of the observation
-      double stopTime = ps.stopTime();            // end of the observation
-      double blockTime = ps.CNintegrationTime();  // Total integration time: How big a timeslot should be integrated
+      SmartPtr<Stream> outputStream;
 
-      // wait until all other threads in this section reach the same point:
-      // This is the start of the work. We need a barier because not all WorkQueue objects might be created at once,
-      // each is  created in a seperate (OMP) Tread.
-#     pragma omp barrier
-      double executionStartTime = omp_get_wtime();
-      double lastTime = omp_get_wtime();
+      // Connect to output stream
+      try {
+        if (ps.getHostName(CORRELATED_DATA, subband) == "") {
+          // an empty host name means 'write to disk directly', to
+          // make debugging easier for now
+          outputStream = new FileStream(ps.getFileName(CORRELATED_DATA, subband), 0666);
+        } else {
+          // connect to the Storage_main process for this output
+          const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, subband);
 
-      workQueue.timers["CPU - total"]->start();
+          outputStream = createStream(desc, false, 0);
+        }
+      } catch(Exception &ex) {
+        LOG_ERROR_STR("Dropping rest of subband " << subband << ": " << ex);
 
-      // loop all available blocks. use the blocks to determine if we are within the valid observation times
-      // This loop is not parallel
-      for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block++)
-      {
-#       pragma omp single nowait    // Only a single thread should perform the cout
-        LOG_INFO_STR("block = " << block
-                  << ", time = " << to_simple_string(from_ustime_t(currentTime))  //current time
-                  << ", exec = " << omp_get_wtime() - lastTime);
-
-        // Save the current time: This will be used to display the execution time for this block
-        lastTime = omp_get_wtime();
-
-        // process each subband in a seperate omp tread
-        // This is the main loop.
-        // Get data from an input, send to the gpu, process, assign to the output.
-        // schedule(dynamic) = the iterations requiring varying, or even unpredictable, amounts of work.
-        // nowait = Use this clause to avoid the implied barrier at the end of the for directive.
-        //          Threads do not synchronize at the end of the parallel loop.
-        // ordered =  Specifies that the iterations of the loop must be executed as they would be in a serial program
-#       pragma omp for schedule(dynamic), nowait, ordered  // no parallel: this no new threads
-        for (unsigned subband = 0; subband < ps.nrSubbands(); subband++)
-        {
-          // Create an data object to Storage around our visibilities
-          SmartPtr<CorrelatedData> output = new CorrelatedData(ps.nrStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 1);
-
-          workQueue.timers["CPU - input"]->start();
-          // Each input block is sent in order. Therefore wait for the correct block
-          inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-          receiveSubbandSamples(workQueue, subband);
-          // Advance the block index
-          inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
-          workQueue.timers["CPU - input"]->stop();
-
-          // Perform calculations
-          workQueue.timers["CPU - compute"]->start();
-          workQueue.doSubband(subband, *output);
-          workQueue.timers["CPU - compute"]->stop();
-
-          // Hand off the block to Storage
-          workQueue.timers["CPU - output"]->start();
-          writeOutput(block, subband, output.release());
-          workQueue.timers["CPU - output"]->stop();
-        }  // end pragma omp for
+        outputStream = new NullStream;
       }
 
-      workQueue.timers["CPU - total"]->stop();
+      SmartPtr<CorrelatedDataHostBuffer> output;
 
-      //The omp for loop was nowait: We need a barier to assure that
-#     pragma omp barrier
+      // Process pool elements until end-of-output
+      while ((output = subbandPool[subband].bequeue->remove()) != NULL) {
+        size_t block = output->block;
+        unsigned subband = output->subband;
 
-      //master = a section of code that must be run only by the master thread.
-#     pragma omp master
+        CorrelatorWorkQueue &queue = output->queue; // cache queue object, because `output' will be destroyed
 
-      if (!profiling)
-        LOG_INFO_STR("run time = " << omp_get_wtime() - executionStartTime);
+        if (subband == 0) {
+          LOG_INFO_STR("[block " << block << "] Writing start");
+        }
+
+        // Write block to disk 
+        try {
+          output->write(outputStream.get(), true);
+        } catch(Exception &ex) {
+          LOG_ERROR_STR("Dropping rest of subband " << subband << ": " << ex);
+
+          outputStream = new NullStream;
+        }
+
+        // Hand the object back to the workQueue it originally came from
+        queue.outputPool.free.append(output);
+
+        ASSERT(!output);
+
+        if (subband == 0) {
+          LOG_INFO_STR("[block " << block << "] Done");
+        }
+      }
     }
+
   }
 }
 

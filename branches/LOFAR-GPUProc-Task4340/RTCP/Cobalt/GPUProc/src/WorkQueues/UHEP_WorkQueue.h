@@ -60,7 +60,7 @@ namespace LOFAR
       cl::Buffer devInvFIRfilterWeights;
 
       cl::Buffer devTriggerInfo;
-      VectorHostBuffer<TriggerInfo> hostTriggerInfo;
+      MultiArraySharedBuffer<TriggerInfo, 1> hostTriggerInfo;
     };
   }
 }

@@ -50,7 +50,7 @@ TEST(propagateFlagsToOutput)
   CorrelatorWorkQueue::flagFunctions::propagateFlagsToOutput(parset, inputFlags, output);
 
   // now perform weighting of the data based on the number of valid samples
-  CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities(parset, output);  
+  CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(parset, output);  
   // *********************************************************************************************
 
   // Now validate the functionality:
@@ -193,18 +193,18 @@ TEST(calculateAndSetNumberOfFlaggedSamples4Channels)
   flagsPerChanel[1][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples(parset, flagsPerChanel, output);
+  CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint16_t>(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
 
-  CHECK_EQUAL(256u - 11u, output.nrValidSamples(0,1)); // 11 flagged in station 1
-  CHECK_EQUAL(256u - 20u, output.nrValidSamples(1,1)); // The union is 11+9 == 20 flagged
-  CHECK_EQUAL(256u - 9u, output.nrValidSamples(2,1)); // 9 flagged in station 2
+  CHECK_EQUAL(256u - 11u, output.getNrValidSamples(0,1)); // 11 flagged in station 1
+  CHECK_EQUAL(256u - 20u, output.getNrValidSamples(1,1)); // The union is 11+9 == 20 flagged
+  CHECK_EQUAL(256u - 9u, output.getNrValidSamples(2,1)); // 9 flagged in station 2
  
   // Channel zero should always be all flagged
-  CHECK_EQUAL(0u, output.nrValidSamples(0,0)); // all flagged in station 2
-  CHECK_EQUAL(0u, output.nrValidSamples(1,0)); // all flagged in station 2
-  CHECK_EQUAL(0u, output.nrValidSamples(2,0)); // all flagged in station 2
+  CHECK_EQUAL(0u, output.getNrValidSamples(0,0)); // all flagged in station 2
+  CHECK_EQUAL(0u, output.getNrValidSamples(1,0)); // all flagged in station 2
+  CHECK_EQUAL(0u, output.getNrValidSamples(2,0)); // all flagged in station 2
 }
 
 TEST(calculateAndSetNumberOfFlaggedSamples1Channels)
@@ -232,13 +232,13 @@ TEST(calculateAndSetNumberOfFlaggedSamples1Channels)
   flagsPerChanel[0][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples(parset, flagsPerChanel, output);
+  CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint16_t>(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
   // channel is 1 so no time resolution loss!!
-  CHECK_EQUAL(245u, output.nrValidSamples(0,0)); // 11 flagged in station 1
-  CHECK_EQUAL(236u, output.nrValidSamples(1,0)); // The union is 11+9 == 20 flagged
-  CHECK_EQUAL(247u, output.nrValidSamples(2,0)); // 9 flagged in station 2  
+  CHECK_EQUAL(245u, output.getNrValidSamples(0,0)); // 11 flagged in station 1
+  CHECK_EQUAL(236u, output.getNrValidSamples(1,0)); // The union is 11+9 == 20 flagged
+  CHECK_EQUAL(247u, output.getNrValidSamples(2,0)); // 9 flagged in station 2  
 }
 
 TEST(applyFractionOfFlaggedSamplesOnVisibilities)
@@ -269,7 +269,7 @@ TEST(applyFractionOfFlaggedSamplesOnVisibilities)
   output.setNrValidSamples(0,1,n_valid_samples); //baseline 0, channel 1
   output.setNrValidSamples(1,1,256); //baseline 1, channel 1
   output.setNrValidSamples(2,1,0); //baseline 0, channel 1
-  CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities(parset, output);
+  CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(parset, output);
 
   // 4 channels: therefore the chanel zero should be zero
   CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[0][0][0][0]);
