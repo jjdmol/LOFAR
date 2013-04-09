@@ -43,8 +43,7 @@ namespace LOFAR
       stationInputs16(ps.nrStations()),
       stationInputs8(ps.nrStations()),
       stationInputs4(ps.nrStations()),
-      bufferToGPUstreams(ps.nrStations()),
-      outputs(ps.nrSubbands())
+      bufferToGPUstreams(ps.nrStations())
     {
       createContext(context, devices);
 
@@ -66,91 +65,12 @@ namespace LOFAR
           break;
         }
       }
-
-      for (unsigned sb = 0; sb < ps.nrSubbands(); sb++) {
-        // Allow 10 blocks to be in the best-effort queue.
-        // TODO: make this dynamic based on memory or time
-        outputs[sb].bequeue = new BestEffortQueue< SmartPtr<StreamableData> >(10, ps.realTime());
-      }
-    }
-
-
-    void Pipeline::doWork()
-    {
-      handleOutput();
-    }
-
-
-    void Pipeline::handleOutput()
-    {
-      // Process to all output streams in parallel
-
-#           pragma omp parallel for num_threads(ps.nrSubbands())
-      for (unsigned sb = 0; sb < ps.nrSubbands(); sb++) {
-        struct Output &output = outputs[sb];
-
-        SmartPtr<Stream> outputStream;
-
-        try {
-          // Connect to output stream
-          if (ps.getHostName(CORRELATED_DATA, sb) == "") {
-            // an empty host name means 'write to disk directly', to
-            // make debugging easier for now
-            outputStream = new FileStream(ps.getFileName(CORRELATED_DATA, sb), 0666);
-          } else {
-            // connect to the Storage_main process for this output
-            const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, sb);
-
-            // TODO: Create these connections asynchronously!
-            outputStream = createStream(desc, false, 0);
-          }
-
-          // Process queue elements
-          SmartPtr<StreamableData> data;
-
-          while ((data = output.bequeue->remove()) != NULL) {
-            // Write data to Storage
-            data->write(outputStream.get(), true);
-          }
-        } catch(Exception &ex) {
-          LOG_ERROR_STR("Caught exception for output subband " << sb << ": " << ex);
-        }
-      }
-    }
-
-
-    void Pipeline::noMoreOutput()
-    {
-      for (unsigned sb = 0; sb < ps.nrSubbands(); sb++) {
-        outputs[sb].bequeue->noMore();
-      }
     }
 
 
     cl::Program Pipeline::createProgram(const char *sources)
     {
       return LOFAR::Cobalt::createProgram(ps, context, devices, sources);
-    }
-
-
-    void Pipeline::writeOutput(unsigned block, unsigned subband, StreamableData *data)
-    {
-      struct Output &output = outputs[subband];
-
-      // Force blocks to be written in-order
-      output.sync.waitFor(block);
-
-      // We do the ordering, so we set the sequence numbers
-      data->setSequenceNumber(block);
-
-      if (!output.bequeue->append(data)) {
-        LOG_WARN_STR("Dropping block " << block << " of subband " << subband);
-
-        delete data;
-      }
-
-      // Allow the next block to be written
-      output.sync.advanceTo(block + 1);
     }
 
 
@@ -244,16 +164,16 @@ namespace LOFAR
       double wall_seconds = total_timers["CPU - total"]->getAverage();
       double gpu_seconds = counter_groups["compute"].runtime / nrGPUs;
       double spin_seconds = total_timers["GPU - wait"]->getAverage();
-      double input_seconds = total_timers["CPU - input"]->getElapsed() / nrWorkQueues;
-      double cpu_seconds = total_timers["CPU - compute"]->getElapsed() / nrWorkQueues;
-      double output_seconds = total_timers["CPU - output"]->getElapsed() / nrWorkQueues;
+      double input_seconds = total_timers["CPU - read input"]->getElapsed() / nrWorkQueues;
+      double cpu_seconds = total_timers["CPU - process"]->getElapsed() / nrWorkQueues;
+      double postprocess_seconds = total_timers["CPU - postprocess"]->getElapsed() / nrWorkQueues;
 
       LOG_INFO_STR("Wall seconds spent processing        : " << fixed << setw(8) << setprecision(3) << wall_seconds);
       LOG_INFO_STR("GPU  seconds spent computing, per GPU: " << fixed << setw(8) << setprecision(3) << gpu_seconds);
       LOG_INFO_STR("Spin seconds spent polling, per block: " << fixed << setw(8) << setprecision(3) << spin_seconds);
       LOG_INFO_STR("CPU  seconds spent on input,   per WQ: " << fixed << setw(8) << setprecision(3) << input_seconds);
       LOG_INFO_STR("CPU  seconds spent processing, per WQ: " << fixed << setw(8) << setprecision(3) << cpu_seconds);
-      LOG_INFO_STR("CPU  seconds spent on output,  per WQ: " << fixed << setw(8) << setprecision(3) << output_seconds);
+      LOG_INFO_STR("CPU  seconds spent postprocessing, per WQ: " << fixed << setw(8) << setprecision(3) << postprocess_seconds);
     }
 
   }

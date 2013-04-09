@@ -24,9 +24,11 @@
 // @file
 #include <complex>
 
+#include <Common/Thread/Queue.h>
 #include <Stream/Stream.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/CorrelatedData.h>
+#include <CoInterface/SmartPtr.h>
 #include <CoInterface/SparseSet.h>
 #include <CoInterface/SubbandMetaData.h>
 
@@ -45,6 +47,82 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    /*
+     * The CorrelatorWorkQueue does the following transformation:
+     *   WorkQueueInputData -> CorrelatedDataHostBuffer
+     *
+     * The WorkQueueInputData represents one block of one subband
+     * of input data, and the CorrelatedDataHostBuffer the complex
+     * visibilities of such a block.
+     *
+     * For both input and output, a fixed set of objects is created,
+     * tied to the GPU specific for the WorkQueue, for increased
+     * performance. The objects are recycled by using Pool objects.
+     *
+     * The data flows as follows:
+     *
+     *   // Fetch the next input object to fill
+     *   SmartPtr<WorkQueueInputData> input = queue.inputPool.free.remove();
+     *
+     *   // Provide input
+     *   receiveInput(input);
+     *
+     *   // Annotate input
+     *   input->block = block;
+     *   input->subband = subband;
+     *
+     *   // Fetch the next output object to fill
+     *   SmartPtr<CorrelatedDataHostBuffer> output = queue.outputPool.free.remove();
+     *
+     *   // Process block
+     *   queue.doSubband(input, output);
+     *
+     *   // Give back input and output objects to queue
+     *   queue.inputPool.free.append(input);
+     *   queue.outputPool.free.append(output);
+     *
+     *   The queue.inputPool.filled and queue.outputPool.filled can be used to
+     *   temporarily store filled input and output objects. Such is needed to
+     *   obtain parallellism (i.e. read/process/write in separate threads).
+     */
+    class CorrelatorWorkQueue;
+
+    // The pool operates using a 'free' and a 'filled' queue to cycle through buffers. Producers
+    // move elements free->filled, and consumers move elements filled->free.
+    template <typename T>
+    struct Pool
+    {
+      typedef T element_type;
+
+      Queue< SmartPtr<element_type> > free;
+      Queue< SmartPtr<element_type> > filled;
+    };
+
+    // A CorrelatedData object tied to a HostBuffer and WorkQueue. Such links
+    // are needed for performance -- the visibilities are stored in a buffer
+    // directly linked to the GPU output buffer.
+    class CorrelatedDataHostBuffer: public MultiArrayHostBuffer<fcomplex, 4>, public CorrelatedData
+    {
+    public:
+      CorrelatedDataHostBuffer(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, DeviceBuffer &deviceBuffer, CorrelatorWorkQueue &queue) 
+      :
+        MultiArrayHostBuffer<fcomplex, 4>(boost::extents[nrStations * (nrStations + 1) / 2][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], CL_MEM_WRITE_ONLY, deviceBuffer),
+        CorrelatedData(nrStations, nrChannels, maxNrValidSamples, this->origin(), this->num_elements(), heapAllocator, 1),
+        queue(queue)
+      {
+      }
+
+      // Annotation required, as we'll loose track of the exact order
+      size_t block;
+      unsigned subband;
+
+      CorrelatorWorkQueue &queue;
+
+    private:
+      CorrelatedDataHostBuffer();
+      CorrelatedDataHostBuffer(const CorrelatedDataHostBuffer &);
+    };
+
     // 
     //   Collect all inputData for the correlatorWorkQueue item:
     //    \arg inputsamples
@@ -54,13 +132,42 @@ namespace LOFAR
     // It also contains a read function parsing all this data from an input stream.   
     class WorkQueueInputData
     {
-      public:      
-      MultiArraySharedBuffer<float, 3> delaysAtBegin; //!< Whole sample delays at the start of the workitem      
-      MultiArraySharedBuffer<float, 3> delaysAfterEnd;//!< Whole sample delays at the end of the workitem      
-      MultiArraySharedBuffer<float, 2> phaseOffsets;  //!< Remainder of delays
+    public:
+
+      // The set of GPU buffers to link our HostBuffers to.
+      struct DeviceBuffers
+      {
+        DeviceBuffer delaysAtBegin;
+        DeviceBuffer delaysAfterEnd;
+        DeviceBuffer phaseOffsets;
+        DeviceBuffer inputSamples;
+
+        DeviceBuffers(size_t n_beams, size_t n_stations, size_t n_polarizations,
+                         size_t n_samples, size_t bytes_per_complex_sample,
+                         cl::CommandQueue &queue,
+                         size_t inputSamplesMinSize = 0,
+                         cl_mem_flags deviceBufferFlags = CL_MEM_READ_ONLY)
+        :
+          delaysAtBegin(queue, deviceBufferFlags, n_beams * n_stations * n_polarizations * sizeof(float)),
+          delaysAfterEnd(queue, deviceBufferFlags, n_beams * n_stations * n_polarizations * sizeof(float)),
+          phaseOffsets(queue, deviceBufferFlags, n_stations * n_polarizations * sizeof(float)),
+          inputSamples(queue, CL_MEM_READ_WRITE, std::max(inputSamplesMinSize, n_stations * n_samples * n_polarizations * bytes_per_complex_sample))
+        {
+        }
+      };
+
+      // Relevant block
+      size_t block;
+
+      // Relevant subband
+      unsigned subband;
+
+      MultiArrayHostBuffer<float, 3> delaysAtBegin; //!< Whole sample delays at the start of the workitem      
+      MultiArrayHostBuffer<float, 3> delaysAfterEnd;//!< Whole sample delays at the end of the workitem      
+      MultiArrayHostBuffer<float, 2> phaseOffsets;  //!< Remainder of delays
 
       // inputdata with flagged data set to zero
-      MultiArraySharedBuffer<char, 4> inputSamples;
+      MultiArrayHostBuffer<char, 4> inputSamples;
 
       // The input flags
       MultiDimArray<SparseSet<unsigned>,1> inputFlags;
@@ -68,14 +175,13 @@ namespace LOFAR
       // Create the inputData object we need shared host/device memory on the supplied devicequeue
       WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
                          size_t n_samples, size_t bytes_per_complex_sample,
-                         cl::CommandQueue &queue, cl::Buffer &queue_buffer,
-                         cl_mem_flags hostBufferFlags = CL_MEM_WRITE_ONLY, // input therefore assume host write, device read
-                         cl_mem_flags deviceBufferFlags = CL_MEM_READ_ONLY)
+                         DeviceBuffers &deviceBuffers,
+                         cl_mem_flags hostBufferFlags = CL_MEM_WRITE_ONLY)
         :
-        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
-        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
-        phaseOffsets(boost::extents[n_stations][n_polarizations], queue, hostBufferFlags, deviceBufferFlags),
-        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample], queue, hostBufferFlags, queue_buffer), // TODO: The size of the buffer is NOT validated
+        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations], hostBufferFlags, deviceBuffers.delaysAtBegin),
+        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations], hostBufferFlags, deviceBuffers.delaysAfterEnd),
+        phaseOffsets(boost::extents[n_stations][n_polarizations], hostBufferFlags, deviceBuffers.phaseOffsets),
+        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample], hostBufferFlags, deviceBuffers.inputSamples), // TODO: The size of the buffer is NOT validated
         inputFlags(boost::extents[n_stations])
       {
       }
@@ -105,18 +211,18 @@ namespace LOFAR
           CorrelatedData &output) ;
 
         // 2. Calculate the weight based on the number of flags and apply this weighting to all output values
-        static void applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
+        template<typename T> static void applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
           CorrelatedData &output);
 
         // 1.1Convert the flags per station to channel flags, change time scale if nchannel > 1
         static void convertFlagsToChannelFlags(Parset const &parset,
           MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChanel);
+          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
 
         // 1.2calculate the number of flagged samples and set this on the output dataproduct
         // This function is aware of the used filter width a corrects for this.
-        static void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
-          MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChanel,
+        template<typename T> static void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
+          MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
           CorrelatedData &output);
 
         // 1.3 Get the LOG2 of the input. Used to speed up devisions by 2
@@ -134,24 +240,36 @@ namespace LOFAR
                           FilterBank &filterBank);
 
       // Correlate the data found in the input data buffer
-      void doSubband(unsigned subband, CorrelatedData &output);
+      void processSubband(WorkQueueInputData &input, CorrelatedDataHostBuffer &output);
+
+      // Do post processing on the CPU
+      void postprocessSubband(CorrelatedDataHostBuffer &output);
       
     private:
+      // The previously processed SAP/block, or -1 if nothing has been
+      // processed yet. Used in order to determine if new delays have
+      // to be uploaded.
+      ssize_t prevBlock;
+      signed int prevSAP;
+
       // Raw buffers, these are mapped with boost multiarrays 
       // in the InputData class
-      cl::Buffer devCorrectedData;
-      cl::Buffer devFilteredData;
+      WorkQueueInputData::DeviceBuffers devInput;
+
+      DeviceBuffer devFilteredData;
 
     public:
-      // All input data collected in a single struct
-      WorkQueueInputData inputData;
+      // A pool of input data, to allow items to be filled and
+      // computed on in parallel.
+      Pool<WorkQueueInputData> inputPool;
 
-      // Output data object, content received from the gpu or metadata (flags)
-      MultiArraySharedBuffer<std::complex<float>, 4> visibilities;
+      // A pool of output data, to allow items to be filled
+      // and written in parallel.
+      Pool<CorrelatedDataHostBuffer> outputPool;
 
     private:
       // Compiled kernels
-      cl::Buffer devFIRweights;
+      DeviceBuffer devFIRweights;
       FIR_FilterKernel firFilterKernel;
       Filter_FFT_Kernel fftKernel;
       MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
@@ -162,10 +280,10 @@ namespace LOFAR
 #else
       CorrelatorKernel correlatorKernel;
 #endif
-      //void computeFlags(CorrelatedData &output);
+
+      friend class WorkQueueInputData;
     };
 
   }
 }
 #endif
-

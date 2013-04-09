@@ -37,7 +37,6 @@
 #include "OpenMP_Support.h"
 #include "opencl-incl.h"
 #include "createProgram.h"
-#include "BestEffortQueue.h"
 #include "SlidingPointer.h"
 #include "WorkQueues/WorkQueue.h"
 #include "PerformanceCounter.h"
@@ -92,16 +91,7 @@ namespace LOFAR
 
       void doWork();
 
-      // Write an output block. Takes ownership of data, because the
-      // block will be kept in the background until it can be written.
-      void writeOutput(unsigned block, unsigned subband, StreamableData *data);
-
-      // signal that we've written all blocks (because we can drop some)
-      void noMoreOutput();
-
-      //private:
       void                    sendNextBlock(unsigned station);
-
       
     protected:
       // combines all functionality needed for getting the total from a set of counters
@@ -115,18 +105,6 @@ namespace LOFAR
         // Print a logline with results
         void log(size_t nrWorkQueues);
       } performance;
-    private:
-      struct Output {
-        // synchronisation to write blocks in-order
-        SlidingPointer<size_t> sync;
-
-        // output data queue
-        SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
-      };
-
-      std::vector<struct Output> outputs;       // indexed by subband
-
-      void handleOutput();
     };
   }
 }
