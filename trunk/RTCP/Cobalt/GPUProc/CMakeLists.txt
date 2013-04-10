@@ -14,10 +14,12 @@ endif()
 
 if(USE_CUDA)
   lofar_find_package(CUDA REQUIRED)
+  add_definitions(-DUSE_CUDA)
 endif()
 
 if(USE_OPENCL)
   lofar_find_package(OpenCL REQUIRED)
+  add_definitions(-DUSE_OPENCL)
 endif()
 
 #add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
