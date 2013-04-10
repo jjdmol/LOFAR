@@ -194,7 +194,7 @@ namespace LOFAR
       if (isDefined("Observation.nrBitsPerSample")) {
         settings.nrBitsPerSample = getUint32("Observation.nrBitsPerSample", 16);
       } else {
-        LOG_WARN("Using depricatdd OLAP.nrBitsPerSample. Please replace by Observation.nrBitsPerSample");
+        LOG_WARN("Using deprecated OLAP.nrBitsPerSample. Please replace by Observation.nrBitsPerSample");
         settings.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
       }
 
