@@ -57,10 +57,6 @@ lofar_add_library(gpuproc
   WorkQueues/WorkQueue.cc)
 
 if(USE_CUDA)
-  configure_file (
-    "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/config.h"  # no need to install this header
-  )
 
   cuda_add_executable(rtcp rtcp.cc)
   cuda_add_cufft_to_target(rtcp)

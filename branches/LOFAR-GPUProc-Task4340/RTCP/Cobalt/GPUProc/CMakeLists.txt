@@ -33,12 +33,12 @@ if(USE_CUDA)
   message(STATUS "CUDA_nvcuvenc_LIBRARY = ${CUDA_nvcuvenc_LIBRARY}")
   message(STATUS "CUDA_nvcuvid_LIBRARY = ${CUDA_nvcuvid_LIBRARY}")
   endif()
-endif()
-
+  add_definitions(-DUSE_CUDA)
 endif()
 
 if(USE_OPENCL)
   lofar_find_package(OpenCL REQUIRED)
+  add_definitions(-DUSE_OPENCL)
 endif()
 
 include(LofarFindPackage)

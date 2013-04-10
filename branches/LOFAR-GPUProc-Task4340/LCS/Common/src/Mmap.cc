@@ -21,7 +21,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include "Mmap.h"
+#include <Common/Mmap.h>
 
 #include <cerrno>
 
