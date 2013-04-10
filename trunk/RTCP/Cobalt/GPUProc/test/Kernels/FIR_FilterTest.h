@@ -34,13 +34,34 @@ namespace LOFAR
       FIR_FilterTest(const Parset &ps)
         : UnitTest(ps, "FIR.cl")
       {
+        switch (ps.nrBitsPerSample()) {
+        case 4: // TODO: move this case before UnitTest(...), which already fails to compile the kernel
+          std::cerr << "4 bit mode not yet supported in this test" << std::endl;
+          check(false, true);
+          break;
+        case 8:
+          firTests<signed char>(ps);
+          break;
+        case 16:
+          firTests<short>(ps);
+          break;
+        default:
+          std::cerr << "unrecognized number of bits per sample type" << std::endl;
+          check(false, true);
+        }
+      }
+
+      template <typename SampleT>
+      void firTests(const Parset &ps)
+      {
         bool testOk = true;
 
+        const size_t nrComplexComp = 2; // real, imag
         MultiArraySharedBuffer<float, 5> filteredData(
-          boost::extents[ps.nrStations()][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][ps.nrBytesPerComplexSample()],
+          boost::extents[ps.nrStations()][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][nrComplexComp],
           queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
-        MultiArraySharedBuffer<signed char, 5> inputSamples(
-          boost::extents[ps.nrStations()][ps.nrPPFTaps() - 1 + ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()],
+        MultiArraySharedBuffer<SampleT, 5> inputSamples(
+          boost::extents[ps.nrStations()][ps.nrPPFTaps() - 1 + ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][nrComplexComp],
           queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
         MultiArraySharedBuffer<float, 2> firWeights(
           boost::extents[ps.nrChannelsPerSubband()][ps.nrPPFTaps()],
