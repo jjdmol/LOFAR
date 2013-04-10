@@ -1,2 +1,9 @@
-// \ingroup Cobalt
-// \defgroup OutputProc OutputProc Description
+/**
+
+\ingroup Cobalt
+\defgroup OutputProc Output Processing
+
+Data Storage applications
+
+*/
+
