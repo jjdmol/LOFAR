@@ -23,8 +23,7 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import nl.astron.lofar.sas.otb.jotdb3.jTreeState;
+import javax.swing.JFileChooser;
 import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
 
@@ -39,21 +38,25 @@ import org.apache.log4j.Logger;
  *
  * @updated
  */
-public final class StateChangeHistoryTableModel extends javax.swing.table.DefaultTableModel {
+public final class MetadataTableModel extends javax.swing.table.DefaultTableModel {
     
-    private String  headers[] = {"ID","MomID","New State","UserName","TimeStamp"};
+    private String  headers[] = {"Parameter","value"};
     private OtdbRmi otdbRmi;
     private Object  data[][];
     private int     itsTreeID;
+    private JFileChooser fc          = null;
+    private String itsUser ="";
+
     
-    static Logger logger = Logger.getLogger(StateChangeHistoryTableModel.class);
+    static Logger logger = Logger.getLogger(MetadataTableModel.class);
     static String name = "StateChangeHistoryTableModel";
 
     /** Creates a new instance of PICtableModel */
-    public StateChangeHistoryTableModel(OtdbRmi otdbRmi,int treeID) {
+    public MetadataTableModel(OtdbRmi otdbRmi,int treeID, String aUser) {
 
         this.otdbRmi = otdbRmi;
         this.itsTreeID=treeID;
+        this.itsUser=aUser;
         boolean fillTable = fillTable();
     }
 
@@ -62,7 +65,9 @@ public final class StateChangeHistoryTableModel extends javax.swing.table.Defaul
         fillTable();
     }
     
-    /** Fills the table from the database */
+    
+    
+  /** Fills the table from the database */
     public boolean fillTable() {
         
        if (otdbRmi == null) {
@@ -77,29 +82,38 @@ public final class StateChangeHistoryTableModel extends javax.swing.table.Defaul
             data=null;
             this.setRowCount(0);
 
-            // Get a stateList of all available changes
-            ArrayList<jTreeState> aStateList=new ArrayList(OtdbRmi.getRemoteOTDB().getStateList(itsTreeID, false));
-            data = new Object[aStateList.size()][headers.length];
-            logger.debug("Statelist downloaded. Size: "+aStateList.size());
+            // create filename that can be used at the remote site    
+            String aRemoteFileName="/tmp/"+itsTreeID+"_"+itsUser+".Metadata";
+                    
+            // write the parset
+            OtdbRmi.getRemoteMaintenance().exportMetadata(itsTreeID,aRemoteFileName); 
+                    
+            //obtain the remote file
+            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+             
+            String aParSet=new String(dldata);
+            
+            // split inputfile in different lines on return.
+            String[] lines = aParSet.split("\n");
+
+            data = new Object[lines.length][headers.length];
+            logger.debug("metadata downloaded. Size: "+lines.length);
            
-            for (int k=0; k< aStateList.size();k++) {
-                jTreeState tState = aStateList.get(k);
-                if (tState == null) {
-                    logger.warn("No such treeState found!");
-                } else {
-                    logger.debug("Gathered info for ID: "+tState.treeID);
-                    data[k][0]=new Integer(tState.treeID);
-                    data[k][1]=new Integer(tState.momID);
-	            data[k][2]=OtdbRmi.getTreeState().get(tState.newState);
-	            data[k][3]=tState.username;
-	            data[k][4]=tState.timestamp.replace("T", " ");
-                }
+            for (int k=0; k< lines.length;k++) {
+                String[] keyval = lines[k].split("=");
+                String aS="";
+                String [] str={keyval[0],aS};
+                data[k][0]=keyval[0];
+                data[k][1]=keyval[1];
             }
             fireTableDataChanged();
         } catch (RemoteException e) {
-            logger.debug("Remote OTDB getTreeState failed: " + e);
+            logger.debug("Remote OTDB getMetadata failed: " + e);
 	} 
         return true;
+    }
+    public int getTreeID() {
+        return itsTreeID;
     }
 
     /** Returns the number of rows 
