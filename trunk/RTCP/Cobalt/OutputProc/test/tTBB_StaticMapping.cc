@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     if (lrpath != NULL) {
       tbbMappingFilename = string(lrpath) + "/etc/StaticMetaData/";
     } else {
-      tbbMappingFilename = "tTBB_Writer.in_1/";
+      tbbMappingFilename = "tTBB_StaticMapping.in_1/";
     }
     tbbMappingFilename.append(defaultTbbMappingFilename);
   }
