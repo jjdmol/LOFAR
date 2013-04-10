@@ -155,7 +155,7 @@ namespace LOFAR
       template <typename ExtentList>
       MultiArrayHostBuffer(const ExtentList &extents, cl_mem_flags hostBufferFlags, DeviceBuffer &deviceBuffer)
       :
-        HostBuffer(deviceBuffer, nrElements(extents) * sizeof(T), hostBufferFlags),
+        HostBuffer(deviceBuffer, this->nrElements(extents) * sizeof(T), hostBufferFlags),
         MultiDimArray<T,DIM>(extents, static_cast<T*>(ptr), true)
       {
       }
@@ -174,7 +174,7 @@ namespace LOFAR
       template <typename ExtentList>
       MultiArraySharedBuffer(const ExtentList &extents, cl::CommandQueue &queue, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE, cl_mem_flags deviceBufferFlags = CL_MEM_READ_WRITE)
         :
-        DeviceBuffer(queue, deviceBufferFlags, nrElements(extents) * sizeof(T)),
+        DeviceBuffer(queue, deviceBufferFlags, this->nrElements(extents) * sizeof(T)),
         MultiArrayHostBuffer<T, DIM>(extents, hostBufferFlags, *this)
       {
       }
