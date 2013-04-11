@@ -76,11 +76,16 @@
 #include <complex>
 #include <sstream>
 
+namespace LOFAR
+{
+namespace Cobalt
+{
 namespace gpu
 {
   /// \name Math functions for real numbers
-  /// Make sure that code inside gpu:: doesn't try to call the complex math
-  /// functions when using real numbers, but the standard math functions.
+  /// Make sure that code inside namespace \c gpu doesn't try to call the
+  /// complex math functions but the standard math functions when using real
+  /// numbers.
   /// @{
   template <typename ValueType> 
     __host__ __device__ 
@@ -1185,6 +1190,11 @@ public:
 
   /// @}
 
-} // end namespace gpu
+} // namespace gpu
+
+} // namespace Cobalt
+
+} // namespace LOFAR
+
 
 #endif
