@@ -67,8 +67,8 @@
 #ifndef LOFAR_GPUPROC_CUDA_COMPLEX_H
 #define LOFAR_GPUPROC_CUDA_COMPLEX_H
 
-/*! \file complex.h
- *  \brief Complex numbers
+/*! \file cuda/complex.h
+ *  \brief Complex numbers.
  */
 
 #include <cuComplex.h>
@@ -76,10 +76,12 @@
 #include <complex>
 #include <sstream>
 
-// We need this to make sure code inside cusp:: that calls sqrt() using real numbers
-// doesn't try to call the complex sqrt, but the standard sqrt
 namespace cusp
 {
+  /// \name Math functions for real numbers
+  /// Make sure that code inside cusp:: doesn't try to call the complex math
+  /// functions when using real numbers, but the standard math functions.
+  /// @{
   template <typename ValueType> 
     __host__ __device__ 
     inline ValueType cos(ValueType x){
@@ -165,11 +167,13 @@ namespace cusp
     inline ValueType conj(ValueType x){
     return x;
   }
-}
+  /// @}
 
-namespace cusp
-{
 
+  /// \name Math functions for complex numbers
+  /// @{
+
+  //# Forward declarations
   template <typename ValueType> struct complex;
   template <> struct complex<float>;
   template <> struct complex<double>;
@@ -1178,6 +1182,8 @@ public:
     //return (log(ValueType(1)+z)-log(ValueType(1)-z))/ValueType(2);
 
   }
+
+  /// @}
 
 } // end namespace cusp
 
