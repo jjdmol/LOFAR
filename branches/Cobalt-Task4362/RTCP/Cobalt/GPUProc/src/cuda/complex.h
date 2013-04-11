@@ -76,10 +76,10 @@
 #include <complex>
 #include <sstream>
 
-namespace cusp
+namespace gpu
 {
   /// \name Math functions for real numbers
-  /// Make sure that code inside cusp:: doesn't try to call the complex math
+  /// Make sure that code inside gpu:: doesn't try to call the complex math
   /// functions when using real numbers, but the standard math functions.
   /// @{
   template <typename ValueType> 
@@ -1118,7 +1118,7 @@ public:
   template <typename ValueType>
     __host__ __device__
     inline complex<ValueType> acosh(const complex<ValueType>& z){
-    cusp::complex<ValueType> ret((z.real() - z.imag()) * (z.real() + z.imag()) - ValueType(1.0),
+    gpu::complex<ValueType> ret((z.real() - z.imag()) * (z.real() + z.imag()) - ValueType(1.0),
 				 ValueType(2.0) * z.real() * z.imag());    
     ret = sqrt(ret);
     if (z.real() < ValueType(0.0)){
@@ -1132,7 +1132,7 @@ public:
     return ret;
 
     /*
-    cusp::complex<ValueType> ret = log(sqrt(z*z-ValueType(1))+z);
+    gpu::complex<ValueType> ret = log(sqrt(z*z-ValueType(1))+z);
     if(ret.real() < 0){
       ret.real(-ret.real());
     }
@@ -1185,6 +1185,6 @@ public:
 
   /// @}
 
-} // end namespace cusp
+} // end namespace gpu
 
 #endif
