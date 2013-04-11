@@ -1358,14 +1358,15 @@ public class MainPanel extends javax.swing.JPanel
      */
     private void viewMetadata(int treeID) {
         // showMetadata
+       itsMainFrame.setHourglassCursor();
         itsMetadataModel = new MetadataTableModel(SharedVars.getOTDBrmi(), treeID,itsMainFrame.getUserAccount().getUserName());
         if (metadataDialog == null) {
-            metadataDialog = new MetadataDialog(itsMainFrame, true, itsMetadataModel, "Metadata");
+            metadataDialog = new MetadataDialog(itsMainFrame, true, itsMetadataModel, "Metadata",itsMainFrame.getUserAccount().getUserName());
         } else {
             itsMetadataModel.setTree(treeID);
             metadataDialog.setModel(itsMetadataModel);
         }
-        metadataDialog.showCancelButton(false);
+        itsMainFrame.setNormalCursor();
         metadataDialog.setLocationRelativeTo(this);
         metadataDialog.setTableCellAlignment(JLabel.LEFT);
 
