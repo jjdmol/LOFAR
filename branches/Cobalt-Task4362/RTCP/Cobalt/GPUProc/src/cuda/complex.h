@@ -52,7 +52,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  * 
-*/
+ */
+
+/* 
+ *  Copyright (c) 2013 ASTRON (Netherlands Institute for Radio Astronomy)
+ *
+ *  This file is part of the LOFAR software suite.
+ *  It is an adaptation of the file cusp/complex.h from the cusp library,
+ *  available at https://github.com/cusplibrary/cusplibrary.
+ *
+ *  $Id$
+ */
 
 #ifndef LOFAR_GPUPROC_CUDA_COMPLEX_H
 #define LOFAR_GPUPROC_CUDA_COMPLEX_H
@@ -61,23 +71,13 @@
  *  \brief Complex numbers
  */
 
-// #pragma once
-
-// #include <cusp/detail/config.h>
-
 // #if (defined THRUST_DEVICE_BACKEND && THRUST_DEVICE_BACKEND == THRUST_DEVICE_BACKEND_CUDA) || (defined THRUST_DEVICE_SYSTEM && THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA)
 #if 1
 
-// #ifdef _WIN32
-// #define _USE_MATH_DEFINES 1  // make sure M_PI is defined
-// #endif
-
-// #include <math.h>
-#include <complex>
 #include <cuComplex.h>
-#include <sstream>
-// #include <cusp/cmath.h>
 #include <cmath>
+#include <complex>
+#include <sstream>
 
 // We need this to make sure code inside cusp:: that calls sqrt() using real numbers
 // doesn't try to call the complex sqrt, but the standard sqrt
