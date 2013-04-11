@@ -25,59 +25,14 @@
 #ifndef LOFAR_GPUPROC_COMPLEX_H
 #define LOFAR_GPUPROC_COMPLEX_H
 
-// #if defined (USE_CUDA) && defined (USE_OPENCL)
-// # error "Either CUDA or OpenCL must be enabled, not both"
-// #endif
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# warning "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-//# Forward declaration
-namespace LOFAR {
-  namespace Cobalt {
-    namespace gpu { 
-      template<typename T> class complex;
-      // template<> class complex<float>;
-      // template<> class complex<double>;
-    }
-  }
-}
-
-#include <complex>
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    namespace gpu
-    { 
-      // Template to represent complex numbers on a GPU. 
-      // The non-specialized version is based on std::complex.
-      // Specializations for float and double are included from a
-      // language-specific file (CUDA or OpenCL).
-      template<typename T> 
-      class complex : public std::complex<T>
-      {
-      public:
-        // Default constructor.
-        // __host__ __device__ 
-        complex(const T& re = T(), const T& im = T())
-          : std::complex<T>(re, im) { }
-
-        // Copy constructor.
-        template<typename U>
-        // __host__ __device__
-        complex(const complex<U>& z)
-          : std::complex<T>(z.real(), z.imag()) { }
-      };
-
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
-
-// #if defined (USE_CUDA)
-// # include "cuda/complex.h"
-// #elif defined (USE_OPENCL)
-// # include "opencl/complex.h"
-// #endif
+#if defined (USE_CUDA)
+# include "cuda/complex.h"
+#elif defined (USE_OPENCL)
+# include "opencl/complex.h"
+#endif
 
 #endif
