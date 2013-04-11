@@ -27,9 +27,9 @@
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Allocator.h>
 #include <CoInterface/RSPTimeStamp.h>
+#include <CoInterface/SlidingPointer.h>
 #include "BufferSettings.h"
 #include "SharedMemory.h"
-#include "SlidingPointer.h"
 #include "Ranges.h"
 
 namespace LOFAR

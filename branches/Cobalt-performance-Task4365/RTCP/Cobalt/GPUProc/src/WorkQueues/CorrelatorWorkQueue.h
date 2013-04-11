@@ -186,10 +186,6 @@ namespace LOFAR
       {
       }
 
-      // Read for \c station the data and metadata from the \c inputstream, set flagged samples zero.
-      void read(Stream *inputStream, size_t station, unsigned subband, unsigned beamIdx);
-
-    private:
       // set all flagged inputSamples to zero.
       void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
     };

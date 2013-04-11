@@ -7,7 +7,6 @@
 #include <Common/LofarLogger.h>
 #include "BufferSettings.h"
 #include "SharedMemory.h"
-#include "SlidingPointer.h"
 #include "Ranges.h"
 
 namespace LOFAR

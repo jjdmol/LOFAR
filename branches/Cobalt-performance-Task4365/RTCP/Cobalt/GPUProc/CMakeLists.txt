@@ -3,7 +3,7 @@
 # We need at least CMake 2.8 for CUDA support
 cmake_minimum_required(VERSION 2.8)
 
-lofar_package(GPUProc 1.0 DEPENDS Common Stream ApplCommon CoInterface OpenCL_FFT)
+lofar_package(GPUProc 1.0 DEPENDS Common Stream ApplCommon CoInterface OpenCL_FFT InputProc)
 
 # Handle options USE_CUDA and USE_OPENCL.
 if(NOT USE_CUDA AND NOT USE_OPENCL)

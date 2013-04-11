@@ -26,11 +26,27 @@
 #include <ctime>
 #include <unistd.h>
 #include <iostream>
+#include <map>
+#include <vector>
+#include <string>
 #include <omp.h>
+#include "boost/format.hpp"
 
-#include "Common/LofarLogger.h"
-#include "Common/Exception.h"
-#include "CoInterface/Parset.h"
+#include <Common/LofarLogger.h>
+#include <Common/Exception.h>
+#include <CoInterface/Parset.h>
+
+#include <InputProc/OMPThread.h>
+#include <InputProc/SampleType.h>
+#include <InputProc/Buffer/StationID.h>
+#include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Buffer/BlockReader.h>
+#include <InputProc/Station/PacketsToBuffer.h>
+
+#ifdef HAVE_MPI
+#include <mpi.h>
+#include <InputProc/Transpose/MPISendStation.h>
+#endif
 
 #include "global_defines.h"
 #include "OpenMP_Support.h"
@@ -40,20 +56,135 @@
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 
-#include <cstdlib>
-
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
+using namespace std;
+using boost::format;
 
 // Use our own terminate handler
 Exception::TerminateHandler t(OpenCL_Support::terminate);
 
 void usage(char **argv)
 {
-  std::cerr << "usage: " << argv[0] << " parset" << " [-t correlator|beam|UHEP] [-p]" << std::endl;
-  std::cerr << std::endl;
-  std::cerr << "  -t: select pipeline type" << std::endl;
-  std::cerr << "  -p: enable profiling" << std::endl;
+  cerr << "usage: " << argv[0] << " parset" << " [-t correlator|beam|UHEP] [-p]" << endl;
+  cerr << endl;
+  cerr << "  -t: select pipeline type" << endl;
+  cerr << "  -p: enable profiling" << endl;
+}
+
+// Rank in MPI set of hosts
+int rank = 0;
+
+// Number of MPI hosts
+int nrHosts = 1;
+
+// Which MPI rank receives which subbands.
+map<int, vector<size_t> > subbandDistribution; // rank -> [subbands]
+
+// An MPI send process, sending data for one station.
+template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
+{
+  /*
+   * Construct our stationID.
+   */
+
+  // fetch station name (f.e. CS001HBA0)
+  const string fullFieldName = ps.settings.stations[stationIdx].name;
+
+  // split into station name and antenna field name
+  const string stationName = fullFieldName.substr(0,5); // CS001
+  const string fieldName   = fullFieldName.substr(5);   // HBA0
+
+  struct StationID stationID(stationName, fieldName, ps.settings.clockMHz, ps.settings.nrBitsPerSample);
+
+  /*
+   * For now, we run the circular buffer
+   */
+  struct BufferSettings settings(stationID, false);
+
+  // Force buffer reader/writer syncing if observation is non-real time
+  settings.sync = !ps.realTime();
+
+  // fetch input streams
+  vector<string> inputStreams = ps.getStringVector(str(format("PIC.Core.Station.%s.RSP.ports") % fullFieldName), true);
+
+  MultiPacketsToBuffer station( settings, inputStreams );
+
+  /*
+   * Stream the data.
+   */
+
+  #pragma omp parallel sections
+  {
+    // Start a circular buffer
+    #pragma omp section
+    { station.process();
+    }
+
+    // Send data to receivers
+    #pragma omp section
+    {
+      // Fetch buffer settings from SHM.
+      struct BufferSettings s(stationID, true);
+
+      const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), stationID.clockMHz);
+      const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), stationID.clockMHz);
+
+      LOG_INFO_STR("Detected " << s);
+      LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
+
+      /*
+       * Set up circular buffer data reader.
+       */
+      vector<size_t> beamlets(ps.nrSubbands());
+      for( size_t i = 0; i < beamlets.size(); ++i) {
+        // Determine the beamlet number of subband i for THIS station
+        unsigned board = ps.settings.stations[stationIdx].rspBoardMap[i];
+        unsigned slot  = ps.settings.stations[stationIdx].rspSlotMap[i];
+
+        unsigned beamlet = board * s.nrBeamletsPerBoard + slot;
+
+        beamlets[i] = beamlet;
+      }
+
+      BlockReader<SampleT> reader(s, beamlets, ps.nrHistorySamples(), 0.25);
+
+#ifdef HAVE_MPI
+      /*
+       * Set up the MPI send engine.
+       */
+      MPISendStation sender(s, rank, subbandDistribution);
+#else
+#error Not implemented -- MPI required
+#endif
+
+      /*
+       * Transfer all blocks.
+       */
+      LOG_INFO_STR("Sending to receivers");
+      for (TimeStamp current = from; current + ps.nrSamplesPerSubband() < to; current += ps.nrSamplesPerSubband()) {
+        // The offsets at which each subband is read (due to geometric delays)
+        vector<ssize_t> read_offsets(ps.nrSubbands(), 0);
+
+        // TODO: fetch delays and compute read_offsets
+
+        // Read the next block from the circular buffer.
+        SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + ps.nrSamplesPerSubband(), read_offsets));
+
+        vector<SubbandMetaData> metaDatas(ps.nrSubbands());
+
+        // TODO: fetch delays and populate metaDatas
+
+        // Send the block to the receivers
+        sender.sendBlock<SampleT>(*block, metaDatas);
+      }
+
+      /*
+       * The end.
+       */
+      station.stop();
+    }
+  }
 }
 
 enum SELECTPIPELINE { correlator, beam, UHEP,unittest};
@@ -70,7 +201,7 @@ SELECTPIPELINE to_select_pipeline(char *argument)
   if (!strcmp(argument,"UHEP"))
     return UHEP;
 
-  std::cout << "incorrect third argument supplied." << std::endl;
+  cout << "incorrect third argument supplied." << endl;
   exit(1);
 }
 
@@ -79,8 +210,11 @@ int main(int argc, char **argv)
   // Make sure all time is dealt with and reported in UTC
   setenv("TZ", "UTC", 1);
 
-  //Allow usage of nested omp calls
+  // Allow usage of nested omp calls
   omp_set_nested(true);
+
+  // Allow thread registration
+  OMPThread::init();
 
   using namespace LOFAR::Cobalt;
 
@@ -93,6 +227,21 @@ int main(int argc, char **argv)
     perror("error setting DISPLAY");
     exit(1);
   }
+
+#ifdef HAVE_MPI
+  // Initialise and query MPI
+  if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
+    LOG_ERROR_STR("MPI_Init failed");
+    exit(1);
+  }
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
+
+  LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
+#else
+  LOG_INFO_STR("MPI not enabled -- running in stand-alone mode");
+#endif
 
 #if 0 && defined __linux__
   set_affinity(0);   //something with processor affinity, define at start of rtcp
@@ -127,53 +276,88 @@ int main(int argc, char **argv)
   // Create a parameters set object based on the inputs
   Parset ps(argv[optind]);
 
-  // Set the number of stations: Code is currently non functional
-  //bool set_num_stations = false;
-  //if (set_num_stations)
-  //{
-  //    const char *str = getenv("NR_STATIONS");
-  //    ps.nrStations() = str ? atoi(str) : 77;
-  //}
   LOG_DEBUG_STR("nr stations = " << ps.nrStations());
+  LOG_DEBUG_STR("nr subbands = " << ps.nrSubbands());
+  LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
 
-  // Select number of GPUs to run on
+  // Distribute the subbands over the receivers
+  for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+    int receiverRank = nrHosts - 1; // for now, the last rank receives all
 
-  // Spawn the output processes (only do this once globally)
-  StorageProcesses storageProcesses(ps, "");
-
-  // use a switch to select between modes
-  switch (option)
-  {
-  case correlator:
-    LOG_INFO_STR("Correlator pipeline selected");
-    CorrelatorPipeline(ps).doWork();
-    break;
-
-  case beam:
-    LOG_INFO_STR("BeamFormer pipeline selected");
-    BeamFormerPipeline(ps).doWork();
-    break;
-
-  case UHEP:
-    LOG_INFO_STR("UHEP pipeline selected");
-    //UHEP_Pipeline(ps).doWork();
-    break;
-
-  default:
-    LOG_WARN_STR("No pipeline selected, do nothing");
-    break;
+    subbandDistribution[receiverRank].push_back(subband);
   }
 
-  // COMPLETING stage
-  time_t completing_start = time(0);
+  // Decide course to take based on rank.
+  if (rank < (int)ps.nrStations()) {
+    /*
+     * Send station data
+     */
+   
+    switch (ps.nrBitsPerSample()) {
+    default:
+    case 16: 
+      sender< SampleType<i16complex> >(ps, rank);
+      break;
 
-  // retrieve and forward final meta data
-  // TODO: Increase timeouts when FinalMetaDataGatherer starts working
-  // again
-  storageProcesses.forwardFinalMetaData(completing_start + 2);
+    case 8: 
+      sender< SampleType<i8complex> >(ps, rank);
+      break;
 
-  // graceful exit
-  storageProcesses.stop(completing_start + 10);
+    case 4: 
+      sender< SampleType<i4complex> >(ps, rank);
+      break;
+    }
+
+  } else {
+    /*
+     * Receive and process station data
+     */
+
+    // TODO: Honour subbandDistribution
+      
+    // Spawn the output processes (only do this once globally)
+    StorageProcesses storageProcesses(ps, "");
+
+    // use a switch to select between modes
+    switch (option)
+    {
+    case correlator:
+      LOG_INFO_STR("Correlator pipeline selected");
+      CorrelatorPipeline(ps).doWork();
+      break;
+
+    case beam:
+      LOG_INFO_STR("BeamFormer pipeline selected");
+      BeamFormerPipeline(ps).doWork();
+      break;
+
+    case UHEP:
+      LOG_INFO_STR("UHEP pipeline selected");
+      //UHEP_Pipeline(ps).doWork();
+      break;
+
+    default:
+      LOG_WARN_STR("No pipeline selected, do nothing");
+      break;
+    }
+
+    // COMPLETING stage
+    time_t completing_start = time(0);
+
+    // retrieve and forward final meta data
+    // TODO: Increase timeouts when FinalMetaDataGatherer starts working
+    // again
+    storageProcesses.forwardFinalMetaData(completing_start + 2);
+
+    // graceful exit
+    storageProcesses.stop(completing_start + 10);
+  }
+
+  LOG_INFO_STR("Done");
+
+#ifdef HAVE_MPI
+  MPI_Finalize();
+#endif
 
   return 0;
 }
