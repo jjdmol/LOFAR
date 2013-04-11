@@ -54,11 +54,12 @@ public class MetadataDialog extends javax.swing.JDialog {
      * @param   aModel      The model we work with
      * @param   aTitle      The title for this dialog
      */
-    public MetadataDialog(java.awt.Frame parent, boolean modal, MetadataTableModel aModel, String aTitle) {
+    public MetadataDialog(java.awt.Frame parent, boolean modal, MetadataTableModel aModel, String aTitle, String aUser) {
         super(parent, modal);
         initComponents();
         itsModel = aModel;
         itsTitle = aTitle;
+        itsUser = aUser;
         titleLabel.setText(aTitle);
         tablePanel1.setTableModel(aModel);
         tablePanel1.validate();
@@ -81,8 +82,6 @@ public class MetadataDialog extends javax.swing.JDialog {
         return isChanged;
     }
 
-    /** if this var is a reference, we need to make that obvious
-     */
     public void setWarning(String aS) {
         tablePanel1.setWarning(aS);
     }
@@ -90,13 +89,9 @@ public class MetadataDialog extends javax.swing.JDialog {
     public void removeWarning() {
         tablePanel1.removeWarning();
     }
-
-    public void showCancelButton(boolean aFlag) {
-        this.cancelButton.setVisible(aFlag);
-    }
     
-    public void showOkButton(boolean aFlag) {
-        this.okButton.setVisible(aFlag);
+    public void showQuitButton(boolean aFlag) {
+        this.quitButton.setVisible(aFlag);
     }
     
     /** This method is called from within the constructor to
@@ -108,45 +103,35 @@ public class MetadataDialog extends javax.swing.JDialog {
     private void initComponents() {
 
         titleLabel = new javax.swing.JLabel();
-        okButton = new javax.swing.JButton();
-        cancelButton = new javax.swing.JButton();
+        quitButton = new javax.swing.JButton();
         tablePanel1 = new nl.astron.lofar.sas.otbcomponents.TablePanel();
-        SaveParsetButton = new javax.swing.JButton();
+        SaveButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("LOFAR View TreeInfo");
+        setTitle("LOFAR View VIC Metadata");
         setAlwaysOnTop(true);
         setModal(true);
-        setName("loadFileDialog"); // NOI18N
+        setName("MetadataDialog"); // NOI18N
         setResizable(false);
 
         titleLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         titleLabel.setText("no Title");
 
-        okButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
-        okButton.setText("OK");
-        okButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        okButton.addActionListener(new java.awt.event.ActionListener() {
+        quitButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
+        quitButton.setText("Quit");
+        quitButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        quitButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                okButtonActionPerformed(evt);
+                quitButtonActionPerformed(evt);
             }
         });
 
-        cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
-        cancelButton.setText("Cancel");
-        cancelButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        cancelButton.addActionListener(new java.awt.event.ActionListener() {
+        SaveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_save.png"))); // NOI18N
+        SaveButton.setText("Save to File");
+        SaveButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        SaveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cancelButtonActionPerformed(evt);
-            }
-        });
-
-        SaveParsetButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_save.png"))); // NOI18N
-        SaveParsetButton.setText("Save Parset to File");
-        SaveParsetButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        SaveParsetButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                SaveParsetButtonActionPerformed(evt);
+                SaveButtonActionPerformed(evt);
             }
         });
 
@@ -157,14 +142,12 @@ public class MetadataDialog extends javax.swing.JDialog {
             .add(layout.createSequentialGroup()
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, titleLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 781, Short.MAX_VALUE)
-                    .add(tablePanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 781, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, titleLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1386, Short.MAX_VALUE)
+                    .add(tablePanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1386, Short.MAX_VALUE)
                     .add(layout.createSequentialGroup()
-                        .add(SaveParsetButton)
+                        .add(SaveButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(cancelButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(okButton)))
+                        .add(quitButton)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -176,31 +159,25 @@ public class MetadataDialog extends javax.swing.JDialog {
                 .add(tablePanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 458, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(18, 18, 18)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(SaveParsetButton)
-                    .add(cancelButton)
-                    .add(okButton))
+                    .add(SaveButton)
+                    .add(quitButton))
                 .add(22, 22, 22))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
-        setVisible(false);
-        dispose();
-    }//GEN-LAST:event_cancelButtonActionPerformed
-
-    private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
+    private void quitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quitButtonActionPerformed
         fireActionListenerActionPerformed(evt);
         setVisible(false);
         dispose();
-    }//GEN-LAST:event_okButtonActionPerformed
+    }//GEN-LAST:event_quitButtonActionPerformed
 
-    private void SaveParsetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveParsetButtonActionPerformed
-        if (evt.getActionCommand().equals("Save Metadata to File")) {
+    private void SaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveButtonActionPerformed
+        if (evt.getActionCommand().equals("Save to File")) {
             saveMetadata();
         }
-    }//GEN-LAST:event_SaveParsetButtonActionPerformed
+    }//GEN-LAST:event_SaveButtonActionPerformed
 
 
     private void saveMetadata() {
@@ -214,7 +191,7 @@ public class MetadataDialog extends javax.swing.JDialog {
                 File aFile = fc.getSelectedFile();
                     
                 // create filename that can be used at the remote site    
-                String aRemoteFileName="/tmp/"+aTreeID+"-"+itsMainFrame.getUserAccount().getUserName()+".Metadata";
+                String aRemoteFileName="/tmp/"+aTreeID+"-"+itsUser+".Metadata";
                     
                 // write the parset
                 OtdbRmi.getRemoteMaintenance().exportMetadata(aTreeID,aRemoteFileName); 
@@ -245,16 +222,15 @@ public class MetadataDialog extends javax.swing.JDialog {
     }
 
 
-    private MainFrame itsMainFrame = null;
+    private String itsUser = "";
     private MetadataTableModel itsModel = null;
     private String itsTitle = "";
     private boolean isChanged=false;
     private JFileChooser fc          = null;
             
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton SaveParsetButton;
-    private javax.swing.JButton cancelButton;
-    private javax.swing.JButton okButton;
+    private javax.swing.JButton SaveButton;
+    private javax.swing.JButton quitButton;
     private nl.astron.lofar.sas.otbcomponents.TablePanel tablePanel1;
     private javax.swing.JLabel titleLabel;
     // End of variables declaration//GEN-END:variables

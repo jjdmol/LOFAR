@@ -101,10 +101,8 @@ public final class MetadataTableModel extends javax.swing.table.DefaultTableMode
            
             for (int k=0; k< lines.length;k++) {
                 String[] keyval = lines[k].split("=");
-                String aS="";
-                String [] str={keyval[0],aS};
-                data[k][0]=keyval[0];
-                data[k][1]=keyval[1];
+                if (keyval.length >= 1 ) data[k][0]=keyval[0];
+                if (keyval.length >= 2 ) data[k][1]=keyval[1];
             }
             fireTableDataChanged();
         } catch (RemoteException e) {
