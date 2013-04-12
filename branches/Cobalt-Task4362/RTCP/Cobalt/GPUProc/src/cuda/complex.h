@@ -1,1200 +1,1203 @@
 /*
- *  Copyright 2008-2009 NVIDIA Corporation
+ * Copyright (c) 1999
+ * Silicon Graphics Computer Systems, Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Copyright (c) 1999
+ * Boris Fomitchev
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * This material is provided "as is", with absolutely no warranty expressed
+ * or implied. Any use is at your own risk.
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
-/*
- * Copyright (c) 2010, The Regents of the University of California,
- * through Lawrence Berkeley National Laboratory (subject to receipt of
- * any required approvals from U.S. Dept. of Energy) All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or
- * without modification, are permitted provided that the
- * following conditions are met:
- * 
- *     * Redistributions of source code must retain the above
- * copyright notice, this list of conditions and the following
- * disclaimer.
- * 
- *     * Redistributions in binary form must reproduce the
- * above copyright notice, this list of conditions and the
- * following disclaimer in the documentation and/or other
- * materials provided with the distribution.
- * 
- *     * Neither the name of the University of California,
- * Berkeley, nor the names of its contributors may be used to
- * endorse or promote products derived from this software
- * without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
- * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- * 
- */
-
-/* 
- *  Copyright (c) 2013 ASTRON (Netherlands Institute for Radio Astronomy)
+ * Permission to use or copy this software for any purpose is hereby granted
+ * without fee, provided the above notices are retained on all copies.
+ * Permission to modify the code and to distribute modified code is granted,
+ * provided the above notices are retained, and a notice that the code was
+ * modified is included with the above copyright notice.
  *
- *  This file is part of the LOFAR software suite.
- *  It is an adaptation of the file cusp/complex.h from the cusp library,
- *  available at https://github.com/cusplibrary/cusplibrary.
+ * Adapted for PyCUDA by Andreas Kloeckner 2009.
  *
- *  $Id$
+ * Adapted for LOFAR by Marcel Loose 2013.
  */
 
 #ifndef LOFAR_GPUPROC_CUDA_COMPLEX_H
 #define LOFAR_GPUPROC_CUDA_COMPLEX_H
 
-/*! \file cuda/complex.h
- *  \brief Complex numbers.
- */
+namespace LOFAR {
+namespace Cobalt {
+namespace gpu {
 
-#include <cuComplex.h>
-#include <cmath>
-#include <complex>
-#include <sstream>
+#define _STLP_USE_NO_IOSTREAMS
+#define _STLP_DECLSPEC /* empty */
+#define _STLP_CLASS_DECLSPEC /* empty */
+#define _STLP_FUNCTION_TMPL_PARTIAL_ORDER
+#define _STLP_TEMPLATE_NULL template<>
 
-namespace LOFAR
-{
-namespace Cobalt
-{
-namespace gpu
-{
-  /// \name Math functions for real numbers
-  /// Make sure that code inside namespace \c gpu doesn't try to call the
-  /// complex math functions but the standard math functions when using real
-  /// numbers.
-  /// @{
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType cos(ValueType x){
-    return std::cos(x);
+template <class _Tp>
+struct complex {
+  typedef _Tp value_type;
+  typedef complex<_Tp> _Self;
+
+  // Constructors, destructor, assignment operator.
+  __device__
+  complex() : _M_re(0), _M_im(0) {}
+  __device__
+  complex(const value_type& __x)
+    : _M_re(__x), _M_im(0) {}
+  __device__
+  complex(const value_type& __x, const value_type& __y)
+    : _M_re(__x), _M_im(__y) {}
+  __device__
+  complex(const _Self& __z)
+    : _M_re(__z._M_re), _M_im(__z._M_im) {}
+
+  __device__
+  _Self& operator=(const _Self& __z) {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType sin(ValueType x){
-    return std::sin(x);
+  __device__
+  volatile _Self& operator=(const _Self& __z) volatile {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType tan(ValueType x){
-    return std::tan(x);
+
+
+  template <class _Tp2>
+  __device__
+  explicit complex(const complex<_Tp2>& __z)
+    : _M_re(__z._M_re), _M_im(__z._M_im) {}
+
+  template <class _Tp2>
+  __device__
+  _Self& operator=(const complex<_Tp2>& __z) {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType acos(ValueType x){
-    return std::acos(x);
+  template <class _Tp2>
+  __device__
+  volatile _Self& operator=(const complex<_Tp2>& __z) volatile {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType asin(ValueType x){
-    return std::asin(x);
+
+  // Element access.
+  __device__
+  value_type real() const { return _M_re; }
+  __device__
+  value_type imag() const { return _M_im; }
+
+  // Arithmetic op= operations involving one real argument.
+
+  __device__
+  _Self& operator= (const value_type& __x) {
+    _M_re = __x;
+    _M_im = 0;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType atan(ValueType x){
-    return std::atan(x);
+  __device__
+  volatile _Self& operator= (const value_type& __x) volatile {
+    _M_re = __x;
+    _M_im = 0;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType atan2(ValueType x,ValueType y){
-    return std::atan2(x,y);
+  __device__
+  _Self& operator+= (const value_type& __x) {
+    _M_re += __x;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType cosh(ValueType x){
-    return std::cosh(x);
+  __device__
+  _Self& operator-= (const value_type& __x) {
+    _M_re -= __x;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType sinh(ValueType x){
-    return std::sinh(x);
+  __device__
+  _Self& operator*= (const value_type& __x) {
+    _M_re *= __x;
+    _M_im *= __x;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType tanh(ValueType x){
-    return std::tanh(x);
+  __device__
+  _Self& operator/= (const value_type& __x) {
+    _M_re /= __x;
+    _M_im /= __x;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType exp(ValueType x){
-    return std::exp(x);
+
+  // Arithmetic op= operations involving two complex arguments.
+
+  static void  __device__ _div(const value_type& __z1_r, const value_type& __z1_i,
+                               const value_type& __z2_r, const value_type& __z2_i,
+                               value_type& __res_r, value_type& __res_i);
+
+  static void __device__ _div(const value_type& __z1_r,
+                              const value_type& __z2_r, const value_type& __z2_i,
+                              value_type& __res_r, value_type& __res_i);
+
+  template <class _Tp2> __device__ _Self& operator+= (const complex<_Tp2>& __z) {
+    _M_re += __z._M_re;
+    _M_im += __z._M_im;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType log(ValueType x){
-    return std::log(x);
+
+  template <class _Tp2> __device__ _Self& operator-= (const complex<_Tp2>& __z) {
+    _M_re -= __z._M_re;
+    _M_im -= __z._M_im;
+    return *this;
   }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline ValueType log10(ValueType x){
-    return std::log10(x);
+
+  template <class _Tp2> __device__ _Self& operator*= (const complex<_Tp2>& __z) {
+    value_type __r = _M_re * __z._M_re - _M_im * __z._M_im;
+    value_type __i = _M_re * __z._M_im + _M_im * __z._M_re;
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
   }
-  template <typename ValueType, typename ExponentType> 
-    __host__ __device__ 
-    inline ValueType pow(ValueType x, ExponentType e){
-    return std::pow(x,e);
+
+  template <class _Tp2> __device__ _Self& operator/= (const complex<_Tp2>& __z) {
+    value_type __r;
+    value_type __i;
+    _div(_M_re, _M_im, __z._M_re, __z._M_im, __r, __i);
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
   }
-  template <typename ValueType>
-    __host__ __device__ 
-    inline ValueType sqrt(ValueType x){
-    return std::sqrt(x);
+
+  __device__
+  _Self& operator+= (const _Self& __z) {
+    _M_re += __z._M_re;
+    _M_im += __z._M_im;
+    return *this;
   }
-  template <typename ValueType>
-    __host__ __device__ 
-    inline ValueType abs(ValueType x){
-    return std::abs(x);
+
+  __device__
+  _Self& operator-= (const _Self& __z) {
+    _M_re -= __z._M_re;
+    _M_im -= __z._M_im;
+    return *this;
   }
-  template <typename ValueType>
-    __host__ __device__ 
-    inline ValueType conj(ValueType x){
-    return x;
+
+  __device__
+  _Self& operator*= (const _Self& __z) {
+    value_type __r = _M_re * __z._M_re - _M_im * __z._M_im;
+    value_type __i = _M_re * __z._M_im + _M_im * __z._M_re;
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
   }
-  /// @}
 
+  __device__
+  _Self& operator/= (const _Self& __z) {
+    value_type __r;
+    value_type __i;
+    _div(_M_re, _M_im, __z._M_re, __z._M_im, __r, __i);
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
+  }
 
-  /// \name Math functions for complex numbers
-  /// @{
-
-  //# Forward declarations
-  template <typename ValueType> struct complex;
-  template <> struct complex<float>;
-  template <> struct complex<double>;
-
-
-  ///  Returns the magnitude of z.
-  template<typename ValueType>
-  __host__ __device__
-  ValueType abs(const complex<ValueType>& z);
-  ///  Returns the phase angle of z.
-  template<typename ValueType>
-  __host__ __device__
-  ValueType arg(const complex<ValueType>& z);
-  ///  Returns the magnitude of z squared.
-  template<typename ValueType>
-  __host__ __device__
-  ValueType norm(const complex<ValueType>& z);
-
-  ///  Returns the complex conjugate of z.
-  template<typename ValueType>
-  __host__ __device__
-  complex<ValueType> conj(const complex<ValueType>& z);
-  ///  Returns the complex with magnitude m and angle theta in radians.
-  template<typename ValueType>
-  __host__ __device__
-  complex<ValueType> polar(const ValueType& m, const ValueType& theta = 0);
-
-  // Arithmetic operators:
-  // Multiplication
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator*(const complex<ValueType>& lhs, const complex<ValueType>& rhs);
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator*(const complex<ValueType>& lhs, const ValueType & rhs);
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator*(const ValueType& lhs, const complex<ValueType>& rhs);
-  // Division
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> operator/(const complex<ValueType>& lhs, const complex<ValueType>& rhs);
-  template <>
-    __host__ __device__
-    inline complex<float> operator/(const complex<float>& lhs, const complex<float>& rhs);
-  template <>
-    __host__ __device__
-    inline complex<double> operator/(const complex<double>& lhs, const complex<double>& rhs);
-
-  // Addition
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator+(const complex<ValueType>& lhs, const complex<ValueType>& rhs);
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator+(const complex<ValueType>& lhs, const ValueType & rhs);
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator+(const ValueType& lhs, const complex<ValueType>& rhs);
-  // Subtraction
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator-(const complex<ValueType>& lhs, const complex<ValueType>& rhs);
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator-(const complex<ValueType>& lhs, const ValueType & rhs);
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> operator-(const ValueType& lhs, const complex<ValueType>& rhs);
-
-  // Unary plus and minus
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator+(const complex<ValueType>& rhs);
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator-(const complex<ValueType>& rhs);
-
-  // Transcendentals:
-  // Returns the complex cosine of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> cos(const complex<ValueType>& z);
-  // Returns the complex hyperbolic cosine of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> cosh(const complex<ValueType>& z);
-  // Returns the complex base e exponential of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> exp(const complex<ValueType>& z);
-  // Returns the complex natural logarithm of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> log(const complex<ValueType>& z);
-  // Returns the complex base 10 logarithm of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> log10(const complex<ValueType>& z);
-  // Returns z to the n'th power.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> pow(const complex<ValueType>& z, const int& n);
-  // Returns z to the x'th power.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> pow(const complex<ValueType>&z, const ValueType&x);
-  // Returns z to the z2'th power.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> pow(const complex<ValueType>&z, 
-							  const complex<ValueType>&z2);
-  // Returns x to the z'th power.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> pow(const ValueType& x, const complex<ValueType>& z);
-  // Returns the complex sine of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> sin(const complex<ValueType>&z);
-  // Returns the complex hyperbolic sine of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> sinh(const complex<ValueType>&z);
-  // Returns the complex square root of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> sqrt(const complex<ValueType>&z);
-  // Returns the complex tangent of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> tan(const complex<ValueType>&z);
-  // Returns the complex hyperbolic tangent of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> tanh(const complex<ValueType>&z);
-
-
-  // Inverse Trigonometric:
-  // Returns the complex arc cosine of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> acos(const complex<ValueType>& z);
-  // Returns the complex arc sine of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> asin(const complex<ValueType>& z);
-  // Returns the complex arc tangent of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> atan(const complex<ValueType>& z);
-  // Returns the complex hyperbolic arc cosine of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> acosh(const complex<ValueType>& z);
-  // Returns the complex hyperbolic arc sine of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> asinh(const complex<ValueType>& z);
-  // Returns the complex hyperbolic arc tangent of z.
-  template <typename ValueType>
-    __host__ __device__
-  complex<ValueType> atanh(const complex<ValueType>& z);
-
-
-
-  // Stream operators:
-  template<typename ValueType,class charT, class traits>
-    std::basic_ostream<charT, traits>& operator<<(std::basic_ostream<charT, traits>& os, const complex<ValueType>& z);
-  template<typename ValueType, typename charT, class traits>
-    std::basic_istream<charT, traits>&
-    operator>>(std::basic_istream<charT, traits>& is, complex<ValueType>& z);
-  
-
-  // Stream operators
-  template<typename ValueType,class charT, class traits>
-    std::basic_ostream<charT, traits>& operator<<(std::basic_ostream<charT, traits>& os, const complex<ValueType>& z)
-    {
-      os << '(' << z.real() << ',' << z.imag() << ')';
-      return os;
-    };
-
-  template<typename ValueType, typename charT, class traits>
-    std::basic_istream<charT, traits>&
-    operator>>(std::basic_istream<charT, traits>& is, complex<ValueType>& z)
-    {
-      ValueType re, im;
-
-      charT ch;
-      is >> ch;
-
-      if(ch == '(')
-      {
-        is >> re >> ch;
-        if (ch == ',')
-        {
-          is >> im >> ch;
-          if (ch == ')')
-          {
-            z = complex<ValueType>(re, im);
-          }
-          else
-          {
-            is.setstate(std::ios_base::failbit);
-          }
-        }
-        else if (ch == ')')
-        {
-          z = re;
-        }
-        else
-        {
-          is.setstate(std::ios_base::failbit);
-        }
-      }
-      else
-      {
-        is.putback(ch);
-        is >> re;
-        z = re;
-      }
-      return is;
-    }
-
-template <typename T>
-  struct norm_type {
-    typedef T type; 
-  };
- template <typename T>
-   struct norm_type< complex<T> > { 
-   typedef T type;
- };
-  
-template <typename ValueType>
-struct complex
-{
-public:
-  typedef ValueType value_type;
-
-  // Constructors
-  __host__ __device__      
-    inline complex<ValueType>(const ValueType & re = ValueType(), const ValueType& im = ValueType())
-    {
-      real(re);
-      imag(im);
-    }  
-
-  template <class X> 
-    __host__ __device__
-    inline complex<ValueType>(const complex<X> & z)
-    {
-      real(z.real());
-      imag(z.imag());
-    }  
-  
-  template <class X> 
-    __host__ __device__
-    inline complex<ValueType>(const std::complex<X> & z)
-    {
-      real(z.real());
-      imag(z.imag());
-    }  
-
-  template <typename T>
-    __host__ __device__
-    inline complex<ValueType>& operator=(const complex<T> z)
-    {
-      real(z.real());
-      imag(z.imag());
-      return *this;
-    }
-
-  __host__ __device__
-    inline complex<ValueType>& operator+=(const complex<ValueType> z)
-    {
-      real(real()+z.real());
-      imag(imag()+z.imag());
-      return *this;
-    }
-
-  __host__ __device__
-    inline complex<ValueType>& operator-=(const complex<ValueType> z)
-    {
-      real(real()-z.real());
-      imag(imag()-z.imag());
-      return *this;
-    }
-
-  __host__ __device__
-    inline complex<ValueType>& operator*=(const complex<ValueType> z)
-    {
-      *this = *this * z;
-      return *this;
-    }
-
-  __host__ __device__
-    inline complex<ValueType>& operator/=(const complex<ValueType> z)
-    {
-      *this = *this / z;
-      return *this;
-    }
-
-  __host__ __device__ inline ValueType real() const volatile;
-  __host__ __device__ inline ValueType imag() const volatile;
-  __host__ __device__ inline ValueType real() const;
-  __host__ __device__ inline ValueType imag() const;
-  __host__ __device__ inline void real(ValueType) volatile;
-  __host__ __device__ inline void imag(ValueType) volatile;
-  __host__ __device__ inline void real(ValueType);
-  __host__ __device__ inline void imag(ValueType);
+  // Data members.
+  value_type _M_re;
+  value_type _M_im;
 };
 
-// TODO make cuFloatComplex and cuDoubleComplex protected
-// TODO see if returning references is a perf hazard
+// Explicit specializations for float, double, long double.  The only
+// reason for these specializations is to enable automatic conversions
+// from complex<float> to complex<double>, and complex<double> to
+// complex<long double>.
 
-template<>
-struct complex <float> : public cuFloatComplex
-{
-public:
+_STLP_TEMPLATE_NULL
+struct _STLP_CLASS_DECLSPEC complex<float> {
   typedef float value_type;
-  __host__ __device__ 
-    inline  complex<float>(){};
-  __host__ __device__ 
-    inline  complex<float>(const float & re, const float& im = float())
-    {
-      real(re);
-      imag(im);
-    }  
+  typedef complex<float> _Self;
+  // Constructors, destructor, assignment operator.
 
-  // For some reason having the following constructor
-  // explicitly makes things faster with at least g++
-  __host__ __device__
-    complex<float>(const complex<float> & z)
-    : cuFloatComplex(z){}
+  __device__ complex(value_type __x = 0.0f, value_type __y = 0.0f)
+    : _M_re(__x), _M_im(__y) {}
 
-  __host__ __device__
-    complex<float>(cuFloatComplex z)
-    : cuFloatComplex(z){}
-  
-  template <class X> 
-    inline complex<float>(const std::complex<X> & z)
-    {
-      real(z.real());
-      imag(z.imag());
-    }  
+  __device__ complex(const complex<float>& __z) 
+    : _M_re(__z._M_re), _M_im(__z._M_im) {}
 
-  // Member operators
-  template <typename T>
-    __host__ __device__
-    inline volatile complex<float>& operator=(const complex<T> z) volatile
-    {
-      real(z.real());
-      imag(z.imag());
-      return *this;
-    }
+  inline explicit complex(const complex<double>& __z);
+  // Element access.
+  value_type __device__ real() const { return _M_re; }
+  value_type __device__ imag() const { return _M_im; }
 
-  template <typename T>
-    __host__ __device__
-    inline complex<float>& operator=(const complex<T> z)
-    {
-      real(z.real());
-      imag(z.imag());
-      return *this;
-    }
+  // Arithmetic op= operations involving one real argument.
 
-  __host__ __device__ 
-    inline complex<float>& operator+=(const complex<float> z)
-    {
-      real(real()+z.real());
-      imag(imag()+z.imag());
-      return *this;
-    }
-
-  __host__ __device__ 
-    inline complex<float>& operator-=(const complex<float> z)
-    {
-      real(real()-z.real());
-      imag(imag()-z.imag());
-      return *this;
-    }
-
-  __host__ __device__ 
-    inline complex<float>& operator*=(const complex<float> z)
-    {
-      *this = *this * z;
-      return *this;
-    }
-
-  __host__ __device__ 
-    inline complex<float>& operator/=(const complex<float> z)
-    {
-      *this = *this / z;
-      return *this;
-    }
-
-  // Let the compiler synthesize the copy and assignment operators.
-  __host__ __device__ inline complex<float>(const volatile complex<float> & z)
-  {
-    real(z.real());
-    imag(z.imag());
+  __device__ _Self& operator= (value_type __x) {
+    _M_re = __x;
+    _M_im = 0.0f;
+    return *this;
+  }
+  volatile __device__ _Self& operator= (value_type __x) volatile {
+    _M_re = __x;
+    _M_im = 0.0f;
+    return *this;
+  }
+  __device__ _Self& operator+= (value_type __x) {
+    _M_re += __x;
+    return *this;
+  }
+  __device__ _Self& operator-= (value_type __x) {
+    _M_re -= __x;
+    return *this;
+  }
+  __device__ _Self& operator*= (value_type __x) {
+    _M_re *= __x;
+    _M_im *= __x;
+    return *this;
+  }
+  __device__ _Self& operator/= (value_type __x) {
+    _M_re /= __x;
+    _M_im /= __x;
+    return *this;
   }
 
-  __host__ __device__ inline float real() const volatile{ return x; }
-  __host__ __device__ inline float imag() const volatile{ return y; }
-  __host__ __device__ inline float real() const{ return x; }
-  __host__ __device__ inline float imag() const{ return y; }
-  __host__ __device__ inline void real(float re)volatile{ x = re; }
-  __host__ __device__ inline void imag(float im)volatile{ y = im; }
-  __host__ __device__ inline void real(float re){ x = re; }
-  __host__ __device__ inline void imag(float im){ y = im; }
+  // Arithmetic op= operations involving two complex arguments.
 
-  // cast operators
-  inline operator std::complex<float>() const { return std::complex<float>(real(),imag()); }
-  //  inline operator float() const { return real(); }
+  static __device__ void _div(const float& __z1_r, const float& __z1_i,
+                              const float& __z2_r, const float& __z2_i,
+                              float& __res_r, float& __res_i);
+
+  static __device__ void _div(const float& __z1_r,
+                              const float& __z2_r, const float& __z2_i,
+                              float& __res_r, float& __res_i);
+
+  template <class _Tp2>
+  __device__ 
+  complex<float>& operator=(const complex<_Tp2>& __z) {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
+  }
+
+  template <class _Tp2>
+  __device__ 
+  volatile complex<float>& operator=(const complex<_Tp2>& __z) volatile {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
+  }
+
+
+  template <class _Tp2>
+  __device__ 
+  complex<float>& operator+= (const complex<_Tp2>& __z) {
+    _M_re += __z._M_re;
+    _M_im += __z._M_im;
+    return *this;
+  }
+
+  template <class _Tp2>
+  __device__ 
+  complex<float>& operator-= (const complex<_Tp2>& __z) {
+    _M_re -= __z._M_re;
+    _M_im -= __z._M_im;
+    return *this;
+  }
+
+  template <class _Tp2>
+  __device__ 
+  complex<float>& operator*= (const complex<_Tp2>& __z) {
+    float __r = _M_re * __z._M_re - _M_im * __z._M_im;
+    float __i = _M_re * __z._M_im + _M_im * __z._M_re;
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
+  }
+
+  template <class _Tp2>
+  __device__ 
+  complex<float>& operator/= (const complex<_Tp2>& __z) {
+    float __r;
+    float __i;
+    _div(_M_re, _M_im, __z._M_re, __z._M_im, __r, __i);
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
+  }
+
+  __device__ 
+  _Self& operator=(const _Self& __z) {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
+  }
+
+  __device__ 
+  volatile _Self& operator=(const _Self& __z) volatile {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
+  }
+
+
+  __device__ 
+  _Self& operator+= (const _Self& __z) {
+    _M_re += __z._M_re;
+    _M_im += __z._M_im;
+    return *this;
+  }
+
+  __device__ 
+  _Self& operator-= (const _Self& __z) {
+    _M_re -= __z._M_re;
+    _M_im -= __z._M_im;
+    return *this;
+  }
+
+  __device__ 
+  _Self& operator*= (const _Self& __z) {
+    value_type __r = _M_re * __z._M_re - _M_im * __z._M_im;
+    value_type __i = _M_re * __z._M_im + _M_im * __z._M_re;
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
+  }
+
+  __device__ 
+  _Self& operator/= (const _Self& __z) {
+    value_type __r;
+    value_type __i;
+    _div(_M_re, _M_im, __z._M_re, __z._M_im, __r, __i);
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
+  }
+
+  // Data members.
+  value_type _M_re;
+  value_type _M_im;
 };
 
 template<>
-struct complex <double> : public cuDoubleComplex
-{
-public:
+struct _STLP_CLASS_DECLSPEC complex<double> {
   typedef double value_type;
-  __host__ __device__
-    inline  complex<double>(){};
-  __host__ __device__
-    inline complex<double>(const double & re, const double& im = double())
-    {
-      real(re);
-      imag(im);
-    }
+  typedef complex<double> _Self;
 
-  // For some reason having the following constructor
-  // explicitly makes things faster with at least g++
-  __host__ __device__
-    inline complex<double>(const complex<double> & z)
-    : cuDoubleComplex(z) {}
+  // Constructors, destructor, assignment operator.
 
-  __host__ __device__
-    inline complex<double>(cuDoubleComplex z)
-    : cuDoubleComplex(z) {}
+  __device__
+  complex(value_type __x = 0.0, value_type __y = 0.0)
+    : _M_re(__x), _M_im(__y) {}
 
-  template <class X> 
-    inline complex<double>(const std::complex<X> & z)
-    {
-      real(z.real());
-      imag(z.imag());
-    }  
+  __device__
+  complex(const complex<double>& __z)
+    : _M_re(__z._M_re), _M_im(__z._M_im) {}
+  __device__
+  inline complex(const complex<float>& __z);
+  // Element access.
+  __device__
+  value_type real() const { return _M_re; }
+  __device__
+  value_type imag() const { return _M_im; }
 
-  // Member operators
-  template <typename T>
-    __host__ __device__
-    inline volatile complex<double>& operator=(const complex<T> z) volatile
-    {
-      real(z.real());
-      imag(z.imag());
-      return *this;
-    }
+  // Arithmetic op= operations involving one real argument.
 
-  template <typename T>
-    __host__ __device__
-    inline complex<double>& operator=(const complex<T> z)
-    {
-      real(z.real());
-      imag(z.imag());
-      return *this;
-    }
-
-  __host__ __device__
-    inline complex<double>& operator+=(const complex<double> z)
-    {
-      real(real()+z.real());
-      imag(imag()+z.imag());
-      return *this;
-    }
-
-  __host__ __device__
-    inline complex<double>& operator-=(const complex<double> z)
-    {
-      real(real()-z.real());
-      imag(imag()-z.imag());
-      return *this;
-    }
-
-  __host__ __device__
-    inline complex<double>& operator*=(const complex<double> z)
-    {
-      *this = *this * z;
-      return *this;
-    }
-
-  __host__ __device__
-    inline complex<double>& operator/=(const complex<double> z)
-    {
-      *this = *this / z;
-      return *this;
-    }
-
-  __host__ __device__ inline complex<double>(const volatile complex<double> & z)
-  {
-    real(z.real());
-    imag(z.imag());
+  __device__
+  _Self& operator= (value_type __x) {
+    _M_re = __x;
+    _M_im = 0.0;
+    return *this;
+  }
+  __device__
+  volatile _Self& operator= (value_type __x) volatile {
+    _M_re = __x;
+    _M_im = 0.0;
+    return *this;
+  }
+  __device__
+  _Self& operator+= (value_type __x) {
+    _M_re += __x;
+    return *this;
+  }
+  __device__
+  _Self& operator-= (value_type __x) {
+    _M_re -= __x;
+    return *this;
+  }
+  __device__
+  _Self& operator*= (value_type __x) {
+    _M_re *= __x;
+    _M_im *= __x;
+    return *this;
+  }
+  __device__
+  _Self& operator/= (value_type __x) {
+    _M_re /= __x;
+    _M_im /= __x;
+    return *this;
   }
 
-  // Let the compiler synthesize the copy and assignment operators.
-  __host__ __device__ inline double real() const volatile { return x; }
-  __host__ __device__ inline double imag() const volatile { return y; }
-  __host__ __device__ inline double real() const { return x; }
-  __host__ __device__ inline double imag() const { return y; }
-  __host__ __device__ inline void real(double re)volatile{ x = re; }
-  __host__ __device__ inline void imag(double im)volatile{ y = im; }
-  __host__ __device__ inline void real(double re){ x = re; }
-  __host__ __device__ inline void imag(double im){ y = im; }
+  // Arithmetic op= operations involving two complex arguments.
 
-  // cast operators
-  inline operator std::complex<double>() const { return std::complex<double>(real(),imag()); }
-  //  inline operator double() { return real(); }
+  static __device__ void _div(const double& __z1_r, const double& __z1_i,
+                              const double& __z2_r, const double& __z2_i,
+                              double& __res_r, double& __res_i);
+  static __device__ void _div(const double& __z1_r,
+                              const double& __z2_r, const double& __z2_i,
+                              double& __res_r, double& __res_i);
+
+#if defined (_STLP_FUNCTION_TMPL_PARTIAL_ORDER)
+  template <class _Tp2>
+  __device__
+  complex<double>& operator=(const complex<_Tp2>& __z) {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
+  }
+
+  template <class _Tp2>
+  __device__
+  volatile complex<double>& operator=(const volatile complex<_Tp2>& __z) {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
+  }
+
+  template <class _Tp2>
+  __device__
+  complex<double>& operator+= (const complex<_Tp2>& __z) {
+    _M_re += __z._M_re;
+    _M_im += __z._M_im;
+    return *this;
+  }
+
+  template <class _Tp2>
+  __device__ 
+  complex<double>& operator-= (const complex<_Tp2>& __z) {
+    _M_re -= __z._M_re;
+    _M_im -= __z._M_im;
+    return *this;
+  }
+
+  template <class _Tp2>
+  __device__ 
+  complex<double>& operator*= (const complex<_Tp2>& __z) {
+    double __r = _M_re * __z._M_re - _M_im * __z._M_im;
+    double __i = _M_re * __z._M_im + _M_im * __z._M_re;
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
+  }
+
+  template <class _Tp2>
+  __device__ 
+  complex<double>& operator/= (const complex<_Tp2>& __z) {
+    double __r;
+    double __i;
+    _div(_M_re, _M_im, __z._M_re, __z._M_im, __r, __i);
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
+  }
+
+#endif /* _STLP_FUNCTION_TMPL_PARTIAL_ORDER */
+  __device__ 
+  _Self& operator=(const _Self& __z) {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
+  }
+
+  __device__ 
+  volatile _Self& operator=(const _Self& __z) volatile {
+    _M_re = __z._M_re;
+    _M_im = __z._M_im;
+    return *this;
+  }
+
+  __device__ 
+  _Self& operator+= (const _Self& __z) {
+    _M_re += __z._M_re;
+    _M_im += __z._M_im;
+    return *this;
+  }
+
+  __device__ 
+  _Self& operator-= (const _Self& __z) {
+    _M_re -= __z._M_re;
+    _M_im -= __z._M_im;
+    return *this;
+  }
+
+  __device__ 
+  _Self& operator*= (const _Self& __z) {
+    value_type __r = _M_re * __z._M_re - _M_im * __z._M_im;
+    value_type __i = _M_re * __z._M_im + _M_im * __z._M_re;
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
+  }
+
+  __device__ 
+  _Self& operator/= (const _Self& __z) {
+    value_type __r;
+    value_type __i;
+    _div(_M_re, _M_im, __z._M_re, __z._M_im, __r, __i);
+    _M_re = __r;
+    _M_im = __i;
+    return *this;
+  }
+
+  // Data members.
+  value_type _M_re;
+  value_type _M_im;
 };
 
-
-
-  // Binary arithmetic operations
-  // At the moment I'm implementing the basic functions, and the 
-  // corresponding cuComplex calls are commented.
-
-  template<typename ValueType>
-    __host__ __device__ 
-    inline complex<ValueType> operator+(const complex<ValueType>& lhs,
-					    const complex<ValueType>& rhs){
-    return complex<ValueType>(lhs.real()+rhs.real(),lhs.imag()+rhs.imag());
-    //  return cuCaddf(lhs,rhs);
-  }
-
-  template<typename ValueType>
-    __host__ __device__ 
-    inline complex<ValueType> operator+(const volatile complex<ValueType>& lhs,
-					    const volatile complex<ValueType>& rhs){
-    return complex<ValueType>(lhs.real()+rhs.real(),lhs.imag()+rhs.imag());
-    //  return cuCaddf(lhs,rhs);
-  }
-
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline complex<ValueType> operator+(const complex<ValueType>& lhs, const ValueType & rhs){
-    return complex<ValueType>(lhs.real()+rhs,lhs.imag());
-    //  return cuCaddf(lhs,complex<ValueType>(rhs));
-  }
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline complex<ValueType> operator+(const ValueType& lhs, const complex<ValueType>& rhs){
-    return complex<ValueType>(rhs.real()+lhs,rhs.imag());
-    //  return cuCaddf(complex<float>(lhs),rhs);
-  }
-
-  template <typename ValueType> 
-    __host__ __device__ 
-    inline complex<ValueType> operator-(const complex<ValueType>& lhs, const complex<ValueType>& rhs){
-    return complex<ValueType>(lhs.real()-rhs.real(),lhs.imag()-rhs.imag());
-    //  return cuCsubf(lhs,rhs);
-  }
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator-(const complex<ValueType>& lhs, const ValueType & rhs){
-    return complex<ValueType>(lhs.real()-rhs,lhs.imag());
-    //  return cuCsubf(lhs,complex<float>(rhs));
-  }
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator-(const ValueType& lhs, const complex<ValueType>& rhs){
-    return complex<ValueType>(lhs-rhs.real(),-rhs.imag());
-    //  return cuCsubf(complex<float>(lhs),rhs);
-  }
-
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator*(const complex<ValueType>& lhs,
-					    const complex<ValueType>& rhs){
-    return complex<ValueType>(lhs.real()*rhs.real()-lhs.imag()*rhs.imag(),
-				  lhs.real()*rhs.imag()+lhs.imag()*rhs.real());
-    //  return cuCmulf(lhs,rhs);
-  }
-
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator*(const complex<ValueType>& lhs, const ValueType & rhs){
-    return complex<ValueType>(lhs.real()*rhs,lhs.imag()*rhs);
-    //  return cuCmulf(lhs,complex<float>(rhs));
-  }
-
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator*(const ValueType& lhs, const complex<ValueType>& rhs){
-    return complex<ValueType>(rhs.real()*lhs,rhs.imag()*lhs);
-    //  return cuCmulf(complex<float>(lhs),rhs);
-  }
-
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> operator/(const complex<ValueType>& lhs, const complex<ValueType>& rhs){
-    const ValueType cross_norm  =  lhs.real() * rhs.real() + lhs.imag() * rhs.imag();
-    const ValueType rhs_norm = norm(rhs);
-    return complex<ValueType>(cross_norm/rhs_norm,
-				  (lhs.imag() * rhs.real() - lhs.real() * rhs.imag()) / rhs_norm);
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<float> operator/(const complex<float>& lhs, const complex<float>& rhs){
-    return cuCdivf(lhs,rhs);
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<double> operator/(const complex<double>& lhs, const complex<double>& rhs){
-    return cuCdiv(lhs,rhs);
-  }
-
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator/(const complex<ValueType>& lhs, const ValueType & rhs){
-    return complex<ValueType>(lhs.real()/rhs,lhs.imag()/rhs);
-    //  return cuCdivf(lhs,complex<float>(rhs));
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> operator/(const ValueType& lhs, const complex<ValueType>& rhs){
-    const ValueType cross_norm  =  lhs * rhs.real();
-    const ValueType rhs_norm = norm(rhs);
-    return complex<ValueType>(cross_norm/rhs_norm,(-lhs.real() * rhs.imag()) / rhs_norm);
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<float> operator/(const float& lhs, const complex<float>& rhs){
-    return cuCdivf(complex<float>(lhs),rhs);
-  }
-  template <>
-    __host__ __device__
-    inline complex<double> operator/(const double& lhs, const complex<double>& rhs){
-    return cuCdiv(complex<double>(lhs),rhs);
-  }
-
-
-  // Unary arithmetic operations
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator+(const complex<ValueType>& rhs){
-    return rhs;
-  }
-  template <typename ValueType> 
-    __host__ __device__
-    inline complex<ValueType> operator-(const complex<ValueType>& rhs){
-    return rhs*-ValueType(1);
-  }
-
-  // Equality operators 
-  template <typename ValueType> 
-    __host__ __device__
-    inline bool operator==(const complex<ValueType>& lhs, const complex<ValueType>& rhs){
-    if(lhs.real() == rhs.real() && lhs.imag() == rhs.imag()){
-      return true;
-    }
-    return false;
-  }
-  template <typename ValueType> 
-    __host__ __device__
-    inline bool operator==(const ValueType & lhs, const complex<ValueType>& rhs){
-    if(lhs == rhs.real() && rhs.imag() == 0){
-      return true;
-    }
-    return false;
-  }
-  template <typename ValueType> 
-    __host__ __device__
-    inline bool operator==(const complex<ValueType> & lhs, const ValueType& rhs){
-    if(lhs.real() == rhs && lhs.imag() == 0){
-      return true;
-    }
-    return false;
-  }
-
-  template <typename ValueType> 
-    __host__ __device__
-    inline bool operator!=(const complex<ValueType>& lhs, const complex<ValueType>& rhs){
-    return !(lhs == rhs);
-  }
-
-  template <typename ValueType> 
-    __host__ __device__
-    inline bool operator!=(const ValueType & lhs, const complex<ValueType>& rhs){
-    return !(lhs == rhs);
-  }
-
-  template <typename ValueType> 
-    __host__ __device__
-    inline bool operator!=(const complex<ValueType> & lhs, const ValueType& rhs){
-    return !(lhs == rhs);
-  }
-
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> conj(const complex<ValueType>& z){
-    return complex<ValueType>(z.real(),-z.imag());
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline ValueType abs(const complex<ValueType>& z){
-    return ::hypot(z.real(),z.imag());
-  }
-  template <>
-    __host__ __device__
-    inline float abs(const complex<float>& z){
-    return ::hypotf(z.real(),z.imag());
-  }
-  template<>
-    __host__ __device__
-    inline double abs(const complex<double>& z){
-    return ::hypot(z.real(),z.imag());
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline ValueType arg(const complex<ValueType>& z){
-    return atan2(z.imag(),z.real());
-  }
-  template<>
-    __host__ __device__
-    inline float arg(const complex<float>& z){
-    return atan2f(z.imag(),z.real());
-  }
-  template<>
-    __host__ __device__
-    inline double arg(const complex<double>& z){
-    return atan2(z.imag(),z.real());
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline ValueType norm(const complex<ValueType>& z){
-    return z.real()*z.real() + z.imag()*z.imag();
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> polar(const ValueType & m, const ValueType & theta){ 
-    return complex<ValueType>(m * ::cos(theta),m * ::sin(theta));
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<float> polar(const float & magnitude, const float & angle){ 
-    return complex<float>(magnitude * ::cosf(angle),magnitude * ::sinf(angle));
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<double> polar(const double & magnitude, const double & angle){ 
-    return complex<double>(magnitude * ::cos(angle),magnitude * ::sin(angle));
-  }
-
-  // Transcendental functions implementation
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> cos(const complex<ValueType>& z){
-    const ValueType re = z.real();
-    const ValueType im = z.imag();
-    return complex<ValueType>(::cos(re) * ::cosh(im), -::sin(re) * ::sinh(im));
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<float> cos(const complex<float>& z){
-    const float re = z.real();
-    const float im = z.imag();
-    return complex<float>(cosf(re) * coshf(im), -sinf(re) * sinhf(im));
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> cosh(const complex<ValueType>& z){
-    const ValueType re = z.real();
-    const ValueType im = z.imag();
-    return complex<ValueType>(::cosh(re) * ::cos(im), ::sinh(re) * ::sin(im));
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<float> cosh(const complex<float>& z){
-    const float re = z.real();
-    const float im = z.imag();
-    return complex<float>(::coshf(re) * ::cosf(im), ::sinhf(re) * ::sinf(im));
-  }
-
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> exp(const complex<ValueType>& z){
-    return polar(::exp(z.real()),z.imag());
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<float> exp(const complex<float>& z){
-    return polar(::expf(z.real()),z.imag());
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> log(const complex<ValueType>& z){
-    return complex<ValueType>(::log(abs(z)),arg(z));
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<float> log(const complex<float>& z){
-    return complex<float>(::logf(abs(z)),arg(z));
-  }
-
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> log10(const complex<ValueType>& z){ 
-    // Using the explicit literal prevents compile time warnings in
-    // devices that don't support doubles 
-    return log(z)/ValueType(2.30258509299404568402);
-    //    return log(z)/ValueType(::log(10.0));
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> pow(const complex<ValueType>& z, const ValueType & exponent){
-    return exp(log(z)*exponent);
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> pow(const complex<ValueType>& z, const complex<ValueType> & exponent){
-    return exp(log(z)*exponent);
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> pow(const ValueType & x, const complex<ValueType> & exponent){
-    return exp(::log(x)*exponent);
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<float> pow(const float & x, const complex<float> & exponent){
-    return exp(::logf(x)*exponent);
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> pow(const complex<ValueType>& z,const int & exponent){
-    return exp(log(z)*ValueType(exponent));
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> sin(const complex<ValueType>& z){
-    const ValueType re = z.real();
-    const ValueType im = z.imag();
-    return complex<ValueType>(::sin(re) * ::cosh(im), ::cos(re) * ::sinh(im));
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<float> sin(const complex<float>& z){
-    const float re = z.real();
-    const float im = z.imag();
-    return complex<float>(::sinf(re) * ::coshf(im), ::cosf(re) * ::sinhf(im));
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> sinh(const complex<ValueType>& z){
-    const ValueType re = z.real();
-    const ValueType im = z.imag();
-    return complex<ValueType>(::sinh(re) * ::cos(im), ::cosh(re) * ::sin(im));
-  }
-
-  template <>
-    __host__ __device__
-    inline complex<float> sinh(const complex<float>& z){
-    const float re = z.real();
-    const float im = z.imag();
-    return complex<float>(::sinhf(re) * ::cosf(im), ::coshf(re) * ::sinf(im));
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> sqrt(const complex<ValueType>& z){
-    return polar(::sqrt(abs(z)),arg(z)/ValueType(2));
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<float> sqrt(const complex<float>& z){
-    return polar(::sqrtf(abs(z)),arg(z)/float(2));
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> tan(const complex<ValueType>& z){
-    return sin(z)/cos(z);
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> tanh(const complex<ValueType>& z){
-    // This implementation seems better than the simple sin/cos
-    return (exp(ValueType(2)*z)-ValueType(1))/(exp(ValueType(2)*z)+ValueType(1));
-    //    return sinh(z)/cosh(z);
-  }
-
-  // Inverse trigonometric functions implementation
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> acos(const complex<ValueType>& z){
-    const complex<ValueType> ret = asin(z);
-    return complex<ValueType>(ValueType(M_PI/2.0) - ret.real(),-ret.imag());
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> asin(const complex<ValueType>& z){
-    const complex<ValueType> i(0,1);
-    return -i*asinh(i*z);
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> atan(const complex<ValueType>& z){
-    const complex<ValueType> i(0,1);
-    return -i*atanh(i*z);
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> acosh(const complex<ValueType>& z){
-    gpu::complex<ValueType> ret((z.real() - z.imag()) * (z.real() + z.imag()) - ValueType(1.0),
-				 ValueType(2.0) * z.real() * z.imag());    
-    ret = sqrt(ret);
-    if (z.real() < ValueType(0.0)){
-      ret = -ret;
-    }
-    ret += z;
-    ret = log(ret);
-    if (ret.real() < ValueType(0.0)){
-      ret = -ret;
-    }
-    return ret;
-
-    /*
-    gpu::complex<ValueType> ret = log(sqrt(z*z-ValueType(1))+z);
-    if(ret.real() < 0){
-      ret.real(-ret.real());
-    }
-    return ret;
-    */
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> asinh(const complex<ValueType>& z){
-    return log(sqrt(z*z+ValueType(1))+z);
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<ValueType> atanh(const complex<ValueType>& z){
-    ValueType imag2 = z.imag() *  z.imag();   
-    ValueType n = ValueType(1.0) + z.real();
-    n = imag2 + n * n;
-
-    ValueType d = ValueType(1.0) - z.real();
-    d = imag2 + d * d;
-    complex<ValueType> ret(ValueType(0.25) * (::log(n) - ::log(d)),0);
-
-    d = ValueType(1.0) -  z.real() * z.real() - imag2;
-
-    ret.imag(ValueType(0.5) * ::atan2(ValueType(2.0) * z.imag(), d));
-    return ret;
-    //return (log(ValueType(1)+z)-log(ValueType(1)-z))/ValueType(2);
-  }
-
-  template <typename ValueType>
-    __host__ __device__
-    inline complex<float> atanh(const complex<float>& z){
-        float imag2 = z.imag() *  z.imag();   
-    float n = float(1.0) + z.real();
-    n = imag2 + n * n;
-
-    float d = float(1.0) - z.real();
-    d = imag2 + d * d;
-    complex<float> ret(float(0.25) * (::logf(n) - ::logf(d)),0);
-
-    d = float(1.0) -  z.real() * z.real() - imag2;
-
-    ret.imag(float(0.5) * ::atan2f(float(2.0) * z.imag(), d));
-    return ret;
-    //return (log(ValueType(1)+z)-log(ValueType(1)-z))/ValueType(2);
-
-  }
-
-  /// @}
+// Converting constructors from one of these three specialized types
+// to another.
+
+inline complex<float>::complex(const complex<double>& __z)
+  : _M_re((float)__z._M_re), _M_im((float)__z._M_im) {}
+inline complex<double>::complex(const complex<float>& __z)
+  : _M_re(__z._M_re), _M_im(__z._M_im) {}
+
+// Unary non-member arithmetic operators.
+
+template <class _Tp>
+inline complex<_Tp> __device__ operator+(const complex<_Tp>& __z)
+{ return __z; }
+
+template <class _Tp>
+inline complex<_Tp> __device__  operator-(const complex<_Tp>& __z)
+{ return complex<_Tp>(-__z._M_re, -__z._M_im); }
+
+// Non-member arithmetic operations involving one real argument.
+
+template <class _Tp>
+__device__
+inline complex<_Tp> operator+(const _Tp& __x, const complex<_Tp>& __z)
+{ return complex<_Tp>(__x + __z._M_re, __z._M_im); }
+
+template <class _Tp>
+__device__
+inline complex<_Tp> operator+(const complex<_Tp>& __z, const _Tp& __x)
+{ return complex<_Tp>(__z._M_re + __x, __z._M_im); }
+
+template <class _Tp>
+__device__
+inline complex<_Tp> operator-(const _Tp& __x, const complex<_Tp>& __z)
+{ return complex<_Tp>(__x - __z._M_re, -__z._M_im); }
+
+template <class _Tp>
+__device__
+inline complex<_Tp> operator-(const complex<_Tp>& __z, const _Tp& __x)
+{ return complex<_Tp>(__z._M_re - __x, __z._M_im); }
+
+template <class _Tp>
+__device__
+inline complex<_Tp> operator*(const _Tp& __x, const complex<_Tp>& __z)
+{ return complex<_Tp>(__x * __z._M_re, __x * __z._M_im); }
+
+template <class _Tp>
+__device__
+inline complex<_Tp> operator*(const complex<_Tp>& __z, const _Tp& __x)
+{ return complex<_Tp>(__z._M_re * __x, __z._M_im * __x); }
+
+template <class _Tp>
+__device__
+inline complex<_Tp> operator/(const _Tp& __x, const complex<_Tp>& __z) {
+  complex<_Tp> __result;
+  complex<_Tp>::_div(__x,
+                     __z._M_re, __z._M_im,
+                     __result._M_re, __result._M_im);
+  return __result;
+}
+
+template <class _Tp>
+__device__
+inline complex<_Tp> operator/(const complex<_Tp>& __z, const _Tp& __x)
+{ return complex<_Tp>(__z._M_re / __x, __z._M_im / __x); }
+
+// Non-member arithmetic operations involving two complex arguments
+
+template <class _Tp>
+__device__
+inline complex<_Tp>
+operator+(const complex<_Tp>& __z1, const complex<_Tp>& __z2)
+{ return complex<_Tp>(__z1._M_re + __z2._M_re, __z1._M_im + __z2._M_im); }
+
+template <class _Tp>
+__device__
+inline complex<_Tp>
+operator+(const volatile complex<_Tp>& __z1, const volatile complex<_Tp>& __z2)
+{ return complex<_Tp>(__z1._M_re + __z2._M_re, __z1._M_im + __z2._M_im); }
+
+
+template <class _Tp>
+__device__
+inline complex<_Tp> __device__
+operator-(const complex<_Tp>& __z1, const complex<_Tp>& __z2)
+{ return complex<_Tp>(__z1._M_re - __z2._M_re, __z1._M_im - __z2._M_im); }
+
+template <class _Tp>
+__device__
+inline complex<_Tp> __device__
+operator*(const complex<_Tp>& __z1, const complex<_Tp>& __z2) {
+  return complex<_Tp>(__z1._M_re * __z2._M_re - __z1._M_im * __z2._M_im,
+                      __z1._M_re * __z2._M_im + __z1._M_im * __z2._M_re);
+}
+
+template <class _Tp>
+__device__
+inline complex<_Tp> __device__
+operator*(const volatile complex<_Tp>& __z1, const volatile complex<_Tp>& __z2) {
+  return complex<_Tp>(__z1._M_re * __z2._M_re - __z1._M_im * __z2._M_im,
+                      __z1._M_re * __z2._M_im + __z1._M_im * __z2._M_re);
+}
+
+template <class _Tp>
+__device__
+inline complex<_Tp> __device__
+operator/(const complex<_Tp>& __z1, const complex<_Tp>& __z2) {
+  complex<_Tp> __result;
+  complex<_Tp>::_div(__z1._M_re, __z1._M_im,
+                     __z2._M_re, __z2._M_im,
+                     __result._M_re, __result._M_im);
+  return __result;
+}
+
+// Comparison operators.
+
+template <class _Tp>
+__device__
+inline bool operator==(const complex<_Tp>& __z1, const complex<_Tp>& __z2)
+{ return __z1._M_re == __z2._M_re && __z1._M_im == __z2._M_im; }
+
+template <class _Tp>
+__device__
+inline bool operator==(const complex<_Tp>& __z, const _Tp& __x)
+{ return __z._M_re == __x && __z._M_im == 0; }
+
+template <class _Tp>
+__device__
+inline bool operator==(const _Tp& __x, const complex<_Tp>& __z)
+{ return __x == __z._M_re && 0 == __z._M_im; }
+
+//04/27/04 dums: removal of this check, if it is restablish
+//please explain why the other operators are not macro guarded
+//#ifdef _STLP_FUNCTION_TMPL_PARTIAL_ORDER
+
+template <class _Tp>
+__device__
+inline bool operator!=(const complex<_Tp>& __z1, const complex<_Tp>& __z2)
+{ return __z1._M_re != __z2._M_re || __z1._M_im != __z2._M_im; }
+
+//#endif /* _STLP_FUNCTION_TMPL_PARTIAL_ORDER */
+
+template <class _Tp>
+__device__
+inline bool operator!=(const complex<_Tp>& __z, const _Tp& __x)
+{ return __z._M_re != __x || __z._M_im != 0; }
+
+template <class _Tp>
+__device__
+inline bool operator!=(const _Tp& __x, const complex<_Tp>& __z)
+{ return __x != __z._M_re || 0 != __z._M_im; }
+
+// Other basic arithmetic operations
+template <class _Tp>
+__device__
+inline _Tp real(const complex<_Tp>& __z)
+{ return __z._M_re; }
+
+template <class _Tp>
+__device__
+inline _Tp imag(const complex<_Tp>& __z)
+{ return __z._M_im; }
+
+template <class _Tp>
+__device__
+_Tp abs(const complex<_Tp>& __z);
+
+template <class _Tp>
+__device__
+_Tp arg(const complex<_Tp>& __z);
+
+template <class _Tp>
+__device__
+inline _Tp norm(const complex<_Tp>& __z)
+{ return __z._M_re * __z._M_re + __z._M_im * __z._M_im; }
+
+template <class _Tp>
+__device__
+inline complex<_Tp> conj(const complex<_Tp>& __z)
+{ return complex<_Tp>(__z._M_re, -__z._M_im); }
+
+template <class _Tp>
+__device__
+complex<_Tp> polar(const _Tp& __rho)
+{ return complex<_Tp>(__rho, 0); }
+
+template <class _Tp>
+__device__
+complex<_Tp> polar(const _Tp& __rho, const _Tp& __phi);
+
+_STLP_TEMPLATE_NULL
+__device__ float abs(const complex<float>&);
+_STLP_TEMPLATE_NULL
+__device__ double abs(const complex<double>&);
+_STLP_TEMPLATE_NULL
+__device__ float arg(const complex<float>&);
+_STLP_TEMPLATE_NULL
+__device__ double arg(const complex<double>&);
+_STLP_TEMPLATE_NULL
+__device__ complex<float> polar(const float& __rho, const float& __phi);
+_STLP_TEMPLATE_NULL
+__device__ complex<double> polar(const double& __rho, const double& __phi);
+
+template <class _Tp>
+__device__
+_Tp abs(const complex<_Tp>& __z)
+{ return _Tp(abs(complex<double>(double(__z.real()), double(__z.imag())))); }
+
+template <class _Tp>
+__device__
+_Tp arg(const complex<_Tp>& __z)
+{ return _Tp(arg(complex<double>(double(__z.real()), double(__z.imag())))); }
+
+template <class _Tp>
+__device__
+complex<_Tp> polar(const _Tp& __rho, const _Tp& __phi) {
+  complex<double> __tmp = polar(double(__rho), double(__phi));
+  return complex<_Tp>(_Tp(__tmp.real()), _Tp(__tmp.imag()));
+}
+
+
+// Transcendental functions.  These are defined only for float,
+//  double, and long double.  (Sqrt isn't transcendental, of course,
+//  but it's included in this section anyway.)
+
+__device__ complex<float> sqrt(const complex<float>&);
+
+__device__ complex<float> exp(const complex<float>&);
+__device__ complex<float>  log(const complex<float>&);
+__device__ complex<float> log10(const complex<float>&);
+
+// uses some stlport-private power thing
+// __device__ complex<float> pow(const complex<float>&, int);
+__device__ complex<float> pow(const complex<float>&, const float&);
+__device__ complex<float> pow(const float&, const complex<float>&);
+__device__ complex<float> pow(const complex<float>&, const complex<float>&);
+
+__device__ complex<float> sin(const complex<float>&);
+__device__ complex<float> cos(const complex<float>&);
+__device__ complex<float> tan(const complex<float>&);
+
+__device__ complex<float> sinh(const complex<float>&);
+__device__ complex<float> cosh(const complex<float>&);
+__device__ complex<float> tanh(const complex<float>&);
+
+__device__ complex<double> sqrt(const complex<double>&);
+
+__device__ complex<double> exp(const complex<double>&);
+__device__ complex<double> log(const complex<double>&);
+__device__ complex<double> log10(const complex<double>&);
+
+// uses some stlport-private power thing
+// __device__ complex<double> pow(const complex<double>&, int);
+__device__ complex<double> pow(const complex<double>&, const double&);
+__device__ complex<double> pow(const double&, const complex<double>&);
+__device__ complex<double> pow(const complex<double>&, const complex<double>&);
+
+__device__ complex<double> sin(const complex<double>&);
+__device__ complex<double> cos(const complex<double>&);
+__device__ complex<double> tan(const complex<double>&);
+
+__device__ complex<double> sinh(const complex<double>&);
+__device__ complex<double> cosh(const complex<double>&);
+__device__ complex<double> tanh(const complex<double>&);
+
+
+/**********************************************************************\
+|*                           Implementation                           *|
+\**********************************************************************/
+
+// Complex division and square roots.
+
+// Absolute value
+_STLP_TEMPLATE_NULL
+__device__ float abs(const complex<float>& __z)
+{ return ::hypot(__z._M_re, __z._M_im); }
+_STLP_TEMPLATE_NULL
+__device__ double abs(const complex<double>& __z)
+{ return ::hypot(__z._M_re, __z._M_im); }
+
+// Phase
+
+_STLP_TEMPLATE_NULL
+__device__ float arg(const complex<float>& __z)
+{ return ::atan2(__z._M_im, __z._M_re); }
+
+_STLP_TEMPLATE_NULL
+__device__ double arg(const complex<double>& __z)
+{ return ::atan2(__z._M_im, __z._M_re); }
+
+// Construct a complex number from polar representation
+_STLP_TEMPLATE_NULL
+__device__ complex<float> polar(const float& __rho, const float& __phi)
+{ return complex<float>(__rho * ::cos(__phi), __rho * ::sin(__phi)); }
+_STLP_TEMPLATE_NULL
+__device__ complex<double> polar(const double& __rho, const double& __phi)
+{ return complex<double>(__rho * ::cos(__phi), __rho * ::sin(__phi)); }
+
+// Division
+template <class _Tp>
+__device__
+static void _divT(const _Tp& __z1_r, const _Tp& __z1_i,
+                  const _Tp& __z2_r, const _Tp& __z2_i,
+                  _Tp& __res_r, _Tp& __res_i) {
+  _Tp __ar = __z2_r >= 0 ? __z2_r : -__z2_r;
+  _Tp __ai = __z2_i >= 0 ? __z2_i : -__z2_i;
+
+  if (__ar <= __ai) {
+    _Tp __ratio = __z2_r / __z2_i;
+    _Tp __denom = __z2_i * (1 + __ratio * __ratio);
+    __res_r = (__z1_r * __ratio + __z1_i) / __denom;
+    __res_i = (__z1_i * __ratio - __z1_r) / __denom;
+  }
+  else {
+    _Tp __ratio = __z2_i / __z2_r;
+    _Tp __denom = __z2_r * (1 + __ratio * __ratio);
+    __res_r = (__z1_r + __z1_i * __ratio) / __denom;
+    __res_i = (__z1_i - __z1_r * __ratio) / __denom;
+  }
+}
+
+template <class _Tp>
+__device__
+static void _divT(const _Tp& __z1_r,
+                  const _Tp& __z2_r, const _Tp& __z2_i,
+                  _Tp& __res_r, _Tp& __res_i) {
+  _Tp __ar = __z2_r >= 0 ? __z2_r : -__z2_r;
+  _Tp __ai = __z2_i >= 0 ? __z2_i : -__z2_i;
+
+  if (__ar <= __ai) {
+    _Tp __ratio = __z2_r / __z2_i;
+    _Tp __denom = __z2_i * (1 + __ratio * __ratio);
+    __res_r = (__z1_r * __ratio) / __denom;
+    __res_i = - __z1_r / __denom;
+  }
+  else {
+    _Tp __ratio = __z2_i / __z2_r;
+    _Tp __denom = __z2_r * (1 + __ratio * __ratio);
+    __res_r = __z1_r / __denom;
+    __res_i = - (__z1_r * __ratio) / __denom;
+  }
+}
+
+__device__
+void
+complex<float>::_div(const float& __z1_r, const float& __z1_i,
+                     const float& __z2_r, const float& __z2_i,
+                     float& __res_r, float& __res_i)
+{ _divT(__z1_r, __z1_i, __z2_r, __z2_i, __res_r, __res_i); }
+
+__device__
+void
+complex<float>::_div(const float& __z1_r,
+                     const float& __z2_r, const float& __z2_i,
+                     float& __res_r, float& __res_i)
+{ _divT(__z1_r, __z2_r, __z2_i, __res_r, __res_i); }
+
+
+__device__
+void
+complex<double>::_div(const double& __z1_r, const double& __z1_i,
+                      const double& __z2_r, const double& __z2_i,
+                      double& __res_r, double& __res_i)
+{ _divT(__z1_r, __z1_i, __z2_r, __z2_i, __res_r, __res_i); }
+
+__device__
+void
+complex<double>::_div(const double& __z1_r,
+                      const double& __z2_r, const double& __z2_i,
+                      double& __res_r, double& __res_i)
+{ _divT(__z1_r, __z2_r, __z2_i, __res_r, __res_i); }
+
+//----------------------------------------------------------------------
+// Square root
+template <class _Tp>
+__device__ 
+static complex<_Tp> sqrtT(const complex<_Tp>& z) {
+  _Tp re = z._M_re;
+  _Tp im = z._M_im;
+  _Tp mag = ::hypot(re, im);
+  complex<_Tp> result;
+
+  if (mag == 0.f) {
+    result._M_re = result._M_im = 0.f;
+  } else if (re > 0.f) {
+    result._M_re = ::sqrt(0.5f * (mag + re));
+    result._M_im = im/result._M_re/2.f;
+  } else {
+    result._M_im = ::sqrt(0.5f * (mag - re));
+    if (im < 0.f)
+      result._M_im = - result._M_im;
+    result._M_re = im/result._M_im/2.f;
+  }
+  return result;
+}
+
+__device__
+complex<float> 
+sqrt(const complex<float>& z) { return sqrtT(z); }
+
+__device__
+complex<double>
+sqrt(const complex<double>& z) { return sqrtT(z); }
+
+// exp, log, pow for complex<float>, complex<double>, and complex<long double>
+//----------------------------------------------------------------------
+// exp
+template <class _Tp>
+__device__ 
+static complex<_Tp> expT(const complex<_Tp>& z) {
+  _Tp expx = ::exp(z._M_re);
+  return complex<_Tp>(expx * ::cos(z._M_im),
+                      expx * ::sin(z._M_im));
+}
+__device__ complex<float>  exp(const complex<float>& z)
+{ return expT(z); }
+
+__device__ complex<double> exp(const complex<double>& z)
+{ return expT(z); }
+
+#if 0
+//----------------------------------------------------------------------
+// log10
+template <class _Tp>
+static __device__ complex<_Tp> log10T(const complex<_Tp>& z, const _Tp& ln10_inv) {
+  complex<_Tp> r;
+
+  r._M_im = ::atan2(z._M_im, z._M_re) * ln10_inv;
+  r._M_re = ::log10(::hypot(z._M_re, z._M_im));
+  return r;
+}
+
+static const float LN10_INVF = 1.f / ::log(10.f);
+__device__ complex<float> log10(const complex<float>& z)
+{ return log10T(z, LN10_INVF); }
+
+static const double LN10_INV = 1. / ::log10(10.);
+__device__ complex<double> log10(const complex<double>& z)
+{ return log10T(z, LN10_INV); }
+
+#endif
+
+//----------------------------------------------------------------------
+// log
+template <class _Tp>
+static __device__ complex<_Tp> logT(const complex<_Tp>& z) {
+  complex<_Tp> r;
+
+  r._M_im = ::atan2(z._M_im, z._M_re);
+  r._M_re = ::log(::hypot(z._M_re, z._M_im));
+  return r;
+}
+__device__ complex<float> log(const complex<float>& z)
+{ return logT(z); }
+
+__device__ complex<double> log(const complex<double>& z)
+{ return logT(z); }
+
+//----------------------------------------------------------------------
+// pow
+template <class _Tp>
+__device__
+static complex<_Tp> powT(const _Tp& a, const complex<_Tp>& b) {
+  _Tp logr = ::log(a);
+  _Tp x = ::exp(logr * b._M_re);
+  _Tp y = logr * b._M_im;
+
+  return complex<_Tp>(x * ::cos(y), x * ::sin(y));
+}
+
+#if 0
+template <class _Tp>
+__device__
+static complex<_Tp> powT(const complex<_Tp>& z_in, int n) {
+  complex<_Tp> z = z_in;
+  z = _STLP_PRIV __power(z, (n < 0 ? -n : n), multiplies< complex<_Tp> >());
+  if (n < 0)
+    return _Tp(1.0) / z;
+  else
+    return z;
+}
+#endif
+
+template <class _Tp>
+__device__
+static complex<_Tp> powT(const complex<_Tp>& a, const _Tp& b) {
+  _Tp logr = ::log(::hypot(a._M_re,a._M_im));
+  _Tp logi = ::atan2(a._M_im, a._M_re);
+  _Tp x = ::exp(logr * b);
+  _Tp y = logi * b;
+
+  return complex<_Tp>(x * ::cos(y), x * ::sin(y));
+}
+
+template <class _Tp>
+__device__
+static complex<_Tp> powT(const complex<_Tp>& a, const complex<_Tp>& b) {
+  _Tp logr = ::log(::hypot(a._M_re,a._M_im));
+  _Tp logi = ::atan2(a._M_im, a._M_re);
+  _Tp x = ::exp(logr * b._M_re - logi * b._M_im);
+  _Tp y = logr * b._M_im + logi * b._M_re;
+
+  return complex<_Tp>(x * ::cos(y), x * ::sin(y));
+}
+
+__device__ complex<float> pow(const float& a, const complex<float>& b)
+{ return powT(a, b); }
+
+/*
+__device__ complex<float> pow(const complex<float>& z_in, int n)
+{ return powT(z_in, n); }
+*/
+
+__device__ complex<float> pow(const complex<float>& a, const float& b)
+{ return powT(a, b); }
+
+__device__ complex<float> pow(const complex<float>& a, const complex<float>& b)
+{ return powT(a, b); }
+
+__device__ complex<double> pow(const double& a, const complex<double>& b)
+{ return powT(a, b); }
+
+/*
+__device__ complex<double> pow(const complex<double>& z_in, int n)
+{ return powT(z_in, n); }
+*/
+
+__device__ complex<double> pow(const complex<double>& a, const double& b)
+{ return powT(a, b); }
+
+__device__ complex<double> pow(const complex<double>& a, const complex<double>& b)
+{ return powT(a, b); }
+
+// ----------------------------------------------------------------------------
+// trig helpers
+
+#ifndef FLT_MAX
+#define FLT_MAX 3.402823466E+38F
+#endif
+
+#ifndef DBL_MAX
+#define DBL_MAX 1.7976931348623158e+308
+#endif
+
+#define float_limit ::log(FLT_MAX)
+#define double_limit ::log(DBL_MAX)
+
+//----------------------------------------------------------------------
+// sin
+template <class _Tp>
+__device__ complex<_Tp> sinT(const complex<_Tp>& z) {
+  return complex<_Tp>(::sin(z._M_re) * ::cosh(z._M_im),
+                      ::cos(z._M_re) * ::sinh(z._M_im));
+}
+
+__device__ complex<float> sin(const complex<float>& z)
+{ return sinT(z); }
+
+__device__ complex<double> sin(const complex<double>& z)
+{ return sinT(z); }
+
+//----------------------------------------------------------------------
+// cos
+template <class _Tp>
+__device__ complex<_Tp> cosT(const complex<_Tp>& z) {
+  return complex<_Tp>(::cos(z._M_re) * ::cosh(z._M_im),
+                     -::sin(z._M_re) * ::sinh(z._M_im));
+}
+
+__device__ complex<float> cos(const complex<float>& z)
+{ return cosT(z); }
+
+__device__ complex<double> cos(const complex<double>& z)
+{ return cosT(z); }
+
+
+//----------------------------------------------------------------------
+// tan
+template <class _Tp>
+__device__ complex<_Tp> tanT(const complex<_Tp>& z, const _Tp& Tp_limit) {
+  _Tp re2 = 2.f * z._M_re;
+  _Tp im2 = 2.f * z._M_im;
+
+  if (::abs(im2) > Tp_limit)
+    return complex<_Tp>(0.f, (im2 > 0 ? 1.f : -1.f));
+  else {
+    _Tp den = ::cos(re2) + ::cosh(im2);
+    return complex<_Tp>(::sin(re2) / den, ::sinh(im2) / den);
+  }
+}
+
+__device__ complex<float> tan(const complex<float>& z)
+{ return tanT(z, float_limit); }
+
+__device__ complex<double> tan(const complex<double>& z)
+{ return tanT(z, double_limit); }
+
+
+//----------------------------------------------------------------------
+// sinh
+template <class _Tp>
+__device__ complex<_Tp> sinhT(const complex<_Tp>& z) {
+  return complex<_Tp>(::sinh(z._M_re) * ::cos(z._M_im),
+                      ::cosh(z._M_re) * ::sin(z._M_im));
+}
+
+__device__ complex<float> sinh(const complex<float>& z)
+{ return sinhT(z); }
+
+__device__ complex<double> sinh(const complex<double>& z)
+{ return sinhT(z); }
+
+
+//----------------------------------------------------------------------
+// cosh
+template <class _Tp>
+__device__ complex<_Tp> coshT(const complex<_Tp>& z) {
+  return complex<_Tp>(::cosh(z._M_re) * ::cos(z._M_im),
+                      ::sinh(z._M_re) * ::sin(z._M_im));
+}
+
+__device__ complex<float> cosh(const complex<float>& z)
+{ return coshT(z); }
+
+__device__ complex<double> cosh(const complex<double>& z)
+{ return coshT(z); }
+
+
+//----------------------------------------------------------------------
+// tanh
+template <class _Tp>
+__device__ complex<_Tp> tanhT(const complex<_Tp>& z, const _Tp& Tp_limit) {
+  _Tp re2 = 2.f * z._M_re;
+  _Tp im2 = 2.f * z._M_im;
+  if (::abs(re2) > Tp_limit)
+    return complex<_Tp>((re2 > 0 ? 1.f : -1.f), 0.f);
+  else {
+    _Tp den = ::cosh(re2) + ::cos(im2);
+    return complex<_Tp>(::sinh(re2) / den, ::sin(im2) / den);
+  }
+}
+
+__device__ complex<float> tanh(const complex<float>& z)
+{ return tanhT(z, float_limit); }
+
+__device__ complex<double> tanh(const complex<double>& z)
+{ return tanhT(z, double_limit); }
 
 } // namespace gpu
-
 } // namespace Cobalt
-
 } // namespace LOFAR
-
 
 #endif
