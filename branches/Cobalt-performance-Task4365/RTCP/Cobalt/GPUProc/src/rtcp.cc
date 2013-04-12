@@ -102,13 +102,22 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
    */
   struct BufferSettings settings(stationID, false);
 
-  // Force buffer reader/writer syncing if observation is non-real time
-  settings.sync = !ps.realTime();
+  settings.setBufferSize(2.0);
 
   // fetch input streams
   vector<string> inputStreams = ps.getStringVector(str(format("PIC.Core.Station.%s.RSP.ports") % fullFieldName), true);
+  settings.nrBoards = inputStreams.size();
 
-  MultiPacketsToBuffer station( settings, inputStreams );
+  // Force buffer reader/writer syncing if observation is non-real time
+  SyncLock syncLock(settings);
+
+  if (!ps.realTime()) {
+    settings.sync = true;
+    settings.syncLock = &syncLock;
+  }
+
+  // Set up the circular buffer
+  MultiPacketsToBuffer station(settings, inputStreams);
 
   /*
    * Stream the data.
@@ -118,7 +127,9 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
   {
     // Start a circular buffer
     #pragma omp section
-    { station.process();
+    { 
+      LOG_INFO_STR("Starting circular buffer");
+      station.process();
     }
 
     // Send data to receivers
@@ -127,8 +138,8 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
       // Fetch buffer settings from SHM.
       struct BufferSettings s(stationID, true);
 
-      const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), stationID.clockMHz);
-      const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), stationID.clockMHz);
+      const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
+      const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
 
       LOG_INFO_STR("Detected " << s);
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
@@ -171,12 +182,16 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
         // Read the next block from the circular buffer.
         SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + ps.nrSamplesPerSubband(), read_offsets));
 
+        LOG_INFO_STR("Block read");
+
         vector<SubbandMetaData> metaDatas(ps.nrSubbands());
 
         // TODO: fetch delays and populate metaDatas
 
         // Send the block to the receivers
         sender.sendBlock<SampleT>(*block, metaDatas);
+
+        LOG_INFO_STR("Block sent");
       }
 
       /*
@@ -219,6 +234,11 @@ int main(int argc, char **argv)
   using namespace LOFAR::Cobalt;
 
   INIT_LOGGER("rtcp");
+#ifdef HAVE_LOG4CPLUS
+#else
+  LOGCOUT_SETLEVEL(8);
+#endif
+
   LOG_INFO_STR("running ...");
 
   // Set parts of the environment
@@ -230,7 +250,9 @@ int main(int argc, char **argv)
 
 #ifdef HAVE_MPI
   // Initialise and query MPI
-  if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
+  int mpi_thread_support;
+
+  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
     LOG_ERROR_STR("MPI_Init failed");
     exit(1);
   }
@@ -286,6 +308,9 @@ int main(int argc, char **argv)
 
     subbandDistribution[receiverRank].push_back(subband);
   }
+
+  // This is currently the only supported case
+  ASSERT(nrHosts == (int)ps.nrStations() + 1);
 
   // Decide course to take based on rank.
   if (rank < (int)ps.nrStations()) {

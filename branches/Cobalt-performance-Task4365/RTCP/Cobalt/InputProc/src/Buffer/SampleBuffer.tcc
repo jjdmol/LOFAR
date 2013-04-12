@@ -30,6 +30,7 @@ namespace LOFAR
       allocator(data),
       settings(initSettings(_settings, create)),
       sync(settings->sync),
+      syncLock(settings->syncLock),
 
       nrBeamletsPerBoard(settings->nrBeamletsPerBoard),
       nrSamples(settings->nrSamples),
@@ -37,12 +38,18 @@ namespace LOFAR
       nrAvailableRanges(settings->nrAvailableRanges),
 
       beamlets(boost::extents[nrBoards * nrBeamletsPerBoard][nrSamples], 128, allocator, false, false),
-      boards(nrBoards, Board(*this))
+      boards(nrBoards,Board(*this))
     {
+      if (sync) {
+        ASSERT(syncLock);
+        ASSERT(syncLock->size() == nrBoards);
+      }
+
       for (size_t b = 0; b < boards.size(); b++) {
         size_t numBytes = Ranges::size(nrAvailableRanges);
 
         boards[b].available = Ranges(static_cast<int64*>(allocator.allocate(numBytes, 8)), numBytes, nrSamples, create);
+        boards[b].boardNr = b;
       }
 
       LOG_INFO_STR( logPrefix << "Initialised" );
@@ -69,8 +76,9 @@ namespace LOFAR
 
 
     template<typename T>
-    SampleBuffer<T>::Board::Board( SampleBuffer<T> &buffer )
+    SampleBuffer<T>::Board::Board( SampleBuffer<T> &buffer, size_t boardNr )
       :
+      boardNr(boardNr),
       buffer(buffer)
     {
     }
@@ -81,7 +89,7 @@ namespace LOFAR
     {
       if (buffer.sync) {
         // Free up read intent up until `epoch'.
-        readPtr.advanceTo(epoch);
+        (*buffer.syncLock)[boardNr].readPtr.advanceTo(epoch);
       }
     }
 
@@ -94,7 +102,7 @@ namespace LOFAR
 
       if (buffer.sync) {
         // Wait for writer to finish writing until `end'.
-        writePtr.waitFor(end);
+        (*buffer.syncLock)[boardNr].writePtr.waitFor(end);
       }
     }
 
@@ -126,10 +134,10 @@ namespace LOFAR
       if (buffer.sync) {
         // Signal write intent, to let reader know we don't have data older than
         // this.
-        writePtr.advanceTo(begin);
+        (*buffer.syncLock)[boardNr].writePtr.advanceTo(begin);
 
         // Wait for reader to finish what we're about to overwrite
-        readPtr.waitFor(end - buffer.settings->nrSamples);
+        (*buffer.syncLock)[boardNr].readPtr.waitFor(end - buffer.settings->nrSamples);
       }
 
       // Mark overwritten range (and everything before it to prevent a mix) as invalid
@@ -142,7 +150,7 @@ namespace LOFAR
     {
       if (buffer.sync) {
         // Signal we're done writing
-        writePtr.advanceTo(end);
+        (*buffer.syncLock)[boardNr].writePtr.advanceTo(end);
       }
     }
 
@@ -155,7 +163,7 @@ namespace LOFAR
 
         // Put the writePtr into the far future.
         // We only use this TimeStamp for comparison so clockSpeed does not matter.
-        writePtr.advanceTo(TimeStamp(0xFFFFFFFFFFFFFFFFULL));
+        (*buffer.syncLock)[boardNr].writePtr.advanceTo(TimeStamp(0xFFFFFFFFFFFFFFFFULL));
       }
     }
   }

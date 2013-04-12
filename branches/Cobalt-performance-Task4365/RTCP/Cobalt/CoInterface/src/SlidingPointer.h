@@ -45,6 +45,8 @@ namespace LOFAR
       void advanceTo(T);
       void waitFor(T);
 
+      T value();
+
     private:
       struct WaitCondition {
         WaitCondition(T value, std::set<WaitCondition *> &set) : value(value), set(set)
@@ -107,6 +109,14 @@ namespace LOFAR
         WaitCondition waitCondition(value, itsWaitList);
         waitCondition.valueReached.wait(itsMutex);
       }
+    }
+
+    template <typename T>
+    inline T SlidingPointer<T>::value()
+    {
+      ScopedLock lock(itsMutex);
+
+      return itsValue;
     }
 
   } // namespace Cobalt

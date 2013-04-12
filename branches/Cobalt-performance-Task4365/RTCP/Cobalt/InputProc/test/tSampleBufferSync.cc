@@ -64,6 +64,10 @@ void initBoard()
   // Test non-real-time syncing!
   settings.sync = true;
 
+  // Create a lock set for syncing
+  SyncLock syncLock(settings);
+  settings.syncLock = &syncLock;
+
   // Create the buffer
   buffer = new SampleBuffer< SampleType<i16complex> >(settings, true);
   board = &buffer->boards[0];

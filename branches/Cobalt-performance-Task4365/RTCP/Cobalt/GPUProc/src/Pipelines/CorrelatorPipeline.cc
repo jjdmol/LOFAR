@@ -269,12 +269,9 @@ namespace LOFAR
 
           // Fetch an input object to fill from the selected queue.
           // NOTE: We'll put it in a SmartPtr right away!
-          WorkQueueInputData *data = queue.inputPool.free.remove();
+          SmartPtr<WorkQueueInputData> data = queue.inputPool.free.remove();
 
-          // Record and annotate the block
-          inputDatas[subband].data = data;
-          inputDatas[subband].queue = &queue;
-
+          // Annotate the block
           data->block   = block;
           data->subband = subband;
 
@@ -282,6 +279,10 @@ namespace LOFAR
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
             blocks[stat].beamlets[subband].samples = reinterpret_cast<SampleT*>(&data->inputSamples[stat][0][0][0]);
           }
+
+          // Record the block (transfers ownership)
+          inputDatas[subband].data = data;
+          inputDatas[subband].queue = &queue;
         }
 
         // Receive all subbands from all stations

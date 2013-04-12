@@ -23,11 +23,11 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Allocator.h>
 #include <CoInterface/RSPTimeStamp.h>
-#include <CoInterface/SlidingPointer.h>
 #include "BufferSettings.h"
 #include "SharedMemory.h"
 #include "Ranges.h"
@@ -36,8 +36,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-
     /*
      * Maintains a sample buffer in shared memory, which can be created
      * or attached to.
@@ -61,6 +59,11 @@ namespace LOFAR
     class SampleBuffer
     {
     public:
+
+      // Read/write pointers to keep readers and writers in sync
+      // if buffer.sync == true. The pointers assume that data will both be read
+      // and written in-order.
+
       // Create (create=true) or attach to (create=false) a sample buffer
       // in shared memory. If sync=true, readers and writers are kept in sync,
       // which is useful in the non-real-time mode, but only supports one
@@ -81,6 +84,7 @@ namespace LOFAR
 
       // Keep readers/writers in sync
       const bool sync;
+      SyncLock * const syncLock;
 
       const size_t nrBeamletsPerBoard;
       const size_t nrSamples;
@@ -93,9 +97,10 @@ namespace LOFAR
 
       class Board {
       public:
-        Board( SampleBuffer<T> &buffer );
+        Board( SampleBuffer<T> &buffer, size_t boardNr = 0 );
 
         Ranges available;
+        size_t boardNr; // Caller can modify this
 
         // Signal that there will be no reads before the given epoch
         void noReadBefore( const TimeStamp &epoch );
@@ -123,12 +128,6 @@ namespace LOFAR
 
       private:
         SampleBuffer<T> &buffer;
-
-        // Read/write pointers to keep readers and writers in sync
-        // if buffer.sync == true. The pointers assume that data will both be read
-        // and written in-order.
-        SlidingPointer<BufferSettings::range_type> readPtr;
-        SlidingPointer<BufferSettings::range_type> writePtr;
       };
 
       std::vector<Board> boards;
