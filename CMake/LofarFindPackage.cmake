@@ -81,6 +81,7 @@ function(lofar_find_package _package)
       else(${_PKG}_INCLUDE_DIRS)
         include_directories(${${_PKG}_INCLUDE_DIR})
       endif(${_PKG}_INCLUDE_DIRS)
+      set(${_PKG}_LIBRARIES ${${_PKG}_LIBRARIES} PARENT_SCOPE)
       set(LOFAR_EXTRA_LIBRARIES ${LOFAR_EXTRA_LIBRARIES} ${${_PKG}_LIBRARIES}
         PARENT_SCOPE)
     else(${_PKG}_FOUND)
