@@ -122,8 +122,6 @@ namespace LOFAR {
 
       // Determine the relevant offsets in the buffer, processing:
       //   offset: the shift applied to compensate geometric delays (etc)
-      //   reader.nrHistorySamples: the number of past samples to include (for
-      //                            PPF initialisation)
       size_t from_offset = reader.buffer.offset(this->from + offset);
       size_t to_offset   = reader.buffer.offset(this->to   + offset);
 
