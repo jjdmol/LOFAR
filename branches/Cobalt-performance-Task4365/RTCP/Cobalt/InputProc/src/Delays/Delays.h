@@ -176,6 +176,9 @@ namespace LOFAR
       // in `result'.
       void calcDelays( const TimeStamp &timestamp, AllDelays &result );
 
+      // Returns the non-geometric delay to add for this station
+      double baseDelay() const;
+
 #ifdef HAVE_CASACORE
       casa::MVEpoch                       toUTC( const TimeStamp &timestamp ) const;
 

@@ -197,7 +197,11 @@ namespace LOFAR
       casa::Vector<double> dir = casaDir.getValue();
       std::copy(dir.begin(), dir.end(), d.direction);
 
+      // Compute delay
       d.delay = casaDir * phasePositionDiff * (1.0 / speedOfLight);
+
+      // Add non-geometric delays
+      d.delay += baseDelay();
 
       return d;
     }
@@ -242,9 +246,26 @@ namespace LOFAR
 
     void Delays::calcDelays( const TimeStamp &timestamp, AllDelays &result ) {
       (void)timestamp;
-      (void)result;
+
+      for (size_t sap = 0; sap < result.SAPs.size(); ++sap) {
+        result.SAPs[sap].SAP.delay = baseDelay();
+
+        if (parset.settings.beamFormer.enabled) {
+          for (size_t tab = 0; tab < result.SAPs[sap].TABs.size(); tab++) {
+            result.SAPs[sap].TABs[tab].delay = baseDelay();
+          }
+        }
+      }
     }
 #endif
+
+
+    double Delays::baseDelay() const
+    {
+      double clockCorrection = parset.settings.corrections.clock ? parset.settings.stations[stationIdx].clockCorrection : 0.0;
+
+      return clockCorrection;
+    }
 
 
     void Delays::mainLoop()
