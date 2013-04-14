@@ -155,19 +155,6 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
     // Send data to receivers
     #pragma omp section
     {
-      /*
-       * Set up delay compensation.
-       */
-      Delays delays(ps, stationIdx, from, ps.nrSamplesPerSubband());
-      delays.start();
-
-      Delays::AllDelays delaySet1(ps), delaySet2(ps);
-      Delays::AllDelays *delaysAtBegin  = &delaySet1;
-      Delays::AllDelays *delaysAfterEnd = &delaySet2;
-
-      // Get delays at begin of first block
-      delays.getNextDelays(*delaysAtBegin);
-
       // Fetch buffer settings from SHM.
       struct BufferSettings s(stationID, true);
 
@@ -200,54 +187,43 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 #endif
 
       /*
+       * Set up delay compensation.
+       */
+      Delays delays(ps, stationIdx, from, ps.nrSamplesPerSubband());
+      delays.start();
+
+      // We keep track of the delays at the beginning and end of each block.
+      // After each block, we'll swap the afterEnd delays into atBegin.
+      Delays::AllDelays delaySet1(ps), delaySet2(ps);
+      Delays::AllDelays *delaysAtBegin  = &delaySet1;
+      Delays::AllDelays *delaysAfterEnd = &delaySet2;
+
+      // Get delays at begin of first block
+      delays.getNextDelays(*delaysAtBegin);
+
+      /*
        * Transfer all blocks.
        */
       LOG_INFO_STR("Sending to receivers");
+
+      vector<SubbandMetaData> metaDatas(ps.nrSubbands());
+      vector<ssize_t> read_offsets(ps.nrSubbands());
+
       for (TimeStamp current = from; current + ps.nrSamplesPerSubband() < to; current += ps.nrSamplesPerSubband()) {
         // Fetch end delays (start delays are set by the previous block, or
         // before the loop).
         delays.getNextDelays(*delaysAfterEnd);
 
-        // Delay compensation is performed in two parts. First, a coarse
-        // correction is done by shifting the block to read by a whole
-        // number of samples. Then, in the GPU, the remainder of the delay
-        // will be corrected for using a phase shift.
-        vector<ssize_t> coarseDelaysSamples(ps.settings.SAPs.size()); // [sap], in samples
-        vector<double>  coarseDelaysSeconds(ps.settings.SAPs.size()); // [sap], in seconds
-        for (size_t sap = 0; sap < ps.nrBeams(); ++sap) {
-          double delayAtBegin  = delaysAtBegin->SAPs[sap].SAP.delay;
-          double delayAfterEnd = delaysAfterEnd->SAPs[sap].SAP.delay;
+        // Compute the next set of metaData and read_offsets from the new
+        // delays pair.
+        delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, metaDatas, read_offsets);
 
-          // The coarse delay compensation is based on the average delay
-          // between begin and end.
-          coarseDelaysSamples[sap] = static_cast<ssize_t>(floor(0.5 * (delayAtBegin + delayAfterEnd) * ps.subbandBandwidth() + 0.5));
-          coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / ps.subbandBandwidth();
-        }
-
-        // Compute the offsets at which each subband is read
-        vector<ssize_t> read_offsets(ps.nrSubbands(), 0);
-
-        for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-          unsigned sap = ps.settings.subbands[subband].SAP;
-
-          // Mystery unary minus
-          read_offsets[subband] = -coarseDelaysSamples[sap];
-        }
+        LOG_DEBUG_STR("Delays obtained");
 
         // Read the next block from the circular buffer.
         SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + ps.nrSamplesPerSubband(), read_offsets));
 
         LOG_INFO_STR("Block read");
-
-        vector<SubbandMetaData> metaDatas(ps.nrSubbands());
-
-        // Add the delays to metaDatas.
-        for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-          unsigned sap = ps.settings.subbands[subband].SAP;
-
-          metaDatas[subband].stationBeam.delayAtBegin  = delaysAtBegin->SAPs[sap].SAP.delay - coarseDelaysSeconds[sap];
-          metaDatas[subband].stationBeam.delayAfterEnd = delaysAfterEnd->SAPs[sap].SAP.delay - coarseDelaysSeconds[sap];
-        }
 
         // Send the block to the receivers
         sender.sendBlock<SampleT>(*block, metaDatas);
