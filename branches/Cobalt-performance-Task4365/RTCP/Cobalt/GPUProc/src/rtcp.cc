@@ -352,6 +352,13 @@ int main(int argc, char **argv)
   // This is currently the only supported case
   ASSERT(nrHosts >= (int)ps.nrStations() + 1);
 
+  // Only ONE host should start the Storage processes
+  SmartPtr<StorageProcesses> storageProcesses;
+
+  if (rank == 0) {
+    storageProcesses = new StorageProcesses(ps, "");
+  }
+
   // Decide course to take based on rank.
   if (rank < (int)ps.nrStations()) {
     /*
@@ -381,7 +388,6 @@ int main(int argc, char **argv)
     // TODO: Honour subbandDistribution by forwarding it to the pipeline
       
     // Spawn the output processes (only do this once globally)
-    StorageProcesses storageProcesses(ps, "");
 
     // use a switch to select between modes
     switch (option)
@@ -405,19 +411,23 @@ int main(int argc, char **argv)
       LOG_WARN_STR("No pipeline selected, do nothing");
       break;
     }
+  } else {
+    LOG_WARN_STR("Superfluous MPI rank");
+  }
 
-    // COMPLETING stage
+  /*
+   * COMPLETING stage
+   */
+  if (storageProcesses) {
     time_t completing_start = time(0);
 
     // retrieve and forward final meta data
     // TODO: Increase timeouts when FinalMetaDataGatherer starts working
     // again
-    storageProcesses.forwardFinalMetaData(completing_start + 2);
+    storageProcesses->forwardFinalMetaData(completing_start + 2);
 
     // graceful exit
-    storageProcesses.stop(completing_start + 10);
-  } else {
-    LOG_WARN_STR("Superfluous MPI rank");
+    storageProcesses->stop(completing_start + 10);
   }
 
   LOG_INFO_STR("Done");
