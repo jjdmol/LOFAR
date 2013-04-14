@@ -92,6 +92,14 @@ namespace LOFAR
         }
       }
 
+      // illegal version means illegal packet
+      if (packet.header.version < 2) {
+        // This mainly catches packets that are all zero (f.e. /dev/zero or
+        // null: streams).
+        ++nrBadOther;
+        return false;
+      }
+
       // illegal timestamp means illegal packet
       if (packet.header.timestamp == ~0U) {
         ++nrBadTime;
@@ -135,13 +143,14 @@ namespace LOFAR
 
     void PacketReader::logStatistics()
     {
-      LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadMode << " clock/bitmode errors" );
+      LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadMode << " clock/bitmode errors, " << nrBadOther << " otherwise bad packets" );
 
       nrReceived = 0;
       nrBadTime = 0;
       nrBadSize = 0;
       nrBadData = 0;
       nrBadMode = 0;
+      nrBadOther = 0;
 
       hadSizeError = false;
       hadModeError = false;
