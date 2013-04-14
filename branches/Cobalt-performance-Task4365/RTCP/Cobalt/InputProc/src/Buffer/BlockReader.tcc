@@ -41,7 +41,7 @@ namespace LOFAR {
       size_t nrBeamlets = settings.nrBoards * settings.nrBeamletsPerBoard;
 
       for (size_t i = 0; i < beamlets.size(); ++i)
-        ASSERT( beamlets[i] < nrBeamlets );
+        ASSERTSTR( beamlets[i] < nrBeamlets, beamlets[i] << " < " << nrBeamlets );
     }
 
 

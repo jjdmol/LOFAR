@@ -42,6 +42,8 @@
 #include <InputProc/Buffer/BufferSettings.h>
 #include <InputProc/Buffer/BlockReader.h>
 #include <InputProc/Station/PacketsToBuffer.h>
+#include <InputProc/Station/PacketFactory.h>
+#include <InputProc/Station/PacketStream.h>
 #include <InputProc/Delays/Delays.h>
 
 #ifdef HAVE_MPI
@@ -85,6 +87,9 @@ map<int, vector<size_t> > subbandDistribution; // rank -> [subbands]
 // An MPI send process, sending data for one station.
 template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 {
+  const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
+  const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
+
   /*
    * Construct our stationID.
    */
@@ -106,7 +111,21 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
   settings.setBufferSize(2.0);
 
   // fetch input streams
-  vector<string> inputStreams = ps.getStringVector(str(format("PIC.Core.Station.%s.RSP.ports") % fullFieldName), true);
+  vector<string> inputStreamDescs = ps.getStringVector(str(format("PIC.Core.Station.%s.RSP.ports") % fullFieldName), true);
+  vector< SmartPtr<Stream> > inputStreams(inputStreamDescs.size());
+
+  for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
+    const string desc = inputStreamDescs[board];
+
+    if (desc == "factory:") {
+      PacketFactory factory(settings);
+      inputStreams[board] = new PacketStream(factory, from, to, board);
+    } else {
+      inputStreams[board] = createStream(desc, true);
+    }
+  }
+
+  ASSERTSTR(inputStreams.size() > 0, "No input streams for station " << fullFieldName);
   settings.nrBoards = inputStreams.size();
 
   // Force buffer reader/writer syncing if observation is non-real time
@@ -139,9 +158,6 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
       /*
        * Set up delay compensation.
        */
-      const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
-      const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
-
       Delays delays(ps, stationIdx, from, ps.nrSamplesPerSubband());
       delays.start();
 
@@ -352,13 +368,13 @@ int main(int argc, char **argv)
 
   // Distribute the subbands over the receivers
   for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-    int receiverRank = nrHosts - 1; // for now, the last rank receives all
+    int receiverRank = ps.nrStations(); // for now, this rank receives all
 
     subbandDistribution[receiverRank].push_back(subband);
   }
 
   // This is currently the only supported case
-  ASSERT(nrHosts == (int)ps.nrStations() + 1);
+  ASSERT(nrHosts >= (int)ps.nrStations() + 1);
 
   // Decide course to take based on rank.
   if (rank < (int)ps.nrStations()) {
@@ -381,12 +397,12 @@ int main(int argc, char **argv)
       break;
     }
 
-  } else {
+  } else if (subbandDistribution.find(rank) != subbandDistribution.end()) {
     /*
      * Receive and process station data
      */
 
-    // TODO: Honour subbandDistribution
+    // TODO: Honour subbandDistribution by forwarding it to the pipeline
       
     // Spawn the output processes (only do this once globally)
     StorageProcesses storageProcesses(ps, "");
@@ -424,6 +440,8 @@ int main(int argc, char **argv)
 
     // graceful exit
     storageProcesses.stop(completing_start + 10);
+  } else {
+    LOG_WARN_STR("Superfluous MPI rank");
   }
 
   LOG_INFO_STR("Done");

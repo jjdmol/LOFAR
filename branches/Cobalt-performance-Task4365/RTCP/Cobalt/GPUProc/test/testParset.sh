@@ -95,9 +95,9 @@ function parse_logs
   echo "Global 20" >> rtcp.debug &&
 
   # run correlator -- without profiling
-  $BINDIR/rtcp $PARSET > performance_normal.txt 2>&1 &&
+  mpirun -H localhost -np 3 $BINDIR/rtcp $PARSET > performance_normal.txt 2>&1 &&
   # run correlator -- with profiling
-  $BINDIR/rtcp -p $PARSET > performance_profiled.txt 2>&1 &&
+  mpirun -H localhost -np 3 $BINDIR/rtcp -p $PARSET > performance_profiled.txt 2>&1 &&
 
   # compare output
   if [ "x" != "x$REFDIR" ]
