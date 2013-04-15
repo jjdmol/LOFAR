@@ -23,6 +23,7 @@
 #include <CoInterface/RSPTimeStamp.h>
 
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_iomanip.h>
 
 #include <time.h>
 
@@ -33,15 +34,18 @@ namespace LOFAR
 
     ostream &operator << (ostream &os, const TimeStamp &ts)
     {
+      double time_d = ts.getSeconds();
+      time_t seconds = static_cast<time_t>(floor(time_d));
+      unsigned ms = static_cast<unsigned>(floor((time_d - seconds) * 1000 + 0.5));
+
       char   buf[26];
-      time_t seconds = ts.getSeqId();
       struct tm tm;
 
       gmtime_r(&seconds, &tm);
       size_t len = strftime(buf, sizeof buf, "%F %T", &tm);
       buf[len] = '\0';
 
-      return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "] = " << buf << " UTC";
+      return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "] = " << buf << "." << setfill('0') << setw(3) << ms << " UTC";
     }
 
   } // namespace Cobalt
