@@ -100,34 +100,6 @@ namespace LOFAR
       //  The two sections in this function are done in parallel with a seperate set of threads.
 #     pragma omp parallel sections
       {
-#if 0
-        /*
-         * STATION INPUT -> CIRCULAR BUFFER
-         */
-#       pragma omp section
-        {
-#         pragma omp parallel for num_threads(ps.nrStations())
-          for (size_t stat = 0; stat < ps.nrStations(); stat++) {
-            stationBuffers[stat].process();
-          }
-        }
-
-        /*
-         * CIRCULAR BUFFER -> STATION STREAMS
-         *
-         * Handles one block per station.
-         */
-#       pragma omp section
-        {
-#         pragma omp parallel for num_threads(ps.nrStations())
-          for (size_t stat = 0; stat < ps.nrStations(); stat++) {
-            for (size_t block = 0; block < nrBlocks; block++) {
-              sendNextBlock(stat);
-            }
-          }
-        }
-#endif
-
         /*
          * BLOCK OF SUBBANDS -> WORKQUEUE INPUTPOOL
          */
