@@ -12,7 +12,7 @@ filenameFrom=$logdir$host"_StationTest.csv"
 filenameToo=$logdir$host"_StationTestHistory.csv"
 cat $filenameFrom >> $filenameToo
 
-# Add test results too PVSS
+# Add test results too PVSS and make bad_rcu_file
 updatePVSS.py
 
 # Make old station log files
