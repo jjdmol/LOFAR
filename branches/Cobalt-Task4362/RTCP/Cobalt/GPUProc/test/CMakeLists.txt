@@ -6,7 +6,7 @@ include(LofarCTest)
 # source files and headers in subdirectories include UnitTest.h
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-lofar_add_test(t_complex t_complex.cc)
+#lofar_add_test(t_complex t_complex.cc)
 
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tContext tContext.cc)
