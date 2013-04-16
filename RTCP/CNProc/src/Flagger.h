@@ -2,6 +2,7 @@
 #define LOFAR_CNPROC_FLAGGER_H
 
 #include <Interface/MultiDimArray.h>
+#include <Common/lofar_complex.h>
 
 #include <FlaggerHistory.h>
 
@@ -32,12 +33,7 @@ private:
   void oneDimensionalConvolution(const float* data, const unsigned dataSize, float* dest, const float* kernel, const unsigned kernelSize);
   void sumThreshold2DHorizontal(MultiDimArray<float,2> &powers, MultiDimArray<bool,2> &flags, const unsigned window, const float threshold);
   void sumThreshold2DVertical(MultiDimArray<float,2> &powers, MultiDimArray<bool,2> &flags, const unsigned window, const float threshold);
-  bool addToHistory(const float localMean, const float localStdDev, const float localMedian, std::vector<float> powers, FlaggerHistory& history);
   void apply1DflagsTo2D(MultiDimArray<bool,2> &flags, std::vector<bool> & integratedFlags);
-
-#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
-  void flagWithIntegratedHistoryPowers(MultiDimArray<bool,2> &flags,const float sensitivity, FlaggerHistory history);
-#endif
 
 protected:
 
@@ -66,9 +62,10 @@ protected:
 						std::vector<bool>& flags, FlaggerHistory& history);
 
   void calculateMeanAndStdDev(const std::vector<float>& powers, float& mean, float& stdDev);
-  float calculateMedian(const std::vector<float>& powers);
+  unsigned calculateMedian(const std::vector<float>& powers, float& median); // calculate median, return position of the element
+  unsigned calculateMedian(const std::vector<float>& powers, const std::vector<bool>& flags, float& median); // calculate median, return position of the element, or -1 if all was flagged
+
   void calculateMeanAndStdDev(const std::vector<float>& powers, const std::vector<bool>& flags, float& mean, float& stdDev);
-  float calculateMedian(const std::vector<float>& powers, const std::vector<bool>& flags);
   void calculateNormalStatistics(const std::vector<float>& powers, const std::vector<bool>& flags, float& mean, float& median, float& stdDev);
   void calculateWinsorizedStatistics(const std::vector<float>& powers, const std::vector<bool>& flags, float& mean, float& median, float& stdDev);
   void calculateStatistics(const std::vector<float>& powers, const std::vector<bool>& flags, float& mean, float& median, float& stdDev);
@@ -78,9 +75,17 @@ protected:
   void sumThreshold1D(std::vector<float>& powers, std::vector<bool>& flags, const unsigned window, const float threshold);
   void oneDimensionalGausConvolution(const float* data, const unsigned dataSize, float*dest, const float sigma);
 
+  bool addToHistory(const float value, FlaggerHistory& history, float threshold = 7.0f);
+
+  unsigned SIROperator(std::vector<bool> flags, float eta);
+
   std::string getFlaggerStatisticsTypeString();
   std::string getFlaggerStatisticsTypeString(FlaggerStatisticsType t);
   FlaggerStatisticsType getFlaggerStatisticsType(std::string t);
+
+  float power(fcomplex in) {
+	  return real(in) * real(in) + imag(in) * imag(in);
+  }
 
   const Parset& itsParset;
   const unsigned itsNrStations;
