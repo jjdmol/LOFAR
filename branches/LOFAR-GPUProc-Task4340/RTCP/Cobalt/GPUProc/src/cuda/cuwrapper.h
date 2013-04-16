@@ -55,14 +55,36 @@ namespace cu {
   }
 
 
+#if 0
   inline void init(unsigned flags = 0)
   {
     checkCudaCall(cuInit(flags));
   }
+#endif
+
+  class Platform { // to correspond to OpenCL
+    public:
+      Platform(unsigned flags = 0)
+      {
+        checkCudaCall(cuInit(flags));
+      }
+
+      ~Platform()
+      {
+      }
+
+      size_t size()
+      {
+	int nrDevices;
+	checkCudaCall(cuDeviceGetCount(&nrDevices));
+	return nrDevices;
+      }
+  };
 
 
   class Device {
     public:
+#if 0
       static int getCount()
       {
 	int nrDevices;
@@ -70,6 +92,7 @@ namespace cu {
 	return nrDevices;
       }
 
+#endif
       Device(int ordinal)
       {
 	checkCudaCall(cuDeviceGet(&_device, ordinal));

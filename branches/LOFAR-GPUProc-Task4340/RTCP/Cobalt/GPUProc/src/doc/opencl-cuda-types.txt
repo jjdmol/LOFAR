@@ -3,17 +3,18 @@ $Id$
 GPUProc OpenCL/CUDA Type Correspondence
 =======================================
 
-OpenCL            CUDA (cuwrapper.h)
------------------------------------------
-cl::Context       cu::Context
-cl::Program       cu::Module
-cl::Kernel        cu::Function
-cl::Buffer        cu::HostMemory, cu::DeviceMemory
-cl::Error         cu::Error
-cl::Device        cu::Device
-cl::Event         cu::Event
-cl::CommandQueue  cu::Stream
-cl::NDRange       dim3
-cl::Platform      -
------------------------------------------
+OpenCL (cl.hpp)   CUDA (cuwrapper.h)  GPUProc ([cuda|opencl]/gpuwrapper.cc)
+------------------------------------------------------------------------------
+cl::Context       cu::Context         gpu::Context
+cl::Program       cu::Module          gpu::Program
+cl::Kernel        cu::Function        gpu::Kernel
+cl::Buffer        cu::HostMemory      gpu::HostMemory (MultiArraySharedBuffer)
+(idem)            cu::DeviceMemory    gpu::DeviceMemory (idem)
+cl::Error         cu::Error           gpu::GPUException
+cl::Device        cu::Device          gpu::Device
+cl::Event         cu::Event           gpu::Event
+cl::CommandQueue  cu::Stream          gpu::CommandQueue
+cl::NDRange       dim3                gpu::NDRange
+cl::Platform      cu::Platform        gpu::Platform
+------------------------------------------------------------------------------
 
