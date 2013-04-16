@@ -85,7 +85,7 @@ namespace LOFAR
       for (unsigned sb = 0; sb < ps.nrSubbands(); sb++) {
         // Allow 10 blocks to be in the best-effort queue.
         // TODO: make this dynamic based on memory or time
-        subbandPool[sb].bequeue = new BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> >(10, ps.realTime());
+        subbandPool[sb].bequeue = new BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> >(3, ps.realTime());
       }
 
       double startTime = ps.startTime();
@@ -274,7 +274,7 @@ namespace LOFAR
             // TODO: Not in this thread! Add a preprocess thread maybe?
             data->inputFlags[stat] = metaData.flags;
 
-            data->flagInputSamples(stat, metaData);
+            //data->flagInputSamples(stat, metaData);
 
             // extract and assign the delays for the station beams
             for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++)
@@ -313,8 +313,8 @@ namespace LOFAR
         size_t block = input->block;
         unsigned subband = input->subband;
 
-        if (subband == 0) {
-          LOG_INFO_STR("[block " << block << "] Processing start");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Processing start");
         }
 
         // Also fetch an output object to store results
@@ -337,8 +337,8 @@ namespace LOFAR
         workQueue.inputPool.free.append(input);
         ASSERT(!input);
 
-        if (subband == 0) {
-          LOG_DEBUG_STR("[block " << block << "] Forwarded output to post processing");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_DEBUG_STR("[block " << block << ", subband " << subband << "] Forwarded output to post processing");
         }
       }
     }
@@ -348,13 +348,17 @@ namespace LOFAR
     {
       SmartPtr<CorrelatedDataHostBuffer> output;
 
+      size_t nrBlocksForwarded = 0;
+      size_t nrBlocksDropped = 0;
+      time_t lastLogTime = 0;
+
       // Keep fetching output objects until end-of-output
       while ((output = workQueue.outputPool.filled.remove()) != NULL) {
         size_t block = output->block;
         unsigned subband = output->subband;
 
-        if (subband == 0) {
-          LOG_INFO_STR("[block " << block << "] Post processing start");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Post processing start");
         }
 
         workQueue.timers["CPU - postprocess"]->start();
@@ -368,10 +372,13 @@ namespace LOFAR
         output->setSequenceNumber(block);
 
         if (!subbandPool[subband].bequeue->append(output)) {
-          LOG_WARN_STR("[block " << block << "] Dropped for subband " << subband);
+          nrBlocksDropped++;
+          //LOG_WARN_STR("[block " << block << "] Dropped for subband " << subband);
 
           // Give back to queue
           workQueue.outputPool.free.append(output);
+        } else {
+          nrBlocksForwarded++;
         }
 
         // Allow next block to be written
@@ -379,8 +386,14 @@ namespace LOFAR
 
         ASSERT(!output);
 
-        if (subband == 0) {
-          LOG_DEBUG_STR("[block " << block << "] Forwarded output to writer");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_DEBUG_STR("[block " << block << ", subband " << subband << "] Forwarded output to writer");
+        }
+
+        if (time(0) != lastLogTime) {
+          lastLogTime = time(0);
+
+          LOG_INFO_STR("Forwarded " << nrBlocksForwarded << " blocks, dropped " << nrBlocksDropped << " blocks");
         }
       }
     }
@@ -417,8 +430,8 @@ namespace LOFAR
 
         CorrelatorWorkQueue &queue = output->queue; // cache queue object, because `output' will be destroyed
 
-        if (subband == 0) {
-          LOG_INFO_STR("[block " << block << "] Writing start");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Writing start");
         }
 
         // Write block to disk 
@@ -435,8 +448,8 @@ namespace LOFAR
 
         ASSERT(!output);
 
-        if (subband == 0) {
-          LOG_INFO_STR("[block " << block << "] Done");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Done");
         }
       }
     }

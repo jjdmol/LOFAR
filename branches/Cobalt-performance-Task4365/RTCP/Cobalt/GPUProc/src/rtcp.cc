@@ -218,17 +218,17 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
         // delays pair.
         delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, metaDatas, read_offsets);
 
-        LOG_DEBUG_STR("Delays obtained");
+        //LOG_DEBUG_STR("Delays obtained");
 
         // Read the next block from the circular buffer.
         SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + ps.nrSamplesPerSubband(), read_offsets));
 
-        LOG_INFO_STR("Block read");
+        //LOG_INFO_STR("Block read");
 
         // Send the block to the receivers
         sender.sendBlock<SampleT>(*block, metaDatas);
 
-        LOG_INFO_STR("Block sent");
+        //LOG_INFO_STR("Block sent");
 
         // Swap delay sets to accomplish delaysAtBegin = delaysAfterEnd
         swap(delaysAtBegin, delaysAfterEnd);
@@ -273,12 +273,6 @@ int main(int argc, char **argv)
 
   using namespace LOFAR::Cobalt;
 
-  INIT_LOGGER("rtcp");
-#ifdef HAVE_LOG4CPLUS
-#else
-  LOGCOUT_SETLEVEL(8);
-#endif
-
   LOG_INFO_STR("running ...");
 
   // Set parts of the environment
@@ -293,7 +287,7 @@ int main(int argc, char **argv)
   int mpi_thread_support;
 
   if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
-    LOG_ERROR_STR("MPI_Init failed");
+    cerr << "MPI_Init failed" << endl;
     exit(1);
   }
 
@@ -303,6 +297,12 @@ int main(int argc, char **argv)
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
 #else
   LOG_INFO_STR("MPI not enabled -- running in stand-alone mode");
+#endif
+
+#ifdef HAVE_LOG4CPLUS
+  INIT_LOGGER(str(format("rtcp@%02d") % rank));
+#else
+  INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
 #endif
 
 #if 0 && defined __linux__
