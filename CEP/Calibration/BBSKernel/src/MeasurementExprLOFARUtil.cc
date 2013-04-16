@@ -125,10 +125,12 @@ Expr<JonesMatrix>::Ptr
 makeClockExpr(Scope &scope,
     const Station::ConstPtr &station)
 {
-    ExprParm::Ptr delay = scope(INSTRUMENT, "Clock:" + station->name());
+    ExprParm::Ptr delay0 = scope(INSTRUMENT, "Clock:0:" + station->name());
+    ExprParm::Ptr delay1 = scope(INSTRUMENT, "Clock:1:" + station->name());
 
-    Expr<Scalar>::Ptr shift = Expr<Scalar>::Ptr(new Delay(delay));
-    return Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(shift, shift));
+    Expr<Scalar>::Ptr shift0 = Expr<Scalar>::Ptr(new Delay(delay0));
+    Expr<Scalar>::Ptr shift1 = Expr<Scalar>::Ptr(new Delay(delay1));
+    return Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(shift0, shift1));
 }
 
 Expr<JonesMatrix>::Ptr
