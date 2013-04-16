@@ -50,7 +50,8 @@ void Flagger::calculateMeanAndStdDev(const std::vector<float>& powers, float& me
 }
 
 
-float Flagger::calculateMedian(const std::vector<float>& powers) {
+// TODO, write version that avoid linear scan for index (often not needed)
+unsigned Flagger::calculateMedian(const std::vector<float>& powers, float& median) { // calculate median, return position of the element
   // we have to copy the vector, nth_element changes the ordering.
   // TODO create copy without flagged elements
   std::vector<float> copy(powers);
@@ -58,7 +59,51 @@ float Flagger::calculateMedian(const std::vector<float>& powers) {
   // calculate median, expensive, but nth_element is guaranteed to be O(n)
   std::vector<float>::iterator it = copy.begin() + (copy.size() / 2);
   std::nth_element(copy.begin(), it, copy.end());
-  return *it;
+  median = *it;
+//  return it - copy.begin(); // Incorrect! nth_element changes ordering, so index does not mean anything!
+
+  for(unsigned i=0; i<powers.size(); i++) {
+    if(median == powers[i]) return i;
+  }
+
+  // The element was not found! This should not happen.
+  LOG_DEBUG_STR("calculateMedian: could not find index, returning 0");
+  return 0;
+}
+
+
+// calculate median, return position of the element
+// returns -1 if all all elements were flagged
+// TODO write version without linear scan for index
+unsigned Flagger::calculateMedian(const std::vector<float>& powers, const std::vector<bool>& flags, float& median) { 
+  std::vector<float> data;
+  data.resize(powers.size());
+  unsigned unflaggedCount = 0;
+  for(unsigned i=0; i<powers.size(); i++) {
+    if(!flags[i]) {
+      data[unflaggedCount] = powers[i];
+      unflaggedCount++;
+    }
+  }
+
+//  cout << "unflaggedCount = " << unflaggedCount << endl;
+
+  if(unflaggedCount == 0) {
+    median = 0.0f;
+    return -1;
+  }
+
+  // fast O(n) median
+  std::nth_element(&data[0], &data[unflaggedCount/2], &data[unflaggedCount]);
+  median = data[unflaggedCount/2];
+
+  for(unsigned i=0; i<powers.size(); i++) {
+    if(median == powers[i]) return i;
+  }
+
+  // The element was not found! This should not happen.
+  LOG_DEBUG_STR("calculateMedian: could not find index, returning 0");
+  return 0;
 }
 
 
@@ -89,79 +134,79 @@ void Flagger::calculateMeanAndStdDev(const std::vector<float>& powers, const std
 }
 
 
-float Flagger::calculateMedian(const std::vector<float>& powers, const std::vector<bool>& /* flags */) {
-  // we have to copy the vector, nth_element changes the ordering.
-  std::vector<float> copy(powers);
-
-  // calculate median, expensive, but nth_element is guaranteed to be O(n)
-  std::vector<float>::iterator it = copy.begin() + (copy.size() / 2);
-  std::nth_element(copy.begin(), it, copy.end());
-  return *it;
-}
-
-
 void Flagger::calculateNormalStatistics(const std::vector<float>& powers, const std::vector<bool>& flags, 
 					float& mean, float& median, float& stdDev) {
+  // TODO do not count flagged samples
   calculateMeanAndStdDev(powers, flags, mean, stdDev);
-  median = calculateMedian(powers, flags);
+  calculateMedian(powers, median);
 }
 
 
 void Flagger::calculateWinsorizedStatistics(const std::vector<float>& powers, const std::vector<bool>& flags, 
 					    float& mean, float& median, float& stdDev) {
-  // we have to copy the vector, we will change the ordering.
-  std::vector<float> tmpPower(powers);
-  std::sort(tmpPower.begin(), tmpPower.end());
+  std::vector<float> data;
+  data.resize(powers.size());
+  unsigned unflaggedCount = 0;
+  for(unsigned i=0; i<powers.size(); i++) {
+    if(!flags[i]) {
+      data[unflaggedCount] = powers[i];
+      unflaggedCount++;
+    }
+  }
 
-  unsigned lowIndex = (unsigned) floor(0.1 * tmpPower.size());
-  unsigned highIndex = (unsigned) ceil(0.9 * tmpPower.size()) - 1;
-  float lowValue = tmpPower[lowIndex];
-  float highValue = tmpPower[highIndex];
+//  cout << "unflaggedCount = " << unflaggedCount << endl;
+
+  if(unflaggedCount == 0) {
+    mean = 0.0f;
+    median = 0.0f;
+    stdDev = 0.0f;
+    return;
+  }
+
+  // fast O(n) median
+  std::nth_element(&data[0], &data[unflaggedCount/2], &data[unflaggedCount]);
+  median = data[unflaggedCount/2];
+
+  unsigned lowIndex = (unsigned) floor(0.1 * unflaggedCount);
+  unsigned highIndex = (unsigned) ceil(0.9 * unflaggedCount);
+  if(highIndex > 0) highIndex--;
+  std::nth_element(&data[0], &data[lowIndex], &data[unflaggedCount]);
+  float lowValue = data[lowIndex];
+  std::nth_element(&data[0], &data[highIndex], &data[unflaggedCount]);
+  float highValue = data[highIndex];
 
   // Calculate mean
-  // This can be done 20% quicker if we exploit the sorted array: if index < lowIndex -> val = lowValue.
   mean = 0.0f;
-  unsigned count = 0;
-  for (unsigned i = 0; i < tmpPower.size(); i++) {
-    if(!flags[i]) {
-      float value = tmpPower[i];
-      if (value < lowValue) {
-	mean += lowValue;
-      } else if (value > highValue) {
-	mean += highValue;
-      } else {
-        mean += value;
-      }
-      count++;
+  for(unsigned i = 0;i<unflaggedCount;++i) {
+    float value = data[i];
+    if(value < lowValue) {
+      mean += lowValue;
+    } else if(value > highValue) {
+      mean += highValue;
+    } else {
+      mean += value;
     }
   }
-
-  if (count > 0) {
-    mean /= count;
-  }
-
-  median = tmpPower[tmpPower.size() / 2];
-
+  mean /= unflaggedCount;
+  
   // Calculate variance
   stdDev = 0.0f;
-  for (unsigned i = 0; i < tmpPower.size(); i++) {
-    if(!flags[i]) {
-      float value = tmpPower[i];
-      if (value < lowValue) {
-	stdDev += (lowValue - mean) * (lowValue - mean);
-      } else if (value > highValue) {
-	stdDev += (highValue - mean) * (highValue - mean);
-      } else {
-	stdDev += (value - mean) * (value - mean);
-      }
+  for(unsigned i = 0;i<unflaggedCount;++i) {
+    float value = data[i];
+    if(value < lowValue) {
+      stdDev += (lowValue-mean)*(lowValue-mean);
+    } else if(value > highValue) {
+      stdDev += (highValue-mean)*(highValue-mean);
+    } else {
+      stdDev += (value-mean)*(value-mean);
     }
   }
-  if (count > 0) {
-    stdDev = (float) sqrt(1.54 * stdDev / count);
-  }
+  stdDev = sqrtf(1.54f * stdDev / unflaggedCount);
+
+//  cout << "mean = " << mean << ", median = " << median << ", stdDev = " << stdDev << endl;
 }
 
-
+  
 void Flagger::calculateStatistics(const std::vector<float>& powers, const std::vector<bool>& flags, float& mean, float& median, float& stdDev) {
   RFIStatsTimer.start();
 
@@ -458,30 +503,24 @@ void Flagger::sumThresholdFlagger1DSmoothed(std::vector<float>& powers, std::vec
 }
 
 
-bool Flagger::addToHistory(const float /* localMean */, const float /* localStdDev */, const float localMedian, std::vector<float> powers, FlaggerHistory& history) {
-  float historyFlaggingThreshold = 7.0f;
-
-  // add the corrected power statistics to the history
+bool Flagger::addToHistory(const float value, FlaggerHistory& history, float historyFlaggingThreshold) {
   if (history.getSize() < MIN_HISTORY_SIZE) {
-    history.add(localMedian, powers); // add it, we don't have enough history yet.
+    history.add(value); // add it, and return, we don't have enough history yet.
     return false;
   }
 
-  float meanMedian = history.getMeanMedian();
-  float stdDevOfMedians = history.getStdDevOfMedians();
+  float mean = history.getMean();
+  float stdDev = history.getStdDev();
+  float threshold = mean + historyFlaggingThreshold * stdDev;
 
-  float threshold = meanMedian + historyFlaggingThreshold * stdDevOfMedians;
-
-//  LOG_DEBUG_STR("localMedian = " << localMedian << ", meanMedian = " << meanMedian << ", stdDevOfMedians = " << stdDevOfMedians << ", factor from cuttoff is: " << (localMedian / threshold));
-
-  bool flagSecond = localMedian > threshold;
+  bool flagSecond = value > threshold;
   if (flagSecond) {
-      LOG_DEBUG_STR("History flagger flagged this second");
+      LOG_DEBUG_STR("History flagger flagged this second: value = " << value << ", mean = " << mean << ", stdDev = " << stdDev << ", factor from cuttoff is: " << (value / threshold));
     // this second was flagged, add the threshold value to the history.
-    history.add(threshold, powers);
+    history.add(threshold);
   } else {
     // add data
-    history.add(localMedian, powers);
+    history.add(value);
   }
 
   return flagSecond;
@@ -491,13 +530,16 @@ bool Flagger::addToHistory(const float /* localMean */, const float /* localStdD
 void Flagger::sumThresholdFlagger1DWithHistory(std::vector<float>& powers, 
 					       std::vector<bool>& flags, const float sensitivity, FlaggerHistory& history) {
   sumThresholdFlagger1D(powers, flags, sensitivity);
+
+  // flag twice, so the second time flags with the corrected statistics
+  sumThresholdFlagger1D(powers, flags, sensitivity);
   
   float localMean, localStdDev, localMedian;
 
   // calculate final statistics (flagged samples were replaced with threshold values)
   calculateStatistics(powers, flags, localMean, localMedian, localStdDev);
 
-  if(addToHistory(localMean, localStdDev, localMedian, powers, history)) {
+  if(addToHistory(localMedian, history)) {
     for (unsigned i = 0; i < powers.size(); i++) {
       flags[i] = true;
     }
@@ -554,45 +596,16 @@ void Flagger::sumThresholdFlagger2DWithHistory(MultiDimArray<float,2> &powers, M
 #endif
 
 // if we divide median by the total power, we cancel out bandpass, etc.
-//  if(addToHistory(localMean / total, localStdDev / total, localMedian / total, integratedPowers, history[station][subband][pol])) {
+//  if(addToHistory(localMean / total, localStdDev / total, localMedian / total, history[station][subband][pol])) {
 
-  if(addToHistory(localMean, localStdDev, localMedian, integratedPowers, history[station][subband][pol])) {
+  if(addToHistory(localMedian, history[station][subband][pol])) {
     for (unsigned channel = 0; channel < flags.shape()[0]; channel++) {
       for (unsigned time = 0; time < flags.shape()[1]; time++) {
 	flags[channel][time] = true;
       }
     }
   }
-
-#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
-  flagWithIntegratedHistoryPowers(flags, sensitivity, history[station][subband][pol]);
-#endif
 }
-
-
-#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
-void Flagger::flagWithIntegratedHistoryPowers(MultiDimArray<bool,2> &flags,const float sensitivity, 
-					       FlaggerHistory history)
-{
-  if (history.getSize() >= MIN_HISTORY_SIZE) {
-    std::vector<bool> tmpFlags(flags.shape()[0]);
-    tmpFlags.clear();
-
-    std::vector<float>& historyIntegratedPowers = history.getIntegratedPowers();
-    sumThresholdFlagger1D(historyIntegratedPowers, tmpFlags, sensitivity);
-
-    // copy flags from tmp flags back to flags.
-    for (unsigned channel = 0; channel < flags.shape()[0]; channel++) {
-      if(tmpFlags[channel]) {
-	LOG_DEBUG_STR("HISTORY FLAGGED samples");
-	for (unsigned time = 0; time < flags.shape()[1]; time++) {
-	  flags[channel][time] = true;
-	}
-      }
-    }
-  }
-}
-#endif
 
 
 void Flagger::apply1DflagsTo2D(MultiDimArray<bool,2> &flags, std::vector<bool> & integratedFlags)
@@ -616,11 +629,55 @@ void Flagger::sumThresholdFlagger1DSmoothedWithHistory(std::vector<float>& power
   // calculate final statistics (flagged samples were replaced with threshold values)
   calculateStatistics(powers, flags, localMean, localMedian, localStdDev);
 
-  if(addToHistory(localMean, localStdDev, localMedian, powers, history)) {
+  if(addToHistory(localMedian, history)) {
     for (unsigned i = 0; i < powers.size(); i++) {
       flags[i] = true;
     }
   }
+}
+
+
+/**
+ * This is an experimental algorithm that might be slightly faster than
+ * the original algorithm by Andre Offringa. Jasper van de Gronde is preparing an article about it.
+ * @param [in,out] flags The input array of flags to be dilated that will be overwritten by the dilatation of itself.
+ * @param [in] eta The η parameter that specifies the minimum number of good data
+ * that any subsequence should have (see class description for the definition).
+ */
+unsigned Flagger::SIROperator(std::vector<bool> flags, float eta) {
+  int old= 0;
+  for(unsigned i=0; i<flags.size(); i++) {
+    if(flags[i]) old++;
+  }
+
+  bool temp[flags.size()];
+  float credit = 0.0f;
+  for (unsigned i = 0; i < flags.size(); i++) {
+    // credit ← max(0, credit) + w(f [i])
+    const float w = flags[i] ? eta : eta - 1.0f;
+    const float maxcredit0 = credit > 0.0f ? credit : 0.0f;
+    credit = maxcredit0 + w;
+    temp[i] = (credit >= 0.0f);
+  }
+
+  // The same iteration, but now backwards
+  credit = 0.0f;
+  for (int i = flags.size() - 1; i >= 0; i--) {
+    const float w = flags[i] ? eta : eta - 1.0f;
+    const float maxcredit0 = credit > 0.0f ? credit : 0.0f;
+    credit = maxcredit0 + w;
+    flags[i] = (credit >= 0.0f) || temp[i];
+  }
+
+
+  int c= 0;
+  for(unsigned i=0; i<flags.size(); i++) {
+    if(flags[i]) c++;
+  }
+
+  LOG_DEBUG_STR("SIR operator flagged " << (c - old) << " samples");
+
+  return c;
 }
 
 

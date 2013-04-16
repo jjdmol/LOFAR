@@ -118,7 +118,8 @@ void PostCorrelationFlagger::detectBrokenStations() {
 
   calculateMeanAndStdDev(itsSummedStationPowers, mean, stdDev);
 
-  float median = calculateMedian(itsSummedStationPowers);
+  float median;
+  calculateMedian(itsSummedStationPowers, median);
   float threshold = mean + itsCutoffThreshold * stdDev;
 
   LOG_DEBUG_STR("RFI post detectBrokenStations: mean = " << mean << ", median = " << median << " stdDev = " << stdDev << ", threshold = " << threshold);

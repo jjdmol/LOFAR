@@ -56,6 +56,8 @@
 #include <boost/format.hpp>
 #include <sys/time.h>
 
+#define SAVE_REAL_TIME_FLAGGER_FILTERED_DATA_DEBUG 1
+
 #if defined HAVE_BGP
 //#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
 #define LOG_CONDITION	(itsLocationInfo.rank() == 0)
@@ -81,6 +83,9 @@ void assertion_failed(char const * expr, char const * function, char const * fil
 namespace LOFAR {
 namespace RTCP {
 
+#if SAVE_REAL_TIME_FLAGGER_FILTERED_DATA_DEBUG
+static  FILE* outputFile;
+#endif
 
 static NSTimer computeTimer("computing", true, true);
 static NSTimer totalProcessingTimer("global total processing", true, true);
@@ -166,6 +171,20 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   itsNrSlotsInFrame          = parset.nrSlotsInFrame();
   itsCNintegrationTime       = parset.CNintegrationTime();
 
+
+#if SAVE_REAL_TIME_FLAGGER_FILTERED_DATA_DEBUG 
+  stringstream filename;
+  filename << "/var/scratch/rob/" << myPset << "." << myCoreInPset << ".myFilteredData";
+  outputFile = fopen(filename.str().c_str(), "w");
+  fwrite(&itsNrStations, sizeof(unsigned), 1, outputFile);
+  fwrite(&itsNrSubbands, sizeof(unsigned), 1, outputFile);
+  fwrite(&itsNrChannels, sizeof(unsigned), 1, outputFile);
+  unsigned tmp = NR_POLARIZATIONS;
+  fwrite(&tmp, sizeof(unsigned), 1, outputFile);
+  fflush(outputFile);
+#endif // SAVE_REAL_TIME_FLAGGER_FILTERED_DATA_DEBUG
+
+
   if (itsFakeInputData && LOG_CONDITION)
     LOG_WARN_STR(itsLogPrefix << "Generating fake input data -- any real input is discarded!");
 
@@ -210,7 +229,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     }
 
     if (parset.onlineFlagging() && parset.onlinePreCorrelationNoChannelsFlagging()) {
-      itsPreCorrelationNoChannelsFlagger = new PreCorrelationNoChannelsFlagger(parset, itsNrStations, itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
+      itsPreCorrelationNoChannelsFlagger = new PreCorrelationNoChannelsFlagger(parset, myPset, myCoreInPset, parset.correctBandPass(), itsNrStations, itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Online PreCorrelation no channels flagger enabled");
     } else {
@@ -236,8 +255,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Online PostCorrelation flagger Detect Broken Stations enabled");
     }
-
-    }
+  }
 
     if (parset.outputBeamFormedData() || parset.outputTrigger()) {
       itsBeamFormedData = new BeamFormedData(BeamFormer::BEST_NRBEAMS, itsNrChannels, itsNrSamplesPerIntegration, itsBigAllocator);
@@ -363,6 +381,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::~CN_Processing()
 #elif defined HAVE_FFTW2
   fftw_forget_wisdom();
 #endif  
+
+#if SAVE_REAL_TIME_FLAGGER_FILTERED_DATA_DEBUG
+  fclose(outputFile);
+#endif
 }
 
 
@@ -815,7 +837,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preCorrelationN
 
   timer.start();
   computeTimer.start();
-  itsPreCorrelationNoChannelsFlagger->flag(itsFilteredData, *itsCurrentSubband);
+  itsPreCorrelationNoChannelsFlagger->flag(itsFilteredData, itsBlock, *itsCurrentSubband);
   computeTimer.stop();
   timer.stop();
 }
@@ -1030,6 +1052,27 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
     if (itsPreCorrelationFlagger != NULL)
       preCorrelationFlagging();
+
+#if SAVE_REAL_TIME_FLAGGER_FILTERED_DATA_DEBUG
+    for(unsigned station=0; station < itsNrStations; station++) {
+      fwrite(&itsBlock, sizeof(unsigned), 1, outputFile);
+      fwrite(&station, sizeof(unsigned), 1, outputFile);
+      int tmp = *itsCurrentSubband;
+      fwrite(&tmp, sizeof(float), 1, outputFile);
+      for(unsigned c=0; c<itsNrChannels; c++) {
+	float sum = 0.0f;
+	for(unsigned pol=0; pol < NR_POLARIZATIONS; pol++) {
+	  for(unsigned t=0; t<itsNrSamplesPerIntegration; t++) {
+	    fcomplex sample = itsFilteredData->samples[c][station][t][pol];
+	    float power = real(sample) * real(sample) + imag(sample) * imag(sample);
+	    sum += power;
+	  }
+	  fwrite(&sum, sizeof(float), 1, outputFile);
+	}
+      }
+    }
+    fflush(outputFile);
+#endif // SAVE_REAL_TIME_FLAGGER_FILTERED_DATA_DEBUG
 
     mergeStations(); // create superstations
 #if !defined HAVE_BGP
