@@ -56,7 +56,7 @@
 #include <boost/format.hpp>
 #include <sys/time.h>
 
-#define SAVE_REAL_TIME_FLAGGER_FILTERED_DATA_DEBUG 1
+#define SAVE_REAL_TIME_FLAGGER_FILTERED_DATA_DEBUG 0
 
 #if defined HAVE_BGP
 //#define LOG_CONDITION	(itsLocationInfo.rankInPset() == 0)
