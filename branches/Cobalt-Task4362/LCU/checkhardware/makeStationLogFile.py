@@ -16,15 +16,30 @@ from general_lib import *
 f = open("/opt/stationtest/checkHardware.conf", 'r')
 data = f.readlines()
 f.close()
+logdir = ''
 for line in data:
-    if line.find('log-dir') != -1:
+    if line.find('log-dir-global') != -1:
         key, logdir = line.strip().split('=')
+        if os.path.exists(logdir):
+            break
+    if line.find('log-dir-local') != -1:
+        key, logdir = line.strip().split('=')
+        if not os.path.exists(logdir):
+            print "No log dir found"
+            sys.exit(-1)
+
 
 testfilename = '%s_StationTest.csv' %(getHostName())
+
 fullFilename = os.path.join(logdir, testfilename)
-f = open(fullFilename, 'r')
-testdata = f.readlines()
-f.close()
+
+try:        
+    f = open(fullFilename, 'r')
+    testdata = f.readlines()
+    f.close()
+except:
+    print "Can not open/read %s" %(fullFilename)
+    sys.exit(-1)
 
 fileinfo = os.stat(fullFilename)
 log = cStationLogger(logdir, gmtime(fileinfo[-1]))
@@ -76,8 +91,11 @@ for line in testdata:
     		log.addLine('LBAmd1>: Sv=normal  Pr=normal , LBA Outer (LBL) low noise: RCU: (%d,%d)' %\
                         (partNr*2, partNr*2+1))
         elif msgType == 'HIGH_NOISE':
-    		log.addLine('LBAosc1>: Sv=normal  Pr=normal , LBA Outer (LBL) large oscillation (high noise): RCU: (%d,%d)' %\
+    		log.addLine('LBAmd1>: Sv=normal  Pr=normal , LBA Outer (LBL) high noise: RCU: (%d,%d)' %\
                         (partNr*2, partNr*2+1))
+        elif msgType == 'OSCILLATION':
+    		log.addLine('LBAosc1>: Sv=normal  Pr=normal , LBA Outer (LBL) large oscillation: RCU: (%d,%d)' %\
+                        (partNr*2, partNr*2+1))                
         elif msgType == 'FAIL':
             if keyinfo.has_key('X'):
                 log.addLine('LBAmd1>: Sv=normal  Pr=normal , LBA Outer (LBL) defect: RCU: %d factor: %3.1f' %\
@@ -100,8 +118,11 @@ for line in testdata:
     		log.addLine('LBAmd3>: Sv=normal  Pr=normal , LBA Inner (LBH) low noise: RCU: (%d,%d)' %\
                         (partNr*2, partNr*2+1))
         elif msgType == 'HIGH_NOISE':
-    		log.addLine('LBAosc3>: Sv=normal  Pr=normal , LBA Inner (LBH) large oscillation (high noise): RCU: (%d,%d)' %\
+    		log.addLine('LBAmd3>: Sv=normal  Pr=normal , LBA Inner (LBH) high noise: RCU: (%d,%d)' %\
                         (partNr*2, partNr*2+1))
+        elif msgType == 'OSCILLATION':
+    		log.addLine('LBAosc3>: Sv=normal  Pr=normal , LBA Inner (LBH) large oscillation: RCU: (%d,%d)' %\
+                        (partNr*2, partNr*2+1))                
         elif msgType == 'FAIL':
             if keyinfo.has_key('X'):
                 log.addLine('LBAmd3>: Sv=normal  Pr=normal , LBA Inner (LBH) defect: RCU: %s factor: %3.1f' %\
@@ -125,9 +146,13 @@ for line in testdata:
                         (partNr, partNr*2, partNr*2+1))
         
         elif msgType == 'HIGH_NOISE':
-    		log.addLine('HBAosc>: Sv=normal  Pr=normal , Tile %d - RCU (%d,%d); Large oscillation (high noise)' %\
+    		log.addLine('HBAmd5>: Sv=normal  Pr=normal , Tile %d - RCU (%d,%d); high noise' %\
                         (partNr, partNr*2, partNr*2+1))                
         
+        elif msgType == 'OSCILLATION':
+    		log.addLine('HBAosc>: Sv=normal  Pr=normal , Tile %d - RCU (%d,%d); Large oscillation' %\
+                        (partNr, partNr*2, partNr*2+1))                
+                
         elif msgType == 'C_SUMMATOR':
     		last_c_summator = partNr
     		log.addLine('HBAmdt>: Sv=normal  Pr=normal , Tile %d - RCU %d; Broken. No modem communication' %\
