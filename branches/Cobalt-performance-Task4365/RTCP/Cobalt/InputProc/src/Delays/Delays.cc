@@ -191,14 +191,21 @@ namespace LOFAR
     struct Delays::Delay Delays::convert( casa::MDirection::Convert &converter, const casa::MVDirection &direction ) const {
       struct Delay d;
 
-      MVDirection casaDir = converter(direction).getValue();
+      if (parset.settings.delayCompensation.enabled) {
+        MVDirection casaDir = converter(direction).getValue();
 
-      // Compute direction and convert it 
-      casa::Vector<double> dir = casaDir.getValue();
-      std::copy(dir.begin(), dir.end(), d.direction);
+        // Compute direction and convert it 
+        casa::Vector<double> dir = casaDir.getValue();
+        std::copy(dir.begin(), dir.end(), d.direction);
 
-      // Compute delay
-      d.delay = casaDir * phasePositionDiff * (1.0 / speedOfLight);
+        // Compute delay
+        d.delay = casaDir * phasePositionDiff * (1.0 / speedOfLight);
+      } else {
+        d.delay = 0.0;
+        d.direction[0] = 0.0;
+        d.direction[1] = 0.0;
+        d.direction[2] = 0.0;
+      }
 
       // Add non-geometric delays
       d.delay += baseDelay();
