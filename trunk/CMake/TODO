@@ -3,6 +3,26 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
+* Some Find modules use variables that they set in their own macros, e.g.
+  FindCUDA.cmake. Since lofar_find_package() is a function, these variables
+  are lost at the moment that you leave this function. A possible improvement
+  to lofar_find_package() could be to export all non-cached variables that
+  start with <PKG>_ to the parent scope. The following code snippet could 
+  accomplish this:
+
+    get_directory_property(_vars VARIABLES)
+    get_directory_property(_cvars CACHE_VARIABLES)
+    foreach(_var ${_vars})
+      if(_var MATCHES "^${_PKG}" OR _var MATCHES "^${_package}")
+        if(NOT _cvars MATCHES "${_var}")
+          set(${_var} ${${_var}} PARENT_SCOPE)
+        endif()
+      endif()
+    endforeach()
+
+  For the time being, however, I think it will suffice to export only
+  <PKG>_INCLUDE_DIRS and <PKG>_LIBRARIES.
+
 * Make sure that Python code is already compiled during the build phase. 
   Currently, python sources are compiled during install. What's worse, 
   compilation failures are not reported, and no non-zero exit status is set.
