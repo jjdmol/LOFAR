@@ -27,7 +27,10 @@ template <typename T> inline BestEffortQueue<T>::BestEffortQueue(size_t maxSize,
 :
   maxSize(maxSize),
   drop(drop),
-  removing(false),
+  //removing(false), // <-- this will prevent append() if noone is remove()ing. Disabled for now, because
+                     // it causes tests to fail, and even if a thread is remove()ing, objects can still
+                     // pile up in the queue.
+  //removing(true),
   freeSpace(maxSize),
   flushing(false)
 {
