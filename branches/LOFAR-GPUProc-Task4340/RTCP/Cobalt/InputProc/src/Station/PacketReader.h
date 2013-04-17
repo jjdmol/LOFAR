@@ -79,6 +79,7 @@ namespace LOFAR
       size_t nrBadTime; // nr. of packets with an illegal time stamp
       size_t nrBadData; // nr. of packets with payload errors
       size_t nrBadMode; // nr. of packets with an incorrect clock/bitmode
+      size_t nrBadOther; // nr. of packets that are bad in another fashion (illegal header, etc)
 
       bool hadSizeError; // already reported about wrongly sized packets since last logStatistics()
       bool hadModeError; // already reported about wrong clocks/bitmodes since last logStatistics()

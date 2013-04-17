@@ -52,7 +52,9 @@ namespace LOFAR
     template<typename T>
     std::ostream &operator <<(std::ostream &str, const struct SampleType<T> &sample)
     {
-      str << "(" << sample.x.real() << " + " << sample.x.imag() << "i, " << sample.y.real() << " + " << sample.y.imag() << "i)";
+      // Cast to int to prevent signed chars from being printed as characters
+      // instead of numbers.
+      str << "(" << (int)(sample.x.real()) << " + " << (int)(sample.x.imag()) << "i, " << (int)(sample.y.real()) << " + " << (int)(sample.y.imag()) << "i)";
 
       return str;
     }

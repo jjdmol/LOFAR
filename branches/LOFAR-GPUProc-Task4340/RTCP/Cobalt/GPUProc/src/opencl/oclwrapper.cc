@@ -1,5 +1,5 @@
-//# RSP: RSP data format
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# oclwrapper.h
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,33 +18,44 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_RSP_H
-#define LOFAR_GPUPROC_RSP_H
+#ifndef LOFAR_GPUPROC_OCLWRAPPER_H
+#define LOFAR_GPUPROC_OCLWRAPPER_H
 
-#include <stdint.h>
+#include "opencl-incl.h"
 
-namespace LOFAR
-{
-  namespace Cobalt
+namespace LOFAR {
+namespace Cobalt {
+
+  // CUDA is our primary GPU API, so adapt the OpenCL names (except for Buffer).
+  // (This is a bit silly given OpenCL's raison d'etre...)
+
+  using cl::Context;
+
+  class Module : cl::Program
   {
+    // TODO: add constructors to classes here
+  };
 
-    // All data is in Little Endian format!
-    struct RSP {
-      struct Header {
-        uint8_t version;
-        uint8_t sourceInfo;
-        uint16_t configuration;
-        uint16_t station;
-        uint8_t nrBeamlets;
-        uint8_t nrBlocks;
-        uint32_t timestamp;
-        uint32_t blockSequenceNumber;
-      } header;
+  class Function : cl::Kernel
+  {
+  };
 
-      char data[8130];
-    };
+  // Buffer maps to host + device memory objects, so can only really adapt the other way around.
+  using cl::Buffer;
 
-  } // namespace Cobalt
+  class GPUProcException : cl::Error
+  {
+  };
+
+  using cl::Device;
+
+  using cl::Event;
+
+  class Stream : cl::CommandQueue
+  {
+  };
+
+} // namespace Cobalt
 } // namespace LOFAR
 
 #endif

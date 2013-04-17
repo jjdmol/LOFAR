@@ -14,7 +14,7 @@ cl::Error         cu::Error           gpu::GPUException
 cl::Device        cu::Device          gpu::Device
 cl::Event         cu::Event           gpu::Event
 cl::CommandQueue  cu::Stream          gpu::CommandQueue
-cl::NDRange       dim3                gpu::NDRange
+cl::NDRange       dim3 (uint x, y, z) gpu::NDRange
 cl::Platform      cu::Platform        gpu::Platform
 ------------------------------------------------------------------------------
 

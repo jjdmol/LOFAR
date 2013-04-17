@@ -22,7 +22,6 @@
 #define LOFAR_GPUPROC_CREATE_PROGRAM_H
 
 #include <vector>
-
 #include <boost/shared_ptr.hpp>
 #include <cuda.h>
 

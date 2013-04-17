@@ -52,17 +52,29 @@ int main( int, char **argv )
 
   OMPThread::init();
 
-  vector<string> streamDescs(1, "tcp:localhost:54321");
+  const string desc = "tcp:localhost:54321";
+
+  vector< SmartPtr<Stream> > inputStreams(1);
+  vector< SmartPtr<Stream> > outputStreams(1);
+
+  #pragma omp parallel sections
+  {
+    #pragma omp section
+    inputStreams[0] = createStream(desc, true);
+
+    #pragma omp section
+    outputStreams[0] = createStream(desc, false);
+  }
 
   struct StationID stationID("RS106", "LBA", 200, 16);
   struct BufferSettings settings(stationID, false);
 
   PacketFactory factory(settings);
-  Generator g(settings, streamDescs, factory);
+  Generator g(settings, outputStreams, factory);
 
   bool error = false;
 
-  #pragma omp parallel sections num_threads(2)
+  #pragma omp parallel sections
   {
     #pragma omp section
     {
@@ -81,8 +93,7 @@ int main( int, char **argv )
       // Read and verify the generated packets
 
       try {
-        SmartPtr<Stream> inputStream = createStream(streamDescs[0], true);
-        PacketReader reader("", *inputStream);
+        PacketReader reader("", *inputStreams[0]);
 
         for(size_t nr = 0; nr < NUMPACKETS; ++nr) {
           struct RSP packet;

@@ -3,7 +3,7 @@
 # We need at least CMake 2.8 for CUDA support
 cmake_minimum_required(VERSION 2.8)
 
-lofar_package(GPUProc 1.0 DEPENDS Common Stream ApplCommon CoInterface OpenCL_FFT)
+lofar_package(GPUProc 1.0 DEPENDS Common Stream ApplCommon CoInterface OpenCL_FFT InputProc)
 
 # Handle options USE_CUDA and USE_OPENCL.
 if(NOT USE_CUDA AND NOT USE_OPENCL)
@@ -46,9 +46,7 @@ lofar_find_package(Boost REQUIRED)
 lofar_find_package(OpenMP REQUIRED)
 lofar_find_package(LibSSH2 REQUIRED)
 lofar_find_package(OpenSSL REQUIRED)
-lofar_find_package(Boost REQUIRED)
-#add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
-lofar_find_package(Casacore COMPONENTS measures REQUIRED)
+lofar_find_package(MPI REQUIRED)
 lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)  # 'double threads' for FFT unit test refs
 
 if(USE_VALGRIND)

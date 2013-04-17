@@ -199,9 +199,9 @@ namespace cu {
   class Module
   {
     public:
-      Module(const char *file_name)
+      Module(const std::string &file_name)
       {
-	checkCudaCall(cuModuleLoad(&_module, file_name));
+	checkCudaCall(cuModuleLoad(&_module, file_name.c_str()));
       }
 
       Module(const void *data)
@@ -232,9 +232,9 @@ namespace cu {
   class Function
   {
     public:
-      Function(Module &module, const char *name)
+      Function(Module &module, const std::string &name)
       {
-	checkCudaCall(cuModuleGetFunction(&_function, module, name));
+	checkCudaCall(cuModuleGetFunction(&_function, module, name.c_str()));
       }
 
       int getAttribute(CUfunction_attribute attribute)
