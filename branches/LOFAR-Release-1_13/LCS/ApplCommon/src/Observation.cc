@@ -248,7 +248,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 		}
 
 		// finally update vector with beamnumbers
-		if (_isStationName(myHostname(false))) {
+//		if (_isStationName(myHostname(false))) {
 			int	nrSubbands = newBeam.subbands.size();
 			if (!itsHasDataslots) {		// old situation
 				BeamBeamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);	// true:expandable
@@ -269,7 +269,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 					itsBeamSlotList.push_back(beamIdx);
 				}
 			} // itsHasDataslots
-		} // on a station
+//		} // on a station
 	} // for all digital beams
 
 	// loop over al analogue beams
