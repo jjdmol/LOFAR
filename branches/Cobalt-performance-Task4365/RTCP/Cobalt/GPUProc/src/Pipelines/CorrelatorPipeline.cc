@@ -274,7 +274,7 @@ namespace LOFAR
             // TODO: Not in this thread! Add a preprocess thread maybe?
             data->inputFlags[stat] = metaData.flags;
 
-            //data->flagInputSamples(stat, metaData);
+            data->flagInputSamples(stat, metaData);
 
             // extract and assign the delays for the station beams
             for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++)
