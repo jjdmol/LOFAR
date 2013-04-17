@@ -30,7 +30,6 @@
 #include <GPUProc/OpenMP_Support.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
-#include <GPUProc/Input/BeamletBufferToComputeNode.h>
 
 namespace LOFAR
 {
@@ -63,7 +62,7 @@ namespace LOFAR
       devInput(ps.nrBeams(),
                 ps.nrStations(),
                 NR_POLARIZATIONS,
-                (ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband(),
+                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
                 queue,
 
@@ -122,18 +121,26 @@ namespace LOFAR
 #endif
     {
       // put enough objects in the inputPool to operate
-      for(size_t i = 0; i < 2; ++i) {
+      // TODO: Tweak the number of inputPool objects per WorkQueue,
+      // probably something like max(3, nrSubbands/nrWorkQueues * 2), because
+      // there both need to be enough items to receive all subbands at
+      // once, and enough items to process the same amount in the
+      // mean time.
+      //
+      // At least 3 items are needed for a smooth Pool operation.
+      size_t nrInputDatas = std::max(3UL, ps.nrSubbands());
+      for(size_t i = 0; i < nrInputDatas; ++i) {
         inputPool.free.append(new WorkQueueInputData(
                 ps.nrBeams(),
                 ps.nrStations(),
                 NR_POLARIZATIONS,
-                (ps.nrSamplesPerChannel() + NR_TAPS - 1) * ps.nrChannelsPerSubband(),
+                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
                 devInput));
       }
 
       // put enough objects in the outputPool to operate
-      for(size_t i = 0; i < 2; ++i) {
+      for(size_t i = 0; i < 3; ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),
@@ -482,53 +489,6 @@ namespace LOFAR
       }
     }
 
-
-    void WorkQueueInputData::read(Stream *inputStream, size_t stationIdx, unsigned subband, unsigned beamIdx)
-    {
-      // create a header objects
-      BeamletBufferToComputeNode<i16complex>::header header_object;
-      size_t subbandSize = inputSamples[stationIdx].num_elements() * sizeof *inputSamples.origin();
-
-      // fill it with the header data from the stream
-      inputStream->read(&header_object, sizeof header_object);
-
-      // validate that the data to be received is of the correct size for the target buffer
-      ASSERTSTR(subband == header_object.subband,
-                "Expected subband " << subband << ", got subband "
-                                    << header_object.subband);
-      ASSERTSTR(subbandSize == header_object.nrSamples * header_object.sampleSize,
-                "Expected " << subbandSize << " bytes, got "
-                            << header_object.nrSamples * header_object.sampleSize
-                            << " bytes (= " << header_object.nrSamples
-                            << " samples * " << header_object.sampleSize
-                            << " bytes/sample)");
-
-      // read data into the shared buffer: This can be loaded into the gpu with a single command later on
-      inputStream->read(inputSamples[stationIdx].origin(), subbandSize);
-
-      // meta data object
-      SubbandMetaData metaData(header_object.nrTABs);
-      // fill it with from the stream
-      metaData.read(inputStream);
-
-      // save the flags to the input_data object, to allow
-      // transfer to output
-      inputFlags[stationIdx] = metaData.flags;
-
-      // flag the input data, contained in the meta data
-      flagInputSamples(stationIdx, metaData);
-
-      // extract delays for the stationion beam
-      struct SubbandMetaData::beamInfo &beamInfo_object = metaData.stationBeam;
-      // assign the delays
-
-      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++)
-      {
-        delaysAtBegin[beamIdx][stationIdx][pol] = beamInfo_object.delayAtBegin;
-        delaysAfterEnd[beamIdx][stationIdx][pol] = beamInfo_object.delayAfterEnd;
-        phaseOffsets[stationIdx][pol] = 0.0;
-      }
-    }
 
     // flag the input samples.
     void WorkQueueInputData::flagInputSamples(unsigned station,

@@ -60,7 +60,7 @@ namespace LOFAR
 
       template<typename T>
       struct Beamlet {
-        std::vector<T>  samples;
+        T *samples;
         SubbandMetaData metaData;
       };
 

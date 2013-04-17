@@ -512,9 +512,6 @@ namespace LOFAR
       unsigned                    nrSamplesPerChannel() const;
       unsigned                    nrSamplesPerSubband() const;
       unsigned                    nrHistorySamples() const;
-      unsigned                    nrSamplesToCNProc() const;
-      unsigned                    inputBufferSize() const; // in samples
-      unsigned                    maxNetworkDelay() const;
       unsigned                    nrPPFTaps() const;
       unsigned                    nrChannelsPerSubband() const;
       double                      channelWidth() const;
@@ -596,13 +593,6 @@ namespace LOFAR
       bool                        haveAnaBeam() const;
       std::vector<double>         getAnaBeamDirection() const;
       std::string                 getAnaBeamDirectionType() const;
-
-      struct StationRSPpair {
-        std::string station;
-        unsigned rsp;
-      };
-
-      std::vector<StationRSPpair> getStationNamesAndRSPboardNumbers(unsigned psetNumber) const;
 
       std::string                 getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
 

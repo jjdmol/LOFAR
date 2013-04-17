@@ -40,6 +40,7 @@ using namespace Cobalt;
 using namespace std;
 
 SmartPtr< SampleBuffer< SampleType<i16complex> > > buffer;
+SmartPtr<SyncLock> syncLock;
 SampleBuffer< SampleType<i16complex> >::Board *board;
 
 // Offset to prevent diving into negative timestamps
@@ -63,6 +64,10 @@ void initBoard()
 
   // Test non-real-time syncing!
   settings.sync = true;
+
+  // Create a lock set for syncing
+  syncLock = new SyncLock(settings);
+  settings.syncLock = syncLock;
 
   // Create the buffer
   buffer = new SampleBuffer< SampleType<i16complex> >(settings, true);

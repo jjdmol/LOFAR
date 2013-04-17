@@ -35,14 +35,18 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    Generator::Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors, PacketFactory &packetFactory )
+    Generator::Generator( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &outputStreams_, PacketFactory &packetFactory )
       :
-      RSPBoards(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaField), streamDescriptors.size()),
+      RSPBoards(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaField), outputStreams_.size()),
       settings(settings),
-      streamDescriptors(streamDescriptors),
+      outputStreams(outputStreams_.size()),
       packetFactory(packetFactory),
       nrSent(nrBoards, 0)
     {
+      for (size_t i = 0; i < outputStreams.size(); ++i) {
+        outputStreams[i] = outputStreams_[i];
+      }
+
       LOG_INFO_STR( logPrefix << "Initialised" );
     }
 
@@ -52,8 +56,7 @@ namespace LOFAR
       const std::string logPrefix(str(boost::format("[station %s %s board %u] [Generator] ") % settings.station.stationName % settings.station.antennaField % nr));
 
       try {
-        LOG_INFO_STR( logPrefix << "Connecting to " << streamDescriptors[nr] );
-        SmartPtr<Stream> s = createStream(streamDescriptors[nr], false);
+        Stream &s = *outputStreams[nr];
 
         LOG_INFO_STR( logPrefix << "Start" );
 
@@ -70,7 +73,7 @@ namespace LOFAR
 
           // send packet
           try {
-            s->write(&packet, packet.packetSize());
+            s.write(&packet, packet.packetSize());
           } catch (SystemCallException &ex) {
             // UDP can return ECONNREFUSED or EINVAL if server does not have its port open
             if (ex.error != ECONNREFUSED && ex.error != EINVAL)

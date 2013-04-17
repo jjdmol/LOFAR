@@ -41,7 +41,7 @@ namespace LOFAR {
       size_t nrBeamlets = settings.nrBoards * settings.nrBeamletsPerBoard;
 
       for (size_t i = 0; i < beamlets.size(); ++i)
-        ASSERT( beamlets[i] < nrBeamlets );
+        ASSERTSTR( beamlets[i] < nrBeamlets, beamlets[i] << " < " << nrBeamlets );
     }
 
 
@@ -122,8 +122,6 @@ namespace LOFAR {
 
       // Determine the relevant offsets in the buffer, processing:
       //   offset: the shift applied to compensate geometric delays (etc)
-      //   reader.nrHistorySamples: the number of past samples to include (for
-      //                            PPF initialisation)
       size_t from_offset = reader.buffer.offset(this->from + offset);
       size_t to_offset   = reader.buffer.offset(this->to   + offset);
 
@@ -174,7 +172,7 @@ namespace LOFAR {
     SmartPtr<typename BlockReader<T>::LockedBlock> BlockReader<T>::block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
     {
       ASSERT( to > from );
-      ASSERT( to - from < buffer.nrSamples );
+      ASSERTSTR( to - from + nrHistorySamples < buffer.nrSamples, "Requested to read block " << from << " to " << to << ", which results in " << (to - from + nrHistorySamples) << " samples, but buffer is only " << buffer.nrSamples << " wide" );
 
       // wait for block start (but only in real-time mode)
       if (!buffer.sync) {

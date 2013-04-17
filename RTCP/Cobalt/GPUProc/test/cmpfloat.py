@@ -11,7 +11,7 @@ from math import fabs
 
 # precision with which to compare: absolute differences smaller
 # than this are considered equal.
-PRECISION = 1e-4
+PRECISION = 1e-10
 
 def cmpfloat(filename_a, filename_b, precision = PRECISION):
   A = filename_a

@@ -26,18 +26,13 @@
 
 #include <Common/LofarTypes.h>
 #include <Common/Thread/Queue.h>
-#include <Stream/Stream.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/StreamableData.h>
 #include <CoInterface/SmartPtr.h>
 
-#include "Input/InputSection.h"
-#include "Input/BeamletBufferToComputeNode.h"
 #include "global_defines.h"
 #include "OpenMP_Support.h"
 #include "opencl-incl.h"
 #include "createProgram.h"
-#include "SlidingPointer.h"
 #include "WorkQueues/WorkQueue.h"
 #include "PerformanceCounter.h"
 
@@ -45,27 +40,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-    template <typename SAMPLE_TYPE>
-    class StationInput
-    {
-    public:
-      SmartPtr<InputSection<SAMPLE_TYPE> >               inputSection;
-      SmartPtr<BeamletBufferToComputeNode<SAMPLE_TYPE> > beamletBufferToComputeNode;
-
-      void init(const Parset &ps, unsigned psetNumber);
-    };
-
-    template<typename SAMPLE_TYPE>
-    void StationInput<SAMPLE_TYPE>::init(const Parset &ps, unsigned psetNumber)
-    {
-      string stationName = ps.getStationNamesAndRSPboardNumbers(psetNumber)[0].station;       // TODO: support more than one station
-      std::vector<Parset::StationRSPpair> inputs = ps.getStationNamesAndRSPboardNumbers(psetNumber);
-
-      inputSection = new InputSection<SAMPLE_TYPE>(ps, inputs);
-      beamletBufferToComputeNode = new BeamletBufferToComputeNode<SAMPLE_TYPE>(ps, stationName, inputSection->itsBeamletBuffers, 0);
-    }
-
     class Pipeline
     {
     public:
@@ -76,14 +50,6 @@ namespace LOFAR
       const Parset            &ps;
       cl::Context context;
       std::vector<cl::Device> devices;
-
-      std::vector<StationInput<i16complex> > stationInputs16;       // indexed by station
-      std::vector<StationInput<i8complex> >  stationInputs8;       // indexed by station
-      std::vector<StationInput<i4complex> >  stationInputs4;       // indexed by station
-
-      std::vector<SmartPtr<Stream> >  bufferToGPUstreams;       // indexed by station
-
-      SlidingPointer<uint64_t> inputSynchronization;
 
 #if defined USE_B7015
       OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];

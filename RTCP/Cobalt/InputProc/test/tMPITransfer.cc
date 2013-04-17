@@ -96,26 +96,35 @@ void sender()
   OMPThread::init();
 
   // Transfer of packets from generator to buffer
-  std::vector<std::string> inputStreams(4);
+  std::vector< SmartPtr<Stream> > inputStreams(4);
+  std::vector< SmartPtr<Stream> > outputStreams(4);
   for (size_t i = 0; i < inputStreams.size(); ++i) {
-    inputStreams[i] = str(format("tcp:127.0.0.%d:%u") % (rank + 1) % (4346+i));
+    const string desc = str(format("tcp:127.0.0.%d:%u") % (rank + 1) % (4346+i));
+
+
+    #pragma omp parallel sections
+    {
+      #pragma omp section
+      inputStreams[i] = createStream(desc, true);
+
+      #pragma omp section
+      outputStreams[i] = createStream(desc, false);
+    }
   }
 
   MultiPacketsToBuffer station( settings, inputStreams );
   PacketFactory factory( settings );
-  Generator generator( settings, inputStreams, factory );
+  Generator generator( settings, outputStreams, factory );
 
-  #pragma omp parallel sections num_threads(4)
+  #pragma omp parallel sections
   {
     // Generate the data to send
     #pragma omp section
-    { generator.process();
-    }
+    generator.process();
 
     // Start a circular buffer
     #pragma omp section
-    { station.process();
-    }
+    station.process();
 
     // Send data to receivers
     #pragma omp section
@@ -157,6 +166,9 @@ void receiver()
 
   MPIReceiveStations receiver(stationRanks, beamlets, blockSize + nrHistorySamples);
 
+  // create space for the samples
+  MultiDimArray<SampleT, 3> samples(boost::extents[nrStations][nrBeamlets][blockSize + nrHistorySamples]);
+
   // create blocks -- they all have to be the right size already
   std::vector< struct MPIReceiveStations::Block<SampleT> > blocks(nrStations);
 
@@ -164,7 +176,7 @@ void receiver()
     blocks[s].beamlets.resize(nrBeamlets);
 
     for (size_t b = 0; b < nrBeamlets; ++b) {
-      blocks[s].beamlets[b].samples.resize(blockSize + nrHistorySamples);
+      blocks[s].beamlets[b].samples = &samples[s][b][0];
     }
   }
 

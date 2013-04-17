@@ -37,6 +37,7 @@
 #include <Common/Thread/Semaphore.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/SubbandMetaData.h>
 #include <CoInterface/RSPTimeStamp.h>
 #include <CoInterface/SmartPtr.h>
 
@@ -139,6 +140,18 @@ namespace LOFAR
       // Get the set of directions (ITRF) and delays for the beams
       void getNextDelays( AllDelays &result );
 
+      /*
+       * Convert the (delaysAtBegin, delaysAfterEnd) delays pair to all delays
+       * required in metaDatas, and to the read_offsets at which the data should
+       * be read from the circular buffer.
+       *
+       * Essentially, the read_offset for each subband is 
+       *     SAP.delay / sampleDuration
+       * and in the metaData the remainders will be recorded, that is,
+       *     SAP.delay % sampleDuration.
+       */
+      void generateMetaData( const AllDelays &delaysAtBegin, const AllDelays &delaysAfterEnd, std::vector<SubbandMetaData> &metaDatas, std::vector<ssize_t> &read_offsets );
+
     private:
       const Parset &parset;
       const size_t stationIdx;
@@ -175,6 +188,9 @@ namespace LOFAR
       // Computes the delays for a specific moment in time and stores them
       // in `result'.
       void calcDelays( const TimeStamp &timestamp, AllDelays &result );
+
+      // Returns the non-geometric delay to add for this station
+      double baseDelay() const;
 
 #ifdef HAVE_CASACORE
       casa::MVEpoch                       toUTC( const TimeStamp &timestamp ) const;

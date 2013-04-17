@@ -96,7 +96,7 @@ namespace LOFAR {
       std::vector<struct Header> headers(stationRanks.size());
 
       for (size_t stat = 0; stat < stationRanks.size(); ++stat) {
-        LOG_DEBUG_STR(logPrefix << "Posting receive for header from rank " << stationRanks[stat]);
+        //LOG_DEBUG_STR(logPrefix << "Posting receive for header from rank " << stationRanks[stat]);
 
         // receive the header
         header_requests[stat] = receiveHeader(stat, headers[stat]);
@@ -110,7 +110,7 @@ namespace LOFAR {
          * WAIT FOR ANY HEADER
          */
 
-        LOG_DEBUG_STR(logPrefix << "Waiting for headers");
+        //LOG_DEBUG_STR(logPrefix << "Waiting for headers");
 
         // Wait for any header request to finish
         int stat = waitAny(header_requests);
@@ -122,7 +122,7 @@ namespace LOFAR {
 
         const struct Header &header = headers[stat];
 
-        LOG_DEBUG_STR(logPrefix << "Received header from rank " << rank);
+        //LOG_DEBUG_STR(logPrefix << "Received header from rank " << rank);
 
         ASSERTSTR(header.nrBeamlets == beamlets.size(), "Got " << header.nrBeamlets << " beamlets, but expected " << beamlets.size());
 
@@ -138,7 +138,7 @@ namespace LOFAR {
            * RECEIVE BEAMLET (ASYNC)
            */
 
-          LOG_DEBUG_STR(logPrefix << "Receiving beamlet " << beamlet << " from rank " << rank << " using " << (wrapOffset > 0 ? 2 : 1) << " transfers");
+          //LOG_DEBUG_STR(logPrefix << "Receiving beamlet " << beamlet << " from rank " << rank << " using " << (wrapOffset > 0 ? 2 : 1) << " transfers");
 
           // First sample transfer
           requests.push_back(receiveData<T>(stat, beamlet, 0, &blocks[stat].beamlets[beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize));

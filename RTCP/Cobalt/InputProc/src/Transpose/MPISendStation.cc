@@ -73,7 +73,7 @@ namespace LOFAR {
     template<typename T>
     MPI_Request MPISendStation::sendHeader( int rank, struct MPIProtocol::Header &header, const struct Block<T> &block )
     {
-      LOG_DEBUG_STR(logPrefix << "Sending header to rank " << rank);
+      //LOG_DEBUG_STR(logPrefix << "Sending header to rank " << rank);
 
       // Copy dynamic header info
       header.from             = block.from;
@@ -101,7 +101,7 @@ namespace LOFAR {
     template<typename T>
     unsigned MPISendStation::sendData( int rank, unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] )
     {
-      LOG_DEBUG_STR(logPrefix << "Sending beamlet " << beamlet << " to rank " << rank << " using " << ib.nrRanges << " transfers");
+      //LOG_DEBUG_STR(logPrefix << "Sending beamlet " << beamlet << " to rank " << rank << " using " << ib.nrRanges << " transfers");
 
       // Send beamlet using 1 or 2 transfers
       for(unsigned transfer = 0; transfer < ib.nrRanges; ++transfer) {
