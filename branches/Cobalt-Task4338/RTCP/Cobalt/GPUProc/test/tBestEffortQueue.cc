@@ -36,12 +36,14 @@ void test_drop()
 
   // queue has free space -- append should succeed
   for (size_t i = 0; i < queueSize; ++i) {
-    ASSERT(queue.append(100 + i));
+    size_t e = 100 + i;
+    ASSERT(queue.append(e));
     ASSERT(queue.size() == i + 1);
   }
 
   // queue is full -- append should fail
-  ASSERT(!queue.append(1000));
+  size_t e = 1000;
+  ASSERT(!queue.append(e));
   ASSERT(queue.size() == queueSize);
 
   // removal should succeed
@@ -60,7 +62,8 @@ void test_nondrop()
 
   // queue has free space -- append should succeed
   for (size_t i = 0; i < queueSize; ++i) {
-    ASSERT(queue.append(100 + i));
+    size_t e = 100 + i;
+    ASSERT(queue.append(e));
     ASSERT(queue.size() == i + 1);
   }
 
@@ -70,7 +73,8 @@ void test_nondrop()
     {
       // push more -- append should always succeed
       for (size_t i = 0; i < queueSize; ++i) {
-        ASSERT(queue.append(100 + i));
+        size_t e = 100 + i;
+        ASSERT(queue.append(e));
       }
     }
 
@@ -93,14 +97,16 @@ void test_nomore()
 
   // fill queue
   for (size_t i = 0; i < queueSize; ++i) {
-    ASSERT(queue.append(100 + i));
+    size_t e = 100 + i;
+    ASSERT(queue.append(e));
   }
 
   // end-of-stream
   queue.noMore();
 
   // can't append anymore
-  ASSERT(!queue.append(1));
+  size_t e = 1;
+  ASSERT(!queue.append(e));
 
   // should be able to empty queue until we hit 0
   for (size_t i = 0; i < queueSize; ++i) {
@@ -112,7 +118,7 @@ void test_nomore()
   ASSERT(queue.empty());
 
   // can't append anymore
-  ASSERT(!queue.append(1));
+  ASSERT(!queue.append(e));
 }
 
 int main()

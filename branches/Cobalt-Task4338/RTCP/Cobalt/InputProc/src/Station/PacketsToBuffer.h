@@ -93,19 +93,22 @@ namespace LOFAR
     class MultiPacketsToBuffer : public RSPBoards
     {
     public:
-      MultiPacketsToBuffer( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
+      MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_ )
         :
-        RSPBoards("", streamDescriptors.size()),
+        RSPBoards("", inputStreams_.size()),
         settings(settings),
-        streamDescriptors(streamDescriptors)
+        inputStreams(inputStreams_.size())
       {
+        // Don't take over ownership!
+        for (size_t i = 0; i < inputStreams.size(); ++i) {
+          inputStreams[i] = inputStreams_[i];
+        }
       }
 
     protected:
       virtual void processBoard( size_t boardNr )
       {
-        SmartPtr<Stream> inputStream = createStream(streamDescriptors[boardNr], true);
-        PacketsToBuffer board(*inputStream, settings, boardNr);
+        PacketsToBuffer board(*inputStreams[boardNr], settings, boardNr);
 
         board.process();
       }
@@ -118,10 +121,8 @@ namespace LOFAR
 
     private:
       const BufferSettings settings;
-      const std::vector<std::string> streamDescriptors;
+      std::vector<Stream *> inputStreams;
     };
-
-
   }
 }
 

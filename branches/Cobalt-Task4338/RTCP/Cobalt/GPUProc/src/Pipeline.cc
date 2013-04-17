@@ -24,12 +24,13 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
-#include <Stream/FileStream.h>
-#include <Stream/SharedMemoryStream.h>
-#include <Stream/NullStream.h>
-#include <CoInterface/Stream.h>
 
 #include "OpenCL_Support.h"
+
+#if 0
+#include <boost/format.hpp>
+using boost::format;
+#endif
 
 namespace LOFAR
 {
@@ -39,32 +40,9 @@ namespace LOFAR
 
     Pipeline::Pipeline(const Parset &ps)
       :
-      ps(ps),
-      stationInputs16(ps.nrStations()),
-      stationInputs8(ps.nrStations()),
-      stationInputs4(ps.nrStations()),
-      bufferToGPUstreams(ps.nrStations())
+      ps(ps)
     {
       createContext(context, devices);
-
-      for (unsigned stat = 0; stat < ps.nrStations(); stat++) {
-        bufferToGPUstreams[stat] = new SharedMemoryStream;
-
-        switch (ps.nrBitsPerSample()) {
-        default:
-        case 16:
-          stationInputs16[stat].init(ps, stat);
-          break;
-
-        case 8:
-          stationInputs8[stat].init(ps, stat);
-          break;
-
-        case 4:
-          stationInputs4[stat].init(ps, stat);
-          break;
-        }
-      }
     }
 
 
@@ -73,30 +51,6 @@ namespace LOFAR
       return LOFAR::Cobalt::createProgram(ps, context, devices, sources);
     }
 
-
-    void Pipeline::sendNextBlock(unsigned station)
-    {
-      (void)station;
-
-      unsigned bitsPerSample = ps.nrBitsPerSample();
-
-      Stream *stream = bufferToGPUstreams[station];
-
-      switch(bitsPerSample) {
-      default:
-      case 16:
-        stationInputs16[station].beamletBufferToComputeNode->process(stream);
-        break;
-
-      case 8:
-        stationInputs8[station].beamletBufferToComputeNode->process(stream);
-        break;
-
-      case 4:
-        stationInputs4[station].beamletBufferToComputeNode->process(stream);
-        break;
-      }
-    }
 
     void Pipeline::Performance::addQueue(WorkQueue &queue)
     {

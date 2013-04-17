@@ -26,12 +26,14 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <CoInterface/SparseSet.h>
+#include <CoInterface/SlidingPointer.h>
 #include "StationID.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
+    class SyncLock;
 
     struct BufferSettings {
     private:
@@ -52,6 +54,7 @@ namespace LOFAR
 
       // true: sync reader and writer, useful in real-time mode
       bool sync;
+      SyncLock *syncLock;
 
       unsigned nrBeamletsPerBoard;
 
@@ -94,6 +97,19 @@ namespace LOFAR
 
     std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s );
 
+    struct BoardLock {
+      SlidingPointer<BufferSettings::range_type> readPtr;
+      SlidingPointer<BufferSettings::range_type> writePtr;
+    };
+
+    class SyncLock: public std::vector<struct BoardLock> { // [board]
+    public:
+      SyncLock(const BufferSettings &settings)
+      :
+        std::vector<struct BoardLock>(settings.nrBoards)
+      {
+      }
+    };
   }
 }
 

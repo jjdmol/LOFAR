@@ -43,13 +43,13 @@ namespace LOFAR
     {
     public:
       // Create a best-effort queue with room for `maxSize' elements.
-      // If `dropIfFull' is true, appends are dropped if the queue
-      // has reached `maxSize'.
-      BestEffortQueue(size_t maxSize, bool dropIfFull);
+      // If `drop' is true, appends are dropped if the queue
+      // has reached `maxSize', or if no remove() has been posted yet.
+      BestEffortQueue(size_t maxSize, bool drop);
 
       // Add an element. Returns true if append succeeded, false if element
       // was dropped.
-      bool append(T);
+      bool append(T&);
 
       // Remove an element -- 0 or NULL signals end-of-stream.
       T remove();
@@ -59,7 +59,11 @@ namespace LOFAR
 
     private:
       const size_t maxSize;
-      const bool dropIfFull;
+      const bool drop;
+
+      // true if we're removing elements, that is,
+      // remove() has been called at least once.
+      bool removing;
 
       // contains the amount of free space in the queue
       Semaphore freeSpace;

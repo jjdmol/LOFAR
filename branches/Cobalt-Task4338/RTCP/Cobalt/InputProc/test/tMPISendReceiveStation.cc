@@ -264,6 +264,9 @@ TEST(Block_OneStation) {
     block_in.beamlets.push_back(ib);
   }
 
+  // create a place to store the samples
+  MultiDimArray<SampleT, 3> samples_out(boost::extents[nrStations][nrBeamlets][blockSize]);
+
   // create blocks_out -- they all have to be the right size already
   blocks_out.resize(nrStations);
 
@@ -271,7 +274,7 @@ TEST(Block_OneStation) {
     blocks_out[s].beamlets.resize(nrBeamlets);
 
     for (size_t b = 0; b < nrBeamlets; ++b) {
-      blocks_out[s].beamlets[b].samples.resize(blockSize);
+      blocks_out[s].beamlets[b].samples = &samples_out[s][b][0];
     }
   }
 
@@ -289,8 +292,9 @@ TEST(Block_OneStation) {
   if (rank == 1) {
     // Validate results
     for (size_t b = 0; b < nrBeamlets; ++b) {
-      CHECK_EQUAL(data_in[0], blocks_out[0].beamlets[b].samples[0]);
-      CHECK(data_in == blocks_out[0].beamlets[b].samples);
+      for (size_t t = 0; t < blockSize; ++t) {
+        CHECK_EQUAL(data_in[t], samples_out[0][b][t]);
+      }
 
       CHECK_EQUAL(block_in.beamlets[b].flagsAtBegin, blocks_out[0].beamlets[b].metaData.flags);
     }

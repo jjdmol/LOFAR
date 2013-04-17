@@ -191,13 +191,24 @@ namespace LOFAR
     struct Delays::Delay Delays::convert( casa::MDirection::Convert &converter, const casa::MVDirection &direction ) const {
       struct Delay d;
 
-      MVDirection casaDir = converter(direction).getValue();
+      if (parset.settings.delayCompensation.enabled) {
+        MVDirection casaDir = converter(direction).getValue();
 
-      // Compute direction and convert it 
-      casa::Vector<double> dir = casaDir.getValue();
-      std::copy(dir.begin(), dir.end(), d.direction);
+        // Compute direction and convert it 
+        casa::Vector<double> dir = casaDir.getValue();
+        std::copy(dir.begin(), dir.end(), d.direction);
 
-      d.delay = casaDir * phasePositionDiff * (1.0 / speedOfLight);
+        // Compute delay
+        d.delay = casaDir * phasePositionDiff * (1.0 / speedOfLight);
+      } else {
+        d.delay = 0.0;
+        d.direction[0] = 0.0;
+        d.direction[1] = 0.0;
+        d.direction[2] = 0.0;
+      }
+
+      // Add non-geometric delays
+      d.delay += baseDelay();
 
       return d;
     }
@@ -242,9 +253,26 @@ namespace LOFAR
 
     void Delays::calcDelays( const TimeStamp &timestamp, AllDelays &result ) {
       (void)timestamp;
-      (void)result;
+
+      for (size_t sap = 0; sap < result.SAPs.size(); ++sap) {
+        result.SAPs[sap].SAP.delay = baseDelay();
+
+        if (parset.settings.beamFormer.enabled) {
+          for (size_t tab = 0; tab < result.SAPs[sap].TABs.size(); tab++) {
+            result.SAPs[sap].TABs[tab].delay = baseDelay();
+          }
+        }
+      }
     }
 #endif
+
+
+    double Delays::baseDelay() const
+    {
+      double clockCorrection = parset.settings.corrections.clock ? parset.settings.stations[stationIdx].clockCorrection : 0.0;
+
+      return clockCorrection;
+    }
 
 
     void Delays::mainLoop()
@@ -322,6 +350,51 @@ namespace LOFAR
 
       bufferFree.up();
     }
+
+    void Delays::generateMetaData( const AllDelays &delaysAtBegin, const AllDelays &delaysAfterEnd, vector<SubbandMetaData> &metaDatas, vector<ssize_t> &read_offsets )
+    {
+      ASSERT( metaDatas.size() == parset.nrSubbands() );
+      ASSERT( read_offsets.size() == parset.nrSubbands() );
+
+      // Delay compensation is performed in two parts. First, a coarse
+      // correction is done by shifting the block to read by a whole
+      // number of samples. Then, in the GPU, the remainder of the delay
+      // will be corrected for using a phase shift.
+      vector<ssize_t> coarseDelaysSamples(parset.settings.SAPs.size()); // [sap], in samples
+      vector<double>  coarseDelaysSeconds(parset.settings.SAPs.size()); // [sap], in seconds
+      for (size_t sap = 0; sap < parset.nrBeams(); ++sap) {
+        double delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.delay;
+        double delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.delay;
+
+        // The coarse delay compensation is based on the average delay
+        // between begin and end.
+        coarseDelaysSamples[sap] = static_cast<ssize_t>(floor(0.5 * (delayAtBegin + delayAfterEnd) * parset.subbandBandwidth() + 0.5));
+        coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / parset.subbandBandwidth();
+      }
+
+      // Compute the offsets at which each subband is read
+      for (size_t subband = 0; subband < parset.nrSubbands(); ++subband) {
+        unsigned sap = parset.settings.subbands[subband].SAP;
+
+        // Mystery unary minus
+        read_offsets[subband] = -coarseDelaysSamples[sap];
+      }
+
+      // Add the delays to metaDatas.
+      for (size_t subband = 0; subband < parset.nrSubbands(); ++subband) {
+        unsigned sap = parset.settings.subbands[subband].SAP;
+        double coarseDelay = coarseDelaysSeconds[sap];
+
+        metaDatas[subband].stationBeam.delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.delay - coarseDelay;
+        metaDatas[subband].stationBeam.delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.delay - coarseDelay;
+
+        for (size_t tab = 0; tab < metaDatas[subband].TABs.size(); ++tab) {
+          metaDatas[subband].TABs[tab].delayAtBegin  = delaysAtBegin.SAPs[sap].TABs[tab].delay - coarseDelay;
+          metaDatas[subband].TABs[tab].delayAfterEnd = delaysAfterEnd.SAPs[sap].TABs[tab].delay - coarseDelay;
+        }
+      }
+    }
+
   } // namespace Cobalt
 } // namespace LOFAR
 

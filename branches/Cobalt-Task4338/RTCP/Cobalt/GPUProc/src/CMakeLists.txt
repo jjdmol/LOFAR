@@ -12,14 +12,6 @@ set(_gpuproc_sources
   BandPass.cc
   FilterBank.cc
   global_defines.cc
-  Input/BeamletBuffer.cc
-  Input/BeamletBufferToComputeNode.cc
-  Input/CN_Mapping.cc
-  Input/Delays.cc
-  Input/InputSection.cc
-  Input/InputThread.cc
-  Input/LogThread.cc
-  Input/ReaderWriterSynchronization.cc
   Kernel.cc
   Kernels/BeamFormerKernel.cc
   Kernels/BeamFormerTransposeKernel.cc

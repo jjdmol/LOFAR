@@ -23,17 +23,21 @@ namespace LOFAR
   namespace Cobalt 
   {
 
-template <typename T> inline BestEffortQueue<T>::BestEffortQueue(size_t maxSize, bool dropIfFull)
+template <typename T> inline BestEffortQueue<T>::BestEffortQueue(size_t maxSize, bool drop)
 :
   maxSize(maxSize),
-  dropIfFull(dropIfFull),
+  drop(drop),
+  //removing(false), // <-- this will prevent append() if noone is remove()ing. Disabled for now, because
+                     // it causes tests to fail, and even if a thread is remove()ing, objects can still
+                     // pile up in the queue.
+  removing(true),
   freeSpace(maxSize),
   flushing(false)
 {
 }
 
 
-template <typename T> inline bool BestEffortQueue<T>::append(T element)
+template <typename T> inline bool BestEffortQueue<T>::append(T &element)
 {
   bool canAppend;
 
@@ -41,8 +45,12 @@ template <typename T> inline bool BestEffortQueue<T>::append(T element)
   if (flushing)
     return false;
 
+  // can't append if we're not removing elements
+  if (!removing && drop)
+    return false;
+
   // determine whether we can append
-  if (dropIfFull) {
+  if (drop) {
     canAppend = freeSpace.tryDown();
   } else {
     canAppend = freeSpace.down();
@@ -59,6 +67,8 @@ template <typename T> inline bool BestEffortQueue<T>::append(T element)
 
 template <typename T> inline T BestEffortQueue<T>::remove()
 {
+  removing = true;
+
   T element = Queue<T>::remove();
 
   // freed up one spot

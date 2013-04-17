@@ -117,6 +117,8 @@ namespace LOFAR
       SampleBuffer<T> buffer(settings, true);
       PacketWriter<T> writer(logPrefix, buffer, boardNr);
 
+      LOG_INFO_STR( logPrefix << "Processing packets" );
+
       try {
         // Process lingering packet from previous run, if any
         if (writeGivenPacket) {

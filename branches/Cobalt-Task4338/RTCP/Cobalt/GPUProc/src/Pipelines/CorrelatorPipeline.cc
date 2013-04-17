@@ -32,6 +32,9 @@
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/Stream.h>
 
+#include <InputProc/SampleType.h>
+#include <InputProc/Transpose/MPIReceiveStations.h>
+
 #include <GPUProc/OpenMP_Support.h>
 #include <GPUProc/createProgram.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
@@ -82,7 +85,7 @@ namespace LOFAR
       for (unsigned sb = 0; sb < ps.nrSubbands(); sb++) {
         // Allow 10 blocks to be in the best-effort queue.
         // TODO: make this dynamic based on memory or time
-        subbandPool[sb].bequeue = new BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> >(10, ps.realTime());
+        subbandPool[sb].bequeue = new BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> >(3, ps.realTime());
       }
 
       double startTime = ps.startTime();
@@ -98,52 +101,24 @@ namespace LOFAR
 #     pragma omp parallel sections
       {
         /*
-         * CIRCULAR BUFFER -> STATION STREAMS
-         *
-         * Handles one block per station.
+         * BLOCK OF SUBBANDS -> WORKQUEUE INPUTPOOL
          */
 #       pragma omp section
         {
-          size_t nrStations = ps.nrStations();
-          // The data from the input buffer to the input stream is run in a seperate thread
-#         pragma omp parallel for num_threads(nrStations)
-          for (size_t stat = 0; stat < nrStations; stat++) {
-            for (size_t block = 0; block < nrBlocks; block++) {
-              sendNextBlock(stat);
-            }
+          switch (ps.nrBitsPerSample()) {
+          default:
+          case 16:
+            receiveInput< SampleType<i16complex> >(nrBlocks, workQueues);
+            break;
+          case 8:
+            receiveInput< SampleType<i8complex> >(nrBlocks, workQueues);
+            break;
+          case 4:
+            receiveInput< SampleType<i4complex> >(nrBlocks, workQueues);
+            break;
           }
         }
 
-        /*
-         * STATION STREAMS -> WORKQUEUE INPUTPOOL
-         *
-         * Collects one subband of all stations.
-         */
-#       pragma omp section
-        {
-          // Let the queues pick up work as soon as they're ready.
-#         pragma omp parallel num_threads(workQueues.size())
-          {
-            CorrelatorWorkQueue &queue = *workQueues[omp_get_thread_num() % workQueues.size()];
-
-            for (size_t block = 0; block < nrBlocks; block++) {
-              // process each subband in a seperate omp tread
-              // This is the main loop.
-              // Get data from an input, send to the gpu, process, assign to the output.
-              // schedule(dynamic) = the iterations requiring varying, or even unpredictable, amounts of work.
-              // nowait = Use this clause to avoid the implied barrier at the end of the for directive.
-              //          Threads do not synchronize at the end of the parallel loop.
-              // ordered =  Specifies that the iterations of the loop must be executed as they would be in a serial program
-#             pragma omp for schedule(dynamic), nowait, ordered  // no parallel: this no new threads
-              for (unsigned subband = 0; subband < ps.nrSubbands(); subband++) {
-                receiveSubbandSamples(queue, block, subband);
-              }
-            }
-
-            // Signal end of input
-            queue.inputPool.filled.append(NULL);
-          }
-        }
 
         /*
          * WORKQUEUE INPUTPOOL -> WORKQUEUE OUTPUTPOOL
@@ -210,57 +185,123 @@ namespace LOFAR
     }
 
 
-    void CorrelatorPipeline::receiveSubbandSamples(
-      CorrelatorWorkQueue &workQueue, size_t block, unsigned subband)
+    // Record type needed by receiveInput. Before c++0x, a local type
+    // can't be a template argument, so we'll have to define this type
+    // globally.
+    struct inputData_t {
+      // An InputData object suited for storing one subband from all
+      // stations.
+      SmartPtr<WorkQueueInputData> data;
+
+      // The WorkQueue associated with the data
+      CorrelatorWorkQueue *queue;
+    };
+
+    template<typename SampleT> void CorrelatorPipeline::receiveInput( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues )
     {
-      // Fetch the next input object to fill
-      SmartPtr<WorkQueueInputData> inputData(workQueue.inputPool.free.remove());
+      // The length of a block in samples
+      size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
 
-      inputData->block   = block;
-      inputData->subband = subband;
-
-      if (subband == 0) {
-        LOG_INFO_STR("[block " << block << "] Reading input samples");
+      // SEND: For now, the n stations are sent by the first n ranks.
+      vector<int> stationRanks(ps.nrStations());
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+        stationRanks[stat] = stat;
       }
 
-      // Wait for previous data to be read
-      inputSynchronization.waitFor(block * ps.nrSubbands() + subband);
-
-      // Block 0 may take a while to arrive if we start early
-      if (block > 0) {
-        workQueue.timers["CPU - read input"]->start();
+      // RECEIVE: For now, we receive ALL beamlets.
+      vector<size_t> subbands(ps.nrSubbands());
+      for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+        subbands[subband] = subband;
       }
 
-      // Read the samples from the input stream in parallel
-#     pragma omp parallel for
-      for (unsigned station = 0; station < ps.nrStations(); station++)
-      {
+      // Set up the MPI environment.
+      MPIReceiveStations receiver(stationRanks, subbands, blockSize);
 
-        // each input stream contains the data from a single station
-        Stream *inputStream = bufferToGPUstreams[station];
+      // Create a block object to hold all information for receiving one
+      // block.
+      vector<struct MPIReceiveStations::Block<SampleT> > blocks(ps.nrStations());
 
-        inputData->read(inputStream, station, subband, ps.subbandToSAPmapping()[subband]);
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+        blocks[stat].beamlets.resize(ps.nrSubbands());
+      }
 
-        if (subband == 0) {
-          LOG_DEBUG_STR("[block " << block << "] Read input from station " << station);
+      size_t workQueueIterator = 0;
+
+      for (size_t block = 0; block < nrBlocks; block++) {
+        // Receive the samples of all subbands from the stations for this
+        // block.
+
+        // The set of InputData objects we're using for this block.
+        vector<struct inputData_t> inputDatas(ps.nrSubbands());
+
+        for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+          // Fetch an input object to store this subband. For now, blindly
+          // round-robin over the work queues.
+          CorrelatorWorkQueue &queue = *workQueues[workQueueIterator++ % workQueues.size()];
+
+          // Fetch an input object to fill from the selected queue.
+          // NOTE: We'll put it in a SmartPtr right away!
+          SmartPtr<WorkQueueInputData> data = queue.inputPool.free.remove();
+
+          // Annotate the block
+          data->block   = block;
+          data->subband = subband;
+
+          // Incorporate it in the receiver's input set.
+          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+            blocks[stat].beamlets[subband].samples = reinterpret_cast<SampleT*>(&data->inputSamples[stat][0][0][0]);
+          }
+
+          // Record the block (transfers ownership)
+          inputDatas[subband].data = data;
+          inputDatas[subband].queue = &queue;
         }
-      }
 
-      if (block > 0) {
-        workQueue.timers["CPU - read input"]->stop();
-      }
+        // Receive all subbands from all stations
+        LOG_INFO_STR("[block " << block << "] Reading input samples");
+        receiver.receiveBlock<SampleT>(blocks);
 
-      // Advance the block index
-      inputSynchronization.advanceTo(block * ps.nrSubbands() + subband + 1);
+        // Process and forward the received input to the processing threads
+        for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+          CorrelatorWorkQueue &queue = *inputDatas[subband].queue;
+          SmartPtr<WorkQueueInputData> data = inputDatas[subband].data;
 
-      // Register this block as workQueue input
-      workQueue.inputPool.filled.append(inputData);
-      ASSERT(!inputData);
+          // Translate the metadata as provided by receiver
+          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+            SubbandMetaData &metaData = blocks[stat].beamlets[subband].metaData;
 
-      if (subband == 0) {
+            // extract and apply the flags
+            // TODO: Not in this thread! Add a preprocess thread maybe?
+            data->inputFlags[stat] = metaData.flags;
+
+            data->flagInputSamples(stat, metaData);
+
+            // extract and assign the delays for the station beams
+            for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++)
+            {
+              unsigned sap = ps.settings.subbands[subband].SAP;
+
+              data->delaysAtBegin[sap][stat][pol] = metaData.stationBeam.delayAtBegin;
+              data->delaysAfterEnd[sap][stat][pol] = metaData.stationBeam.delayAfterEnd;
+              data->phaseOffsets[stat][pol] = 0.0;
+            }
+          }
+
+          queue.inputPool.filled.append(data);
+        }
+
         LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
       }
+
+      // Signal end of input
+      for (size_t i = 0; i < workQueues.size(); ++i) {
+        workQueues[i]->inputPool.filled.append(NULL);
+      }
     }
+
+    template void CorrelatorPipeline::receiveInput< SampleType<i16complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
+    template void CorrelatorPipeline::receiveInput< SampleType<i8complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
+    template void CorrelatorPipeline::receiveInput< SampleType<i4complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
 
 
     void CorrelatorPipeline::processSubbands(CorrelatorWorkQueue &workQueue)
@@ -272,8 +313,8 @@ namespace LOFAR
         size_t block = input->block;
         unsigned subband = input->subband;
 
-        if (subband == 0) {
-          LOG_INFO_STR("[block " << block << "] Processing start");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Processing start");
         }
 
         // Also fetch an output object to store results
@@ -296,8 +337,8 @@ namespace LOFAR
         workQueue.inputPool.free.append(input);
         ASSERT(!input);
 
-        if (subband == 0) {
-          LOG_DEBUG_STR("[block " << block << "] Forwarded output to post processing");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_DEBUG_STR("[block " << block << ", subband " << subband << "] Forwarded output to post processing");
         }
       }
     }
@@ -307,13 +348,17 @@ namespace LOFAR
     {
       SmartPtr<CorrelatedDataHostBuffer> output;
 
+      size_t nrBlocksForwarded = 0;
+      size_t nrBlocksDropped = 0;
+      time_t lastLogTime = 0;
+
       // Keep fetching output objects until end-of-output
       while ((output = workQueue.outputPool.filled.remove()) != NULL) {
         size_t block = output->block;
         unsigned subband = output->subband;
 
-        if (subband == 0) {
-          LOG_INFO_STR("[block " << block << "] Post processing start");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Post processing start");
         }
 
         workQueue.timers["CPU - postprocess"]->start();
@@ -327,10 +372,13 @@ namespace LOFAR
         output->setSequenceNumber(block);
 
         if (!subbandPool[subband].bequeue->append(output)) {
-          LOG_WARN_STR("[block " << block << "] Dropped for subband " << subband);
+          nrBlocksDropped++;
+          //LOG_WARN_STR("[block " << block << "] Dropped for subband " << subband);
 
           // Give back to queue
           workQueue.outputPool.free.append(output);
+        } else {
+          nrBlocksForwarded++;
         }
 
         // Allow next block to be written
@@ -338,8 +386,14 @@ namespace LOFAR
 
         ASSERT(!output);
 
-        if (subband == 0) {
-          LOG_DEBUG_STR("[block " << block << "] Forwarded output to writer");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_DEBUG_STR("[block " << block << ", subband " << subband << "] Forwarded output to writer");
+        }
+
+        if (time(0) != lastLogTime) {
+          lastLogTime = time(0);
+
+          LOG_INFO_STR("Forwarded " << nrBlocksForwarded << " blocks, dropped " << nrBlocksDropped << " blocks");
         }
       }
     }
@@ -376,8 +430,8 @@ namespace LOFAR
 
         CorrelatorWorkQueue &queue = output->queue; // cache queue object, because `output' will be destroyed
 
-        if (subband == 0) {
-          LOG_INFO_STR("[block " << block << "] Writing start");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Writing start");
         }
 
         // Write block to disk 
@@ -394,8 +448,8 @@ namespace LOFAR
 
         ASSERT(!output);
 
-        if (subband == 0) {
-          LOG_INFO_STR("[block " << block << "] Done");
+        if (subband == 0 || subband == ps.nrSubbands() - 1) {
+          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Done");
         }
       }
     }

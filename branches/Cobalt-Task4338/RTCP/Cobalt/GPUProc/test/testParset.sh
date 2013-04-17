@@ -21,12 +21,12 @@ do
       ;;
 
     \?)
-      echo "Invalid option: -$OPTARG"
+      echo "Invalid option: -$OPTARG" >&2
       exit 1
       ;;
 
     :)
-      echo "Option needs argument: -$OPTARG"
+      echo "Option needs argument: -$OPTARG" >&2
       exit 1
       ;;
   esac
@@ -50,7 +50,7 @@ haveGPU || exit 3
 # Check for input files
 if [ ! -e /var/scratch/mol/test_sets ]
 then
-  echo "No input files found -- aborting test."
+  echo "No input files found -- aborting test." >&2
   exit 3
 fi
 
@@ -79,7 +79,7 @@ function parse_logs
 
   if [ "$GPUUSAGE" -lt $GPUEFFICIENCY ]
   then
-    echo "ERROR: GPU usage < $GPUEFFICIENCY% -- considering test a failure."
+    echo "ERROR: GPU usage < $GPUEFFICIENCY% -- considering test a failure." >&2
     return 1
   fi
 
@@ -95,9 +95,9 @@ function parse_logs
   echo "Global 20" >> rtcp.debug &&
 
   # run correlator -- without profiling
-  $BINDIR/rtcp $PARSET > performance_normal.txt 2>&1 &&
+  mpirun -H localhost -np 3 $BINDIR/rtcp $PARSET > performance_normal.txt 2>&1 &&
   # run correlator -- with profiling
-  $BINDIR/rtcp -p $PARSET > performance_profiled.txt 2>&1 &&
+  mpirun -H localhost -np 3 $BINDIR/rtcp -p $PARSET > performance_profiled.txt 2>&1 &&
 
   # compare output
   if [ "x" != "x$REFDIR" ]

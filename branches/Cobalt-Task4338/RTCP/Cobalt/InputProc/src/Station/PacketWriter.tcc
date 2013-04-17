@@ -92,8 +92,8 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
     if (wrap > 0) {
       T *dst2 = &buffer.beamlets[firstBeamlet + b][0];
 
-      memcpy(dst1, beamlets, wrap        * sizeof(T));
-      memcpy(dst2, beamlets, to_offset   * sizeof(T));
+      memcpy(dst1, beamlets,        wrap        * sizeof(T));
+      memcpy(dst2, beamlets + wrap, to_offset   * sizeof(T));
     } else {
       memcpy(dst1, beamlets, nrTimeslots * sizeof(T));
     }
