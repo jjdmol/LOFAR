@@ -172,7 +172,7 @@ namespace LOFAR {
     SmartPtr<typename BlockReader<T>::LockedBlock> BlockReader<T>::block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
     {
       ASSERT( to > from );
-      ASSERT( to - from < buffer.nrSamples );
+      ASSERTSTR( to - from + nrHistorySamples < buffer.nrSamples, "Requested to read block " << from << " to " << to << ", which results in " << (to - from + nrHistorySamples) << " samples, but buffer is only " << buffer.nrSamples << " wide" );
 
       // wait for block start (but only in real-time mode)
       if (!buffer.sync) {
