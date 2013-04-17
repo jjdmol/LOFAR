@@ -21,12 +21,12 @@ do
       ;;
 
     \?)
-      echo "Invalid option: -$OPTARG"
+      echo "Invalid option: -$OPTARG" >&2
       exit 1
       ;;
 
     :)
-      echo "Option needs argument: -$OPTARG"
+      echo "Option needs argument: -$OPTARG" >&2
       exit 1
       ;;
   esac
@@ -50,7 +50,7 @@ haveGPU || exit 3
 # Check for input files
 if [ ! -e /var/scratch/mol/test_sets ]
 then
-  echo "No input files found -- aborting test."
+  echo "No input files found -- aborting test." >&2
   exit 3
 fi
 
@@ -79,7 +79,7 @@ function parse_logs
 
   if [ "$GPUUSAGE" -lt $GPUEFFICIENCY ]
   then
-    echo "ERROR: GPU usage < $GPUEFFICIENCY% -- considering test a failure."
+    echo "ERROR: GPU usage < $GPUEFFICIENCY% -- considering test a failure." >&2
     return 1
   fi
 
