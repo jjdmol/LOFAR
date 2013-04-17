@@ -24,7 +24,9 @@
 #include <string>
 #include <vector>
 
+#include <Stream/Stream.h>
 #include <CoInterface/RSPTimeStamp.h>
+#include <CoInterface/SmartPtr.h>
 
 #include <InputProc/RSPBoards.h>
 #include <InputProc/Buffer/BufferSettings.h>
@@ -42,11 +44,11 @@ namespace LOFAR
     class Generator : public RSPBoards
     {
     public:
-      Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors, PacketFactory &packetFactory );
+      Generator( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &outputStreams, PacketFactory &packetFactory );
 
     protected:
       const BufferSettings settings;
-      const std::vector<std::string> streamDescriptors;
+      std::vector<Stream *> outputStreams;
       PacketFactory &packetFactory;
 
       std::vector<size_t> nrSent;

@@ -22,6 +22,7 @@
 #define LOFAR_GPUPROC_CORRELATOR_PIPELINE_H
 
 #include <CoInterface/Parset.h>
+#include <CoInterface/SlidingPointer.h>
 
 #include <GPUProc/opencl-incl.h>
 #include <GPUProc/BestEffortQueue.h>
@@ -49,8 +50,8 @@ namespace LOFAR
       // per thread/station start up the input create 2 WorkQueue for each available GPU
       void        doWork();
 
-      // Read for a subband the data from the station steams, and put in shared memory
-      void        receiveSubbandSamples(CorrelatorWorkQueue &workQueue, size_t block, unsigned subband);
+      // for each block, read all subbands from all stations, and divide the work over the workQueues
+      template<typename SampleT> void receiveInput( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
 
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void        doWorkQueue(CorrelatorWorkQueue &workQueue);
