@@ -1,0 +1,21 @@
+## -*- CMake -*-
+##
+## Host specific variants file. 
+## Settings in this file extend or override those in the global variants file.
+##
+## $Id$
+
+option(USE_LOG4CPLUS "Use Log4Cplus" OFF)
+option(USE_OPENMP    "Use OpenMP"    ON)
+option(USE_MPI       "Use MPI"       ON)
+
+set(ENV{OPENCL_INCLUDE} /cm/shared/apps/cuda41/toolkit/4.1.28/include)
+set(CASACORE_ROOT_DIR /home/mol/root)
+set(LIBSSH2_ROOT_DIR /home/mol/root)
+set(DAL_ROOT_DIR /home/mol/root)
+set(UNITTEST++_ROOT_DIR /cm/shared/apps/UnitTest++)
+
+# The file /usr/lib64/boost/BoostConfig.cmake in the package boost-devel-1.41
+# that ships with CentOS 6.3 seems to be broken. Setting Boost_NO_BOOST_CMAKE
+# will ignore it.
+set(Boost_NO_BOOST_CMAKE ON)
