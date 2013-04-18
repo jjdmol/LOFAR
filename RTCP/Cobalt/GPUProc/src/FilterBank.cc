@@ -129,7 +129,7 @@ namespace LOFAR
                    q9 = 3.92377e-3;
 
       const double k1 = 3.75;
-      double ax = abs(x);
+      double ax = fabs(x);
 
       double y = 0, result = 0;
 
