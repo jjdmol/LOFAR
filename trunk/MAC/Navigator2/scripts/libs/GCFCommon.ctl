@@ -251,22 +251,26 @@ updateChildState(string dp1, int state, string dp2, bool invalid) {
 updateSelfState(string dp1, int state, 
                 string dp2, string msg,
                 string dp3, bool invalid) {
-  	string SymbolCol;
+  string SymbolCol;
 
-  	if (invalid) {
-          if (dp1 == "") {
-       	    SymbolCol = "Lofar_dpOffline";
-          } else {
-       	    SymbolCol = "Lofar_invalid";
-          }
-  	}
-  	else {
-      	  SymbolCol = getStateColor(state);
-  	}
-  	setValue("selfState.light", "backCol", SymbolCol);
+  if (invalid) {
+    if (dp1 == "") {
+      SymbolCol = "Lofar_dpOffline";
+    } else {
+      SymbolCol = "Lofar_invalid";
+    }
+  }
+  else {
+    SymbolCol = getStateColor(state);
+  }
+  setValue("selfState.light", "backCol", SymbolCol);
 
-   string tooltip = "Last status message: "+msg;
-   setValue("light","toolTipText",tooltip);
+  // get the old tooltip because it contains the baseDP
+  string tooltip="";
+  getValue("light","toolTipText",tooltip);
+  dyn_string aS = strsplit(tooltip," ");
+  tooltip =aS[1] + " <br>Last status message: "+msg;
+  setValue("light","toolTipText",tooltip);
 }
 
 bool waitInitProcess(string procName) {

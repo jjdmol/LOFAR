@@ -4,9 +4,6 @@ LANG:1 16 Lofar Self State
 PANEL,-1 -1 151 141 N "_3DFace" 0
 "main()
 {  
-  //get the baseDP
-  getValue(\"light\",\"toolTipText\",baseDP);
-
 }" 0
  E E "main()
 {
@@ -18,6 +15,11 @@ E "#uses \"navPanel.ctl\"
 string baseDP=\"\";
 
 void rClick() {
+  //get the baseDP
+  string tooltip = \"\";
+  getValue(\"light\",\"toolTipText\",tooltip);
+  dyn_string aS = strsplit(tooltip,\" \");
+  baseDP = aS[1];
   navPanel_statePopup(baseDP);
 }" 0
  2
