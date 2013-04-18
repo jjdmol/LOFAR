@@ -1,4 +1,4 @@
-//# createProgram.cu
+//# createProgram.cc
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -48,7 +48,7 @@ namespace LOFAR
   {
     using namespace std;
 
-    ModuleShPtr createProgram(const Parset &ps, cu::Context &context, vector<string> &targets, const char *sources)
+    gpu::Module::Ptr createProgram(const Parset &ps, gpu::Context &context, vector<string> &targets, const string &source)
     {
       string cudaCompiler(CUDA_TOOLKIT_ROOT_DIR);
       if (!cudaCompiler.empty()) {
@@ -104,6 +104,7 @@ namespace LOFAR
       }
 
       // Derive output filename from input filename by replacing the extension.
+//TODO: hook up inputFilename from source arg
       string outputFilename(inputFilename);
       size_t idx = outputFilename.find_last_of('.');
       if (idx != string::npos) {
@@ -181,10 +182,10 @@ namespace LOFAR
       optionValues.push_back(&fallback);
 #endif
 
-      ModuleShPtr module;
+      gpu::Module::Ptr module;
       //CUModule module(buf, options, optionValues);
       try {
-        module = new cu::Module(buf, options, optionValues);
+        module = new gpu::Module(buf, options, optionValues);
         if (infoLogSize > infoLog.size()) { // zero-term log and guard against bogus JIT opt val output
           infoLogSize = infoLog.size();
         }

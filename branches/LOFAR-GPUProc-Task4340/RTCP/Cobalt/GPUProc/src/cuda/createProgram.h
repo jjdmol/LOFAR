@@ -22,7 +22,6 @@
 #define LOFAR_GPUPROC_CREATE_PROGRAM_H
 
 #include <vector>
-#include <boost/shared_ptr.hpp>
 #include <cuda.h>
 
 #include <CoInterface/Parset.h>
@@ -34,9 +33,7 @@ namespace LOFAR
   namespace Cobalt
   {
     //cl::Program createProgram(const Parset &ps, cl::Context &context, std::vector<cl::Device> &devices, const char *sources);
-    typedef boost::shared_ptr<cu::Module> ModuleShPtr;
-
-    ModuleShPtr createProgram(const Parset &ps, cu::Context &context, std::vector<std::string> &targets, const char *sources);
+    gpu::Module::Ptr createProgram(const Parset &ps, gpu::Context &context, std::vector<std::string> &targets, const string &source);
   }
 }
 

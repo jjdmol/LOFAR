@@ -23,6 +23,10 @@
 
 #include <string>
 #include <exception>
+
+// unique_ptr would be more fitting, but we don't want to require C++11, so use
+// shared_ptr instead, which also corresponds well to the OpenCL/C++ wrapper.
+#include <boost/shared_ptr.hpp>
 #include <cuda.h>
 
 namespace LOFAR {
@@ -199,6 +203,8 @@ namespace cu {
   class Module
   {
     public:
+      typedef boost::shared_ptr<Module> Ptr;
+
       Module(const std::string &file_name)
       {
 	checkCudaCall(cuModuleLoad(&_module, file_name.c_str()));
@@ -209,7 +215,7 @@ namespace cu {
 	checkCudaCall(cuModuleLoadData(&_module, data));
       }
 
-      Module(const void *data, std::vector<CUjit_option>& options, std::vector<void*> optionValues)
+      Module(const void *data, std::vector<CUjit_option> &options, std::vector<void*> &optionValues)
       {
         checkCudaCall(cuModuleLoadDataEx(&_module, data, options.size(), &options[0], &optionValues[0]));
       }
@@ -219,13 +225,20 @@ namespace cu {
 	checkCudaCall(cuModuleUnload(_module));
       }
 
+#if 0 // TODO: elsewhere too in this file
       operator CUmodule ()
       {
 	return _module;
       }
+#endif
 
     private:
       CUmodule _module;
+
+      // do not copy, use ShPtr
+//TODO: idem for other cuwrapper classes
+      Module(const Module& module);
+      Module& operator=(const Module& rhs);
   };
 
 
