@@ -121,16 +121,17 @@ void writeParm (const Matrix<double>& val, const String& name,
 
 Matrix<double> getAP (const Matrix<double>& ampl,
                       const Matrix<double>& phase,
+                      bool phase0,
                       double perc, long skipLast)
 {
   // Get the median in time for each frequency.
   ASSERT (ampl.shape() == phase.shape());
   const IPosition& shp = ampl.shape();
   int nf = shp[0];
+  // Optionally ignore the last value.
   int nt = std::max (1L, shp[1] - skipLast);
   Matrix<double> result(nf,2);
   for (int i=0; i<nf; ++i) {
-    // Ignore the last value.
     Matrix<double> aline = ampl(IPosition(2,i,0), IPosition(2,i,nt-1));
     double med = median(aline);
     if (abs(aline(i,nt-1) - med) > perc/100*med) {
@@ -138,14 +139,14 @@ Matrix<double> getAP (const Matrix<double>& ampl,
                     << perc << "% from median " << med);
     }
     result(i,0) = med;
-    // Use one but last phase value.
-    result(i,1) = phase(i, nt-1);
+    result(i,1) = (phase0  ?  0 : phase(i, nt-1));
   }
   return result;
 }
 
 void processRI (const Record& realValues, const Record& imagValues,
-                double perc, int skipLast, ParmDB& parmdb, parmValType type)
+                double perc, int skipLast, bool phase0,
+                ParmDB& parmdb, parmValType type)
 {
   for (uInt i=0; i<realValues.nfields(); ++i) {
     String name = realValues.name(i);
@@ -159,7 +160,7 @@ void processRI (const Record& realValues, const Record& imagValues,
     // Get the median ampl and last phase per frequency.
     Matrix<double> ap (getAP (sqrt(real*real + imag*imag),
                               atan2(real, imag),
-                              perc, skipLast));
+                              phase0, perc, skipLast));
     // Write the results as real/imag or ampl/phase.
     Matrix<double> medAmpl   (ap(IPosition(2,0,0), IPosition(2,nf-1,0)));
     Matrix<double> lastPhase (ap(IPosition(2,0,1), IPosition(2,nf-1,1)));
@@ -183,7 +184,8 @@ void processRI (const Record& realValues, const Record& imagValues,
 }
 
 void processAP (const Record& amplValues, const Record& phaseValues,
-                double perc, int skipLast, ParmDB& parmdb, parmValType type)
+                double perc, int skipLast, bool phase0,
+                ParmDB& parmdb, parmValType type)
 {
   for (uInt i=0; i<amplValues.nfields(); ++i) {
     String name = amplValues.name(i);
@@ -195,7 +197,7 @@ void processAP (const Record& amplValues, const Record& phaseValues,
     Matrix<double> phase (phases.asArrayDouble("values"));
     int nf = ampl.shape()[0];
     // Get the median ampl and last phase per frequency.
-    Matrix<double> ap (getAP (ampl, phase, perc, skipLast));
+    Matrix<double> ap (getAP (ampl, phase, phase0, perc, skipLast));
     // Write the results as ampl/phase or real/imag.
     Matrix<double> medAmpl   (ap(IPosition(2,0,0), IPosition(2,nf-1,0)));
     Matrix<double> lastPhase (ap(IPosition(2,0,1), IPosition(2,nf-1,1)));
@@ -218,7 +220,8 @@ void processAP (const Record& amplValues, const Record& phaseValues,
 }
 
 void doIt (const String& nameIn, const String& nameOut,
-           bool append, int skipLast, float amplPerc, parmValType type)
+           bool append, int skipLast, bool phase0,
+           float amplPerc, parmValType type)
 {
   // Open the ParmDBs.
   ParmFacade pdbIn (nameIn);
@@ -234,7 +237,7 @@ void doIt (const String& nameIn, const String& nameOut,
                                            range[2], range[3]);
   ASSERT (realValues.size() == imagValues.size());
   if (realValues.size() > 0) {
-    processRI (realValues, imagValues, amplPerc, skipLast, pdbOut, type);
+    processRI (realValues, imagValues, amplPerc, skipLast, phase0, pdbOut, type);
   } else {
     Record amplValues  = pdbIn.getValuesGrid ("Gain:*:Ampl:*",
                                               range[0], range[1],
@@ -245,7 +248,7 @@ void doIt (const String& nameIn, const String& nameOut,
     ASSERT (amplValues.size() == phaseValues.size());
     ASSERTSTR  (amplValues.size() > 0, "real/imag nor amplitude/phase "
                 "parameters found in " << nameIn);
-    processAP (amplValues, phaseValues, amplPerc, skipLast, pdbOut, type);
+    processAP (amplValues, phaseValues, amplPerc, skipLast, phase0, pdbOut, type);
   }
 }
 
@@ -265,6 +268,7 @@ int main (int argc, char *argv[])
                   "keep=same as input, polar=ampl/phase, complex=real/imag",
                   "string");
     input.create ("skiplast", "True", "Ignore last time solution?", "bool");
+    input.create ("zerophase", "False", "Make the phase zero?", "bool");
     input.create ("amplperc", "10.",
                    "Print warning if amplitude deviates more than this "
                    "percentage from the median amplitude",
@@ -273,6 +277,7 @@ int main (int argc, char *argv[])
     String nameIn   = input.getString ("in");
     String nameOut  = input.getString ("out");
     bool   append   = input.getBool   ("append");
+    bool   phase0   = input.getBool   ("zerophase");
     int    skipLast = (input.getBool  ("skiplast")  ?  1 : 0);
     Double amplPerc = input.getDouble ("amplperc");
     String type     = input.getString ("type");
@@ -286,7 +291,7 @@ int main (int argc, char *argv[])
       throw AipsError("parameter type must have value KEEP, POLAR, or COMPLEX");
     }
     // Do the export.
-    doIt (nameIn, nameOut, append, skipLast, amplPerc, parmType);
+    doIt (nameIn, nameOut, append, skipLast, phase0, amplPerc, parmType);
   } catch (LOFAR::Exception& ex) {
     cerr << "Caught LOFAR exception: " << ex << endl;
     return 1;
