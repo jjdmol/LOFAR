@@ -30,8 +30,6 @@ if(UNITTEST++_FOUND)
 endif()
 
 if(USE_CUDA)
-  cuda_add_executable(t_cuda_complex complex_kernel.cu)  
-  add_test(t_cuda_complex t_cuda_complex)
   add_subdirectory(cuda)
 endif()
 
