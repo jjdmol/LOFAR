@@ -31,4 +31,5 @@ install(PROGRAMS
 
 install(FILES
   swlevel.conf
+  swlevel_int.conf
   DESTINATION etc)

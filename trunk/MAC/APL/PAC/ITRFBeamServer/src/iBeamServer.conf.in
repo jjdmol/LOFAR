@@ -14,7 +14,7 @@ BeamServer.EnableStaticCalibration = 1
 # normal HBAUpdateInterval >= 10, for testing use 
 # (4, 6 or 8) secs. Note: 4 sec is absolute minimum!
 #
-BeamServer.HBAUpdateInterval= 10	# >=10, normally 300
+BeamServer.HBAUpdateInterval= 180	# >=10, normally 300
 BeamServer.UpdateInterval   = 1		# should be 1 for normal operation
 BeamServer.ComputeInterval  = 1		# can be 1 for ITRFBeamserver, was 10 for old BeamServer
 
