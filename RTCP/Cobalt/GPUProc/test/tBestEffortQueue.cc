@@ -23,8 +23,6 @@
 #include <unistd.h>
 
 #include <Common/LofarLogger.h>
-
-#include <GPUProc/opencl-incl.h>
 #include <GPUProc/BestEffortQueue.h>
 
 using namespace LOFAR;
