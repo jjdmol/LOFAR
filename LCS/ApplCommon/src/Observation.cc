@@ -403,91 +403,95 @@ Observation::Observation(const ParameterSet*		aParSet,
       isLocations.clear();
     }
 
-    // chose the right coherent stokes set
-    if(aParSet->getString(olapprefix+"CNProc_CoherentStokes.which", "") == "XXYY") {
-      csFiles = bfFiles;
-      csLocations = bfLocations;
-    }
+    if (!csFiles.empty() || !isFiles.empty()) {
+      // ONLY Merge lists if not already done so (f.e. by RTCP/Run/LOFAR/Parset.py)
 
-    // erase the target list
-    bfFiles.clear();
-    bfLocations.clear();
+      // chose the right coherent stokes set
+      if(aParSet->getString(olapprefix+"CNProc_CoherentStokes.which", "") == "XXYY") {
+	csFiles = bfFiles;
+	csLocations = bfLocations;
+      }
 
-    // set indices to scan the coherent and incoherent lists
-    size_t coherentIdx = 0;
-    size_t incoherentIdx = 0;
+      // erase the target list
+      bfFiles.clear();
+      bfLocations.clear();
 
-    // iterate over the beams and tied array beams to reconstruct the
-    // Beamformed lists.
-    if (csFiles.size() > 0 || isFiles.size() > 0 ) {
-      for (unsigned b = 0; b < beams.size(); ++b) {
-        Beam &beam = beams[b];
+      // set indices to scan the coherent and incoherent lists
+      size_t coherentIdx = 0;
+      size_t incoherentIdx = 0;
 
-        // skip duplicate beams in dual mode
-		    if (beam.name.find("_1") != string::npos)
-            continue;
+      // iterate over the beams and tied array beams to reconstruct the
+      // Beamformed lists.
+      if (csFiles.size() > 0 || isFiles.size() > 0 ) {
+	for (unsigned b = 0; b < beams.size(); ++b) {
+	  Beam &beam = beams[b];
 
-        size_t nrSubbands = beam.subbands.size();
+	  // skip duplicate beams in dual mode
+		      if (beam.name.find("_1") != string::npos)
+	      continue;
 
-        // number of files we'll create per TAB
-        size_t nrCoherentFiles = (int)ceil(1.0 * nrSubbands / nrCoherentSubbandsPerFile) * nrCoherentStokes;
-        size_t nrIncoherentFiles = (int)ceil(1.0 * nrSubbands / nrIncoherentSubbandsPerFile) * nrIncoherentStokes;
+	  size_t nrSubbands = beam.subbands.size();
 
-        LOG_DEBUG_STR("beam " << b << " has " << nrCoherentFiles << " files/cs and " << nrIncoherentFiles << " files/is");
+	  // number of files we'll create per TAB
+	  size_t nrCoherentFiles = (int)ceil(1.0 * nrSubbands / nrCoherentSubbandsPerFile) * nrCoherentStokes;
+	  size_t nrIncoherentFiles = (int)ceil(1.0 * nrSubbands / nrIncoherentSubbandsPerFile) * nrIncoherentStokes;
 
-        // process in defined order: 1. manual 2. rings 3. fly's eye
+	  LOG_DEBUG_STR("beam " << b << " has " << nrCoherentFiles << " files/cs and " << nrIncoherentFiles << " files/is");
 
-        // manual TABs
-        LOG_DEBUG_STR("beam " << b << " has " << beam.TABs.size() << " manual TABs");
-        for (unsigned t = 0; t < beam.TABs.size(); ++t) {
-          TiedArrayBeam &tab = beam.TABs[t];
+	  // process in defined order: 1. manual 2. rings 3. fly's eye
 
-          if (tab.coherent) {
-            for (unsigned f = 0; f < nrCoherentFiles; ++f) {
-              bfFiles.push_back(csFiles[coherentIdx]);
-              bfLocations.push_back(csLocations[coherentIdx]);
-              coherentIdx++;
-            }
-          } else {
-            for (unsigned f = 0; f < nrIncoherentFiles; ++f) {
-              bfFiles.push_back(isFiles[incoherentIdx]);
-              bfLocations.push_back(isLocations[incoherentIdx]);
-              incoherentIdx++;
-            }
-          }
+	  // manual TABs
+	  LOG_DEBUG_STR("beam " << b << " has " << beam.TABs.size() << " manual TABs");
+	  for (unsigned t = 0; t < beam.TABs.size(); ++t) {
+	    TiedArrayBeam &tab = beam.TABs[t];
 
-        }
+	    if (tab.coherent) {
+	      for (unsigned f = 0; f < nrCoherentFiles; ++f) {
+		bfFiles.push_back(csFiles[coherentIdx]);
+		bfLocations.push_back(csLocations[coherentIdx]);
+		coherentIdx++;
+	      }
+	    } else {
+	      for (unsigned f = 0; f < nrIncoherentFiles; ++f) {
+		bfFiles.push_back(isFiles[incoherentIdx]);
+		bfLocations.push_back(isLocations[incoherentIdx]);
+		incoherentIdx++;
+	      }
+	    }
 
-        // ring TABs
-        if (beam.nrTABrings > 0) {
-          // for (n-1) rings, we get 3n(n-1) + 1 tabs
-          size_t n = beam.nrTABrings + 1;
-          size_t nrRingTABs = 3 * n * (n-1) + 1;
+	  }
 
-          LOG_DEBUG_STR("beam " << b << " has " << nrRingTABs << " ring TABs");
+	  // ring TABs
+	  if (beam.nrTABrings > 0) {
+	    // for (n-1) rings, we get 3n(n-1) + 1 tabs
+	    size_t n = beam.nrTABrings + 1;
+	    size_t nrRingTABs = 3 * n * (n-1) + 1;
 
-          for (unsigned t = 0; t < nrRingTABs; ++t) {
-            // ring TABs are always coherent
-            for (unsigned f = 0; f < nrCoherentFiles; ++f) {
-              bfFiles.push_back(csFiles[coherentIdx]);
-              bfLocations.push_back(csLocations[coherentIdx]);
-              coherentIdx++;
-            }
-          }
-        }
+	    LOG_DEBUG_STR("beam " << b << " has " << nrRingTABs << " ring TABs");
 
-        // fly's eye
-        if (flysEye) {
-          LOG_DEBUG_STR("beam " << b << " has " << nrStations << " fly's eye TABs");
-          for (unsigned t = 0; t < nrStations; ++t) {
-            // fly's eye TABs are always coherent
-            for (unsigned f = 0; f < nrCoherentFiles; ++f) {
-              bfFiles.push_back(csFiles[coherentIdx]);
-              bfLocations.push_back(csLocations[coherentIdx]);
-              coherentIdx++;
-            }
-          }
-        }
+	    for (unsigned t = 0; t < nrRingTABs; ++t) {
+	      // ring TABs are always coherent
+	      for (unsigned f = 0; f < nrCoherentFiles; ++f) {
+		bfFiles.push_back(csFiles[coherentIdx]);
+		bfLocations.push_back(csLocations[coherentIdx]);
+		coherentIdx++;
+	      }
+	    }
+	  }
+
+	  // fly's eye
+	  if (flysEye) {
+	    LOG_DEBUG_STR("beam " << b << " has " << nrStations << " fly's eye TABs");
+	    for (unsigned t = 0; t < nrStations; ++t) {
+	      // fly's eye TABs are always coherent
+	      for (unsigned f = 0; f < nrCoherentFiles; ++f) {
+		bfFiles.push_back(csFiles[coherentIdx]);
+		bfLocations.push_back(csLocations[coherentIdx]);
+		coherentIdx++;
+	      }
+	    }
+	  }
+	}
       }
     }
 
