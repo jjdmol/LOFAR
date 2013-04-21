@@ -99,7 +99,7 @@ namespace LOFAR
 
     void PacketsToBuffer::logStatistics( PacketReader &reader, const struct RSP &packet )
     {
-      if (packet.header.timestamp < lastlog_timestamp + LOG_INTERVAL) {
+      if (packet.header.timestamp > lastlog_timestamp + LOG_INTERVAL) {
         lastlog_timestamp = packet.header.timestamp;
 
         reader.logStatistics();
