@@ -19,6 +19,8 @@ lofar_add_bin_program(DummyStorage DummyStorage.cc)
 lofar_add_test(tStorageProcesses tStorageProcesses.cc)
 #lofar_add_test(tDelayCompensation tDelayCompensation.cc)
 lofar_add_test(RTCP_UnitTest RTCP_UnitTest.cc UnitTest.cc)
+lofar_add_test(FIR_FilterTest kernels/FIR_FilterTest.cc)
+
 
 lofar_find_package(UnitTest++)
 if(UNITTEST++_FOUND)
@@ -30,4 +32,5 @@ endif()
 if(USE_CUDA)
   add_subdirectory(cuda)
 endif()
+
 
