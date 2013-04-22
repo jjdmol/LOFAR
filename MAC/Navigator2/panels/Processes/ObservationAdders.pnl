@@ -30,10 +30,10 @@ void prepareProcesses() {
     osnr  = substr(adders[i],strpos(adders[i],\"OSIONode\")+8,2);
     anr  = substr(adders[i],strpos(adders[i],\"Adder\")+5,2);
     if (osnr != oldNr) {
-      dynAppend(result,connectTo+\",IONode\"+osnr+\",\"+CEPDBName+\"LOFAR_ObsSW_OSIOnode\"+osnr);    
+      dynAppend(result,connectTo+\",IONode\"+osnr+\",\"+CEPDBName+\"LOFAR_ObsSW_OSIONode\"+osnr);    
       oldNr=osnr;
     }
-    dynAppend(result,CEPDBName+\"LOFAR_ObsSW_OSIOnode\"+osnr+\",Adder\"+anr+\",\"+adders[i]);    
+    dynAppend(result,CEPDBName+\"LOFAR_ObsSW_OSIONode\"+osnr+\",_Adder\"+anr+\",\"+adders[i]);    
     dynAppend(g_processesList,adders[i]);
   }  
   
@@ -124,7 +124,7 @@ void redraw() {
     } else {
       barColor = \"_3DFace\";
     }
-    ARefNames[ref]=\"IB\"+(ref);
+    ARefNames[ref]=\"A\"+(ref);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                       \"\",                              // Name of this panel
