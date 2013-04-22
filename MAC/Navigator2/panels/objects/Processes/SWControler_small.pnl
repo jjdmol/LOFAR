@@ -43,7 +43,7 @@ private void observationChanged(string dp1, dyn_string observations,
       if ($name != \"PythonControl\" && navFunct_isObservation(observations[i])) {
         firstObservation = observations[i];
         exit;
-      } else if ($name == \"PythonControl\" && navFunct_isObservation[i]) {
+      } else if ($name == \"PythonControl\" && navFunct_isObservation(observations[i])) {
         firstObservation = observations[i];
         exit;
       } else {
