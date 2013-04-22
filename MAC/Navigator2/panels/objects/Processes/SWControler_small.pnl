@@ -36,7 +36,7 @@ PANEL,-1 -1 123 95 N "_3DFace" 2
 private void observationChanged(string dp1, dyn_string observations,
                                 string dp2, bool invalid) {
 
-  fisrtObservation = \"\";
+  firstObservation = \"\";
   // for now the object will only show the controller for the first observation
   if (dynlen(observations) >= 1) {
     for (int i = 1; i <= dynlen(observations); i++)  {
