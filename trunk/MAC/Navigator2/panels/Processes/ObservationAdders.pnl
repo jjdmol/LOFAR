@@ -23,15 +23,17 @@ void prepareProcesses() {
   string connectTo=MainDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observationName);
   dynAppend(result,\",\"+observationName+\",\"+connectTo);    
 
-  string nr=\"\";
+  string osnr=\"\";
+  string anr=\"\";
   string oldNr=\"\";
   for  (int i=1; i<= dynlen(adders); i++) {
-    nr  = substr(adders[i],strpos(adders[i],\"PSIONode\")+8,2);
-    if (nr != oldNr) {
-      dynAppend(result,connectTo+\",IONode\"+nr+\",\"+CEPDBName+\"LOFAR_ObsSW_OSIOnode\"+nr);    
-      oldNr=nr;
+    osnr  = substr(adders[i],strpos(adders[i],\"OSIONode\")+8,2);
+    anr  = substr(adders[i],strpos(adders[i],\"Adder\")+5,2);
+    if (osnr != oldNr) {
+      dynAppend(result,connectTo+\",IONode\"+osnr+\",\"+CEPDBName+\"LOFAR_ObsSW_OSIOnode\"+osnr);    
+      oldNr=osnr;
     }
-    dynAppend(result,CEPDBName+\"LOFAR_ObsSW_OSIOnode\"+nr+\",Adder,\"+adders[i]);    
+    dynAppend(result,CEPDBName+\"LOFAR_ObsSW_OSIOnode\"+osnr+\",Adder\"+anr+\",\"+adders[i]);    
     dynAppend(g_processesList,adders[i]);
   }  
   
@@ -84,7 +86,6 @@ void addAdders() {
 
   // get all the Adders used by this observation
   adders = navFunct_getAddersForObservation(observationName);
-
 }" 0
  E E E E 1 -1 -1 0  0 0
 ""0  1

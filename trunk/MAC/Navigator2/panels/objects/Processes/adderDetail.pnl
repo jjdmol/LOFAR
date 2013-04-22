@@ -2,8 +2,8 @@ V 11
 1
 LANG:1 0 
 PANEL,-1 -1 1300 66 N "_3DFace" 2
+"$adder"
 "$barColor"
-"$inputBuffer"
 "main()
 {
 
@@ -12,109 +12,81 @@ PANEL,-1 -1 1300 66 N "_3DFace" 2
   setValue(\"bar\",\"backCol\",barColor);
   
   baseDP         = g_currentDatapoint;
-  inputBufferDP  = $inputBuffer;
+  adderDP  = $adder;
     
   // connect to the inputBuffer values  
   // check if the requiered datapoint for this view are enabled and accessible
-  if (dpExists(inputBufferDP + \".stationName\")) {
-     if (!dpConnect(\"updateBuffer\", inputBufferDP + \".stationName\",
-                                 inputBufferDP + \".late\",
-	                                inputBufferDP + \".IOTime\",
-	                                inputBufferDP + \".stream0.blocksIn\",
-	                                inputBufferDP + \".stream0.percBad\",
-	                                inputBufferDP + \".stream0.rejected\", 
-	                                inputBufferDP + \".stream1.blocksIn\",
-   	                             inputBufferDP + \".stream1.percBad\",
-	                                inputBufferDP + \".stream1.rejected\", 
-	                                inputBufferDP + \".stream2.blocksIn\",
-	                                inputBufferDP + \".stream2.percBad\",
-	                                inputBufferDP + \".stream2.rejected\", 
-	                                inputBufferDP + \".stream3.blocksIn\",
-	                                inputBufferDP + \".stream3.percBad\",
-                                 inputBufferDP + \".stream3.rejected\", 
-                                 inputBufferDP + \".status.state:_online.._invalid\") == -1) {
-      LOG_ERROR(\"inputBuffer.pnl:updateTrigger|Couldn't connect to: \"+inputBufferDP+\" \"+getLastError());
+  if (dpExists(adderDP + \".status.state\")) {
+     if (!dpConnect(\"updateAdder\", adderDP + \".dropping\",
+                                 adderDP + \".dropped\",
+	                                adderDP + \".dataProductType\",
+	                                adderDP + \".fileName\",
+	                                adderDP + \".locusNode\",
+	                                adderDP + \".directory\", 
+	                                adderDP + \".observationName\",
+   	                             adderDP + \".dataProduct\",
+	                                adderDP + \".writer\", 
+                                 adderDP + \".status.state:_online.._invalid\") == -1) {
+      LOG_ERROR(\"adderDetail.pnl:updateTrigger|Couldn't connect to: \"+adderDP+\" \"+getLastError());
     }
   } else {
-    LOG_ERROR(\"inputBuffer.pnl:updateTrigger|Couldn't find DP to connect to: \"+inputBufferDP);
-    setValue(\"stationName\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"late\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"IOTime\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream0_blocksIn\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream0_percBad\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream0_rejected\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream1_blocksIn\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream1_percBad\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream1_rejected\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream2_blocksIn\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream2_percBad\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream2_rejected\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream3_blocksIn\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream3_percBad\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"stream3_rejected\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    LOG_ERROR(\"adderDetail.pnl:updateTrigger|Couldn't find DP to connect to: \"+adderDP);
+    setValue(\"dropping\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"dropped\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"dataProductType\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"fileName\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"locusNode\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"directory\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"observationName\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"dataProduct\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"writer\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }    
     
   // pass baseDP to selfstate Object to work with
-  setValue(\"selfState.light\",\"toolTipText\",inputBufferDP);
+  setValue(\"selfState.light\",\"toolTipText\",adderDP);
  
 
   // connect for selfUpdates
-  showSelfState(inputBufferDP);
+  showSelfState(adderDP);
 }
 
 
-updateBuffer(string dp1, string stationName, 
-             string dp2, string late,
-             string dp3, string IOTime,
-             string dp4, string in0,
-             string dp5, string bad0,
-             string dp6, string rejected0,
-             string dp7, string in1,
-             string dp8, string bad1,
-             string dp9, string rejected1,
-             string dp10, string in2,
-             string dp11, string bad2,
-             string dp12, string rejected2,
-             string dp13, string in3,
-             string dp14, string bad3,
-             string dp15, string rejected3,
+updateAdder(string dp1, bool dropping, 
+             string dp2, int dropped,
+             string dp3, string dataProductType,
+             string dp4, string fileName,
+             string dp5, int locusNode,
+             string dp6, string directory,
+             string dp7, string observationName,
+             string dp8, string dataProduct,
+             string dp9, int writer,
              string dp16, bool invalid)
 {
 
-  LOG_DEBUG(\"inputBuffer.pnl:updateBuffer|entered\"); 
+  LOG_DEBUG(\"adderDetail.pnl:updateAdder|entered\"); 
   
   if (!invalid) {
-    setValue(\"stationName\",\"text\",station);
-    setValue(\"late\", \"text\", late);
-    setValue(\"IOTime\", \"text\", IOTime);
-    setValue(\"stream0_blocksIn\", \"text\", in0);
-    setValue(\"stream0_percBad\", \"text\", bad0);
-    setValue(\"stream0_rejected\", \"text\", rejected0);
-    setValue(\"stream1_blocksIn\", \"text\", in1);
-    setValue(\"stream1_percBad\", \"text\", bad1);
-    setValue(\"stream1_rejected\", \"text\", rejected1);
-    setValue(\"stream2_blocksIn\", \"text\", in2);
-    setValue(\"stream2_percBad\", \"text\", bad2);
-    setValue(\"stream2_rejected\", \"text\", rejected2);
-    setValue(\"stream3_blocksIn\", \"text\", in3);
-    setValue(\"stream3_percBad\", \"text\", bad3);
-    setValue(\"stream3_rejected\", \"text\", rejected3);
+    if (dropping) {
+      setValue(\"dropping\",\"backCol\",\"red\");
+    } else {
+      setValue(\"dropping\",\"backCol\",\"green\");
+    }        
+    setValue(\"dropped\", \"text\", dropped);
+    setValue(\"dataProductType\", \"text\", dataProductType);
+    setValue(\"fileName\", \"text\", fileName);
+    setValue(\"locusNode\", \"text\", locusNode);
+    setValue(\"directory\", \"text\", directory);
+    setValue(\"dataProduct\", \"text\", dataProduct);
+    setValue(\"writer\", \"text\", writer);
   } else {
-    setValue(\"stationName\",\"text\",\"???\");
-    setValue(\"late\", \"text\", \"\");
-    setValue(\"IOTime\", \"text\", \"\");
-    setValue(\"stream0_blocksIn\", \"text\", \"\");
-    setValue(\"stream0_percBad\", \"text\", \"\");
-    setValue(\"stream0_rejected\", \"text\", \"\");
-    setValue(\"stream1_blocksIn\", \"text\", \"\");
-    setValue(\"stream1_percBad\", \"text\", \"\");
-    setValue(\"stream1_rejected\", \"text\", \"\");
-    setValue(\"stream2_blocksIn\", \"text\", \"\");
-    setValue(\"stream2_percBad\", \"text\", \"\");
-    setValue(\"stream2_rejected\", \"text\", \"\");
-    setValue(\"stream3_blocksIn\", \"text\", \"\");
-    setValue(\"stream3_percBad\", \"text\", \"\");
-    setValue(\"stream3_rejected\", \"text\", \"\");
+    setValue(\"dropping\",\"backCol\",\"Lofar_invalid\");
+    setValue(\"dropped\", \"text\", \"\");
+    setValue(\"dataProductType\", \"text\", \"\");
+    setValue(\"fileName\", \"text\", \"\");
+    setValue(\"locusNode\", \"text\", \"\");
+    setValue(\"directory\", \"text\", \"\");
+    setValue(\"dataProduct\", \"text\", \"\");
+    setValue(\"writer\", \"text\", \"\");
   }
 }
 " 0
@@ -122,11 +94,11 @@ updateBuffer(string dp1, string stationName,
 ""0  1
 E "#uses \"navPanel.ctl\"
 
-string inputbuffer=\"\";
+string adder=\"\";
 string database=\"\";
 
 string baseDP = \"\";
-string inputBufferDP=\"\";
+string adderDP=\"\";
 string station=\"\";
 string stationDP=\"\";
 string barColor=\"\";
@@ -139,9 +111,7 @@ void click(string dp) {
   delay(0, 100); 
   if (!bDoubleClicked) {
     if (dp == stationDP) {
-      navPanel_setEvent(station,\"EventClick\");
-    } else {  
-      navPanel_setEvent(\"InputBuffer\",\"EventClick\");
+      navPanel_setEvent(\"Adder\",\"EventClick\");
     }
   }
 }
@@ -152,9 +122,9 @@ void dblClick(string dp) {
   bDoubleClicked = true; 
 
   if (dpExists(dp) ) {
-    LOG_DEBUG(\"inputBuffer.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+dp);
+    LOG_DEBUG(\"adderDetail.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+dp);
     g_currentDatapoint=dp;
-    navPanel_setEvent(\"inputBuffer.pnl\",\"ChangePanel\");  
+    navPanel_setEvent(\"adderDetail.pnl\",\"ChangePanel\");  
   }
   // set delay to avoid click event will be triggered
   delay(0, 500);
@@ -163,7 +133,7 @@ void dblClick(string dp) {
 
 // routine for right mouse click
 void rClick(string dp) {
-  navPanel_setEvent(\"inputBuffer.pnl\",\"EventRightClick\");
+  navPanel_setEvent(\"adderDetail.pnl\",\"EventRightClick\");
 }" 0
  2
 "CBRef" "1"
@@ -187,29 +157,10 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 2 1 E U  1 E 0 3 1260 17
-2 0
-"stationName"
-""
-1 22 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-0 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 22 4 53 17
-0 2 2 "0s" 0 0 0 192 0 0  22 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 5 CS000
 2 1
-"late"
+"dropped"
 ""
-1 73 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 102 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 1 0 0 0 0 0
 E E E
@@ -219,16 +170,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 73 4 115 17
-0 2 2 "0s" 0 0 0 192 0 0  73 4 1
+E E 0 1 1 2 1 E U  0 E 102 4 144 17
+0 2 2 "0s" 0 0 0 192 0 0  102 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 7 0000000
 2 2
-"IOTime"
+"locusNode"
 ""
-1 136 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 174 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 2 0 0 0 0 0
 E E E
@@ -238,16 +189,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 136 4 178 17
-0 2 2 "0s" 0 0 0 192 0 0  136 4 1
+E E 0 1 1 2 1 E U  0 E 174 4 216 17
+0 2 2 "0s" 0 0 0 192 0 0  174 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 7 0000000
 2 3
-"stream0_blocksIn"
+"writer"
 ""
-1 210 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 274 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 3 0 0 0 0 0
 E E E
@@ -257,16 +208,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 210 4 246 17
-0 2 2 "0s" 0 0 0 192 0 0  210 4 1
+E E 0 1 1 2 1 E U  0 E 274 4 310 17
+0 2 2 "0s" 0 0 0 192 0 0  274 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
 2 4
-"stream0_percBad"
+"dataProduct"
 ""
-1 270 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 364 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 4 0 0 0 0 0
 E E E
@@ -276,16 +227,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 270 4 306 17
-0 2 2 "0s" 0 0 0 192 0 0  270 4 1
+E E 0 1 1 2 1 E U  0 E 364 4 400 17
+0 2 2 "0s" 0 0 0 192 0 0  364 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
 2 5
-"stream0_rejected"
+"dataProductType"
 ""
-1 330 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 494 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -295,16 +246,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 330 4 366 17
-0 2 2 "0s" 0 0 0 192 0 0  330 4 1
+E E 0 1 1 2 1 E U  0 E 494 4 530 17
+0 2 2 "0s" 0 0 0 192 0 0  494 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
 2 6
-"stream1_blocksIn"
+"directory"
 ""
-1 410 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 654 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -314,16 +265,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 410 4 446 17
-0 2 2 "0s" 0 0 0 192 0 0  410 4 1
+E E 0 1 1 2 1 E U  0 E 654 4 690 17
+0 2 2 "0s" 0 0 0 192 0 0  654 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
 2 7
-"stream1_percBad"
+"fileName"
 ""
-1 470 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 924 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -333,18 +284,20 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 470 4 506 17
-0 2 2 "0s" 0 0 0 192 0 0  470 4 1
+E E 0 1 1 2 1 E U  0 E 924 4 960 17
+0 2 2 "0s" 0 0 0 192 0 0  924 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
-2 8
-"stream1_rejected"
+1 19 0 "" 1
+0
+6 18
+"dropping"
 ""
-1 530 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 90 30 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
-8 0 0 0 0 0
+16 0 0 0 0 0
 E E E
 0
 1
@@ -352,128 +305,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 530 4 566 17
-0 2 2 "0s" 0 0 0 192 0 0  530 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-2 9
-"stream2_blocksIn"
-""
-1 610 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-9 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 610 4 646 17
-0 2 2 "0s" 0 0 0 192 0 0  610 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-2 10
-"stream2_percBad"
-""
-1 670 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-10 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 670 4 706 17
-0 2 2 "0s" 0 0 0 192 0 0  670 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-2 11
-"stream2_rejected"
-""
-1 730 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-11 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 730 4 766 17
-0 2 2 "0s" 0 0 0 192 0 0  730 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-2 12
-"stream3_blocksIn"
-""
-1 810 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-12 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 810 4 846 17
-0 2 2 "0s" 0 0 0 192 0 0  810 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-2 13
-"stream3_percBad"
-""
-1 870 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-13 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 870 4 906 17
-0 2 2 "0s" 0 0 0 192 0 0  870 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-2 14
-"stream3_rejected"
-""
-1 930 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-14 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 930 4 966 17
-0 2 2 "0s" 0 0 0 192 0 0  930 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-1 17 0 "" 1
-0
+E E 0 1 1 2 1 E 1 0 1 -45 -25 1 E 90 30 100 40
 0
 LAYER, 1 
 1

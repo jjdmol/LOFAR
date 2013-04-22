@@ -6,6 +6,10 @@ PANEL,-1 -1 114 71 N "_3DFace" 1
 "main()
 {
   observation = $observation;
+    // we just need to make clear the type of this baseDP to get the right panel.
+  // The panel itself will sort out the list of adders belonging to it
+  baseDP =CEPDBName+\"LOFAR_ObsSW_OSIONode00_Adder0\";
+
   reload();
 }
   
@@ -23,7 +27,8 @@ private void reload() {
   for (int i=1; i<= dynlen(adders); i++) {
     dynAppend(connectTo,adders[i]+\".dropping:_online.._value\");
   }
-    
+  if (dynlen(adders) > 0) baseDP = adders[1];
+  
   // check if the required datapoint for this view are enabled and accessible
   if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo)>0 ){
     if (dpConnect(\"adderCB\", connectTo) == -1) {
