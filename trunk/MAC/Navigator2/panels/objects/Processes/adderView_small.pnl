@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 114 71 N "_3DFace" 1
+PANEL,-1 -1 156 103 N "_3DFace" 1
 "$observation"
 "main()
 {
@@ -9,7 +9,7 @@ PANEL,-1 -1 114 71 N "_3DFace" 1
     // we just need to make clear the type of this baseDP to get the right panel.
   // The panel itself will sort out the list of adders belonging to it
   baseDP =CEPDBName+\"LOFAR_ObsSW_OSIONode00_Adder0\";
-
+  delay(10);
   reload();
 }
   
