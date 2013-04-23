@@ -37,19 +37,28 @@ private void observationChanged(string dp1, dyn_string observations,
                                 string dp2, bool invalid) {
 
   firstObservation = \"\";
+  string firstPipeline = \"\";
   // for now the object will only show the controller for the first observation
   if (dynlen(observations) >= 1) {
     for (int i = 1; i <= dynlen(observations); i++)  {
       if ($name != \"PythonControl\" && navFunct_isObservation(observations[i])) {
         firstObservation = observations[i];
-        exit;
+        break;
       } else if ($name == \"PythonControl\" && !navFunct_isObservation(observations[i])) {
-        firstObservation = observations[i];
-        exit;
-      } else {
+        firstPipeline = observations[i];
+      }
+      if ($name != \"PythonControl\" && firstObservation == \"\") {
         setValue(\"process\", \"backCol\", \"Lofar_off\");
         return;
       }
+      
+      if ($name == \"PythonControl\" && firstPipeline == \"\") {
+        setValue(\"process\", \"backCol\", \"Lofar_off\");
+        return;
+      } else if ($name == \"PythonControl\") {
+        firstObservation=firstPipeline;
+      }
+      
     }
     // get real name from claimmanager
     obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+firstObservation);

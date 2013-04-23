@@ -177,7 +177,7 @@ LANG:1 18 Observation Adders
 2 2
 "PRIMITIVE_TEXT2"
 ""
-1 30 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 25 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 2 0 0 0 0 0
 E E E
@@ -187,8 +187,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 30 32 80 45
-0 2 2 "0s" 0 0 0 192 0 0  30 32 1
+E E 0 1 1 2 1 E U  0 E 25 32 75 45
+0 2 2 "0s" 0 0 0 192 0 0  25 32 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -196,7 +196,7 @@ LANG:1 8 dropping
 2 3
 "PRIMITIVE_TEXT3"
 ""
-1 102 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 85 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 3 0 0 0 0 0
 E E E
@@ -206,8 +206,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 102 32 149 45
-0 2 2 "0s" 0 0 0 192 0 0  102 32 1
+E E 0 1 1 2 1 E U  0 E 85 32 132 45
+0 2 2 "0s" 0 0 0 192 0 0  85 32 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -215,7 +215,7 @@ LANG:1 7 dropped
 2 5
 "PRIMITIVE_TEXT5"
 ""
-1 174 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 133 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -225,8 +225,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 174 32 231 45
-0 2 2 "0s" 0 0 0 192 0 0  174 32 1
+E E 0 1 1 2 1 E U  0 E 133 32 190 45
+0 2 2 "0s" 0 0 0 192 0 0  133 32 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -234,7 +234,7 @@ LANG:1 9 locusNode
 2 7
 "PRIMITIVE_TEXT7"
 ""
-1 274 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 200 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -244,8 +244,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 274 32 308 45
-0 2 2 "0s" 0 0 0 192 0 0  274 32 1
+E E 0 1 1 2 1 E U  0 E 200 32 234 45
+0 2 2 "0s" 0 0 0 192 0 0  200 32 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -253,7 +253,7 @@ LANG:1 6 writer
 2 9
 "PRIMITIVE_TEXT9"
 ""
-1 364 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 255 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 9 0 0 0 0 0
 E E E
@@ -263,8 +263,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 364 32 434 45
-0 2 2 "0s" 0 0 0 192 0 0  364 32 1
+E E 0 1 1 2 1 E U  0 E 255 32 325 45
+0 2 2 "0s" 0 0 0 192 0 0  255 32 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -272,7 +272,7 @@ LANG:1 11 dataProduct
 2 14
 "PRIMITIVE_TEXT14"
 ""
-1 494 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 435 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 14 0 0 0 0 0
 E E E
@@ -282,8 +282,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 494 32 592 45
-0 2 2 "0s" 0 0 0 192 0 0  494 32 1
+E E 0 1 1 2 1 E U  0 E 435 32 533 45
+0 2 2 "0s" 0 0 0 192 0 0  435 32 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -291,7 +291,7 @@ LANG:1 15 dataProductType
 2 18
 "PRIMITIVE_TEXT18"
 ""
-1 654 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 562 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 18 0 0 0 0 0
 E E E
@@ -301,8 +301,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 654 32 706 45
-0 2 2 "0s" 0 0 0 192 0 0  654 32 1
+E E 0 1 1 2 1 E U  0 E 562 32 614 45
+0 2 2 "0s" 0 0 0 192 0 0  562 32 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -310,7 +310,7 @@ LANG:1 9 directory
 2 39
 "PRIMITIVE_TEXT23"
 ""
-1 924 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 825 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 39 0 0 0 0 0
 E E E
@@ -320,8 +320,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 924 32 973 45
-0 2 2 "0s" 0 0 0 192 0 0  924 32 1
+E E 0 1 1 2 1 E U  0 E 825 32 874 45
+0 2 2 "0s" 0 0 0 192 0 0  825 32 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
