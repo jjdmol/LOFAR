@@ -1,22 +1,23 @@
-//# BufferSettings.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id: $
+/* BufferSettings.h
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #ifndef LOFAR_INPUT_PROC_BUFFER_SETTINGS_H
 #define LOFAR_INPUT_PROC_BUFFER_SETTINGS_H
@@ -24,16 +25,12 @@
 #include <ostream>
 
 #include <Common/LofarLogger.h>
-#include <Common/LofarTypes.h>
-#include <CoInterface/SparseSet.h>
-#include <CoInterface/SlidingPointer.h>
 #include "StationID.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class SyncLock;
 
     struct BufferSettings {
     private:
@@ -47,21 +44,14 @@ namespace LOFAR
       }
 
     public:
-      typedef uint64 range_type;
-      typedef SparseSet<range_type> flags_type;
-
       struct StationID station;
-
-      // true: sync reader and writer, useful in real-time mode
-      bool sync;
-      SyncLock *syncLock;
 
       unsigned nrBeamletsPerBoard;
 
       size_t nrSamples;
 
       unsigned nrBoards;
-      size_t nrAvailableRanges;
+      size_t nrFlagRanges;
 
       key_t dataKey;
 
@@ -74,7 +64,7 @@ namespace LOFAR
       // Shortcut to set nrSamples to represent `seconds' of buffer.
       void setBufferSize(double seconds);
 
-      size_t boardIndex(unsigned beamlet) const
+      size_t flagIdx(unsigned beamlet) const
       {
         return beamlet / nrBeamletsPerBoard;
       }
@@ -82,11 +72,10 @@ namespace LOFAR
       bool operator==(const struct BufferSettings &other) const
       {
         return station == other.station
-               && sync == other.sync
                && nrBeamletsPerBoard == other.nrBeamletsPerBoard
                && nrSamples == other.nrSamples
                && nrBoards == other.nrBoards
-               && nrAvailableRanges == other.nrAvailableRanges
+               && nrFlagRanges == other.nrFlagRanges
                && dataKey == other.dataKey;
       }
     private:
@@ -97,19 +86,6 @@ namespace LOFAR
 
     std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s );
 
-    struct BoardLock {
-      SlidingPointer<BufferSettings::range_type> readPtr;
-      SlidingPointer<BufferSettings::range_type> writePtr;
-    };
-
-    class SyncLock: public std::vector<struct BoardLock> { // [board]
-    public:
-      SyncLock(const BufferSettings &settings)
-      :
-        std::vector<struct BoardLock>(settings.nrBoards)
-      {
-      }
-    };
   }
 }
 

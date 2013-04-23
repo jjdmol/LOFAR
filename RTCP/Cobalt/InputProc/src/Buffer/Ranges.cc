@@ -1,22 +1,23 @@
-//# Ranges.cc
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id: $
+/* Ranges.cc
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -51,7 +52,7 @@ namespace LOFAR
     {
     }
 
-    Ranges::Ranges( void *data, size_t numBytes, value_type minHistory, bool create )
+    Ranges::Ranges( void *data, size_t numBytes, int64 minHistory, bool create )
       :
       create(create),
       len(numBytes / sizeof *ranges),
@@ -71,7 +72,7 @@ namespace LOFAR
           i->~Range();
     }
 
-    void Ranges::excludeBefore( value_type to )
+    void Ranges::excludeBefore( int64 to )
     {
       for (struct Range *i = begin; i != end; ++i) {
         if (i->to <= to) {
@@ -88,7 +89,7 @@ namespace LOFAR
       }
     }
 
-    bool Ranges::include( value_type from, value_type to )
+    bool Ranges::include( int64 from, int64 to )
     {
       ASSERTSTR( from < to, from << " < " << to );
       ASSERTSTR( from >= head->to, from << " >= " << head->to );
@@ -122,12 +123,12 @@ namespace LOFAR
       return false;
     }
 
-    bool Ranges::anythingBetween( value_type first, value_type last ) const
+    bool Ranges::anythingBetween( int64 first, int64 last ) const
     {
       for(struct Range *i = begin; i != end; ++i) {
         // read in same order as writes occur
-        value_type from = i->from;
-        value_type to = i->to;
+        int64 from = i->from;
+        int64 to = i->to;
 
         if (to == 0) {
           // unused
@@ -149,17 +150,17 @@ namespace LOFAR
       return false;
     }
 
-    BufferSettings::flags_type Ranges::sparseSet( value_type first, value_type last ) const
+    SparseSet<int64> Ranges::sparseSet( int64 first, int64 last ) const
     {
-      BufferSettings::flags_type result;
+      SparseSet<int64> result;
 
       if (first >= last)
         return result;
 
       for(struct Range *i = begin; i != end; ++i) {
         // read in same order as writes occur
-        value_type from = i->from;
-        value_type to = i->to;
+        int64 from = i->from;
+        int64 to = i->to;
 
         if (to == 0) {
           // unused

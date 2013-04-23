@@ -23,8 +23,8 @@
 // //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include "DH_Example.h"
-#include "DH_ExampleExtra.h"
+#include <DH_Example.h>
+#include <DH_ExampleExtra.h>
 #include <Transport/TH_ShMem.h>
 #include <Transport/TH_MPI.h>
 #include <Transport/TH_Mem.h>

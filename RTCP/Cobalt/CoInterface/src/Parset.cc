@@ -1,22 +1,23 @@
-//# Parset.cc
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* Parset.cc
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id$
+ */
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -194,7 +195,7 @@ namespace LOFAR
       if (isDefined("Observation.nrBitsPerSample")) {
         settings.nrBitsPerSample = getUint32("Observation.nrBitsPerSample", 16);
       } else {
-        LOG_WARN("Using deprecated OLAP.nrBitsPerSample. Please replace by Observation.nrBitsPerSample");
+        LOG_WARN("Using depricatdd OLAP.nrBitsPerSample. Please replace by Observation.nrBitsPerSample");
         settings.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
       }
 
@@ -490,6 +491,48 @@ namespace LOFAR
 
     void Parset::checkInputConsistency() const
     {
+      using std::set;
+
+      map<string, set<unsigned> > allRSPboards;
+      vector<unsigned> inputs = phaseOnePsets();
+
+      for (vector<unsigned>::const_iterator pset = inputs.begin(); pset != inputs.end(); pset++) {
+        vector<StationRSPpair> stationRSPpairs = getStationNamesAndRSPboardNumbers(*pset);
+
+        for (vector<StationRSPpair>::const_iterator pair = stationRSPpairs.begin(); pair != stationRSPpairs.end(); pair++) {
+          const string &station = pair->station;
+          unsigned rsp = pair->rsp;
+
+          map<string, set<unsigned> >::const_iterator stationRSPs = allRSPboards.find(station);
+
+          if (stationRSPs != allRSPboards.end() && stationRSPs->second.find(rsp) != stationRSPs->second.end())
+            THROW(CoInterfaceException, station << "/RSP" << rsp << " multiple times defined in \"PIC.Core.IONProc.*.inputs\"");
+
+          allRSPboards[station].insert(rsp);
+        }
+      }
+
+      for (map<string, set<unsigned> >::const_iterator stationRSPs = allRSPboards.begin(); stationRSPs != allRSPboards.end(); stationRSPs++) {
+        const string          &station = stationRSPs->first;
+        const set<unsigned> &rsps = stationRSPs->second;
+
+        vector<unsigned> rspsOfStation = subbandToRSPboardMapping(station);
+        vector<unsigned> slotsOfStation = subbandToRSPslotMapping(station);
+
+        if (rspsOfStation.size() != nrSubbands())
+          THROW(CoInterfaceException, string("the size of \"Observation.Dataslots.") + station + ".RSPBoardList\" does not equal the number of subbands");
+
+        if (slotsOfStation.size() != nrSubbands())
+          THROW(CoInterfaceException, string("the size of \"Observation.Dataslots.") + station + ".DataslotList\" does not equal the number of subbands");
+
+        for (int subband = nrSubbands(); --subband >= 0; ) {
+          if (rsps.find(rspsOfStation[subband]) == rsps.end())
+            THROW(CoInterfaceException, "\"Observation.Dataslots." << station << ".RSPBoardList\" mentions RSP board " << rspsOfStation[subband] << ", which does not exist");
+
+          if (slotsOfStation[subband] >= nrSlotsInFrame())
+            THROW(CoInterfaceException, "\"Observation.Dataslots." << station << ".DataslotList\" mentions RSP slot " << slotsOfStation[subband] << ", which is more than the number of slots in a frame");
+        }
+      }
     }
 
     void Parset::check() const
@@ -527,6 +570,25 @@ namespace LOFAR
              && info.timeIntFactor != 1 )
           THROW(CoInterfaceException, "Cannot perform temporal integration if calculating Coherent Stokes XXYY. Integration factor needs to be 1, but is set to " << info.timeIntFactor);
       }
+    }
+
+
+    vector<Parset::StationRSPpair> Parset::getStationNamesAndRSPboardNumbers(unsigned psetNumber) const
+    {
+      vector<string> inputs = getStringVector(str(boost::format("PIC.Core.IONProc.%s[%u].inputs") % partitionName() % psetNumber), true);
+      vector<StationRSPpair> stationsAndRSPs(inputs.size());
+
+      for (unsigned i = 0; i < inputs.size(); i++) {
+        vector<string> split = StringUtil::split(inputs[i], '/');
+
+        if (split.size() != 2 || split[1].substr(0, 3) != "RSP")
+          THROW(CoInterfaceException, string("expected stationname/RSPn pair in \"") << inputs[i] << '"');
+
+        stationsAndRSPs[i].station = split[0];
+        stationsAndRSPs[i].rsp = boost::lexical_cast<unsigned>(split[1].substr(3));
+      }
+
+      return stationsAndRSPs;
     }
 
 
@@ -1062,6 +1124,21 @@ namespace LOFAR
     unsigned Parset::nrHistorySamples() const
     {
       return nrChannelsPerSubband() > 1 ? (nrPPFTaps() - 1) * nrChannelsPerSubband() : 0;
+    }
+
+    unsigned Parset::nrSamplesToCNProc() const
+    {
+      return nrSamplesPerSubband() + nrHistorySamples() + 32 / (NR_POLARIZATIONS * 2 * nrBitsPerSample() / 8);
+    }
+
+    unsigned Parset::inputBufferSize() const
+    {
+      return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer", 1.0) * subbandBandwidth());
+    }
+
+    unsigned Parset::maxNetworkDelay() const
+    {
+      return (unsigned) (getDouble("OLAP.maxNetworkDelay", 0.25) * subbandBandwidth());
     }
 
     unsigned Parset::nrPPFTaps() const

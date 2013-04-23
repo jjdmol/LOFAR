@@ -106,7 +106,7 @@ double FilterBank::besselI0(double x)
       q9 = 3.92377e-3;
 
   const double k1 = 3.75;
-  double ax = fabs(x);
+  double ax = abs(x);
 
   double y = 0, result = 0;
 

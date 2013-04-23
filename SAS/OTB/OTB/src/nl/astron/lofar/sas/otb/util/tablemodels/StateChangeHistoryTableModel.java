@@ -62,6 +62,7 @@ public final class StateChangeHistoryTableModel extends javax.swing.table.Defaul
         fillTable();
     }
     
+    
     /** Fills the table from the database */
     public boolean fillTable() {
         

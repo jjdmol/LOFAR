@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
-import javax.swing.table.DefaultTableModel;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.lofarutils.inputfieldbuilder.inputFieldBuilder;
 import nl.astron.lofar.sas.otb.*;
@@ -42,14 +41,12 @@ import nl.astron.lofar.sas.otb.jotdb3.jVICnodeDef;
 import nl.astron.lofar.sas.otb.util.*;
 import nl.astron.lofar.sas.otb.util.tablemodels.ComponentTableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.DefaultTemplatetableModel;
-import nl.astron.lofar.sas.otb.util.tablemodels.MetadataTableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.PICtableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.StateChangeHistoryTableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.TemplatetableModel;
 import nl.astron.lofar.sas.otb.util.tablemodels.VICtableModel;
 import nl.astron.lofar.sas.otbcomponents.CreateDefaultTemplateDialog;
 import nl.astron.lofar.sas.otbcomponents.LoadFileDialog;
-import nl.astron.lofar.sas.otbcomponents.MetadataDialog;
 import nl.astron.lofar.sas.otbcomponents.MultiEditDialog;
 import nl.astron.lofar.sas.otbcomponents.TableDialog;
 import nl.astron.lofar.sas.otbcomponents.TreeInfoDialog;
@@ -114,12 +111,9 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1.setButtonIcon("Refresh", new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_refresh_e.gif")));
                 buttonPanel1.addButton("View");
                 buttonPanel1.setButtonIcon("View", new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif")));
-                buttonPanel1.addButton("Metadata");
-                buttonPanel1.setButtonIcon("Metadata", new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_info.gif")));
                 buttonPanel1.addButton("Schedule");
                 buttonPanel1.setButtonIcon("Schedule", new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_fileopen.gif")));
                 buttonPanel1.setButtonEnabled("State History", false);
-                buttonPanel1.setButtonEnabled("Metadata", false);
                 buttonPanel1.setButtonEnabled("Delete", false);
                 buttonPanel1.setButtonEnabled("View", false);
                 buttonPanel1.setButtonEnabled("Schedule", false);
@@ -892,12 +886,6 @@ public class MainPanel extends javax.swing.JPanel
 
                         }
                         break;
-                    case "Metadata":
-                        if (treeID > 0) {
-                            viewMetadata(treeID);
-                        }
-                        break;
-
                 }
                 break;
             case "Templates": {
@@ -1339,7 +1327,7 @@ public class MainPanel extends javax.swing.JPanel
         itsStateChangeModel = new StateChangeHistoryTableModel(SharedVars.getOTDBrmi(), treeID);
         // showstateChangeInfo
         if (stateChangeHistoryDialog == null) {
-            stateChangeHistoryDialog = new TableDialog(itsMainFrame, true,itsStateChangeModel, "State change history");
+            stateChangeHistoryDialog = new TableDialog(itsMainFrame, true, itsStateChangeModel, "State change history");
         } else {
             itsStateChangeModel.setTree(treeID);
             stateChangeHistoryDialog.setModel(itsStateChangeModel);
@@ -1351,29 +1339,6 @@ public class MainPanel extends javax.swing.JPanel
         stateChangeHistoryDialog.setVisible(true);
 
     }
-    
-    /** Launch the metadata window
-     *
-     * @param  treeID  The treeId of the chosen tree
-     */
-    private void viewMetadata(int treeID) {
-        // showMetadata
-       itsMainFrame.setHourglassCursor();
-        itsMetadataModel = new MetadataTableModel(SharedVars.getOTDBrmi(), treeID,itsMainFrame.getUserAccount().getUserName());
-        if (metadataDialog == null) {
-            metadataDialog = new MetadataDialog(itsMainFrame, true, itsMetadataModel, "Metadata",itsMainFrame.getUserAccount().getUserName());
-        } else {
-            itsMetadataModel.setTree(treeID);
-            metadataDialog.setModel(itsMetadataModel);
-        }
-        itsMainFrame.setNormalCursor();
-        metadataDialog.setLocationRelativeTo(this);
-        metadataDialog.setTableCellAlignment(JLabel.LEFT);
-
-        metadataDialog.setVisible(true);
-
-    }
-
 
     /** Launch multiEditDialog,
      *
@@ -1572,11 +1537,9 @@ public class MainPanel extends javax.swing.JPanel
                         buttonPanel1.setButtonEnabled("State History", true);
                         buttonPanel1.setButtonEnabled("View", true);
                         buttonPanel1.setButtonEnabled("Query Panel", true);
-                        buttonPanel1.setButtonEnabled("Metadata", true);
                         buttonPanel1.setButtonEnabled("Refresh", true);
                     } else {
                         buttonPanel1.setButtonEnabled("Query Panel", false);
-                        buttonPanel1.setButtonEnabled("Metadata", false);
                         buttonPanel1.setButtonEnabled("Refresh", false);
                         buttonPanel1.setButtonEnabled("State History", false);
                         buttonPanel1.setButtonEnabled("View", false);
@@ -1587,7 +1550,6 @@ public class MainPanel extends javax.swing.JPanel
                     buttonPanel1.setButtonEnabled("Delete", false);
                     buttonPanel1.setButtonEnabled("View", false);
                     buttonPanel1.setButtonEnabled("State History", false);
-                    buttonPanel1.setButtonEnabled("Metadata", false);
                     buttonPanel1.setButtonEnabled("Schedule", false);
                 }
                 break;
@@ -1733,9 +1695,7 @@ public class MainPanel extends javax.swing.JPanel
     private MultiEditDialog multiEditDialog = null;
     private CreateDefaultTemplateDialog defaultTemplateDialog = null;
     private TableDialog stateChangeHistoryDialog = null;
-    private MetadataDialog metadataDialog = null;
     private StateChangeHistoryTableModel itsStateChangeModel = null;
-    private MetadataTableModel itsMetadataModel = null;
     private boolean changed = false;
     private boolean multipleSelection = false;
     // File to be loaded info

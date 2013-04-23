@@ -1,22 +1,25 @@
-//# TBB_Writer.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* TBB_Writer.h
+ *
+ * Copyright (C) 2012
+ * ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: TBB_Writer.h 14188 2012-09-07 15:41:22Z amesfoort $
+ */
 
 #ifndef LOFAR_STORAGE_TBB_WRITER_H
 #define LOFAR_STORAGE_TBB_WRITER_H 1
@@ -31,7 +34,7 @@
 
 #include <Common/LofarTypes.h>
 #ifndef USE_THREADS
-#error The TBB writer needs USE_THREADS to build and operate. You can also define it by hand and link to the right LOFAR lib(s).
+#error The TBB writer needs USE_THREADS to operate. You can also define it by hand and link to the right LOFAR lib(s).
 #endif
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Queue.h>
@@ -49,9 +52,7 @@
 #warning TBB_Writer version not derived from the cmake build system, but hard-coded using the TBB_WRITER_VERSION symbol.
 #endif
 
-#ifdef HAVE_DAL
 #include <dal/lofar/TBB_File.h>
-#endif
 
 namespace LOFAR
 {
@@ -81,12 +82,12 @@ namespace LOFAR
         uint32_t sampleNr;
 
         // In spectral mode indicates frequency band and slice (transform block of 1024 samples) of first payload sample.
-        uint32_t bandSliceNr;   // bandNr[9:0] and sliceNr[31:10].
+        uint32_t bandSliceNr;         // bandNr[9:0] and sliceNr[31:10].
 #define TBB_BAND_NR_MASK        ((1 << 10) - 1)
 #define TBB_SLICE_NR_SHIFT      10
       };
 
-      uint16_t nOfSamplesPerFrame; // Total number of samples in the frame payload
+      uint16_t nOfSamplesPerFrame;   // Total number of samples in the frame payload
       uint16_t nOfFreqBands;    // Number of frequency bands for each spectrum in spectral mode. Is set to 0 for transient mode.
 
       uint8_t bandSel[64];      // Each bit in the band selector field indicates whether the band with the bit index is present in the spectrum or not.
@@ -104,7 +105,7 @@ namespace LOFAR
        */
 #define MAX_TBB_DATA_SIZE               (2040 - sizeof(TBB_Header) - sizeof(uint32_t))  // 1948: TBB frame size without header and payload crc32.
 
-#define MAX_TBB_TRANSIENT_NSAMPLES      (MAX_TBB_DATA_SIZE / 3 * 2)  // 1298 (.666: 1 byte padding when indeed 1298 samples would ever be stored in TBB)
+#define MAX_TBB_TRANSIENT_NSAMPLES      (MAX_TBB_DATA_SIZE / 3 * 2)     // 1298 (.666: 1 byte padding when indeed 1298 samples would ever be stored in TBB)
 #define MAX_TBB_SPECTRAL_NSAMPLES       (MAX_TBB_DATA_SIZE / (2 * sizeof(int16_t)))     // 487
 
       // Unpacked, sign-extended (for transient) samples without padding, i.e. as received.
@@ -119,9 +120,9 @@ namespace LOFAR
       // For spectral, it depends on the nr of subbands (max is equal to MAX_TBB_SPECTRAL_NSAMPLES).
       // TBB sends as many samples for all subbands as it can fit; e.g. with 5 subbands, each frame has 485 samples.
 
-#define SPECTRAL_TRANSFORM_SIZE         1024  // RSP FFT block size
+#define SPECTRAL_TRANSFORM_SIZE         1024    // RSP FFT block size
 
-#define DEFAULT_TBB_TRANSIENT_NSAMPLES  1024  // for spectral it depends on #subbands
+#define DEFAULT_TBB_TRANSIENT_NSAMPLES  1024    // for spectral it depends on #subbands
     };
 
     struct TBB_Frame {
@@ -147,25 +148,24 @@ namespace LOFAR
     typedef std::map<unsigned, StationMetaData> StationMetaDataMap;
 
     struct SubbandInfo {
-      std::vector<double>   centralFreqs;   // empty in transient mode
-      std::vector<unsigned> storageIndices; // idem
+      std::vector<double>   centralFreqs;     // empty in transient mode
+      std::vector<unsigned> storageIndices;   // idem
     };
 
 
-#ifdef HAVE_DAL
     class TBB_Dipole
     {
       LOFAR::FileStream*       itsRawOut;
       dal::TBB_Dataset<short>* itsDataset;
       std::vector<dal::Range>  itsFlagOffsets;
 
-      uint32_t itsSampleFreq; // Hz
-      unsigned itsNrSubbands; // spectral mode only, 0 in transient mode
+      uint32_t itsSampleFreq;   // Hz
+      unsigned itsNrSubbands;   // spectral mode only, 0 in transient mode
 
-      uint32_t itsTime;       // seconds
+      uint32_t itsTime;   // seconds
       union {
-        uint32_t itsExpSampleNr; // transient mode
-        uint32_t itsExpSliceNr;  // spectral mode
+        uint32_t itsExpSampleNr;         // transient mode
+        uint32_t itsExpSliceNr;          // spectral mode
       };
       ssize_t itsDatasetLen;
 
@@ -178,7 +178,7 @@ namespace LOFAR
 
     public:
       TBB_Dipole();
-      TBB_Dipole(const TBB_Dipole& rhs); // do not use; only for TBB_Station vector<TBB_Dipole>(N) constr
+      TBB_Dipole(const TBB_Dipole& rhs);   // do not use; only for TBB_Station vector<TBB_Dipole>(N) constr
       ~TBB_Dipole();
 
       // Output threads
@@ -210,7 +210,7 @@ namespace LOFAR
       std::vector<TBB_Dipole> itsDipoles;
       const Parset& itsParset;
       const StationMetaData& itsStationMetaData;
-      const SubbandInfo itsSubbandInfo; // for spectral mode
+      const SubbandInfo itsSubbandInfo;   // for spectral mode
       const std::string itsH5Filename;
 
       double getSubbandCentralFreq(unsigned subbandNr, unsigned nyquistZone, double sampleFreq) const;
@@ -265,8 +265,8 @@ namespace LOFAR
       TBB_Frame* itsFrameBuffers;
 
       // Queue pointers point into itsFrameBuffers.
-      Queue<TBB_Frame*> itsReceiveQueue; // input  -> output thread
-      Queue<TBB_Frame*> itsFreeQueue;    // output -> input  thread
+      Queue<TBB_Frame*> itsReceiveQueue;   // input  -> output thread
+      Queue<TBB_Frame*> itsFreeQueue;      // output -> input  thread
 
       TBB_Writer& itsWriter;
       const std::string& itsInputStreamName;
@@ -329,7 +329,7 @@ namespace LOFAR
 
       const Parset& itsParset;
       const StationMetaDataMap& itsStationMetaDataMap;
-      StationMetaData itsUnknownStationMetaData; // referred to for data from unknown stations (fallback)
+      StationMetaData itsUnknownStationMetaData;   // referred to for data from unknown stations (fallback)
       const std::string& itsOutDir;
 
       unsigned itsRunNr;
@@ -359,8 +359,6 @@ namespace LOFAR
 
   } // namespace Cobalt
 } // namespace LOFAR
-
-#endif // HAVE_DAL
 
 #endif // LOFAR_STORAGE_TBB_WRITER_H
 

@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 123 95 N "_3DFace" 2
+PANEL,-1 -1 388 166 N "_3DFace" 2
 "$name"
 "$station"
 "main()
@@ -36,30 +36,9 @@ PANEL,-1 -1 123 95 N "_3DFace" 2
 private void observationChanged(string dp1, dyn_string observations,
                                 string dp2, bool invalid) {
 
-  firstObservation = \"\";
-  string firstPipeline = \"\";
   // for now the object will only show the controller for the first observation
   if (dynlen(observations) >= 1) {
-    for (int i = 1; i <= dynlen(observations); i++)  {
-      if ($name != \"PythonControl\" && navFunct_isObservation(observations[i])) {
-        firstObservation = observations[i];
-        break;
-      } else if ($name == \"PythonControl\" && !navFunct_isObservation(observations[i])) {
-        firstPipeline = observations[i];
-      }
-      if ($name != \"PythonControl\" && firstObservation == \"\") {
-        setValue(\"process\", \"backCol\", \"Lofar_off\");
-        return;
-      }
-      
-      if ($name == \"PythonControl\" && firstPipeline == \"\") {
-        setValue(\"process\", \"backCol\", \"Lofar_off\");
-        return;
-      } else if ($name == \"PythonControl\") {
-        firstObservation=firstPipeline;
-      }
-      
-    }
+    firstObservation = observations[1];
     // get real name from claimmanager
     obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+firstObservation);
     baseDP = station+obsDP+\"_\"+$name;
@@ -113,9 +92,9 @@ updateSWController(string dp1, string sStart,
   
   if (!startError || (!stopError && sStop != \"\")) {
     setValue(\"process\", \"backCol\", \"red\");
-  } else if (start >= stop) {
+  } else if (start > stop) {
     setValue(\"process\", \"backCol\", \"green\");
-  } else if (stop > start) {
+  } else if (stop >= start) {
     setValue(\"process\", \"backCol\", \"red\");
   } else {       
     setValue(\"process\", \"backCol\", \"red\");

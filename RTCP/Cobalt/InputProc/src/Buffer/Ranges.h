@@ -1,22 +1,23 @@
-//# Ranges.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id: $
+/* Ranges.h
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #ifndef LOFAR_INPUT_PROC_RANGES_H
 #define LOFAR_INPUT_PROC_RANGES_H
@@ -25,7 +26,7 @@
 
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
-#include "BufferSettings.h"
+#include <CoInterface/SparseSet.h>
 
 namespace LOFAR
 {
@@ -33,7 +34,7 @@ namespace LOFAR
   {
 
     //
-    // Thread-safe, lock-free set of value_type [from,to) ranges.
+    // Thread-safe, lock-free set of int64 [from,to) ranges.
     //
     // This implementation is thread safe for one writer and any number
     // of readers.
@@ -49,24 +50,22 @@ namespace LOFAR
     class Ranges
     {
     public:
-      typedef BufferSettings::range_type value_type;
-
       Ranges();
-      Ranges( void *data, size_t numBytes, value_type minHistory, bool create );
+      Ranges( void *data, size_t numBytes, int64 minHistory, bool create );
       ~Ranges();
 
       // Remove [0,to)
-      void excludeBefore( value_type to );
+      void excludeBefore( int64 to );
 
       // Add a range [from,to), and return whether the addition
       // was succesful.
-      bool include( value_type from, value_type to );
+      bool include( int64 from, int64 to );
 
       // Returns whether there is anything set in [first, last)
-      bool anythingBetween( value_type first, value_type last ) const;
+      bool anythingBetween( int64 first, int64 last ) const;
 
       // Returns [first, last) as a SparseSet
-      BufferSettings::flags_type sparseSet( value_type first, value_type last ) const;
+      SparseSet<int64> sparseSet( int64 first, int64 last ) const;
 
       // The size of a single [from,to) pair.
       static size_t elementSize()
@@ -81,7 +80,7 @@ namespace LOFAR
         // from <  to   : a valid range
         // from >= to   : invalid range (being written)
         // from = to = 0: an unused range
-        volatile value_type from, to;
+        volatile int64 from, to;
 
         Range() : from(0), to(0)
         {
@@ -97,7 +96,7 @@ namespace LOFAR
 
       // minimal history to maintain (samples newer than this
       // will be maintained in favour of newly added ranges)
-      value_type minHistory;
+      int64 minHistory;
 
     public:
       // The size of this object for a given number of [from,to) pairs.

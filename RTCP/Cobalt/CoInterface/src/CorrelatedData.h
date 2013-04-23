@@ -1,22 +1,23 @@
-//# CorrelatedData.h
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* CorrelatedData.h
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id$
+ */
 
 #ifndef LOFAR_INTERFACE_CORRELATED_DATA_H
 #define LOFAR_INTERFACE_CORRELATED_DATA_H
@@ -45,32 +46,25 @@ namespace LOFAR
 
       virtual IntegratableData &operator += (const IntegratableData &);
 
-      // Fast access to weights; T = uint32_t, uint16_t, or uint8_t,
-      // based on itsNrBytesPerNrValidSamples.
-      template<typename T> T &nrValidSamples(unsigned bl, unsigned ch);
-
-      // Slow short-cut functions. Use for testing only!
-      unsigned getNrValidSamples(unsigned bl, unsigned ch);
-      void setNrValidSamples(unsigned bl, unsigned ch, unsigned value);
+      unsigned                    nrValidSamples(unsigned bl, unsigned ch) const;
+      void                        setNrValidSamples(unsigned bl, unsigned ch, unsigned value);
 
       const unsigned itsAlignment;
       const unsigned itsNrBaselines;
 
       MultiDimArray<fcomplex, 4>  visibilities; //[nrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS]
 
-      // The size of the nrValidSamples is determined by the maximum value that
-      // has to be stored, which fits either in 1, 2, or 4 bytes.
-      const unsigned itsNrBytesPerNrValidSamples;     // 1, 2, or 4
+      const unsigned itsNrBytesPerNrValidSamples;
+      Matrix<uint32_t>            itsNrValidSamples4; //[nrBaselines][nrChannels]
+      Matrix<uint16_t>            itsNrValidSamples2; //[nrBaselines][nrChannels]
+      Matrix<uint8_t>             itsNrValidSamples1; //[nrBaselines][nrChannels]
+
     protected:
       virtual void                readData(Stream *);
       virtual void                writeData(Stream *);
 
     private:
       void init(unsigned nrChannels, Allocator &allocator);
-
-      Matrix<uint32_t>            itsNrValidSamples4; //[nrBaselines][nrChannels]
-      Matrix<uint16_t>            itsNrValidSamples2; //[nrBaselines][nrChannels]
-      Matrix<uint8_t>             itsNrValidSamples1; //[nrBaselines][nrChannels]
     };
 
 
@@ -109,43 +103,17 @@ namespace LOFAR
       case 1: itsNrValidSamples1.resize(boost::extents[itsNrBaselines][nrChannels], itsAlignment, allocator, true);
         break;
       }
-
-      // zero weights
-      for (size_t bl = 0; bl < itsNrBaselines; ++bl) {
-        for (size_t ch = 0; ch < nrChannels; ++ch) {
-          setNrValidSamples(bl, ch, 0);
-        }
-      }
     }
 
 
-    template<> inline uint32_t &CorrelatedData::nrValidSamples<uint32_t>(unsigned bl, unsigned ch)
-    {
-      return itsNrValidSamples4[bl][ch];
-    }
-
-
-    template<> inline uint16_t &CorrelatedData::nrValidSamples<uint16_t>(unsigned bl, unsigned ch)
-    {
-      return itsNrValidSamples2[bl][ch];
-    }
-
-
-    template<> inline uint8_t &CorrelatedData::nrValidSamples<uint8_t>(unsigned bl, unsigned ch)
-    {
-      return itsNrValidSamples1[bl][ch];
-    }
-
-
-    inline unsigned CorrelatedData::getNrValidSamples(unsigned bl, unsigned ch)
+    inline unsigned CorrelatedData::nrValidSamples(unsigned bl, unsigned ch) const
     {
       switch (itsNrBytesPerNrValidSamples) {
-        case 4: return nrValidSamples<uint32_t>(bl, ch);
-        case 2: return nrValidSamples<uint16_t>(bl, ch);
-        case 1: return nrValidSamples<uint8_t>(bl, ch);
+      case 4: return itsNrValidSamples4[bl][ch];
+      case 2: return itsNrValidSamples2[bl][ch];
+      case 1: return itsNrValidSamples1[bl][ch];
       }
 
-      // Satisfy compiler
       return 0;
     }
 
@@ -153,14 +121,14 @@ namespace LOFAR
     inline void CorrelatedData::setNrValidSamples(unsigned bl, unsigned ch, unsigned value)
     {
       switch (itsNrBytesPerNrValidSamples) {
-        case 4: nrValidSamples<uint32_t>(bl, ch) = value;
-          break;
+      case 4: itsNrValidSamples4[bl][ch] = value;
+        break;
 
-        case 2: nrValidSamples<uint16_t>(bl, ch) = value;
-          break;
+      case 2: itsNrValidSamples2[bl][ch] = value;
+        break;
 
-        case 1: nrValidSamples<uint8_t>(bl, ch) = value;
-          break;
+      case 1: itsNrValidSamples1[bl][ch] = value;
+        break;
       }
     }
 

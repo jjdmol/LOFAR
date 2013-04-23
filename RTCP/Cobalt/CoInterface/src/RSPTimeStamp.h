@@ -1,22 +1,23 @@
-//# RSPTimeStamp.h: Small class to hold the timestamps from RSP
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* RSPTimeStamp.h: Small class to hold the timestamps from RSP
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id$
+ */
 
 #ifndef LOFAR_INTERFACE_RSPTIMESTAMP_H
 #define LOFAR_INTERFACE_RSPTIMESTAMP_H
@@ -35,8 +36,8 @@ namespace LOFAR
     {
     public:
       TimeStamp(); // empty constructor to be able to create vectors of TimeStamps
-      TimeStamp(uint64 time); // for conversion from ints, used to convert values like 0x7FFFFFFF and 0x0 for special cases.
-      TimeStamp(uint64 time, unsigned clockSpeed);
+      TimeStamp(int64 time); // for conversion from ints, used to convert values like 0x7FFFFFFF and 0x0 for special cases.
+      TimeStamp(int64 time, unsigned clockSpeed);
       TimeStamp(unsigned seqId, unsigned blockId, unsigned clockSpeed);
 
       TimeStamp     &setStamp(unsigned seqId, unsigned blockId);
@@ -60,7 +61,7 @@ namespace LOFAR
       TimeStamp operator +  (T) const;
       template <typename T>
       TimeStamp operator -  (T) const;
-      uint64 operator -  (const TimeStamp &) const;
+      int64 operator -  (const TimeStamp &) const;
 
       bool operator >  (const TimeStamp &) const;
       bool operator <  (const TimeStamp &) const;
@@ -70,14 +71,13 @@ namespace LOFAR
       bool operator != (const TimeStamp &) const;
       bool operator !  () const;
 
-      double getSeconds() const;
-      operator uint64 () const;
+      operator int64 () const;
       operator struct timespec () const;
 
       friend ostream &operator << (ostream &os, const TimeStamp &ss);
 
     protected:
-      uint64 itsTime;
+      int64 itsTime;
       unsigned itsClockSpeed;
     };
 
@@ -87,13 +87,13 @@ namespace LOFAR
     {
     }
 
-    inline TimeStamp::TimeStamp(uint64 time) :
+    inline TimeStamp::TimeStamp(int64 time) :
       itsTime(time),
       itsClockSpeed(0)
     {
     }
 
-    inline TimeStamp::TimeStamp(uint64 time, unsigned clockSpeed) :
+    inline TimeStamp::TimeStamp(int64 time, unsigned clockSpeed) :
       itsTime(time),
       itsClockSpeed(clockSpeed)
     {
@@ -104,18 +104,18 @@ namespace LOFAR
       itsClockSpeed = clockSpeed;
 
 #ifdef EVEN_SECOND_HAS_MORE_SAMPLES
-      itsTime = ((uint64) seqId * itsClockSpeed + 512) / 1024 + blockId;
+      itsTime = ((int64) seqId * itsClockSpeed + 512) / 1024 + blockId;
 #else
-      itsTime = ((uint64) seqId * itsClockSpeed) / 1024 + blockId;
+      itsTime = ((int64) seqId * itsClockSpeed) / 1024 + blockId;
 #endif
     }
 
     inline TimeStamp &TimeStamp::setStamp(unsigned seqId, unsigned blockId)
     {
 #ifdef EVEN_SECOND_HAS_MORE_SAMPLES
-      itsTime = ((uint64) seqId * itsClockSpeed + 512) / 1024 + blockId;
+      itsTime = ((int64) seqId * itsClockSpeed + 512) / 1024 + blockId;
 #else
-      itsTime = ((uint64) seqId * itsClockSpeed) / 1024 + blockId;
+      itsTime = ((int64) seqId * itsClockSpeed) / 1024 + blockId;
 #endif
       return *this;
     }
@@ -190,7 +190,7 @@ namespace LOFAR
       return TimeStamp(itsTime - decrement, itsClockSpeed);
     }
 
-    inline uint64 TimeStamp::operator - (const TimeStamp &other) const
+    inline int64 TimeStamp::operator - (const TimeStamp &other) const
     {
       return itsTime - other.itsTime;
     }
@@ -200,19 +200,14 @@ namespace LOFAR
       return itsTime == 0;
     }
 
-    inline double TimeStamp::getSeconds() const
-    {
-      return 1.0 * itsTime * 1024 / itsClockSpeed;
-    }
-
-    inline TimeStamp::operator uint64 () const
+    inline TimeStamp::operator int64 () const
     {
       return itsTime;
     }
 
     inline TimeStamp::operator struct timespec () const
     {
-      uint64 ns = (uint64) (getSeconds() * 1e9);
+      int64 ns = (int64) (itsTime * 1024 * 1e9 / itsClockSpeed);
       struct timespec ts;
 
       ts.tv_sec = ns / 1000000000ULL;

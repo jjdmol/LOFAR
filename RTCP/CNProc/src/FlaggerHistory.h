@@ -2,8 +2,13 @@
 #define LOFAR_CNPROC_FLAGGER_HISTORY_H
 
 
-#define HISTORY_SIZE 1024
-#define MIN_HISTORY_SIZE 32 // at least 1, and the maximum is HISTORY_SIZE
+#define HISTORY_SIZE 64
+#define MIN_HISTORY_SIZE 4 // at least 1, max HISTORY_SIZE
+#define FLAG_WITH_INTEGRATED_HISTORY_POWERS 0
+
+#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
+#include <Interface/MultiDimArray.h>
+#endif
 
 namespace LOFAR {
 namespace RTCP {
@@ -11,57 +16,85 @@ namespace RTCP {
 class FlaggerHistory {
   unsigned itsSize;
   unsigned itsCurrent;
-  float itsSum;
+  float itsMedianSum;
 
-  std::vector<float> itsValues; // [HISTORY_SIZE]
+  std::vector<float> itsMedians;
+
+#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
+  MultiDimArray<float,2> itsPowers; // history of powers, [HISTORY_SIZE][itsNrChannels]
+  std::vector<float> itsIntegratedPowers; // the sum of all powers in itsPowers [itsNrChannels]
+#endif
 
 public:
 
-FlaggerHistory() : itsSize(0), itsCurrent(0), itsSum(0.0f) {
-    itsValues.resize(HISTORY_SIZE);
-    memset(&itsValues[0], 0, HISTORY_SIZE * sizeof(float));
+FlaggerHistory() : itsSize(0), itsCurrent(0), itsMedianSum(0.0f) {
+    itsMedians.resize(HISTORY_SIZE);
+    memset(&itsMedians[0], 0, HISTORY_SIZE * sizeof(float));
   }
 
+  void add(float median, std::vector<float>& powers) { // we have to copy powers
+#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
+    unsigned nrChannels = powers.size();
+    if(itsSize == 0) {
+      itsPowers.resize(boost::extents[HISTORY_SIZE][nrChannels]);
+      itsIntegratedPowers.resize(nrChannels);
+      memset(&itsIntegratedPowers[0], 0, nrChannels * sizeof(float));
+      memset(&itsPowers[0][0], 0, HISTORY_SIZE * nrChannels * sizeof(float));
+    }
+#else
+    (void) powers; // prevent compiler warning
+#endif
 
-  void add(float val) {
     if (itsSize >= HISTORY_SIZE) { // we are overwriting an old element
-      itsSum -= itsValues[itsCurrent];
+      itsMedianSum -= itsMedians[itsCurrent];
+
+#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
+      for(unsigned c=0; c<nrChannels; c++) {
+	itsIntegratedPowers[c] -= itsPowers[itsCurrent][c];
+      }
+#endif
     } else {
       itsSize++;
     }
-    itsSum += val;
-    itsValues[itsCurrent] = val;
+    itsMedians[itsCurrent] = median;
+    itsMedianSum += median;
+
+#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
+    for(unsigned c=0; c<nrChannels; c++) {
+      itsPowers[itsCurrent][c] = powers[c];
+      itsIntegratedPowers[itsCurrent] += powers[c];
+    }
+#endif
+
     itsCurrent++;
     if(itsCurrent >= HISTORY_SIZE) itsCurrent = 0;
 
 #if 0
     std::cout << "HISTORY(" << itsSize << "): ";
     for(int i=0; i<HISTORY_SIZE; i++) {
-	    std::cout << itsValues[i] << " ";
+	    std::cout << itsMedians[i] << " ";
     }
     std::cout << std::endl;
 #endif
   }
 
-
-  float getMean() {
+  float getMeanMedian() {
     if (itsSize == 0) {
       return 0.0f;
     }
-    return itsSum / itsSize;
+    return itsMedianSum / itsSize;
   }
 
-
-  float getStdDev() {
+  float getStdDevOfMedians() {
     if (itsSize == 0) {
       return 0.0f;
     }
 
     float stdDev = 0.0f;
-    float mean = getMean();
+    float meanMedian = getMeanMedian();
 
     for (unsigned i = 0; i < itsSize; i++) {
-      float diff = itsValues[i] - mean;
+      float diff = itsMedians[i] - meanMedian;
       stdDev += diff * diff;
     }
     stdDev /= itsSize;
@@ -69,10 +102,16 @@ FlaggerHistory() : itsSize(0), itsCurrent(0), itsSum(0.0f) {
     return stdDev;
   }
 
-
   unsigned getSize() {
     return itsSize;
   }
+
+#if FLAG_WITH_INTEGRATED_HISTORY_POWERS
+  std::vector<float>& getIntegratedPowers() {
+    return itsIntegratedPowers;
+  }
+#endif
+
 }; // end of FlaggerHistory
   
 

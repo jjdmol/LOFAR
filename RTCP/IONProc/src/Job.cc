@@ -83,8 +83,6 @@ Job::Job(const char *parsetName)
     LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
   }
 
-  LOG_DEBUG_STR(itsLogPrefix << "Running from " << (unsigned long)itsParset.startTime() << " to " << (unsigned long)itsParset.stopTime());
-
   // check enough parset settings just to get to the coordinated check in jobThread safely
   if (itsParset.CNintegrationTime() <= 0)
     THROW(IONProcException,"CNintegrationTime must be bigger than 0");
@@ -197,7 +195,6 @@ void Job::cancel()
   if (itsDoCancel) {
     LOG_WARN_STR(itsLogPrefix << "Observation already cancelled");
   } else {
-    LOG_WARN_STR(itsLogPrefix << "Cancelling observation");
     itsDoCancel = true;
     //jobQueue.itsReevaluate.broadcast();
 
@@ -471,8 +468,6 @@ bool Job::startBlock()
     broadcast(itsStopTime);
   }
 
-//  LOG_INFO_STR("anotherRun: itsBlockNumber = " << itsBlockNumber);
-
   bool done = !itsIsRunning;
 
   if (itsStopTime > 0.0) {
@@ -481,8 +476,6 @@ bool Job::startBlock()
 
     done = done || currentTime > itsStopTime;
   }
-
-//  LOG_INFO_STR("anotherRun: done = " << done);
 
   return !done;
 }
@@ -621,7 +614,6 @@ bool Job::pause(const double &when)
     if (!itsDoCancel)
       cancel();
   } else {
-    LOG_WARN_STR(itsLogPrefix << "Non-real time mode blablabla");
     itsRequestedStopTime = when;
   }
 

@@ -1,22 +1,23 @@
-//# outputProc.cc
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* outputProc.cc
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id$
+ */
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -71,7 +72,7 @@ int main(int argc, char *argv[])
 #if defined HAVE_LOG4CPLUS
   char *dirc = strdup(argv[0]);
 
-  INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/outputProc.log_prop");
+  INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/Storage_main.log_prop");
 
   free(dirc);
 #elif defined HAVE_LOG4CXX
@@ -79,12 +80,10 @@ int main(int argc, char *argv[])
   Context::initialize();
   setLevel("Global",8);
 #else
-  INIT_LOGGER_WITH_SYSINFO(str(boost::format("OutputProc@%02d") % (argc > 2 ? atoi(argv[2]) : -1)));
+  INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 2 ? atoi(argv[2]) : -1)));
 #endif
 
   CasaLogSink::attach();
-
-  string obsLogPrefix = "[obs unknown] ";
 
   try {
     if (argc != 4)
@@ -116,7 +115,7 @@ int main(int argc, char *argv[])
     ASSERT(myRank < hostnames.size());
     string myHostName = hostnames[myRank];
 
-    obsLogPrefix = str(boost::format("[obs %u] ") % parset.observationID());
+    string obsLogPrefix = str(boost::format("[obs %u] ") % parset.observationID());
 
     {
       // make sure "parset" stays in scope for the lifetime of the SubbandWriters
@@ -166,11 +165,11 @@ int main(int argc, char *argv[])
         }
     }
   } catch (Exception &ex) {
-    LOG_FATAL_STR(obsLogPrefix << "Caught Exception: " << ex);
+    LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
     return 1;
   }
 
-  LOG_INFO_STR(obsLogPrefix << "Program end");
+  LOG_INFO_STR("[obs unknown] Program end");
   return 0;
 }
 

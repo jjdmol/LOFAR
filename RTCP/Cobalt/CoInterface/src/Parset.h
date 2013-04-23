@@ -1,22 +1,23 @@
-//# Parset.h: class/struct that holds the Parset information
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* Parset.h: class/struct that holds the Parset information
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id$
+ */
 
 #ifndef LOFAR_INTERFACE_PARSET_H
 #define LOFAR_INTERFACE_PARSET_H
@@ -512,6 +513,9 @@ namespace LOFAR
       unsigned                    nrSamplesPerChannel() const;
       unsigned                    nrSamplesPerSubband() const;
       unsigned                    nrHistorySamples() const;
+      unsigned                    nrSamplesToCNProc() const;
+      unsigned                    inputBufferSize() const; // in samples
+      unsigned                    maxNetworkDelay() const;
       unsigned                    nrPPFTaps() const;
       unsigned                    nrChannelsPerSubband() const;
       double                      channelWidth() const;
@@ -593,6 +597,13 @@ namespace LOFAR
       bool                        haveAnaBeam() const;
       std::vector<double>         getAnaBeamDirection() const;
       std::string                 getAnaBeamDirectionType() const;
+
+      struct StationRSPpair {
+        std::string station;
+        unsigned rsp;
+      };
+
+      std::vector<StationRSPpair> getStationNamesAndRSPboardNumbers(unsigned psetNumber) const;
 
       std::string                 getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
 

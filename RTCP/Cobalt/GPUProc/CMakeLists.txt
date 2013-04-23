@@ -1,35 +1,16 @@
 # $Id: CMakeLists.txt 16350 2010-09-20 13:14:52Z nieuwpoort $
 
-# We need at least CMake 2.8 for CUDA support
-cmake_minimum_required(VERSION 2.8)
-
-lofar_package(GPUProc 1.0 DEPENDS Common Stream ApplCommon CoInterface OpenCL_FFT InputProc)
-
-# Handle options USE_CUDA and USE_OPENCL.
-if(NOT USE_CUDA AND NOT USE_OPENCL)
-  message(FATAL_ERROR
-    "You need to enable CUDA or OpenCL to build ${PACKAGE_NAME}. "
-    "Please check your variants file!")
-endif()
-
-if(USE_CUDA)
-  lofar_find_package(CUDA REQUIRED)
-  add_definitions(-DUSE_CUDA)
-endif()
-
-if(USE_OPENCL)
-  lofar_find_package(OpenCL REQUIRED)
-  add_definitions(-DUSE_OPENCL)
-endif()
+lofar_package(GPUProc 1.0 DEPENDS Common Stream ApplCommon CoInterface OpenCL_FFT)
 
 #add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
 
 include(LofarFindPackage)
 lofar_find_package(OpenMP REQUIRED)
+lofar_find_package(OpenCL REQUIRED)
 lofar_find_package(LibSSH2 REQUIRED)
 lofar_find_package(OpenSSL REQUIRED)
-lofar_find_package(Boost REQUIRED)
-lofar_find_package(MPI)
+lofar_find_package(Boost REQUIRED COMPONENTS date_time)
+lofar_find_package(Casacore COMPONENTS measures REQUIRED)
 lofar_find_package(FFTW3 COMPONENTS single double threads)  # 'double threads' for FFT unit test refs
 if(NOT FFTW3_FOUND)
   lofar_find_package(FFTW2 COMPONENTS single real)
@@ -37,10 +18,6 @@ if(NOT FFTW3_FOUND)
     message(SEND_ERROR "Should have FFTW3 or FFTW2 installed.")
   endif(NOT FFTW2_FOUND)
 endif(NOT FFTW3_FOUND)
-
-# InputProc/Delays.h drags in a dependency on casa; hence we need to add the
-# following line. This should be fixed someday.
-lofar_find_package(Casacore COMPONENTS casa)
 
 lofar_find_package(Valgrind)
 if(USE_VALGRIND)

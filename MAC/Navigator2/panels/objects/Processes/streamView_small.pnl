@@ -1,18 +1,13 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 114 72 N "_3DFace" 2
+PANEL,-1 -1 400 400 N "_3DFace" 2
 "$observation"
 "$streamNr"
 "main()
 {
   stream = \"stream\"+$streamNr;
   observation = $observation;
-  
-  // we just need to make clear the type of this baseDP to get the right panel.
-  // The panel itself will sort out the list of inputbuffers belonging to it
-  baseDP =CEPDBName+\"LOFAR_PermSW_PSIONode00_InputBuffer\";
-
   reload();
 }
   
@@ -30,8 +25,7 @@ private void reload() {
   for (int i=1; i<= dynlen(inputBuffers); i++) {
     dynAppend(connectTo,inputBuffers[i]+\".\"+stream+\".percBad:_online.._value\");
   }
-  if (dynlen(inputBuffers) > 0) baseDP = inputBuffers[1];
-  
+    
   // check if the required datapoint for this view are enabled and accessible
   if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo)>0 ){
     if (dpConnect(\"streamCB\", connectTo) == -1) {
@@ -78,57 +72,15 @@ void streamCB(dyn_string dps, dyn_float values)
   setValue(\"streamObject\", \"backCol\", color);
 
  }" 0
- E "main(int x, int y)
-{
-  click();
-}" 0
- "main()
-{
-  rClick();
-}" 0
- "main(int x, int y)
-{
-  dblClick();
-}" 0
- 1 -1 -1 0  0 0
+ E E E E 1 -1 -1 0  0 0
 ""0  1
 E "#uses \"navPanel.ctl\"
 
-string baseDP=\"\";
 string stream;
 string observation;
 dyn_string connectTo;
 dyn_string inputBuffers;
-bool connected = false;
-bool bDoubleClicked  = false;
-
-// routine for single mouse click
-void click() {
-
-}
-
-// routine for double mouse click
-void dblClick() {
-  // indicate this is a doubleClick
-  bDoubleClicked = true;   
- 
-  if (dpExists(baseDP) ) {
-    LOG_DEBUG(\"streamView_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
-    g_currentDatapoint=baseDP;
-    //we also have to set the tabctrl to think this was initiated from the ProcessesTab, otherwise we will get the wrong panel.
-    navPanel_setEvent(\"Processes\",\"ChangeTab\");
-  }
-
-  
-  // set delay to avoid click event will be triggered
-  delay(0, 500);
-  bDoubleClicked = false;  
-}                       
-
-// routine for right mouse click
-void rClick() {
-
-}                       " 0
+bool connected = false;" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -141,15 +93,7 @@ LANG:1 0
 "streamObject"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 0 0 0 0 0 0
 E E E
 0
@@ -158,11 +102,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  1 E 0 0 24 13
+E E 0 1 1 2 1 E U  1 E 0 0 24 13
 0
 LAYER, 1 
 1

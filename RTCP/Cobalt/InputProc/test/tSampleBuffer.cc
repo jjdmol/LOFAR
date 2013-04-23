@@ -1,22 +1,23 @@
-//# tSampleBuffer.cc
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* tSampleBuffer.cc
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -25,10 +26,10 @@
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 
-#include <InputProc/SampleType.h>
-#include <InputProc/Buffer/StationID.h>
-#include <InputProc/Buffer/SampleBuffer.h>
-#include <InputProc/Buffer/BufferSettings.h>
+#include <SampleType.h>
+#include <Buffer/StationID.h>
+#include <Buffer/SampleBuffer.h>
+#include <Buffer/BufferSettings.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -56,11 +57,7 @@ int main()
   struct BufferSettings settings(stationID, false);
 
   // Use a fixed key, so the test suite knows what to clean
-  settings.dataKey = 0x10000004;
-
-  // Limit the array in size to work on systems with only 32MB SHM
-  settings.nrBoards = 1;
-  settings.setBufferSize(0.1);
+  settings.dataKey = 0x12345678;
 
   // Test various modes
   LOG_INFO("Test 16-bit complex");

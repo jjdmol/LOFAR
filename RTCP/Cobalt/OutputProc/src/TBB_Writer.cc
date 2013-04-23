@@ -1,26 +1,27 @@
-//# TBB_Writer.cc: Write TBB data into an HDF5 file
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* TBB_Writer.cc: Write TBB data into an HDF5 file
+ *
+ * Copyright (C) 2012
+ * ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: TBB_Writer.cc 47912 2012-09-07 11:54:53Z amesfoort $
+ */
 
 #include <lofar_config.h>
-
-#ifdef HAVE_DAL
 
 #define _FILE_OFFSET_BITS 64
 #include <cstddef>
@@ -91,7 +92,7 @@ namespace LOFAR
       return string(&date[0]);
     }
 
-    // FileStream doesn't do pwrite(2). Nobody else needs it, so define it here, but in the same way.
+    // FileStream doesn't do pwrite(2).
     static size_t tryPWrite(int fd, const void *ptr, size_t size, off_t offset)
     {
       ssize_t bytes = ::pwrite(fd, ptr, size, offset);
@@ -114,11 +115,11 @@ namespace LOFAR
     {
       out << (unsigned)h.stationID << " " << (unsigned)h.rspID << " " << (unsigned)h.rcuID << " " << (unsigned)h.sampleFreq <<
       " " << h.seqNr << " " << h.time << " " << (h.nOfFreqBands == 0 ? h.sampleNr : h.bandSliceNr) << " " << h.nOfSamplesPerFrame <<
-      " " << h.nOfFreqBands << " " << h.spare << " " << h.crc16; // casts uin8_t to unsigned to avoid printing as char
+      " " << h.nOfFreqBands << " " << h.spare << " " << h.crc16;      // casts uin8_t to unsigned to avoid printing as char
       return out;
     }
 
-//////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
 
     TBB_Dipole::TBB_Dipole()
       : itsRawOut(NULL) // needed, setting the others is superfluous
@@ -150,15 +151,15 @@ namespace LOFAR
       // Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
       if (isInitialized()) {
         try {
-          if (itsNrSubbands == 0) { // transient mode
+          if (itsNrSubbands == 0) {               // transient mode
             itsDataset->resize1D(itsDatasetLen);
-          } else { // spectral mode
+          } else {               // spectral mode
             vector<ssize_t> newDims(2);
             newDims[0] = itsDatasetLen;
-            newDims[1] = itsNrSubbands; // only the 1st dim can be extended
+            newDims[1] = itsNrSubbands;                     // only the 1st dim can be extended
             itsDataset->resize(newDims);
           }
-        } catch (exception& exc) { // dal::DALException, or std::bad_alloc from vector constr
+        } catch (exception& exc) {         // dal::DALException, or std::bad_alloc from vector constr
           LOG_WARN_STR("TBB: failed to resize HDF5 dipole dataset to external data size: " << exc.what());
         }
 
@@ -208,12 +209,12 @@ namespace LOFAR
       }
 
       itsTime = header.time;
-      if (itsNrSubbands == 0) { // transient mode
+      if (itsNrSubbands == 0) {   // transient mode
         itsExpSampleNr = header.sampleNr;
-      } else { // spectral mode
+      } else {   // spectral mode
         itsExpSliceNr = header.bandSliceNr >> TBB_SLICE_NR_SHIFT;
       }
-      itsDatasetLen = 0; // already 0, for completeness
+      itsDatasetLen = 0;   // already 0, for completeness
     }
 
     bool TBB_Dipole::isInitialized() const
@@ -226,7 +227,7 @@ namespace LOFAR
     {
       if (itsFlagOffsets.empty() || offset > itsFlagOffsets.back().end) {
         itsFlagOffsets.push_back(dal::Range(offset, offset + len));
-      } else { // extend
+      } else {   // extend
         itsFlagOffsets.back().end += len;
       }
     }
@@ -247,15 +248,15 @@ namespace LOFAR
       off_t offset = 0;
       if (frame.header.time == itsTime) {
         offset = itsDatasetLen + frame.header.sampleNr - itsExpSampleNr;
-      } else { // crossed a seconds boundary, potentially more than once on excessive frame loss
-        // A dump does not have to start at a sec bound, so up till the first bound, we may have had fewer than itsSampleFreq samples.
+      } else {   // crossed a seconds boundary, potentially more than once on excessive frame loss
+                 // A dump does not have to start at a sec bound, so up till the first bound, we may have had fewer than itsSampleFreq samples.
         if (itsDatasetLen < (int32_t)itsSampleFreq) {
           offset = itsDatasetLen;
           itsTime++;
         }
         offset += (off_t)(frame.header.time - itsTime) * itsSampleFreq;
 
-        uint32_t newSecSampleNr0 = frame.header.sampleNr & (frame.header.nOfSamplesPerFrame - 1); // 0, or 512 by correctSampleNr()
+        uint32_t newSecSampleNr0 = frame.header.sampleNr & (frame.header.nOfSamplesPerFrame - 1);         // 0, or 512 by correctSampleNr()
         offset += frame.header.sampleNr - newSecSampleNr0;
       }
 
@@ -266,7 +267,7 @@ namespace LOFAR
       size_t nskipped = offset - itsDatasetLen;
       if (nskipped > 0) {
         appendFlags(itsDatasetLen, nskipped);
-        itsRawOut->skip(nskipped * sizeof(frame.payload.data[0])); // skip space of lost frame(s)
+        itsRawOut->skip(nskipped * sizeof(frame.payload.data[0]));         // skip space of lost frame(s)
       }
 
       /*
@@ -276,7 +277,7 @@ namespace LOFAR
       if (!crc32tbb(&frame.payload, frame.header.nOfSamplesPerFrame)) {
         appendFlags(offset, frame.header.nOfSamplesPerFrame);
         uint32_t crc32;
-        memcpy(&crc32, &frame.payload.data[frame.header.nOfSamplesPerFrame], sizeof crc32); // strict-aliasing safe
+        memcpy(&crc32, &frame.payload.data[frame.header.nOfSamplesPerFrame], sizeof crc32);         // strict-aliasing safe
         LOG_WARN_STR("TBB: crc32: " << frame.header << " " << crc32);
       } else if (hasAllZeroDataSamples(frame.payload, frame.header.nOfSamplesPerFrame)) {
         appendFlags(offset, frame.header.nOfSamplesPerFrame);
@@ -296,7 +297,7 @@ namespace LOFAR
        * Out-of-order or duplicate frames are very unlikely in the LOFAR TBB setup,
        * but let us know if it ever happens, then we will adapt this code and appendFlags().
        */
-      uint32_t sliceNr = frame.header.bandSliceNr >> TBB_SLICE_NR_SHIFT; // cannot sanitize fully: too large values indicate lost data: flag
+      uint32_t sliceNr = frame.header.bandSliceNr >> TBB_SLICE_NR_SHIFT;   // cannot sanitize fully: too large values indicate lost data: flag
       if (frame.header.time < itsTime || (frame.header.time == itsTime && sliceNr < itsExpSliceNr)) {
         LOG_WARN_STR("TBB: Unhandled out-of-order or duplicate frame: " <<
                      (unsigned)frame.header.stationID << " " << (unsigned)frame.header.rspID << " " << (unsigned)frame.header.rcuID <<
@@ -307,8 +308,8 @@ namespace LOFAR
       off_t offset = 0;
       if (frame.header.time == itsTime) {
         offset = itsDatasetLen + sliceNr - itsExpSliceNr;
-      } else { // crossed a seconds boundary, potentially more than once on excessive frame loss
-        // A dump does not have to start at a sec bound, so up till the first bound, we may have had fewer than itsSampleFreq samples.
+      } else {   // crossed a seconds boundary, potentially more than once on excessive frame loss
+                 // A dump does not have to start at a sec bound, so up till the first bound, we may have had fewer than itsSampleFreq samples.
         if (itsDatasetLen < (int32_t)itsSampleFreq) {
           offset = itsDatasetLen;
           itsTime++;
@@ -322,7 +323,7 @@ namespace LOFAR
        */
       size_t nskipped = offset - itsDatasetLen;
       if (nskipped > 0) {
-        appendFlags(itsDatasetLen, nskipped); // no need to skip/lseek; we use pwrite() below
+        appendFlags(itsDatasetLen, nskipped);         // no need to skip/lseek; we use pwrite() below
       }
 
       /*
@@ -332,11 +333,11 @@ namespace LOFAR
        * TBB Design Doc states the crc32 is computed for transient data only, but it is also valid for spectral data.
        * Except that it looks invalid for the first spectral frame each second, so skip checking those. // TODO: enable 'sliceNr != 0 && ' below after verifying with recent real data
        */
-      unsigned nSamplesPerSubband = frame.header.nOfSamplesPerFrame / itsNrSubbands; // any remainder is zeroed until the crc32
+      unsigned nSamplesPerSubband = frame.header.nOfSamplesPerFrame / itsNrSubbands;   // any remainder is zeroed until the crc32
       if (/*sliceNr != 0 && */ !crc32tbb(&frame.payload, 2 * MAX_TBB_SPECTRAL_NSAMPLES)) {
         appendFlags(offset, nSamplesPerSubband);
         uint32_t crc32;
-        memcpy(&crc32, &frame.payload.data[2 * MAX_TBB_SPECTRAL_NSAMPLES], sizeof crc32); // strict-aliasing safe
+        memcpy(&crc32, &frame.payload.data[2 * MAX_TBB_SPECTRAL_NSAMPLES], sizeof crc32);         // strict-aliasing safe
         LOG_WARN_STR("TBB: crc32: " << frame.header << " " << crc32);
       } else if (hasAllZeroDataSamples(frame.payload, 2 * frame.header.nOfSamplesPerFrame)) {
         appendFlags(offset, nSamplesPerSubband);
@@ -371,21 +372,21 @@ namespace LOFAR
                                            const string& rawFilename, dal::TBB_Station& station)
     {
       // Override endianess. TBB data is always stored little endian and also received as such, so written as-is on any platform.
-      if (subbandInfo.centralFreqs.empty()) { // transient mode
+      if (subbandInfo.centralFreqs.empty()) {   // transient mode
         dal::TBB_DipoleDataset* dpDataset = new dal::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
         itsDataset = static_cast<dal::TBB_Dataset<short>*>(dpDataset);
 
         itsDataset->create1D(0, -1, LOFAR::basename(rawFilename), itsDataset->LITTLE);
 
         dpDataset->sampleNumber().value = header.sampleNr;
-      } else { // spectral mode
+      } else {   // spectral mode
         dal::TBB_SubbandsDataset* sbDataset = new dal::TBB_SubbandsDataset(station.subbands(header.stationID, header.rspID, header.rcuID));
-        itsDataset = reinterpret_cast<dal::TBB_Dataset<short>*>(sbDataset); // not so nice
+        itsDataset = reinterpret_cast<dal::TBB_Dataset<short>*>(sbDataset);         // not so nice
 
         vector<ssize_t> dims(2), maxdims(2);
         dims[0] = 0;
         dims[1] = itsNrSubbands;
-        maxdims[0] = -1; // only the 1st dim can be extendible
+        maxdims[0] = -1;         // only the 1st dim can be extendible
         maxdims[1] = itsNrSubbands;
         itsDataset->create(dims, maxdims, LOFAR::basename(rawFilename), itsDataset->LITTLE);
 
@@ -403,9 +404,9 @@ namespace LOFAR
       itsDataset->sampleFrequency().value = header.sampleFreq;
       itsDataset->sampleFrequencyUnit().value = "MHz";
 
-      itsDataset->time().value = header.time; // in seconds
+      itsDataset->time().value = header.time;                  // in seconds
 
-      itsDataset->samplesPerFrame().value = header.nOfSamplesPerFrame; // possibly sanitized
+      itsDataset->samplesPerFrame().value = header.nOfSamplesPerFrame;       // possibly sanitized
       //itsDataset->dataLength().value is set at the end (destr)
       //itsDataset->flagOffsets().value is set at the end (destr) // TODO: attrib -> 1D dataset
       itsDataset->nyquistZone().value = parset.nyquistZone();
@@ -451,26 +452,26 @@ namespace LOFAR
         antPos[0] = stationMetaData.antPositions[2u * 3u * header.rcuID];
         antPos[1] = stationMetaData.antPositions[2u * 3u * header.rcuID + 1u];
         antPos[2] = stationMetaData.antPositions[2u * 3u * header.rcuID + 2u];
-        itsDataset->antennaPosition().create(antPos.size()).set(antPos); // absolute position
+        itsDataset->antennaPosition().create(antPos.size()).set(antPos);         // absolute position
 
         itsDataset->antennaPositionUnit().value = "m";
-        itsDataset->antennaPositionFrame().value = parset.positionType(); // "ITRF"
+        itsDataset->antennaPositionFrame().value = parset.positionType();         // "ITRF"
 
         /*
          * The normal vector and rotation matrix are actually per antenna field,
          * but given the HBA0/HBA1 "ears" depending on antenna set, it was
          * decided to store them per antenna.
          */
-        itsDataset->antennaNormalVector().create(stationMetaData.normalVector.size()).set(stationMetaData.normalVector);       // 3 doubles
-        itsDataset->antennaRotationMatrix().create(stationMetaData.rotationMatrix.size()).set(stationMetaData.rotationMatrix); // 9 doubles, 3x3, row-major
+        itsDataset->antennaNormalVector().create(stationMetaData.normalVector.size()).set(stationMetaData.normalVector);               // 3 doubles
+        itsDataset->antennaRotationMatrix().create(stationMetaData.rotationMatrix.size()).set(stationMetaData.rotationMatrix);         // 9 doubles, 3x3, row-major
       }
 
       // Tile beam is the analog beam. Only HBA can have one analog beam; optional.
       if (parset.haveAnaBeam()) {
         vector<double> anaBeamDir(parset.getAnaBeamDirection());
-        itsDataset->tileBeam().create(anaBeamDir.size()).set(anaBeamDir); // always for beam 0
+        itsDataset->tileBeam().create(anaBeamDir.size()).set(anaBeamDir);              // always for beam 0
         itsDataset->tileBeamUnit().value = "m";
-        itsDataset->tileBeamFrame().value = parset.getAnaBeamDirectionType(); // idem
+        itsDataset->tileBeamFrame().value = parset.getAnaBeamDirectionType();         // idem
 
         //itsDataset->tileBeamDipoles().create(???.size()).set(???);
 
@@ -483,7 +484,7 @@ namespace LOFAR
         //itsDataset->tileDipolePositionFrame().value = ???;
       }
 
-      itsDataset->dispersionMeasure().value = parset.dispersionMeasure(0, 0); // beam, pencil TODO: adapt too if >1 beam?
+      itsDataset->dispersionMeasure().value = parset.dispersionMeasure(0, 0);       // beam, pencil TODO: adapt too if >1 beam?
       itsDataset->dispersionMeasureUnit().value = "pc/cm^3";
     }
 
@@ -502,7 +503,7 @@ namespace LOFAR
       return true;
     }
 
-//////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
 
     TBB_Station::TBB_Station(const string& stationName, Mutex& h5Mutex, const Parset& parset,
                              const StationMetaData& stationMetaData, const string& h5Filename)
@@ -529,7 +530,7 @@ namespace LOFAR
       try {
         ScopedLock slH5(itsH5Mutex);
         itsStation.nofDipoles().value = itsStation.dipoles().size();
-      } catch (exception& exc) { // dal::DALException or worse
+      } catch (exception& exc) {   // dal::DALException or worse
         LOG_WARN_STR("TBB: failed to set station NOF_DIPOLES attribute: " << exc.what());
       }
     }
@@ -577,7 +578,7 @@ namespace LOFAR
       string rawFilename(itsH5Filename);
       string rsprcuStr(formatString("_%03u%03u", rspID, rcuID));
       size_t pos = rawFilename.find('_', rawFilename.find('_') + 1);
-      rawFilename.insert(pos, rsprcuStr); // insert _rsp/rcu IDs after station name (2nd '_')
+      rawFilename.insert(pos, rsprcuStr);   // insert _rsp/rcu IDs after station name (2nd '_')
       rawFilename.resize(rawFilename.size() - (sizeof(".h5") - 1));
       rawFilename.append(".raw");
       return rawFilename;
@@ -596,9 +597,9 @@ namespace LOFAR
                     rawFilename, itsStation, itsH5Mutex);
       }
 
-      if (itsSubbandInfo.centralFreqs.empty()) { // transient mode
+      if (itsSubbandInfo.centralFreqs.empty()) {   // transient mode
         dipole.processTransientFrameData(frame);
-      } else { // spectral mode
+      } else {   // spectral mode
         dipole.processSpectralFrameData(frame, itsSubbandInfo);
       }
     }
@@ -648,17 +649,17 @@ namespace LOFAR
       itsH5File.observationStartMJD().value = toMJD(itsParset.startTime());
 
       // The stop time can be a bit further than the one actually specified, because we process in blocks.
-      unsigned nrBlocks = floor((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()); // TODO: check vs bf: unsigned nrBlocks = parset.nrBeamFormedBlocks();
+      unsigned nrBlocks = floor((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime());   // TODO: check vs bf: unsigned nrBlocks = parset.nrBeamFormedBlocks();
       double stopTime = itsParset.startTime() + nrBlocks * itsParset.CNintegrationTime();
 
       itsH5File.observationEndUTC().value = utcTimeStr(stopTime);
       itsH5File.observationEndMJD().value = toMJD(stopTime);
 
-      itsH5File.observationNofStations().value = itsParset.nrStations(); // TODO: SS beamformer?
+      itsH5File.observationNofStations().value = itsParset.nrStations();   // TODO: SS beamformer?
       // For the observation attribs, dump all stations participating in the observation (i.e. allStationNames(), not mergedStationNames()).
       // This may not correspond to which station HDF5 groups will be written for TBB, but that is true anyway, regardless of any merging.
       vector<string> allStNames(itsParset.allStationNames());
-      itsH5File.observationStationsList().create(allStNames.size()).set(allStNames); // TODO: SS beamformer?
+      itsH5File.observationStationsList().create(allStNames.size()).set(allStNames);   // TODO: SS beamformer?
 
       double subbandBandwidth = itsParset.subbandBandwidth();
       double channelBandwidth = itsParset.channelWidth();
@@ -726,18 +727,18 @@ namespace LOFAR
       vector<string> obsStationNames(itsParset.allStationNames());
       vector<string>::const_iterator nameIt(obsStationNames.begin());
 
-      vector<double> stationPositions(itsParset.positions()); // len must be (is generated as) 3x #stations
+      vector<double> stationPositions(itsParset.positions());   // len must be (is generated as) 3x #stations
       vector<double>::const_iterator posIt(stationPositions.begin());
       string stFullName;
       for (; nameIt != obsStationNames.end(); ++nameIt, posIt += 3) {
         stFullName = *nameIt;
-        if (stName == stFullName.substr(0, stName.size())) { // for TBB, consider "CS001" == "CS001HBA0" etc
+        if (stName == stFullName.substr(0, stName.size())) {         // for TBB, consider "CS001" == "CS001HBA0" etc
           break;
         }
       }
-      if (nameIt != obsStationNames.end() && posIt < stationPositions.end()) { // found?
+      if (nameIt != obsStationNames.end() && posIt < stationPositions.end()) {   // found?
         stPos.assign(posIt, posIt + 3);
-      } else { // N/A, but create the group anyway to be able to store incoming data.
+      } else {   // N/A, but create the group anyway to be able to store incoming data.
         stFullName.clear();
       }
       itsStation.create();
@@ -762,7 +763,7 @@ namespace LOFAR
       }
 
       // digital beam(s)
-      if (itsParset.nrBeams() > 0) { // TODO: adapt DAL, so we can write all digital beams, analog too if tiles (HBA)
+      if (itsParset.nrBeams() > 0) {   // TODO: adapt DAL, so we can write all digital beams, analog too if tiles (HBA)
         vector<double> beamDir(itsParset.getBeamDirection(0));
         st.beamDirection().create(beamDir.size()).set(beamDir);
         st.beamDirectionUnit().value = "m";
@@ -785,7 +786,7 @@ namespace LOFAR
     {
       tg.groupType().value = "TriggerGroup";
       tg.triggerType().value = "Unknown";
-      tg.triggerVersion().value = 0; // There is no trigger algorithm info available to us yet.
+      tg.triggerVersion().value = 0;   // There is no trigger algorithm info available to us yet.
 
       // Trigger parameters (how to decide if there is a trigger; per obs)
       try {
@@ -813,7 +814,7 @@ namespace LOFAR
 
     }
 
-//////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
 
     TBB_StreamWriter::TBB_StreamWriter(TBB_Writer& writer, const string& inputStreamName,
                                        size_t expNTrSamples, const string& logPrefix,
@@ -846,7 +847,7 @@ namespace LOFAR
       } catch (exception& exc) {
         if (itsOutputThread != NULL) {
           try {
-            itsReceiveQueue.append(NULL); // tell output thread to stop
+            itsReceiveQueue.append(NULL);                     // tell output thread to stop
           } catch (exception& exc) {
             LOG_WARN_STR("TBB: failed to notify output thread to terminate: " << exc.what());
           }
@@ -883,17 +884,17 @@ namespace LOFAR
 
     time_t TBB_StreamWriter::getTimeoutStampSec() const
     {
-      return itsTimeoutStamp.tv_sec; // racy read (and no access once guarantee), but only to terminate after timeout
+      return itsTimeoutStamp.tv_sec;   // racy read (and no access once guarantee), but only to terminate after timeout
     }
 
     void TBB_StreamWriter::frameHeaderLittleToHost(TBB_Header& header) const
     {
-      header.seqNr = le32toh(header.seqNr); // set to 0 for crc16, otherwise unused
+      header.seqNr = le32toh(header.seqNr);                // set to 0 for crc16, otherwise unused
       header.time = le32toh(header.time);
       header.sampleNr = le32toh(header.sampleNr);
       header.nOfSamplesPerFrame = le16toh(header.nOfSamplesPerFrame);
       header.nOfFreqBands = le16toh(header.nOfFreqBands);
-      header.spare = le16toh(header.spare); // unused
+      header.spare = le16toh(header.spare);                // unused
       header.crc16 = le16toh(header.crc16);
     }
 
@@ -919,10 +920,10 @@ namespace LOFAR
     {
       itsCrc16gen.reset();
 
-      const char* ptr = reinterpret_cast<const char*>(header); // to char* for strict-aliasing
+      const char* ptr = reinterpret_cast<const char*>(header);   // to char* for strict-aliasing
       for (unsigned i = 0; i < sizeof(*header) - sizeof(header->crc16); i += 2) {
         int16_t val;
-        memcpy(&val, &ptr[i], sizeof val); // strict-aliasing safe
+        memcpy(&val, &ptr[i], sizeof val);         // strict-aliasing safe
         val = __bswap_16(val);
         itsCrc16gen.process_bytes(&val, sizeof val);
       }
@@ -943,17 +944,17 @@ namespace LOFAR
     {
       itsCrc32gen.reset();
 
-      const char* ptr = reinterpret_cast<const char*>(payload->data); // to char* for strict-aliasing
+      const char* ptr = reinterpret_cast<const char*>(payload->data);   // to char* for strict-aliasing
       for (unsigned i = 0; i < nTrSamples * sizeof(int16_t); i += 2) {
         int16_t val;
-        memcpy(&val, &ptr[i], sizeof val); // strict-aliasing safe
+        memcpy(&val, &ptr[i], sizeof val);         // strict-aliasing safe
         val = __bswap_16(val);
         itsCrc32gen.process_bytes(&val, sizeof val);
       }
 
       // It is also possible to process crc32val and see if checksum() equals 0.
       uint32_t crc32val;
-      memcpy(&crc32val, &ptr[nTrSamples * sizeof(int16_t)], sizeof crc32val); // idem
+      memcpy(&crc32val, &ptr[nTrSamples * sizeof(int16_t)], sizeof crc32val);   // idem
 #if __BYTE_ORDER == __BIG_ENDIAN || defined WORDS_BIGENDIAN // for cross-compilation on little endian; fails for big->little
       crc32val = __bswap_32(crc32val);
 #endif
@@ -966,13 +967,13 @@ namespace LOFAR
      */
     void TBB_StreamWriter::processHeader(TBB_Header& header, size_t recvPayloadSize)
     {
-      header.seqNr = 0; // For the header crc. Don't save/restore it as we don't need this field.
+      header.seqNr = 0;   // For the header crc. Don't save/restore it as we don't need this field.
       if (!crc16tbb(&header)) {
         /*
          * The TBB spec states that each frame has the same fixed length, so the previous values are a good base guess if the header crc fails.
          * But it is not clear if it is worth the effort to try to guess to fix something up. For now, drop and log.
          */
-        THROW(TBB_MalformedFrameException, "crc16: " << header); // header not yet bswapped on _big_ endian
+        THROW(TBB_MalformedFrameException, "crc16: " << header);         // header not yet bswapped on _big_ endian
       }
 
       /*
@@ -990,10 +991,10 @@ namespace LOFAR
       }
 
       size_t sampleSize;
-      if (header.nOfFreqBands == 0) { // transient mode TODO: do not rely on data to check data size!
+      if (header.nOfFreqBands == 0) {   // transient mode TODO: do not rely on data to check data size!
         correctSampleNr(header);
         sampleSize = sizeof(int16_t);
-      } else { // spectral mode
+      } else {   // spectral mode
         sampleSize = 2 * sizeof(int16_t);
       }
       // Div with a bad recvPayloadSize could round. Causes crc32 error at worst, but avoids wrong or misaligned memory access.
@@ -1023,7 +1024,7 @@ namespace LOFAR
       Stream* stream;
       try {
         stream = createStream(itsInputStreamName, true);
-      } catch (Exception& exc) { // SystemCallException or CoInterfaceException (or TimeOutException)
+      } catch (Exception& exc) {   // SystemCallException or CoInterfaceException (or TimeOutException)
         LOG_WARN_STR(itsLogPrefix << exc);
         itsInExitStatus = 1;
         return;
@@ -1036,7 +1037,7 @@ namespace LOFAR
         try {
           frame = itsFreeQueue.remove();
 
-          size_t nread = stream->tryRead(frame, itsExpFrameSize); // read() once for udp
+          size_t nread = stream->tryRead(frame, itsExpFrameSize);               // read() once for udp
 
           // Notify master that we are still busy. (Racy, but ok, see the timeoutstamp decl.)
           ::gettimeofday(&itsTimeoutStamp, NULL);
@@ -1061,15 +1062,15 @@ namespace LOFAR
           } catch (exception& exc) {
             LOG_WARN_STR(itsLogPrefix << "may have lost a frame buffer (1): " << exc.what());
           }
-        } catch (Stream::EndOfStreamException& ) { // after end of stream, for input from file or pipe
+        } catch (Stream::EndOfStreamException& ) {         // after end of stream, for input from file or pipe
           break;
         } catch (exception& exc) {
           LOG_FATAL_STR(itsLogPrefix << exc.what());
           itsInExitStatus = 1;
           break;
-        } catch (...) { // thread cancellation exc induced after timeout, for input from udp
+        } catch (...) {         // thread cancellation exc induced after timeout, for input from udp
           delete stream;
-          throw; // mandatory
+          throw;               // mandatory
         }
       }
 
@@ -1122,7 +1123,7 @@ namespace LOFAR
       }
     }
 
-//////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
 
     TBB_Writer::TBB_Writer(const vector<string>& inputStreamNames, const Parset& parset,
                            const StationMetaDataMap& stationMetaDataMap,
@@ -1156,7 +1157,7 @@ namespace LOFAR
 
       itsUnknownStationMetaData.available = false;
 
-      size_t expNTrSamples; // in terms of the transient sample size
+      size_t expNTrSamples;   // in terms of the transient sample size
       int operatingMode = itsParset.getInt("Observation.TBB.TBBsetting.operatingMode", 0);
       if (operatingMode == TBB_TRANSIENT_MODE) {
         expNTrSamples = DEFAULT_TBB_TRANSIENT_NSAMPLES;
@@ -1188,10 +1189,10 @@ namespace LOFAR
 
     TBB_Station* TBB_Writer::getStation(const TBB_Header& header)
     {
-      ScopedLock sl(itsStationsMutex); // protect against insert below
+      ScopedLock sl(itsStationsMutex);   // protect against insert below
       map<unsigned, TBB_Station*>::iterator stIt(itsStations.find(header.stationID));
       if (stIt != itsStations.end()) {
-        return stIt->second; // common case
+        return stIt->second;         // common case
       }
 
       // Create new station with HDF5 file and station HDF5 group.
@@ -1224,17 +1225,17 @@ namespace LOFAR
       struct timeval tv;
       tv.tv_sec = header.time;
       unsigned long usecNr;
-      if (header.nOfFreqBands == 0) { // transient mode
+      if (header.nOfFreqBands == 0) {   // transient mode
         usecNr = header.sampleNr;
-      } else { // spectral mode
+      } else {   // spectral mode
         usecNr = header.bandSliceNr >> TBB_SLICE_NR_SHIFT;
       }
       tv.tv_usec = static_cast<unsigned long>(round( static_cast<double>(usecNr) / header.sampleFreq ));
 
       // Generate the output filename, because for TBB it is not in the parset.
       // From LOFAR-USG-ICD005 spec named "LOFAR Data Format ICD File Naming Conventions", by A. Alexov et al.
-      const char output_format[] = "D%Y%m%dT%H%M"; // without secs
-      const char output_format_secs[] = "%06.3fZ"; // total width of ss.sss is 6
+      const char output_format[] = "D%Y%m%dT%H%M";   // without secs
+      const char output_format_secs[] = "%06.3fZ";   // total width of ss.sss is 6
       const char output_format_example[] = "DYYYYMMDDTHHMMSS.SSSZ";
       string triggerDateTime(formatFilenameTimestamp(tv, output_format, output_format_secs, sizeof(output_format_example)));
       string h5Filename(itsOutDir + "L" + obsIDStr + "_" + stationName + "_" + triggerDateTime + "_" + typeExt);
@@ -1258,7 +1259,7 @@ namespace LOFAR
         runNrStr = formatString("R%03u_", itsRunNr);
         h5Filename.replace(pos, runNrStr.size(), runNrStr);
       }
-      if (itsRunNr == 1000) { // run number is supposed to fit in 3 digits
+      if (itsRunNr == 1000) {   // run number is supposed to fit in 3 digits
         throw StorageException("failed to generate new .h5 filename after trying 1000 filenames.");
       }
 
@@ -1272,6 +1273,4 @@ namespace LOFAR
 
   } // namespace Cobalt
 } // namespace LOFAR
-
-#endif // HAVE_DAL
 

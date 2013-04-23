@@ -1,22 +1,23 @@
-//# PacketsToBuffer.h
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id: $
+/* PacketsToBuffer.h
+ * Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #ifndef LOFAR_INPUT_PROC_PACKETS_TO_BUFFER_H
 #define LOFAR_INPUT_PROC_PACKETS_TO_BUFFER_H
@@ -28,8 +29,8 @@
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/Stream.h>
 
-#include <InputProc/RSPBoards.h>
-#include <InputProc/Buffer/BufferSettings.h>
+#include <RSPBoards.h>
+#include <Buffer/BufferSettings.h>
 
 #include "RSP.h"
 #include "PacketReader.h"
@@ -93,22 +94,19 @@ namespace LOFAR
     class MultiPacketsToBuffer : public RSPBoards
     {
     public:
-      MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_ )
+      MultiPacketsToBuffer( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
         :
-        RSPBoards("", inputStreams_.size()),
+        RSPBoards("", streamDescriptors.size()),
         settings(settings),
-        inputStreams(inputStreams_.size())
+        streamDescriptors(streamDescriptors)
       {
-        // Don't take over ownership!
-        for (size_t i = 0; i < inputStreams.size(); ++i) {
-          inputStreams[i] = inputStreams_[i];
-        }
       }
 
     protected:
       virtual void processBoard( size_t boardNr )
       {
-        PacketsToBuffer board(*inputStreams[boardNr], settings, boardNr);
+        SmartPtr<Stream> inputStream = createStream(streamDescriptors[boardNr], true);
+        PacketsToBuffer board(*inputStream, settings, boardNr);
 
         board.process();
       }
@@ -116,13 +114,15 @@ namespace LOFAR
 
       virtual void logStatistics()
       {
-        // PacketsToBuffer already logs
+        // TODO
       }
 
     private:
       const BufferSettings settings;
-      std::vector<Stream *> inputStreams;
+      const std::vector<std::string> streamDescriptors;
     };
+
+
   }
 }
 

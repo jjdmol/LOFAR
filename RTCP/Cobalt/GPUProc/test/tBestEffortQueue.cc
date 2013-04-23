@@ -1,29 +1,32 @@
-//# tBestEffortQueue.cc
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* tBestEffortQueue.cc
+ * Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
 #include <unistd.h>
 
 #include <Common/LofarLogger.h>
-#include <GPUProc/BestEffortQueue.h>
+
+#include <opencl-incl.h>
+#include <BestEffortQueue.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -37,14 +40,12 @@ void test_drop()
 
   // queue has free space -- append should succeed
   for (size_t i = 0; i < queueSize; ++i) {
-    size_t e = 100 + i;
-    ASSERT(queue.append(e));
+    ASSERT(queue.append(100 + i));
     ASSERT(queue.size() == i + 1);
   }
 
   // queue is full -- append should fail
-  size_t e = 1000;
-  ASSERT(!queue.append(e));
+  ASSERT(!queue.append(1000));
   ASSERT(queue.size() == queueSize);
 
   // removal should succeed
@@ -63,8 +64,7 @@ void test_nondrop()
 
   // queue has free space -- append should succeed
   for (size_t i = 0; i < queueSize; ++i) {
-    size_t e = 100 + i;
-    ASSERT(queue.append(e));
+    ASSERT(queue.append(100 + i));
     ASSERT(queue.size() == i + 1);
   }
 
@@ -74,8 +74,7 @@ void test_nondrop()
     {
       // push more -- append should always succeed
       for (size_t i = 0; i < queueSize; ++i) {
-        size_t e = 100 + i;
-        ASSERT(queue.append(e));
+        ASSERT(queue.append(100 + i));
       }
     }
 
@@ -98,16 +97,14 @@ void test_nomore()
 
   // fill queue
   for (size_t i = 0; i < queueSize; ++i) {
-    size_t e = 100 + i;
-    ASSERT(queue.append(e));
+    ASSERT(queue.append(100 + i));
   }
 
   // end-of-stream
   queue.noMore();
 
   // can't append anymore
-  size_t e = 1;
-  ASSERT(!queue.append(e));
+  ASSERT(!queue.append(1));
 
   // should be able to empty queue until we hit 0
   for (size_t i = 0; i < queueSize; ++i) {
@@ -119,7 +116,7 @@ void test_nomore()
   ASSERT(queue.empty());
 
   // can't append anymore
-  ASSERT(!queue.append(e));
+  ASSERT(!queue.append(1));
 }
 
 int main()

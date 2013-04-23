@@ -1,22 +1,23 @@
-//# PacketWriter.cc
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* PacketWriter.cc
+ * Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -27,14 +28,15 @@
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 #include <Stream/FileStream.h>
+#include <CoInterface/SparseSet.h>
 
-#include <InputProc/SampleType.h>
-#include <InputProc/Buffer/StationID.h>
-#include <InputProc/Buffer/SampleBuffer.h>
-#include <InputProc/Buffer/BufferSettings.h>
-#include <InputProc/Station/PacketReader.h>
-#include <InputProc/Station/PacketWriter.h>
-#include <InputProc/Station/RSP.h>
+#include <SampleType.h>
+#include <Buffer/StationID.h>
+#include <Buffer/SampleBuffer.h>
+#include <Buffer/BufferSettings.h>
+#include <Station/PacketReader.h>
+#include <Station/PacketWriter.h>
+#include <Station/RSP.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -67,7 +69,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
     // Check whether the packet is in the buffer
 
     // Check the flags
-    BufferSettings::flags_type available = buffer.boards[0].available.sparseSet(packet.timeStamp(), packet.timeStamp() + packet.header.nrBlocks);
+    SparseSet<int64> available = buffer.flags[0].sparseSet((int64)packet.timeStamp(), (int64)packet.timeStamp() + packet.header.nrBlocks);
     ASSERT(available.count() == packet.header.nrBlocks);
 
     // Check the data
@@ -79,7 +81,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
 
         // Obtain the buffer's sample
         // Note: we're the 0th board, so beamlet indices are also absolute
-        uint64 timestamp = packet.timeStamp() + sample;
+        int64 timestamp = packet.timeStamp() + sample;
         SampleType<T> buf = buffer.beamlets[beamlet][timestamp % settings.nrSamples];
 
         // Compare them
@@ -92,8 +94,8 @@ void test( struct BufferSettings &settings, const std::string &filename )
   }
 
   // There should be only nrValidSamples samples in the buffer, nothing more
-  BufferSettings::range_type now = (uint64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
-  BufferSettings::flags_type  available = buffer.boards[0].available.sparseSet(0, now);
+  int64 now = (int64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
+  SparseSet<int64> available = buffer.flags[0].sparseSet(0, now);
   ASSERT((size_t)available.count() == nrValidSamples);
 }
 
@@ -110,11 +112,7 @@ int main()
   struct BufferSettings settings(stationID, false);
 
   // Use a fixed key, so the test suite knows what to clean
-  settings.dataKey = 0x10000003;
-
-  // Limit the array in size to work on systems with only 32MB SHM
-  settings.nrBoards = 1;
-  settings.setBufferSize(0.1);
+  settings.dataKey = 0x12345678;
 
   // Test various modes
   LOG_INFO("Test 16-bit complex");

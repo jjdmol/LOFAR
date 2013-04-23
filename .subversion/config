@@ -149,8 +149,6 @@ enable-auto-props = yes
 *.cpp = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.csh = svn:eol-style=native;svn:executable;svn:keywords=Author Date Id Revision
 *.css = svn:eol-style=native
-*.cu = svn:eol-style=native;svn:keywords=Author Date Id Revision
-*.cuh = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.cxx = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.doc = svn:mime-type=application/msword
 *.dox = svn:eol-style=native
@@ -183,8 +181,8 @@ enable-auto-props = yes
 *.ppt = svn:mime-type=application/vnd.ms-powerpoint
 *.py = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.rtf = svn:mime-type=application/rtf
-*.run = svn:eol-style=LF;svn:executable;svn:keywords=Author Date Id Revision
-*.sh = svn:eol-style=LF;svn:executable;svn:keywords=Author Date Id Revision
+*.run = svn:eol-style=native;svn:executable
+*.sh = svn:eol-style=native;svn:executable;svn:keywords=Author Date Id Revision
 *.S = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.stdout = svn:eol-style=native
 *.tcc = svn:eol-style=native;svn:keywords=Author Date Id Revision

@@ -7,6 +7,7 @@ PANEL,-1 -1 1010 745 N "_3DFace" 0
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
 
+  strPanelName    = \"antennaField\";
   strModuleName   = myModuleName();  
 
   baseDP=g_currentDatapoint;
@@ -778,12 +779,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 10 556 59 569
+E E 0 1 1 2 1 E U  0 E 10 556 200 569
 0 2 2 "0s" 0 0 0 192 0 0  10 556 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 8 CEP View
+LANG:1 46 CEP View                               Streams
 2 44
 "PRIMITIVE_TEXT16"
 ""
@@ -860,12 +861,12 @@ E E 0 1 1 2 1 E U  0 E 745 10 792 23
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 7 HBA LBA
-2 65
-"PRIMITIVE_TEXT21"
+2 48
+"PRIMITIVE_TEXT20"
 ""
-1 144 556 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 572 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
-35 0 0 0 0 0
+33 0 0 0 0 0
 E E E
 0
 1
@@ -873,259 +874,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 144 556 192 569
-0 2 2 "0s" 0 0 0 192 0 0  144 556 1
+E E 0 1 1 2 1 E U  0 E 10 572 363 585
+0 2 2 "0s" 0 0 0 192 0 0  10 572 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 7 Streams
-2 66
-"PRIMITIVE_TEXT22"
-""
-1 127 580 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-36 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 127 580 134 593
-0 2 2 "0s" 0 0 0 192 0 0  127 580 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 1 0
-2 67
-"PRIMITIVE_TEXT23"
-""
-1 157 580 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-37 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 157 580 164 593
-0 2 2 "0s" 0 0 0 192 0 0  157 580 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 1 1
-2 68
-"PRIMITIVE_TEXT24"
-""
-1 187 580 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-38 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 187 580 194 593
-0 2 2 "0s" 0 0 0 192 0 0  187 580 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 1 2
-2 69
-"PRIMITIVE_TEXT25"
-""
-1 217 580 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-39 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 217 580 224 593
-0 2 2 "0s" 0 0 0 192 0 0  217 580 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 1 3
-2 70
-"PRIMITIVE_TEXT26"
-""
-1 241 580 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-40 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 241 580 291 593
-0 2 2 "0s" 0 0 0 192 0 0  241 580 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 8 dropping
-2 71
-"PRIMITIVE_TEXT27"
-""
-1 242 556 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-41 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 242 556 282 569
-0 2 2 "0s" 0 0 0 192 0 0  242 556 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 6 Adders
-2 72
-"PRIMITIVE_TEXT28"
-""
-1 309 556 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-42 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 309 556 351 569
-0 2 2 "0s" 0 0 0 192 0 0  309 556 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 7 Writers
-2 73
-"PRIMITIVE_TEXT29"
-""
-1 310 580 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-43 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 310 580 357 593
-0 2 2 "0s" 0 0 0 192 0 0  310 580 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 7 dropped
-2 74
-"PRIMITIVE_TEXT30"
-""
-1 626 556 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-44 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 626 556 695 569
-0 2 2 "0s" 0 0 0 192 0 0  626 556 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 11 Observation
-2 75
-"PRIMITIVE_TEXT31"
-""
-1 370 580 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-45 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 370 580 426 593
-0 2 2 "0s" 0 0 0 192 0 0  370 580 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 9 startTime
-2 76
-"PRIMITIVE_TEXT32"
-""
-1 822 580 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-46 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 822 580 875 593
-0 2 2 "0s" 0 0 0 192 0 0  822 580 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 8 stopTime
-2 77
-"PRIMITIVE_TEXT33"
-""
-1 622 580 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-47 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 622 580 672 593
-0 2 2 "0s" 0 0 0 192 0 0  622 580 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 8 progress
-2 78
-"PRIMITIVE_TEXT34"
-""
-1 927 580 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-48 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 927 580 991 593
-0 2 2 "0s" 0 0 0 192 0 0  927 580 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 10 exceeding?
+LANG:1 95                                        0        1        2       3      dropping        dropped
 0
 LAYER, 1 
 1

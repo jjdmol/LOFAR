@@ -1,22 +1,23 @@
-//# PacketWriter.tcc
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id: $
+/* PacketWriter.tcc
+ * Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <ios>
 #include <boost/format.hpp>
@@ -35,7 +36,7 @@ template<typename T> PacketWriter<T>::PacketWriter( const std::string &logPrefix
   logPrefix(str(boost::format("%s [PacketWriter] ") % logPrefix)),
 
   buffer(buffer),
-  board(buffer.boards[boardNr]),
+  flags(buffer.flags[boardNr]),
   settings(*buffer.settings),
   firstBeamlet(boardNr * settings.nrBeamletsPerBoard),
 
@@ -48,12 +49,6 @@ template<typename T> PacketWriter<T>::PacketWriter( const std::string &logPrefix
   ASSERT( firstBeamlet + settings.nrBeamletsPerBoard <= settings.nrBoards * settings.nrBeamletsPerBoard );
 }
 
-template<typename T> PacketWriter<T>::~PacketWriter()
-{
-  // we won't write anymore
-  board.noMoreWriting();
-}
-
 
 template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet )
 {
@@ -63,12 +58,11 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   // should not exceed the number of beamlets we expect
   ASSERT( nrBeamlets <= settings.nrBeamletsPerBoard );
 
-  const TimeStamp begin = packet.timeStamp();
-  const TimeStamp end   = begin + nrTimeslots;
+  const TimeStamp timestamp = packet.timeStamp();
 
   // determine the time span when cast on the buffer
-  const size_t from_offset = buffer.offset(begin);
-  size_t to_offset = buffer.offset(end);
+  const size_t from_offset = (int64)timestamp % settings.nrSamples;
+  size_t to_offset = ((int64)timestamp + nrTimeslots) % settings.nrSamples;
 
   if (to_offset == 0)
     to_offset = settings.nrSamples;
@@ -76,12 +70,11 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   const size_t wrap = from_offset < to_offset ? 0 : settings.nrSamples - from_offset;
 
   /*
-   * Make sure the buffer and available ranges are always consistent.
+   * Make sure the buffer and flags are always consistent.
    */
 
-  // signal write intent, to sync with reader in non-realtime mode and
-  // to invalidate old data we're about to overwrite.
-  board.startWrite(begin, end);
+  // mark data we overwrite as invalid
+  flags.excludeBefore(timestamp + nrTimeslots - settings.nrSamples);
 
   // transpose
   const T *beamlets = reinterpret_cast<const T*>(&packet.payload.data);
@@ -92,8 +85,8 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
     if (wrap > 0) {
       T *dst2 = &buffer.beamlets[firstBeamlet + b][0];
 
-      memcpy(dst1, beamlets,        wrap        * sizeof(T));
-      memcpy(dst2, beamlets + wrap, to_offset   * sizeof(T));
+      memcpy(dst1, beamlets, wrap        * sizeof(T));
+      memcpy(dst2, beamlets, to_offset   * sizeof(T));
     } else {
       memcpy(dst1, beamlets, nrTimeslots * sizeof(T));
     }
@@ -102,10 +95,7 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   }
 
   // mark as valid
-  board.available.include(begin, end);
-
-  // signal end of write
-  board.stopWrite(end);
+  flags.include(timestamp, timestamp + nrTimeslots);
 
   ++nrWritten;
 }

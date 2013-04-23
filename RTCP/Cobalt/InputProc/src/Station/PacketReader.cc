@@ -1,22 +1,23 @@
-//# PacketReader.cc
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id: $
+/* PacketReader.cc
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -92,14 +93,6 @@ namespace LOFAR
         }
       }
 
-      // illegal version means illegal packet
-      if (packet.header.version < 2) {
-        // This mainly catches packets that are all zero (f.e. /dev/zero or
-        // null: streams).
-        ++nrBadOther;
-        return false;
-      }
-
       // illegal timestamp means illegal packet
       if (packet.header.timestamp == ~0U) {
         ++nrBadTime;
@@ -128,7 +121,7 @@ namespace LOFAR
           || packet.header.nrBeamlets != settings.nrBeamletsPerBoard) {
 
         if (!hadModeError) {
-          LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit, " << (int)packet.header.nrBeamlets << " beamlets), but expected mode (" << settings.station.clockMHz << " MHz, " << settings.station.bitMode << " bit, " << settings.nrBeamletsPerBoard << " beamlets)");
+          LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit, " << packet.header.nrBeamlets << " beamlets), but expected mode (" << settings.station.clockMHz << " MHz, " << settings.station.bitMode << " bit, " << settings.nrBeamletsPerBoard << " beamlets)");
           hadModeError = true;
         }
 
@@ -143,14 +136,13 @@ namespace LOFAR
 
     void PacketReader::logStatistics()
     {
-      LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadMode << " clock/bitmode errors, " << nrBadOther << " otherwise bad packets" );
+      LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadMode << " clock/bitmode errors" );
 
       nrReceived = 0;
       nrBadTime = 0;
       nrBadSize = 0;
       nrBadData = 0;
       nrBadMode = 0;
-      nrBadOther = 0;
 
       hadSizeError = false;
       hadModeError = false;

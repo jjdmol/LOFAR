@@ -43,7 +43,7 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
 :
   itsLogPrefix(str(boost::format("[obs %u type %u stream %3u adder %3u] ") % parset.observationID() % outputType % streamNr % adderNr)),
   itsOutputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)),
-  itsDeadline(parset.realTime() ? parset.stopTime() : 0)
+  itsDeadline(parset.stopTime())
 {
   for (unsigned i = 0; i < maxSendQueueSize; i ++)
     itsFreeQueue.append(newStreamableData(parset, outputType, streamNr, hugeMemoryAllocator));

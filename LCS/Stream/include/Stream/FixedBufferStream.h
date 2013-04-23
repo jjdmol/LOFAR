@@ -46,6 +46,7 @@ class FixedBufferStream : public Stream
     char * const itsEnd;
 
     char *itsHead;
+    char *itsTail;
 };
 
 } // namespace LOFAR

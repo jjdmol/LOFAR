@@ -1,22 +1,23 @@
-//# Generator.cc
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id: $
+/* Generator.cc
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -35,28 +36,63 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    Generator::Generator( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &outputStreams_, PacketFactory &packetFactory )
+    Generator::Generator( const BufferSettings &settings, const std::vector<std::string> &streamDescriptors )
       :
-      RSPBoards(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaField), outputStreams_.size()),
+      RSPBoards(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaField), streamDescriptors.size()),
       settings(settings),
-      outputStreams(outputStreams_.size()),
-      packetFactory(packetFactory),
+      streamDescriptors(streamDescriptors),
       nrSent(nrBoards, 0)
     {
-      for (size_t i = 0; i < outputStreams.size(); ++i) {
-        outputStreams[i] = outputStreams_[i];
-      }
-
       LOG_INFO_STR( logPrefix << "Initialised" );
     }
 
+    void Generator::makePacket( size_t boardNr, struct RSP &packet, const TimeStamp &timestamp )
+    {
+      // configure the packet header
+      packet.header.version = 3; // we emulate BDI 6.0
+
+      packet.header.sourceInfo1 =
+        (boardNr & 0x1F) | (settings.station.clockMHz == 200 ? 1 << 7 : 0);
+
+      switch (settings.station.bitMode) {
+      case 16:
+        packet.header.sourceInfo2 = 0;
+        break;
+
+      case 8:
+        packet.header.sourceInfo2 = 1;
+        break;
+
+      case 4:
+        packet.header.sourceInfo2 = 2;
+        break;
+      }
+
+      packet.header.nrBeamlets = settings.nrBeamletsPerBoard;
+      packet.header.nrBlocks = 16;
+
+      packet.header.timestamp = timestamp.getSeqId();
+      packet.header.blockSequenceNumber = timestamp.getBlockId();
+
+      // insert data that is different for each packet
+      int64 data = timestamp;
+
+      memset(packet.payload.data, data & 0xFF, sizeof packet.payload.data);
+
+      // verify whether the packet really reflects what we intended
+      ASSERT(packet.rspBoard()     == boardNr);
+      ASSERT(packet.payloadError() == false);
+      ASSERT(packet.bitMode()      == settings.station.bitMode);
+      ASSERT(packet.clockMHz()     == settings.station.clockMHz);
+    }
 
     void Generator::processBoard( size_t nr )
     {
       const std::string logPrefix(str(boost::format("[station %s %s board %u] [Generator] ") % settings.station.stationName % settings.station.antennaField % nr));
 
       try {
-        Stream &s = *outputStreams[nr];
+        LOG_INFO_STR( logPrefix << "Connecting to " << streamDescriptors[nr] );
+        SmartPtr<Stream> s = createStream(streamDescriptors[nr], false);
 
         LOG_INFO_STR( logPrefix << "Start" );
 
@@ -65,7 +101,9 @@ namespace LOFAR
           struct RSP packet;
 
           // generate packet
-          packetFactory.makePacket( packet, current, nr );
+          makePacket( nr, packet, current );
+
+          ASSERT(packet.packetSize() <= sizeof packet);
 
           // wait until it is due
           if (!waiter.waitUntil(current))
@@ -73,7 +111,7 @@ namespace LOFAR
 
           // send packet
           try {
-            s.write(&packet, packet.packetSize());
+            s->write(&packet, packet.packetSize());
           } catch (SystemCallException &ex) {
             // UDP can return ECONNREFUSED or EINVAL if server does not have its port open
             if (ex.error != ECONNREFUSED && ex.error != EINVAL)

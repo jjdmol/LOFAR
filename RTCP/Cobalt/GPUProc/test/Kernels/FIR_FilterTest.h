@@ -1,29 +1,30 @@
-//# FIR_FilterTest.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* FIR_FilterTest.h
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #ifndef GPUPROC_FIR_FILTERTEST_H
 #define GPUPROC_FIR_FILTERTEST_H
 
 #include <UnitTest.h>
-#include <GPUProc/FilterBank.h>
-#include <GPUProc/Kernels/FIR_FilterKernel.h>
+#include <FilterBank.h>
+#include <Kernels/FIR_FilterKernel.h>
 
 namespace LOFAR
 {
@@ -34,34 +35,13 @@ namespace LOFAR
       FIR_FilterTest(const Parset &ps)
         : UnitTest(ps, "FIR.cl")
       {
-        switch (ps.nrBitsPerSample()) {
-        case 4: // TODO: move this case before UnitTest(...), which already fails to compile the kernel
-          std::cerr << "4 bit mode not yet supported in this test" << std::endl;
-          check(false, true);
-          break;
-        case 8:
-          firTests<signed char>(ps);
-          break;
-        case 16:
-          firTests<short>(ps);
-          break;
-        default:
-          std::cerr << "unrecognized number of bits per sample type" << std::endl;
-          check(false, true);
-        }
-      }
-
-      template <typename SampleT>
-      void firTests(const Parset &ps)
-      {
         bool testOk = true;
 
-        const size_t nrComplexComp = 2; // real, imag
         MultiArraySharedBuffer<float, 5> filteredData(
-          boost::extents[ps.nrStations()][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][nrComplexComp],
+          boost::extents[ps.nrStations()][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][ps.nrBytesPerComplexSample()],
           queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY);
-        MultiArraySharedBuffer<SampleT, 5> inputSamples(
-          boost::extents[ps.nrStations()][ps.nrPPFTaps() - 1 + ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][nrComplexComp],
+        MultiArraySharedBuffer<signed char, 5> inputSamples(
+          boost::extents[ps.nrStations()][ps.nrPPFTaps() - 1 + ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()],
           queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY);
         MultiArraySharedBuffer<float, 2> firWeights(
           boost::extents[ps.nrChannelsPerSubband()][ps.nrPPFTaps()],

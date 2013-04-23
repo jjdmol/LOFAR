@@ -7,12 +7,24 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
+# Add current source directory to -I path. This is needed because GPUProc uses
+# angle brackets for internal header files, instead of quotes.
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 lofar_add_library(gpuproc
   #Package__Version.cc
   BandPass.cc
   createProgram.cc
   FilterBank.cc
   global_defines.cc
+  Input/BeamletBuffer.cc
+  Input/BeamletBufferToComputeNode.cc
+  Input/CN_Mapping.cc
+  Input/Delays.cc
+  Input/InputSection.cc
+  Input/InputThread.cc
+  Input/LogThread.cc
+  Input/ReaderWriterSynchronization.cc
   Kernel.cc
   Kernels/BeamFormerKernel.cc
   Kernels/BeamFormerTransposeKernel.cc
@@ -28,24 +40,25 @@ lofar_add_library(gpuproc
   Kernels/FIR_FilterKernel.cc
   Kernels/IncoherentStokesKernel.cc
   Kernels/IntToFloatKernel.cc
-  #Kernels/UHEP_BeamFormerKernel.cc
-  #Kernels/UHEP_InvFFT_Kernel.cc
-  #Kernels/UHEP_InvFIR_Kernel.cc
-  #Kernels/UHEP_TransposeKernel.cc
-  #Kernels/UHEP_TriggerKernel.cc
+  Kernels/UHEP_BeamFormerKernel.cc
+  Kernels/UHEP_InvFFT_Kernel.cc
+  Kernels/UHEP_InvFIR_Kernel.cc
+  Kernels/UHEP_TransposeKernel.cc
+  Kernels/UHEP_TriggerKernel.cc
   OpenCL_Support.cc
   PerformanceCounter.cc
   Pipeline.cc
   Pipelines/BeamFormerPipeline.cc
   Pipelines/CorrelatorPipeline.cc
-  #Pipelines/UHEP_Pipeline.cc
+  Pipelines/UHEP_Pipeline.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
-  #UHEP/InvertedStationPPFWeights.cc
+  UHEP/InvertedStationPPFWeights.cc
+  UnitTest.cc 
   WorkQueues/BeamFormerWorkQueue.cc
   WorkQueues/CorrelatorWorkQueue.cc
-  #WorkQueues/UHEP_WorkQueue.cc
+  WorkQueues/UHEP_WorkQueue.cc
   WorkQueues/WorkQueue.cc)
 
 lofar_add_bin_program(rtcp rtcp.cc)

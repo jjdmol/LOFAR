@@ -35,7 +35,7 @@ echo "---------------"
 (ln -sfT `dirname $STORAGE_PARSET` /opt/lofar/var/log/latest || true) &&
 
 # Make the /opt/lofar/var/log/latest.parset symlink
-(ln -sfT $STORAGE_PARSET /globalhome/lofarsystem/log/latest.parset || true) &&
+(ln -sfT $STORAGE_PARSET /opt/lofar/var/log/latest.parset || true) &&
 
 # Inject the parset into the correlator
 /opt/lofar/bin/commandOLAP.py -P $PARTITION parset $IONPROC_PARSET

@@ -1,22 +1,23 @@
-//# PacketsToBuffer.cc
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id: $
+/* PacketsToBuffer.cc
+ * Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -26,8 +27,8 @@
 
 #include <Common/LofarLogger.h>
 
-#include <InputProc/SampleType.h>
-#include <InputProc/Buffer/SampleBuffer.h>
+#include <SampleType.h>
+#include <Buffer/SampleBuffer.h>
 
 #include "PacketWriter.h"
 
@@ -39,7 +40,7 @@ namespace LOFAR
 
     PacketsToBuffer::PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr )
       :
-      logPrefix(str(boost::format("[station %s board %u] [PacketsToBuffer] ") % settings.station.stationName % boardNr)),
+      logPrefix(str(boost::format("[station %s board %u] ") % settings.station % boardNr)),
       inputStream(inputStream),
       lastlog_timestamp(0),
       settings(settings),
@@ -99,7 +100,7 @@ namespace LOFAR
 
     void PacketsToBuffer::logStatistics( PacketReader &reader, const struct RSP &packet )
     {
-      if (packet.header.timestamp > lastlog_timestamp + LOG_INTERVAL) {
+      if (packet.header.timestamp < lastlog_timestamp + LOG_INTERVAL) {
         lastlog_timestamp = packet.header.timestamp;
 
         reader.logStatistics();
@@ -116,8 +117,6 @@ namespace LOFAR
       // Create output structures
       SampleBuffer<T> buffer(settings, true);
       PacketWriter<T> writer(logPrefix, buffer, boardNr);
-
-      LOG_INFO_STR( logPrefix << "Processing packets" );
 
       try {
         // Process lingering packet from previous run, if any

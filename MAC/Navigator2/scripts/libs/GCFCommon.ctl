@@ -177,8 +177,7 @@ int getStateNumber(string aState) {
 void showSelfState(string aDP) {
   	// check if the required datapoint for this view are accessible
   	if (dpExists(aDP+".status.state")) {
-          if (dpConnect("updateSelfState",aDP + ".status.state",
-                        aDP + ".status.message", 
+          if (dpConnect("updateSelfState",aDP + ".status.state", 
                         aDP + ".status.state:_online.._invalid")==-1) {
             setValue("selfState.light","backCol","Lofar_invalid");
           }
@@ -248,29 +247,20 @@ updateChildState(string dp1, int state, string dp2, bool invalid) {
 //
 // Added 3-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
-updateSelfState(string dp1, int state, 
-                string dp2, string msg,
-                string dp3, bool invalid) {
-  string SymbolCol;
+updateSelfState(string dp1, int state, string dp2, bool invalid) {
+  	string SymbolCol;
 
-  if (invalid) {
-    if (dp1 == "") {
-      SymbolCol = "Lofar_dpOffline";
-    } else {
-      SymbolCol = "Lofar_invalid";
-    }
-  }
-  else {
-    SymbolCol = getStateColor(state);
-  }
-  setValue("selfState.light", "backCol", SymbolCol);
-
-  // get the old tooltip because it contains the baseDP
-  string tooltip="";
-  getValue("light","toolTipText",tooltip);
-  dyn_string aS = strsplit(tooltip," ");
-  tooltip =aS[1] + " <br>Last status message: "+msg;
-  setValue("light","toolTipText",tooltip);
+  	if (invalid) {
+          if (dp1 == "") {
+       	    SymbolCol = "Lofar_dpOffline";
+          } else {
+       	    SymbolCol = "Lofar_invalid";
+          }
+  	}
+  	else {
+      	  SymbolCol = getStateColor(state);
+  	}
+  	setValue("selfState.light", "backCol", SymbolCol);
 }
 
 bool waitInitProcess(string procName) {

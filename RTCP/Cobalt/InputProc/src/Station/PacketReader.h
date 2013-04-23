@@ -1,22 +1,23 @@
-//# PacketReader.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id: $
+/* PacketReader.h
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #ifndef LOFAR_INPUT_PROC_PACKETREADER_H
 #define LOFAR_INPUT_PROC_PACKETREADER_H
@@ -26,7 +27,7 @@
 #include <Common/Exception.h>
 #include <Stream/Stream.h>
 
-#include <InputProc/Buffer/BufferSettings.h>
+#include <Buffer/BufferSettings.h>
 
 #include "RSP.h"
 
@@ -79,7 +80,6 @@ namespace LOFAR
       size_t nrBadTime; // nr. of packets with an illegal time stamp
       size_t nrBadData; // nr. of packets with payload errors
       size_t nrBadMode; // nr. of packets with an incorrect clock/bitmode
-      size_t nrBadOther; // nr. of packets that are bad in another fashion (illegal header, etc)
 
       bool hadSizeError; // already reported about wrongly sized packets since last logStatistics()
       bool hadModeError; // already reported about wrong clocks/bitmodes since last logStatistics()

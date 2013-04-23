@@ -35,7 +35,8 @@ FixedBufferStream::FixedBufferStream(char *buffer, size_t size)
 :
   itsStart(buffer),
   itsEnd(buffer + size),
-  itsHead(buffer)
+  itsHead(buffer),
+  itsTail(buffer)
 {
 }
 
@@ -49,13 +50,13 @@ size_t FixedBufferStream::tryRead(void *ptr, size_t size)
 {
   Cancellation::point(); // keep behaviour consistent with real I/O streams
 
-  size_t numBytes = std::min<size_t>(size, itsEnd - itsHead);
+  size_t numBytes = std::min<size_t>(size, itsHead - itsTail);
 
   if (numBytes == 0)
     THROW(EndOfStreamException, "No space left in buffer");
 
-  memcpy(ptr, itsHead, numBytes);
-  itsHead += numBytes;
+  memcpy(ptr, itsTail, numBytes);
+  itsTail += numBytes;
 
   return numBytes;
 }

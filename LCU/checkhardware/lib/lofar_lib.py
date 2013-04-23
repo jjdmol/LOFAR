@@ -1,10 +1,8 @@
 # lofar_lib
 
 import os
-import sys
 import time
 from general_lib import sendCmd
-import logging
 
 CoreStations          = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C',\
                          'CS013C','CS017C','CS021C','CS024C','CS026C','CS028C','CS030C','CS031',\
@@ -17,12 +15,6 @@ InternationalStations =	('DE601C','DE602C','DE603C','DE604C','DE605C','FR606C','
 
 
 StationType = dict( CS=1, RS=2, IS=3 )
-
-logger = None
-def init_lofar_lib():
-    global logger
-    logger = logging.getLogger()
-    logger.debug("init logger lofar_lib")
 
 
 def dataDir():
@@ -105,10 +97,9 @@ def swlevel(level=None):
 
 # Run rspctl command with given args and return response
 def rspctl(args='', wait=0.0):
-    global logger
     if args != '':
-        logger.debug("rspctl %s" %(args))
         response = sendCmd('rspctl', args)
+        #print "rspctl %s" %(args)
         if wait > 0.0:
             time.sleep(wait)
         return (response)
@@ -117,122 +108,15 @@ def rspctl(args='', wait=0.0):
 
 # Run tbbctl command with given args and return response
 def tbbctl(args=''):
-    global logger
     if args != '':
-        logger.debug("tbbctl %s" %(args))
         return (sendCmd('tbbctl', args))
     return ('No args given')
 
 
-# wait until all boards have a working image loaded
-# returns 1 if ready or 0 if timed_out
-def waitTBBready(n_boards=6):
-    global logger
-    timeout = 90
-    logger.info("wait for working TBB boards ")
-    sys.stdout.flush()
-    while timeout > 0:
-        answer = tbbctl('--version')
-        #print answer
-        if answer.find('TBBDriver is NOT responding') > 0:
-            if timed_out < 10:
-                logger.info("TBBDriver is NOT responding, try again in every 5 seconds")
-            time.sleep(5.0)
-            timeout -= 5
-            if timeout < 60:
-                return (0)
-            continue
-        # check if image_nr > 0 for all boards
-        if answer.count('V') == (n_boards * 4):
-        #if answer.count('V') == ((self.nr-1) * 4):
-            logger.info("All boards in working image")
-            return (1)
-        time.sleep(1.0)
-        timeout -= 1
-    logger.warn("Not all TB boards in working image")
-    return (0)
-
-
-# wait until all boards have a working image loaded
-# returns 1 if ready or 0 if timed_out
-def waitRSPready():
-    global logger
-    timeout = 60
-    logger.info("wait for working RSP boards ")
-    sys.stdout.flush()
-    while timeout > 0:
-        answer = rspctl('--version')
-        #print answer
-        if answer.count('No Response') > 0:
-            time.sleep(5.0)
-            timeout -= 5
-            if timeout < 60:
-                return (0)
-            continue
-        # check if image_nr > 0 for all boards
-        if answer.count('0.0') == 0:
-            logger.info("All boards in working image")
-            return (1)
-        else:
-            logger.warn("Not all RSP boards in working image")
-        time.sleep(5.0)
-        timeout -= 1
-    return (0)
-
-def swapXY(state):
-    global logger
-    if state in (0,1):
-        if state == 1:
-            logger.info("XY-output swapped")
-        else:
-            logger.info("XY-output normal")
-        rspctl('--swapxy=%d' %(state))
-
-# function used for antenna testing        
-def resetRSPsettings():
-    global logger
-    if rspctl('--clock').find('200MHz') < 0:
-        rspctl('--clock=200')
-        logger.info("Changed Clock to 200MHz")
-        time.sleep(2.0)
-    rspctl('--wg=0', wait=0.0)
-    rspctl('--rcuprsg=0', wait=0.0)
-    rspctl('--datastream=0', wait=0.0)
-    rspctl('--splitter=0', wait=0.0)
-    rspctl('--specinv=0', wait=0.0)
-    rspctl('--bitmode=16', wait=0.0)
-    rspctl('--rcumode=0', wait=0.0)
-    rspctl('--rcuenable=0', wait=0.0)
-    rspctl('--hbadelays=%s' %(('128,'*16)[:-1]), wait=0.0)
-
-def turnonRCUs(mode, rcus):
-    global logger
-    logger.info("turn RCU's on, mode %d" %(mode))
-    logger.info("enable rcus")
-    rspctl('--rcuenable=1', wait=0.0)
-    logger.info("setweights")
-    rspctl('--aweights=8000,0', wait=0.0)
-    if mode >= 5:
-        rspctl('--specinv=1', wait=0.0)
-    else:
-        rspctl('--specinv=0', wait=0.0)
-    logger.info("set rcu mode")
-    rsp_rcu_mode(mode, rcus)
-    if mode >= 5:
-        logger.info("set hbadelays to 0 for 1 second")
-        rspctl('--hbadelay=%s' %(('0,'* 16)[:-1]), wait=6.0)
-    
-def turnoffRCUs():
-    global logger
-    logger.info("RCU's off, mode 0")
-    rspctl('--rcumode=0', wait=0.0)
-    rspctl('--rcuenable=0', wait=0.0)
-    rspctl('--aweights=0,0', wait=1.0)
-
 # set rcu mode, if mode > 4(hba) turn on hba's in steps to avoid power dips
-def rsp_rcu_mode(mode, n_rcus=96):
-    if mode > 0 and mode < 5: # lba modes
-        rspctl('--rcumode=%d' %(mode), wait=3.0)
+def rsp_rcumode(mode, n_rcus=96):
+    if mode > 0 and mode < 4: # lba modes
+        rspctl('--rcumode=%d' %(mode))
         return (0)
     elif mode < 8: # hba modes
         #n_rcus = n_boards * 8
@@ -248,8 +132,9 @@ def rsp_rcu_mode(mode, n_rcus=96):
             selection = '--select='
             for rcu in range(step*2, n_rcus, jump):
                 selection += '%d,%d,' %(rcu,rcu+1)
-            rspctl('--rcumode=%d %s' %(mode, selection[:-1]), wait=0.5)
-        time.sleep(2.5)
+            rspctl('--rcumode=%d %s' %(mode, selection[:-1]))
+            time.sleep(1.0)
+        time.sleep(1.0)
         return (0) 
     else:
         return (-1)

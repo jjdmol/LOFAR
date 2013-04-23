@@ -1,22 +1,23 @@
-//# RSPBoards.cc
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* RSPBoards.cc
+ * Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -45,7 +46,7 @@ namespace LOFAR
     void RSPBoards::process()
     {
       // References to all threads that will need aborting
-      std::vector<OMPThread> threads(nrBoards + 1);
+      std::vector<OMPThread> threads(nrBoards * 2);
 
       ASSERT(nrBoards > 0);
 
@@ -76,21 +77,23 @@ namespace LOFAR
         // Log threads
 #   pragma omp section
         {
-          // start log statistics
-          LOG_INFO_STR( logPrefix << "Starting log statistics" );
+          // start all log statistics
+          LOG_INFO_STR( logPrefix << "Starting all log statistics" );
+#     pragma omp parallel for num_threads(nrBoards)
+          for (size_t i = 0; i < nrBoards; ++i) {
+            OMPThread::ScopedRun sr(threads[i + nrBoards]);
 
-          OMPThread::ScopedRun sr(threads[0 + nrBoards]);
+            try {
+              for(;; ) {
+                if (usleep(999999) == -1 && errno == EINTR)
+                  // got killed
+                  break;
 
-          try {
-            for(;; ) {
-              if (usleep(999999) == -1 && errno == EINTR)
-                // got killed
-                break;
-
-              logStatistics();
+                logStatistics();
+              }
+            } catch(Exception &ex) {
+              LOG_ERROR_STR("Caught exception: " << ex);
             }
-          } catch(Exception &ex) {
-            LOG_ERROR_STR("Caught exception: " << ex);
           }
         }
 

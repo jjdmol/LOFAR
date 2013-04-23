@@ -31,7 +31,9 @@
 #endif
 
 #include <ctime>
-#include <boost/date_time/posix_time/posix_time.hpp>
+
+//# Forward declarations
+namespace boost { namespace posix_time { class ptime; } }
 
 namespace LOFAR
 {

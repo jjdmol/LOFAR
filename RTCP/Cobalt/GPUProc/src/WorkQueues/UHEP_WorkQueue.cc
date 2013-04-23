@@ -1,40 +1,43 @@
-//# UHEP_WorkQueue.cc
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* UHEP_WorkQueue.cc
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
 #include "UHEP_WorkQueue.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #include <Common/LofarLogger.h>
-#include <ApplCommon/PosixTime.h>
+#include "ApplCommon/PosixTime.h"
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/global_defines.h>
-#include <GPUProc/OpenMP_Support.h>
+#include <global_defines.h>
+#include <OpenMP_Support.h>
 
-#include <GPUProc/UHEP/InvertedStationPPFWeights.h>
-#include <GPUProc/Kernels/UHEP_TransposeKernel.h>
-#include <GPUProc/Kernels/UHEP_InvFFT_Kernel.h>
-#include <GPUProc/Kernels/UHEP_InvFIR_Kernel.h>
-#include <GPUProc/Kernels/UHEP_TriggerKernel.h>
-#include <GPUProc/Kernels/UHEP_BeamFormerKernel.h>
+#include <UHEP/InvertedStationPPFWeights.h>
+#include <Kernels/UHEP_TransposeKernel.h>
+#include <Kernels/UHEP_InvFFT_Kernel.h>
+#include <Kernels/UHEP_InvFIR_Kernel.h>
+#include <Kernels/UHEP_TriggerKernel.h>
+#include <Kernels/UHEP_BeamFormerKernel.h>
 
 #include "WorkQueue.h"
 
@@ -48,7 +51,7 @@ namespace LOFAR
       pipeline(pipeline),
       hostInputSamples(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY),
       hostBeamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY),
-      hostTriggerInfo(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY)
+      hostTriggerInfo(ps.nrTABs(0), queue, CL_MEM_READ_ONLY)
     {
       size_t inputSamplesSize = ps.nrStations() * ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
       size_t complexVoltagesSize = ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);
@@ -121,7 +124,7 @@ namespace LOFAR
         invFIR.enqueue(queue, pipeline.invFIRfilterCounter);
         trigger.enqueue(queue, pipeline.triggerCounter);
         queue.finish();             // necessary to overlap I/O & computations ???
-        queue.enqueueReadBuffer(devTriggerInfo, CL_TRUE, 0, hostTriggerInfo.bytesize(), hostTriggerInfo.origin());
+        queue.enqueueReadBuffer(devTriggerInfo, CL_TRUE, 0, hostTriggerInfo.size() * sizeof(TriggerInfo), &hostTriggerInfo[0]);
       }
 
 #pragma omp barrier

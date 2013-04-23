@@ -1,22 +1,23 @@
-//# tSharedMemory.cc
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/* tSharedMemory.cc
+ * Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: $
+ */
 
 #include <lofar_config.h>
 
@@ -26,9 +27,7 @@
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Semaphore.h>
 
-#include <InputProc/Buffer/SharedMemory.h>
-
-#define DATAKEY 0x10000006
+#include <Buffer/SharedMemory.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -42,7 +41,7 @@ public:
   {
     sleep(1);
 
-    SharedMemoryArena m( DATAKEY, 1024, SharedMemoryArena::CREATE, 0 );
+    SharedMemoryArena m( 0x12345678, 1024, SharedMemoryArena::CREATE, 0 );
 
     LOG_INFO("Memory area created");
 
@@ -54,7 +53,7 @@ public:
   {
     LOG_INFO("Waiting for memory area");
 
-    SharedMemoryArena m( DATAKEY, 1024, SharedMemoryArena::READ, 2 );
+    SharedMemoryArena m( 0x12345678, 1024, SharedMemoryArena::READ, 2 );
 
     LOG_INFO("Memory area attached");
 
@@ -71,16 +70,16 @@ int main()
   {
     LOG_INFO("Create shared memory region");
 
-    SharedMemoryArena m( DATAKEY, 1024, SharedMemoryArena::CREATE, 0 );
+    SharedMemoryArena m( 0x12345678, 1024, SharedMemoryArena::CREATE, 0 );
   }
 
   /* Create a shared memory region and access it */
   {
     LOG_INFO("Create shared memory region and access it");
 
-    SharedMemoryArena x( DATAKEY, 1024, SharedMemoryArena::CREATE, 0 );
+    SharedMemoryArena x( 0x12345678, 1024, SharedMemoryArena::CREATE, 0 );
 
-    SharedMemoryArena y( DATAKEY, 1024, SharedMemoryArena::READ, 0 );
+    SharedMemoryArena y( 0x12345678, 1024, SharedMemoryArena::READ, 0 );
   }
 
   /* Access a non-existing shared memory region */
@@ -90,7 +89,7 @@ int main()
     bool caught_exception = false;
 
     try {
-      SharedMemoryArena y( DATAKEY, 1024, SharedMemoryArena::READ, 0 );
+      SharedMemoryArena y( 0x12345678, 1024, SharedMemoryArena::READ, 0 );
     } catch(SystemCallException &e) {
       caught_exception = true;
     }
@@ -105,7 +104,7 @@ int main()
     bool caught_exception = false;
 
     try {
-      SharedMemoryArena y( DATAKEY, 1024, SharedMemoryArena::READ, 1 );
+      SharedMemoryArena y( 0x12345678, 1024, SharedMemoryArena::READ, 1 );
     } catch(SharedMemoryArena::TimeOutException &e) {
       caught_exception = true;
     }
@@ -132,9 +131,9 @@ int main()
   {
     LOG_INFO("Checking memory access through SharedStruct");
 
-    SharedStruct<int> writer( DATAKEY, true, 0 );
+    SharedStruct<int> writer( 0x12345678, true, 0 );
 
-    SharedStruct<int> reader( DATAKEY, false, 0 );
+    SharedStruct<int> reader( 0x12345678, false, 0 );
 
     writer.get() = 42;
     ASSERT( reader.get() == 42 );

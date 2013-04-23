@@ -86,7 +86,8 @@ class cTestLogger(cLogger):
         cLogger.__init__(self, logdir, filename)
              
     def addLine(self, info):
-        cLogger.info(self, info)
+        cLogger.info(self, info)      
+
 
 class cStationLogger(cLogger):
     def __init__(self, logdir, filetime=time.gmtime()):
