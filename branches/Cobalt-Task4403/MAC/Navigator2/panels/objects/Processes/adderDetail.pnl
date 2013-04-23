@@ -1,0 +1,341 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 1300 66 N "_3DFace" 2
+"$adder"
+"$barColor"
+"main()
+{
+
+  barColor = $barColor;
+  
+  setValue(\"bar\",\"backCol\",barColor);
+  
+  baseDP         = g_currentDatapoint;
+  adderDP  = $adder;
+    
+  // connect to the inputBuffer values  
+  // check if the requiered datapoint for this view are enabled and accessible
+  if (dpExists(adderDP + \".status.state\")) {
+     if (!dpConnect(\"updateAdder\", adderDP + \".dropping\",
+                                 adderDP + \".dropped\",
+	                                adderDP + \".dataProductType\",
+	                                adderDP + \".fileName\",
+	                                adderDP + \".locusNode\",
+	                                adderDP + \".directory\", 
+	                                adderDP + \".observationName\",
+   	                             adderDP + \".dataProduct\",
+	                                adderDP + \".writer\", 
+                                 adderDP + \".status.state:_online.._invalid\") == -1) {
+      LOG_ERROR(\"adderDetail.pnl:updateTrigger|Couldn't connect to: \"+adderDP+\" \"+getLastError());
+    }
+  } else {
+    LOG_ERROR(\"adderDetail.pnl:updateTrigger|Couldn't find DP to connect to: \"+adderDP);
+    setValue(\"dropping\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"dropped\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"dataProductType\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"fileName\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"locusNode\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"directory\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"observationName\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"dataProduct\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"writer\", \"backCol\", \"Lofar_dpdoesnotexist\");
+  }    
+    
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",adderDP);
+ 
+
+  // connect for selfUpdates
+  showSelfState(adderDP);
+}
+
+
+updateAdder(string dp1, bool dropping, 
+             string dp2, int dropped,
+             string dp3, string dataProductType,
+             string dp4, string fileName,
+             string dp5, int locusNode,
+             string dp6, string directory,
+             string dp7, string observationName,
+             string dp8, string dataProduct,
+             string dp9, int writer,
+             string dp16, bool invalid)
+{
+
+  LOG_DEBUG(\"adderDetail.pnl:updateAdder|entered\"); 
+  
+  if (!invalid) {
+    if (dropping) {
+      setValue(\"dropping\",\"backCol\",\"red\");
+    } else {
+      setValue(\"dropping\",\"backCol\",\"green\");
+    }        
+    setValue(\"dropped\", \"text\", dropped);
+    setValue(\"dataProductType\", \"text\", dataProductType);
+    setValue(\"fileName\", \"text\", fileName);
+    setValue(\"locusNode\", \"text\", locusNode);
+    setValue(\"directory\", \"text\", directory);
+    setValue(\"dataProduct\", \"text\", dataProduct);
+    setValue(\"writer\", \"text\", writer);
+  } else {
+    setValue(\"dropping\",\"backCol\",\"Lofar_invalid\");
+    setValue(\"dropped\", \"text\", \"\");
+    setValue(\"dataProductType\", \"text\", \"\");
+    setValue(\"fileName\", \"text\", \"\");
+    setValue(\"locusNode\", \"text\", \"\");
+    setValue(\"directory\", \"text\", \"\");
+    setValue(\"dataProduct\", \"text\", \"\");
+    setValue(\"writer\", \"text\", \"\");
+  }
+}
+" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string adder=\"\";
+string database=\"\";
+
+string baseDP = \"\";
+string adderDP=\"\";
+string station=\"\";
+string stationDP=\"\";
+string barColor=\"\";
+
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click(string dp) {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    if (dp == stationDP) {
+      navPanel_setEvent(\"Adder\",\"EventClick\");
+    }
+  }
+}
+
+// routine for double mouse click
+void dblClick(string dp) {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+
+  if (dpExists(dp) ) {
+    LOG_DEBUG(\"adderDetail.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+dp);
+    g_currentDatapoint=dp;
+    navPanel_setEvent(\"adderDetail.pnl\",\"ChangePanel\");  
+  }
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;
+}
+
+// routine for right mouse click
+void rClick(string dp) {
+  navPanel_setEvent(\"adderDetail.pnl\",\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 16
+"bar"
+""
+1 0 0 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 0 3 1260 17
+2 1
+"dropped"
+""
+1 102 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 102 4 144 17
+0 2 2 "0s" 0 0 0 192 0 0  102 4 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 7 0000000
+2 2
+"locusNode"
+""
+1 174 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 174 4 216 17
+0 2 2 "0s" 0 0 0 192 0 0  174 4 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 7 0000000
+2 3
+"writer"
+""
+1 274 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 274 4 310 17
+0 2 2 "0s" 0 0 0 192 0 0  274 4 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 6 000000
+2 4
+"dataProduct"
+""
+1 364 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 364 4 400 17
+0 2 2 "0s" 0 0 0 192 0 0  364 4 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 6 000000
+2 5
+"dataProductType"
+""
+1 494 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 494 4 530 17
+0 2 2 "0s" 0 0 0 192 0 0  494 4 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 6 000000
+2 6
+"directory"
+""
+1 654 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 654 4 690 17
+0 2 2 "0s" 0 0 0 192 0 0  654 4 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 6 000000
+2 7
+"fileName"
+""
+1 924 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 924 4 960 17
+0 2 2 "0s" 0 0 0 192 0 0  924 4 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 6 000000
+1 19 0 "" 1
+0
+6 18
+"dropping"
+""
+1 90 30 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -45 -25 1 E 90 30 100 40
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "selfState" -1
+"objects\\lofar_self_state.pnl" 7 18 T 15 0.7142857142857143 0 0.7142857142857143 -4 -9.857142857142858
+0
+0
