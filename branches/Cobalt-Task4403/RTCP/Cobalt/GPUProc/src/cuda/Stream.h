@@ -3,23 +3,25 @@
 #include <cuda.h>  // for CUdeviceptr
 #include <boost/shared_ptr.hpp>
 
+struct Block;
+class DeviceMemory;
 class Event;
 class Function;
+struct Grid;
+class HostMemory;
 
 class Stream
 {
 public:
   Stream(unsigned flags = 0);
-  void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size);
-  void memcpyDtoHAsync(void *hostPtr, CUdeviceptr devPtr, size_t size);
-  void launchKernel(Function &function, 
-                    unsigned gridX, unsigned gridY, unsigned gridZ, 
-                    unsigned blockX, unsigned blockY, unsigned blockZ, 
-                    unsigned sharedMemBytes, const void **parameters);
+  void memcpyHtoDAsync(DeviceMemory& devMem, const HostMemory& hostMem);
+  void memcpyDtoHAsync(HostMemory& hostMem, const DeviceMemory& devMem);
+  void launchKernel(Function &function, const Grid&, const Block&,
+                    unsigned sharedMemBytes, const void **parameters = 0);
   void query();
   void synchronize();
-  void waitEvent(Event &event);
-  void record(Event &event);
+  void waitEvent(const Event &event);
+  void record(const Event &event);
 private:
   friend class Event;
   class Impl;

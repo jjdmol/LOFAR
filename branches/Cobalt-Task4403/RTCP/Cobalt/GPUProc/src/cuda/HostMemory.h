@@ -10,7 +10,9 @@ public:
   template<typename T> operator T * ();
   template<typename T> operator const T * () const;
 private:
+  friend class Stream;
   void *_ptr;
+  size_t _size;
 };
 
 template<typename T> HostMemory::operator T * ()

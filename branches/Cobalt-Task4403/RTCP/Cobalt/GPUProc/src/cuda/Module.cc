@@ -7,16 +7,19 @@
 
 struct Module::Impl : boost::noncopyable
 {
+  //# Module Management
   Impl(const char *fname)
   {
     checkCudaCall(cuModuleLoad(&_module, fname));
   }
 
+  //# Module Management
   Impl(const void *image)
   {
     checkCudaCall(cuModuleLoadData(&_module, image));
   }
 
+  //# Module Management
   Impl(const void *image, unsigned numOptions, 
        CUjit_option *options, void **optionValues)
   {
@@ -24,6 +27,7 @@ struct Module::Impl : boost::noncopyable
                                      options, optionValues));
   }
 
+  //# Module Management
   ~Impl()
   {
     checkCudaCall(cuModuleUnload(_module));

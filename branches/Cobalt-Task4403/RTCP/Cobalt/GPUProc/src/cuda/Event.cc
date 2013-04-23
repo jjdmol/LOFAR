@@ -5,16 +5,19 @@
 
 struct Event::Impl : boost::noncopyable
 {
+  //# Event Management
   Impl(unsigned flags) : _flags(flags)
   {
     checkCudaCall(cuEventCreate(&_event, flags));
   }
 
+  //# Event Management
   ~Impl()
   {
     checkCudaCall(cuEventDestroy(_event));
   }
 
+  //# Event Management
   float elapsedTime(const Event& now) const
   {
     float milliseconds;

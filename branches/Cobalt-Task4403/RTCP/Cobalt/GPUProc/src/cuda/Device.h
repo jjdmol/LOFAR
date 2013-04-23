@@ -9,8 +9,8 @@ public:
   Device(int ordinal);
   std::string getName() const;
   template <CUdevice_attribute attribute> int getAttribute() const;
-  CUdevice get() const;
 private:
+  friend class Context;
   CUdevice _device;
 };
 

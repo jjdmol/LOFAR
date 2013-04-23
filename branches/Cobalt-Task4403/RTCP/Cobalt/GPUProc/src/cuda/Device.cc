@@ -2,11 +2,13 @@
 #include "Error.h"
 #include <cuda.h>
 
+//# Device Management
 Device::Device(int ordinal)
 {
   checkCudaCall(cuDeviceGet(&_device, ordinal));
 }
 
+//# Device Management
 std::string Device::getName() const
 {
   char name[256];
@@ -14,14 +16,10 @@ std::string Device::getName() const
   return std::string(name);
 }
 
+//# Device Management
 template <CUdevice_attribute attribute> int Device::getAttribute() const
 {
   int value;
   checkCudaCall(cuDeviceGetAttribute(&value, attribute, _device));
   return value;
-}
-
-CUdevice Device::get() const
-{
-  return _device;
 }
