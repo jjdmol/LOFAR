@@ -81,6 +81,7 @@ void writerCB(dyn_string dps, dyn_int values)
 ""0  1
 E "#uses \"navPanel.ctl\"
 
+string baseDP;
 string observation;
 dyn_string connectTo;
 dyn_string writers;
