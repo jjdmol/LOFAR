@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_CUDASUPPORT_CUDAEXCEPTION_H
-#define LOFAR_CUDASUPPORT_CUDAEXCEPTION_H
+#ifndef LOFAR_GPUPROC_CUDA_CUDAEXCEPTION_H
+#define LOFAR_GPUPROC_CUDA_CUDAEXCEPTION_H
 
 // \file
 // Exception class for wrapping CUDA errors
@@ -52,3 +52,4 @@ namespace LOFAR
   } while(0)
 
 #endif
+
