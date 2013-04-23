@@ -8,6 +8,7 @@ class Event
 public:
   Event(unsigned flags = CU_EVENT_DEFAULT);
   float elapsedTime() const;
+  CUevent operator()() const;
 private:
   friend class Stream;
   class Impl;

@@ -55,3 +55,7 @@ Module::Module(const void *data,
 {
 }
 
+CUmodule Module::operator()() const
+{
+  return _impl->_module;
+}

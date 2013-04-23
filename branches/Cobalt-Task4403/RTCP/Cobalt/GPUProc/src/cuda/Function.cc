@@ -3,12 +3,10 @@
 #include "Module.h"
 #include <cuda.h>
 
-#include "Module.cc"
-
 //# Module Management
 Function::Function(const std::string &name, const Module &module)
 {
-  checkCudaCall(cuModuleGetFunction(&_function, module._impl->_module, name.c_str()));
+  checkCudaCall(cuModuleGetFunction(&_function, module(), name.c_str()));
 }
 
 //# Execution Control

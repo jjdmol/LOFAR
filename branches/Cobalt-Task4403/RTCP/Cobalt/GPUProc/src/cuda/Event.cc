@@ -39,3 +39,8 @@ float Event::elapsedTime() const
 {
   return _impl->elapsedTime(Event());
 }
+
+CUevent Event::operator()() const
+{
+  return _impl->_event;
+}

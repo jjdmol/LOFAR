@@ -13,6 +13,7 @@ public:
   Module(const void *data, 
          std::vector<CUjit_option>& options, 
          std::vector<void*> optionValues);
+  CUmodule operator()() const;
 private:
   friend class Function;
   struct Impl;

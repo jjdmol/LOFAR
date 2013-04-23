@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Block.h"
 #include "DeviceMemory.h"
 #include "Error.h"
@@ -10,8 +8,6 @@
 #include "Stream.h"
 #include <boost/noncopyable.hpp>
 #include <cuda.h>
-
-#include "Event.cc"
 
 class Stream::Impl : boost::noncopyable
 {
@@ -121,10 +117,10 @@ void Stream::synchronize()
 
 void Stream::waitEvent(const Event &event)
 {
-  _impl->waitEvent(event._impl->_event);
+  _impl->waitEvent(event());
 }
 
 void Stream::record(const Event &event)
 {
-  _impl->record(event._impl->_event);
+  _impl->record(event());
 }
