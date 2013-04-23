@@ -1,4 +1,4 @@
-//# createProgram.h
+//# tcreateProgram.cc: test CUDA kernel runtime compilation from src file
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,27 +18,38 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CREATE_PROGRAM_H
-#define LOFAR_GPUPROC_CREATE_PROGRAM_H
+#include <lofar_config.h>
 
 #include <string>
 #include <vector>
 
 #include <CoInterface/Parset.h>
-#include "gpu-wrapper.h"
+#include <GPUProc/createProgram.h>
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    /*
-     * For CUDA, context is ignored, but note that creating such an object
-     * makes it the active context.
-     * srcFilename cannot be an absolute path.
-     */
-    gpu::Module createProgram(const Parset &ps, gpu::Context &context, std::vector<std::string> &targets, const std::string &srcFilename);
+using namespace std;
+using namespace LOFAR::Cobalt;
+
+int main(int argc, char *argv[]) {
+  if (argc != 3) {
+    cerr << "Usage: " << argv[0] << " <L12345.parset> <kernel.cu>" << endl;
+    return 1;
   }
-}
 
-#endif
+  Parset ps(argv[1]);
+  gpu::Device device(0);
+  gpu::Context ctx(device);
+  vector<string> targets; // unused atm, so can be empty
+  string srcFilename(argv[2]);
+
+  try {
+    gpu::Module module(createProgram(ps, ctx, targets, srcFilename));
+    cout << "Succesfully compiled '" << srcFilename << "'" << endl;
+
+  } catch (gpu::Error& exc) {
+    cerr << "CuError: " << exc << endl;
+    return 1;
+  }
+
+  return 0;
+}
 

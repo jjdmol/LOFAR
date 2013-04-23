@@ -1,5 +1,5 @@
-//# createProgram.h
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# opencl-incl.h: portable OpenCL header include with our option(s)
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,24 +18,17 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CREATE_PROGRAM_H
-#define LOFAR_GPUPROC_CREATE_PROGRAM_H
+#ifndef LOFAR_GPUPROC_OPENCL_OPENCL_INCL_H
+#define LOFAR_GPUPROC_OPENCL_OPENCL_INCL_H
 
-#include <vector>
-#include <cuda.h>
+// OpenCL include option(s)
+#define __CL_ENABLE_EXCEPTIONS
 
-#include <CoInterface/Parset.h>
-//#include "opencl-incl.h"
-#include "cuwrapper.h"
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    //cl::Program createProgram(const Parset &ps, cl::Context &context, std::vector<cl::Device> &devices, const char *sources);
-    gpu::Module::Ptr createProgram(const Parset &ps, gpu::Context &context, std::vector<std::string> &targets, const string &source);
-  }
-}
+#if defined(__APPLE__) || defined(__MACOSX)
+# include <OpenCL/cl.hpp>
+#else
+# include <CL/cl.hpp>
+#endif
 
 #endif
 

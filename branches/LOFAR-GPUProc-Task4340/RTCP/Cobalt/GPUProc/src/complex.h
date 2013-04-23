@@ -1,6 +1,6 @@
 //# complex.h: Support for complex numbers on GPUs.
 //#
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -26,13 +26,16 @@
 #define LOFAR_GPUPROC_COMPLEX_H
 
 #if defined (USE_CUDA) && defined (USE_OPENCL)
-# warning "Either CUDA or OpenCL must be enabled, not both"
+# error "Either CUDA or OpenCL must be enabled, not both"
 #endif
 
 #if defined (USE_CUDA)
 # include "cuda/complex.h"
 #elif defined (USE_OPENCL)
 # include "opencl/complex.h"
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
 #endif
 
 #endif
+

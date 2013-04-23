@@ -1,4 +1,4 @@
-//# cuwrapper.cu
+//# gpu-wrapper.cc
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,11 +20,15 @@
 
 #include <lofar_config.h>
 
-#include "cuwrapper.h"
+#include "gpu-wrapper.h"
+
+#include <boost/noncopyable.hpp>
 
 namespace LOFAR {
 namespace Cobalt {
-namespace cu {
+namespace gpu {
+
+using namespace std;
 
 const char *Error::what() const throw()
 {
@@ -120,7 +124,140 @@ const char *Error::what() const throw()
   }
 }
 
-} // namespace cu
+
+  class Device::Impl : boost::noncopyable
+  {
+  public:
+    Impl(int ordinal)
+    {
+      checkCuCall(cuDeviceGet(&_device, ordinal));
+    }
+
+    string getName() const
+    {
+      // NV ref is not crystal clear on returned str len. Better be safe.
+      const size_t max_name_len = 255;
+      char name[max_name_len + 1];
+      checkCuCall(cuDeviceGetName(name, max_name_len, _device));
+      return string(name);
+    }
+
+    template <CUdevice_attribute attribute>
+    int getAttribute() const
+    {
+      int value;
+      checkCuCall(cuDeviceGetAttribute(&value, attribute, _device));
+      return value;
+    }
+
+  //private: // Contest::Impl needs it to create a CUcontext
+    CUdevice _device;
+  };
+
+  Device::Device(int ordinal) : _impl(new Impl(ordinal)) { }
+
+  string Device::getName()
+  {
+    return _impl->getName();
+  }
+
+  template <CUdevice_attribute attribute>
+  int Device::getAttribute() const
+  {
+    return _impl->getAttribute<attribute>();
+  }
+
+
+  class Context::Impl : boost::noncopyable
+  {
+  public:
+    Impl(Device device, unsigned int flags)
+    {
+      checkCuCall(cuCtxCreate(&_context, flags, device._impl->_device));
+    }
+
+    ~Impl()
+    {
+      checkCuCall(cuCtxDestroy(_context));
+    }
+
+    void setCurrent() const
+    {
+      checkCuCall(cuCtxSetCurrent(_context));
+    }
+
+    void setCacheConfig(CUfunc_cache config) const
+    {
+      checkCuCall(cuCtxSetCacheConfig(config));
+    }
+
+    void setSharedMemConfig(CUsharedconfig config) const
+    {
+      checkCuCall(cuCtxSetSharedMemConfig(config));
+    }
+
+  private:
+    CUcontext _context;
+  };
+
+  Context::Context(Device device, unsigned int flags)
+    : _impl(new Impl(device, flags)) { }
+
+  void Context::setCurrent() const
+  {
+    _impl->setCurrent();
+  }
+
+  void Context::setCacheConfig(CUfunc_cache config) const
+  {
+    _impl->setCacheConfig(config);
+  }
+
+  void Context::setSharedMemConfig(CUsharedconfig config) const
+  {
+    _impl->setSharedMemConfig(config);
+  }
+
+
+  class Module::Impl : boost::noncopyable
+  {
+  public:
+    Impl(const string &file_name)
+    {
+      checkCuCall(cuModuleLoad(&_module, file_name.c_str()));
+    }
+
+    Impl(const void *data)
+    {
+      checkCuCall(cuModuleLoadData(&_module, data));
+    }
+
+    Impl(const void *data, vector<CUjit_option> &options,
+         vector<void*> &optionValues)
+    {
+      checkCuCall(cuModuleLoadDataEx(&_module, data, options.size(),
+                                     &options[0], &optionValues[0]));
+    }
+
+    ~Impl()
+    {
+      checkCuCall(cuModuleUnload(_module));
+    }
+
+  private:
+    CUmodule _module;
+  };
+
+  Module::Module(const string &file_name) : _impl(new Impl(file_name)) { }
+
+  Module::Module(const void *data) : _impl(new Impl(data)) { }
+
+  Module::Module(const void *data, vector<CUjit_option> &options,
+                 vector<void*> &optionValues)
+    : _impl(new Impl(data, options, optionValues)) { }
+
+
+} // namespace gpu
 } // namespace Cobalt
 } // namespace LOFAR
 

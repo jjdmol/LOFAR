@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "createProgram.h"
+#include <createProgram.h>
 
 #include <cstdlib>
 #include <sys/types.h>
@@ -29,7 +29,6 @@
 #include <unistd.h>
 #include <cstring>
 #include <cerrno>
-#include <string>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -48,31 +47,34 @@ namespace LOFAR
   {
     using namespace std;
 
-    gpu::Module::Ptr createProgram(const Parset &ps, gpu::Context &context, vector<string> &targets, const string &source)
+    gpu::Module createProgram(const Parset &ps, gpu::Context &context, vector<string> &targets, const string &srcFilename)
     {
+#if 0
       string cudaCompiler(CUDA_TOOLKIT_ROOT_DIR);
       if (!cudaCompiler.empty()) {
         cudaCompiler += "/bin/nvcc";
       }
-      if (::access(cudaCompiler.c_str(), X_OK) == -1) {
-        cudaCompiler = "nvcc"; // try through PATH
-      }
+      if (::access(cudaCompiler.c_str(), X_OK) == -1)
+#endif
+      const string cudaCompiler = "nvcc"; // try through PATH  TODO: allow cmd-line arg override?
 
       bool debug = false; // TODO: wire up to program arg or 
 
       stringstream cmd(cudaCompiler);
       cmd << " --ptx";                         // Request intermediate format (ptx) as output. We may want to view or stir it.
       cmd << " -I" << dirname(__FILE__);       // TODO: move kernel sources to their own dir
-      cmd << (debug ? " -G --source-in-ptx" : "");
-      cmd << " -m32"                           // -m64 (default) takes extra regs for a ptr
+      if (debug) {
+        cmd << " -G --source-in-ptx";
+      }
+      cmd << " -m32";                          // -m64 (default) takes extra regs for a ptr, but allows >2 GB buffers, which we don't need
       // use opt level 99
       // -Ox is only for host code. Opt backend compilation below.
-      cmd << " --gpu-architecture compute_30"; // TODO: incorrectly assumes one, single virt arch
+      cmd << " --gpu-architecture compute_30"; // TODO: incorrectly assumes one, single virt arch; check out targets arg
       //cmd << " --maxrregcount 63;" // probably only effective for backend compilation below
-      cmd << " --use_fast_math";
+      cmd << " --use_fast_math"; // we believe we can get away with this for LOFAR online DSP
 
       cmd << " -DNVIDIA_CUDA"; // left-over from OpenCL for Correlator.cl/.cu
-      //cmd << " -DUSE_FLOAT4_IN_CORRELATOR"; // on "GeForce GTX 680"
+      //cmd << " -DUSE_FLOAT4_IN_CORRELATOR"; // on "GeForce GTX 680" // TODO: move this and many -D opts below into kernel-specific build arg routines
       cmd << " -DNR_BITS_PER_SAMPLE=" << ps.nrBitsPerSample();
       cmd << " -DSUBBAND_BANDWIDTH=" << std::setprecision(7) << ps.subbandBandwidth() << 'f';
       cmd << " -DNR_SUBBANDS=" << ps.nrSubbands();
@@ -97,24 +99,25 @@ namespace LOFAR
       }
       cmd << " -DDEDISPERSION_FFT_SIZE=" << ps.dedispersionFFTsize();
 
+      // TODO: do this only if compilation failed
       static bool printCudaCompileCommand = false; // TODO: -> LOG_ONCE()/WARN_ONCE()/similar; don't care about races
       if (!printCudaCompileCommand) {
           printCudaCompileCommand = true;
-          cout << "CUDA compilation to ptx command: " << compileCommand << endl;
+          cout << "CUDA compilation to ptx command: " << cmd << endl;
       }
 
-      // Derive output filename from input filename by replacing the extension.
-//TODO: hook up inputFilename from source arg
-      string outputFilename(inputFilename);
+      // Derive output filename from input src filename by replacing the extension.
+      string outputFilename(srcFilename);
       size_t idx = outputFilename.find_last_of('.');
       if (idx != string::npos) {
         outputFilename.resize(idx);
       }
       outputFilename += ".ptx"; // output filename to be overwritten
 
+      cmd << " " << srcFilename;
       int rv;
-      if ((rv = std::system(compileCommand + " " + inputFilename)) != 0) { // blocking. If it takes too long, rewrite building all kernels at once. TODO: output goes to stdout/stderr -> collect it for proper logging
-        throw SystemCallException("system", std::errno, THROW_ARGS);
+      if ((rv = std::system(cmd.str().c_str())) != 0) { // blocking. If it takes too long, rewrite building all kernels at once. TODO: output goes to stdout/stderr -> collect it for proper logging
+        throw SystemCallException("system", errno, THROW_ARGS); // system() is not really a syscall...
       }
 
 // TODO: separate function!!!
@@ -129,7 +132,7 @@ namespace LOFAR
        * Note: need to pass a void* with option vals. Preferably, do not alloc dyn (mem leaks on exc).
        * Instead, use local vars for small variables and vector<char> xxx; passing &xxx[0] for output 'strings'.
        */
-      vector<cu::CUjit_options> options;
+      vector<CUjit_option> options;
       vector<void*> optionValues;
 
 #if 0
@@ -172,26 +175,27 @@ namespace LOFAR
       optionValues.push_back(NULL); // no option value, but I suppose the array needs a placeholder
 #endif
 
-      cu::CUjit_target_enum target = CU_TARGET_COMPUTE_30; // TODO: determine val from auto-detect or whatever
+      CUjit_target_enum target = CU_TARGET_COMPUTE_30; // TODO: determine val from auto-detect or whatever
       options.push_back(CU_JIT_TARGET);
       optionValues.push_back(&target);
 
 #if 0
-      cu::CUjit_fallback_enum fallback = CU_PREFER_PTX;
+      CUjit_fallback_enum fallback = CU_PREFER_PTX;
       options.push_back(CU_JIT_FALLBACK_STRATEGY);
       optionValues.push_back(&fallback);
 #endif
 
-      gpu::Module::Ptr module;
-      //CUModule module(buf, options, optionValues);
       try {
-        module = new gpu::Module(buf, options, optionValues);
+        gpu::Module module(&buf[0], options, optionValues);
+        // TODO: check what the ptx compiler prints. Don't print bogus. See if infoLogSize indeed is set to 0 if all cool.
+        // TODO: maybe retry if buffer len exhausted, esp for errors
         if (infoLogSize > infoLog.size()) { // zero-term log and guard against bogus JIT opt val output
           infoLogSize = infoLog.size();
         }
         infoLog[infoLogSize - 1] = '\0';
         cout << "Build info for '" << outputFilename << "' (" << jitWallTime << " us):" << endl << &infoLog[0] << endl;
-      } catch (CudaException& exc) {
+        return module;
+      } catch (gpu::Error& exc) {
         if (errorLogSize > errorLog.size()) { // idem
           errorLogSize = errorLog.size();
         }
@@ -199,9 +203,7 @@ namespace LOFAR
         cerr << "Build errors for '" << outputFilename << "' (" << jitWallTime << " us):" << endl << &errorLog[0] << endl;
         throw;
       }
-
-      return module;
-//return createProgram(context, devices, dirname(__FILE__).append("/").append(sources).c_str(), args.str().c_str());
+//return createProgram(context, devices, dirname(__FILE__).append("/").append(srcFilename).c_str(), args.str().c_str());
     }
 
   } // namespace Cobalt

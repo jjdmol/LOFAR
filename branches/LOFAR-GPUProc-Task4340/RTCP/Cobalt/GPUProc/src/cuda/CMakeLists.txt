@@ -6,5 +6,6 @@ configure_file (
   )
 
 lofar_add_library(gpuproc_cuda
-
+  createProgram.cc
+  gpu-wrapper.cc
 )

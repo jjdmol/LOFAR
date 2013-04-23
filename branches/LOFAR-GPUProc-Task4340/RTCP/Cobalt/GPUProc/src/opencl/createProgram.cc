@@ -20,21 +20,21 @@
 
 #include <lofar_config.h>
 
-#include "createProgram.h"
+#include <createProgram.h>
 
 #include <sstream>
 #include <iomanip>
 
 #include <Common/SystemUtil.h>
 
-#include "global_defines.h"
+#include <global_defines.h>
 #include "OpenCL_Support.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    cl::Program createProgram(const Parset &ps, cl::Context &context, std::vector<cl::Device> &devices, const char *sources)
+    cl::Program createProgram(const Parset &ps, cl::Context &context, std::vector<cl::Device> &devices, const char *srcFilename)
     {
       std::stringstream args;
       args << "-cl-fast-relaxed-math";
@@ -77,7 +77,7 @@ namespace LOFAR
         args << " -DBANDPASS_CORRECTION";
 
       args << " -DDEDISPERSION_FFT_SIZE=" << ps.dedispersionFFTsize();
-      return createProgram(context, devices, dirname(__FILE__).append("/").append(sources).c_str(), args.str().c_str());
+      return createProgram(context, devices, dirname(__FILE__).append("/").append(srcFilename).c_str(), args.str().c_str());
     }
   }
 }

@@ -1,5 +1,6 @@
-//# opencl-incl.h: portable OpenCL header include with our option(s)
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# gpu-wrapper.h: CUDA/OpenCL primitive wrapper selection
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,16 +19,22 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_OPENCL_INCL_H
-#define LOFAR_GPUPROC_OPENCL_INCL_H
+// \file
+// CUDA/OpenCL primitive wrapper selection
 
-// OpenCL include option(s)
-#define __CL_ENABLE_EXCEPTIONS
+#ifndef LOFAR_GPUPROC_GPU_WRAPPER_H
+#define LOFAR_GPUPROC_GPU_WRAPPER_H
 
-#if defined(__APPLE__) || defined(__MACOSX)
-# include <OpenCL/cl.hpp>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
+
+#if defined (USE_CUDA)
+# include "cuda/gpu-wrapper.h"
+#elif defined (USE_OPENCL)
+# include "opencl/gpu-wrapper.h"
 #else
-# include <CL/cl.hpp>
+# error "Either CUDA or OpenCL must be enabled, not neither"
 #endif
 
 #endif

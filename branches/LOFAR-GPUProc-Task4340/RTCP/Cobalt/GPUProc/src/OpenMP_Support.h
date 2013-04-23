@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef OPEN_MP_SUPPORT_H
-#define OPEN_MP_SUPPORT_H
+#ifndef LOFAR_GPUPROC_OPENMP_SUPPORT_H
+#define LOFAR_GPUPROC_OPENMP_SUPPORT_H
 
 #include <omp.h>
 

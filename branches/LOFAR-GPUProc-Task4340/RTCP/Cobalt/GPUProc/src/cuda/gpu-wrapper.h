@@ -1,4 +1,4 @@
-//# cuwrapper.h
+//# gpu-wrapper.h
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,20 +18,26 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUWRAPPER_H
-#define LOFAR_GPUPROC_CUWRAPPER_H
+#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_H
+#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_H
+
+// \file
+// C++ wrappers for CUDA akin the OpenCL C++ wrappers.
+// Uses the "Pimpl" idiom as far as possible. For more info on Pimpl, see
+// http://www.boost.org/doc/libs/release/libs/smart_ptr/sp_techniques.html#pimpl
 
 #include <string>
+#include <vector>
 #include <exception>
 
-// unique_ptr would be more fitting, but we don't want to require C++11, so use
-// shared_ptr instead, which also corresponds well to the OpenCL/C++ wrapper.
+// unique_ptr would be enough, but we don't want to require C++11, so use
+// shared_ptr instead, which also corresponds better to the OpenCL C++ wrapper.
 #include <boost/shared_ptr.hpp>
-#include <cuda.h>
+#include <cuda.h> // ideally, this goes into the .cc, but too much leakage
 
 namespace LOFAR {
 namespace Cobalt {
-namespace cu {
+namespace gpu {
 
   class Error : public std::exception {
     public:
@@ -52,7 +58,7 @@ namespace cu {
       CUresult _result;
   };
 
-  inline void checkCudaCall(CUresult result)
+  inline void checkCuCall(CUresult result)
   {
     if (result != CUDA_SUCCESS)
       throw Error(result);
@@ -62,7 +68,7 @@ namespace cu {
 #if 0
   inline void init(unsigned flags = 0)
   {
-    checkCudaCall(cuInit(flags));
+    checkCuCall(cuInit(flags));
   }
 #endif
 
@@ -70,7 +76,7 @@ namespace cu {
     public:
       Platform(unsigned flags = 0)
       {
-        checkCudaCall(cuInit(flags));
+        checkCuCall(cuInit(flags));
       }
 
       ~Platform()
@@ -80,77 +86,68 @@ namespace cu {
       size_t size()
       {
 	int nrDevices;
-	checkCudaCall(cuDeviceGetCount(&nrDevices));
-	return nrDevices;
+	checkCuCall(cuDeviceGetCount(&nrDevices));
+	return (size_t)nrDevices;
       }
   };
 
 
-  class Device {
-    public:
+  class Device
+  {
+  public:
+    Device(int ordinal = 0);
+
 #if 0
       static int getCount()
       {
 	int nrDevices;
-	checkCudaCall(cuDeviceGetCount(&nrDevices));
+	checkCuCall(cuDeviceGetCount(&nrDevices));
 	return nrDevices;
       }
-
 #endif
-      Device(int ordinal)
-      {
-	checkCudaCall(cuDeviceGet(&_device, ordinal));
-      }
 
-      std::string getName() const
-      {
-	char name[64];
-	checkCudaCall(cuDeviceGetName(name, sizeof name, _device));
-	return std::string(name);
-      }
+    std::string getName();
 
-      template <CUdevice_attribute attribute> int getAttribute() const
-      {
-	int value;
-	checkCudaCall(cuDeviceGetAttribute(&value, attribute, _device));
-	return value;
-      }
+    // template this one to make it similar to getInfo() in OpenCL's C++ wrapper.
+    template <CUdevice_attribute attribute>
+    int getAttribute() const;
 
-      operator CUdevice ()
-      {
-	return _device;
-      }
+    friend class Context; // Context needs our device (i.e. _impl) to create a context
 
-    private:
-      CUdevice _device;
+  private:
+    class Impl;
+    boost::shared_ptr<Impl> _impl;
   };
 
 
   class Context
   {
-    public:
-      Context(int flags, Device device)
-      {
-	checkCudaCall(cuCtxCreate(&_context, flags, device));
-      }
+  public:
+    /*
+     * Creates a new CUDA context and associates it with the calling thread.
+     * (i.e. setCurrent() implied)
+     * Note that a
+     */
+    Context(Device device, unsigned int flags = 0);
 
-      ~Context()
-      {
-	checkCudaCall(cuCtxDestroy(_context));
-      }
+    /*
+     * Makes this context the current context.
+     */
+    void setCurrent() const;
 
-      void setCurrent() const
-      {
-	checkCudaCall(cuCtxSetCurrent(_context));
-      }
+    /*
+     * Sets the cache config of the _current_ context.
+     */
+    void setCacheConfig(CUfunc_cache config) const;
 
-      operator CUcontext ()
-      {
-	return _context;
-      }
+    /*
+     * Sets the shared memory config of the _current_ context.
+     */
+    void setSharedMemConfig(CUsharedconfig config) const;
 
-    private:
-      CUcontext _context;
+  private:
+    class Impl;
+    boost::shared_ptr<Impl> _impl;
   };
 
 
@@ -159,12 +156,12 @@ namespace cu {
     public:
       HostMemory(size_t size, int flags = 0)
       {
-	checkCudaCall(cuMemHostAlloc(&_ptr, size, flags));
+	checkCuCall(cuMemHostAlloc(&_ptr, size, flags));
       }
 
       ~HostMemory()
       {
-	checkCudaCall(cuMemFreeHost(_ptr));
+	checkCuCall(cuMemFreeHost(_ptr));
       }
 
       template <typename T> operator T * ()
@@ -182,12 +179,12 @@ namespace cu {
     public:
       DeviceMemory(size_t size)
       {
-	checkCudaCall(cuMemAlloc(&_ptr, size));
+	checkCuCall(cuMemAlloc(&_ptr, size));
       }
 
       ~DeviceMemory()
       {
-	checkCudaCall(cuMemFree(_ptr));
+	checkCuCall(cuMemFree(_ptr));
       }
 
       operator CUdeviceptr ()
@@ -202,64 +199,39 @@ namespace cu {
 
   class Module
   {
-    public:
-      typedef boost::shared_ptr<Module> Ptr;
+  public:
+    Module(const std::string &file_name);
 
-      Module(const std::string &file_name)
-      {
-	checkCudaCall(cuModuleLoad(&_module, file_name.c_str()));
-      }
+    Module(const void *data);
 
-      Module(const void *data)
-      {
-	checkCudaCall(cuModuleLoadData(&_module, data));
-      }
+    Module(const void *data, std::vector<CUjit_option> &options,
+           std::vector<void*> &optionValues);
 
-      Module(const void *data, std::vector<CUjit_option> &options, std::vector<void*> &optionValues)
-      {
-        checkCudaCall(cuModuleLoadDataEx(&_module, data, options.size(), &options[0], &optionValues[0]));
-      }
-
-      ~Module()
-      {
-	checkCudaCall(cuModuleUnload(_module));
-      }
-
-#if 0 // TODO: elsewhere too in this file
-      operator CUmodule ()
-      {
-	return _module;
-      }
-#endif
-
-    private:
-      CUmodule _module;
-
-      // do not copy, use ShPtr
-//TODO: idem for other cuwrapper classes
-      Module(const Module& module);
-      Module& operator=(const Module& rhs);
+  private:
+    class Impl;
+    boost::shared_ptr<Impl> _impl;
   };
 
 
+#if 0
   class Function
   {
     public:
       Function(Module &module, const std::string &name)
       {
-	checkCudaCall(cuModuleGetFunction(&_function, module, name.c_str()));
+	checkCuCall(cuModuleGetFunction(&_function, module, name.c_str()));
       }
 
       int getAttribute(CUfunction_attribute attribute)
       {
 	int value;
-	checkCudaCall(cuFuncGetAttribute(&value, attribute, _function));
+	checkCuCall(cuFuncGetAttribute(&value, attribute, _function));
 	return value;
       }
 
       void setSharedMemConfig(CUsharedconfig config)
       {
-	checkCudaCall(cuFuncSetSharedMemConfig(_function, config));
+	checkCuCall(cuFuncSetSharedMemConfig(_function, config));
       }
 
       operator CUfunction ()
@@ -277,18 +249,18 @@ namespace cu {
     public:
       Event(int flags = CU_EVENT_DEFAULT)
       {
-	checkCudaCall(cuEventCreate(&_event, flags));
+	checkCuCall(cuEventCreate(&_event, flags));
       }
 
       ~Event()
       {
-	checkCudaCall(cuEventDestroy(_event));
+	checkCuCall(cuEventDestroy(_event));
       }
 
       float elapsedTime(Event &second)
       {
 	float ms;
-	checkCudaCall(cuEventElapsedTime(&ms, second, _event));
+	checkCuCall(cuEventElapsedTime(&ms, second, _event));
 	return ms;
       }
 
@@ -307,47 +279,47 @@ namespace cu {
     public:
       Stream(int flags = CU_STREAM_DEFAULT)
       {
-	checkCudaCall(cuStreamCreate(&_stream, flags));
+	checkCuCall(cuStreamCreate(&_stream, flags));
       }
 
       ~Stream()
       {
-	checkCudaCall(cuStreamDestroy(_stream));
+	checkCuCall(cuStreamDestroy(_stream));
       }
 
       void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size)
       {
-	checkCudaCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _stream));
+	checkCuCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _stream));
       }
 
       void memcpyDtoHAsync(void *hostPtr, CUdeviceptr devPtr, size_t size)
       {
-	checkCudaCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _stream));
+	checkCuCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _stream));
       }
 
       void launchKernel(Function &function, unsigned gridX, unsigned gridY, unsigned gridZ, unsigned blockX, unsigned blockY, unsigned blockZ, unsigned sharedMemBytes, const void **parameters)
       {
-	checkCudaCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes, _stream, const_cast<void **>(parameters), 0));
+	checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes, _stream, const_cast<void **>(parameters), 0));
       }
 
       void query()
       {
-	checkCudaCall(cuStreamQuery(_stream));
+	checkCuCall(cuStreamQuery(_stream));
       }
 
       void synchronize()
       {
-	checkCudaCall(cuStreamSynchronize(_stream));
+	checkCuCall(cuStreamSynchronize(_stream));
       }
 
       void waitEvent(Event &event)
       {
-	checkCudaCall(cuStreamWaitEvent(_stream, event, 0));
+	checkCuCall(cuStreamWaitEvent(_stream, event, 0));
       }
 
       void record(Event &event)
       {
-	checkCudaCall(cuEventRecord(event, _stream));
+	checkCuCall(cuEventRecord(event, _stream));
       }
 
       operator CUstream ()
@@ -359,8 +331,9 @@ namespace cu {
       CUstream _stream;
   };
 }
+#endif
 
-} // namespace cu
+} // namespace gpu
 } // namespace Cobalt
 } // namespace LOFAR
 

@@ -40,7 +40,7 @@ namespace LOFAR
     }
     _ptr = ::mmap(addr, length, prot, flags, fd, offset);
     if (_ptr == MAP_FAILED) {
-       throw SystemCallException("mmap() failed", std::errno, THROW_ARGS);
+       throw SystemCallException("mmap", std::errno, THROW_ARGS);
     }
   }
 

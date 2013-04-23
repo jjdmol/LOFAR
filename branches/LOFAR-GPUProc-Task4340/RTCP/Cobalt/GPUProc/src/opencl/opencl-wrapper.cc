@@ -1,4 +1,4 @@
-//# oclwrapper.h
+//# opencl-wrapper.h
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_OCLWRAPPER_H
-#define LOFAR_GPUPROC_OCLWRAPPER_H
+#ifndef LOFAR_GPUPROC_OPENCL_OPENCL_WRAPPER_H
+#define LOFAR_GPUPROC_OPENCL_OPENCL_WRAPPER_H
 
 #include "opencl-incl.h"
 
