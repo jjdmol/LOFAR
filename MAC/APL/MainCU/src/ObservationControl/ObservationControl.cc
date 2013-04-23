@@ -250,7 +250,7 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 				reportState = RTDB_OBJ_STATE_BROKEN;
 				break;
 			default:
-				message = "Unknown reason";
+				message = formatString("Unknown reason(%d)", itsQuitReason);
 				reportState = RTDB_OBJ_STATE_BROKEN;
 			}
 		}
