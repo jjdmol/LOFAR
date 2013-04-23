@@ -1,10 +1,11 @@
 #!/bin/sh
 
 # Parsets to use
+
 PARSETS="
-RTCP_UnitTest.parset.77_Stations
-RTCP_UnitTest.parset.AARTFAAC
-RTCP_UnitTest.parset.small-test
+FIR_FilterTest.parset.77_Stations
+FIR_FilterTest.parset.AARTFAAC
+FIR_FilterTest.parset.small-test
 "
 
 # Check for GPU
@@ -18,12 +19,13 @@ fi
 STATUS=0
 for PARSET in $PARSETS
 do
-  echo "Running ./RTCP_UnitTest $PARSET" >&2
-  ./RTCP_UnitTest $PARSET
+  echo "Running ./FIR_FilterTest $PARSET" >&2
+  ./FIR_FilterTest $PARSET >&1
   if [ $? != 0 ]
   then
     STATUS=1
-    echo "FAILED: ./RTCP_UnitTest $PARSET" >&2
+    echo "FAILED: ./FIR_FilterTest $PARSET" >&2
+	exit $STATUS #exit for now.
   fi
 done
 
