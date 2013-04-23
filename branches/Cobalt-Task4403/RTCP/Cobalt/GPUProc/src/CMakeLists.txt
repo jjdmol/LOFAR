@@ -49,3 +49,5 @@ lofar_add_library(gpuproc
   WorkQueues/WorkQueue.cc)
 
 lofar_add_bin_program(rtcp rtcp.cc)
+
+add_subdirectory(cuda)
