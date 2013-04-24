@@ -125,55 +125,48 @@ const char *Error::what() const throw()
 }
 
 
-  class Device::Impl : boost::noncopyable
+  Platform::Platform(unsigned int flags)
   {
-  public:
-    Impl(int ordinal)
-    {
-      checkCuCall(cuDeviceGet(&_device, ordinal));
-    }
+    checkCuCall(cuInit(flags));
+  }
 
-    string getName() const
-    {
-      // NV ref is not crystal clear on returned str len. Better be safe.
-      const size_t max_name_len = 255;
-      char name[max_name_len + 1];
-      checkCuCall(cuDeviceGetName(name, max_name_len, _device));
-      return string(name);
-    }
-
-    template <CUdevice_attribute attribute>
-    int getAttribute() const
-    {
-      int value;
-      checkCuCall(cuDeviceGetAttribute(&value, attribute, _device));
-      return value;
-    }
-
-  //private: // Contest::Impl needs it to create a CUcontext
-    CUdevice _device;
-  };
-
-  Device::Device(int ordinal) : _impl(new Impl(ordinal)) { }
-
-  string Device::getName()
+  size_t Platform::size()
   {
-    return _impl->getName();
+    int nrDevices;
+    checkCuCall(cuDeviceGetCount(&nrDevices));
+    return (size_t)nrDevices;
+  }
+
+
+  Device::Device(int ordinal)
+  {
+    checkCuCall(cuDeviceGet(&_device, ordinal));
+  }
+
+  string Device::getName() const
+  {
+    // NV ref is not crystal clear on returned str len. Better be safe.
+    const size_t max_name_len = 255;
+    char name[max_name_len + 1];
+    checkCuCall(cuDeviceGetName(name, max_name_len, _device));
+    return string(name);
   }
 
   template <CUdevice_attribute attribute>
   int Device::getAttribute() const
   {
-    return _impl->getAttribute<attribute>();
+    int value;
+    checkCuCall(cuDeviceGetAttribute(&value, attribute, _device));
+    return value;
   }
 
 
   class Context::Impl : boost::noncopyable
   {
   public:
-    Impl(Device device, unsigned int flags)
+    Impl(CUdevice device, unsigned int flags)
     {
-      checkCuCall(cuCtxCreate(&_context, flags, device._impl->_device));
+      checkCuCall(cuCtxCreate(&_context, flags, device));
     }
 
     ~Impl()
@@ -201,7 +194,7 @@ const char *Error::what() const throw()
   };
 
   Context::Context(Device device, unsigned int flags)
-    : _impl(new Impl(device, flags)) { }
+    : _impl(new Impl(device._device, flags)) { }
 
   void Context::setCurrent() const
   {
@@ -217,6 +210,59 @@ const char *Error::what() const throw()
   {
     _impl->setSharedMemConfig(config);
   }
+
+
+  class HostMemory::Impl : boost::noncopyable
+  {
+  public:
+    Impl(size_t size, int flags)
+    {
+      checkCuCall(cuMemHostAlloc(&_ptr, size, flags));
+    }
+
+    ~Impl()
+    {
+      checkCuCall(cuMemFreeHost(_ptr));
+    }
+
+    template <typename T> T *get() const
+    {
+      return static_cast<T *>(_ptr);
+    }
+
+  private:
+    void *_ptr;
+  };
+
+  HostMemory::HostMemory(size_t size, int flags)
+    : _impl(new Impl(size, flags)) { }
+
+  template <typename T>
+  T *HostMemory::get() const
+  {
+    return _impl->get<T>();
+  }
+
+
+  class DeviceMemory::Impl : boost::noncopyable
+  {
+  public:
+    Impl(size_t size)
+    {
+      checkCuCall(cuMemAlloc(&_ptr, size));
+    }
+
+    ~Impl()
+    {
+      checkCuCall(cuMemFree(_ptr));
+    }
+
+  //private: // Stream needs it to do transfers
+    CUdeviceptr _ptr;
+  };
+
+  DeviceMemory::DeviceMemory(size_t size)
+    : _impl(new Impl(size)) { }
 
 
   class Module::Impl : boost::noncopyable
@@ -244,7 +290,7 @@ const char *Error::what() const throw()
       checkCuCall(cuModuleUnload(_module));
     }
 
-  private:
+  //private: // Function needs it to create a CUfunction
     CUmodule _module;
   };
 
@@ -255,6 +301,163 @@ const char *Error::what() const throw()
   Module::Module(const void *data, vector<CUjit_option> &options,
                  vector<void*> &optionValues)
     : _impl(new Impl(data, options, optionValues)) { }
+
+
+  Function::Function(Module &module, const string &name)
+  {
+    checkCuCall(cuModuleGetFunction(&_function, module._impl->_module, name.c_str()));
+  }
+
+  int Function::getAttribute(CUfunction_attribute attribute) const
+  {
+    int value;
+    checkCuCall(cuFuncGetAttribute(&value, attribute, _function));
+    return value;
+  }
+
+  void Function::setSharedMemConfig(CUsharedconfig config)
+  {
+    checkCuCall(cuFuncSetSharedMemConfig(_function, config));
+  }
+
+
+  class Event::Impl : boost::noncopyable
+  {
+  public:
+    Impl(int flags = CU_EVENT_DEFAULT)
+    {
+      checkCuCall(cuEventCreate(&_event, flags));
+    }
+
+    ~Impl()
+    {
+      checkCuCall(cuEventDestroy(_event));
+    }
+
+    float elapsedTime(Event &second)
+    {
+      float ms;
+      checkCuCall(cuEventElapsedTime(&ms, second._impl->_event, _event));
+      return ms;
+    }
+
+  //private: // Stream needs it to wait for and record events
+    CUevent _event;
+  };
+
+  Event::Event(int flags) : _impl(new Impl(flags)) { }
+
+  float Event::elapsedTime(Event &second)
+  {
+    _impl->elapsedTime(second);
+  }
+
+
+  class Stream::Impl : boost::noncopyable
+  {
+  public:
+    Impl(int flags = CU_STREAM_DEFAULT)
+    {
+      checkCuCall(cuStreamCreate(&_stream, flags));
+    }
+
+    ~Impl()
+    {
+      checkCuCall(cuStreamDestroy(_stream));
+    }
+
+    void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size)
+    {
+      checkCuCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _stream));
+    }
+
+    void memcpyDtoHAsync(void *hostPtr, CUdeviceptr devPtr, size_t size)
+    {
+      checkCuCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _stream));
+    }
+
+    void launchKernel(CUfunction function, unsigned gridX, unsigned gridY,
+                      unsigned gridZ, unsigned blockX, unsigned blockY,
+                      unsigned blockZ, unsigned sharedMemBytes,
+                      const void **parameters)
+    {
+      checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
+                  blockY, blockZ, sharedMemBytes, _stream,
+                  const_cast<void **>(parameters), 0));
+    }
+
+    bool query()
+    {
+      CUresult rv = cuStreamQuery(_stream);
+      if (rv == CUDA_ERROR_NOT_READY) {
+        return false;
+      } else if (rv == CUDA_SUCCESS) {
+        return true;
+      }
+      checkCuCall(rv); // throw
+    }
+
+    void synchronize()
+    {
+      checkCuCall(cuStreamSynchronize(_stream));
+    }
+
+    void waitEvent(CUevent event)
+    {
+      checkCuCall(cuStreamWaitEvent(_stream, event, 0));
+    }
+
+    void recordEvent(CUevent event)
+    {
+      checkCuCall(cuEventRecord(event, _stream));
+    }
+
+  private:
+    CUstream _stream;
+  };
+
+  Stream::Stream(int flags) : _impl(new Impl(flags)) { }
+
+  void Stream::memcpyHtoDAsync(DeviceMemory &devMem, const HostMemory &hostMem,
+                               size_t size)
+  {
+    _impl->memcpyHtoDAsync(devMem._impl->_ptr, hostMem.get<void*>(), size);
+  }
+
+  void Stream::memcpyDtoHAsync(HostMemory &hostMem, const DeviceMemory &devMem,
+                               size_t size)
+  {
+    _impl->memcpyDtoHAsync(hostMem.get<void*>(), devMem._impl->_ptr, size);
+  }
+
+  void Stream::launchKernel(Function function, unsigned gridX, unsigned gridY,
+                            unsigned gridZ, unsigned blockX, unsigned blockY,
+                            unsigned blockZ, unsigned sharedMemBytes,
+                            const void **parameters)
+  {
+    _impl->launchKernel(function._function, gridX, gridY, gridZ, blockX, blockY,
+                        blockZ, sharedMemBytes, parameters);
+  }
+
+  bool Stream::query()
+  {
+    _impl->query();
+  }
+
+  void Stream::synchronize()
+  {
+    _impl->synchronize();
+  }
+
+  void Stream::waitEvent(const Event &event)
+  {
+    _impl->waitEvent(event._impl->_event);
+  }
+
+  void Stream::recordEvent(const Event &event)
+  {
+    _impl->recordEvent(event._impl->_event);
+  }
 
 
 } // namespace gpu

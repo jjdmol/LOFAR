@@ -23,15 +23,18 @@
 
 // \file
 // C++ wrappers for CUDA akin the OpenCL C++ wrappers.
-// Uses the "Pimpl" idiom as far as possible. For more info on Pimpl, see
+// Uses the "Pimpl" idiom for resource managing classes (i.e. that need to
+// control copying having a non-trivial destructor. For more info on Pimpl, see
 // http://www.boost.org/doc/libs/release/libs/smart_ptr/sp_techniques.html#pimpl
 
+// Not Pimpl-ed are class Platform, Device, and Function.
+// These are also passed by value.
+
+#include <cstddef>
 #include <string>
 #include <vector>
 #include <exception>
 
-// unique_ptr would be enough, but we don't want to require C++11, so use
-// shared_ptr instead, which also corresponds better to the OpenCL C++ wrapper.
 #include <boost/shared_ptr.hpp>
 #include <cuda.h> // ideally, this goes into the .cc, but too much leakage
 
@@ -41,17 +44,13 @@ namespace gpu {
 
   class Error : public std::exception {
     public:
-      Error(CUresult result)
-      :
-        _result(result)
-      {
-      }
+      Error(CUresult result) : _result(result) { }
 
       virtual const char *what() const throw();
 
-      operator CUresult () const
+      operator CUresult() const
       {
-	return _result;
+        return _result;
       }
 
     private:
@@ -65,58 +64,41 @@ namespace gpu {
   }
 
 
-#if 0
-  inline void init(unsigned flags = 0)
-  {
-    checkCuCall(cuInit(flags));
-  }
-#endif
-
-  class Platform { // to correspond to OpenCL
+  class Platform {
     public:
-      Platform(unsigned flags = 0)
-      {
-        checkCuCall(cuInit(flags));
-      }
+      /*
+       * Initialize the CUDA platform.
+       * This object is not strictly needed, but hide the cu calls
+       * and make it similar to OpenCL.
+       * flags must be 0 (at least up till CUDA 5.0).
+       */
+      Platform(unsigned int flags = 0);
 
-      ~Platform()
-      {
-      }
-
-      size_t size()
-      {
-	int nrDevices;
-	checkCuCall(cuDeviceGetCount(&nrDevices));
-	return (size_t)nrDevices;
-      }
+      /*
+       * Returns the number of devices in the CUDA platform (or throws).
+       */
+      size_t size();
   };
 
 
   class Device
   {
   public:
+    /*
+     * ordinal is the device number. Valid range: [0, Platform.size()-1].
+     */
     Device(int ordinal = 0);
 
-#if 0
-      static int getCount()
-      {
-	int nrDevices;
-	checkCuCall(cuDeviceGetCount(&nrDevices));
-	return nrDevices;
-      }
-#endif
-
-    std::string getName();
+    std::string getName() const;
 
     // template this one to make it similar to getInfo() in OpenCL's C++ wrapper.
     template <CUdevice_attribute attribute>
     int getAttribute() const;
 
-    friend class Context; // Context needs our device (i.e. _impl) to create a context
+    friend class Context; // Context needs our device (i.e. _device) to create a context
 
   private:
-    class Impl;
-    boost::shared_ptr<Impl> _impl;
+    CUdevice _device;
   };
 
 
@@ -126,9 +108,8 @@ namespace gpu {
     /*
      * Creates a new CUDA context and associates it with the calling thread.
      * (i.e. setCurrent() implied)
-     * Note that a
      */
-    Context(Device device, unsigned int flags = 0);
+    Context(Device device, unsigned int flags = CU_CTX_SCHED_AUTO);
 
     /*
      * Makes this context the current context.
@@ -153,47 +134,35 @@ namespace gpu {
 
   class HostMemory
   {
-    public:
-      HostMemory(size_t size, int flags = 0)
-      {
-	checkCuCall(cuMemHostAlloc(&_ptr, size, flags));
-      }
+  public:
+    /*
+     * We may want to consider flags = CU_MEMHOSTALLOC_PORTABLE
+     * and maybe for input buffers, CU_MEMHOSTALLOC_PORTABLE | CU_MEMHOSTALLOC_WRITECOMBINED
+     */
+    HostMemory(size_t size, int flags = 0);
 
-      ~HostMemory()
-      {
-	checkCuCall(cuMemFreeHost(_ptr));
-      }
+    /*
+     * The returned ptr cannot have a lifetime beyond the lifetime of this
+     * object (actually the last copy).
+     */
+    template <typename T> T *get() const;
 
-      template <typename T> operator T * ()
-      {
-	return static_cast<T *>(_ptr);
-      }
-
-    private:
-      void *_ptr;
+  private:
+    class Impl;
+    boost::shared_ptr<Impl> _impl;
   };
 
 
   class DeviceMemory
   {
-    public:
-      DeviceMemory(size_t size)
-      {
-	checkCuCall(cuMemAlloc(&_ptr, size));
-      }
+  public:
+    DeviceMemory(size_t size);
 
-      ~DeviceMemory()
-      {
-	checkCuCall(cuMemFree(_ptr));
-      }
+    friend class Stream; // Stream needs our device ptr (i.e. _impl) to transfer H2D
 
-      operator CUdeviceptr ()
-      {
-	return _ptr;
-      }
-
-    private:
-      CUdeviceptr _ptr;
+  private:
+    class Impl;
+    boost::shared_ptr<Impl> _impl;
   };
 
 
@@ -207,131 +176,87 @@ namespace gpu {
     Module(const void *data, std::vector<CUjit_option> &options,
            std::vector<void*> &optionValues);
 
+    friend class Function; // Function needs our module (i.e. _impl) to create a function
+
   private:
     class Impl;
     boost::shared_ptr<Impl> _impl;
   };
 
 
-#if 0
   class Function
   {
-    public:
-      Function(Module &module, const std::string &name)
-      {
-	checkCuCall(cuModuleGetFunction(&_function, module, name.c_str()));
-      }
+  public:
+    Function(Module &module, const std::string &name);
 
-      int getAttribute(CUfunction_attribute attribute)
-      {
-	int value;
-	checkCuCall(cuFuncGetAttribute(&value, attribute, _function));
-	return value;
-      }
+    int getAttribute(CUfunction_attribute attribute) const;
 
-      void setSharedMemConfig(CUsharedconfig config)
-      {
-	checkCuCall(cuFuncSetSharedMemConfig(_function, config));
-      }
+    void setSharedMemConfig(CUsharedconfig config);
 
-      operator CUfunction ()
-      {
-	return _function;
-      }
+    friend class Stream; // Stream needs our function (i.e. _function) to launch a kernel
 
-    private:
-      CUfunction _function;
+  private:
+    CUfunction _function;
   };
 
 
   class Event
   {
-    public:
-      Event(int flags = CU_EVENT_DEFAULT)
-      {
-	checkCuCall(cuEventCreate(&_event, flags));
-      }
+  public:
+    Event(int flags = CU_EVENT_DEFAULT);
 
-      ~Event()
-      {
-	checkCuCall(cuEventDestroy(_event));
-      }
+    ~Event();
 
-      float elapsedTime(Event &second)
-      {
-	float ms;
-	checkCuCall(cuEventElapsedTime(&ms, second, _event));
-	return ms;
-      }
+    float elapsedTime(Event &second);
 
-      operator CUevent ()
-      {
-	return _event;
-      }
+    friend class Stream; // Stream needs our event (i.e. _impl) to wait for and record events
 
-    private:
-      CUevent _event;
+  private:
+    class Impl;
+    boost::shared_ptr<Impl> _impl;
   };
 
 
   class Stream
   {
-    public:
-      Stream(int flags = CU_STREAM_DEFAULT)
-      {
-	checkCuCall(cuStreamCreate(&_stream, flags));
-      }
+  public:
+    Stream(int flags = CU_STREAM_DEFAULT);
 
-      ~Stream()
-      {
-	checkCuCall(cuStreamDestroy(_stream));
-      }
+    ~Stream();
 
-      void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, size_t size)
-      {
-	checkCuCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _stream));
-      }
+    /*
+     * Transfers size bytes from hostMem to devMem asynchronously. (1st arg is dst.)
+     */
+    void memcpyHtoDAsync(DeviceMemory &devMem, const HostMemory &hostMem, size_t size);
 
-      void memcpyDtoHAsync(void *hostPtr, CUdeviceptr devPtr, size_t size)
-      {
-	checkCuCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _stream));
-      }
+    /*
+     * Transfers size bytes from devMem to hostMem asynchronously. (1st arg is dst.)
+     */
+    void memcpyDtoHAsync(HostMemory &hostMem, const DeviceMemory &devMem, size_t size);
 
-      void launchKernel(Function &function, unsigned gridX, unsigned gridY, unsigned gridZ, unsigned blockX, unsigned blockY, unsigned blockZ, unsigned sharedMemBytes, const void **parameters)
-      {
-	checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX, blockY, blockZ, sharedMemBytes, _stream, const_cast<void **>(parameters), 0));
-      }
+    void launchKernel(Function function, unsigned gridX, unsigned gridY,
+                      unsigned gridZ, unsigned blockX, unsigned blockY,
+                      unsigned blockZ, unsigned sharedMemBytes,
+                      const void **parameters);
 
-      void query()
-      {
-	checkCuCall(cuStreamQuery(_stream));
-      }
+    /*
+     * Check this stream if all its operations have completed.
+     * Returns true if all completed, or false if not yet all completed.
+     * Throws on other errors (other is vs not yet all completed).
+     */
+    bool query();
 
-      void synchronize()
-      {
-	checkCuCall(cuStreamSynchronize(_stream));
-      }
+    void synchronize();
 
-      void waitEvent(Event &event)
-      {
-	checkCuCall(cuStreamWaitEvent(_stream, event, 0));
-      }
+    void waitEvent(const Event &event);
 
-      void record(Event &event)
-      {
-	checkCuCall(cuEventRecord(event, _stream));
-      }
+    void recordEvent(const Event &event);
 
-      operator CUstream ()
-      {
-	return _stream;
-      }
-
-    private:
-      CUstream _stream;
+  private:
+    class Impl;
+    boost::shared_ptr<Impl> _impl;
   };
-}
-#endif
+
 
 } // namespace gpu
 } // namespace Cobalt
