@@ -116,7 +116,7 @@ namespace LOFAR
 
       virtual void logStatistics()
       {
-        // TODO
+        // PacketsToBuffer already logs
       }
 
     private:
