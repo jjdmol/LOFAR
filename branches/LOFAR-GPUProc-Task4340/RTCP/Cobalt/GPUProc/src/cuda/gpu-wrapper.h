@@ -26,7 +26,6 @@
 // Uses the "Pimpl" idiom for resource managing classes (i.e. that need to
 // control copying having a non-trivial destructor. For more info on Pimpl, see
 // http://www.boost.org/doc/libs/release/libs/smart_ptr/sp_techniques.html#pimpl
-
 // Not Pimpl-ed are class Platform, Device, and Function.
 // These are also passed by value.
 
