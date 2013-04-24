@@ -31,8 +31,8 @@
 namespace LOFAR
 {
 
-  Mmap::Mmap(void *addr, size_t length, int prot = PROT_READ,
-             int flags = MAP_PRIVATE, int fd = -1, off_t offset = 0) :
+  Mmap::Mmap(void *addr, size_t length, int prot, int flags, int fd,
+             off_t offset) :
     _len(length)
   {
     if (flags & MAP_ANONYMOUS) {
@@ -40,7 +40,7 @@ namespace LOFAR
     }
     _ptr = ::mmap(addr, length, prot, flags, fd, offset);
     if (_ptr == MAP_FAILED) {
-       throw SystemCallException("mmap", std::errno, THROW_ARGS);
+       throw SystemCallException("mmap", errno, THROW_ARGS);
     }
   }
 
