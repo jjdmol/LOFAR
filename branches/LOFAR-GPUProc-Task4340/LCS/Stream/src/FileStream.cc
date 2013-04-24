@@ -72,7 +72,7 @@ size_t FileStream::size()
 {
   struct stat st;
 
-  if (::fstat(fd, &st) != 0) {
+  if (::fstat(fd, &st) != 0)
     throw SystemCallException("fstat", errno, THROW_ARGS);
 
   return (size_t)st.st_size;
