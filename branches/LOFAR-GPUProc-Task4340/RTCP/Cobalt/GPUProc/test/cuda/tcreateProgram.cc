@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 
   } catch (gpu::Error& exc) {
-    cerr << "CuError: " << exc << endl;
+    cerr << "gpu::Error: " << exc << endl;
     return 1;
   }
 
