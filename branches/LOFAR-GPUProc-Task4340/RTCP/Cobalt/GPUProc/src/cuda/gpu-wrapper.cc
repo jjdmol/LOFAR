@@ -130,7 +130,7 @@ const char *Error::what() const throw()
     checkCuCall(cuInit(flags));
   }
 
-  size_t Platform::size()
+  size_t Platform::size() const
   {
     int nrDevices;
     checkCuCall(cuDeviceGetCount(&nrDevices));
@@ -215,7 +215,7 @@ const char *Error::what() const throw()
   class HostMemory::Impl : boost::noncopyable
   {
   public:
-    Impl(size_t size, int flags)
+    Impl(size_t size, unsigned int flags)
     {
       checkCuCall(cuMemHostAlloc(&_ptr, size, flags));
     }
@@ -234,7 +234,7 @@ const char *Error::what() const throw()
     void *_ptr;
   };
 
-  HostMemory::HostMemory(size_t size, int flags)
+  HostMemory::HostMemory(size_t size, unsigned int flags)
     : _impl(new Impl(size, flags)) { }
 
   template <typename T>
@@ -315,7 +315,7 @@ const char *Error::what() const throw()
     return value;
   }
 
-  void Function::setSharedMemConfig(CUsharedconfig config)
+  void Function::setSharedMemConfig(CUsharedconfig config) const
   {
     checkCuCall(cuFuncSetSharedMemConfig(_function, config));
   }
@@ -324,7 +324,7 @@ const char *Error::what() const throw()
   class Event::Impl : boost::noncopyable
   {
   public:
-    Impl(int flags = CU_EVENT_DEFAULT)
+    Impl(unsigned int flags = CU_EVENT_DEFAULT)
     {
       checkCuCall(cuEventCreate(&_event, flags));
     }
@@ -334,7 +334,7 @@ const char *Error::what() const throw()
       checkCuCall(cuEventDestroy(_event));
     }
 
-    float elapsedTime(Event &second)
+    float elapsedTime(Event &second) const
     {
       float ms;
       checkCuCall(cuEventElapsedTime(&ms, second._impl->_event, _event));
@@ -345,18 +345,18 @@ const char *Error::what() const throw()
     CUevent _event;
   };
 
-  Event::Event(int flags) : _impl(new Impl(flags)) { }
+  Event::Event(unsigned int flags) : _impl(new Impl(flags)) { }
 
-  float Event::elapsedTime(Event &second)
+  float Event::elapsedTime(Event &second) const
   {
-    _impl->elapsedTime(second);
+    return _impl->elapsedTime(second);
   }
 
 
   class Stream::Impl : boost::noncopyable
   {
   public:
-    Impl(int flags = CU_STREAM_DEFAULT)
+    Impl(unsigned int flags = CU_STREAM_DEFAULT)
     {
       checkCuCall(cuStreamCreate(&_stream, flags));
     }
@@ -386,7 +386,7 @@ const char *Error::what() const throw()
                   const_cast<void **>(parameters), 0));
     }
 
-    bool query()
+    bool query() const
     {
       CUresult rv = cuStreamQuery(_stream);
       if (rv == CUDA_ERROR_NOT_READY) {
@@ -395,14 +395,15 @@ const char *Error::what() const throw()
         return true;
       }
       checkCuCall(rv); // throw
+      return false; // not reached; silence compilation warning
     }
 
-    void synchronize()
+    void synchronize() const
     {
       checkCuCall(cuStreamSynchronize(_stream));
     }
 
-    void waitEvent(CUevent event)
+    void waitEvent(CUevent event) const
     {
       checkCuCall(cuStreamWaitEvent(_stream, event, 0));
     }
@@ -416,7 +417,7 @@ const char *Error::what() const throw()
     CUstream _stream;
   };
 
-  Stream::Stream(int flags) : _impl(new Impl(flags)) { }
+  Stream::Stream(unsigned int flags) : _impl(new Impl(flags)) { }
 
   void Stream::memcpyHtoDAsync(DeviceMemory &devMem, const HostMemory &hostMem,
                                size_t size)
@@ -439,17 +440,17 @@ const char *Error::what() const throw()
                         blockZ, sharedMemBytes, parameters);
   }
 
-  bool Stream::query()
+  bool Stream::query() const
   {
-    _impl->query();
+    return _impl->query();
   }
 
-  void Stream::synchronize()
+  void Stream::synchronize() const
   {
     _impl->synchronize();
   }
 
-  void Stream::waitEvent(const Event &event)
+  void Stream::waitEvent(const Event &event) const
   {
     _impl->waitEvent(event._impl->_event);
   }

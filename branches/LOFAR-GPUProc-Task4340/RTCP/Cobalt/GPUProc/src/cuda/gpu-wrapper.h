@@ -77,7 +77,7 @@ namespace gpu {
       /*
        * Returns the number of devices in the CUDA platform (or throws).
        */
-      size_t size();
+      size_t size() const;
   };
 
 
@@ -139,7 +139,7 @@ namespace gpu {
      * We may want to consider flags = CU_MEMHOSTALLOC_PORTABLE
      * and maybe for input buffers, CU_MEMHOSTALLOC_PORTABLE | CU_MEMHOSTALLOC_WRITECOMBINED
      */
-    HostMemory(size_t size, int flags = 0);
+    HostMemory(size_t size, unsigned int flags = 0);
 
     /*
      * The returned ptr cannot have a lifetime beyond the lifetime of this
@@ -191,7 +191,7 @@ namespace gpu {
 
     int getAttribute(CUfunction_attribute attribute) const;
 
-    void setSharedMemConfig(CUsharedconfig config);
+    void setSharedMemConfig(CUsharedconfig config) const;
 
     friend class Stream; // Stream needs our function (i.e. _function) to launch a kernel
 
@@ -203,11 +203,11 @@ namespace gpu {
   class Event
   {
   public:
-    Event(int flags = CU_EVENT_DEFAULT);
+    Event(unsigned int flags = CU_EVENT_DEFAULT);
 
     ~Event();
 
-    float elapsedTime(Event &second);
+    float elapsedTime(Event &second) const;
 
     friend class Stream; // Stream needs our event (i.e. _impl) to wait for and record events
 
@@ -220,7 +220,7 @@ namespace gpu {
   class Stream
   {
   public:
-    Stream(int flags = CU_STREAM_DEFAULT);
+    Stream(unsigned int flags = CU_STREAM_DEFAULT);
 
     ~Stream();
 
@@ -244,11 +244,11 @@ namespace gpu {
      * Returns true if all completed, or false if not yet all completed.
      * Throws on other errors (other is vs not yet all completed).
      */
-    bool query();
+    bool query() const;
 
-    void synchronize();
+    void synchronize() const;
 
-    void waitEvent(const Event &event);
+    void waitEvent(const Event &event) const;
 
     void recordEvent(const Event &event);
 
