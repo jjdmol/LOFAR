@@ -20,6 +20,11 @@ private void reload() {
   
   // get all the InputBuffers used by this observation
   inputBuffers = navFunct_getInputBuffersForObservation(observation);
+  
+  if ($streamNr == 1) {
+    string obsDP = claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observation);
+    LOG_DEBUG(\"streamView_small.pnl:reload|obsDP: \"+obsDP+\" observation :\"+observation+\" InputBuffers: \"+inputBuffers);
+  }
 
   // change all found DP's to contain all the elements that contain the stream.percBad
   if (connected) {

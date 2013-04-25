@@ -706,36 +706,37 @@ string  FindFreeClaim(
 // *******************************************
 void checkAndCreateDPs() {
   
+  bool changed = false;
   // loop over all claimable types and check if the needed DP's allready exist
   for (int i=1; i<= dynlen(claimableTypes); i++) {
-    // check for Temp Observation points, we need 100 off all of them, if one is not available we
+    // check for Temp Observation points, we need g_MaxNrClaims off all of them, if one is not available we
     // will create it on the fly
     //For Master the temppoints are:
     //
     //    DPType              DP's
-    //    Observation:        LOFAR_ObsSW_TempObs0001-0100
-    //    ObservationControl: LOFAR_ObsSW_TempObs0001-0100_ObservationControl
+    //    Observation:        LOFAR_ObsSW_TempObs0001-g_MaxNrClaims
+    //    ObservationControl: LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_ObservationControl
     // 
     // And for the Stations:   
     //
     //    DPType          DP's
-    //    StnObservation: LOFAR_ObsSW_TempObs0001-0100
-    //    BeamControl:    LOFAR_ObsSW_TempObs0001-0100_BeamControl
-    //    CalControl:     LOFAR_ObsSW_TempObs0001-0100_CalibrationControl
-    //    TBBControl:     LOFAR_ObsSW_TempObs0001-0100_TBBControl
+    //    StnObservation: LOFAR_ObsSW_TempObs0001-g_MaxNrClaims
+    //    BeamControl:    LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_BeamControl
+    //    CalControl:     LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_CalibrationControl
+    //    TBBControl:     LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_TBBControl
     //
     //And for CCU:
     //    DPType          DP's
-    //    CEPObservation: LOFAR_ObsSW_TempObs0001-0100
-    //    OnlineControl:  LOFAR_ObsSW_TempObs0001-0100_OnlineControl
-    //    BGLAppl:        LOFAR_ObsSW_TempObs0001-0100_OnlineControl_BGLAppl
-    //    BGLProc:        LOFAR_ObsSW_TempObs0001-0100_OnlineControl_BGLAppl_BGLProc
+    //    CEPObservation: LOFAR_ObsSW_TempObs0001-g_MaxNrClaims
+    //    OnlineControl:  LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_OnlineControl
+    //    PythonControl:  LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_PythonControl
+    //    BGLAppl:        LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_OnlineControl_BGLAppl
+    //    BGLProc:        LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_OnlineControl_BGLAppl_BGLProc
     
 
-    
     if (claimableTypes[i] == "Observation") {
       //different points for Client and Master
-      for (int j=1;j<=100;j++) {
+      for (int j=1;j<=g_MaxNrClaims;j++) {
         string pre;
         if (j < 10) {
           pre ="000"+j;
@@ -750,50 +751,69 @@ void checkAndCreateDPs() {
             //CEPObservation
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre,"CEPObservation");
+              changed = true;
             }
             //OnlineControl
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl")) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl","OnlineControl");
+              changed = true;
+            }
+            //PythonControl
+            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_PythonControl")) {
+              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_PythonControl","PythonControl");
+              changed = true;
             }
             //BGPAppl
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl")) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl","BGPAppl");
+              changed = true;
             }
             //BGPProc
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc")) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc","BGPProc");
+              changed = true;
             }
           } else {
             //StnObservation
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre,"StnObservation");
+              changed = true;
             }
             //BeamControl
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_BeamControl")) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_BeamControl","BeamControl");
+              changed = true;
             }
             //CalControl
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_CalibrationControl")) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_CalibrationControl","CalibrationControl");
+              changed = true;
             }
             //TBBControl
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_TBBControl")) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_TBBControl","TBBControl");
+              changed = true;
             }
           }
         } else {
           //Observation
           if (!dpExists("LOFAR_ObsSW_TempObs"+pre)) {
             dpCreate("LOFAR_ObsSW_TempObs"+pre,"Observation");
+            changed = true;
           } 
           //ObservationControl
           if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_ObservationControl")) {
             dpCreate("LOFAR_ObsSW_TempObs"+pre+"_ObservationControl","ObservationControl");
+            changed = true;
           }
         } // end iscClient
       } // end Observation counter loop
     } // end Observation Type
   } // end claimable Types loop
+  if (changed) {
+    // set flag so copies will be done
+    dpSet("scriptInfo.transferMPs.runDone",false);
+  }
 }
 
 // *******************************************
