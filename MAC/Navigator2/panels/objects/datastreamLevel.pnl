@@ -106,9 +106,7 @@ showDatastreams()
               formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 5\";
     }
 
-    LOG_DEBUG(\"datastreamLevel.pnl:showLevelsQuery: \" + query);
     dpQuery(query, tab);
-    LOG_DEBUG(\"datastreamLevel.pnl:showLevels|Found: \" + tab + \" length: \" + dynlen(tab));
 	 	 
 	 	
     for(z=2;z<dynlen(tab);z++) {
@@ -146,9 +144,7 @@ showDatastreams()
               formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 5\";
     }
 
-    LOG_DEBUG(\"datastreamLevel.pnl:showLevelsQuery: \" + query);
     dpQuery(query, tab);
-    LOG_DEBUG(\"datastreamLevel.pnl:showLevels|Found: \" + tab + \" length: \" + dynlen(tab));
 	 	 
 	 	
     for(z=2;z<dynlen(tab);z++) {

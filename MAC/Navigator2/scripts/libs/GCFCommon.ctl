@@ -51,6 +51,7 @@ global mapping stateNumber;
 global bool       g_initializing          = true;     // to show if initialise is ready
 global string     g_initProcess           = "";       // holds last finished init process
 global bool       g_standAlone            = false;    // can be used to check if we are in standalone mode (== station only mode)
+global int        g_MaxNrClaims           = 500;      // the maximal nr of claims handled by the claimmanager
 
 
 ///////////////////////////////////////////////////////////////////////////
