@@ -24,7 +24,6 @@
 #include <CoInterface/Parset.h>
 
 #include <Common/LofarLogger.h>
-#include <GPUProc/global_defines.h>
 #include "FIR_FilterTest.h"
 //
 
@@ -40,21 +39,7 @@ int main(int argc, char **argv)
   INIT_LOGGER("RTCP");
   std::cout << "running ..." << std::endl;
 
-  //if (argc < 2)
-  //{
-  //  std::cerr << "usage: " << argv[0] << " parset" << std::endl;
-  //  return 1;
-  //}
-
-  LOFAR::Cobalt::Parset ps(argv[1]);
-
-  //std::cout << "Obs ps: nSt=" << ps.nrStations() 
-  //          << " nPol=" << NR_POLARIZATIONS
-  //          << " nSampPerCh=" << ps.nrSamplesPerChannel() 
-  //          << " nChPerSb="  << ps.nrChannelsPerSubband() << " nTaps=" << ps.nrPPFTaps()
-  //          << " nBitsPerSamp=" << ps.nrBitsPerSample() << std::endl;
-
-  (FIR_FilterTest)(ps);
+  (FIR_FilterTest)();
 
   return 0;
 }

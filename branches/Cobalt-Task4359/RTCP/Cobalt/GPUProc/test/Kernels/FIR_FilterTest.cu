@@ -18,14 +18,14 @@
 //#
 //# $Id$
 
-#include <lofar_config.h>
-
 #include <iostream>
-#include <CoInterface/Parset.h>
+#include <stdlib.h> 
 
-#include <Common/LofarLogger.h>
 #include "FIR_FilterTest.h"
-
+#include <sstream>
+#include <fstream>
+#include <cuda_runtime.h>
+#include <cuda.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -35,12 +35,246 @@ using namespace LOFAR::Cobalt;
 
 int main(int argc, char **argv)
 {
+  CUresult cudaStatus;
+  int cuda_device = 0;
+  cudaError_t cuError;
+  cudaDeviceProp deviceProp;
 
-  INIT_LOGGER("RTCP");
-  std::cout << "running ..." << std::endl;
+  cudaStatus = cuInit(0);
+  if (cudaStatus != CUDA_SUCCESS) {
+    std::cerr << " Failed intializion: " << cudaStatus << std::endl;
+  }
 
-  (FIR_FilterTest)();
+  cuError = cudaSetDevice(0);
+  if (cuError != cudaSuccess) {
+    std::cerr << " Failed loading the device" << std::endl;
+  }
+  cuError =cudaGetDeviceProperties(&deviceProp, cuda_device);
+  if (cuError != cudaSuccess) {
+    std::cerr << " Failed loading cudaGetDeviceProperties" << std::endl;
+  }
+
+  std::cerr << "> Using CUDA device [" << cuda_device << " : " <<  deviceProp.name << std:: endl;
+
+  char *kernel_name = "FIR_Filter";
+  char *kernel_extention = ".cu";
+  std::stringstream ss;
+  ss << "nvcc " << kernel_name << kernel_extention
+    << " -ptx"
+    << " -DNR_STATIONS=" << NR_STATIONS
+    << " -DNR_TAPS=" << NR_TAPS
+    << " -DNR_SAMPLES_PER_CHANNEL=" << NR_SAMPLES_PER_CHANNEL
+    << " -DNR_CHANNELS=" << NR_CHANNELS
+    << " -DNR_POLARIZATIONS=" << NR_POLARIZATIONS
+    << " -DCOMPLEX=" << COMPLEX
+    << " -DNR_BITS_PER_SAMPLE=" << NR_BITS_PER_SAMPLE;
+  std::string str = ss.str();
+
+  //call system with the compiled string
+  char const *CommandString= str.c_str();
+  int return_value = system(  CommandString);
+  std::cerr << "system call returned with status:"  << return_value << std::endl;
+
+  // load the created module
+  CUmodule     hModule  = 0;
+  CUfunction   hKernel  = 0;
+
+  std::fstream in("FIR_Filter.ptx", std::ios_base::in );
+  std::stringstream sstr;
+  sstr << in.rdbuf();
+  cudaFree(0); // Hack to initialize the primary context. should use a proper api functions
+  cudaStatus = cuModuleLoadDataEx(&hModule, sstr.str().c_str(), 0, 0, 0);
+  if (cudaStatus != cudaSuccess) {
+    std::cerr << " Failed loading the kernel module, status: " << cudaStatus <<std::endl;
+  }
+
+
+
+  // Get the entry point in the kernel
+  cudaStatus = cuModuleGetFunction(&hKernel, hModule, "FIR_filter");
+  if (cudaStatus != cudaSuccess)
+  {
+    std::cerr << " Failed loading the function entry point, status: " << cudaStatus <<std::endl;
+  }
+  cudaStream_t cuStream;
+
+  cuError = cudaStreamCreate (&cuStream);
+  if (cuError != cudaSuccess) {
+    std::cerr << " Failed creating a stream: " << cuError << std::endl;
+  }
+
+
+  // Number of threads?
+  int nrChannelsPerSubband = NR_CHANNELS;
+  int nrStations = NR_STATIONS; 
+  int MAXNRCUDATHREADS = 1024;//doet moet nog opgevraagt worden en niuet als magish getal
+  size_t maxNrThreads = MAXNRCUDATHREADS;
+  unsigned totalNrThreads = nrChannelsPerSubband * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
+  unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
+  
+  dim3 globalWorkSize(nrPasses, nrStations); 
+  dim3 localWorkSize(totalNrThreads / nrPasses, 1); 
+
+
+
+
+  cudaError_t cudaErrorStatus;
+  bool testOk = true;
+  //const size_t nrComplexComp = 2; // real, imag
+
+  // Create the needed data
+  unsigned sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX;
+  float* rawFilteredData = new float[sizeFilteredData];
+  for (unsigned idx = 0; idx < sizeFilteredData; ++idx)
+  {
+    rawFilteredData[idx] = 0;
+  }
+
+  FilteredDataType filteredData = reinterpret_cast<FilteredDataType>(rawFilteredData);
+
+  unsigned sizeSampledData = NR_STATIONS * (NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL) * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;               
+  SampleType * rawInputSamples = new SampleType[sizeSampledData];
+  for (unsigned idx = 0; idx < sizeSampledData; ++idx)
+  {
+    rawInputSamples[idx] = 0;
+  }
+  SampledDataType inputSamples = reinterpret_cast<SampledDataType>(rawInputSamples);
+
+
+
+  unsigned sizeWeightsData = NR_CHANNELS * 16;
+  float * rawFirWeights = new float[sizeWeightsData];
+  for (unsigned idx = 0; idx < sizeWeightsData; ++idx)
+  {
+    rawFirWeights[idx] = 0;
+  }
+  WeightsType firWeights = reinterpret_cast<WeightsType>(rawFirWeights);
+
+  // Data on the gpu
+  CUdeviceptr DevFilteredData = (CUdeviceptr)NULL;;
+  CUdeviceptr DevSampledData = (CUdeviceptr)NULL;;
+  CUdeviceptr DevFirWeights = (CUdeviceptr)NULL;;
+
+  CUdeviceptr d_data = (CUdeviceptr)NULL;
+
+
+  // Allocate GPU buffers for three vectors (two input, one output)    .
+  cudaStatus =   cuMemAlloc(&DevFilteredData, sizeFilteredData * sizeof(float));
+  if (cudaStatus != cudaSuccess) {
+    std::cerr << "memory allocation failed: " << cudaStatus << std::endl;
+    throw "cudaMalloc failed!";
+  }
+
+  cudaStatus = cuMemAlloc(&DevSampledData, sizeSampledData * sizeof(SampleType));
+  if (cudaErrorStatus != cudaSuccess) {
+    std::cerr << "memory allocation failed: " << cudaStatus << std::endl;
+    throw "cudaMalloc failed!";
+  }
+
+  cudaStatus = cuMemAlloc(&DevFirWeights, sizeWeightsData * sizeof(float));
+  if (cudaStatus != cudaSuccess) {
+    std::cerr << "memory allocation failed: " << cudaStatus << std::endl;
+    throw "cudaMalloc failed!";
+  }    
+
+  unsigned station, sample, ch, pol;
+
+  // Test 1: Single impulse test on single non-zero weight
+  station = ch = pol = 0;
+  sample = NR_TAPS - 1; // skip FIR init samples
+  (*firWeights)[0][0] = 2.0f;
+  (*inputSamples)[station][sample][ch][pol] = 3;
+
+
+  // Copy input vectors from host memory to GPU buffers.
+  cudaStatus = cuMemcpyHtoD(DevFirWeights, rawFirWeights,
+    sizeWeightsData * sizeof(float));
+  if (cudaStatus != cudaSuccess) {
+    fprintf(stderr, "cudaMemcpy failed!");
+    throw "cudaMemcpy failed!";
+  }
+
+  cudaStatus = cuMemcpyHtoD(DevSampledData, rawInputSamples,
+    sizeSampledData * sizeof(SampleType));
+  if (cudaStatus != cudaSuccess) {
+    fprintf(stderr, "cudaMemcpy failed!");
+    throw "cudaMemcpy failed!";
+  }
+
+  cudaStatus = cuMemcpyHtoD(DevFilteredData, rawFilteredData,
+    sizeFilteredData * sizeof(float));
+  if (cudaStatus != cudaSuccess) {
+    fprintf(stderr, "cudaMemcpy failed!");
+    throw "cudaMemcpy failed!";
+  }
+
+
+  cudaErrorStatus = cudaDeviceSynchronize();
+  if (cudaErrorStatus != cudaSuccess) {
+    fprintf(stderr, "cudaDeviceSynchronize returned error code %d after sync of memory!\n", cudaErrorStatus);
+
+  }
+
+
+  void* kernel_func_args[3] = { &DevFilteredData,
+                                &DevSampledData,
+                                &DevFirWeights };
+
+  unsigned  sharedMemBytes = 512;
+
+  cudaStatus = cuLaunchKernel( hKernel, globalWorkSize.x, globalWorkSize.y, globalWorkSize.z, 
+    localWorkSize.x, localWorkSize.y, localWorkSize.z, NULL, cuStream, kernel_func_args,0);
+  if (cudaStatus != cudaSuccess)
+  {
+    std::cerr << " cuLaunchKernel " << cudaStatus <<std::endl;
+  }
+
+  cudaErrorStatus = cudaDeviceSynchronize();
+  if (cudaErrorStatus != cudaSuccess) {
+    fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching Kernel!\n", cudaErrorStatus);
+    throw "cudaDeviceSynchronize returned error code after launching Kernel!\n";
+  }
+
+  // Copy output vector from GPU buffer to host memory.
+  cudaStatus = cuMemcpyDtoH(filteredData, DevFilteredData,
+    sizeFilteredData * sizeof(float));
+  if (cudaStatus != cudaSuccess) {
+    fprintf(stderr, "cudaMemcpy failed!");
+    throw "cudaMemcpy failed!";
+  }
+  
+  cudaErrorStatus = cudaDeviceSynchronize();
+  // Expected output: St0, pol0, ch0, sampl0: 6. The rest all 0.
+  if((*filteredData)[0][0][0][0][0] != 6.0f) 
+  {
+    std::cerr << "FIR_FilterTest 1: Expected at idx 0: 6; got: " << (*filteredData)[0][0][0][0][0] << std::endl;
+
+    testOk = false;
+  }
+  std::cerr << "Weights returned " << (*filteredData)[0][0][0][0][0] << std::endl;
+  //const unsigned nrExpectedZeros = sizeFilteredData - 1;
+  //unsigned nrZeros = 0;
+  //for (unsigned i = 1; i < sizeFilteredData; i++) 
+  //{
+  //  if (rawFilteredData[i] == 0.0f) 
+  //  { 
+  //    nrZeros += 1;
+  //  }
+  //}
+  //if (nrZeros == nrExpectedZeros) 
+  //{
+  //  std::cout << "FIR_FilterTest 1: test OK" << std::endl;
+  //} 
+  //else 
+  //{
+  //  std::cerr << "FIR_FilterTest 1: Unexpected non-zero(s). Only " << nrZeros << " zeros out of " << nrExpectedZeros << std::endl;
+  //  testOk = false;
+  //}
+
+
+  //FIR_FilterTest();
 
   return 0;
 }
+
 

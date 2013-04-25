@@ -3,17 +3,6 @@
 #include <cuda.h>
 
 
-#define COMPLEX 2       // do not change
-#define NR_BITS_PER_SAMPLE 16
-#define NR_STATION_FILTER_TAPS  16
-#define USE_NEW_CORRELATOR
-#define NR_POLARIZATIONS         2 
-#define NR_TAPS                 16
-
-#define NR_STATIONS 20
-#define NR_SAMPLES_PER_CHANNEL 100
-#define NR_CHANNELS 16
-
 #if NR_BITS_PER_SAMPLE == 16
 typedef signed short SampleType;
 #elif NR_BITS_PER_SAMPLE == 8
@@ -22,10 +11,10 @@ typedef signed char SampleType;
 #error unsupported NR_BITS_PER_SAMPLE
 #endif
 
-
 typedef SampleType (*SampledDataType)[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
 typedef float (*FilteredDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][COMPLEX];
 typedef const float (*WeightsType)[NR_CHANNELS][16];
+
 
 
 /*!
@@ -62,6 +51,7 @@ typedef const float (*WeightsType)[NR_CHANNELS][16];
  *
  * TODO: convert complex dim to fcomplex (=float2 in math.cl) in device code and to complex<float> in host code.
  */
+extern "C" {
 __global__ void FIR_filter( void *filteredDataPtr,
                           const void *sampledDataPtr,
                           const void *weightsPtr)
@@ -69,8 +59,10 @@ __global__ void FIR_filter( void *filteredDataPtr,
   SampledDataType sampledData = (SampledDataType) sampledDataPtr;
   FilteredDataType filteredData = (FilteredDataType) filteredDataPtr;
   WeightsType weightsData = (WeightsType) weightsPtr;
-
-  unsigned cpr = blockIdx.x*blockDim.x+threadIdx.x;
+  //(*filteredData)[0][0][0][0][0] = (*sampledData)[0][1][0][0];
+  //(*filteredData)[0][0][0][0][1] = (*weightsData)[0][0];
+  //return;
+  unsigned cpr = blockIdx.x*blockDim.x+threadIdx.x; //deze is nog incorrect dus nog uitzoeken
 #if 0
   // Straight index calc for NR_CHANNELS == 1
   uint pol_ri = cpr & 3;
@@ -83,7 +75,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
   unsigned pol = (cpr >> 1) / NR_CHANNELS;
   unsigned pol_ri = (pol << 1) | ri;
 #endif
-  unsigned station = blockIdx.y*blockDim.y+threadIdx.y;
+  unsigned station = blockIdx.y; //*blockDim.y+threadIdx.y; //deze is nog incorrect dus nog uitzoeken
 
   //const float16 weights = (*weightsData)[channel];
   const float weights_s0 = (*weightsData)[channel][0];
@@ -439,34 +431,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 15][channel][ri] = sum_sF;
   }
 }
-//
-//int main()
-//{
-//    const int arraySize = 5;
-//    const int a[arraySize] = { 1, 2, 3, 4, 5 };
-//    const int b[arraySize] = { 10, 20, 30, 40, 50 };
-//    int c[arraySize] = { 0 };
-//
-//    // Add vectors in parallel.
-//    cudaError_t cudaStatus = addWithCuda(c, a, b, arraySize);
-//    if (cudaStatus != cudaSuccess) {
-//        fprintf(stderr, "addWithCuda failed!");
-//        return 1;
-//    }
-//
-//    printf("{1,2,3,4,5} + {10,20,30,40,50} = {%d,%d,%d,%d,%d}\n",
-//        c[0], c[1], c[2], c[3], c[4]);
-//
-//    // cudaDeviceReset must be called before exiting in order for profiling and
-//    // tracing tools such as Nsight and Visual Profiler to show complete traces.
-//    cudaStatus = cudaDeviceReset();
-//    if (cudaStatus != cudaSuccess) {
-//        fprintf(stderr, "cudaDeviceReset failed!");
-//        return 1;
-//    }
-//
-//    return 0;
-//}
+}
 
 // Helper function for using CUDA to add vectors in parallel.
 cudaError_t FIR_filter_wrapper(float *DevFilteredData,
@@ -479,7 +444,7 @@ cudaError_t FIR_filter_wrapper(float *DevFilteredData,
     cudaStatus = cudaSetDevice(0);
     if (cudaStatus != cudaSuccess) {
         //fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
-        return cudaStatus;;
+        return cudaStatus;
     }
 
     // From here copy pasta of opencl code
@@ -493,85 +458,10 @@ cudaError_t FIR_filter_wrapper(float *DevFilteredData,
     unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
     dim3 localWorkSize(totalNrThreads / nrPasses, 1); 
 
-    //// Create the needed data
-    //unsigned sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX;
-    //float* filteredData = new float[sizeFilteredData];
-    //for (unsigned idx = 0; idx < sizeFilteredData; ++idx)
-    //{
-    //  filteredData[idx] = 0;
-    //}
-    //
-    //unsigned sizeSampledData = NR_STATIONS * (NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL) * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;
-    //float * sampledData = new float[sizeSampledData];
-    //for (unsigned idx = 0; idx < sizeSampledData; ++idx)
-    //{
-    //  sampledData[idx] = 0;
-    //}
-
-    //unsigned sizeWeightsData = NR_CHANNELS * 16;
-    //float * weightsData = new float[sizeWeightsData];
-    //     for (unsigned idx = 0; idx < sizeWeightsData; ++idx)
-    //{
-    //  weightsData[idx] = 0;
-    //}
-
-    //copy to the gpu
-    //float *DevFilteredData;
-    //float *DevSampledData;
-    //float *DevWeightsData;
-    // Allocate GPU buffers for three vectors (two input, one output)    .
-    //cudaStatus = cudaMalloc((void**)&DevFilteredData, sizeFilteredData * sizeof(float));
-    //if (cudaStatus != cudaSuccess) {
-    //    fprintf(stderr, "cudaMalloc failed!");
-    //    goto Error;
-    //}
-
-    //cudaStatus = cudaMalloc((void**)&DevSampledData, sizeSampledData * sizeof(float));
-    //if (cudaStatus != cudaSuccess) {
-    //    fprintf(stderr, "cudaMalloc failed!");
-    //    goto Error;
-    //}
-
-    //cudaStatus = cudaMalloc((void**)&DevWeightsData, sizeWeightsData * sizeof(float));
-    //if (cudaStatus != cudaSuccess) {
-    //    fprintf(stderr, "cudaMalloc failed!");
-    //    goto Error;
-    //}    
-
-    //// Copy input vectors from host memory to GPU buffers.
-    //cudaStatus = cudaMemcpy(DevWeightsData, weightsData,
-    //  sizeWeightsData * sizeof(float), cudaMemcpyHostToDevice);
-    //if (cudaStatus != cudaSuccess) {
-    //    fprintf(stderr, "cudaMemcpy failed!");
-    //    goto Error;
-    //}
-
-    //cudaStatus = cudaMemcpy(DevSampledData, sampledData,
-    //  sizeSampledData * sizeof(float), cudaMemcpyHostToDevice);
-    //if (cudaStatus != cudaSuccess) {
-    //    fprintf(stderr, "cudaMemcpy failed!");
-    //    goto Error;
-    //}
-
-
     // Launch a kernel on the GPU with one thread for each element.
     FIR_filter<<<globalWorkSize, localWorkSize>>>(DevFilteredData,
       DevSampledData, DevWeightsData);
 
-    //// cudaDeviceSynchronize waits for the kernel to finish, and returns
-    //// any errors encountered during the launch.
-    //cudaStatus = cudaDeviceSynchronize();
-    //if (cudaStatus != cudaSuccess) {
-    //    fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
-    //    return cudaStatus;;
-    //}
-
-    //// Copy output vector from GPU buffer to host memory.
-    //cudaStatus = cudaMemcpy(filteredData, DevFilteredData,
-    //  sizeFilteredData * sizeof(float), cudaMemcpyDeviceToHost);
-    //if (cudaStatus != cudaSuccess) {
-    //    fprintf(stderr, "cudaMemcpy failed!");
-    //    return cudaStatus;;
-    //}
-
+    return (cudaError_t)0;
 }
+
