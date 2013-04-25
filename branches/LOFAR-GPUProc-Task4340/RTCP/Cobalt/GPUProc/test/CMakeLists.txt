@@ -30,6 +30,17 @@ if(UNITTEST++_FOUND)
 endif()
 
 if(USE_CUDA)
+  add_definitions(-DUSE_CUDA)
+
   add_subdirectory(cuda)
+
+  remove_definitions(-DUSE_CUDA)
 endif()
 
+if(USE_OPENCL)
+  add_definitions(-DUSE_OPENCL)
+
+  add_subdirectory(opencl)
+
+  remove_definitions(-DUSE_OPENCL)
+endif()

@@ -26,29 +26,24 @@
 
 #include <CoInterface/Parset.h>
 
-#include <PerformanceCounter.h>
-//#include "opencl-incl.h"
-//#include "cuwrapper.h"
-#include "gpu-wrapper.h" // includes from cuda/ or opencl/
+#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class Kernel : public /*cl::Kernel*/gpu::Kernel
+    class Kernel : public gpu::Function
     {
     public:
-      //Kernel(const Parset &ps, cl::Program &program, const char *name);
-      Kernel(const Parset &ps, gpu::Program& program, const std::string &name);
+      Kernel(const Parset &ps, gpu::Module& module, const std::string &name);
 
-      void enqueue(gpu::CommandQueue &queue, PerformanceCounter &counter);
+      void enqueue(gpu::Stream &stream, PerformanceCounter &counter);
 
     protected:
-//      cl::Event event;
       gpu::Event event;
       const Parset &ps;
-//      cl::NDRange globalWorkSize, localWorkSize;
-      gpu::NDRange globalWorkSize, localWorkSize;
+      gpu::dim3 globalWorkSize, localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
     };
   }

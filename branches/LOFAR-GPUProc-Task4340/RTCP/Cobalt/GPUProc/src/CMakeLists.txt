@@ -7,7 +7,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
-lofar_add_library(gpuproc
+set(GPUPROC_SOURCES
   #Package__Version.cc
   BandPass.cc
   FilterBank.cc
@@ -48,20 +48,30 @@ lofar_add_library(gpuproc
   WorkQueues/WorkQueue.cc)
 
 if(USE_CUDA)
+  add_definitions(-DUSE_CUDA)
 
-  cuda_add_executable(rtcp rtcp.cc)
-  cuda_add_cufft_to_target(rtcp)
-#  lofar_add_cuda_bin_program(rtcp rtcp.cc)
+  lofar_add_library(gpuproc ${GPUPROC_SOURCES})
+  lofar_add_bin_program(rtcp rtcp.cc)
+  #cuda_add_executable(rtcp rtcp.cc)
+  #cuda_add_cufft_to_target(rtcp)
+  target_link_libraries(gpuproc cufft)
 
   install(FILES
     rtcp
     DESTINATION bin)
+
+  remove_definitions(-DUSE_CUDA)
 endif(USE_CUDA)
 
 if(USE_OPENCL)
-  lofar_add_bin_program(rtcp_ocl rtcp.cc)
+  add_definitions(-DUSE_OPENCL)
+
+  lofar_add_library(gpuproc_opencl ${GPUPROC_SOURCES})
+  lofar_add_bin_program(rtcp_opencl rtcp.cc)
 
   install(FILES
-    rtcp_ocl
+    rtcp_opencl
     DESTINATION bin)
+
+  remove_definitions(-DUSE_OPENCL)
 endif(USE_OPENCL)

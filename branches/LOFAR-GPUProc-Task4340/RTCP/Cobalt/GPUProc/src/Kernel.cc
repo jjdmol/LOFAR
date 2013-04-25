@@ -26,11 +26,9 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    //Kernel::Kernel(const Parset &ps, cl::Program &program, const char *name)
-    Kernel(const Parset &ps, gpu::Program& program, const string &name)
+    Kernel(const Parset &ps, gpu::Module& module, const string &name)
       :
-      //cl::Kernel(program, name),
-      gpu::Kernel(program, name),
+      gpu::Kernel(module, name),
       ps(ps)
     {
     }
@@ -43,7 +41,7 @@ namespace LOFAR
         if (globalWorkSize[dim] == 0)
           return;
 
-      queue.enqueueNDRangeKernel(*this, /*cl*/gpu::NullRange, globalWorkSize, localWorkSize, 0, &event);
+      queue.enqueueNDRangeKernel(*this, gpu::dim3, globalWorkSize, localWorkSize, 0, &event);
       counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
 
