@@ -177,8 +177,8 @@ _CtrlDebug_CTRL_8	_CtrlDebug
 # DpValue
 ElementName	TypeName	_original.._value
 scriptInfo.transferMPs.runDone	ScriptInfo	0
-_ValueArchive_2.size.maxDpElGet	_ValueArchive	500
-_ValueArchive_2.size.maxDpElSet	_ValueArchive	500
+_ValueArchive_2.size.maxDpElGet	_ValueArchive	2500
+_ValueArchive_2.size.maxDpElSet	_ValueArchive	2500
 root.LOFAR_Processes	NavPanelConfig	"Processes/MainCU_Processes.pnl"
 root.LOFAR_Observations	NavPanelConfig	"Observations/Observations.pnl"
 root.StnLOFAR_Hardware	NavPanelConfig	"Hardware/Station.pnl"
