@@ -755,7 +755,7 @@ substitute_observation()
 			    if (obsNr < 10) {
 			      obsbase="TempObs000"obsNr;
 
-                            } else if (obsNr > 9 && obsNr < 100) {
+                            } else if (obsNr > 9 && obsNr < 500) {
                               obsbase="TempObs00"obsNr;
 			    }
 			    sub("@observation@", obsbase, dpname);
