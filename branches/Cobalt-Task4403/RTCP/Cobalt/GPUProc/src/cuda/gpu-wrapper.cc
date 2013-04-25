@@ -193,8 +193,10 @@ const char *Error::what() const throw()
     CUcontext _context;
   };
 
-  Context::Context(Device device, unsigned int flags)
-    : _impl(new Impl(device._device, flags)) { }
+  Context::Context(Device device, unsigned int flags) : 
+    _impl(new Impl(device._device, flags))
+  {
+  }
 
   void Context::setCurrent() const
   {
@@ -234,8 +236,10 @@ const char *Error::what() const throw()
     void *_ptr;
   };
 
-  HostMemory::HostMemory(size_t size, unsigned int flags)
-    : _impl(new Impl(size, flags)) { }
+  HostMemory::HostMemory(size_t size, unsigned int flags) :
+    _impl(new Impl(size, flags))
+  {
+  }
 
   template <typename T>
   T *HostMemory::get() const
@@ -261,16 +265,18 @@ const char *Error::what() const throw()
     CUdeviceptr _ptr;
   };
 
-  DeviceMemory::DeviceMemory(size_t size)
-    : _impl(new Impl(size)) { }
+  DeviceMemory::DeviceMemory(size_t size) :
+    _impl(new Impl(size))
+  {
+  }
 
 
   class Module::Impl : boost::noncopyable
   {
   public:
-    Impl(const string &file_name)
+    Impl(const char* fname)
     {
-      checkCuCall(cuModuleLoad(&_module, file_name.c_str()));
+      checkCuCall(cuModuleLoad(&_module, fname));
     }
 
     Impl(const void *data)
@@ -278,11 +284,11 @@ const char *Error::what() const throw()
       checkCuCall(cuModuleLoadData(&_module, data));
     }
 
-    Impl(const void *data, vector<CUjit_option> &options,
-         vector<void*> &optionValues)
+    Impl(const void *image, unsigned int numOptions,
+         CUjit_option *options, void **optionValues)
     {
-      checkCuCall(cuModuleLoadDataEx(&_module, data, options.size(),
-                                     &options[0], &optionValues[0]));
+      checkCuCall(cuModuleLoadDataEx(&_module, image, numOptions,
+                                     options, optionValues));
     }
 
     ~Impl()
@@ -294,18 +300,29 @@ const char *Error::what() const throw()
     CUmodule _module;
   };
 
-  Module::Module(const string &file_name) : _impl(new Impl(file_name)) { }
+  Module::Module(const string &fname) : 
+    _impl(new Impl(fname.c_str()))
+  {
+  }
 
-  Module::Module(const void *data) : _impl(new Impl(data)) { }
+  Module::Module(const void *image) : 
+    _impl(new Impl(image))
+  {
+  }
 
-  Module::Module(const void *data, vector<CUjit_option> &options,
-                 vector<void*> &optionValues)
-    : _impl(new Impl(data, options, optionValues)) { }
+  Module::Module(const void *image, 
+                 vector<CUjit_option> &options,
+                 vector<void*> &optionValues) :
+    _impl(new Impl(image, min(options.size(), optionValues.size()), 
+                   &options[0], &optionValues[0]))
+  {
+  }
 
 
   Function::Function(Module &module, const string &name)
   {
-    checkCuCall(cuModuleGetFunction(&_function, module._impl->_module, name.c_str()));
+    checkCuCall(cuModuleGetFunction(&_function, module._impl->_module, 
+                                    name.c_str()));
   }
 
   int Function::getAttribute(CUfunction_attribute attribute) const
@@ -324,7 +341,7 @@ const char *Error::what() const throw()
   class Event::Impl : boost::noncopyable
   {
   public:
-    Impl(unsigned int flags = CU_EVENT_DEFAULT)
+    Impl(unsigned int flags)
     {
       checkCuCall(cuEventCreate(&_event, flags));
     }
@@ -334,10 +351,10 @@ const char *Error::what() const throw()
       checkCuCall(cuEventDestroy(_event));
     }
 
-    float elapsedTime(Event &second) const
+    float elapsedTime(CUevent other) const
     {
       float ms;
-      checkCuCall(cuEventElapsedTime(&ms, second._impl->_event, _event));
+      checkCuCall(cuEventElapsedTime(&ms, other, _event));
       return ms;
     }
 
@@ -349,7 +366,7 @@ const char *Error::what() const throw()
 
   float Event::elapsedTime(Event &second) const
   {
-    return _impl->elapsedTime(second);
+    return _impl->elapsedTime(second._impl->_event);
   }
 
 
@@ -379,11 +396,11 @@ const char *Error::what() const throw()
     void launchKernel(CUfunction function, unsigned gridX, unsigned gridY,
                       unsigned gridZ, unsigned blockX, unsigned blockY,
                       unsigned blockZ, unsigned sharedMemBytes,
-                      const void **parameters)
+                      void **parameters)
     {
       checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
                   blockY, blockZ, sharedMemBytes, _stream,
-                  const_cast<void **>(parameters), 0));
+                  parameters, 0));
     }
 
     bool query() const
@@ -394,7 +411,7 @@ const char *Error::what() const throw()
       } else if (rv == CUDA_SUCCESS) {
         return true;
       }
-      checkCuCall(rv); // throw
+      checkCuCall(rv); // check and throw if other error
       return false; // not reached; silence compilation warning
     }
 
@@ -431,13 +448,14 @@ const char *Error::what() const throw()
     _impl->memcpyDtoHAsync(hostMem.get<void*>(), devMem._impl->_ptr, size);
   }
 
-  void Stream::launchKernel(Function function, unsigned gridX, unsigned gridY,
-                            unsigned gridZ, unsigned blockX, unsigned blockY,
-                            unsigned blockZ, unsigned sharedMemBytes,
-                            const void **parameters)
+  void Stream::launchKernel(const Function &function, 
+                            unsigned gridX, unsigned gridY, unsigned gridZ,
+                            unsigned blockX, unsigned blockY, unsigned blockZ,
+                            unsigned sharedMemBytes, const void **parameters)
   {
-    _impl->launchKernel(function._function, gridX, gridY, gridZ, blockX, blockY,
-                        blockZ, sharedMemBytes, parameters);
+    _impl->launchKernel(function._function, 
+                        gridX, gridY, gridZ, blockX, blockY, blockZ, 
+                        sharedMemBytes, const_cast<void **>(parameters));
   }
 
   bool Stream::query() const

@@ -1,4 +1,5 @@
-//# gpu-wrapper.h
+//# gpu-wrapper.h: CUDA-specific wrapper classes for GPU types.
+//#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,12 +22,12 @@
 #ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_H
 #define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_H
 
-// \file
+// \file cuda/gpu-wrapper.h
 // C++ wrappers for CUDA akin the OpenCL C++ wrappers.
 // Uses the "Pimpl" idiom for resource managing classes (i.e. that need to
 // control copying having a non-trivial destructor. For more info on Pimpl, see
 // http://www.boost.org/doc/libs/release/libs/smart_ptr/sp_techniques.html#pimpl
-
+//
 // Not Pimpl-ed are class Platform, Device, and Function.
 // These are also passed by value.
 
@@ -63,197 +64,281 @@ namespace gpu {
       throw Error(result);
   }
 
-
+  // This object is not strictly needed, because in CUDA there's only one
+  // platform, but it hides the CUDA calls and makes it similar to OpenCL.
   class Platform {
     public:
-      /*
-       * Initialize the CUDA platform.
-       * This object is not strictly needed, but hide the cu calls
-       * and make it similar to OpenCL.
-       * flags must be 0 (at least up till CUDA 5.0).
-       */
+      // Initialize the CUDA platform.
+      // \param flags must be 0 (at least up till CUDA 5.0).
       Platform(unsigned int flags = 0);
 
-      /*
-       * Returns the number of devices in the CUDA platform (or throws).
-       */
+      // Returns the number of devices in the CUDA platform.
       size_t size() const;
   };
 
-
+  // Wrap a CUDA Device.
   class Device
   {
   public:
-    /*
-     * ordinal is the device number. Valid range: [0, Platform.size()-1].
-     */
+    // Create a device.
+    // \param ordinal is the device number; valid range: [0, Platform.size()-1]
     Device(int ordinal = 0);
 
+    // Return the name of the device in human readable form.
     std::string getName() const;
 
-    // template this one to make it similar to getInfo() in OpenCL's C++ wrapper.
+    // Return information on a specific \a attribute.
+    // This method is similar to \c getInfo() in the OpenCL C++ wrapper.
+    // \tparam CUdevice_attribute CUDA device attribute type
     template <CUdevice_attribute attribute>
     int getAttribute() const;
 
-    friend class Context; // Context needs our device (i.e. _device) to create a context
-
   private:
+    // Context needs access to our \c _device to create a context.
+    friend class Context; 
+
+    // The CUDA device.
     CUdevice _device;
   };
 
 
+  // Wrap a CUDA Context. Since this class manages a resource (a CUDA context),
+  // it uses the pimpl idiom in combination with a reference counted pointer to
+  // make it copyable.
   class Context
   {
   public:
-    /*
-     * Creates a new CUDA context and associates it with the calling thread.
-     * (i.e. setCurrent() implied)
-     */
+    // Create a new CUDA context and associate it with the calling thread.
+    // In other words, \c setCurrent() is implied.
     Context(Device device, unsigned int flags = CU_CTX_SCHED_AUTO);
 
-    /*
-     * Makes this context the current context.
-     */
+    // Make this context the current context.
     void setCurrent() const;
 
-    /*
-     * Sets the cache config of the _current_ context.
-     */
+    // Set the cache configuration of the current context.
     void setCacheConfig(CUfunc_cache config) const;
 
-    /*
-     * Sets the shared memory config of the _current_ context.
-     */
+    // Set the shared memory configuration of the current context.
     void setSharedMemConfig(CUsharedconfig config) const;
 
   private:
+    // Non-copyable implementation class.
     class Impl;
+
+    // Reference counted pointer to the implementation class.
     boost::shared_ptr<Impl> _impl;
   };
 
 
+  // Wrap CUDA Host Memory. This is the equivalent of a OpenCL Buffer. CUDA
+  // distinguishes between between host- and device memory, OpenCL does not.
   class HostMemory
   {
   public:
-    /*
-     * We may want to consider flags = CU_MEMHOSTALLOC_PORTABLE
-     * and maybe for input buffers, CU_MEMHOSTALLOC_PORTABLE | CU_MEMHOSTALLOC_WRITECOMBINED
-     */
+    // Allocate \a size bytes of host memory.
+    // \param size number of bytes to allocate
+    // \param flags affect allocation
+    // \note To create pinned memory, we need to set
+    // \code 
+    // flags = CU_MEMHOSTALLOC_PORTABLE
+    // \endcode
+    // \note For input buffers we may consider setting
+    // \code
+    // flags = CU_MEMHOSTALLOC_PORTABLE | CU_MEMHOSTALLOC_WRITECOMBINED
+    // \endcode
+    // Please refer to the documentation of the function \c cuMemHostAlloc() in
+    // the CUDA Driver API for details.
     HostMemory(size_t size, unsigned int flags = 0);
 
-    /*
-     * The returned ptr cannot have a lifetime beyond the lifetime of this
-     * object (actually the last copy).
-     */
+    // Return a pointer to the actual memory. 
+    // \warning The returned pointer shall not have a lifetime beyond the
+    // lifetime of this object (actually the last copy).
     template <typename T> T *get() const;
 
   private:
+    // Non-copyable implementation class.
     class Impl;
+
+    // Reference counted pointer to the implementation class.
     boost::shared_ptr<Impl> _impl;
   };
 
 
+  // Wrap CUDA Device Memory. This is the equivalent of an OpenCL Buffer. CUDA
+  // distinguishes between between host- and device memory, OpenCL does not.
   class DeviceMemory
   {
   public:
+    // Alocate \a size bytes of device memory.
     DeviceMemory(size_t size);
 
-    friend class Stream; // Stream needs our device ptr (i.e. _impl) to transfer H2D
-
   private:
+    // Stream needs access to our device ptr for host-to-device transfer.
+    friend class Stream;
+
+    // Non-copyable implementation class.
     class Impl;
+
+    // Reference counted pointer to the implementation class.
     boost::shared_ptr<Impl> _impl;
   };
 
 
+  // Wrap a CUDA Module. This is the equivalent of a OpenCL Program.
   class Module
   {
   public:
-    Module(const std::string &file_name);
+    // Load the module in the file \a fname into the current context. The file
+    // should be a \e cubin file or a \e ptx file as output by \c nvcc.
+    // \param fname name of a module file
+    // \note For details, please refer to the documentation of \c cuModuleLoad
+    // in the CUDA Driver API.
+    Module(const std::string &fname);
 
-    Module(const void *data);
+    // Load the module pointed to by \a image into the current context. The
+    // pointer may point to a null-terminated string containing \e cubin or \e
+    // ptx code.
+    // \param image pointer to a module image in memory
+    // \note For details, please refer to the documentation of \c
+    // cuModuleLoadData in the CUDA Driver API.
+    Module(const void *image);
 
-    Module(const void *data, std::vector<CUjit_option> &options,
+    // Load the module pointed to by \a image into the current context. The
+    // pointer may point to a null-terminated string containing \e cubin or \e
+    // ptx code.
+    // \param image pointer to a module image in memory
+    // \param options vector of \c CUjit_option items
+    // \param optionValues vector of values associated with \a options
+    // \note For details, please refer to the documentation of \c
+    // cuModuleLoadDataEx in the CUDA Driver API.
+    Module(const void *image, 
+           std::vector<CUjit_option> &options,
            std::vector<void*> &optionValues);
 
-    friend class Function; // Function needs our module (i.e. _impl) to create a function
-
   private:
+    // Function needs access to our module to create a function.
+    friend class Function; 
+
+    // Non-copyable implementation class.
     class Impl;
+
+    // Reference counted pointer to the implementation class.
     boost::shared_ptr<Impl> _impl;
   };
 
-
+  // Wrap a CUDA Device Function. This is the equivalent of an OpenCL Program.
   class Function
   {
   public:
+    // Construct a function object by looking up the function \a name in the
+    // module \a module.
     Function(Module &module, const std::string &name);
 
+    // Return information about a function. 
+    // \note For details on valid values for \a attribute, please refer to 
+    // the documentation of cuFuncGetAttribute in the CUDA Driver API.
     int getAttribute(CUfunction_attribute attribute) const;
 
+    // Set the shared memory configuration for a device function.
+    // \note For details on valid values for \a config, please refer to the
+    // documentation of cuFuncSetSharedMemConfig in the CUDA Driver API.
     void setSharedMemConfig(CUsharedconfig config) const;
 
-    friend class Stream; // Stream needs our function (i.e. _function) to launch a kernel
-
   private:
+    // Stream needs access to our CUDA function to launch a kernel.
+    friend class Stream;
+
+    // CUDA function.
     CUfunction _function;
   };
 
-
+  // Wrap a CUDA Event. This is the equivalent of an OpenCL Event.
   class Event
   {
   public:
+    // Construct a CUDA event. This class manages a resource (a CUDA event) and
+    // is therefore implemented using the pimpl idiom, using a reference counted
+    // pointer to a non-copyable implementation class.
+    // \note For details on valid values for \a flags, please refer to the
+    // documentation of cuEventCreate in the CUDA Driver API.
     Event(unsigned int flags = CU_EVENT_DEFAULT);
 
-    ~Event();
-
+    // Return the elapsed time in milliseconds between this event and the \a
+    // second event.
     float elapsedTime(Event &second) const;
 
-    friend class Stream; // Stream needs our event (i.e. _impl) to wait for and record events
-
   private:
+    // Stream needs access to our CUDA event to wait for and record events.
+    friend class Stream;
+
+    // Non-copyable implementation class.
     class Impl;
+
+    // Reference counted pointer to the implementation class.
     boost::shared_ptr<Impl> _impl;
   };
 
 
+  // Wrap a CUDA Stream. This is the equivalent of an OpenCL CommandQueue. This
+  // class manages a resource (a CUDA stream) and is therefore implemented using
+  // the pimpl idiom, using a reference counted pointer to a non-copyable
+  // implementation class.
   class Stream
   {
   public:
-    Stream(unsigned int flags = 0 /* CU_STREAM_DEFAULT */);
+    // Create a stream. 
+    // \param flags must be 0 for CUDA < 5.0
+    // \note For details on valid values for \a flags, please refer to the
+    // documentation of \c cuStreamCreate in the CUDA Driver API.
+    Stream(unsigned int flags = 0);
 
-    ~Stream();
+    // Transfers \a size bytes asynchronously from host memory \a hostMem to
+    // device memory \a devMem.
+    void memcpyHtoDAsync(DeviceMemory &devMem, const HostMemory &hostMem, 
+                         size_t size);
 
-    /*
-     * Transfers size bytes from hostMem to devMem asynchronously. (1st arg is dst.)
-     */
-    void memcpyHtoDAsync(DeviceMemory &devMem, const HostMemory &hostMem, size_t size);
+    // Transfers \a size bytes asynchronously from device memory \a devMem to
+    // host memory \a hostMem asynchronously. 
+    void memcpyDtoHAsync(HostMemory &hostMem, const DeviceMemory &devMem, 
+                         size_t size);
 
-    /*
-     * Transfers size bytes from devMem to hostMem asynchronously. (1st arg is dst.)
-     */
-    void memcpyDtoHAsync(HostMemory &hostMem, const DeviceMemory &devMem, size_t size);
+    // Launch a CUDA function. 
+    // \param function object containing the function to launch
+    // \param gridX x-coordinate of the grid
+    // \param gridY y-coordinate of the grid
+    // \param gridZ z-coordinate of the grid
+    // \param blockX x-coordinate of the block
+    // \param blockY y-coordinate of the block
+    // \param blockZ z-coordinate of the block
+    // \param sharedMemBytes the amount of shared memory per thread block
+    // \param parameters array of pointers to the parameters that must be passed
+    //        to the function \a function
+    // \todo It's probably better to store the function parameters in the
+    // Function object, and define a setParameters() method in Function to set
+    // them.
+    void launchKernel(const Function &function, 
+                      unsigned gridX, unsigned gridY, unsigned gridZ, 
+                      unsigned blockX, unsigned blockY, unsigned blockZ,
+                      unsigned sharedMemBytes, const void **parameters);
 
-    void launchKernel(Function function, unsigned gridX, unsigned gridY,
-                      unsigned gridZ, unsigned blockX, unsigned blockY,
-                      unsigned blockZ, unsigned sharedMemBytes,
-                      const void **parameters);
-
-    /*
-     * Check this stream if all its operations have completed.
-     * Returns true if all completed, or false if not yet all completed.
-     * Throws on other errors (other is vs not yet all completed).
-     */
+    // Check if all operations on this stream have completed.
+    // \return true if all completed, or false otherwise.
     bool query() const;
 
+    // Wait until a this stream's tasks are completed.
     void synchronize() const;
 
+    // Let this stream wait on the event \a event.
     void waitEvent(const Event &event) const;
 
+    // Record the event \a event for this stream.
     void recordEvent(const Event &event);
 
   private:
+    // Non-copyable implementation class.
     class Impl;
+
+    // Reference counted pointer to the implementation class.
     boost::shared_ptr<Impl> _impl;
   };
 
