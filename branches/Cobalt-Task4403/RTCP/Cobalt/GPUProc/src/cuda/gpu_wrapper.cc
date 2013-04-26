@@ -130,9 +130,27 @@ namespace gpu {
       return "Context is destroyed";
     case CUDA_ERROR_UNKNOWN:
       return "Unknown";
+#if CUDA_VERSION >= 4010
+    case CUDA_ERROR_ASSERT:
+      return "Assert";
+    case CUDA_ERROR_TOO_MANY_PEERS:
+      return "Too many peers";
+    case CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED:
+      return "Host memory already registered";
+    case CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED:
+      return "Host memory not registered";
+#endif
+#if CUDA_VERSION >= 5000
+    case CUDA_ERROR_PEER_ACCESS_UNSUPPORTED:
+      return "Peer access unsupported";
+    case CUDA_ERROR_NOT_PERMITTED:
+      return "Not permitted";
+    case CUDA_ERROR_NOT_SUPPORTED:
+      return "Not supported";
+#endif
     default:
       std::stringstream str;
-      str << "Unspecified error (" << errcode << ")";
+      str << "Unknown error (" << errcode << ")";
       return str.str();
     }
   }
