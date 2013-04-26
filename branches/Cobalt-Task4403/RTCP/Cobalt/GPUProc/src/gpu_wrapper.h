@@ -1,4 +1,4 @@
-//# gpu_wrapper.h: Wrap GPU 
+//# gpu_wrapper.h: Wrapper classes for GPU types.
 //#
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -20,7 +20,7 @@
 //# $Id$
 
 // \file
-// Support for complex numbers on GPUs.
+// Wrapper classes for GPU types.
 
 #ifndef LOFAR_GPUPROC_GPU_WRAPPER_H
 #define LOFAR_GPUPROC_GPU_WRAPPER_H
@@ -35,17 +35,17 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu 
+    namespace gpu
     {
       // Exception class for GPU errors.
       EXCEPTION_CLASS(GPUException, LOFAR::Exception);
 
-      // Return the OpenCL or CUDA error string from the given error code.
-      // This method must be implemented in both the CUDA and OpenCL wrappers.
-      extern const char *errorMessage(int errcode);
-    }
-  }
-}
+    } // namespace gpu
+
+  } // namespace Cobalt
+
+} // namespace LOFAR
+
 
 #if defined (USE_CUDA)
 # include "cuda/gpu_wrapper.h"
