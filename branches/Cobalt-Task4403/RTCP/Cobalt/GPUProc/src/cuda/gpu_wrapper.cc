@@ -41,7 +41,7 @@ namespace LOFAR {
 namespace Cobalt {
 namespace gpu {
 
-  std::string errorMessage(int errcode)
+  std::string errorMessage(CUresult errcode)
   {
     switch (errcode) {
     case CUDA_SUCCESS:

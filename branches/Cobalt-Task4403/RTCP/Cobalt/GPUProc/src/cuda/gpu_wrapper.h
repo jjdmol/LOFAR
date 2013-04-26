@@ -48,7 +48,7 @@ namespace gpu {
   EXCEPTION_CLASS(CUDAException, GPUException);
 
   // Return the CUDA error string associated with \a errcode.
-  std::string errorMessage(int errcode);
+  std::string errorMessage(CUresult errcode);
 
   // This object is not strictly needed, because in CUDA there's only one
   // platform, but it hides the CUDA calls and makes it similar to OpenCL.
