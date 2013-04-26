@@ -1,4 +1,5 @@
-//# gpu-wrapper.cc
+//# gpu_wrapper.cc:  CUDA-specific wrapper classes for GPU types.
+//#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,7 +20,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include "gpu-wrapper.h"
+#include "gpu_wrapper.h"
 #include <boost/noncopyable.hpp>
 #include <algorithm>  // for std::min
 

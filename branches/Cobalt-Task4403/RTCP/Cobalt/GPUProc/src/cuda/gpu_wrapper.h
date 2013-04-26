@@ -1,4 +1,4 @@
-//# gpu-wrapper.h: CUDA-specific wrapper classes for GPU types.
+//# gpu_wrapper.h: CUDA-specific wrapper classes for GPU types.
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -22,7 +22,7 @@
 #ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_H
 #define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_H
 
-// \file cuda/gpu-wrapper.h
+// \file cuda/gpu_wrapper.h
 // C++ wrappers for CUDA akin the OpenCL C++ wrappers.
 // Uses the "Pimpl" idiom for resource managing classes (i.e. that need to
 // control copying having a non-trivial destructor. For more info on Pimpl, see
@@ -38,7 +38,7 @@
 #include <boost/shared_ptr.hpp>
 #include <cuda.h> // ideally, this goes into the .cc, but too much leakage
 
-#include <GPUProc/gpu-wrapper.h>
+#include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR {
 namespace Cobalt {
@@ -47,7 +47,7 @@ namespace gpu {
   // Exception class for CUDA errors.
   EXCEPTION_CLASS(CUDAException, GPUException);
 
-  // Return the error string associated with \a errcode.
+  // Return the CUDA error string associated with \a errcode.
   const char* errorMessage(int errcode);
 
   // This object is not strictly needed, because in CUDA there's only one
