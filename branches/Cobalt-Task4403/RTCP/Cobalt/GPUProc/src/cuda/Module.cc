@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Module.h"
 #include "Error.h"
 #include <boost/noncopyable.hpp>
