@@ -19,20 +19,29 @@
 //# $Id$
 
 #include <lofar_config.h>
-
 #include "gpu-wrapper.h"
-
 #include <boost/noncopyable.hpp>
+#include <algorithm>  // for std::min
+
+// Convenience macro to call a CUDA Device API function and throw a
+// CUDAException if an error occurred.
+#define checkCuCall(func)                                               \
+  do {                                                                  \
+    CUresult result = func;                                             \
+    if (result != CUDA_SUCCESS) {                                       \
+      THROW (LOFAR::Cobalt::gpu::CUDAException,                         \
+             #func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
+    }                                                                   \
+  } while(0)
+
 
 namespace LOFAR {
 namespace Cobalt {
 namespace gpu {
 
-using namespace std;
-
-const char *Error::what() const throw()
-{
-  switch (_result) {
+  const char *errorMessage(int errcode)
+  {
+    switch (errcode) {
     case CUDA_SUCCESS:
       return "success";
     case CUDA_ERROR_INVALID_VALUE:
@@ -121,8 +130,8 @@ const char *Error::what() const throw()
       return "unknown";
     default:
       return "unknown error code";
+    }
   }
-}
 
 
   Platform::Platform(unsigned int flags)
@@ -143,13 +152,13 @@ const char *Error::what() const throw()
     checkCuCall(cuDeviceGet(&_device, ordinal));
   }
 
-  string Device::getName() const
+  std::string Device::getName() const
   {
     // NV ref is not crystal clear on returned str len. Better be safe.
     const size_t max_name_len = 255;
     char name[max_name_len + 1];
     checkCuCall(cuDeviceGetName(name, max_name_len, _device));
-    return string(name);
+    return std::string(name);
   }
 
   template <CUdevice_attribute attribute>
@@ -300,7 +309,7 @@ const char *Error::what() const throw()
     CUmodule _module;
   };
 
-  Module::Module(const string &fname) : 
+  Module::Module(const std::string &fname) : 
     _impl(new Impl(fname.c_str()))
   {
   }
@@ -311,15 +320,15 @@ const char *Error::what() const throw()
   }
 
   Module::Module(const void *image, 
-                 vector<CUjit_option> &options,
-                 vector<void*> &optionValues) :
-    _impl(new Impl(image, min(options.size(), optionValues.size()), 
+                 std::vector<CUjit_option> &options,
+                 std::vector<void*> &optionValues) :
+    _impl(new Impl(image, std::min(options.size(), optionValues.size()), 
                    &options[0], &optionValues[0]))
   {
   }
 
 
-  Function::Function(Module &module, const string &name)
+  Function::Function(Module &module, const std::string &name)
   {
     checkCuCall(cuModuleGetFunction(&_function, module._impl->_module, 
                                     name.c_str()));

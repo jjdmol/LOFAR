@@ -34,35 +34,21 @@
 #include <cstddef>
 #include <string>
 #include <vector>
-#include <exception>
 
 #include <boost/shared_ptr.hpp>
 #include <cuda.h> // ideally, this goes into the .cc, but too much leakage
+
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR {
 namespace Cobalt {
 namespace gpu {
 
-  class Error : public std::exception {
-    public:
-      Error(CUresult result) : _result(result) { }
+  // Exception class for CUDA errors.
+  EXCEPTION_CLASS(CUDAException, GPUException);
 
-      virtual const char *what() const throw();
-
-      operator CUresult() const
-      {
-        return _result;
-      }
-
-    private:
-      CUresult _result;
-  };
-
-  inline void checkCuCall(CUresult result)
-  {
-    if (result != CUDA_SUCCESS)
-      throw Error(result);
-  }
+  // Return the error string associated with \a errcode.
+  const char* errorMessage(int errcode);
 
   // This object is not strictly needed, because in CUDA there's only one
   // platform, but it hides the CUDA calls and makes it similar to OpenCL.
