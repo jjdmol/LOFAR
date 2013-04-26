@@ -34,6 +34,8 @@
 #include <Common/Exception.h>
 
 namespace LOFAR
+
+
 {
   namespace Cobalt
   {
@@ -48,7 +50,14 @@ namespace LOFAR
   }
 }
 
-// Convenience wrapper to catch an OpenCL exception (cl::Error) and rethrow
+#if 0
+//# Don't know how useful this is, because you can't wrap constructors this way.
+//# If CL-exceptions are enabled the object will be defined inside the
+//# try-block of the macro; if they're disabled the object will be defined 
+//# inside the do-while block *and* you would need to check the error returned
+//# in one of the constructor arguments :(
+
+// Convenience macro to catch an OpenCL exception (cl::Error) and rethrow
 // it as a LOFAR OpenCLException.
 #if defined(__CL_ENABLE_EXCEPTIONS)
 # define CHECK_OPENCL_CALL(func)                                        \
@@ -60,7 +69,15 @@ namespace LOFAR
     THROW (LOFAR::Cobalt::gpu::OpenCLException, oss.str());             \
   }
 #else
-# define CHECK_OPENCL_CALL(func) func
+# define CHECK_OPENCL_CALL(func)                                        \
+  do {                                                                  \
+    cl_int result = func;                                               \
+    if (result != CL_SUCCESS) {                                         \
+      THROW (LOFAR::Cobalt::gpu::OpenCLException,                       \
+             #func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
+    }                                                                   \
+  } while(0)
+#endif
 #endif
 
 #endif
