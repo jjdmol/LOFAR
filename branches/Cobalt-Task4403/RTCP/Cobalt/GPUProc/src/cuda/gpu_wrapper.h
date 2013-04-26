@@ -48,18 +48,18 @@ namespace gpu {
   EXCEPTION_CLASS(CUDAException, GPUException);
 
   // Return the CUDA error string associated with \a errcode.
-  const char* errorMessage(int errcode);
+  std::string errorMessage(int errcode);
 
   // This object is not strictly needed, because in CUDA there's only one
   // platform, but it hides the CUDA calls and makes it similar to OpenCL.
   class Platform {
-    public:
-      // Initialize the CUDA platform.
-      // \param flags must be 0 (at least up till CUDA 5.0).
-      Platform(unsigned int flags = 0);
+  public:
+    // Initialize the CUDA platform.
+    // \param flags must be 0 (at least up till CUDA 5.0).
+    Platform(unsigned int flags = 0);
 
-      // Returns the number of devices in the CUDA platform.
-      size_t size() const;
+    // Returns the number of devices in the CUDA platform.
+    size_t size() const;
   };
 
   // Wrap a CUDA Device.

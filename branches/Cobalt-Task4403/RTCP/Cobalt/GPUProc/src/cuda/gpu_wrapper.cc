@@ -1,4 +1,4 @@
-//# gpu_wrapper.cc:  CUDA-specific wrapper classes for GPU types.
+//# gpu_wrapper.cc: CUDA-specific wrapper classes for GPU types.
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 #include "gpu_wrapper.h"
 #include <boost/noncopyable.hpp>
+#include <string>
 #include <algorithm>  // for std::min
 
 // Convenience macro to call a CUDA Device API function and throw a
@@ -40,97 +41,99 @@ namespace LOFAR {
 namespace Cobalt {
 namespace gpu {
 
-  const char *errorMessage(int errcode)
+  std::string errorMessage(int errcode)
   {
     switch (errcode) {
     case CUDA_SUCCESS:
-      return "success";
+      return "Success";
     case CUDA_ERROR_INVALID_VALUE:
-      return "invalid value";
+      return "Invalid value";
     case CUDA_ERROR_OUT_OF_MEMORY:
-      return "out of memory";
+      return "Out of memory";
     case CUDA_ERROR_NOT_INITIALIZED:
-      return "not initialized";
+      return "Not initialized";
     case CUDA_ERROR_DEINITIALIZED:
-      return "deinitialized";
+      return "Deinitialized";
     case CUDA_ERROR_PROFILER_DISABLED:
-      return "profiler disabled";
+      return "Profiler disabled";
     case CUDA_ERROR_PROFILER_NOT_INITIALIZED:
-      return "profiler not initialized";
+      return "Profiler not initialized";
     case CUDA_ERROR_PROFILER_ALREADY_STARTED:
-      return "profiler already started";
+      return "Profiler already started";
     case CUDA_ERROR_PROFILER_ALREADY_STOPPED:
-      return "profiler already stopped";
+      return "Profiler already stopped";
     case CUDA_ERROR_NO_DEVICE:
-      return "no device";
+      return "No device";
     case CUDA_ERROR_INVALID_DEVICE:
-      return "invalid device";
+      return "Invalid device";
     case CUDA_ERROR_INVALID_IMAGE:
-      return "invalid image";
+      return "Invalid image";
     case CUDA_ERROR_INVALID_CONTEXT:
-      return "invalid context";
+      return "Invalid context";
     case CUDA_ERROR_CONTEXT_ALREADY_CURRENT:
-      return "context already current";
+      return "Context already current";
     case CUDA_ERROR_MAP_FAILED:
-      return "map failed";
+      return "Map failed";
     case CUDA_ERROR_UNMAP_FAILED:
-      return "unmap failed";
+      return "Unmap failed";
     case CUDA_ERROR_ARRAY_IS_MAPPED:
-      return "array is mapped";
+      return "Array is mapped";
     case CUDA_ERROR_ALREADY_MAPPED:
-      return "already mapped";
+      return "Already mapped";
     case CUDA_ERROR_NO_BINARY_FOR_GPU:
-      return "no binary for GPU";
+      return "No binary for GPU";
     case CUDA_ERROR_ALREADY_ACQUIRED:
-      return "already acquired";
+      return "Already acquired";
     case CUDA_ERROR_NOT_MAPPED:
-      return "not mapped";
+      return "Not mapped";
     case CUDA_ERROR_NOT_MAPPED_AS_ARRAY:
-      return "not mapped as array";
+      return "Not mapped as array";
     case CUDA_ERROR_NOT_MAPPED_AS_POINTER:
-      return "not mapped as pointer";
+      return "Not mapped as pointer";
     case CUDA_ERROR_ECC_UNCORRECTABLE:
       return "ECC uncorrectable";
     case CUDA_ERROR_UNSUPPORTED_LIMIT:
-      return "unsupported limit";
+      return "Unsupported limit";
     case CUDA_ERROR_CONTEXT_ALREADY_IN_USE:
-      return "context already in use";
+      return "Context already in use";
     case CUDA_ERROR_INVALID_SOURCE:
-      return "invalid source";
+      return "Invalid source";
     case CUDA_ERROR_FILE_NOT_FOUND:
-      return "file not found";
+      return "File not found";
     case CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND:
-      return "shared object symbol not found";
+      return "Shared object symbol not found";
     case CUDA_ERROR_SHARED_OBJECT_INIT_FAILED:
-      return "shared object init failed";
+      return "Shared object init failed";
     case CUDA_ERROR_OPERATING_SYSTEM:
-      return "operating system";
+      return "Operating system";
     case CUDA_ERROR_INVALID_HANDLE:
-      return "invalid handle";
+      return "Invalid handle";
     case CUDA_ERROR_NOT_FOUND:
-      return "not found";
+      return "Not found";
     case CUDA_ERROR_NOT_READY:
-      return "not ready";
+      return "Not ready";
     case CUDA_ERROR_LAUNCH_FAILED:
-      return "launch failed";
+      return "Launch failed";
     case CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES:
-      return "launch out of resources";
+      return "Launch out of resources";
     case CUDA_ERROR_LAUNCH_TIMEOUT:
-      return "launch timeout";
+      return "Launch timeout";
     case CUDA_ERROR_LAUNCH_INCOMPATIBLE_TEXTURING:
-      return "launch incompatible texturing";
+      return "Launch incompatible texturing";
     case CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED:
-      return "peer access already enabled";
+      return "Peer access already enabled";
     case CUDA_ERROR_PEER_ACCESS_NOT_ENABLED:
-      return "peer access not enabled";
+      return "Peer access not enabled";
     case CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE:
-      return "primary context active";
+      return "Primary context active";
     case CUDA_ERROR_CONTEXT_IS_DESTROYED:
-      return "context is destroyed";
+      return "Context is destroyed";
     case CUDA_ERROR_UNKNOWN:
-      return "unknown";
+      return "Unknown";
     default:
-      return "unknown error code";
+      std::stringstream str;
+      str << "Unspecified error (" << errcode << ")";
+      return str.str();
     }
   }
 
