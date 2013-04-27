@@ -31,7 +31,7 @@
 
 #include "global_defines.h"
 #include "OpenMP_Support.h"
-#include "opencl-incl.h"
+#include "gpu-wrapper.h"
 #include "WorkQueues/WorkQueue.h"
 #include "PerformanceCounter.h"
 

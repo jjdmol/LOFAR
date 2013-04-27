@@ -26,22 +26,20 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    Kernel(const Parset &ps, gpu::Module& module, const string &name)
+    Kernel::Kernel(const Parset &ps, gpu::Module& module, const string &name)
       :
-      gpu::Kernel(module, name),
+      gpu::Function(module, name),
       ps(ps)
     {
     }
 
-    void Kernel::enqueue(gpu::CommandQueue &queue, PerformanceCounter &counter)
+    void Kernel::enqueue(gpu::Stream &stream, PerformanceCounter &counter)
     {
       // AMD APP (OpenCL) complains if we submit 0-sized work
-      // TODO: no need to check all dims: dim 0 cannot be 0 while other dims are non-zero (maybe enforce when creating Kernel obj).
-      for (unsigned dim = 0; dim < globalWorkSize.dimensions(); dim++)
-        if (globalWorkSize[dim] == 0)
-          return;
+      if (globalWorkSize.x == 0)
+        return;
 
-      queue.enqueueNDRangeKernel(*this, gpu::dim3, globalWorkSize, localWorkSize, 0, &event);
+      stream.enqueueNDRangeKernel(*this, gpu::nullDim, globalWorkSize, localWorkSize, 0, &event);
       counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
 

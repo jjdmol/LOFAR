@@ -140,7 +140,7 @@ namespace LOFAR
       if (!profiling)
         return;
 
-      // reference count between C and C++ conversions is serously broken in C++ wrapper
+      // reference count between C and C++ conversions is seriously broken in C++ wrapper
       cl_event ev = event();
       cl_int error = clRetainEvent(ev);
 

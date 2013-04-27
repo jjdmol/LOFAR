@@ -216,6 +216,39 @@ namespace gpu {
   };
 
 
+  /*
+   * Dimension for kernel launch configuration. Unspecified members are set to 1.
+   * The gpu::nullDim constant corresponds to OpenCL's NulLRange (use default).
+   *
+   * Do not use CUDA/nvcc's built-in dim3 as used in the runtime API.
+   * We use the driver API and do not want to build all our sources with nvcc.
+   */
+  struct dim3
+  {
+    unsigned int x, y, z;
+
+    dim3(unsigned int x = 1, unsigned int y = 1, unsigned z = 1)
+      : x(x), y(y), z(z) { }
+
+#if 0
+    size_t dimensions()
+    {
+      // Not exactly like OpenCL's NDRange, but close enough semantically.
+      size_t ndims;
+      if (x == 0)
+        return 0;
+      if (y == 0)
+        return 1;
+      if (z == 0)
+        return 2;
+      return 3;
+    }
+#endif
+  };
+
+  static const dim3 nullDim(1, 0, 1); // invalid to differ from an empty job
+
+
   class Stream
   {
   public:
@@ -233,10 +266,8 @@ namespace gpu {
      */
     void memcpyDtoHAsync(HostMemory &hostMem, const DeviceMemory &devMem, size_t size);
 
-    void launchKernel(Function function, unsigned gridX, unsigned gridY,
-                      unsigned gridZ, unsigned blockX, unsigned blockY,
-                      unsigned blockZ, unsigned sharedMemBytes,
-                      const void **parameters);
+    void launchKernel(Function function, dim3 gridDim, dim3 blockDim,
+                      unsigned sharedMemBytes, const void **parameters);
 
     /*
      * Check this stream if all its operations have completed.

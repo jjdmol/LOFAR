@@ -26,7 +26,7 @@
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Condition.h>
 
-#include "opencl-incl.h"
+#include "gpu-wrapper.h"
 
 namespace LOFAR
 {
@@ -50,7 +50,7 @@ namespace LOFAR
 
       // register an operation covered by `event'. runtime will be determined by OpenCL, the
       // rest of the figures have to be provided.
-      void doOperation(cl::Event &, size_t nrOperations, size_t nrBytesRead, size_t nrBytesWritten);
+      void doOperation(gpu::Event &, size_t nrOperations, size_t nrBytesRead, size_t nrBytesWritten);
 
       // performance figures
       struct figures {
@@ -130,5 +130,6 @@ namespace LOFAR
     };
   }
 }
+
 #endif
 

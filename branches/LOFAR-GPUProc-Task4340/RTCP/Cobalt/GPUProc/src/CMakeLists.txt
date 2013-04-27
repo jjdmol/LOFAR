@@ -60,7 +60,7 @@ if(USE_CUDA)
     rtcp
     DESTINATION bin)
 
-  remove_definitions(-DUSE_CUDA)
+#  remove_definitions(-DUSE_CUDA)
 endif(USE_CUDA)
 
 if(USE_OPENCL)

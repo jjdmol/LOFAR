@@ -30,7 +30,7 @@
 #include <vector>
 #include <string>
 #include <omp.h>
-#include "boost/format.hpp"
+#include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>

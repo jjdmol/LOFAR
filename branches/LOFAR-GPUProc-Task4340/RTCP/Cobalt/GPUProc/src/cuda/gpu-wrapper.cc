@@ -18,7 +18,7 @@
 //#
 //# $Id$
 
-#include <lofar_config.h>
+#include <lofar_config.h> // always included in LOFAR .cc, but not used here
 
 #include "gpu-wrapper.h"
 
@@ -376,13 +376,11 @@ const char *Error::what() const throw()
       checkCuCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _stream));
     }
 
-    void launchKernel(CUfunction function, unsigned gridX, unsigned gridY,
-                      unsigned gridZ, unsigned blockX, unsigned blockY,
-                      unsigned blockZ, unsigned sharedMemBytes,
-                      const void **parameters)
+    void launchKernel(CUfunction function, dim3 gridDim, dim3 blockDim,
+                      unsigned sharedMemBytes, const void **parameters)
     {
-      checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
-                  blockY, blockZ, sharedMemBytes, _stream,
+      checkCuCall(cuLaunchKernel(function, gridDim.x, gridDim.y, gridDim.z,
+                  blockDim.x, blockDim.y, blockDim.z, sharedMemBytes, _stream,
                   const_cast<void **>(parameters), 0));
     }
 
@@ -431,13 +429,11 @@ const char *Error::what() const throw()
     _impl->memcpyDtoHAsync(hostMem.get<void*>(), devMem._impl->_ptr, size);
   }
 
-  void Stream::launchKernel(Function function, unsigned gridX, unsigned gridY,
-                            unsigned gridZ, unsigned blockX, unsigned blockY,
-                            unsigned blockZ, unsigned sharedMemBytes,
-                            const void **parameters)
+  void Stream::launchKernel(Function function, dim3 gridDim, dim3 blockDim,
+                            unsigned sharedMemBytes, const void **parameters)
   {
-    _impl->launchKernel(function._function, gridX, gridY, gridZ, blockX, blockY,
-                        blockZ, sharedMemBytes, parameters);
+    _impl->launchKernel(function._function, gridDim, blockDim, sharedMemBytes,
+                        parameters);
   }
 
   bool Stream::query() const

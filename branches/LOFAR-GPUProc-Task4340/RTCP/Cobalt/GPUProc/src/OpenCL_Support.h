@@ -24,7 +24,7 @@
 #include <CoInterface/Allocator.h>
 #include <CoInterface/MultiDimArray.h>
 
-#include "opencl-incl.h"
+#include "gpu-wrapper.h"
 
 namespace LOFAR
 {

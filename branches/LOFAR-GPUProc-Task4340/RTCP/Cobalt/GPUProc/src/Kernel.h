@@ -26,8 +26,8 @@
 
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/PerformanceCounter.h>
-#include <GPUProc/gpu-wrapper.h>
+#include "PerformanceCounter.h"
+#include "gpu-wrapper.h"
 
 namespace LOFAR
 {
