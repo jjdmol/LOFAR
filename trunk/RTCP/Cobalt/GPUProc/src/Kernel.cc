@@ -40,7 +40,12 @@ namespace LOFAR
         if (globalWorkSize[dim] == 0)
           return;
 
-      queue.enqueueNDRangeKernel(*this, cl::NullRange, globalWorkSize, localWorkSize, 0, &event);
+      queue.enqueueNDRangeKernel(*this, 
+                                 cl::NullRange,
+                                 globalWorkSize,
+                                 localWorkSize,
+                                 0, 
+                                 &event);
       counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
   }
