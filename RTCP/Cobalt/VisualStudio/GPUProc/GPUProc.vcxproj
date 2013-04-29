@@ -24,6 +24,8 @@
     <None Include="..\..\GPUProc\src\FFT.cl" />
     <None Include="..\..\GPUProc\src\fft2.cl" />
     <None Include="..\..\GPUProc\src\FIR.cl" />
+    <None Include="..\..\GPUProc\src\FIR.cu" />
+    <None Include="..\..\GPUProc\src\Kernels\FIR_Filter.cu" />
     <None Include="..\..\GPUProc\src\math.cl" />
     <None Include="..\..\GPUProc\src\NewCorrelator.cl" />
     <None Include="..\..\GPUProc\src\UHEP\BeamFormer.cl" />
@@ -93,25 +95,25 @@
     <ClInclude Include="..\..\GPUProc\src\SubbandMetaData.h" />
     <ClInclude Include="..\..\GPUProc\src\UHEP\InvertedStationPPFWeights.h" />
     <ClInclude Include="..\..\GPUProc\src\UnitTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\AMD_FFT_Test.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\BeamFormerTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\BeamFormerTransposeTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\CoherentStokesTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\CorrelateRectangleTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\CorrelateTriangleTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\CorrelatorTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\DedispersionChirpTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\FFT_Test.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\FIR_FilterTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\IncoherentStokesTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\IntToFloatTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\UHEP_BeamFormerTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\UHEP_TransposeTest.h" />
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\UHEP_TriggerTest.h" />
     <ClInclude Include="..\..\GPUProc\src\WorkQueues\BeamFormerWorkQueue.h" />
     <ClInclude Include="..\..\GPUProc\src\WorkQueues\CorrelatorWorkQueue.h" />
     <ClInclude Include="..\..\GPUProc\src\WorkQueues\UHEP_WorkQueue.h" />
     <ClInclude Include="..\..\GPUProc\src\WorkQueues\WorkQueue.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\AMD_FFT_Test.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\BeamFormerTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\BeamFormerTransposeTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\CoherentStokesTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\CorrelateRectangleTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\CorrelateTriangleTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\CorrelatorTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\DedispersionChirpTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\FFT_Test.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\FIR_FilterTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\IncoherentStokesTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\IntToFloatTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\UHEP_BeamFormerTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\UHEP_TransposeTest.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\UHEP_TriggerTest.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\BandPass.cc" />
@@ -184,6 +186,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.0.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -231,5 +234,6 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 4.0.targets" />
   </ImportGroup>
 </Project>
