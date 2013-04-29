@@ -9,6 +9,7 @@ int main()
   char *kernelPath = "/home/wklijn/build/4429/gnu_debug/installed/share/gpu/kernels/TestKernel.cu";
 
   // Run a kernel with two different defines, should result in two results
+  std::cout << kernelPath << std:: endl;
 
   return 0;
 }
