@@ -1,7 +1,7 @@
 # $Id: CMakeLists.txt 17003 2011-01-06 08:54:59Z romein $
 
 include(LofarPackageVersion)
-
+add_subdirectory(Kernels)
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}
