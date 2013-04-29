@@ -7,7 +7,6 @@ FIR_FilterTest.parset.77_Stations
 FIR_FilterTest.parset.AARTFAAC
 FIR_FilterTest.parset.small-test
 "
-echo blaaaaaaa > ~/temp.txt
 cp ${srcdir}/../../src/Kernels/FIR_Filter.cu .
 
 # Check for GPU
