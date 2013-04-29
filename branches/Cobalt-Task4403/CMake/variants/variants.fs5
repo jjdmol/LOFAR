@@ -10,6 +10,7 @@ option(USE_OPENMP    "Use OpenMP"    ON)
 option(USE_MPI       "Use MPI"       ON)
 
 set(ENV{OPENCL_INCLUDE} /cm/shared/apps/cuda41/toolkit/4.1.28/include)
+set(ENV{CUDA_LIB_PATH} $ENV{CUDA_ROOT}/lib)
 set(CASACORE_ROOT_DIR /home/mol/root)
 set(LIBSSH2_ROOT_DIR /home/mol/root)
 set(DAL_ROOT_DIR /home/mol/root)
