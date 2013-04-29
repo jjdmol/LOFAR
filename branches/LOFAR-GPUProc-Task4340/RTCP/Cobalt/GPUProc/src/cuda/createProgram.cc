@@ -66,7 +66,7 @@ namespace LOFAR
       if (debug) {
         cmd << " -G --source-in-ptx";
       }
-      cmd << " -m32";                          // -m64 (default) takes extra regs for a ptr, but allows >2 GB buffers, which we don't need
+      //cmd << " -m32";                          // -m64 (default) takes extra regs for a ptr, but allows >2 GB buffers, which we need in some kernels
       // use opt level 99
       // -Ox is only for host code. Opt backend compilation below.
       cmd << " --gpu-architecture compute_30"; // TODO: incorrectly assumes one, single virt arch; check out targets arg

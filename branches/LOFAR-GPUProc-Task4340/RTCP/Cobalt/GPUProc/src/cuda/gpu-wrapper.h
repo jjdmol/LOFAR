@@ -188,14 +188,18 @@ namespace gpu {
   public:
     Function(Module &module, const std::string &name);
 
+    template <typename T>
+    void setArg(size_t index, const T& val);
+
     int getAttribute(CUfunction_attribute attribute) const;
 
     void setSharedMemConfig(CUsharedconfig config) const;
 
-    friend class Stream; // Stream needs our function (i.e. _function) to launch a kernel
+    friend class Stream; // Stream needs our function and params to launch a kernel
 
   private:
     CUfunction _function;
+    std::vector<void*> _kernelParams;
   };
 
 
@@ -246,8 +250,6 @@ namespace gpu {
 #endif
   };
 
-  static const dim3 nullDim(1, 0, 1); // invalid to differ from an empty job
-
 
   class Stream
   {
@@ -266,8 +268,8 @@ namespace gpu {
      */
     void memcpyDtoHAsync(HostMemory &hostMem, const DeviceMemory &devMem, size_t size);
 
-    void launchKernel(Function function, dim3 gridDim, dim3 blockDim,
-                      unsigned sharedMemBytes, const void **parameters);
+    void launchKernel(Function &function, dim3 gridDim, dim3 blockDim,
+                      unsigned int sharedMemBytes);
 
     /*
      * Check this stream if all its operations have completed.

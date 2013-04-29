@@ -26,7 +26,7 @@
 
 #include <CoInterface/Parset.h>
 
-#include "PerformanceCounter.h"
+//#include "PerformanceCounter.h"
 #include "gpu-wrapper.h"
 
 namespace LOFAR
@@ -38,13 +38,13 @@ namespace LOFAR
     public:
       Kernel(const Parset &ps, gpu::Module& module, const std::string &name);
 
-      void enqueue(gpu::Stream &stream, PerformanceCounter &counter);
+      void enqueue(gpu::Stream &stream/*, PerformanceCounter &counter*/);
 
     protected:
-      gpu::Event event;
+//      gpu::Event event;
       const Parset &ps;
       gpu::dim3 globalWorkSize, localWorkSize;
-      size_t nrOperations, nrBytesRead, nrBytesWritten;
+//      size_t nrOperations, nrBytesRead, nrBytesWritten;
     };
   }
 }

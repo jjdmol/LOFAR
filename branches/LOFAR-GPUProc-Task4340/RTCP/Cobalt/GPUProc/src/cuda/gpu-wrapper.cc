@@ -308,6 +308,15 @@ const char *Error::what() const throw()
     checkCuCall(cuModuleGetFunction(&_function, module._impl->_module, name.c_str()));
   }
 
+  template <typename T>
+  void Function::setArg(size_t index, const T& val)
+  {
+    if (index >= _kernelParams.size()) {
+      _kernelParams.resize(index + 1);
+    }
+    _kernelParams[index] = &val;
+  }
+
   int Function::getAttribute(CUfunction_attribute attribute) const
   {
     int value;
@@ -376,12 +385,12 @@ const char *Error::what() const throw()
       checkCuCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _stream));
     }
 
-    void launchKernel(CUfunction function, dim3 gridDim, dim3 blockDim,
-                      unsigned sharedMemBytes, const void **parameters)
+    void launchKernel(CUfunction &function, dim3 gridDim, dim3 blockDim,
+                      unsigned int sharedMemBytes, vector<void*>& kernelParams)
     {
       checkCuCall(cuLaunchKernel(function, gridDim.x, gridDim.y, gridDim.z,
                   blockDim.x, blockDim.y, blockDim.z, sharedMemBytes, _stream,
-                  const_cast<void **>(parameters), 0));
+                  &kernelParams[0], NULL));
     }
 
     bool query() const
@@ -429,11 +438,11 @@ const char *Error::what() const throw()
     _impl->memcpyDtoHAsync(hostMem.get<void*>(), devMem._impl->_ptr, size);
   }
 
-  void Stream::launchKernel(Function function, dim3 gridDim, dim3 blockDim,
-                            unsigned sharedMemBytes, const void **parameters)
+  void Stream::launchKernel(Function &function, dim3 gridDim, dim3 blockDim,
+                            unsigned int sharedMemBytes)
   {
     _impl->launchKernel(function._function, gridDim, blockDim, sharedMemBytes,
-                        parameters);
+                        function._kernelParams);
   }
 
   bool Stream::query() const
