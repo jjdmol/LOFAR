@@ -2352,8 +2352,9 @@ dyn_string navFunct_getAddersForObservation(string obsName) {
   dyn_string adders;
   dyn_dyn_anytype tab;
   string query="SELECT '_online.._value' FROM 'LOFAR_*_Adder*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
-  
+  //DebugN("query: "+query);
   dpQuery(query,tab);
+  //DebugN("Result:"+result);
   for(int z=2;z<=dynlen(tab);z++) {
     dynAppend(adders,dpSubStr(tab[z][1],DPSUB_SYS_DP));
   }

@@ -41,6 +41,10 @@ if(NOT FFTW3_FOUND)
   endif(NOT FFTW2_FOUND)
 endif(NOT FFTW3_FOUND)
 
+# InputProc/Delays.h drags in a dependency on casa; hence we need to add the
+# following line. This should be fixed someday.
+lofar_find_package(Casacore COMPONENTS casa)
+
 lofar_find_package(Valgrind)
 if(USE_VALGRIND)
   add_definitions(-DUSE_VALGRIND)

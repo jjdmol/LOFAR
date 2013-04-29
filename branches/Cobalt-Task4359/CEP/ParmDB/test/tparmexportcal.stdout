@@ -46,7 +46,7 @@ Gain:S1:Ampl:1  type=scalar
     values:  1  shape=[1, 1]
     pert=1e-06 pert_rel=y
 Gain:S1:Phase:1  type=scalar
-    values:  0.1  shape=[1, 1]
+    values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=n
 2 default parms and 2 values found
 0 parms and 0 values found

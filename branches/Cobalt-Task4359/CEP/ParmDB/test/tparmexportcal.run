@@ -67,10 +67,10 @@ grep -v ": Version " tparmexportcal_tmp.stdout
 
 # Export in standard way and show result.
 echo ""
-../src/parmexportcal in=tparmexportcal_tmp.pdb out=tparmexportcal_tmp.pdb2 | grep -v ": Version " | grep -v "INFO "
+../src/parmexportcal in=tparmexportcal_tmp.pdb out=tparmexportcal_tmp.pdb2 zerophase=true | grep -v ": Version " | grep -v "INFO "
 showparms
 
-# Export in as ampl/phase way and show result.
+# Export in as sin/cos way and show result.
 echo ""
 ../src/parmexportcal in=tparmexportcal_tmp.pdb out=tparmexportcal_tmp.pdb2 type=complex | grep -v ": Version " | grep -v "INFO "
 showparms

@@ -1,14 +1,7 @@
 #!/usr/bin/env python
 #coding: iso-8859-15
 import os,sys,time,pg
-from database import *
-
-# get info from database.py
-dbName=getDBname()
-dbHost=getDBhost()
-
-# calling stored procedures only works from the pg module for some reason.
-otdb = pg.connect(user="postgres", host=dbHost, dbname=dbName)
+from optparse import OptionParser
 
 #
 # addIndexedComponent(treeID, keyName, orgTreeID)
@@ -185,13 +178,52 @@ if __name__ == '__main__':
     to a copy of the new master tree.
     """
 
-    # check syntax of invocation
-    # Expected syntax: makeDefaultTemplates componentversion
-    if (len(sys.argv) != 2):
-        print "Syntax: %s <versionnumber of new master components>" % sys.argv[0]
-        sys.exit(1)
-    newVersion = int(sys.argv[1])
+    parser = OptionParser("Usage: %prog [options]" )
+    parser.add_option("-D", "--database",
+                      dest="dbName",
+                      type="string",
+                      default="",
+                      help="Name of OTDB database to use")
+
+    parser.add_option("-H", "--host",
+                      dest="dbHost",
+                      type="string",
+                      default="sasdb",
+                      help="Hostname of OTDB database")
+
+    parser.add_option("-v","--version",
+                      dest="newVersion",
+                      type="int",
+                      default=0,
+                      help="Version number of new master components")
+
+    # parse arguments
+
+    (options, args) = parser.parse_args()
+
+    if not options.dbName:
+        print "Provide the name of OTDB database to use!"
+        print
+        parser.print_help()
+        sys.exit(0)
+
+    if not options.newVersion:
+        print "Provide the Version number of new master components to use!"
+        print
+        parser.print_help()
+        sys.exit(0)
     
+    dbName = options.dbName
+    dbHost = options.dbHost
+    newVersion = options.newVersion
+
+    # get info from database.py
+    #dbName=getDBname()
+    #dbHost=getDBhost()
+
+    # calling stored procedures only works from the pg module for some reason.
+    otdb = pg.connect(user="postgres", host=dbHost, dbname=dbName)
+
     # Check if a component LOFAR of this version exists
     versions = [v[0] for v in otdb.query("select version from getVCnodeList('LOFAR', 0, false)").getresult()]
     versions.sort()
