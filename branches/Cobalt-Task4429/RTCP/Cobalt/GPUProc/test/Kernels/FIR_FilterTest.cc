@@ -35,7 +35,28 @@ using namespace LOFAR::Cobalt;
 
 int main(int argc, char **argv)
 {
-  CUresult cudaStatus;
+
+  char *kernel_name = "FIR_Filter";
+  char *kernel_extention = ".cu";
+  std::stringstream ss;
+  ss << "nvcc " << kernel_name << kernel_extention
+    << " -ptx"
+    << " -DNR_STATIONS=" << NR_STATIONS
+    << " -DNR_TAPS=" << NR_TAPS
+    << " -DNR_SAMPLES_PER_CHANNEL=" << NR_SAMPLES_PER_CHANNEL
+    << " -DNR_CHANNELS=" << NR_CHANNELS
+    << " -DNR_POLARIZATIONS=" << NR_POLARIZATIONS
+    << " -DCOMPLEX=" << COMPLEX
+    << " -DNR_BITS_PER_SAMPLE=" << NR_BITS_PER_SAMPLE;
+  std::string str = ss.str();
+
+  //call system with the compiled string
+  char const *CommandString= str.c_str();
+  int return_value = system(  CommandString);
+  std::cerr << "system call returned with status:"  << return_value << std::endl;
+
+
+    CUresult cudaStatus;
   int cuda_device = 0;
   cudaError_t cuError;
   cudaDeviceProp deviceProp;
@@ -56,24 +77,6 @@ int main(int argc, char **argv)
 
   std::cerr << "> Using CUDA device [" << cuda_device << " : " <<  deviceProp.name << std:: endl;
 
-  char *kernel_name = "FIR_Filter";
-  char *kernel_extention = ".cu";
-  std::stringstream ss;
-  ss << "nvcc " << kernel_name << kernel_extention
-    << " -ptx"
-    << " -DNR_STATIONS=" << NR_STATIONS
-    << " -DNR_TAPS=" << NR_TAPS
-    << " -DNR_SAMPLES_PER_CHANNEL=" << NR_SAMPLES_PER_CHANNEL
-    << " -DNR_CHANNELS=" << NR_CHANNELS
-    << " -DNR_POLARIZATIONS=" << NR_POLARIZATIONS
-    << " -DCOMPLEX=" << COMPLEX
-    << " -DNR_BITS_PER_SAMPLE=" << NR_BITS_PER_SAMPLE;
-  std::string str = ss.str();
-
-  //call system with the compiled string
-  char const *CommandString= str.c_str();
-  int return_value = system(  CommandString);
-  std::cerr << "system call returned with status:"  << return_value << std::endl;
 
   // load the created module
   CUmodule     hModule  = 0;
