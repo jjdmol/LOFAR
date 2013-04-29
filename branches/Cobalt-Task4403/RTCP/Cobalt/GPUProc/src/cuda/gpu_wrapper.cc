@@ -217,7 +217,11 @@ namespace gpu {
 
     void setSharedMemConfig(CUsharedconfig config) const
     {
+#if CUDA_VERSION >= 4020
       checkCuCall(cuCtxSetSharedMemConfig(config));
+#else
+      (void)config;
+#endif
     }
 
   private:
@@ -365,7 +369,11 @@ namespace gpu {
 
   void Function::setSharedMemConfig(CUsharedconfig config) const
   {
+#if CUDA_VERSION >= 4020
     checkCuCall(cuFuncSetSharedMemConfig(_function, config));
+#else
+      (void)config;
+#endif
   }
 
 

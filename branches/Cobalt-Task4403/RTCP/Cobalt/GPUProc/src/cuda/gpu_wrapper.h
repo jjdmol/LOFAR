@@ -41,6 +41,10 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <Common/Exception.h>
 
+#if CUDA_VERSION < 4020
+  typedef int CUsharedconfig;
+#endif
+
 namespace LOFAR {
 namespace Cobalt {
 namespace gpu {
