@@ -48,9 +48,8 @@ set(GPUPROC_SOURCES
   WorkQueues/WorkQueue.cc)
 
 if(USE_CUDA)
-  add_definitions(-DUSE_CUDA)
-
   lofar_add_library(gpuproc ${GPUPROC_SOURCES})
+  set_target_properties(gpuproc PROPERTIES DEFINE_SYMBOL "USE_CUDA")
   lofar_add_bin_program(rtcp rtcp.cc)
   #cuda_add_executable(rtcp rtcp.cc)
   #cuda_add_cufft_to_target(rtcp)
@@ -59,19 +58,14 @@ if(USE_CUDA)
   install(FILES
     rtcp
     DESTINATION bin)
-
-#  remove_definitions(-DUSE_CUDA)
 endif(USE_CUDA)
 
 if(USE_OPENCL)
-  add_definitions(-DUSE_OPENCL)
-
   lofar_add_library(gpuproc_opencl ${GPUPROC_SOURCES})
+  set_target_properties(gpuproc PROPERTIES DEFINE_SYMBOL "USE_OPENCL")
   lofar_add_bin_program(rtcp_opencl rtcp.cc)
 
   install(FILES
     rtcp_opencl
     DESTINATION bin)
-
-  remove_definitions(-DUSE_OPENCL)
 endif(USE_OPENCL)
