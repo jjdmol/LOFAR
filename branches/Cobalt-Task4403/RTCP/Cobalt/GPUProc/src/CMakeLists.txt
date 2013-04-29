@@ -7,7 +7,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
-lofar_add_library(gpuproc
+set(_gpuproc_sources
   #Package__Version.cc
   BandPass.cc
   createProgram.cc
@@ -48,6 +48,14 @@ lofar_add_library(gpuproc
   #WorkQueues/UHEP_WorkQueue.cc
   WorkQueues/WorkQueue.cc)
 
+if(USE_CUDA)
+  list(APPEND _gpuproc_sources cuda/gpu_wrapper.cc)
+endif()
+if(USE_OPENCL)
+  list(APPEND _gpuproc_sources opencl/gpu_wrapper.cc)
+endif()
+
+lofar_add_library(gpuproc ${_gpuproc_sources})
+
 lofar_add_bin_program(rtcp rtcp.cc)
 
-add_subdirectory(cuda)
