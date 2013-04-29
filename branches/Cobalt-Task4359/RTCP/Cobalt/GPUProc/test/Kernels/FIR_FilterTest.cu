@@ -166,7 +166,7 @@ int main(int argc, char **argv)
   }
 
   cudaStatus = cuMemAlloc(&DevSampledData, sizeSampledData * sizeof(SampleType));
-  if (cudaErrorStatus != cudaSuccess) {
+  if (cudaStatus != cudaSuccess) {
     std::cerr << "memory allocation failed: " << cudaStatus << std::endl;
     throw "cudaMalloc failed!";
   }
@@ -252,29 +252,24 @@ int main(int argc, char **argv)
     testOk = false;
   }
   std::cerr << "Weights returned " << (*filteredData)[0][0][0][0][0] << std::endl;
-  //const unsigned nrExpectedZeros = sizeFilteredData - 1;
-  //unsigned nrZeros = 0;
-  //for (unsigned i = 1; i < sizeFilteredData; i++) 
-  //{
-  //  if (rawFilteredData[i] == 0.0f) 
-  //  { 
-  //    nrZeros += 1;
-  //  }
-  //}
-  //if (nrZeros == nrExpectedZeros) 
-  //{
-  //  std::cout << "FIR_FilterTest 1: test OK" << std::endl;
-  //} 
-  //else 
-  //{
-  //  std::cerr << "FIR_FilterTest 1: Unexpected non-zero(s). Only " << nrZeros << " zeros out of " << nrExpectedZeros << std::endl;
-  //  testOk = false;
-  //}
 
-
-  //FIR_FilterTest();
+  const unsigned nrExpectedZeros = sizeFilteredData - 1;
+  unsigned nrZeros = 0;
+  for (unsigned i = 1; i < sizeFilteredData; i++) 
+  {
+    if (rawFilteredData[i] == 0.0f) 
+    { 
+      nrZeros += 1;
+    }
+  }
+  if (nrZeros != nrExpectedZeros) 
+  {
+    std::cerr << "FIR_FilterTest 1: Unexpected non-zero(s). Only " << nrZeros << " zeros out of " << nrExpectedZeros << std::endl;
+    testOk = false;
+  }
+  if ( !testOk)
+    return -1;
 
   return 0;
 }
-
 
