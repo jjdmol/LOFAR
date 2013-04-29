@@ -62,7 +62,7 @@ endif(USE_CUDA)
 
 if(USE_OPENCL)
   lofar_add_library(gpuproc_opencl ${GPUPROC_SOURCES})
-  set_target_properties(gpuproc PROPERTIES DEFINE_SYMBOL "USE_OPENCL")
+  set_target_properties(gpuproc_opencl PROPERTIES DEFINE_SYMBOL "USE_OPENCL")
   lofar_add_bin_program(rtcp_opencl rtcp.cc)
 
   install(FILES
