@@ -108,6 +108,10 @@
     <None Include="..\..\GPUProc\src\UHEP\InvFIR.cl">
       <Filter>UHEP</Filter>
     </None>
+    <None Include="..\..\GPUProc\src\FIR.cu" />
+    <None Include="..\..\GPUProc\src\Kernels\FIR_Filter.cu">
+      <Filter>Kernels</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\GPUProc\src\backward\CL\cl.hpp">
@@ -224,51 +228,6 @@
     <ClInclude Include="..\..\GPUProc\src\UHEP\InvertedStationPPFWeights.h">
       <Filter>UHEP</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\BeamFormerTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\BeamFormerTransposeTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\CoherentStokesTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\CorrelateRectangleTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\CorrelateTriangleTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\CorrelatorTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\DedispersionChirpTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\FFT_Test.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\FIR_FilterTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\IncoherentStokesTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\IntToFloatTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\UHEP_BeamFormerTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\UHEP_TransposeTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\UHEP_TriggerTest.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\UnitTests\AMD_FFT_Test.h">
-      <Filter>UnitTests</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\WorkQueues\BeamFormerWorkQueue.h">
       <Filter>WorkQueues</Filter>
     </ClInclude>
@@ -325,6 +284,51 @@
     </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\Pipeline.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\AMD_FFT_Test.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\BeamFormerTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\BeamFormerTransposeTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\CoherentStokesTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\CorrelateRectangleTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\CorrelateTriangleTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\CorrelatorTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\DedispersionChirpTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\FFT_Test.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\FIR_FilterTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\IncoherentStokesTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\IntToFloatTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\UHEP_BeamFormerTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\UHEP_TransposeTest.h">
+      <Filter>UnitTests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\UHEP_TriggerTest.h">
+      <Filter>UnitTests</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
