@@ -252,7 +252,7 @@ namespace gpu {
   class Stream
   {
   public:
-    Stream(unsigned int flags = CU_STREAM_DEFAULT);
+    Stream(unsigned int flags = 0); // named CU_STREAM_DEFAULT since CUDA 5.0
 
     ~Stream();
 

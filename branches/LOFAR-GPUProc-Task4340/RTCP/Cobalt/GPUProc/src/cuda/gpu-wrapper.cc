@@ -356,7 +356,7 @@ const char *Error::what() const throw()
   class Stream::Impl : boost::noncopyable
   {
   public:
-    Impl(unsigned int flags = CU_STREAM_DEFAULT)
+    Impl(unsigned int flags = 0)
     {
       checkCuCall(cuStreamCreate(&_stream, flags));
     }
