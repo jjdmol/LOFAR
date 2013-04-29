@@ -39,6 +39,7 @@
 #include <cuda.h> // ideally, this goes into the .cc, but too much leakage
 
 #include <GPUProc/gpu_wrapper.h>
+#include <Common/Exception.h>
 
 namespace LOFAR {
 namespace Cobalt {
