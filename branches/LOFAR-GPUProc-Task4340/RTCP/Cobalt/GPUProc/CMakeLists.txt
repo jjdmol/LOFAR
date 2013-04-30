@@ -37,6 +37,9 @@ if(USE_CUDA)
     message(STATUS "CUDA_nvcuvid_LIBRARY = ${CUDA_nvcuvid_LIBRARY}")
   endif()
 
+  if(LOFAR_BUILD_VARIANT MATCHES "^DEBUG$")
+    list(APPEND CUDA_NVCC_FLAGS "-g")
+  endif()
 endif()
 
 if(USE_OPENCL)

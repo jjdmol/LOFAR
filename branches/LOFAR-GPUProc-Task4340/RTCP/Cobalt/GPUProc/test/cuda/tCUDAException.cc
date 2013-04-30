@@ -32,7 +32,7 @@ int main()
     cudaDeviceProp prop;
     CUDA_CALL(cudaGetDeviceCount(&count));
     std::cout << "Found " << count << " CUDA capable device(s)" << std::endl;
-    CUDA_CALL(cudaGetDeviceProperties(&prop, 2));
+    CUDA_CALL(cudaGetDeviceProperties(&prop, count));  // will fail
   } catch (CUDAException& e) {
     std::cerr << e << std::endl;
   }

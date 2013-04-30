@@ -20,7 +20,9 @@ lofar_add_test(tSSH tSSH.cc)
 lofar_add_bin_program(DummyStorage DummyStorage.cc)
 lofar_add_test(tStorageProcesses tStorageProcesses.cc)
 #lofar_add_test(tDelayCompensation tDelayCompensation.cc)
-lofar_add_test(RTCP_UnitTest RTCP_UnitTest.cc UnitTest.cc)
+#lofar_add_test(RTCP_UnitTest RTCP_UnitTest.cc UnitTest.cc)
+
+add_subdirectory(Kernels)
 
 lofar_find_package(UnitTest++)
 if(UNITTEST++_FOUND)
@@ -44,3 +46,4 @@ if(USE_OPENCL)
 
   remove_definitions(-DUSE_OPENCL)
 endif()
+
