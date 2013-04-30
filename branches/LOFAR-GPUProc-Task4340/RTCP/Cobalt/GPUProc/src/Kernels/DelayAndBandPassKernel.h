@@ -24,8 +24,8 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
-#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/gpu-wrapper.h>
+//#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {
@@ -35,9 +35,9 @@ namespace LOFAR
     class DelayAndBandPassKernel : public Kernel
     {
     public:
-      DelayAndBandPassKernel(const Parset &ps, cl::Program &program, cl::Buffer &devCorrectedData, cl::Buffer &devFilteredData, cl::Buffer &devDelaysAtBegin, cl::Buffer &devDelaysAfterEnd, cl::Buffer &devPhaseOffsets, cl::Buffer &devBandPassCorrectionWeights);
+      DelayAndBandPassKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devDelaysAtBegin, gpu::DeviceMemory &devDelaysAfterEnd, gpu::DeviceMemory &devPhaseOffsets, gpu::DeviceMemory &devBandPassCorrectionWeights);
 
-      void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, unsigned subband);
+      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, unsigned subband);
     };
   }
 }

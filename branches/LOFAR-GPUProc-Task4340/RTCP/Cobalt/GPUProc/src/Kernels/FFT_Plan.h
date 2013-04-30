@@ -23,7 +23,7 @@
 
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 #include <GPUProc/OpenCL_Support.h>
 #include <OpenCL_FFT/clFFT.h>
 
@@ -35,7 +35,7 @@ namespace LOFAR
     class FFT_Plan
     {
     public:
-      FFT_Plan(cl::Context &context, unsigned fftSize);
+      FFT_Plan(gpu::Context &context, unsigned fftSize);
       ~FFT_Plan();
       clFFT_Plan plan;
     };

@@ -24,8 +24,8 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
-#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/gpu-wrapper.h>
+//#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {
@@ -35,10 +35,10 @@ namespace LOFAR
     class DedispersionChirpKernel : public Kernel
     {
     public:
-      DedispersionChirpKernel(const Parset &ps, cl::Program &program,
-                              cl::CommandQueue &queue, cl::Buffer &buffer, cl::Buffer &DMs);
+      DedispersionChirpKernel(const Parset &ps, gpu::Module &program,
+                              gpu::Stream &queue, gpu::DeviceMemory &buffer, gpu::DeviceMemory &DMs);
 
-      void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, double subbandFrequency);
+      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, double subbandFrequency);
 
     };
 

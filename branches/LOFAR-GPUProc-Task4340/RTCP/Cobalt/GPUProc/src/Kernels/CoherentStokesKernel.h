@@ -24,7 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
@@ -34,8 +34,8 @@ namespace LOFAR
     class CoherentStokesKernel : public Kernel
     {
     public:
-      CoherentStokesKernel(const Parset &ps, cl::Program &program,
-                           cl::Buffer &devStokesData, cl::Buffer &devComplexVoltages);
+      CoherentStokesKernel(const Parset &ps, gpu::Module &program,
+                           gpu::DeviceMemory &devStokesData, gpu::DeviceMemory &devComplexVoltages);
 
     };
   }

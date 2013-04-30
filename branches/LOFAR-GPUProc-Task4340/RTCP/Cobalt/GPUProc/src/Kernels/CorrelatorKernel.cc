@@ -36,7 +36,7 @@ namespace LOFAR
   namespace Cobalt
   {
 #if !defined USE_NEW_CORRELATOR
-    CorrelatorKernel::CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
+    CorrelatorKernel::CorrelatorKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_4X4
       Kernel(ps, program, "correlate_4x4")
@@ -57,7 +57,7 @@ namespace LOFAR
       std::vector<cl_context_properties> properties;
       queue.getInfo<CL_QUEUE_CONTEXT>().getInfo(CL_CONTEXT_PROPERTIES, &properties);
 
-      if (cl::Platform((cl_platform_id) properties[1]).getInfo<CL_PLATFORM_NAME>() == "AMD Accelerated Parallel Processing")
+      if (gpu::Platform((cl_platform_id) properties[1]).getInfo<CL_PLATFORM_NAME>() == "AMD Accelerated Parallel Processing")
         preferredMultiple = 256;
       else
         getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
@@ -80,8 +80,8 @@ namespace LOFAR
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
-      globalWorkSize = cl::NDRange(nrPasses * nrThreads, nrUsableChannels);
-      localWorkSize = cl::NDRange(nrThreads, 1);
+      globalWorkSize = gpu::dim3(nrPasses * nrThreads, nrUsableChannels);
+      localWorkSize = gpu::dim3(nrThreads, 1);
 
       nrOperations = (size_t) nrUsableChannels * ps.nrBaselines() * ps.nrSamplesPerChannel() * 32;
       nrBytesRead = (size_t) nrPasses * ps.nrStations() * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
@@ -91,7 +91,7 @@ namespace LOFAR
 #else
 
 
-    CorrelatorKernel::CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
+    CorrelatorKernel::CorrelatorKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_2X2
       Kernel(ps, program, "correlate")
@@ -111,8 +111,8 @@ namespace LOFAR
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks);
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
-      globalWorkSize = cl::NDRange(16 * 16, nrBlocks, nrUsableChannels);
-      localWorkSize = cl::NDRange(16 * 16, 1, 1);
+      globalWorkSize = gpu::dim3(16 * 16, nrBlocks, nrUsableChannels);
+      localWorkSize = gpu::dim3(16 * 16, 1, 1);
 
       // FIXME
       //nrOperations   = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
@@ -121,7 +121,7 @@ namespace LOFAR
       nrBytesWritten = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
 
-    CorrelateRectangleKernel::CorrelateRectangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
+    CorrelateRectangleKernel::CorrelateRectangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_2X2
       Kernel(ps, program, "correlateRectangleKernel")
@@ -137,8 +137,8 @@ namespace LOFAR
       LOG_DEBUG_STR("nrRectangles = " << nrRectangles);
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
-      globalWorkSize = cl::NDRange(16 * 16, nrRectangles, nrUsableChannels);
-      localWorkSize = cl::NDRange(16 * 16, 1, 1);
+      globalWorkSize = gpu::dim3(16 * 16, nrRectangles, nrUsableChannels);
+      localWorkSize = gpu::dim3(16 * 16, 1, 1);
 
       nrOperations = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
       nrBytesRead = (size_t) (32 + 32) * nrRectangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
@@ -146,7 +146,7 @@ namespace LOFAR
     }
 
 
-    CorrelateTriangleKernel::CorrelateTriangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
+    CorrelateTriangleKernel::CorrelateTriangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_2X2
       Kernel(ps, program, "correlateTriangleKernel")
@@ -167,8 +167,8 @@ namespace LOFAR
       LOG_DEBUG_STR("nrTriangles = " << nrTriangles << ", nrMiniBlocks = " << nrMiniBlocks << ", nrThreads = " << nrThreads);
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);
-      globalWorkSize = cl::NDRange(nrThreads, nrTriangles, nrUsableChannels);
-      localWorkSize = cl::NDRange(nrThreads, 1, 1);
+      globalWorkSize = gpu::dim3(nrThreads, nrTriangles, nrUsableChannels);
+      localWorkSize = gpu::dim3(nrThreads, 1, 1);
 
       nrOperations = (size_t) (32 * 32 / 2) * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
       nrBytesRead = (size_t) 32 * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);

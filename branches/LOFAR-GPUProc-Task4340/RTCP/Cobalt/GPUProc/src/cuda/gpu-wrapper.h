@@ -141,10 +141,10 @@ namespace gpu {
     HostMemory(size_t size, unsigned int flags = 0);
 
     /*
-     * The returned ptr cannot have a lifetime beyond the lifetime of this
+     * The returned pointer cannot have a lifetime beyond the lifetime of this
      * object (actually the last copy).
      */
-    template <typename T> T *get() const;
+    template <typename T> T * operator()() const;
 
   private:
     class Impl;
@@ -156,6 +156,16 @@ namespace gpu {
   {
   public:
     DeviceMemory(size_t size);
+
+    /*
+     * The returned void pointer cannot have a lifetime beyond the lifetime of this
+     * object (actually the last copy). Do not dereference this device pointer!
+     *
+     * This accessor is needed to launch kernels written externally that do not
+     * work with these classes (e.g. FFT). Even if we can convert that code,
+     * this is useful in the meantime.
+     */
+    void *operator()() const;
 
     friend class Stream; // Stream needs our device ptr (i.e. _impl) to transfer H2D
 

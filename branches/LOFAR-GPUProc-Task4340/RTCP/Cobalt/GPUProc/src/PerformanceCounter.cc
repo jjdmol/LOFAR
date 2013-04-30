@@ -99,7 +99,7 @@ namespace LOFAR
 
       try {
         // extract performance information
-        cl::Event event(ev);
+        gpu::Event event(ev);
 
         size_t queued = event.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
         size_t submitted = event.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>();
@@ -107,7 +107,7 @@ namespace LOFAR
         size_t stop = event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
         double seconds = (stop - start) / 1e9;
 
-        // sanity checks
+        // sanity checks TODO: make sure perf info trouble cannot crash the correlator in production
         ASSERT(seconds >= 0);
         ASSERTSTR(seconds < 15, "Kernel took " << seconds << " seconds to execute: thread " << omp_get_thread_num() << ": " << queued << ' ' << submitted - queued << ' ' << start - queued << ' ' << stop - queued);
 
@@ -135,7 +135,7 @@ namespace LOFAR
     }
 
 
-    void PerformanceCounter::doOperation(cl::Event &event, size_t nrOperations, size_t nrBytesRead, size_t nrBytesWritten)
+    void PerformanceCounter::doOperation(gpu::Event &event, size_t nrOperations, size_t nrBytesRead, size_t nrBytesWritten)
     {
       if (!profiling)
         return;
@@ -143,7 +143,6 @@ namespace LOFAR
       // reference count between C and C++ conversions is seriously broken in C++ wrapper
       cl_event ev = event();
       cl_int error = clRetainEvent(ev);
-
       if (error != CL_SUCCESS)
         throw cl::Error(error, "clRetainEvent");
 

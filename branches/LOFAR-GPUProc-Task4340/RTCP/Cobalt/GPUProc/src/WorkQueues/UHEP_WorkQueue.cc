@@ -58,21 +58,21 @@ namespace LOFAR
       size_t buffer0size = std::max(inputSamplesSize, transposedDataSize);
       size_t buffer1size = std::max(complexVoltagesSize, invFIRfilteredDataSize);
 
-      devBuffers[0] = cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, buffer0size);
-      devBuffers[1] = cl::Buffer(pipeline.context, CL_MEM_READ_WRITE, buffer1size);
+      devBuffers[0] = gpu::DeviceMemory(pipeline.context, CL_MEM_READ_WRITE, buffer0size);
+      devBuffers[1] = gpu::DeviceMemory(pipeline.context, CL_MEM_READ_WRITE, buffer1size);
 
       size_t beamFormerWeightsSize = ps.nrStations() * ps.nrSubbands() * ps.nrTABs(0) * sizeof(std::complex<float>);
-      devBeamFormerWeights = cl::Buffer(pipeline.context, CL_MEM_READ_ONLY, beamFormerWeightsSize);
+      devBeamFormerWeights = gpu::DeviceMemory(pipeline.context, CL_MEM_READ_ONLY, beamFormerWeightsSize);
 
       devInputSamples = devBuffers[0];
       devComplexVoltages = devBuffers[1];
 
-      devReverseSubbandMapping = cl::Buffer(pipeline.context, CL_MEM_READ_ONLY, 512 * sizeof(int));
-      devInvFIRfilterWeights = cl::Buffer(pipeline.context, CL_MEM_READ_ONLY, 1024 * NR_STATION_FILTER_TAPS * sizeof(float));
+      devReverseSubbandMapping = gpu::DeviceMemory(pipeline.context, CL_MEM_READ_ONLY, 512 * sizeof(int));
+      devInvFIRfilterWeights = gpu::DeviceMemory(pipeline.context, CL_MEM_READ_ONLY, 1024 * NR_STATION_FILTER_TAPS * sizeof(float));
       devFFTedData = devBuffers[0];
       devInvFIRfilteredData = devBuffers[1];
 
-      devTriggerInfo = cl::Buffer(pipeline.context, CL_MEM_WRITE_ONLY, ps.nrTABs(0) * sizeof(TriggerInfo));
+      devTriggerInfo = gpu::DeviceMemory(pipeline.context, CL_MEM_WRITE_ONLY, ps.nrTABs(0) * sizeof(TriggerInfo));
     }
 
 

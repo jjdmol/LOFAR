@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <createProgram.h>
+#include <GPUProc/createProgram.h>
 
 #include <sstream>
 #include <iomanip>

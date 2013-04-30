@@ -32,7 +32,7 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    CoherentStokesKernel::CoherentStokesKernel(const Parset &ps, cl::Program &program, cl::Buffer &devStokesData, cl::Buffer &devComplexVoltages)
+    CoherentStokesKernel::CoherentStokesKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devStokesData, gpu::DeviceMemory &devComplexVoltages)
       :
       Kernel(ps, program, "coherentStokes")
     {
@@ -41,8 +41,8 @@ namespace LOFAR
       setArg(0, devStokesData);
       setArg(1, devComplexVoltages);
 
-      globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
-      localWorkSize = cl::NDRange(256, 1, 1);
+      globalWorkSize = gpu::dim3(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
+      localWorkSize = gpu::dim3(256, 1, 1);
 
       nrOperations = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * (ps.nrCoherentStokes() == 1 ? 8 : 20 + 2.0 / ps.coherentStokesTimeIntegrationFactor());
       nrBytesRead = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);

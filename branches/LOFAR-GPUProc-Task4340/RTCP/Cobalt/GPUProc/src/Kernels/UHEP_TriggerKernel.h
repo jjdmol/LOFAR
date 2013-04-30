@@ -24,7 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
@@ -40,8 +40,8 @@ namespace LOFAR
     class UHEP_TriggerKernel : public Kernel
     {
     public:
-      UHEP_TriggerKernel(const Parset &ps, cl::Program &program,
-                         cl::Buffer &devTriggerInfo, cl::Buffer &devInvFIRfilteredData);
+      UHEP_TriggerKernel(const Parset &ps, gpu::Module &program,
+                         gpu::DeviceMemory &devTriggerInfo, gpu::DeviceMemory &devInvFIRfilteredData);
 
     };
 

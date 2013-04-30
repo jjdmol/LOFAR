@@ -47,7 +47,7 @@ namespace LOFAR
     }
 
 
-    cl::Program Pipeline::createProgram(const char *sources)
+    gpu::Module Pipeline::createProgram(const char *sources)
     {
       return LOFAR::Cobalt::createProgram(ps, context, devices, sources);
     }
@@ -56,7 +56,7 @@ namespace LOFAR
     void Pipeline::Performance::addQueue(WorkQueue &queue)
     {
       ScopedLock sl(totalsMutex);
-
+/*
       // add performance counters
       for (map<string, SmartPtr<PerformanceCounter> >::iterator i = queue.counters.begin(); i != queue.counters.end(); ++i) {
 
@@ -67,7 +67,7 @@ namespace LOFAR
 
         total_counters[name] += counter->getTotal();
       }
-
+*/
       // add timers
       for (map<string, SmartPtr<NSTimer> >::iterator i = queue.timers.begin(); i != queue.timers.end(); ++i) {
 
@@ -83,7 +83,7 @@ namespace LOFAR
     
     void Pipeline::Performance::log(size_t nrWorkQueues)
     {
-      // Group figures based on their prefix before " - ", so "compute - FIR"
+ /*     // Group figures based on their prefix before " - ", so "compute - FIR"
       // belongs to group "compute".
       map<string, PerformanceCounter::figures> counter_groups;
 
@@ -114,7 +114,7 @@ namespace LOFAR
       for (map<string, PerformanceCounter::figures>::const_iterator i = counter_groups.begin(); i != counter_groups.end(); ++i) {
         LOG_INFO_STR(i->second.log(i->first));
       }
-
+*/
       // Log specific performance figures for regression tests at INFO level
       double wall_seconds = total_timers["CPU - total"]->getAverage();
       double gpu_seconds = counter_groups["compute"].runtime / nrGPUs;

@@ -33,7 +33,7 @@ namespace LOFAR
     {
     }
 
-    void Kernel::enqueue(gpu::Stream &stream/*, PerformanceCounter &counter*/)
+    void Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
     {
       // AMD APP (OpenCL) complains if we submit 0-sized work
       if (globalWorkSize.x == 0)
@@ -44,8 +44,8 @@ namespace LOFAR
       globalWorkSize.y /= localWorkSize.y;
       globalWorkSize.z /= localWorkSize.z;
       const unsigned dynSharedMemBytes = 0; // our kernels do not use dyn shmem
-      //stream.enqueueNDRangeKernel(*this, gpu::nullDim, globalWorkSize, localWorkSize, 0, &event);
-      stream.launchKernel(*this, globalWorkSize, localWorkSize, dynSharedMemBytes);
+      //queue.enqueueNDRangeKernel(*this, gpu::nullDim, globalWorkSize, localWorkSize, 0, &event);
+      queue.launchKernel(*this, globalWorkSize, localWorkSize, dynSharedMemBytes);
 //      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
 

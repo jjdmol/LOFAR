@@ -3,23 +3,24 @@ $Id$
 GPUProc OpenCL/CUDA Type Correspondence
 =======================================
 
-OpenCL (cl.hpp)   CUDA (cuwrapper.h)  GPUProc ([cuda|opencl]/gpuwrapper.cc)
-------------------------------------------------------------------------------
-cl::Context       cu::Context         gpu::Context
-cl::Program       cu::Module          gpu::Module
-cl::Kernel        cu::Function        gpu::Function
-cl::Buffer        cu::HostMemory      gpu::HostMemory (MultiArraySharedBuffer)
-(idem)            cu::DeviceMemory    gpu::DeviceMemory (idem)
-cl::Error         cu::CUDAException   gpu::GPUException
-cl::Device        cu::Device          gpu::Device
-cl::Event         cu::Event           gpu::Event
-cl::CommandQueue  cu::Stream          gpu::Stream
-cl::NDRange       dim3 (uint x, y, z) gpu::dim3
-cl::Platform      cu::Platform        gpu::Platform
-------------------------------------------------------------------------------
+OpenCL (cl.hpp)   CUDA (cuda.h)  GPUProc ({cuda|opencl}/gpu-wrapper.h)
+-------------------------------------------------------------------------
+cl::Context       CUcontext      gpu::Context
+cl::Program       CUmodule       gpu::Module
+cl::Kernel        CUfunction     gpu::Function
+cl::Buffer        void*          gpu::HostMemory (MultiArraySharedBuffer)
+(idem)            CUdeviceptr    gpu::DeviceMemory (idem)
+cl::Error         CUresult       gpu::Error
+(idem)            cudaError_t    gpu::GPUException
+cl::Device        CUdevice       gpu::Device
+cl::Event         CUevent        gpu::Event
+cl::CommandQueue  CUstream       gpu::Stream
+cl::NDRange       uint x, y, z   gpu::dim3
+cl::Platform      (none)         gpu::Platform
+-------------------------------------------------------------------------
 
 For the GPUProc types, we use the CUDA names as much as possible.
 
-To match the ref counting OpenCL types, all cu:: types are a boost::shard_ptr
-around Impl classes.
+To match the ref counting OpenCL types, all resource managing (meaningful
+destructor) CUDA types have a boost::shared_ptr around Impl classes.
 

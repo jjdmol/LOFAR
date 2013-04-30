@@ -32,7 +32,7 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    BeamFormerTransposeKernel::BeamFormerTransposeKernel(const Parset &ps, cl::Program &program, cl::Buffer &devTransposedData, cl::Buffer &devComplexVoltages)
+    BeamFormerTransposeKernel::BeamFormerTransposeKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devTransposedData, gpu::DeviceMemory &devComplexVoltages)
       :
       Kernel(ps, program, "transposeComplexVoltages")
     {
@@ -40,9 +40,9 @@ namespace LOFAR
       setArg(0, devTransposedData);
       setArg(1, devComplexVoltages);
 
-      //globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
-      globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, ps.nrSamplesPerChannel() / 16);
-      localWorkSize = cl::NDRange(256, 1, 1);
+      //globalWorkSize = gpu::dim3(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
+      globalWorkSize = gpu::dim3(256, (ps.nrTABs(0) + 15) / 16, ps.nrSamplesPerChannel() / 16);
+      localWorkSize = gpu::dim3(256, 1, 1);
 
       nrOperations = 0;
       nrBytesRead = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>),

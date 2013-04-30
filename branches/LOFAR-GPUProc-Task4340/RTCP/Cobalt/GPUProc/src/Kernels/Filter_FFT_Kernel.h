@@ -24,7 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include "FFT_Kernel.h"
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
@@ -33,8 +33,8 @@ namespace LOFAR
     class Filter_FFT_Kernel : public FFT_Kernel
     {
     public:
-      Filter_FFT_Kernel(const Parset &ps, cl::Context &context,
-                        cl::Buffer &devFilteredData);
+      Filter_FFT_Kernel(const Parset &ps, gpu::Context &context,
+                        gpu::DeviceMemory &devFilteredData);
 
     };
 

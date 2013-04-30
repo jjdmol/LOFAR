@@ -21,7 +21,7 @@
 #ifndef LOFAR_GPUPROC_CORRELATOR_PIPELINE_PROGRAMS_H
 #define LOFAR_GPUPROC_CORRELATOR_PIPELINE_PROGRAMS_H
 
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
@@ -29,10 +29,10 @@ namespace LOFAR
   {
     struct CorrelatorPipelinePrograms
     {
-      cl::Program firFilterProgram;
-      //cl::Program fftProgram; // fft kernel apparently does not need a program...
-      cl::Program delayAndBandPassProgram;
-      cl::Program correlatorProgram;
+      gpu::Function firFilterProgram;
+      //gpu::Function fftProgram; // fft kernel apparently does not need a program...
+      gpu::Function delayAndBandPassProgram;
+      gpu::Function correlatorProgram;
     };
   }
 }

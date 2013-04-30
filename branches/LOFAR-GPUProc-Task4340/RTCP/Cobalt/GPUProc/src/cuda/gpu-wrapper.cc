@@ -225,7 +225,7 @@ const char *Error::what() const throw()
       checkCuCall(cuMemFreeHost(_ptr));
     }
 
-    template <typename T> T *get() const
+    template <typename T> T *operator()() const
     {
       return static_cast<T *>(_ptr);
     }
@@ -237,10 +237,9 @@ const char *Error::what() const throw()
   HostMemory::HostMemory(size_t size, unsigned int flags)
     : _impl(new Impl(size, flags)) { }
 
-  template <typename T>
-  T *HostMemory::get() const
+  template <typename T> T *HostMemory::operator()() const
   {
-    return _impl->get<T>();
+    return _impl->operator()<T>();
   }
 
 
@@ -257,12 +256,22 @@ const char *Error::what() const throw()
       checkCuCall(cuMemFree(_ptr));
     }
 
+    void *operator()() const
+    {
+      return (void *)_ptr;
+    }
+
   //private: // Stream needs it to do transfers
     CUdeviceptr _ptr;
   };
 
   DeviceMemory::DeviceMemory(size_t size)
     : _impl(new Impl(size)) { }
+
+  void *DeviceMemory::operator()() const
+  {
+    return (*_impl)();
+  }
 
 
   class Module::Impl : boost::noncopyable
@@ -429,13 +438,13 @@ const char *Error::what() const throw()
   void Stream::memcpyHtoDAsync(DeviceMemory &devMem, const HostMemory &hostMem,
                                size_t size)
   {
-    _impl->memcpyHtoDAsync(devMem._impl->_ptr, hostMem.get<void*>(), size);
+    _impl->memcpyHtoDAsync(devMem._impl->_ptr, hostMem.operator()<void*>(), size);
   }
 
   void Stream::memcpyDtoHAsync(HostMemory &hostMem, const DeviceMemory &devMem,
                                size_t size)
   {
-    _impl->memcpyDtoHAsync(hostMem.get<void*>(), devMem._impl->_ptr, size);
+    _impl->memcpyDtoHAsync(hostMem.operator()<void*>(), devMem._impl->_ptr, size);
   }
 
   void Stream::launchKernel(Function &function, dim3 gridDim, dim3 blockDim,

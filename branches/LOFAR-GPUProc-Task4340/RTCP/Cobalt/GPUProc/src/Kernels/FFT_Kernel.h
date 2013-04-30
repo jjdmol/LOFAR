@@ -23,8 +23,8 @@
 
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/opencl-incl.h>
-#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/gpu-wrapper.h>
+//#include <GPUProc/PerformanceCounter.h>
 #include "FFT_Plan.h"
 
 namespace LOFAR
@@ -34,21 +34,21 @@ namespace LOFAR
     class FFT_Kernel
     {
     public:
-      FFT_Kernel(cl::Context &context, unsigned fftSize,
-                 unsigned nrFFTs, bool forward, cl::Buffer &buffer);
-      void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter);
+      FFT_Kernel(gpu::Context &context, unsigned fftSize,
+                 unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer);
+      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
 
 
     private:
       unsigned nrFFTs, fftSize;
 #if defined USE_CUSTOM_FFT
-      cl::Kernel kernel;
+      gpu::Function kernel;
 #else
       clFFT_Direction direction;
       FFT_Plan plan;
-      cl::Buffer   &buffer;
+      gpu::DeviceMemory &buffer;
 #endif
-      cl::Event event;
+      gpu::Event event;
     };
   }
 }

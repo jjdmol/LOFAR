@@ -24,7 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
@@ -33,9 +33,9 @@ namespace LOFAR
     class FIR_FilterKernel : public Kernel
     {
     public:
-      FIR_FilterKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                       cl::Buffer &devFilteredData, cl::Buffer &devInputSamples,
-                       cl::Buffer &devFIRweights);
+      FIR_FilterKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
+                       gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devInputSamples,
+                       gpu::DeviceMemory &devFIRweights);
     };
   }
 }

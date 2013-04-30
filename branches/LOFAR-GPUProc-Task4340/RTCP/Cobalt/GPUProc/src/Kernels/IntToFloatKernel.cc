@@ -30,7 +30,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    IntToFloatKernel::IntToFloatKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devFilteredData, cl::Buffer &devInputSamples)
+    IntToFloatKernel::IntToFloatKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devInputSamples)
       :
       Kernel(ps, program, "intToFloat")
     {
@@ -39,8 +39,8 @@ namespace LOFAR
 
       size_t maxNrThreads;
       getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
-      globalWorkSize = cl::NDRange(maxNrThreads, ps.nrStations());
-      localWorkSize = cl::NDRange(maxNrThreads, 1);
+      globalWorkSize = gpu::dim3(maxNrThreads, ps.nrStations());
+      localWorkSize = gpu::dim3(maxNrThreads, 1);
 
       size_t nrSamples = ps.nrStations() * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS;
       nrOperations = nrSamples * 2;

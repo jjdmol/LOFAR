@@ -24,7 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
@@ -33,8 +33,8 @@ namespace LOFAR
     class BeamFormerKernel : public Kernel
     {
     public:
-      BeamFormerKernel(const Parset &ps, cl::Program &program, cl::Buffer &devComplexVoltages,
-                       cl::Buffer &devCorrectedData, cl::Buffer &devBeamFormerWeights);
+      BeamFormerKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devComplexVoltages,
+                       gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devBeamFormerWeights);
     };
 
 

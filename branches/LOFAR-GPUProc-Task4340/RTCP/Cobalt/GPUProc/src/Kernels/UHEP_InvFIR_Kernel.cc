@@ -28,9 +28,9 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    UHEP_InvFIR_Kernel::UHEP_InvFIR_Kernel(const Parset &ps, cl::CommandQueue &queue,
-                                           cl::Program &program, cl::Buffer &devInvFIRfilteredData, cl::Buffer &devFFTedData,
-                                           cl::Buffer &devInvFIRfilterWeights)
+    UHEP_InvFIR_Kernel::UHEP_InvFIR_Kernel(const Parset &ps, gpu::Stream &queue,
+                                           gpu::Module &program, gpu::DeviceMemory &devInvFIRfilteredData, gpu::DeviceMemory &devFFTedData,
+                                           gpu::DeviceMemory &devInvFIRfilterWeights)
       :
       Kernel(ps, program, "invFIRfilter")
     {
@@ -44,8 +44,8 @@ namespace LOFAR
       for (nrThreads = 1024; nrThreads > maxNrThreads; nrThreads /= 2)
         ;
 
-      globalWorkSize = cl::NDRange(1024, NR_POLARIZATIONS, ps.nrTABs(0));
-      localWorkSize = cl::NDRange(nrThreads, 1, 1);
+      globalWorkSize = gpu::dim3(1024, NR_POLARIZATIONS, ps.nrTABs(0));
+      localWorkSize = gpu::dim3(nrThreads, 1, 1);
 
       size_t count = ps.nrTABs(0) * NR_POLARIZATIONS * 1024;
       nrOperations = count * ps.nrSamplesPerChannel() * NR_STATION_FILTER_TAPS * 2;

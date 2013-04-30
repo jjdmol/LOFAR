@@ -28,7 +28,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    Filter_FFT_Kernel::Filter_FFT_Kernel(const Parset &ps, cl::Context &context, cl::Buffer &devFilteredData)
+    Filter_FFT_Kernel::Filter_FFT_Kernel(const Parset &ps, gpu::Context &context, gpu::DeviceMemory &devFilteredData)
       :
       FFT_Kernel(context, ps.nrChannelsPerSubband(), ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel(), true, devFilteredData)
     {

@@ -30,8 +30,8 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    IncoherentStokesKernel::IncoherentStokesKernel(const Parset &ps, cl::CommandQueue &queue,
-                                                   cl::Program &program, cl::Buffer &devIncoherentStokes, cl::Buffer &devInputSamples)
+    IncoherentStokesKernel::IncoherentStokesKernel(const Parset &ps, gpu::Stream &queue,
+                                                   gpu::Module &program, gpu::DeviceMemory &devIncoherentStokes, gpu::DeviceMemory &devInputSamples)
       :
       Kernel(ps, program, "incoherentStokes")
     {
@@ -43,8 +43,8 @@ namespace LOFAR
       getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
       unsigned nrPasses = (nrTimes + maxNrThreads - 1) / maxNrThreads;
       unsigned nrTimesPerPass = (nrTimes + nrPasses - 1) / nrPasses;
-      globalWorkSize = cl::NDRange(nrTimesPerPass * nrPasses, ps.nrChannelsPerSubband());
-      localWorkSize = cl::NDRange(nrTimesPerPass, 1);
+      globalWorkSize = gpu::dim3(nrTimesPerPass * nrPasses, ps.nrChannelsPerSubband());
+      localWorkSize = gpu::dim3(nrTimesPerPass, 1);
 
       nrOperations = ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrStations() * (ps.nrIncoherentStokes() == 1 ? 8 : 20 + 2.0 / ps.incoherentStokesTimeIntegrationFactor());
       nrBytesRead = (size_t) ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);

@@ -25,7 +25,7 @@
 
 #include <GPUProc/Kernel.h>
 #include <GPUProc/global_defines.h>
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
@@ -36,8 +36,8 @@ namespace LOFAR
     class CorrelatorKernel : public Kernel
     {
     public:
-      CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue,
-                       cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
+      CorrelatorKernel(const Parset &ps, gpu::Stream &queue,
+                       gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
     };
 
 #else
@@ -45,23 +45,23 @@ namespace LOFAR
     class CorrelatorKernel : public Kernel
     {
     public:
-      CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                       cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
+      CorrelatorKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
+                       gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
 
     };
 
     class CorrelateRectangleKernel : public Kernel
     {
     public:
-      CorrelateRectangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                               cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
+      CorrelateRectangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
+                               gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
     };
 
     class CorrelateTriangleKernel : public Kernel
     {
     public:
-      CorrelateTriangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                              cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData);
+      CorrelateTriangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
+                              gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
     };
 
 #endif

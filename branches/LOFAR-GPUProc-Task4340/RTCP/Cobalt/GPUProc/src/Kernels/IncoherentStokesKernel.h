@@ -24,7 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
@@ -34,8 +34,8 @@ namespace LOFAR
     class IncoherentStokesKernel : public Kernel
     {
     public:
-      IncoherentStokesKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                             cl::Buffer &devIncoherentStokes, cl::Buffer &devInputSamples);
+      IncoherentStokesKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
+                             gpu::DeviceMemory &devIncoherentStokes, gpu::DeviceMemory &devInputSamples);
     };
 
   }

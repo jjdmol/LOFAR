@@ -49,8 +49,8 @@ namespace LOFAR
      * [output] <-
      */
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset       &parset,
-      cl::Context &context, 
-      cl::Device  &device,
+      gpu::Context &context, 
+      gpu::Device  &device,
       unsigned gpuNumber,
                                              CorrelatorPipelinePrograms & programs,
                                              FilterBank &filterBank

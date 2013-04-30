@@ -26,16 +26,15 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    FFT_Plan::FFT_Plan(cl::Context &context, unsigned fftSize)
+    FFT_Plan::FFT_Plan(gpu::Context &context, unsigned fftSize)
     {
       clFFT_Dim3 dim = { fftSize, 1, 1 };
       cl_int error;
       plan = clFFT_CreatePlan(context(), dim, clFFT_1D, clFFT_InterleavedComplexFormat, &error);
-
       if (error != CL_SUCCESS)
-        throw cl::Error(error, "clFFT_CreatePlan");
+        throw gpu::Error(error, "clFFT_CreatePlan");
 
-      //clFFT_DumpPlan(plan, stdout);
+      //clFFT_DumpPlan(plan, stdout); // TODO: investigate what this is. Needed?
     }
 
     FFT_Plan::~FFT_Plan()

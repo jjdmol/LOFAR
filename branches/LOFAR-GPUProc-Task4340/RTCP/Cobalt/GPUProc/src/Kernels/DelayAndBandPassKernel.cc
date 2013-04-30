@@ -31,10 +31,10 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    DelayAndBandPassKernel::DelayAndBandPassKernel(const Parset &ps, cl::Program &program,
-                                                   cl::Buffer &devCorrectedData, cl::Buffer &devFilteredData,
-                                                   cl::Buffer &devDelaysAtBegin, cl::Buffer &devDelaysAfterEnd,
-                                                   cl::Buffer &devPhaseOffsets, cl::Buffer &devBandPassCorrectionWeights)
+    DelayAndBandPassKernel::DelayAndBandPassKernel(const Parset &ps, gpu::Module &program,
+                                                   gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devFilteredData,
+                                                   gpu::DeviceMemory &devDelaysAtBegin, gpu::DeviceMemory &devDelaysAfterEnd,
+                                                   gpu::DeviceMemory &devPhaseOffsets, gpu::DeviceMemory &devBandPassCorrectionWeights)
       :
       Kernel(ps, program, "applyDelaysAndCorrectBandPass")
     {
@@ -48,19 +48,20 @@ namespace LOFAR
       setArg(6, devPhaseOffsets);
       setArg(7, devBandPassCorrectionWeights);
 
-      globalWorkSize = cl::NDRange(256, ps.nrChannelsPerSubband() == 1 ? 1 : ps.nrChannelsPerSubband() / 16, ps.nrStations());
-      localWorkSize = cl::NDRange(256, 1, 1);
+      globalWorkSize = gpu::dim3(256, ps.nrChannelsPerSubband() == 1 ? 1 : ps.nrChannelsPerSubband() / 16, ps.nrStations());
+      localWorkSize = gpu::dim3(256, 1, 1);
 
       size_t nrSamples = ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
       nrOperations = nrSamples * 12;
       nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
     }
 
-    void DelayAndBandPassKernel::enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, unsigned subband)
+    void DelayAndBandPassKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, unsigned subband)
     {
       setArg(2, (float) ps.subbandToFrequencyMapping()[subband]);
-      setArg(3, 0);       // beam
-      Kernel::enqueue(queue, counter);
+      const unsigned beam = 0; // TODO: allow other beams
+      setArg(3, beam);
+      Kernel::enqueue(queue/*, counter*/);
     }
 
 

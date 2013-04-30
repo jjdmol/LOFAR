@@ -44,22 +44,22 @@ namespace LOFAR
       void doWork(const float *delaysAtBegin, const float *delaysAfterEnd, const float *phaseOffsets);
 
       UHEP_Pipeline       &pipeline;
-      cl::Event inputSamplesEvent, beamFormerWeightsEvent;
+      gpu::Event inputSamplesEvent, beamFormerWeightsEvent;
 
-      cl::Buffer devBuffers[2];
-      cl::Buffer devInputSamples;
+      gpu::DeviceMemory devBuffers[2];
+      gpu::DeviceMemory devInputSamples;
       MultiArrayHostBuffer<char, 5> hostInputSamples;
 
-      cl::Buffer devBeamFormerWeights;
+      gpu::DeviceMemory devBeamFormerWeights;
       MultiArrayHostBuffer<std::complex<float>, 3> hostBeamFormerWeights;
 
-      cl::Buffer devComplexVoltages;
-      cl::Buffer devReverseSubbandMapping;
-      cl::Buffer devFFTedData;
-      cl::Buffer devInvFIRfilteredData;
-      cl::Buffer devInvFIRfilterWeights;
+      gpu::DeviceMemory devComplexVoltages;
+      gpu::DeviceMemory devReverseSubbandMapping;
+      gpu::DeviceMemory devFFTedData;
+      gpu::DeviceMemory devInvFIRfilteredData;
+      gpu::DeviceMemory devInvFIRfilterWeights;
 
-      cl::Buffer devTriggerInfo;
+      gpu::DeviceMemory devTriggerInfo;
       MultiArraySharedBuffer<TriggerInfo, 1> hostTriggerInfo;
     };
   }

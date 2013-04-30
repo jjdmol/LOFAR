@@ -13,36 +13,36 @@ set(GPUPROC_SOURCES
   FilterBank.cc
   global_defines.cc
   Kernel.cc
-  Kernels/BeamFormerKernel.cc
-  Kernels/BeamFormerTransposeKernel.cc
-  Kernels/CoherentStokesKernel.cc
+  #Kernels/BeamFormerKernel.cc
+  #Kernels/BeamFormerTransposeKernel.cc
+  #Kernels/CoherentStokesKernel.cc
   Kernels/CorrelatorKernel.cc
-  Kernels/DedispersionBackwardFFTkernel.cc
-  Kernels/DedispersionChirpKernel.cc
-  Kernels/DedispersionForwardFFTkernel.cc
+  #Kernels/DedispersionBackwardFFTkernel.cc
+  #Kernels/DedispersionChirpKernel.cc
+  #Kernels/DedispersionForwardFFTkernel.cc
   Kernels/DelayAndBandPassKernel.cc
   Kernels/FFT_Kernel.cc
   Kernels/FFT_Plan.cc
   Kernels/Filter_FFT_Kernel.cc
   Kernels/FIR_FilterKernel.cc
-  Kernels/IncoherentStokesKernel.cc
-  Kernels/IntToFloatKernel.cc
+  #Kernels/IncoherentStokesKernel.cc
+  #Kernels/IntToFloatKernel.cc
   #Kernels/UHEP_BeamFormerKernel.cc
   #Kernels/UHEP_InvFFT_Kernel.cc
   #Kernels/UHEP_InvFIR_Kernel.cc
   #Kernels/UHEP_TransposeKernel.cc
   #Kernels/UHEP_TriggerKernel.cc
   OpenCL_Support.cc
-  PerformanceCounter.cc
+#  PerformanceCounter.cc
   Pipeline.cc
-  Pipelines/BeamFormerPipeline.cc
+  #Pipelines/BeamFormerPipeline.cc
   Pipelines/CorrelatorPipeline.cc
   #Pipelines/UHEP_Pipeline.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
   #UHEP/InvertedStationPPFWeights.cc
-  WorkQueues/BeamFormerWorkQueue.cc
+  #WorkQueues/BeamFormerWorkQueue.cc
   WorkQueues/CorrelatorWorkQueue.cc
   #WorkQueues/UHEP_WorkQueue.cc
   WorkQueues/WorkQueue.cc)

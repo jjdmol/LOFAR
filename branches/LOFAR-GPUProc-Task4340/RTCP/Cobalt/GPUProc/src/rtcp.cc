@@ -57,7 +57,7 @@
 #include "OpenMP_Support.h"
 #include "OpenCL_Support.h"
 #include "Pipelines/CorrelatorPipeline.h"
-#include "Pipelines/BeamFormerPipeline.h"
+//#include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 
@@ -404,7 +404,7 @@ int main(int argc, char **argv)
 
     case beam:
       LOG_INFO_STR("BeamFormer pipeline selected");
-      BeamFormerPipeline(ps).doWork();
+      //BeamFormerPipeline(ps).doWork();
       break;
 
     case UHEP:

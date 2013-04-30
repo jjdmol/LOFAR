@@ -32,7 +32,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    BeamFormerKernel::BeamFormerKernel(const Parset &ps, cl::Program &program, cl::Buffer &devComplexVoltages, cl::Buffer &devCorrectedData, cl::Buffer &devBeamFormerWeights)
+    BeamFormerKernel::BeamFormerKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devComplexVoltages, gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devBeamFormerWeights)
       :
       Kernel(ps, program, "complexVoltages")
     {
@@ -40,11 +40,12 @@ namespace LOFAR
       setArg(1, devCorrectedData);
       setArg(2, devBeamFormerWeights);
 
-      globalWorkSize = cl::NDRange(NR_POLARIZATIONS, ps.nrTABs(0), ps.nrChannelsPerSubband());
-      localWorkSize = cl::NDRange(NR_POLARIZATIONS, ps.nrTABs(0), 1);
+      globalWorkSize = gpu::dim3(NR_POLARIZATIONS, ps.nrTABs(0), ps.nrChannelsPerSubband());
+      localWorkSize = gpu::dim3(NR_POLARIZATIONS, ps.nrTABs(0), 1);
 
       // FIXME: nrTABs
-      //queue.enqueueNDRangeKernel(*this, cl::NullRange, cl::NDRange(16, ps.nrTABs(0), ps.nrChannelsPerSubband()), cl::NDRange(16, ps.nrTABs(0), 1), 0, &event);
+      //queue.enqueueNDRangeKernel(*this, cl::NullRange, gpu::dim3(16, ps.nrTABs(0), ps.nrChannelsPerSubband()), gpu::dim3(16, ps.nrTABs(0), 1), 0, &event);
+      //queue.launchKernel(*this, gpu::dim3(16, ps.nrTABs(0), ps.nrChannelsPerSubband()), gpu::dim3(16, ps.nrTABs(0), 0); // TODO: extend/use Kernel::enqueue(). This will also correct the CUDA vs OpenCL interpret of gridSize (when fixed/enabled).
 
       size_t count = ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
       size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(0) * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * sizeof(std::complex<float>);

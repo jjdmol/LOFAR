@@ -30,7 +30,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    UHEP_TransposeKernel::UHEP_TransposeKernel(const Parset &ps, cl::Program &program, cl::Buffer &devFFTedData, cl::Buffer &devComplexVoltages, cl::Buffer &devReverseSubbandMapping)
+    UHEP_TransposeKernel::UHEP_TransposeKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devFFTedData, gpu::DeviceMemory &devComplexVoltages, gpu::DeviceMemory &devReverseSubbandMapping)
       :
       Kernel(ps, program, "UHEP_Transpose")
     {
@@ -38,8 +38,8 @@ namespace LOFAR
       setArg(1, devComplexVoltages);
       setArg(2, devReverseSubbandMapping);
 
-      globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, 512 / 16);
-      localWorkSize = cl::NDRange(256, 1, 1);
+      globalWorkSize = gpu::dim3(256, (ps.nrTABs(0) + 15) / 16, 512 / 16);
+      localWorkSize = gpu::dim3(256, 1, 1);
 
       nrOperations = 0;
       nrBytesRead = (size_t) ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);

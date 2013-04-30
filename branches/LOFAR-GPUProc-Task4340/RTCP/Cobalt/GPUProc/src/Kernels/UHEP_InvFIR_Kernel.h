@@ -24,7 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
@@ -33,9 +33,9 @@ namespace LOFAR
     class UHEP_InvFIR_Kernel : public Kernel
     {
     public:
-      UHEP_InvFIR_Kernel(const Parset &ps, cl::CommandQueue &queue,
-                         cl::Program &program, cl::Buffer &devInvFIRfilteredData,
-                         cl::Buffer &devFFTedData, cl::Buffer &devInvFIRfilterWeights);
+      UHEP_InvFIR_Kernel(const Parset &ps, gpu::Stream &queue,
+                         gpu::Module &program, gpu::DeviceMemory &devInvFIRfilteredData,
+                         gpu::DeviceMemory &devFFTedData, gpu::DeviceMemory &devInvFIRfilterWeights);
     };
 
   }

@@ -33,7 +33,7 @@
 #include "OpenMP_Support.h"
 #include "gpu-wrapper.h"
 #include "WorkQueues/WorkQueue.h"
-#include "PerformanceCounter.h"
+//#include "PerformanceCounter.h"
 
 namespace LOFAR
 {
@@ -44,11 +44,11 @@ namespace LOFAR
     public:
       Pipeline(const Parset &);
 
-      cl::Program             createProgram(const char *sources);
+      gpu::Module              createProgram(const char *sources);
 
-      const Parset            &ps;
-      cl::Context context;
-      std::vector<cl::Device> devices;
+      const Parset             &ps;
+      gpu::Context             context;
+      std::vector<gpu::Device> devices;
 
 #if defined USE_B7015
       OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
@@ -61,12 +61,12 @@ namespace LOFAR
     protected:
       // combines all functionality needed for getting the total from a set of counters
       struct Performance {
-        std::map<std::string, PerformanceCounter::figures> total_counters;
-        std::map<std::string, SmartPtr<NSTimer> > total_timers;
+//        std::map<std::string, PerformanceCounter::figures> total_counters;
+//        std::map<std::string, SmartPtr<NSTimer> > total_timers;
         // lock on the shared data
-        Mutex totalsMutex;
+//        Mutex totalsMutex;
         // add the counter in this queue
-        void addQueue(WorkQueue &queue);
+//        void addQueue(WorkQueue &queue);
         // Print a logline with results
         void log(size_t nrWorkQueues);
       } performance;

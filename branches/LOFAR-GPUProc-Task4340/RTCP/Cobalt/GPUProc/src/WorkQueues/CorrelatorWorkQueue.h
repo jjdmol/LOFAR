@@ -144,7 +144,7 @@ namespace LOFAR
 
         DeviceBuffers(size_t n_beams, size_t n_stations, size_t n_polarizations,
                          size_t n_samples, size_t bytes_per_complex_sample,
-                         cl::CommandQueue &queue,
+                         gpu::Stream &queue,
                          size_t inputSamplesMinSize = 0,
                          cl_mem_flags deviceBufferFlags = CL_MEM_READ_ONLY)
         :
@@ -230,8 +230,8 @@ namespace LOFAR
       };
 
     public:
-      CorrelatorWorkQueue(const Parset &parset,cl::Context &context,
-                          cl::Device &device, unsigned queueNumber,
+      CorrelatorWorkQueue(const Parset &parset,gpu::Context &context,
+                          gpu::Device &device, unsigned queueNumber,
                           CorrelatorPipelinePrograms &programs,
                           FilterBank &filterBank);
 

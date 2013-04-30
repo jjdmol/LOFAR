@@ -30,15 +30,15 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    UHEP_InvFFT_Kernel::UHEP_InvFFT_Kernel(const Parset &ps, cl::Program &program, cl::Buffer &devFFTedData)
+    UHEP_InvFFT_Kernel::UHEP_InvFFT_Kernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devFFTedData)
       :
       Kernel(ps, program, "inv_fft")
     {
       setArg(0, devFFTedData);
       setArg(1, devFFTedData);
 
-      globalWorkSize = cl::NDRange(128, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel());
-      localWorkSize = cl::NDRange(128, 1);
+      globalWorkSize = gpu::dim3(128, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel());
+      localWorkSize = gpu::dim3(128, 1);
 
       size_t nrFFTs = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1);
       nrOperations = nrFFTs * 5 * 1024 * 10;

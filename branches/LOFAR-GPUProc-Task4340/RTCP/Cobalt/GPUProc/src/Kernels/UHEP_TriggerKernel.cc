@@ -28,15 +28,15 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    UHEP_TriggerKernel::UHEP_TriggerKernel(const Parset &ps, cl::Program &program, cl::Buffer &devTriggerInfo, cl::Buffer &devInvFIRfilteredData)
+    UHEP_TriggerKernel::UHEP_TriggerKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devTriggerInfo, gpu::DeviceMemory &devInvFIRfilteredData)
       :
       Kernel(ps, program, "trigger")
     {
       setArg(0, devTriggerInfo);
       setArg(1, devInvFIRfilteredData);
 
-      globalWorkSize = cl::NDRange(16, 16, ps.nrTABs(0));
-      localWorkSize = cl::NDRange(16, 16, 1);
+      globalWorkSize = gpu::dim3(16, 16, ps.nrTABs(0));
+      localWorkSize = gpu::dim3(16, 16, 1);
 
       nrOperations = (size_t) ps.nrTABs(0) * ps.nrSamplesPerChannel() * 1024 * (3 /* power */ + 2 /* window */ + 1 /* max */ + 7 /* mean/variance */);
       nrBytesRead = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * 1024 * sizeof(float);

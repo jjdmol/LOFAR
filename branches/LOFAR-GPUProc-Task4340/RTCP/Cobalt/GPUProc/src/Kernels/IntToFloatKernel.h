@@ -24,7 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
@@ -33,8 +33,8 @@ namespace LOFAR
     class IntToFloatKernel : public Kernel
     {
     public:
-      IntToFloatKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                       cl::Buffer &devFilteredData, cl::Buffer &devInputSamples);
+      IntToFloatKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
+                       gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devInputSamples);
     };
   }
 

@@ -23,7 +23,7 @@
 
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 #include <GPUProc/Pipeline.h>
 #include <GPUProc/PerformanceCounter.h>
 
@@ -39,7 +39,7 @@ namespace LOFAR
 
       void                    doWork();
 
-      cl::Program beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
+      gpu::Function beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
       PerformanceCounter beamFormerCounter, transposeCounter, invFFTcounter, invFIRfilterCounter, triggerCounter;
       PerformanceCounter beamFormerWeightsCounter, samplesCounter;
     };

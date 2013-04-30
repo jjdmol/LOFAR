@@ -31,7 +31,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    WorkQueue::WorkQueue(cl::Context &context, cl::Device &device, unsigned gpuNumber, const Parset &ps)
+    WorkQueue::WorkQueue(gpu::Context &context, gpu::Device &device, unsigned gpuNumber, const Parset &ps)
       :
       gpu(gpuNumber),
       device(device),
@@ -41,7 +41,7 @@ namespace LOFAR
       set_affinity(gpu);
 #endif
 
-      queue = cl::CommandQueue(context, device, profiling ? CL_QUEUE_PROFILING_ENABLE : 0);
+      queue = gpu::Stream(context, device, profiling ? CL_QUEUE_PROFILING_ENABLE : 0);
     }
 
 

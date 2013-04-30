@@ -30,7 +30,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devFilteredData, cl::Buffer &devInputSamples, cl::Buffer &devFIRweights)
+    FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devInputSamples, gpu::DeviceMemory &devFIRweights)
       :
       Kernel(ps, program, "FIR_filter")
     {
@@ -42,8 +42,8 @@ namespace LOFAR
       getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
       unsigned totalNrThreads = ps.nrChannelsPerSubband() * NR_POLARIZATIONS * 2;
       unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
-      globalWorkSize = cl::NDRange(totalNrThreads, ps.nrStations());
-      localWorkSize = cl::NDRange(totalNrThreads / nrPasses, 1);
+      globalWorkSize = gpu::dim3(totalNrThreads, ps.nrStations());
+      localWorkSize = gpu::dim3(totalNrThreads / nrPasses, 1);
 
       size_t nrSamples = (size_t) ps.nrStations() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS;
       nrOperations = nrSamples * ps.nrSamplesPerChannel() * NR_TAPS * 2 * 2;

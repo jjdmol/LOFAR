@@ -32,7 +32,7 @@ namespace LOFAR
     class DedispersionForwardFFTkernel : public FFT_Kernel
     {
     public:
-      DedispersionForwardFFTkernel(const Parset &ps, cl::Context &context, cl::Buffer &buffer);
+      DedispersionForwardFFTkernel(const Parset &ps, gpu::Context &context, gpu::DeviceMemory &buffer);
 
     };
   }

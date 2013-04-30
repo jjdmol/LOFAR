@@ -31,7 +31,7 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    FFT_Kernel::FFT_Kernel(cl::Context &context, unsigned fftSize, unsigned nrFFTs, bool forward, cl::Buffer &buffer)
+    FFT_Kernel::FFT_Kernel(gpu::Context &context, unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer)
       :
       nrFFTs(nrFFTs),
       fftSize(fftSize)
@@ -39,9 +39,9 @@ namespace LOFAR
     {
       ASSERT(fftSize == 256);
       ASSERT(forward);
-      std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
-      cl::Program program = createProgram(context, devices, "FFT.cl", "");
-      kernel = cl::Kernel(program, "fft0");
+      std::vector<gpu::Device> devices(context.getInfo<CL_CONTEXT_DEVICES>());
+      gpu::Module program(createProgram(context, devices, "FFT.cl", ""));
+      kernel = gpu::Function(program, "fft0");
       kernel.setArg(0, buffer);
     }
 #else
@@ -52,21 +52,21 @@ namespace LOFAR
     }
 #endif
 
-    void FFT_Kernel::enqueue(cl::CommandQueue &queue, PerformanceCounter &counter)
+    void FFT_Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
     {
 #if defined USE_CUSTOM_FFT
-      queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(nrFFTs * 64 / 4, 4), cl::NDRange(64, 4), 0, &event);
+      //queue.enqueueNDRangeKernel(kernel, cl::NullRange, gpu::dim3(nrFFTs * 64 / 4, 4), gpu::dim3(64, 4), 0, &event);
+      queue.launchKernel(kernel, gpu::dim3(nrFFTs * 64 / 4, 4), gpu::dim3(64, 4), 0); // TODO: extend/use Kernel::enqueue(). This will also correct the CUDA vs OpenCL interpret of gridSize.
 #else
       cl_int error = clFFT_ExecuteInterleaved(queue(), plan.plan, nrFFTs, direction, buffer(), buffer(), 0, 0, &event());
-
       if (error != CL_SUCCESS)
-        throw cl::Error(error, "clFFT_ExecuteInterleaved");
+        throw gpu::Error(error, "clFFT_ExecuteInterleaved");
 #endif
-
+/*
       counter.doOperation(event,
                           (size_t) nrFFTs * 5 * fftSize * log2(fftSize),
                           (size_t) nrFFTs * fftSize * sizeof(std::complex<float>),
-                          (size_t) nrFFTs * fftSize * sizeof(std::complex<float>));
+                          (size_t) nrFFTs * fftSize * sizeof(std::complex<float>));*/
     }
 
   }

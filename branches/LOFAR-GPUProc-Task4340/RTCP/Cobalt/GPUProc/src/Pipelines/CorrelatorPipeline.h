@@ -24,7 +24,7 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/SlidingPointer.h>
 
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 #include <GPUProc/BestEffortQueue.h>
 #include <GPUProc/Pipeline.h>
 #include <GPUProc/FilterBank.h>

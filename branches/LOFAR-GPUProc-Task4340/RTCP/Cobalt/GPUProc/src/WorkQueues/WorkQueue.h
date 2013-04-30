@@ -28,7 +28,7 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <GPUProc/PerformanceCounter.h>
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu-wrapper.h>
 
 namespace LOFAR
 {
@@ -37,11 +37,11 @@ namespace LOFAR
     class WorkQueue
     {
     public:
-      WorkQueue(cl::Context &context, cl::Device &device, unsigned gpuNumber, const Parset &ps);
+      WorkQueue(gpu::Context &context, gpu::Device &device, unsigned gpuNumber, const Parset &ps);
 
       const unsigned gpu;
-      cl::Device &device;
-      cl::CommandQueue queue;
+      gpu::Device &device;
+      gpu::Stream queue;
 
       std::map<std::string, SmartPtr<PerformanceCounter> > counters;
       std::map<std::string, SmartPtr<NSTimer> > timers;
