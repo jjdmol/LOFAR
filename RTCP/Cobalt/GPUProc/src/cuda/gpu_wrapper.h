@@ -55,6 +55,28 @@ namespace gpu {
   // Return the CUDA error string associated with \a errcode.
   std::string errorMessage(CUresult errcode);
 
+  // Struct representing a CUDA Block, which is similar to the @c dim3 type in
+  // the CUDA Runtime API.
+  struct Block
+  {
+    Block(unsigned int x_ = 1, unsigned int y_ = 1, unsigned int z_ = 1);
+    unsigned int x;
+    unsigned int y;
+    unsigned int z;
+  };
+
+
+  // Struct representing a CUDA Grid, which is similar to the @c dim3 type in
+  // the CUDA Runtime API.
+  struct Grid
+  {
+    Grid(unsigned int x_ = 1, unsigned int y_ = 1, unsigned int z_ = 1);
+    unsigned int x;
+    unsigned int y;
+    unsigned int z;
+  };
+
+
   // This object is not strictly needed, because in CUDA there's only one
   // platform, but it hides the CUDA calls and makes it similar to OpenCL.
   class Platform {
@@ -295,12 +317,8 @@ namespace gpu {
 
     // Launch a CUDA function. 
     // \param function object containing the function to launch
-    // \param gridX x-coordinate of the grid
-    // \param gridY y-coordinate of the grid
-    // \param gridZ z-coordinate of the grid
-    // \param blockX x-coordinate of the block
-    // \param blockY y-coordinate of the block
-    // \param blockZ z-coordinate of the block
+    // \param Grid coordinates
+    // \param Block coordinates
     // \param sharedMemBytes the amount of shared memory per thread block
     // \param parameters array of pointers to the parameters that must be passed
     //        to the function \a function
@@ -308,8 +326,7 @@ namespace gpu {
     // Function object, and define a setParameters() method in Function to set
     // them.
     void launchKernel(const Function &function, 
-                      unsigned gridX, unsigned gridY, unsigned gridZ, 
-                      unsigned blockX, unsigned blockY, unsigned blockZ,
+                      const Grid &grid, const Block &block,
                       unsigned sharedMemBytes, const void **parameters);
 
     // Check if all operations on this stream have completed.
