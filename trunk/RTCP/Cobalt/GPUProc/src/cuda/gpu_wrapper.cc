@@ -519,18 +519,32 @@ namespace LOFAR
       {
       }
 
-      void Stream::memcpyHtoDAsync(DeviceMemory &devMem, 
-                                   const HostMemory &hostMem,
-                                   size_t size)
+      void Stream::writeBuffer(DeviceMemory &devMem, 
+                               const HostMemory &hostMem,
+                               bool synchronous)
       {
-        _impl->memcpyHtoDAsync(devMem._impl->_ptr, hostMem.get<void*>(), size);
+        _impl->memcpyHtoDAsync(devMem._impl->_ptr, 
+                               hostMem.get<void*>(), 
+                               hostMem.size());
+        if (synchronous) {
+          Event ev;
+          recordEvent(ev);
+          waitEvent(ev);
+        }
       }
 
-      void Stream::memcpyDtoHAsync(HostMemory &hostMem, 
-                                   const DeviceMemory &devMem,
-                                   size_t size)
+      void Stream::readBuffer(HostMemory &hostMem, 
+                              const DeviceMemory &devMem,
+                              bool synchronous)
       {
-        _impl->memcpyDtoHAsync(hostMem.get<void*>(), devMem._impl->_ptr, size);
+        _impl->memcpyDtoHAsync(hostMem.get<void*>(), 
+                               devMem._impl->_ptr, 
+                               devMem.size());
+        if (synchronous) {
+          Event ev;
+          recordEvent(ev);
+          waitEvent(ev);
+        }
       }
 
       void Stream::launchKernel(const Function &function,
