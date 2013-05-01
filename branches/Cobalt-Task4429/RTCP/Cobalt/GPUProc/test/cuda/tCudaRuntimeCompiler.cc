@@ -2,103 +2,141 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-#include <stdio.h>
-#include <iostream>
+#include <cstdio>
+
+#include <iostream>  // popen, pget
 #include <string>
 #include <sstream>
-#include <iomanip>
-#include <Common/SystemCallException.h>
-#include <Common/SystemUtil.h>
+#include <iomanip>  // setprecision
+#include <map>
+#include <set>
+
+namespace CudaRuntimeCompiler
+{
+  typedef std::set<std::string> flags_type;
+  typedef std::map<std::string, std::string> definitions_type;
+
+  // Return the set of default flags for the nvcc compilation of a cuda kernel in Cobalt
+  const flags_type& defaultFlags()
+  {
+    static flags_type flags;
+    if (flags.empty())  //fill with default values
+    {
+      //flags.insert("device-debug ");
+      flags.insert("use_fast_math");
+      flags.insert("gpu-architecture compute_30");
+      // opencl specific: --source-in-ptx  -m64
+    }
+    return flags;    
+  };
+
+  // Return the set of default definitions for the nvcc compilation of a cuda kernel in Cobalt
+  const definitions_type& defaultDefinitions()
+  {
+    static definitions_type definitions;
+    if (definitions.empty())  //fill with default values
+    {
+      definitions["NVIDIA_CUDA"] = "1";       // left-over from OpenCL for Correlator.cl/.cu 
+      definitions["NR_BITS_PER_SAMPLE"] = "20";  //ps.nrBitsPerSample();
+    }
+    return definitions;  
+  }
+  
+  // Performs a 'system' call of nvcc. Return the stdout of the command
+  // on error no stdout is created and an exception is thrown
+  std::string runNVCC(std::string cmd)
+  {
+    // *******************************************************
+    // Call nvcc on the command line, get content as string
+    std::string ptxFileContent;                              // The ptx file, to be red from stdout
+    char buffer [1024];       
+    FILE * ptxFilePointer = popen(cmd.c_str(), "r" ); // Broken pipe: write to pipe with no readers
+
+    // First test if we have content. nvcc does not provide output on stdout when compilation failes
+    if (fgets (buffer , 100 , ptxFilePointer)  == NULL )    // if we cannot read nothing from the stream
+    {
+      // log that we have a failed compile run
+      throw "nvcc compilation failed!";                     // TODO: Need to be a  lofar::gpu::exeption.
+    }
+    //Now read the content of the file pointer
+    while ( ! feof (ptxFilePointer) )                       //We do not get the cerr
+    {
+      if ( fgets (buffer , 100 , ptxFilePointer) == NULL )  // FILE * can only be red with cstdio functions
+        break;
+      ptxFileContent += buffer;
+    }
+
+    fclose (ptxFilePointer);                                // Remember to close the FILE *. Otherwise linux pipe error
+    // *******************************************************
+
+    return ptxFileContent;
+  }
+
+  // Create a nvcc command line string based on the input path, a set of flags and a map
+  // of definitions. Use this command to call nvcc and compile the file at input path to a ptx file
+  // which content is returned as a string
+  std::string compileToPtx(const std::string& pathToCuFile, const flags_type& flags, const definitions_type& definitions)
+  {
+    const std::string cudaCompiler = "nvcc"; 
+    std::stringstream cmd("");
+    cmd << cudaCompiler ;
+    cmd << " " << pathToCuFile ;
+    cmd << " --ptx";                       
+
+    // add the set of flags
+    for (flags_type::const_iterator it=flags.begin(); it!=flags.end(); ++it)
+      cmd << " --" << *it;  // flags should be prepended with a space and a minus
+
+    // add the map of defines
+    for (definitions_type::const_iterator it=definitions.begin(); it!=definitions.end(); ++it)
+      cmd << " -D" << it->first << "=" << it->second;  //eg:  -DTEST=20
+
+    // output to stdout
+    cmd << " -o -";
+    std::cout << "Runtime compilation of kernel, command: " << std::endl << cmd.str()  << std::endl;
+
+    return runNVCC(cmd.str());
+  };
+
+  // overloaded function. Use the path and default flags and definitions to call nvcc
+  std::string compileToPtx(const std::string& pathToCuFile)
+  {
+    // compile with the default flags and definitions
+    return CudaRuntimeCompiler::compileToPtx(pathToCuFile, defaultFlags(), defaultDefinitions());
+  };
+}
 
 
 using namespace std;
 int main()
 {
+   // Run a kernel with two different defines, should result in two different kernels.
+   // Just run the compiler with two magic numbers and test for the existance of the numbers
+   string kernelPath = ".in_tCudaRuntimeCompiler.cu";
 
-  char *kernelPath = "/home/wklijn/build/4429/gnu_debug/installed/share/gpu/kernels/TestKernel.cu";
+  
+  // Get an instantiation of the default parameters
+  CudaRuntimeCompiler::definitions_type definitions = CudaRuntimeCompiler::defaultDefinitions();
+  // override the default with a magic number
+  definitions["NVIDIA_CUDA"] = "123456";
 
-  // Run a kernel with two different defines, should result in two results
-  std::cout << kernelPath << std:: endl;
+  string ptx1 = CudaRuntimeCompiler::compileToPtx(kernelPath, 
+                                    CudaRuntimeCompiler::defaultFlags(),
+                                    definitions);
+  definitions["NVIDIA_CUDA"] = "654321";
 
-  string srcFilename(kernelPath);
-#if 0
-  string cudaCompiler(CUDA_TOOLKIT_ROOT_DIR);
-  if (!cudaCompiler.empty()) 
+  string ptx2 = CudaRuntimeCompiler::compileToPtx(kernelPath, 
+                                    CudaRuntimeCompiler::defaultFlags(),
+                                    definitions);
+
+  if ((std::string::npos != ptx1.find("123456")) ||
+      (std::string::npos != ptx2.find("654321")))
   {
-    cudaCompiler += "/bin/nvcc";
+    return 0;
+    
   }
-  if (::access(cudaCompiler.c_str(), X_OK) == -1)
-#endif
-  const string cudaCompiler = "nvcc"; // try through PATH  TODO: allow cmd-line arg override?
+  cerr << "did not find the magic numbers in the compiled ptx: 123456 and 654321" << endl;
+  cout << ptx1 << ptx2 ;
+  return -1;
 
-  bool debug = false; // TODO: wire up to program arg or 
-
-  stringstream cmd(cudaCompiler);
-  cmd << " --ptx";                         // Request intermediate format (ptx) as output. We may want to view or stir it.
-  cmd << " -I" << dirname(__FILE__);       // TODO: move kernel sources to their own dir
-  if (debug) 
-  {
-    cmd << " -G --source-in-ptx";
-  }
-  cmd << " -m32";                          // -m64 (default) takes extra regs for a ptr, but allows >2 GB buffers, which we don't need
-  // use opt level 99
-  // -Ox is only for host code. Opt backend compilation below.
-  cmd << " --gpu-architecture compute_30"; // TODO: incorrectly assumes one, single virt arch; check out targets arg
-  //cmd << " --maxrregcount 63;" // probably only effective for backend compilation below
-  cmd << " --use_fast_math"; // we believe we can get away with this for LOFAR online DSP
-
-  // From here arguments that should be in 
-  cmd << " -DNVIDIA_CUDA"; // left-over from OpenCL for Correlator.cl/.cu
-  //cmd << " -DUSE_FLOAT4_IN_CORRELATOR"; // on "GeForce GTX 680" // TODO: move this and many -D opts below into kernel-specific build arg routines
-  cmd << " -DNR_BITS_PER_SAMPLE=" << ps.nrBitsPerSample();
-  cmd << " -DSUBBAND_BANDWIDTH=" << std::setprecision(7) << ps.subbandBandwidth() << 'f';
-  cmd << " -DNR_SUBBANDS=" << ps.nrSubbands();
-  cmd << " -DNR_CHANNELS=" << ps.nrChannelsPerSubband();
-  cmd << " -DNR_STATIONS=" << ps.nrStations();
-  cmd << " -DNR_SAMPLES_PER_CHANNEL=" << ps.nrSamplesPerChannel();
-  cmd << " -DNR_SAMPLES_PER_SUBBAND=" << ps.nrSamplesPerSubband();
-  cmd << " -DNR_BEAMS=" << ps.nrBeams();
-  cmd << " -DNR_TABS=" << ps.nrTABs(0);
-  cmd << " -DNR_COHERENT_STOKES=" << ps.nrCoherentStokes();
-  cmd << " -DNR_INCOHERENT_STOKES=" << ps.nrIncoherentStokes();
-  cmd << " -DCOHERENT_STOKES_TIME_INTEGRATION_FACTOR=" << ps.coherentStokesTimeIntegrationFactor();
-  cmd << " -DINCOHERENT_STOKES_TIME_INTEGRATION_FACTOR=" << ps.incoherentStokesTimeIntegrationFactor();
-  cmd << " -DNR_POLARIZATIONS=" << NR_POLARIZATIONS;
-  cmd << " -DNR_TAPS=" << NR_TAPS;
-  cmd << " -DNR_STATION_FILTER_TAPS=" << NR_STATION_FILTER_TAPS;
-  if (ps.delayCompensation()) 
-  {
-    cmd << " -DDELAY_COMPENSATION";
-  }
-  if (ps.correctBandPass()) 
-  {
-    cmd << " -DBANDPASS_CORRECTION";
-  }
-  cmd << " -DDEDISPERSION_FFT_SIZE=" << ps.dedispersionFFTsize();
-
-  // TODO: do this only if compilation failed
-  static bool printCudaCompileCommand = false; // TODO: -> LOG_ONCE()/WARN_ONCE()/similar; don't care about races
-  if (!printCudaCompileCommand) 
-  {
-    printCudaCompileCommand = true;
-    cout << "CUDA compilation to ptx command: " << cmd << endl;
-  }
-
-  // Derive output filename from input src filename by replacing the extension.
-  string outputFilename(srcFilename);
-  size_t idx = outputFilename.find_last_of('.');
-  if (idx != string::npos) 
-  {
-    outputFilename.resize(idx);
-  }
-  outputFilename += ".ptx"; // output filename to be overwritten
-
-  cmd << " " << srcFilename;
-  int rv;
-  if ((rv = std::system(cmd.str().c_str())) != 0) 
-  { // blocking. If it takes too long, rewrite building all kernels at once. TODO: output goes to stdout/stderr -> collect it for proper logging
-    throw SystemCallException("system", errno, THROW_ARGS); // system() is not really a syscall...
-  }
-
-  return 0;
 }
