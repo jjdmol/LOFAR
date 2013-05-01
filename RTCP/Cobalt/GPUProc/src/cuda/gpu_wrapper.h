@@ -320,15 +320,21 @@ namespace LOFAR
         // documentation of \c cuStreamCreate in the CUDA Driver API.
         Stream(unsigned int flags = 0);
 
-        // Transfers \a size bytes asynchronously from host memory \a hostMem to
-        // device memory \a devMem.
-        void memcpyHtoDAsync(DeviceMemory &devMem, const HostMemory &hostMem,
-                             size_t size);
+        // Transfer data from host memory \a hostMem to device memory \a devMem.
+        // \param devMem Device memory that will be copied to.
+        // \param hostMem Host memory that will be copied from.
+        // \param synchronous Indicates whether the transfer must be done
+        //        synchronously or asynchronously.
+        void writeBuffer(DeviceMemory &devMem, const HostMemory &hostMem,
+                         bool synchronous = false);
 
-        // Transfers \a size bytes asynchronously from device memory \a devMem
-        // to host memory \a hostMem asynchronously.
-        void memcpyDtoHAsync(HostMemory &hostMem, const DeviceMemory &devMem,
-                             size_t size);
+        // Transfer data from device memory \a devMem to host memory \a hostMem.
+        // \param hostMem Host memory that will be copied to.
+        // \param devMem Device memory that will be copied from.
+        // \param synchronous Indicates whether the transfer must be done
+        //        synchronously or asynchronously.
+        void readBuffer(HostMemory &hostMem, const DeviceMemory &devMem,
+                        bool synchronous = false);
 
         // Launch a CUDA function.
         // \param function object containing the function to launch
