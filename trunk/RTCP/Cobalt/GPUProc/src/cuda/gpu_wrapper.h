@@ -58,6 +58,7 @@ namespace LOFAR
       // Return the CUDA error string associated with \a errcode.
       std::string errorMessage(CUresult errcode);
 
+
       // Struct representing a CUDA Block, which is similar to the @c dim3 type
       // in the CUDA Runtime API.
       struct Block
@@ -174,6 +175,9 @@ namespace LOFAR
         template <typename T>
         T *get() const;
 
+        // Return the size of this memory block.
+        size_t size() const;
+
       private:
         // Non-copyable implementation class.
         class Impl;
@@ -189,8 +193,11 @@ namespace LOFAR
       class DeviceMemory
       {
       public:
-        // Alocate \a size bytes of device memory.
+        // Allocate \a size bytes of device memory.
         DeviceMemory(size_t size);
+
+        // Return the size of this memory block.
+        size_t size() const;
 
       private:
         // Stream needs access to our device ptr for host-to-device transfer.
