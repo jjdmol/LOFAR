@@ -267,7 +267,7 @@ namespace LOFAR
       class HostMemory::Impl : boost::noncopyable
       {
       public:
-        Impl(size_t size, unsigned int flags)
+        Impl(size_t size, unsigned int flags) : _size(size)
         {
           checkCuCall(cuMemHostAlloc(&_ptr, size, flags));
         }
@@ -283,8 +283,14 @@ namespace LOFAR
           return static_cast<T *>(_ptr);
         }
 
+        size_t size() const
+        {
+          return _size;
+        }
+
       private:
         void *_ptr;
+        size_t _size;
       };
 
       HostMemory::HostMemory(size_t size, unsigned int flags) :
@@ -298,11 +304,16 @@ namespace LOFAR
         return _impl->get<T>();
       }
 
+      size_t HostMemory::size() const
+      {
+        return _impl->size();
+      }
+
 
       class DeviceMemory::Impl : boost::noncopyable
       {
       public:
-        Impl(size_t size)
+        Impl(size_t size) : _size(size)
         {
           checkCuCall(cuMemAlloc(&_ptr, size));
         }
@@ -312,13 +323,25 @@ namespace LOFAR
           checkCuCall(cuMemFree(_ptr));
         }
 
+        size_t size() const
+        {
+          return _size;
+        }
+
         //private: // Stream needs it to do transfers
         CUdeviceptr _ptr;
+      private:
+        size_t _size;
       };
 
       DeviceMemory::DeviceMemory(size_t size) :
         _impl(new Impl(size))
       {
+      }
+
+      size_t DeviceMemory::size() const
+      {
+        return _impl->size();
       }
 
 
