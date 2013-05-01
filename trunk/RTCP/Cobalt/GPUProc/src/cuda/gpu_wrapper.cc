@@ -156,6 +156,18 @@ namespace gpu {
   }
 
 
+  Block::Block(unsigned int x_, unsigned int y_, unsigned int z_) :
+    x(x_), y(y_), z(z_)
+  {
+  }
+
+
+  Grid::Grid(unsigned int x_, unsigned int y_, unsigned int z_) :
+    x(x_), y(y_), z(z_)
+  {
+  }
+
+
   Platform::Platform(unsigned int flags)
   {
     checkCuCall(cuInit(flags));
@@ -488,12 +500,11 @@ namespace gpu {
   }
 
   void Stream::launchKernel(const Function &function, 
-                            unsigned gridX, unsigned gridY, unsigned gridZ,
-                            unsigned blockX, unsigned blockY, unsigned blockZ,
+                            const Grid &grid, const Block &block,
                             unsigned sharedMemBytes, const void **parameters)
   {
     _impl->launchKernel(function._function, 
-                        gridX, gridY, gridZ, blockX, blockY, blockZ, 
+                        grid.x, grid.y, grid.z, block.x, block.y, block.z, 
                         sharedMemBytes, const_cast<void **>(parameters));
   }
 
