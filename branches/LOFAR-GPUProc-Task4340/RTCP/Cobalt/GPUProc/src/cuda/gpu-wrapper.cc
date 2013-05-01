@@ -152,8 +152,7 @@ const char *Error::what() const throw()
     return string(name);
   }
 
-  template <CUdevice_attribute attribute>
-  int Device::getAttribute() const
+  int Device::getAttribute(CUdevice_attribute attribute) const
   {
     int value;
     checkCuCall(cuDeviceGetAttribute(&value, attribute, _device));
@@ -225,9 +224,9 @@ const char *Error::what() const throw()
       checkCuCall(cuMemFreeHost(_ptr));
     }
 
-    template <typename T> T *operator()() const
+    void *get() const
     {
-      return static_cast<T *>(_ptr);
+      return _ptr;
     }
 
   private:
@@ -237,9 +236,9 @@ const char *Error::what() const throw()
   HostMemory::HostMemory(size_t size, unsigned int flags)
     : _impl(new Impl(size, flags)) { }
 
-  template <typename T> T *HostMemory::operator()() const
+  void *HostMemory::doGet() const
   {
-    return _impl->operator()<T>();
+    return _impl->get();
   }
 
 
@@ -256,9 +255,9 @@ const char *Error::what() const throw()
       checkCuCall(cuMemFree(_ptr));
     }
 
-    void *operator()() const
+    void *get() const
     {
-      return (void *)_ptr;
+      return reinterpret_cast<void *>(_ptr);
     }
 
   //private: // Stream needs it to do transfers
@@ -268,9 +267,9 @@ const char *Error::what() const throw()
   DeviceMemory::DeviceMemory(size_t size)
     : _impl(new Impl(size)) { }
 
-  void *DeviceMemory::operator()() const
+  void *DeviceMemory::get() const
   {
-    return (*_impl)();
+    return _impl->get();
   }
 
 
@@ -288,7 +287,7 @@ const char *Error::what() const throw()
     }
 
     Impl(const void *data, vector<CUjit_option> &options,
-         vector<void*> &optionValues)
+         vector<void *> &optionValues)
     {
       checkCuCall(cuModuleLoadDataEx(&_module, data, options.size(),
                                      &options[0], &optionValues[0]));
@@ -308,7 +307,7 @@ const char *Error::what() const throw()
   Module::Module(const void *data) : _impl(new Impl(data)) { }
 
   Module::Module(const void *data, vector<CUjit_option> &options,
-                 vector<void*> &optionValues)
+                 vector<void *> &optionValues)
     : _impl(new Impl(data, options, optionValues)) { }
 
 
@@ -317,17 +316,15 @@ const char *Error::what() const throw()
     checkCuCall(cuModuleGetFunction(&_function, module._impl->_module, name.c_str()));
   }
 
-  template <typename T>
-  void Function::setArg(size_t index, const T& val)
+  void Function::setArg(size_t index, const void *val)
   {
     if (index >= _kernelParams.size()) {
       _kernelParams.resize(index + 1);
     }
-    _kernelParams[index] = &val;
+    _kernelParams[index] = const_cast<void *>(val);
   }
 
-  template <CUfunction_attribute attribute>
-  int Function::getAttribute() const
+  int Function::getAttribute(CUfunction_attribute attribute) const
   {
     int value;
     checkCuCall(cuFuncGetAttribute(&value, attribute, _function));
@@ -396,7 +393,7 @@ const char *Error::what() const throw()
     }
 
     void launchKernel(CUfunction &function, dim3 gridDim, dim3 blockDim,
-                      unsigned int sharedMemBytes, vector<void*>& kernelParams)
+                      unsigned int sharedMemBytes, vector<void *>& kernelParams)
     {
       checkCuCall(cuLaunchKernel(function, gridDim.x, gridDim.y, gridDim.z,
                   blockDim.x, blockDim.y, blockDim.z, sharedMemBytes, _stream,
@@ -439,13 +436,13 @@ const char *Error::what() const throw()
   void Stream::memcpyHtoDAsync(DeviceMemory &devMem, const HostMemory &hostMem,
                                size_t size)
   {
-    _impl->memcpyHtoDAsync(devMem._impl->_ptr, hostMem.operator()<void*>(), size);
+    _impl->memcpyHtoDAsync(devMem._impl->_ptr, hostMem.get<void *>(), size);
   }
 
   void Stream::memcpyDtoHAsync(HostMemory &hostMem, const DeviceMemory &devMem,
                                size_t size)
   {
-    _impl->memcpyDtoHAsync(hostMem.operator()<void*>(), devMem._impl->_ptr, size);
+    _impl->memcpyDtoHAsync(hostMem.get<void *>(), devMem._impl->_ptr, size);
   }
 
   void Stream::launchKernel(Function &function, dim3 gridDim, dim3 blockDim,

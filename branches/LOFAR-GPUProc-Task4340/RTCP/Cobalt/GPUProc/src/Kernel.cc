@@ -40,6 +40,7 @@ namespace LOFAR
         return;
 
       // TODO: to globalWorkSize in terms of localWorkSize (CUDA)
+      // TODO: check assumption that this divides with no remainder
       globalWorkSize.x /= localWorkSize.x;
       globalWorkSize.y /= localWorkSize.y;
       globalWorkSize.z /= localWorkSize.z;

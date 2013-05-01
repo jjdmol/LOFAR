@@ -90,9 +90,7 @@ namespace gpu {
 
     std::string getName() const;
 
-    // template this one to make it similar to getInfo() in OpenCL's C++ wrapper.
-    template <CUdevice_attribute attribute>
-    int getAttribute() const;
+    int getAttribute(CUdevice_attribute attribute) const;
 
     friend class Context; // Context needs our device (i.e. _device) to create a context
 
@@ -144,11 +142,16 @@ namespace gpu {
      * The returned pointer cannot have a lifetime beyond the lifetime of this
      * object (actually the last copy).
      */
-    template <typename T> T * operator()() const;
+    template <typename T> T *get() const
+    {
+      return static_cast<T *>(doGet());
+    }
 
   private:
     class Impl;
     boost::shared_ptr<Impl> _impl;
+
+    void *doGet() const;
   };
 
 
@@ -165,7 +168,7 @@ namespace gpu {
      * work with these classes (e.g. FFT). Even if we can convert that code,
      * this is useful in the meantime.
      */
-    void *operator()() const;
+    void *get() const;
 
     friend class Stream; // Stream needs our device ptr (i.e. _impl) to transfer H2D
 
@@ -183,7 +186,7 @@ namespace gpu {
     Module(const void *data);
 
     Module(const void *data, std::vector<CUjit_option> &options,
-           std::vector<void*> &optionValues);
+           std::vector<void *> &optionValues);
 
     friend class Function; // Function needs our module (i.e. _impl) to create a function
 
@@ -198,12 +201,23 @@ namespace gpu {
   public:
     Function(Module &module, const std::string &name);
 
+    // For immediates.
+    // Not for pointers and memory objects (void *, CUdeviceptr).
     template <typename T>
-    void setArg(size_t index, const T& val);
+    void setArg(size_t index, const T& val)
+    {
+      setArg(index, static_cast<const void *>(&val));
+    }
 
-    // template this one to make it similar to getInfo() in OpenCL's C++ wrapper.
-    template <CUfunction_attribute attribute>
-    int getAttribute() const;
+    // For device memory objects (CUdeviceptr) as void *, e.g. from DeviceMemory::get().
+    // No need to use template specialization here.
+    void setArg(size_t index, const void *val);
+
+    // Do not use. To protect from passing pointers other than device memory void *.
+    template<typename T>
+    void setArg(size_t index, const T *&val); // intentionally not implemented
+
+    int getAttribute(CUfunction_attribute attribute) const;
 
     void setSharedMemConfig(CUsharedconfig config) const;
 
@@ -211,7 +225,7 @@ namespace gpu {
 
   private:
     CUfunction _function;
-    std::vector<void*> _kernelParams;
+    std::vector<void *> _kernelParams;
   };
 
 
