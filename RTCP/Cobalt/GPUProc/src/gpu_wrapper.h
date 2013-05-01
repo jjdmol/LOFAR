@@ -1,4 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
+//# gpu_wrapper.h: Wrapper classes for GPU types.
 //#
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -19,10 +19,17 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+// \file
+// Wrapper classes for GPU types.
 
-#warning "Not implemented yet."
+#ifndef LOFAR_GPUPROC_GPU_WRAPPER_H
+#define LOFAR_GPUPROC_GPU_WRAPPER_H
+
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
+
+#include <Common/Exception.h>
 
 namespace LOFAR
 {
@@ -30,9 +37,20 @@ namespace LOFAR
   {
     namespace gpu
     {
+      // Exception class for GPU errors.
+      EXCEPTION_CLASS(GPUException, LOFAR::Exception);
 
     } // namespace gpu
 
   } // namespace Cobalt
 
 } // namespace LOFAR
+
+
+#if defined (USE_CUDA)
+# include "cuda/gpu_wrapper.h"
+#elif defined (USE_OPENCL)
+# include "opencl/gpu_wrapper.h"
+#endif
+
+#endif
