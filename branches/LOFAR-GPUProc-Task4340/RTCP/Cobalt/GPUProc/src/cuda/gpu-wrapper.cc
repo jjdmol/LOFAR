@@ -326,7 +326,8 @@ const char *Error::what() const throw()
     _kernelParams[index] = &val;
   }
 
-  int Function::getAttribute(CUfunction_attribute attribute) const
+  template <CUfunction_attribute attribute>
+  int Function::getAttribute() const
   {
     int value;
     checkCuCall(cuFuncGetAttribute(&value, attribute, _function));

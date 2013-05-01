@@ -201,7 +201,9 @@ namespace gpu {
     template <typename T>
     void setArg(size_t index, const T& val);
 
-    int getAttribute(CUfunction_attribute attribute) const;
+    // template this one to make it similar to getInfo() in OpenCL's C++ wrapper.
+    template <CUfunction_attribute attribute>
+    int getAttribute() const;
 
     void setSharedMemConfig(CUsharedconfig config) const;
 
