@@ -33,7 +33,7 @@
 #define NR_TAPS                 16
 
 #define NR_STATIONS 20
-#define NR_SAMPLES_PER_CHANNEL 100
+#define NR_SAMPLES_PER_CHANNEL 128
 #define NR_CHANNELS 64
 
 #if NR_BITS_PER_SAMPLE == 16
