@@ -38,6 +38,9 @@ int main()
 
     // Add vectors in parallel.
     cudaError_t cudaStatus = addWithCuda(complex_out, complex_in,arraySize);
+    if (cudaStatus == cudaErrorNoDevice) {
+        return 3;
+    }
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "addWithCuda failed!");
         return 1;
@@ -89,7 +92,7 @@ cudaError_t addWithCuda(std::complex<float>* output_complex,
     // Choose which GPU to run on, change this on a multi-GPU system.
     cudaStatus = cudaSetDevice(0);
     if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
+        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?\n");
         goto Error;
     }
 
