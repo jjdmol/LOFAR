@@ -11,6 +11,7 @@ lofar_add_library(gpuproc
   #Package__Version.cc
   BandPass.cc
   createProgram.cc
+  cuda/CudaRuntimeCompiler.cc
   FilterBank.cc
   global_defines.cc
   Kernel.cc
