@@ -433,6 +433,11 @@ namespace LOFAR
           return ms;
         }
 
+        void wait()
+        {
+          checkCuCall(cuEventSynchronize(_event));
+        }
+
         //private: // Stream needs it to wait for and record events
         CUevent _event;
       };
@@ -444,6 +449,11 @@ namespace LOFAR
       float Event::elapsedTime(Event &second) const
       {
         return _impl->elapsedTime(second._impl->_event);
+      }
+
+      void Event::wait()
+      {
+        _impl->wait();
       }
 
 
@@ -524,9 +534,13 @@ namespace LOFAR
                                hostMem.get<void*>(), 
                                hostMem.size());
         if (synchronous) {
+          synchronize();
+/*
           Event ev;
           recordEvent(ev);
-          waitEvent(ev);
+          // waitEvent(ev) fails here, as it syncs across streams, the host doesn't have to wait
+          ev.wait();
+*/
         }
       }
 
@@ -538,9 +552,13 @@ namespace LOFAR
                                devMem._impl->_ptr, 
                                devMem.size());
         if (synchronous) {
+          synchronize();
+/*
           Event ev;
           recordEvent(ev);
-          waitEvent(ev);
+          // waitEvent(ev) fails here, as it syncs across streams, the host doesn't have to wait
+          ev.wait();
+*/
         }
       }
 
