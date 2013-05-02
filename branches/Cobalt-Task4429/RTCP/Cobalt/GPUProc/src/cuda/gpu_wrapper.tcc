@@ -1,4 +1,5 @@
-//# tCUDAException.cc
+//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
+//#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,22 +19,28 @@
 //#
 //# $Id$
 
-#include <lofar_config.h>
+#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
 
-#include <GPUProc/cuda/CUDAException.h>
-#include <iostream>
+// \file
+// Template implementation of CUDA-specific wrapper classes for GPU types.
 
-using namespace LOFAR::Cobalt;
-
-int main()
+namespace LOFAR
 {
-  try {
-    int count;
-    cudaDeviceProp prop;
-    CUDA_CALL(cudaGetDeviceCount(&count));
-    std::cout << "Found " << count << " CUDA capable device(s)" << std::endl;
-    CUDA_CALL(cudaGetDeviceProperties(&prop, count));  // will fail
-  } catch (CUDAException& e) {
-    std::cerr << e << std::endl;
-  }
-}
+  namespace Cobalt
+  {
+    namespace gpu
+    {
+        template <typename T>
+        T * HostMemory::get() const
+        {
+          return static_cast<T *>(getPtr());
+        }
+
+    } // namespace gpu
+
+  } // namespace Cobalt
+
+} // namespace LOFAR
+
+#endif

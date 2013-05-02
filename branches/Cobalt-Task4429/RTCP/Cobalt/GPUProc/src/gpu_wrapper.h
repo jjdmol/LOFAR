@@ -1,5 +1,6 @@
-//# tCUDAException.cc
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# gpu_wrapper.h: Wrapper classes for GPU types.
+//#
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,22 +19,38 @@
 //#
 //# $Id$
 
-#include <lofar_config.h>
+// \file
+// Wrapper classes for GPU types.
 
-#include <GPUProc/cuda/CUDAException.h>
-#include <iostream>
+#ifndef LOFAR_GPUPROC_GPU_WRAPPER_H
+#define LOFAR_GPUPROC_GPU_WRAPPER_H
 
-using namespace LOFAR::Cobalt;
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-int main()
+#include <Common/Exception.h>
+
+namespace LOFAR
 {
-  try {
-    int count;
-    cudaDeviceProp prop;
-    CUDA_CALL(cudaGetDeviceCount(&count));
-    std::cout << "Found " << count << " CUDA capable device(s)" << std::endl;
-    CUDA_CALL(cudaGetDeviceProperties(&prop, count));  // will fail
-  } catch (CUDAException& e) {
-    std::cerr << e << std::endl;
-  }
-}
+  namespace Cobalt
+  {
+    namespace gpu
+    {
+      // Exception class for GPU errors.
+      EXCEPTION_CLASS(GPUException, LOFAR::Exception);
+
+    } // namespace gpu
+
+  } // namespace Cobalt
+
+} // namespace LOFAR
+
+
+#if defined (USE_CUDA)
+# include "cuda/gpu_wrapper.h"
+#elif defined (USE_OPENCL)
+# include "opencl/gpu_wrapper.h"
+#endif
+
+#endif

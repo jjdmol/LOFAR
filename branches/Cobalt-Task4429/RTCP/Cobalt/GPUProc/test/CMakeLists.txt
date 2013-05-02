@@ -22,17 +22,16 @@ lofar_add_test(tStorageProcesses tStorageProcesses.cc)
 #lofar_add_test(tDelayCompensation tDelayCompensation.cc)
 #lofar_add_test(RTCP_UnitTest RTCP_UnitTest.cc UnitTest.cc)
 
-add_subdirectory(Kernels)
-
 lofar_find_package(UnitTest++)
 if(UNITTEST++_FOUND)
   lofar_add_test(tCorrelatorWorkQueue 
-    UnitTests/WorkQueues/CorrelatorWorkQueue.cc
+    UnitTests/WorkQueues/tCorrelatorWorkQueue.cc
     UnitTests/new_style_unittest.cc)
 endif()
 
 if(USE_CUDA)
   add_subdirectory(cuda)
+  add_subdirectory(Kernels)
 endif()
 
 
