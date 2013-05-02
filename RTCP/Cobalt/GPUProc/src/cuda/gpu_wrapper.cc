@@ -198,8 +198,7 @@ namespace LOFAR
         return std::string(name);
       }
 
-      template <CUdevice_attribute attribute>
-      int Device::getAttribute() const
+      int Device::getAttribute(CUdevice_attribute attribute) const
       {
         int value;
         checkCuCall(cuDeviceGetAttribute(&value, attribute, _device));
@@ -277,10 +276,9 @@ namespace LOFAR
           checkCuCall(cuMemFreeHost(_ptr));
         }
 
-        template <typename T>
-        T *get() const
+        void *get() const
         {
-          return static_cast<T *>(_ptr);
+          return _ptr;
         }
 
         size_t size() const
@@ -298,15 +296,14 @@ namespace LOFAR
       {
       }
 
-      template <typename T>
-      T *HostMemory::get() const
-      {
-        return _impl->get<T>();
-      }
-
       size_t HostMemory::size() const
       {
         return _impl->size();
+      }
+
+      void* HostMemory::getPtr() const
+      {
+        return _impl->get();
       }
 
 

@@ -107,10 +107,8 @@ namespace LOFAR
         std::string getName() const;
 
         // Return information on a specific \a attribute.
-        // This method is similar to \c getInfo() in the OpenCL C++ wrapper.
-        // \tparam CUdevice_attribute CUDA device attribute type
-        template <CUdevice_attribute attribute>
-        int getAttribute() const;
+        // \param attribute CUDA device attribute
+        int getAttribute(CUdevice_attribute attribute) const;
 
       private:
         // Context needs access to our \c _device to create a context.
@@ -179,6 +177,10 @@ namespace LOFAR
         size_t size() const;
 
       private:
+        // Get a void pointer to the actual memory from our Impl class. This
+        // method is only used by our templated get() method.
+        void* getPtr() const;
+
         // Non-copyable implementation class.
         class Impl;
 
@@ -375,6 +377,8 @@ namespace LOFAR
     } // namespace gpu
   } // namespace Cobalt
 } // namespace LOFAR
+
+#include "gpu_wrapper.tcc"
 
 #endif
 
