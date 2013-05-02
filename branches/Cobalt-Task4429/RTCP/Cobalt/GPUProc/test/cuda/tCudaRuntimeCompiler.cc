@@ -7,7 +7,7 @@ int main()
 {
    // Run a kernel with two different defines, should result in two different kernels.
    // Just run the compiler with two magic numbers and test for the existance of the numbers
-   string kernelPath = ".in_tCudaRuntimeCompiler.cu";
+   string kernelPath = "tCudaRuntimeCompiler.in_.cu";
 
   
   // Get an instantiation of the default parameters

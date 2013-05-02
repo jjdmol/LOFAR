@@ -1,3 +1,3 @@
 #!/bin/sh
-./tCudaRuntimeCompiler.sh tCudaRuntimeCompiler > tCudaRuntimeCompiler.log 2>&1
+./runctest.sh tCudaRuntimeCompiler > tCudaRuntimeCompiler.log 2>&1
 

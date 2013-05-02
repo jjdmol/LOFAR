@@ -1,3 +1,5 @@
+include(LofarCTest)
+
 lofar_add_test(tCUDAException tCUDAException.cc)
 lofar_add_test(tCudaRuntimeCompiler tCudaRuntimeCompiler.cc)
 

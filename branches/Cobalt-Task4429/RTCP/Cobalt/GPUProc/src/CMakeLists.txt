@@ -2,6 +2,7 @@
 
 include(LofarPackageVersion)
 add_subdirectory(Kernels)
+add_subdirectory(cuda)
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}
