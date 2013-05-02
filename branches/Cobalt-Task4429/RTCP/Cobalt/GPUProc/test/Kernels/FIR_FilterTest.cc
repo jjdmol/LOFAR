@@ -33,7 +33,7 @@ using namespace LOFAR::Cobalt;
 // Use our own terminate handler
 //Exception::TerminateHandler t(OpenCL_Support::terminate);
 
-int main()
+int main(int argc, char **argv)
 {
 
   char *kernel_name = "FIR_Filter";
@@ -77,19 +77,6 @@ int main()
 
   std::cerr << "> Using CUDA device [" << cuda_device << " : " <<  deviceProp.name << std:: endl;
 
-  const char *kernel_name = "FIR_Filter";
-  const char *kernel_extention = ".cu";
-  std::stringstream ss;
-  ss << "nvcc " << kernel_name << kernel_extention
-    << " -ptx"
-    << " -DNR_STATIONS=" << NR_STATIONS
-    << " -DNR_TAPS=" << NR_TAPS
-    << " -DNR_SAMPLES_PER_CHANNEL=" << NR_SAMPLES_PER_CHANNEL
-    << " -DNR_CHANNELS=" << NR_CHANNELS
-    << " -DNR_POLARIZATIONS=" << NR_POLARIZATIONS
-    << " -DCOMPLEX=" << COMPLEX
-    << " -DNR_BITS_PER_SAMPLE=" << NR_BITS_PER_SAMPLE;
-  std::string str = ss.str();
 
   // load the created module
   CUmodule     hModule  = 0;
@@ -100,7 +87,7 @@ int main()
   sstr << in.rdbuf();
   cudaFree(0); // Hack to initialize the primary context. should use a proper api functions
   cudaStatus = cuModuleLoadDataEx(&hModule, sstr.str().c_str(), 0, 0, 0);
-  if (cudaStatus != CUDA_SUCCESS) {
+  if (cudaStatus != cudaSuccess) {
     std::cerr << " Failed loading the kernel module, status: " << cudaStatus <<std::endl;
   }
 
@@ -108,7 +95,7 @@ int main()
 
   // Get the entry point in the kernel
   cudaStatus = cuModuleGetFunction(&hKernel, hModule, "FIR_filter");
-  if (cudaStatus != CUDA_SUCCESS)
+  if (cudaStatus != cudaSuccess)
   {
     std::cerr << " Failed loading the function entry point, status: " << cudaStatus <<std::endl;
   }
@@ -171,24 +158,24 @@ int main()
   CUdeviceptr DevSampledData = (CUdeviceptr)NULL;;
   CUdeviceptr DevFirWeights = (CUdeviceptr)NULL;;
 
-  // CUdeviceptr d_data = (CUdeviceptr)NULL;
+  CUdeviceptr d_data = (CUdeviceptr)NULL;
 
 
   // Allocate GPU buffers for three vectors (two input, one output)    .
   cudaStatus =   cuMemAlloc(&DevFilteredData, sizeFilteredData * sizeof(float));
-  if (cudaStatus != CUDA_SUCCESS) {
+  if (cudaStatus != cudaSuccess) {
     std::cerr << "memory allocation failed: " << cudaStatus << std::endl;
     throw "cudaMalloc failed!";
   }
 
   cudaStatus = cuMemAlloc(&DevSampledData, sizeSampledData * sizeof(SampleType));
-  if (cudaStatus != CUDA_SUCCESS) {
+  if (cudaStatus != cudaSuccess) {
     std::cerr << "memory allocation failed: " << cudaStatus << std::endl;
     throw "cudaMalloc failed!";
   }
 
   cudaStatus = cuMemAlloc(&DevFirWeights, sizeWeightsData * sizeof(float));
-  if (cudaStatus != CUDA_SUCCESS) {
+  if (cudaStatus != cudaSuccess) {
     std::cerr << "memory allocation failed: " << cudaStatus << std::endl;
     throw "cudaMalloc failed!";
   }    
@@ -205,21 +192,21 @@ int main()
   // Copy input vectors from host memory to GPU buffers.
   cudaStatus = cuMemcpyHtoD(DevFirWeights, rawFirWeights,
     sizeWeightsData * sizeof(float));
-  if (cudaStatus != CUDA_SUCCESS) {
+  if (cudaStatus != cudaSuccess) {
     fprintf(stderr, "cudaMemcpy failed!");
     throw "cudaMemcpy failed!";
   }
 
   cudaStatus = cuMemcpyHtoD(DevSampledData, rawInputSamples,
     sizeSampledData * sizeof(SampleType));
-  if (cudaStatus != CUDA_SUCCESS) {
+  if (cudaStatus != cudaSuccess) {
     fprintf(stderr, "cudaMemcpy failed!");
     throw "cudaMemcpy failed!";
   }
 
   cudaStatus = cuMemcpyHtoD(DevFilteredData, rawFilteredData,
     sizeFilteredData * sizeof(float));
-  if (cudaStatus != CUDA_SUCCESS) {
+  if (cudaStatus != cudaSuccess) {
     fprintf(stderr, "cudaMemcpy failed!");
     throw "cudaMemcpy failed!";
   }
@@ -236,11 +223,11 @@ int main()
                                 &DevSampledData,
                                 &DevFirWeights };
 
-  // unsigned  sharedMemBytes = 512;
+  unsigned  sharedMemBytes = 512;
 
   cudaStatus = cuLaunchKernel( hKernel, globalWorkSize.x, globalWorkSize.y, globalWorkSize.z, 
     localWorkSize.x, localWorkSize.y, localWorkSize.z, NULL, cuStream, kernel_func_args,0);
-  if (cudaStatus != CUDA_SUCCESS)
+  if (cudaStatus != cudaSuccess)
   {
     std::cerr << " cuLaunchKernel " << cudaStatus <<std::endl;
   }
@@ -254,7 +241,7 @@ int main()
   // Copy output vector from GPU buffer to host memory.
   cudaStatus = cuMemcpyDtoH(filteredData, DevFilteredData,
     sizeFilteredData * sizeof(float));
-  if (cudaStatus != CUDA_SUCCESS) {
+  if (cudaStatus != cudaSuccess) {
     fprintf(stderr, "cudaMemcpy failed!");
     throw "cudaMemcpy failed!";
   }

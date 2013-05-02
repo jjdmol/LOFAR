@@ -33,7 +33,7 @@
 #define NR_TAPS                 16
 
 #define NR_STATIONS 20
-#define NR_SAMPLES_PER_CHANNEL 128
+#define NR_SAMPLES_PER_CHANNEL 100
 #define NR_CHANNELS 64
 
 #if NR_BITS_PER_SAMPLE == 16
@@ -122,10 +122,10 @@ namespace LOFAR
 
         std::cerr << "> Using CUDA device [" << cuda_device << " : " <<  deviceProp.name << std:: endl;
 
-        const char *kernel_name = "FIR_Filter";
-        const char *kernel_extension = ".cu";
+        char *kernel_name = "FIR_Filter";
+        char *kernel_extention = ".cu";
         std::stringstream ss;
-        ss << "nvcc " << kernel_name << kernel_extension
+        ss << "nvcc " << kernel_name << kernel_extention
           << " -ptx"
           << " -DNR_STATIONS=" << 10 
           << " -DNR_TAPS=" << 16
@@ -150,7 +150,7 @@ namespace LOFAR
         sstr << in.rdbuf();
         cudaFree(0); // Hack to initialize the primary context. should use a proper api functions
         cudaStatus = cuModuleLoadDataEx(&hModule, sstr.str().c_str(), 0, 0, 0);
-        if (cudaStatus != CUDA_SUCCESS) {
+        if (cudaStatus != cudaSuccess) {
           std::cerr << " Failed loading the kernel module, status: " << cudaStatus <<std::endl;
         }
 
@@ -158,7 +158,7 @@ namespace LOFAR
 
         // Get the entry point in the kernel
         cudaStatus = cuModuleGetFunction(&hKernel, hModule, "FIR_filter");
-        if (cudaStatus != CUDA_SUCCESS)
+        if (cudaStatus != cudaSuccess)
         {
           std::cerr << " Failed loading the function entry point, status: " << cudaStatus <<std::endl;
         }
@@ -280,7 +280,7 @@ namespace LOFAR
     unsigned  sharedMemBytes = 64;
     cudaStatus = cuLaunchKernel( hKernel, globalWorkSize.x, globalWorkSize.y, globalWorkSize.z, 
       localWorkSize.x, localWorkSize.y, localWorkSize.z, sharedMemBytes, cuStream, kernel_func_args,0);
-    if (cudaStatus != CUDA_SUCCESS)
+    if (cudaStatus != cudaSuccess)
   {
     std::cerr << " cuLaunchKernel " << cudaStatus <<std::endl;
     }
@@ -307,7 +307,7 @@ namespace LOFAR
         // Expected output: St0, pol0, ch0, sampl0: 6. The rest all 0.
         if((*filteredData)[0][0][0][0][0] != 6.0f) 
         {
-          // int maxSample = NR_SAMPLES_PER_CHANNEL;
+          int maxSample = NR_SAMPLES_PER_CHANNEL;
           std::cerr << "FIR_FilterTest 1: Expected at idx 0: 6; got: " << (*filteredData)[0][0][0][0][0] << std::endl;
           testOk = false;
         }

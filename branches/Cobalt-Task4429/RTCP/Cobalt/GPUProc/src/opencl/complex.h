@@ -22,8 +22,6 @@
 // \file opencl/complex.h
 // Support for complex numbers in OpenCL.
 
-#warning "Not implemented yet."
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -31,7 +29,7 @@ namespace LOFAR
     namespace gpu
     {
 
-    } // namespace gpu
+    } // namespace cl
 
   } // namespace Cobalt
 
