@@ -297,6 +297,10 @@ namespace LOFAR
         // second event.
         float elapsedTime(Event &second) const;
 
+        // Wait until all work preceding this event in the same stream has
+        // completed.
+        void wait();
+
       private:
         // Stream needs access to our CUDA event to wait for and record events.
         friend class Stream;
