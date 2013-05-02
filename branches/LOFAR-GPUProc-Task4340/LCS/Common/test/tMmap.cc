@@ -118,7 +118,7 @@ int main()
     cerr << "Error: erroneous mmap should have thrown, but it did not" << endl;
     return 1;
   } catch (LOFAR::SystemCallException& exc) {
-    cerr << "Caught expected SystemCallException: " << exc << endl;
+    cerr << "Caught expected SystemCallException" << endl;
   }
 
   cout << "Mmap Tests: all tests succeeded" << endl;
