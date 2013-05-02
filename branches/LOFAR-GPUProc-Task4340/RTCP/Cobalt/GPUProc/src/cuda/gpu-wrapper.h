@@ -238,6 +238,9 @@ namespace gpu {
 
     float elapsedTime(Event &second) const;
 
+    // Wait until all work preceding this event in the same stream has completed.
+    void wait();
+
     friend class Stream; // Stream needs our event (i.e. _impl) to wait for and record events
 
   private:

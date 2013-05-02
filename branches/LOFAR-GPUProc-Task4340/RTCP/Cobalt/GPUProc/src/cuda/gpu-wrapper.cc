@@ -357,6 +357,11 @@ const char *Error::what() const throw()
       return ms;
     }
 
+    void wait()
+    {
+      checkCuCall(cuEventSynchronize(_event));
+    }
+
   //private: // Stream needs it to wait for and record events
     CUevent _event;
   };
@@ -366,6 +371,11 @@ const char *Error::what() const throw()
   float Event::elapsedTime(Event &second) const
   {
     return _impl->elapsedTime(second);
+  }
+
+  void Event::wait()
+  {
+    _impl->wait();
   }
 
 
