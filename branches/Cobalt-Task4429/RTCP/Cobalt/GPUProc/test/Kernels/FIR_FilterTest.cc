@@ -36,7 +36,7 @@ using namespace LOFAR::Cobalt;
 int main()
 {
 
-  char *kernel_name = "FIR_Filter";
+  char const *kernel_name = "FIR_Filter";
   char *kernel_extention = ".cu";
   std::stringstream ss;
   ss << "nvcc " << kernel_name << kernel_extention
@@ -77,19 +77,6 @@ int main()
 
   std::cerr << "> Using CUDA device [" << cuda_device << " : " <<  deviceProp.name << std:: endl;
 
-  const char *kernel_name = "FIR_Filter";
-  const char *kernel_extention = ".cu";
-  std::stringstream ss;
-  ss << "nvcc " << kernel_name << kernel_extention
-    << " -ptx"
-    << " -DNR_STATIONS=" << NR_STATIONS
-    << " -DNR_TAPS=" << NR_TAPS
-    << " -DNR_SAMPLES_PER_CHANNEL=" << NR_SAMPLES_PER_CHANNEL
-    << " -DNR_CHANNELS=" << NR_CHANNELS
-    << " -DNR_POLARIZATIONS=" << NR_POLARIZATIONS
-    << " -DCOMPLEX=" << COMPLEX
-    << " -DNR_BITS_PER_SAMPLE=" << NR_BITS_PER_SAMPLE;
-  std::string str = ss.str();
 
   // load the created module
   CUmodule     hModule  = 0;
