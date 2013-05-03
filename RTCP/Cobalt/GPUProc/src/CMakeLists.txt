@@ -1,7 +1,8 @@
 # $Id: CMakeLists.txt 17003 2011-01-06 08:54:59Z romein $
 
 include(LofarPackageVersion)
-
+add_subdirectory(Kernels)
+add_subdirectory(cuda)
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}
@@ -11,6 +12,7 @@ set(_gpuproc_sources
   #Package__Version.cc
   BandPass.cc
   createProgram.cc
+  cuda/CudaRuntimeCompiler.cc
   FilterBank.cc
   global_defines.cc
   Kernel.cc
