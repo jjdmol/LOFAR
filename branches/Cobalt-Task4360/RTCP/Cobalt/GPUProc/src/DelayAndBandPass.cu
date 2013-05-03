@@ -18,10 +18,8 @@
 //#
 //# $Id$
 
-#include "math.cl"
-
 /** @file
- * This file contains an OpenCL implementation of the GPU kernel for the delay
+ * This file contains an Cuda implementation of the GPU kernel for the delay
  * and bandpass correction.
  *
  * Usually, this kernel will be run after the polyphase filter kernel FIR.cl. In
@@ -43,9 +41,18 @@
  * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
  */
 
+#define NR_CHANNELS 1
+#define NR_STATIONS
+#define NR_SAMPLES_PER_CHANNEL
+#define NR_SAMPLES_PER_SUBBAND
+#define NR_BITS_PER_SAMPLE 16
+#define NR_POLARIZATIONS
+#define NR_BEAMS
+
 #if NR_CHANNELS == 1
 #undef BANDPASS_CORRECTION
 #endif
+
 
 
 typedef __global fcomplex2 (*restrict OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
@@ -100,6 +107,7 @@ typedef __global const float (*restrict BandPassFactorsType)[NR_CHANNELS];
  *                                 ::BandPassFactorsType, a 1D array [channel] of
  *                                 float, containing bandpass correction factors
  */
+#define NR_CHANNELS 2
 __kernel __attribute__((reqd_work_group_size(16 * 16, 1, 1)))
 void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
                                    __global const fcomplex *restrict filteredDataPtr,
