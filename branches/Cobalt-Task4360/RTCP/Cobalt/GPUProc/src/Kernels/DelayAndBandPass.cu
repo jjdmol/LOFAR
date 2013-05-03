@@ -41,35 +41,49 @@
  * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
  */
 
-#define NR_CHANNELS 1
-#define NR_STATIONS
-#define NR_SAMPLES_PER_CHANNEL
-#define NR_SAMPLES_PER_SUBBAND
+//nvcc /home/wklijn/sources/4360/LOFAR/RTCP/Cobalt/GPUProc/src/Kernels/DelayAndBandPass.cu -I /home/wklijn/sources/4360/LOFAR/RTCP/Cobalt/GPUProc/src --ptx --gpu-architecture compute_30 --use_fast_math
+
+#include "cuda_runtime.h"
+#include <cuda.h>
+
+#include <cuda/complex.h>
+
+#define NR_CHANNELS 10
+#define NR_STATIONS 10
+#define NR_SAMPLES_PER_CHANNEL 1024
+#define NR_SAMPLES_PER_SUBBAND 128
 #define NR_BITS_PER_SAMPLE 16
-#define NR_POLARIZATIONS
-#define NR_BEAMS
+#define NR_POLARIZATIONS 2
+#define NR_BEAMS 8
+#define USE_CUDA 1
+#define COMPLEX 2
+#define SUBBAND_BANDWIDTH 4
+#define BANDPASS_CORRECTION 1
+#define DELAY_COMPENSATION 1
 
 #if NR_CHANNELS == 1
 #undef BANDPASS_CORRECTION
 #endif
 
 
-
-typedef __global fcomplex2 (*restrict OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
+typedef LOFAR::Cobalt::gpu::complex<float> complexfloat;
+typedef LOFAR::Cobalt::gpu::complex<short> complexshort;
+typedef LOFAR::Cobalt::gpu::complex<char> complexchar;
+typedef  complexfloat (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
 #if NR_CHANNELS == 1
 #if NR_BITS_PER_SAMPLE == 16
-typedef __global short_complex2 (*restrict InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND];
+typedef  complexshort (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
 #elif NR_BITS_PER_SAMPLE == 8
-typedef __global char_complex2 (*restrict InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND];
+typedef  complexchar (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
 #else
 #error unsupport NR_BITS_PER_SAMPLE
 #endif
 #else
-typedef __global fcomplex (*restrict InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
+typedef  complexfloat (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 #endif
-typedef __global const float2 (*restrict DelaysType)[NR_BEAMS][NR_STATIONS]; // 2 Polarizations; in seconds
-typedef __global const float2 (*restrict PhaseOffsetsType)[NR_STATIONS]; // 2 Polarizations; in radians
-typedef __global const float (*restrict BandPassFactorsType)[NR_CHANNELS];
+typedef  const complexfloat (* DelaysType)[NR_BEAMS][NR_STATIONS]; // 2 Polarizations; in seconds
+typedef  const complexfloat (* PhaseOffsetsType)[NR_STATIONS]; // 2 Polarizations; in radians
+typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 
 
 /**
@@ -107,16 +121,18 @@ typedef __global const float (*restrict BandPassFactorsType)[NR_CHANNELS];
  *                                 ::BandPassFactorsType, a 1D array [channel] of
  *                                 float, containing bandpass correction factors
  */
-#define NR_CHANNELS 2
-__kernel __attribute__((reqd_work_group_size(16 * 16, 1, 1)))
-void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
-                                   __global const fcomplex *restrict filteredDataPtr,
+
+//__kernel __attribute__((reqd_work_group_size(16 * 16, 1, 1)))
+
+extern "C" {
+ __global__ void applyDelaysAndCorrectBandPass( complexfloat * correctedDataPtr,
+                                    const complexfloat * filteredDataPtr,
                                    float subbandFrequency,
                                    unsigned beam,
-                                   __global const float2 *restrict delaysAtBeginPtr,
-                                   __global const float2 *restrict delaysAfterEndPtr,
-                                   __global const float2 *restrict phaseOffsetsPtr,
-                                   __global const float *restrict bandPassFactorsPtr)
+                                    const float2 * delaysAtBeginPtr,
+                                    const float2 * delaysAfterEndPtr,
+                                    const float2 * phaseOffsetsPtr,
+                                    const float * bandPassFactorsPtr)
 {
   OutputDataType outputData = (OutputDataType) correctedDataPtr;
   InputDataType inputData = (InputDataType) filteredDataPtr;
@@ -127,13 +143,13 @@ void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
 #if NR_CHANNELS > 1
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
 
-  __local fcomplex2 tmp[16][17]; // one too wide to allow coalesced reads
+  complexfloat tmp[16][17][2]; // one too wide to allow coalesced reads
 
-  uint major = get_global_id(0) / 16;
-  uint minor = get_global_id(0) % 16;
-  uint channel = get_global_id(1) * 16;
+  unsigned major = blockIdx.x*blockDim.x+threadIdx.x / 16;
+  unsigned minor = blockIdx.x*blockDim.x+threadIdx.x % 16;
+  unsigned channel = blockIdx.y*blockDim.y+threadIdx.y * 16;
 #endif
-  uint station = get_global_id(2);
+  unsigned station = blockIdx.y;
 
 #if defined DELAY_COMPENSATION
 #if NR_CHANNELS == 1
@@ -141,22 +157,22 @@ void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
 #else
   float frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS);
 #endif
-  float2 delayAtBegin = (*delaysAtBegin)[beam][station];
-  float2 delayAfterEnd = (*delaysAfterEnd)[beam][station];
-  float2 phiBegin = -2 * 3.1415926535f * delayAtBegin;
-  float2 phiEnd = -2 * 3.1415926535f * delayAfterEnd;
-  float2 deltaPhi = (phiEnd - phiBegin) / NR_SAMPLES_PER_CHANNEL;
+  complexfloat delayAtBegin = (*delaysAtBegin)[beam][station];
+  complexfloat delayAfterEnd = (*delaysAfterEnd)[beam][station];
+  complexfloat phiBegin = -2 * 3.1415926535f * delayAtBegin;
+  complexfloat phiEnd = -2 * 3.1415926535f * delayAfterEnd;
+  complexfloat deltaPhi = (phiEnd - phiBegin) / float(NR_SAMPLES_PER_CHANNEL); //cast to float first
 #if NR_CHANNELS == 1
-  float2 myPhiBegin = (phiBegin + get_local_id(0) * deltaPhi) * frequency + (*phaseOffsets)[station];
-  float2 myPhiDelta = get_local_size(0) * deltaPhi * frequency;
+  complexfloat myPhiBegin = (phiBegin + float(threadIdx.x) * deltaPhi) * frequency + (*phaseOffsets)[station];
+  complexfloat myPhiDelta = float(blockDim.x) * deltaPhi * frequency;
 #else
-  float2 myPhiBegin = (phiBegin + major * deltaPhi) * frequency + (*phaseOffsets)[station];
-  float2 myPhiDelta = 16 * deltaPhi * frequency;
+  complexfloat myPhiBegin = (phiBegin + float(major) * deltaPhi) * frequency + (*phaseOffsets)[station];
+  complexfloat myPhiDelta = 16.0f * deltaPhi * frequency;
 #endif
-  fcomplex vX = cexp(myPhiBegin.x);
-  fcomplex vY = cexp(myPhiBegin.y);
-  fcomplex dvX = cexp(myPhiDelta.x);
-  fcomplex dvY = cexp(myPhiDelta.y);
+  complexfloat vX = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiBegin.real()));  // This cast might be costly
+  complexfloat vY = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiBegin.imag()));
+  complexfloat dvX = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiDelta.real()));
+  complexfloat dvY = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiDelta.imag()));
 #endif
 
 #if defined BANDPASS_CORRECTION
@@ -169,35 +185,43 @@ void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
 #endif
 
 #if NR_CHANNELS == 1
-  for (uint time = get_local_id(0); time < NR_SAMPLES_PER_SUBBAND; time += get_local_size(0)) {
-    fcomplex2 samples = convert_float4((*inputData)[station][time]);
-    fcomplex sampleX = samples.s01;
-    fcomplex sampleY = samples.s23;
+  for (unsigned time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x) 
+  {
+    //fcomplex2 samples = convert_float4((*inputData)[station][time]);  complexshort (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS]
+    complexfloat sampleX = complexfloat((*inputData)[station][time][0].real(),
+                                        (*inputData)[station][time][0].imag()); //samples.s01; // low floats from the float4
+    complexfloat sampleY = complexfloat((*inputData)[station][time][1].real(),
+                                        (*inputData)[station][time][1].imag()); //samples.s23; //high floats
 #else
-  for (uint time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16) {
-    fcomplex sampleX = (*inputData)[station][0][time + major][channel + minor];
-    fcomplex sampleY = (*inputData)[station][1][time + major][channel + minor];
+  for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16) {
+    complexfloat sampleX = (*inputData)[station][0][time + major][channel + minor];
+    complexfloat sampleY = (*inputData)[station][1][time + major][channel + minor];
 #endif
 
 #if defined DELAY_COMPENSATION
-    sampleX = cmul(sampleX, vX);
-    sampleY = cmul(sampleY, vY);
-    vX = cmul(vY, dvX);
-    vY = cmul(vY, dvY);
+    sampleX = sampleX * vX;
+    sampleY = sampleY * vY;
+    vX = vY * dvX;
+    vY = vY * dvY;
 #elif defined BANDPASS_CORRECTION
     sampleX *= weight;
     sampleY *= weight;
 #endif
 
 #if NR_CHANNELS == 1
-    (*outputData)[station][0][time] = (float4) (sampleX, sampleY);
+    (*outputData)[station][0][time][0] = sampleX;
+    (*outputData)[station][0][time][1] = sampleY;
 #else
-    tmp[major][minor] = (float4) (sampleX, sampleY);
-    barrier(CLK_LOCAL_MEM_FENCE);
+    tmp[major][minor][0] = sampleX;
+    tmp[major][minor][1] = sampleY;
+    __syncthreads();
 
-    (*outputData)[station][channel + major][time + minor] = tmp[minor][major];
-    barrier(CLK_LOCAL_MEM_FENCE);
+
+    (*outputData)[station][channel + major][time + minor][0] = tmp[minor][major][0];
+    (*outputData)[station][channel + major][time + minor][1] = tmp[minor][major][1];
+    __syncthreads();
+
 #endif
   }
 }
-
+}
