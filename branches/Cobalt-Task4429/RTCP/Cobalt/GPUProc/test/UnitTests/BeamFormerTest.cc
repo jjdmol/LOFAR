@@ -18,6 +18,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <UnitTest++.h>
 
 TEST(FailSpectacularly2)
