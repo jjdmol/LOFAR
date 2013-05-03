@@ -1,8 +1,0 @@
-[general]
-pvss_path = "/opt/WinCC_OA/3.10"
-proj_path = "/opt/pvss/pvssproj/CS000"
-proj_version = "3.10"
-userName = "root"
-password = ""
-langs = "en_US.iso88591"
-ctrlMaxPendings = 7500 
