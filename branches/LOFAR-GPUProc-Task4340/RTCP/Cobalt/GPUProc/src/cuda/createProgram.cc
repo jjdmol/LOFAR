@@ -56,11 +56,10 @@ namespace LOFAR
       }
       if (::access(cudaCompiler.c_str(), X_OK) == -1)
 #endif
-      const string cudaCompiler = "nvcc"; // try through PATH  TODO: allow cmd-line arg override?
-
       bool debug = false; // TODO: wire up to program arg or 
 
-      stringstream cmd(cudaCompiler);
+      ostringstream cmd;
+      cmd << "nvcc"; // TODO: allow cmd-line arg override
       cmd << " --ptx";                         // Request intermediate format (ptx) as output. We may want to view or stir it.
       cmd << " -I" << dirname(__FILE__);       // TODO: move kernel sources to their own dir
       if (debug) {
