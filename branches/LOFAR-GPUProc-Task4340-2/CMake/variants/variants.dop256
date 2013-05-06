@@ -1,0 +1,13 @@
+option(USE_MPI       "Use MPI"       ON)
+option(USE_OPENMP    "Use OpenMP"    ON)
+option(USE_CUDA      "Use CUDA"      ON)
+option(USE_OPENCL    "Use OpenCL"    OFF)
+
+set(GNU_COMPILE_DEFINITIONS -DCL_USE_DEPRECATED_OPENCL_1_1_APIS)
+
+# CUDA 5.0 headers refuse to try gcc 4.7. Force 4.6 for the moment.
+set(GNU_C         /usr/bin/gcc-4.6 )
+set(GNU_CXX       /usr/bin/g++-4.6 )
+set(GNU_Fortran   /usr/bin/gfortran-4.6)
+set(GNU_ASM       /usr/bin/gcc-4.6 )
+
