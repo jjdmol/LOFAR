@@ -56,15 +56,13 @@ namespace LOFAR
       }
       if (::access(cudaCompiler.c_str(), X_OK) == -1)
 #endif
-      bool debug = false; // TODO: wire up to program arg or 
-
       ostringstream cmd;
       cmd << "nvcc"; // TODO: allow cmd-line arg override
       cmd << " --ptx";                         // Request intermediate format (ptx) as output. We may want to view or stir it.
       cmd << " -I" << dirname(__FILE__);       // TODO: move kernel sources to their own dir
-      if (debug) {
-        cmd << " -G --source-in-ptx";
-      }
+#ifdef LOFAR_DEBUG
+      cmd << " -G --source-in-ptx";
+#endif
       //cmd << " -m32";                          // -m64 (default) takes extra regs for a ptr, but allows >2 GB buffers, which we need in some kernels
       // use opt level 99
       // -Ox is only for host code. Opt backend compilation below.
