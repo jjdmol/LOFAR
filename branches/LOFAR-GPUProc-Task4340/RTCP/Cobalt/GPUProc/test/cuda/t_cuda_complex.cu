@@ -1,4 +1,4 @@
-//# tCUDAException.cc: small test for CUDAException class
+//# t_cuda_complex.cu
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -60,6 +60,9 @@ int main()
 
     // Add vectors in parallel.
     cudaError_t cudaStatus = addWithCuda(complex_out, complex_in,arraySize);
+    if (cudaStatus == cudaErrorNoDevice) {
+        return 3;
+    }
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "addWithCuda failed!");
         return 1;
@@ -111,7 +114,7 @@ cudaError_t addWithCuda(std::complex<float>* output_complex,
     // Choose which GPU to run on, change this on a multi-GPU system.
     cudaStatus = cudaSetDevice(0);
     if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
+        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?\n");
         goto Error;
     }
 

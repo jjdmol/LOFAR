@@ -25,6 +25,8 @@
 #ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
 #define LOFAR_GPUPROC_OPENCL_COMPLEX_H
 
+#warning "Not implemented yet."
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -32,7 +34,7 @@ namespace LOFAR
     namespace gpu
     {
 
-    } // namespace cl
+    } // namespace gpu
 
   } // namespace Cobalt
 

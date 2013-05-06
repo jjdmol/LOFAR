@@ -1,13 +1,14 @@
 # $Id: CMakeLists.txt 17003 2011-01-06 08:54:59Z romein $
 
 include(LofarPackageVersion)
-
+add_subdirectory(Kernels)
+add_subdirectory(cuda)
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
-set(GPUPROC_SOURCES
+set(_gpuproc_sources
   #Package__Version.cc
   BandPass.cc
   FilterBank.cc
@@ -48,7 +49,9 @@ set(GPUPROC_SOURCES
   WorkQueues/WorkQueue.cc)
 
 if(USE_CUDA)
-  lofar_add_library(gpuproc ${GPUPROC_SOURCES})
+  list(APPEND _gpuproc_sources cuda/gpu_wrapper.cc cuda/CudaRuntimeCompiler.cc)
+
+  lofar_add_library(gpuproc ${_gpuproc_sources})
   set_target_properties(gpuproc PROPERTIES DEFINE_SYMBOL "USE_CUDA")
   lofar_add_bin_program(rtcp rtcp.cc)
   #cuda_add_executable(rtcp rtcp.cc)
@@ -61,7 +64,9 @@ if(USE_CUDA)
 endif(USE_CUDA)
 
 if(USE_OPENCL)
-  lofar_add_library(gpuproc_opencl ${GPUPROC_SOURCES})
+  list(APPEND _gpuproc_sources opencl/gpu_wrapper.cc)
+
+  lofar_add_library(gpuproc_opencl ${_gpuproc_sources})
   set_target_properties(gpuproc_opencl PROPERTIES DEFINE_SYMBOL "USE_OPENCL")
   lofar_add_bin_program(rtcp_opencl rtcp.cc)
 
@@ -69,3 +74,4 @@ if(USE_OPENCL)
     rtcp_opencl
     DESTINATION bin)
 endif(USE_OPENCL)
+

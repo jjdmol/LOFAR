@@ -1,4 +1,5 @@
-//# BeamFormerTest.cc
+//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
+//#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,12 +19,28 @@
 //#
 //# $Id$
 
-#include <lofar_config.h>
+#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
 
-#include <UnitTest++.h>
+// \file
+// Template implementation of CUDA-specific wrapper classes for GPU types.
 
-TEST(FailSpectacularly2)
+namespace LOFAR
 {
-  CHECK(true);
-}
+  namespace Cobalt
+  {
+    namespace gpu
+    {
+        template <typename T>
+        T * HostMemory::get() const
+        {
+          return static_cast<T *>(getPtr());
+        }
 
+    } // namespace gpu
+
+  } // namespace Cobalt
+
+} // namespace LOFAR
+
+#endif
