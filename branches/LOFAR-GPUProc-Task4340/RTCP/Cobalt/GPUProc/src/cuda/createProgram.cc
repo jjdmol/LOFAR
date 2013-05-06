@@ -74,7 +74,8 @@ namespace LOFAR
       cmd << " --use_fast_math"; // we believe we can get away with this for LOFAR online DSP
 
       cmd << " -DNVIDIA_CUDA"; // left-over from OpenCL for Correlator.cl/.cu
-      //cmd << " -DUSE_FLOAT4_IN_CORRELATOR"; // on "GeForce GTX 680" // TODO: move this and many -D opts below into kernel-specific build arg routines
+      //if (targets[0].getName() == "GeForce GTX 680") // TODO: move this and many -D opts below into kernel-specific build arg routines
+      //cmd << " -DUSE_FLOAT4_IN_CORRELATOR";
       cmd << " -DNR_BITS_PER_SAMPLE=" << ps.nrBitsPerSample();
       cmd << " -DSUBBAND_BANDWIDTH=" << std::setprecision(7) << ps.subbandBandwidth() << 'f';
       cmd << " -DNR_SUBBANDS=" << ps.nrSubbands();

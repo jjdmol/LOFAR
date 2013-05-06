@@ -39,7 +39,8 @@ namespace LOFAR
       setArg(1, DMs);
 
       size_t maxNrThreads;
-      getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       unsigned fftSize = ps.dedispersionFFTsize();
 
       globalWorkSize = gpu::dim3(fftSize, ps.nrSamplesPerChannel() / fftSize, ps.nrChannelsPerSubband());

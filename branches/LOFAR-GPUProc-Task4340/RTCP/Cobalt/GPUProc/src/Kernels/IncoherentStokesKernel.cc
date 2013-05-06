@@ -40,7 +40,8 @@ namespace LOFAR
 
       unsigned nrTimes = ps.nrSamplesPerChannel() / ps.incoherentStokesTimeIntegrationFactor();
       size_t maxNrThreads;
-      getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       unsigned nrPasses = (nrTimes + maxNrThreads - 1) / maxNrThreads;
       unsigned nrTimesPerPass = (nrTimes + nrPasses - 1) / nrPasses;
       globalWorkSize = gpu::dim3(nrTimesPerPass * nrPasses, ps.nrChannelsPerSubband());

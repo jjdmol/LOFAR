@@ -39,7 +39,8 @@ namespace LOFAR
       setArg(2, devInvFIRfilterWeights);
 
       size_t maxNrThreads, nrThreads;
-      getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       // round down to nearest power of two
       for (nrThreads = 1024; nrThreads > maxNrThreads; nrThreads /= 2)
         ;

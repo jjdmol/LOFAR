@@ -137,6 +137,11 @@ const char *Error::what() const throw()
     return (size_t)nrDevices;
   }
 
+  string Platform::getName() const
+  {
+    return "NVIDIA CUDA";
+  }
+
 
   Device::Device(int ordinal)
   {
@@ -178,6 +183,13 @@ const char *Error::what() const throw()
       checkCuCall(cuCtxSetCurrent(_context));
     }
 
+    CUdevice getDevice() const
+    {
+      CUdevice dev;
+      checkCuCall(cuCtxGetDevice(&dev));
+      return dev;
+    }
+
     void setCacheConfig(CUfunc_cache config) const
     {
       checkCuCall(cuCtxSetCacheConfig(config));
@@ -198,6 +210,11 @@ const char *Error::what() const throw()
   void Context::setCurrent() const
   {
     _impl->setCurrent();
+  }
+
+  Device Context::getDevice() const
+  {
+    return Device(_impl->getDevice());
   }
 
   void Context::setCacheConfig(CUfunc_cache config) const

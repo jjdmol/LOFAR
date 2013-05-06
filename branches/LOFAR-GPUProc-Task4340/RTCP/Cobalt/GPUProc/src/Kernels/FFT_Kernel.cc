@@ -39,7 +39,8 @@ namespace LOFAR
     {
       ASSERT(fftSize == 256);
       ASSERT(forward);
-      std::vector<gpu::Device> devices(context.getInfo<CL_CONTEXT_DEVICES>());
+      //std::vector<gpu::Device> devices(context.getInfo<CL_CONTEXT_DEVICES>());
+      std::vector<gpu::Device> devices(1, context.getDevice()); // CUDA has only one device per context; generalize later to replace the prev commented line
       gpu::Module program(createProgram(context, devices, "FFT.cl", ""));
       kernel = gpu::Function(program, "fft0");
       kernel.setArg(0, buffer);

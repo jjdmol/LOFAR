@@ -38,7 +38,8 @@ namespace LOFAR
       setArg(1, devInputSamples);
 
       size_t maxNrThreads;
-      getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       globalWorkSize = gpu::dim3(maxNrThreads, ps.nrStations());
       localWorkSize = gpu::dim3(maxNrThreads, 1);
 

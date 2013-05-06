@@ -131,7 +131,9 @@ namespace LOFAR
       }
 
       for (std::vector<cl::Platform>::iterator platform = platforms.begin(); platform != platforms.end(); platform++) {
-        if (platform->getInfo<CL_PLATFORM_NAME>() == platformName) {
+        //if (platform->getInfo<CL_PLATFORM_NAME>() == platformName) {
+        gpu::Platform pf; // not so nice; generalize later
+        if (pf.getName() == platformName) {
           platform->getDevices(type, &devices);
 
           if (deviceName != 0)

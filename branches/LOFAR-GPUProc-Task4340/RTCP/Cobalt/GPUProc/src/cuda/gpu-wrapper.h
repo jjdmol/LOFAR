@@ -77,6 +77,11 @@ namespace gpu {
        * Returns the number of devices in the CUDA platform (or throws).
        */
       size_t size() const;
+
+      /*
+       * Returns the name of the CUDA platform. (currently, "NVIDIA CUDA")
+       */
+      std::string getName() const;
   };
 
 
@@ -112,6 +117,11 @@ namespace gpu {
      * Makes this context the current context.
      */
     void setCurrent() const;
+
+    /*
+     * Returns the device associated to the _current_ context.
+     */
+    Device getDevice() const;
 
     /*
      * Sets the cache config of the _current_ context.
