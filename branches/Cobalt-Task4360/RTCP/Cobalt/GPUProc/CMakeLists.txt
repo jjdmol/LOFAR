@@ -18,6 +18,8 @@ if(USE_CUDA)
   if(LOFAR_BUILD_VARIANT MATCHES "^DEBUG$")
     list(APPEND CUDA_NVCC_FLAGS "-g")
   endif()
+  # For backward compatibility with existing OpenCL code
+  lofar_find_package(OpenCL)
 endif()
 
 if(USE_OPENCL)
