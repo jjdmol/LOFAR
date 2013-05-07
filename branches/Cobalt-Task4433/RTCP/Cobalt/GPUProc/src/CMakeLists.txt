@@ -12,9 +12,6 @@ set(_gpuproc_sources
   #Package__Version.cc
   BandPass.cc
   createProgram.cc
-  cuda/CudaRuntimeCompiler.cc
-  cuda/Module.cc
-  cuda/Error.cc
   FilterBank.cc
   global_defines.cc
   Kernel.cc
@@ -53,10 +50,13 @@ set(_gpuproc_sources
   WorkQueues/WorkQueue.cc)
 
 if(USE_CUDA)
-  list(APPEND _gpuproc_sources cuda/gpu_wrapper.cc)
+  list(APPEND _gpuproc_sources 
+    cuda/CudaRuntimeCompiler.cc
+    cuda/gpu_wrapper.cc)
 endif()
 if(USE_OPENCL)
-  list(APPEND _gpuproc_sources opencl/gpu_wrapper.cc)
+  list(APPEND _gpuproc_sources 
+    opencl/gpu_wrapper.cc)
 endif()
 
 lofar_add_library(gpuproc ${_gpuproc_sources})
