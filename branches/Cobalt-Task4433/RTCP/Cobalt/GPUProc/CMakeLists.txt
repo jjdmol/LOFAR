@@ -3,33 +3,25 @@
 # We need at least CMake 2.8 for CUDA support
 cmake_minimum_required(VERSION 2.8)
 
-lofar_package(GPUProc 1.0 DEPENDS Common Stream ApplCommon CoInterface OpenCL_FFT InputProc)
-
 # Handle options USE_CUDA and USE_OPENCL.
-if(NOT USE_CUDA AND NOT USE_OPENCL)
-  message(FATAL_ERROR
-    "You need to enable CUDA or OpenCL to build ${PACKAGE_NAME}. "
-    "Please check your variants file!")
-endif()
-
-if(USE_CUDA)
+if(USE_CUDA AND NOT USE_OPENCL)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc)
   lofar_find_package(CUDA REQUIRED)
   add_definitions(-DUSE_CUDA)
   if(LOFAR_BUILD_VARIANT MATCHES "^DEBUG$")
     list(APPEND CUDA_NVCC_FLAGS "-g")
   endif()
-  # For backward compatibility with existing OpenCL code
-  lofar_find_package(OpenCL)
-endif()
-
-if(USE_OPENCL)
+elseif(USE_OPENCL AND NOT USE_CUDA)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc OpenCL_FFT)
   lofar_find_package(OpenCL REQUIRED)
   add_definitions(-DUSE_OPENCL)
+else()
+  message(FATAL_ERROR
+    "Either CUDA or OpenCL must be enabled to build GPUProc.")
 endif()
 
-#add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
+lofar_package(GPUProc 1.0 DEPENDS ${_gpuproc_deps})
 
-include(LofarFindPackage)
 lofar_find_package(OpenMP REQUIRED)
 lofar_find_package(LibSSH2 REQUIRED)
 lofar_find_package(OpenSSL REQUIRED)
@@ -51,12 +43,6 @@ lofar_find_package(Valgrind)
 if(USE_VALGRIND)
   add_definitions(-DUSE_VALGRIND)
 endif(USE_VALGRIND)  
-
-if(USE_PATCHED_OPENCL_HEADERS)
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/backward)
-endif(USE_PATCHED_OPENCL_HEADERS)
-
-#include_directories(clAmdFft/include) # AMD OpenCL FFT
 
 add_subdirectory(src)
 add_subdirectory(test)
