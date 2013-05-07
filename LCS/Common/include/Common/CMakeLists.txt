@@ -55,6 +55,7 @@ install(FILES
   LofarTypedefs.h
   LofarTypes.h
   lofar_vector.h
+  Mmap.h
   Numeric.h
   ObjectFactory.h
   OpenMP.h
