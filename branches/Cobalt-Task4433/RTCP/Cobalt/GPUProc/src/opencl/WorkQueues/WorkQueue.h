@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# WorkQueue.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,42 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_WORKQUEUE_H
+#define LOFAR_GPUPROC_OPENCL_WORKQUEUE_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#include <string>
+#include <map>
 
-#warning "Not implemented yet."
+#include <Common/Timer.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
+#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/gpu_incl.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    class WorkQueue
     {
+    public:
+      WorkQueue(cl::Context &context, cl::Device &device, unsigned gpuNumber, const Parset &ps);
 
-    } // namespace gpu
+      const unsigned gpu;
+      cl::Device &device;
+      cl::CommandQueue queue;
 
-  } // namespace Cobalt
+      std::map<std::string, SmartPtr<PerformanceCounter> > counters;
+      std::map<std::string, SmartPtr<NSTimer> > timers;
 
-} // namespace LOFAR
+    protected:
+      const Parset &ps;
+
+      void addCounter(const std::string &name);
+      void addTimer(const std::string &name);
+    };
+  }
+}
 
 #endif
 

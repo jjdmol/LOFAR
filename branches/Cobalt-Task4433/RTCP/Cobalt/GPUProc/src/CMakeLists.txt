@@ -1,8 +1,7 @@
 # $Id: CMakeLists.txt 17003 2011-01-06 08:54:59Z romein $
 
 include(LofarPackageVersion)
-add_subdirectory(Kernels)
-add_subdirectory(cuda)
+
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
   ${CMAKE_CURRENT_SOURCE_DIR}
@@ -11,55 +10,59 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 set(_gpuproc_sources
   #Package__Version.cc
   BandPass.cc
-  createProgram.cc
   FilterBank.cc
   global_defines.cc
-  Kernel.cc
-  Kernels/BeamFormerKernel.cc
-  Kernels/BeamFormerTransposeKernel.cc
-  Kernels/CoherentStokesKernel.cc
-  Kernels/CorrelatorKernel.cc
-  Kernels/DedispersionBackwardFFTkernel.cc
-  Kernels/DedispersionChirpKernel.cc
-  Kernels/DedispersionForwardFFTkernel.cc
-  Kernels/DelayAndBandPassKernel.cc
-  Kernels/FFT_Kernel.cc
-  Kernels/FFT_Plan.cc
-  Kernels/Filter_FFT_Kernel.cc
-  Kernels/FIR_FilterKernel.cc
-  Kernels/IncoherentStokesKernel.cc
-  Kernels/IntToFloatKernel.cc
-  #Kernels/UHEP_BeamFormerKernel.cc
-  #Kernels/UHEP_InvFFT_Kernel.cc
-  #Kernels/UHEP_InvFIR_Kernel.cc
-  #Kernels/UHEP_TransposeKernel.cc
-  #Kernels/UHEP_TriggerKernel.cc
-  OpenCL_Support.cc
-  PerformanceCounter.cc
-  Pipeline.cc
-  Pipelines/BeamFormerPipeline.cc
-  Pipelines/CorrelatorPipeline.cc
-  #Pipelines/UHEP_Pipeline.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
-  #UHEP/InvertedStationPPFWeights.cc
-  WorkQueues/BeamFormerWorkQueue.cc
-  WorkQueues/CorrelatorWorkQueue.cc
-  #WorkQueues/UHEP_WorkQueue.cc
-  WorkQueues/WorkQueue.cc)
+)
 
 if(USE_CUDA)
   list(APPEND _gpuproc_sources 
+    cuda/gpu_wrapper.cc
     cuda/CudaRuntimeCompiler.cc
-    cuda/gpu_wrapper.cc)
+  )
 endif()
+
 if(USE_OPENCL)
   list(APPEND _gpuproc_sources 
-    opencl/gpu_wrapper.cc)
+    opencl/gpu_wrapper.cc
+    opencl/createProgram.cc
+    opencl/OpenCL_Support.cc
+    opencl/PerformanceCounter.cc
+    opencl/Kernels/Kernel.cc
+    opencl/Kernels/BeamFormerKernel.cc
+    opencl/Kernels/BeamFormerTransposeKernel.cc
+    opencl/Kernels/CoherentStokesKernel.cc
+    opencl/Kernels/CorrelatorKernel.cc
+    opencl/Kernels/DedispersionBackwardFFTkernel.cc
+    opencl/Kernels/DedispersionChirpKernel.cc
+    opencl/Kernels/DedispersionForwardFFTkernel.cc
+    opencl/Kernels/DelayAndBandPassKernel.cc
+    opencl/Kernels/FFT_Kernel.cc
+    opencl/Kernels/FFT_Plan.cc
+    opencl/Kernels/Filter_FFT_Kernel.cc
+    opencl/Kernels/FIR_FilterKernel.cc
+    opencl/Kernels/IncoherentStokesKernel.cc
+    opencl/Kernels/IntToFloatKernel.cc
+    #opencl/Kernels/UHEP_BeamFormerKernel.cc
+    #opencl/Kernels/UHEP_InvFFT_Kernel.cc
+    #opencl/Kernels/UHEP_InvFIR_Kernel.cc
+    #opencl/Kernels/UHEP_TransposeKernel.cc
+    #opencl/Kernels/UHEP_TriggerKernel.cc
+    opencl/Pipelines/Pipeline.cc
+    opencl/Pipelines/BeamFormerPipeline.cc
+    opencl/Pipelines/CorrelatorPipeline.cc
+    #opencl/Pipelines/UHEP_Pipeline.cc
+    opencl/WorkQueues/WorkQueue.cc
+    opencl/WorkQueues/BeamFormerWorkQueue.cc
+    opencl/WorkQueues/CorrelatorWorkQueue.cc
+    #opencl/WorkQueues/UHEP_WorkQueue.cc
+  )
 endif()
 
 lofar_add_library(gpuproc ${_gpuproc_sources})
 
-lofar_add_bin_program(rtcp rtcp.cc)
-
+if(USE_OPENCL)
+  lofar_add_bin_program(rtcp rtcp.cc)
+endif()

@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# FIR_FilterKernel.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,27 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_FIR_FILTER_KERNEL_H
+#define LOFAR_GPUPROC_OPENCL_FIR_FILTER_KERNEL_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#include <CoInterface/Parset.h>
 
-#warning "Not implemented yet."
+#include "Kernel.h"
+#include <GPUProc/gpu_incl.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    class FIR_FilterKernel : public Kernel
     {
-
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+    public:
+      FIR_FilterKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
+                       cl::Buffer &devFilteredData, cl::Buffer &devInputSamples,
+                       cl::Buffer &devFIRweights);
+    };
+  }
+}
 
 #endif
 

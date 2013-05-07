@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# FFT_Kernel.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,40 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_FFT_KERNEL_H
+#define LOFAR_GPUPROC_OPENCL_FFT_KERNEL_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#include <CoInterface/Parset.h>
 
-#warning "Not implemented yet."
+#include <GPUProc/gpu_incl.h>
+#include <GPUProc/PerformanceCounter.h>
+#include "FFT_Plan.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    class FFT_Kernel
     {
+    public:
+      FFT_Kernel(cl::Context &context, unsigned fftSize,
+                 unsigned nrFFTs, bool forward, cl::Buffer &buffer);
+      void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter);
 
-    } // namespace gpu
 
-  } // namespace Cobalt
-
-} // namespace LOFAR
+    private:
+      unsigned nrFFTs, fftSize;
+#if defined USE_CUSTOM_FFT
+      cl::Kernel kernel;
+#else
+      clFFT_Direction direction;
+      FFT_Plan plan;
+      cl::Buffer   &buffer;
+#endif
+      cl::Event event;
+    };
+  }
+}
 
 #endif
 

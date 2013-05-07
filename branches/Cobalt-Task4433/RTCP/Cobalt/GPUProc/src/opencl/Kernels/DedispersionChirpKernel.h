@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# DedispersionChirpKernel.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,32 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_DEDISPERSION_CHIRP_KERNEL_H
+#define LOFAR_GPUPROC_OPENCL_DEDISPERSION_CHIRP_KERNEL_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#include <CoInterface/Parset.h>
 
-#warning "Not implemented yet."
+#include "Kernel.h"
+#include <GPUProc/gpu_incl.h>
+#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+
+    class DedispersionChirpKernel : public Kernel
     {
+    public:
+      DedispersionChirpKernel(const Parset &ps, cl::Program &program,
+                              cl::CommandQueue &queue, cl::Buffer &buffer, cl::Buffer &DMs);
 
-    } // namespace gpu
+      void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, double subbandFrequency);
 
-  } // namespace Cobalt
+    };
 
-} // namespace LOFAR
+  }
+}
 
 #endif
 

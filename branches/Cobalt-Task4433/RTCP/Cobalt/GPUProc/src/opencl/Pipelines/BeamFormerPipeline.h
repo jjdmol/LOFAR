@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# BeamFormerPipeline.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,33 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_BEAMFORMERPIPELINE_H
+#define LOFAR_GPUPROC_OPENCL_BEAMFORMERPIPELINE_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#include <CoInterface/Parset.h>
 
-#warning "Not implemented yet."
+#include <GPUProc/gpu_incl.h>
+#include <GPUProc/Pipeline.h>
+#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    class BeamFormerPipeline : public Pipeline
     {
+    public:
+      BeamFormerPipeline(const Parset &);
 
-    } // namespace gpu
+      void                    doWork();
 
-  } // namespace Cobalt
+      cl::Program intToFloatProgram, delayAndBandPassProgram, beamFormerProgram, transposeProgram, dedispersionChirpProgram;
 
-} // namespace LOFAR
+      PerformanceCounter intToFloatCounter, fftCounter, delayAndBandPassCounter, beamFormerCounter, transposeCounter, dedispersionForwardFFTcounter, dedispersionChirpCounter, dedispersionBackwardFFTcounter;
+      PerformanceCounter samplesCounter;
+    };
+  }
+}
 
 #endif
 

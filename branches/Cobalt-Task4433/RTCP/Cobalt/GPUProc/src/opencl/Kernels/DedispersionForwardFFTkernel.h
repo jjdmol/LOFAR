@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# DedispersionForwardFFTkernel.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,25 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_DEDISPERSION_FORWARD_FFTKERNEL_H
+#define LOFAR_GPUPROC_OPENCL_DEDISPERSION_FORWARD_FFTKERNEL_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#include <CoInterface/Parset.h>
 
-#warning "Not implemented yet."
+#include "FFT_Kernel.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    class DedispersionForwardFFTkernel : public FFT_Kernel
     {
+    public:
+      DedispersionForwardFFTkernel(const Parset &ps, cl::Context &context, cl::Buffer &buffer);
 
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+    };
+  }
+}
 
 #endif
 

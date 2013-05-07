@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# IncoherentStokesKernel.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,28 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_INCOHERENT_STOKES_KERNEL_H
+#define LOFAR_GPUPROC_OPENCL_INCOHERENT_STOKES_KERNEL_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#include <CoInterface/Parset.h>
 
-#warning "Not implemented yet."
+#include "Kernel.h"
+#include <GPUProc/gpu_incl.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+
+    class IncoherentStokesKernel : public Kernel
     {
+    public:
+      IncoherentStokesKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
+                             cl::Buffer &devIncoherentStokes, cl::Buffer &devInputSamples);
+    };
 
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+  }
+}
 
 #endif
 

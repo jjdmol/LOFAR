@@ -51,6 +51,9 @@ namespace LOFAR
 # include "cuda/gpu_wrapper.h"
 #elif defined (USE_OPENCL)
 # include "opencl/gpu_wrapper.h"
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
 #endif
 
 #endif
+

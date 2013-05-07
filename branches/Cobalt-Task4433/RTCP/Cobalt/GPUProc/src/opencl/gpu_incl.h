@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# gpu_incl.h: portable OpenCL header include with our option(s)
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,17 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_GPU_INCL_H
+#define LOFAR_GPUPROC_OPENCL_GPU_INCL_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+// OpenCL include option(s)
+#define __CL_ENABLE_EXCEPTIONS
 
-#warning "Not implemented yet."
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    namespace gpu
-    {
-
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+#if defined(__APPLE__) || defined(__MACOSX)
+# include <OpenCL/cl.hpp>
+#else
+# include <CL/cl.hpp>
+#endif
 
 #endif
 

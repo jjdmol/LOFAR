@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# createProgram.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,22 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_CREATE_PROGRAM_H
+#define LOFAR_GPUPROC_OPENCL_CREATE_PROGRAM_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#include <vector>
 
-#warning "Not implemented yet."
+#include <CoInterface/Parset.h>
+
+#include "gpu_incl.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
-    {
-
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+    cl::Program createProgram(const Parset &ps, cl::Context &context, std::vector<cl::Device> &devices, const char *sources);
+  }
+}
 
 #endif
 

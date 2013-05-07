@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# DelayAndBandPassKernel.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,29 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_DELAY_AND_BAND_PASS_KERNEL_H
+#define LOFAR_GPUPROC_OPENCL_DELAY_AND_BAND_PASS_KERNEL_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#include <CoInterface/Parset.h>
 
-#warning "Not implemented yet."
+#include "Kernel.h"
+#include <GPUProc/gpu_incl.h>
+#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+
+    class DelayAndBandPassKernel : public Kernel
     {
+    public:
+      DelayAndBandPassKernel(const Parset &ps, cl::Program &program, cl::Buffer &devCorrectedData, cl::Buffer &devFilteredData, cl::Buffer &devDelaysAtBegin, cl::Buffer &devDelaysAfterEnd, cl::Buffer &devPhaseOffsets, cl::Buffer &devBandPassCorrectionWeights);
 
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+      void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter, unsigned subband);
+    };
+  }
+}
 
 #endif
 

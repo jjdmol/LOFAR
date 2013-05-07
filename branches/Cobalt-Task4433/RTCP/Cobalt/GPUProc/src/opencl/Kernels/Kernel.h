@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# Kernel.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,33 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_KERNEL_H
+#define LOFAR_GPUPROC_OPENCL_KERNEL_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#include <CoInterface/Parset.h>
 
-#warning "Not implemented yet."
+#include <GPUProc/gpu_incl.h>
+#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    class Kernel : public cl::Kernel
     {
+    public:
+      Kernel(const Parset &ps, cl::Program &program, const char *name);
 
-    } // namespace gpu
+      void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter);
 
-  } // namespace Cobalt
-
-} // namespace LOFAR
+    protected:
+      cl::Event event;
+      const Parset &ps;
+      cl::NDRange globalWorkSize, localWorkSize;
+      size_t nrOperations, nrBytesRead, nrBytesWritten;
+    };
+  }
+}
 
 #endif
 

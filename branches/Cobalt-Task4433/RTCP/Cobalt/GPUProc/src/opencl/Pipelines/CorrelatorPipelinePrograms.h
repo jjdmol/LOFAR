@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# CorrelatorPipelinePrograms.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,23 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_CORRELATOR_PIPELINE_PROGRAMS_H
+#define LOFAR_GPUPROC_OPENCL_CORRELATOR_PIPELINE_PROGRAMS_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
-
-#warning "Not implemented yet."
+#include <GPUProc/gpu_incl.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    struct CorrelatorPipelinePrograms
     {
-
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+      cl::Program firFilterProgram;
+      cl::Program delayAndBandPassProgram;
+      cl::Program correlatorProgram;
+    };
+  }
+}
 
 #endif
 

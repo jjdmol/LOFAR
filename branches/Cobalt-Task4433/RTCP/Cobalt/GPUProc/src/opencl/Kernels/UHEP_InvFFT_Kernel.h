@@ -1,5 +1,4 @@
-//# complex.h: Support for complex numbers in OpenCL
-//#
+//# UHEP_InvFFT_Kernel.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,26 +18,26 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+#ifndef LOFAR_GPUPROC_OPENCL_UHEP_INV_FFT_KERNEL_H
+#define LOFAR_GPUPROC_OPENCL_UHEP_INV_FFT_KERNEL_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#include <CoInterface/Parset.h>
 
-#warning "Not implemented yet."
+#include "Kernel.h"
+#include <GPUProc/gpu_incl.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    class UHEP_InvFFT_Kernel : public Kernel
     {
+    public:
+      UHEP_InvFFT_Kernel(const Parset &ps, cl::Program &program, cl::Buffer &devFFTedData);
 
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+    };
+  }
+}
 
 #endif
 

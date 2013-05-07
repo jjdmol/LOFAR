@@ -1,6 +1,6 @@
-//# complex.h: Support for complex numbers in OpenCL
+//# gpu_incl.h
 //#
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -19,26 +19,23 @@
 //#
 //# $Id$
 
-// \file opencl/complex.h
-// Support for complex numbers in OpenCL.
+// \file
+// Include the right GPU API include with our options.
 
-#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
-#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#ifndef LOFAR_GPUPROC_GPU_INCL_H
+#define LOFAR_GPUPROC_GPU_INCL_H
 
-#warning "Not implemented yet."
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    namespace gpu
-    {
-
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+#if defined (USE_CUDA)
+# include "cuda/gpu_incl.h"
+#elif defined (USE_OPENCL)
+# include "opencl/gpu_incl.h"
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 
