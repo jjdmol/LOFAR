@@ -13,6 +13,8 @@ set(_gpuproc_sources
   BandPass.cc
   createProgram.cc
   cuda/CudaRuntimeCompiler.cc
+  cuda/Module.cc
+  cuda/Error.cc
   FilterBank.cc
   global_defines.cc
   Kernel.cc
