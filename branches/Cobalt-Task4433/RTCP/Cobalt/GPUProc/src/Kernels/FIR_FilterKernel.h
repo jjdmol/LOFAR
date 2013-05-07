@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include "cuda/FIR_FilterKernel.h"
+# include <cuda/Kernels/FIR_FilterKernel.h>
 #elif defined (USE_OPENCL)
-# include "opencl/FIR_FilterKernel.h"
+# include <opencl/Kernels/FIR_FilterKernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include "cuda/UHEP_InvFFT_Kernel.h"
+# include <cuda/Kernels/UHEP_InvFFT_Kernel.h>
 #elif defined (USE_OPENCL)
-# include "opencl/UHEP_InvFFT_Kernel.h"
+# include <opencl/Kernels/UHEP_InvFFT_Kernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include "cuda/UHEP_TriggerKernel.h"
+# include <cuda/Kernels/UHEP_TriggerKernel.h>
 #elif defined (USE_OPENCL)
-# include "opencl/UHEP_TriggerKernel.h"
+# include <opencl/Kernels/UHEP_TriggerKernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

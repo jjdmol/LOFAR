@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include "cuda/BeamFormerTransposeKernel.h"
+# include <cuda/Kernels/BeamFormerTransposeKernel.h>
 #elif defined (USE_OPENCL)
-# include "opencl/BeamFormerTransposeKernel.h"
+# include <opencl/Kernels/BeamFormerTransposeKernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include "cuda/CorrelatorPipelinePrograms.h"
+# include <cuda/Pipelines/CorrelatorPipelinePrograms.h>
 #elif defined (USE_OPENCL)
-# include "opencl/CorrelatorPipelinePrograms.h"
+# include <opencl/Pipelines/CorrelatorPipelinePrograms.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include "cuda/DedispersionChirpKernel.h"
+# include <cuda/Kernels/DedispersionChirpKernel.h>
 #elif defined (USE_OPENCL)
-# include "opencl/DedispersionChirpKernel.h"
+# include <opencl/Kernels/DedispersionChirpKernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

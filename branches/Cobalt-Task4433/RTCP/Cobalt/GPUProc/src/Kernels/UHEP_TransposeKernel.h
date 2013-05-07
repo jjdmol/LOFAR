@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include "cuda/UHEP_TransposeKernel.h"
+# include <cuda/Kernels/UHEP_TransposeKernel.h>
 #elif defined (USE_OPENCL)
-# include "opencl/UHEP_TransposeKernel.h"
+# include <opencl/Kernels/UHEP_TransposeKernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif
