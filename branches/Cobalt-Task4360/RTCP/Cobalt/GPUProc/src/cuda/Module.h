@@ -14,6 +14,8 @@ public:
          std::vector<CUjit_option>& options, 
          std::vector<void*> optionValues);
   CUmodule operator()() const;
+
+  CUfunction getKernelEntryPoint(const char* functionName);
 private:
   friend class Function;
   struct Impl;

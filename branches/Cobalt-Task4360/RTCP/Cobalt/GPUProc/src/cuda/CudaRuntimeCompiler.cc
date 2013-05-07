@@ -29,7 +29,7 @@ namespace CudaRuntimeCompiler
     {
       //flags.insert("device-debug ");
       flags.insert("use_fast_math");
-      flags.insert("gpu-architecture compute_30");
+      //flags.insert("gpu-architecture compute_30");  force that the computate architecture needs to be specified
       // opencl specific: --source-in-ptx  -m64
     }
     return flags;    
