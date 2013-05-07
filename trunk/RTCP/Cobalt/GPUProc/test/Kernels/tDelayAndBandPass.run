@@ -1,0 +1,18 @@
+#!/bin/sh -x
+
+echo "we are here"
+cp ${srcdir}/../../src/Kernels/DelayAndBandPass.cu .
+cp ${srcdir}/../../src/cuda/complex.h .
+module load cuda50/toolkit/5.0.35
+
+ls -l > /tmp/test.txt
+
+# Check for GPU
+if ! lspci | grep -E "VGA|3D" | grep -E "ATI|NVIDIA"
+then
+  echo "No ATI/NVIDIA graphics cards detected on host `hostname`" \
+       "-- aborting test." >&2
+  exit 3
+fi
+
+./tDelayAndBandPass

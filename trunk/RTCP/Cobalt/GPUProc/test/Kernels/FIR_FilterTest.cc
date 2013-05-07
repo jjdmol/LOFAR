@@ -99,8 +99,8 @@ int main()
   {
     std::cerr << " Failed loading the function entry point, status: " << cudaStatus <<std::endl;
   }
-  cudaStream_t cuStream;
 
+  cudaStream_t cuStream;
   cuError = cudaStreamCreate (&cuStream);
   if (cuError != cudaSuccess) {
     std::cerr << " Failed creating a stream: " << cuError << std::endl;

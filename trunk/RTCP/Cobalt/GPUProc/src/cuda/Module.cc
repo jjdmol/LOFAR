@@ -57,3 +57,12 @@ CUmodule Module::operator()() const
 {
   return _impl->_module;
 }
+
+CUfunction Module::getKernelEntryPoint(const char* functionName)
+{
+    CUfunction   hKernel; 
+    checkCudaCall(cuModuleGetFunction(&hKernel,
+                  _impl->_module,
+                  functionName));
+    return hKernel;
+}
