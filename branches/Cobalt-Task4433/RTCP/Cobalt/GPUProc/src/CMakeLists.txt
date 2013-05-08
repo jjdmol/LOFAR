@@ -26,9 +26,6 @@ if(USE_CUDA)
   lofar_add_library(gpuproc ${_gpuproc_sources})
   # Compiling rtcp.cc doesn't work yet for CUDA
   #lofar_add_bin_program(rtcp rtcp.cc)
-  #install(FILES
-  #  rtcp
-  #  DESTINATION bin)
 endif()
 
 if(USE_OPENCL)
@@ -69,7 +66,4 @@ if(USE_OPENCL)
 
   lofar_add_library(gpuproc_opencl ${_gpuproc_sources})
   lofar_add_bin_program(rtcp_opencl rtcp.cc)
-  install(FILES
-    rtcp_opencl
-    DESTINATION bin)
 endif()

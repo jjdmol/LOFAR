@@ -25,7 +25,7 @@
 #include <UnitTest++.h>
 #include <iostream>
 #include <CoInterface/Parset.h>
-#include "CoInterface/CorrelatedData.h"
+#include <CoInterface/CorrelatedData.h>
 #include <CoInterface/SparseSet.h>
 #include <CoInterface/MultiDimArray.h>
 #include <complex>
