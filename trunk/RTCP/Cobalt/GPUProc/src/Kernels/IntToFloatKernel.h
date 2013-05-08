@@ -1,5 +1,6 @@
 //# IntToFloatKernel.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,27 +19,23 @@
 //#
 //# $Id$
 
+// \file
+// Include the right GPU API include with our options.
+
 #ifndef LOFAR_GPUPROC_INT_TO_FLOAT_KERNEL_H
 #define LOFAR_GPUPROC_INT_TO_FLOAT_KERNEL_H
 
-#include <CoInterface/Parset.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-#include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    class IntToFloatKernel : public Kernel
-    {
-    public:
-      IntToFloatKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                       cl::Buffer &devFilteredData, cl::Buffer &devInputSamples);
-    };
-  }
-
-}
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Kernels/IntToFloatKernel.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Kernels/IntToFloatKernel.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

@@ -26,13 +26,16 @@
 #define LOFAR_GPUPROC_COMPLEX_H
 
 #if defined (USE_CUDA) && defined (USE_OPENCL)
-# warning "Either CUDA or OpenCL must be enabled, not both"
+# error "Either CUDA or OpenCL must be enabled, not both"
 #endif
 
 #if defined (USE_CUDA)
 # include "cuda/complex.h"
 #elif defined (USE_OPENCL)
 # include "opencl/complex.h"
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
 #endif
 
 #endif
+

@@ -1,5 +1,6 @@
 //# WorkQueue.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,42 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_WORKQUEUE_H
-#define LOFAR_GPUPROC_WORKQUEUE_H
+// \file
+// Include the right GPU API include with our options.
 
-#include <string>
-#include <map>
+#ifndef LOFAR_GPUPROC_WORK_QUEUE_H
+#define LOFAR_GPUPROC_WORK_QUEUE_H
 
-#include <Common/Timer.h>
-#include <CoInterface/Parset.h>
-#include <CoInterface/SmartPtr.h>
-#include <GPUProc/PerformanceCounter.h>
-#include <GPUProc/opencl-incl.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    class WorkQueue
-    {
-    public:
-      WorkQueue(cl::Context &context, cl::Device &device, unsigned gpuNumber, const Parset &ps);
-
-      const unsigned gpu;
-      cl::Device &device;
-      cl::CommandQueue queue;
-
-      std::map<std::string, SmartPtr<PerformanceCounter> > counters;
-      std::map<std::string, SmartPtr<NSTimer> > timers;
-
-    protected:
-      const Parset &ps;
-
-      void addCounter(const std::string &name);
-      void addTimer(const std::string &name);
-    };
-  }
-}
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/WorkQueues/WorkQueue.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/WorkQueues/WorkQueue.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

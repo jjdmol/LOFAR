@@ -1,12 +1,26 @@
 #include <string>
 #include <cstdlib>
 
-
+#include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
-#include <GPUProc/cuda/Module.h>
-#include <GPUProc/cuda/Error.h>
 
 using namespace std;
+using namespace LOFAR::Cobalt;
+
+void checkCudaCall(CUresult result)
+{
+  if (result != CUDA_SUCCESS) {
+    THROW (gpu::GPUException, "CUDA Device error: (" << result << ")");
+  }
+}
+
+void checkCudaCall(cudaError_t error)
+{
+  if (error != cudaSuccess) {
+    THROW (gpu::GPUException, "CUDA Runtime error: (" << error << ")");
+  }
+}
+
 int main()
 {
 
@@ -60,7 +74,7 @@ int main()
 
   // load the created module and get function entry point
   CUmodule     hModule  = 0;
-  Module delayAndBandPassModule(ptx1.c_str(), options, optionValues);
+  gpu::Module delayAndBandPassModule(ptx1.c_str(), options, optionValues);
   CUfunction   hKernel  =  delayAndBandPassModule.getKernelEntryPoint("applyDelaysAndCorrectBandPass");
 
   // Create the data arrays

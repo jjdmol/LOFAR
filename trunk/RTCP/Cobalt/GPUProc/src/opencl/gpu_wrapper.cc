@@ -20,8 +20,8 @@
 //# $Id$
 
 #include <lofar_config.h>
+
 #include "gpu_wrapper.h"
-#include <CL/cl.hpp>
 
 namespace LOFAR
 {
@@ -136,3 +136,4 @@ namespace LOFAR
   } // namespace Cobalt
 
 } // namespace LOFAR
+

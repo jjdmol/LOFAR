@@ -1,5 +1,6 @@
 //# BeamFormerWorkQueue.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,66 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_BEAM_FORMER_WORKQUEUE_H
-#define LOFAR_GPUPROC_BEAM_FORMER_WORKQUEUE_H
+// \file
+// Include the right GPU API include with our options.
 
-#include <complex>
+#ifndef LOFAR_GPUPROC_BEAM_FORMER_WORK_QUEUE_H
+#define LOFAR_GPUPROC_BEAM_FORMER_WORK_QUEUE_H
 
-#include <Common/LofarLogger.h>
-#include <CoInterface/Parset.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-#include <GPUProc/OpenCL_Support.h>
-#include <GPUProc/BandPass.h>
-#include <GPUProc/Pipelines/BeamFormerPipeline.h>
-
-#include <GPUProc/Kernels/IntToFloatKernel.h>
-#include <GPUProc/Kernels/Filter_FFT_Kernel.h>
-#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/Kernels/BeamFormerKernel.h>
-#include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
-#include <GPUProc/Kernels/DedispersionForwardFFTkernel.h>
-#include <GPUProc/Kernels/DedispersionBackwardFFTkernel.h>
-#include <GPUProc/Kernels/DedispersionChirpKernel.h>
-
-#include "WorkQueue.h"
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    class BeamFormerWorkQueue : public WorkQueue
-    {
-    public:
-      BeamFormerWorkQueue(BeamFormerPipeline &, unsigned queueNumber);
-
-      void doWork();
-
-      BeamFormerPipeline  &pipeline;
-
-      MultiArraySharedBuffer<char, 4>                inputSamples;
-      DeviceBuffer devFilteredData;
-      MultiArraySharedBuffer<float, 1>               bandPassCorrectionWeights;
-      MultiArraySharedBuffer<float, 3>               delaysAtBegin, delaysAfterEnd;
-      MultiArraySharedBuffer<float, 2>               phaseOffsets;
-      DeviceBuffer devCorrectedData;
-      MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights;
-      DeviceBuffer devComplexVoltages;
-      MultiArraySharedBuffer<std::complex<float>, 4> transposedComplexVoltages;
-      MultiArraySharedBuffer<float, 1>               DMs;
-
-    private:
-      IntToFloatKernel intToFloatKernel;
-      Filter_FFT_Kernel fftKernel;
-      DelayAndBandPassKernel delayAndBandPassKernel;
-      BeamFormerKernel beamFormerKernel;
-      BeamFormerTransposeKernel transposeKernel;
-      DedispersionForwardFFTkernel dedispersionForwardFFTkernel;
-      DedispersionBackwardFFTkernel dedispersionBackwardFFTkernel;
-      DedispersionChirpKernel dedispersionChirpKernel;
-    };
-
-  }
-}
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/WorkQueues/BeamFormerWorkQueue.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/WorkQueues/BeamFormerWorkQueue.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

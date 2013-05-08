@@ -1,5 +1,6 @@
 //# createProgram.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,21 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CREATE_PROGRAM_H
-#define LOFAR_GPUPROC_CREATE_PROGRAM_H
+// \file
+// Build GPU kernel program at runtime.
 
-#include <vector>
+#ifndef LOFAR_CREATE_PROGRAM_H
+#define LOFAR_CREATE_PROGRAM_H
 
-#include <CoInterface/Parset.h>
-#include "opencl-incl.h"
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    cl::Program createProgram(const Parset &ps, cl::Context &context, std::vector<cl::Device> &devices, const char *sources);
-  }
-}
+#if defined (USE_CUDA)
+# include "cuda/createProgram.h"
+#elif defined (USE_OPENCL)
+# include "opencl/createProgram.h"
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

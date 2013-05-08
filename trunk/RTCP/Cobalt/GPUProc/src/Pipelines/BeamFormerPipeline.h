@@ -1,5 +1,6 @@
 //# BeamFormerPipeline.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,33 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_BEAMFORMERPIPELINE_H
-#define LOFAR_GPUPROC_BEAMFORMERPIPELINE_H
+// \file
+// Support for the beamformer pipeline.
 
-#include <CoInterface/Parset.h>
+#ifndef LOFAR_GPUPROC_BEAM_FORMER_PIPELINE_H
+#define LOFAR_GPUPROC_BEAM_FORMER_PIPELINE_H
 
-#include <GPUProc/opencl-incl.h>
-#include <GPUProc/Pipeline.h>
-#include <GPUProc/PerformanceCounter.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    class BeamFormerPipeline : public Pipeline
-    {
-    public:
-      BeamFormerPipeline(const Parset &);
-
-      void                    doWork();
-
-      cl::Program intToFloatProgram, delayAndBandPassProgram, beamFormerProgram, transposeProgram, dedispersionChirpProgram;
-
-      PerformanceCounter intToFloatCounter, fftCounter, delayAndBandPassCounter, beamFormerCounter, transposeCounter, dedispersionForwardFFTcounter, dedispersionChirpCounter, dedispersionBackwardFFTcounter;
-      PerformanceCounter samplesCounter;
-    };
-  }
-}
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Pipelines/BeamFormerPipeline.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Pipelines/BeamFormerPipeline.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 
