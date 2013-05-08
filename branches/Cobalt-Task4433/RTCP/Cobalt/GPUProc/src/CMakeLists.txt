@@ -22,6 +22,7 @@ if(USE_CUDA)
     cuda/gpu_wrapper.cc
     cuda/CudaRuntimeCompiler.cc
   )
+  add_subdirectory(cuda)
 
   lofar_add_library(gpuproc ${_gpuproc_sources})
   # Compiling rtcp.cc doesn't work yet for CUDA
@@ -63,6 +64,7 @@ if(USE_OPENCL)
     opencl/WorkQueues/CorrelatorWorkQueue.cc
     #opencl/WorkQueues/UHEP_WorkQueue.cc
   )
+  add_subdirectory(opencl)
 
   lofar_add_library(gpuproc_opencl ${_gpuproc_sources})
   lofar_add_bin_program(rtcp_opencl rtcp.cc)
