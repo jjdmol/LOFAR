@@ -1,5 +1,6 @@
 //# UHEP_TriggerKernel.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,35 +19,23 @@
 //#
 //# $Id$
 
+// \file
+// Include the right GPU API include with our options.
+
 #ifndef LOFAR_GPUPROC_UHEP_TRIGGER_KERNEL_H
 #define LOFAR_GPUPROC_UHEP_TRIGGER_KERNEL_H
 
-#include <CoInterface/Parset.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-#include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-
-
-    struct TriggerInfo {
-      float mean, variance, bestValue;
-      unsigned bestApproxIndex;
-    };
-
-    class UHEP_TriggerKernel : public Kernel
-    {
-    public:
-      UHEP_TriggerKernel(const Parset &ps, cl::Program &program,
-                         cl::Buffer &devTriggerInfo, cl::Buffer &devInvFIRfilteredData);
-
-    };
-
-  }
-}
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Kernels/UHEP_TriggerKernel.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Kernels/UHEP_TriggerKernel.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

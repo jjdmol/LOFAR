@@ -20,7 +20,7 @@
 //# $Id$
 
 // \file opencl/gpu_wrapper.h
-// Support for complex numbers on GPUs.
+// GPU types on top of OpenCL.
 
 #ifndef LOFAR_GPUPROC_OPENCL_GPU_WRAPPER_H
 #define LOFAR_GPUPROC_OPENCL_GPU_WRAPPER_H
@@ -28,14 +28,11 @@
 #warning "Only partially implemented."
 
 #include <sstream>
-#include <CL/cl.hpp>
 
-#include <GPUProc/gpu_wrapper.h>
 #include <Common/Exception.h>
+#include "gpu_incl.h"
 
 namespace LOFAR
-
-
 {
   namespace Cobalt
   {
@@ -81,3 +78,4 @@ namespace LOFAR
 #endif
 
 #endif
+

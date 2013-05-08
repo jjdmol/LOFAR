@@ -22,6 +22,9 @@
 // \file opencl/complex.h
 // Support for complex numbers in OpenCL.
 
+#ifndef LOFAR_GPUPROC_OPENCL_COMPLEX_H
+#define LOFAR_GPUPROC_OPENCL_COMPLEX_H
+
 #warning "Not implemented yet."
 
 namespace LOFAR
@@ -36,3 +39,6 @@ namespace LOFAR
   } // namespace Cobalt
 
 } // namespace LOFAR
+
+#endif
+

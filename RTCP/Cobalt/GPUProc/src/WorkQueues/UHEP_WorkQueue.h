@@ -1,5 +1,6 @@
 //# UHEP_WorkQueue.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,52 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_UHEP_WORKQUEUE_H
-#define LOFAR_GPUPROC_UHEP_WORKQUEUE_H
+// \file
+// Include the right GPU API include with our options.
 
-#include <complex>
+#ifndef LOFAR_GPUPROC_UHEP_WORK_QUEUE_H
+#define LOFAR_GPUPROC_UHEP_WORK_QUEUE_H
 
-#include <Common/LofarLogger.h>
-#include <CoInterface/Parset.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-#include <GPUProc/global_defines.h>
-#include <GPUProc/OpenCL_Support.h>
-#include <GPUProc/Pipelines/UHEP_Pipeline.h>
-#include <GPUProc/Kernels/UHEP_TriggerKernel.h>
-#include "WorkQueue.h"
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    class UHEP_WorkQueue : public WorkQueue
-    {
-    public:
-      UHEP_WorkQueue(UHEP_Pipeline &, unsigned queueNumber);
-
-      void doWork(const float *delaysAtBegin, const float *delaysAfterEnd, const float *phaseOffsets);
-
-      UHEP_Pipeline       &pipeline;
-      cl::Event inputSamplesEvent, beamFormerWeightsEvent;
-
-      cl::Buffer devBuffers[2];
-      cl::Buffer devInputSamples;
-      MultiArrayHostBuffer<char, 5> hostInputSamples;
-
-      cl::Buffer devBeamFormerWeights;
-      MultiArrayHostBuffer<std::complex<float>, 3> hostBeamFormerWeights;
-
-      cl::Buffer devComplexVoltages;
-      cl::Buffer devReverseSubbandMapping;
-      cl::Buffer devFFTedData;
-      cl::Buffer devInvFIRfilteredData;
-      cl::Buffer devInvFIRfilterWeights;
-
-      cl::Buffer devTriggerInfo;
-      MultiArraySharedBuffer<TriggerInfo, 1> hostTriggerInfo;
-    };
-  }
-}
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/WorkQueues/UHEP_WorkQueue.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/WorkQueues/UHEP_WorkQueue.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

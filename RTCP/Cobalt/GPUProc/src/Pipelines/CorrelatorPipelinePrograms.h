@@ -1,5 +1,6 @@
 //# CorrelatorPipelinePrograms.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,23 +19,23 @@
 //#
 //# $Id$
 
+// \file
+// Include the right GPU API include with our options.
+
 #ifndef LOFAR_GPUPROC_CORRELATOR_PIPELINE_PROGRAMS_H
 #define LOFAR_GPUPROC_CORRELATOR_PIPELINE_PROGRAMS_H
 
-#include <GPUProc/opencl-incl.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    struct CorrelatorPipelinePrograms
-    {
-      cl::Program firFilterProgram;
-      cl::Program delayAndBandPassProgram;
-      cl::Program correlatorProgram;
-    };
-  }
-}
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Pipelines/CorrelatorPipelinePrograms.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Pipelines/CorrelatorPipelinePrograms.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

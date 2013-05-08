@@ -389,6 +389,17 @@ namespace LOFAR
       {
       }
 
+      // TODO: This should return a Function object; this function should
+      // be moved into the Impl class.
+      CUfunction Module::getKernelEntryPoint(const char* functionName)
+      {
+        CUfunction   hKernel; 
+        checkCuCall(cuModuleGetFunction(&hKernel,
+                                        _impl->_module,
+                                        functionName));
+        return hKernel;
+      }
+
 
       Function::Function(Module &module, const std::string &name)
       {

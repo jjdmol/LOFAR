@@ -1,5 +1,6 @@
 //# UHEP_Pipeline.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,34 +19,23 @@
 //#
 //# $Id$
 
+// \file
+// Include the right GPU API include with our options.
+
 #ifndef LOFAR_GPUPROC_UHEP_PIPELINE_H
 #define LOFAR_GPUPROC_UHEP_PIPELINE_H
 
-#include <CoInterface/Parset.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-#include <GPUProc/opencl-incl.h>
-#include <GPUProc/Pipeline.h>
-#include <GPUProc/PerformanceCounter.h>
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-
-    class UHEP_Pipeline : public Pipeline
-    {
-    public:
-      UHEP_Pipeline(const Parset &);
-
-      void                    doWork();
-
-      cl::Program beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
-      PerformanceCounter beamFormerCounter, transposeCounter, invFFTcounter, invFIRfilterCounter, triggerCounter;
-      PerformanceCounter beamFormerWeightsCounter, samplesCounter;
-    };
-
-  }
-}
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Pipelines/UHEP_Pipeline.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Pipelines/UHEP_Pipeline.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

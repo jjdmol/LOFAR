@@ -1,5 +1,6 @@
 //# CorrelatorPipeline.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,67 +19,23 @@
 //#
 //# $Id$
 
+// \file
+// Support for the correlator pipeline.
+
 #ifndef LOFAR_GPUPROC_CORRELATOR_PIPELINE_H
 #define LOFAR_GPUPROC_CORRELATOR_PIPELINE_H
 
-#include <CoInterface/Parset.h>
-#include <CoInterface/SlidingPointer.h>
-
-#include <GPUProc/opencl-incl.h>
-#include <GPUProc/BestEffortQueue.h>
-#include <GPUProc/Pipeline.h>
-#include <GPUProc/FilterBank.h>
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
-#include "CorrelatorPipelinePrograms.h"
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    // Correlator pipeline, connect input, GPUWorkQueues and output in a parallel (OMP).
-    // Connect all parts of the pipeline together: set up connections with the input stream
-    // each in a seperate thread. Start 2 WorkQueues for each GPU in the system.
-    // The WorkQueue are then filled with data from the stream. And started to 
-    // work. After all data is collected the output is written, again all parallel.
-    // This class contains most CPU side parallelism.
-    // It also contains two 'data' members that are shared between queues
-    class CorrelatorPipeline : public Pipeline
-    {
-    public:
-      CorrelatorPipeline(const Parset &);
-
-      // per thread/station start up the input create 2 WorkQueue for each available GPU
-      void        doWork();
-
-      // for each block, read all subbands from all stations, and divide the work over the workQueues
-      template<typename SampleT> void receiveInput( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
-
-      // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
-      void        doWorkQueue(CorrelatorWorkQueue &workQueue);
-
-      // process subbands on the GPU
-      void        processSubbands(CorrelatorWorkQueue &workQueue);
-
-      // postprocess subbands on the CPU
-      void        postprocessSubbands(CorrelatorWorkQueue &workQueue);
-
-      // send subbands to Storage
-      void        writeSubband(unsigned subband);
-
-    private:
-      struct Output {
-        // synchronisation to write blocks in-order
-        SlidingPointer<size_t> sync;
-
-        // output data queue
-        SmartPtr< BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> > > bequeue;
-      };
-
-      std::vector<struct Output> subbandPool;  // [subband]
-
-      FilterBank filterBank;
-      CorrelatorPipelinePrograms programs;
-    };
-  }
-}
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
 #endif
+
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Pipelines/CorrelatorPipeline.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Pipelines/CorrelatorPipeline.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
+
+#endif
+

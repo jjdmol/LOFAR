@@ -1,5 +1,6 @@
 //# BeamFormerTransposeKernel.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,27 +19,23 @@
 //#
 //# $Id$
 
+// \file
+// Include the right GPU API include with our options.
+
 #ifndef LOFAR_GPUPROC_BEAM_FORMER_TRANSPOSE_KERNEL_H
 #define LOFAR_GPUPROC_BEAM_FORMER_TRANSPOSE_KERNEL_H
 
-#include <CoInterface/Parset.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-#include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    class BeamFormerTransposeKernel : public Kernel
-    {
-    public:
-      BeamFormerTransposeKernel(const Parset &ps, cl::Program &program,
-                                cl::Buffer &devTransposedData, cl::Buffer &devComplexVoltages);
-
-    };
-  }
-}
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Kernels/BeamFormerTransposeKernel.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Kernels/BeamFormerTransposeKernel.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 
