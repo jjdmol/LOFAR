@@ -70,16 +70,12 @@ void FileStream::skip(size_t bytes)
 
 size_t FileStream::size()
 {
-  // lseek returning -1 can be either an error, or theoretically,
-  // a valid new file position. To make sure, we need to
-  // clear and check errno.
-  errno = 0;
-  off_t pos = lseek(fd, 0, SEEK_END);
+  struct stat st;
 
-  if (pos == (off_t)-1 && errno)
-    throw SystemCallException("lseek", errno, THROW_ARGS);
+  if (::fstat(fd, &st) != 0)
+    throw SystemCallException("fstat", errno, THROW_ARGS);
 
-  return pos;
+  return (size_t)st.st_size;
 }
 
 } // namespace LOFAR

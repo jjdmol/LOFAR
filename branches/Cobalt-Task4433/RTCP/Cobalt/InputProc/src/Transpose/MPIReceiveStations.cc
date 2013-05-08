@@ -114,7 +114,6 @@ namespace LOFAR {
 
         // Wait for any header request to finish
         int stat = waitAny(header_requests);
-        int rank = stationRanks[stat];
 
         /*
          * CHECK HEADER
@@ -122,6 +121,7 @@ namespace LOFAR {
 
         const struct Header &header = headers[stat];
 
+        //int rank = stationRanks[stat];
         //LOG_DEBUG_STR(logPrefix << "Received header from rank " << rank);
 
         ASSERTSTR(header.nrBeamlets == beamlets.size(), "Got " << header.nrBeamlets << " beamlets, but expected " << beamlets.size());
