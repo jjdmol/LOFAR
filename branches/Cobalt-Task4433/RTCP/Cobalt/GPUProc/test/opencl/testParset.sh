@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 # Run a parset and compare the output to that in the reference_output directory.
 # 
@@ -37,7 +37,7 @@ PARSET=$1
 # Include some useful shell functions
 . $srcdir/testFuncs.sh
 
-BINDIR=`pwd`/../src
+BINDIR=`pwd`/../../src
 
 # Some host info
 echo "Running as `whoami`"
@@ -95,9 +95,9 @@ function parse_logs
   echo "Global 20" >> rtcp.debug &&
 
   # run correlator -- without profiling
-  mpirun -H localhost -np 3 $BINDIR/rtcp $PARSET > performance_normal.txt 2>&1 &&
+  mpirun -H localhost -np 3 $BINDIR/rtcp_opencl $PARSET > performance_normal.txt 2>&1 &&
   # run correlator -- with profiling
-  mpirun -H localhost -np 3 $BINDIR/rtcp -p $PARSET > performance_profiled.txt 2>&1 &&
+  mpirun -H localhost -np 3 $BINDIR/rtcp_opencl -p $PARSET > performance_profiled.txt 2>&1 &&
 
   # compare output
   if [ "x" != "x$REFDIR" ]
