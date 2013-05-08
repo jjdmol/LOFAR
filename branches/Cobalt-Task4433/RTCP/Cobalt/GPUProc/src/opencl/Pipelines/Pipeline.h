@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_OPENCL_PIPELINE_H
-#define LOFAR_GPUPROC_OPENCL_PIPELINE_H
+#ifndef LOFAR_GPUPROC_PIPELINE_H
+#define LOFAR_GPUPROC_PIPELINE_H
 
 #include <string>
 #include <vector>
@@ -29,12 +29,12 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 
-#include <GPUProc/global_defines.h>
-#include <GPUProc/OpenMP_Support.h>
-#include <GPUProc/gpu_incl.h>
-#include <GPUProc/createProgram.h>
-#include <GPUProc/WorkQueues/WorkQueue.h>
-#include <GPUProc/PerformanceCounter.h>
+#include "global_defines.h"
+#include "OpenMP_Support.h"
+#include "opencl-incl.h"
+#include "createProgram.h"
+#include "WorkQueues/WorkQueue.h"
+#include "PerformanceCounter.h"
 
 namespace LOFAR
 {

@@ -18,13 +18,13 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_OPENCL_FIR_FILTER_KERNEL_H
-#define LOFAR_GPUPROC_OPENCL_FIR_FILTER_KERNEL_H
+#ifndef LOFAR_GPUPROC_FIR_FILTER_KERNEL_H
+#define LOFAR_GPUPROC_FIR_FILTER_KERNEL_H
 
 #include <CoInterface/Parset.h>
 
-#include "Kernel.h"
-#include <GPUProc/gpu_incl.h>
+#include <GPUProc/Kernel.h>
+#include <GPUProc/opencl-incl.h>
 
 namespace LOFAR
 {

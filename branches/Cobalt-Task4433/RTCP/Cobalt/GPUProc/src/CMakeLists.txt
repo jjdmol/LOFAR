@@ -14,29 +14,19 @@ set(_gpuproc_sources
   global_defines.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc
-  Storage/StorageProcesses.cc
-)
+  Storage/StorageProcesses.cc)
 
 if(USE_CUDA)
   list(APPEND _gpuproc_sources 
     cuda/gpu_wrapper.cc
     cuda/CudaRuntimeCompiler.cc
   )
-
-  lofar_add_library(gpuproc ${_gpuproc_sources})
-  # Compiling rtcp.cc doesn't work yet for CUDA
-  #lofar_add_bin_program(rtcp rtcp.cc)
-  #install(FILES
-  #  rtcp
-  #  DESTINATION bin)
 endif()
 
 if(USE_OPENCL)
   list(APPEND _gpuproc_sources 
-    #opencl/gpu_wrapper.cc
     opencl/createProgram.cc
-    opencl/OpenCL_Support.cc
-    opencl/PerformanceCounter.cc
+    opencl/gpu_wrapper.cc
     opencl/Kernels/Kernel.cc
     opencl/Kernels/BeamFormerKernel.cc
     opencl/Kernels/BeamFormerTransposeKernel.cc
@@ -52,24 +42,18 @@ if(USE_OPENCL)
     opencl/Kernels/FIR_FilterKernel.cc
     opencl/Kernels/IncoherentStokesKernel.cc
     opencl/Kernels/IntToFloatKernel.cc
-    #opencl/Kernels/UHEP_BeamFormerKernel.cc
-    #opencl/Kernels/UHEP_InvFFT_Kernel.cc
-    #opencl/Kernels/UHEP_InvFIR_Kernel.cc
-    #opencl/Kernels/UHEP_TransposeKernel.cc
-    #opencl/Kernels/UHEP_TriggerKernel.cc
+    opencl/OpenCL_Support.cc
+    opencl/PerformanceCounter.cc
     opencl/Pipelines/Pipeline.cc
     opencl/Pipelines/BeamFormerPipeline.cc
     opencl/Pipelines/CorrelatorPipeline.cc
-    #opencl/Pipelines/UHEP_Pipeline.cc
-    opencl/WorkQueues/WorkQueue.cc
     opencl/WorkQueues/BeamFormerWorkQueue.cc
     opencl/WorkQueues/CorrelatorWorkQueue.cc
-    #opencl/WorkQueues/UHEP_WorkQueue.cc
-  )
+    opencl/WorkQueues/WorkQueue.cc)
+endif()
 
-  lofar_add_library(gpuproc_opencl ${_gpuproc_sources})
-  lofar_add_bin_program(rtcp_opencl rtcp.cc)
-  install(FILES
-    rtcp_opencl
-    DESTINATION bin)
+lofar_add_library(gpuproc ${_gpuproc_sources})
+
+if(USE_OPENCL)
+  lofar_add_bin_program(rtcp rtcp.cc)
 endif()

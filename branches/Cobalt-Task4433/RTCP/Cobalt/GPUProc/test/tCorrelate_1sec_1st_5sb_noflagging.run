@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 TESTNAME=`basename "${0%%.run}"`
 
 PARSET=$srcdir/$TESTNAME.parset

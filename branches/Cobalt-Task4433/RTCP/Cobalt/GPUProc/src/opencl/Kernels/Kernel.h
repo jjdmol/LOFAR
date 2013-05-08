@@ -18,13 +18,12 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_OPENCL_KERNEL_H
-#define LOFAR_GPUPROC_OPENCL_KERNEL_H
+#ifndef LOFAR_GPUPROC_KERNEL_H
+#define LOFAR_GPUPROC_KERNEL_H
 
 #include <CoInterface/Parset.h>
-
-#include <GPUProc/gpu_incl.h>
-#include <GPUProc/PerformanceCounter.h>
+#include "opencl-incl.h"
+#include "PerformanceCounter.h"
 
 namespace LOFAR
 {

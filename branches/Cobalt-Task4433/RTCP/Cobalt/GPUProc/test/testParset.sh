@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # Run a parset and compare the output to that in the reference_output directory.
 # 

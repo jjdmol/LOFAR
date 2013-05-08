@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
 
-#include <GPUProc/OpenCL_Support.h>
+#include "OpenCL_Support.h"
 
 #if 0
 #include <boost/format.hpp>

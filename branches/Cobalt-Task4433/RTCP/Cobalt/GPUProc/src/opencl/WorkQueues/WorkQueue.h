@@ -28,7 +28,7 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <GPUProc/PerformanceCounter.h>
-#include <GPUProc/gpu_incl.h>
+#include <GPUProc/opencl-incl.h>
 
 namespace LOFAR
 {

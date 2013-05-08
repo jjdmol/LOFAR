@@ -1,5 +1,5 @@
-//# tContext.cc: test OpenCL context creation
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# opencl-incl.h: portable OpenCL header include with our option(s)
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,32 +18,17 @@
 //#
 //# $Id$
 
-#include <lofar_config.h>
+#ifndef LOFAR_GPUPROC_OPENCL_INCL_H
+#define LOFAR_GPUPROC_OPENCL_INCL_H
 
-#include <vector>
-#include <Common/LofarLogger.h>
+// OpenCL include option(s)
+#define __CL_ENABLE_EXCEPTIONS
 
-#include <GPUProc/OpenCL_Support.h>
+#if defined(__APPLE__) || defined(__MACOSX)
+# include <OpenCL/cl.hpp>
+#else
+# include <CL/cl.hpp>
+#endif
 
-using namespace LOFAR;
-using namespace Cobalt;
-using namespace std;
-
-// test OpenCL context creation
-void test_create()
-{
-  cl::Context context;
-  vector<cl::Device> devices;
-
-  createContext(context, devices);
-}
-
-int main()
-{
-  INIT_LOGGER( "tContext" );
-
-  test_create();
-
-  return 0;
-}
+#endif
 
