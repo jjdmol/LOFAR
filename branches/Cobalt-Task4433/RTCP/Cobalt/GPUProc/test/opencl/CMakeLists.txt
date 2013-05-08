@@ -14,7 +14,7 @@ if(UNITTEST++_FOUND)
 endif()
 
 # tests that use testParset.sh
-lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging)
-lofar_add_test(tCorrelate_3sec_1st_5sb)
-lofar_add_test(tCorrelate_3sec_2st_5sb)
-lofar_add_test(tGPUPerformance)
+lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp_opencl)
+lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp_opencl)
+lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp_opencl)
+lofar_add_test(tGPUPerformance DEPENDS rtcp_opencl)
