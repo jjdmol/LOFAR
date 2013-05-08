@@ -174,7 +174,7 @@ void applyDelaysAndCorrectBandPass(__global fcomplex *restrict correctedDataPtr,
 #if defined DELAY_COMPENSATION
     sampleX = cmul(sampleX, vX);
     sampleY = cmul(sampleY, vY);
-    vX = cmul(vY, dvX);
+    vX = cmul(vX, dvX);
     vY = cmul(vY, dvY);
 #elif defined BANDPASS_CORRECTION
     sampleX *= weight;
