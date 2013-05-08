@@ -23,8 +23,7 @@ endif()
 
 # TODO: gradually move tests below out of USE_OPENCL when CUDA port is getting done
 if(USE_OPENCL)
-  lofar_add_test(tContext tContext.cc)
-  lofar_add_test(tPerformanceCounter tPerformanceCounter.cc)
+  add_subdirectory(opencl)
   lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging)
   lofar_add_test(tCorrelate_3sec_1st_5sb)
   lofar_add_test(tCorrelate_3sec_2st_5sb)
@@ -32,10 +31,5 @@ if(USE_OPENCL)
   #lofar_add_test(RTCP_UnitTest RTCP_UnitTest.cc UnitTest.cc)
 
   lofar_find_package(UnitTest++)
-  if(UNITTEST++_FOUND)
-    lofar_add_test(tCorrelatorWorkQueue 
-      UnitTests/WorkQueues/tCorrelatorWorkQueue.cc
-      UnitTests/new_style_unittest.cc)
-  endif()
 endif()
 
