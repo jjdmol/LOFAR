@@ -18,12 +18,12 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_FFT_KERNEL_H
-#define LOFAR_GPUPROC_FFT_KERNEL_H
+#ifndef LOFAR_GPUPROC_OPENCL_FFT_KERNEL_H
+#define LOFAR_GPUPROC_OPENCL_FFT_KERNEL_H
 
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu_incl.h>
 #include <GPUProc/PerformanceCounter.h>
 #include "FFT_Plan.h"
 

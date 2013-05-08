@@ -39,6 +39,7 @@
 #include <GPUProc/createProgram.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 #include <GPUProc/WorkQueues/WorkQueue.h>
+
 using namespace std;
 
 namespace LOFAR

@@ -18,14 +18,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_UHEP_PIPELINE_H
-#define LOFAR_GPUPROC_UHEP_PIPELINE_H
+#ifndef LOFAR_GPUPROC_OPENCL_UHEP_PIPELINE_H
+#define LOFAR_GPUPROC_OPENCL_UHEP_PIPELINE_H
 
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/opencl-incl.h>
-#include <GPUProc/Pipeline.h>
+#include <GPUProc/gpu_incl.h>
 #include <GPUProc/PerformanceCounter.h>
+#include "Pipeline.h"
 
 namespace LOFAR
 {

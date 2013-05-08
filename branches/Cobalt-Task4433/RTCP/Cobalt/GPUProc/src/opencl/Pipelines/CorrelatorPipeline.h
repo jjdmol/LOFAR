@@ -18,17 +18,17 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CORRELATOR_PIPELINE_H
-#define LOFAR_GPUPROC_CORRELATOR_PIPELINE_H
+#ifndef LOFAR_GPUPROC_OPENCL_CORRELATOR_PIPELINE_H
+#define LOFAR_GPUPROC_OPENCL_CORRELATOR_PIPELINE_H
 
 #include <CoInterface/Parset.h>
 #include <CoInterface/SlidingPointer.h>
 
-#include <GPUProc/opencl-incl.h>
+#include <GPUProc/gpu_incl.h>
 #include <GPUProc/BestEffortQueue.h>
-#include <GPUProc/Pipeline.h>
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
+#include "Pipeline.h"
 #include "CorrelatorPipelinePrograms.h"
 
 namespace LOFAR
@@ -81,4 +81,6 @@ namespace LOFAR
     };
   }
 }
+
 #endif
+

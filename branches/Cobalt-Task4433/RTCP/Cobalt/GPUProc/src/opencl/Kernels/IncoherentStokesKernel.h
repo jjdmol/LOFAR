@@ -18,13 +18,13 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_INCOHERENT_STOKES_KERNEL_H
-#define LOFAR_GPUPROC_INCOHERENT_STOKES_KERNEL_H
+#ifndef LOFAR_GPUPROC_OPENCL_INCOHERENT_STOKES_KERNEL_H
+#define LOFAR_GPUPROC_OPENCL_INCOHERENT_STOKES_KERNEL_H
 
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/Kernel.h>
-#include <GPUProc/opencl-incl.h>
+#include "Kernel.h"
+#include <GPUProc/gpu_incl.h>
 
 namespace LOFAR
 {
