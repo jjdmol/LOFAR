@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include <cuda/Kernels/CorrelatorKernel.h>
+# include <GPUProc/cuda/Kernels/CorrelatorKernel.h>
 #elif defined (USE_OPENCL)
-# include <opencl/Kernels/CorrelatorKernel.h>
+# include <GPUProc/opencl/Kernels/CorrelatorKernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

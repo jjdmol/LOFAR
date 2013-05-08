@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include <cuda/WorkQueues/BeamFormerWorkQueue.h>
+# include <GPUProc/cuda/WorkQueues/BeamFormerWorkQueue.h>
 #elif defined (USE_OPENCL)
-# include <opencl/WorkQueues/BeamFormerWorkQueue.h>
+# include <GPUProc/opencl/WorkQueues/BeamFormerWorkQueue.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

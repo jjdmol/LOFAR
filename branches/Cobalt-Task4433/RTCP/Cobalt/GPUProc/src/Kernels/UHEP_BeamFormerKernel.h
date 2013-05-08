@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include <cuda/Kernels/UHEP_BeamFormerKernel.h>
+# include <GPUProc/cuda/Kernels/UHEP_BeamFormerKernel.h>
 #elif defined (USE_OPENCL)
-# include <opencl/Kernels/UHEP_BeamFormerKernel.h>
+# include <GPUProc/opencl/Kernels/UHEP_BeamFormerKernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

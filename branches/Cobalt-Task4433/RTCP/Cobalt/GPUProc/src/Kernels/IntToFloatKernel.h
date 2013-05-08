@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include <cuda/Kernels/IntToFloatKernel.h>
+# include <GPUProc/cuda/Kernels/IntToFloatKernel.h>
 #elif defined (USE_OPENCL)
-# include <opencl/Kernels/IntToFloatKernel.h>
+# include <GPUProc/opencl/Kernels/IntToFloatKernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

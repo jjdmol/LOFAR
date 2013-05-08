@@ -28,7 +28,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/PrettyUnits.h>
-#include "OpenMP_Support.h"
+#include <GPUProc/OpenMP_Support.h>
 
 using namespace std;
 

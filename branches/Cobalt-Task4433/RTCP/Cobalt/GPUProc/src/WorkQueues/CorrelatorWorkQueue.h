@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include <cuda/WorkQueues/CorrelatorWorkQueue.h>
+# include <GPUProc/cuda/WorkQueues/CorrelatorWorkQueue.h>
 #elif defined (USE_OPENCL)
-# include <opencl/WorkQueues/CorrelatorWorkQueue.h>
+# include <GPUProc/opencl/WorkQueues/CorrelatorWorkQueue.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

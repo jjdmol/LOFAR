@@ -24,8 +24,8 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/gpu_incl.h>
-#include <GPUProc/Pipeline.h>
 #include <GPUProc/PerformanceCounter.h>
+#include "Pipeline.h"
 
 namespace LOFAR
 {

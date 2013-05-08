@@ -1,4 +1,4 @@
-//# FIR_FilterKernel.h
+//# CorrelatorPipeline.h
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -20,19 +20,19 @@
 //# $Id$
 
 // \file
-// Include the right GPU API include with our options.
+// Support for the correlator pipeline.
 
-#ifndef LOFAR_GPUPROC_FIR_FILTER_KERNEL_H
-#define LOFAR_GPUPROC_FIR_FILTER_KERNEL_H
+#ifndef LOFAR_GPUPROC_CORRELATOR_PIPELINE_H
+#define LOFAR_GPUPROC_CORRELATOR_PIPELINE_H
 
 #if defined (USE_CUDA) && defined (USE_OPENCL)
 # error "Either CUDA or OpenCL must be enabled, not both"
 #endif
 
 #if defined (USE_CUDA)
-# include <GPUProc/cuda/Kernels/FIR_FilterKernel.h>
+# include <GPUProc/cuda/Pipelines/CorrelatorPipeline.h>
 #elif defined (USE_OPENCL)
-# include <GPUProc/opencl/Kernels/FIR_FilterKernel.h>
+# include <GPUProc/opencl/Pipelines/CorrelatorPipeline.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

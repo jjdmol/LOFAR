@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include <cuda/Kernels/DelayAndBandPassKernel.h>
+# include <GPUProc/cuda/Kernels/DelayAndBandPassKernel.h>
 #elif defined (USE_OPENCL)
-# include <opencl/Kernels/DelayAndBandPassKernel.h>
+# include <GPUProc/opencl/Kernels/DelayAndBandPassKernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

@@ -28,10 +28,9 @@
 #warning "Only partially implemented."
 
 #include <sstream>
-#include <CL/cl.hpp>
 
-#include <GPUProc/gpu_wrapper.h>
 #include <Common/Exception.h>
+#include "gpu_incl.h"
 
 namespace LOFAR
 {

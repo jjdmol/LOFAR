@@ -1,16 +1,36 @@
 # $Id: CMakeLists.txt 16350 2010-09-20 13:14:52Z nieuwpoort $
 
-# We need at least CMake 2.8 for CUDA support
-cmake_minimum_required(VERSION 2.8)
-
 # Handle options USE_CUDA and USE_OPENCL.
 if(USE_CUDA AND NOT USE_OPENCL)
+  # We need at least CMake 2.8 for CUDA support
+  cmake_minimum_required(VERSION 2.8)
+
   set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc)
-  lofar_find_package(CUDA REQUIRED)
+  lofar_find_package(CUDA 4.1 REQUIRED)
   add_definitions(-DUSE_CUDA)
   if(LOFAR_BUILD_VARIANT MATCHES "^DEBUG$")
-    list(APPEND CUDA_NVCC_FLAGS "-g")
+    list(APPEND CUDA_NVCC_FLAGS "-g" "-G")
   endif()
+
+  if(0)  # for dev to see what is available how; disabled to reduce spam
+    message(STATUS "CUDA_FOUND = ${CUDA_FOUND}")
+    message(STATUS "CUDA_VERSION_MAJOR = ${CUDA_VERSION_MAJOR}")
+    message(STATUS "CUDA_VERSION_MINOR = ${CUDA_VERSION_MINOR}")
+    message(STATUS "CUDA_VERSION = ${CUDA_VERSION}") # sometimes avail if CUDA_VERSION_STRING is not
+    message(STATUS "CUDA_VERSION_STRING = ${CUDA_VERSION_STRING}")
+    message(STATUS "CUDA_TOOLKIT_ROOT_DIR = ${CUDA_TOOLKIT_ROOT_DIR}")
+    message(STATUS "CUDA_SDK_ROOT_DIR = ${CUDA_SDK_ROOT_DIR}")
+    message(STATUS "CUDA_INCLUDE_DIRS = ${CUDA_INCLUDE_DIRS}")
+    message(STATUS "CUDA_LIBRARIES = ${CUDA_LIBRARIES}")
+    message(STATUS "CUDA_CUFFT_LIBRARIES = ${CUDA_CUFFT_LIBRARIES}")
+    message(STATUS "CUDA_CUBLAS_LIBRARIES = ${CUDA_CUBLAS_LIBRARIES}")
+    message(STATUS "CUDA_curand_LIBRARY = ${CUDA_curand_LIBRARY}")
+    message(STATUS "CUDA_cusparse_LIBRARY = ${CUDA_cusparse_LIBRARY}")
+    message(STATUS "CUDA_npp_LIBRARY = ${CUDA_npp_LIBRARY}")
+    message(STATUS "CUDA_nvcuvenc_LIBRARY = ${CUDA_nvcuvenc_LIBRARY}")
+    message(STATUS "CUDA_nvcuvid_LIBRARY = ${CUDA_nvcuvid_LIBRARY}")
+  endif()
+
 elseif(USE_OPENCL AND NOT USE_CUDA)
   set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc OpenCL_FFT)
   lofar_find_package(OpenCL REQUIRED)

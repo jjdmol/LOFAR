@@ -22,17 +22,17 @@
 // \file
 // Include the right GPU API include with our options.
 
-#ifndef LOFAR_GPUPROC_DEDISPERSION_KERNEL_H
-#define LOFAR_GPUPROC_DEDISPERSION_KERNEL_H
+#ifndef LOFAR_GPUPROC_DEDISPERSION_CHIRP_KERNEL_H
+#define LOFAR_GPUPROC_DEDISPERSION_CHIRP_KERNEL_H
 
 #if defined (USE_CUDA) && defined (USE_OPENCL)
 # error "Either CUDA or OpenCL must be enabled, not both"
 #endif
 
 #if defined (USE_CUDA)
-# include <cuda/Kernels/DedispersionChirpKernel.h>
+# include <GPUProc/cuda/Kernels/DedispersionChirpKernel.h>
 #elif defined (USE_OPENCL)
-# include <opencl/Kernels/DedispersionChirpKernel.h>
+# include <GPUProc/opencl/Kernels/DedispersionChirpKernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

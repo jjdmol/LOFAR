@@ -26,9 +26,9 @@
 
 #include <GPUProc/gpu_incl.h>
 #include <GPUProc/BestEffortQueue.h>
-#include <GPUProc/Pipeline.h>
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
+#include "Pipeline.h"
 #include "CorrelatorPipelinePrograms.h"
 
 namespace LOFAR

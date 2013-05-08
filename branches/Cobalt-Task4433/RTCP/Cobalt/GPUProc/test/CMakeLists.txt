@@ -9,29 +9,33 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 #lofar_add_test(t_complex t_complex.cc)
 
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
-lofar_add_test(tContext tContext.cc)
-lofar_add_test(tPerformanceCounter tPerformanceCounter.cc)
-lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging)
-lofar_add_test(tCorrelate_3sec_1st_5sb)
-lofar_add_test(tCorrelate_3sec_2st_5sb)
 lofar_add_test(tGPUPerformance)
 
 lofar_add_test(tSSH tSSH.cc)
 lofar_add_bin_program(DummyStorage DummyStorage.cc)
 lofar_add_test(tStorageProcesses tStorageProcesses.cc)
-#lofar_add_test(tDelayCompensation tDelayCompensation.cc)
-#lofar_add_test(RTCP_UnitTest RTCP_UnitTest.cc UnitTest.cc)
 
-lofar_find_package(UnitTest++)
-if(UNITTEST++_FOUND)
-  lofar_add_test(tCorrelatorWorkQueue 
-    UnitTests/WorkQueues/tCorrelatorWorkQueue.cc
-    UnitTests/new_style_unittest.cc)
-endif()
 
 if(USE_CUDA)
   add_subdirectory(cuda)
   add_subdirectory(Kernels)
 endif()
 
+# TODO: gradually move tests below out of USE_OPENCL when CUDA port is getting done
+if(USE_OPENCL)
+  lofar_add_test(tContext tContext.cc)
+  lofar_add_test(tPerformanceCounter tPerformanceCounter.cc)
+  lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging)
+  lofar_add_test(tCorrelate_3sec_1st_5sb)
+  lofar_add_test(tCorrelate_3sec_2st_5sb)
+  #lofar_add_test(tDelayCompensation tDelayCompensation.cc)
+  #lofar_add_test(RTCP_UnitTest RTCP_UnitTest.cc UnitTest.cc)
+
+  lofar_find_package(UnitTest++)
+  if(UNITTEST++_FOUND)
+    lofar_add_test(tCorrelatorWorkQueue 
+      UnitTests/WorkQueues/tCorrelatorWorkQueue.cc
+      UnitTests/new_style_unittest.cc)
+  endif()
+endif()
 

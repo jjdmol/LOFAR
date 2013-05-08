@@ -30,9 +30,9 @@
 #endif
 
 #if defined (USE_CUDA)
-# include <cuda/Pipelines/UHEP_Pipeline.h>
+# include <GPUProc/cuda/Pipelines/UHEP_Pipeline.h>
 #elif defined (USE_OPENCL)
-# include <opencl/Pipelines/UHEP_Pipeline.h>
+# include <GPUProc/opencl/Pipelines/UHEP_Pipeline.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif
