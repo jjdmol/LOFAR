@@ -47,13 +47,7 @@ lofar_find_package(LibSSH2 REQUIRED)
 lofar_find_package(OpenSSL REQUIRED)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(MPI)
-lofar_find_package(FFTW3 COMPONENTS single double threads)  # 'double threads' for FFT unit test refs
-if(NOT FFTW3_FOUND)
-  lofar_find_package(FFTW2 COMPONENTS single real)
-  if(NOT FFTW2_FOUND)
-    message(SEND_ERROR "Should have FFTW3 or FFTW2 installed.")
-  endif(NOT FFTW2_FOUND)
-endif(NOT FFTW3_FOUND)
+lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)  # 'double threads' for FFT unit test refs
 
 # InputProc/Delays.h drags in a dependency on casa; hence we need to add the
 # following line. This should be fixed someday.
