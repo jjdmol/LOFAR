@@ -53,10 +53,14 @@ lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)  # 'double t
 # following line. This should be fixed someday.
 lofar_find_package(Casacore COMPONENTS casa)
 
-lofar_find_package(Valgrind)
 if(USE_VALGRIND)
-  add_definitions(-DUSE_VALGRIND)
-endif(USE_VALGRIND)  
+  lofar_find_package(Valgrind)
+  if(VALGRIND_FOUND)
+    add_definitions(-DUSE_VALGRIND)
+  else()
+    message(WARNING "USE_VALGRIND requested, but not found!")
+  endif()
+endif()  
 
 add_subdirectory(src)
 add_subdirectory(test)
