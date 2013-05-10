@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tReadLine > tReadLine.log 2>&1
+./runctest.sh tReadLine

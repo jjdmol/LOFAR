@@ -23,7 +23,7 @@ do
   cat ${rawinfilenames[$i]} > tTBB_Writer_stream$i.pipe &
 done
 
-./runctest.sh TBB_Writer --parsetfile=$parsetfilename --timeout=1 --keeprunning=0 2>&1 >> tTBB_Writer.log
+./runctest.sh TBB_Writer --parsetfile=$parsetfilename --timeout=1 --keeprunning=0
 
 # Ideally, we use h5check first to verify that the file is a proper hdf5 file,
 # but h5check is a separate util and usually not installed, so check content straight away.

@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh FIR_FilterTest > FIR_FilterTest.log 2>&1
+./runctest.sh FIR_FilterTest

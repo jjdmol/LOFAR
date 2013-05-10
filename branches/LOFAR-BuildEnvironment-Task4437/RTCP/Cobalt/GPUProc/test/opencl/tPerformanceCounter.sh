@@ -1,3 +1,3 @@
 #!/bin/sh
-./runctest.sh tPerformanceCounter > tPerformanceCounter.log 2>&1
+./runctest.sh tPerformanceCounter
 
