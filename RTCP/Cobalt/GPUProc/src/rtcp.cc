@@ -46,10 +46,8 @@
 #include <InputProc/Station/PacketStream.h>
 #include <InputProc/Delays/Delays.h>
 
-#ifdef HAVE_MPI
 #include <mpi.h>
 #include <InputProc/Transpose/MPISendStation.h>
-#endif
 
 #include "global_defines.h"
 #include "OpenMP_Support.h"
@@ -177,14 +175,10 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 
       BlockReader<SampleT> reader(s, beamlets, ps.nrHistorySamples(), 0.25);
 
-#ifdef HAVE_MPI
       /*
        * Set up the MPI send engine.
        */
       MPISendStation sender(s, rank, subbandDistribution);
-#else
-#error Not implemented -- MPI required
-#endif
 
       /*
        * Set up delay compensation.
@@ -282,7 +276,6 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-#ifdef HAVE_MPI
   // Initialise and query MPI
   int mpi_thread_support;
 
@@ -295,9 +288,6 @@ int main(int argc, char **argv)
   MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
 
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
-#else
-  LOG_INFO_STR("MPI not enabled -- running in stand-alone mode");
-#endif
 
 #ifdef HAVE_LOG4CPLUS
   INIT_LOGGER(str(format("rtcp@%02d") % rank));
@@ -432,9 +422,7 @@ int main(int argc, char **argv)
 
   LOG_INFO_STR("Done");
 
-#ifdef HAVE_MPI
   MPI_Finalize();
-#endif
 
   return 0;
 }
