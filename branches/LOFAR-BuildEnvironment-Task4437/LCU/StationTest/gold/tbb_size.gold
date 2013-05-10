@@ -1,0 +1,15 @@
+subscribed, execute command
+
+== TBB ==================================== installed memory information ====
+
+TBB  pages     Total memory
+---  --------  ------------
+  0   4194304   8.000 GByte
+  1   4194304   8.000 GByte
+  2   4194304   8.000 GByte
+  3   4194304   8.000 GByte
+  4   4194304   8.000 GByte
+  5   4194304   8.000 GByte
+
+1 page = 2048 Bytes
+
