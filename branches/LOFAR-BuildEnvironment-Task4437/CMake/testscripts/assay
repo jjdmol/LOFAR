@@ -203,9 +203,14 @@
     export LOFAR_CHECKTOOL
   fi
 
-# Execute the command.
-  eval "$COMMAND" > ${PROG}_tmp.out
-  STATUS=$?
+# Execute the command, and duplicate stdout to file. The challenge here is to
+# fetch the exit status of $COMMAND, not that of tee. There is an arcane POSIX
+# way of doing this (ref: http://stackoverflow.com/questions/2413166/
+# bash-redirect-and-append-stdout-and-stderr-to-file-and-terminal).
+  exec 4>&1
+  STATUS=$({ { eval "$COMMAND"; echo $? >&3; } | \
+             { tee ${PROG}_tmp.out >&4; } } 3>&1)
+  exec 4>&-
 
   # Check the status.
   case $STATUS in 
