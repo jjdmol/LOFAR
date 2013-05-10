@@ -29,17 +29,9 @@
 #include <iostream>
 #include <sstream>
 
-#if defined HAVE_FFTW3
 #include <fftw3.h>
 #define fftw_real(x)     ((x)[0])
 #define fftw_imag(x)     ((x)[1])
-#elif defined HAVE_FFTW2
-#include <fftw.h>
-#define fftw_real(x)     (c_re(x))
-#define fftw_imag(x)     (c_im(x))
-#else
-#error Should have FFTW3 or FFTW2 installed
-#endif
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Align.h>
@@ -239,13 +231,8 @@ namespace LOFAR
         // the input for the ifft is of size 4*grid_n
         // input = [grid ; zeros(grid_n*2,1) ;grid(grid_n:-1:2)];
 
-#if defined HAVE_FFTW3
         fftwf_complex* cinput = (fftwf_complex*) fftwf_malloc(grid_n * 4 * sizeof(fftwf_complex));
         fftwf_complex* coutput = (fftwf_complex*) fftwf_malloc(grid_n * 4 * sizeof(fftwf_complex));
-#elif defined HAVE_FFTW2
-        fftw_complex* cinput = (fftw_complex*) fftw_malloc(grid_n * 4 * sizeof(fftw_complex));
-        fftw_complex* coutput = (fftw_complex*) fftw_malloc(grid_n * 4 * sizeof(fftw_complex));
-#endif
 
         if (cinput == NULL || coutput == NULL) {
           THROW(GPUProcException, "cannot allocate buffers");
@@ -282,13 +269,8 @@ namespace LOFAR
         LOG_DEBUG(logStr.str());
 #endif
 
-#if defined HAVE_FFTW3
         fftwf_plan plan = fftwf_plan_dft_1d(grid_n * 4, cinput, coutput, FFTW_BACKWARD, FFTW_ESTIMATE);
         fftwf_execute(plan);
-#elif defined HAVE_FFTW2
-        fftw_plan plan = fftw_create_plan(grid_n * 4, FFTW_BACKWARD, FFTW_ESTIMATE);
-        fftw_one(plan, cinput, coutput);
-#endif
 
 #if 0
         for(unsigned i = 0; i<grid_n * 4; i++) {
@@ -316,15 +298,9 @@ namespace LOFAR
           index++;
         }
 
-#if defined HAVE_FFTW3
         fftwf_destroy_plan(plan);
         fftwf_free(cinput);
         fftwf_free(coutput);
-#elif defined HAVE_FFTW2
-        fftw_destroy_plan(plan);
-        fftw_free(cinput);
-        fftw_free(coutput);
-#endif
 
         // multiply with window
         for (unsigned i = 0; i <= n; i++) {
