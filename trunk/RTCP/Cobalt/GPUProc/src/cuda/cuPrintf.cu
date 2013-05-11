@@ -877,3 +877,4 @@ extern "C" cudaError_t cudaPrintfDisplay(void *outputFP, bool showThreadID)
 #undef CUPRINTF_SM11_MAGIC
 
 #endif
+
