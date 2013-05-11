@@ -27,7 +27,6 @@
 // Uses the "Pimpl" idiom for resource managing classes (i.e. that need to
 // control copying having a non-trivial destructor. For more info on Pimpl, see
 // http://www.boost.org/doc/libs/release/libs/smart_ptr/sp_techniques.html#pimpl
-//
 // Not Pimpl-ed are class Platform, Device, and Function.
 // These are also passed by value.
 
@@ -38,8 +37,7 @@
 #include <boost/shared_ptr.hpp>
 #include <cuda.h> // ideally, this goes into the .cc, but too much leakage
 
-#include <GPUProc/gpu_wrapper.h>
-#include <Common/Exception.h>
+#include <GPUProc/gpu_wrapper.h> // GPUException
 
 #if CUDA_VERSION < 4020
 typedef int CUsharedconfig;
@@ -81,7 +79,7 @@ namespace LOFAR
       };
 
 
-      // This object is not strictly needed, because in CUDA there's only one
+      // This class is not strictly needed, because in CUDA there's only one
       // platform, but it hides the CUDA calls and makes it similar to OpenCL.
       class Platform
       {
@@ -92,6 +90,9 @@ namespace LOFAR
 
         // Returns the number of devices in the CUDA platform.
         size_t size() const;
+
+        // Returns the name of the CUDA platform. (currently, "NVIDIA CUDA")
+        std::string getName() const;
       };
 
       // Wrap a CUDA Device.
@@ -132,10 +133,13 @@ namespace LOFAR
         // Make this context the current context.
         void setCurrent() const;
 
-        // Set the cache configuration of the current context.
+        // Returns the device associated to the _current_ context.
+        Device getDevice() const;
+
+        // Set the cache configuration of the _current_ context.
         void setCacheConfig(CUfunc_cache config) const;
 
-        // Set the shared memory configuration of the current context.
+        // Set the shared memory configuration of the _current_ context.
         void setSharedMemConfig(CUsharedconfig config) const;
 
       private:
@@ -267,6 +271,20 @@ namespace LOFAR
         // module \a module.
         Function(Module &module, const std::string &name);
 
+        // Set kernel immediate argument number \a index to \a val.
+        // Not for pointers and memory objects (void *, CUdeviceptr).
+        template <typename T>
+        void setParameter(size_t index, const T &val);
+
+        // Set kernel device memory object argument number \a index to \a val.
+        // For device memory objects (CUdeviceptr) as void *, e.g. from DeviceMemory::get().
+        // Not for immediates. No need to use template specialization here.
+        void setParameter(size_t index, const void *val);
+
+        // Do not use. To protect from passing pointers other than device memory void *.
+        template<typename T>
+        void setParameter(size_t index, const T *&val); // intentionally not implemented
+
         // Return information about a function.
         // \note For details on valid values for \a attribute, please refer to
         // the documentation of cuFuncGetAttribute in the CUDA Driver API.
@@ -283,6 +301,9 @@ namespace LOFAR
 
         // CUDA function.
         CUfunction _function;
+
+        // function arguments as set.
+        std::vector<void *> _kernelParams;
       };
 
       // Wrap a CUDA Event. This is the equivalent of an OpenCL Event.
@@ -327,7 +348,7 @@ namespace LOFAR
         // \param flags must be 0 for CUDA < 5.0
         // \note For details on valid values for \a flags, please refer to the
         // documentation of \c cuStreamCreate in the CUDA Driver API.
-        Stream(unsigned int flags = 0);
+        Stream(unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
 
         // Transfer data from host memory \a hostMem to device memory \a devMem.
         // \param devMem Device memory that will be copied to.
@@ -347,17 +368,13 @@ namespace LOFAR
 
         // Launch a CUDA function.
         // \param function object containing the function to launch
-        // \param Grid coordinates
-        // \param Block coordinates
-        // \param sharedMemBytes the amount of shared memory per thread block
-        // \param parameters array of pointers to the parameters that must be
-        //        passed to the function \a function
-        // \todo It's probably better to store the function parameters in the
-        //       Function object, and define a setParameters() method in
-        //       Function to set them.
+        // \param grid Grid size (in terms of threads (not blocks))
+        // \param block Block (thread group) size
+        // \param sharedMemBytes the amount of shared memory per block that is
+        //        dynamically allocated at launch-time
         void launchKernel(const Function &function,
                           const Grid &grid, const Block &block,
-                          unsigned sharedMemBytes, const void **parameters);
+                          unsigned sharedMemBytes);
 
         // Check if all operations on this stream have completed.
         // \return true if all completed, or false otherwise.

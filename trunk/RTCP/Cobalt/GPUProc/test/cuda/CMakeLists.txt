@@ -3,6 +3,7 @@
 include(LofarCTest)
 
 lofar_add_test(tCudaRuntimeCompiler tCudaRuntimeCompiler.cc)
+lofar_add_test(tcreateProgram tcreateProgram.cc)
 lofar_add_test(tStreamReadBuffer tStreamReadBuffer.cc)
 
 
