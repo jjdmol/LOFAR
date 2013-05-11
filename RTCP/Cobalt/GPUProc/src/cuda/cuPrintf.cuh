@@ -160,3 +160,4 @@ extern "C" void cudaPrintfEnd();
 extern "C" cudaError_t cudaPrintfDisplay(void *outputFP=NULL, bool showThreadID=false);
 
 #endif  // CUPRINTF_H
+
