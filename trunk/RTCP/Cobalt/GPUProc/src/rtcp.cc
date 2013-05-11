@@ -24,13 +24,15 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <iostream>
 #include <map>
 #include <vector>
 #include <string>
 #include <omp.h>
-#include "boost/format.hpp"
+#include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
@@ -258,6 +260,9 @@ int main(int argc, char **argv)
 {
   // Make sure all time is dealt with and reported in UTC
   setenv("TZ", "UTC", 1);
+
+  // Restrict access to (tmp build) files we create to owner
+  umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
   // Allow usage of nested omp calls
   omp_set_nested(true);
