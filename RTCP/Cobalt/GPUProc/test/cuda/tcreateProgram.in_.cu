@@ -1,5 +1,4 @@
-//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
-//#
+//# createProgram.in_.cu: 2-function CUDA kernel for compilation testing
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,34 +18,21 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+extern "C" {
 
-// \file
-// Template implementation of CUDA-specific wrapper classes for GPU types.
-
-namespace LOFAR
-{
-  namespace Cobalt
+  __device__ void cpc(char *outputPos, char c)
   {
-    namespace gpu
+    *outputPos = c;
+  }
+
+  __global__ void copy(char *out, const char *in, size_t size)
+  {
+    unsigned i = gridDim.x;
+    if (i < size)
     {
-        template <typename T>
-        T * HostMemory::get() const
-        {
-          return static_cast<T *>(getPtr());
-        }
+      cpc(&out[i], in[i]);
+    }
+  }
 
-        template <typename T>
-        void Function::setParameter(size_t index, const T &val)
-        {
-          setParameter(index, static_cast<const void *>(&val));
-        }
+}
 
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
-
-#endif

@@ -21,6 +21,7 @@ if(USE_CUDA)
   list(APPEND _gpuproc_sources 
     cuda/gpu_wrapper.cc
     cuda/CudaRuntimeCompiler.cc
+    cuda/createProgram.cc
   )
   add_subdirectory(cuda)
 

@@ -20,10 +20,14 @@
 //# $Id$
 
 #include <lofar_config.h>
+
 #include "gpu_wrapper.h"
-#include <boost/noncopyable.hpp>
+
 #include <string>
+#include <iostream> // tmptmptmp
 #include <algorithm>  // for std::min
+
+#include <boost/noncopyable.hpp>
 
 // Convenience macro to call a CUDA Device API function and throw a
 // CUDAException if an error occurred.
@@ -183,6 +187,11 @@ namespace LOFAR
         return (size_t)nrDevices;
       }
 
+      std::string Platform::getName() const
+      {
+        return "NVIDIA CUDA";
+      }
+
 
       Device::Device(int ordinal)
       {
@@ -224,6 +233,13 @@ namespace LOFAR
           checkCuCall(cuCtxSetCurrent(_context));
         }
 
+        CUdevice getDevice() const
+        {
+          CUdevice dev;
+          checkCuCall(cuCtxGetDevice(&dev));
+          return dev;
+        }
+
         void setCacheConfig(CUfunc_cache config) const
         {
           checkCuCall(cuCtxSetCacheConfig(config));
@@ -250,6 +266,11 @@ namespace LOFAR
       void Context::setCurrent() const
       {
         _impl->setCurrent();
+      }
+
+      Device Context::getDevice() const
+      {
+        return Device(_impl->getDevice());
       }
 
       void Context::setCacheConfig(CUfunc_cache config) const
@@ -325,7 +346,7 @@ namespace LOFAR
           return _size;
         }
 
-        //private: // Stream needs it to do transfers
+      //private: // Stream needs it to do transfers
         CUdeviceptr _ptr;
       private:
         size_t _size;
@@ -350,9 +371,9 @@ namespace LOFAR
           checkCuCall(cuModuleLoad(&_module, fname));
         }
 
-        Impl(const void *data)
+        Impl(const void *image)
         {
-          checkCuCall(cuModuleLoadData(&_module, data));
+          checkCuCall(cuModuleLoadData(&_module, image));
         }
 
         Impl(const void *image, unsigned int numOptions,
@@ -499,7 +520,7 @@ namespace LOFAR
         {
           checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
                                      blockY, blockZ, sharedMemBytes, _stream,
-                                     parameters, 0));
+                                     parameters, NULL));
         }
 
         bool query() const
@@ -546,12 +567,6 @@ namespace LOFAR
                                hostMem.size());
         if (synchronous) {
           synchronize();
-/*
-          Event ev;
-          recordEvent(ev);
-          // waitEvent(ev) fails here, as it syncs across streams, the host doesn't have to wait
-          ev.wait();
-*/
         }
       }
 
@@ -564,23 +579,16 @@ namespace LOFAR
                                devMem.size());
         if (synchronous) {
           synchronize();
-/*
-          Event ev;
-          recordEvent(ev);
-          // waitEvent(ev) fails here, as it syncs across streams, the host doesn't have to wait
-          ev.wait();
-*/
         }
       }
 
       void Stream::launchKernel(const Function &function,
                                 const Grid &grid, const Block &block,
-                                unsigned sharedMemBytes, 
-                                const void **parameters)
+                                unsigned sharedMemBytes)
       {
-        _impl->launchKernel(function._function,
-                            grid.x, grid.y, grid.z, block.x, block.y, block.z,
-                            sharedMemBytes, const_cast<void **>(parameters));
+        _impl->launchKernel(function._function, grid.x, grid.y, grid.z,
+                            block.x, block.y, block.z, sharedMemBytes,
+                            const_cast<void **>(&function._kernelParams[0]));
       }
 
       bool Stream::query() const
