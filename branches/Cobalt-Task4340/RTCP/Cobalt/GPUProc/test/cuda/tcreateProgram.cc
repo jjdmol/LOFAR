@@ -1,5 +1,4 @@
-//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
-//#
+//# tcreateProgram.cc: test CUDA kernel runtime compilation from src file
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,34 +18,33 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+#include <lofar_config.h>
 
-// \file
-// Template implementation of CUDA-specific wrapper classes for GPU types.
+#include <string>
+#include <vector>
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    namespace gpu
-    {
-        template <typename T>
-        T * HostMemory::get() const
-        {
-          return static_cast<T *>(getPtr());
-        }
+#include <CoInterface/Parset.h>
+#include <GPUProc/createProgram.h>
 
-        template <typename T>
-        void Function::setParameter(size_t index, const T &val)
-        {
-          setParameter(index, static_cast<const void *>(&val));
-        }
+using namespace std;
+using namespace LOFAR::Cobalt;
 
-    } // namespace gpu
+int main(int argc, char *argv[]) {
+  if (argc != 3) {
+    cerr << "Usage: " << argv[0] << " <L12345.parset> <kernel.cu>" << endl;
+    return 1;
+  }
 
-  } // namespace Cobalt
+  Parset ps(argv[1]);
+  gpu::Platform pf;
+  gpu::Device device(0);
+  gpu::Context ctx(device);
+  vector<string> targets; // unused atm, so can be empty
+  string srcFilename(argv[2]);
 
-} // namespace LOFAR
+  gpu::Module module(createProgram(ps, ctx, targets, srcFilename));
+  cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 
-#endif
+  return 0;
+}
+

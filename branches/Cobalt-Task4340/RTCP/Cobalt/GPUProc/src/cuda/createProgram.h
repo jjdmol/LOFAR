@@ -1,5 +1,4 @@
-//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
-//#
+//# createProgram.h
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,34 +18,28 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+#ifndef LOFAR_GPUPROC_CREATE_PROGRAM_H
+#define LOFAR_GPUPROC_CREATE_PROGRAM_H
 
-// \file
-// Template implementation of CUDA-specific wrapper classes for GPU types.
+#include <string>
+#include <vector>
+
+#include <CoInterface/Parset.h>
+
+#include "gpu_wrapper.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
-    {
-        template <typename T>
-        T * HostMemory::get() const
-        {
-          return static_cast<T *>(getPtr());
-        }
-
-        template <typename T>
-        void Function::setParameter(size_t index, const T &val)
-        {
-          setParameter(index, static_cast<const void *>(&val));
-        }
-
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+    /*
+     * For CUDA, context is ignored, but note that creating such an object
+     * makes it the active context.
+     * srcFilename cannot be an absolute path.
+     */
+    gpu::Module createProgram(const Parset &ps, gpu::Context &context, std::vector<std::string> &targets, const std::string &srcFilename);
+  }
+}
 
 #endif
+
