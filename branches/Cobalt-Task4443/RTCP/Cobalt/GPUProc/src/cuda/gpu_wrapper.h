@@ -274,16 +274,16 @@ namespace LOFAR
         // Set kernel immediate argument number \a index to \a val.
         // Not for pointers and memory objects (void *, CUdeviceptr).
         template <typename T>
-        void setParameter(size_t index, const T &val);
+        void setArg(size_t index, const T &val);
 
         // Set kernel device memory object argument number \a index to \a val.
         // For device memory objects (CUdeviceptr) as void *, e.g. from DeviceMemory::get().
         // Not for immediates. No need to use template specialization here.
-        void setParameter(size_t index, const void *val);
+        void setArg(size_t index, const void *val);
 
         // Do not use. To protect from passing pointers other than device memory void *.
         template<typename T>
-        void setParameter(size_t index, const T *&val); // intentionally not implemented
+        void setArg(size_t index, const T *&val); // intentionally not implemented
 
         // Return information about a function.
         // \note For details on valid values for \a attribute, please refer to
@@ -303,7 +303,7 @@ namespace LOFAR
         CUfunction _function;
 
         // function arguments as set.
-        std::vector<void *> _kernelParams;
+        std::vector<const void *> _kernelArgs;
       };
 
       // Wrap a CUDA Event. This is the equivalent of an OpenCL Event.

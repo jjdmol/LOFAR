@@ -412,6 +412,7 @@ namespace LOFAR
 
       // TODO: This should return a Function object; this function should
       // be moved into the Impl class.
+      // alx: this functionality should be (is) provided by Function(Module&, string&)
       CUfunction Module::getKernelEntryPoint(const char* functionName)
       {
         CUfunction   hKernel; 
@@ -426,6 +427,14 @@ namespace LOFAR
       {
         checkCuCall(cuModuleGetFunction(&_function, module._impl->_module,
                                         name.c_str()));
+      }
+
+      void Function::setArg(size_t index, const void *val)
+      {
+        if (index >= _kernelArgs.size()) {
+          _kernelArgs.resize(index + 1);
+        }
+        _kernelArgs[index] = const_cast<void *>(val);
       }
 
       int Function::getAttribute(CUfunction_attribute attribute) const
@@ -588,7 +597,7 @@ namespace LOFAR
       {
         _impl->launchKernel(function._function, grid.x, grid.y, grid.z,
                             block.x, block.y, block.z, sharedMemBytes,
-                            const_cast<void **>(&function._kernelParams[0]));
+                            const_cast<void **>(&function._kernelArgs[0]));
       }
 
       bool Stream::query() const

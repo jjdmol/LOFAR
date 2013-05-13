@@ -1,6 +1,5 @@
-//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
-//#
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# DedispersionBackwardFFTkernel.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -19,35 +18,26 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+#ifndef LOFAR_GPUPROC_CUDA_DEDISPERSION_BACKWARD_FFTKERNEL_H
+#define LOFAR_GPUPROC_CUDA_DEDISPERSION_BACKWARD_FFTKERNEL_H
 
-// \file
-// Template implementation of CUDA-specific wrapper classes for GPU types.
+#include <CoInterface/Parset.h>
+
+#include "FFT_Kernel.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    class DedispersionBackwardFFTkernel : public FFT_Kernel
     {
-        template <typename T>
-        T * HostMemory::get() const
-        {
-          return static_cast<T *>(getPtr());
-        }
+    public:
+      DedispersionBackwardFFTkernel(const Parset &ps, gpu::Context &context, gpu::DeviceMemory &buffer);
 
-        template <typename T>
-        void Function::setArg(size_t index, const T &val)
-        {
-          setArg(index, static_cast<const void *>(&val));
-        }
+    };
+  }
 
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+}
 
 #endif
 

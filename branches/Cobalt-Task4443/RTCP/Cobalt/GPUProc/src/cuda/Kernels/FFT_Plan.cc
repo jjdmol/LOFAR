@@ -1,6 +1,5 @@
-//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
-//#
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# FFT_Plan.cc
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -19,35 +18,31 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+#include "lofar_config.h"
 
-// \file
-// Template implementation of CUDA-specific wrapper classes for GPU types.
+#include "FFT_Plan.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    FFT_Plan::FFT_Plan(gpu::Context &context, unsigned fftSize)
     {
-        template <typename T>
-        T * HostMemory::get() const
-        {
-          return static_cast<T *>(getPtr());
-        }
+      //clFFT_Dim3 dim = { fftSize, 1, 1 };
+      //cl_int error;
+      //plan = clFFT_CreatePlan(context(), dim, clFFT_1D, clFFT_InterleavedComplexFormat, &error);
+      //if (error != CL_SUCCESS)
+      //  throw gpu::Error(error, "clFFT_CreatePlan");
 
-        template <typename T>
-        void Function::setArg(size_t index, const T &val)
-        {
-          setArg(index, static_cast<const void *>(&val));
-        }
+      ////clFFT_DumpPlan(plan, stdout); // TODO: investigate what this is. Needed?
+    }
 
-    } // namespace gpu
+    FFT_Plan::~FFT_Plan()
+    {
+      //clFFT_DestroyPlan(plan);
+    }
 
-  } // namespace Cobalt
 
-} // namespace LOFAR
-
-#endif
+  }
+}
 
