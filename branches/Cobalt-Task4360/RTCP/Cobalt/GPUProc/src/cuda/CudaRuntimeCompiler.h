@@ -23,6 +23,7 @@ namespace CudaRuntimeCompiler
   const flags_type& defaultFlags();
   
   // Return the set of default definitions for the nvcc compilation of a cuda kernel in Cobalt
+  // DEFINITION=0 results in a definition and cannot for used for undef. Do not insert parameters in this case
   const definitions_type& defaultDefinitions();
   
   // Performs a 'system' call of nvcc. Return the stdout of the command
