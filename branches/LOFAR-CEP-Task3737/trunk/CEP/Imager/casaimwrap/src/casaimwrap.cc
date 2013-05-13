@@ -384,7 +384,7 @@ Record begin_degrid(CASAContext &context, const Record &coordinates,
         chunk.asArrayDouble("TIME"),
         chunk.asArrayDouble("TIME_CENTROID"),
         chunk.asArrayBool("FLAG_ROW"),
-        chunk.asArrayFloat("WEIGHT"),
+        chunk.asArrayFloat("IMAGING_WEIGHT"),
         chunk.asArrayBool("FLAG"),
         true);
 
@@ -405,7 +405,7 @@ Record degrid(CASAContext &context, const Record &chunk)
         chunk.asArrayDouble("TIME"),
         chunk.asArrayDouble("TIME_CENTROID"),
         chunk.asArrayBool("FLAG_ROW"),
-        chunk.asArrayFloat("WEIGHT"),
+        chunk.asArrayFloat("IMAGING_WEIGHT"),
         chunk.asArrayBool("FLAG"),
         false);
 
@@ -453,7 +453,7 @@ void begin_grid(CASAContext &context, const ValueHolder &shape,
         chunk.asArrayDouble("TIME"),
         chunk.asArrayDouble("TIME_CENTROID"),
         chunk.asArrayBool("FLAG_ROW"),
-        chunk.asArrayFloat("WEIGHT"),
+        chunk.asArrayFloat("IMAGING_WEIGHT"),
         chunk.asArrayBool("FLAG"),
         chunk.asArrayComplex("DATA"),
         true);
@@ -474,7 +474,7 @@ void grid(CASAContext &context, const Record &chunk)
         chunk.asArrayDouble("TIME"),
         chunk.asArrayDouble("TIME_CENTROID"),
         chunk.asArrayBool("FLAG_ROW"),
-        chunk.asArrayFloat("WEIGHT"),
+        chunk.asArrayFloat("IMAGING_WEIGHT"),
         chunk.asArrayBool("FLAG"),
         chunk.asArrayComplex("DATA"),
         false);

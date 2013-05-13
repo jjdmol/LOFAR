@@ -1,10 +1,16 @@
+import itertools
 import os.path as path
 import numpy
 import lofar.casaimwrap
+import lofar.pyimager.algorithms.constants as constants
 import pyrap.tables
+import visimagingweight
+
+from pylab import *
 
 class DataProcessorLowLevel:
     def __init__(self, measurement, options):
+        print measurement
         self._measurement = measurement
         self._ms = pyrap.tables.table(measurement)
         self._ms = self._ms.query("ANTENNA1 != ANTENNA2 && OBSERVATION_ID ==" \
@@ -24,9 +30,9 @@ class DataProcessorLowLevel:
         parms["imagename"] = options["image"]
         parms["UseLIG"] = False             # linear interpolation
         parms["UseEJones"] = True
-        #parms["ApplyElement"] = True
+        parms["ApplyElement"] = True
         parms["PBCut"] = 1e-2
-        parms["StepApplyElement"] = 0       # if 0 don't apply element beam
+        parms["StepApplyElement"] = 1000       # if 0 don't apply element beam
 #        parms["TWElement"] = 0.02
         parms["PredictFT"] = False
         parms["PsfImage"] = ""
@@ -40,8 +46,8 @@ class DataProcessorLowLevel:
         # will be determined by LofarFTMachine
         parms["wplanes"] = 0
 
-#        parms["ApplyBeamCode"] = 0
-        parms["ApplyBeamCode"] = 3
+        parms["ApplyBeamCode"] = 0
+        #parms["ApplyBeamCode"] = 3
         parms["UVmin"] = 0
         parms["UVmax"] = 100000
         parms["MakeDirtyCorr"] = False
@@ -55,6 +61,10 @@ class DataProcessorLowLevel:
         parms["t1"] = -1
         parms["ChanBlockSize"] = 0
         parms["FindNWplanes"] = True
+        
+        weightoptionnames = ["weighttype", "rmode", "noise", "robustness"]
+        weightoptions = dict( (key, value) for (key,value) in options.iteritems() if key in weightoptionnames)
+        self.imw = visimagingweight.VisImagingWeight(**weightoptions)
 
         self._context = lofar.casaimwrap.CASAContext()
         lofar.casaimwrap.init(self._context, self._measurement, parms)
@@ -83,9 +93,37 @@ class DataProcessorLowLevel:
             self._ms.getcol("UVW")), 1)))
 
     def density(self, coordinates, shape):
-        return 1.0
+        increment = coordinates.get_increment()
+        freqs = self.channel_frequency()
+        f = freqs/constants.speed_of_light
+        
+        density_shape = shape[2:]
+        density_increment = increment[2]
+        
+        uorig = int(density_shape[1]/2)
+        vorig = int(density_shape[0]/2)
+        
+        density = numpy.zeros(density_shape)
+        uscale = density_shape[1]*density_increment[1]
+        vscale = density_shape[0]*density_increment[0]
+        uvw = self._ms.getcol("UVW")
+        weight = self._ms.getcol("WEIGHT_SPECTRUM")
+        for i in range(len(self._ms)):
+          u1 = uvw[i,0]*uscale
+          v1 = uvw[i,1]*vscale
+          for j in range(len(f)):
+              u = int(u1*f[j])
+              v = int(v1*f[j])
+              if abs(u)<uorig and abs(v)<vorig : 
+                  w = sum(weight[i, j,:])
+                  density[vorig+v,uorig+u] += w
+                  density[vorig-v,uorig-u] += w
+        return density
+        
+    def set_density(self, density, coordinates) :
+        self.imw.set_density(density, coordinates)
 
-    def response(self, coordinates, shape, density):
+    def response(self, coordinates, shape):
         # TODO: This is a hack! LofarFTMachine computes the average response
         # while gridding. It cannot compute it on its own for arbitrary
         # coordinates and shape. For the moment, the CASA DataProcessor class
@@ -93,8 +131,7 @@ class DataProcessorLowLevel:
         # shape as were used in the last call to get().
         return lofar.casaimwrap.average_response(self._context)
 
-    def point_spread_function(self, coordinates, shape, density, as_grid):
-        assert(density == 1.0)
+    def point_spread_function(self, coordinates, shape, as_grid):
         assert(not as_grid)
 
         args = {}
@@ -104,8 +141,9 @@ class DataProcessorLowLevel:
         args["TIME"] = self._ms.getcol("TIME")
         args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
         args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
-        args["WEIGHT"] = self._ms.getcol("WEIGHT")
         args["FLAG"] = self._ms.getcol("FLAG")
+        args["IMAGING_WEIGHT"] = self.imw.imaging_weight(args["UVW"], \
+            self.channel_frequency(), args["FLAG"], self._ms.getcol("WEIGHT_SPECTRUM"))
         args["DATA"] = numpy.ones(args["FLAG"].shape, dtype=numpy.complex64)
 
         lofar.casaimwrap.begin_grid(self._context, shape, coordinates.dict(), \
@@ -113,9 +151,13 @@ class DataProcessorLowLevel:
         result = lofar.casaimwrap.end_grid(self._context, False)
         return (result["image"], result["weight"])
 
-    def grid(self, coordinates, shape, density, as_grid):
-        assert(density == 1.0)
+    def grid(self, coordinates, shape, as_grid):
         assert(not as_grid)
+
+        print  "****************************************************************"
+        print coordinates
+        print shape
+        print  "****************************************************************"
 
         args = {}
         args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
@@ -124,8 +166,8 @@ class DataProcessorLowLevel:
         args["TIME"] = self._ms.getcol("TIME")
         args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
         args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
-        args["WEIGHT"] = self._ms.getcol("WEIGHT")
         args["FLAG"] = self._ms.getcol("FLAG")
+        args["IMAGING_WEIGHT"] = numpy.ones(args["FLAG"].shape[:2], dtype=numpy.float32)
         args["DATA"] = self._ms.getcol(self._data_column)
 
         lofar.casaimwrap.begin_grid(self._context, shape, coordinates.dict(), \
@@ -143,16 +185,15 @@ class DataProcessorLowLevel:
         args["TIME"] = self._ms.getcol("TIME")
         args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
         args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
-        args["WEIGHT"] = self._ms.getcol("WEIGHT")
         args["FLAG"] = self._ms.getcol("FLAG")
+        args["IMAGING_WEIGHT"] = numpy.ones(args["FLAG"].shape[:2], dtype=numpy.float32)
 
         result = lofar.casaimwrap.begin_degrid(self._context, \
             coordinates.dict(), model, args)
         lofar.casaimwrap.end_degrid(self._context)
 #        self._ms.putcol(self._data_column, result["data"])
 
-    def residual(self, coordinates, model, density, as_grid):
-        assert(density == 1.0)
+    def residual(self, coordinates, model, as_grid):
         assert(not as_grid)
 
         # Degrid model.
@@ -163,8 +204,8 @@ class DataProcessorLowLevel:
         args["TIME"] = self._ms.getcol("TIME")
         args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
         args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
-        args["WEIGHT"] = self._ms.getcol("WEIGHT")
         args["FLAG"] = self._ms.getcol("FLAG")
+        args["IMAGING_WEIGHT"] = numpy.ones(args["FLAG"].shape[:2], dtype=numpy.float32)
 
         result = lofar.casaimwrap.begin_degrid(self._context, \
             coordinates.dict(), model, args)
@@ -181,8 +222,8 @@ class DataProcessorLowLevel:
         args["TIME"] = self._ms.getcol("TIME")
         args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
         args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
-        args["WEIGHT"] = self._ms.getcol("WEIGHT")
         args["FLAG"] = self._ms.getcol("FLAG")
+        args["IMAGING_WEIGHT"] = numpy.ones(args["FLAG"].shape[:2], dtype=numpy.float32)
         args["DATA"] = residual
 
         lofar.casaimwrap.begin_grid(self._context, model.shape, \

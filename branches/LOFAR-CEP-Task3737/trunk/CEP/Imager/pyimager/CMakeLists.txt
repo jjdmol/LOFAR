@@ -10,6 +10,7 @@ python_install(__init__.py
     processors/casa/data_processor_low_level.py
     processors/casa/data_processor_parallel.py
     processors/casa/data_processor_parallel_low_level.py
+    processors/casa/visimagingweight.py
     processors/pywsplit/__init__.py
     processors/pywsplit/data_processor.py
     processors/pywsplit/data_processor_low_level.py

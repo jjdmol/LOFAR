@@ -2,6 +2,7 @@
 
 from data_processor import DataProcessor
 from data_processor_parallel import DataProcessorParallel 
+import os
 
 def create_data_processor(measurement, options):
     """Factory function that can be used to switch to a specialized class
@@ -14,7 +15,7 @@ def create_data_processor(measurement, options):
     Otherwise a local dataprocessor will be created.
     """
     
-    if isinstance(measurement, dict):
+    if isinstance(measurement, dict) or (isinstance(measurement, basestring) and os.path.isfile(measurement)):
         return DataProcessorParallel(measurement, options)
     else:  
         return DataProcessor(measurement, options)

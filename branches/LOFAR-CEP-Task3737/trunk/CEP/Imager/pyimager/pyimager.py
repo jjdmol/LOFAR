@@ -38,6 +38,14 @@ def main():
         default = -1.0, metavar = "SPEEDUP", help = "")
     subparser.add_argument("-m", "--cycle-max-psf-fraction", type = float,
         default = 0.8, metavar = "FRACTION", help = "")
+    subparser.add_argument("--weight-type", dest = "weighttype", 
+        default = "natural", metavar = "WEIGHTTYPE", help = "uniform, natural, robust")
+    subparser.add_argument("--rmode", dest = "rmode", 
+        default = "normal", metavar = "RMODE", help = "abs, normal")
+    subparser.add_argument("--noise", dest = "noise", type = float,
+        default = 0.0, metavar = "NOISE", help = "")
+    subparser.add_argument("--robustness", dest = "robustness", type = float,
+        default = 0.0, metavar = "ROBUSTNESS", help = "")
 #    subparser.add_argument("-g", choices = ["awz", "aw", "w"],
 #        help = "gridder to use")
 #    subparser.add_argument("-G", dest = "gridder_options", action = "append",

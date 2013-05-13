@@ -80,7 +80,7 @@ void VisBufferStub::setChunk(const Vector<Int> &antenna1,
     const Vector<Double> &time,
     const Vector<Double> &timeCentroid,
     const Vector<Bool> &flagRow,
-    const Matrix<Float> &weight,
+    const Matrix<Float> &imagingWeight,
     const Cube<Bool> &flag,
     const Cube<Complex> &data,
     Bool newMS)
@@ -90,7 +90,7 @@ void VisBufferStub::setChunk(const Vector<Int> &antenna1,
     itsTime.reference(time);
     itsTimeCentroid.reference(timeCentroid);
     itsFlagRow.reference(flagRow);
-    itsWeight.reference(weight);
+    itsImagingWeight.reference(imagingWeight);
     itsFlag.reference(flag);
     itsData.reference(data);
     itsNewMS = newMS;
@@ -106,33 +106,33 @@ void VisBufferStub::setChunk(const Vector<Int> &antenna1,
         itsUVW(i)(2) = uvw(2, i);
     }
 
-    // Compute imaging weights.
-    VisImagingWeight imw("natural");
-
-    Matrix<Bool> tmp_flag;
-    tmp_flag.resize(itsNChannel, itsNRow);
-    for(Int row = 0; row < itsNRow; row++)
-    {
-        for(Int ch = 0; ch < itsNChannel; ch++)
-        {
-            tmp_flag(ch,row) = itsFlag(0, ch, row);
-            for(Int cr = 1; cr < itsNCorr; cr++)
-            {
-                tmp_flag(ch,row) |= itsFlag(cr, ch, row);
-            }
-        }
-    }
-
-    // Take average of parallel hand polarizations for now.
-    // Later convert weight() to return full polarization dependence.
-    Vector<Float> tmp_weight;
-    tmp_weight.resize(itsNRow);
-    tmp_weight = itsWeight.row(0);
-    tmp_weight += itsWeight.row(itsNCorr - 1);
-    tmp_weight /= 2.0f;
-
-    itsImagingWeight.resize(itsNChannel, itsNRow);
-    imw.weightNatural(itsImagingWeight, tmp_flag, tmp_weight);
+//     // Compute imaging weights.
+//     VisImagingWeight imw("natural");
+// 
+//     Matrix<Bool> tmp_flag;
+//     tmp_flag.resize(itsNChannel, itsNRow);
+//     for(Int row = 0; row < itsNRow; row++)
+//     {
+//         for(Int ch = 0; ch < itsNChannel; ch++)
+//         {
+//             tmp_flag(ch,row) = itsFlag(0, ch, row);
+//             for(Int cr = 1; cr < itsNCorr; cr++)
+//             {
+//                 tmp_flag(ch,row) |= itsFlag(cr, ch, row);
+//             }
+//         }
+//     }
+// 
+//     // Take average of parallel hand polarizations for now.
+//     // Later convert weight() to return full polarization dependence.
+//     Vector<Float> tmp_weight;
+//     tmp_weight.resize(itsNRow);
+//     tmp_weight = itsWeight.row(0);
+//     tmp_weight += itsWeight.row(itsNCorr - 1);
+//     tmp_weight /= 2.0f;
+// 
+//     itsImagingWeight.resize(itsNChannel, itsNRow);
+//     imw.weightNatural(itsImagingWeight, tmp_flag, tmp_weight);
 }
 
 void VisBufferStub::setChunk(const Vector<Int> &antenna1,
@@ -141,11 +141,11 @@ void VisBufferStub::setChunk(const Vector<Int> &antenna1,
     const Vector<Double> &time,
     const Vector<Double> &timeCentroid,
     const Vector<Bool> &flagRow,
-    const Matrix<Float> &weight,
+    const Matrix<Float> &imagingWeight,
     const Cube<Bool> &flag,
     Bool newMS)
 {
-    setChunk(antenna1, antenna2, uvw, time, timeCentroid, flagRow, weight, flag,
+    setChunk(antenna1, antenna2, uvw, time, timeCentroid, flagRow, imagingWeight, flag,
         Cube<Complex>(), newMS);
     itsData.resize(itsFlag.shape());
     itsData.set(0.0);

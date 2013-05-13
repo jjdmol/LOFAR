@@ -211,6 +211,10 @@ def mfclean(options):
     processor_options["padding"] = 1.0
     processor_options["image"] = options.image
     processor_options["threads"] = options.threads
+    processor_options["weighttype"] = options.weighttype
+    processor_options["rmode"] = options.rmode
+    processor_options["noise"] = options.noise
+    processor_options["robustness"] = options.robustness
     processor = processors.create_data_processor(options.processor,
         options.ms, processor_options)
 
@@ -223,10 +227,12 @@ def mfclean(options):
     # TODO: Cyril mentioned above image size estimation is too conservative.
     # Need to check this and find a better estimate if necessary. For now, will
     # just multiply estimated FOV by 2.0.
-    image_size *= 2.0
+    #image_size *= 2.0
 
     (n_px, delta_px) = util.image_configuration(image_size, max_freq,
         max_baseline)
+        
+    #n_px = 1000
 
     util.notice("image configuration:")
     util.notice("    size: %d x %d pixel" % (n_px, n_px))
@@ -235,9 +241,9 @@ def mfclean(options):
     util.notice("    angular resolution @ 3 pixel/beam: %.2f arcsec/pixel"
         % (3600.0 * delta_px * 180.0 / numpy.pi))
 
-    if n_px > 750:
-        util.error("image too large!")
-        return
+    #if n_px > 750:
+        #util.error("image too large!")
+        #return
 
     # TODO: Need to implement support for multiple channel images. Currently,
     # all data channels are combined into a single MFS image per correlation.
@@ -525,8 +531,8 @@ def mfclean(options):
         util.warning("clean did not reach threshold: %f Jy."
             % options.threshold)
 
-    util.show_image(residual[0][0,:,:,:], "final residual")
-    restored = restore_image(image_coordinates.dict(), model[0], residual[0],
-        beam[0])
-    util.show_image(restored[0,:,:,:], "restored image")
-    matplotlib.pyplot.show()
+    #util.show_image(residual[0][0,:,:,:], "final residual")
+    #restored = restore_image(image_coordinates.dict(), model[0], residual[0],
+        #beam[0])
+    #util.show_image(restored[0,:,:,:], "restored image")
+    #matplotlib.pyplot.show()

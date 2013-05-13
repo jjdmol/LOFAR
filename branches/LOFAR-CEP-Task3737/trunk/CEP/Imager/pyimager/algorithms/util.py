@@ -33,7 +33,7 @@ def show_image(data, title=None):
     data -- A 4 x N x M array of values to be plotted.
     title -- An optional title to be put at the top of the combined plot.
     """
-    fig, axes = matplotlib.pyplot.subplots(nrows=2, ncols=2)
+    fig, axes = matplotlib.pyplot.subplot(nrows=2, ncols=2)
     if title is not None:
         fig.suptitle(title, fontsize=14)
 

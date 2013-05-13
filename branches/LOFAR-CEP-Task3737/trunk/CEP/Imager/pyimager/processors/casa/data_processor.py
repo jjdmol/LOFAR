@@ -16,6 +16,7 @@ class DataProcessor:
         self._cached_density = None
         self._cached_response = None
         self._response_available = False
+        self._weighting_needs_density = (options["weighttype"] != "natural")
 
     def _create_processor(self, measurement, options) :
         self._processor = \
@@ -39,8 +40,10 @@ class DataProcessor:
     def point_spread_function(self, coordinates, shape):
         self._update_image_configuration(coordinates, shape)
 
+        if self._weighting_needs_density:
+            self._density()
         psf, weight = self._processor.point_spread_function(self._coordinates,
-            self._shape, self._density(), False)
+            self._shape, False)
 
         exp_weight = weight[:, :, numpy.newaxis, numpy.newaxis]
         return numpy.where(exp_weight > 0.0, psf / exp_weight, 0.0)
@@ -52,9 +55,11 @@ class DataProcessor:
     def grid(self, coordinates, shape, normalization):
         self._update_image_configuration(coordinates, shape)
 
+        if self._weighting_needs_density:
+            self._density()
         # Grid.
         image, weight = self._processor.grid(self._coordinates, self._shape, \
-            self._density(), False)
+            False)
 
         # TODO: This is a hack! LofarFTMachine does not provide a method to
         # compute the average response on its own. Instead it is computed while
@@ -98,9 +103,12 @@ class DataProcessor:
         model = self.normalize(coordinates, model, normalization_model, \
             Normalization.FLAT_NOISE)
 
+        if self._weighting_needs_density:
+            self._density()
+            
         # Compute the residual image.
         residual, weight = self._processor.residual(self._coordinates, model, \
-            self._density(), False)
+            False)
 
         # TODO: This is a hack! LofarFTMachine does not provide a method to
         # compute the average response on its own. Instead it is computed while
@@ -159,14 +167,16 @@ class DataProcessor:
         if self._cached_density is None:
             self._cached_density = self._processor.density(self._coordinates, \
                 self._shape)
+            self._processor.set_density(self._cached_density, self._coordinates)
         return self._cached_density
 
     def _response(self):
         if self._cached_response is None:
             assert(self._response_available)
+            if self._weighting_needs_density:
+                self._density()
             self._cached_response = \
-                self._processor.response(self._coordinates, self._shape, \
-                self._density())
+                self._processor.response(self._coordinates, self._shape)
         return self._cached_response
 
     def _update_image_configuration(self, coordinates, shape):

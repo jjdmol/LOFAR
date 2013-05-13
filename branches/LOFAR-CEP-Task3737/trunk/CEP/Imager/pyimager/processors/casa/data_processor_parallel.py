@@ -20,3 +20,4 @@ class DataProcessorParallel(DataProcessor):
 
     def channel_width(self):
         return [channel[1] for channel in self.channels()]
+        
