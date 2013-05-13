@@ -22,11 +22,14 @@
 #
 #  $Id$
 
+# Remove all aliases, we want a clean shell.
+unalias -a
+
 # Set default options.
 NEEDOUTFIL=0
 
 # Sanity check! Can be removed once things work OK.
-if test -z "$srcdir"; then
+if [ -z "$srcdir" ]; then
   echo "FATAL ERROR: srcdir is not set"
   exit 1
 fi
@@ -45,22 +48,19 @@ do
   fi
 done
 
-if test $# -lt 1 || test $# -gt 3; then
+if [ $# -lt 1 ] || [ $# -gt 3 ]; then
   echo "usage: runtest.sh [-stdout] <testname> [<max run-time>] [<precision>]"
   exit 1
 fi
 
-if [ "$2" != "" ]; then
-  MAXTIME=$2
-else
-  MAXTIME=300  # 300 seconds == 5 minutes
-fi
+# List of files to copy (and later clean up)
+FILELIST="$1.in* $1.stdout $1.run $1.py $1.parset* $1.log_prop $1.debug"
 
-if [ "$3" != "" ]; then
-  PREC=$3
-else
-  PREC=1e-5
-fi
+# Maximum run-time in seconds, defaults to 300
+MAXTIME=${2:-300}
+
+# Numeric precision, defaults to 1e-5
+PREC=${3:-1e-5}
 
 # Get directory of this script.
 lfr_script_dir=`dirname "$0"`
@@ -73,50 +73,19 @@ export lfr_script_dir
 PATH=.:$PATH
 export PATH
 
-# Delete all possible files from previous test runs.
-\rm -f $1.err $1.valgrind*
-
-#
-# Copy expected files to current directory
-#
-if test -f "$srcdir/$1.in"; then
-  \rm -f $1.in
-  \cp "$srcdir/$1.in"  .
-fi
-\rm -rf $1.in_*
-\cp -r "$srcdir/$1.in_"* . > /dev/null 2>&1
-chmod -R +w $1.in_* > /dev/null 2>&1    # Make writable (for make distcheck).
-if test -f "$srcdir/$1.stdout"; then
-  \rm -f $1.stdout
-  \cp "$srcdir/$1.stdout" .
-elif test -f "$srcdir/$1.out"; then
-  \rm -f $1.stdout
-  \cp "$srcdir/$1.out" $1.stdout
-fi
-if test -f "$srcdir/$1.run"; then
-  \rm -f $1.run
-  \cp "$srcdir/$1.run" .
-fi
-if test -f "$srcdir/$1.py"; then
-  \rm -f $1.py
-  \cp "$srcdir/$1.py" .
-fi
-\rm -f $1.parset*
-\cp "$srcdir/$1.parset"* . > /dev/null 2>&1
-if test -f "$srcdir/$1.log_prop"; then
-  \rm -f $1.log_prop
-  \cp "$srcdir/$1.log_prop" .
-else
-  if test ! -f "$1.log_prop"; then
-    sed -e "s%<LOGFILENAME>%$1_tmp.log%" "$lfr_script_dir/default.log_prop" > $1.log_prop
-  fi
-fi
+# Copy required files to current directory
+cp "$lfr_script_dir/default.log_prop" "$1.log_prop"
+cp "$lfr_script_dir/default.debug" "$1.debug"
+for f in $FILELIST
+do
+  eval cp -a "$srcdir/$f" . 2>/dev/null
+done
 
 # Run assay
 "$lfr_script_dir/assay" $1 $MAXTIME $PREC $NEEDOUTFIL
-STS=$?
+STATUS=$?
 
-# Cleanup (mainly for make distcheck).
-\rm -f $1.stdout $1.run $1.py $1.in $1.parset* $1.log_prop
-\rm -rf $1.in_*
-exit $STS
+# Clean up
+trap 'for f in $FILELIST; do rm -rf "$f"; done; \
+      trap - 0;
+      exit $STATUS' 0 1 2 3 15
