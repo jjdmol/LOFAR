@@ -341,12 +341,17 @@ namespace LOFAR
           checkCuCall(cuMemFree(_ptr));
         }
 
+        CUdeviceptr get() const
+        {
+          return _ptr;
+        }
+
         size_t size() const
         {
           return _size;
         }
 
-      //private: // Stream needs it to do transfers
+      //private: // Functions needs its address to set kernel args
         CUdeviceptr _ptr;
       private:
         size_t _size;
@@ -355,6 +360,11 @@ namespace LOFAR
       DeviceMemory::DeviceMemory(size_t size) :
         _impl(new Impl(size))
       {
+      }
+
+      void *DeviceMemory::get() const
+      {
+        return (void *)_impl->get(); // not sure void * is a reasonble idea for a dev "ptr"
       }
 
       size_t DeviceMemory::size() const
@@ -412,9 +422,10 @@ namespace LOFAR
 
       // TODO: This should return a Function object; this function should
       // be moved into the Impl class.
+      // alx: this functionality should be (is) provided by Function(Module&, string&)
       CUfunction Module::getKernelEntryPoint(const char* functionName)
       {
-        CUfunction   hKernel; 
+        CUfunction hKernel; 
         checkCuCall(cuModuleGetFunction(&hKernel,
                                         _impl->_module,
                                         functionName));
@@ -426,6 +437,24 @@ namespace LOFAR
       {
         checkCuCall(cuModuleGetFunction(&_function, module._impl->_module,
                                         name.c_str()));
+      }
+
+      void Function::setArg(size_t index, const DeviceMemory &mem)
+      {
+        doSetArg(index, &mem._impl->_ptr);
+      }
+
+      void Function::setArg(size_t index, const void **val)
+      {
+        doSetArg(index, (const void *)val);
+      }
+
+      void Function::doSetArg(size_t index, const void *argp)
+      {
+        if (index >= _kernelArgs.size()) {
+          _kernelArgs.resize(index + 1);
+        }
+        _kernelArgs[index] = argp;
       }
 
       int Function::getAttribute(CUfunction_attribute attribute) const
@@ -470,7 +499,7 @@ namespace LOFAR
           checkCuCall(cuEventSynchronize(_event));
         }
 
-        //private: // Stream needs it to wait for and record events
+      //private: // Stream needs it to wait for and record events
         CUevent _event;
       };
 
@@ -531,7 +560,7 @@ namespace LOFAR
           } else if (rv == CUDA_SUCCESS) {
             return true;
           }
-          checkCuCall(rv); // check and throw if other error
+          checkCuCall(rv); // throws
           return false; // not reached; silence compilation warning
         }
 
@@ -562,8 +591,8 @@ namespace LOFAR
                                const HostMemory &hostMem,
                                bool synchronous)
       {
-        _impl->memcpyHtoDAsync(devMem._impl->_ptr, 
-                               hostMem.get<void*>(), 
+        _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
+                               hostMem.get<void *>(),
                                hostMem.size());
         if (synchronous) {
           synchronize();
@@ -574,8 +603,8 @@ namespace LOFAR
                               const DeviceMemory &devMem,
                               bool synchronous)
       {
-        _impl->memcpyDtoHAsync(hostMem.get<void*>(), 
-                               devMem._impl->_ptr, 
+        _impl->memcpyDtoHAsync(hostMem.get<void *>(), 
+                               (CUdeviceptr)devMem.get(),
                                devMem.size());
         if (synchronous) {
           synchronize();
@@ -583,12 +612,12 @@ namespace LOFAR
       }
 
       void Stream::launchKernel(const Function &function,
-                                const Grid &grid, const Block &block,
-                                unsigned sharedMemBytes)
+                                const Grid &grid, const Block &block)
       {
+        const unsigned dynSharedMemBytes = 0; // we don't need this for LOFAR
         _impl->launchKernel(function._function, grid.x, grid.y, grid.z,
-                            block.x, block.y, block.z, sharedMemBytes,
-                            const_cast<void **>(&function._kernelParams[0]));
+                            block.x, block.y, block.z, dynSharedMemBytes,
+                            const_cast<void **>(&function._kernelArgs[0]));
       }
 
       bool Stream::query() const

@@ -202,12 +202,15 @@ namespace LOFAR
         // Allocate \a size bytes of device memory.
         DeviceMemory(size_t size);
 
+        // Return a device pointer as a handle to the memory.
+        void *get() const;
+
         // Return the size of this memory block.
         size_t size() const;
 
       private:
-        // Stream needs access to our device ptr for host-to-device transfer.
-        friend class Stream;
+        // Function needs access to our device ptr location to set this as a kernel arg.
+        friend class Function;
 
         // Non-copyable implementation class.
         class Impl;
@@ -272,18 +275,31 @@ namespace LOFAR
         Function(Module &module, const std::string &name);
 
         // Set kernel immediate argument number \a index to \a val.
-        // Not for pointers and memory objects (void *, CUdeviceptr).
+        // \a val must outlive kernel execution.
+        // Not for device memory objects (be it as DeviceMemory or as void *).
         template <typename T>
-        void setParameter(size_t index, const T &val);
+        void setArg(size_t index, const T &val);
 
-        // Set kernel device memory object argument number \a index to \a val.
-        // For device memory objects (CUdeviceptr) as void *, e.g. from DeviceMemory::get().
-        // Not for immediates. No need to use template specialization here.
-        void setParameter(size_t index, const void *val);
+        // Set kernel DeviceMemory object argument number \a index to \a mem.
+        // \a mem must outlive kernel execution.
+        void setArg(size_t index, const DeviceMemory &mem);
 
-        // Do not use. To protect from passing pointers other than device memory void *.
+        // Set pointer to kernel device memory object (as void *) number \a index
+        // to \a val. \a *val must outlive kernel execution.
+        // Note: Prefer to use setArg() passing a DeviceMemory ref over this overload.
+        void setArg(size_t index, const void **val);
+
+        // Do not use. To guard against passing pointers.
+        // Note that even device void * cannot be passed, because we need its
+        // address with a life time longer than this formal parameter.
         template<typename T>
-        void setParameter(size_t index, const T *&val); // intentionally not implemented
+        void setArg(size_t index, const T *&); // intentionally not impl.
+
+        // Do not use. To guard against passing HostMemory references to kernels.
+        void setArg(size_t index, const HostMemory &); // intentionally not impl.
+
+        // Do not use. To guard against passing HostMemory pointers to kernels.
+        void setArg(size_t index, const HostMemory *); // intentionally not impl.
 
         // Return information about a function.
         // \note For details on valid values for \a attribute, please refer to
@@ -302,8 +318,12 @@ namespace LOFAR
         // CUDA function.
         CUfunction _function;
 
-        // function arguments as set.
-        std::vector<void *> _kernelParams;
+        // Function arguments as set.
+        std::vector<const void *> _kernelArgs;
+
+
+        // Helper function to modify _kernelArgs.
+        void doSetArg(size_t index, const void *argp);
       };
 
       // Wrap a CUDA Event. This is the equivalent of an OpenCL Event.
@@ -368,13 +388,10 @@ namespace LOFAR
 
         // Launch a CUDA function.
         // \param function object containing the function to launch
-        // \param grid Grid size (in terms of threads (not blocks))
+        // \param grid Grid size (in terms of blocks (not threads (OpenCL)))
         // \param block Block (thread group) size
-        // \param sharedMemBytes the amount of shared memory per block that is
-        //        dynamically allocated at launch-time
         void launchKernel(const Function &function,
-                          const Grid &grid, const Block &block,
-                          unsigned sharedMemBytes);
+                          const Grid &grid, const Block &block);
 
         // Check if all operations on this stream have completed.
         // \return true if all completed, or false otherwise.

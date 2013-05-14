@@ -1,6 +1,5 @@
-//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
-//#
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# FIR_FilterKernel.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -19,35 +18,27 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+#ifndef LOFAR_GPUPROC_CUDA_FIR_FILTER_KERNEL_H
+#define LOFAR_GPUPROC_CUDA_FIR_FILTER_KERNEL_H
 
-// \file
-// Template implementation of CUDA-specific wrapper classes for GPU types.
+#include <CoInterface/Parset.h>
+
+#include "Kernel.h"
+#include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    class FIR_FilterKernel : public Kernel
     {
-        template <typename T>
-        T * HostMemory::get() const
-        {
-          return static_cast<T *>(getPtr());
-        }
-
-        template <typename T>
-        void Function::setArg(size_t index, const T &val)
-        {
-          doSetArg(index, &val);
-        }
-
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+    public:
+      FIR_FilterKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
+                       gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devInputSamples,
+                       gpu::DeviceMemory &devFIRweights);
+    };
+  }
+}
 
 #endif
 

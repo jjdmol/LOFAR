@@ -1,5 +1,4 @@
-//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
-//#
+//# tKernel.in_.cu: simple function to test Kernel class
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,35 +18,17 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+extern "C" {
 
-// \file
-// Template implementation of CUDA-specific wrapper classes for GPU types.
-
-namespace LOFAR
-{
-  namespace Cobalt
+  // test various "types" of args (for arg setting), esp. an immediate and a buffer
+  __global__ void testKernel(float *out, const float *in, size_t size, float inc)
   {
-    namespace gpu
+    unsigned i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < size)
     {
-        template <typename T>
-        T * HostMemory::get() const
-        {
-          return static_cast<T *>(getPtr());
-        }
+      out[i] = in[i] + inc;
+    }
+  }
 
-        template <typename T>
-        void Function::setArg(size_t index, const T &val)
-        {
-          doSetArg(index, &val);
-        }
-
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
-
-#endif
+}
 
