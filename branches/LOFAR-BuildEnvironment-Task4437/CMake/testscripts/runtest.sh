@@ -74,7 +74,7 @@ script_dir=$(cd "$(dirname "$0")" && pwd)
 [ -f "$srcdir/$1.debug" ] || cp "$script_dir/default.debug" "$1.debug"
 for f in $FILELIST
 do
-  eval cp -a "$srcdir/$f" . 2>/dev/null
+  eval cp -r "$srcdir/$f" . 2>/dev/null
 done
 
 # Run assay
