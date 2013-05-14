@@ -62,27 +62,23 @@ MAXTIME=${2:-300}
 # Numeric precision, defaults to 1e-5
 PREC=${3:-1e-5}
 
-# Get directory of this script.
-lfr_script_dir=`dirname "$0"`
-lfr_script_dir=`cd "$lfr_script_dir" && pwd`
-
-# Export lfr_script_dir, so that it can be used by assay
-export lfr_script_dir
-
 # Add the current directory to the path. We don't care if it's already in.
 PATH=.:$PATH
 export PATH
 
+# Get absolute directory of this script.
+script_dir=$(cd "$(dirname "$0")" && pwd)
+
 # Copy required files to current directory
-cp "$lfr_script_dir/default.log_prop" "$1.log_prop"
-cp "$lfr_script_dir/default.debug" "$1.debug"
+[ -f "$srcdir/$1.log_prop" ] || cp "$script_dir/default.log_prop" "$1.log_prop"
+[ -f "$srcdir/$1.debug" ] || cp "$script_dir/default.debug" "$1.debug"
 for f in $FILELIST
 do
   eval cp -a "$srcdir/$f" . 2>/dev/null
 done
 
 # Run assay
-"$lfr_script_dir/assay" $1 $MAXTIME $PREC $NEEDOUTFIL
+"$script_dir/assay" $1 $MAXTIME $PREC $NEEDOUTFIL
 STATUS=$?
 
 # Clean up

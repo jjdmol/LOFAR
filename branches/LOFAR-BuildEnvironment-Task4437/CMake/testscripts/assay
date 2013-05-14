@@ -142,6 +142,9 @@
   NEEDOUTFIL=$1
   shift
 
+# Get absolute directory of this script.
+  lfr_script_dir=$(cd "$(dirname "$0")" && pwd)
+
 # Use LimitExec if possible and available.
   LOFAR_LIMITEXEC=
   if [ -x "$LOFARROOT/bin/LimitExec" ]
@@ -235,11 +238,6 @@
     ;;
   *) 
     echo "FAIL (execution failure): $PROG"
-    # We may want to know what went wrong, so we'll secure the log file
-    if [ -f ${PROG}_tmp.log ]
-    then
-      mv ${PROG}_tmp.log ${PROG}.err
-    fi
     exit
      ;;
   esac
