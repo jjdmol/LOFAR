@@ -341,6 +341,11 @@ namespace LOFAR
           checkCuCall(cuMemFree(_ptr));
         }
 
+        CUdeviceptr get() const
+        {
+          return _ptr;
+        }
+
         size_t size() const
         {
           return _size;
@@ -355,6 +360,11 @@ namespace LOFAR
       DeviceMemory::DeviceMemory(size_t size) :
         _impl(new Impl(size))
       {
+      }
+
+      void *DeviceMemory::get() const
+      {
+        return (void *)_impl->get(); // not sure void * is a reasonble idea for a dev "ptr"
       }
 
       size_t DeviceMemory::size() const
@@ -434,7 +444,7 @@ namespace LOFAR
         if (index >= _kernelArgs.size()) {
           _kernelArgs.resize(index + 1);
         }
-        _kernelArgs[index] = const_cast<void *>(val);
+        _kernelArgs[index] = val;
       }
 
       int Function::getAttribute(CUfunction_attribute attribute) const
@@ -527,6 +537,7 @@ namespace LOFAR
                           unsigned blockZ, unsigned sharedMemBytes,
                           void **parameters)
         {
+std::cerr << "func=" << function << " grid=" << gridX << ", " << gridY << ", " << gridZ << " block=" << blockX << ", " << blockY << ", " << blockZ << " shmem=" << sharedMemBytes << " strm=" << _stream << " args=" << parameters[0] << ", " << parameters[1] << ", " << parameters[2] << ", " << parameters[3] << std::endl;
           checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
                                      blockY, blockZ, sharedMemBytes, _stream,
                                      parameters, NULL));

@@ -202,6 +202,9 @@ namespace LOFAR
         // Allocate \a size bytes of device memory.
         DeviceMemory(size_t size);
 
+        // Return a device pointer as a handle to the memory.
+        void *get() const;
+
         // Return the size of this memory block.
         size_t size() const;
 
@@ -302,6 +305,7 @@ namespace LOFAR
         // CUDA function.
         CUfunction _function;
 
+public: // tmp
         // function arguments as set.
         std::vector<const void *> _kernelArgs;
       };

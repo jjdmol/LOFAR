@@ -58,7 +58,7 @@ namespace LOFAR
 #endif
       ostringstream cmd;
       cmd << "nvcc"; // TODO: allow cmd-line arg override
-      //cmd << " --compiler-bindir /usr/bin/g++-4.6"; // TODO: generalize; also in the tCudaRuntimeCompiler test
+      cmd << " --compiler-bindir /usr/bin/g++-4.6"; // TODO: generalize; also in the tCudaRuntimeCompiler test
       cmd << " --ptx";                         // Request intermediate format (ptx) as output. We may want to view or stir it.
       cmd << " -I" << dirname(__FILE__);       // TODO: read from installed directory if installed, or from this directory if testing (?)
 #ifdef LOFAR_DEBUG
