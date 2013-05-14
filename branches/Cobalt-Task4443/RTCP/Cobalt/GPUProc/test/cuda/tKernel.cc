@@ -1,4 +1,4 @@
-//# tcreateProgram.cc: test CUDA kernel runtime compilation from src file
+//# tKernel.cc: test creating and running a CUDA kernel from src at runtime
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -48,10 +48,10 @@ int main() {
 
   gpu::Stream stream;
 
-  const size_t size = 8 * 1024 * 1024;
-  gpu::HostMemory in(size * sizeof(float));
+  const size_t size = 2 * 1024 * 1024;
+  gpu::HostMemory in(size  * sizeof(float));
   gpu::HostMemory out(size * sizeof(float));
-  gpu::DeviceMemory d_in(size * sizeof(float));
+  gpu::DeviceMemory d_in(size  * sizeof(float));
   gpu::DeviceMemory d_out(size * sizeof(float));
 
   // init buffers
@@ -60,26 +60,20 @@ int main() {
     in.get<float>()[i] = (float)i;
   }
   memset(out.get<void>(), 0, size * sizeof(float));
-  const float incVal = 1.0f;
+  const float incVal = 1.5f;
 
   // kernel args
-/*  func.setArg(0, d_out.get());
-  func.setArg(1, d_in.get());
+  func.setArg(0, d_out);
+  func.setArg(1, d_in);
   func.setArg(2, size);
-  func.setArg(3, incVal);*/
-func._kernelArgs.resize(4);
-func._kernelArgs[0] = d_out.get();
-func._kernelArgs[1] = d_in.get();
-func._kernelArgs[2] = &size;
-func._kernelArgs[3] = &incVal;
+  func.setArg(3, incVal);
 
   // launch args
-  gpu::Grid grid(size);
-  gpu::Block block(256); // reasonable, assumes it divides size
-  const unsigned dynShMemSize = 0;
+  gpu::Block block(64); // reasonable for many platforms; assumes it divides size
+  gpu::Grid grid(size / block.x);
 
   stream.writeBuffer(d_in, in); // asynchronous transfer
-  stream.launchKernel(func, grid, block, dynShMemSize);
+  stream.launchKernel(func, grid, block);
   stream.readBuffer(out, d_out, true); // synchronous transfer
   cout << "Succesfully executed kernel and read back output data" << endl;
 
@@ -87,7 +81,7 @@ func._kernelArgs[3] = &incVal;
   size_t nrErrors = 0;
   for (size_t i = 0; i < size; i++)
   {
-    if (out.get<float>()[i] != i + incVal)
+    if (out.get<float>()[i] != (float)i + incVal)
     {
       nrErrors += 1;
     }

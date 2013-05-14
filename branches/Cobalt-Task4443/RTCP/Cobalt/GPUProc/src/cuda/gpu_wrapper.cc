@@ -351,7 +351,7 @@ namespace LOFAR
           return _size;
         }
 
-      //private: // Stream needs it to do transfers
+      //private: // Functions needs its address to set kernel args
         CUdeviceptr _ptr;
       private:
         size_t _size;
@@ -425,7 +425,7 @@ namespace LOFAR
       // alx: this functionality should be (is) provided by Function(Module&, string&)
       CUfunction Module::getKernelEntryPoint(const char* functionName)
       {
-        CUfunction   hKernel; 
+        CUfunction hKernel; 
         checkCuCall(cuModuleGetFunction(&hKernel,
                                         _impl->_module,
                                         functionName));
@@ -439,12 +439,22 @@ namespace LOFAR
                                         name.c_str()));
       }
 
-      void Function::setArg(size_t index, const void *val)
+      void Function::setArg(size_t index, const DeviceMemory &mem)
+      {
+        doSetArg(index, &mem._impl->_ptr);
+      }
+
+      void Function::setArg(size_t index, const void **val)
+      {
+        doSetArg(index, (const void *)val);
+      }
+
+      void Function::doSetArg(size_t index, const void *argp)
       {
         if (index >= _kernelArgs.size()) {
           _kernelArgs.resize(index + 1);
         }
-        _kernelArgs[index] = val;
+        _kernelArgs[index] = argp;
       }
 
       int Function::getAttribute(CUfunction_attribute attribute) const
@@ -489,7 +499,7 @@ namespace LOFAR
           checkCuCall(cuEventSynchronize(_event));
         }
 
-        //private: // Stream needs it to wait for and record events
+      //private: // Stream needs it to wait for and record events
         CUevent _event;
       };
 
@@ -537,7 +547,6 @@ namespace LOFAR
                           unsigned blockZ, unsigned sharedMemBytes,
                           void **parameters)
         {
-std::cerr << "func=" << function << " grid=" << gridX << ", " << gridY << ", " << gridZ << " block=" << blockX << ", " << blockY << ", " << blockZ << " shmem=" << sharedMemBytes << " strm=" << _stream << " args=" << parameters[0] << ", " << parameters[1] << ", " << parameters[2] << ", " << parameters[3] << std::endl;
           checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
                                      blockY, blockZ, sharedMemBytes, _stream,
                                      parameters, NULL));
@@ -551,7 +560,7 @@ std::cerr << "func=" << function << " grid=" << gridX << ", " << gridY << ", " <
           } else if (rv == CUDA_SUCCESS) {
             return true;
           }
-          checkCuCall(rv); // check and throw if other error
+          checkCuCall(rv); // throws
           return false; // not reached; silence compilation warning
         }
 
@@ -582,8 +591,8 @@ std::cerr << "func=" << function << " grid=" << gridX << ", " << gridY << ", " <
                                const HostMemory &hostMem,
                                bool synchronous)
       {
-        _impl->memcpyHtoDAsync(devMem._impl->_ptr, 
-                               hostMem.get<void*>(), 
+        _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
+                               hostMem.get<void *>(),
                                hostMem.size());
         if (synchronous) {
           synchronize();
@@ -594,8 +603,8 @@ std::cerr << "func=" << function << " grid=" << gridX << ", " << gridY << ", " <
                               const DeviceMemory &devMem,
                               bool synchronous)
       {
-        _impl->memcpyDtoHAsync(hostMem.get<void*>(), 
-                               devMem._impl->_ptr, 
+        _impl->memcpyDtoHAsync(hostMem.get<void *>(), 
+                               (CUdeviceptr)devMem.get(),
                                devMem.size());
         if (synchronous) {
           synchronize();
@@ -603,11 +612,11 @@ std::cerr << "func=" << function << " grid=" << gridX << ", " << gridY << ", " <
       }
 
       void Stream::launchKernel(const Function &function,
-                                const Grid &grid, const Block &block,
-                                unsigned sharedMemBytes)
+                                const Grid &grid, const Block &block)
       {
+        const unsigned dynSharedMemBytes = 0; // we don't need this for LOFAR
         _impl->launchKernel(function._function, grid.x, grid.y, grid.z,
-                            block.x, block.y, block.z, sharedMemBytes,
+                            block.x, block.y, block.z, dynSharedMemBytes,
                             const_cast<void **>(&function._kernelArgs[0]));
       }
 

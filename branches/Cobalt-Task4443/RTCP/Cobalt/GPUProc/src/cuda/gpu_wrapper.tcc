@@ -40,7 +40,7 @@ namespace LOFAR
         template <typename T>
         void Function::setArg(size_t index, const T &val)
         {
-          setArg(index, static_cast<const void *>(&val));
+          doSetArg(index, &val);
         }
 
     } // namespace gpu

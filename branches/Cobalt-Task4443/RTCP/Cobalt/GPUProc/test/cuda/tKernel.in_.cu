@@ -23,7 +23,7 @@ extern "C" {
   // test various "types" of args (for arg setting), esp. an immediate and a buffer
   __global__ void testKernel(float *out, const float *in, size_t size, float inc)
   {
-    unsigned i = gridDim.x;
+    unsigned i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < size)
     {
       out[i] = in[i] + inc;

@@ -13,6 +13,8 @@ lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
 lofar_add_test(tStorageProcesses tStorageProcesses.cc)
 
+#add_subdirectory(Kernels)
+
 if(USE_CUDA)
   add_subdirectory(cuda)
 endif()
