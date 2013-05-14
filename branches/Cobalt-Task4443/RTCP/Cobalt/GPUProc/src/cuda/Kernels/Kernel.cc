@@ -40,13 +40,13 @@ namespace LOFAR
       //  return;
 
       // TODO: to globalWorkSize in terms of localWorkSize (CUDA) (+ remove assertion): add protected setThreadDim()
-      assert(globalWorkSize.x % localWorkSize.x == 0 &&
-             globalWorkSize.y % localWorkSize.y == 0 &&
-             globalWorkSize.z % localWorkSize.z == 0);
-      gpu::Grid grid(globalWorkSize.x / localWorkSize.x,
-                     globalWorkSize.y = localWorkSize.y,
-                     globalWorkSize.z = localWorkSize.z);
-      gpu::Block block(localWorkSize.x, localWorkSize.y, localWorkSize.z);
+      gpu::Block block(localWorkSize);
+      assert(globalWorkSize.x % block.x == 0 &&
+             globalWorkSize.y % block.y == 0 &&
+             globalWorkSize.z % block.z == 0);
+      gpu::Grid grid(globalWorkSize.x / block.x,
+                     globalWorkSize.y / block.y,
+                     globalWorkSize.z / block.z);
       //queue.enqueueNDRangeKernel(*this, gpu::nullDim, globalWorkSize, localWorkSize, 0, &event);
       queue.launchKernel(*this, grid, block);
 //      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
