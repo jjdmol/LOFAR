@@ -43,7 +43,7 @@ int main()
   for( unsigned i = 0; i < sizeof suffixes / sizeof suffixes[0]; i++ ) {
     try {
       const string parsetName = string("tMeasurementSetFormat.parset") + suffixes[i];
-      const string msName = string("tMeasurementSetFormat") + suffixes[i] + "_tmp.ms";
+      const string msName = string("tMeasurementSetFormat_tmp") + suffixes[i] + ".MS";
 
       LOG_DEBUG_STR("Testing " << parsetName);
 
