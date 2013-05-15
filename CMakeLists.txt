@@ -6,8 +6,7 @@ cmake_minimum_required(VERSION 2.6)
 ## Preamble: set compilers
 ## ---------------------------------------------------------------------------
 include(CMake/LofarInit.cmake)
-lofar_find_package(Boost REQUIRED COMPONENTS python thread)
-lofar_find_package(Casacore REQUIRED COMPONENTS scimath)
+
 ## ---------------------------------------------------------------------------
 ## Project characteristics
 ## ---------------------------------------------------------------------------
