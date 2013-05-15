@@ -1,23 +1,25 @@
 #include <string>
+#include <vector>
 #include <cstdlib>
 
-#include <GPUProc/gpu_wrapper.h>
+#include <Common/Exception.h>
+
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
+#include <cuda.h>
 
 using namespace std;
-using namespace LOFAR::Cobalt;
 
 void checkCudaCall(CUresult result)
 {
   if (result != CUDA_SUCCESS) {
-    THROW (gpu::GPUException, "CUDA Device error: (" << result << ")");
+    THROW (LOFAR::Exception, "CUDA Device error: (" << result << ")");
   }
 }
 
 void checkCudaCall(cudaError_t error)
 {
   if (error != cudaSuccess) {
-    THROW (gpu::GPUException, "CUDA Runtime error: (" << error << ")");
+    THROW (LOFAR::Exception, "CUDA Runtime error: (" << error << ")");
   }
 }
 
@@ -45,9 +47,9 @@ int main()
   definitions["NR_SAMPLES_PER_CHANNEL"] = "128";
   unsigned NR_SAMPLES_PER_CHANNEL = 128;
   definitions["NR_SAMPLES_PER_SUBBAND"] = "128";
-  unsigned NR_SAMPLES_PER_SUBBAND = 128;
+//  unsigned NR_SAMPLES_PER_SUBBAND = 128;
   definitions["NR_BITS_PER_SAMPLE"] = "8";
-  unsigned NR_BITS_PER_SAMPLE = 8;
+//  unsigned NR_BITS_PER_SAMPLE = 8;
   definitions["NR_POLARIZATIONS"] = "2";
   unsigned NR_POLARIZATIONS = 2;
   definitions["NR_BEAMS"] = "8";
@@ -56,7 +58,7 @@ int main()
   definitions["COMPLEX"] = "2";
   unsigned COMPLEX = 2;
   definitions["SUBBAND_BANDWIDTH"] = ".04";
-  unsigned SUBBAND_BANDWIDTH = 4;
+//  unsigned SUBBAND_BANDWIDTH = 4;
   definitions["BANDPASS_CORRECTION"] = "1";
   definitions["DELAY_COMPENSATION"] = "1";
 
@@ -73,9 +75,10 @@ int main()
   optionValues.push_back(NULL); // no option value, but I suppose the array needs a placeholder
 
   // load the created module and get function entry point
-  CUmodule     hModule  = 0;
-  gpu::Module delayAndBandPassModule(ptx1.c_str(), options, optionValues);
-  CUfunction   hKernel  =  delayAndBandPassModule.getKernelEntryPoint("applyDelaysAndCorrectBandPass");
+  CUmodule delayAndBandPassModule;
+  checkCudaCall(cuModuleLoadDataEx(&delayAndBandPassModule, ptx1.c_str(), options.size(), &options[0], &optionValues[0]));
+  CUfunction hKernel;
+  checkCudaCall(cuModuleGetFunction(&hKernel, delayAndBandPassModule, "applyDelaysAndCorrectBandPass"));
 
   // Create the data arrays
 
@@ -187,27 +190,18 @@ int main()
                                   &DevbandPassFactorsData};
 
 
-
-  // Number of threads?
-  int nrChannelsPerSubband = NR_CHANNELS;
-  int nrStations = NR_STATIONS; 
-  int MAXNRCUDATHREADS = 1024;//doet moet nog opgevraagt worden en niuet als magish getal
-  size_t maxNrThreads = MAXNRCUDATHREADS;
-  unsigned totalNrThreads = nrChannelsPerSubband * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
-  unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
-  
   dim3 globalWorkSize(1, 1); 
   dim3 localWorkSize(1, 1); 
 
-    cudaStream_t cuStream;
+  cudaStream_t cuStream;
   checkCudaCall(cudaStreamCreate(&cuStream));
   
 		
 		
-    checkCudaCall(cuLaunchKernel( hKernel, globalWorkSize.x, globalWorkSize.y, globalWorkSize.z, 
-    localWorkSize.x, localWorkSize.y, localWorkSize.z, NULL, cuStream, kernel_func_args,0));
+  checkCudaCall(cuLaunchKernel( hKernel, globalWorkSize.x, globalWorkSize.y, globalWorkSize.z, 
+    localWorkSize.x, localWorkSize.y, localWorkSize.z, 0, cuStream, kernel_func_args, NULL));
 
-    checkCudaCall(cudaDeviceSynchronize());
+  checkCudaCall(cudaDeviceSynchronize());
 
   // Copy output vector from GPU buffer to host memory.
   checkCudaCall(cuMemcpyDtoH(rawCorrectedData, DevCorrectedData,
@@ -217,3 +211,4 @@ int main()
 
     return 0;
 }
+

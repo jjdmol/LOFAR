@@ -251,9 +251,6 @@ namespace LOFAR
                std::vector<CUjit_option> &options,
                std::vector<void*> &optionValues);
 
-        // \todo This should return a Function object, not a CUfunction.
-        CUfunction getKernelEntryPoint(const char* functionName);
-
       private:
         // Function needs access to our module to create a function.
         friend class Function;
