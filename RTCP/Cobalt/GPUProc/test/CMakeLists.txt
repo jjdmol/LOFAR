@@ -13,8 +13,6 @@ lofar_add_test(tSSH tSSH.cc)
 lofar_add_bin_program(DummyStorage DummyStorage.cc)
 lofar_add_test(tStorageProcesses tStorageProcesses.cc DEPENDS DummyStorage)
 
-add_subdirectory(Kernels)
-
 if(USE_CUDA)
   add_subdirectory(cuda)
 endif()
