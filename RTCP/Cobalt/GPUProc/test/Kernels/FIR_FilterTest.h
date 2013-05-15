@@ -44,18 +44,14 @@ typedef signed char SampleType;
 #error unsupported NR_BITS_PER_SAMPLE
 #endif
 
-#include "lofar_config.h"
-
 #include <iostream>
 #include <string>
 #include <sstream>
 
 #include <iostream>
 #include <stdlib.h> 
-#include "FIR_FilterTest.h"
 #include <sstream>
 #include <fstream>
-#include <cuda_runtime.h>
 #include <cuda.h>
 #include <exception>
 
@@ -185,7 +181,6 @@ namespace LOFAR
 
 
         cudaError_t cudaErrorStatus;
-        bool testOk = true;
         //const size_t nrComplexComp = 2; // real, imag
 
         // Create the needed data
@@ -309,7 +304,6 @@ namespace LOFAR
         {
           // int maxSample = NR_SAMPLES_PER_CHANNEL;
           std::cerr << "FIR_FilterTest 1: Expected at idx 0: 6; got: " << (*filteredData)[0][0][0][0][0] << std::endl;
-          testOk = false;
         }
 
         const unsigned nrExpectedZeros = sizeFilteredData - 1;
@@ -328,139 +322,8 @@ namespace LOFAR
         else 
         {
           std::cerr << "FIR_FilterTest 1: Unexpected non-zero(s). Only " << nrZeros << " zeros out of " << nrExpectedZeros << std::endl;
-          testOk = false;
         }
 
-
-        //// Test 2: Impulse train 2*NR_TAPS apart. All st, all ch, all pol.
-        //for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
-        //  for (unsigned tap = 0; tap < ps.nrPPFTaps(); tap++) {
-        //    firWeights[ch][tap] = ch + tap;
-        //  }
-        //}
-
-        //for (station = 0; station < ps.nrStations(); station++) {
-        //  for (sample = ps.nrPPFTaps() - 1; sample < ps.nrPPFTaps() - 1 + ps.nrSamplesPerChannel(); sample += 2 * ps.nrPPFTaps()) {
-        //    for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
-        //      for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-        //        inputSamples[station][sample][ch][pol][0] = station;
-        //      }
-        //    }
-        //  }
-        //}
-
-        //firWeights.hostToDevice(CL_FALSE);
-        //inputSamples.hostToDevice(CL_FALSE);
-        //firFilterKernel.enqueue(queue, counter);
-        //filteredData.deviceToHost(CL_TRUE);
-
-        //// Expected output: sequences of (filterbank scaled by station nr, NR_TAPS zeros)
-        //unsigned nrErrors = 0;
-        //for (station = 0; station < ps.nrStations(); station++) {
-        //  for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-        //    unsigned s;
-        //    for (sample = 0; sample < ps.nrSamplesPerChannel() / (2 * ps.nrPPFTaps()); sample += s) {
-        //      for (s = 0; s < ps.nrPPFTaps(); s++) {
-        //        for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
-        //          if (filteredData[station][pol][sample + s][ch][0] != station * firWeights[ch][s]) {
-        //            if (++nrErrors < 100) { // limit spam
-        //              std::cerr << "2a.filtered[" << station << "][" << pol << "][" << sample + s << "][" << ch <<
-        //                "][0] (sample=" << sample << " s=" << s << ") = " << filteredData[station][pol][sample + s][ch][0] << std::endl;
-        //            }
-        //          }
-        //          if (filteredData[station][pol][sample + s][ch][1] != 0.0f) {
-        //            if (++nrErrors < 100) {
-        //              std::cerr << "2a imag non-zero: " << filteredData[station][pol][sample + s][ch][1] << std::endl;
-        //            }
-        //          }
-        //        }
-        //      }
-
-        //      for (; s < 2 * ps.nrPPFTaps(); s++) {
-        //        for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
-        //          if (filteredData[station][pol][sample + s][ch][0] != 0.0f || filteredData[station][pol][sample + s][ch][1] != 0.0f) {
-        //            if (++nrErrors < 100) {
-        //              std::cerr << "2b.filtered[" << station << "][" << pol << "][" << sample + s << "][" << ch <<
-        //                "][0] (sample=" << sample << " s=" << s << ") = " << filteredData[station][pol][sample + s][ch][0] <<
-        //                ", " << filteredData[station][pol][sample + s][ch][1] << std::endl;
-        //            }
-        //          }
-        //        }
-        //      }
-        //    }
-        //  }
-        //}
-        //if (nrErrors == 0) {
-        //  std::cout << "FIR_FilterTest 2: test OK" << std::endl;
-        //} else {
-        //  std::cerr << "FIR_FilterTest 2: " << nrErrors << " unexpected output values" << std::endl;
-        //  testOk = false;
-        //}
-
-
-        //// Test 3: Scaled step test (scaled DC gain) on KAISER filterbank. Non-zero imag input.
-        //FilterBank filterBank(true, ps.nrPPFTaps(), ps.nrChannelsPerSubband(), KAISER);
-        //filterBank.negateWeights();         // not needed for testing, but as we use it
-        ////filterBank.printWeights();
-
-        //assert(firWeights.num_elements() == filterBank.getWeights().num_elements());
-        //double* expectedSums = new double[ps.nrChannelsPerSubband()];
-        //memset(expectedSums, 0, ps.nrChannelsPerSubband() * sizeof(double));
-        //for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
-        //  for (unsigned tap = 0; tap < ps.nrPPFTaps(); tap++) {
-        //    firWeights[ch][tap] = filterBank.getWeights()[ch][tap];
-        //    expectedSums[ch] += firWeights[ch][tap];
-        //  }
-        //}
-
-        //for (station = 0; station < ps.nrStations(); station++) {
-        //  for (sample = 0; sample < ps.nrPPFTaps() - 1 + ps.nrSamplesPerChannel(); sample++) {
-        //    for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
-        //      for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-        //        inputSamples[station][sample][ch][pol][0] = 2; // real
-        //        inputSamples[station][sample][ch][pol][1] = 3; // imag
-        //      }
-        //    }
-        //  }
-        //}
-
-        //firWeights.hostToDevice(CL_FALSE);
-        //inputSamples.hostToDevice(CL_FALSE);
-        //firFilterKernel.enqueue(queue, counter);
-        //filteredData.deviceToHost(CL_TRUE);
-
-        //nrErrors = 0;
-        //for (station = 0; station < ps.nrStations(); station++) {
-        //  for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-        //    for (sample = 0; sample < ps.nrSamplesPerChannel(); sample++) {
-        //      for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
-        //        // Expected sum must also be scaled by 2 and 3, because weights are real only.
-        //        if (!fpEquals(filteredData[station][pol][sample][ch][0], 2 * expectedSums[ch])) {
-        //          if (++nrErrors < 100) { // limit spam
-        //            std::cerr << "3a.filtered[" << station << "][" << pol << "][" << sample << "][" << ch <<
-        //              "][0] = " << filteredData[station][pol][sample][ch][0] << " 2*weight = " << 2 * expectedSums[ch] << std::endl;
-        //          }
-        //        }
-        //        if (!fpEquals(filteredData[station][pol][sample][ch][1], 3 * expectedSums[ch])) {
-        //          if (++nrErrors < 100) {
-        //            std::cerr << "3b.filtered[" << station << "][" << pol << "][" << sample << "][" << ch <<
-        //              "][1] = " << filteredData[station][pol][sample][ch][1] << " 3*weight = " << 3 * expectedSums[ch] << std::endl;
-        //          }
-        //        }
-        //      }
-        //    }
-        //  }
-        //}
-        //delete[] expectedSums;
-        //if (nrErrors == 0) {
-        //  std::cout << "FIR_FilterTest 3: test OK" << std::endl;
-        //} else {
-        //  std::cerr << "FIR_FilterTest 3: " << nrErrors << " unexpected output values" << std::endl;
-        //  testOk = false;
-        //}
-
-
-        //check(testOk, true);
       }
     };
   }
