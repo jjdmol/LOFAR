@@ -1,13 +1,12 @@
 #!/bin/sh
 
 # Parsets to use
-module load cuda50/toolkit/5.0.35
 PARSETS="
 FIR_FilterTest.parset.77_Stations
 FIR_FilterTest.parset.AARTFAAC
 FIR_FilterTest.parset.small-test
 "
-cp ${srcdir}/../../src/Kernels/FIR_Filter.cu .
+cp ${srcdir}/../../src/cuda/FIR_Filter.cu .
 
 # Check for GPU
 if ! lspci | grep -E "VGA|3D" | grep -E "ATI|NVIDIA"

@@ -24,6 +24,7 @@
 #include "device_launch_parameters.h"
 
 #include <cstdio>   // popen, pget
+#include <stdexcept>
 #include <iostream>  
 #include <string>
 #include <sstream>
@@ -84,7 +85,7 @@ namespace CudaRuntimeCompiler
     {
       // log that we have a failed compile run
 
-      throw "nvcc compilation failed!";                     // TODO: Need to be a  lofar::gpu::exeption.
+      throw std::runtime_error("nvcc compilation failed!");
     }
     //Now read the content of the file pointer
     while ( ! feof (ptxFilePointer) )                       //We do not get the cerr
