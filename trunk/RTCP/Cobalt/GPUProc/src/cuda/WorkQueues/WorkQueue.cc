@@ -1,5 +1,5 @@
-//# createProgram.h
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Align.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,28 +18,44 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_CREATE_PROGRAM_H
-#define LOFAR_GPUPROC_CUDA_CREATE_PROGRAM_H
+#include <lofar_config.h>
 
-#include <string>
-#include <vector>
+#include "WorkQueue.h"
 
-#include <CoInterface/Parset.h>
+#include <Common/LofarLogger.h>
 
-#include "gpu_wrapper.h"
+#include <GPUProc/global_defines.h>
+
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    /*
-     * For CUDA, context is ignored, but note that creating such an object
-     * makes it the active context.
-     * srcFilename cannot be an absolute path.
-     */
-    gpu::Module createProgram(const Parset &ps, gpu::Context &context, std::vector<std::string> &targets, const std::string &srcFilename);
+    WorkQueue::WorkQueue(gpu::Context &context, gpu::Device &device, unsigned gpuNumber, const Parset &ps)
+      :
+      gpu(gpuNumber),
+      device(device),
+      ps(ps)
+    {
+#if defined __linux__ && defined USE_B7015
+      set_affinity(gpu);
+#endif
+
+      queue = gpu::Stream(context, device, profiling ? CL_QUEUE_PROFILING_ENABLE : 0);
+    }
+
+
+    void WorkQueue::addCounter(const std::string &name)
+    {
+      counters[name] = new PerformanceCounter(name, profiling);
+    }
+
+
+    void WorkQueue::addTimer(const std::string &name)
+    {
+      timers[name] = new NSTimer(name, false, false);
+    }
+
   }
 }
-
-#endif
 
