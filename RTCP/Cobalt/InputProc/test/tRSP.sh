@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tRSP > tRSP.log 2>&1
+./runctest.sh tRSP

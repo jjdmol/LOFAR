@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tBandpass > /dev/null 2>&1
+./runctest.sh tBandpass
