@@ -2,9 +2,9 @@
 
 # Parsets to use
 PARSETS="
-FIR_FilterTest.parset.77_Stations
-FIR_FilterTest.parset.AARTFAAC
-FIR_FilterTest.parset.small-test
+tFIR_Filter.parset.77_Stations
+tFIR_Filter.parset.AARTFAAC
+tFIR_Filter.parset.small-test
 "
 cp ${srcdir}/../../src/cuda/FIR_Filter.cu .
 
@@ -19,12 +19,12 @@ fi
 STATUS=0
 for PARSET in $PARSETS
 do
-  echo "Running ./FIR_FilterTest $PARSET" >&2
-  ./FIR_FilterTest $PARSET >&1
+  echo "Running ./tFIR_Filter $PARSET" >&2
+  ./tFIR_Filter $PARSET >&1
   if [ $? != 0 ]
   then
     STATUS=1
-    echo "FAILED: ./FIR_FilterTest $PARSET" >&2
+    echo "FAILED: ./tFIR_Filter $PARSET" >&2
 	exit $STATUS #exit for now.
   fi
 done

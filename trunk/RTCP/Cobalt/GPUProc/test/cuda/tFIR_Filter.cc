@@ -21,7 +21,7 @@
 #include <iostream>
 #include <stdlib.h> 
 
-#include "FIR_FilterTest.h"
+#include "tFIR_Filter.h"
 #include <sstream>
 #include <fstream>
 #include <cuda_runtime.h>
