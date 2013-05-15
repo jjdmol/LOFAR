@@ -1,4 +1,4 @@
-//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
+//# Kernel.h
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -19,35 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-
 // \file
-// Template implementation of CUDA-specific wrapper classes for GPU types.
+// Include the right GPU API include with our options.
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    namespace gpu
-    {
-        template <typename T>
-        T * HostMemory::get() const
-        {
-          return static_cast<T *>(getPtr());
-        }
+#ifndef LOFAR_GPUPROC_KERNEL_H
+#define LOFAR_GPUPROC_KERNEL_H
 
-        template <typename T>
-        void Function::setArg(size_t index, const T &val)
-        {
-          doSetArg(index, &val);
-        }
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Kernels/Kernel.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Kernels/Kernel.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

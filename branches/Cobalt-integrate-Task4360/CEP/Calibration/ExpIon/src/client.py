@@ -2,7 +2,7 @@
 
 import IPython
 
-if float(IPython.__version__) < 0.11 :
+if [int(v) for v in IPython.__version__.split('.')] < [0,11] :
   from IPython.kernel import client
   import atexit
 # Without the following statement python sometimes throws an exception on exit
@@ -13,15 +13,16 @@ if float(IPython.__version__) < 0.11 :
 else:
   from IPython.parallel import Client
   
-  rc = Client()
-  dview = rc[:]
-  
   def MultiEngineClient() :
+    rc = Client()
+    dview = rc[:]
     return dview
     
   class TaskClient :
     def __init__(self) :
-      self.lbview = rc.load_balanced_view()
+      self.rc = Client()
+      self.dview = self.rc[:]
+      self.lbview = self.rc.load_balanced_view()
     
     def run(self, maptask) :
       return self.lbview.apply(maptask.func, *maptask.args)

@@ -1,6 +1,5 @@
-//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
-//#
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# WorkQueue.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -19,35 +18,42 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+#ifndef LOFAR_GPUPROC_CUDA_WORKQUEUE_H
+#define LOFAR_GPUPROC_CUDA_WORKQUEUE_H
 
-// \file
-// Template implementation of CUDA-specific wrapper classes for GPU types.
+#include <string>
+#include <map>
+
+#include <Common/Timer.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
+#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    class WorkQueue
     {
-        template <typename T>
-        T * HostMemory::get() const
-        {
-          return static_cast<T *>(getPtr());
-        }
+    public:
+      WorkQueue(gpu::Context &context, gpu::Device &device, unsigned gpuNumber, const Parset &ps);
 
-        template <typename T>
-        void Function::setArg(size_t index, const T &val)
-        {
-          doSetArg(index, &val);
-        }
+      const unsigned gpu;
+      gpu::Device &device;
+      gpu::Stream queue;
 
-    } // namespace gpu
+      std::map<std::string, SmartPtr<PerformanceCounter> > counters;
+      std::map<std::string, SmartPtr<NSTimer> > timers;
 
-  } // namespace Cobalt
+    protected:
+      const Parset &ps;
 
-} // namespace LOFAR
+      void addCounter(const std::string &name);
+      void addTimer(const std::string &name);
+    };
+  }
+}
 
 #endif
 

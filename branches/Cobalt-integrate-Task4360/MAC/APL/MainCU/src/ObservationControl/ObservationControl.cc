@@ -273,16 +273,17 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 void ObservationControl::registerResultMessage(const string& cntlrName, int	result, CTState::CTstateNr	state)
 {
 	// always handle a quited-msg from a controller.
+	CTState		cts;
 	if (state == CTState::QUITED) {
 		_updateChildInfo(cntlrName, state);
 		if (result != CT_RESULT_NO_ERROR && result != CT_RESULT_LOST_CONNECTION) {
+			LOG_INFO_STR("Setting QuitReason to " << result << ", controller=" << cntlrName << ",state=" << cts.name(state));
 			itsQuitReason = result;
 		}
 		return;
 	}
 
 	// does the message belong to the current state?
-	CTState		cts;
 	CTState::CTstateNr	requestedState = cts.stateAck(itsState);
 	if (state != requestedState) {
 		if (state < requestedState) {

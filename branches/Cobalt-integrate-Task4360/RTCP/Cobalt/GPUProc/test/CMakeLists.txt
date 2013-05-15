@@ -6,12 +6,14 @@ include(LofarCTest)
 # source files and headers in subdirectories include UnitTest.h
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-# Jan David, is this a test case? If so, please rename + lofar_add_test().
-lofar_add_bin_program(DummyStorage DummyStorage.cc)
-
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
-lofar_add_test(tStorageProcesses tStorageProcesses.cc)
+
+# DummyStorage is started by tStorageProcesses to emulate an OutputProc process
+lofar_add_bin_program(DummyStorage DummyStorage.cc)
+lofar_add_test(tStorageProcesses tStorageProcesses.cc DEPENDS DummyStorage)
+
+#add_subdirectory(Kernels)
 
 if(USE_CUDA)
   add_subdirectory(cuda)

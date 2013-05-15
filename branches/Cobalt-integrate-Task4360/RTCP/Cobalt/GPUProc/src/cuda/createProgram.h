@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CREATE_PROGRAM_H
-#define LOFAR_GPUPROC_CREATE_PROGRAM_H
+#ifndef LOFAR_GPUPROC_CUDA_CREATE_PROGRAM_H
+#define LOFAR_GPUPROC_CUDA_CREATE_PROGRAM_H
 
 #include <string>
 #include <vector>

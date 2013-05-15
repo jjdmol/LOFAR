@@ -1,6 +1,5 @@
-//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
-//#
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Align.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -19,35 +18,44 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+#include <lofar_config.h>
 
-// \file
-// Template implementation of CUDA-specific wrapper classes for GPU types.
+#include "WorkQueue.h"
+
+#include <Common/LofarLogger.h>
+
+#include <GPUProc/global_defines.h>
+
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    WorkQueue::WorkQueue(gpu::Context &context, gpu::Device &device, unsigned gpuNumber, const Parset &ps)
+      :
+      gpu(gpuNumber),
+      device(device),
+      ps(ps)
     {
-        template <typename T>
-        T * HostMemory::get() const
-        {
-          return static_cast<T *>(getPtr());
-        }
-
-        template <typename T>
-        void Function::setArg(size_t index, const T &val)
-        {
-          doSetArg(index, &val);
-        }
-
-    } // namespace gpu
-
-  } // namespace Cobalt
-
-} // namespace LOFAR
-
+#if defined __linux__ && defined USE_B7015
+      set_affinity(gpu);
 #endif
+
+      queue = gpu::Stream(context, device, profiling ? CL_QUEUE_PROFILING_ENABLE : 0);
+    }
+
+
+    void WorkQueue::addCounter(const std::string &name)
+    {
+      counters[name] = new PerformanceCounter(name, profiling);
+    }
+
+
+    void WorkQueue::addTimer(const std::string &name)
+    {
+      timers[name] = new NSTimer(name, false, false);
+    }
+
+  }
+}
 

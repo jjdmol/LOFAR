@@ -1,6 +1,5 @@
-//# gpu_wrapper.tcc: CUDA-specific wrapper classes for GPU types.
-//#
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# BeamFormerPipeline.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -19,35 +18,33 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
-#define LOFAR_GPUPROC_CUDA_GPU_WRAPPER_TCC
+#ifndef LOFAR_GPUPROC_CUDA_BEAMFORMERPIPELINE_H
+#define LOFAR_GPUPROC_CUDA_BEAMFORMERPIPELINE_H
 
-// \file
-// Template implementation of CUDA-specific wrapper classes for GPU types.
+#include <CoInterface/Parset.h>
+
+#include <GPUProc/gpu_wrapper.h>
+#include "Pipeline.h"
+#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    namespace gpu
+    class BeamFormerPipeline : public Pipeline
     {
-        template <typename T>
-        T * HostMemory::get() const
-        {
-          return static_cast<T *>(getPtr());
-        }
+    public:
+      BeamFormerPipeline(const Parset &);
 
-        template <typename T>
-        void Function::setArg(size_t index, const T &val)
-        {
-          doSetArg(index, &val);
-        }
+      void doWork();
 
-    } // namespace gpu
+      gpu::Function intToFloatProgram, delayAndBandPassProgram, beamFormerProgram, transposeProgram, dedispersionChirpProgram;
 
-  } // namespace Cobalt
-
-} // namespace LOFAR
+      PerformanceCounter intToFloatCounter, fftCounter, delayAndBandPassCounter, beamFormerCounter, transposeCounter, dedispersionForwardFFTcounter, dedispersionChirpCounter, dedispersionBackwardFFTcounter;
+      PerformanceCounter samplesCounter;
+    };
+  }
+}
 
 #endif
 
