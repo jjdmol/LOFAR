@@ -1,5 +1,5 @@
-//# createProgram.h
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# CorrelatorPipelinePrograms.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,26 +18,22 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_CREATE_PROGRAM_H
-#define LOFAR_GPUPROC_CUDA_CREATE_PROGRAM_H
+#ifndef LOFAR_GPUPROC_CUDA_CORRELATOR_PIPELINE_PROGRAMS_H
+#define LOFAR_GPUPROC_CUDA_CORRELATOR_PIPELINE_PROGRAMS_H
 
-#include <string>
-#include <vector>
-
-#include <CoInterface/Parset.h>
-
-#include "gpu_wrapper.h"
+#include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    /*
-     * For CUDA, context is ignored, but note that creating such an object
-     * makes it the active context.
-     * srcFilename cannot be an absolute path.
-     */
-    gpu::Module createProgram(const Parset &ps, gpu::Context &context, std::vector<std::string> &targets, const std::string &srcFilename);
+    struct CorrelatorPipelinePrograms
+    {
+      gpu::Function firFilterProgram;
+      //gpu::Function fftProgram; // fft kernel apparently does not need a program...
+      gpu::Function delayAndBandPassProgram;
+      gpu::Function correlatorProgram;
+    };
   }
 }
 
