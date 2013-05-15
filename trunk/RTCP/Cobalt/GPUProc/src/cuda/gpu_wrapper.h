@@ -35,7 +35,7 @@
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
-#include <cuda.h> // ideally, this goes into the .cc, but too much leakage
+#include "gpu_incl.h" // ideally, this goes into the .cc, but too much leakage
 
 #include <GPUProc/gpu_wrapper.h> // GPUException
 
