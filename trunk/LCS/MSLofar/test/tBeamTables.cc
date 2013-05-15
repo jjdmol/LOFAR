@@ -155,7 +155,8 @@ int main()
     testBM ("HBA_ONE",  "HBA", "1");
     testBM ("HBA_ONE_INNER",  "HBA", "1");
   } catch (std::exception& x) {
-    cout << "Unexpected exception: " << x.what() << endl;
+    cerr << "Unexpected exception: " << x.what() << endl;
+    return 1;
   }
   return 0;
 }

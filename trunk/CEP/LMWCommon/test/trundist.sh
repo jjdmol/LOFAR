@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh trundist > trundist.log 2>&1
+./runctest.sh trundist
