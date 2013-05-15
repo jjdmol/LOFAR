@@ -44,7 +44,23 @@ SyntaxError()
         echo "        - Option -l says this is run locally in a checked out SVN tree"
 	echo ""
 }
+# Replace the placeholder @VERSION@ in file Version.comp.tmpl by the version
+# provided on commandline
 
+createVersionFile()
+{
+if [ -e Version.comp.tmpl ]; then 
+   sed s/@VERSION@/$1/ Version.comp.tmpl > Version.comp     
+   if [ $? -ne 0 ]; then 
+     echo "Could not create Version.comp, will not continue!"
+     exit 1
+   fi
+else
+   echo "Could not find Version.comp.tmpl, will not continue!"
+   exit 1
+fi
+}
+  
 #
 # Construct a file that contains node-childnode relations and the file it is mentioned in
 # Syntax: componentname file | componentname.childname file
@@ -194,6 +210,10 @@ if [ -e $DIR/load_OTDB_comps ]; then
   UNUSEDFILES=/tmp/unusedFiles
   WORKFILE=/tmp/tmpFile4load_components
 
+  # First create Version.comp to contain version number of the components
+  echo "Creating Version.comp file with versionnumber "$VERSION
+  createVersionFile $VERSION
+
   # First construct gcompfile using .base-files.
   if [ $localUse = 1 ]; then 
     ./create_OTDB_comps -l
@@ -252,5 +272,3 @@ else
 fi
 
 exit
-
-
