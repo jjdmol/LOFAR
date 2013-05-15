@@ -12,7 +12,8 @@ DESTINATION sbin)
 file(GLOB otdb_comps
   *.comp
   *.list
-  *.base)
+  *.base
+  *.tmpl)
 install(FILES
   ${otdb_comps}
   DESTINATION etc/otdb)
