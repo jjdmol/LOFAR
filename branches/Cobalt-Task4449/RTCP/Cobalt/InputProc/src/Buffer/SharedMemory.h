@@ -68,6 +68,11 @@ namespace LOFAR
       // or 0 if the maximum could not be determined.
       static size_t maxSize();
 
+      // Remove an existing SHM area (no-op if no SHM area has been registered
+      // under the given key). If quiet = false, a warning is printed if the
+      // SHM area is found and removed.
+      static void remove( key_t key, bool quiet = false );
+
     private:
       const key_t key;
       const Mode mode;
