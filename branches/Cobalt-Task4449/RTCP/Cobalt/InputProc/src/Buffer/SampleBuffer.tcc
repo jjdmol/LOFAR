@@ -41,8 +41,8 @@ namespace LOFAR
       boards(nrBoards,Board(*this))
     {
       if (sync) {
-        ASSERT(syncLock);
-        ASSERT(syncLock->size() == nrBoards);
+        ASSERTSTR(syncLock, "Synced buffer requires syncLock object");
+        ASSERTSTR(syncLock->size() == nrBoards, "SHM buffer has " << nrBoards << " RSP boards, but syncLock expects " << syncLock->size() << " boards");
       }
 
       for (size_t b = 0; b < boards.size(); b++) {
