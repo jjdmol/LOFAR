@@ -9,7 +9,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
   lofar_find_package(CUDA 4.1 REQUIRED)
   add_definitions(-DUSE_CUDA)
   if(LOFAR_BUILD_VARIANT MATCHES "^DEBUG$")
-    list(APPEND CUDA_NVCC_FLAGS "-g" "-G")
+    list(APPEND CUDA_NVCC_FLAGS -g -G)
   endif()
 
   if(0)  # for dev to see what is available how; disabled to reduce spam
