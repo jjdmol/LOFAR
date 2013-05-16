@@ -26,6 +26,7 @@
 #include <ctime>
 #include <string>
 #include <sstream>
+#include <iostream>
 #include <libssh2.h>
 
 #include <Common/Thread/Thread.h>
@@ -50,7 +51,7 @@ namespace LOFAR
 
       EXCEPTION_CLASS(SSHException, LOFAR::Exception);
 
-      SSHconnection(const std::string &logPrefix, const std::string &hostname, const std::string &commandline, const std::string &username, const std::string &pubkey, const std::string &privkey, bool captureStdout = false);
+      SSHconnection(const std::string &logPrefix, const std::string &hostname, const std::string &commandline, const std::string &username, const std::string &pubkey, const std::string &privkey, bool captureStdout = false, ostream &_cout = cout, ostream &_cerr = cerr);
 
       ~SSHconnection();
 
@@ -87,6 +88,9 @@ namespace LOFAR
       SmartPtr<Thread> itsThread;
       const bool itsCaptureStdout;
       std::stringstream itsStdoutBuffer;
+
+      std::ostream &itsCout;
+      std::ostream &itsCerr;
 
       bool waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock );
 

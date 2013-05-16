@@ -24,6 +24,7 @@
 #include <cstdio>
 #include <ctime>
 #include <unistd.h>
+#include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Stream/SocketStream.h>
@@ -35,12 +36,15 @@ char privkey[1024];
 
 using namespace LOFAR;
 using namespace Cobalt;
+using boost::format;
 
 
-void test_SSHconnection( const char *cmd, bool capture )
+void test_SSHconnection( const string &stdout_str, const string &stderr_str, bool capture )
 {
   const char *USER = getenv("USER");
-  SSHconnection ssh("", "localhost", cmd, USER, pubkey, privkey, capture);
+  stringstream ssh_stdout, ssh_stderr;
+  const string cmd = str(format("echo %s; echo %s 1>&2") % stdout_str % stderr_str);
+  SSHconnection ssh("", "localhost", cmd, USER, pubkey, privkey, capture, ssh_stdout, ssh_stderr);
 
   ssh.start();
 
@@ -50,8 +54,15 @@ void test_SSHconnection( const char *cmd, bool capture )
 
   ssh.wait(ts);
 
+  // SSH (and bashrc) can insert headers and footers on stdout and stderr, so we need to
+  // search for our echoed strings.
+
   if (capture)
-    cout << "Captured [" << ssh.stdoutBuffer() << "]" << endl;
+    ASSERT(ssh.stdoutBuffer().find(stdout_str) != string::npos);
+  else
+    ASSERT(ssh_stdout.str().find(stdout_str) != string::npos);
+
+  ASSERT(ssh_stderr.str().find(stderr_str) != string::npos);
 }
 
 int main()
@@ -64,14 +75,11 @@ int main()
 
   SSH_Init();
 
-  test_SSHconnection( "echo stdout read [stdout]", false );
-  test_SSHconnection( "echo stderr read [stderr] 1>&2", false );
+  test_SSHconnection( "stdout read", "", false );
+  test_SSHconnection( "",            "stderr read", false );
+  test_SSHconnection( "stdout read", "stderr read", false );
 
-  test_SSHconnection( "echo capture stdout [stdout]", true );
-  test_SSHconnection( "echo capture stdout [stdout]; echo but not capture stderr [stderr] 1>&2", true );
-
-  test_SSHconnection( "echo stderr first [stderr] 1>&2; echo stdout second [stdout]", false );
-  test_SSHconnection( "echo stdout first [stdout]; echo stderr second [stderr] 1>&2", false );
+  test_SSHconnection( "stdout capture", "", true );
 
   SSH_Finalize();
 
