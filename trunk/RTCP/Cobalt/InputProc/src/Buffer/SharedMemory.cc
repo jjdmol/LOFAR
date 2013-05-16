@@ -189,6 +189,24 @@ namespace LOFAR
       return 0;
     }
 
+    void SharedMemoryArena::remove( key_t key, bool quiet )
+    {
+      int shmid = shmget( key, 0, 0 );
+
+      if (shmid < 0)
+        // key does not exist
+        return;
+
+      if (!quiet)
+        LOG_WARN_STR("Removing existing SHM area 0x" << hex << key);
+
+      if (shmctl(shmid, IPC_RMID, NULL) < 0)
+        // failed to remove SHM
+        throw SystemCallException("shmctl", errno, THROW_ARGS);
+
+      // key existed, SHM removed
+    }
+
 
     SharedMemoryArena::~SharedMemoryArena()
     {

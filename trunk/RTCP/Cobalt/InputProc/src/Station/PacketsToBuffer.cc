@@ -37,7 +37,7 @@ namespace LOFAR
   {
 
 
-    PacketsToBuffer::PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr )
+    PacketsToBuffer::PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr, bool cleanup )
       :
       logPrefix(str(boost::format("[station %s board %u] [PacketsToBuffer] ") % settings.station.stationName % boardNr)),
       inputStream(inputStream),
@@ -46,6 +46,32 @@ namespace LOFAR
       boardNr(boardNr)
     {
       LOG_INFO_STR( logPrefix << "Initialised" );
+
+      if (cleanup) {
+        /*
+         * Make sure there are no lingering SHM buffers for this
+         * station from previous runs.
+         */
+
+        // Remove the provided dataKey, as it could be a custom setting
+        SharedMemoryArena::remove(settings.dataKey);
+
+        // Remove the keys of all possible configurations
+        StationID station = settings.station;
+
+        const unsigned bitmodes[] = { 4, 8, 16 };
+        const unsigned clocks[]   = { 160, 200 };
+
+        for (size_t b = 0; b < sizeof bitmodes / sizeof bitmodes[0]; ++b) {
+          for (size_t c = 0; c < sizeof clocks / sizeof clocks[0]; ++c) {
+            station.bitMode  = bitmodes[b];
+            station.clockMHz = clocks[c];
+            
+            // Remove any lingering buffer for this mode
+            SharedMemoryArena::remove(station.hash());
+          }
+        }
+      }
     }
 
 
@@ -88,6 +114,8 @@ namespace LOFAR
           // update settings
           settings.station.bitMode = bitMode;
           settings.station.clockMHz = clockMHz;
+          settings.dataKey = settings.station.hash();
+
           settings.nrBeamletsPerBoard = nrBeamlets;
 
           // Process packet again

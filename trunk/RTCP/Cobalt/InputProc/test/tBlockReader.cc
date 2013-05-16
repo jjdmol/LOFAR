@@ -112,14 +112,16 @@ void test( struct BufferSettings &settings, const std::string &filename )
   FileStream fs(filename);
 
   // Set up transfer
-  PacketsToBuffer transfer(fs, settings, 0);
+  PacketsToBuffer transfer(fs, settings, 0, false);
 
   // Do transfer
   transfer.process();
 
   // Determine the timestamps of the packets we've just written
   BufferSettings::range_type now = (uint64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
-  BufferSettings::flags_type  available = buffer.boards[0].available.sparseSet(0, now);
+  BufferSettings::flags_type available = buffer.boards[0].available.sparseSet(0, now);
+
+  ASSERT(available.getRanges().size() > 0);
 
   const TimeStamp from(available.getRanges()[0].begin, settings.station.clockMHz * 1000000);
 
