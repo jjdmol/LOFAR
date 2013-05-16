@@ -269,7 +269,7 @@ namespace LOFAR
      * Note that waitsocket() is a forced cancellation point.
      */
 
-    SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &pubkey, const string &privkey, bool captureStdout)
+    SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &pubkey, const string &privkey, bool captureStdout, ostream &_cout, ostream &_cerr)
       :
       itsLogPrefix(logPrefix),
       itsHostName(hostname),
@@ -278,7 +278,9 @@ namespace LOFAR
       itsPublicKey(pubkey),
       itsPrivateKey(privkey),
       itsConnected(false),
-      itsCaptureStdout(captureStdout)
+      itsCaptureStdout(captureStdout),
+      itsCout(_cout),
+      itsCerr(_cerr)
     {
     }
 
@@ -642,9 +644,9 @@ namespace LOFAR
                     ScopedLock sl(coutMutex);
 #endif
                     if (s == 0)
-                      cout << line[s] << endl;
+                      itsCout << line[s] << endl;
                     else
-                      cerr << line[s] << endl;
+                      itsCerr << line[s] << endl;
                   }
                 }
               }

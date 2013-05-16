@@ -56,6 +56,7 @@ namespace LOFAR
       bufferUsed(0),
       delayTimer("delay producer", true, true)
     {
+      ASSERTSTR(test(), "Delay compensation engine is broken");
     }
 
 
@@ -147,6 +148,37 @@ namespace LOFAR
 
       // (40587 modify Julian day number = 00:00:00 January 1, 1970, GMT)
       return MVEpoch(day + 40587., frac);
+    }
+
+
+    bool Delays::test()
+    {
+      try {
+        // set up a converter
+        MDirection::Types dirType;
+
+        if (!MDirection::getType(dirType, "J2000"))
+          THROW(Exception, "Beam direction type unknown: J2000");
+
+        MeasFrame frame;
+        frame.set(MEpoch(toUTC(from), MEpoch::UTC));
+        frame.set(MPosition(MVPosition(0,0,0), MPosition::ITRF));
+
+        MDirection::Convert converter(dirType, MDirection::Ref(MDirection::ITRF, frame));
+
+        // convert a direction
+        MVDirection sourceDir(0,0);
+        MVDirection pointDir = converter(sourceDir).getValue();
+      } catch (AipsError &ex) {
+        LOG_FATAL_STR("Casacore fails to compute delays: " << ex.what());
+        LOG_FATAL_STR("Hint: If the TAI_UTC table cannot be found, please copy the measures data to ~/aips++/data, or set their location as 'measures.directory: $HOME/measures_data' or similar in ~/.casarc");
+        return false;
+      } catch (Exception &ex) {
+        LOG_FATAL_STR("Casacore fails to compute delays: " << ex);
+        return false;
+      }
+
+      return true;
     }
 
 
@@ -248,6 +280,10 @@ namespace LOFAR
       }
     }
 #else
+    bool Delays::test() {
+      return true;
+    }
+
     void Delays::init() {
     }
 

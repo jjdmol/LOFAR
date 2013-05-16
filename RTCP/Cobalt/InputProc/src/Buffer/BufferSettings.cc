@@ -49,7 +49,7 @@ namespace LOFAR
           *this = shm.get();
         } while (!valid());
 
-        ASSERT( valid() );
+        ASSERTSTR( valid(), "SHM buffer has invalid header (version mismatch?) for " << station );
       } else {
         deriveDefaultSettings();
       }
