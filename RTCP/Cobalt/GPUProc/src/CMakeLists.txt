@@ -55,6 +55,9 @@ if(USE_CUDA)
   add_subdirectory(cuda)
 
   lofar_add_library(gpuproc ${_gpuproc_sources})
+  if(CUDA_cufft_LIBRARY)
+    target_link_libraries(gpuproc ${CUDA_cufft_LIBRARY})
+  endif()
   # Compiling rtcp.cc doesn't work yet for CUDA
   #lofar_add_bin_program(rtcp rtcp.cc)
 endif()
