@@ -41,13 +41,9 @@ namespace LOFAR
 
     private:
       unsigned nrFFTs, fftSize;
-#if defined USE_CUSTOM_FFT
-      gpu::Function kernel;
-#else
       //clFFT_Direction direction;
       FFT_Plan plan;
       gpu::DeviceMemory &buffer;
-#endif
       gpu::Event event;
     };
   }
