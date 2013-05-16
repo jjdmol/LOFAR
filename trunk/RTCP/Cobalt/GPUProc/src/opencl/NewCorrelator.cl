@@ -119,7 +119,7 @@ void correlateTriangleKernel(__global void *visibilitiesPtr,
     (*visibilities)[baseline            ][channel].odd = vis_0A_i;
   }
 
-  if (statXoffset < nrStationsThisBlock && statYoffset + 1 < nrStationsThisBlock) {
+  if (statXoffset < nrStationsThisBlock && statXoffset != statYoffset) {
     (*visibilities)[baseline + 1][channel].even = vis_1A_r;
     (*visibilities)[baseline + 1][channel].odd = vis_1A_i;
   }
