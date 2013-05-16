@@ -36,6 +36,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include "gpu_incl.h" // ideally, this goes into the .cc, but too much leakage
+#include <cufft.h>
 
 #include <GPUProc/gpu_wrapper.h> // GPUException
 
@@ -52,6 +53,9 @@ namespace LOFAR
 
       // Exception class for CUDA errors.
       EXCEPTION_CLASS(CUDAException, GPUException);
+
+      // Return the cuFFT error string associated with \a errcode.
+      std::string cufftErrorMessage(cufftResult errcode);
 
       // Return the CUDA error string associated with \a errcode.
       std::string errorMessage(CUresult errcode);

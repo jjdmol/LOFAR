@@ -34,7 +34,7 @@ namespace LOFAR
 
       // TODO: convert error to a string. cufft has its own errors
       if (error != CUFFT_SUCCESS)
-        THROW(gpu::CUDAException, "cufftPlan1d");
+        THROW(gpu::CUDAException, "cufftPlan1d: " << gpu::cufftErrorMessage(error));
     }
 
     FFT_Plan::~FFT_Plan()

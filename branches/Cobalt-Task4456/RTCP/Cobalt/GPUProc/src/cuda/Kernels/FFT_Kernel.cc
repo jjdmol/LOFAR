@@ -40,6 +40,8 @@ namespace LOFAR
       plan(fftSize, nrFFTs),
       buffer(buffer)
     {
+      // Currently unused
+      (void)context;
     }
 
     void FFT_Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
@@ -53,7 +55,7 @@ namespace LOFAR
 
       // TODO: convert error to a string. cufft has its own errors
       if (error != CUFFT_SUCCESS)
-        THROW(gpu::CUDAException, "cufftExecC2C");
+        THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
 
 /*
       counter.doOperation(event,
