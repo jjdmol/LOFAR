@@ -47,7 +47,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
   FileStream fs(filename);
 
   // Set up transfer
-  PacketsToBuffer transfer(fs, settings, 0);
+  PacketsToBuffer transfer(fs, settings, 0, false);
 
   // Do transfer
   transfer.process();
