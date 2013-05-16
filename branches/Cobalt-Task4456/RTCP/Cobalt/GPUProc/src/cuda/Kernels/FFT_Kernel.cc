@@ -36,7 +36,7 @@ namespace LOFAR
       nrFFTs(nrFFTs),
       fftSize(fftSize)
       , //direction(forward ? clFFT_Forward : clFFT_Inverse),
-      plan(context, fftSize),
+      plan(fftSize, nrFFTs),
       buffer(buffer)
     {
     }
