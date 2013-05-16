@@ -32,7 +32,14 @@
 #include <map>
 #include <set>
 
+#include <Common/Exception.h>
+#include <Common/SystemCallException.h>
+#include <Common/LofarLogger.h>
+
 #include "CudaRuntimeCompiler.h"
+
+using namespace LOFAR;
+using namespace std;
 
 // Collection of functions needed for runtime compilation of a kernel supplied 
 // as a path to a ptx string.
@@ -72,33 +79,41 @@ namespace CudaRuntimeCompiler
   
   // Performs a 'system' call of nvcc. Return the stdout of the command
   // on error no stdout is created and an exception is thrown
-  std::string runNVCC(std::string cmd)
+  std::string runNVCC(const std::string &cmd)
   {
     // *******************************************************
     // Call nvcc on the command line, get content as string
-    std::string ptxFileContent;                              // The ptx file, to be red from stdout
+    stringstream ptxFileContent;                              // The ptx file, to be read from stdout
     char buffer [1024];       
-    FILE * ptxFilePointer = popen(cmd.c_str(), "r" );       
+    FILE * ptxFilePointer = popen(cmd.c_str(), "r" );
 
-    // First test if we have content. nvcc does not provide output on stdout when compilation failes
-    if (fgets (buffer , 100 , ptxFilePointer)  == NULL )    // if we cannot read nothing from the stream
-    {
-      // log that we have a failed compile run
+    if (!ptxFilePointer)
+      throw SystemCallException("popen", errno, THROW_ARGS);
 
-      throw std::runtime_error("nvcc compilation failed!");
-    }
-    //Now read the content of the file pointer
-    while ( ! feof (ptxFilePointer) )                       //We do not get the cerr
+    // Read the content of the file pointer
+    while (!feof(ptxFilePointer))                       //We do not get the cerr
     {
-      if ( fgets (buffer , 100 , ptxFilePointer) == NULL )  // FILE * can only be red with cstdio functions
+      if (fgets(buffer, sizeof buffer, ptxFilePointer) == NULL)  // FILE * can only be read with cstdio functions
         break;
-      ptxFileContent += buffer;
+
+      ptxFileContent << buffer;
     }
 
-    fclose (ptxFilePointer);                                // Remember to close the FILE *. Otherwise linux pipe error
+    // Close file stream
+    if (fclose(ptxFilePointer) == EOF)
+      throw SystemCallException("fclose", errno, THROW_ARGS);
+
     // *******************************************************
 
-    return ptxFileContent;
+    // Fetch and return PTX, if any
+    string ptxStr = ptxFileContent.str();
+
+    if (ptxStr.empty()) {
+      // log that we have a failed compile run
+      THROW(Exception, "nvcc compilation failed!");
+    }
+
+    return ptxStr;
   }
 
   // Create a nvcc command line string based on the input path, a set of flags and a map
@@ -106,8 +121,8 @@ namespace CudaRuntimeCompiler
   // which content is returned as a string
   std::string compileToPtx(const std::string& pathToCuFile, const flags_type& flags, const definitions_type& definitions)
   {
-    const std::string cudaCompiler = "nvcc"; 
-    std::stringstream cmd("");
+    const string cudaCompiler = "nvcc"; 
+    stringstream cmd("");
     cmd << cudaCompiler ;
     cmd << " " << pathToCuFile ;
     cmd << " --ptx";                       
@@ -122,7 +137,7 @@ namespace CudaRuntimeCompiler
 
     // output to stdout
     cmd << " -o -";
-    std::cout << "Runtime compilation of kernel, command: " << std::endl << cmd.str()  << std::endl;
+    LOG_INFO_STR("Runtime compilation of kernel, command: " << cmd.str());
 
     return runNVCC(cmd.str());
   };
