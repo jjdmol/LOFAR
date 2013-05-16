@@ -40,8 +40,8 @@ namespace LOFAR
 
 
     private:
-      unsigned nrFFTs, fftSize;
-      //clFFT_Direction direction;
+      const unsigned nrFFTs, fftSize;
+      const int direction;
       FFT_Plan plan;
       gpu::DeviceMemory &buffer;
       gpu::Event event;

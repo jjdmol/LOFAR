@@ -21,6 +21,7 @@
 #include "lofar_config.h"
 
 #include <vector>
+#include <cufft.h>
 
 #include <Common/LofarLogger.h>
 
@@ -34,8 +35,8 @@ namespace LOFAR
     FFT_Kernel::FFT_Kernel(gpu::Context &context, unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer)
       :
       nrFFTs(nrFFTs),
-      fftSize(fftSize)
-      , //direction(forward ? clFFT_Forward : clFFT_Inverse),
+      fftSize(fftSize),
+      direction(forward ? CUFFT_FORWARD : CUFFT_INVERSE),
       plan(fftSize, nrFFTs),
       buffer(buffer)
     {
@@ -43,9 +44,17 @@ namespace LOFAR
 
     void FFT_Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
     {
-      //cl_int error = clFFT_ExecuteInterleaved(queue(), plan.plan, nrFFTs, direction, buffer(), buffer(), 0, 0, &event());
-      //if (error != CL_SUCCESS)
-      //  throw gpu::Error(error, "clFFT_ExecuteInterleaved");
+      cufftResult error;
+
+      error = cufftExecC2C(plan.plan,
+                           static_cast<cufftComplex*>(buffer.get()),
+                           static_cast<cufftComplex*>(buffer.get()),
+                           direction);
+
+      // TODO: convert error to a string. cufft has its own errors
+      if (error != CUFFT_SUCCESS)
+        THROW(gpu::CUDAException, "cufftExecC2C");
+
 /*
       counter.doOperation(event,
                           (size_t) nrFFTs * 5 * fftSize * log2(fftSize),
