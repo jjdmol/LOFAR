@@ -1,7 +1,6 @@
 #!/bin/sh -x
 
-echo "we are here"
-cp ${srcdir}/../../src/Kernels/DelayAndBandPass.cu .
+cp ${srcdir}/../../src/cuda/DelayAndBandPass.cu .
 cp ${srcdir}/../../src/cuda/complex.h .
 module load cuda50/toolkit/5.0.35
 

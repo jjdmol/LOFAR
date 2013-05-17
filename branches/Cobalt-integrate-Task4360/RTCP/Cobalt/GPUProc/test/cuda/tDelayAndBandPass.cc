@@ -1,13 +1,28 @@
+#include <lofar_config.h>
+
 #include <string>
 #include <cstdlib>
 #include <sstream>
 #include <cmath> 
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
-#include <GPUProc/cuda/Module.h>
-#include <GPUProc/cuda/Error.h>
-
+#include <GPUProc/cuda/gpu_wrapper.h>
+#include <Common/Exception.h>
+#include <GPUProc/createProgram.h>
+#include <typeinfo>
 using namespace std;
+using namespace LOFAR::Cobalt::gpu;
+using namespace LOFAR::Cobalt;
 
+#define checkCuCall(func)                                               \
+  do {                                                                  \
+    CUresult result = func;                                             \
+    if (result != CUDA_SUCCESS) {                                       \
+      THROW (LOFAR::Cobalt::gpu::CUDAException,                         \
+             # func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
+    }                                                                   \
+  } while(0)
+
+// Helper function to get initialized memory
 float * getInitializedArray(unsigned size, float defaultValue)
 {
   float* createdArray =  new float[size];
@@ -16,13 +31,7 @@ float * getInitializedArray(unsigned size, float defaultValue)
   return createdArray;
 }
 
-void createHostDataAndCopy(CUdeviceptr& devicePointer, float* hostPointer, unsigned size)
-{
-  checkCudaCall(cuMemAlloc(&devicePointer, size*sizeof(float)));
-  checkCudaCall(cuMemcpyHtoD(devicePointer, hostPointer, size*sizeof(float)));
-}
-
-
+// 
 float * runTest(float bandPassFactor,
                 float frequency = 0.0,
                 float subbandWidth = 0.0,
@@ -31,14 +40,13 @@ float * runTest(float bandPassFactor,
                 float delayEnd = 0.0,
                 float PhaseOffset = 0.0)
 {
-
+  // Set up environment
+  gpu::Platform pf;
+  gpu::Device device(0);
+  gpu::Context ctx(device);
+  Stream cuStream;
   std::stringstream tostrstram("");
 
-   // Run a kernel with two different defines, should result in two different kernels.
-   // Just run the compiler with two magic numbers and test for the existance of the numbers
-  /*const char* lofarroot = getenv("LOFARROOT");  //runtime environment and thus installed
-  if (lofarroot)
-  */
   string kernelPath = "DelayAndBandPass.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
  
   // Get an instantiation of the default parameters
@@ -73,122 +81,106 @@ float * runTest(float bandPassFactor,
   definitions["BANDPASS_CORRECTION"] = "1";
   if (delayCompensation)
     definitions["DELAY_COMPENSATION"] = "1";
-    
-  string ptx1 = CudaRuntimeCompiler::compileToPtx(kernelPath, flags, definitions);
-  // **************************************************************************
-
-  
-
-  // ****************************************************************
-  // Load the module from ptx string 
-  // The module compiler needs a target 
-  cudaFree(0); // Hack to initialize the primary context. should use a proper api functions ( it does not exist?)
-
-  vector<CUjit_option> options;
-  vector<void*> optionValues;
-  options.push_back(CU_JIT_TARGET_FROM_CUCONTEXT);
-  optionValues.push_back(NULL); // no option value, but I suppose the array needs a placeholder
-
-  // load the created module and get function entry point
-  CUmodule     hModule  = 0;
-  Module delayAndBandPassModule(ptx1.c_str(), options, optionValues);
-  CUfunction   hKernel  =  delayAndBandPassModule.getKernelEntryPoint("applyDelaysAndCorrectBandPass");  // c function this no argument overloading
-  // ******************************************************************************************
+  vector<string> targets; // unused atm, so can be empty
+  gpu::Module module(createProgram(ctx, targets, kernelPath, flags, definitions));  
+  Function  hKernel(module, "applyDelaysAndCorrectBandPass");  // c function this no argument overloading
 
   // *************************************************************
-  // Create the data arrays
-  unsigned sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX;
-  CUdeviceptr DevFilteredData = (CUdeviceptr)NULL;
+  // Create the data arrays  
+  size_t sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX * sizeof(float);
+  DeviceMemory DevFilteredMemory(sizeFilteredData);
   float* rawFilteredData = getInitializedArray(sizeFilteredData, 1.0);
-  createHostDataAndCopy(DevFilteredData, rawFilteredData, sizeFilteredData);
+  DevFilteredMemory.copyTo((void *)rawFilteredData, sizeFilteredData);
 
-  unsigned sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX;
-  CUdeviceptr DevCorrectedData = (CUdeviceptr)NULL;
+  size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
+  DeviceMemory DevCorrectedMemory(sizeCorrectedData);
   float* rawCorrectedData = getInitializedArray(sizeCorrectedData, 42); 
-  createHostDataAndCopy(DevCorrectedData, rawCorrectedData, sizeCorrectedData);
+  DevCorrectedMemory.copyTo((void *)rawCorrectedData, sizeCorrectedData);
 
-  unsigned sizeDelaysAtBeginData = NR_STATIONS * NR_BEAMS * 2;  //not complex: it is two float number
-  CUdeviceptr DevDelaysAtBeginData = (CUdeviceptr)NULL;
+  size_t sizeDelaysAtBeginData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float);  
+  DeviceMemory DevDelaysAtBeginMemory(sizeDelaysAtBeginData);
   float* rawDelaysAtBeginData = getInitializedArray(sizeDelaysAtBeginData, delayBegin);
-  createHostDataAndCopy(DevDelaysAtBeginData, rawDelaysAtBeginData, sizeDelaysAtBeginData );
+  DevDelaysAtBeginMemory.copyTo(rawDelaysAtBeginData, sizeDelaysAtBeginData);
 
-  unsigned sizeDelaysAfterEndData = NR_STATIONS * NR_BEAMS * 2; //not complex: it is two float number
-  CUdeviceptr DevDelaysAfterEndData = (CUdeviceptr)NULL;
+
+  size_t sizeDelaysAfterEndData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float); 
+  DeviceMemory DevDelaysAfterEndMemory(sizeDelaysAfterEndData);
   float* rawDelaysAfterEndData = getInitializedArray(sizeDelaysAfterEndData, delayEnd);
-  createHostDataAndCopy(DevDelaysAfterEndData, rawDelaysAfterEndData, sizeDelaysAfterEndData);
+  DevDelaysAfterEndMemory.copyTo(rawDelaysAfterEndData, sizeDelaysAfterEndData);
 
-  unsigned sizePhaseOffsetData = NR_STATIONS * 2; //not complex: it is two float number
-  CUdeviceptr DevPhaseOffsetData = (CUdeviceptr)NULL;
+  size_t sizePhaseOffsetData = NR_STATIONS * 2*sizeof(float); 
+  DeviceMemory DevPhaseOffsetMemory(sizePhaseOffsetData);
   float* rawPhaseOffsetData = getInitializedArray(sizePhaseOffsetData, PhaseOffset);
-  createHostDataAndCopy(DevPhaseOffsetData, rawPhaseOffsetData, sizePhaseOffsetData);
+  DevPhaseOffsetMemory.copyTo(rawPhaseOffsetData, sizePhaseOffsetData);
 
-  unsigned sizebandPassFactorsData = NR_CHANNELS;
-  CUdeviceptr DevbandPassFactorsData = (CUdeviceptr)NULL;
+  size_t sizebandPassFactorsData = NR_CHANNELS * sizeof(float);
+  DeviceMemory DevbandPassFactorsMemory(sizebandPassFactorsData);
   float* rawbandPassFactorsData = getInitializedArray(sizebandPassFactorsData, bandPassFactor);
-  createHostDataAndCopy(DevbandPassFactorsData, rawbandPassFactorsData, sizebandPassFactorsData);
+  DevbandPassFactorsMemory.copyTo(rawbandPassFactorsData, sizebandPassFactorsData);
   
-  unsigned sizeSubbandFrequency = 1;
-  CUdeviceptr DevSubbandFrequencyData = (CUdeviceptr)NULL;
+  size_t sizeSubbandFrequency = 1 * sizeof(float);
+  DeviceMemory DevSubbandFrequencyMemory(sizeSubbandFrequency);
   float* subbandFrequency = getInitializedArray(sizeSubbandFrequency, frequency);
-  createHostDataAndCopy(DevSubbandFrequencyData, subbandFrequency, sizeSubbandFrequency);
+  DevSubbandFrequencyMemory.copyTo(subbandFrequency, sizeSubbandFrequency);
+  
+  size_t sizeBeamData = 1 * sizeof(unsigned);
+  DeviceMemory DevBeamMemory(sizeBeamData);
+  unsigned* beamData = new unsigned[1];
+  beamData[0] = 0;
+  DevBeamMemory.copyTo(beamData, sizeBeamData);
 
-  unsigned* beam = new unsigned[1];
-  beam[0] = 0;
-  CUdeviceptr DevBeamData = (CUdeviceptr)NULL;;
-  checkCudaCall(cuMemAlloc(&DevBeamData, sizeof(unsigned)));
-  checkCudaCall(cuMemcpyHtoD(DevBeamData, beam, sizeof(unsigned)));
-
-  // Assure that all memory moves are complete and check for errors
-  checkCudaCall(cudaDeviceSynchronize());
   // ****************************************************************************
-
   // Run the kernel on the created data
-  void* kernel_func_args[8] = { &DevCorrectedData,
-                                  &DevFilteredData,
-                                  &DevSubbandFrequencyData,
-                                  &DevBeamData,
-                                  &DevDelaysAtBeginData,
-                                  &DevDelaysAfterEndData,
-                                  &DevPhaseOffsetData,
-                                  &DevbandPassFactorsData};
+  hKernel.setArg(0, DevCorrectedMemory);
+  hKernel.setArg(1, DevFilteredMemory);
+  hKernel.setArg(2, DevSubbandFrequencyMemory);
+  hKernel.setArg(3, DevBeamMemory);
+  hKernel.setArg(4, DevDelaysAtBeginMemory);
+  hKernel.setArg(5, DevDelaysAfterEndMemory);
+  hKernel.setArg(6, DevPhaseOffsetMemory);
+  hKernel.setArg(7, DevbandPassFactorsMemory);
 
-  // Number of threads?
+  // Calculate the number of threads in total and per blovk
   int nrChannelsPerSubband = NR_CHANNELS;
   int nrStations = NR_STATIONS; 
   int MAXNRCUDATHREADS = 1024;//doet moet nog opgevraagt worden en niuet als magish getal
   size_t maxNrThreads = MAXNRCUDATHREADS;
   unsigned totalNrThreads = nrChannelsPerSubband * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
   unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
-
-
-  //globalWorkSize = cl::NDRange(256, ps.nrChannelsPerSubband() == 1 ? 1 : ps.nrChannelsPerSubband() / 16, ps.nrStations());
-  //localWorkSize = cl::NDRange(256, 1, 1);
-  // Use static worksize 1 for now
-  dim3 globalWorkSize(1, NR_CHANNELS == 1? 1: NR_CHANNELS/16, NR_STATIONS); 
-  dim3 localWorkSize(256, 1,1); 
+  // assign to gpu_wrapper objects
+  Grid globalWorkSize(1, NR_CHANNELS == 1? 1: NR_CHANNELS/16, NR_STATIONS);  
+  Block localWorkSize(256, 1,1); 
 
   // Run the kernel
-  cudaStream_t cuStream;
-  checkCudaCall(cudaStreamCreate(&cuStream));
+  cuStream.synchronize(); // assure memory is copied
+  cuStream.launchKernel(hKernel, globalWorkSize, localWorkSize);
+  cuStream.synchronize(); // assure that the kernel is finished
   
-	checkCudaCall(cuLaunchKernel( hKernel, globalWorkSize.x, globalWorkSize.y, globalWorkSize.z, 
-    localWorkSize.x, localWorkSize.y, localWorkSize.z, NULL, cuStream, kernel_func_args,0));
-
-  checkCudaCall(cudaDeviceSynchronize());
-  // ***********************************************************
-
   // Copy output vector from GPU buffer to host memory.
-  checkCudaCall(cuMemcpyDtoH(rawCorrectedData, DevCorrectedData, sizeCorrectedData * sizeof(float)));
-
-  checkCudaCall(cudaDeviceSynchronize());
+  DevCorrectedMemory.copyFrom(rawCorrectedData, sizeCorrectedData); 
+  cuStream.synchronize(); //assure copy from device is done
+  
+  // *************************************
   // Create the return values
   float *firstAndLastComplex = new float[4];
   // Return the first complex
   firstAndLastComplex[0] = rawCorrectedData[0];
   firstAndLastComplex[1] = rawCorrectedData[1];
   //return the last complex number
-  firstAndLastComplex[2] = rawCorrectedData[sizeCorrectedData-2];
-  firstAndLastComplex[3] = rawCorrectedData[sizeCorrectedData-1];
+  firstAndLastComplex[2] = rawCorrectedData[(sizeCorrectedData / sizeof(float)) - 2];
+  firstAndLastComplex[3] = rawCorrectedData[(sizeCorrectedData / sizeof(float))-1];
+
+  // *************************************
+  // cleanup memory
+  delete [] rawFilteredData;
+  delete [] rawCorrectedData;
+  delete [] rawDelaysAtBeginData;
+  delete [] rawDelaysAfterEndData;
+  delete [] rawPhaseOffsetData;
+  delete [] rawbandPassFactorsData;
+  delete [] subbandFrequency;
+  delete [] beamData;
+
   return firstAndLastComplex;
 }
 
@@ -200,7 +192,6 @@ int main()
   bool delayCompensation = false;
   float * results;
 
-  // ********************************************************
   // The input samples are all ones
   // After correction, multiply with 2.
   // The first and the last complex values are retrieved. They should be scaled with the bandPassFactor == 2
@@ -215,7 +206,6 @@ int main()
       return -1;
     }
   }
-
 
   //**********************************************************************
   // Delaycompensation but only for the phase ofsets:
@@ -239,7 +229,6 @@ int main()
       return -1;
     }
   }
-
 
   //****************************************************************************
   // delays  begin and end both 1 no phase offset frequency 1 width 1
@@ -265,7 +254,7 @@ int main()
     }
   }
 
-    //****************************************************************************
+  //****************************************************************************
   // delays  begin 1 and end 0 no phase offset frequency 1 width 1
   // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
   //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
@@ -292,7 +281,7 @@ int main()
     }
   }
 
-    //****************************************************************************
+  //****************************************************************************
   // delays  begin 1 and end 0 no phase offset frequency 1 width 1
   // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
   //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14

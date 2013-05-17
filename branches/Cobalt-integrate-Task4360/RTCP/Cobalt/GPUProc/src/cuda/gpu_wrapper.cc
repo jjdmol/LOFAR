@@ -20,6 +20,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include "gpu_wrapper.h"
 
@@ -351,6 +352,18 @@ namespace LOFAR
           return _size;
         }
 
+        void copyTo(void *hostPointer, size_t size)
+        {
+          ASSERT(size <= _size);
+          checkCuCall(cuMemcpyHtoD(get(), hostPointer, size));
+        }
+
+        void copyFrom(void *hostPointer, size_t size)
+        {
+          ASSERT(size <= _size);
+          checkCuCall(cuMemcpyDtoH(hostPointer, get(), size));
+        }
+
       //private: // Functions needs its address to set kernel args
         CUdeviceptr _ptr;
       private:
@@ -362,9 +375,9 @@ namespace LOFAR
       {
       }
 
-      void *DeviceMemory::get() const
+      CUdeviceptr DeviceMemory::get() const
       {
-        return (void *)_impl->get(); // not sure void * is a reasonble idea for a dev "ptr"
+        return _impl->get(); 
       }
 
       size_t DeviceMemory::size() const
@@ -372,6 +385,15 @@ namespace LOFAR
         return _impl->size();
       }
 
+      void DeviceMemory::copyTo(void *hostPointer, size_t size)
+      {
+        _impl->copyTo(hostPointer, size);
+      }
+
+      void DeviceMemory::copyFrom(void *hostPointer, size_t size) const
+      {
+        _impl->copyFrom(hostPointer, size);
+      }
 
       class Module::Impl : boost::noncopyable
       {

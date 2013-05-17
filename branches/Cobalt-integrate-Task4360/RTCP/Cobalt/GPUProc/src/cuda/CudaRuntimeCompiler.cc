@@ -57,14 +57,7 @@ namespace CudaRuntimeCompiler
     char buffer [1024];       
     FILE * ptxFilePointer = popen(cmd.c_str(), "r" );       
 
-    // First test if we have content. nvcc does not provide output on stdout when compilation failes
-    if (fgets (buffer , 100 , ptxFilePointer)  == NULL )    // if we cannot read nothing from the stream
-    {
-      // log that we have a failed compile run
-
-      throw "nvcc compilation failed!";                     // TODO: Need to be a  lofar::gpu::exeption.
-    }
-    //Now read the content of the file pointer
+    // Read the content of the file pointer
     while ( ! feof (ptxFilePointer) )                       //We do not get the cerr
     {
       if ( fgets (buffer , 100 , ptxFilePointer) == NULL )  // FILE * can only be red with cstdio functions
@@ -87,7 +80,7 @@ namespace CudaRuntimeCompiler
     std::stringstream cmd("");
     cmd << cudaCompiler ;
     cmd << " " << pathToCuFile ;
-    cmd << " --ptx";                       
+    cmd << " --ptx";    
 
     // add the set of flags
     for (flags_type::const_iterator it=flags.begin(); it!=flags.end(); ++it)
@@ -99,7 +92,7 @@ namespace CudaRuntimeCompiler
 
     // output to stdout
     cmd << " -o -";
-    std::cout << "Runtime compilation of kernel, command: " << std::endl << cmd.str()  << std::endl;
+    std::cerr << "Runtime compilation of kernel, command: " << std::endl << cmd.str()  << std::endl;
 
     return runNVCC(cmd.str());
   };
