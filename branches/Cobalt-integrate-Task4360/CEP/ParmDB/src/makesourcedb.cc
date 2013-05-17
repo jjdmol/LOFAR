@@ -115,7 +115,7 @@
 // If such a column is not given, it defaults to J2000. The reference type
 // given must be a valid casacore measures type (which is case-insensitive).
 
-// See the various test/tmakesourcdb files for an example.
+// See the various test/tmakesourcedb files for an example.
 
 #include <lofar_config.h>
 #include <ParmDB/SourceDB.h>
@@ -812,6 +812,7 @@ void calcRMParam (double& polfrac, double& polang,
 }
 
 void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
+              const string& prefix, const string& suffix,
               bool check, int& nrpatch, int& nrsource,
               int& nrpatchfnd, int& nrsourcefnd, const SearchInfo& searchInfo)
 {
@@ -964,7 +965,9 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
   } else {
     if (matchSearchInfo (ra, dec, searchInfo)) {
       if (patch.empty()) {
-        pdb.addSource (srcInfo, cat, fluxI, fieldValues, ra, dec, check);
+        // Patch name is source name plus possible prefix and suffix.
+        pdb.addSource (srcInfo, prefix + srcInfo.getName() + suffix,
+                       cat, fluxI, fieldValues, ra, dec, check);
       } else {
         pdb.addSource (srcInfo, patch, fieldValues, ra, dec, check);
       }
@@ -975,8 +978,8 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
 }
 
 void make (const string& in, const string& out, const string& outType,
-           const string& format, bool append, bool check,
-           const SearchInfo& searchInfo)
+           const string& format, const string& prefix, const string& suffix,
+           bool append, bool check, const SearchInfo& searchInfo)
 {
   // Analyze the format string.
   SdbFormat sdbf = getFormat (format);
@@ -1015,7 +1018,7 @@ void make (const string& in, const string& out, const string& outType,
         }
       }
       if (!skip) {
-        process (line, pdb, sdbf, check, nrpatch, nrsource,
+        process (line, pdb, sdbf, prefix, suffix, check, nrpatch, nrsource,
                  nrpatchfnd, nrsourcefnd, searchInfo);
       }
       // Read next line
@@ -1090,7 +1093,7 @@ int main (int argc, char* argv[])
   try {
     // Get the inputs.
     Input inputs(1);
-    inputs.version ("GvD 2012-Jul-10");
+    inputs.version ("GvD 2013-May-16");
     inputs.create("in", "",
                   "Input file name", "string");
     inputs.create("out", "",
@@ -1102,6 +1105,12 @@ int main (int argc, char* argv[])
                   "string");
     inputs.create("append", "true",
                   "Append to possibly existing sourcedb?", "bool");
+    inputs.create("patchprefix", "",
+                  "Add this prefix to patch name if taken from source name",
+                  "string");
+    inputs.create("patchsuffix", "",
+                  "Add this suffix to patch name if taken from source name",
+                  "string");
     inputs.create("check", "false",
                   "Check immediately for duplicate entries?", "bool");
     inputs.create("center", "",
@@ -1124,6 +1133,8 @@ int main (int argc, char* argv[])
     ASSERTSTR (!out.empty(), "no output sourcedb name given");
     string outType = inputs.getString("outtype");
     string format = inputs.getString("format");
+    string prefix = inputs.getString("patchprefix");
+    string suffix = inputs.getString("patchsuffix");
     bool append = inputs.getBool("append");
     bool check  = inputs.getBool("check");
     string center = inputs.getString ("center");
@@ -1147,7 +1158,7 @@ int main (int argc, char* argv[])
       cerr << "No format string found; using default format" << endl;
       format = "Name,Type,Ra,Dec,I,Q,U,V,MajorAxis,MinorAxis,Orientation";
     }
-    make (in, out, outType, format, append, check,
+    make (in, out, outType, format, prefix, suffix, append, check,
           getSearchInfo (center, radius, width));
   } catch (Exception& x) {
     cerr << "Caught LOFAR exception: " << x << endl;
