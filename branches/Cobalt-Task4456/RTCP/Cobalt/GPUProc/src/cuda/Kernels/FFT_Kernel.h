@@ -34,8 +34,7 @@ namespace LOFAR
     class FFT_Kernel
     {
     public:
-      FFT_Kernel(gpu::Context &context, unsigned fftSize,
-                 unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer);
+      FFT_Kernel(unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer);
       void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
 
 

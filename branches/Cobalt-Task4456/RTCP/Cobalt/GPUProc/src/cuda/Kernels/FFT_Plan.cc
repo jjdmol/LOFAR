@@ -32,7 +32,6 @@ namespace LOFAR
 
       error = cufftPlan1d(&plan, fftSize, CUFFT_C2C, nrFFTs);
 
-      // TODO: convert error to a string. cufft has its own errors
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftPlan1d: " << gpu::cufftErrorMessage(error));
     }
@@ -40,6 +39,16 @@ namespace LOFAR
     FFT_Plan::~FFT_Plan()
     {
       cufftDestroy(plan);
+    }
+
+    void FFT_Plan::setStream(gpu::Stream &stream)
+    {
+      cufftResult error;
+
+      error = cufftSetStream(plan, stream.stream());
+
+      if (error != CUFFT_SUCCESS)
+        THROW(gpu::CUDAException, "cufftSetStream: " << gpu::cufftErrorMessage(error));
     }
   }
 }

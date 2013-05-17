@@ -32,7 +32,7 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    FFT_Kernel::FFT_Kernel(gpu::Context &context, unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer)
+    FFT_Kernel::FFT_Kernel(unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer)
       :
       nrFFTs(nrFFTs),
       fftSize(fftSize),
@@ -40,20 +40,21 @@ namespace LOFAR
       plan(fftSize, nrFFTs),
       buffer(buffer)
     {
-      // Currently unused
-      (void)context;
     }
 
     void FFT_Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
     {
       cufftResult error;
 
+      // Tie our plan to the specified stream
+      plan.setStream(queue);
+
+      // Enqueue the FFT execution
       error = cufftExecC2C(plan.plan,
                            static_cast<cufftComplex*>(buffer.get()),
                            static_cast<cufftComplex*>(buffer.get()),
                            direction);
 
-      // TODO: convert error to a string. cufft has its own errors
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
 

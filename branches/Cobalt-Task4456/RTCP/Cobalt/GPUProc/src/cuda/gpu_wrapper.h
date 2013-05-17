@@ -407,6 +407,9 @@ namespace LOFAR
         // Record the event \a event for this stream.
         void recordEvent(const Event &event);
 
+        // Return the underlying CUDA stream.
+        CUstream stream() const;
+
       private:
         // Non-copyable implementation class.
         class Impl;

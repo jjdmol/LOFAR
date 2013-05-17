@@ -33,7 +33,7 @@ namespace LOFAR
   {
     DedispersionBackwardFFTkernel::DedispersionBackwardFFTkernel(const Parset &ps, gpu::Context &context, gpu::DeviceMemory &buffer)
       :
-      FFT_Kernel(context, ps.dedispersionFFTsize(), ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize(), false, buffer)
+      FFT_Kernel(ps.dedispersionFFTsize(), ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() / ps.dedispersionFFTsize(), false, buffer)
     {
       ASSERT(ps.nrSamplesPerChannel() % ps.dedispersionFFTsize() == 0);
     }

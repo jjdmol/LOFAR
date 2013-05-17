@@ -597,6 +597,11 @@ namespace LOFAR
           checkCuCall(cuEventRecord(event, _stream));
         }
 
+        CUstream stream() const
+        {
+          return _stream;
+        }
+
       private:
         CUstream _stream;
       };
@@ -656,6 +661,11 @@ namespace LOFAR
       void Stream::recordEvent(const Event &event)
       {
         _impl->recordEvent(event._impl->_event);
+      }
+
+      CUstream Stream::stream() const
+      {
+        return _impl->stream();
       }
 
 
