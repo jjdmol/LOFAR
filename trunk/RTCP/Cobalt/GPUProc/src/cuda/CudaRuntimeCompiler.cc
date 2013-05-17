@@ -107,10 +107,13 @@ namespace CudaRuntimeCompiler
     // Fetch and return PTX, if any
     string ptxStr = ptxFileContent.str();
 
-    if (ptxStr.empty()) {
+    if (ptxStr.empty()) 
+    {
+      LOG_DEBUG(" NVCC Compilation of cuda kernel failed. Command line arguments:");
+      LOG_DEBUG(cmd);
       // log that we have a failed compile run
       THROW(Exception, "nvcc compilation failed!");
-  }
+    }
 
     return ptxStr;
   }
