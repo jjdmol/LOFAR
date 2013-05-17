@@ -23,12 +23,13 @@ using namespace LOFAR::Cobalt;
   } while(0)
 
 // Helper function to get initialized memory
-float * getInitializedArray(unsigned size, float defaultValue)
+HostMemory& getInitializedArray(unsigned size, float defaultValue)
 {
-  float* createdArray =  new float[size];
+  HostMemory hostFilteredMemory(size);
+  float* createdArray =  hostFilteredMemory.get<float>();
   for (unsigned idx = 0; idx < size; ++idx)
     createdArray[idx] = defaultValue;
-  return createdArray;
+  return hostFilteredMemory;
 }
 
 // 
@@ -89,45 +90,45 @@ float * runTest(float bandPassFactor,
   // Create the data arrays  
   size_t sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX * sizeof(float);
   DeviceMemory DevFilteredMemory(sizeFilteredData);
-  float* rawFilteredData = getInitializedArray(sizeFilteredData, 1.0);
-  DevFilteredMemory.copyTo((void *)rawFilteredData, sizeFilteredData);
+  HostMemory rawFilteredData = getInitializedArray(sizeFilteredData, 1.0);
+  cuStream.writeBuffer(DevFilteredMemory, sizeFilteredData);
+  
 
   size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
   DeviceMemory DevCorrectedMemory(sizeCorrectedData);
-  float* rawCorrectedData = getInitializedArray(sizeCorrectedData, 42); 
-  DevCorrectedMemory.copyTo((void *)rawCorrectedData, sizeCorrectedData);
+  HostMemory rawCorrectedData = getInitializedArray(sizeCorrectedData, 42); 
+  cuStream.writeBuffer(DevCorrectedMemory, rawCorrectedData);
 
   size_t sizeDelaysAtBeginData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float);  
   DeviceMemory DevDelaysAtBeginMemory(sizeDelaysAtBeginData);
-  float* rawDelaysAtBeginData = getInitializedArray(sizeDelaysAtBeginData, delayBegin);
-  DevDelaysAtBeginMemory.copyTo(rawDelaysAtBeginData, sizeDelaysAtBeginData);
-
-
+  HostMemory rawDelaysAtBeginData = getInitializedArray(sizeDelaysAtBeginData, delayBegin);
+  cuStream.writeBuffer(DevDelaysAtBeginMemory, rawDelaysAtBeginData);
+    
   size_t sizeDelaysAfterEndData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float); 
   DeviceMemory DevDelaysAfterEndMemory(sizeDelaysAfterEndData);
-  float* rawDelaysAfterEndData = getInitializedArray(sizeDelaysAfterEndData, delayEnd);
-  DevDelaysAfterEndMemory.copyTo(rawDelaysAfterEndData, sizeDelaysAfterEndData);
-
+  HostMemory rawDelaysAfterEndData = getInitializedArray(sizeDelaysAfterEndData, delayEnd);
+  cuStream.writeBuffer(DevDelaysAfterEndMemory, rawDelaysAfterEndData);
+    
   size_t sizePhaseOffsetData = NR_STATIONS * 2*sizeof(float); 
   DeviceMemory DevPhaseOffsetMemory(sizePhaseOffsetData);
-  float* rawPhaseOffsetData = getInitializedArray(sizePhaseOffsetData, PhaseOffset);
-  DevPhaseOffsetMemory.copyTo(rawPhaseOffsetData, sizePhaseOffsetData);
+  HostMemory rawPhaseOffsetData = getInitializedArray(sizePhaseOffsetData, PhaseOffset);
+  cuStream.writeBuffer(DevPhaseOffsetMemory, rawPhaseOffsetData);
 
   size_t sizebandPassFactorsData = NR_CHANNELS * sizeof(float);
   DeviceMemory DevbandPassFactorsMemory(sizebandPassFactorsData);
-  float* rawbandPassFactorsData = getInitializedArray(sizebandPassFactorsData, bandPassFactor);
-  DevbandPassFactorsMemory.copyTo(rawbandPassFactorsData, sizebandPassFactorsData);
+  HostMemory rawbandPassFactorsData = getInitializedArray(sizebandPassFactorsData, bandPassFactor);
+  cuStream.writeBuffer(DevbandPassFactorsMemory, rawbandPassFactorsData);
   
   size_t sizeSubbandFrequency = 1 * sizeof(float);
   DeviceMemory DevSubbandFrequencyMemory(sizeSubbandFrequency);
-  float* subbandFrequency = getInitializedArray(sizeSubbandFrequency, frequency);
-  DevSubbandFrequencyMemory.copyTo(subbandFrequency, sizeSubbandFrequency);
+  HostMemory subbandFrequency = getInitializedArray(sizeSubbandFrequency, frequency);
+  cuStream.writeBuffer(DevSubbandFrequencyMemory, subbandFrequency);
   
   size_t sizeBeamData = 1 * sizeof(unsigned);
   DeviceMemory DevBeamMemory(sizeBeamData);
-  unsigned* beamData = new unsigned[1];
-  beamData[0] = 0;
-  DevBeamMemory.copyTo(beamData, sizeBeamData);
+  HostMemory beamData(sizeBeamData);
+  beamData.get<unsigned>()[0];
+  cuStream.writeBuffer(DevBeamMemory, beamData)
 
   // ****************************************************************************
   // Run the kernel on the created data

@@ -208,12 +208,6 @@ namespace LOFAR
         // Return the size of this memory block.
         size_t size() const;
 
-        // Copy size bytes from the memory location hostPointer to the Device
-        void copyTo(void *hostPointer, size_t size);
-
-        // Copy size bytes from the device to memory location hostPointer
-        void copyFrom(void *hostPointer, size_t size) const;
-
       private:
         // Function needs access to our device ptr location to set this as a kernel arg.
         friend class Function;

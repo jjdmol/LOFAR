@@ -352,18 +352,6 @@ namespace LOFAR
           return _size;
         }
 
-        void copyTo(void *hostPointer, size_t size)
-        {
-          ASSERT(size <= _size);
-          checkCuCall(cuMemcpyHtoD(get(), hostPointer, size));
-        }
-
-        void copyFrom(void *hostPointer, size_t size)
-        {
-          ASSERT(size <= _size);
-          checkCuCall(cuMemcpyDtoH(hostPointer, get(), size));
-        }
-
       //private: // Functions needs its address to set kernel args
         CUdeviceptr _ptr;
       private:
@@ -385,15 +373,6 @@ namespace LOFAR
         return _impl->size();
       }
 
-      void DeviceMemory::copyTo(void *hostPointer, size_t size)
-      {
-        _impl->copyTo(hostPointer, size);
-      }
-
-      void DeviceMemory::copyFrom(void *hostPointer, size_t size) const
-      {
-        _impl->copyFrom(hostPointer, size);
-      }
 
       class Module::Impl : boost::noncopyable
       {
@@ -603,7 +582,7 @@ namespace LOFAR
       {
         _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
                                hostMem.get<void *>(),
-                               hostMem.size());
+                               hostMem.size());  // TODO: This might fail silently if the size is larger as the dev memory
         if (synchronous) {
           synchronize();
         }
