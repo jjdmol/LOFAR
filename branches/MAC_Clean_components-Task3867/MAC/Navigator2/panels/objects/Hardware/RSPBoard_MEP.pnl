@@ -1,0 +1,181 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 227 121 N "_3DFace" 0
+"main()
+{
+  baseDP=g_currentDatapoint+\".MEP\";
+  if(!dpExists(baseDP + \".seqnr:_online.._value\") ||
+     !dpExists(baseDP + \".error:_online.._value\")) {
+    setValue(\"output_seqnr\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"output_error\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"output_seqnr\", \"text\", \"error\");
+    setValue(\"output_error\"   , \"text\", \"error\");
+    return;
+  } else {
+    setValue(\"output_seqnr\", \"backCol\", \"white\");
+    setValue(\"output_error\", \"backCol\", \"white\");
+    dpConnect(\"boardMEPDetails\", baseDP + \".seqnr:_online.._value\",
+                                 baseDP + \".error:_online.._value\");
+  }
+
+}
+" 0
+ E E E E 1 -1 -1 0  10 170
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+
+void boardMEPDetails(string dp1, int seqnr,
+                string dp2, int error)
+{
+    setValue(\"output_seqnr\", \"text\", seqnr);
+    setValue(\"output_error\"   , \"text\", error);
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"childStateBorder"
+""
+1 10 143 E E E 1 E 1 E N "_WindowText" E N "grey" E E
+ E E
+1 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 0.7000000000000001 0 0.6015037593984962 3 3.984962406015038 1 E 10 10 210 143
+14 7
+"output_error"
+""
+1 60 64 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 58 62 132 87
+3 "0s" 0 0 0 2 0 -1  E E E
+14 9
+"output_seqnr"
+""
+1 60 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 58 38 132 63
+3 "0s" 0 0 0 2 0 -1  E E E
+2 11
+"PRIMITIVE_TEXT1"
+""
+1 60 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 60 20 92 37
+0 2 2 "0s" 0 0 0 192 0 0  60 20 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 3 MEP
+2 12
+"PRIMITIVE_TEXT2"
+""
+1 20 47 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 20 47 51 61
+0 2 2 "0s" 0 0 0 192 0 0  20 47 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 6 Seqnr:
+2 13
+"PRIMITIVE_TEXT3"
+""
+1 20 68 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 20 68 45 82
+0 2 2 "0s" 0 0 0 192 0 0  20 68 1
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 6 Error:
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
