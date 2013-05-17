@@ -17,7 +17,6 @@
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
-
 #include <lofar_config.h>
 
 #include "cuda_runtime.h"
@@ -85,13 +84,13 @@ namespace CudaRuntimeCompiler
     // Call nvcc on the command line, get content as string
     stringstream ptxFileContent;                              // The ptx file, to be read from stdout
     char buffer [1024];       
-    FILE * ptxFilePointer = popen(cmd.c_str(), "r" );
+    FILE * ptxFilePointer = popen(cmd.c_str(), "r" );       
 
     if (!ptxFilePointer)
       throw SystemCallException("popen", errno, THROW_ARGS);
 
     // Read the content of the file pointer
-    while (!feof(ptxFilePointer))                       //We do not get the cerr
+    while ( ! feof (ptxFilePointer) )                       //We do not get the cerr
     {
       if (fgets(buffer, sizeof buffer, ptxFilePointer) == NULL)  // FILE * can only be read with cstdio functions
         break;
@@ -111,7 +110,7 @@ namespace CudaRuntimeCompiler
     if (ptxStr.empty()) {
       // log that we have a failed compile run
       THROW(Exception, "nvcc compilation failed!");
-    }
+  }
 
     return ptxStr;
   }
@@ -125,7 +124,7 @@ namespace CudaRuntimeCompiler
     stringstream cmd("");
     cmd << cudaCompiler ;
     cmd << " " << pathToCuFile ;
-    cmd << " --ptx";                       
+    cmd << " --ptx";    
 
     // add the set of flags
     for (flags_type::const_iterator it=flags.begin(); it!=flags.end(); ++it)
@@ -149,4 +148,3 @@ namespace CudaRuntimeCompiler
     return CudaRuntimeCompiler::compileToPtx(pathToCuFile, defaultFlags(), defaultDefinitions());
   };
 }
-

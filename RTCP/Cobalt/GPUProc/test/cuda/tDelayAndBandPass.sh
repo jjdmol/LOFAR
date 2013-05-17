@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tDelayAndBandPass
+./runctest.sh tDelayAndBandPass > tDelayAndBandPass.log 2>&1
