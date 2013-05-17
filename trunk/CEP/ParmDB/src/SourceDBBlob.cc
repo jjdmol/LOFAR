@@ -147,13 +147,14 @@ namespace BBS {
   }
 
   void SourceDBBlob::addSource (const SourceInfo& sourceInfo,
+                                const string& patchName,
                                 int,
                                 double,
                                 const ParmMap& defaultParameters,
                                 double ra, double dec,
                                 bool check)
   {
-    addSource (sourceInfo, sourceInfo.getName(), defaultParameters,
+    addSource (sourceInfo, patchName, defaultParameters,
                ra, dec, check);
   }
 

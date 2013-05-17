@@ -271,6 +271,7 @@ namespace BBS {
   }
 
   void SourceDBCasa::addSource (const SourceInfo& sourceInfo,
+                                const string& patchName,
                                 int catType,
                                 double apparentBrightness,
                                 const ParmMap& defaultParameters,
@@ -282,14 +283,14 @@ namespace BBS {
     TableLocker lockerp(itsPatchTable, FileLocker::Write);
     TableLocker lockers(itsSourceTable, FileLocker::Write);
     if (check) {
-      ASSERTSTR (!patchExists(sourceInfo.getName()),
-                 "Patch " << sourceInfo.getName() << " already exists");
+      ASSERTSTR (!patchExists(patchName),
+                 "Patch " << patchName << " already exists");
       ASSERTSTR (!sourceExists(sourceInfo.getName()),
                  "Source " << sourceInfo.getName() << " already exists");
     }
-    itsPatchSet.insert  (sourceInfo.getName());
+    itsPatchSet.insert  (patchName);
     itsSourceSet.insert (sourceInfo.getName());
-    uint patchId = addPatch (sourceInfo.getName(), catType,
+    uint patchId = addPatch (patchName, catType,
                              apparentBrightness, ra, dec, false);
     addSrc (sourceInfo, patchId, defaultParameters, ra, dec);
   }

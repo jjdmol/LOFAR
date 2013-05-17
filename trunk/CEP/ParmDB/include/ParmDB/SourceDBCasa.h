@@ -98,6 +98,7 @@ namespace BBS {
     // Add a source which forms a patch in itself (with the same name).
     // <br>Optionally it is checked if the patch or source already exists.
     virtual void addSource (const SourceInfo& sourceInfo,
+                            const string& patchName,
                             int catType,
                             double apparentBrightness,
                             const ParmMap& defaultParameters,

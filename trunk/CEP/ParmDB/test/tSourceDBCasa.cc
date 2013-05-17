@@ -141,10 +141,10 @@ void testSources()
   ASSERT (t1.nrow() == 2);
   ASSERT (t2.nrow() == 4);
   // Now add a source as a patch and as a source to that patch.
-  pdb.addSource (SourceInfo("src2", SourceInfo::POINT), 3, 2.5, defValues,
-                 1.1, -1.1);
-  pdb.addSource (SourceInfo("src2a", SourceInfo::DISK), "src2", defValues,
-                 1.101, -1.101);
+  pdb.addSource (SourceInfo("src2", SourceInfo::POINT), "src2",
+                 3, 2.5, defValues, 1.1, -1.1);
+  pdb.addSource (SourceInfo("src2a", SourceInfo::DISK), "src2",
+                 defValues, 1.101, -1.101);
   ASSERT (t1.nrow() == 4);
   ASSERT (t2.nrow() == 5);
   ASSERT (pdb.sourceExists ("sun"));
