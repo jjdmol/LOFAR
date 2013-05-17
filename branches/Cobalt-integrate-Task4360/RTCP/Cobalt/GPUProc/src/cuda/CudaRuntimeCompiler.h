@@ -28,7 +28,7 @@ namespace CudaRuntimeCompiler
   
   // Performs a 'system' call of nvcc. Return the stdout of the command
   // on error no stdout is created and an exception is thrown
-  std::string runNVCC(std::string cmd);
+  std::string runNVCC(const std::string &cmd);
   
   // Create a nvcc command line string based on the input path, a set of flags and a map
   // of definitions. Use this command to call nvcc and compile the file at input path to a ptx file

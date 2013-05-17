@@ -182,6 +182,9 @@ namespace LOFAR
       // Resize the given delay set to the right proportions.
       void setAllDelaysSize( AllDelays &result ) const;
 
+      // Test whether the conversion engine actually works.
+      bool test();
+
       // Initialise computing/converting engines
       void init();
 

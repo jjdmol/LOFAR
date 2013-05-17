@@ -52,7 +52,9 @@ namespace LOFAR
     class PacketsToBuffer
     {
     public:
-      PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr );
+      // cleanup: if true, erase any existing SHM areas corresponding to our
+      // station.
+      PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr, bool cleanup = true );
 
       // Process data for this board until interrupted or end of data. Auto-senses
       // mode (bit mode & clock).

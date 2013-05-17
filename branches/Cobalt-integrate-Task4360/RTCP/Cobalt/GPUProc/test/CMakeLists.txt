@@ -10,10 +10,8 @@ lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
 
 # DummyStorage is started by tStorageProcesses to emulate an OutputProc process
-lofar_add_bin_program(DummyStorage DummyStorage.cc)
+lofar_add_executable(DummyStorage DummyStorage.cc)
 lofar_add_test(tStorageProcesses tStorageProcesses.cc DEPENDS DummyStorage)
-
-#add_subdirectory(Kernels)
 
 if(USE_CUDA)
   add_subdirectory(cuda)

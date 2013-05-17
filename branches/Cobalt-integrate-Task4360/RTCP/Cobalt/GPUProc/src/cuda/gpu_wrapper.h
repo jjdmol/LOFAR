@@ -257,9 +257,6 @@ namespace LOFAR
                std::vector<CUjit_option> &options,
                std::vector<void*> &optionValues);
 
-        // \todo This should return a Function object, not a CUfunction.
-        CUfunction getKernelEntryPoint(const char* functionName);
-
       private:
         // Function needs access to our module to create a function.
         friend class Function;
@@ -295,18 +292,6 @@ namespace LOFAR
         // Note: Prefer to use setArg() passing a DeviceMemory ref over this overload.
         void setArg(size_t index, const void **val);
 
-        // Do not use. To guard against passing pointers.
-        // Note that even device void * cannot be passed, because we need its
-        // address with a life time longer than this formal parameter.
-        template<typename T>
-        void setArg(size_t index, const T *&); // intentionally not impl.
-
-        // Do not use. To guard against passing HostMemory references to kernels.
-        void setArg(size_t index, const HostMemory &); // intentionally not impl.
-
-        // Do not use. To guard against passing HostMemory pointers to kernels.
-        void setArg(size_t index, const HostMemory *); // intentionally not impl.
-
         // Return information about a function.
         // \note For details on valid values for \a attribute, please refer to
         // the documentation of cuFuncGetAttribute in the CUDA Driver API.
@@ -330,6 +315,18 @@ namespace LOFAR
 
         // Helper function to modify _kernelArgs.
         void doSetArg(size_t index, const void *argp);
+
+        // Do not use. To guard against passing pointers.
+        // Note that even device void * cannot be passed, because we need its
+        // address with a life time longer than this formal parameter.
+        template<typename T>
+        void setArg(size_t index, const T *&); // intentionally not impl.
+
+        // Do not use. To guard against passing HostMemory references to kernels.
+        void setArg(size_t index, const HostMemory &); // intentionally not impl.
+
+        // Do not use. To guard against passing HostMemory pointers to kernels.
+        void setArg(size_t index, const HostMemory *); // intentionally not impl.
       };
 
       // Wrap a CUDA Event. This is the equivalent of an OpenCL Event.

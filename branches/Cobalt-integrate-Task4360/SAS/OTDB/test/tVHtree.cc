@@ -187,12 +187,12 @@ int main (int	argc, char*	argv[]) {
 		treeInfo = conn.getTreeInfo(VHtreeID);
 		LOG_INFO_STR(treeInfo);
 
-		LOG_INFO("Exporting whole tree to 'treeExport'");
-		ASSERTSTR(tm.exportTree(VHtreeID, topNode.nodeID(), "treeExport"),
+		LOG_INFO("Exporting whole tree to 'tVHtree_tmp.treeExport'");
+		ASSERTSTR(tm.exportTree(VHtreeID, topNode.nodeID(), "tVHtree_tmp.treeExport"),
 										"Error during export of whole tree");
 
-		LOG_INFO("Exporting subtree to 'subtreeExport'");
-		ASSERTSTR(tm.exportTree(VHtreeID, subTreeNodeID, "subtreeExport"),
+		LOG_INFO("Exporting subtree to 'tVHtree_tmp.subtreeExport'");
+		ASSERTSTR(tm.exportTree(VHtreeID, subTreeNodeID, "tVHtree_tmp.subtreeExport"),
 										"Error during export of subtree");
 
 		LOG_INFO("Trying to apply a processType to a VIC tree which is not allowed");

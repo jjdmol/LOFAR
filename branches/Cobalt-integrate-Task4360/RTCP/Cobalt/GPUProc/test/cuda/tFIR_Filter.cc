@@ -21,7 +21,7 @@
 #include <iostream>
 #include <stdlib.h> 
 
-#include "FIR_FilterTest.h"
+#include "tFIR_Filter.h"
 #include <sstream>
 #include <fstream>
 #include <cuda_runtime.h>
@@ -37,7 +37,7 @@ int main()
 {
 
   char const *kernel_name = "FIR_Filter";
-  char *kernel_extention = ".cu";
+  const char *kernel_extention = ".cu";
   std::stringstream ss;
   ss << "nvcc " << kernel_name << kernel_extention
     << " -ptx"
@@ -226,7 +226,7 @@ int main()
   // unsigned  sharedMemBytes = 512;
 
   cudaStatus = cuLaunchKernel( hKernel, globalWorkSize.x, globalWorkSize.y, globalWorkSize.z, 
-    localWorkSize.x, localWorkSize.y, localWorkSize.z, NULL, cuStream, kernel_func_args,0);
+    localWorkSize.x, localWorkSize.y, localWorkSize.z, 0, cuStream, kernel_func_args, NULL);
   if (cudaStatus != CUDA_SUCCESS)
   {
     std::cerr << " cuLaunchKernel " << cudaStatus <<std::endl;

@@ -31,6 +31,7 @@
 
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 #include <Common/Thread/Mutex.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Stream.h>
@@ -62,6 +63,8 @@ using namespace LOFAR;
 using namespace Cobalt;
 using namespace std;
 using boost::format;
+
+Exception::TerminateHandler t(Exception::terminate);
 
 const size_t clockMHz = 200;
 const size_t clockHz = clockMHz * 1000 * 1000;

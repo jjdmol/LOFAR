@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tMSWriterCorrelated 2>&1 > tMSWriterCorrelated.log
+./runctest.sh tMSWriterCorrelated
