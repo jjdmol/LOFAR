@@ -23,13 +23,13 @@ using namespace LOFAR::Cobalt;
   } while(0)
 
 // Helper function to get initialized memory
-HostMemory& getInitializedArray(unsigned size, float defaultValue)
+HostMemory getInitializedArray(unsigned size, float defaultValue)
 {
-  HostMemory hostFilteredMemory(size);
-  float* createdArray =  hostFilteredMemory.get<float>();
+  HostMemory memory(size);
+  float* createdArray =  memory.get<float>();
   for (unsigned idx = 0; idx < size; ++idx)
-    createdArray[idx] = defaultValue;
-  return hostFilteredMemory;
+    createdArray[idx] = (float)defaultValue;
+  return memory;
 }
 
 // 
@@ -91,12 +91,11 @@ float * runTest(float bandPassFactor,
   size_t sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX * sizeof(float);
   DeviceMemory DevFilteredMemory(sizeFilteredData);
   HostMemory rawFilteredData = getInitializedArray(sizeFilteredData, 1.0);
-  cuStream.writeBuffer(DevFilteredMemory, sizeFilteredData);
-  
+  cuStream.writeBuffer(DevFilteredMemory, rawFilteredData);
 
   size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
   DeviceMemory DevCorrectedMemory(sizeCorrectedData);
-  HostMemory rawCorrectedData = getInitializedArray(sizeCorrectedData, 42); 
+  HostMemory rawCorrectedData = getInitializedArray(sizeCorrectedData, 42.0); 
   cuStream.writeBuffer(DevCorrectedMemory, rawCorrectedData);
 
   size_t sizeDelaysAtBeginData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float);  
@@ -128,7 +127,7 @@ float * runTest(float bandPassFactor,
   DeviceMemory DevBeamMemory(sizeBeamData);
   HostMemory beamData(sizeBeamData);
   beamData.get<unsigned>()[0];
-  cuStream.writeBuffer(DevBeamMemory, beamData)
+  cuStream.writeBuffer(DevBeamMemory, beamData);
 
   // ****************************************************************************
   // Run the kernel on the created data
@@ -158,29 +157,21 @@ float * runTest(float bandPassFactor,
   cuStream.synchronize(); // assure that the kernel is finished
   
   // Copy output vector from GPU buffer to host memory.
-  DevCorrectedMemory.copyFrom(rawCorrectedData, sizeCorrectedData); 
+  cuStream.readBuffer(rawCorrectedData, DevCorrectedMemory);
   cuStream.synchronize(); //assure copy from device is done
   
   // *************************************
   // Create the return values
   float *firstAndLastComplex = new float[4];
   // Return the first complex
-  firstAndLastComplex[0] = rawCorrectedData[0];
-  firstAndLastComplex[1] = rawCorrectedData[1];
+  firstAndLastComplex[0] = rawCorrectedData.get<float>()[0];
+  firstAndLastComplex[1] = rawCorrectedData.get<float>()[1];
   //return the last complex number
-  firstAndLastComplex[2] = rawCorrectedData[(sizeCorrectedData / sizeof(float)) - 2];
-  firstAndLastComplex[3] = rawCorrectedData[(sizeCorrectedData / sizeof(float))-1];
+  firstAndLastComplex[2] = rawCorrectedData.get<float>()[(sizeCorrectedData / sizeof(float)) - 2];
+  firstAndLastComplex[3] = rawCorrectedData.get<float>()[(sizeCorrectedData / sizeof(float))-1];
 
   // *************************************
   // cleanup memory
-  delete [] rawFilteredData;
-  delete [] rawCorrectedData;
-  delete [] rawDelaysAtBeginData;
-  delete [] rawDelaysAfterEndData;
-  delete [] rawPhaseOffsetData;
-  delete [] rawbandPassFactorsData;
-  delete [] subbandFrequency;
-  delete [] beamData;
 
   return firstAndLastComplex;
 }
@@ -313,4 +304,5 @@ int main()
 
   return 0;
 }
+
 
