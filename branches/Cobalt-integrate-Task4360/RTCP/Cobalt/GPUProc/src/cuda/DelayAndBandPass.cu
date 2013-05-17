@@ -137,7 +137,6 @@ extern "C" {
 #if NR_CHANNELS == 1
   float frequency = subbandFrequency;
 #else
-  // Michiel Brentjes wants the frequencies to be individual for each subband, this would be a candidate const value
   float frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS);
 #endif
   float2 delayAtBegin = make_float2((*delaysAtBegin)[beam][station][0], (*delaysAtBegin)[beam][station][1]);
@@ -149,9 +148,7 @@ extern "C" {
   float2 phiEnd = make_float2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y) ;  // TODO: Waarom die -2pi?? dit breekt met het idee dat je de compensaties begin eind het zelfde kunt houden.
 
   float2 deltaPhi = make_float2((phiEnd.x - phiBegin.x) / NR_SAMPLES_PER_CHANNEL,
-                                (phiEnd.y - phiBegin.y) / NR_SAMPLES_PER_CHANNEL); 
-
-   
+                                (phiEnd.y - phiBegin.y) / NR_SAMPLES_PER_CHANNEL);   
   
 #if NR_CHANNELS == 1
   float2 myPhiBegin = make_float2(
@@ -166,13 +163,12 @@ extern "C" {
                           (phiBegin.y + float(major) * deltaPhi.y) * frequency + (*phaseOffsets)[station][1]);
   float2 myPhiDelta = make_float2(16.0f * deltaPhi.x * frequency,
                                   16.0f * deltaPhi.y * frequency); // Magic constant: 16 is the time step we take in the samples
-
 #endif
+
   complexfloat vX = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiBegin.x));  // This cast might be costly
   complexfloat vY = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiBegin.y));
   complexfloat dvX = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiDelta.x));
   complexfloat dvY = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiDelta.y));
-
 #endif
 
 #if defined BANDPASS_CORRECTION

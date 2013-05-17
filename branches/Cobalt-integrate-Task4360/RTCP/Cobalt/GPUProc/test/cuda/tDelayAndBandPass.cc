@@ -126,7 +126,6 @@ float * runTest(float bandPassFactor,
   size_t sizeBeamData = 1 * sizeof(unsigned);
   DeviceMemory DevBeamMemory(sizeBeamData);
   HostMemory beamData(sizeBeamData);
-  beamData.get<unsigned>()[0];
   cuStream.writeBuffer(DevBeamMemory, beamData);
 
   // ****************************************************************************
@@ -205,7 +204,7 @@ int main()
   // cexp(1) = e = 2.71828
   results = runTest(1.0,   // bandpass factor
                     1.0,   // frequency
-                    1.0,   // SUBBAND_BANDWIDTH set to zero forces
+                    1.0,   
                     true,  // delayCompensation
                     0.0,   // delays begin  
                     0.0,   // delays end
@@ -229,7 +228,7 @@ int main()
   // exp(-3.14159+0 i) == 0.04312
   results = runTest(1.0,   // bandpass factor
                     1.0,   // frequency
-                    1.0,   // SUBBAND_BANDWIDTH set to zero forces
+                    1.0,   
                     true,  // delayCompensation
                     1.0,   // delays begin  
                     1.0,   // delays end
@@ -256,7 +255,7 @@ int main()
   // Ask john Romein for more details
   results = runTest(1.0,   // bandpass factor
                     1.0,   // frequency
-                    1.0,   // SUBBAND_BANDWIDTH set to zero forces
+                    1.0,   
                     true,  // delayCompensation
                     1.0,   // delays begin  
                     0.0,   // delays end
@@ -284,7 +283,7 @@ int main()
   // In this test the phase offsetss are also compensated
   results = runTest(2.0,   // bandpass factor (weights == 2)
                     1.0,   // frequency
-                    1.0,   // SUBBAND_BANDWIDTH set to zero forces
+                    1.0,   
                     true,  // delayCompensation
                     1.0,   // delays begin  
                     0.0,   // delays end
