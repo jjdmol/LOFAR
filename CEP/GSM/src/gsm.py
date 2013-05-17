@@ -10,13 +10,14 @@ def gsmMain (name, argv):
     import lofar.gsm.gsmutils as gsm 
     #import gsmutils as gsm 
 
-    if len(argv) < 4:
+    if len(argv) < 4  or  (argv[0] == '-p'  and  len(argv) < 6):
         print ''
         print 'Insufficient arguments given; run as:'
         print ''
-        print '   %s outfile RA DEC radius [vlssFluxCutoff [assocTheta]]' % name
+        print '   %s [-p patchname] outfile RA DEC radius [vlssFluxCutoff [assocTheta]]' % name
         print 'to select using a cone'
         print ''
+        print '   -p patchname    if given, all sources belong to this single patch'
         print '   outfile         path-name of the output file'
         print '                   It will be overwritten if already existing'
         print '   RA              cone center Right Ascension (J2000, degrees)'
@@ -30,16 +31,21 @@ def gsmMain (name, argv):
         return False
 
     # Get the arguments.
-    outfile = argv[0]
-    ra      = float(argv[1])
-    dec     = float(argv[2])
-    radius  = float(argv[3])
+    patch   = ''
+    st = 0
+    if argv[0] == '-p':
+        patch = argv[1]
+        st = 2
+    outfile = argv[st]
+    ra      = float(argv[st+1])
+    dec     = float(argv[st+2])
+    radius  = float(argv[st+3])
     cutoff  = 4.
     theta   = 0.00278
-    if len(argv) > 4:
-        cutoff = float(argv[4])
-    if len(argv) > 5:
-        theta = float(argv[5])
+    if len(argv) > st+4:
+        cutoff = float(argv[st+4])
+    if len(argv) > st+5:
+        theta = float(argv[st+5])
 
     db_host = "ldb002"
     #db_host = "napels"
@@ -54,6 +60,7 @@ def gsmMain (name, argv):
         conn = db.connect(hostname=db_host, database=db_dbase, username=db_user,
                           password=db_passwd, port=db_port, autocommit=db_autocommit)
         gsm.expected_fluxes_in_fov (conn, ra, dec, radius, theta, outfile,
+                                    patchname=patch,
                                     storespectraplots=False,
                                     deruiter_radius=3.717,
                                     vlss_flux_cutoff=cutoff)

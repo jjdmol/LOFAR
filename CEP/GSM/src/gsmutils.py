@@ -11,9 +11,11 @@ import monetdb.sql as db
 import logging
 from gsm_exceptions import GSMException
 
-def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_theta, bbsfile, 
-                                 storespectraplots=False, deruiter_radius=0.,
-                                 vlss_flux_cutoff=None):
+def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
+                           assoc_theta, bbsfile, 
+                           storespectraplots=False, deruiter_radius=0.,
+                           vlss_flux_cutoff=None,
+                           patchname=''):
     """Search for VLSS, WENSS and NVSS sources that
     are in the given FoV. The FoV is set by its central position
     (ra_central, decl_central) out to a radius of fov_radius.
@@ -30,6 +32,9 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
     The query returns all vlss sources (id) that are in the FoV.
     If so, the counterparts from other catalogues are returned as well 
     (also their ids).
+
+    If patchname is given, all sources get that patch name and the center of
+    the patch is given central ra/dec. Its brightness is the summed flux.
     """
     
     DERUITER_R = deruiter_radius
@@ -63,10 +68,10 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
     
     if vlss_flux_cutoff is None:
         vlss_flux_cutoff = 0.
-    skymodel = open(bbsfile, 'w')
-    header = "# (Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6',  SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation) = format\n\n"
-    skymodel.write(header)
+
     status = True
+    bbsrows = []
+    totalFlux = 0.
 
     # This is dimensionless search radius that takes into account 
     # the ra and decl difference between two sources weighted by 
@@ -764,7 +769,9 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
                 if len(lognu) == 1:
                     #print "Exp. flux:", 10**(np.log10(v_flux[i]) + 0.7 * np.log10(74.0/60.0))
                     #print "Default -0.7"
-                    bbsrow += str(round(10**(np.log10(v_flux[i]) + 0.7 * np.log10(74.0/60.0)), 2)) + ", , , , , "
+                    fluxrow = round(10**(np.log10(v_flux[i]) + 0.7 * np.log10(74.0/60.0)), 2)
+                    totalFlux += fluxrow
+                    bbsrow += str(fluxrow) + ", , , , , "
                     bbsrow += "[-0.7]"
                 elif len(lognu) == 2 or (len(lognu) == 3 and nvss_catsrcid[i] is None):
                     #print "Do a 1-degree polynomial fit"
@@ -776,7 +783,9 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
                         spectrumfiles.append(spectrumfile)
                     # Default reference frequency is reported, so we leave it empty here;
                     # Catalogues just report on Stokes I, so others are empty.
-                    bbsrow += str(round(10**p[0], 4)) + ", , , , , "
+                    fluxrow = round(10**p[0], 4)
+                    totalFlux += fluxrow
+                    bbsrow += str(fluxrow) + ", , , , , "
                     bbsrow += "[" + str(round(p[1], 4)) + "]"
                 elif (len(lognu) == 3 and nvss_catsrcid[i] is not None) or len(lognu) == 4:
                     #print "Do a 2-degree polynomial fit"
@@ -793,16 +802,29 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
                     # Gaussian source:
                     bbsrow += ", " + str(round(major[i], 2)) + ", " + str(round(minor[i], 2)) + ", " + str(round(pa[i], 2))
                 #print bbsrow
-                skymodel.write(bbsrow + '\n')
+                bbsrows.append (bbsrow)
             
             if storespectraplots:
                 print "Spectra available in:", spectrumfiles
-        
-        skymodel.close()
-        print "Sky model stored in source table:", bbsfile
-        
+                
         if not status:
             raise GSMException("Sky Model File %s is empty" % (bbsfile,))
+
+        # Write the format line.
+        # Optionally it contains a column containing the patch name.
+        skymodel = open(bbsfile, 'w')
+        header = "FORMAT = Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6', SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation"
+        # Add fixed patch name to the header and add a line defining the patch.
+        if len(patchname) > 0:
+            header += ", patch=fixed'" + patchname + "'\n\n"
+            header += "# the next line defines the patch\n"
+            header += ',, ' + ra2bbshms(ra_central) + ', ' + decl2bbsdms(decl_central) + ', ' + str(totalFlux)
+        header += "\n\n# the next lines define the sources\n"
+        skymodel.write(header)
+        for bbsrow in bbsrows:
+            skymodel.write(bbsrow + '\n')
+        skymodel.close()
+        print "Sky model stored in source table:", bbsfile
 
     except db.Error, e:
         logging.warn("Failed on query nr %s; for reason %s" % (query, e))
