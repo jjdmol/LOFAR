@@ -20,6 +20,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include "gpu_wrapper.h"
 
@@ -362,9 +363,9 @@ namespace LOFAR
       {
       }
 
-      void *DeviceMemory::get() const
+      CUdeviceptr DeviceMemory::get() const
       {
-        return (void *)_impl->get(); // not sure void * is a reasonble idea for a dev "ptr"
+        return _impl->get(); 
       }
 
       size_t DeviceMemory::size() const
@@ -581,7 +582,7 @@ namespace LOFAR
       {
         _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
                                hostMem.get<void *>(),
-                               hostMem.size());
+                               hostMem.size());  // TODO: This might fail silently if the size is larger as the dev memory
         if (synchronous) {
           synchronize();
         }

@@ -27,6 +27,7 @@
 #include <CoInterface/Parset.h>
 
 #include "gpu_wrapper.h"
+#include "CudaRuntimeCompiler.h"
 
 namespace LOFAR
 {
@@ -37,7 +38,10 @@ namespace LOFAR
      * makes it the active context.
      * srcFilename cannot be an absolute path.
      */
-    gpu::Module createProgram(const Parset &ps, gpu::Context &context, std::vector<std::string> &targets, const std::string &srcFilename);
+    gpu::Module createProgram( gpu::Context &context, std::vector<std::string> &targets,
+      const std::string &srcFilename, 
+      CudaRuntimeCompiler::flags_type flags,
+      CudaRuntimeCompiler::definitions_type definitions );
   }
 }
 
