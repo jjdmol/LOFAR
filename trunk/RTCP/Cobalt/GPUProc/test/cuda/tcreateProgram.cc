@@ -53,9 +53,6 @@ int main(int argc, char *argv[]) {
   // input_types.
   CudaRuntimeCompiler::flags_type flags = CudaRuntimeCompiler::defaultFlags();
   CudaRuntimeCompiler::definitions_type definitions = CudaRuntimeCompiler::defaultDefinitions();
-#ifdef LOFAR_DEBUG
-  flags.insert("source-in-ptx");
-#endif
   definitions["NR_BITS_PER_SAMPLE"]= boost::lexical_cast<string>(ps.nrBitsPerSample());
   definitions["SUBBAND_BANDWIDTH"]= boost::lexical_cast<string>(ps.subbandBandwidth()).append("f");
   definitions["NR_SUBBANDS"]= boost::lexical_cast<string>(ps.nrSubbands());
