@@ -23,13 +23,11 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include <boost/lexical_cast.hpp>
 
 #include <CoInterface/Parset.h>
 #include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/createProgram.h>
-
-
-#include <boost/lexical_cast.hpp>
+#include <GPUProc/gpu_utils.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <GPUProc/global_defines.h>
 

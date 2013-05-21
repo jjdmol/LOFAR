@@ -26,7 +26,6 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenMP_Support.h>
-#include <GPUProc/createProgram.h>
 #include <GPUProc/WorkQueues/UHEP_WorkQueue.h>
 
 namespace LOFAR

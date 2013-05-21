@@ -25,7 +25,6 @@
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/OpenMP_Support.h>
-#include <GPUProc/createProgram.h>
 #include <GPUProc/WorkQueues/BeamFormerWorkQueue.h>
 
 namespace LOFAR

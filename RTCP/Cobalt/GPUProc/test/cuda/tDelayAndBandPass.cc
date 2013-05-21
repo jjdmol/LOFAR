@@ -20,15 +20,17 @@
 
 #include <lofar_config.h>
 
-#include <string>
 #include <cstdlib>
-#include <sstream>
 #include <cmath> 
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
-#include <GPUProc/cuda/gpu_wrapper.h>
-#include <Common/Exception.h>
-#include <GPUProc/createProgram.h>
+#include <string>
+#include <sstream>
 #include <typeinfo>
+
+#include <Common/Exception.h>
+
+#include <GPUProc/gpu_wrapper.h>
+#include <GPUProc/gpu_utils.h>
+#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt::gpu;

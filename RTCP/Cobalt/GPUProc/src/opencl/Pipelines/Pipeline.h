@@ -32,7 +32,6 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenMP_Support.h>
 #include <GPUProc/gpu_incl.h>
-#include <GPUProc/createProgram.h>
 #include <GPUProc/WorkQueues/WorkQueue.h>
 #include <GPUProc/PerformanceCounter.h>
 
