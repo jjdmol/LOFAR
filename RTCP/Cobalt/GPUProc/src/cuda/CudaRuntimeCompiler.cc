@@ -17,6 +17,7 @@
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
+
 #include <lofar_config.h>
 
 #include "cuda_runtime.h"
@@ -151,3 +152,4 @@ namespace CudaRuntimeCompiler
     return CudaRuntimeCompiler::compileToPtx(pathToCuFile, defaultFlags(), defaultDefinitions());
   };
 }
+

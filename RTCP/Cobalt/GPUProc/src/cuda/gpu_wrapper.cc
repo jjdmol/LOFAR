@@ -20,15 +20,15 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 #include "gpu_wrapper.h"
 
 #include <string>
-#include <iostream> // tmptmptmp
 #include <algorithm>  // for std::min
 
 #include <boost/noncopyable.hpp>
+
+#include <Common/LofarLogger.h>
 
 // Convenience macro to call a CUDA Device API function and throw a
 // CUDAException if an error occurred.
@@ -363,9 +363,9 @@ namespace LOFAR
       {
       }
 
-      CUdeviceptr DeviceMemory::get() const
+      void *DeviceMemory::get() const
       {
-        return _impl->get(); 
+        return (void *)_impl->get();
       }
 
       size_t DeviceMemory::size() const
@@ -580,9 +580,16 @@ namespace LOFAR
                                const HostMemory &hostMem,
                                bool synchronous)
       {
+        // tmp check: avoid async writeBuffer request that will fail later.
+        // This interface may still change at which point a cleaner solution can be used.
+        if (hostMem.size() > devMem.size())
+        {
+          THROW(CUDAException, "writeBuffer(): host buffer too large for device buffer");
+        }
+
         _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
                                hostMem.get<void *>(),
-                               hostMem.size());  // TODO: This might fail silently if the size is larger as the dev memory
+                               hostMem.size());
         if (synchronous) {
           synchronize();
         }
@@ -592,6 +599,13 @@ namespace LOFAR
                               const DeviceMemory &devMem,
                               bool synchronous)
       {
+        // tmp check: avoid async writeBuffer request that will fail later.
+        // This interface may still change at which point a cleaner solution can be used.
+        if (devMem.size() > hostMem.size())
+        {
+          THROW(CUDAException, "readBuffer(): device buffer too large for host buffer");
+        }
+
         _impl->memcpyDtoHAsync(hostMem.get<void *>(), 
                                (CUdeviceptr)devMem.get(),
                                devMem.size());
