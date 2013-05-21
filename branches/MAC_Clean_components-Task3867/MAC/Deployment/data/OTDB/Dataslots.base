@@ -8,6 +8,5 @@ node   Dataslots     4.0.0  development 'node constraint'  "Placeholder for data
 
 #    name                    dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-#par  @stationName@@antennaFieldName@    I    text   -      10    0    ""       -     "dataslots in use for this antennafield"
 uses  DataslotInfo    4.0.0  development '1'		       "Dataslot (beamlet) allocation"
 

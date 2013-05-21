@@ -12,11 +12,7 @@ node  VirtualInstrument        4.0.0  development 'node constraint'  "VirtualIns
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #-------------------------------------------------------------------------------------------------------
-par stationList              I    vtext   -      10    0     '[]'     -   'list of all used stations, eg. [CS001,CS016]'
-par partitionList            I    vtext   -      10    0     '["R00"]'                         -   'list of the used BG/P partitions'
-par storageNodeList          I    vtext   -      10    100   '[]'        -   'list of all used StorageNodes'
-par imageNodeList            I    vtext   -      10    100   '[]'                            -   'list of all used ImageNodes'
-par storageCapacity          I    int    DISK   10    100    760                           -   'total available StorageCapacity'
-par stationSet		     I	  text   -      10    0      ""	                           -   'MOM stationset'
-par minimalNrStations        I    int    -      10    0      1                             -   'MOM minimal nr stations needed'
-
+par stationList              I    vtext   -      10    0     '[]'                    -   'list of all used stations, eg. [CS001,CS016]'
+par partitionList            I    vtext   -      10    0     '["R00"]'               -   'list of the used BG/P partitions'
+par stationSet		     I	  text    -      10    0      ""	             -   'Predefined stationset, e.g. Custom or Dutch'
+par minimalNrStations        I    int     -      10    0      1                      -   'the minimum number of stations needed'

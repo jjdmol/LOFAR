@@ -19,19 +19,5 @@ node  DataProducts     4.0.2  development 'node constraint'  "Place holder for a
 #--------------------------------------------------------------------------------------------------------
 #    name                         dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-# par  nrOfOutput_Correlated_    	  I      int     -       10    0    0                      -     'Number of Correlated DataProducts'
-# par  nrOfOutput_Beamformed_   	  I      int     -       10    0    0                      -     'Number of Beamformed DataProducts'
-# par  nrOfOutput_InstrumentModels_ I      int     -       10    0    0                      -     'Number of InstrumentModel DataProducts'
-# par  nrOfOutput_SkyImages_   	  I      int     -       10    0    0                      -     'Number of SkyImage DataProducts'
-
-
-
-
-#    name              		dir.    type   unit     prun.   vm      value   constr. descr.
-#--------------------------------------------------------------------------------------------------------
 uses  @inputdataproduct@    4.0.2  development 'node constraint'  "Storage settings for @inputdataproduct@ type"
 uses  @outputdataproduct@   4.0.2  development 'node constraint'  "Storage settings for @outputdataproduct@ type"
-# uses  Output_Correlated_	4.0.0  development 'node constraint'  "Storage settings for Correlated dataProduct type"
-# uses  Output_Beamformed_	4.0.0  development 'node constraint'  "Storage settings for Beamformed dataProduct type"
-# uses  Output_InstrumentModel_	4.0.0  development 'node constraint'  "Storage settings for InstrumentModel dataProduct type"
-# uses  Output_SkyImage_		4.0.0  development 'node constraint'  "Storage settings for SkyImage dataProduct type"

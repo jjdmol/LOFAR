@@ -15,7 +15,6 @@ par  inspectionProgram 	I    text   -     100	0	'launch-msplots.sh'		-	"Script t
 par  inspectionHost	    I    text   -     100	0	'lhn001'				-	"Machine the inspection-script should be started"
 
 
-uses  ApplCtrl      4.0.0  development 1                  "The ACC controller"
 uses  CorrAppl      4.0.0  development 1                  "CN Application"
 uses  OLAP          4.0.3  development 1                  "OLAP specific information"
 
