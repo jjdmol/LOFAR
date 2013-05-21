@@ -18,7 +18,7 @@
 //#
 //# $Id$
 
-#include "lofar_config.h"
+#include <lofar_config.h>
 
 #include "UHEP_TransposeKernel.h"
 
