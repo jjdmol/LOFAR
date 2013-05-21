@@ -203,7 +203,7 @@ namespace LOFAR
         DeviceMemory(size_t size);
 
         // Return a device pointer as a handle to the memory.
-        CUdeviceptr get() const;
+        void *get() const;
 
         // Return the size of this memory block.
         size_t size() const;
