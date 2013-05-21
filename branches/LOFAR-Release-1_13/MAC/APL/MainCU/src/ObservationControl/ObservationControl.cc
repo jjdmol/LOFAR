@@ -502,6 +502,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildsInError = 0;
 			itsStartTimer    = 0;
 			LOG_INFO("Requesting all childs to go operation state");
+			itsQuitReason = CT_RESULT_NO_ERROR;		// clear startup errors.
 			itsChildControl->requestState(CTState::RESUMED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
