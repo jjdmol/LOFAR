@@ -1,4 +1,4 @@
-//# OpenCL_Support.h
+//# Buffers.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_OPENCL_OPENCL_SUPPORT_H
-#define LOFAR_GPUPROC_OPENCL_OPENCL_SUPPORT_H
+#ifndef LOFAR_GPUPROC_OPENCL_BUFFERS_H
+#define LOFAR_GPUPROC_OPENCL_BUFFERS_H
 
 #include <CoInterface/Allocator.h>
 #include <CoInterface/MultiDimArray.h>
@@ -30,10 +30,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-    extern std::string errorMessage(cl_int error);
-    extern void createContext(cl::Context &, std::vector<cl::Device> &);
-    extern cl::Program createProgram(cl::Context &, std::vector<cl::Device> &, const char *sources, const char *args);
 
     // A buffer on the GPU (device), to which CPU (host) buffers can be attached.
     class DeviceBuffer
@@ -184,16 +180,6 @@ namespace LOFAR
       using HostBuffer::deviceToHost;
       using DeviceBuffer::operator cl::Buffer&;
     };
-
-    namespace OpenCL_Support
-    {
-      // The sole purpose of this function is to extract detailed error
-      // information if a cl::Error was thrown. Since we want the complete
-      // backtrace, we cannot simply try-catch in main(), because that would
-      // unwind the stack. The only option we have is to use our own terminate
-      // handler.
-      void terminate();
-    }
 
   } // namespace Cobalt
 } // namespace LOFAR

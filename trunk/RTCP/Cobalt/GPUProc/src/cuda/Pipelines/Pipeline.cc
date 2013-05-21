@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
 
-#include <GPUProc/OpenCL_Support.h>
+#include <GPUProc/Buffers.h>
 #include <GPUProc/createProgram.h>
 
 #if 0

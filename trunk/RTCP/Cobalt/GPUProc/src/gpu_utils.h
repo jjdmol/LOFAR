@@ -1,5 +1,6 @@
-//# FFT_Plan.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# gpu_utils.h
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,28 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_FFT_PLAN_H
-#define LOFAR_GPUPROC_CUDA_FFT_PLAN_H
+// \file
+// Support functions for GPU device selection, context, program management.
 
-#include <CoInterface/Parset.h>
+#ifndef LOFAR_GPU_UTILS_H
+#define LOFAR_GPU_UTILS_H
 
-#include <GPUProc/gpu_wrapper.h>
-//#include <OpenCL_FFT/clFFT.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-
-    class FFT_Plan
-    {
-    public:
-      FFT_Plan(gpu::Context &context, unsigned fftSize);
-      ~FFT_Plan();
-      //clFFT_Plan plan;
-    };
-  }
-}
+#if defined (USE_CUDA)
+# include "cuda/gpu_utils.h"
+#elif defined (USE_OPENCL)
+# include "opencl/gpu_utils.h"
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

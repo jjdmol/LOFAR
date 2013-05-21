@@ -27,7 +27,7 @@
 
 #include <Common/SystemUtil.h>
 #include <GPUProc/global_defines.h>
-#include "OpenCL_Support.h"
+#include "gpu_utils.h"
 
 namespace LOFAR
 {

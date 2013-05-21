@@ -1,4 +1,4 @@
-//# OpenCL_Support.h
+//# Buffers.h
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -20,19 +20,19 @@
 //# $Id$
 
 // \file
-// Include the right GPU API include with our options.
+// Support for our GPU processing buffer types.
 
-#ifndef LOFAR_GPUPROC_OPENCL_SUPPORT_H
-#define LOFAR_GPUPROC_OPENCL_SUPPORT_H
+#ifndef LOFAR_GPUPROC_BUFFERS_H
+#define LOFAR_GPUPROC_BUFFERS_H
 
 #if defined (USE_CUDA) && defined (USE_OPENCL)
 # error "Either CUDA or OpenCL must be enabled, not both"
 #endif
 
 #if defined (USE_CUDA)
-# include "cuda/OpenCL_Support.h"
+# include "cuda/Buffers.h"
 #elif defined (USE_OPENCL)
-# include "opencl/OpenCL_Support.h"
+# include "opencl/Buffers.h"
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

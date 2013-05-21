@@ -1,5 +1,5 @@
-//# FFT_Plan.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# gpu_utils.h
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,28 +18,34 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_FFT_PLAN_H
-#define LOFAR_GPUPROC_CUDA_FFT_PLAN_H
-
-#include <CoInterface/Parset.h>
-
-#include <GPUProc/gpu_wrapper.h>
-//#include <OpenCL_FFT/clFFT.h>
+#ifndef LOFAR_GPUPROC_OPENCL_GPU_UTILS_H
+#define LOFAR_GPUPROC_OPENCL_GPU_UTILS_H
 
 namespace LOFAR
 {
   namespace Cobalt
   {
 
-    class FFT_Plan
+    std::string errorMessage(cl_int error);
+
+    void createContext(cl::Context &, std::vector<cl::Device> &);
+
+    cl::Program createProgram(cl::Context &, std::vector<cl::Device> &,
+                              const char *sources, const char *args);
+
+
+    namespace gpu_utils
     {
-    public:
-      FFT_Plan(gpu::Context &context, unsigned fftSize);
-      ~FFT_Plan();
-      //clFFT_Plan plan;
-    };
-  }
-}
+      // The sole purpose of this function is to extract detailed error
+      // information if a cl::Error was thrown. Since we want the complete
+      // backtrace, we cannot simply try-catch in main(), because that would
+      // unwind the stack. The only option we have is to use our own terminate
+      // handler.
+      void terminate();
+    }
+
+  } // namespace Cobalt
+} // namespace LOFAR
 
 #endif
 
