@@ -30,7 +30,7 @@
 #include <CoInterface/SmartPtr.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/OpenMP_Support.h>
+#include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/gpu_incl.h>
 #include <GPUProc/WorkQueues/WorkQueue.h>
 #include <GPUProc/PerformanceCounter.h>
