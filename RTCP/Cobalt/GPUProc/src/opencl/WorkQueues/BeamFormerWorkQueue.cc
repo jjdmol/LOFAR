@@ -27,7 +27,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/OpenMP_Support.h>
+#include <GPUProc/OpenMP_Lock.h>
 
 namespace LOFAR
 {

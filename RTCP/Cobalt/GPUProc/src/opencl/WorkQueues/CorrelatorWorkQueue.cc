@@ -27,7 +27,7 @@
 
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/OpenMP_Support.h>
+#include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
 

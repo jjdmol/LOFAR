@@ -1,4 +1,4 @@
-//# OpenMP_Support.h
+//# OpenMP_Lock.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_OPENMP_SUPPORT_H
-#define LOFAR_GPUPROC_OPENMP_SUPPORT_H
+#ifndef LOFAR_GPUPROC_OPENMP_LOCK_H
+#define LOFAR_GPUPROC_OPENMP_LOCK_H
 
 #include <omp.h>
 

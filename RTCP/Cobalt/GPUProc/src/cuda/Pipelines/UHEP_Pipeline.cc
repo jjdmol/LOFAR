@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/OpenMP_Support.h>
+#include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/WorkQueues/UHEP_WorkQueue.h>
 
 namespace LOFAR

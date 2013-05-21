@@ -52,7 +52,7 @@
 #include <InputProc/Transpose/MPISendStation.h>
 
 #include "global_defines.h"
-#include "OpenMP_Support.h"
+#include "OpenMP_Lock.h"
 #include "gpu_wrapper.h"
 #include "Buffers.h"
 #include "Pipelines/CorrelatorPipeline.h"
