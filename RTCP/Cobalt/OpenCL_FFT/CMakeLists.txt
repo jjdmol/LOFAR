@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 17975 2011-05-10 09:52:51Z mol $
+# $Id$
 
 lofar_package(OpenCL_FFT 1.0)
 

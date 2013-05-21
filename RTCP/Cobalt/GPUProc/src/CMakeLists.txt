@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 17003 2011-01-06 08:54:59Z romein $
+# $Id$
 
 include(LofarPackageVersion)
 
