@@ -29,9 +29,6 @@
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
-// Use our own terminate handler
-//Exception::TerminateHandler t(OpenCL_Support::terminate);
-
 int main()
 {
 

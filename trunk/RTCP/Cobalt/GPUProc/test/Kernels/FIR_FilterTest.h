@@ -1,8 +1,29 @@
+//# FIR_FilterTest.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id$
+
 #ifndef GPUPROC_FIR_FILTERTEST_H
 #define GPUPROC_FIR_FILTERTEST_H
+
 #include "CL/cl.hpp"
 #include "Interface/Parset.h"
-#include "OpenCL_Support.h"
+#include "Buffers.h"
 #include "UnitTest.h"
 #include "global_defines.h"
 #include <complex>
@@ -165,8 +186,8 @@ namespace LOFAR
                 filteredData.deviceToHost(CL_TRUE);
 
                 nrErrors = 0;
-				for (station = 0; station < ps.nrStations(); station++) {
-				    for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+                for (station = 0; station < ps.nrStations(); station++) {
+                    for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
                         for (sample = 0; sample < ps.nrSamplesPerChannel(); sample++) {
                             for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
                                 // Expected sum must also be scaled by 2 and 3, because weights are real only.
