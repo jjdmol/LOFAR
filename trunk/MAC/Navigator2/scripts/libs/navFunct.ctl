@@ -2323,7 +2323,7 @@ dyn_string navFunct_getInputBuffersForObservation(string obsName) {
   string extra = "";
   
   for (int i=1; i<=dynlen(ioNodeList);i++) {
-    if (ioNodeList[i]<10) {
+    if ((int)ioNodeList[i]<10) {
       extra = "0";
     } else {
       extra = "";
