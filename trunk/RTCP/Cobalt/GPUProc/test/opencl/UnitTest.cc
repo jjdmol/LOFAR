@@ -23,8 +23,7 @@
 #include "UnitTest.h"
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/OpenCL_Support.h>
-#include <GPUProc/createProgram.h>
+#include <GPUProc/gpu_utils.h>
 
 namespace LOFAR
 {

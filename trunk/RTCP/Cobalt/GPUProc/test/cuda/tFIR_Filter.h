@@ -1,4 +1,4 @@
-//# FIR_FilterTest.h
+//# FIR_Filter.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -44,16 +44,13 @@ typedef signed char SampleType;
 #error unsupported NR_BITS_PER_SAMPLE
 #endif
 
-#include <iostream>
+#include <cstdlib> 
 #include <string>
-#include <sstream>
-
 #include <iostream>
-#include <stdlib.h> 
 #include <sstream>
 #include <fstream>
-#include <cuda.h>
 #include <exception>
+#include <cuda.h>
 
 extern cudaError_t FIR_filter_wrapper(float *DevFilteredData,
   float const *DevSampledData,

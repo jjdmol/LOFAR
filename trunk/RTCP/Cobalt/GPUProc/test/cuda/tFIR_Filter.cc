@@ -1,4 +1,4 @@
-//# FIR_FilterTest.cc
+//# FIR_Filter.cc
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,13 +18,12 @@
 //#
 //# $Id$
 
+#include "tFIR_Filter.h"
+
 #include <iostream>
 #include <stdlib.h> 
-
-#include "tFIR_Filter.h"
 #include <sstream>
 #include <fstream>
-#include <cuda_runtime.h>
 #include <cuda.h>
 
 using namespace LOFAR;

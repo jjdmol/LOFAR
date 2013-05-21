@@ -36,7 +36,6 @@
 #include <InputProc/Transpose/MPIReceiveStations.h>
 
 #include <GPUProc/OpenMP_Support.h>
-#include <GPUProc/createProgram.h>
 #include <GPUProc/WorkQueues/WorkQueue.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 

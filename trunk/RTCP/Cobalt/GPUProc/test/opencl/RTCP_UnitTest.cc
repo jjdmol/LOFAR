@@ -28,7 +28,8 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/OpenCL_Support.h>
+#include <GPUProc/Buffers.h>
+#include <GPUProc/gpu_utils.h>
 
 #include <UnitTest.h>
 #include "Kernels/IncoherentStokesTest.h"
@@ -53,7 +54,7 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
 // Use our own terminate handler
-Exception::TerminateHandler t(OpenCL_Support::terminate);
+Exception::TerminateHandler t(gpu::terminate);
 
 int main(int argc, char **argv)
 {

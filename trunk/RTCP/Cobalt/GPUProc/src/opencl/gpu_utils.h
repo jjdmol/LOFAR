@@ -21,28 +21,27 @@
 #ifndef LOFAR_GPUPROC_OPENCL_GPU_UTILS_H
 #define LOFAR_GPUPROC_OPENCL_GPU_UTILS_H
 
+#include <string>
+#include <vector>
+
+#include <CoInterface/Parset.h>
+
+#include "gpu_incl.h"
+
 namespace LOFAR
 {
   namespace Cobalt
   {
 
-    std::string errorMessage(cl_int error);
-
     void createContext(cl::Context &, std::vector<cl::Device> &);
 
+
+    cl::Program createProgram(const Parset &ps, cl::Context &context,
+                              std::vector<cl::Device> &devices,
+                              const char *sources);
+    // called by the above ("internal").
     cl::Program createProgram(cl::Context &, std::vector<cl::Device> &,
                               const char *sources, const char *args);
-
-
-    namespace gpu_utils
-    {
-      // The sole purpose of this function is to extract detailed error
-      // information if a cl::Error was thrown. Since we want the complete
-      // backtrace, we cannot simply try-catch in main(), because that would
-      // unwind the stack. The only option we have is to use our own terminate
-      // handler.
-      void terminate();
-    }
 
   } // namespace Cobalt
 } // namespace LOFAR

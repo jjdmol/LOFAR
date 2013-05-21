@@ -26,7 +26,7 @@
 #include <Common/lofar_iomanip.h>
 
 #include <GPUProc/Buffers.h>
-#include <GPUProc/createProgram.h>
+#include <GPUProc/gpu_utils.h>
 
 #if 0
 #include <boost/format.hpp>

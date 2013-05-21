@@ -1,4 +1,4 @@
-//# createProgram.cc
+//# gpu_utils.cc
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <GPUProc/createProgram.h>
+#include "gpu_utils.h"
 
 #include <cstdlib>
 #include <sys/types.h>
@@ -47,6 +47,7 @@ namespace LOFAR
   namespace Cobalt
   {
     using namespace std;
+
     gpu::Module createProgram(gpu::Context &context, vector<string> &targets, const string &srcFilename, 
       CudaRuntimeCompiler::flags_type flags, CudaRuntimeCompiler::definitions_type definitions )
     {

@@ -53,7 +53,7 @@
 
 #include "global_defines.h"
 #include "OpenMP_Support.h"
-#include "gpu_utils.h"
+#include "gpu_wrapper.h"
 #include "Buffers.h"
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
@@ -66,7 +66,7 @@ using namespace std;
 using boost::format;
 
 // Use our own terminate handler
-Exception::TerminateHandler t(gpu_utils::terminate);
+Exception::TerminateHandler t(gpu::terminate);
 
 void usage(char **argv)
 {
