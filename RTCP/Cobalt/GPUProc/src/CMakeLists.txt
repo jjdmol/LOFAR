@@ -65,8 +65,8 @@ endif()
 if(USE_OPENCL)
   list(APPEND _gpuproc_sources 
     #opencl/gpu_wrapper.cc
+    opencl/gpu_utils.cc
     opencl/createProgram.cc
-    opencl/OpenCL_Support.cc
     opencl/PerformanceCounter.cc
     opencl/Kernels/Kernel.cc
     opencl/Kernels/BeamFormerKernel.cc

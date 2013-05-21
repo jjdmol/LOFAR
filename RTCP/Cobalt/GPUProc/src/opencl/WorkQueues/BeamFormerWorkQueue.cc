@@ -28,7 +28,6 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenMP_Support.h>
-#include <GPUProc/OpenCL_Support.h>
 
 namespace LOFAR
 {
