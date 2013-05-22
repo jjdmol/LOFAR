@@ -69,8 +69,8 @@ Exception::TerminateHandler t(Exception::terminate);
 const size_t clockMHz = 200;
 const size_t clockHz = clockMHz * 1000 * 1000;
 typedef SampleType<i16complex> SampleT;
-const TimeStamp from(time(0L) + 10, 0, clockHz);
-const TimeStamp to(time(0L) + 10 + DURATION, 0, clockHz);
+TimeStamp from;
+TimeStamp to;
 const size_t blockSize = BLOCKSIZE * clockHz / 1024;
 map<int, std::vector<size_t> > beamletDistribution;
 const size_t nrHistorySamples = 16;
@@ -94,6 +94,15 @@ void sender()
   struct StationID stationID(str(format("CS%03d") % rank), "LBA", clockMHz, 16);
   struct BufferSettings settings(stationID, false);
 
+  // sync readers and writers to prevent data loss
+  // if the reader is delayed w.r.t. the generator
+
+  SmartPtr<SyncLock> syncLock;
+
+  syncLock = new SyncLock(settings);
+  settings.syncLock = syncLock;
+  settings.sync = true;
+
   omp_set_nested(true);
   //omp_set_num_threads(32);
   OMPThread::init();
@@ -115,9 +124,11 @@ void sender()
     }
   }
 
+  removeSampleBuffers(settings);
+
   MultiPacketsToBuffer station( settings, inputStreams );
   PacketFactory factory( settings );
-  Generator generator( settings, outputStreams, factory );
+  Generator generator( settings, outputStreams, factory, from - nrHistorySamples, to );
 
   #pragma omp parallel sections
   {
@@ -192,7 +203,7 @@ void receiver()
     // validate meta data
     for (int s = 0; s < nrStations; ++s) {
       for (size_t b = 0; b < nrBeamlets; ++b) {
-        ASSERT(blocks[s].beamlets[b].metaData.flags == metaData.flags);
+        ASSERTSTR(blocks[s].beamlets[b].metaData.flags == metaData.flags, "Got flags " << blocks[s].beamlets[b].metaData.flags << " but expected flags " << metaData.flags);
       }
     }
 
@@ -232,6 +243,12 @@ int main( int argc, char **argv )
 
   // Need at least one sender and one receiver
   ASSERT( nrHosts >= 2 );
+
+  // agree on the start time
+  time_t now = time(0L);
+  MPI_Bcast(&now, sizeof now, MPI_CHAR, 0, MPI_COMM_WORLD);
+  from = TimeStamp(now + 5, 0, clockHz);
+  to   = TimeStamp(now + 5 + DURATION, 0, clockHz);
 
   // Use half of the nodes as stations
   nrStations = nrHosts/2;

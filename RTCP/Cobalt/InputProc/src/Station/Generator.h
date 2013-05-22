@@ -44,7 +44,7 @@ namespace LOFAR
     class Generator : public RSPBoards
     {
     public:
-      Generator( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &outputStreams, PacketFactory &packetFactory );
+      Generator( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &outputStreams, PacketFactory &packetFactory, const TimeStamp &from, const TimeStamp &to );
 
     protected:
       const BufferSettings settings;
@@ -52,6 +52,8 @@ namespace LOFAR
       PacketFactory &packetFactory;
 
       std::vector<size_t> nrSent;
+
+      const TimeStamp from, to;
 
       virtual void processBoard( size_t nr );
       virtual void logStatistics();
