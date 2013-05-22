@@ -52,8 +52,6 @@
 
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
-#include "gpu_wrapper.h"
-#include "Buffers.h"
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
