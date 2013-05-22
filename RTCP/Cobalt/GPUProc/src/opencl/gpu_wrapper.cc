@@ -23,6 +23,8 @@
 
 #include "gpu_wrapper.h"
 
+#include <iostream>
+
 #include <Common/Exception.h>
 #include <Common/Thread/Mutex.h>
 

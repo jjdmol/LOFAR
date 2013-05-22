@@ -24,8 +24,7 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
-#include <iomanip>
+#include <iomanip> // std::setprecision()
 #include <fstream>
 #include <sstream>
 
