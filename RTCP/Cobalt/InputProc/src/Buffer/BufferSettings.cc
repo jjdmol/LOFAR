@@ -103,6 +103,12 @@ namespace LOFAR
     {
       str << s.station << " beamlets: " << (s.nrBoards * s.nrBeamletsPerBoard) << " buffer: " << (1.0 * s.nrSamples / s.station.clockMHz / 1000000 * 1024) << "s";
 
+      if (s.sync) {
+        str << " [r/w sync]";
+      } else {
+        str << " [realtime]";
+      }
+
       return str;
     }
 
