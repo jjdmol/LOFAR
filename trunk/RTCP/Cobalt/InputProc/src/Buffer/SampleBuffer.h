@@ -132,6 +132,10 @@ namespace LOFAR
 
       std::vector<Board> boards;
     };
+
+    // Removes the sample buffers that correspond to settings.dataKey,
+    // as well as any sample buffer that refers to the same station.
+    void removeSampleBuffers( const BufferSettings &settings );
   }
 }
 

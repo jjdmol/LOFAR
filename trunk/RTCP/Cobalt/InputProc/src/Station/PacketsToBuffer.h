@@ -54,7 +54,7 @@ namespace LOFAR
     public:
       // cleanup: if true, erase any existing SHM areas corresponding to our
       // station.
-      PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr, bool cleanup = true );
+      PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr );
 
       // Process data for this board until interrupted or end of data. Auto-senses
       // mode (bit mode & clock).

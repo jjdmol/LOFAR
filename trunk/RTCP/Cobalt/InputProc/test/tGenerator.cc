@@ -69,8 +69,10 @@ int main( int, char **argv )
   struct StationID stationID("RS106", "LBA", 200, 16);
   struct BufferSettings settings(stationID, false);
 
+  const TimeStamp from(time(0), 0, stationID.clockMHz * 1000000);
+  const TimeStamp to = from + NUMPACKETS * 16; /* 16 timeslots/packet */
   PacketFactory factory(settings);
-  Generator g(settings, outputStreams, factory);
+  Generator g(settings, outputStreams, factory, from, to);
 
   bool error = false;
 
