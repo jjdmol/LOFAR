@@ -49,6 +49,36 @@ namespace LOFAR
     namespace gpu
     {
 
+      std::string cufftErrorMessage(cufftResult errcode)
+      {
+        switch (errcode) {
+        case CUFFT_SUCCESS:
+          return "Success";
+        case CUFFT_INVALID_PLAN:
+          return "Invalid plan";
+        case CUFFT_ALLOC_FAILED:
+          return "Failed to allocate CPU or GPU memory";
+        case CUFFT_INVALID_TYPE: // no longer used
+          return "Invalid type";
+        case CUFFT_INVALID_VALUE:
+          return "Invalid pointer or parameter";
+        case CUFFT_INTERNAL_ERROR:
+          return "Driver or internal cuFFT error";
+        case CUFFT_EXEC_FAILED:
+          return "Failed to execute FFT kernel";
+        case CUFFT_SETUP_FAILED:
+          return "Failed to initialise cuFFT library";
+        case CUFFT_INVALID_SIZE:
+          return "Invalid transform size";
+        case CUFFT_UNALIGNED_DATA: // no longer used
+          return "Data not properly aligned";
+        default:
+          std::stringstream str;
+          str << "Unknown error (" << errcode << ")";
+          return str.str();
+        }
+      }
+
       std::string errorMessage(CUresult errcode)
       {
         switch (errcode) {
@@ -568,6 +598,11 @@ namespace LOFAR
           checkCuCall(cuEventRecord(event, _stream));
         }
 
+        CUstream get() const
+        {
+          return _stream;
+        }
+
       private:
         CUstream _stream;
       };
@@ -641,6 +676,11 @@ namespace LOFAR
       void Stream::recordEvent(const Event &event)
       {
         _impl->recordEvent(event._impl->_event);
+      }
+
+      CUstream Stream::get() const
+      {
+        return _impl->get();
       }
 
 

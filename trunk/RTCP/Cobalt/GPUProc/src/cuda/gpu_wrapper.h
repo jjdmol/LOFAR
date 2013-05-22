@@ -36,6 +36,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include "gpu_incl.h" // ideally, this goes into the .cc, but too much leakage
+#include <cufft.h>
 
 #include <GPUProc/gpu_wrapper.h> // GPUException
 
@@ -47,11 +48,17 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    // Needed for friend declaration in gpu::Stream
+    class FFT_Plan;
+
     namespace gpu
     {
 
       // Exception class for CUDA errors.
       EXCEPTION_CLASS(CUDAException, GPUException);
+
+      // Return the cuFFT error string associated with \a errcode.
+      std::string cufftErrorMessage(cufftResult errcode);
 
       // Return the CUDA error string associated with \a errcode.
       std::string errorMessage(CUresult errcode);
@@ -404,6 +411,11 @@ namespace LOFAR
         void recordEvent(const Event &event);
 
       private:
+        friend class LOFAR::Cobalt::FFT_Plan;
+
+        // Return the underlying CUDA stream.
+        CUstream get() const;
+
         // Non-copyable implementation class.
         class Impl;
 
