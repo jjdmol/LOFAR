@@ -179,7 +179,7 @@ int main() {
 
     // Check for our frequency response
     for (int i = 0; i < fftSize; i++) {
-      if (i == (unsigned)floor(freq) || i == (unsigned)ceil(freq)) {
+      if (i == (int)floor(freq) || i == (int)ceil(freq)) {
         /*
         if (!cmp_fcomplex(inout.get<fcomplex>()[i], fcomplex(amplitude * (float)fftSize, 0.0f))) {
           nrErrors += 1;
