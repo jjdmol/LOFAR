@@ -1,4 +1,4 @@
-//# cuda_math.h: Functions and operators for CUDA-specific types.
+//# gpu_math.cuh: Functions and operators for CUDA-specific types.
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -19,10 +19,10 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_MATH_H
-#define LOFAR_GPUPROC_CUDA_MATH_H
+#ifndef LOFAR_GPUPROC_CUDA_GPU_MATH_CUH
+#define LOFAR_GPUPROC_CUDA_GPU_MATH_CUH
 
-// \file cuda/cuda_math.h
+// \file cuda/gpu_math.cuh
 // Functions and operators for CUDA-specific types.
 // This file contains functions and operators for CUDA-specific types, like
 // float4. Only a minimal set of operators is provided, the ones that are
@@ -37,45 +37,45 @@
 
 extern "C" {
 
-__device__ float4 operator + (float4 a, float4 b)
+inline __device__ float4 operator + (float4 a, float4 b)
 {
   return make_float4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
 }
 
-__device__ float4 operator - (float4 a, float4 b)
+inline __device__ float4 operator - (float4 a, float4 b)
 {
   return make_float4(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
 }
 
-__device__ float4 operator * (float4 a, float4 b)
+inline __device__ float4 operator * (float4 a, float4 b)
 {
   return make_float4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
 }
 
-__device__ float4 operator / (float4 a, float4 b)
+inline __device__ float4 operator / (float4 a, float4 b)
 {
   return make_float4(a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w);
 }
 
-__device__ float4& operator += (float4 &a, float4 b)
+inline __device__ float4& operator += (float4 &a, float4 b)
 {
   a.x += b.x; a.y += b.y; a.z += b.z; a.w += b.w;
   return a;
 }
 
-__device__ float4& operator -= (float4 &a, float4 b)
+inline __device__ float4& operator -= (float4 &a, float4 b)
 {
   a.x -= b.x; a.y -= b.y; a.z -= b.z; a.w -= b.w;
   return a;
 }
 
-__device__ float4& operator *= (float4 &a, float4 b)
+inline __device__ float4& operator *= (float4 &a, float4 b)
 {
   a.x *= b.x; a.y *= b.y; a.z *= b.z; a.w *= b.w;
   return a;
 }
 
-__device__ float4& operator /= (float4 &a, float4 b)
+inline __device__ float4& operator /= (float4 &a, float4 b)
 {
   a.x /= b.x; a.y /= b.y; a.z /= b.z; a.w /= b.w;
   return a;
