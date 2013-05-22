@@ -48,6 +48,9 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    // Needed for friend declaration in gpu::Stream
+    class FFT_Plan;
+
     namespace gpu
     {
 
@@ -407,10 +410,12 @@ namespace LOFAR
         // Record the event \a event for this stream.
         void recordEvent(const Event &event);
 
-        // Return the underlying CUDA stream.
-        CUstream stream() const;
-
       private:
+        friend class LOFAR::Cobalt::FFT_Plan;
+
+        // Return the underlying CUDA stream.
+        CUstream get() const;
+
         // Non-copyable implementation class.
         class Impl;
 

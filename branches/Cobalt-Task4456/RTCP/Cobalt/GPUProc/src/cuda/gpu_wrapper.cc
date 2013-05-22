@@ -597,7 +597,7 @@ namespace LOFAR
           checkCuCall(cuEventRecord(event, _stream));
         }
 
-        CUstream stream() const
+        CUstream get() const
         {
           return _stream;
         }
@@ -663,9 +663,9 @@ namespace LOFAR
         _impl->recordEvent(event._impl->_event);
       }
 
-      CUstream Stream::stream() const
+      CUstream Stream::get() const
       {
-        return _impl->stream();
+        return _impl->get();
       }
 
 

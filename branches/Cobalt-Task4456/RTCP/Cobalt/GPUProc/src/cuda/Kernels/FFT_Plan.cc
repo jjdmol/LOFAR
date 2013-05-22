@@ -45,7 +45,7 @@ namespace LOFAR
     {
       cufftResult error;
 
-      error = cufftSetStream(plan, stream.stream());
+      error = cufftSetStream(plan, stream.get());
 
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftSetStream: " << gpu::cufftErrorMessage(error));
