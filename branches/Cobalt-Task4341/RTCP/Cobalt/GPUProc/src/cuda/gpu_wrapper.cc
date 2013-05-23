@@ -220,11 +220,30 @@ namespace LOFAR
         }
       }
 
+      int Platform::version() const
+      {
+        int version;
+        checkCuCall(cuDriverGetVersion(&version));
+        return version;
+      }
+
       size_t Platform::size() const
       {
         int nrDevices;
         checkCuCall(cuDeviceGetCount(&nrDevices));
         return (size_t)nrDevices;
+      }
+
+      std::vector<Device> Platform::devices() const
+      {
+        size_t nrDevices = size();
+
+        vector<Device> devices;
+        devices.reserve(nrDevices);
+
+        for (size_t i = 0; i < nrDevices; ++i) {
+          devices.push_back(Device(i));
+        }
       }
 
       std::string Platform::getName() const

@@ -85,6 +85,8 @@ namespace LOFAR
         unsigned int z;
       };
 
+      // Forward declaration needed by Platform::devices.
+      class Device;
 
       // This class is not strictly needed, because in CUDA there's only one
       // platform, but it hides the CUDA calls and makes it similar to OpenCL.
@@ -95,8 +97,14 @@ namespace LOFAR
         // \param flags must be 0 (at least up till CUDA 5.0).
         Platform(unsigned int flags = 0);
 
+        // The CUDA version (f.e. 5.0 -> 5000).
+        int version() const;
+
         // Returns the number of devices in the CUDA platform.
         size_t size() const;
+
+        // Returns a vector of all devies in the CUDA platform.
+        std::vector<Device> devices() const;
 
         // Returns the name of the CUDA platform. (currently, "NVIDIA CUDA")
         std::string getName() const;
