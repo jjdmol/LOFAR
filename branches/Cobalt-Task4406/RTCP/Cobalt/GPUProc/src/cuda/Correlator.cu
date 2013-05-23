@@ -578,41 +578,61 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 /*!
  * See the correlate() kernel.
  */
-__kernel void correlate_4x4(__global void *visibilitiesPtr,
-                            __global const void *correctedDataPtr
-                            )
+/* __kernel void correlate_4x4(__global void *visibilitiesPtr, */
+/*                             __global const void *correctedDataPtr */
+/*                             ) */
+__global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPtr)
 {
   VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
-  __local fcomplex2 samples[4][BLOCK_SIZE][(NR_STATIONS + 3) / 4 | 1]; // avoid power-of-2
+  __shared__ fcomplex2 samples[4][BLOCK_SIZE][(NR_STATIONS + 3) / 4 | 1]; // avoid power-of-2
 
-  uint channel = get_global_id(1) + 1;
-  uint block = get_global_id(0);
+  /* uint block = get_global_id(0); */
+  uint block = blockIdx.x * blockDim.x + threadIdx.x;
+  /* uint channel = get_global_id(1) + 1; */
+  uint channel = blockIdx.y * blockDim.y + threadIdx.y + 1;
 
-  uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2;
+  /* uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2; */
+  uint x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
   uint y = block - x * (x + 1) / 2;
 
   uint stat_A = 4 * x;
 
   bool compute_correlations = stat_A < NR_STATIONS;
 
-  float4 vis_0A_r = (float4) 0, vis_0A_i = (float4) 0;
-  float4 vis_0B_r = (float4) 0, vis_0B_i = (float4) 0;
-  float4 vis_0C_r = (float4) 0, vis_0C_i = (float4) 0;
-  float4 vis_0D_r = (float4) 0, vis_0D_i = (float4) 0;
-  float4 vis_1A_r = (float4) 0, vis_1A_i = (float4) 0;
-  float4 vis_1B_r = (float4) 0, vis_1B_i = (float4) 0;
-  float4 vis_1C_r = (float4) 0, vis_1C_i = (float4) 0;
-  float4 vis_1D_r = (float4) 0, vis_1D_i = (float4) 0;
-  float4 vis_2A_r = (float4) 0, vis_2A_i = (float4) 0;
-  float4 vis_2B_r = (float4) 0, vis_2B_i = (float4) 0;
-  float4 vis_2C_r = (float4) 0, vis_2C_i = (float4) 0;
-  float4 vis_2D_r = (float4) 0, vis_2D_i = (float4) 0;
-  float4 vis_3A_r = (float4) 0, vis_3A_i = (float4) 0;
-  float4 vis_3B_r = (float4) 0, vis_3B_i = (float4) 0;
-  float4 vis_3C_r = (float4) 0, vis_3C_i = (float4) 0;
-  float4 vis_3D_r = (float4) 0, vis_3D_i = (float4) 0;
+  /* float4 vis_0A_r = (float4) 0, vis_0A_i = (float4) 0; */
+  /* float4 vis_0B_r = (float4) 0, vis_0B_i = (float4) 0; */
+  /* float4 vis_0C_r = (float4) 0, vis_0C_i = (float4) 0; */
+  /* float4 vis_0D_r = (float4) 0, vis_0D_i = (float4) 0; */
+  /* float4 vis_1A_r = (float4) 0, vis_1A_i = (float4) 0; */
+  /* float4 vis_1B_r = (float4) 0, vis_1B_i = (float4) 0; */
+  /* float4 vis_1C_r = (float4) 0, vis_1C_i = (float4) 0; */
+  /* float4 vis_1D_r = (float4) 0, vis_1D_i = (float4) 0; */
+  /* float4 vis_2A_r = (float4) 0, vis_2A_i = (float4) 0; */
+  /* float4 vis_2B_r = (float4) 0, vis_2B_i = (float4) 0; */
+  /* float4 vis_2C_r = (float4) 0, vis_2C_i = (float4) 0; */
+  /* float4 vis_2D_r = (float4) 0, vis_2D_i = (float4) 0; */
+  /* float4 vis_3A_r = (float4) 0, vis_3A_i = (float4) 0; */
+  /* float4 vis_3B_r = (float4) 0, vis_3B_i = (float4) 0; */
+  /* float4 vis_3C_r = (float4) 0, vis_3C_i = (float4) 0; */
+  /* float4 vis_3D_r = (float4) 0, vis_3D_i = (float4) 0; */
+  float4 vis_0A_r = {0, 0, 0, 0}, vis_0A_i = {0, 0, 0, 0};
+  float4 vis_0B_r = {0, 0, 0, 0}, vis_0B_i = {0, 0, 0, 0};
+  float4 vis_0C_r = {0, 0, 0, 0}, vis_0C_i = {0, 0, 0, 0};
+  float4 vis_0D_r = {0, 0, 0, 0}, vis_0D_i = {0, 0, 0, 0};
+  float4 vis_1A_r = {0, 0, 0, 0}, vis_1A_i = {0, 0, 0, 0};
+  float4 vis_1B_r = {0, 0, 0, 0}, vis_1B_i = {0, 0, 0, 0};
+  float4 vis_1C_r = {0, 0, 0, 0}, vis_1C_i = {0, 0, 0, 0};
+  float4 vis_1D_r = {0, 0, 0, 0}, vis_1D_i = {0, 0, 0, 0};
+  float4 vis_2A_r = {0, 0, 0, 0}, vis_2A_i = {0, 0, 0, 0};
+  float4 vis_2B_r = {0, 0, 0, 0}, vis_2B_i = {0, 0, 0, 0};
+  float4 vis_2C_r = {0, 0, 0, 0}, vis_2C_i = {0, 0, 0, 0};
+  float4 vis_2D_r = {0, 0, 0, 0}, vis_2D_i = {0, 0, 0, 0};
+  float4 vis_3A_r = {0, 0, 0, 0}, vis_3A_i = {0, 0, 0, 0};
+  float4 vis_3B_r = {0, 0, 0, 0}, vis_3B_i = {0, 0, 0, 0};
+  float4 vis_3C_r = {0, 0, 0, 0}, vis_3C_i = {0, 0, 0, 0};
+  float4 vis_3D_r = {0, 0, 0, 0}, vis_3D_i = {0, 0, 0, 0};
 
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += BLOCK_SIZE) {
     // load data into local memory
