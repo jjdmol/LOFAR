@@ -114,6 +114,21 @@ namespace LOFAR
         // Return the name of the device in human readable form.
         std::string getName() const;
 
+        // Return the compute capability (major)
+        unsigned getComputeCapabilityMajor() const;
+
+        // Return the compute capability (minor)
+        unsigned getComputeCapabilityMinor() const;
+
+        // Return the total amount of global memory, in bytes
+        size_t getTotalGlobalMem() const;
+
+        // Return the maximum amount of shared memory per block
+        size_t getBlockSharedMem() const;
+
+        // Return the total amount of constant memory
+        size_t getTotalConstMem() const;
+
         // Return information on a specific \a attribute.
         // \param attribute CUDA device attribute
         int getAttribute(CUdevice_attribute attribute) const;
