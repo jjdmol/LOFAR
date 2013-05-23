@@ -203,31 +203,31 @@ namespace LOFAR
       optionValues.push_back(&thrPerBlk); // can be read back
 #endif
 
-      unsigned int infoLogSize  = BUILD_MAX_LOG_SIZE + 1; // input and output var for JIT compiler
-      unsigned int errorLogSize = BUILD_MAX_LOG_SIZE + 1; // idem (hence not the a single var or const)
+      size_t infoLogSize  = BUILD_MAX_LOG_SIZE + 1; // input and output var for JIT compiler
+      size_t errorLogSize = BUILD_MAX_LOG_SIZE + 1; // idem (hence not the a single var or const)
 
       vector<char> infoLog(infoLogSize);
       options[CU_JIT_INFO_LOG_BUFFER] = &infoLog[0];
-      options[CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES] = &infoLogSize;
+      options[CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES] = reinterpret_cast<void*>(infoLogSize);
 
       vector<char> errorLog(errorLogSize);
       options[CU_JIT_ERROR_LOG_BUFFER] = &errorLog[0];
-      options[CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES] = &errorLogSize;
+      options[CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES] = reinterpret_cast<void*>(errorLogSize);
 
       float jitWallTime = 0.0f; // output val (init it anyway), in milliseconds
       options[CU_JIT_WALL_TIME] = &jitWallTime;
 
 #if 0
-      unsigned int optLvl = 4; // 0-4, default 4
-      options[CU_JIT_OPTIMIZATION_LEVEL] = &optLvl;
+      size_t optLvl = 4; // 0-4, default 4
+      options[CU_JIT_OPTIMIZATION_LEVEL] = reinterpret_cast<void*>(optLvl);
 #endif
 
-      unsigned int jitTarget = target;
-      options[CU_JIT_TARGET] = reinterpret_cast<void*>(jitTarget); // cast the value itself to a void*!
+      size_t jitTarget = target;
+      options[CU_JIT_TARGET] = reinterpret_cast<void*>(jitTarget);
 
 #if 0
-      CUjit_fallback_enum fallback = CU_PREFER_PTX;
-      options[CU_JIT_FALLBACK_STRATEGY] = &fallback;
+      size_t fallback = CU_PREFER_PTX;
+      options[CU_JIT_FALLBACK_STRATEGY] = reinterpret_cast<void*>(fallback);
 #endif
       try {
 

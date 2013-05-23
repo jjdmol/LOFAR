@@ -278,6 +278,8 @@ namespace LOFAR
         // \param image pointer to a module image in memory
         // \param options map of \c CUjit_option items, with their associated
         // values.
+        // \note All values are cast to void*, so if an option requires
+        // an unsigned int as value, the unsigned int's value itself is cast to void*!
         // \note For details, please refer to the documentation of \c
         // cuModuleLoadDataEx in the CUDA Driver API.
         Module(const void *image, const optionmap_t &options);
