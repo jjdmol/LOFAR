@@ -2323,13 +2323,13 @@ dyn_string navFunct_getInputBuffersForObservation(string obsName) {
   string extra = "";
   
   for (int i=1; i<=dynlen(ioNodeList);i++) {
-    if (i<10) {
+    if ((int)ioNodeList[i]<10) {
       extra = "0";
     } else {
       extra = "";
     }
   
-    string IBDP = "CCU001:LOFAR_PermSW_PSIONode"+extra+i+"_InputBuffer";
+    string IBDP = "CCU001:LOFAR_PermSW_PSIONode"+extra+ioNodeList[i]+"_InputBuffer";
     dynAppend(InputBuffers,IBDP);
   }
   return InputBuffers;

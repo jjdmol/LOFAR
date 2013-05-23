@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 21382 2012-06-29 11:26:52Z mol $
+# $Id$
 
 lofar_package(InputProc 1.0
   DEPENDS ApplCommon Common Stream CoInterface)

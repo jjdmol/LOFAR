@@ -25,11 +25,11 @@
 #ifndef LOFAR_GPUPROC_OPENCL_GPU_WRAPPER_H
 #define LOFAR_GPUPROC_OPENCL_GPU_WRAPPER_H
 
-#warning "Only partially implemented."
-
 #include <sstream>
 
 #include <Common/Exception.h>
+
+#include <GPUProc/gpu_wrapper.h> // GPUException
 #include "gpu_incl.h"
 
 namespace LOFAR
@@ -43,6 +43,13 @@ namespace LOFAR
 
       // Return the OpenCL error string associated with \a errcode.
       std::string errorMessage(cl_int errcode);
+
+      // The sole purpose of this function is to extract detailed error
+      // information if a cl::Error was thrown. Since we want the complete
+      // backtrace, we cannot simply try-catch in main(), because that would
+      // unwind the stack. The only option we have is to use our own terminate
+      // handler.
+      void terminate();
     }
   }
 }

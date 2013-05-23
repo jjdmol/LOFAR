@@ -1,5 +1,4 @@
-//# OpenCL_Support.h
-//#
+//# gpu_utils.h
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,23 +18,33 @@
 //#
 //# $Id$
 
-// \file
-// Include the right GPU API include with our options.
+#ifndef LOFAR_GPUPROC_OPENCL_GPU_UTILS_H
+#define LOFAR_GPUPROC_OPENCL_GPU_UTILS_H
 
-#ifndef LOFAR_GPUPROC_OPENCL_SUPPORT_H
-#define LOFAR_GPUPROC_OPENCL_SUPPORT_H
+#include <string>
+#include <vector>
 
-#if defined (USE_CUDA) && defined (USE_OPENCL)
-# error "Either CUDA or OpenCL must be enabled, not both"
-#endif
+#include <CoInterface/Parset.h>
 
-#if defined (USE_CUDA)
-# include "cuda/OpenCL_Support.h"
-#elif defined (USE_OPENCL)
-# include "opencl/OpenCL_Support.h"
-#else
-# error "Either CUDA or OpenCL must be enabled, not neither"
-#endif
+#include "gpu_incl.h"
+
+namespace LOFAR
+{
+  namespace Cobalt
+  {
+
+    void createContext(cl::Context &, std::vector<cl::Device> &);
+
+
+    cl::Program createProgram(const Parset &ps, cl::Context &context,
+                              std::vector<cl::Device> &devices,
+                              const char *sources);
+    // called by the above ("internal").
+    cl::Program createProgram(cl::Context &, std::vector<cl::Device> &,
+                              const char *sources, const char *args);
+
+  } // namespace Cobalt
+} // namespace LOFAR
 
 #endif
 

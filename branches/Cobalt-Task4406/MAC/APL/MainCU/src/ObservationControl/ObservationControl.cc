@@ -276,9 +276,12 @@ void ObservationControl::registerResultMessage(const string& cntlrName, int	resu
 	CTState		cts;
 	if (state == CTState::QUITED) {
 		_updateChildInfo(cntlrName, state);
-		if (result != CT_RESULT_NO_ERROR && result != CT_RESULT_LOST_CONNECTION) {
-			LOG_INFO_STR("Setting QuitReason to " << result << ", controller=" << cntlrName << ",state=" << cts.name(state));
-			itsQuitReason = result;
+		if (result != CT_RESULT_NO_ERROR && result != CT_RESULT_LOST_CONNECTION) {	// serious problem
+			map<string, ChildProc>::iterator iter = itsChildInfo.find(cntlrName);
+			if ((iter != itsChildInfo.end()) && (iter->second.type != CNTLRTYPE_STATIONCTRL)) {	// not from a station?
+				LOG_INFO_STR("Setting QuitReason to " << result << ", controller=" << cntlrName << ",state=" << cts.name(state));
+				itsQuitReason = result;
+			}
 		}
 		return;
 	}
@@ -502,6 +505,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildsInError = 0;
 			itsStartTimer    = 0;
 			LOG_INFO("Requesting all childs to go operation state");
+			itsQuitReason = CT_RESULT_NO_ERROR;		// clear startup errors.
 			itsChildControl->requestState(CTState::RESUMED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}

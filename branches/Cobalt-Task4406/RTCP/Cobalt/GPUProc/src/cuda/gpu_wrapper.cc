@@ -24,10 +24,11 @@
 #include "gpu_wrapper.h"
 
 #include <string>
-#include <iostream> // tmptmptmp
 #include <algorithm>  // for std::min
 
 #include <boost/noncopyable.hpp>
+
+#include <Common/LofarLogger.h>
 
 // Convenience macro to call a CUDA Device API function and throw a
 // CUDAException if an error occurred.
@@ -47,6 +48,36 @@ namespace LOFAR
   {
     namespace gpu
     {
+
+      std::string cufftErrorMessage(cufftResult errcode)
+      {
+        switch (errcode) {
+        case CUFFT_SUCCESS:
+          return "Success";
+        case CUFFT_INVALID_PLAN:
+          return "Invalid plan";
+        case CUFFT_ALLOC_FAILED:
+          return "Failed to allocate CPU or GPU memory";
+        case CUFFT_INVALID_TYPE: // no longer used
+          return "Invalid type";
+        case CUFFT_INVALID_VALUE:
+          return "Invalid pointer or parameter";
+        case CUFFT_INTERNAL_ERROR:
+          return "Driver or internal cuFFT error";
+        case CUFFT_EXEC_FAILED:
+          return "Failed to execute FFT kernel";
+        case CUFFT_SETUP_FAILED:
+          return "Failed to initialise cuFFT library";
+        case CUFFT_INVALID_SIZE:
+          return "Invalid transform size";
+        case CUFFT_UNALIGNED_DATA: // no longer used
+          return "Data not properly aligned";
+        default:
+          std::stringstream str;
+          str << "Unknown error (" << errcode << ")";
+          return str.str();
+        }
+      }
 
       std::string errorMessage(CUresult errcode)
       {
@@ -364,7 +395,7 @@ namespace LOFAR
 
       void *DeviceMemory::get() const
       {
-        return (void *)_impl->get(); // not sure void * is a reasonble idea for a dev "ptr"
+        return (void *)_impl->get();
       }
 
       size_t DeviceMemory::size() const
@@ -567,6 +598,11 @@ namespace LOFAR
           checkCuCall(cuEventRecord(event, _stream));
         }
 
+        CUstream get() const
+        {
+          return _stream;
+        }
+
       private:
         CUstream _stream;
       };
@@ -579,6 +615,13 @@ namespace LOFAR
                                const HostMemory &hostMem,
                                bool synchronous)
       {
+        // tmp check: avoid async writeBuffer request that will fail later.
+        // This interface may still change at which point a cleaner solution can be used.
+        if (hostMem.size() > devMem.size())
+        {
+          THROW(CUDAException, "writeBuffer(): host buffer too large for device buffer");
+        }
+
         _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
                                hostMem.get<void *>(),
                                hostMem.size());
@@ -591,6 +634,13 @@ namespace LOFAR
                               const DeviceMemory &devMem,
                               bool synchronous)
       {
+        // tmp check: avoid async writeBuffer request that will fail later.
+        // This interface may still change at which point a cleaner solution can be used.
+        if (devMem.size() > hostMem.size())
+        {
+          THROW(CUDAException, "readBuffer(): device buffer too large for host buffer");
+        }
+
         _impl->memcpyDtoHAsync(hostMem.get<void *>(), 
                                (CUdeviceptr)devMem.get(),
                                devMem.size());
@@ -626,6 +676,11 @@ namespace LOFAR
       void Stream::recordEvent(const Event &event)
       {
         _impl->recordEvent(event._impl->_event);
+      }
+
+      CUstream Stream::get() const
+      {
+        return _impl->get();
       }
 
 

@@ -18,9 +18,10 @@
 //#
 //# $Id$
 
-#include "lofar_config.h"
+#include <lofar_config.h>
 
 #include <vector>
+#include <cufft.h>
 
 #include <Common/LofarLogger.h>
 
@@ -31,38 +32,32 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    FFT_Kernel::FFT_Kernel(gpu::Context &context, unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer)
+    FFT_Kernel::FFT_Kernel(unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer)
       :
       nrFFTs(nrFFTs),
-      fftSize(fftSize)
-#if defined USE_CUSTOM_FFT
-    {
-      ASSERT(fftSize == 256);
-      ASSERT(forward);
-      //std::vector<gpu::Device> devices(context.getInfo<CL_CONTEXT_DEVICES>());
-      std::vector<gpu::Device> devices(1, context.getDevice()); // CUDA has only one device per context; generalize later to replace the prev commented line
-      gpu::Module program(createProgram(context, devices, "FFT.cl", ""));
-      kernel = gpu::Function(program, "fft0");
-      kernel.setArg(0, buffer);
-    }
-#else
-      , //direction(forward ? clFFT_Forward : clFFT_Inverse),
-      plan(context, fftSize),
+      fftSize(fftSize),
+      direction(forward ? CUFFT_FORWARD : CUFFT_INVERSE),
+      plan(fftSize, nrFFTs),
       buffer(buffer)
     {
     }
-#endif
 
     void FFT_Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
     {
-#if defined USE_CUSTOM_FFT
-      //queue.enqueueNDRangeKernel(kernel, cl::NullRange, gpu::dim3(nrFFTs * 64 / 4, 4), gpu::dim3(64, 4), 0, &event);
-      queue.launchKernel(kernel, gpu::dim3(nrFFTs * 64 / 4, 4), gpu::dim3(64, 4), 0); // TODO: extend/use Kernel::enqueue(). This will also correct the CUDA vs OpenCL interpret of gridSize.
-#else
-      //cl_int error = clFFT_ExecuteInterleaved(queue(), plan.plan, nrFFTs, direction, buffer(), buffer(), 0, 0, &event());
-      //if (error != CL_SUCCESS)
-      //  throw gpu::Error(error, "clFFT_ExecuteInterleaved");
-#endif
+      cufftResult error;
+
+      // Tie our plan to the specified stream
+      plan.setStream(queue);
+
+      // Enqueue the FFT execution
+      error = cufftExecC2C(plan.plan,
+                           static_cast<cufftComplex*>(buffer.get()),
+                           static_cast<cufftComplex*>(buffer.get()),
+                           direction);
+
+      if (error != CUFFT_SUCCESS)
+        THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
+
 /*
       counter.doOperation(event,
                           (size_t) nrFFTs * 5 * fftSize * log2(fftSize),

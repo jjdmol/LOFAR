@@ -471,11 +471,18 @@ namespace LOFAR
   template <typename T>
   std::ostream &operator << (std::ostream &str, const SparseSet<T> &set)
   {
-    for (typename SparseSet<T>::const_iterator it = set.getRanges().begin(); it != set.getRanges().end(); it++)
+    if (set.getRanges().empty())
+      return str << "[]";
+
+    for (typename SparseSet<T>::const_iterator it = set.getRanges().begin(); it != set.getRanges().end(); it++) {
+      if (it != set.getRanges().begin())
+        str << ' ';
+
       if (it->end == it->begin + 1)
-        str << '[' << it->begin << "] ";
+        str << '[' << it->begin << ']';
       else
-        str << '[' << it->begin << ".." << it->end << "> ";
+        str << '[' << it->begin << ".." << it->end << '>';
+    }
 
     return str;
   }

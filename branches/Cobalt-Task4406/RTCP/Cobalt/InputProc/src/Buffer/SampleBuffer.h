@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #ifndef LOFAR_INPUT_PROC_SAMPLEBUFFER_H
 #define LOFAR_INPUT_PROC_SAMPLEBUFFER_H
@@ -132,6 +132,10 @@ namespace LOFAR
 
       std::vector<Board> boards;
     };
+
+    // Removes the sample buffers that correspond to settings.dataKey,
+    // as well as any sample buffer that refers to the same station.
+    void removeSampleBuffers( const BufferSettings &settings );
   }
 }
 

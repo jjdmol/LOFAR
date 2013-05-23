@@ -33,7 +33,7 @@ cat tmakesourcedb_tmp.stdout
 
 echo ""
 echo "test 2 ..."
-../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'1',Name,Type,RefType,Ra,Dec,I,Q,U,V,SpectralIndex='0.5',ReferenceFrequency='1e9',MajorAxis,MinorAxis,Orientation" | grep -v ' Version '
+../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'1',Name,Type,RefType,Ra,Dec,I,Q,U,V,SpectralIndex='0.5',ReferenceFrequency='1e9',MajorAxis,MinorAxis,Orientation" patchprefix='p_' patchsuffix='-suf' | grep -v ' Version '
 ../src/parmdbm tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
 showdef

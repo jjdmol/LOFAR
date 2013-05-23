@@ -35,7 +35,6 @@
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
-#include <Common/Exception.h>
 #include <CoInterface/Parset.h>
 
 #include <InputProc/OMPThread.h>
@@ -52,8 +51,7 @@
 #include <InputProc/Transpose/MPISendStation.h>
 
 #include "global_defines.h"
-#include "OpenMP_Support.h"
-#include "OpenCL_Support.h"
+#include "OpenMP_Lock.h"
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
@@ -63,9 +61,6 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 using boost::format;
-
-// Use our own terminate handler
-Exception::TerminateHandler t(OpenCL_Support::terminate);
 
 void usage(char **argv)
 {

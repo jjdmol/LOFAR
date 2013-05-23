@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -200,7 +200,9 @@ namespace LOFAR
       if (!quiet)
         LOG_WARN_STR("Removing existing SHM area 0x" << hex << key);
 
-      if (shmctl(shmid, IPC_RMID, NULL) < 0)
+      // Note: the shmid might have been removed by another thread or process,
+      // so getting EINVAL is a possibility.
+      if (shmctl(shmid, IPC_RMID, NULL) < 0 && errno != EINVAL)
         // failed to remove SHM
         throw SystemCallException("shmctl", errno, THROW_ARGS);
 

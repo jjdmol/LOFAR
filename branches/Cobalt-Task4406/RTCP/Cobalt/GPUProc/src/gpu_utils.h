@@ -1,5 +1,6 @@
-//# createProgram.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# gpu_utils.h
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,22 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_OPENCL_CREATE_PROGRAM_H
-#define LOFAR_GPUPROC_OPENCL_CREATE_PROGRAM_H
+// \file
+// Support functions for GPU device selection, context, program management.
 
-#include <vector>
+#ifndef LOFAR_GPU_UTILS_H
+#define LOFAR_GPU_UTILS_H
 
-#include <CoInterface/Parset.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-#include "gpu_incl.h"
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    cl::Program createProgram(const Parset &ps, cl::Context &context, std::vector<cl::Device> &devices, const char *sources);
-  }
-}
+#if defined (USE_CUDA)
+# include "cuda/gpu_utils.h"
+#elif defined (USE_OPENCL)
+# include "opencl/gpu_utils.h"
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

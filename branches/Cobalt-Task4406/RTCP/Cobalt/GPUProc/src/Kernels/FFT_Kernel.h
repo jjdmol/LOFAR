@@ -1,5 +1,6 @@
-//# OpenMP_Support.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# FFT_Kernel.h
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,57 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_OPENMP_SUPPORT_H
-#define LOFAR_GPUPROC_OPENMP_SUPPORT_H
+// \file
+// Include the right GPU API include with our options.
 
-#include <omp.h>
+#ifndef LOFAR_GPUPROC_FFT_KERNEL_H
+#define LOFAR_GPUPROC_FFT_KERNEL_H
 
-class OMP_Lock
-{
-public:
-  OMP_Lock()
-  {
-    omp_init_lock(&omp_lock);
-  }
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-  ~OMP_Lock()
-  {
-    omp_destroy_lock(&omp_lock);
-  }
-
-  void lock()
-  {
-    omp_set_lock(&omp_lock);
-  }
-
-  void unlock()
-  {
-    omp_unset_lock(&omp_lock);
-  }
-
-private:
-  omp_lock_t omp_lock;
-};
-
-
-class OMP_ScopedLock
-{
-public:
-  OMP_ScopedLock(OMP_Lock &omp_lock)
-    :
-    omp_lock(omp_lock)
-  {
-    omp_lock.lock();
-  }
-
-  ~OMP_ScopedLock()
-  {
-    omp_lock.unlock();
-  }
-
-private:
-  OMP_Lock &omp_lock;
-};
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Kernels/FFT_Kernel.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Kernels/FFT_Kernel.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

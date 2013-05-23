@@ -116,6 +116,7 @@ namespace BBS {
     // Add a source which forms a patch in itself (with the same name).
     // <br>Optionally it is checked if the patch or source already exists.
     virtual void addSource (const SourceInfo& sourceInfo,
+                            const string& patchName,
                             int catType,
                             double apparentBrightness,
                             const ParmMap& defaultParameters,
@@ -250,12 +251,13 @@ namespace BBS {
 
     // Add a source which forms a patch in itself (with the same name).
     void addSource (const SourceInfo& sourceInfo,
+                    const string& patchName,
                     int catType,
                     double apparentBrightness,
                     const ParmMap& defaultParameters,
                     double ra=-1e9, double dec=-1e9,
                     bool check = true)
-      { itsRep->addSource (sourceInfo, catType, apparentBrightness,
+      { itsRep->addSource (sourceInfo, patchName, catType, apparentBrightness,
                            defaultParameters, ra, dec, check); }
 
     // Get patch names in order of category and decreasing apparent flux.

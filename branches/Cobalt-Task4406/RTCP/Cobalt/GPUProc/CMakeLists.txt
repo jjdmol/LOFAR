@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 16350 2010-09-20 13:14:52Z nieuwpoort $
+# $Id$
 
 # Handle options USE_CUDA and USE_OPENCL.
 if(USE_CUDA AND NOT USE_OPENCL)

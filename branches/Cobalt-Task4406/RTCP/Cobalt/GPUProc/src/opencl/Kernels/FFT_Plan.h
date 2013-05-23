@@ -24,7 +24,6 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/gpu_incl.h>
-#include <GPUProc/OpenCL_Support.h>
 #include <OpenCL_FFT/clFFT.h>
 
 namespace LOFAR

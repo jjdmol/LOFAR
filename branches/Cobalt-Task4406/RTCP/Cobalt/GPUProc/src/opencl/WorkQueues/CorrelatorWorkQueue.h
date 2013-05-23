@@ -33,7 +33,7 @@
 #include <CoInterface/SubbandMetaData.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/OpenCL_Support.h>
+#include <GPUProc/Buffers.h>
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>

@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -35,13 +35,15 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    Generator::Generator( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &outputStreams_, PacketFactory &packetFactory )
+    Generator::Generator( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &outputStreams_, PacketFactory &packetFactory, const TimeStamp &from, const TimeStamp &to )
       :
       RSPBoards(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaField), outputStreams_.size()),
       settings(settings),
       outputStreams(outputStreams_.size()),
       packetFactory(packetFactory),
-      nrSent(nrBoards, 0)
+      nrSent(nrBoards, 0),
+      from(from),
+      to(to)
     {
       for (size_t i = 0; i < outputStreams.size(); ++i) {
         outputStreams[i] = outputStreams_[i];
@@ -60,8 +62,7 @@ namespace LOFAR
 
         LOG_INFO_STR( logPrefix << "Start" );
 
-        TimeStamp current(time(0L) + 1, 0, settings.station.clockMHz * 1000000);
-        for(;; ) {
+        for(TimeStamp current = from; !to || current < to; /* increment in loop */ ) {
           struct RSP packet;
 
           // generate packet

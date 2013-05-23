@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #ifndef LOFAR_INPUT_PROC_PACKETS_TO_BUFFER_H
 #define LOFAR_INPUT_PROC_PACKETS_TO_BUFFER_H
@@ -54,7 +54,7 @@ namespace LOFAR
     public:
       // cleanup: if true, erase any existing SHM areas corresponding to our
       // station.
-      PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr, bool cleanup = true );
+      PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr );
 
       // Process data for this board until interrupted or end of data. Auto-senses
       // mode (bit mode & clock).
