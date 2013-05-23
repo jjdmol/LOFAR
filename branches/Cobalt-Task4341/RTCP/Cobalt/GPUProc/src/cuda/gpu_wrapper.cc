@@ -236,14 +236,15 @@ namespace LOFAR
 
       std::vector<Device> Platform::devices() const
       {
-        size_t nrDevices = size();
+        std::vector<Device> devices;
 
-        vector<Device> devices;
-        devices.reserve(nrDevices);
+        size_t nrDevices = size();
 
         for (size_t i = 0; i < nrDevices; ++i) {
           devices.push_back(Device(i));
         }
+
+        return devices;
       }
 
       std::string Platform::getName() const
