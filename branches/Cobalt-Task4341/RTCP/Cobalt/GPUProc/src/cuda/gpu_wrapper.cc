@@ -208,7 +208,16 @@ namespace LOFAR
 
       Platform::Platform(unsigned int flags)
       {
-        checkCuCall(cuInit(flags));
+        // TODO: Technically, we need to make this thread safe.
+        // Typically, however, the first platform is created in the main
+        // thread.
+        static bool initialised = false;
+
+        if (!initialised) {
+          initialised = true;
+
+          checkCuCall(cuInit(flags));
+        }
       }
 
       size_t Platform::size() const

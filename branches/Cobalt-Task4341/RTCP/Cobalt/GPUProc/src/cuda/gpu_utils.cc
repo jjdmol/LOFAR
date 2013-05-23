@@ -32,6 +32,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <boost/format.hpp>
 
 #include <Common/SystemUtil.h>
 #include <Common/SystemCallException.h>
@@ -47,10 +48,142 @@ namespace LOFAR
   namespace Cobalt
   {
     using namespace std;
+    using boost::format;
 
-    gpu::Module createProgram(gpu::Context &context, vector<string> &targets, const string &srcFilename, 
+    namespace {
+      // Return the highest compute target supported by the given device
+      CUjit_target computeTarget(const gpu::Device &device)
+      {
+        unsigned major = device.getComputeCapabilityMajor();
+        unsigned minor = device.getComputeCapabilityMinor();
+
+        switch (major) {
+          case 0:
+            return CU_TARGET_COMPUTE_10;
+
+          case 1:
+            switch (minor) {
+              case 0:
+                return CU_TARGET_COMPUTE_10;
+              case 1:
+                return CU_TARGET_COMPUTE_11;
+              case 2:
+                return CU_TARGET_COMPUTE_12;
+              case 3:
+                return CU_TARGET_COMPUTE_13;
+              default:
+                return CU_TARGET_COMPUTE_13;
+            }
+
+          case 2:
+            switch (minor) {
+              case 0:
+                return CU_TARGET_COMPUTE_20;
+              case 1:
+                return CU_TARGET_COMPUTE_21;
+              default:
+                return CU_TARGET_COMPUTE_21;
+            }
+
+          case 3:
+            if (minor < 5) {
+              return CU_TARGET_COMPUTE_30;
+            } else {
+              return CU_TARGET_COMPUTE_35;
+            }
+
+          default:
+            return CU_TARGET_COMPUTE_35;
+        }
+      }
+
+      // Return the highest compute target supported by all the given devices
+      CUjit_target computeTarget(const std::vector<gpu::Device> &devices)
+      {
+        if (devices.empty())
+          return CU_TARGET_COMPUTE_35;
+
+        CUjit_target minTarget = CU_TARGET_COMPUTE_35;
+
+        for (std::vector<gpu::Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
+          CUjit_target target = computeTarget(*i);
+
+          if (target < minTarget)
+            minTarget = target;
+        }
+
+        return minTarget;
+      }
+
+      string get_virtarch(CUjit_target target)
+      {
+        switch (target) {
+        default:
+          return "";
+
+        case CU_TARGET_COMPUTE_10:
+          return "cmpute_10";
+
+        case CU_TARGET_COMPUTE_11:
+          return "compute_11";
+
+        case CU_TARGET_COMPUTE_12:
+          return "compute_12";
+
+        case CU_TARGET_COMPUTE_13:
+          return "compute_13";
+
+        case CU_TARGET_COMPUTE_20:
+        case CU_TARGET_COMPUTE_21:
+          return "compute_20";
+
+        case CU_TARGET_COMPUTE_30:
+        case CU_TARGET_COMPUTE_35:
+          return "compute_30";
+        }
+      }
+
+      string get_gpuarch(CUjit_target target)
+      {
+        switch (target) {
+        default:
+          return "";
+
+        case CU_TARGET_COMPUTE_10:
+          return "sm_10";
+
+        case CU_TARGET_COMPUTE_11:
+          return "sm_11";
+
+        case CU_TARGET_COMPUTE_12:
+          return "sm_12";
+
+        case CU_TARGET_COMPUTE_13:
+          return "sm_13";
+
+        case CU_TARGET_COMPUTE_20:
+        case CU_TARGET_COMPUTE_21:
+          return "sm_20";
+
+        case CU_TARGET_COMPUTE_30:
+        case CU_TARGET_COMPUTE_35:
+          return "sm_30";
+        }
+      }
+    }
+
+    gpu::Module createProgram(const std::vector<gpu::Device> &devices, const std::string &srcFilename, 
       CudaRuntimeCompiler::flags_type flags, CudaRuntimeCompiler::definitions_type definitions )
     {
+      // Target the oldest architecture of the given devices
+      CUjit_target target = computeTarget(devices);
+
+      // Add the derived target to our flags -- for now, we only compile for
+      // the oldest target.
+      flags.insert(str(format("gpu-code %s") % get_gpuarch(target)));
+      flags.insert(str(format("gpu-architecture %s") % get_virtarch(target)));
+
+      // Create PTX
       string ptxAsString = CudaRuntimeCompiler::compileToPtx(srcFilename, flags, definitions);
 
       /*
@@ -96,15 +229,12 @@ namespace LOFAR
       unsigned int optLvl = 4; // 0-4, default 4
       options.push_back(CU_JIT_OPTIMIZATION_LEVEL);
       optionValues.push_back(&optLvl);
-
-      options.push_back(CU_JIT_TARGET_FROM_CUCONTEXT);
-      optionValues.push_back(NULL); // no option value, but I suppose the array needs a placeholder
 #endif
-/*
-      CUjit_target_enum target = CU_TARGET_COMPUTE_30; // TODO: determine val from auto-detect or whatever
+
+      unsigned int jitTarget = target;
       options.push_back(CU_JIT_TARGET);
-      optionValues.push_back(&target);
-*/
+      optionValues.push_back(reinterpret_cast<void*>(jitTarget)); // cast the value itself to a void*!
+
 #if 0
       CUjit_fallback_enum fallback = CU_PREFER_PTX;
       options.push_back(CU_JIT_FALLBACK_STRATEGY);

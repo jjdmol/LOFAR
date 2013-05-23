@@ -25,6 +25,7 @@
 #include <string>
 #include <sstream>
 #include <typeinfo>
+#include <vector>
 
 #include <Common/Exception.h>
 
@@ -67,6 +68,7 @@ float * runTest(float bandPassFactor,
   // Set up environment
   gpu::Platform pf;
   gpu::Device device(0);
+  vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
   Stream cuStream;
   std::stringstream tostrstram("");
@@ -106,7 +108,7 @@ float * runTest(float bandPassFactor,
   if (delayCompensation)
     definitions["DELAY_COMPENSATION"] = "1";
   vector<string> targets; // unused atm, so can be empty
-  gpu::Module module(createProgram(ctx, targets, kernelPath, flags, definitions));  
+  gpu::Module module(createProgram(devices, kernelPath, flags, definitions));  
   Function  hKernel(module, "applyDelaysAndCorrectBandPass");  // c function this no argument overloading
 
   // *************************************************************

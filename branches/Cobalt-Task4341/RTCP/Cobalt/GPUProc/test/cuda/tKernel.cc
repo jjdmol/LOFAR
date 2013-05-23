@@ -38,8 +38,8 @@ int main() {
   // Set up gpu environment
   gpu::Platform pf;
   gpu::Device device(0);
+  vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
-  vector<string> targets; // unused atm, so can be empty
   string srcFilename("tKernel.in_.cu");
   Parset ps("tKernel.parset.in");
 
@@ -71,7 +71,7 @@ int main() {
   }
   definitions["DEDISPERSION_FFT_SIZE"]= boost::lexical_cast<string>(ps.dedispersionFFTsize());
 
-  gpu::Module module(createProgram(ctx, targets, srcFilename, flags, definitions));
+  gpu::Module module(createProgram(devices, srcFilename, flags, definitions));
   cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 
   string entryPointName("testKernel");
