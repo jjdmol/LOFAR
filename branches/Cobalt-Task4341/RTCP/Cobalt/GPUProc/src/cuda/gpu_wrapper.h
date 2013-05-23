@@ -161,9 +161,6 @@ namespace LOFAR
         // In other words, \c setCurrent() is implied.
         Context(Device device, unsigned int flags = CU_CTX_SCHED_AUTO);
 
-        // Make this context the current context.
-        void setCurrent() const;
-
         // Returns the device associated to the _current_ context.
         Device getDevice() const;
 
@@ -179,6 +176,20 @@ namespace LOFAR
 
         // Reference counted pointer to the implementation class.
         boost::shared_ptr<Impl> _impl;
+
+        friend class ScopedCurrentContext;
+      };
+
+
+      // Make a certain context the current one for a certain scope.
+      class ScopedCurrentContext
+      {
+      public:
+        ScopedCurrentContext( const Context &context );
+        ~ScopedCurrentContext();
+
+      private:
+        const Context &context;
       };
 
 

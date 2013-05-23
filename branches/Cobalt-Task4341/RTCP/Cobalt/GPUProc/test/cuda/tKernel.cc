@@ -40,6 +40,7 @@ int main() {
   gpu::Device device(0);
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
+  gpu::ScopedCurrentContext scc(ctx);
   string srcFilename("tKernel.in_.cu");
   Parset ps("tKernel.parset.in");
 

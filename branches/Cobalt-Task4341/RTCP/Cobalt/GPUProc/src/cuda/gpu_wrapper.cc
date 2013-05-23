@@ -311,16 +311,14 @@ namespace LOFAR
         Impl(CUdevice device, unsigned int flags)
         {
           checkCuCall(cuCtxCreate(&_context, flags, device));
+
+          // Make the context floating, so we can tie it to any thread
+          freeCurrent();
         }
 
         ~Impl()
         {
           checkCuCall(cuCtxDestroy(_context));
-        }
-
-        void setCurrent() const
-        {
-          checkCuCall(cuCtxSetCurrent(_context));
         }
 
         CUdevice getDevice() const
@@ -344,6 +342,21 @@ namespace LOFAR
 #endif
         }
 
+        void setCurrent() const
+        {
+          checkCuCall(cuCtxPushCurrent(_context));
+        }
+
+        void freeCurrent() const
+        {
+          CUcontext dummy;
+          checkCuCall(cuCtxPopCurrent(&dummy));
+
+          // We should have freed this context, or something went terribly
+          // wrong!
+          ASSERT(dummy == _context);
+        }
+
       private:
         CUcontext _context;
       };
@@ -353,24 +366,37 @@ namespace LOFAR
       {
       }
 
-      void Context::setCurrent() const
-      {
-        _impl->setCurrent();
-      }
-
       Device Context::getDevice() const
       {
+        ScopedCurrentContext scc(*this);
+
         return Device(_impl->getDevice());
       }
 
       void Context::setCacheConfig(CUfunc_cache config) const
       {
+        ScopedCurrentContext scc(*this);
+
         _impl->setCacheConfig(config);
       }
 
       void Context::setSharedMemConfig(CUsharedconfig config) const
       {
+        ScopedCurrentContext scc(*this);
+
         _impl->setSharedMemConfig(config);
+      }
+
+
+      ScopedCurrentContext::ScopedCurrentContext(const Context &context) :
+        context(context)
+      {
+        context._impl->setCurrent();
+      }
+
+      ScopedCurrentContext::~ScopedCurrentContext()
+      {
+        context._impl->freeCurrent();
       }
 
 

@@ -40,6 +40,7 @@ int main() {
 
   gpu::Device dev(0);
   gpu::Context ctx(dev);
+  gpu::ScopedCurrentContext scc(ctx);
 
   const size_t bufSize = 64 * 1024 * 1024;
   const char expectedVal = 42;

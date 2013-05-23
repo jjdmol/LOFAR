@@ -68,6 +68,7 @@ int main() {
   gpu::Platform pf;
   gpu::Device device(0);
   gpu::Context ctx(device);
+  gpu::ScopedCurrentContext scc(ctx);
 
   gpu::Stream stream;
 

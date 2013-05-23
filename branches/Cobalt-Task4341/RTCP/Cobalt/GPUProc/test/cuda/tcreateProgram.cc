@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
   gpu::Device device(0);
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
+  gpu::ScopedCurrentContext scc(ctx);
   vector<string> targets; // unused atm, so can be empty
 
   // Open inputs
