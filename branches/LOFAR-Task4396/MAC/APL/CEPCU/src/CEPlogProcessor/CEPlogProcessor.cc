@@ -850,20 +850,6 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
 
     RTDBPropertySet *inputBuffer = itsInputBuffers[processNr];
 
-    if (logline.obsID >= 0) {
-        // will be flushed once other relevant meta data is found and flushed
-        inputBuffer->setValue("observationName", GCFPVString(str(format("%i") % logline.obsID).c_str()), logline.timestamp, false);
-    }
-
-    if ((result = strstr(logline.target, "station "))) {
-      char stationName[6];
-      strncpy(stationName, result + 8, 5);
-      stationName[5] = '\0';
-
-      // will be flushed once other relevant meta data is found and flushed
-      inputBuffer->setValue("process.logMsg", GCFPVString(stationName), logline.timestamp, false);
-    }
-
     if (_recordLogMsg(logline)) {
         inputBuffer->setValue("process.logMsg", GCFPVString(logline.fullmsg), logline.timestamp, true);
     }
@@ -896,6 +882,24 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
 
     if (!strcmp(logline.msg,"----- Observation start")) {
       LOG_DEBUG_STR("obs " << logline.obsID << " run()");
+    }
+
+    if (logline.obsID >= 0) {
+        LOG_DEBUG_STR("input buffer " << processNr << " processes obsid " << logline.obsID);
+
+        // will be flushed once other relevant meta data is found and flushed
+        inputBuffer->setValue("observationName", GCFPVString(str(format("%i") % logline.obsID).c_str()), logline.timestamp, false);
+    }
+
+    if ((result = strstr(logline.target, "station "))) {
+      char stationName[6];
+      strncpy(stationName, result + 8, 5);
+      stationName[5] = '\0';
+
+      LOG_DEBUG_STR("input buffer " << processNr << " processes station " << stationName);
+
+      // will be flushed once other relevant meta data is found and flushed
+      inputBuffer->setValue("process.logMsg", GCFPVString(stationName), logline.timestamp, false);
     }
 
     //
