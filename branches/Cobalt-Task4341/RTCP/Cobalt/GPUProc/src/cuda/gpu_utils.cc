@@ -191,8 +191,7 @@ namespace LOFAR
        * Note: need to pass a void* with option vals. Preferably, do not alloc dyn (mem leaks on exc).
        * Instead, use local vars for small variables and vector<char> xxx; passing &xxx[0] for output c-strings.
        */
-      vector<CUjit_option> options;
-      vector<void*> optionValues;
+      gpu::Module::optionmap_t options;
 
 #if 0
       unsigned int maxRegs = 63; // TODO: write this up
@@ -208,41 +207,31 @@ namespace LOFAR
       unsigned int errorLogSize = BUILD_MAX_LOG_SIZE + 1; // idem (hence not the a single var or const)
 
       vector<char> infoLog(infoLogSize);
-      options.push_back(CU_JIT_INFO_LOG_BUFFER);
-      optionValues.push_back(&infoLog[0]);
-
-      options.push_back(CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES);
-      optionValues.push_back(&infoLogSize);
+      options[CU_JIT_INFO_LOG_BUFFER] = &infoLog[0];
+      options[CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES] = &infoLogSize;
 
       vector<char> errorLog(errorLogSize);
-      options.push_back(CU_JIT_ERROR_LOG_BUFFER);
-      optionValues.push_back(&errorLog[0]);
-
-      options.push_back(CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES);
-      optionValues.push_back(&errorLogSize);
+      options[CU_JIT_ERROR_LOG_BUFFER] = &errorLog[0];
+      options[CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES] = &errorLogSize;
 
       float jitWallTime = 0.0f; // output val (init it anyway), in milliseconds
-      options.push_back(CU_JIT_WALL_TIME);
-      optionValues.push_back(&jitWallTime);
+      options[CU_JIT_WALL_TIME] = &jitWallTime;
 
 #if 0
       unsigned int optLvl = 4; // 0-4, default 4
-      options.push_back(CU_JIT_OPTIMIZATION_LEVEL);
-      optionValues.push_back(&optLvl);
+      options[CU_JIT_OPTIMIZATION_LEVEL] = &optLvl;
 #endif
 
       unsigned int jitTarget = target;
-      options.push_back(CU_JIT_TARGET);
-      optionValues.push_back(reinterpret_cast<void*>(jitTarget)); // cast the value itself to a void*!
+      options[CU_JIT_TARGET] = reinterpret_cast<void*>(jitTarget); // cast the value itself to a void*!
 
 #if 0
       CUjit_fallback_enum fallback = CU_PREFER_PTX;
-      options.push_back(CU_JIT_FALLBACK_STRATEGY);
-      optionValues.push_back(&fallback);
+      options[CU_JIT_FALLBACK_STRATEGY] = &fallback;
 #endif
       try {
 
-        gpu::Module module(ptxAsString.c_str(), options, optionValues);
+        gpu::Module module(ptxAsString.c_str(), options);
         // TODO: check what the ptx compiler prints. Don't print bogus. See if infoLogSize indeed is set to 0 if all cool.
         // TODO: maybe retry if buffer len exhausted, esp for errors
         if (infoLogSize > infoLog.size()) { // zero-term log and guard against bogus JIT opt val output

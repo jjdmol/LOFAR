@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <boost/shared_ptr.hpp>
 #include "gpu_incl.h" // ideally, this goes into the .cc, but too much leakage
@@ -254,6 +255,8 @@ namespace LOFAR
       class Module
       {
       public:
+        typedef std::map<CUjit_option,void*> optionmap_t;
+
         // Load the module in the file \a fname into the current context. The
         // file should be a \e cubin file or a \e ptx file as output by \c nvcc.
         // \param fname name of a module file
@@ -273,13 +276,11 @@ namespace LOFAR
         // pointer may point to a null-terminated string containing \e cubin or
         // \e ptx code.
         // \param image pointer to a module image in memory
-        // \param options vector of \c CUjit_option items
-        // \param optionValues vector of values associated with \a options
+        // \param options map of \c CUjit_option items, with their associated
+        // values.
         // \note For details, please refer to the documentation of \c
         // cuModuleLoadDataEx in the CUDA Driver API.
-        Module(const void *image,
-               std::vector<CUjit_option> &options,
-               std::vector<void*> &optionValues);
+        Module(const void *image, const optionmap_t &options);
 
       private:
         // Function needs access to our module to create a function.

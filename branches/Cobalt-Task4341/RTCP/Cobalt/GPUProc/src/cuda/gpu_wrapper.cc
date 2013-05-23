@@ -466,9 +466,9 @@ namespace LOFAR
       class Module::Impl : boost::noncopyable
       {
       public:
-        Impl(const char* fname)
+        Impl(const std::string &fname)
         {
-          checkCuCall(cuModuleLoad(&_module, fname));
+          checkCuCall(cuModuleLoad(&_module, fname.c_str()));
         }
 
         Impl(const void *image)
@@ -476,11 +476,19 @@ namespace LOFAR
           checkCuCall(cuModuleLoadData(&_module, image));
         }
 
-        Impl(const void *image, unsigned int numOptions,
-             CUjit_option *options, void **optionValues)
+        Impl(const void *image, const Module::optionmap_t options)
         {
-          checkCuCall(cuModuleLoadDataEx(&_module, image, numOptions,
-                                         options, optionValues));
+          // Convert our option map to two arrays for CUDA
+          std::vector<CUjit_option> keys;
+          std::vector<void*> values;
+
+          for (optionmap_t::const_iterator i = options.begin(); i != options.end(); ++i) {
+            keys.push_back(i->first);
+            values.push_back(i->second);
+          }
+
+          checkCuCall(cuModuleLoadDataEx(&_module, image, options.size(),
+                                         &keys[0], &values[0]));
         }
 
         ~Impl()
@@ -493,7 +501,7 @@ namespace LOFAR
       };
 
       Module::Module(const std::string &fname) :
-        _impl(new Impl(fname.c_str()))
+        _impl(new Impl(fname))
       {
       }
 
@@ -502,11 +510,8 @@ namespace LOFAR
       {
       }
 
-      Module::Module(const void *image,
-                     std::vector<CUjit_option> &options,
-                     std::vector<void*> &optionValues) :
-        _impl(new Impl(image, std::min(options.size(), optionValues.size()),
-                       &options[0], &optionValues[0]))
+      Module::Module(const void *image, const optionmap_t &options):
+        _impl(new Impl(image, options))
       {
       }
 
