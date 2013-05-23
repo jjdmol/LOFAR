@@ -135,17 +135,17 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
     // load data into local memory
     /* for (uint i = get_local_id(0); i < BLOCK_SIZE * NR_STATIONS; i += get_local_size(0)) { */
     for (uint i = threadIdx.x; i < BLOCK_SIZE * NR_STATIONS; i += blockDim.x)
-    {
-      uint time = i % BLOCK_SIZE;
-      uint stat = i / BLOCK_SIZE;
+      {
+        uint time = i % BLOCK_SIZE;
+        uint stat = i / BLOCK_SIZE;
 
-      fcomplex2 sample = (*correctedData)[stat][channel][major + time];
+        fcomplex2 sample = (*correctedData)[stat][channel][major + time];
 
-      samples[0][time][stat] = sample.x;
-      samples[1][time][stat] = sample.y;
-      samples[2][time][stat] = sample.z;
-      samples[3][time][stat] = sample.w;
-    }
+        samples[0][time][stat] = sample.x;
+        samples[1][time][stat] = sample.y;
+        samples[2][time][stat] = sample.z;
+        samples[3][time][stat] = sample.w;
+      }
 
     /* barrier(CLK_LOCAL_MEM_FENCE); */
     __syncthreads();
@@ -637,14 +637,16 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += BLOCK_SIZE) {
     // load data into local memory
 #pragma unroll 1
-    for (uint i = get_local_id(0); i < BLOCK_SIZE * NR_STATIONS; i += get_local_size(0)) {
+    /* for (uint i = get_local_id(0); i < BLOCK_SIZE * NR_STATIONS; i += get_local_size(0)) { */
+    for (uint i = threadIdx.x; i < BLOCK_SIZE * NR_STATIONS; i += blockDim.x) {
       uint time = i % BLOCK_SIZE;
       uint stat = i / BLOCK_SIZE;
 
       samples[stat % 4][time][stat / 4] = (*correctedData)[stat][channel][major + time];
     }
 
-    barrier(CLK_LOCAL_MEM_FENCE);
+    /* barrier(CLK_LOCAL_MEM_FENCE); */
+    __syncthreads();
 
     if (compute_correlations) {
       for (uint time = 0; time < BLOCK_SIZE; time++) {
@@ -657,75 +659,140 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
         fcomplex2 sample_2 = samples[2][time][y];
         fcomplex2 sample_3 = samples[3][time][y];
 
-        vis_0A_r += sample_0.xxzz * sample_A.xzxz;
-        vis_0A_i += sample_0.yyww * sample_A.xzxz;
-        vis_0B_r += sample_0.xxzz * sample_B.xzxz;
-        vis_0B_i += sample_0.yyww * sample_B.xzxz;
-        vis_0C_r += sample_0.xxzz * sample_C.xzxz;
-        vis_0C_i += sample_0.yyww * sample_C.xzxz;
-        vis_0D_r += sample_0.xxzz * sample_D.xzxz;
-        vis_0D_i += sample_0.yyww * sample_D.xzxz;
-        vis_1A_r += sample_1.xxzz * sample_A.xzxz;
-        vis_1A_i += sample_1.yyww * sample_A.xzxz;
-        vis_1B_r += sample_1.xxzz * sample_B.xzxz;
-        vis_1B_i += sample_1.yyww * sample_B.xzxz;
-        vis_1C_r += sample_1.xxzz * sample_C.xzxz;
-        vis_1C_i += sample_1.yyww * sample_C.xzxz;
-        vis_1D_r += sample_1.xxzz * sample_D.xzxz;
-        vis_1D_i += sample_1.yyww * sample_D.xzxz;
-        vis_2A_r += sample_2.xxzz * sample_A.xzxz;
-        vis_2A_i += sample_2.yyww * sample_A.xzxz;
-        vis_2B_r += sample_2.xxzz * sample_B.xzxz;
-        vis_2B_i += sample_2.yyww * sample_B.xzxz;
-        vis_2C_r += sample_2.xxzz * sample_C.xzxz;
-        vis_2C_i += sample_2.yyww * sample_C.xzxz;
-        vis_2D_r += sample_2.xxzz * sample_D.xzxz;
-        vis_2D_i += sample_2.yyww * sample_D.xzxz;
-        vis_3A_r += sample_3.xxzz * sample_A.xzxz;
-        vis_3A_i += sample_3.yyww * sample_A.xzxz;
-        vis_3B_r += sample_3.xxzz * sample_B.xzxz;
-        vis_3B_i += sample_3.yyww * sample_B.xzxz;
-        vis_3C_r += sample_3.xxzz * sample_C.xzxz;
-        vis_3C_i += sample_3.yyww * sample_C.xzxz;
-        vis_3D_r += sample_3.xxzz * sample_D.xzxz;
-        vis_3D_i += sample_3.yyww * sample_D.xzxz;
+        /* vis_0A_r += sample_0.xxzz * sample_A.xzxz; */
+        /* vis_0A_i += sample_0.yyww * sample_A.xzxz; */
+        /* vis_0B_r += sample_0.xxzz * sample_B.xzxz; */
+        /* vis_0B_i += sample_0.yyww * sample_B.xzxz; */
+        /* vis_0C_r += sample_0.xxzz * sample_C.xzxz; */
+        /* vis_0C_i += sample_0.yyww * sample_C.xzxz; */
+        /* vis_0D_r += sample_0.xxzz * sample_D.xzxz; */
+        /* vis_0D_i += sample_0.yyww * sample_D.xzxz; */
+        /* vis_1A_r += sample_1.xxzz * sample_A.xzxz; */
+        /* vis_1A_i += sample_1.yyww * sample_A.xzxz; */
+        /* vis_1B_r += sample_1.xxzz * sample_B.xzxz; */
+        /* vis_1B_i += sample_1.yyww * sample_B.xzxz; */
+        /* vis_1C_r += sample_1.xxzz * sample_C.xzxz; */
+        /* vis_1C_i += sample_1.yyww * sample_C.xzxz; */
+        /* vis_1D_r += sample_1.xxzz * sample_D.xzxz; */
+        /* vis_1D_i += sample_1.yyww * sample_D.xzxz; */
+        /* vis_2A_r += sample_2.xxzz * sample_A.xzxz; */
+        /* vis_2A_i += sample_2.yyww * sample_A.xzxz; */
+        /* vis_2B_r += sample_2.xxzz * sample_B.xzxz; */
+        /* vis_2B_i += sample_2.yyww * sample_B.xzxz; */
+        /* vis_2C_r += sample_2.xxzz * sample_C.xzxz; */
+        /* vis_2C_i += sample_2.yyww * sample_C.xzxz; */
+        /* vis_2D_r += sample_2.xxzz * sample_D.xzxz; */
+        /* vis_2D_i += sample_2.yyww * sample_D.xzxz; */
+        /* vis_3A_r += sample_3.xxzz * sample_A.xzxz; */
+        /* vis_3A_i += sample_3.yyww * sample_A.xzxz; */
+        /* vis_3B_r += sample_3.xxzz * sample_B.xzxz; */
+        /* vis_3B_i += sample_3.yyww * sample_B.xzxz; */
+        /* vis_3C_r += sample_3.xxzz * sample_C.xzxz; */
+        /* vis_3C_i += sample_3.yyww * sample_C.xzxz; */
+        /* vis_3D_r += sample_3.xxzz * sample_D.xzxz; */
+        /* vis_3D_i += sample_3.yyww * sample_D.xzxz; */
+        vis_0A_r += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_A,x,z,x,z);
+        vis_0A_i += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,x,z,x,z);
+        vis_0B_r += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_B,x,z,x,z);
+        vis_0B_i += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_B,x,z,x,z);
+        vis_0C_r += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_C,x,z,x,z);
+        vis_0C_i += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_C,x,z,x,z);
+        vis_0D_r += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_D,x,z,x,z);
+        vis_0D_i += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_D,x,z,x,z);
+        vis_1A_r += SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_A,x,z,x,z);
+        vis_1A_i += SWIZZLE(sample_1,y,y,w,w) * SWIZZLE(sample_A,x,z,x,z);
+        vis_1B_r += SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_B,x,z,x,z);
+        vis_1B_i += SWIZZLE(sample_1,y,y,w,w) * SWIZZLE(sample_B,x,z,x,z);
+        vis_1C_r += SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_C,x,z,x,z);
+        vis_1C_i += SWIZZLE(sample_1,y,y,w,w) * SWIZZLE(sample_C,x,z,x,z);
+        vis_1D_r += SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_D,x,z,x,z);
+        vis_1D_i += SWIZZLE(sample_1,y,y,w,w) * SWIZZLE(sample_D,x,z,x,z);
+        vis_2A_r += SWIZZLE(sample_2,x,x,z,z) * SWIZZLE(sample_A,x,z,x,z);
+        vis_2A_i += SWIZZLE(sample_2,y,y,w,w) * SWIZZLE(sample_A,x,z,x,z);
+        vis_2B_r += SWIZZLE(sample_2,x,x,z,z) * SWIZZLE(sample_B,x,z,x,z);
+        vis_2B_i += SWIZZLE(sample_2,y,y,w,w) * SWIZZLE(sample_B,x,z,x,z);
+        vis_2C_r += SWIZZLE(sample_2,x,x,z,z) * SWIZZLE(sample_C,x,z,x,z);
+        vis_2C_i += SWIZZLE(sample_2,y,y,w,w) * SWIZZLE(sample_C,x,z,x,z);
+        vis_2D_r += SWIZZLE(sample_2,x,x,z,z) * SWIZZLE(sample_D,x,z,x,z);
+        vis_2D_i += SWIZZLE(sample_2,y,y,w,w) * SWIZZLE(sample_D,x,z,x,z);
+        vis_3A_r += SWIZZLE(sample_3,x,x,z,z) * SWIZZLE(sample_A,x,z,x,z);
+        vis_3A_i += SWIZZLE(sample_3,y,y,w,w) * SWIZZLE(sample_A,x,z,x,z);
+        vis_3B_r += SWIZZLE(sample_3,x,x,z,z) * SWIZZLE(sample_B,x,z,x,z);
+        vis_3B_i += SWIZZLE(sample_3,y,y,w,w) * SWIZZLE(sample_B,x,z,x,z);
+        vis_3C_r += SWIZZLE(sample_3,x,x,z,z) * SWIZZLE(sample_C,x,z,x,z);
+        vis_3C_i += SWIZZLE(sample_3,y,y,w,w) * SWIZZLE(sample_C,x,z,x,z);
+        vis_3D_r += SWIZZLE(sample_3,x,x,z,z) * SWIZZLE(sample_D,x,z,x,z);
+        vis_3D_i += SWIZZLE(sample_3,y,y,w,w) * SWIZZLE(sample_D,x,z,x,z);
 
-        vis_0A_r += sample_0.yyww * sample_A.ywyw;
-        vis_0A_i -= sample_0.xxzz * sample_A.ywyw;
-        vis_0B_r += sample_0.yyww * sample_B.ywyw;
-        vis_0B_i -= sample_0.xxzz * sample_B.ywyw;
-        vis_0C_r += sample_0.yyww * sample_C.ywyw;
-        vis_0C_i -= sample_0.xxzz * sample_C.ywyw;
-        vis_0D_r += sample_0.yyww * sample_D.ywyw;
-        vis_0D_i -= sample_0.xxzz * sample_D.ywyw;
-        vis_1A_r += sample_1.yyww * sample_A.ywyw;
-        vis_1A_i -= sample_1.xxzz * sample_A.ywyw;
-        vis_1B_r += sample_1.yyww * sample_B.ywyw;
-        vis_1B_i -= sample_1.xxzz * sample_B.ywyw;
-        vis_1C_r += sample_1.yyww * sample_C.ywyw;
-        vis_1C_i -= sample_1.xxzz * sample_C.ywyw;
-        vis_1D_r += sample_1.yyww * sample_D.ywyw;
-        vis_1D_i -= sample_1.xxzz * sample_D.ywyw;
-        vis_2A_r += sample_2.yyww * sample_A.ywyw;
-        vis_2A_i -= sample_2.xxzz * sample_A.ywyw;
-        vis_2B_r += sample_2.yyww * sample_B.ywyw;
-        vis_2B_i -= sample_2.xxzz * sample_B.ywyw;
-        vis_2C_r += sample_2.yyww * sample_C.ywyw;
-        vis_2C_i -= sample_2.xxzz * sample_C.ywyw;
-        vis_2D_r += sample_2.yyww * sample_D.ywyw;
-        vis_2D_i -= sample_2.xxzz * sample_D.ywyw;
-        vis_3A_r += sample_3.yyww * sample_A.ywyw;
-        vis_3A_i -= sample_3.xxzz * sample_A.ywyw;
-        vis_3B_r += sample_3.yyww * sample_B.ywyw;
-        vis_3B_i -= sample_3.xxzz * sample_B.ywyw;
-        vis_3C_r += sample_3.yyww * sample_C.ywyw;
-        vis_3C_i -= sample_3.xxzz * sample_C.ywyw;
-        vis_3D_r += sample_3.yyww * sample_D.ywyw;
-        vis_3D_i -= sample_3.xxzz * sample_D.ywyw;
+        /* vis_0A_r += sample_0.yyww * sample_A.ywyw; */
+        /* vis_0A_i -= sample_0.xxzz * sample_A.ywyw; */
+        /* vis_0B_r += sample_0.yyww * sample_B.ywyw; */
+        /* vis_0B_i -= sample_0.xxzz * sample_B.ywyw; */
+        /* vis_0C_r += sample_0.yyww * sample_C.ywyw; */
+        /* vis_0C_i -= sample_0.xxzz * sample_C.ywyw; */
+        /* vis_0D_r += sample_0.yyww * sample_D.ywyw; */
+        /* vis_0D_i -= sample_0.xxzz * sample_D.ywyw; */
+        /* vis_1A_r += sample_1.yyww * sample_A.ywyw; */
+        /* vis_1A_i -= sample_1.xxzz * sample_A.ywyw; */
+        /* vis_1B_r += sample_1.yyww * sample_B.ywyw; */
+        /* vis_1B_i -= sample_1.xxzz * sample_B.ywyw; */
+        /* vis_1C_r += sample_1.yyww * sample_C.ywyw; */
+        /* vis_1C_i -= sample_1.xxzz * sample_C.ywyw; */
+        /* vis_1D_r += sample_1.yyww * sample_D.ywyw; */
+        /* vis_1D_i -= sample_1.xxzz * sample_D.ywyw; */
+        /* vis_2A_r += sample_2.yyww * sample_A.ywyw; */
+        /* vis_2A_i -= sample_2.xxzz * sample_A.ywyw; */
+        /* vis_2B_r += sample_2.yyww * sample_B.ywyw; */
+        /* vis_2B_i -= sample_2.xxzz * sample_B.ywyw; */
+        /* vis_2C_r += sample_2.yyww * sample_C.ywyw; */
+        /* vis_2C_i -= sample_2.xxzz * sample_C.ywyw; */
+        /* vis_2D_r += sample_2.yyww * sample_D.ywyw; */
+        /* vis_2D_i -= sample_2.xxzz * sample_D.ywyw; */
+        /* vis_3A_r += sample_3.yyww * sample_A.ywyw; */
+        /* vis_3A_i -= sample_3.xxzz * sample_A.ywyw; */
+        /* vis_3B_r += sample_3.yyww * sample_B.ywyw; */
+        /* vis_3B_i -= sample_3.xxzz * sample_B.ywyw; */
+        /* vis_3C_r += sample_3.yyww * sample_C.ywyw; */
+        /* vis_3C_i -= sample_3.xxzz * sample_C.ywyw; */
+        /* vis_3D_r += sample_3.yyww * sample_D.ywyw; */
+        /* vis_3D_i -= sample_3.xxzz * sample_D.ywyw; */
+        vis_0A_r += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,y,w,y,w);
+        vis_0A_i -= SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_A,y,w,y,w);
+        vis_0B_r += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_B,y,w,y,w);
+        vis_0B_i -= SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_B,y,w,y,w);
+        vis_0C_r += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_C,y,w,y,w);
+        vis_0C_i -= SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_C,y,w,y,w);
+        vis_0D_r += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_D,y,w,y,w);
+        vis_0D_i -= SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_D,y,w,y,w);
+        vis_1A_r += SWIZZLE(sample_1,y,y,w,w) * SWIZZLE(sample_A,y,w,y,w);
+        vis_1A_i -= SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_A,y,w,y,w);
+        vis_1B_r += SWIZZLE(sample_1,y,y,w,w) * SWIZZLE(sample_B,y,w,y,w);
+        vis_1B_i -= SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_B,y,w,y,w);
+        vis_1C_r += SWIZZLE(sample_1,y,y,w,w) * SWIZZLE(sample_C,y,w,y,w);
+        vis_1C_i -= SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_C,y,w,y,w);
+        vis_1D_r += SWIZZLE(sample_1,y,y,w,w) * SWIZZLE(sample_D,y,w,y,w);
+        vis_1D_i -= SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_D,y,w,y,w);
+        vis_2A_r += SWIZZLE(sample_2,y,y,w,w) * SWIZZLE(sample_A,y,w,y,w);
+        vis_2A_i -= SWIZZLE(sample_2,x,x,z,z) * SWIZZLE(sample_A,y,w,y,w);
+        vis_2B_r += SWIZZLE(sample_2,y,y,w,w) * SWIZZLE(sample_B,y,w,y,w);
+        vis_2B_i -= SWIZZLE(sample_2,x,x,z,z) * SWIZZLE(sample_B,y,w,y,w);
+        vis_2C_r += SWIZZLE(sample_2,y,y,w,w) * SWIZZLE(sample_C,y,w,y,w);
+        vis_2C_i -= SWIZZLE(sample_2,x,x,z,z) * SWIZZLE(sample_C,y,w,y,w);
+        vis_2D_r += SWIZZLE(sample_2,y,y,w,w) * SWIZZLE(sample_D,y,w,y,w);
+        vis_2D_i -= SWIZZLE(sample_2,x,x,z,z) * SWIZZLE(sample_D,y,w,y,w);
+        vis_3A_r += SWIZZLE(sample_3,y,y,w,w) * SWIZZLE(sample_A,y,w,y,w);
+        vis_3A_i -= SWIZZLE(sample_3,x,x,z,z) * SWIZZLE(sample_A,y,w,y,w);
+        vis_3B_r += SWIZZLE(sample_3,y,y,w,w) * SWIZZLE(sample_B,y,w,y,w);
+        vis_3B_i -= SWIZZLE(sample_3,x,x,z,z) * SWIZZLE(sample_B,y,w,y,w);
+        vis_3C_r += SWIZZLE(sample_3,y,y,w,w) * SWIZZLE(sample_C,y,w,y,w);
+        vis_3C_i -= SWIZZLE(sample_3,x,x,z,z) * SWIZZLE(sample_C,y,w,y,w);
+        vis_3D_r += SWIZZLE(sample_3,y,y,w,w) * SWIZZLE(sample_D,y,w,y,w);
+        vis_3D_i -= SWIZZLE(sample_3,x,x,z,z) * SWIZZLE(sample_D,y,w,y,w);
       }
     }
 
-    barrier(CLK_LOCAL_MEM_FENCE);
+    /* barrier(CLK_LOCAL_MEM_FENCE); */
+    __syncthreads();
   }
 
   // write visibilities
@@ -756,82 +823,146 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   if (do_baseline_0A) {
     uint baseline = (stat_A * (stat_A + 1) / 2) + stat_0;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_0A_r.x, vis_0A_i.x, vis_0A_r.y, vis_0A_i.y, vis_0A_r.z, vis_0A_i.z, vis_0A_r.w, vis_0A_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0A_r.x, vis_0A_i.x, vis_0A_r.y, vis_0A_i.y, vis_0A_r.z, vis_0A_i.z, vis_0A_r.w, vis_0A_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_0A_r.x, vis_0A_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_0A_r.y, vis_0A_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_0A_r.z, vis_0A_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_0A_r.w, vis_0A_i.w);
   }
 
   if (do_baseline_0B) {
     uint baseline = (stat_B * (stat_B + 1) / 2) + stat_0;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_0B_r.x, vis_0B_i.x, vis_0B_r.y, vis_0B_i.y, vis_0B_r.z, vis_0B_i.z, vis_0B_r.w, vis_0B_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0B_r.x, vis_0B_i.x, vis_0B_r.y, vis_0B_i.y, vis_0B_r.z, vis_0B_i.z, vis_0B_r.w, vis_0B_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_0B_r.x, vis_0B_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_0B_r.y, vis_0B_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_0B_r.z, vis_0B_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_0B_r.w, vis_0B_i.w);
   }
 
   if (do_baseline_0C) {
     uint baseline = (stat_C * (stat_C + 1) / 2) + stat_0;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_0C_r.x, vis_0C_i.x, vis_0C_r.y, vis_0C_i.y, vis_0C_r.z, vis_0C_i.z, vis_0C_r.w, vis_0C_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0C_r.x, vis_0C_i.x, vis_0C_r.y, vis_0C_i.y, vis_0C_r.z, vis_0C_i.z, vis_0C_r.w, vis_0C_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_0C_r.x, vis_0C_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_0C_r.y, vis_0C_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_0C_r.z, vis_0C_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_0C_r.w, vis_0C_i.w);
   }
 
   if (do_baseline_0D) {
     uint baseline = (stat_D * (stat_D + 1) / 2) + stat_0;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_0D_r.x, vis_0D_i.x, vis_0D_r.y, vis_0D_i.y, vis_0D_r.z, vis_0D_i.z, vis_0D_r.w, vis_0D_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0D_r.x, vis_0D_i.x, vis_0D_r.y, vis_0D_i.y, vis_0D_r.z, vis_0D_i.z, vis_0D_r.w, vis_0D_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_0D_r.x, vis_0D_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_0D_r.y, vis_0D_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_0D_r.z, vis_0D_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_0D_r.w, vis_0D_i.w);
   }
 
   if (do_baseline_1A) {
     uint baseline = (stat_A * (stat_A + 1) / 2) + stat_1;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_1A_r.x, vis_1A_i.x, vis_1A_r.y, vis_1A_i.y, vis_1A_r.z, vis_1A_i.z, vis_1A_r.w, vis_1A_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1A_r.x, vis_1A_i.x, vis_1A_r.y, vis_1A_i.y, vis_1A_r.z, vis_1A_i.z, vis_1A_r.w, vis_1A_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_1A_r.x, vis_1A_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_1A_r.y, vis_1A_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_1A_r.z, vis_1A_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_1A_r.w, vis_1A_i.w);
   }
 
   if (do_baseline_1B) {
     uint baseline = (stat_B * (stat_B + 1) / 2) + stat_1;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_1B_r.x, vis_1B_i.x, vis_1B_r.y, vis_1B_i.y, vis_1B_r.z, vis_1B_i.z, vis_1B_r.w, vis_1B_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1B_r.x, vis_1B_i.x, vis_1B_r.y, vis_1B_i.y, vis_1B_r.z, vis_1B_i.z, vis_1B_r.w, vis_1B_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_1B_r.x, vis_1B_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_1B_r.y, vis_1B_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_1B_r.z, vis_1B_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_1B_r.w, vis_1B_i.w);
   }
 
   if (do_baseline_1C) {
     uint baseline = (stat_C * (stat_C + 1) / 2) + stat_1;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_1C_r.x, vis_1C_i.x, vis_1C_r.y, vis_1C_i.y, vis_1C_r.z, vis_1C_i.z, vis_1C_r.w, vis_1C_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1C_r.x, vis_1C_i.x, vis_1C_r.y, vis_1C_i.y, vis_1C_r.z, vis_1C_i.z, vis_1C_r.w, vis_1C_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_1C_r.x, vis_1C_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_1C_r.y, vis_1C_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_1C_r.z, vis_1C_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_1C_r.w, vis_1C_i.w);
   }
 
   if (do_baseline_1D) {
     uint baseline = (stat_D * (stat_D + 1) / 2) + stat_1;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_1D_r.x, vis_1D_i.x, vis_1D_r.y, vis_1D_i.y, vis_1D_r.z, vis_1D_i.z, vis_1D_r.w, vis_1D_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1D_r.x, vis_1D_i.x, vis_1D_r.y, vis_1D_i.y, vis_1D_r.z, vis_1D_i.z, vis_1D_r.w, vis_1D_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_1D_r.x, vis_1D_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_1D_r.y, vis_1D_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_1D_r.z, vis_1D_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_1D_r.w, vis_1D_i.w);
   }
 
   if (do_baseline_2A) {
     uint baseline = (stat_A * (stat_A + 1) / 2) + stat_2;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_2A_r.x, vis_2A_i.x, vis_2A_r.y, vis_2A_i.y, vis_2A_r.z, vis_2A_i.z, vis_2A_r.w, vis_2A_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2A_r.x, vis_2A_i.x, vis_2A_r.y, vis_2A_i.y, vis_2A_r.z, vis_2A_i.z, vis_2A_r.w, vis_2A_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_2A_r.x, vis_2A_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_2A_r.y, vis_2A_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_2A_r.z, vis_2A_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_2A_r.w, vis_2A_i.w);
   }
 
   if (do_baseline_2B) {
     uint baseline = (stat_B * (stat_B + 1) / 2) + stat_2;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_2B_r.x, vis_2B_i.x, vis_2B_r.y, vis_2B_i.y, vis_2B_r.z, vis_2B_i.z, vis_2B_r.w, vis_2B_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2B_r.x, vis_2B_i.x, vis_2B_r.y, vis_2B_i.y, vis_2B_r.z, vis_2B_i.z, vis_2B_r.w, vis_2B_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_2B_r.x, vis_2B_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_2B_r.y, vis_2B_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_2B_r.z, vis_2B_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_2B_r.w, vis_2B_i.w);
   }
 
   if (do_baseline_2C) {
     uint baseline = (stat_C * (stat_C + 1) / 2) + stat_2;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_2C_r.x, vis_2C_i.x, vis_2C_r.y, vis_2C_i.y, vis_2C_r.z, vis_2C_i.z, vis_2C_r.w, vis_2C_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2C_r.x, vis_2C_i.x, vis_2C_r.y, vis_2C_i.y, vis_2C_r.z, vis_2C_i.z, vis_2C_r.w, vis_2C_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_2C_r.x, vis_2C_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_2C_r.y, vis_2C_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_2C_r.z, vis_2C_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_2C_r.w, vis_2C_i.w);
   }
 
   if (do_baseline_2D) {
     uint baseline = (stat_D * (stat_D + 1) / 2) + stat_2;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_2D_r.x, vis_2D_i.x, vis_2D_r.y, vis_2D_i.y, vis_2D_r.z, vis_2D_i.z, vis_2D_r.w, vis_2D_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2D_r.x, vis_2D_i.x, vis_2D_r.y, vis_2D_i.y, vis_2D_r.z, vis_2D_i.z, vis_2D_r.w, vis_2D_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_2D_r.x, vis_2D_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_2D_r.y, vis_2D_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_2D_r.z, vis_2D_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_2D_r.w, vis_2D_i.w);
   }
 
   if (do_baseline_3A) {
     uint baseline = (stat_A * (stat_A + 1) / 2) + stat_3;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_3A_r.x, vis_3A_i.x, vis_3A_r.y, vis_3A_i.y, vis_3A_r.z, vis_3A_i.z, vis_3A_r.w, vis_3A_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3A_r.x, vis_3A_i.x, vis_3A_r.y, vis_3A_i.y, vis_3A_r.z, vis_3A_i.z, vis_3A_r.w, vis_3A_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_3A_r.x, vis_3A_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_3A_r.y, vis_3A_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_3A_r.z, vis_3A_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_3A_r.w, vis_3A_i.w);
   }
 
   if (do_baseline_3B) {
     uint baseline = (stat_B * (stat_B + 1) / 2) + stat_3;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_3B_r.x, vis_3B_i.x, vis_3B_r.y, vis_3B_i.y, vis_3B_r.z, vis_3B_i.z, vis_3B_r.w, vis_3B_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3B_r.x, vis_3B_i.x, vis_3B_r.y, vis_3B_i.y, vis_3B_r.z, vis_3B_i.z, vis_3B_r.w, vis_3B_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_3B_r.x, vis_3B_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_3B_r.y, vis_3B_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_3B_r.z, vis_3B_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_3B_r.w, vis_3B_i.w);
   }
 
   if (do_baseline_3C) {
     uint baseline = (stat_C * (stat_C + 1) / 2) + stat_3;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_3C_r.x, vis_3C_i.x, vis_3C_r.y, vis_3C_i.y, vis_3C_r.z, vis_3C_i.z, vis_3C_r.w, vis_3C_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3C_r.x, vis_3C_i.x, vis_3C_r.y, vis_3C_i.y, vis_3C_r.z, vis_3C_i.z, vis_3C_r.w, vis_3C_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_3C_r.x, vis_3C_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_3C_r.y, vis_3C_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_3C_r.z, vis_3C_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_3C_r.w, vis_3C_i.w);
   }
 
   if (do_baseline_3D) {
     uint baseline = (stat_D * (stat_D + 1) / 2) + stat_3;
-    (*visibilities)[baseline][channel] = (fcomplex4) { vis_3D_r.x, vis_3D_i.x, vis_3D_r.y, vis_3D_i.y, vis_3D_r.z, vis_3D_i.z, vis_3D_r.w, vis_3D_i.w };
+    /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3D_r.x, vis_3D_i.x, vis_3D_r.y, vis_3D_i.y, vis_3D_r.z, vis_3D_i.z, vis_3D_r.w, vis_3D_i.w }; */
+    (*visibilities)[baseline][channel][0][0] = make_float2(vis_3D_r.x, vis_3D_i.x);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_3D_r.y, vis_3D_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_3D_r.z, vis_3D_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_3D_r.w, vis_3D_i.w);
   }
 }
 

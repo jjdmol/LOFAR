@@ -35,8 +35,6 @@
 // \c swizzle operation is more powerful, because it's a language built-in.
 #define SWIZZLE(ARG, X, Y, Z, W) make_float4((ARG).X, (ARG).Y, (ARG).Z, (ARG).W)
 
-extern "C" {
-
 inline __device__ float4 operator + (float4 a, float4 b)
 {
   return make_float4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
@@ -80,6 +78,5 @@ inline __device__ float4& operator /= (float4 &a, float4 b)
   a.x /= b.x; a.y /= b.y; a.z /= b.z; a.w /= b.w;
   return a;
 }
-
 
 #endif
