@@ -39,9 +39,12 @@
 #include <stdlib.h>
 #include <unistd.h> // usleep
 #include <cstdio>
+#include <boost/format.hpp>
 
 #include "CEPlogProcessor.h"
 #include "PVSSDatapointDefs.h"
+
+using boost::format;
 
 
 namespace LOFAR {
@@ -50,6 +53,8 @@ namespace LOFAR {
     using namespace GCF::TM;
     using namespace GCF::PVSS;
     using namespace GCF::RTDB;
+    using namespace std;
+
     namespace APL {
     
 // static pointer to this object for signal handler
