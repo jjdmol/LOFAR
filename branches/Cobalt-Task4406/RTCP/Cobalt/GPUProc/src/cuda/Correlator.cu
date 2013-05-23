@@ -329,9 +329,9 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
     uint baseline = (stat_B * (stat_B + 1) / 2) + stat_1;
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1B_r.x, vis_1B_i.x, vis_1B_r.y, vis_1B_i.y, vis_1B_r.z, vis_1B_i.z, vis_1B_r.w, vis_1B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1B_r.x, vis_1B_i.x);
-    (*visibilities)[baseline][channel][0][0] = make_float2(vis_1B_r.y, vis_1B_i.y);
-    (*visibilities)[baseline][channel][0][0] = make_float2(vis_1B_r.z, vis_1B_i.z);
-    (*visibilities)[baseline][channel][0][0] = make_float2(vis_1B_r.w, vis_1B_i.w);
+    (*visibilities)[baseline][channel][0][1] = make_float2(vis_1B_r.y, vis_1B_i.y);
+    (*visibilities)[baseline][channel][1][0] = make_float2(vis_1B_r.z, vis_1B_i.z);
+    (*visibilities)[baseline][channel][1][1] = make_float2(vis_1B_r.w, vis_1B_i.w);
   }
 }
 
