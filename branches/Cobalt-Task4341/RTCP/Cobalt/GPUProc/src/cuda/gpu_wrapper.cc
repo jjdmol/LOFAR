@@ -318,11 +318,7 @@ namespace LOFAR
 
         ~Impl()
         {
-          try {
-            checkCuCall(cuCtxDestroy(_context));
-          } catch (Exception &ex) {
-            LOG_ERROR_STR("Exception in destructor: " << ex);
-          }
+          checkCuCall(cuCtxDestroy(_context));
         }
 
         CUdevice getDevice() const
@@ -395,11 +391,7 @@ namespace LOFAR
 
       ScopedCurrentContext::~ScopedCurrentContext()
       {
-        try {
-          _context._impl->freeCurrent();
-        } catch (Exception &ex) {
-          LOG_ERROR_STR("Exception in destructor: " << ex);
-        }
+        _context._impl->freeCurrent();
       }
 
 
@@ -417,13 +409,9 @@ namespace LOFAR
 
         ~Impl()
         {
-          try {
-            ScopedCurrentContext scc(_context);
+          ScopedCurrentContext scc(_context);
 
-            checkCuCall(cuMemFreeHost(_ptr));
-          } catch (Exception &ex) {
-            LOG_ERROR_STR("Exception in destructor: " << ex);
-          }
+          checkCuCall(cuMemFreeHost(_ptr));
         }
 
         void *get() const
@@ -473,13 +461,9 @@ namespace LOFAR
 
         ~Impl()
         {
-          try {
-            ScopedCurrentContext scc(_context);
+          ScopedCurrentContext scc(_context);
 
-            checkCuCall(cuMemFree(_ptr));
-          } catch (Exception &ex) {
-            LOG_ERROR_STR("Exception in destructor: " << ex);
-          }
+          checkCuCall(cuMemFree(_ptr));
         }
 
         CUdeviceptr get() const
@@ -554,13 +538,9 @@ namespace LOFAR
 
         ~Impl()
         {
-          try {
-            ScopedCurrentContext scc(_context);
+          ScopedCurrentContext scc(_context);
 
-            checkCuCall(cuModuleUnload(_module));
-          } catch (Exception &ex) {
-            LOG_ERROR_STR("Exception in destructor: " << ex);
-          }
+          checkCuCall(cuModuleUnload(_module));
         }
 
         Context getContext() const
@@ -658,13 +638,9 @@ namespace LOFAR
 
         ~Impl()
         {
-          try {
-            ScopedCurrentContext scc(_context);
+          ScopedCurrentContext scc(_context);
 
-            checkCuCall(cuEventDestroy(_event));
-          } catch (Exception &ex) {
-            LOG_ERROR_STR("Exception in destructor: " << ex);
-          }
+          checkCuCall(cuEventDestroy(_event));
         }
 
         float elapsedTime(CUevent other) const
@@ -718,13 +694,9 @@ namespace LOFAR
 
         ~Impl()
         {
-          try {
-            ScopedCurrentContext scc(_context);
+          ScopedCurrentContext scc(_context);
 
-            checkCuCall(cuStreamDestroy(_stream));
-          } catch (Exception &ex) {
-            LOG_ERROR_STR("Exception in destructor: " << ex);
-          }
+          checkCuCall(cuStreamDestroy(_stream));
         }
 
         void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, 
