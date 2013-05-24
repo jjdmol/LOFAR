@@ -31,7 +31,7 @@
 #include <cerrno>
 #include <iostream>
 #include <sstream>
-#include <iomanip>
+#include <set>
 #include <boost/format.hpp>
 
 #include <Common/SystemUtil.h>
@@ -51,6 +51,7 @@ namespace LOFAR
     using boost::format;
 
     namespace {
+
       // Return the highest compute target supported by the given device
       CUjit_target computeTarget(const gpu::Device &device)
       {
@@ -115,6 +116,8 @@ namespace LOFAR
         return minTarget;
       }
 
+      // Translate a compute target to a virtual architecture (= the version
+      // the .cu file is written in).
       string get_virtarch(CUjit_target target)
       {
         switch (target) {
@@ -143,6 +146,8 @@ namespace LOFAR
         }
       }
 
+      // Translate a compute target to a GPU architecture (= the instruction
+      // set supported by the actual GPU).
       string get_gpuarch(CUjit_target target)
       {
         switch (target) {
@@ -176,13 +181,24 @@ namespace LOFAR
     std::string createPTX(const vector<gpu::Device> &devices, const std::string &srcFilename, 
       CudaRuntimeCompiler::flags_type flags, const CudaRuntimeCompiler::definitions_type &definitions )
     {
-      // Target the oldest architecture of the given devices
-      CUjit_target target = computeTarget(devices);
+      // The CUDA code is assumed to be written for the architecture of the
+      // oldest device.
+      CUjit_target commonTarget = computeTarget(devices);
+      flags.insert(str(format("gpu-architecture %s") % get_virtarch(commonTarget)));
 
-      // Add the derived target to our flags -- for now, we only compile for
-      // the oldest target.
-      flags.insert(str(format("gpu-code %s") % get_gpuarch(target)));
-      flags.insert(str(format("gpu-architecture %s") % get_virtarch(target)));
+#if 0
+      // We'll compile a specific version for each device that has a different
+      // architecture.
+      set<CUjit_target> allTargets;
+
+      for (vector<gpu::Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
+        allTargets.insert(computeTarget(*i));
+      }
+
+      for (set<CUjit_target>::const_iterator i = allTargets.begin(); i != allTargets.end(); ++i) {
+        flags.insert(str(format("gpu-code %s") % get_gpuarch(*i)));
+      }
+#endif
 
       // Create and return PTX
       return CudaRuntimeCompiler::compileToPtx(srcFilename, flags, definitions);
