@@ -334,16 +334,12 @@ namespace LOFAR
 
         void setCacheConfig(CUfunc_cache config) const
         {
-          ScopedCurrentContext scc(_context);
-
           checkCuCall(cuCtxSetCacheConfig(config));
         }
 
         void setSharedMemConfig(CUsharedconfig config) const
         {
 #if CUDA_VERSION >= 4020
-          ScopedCurrentContext scc(_context);
-
           checkCuCall(cuCtxSetSharedMemConfig(config));
 #else
           (void)config;
