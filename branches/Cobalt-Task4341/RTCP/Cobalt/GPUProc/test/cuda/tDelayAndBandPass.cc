@@ -47,9 +47,9 @@ using namespace LOFAR::Cobalt;
   } while(0)
 
 // Helper function to get initialized memory
-HostMemory getInitializedArray(unsigned size, float defaultValue)
+HostMemory getInitializedArray(const Context &ctx, unsigned size, float defaultValue)
 {
-  HostMemory memory(size);
+  HostMemory memory(ctx, size);
   float* createdArray =  memory.get<float>();
   for (unsigned idx = 0; idx < size; ++idx)
     createdArray[idx] = (float)defaultValue;
@@ -70,8 +70,7 @@ float * runTest(float bandPassFactor,
   gpu::Device device(0);
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
-  gpu::ScopedCurrentContext scc(ctx);
-  Stream cuStream;
+  Stream cuStream(ctx);
   std::stringstream tostrstram("");
 
   string kernelPath = "DelayAndBandPass.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
@@ -79,7 +78,7 @@ float * runTest(float bandPassFactor,
   // Get an instantiation of the default parameters
   CudaRuntimeCompiler::definitions_type definitions = CudaRuntimeCompiler::defaultDefinitions();
   CudaRuntimeCompiler::flags_type flags = CudaRuntimeCompiler::defaultFlags();
-  flags.insert("gpu-architecture compute_20"); // The real devices will be 3.0
+  //flags.insert("gpu-architecture compute_20"); // The real devices will be 3.0
 
   // ****************************************
   // Compile to ptx
@@ -108,50 +107,50 @@ float * runTest(float bandPassFactor,
   definitions["BANDPASS_CORRECTION"] = "1";
   if (delayCompensation)
     definitions["DELAY_COMPENSATION"] = "1";
-  vector<string> targets; // unused atm, so can be empty
-  gpu::Module module(createProgram(devices, kernelPath, flags, definitions));  
+  string ptx = createPTX(devices, kernelPath, flags, definitions);
+  gpu::Module module(createModule(ctx, kernelPath, ptx));
   Function  hKernel(module, "applyDelaysAndCorrectBandPass");  // c function this no argument overloading
 
   // *************************************************************
   // Create the data arrays  
   size_t sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX * sizeof(float);
-  DeviceMemory DevFilteredMemory(sizeFilteredData);
-  HostMemory rawFilteredData = getInitializedArray(sizeFilteredData, 1.0);
+  DeviceMemory DevFilteredMemory(ctx, sizeFilteredData);
+  HostMemory rawFilteredData = getInitializedArray(ctx, sizeFilteredData, 1.0);
   cuStream.writeBuffer(DevFilteredMemory, rawFilteredData);
 
   size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
-  DeviceMemory DevCorrectedMemory(sizeCorrectedData);
-  HostMemory rawCorrectedData = getInitializedArray(sizeCorrectedData, 42.0); 
+  DeviceMemory DevCorrectedMemory(ctx, sizeCorrectedData);
+  HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 42.0); 
   cuStream.writeBuffer(DevCorrectedMemory, rawCorrectedData);
 
   size_t sizeDelaysAtBeginData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float);  
-  DeviceMemory DevDelaysAtBeginMemory(sizeDelaysAtBeginData);
-  HostMemory rawDelaysAtBeginData = getInitializedArray(sizeDelaysAtBeginData, delayBegin);
+  DeviceMemory DevDelaysAtBeginMemory(ctx, sizeDelaysAtBeginData);
+  HostMemory rawDelaysAtBeginData = getInitializedArray(ctx, sizeDelaysAtBeginData, delayBegin);
   cuStream.writeBuffer(DevDelaysAtBeginMemory, rawDelaysAtBeginData);
     
   size_t sizeDelaysAfterEndData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float); 
-  DeviceMemory DevDelaysAfterEndMemory(sizeDelaysAfterEndData);
-  HostMemory rawDelaysAfterEndData = getInitializedArray(sizeDelaysAfterEndData, delayEnd);
+  DeviceMemory DevDelaysAfterEndMemory(ctx, sizeDelaysAfterEndData);
+  HostMemory rawDelaysAfterEndData = getInitializedArray(ctx, sizeDelaysAfterEndData, delayEnd);
   cuStream.writeBuffer(DevDelaysAfterEndMemory, rawDelaysAfterEndData);
     
   size_t sizePhaseOffsetData = NR_STATIONS * 2*sizeof(float); 
-  DeviceMemory DevPhaseOffsetMemory(sizePhaseOffsetData);
-  HostMemory rawPhaseOffsetData = getInitializedArray(sizePhaseOffsetData, PhaseOffset);
+  DeviceMemory DevPhaseOffsetMemory(ctx, sizePhaseOffsetData);
+  HostMemory rawPhaseOffsetData = getInitializedArray(ctx, sizePhaseOffsetData, PhaseOffset);
   cuStream.writeBuffer(DevPhaseOffsetMemory, rawPhaseOffsetData);
 
   size_t sizebandPassFactorsData = NR_CHANNELS * sizeof(float);
-  DeviceMemory DevbandPassFactorsMemory(sizebandPassFactorsData);
-  HostMemory rawbandPassFactorsData = getInitializedArray(sizebandPassFactorsData, bandPassFactor);
+  DeviceMemory DevbandPassFactorsMemory(ctx, sizebandPassFactorsData);
+  HostMemory rawbandPassFactorsData = getInitializedArray(ctx, sizebandPassFactorsData, bandPassFactor);
   cuStream.writeBuffer(DevbandPassFactorsMemory, rawbandPassFactorsData);
   
   size_t sizeSubbandFrequency = 1 * sizeof(float);
-  DeviceMemory DevSubbandFrequencyMemory(sizeSubbandFrequency);
-  HostMemory subbandFrequency = getInitializedArray(sizeSubbandFrequency, frequency);
+  DeviceMemory DevSubbandFrequencyMemory(ctx, sizeSubbandFrequency);
+  HostMemory subbandFrequency = getInitializedArray(ctx, sizeSubbandFrequency, frequency);
   cuStream.writeBuffer(DevSubbandFrequencyMemory, subbandFrequency);
   
   size_t sizeBeamData = 1 * sizeof(unsigned);
-  DeviceMemory DevBeamMemory(sizeBeamData);
-  HostMemory beamData(sizeBeamData);
+  DeviceMemory DevBeamMemory(ctx, sizeBeamData);
+  HostMemory beamData(ctx, sizeBeamData);
   cuStream.writeBuffer(DevBeamMemory, beamData);
 
   // ****************************************************************************

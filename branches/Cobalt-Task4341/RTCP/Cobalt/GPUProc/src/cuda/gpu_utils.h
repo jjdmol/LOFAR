@@ -39,10 +39,16 @@ namespace LOFAR
      *
      * srcFilename cannot be an absolute path.
      */
-    gpu::Module createProgram( const std::vector<gpu::Device> &devices,
+    std::string createPTX( const std::vector<gpu::Device> &devices,
                                const std::string &srcFilename, 
                                CudaRuntimeCompiler::flags_type flags,
-                               CudaRuntimeCompiler::definitions_type definitions );
+                               const CudaRuntimeCompiler::definitions_type &definitions );
+    /*
+     * Create a Module from a PTX (string).
+     */
+    gpu::Module createModule( const gpu::Context &context,
+                               const std::string &srcFilename, 
+                               const std::string &ptx );
   }
 }
 

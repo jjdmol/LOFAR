@@ -318,7 +318,11 @@ namespace LOFAR
 
         ~Impl()
         {
-          checkCuCall(cuCtxDestroy(_context));
+          try {
+            checkCuCall(cuCtxDestroy(_context));
+          } catch (Exception &ex) {
+            LOG_ERROR_STR("Exception in destructor: " << ex);
+          }
         }
 
         CUdevice getDevice() const
@@ -349,19 +353,14 @@ namespace LOFAR
 
         void freeCurrent() const
         {
-          CUcontext dummy;
-          checkCuCall(cuCtxPopCurrent(&dummy));
-
-          // We should have freed this context, or something went terribly
-          // wrong!
-          ASSERT(dummy == _context);
+          checkCuCall(cuCtxPopCurrent(NULL));
         }
 
       private:
         CUcontext _context;
       };
 
-      Context::Context(Device device, unsigned int flags) :
+      Context::Context(const Device &device, unsigned int flags) :
         _impl(new Impl(device._device, flags))
       {
       }
@@ -388,29 +387,43 @@ namespace LOFAR
       }
 
 
-      ScopedCurrentContext::ScopedCurrentContext(const Context &context) :
-        context(context)
+      ScopedCurrentContext::ScopedCurrentContext(const Context &context):
+        _context(context)
       {
-        context._impl->setCurrent();
+        _context._impl->setCurrent();
       }
 
       ScopedCurrentContext::~ScopedCurrentContext()
       {
-        context._impl->freeCurrent();
+        try {
+          _context._impl->freeCurrent();
+        } catch (Exception &ex) {
+          LOG_ERROR_STR("Exception in destructor: " << ex);
+        }
       }
 
 
       class HostMemory::Impl : boost::noncopyable
       {
       public:
-        Impl(size_t size, unsigned int flags) : _size(size)
+        Impl(const Context &context, size_t size, unsigned int flags):
+          _context(context),
+          _size(size)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuMemHostAlloc(&_ptr, size, flags));
         }
 
         ~Impl()
         {
-          checkCuCall(cuMemFreeHost(_ptr));
+          try {
+            ScopedCurrentContext scc(_context);
+
+            checkCuCall(cuMemFreeHost(_ptr));
+          } catch (Exception &ex) {
+            LOG_ERROR_STR("Exception in destructor: " << ex);
+          }
         }
 
         void *get() const
@@ -424,12 +437,14 @@ namespace LOFAR
         }
 
       private:
+        const Context _context;
+
         void *_ptr;
         size_t _size;
       };
 
-      HostMemory::HostMemory(size_t size, unsigned int flags) :
-        _impl(new Impl(size, flags))
+      HostMemory::HostMemory(const Context &context, size_t size, unsigned int flags) :
+        _impl(new Impl(context, size, flags))
       {
       }
 
@@ -447,14 +462,24 @@ namespace LOFAR
       class DeviceMemory::Impl : boost::noncopyable
       {
       public:
-        Impl(size_t size) : _size(size)
+        Impl(const Context &context, size_t size):
+          _context(context),
+          _size(size)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuMemAlloc(&_ptr, size));
         }
 
         ~Impl()
         {
-          checkCuCall(cuMemFree(_ptr));
+          try {
+            ScopedCurrentContext scc(_context);
+
+            checkCuCall(cuMemFree(_ptr));
+          } catch (Exception &ex) {
+            LOG_ERROR_STR("Exception in destructor: " << ex);
+          }
         }
 
         CUdeviceptr get() const
@@ -470,11 +495,12 @@ namespace LOFAR
       //private: // Functions needs its address to set kernel args
         CUdeviceptr _ptr;
       private:
+        const Context _context;
         size_t _size;
       };
 
-      DeviceMemory::DeviceMemory(size_t size) :
-        _impl(new Impl(size))
+      DeviceMemory::DeviceMemory(const Context &context, size_t size) :
+        _impl(new Impl(context, size))
       {
       }
 
@@ -492,17 +518,24 @@ namespace LOFAR
       class Module::Impl : boost::noncopyable
       {
       public:
-        Impl(const std::string &fname)
+        Impl(const Context &context, const std::string &fname):
+          _context(context)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuModuleLoad(&_module, fname.c_str()));
         }
 
-        Impl(const void *image)
+        Impl(const Context &context, const void *image):
+          _context(context)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuModuleLoadData(&_module, image));
         }
 
-        Impl(const void *image, const Module::optionmap_t options)
+        Impl(const Context &context, const void *image, const Module::optionmap_t options):
+          _context(context)
         {
           // Convert our option map to two arrays for CUDA
           std::vector<CUjit_option> keys;
@@ -513,48 +546,77 @@ namespace LOFAR
             values.push_back(i->second);
           }
 
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuModuleLoadDataEx(&_module, image, options.size(),
                                          &keys[0], &values[0]));
         }
 
         ~Impl()
         {
-          checkCuCall(cuModuleUnload(_module));
+          try {
+            ScopedCurrentContext scc(_context);
+
+            checkCuCall(cuModuleUnload(_module));
+          } catch (Exception &ex) {
+            LOG_ERROR_STR("Exception in destructor: " << ex);
+          }
         }
 
-        //private: // Function needs it to create a CUfunction
+        Context getContext() const
+        {
+          return _context;
+        }
+
+      private:
+        const Context _context;
+
         CUmodule _module;
+
+        friend class Function;
       };
 
-      Module::Module(const std::string &fname) :
-        _impl(new Impl(fname))
+      Module::Module(const Context &context, const std::string &fname) :
+        _impl(new Impl(context, fname))
       {
       }
 
-      Module::Module(const void *image) :
-        _impl(new Impl(image))
+      Module::Module(const Context &context, const void *image) :
+        _impl(new Impl(context, image))
       {
       }
 
-      Module::Module(const void *image, const optionmap_t &options):
-        _impl(new Impl(image, options))
+      Module::Module(const Context &context, const void *image, const optionmap_t &options):
+        _impl(new Impl(context, image, options))
       {
       }
 
-
-      Function::Function(Module &module, const std::string &name)
+      Context Module::getContext() const
       {
+        return _impl->getContext();
+      }
+
+
+      Function::Function(Module &module, const std::string &name):
+        _context(module.getContext())
+      {
+        ScopedCurrentContext scc(_context);
+
         checkCuCall(cuModuleGetFunction(&_function, module._impl->_module,
                                         name.c_str()));
       }
 
       void Function::setArg(size_t index, const DeviceMemory &mem)
       {
+        ScopedCurrentContext scc(_context);
+
         doSetArg(index, &mem._impl->_ptr);
       }
 
       void Function::setArg(size_t index, const void **val)
       {
+        ScopedCurrentContext scc(_context);
+
         doSetArg(index, (const void *)val);
       }
 
@@ -568,6 +630,8 @@ namespace LOFAR
 
       int Function::getAttribute(CUfunction_attribute attribute) const
       {
+        ScopedCurrentContext scc(_context);
+
         int value;
         checkCuCall(cuFuncGetAttribute(&value, attribute, _function));
         return value;
@@ -576,6 +640,8 @@ namespace LOFAR
       void Function::setSharedMemConfig(CUsharedconfig config) const
       {
 #if CUDA_VERSION >= 4020
+        ScopedCurrentContext scc(_context);
+
         checkCuCall(cuFuncSetSharedMemConfig(_function, config));
 #else
         (void)config;
@@ -586,18 +652,29 @@ namespace LOFAR
       class Event::Impl : boost::noncopyable
       {
       public:
-        Impl(unsigned int flags)
+        Impl(const Context &context, unsigned int flags):
+          _context(context)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuEventCreate(&_event, flags));
         }
 
         ~Impl()
         {
-          checkCuCall(cuEventDestroy(_event));
+          try {
+            ScopedCurrentContext scc(_context);
+
+            checkCuCall(cuEventDestroy(_event));
+          } catch (Exception &ex) {
+            LOG_ERROR_STR("Exception in destructor: " << ex);
+          }
         }
 
         float elapsedTime(CUevent other) const
         {
+          ScopedCurrentContext scc(_context);
+
           float ms;
           checkCuCall(cuEventElapsedTime(&ms, other, _event));
           return ms;
@@ -605,14 +682,19 @@ namespace LOFAR
 
         void wait()
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuEventSynchronize(_event));
         }
 
       //private: // Stream needs it to wait for and record events
         CUevent _event;
+      private:
+        const Context _context;
       };
 
-      Event::Event(unsigned int flags) : _impl(new Impl(flags))
+      Event::Event(const Context &context, unsigned int flags):
+        _impl(new Impl(context, flags))
       {
       }
 
@@ -630,24 +712,37 @@ namespace LOFAR
       class Stream::Impl : boost::noncopyable
       {
       public:
-        Impl(unsigned int flags)
+        Impl(const Context &context, unsigned int flags):
+          _context(context)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuStreamCreate(&_stream, flags));
         }
 
         ~Impl()
         {
-          checkCuCall(cuStreamDestroy(_stream));
+          try {
+            ScopedCurrentContext scc(_context);
+
+            checkCuCall(cuStreamDestroy(_stream));
+          } catch (Exception &ex) {
+            LOG_ERROR_STR("Exception in destructor: " << ex);
+          }
         }
 
         void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, 
                              size_t size)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _stream));
         }
 
         void memcpyDtoHAsync(void *hostPtr, CUdeviceptr devPtr, size_t size)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _stream));
         }
 
@@ -656,6 +751,8 @@ namespace LOFAR
                           unsigned blockZ, unsigned sharedMemBytes,
                           void **parameters)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
                                      blockY, blockZ, sharedMemBytes, _stream,
                                      parameters, NULL));
@@ -663,6 +760,8 @@ namespace LOFAR
 
         bool query() const
         {
+          ScopedCurrentContext scc(_context);
+
           CUresult rv = cuStreamQuery(_stream);
           if (rv == CUDA_ERROR_NOT_READY) {
             return false;
@@ -675,16 +774,22 @@ namespace LOFAR
 
         void synchronize() const
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuStreamSynchronize(_stream));
         }
 
         void waitEvent(CUevent event) const
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuStreamWaitEvent(_stream, event, 0));
         }
 
         void recordEvent(CUevent event)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuEventRecord(event, _stream));
         }
 
@@ -693,11 +798,18 @@ namespace LOFAR
           return _stream;
         }
 
+        Context getContext() const
+        {
+          return _context;
+        }
+
       private:
+        const Context _context;
         CUstream _stream;
       };
 
-      Stream::Stream(unsigned int flags) : _impl(new Impl(flags))
+      Stream::Stream(const Context &context, unsigned int flags):
+        _impl(new Impl(context, flags))
       {
       }
 
@@ -771,6 +883,11 @@ namespace LOFAR
       CUstream Stream::get() const
       {
         return _impl->get();
+      }
+
+      Context Stream::getContext() const
+      {
+        return _impl->getContext();
       }
 
 

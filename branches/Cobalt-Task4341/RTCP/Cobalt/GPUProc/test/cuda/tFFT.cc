@@ -68,17 +68,16 @@ int main() {
   gpu::Platform pf;
   gpu::Device device(0);
   gpu::Context ctx(device);
-  gpu::ScopedCurrentContext scc(ctx);
 
-  gpu::Stream stream;
+  gpu::Stream stream(ctx);
 
   const size_t size = 1024 * 1024;
   const int fftSize = 256;
   const unsigned nrFFTs = size / fftSize;
 
   // GPU buffers and plans
-  gpu::HostMemory inout(size  * sizeof(fcomplex));
-  gpu::DeviceMemory d_inout(size  * sizeof(fcomplex));
+  gpu::HostMemory inout(ctx, size  * sizeof(fcomplex));
+  gpu::DeviceMemory d_inout(ctx, size  * sizeof(fcomplex));
 
   FFT_Kernel fftFwdKernel(fftSize, nrFFTs, true, d_inout);
   FFT_Kernel fftBwdKernel(fftSize, nrFFTs, false, d_inout);

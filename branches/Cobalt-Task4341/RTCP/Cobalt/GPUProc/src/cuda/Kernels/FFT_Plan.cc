@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include "FFT_Plan.h"
+#include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
 {
@@ -44,6 +45,8 @@ namespace LOFAR
     void FFT_Plan::setStream(gpu::Stream &stream)
     {
       cufftResult error;
+
+      gpu::ScopedCurrentContext scc(stream.getContext());
 
       error = cufftSetStream(plan, stream.get());
 

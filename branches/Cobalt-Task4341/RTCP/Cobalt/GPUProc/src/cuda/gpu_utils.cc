@@ -172,8 +172,9 @@ namespace LOFAR
       }
     }
 
-    gpu::Module createProgram(const std::vector<gpu::Device> &devices, const std::string &srcFilename, 
-      CudaRuntimeCompiler::flags_type flags, CudaRuntimeCompiler::definitions_type definitions )
+
+    std::string createPTX(const vector<gpu::Device> &devices, const std::string &srcFilename, 
+      CudaRuntimeCompiler::flags_type flags, const CudaRuntimeCompiler::definitions_type &definitions )
     {
       // Target the oldest architecture of the given devices
       CUjit_target target = computeTarget(devices);
@@ -183,9 +184,13 @@ namespace LOFAR
       flags.insert(str(format("gpu-code %s") % get_gpuarch(target)));
       flags.insert(str(format("gpu-architecture %s") % get_virtarch(target)));
 
-      // Create PTX
-      string ptxAsString = CudaRuntimeCompiler::compileToPtx(srcFilename, flags, definitions);
+      // Create and return PTX
+      return CudaRuntimeCompiler::compileToPtx(srcFilename, flags, definitions);
+    }
 
+
+    gpu::Module createModule(const gpu::Context &context, const std::string &srcFilename, const std::string &ptx)
+    {
       /*
        * JIT compilation options.
        * Note: need to pass a void* with option vals. Preferably, do not alloc dyn (mem leaks on exc).
@@ -203,16 +208,16 @@ namespace LOFAR
       optionValues.push_back(&thrPerBlk); // can be read back
 #endif
 
-      size_t infoLogSize  = BUILD_MAX_LOG_SIZE + 1; // input and output var for JIT compiler
-      size_t errorLogSize = BUILD_MAX_LOG_SIZE + 1; // idem (hence not the a single var or const)
+      unsigned infoLogSize  = BUILD_MAX_LOG_SIZE + 1; // input and output var for JIT compiler
+      unsigned errorLogSize = BUILD_MAX_LOG_SIZE + 1; // idem (hence not the a single var or const)
 
       vector<char> infoLog(infoLogSize);
       options[CU_JIT_INFO_LOG_BUFFER] = &infoLog[0];
-      options[CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES] = reinterpret_cast<void*>(infoLogSize);
+      options[CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES] = &infoLogSize;
 
       vector<char> errorLog(errorLogSize);
       options[CU_JIT_ERROR_LOG_BUFFER] = &errorLog[0];
-      options[CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES] = reinterpret_cast<void*>(errorLogSize);
+      options[CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES] = &errorLogSize;
 
       float jitWallTime = 0.0f; // output val (init it anyway), in milliseconds
       options[CU_JIT_WALL_TIME] = &jitWallTime;
@@ -222,16 +227,19 @@ namespace LOFAR
       options[CU_JIT_OPTIMIZATION_LEVEL] = reinterpret_cast<void*>(optLvl);
 #endif
 
+#if 0
+      // NOTE: There is no need to specify a target. NVCC will use the best one
+      // available based on the PTX and the Context.
       size_t jitTarget = target;
       options[CU_JIT_TARGET] = reinterpret_cast<void*>(jitTarget);
+#endif
 
 #if 0
       size_t fallback = CU_PREFER_PTX;
       options[CU_JIT_FALLBACK_STRATEGY] = reinterpret_cast<void*>(fallback);
 #endif
       try {
-
-        gpu::Module module(ptxAsString.c_str(), options);
+        gpu::Module module(context, ptx.c_str(), options);
         // TODO: check what the ptx compiler prints. Don't print bogus. See if infoLogSize indeed is set to 0 if all cool.
         // TODO: maybe retry if buffer len exhausted, esp for errors
         if (infoLogSize > infoLog.size()) { // zero-term log and guard against bogus JIT opt val output
@@ -241,6 +249,7 @@ namespace LOFAR
         cout << "Build info for '" << srcFilename 
              << "' (build time: " << jitWallTime 
              << " us):" << endl << &infoLog[0] << endl;
+
         return module;
       } catch (gpu::CUDAException& exc) {
         if (errorLogSize > errorLog.size()) { // idem

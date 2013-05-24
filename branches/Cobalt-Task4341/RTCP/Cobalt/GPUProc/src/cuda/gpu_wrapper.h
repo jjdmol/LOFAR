@@ -51,6 +51,7 @@ namespace LOFAR
   {
     // Needed for friend declaration in gpu::Stream
     class FFT_Plan;
+    class FFT_Kernel;
 
     namespace gpu
     {
@@ -159,7 +160,7 @@ namespace LOFAR
       public:
         // Create a new CUDA context and associate it with the calling thread.
         // In other words, \c setCurrent() is implied.
-        Context(Device device, unsigned int flags = CU_CTX_SCHED_AUTO);
+        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_AUTO);
 
         // Returns the device associated to the _current_ context.
         Device getDevice() const;
@@ -189,7 +190,7 @@ namespace LOFAR
         ~ScopedCurrentContext();
 
       private:
-        const Context &context;
+        const Context &_context;
       };
 
 
@@ -211,7 +212,7 @@ namespace LOFAR
         // \endcode
         // Please refer to the documentation of the function \c cuMemHostAlloc()
         // in the CUDA Driver API for details.
-        HostMemory(size_t size, unsigned int flags = 0);
+        HostMemory(const Context &context, size_t size, unsigned int flags = 0);
 
         // Return a pointer to the actual memory.
         // \warning The returned pointer shall not have a lifetime beyond the
@@ -242,7 +243,7 @@ namespace LOFAR
       {
       public:
         // Allocate \a size bytes of device memory.
-        DeviceMemory(size_t size);
+        DeviceMemory(const Context &context, size_t size);
 
         // Return a device pointer as a handle to the memory.
         void *get() const;
@@ -273,7 +274,7 @@ namespace LOFAR
         // \param fname name of a module file
         // \note For details, please refer to the documentation of \c
         // cuModuleLoad in the CUDA Driver API.
-        Module(const std::string &fname);
+        Module(const Context &context, const std::string &fname);
 
         // Load the module pointed to by \a image into the current context. The
         // pointer may point to a null-terminated string containing \e cubin or
@@ -281,7 +282,7 @@ namespace LOFAR
         // \param image pointer to a module image in memory
         // \note For details, please refer to the documentation of \c
         // cuModuleLoadData in the CUDA Driver API.
-        Module(const void *image);
+        Module(const Context &context, const void *image);
 
         // Load the module pointed to by \a image into the current context. The
         // pointer may point to a null-terminated string containing \e cubin or
@@ -293,7 +294,10 @@ namespace LOFAR
         // an unsigned int as value, the unsigned int's value itself is cast to void*!
         // \note For details, please refer to the documentation of \c
         // cuModuleLoadDataEx in the CUDA Driver API.
-        Module(const void *image, const optionmap_t &options);
+        Module(const Context &context, const void *image, const optionmap_t &options);
+
+        // Return the Context in which this Module was created.
+        Context getContext() const;
 
       private:
         // Function needs access to our module to create a function.
@@ -341,6 +345,8 @@ namespace LOFAR
         void setSharedMemConfig(CUsharedconfig config) const;
 
       private:
+        const Context _context;
+
         // Stream needs access to our CUDA function to launch a kernel.
         friend class Stream;
 
@@ -376,7 +382,7 @@ namespace LOFAR
         // counted pointer to a non-copyable implementation class.
         // \note For details on valid values for \a flags, please refer to the
         // documentation of cuEventCreate in the CUDA Driver API.
-        Event(unsigned int flags = CU_EVENT_DEFAULT);
+        Event(const Context &context, unsigned int flags = CU_EVENT_DEFAULT);
 
         // Return the elapsed time in milliseconds between this event and the \a
         // second event.
@@ -409,7 +415,7 @@ namespace LOFAR
         // \param flags must be 0 for CUDA < 5.0
         // \note For details on valid values for \a flags, please refer to the
         // documentation of \c cuStreamCreate in the CUDA Driver API.
-        Stream(unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
+        Stream(const Context &context, unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
 
         // Transfer data from host memory \a hostMem to device memory \a devMem.
         // \param devMem Device memory that will be copied to.
@@ -449,9 +455,13 @@ namespace LOFAR
 
       private:
         friend class LOFAR::Cobalt::FFT_Plan;
+        friend class LOFAR::Cobalt::FFT_Kernel;
 
         // Return the underlying CUDA stream.
         CUstream get() const;
+
+        // Returns the context associated with the underlying CUDA stream;
+        Context getContext() const;
 
         // Non-copyable implementation class.
         class Impl;
@@ -459,7 +469,6 @@ namespace LOFAR
         // Reference counted pointer to the implementation class.
         boost::shared_ptr<Impl> _impl;
       };
-
 
     } // namespace gpu
   } // namespace Cobalt

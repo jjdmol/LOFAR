@@ -40,7 +40,6 @@ int main() {
   gpu::Device device(0);
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
-  gpu::ScopedCurrentContext scc(ctx);
   string srcFilename("tKernel.in_.cu");
   Parset ps("tKernel.parset.in");
 
@@ -72,19 +71,20 @@ int main() {
   }
   definitions["DEDISPERSION_FFT_SIZE"]= boost::lexical_cast<string>(ps.dedispersionFFTsize());
 
-  gpu::Module module(createProgram(devices, srcFilename, flags, definitions));
+  string ptx = createPTX(devices, srcFilename, flags, definitions);
+  gpu::Module module(createModule(ctx, srcFilename, ptx));
   cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 
   string entryPointName("testKernel");
   gpu::Function func(module, entryPointName);
 
-  gpu::Stream stream;
+  gpu::Stream stream(ctx);
 
   const size_t size = 2 * 1024 * 1024;
-  gpu::HostMemory in(size  * sizeof(float));
-  gpu::HostMemory out(size * sizeof(float));
-  gpu::DeviceMemory d_in(size  * sizeof(float));
-  gpu::DeviceMemory d_out(size * sizeof(float));
+  gpu::HostMemory in(ctx, size  * sizeof(float));
+  gpu::HostMemory out(ctx, size * sizeof(float));
+  gpu::DeviceMemory d_in(ctx, size  * sizeof(float));
+  gpu::DeviceMemory d_out(ctx, size * sizeof(float));
 
   // init buffers
   for (size_t i = 0; i < size; i++)
