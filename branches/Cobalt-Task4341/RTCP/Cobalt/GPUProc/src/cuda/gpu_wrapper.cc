@@ -334,12 +334,16 @@ namespace LOFAR
 
         void setCacheConfig(CUfunc_cache config) const
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuCtxSetCacheConfig(config));
         }
 
         void setSharedMemConfig(CUsharedconfig config) const
         {
 #if CUDA_VERSION >= 4020
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuCtxSetSharedMemConfig(config));
 #else
           (void)config;
@@ -608,15 +612,11 @@ namespace LOFAR
 
       void Function::setArg(size_t index, const DeviceMemory &mem)
       {
-        ScopedCurrentContext scc(_context);
-
         doSetArg(index, &mem._impl->_ptr);
       }
 
       void Function::setArg(size_t index, const void **val)
       {
-        ScopedCurrentContext scc(_context);
-
         doSetArg(index, (const void *)val);
       }
 
@@ -763,13 +763,19 @@ namespace LOFAR
           ScopedCurrentContext scc(_context);
 
           CUresult rv = cuStreamQuery(_stream);
-          if (rv == CUDA_ERROR_NOT_READY) {
-            return false;
-          } else if (rv == CUDA_SUCCESS) {
-            return true;
+
+          switch (rv) {
+            case CUDA_ERROR_NOT_READY:
+              return false;
+
+            case CUDA_SUCCESS:
+              return true;
+
+            default:
+              checkCuCall(rv); // throws
+
+              ASSERT(false); // not reached; silence compilation warning
           }
-          checkCuCall(rv); // throws
-          return false; // not reached; silence compilation warning
         }
 
         void synchronize() const

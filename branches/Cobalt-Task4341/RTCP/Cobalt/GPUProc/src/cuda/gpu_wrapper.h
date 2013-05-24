@@ -155,6 +155,12 @@ namespace LOFAR
       // Wrap a CUDA Context. Since this class manages a resource (a CUDA
       // context), it uses the pimpl idiom in combination with a reference
       // counted pointer to make it copyable.
+      //
+      // We do not tie any context to any thread by default -- all contexts
+      // are `floating', and are to be tied to a thread only by pushing them
+      // as the current context, performing operation(s), and popping them
+      // from the current context stack. The pushing and popping is automated
+      // in the ScopedCurrentContext class.
       class Context
       {
       public:
@@ -269,14 +275,14 @@ namespace LOFAR
       public:
         typedef std::map<CUjit_option,void*> optionmap_t;
 
-        // Load the module in the file \a fname into the current context. The
+        // Load the module in the file \a fname into the given \a context. The
         // file should be a \e cubin file or a \e ptx file as output by \c nvcc.
         // \param fname name of a module file
         // \note For details, please refer to the documentation of \c
         // cuModuleLoad in the CUDA Driver API.
         Module(const Context &context, const std::string &fname);
 
-        // Load the module pointed to by \a image into the current context. The
+        // Load the module pointed to by \a image into the given \a context. The
         // pointer may point to a null-terminated string containing \e cubin or
         // \e ptx code.
         // \param image pointer to a module image in memory
@@ -284,7 +290,7 @@ namespace LOFAR
         // cuModuleLoadData in the CUDA Driver API.
         Module(const Context &context, const void *image);
 
-        // Load the module pointed to by \a image into the current context. The
+        // Load the module pointed to by \a image into the given \a context. The
         // pointer may point to a null-terminated string containing \e cubin or
         // \e ptx code.
         // \param image pointer to a module image in memory
@@ -355,7 +361,6 @@ namespace LOFAR
 
         // Function arguments as set.
         std::vector<const void *> _kernelArgs;
-
 
         // Helper function to modify _kernelArgs.
         void doSetArg(size_t index, const void *argp);
