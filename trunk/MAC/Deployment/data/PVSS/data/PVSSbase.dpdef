@@ -14,7 +14,7 @@ ClaimManager.ClaimManager	1#
 		newObjectName	25#
 	reset	1#
 		typeName	25#
-		newObjectName	25#
+		objectName	25#
 	response	1#
 		typeName	25#
 		newObjectName	25#
