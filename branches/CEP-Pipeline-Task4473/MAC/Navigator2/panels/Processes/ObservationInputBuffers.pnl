@@ -1,0 +1,566 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 1307 841 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  baseDP         = g_currentDatapoint;
+  dpGet(baseDP+\".observationName\",observationNr);
+  observationName=\"Observation\"+observationNr;
+  strModuleName   = myModuleName();
+  
+  TopLabel.text(observationName+\" InputBuffers\");
+  
+   
+  reload();
+
+}
+
+void prepareProcesses() {
+  dyn_string result;
+  string connectTo=MainDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observationName);
+  dynAppend(result,\",\"+observationName+\",\"+connectTo);    
+
+  string nr=\"\";
+  string oldNr=\"\";
+  for  (int i=1; i<= dynlen(inputBuffers); i++) {
+    nr  = substr(inputBuffers[i],strpos(inputBuffers[i],\"PSIONode\")+8,2);
+    if (nr != oldNr) {
+      dynAppend(result,connectTo+\",IONode\"+nr+\",\"+CEPDBName+\"LOFAR_PermSW_PSIOnode\"+nr);    
+      oldNr=nr;
+    }
+    dynAppend(result,CEPDBName+\"LOFAR_PermSW_PSIOnode\"+nr+\",InputBuffer,\"+inputBuffers[i]);    
+    dynAppend(g_processesList,inputBuffers[i]);
+  }  
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG(\"ObservationInputBuffers.pnl:prepareProcesses|processList found: \"+ result);    
+  
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"ObservationInputBuffers.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"ObservationInputBuffers.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+ 
+  addInputBuffers();
+  
+  // set the observation selectable items
+  prepareProcesses();
+  
+  redraw();
+
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"ObservationInputBuffers.pnl\",\"Update\");
+}
+
+void addInputBuffers() {
+
+  // get all the InputBuffers used by this observation
+  inputBuffers = navFunct_getInputBuffersForObservation(observationName);  
+
+}" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+string observationNr;
+string observationName;
+dyn_string inputBuffers;
+bool connected = false;
+dyn_string IBRefNames;
+string strModuleName;
+
+
+void clearIBRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(IBRefNames); i++) {
+    removeSymbol(strModuleName,\"\",IBRefNames[i]);
+  }
+  dynClear(IBRefNames);
+}
+
+void redraw() {
+  string barColor = \"_3DFace\";
+  if (dynlen(IBRefNames) > 0) {
+    clearIBRefNames();
+  }    
+  int xPos_AddSymbol = 0; 
+  int yPos_AddSymbol = 70; 
+  int ref = 1;
+  string addPanelName    = \"objects/Processes/inputBuffer.pnl\";
+  //loop over list and prepare panel with all inputBuffer objects   
+  for (int i=1; i<= dynlen(inputBuffers); i++) {
+    if ((float)i/2. != floor(i/2.)) {
+      barColor = \"lightgrey\";
+    } else {
+      barColor = \"_3DFace\";
+    }
+    IBRefNames[ref]=\"IB\"+(ref);
+      
+    if (  addSymbol(  strModuleName,                   // Stay in this modul
+                      \"\",                              // Name of this panel
+                      addPanelName,                    // Panel to add
+                      IBRefNames[ref],            // Ref of the addedPanel
+                      makeDynString( \"$inputBuffer:\" + inputBuffers[i],
+                                     \"$barColor:\"    + barColor) ,     // Define all $values
+                      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+                      yPos_AddSymbol,                  // Ypos of the AddedSymbol
+                      0,                               // angle
+                      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  LOG_ERROR(\"ObservationInputBuffers.pnl:redraw|Error Appending inputBuffer for: \" + inputBuffers[i] + \" in this panel.\");
+          }
+    yPos_AddSymbol += 14;
+    ref++;
+  }
+
+}
+  
+  
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 0
+"TopLabel"
+""
+1 410 0 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 410 0 612 20
+0 2 2 "0s" 0 0 0 192 0 0  410 0 1
+1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
+LANG:1 24 Observation InputBuffers
+2 2
+"PRIMITIVE_TEXT2"
+""
+1 24 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 24 54 65 67
+0 2 2 "0s" 0 0 0 192 0 0  24 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 Station
+2 3
+"PRIMITIVE_TEXT3"
+""
+1 92 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 92 54 114 67
+0 2 2 "0s" 0 0 0 192 0 0  92 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 late
+2 5
+"PRIMITIVE_TEXT5"
+""
+1 142 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 142 52 183 65
+0 2 2 "0s" 0 0 0 192 0 0  142 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 6 IOTime
+2 7
+"PRIMITIVE_TEXT7"
+""
+1 202 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 202 52 250 65
+0 2 2 "0s" 0 0 0 192 0 0  202 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 9
+"PRIMITIVE_TEXT9"
+""
+1 262 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 262 52 296 65
+0 2 2 "0s" 0 0 0 192 0 0  262 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 11
+"PRIMITIVE_TEXT11"
+""
+1 322 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 322 52 370 65
+0 2 2 "0s" 0 0 0 192 0 0  322 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 13
+"PRIMITIVE_TEXT13"
+""
+1 260 32 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 260 32 308 45
+0 2 2 "0s" 0 0 0 192 0 0  260 32 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream0
+2 14
+"PRIMITIVE_TEXT14"
+""
+1 402 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 402 52 450 65
+0 2 2 "0s" 0 0 0 192 0 0  402 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 16
+"PRIMITIVE_TEXT16"
+""
+1 472 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 472 52 506 65
+0 2 2 "0s" 0 0 0 192 0 0  472 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 18
+"PRIMITIVE_TEXT18"
+""
+1 522 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 522 52 570 65
+0 2 2 "0s" 0 0 0 192 0 0  522 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 20
+"PRIMITIVE_TEXT20"
+""
+1 474 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 474 34 522 47
+0 2 2 "0s" 0 0 0 192 0 0  474 34 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream1
+2 39
+"PRIMITIVE_TEXT23"
+""
+1 602 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+39 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 602 52 650 65
+0 2 2 "0s" 0 0 0 192 0 0  602 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 41
+"PRIMITIVE_TEXT25"
+""
+1 662 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 662 50 696 63
+0 2 2 "0s" 0 0 0 192 0 0  662 50 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 43
+"PRIMITIVE_TEXT27"
+""
+1 722 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+43 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 722 50 770 63
+0 2 2 "0s" 0 0 0 192 0 0  722 50 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 45
+"PRIMITIVE_TEXT29"
+""
+1 660 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+45 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 660 34 708 47
+0 2 2 "0s" 0 0 0 192 0 0  660 34 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream2
+2 46
+"PRIMITIVE_TEXT39"
+""
+1 802 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 802 52 850 65
+0 2 2 "0s" 0 0 0 192 0 0  802 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 48
+"PRIMITIVE_TEXT41"
+""
+1 862 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 862 52 896 65
+0 2 2 "0s" 0 0 0 192 0 0  862 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 50
+"PRIMITIVE_TEXT42"
+""
+1 922 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+50 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 922 52 970 65
+0 2 2 "0s" 0 0 0 192 0 0  922 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 52
+"PRIMITIVE_TEXT45"
+""
+1 860 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+52 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 860 34 908 47
+0 2 2 "0s" 0 0 0 192 0 0  860 34 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream3
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
