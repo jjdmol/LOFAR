@@ -904,7 +904,7 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
       LOG_DEBUG_STR("input buffer " << processNr << " processes station " << stationName);
 
       // will be flushed once other relevant meta data is found and flushed
-      inputBuffer->setValue("process.logMsg", GCFPVString(stationName), logline.timestamp, false);
+      inputBuffer->setValue("stationName", GCFPVString(stationName), logline.timestamp, false);
     }
 
     //
