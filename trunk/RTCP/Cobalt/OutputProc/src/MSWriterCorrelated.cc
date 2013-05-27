@@ -94,8 +94,8 @@ namespace LOFAR
       itsConfiguration.add("startTime",            parset.getString("Observation.startTime"));
       itsConfiguration.add("duration",             "0");
       itsConfiguration.add("integrationInterval",  str(format("%f") % parset.IONintegrationTime()));
-      itsConfiguration.add("centralFrequency",     str(format("%f") % (frequencies[subbandIndex] / 1e6)));
-      itsConfiguration.add("channelWidth",         str(format("%f") % (parset.channelWidth() / 1e3)));
+      itsConfiguration.add("centralFrequency",     str(format("%f") % (frequencies[subbandIndex])));
+      itsConfiguration.add("channelWidth",         str(format("%f") % (parset.channelWidth())));
       itsConfiguration.add("channelsPerSubband",   str(format("%u") % parset.nrChannelsPerSubband()));
       itsConfiguration.add("stationSubband",       str(format("%u") % subbands[subbandIndex]));
       itsConfiguration.add("subband",              str(format("%u") % subbandIndex));
