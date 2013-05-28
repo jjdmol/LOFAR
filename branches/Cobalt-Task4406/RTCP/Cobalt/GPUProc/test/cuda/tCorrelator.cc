@@ -35,6 +35,8 @@
 using namespace std;
 using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;
+using LOFAR::Exception;
+#define NR_BASELINES     (NR_STATIONS * (NR_STATIONS + 1) / 2)
 
 #define checkCuCall(func)                                               \
   do {                                                                  \
@@ -56,22 +58,11 @@ HostMemory getInitializedArray(unsigned size, float defaultValue)
 }
 
 // 
-float * runTest(float bandPassFactor,
-                float frequency = 0.0,
-                float subbandWidth = 0.0,
-                bool delayCompensation = false, 
-                float delayBegin = 0.0,
-                float delayEnd = 0.0,
-                float PhaseOffset = 0.0)
+HostMemory runTest(gpu::Context ctx,
+                     Stream cuStream,
+                     float * inputData)
 {
-  // Set up environment
-  gpu::Platform pf;
-  gpu::Device device(0);
-  gpu::Context ctx(device);
-  Stream cuStream;
-  std::stringstream tostrstram("");
-
-  string kernelPath = "DelayAndBandPass.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
+  string kernelPath = "Correlator.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
  
   // Get an instantiation of the default parameters
   CudaRuntimeCompiler::definitions_type definitions = CudaRuntimeCompiler::defaultDefinitions();
@@ -81,101 +72,51 @@ float * runTest(float bandPassFactor,
   // ****************************************
   // Compile to ptx
   // Set op string string pairs to be provided to the compiler as defines
-  definitions["NR_CHANNELS"] = "16";
-  unsigned NR_CHANNELS = 16;
   definitions["NR_STATIONS"] = "2";
   unsigned NR_STATIONS = 2;
+  definitions["NR_CHANNELS"] = "16";
+  unsigned NR_CHANNELS = 16;
   definitions["NR_SAMPLES_PER_CHANNEL"] = "64";
   unsigned NR_SAMPLES_PER_CHANNEL = 64;
-  definitions["NR_SAMPLES_PER_SUBBAND"] = "1024";
-  unsigned NR_SAMPLES_PER_SUBBAND = 1024;
-  definitions["NR_BITS_PER_SAMPLE"] = "8";
-  unsigned NR_BITS_PER_SAMPLE = 8;
   definitions["NR_POLARIZATIONS"] = "2";
   unsigned NR_POLARIZATIONS = 2;
-  definitions["NR_BEAMS"] = "8";
-  unsigned NR_BEAMS = 8;
-  definitions["USE_CUDA"] = "1";
   definitions["COMPLEX"] = "2";
   unsigned COMPLEX = 2;
-  tostrstram << subbandWidth;
-  definitions["SUBBAND_BANDWIDTH"] = tostrstram.str();
-  tostrstram.clear();
-  float SUBBAND_BANDWIDTH = subbandWidth;
-  definitions["BANDPASS_CORRECTION"] = "1";
-  if (delayCompensation)
-    definitions["DELAY_COMPENSATION"] = "1";
+
   vector<string> targets; // unused atm, so can be empty
   gpu::Module module(createProgram(ctx, targets, kernelPath, flags, definitions));  
-
-  return NULL;
-
-
-  Function  hKernel(module, "applyDelaysAndCorrectBandPass");  // c function this no argument overloading
+  Function  hKernel(module, "correlate");  // c function this no argument overloading
 
   // *************************************************************
   // Create the data arrays  
-  size_t sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX * sizeof(float);
-  DeviceMemory DevFilteredMemory(sizeFilteredData);
-  HostMemory rawFilteredData = getInitializedArray(sizeFilteredData, 1.0);
-  cuStream.writeBuffer(DevFilteredMemory, rawFilteredData);
-
   size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
   DeviceMemory DevCorrectedMemory(sizeCorrectedData);
-  HostMemory rawCorrectedData = getInitializedArray(sizeCorrectedData, 42.0); 
+  HostMemory rawCorrectedData = getInitializedArray(sizeCorrectedData, 0.0);
+  
+
+  size_t sizeVisibilitiesData = NR_BASELINES * NR_CHANNELS * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX * sizeof(float);
+  DeviceMemory DevVisibilitiesMemory(sizeVisibilitiesData);
+  HostMemory rawVisibilitiesData = getInitializedArray(sizeVisibilitiesData, 42.0); 
+  cuStream.writeBuffer(DevVisibilitiesMemory, rawVisibilitiesData);
+
+  //copy the input received as argument to the input array
+  float *rawDataPtr = rawCorrectedData.get<float>();
+  for (unsigned idx = 0; idx < sizeCorrectedData; ++idx)
+    rawDataPtr[idx] = inputData[idx];
   cuStream.writeBuffer(DevCorrectedMemory, rawCorrectedData);
-
-  size_t sizeDelaysAtBeginData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float);  
-  DeviceMemory DevDelaysAtBeginMemory(sizeDelaysAtBeginData);
-  HostMemory rawDelaysAtBeginData = getInitializedArray(sizeDelaysAtBeginData, delayBegin);
-  cuStream.writeBuffer(DevDelaysAtBeginMemory, rawDelaysAtBeginData);
-    
-  size_t sizeDelaysAfterEndData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float); 
-  DeviceMemory DevDelaysAfterEndMemory(sizeDelaysAfterEndData);
-  HostMemory rawDelaysAfterEndData = getInitializedArray(sizeDelaysAfterEndData, delayEnd);
-  cuStream.writeBuffer(DevDelaysAfterEndMemory, rawDelaysAfterEndData);
-    
-  size_t sizePhaseOffsetData = NR_STATIONS * 2*sizeof(float); 
-  DeviceMemory DevPhaseOffsetMemory(sizePhaseOffsetData);
-  HostMemory rawPhaseOffsetData = getInitializedArray(sizePhaseOffsetData, PhaseOffset);
-  cuStream.writeBuffer(DevPhaseOffsetMemory, rawPhaseOffsetData);
-
-  size_t sizebandPassFactorsData = NR_CHANNELS * sizeof(float);
-  DeviceMemory DevbandPassFactorsMemory(sizebandPassFactorsData);
-  HostMemory rawbandPassFactorsData = getInitializedArray(sizebandPassFactorsData, bandPassFactor);
-  cuStream.writeBuffer(DevbandPassFactorsMemory, rawbandPassFactorsData);
-  
-  size_t sizeSubbandFrequency = 1 * sizeof(float);
-  DeviceMemory DevSubbandFrequencyMemory(sizeSubbandFrequency);
-  HostMemory subbandFrequency = getInitializedArray(sizeSubbandFrequency, frequency);
-  cuStream.writeBuffer(DevSubbandFrequencyMemory, subbandFrequency);
-  
-  size_t sizeBeamData = 1 * sizeof(unsigned);
-  DeviceMemory DevBeamMemory(sizeBeamData);
-  HostMemory beamData(sizeBeamData);
-  cuStream.writeBuffer(DevBeamMemory, beamData);
 
   // ****************************************************************************
   // Run the kernel on the created data
-  hKernel.setArg(0, DevCorrectedMemory);
-  hKernel.setArg(1, DevFilteredMemory);
-  hKernel.setArg(2, DevSubbandFrequencyMemory);
-  hKernel.setArg(3, DevBeamMemory);
-  hKernel.setArg(4, DevDelaysAtBeginMemory);
-  hKernel.setArg(5, DevDelaysAfterEndMemory);
-  hKernel.setArg(6, DevPhaseOffsetMemory);
-  hKernel.setArg(7, DevbandPassFactorsMemory);
-
+  hKernel.setArg(0, DevVisibilitiesMemory);
+  hKernel.setArg(1, DevCorrectedMemory);
+  
   // Calculate the number of threads in total and per blovk
-  int nrChannelsPerSubband = NR_CHANNELS;
-  int nrStations = NR_STATIONS; 
-  int MAXNRCUDATHREADS = 1024;//doet moet nog opgevraagt worden en niuet als magish getal
-  size_t maxNrThreads = MAXNRCUDATHREADS;
-  unsigned totalNrThreads = nrChannelsPerSubband * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
-  unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
-  // assign to gpu_wrapper objects
-  Grid globalWorkSize(1, NR_CHANNELS == 1? 1: NR_CHANNELS/16, NR_STATIONS);  
-  Block localWorkSize(256, 1,1); 
+  unsigned nrBlocks = NR_BASELINES;
+  unsigned nrPasses = (nrBlocks + 1024 - 1) / 1024;
+  unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
+  unsigned nrUsableChannels = 15;
+  Grid globalWorkSize(nrPasses, nrUsableChannels, 1);  
+  Block localWorkSize(nrThreads, 1,1); 
 
   // Run the kernel
   cuStream.synchronize(); // assure memory is copied
@@ -183,153 +124,182 @@ float * runTest(float bandPassFactor,
   cuStream.synchronize(); // assure that the kernel is finished
   
   // Copy output vector from GPU buffer to host memory.
-  cuStream.readBuffer(rawCorrectedData, DevCorrectedMemory);
+  cuStream.readBuffer(rawVisibilitiesData, DevVisibilitiesMemory);
   cuStream.synchronize(); //assure copy from device is done
-  
-  // *************************************
-  // Create the return values
-  float *firstAndLastComplex = new float[4];
-  // Return the first complex
-  firstAndLastComplex[0] = rawCorrectedData.get<float>()[0];
-  firstAndLastComplex[1] = rawCorrectedData.get<float>()[1];
-  //return the last complex number
-  firstAndLastComplex[2] = rawCorrectedData.get<float>()[(sizeCorrectedData / sizeof(float)) - 2];
-  firstAndLastComplex[3] = rawCorrectedData.get<float>()[(sizeCorrectedData / sizeof(float))-1];
 
-  // *************************************
-  // cleanup memory
-
-  return firstAndLastComplex;
+  return rawVisibilitiesData;
 }
+
+Exception::TerminateHandler t(Exception::terminate);
 
 int main()
 {
+  // seed random generator with zero
+  srand (0);
+
+  // Create a default context
+  gpu::Platform pf;
+  gpu::Device device(0);
+  gpu::Context ctx(device);
+  Stream cuStream;
+
+  // Define type paramters
+  unsigned NR_STATIONS = 2;
+  unsigned NR_CHANNELS = 16;
+  unsigned NR_SAMPLES_PER_CHANNEL = 64;
+  unsigned NR_POLARIZATIONS = 2;
+  unsigned COMPLEX = 2;
+
+  // Define dependend paramters
+  unsigned lengthInputData = NR_STATIONS * NR_CHANNELS * 
+                             NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS *COMPLEX;
+  unsigned lengthOutputData = NR_BASELINES * NR_CHANNELS * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX;
+
+  // Create data members
+  float * inputData = new float[lengthInputData];
+  float * outputData = new float[lengthOutputData];
+  float *outputOnHostPtr;
+    
   // ***********************************************************
-  // Test if the bandpass correction factor is applied correctly in isolation
-  float bandPassFactor = 2.0;
-  bool delayCompensation = false;
-  float * results;
+  // Baseline test: If all input data is zero the output should be zero
+  // The output array is initialized with 42s
+  for (unsigned idx = 0; idx < lengthInputData ; ++idx)
+    inputData[idx] = 0;
 
-  // The input samples are all ones
-  // After correction, multiply with 2.
-  // The first and the last complex values are retrieved. They should be scaled with the bandPassFactor == 2
-  results = runTest(bandPassFactor, delayCompensation);
+  HostMemory outputOnHost = runTest(ctx, cuStream, inputData);
+   
+  // Copy the output data to a local array
+  outputOnHostPtr = outputOnHost.get<float>();
+  for (unsigned idx = 0; idx < lengthOutputData ; ++ idx)
+    outputData[idx] = outputOnHostPtr[idx];
 
-  return 0;
-  for (unsigned idx = 0; idx < 4; ++idx)
+  // Now validate the outputdata
+  for (unsigned idx_baseline = 0; idx_baseline < NR_BASELINES ; ++ idx_baseline)
   {
-    if (results[idx] != 2.0)
+    cerr << "baseline: " << idx_baseline << endl;
+    for (unsigned idx_channels = 0; idx_channels < NR_CHANNELS ; ++ idx_channels)
     {
-      cerr << "Bandpass correction returned an incorrect value at index" << idx << endl;
-      cerr << " expected: 2, 2, 2, 2" << endl;    
-      cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
-      return -1;
+      cerr << idx_channels << " : ";
+      for (unsigned idx = 0; idx < 8; ++idx)
+      {
+        unsigned idx_in_output_data = idx_baseline * NR_CHANNELS * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX +
+          idx_channels * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX +
+          idx;
+        cerr << outputData[idx_in_output_data] << ", " ;
+        if ( idx_channels != 0)
+          if (outputData[idx_in_output_data] != 0)
+          {
+            cerr << "Non zero number encountered while all input data was zero. Exit -1";
+            delete [] inputData;
+            delete [] outputData;
+            return -1;
+          }
+      }
+      cerr << endl;  
     }
   }
 
-  //**********************************************************************
-  // Delaycompensation but only for the phase ofsets:
-  // All computations the drop except the phase ofset of 1,0 which is fed into a an cexp
-  // cexp(1) = e = 2.71828
-  results = runTest(1.0,   // bandpass factor
-                    1.0,   // frequency
-                    1.0,   
-                    true,  // delayCompensation
-                    0.0,   // delays begin  
-                    0.0,   // delays end
-                    1.0);  // phase offsets
+  // ***********************************************************
+  // To test if the kernel is working we try to correlate a number of delayed
+  // random initialize channels.
+  // With zero delay the output should be the highest. A fringe :D 
+  
+  // 1. First create a random channel with a length that is large enough
+  // It should be length NR_SAMPLES_PER_CHANNEL plus padding at both side to encompass the delay
+  unsigned padding = 7; // We have 15 channels with content 2 * 7 delays + delay 0
+  unsigned lengthRandomData = NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX + 2 * padding*4;
+  float * randomInputData = new float[lengthRandomData];
 
-  for (unsigned idx = 0; idx < 4; ++idx)
+  // Create the random signal
+  for (unsigned idx = 0; idx < lengthRandomData ; ++idx)
+    randomInputData[idx] = ((rand() % 1024  + 1) * 1.0 // make float
+                            - 512.0) / 512.0;          // centre around zero and normalize
+  
+  // Fill the input array channels
+  // channel 8 is the non delayed channel and should correlate
+  for (unsigned idx_station = 0; idx_station < 2; ++ idx_station)
   {
-    if ((results[idx] -  2.71828) > 0.00001 )
+    cerr << "idx_station: " << idx_station << endl;
+    for (unsigned idx_channel = 0; idx_channel < 16; ++ idx_channel)
     {
-      cerr << " phase offsets correction returned an incorrect value at index" << idx << endl;
-      cerr << " expected: 2.71828, 2.71828, 2.71828, 2.71828" << endl;    
-      cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
-      return -1;
+      for (unsigned idx_datapoint = 0; idx_datapoint< NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX ; ++ idx_datapoint)
+      {
+        // In the input array step trough the channel
+        unsigned idx_inputdata = 
+            idx_station * 16 * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX +
+            idx_channel * NR_SAMPLES_PER_CHANNEL *  NR_POLARIZATIONS * COMPLEX +
+            idx_datapoint;
+       
+        // Pick from the random array the same number of samples
+        // But with an offset depending on the channel number
+        unsigned padding_offset = 32; 
+        int padding = padding_offset - idx_channel * 4; // station 1 is filled with delayed signal
+
+        // Station zero is anchored as the middle and is filled with the baseline signal
+        if (idx_station == 0)
+          padding = padding_offset - 8 * 4;
+
+        // Get the index in the random signal array
+        unsigned idx_randomdata = padding_offset + padding + idx_datapoint;
+
+        //assign the signal;
+        inputData[idx_inputdata] = randomInputData[idx_randomdata];
+        if (idx_datapoint < 16)  // plot first part if the input signal for debugging purpose
+          cerr << inputData[idx_inputdata] << " : ";
+      }
+      cerr << endl;
     }
   }
 
-  //****************************************************************************
-  // delays  begin and end both 1 no phase offset frequency 1 width 1
-  // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
-  //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
-  // exp(-3.14159+0 i) == 0.04312
-  results = runTest(1.0,   // bandpass factor
-                    1.0,   // frequency
-                    1.0,   
-                    true,  // delayCompensation
-                    1.0,   // delays begin  
-                    1.0,   // delays end
-                    0.0);  // phase offsets
+  // Run the kernel  
+  outputOnHost = runTest(ctx, cuStream, inputData);
+  
+  // Copy the output data to a local array
+  outputOnHostPtr = outputOnHost.get<float>();
+  for (unsigned idx = 0; idx < lengthOutputData ; ++ idx)
+    outputData[idx] = outputOnHostPtr[idx];
 
-  for (unsigned idx = 0; idx < 4; ++idx)
+  // Target value for correlation channel  
+  float targetValues[8] = {36.2332, 0, -7.83033, 3.32368, -7.83033, -3.32368, 42.246, 0};
+
+  // print the contents of the output array for debugging purpose
+  for (unsigned idx_baseline = 0; idx_baseline < NR_BASELINES ; ++ idx_baseline)
   {
-    if (fabs(results[idx] -  0.04321) > 0.00001 )
+    cerr << "baseline: " << idx_baseline << endl;
+    for (unsigned idx_channels = 0; idx_channels < NR_CHANNELS ; ++ idx_channels)
     {
-      cerr << " delays  begin and end both 1 no phase offset frequency 1 width 1" << idx << endl;
-      cerr << " expected:  0.04321,  0.04321,  0.04321,  0.04321" << endl;    
-      cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
-      return -1;
+      cerr << idx_channels << " : ";
+      for (unsigned idx = 0; idx < 8; ++idx)
+      {
+        unsigned idx_in_output_data = idx_baseline * NR_CHANNELS * 8 +
+          idx_channels * 8 +
+          idx;
+        if ( idx_baseline == 1 && idx_channels == 8)
+        {
+
+          //validate that the correct value is found
+          if ( abs(outputData[idx_in_output_data] - targetValues[idx]) > 0.0001)
+          {
+            cerr << "The correlated data found was not within an acceptable delta:" << endl
+              << "Expected: " << outputData[idx_in_output_data] << endl
+              << "Found: " << targetValues[idx] << endl
+              << "Difference: " << outputData[idx_in_output_data] - targetValues[idx] 
+              << "  Delta: " << 0.0001;
+
+            delete [] inputData;
+            delete [] outputData;
+            return -1;
+          }
+        }
+        cerr << outputData[idx_in_output_data] << ", " ;
+      }
+      cerr << endl;  
     }
   }
+  // Validate that the channel 8 had fringes
 
-  //****************************************************************************
-  // delays  begin 1 and end 0 no phase offset frequency 1 width 1
-  // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
-  //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
-  // exp(-3.14159+0 i) == 0.04312
-  // The later sets of samples are calculate as:
-  // vX = vX * dvX;  The delays are multiplied because we are calculating with exponents
-  // Ask john Romein for more details
-  results = runTest(1.0,   // bandpass factor
-                    1.0,   // frequency
-                    1.0,   
-                    true,  // delayCompensation
-                    1.0,   // delays begin  
-                    0.0,   // delays end
-                    0.0);  // phase offsets
-
-  for (unsigned idx = 0; idx < 4; ++idx)
-  {  // Magic number ask John Romein why they are correct
-    if(!((fabs(results[idx] -  0.04321) < 0.00001) || (fabs(results[idx] -  0.952098) < 0.00001)))
-    {
-      cerr << " delays  begin and end both 1 no phase offset frequency 1 width 1" << idx << endl;
-      cerr << " expected:  0.04321,  0.04321,  0.952098,  0.952098" << endl;    
-      cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
-      return -1;
-    }
-  }
-
-  //****************************************************************************
-  // delays  begin 1 and end 0 no phase offset frequency 1 width 1
-  // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
-  //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
-  // exp(-3.14159+0 i) == 0.04312
-  // The later sets of samples are calculate as:
-  // vX = vX * dvX;  The delays are multiplied because we are calculating with exponents
-  // Ask john Romein for more details
-  // In this test the phase offsetss are also compensated
-  results = runTest(2.0,   // bandpass factor (weights == 2)
-                    1.0,   // frequency
-                    1.0,   
-                    true,  // delayCompensation
-                    1.0,   // delays begin  
-                    0.0,   // delays end
-                    1.0);  // phase offsets (correct with e = 2.71828)
-
-  for (unsigned idx = 0; idx < 4; ++idx)
-  {  // Magic number ask John Romein why they are correct
-    if(!((fabs(results[idx] -  0.04321 * 2.71828 * 2) < 0.0001)  ||
-        (fabs(results[idx] -  2.58807* 2) < 0.0001)))
-    {
-      cerr << " delays  begin and end both 1 no phase offset frequency 1 width " << idx << endl;
-      cerr << " expected:  0.04321,  0.04321,  0.952098,  0.952098" << endl;    
-      cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
-      return -1;
-    }
-  }
-
+  delete [] inputData;
+  delete [] outputData;
   return 0;
 }
 
