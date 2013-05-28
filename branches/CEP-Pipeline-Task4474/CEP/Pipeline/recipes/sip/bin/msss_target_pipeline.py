@@ -49,7 +49,6 @@ class msss_target_pipeline(control):
         self.parset = parameterset()
         self.input_data = {}
         self.output_data = {}
-        self.io_data_mask = []
         self.parset_feedback_file = None
 
 
@@ -66,31 +65,35 @@ class msss_target_pipeline(control):
         Get input- and output-data product specifications from the
         parset-file, and do some sanity checks.
         """
-        odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
+        dps = self.parset.makeSubset(
+            self.parset.fullModuleName('DataProducts') + '.'
+        )
         self.input_data['data'] = DataMap([
             tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
-                    odp.getStringVector('Input_Correlated.locations'),
-                    odp.getStringVector('Input_Correlated.filenames'),
-                    odp.getBoolVector('Input_Correlated.skip'))
+                    dps.getStringVector('Input_Correlated.locations'),
+                    dps.getStringVector('Input_Correlated.filenames'),
+                    dps.getBoolVector('Input_Correlated.skip'))
         ])
         self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data['data']))
+
         self.input_data['instrument'] = DataMap([
             tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
-                    odp.getStringVector('Input_InstrumentModel.locations'),
-                    odp.getStringVector('Input_InstrumentModel.filenames'),
-                    odp.getBoolVector('Input_InstrumentModel.skip'))
+                    dps.getStringVector('Input_InstrumentModel.locations'),
+                    dps.getStringVector('Input_InstrumentModel.filenames'),
+                    dps.getBoolVector('Input_InstrumentModel.skip'))
         ])
         self.logger.debug("%d Input_InstrumentModel data products specified" %
                           len(self.input_data['instrument']))
+                          
         self.output_data['data'] = DataMap([
             tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
-                    odp.getStringVector('Output_Correlated.locations'),
-                    odp.getStringVector('Output_Correlated.filenames'),
-                    odp.getBoolVector('Output_Correlated.skip'))
+                    dps.getStringVector('Output_Correlated.locations'),
+                    dps.getStringVector('Output_Correlated.filenames'),
+                    dps.getBoolVector('Output_Correlated.skip'))
         ])
         self.logger.debug("%d Output_Correlated data products specified" %
                           len(self.output_data['data']))
@@ -107,58 +110,6 @@ class msss_target_pipeline(control):
         ):  raise PipelineException(
                 "Validation of input/output data product specification failed!"
             )
-#        # Validate input data, by searching the cluster for files
-#        self._validate_input_data()
-#        # Update input- and output-data product specifications if needed.
-#        if not all(self.io_data_mask):
-#            self.logger.info("Updating input/output product specifications")
-#            self.input_data['data'] = [f for (f, m)
-#                in zip(self.input_data['data'], self.io_data_mask) if m
-#            ]
-#            self.input_data['instrument'] = [f for (f, m)
-#                in zip(self.input_data['instrument'], self.io_data_mask) if m
-#            ]
-#            self.output_data['data'] = [f for (f, m)
-#                in zip(self.output_data['data'], self.io_data_mask) if m
-#            ]
-
-
-#    def _validate_input_data(self):
-#        """
-#        Search for the requested input files and mask the files in
-#        `self.input_data{}` that could not be found on the system.
-#        """
-#        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
-#        data_mask = tally_data_map(
-#            self.input_data['data'], 'L*_SB???_uv.MS', self.logger
-#        )
-#        # Log a warning if not all input data files were found.
-#        if not all(data_mask):
-#            self.logger.warn(
-#                "The following input data files were not found: %s" %
-#                ', '.join(
-#                    ':'.join(f) for (f, m) in zip(
-#                        self.input_data['data'], data_mask
-#                    ) if not m
-#                )
-#            )
-#        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
-#        inst_mask = tally_data_map(
-#            self.input_data['instrument'], 'L*_SB???_inst.INST', self.logger
-#        )
-#        # Log a warning if not all input instrument files were found.
-#        if not all(inst_mask):
-#            self.logger.warn(
-#                "The following input instrument files were not found: %s" %
-#                ', '.join(
-#                    ':'.join(f) for (f, m) in zip(
-#                        self.input_data['instrument'], inst_mask
-#                    ) if not m
-#                )
-#            )
-
-#        # Set the IO data mask
-#        self.io_data_mask = [x and y for (x, y) in zip(data_mask, inst_mask)]
 
 
     def _create_target_map_for_instruments(self):
@@ -229,12 +180,15 @@ class msss_target_pipeline(control):
             return self.usage()
         self.parset.adoptFile(parset_file)
         self.parset_feedback_file = parset_file + "_feedback"
+        
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
         if not self.inputs.has_key('job_name'):
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
+
+        # Call the base-class's `go()` method.
         return super(msss_target_pipeline, self).go()
 
 
