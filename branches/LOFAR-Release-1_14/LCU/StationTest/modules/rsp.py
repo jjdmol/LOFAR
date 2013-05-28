@@ -1330,17 +1330,17 @@ def read_rsr_timestamp(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
   for ri in rspId:
       for fi in fpgaId:
           tc.appendLog(applev, '>>> RSR timestamps:')
-          tc.appendLog(applev, '    . RSP-%s, FPGA-%s : %d' % (ri, fi, fpgaTimestamps[index])
+          tc.appendLog(applev, '    . RSP-%s, FPGA-%s : %d' % (ri, fi, fpgaTimestamps[index]))
   index = 0
   for ri in rspId:
       for fi in fpgaId:
         tc.appendLog(applev, '>>> RSR timestamp behaviour at sync:')
         if fpgaTimestamp_modes[index]==1:
-            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : reset to -1' % (ri, fi)
+            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : reset to -1' % (ri, fi))
         elif fpgaTimestamp_modes[index]==2:
-            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : auto increment' % (ri, fi)
+            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : auto increment' % (ri, fi))
         else:
-            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : no change' % (ri, fi)
+            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : no change' % (ri, fi))
       
   ret = fpgaTimestamps[0]
   for ti in fpgaTimestamps:
