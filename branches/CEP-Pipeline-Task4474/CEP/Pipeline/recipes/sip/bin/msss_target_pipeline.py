@@ -310,10 +310,6 @@ class msss_target_pipeline(control):
                 mapfile=os.path.join(mapfile_dir, 'dppp[0].mapfile')
             )['mapfile']
 
-#        demix_mapfile = dppp_mapfile
-#        # Demix the relevant A-team sources
-#        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
-
         # ********************************************************************
         # 5. Run bss using the instrument file from the target observation
         # Create an empty sourcedb for BBS
@@ -336,24 +332,18 @@ class msss_target_pipeline(control):
             )['data_mapfile']
 
         # *********************************************************************
-        # 6. Second dppp run for  flaging NaN's in the MS.  
-        # Create another parameter-subset for a second DPPP run.
-        ndppp_parset = os.path.join(parset_dir, "NDPPP[1].parset")
-        py_parset.makeSubset('DPPP[1].').writeFile(ndppp_parset)
-
-        # Do a second run of DPPP, just to flag NaN's from the MS. Store the
-        # results in the files specified in the corrected data map-file
-        # WARNING: This will create a new MS with a DATA column containing the
-        # CORRECTED_DATA column of the original MS.
-        with duration(self, "ndppp"):
-            self.run_task("ndppp",
-                (bbs_mapfile, corrected_mapfile),
-                clobber=False,
-                suffix='',
-                parset=ndppp_parset,
-                mapfile=os.path.join(mapfile_dir, 'dppp[1].mapfile')
+        # 6. Copy the MS's to their final output destination.
+        # When the copier recipe has run, the map-file named in
+        # corrected_mapfile will contain an updated map of output files.
+        with duration(self, "copier"):
+            self.run_task("copier",
+                mapfile_source=bbs_mapfile,
+                mapfile_target=corrected_mapfile,
+                mapfiles_dir=mapfile_dir,
+                mapfile=corrected_mapfile
             )
 
+        # *********************************************************************
         # 7. Create feedback file for further processing by the LOFAR framework
         # (MAC)
         # Create a parset-file containing the metadata for MAC/SAS

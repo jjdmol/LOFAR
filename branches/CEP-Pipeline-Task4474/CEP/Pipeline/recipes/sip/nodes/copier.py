@@ -50,8 +50,9 @@ class copier(LOFARnodeTCP):
 
 
         # construct copy command: Copy to the dir
-        command = ["rsync", "-r", "{0}:{1}".format(source_node, source_path),
-                               "{0}".format(os.path.dirname(target_path))]
+        command = ["rsync", "-r", 
+                   "{0}:{1}/".format(source_node, source_path),
+                   "{0}".format(target_path)]
 
         self.logger.debug("executing: " + " ".join(command))
         #Spawn a subprocess and connect the pipes
