@@ -41,7 +41,7 @@ namespace LOFAR
       set_affinity(gpu);
 #endif
 
-      queue = gpu::Stream(context, device, profiling ? CL_QUEUE_PROFILING_ENABLE : 0);
+      queue = gpu::Stream(/*context, device, profiling ? CL_QUEUE_PROFILING_ENABLE : 0*/);
     }
 
 

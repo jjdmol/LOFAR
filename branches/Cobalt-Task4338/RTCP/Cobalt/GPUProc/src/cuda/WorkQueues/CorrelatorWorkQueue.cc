@@ -177,12 +177,13 @@ namespace LOFAR
       addTimer("GPU - compute");
       addTimer("GPU - wait");
 
-      queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), filterBank.getWeights().origin());
+      //queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), filterBank.getWeights().origin());
+      queue.writeBuffer(devFIRweights, filterBank.getWeights().origin(), true);
 
       if (ps.correctBandPass())
       {
         BandPass::computeCorrectionFactors(bandPassCorrectionWeights.origin(), ps.nrChannelsPerSubband());
-        bandPassCorrectionWeights.hostToDevice(CL_TRUE);
+        bandPassCorrectionWeights.hostToDevice(true);
       }
     }
 
@@ -401,7 +402,7 @@ namespace LOFAR
 #if defined USE_B7015
         OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
-        input.inputSamples.hostToDevice(CL_TRUE);
+        input.inputSamples.hostToDevice(true);
         counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
 
         timers["GPU - input"]->stop();
@@ -416,9 +417,9 @@ namespace LOFAR
 
       // Only upload delays if they changed w.r.t. the previous subband
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
-        input.delaysAtBegin.hostToDevice(CL_FALSE);
-        input.delaysAfterEnd.hostToDevice(CL_FALSE);
-        input.phaseOffsets.hostToDevice(CL_FALSE);
+        input.delaysAtBegin.hostToDevice(false);
+        input.delaysAfterEnd.hostToDevice(false);
+        input.phaseOffsets.hostToDevice(false);
 
         prevSAP = SAP;
         prevBlock = block;
@@ -458,7 +459,7 @@ namespace LOFAR
 #if defined USE_B7015
         OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
 #endif
-        output.deviceToHost(CL_TRUE);
+        output.deviceToHost(true);
         // now perform weighting of the data based on the number of valid samples
 
         counters["output - visibilities"]->doOperation(output.deviceBuffer.event, 0, output.bytesize(), 0);

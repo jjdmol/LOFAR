@@ -63,7 +63,7 @@ namespace LOFAR
     {
       if (ps.correctBandPass()) {
         BandPass::computeCorrectionFactors(bandPassCorrectionWeights.origin(), ps.nrChannelsPerSubband());
-        bandPassCorrectionWeights.hostToDevice(CL_TRUE);
+        bandPassCorrectionWeights.hostToDevice(true);
       }
     }
 
@@ -71,8 +71,8 @@ namespace LOFAR
     void BeamFormerWorkQueue::doWork()
     {
       //queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, firWeightsSize, firFilterWeights);
-      bandPassCorrectionWeights.hostToDevice(CL_TRUE);
-      DMs.hostToDevice(CL_TRUE);
+      bandPassCorrectionWeights.hostToDevice(true);
+      DMs.hostToDevice(true);
 
       double startTime = ps.startTime(), currentTime, stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
 
@@ -92,10 +92,10 @@ namespace LOFAR
         if (ps.nrStations() >= 3)
           delaysAtBegin[0][2][0] = 1e-6, delaysAfterEnd[0][2][0] = 1.1e-6;
 
-        delaysAtBegin.hostToDevice(CL_FALSE);
-        delaysAfterEnd.hostToDevice(CL_FALSE);
-        phaseOffsets.hostToDevice(CL_FALSE);
-        beamFormerWeights.hostToDevice(CL_FALSE);
+        delaysAtBegin.hostToDevice(false);
+        delaysAfterEnd.hostToDevice(false);
+        phaseOffsets.hostToDevice(false);
+        beamFormerWeights.hostToDevice(false);
 
 #pragma omp for schedule(dynamic), nowait
         for (unsigned subband = 0; subband < ps.nrSubbands(); subband++) {
@@ -104,7 +104,7 @@ namespace LOFAR
 #if defined USE_B7015
             OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
-            inputSamples.hostToDevice(CL_TRUE);
+            inputSamples.hostToDevice(true);
             pipeline.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
           }
 #endif
@@ -127,7 +127,7 @@ namespace LOFAR
           }
 
           //queue.enqueueReadBuffer(devComplexVoltages, CL_TRUE, 0, hostComplexVoltages.bytesize(), hostComplexVoltages.origin());
-          //dedispersedData.deviceToHost(CL_TRUE);
+          //dedispersedData.deviceToHost(true);
         }
       }
 
