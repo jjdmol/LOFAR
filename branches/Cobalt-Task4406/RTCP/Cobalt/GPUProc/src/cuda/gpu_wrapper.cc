@@ -231,16 +231,46 @@ namespace LOFAR
 
       std::string Device::getName() const
       {
-        // NV ref is not crystal clear on returned str len. Better be safe.
-        const size_t max_name_len = 255;
-        char name[max_name_len + 1];
-        checkCuCall(cuDeviceGetName(name, max_name_len, _device));
+        char name[1024];
+
+        // NV ref is not crystal clear on returned str len. Better be safe
+        // and reserve an extra byte for the \0 terminator.
+        checkCuCall(cuDeviceGetName(name, sizeof name - 1, _device));
         return std::string(name);
+      }
+
+      unsigned Device::getComputeCapabilityMajor() const
+      {
+        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
+      }
+
+      unsigned Device::getComputeCapabilityMinor() const
+      {
+        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
+      }
+
+      size_t Device::getTotalGlobalMem() const
+      {
+        size_t value;
+
+        checkCuCall(cuDeviceTotalMem(&value, _device));
+        return value;
+      }
+
+      size_t Device::getBlockSharedMem() const
+      {
+        return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK);
+      }
+
+      size_t Device::getTotalConstMem() const
+      {
+        return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY);
       }
 
       int Device::getAttribute(CUdevice_attribute attribute) const
       {
         int value;
+
         checkCuCall(cuDeviceGetAttribute(&value, attribute, _device));
         return value;
       }

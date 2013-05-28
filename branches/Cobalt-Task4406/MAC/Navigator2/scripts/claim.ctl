@@ -12,6 +12,12 @@
 //      "ClaimManager.request.typeName", "Observation",
 //      "ClaimManager.request.newObjectName", "MYOBSERVATION" );
 //
+//    And can be freed via:
+//
+//
+//    dpSet( 
+//      "ClaimManager.reset.typeName", "Observation",
+//      "ClaimManager.reset.objectName", "MYOBSERVATION" );
 //
 //    The Claim Manager has a global array of claimed datapoints
 //    for better performance. If the claimmanager runs on the mainserver
@@ -368,8 +374,105 @@ void startLocalClaim() {
     "ClaimManager.request.typeName", 
     "ClaimManager.request.newObjectName" ); 
 
+  // And Connect to the dp elements that we use to reset a claimed point to free
+  dpConnect( "resetCallback", 
+    false,         
+    "ClaimManager.reset.typeName", 
+    "ClaimManager.reset.objectName" ); 
 }
 
+// *******************************************
+// Name : resetCallback
+// *******************************************
+// Description:
+//    This is the callback that is triggered
+//    when a client resets a claim.
+//
+//    A claim must be made via:
+//
+//    dpSet( 
+//      "ClaimManager.reset.typeName", "Observation",
+//      "ClaimManager.reset.newObjectName", "MYOBSERVATION" );
+//
+// Returns:
+//    None
+// *******************************************
+    
+void resetCallback(
+  string strDP1, string strTypeName,
+  string strDP2, string strObjectName   
+)
+{
+  // Local data
+  string strDP="";
+  time resetDate;
+  bool error=false;
+  
+  if( bDebug ) DebugN( "claim.ctl:resetCallback| request for " + strTypeName + "," + strObjectName );
+  
+  // We want to reset a datapoint
+  // First verify the datapoint type 
+  if (isClient) {
+    if( ! mappingHasKey( g_ClaimedTypes, strTypeName )) {
+      DebugN("claim.ctl:claimCallback|ERROR!!!!  Client was asked for DPtype: "+strTypeName+" But has no such type local.");
+      error=true;    
+    }
+  } else {
+    if (bDebug) DebugN("claim.ctl:claimCallback|Check if Type is in mapping"); 
+   	VerifyDatapointType( strTypeName );
+  }
+  
+  // (2) We should have the right type. ( from step (1) )
+  // now look for the point that needs to be resetted
+  if (!error) {
+          
+    // (3) Set the 'ClaimDate' of the datapoint
+    // that we've found and the master should add the response to the Cache arrays
+    if (!isClient ) {
+      
+      if (bDebug) DebugN("claim.ctl:claimCallback|Master Cache action required");
+      dyn_string typeNames;
+      dyn_string newObjectNames;
+      dyn_string DPNames;
+      dyn_time   claimDates;
+
+      // get all lists of claimed datapoints 
+      dpGet("ClaimManager.cache.typeNames",typeNames,
+        		"ClaimManager.cache.newObjectNames",newObjectNames,
+        		"ClaimManager.cache.DPNames",DPNames,
+        		"ClaimManager.cache.claimDates",claimDates); 
+      
+     
+      bool found = false;
+      for (int i=1; i<= dynlen(typeNames); i++) {
+        
+        // same only claimdate can be altered
+        if (typeNames[i] == strTypeName &&
+            newObjectNames[i] == strObjectName) {
+          
+          if (bDebug) DebugN("claim.ctl:resetCallback|Found type and Objectname are the same, reset Cache entry Claimdate");
+          dynRemove(  claimDates,i); 
+          dynInsertAt(claimDates,resetDate,i);
+          found = true;
+          exit;
+        }
+      }
+            
+      // write back
+      if (found) {
+        dpSet("ClaimManager.cache.typeNames",typeNames,
+          		"ClaimManager.cache.newObjectNames",newObjectNames,
+          		"ClaimManager.cache.DPNames",DPNames,
+          		"ClaimManager.cache.claimDates",claimDates);  
+      }
+    } else {
+      DebugN("claim.ctl:resetCallback| ERROR: Observation not found in cache");
+    }
+  }
+}
+
+
+  
 // *******************************************
 // Name : claimCallback
 // *******************************************
@@ -590,7 +693,7 @@ void GetClaimInfo(
 //    The Client will only look in his local cache if the claim is known
 //    The master has the right to write out new claims
 //
-//    if the mapping for a certain strType exceeds the number of DP's for that type
+//    if the mapping for a certain strType exceeds the number of DP's for that type AND there is no free claim
 //    the oldest Claim will be found and that entry will be overwritten.
 //
 //    Free means that the 'ClaimDate' is 1970.
@@ -627,7 +730,8 @@ string  FindFreeClaim(
      (g_ClaimedTypes[ strTypeName ][ "NAME" ][t] == strNewObjectName ) )
     {  
       if( bDebug ) DebugN( "claim.ctl:FindFreeClaim|  we found an existing claim for :" + strNewObjectName );
-      iIndex = t;      
+      iIndex = t;
+      break;      
     } 
   } 
   
@@ -639,11 +743,13 @@ string  FindFreeClaim(
     // We did not find a match by name, so we are just going to look for a free element
     if( iIndex == -1 ) {      
       for( int t = 1; (t <= dynlen( g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ] )) && (iIndex ==-1); t++) {
-        // When the year is empty ( e.g. 1970 ) then it marks a free datapoint
-        if( year(  g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][t]) == 1970 ) {
+        // When the year is empty ( e.g. 1970 ) or when the claimtime is older then 7 days then it marks a free datapoint
+        if ( year(  g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][t]) == 1970  || 
+             period(getCurrentTime()) - period(  g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][t])  >= 604800) {
           
           if (bDebug) DebugN("claim.ctl:FindFreeClaim|We found a free objectPlace.");
           iIndex = t;
+          break;
         }  
     	}
   	}
@@ -668,7 +774,7 @@ string  FindFreeClaim(
     
   if( iIndex > 0 )
   {
-    // we have found an index that is free
+    // we have found an index that is free or can be reused
     // Lets claim that place
     claimDate = getCurrentTime();
     
