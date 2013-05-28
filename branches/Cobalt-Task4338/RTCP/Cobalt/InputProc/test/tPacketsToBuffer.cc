@@ -47,7 +47,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
   FileStream fs(filename);
 
   // Set up transfer
-  PacketsToBuffer transfer(fs, settings, 0, false);
+  PacketsToBuffer transfer(fs, settings, 0);
 
   // Do transfer
   transfer.process();
@@ -73,6 +73,7 @@ int main()
 
   // Use a fixed key, so the test suite knows what to clean
   settings.dataKey = 0x10000002;
+  removeSampleBuffers(settings);
 
   // Limit the array in size to work on systems with only 32MB SHM
   settings.nrBoards = 1;

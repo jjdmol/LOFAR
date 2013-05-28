@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: $
+ * $Id$
  */
 
 #include <lofar_config.h>
@@ -57,6 +57,7 @@ void initBoard()
 
   // Use a fixed key, so the test suite knows what to clean
   settings.dataKey = 0x10000005;
+  removeSampleBuffers(settings);
 
   // Limit the array in size to work on systems with only 32MB SHM
   settings.nrBoards = 1;

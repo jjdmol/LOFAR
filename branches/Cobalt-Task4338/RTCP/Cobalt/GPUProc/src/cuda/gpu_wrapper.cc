@@ -49,6 +49,36 @@ namespace LOFAR
     namespace gpu
     {
 
+      std::string cufftErrorMessage(cufftResult errcode)
+      {
+        switch (errcode) {
+        case CUFFT_SUCCESS:
+          return "Success";
+        case CUFFT_INVALID_PLAN:
+          return "Invalid plan";
+        case CUFFT_ALLOC_FAILED:
+          return "Failed to allocate CPU or GPU memory";
+        case CUFFT_INVALID_TYPE: // no longer used
+          return "Invalid type";
+        case CUFFT_INVALID_VALUE:
+          return "Invalid pointer or parameter";
+        case CUFFT_INTERNAL_ERROR:
+          return "Driver or internal cuFFT error";
+        case CUFFT_EXEC_FAILED:
+          return "Failed to execute FFT kernel";
+        case CUFFT_SETUP_FAILED:
+          return "Failed to initialise cuFFT library";
+        case CUFFT_INVALID_SIZE:
+          return "Invalid transform size";
+        case CUFFT_UNALIGNED_DATA: // no longer used
+          return "Data not properly aligned";
+        default:
+          std::stringstream str;
+          str << "Unknown error (" << errcode << ")";
+          return str.str();
+        }
+      }
+
       std::string errorMessage(CUresult errcode)
       {
         switch (errcode) {
@@ -201,16 +231,46 @@ namespace LOFAR
 
       std::string Device::getName() const
       {
-        // NV ref is not crystal clear on returned str len. Better be safe.
-        const size_t max_name_len = 255;
-        char name[max_name_len + 1];
-        checkCuCall(cuDeviceGetName(name, max_name_len, _device));
+        char name[1024];
+
+        // NV ref is not crystal clear on returned str len. Better be safe
+        // and reserve an extra byte for the \0 terminator.
+        checkCuCall(cuDeviceGetName(name, sizeof name - 1, _device));
         return std::string(name);
+      }
+
+      unsigned Device::getComputeCapabilityMajor() const
+      {
+        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
+      }
+
+      unsigned Device::getComputeCapabilityMinor() const
+      {
+        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
+      }
+
+      size_t Device::getTotalGlobalMem() const
+      {
+        size_t value;
+
+        checkCuCall(cuDeviceTotalMem(&value, _device));
+        return value;
+      }
+
+      size_t Device::getBlockSharedMem() const
+      {
+        return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK);
+      }
+
+      size_t Device::getTotalConstMem() const
+      {
+        return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY);
       }
 
       int Device::getAttribute(CUdevice_attribute attribute) const
       {
         int value;
+
         checkCuCall(cuDeviceGetAttribute(&value, attribute, _device));
         return value;
       }
@@ -568,6 +628,11 @@ namespace LOFAR
           checkCuCall(cuEventRecord(event, _stream));
         }
 
+        CUstream get() const
+        {
+          return _stream;
+        }
+
       private:
         CUstream _stream;
       };
@@ -641,6 +706,11 @@ namespace LOFAR
       void Stream::recordEvent(const Event &event)
       {
         _impl->recordEvent(event._impl->_event);
+      }
+
+      CUstream Stream::get() const
+      {
+        return _impl->get();
       }
 
 

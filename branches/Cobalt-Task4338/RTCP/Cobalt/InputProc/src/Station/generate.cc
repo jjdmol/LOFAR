@@ -59,8 +59,11 @@ int main( int argc, char **argv )
   struct StationID stationID(stationName, "LBA", 200, 16);
   struct BufferSettings settings(stationID, false);
 
+  const TimeStamp from(time(0), 0, stationID.clockMHz * 1000000);
+  const TimeStamp to(0);
+
   PacketFactory factory(settings);
-  Generator g(settings, outputStreams, factory);
+  Generator g(settings, outputStreams, factory, from, to);
 
   // Generate packets
   g.process();

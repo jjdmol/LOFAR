@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -102,6 +102,12 @@ namespace LOFAR
     std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s )
     {
       str << s.station << " beamlets: " << (s.nrBoards * s.nrBeamletsPerBoard) << " buffer: " << (1.0 * s.nrSamples / s.station.clockMHz / 1000000 * 1024) << "s";
+
+      if (s.sync) {
+        str << " [r/w sync]";
+      } else {
+        str << " [realtime]";
+      }
 
       return str;
     }

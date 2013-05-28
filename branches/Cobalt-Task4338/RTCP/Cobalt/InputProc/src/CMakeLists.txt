@@ -10,6 +10,7 @@ lofar_add_library(inputproc
   RSPBoards.cc
   Buffer/BufferSettings.cc
   Buffer/Ranges.cc
+  Buffer/SampleBuffer.cc
   Buffer/SharedMemory.cc
   Buffer/StationID.cc
   Delays/Delays.cc
