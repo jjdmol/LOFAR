@@ -41,11 +41,11 @@ namespace LOFAR
       :
         buffer(size),
         queue(queue),
-        hostMapFlags() // i.e. ignore deviceMemFlags in CUDA
+        hostMapFlags() // i.e. ignore deviceMemFlags arg in CUDA
       {
       }
 
-//#if 0
+//#if 0 // unfort, in quite heavy use...
       operator gpu::DeviceMemory & ()
       {
         return buffer;
@@ -130,14 +130,16 @@ namespace LOFAR
         deviceBuffer.deviceToHost(hostMemory, synchronous);
       }
 
-//#if 0
+#if 0
       operator DeviceBuffer& () {
         return deviceBuffer;
       }
-//#endif
+#endif
 
     private:
+    public: // TODO: remove + fix WorkQueue users
       gpu::HostMemory hostMemory;
+    private:
       DeviceBuffer &deviceBuffer;
 
       // Copying is expensive (requires allocation),
@@ -151,7 +153,7 @@ namespace LOFAR
     {
     public:
       template <typename ExtentList>
-      MultiArrayHostBuffer(const ExtentList &extents, unsigned int hostBufferFlags, DeviceBuffer &deviceBuffer)
+      MultiArrayHostBuffer(const ExtentList &extents, cl_mem_flags hostBufferFlags, DeviceBuffer &deviceBuffer)
       :
         HostBuffer(deviceBuffer, this->nrElements(extents) * sizeof(T), hostBufferFlags),
         MultiDimArray<T,DIM>(extents, hostMemory.get<T>(), true)
@@ -180,7 +182,9 @@ namespace LOFAR
       // Select the desired interface
       using HostBuffer::hostToDevice;
       using HostBuffer::deviceToHost;
-//      using DeviceBuffer::operator cl::Buffer&;
+#if 0
+      using DeviceBuffer::operator cl::Buffer&;
+#endif
     };
 
 #if 0

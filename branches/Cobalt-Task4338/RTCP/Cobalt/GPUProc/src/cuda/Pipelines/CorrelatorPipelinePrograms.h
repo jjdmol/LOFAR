@@ -30,7 +30,7 @@ namespace LOFAR
     struct CorrelatorPipelinePrograms
     {
       gpu::Module firFilterProgram;
-      //gpu::Function fftProgram; // fft kernel apparently does not need a program...
+      //gpu::Module fftProgram; // fft kernel apparently does not need a program...
       gpu::Module delayAndBandPassProgram;
       gpu::Module correlatorProgram;
     };

@@ -115,12 +115,12 @@ namespace LOFAR
         queue.enqueueWriteBuffer(devInputSamples, CL_FALSE, 0, hostInputSamples.bytesize(), hostInputSamples.origin(), 0, &inputSamplesEvent);
         pipeline.samplesCounter.doOperation(inputSamplesEvent, 0, 0, hostInputSamples.bytesize());
 
-        beamFormer.enqueue(queue, pipeline.beamFormerCounter);
-        transpose.enqueue(queue, pipeline.transposeCounter);
-        invFFT.enqueue(queue, pipeline.invFFTcounter);
-        invFIR.enqueue(queue, pipeline.invFIRfilterCounter);
-        trigger.enqueue(queue, pipeline.triggerCounter);
-        queue.finish();             // necessary to overlap I/O & computations ???
+        beamFormer.enqueue(queue/*, pipeline.beamFormerCounter*/);
+        transpose.enqueue(queue/*, pipeline.transposeCounter*/);
+        invFFT.enqueue(queue/*, pipeline.invFFTcounter*/);
+        invFIR.enqueue(queue/*, pipeline.invFIRfilterCounter*/);
+        trigger.enqueue(queue/*, pipeline.triggerCounter*/);
+        queue.synchronize(); // necessary to overlap I/O & computations ???
         queue.enqueueReadBuffer(devTriggerInfo, CL_TRUE, 0, hostTriggerInfo.bytesize(), hostTriggerInfo.origin());
       }
 

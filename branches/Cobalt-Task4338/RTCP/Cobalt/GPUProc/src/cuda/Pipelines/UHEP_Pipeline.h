@@ -39,7 +39,8 @@ namespace LOFAR
 
       void doWork();
 
-      gpu::Function beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
+      gpu::Module beamFormerProgram, transposeProgram, invFFTprogram, invFIRfilterProgram, triggerProgram;
+
       PerformanceCounter beamFormerCounter, transposeCounter, invFFTcounter, invFIRfilterCounter, triggerCounter;
       PerformanceCounter beamFormerWeightsCounter, samplesCounter;
     };

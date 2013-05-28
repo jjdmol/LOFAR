@@ -177,7 +177,6 @@ namespace LOFAR
       addTimer("GPU - compute");
       addTimer("GPU - wait");
 
-      //queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), filterBank.getWeights().origin());
       queue.writeBuffer(devFIRweights, filterBank.getWeights().origin(), true);
 
       if (ps.correctBandPass())
@@ -403,7 +402,7 @@ namespace LOFAR
         OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
         input.inputSamples.hostToDevice(true);
-        counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
+//        counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
 
         timers["GPU - input"]->stop();
       }
@@ -426,19 +425,19 @@ namespace LOFAR
       }
 
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel.enqueue(queue, *counters["compute - FIR"]);
-        fftKernel.enqueue(queue, *counters["compute - FFT"]);
+        firFilterKernel.enqueue(queue/*, *counters["compute - FIR"]*/);
+        fftKernel.enqueue(queue/*, *counters["compute - FFT"]*/);
       }
 
-      delayAndBandPassKernel.enqueue(queue, *counters["compute - delay/bp"], subband);
+      delayAndBandPassKernel.enqueue(queue/*, *counters["compute - delay/bp"]*/, subband);
 #if defined USE_NEW_CORRELATOR
-      correlateTriangleKernel.enqueue(queue, *counters["compute - cor.triangle"]);
-      correlateRectangleKernel.enqueue(queue, *counters["compute - cor.rectangle"]);
+      correlateTriangleKernel.enqueue(queue/*, *counters["compute - cor.triangle"]*/);
+      correlateRectangleKernel.enqueue(queue/*, *counters["compute - cor.rectangle"]*/);
 #else
-      correlatorKernel.enqueue(queue, *counters["compute - correlator"]);
+      correlatorKernel.enqueue(queua/*e, *counters["compute - correlator"]*/);
 #endif
 
-      queue.flush();
+      //queue.flush(); // CUDA doesn't have/need flush() (OpenCL)
 
       // ***** The GPU will be occupied for a while, do some calculations in the
       // background.
@@ -448,7 +447,7 @@ namespace LOFAR
 
       // Wait for the GPU to finish.
       timers["GPU - wait"]->start();
-      queue.finish();
+      queue.synchronize();
       timers["GPU - wait"]->stop();
 
       timers["GPU - compute"]->stop();
@@ -462,7 +461,7 @@ namespace LOFAR
         output.deviceToHost(true);
         // now perform weighting of the data based on the number of valid samples
 
-        counters["output - visibilities"]->doOperation(output.deviceBuffer.event, 0, output.bytesize(), 0);
+//        counters["output - visibilities"]->doOperation(output.deviceBuffer.event, 0, output.bytesize(), 0);
 
         timers["GPU - output"]->stop();
       }

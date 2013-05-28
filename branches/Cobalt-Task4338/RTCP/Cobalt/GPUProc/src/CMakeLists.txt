@@ -48,9 +48,9 @@ if(USE_CUDA)
 #    cuda/Pipelines/CorrelatorPipeline.cc
 #    cuda/Pipelines/UHEP_Pipeline.cc
     cuda/WorkQueues/WorkQueue.cc
-#    cuda/WorkQueues/BeamFormerWorkQueue.cc
+    cuda/WorkQueues/BeamFormerWorkQueue.cc
     cuda/WorkQueues/CorrelatorWorkQueue.cc
-#    cuda/WorkQueues/UHEP_WorkQueue.cc
+    #cuda/WorkQueues/UHEP_WorkQueue.cc
   )
   add_subdirectory(cuda)
 

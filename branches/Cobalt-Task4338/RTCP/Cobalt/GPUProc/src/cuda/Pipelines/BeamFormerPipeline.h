@@ -38,7 +38,7 @@ namespace LOFAR
 
       void doWork();
 
-      gpu::Function intToFloatProgram, delayAndBandPassProgram, beamFormerProgram, transposeProgram, dedispersionChirpProgram;
+      gpu::Module intToFloatProgram, delayAndBandPassProgram, beamFormerProgram, transposeProgram, dedispersionChirpProgram;
 
       PerformanceCounter intToFloatCounter, fftCounter, delayAndBandPassCounter, beamFormerCounter, transposeCounter, dedispersionForwardFFTcounter, dedispersionChirpCounter, dedispersionBackwardFFTcounter;
       PerformanceCounter samplesCounter;

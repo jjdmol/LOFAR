@@ -105,25 +105,25 @@ namespace LOFAR
             OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
             inputSamples.hostToDevice(true);
-            pipeline.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
+//            pipeline.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
           }
 #endif
 
           //#pragma omp critical (GPU)
           {
             if (ps.nrChannelsPerSubband() > 1) {
-              intToFloatKernel.enqueue(queue, pipeline.intToFloatCounter);
-              fftKernel.enqueue(queue, pipeline.fftCounter);
+              intToFloatKernel.enqueue(queue/*, pipeline.intToFloatCounter*/);
+              fftKernel.enqueue(queue/*, pipeline.fftCounter*/);
             }
 
-            delayAndBandPassKernel.enqueue(queue, pipeline.delayAndBandPassCounter, subband);
-            beamFormerKernel.enqueue(queue, pipeline.beamFormerCounter);
-            transposeKernel.enqueue(queue, pipeline.transposeCounter);
-            dedispersionForwardFFTkernel.enqueue(queue, pipeline.dedispersionForwardFFTcounter);
-            dedispersionChirpKernel.enqueue(queue, pipeline.dedispersionChirpCounter, ps.subbandToFrequencyMapping()[subband]);
-            dedispersionBackwardFFTkernel.enqueue(queue, pipeline.dedispersionBackwardFFTcounter);
+            delayAndBandPassKernel.enqueue(queue/*, pipeline.delayAndBandPassCounter*/, subband);
+            beamFormerKernel.enqueue(queue/*, pipeline.beamFormerCounter*/);
+            transposeKernel.enqueue(queue/*, pipeline.transposeCounter*/);
+            dedispersionForwardFFTkernel.enqueue(queue/*, pipeline.dedispersionForwardFFTcounter*/);
+            dedispersionChirpKernel.enqueue(queue/*, pipeline.dedispersionChirpCounter*/, ps.subbandToFrequencyMapping()[subband]);
+            dedispersionBackwardFFTkernel.enqueue(queue/*, pipeline.dedispersionBackwardFFTcounter*/);
 
-            queue.finish();
+            queue.synchronize();
           }
 
           //queue.enqueueReadBuffer(devComplexVoltages, CL_TRUE, 0, hostComplexVoltages.bytesize(), hostComplexVoltages.origin());
