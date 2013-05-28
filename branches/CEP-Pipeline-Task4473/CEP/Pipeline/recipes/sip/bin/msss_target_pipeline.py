@@ -380,13 +380,13 @@ class msss_target_pipeline(control):
         # *********************************************************************
         # 6. Copy the MS's to their final output destination.
         # When the copier recipe has run, the map-file named in
-        # self.output_data['data'] will contain an updated map of output files.
+        # corrected_mapfile will contain an updated map of output files.
         with duration(self, "copier"):
             self.run_task("copier",
                 mapfile_source=bbs_mapfile,
-                mapfile_target=self.output_data['data'],
+                mapfile_target=corrected_mapfile,
                 mapfiles_dir=mapfile_dir,
-                mapfile=self.output_data['data']
+                mapfile=corrected_mapfile
             )
 
         # *********************************************************************
