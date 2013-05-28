@@ -46,10 +46,11 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps)
+    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
       :
       Pipeline(ps),
-      subbandPool(ps.nrSubbands()),
+      subbandIndices(subbandIndices),
+      subbandPool(subbandIndices.size()),
       filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER)
     {
       filterBank.negateWeights();
@@ -82,10 +83,10 @@ namespace LOFAR
                                       filterBank);   // The filter set to use. Const
       }
 
-      for (unsigned sb = 0; sb < ps.nrSubbands(); sb++) {
+      for (size_t i = 0; i < subbandPool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.
         // TODO: make this dynamic based on memory or time
-        subbandPool[sb].bequeue = new BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> >(3, ps.realTime());
+        subbandPool[i].bequeue = new BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> >(3, ps.realTime());
       }
 
       double startTime = ps.startTime();
@@ -157,8 +158,8 @@ namespace LOFAR
           }
 
           // Signal end of output
-          for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-            subbandPool[subband].bequeue->noMore();
+          for (size_t i = 0; i < subbandPool.size(); ++i) {
+            subbandPool[i].bequeue->noMore();
           }
         }
 
@@ -167,10 +168,10 @@ namespace LOFAR
          */
 #       pragma omp section
         {
-#         pragma omp parallel for num_threads(ps.nrSubbands())
-          for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+#         pragma omp parallel for num_threads(subbandPool.size())
+          for (size_t i = 0; i < subbandPool.size(); ++i) {
             // write subband to Storage
-            writeSubband(subband);
+            writeSubband(subbandIndices[i], subbandPool[i]);
           }
         }
       }
@@ -208,21 +209,17 @@ namespace LOFAR
         stationRanks[stat] = stat;
       }
 
-      // RECEIVE: For now, we receive ALL beamlets.
-      vector<size_t> subbands(ps.nrSubbands());
-      for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-        subbands[subband] = subband;
-      }
+      // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 
       // Set up the MPI environment.
-      MPIReceiveStations receiver(stationRanks, subbands, blockSize);
+      MPIReceiveStations receiver(stationRanks, subbandIndices, blockSize);
 
       // Create a block object to hold all information for receiving one
       // block.
       vector<struct MPIReceiveStations::Block<SampleT> > blocks(ps.nrStations());
 
       for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-        blocks[stat].beamlets.resize(ps.nrSubbands());
+        blocks[stat].beamlets.resize(subbandIndices.size());
       }
 
       size_t workQueueIterator = 0;
@@ -232,10 +229,10 @@ namespace LOFAR
         // block.
 
         // The set of InputData objects we're using for this block.
-        vector<struct inputData_t> inputDatas(ps.nrSubbands());
+        vector<struct inputData_t> inputDatas(subbandIndices.size());
 
-        for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-          // Fetch an input object to store this subband. For now, blindly
+        for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
+          // Fetch an input object to store this inputIdx. For now, blindly
           // round-robin over the work queues.
           CorrelatorWorkQueue &queue = *workQueues[workQueueIterator++ % workQueues.size()];
 
@@ -245,16 +242,16 @@ namespace LOFAR
 
           // Annotate the block
           data->block   = block;
-          data->subband = subband;
+          data->subband = subbandIndices[inputIdx];
 
           // Incorporate it in the receiver's input set.
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-            blocks[stat].beamlets[subband].samples = reinterpret_cast<SampleT*>(&data->inputSamples[stat][0][0][0]);
+            blocks[stat].beamlets[inputIdx].samples = reinterpret_cast<SampleT*>(&data->inputSamples[stat][0][0][0]);
           }
 
           // Record the block (transfers ownership)
-          inputDatas[subband].data = data;
-          inputDatas[subband].queue = &queue;
+          inputDatas[inputIdx].data = data;
+          inputDatas[inputIdx].queue = &queue;
         }
 
         // Receive all subbands from all stations
@@ -262,13 +259,13 @@ namespace LOFAR
         receiver.receiveBlock<SampleT>(blocks);
 
         // Process and forward the received input to the processing threads
-        for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-          CorrelatorWorkQueue &queue = *inputDatas[subband].queue;
-          SmartPtr<WorkQueueInputData> data = inputDatas[subband].data;
+        for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
+          CorrelatorWorkQueue &queue = *inputDatas[inputIdx].queue;
+          SmartPtr<WorkQueueInputData> data = inputDatas[inputIdx].data;
 
           // Translate the metadata as provided by receiver
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-            SubbandMetaData &metaData = blocks[stat].beamlets[subband].metaData;
+            SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
 
             // extract and apply the flags
             // TODO: Not in this thread! Add a preprocess thread maybe?
@@ -279,7 +276,7 @@ namespace LOFAR
             // extract and assign the delays for the station beams
             for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++)
             {
-              unsigned sap = ps.settings.subbands[subband].SAP;
+              unsigned sap = ps.settings.subbands[data->subband].SAP;
 
               data->delaysAtBegin[sap][stat][pol] = metaData.stationBeam.delayAtBegin;
               data->delaysAfterEnd[sap][stat][pol] = metaData.stationBeam.delayAfterEnd;
@@ -313,9 +310,7 @@ namespace LOFAR
         size_t block = input->block;
         unsigned subband = input->subband;
 
-        if (subband == 0 || subband == ps.nrSubbands() - 1) {
-          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Processing start");
-        }
+        LOG_INFO_STR("[block " << block << ", subband " << subband << "] Processing start");
 
         // Also fetch an output object to store results
         SmartPtr<CorrelatedDataHostBuffer> output = workQueue.outputPool.free.remove();
@@ -337,9 +332,7 @@ namespace LOFAR
         workQueue.inputPool.free.append(input);
         ASSERT(!input);
 
-        if (subband == 0 || subband == ps.nrSubbands() - 1) {
-          LOG_DEBUG_STR("[block " << block << ", subband " << subband << "] Forwarded output to post processing");
-        }
+        LOG_DEBUG_STR("[block " << block << ", subband " << subband << "] Forwarded output to post processing");
       }
     }
 
@@ -357,9 +350,7 @@ namespace LOFAR
         size_t block = output->block;
         unsigned subband = output->subband;
 
-        if (subband == 0 || subband == ps.nrSubbands() - 1) {
-          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Post processing start");
-        }
+        LOG_INFO_STR("[block " << block << ", subband " << subband << "] Post processing start");
 
         workQueue.timers["CPU - postprocess"]->start();
         workQueue.postprocessSubband(*output);
@@ -386,9 +377,7 @@ namespace LOFAR
 
         ASSERT(!output);
 
-        if (subband == 0 || subband == ps.nrSubbands() - 1) {
-          LOG_DEBUG_STR("[block " << block << ", subband " << subband << "] Forwarded output to writer");
-        }
+        LOG_DEBUG_STR("[block " << block << ", subband " << subband << "] Forwarded output to writer");
 
         if (time(0) != lastLogTime) {
           lastLogTime = time(0);
@@ -399,7 +388,7 @@ namespace LOFAR
     }
 
 
-    void CorrelatorPipeline::writeSubband( unsigned subband )
+    void CorrelatorPipeline::writeSubband( unsigned subband, struct Output &output  )
     {
       SmartPtr<Stream> outputStream;
 
@@ -421,22 +410,20 @@ namespace LOFAR
         outputStream = new NullStream;
       }
 
-      SmartPtr<CorrelatedDataHostBuffer> output;
+      SmartPtr<CorrelatedDataHostBuffer> outputData;
 
       // Process pool elements until end-of-output
-      while ((output = subbandPool[subband].bequeue->remove()) != NULL) {
-        size_t block = output->block;
-        unsigned subband = output->subband;
+      while ((outputData = output.bequeue->remove()) != NULL) {
+        size_t block = outputData->block;
+        ASSERT( subband == outputData->subband );
 
-        CorrelatorWorkQueue &queue = output->queue; // cache queue object, because `output' will be destroyed
+        CorrelatorWorkQueue &queue = outputData->queue; // cache queue object, because `output' will be destroyed
 
-        if (subband == 0 || subband == ps.nrSubbands() - 1) {
-          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Writing start");
-        }
+        LOG_INFO_STR("[block " << block << ", subband " << subband << "] Writing start");
 
         // Write block to disk 
         try {
-          output->write(outputStream.get(), true);
+          outputData->write(outputStream.get(), true);
         } catch(Exception &ex) {
           LOG_ERROR_STR("Dropping rest of subband " << subband << ": " << ex);
 
@@ -444,13 +431,11 @@ namespace LOFAR
         }
 
         // Hand the object back to the workQueue it originally came from
-        queue.outputPool.free.append(output);
+        queue.outputPool.free.append(outputData);
 
-        ASSERT(!output);
+        ASSERT(!outputData);
 
-        if (subband == 0 || subband == ps.nrSubbands() - 1) {
-          LOG_INFO_STR("[block " << block << ", subband " << subband << "] Done");
-        }
+        LOG_INFO_STR("[block " << block << ", subband " << subband << "] Done");
       }
     }
 
