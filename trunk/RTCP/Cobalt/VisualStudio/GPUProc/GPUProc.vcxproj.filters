@@ -263,5 +263,8 @@
     <CudaCompile Include="..\..\GPUProc\src\cuda\FIR_Filter.cu">
       <Filter>cuda</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\GPUProc\src\cuda\Correlator.cu">
+      <Filter>cuda</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

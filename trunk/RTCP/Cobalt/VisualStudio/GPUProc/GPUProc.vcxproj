@@ -106,6 +106,7 @@
     <None Include="..\..\GPUProc\src\cuda\gpu_wrapper.tcc" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="..\..\GPUProc\src\cuda\Correlator.cu" />
     <CudaCompile Include="..\..\GPUProc\src\cuda\DelayAndBandPass.cu" />
     <CudaCompile Include="..\..\GPUProc\src\cuda\FIR_Filter.cu" />
   </ItemGroup>
