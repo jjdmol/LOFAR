@@ -88,6 +88,34 @@ SUITE(Stream) {
       CHECK_EQUAL(true, s.query());
     }
   }
+
+  TEST(MultiContext) {
+    Platform pf;
+    vector<Device> devices(pf.devices());
+    vector<Context> ctxs;
+    vector<Stream> streams;
+
+    // Create all contexts, 2 per device to ensure multiple contexts even if
+    // we have one device.
+    for (vector<Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
+      for (size_t n = 0; n < 2; ++n) {
+        Context ctx(*i);
+        ctxs.push_back(ctx);
+      }
+    }
+
+    // Create all streams
+    for (vector<Context>::const_iterator i = ctxs.begin(); i != ctxs.end(); ++i) {
+      Stream s(*i);
+      streams.push_back(s);
+    }
+
+    // Query all streams
+    for (vector<Stream>::const_iterator i = streams.begin(); i != streams.end(); ++i) {
+      // All operations should have been completed, as there were none
+      CHECK_EQUAL(true, i->query());
+    }
+  }
 }
 
 SUITE(Memory) {
