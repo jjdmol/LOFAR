@@ -34,14 +34,21 @@ namespace LOFAR
   namespace Cobalt
   {
     /*
-     * For CUDA, context is ignored, but note that creating such an object
-     * makes it the active context.
+     * If no devices are given, the program is compiled for the latest
+     * architecture.
+     *
      * srcFilename cannot be an absolute path.
      */
-    gpu::Module createProgram( gpu::Context &context, std::vector<std::string> &targets,
+    std::string createPTX( const std::vector<gpu::Device> &devices,
                                const std::string &srcFilename, 
                                CudaRuntimeCompiler::flags_type flags,
-                               CudaRuntimeCompiler::definitions_type definitions );
+                               const CudaRuntimeCompiler::definitions_type &definitions );
+    /*
+     * Create a Module from a PTX (string).
+     */
+    gpu::Module createModule( const gpu::Context &context,
+                               const std::string &srcFilename, 
+                               const std::string &ptx );
   }
 }
 

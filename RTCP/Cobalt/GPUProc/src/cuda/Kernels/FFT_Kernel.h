@@ -35,15 +35,14 @@ namespace LOFAR
     {
     public:
       FFT_Kernel(unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer);
-      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
-
+      void enqueue(gpu::Stream &stream/*, PerformanceCounter &counter*/);
 
     private:
       const unsigned nrFFTs, fftSize;
       const int direction;
       FFT_Plan plan;
       gpu::DeviceMemory &buffer;
-      gpu::Event event;
+      //gpu::Event event;
     };
   }
 }

@@ -41,8 +41,8 @@ int main(int argc, char *argv[]) {
   // Create the gpu parts needed for running a kernel
   gpu::Platform pf;
   gpu::Device device(0);
+  vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
-  vector<string> targets; // unused atm, so can be empty
 
   // Open inputs
   Parset ps(argv[1]);
@@ -76,7 +76,8 @@ int main(int argc, char *argv[]) {
   }
   definitions["DEDISPERSION_FFT_SIZE"]= boost::lexical_cast<string>(ps.dedispersionFFTsize());
 
-  gpu::Module module(createProgram(ctx, targets, srcFilename, flags, definitions));
+  string ptx = createPTX(devices, srcFilename, flags, definitions);
+  gpu::Module module(createModule(ctx, srcFilename, ptx));
   cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 
   return 0;

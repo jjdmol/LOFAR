@@ -29,6 +29,7 @@ namespace LOFAR
     Kernel::Kernel(const Parset &ps, gpu::Module& module, const string &name)
       :
       gpu::Function(module, name),
+      event(module.getContext()),
       ps(ps)
     {
     }
