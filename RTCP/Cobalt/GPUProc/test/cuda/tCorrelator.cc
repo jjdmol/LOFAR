@@ -48,9 +48,9 @@ using LOFAR::Exception;
   } while(0)
 
 // Helper function to get initialized memory
-HostMemory getInitializedArray(unsigned size, float defaultValue)
+HostMemory getInitializedArray(gpu::Context &ctx, unsigned size, float defaultValue)
 {
-  HostMemory memory(size);
+  HostMemory memory(ctx, size);
   float* createdArray =  memory.get<float>();
   for (unsigned idx = 0; idx < size; ++idx)
     createdArray[idx] = (float)defaultValue;
@@ -91,12 +91,12 @@ HostMemory runTest(gpu::Context ctx,
   // Create the data arrays  
   size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
   DeviceMemory DevCorrectedMemory(sizeCorrectedData);
-  HostMemory rawCorrectedData = getInitializedArray(sizeCorrectedData, 0.0);
+  HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 0.0);
   
 
   size_t sizeVisibilitiesData = NR_BASELINES * NR_CHANNELS * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX * sizeof(float);
   DeviceMemory DevVisibilitiesMemory(sizeVisibilitiesData);
-  HostMemory rawVisibilitiesData = getInitializedArray(sizeVisibilitiesData, 42.0); 
+  HostMemory rawVisibilitiesData = getInitializedArray(ctx, sizeVisibilitiesData, 42.0); 
   cuStream.writeBuffer(DevVisibilitiesMemory, rawVisibilitiesData);
 
   //copy the input received as argument to the input array
@@ -141,7 +141,7 @@ int main()
   gpu::Platform pf;
   gpu::Device device(0);
   gpu::Context ctx(device);
-  Stream cuStream;
+  Stream cuStream(ctx);
 
   // Define type paramters
   unsigned NR_STATIONS = 2;
