@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <boost/shared_ptr.hpp>
 #include "gpu_incl.h" // ideally, this goes into the .cc, but too much leakage
@@ -48,9 +49,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    // Needed for friend declaration in gpu::Stream
-    class FFT_Plan;
-
     namespace gpu
     {
 
@@ -85,6 +83,8 @@ namespace LOFAR
         unsigned int z;
       };
 
+      // Forward declaration needed by Platform::devices.
+      class Device;
 
       // This class is not strictly needed, because in CUDA there's only one
       // platform, but it hides the CUDA calls and makes it similar to OpenCL.
@@ -95,8 +95,14 @@ namespace LOFAR
         // \param flags must be 0 (at least up till CUDA 5.0).
         Platform(unsigned int flags = 0);
 
+        // The CUDA version (f.e. 5.0 -> 5000).
+        int version() const;
+
         // Returns the number of devices in the CUDA platform.
         size_t size() const;
+
+        // Returns a vector of all devies in the CUDA platform.
+        std::vector<Device> devices() const;
 
         // Returns the name of the CUDA platform. (currently, "NVIDIA CUDA")
         std::string getName() const;
@@ -145,15 +151,18 @@ namespace LOFAR
       // Wrap a CUDA Context. Since this class manages a resource (a CUDA
       // context), it uses the pimpl idiom in combination with a reference
       // counted pointer to make it copyable.
+      //
+      // We do not tie any context to any thread by default -- all contexts
+      // are `floating', and are to be tied to a thread only by pushing them
+      // as the current context, performing operation(s), and popping them
+      // from the current context stack. The pushing and popping is automated
+      // in the ScopedCurrentContext class.
       class Context
       {
       public:
         // Create a new CUDA context and associate it with the calling thread.
         // In other words, \c setCurrent() is implied.
-        Context(Device device, unsigned int flags = CU_CTX_SCHED_AUTO);
-
-        // Make this context the current context.
-        void setCurrent() const;
+        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_AUTO);
 
         // Returns the device associated to the _current_ context.
         Device getDevice() const;
@@ -170,6 +179,20 @@ namespace LOFAR
 
         // Reference counted pointer to the implementation class.
         boost::shared_ptr<Impl> _impl;
+
+        friend class ScopedCurrentContext;
+      };
+
+
+      // Make a certain context the current one for a certain scope.
+      class ScopedCurrentContext
+      {
+      public:
+        ScopedCurrentContext( const Context &context );
+        ~ScopedCurrentContext();
+
+      private:
+        const Context &_context;
       };
 
 
@@ -191,7 +214,7 @@ namespace LOFAR
         // \endcode
         // Please refer to the documentation of the function \c cuMemHostAlloc()
         // in the CUDA Driver API for details.
-        HostMemory(size_t size, unsigned int flags = 0);
+        HostMemory(const Context &context, size_t size, unsigned int flags = 0);
 
         // Return a pointer to the actual memory.
         // \warning The returned pointer shall not have a lifetime beyond the
@@ -222,7 +245,7 @@ namespace LOFAR
       {
       public:
         // Allocate \a size bytes of device memory.
-        DeviceMemory(size_t size);
+        DeviceMemory(const Context &context, size_t size);
 
         // Return a device pointer as a handle to the memory.
         void *get() const;
@@ -246,32 +269,37 @@ namespace LOFAR
       class Module
       {
       public:
-        // Load the module in the file \a fname into the current context. The
+        typedef std::map<CUjit_option,void*> optionmap_t;
+
+        // Load the module in the file \a fname into the given \a context. The
         // file should be a \e cubin file or a \e ptx file as output by \c nvcc.
         // \param fname name of a module file
         // \note For details, please refer to the documentation of \c
         // cuModuleLoad in the CUDA Driver API.
-        Module(const std::string &fname);
+        Module(const Context &context, const std::string &fname);
 
-        // Load the module pointed to by \a image into the current context. The
+        // Load the module pointed to by \a image into the given \a context. The
         // pointer may point to a null-terminated string containing \e cubin or
         // \e ptx code.
         // \param image pointer to a module image in memory
         // \note For details, please refer to the documentation of \c
         // cuModuleLoadData in the CUDA Driver API.
-        Module(const void *image);
+        Module(const Context &context, const void *image);
 
-        // Load the module pointed to by \a image into the current context. The
+        // Load the module pointed to by \a image into the given \a context. The
         // pointer may point to a null-terminated string containing \e cubin or
         // \e ptx code.
         // \param image pointer to a module image in memory
-        // \param options vector of \c CUjit_option items
-        // \param optionValues vector of values associated with \a options
+        // \param options map of \c CUjit_option items, with their associated
+        // values.
+        // \note All values are cast to void*, so if an option requires
+        // an unsigned int as value, the unsigned int's value itself is cast to void*!
         // \note For details, please refer to the documentation of \c
         // cuModuleLoadDataEx in the CUDA Driver API.
-        Module(const void *image,
-               std::vector<CUjit_option> &options,
-               std::vector<void*> &optionValues);
+        Module(const Context &context, const void *image, const optionmap_t &options);
+
+        // Return the Context in which this Module was created.
+        Context getContext() const;
 
       private:
         // Function needs access to our module to create a function.
@@ -319,6 +347,8 @@ namespace LOFAR
         void setSharedMemConfig(CUsharedconfig config) const;
 
       private:
+        const Context _context;
+
         // Stream needs access to our CUDA function to launch a kernel.
         friend class Stream;
 
@@ -327,7 +357,6 @@ namespace LOFAR
 
         // Function arguments as set.
         std::vector<const void *> _kernelArgs;
-
 
         // Helper function to modify _kernelArgs.
         void doSetArg(size_t index, const void *argp);
@@ -354,7 +383,7 @@ namespace LOFAR
         // counted pointer to a non-copyable implementation class.
         // \note For details on valid values for \a flags, please refer to the
         // documentation of cuEventCreate in the CUDA Driver API.
-        Event(unsigned int flags = CU_EVENT_DEFAULT);
+        Event(const Context &context, unsigned int flags = CU_EVENT_DEFAULT);
 
         // Return the elapsed time in milliseconds between this event and the \a
         // second event.
@@ -387,7 +416,7 @@ namespace LOFAR
         // \param flags must be 0 for CUDA < 5.0
         // \note For details on valid values for \a flags, please refer to the
         // documentation of \c cuStreamCreate in the CUDA Driver API.
-        Stream(unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
+        Stream(const Context &context, unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
 
         // Transfer data from host memory \a hostMem to device memory \a devMem.
         // \param devMem Device memory that will be copied to.
@@ -425,19 +454,19 @@ namespace LOFAR
         // Record the event \a event for this stream.
         void recordEvent(const Event &event);
 
-      private:
-        friend class LOFAR::Cobalt::FFT_Plan;
-
         // Return the underlying CUDA stream.
         CUstream get() const;
 
+        // Returns the context associated with the underlying CUDA stream;
+        Context getContext() const;
+
+      private:
         // Non-copyable implementation class.
         class Impl;
 
         // Reference counted pointer to the implementation class.
         boost::shared_ptr<Impl> _impl;
       };
-
 
     } // namespace gpu
   } // namespace Cobalt

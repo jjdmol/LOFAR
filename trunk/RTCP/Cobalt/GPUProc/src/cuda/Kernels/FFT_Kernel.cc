@@ -42,12 +42,14 @@ namespace LOFAR
     {
     }
 
-    void FFT_Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
+    void FFT_Kernel::enqueue(gpu::Stream &stream/*, PerformanceCounter &counter*/)
     {
+      gpu::ScopedCurrentContext scc(stream.getContext());
+
       cufftResult error;
 
       // Tie our plan to the specified stream
-      plan.setStream(queue);
+      plan.setStream(stream);
 
       // Enqueue the FFT execution
       error = cufftExecC2C(plan.plan,

@@ -43,16 +43,16 @@ int main() {
 
   const size_t bufSize = 64 * 1024 * 1024;
   const char expectedVal = 42;
-  gpu::HostMemory hBuf1(bufSize);
-  gpu::HostMemory hBuf2(bufSize);
+  gpu::HostMemory hBuf1(ctx, bufSize);
+  gpu::HostMemory hBuf2(ctx, bufSize);
   char *buf1 = hBuf1.get<char>();
   char *buf2 = hBuf2.get<char>();
   memset(buf1, expectedVal, bufSize * sizeof(char));
   memset(buf2,           0, bufSize * sizeof(char));
 
-  gpu::DeviceMemory dBuf(bufSize);
+  gpu::DeviceMemory dBuf(ctx, bufSize);
 
-  gpu::Stream strm;
+  gpu::Stream strm(ctx);
 
   strm.writeBuffer(dBuf, hBuf1, false);
   strm.synchronize();
