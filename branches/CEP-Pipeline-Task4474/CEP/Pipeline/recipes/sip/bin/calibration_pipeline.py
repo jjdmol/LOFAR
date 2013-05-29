@@ -29,6 +29,8 @@ class calibration_pipeline(control):
     3. Average and flag data, and demix A-team sources using NDPPP.
     4. Create a sourcedb from the user-supplied sky model, and an empty parmdb.
     5. Run BBS to calibrate the data.
+    6. Copy the MS's to their final output destination.
+    7. Create feedback file for further processing by the LOFAR framework (MAC)
     """
 
     def __init__(self):
@@ -269,15 +271,27 @@ class calibration_pipeline(control):
         bbs_parset = os.path.join(parset_dir, "BBS.parset")
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
         with duration(self, "bbs_reducer"):
-            self.run_task("bbs_reducer",
-                (dppp_mapfile, output_data_mapfile),
+            bbs_mapfile = self.run_task("bbs_reducer",
+                dppp_mapfile,
                 parset=bbs_parset,
                 instrument_mapfile=parmdb_mapfile,
                 sky_mapfile=sourcedb_mapfile
+            )['data_mapfile']
+
+        # *********************************************************************
+        # 6. Copy the MS's to their final output destination.
+        # When the copier recipe has run, the map-file named in
+        # output_data_mapfile will contain an updated map of output files.
+        with duration(self, "copier"):
+            self.run_task("copier",
+                mapfile_source=bbs_mapfile,
+                mapfile_target=output_data_mapfile,
+                mapfiles_dir=mapfile_dir,
+                mapfile=output_data_mapfile
             )
 
         # *********************************************************************
-        # 6. Create feedback file for further processing by the LOFAR framework
+        # 7. Create feedback file for further processing by the LOFAR framework
         # (MAC)
         # Create a parset-file containing the metadata for MAC/SAS
         with duration(self, "get_metadata"):
