@@ -31,7 +31,8 @@
 #include <cerrno>
 #include <iostream>
 #include <sstream>
-#include <iomanip>
+#include <set>
+#include <boost/format.hpp>
 
 #include <Common/SystemUtil.h>
 #include <Common/SystemCallException.h>
@@ -47,19 +48,171 @@ namespace LOFAR
   namespace Cobalt
   {
     using namespace std;
+    using boost::format;
 
-    gpu::Module createProgram(gpu::Context &context, vector<string> &targets, const string &srcFilename, 
-      CudaRuntimeCompiler::flags_type flags, CudaRuntimeCompiler::definitions_type definitions )
+    namespace {
+
+      // Return the highest compute target supported by the given device
+      CUjit_target computeTarget(const gpu::Device &device)
+      {
+        unsigned major = device.getComputeCapabilityMajor();
+        unsigned minor = device.getComputeCapabilityMinor();
+
+        switch (major) {
+          case 0:
+            return CU_TARGET_COMPUTE_10;
+
+          case 1:
+            switch (minor) {
+              case 0:
+                return CU_TARGET_COMPUTE_10;
+              case 1:
+                return CU_TARGET_COMPUTE_11;
+              case 2:
+                return CU_TARGET_COMPUTE_12;
+              case 3:
+                return CU_TARGET_COMPUTE_13;
+              default:
+                return CU_TARGET_COMPUTE_13;
+            }
+
+          case 2:
+            switch (minor) {
+              case 0:
+                return CU_TARGET_COMPUTE_20;
+              case 1:
+                return CU_TARGET_COMPUTE_21;
+              default:
+                return CU_TARGET_COMPUTE_21;
+            }
+
+          case 3:
+            if (minor < 5) {
+              return CU_TARGET_COMPUTE_30;
+            } else {
+              return CU_TARGET_COMPUTE_35;
+            }
+
+          default:
+            return CU_TARGET_COMPUTE_35;
+        }
+      }
+
+      // Return the highest compute target supported by all the given devices
+      CUjit_target computeTarget(const std::vector<gpu::Device> &devices)
+      {
+        if (devices.empty())
+          return CU_TARGET_COMPUTE_35;
+
+        CUjit_target minTarget = CU_TARGET_COMPUTE_35;
+
+        for (std::vector<gpu::Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
+          CUjit_target target = computeTarget(*i);
+
+          if (target < minTarget)
+            minTarget = target;
+        }
+
+        return minTarget;
+      }
+
+      // Translate a compute target to a virtual architecture (= the version
+      // the .cu file is written in).
+      string get_virtarch(CUjit_target target)
+      {
+        switch (target) {
+        default:
+          return "";
+
+        case CU_TARGET_COMPUTE_10:
+          return "cmpute_10";
+
+        case CU_TARGET_COMPUTE_11:
+          return "compute_11";
+
+        case CU_TARGET_COMPUTE_12:
+          return "compute_12";
+
+        case CU_TARGET_COMPUTE_13:
+          return "compute_13";
+
+        case CU_TARGET_COMPUTE_20:
+        case CU_TARGET_COMPUTE_21:
+          return "compute_20";
+
+        case CU_TARGET_COMPUTE_30:
+        case CU_TARGET_COMPUTE_35:
+          return "compute_30";
+        }
+      }
+
+      // Translate a compute target to a GPU architecture (= the instruction
+      // set supported by the actual GPU).
+      string get_gpuarch(CUjit_target target)
+      {
+        switch (target) {
+        default:
+          return "";
+
+        case CU_TARGET_COMPUTE_10:
+          return "sm_10";
+
+        case CU_TARGET_COMPUTE_11:
+          return "sm_11";
+
+        case CU_TARGET_COMPUTE_12:
+          return "sm_12";
+
+        case CU_TARGET_COMPUTE_13:
+          return "sm_13";
+
+        case CU_TARGET_COMPUTE_20:
+        case CU_TARGET_COMPUTE_21:
+          return "sm_20";
+
+        case CU_TARGET_COMPUTE_30:
+        case CU_TARGET_COMPUTE_35:
+          return "sm_30";
+        }
+      }
+    }
+
+
+    std::string createPTX(const vector<gpu::Device> &devices, const std::string &srcFilename, 
+      CudaRuntimeCompiler::flags_type flags, const CudaRuntimeCompiler::definitions_type &definitions )
     {
-      string ptxAsString = CudaRuntimeCompiler::compileToPtx(srcFilename, flags, definitions);
+      // The CUDA code is assumed to be written for the architecture of the
+      // oldest device.
+      CUjit_target commonTarget = computeTarget(devices);
+      flags.insert(str(format("gpu-architecture %s") % get_virtarch(commonTarget)));
 
+#if 0
+      // We'll compile a specific version for each device that has a different
+      // architecture.
+      set<CUjit_target> allTargets;
+
+      for (vector<gpu::Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
+        allTargets.insert(computeTarget(*i));
+      }
+
+      for (set<CUjit_target>::const_iterator i = allTargets.begin(); i != allTargets.end(); ++i) {
+        flags.insert(str(format("gpu-code %s") % get_gpuarch(*i)));
+      }
+#endif
+
+      // Create and return PTX
+      return CudaRuntimeCompiler::compileToPtx(srcFilename, flags, definitions);
+    }
+
+
+    gpu::Module createModule(const gpu::Context &context, const std::string &srcFilename, const std::string &ptx)
+    {
       /*
        * JIT compilation options.
        * Note: need to pass a void* with option vals. Preferably, do not alloc dyn (mem leaks on exc).
        * Instead, use local vars for small variables and vector<char> xxx; passing &xxx[0] for output c-strings.
        */
-      vector<CUjit_option> options;
-      vector<void*> optionValues;
+      gpu::Module::optionmap_t options;
 
 #if 0
       unsigned int maxRegs = 63; // TODO: write this up
@@ -71,48 +224,38 @@ namespace LOFAR
       optionValues.push_back(&thrPerBlk); // can be read back
 #endif
 
-      unsigned int infoLogSize  = BUILD_MAX_LOG_SIZE + 1; // input and output var for JIT compiler
-      unsigned int errorLogSize = BUILD_MAX_LOG_SIZE + 1; // idem (hence not the a single var or const)
+      unsigned infoLogSize  = BUILD_MAX_LOG_SIZE + 1; // input and output var for JIT compiler
+      unsigned errorLogSize = BUILD_MAX_LOG_SIZE + 1; // idem (hence not the a single var or const)
 
       vector<char> infoLog(infoLogSize);
-      options.push_back(CU_JIT_INFO_LOG_BUFFER);
-      optionValues.push_back(&infoLog[0]);
-
-      options.push_back(CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES);
-      optionValues.push_back(&infoLogSize);
+      options[CU_JIT_INFO_LOG_BUFFER] = &infoLog[0];
+      options[CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES] = &infoLogSize;
 
       vector<char> errorLog(errorLogSize);
-      options.push_back(CU_JIT_ERROR_LOG_BUFFER);
-      optionValues.push_back(&errorLog[0]);
-
-      options.push_back(CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES);
-      optionValues.push_back(&errorLogSize);
+      options[CU_JIT_ERROR_LOG_BUFFER] = &errorLog[0];
+      options[CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES] = &errorLogSize;
 
       float jitWallTime = 0.0f; // output val (init it anyway), in milliseconds
-      options.push_back(CU_JIT_WALL_TIME);
-      optionValues.push_back(&jitWallTime);
+      options[CU_JIT_WALL_TIME] = &jitWallTime;
 
 #if 0
-      unsigned int optLvl = 4; // 0-4, default 4
-      options.push_back(CU_JIT_OPTIMIZATION_LEVEL);
-      optionValues.push_back(&optLvl);
-
-      options.push_back(CU_JIT_TARGET_FROM_CUCONTEXT);
-      optionValues.push_back(NULL); // no option value, but I suppose the array needs a placeholder
+      size_t optLvl = 4; // 0-4, default 4
+      options[CU_JIT_OPTIMIZATION_LEVEL] = reinterpret_cast<void*>(optLvl);
 #endif
-/*
-      CUjit_target_enum target = CU_TARGET_COMPUTE_30; // TODO: determine val from auto-detect or whatever
-      options.push_back(CU_JIT_TARGET);
-      optionValues.push_back(&target);
-*/
+
 #if 0
-      CUjit_fallback_enum fallback = CU_PREFER_PTX;
-      options.push_back(CU_JIT_FALLBACK_STRATEGY);
-      optionValues.push_back(&fallback);
+      // NOTE: There is no need to specify a target. NVCC will use the best one
+      // available based on the PTX and the Context.
+      size_t jitTarget = target;
+      options[CU_JIT_TARGET] = reinterpret_cast<void*>(jitTarget);
+#endif
+
+#if 0
+      size_t fallback = CU_PREFER_PTX;
+      options[CU_JIT_FALLBACK_STRATEGY] = reinterpret_cast<void*>(fallback);
 #endif
       try {
-
-        gpu::Module module(ptxAsString.c_str(), options, optionValues);
+        gpu::Module module(context, ptx.c_str(), options);
         // TODO: check what the ptx compiler prints. Don't print bogus. See if infoLogSize indeed is set to 0 if all cool.
         // TODO: maybe retry if buffer len exhausted, esp for errors
         if (infoLogSize > infoLog.size()) { // zero-term log and guard against bogus JIT opt val output
@@ -122,6 +265,7 @@ namespace LOFAR
         cout << "Build info for '" << srcFilename 
              << "' (build time: " << jitWallTime 
              << " us):" << endl << &infoLog[0] << endl;
+
         return module;
       } catch (gpu::CUDAException& exc) {
         if (errorLogSize > errorLog.size()) { // idem
