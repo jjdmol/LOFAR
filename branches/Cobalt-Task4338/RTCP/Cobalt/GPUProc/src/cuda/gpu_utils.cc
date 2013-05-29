@@ -101,9 +101,6 @@ namespace LOFAR
       // Return the highest compute target supported by all the given devices
       CUjit_target computeTarget(const std::vector<gpu::Device> &devices)
       {
-        if (devices.empty())
-          return CU_TARGET_COMPUTE_35;
-
         CUjit_target minTarget = CU_TARGET_COMPUTE_35;
 
         for (std::vector<gpu::Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
@@ -122,10 +119,10 @@ namespace LOFAR
       {
         switch (target) {
         default:
-          return "";
+          return "compute_unknown";
 
         case CU_TARGET_COMPUTE_10:
-          return "cmpute_10";
+          return "compute_10";
 
         case CU_TARGET_COMPUTE_11:
           return "compute_11";
@@ -137,12 +134,16 @@ namespace LOFAR
           return "compute_13";
 
         case CU_TARGET_COMPUTE_20:
-        case CU_TARGET_COMPUTE_21:
           return "compute_20";
 
+        case CU_TARGET_COMPUTE_21:
+          return "compute_21";
+
         case CU_TARGET_COMPUTE_30:
-        case CU_TARGET_COMPUTE_35:
           return "compute_30";
+
+        case CU_TARGET_COMPUTE_35:
+          return "compute_35";
         }
       }
 
@@ -152,7 +153,7 @@ namespace LOFAR
       {
         switch (target) {
         default:
-          return "";
+          return "sm_unknown";
 
         case CU_TARGET_COMPUTE_10:
           return "sm_10";
@@ -167,12 +168,16 @@ namespace LOFAR
           return "sm_13";
 
         case CU_TARGET_COMPUTE_20:
-        case CU_TARGET_COMPUTE_21:
           return "sm_20";
 
+        case CU_TARGET_COMPUTE_21:
+          return "sm_21";
+
         case CU_TARGET_COMPUTE_30:
-        case CU_TARGET_COMPUTE_35:
           return "sm_30";
+
+        case CU_TARGET_COMPUTE_35:
+          return "sm_35";
         }
       }
     }

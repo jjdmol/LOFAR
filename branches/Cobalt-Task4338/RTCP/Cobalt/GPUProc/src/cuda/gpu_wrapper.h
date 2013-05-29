@@ -101,7 +101,7 @@ namespace LOFAR
         // Returns the number of devices in the CUDA platform.
         size_t size() const;
 
-        // Returns a vector of all devies in the CUDA platform.
+        // Returns a vector of all devices in the CUDA platform.
         std::vector<Device> devices() const;
 
         // Returns the name of the CUDA platform. (currently, "NVIDIA CUDA")
