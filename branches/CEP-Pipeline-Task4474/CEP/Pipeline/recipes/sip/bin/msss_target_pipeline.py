@@ -29,13 +29,15 @@ class msss_target_pipeline(control):
     
     1. Prepare phase, collect data from parset and input mapfiles
     2. Copy the instrument files to the correct node, create new file with
-       succesfull copied mss.
+       succesfull copied MS's.
     3. Create database needed for performing work: 
-       Vds, descibing data on the nodes sourcedb, For skymodel (A-team)
-       parmdb for outputtting solutions
+       - VDS, describing data on the nodes sourcedb, 
+       - SourceDB for skymodel (A-team)
+       - ParmDB for outputtting solutions
     4. Run NDPPP to demix the A-Team sources
-    5. Run bss using the instrument file from the target observation, to correct for instrumental effects
-    6. Second dppp run for  flaging NaN's in the MS. 
+    5. Run BBS using the instrument file from the target observation, to
+       correct for instrumental effects
+    6. Copy the MS's to their final output destination.
     7. Create feedback file for further processing by the LOFAR framework (MAC)
 
     **Per subband-group, the following output products will be delivered:**
@@ -251,10 +253,9 @@ class msss_target_pipeline(control):
 
         # *********************************************************************
         # 3. Create database needed for performing work: 
-        #    Vds, descibing data on the nodes
-        #    sourcedb, For skymodel (A-team)
-        #    parmdb for outputtting solutions
-        # Produce a GVDS file describing the data on the compute nodes.
+        #    - GVDS, describing data on the compute nodes
+        #    - SourceDB, for skymodel (A-team)
+        #    - ParmDB for outputtting solutions
         with duration(self, "vdsmaker"):
             gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
 
@@ -291,8 +292,8 @@ class msss_target_pipeline(control):
         # *********************************************************************
         # 4. Run NDPPP to demix the A-Team sources
         # Create a parameter-subset for DPPP and write it to file.
-        ndppp_parset = os.path.join(parset_dir, "NDPPP[0].parset")
-        py_parset.makeSubset('DPPP[0].').writeFile(ndppp_parset)
+        ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
+        py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
         with duration(self, "ndppp"):
@@ -307,7 +308,7 @@ class msss_target_pipeline(control):
                 parset=ndppp_parset,
                 parmdb_mapfile=parmdb_mapfile,
                 sourcedb_mapfile=sourcedb_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'dppp[0].mapfile')
+                mapfile=os.path.join(mapfile_dir, 'dppp.mapfile')
             )['mapfile']
 
         # ********************************************************************
