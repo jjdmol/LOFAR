@@ -269,7 +269,9 @@ namespace LOFAR
       class Module
       {
       public:
-        typedef std::map<CUjit_option,void*> optionmap_t;
+        typedef std::map<CUjit_option, void*> optionmap_t;
+
+        Module(); // TODO: tmp, as long as CorrelatorPipelinePrograms needs a default init
 
         // Load the module in the file \a fname into the given \a context. The
         // file should be a \e cubin file or a \e ptx file as output by \c nvcc.
@@ -454,11 +456,11 @@ namespace LOFAR
         // Record the event \a event for this stream.
         void recordEvent(const Event &event);
 
-        // Return the underlying CUDA stream.
+        // Return the underlying CUDA stream. TODO: try to get rid of CUstream here: FFT thing to here or make it friend
         CUstream get() const;
 
-        // Returns the context associated with the underlying CUDA stream;
-        Context getContext() const;
+        // Returns the context associated with the underlying CUDA stream.
+        Context getContext() const; // TODO: consider using this in the WorkQueues (now has Stream and Context stored)
 
       private:
         // Non-copyable implementation class.

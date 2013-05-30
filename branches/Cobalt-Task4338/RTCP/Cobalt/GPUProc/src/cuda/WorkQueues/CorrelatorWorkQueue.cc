@@ -49,14 +49,10 @@ namespace LOFAR
      * [output] <-
      */
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset &parset,
-      gpu::Context &context, 
-      gpu::Device  &device,
-      unsigned gpuNumber,
-      CorrelatorPipelinePrograms & programs,
-      FilterBank &filterBank
-      )
-      :
-      WorkQueue( context, device, gpuNumber, parset),
+      gpu::Context &context, CorrelatorPipelinePrograms &programs,
+      FilterBank &filterBank)
+    :
+      WorkQueue( parset, context ),
       prevBlock(-1),
       prevSAP(-1),
       devInput(ps.nrBeams(),
@@ -150,7 +146,6 @@ namespace LOFAR
       }
 
       // create all the counters
-      // Move the FIR filter weight to the GPU
 #if defined USE_NEW_CORRELATOR
       addCounter("compute - cor.triangle");
       addCounter("compute - cor.rectangle");
@@ -177,7 +172,11 @@ namespace LOFAR
       addTimer("GPU - compute");
       addTimer("GPU - wait");
 
-      queue.writeBuffer(devFIRweights, filterBank.getWeights().origin(), true);
+      // Copy the FIR filter weights to the device in two steps (TODO: make FilterBank supply the right buffer, or do like BandPassCorrectionWeights below)
+      size_t fbBytes = filterBank.getWeights().num_elements() * sizeof(float);
+      gpu::HostMemory fbBuffer(context, fbBytes);
+      std::memcpy(fbBuffer.get<void>(), filterBank.getWeights().origin(), fbBytes);
+      queue.writeBuffer(devFIRweights, fbBuffer, true);
 
       if (ps.correctBandPass())
       {
@@ -434,7 +433,7 @@ namespace LOFAR
       correlateTriangleKernel.enqueue(queue/*, *counters["compute - cor.triangle"]*/);
       correlateRectangleKernel.enqueue(queue/*, *counters["compute - cor.rectangle"]*/);
 #else
-      correlatorKernel.enqueue(queua/*e, *counters["compute - correlator"]*/);
+      correlatorKernel.enqueue(queue/*, *counters["compute - correlator"]*/);
 #endif
 
       //queue.flush(); // CUDA doesn't have/need flush() (OpenCL)
@@ -455,7 +454,7 @@ namespace LOFAR
       {
         timers["GPU - output"]->start();
 
-#if defined USE_B7015
+#ifdef USE_B7015
         OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
 #endif
         output.deviceToHost(true);

@@ -23,29 +23,25 @@
 #include <string>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 
-
+using namespace LOFAR::Cobalt;
 using namespace std;
+
 int main()
 {
-   // Run a kernel with two different defines, should result in two different kernels.
-   // Just run the compiler with two magic numbers and test for the existance of the numbers
-   string kernelPath = "tCudaRuntimeCompiler.in_.cu";
-
+  // Run a kernel with two different defines, should result in two different kernels.
+  // Just run the compiler with two magic numbers and test for the existance of the numbers
+  string kernelPath = "tCudaRuntimeCompiler.in_.cu";
   
   // Get an instantiation of the default parameters
-  CudaRuntimeCompiler::definitions_type definitions = CudaRuntimeCompiler::defaultDefinitions();
+  definitions_type definitions = defaultDefinitions();
 
   // override the default with a magic number
   definitions["NVIDIA_CUDA"] = "123456";
 
-  string ptx1 = CudaRuntimeCompiler::compileToPtx(kernelPath, 
-                                    CudaRuntimeCompiler::defaultFlags(),
-                                    definitions);
+  string ptx1 = compileToPtx(kernelPath, defaultFlags(), definitions);
   definitions["NVIDIA_CUDA"] = "654321";
 
-  string ptx2 = CudaRuntimeCompiler::compileToPtx(kernelPath, 
-                                    CudaRuntimeCompiler::defaultFlags(),
-                                    definitions);
+  string ptx2 = compileToPtx(kernelPath, defaultFlags(), definitions);
 
   // tests if the magic numbers are inserted into the ptx files
   if ((std::string::npos != ptx1.find("123456")) ||
@@ -57,3 +53,4 @@ int main()
   cout << ptx1 << ptx2 ;
   return -1;
 }
+

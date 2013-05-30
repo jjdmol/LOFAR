@@ -42,7 +42,7 @@ namespace LOFAR
     class Pipeline
     {
     public:
-      Pipeline(const Parset &);
+      Pipeline(const Parset &ps);
 
       cl::Program             createProgram(const char *sources);
 
@@ -54,10 +54,6 @@ namespace LOFAR
       OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
 #endif
 
-      void doWork();
-
-      void                    sendNextBlock(unsigned station);
-      
     protected:
       // combines all functionality needed for getting the total from a set of counters
       struct Performance {

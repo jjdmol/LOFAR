@@ -20,31 +20,33 @@
 
 #include <lofar_config.h>
 
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
+#include "CudaRuntimeCompiler.h"
 
 #include <cstdio>   // popen, pget
 #include <stdexcept>
 #include <iostream>  
 #include <string>
 #include <sstream>
-#include <iomanip>  // setprecision
 #include <map>
 #include <set>
+#include <boost/format.hpp>
 
 #include <Common/Exception.h>
 #include <Common/SystemCallException.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 
-#include "CudaRuntimeCompiler.h"
+#include <GPUProc/global_defines.h>
 
-using namespace LOFAR;
 using namespace std;
 
 // Collection of functions needed for runtime compilation of a kernel supplied 
 // as a path to a ptx string.
-namespace CudaRuntimeCompiler
+namespace LOFAR
 {
+  namespace Cobalt
+  {
+
   // flags
   typedef std::set<std::string> flags_type;
 
@@ -52,29 +54,65 @@ namespace CudaRuntimeCompiler
   typedef std::map<std::string, std::string> definitions_type;
 
   // Return the set of default flags for the nvcc compilation of a cuda kernel in Cobalt
-  const flags_type& defaultFlags()
+  flags_type defaultFlags()
   {
-    static flags_type flags;
-    if (flags.empty())  //fill with default values
-    {
-      //flags.insert("device-debug ");
-      flags.insert("use_fast_math");
-      //flags.insert("gpu-architecture compute_30");  force that the computate architecture needs to be specified
-      // opencl specific: --source-in-ptx  -m64
-    }
+    flags_type flags;
+
+    using boost::format;
+
+    //flags.insert("device-debug");
+    flags.insert("use_fast_math");
+
+    // gpu-architecture and -Ipath are set by createPTX()
+
     return flags;    
   };
 
-  // Return the set of default definitions for the nvcc compilation of a cuda kernel in Cobalt
-  const definitions_type& defaultDefinitions()
+  // Return empty set of definitions for the nvcc compilation of a cuda kernel
+  definitions_type defaultDefinitions()
   {
-    static definitions_type definitions;
-    if (definitions.empty())  //fill with default values
-    {
-      definitions["NVIDIA_CUDA"] = "1";       // left-over from OpenCL for Correlator.cl/.cu 
-      definitions["NR_BITS_PER_SAMPLE"] = "20";  //ps.nrBitsPerSample();
-    }
-    return definitions;  
+    definitions_type defs;
+
+    return defs;
+  }
+
+  // Return the set of default definitions for the nvcc compilation of a cuda kernel in Cobalt
+  definitions_type defaultDefinitions(const Parset &ps)
+  {
+    definitions_type defs;
+
+    using boost::format;
+
+    defs["NVIDIA_CUDA"] = ""; // left-over from OpenCL for Correlator.cl/.cu 
+
+    // TODO: support device specific defs somehow (createPTX() knows about targets, but may be kernel and target specific)
+    //if (devices[0].getInfo<CL_DEVICE_NAME>() == "GeForce GTX 680")
+    //  defs["USE_FLOAT4_IN_CORRELATOR"] = "";
+
+    // TODO: kernel-specific defs should be specified in the XXXKernel class
+    defs["NR_BITS_PER_SAMPLE"] = str(format("%u") % ps.nrBitsPerSample());
+    defs["SUBBAND_BANDWIDTH"]  = str(format("%.7ff") % ps.subbandBandwidth()); // returns double, so rounding issue?
+    defs["NR_SUBBANDS"]        = str(format("%u") % ps.nrSubbands()); // size_t, but %zu not supp
+    defs["NR_CHANNELS"]        = str(format("%u") % ps.nrChannelsPerSubband());
+    defs["NR_STATIONS"]        = str(format("%u") % ps.nrStations());
+    defs["NR_SAMPLES_PER_CHANNEL"] = str(format("%u") % ps.nrSamplesPerChannel());
+    defs["NR_SAMPLES_PER_SUBBAND"] = str(format("%u") % ps.nrSamplesPerSubband());
+    defs["NR_BEAMS"]           = str(format("%u") % ps.nrBeams());
+    defs["NR_TABS"]            = str(format("%u") % ps.nrTABs(0)); // TODO: 0 should be dep on #beams
+    defs["NR_COHERENT_STOKES"] = str(format("%u") % ps.nrCoherentStokes()); // size_t
+    defs["NR_INCOHERENT_STOKES"] = str(format("%u") % ps.nrIncoherentStokes()); // size_t
+    defs["COHERENT_STOKES_TIME_INTEGRATION_FACTOR"]   = str(format("%u") % ps.coherentStokesTimeIntegrationFactor());
+    defs["INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR"] = str(format("%u") % ps.incoherentStokesTimeIntegrationFactor());
+    defs["NR_POLARIZATIONS"]   = str(format("%u") % NR_POLARIZATIONS);
+    defs["NR_TAPS"]            = str(format("%u") % NR_TAPS);
+    defs["NR_STATION_FILTER_TAPS"] = str(format("%u") % NR_STATION_FILTER_TAPS);
+    if (ps.delayCompensation())
+      defs["DELAY_COMPENSATION"] = "";
+    if (ps.correctBandPass())
+      defs["BANDPASS_CORRECTION"] = "";
+    defs["DEDISPERSION_FFT_SIZE"] = str(format("%u") % ps.dedispersionFFTsize()); // size_t
+
+    return defs;  
   }
   
   // Performs a 'system' call of nvcc. Return the stdout of the command
@@ -136,7 +174,11 @@ namespace CudaRuntimeCompiler
 
     // add the map of defines
     for (definitions_type::const_iterator it=definitions.begin(); it!=definitions.end(); ++it)
-      cmd << " -D" << it->first << "=" << it->second;  //eg:  -DTEST=20
+    {
+      cmd << " -D" << it->first;
+      if (!it->second.empty())
+        cmd << "=" << it->second; // e.g. -DTEST=20
+    }
 
     // output to stdout
     cmd << " -o -";
@@ -149,7 +191,9 @@ namespace CudaRuntimeCompiler
   std::string compileToPtx(const std::string& pathToCuFile)
   {
     // compile with the default flags and definitions
-    return CudaRuntimeCompiler::compileToPtx(pathToCuFile, defaultFlags(), defaultDefinitions());
+    return compileToPtx(pathToCuFile, defaultFlags(), defaultDefinitions());
   };
+
+  }
 }
 

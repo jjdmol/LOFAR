@@ -76,8 +76,8 @@ float * runTest(float bandPassFactor,
   string kernelPath = "DelayAndBandPass.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
  
   // Get an instantiation of the default parameters
-  CudaRuntimeCompiler::definitions_type definitions = CudaRuntimeCompiler::defaultDefinitions();
-  CudaRuntimeCompiler::flags_type flags = CudaRuntimeCompiler::defaultFlags();
+  definitions_type definitions = defaultDefinitions();
+  flags_type flags = defaultFlags();
   //flags.insert("gpu-architecture compute_20"); // The real devices will be 3.0
 
   // ****************************************

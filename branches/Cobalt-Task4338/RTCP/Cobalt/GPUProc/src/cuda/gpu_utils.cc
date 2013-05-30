@@ -39,9 +39,9 @@
 #include <Stream/FileStream.h>
 
 #include <GPUProc/global_defines.h>
+#include "CudaRuntimeCompiler.h"
 
 #define BUILD_MAX_LOG_SIZE	4095
-#include "CudaRuntimeCompiler.h"
 
 namespace LOFAR
 {
@@ -137,7 +137,7 @@ namespace LOFAR
           return "compute_20";
 
         case CU_TARGET_COMPUTE_21:
-          return "compute_21";
+          return "compute_20"; // 21 not allowed for nvcc --gpu-architecture option value
 
         case CU_TARGET_COMPUTE_30:
           return "compute_30";
@@ -184,12 +184,13 @@ namespace LOFAR
 
 
     std::string createPTX(const vector<gpu::Device> &devices, const std::string &srcFilename, 
-      CudaRuntimeCompiler::flags_type flags, const CudaRuntimeCompiler::definitions_type &definitions )
+      flags_type &flags, const definitions_type &definitions )
     {
       // The CUDA code is assumed to be written for the architecture of the
       // oldest device.
       CUjit_target commonTarget = computeTarget(devices);
       flags.insert(str(format("gpu-architecture %s") % get_virtarch(commonTarget)));
+      //flags.insert(str(format("-I %s") % dirname(__FILE__))); // TODO: refer to src dir (testing) or install dir (installed)
 
 #if 0
       // We'll compile a specific version for each device that has a different
@@ -206,7 +207,7 @@ namespace LOFAR
 #endif
 
       // Create and return PTX
-      return CudaRuntimeCompiler::compileToPtx(srcFilename, flags, definitions);
+      return compileToPtx(srcFilename, flags, definitions);
     }
 
 

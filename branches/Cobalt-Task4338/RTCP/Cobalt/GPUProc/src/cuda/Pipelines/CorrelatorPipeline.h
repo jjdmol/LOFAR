@@ -35,26 +35,24 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    // Correlator pipeline, connect input, GPUWorkQueues and output in a parallel (OMP).
+    // Correlator pipeline, connect input, correlator WorkQueues and output in parallel (OpenMP).
     // Connect all parts of the pipeline together: set up connections with the input stream
-    // each in a seperate thread. Start 2 WorkQueues for each GPU in the system.
-    // The WorkQueue are then filled with data from the stream. And started to 
-    // work. After all data is collected the output is written, again all parallel.
+    // each in a seperate thread. Start two WorkQueues for each GPU in the system.
+    // These process independently, but can overlap each others compute with host/device I/O.
+    // The WorkQueues are then filled with data from the input stream and started.
+    // After all data is collected the output is written, again in parallel.
     // This class contains most CPU side parallelism.
-    // It also contains two 'data' members that are shared between queues
+    // It also contains two 'data' members that are shared between queues.
     class CorrelatorPipeline : public Pipeline
     {
     public:
       CorrelatorPipeline(const Parset &);
 
-      // per thread/station start up the input create 2 WorkQueue for each available GPU
+      // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void doWork();
 
       // for each block, read all subbands from all stations, and divide the work over the workQueues
       template<typename SampleT> void receiveInput( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
-
-      // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
-      void doWorkQueue(CorrelatorWorkQueue &workQueue);
 
       // process subbands on the GPU
       void processSubbands(CorrelatorWorkQueue &workQueue);
@@ -77,8 +75,11 @@ namespace LOFAR
       std::vector<struct Output> subbandPool; // [subband]
 
       FilterBank filterBank;
-      CorrelatorPipelinePrograms programs;
+
+      std::vector< SmartPtr<CorrelatorWorkQueue> > workQueues;
     };
   }
 }
+
 #endif
+

@@ -65,13 +65,14 @@ HostMemory runTest(gpu::Context ctx,
   string kernelPath = "Correlator.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
  
   // Get an instantiation of the default parameters
-  CudaRuntimeCompiler::definitions_type definitions = CudaRuntimeCompiler::defaultDefinitions();
-  CudaRuntimeCompiler::flags_type flags = CudaRuntimeCompiler::defaultFlags();
+  definitions_type definitions = defaultDefinitions();
+  flags_type flags = defaultFlags();
   flags.insert("gpu-architecture compute_20"); // The real devices will be 3.0
 
   // ****************************************
   // Compile to ptx
   // Set op string string pairs to be provided to the compiler as defines
+  definitions["NVIDIA_CUDA"] = "";
   definitions["NR_STATIONS"] = "2";
   unsigned NR_STATIONS = 2;
   definitions["NR_CHANNELS"] = "16";

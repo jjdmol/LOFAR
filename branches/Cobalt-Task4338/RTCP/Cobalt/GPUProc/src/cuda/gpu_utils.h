@@ -41,8 +41,8 @@ namespace LOFAR
      */
     std::string createPTX( const std::vector<gpu::Device> &devices,
                                const std::string &srcFilename, 
-                               CudaRuntimeCompiler::flags_type flags,
-                               const CudaRuntimeCompiler::definitions_type &definitions );
+                               flags_type &flags,
+                               const definitions_type &definitions );
     /*
      * Create a Module from a PTX (string).
      */

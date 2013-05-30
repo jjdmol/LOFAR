@@ -34,10 +34,11 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline, unsigned gpuNumber)
-      :
-      WorkQueue( pipeline.context,pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
-      pipeline(pipeline),
+    BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pl, unsigned gpuNumber)
+    :
+      WorkQueue( pl.context, pl.devices[gpuNumber], gpuNumber, pl.ps),
+
+      pipeline(pl),
       inputSamples(boost::extents[ps.nrStations()][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
       devFilteredData(queue, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
       bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
