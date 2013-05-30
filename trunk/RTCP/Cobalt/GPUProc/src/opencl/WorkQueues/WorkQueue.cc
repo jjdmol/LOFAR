@@ -24,9 +24,7 @@
 
 #include <Common/LofarLogger.h>
 
-#ifdef USE_B7015
-# include <GPUProc/global_defines.h>
-#endif
+#include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {
