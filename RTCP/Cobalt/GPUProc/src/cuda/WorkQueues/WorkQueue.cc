@@ -33,7 +33,6 @@ namespace LOFAR
     WorkQueue::WorkQueue(const Parset &ps, gpu::Context &context)
     :
       ps(ps),
-      context(context),
       queue(gpu::Stream(context))
     {
     }
