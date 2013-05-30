@@ -351,6 +351,10 @@ namespace LOFAR
       private:
         const Context _context;
 
+        // Keep the Module alive, because Function actually wraps a pointer
+        // to a function within the Module.
+        const Module _module;
+
         // Stream needs access to our CUDA function to launch a kernel.
         friend class Stream;
 
