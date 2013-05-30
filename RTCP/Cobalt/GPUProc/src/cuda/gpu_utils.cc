@@ -86,6 +86,7 @@ namespace LOFAR
                 return CU_TARGET_COMPUTE_21;
             }
 
+#if CUDA_VERSION >= 5000
           case 3:
             if (minor < 5) {
               return CU_TARGET_COMPUTE_30;
@@ -95,6 +96,11 @@ namespace LOFAR
 
           default:
             return CU_TARGET_COMPUTE_35;
+#else
+          default:
+            return CU_TARGET_COMPUTE_30;
+#endif
+
         }
       }
 
@@ -142,8 +148,10 @@ namespace LOFAR
         case CU_TARGET_COMPUTE_30:
           return "compute_30";
 
+#if CUDA_VERSION >= 5000
         case CU_TARGET_COMPUTE_35:
           return "compute_35";
+#endif
         }
       }
 
@@ -176,8 +184,10 @@ namespace LOFAR
         case CU_TARGET_COMPUTE_30:
           return "sm_30";
 
+#if CUDA_VERSION >= 5000
         case CU_TARGET_COMPUTE_35:
           return "sm_35";
+#endif
         }
       }
     }
@@ -207,7 +217,7 @@ namespace LOFAR
 #endif
 
       // Create and return PTX
-      return compileToPtx(srcFilename, flags, definitions);
+      return compileToPtx(string(dirname(__FILE__)) + "/" + srcFilename, flags, definitions);
     }
 
 
