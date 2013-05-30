@@ -58,8 +58,8 @@ if(USE_CUDA)
   if(CUDA_cufft_LIBRARY)
     target_link_libraries(gpuproc ${CUDA_cufft_LIBRARY})
   endif()
-  # Compiling rtcp.cc doesn't work yet for CUDA
-  #lofar_add_bin_program(rtcp rtcp.cc)
+
+  lofar_add_bin_program(rtcp rtcp.cc)
 endif()
 
 if(USE_OPENCL)

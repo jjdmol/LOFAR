@@ -379,7 +379,7 @@ int main(int argc, char **argv)
 
     case beam:
       LOG_INFO_STR("BeamFormer pipeline selected");
-      BeamFormerPipeline(ps).doWork();
+      //BeamFormerPipeline(ps).doWork();
       break;
 
     case UHEP:
