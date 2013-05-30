@@ -27,8 +27,12 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    FFT_Plan::FFT_Plan(unsigned fftSize, unsigned nrFFTs)
+    FFT_Plan::FFT_Plan(gpu::Context &context, unsigned fftSize, unsigned nrFFTs)
+      :
+      context(context)
     {
+      gpu::ScopedCurrentContext scc(context);
+
       cufftResult error;
 
       error = cufftPlan1d(&plan, fftSize, CUFFT_C2C, nrFFTs);
@@ -39,6 +43,8 @@ namespace LOFAR
 
     FFT_Plan::~FFT_Plan()
     {
+      gpu::ScopedCurrentContext scc(context);
+
       cufftDestroy(plan);
     }
 
@@ -46,7 +52,7 @@ namespace LOFAR
     {
       cufftResult error;
 
-      gpu::ScopedCurrentContext scc(stream.getContext());
+      gpu::ScopedCurrentContext scc(context);
 
       error = cufftSetStream(plan, stream.get());
 

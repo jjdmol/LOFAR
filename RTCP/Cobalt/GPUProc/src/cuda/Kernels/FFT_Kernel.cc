@@ -32,19 +32,20 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    FFT_Kernel::FFT_Kernel(unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer)
+    FFT_Kernel::FFT_Kernel(gpu::Context &context, unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer)
       :
+      context(context),
       nrFFTs(nrFFTs),
       fftSize(fftSize),
       direction(forward ? CUFFT_FORWARD : CUFFT_INVERSE),
-      plan(fftSize, nrFFTs),
+      plan(context, fftSize, nrFFTs),
       buffer(buffer)
     {
     }
 
     void FFT_Kernel::enqueue(gpu::Stream &stream/*, PerformanceCounter &counter*/)
     {
-      gpu::ScopedCurrentContext scc(stream.getContext());
+      gpu::ScopedCurrentContext scc(context);
 
       cufftResult error;
 

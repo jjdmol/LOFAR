@@ -30,7 +30,7 @@ namespace LOFAR
   {
     Filter_FFT_Kernel::Filter_FFT_Kernel(const Parset &ps, gpu::Context &context, gpu::DeviceMemory &devFilteredData)
       :
-      FFT_Kernel(ps.nrChannelsPerSubband(), ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel(), true, devFilteredData)
+      FFT_Kernel(context, ps.nrChannelsPerSubband(), ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel(), true, devFilteredData)
     {
     }
 
