@@ -42,23 +42,19 @@ namespace LOFAR
     class Pipeline
     {
     public:
-      Pipeline(const Parset &);
+      Pipeline(const Parset &ps);
 
-      gpu::Module              createProgram(const char *sources);
+      gpu::Module createProgram(const gpu::Context &context,
+                                const std::string &srcFilename);
 
+    protected:
       const Parset             &ps;
-      gpu::Context             context;
       std::vector<gpu::Device> devices;
 
 #if defined USE_B7015
       OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
 #endif
 
-      void doWork();
-
-      void                    sendNextBlock(unsigned station);
-      
-    protected:
       // combines all functionality needed for getting the total from a set of counters
       struct Performance {
         std::map<std::string, PerformanceCounter::figures> total_counters;

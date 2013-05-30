@@ -204,18 +204,18 @@ namespace LOFAR
         // 1. Convert input flags to channel flags, calculate the amount flagged samples and save this in output
         static void propagateFlagsToOutput(Parset const & parset,
           MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-          CorrelatedData &output) ;
+          CorrelatedData &output);
 
         // 2. Calculate the weight based on the number of flags and apply this weighting to all output values
         template<typename T> static void applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
           CorrelatedData &output);
 
-        // 1.1Convert the flags per station to channel flags, change time scale if nchannel > 1
+        // 1.1 Convert the flags per station to channel flags, change time scale if nchannel > 1
         static void convertFlagsToChannelFlags(Parset const &parset,
           MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
           MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
 
-        // 1.2calculate the number of flagged samples and set this on the output dataproduct
+        // 1.2 Calculate the number of flagged samples and set this on the output dataproduct
         // This function is aware of the used filter width a corrects for this.
         template<typename T> static void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
           MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
@@ -230,8 +230,7 @@ namespace LOFAR
       };
 
     public:
-      CorrelatorWorkQueue(const Parset &parset,gpu::Context &context,
-                          gpu::Device &device, unsigned queueNumber,
+      CorrelatorWorkQueue(const Parset &parset, gpu::Context &context,
                           CorrelatorPipelinePrograms &programs,
                           FilterBank &filterBank);
 

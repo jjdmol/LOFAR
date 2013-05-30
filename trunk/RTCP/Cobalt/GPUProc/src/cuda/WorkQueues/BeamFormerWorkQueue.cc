@@ -34,10 +34,11 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline, unsigned gpuNumber)
-      :
-      WorkQueue( pipeline.context,pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
-      pipeline(pipeline),
+    BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pl, unsigned gpuNumber)
+    :
+      WorkQueue( pl.context, pl.devices[gpuNumber], gpuNumber, pl.ps),
+
+      pipeline(pl),
       inputSamples(boost::extents[ps.nrStations()][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
       devFilteredData(queue, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
       bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
@@ -63,7 +64,7 @@ namespace LOFAR
     {
       if (ps.correctBandPass()) {
         BandPass::computeCorrectionFactors(bandPassCorrectionWeights.origin(), ps.nrChannelsPerSubband());
-        bandPassCorrectionWeights.hostToDevice(CL_TRUE);
+        bandPassCorrectionWeights.hostToDevice(true);
       }
     }
 
@@ -71,8 +72,8 @@ namespace LOFAR
     void BeamFormerWorkQueue::doWork()
     {
       //queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, firWeightsSize, firFilterWeights);
-      bandPassCorrectionWeights.hostToDevice(CL_TRUE);
-      DMs.hostToDevice(CL_TRUE);
+      bandPassCorrectionWeights.hostToDevice(true);
+      DMs.hostToDevice(true);
 
       double startTime = ps.startTime(), currentTime, stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
 
@@ -92,10 +93,10 @@ namespace LOFAR
         if (ps.nrStations() >= 3)
           delaysAtBegin[0][2][0] = 1e-6, delaysAfterEnd[0][2][0] = 1.1e-6;
 
-        delaysAtBegin.hostToDevice(CL_FALSE);
-        delaysAfterEnd.hostToDevice(CL_FALSE);
-        phaseOffsets.hostToDevice(CL_FALSE);
-        beamFormerWeights.hostToDevice(CL_FALSE);
+        delaysAtBegin.hostToDevice(false);
+        delaysAfterEnd.hostToDevice(false);
+        phaseOffsets.hostToDevice(false);
+        beamFormerWeights.hostToDevice(false);
 
 #pragma omp for schedule(dynamic), nowait
         for (unsigned subband = 0; subband < ps.nrSubbands(); subband++) {
@@ -104,30 +105,30 @@ namespace LOFAR
 #if defined USE_B7015
             OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
-            inputSamples.hostToDevice(CL_TRUE);
-            pipeline.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
+            inputSamples.hostToDevice(true);
+//            pipeline.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
           }
 #endif
 
           //#pragma omp critical (GPU)
           {
             if (ps.nrChannelsPerSubband() > 1) {
-              intToFloatKernel.enqueue(queue, pipeline.intToFloatCounter);
-              fftKernel.enqueue(queue, pipeline.fftCounter);
+              intToFloatKernel.enqueue(queue/*, pipeline.intToFloatCounter*/);
+              fftKernel.enqueue(queue/*, pipeline.fftCounter*/);
             }
 
-            delayAndBandPassKernel.enqueue(queue, pipeline.delayAndBandPassCounter, subband);
-            beamFormerKernel.enqueue(queue, pipeline.beamFormerCounter);
-            transposeKernel.enqueue(queue, pipeline.transposeCounter);
-            dedispersionForwardFFTkernel.enqueue(queue, pipeline.dedispersionForwardFFTcounter);
-            dedispersionChirpKernel.enqueue(queue, pipeline.dedispersionChirpCounter, ps.subbandToFrequencyMapping()[subband]);
-            dedispersionBackwardFFTkernel.enqueue(queue, pipeline.dedispersionBackwardFFTcounter);
+            delayAndBandPassKernel.enqueue(queue/*, pipeline.delayAndBandPassCounter*/, subband);
+            beamFormerKernel.enqueue(queue/*, pipeline.beamFormerCounter*/);
+            transposeKernel.enqueue(queue/*, pipeline.transposeCounter*/);
+            dedispersionForwardFFTkernel.enqueue(queue/*, pipeline.dedispersionForwardFFTcounter*/);
+            dedispersionChirpKernel.enqueue(queue/*, pipeline.dedispersionChirpCounter*/, ps.subbandToFrequencyMapping()[subband]);
+            dedispersionBackwardFFTkernel.enqueue(queue/*, pipeline.dedispersionBackwardFFTcounter*/);
 
-            queue.finish();
+            queue.synchronize();
           }
 
           //queue.enqueueReadBuffer(devComplexVoltages, CL_TRUE, 0, hostComplexVoltages.bytesize(), hostComplexVoltages.origin());
-          //dedispersedData.deviceToHost(CL_TRUE);
+          //dedispersedData.deviceToHost(true);
         }
       }
 

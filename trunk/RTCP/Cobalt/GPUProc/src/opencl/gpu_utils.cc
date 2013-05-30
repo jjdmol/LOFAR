@@ -146,6 +146,7 @@ namespace LOFAR
 
     cl::Program createProgram(cl::Context &context, std::vector<cl::Device> &devices, const char *sources, const char *args)
     {
+      // Let the compiler read in the source file by passing an #include as source string.
       std::stringstream cmd;
       cmd << "#include \"" << std::string(sources) << '"' << std::endl;
       cl::Program program(context, cmd.str());

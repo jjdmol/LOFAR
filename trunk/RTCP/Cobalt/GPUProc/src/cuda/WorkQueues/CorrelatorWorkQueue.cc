@@ -49,14 +49,10 @@ namespace LOFAR
      * [output] <-
      */
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset &parset,
-      gpu::Context &context, 
-      gpu::Device  &device,
-      unsigned gpuNumber,
-      CorrelatorPipelinePrograms & programs,
-      FilterBank &filterBank
-      )
-      :
-      WorkQueue( context, device, gpuNumber, parset),
+      gpu::Context &context, CorrelatorPipelinePrograms &programs,
+      FilterBank &filterBank)
+    :
+      WorkQueue( parset, context ),
       prevBlock(-1),
       prevSAP(-1),
       devInput(ps.nrBeams(),
@@ -150,7 +146,6 @@ namespace LOFAR
       }
 
       // create all the counters
-      // Move the FIR filter weight to the GPU
 #if defined USE_NEW_CORRELATOR
       addCounter("compute - cor.triangle");
       addCounter("compute - cor.rectangle");
@@ -177,12 +172,16 @@ namespace LOFAR
       addTimer("GPU - compute");
       addTimer("GPU - wait");
 
-      queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float), filterBank.getWeights().origin());
+      // Copy the FIR filter weights to the device in two steps (TODO: make FilterBank supply the right buffer, or do like BandPassCorrectionWeights below)
+      size_t fbBytes = filterBank.getWeights().num_elements() * sizeof(float);
+      gpu::HostMemory fbBuffer(context, fbBytes);
+      std::memcpy(fbBuffer.get<void>(), filterBank.getWeights().origin(), fbBytes);
+      queue.writeBuffer(devFIRweights, fbBuffer, true);
 
       if (ps.correctBandPass())
       {
         BandPass::computeCorrectionFactors(bandPassCorrectionWeights.origin(), ps.nrChannelsPerSubband());
-        bandPassCorrectionWeights.hostToDevice(CL_TRUE);
+        bandPassCorrectionWeights.hostToDevice(true);
       }
     }
 
@@ -401,8 +400,8 @@ namespace LOFAR
 #if defined USE_B7015
         OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
-        input.inputSamples.hostToDevice(CL_TRUE);
-        counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
+        input.inputSamples.hostToDevice(true);
+//        counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
 
         timers["GPU - input"]->stop();
       }
@@ -416,28 +415,28 @@ namespace LOFAR
 
       // Only upload delays if they changed w.r.t. the previous subband
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
-        input.delaysAtBegin.hostToDevice(CL_FALSE);
-        input.delaysAfterEnd.hostToDevice(CL_FALSE);
-        input.phaseOffsets.hostToDevice(CL_FALSE);
+        input.delaysAtBegin.hostToDevice(false);
+        input.delaysAfterEnd.hostToDevice(false);
+        input.phaseOffsets.hostToDevice(false);
 
         prevSAP = SAP;
         prevBlock = block;
       }
 
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel.enqueue(queue, *counters["compute - FIR"]);
-        fftKernel.enqueue(queue, *counters["compute - FFT"]);
+        firFilterKernel.enqueue(queue/*, *counters["compute - FIR"]*/);
+        fftKernel.enqueue(queue/*, *counters["compute - FFT"]*/);
       }
 
-      delayAndBandPassKernel.enqueue(queue, *counters["compute - delay/bp"], subband);
+      delayAndBandPassKernel.enqueue(queue/*, *counters["compute - delay/bp"]*/, subband);
 #if defined USE_NEW_CORRELATOR
-      correlateTriangleKernel.enqueue(queue, *counters["compute - cor.triangle"]);
-      correlateRectangleKernel.enqueue(queue, *counters["compute - cor.rectangle"]);
+      correlateTriangleKernel.enqueue(queue/*, *counters["compute - cor.triangle"]*/);
+      correlateRectangleKernel.enqueue(queue/*, *counters["compute - cor.rectangle"]*/);
 #else
-      correlatorKernel.enqueue(queue, *counters["compute - correlator"]);
+      correlatorKernel.enqueue(queue/*, *counters["compute - correlator"]*/);
 #endif
 
-      queue.flush();
+      //queue.flush(); // CUDA doesn't have/need flush() (OpenCL)
 
       // ***** The GPU will be occupied for a while, do some calculations in the
       // background.
@@ -447,7 +446,7 @@ namespace LOFAR
 
       // Wait for the GPU to finish.
       timers["GPU - wait"]->start();
-      queue.finish();
+      queue.synchronize();
       timers["GPU - wait"]->stop();
 
       timers["GPU - compute"]->stop();
@@ -455,13 +454,13 @@ namespace LOFAR
       {
         timers["GPU - output"]->start();
 
-#if defined USE_B7015
+#ifdef USE_B7015
         OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
 #endif
-        output.deviceToHost(CL_TRUE);
+        output.deviceToHost(true);
         // now perform weighting of the data based on the number of valid samples
 
-        counters["output - visibilities"]->doOperation(output.deviceBuffer.event, 0, output.bytesize(), 0);
+//        counters["output - visibilities"]->doOperation(output.deviceBuffer.event, 0, output.bytesize(), 0);
 
         timers["GPU - output"]->stop();
       }

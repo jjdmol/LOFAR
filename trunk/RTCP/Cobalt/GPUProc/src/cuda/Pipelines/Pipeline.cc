@@ -28,11 +28,6 @@
 #include <GPUProc/Buffers.h>
 #include <GPUProc/gpu_utils.h>
 
-#if 0
-#include <boost/format.hpp>
-using boost::format;
-#endif
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -43,13 +38,18 @@ namespace LOFAR
       :
       ps(ps)
     {
-      createContext(context, devices);
+      gpu::Platform platform;
+      devices = platform.devices();
     }
 
 
-    gpu::Module Pipeline::createProgram(const char *sources)
+    gpu::Module Pipeline::createProgram(const gpu::Context &context,
+                                        const string &srcFilename)
     {
-      return LOFAR::Cobalt::createProgram(ps, context, devices, sources);
+      flags_type flags(defaultFlags());
+      definitions_type definitions(defaultDefinitions(ps));
+      string ptx(createPTX(devices, srcFilename, flags, definitions));
+      return createModule(context, srcFilename, ptx);
     }
 
 
