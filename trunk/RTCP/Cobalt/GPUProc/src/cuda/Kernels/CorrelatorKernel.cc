@@ -59,7 +59,7 @@ namespace LOFAR
       //queue.getInfo<CL_QUEUE_CONTEXT>().getInfo(CL_CONTEXT_PROPERTIES, &properties);
       //if (gpu::Platform((cl_platform_id) properties[1]).getInfo<CL_PLATFORM_NAME>() == "AMD Accelerated Parallel Processing") {
       gpu::Platform pf; // Redecl not so great. Generalize for OpenCL later, then remove prev commented lines
-      if (pf.getName() == "AMD Accelerated Parallel Processing")
+      if (pf.getName() == "AMD Accelerated Parallel Processing") {
         preferredMultiple = 256;
       } else {
         //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
