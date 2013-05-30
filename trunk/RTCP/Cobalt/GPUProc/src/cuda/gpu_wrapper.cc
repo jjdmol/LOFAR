@@ -270,12 +270,30 @@ namespace LOFAR
 
       unsigned Device::getComputeCapabilityMajor() const
       {
+#if CUDA_VERSION >= 5000
         return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
+#else
+        int major;
+        int minor;
+
+        checkCuCall(cuDeviceComputeCapability(&major, &minor, _device));
+
+        return major;
+#endif
       }
 
       unsigned Device::getComputeCapabilityMinor() const
       {
+#if CUDA_VERSION >= 5000
         return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
+#else
+        int major;
+        int minor;
+
+        checkCuCall(cuDeviceComputeCapability(&major, &minor, _device));
+
+        return minor;
+#endif
       }
 
       size_t Device::getTotalGlobalMem() const
