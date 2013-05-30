@@ -607,7 +607,8 @@ namespace LOFAR
 
 
       Function::Function(Module &module, const std::string &name):
-        _context(module.getContext())
+        _context(module.getContext()),
+        _module(module)
       {
         ScopedCurrentContext scc(_context);
 
