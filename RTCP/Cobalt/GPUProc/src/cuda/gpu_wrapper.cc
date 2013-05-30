@@ -847,7 +847,7 @@ namespace LOFAR
 
         _impl->memcpyDtoHAsync(hostMem.get<void *>(), 
                                (CUdeviceptr)devMem.get(),
-                               devMem.size());
+                               size);
         if (synchronous) {
           synchronize();
         }
