@@ -24,6 +24,7 @@
 #include <vector>
 #include <boost/lexical_cast.hpp>
 
+#include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
@@ -33,6 +34,7 @@ using namespace std;
 using namespace LOFAR::Cobalt;
 
 int main(int argc, char *argv[]) {
+  INIT_LOGGER(argv[0]);
   if (argc != 3) {
     cerr << "Usage: " << argv[0] << " <L12345.parset> <kernel.cu>" << endl;
     return 1;

@@ -28,6 +28,7 @@
 #include <vector>
 
 #include <Common/Exception.h>
+#include <Common/LofarLogger.h>
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
@@ -202,6 +203,8 @@ float * runTest(float bandPassFactor,
 
 int main()
 {
+  INIT_LOGGER("tDelayAndBandPass");
+
   // ***********************************************************
   // Test if the bandpass correction factor is applied correctly in isolation
   float bandPassFactor = 2.0;
