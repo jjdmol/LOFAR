@@ -57,30 +57,30 @@ namespace LOFAR
       Pipeline(ps),
       subbandPool(ps.nrSubbands()),
       filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER),
-      workQueues(NR_WORKQUEUES_PER_DEVICE * nrGPUs)
+      workQueues(NR_WORKQUEUES_PER_DEVICE * devices.size())
     {
       filterBank.negateWeights();
 
 
       // If profiling, use one workqueue: with >1 workqueues decreased
       // computation / I/O overlap can affect optimization gains.
-      unsigned nrWorkQueues = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * nrGPUs;
+      unsigned nrWorkQueues = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
 
       // TODO: now that context, program and workqueue creation is together, optimize out the build dupl. Do note that Module(+Function) creation is context-specific. Maybe move some program stuff to CorrelatorPipelinePrograms to call; that also allows to remove gpu_wrapper's Module()
       CorrelatorPipelinePrograms programs;
       for (size_t i = 0; i < nrWorkQueues; ++i) {
-        gpu::Context context(devices[i % nrGPUs]);
+        gpu::Context context(devices[i % devices.size()]);
 
         LOG_INFO("Compiling device kernels");
         double startTime = omp_get_wtime();
         //#pragma omp parallel sections
         {
-          programs.firFilterProgram = createProgram(context, "FIR.cl");
-          programs.delayAndBandPassProgram = createProgram(context, "DelayAndBandPass.cl");
+          programs.firFilterProgram = createProgram(context, "FIR_Filter.cu");
+          programs.delayAndBandPassProgram = createProgram(context, "DelayAndBandPass.cu");
 #if defined USE_NEW_CORRELATOR
-          programs.correlatorProgram = createProgram(context, "NewCorrelator.cl");
+          programs.correlatorProgram = createProgram(context, "NewCorrelator.cu");
 #else
-          programs.correlatorProgram = createProgram(context, "Correlator.cl");
+          programs.correlatorProgram = createProgram(context, "Correlator.cu");
 #endif
         }
         double stopTime = omp_get_wtime();
@@ -142,7 +142,7 @@ namespace LOFAR
 #         pragma omp parallel for num_threads(workQueues.size())
           for (size_t i = 0; i < workQueues.size(); ++i) {
 #ifdef USE_B7015
-            unsigned gpuNr = i % nrGPUs;
+            unsigned gpuNr = i % devices.size();
             set_affinity(gpuNr);
 #endif
             CorrelatorWorkQueue &queue = *workQueues[i];
