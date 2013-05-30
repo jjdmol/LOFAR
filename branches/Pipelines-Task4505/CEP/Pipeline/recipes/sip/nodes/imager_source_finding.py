@@ -100,40 +100,38 @@ class imager_source_finding(LOFARnodeTCP):
                                                         input_image_local))
             self.logger.debug(repr(bdsm_parameters))
             img = bdsm.process_image(bdsm_parameters,
-                        filename=input_image_local, frequency=frequency)
+                        filename = input_image_local, frequency = frequency)
 
+            # Always export the catalog 
+            img.write_catalog(
+                outfile = catalog_output_path + "_{0}".format(str(idx)),
+                catalog_type = 'gaul', clobber = True,
+                format = "bbs", force_output = True)
 
             # If no more matching of sources with gausians is possible (nsrc==0)
             # break the loop
             if img.nsrc == 0:
-                self.logger.debug("No sources found: exiting")
                 n_itter_sourcefind = idx
                 break
-            else:
-                # We have at least found a single source!
-                self.logger.debug("Number of source found: {0}".format(
-                                                                img.nsrc))
-                sources_found = True
 
+            # We have at least found a single source!
+            self.logger.debug("Number of source found: {0}".format(
+                                                                img.nsrc))
             # *****************************************************************
-            # 4. export the catalog and the image with 
-            img.write_catalog(
-                outfile=catalog_output_path + "_{0}".format(str(idx)),
-                catalog_type='gaul', clobber=True,
-                format="bbs", force_output=True)
+            # 4. export the image with 
 
             self.logger.debug("Wrote list of sources to file at: {0})".format(
-                                                        catalog_output_path))
-            img.export_image(outfile=image_output_path_local,
-                             img_type='gaus_resid', clobber=True,
-                             img_format="fits")
+                                                            catalog_output_path))
+            img.export_image(outfile = image_output_path_local,
+                                 img_type = 'gaus_resid', clobber = True,
+                                 img_format = "fits")
             self.logger.debug("Wrote fits image with substracted sources"
-                              " at: {0})".format(image_output_path_local))
-            #img does not have close()
+                                  " at: {0})".format(image_output_path_local))
 
             # Save the frequency from image header of the original input file,
             # This information is not written by pybdsm to the exported image
             frequency = img.frequency
+
 
         # if not set the maximum number of itteration us performed
         if n_itter_sourcefind == None:
@@ -143,10 +141,10 @@ class imager_source_finding(LOFARnodeTCP):
         # 5. The produced catalogs now need to be combined into a single list
         # Call with the number of loops and the path to the files, only combine
         # if we found sources
-        if sources_found:
-            self.logger.debug(
+        #if sources_found:
+        self.logger.debug(
                 "Writing source list to file: {0}".format(catalog_output_path))
-            self._combine_source_lists(n_itter_sourcefind, catalog_output_path)
+        self._combine_source_lists(n_itter_sourcefind, catalog_output_path)
 
         # *********************************************************************
         # 6. Convert sourcelist to sourcedb
@@ -179,6 +177,12 @@ class imager_source_finding(LOFARnodeTCP):
         """
         source_list_lines = []
         format_line = None
+
+        # If no sources are found at all n_itter_sourcefind == 0
+        # But we do need to create a combined sourcelist and read this list
+        if n_itter_sourcefind == 0:
+            n_itter_sourcefind = 1 # at least use the first empty bdsm output  
+
         for idx_source_file in range(n_itter_sourcefind):
             # *****************************************************************
             # 1 . Open the file
@@ -187,6 +191,10 @@ class imager_source_finding(LOFARnodeTCP):
             #**************************************************
             # 2. Parse the files
             #   a. Read the format line and save (same for all bdsm runs)
+            self.logger.error("opening file:")
+            self.logger.error(catalog_output_path + "_{0}".format(
+                                                            idx_source_file))
+
             format_line = filepointer.readline()
 
             #read the rest of the file
@@ -216,7 +224,7 @@ class imager_source_finding(LOFARnodeTCP):
 
 
     def _create_source_db(self, source_list, sourcedb_target_path,
-                          working_directory, create_sourcdb_exec, append=False):
+                          working_directory, create_sourcdb_exec, append = False):
         """
         Convert a sourcelist to a sourcedb:
         
@@ -245,7 +253,7 @@ class imager_source_finding(LOFARnodeTCP):
                  os.path.basename(create_sourcdb_exec)
             ) as logger:
                 catch_segfaults(cmd, working_directory, self.environment,
-                                            logger, cleanup=None)
+                                            logger, cleanup = None)
 
         except Exception, exception:
             self.logger.error("Execution of external failed:")
