@@ -1,4 +1,4 @@
-//# Align.h
+//# WorkQueue.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -26,22 +26,16 @@
 
 #include <GPUProc/global_defines.h>
 
-
 namespace LOFAR
 {
   namespace Cobalt
   {
-    WorkQueue::WorkQueue(gpu::Context &context, gpu::Device &device, unsigned gpuNumber, const Parset &ps)
-      :
-      gpu(gpuNumber),
-      device(device),
-      ps(ps)
+    WorkQueue::WorkQueue(const Parset &ps, gpu::Context &context)
+    :
+      ps(ps),
+      context(context),
+      queue(gpu::Stream(context))
     {
-#if defined __linux__ && defined USE_B7015
-      set_affinity(gpu);
-#endif
-
-      queue = gpu::Stream(context, device, profiling ? CL_QUEUE_PROFILING_ENABLE : 0);
     }
 
 

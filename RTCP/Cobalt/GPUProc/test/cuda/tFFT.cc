@@ -71,7 +71,7 @@ int main() {
 
   gpu::Stream stream(ctx);
 
-  const size_t size = 1024 * 1024;
+  const size_t size = 128 * 1024;
   const int fftSize = 256;
   const unsigned nrFFTs = size / fftSize;
 

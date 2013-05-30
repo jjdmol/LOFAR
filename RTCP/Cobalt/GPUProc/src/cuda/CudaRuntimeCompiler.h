@@ -21,9 +21,6 @@
 #ifndef LOFAR_GPUPROC_CUDA_CUDA_RUNTIME_COMPILER_H
 #define LOFAR_GPUPROC_CUDA_CUDA_RUNTIME_COMPILER_H
 
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-
 #include <cstdio>   // popen, pget
 #include <iostream>  
 #include <string>
@@ -32,10 +29,16 @@
 #include <map>
 #include <set>
 
+#include <CoInterface/Parset.h>
+#include "gpu_incl.h"
+
 // Collection of functions needed for runtime compilation of a kernel supplied 
 // as a path to a ptx string.
-namespace CudaRuntimeCompiler
+namespace LOFAR
 {
+  namespace Cobalt
+  {
+
   // flags
   typedef std::set<std::string> flags_type;
 
@@ -43,11 +46,12 @@ namespace CudaRuntimeCompiler
   typedef std::map<std::string, std::string> definitions_type;
 
   // Return the set of default flags for the nvcc compilation of a cuda kernel in Cobalt
-  const flags_type& defaultFlags();
+  flags_type defaultFlags();
   
   // Return the set of default definitions for the nvcc compilation of a cuda kernel in Cobalt
   // DEFINITION=0 results in a definition and cannot for used for undef. Do not insert parameters in this case
-  const definitions_type& defaultDefinitions();
+  definitions_type defaultDefinitions();
+  definitions_type defaultDefinitions(const Parset &ps);
   
   // Performs a 'system' call of nvcc. Return the stdout of the command
   // on error no stdout is created and an exception is thrown
@@ -60,6 +64,8 @@ namespace CudaRuntimeCompiler
   
   // overloaded function. Use the path and default flags and definitions to call nvcc
   std::string compileToPtx(const std::string& pathToCuFile);
+
+  }
 }
 
 #endif

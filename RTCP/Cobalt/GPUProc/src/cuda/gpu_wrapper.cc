@@ -502,6 +502,10 @@ namespace LOFAR
       class Module::Impl : boost::noncopyable
       {
       public:
+        Impl(): _context(0), _module(0)
+        {
+        }
+
         Impl(const Context &context, const std::string &fname):
           _context(context)
         {
@@ -555,6 +559,11 @@ namespace LOFAR
 
         friend class Function;
       };
+
+      Module::Module() :
+        _impl(new Impl())
+      {
+      }
 
       Module::Module(const Context &context, const std::string &fname) :
         _impl(new Impl(context, fname))

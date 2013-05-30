@@ -23,7 +23,7 @@
 
 #define NR_STATION_FILTER_TAPS  16
 #define USE_NEW_CORRELATOR
-#define NR_POLARIZATIONS         2 // TODO: get the nr of pol symbol from an LCS/Common header
+#define NR_POLARIZATIONS         2 // TODO: get the nr of pol symbol from an LCS/Common header and/or from CoInterface/Config.h (if that isn't a dup too)
 #define NR_TAPS                 16
 #define USE_2X2
 #undef USE_TEST_DATA
@@ -35,6 +35,8 @@ namespace LOFAR
   {
     extern bool profiling;
     extern unsigned nrGPUs;
+
+    void set_affinity(unsigned device);
   }
 }
 

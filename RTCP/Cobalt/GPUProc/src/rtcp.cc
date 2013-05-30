@@ -32,6 +32,7 @@
 #include <vector>
 #include <string>
 #include <omp.h>
+#include <mpi.h>
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
@@ -46,8 +47,6 @@
 #include <InputProc/Station/PacketFactory.h>
 #include <InputProc/Station/PacketStream.h>
 #include <InputProc/Delays/Delays.h>
-
-#include <mpi.h>
 #include <InputProc/Transpose/MPISendStation.h>
 
 #include "global_defines.h"
@@ -89,7 +88,7 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
    * Construct our stationID.
    */
 
-  // fetch station name (f.e. CS001HBA0)
+  // fetch station name (e.g. CS001HBA0)
   const string fullFieldName = ps.settings.stations[stationIdx].name;
 
   // split into station name and antenna field name
@@ -102,7 +101,6 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
    * For now, we run the circular buffer
    */
   struct BufferSettings settings(stationID, false);
-
   settings.setBufferSize(2.0);
 
   // fetch input streams
@@ -125,7 +123,6 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 
   // Force buffer reader/writer syncing if observation is non-real time
   SyncLock syncLock(settings);
-
   if (!ps.realTime()) {
     settings.sync = true;
     settings.syncLock = &syncLock;
@@ -137,7 +134,6 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
   /*
    * Stream the data.
    */
-
   #pragma omp parallel sections
   {
     // Start a circular buffer
@@ -235,7 +231,7 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 
 enum SELECTPIPELINE { correlator, beam, UHEP,unittest};
 
-// Coverts the input argument from string to a valid 'function' name
+// Converts the input argument from string to a valid 'function' name
 SELECTPIPELINE to_select_pipeline(char *argument)
 {
   if (!strcmp(argument,"correlator"))
@@ -262,7 +258,7 @@ int main(int argc, char **argv)
   // Allow usage of nested omp calls
   omp_set_nested(true);
 
-  // Allow thread registration
+  // Allow OpenMP thread registration
   OMPThread::init();
 
   using namespace LOFAR::Cobalt;
@@ -278,7 +274,6 @@ int main(int argc, char **argv)
 
   // Initialise and query MPI
   int mpi_thread_support;
-
   if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
     cerr << "MPI_Init failed" << endl;
     exit(1);
@@ -295,10 +290,6 @@ int main(int argc, char **argv)
   INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
 #endif
 
-#if 0 && defined __linux__
-  set_affinity(0);   //something with processor affinity, define at start of rtcp
-#endif
-
   SELECTPIPELINE option = correlator;
   int opt;
 
@@ -313,7 +304,7 @@ int main(int argc, char **argv)
       profiling = true;
       break;
 
-    default:       /* '?' */
+    default: /* '?' */
       usage(argv);
       exit(1);
     }
@@ -354,7 +345,6 @@ int main(int argc, char **argv)
     /*
      * Send station data
      */
-   
     switch (ps.nrBitsPerSample()) {
     default:
     case 16: 
@@ -412,8 +402,7 @@ int main(int argc, char **argv)
     time_t completing_start = time(0);
 
     // retrieve and forward final meta data
-    // TODO: Increase timeouts when FinalMetaDataGatherer starts working
-    // again
+    // TODO: Increase timeouts when FinalMetaDataGatherer starts working again
     storageProcesses->forwardFinalMetaData(completing_start + 2);
 
     // graceful exit

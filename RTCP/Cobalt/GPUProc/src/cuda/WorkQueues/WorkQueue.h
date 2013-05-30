@@ -37,17 +37,18 @@ namespace LOFAR
     class WorkQueue
     {
     public:
-      WorkQueue(gpu::Context &context, gpu::Device &device, unsigned gpuNumber, const Parset &ps);
+      WorkQueue(const Parset &ps, gpu::Context &context);
 
-      const unsigned gpu;
-      gpu::Device &device;
-      gpu::Stream queue;
-
+      // TODO: clean up access by Pipeline class and move under protected
       std::map<std::string, SmartPtr<PerformanceCounter> > counters;
       std::map<std::string, SmartPtr<NSTimer> > timers;
 
     protected:
       const Parset &ps;
+
+      gpu::Context context;
+      gpu::Stream queue;
+
 
       void addCounter(const std::string &name);
       void addTimer(const std::string &name);

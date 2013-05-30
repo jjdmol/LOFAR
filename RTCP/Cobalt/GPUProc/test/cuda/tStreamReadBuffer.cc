@@ -41,7 +41,7 @@ int main() {
   gpu::Device dev(0);
   gpu::Context ctx(dev);
 
-  const size_t bufSize = 64 * 1024 * 1024;
+  const size_t bufSize = 16 * 1024 * 1024;
   const char expectedVal = 42;
   gpu::HostMemory hBuf1(ctx, bufSize);
   gpu::HostMemory hBuf2(ctx, bufSize);

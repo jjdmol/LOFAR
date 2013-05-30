@@ -24,6 +24,7 @@
 #include <cstring>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 
 #include <Common/LofarLogger.h>
 #include <GPUProc/gpu_wrapper.h>

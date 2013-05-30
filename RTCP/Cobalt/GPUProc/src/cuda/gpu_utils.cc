@@ -39,9 +39,9 @@
 #include <Stream/FileStream.h>
 
 #include <GPUProc/global_defines.h>
+#include "CudaRuntimeCompiler.h"
 
 #define BUILD_MAX_LOG_SIZE	4095
-#include "CudaRuntimeCompiler.h"
 
 namespace LOFAR
 {
@@ -101,9 +101,6 @@ namespace LOFAR
       // Return the highest compute target supported by all the given devices
       CUjit_target computeTarget(const std::vector<gpu::Device> &devices)
       {
-        if (devices.empty())
-          return CU_TARGET_COMPUTE_35;
-
         CUjit_target minTarget = CU_TARGET_COMPUTE_35;
 
         for (std::vector<gpu::Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
@@ -122,10 +119,10 @@ namespace LOFAR
       {
         switch (target) {
         default:
-          return "";
+          return "compute_unknown";
 
         case CU_TARGET_COMPUTE_10:
-          return "cmpute_10";
+          return "compute_10";
 
         case CU_TARGET_COMPUTE_11:
           return "compute_11";
@@ -137,12 +134,16 @@ namespace LOFAR
           return "compute_13";
 
         case CU_TARGET_COMPUTE_20:
-        case CU_TARGET_COMPUTE_21:
           return "compute_20";
 
+        case CU_TARGET_COMPUTE_21:
+          return "compute_20"; // 21 not allowed for nvcc --gpu-architecture option value
+
         case CU_TARGET_COMPUTE_30:
-        case CU_TARGET_COMPUTE_35:
           return "compute_30";
+
+        case CU_TARGET_COMPUTE_35:
+          return "compute_35";
         }
       }
 
@@ -152,7 +153,7 @@ namespace LOFAR
       {
         switch (target) {
         default:
-          return "";
+          return "sm_unknown";
 
         case CU_TARGET_COMPUTE_10:
           return "sm_10";
@@ -167,24 +168,29 @@ namespace LOFAR
           return "sm_13";
 
         case CU_TARGET_COMPUTE_20:
-        case CU_TARGET_COMPUTE_21:
           return "sm_20";
 
+        case CU_TARGET_COMPUTE_21:
+          return "sm_21";
+
         case CU_TARGET_COMPUTE_30:
-        case CU_TARGET_COMPUTE_35:
           return "sm_30";
+
+        case CU_TARGET_COMPUTE_35:
+          return "sm_35";
         }
       }
     }
 
 
     std::string createPTX(const vector<gpu::Device> &devices, const std::string &srcFilename, 
-      CudaRuntimeCompiler::flags_type flags, const CudaRuntimeCompiler::definitions_type &definitions )
+      flags_type &flags, const definitions_type &definitions )
     {
       // The CUDA code is assumed to be written for the architecture of the
       // oldest device.
       CUjit_target commonTarget = computeTarget(devices);
       flags.insert(str(format("gpu-architecture %s") % get_virtarch(commonTarget)));
+      //flags.insert(str(format("-I %s") % dirname(__FILE__))); // TODO: refer to src dir (testing) or install dir (installed)
 
 #if 0
       // We'll compile a specific version for each device that has a different
@@ -201,7 +207,7 @@ namespace LOFAR
 #endif
 
       // Create and return PTX
-      return CudaRuntimeCompiler::compileToPtx(srcFilename, flags, definitions);
+      return compileToPtx(srcFilename, flags, definitions);
     }
 
 

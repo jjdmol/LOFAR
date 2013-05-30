@@ -39,6 +39,12 @@
 #include <GPUProc/WorkQueues/WorkQueue.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 
+#ifdef USE_B7015
+# include <GPUProc/global_defines.h>
+#endif
+
+#define NR_WORKQUEUES_PER_DEVICE  2
+
 using namespace std;
 
 namespace LOFAR
@@ -50,38 +56,44 @@ namespace LOFAR
       :
       Pipeline(ps),
       subbandPool(ps.nrSubbands()),
-      filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER)
+      filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER),
+      workQueues(NR_WORKQUEUES_PER_DEVICE * nrGPUs)
     {
       filterBank.negateWeights();
-      double startTime = omp_get_wtime();
 
-      //#pragma omp parallel sections
-      {
-        programs.firFilterProgram = createProgram("FIR.cl");
-        programs.delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
+
+      // If profiling, use one workqueue: with >1 workqueues decreased
+      // computation / I/O overlap can affect optimization gains.
+      unsigned nrWorkQueues = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * nrGPUs;
+
+      // TODO: now that context, program and workqueue creation is together, optimize out the build dupl. Do note that Module(+Function) creation is context-specific. Maybe move some program stuff to CorrelatorPipelinePrograms to call; that also allows to remove gpu_wrapper's Module()
+      CorrelatorPipelinePrograms programs;
+      for (size_t i = 0; i < nrWorkQueues; ++i) {
+        gpu::Context context(devices[i % nrGPUs]);
+
+        LOG_INFO("Compiling device kernels");
+        double startTime = omp_get_wtime();
+        //#pragma omp parallel sections
+        {
+          programs.firFilterProgram = createProgram(context, "FIR.cl");
+          programs.delayAndBandPassProgram = createProgram(context, "DelayAndBandPass.cl");
 #if defined USE_NEW_CORRELATOR
-        programs.correlatorProgram = createProgram("NewCorrelator.cl");
+          programs.correlatorProgram = createProgram(context, "NewCorrelator.cl");
 #else
-        programs.correlatorProgram = createProgram("Correlator.cl");
+          programs.correlatorProgram = createProgram(context, "Correlator.cl");
 #endif
+        }
+        double stopTime = omp_get_wtime();
+        LOG_INFO("Compiling device kernels done");
+        LOG_DEBUG_STR("Compile time = " << stopTime - startTime);
+
+        workQueues[i] = new CorrelatorWorkQueue(ps, context, programs, filterBank);
       }
-      LOG_DEBUG_STR("compile time = " << omp_get_wtime() - startTime);
+
     }
 
     void CorrelatorPipeline::doWork()
     {
-      size_t nrWorkQueues = (profiling ? 1 : 2) * nrGPUs;
-      vector< SmartPtr<CorrelatorWorkQueue> > workQueues(nrWorkQueues);
-
-      for (size_t i = 0; i < workQueues.size(); ++i) {
-        workQueues[i] = new CorrelatorWorkQueue(ps,               // Configuration
-                                      context,          // Opencl context
-                                      devices[i % nrGPUs], // The GPU this workQueue is connected to
-                                      i % nrGPUs, // The GPU index
-                                      programs,         // The compiled kernels, const
-                                      filterBank);   // The filter set to use. Const
-      }
-
       for (unsigned sb = 0; sb < ps.nrSubbands(); sb++) {
         // Allow 10 blocks to be in the best-effort queue.
         // TODO: make this dynamic based on memory or time
@@ -129,6 +141,10 @@ namespace LOFAR
         {
 #         pragma omp parallel for num_threads(workQueues.size())
           for (size_t i = 0; i < workQueues.size(); ++i) {
+#ifdef USE_B7015
+            unsigned gpuNr = i % nrGPUs;
+            set_affinity(gpuNr);
+#endif
             CorrelatorWorkQueue &queue = *workQueues[i];
 
             // run the queue
