@@ -560,9 +560,11 @@ namespace LOFAR
 
         ~Impl()
         {
-          ScopedCurrentContext scc(_context);
+          if (_module) {
+            ScopedCurrentContext scc(_context);
 
-          checkCuCall(cuModuleUnload(_module));
+            checkCuCall(cuModuleUnload(_module));
+          }
         }
 
         Context getContext() const
@@ -573,7 +575,7 @@ namespace LOFAR
       private:
         const Context _context;
 
-        CUmodule _module;
+        CUmodule _module; // NOTE: can be 0
 
         friend class Function;
       };
