@@ -67,7 +67,6 @@ HostMemory runTest(gpu::Context ctx,
   // Get an instantiation of the default parameters
   definitions_type definitions = defaultDefinitions();
   flags_type flags = defaultFlags();
-  flags.insert("gpu-architecture compute_20"); // The real devices will be 3.0
 
   // ****************************************
   // Compile to ptx
@@ -84,19 +83,20 @@ HostMemory runTest(gpu::Context ctx,
   definitions["COMPLEX"] = "2";
   unsigned COMPLEX = 2;
 
-  vector<string> targets; // unused atm, so can be empty
-  gpu::Module module(createProgram(ctx, targets, kernelPath, flags, definitions));  
+  vector<Device> devices(1, ctx.getDevice());
+  string ptx = createPTX(devices, kernelPath, flags, definitions);
+  gpu::Module module(createModule(ctx, kernelPath, ptx));
   Function  hKernel(module, "correlate");  // c function this no argument overloading
 
   // *************************************************************
   // Create the data arrays  
   size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
-  DeviceMemory DevCorrectedMemory(sizeCorrectedData);
+  DeviceMemory DevCorrectedMemory(ctx, sizeCorrectedData);
   HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 0.0);
   
 
   size_t sizeVisibilitiesData = NR_BASELINES * NR_CHANNELS * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX * sizeof(float);
-  DeviceMemory DevVisibilitiesMemory(sizeVisibilitiesData);
+  DeviceMemory DevVisibilitiesMemory(ctx, sizeVisibilitiesData);
   HostMemory rawVisibilitiesData = getInitializedArray(ctx, sizeVisibilitiesData, 42.0); 
   cuStream.writeBuffer(DevVisibilitiesMemory, rawVisibilitiesData);
 
