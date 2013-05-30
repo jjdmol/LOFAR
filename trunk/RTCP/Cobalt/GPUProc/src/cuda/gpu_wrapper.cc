@@ -824,7 +824,7 @@ namespace LOFAR
         // This interface may still change at which point a cleaner solution can be used.
         if (hostMem.size() > devMem.size())
         {
-          THROW(CUDAException, "writeBuffer(): host buffer too large for device buffer");
+          THROW(CUDAException, "writeBuffer(): host buffer too large for device buffer: host buffer is " << hostMem.size() << " bytes, device buffer is " << devMem.size() << " bytes");
         }
 
         _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
@@ -843,7 +843,7 @@ namespace LOFAR
         // This interface may still change at which point a cleaner solution can be used.
         if (devMem.size() > hostMem.size())
         {
-          THROW(CUDAException, "readBuffer(): device buffer too large for host buffer");
+          THROW(CUDAException, "readBuffer(): device buffer too large for host buffer: device buffer is " << devMem.size() << " bytes, host buffer is " << hostMem.size() << " bytes");
         }
 
         _impl->memcpyDtoHAsync(hostMem.get<void *>(), 
