@@ -49,6 +49,7 @@ namespace LOFAR
 
     protected:
       const Parset             &ps;
+      const gpu::Platform      platform;
       std::vector<gpu::Device> devices;
 
 #if defined USE_B7015
@@ -65,6 +66,10 @@ namespace LOFAR
         void addQueue(WorkQueue &queue);
         // Print a logline with results
         void log(size_t nrWorkQueues);
+
+        size_t nrGPUs;
+
+        Performance(size_t nrGPUs = 1);
       } performance;
     };
   }
