@@ -190,10 +190,6 @@ class imager_source_finding(LOFARnodeTCP):
             #**************************************************
             # 2. Parse the files
             #   a. Read the format line and save (same for all bdsm runs)
-            self.logger.error("opening file:")
-            self.logger.error(catalog_output_path + "_{0}".format(
-                                                            idx_source_file))
-
             format_line = filepointer.readline()
 
             #read the rest of the file
