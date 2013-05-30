@@ -36,6 +36,7 @@
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 #include <CoInterface/Parset.h>
 
 #include <InputProc/OMPThread.h>
@@ -60,6 +61,8 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 using boost::format;
+
+Exception::TerminateHandler th(Exception::terminate);
 
 void usage(char **argv)
 {
