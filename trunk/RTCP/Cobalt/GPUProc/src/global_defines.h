@@ -22,7 +22,7 @@
 #define LOFAR_GPUPROC_GLOBAL_DEFINES_H
 
 #define NR_STATION_FILTER_TAPS  16
-#define USE_NEW_CORRELATOR
+#undef USE_NEW_CORRELATOR
 #define NR_POLARIZATIONS         2 // TODO: get the nr of pol symbol from an LCS/Common header and/or from CoInterface/Config.h (if that isn't a dup too)
 #define NR_TAPS                 16
 #define USE_2X2
