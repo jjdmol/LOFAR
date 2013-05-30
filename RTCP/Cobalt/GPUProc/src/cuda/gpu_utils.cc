@@ -202,8 +202,10 @@ namespace LOFAR
     {
       // The CUDA code is assumed to be written for the architecture of the
       // oldest device.
+#if CUDA_VERSION >= 5000
       CUjit_target commonTarget = computeTarget(devices);
       flags.insert(str(format("gpu-architecture %s") % get_virtarch(commonTarget)));
+#endif
       //flags.insert(str(format("-I %s") % dirname(__FILE__))); // TODO: refer to src dir (testing) or install dir (installed)
 
 #if 0
