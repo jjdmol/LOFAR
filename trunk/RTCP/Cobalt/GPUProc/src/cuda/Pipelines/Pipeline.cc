@@ -117,7 +117,7 @@ namespace LOFAR
 
       // Log specific performance figures for regression tests at INFO level
       double wall_seconds = total_timers["CPU - total"]->getAverage();
-      double gpu_seconds = counter_groups["compute"].runtime / nrGPUs;
+      double gpu_seconds = counter_groups["compute"].runtime / devices.size();
       double spin_seconds = total_timers["GPU - wait"]->getAverage();
       double input_seconds = total_timers["CPU - read input"]->getElapsed() / nrWorkQueues;
       double cpu_seconds = total_timers["CPU - process"]->getElapsed() / nrWorkQueues;
