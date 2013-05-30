@@ -36,10 +36,11 @@ namespace LOFAR
 
     Pipeline::Pipeline(const Parset &ps)
       :
-      ps(ps)
+      ps(ps),
+      platform(),
+      devices(platform.devices()),
+      performance(devices.size())
     {
-      gpu::Platform platform;
-      devices = platform.devices();
     }
 
 
@@ -50,6 +51,12 @@ namespace LOFAR
       definitions_type definitions(defaultDefinitions(ps));
       string ptx(createPTX(devices, srcFilename, flags, definitions));
       return createModule(context, srcFilename, ptx);
+    }
+
+
+    Pipeline::Performance::Performance(size_t nrGPUs):
+      nrGPUs(nrGPUs)
+    {
     }
 
 
@@ -117,7 +124,7 @@ namespace LOFAR
 
       // Log specific performance figures for regression tests at INFO level
       double wall_seconds = total_timers["CPU - total"]->getAverage();
-      double gpu_seconds = counter_groups["compute"].runtime / devices.size();
+      double gpu_seconds = counter_groups["compute"].runtime / nrGPUs;
       double spin_seconds = total_timers["GPU - wait"]->getAverage();
       double input_seconds = total_timers["CPU - read input"]->getElapsed() / nrWorkQueues;
       double cpu_seconds = total_timers["CPU - process"]->getElapsed() / nrWorkQueues;
