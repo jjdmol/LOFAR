@@ -315,7 +315,12 @@ void clientAddClaimCallback(
       int maxMapSize;
       // get all dpNames from this type to be able to check if the map doesn't go out of size (indicates an error)
       if (isClient) {
-  	    maxMapSize = dynlen(dpNames("LOFAR_*","Stn"+typeName));
+        string sys = getSystemName();
+        if ( strpos(sys,"CCU") >= 0) {
+ 	        maxMapSize = dynlen(dpNames("LOFAR_*","CEP"+typeName));
+        } else {
+ 	        maxMapSize = dynlen(dpNames("LOFAR_*","Stn"+typeName));
+        }
       } else {
 	    maxMapSize = dynlen(dpNames("LOFAR_*",typeName));                    
       }
@@ -325,7 +330,7 @@ void clientAddClaimCallback(
         // if length goes over maxMapSize there has been en error sometimes. Since the master
         // claimManager should take care that (for now, might be different in the future)
         if (dynlen( g_ClaimedTypes[ typeName ][ "DP"        ]) >= maxMapSize+1) {
-          DebugN("claim.ctl:clientAddClaimCallback|ERROR!!!!!, internal claim mapping will exceed maxMapSize( "+maxMapSize+")");
+          DebugN("claim.ctl:clientAddClaimCallback|ERROR!!!!!, internal claim mapping will exceed maxMapSize( "+maxMapSize+"): "+  DPName);
         } else {
           if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|No matches found, so just append to mapping");
    

@@ -84,7 +84,7 @@ updateBuffer(string dp1, string stationName,
   LOG_DEBUG(\"inputBuffer.pnl:updateBuffer|entered\"); 
   
   if (!invalid) {
-    setValue(\"stationName\",\"text\",station);
+    setValue(\"stationName\",\"text\",stationName);
     setValue(\"late\", \"text\", late);
     setValue(\"IOTime\", \"text\", IOTime);
     setValue(\"stream0_blocksIn\", \"text\", in0);
@@ -220,7 +220,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 2 1 E U  0 E 73 4 115 17
-0 2 2 "0s" 0 0 0 192 0 0  73 4 1
+0 2 2 "0.3f" 4 0 0 192 0 0  73 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
@@ -472,7 +472,7 @@ E E 0 1 1 2 1 E U  0 E 930 4 966 17
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 6 000000
-1 15 0 "" 1
+1 17 0 "" 1
 0
 0
 LAYER, 1 
