@@ -2309,30 +2309,20 @@ bool navFunct_isObservation(string obsName) {
 // ***************************
 // 
 dyn_string navFunct_getInputBuffersForObservation(string obsName) {
-  string obsDP = claimManager_nameToRealName("LOFAR_ObsSW_"+obsName); 
-  string bgpApplDP = CEPDBName+obsDP+"_OnlineControl_BGPAppl";
-  
-  // get all ionodes used by this observation
-  dyn_string ioNodeList;
-  if (dpExists(bgpApplDP+".ioNodeList")) {
-    dpGet(bgpApplDP+".ioNodeList",ioNodeList);
+  //  we only need the number from the observation
+  if (strpos(obsName,"Observation") >= 0) {
+    strreplace(obsName,"Observation","");
   }
-  
-  // and construct the InputBuffer DP from this list
-  dyn_string InputBuffers;
-  string extra = "";
-  
-  for (int i=1; i<=dynlen(ioNodeList);i++) {
-    if ((int)ioNodeList[i]<10) {
-      extra = "0";
-    } else {
-      extra = "";
-    }
-  
-    string IBDP = "CCU001:LOFAR_PermSW_PSIONode"+extra+ioNodeList[i]+"_InputBuffer";
-    dynAppend(InputBuffers,IBDP);
+  dyn_string inputBuffers;
+  dyn_dyn_anytype tab;
+  string query="SELECT '_online.._value' FROM 'LOFAR_*_InputBuffer*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
+  //DebugN("query: "+query);
+  dpQuery(query,tab);
+  //DebugN("Result:"+result);
+  for(int z=2;z<=dynlen(tab);z++) {
+    dynAppend(inputBuffers,dpSubStr(tab[z][1],DPSUB_SYS_DP));
   }
-  return InputBuffers;
+  return inputBuffers;
 }
 
 
