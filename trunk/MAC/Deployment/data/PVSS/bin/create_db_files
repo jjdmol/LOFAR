@@ -749,13 +749,13 @@ substitute_observation()
 	{
 		hasObservation=index($1,"@observation@");
 		if (hasObservation > 0) {
-			for (obsNr = 1; obsNr < 101; obsNr++) {  
+			for (obsNr = 1; obsNr <= 250; obsNr++) {  
 			    dpname=$1;
 			    obsbase="TempObs0"obsNr;
 			    if (obsNr < 10) {
 			      obsbase="TempObs000"obsNr;
 
-                            } else if (obsNr > 9 && obsNr < 250) {
+                            } else if (obsNr > 9 && obsNr < 100) {
                               obsbase="TempObs00"obsNr;
 			    }
 			    sub("@observation@", obsbase, dpname);
