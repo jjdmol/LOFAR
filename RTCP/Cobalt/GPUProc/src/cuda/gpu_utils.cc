@@ -221,7 +221,8 @@ namespace LOFAR
 #endif
 
       // Create and return PTX
-      return compileToPtx(string(dirname(__FILE__)) + "/" + srcFilename, flags, definitions);
+      //return compileToPtx(string(dirname(__FILE__)) + "/" + srcFilename, flags, definitions);
+      return compileToPtx(srcFilename, flags, definitions);
     }
 
 
