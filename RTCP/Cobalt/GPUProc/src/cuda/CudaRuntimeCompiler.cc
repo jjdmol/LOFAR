@@ -90,6 +90,8 @@ namespace LOFAR
     //  defs["USE_FLOAT4_IN_CORRELATOR"] = "";
 
     // TODO: kernel-specific defs should be specified in the XXXKernel class
+    defs["COMPLEX"] = "2";
+
     defs["NR_BITS_PER_SAMPLE"] = str(format("%u") % ps.nrBitsPerSample());
     defs["SUBBAND_BANDWIDTH"]  = str(format("%.7ff") % ps.subbandBandwidth()); // returns double, so rounding issue?
     defs["NR_SUBBANDS"]        = str(format("%u") % ps.nrSubbands()); // size_t, but %zu not supp
