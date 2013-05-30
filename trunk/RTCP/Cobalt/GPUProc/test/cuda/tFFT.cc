@@ -79,8 +79,8 @@ int main() {
   gpu::HostMemory inout(ctx, size  * sizeof(fcomplex));
   gpu::DeviceMemory d_inout(ctx, size  * sizeof(fcomplex));
 
-  FFT_Kernel fftFwdKernel(fftSize, nrFFTs, true, d_inout);
-  FFT_Kernel fftBwdKernel(fftSize, nrFFTs, false, d_inout);
+  FFT_Kernel fftFwdKernel(ctx, fftSize, nrFFTs, true, d_inout);
+  FFT_Kernel fftBwdKernel(ctx, fftSize, nrFFTs, false, d_inout);
 
   // FFTW buffers and plans
   ASSERT(fftw_init_threads() != 0);
