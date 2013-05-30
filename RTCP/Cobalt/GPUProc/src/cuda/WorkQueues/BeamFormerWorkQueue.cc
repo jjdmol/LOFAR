@@ -36,7 +36,7 @@ namespace LOFAR
 
     BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pl, unsigned gpuNumber)
     :
-      WorkQueue( pl.context, pl.devices[gpuNumber], gpuNumber, pl.ps),
+      WorkQueue( pl.context, pl.devices[gpuNumber], gpuNumber, pl.ps), // TODO: This constructor does not exist on the WorkQueue. Debug to get it compiling
 
       pipeline(pl),
       inputSamples(boost::extents[ps.nrStations()][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
