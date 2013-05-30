@@ -46,7 +46,6 @@ namespace LOFAR
     protected:
       const Parset &ps;
 
-      gpu::Context context;
       gpu::Stream queue;
 
 
