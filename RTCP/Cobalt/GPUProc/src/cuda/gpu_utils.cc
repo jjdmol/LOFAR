@@ -107,7 +107,11 @@ namespace LOFAR
       // Return the highest compute target supported by all the given devices
       CUjit_target computeTarget(const std::vector<gpu::Device> &devices)
       {
+#if CUDA_VERSION >= 5000
         CUjit_target minTarget = CU_TARGET_COMPUTE_35;
+#else
+        CUjit_target minTarget = CU_TARGET_COMPUTE_30;
+#endif
 
         for (std::vector<gpu::Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
           CUjit_target target = computeTarget(*i);
