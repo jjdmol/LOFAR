@@ -839,12 +839,11 @@ namespace LOFAR
                               const DeviceMemory &devMem,
                               bool synchronous)
       {
-        // tmp check: avoid async writeBuffer request that will fail later.
-        // This interface may still change at which point a cleaner solution can be used.
-        if (devMem.size() > hostMem.size())
-        {
-          THROW(CUDAException, "readBuffer(): device buffer too large for host buffer: device buffer is " << devMem.size() << " bytes, host buffer is " << hostMem.size() << " bytes");
-        }
+        // Host buffer can be smaller, because the device
+        // buffers can be used for multiple purposes in
+        // the CUDA code, and thus can be larger than
+        // needed here.
+        size_t size = std::min(devMem.size(), hostMem.size());
 
         _impl->memcpyDtoHAsync(hostMem.get<void *>(), 
                                (CUdeviceptr)devMem.get(),
