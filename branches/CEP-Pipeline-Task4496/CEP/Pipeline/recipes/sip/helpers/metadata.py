@@ -371,10 +371,17 @@ class SkyImage(DataProduct):
         return data
 
 
+# Factory-like dictionary, returns class by name
+data_product = {
+    "Correlated" : Correlated, 
+    "InstrumentModel" : InstrumentModel,
+    "SkyImage" : SkyImage
+}
+
 
 if __name__ == "__main__":
-    Correlated('sample_uv.MS').as_parameterset().writeFile('Correlated.parset')
-    InstrumentModel('sample_inst.INST').as_parameterset().writeFile('InstrumentModel.parset')
-    SkyImage('sample_sky.IM').as_parameterset().writeFile('SkyImage_IM.parset')
-    SkyImage('sample_sky.h5').as_parameterset().writeFile('SkyImage_h5.parset')
+    data_product['Correlated']('sample_uv.MS').as_parameterset().writeFile('Correlated.parset')
+    data_product['InstrumentModel']('sample_inst.INST').as_parameterset().writeFile('InstrumentModel.parset')
+    data_product['SkyImage']('sample_sky.IM').as_parameterset().writeFile('SkyImage_IM.parset')
+    data_product['SkyImage']('sample_sky.h5').as_parameterset().writeFile('SkyImage_h5.parset')
 

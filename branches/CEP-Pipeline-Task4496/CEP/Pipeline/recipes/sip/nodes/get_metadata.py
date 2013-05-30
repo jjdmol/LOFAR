@@ -37,13 +37,12 @@ class get_metadata(LOFARnodeTCP):
 #                return 1
 
             self.logger.debug("Product type: %s" % product_type)
-            if product_type == "Correlated":
-                self.outputs = metadata.Correlated(infile).data()
-            elif product_type == "InstrumentModel":
-                self.outputs = metadata.InstrumentModel(infile).data()
-            elif product_type == "SkyImage":
-                self.outputs = metadata.SkyImage(infile).data()
-            else:
+            try:
+#                self.outputs[product_type] = (
+                self.outputs = (
+                    metadata.data_product[product_type](infile).data()
+                )
+            except KeyError:
                 self.logger.error("Unknown product type: %s" % product_type)
                 return 1
 

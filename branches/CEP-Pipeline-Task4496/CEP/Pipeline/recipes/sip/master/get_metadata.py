@@ -49,6 +49,9 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         )
     }
 
+    outputs = {
+    }
+    
     # List of valid data product types.
     valid_product_types = ["Correlated", "InstrumentModel", "SkyImage"]
 
