@@ -22,7 +22,8 @@ lofar_add_test(tDelayAndBandPassKernel tDelayAndBandPassKernel.cc)
 
 # Trick tDelayAndBandPass into thinking that it can find the kernels it needs
 # using the LOFARROOT environment variable
-set_tests_properties(tCorrelator tDelayAndBandPass
+set_tests_properties(
+  tCorrelator tDelayAndBandPass tDelayAndBandPassKernel tFIR_Filter
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}")
 
 # To compile .cu files, invoke CUDA's nvcc, but respect the host C/C++ compiler (variants) selection.

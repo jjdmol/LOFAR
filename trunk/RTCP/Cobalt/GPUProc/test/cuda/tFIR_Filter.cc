@@ -23,11 +23,13 @@
 #include "tFIR_Filter.h"
 
 #include <iostream>
-#include <stdlib.h> 
+#include <cstdlib> 
 #include <sstream>
 #include <fstream>
+#include <string>
 #include <cuda.h>
 #include <Common/LofarLogger.h>
+#include <boost/format.hpp>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -35,10 +37,12 @@ using namespace LOFAR::Cobalt;
 int main()
 {
   INIT_LOGGER("tFIR_Filter");
-  char const *kernel_name = "FIR_Filter";
-  const char *kernel_extention = ".cu";
+  const char *lofarroot = getenv("LOFARROOT");
+  std::string kernel_path = 
+    std::string(lofarroot ? lofarroot : ".") + "/share/gpu/kernels/";
+  const char *kernel_name = "FIR_Filter.cu";
   std::stringstream ss;
-  ss << "nvcc " << kernel_name << kernel_extention
+  ss << "nvcc " << kernel_path << kernel_name
     << " -ptx"
     << " -DNR_STATIONS=" << NR_STATIONS
     << " -DNR_TAPS=" << NR_TAPS
