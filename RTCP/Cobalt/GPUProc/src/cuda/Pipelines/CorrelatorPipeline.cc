@@ -56,8 +56,7 @@ namespace LOFAR
       :
       Pipeline(ps),
       subbandPool(ps.nrSubbands()),
-      filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER),
-      workQueues(NR_WORKQUEUES_PER_DEVICE * devices.size())
+      filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER)
     {
       filterBank.negateWeights();
 
@@ -65,6 +64,7 @@ namespace LOFAR
       // If profiling, use one workqueue: with >1 workqueues decreased
       // computation / I/O overlap can affect optimization gains.
       unsigned nrWorkQueues = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
+      workQueues.resize(nrWorkQueues);
 
       // TODO: now that context, program and workqueue creation is together, optimize out the build dupl. Do note that Module(+Function) creation is context-specific. Maybe move some program stuff to CorrelatorPipelinePrograms to call; that also allows to remove gpu_wrapper's Module()
       CorrelatorPipelinePrograms programs;
@@ -120,13 +120,13 @@ namespace LOFAR
           switch (ps.nrBitsPerSample()) {
           default:
           case 16:
-            receiveInput< SampleType<i16complex> >(nrBlocks, workQueues);
+            receiveInput< SampleType<i16complex> >(nrBlocks);
             break;
           case 8:
-            receiveInput< SampleType<i8complex> >(nrBlocks, workQueues);
+            receiveInput< SampleType<i8complex> >(nrBlocks);
             break;
           case 4:
-            receiveInput< SampleType<i4complex> >(nrBlocks, workQueues);
+            receiveInput< SampleType<i4complex> >(nrBlocks);
             break;
           }
         }
@@ -213,7 +213,7 @@ namespace LOFAR
       CorrelatorWorkQueue *queue;
     };
 
-    template<typename SampleT> void CorrelatorPipeline::receiveInput( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues )
+    template<typename SampleT> void CorrelatorPipeline::receiveInput( size_t nrBlocks )
     {
       // The length of a block in samples
       size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
@@ -315,9 +315,9 @@ namespace LOFAR
       }
     }
 
-    template void CorrelatorPipeline::receiveInput< SampleType<i16complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
-    template void CorrelatorPipeline::receiveInput< SampleType<i8complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
-    template void CorrelatorPipeline::receiveInput< SampleType<i4complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
+    template void CorrelatorPipeline::receiveInput< SampleType<i16complex> >( size_t nrBlocks );
+    template void CorrelatorPipeline::receiveInput< SampleType<i8complex> >( size_t nrBlocks );
+    template void CorrelatorPipeline::receiveInput< SampleType<i4complex> >( size_t nrBlocks );
 
 
     void CorrelatorPipeline::processSubbands(CorrelatorWorkQueue &workQueue)
