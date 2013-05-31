@@ -106,6 +106,9 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
   struct BufferSettings settings(stationID, false);
   settings.setBufferSize(2.0);
 
+  // Remove lingering buffers
+  removeSampleBuffers(settings);
+
   // fetch input streams
   vector<string> inputStreamDescs = ps.getStringVector(str(format("PIC.Core.Station.%s.RSP.ports") % fullFieldName), true);
   vector< SmartPtr<Stream> > inputStreams(inputStreamDescs.size());
