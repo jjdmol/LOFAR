@@ -41,7 +41,7 @@ int main() {
   gpu::Context ctx(device);
   gpu::Stream stream(ctx);
 
-  Parset ps("tDelayAndBandPassKernel.parset.in");
+  Parset ps("tDelayAndBandPassKernel.in_parset");
   string srcFilename("DelayAndBandPass.cu");
 
   // Get default parameters for the compiler
