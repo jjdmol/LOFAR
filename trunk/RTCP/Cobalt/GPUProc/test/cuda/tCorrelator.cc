@@ -27,6 +27,7 @@
 #include <typeinfo>
 
 #include <Common/Exception.h>
+#include <Common/LofarLogger.h>
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
@@ -135,6 +136,8 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main()
 {
+  INIT_LOGGER("tCorrelator");
+
   // seed random generator with zero
   srand (0);
 

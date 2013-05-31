@@ -19,8 +19,8 @@
  * Adapted for LOFAR by Marcel Loose 2013.
  */
 
-#ifndef LOFAR_GPUPROC_CUDA_COMPLEX_H
-#define LOFAR_GPUPROC_CUDA_COMPLEX_H
+#ifndef LOFAR_GPUPROC_CUDA_COMPLEX_CUH
+#define LOFAR_GPUPROC_CUDA_COMPLEX_CUH
 
 namespace LOFAR {
 namespace Cobalt {

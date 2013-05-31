@@ -224,7 +224,21 @@ namespace LOFAR
 
       // Create and return PTX
       //return compileToPtx(string(dirname(__FILE__)) + "/" + srcFilename, flags, definitions);
-      return compileToPtx(srcFilename, flags, definitions);
+
+      // Get the contents of the LOFARROOT environment variable
+      const char* lofarroot = getenv("LOFARROOT");
+
+      // Add $LOFARROOT/include to include path, if $LOFARROOT is set.
+      if (lofarroot) {
+        flags.insert(str(format("include-path %s/include") % lofarroot));
+      }
+
+      // Prefix the CUDA kernel filename with $LOFARROOT/share/gpu/kernels
+      // if $LOFARROOT is set
+      std::string srcFileDir = 
+        (lofarroot ? str(format("%s/share/gpu/kernels/") % lofarroot) : "");
+
+      return compileToPtx(srcFileDir + srcFilename, flags, definitions);
     }
 
 

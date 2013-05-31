@@ -41,10 +41,10 @@
  * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
  */
 
-#include "cuda_runtime.h"
+#include <cuda_runtime.h>
 #include <cuda.h>
 
-#include "complex.h"
+#include "complex.cuh"
 
 #if NR_CHANNELS == 1
 #undef BANDPASS_CORRECTION  // TODO: Should this be an assert: this result in unexpected behaviour
