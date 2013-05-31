@@ -18,6 +18,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include "tFIR_Filter.h"
 
 #include <iostream>
