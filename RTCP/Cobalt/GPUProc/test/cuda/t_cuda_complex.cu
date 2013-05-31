@@ -27,7 +27,7 @@
 #include <iostream>
 #include <complex>
 
-#include <GPUProc/complex.h>
+#include "complex.cuh"
 
 cudaError_t addWithCuda( std::complex<float> * output_complex, const std::complex<float> * input_complex, size_t size);
 

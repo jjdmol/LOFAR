@@ -1,8 +1,5 @@
 #!/bin/sh -x
 
-cp ${srcdir}/../../share/gpu/kernels/DelayAndBandPass.cu .
-cp ${srcdir}/../../src/cuda/complex.h .
-
 # Check for GPU
 if ! lspci | grep -E "VGA|3D" | grep -E "ATI|NVIDIA"
 then
