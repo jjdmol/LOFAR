@@ -18,6 +18,7 @@ lofar_add_test(tCorrelator tCorrelator.cc)
 lofar_add_test(tFFT tFFT.cc)
 lofar_add_test(tFIR_Filter tFIR_Filter.cc)
 lofar_add_test(tDelayAndBandPass tDelayAndBandPass.cc)
+lofar_add_test(tDelayAndBandPassKernel tDelayAndBandPassKernel.cc)
 
 # Trick tDelayAndBandPass into thinking that it can find the kernels it needs
 # using the LOFARROOT environment variable
