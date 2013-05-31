@@ -20,6 +20,7 @@
 
 #include <lofar_config.h>
 
+#include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
@@ -31,6 +32,8 @@ using namespace std;
 using namespace LOFAR::Cobalt;
 
 int main() {
+  INIT_LOGGER("tDelayAndBandPassKernel");
+
   // Set up gpu environment
   gpu::Platform pf;
   gpu::Device device(0);
@@ -69,6 +72,8 @@ int main() {
                       std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
                       // and the correlatorKernel.
                       ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>)));
+
+  stream.synchronize();
 
   DelayAndBandPassKernel kernel(ps, module, 
                              devInput.inputSamples,

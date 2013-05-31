@@ -52,7 +52,7 @@ HostMemory getInitializedArray(const Context &ctx, unsigned size, float defaultV
 {
   HostMemory memory(ctx, size);
   float* createdArray =  memory.get<float>();
-  for (unsigned idx = 0; idx < size; ++idx)
+  for (unsigned idx = 0; idx < size / sizeof(float); ++idx)
     createdArray[idx] = (float)defaultValue;
   return memory;
 }
@@ -143,23 +143,13 @@ float * runTest(float bandPassFactor,
   DeviceMemory DevbandPassFactorsMemory(ctx, sizebandPassFactorsData);
   HostMemory rawbandPassFactorsData = getInitializedArray(ctx, sizebandPassFactorsData, bandPassFactor);
   cuStream.writeBuffer(DevbandPassFactorsMemory, rawbandPassFactorsData);
-  
-  size_t sizeSubbandFrequency = 1 * sizeof(float);
-  DeviceMemory DevSubbandFrequencyMemory(ctx, sizeSubbandFrequency);
-  HostMemory subbandFrequency = getInitializedArray(ctx, sizeSubbandFrequency, frequency);
-  cuStream.writeBuffer(DevSubbandFrequencyMemory, subbandFrequency);
-  
-  size_t sizeBeamData = 1 * sizeof(unsigned);
-  DeviceMemory DevBeamMemory(ctx, sizeBeamData);
-  HostMemory beamData(ctx, sizeBeamData);
-  cuStream.writeBuffer(DevBeamMemory, beamData);
 
   // ****************************************************************************
   // Run the kernel on the created data
   hKernel.setArg(0, DevCorrectedMemory);
   hKernel.setArg(1, DevFilteredMemory);
-  hKernel.setArg(2, DevSubbandFrequencyMemory);
-  hKernel.setArg(3, DevBeamMemory);
+  hKernel.setArg(2, frequency);
+  hKernel.setArg(3, 0U);
   hKernel.setArg(4, DevDelaysAtBeginMemory);
   hKernel.setArg(5, DevDelaysAfterEndMemory);
   hKernel.setArg(6, DevPhaseOffsetMemory);
