@@ -30,12 +30,16 @@
 
 #include <Common/LofarLogger.h>
 
+#include <GPUProc/global_defines.h>
+
 // Convenience macro to call a CUDA Device API function and throw a
 // CUDAException if an error occurred.
 #define checkCuCall(func)                                               \
   do {                                                                  \
     CUresult result = func;                                             \
     if (result != CUDA_SUCCESS) {                                       \
+      LOG_ERROR_STR(                                                    \
+             # func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
       THROW (LOFAR::Cobalt::gpu::CUDAException,                         \
              # func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
     }                                                                   \
@@ -608,7 +612,8 @@ namespace LOFAR
 
       Function::Function(Module &module, const std::string &name):
         _context(module.getContext()),
-        _module(module)
+        _module(module),
+        _name(name)
       {
         ScopedCurrentContext scc(_context);
 
@@ -813,7 +818,8 @@ namespace LOFAR
       };
 
       Stream::Stream(const Context &context, unsigned int flags):
-        _impl(new Impl(context, flags))
+        _impl(new Impl(context, flags)),
+        force_synchronous(profiling) // TODO: properly set this based on something else
       {
       }
 
@@ -831,7 +837,7 @@ namespace LOFAR
         _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
                                hostMem.get<void *>(),
                                hostMem.size());
-        if (synchronous) {
+        if (synchronous || force_synchronous) {
           synchronize();
         }
       }
@@ -849,7 +855,7 @@ namespace LOFAR
         _impl->memcpyDtoHAsync(hostMem.get<void *>(), 
                                (CUdeviceptr)devMem.get(),
                                size);
-        if (synchronous) {
+        if (synchronous || force_synchronous) {
           synchronize();
         }
       }
@@ -857,10 +863,17 @@ namespace LOFAR
       void Stream::launchKernel(const Function &function,
                                 const Grid &grid, const Block &block)
       {
+        LOG_DEBUG_STR("Launching " << function._name);
+
         const unsigned dynSharedMemBytes = 0; // we don't need this for LOFAR
         _impl->launchKernel(function._function, grid.x, grid.y, grid.z,
                             block.x, block.y, block.z, dynSharedMemBytes,
                             const_cast<void **>(&function._kernelArgs[0]));
+
+          if (force_synchronous) {
+            synchronize();
+          }
+
       }
 
       bool Stream::query() const
@@ -891,6 +904,11 @@ namespace LOFAR
       Context Stream::getContext() const
       {
         return _impl->getContext();
+      }
+
+      bool Stream::isSynchronous() const
+      {
+        return force_synchronous;
       }
 
 

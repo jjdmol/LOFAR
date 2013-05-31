@@ -321,7 +321,7 @@ namespace LOFAR
       public:
         // Construct a function object by looking up the function \a name in the
         // module \a module.
-        Function(Module &module, const std::string &name);
+        Function(Module &module, const std::string &name = "<unknown>");
 
         // Set kernel immediate argument number \a index to \a val.
         // \a val must outlive kernel execution.
@@ -354,6 +354,9 @@ namespace LOFAR
         // Keep the Module alive, because Function actually wraps a pointer
         // to a function within the Module.
         const Module _module;
+
+        // The name of the function, for error reporting purposes
+        const std::string _name;
 
         // Stream needs access to our CUDA function to launch a kernel.
         friend class Stream;
@@ -466,12 +469,18 @@ namespace LOFAR
         // Returns the context associated with the underlying CUDA stream.
         Context getContext() const; // TODO: consider using this in the WorkQueues (now has Stream and Context stored)
 
+        // Return whether this stream mandates synchronous behaviour
+        bool isSynchronous() const;
+
       private:
         // Non-copyable implementation class.
         class Impl;
 
         // Reference counted pointer to the implementation class.
         boost::shared_ptr<Impl> _impl;
+
+        // Force synchronous transfers and kernel launches
+        bool force_synchronous;
       };
 
     } // namespace gpu
