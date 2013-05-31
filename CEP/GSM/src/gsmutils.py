@@ -680,33 +680,34 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
             raise BaseException("ra = %s > 360 degrees, not implemented yet" % str(ra_central + alpha(fov_radius, decl_central))) 
         results = zip(*cursor.fetchall())
         cursor.close()
-        if len(results) != 0:
-            vlss_catsrcid = results[0]
-            vlss_name = results[1]
-            wenssm_catsrcid = results[2]
-            wenssp_catsrcid = results[3]
-            nvss_catsrcid = results[4]
-            v_flux = results[5]
-            wm_flux = results[6]
-            wp_flux = results[7]
-            n_flux = results[8]
-            v_flux_err = results[9]
-            wm_flux_err = results[10]
-            wp_flux_err = results[11]
-            n_flux_err = results[12]
-            wm_assoc_distance_arcsec = results[13]
-            wm_assoc_r = results[14]
-            wp_assoc_distance_arcsec = results[15]
-            wp_assoc_r = results[16]
-            n_assoc_distance_arcsec = results[17]
-            n_assoc_r = results[18]
-            pa = results[19]
-            major = results[20]
-            minor = results[21]
-            ra = results[22]
-            decl = results[23]
-        else:
-            status = False
+        if len(results) == 0:
+            raise GSMException("No sources found, so Sky Model File %s is not created" % (bbsfile,))
+
+        vlss_catsrcid = results[0]
+        vlss_name = results[1]
+        wenssm_catsrcid = results[2]
+        wenssp_catsrcid = results[3]
+        nvss_catsrcid = results[4]
+        v_flux = results[5]
+        wm_flux = results[6]
+        wp_flux = results[7]
+        n_flux = results[8]
+        v_flux_err = results[9]
+        wm_flux_err = results[10]
+        wp_flux_err = results[11]
+        n_flux_err = results[12]
+        wm_assoc_distance_arcsec = results[13]
+        wm_assoc_r = results[14]
+        wp_assoc_distance_arcsec = results[15]
+        wp_assoc_r = results[16]
+        n_assoc_distance_arcsec = results[17]
+        n_assoc_r = results[18]
+        pa = results[19]
+        major = results[20]
+        minor = results[21]
+        ra = results[22]
+        decl = results[23]
+
         spectrumfiles = []
         # Check for duplicate vlss_names. This may arise when a VLSS source 
         # is associated with one or more (genuine) counterparts.
@@ -807,9 +808,6 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius,
             if storespectraplots:
                 print "Spectra available in:", spectrumfiles
                 
-        if not status:
-            raise GSMException("Sky Model File %s is empty" % (bbsfile,))
-
         # Write the format line.
         # Optionally it contains a column containing the patch name.
         skymodel = open(bbsfile, 'w')
