@@ -28,6 +28,7 @@
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/SparseSet.h>
 #include <CoInterface/MultiDimArray.h>
+#include <Common/LofarLogger.h>
 #include <complex>
 
 using namespace LOFAR::Cobalt;
@@ -347,6 +348,7 @@ TEST(applyWeightingToAllPolarizations)
 
 int main()
 {
+  INIT_LOGGER("tCorrelatorWorkQueue");
   return UnitTest::RunAllTests();
 }
 

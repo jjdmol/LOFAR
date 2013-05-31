@@ -30,11 +30,14 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <GPUProc/global_defines.h>
+#include <Common/LofarLogger.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
 
 int main() {
+  INIT_LOGGER("tKernel");
+
   // Set up gpu environment
   gpu::Platform pf;
   gpu::Device device(0);
