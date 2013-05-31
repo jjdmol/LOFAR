@@ -112,15 +112,13 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 extern "C" {
  __global__ void applyDelaysAndCorrectBandPass( complexfloat * correctedDataPtr,
                                                 const complexfloat * filteredDataPtr,
-                                                float* subbandFrequencyPtr,
-                                                unsigned* beamPtr,
+                                                float subbandFrequency,
+                                                unsigned beam,
                                                 const float * delaysAtBeginPtr,
                                                 const float * delaysAfterEndPtr,
                                                 const float * phaseOffsetsPtr,
                                                 const float * bandPassFactorsPtr)
 {
-  unsigned beam = beamPtr[0];
-  float subbandFrequency = subbandFrequencyPtr[0];
   OutputDataType outputData = (OutputDataType) correctedDataPtr;
   InputDataType inputData = (InputDataType) filteredDataPtr;
   DelaysType delaysAtBegin = (DelaysType) delaysAtBeginPtr;
