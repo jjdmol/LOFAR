@@ -25,13 +25,14 @@
 #include <sstream>
 #include <fstream>
 #include <cuda.h>
+#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
 int main()
 {
-
+  INIT_LOGGER("tFIR_Filter");
   char const *kernel_name = "FIR_Filter";
   const char *kernel_extention = ".cu";
   std::stringstream ss;

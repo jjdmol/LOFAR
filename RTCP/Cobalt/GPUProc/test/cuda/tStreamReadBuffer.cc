@@ -25,11 +25,13 @@
 #include <iostream>
 
 #include <GPUProc/gpu_wrapper.h>
+#include <Common/LofarLogger.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
 
 int main() {
+  INIT_LOGGER("tStreamReadBuffer");
   try {
     gpu::Platform pf;
     cout << "Detected " << pf.size() << " CUDA devices" << endl;

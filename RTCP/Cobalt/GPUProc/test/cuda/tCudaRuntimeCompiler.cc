@@ -22,12 +22,14 @@
 
 #include <string>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
+#include <Common/LofarLogger.h>
 
 using namespace LOFAR::Cobalt;
 using namespace std;
 
 int main()
 {
+  INIT_LOGGER("tCudaRuntimeCompiler");
   // Run a kernel with two different defines, should result in two different kernels.
   // Just run the compiler with two magic numbers and test for the existance of the numbers
   string kernelPath = "tCudaRuntimeCompiler.in_.cu";
