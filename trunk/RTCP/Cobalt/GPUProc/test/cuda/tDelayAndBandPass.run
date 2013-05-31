@@ -1,6 +1,6 @@
 #!/bin/sh -x
 
-cp ${srcdir}/../../src/cuda/DelayAndBandPass.cu .
+cp ${srcdir}/../../share/gpu/kernels/DelayAndBandPass.cu .
 cp ${srcdir}/../../src/cuda/complex.h .
 
 # Check for GPU

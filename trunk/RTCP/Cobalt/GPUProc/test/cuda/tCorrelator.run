@@ -1,6 +1,6 @@
 #!/bin/sh -x
 
-cp ${srcdir}/../../src/cuda/Correlator.cu .
+cp ${srcdir}/../../share/gpu/kernels/Correlator.cu .
 cp ${srcdir}/../../src/cuda/complex.h .
 cp ${srcdir}/../../src/cuda/gpu_math.cuh .
 
