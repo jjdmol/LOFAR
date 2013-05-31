@@ -1,4 +1,4 @@
-//# DelayAndBandPass.cl
+//# DelayAndBandPass.cu
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -105,6 +105,10 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
  *                                 float, containing bandpass correction factors
  */
 
+#if NR_CHANNELS == 1
+#error Support for 1 channel per subband has not yet been implemented due to missing int to float conversion routines.
+#endif
+
 extern "C" {
  __global__ void applyDelaysAndCorrectBandPass( complexfloat * correctedDataPtr,
                                                 const complexfloat * filteredDataPtr,
@@ -153,7 +157,7 @@ extern "C" {
 #if NR_CHANNELS == 1
   float2 myPhiBegin = make_float2(
                         (phiBegin.x + float(threadIdx.x) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],
-                        (phiBegin.y + float(threadIdx.x) * deltaPhi.y) * frequency + (*phaseOffsets)[station][1])
+                        (phiBegin.y + float(threadIdx.x) * deltaPhi.y) * frequency + (*phaseOffsets)[station][1]);
   float2 myPhiDelta = make_float2(
                          float(blockDim.x) * deltaPhi.x * frequency.x,
                          float(blockDim.x) * deltaPhi.y * frequency.y);
