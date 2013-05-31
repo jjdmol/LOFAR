@@ -52,7 +52,7 @@ namespace LOFAR
       void doWork();
 
       // for each block, read all subbands from all stations, and divide the work over the workQueues
-      template<typename SampleT> void receiveInput( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
+      template<typename SampleT> void receiveInput( size_t nrBlocks );
 
       // process subbands on the GPU
       void processSubbands(CorrelatorWorkQueue &workQueue);
