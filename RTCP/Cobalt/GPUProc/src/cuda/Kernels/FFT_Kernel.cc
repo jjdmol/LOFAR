@@ -52,6 +52,8 @@ namespace LOFAR
       // Tie our plan to the specified stream
       plan.setStream(stream);
 
+      LOG_DEBUG("Launching cuFFT");
+
       // Enqueue the FFT execution
       error = cufftExecC2C(plan.plan,
                            static_cast<cufftComplex*>(buffer.get()),
@@ -60,6 +62,10 @@ namespace LOFAR
 
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
+
+      if (stream.isSynchronous()) {
+        stream.synchronize();
+      }
 
 /*
       counter.doOperation(event,
