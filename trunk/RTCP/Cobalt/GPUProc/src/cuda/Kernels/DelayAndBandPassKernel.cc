@@ -58,9 +58,8 @@ namespace LOFAR
 
     void DelayAndBandPassKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, unsigned subband)
     {
-      setArg(2, (float) ps.subbandToFrequencyMapping()[subband]);
-      const unsigned beam = 0; // TODO: allow other beams
-      setArg(3, beam);
+      setArg(2, static_cast<float>(ps.settings.subbands[subband].centralFrequency));
+      setArg(3, ps.settings.subbands[subband].SAP);
       Kernel::enqueue(queue/*, counter*/);
     }
 
