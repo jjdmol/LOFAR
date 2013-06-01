@@ -13,6 +13,16 @@ lofar_add_test(tSSH tSSH.cc)
 lofar_add_executable(DummyStorage DummyStorage.cc)
 lofar_add_test(tStorageProcesses tStorageProcesses.cc DEPENDS DummyStorage)
 
+if(UNITTEST++_FOUND)
+  lofar_add_test(tCorrelatorWorkQueue tCorrelatorWorkQueue.cc)
+endif()
+
+# tests that use testParset.sh
+lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp)
+lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp)
+lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp)
+#lofar_add_test(tGPUPerformance DEPENDS rtcp) # performance measurement and comparison are broken
+
 if(USE_CUDA)
   add_subdirectory(cuda)
 endif()
