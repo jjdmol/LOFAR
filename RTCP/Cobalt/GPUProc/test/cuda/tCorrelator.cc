@@ -34,31 +34,14 @@
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 
 #include "FindKernels.h"
+#include "TestUtil.h"
 
 using namespace std;
 using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;
 using LOFAR::Exception;
+
 #define NR_BASELINES     (NR_STATIONS * (NR_STATIONS + 1) / 2)
-
-#define checkCuCall(func)                                               \
-  do {                                                                  \
-    CUresult result = func;                                             \
-    if (result != CUDA_SUCCESS) {                                       \
-      THROW (LOFAR::Cobalt::gpu::CUDAException,                         \
-             # func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
-    }                                                                   \
-  } while(0)
-
-// Helper function to get initialized memory
-HostMemory getInitializedArray(gpu::Context &ctx, unsigned size, float defaultValue)
-{
-  HostMemory memory(ctx, size);
-  float* createdArray =  memory.get<float>();
-  for (unsigned idx = 0; idx < size; ++idx)
-    createdArray[idx] = (float)defaultValue;
-  return memory;
-}
 
 // 
 HostMemory runTest(gpu::Context ctx,
