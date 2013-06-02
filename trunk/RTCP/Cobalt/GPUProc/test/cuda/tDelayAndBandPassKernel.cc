@@ -31,6 +31,8 @@
 using namespace std;
 using namespace LOFAR::Cobalt;
 
+#include "FindKernels.h"
+
 int main() {
   INIT_LOGGER("tDelayAndBandPassKernel");
 
