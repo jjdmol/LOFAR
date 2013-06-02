@@ -33,6 +33,8 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 
+#include "FindKernels.h"
+
 using namespace std;
 using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;

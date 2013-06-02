@@ -31,6 +31,8 @@
 #include <Common/LofarLogger.h>
 #include <boost/format.hpp>
 
+#include "FindKernels.h"
+
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
