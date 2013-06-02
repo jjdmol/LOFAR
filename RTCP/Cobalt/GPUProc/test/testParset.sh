@@ -94,6 +94,9 @@ function parse_logs
   # enable debugging
   echo "Global 20" >> rtcp.debug &&
 
+  # be able to find the GPU kernels
+  export LOFARROOT=$srcdir/.. &&
+
   # run correlator -- without profiling
   mpirun -H localhost -np 3 $BINDIR/rtcp $PARSET > performance_normal.txt 2>&1 &&
   # run correlator -- with profiling
