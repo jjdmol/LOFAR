@@ -193,7 +193,7 @@ int main()
   {
     if (results[idx] != 2.0)
     {
-      cerr << "Bandpass correction returned an incorrect value at index" << idx << endl;
+      cerr << "Bandpass correction returned an incorrect value at index " << idx << endl;
       cerr << " expected: 2, 2, 2, 2" << endl;    
       cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
       return -1;
@@ -216,7 +216,7 @@ int main()
   {
     if ((results[idx] -  2.71828) > 0.00001 )
     {
-      cerr << " phase offsets correction returned an incorrect value at index" << idx << endl;
+      cerr << " phase offsets correction returned an incorrect value at index " << idx << endl;
       cerr << " expected: 2.71828, 2.71828, 2.71828, 2.71828" << endl;    
       cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
       return -1;
@@ -240,7 +240,7 @@ int main()
   {
     if (fabs(results[idx] -  0.04321) > 0.00001 )
     {
-      cerr << " delays  begin and end both 1 no phase offset frequency 1 width 1" << idx << endl;
+      cerr << " delays  begin and end both 1 no phase offset frequency 1 width 1 at index " << idx << endl;
       cerr << " expected:  0.04321,  0.04321,  0.04321,  0.04321" << endl;    
       cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
       return -1;
@@ -267,7 +267,7 @@ int main()
   {  // Magic number ask John Romein why they are correct
     if(!((fabs(results[idx] -  0.04321) < 0.00001) || (fabs(results[idx] -  0.952098) < 0.00001)))
     {
-      cerr << " delays  begin and end both 1 no phase offset frequency 1 width 1" << idx << endl;
+      cerr << " delays  begin and end both 1 no phase offset frequency 1 width 1 at index " << idx << endl;
       cerr << " expected:  0.04321,  0.04321,  0.952098,  0.952098" << endl;    
       cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
       return -1;
@@ -296,7 +296,7 @@ int main()
     if(!((fabs(results[idx] -  0.04321 * 2.71828 * 2) < 0.0001)  ||
         (fabs(results[idx] -  2.58807* 2) < 0.0001)))
     {
-      cerr << " delays  begin and end both 1 no phase offset frequency 1 width " << idx << endl;
+      cerr << " delays  begin and end both 1 no phase offset frequency 1 width 1 at index " << idx << endl;
       cerr << " expected:  0.04321,  0.04321,  0.952098,  0.952098" << endl;    
       cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
       return -1;
