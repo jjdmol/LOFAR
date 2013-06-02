@@ -6,6 +6,8 @@ include(LofarCTest)
 # source files and headers in subdirectories include UnitTest.h
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+add_definitions("-DLOFARROOT=${CMAKE_CURRENT_SOURCE_DIR}/..")
+
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
 
