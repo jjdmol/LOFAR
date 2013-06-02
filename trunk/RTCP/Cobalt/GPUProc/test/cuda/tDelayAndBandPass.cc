@@ -35,29 +35,11 @@
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 
 #include "FindKernels.h"
+#include "TestUtil.h"
 
 using namespace std;
 using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;
-
-#define checkCuCall(func)                                               \
-  do {                                                                  \
-    CUresult result = func;                                             \
-    if (result != CUDA_SUCCESS) {                                       \
-      THROW (LOFAR::Cobalt::gpu::CUDAException,                         \
-             # func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
-    }                                                                   \
-  } while(0)
-
-// Helper function to get initialized memory
-HostMemory getInitializedArray(const Context &ctx, unsigned size, float defaultValue)
-{
-  HostMemory memory(ctx, size);
-  float* createdArray =  memory.get<float>();
-  for (unsigned idx = 0; idx < size / sizeof(float); ++idx)
-    createdArray[idx] = (float)defaultValue;
-  return memory;
-}
 
 // 
 float * runTest(float bandPassFactor,
