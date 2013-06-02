@@ -56,14 +56,13 @@ float * runTest(float bandPassFactor,
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
   Stream cuStream(ctx);
-  std::stringstream tostrstram("");
+  std::stringstream tostrstream("");
 
   string kernelPath = "DelayAndBandPass.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
  
   // Get an instantiation of the default parameters
   definitions_type definitions = defaultDefinitions();
   flags_type flags = defaultFlags();
-  //flags.insert("gpu-architecture compute_20"); // The real devices will be 3.0
 
   // ****************************************
   // Compile to ptx
@@ -85,9 +84,9 @@ float * runTest(float bandPassFactor,
   definitions["USE_CUDA"] = "1";
   definitions["COMPLEX"] = "2";
   unsigned COMPLEX = 2;
-  tostrstram << subbandWidth;
-  definitions["SUBBAND_BANDWIDTH"] = tostrstram.str();
-  tostrstram.clear();
+  tostrstream << subbandWidth;
+  definitions["SUBBAND_BANDWIDTH"] = tostrstream.str();
+  tostrstream.clear();
   float SUBBAND_BANDWIDTH = subbandWidth;
   definitions["BANDPASS_CORRECTION"] = "1";
   if (delayCompensation)
@@ -167,7 +166,7 @@ float * runTest(float bandPassFactor,
   firstAndLastComplex[1] = rawCorrectedData.get<float>()[1];
   //return the last complex number
   firstAndLastComplex[2] = rawCorrectedData.get<float>()[(sizeCorrectedData / sizeof(float)) - 2];
-  firstAndLastComplex[3] = rawCorrectedData.get<float>()[(sizeCorrectedData / sizeof(float))-1];
+  firstAndLastComplex[3] = rawCorrectedData.get<float>()[(sizeCorrectedData / sizeof(float)) - 1];
 
   // *************************************
   // cleanup memory
