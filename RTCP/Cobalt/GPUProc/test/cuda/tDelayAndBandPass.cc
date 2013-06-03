@@ -34,7 +34,6 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 
-#include "FindKernels.h"
 #include "TestUtil.h"
 
 using namespace std;
