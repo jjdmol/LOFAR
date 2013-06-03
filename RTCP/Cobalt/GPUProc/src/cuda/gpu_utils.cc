@@ -144,10 +144,8 @@ namespace LOFAR
           return "compute_13";
 
         case CU_TARGET_COMPUTE_20:
+        case CU_TARGET_COMPUTE_21: // 21 not allowed for nvcc --gpu-architecture option value
           return "compute_20";
-
-        case CU_TARGET_COMPUTE_21:
-          return "compute_20"; // 21 not allowed for nvcc --gpu-architecture option value
 
         case CU_TARGET_COMPUTE_30:
           return "compute_30";
