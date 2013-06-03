@@ -204,7 +204,6 @@ namespace LOFAR
       CUjit_target commonTarget = computeTarget(devices);
       flags.insert(str(format("gpu-architecture %s") % get_virtarch(commonTarget)));
 #endif
-      //flags.insert(str(format("-I %s") % dirname(__FILE__))); // TODO: refer to src dir (testing) or install dir (installed)
 
 #if 0
       // We'll compile a specific version for each device that has a different
@@ -220,13 +219,8 @@ namespace LOFAR
       }
 #endif
 
-      // Create and return PTX
-      //return compileToPtx(string(dirname(__FILE__)) + "/" + srcFilename, flags, definitions);
-
-      // Get the contents of the LOFARROOT environment variable
-      const char* lofarroot = getenv("LOFARROOT");
-
       // Add $LOFARROOT/include to include path, if $LOFARROOT is set.
+      const char* lofarroot = getenv("LOFARROOT");
       if (lofarroot) {
         flags.insert(str(format("include-path %s/include") % lofarroot));
       }
