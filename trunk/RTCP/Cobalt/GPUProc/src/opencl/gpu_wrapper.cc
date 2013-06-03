@@ -29,7 +29,7 @@
 #include <Common/Thread/Mutex.h>
 
 // Use our own terminate handler
-LOFAR::Exception::TerminateHandler t(LOFAR::Cobalt::gpu::terminate);
+LOFAR::Exception::TerminateHandler th(LOFAR::Cobalt::gpu::terminate);
 
 namespace LOFAR
 {
