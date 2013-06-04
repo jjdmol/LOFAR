@@ -83,7 +83,7 @@ namespace LOFAR {
   // Show the complex numbers.
   // <group>
   inline std::ostream& operator<< (std::ostream& os, TYPES::i8complex x)
-    { os << '(' << real(x) << ',' << imag(x) << ')'; return os; }
+    { os << '(' << (int)real(x) << ',' << (int)imag(x) << ')'; return os; }
   inline std::ostream& operator<< (std::ostream& os, TYPES::i16complex x)
     { os << '(' << real(x) << ',' << imag(x) << ')'; return os; }
   inline std::ostream& operator<< (std::ostream& os, TYPES::u16complex x)
