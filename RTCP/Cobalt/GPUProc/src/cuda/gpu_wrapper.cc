@@ -46,7 +46,7 @@
     }                                                                   \
   } while(0)
 
-Exception::TerminateHandler th(Exception::terminate);
+Exception::TerminateHandler th(LOFAR::Exception::terminate);
 
 namespace LOFAR
 {
