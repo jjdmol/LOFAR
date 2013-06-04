@@ -98,12 +98,12 @@ float * runTest(float bandPassFactor,
   // Create the data arrays  
   size_t sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX * sizeof(float);
   DeviceMemory DevFilteredMemory(ctx, sizeFilteredData);
-  HostMemory rawFilteredData = getInitializedArray(ctx, sizeFilteredData, 1.0);
+  HostMemory rawFilteredData = getInitializedArray(ctx, sizeFilteredData, 1.0f);
   cuStream.writeBuffer(DevFilteredMemory, rawFilteredData);
 
   size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
   DeviceMemory DevCorrectedMemory(ctx, sizeCorrectedData);
-  HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 42.0); 
+  HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 42.0f); 
   cuStream.writeBuffer(DevCorrectedMemory, rawCorrectedData);
 
   size_t sizeDelaysAtBeginData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float);  
@@ -186,7 +186,7 @@ int main()
   // The input samples are all ones
   // After correction, multiply with 2.
   // The first and the last complex values are retrieved. They should be scaled with the bandPassFactor == 2
-  results = runTest(bandPassFactor, delayCompensation);
+  results = runTest(bandPassFactor);
   for (unsigned idx = 0; idx < 4; ++idx)
   {
     if (results[idx] != 2.0)
