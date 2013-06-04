@@ -369,6 +369,7 @@ int main(int argc, char **argv)
     /*
      * Receive and process station data
      */
+    LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
 
     // TODO: Honour subbandDistribution by forwarding it to the pipeline
       
