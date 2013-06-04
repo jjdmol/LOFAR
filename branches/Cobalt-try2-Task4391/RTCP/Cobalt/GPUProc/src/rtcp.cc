@@ -325,8 +325,10 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
 
   // Distribute the subbands over the receivers
+  size_t nrReceivers = nrHosts - ps.nrStations();
+  size_t firstReceiver = ps.nrStations();
   for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-    int receiverRank = ps.nrStations(); // for now, this rank receives all
+    int receiverRank = firstReceiver + subband % nrReceivers;
 
     subbandDistribution[receiverRank].push_back(subband);
   }
@@ -343,6 +345,8 @@ int main(int argc, char **argv)
 
   // Decide course to take based on rank.
   if (rank < (int)ps.nrStations()) {
+    ASSERTSTR(subbandDistribution.find(rank) == subbandDistribution.end(), "An MPI rank can't both send station data and receive it.");
+
     /*
      * Send station data
      */
@@ -375,7 +379,7 @@ int main(int argc, char **argv)
     {
     case correlator:
       LOG_INFO_STR("Correlator pipeline selected");
-      CorrelatorPipeline(ps).doWork();
+      CorrelatorPipeline(ps, subbandDistribution[rank]).doWork();
       break;
 
     case beam:
