@@ -16,6 +16,7 @@ lofar_add_test(tStreamReadBuffer tStreamReadBuffer.cc)
 lofar_add_test(tCorrelator tCorrelator.cc)
 
 lofar_add_test(tFFT tFFT.cc)
+lofar_add_test(tFFT_leakage tFFT_leakage.cc)
 lofar_add_test(tFIR_Filter tFIR_Filter.cc)
 lofar_add_test(tDelayAndBandPass tDelayAndBandPass.cc)
 lofar_add_test(tDelayAndBandPassKernel tDelayAndBandPassKernel.cc)
