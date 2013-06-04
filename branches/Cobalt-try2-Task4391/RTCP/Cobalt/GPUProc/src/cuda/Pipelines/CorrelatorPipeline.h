@@ -57,7 +57,7 @@ namespace LOFAR
       template<typename SampleT> void receiveInput( size_t nrBlocks );
 
     private:
-      const std::vector<size_t> subbandIndices;
+      const std::vector<size_t> subbandIndices; // [localSubbandIdx]
 
       struct Output {
         // synchronisation to write blocks in-order
@@ -67,7 +67,7 @@ namespace LOFAR
         SmartPtr< BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> > > bequeue;
       };
 
-      std::vector<struct Output> subbandPool; // [subband]
+      std::vector<struct Output> subbandPool; // [localSubbandIdx]
 
       FilterBank filterBank;
 
@@ -80,7 +80,7 @@ namespace LOFAR
       void postprocessSubbands(CorrelatorWorkQueue &workQueue);
 
       // send subbands to Storage
-      void writeSubband(unsigned subband, struct Output &output);
+      void writeSubband(unsigned globalSubbandIdx, struct Output &output);
     };
   }
 }

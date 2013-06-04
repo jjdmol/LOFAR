@@ -325,9 +325,9 @@ namespace LOFAR
       // Keep fetching input objects until end-of-input
       while ((input = workQueue.inputPool.filled.remove()) != NULL) {
         size_t block = input->blockID.block;
-        unsigned subband = input->blockID.globalSubbandIdx;
+        unsigned globalSubbandIdx = input->blockID.globalSubbandIdx;
 
-        LOG_INFO_STR("[block " << block << ", subband " << subband << "] Processing start");
+        LOG_INFO_STR("[block " << block << ", subband " << globalSubbandIdx << "] Processing start");
 
         // Also fetch an output object to store results
         SmartPtr<CorrelatedDataHostBuffer> output = workQueue.outputPool.free.remove();
@@ -348,7 +348,7 @@ namespace LOFAR
         workQueue.inputPool.free.append(input);
         ASSERT(!input);
 
-        LOG_DEBUG_STR("[block " << block << ", subband " << subband << "] Forwarded output to post processing");
+        LOG_DEBUG_STR("[block " << block << ", subband " << globalSubbandIdx << "] Forwarded output to post processing");
       }
     }
 
@@ -364,24 +364,24 @@ namespace LOFAR
       // Keep fetching output objects until end-of-output
       while ((output = workQueue.outputPool.filled.remove()) != NULL) {
         size_t block = output->blockID.block;
-        unsigned subband = output->blockID.globalSubbandIdx;
-        unsigned subbandIdx = output->blockID.localSubbandIdx;
+        unsigned globalSubbandIdx = output->blockID.globalSubbandIdx;
+        unsigned localSubbandIdx = output->blockID.localSubbandIdx;
 
-        LOG_INFO_STR("[block " << block << ", subband " << subband << "] Post processing start");
+        LOG_INFO_STR("[block " << block << ", subband " << globalSubbandIdx << "] Post processing start");
 
         workQueue.timers["CPU - postprocess"]->start();
         workQueue.postprocessSubband(*output);
         workQueue.timers["CPU - postprocess"]->stop();
 
         // Hand off output, force in-order as Storage expects it that way
-        subbandPool[subbandIdx].sync.waitFor(block);
+        subbandPool[localSubbandIdx].sync.waitFor(block);
 
         // We do the ordering, so we set the sequence numbers
         output->setSequenceNumber(block);
 
-        if (!subbandPool[subbandIdx].bequeue->append(output)) {
+        if (!subbandPool[localSubbandIdx].bequeue->append(output)) {
           nrBlocksDropped++;
-          //LOG_WARN_STR("[block " << block << "] Dropped for subband " << subband);
+          //LOG_WARN_STR("[block " << block << "] Dropped for subband " << globalSubbandIdx);
 
           // Give back to queue
           workQueue.outputPool.free.append(output);
@@ -390,11 +390,11 @@ namespace LOFAR
         }
 
         // Allow next block to be written
-        subbandPool[subbandIdx].sync.advanceTo(block + 1);
+        subbandPool[localSubbandIdx].sync.advanceTo(block + 1);
 
         ASSERT(!output);
 
-        LOG_DEBUG_STR("[block " << block << ", subband " << subband << "] Forwarded output to writer");
+        LOG_DEBUG_STR("[block " << block << ", subband " << globalSubbandIdx << "] Forwarded output to writer");
 
         if (time(0) != lastLogTime) {
           lastLogTime = time(0);
@@ -405,7 +405,7 @@ namespace LOFAR
     }
 
 
-    void CorrelatorPipeline::writeSubband( unsigned subband, struct Output &output )
+    void CorrelatorPipeline::writeSubband( unsigned globalSubbandIdx, struct Output &output )
     {
       SmartPtr<Stream> outputStream;
 
@@ -432,17 +432,17 @@ namespace LOFAR
       // Process pool elements until end-of-output
       while ((outputData = output.bequeue->remove()) != NULL) {
         size_t block = outputData->blockID.block;
-        ASSERT( subband == outputData->blockID.globalSubbandIdx );
+        ASSERT( globalSubbandIdx == outputData->blockID.globalSubbandIdx );
 
         CorrelatorWorkQueue &queue = outputData->queue; // cache queue object, because `output' will be destroyed
 
-        LOG_INFO_STR("[block " << block << ", subband " << subband << "] Writing start");
+        LOG_INFO_STR("[block " << block << ", subband " << globalSubbandIdx << "] Writing start");
 
         // Write block to disk 
         try {
           outputData->write(outputStream.get(), true);
         } catch(Exception &ex) {
-          LOG_ERROR_STR("Dropping rest of subband " << subband << ": " << ex);
+          LOG_ERROR_STR("Dropping rest of subband " << globalSubbandIdx << ": " << ex);
 
           outputStream = new NullStream;
         }
@@ -452,7 +452,7 @@ namespace LOFAR
 
         ASSERT(!outputData);
 
-        LOG_INFO_STR("[block " << block << ", subband " << subband << "] Done");
+        LOG_INFO_STR("[block " << block << ", subband " << globalSubbandIdx << "] Done");
       }
     }
 
