@@ -70,6 +70,7 @@ namespace LOFAR
      *   // Annotate input
      *   input->block = block;
      *   input->subband = subband;
+     *   input->subbandIdx = subbandIdx;
      *
      *   // Fetch the next output object to fill
      *   SmartPtr<CorrelatedDataHostBuffer> output = queue.outputPool.free.remove();
@@ -115,6 +116,7 @@ namespace LOFAR
       // Annotation required, as we'll loose track of the exact order
       size_t block;
       unsigned subband;
+      unsigned subbandIdx;
 
       CorrelatorWorkQueue &queue;
 
@@ -159,8 +161,11 @@ namespace LOFAR
       // Relevant block
       size_t block;
 
-      // Relevant subband
+      // Relevant subband: [0, ps.nrSubbands())
       unsigned subband;
+
+      // Index of this subband local to this pipeline: [0, subbandIndices.size())
+      unsigned subbandIdx;
 
       MultiArrayHostBuffer<float, 3> delaysAtBegin; //!< Whole sample delays at the start of the workitem      
       MultiArrayHostBuffer<float, 3> delaysAfterEnd;//!< Whole sample delays at the end of the workitem      

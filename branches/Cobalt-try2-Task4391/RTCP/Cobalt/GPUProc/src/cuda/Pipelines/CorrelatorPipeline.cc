@@ -325,6 +325,7 @@ namespace LOFAR
       while ((input = workQueue.inputPool.filled.remove()) != NULL) {
         size_t block = input->block;
         unsigned subband = input->subband;
+        unsigned subbandIdx = input->subbandIdx;
 
         LOG_INFO_STR("[block " << block << ", subband " << subband << "] Processing start");
 
@@ -334,6 +335,7 @@ namespace LOFAR
 
         output->block = block;
         output->subband = subband;
+        output->subbandIdx = subbandIdx;
 
         // Perform calculations
         workQueue.timers["CPU - process"]->start();
@@ -365,6 +367,7 @@ namespace LOFAR
       while ((output = workQueue.outputPool.filled.remove()) != NULL) {
         size_t block = output->block;
         unsigned subband = output->subband;
+        unsigned subbandIdx = output->subbandIdx;
 
         LOG_INFO_STR("[block " << block << ", subband " << subband << "] Post processing start");
 
@@ -373,12 +376,12 @@ namespace LOFAR
         workQueue.timers["CPU - postprocess"]->stop();
 
         // Hand off output, force in-order as Storage expects it that way
-        subbandPool[subband].sync.waitFor(block);
+        subbandPool[subbandIdx].sync.waitFor(block);
 
         // We do the ordering, so we set the sequence numbers
         output->setSequenceNumber(block);
 
-        if (!subbandPool[subband].bequeue->append(output)) {
+        if (!subbandPool[subbandIdx].bequeue->append(output)) {
           nrBlocksDropped++;
           //LOG_WARN_STR("[block " << block << "] Dropped for subband " << subband);
 
@@ -389,7 +392,7 @@ namespace LOFAR
         }
 
         // Allow next block to be written
-        subbandPool[subband].sync.advanceTo(block + 1);
+        subbandPool[subbandIdx].sync.advanceTo(block + 1);
 
         ASSERT(!output);
 
