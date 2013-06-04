@@ -259,6 +259,7 @@ namespace LOFAR
           // Annotate the block
           data->block   = block;
           data->subband = subbandIndices[inputIdx];
+          data->subbandIdx = inputIdx;
 
           // Incorporate it in the receiver's input set.
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
