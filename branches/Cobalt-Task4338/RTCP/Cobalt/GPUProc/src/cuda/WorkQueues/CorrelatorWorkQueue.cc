@@ -55,65 +55,40 @@ namespace LOFAR
       WorkQueue( parset, context ),
       prevBlock(-1),
       prevSAP(-1),
-      devInput(ps.nrBeams(),
-                ps.nrStations(),
-                NR_POLARIZATIONS,
-                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
-                ps.nrBytesPerComplexSample(),
-                queue,
+      // TODO: have the Kernel classes be able to provide input and output buffer sizes to use below
+      devInput(ps.nrBeams(), ps.nrStations(), NR_POLARIZATIONS,
+               ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
+               ps.nrBytesPerComplexSample(), context,
 
-                // reserve enough space in inputSamples for the output of
-                // the delayAndBandPassKernel.
-                ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
-      devFilteredData(queue,
-                      CL_MEM_READ_WRITE,
+               // reserve enough space in inputSamples for the output of the delayAndBandPassKernel.
+               ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
+      // reserve enough space for the output of the firFilterKernel,
+      devFilteredData(context, std::max(
+                        ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+                        // and the correlatorKernel.
+                        ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>)
+                      )),
+      devFIRweights(context, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
+      devBandPassCorrectionWeights(context, ps.nrChannelsPerSubband() * sizeof(float)),
 
-                      // reserve enough space for the output of the
-                      // firFilterKernel,
-                      std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-                      // and the correlatorKernel.
-                      ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>))),
-      devFIRweights(queue,
-                    CL_MEM_READ_ONLY,
-                    ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
-      firFilterKernel(ps,
-                      queue,
-                      programs.firFilterProgram,
-                      devFilteredData,
-                      devInput.inputSamples,
-                      devFIRweights),
-      fftKernel(ps,
-                context,
-                devFilteredData),
-      bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()],
-                                queue,
-                                CL_MEM_WRITE_ONLY,
-                                CL_MEM_READ_ONLY),
-      delayAndBandPassKernel(ps,
-                             programs.delayAndBandPassProgram,
+      firFilterKernel(ps, queue, programs.firFilterProgram,
+                      devFilteredData, devInput.inputSamples, devFIRweights),
+      fftKernel(ps, context, devFilteredData),
+      delayAndBandPassKernel(ps, programs.delayAndBandPassProgram,
                              devInput.inputSamples,
                              devFilteredData,
                              devInput.delaysAtBegin,
                              devInput.delaysAfterEnd,
                              devInput.phaseOffsets,
-                             bandPassCorrectionWeights),
+                             devBandPassCorrectionWeights),
 #if defined USE_NEW_CORRELATOR
-      correlateTriangleKernel(ps,
-                              queue,
-                              programs.correlatorProgram,
-                              devFilteredData,
-                              devInput.inputSamples),
-      correlateRectangleKernel(ps,
-                              queue,
-                              programs.correlatorProgram, 
-                              devFilteredData, 
-                              devInput.inputSamples)
+      correlateTriangleKernel(ps, queue, programs.correlatorProgram,
+                              devFilteredData, devInput.inputSamples),
+      correlateRectangleKernel(ps, queue, programs.correlatorProgram, 
+                              devFilteredData, devInput.inputSamples)
 #else
-      correlatorKernel(ps,
-                       queue, 
-                       programs.correlatorProgram, 
-                       devFilteredData, 
-                       devInput.inputSamples)
+      correlatorKernel(ps, queue, programs.correlatorProgram, 
+                              devFilteredData, devInput.inputSamples)
 #endif
     {
       // put enough objects in the inputPool to operate
@@ -141,7 +116,6 @@ namespace LOFAR
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),
                 ps.integrationSteps(),
-                devFilteredData,
                 *this));
       }
 
@@ -172,16 +146,21 @@ namespace LOFAR
       addTimer("GPU - compute");
       addTimer("GPU - wait");
 
-      // Copy the FIR filter weights to the device in two steps (TODO: make FilterBank supply the right buffer, or do like BandPassCorrectionWeights below)
-      size_t fbBytes = filterBank.getWeights().num_elements() * sizeof(float);
-      gpu::HostMemory fbBuffer(context, fbBytes);
-      std::memcpy(fbBuffer.get<void>(), filterBank.getWeights().origin(), fbBytes);
-      queue.writeBuffer(devFIRweights, fbBuffer, true);
+      // Copy the FIR filter and bandpass weights to the device.
+      // Note that these constant weights are now (unnecessarily) stored on the
+      // device for every workqueue. A single copy per device could be used, but
+      // first verify that the device platform still allows workqueue overlap.
+      size_t firWeightsSize = filterBank.getWeights().num_elements() * sizeof(float);
+      gpu::HostMemory firWeights(context, firWeightsSize);
+      std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(), fbBytes);
+      queue.writeBuffer(devFIRweights, firWeights, true);
 
       if (ps.correctBandPass())
       {
-        BandPass::computeCorrectionFactors(bandPassCorrectionWeights.origin(), ps.nrChannelsPerSubband());
-        bandPassCorrectionWeights.hostToDevice(true);
+        gpu::HostMemory bpWeights(context, ps.nrChannelsPerSubband() * sizeof(float));
+        BandPass::computeCorrectionFactors(bpWeights.origin(),
+                                           ps.nrChannelsPerSubband());
+        queue.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
       }
     }
 

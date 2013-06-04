@@ -1,4 +1,4 @@
-//# Buffers.h
+//# MultiDimArrayHostBuffer.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_OPENCL_BUFFERS_H
-#define LOFAR_GPUPROC_OPENCL_BUFFERS_H
+#ifndef LOFAR_GPUPROC_OPENCL_MULTI_DIM_ARRAY_HOST_BUFFER_H
+#define LOFAR_GPUPROC_OPENCL_MULTI_DIM_ARRAY_HOST_BUFFER_H
 
 #include <CoInterface/Allocator.h>
 #include <CoInterface/MultiDimArray.h>

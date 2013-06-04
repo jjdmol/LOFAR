@@ -1,4 +1,4 @@
-//# Buffers.h
+//# MultiDimArrayHostBuffer.h
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -20,19 +20,19 @@
 //# $Id$
 
 // \file
-// Support for our GPU processing buffer types.
+// Support for our multi-dim array-ed GPU host buffer.
 
-#ifndef LOFAR_GPUPROC_BUFFERS_H
-#define LOFAR_GPUPROC_BUFFERS_H
+#ifndef LOFAR_GPUPROC_MULTI_DIM_ARRAY_HOST_BUFFER_H
+#define LOFAR_GPUPROC_MULTI_DIM_ARRAY_HOST_BUFFER_H
 
 #if defined (USE_CUDA) && defined (USE_OPENCL)
 # error "Either CUDA or OpenCL must be enabled, not both"
 #endif
 
 #if defined (USE_CUDA)
-# include "cuda/Buffers.h"
+# include "cuda/MultiDimArrayHostBuffer.h"
 #elif defined (USE_OPENCL)
-# include "opencl/Buffers.h"
+# include "opencl/MultiDimArrayHostBuffer.h"
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif
