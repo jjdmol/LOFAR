@@ -257,9 +257,9 @@ namespace LOFAR
           SmartPtr<WorkQueueInputData> data = queue.inputPool.free.remove();
 
           // Annotate the block
-          data->block   = block;
-          data->subband = subbandIndices[inputIdx];
-          data->subbandIdx = inputIdx;
+          data->blockID.block            = block;
+          data->blockID.globalSubbandIdx = subbandIndices[inputIdx];
+          data->blockID.localSubbandIdx  = inputIdx;
 
           // Incorporate it in the receiver's input set.
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
@@ -293,7 +293,7 @@ namespace LOFAR
             // extract and assign the delays for the station beams
             for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++)
             {
-              unsigned sap = ps.settings.subbands[data->subband].SAP;
+              unsigned sap = ps.settings.subbands[data->blockID.globalSubbandIdx].SAP;
 
               data->delaysAtBegin[sap][stat][pol] = metaData.stationBeam.delayAtBegin;
               data->delaysAfterEnd[sap][stat][pol] = metaData.stationBeam.delayAfterEnd;
@@ -324,9 +324,8 @@ namespace LOFAR
 
       // Keep fetching input objects until end-of-input
       while ((input = workQueue.inputPool.filled.remove()) != NULL) {
-        size_t block = input->block;
-        unsigned subband = input->subband;
-        unsigned subbandIdx = input->subbandIdx;
+        size_t block = input->blockID.block;
+        unsigned subband = input->blockID.globalSubbandIdx;
 
         LOG_INFO_STR("[block " << block << ", subband " << subband << "] Processing start");
 
@@ -334,9 +333,7 @@ namespace LOFAR
         SmartPtr<CorrelatedDataHostBuffer> output = workQueue.outputPool.free.remove();
         ASSERT(output != NULL); // Only we signal end-of-data, so we should never receive it
 
-        output->block = block;
-        output->subband = subband;
-        output->subbandIdx = subbandIdx;
+        output->blockID = input->blockID;
 
         // Perform calculations
         workQueue.timers["CPU - process"]->start();
@@ -366,9 +363,9 @@ namespace LOFAR
 
       // Keep fetching output objects until end-of-output
       while ((output = workQueue.outputPool.filled.remove()) != NULL) {
-        size_t block = output->block;
-        unsigned subband = output->subband;
-        unsigned subbandIdx = output->subbandIdx;
+        size_t block = output->blockID.block;
+        unsigned subband = output->blockID.globalSubbandIdx;
+        unsigned subbandIdx = output->blockID.localSubbandIdx;
 
         LOG_INFO_STR("[block " << block << ", subband " << subband << "] Post processing start");
 
@@ -434,8 +431,8 @@ namespace LOFAR
 
       // Process pool elements until end-of-output
       while ((outputData = output.bequeue->remove()) != NULL) {
-        size_t block = outputData->block;
-        ASSERT( subband == outputData->subband );
+        size_t block = outputData->blockID.block;
+        ASSERT( subband == outputData->blockID.globalSubbandIdx );
 
         CorrelatorWorkQueue &queue = outputData->queue; // cache queue object, because `output' will be destroyed
 
