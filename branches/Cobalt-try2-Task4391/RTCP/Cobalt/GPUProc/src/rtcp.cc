@@ -266,8 +266,6 @@ int main(int argc, char **argv)
 
   using namespace LOFAR::Cobalt;
 
-  LOG_INFO_STR("running ...");
-
   // Set parts of the environment
   if (setenv("DISPLAY", ":0", 1) < 0)
   {
@@ -285,13 +283,13 @@ int main(int argc, char **argv)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
 
-  LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
-
 #ifdef HAVE_LOG4CPLUS
   INIT_LOGGER(str(format("rtcp@%02d") % rank));
 #else
   INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
 #endif
+
+  LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
 
   SELECTPIPELINE option = correlator;
   int opt;
