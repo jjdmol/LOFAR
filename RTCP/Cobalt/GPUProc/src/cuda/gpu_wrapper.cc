@@ -28,6 +28,7 @@
 
 #include <boost/noncopyable.hpp>
 
+#include <Common/Exception.h>
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/global_defines.h>
