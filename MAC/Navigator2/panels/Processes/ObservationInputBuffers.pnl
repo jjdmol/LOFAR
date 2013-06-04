@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1307 841 N "_3DFace" 0
+PANEL,-1 -1 1055 778 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -10,7 +10,6 @@ PANEL,-1 -1 1307 841 N "_3DFace" 0
   dpGet(baseDP+\".observationName\",observationNr);
   observationName=\"Observation\"+observationNr;
   strModuleName   = myModuleName();
-  
   TopLabel.text(observationName+\" InputBuffers\");
   
    
