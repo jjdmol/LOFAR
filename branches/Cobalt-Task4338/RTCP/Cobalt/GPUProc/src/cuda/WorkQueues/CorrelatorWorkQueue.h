@@ -34,6 +34,7 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
+#include <GPUProc/BlockID.h>
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
@@ -68,8 +69,9 @@ namespace LOFAR
      *   receiveInput(input);
      *
      *   // Annotate input
-     *   input->block = block;
-     *   input->subband = subband;
+     *   input->blockID.block = block;
+     *   input->blockID.globalSubbandIdx = subband;
+     *   input->blockID.localSubbandIdx  = subbandIdx;
      *
      *   // Fetch the next output object to fill
      *   SmartPtr<CorrelatedDataHostBuffer> output = queue.outputPool.free.remove();
@@ -119,8 +121,7 @@ namespace LOFAR
       }
 
       // Annotation required, as we'll lose track of the exact order
-      size_t block;
-      unsigned subband;
+      struct BlockID blockID;
 
       CorrelatorWorkQueue &workQueue;
 
@@ -164,11 +165,8 @@ namespace LOFAR
         }
       };
 
-      // Relevant block
-      size_t block;
-
-      // Relevant subband
-      unsigned subband;
+      // Which block this InputData represents
+      struct BlockID blockID;
 
       //!< Whole sample delays at the start of the workitem      
       MultiDimArrayHostBuffer<float, 3> delaysAtBegin;

@@ -372,8 +372,8 @@ namespace LOFAR
     {
       timers["GPU - total"]->start();
 
-      size_t block = input.block;
-      unsigned subband = input.subband;
+      size_t block = input.blockID.block;
+      unsigned subband = input.blockID.globalSubbandIdx;
 
       {
         timers["GPU - input"]->start();
@@ -402,6 +402,8 @@ namespace LOFAR
 
         prevSAP = SAP;
         prevBlock = block;
+
+        queue.synchronize();
       }
 
       if (ps.nrChannelsPerSubband() > 1) {

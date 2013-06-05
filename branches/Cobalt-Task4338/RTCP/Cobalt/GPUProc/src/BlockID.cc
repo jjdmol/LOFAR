@@ -1,4 +1,4 @@
-//# global_defines.h
+//# BlockID.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -17,28 +17,20 @@
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
+#include <lofar_config.h>
 
-#ifndef LOFAR_GPUPROC_GLOBAL_DEFINES_H
-#define LOFAR_GPUPROC_GLOBAL_DEFINES_H
-
-#define NR_STATION_FILTER_TAPS  16
-#undef USE_NEW_CORRELATOR
-#define NR_POLARIZATIONS         2 // TODO: get the nr of pol symbol from an LCS/Common header and/or from CoInterface/Config.h (if that isn't a dup too)
-#define NR_TAPS                 16
-#undef USE_2X2
-#undef USE_TEST_DATA
-#undef USE_B7015
+#include "BlockID.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    extern bool profiling;
-    extern unsigned nrGPUs;
+    std::ostream &operator<<(std::ostream &str, const struct BlockID &id) {
+      str << "block " << id.block << " subband " << id.globalSubbandIdx << " (local index " << id.localSubbandIdx << ")";
 
-    void set_affinity(unsigned device);
+      return str;
+    }
+
   }
 }
-
-#endif
 
