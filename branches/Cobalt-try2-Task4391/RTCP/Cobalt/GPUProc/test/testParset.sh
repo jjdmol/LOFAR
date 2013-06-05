@@ -98,9 +98,9 @@ function parse_logs
   export LOFARROOT=$srcdir/.. &&
 
   # run correlator -- without profiling
-  mpirun -H localhost -np 3 $BINDIR/rtcp $PARSET > performance_normal.txt 2>&1 &&
+  mpirun -H localhost -np 4 $BINDIR/rtcp $PARSET > performance_normal.txt 2>&1 &&
   # run correlator -- with profiling
-  mpirun -H localhost -np 3 $BINDIR/rtcp -p $PARSET > performance_profiled.txt 2>&1 &&
+  mpirun -H localhost -np 4 $BINDIR/rtcp -p $PARSET > performance_profiled.txt 2>&1 &&
 
   # compare output
   if [ "x" != "x$REFDIR" ]
