@@ -444,7 +444,8 @@ namespace LOFAR
         size_t block = output->block;
         unsigned subband = output->subband;
 
-        CorrelatorWorkQueue &queue = output->queue; // cache queue object, because `output' will be destroyed
+        // Cache workQueue reference, because `output' will be destroyed.
+        CorrelatorWorkQueue &workQueue = output->workQueue;
 
         if (subband == 0 || subband == ps.nrSubbands() - 1) {
           LOG_INFO_STR("[block " << block << ", subband " << subband << "] Writing start");
@@ -460,7 +461,7 @@ namespace LOFAR
         }
 
         // Hand the object back to the workQueue it originally came from
-        queue.outputPool.free.append(output);
+        workQueue.outputPool.free.append(output);
 
         ASSERT(!output);
 

@@ -106,13 +106,14 @@ namespace LOFAR
     {
     public:
       CorrelatedDataHostBuffer(unsigned nrStations, unsigned nrChannels,
-                               unsigned maxNrValidSamples, CorrelatorWorkQueue &workQueue)
+                               unsigned maxNrValidSamples, gpu::Context &context,
+                               CorrelatorWorkQueue &workQueue)
       :
         CorrelatedData(nrStations, nrChannels, maxNrValidSamples, this->origin(),
                        this->num_elements(), heapAllocator, 1),
         MultiDimArrayHostBuffer<fcomplex, 4>(boost::extents[nrStations * (nrStations + 1) / 2]
                                                            [nrChannels][NR_POLARIZATIONS]
-                                                           [NR_POLARIZATIONS], 0),
+                                                           [NR_POLARIZATIONS], context, 0),
         workQueue(workQueue)
       {
       }
@@ -187,12 +188,16 @@ namespace LOFAR
       // Create the inputData object we need shared host/device memory on the supplied devicequeue
       WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
                          size_t n_samples, size_t bytes_per_complex_sample,
-                         unsigned int hostBufferFlags = 0)
+                         gpu::Context &context, unsigned int hostBufferFlags = 0)
         :
-        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations], hostBufferFlags),
-        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations], hostBufferFlags),
-        phaseOffsets(boost::extents[n_stations][n_polarizations], hostBufferFlags),
-        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample], hostBufferFlags), // TODO: The size of the buffer is NOT validated
+        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        phaseOffsets(boost::extents[n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample],
+                       context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
         inputFlags(boost::extents[n_stations])
       {
       }

@@ -100,22 +100,23 @@ namespace LOFAR
       //
       // At least 3 items are needed for a smooth Pool operation.
       size_t nrInputDatas = std::max(3UL, ps.nrSubbands());
-      for(size_t i = 0; i < nrInputDatas; ++i) {
+      for (size_t i = 0; i < nrInputDatas; ++i) {
         inputPool.free.append(new WorkQueueInputData(
                 ps.nrBeams(),
                 ps.nrStations(),
                 NR_POLARIZATIONS,
                 ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
-                devInput));
+                context));
       }
 
       // put enough objects in the outputPool to operate
-      for(size_t i = 0; i < 3; ++i) {
+      for (size_t i = 0; i < 3; ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),
                 ps.integrationSteps(),
+                context,
                 *this));
       }
 
@@ -152,13 +153,13 @@ namespace LOFAR
       // first verify that the device platform still allows workqueue overlap.
       size_t firWeightsSize = filterBank.getWeights().num_elements() * sizeof(float);
       gpu::HostMemory firWeights(context, firWeightsSize);
-      std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(), fbBytes);
+      std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(), firWeightsSize);
       queue.writeBuffer(devFIRweights, firWeights, true);
 
       if (ps.correctBandPass())
       {
         gpu::HostMemory bpWeights(context, ps.nrChannelsPerSubband() * sizeof(float));
-        BandPass::computeCorrectionFactors(bpWeights.origin(),
+        BandPass::computeCorrectionFactors(bpWeights.get<float>(),
                                            ps.nrChannelsPerSubband());
         queue.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
       }
@@ -339,17 +340,18 @@ namespace LOFAR
     template<typename T> void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
       CorrelatedData &output)
     {
-      for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl) {
+      for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl)
+      {
         // Calculate the weights for the channels
         //
         // Channel 0 is already flagged according to specs, so we can simply
         // include it both for 1 and >1 channels/subband.
-        for(unsigned ch = 0; ch < parset.nrChannelsPerSubband(); ch ++) 
+        for (unsigned ch = 0; ch < parset.nrChannelsPerSubband(); ch++) 
         {
           T nrValidSamples = output.nrValidSamples<T>(bl, ch);
 
-          // If all samples flagged weights is zero
-          // TODO: make a lookup table for the expensive division
+          // If all samples flagged, weights is zero.
+          // TODO: make a lookup table for the expensive division; measure first
           float weight = nrValidSamples ? 1e-6f / nrValidSamples : 0;  
 
           applyWeightingToAllPolarizations(bl, ch, weight, output);
@@ -379,7 +381,7 @@ namespace LOFAR
 #if defined USE_B7015
         OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
-        input.inputSamples.hostToDevice(true);
+        queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
 //        counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
 
         timers["GPU - input"]->stop();
@@ -394,9 +396,9 @@ namespace LOFAR
 
       // Only upload delays if they changed w.r.t. the previous subband
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
-        input.delaysAtBegin.hostToDevice(false);
-        input.delaysAfterEnd.hostToDevice(false);
-        input.phaseOffsets.hostToDevice(false);
+        queue.writeBuffer(devInput.delaysAtBegin,  input.delaysAtBegin,  false);
+        queue.writeBuffer(devInput.delaysAfterEnd, input.delaysAfterEnd, false);
+        queue.writeBuffer(devInput.phaseOffsets,   input.phaseOffsets, false);
 
         prevSAP = SAP;
         prevBlock = block;
@@ -436,8 +438,8 @@ namespace LOFAR
 #ifdef USE_B7015
         OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
 #endif
-        output.deviceToHost(true);
-        // now perform weighting of the data based on the number of valid samples
+        queue.readBuffer(output, devFilteredData, true);
+        // now perform weighting of the data based on the number of valid samples; TODO???
 
 //        counters["output - visibilities"]->doOperation(output.deviceBuffer.event, 0, output.bytesize(), 0);
 
