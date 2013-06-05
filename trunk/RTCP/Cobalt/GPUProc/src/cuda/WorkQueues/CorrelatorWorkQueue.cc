@@ -391,8 +391,8 @@ namespace LOFAR
     {
       timers["GPU - total"]->start();
 
-      size_t block = input.block;
-      unsigned subband = input.subband;
+      size_t block = input.blockID.block;
+      unsigned subband = input.blockID.globalSubbandIdx;
 
       {
         timers["GPU - input"]->start();
