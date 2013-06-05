@@ -321,7 +321,7 @@ namespace LOFAR
       public:
         // Construct a function object by looking up the function \a name in the
         // module \a module.
-        Function(Module &module, const std::string &name = "<unknown>");
+        Function(Module &module, const std::string &name);
 
         // Set kernel immediate argument number \a index to \a val.
         // \a val must outlive kernel execution.
