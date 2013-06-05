@@ -3,7 +3,7 @@
 install(FILES 
   complex.cuh 
   gpu_math.cuh
-  Correlator.cu
-  DelayAndBandPass.cu
   FIR_Filter.cu
+  DelayAndBandPass.cu
+  Correlator.cu
   DESTINATION share/gpu/kernels)

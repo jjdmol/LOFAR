@@ -25,7 +25,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
 
-#include <GPUProc/Buffers.h>
 #include <GPUProc/gpu_utils.h>
 
 namespace LOFAR

@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/Buffers.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
 

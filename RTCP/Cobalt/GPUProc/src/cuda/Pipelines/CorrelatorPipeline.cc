@@ -435,7 +435,8 @@ namespace LOFAR
         const struct BlockID id = outputData->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
-        CorrelatorWorkQueue &queue = outputData->queue; // cache queue object, because `output' will be destroyed
+        // Cache workQueue reference, because `output' will be destroyed.
+        CorrelatorWorkQueue &workQueue = outputData->workQueue;
 
         LOG_INFO_STR("[" << id << "] Writing start");
 
@@ -449,7 +450,7 @@ namespace LOFAR
         }
 
         // Hand the object back to the workQueue it originally came from
-        queue.outputPool.free.append(outputData);
+        workQueue.outputPool.free.append(outputData);
 
         ASSERT(!outputData);
 

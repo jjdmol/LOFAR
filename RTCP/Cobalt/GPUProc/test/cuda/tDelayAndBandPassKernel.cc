@@ -24,7 +24,7 @@
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/Buffers.h>
+#include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 
@@ -57,23 +57,19 @@ int main() {
                 NR_POLARIZATIONS,
                 ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
-                stream);
+                ctx);
 
-  MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()],
-                                stream,
-                                CL_MEM_WRITE_ONLY,
-                                CL_MEM_READ_ONLY);
+  // Calculate bandpass weights and transfer to the device.
+  gpu::HostMemory bpWeights(ctx, ps.nrChannelsPerSubband() * sizeof(float));
+  BandPass::computeCorrectionFactors(bpWeights.get<float>(),
+                                     ps.nrChannelsPerSubband());
+  gpu::DeviceMemory devBandPassCorrectionWeights(ctx, ps.nrChannelsPerSubband() * sizeof(float));
+  stream.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
 
-  DeviceBuffer devFilteredData(stream,
-                      CL_MEM_READ_WRITE,
-
-                      // reserve enough space for the output of the
-                      // firFilterKernel,
-                      std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-                      // and the correlatorKernel.
-                      ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>)));
-
-  stream.synchronize();
+  // reserve enough space for the output of the firFilterKernel, and the correlatorKernel.
+  size_t devFilteredDataSize = std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+                      ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
+  gpu::DeviceMemory devFilteredData(ctx, devFilteredDataSize);
 
   DelayAndBandPassKernel kernel(ps, module, 
                              devInput.inputSamples,
@@ -81,9 +77,10 @@ int main() {
                              devInput.delaysAtBegin,
                              devInput.delaysAfterEnd,
                              devInput.phaseOffsets,
-                             bandPassCorrectionWeights);
+                             devBandPassCorrectionWeights);
 
-  kernel.enqueue(stream, 0);
+  unsigned subband = 0;
+  kernel.enqueue(stream, subband);
   stream.synchronize();
 
   return 0;
