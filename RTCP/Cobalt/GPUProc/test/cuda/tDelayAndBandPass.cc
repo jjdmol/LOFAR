@@ -33,6 +33,7 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
+#include <UnitTest++.h>
 
 #include "TestUtil.h"
 
@@ -173,114 +174,119 @@ float * runTest(float bandPassFactor,
   return firstAndLastComplex;
 }
 
-int main()
+TEST(BandPass)
 {
-  INIT_LOGGER("tDelayAndBandPass");
-
   // ***********************************************************
   // Test if the bandpass correction factor is applied correctly in isolation
   float bandPassFactor = 2.0;
-  bool delayCompensation = false;
   float * results;
 
   // The input samples are all ones
   // After correction, multiply with 2.
   // The first and the last complex values are retrieved. They should be scaled with the bandPassFactor == 2
   results = runTest(bandPassFactor);
-  for (unsigned idx = 0; idx < 4; ++idx)
-  {
-    if (results[idx] != 2.0)
-    {
-      cerr << "Bandpass correction returned an incorrect value at index " << idx << endl;
-      cerr << " expected: 2, 2, 2, 2" << endl;    
-      cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
-      return -1;
-    }
-  }
+
+  CHECK_CLOSE(2.0, results[0], 0.00001);
+  CHECK_CLOSE(2.0, results[1], 0.00001);
+  CHECK_CLOSE(2.0, results[2], 0.00001);
+  CHECK_CLOSE(2.0, results[3], 0.00001);
+
+  delete[] results;
+}
+
+TEST(PhaseOffsets)
+{
+  float * results;
 
   //**********************************************************************
   // Delaycompensation but only for the phase ofsets:
-  // All computations the drop except the phase ofset of 1,0 which is fed into a an cexp
-  // cexp(1) = e = 2.71828
+  // All computations the drop except the phase ofset of 1,0 which is fed into a cosisin
+  // cosisin(pi) = -1
   results = runTest(1.0,   // bandpass factor
                     1.0,   // frequency
                     1.0,   
                     true,  // delayCompensation
                     0.0,   // delays begin  
                     0.0,   // delays end
-                    1.0);  // phase offsets
+                    M_PI); // phase offsets
 
-  for (unsigned idx = 0; idx < 4; ++idx)
+  CHECK_CLOSE(-1.0, results[0], 0.00001);
+  CHECK_CLOSE(-1.0, results[1], 0.00001);
+  CHECK_CLOSE(-1.0, results[2], 0.00001);
+  CHECK_CLOSE(-1.0, results[3], 0.00001);
+
+  delete[] results;
+}
+
+SUITE(DelayCompensation)
+{
+  TEST(ConstantDelay)
   {
-    if ((results[idx] -  2.71828) > 0.00001 )
-    {
-      cerr << " phase offsets correction returned an incorrect value at index " << idx << endl;
-      cerr << " expected: 2.71828, 2.71828, 2.71828, 2.71828" << endl;    
-      cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
-      return -1;
-    }
+    float * results;
+
+    //****************************************************************************
+    // delays  begin and end both 1 no phase offset frequency 1 width 1
+    // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
+    //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
+    // cosisin(-3.14159+0 i) == -1
+    results = runTest(1.0,   // bandpass factor
+                      1.0,   // frequency
+                      1.0,   
+                      true,  // delayCompensation
+                      1.0,   // delays begin  
+                      1.0,   // delays end
+                      0.0);  // phase offsets
+
+    CHECK_CLOSE(-1.0, results[0], 0.00001);
+    CHECK_CLOSE(-1.0, results[1], 0.00001);
+    CHECK_CLOSE(-1.0, results[2], 0.00001);
+    CHECK_CLOSE(-1.0, results[3], 0.00001);
+
+    delete[] results;
   }
 
-  //****************************************************************************
-  // delays  begin and end both 1 no phase offset frequency 1 width 1
-  // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
-  //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
-  // exp(-3.14159+0 i) == 0.04312
-  results = runTest(1.0,   // bandpass factor
-                    1.0,   // frequency
-                    1.0,   
-                    true,  // delayCompensation
-                    1.0,   // delays begin  
-                    1.0,   // delays end
-                    0.0);  // phase offsets
-
-  for (unsigned idx = 0; idx < 4; ++idx)
+  TEST(SlopedDelay)
   {
-    if (fabs(results[idx] -  0.04321) > 0.00001 )
-    {
-      cerr << " delays  begin and end both 1 no phase offset frequency 1 width 1 at index " << idx << endl;
-      cerr << " expected:  0.04321,  0.04321,  0.04321,  0.04321" << endl;    
-      cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
-      return -1;
-    }
+    float * results;
+
+    //****************************************************************************
+    // delays  begin 1 and end 0 no phase offset frequency 1 width 1
+    // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
+    //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
+    // cosisin(-3.14159+0 i) == -1
+    // The later sets of samples are calculate as:
+    // vX = vX * dvX;  The delays are multiplied because we are calculating with exponents
+    // Ask john Romein for more details
+    results = runTest(1.0,   // bandpass factor
+                      1.0,   // frequency
+                      1.0,   
+                      true,  // delayCompensation
+                      1.0,   // delays begin  
+                      0.0,   // delays end
+                      0.0);  // phase offsets
+
+    CHECK_CLOSE(-1.0,     results[0], 0.00001);
+    CHECK_CLOSE(-1.0,     results[1], 0.00001);
+    CHECK_CLOSE(1.047860, results[2], 0.00001);
+    CHECK_CLOSE(0.949728, results[3], 0.00001);
+
+    delete[] results;
   }
+}
+
+TEST(AllAtOnce)
+{
+  float * results;
 
   //****************************************************************************
   // delays  begin 1 and end 0 no phase offset frequency 1 width 1
   // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
   //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
-  // exp(-3.14159+0 i) == 0.04312
+  // cosisin(-3.14159+0 i) == -1
   // The later sets of samples are calculate as:
   // vX = vX * dvX;  The delays are multiplied because we are calculating with exponents
   // Ask john Romein for more details
-  results = runTest(1.0,   // bandpass factor
-                    1.0,   // frequency
-                    1.0,   
-                    true,  // delayCompensation
-                    1.0,   // delays begin  
-                    0.0,   // delays end
-                    0.0);  // phase offsets
-
-  for (unsigned idx = 0; idx < 4; ++idx)
-  {  // Magic number ask John Romein why they are correct
-    if(!((fabs(results[idx] -  0.04321) < 0.00001) || (fabs(results[idx] -  0.952098) < 0.00001)))
-    {
-      cerr << " delays  begin and end both 1 no phase offset frequency 1 width 1 at index " << idx << endl;
-      cerr << " expected:  0.04321,  0.04321,  0.952098,  0.952098" << endl;    
-      cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
-      return -1;
-    }
-  }
-
-  //****************************************************************************
-  // delays  begin 1 and end 0 no phase offset frequency 1 width 1
-  // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
-  //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
-  // exp(-3.14159+0 i) == 0.04312
-  // The later sets of samples are calculate as:
-  // vX = vX * dvX;  The delays are multiplied because we are calculating with exponents
-  // Ask john Romein for more details
-  // In this test the phase offsetss are also compensated
+  // In this test the phase offsets are also compensated
   results = runTest(2.0,   // bandpass factor (weights == 2)
                     1.0,   // frequency
                     1.0,   
@@ -289,18 +295,18 @@ int main()
                     0.0,   // delays end
                     1.0);  // phase offsets (correct with e = 2.71828)
 
-  for (unsigned idx = 0; idx < 4; ++idx)
-  {  // Magic number ask John Romein why they are correct
-    if(!((fabs(results[idx] -  0.04321 * 2.71828 * 2) < 0.0001)  ||
-        (fabs(results[idx] -  2.58807* 2) < 0.0001)))
-    {
-      cerr << " delays  begin and end both 1 no phase offset frequency 1 width 1 at index " << idx << endl;
-      cerr << " expected:  0.04321,  0.04321,  0.952098,  0.952098" << endl;    
-      cerr << " received: " << results[0] << ", " << results[1] << ", "<< results[2] << ", "<< results[3] << endl;
-      return -1;
-    }
-  }
+  CHECK_CLOSE( 0.602337, results[0], 0.00001);
+  CHECK_CLOSE(-2.763550, results[1], 0.00001);
+  CHECK_CLOSE(-0.466011, results[2], 0.00001);
+  CHECK_CLOSE( 2.789770, results[3], 0.00001);
 
-  return 0;
+  delete[] results;
+}
+
+int main()
+{
+  INIT_LOGGER("tDelayAndBandPass");
+
+  return UnitTest::RunAllTests() > 0;
 }
 

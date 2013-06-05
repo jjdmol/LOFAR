@@ -421,6 +421,8 @@ namespace LOFAR
 
         prevSAP = SAP;
         prevBlock = block;
+
+        queue.synchronize();
       }
 
       if (ps.nrChannelsPerSubband() > 1) {
