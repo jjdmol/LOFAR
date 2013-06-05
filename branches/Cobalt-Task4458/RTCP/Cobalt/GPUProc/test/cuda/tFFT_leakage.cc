@@ -34,6 +34,14 @@
 #include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 
+#include "Interface/Parset.h"
+#include <GPUProc/cuda/Buffers.h>
+#include <GPUProc/FilterBank.h>
+#include <GPUProc/cuda/WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/cuda/Pipelines/Pipeline.h>
+#include <GPUProc/cuda/CudaRuntimeCompiler.h>
+#include <GPUProc/cuda/gpu_utils.h>
+
 using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -65,9 +73,11 @@ bool cmp_fcomplex(const fcomplex &a, const fcomplex &b, const float epsilon = EP
   return fabs(absa - absb) <= epsilon * epsilon;
 }
 
+
+
 int main() {
   INIT_LOGGER("tFFT");
-
+  Parset ps("tFFT_leakage.in_.parset");
   gpu::Platform pf;
   gpu::Device device(0);
   gpu::Context ctx(device);
@@ -79,161 +89,133 @@ int main() {
   const unsigned nrFFTs = size / fftSize;
 
   // GPU buffers and plans
-  gpu::HostMemory inout(ctx, size  * sizeof(fcomplex));
+  gpu::HostMemory inout(ctx, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband()   * sizeof(fcomplex));
   gpu::DeviceMemory d_inout(ctx, size  * sizeof(fcomplex));
 
-  FFT_Kernel fftFwdKernel(ctx, fftSize, nrFFTs, true, d_inout);
-  FFT_Kernel fftBwdKernel(ctx, fftSize, nrFFTs, false, d_inout);
 
-  // FFTW buffers and plans
-  ASSERT(fftw_init_threads() != 0);
-  fftw_plan_with_nthreads(4); // use up to 4 threads (don't care about test performance, but be impatient anyway...)
 
-  fftwf_complex *f_inout = (fftwf_complex*)fftw_malloc(fftSize * nrFFTs * sizeof(fftw_complex));
-  ASSERT(f_inout);
+#define NR_POLARIZATIONS 2
 
-  fftwf_plan f_fftFwdPlan = fftwf_plan_many_dft(1, &fftSize, nrFFTs, // int rank, const int *n (=dims), int howmany,
-                                      f_inout, NULL, 1, fftSize,    // fftw_complex *in, const int *inembed, int istride, int idist,
-                                      f_inout, NULL, 1, fftSize,    // fftw_complex *out, const int *onembed, int ostride, int odist,
-                                      FFTW_FORWARD, FFTW_ESTIMATE); // int sign, unsigned flags
-  ASSERT(f_fftFwdPlan);
+  WorkQueueInputData::DeviceBuffers devInput(ps.nrBeams(),
+    ps.nrStations(),
+    NR_POLARIZATIONS,
+    ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
+    ps.nrBytesPerComplexSample(),
+    stream,
+    // reserve enough space in inputSamples for the output of
+    // the delayAndBandPassKernel.
+    ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
 
-  // First run two very basic tests, then a third test with many transforms with FFTW output as reference.
-  // All tests run complex-to-complex float, in-place.
+  DeviceBuffer devFilteredData(stream,
+    CL_MEM_READ_WRITE,
+    // reserve enough space for the output of the
+    // firFilterKernel,
+    std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+    // and the correlatorKernel.
+    ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>)));
 
-  // *****************************************
-  // Test 1: Impulse at origin
-  // *****************************************
-  {
-    // init buffers
-    for (size_t i = 0; i < size; i++) {
-      inout.get<fcomplex>()[i] = fcomplex(0.0f, 0.0f);
-    }
+  // Create the FIR Filter weights
+  DeviceBuffer devFIRweights(stream, CL_MEM_READ_ONLY,
+                             ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float));
+  FilterBank filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER);
+  size_t fbBytes = filterBank.getWeights().num_elements() * sizeof(float);
+  HostBuffer fbBuffer(devFIRweights, fbBytes); 
+  // Copy to the hostbuffer
+  std::memcpy(fbBuffer.hostMemory.get<void>(), filterBank.getWeights().origin(), fbBytes);
 
-    inout.get<fcomplex>()[0] = fcomplex(1.0f, 0.0f);
 
-    // Forward FFT: compute and I/O
-    stream.writeBuffer(d_inout, inout);
-    fftFwdKernel.enqueue(stream);
-    stream.readBuffer(inout, d_inout, true);
+  HostBuffer outFiltered(devFilteredData, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
+ 
+  std::vector<gpu::Device> devices(1,device);
+  flags_type flags(defaultFlags());
+  definitions_type definitions(defaultDefinitions(ps));
+  string ptx(createPTX(devices, "FIR_Filter.cu", flags, definitions));
+  gpu::Module program =  createModule(ctx, "FIR_Filter.cu", ptx);
 
-    // verify output
+  FIR_FilterKernel firFilterKernel(ps, 
+    stream, 
+    program, 
+    devFilteredData, 
+    devInput.inputSamples,
+    devFIRweights);
 
-    // Check for constant function in transfer domain. All real values 1.0 (like fftw, scaled). All imag must be 0.0.
-    for (int i = 0; i < fftSize; i++) {
-      if (inout.get<fcomplex>()[i] != fcomplex(1.0f, 0.0f)) {
-        if (++nrErrors < 100) { // limit spam
-          cerr << "fwd: " << i << ':' << inout.get<fcomplex>()[i] << endl;
-        }
-      }
-    }
+  FFT_Kernel fftFwdKernel(ctx, fftSize, nrFFTs, true, devFilteredData);
 
-    // Backward FFT: compute and I/O
-    fftFwdKernel.enqueue(stream);
-    stream.readBuffer(inout, d_inout, true);
-
-    // See if we got only our scaled impuls back.
-    if (inout.get<fcomplex>()[0] != fcomplex((float)fftSize, 0.0f)) {
-      nrErrors += 1;
-      cerr << "bwd: " << inout.get<fcomplex>()[0] << " at idx 0 should have been " << fcomplex((float)fftSize, 0.0f) << endl;
-    }
-
-    for (int i = 1; i < fftSize; i++) {
-      if (inout.get<fcomplex>()[i] != fcomplex(0.0f, 0.0f)) {
-        if (++nrErrors < 100) {
-          cerr << "bwd: " << i << ':' << inout.get<fcomplex>()[i] << endl;
-        }
-      }
-    }
-  }
-
-  // *****************************************
-  // Test 2: Sine waves, compare signal leakage to fftw
-  // *****************************************
   fstream amplitudes("amplitudes.output",  std::fstream::out);
-  double freq_begin = 128.0;
-  double freq_end = 129.0;
-  double freq_steps = 7.0;
+  double freq_begin = 4.0;
+  double freq_end = 5.0;
+  double freq_steps = 37.0;
   amplitudes << "freq_begin," << "freq_end," << "freq_steps," << "fftSize" << endl;
   amplitudes << freq_begin << ","<< freq_end << "," << freq_steps << "," << fftSize << endl;
+  size_t numberInputSamples = (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) ;
+  MultiArrayHostBuffer<i16complex,2 > inputDataRaw(
+    boost::extents[(ps.nrHistorySamples() + ps.nrSamplesPerSubband())][2],
+    CL_MEM_READ_WRITE, devInput.inputSamples);
 
+  // Initialize the input data with a sinus
   for( double freq = freq_begin; freq <= freq_end; freq += 1.0/freq_steps) //dus niet 128 hz  // eenheid in fft window widths
   {
     amplitudes << "Frequency: ," ;
     cerr << "Frequency: " << freq << endl;
 
-    const float amplitude = 1.0;
+    const double amplitude = 32767.0;
 
     // init buffers
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < numberInputSamples; i++) {
       const double phase = (double)i * 2.0 * M_PI * freq / fftSize;
-      const float real = amplitude * cos(phase);
-      const float imag = amplitude * sin(phase);
-
-      inout.get<fcomplex>()[i] = fcomplex(real, imag);
-      f_inout[i][0] = real;
-      f_inout[i][1] = imag;
+      const double real = amplitude * cos(phase);
+      const double imag = amplitude * sin(phase);
+      //inout.get<fcomplex>()[i] = fcomplex(real, imag);
+      inputDataRaw[i][0] = i16complex((int16)rint(real),(int16)rint(imag));
+      inputDataRaw[i][1] = i16complex((int16)rint(real),(int16)rint(imag));      
     }
 
-    // GPU: Forward FFT: compute and I/O
-    stream.writeBuffer(d_inout, inout);
 
+    fbBuffer.hostToDevice(true);
+    inputDataRaw.hostToDevice(true);
+    stream.synchronize();   
+    firFilterKernel.enqueue(stream);
+    
+    // As a test return the intermediate results
+    //outFiltered.deviceToHost(true);
+    //stream.synchronize(); 
+
+
+
+    stream.synchronize();   
     fftFwdKernel.enqueue(stream);
-    stream.readBuffer(inout, d_inout, true);
+    stream.synchronize();   
+    outFiltered.deviceToHost(true);
+    //stream.readBuffer(inout, d_inout, true);
 
-    // FFTW: Forward FFT
-    fftwf_execute(f_fftFwdPlan);
 
     // verify output -- we can't verify per-element because the leakage will
     // differ in pattern. So we collect the total signal leak outside our peak.
     double leak_gpu = 0.0;
     double leak_fftw = 0.0;
-
-    
-
-    
     // Check for our frequency response
     for (int i = 0; i < fftSize; i++) 
     {
-      amplitudes << amp(inout.get<fcomplex>()[i]) << ",";
+      amplitudes << amp(outFiltered.hostMemory.get<fcomplex>()[i]) << ",";
       if (i == (int)floor(freq) || i == (int)ceil(freq)) 
       {
-        /*
-        if (!cmp_fcomplex(inout.get<fcomplex>()[i], fcomplex(amplitude * (float)fftSize, 0.0f))) {
-          nrErrors += 1;
-          cerr << "fwd: " << inout.get<fcomplex>()[i] << " at idx " << i << " should have been " << fcomplex((float)fftSize, 0.0f) << endl;
-        }
-        */
+        cerr << "GPU  signal peak @ freq " << i << ": " << amp(outFiltered.hostMemory.get<fcomplex>()[i]) << endl;
+      } 
+      else
+      {
 
-        cerr << "GPU  signal peak @ freq " << i << ": " << amp(inout.get<fcomplex>()[i]) << endl;
-        cerr << "FFTW signal peak @ freq " << i << ": " << amp(f_inout[i]) << endl;
-      } else {
-        // accumulate leakage
-        leak_gpu += amp(inout.get<fcomplex>()[i]);
-        leak_fftw += amp(f_inout[i]);
+        leak_gpu += amp(outFiltered.hostMemory.get<fcomplex>()[i]);
+
       }
     }
     amplitudes << endl;
     cerr << "GPU  signal leak: " << leak_gpu << endl;
-    cerr << "FFTW signal leak: " << leak_fftw << endl;
-
-    // Allow at most twice the leakage of FFTW, and accept any near-zero
-    // leakage.
-    double leak_error = abs(leak_gpu - leak_fftw) / leak_fftw;
-    ASSERT(leak_gpu < 1.0e-4 || leak_error < 1.0);
   }
 
   if (nrErrors > 0)
   {
     cerr << "Error: " << nrErrors << " unexpected output values" << endl;
   }
-
-  // Cleanup
-  fftwf_destroy_plan(f_fftFwdPlan);
-  fftwf_free(f_inout);
-  fftw_cleanup_threads();
-
-  // Done
 
   return nrErrors > 0;
 }
