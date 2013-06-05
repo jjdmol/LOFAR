@@ -830,7 +830,7 @@ namespace LOFAR
                                bool synchronous)
       {
         // tmp check: avoid async writeBuffer request that will fail later.
-        // This interface may still change at which point a cleaner solution can be used.
+        // TODO: This interface may still change at which point a cleaner solution can be used.
         if (hostMem.size() > devMem.size())
         {
           THROW(CUDAException, "writeBuffer(): host buffer too large for device buffer: host buffer is " << hostMem.size() << " bytes, device buffer is " << devMem.size() << " bytes");

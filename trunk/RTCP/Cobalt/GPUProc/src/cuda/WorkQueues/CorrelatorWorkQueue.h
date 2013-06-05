@@ -33,7 +33,7 @@
 #include <CoInterface/SubbandMetaData.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/Buffers.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/BlockID.h>
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
@@ -101,23 +101,29 @@ namespace LOFAR
     };
 
     // A CorrelatedData object tied to a HostBuffer and WorkQueue. Such links
-    // are needed for performance -- the visibilities are stored in a buffer
-    // directly linked to the GPU output buffer.
-    class CorrelatedDataHostBuffer: public MultiArrayHostBuffer<fcomplex, 4>, public CorrelatedData
+    // After the visibilities have been written to storage, we need remember
+    // the queue to recycle the buffer.
+    class CorrelatedDataHostBuffer: public CorrelatedData,
+                                    public MultiDimArrayHostBuffer<fcomplex, 4>
     {
     public:
-      CorrelatedDataHostBuffer(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, DeviceBuffer &deviceBuffer, CorrelatorWorkQueue &queue) 
+      CorrelatedDataHostBuffer(unsigned nrStations, unsigned nrChannels,
+                               unsigned maxNrValidSamples, gpu::Context &context,
+                               CorrelatorWorkQueue &workQueue)
       :
-        MultiArrayHostBuffer<fcomplex, 4>(boost::extents[nrStations * (nrStations + 1) / 2][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], CL_MEM_WRITE_ONLY, deviceBuffer),
-        CorrelatedData(nrStations, nrChannels, maxNrValidSamples, this->origin(), this->num_elements(), heapAllocator, 1),
-        queue(queue)
+        CorrelatedData(nrStations, nrChannels, maxNrValidSamples, this->origin(),
+                       this->num_elements(), heapAllocator, 1),
+        MultiDimArrayHostBuffer<fcomplex, 4>(boost::extents[nrStations * (nrStations + 1) / 2]
+                                                           [nrChannels][NR_POLARIZATIONS]
+                                                           [NR_POLARIZATIONS], context, 0),
+        workQueue(workQueue)
       {
       }
 
-      // Annotation required, as we'll loose track of the exact order
+      // Annotation required, as we'll lose track of the exact order
       struct BlockID blockID;
 
-      CorrelatorWorkQueue &queue;
+      CorrelatorWorkQueue &workQueue;
 
     private:
       CorrelatedDataHostBuffer();
@@ -135,24 +141,26 @@ namespace LOFAR
     {
     public:
 
-      // The set of GPU buffers to link our HostBuffers to.
+      // The set of GPU buffers to link our host buffers to.
+      // Device buffers may be reused between different pairs of kernels,
+      // since device memory size is a concern. Use inputSamplesMinSize
+      // to specify a minimum derived from other uses apart from input.
       struct DeviceBuffers
       {
-        DeviceBuffer delaysAtBegin;
-        DeviceBuffer delaysAfterEnd;
-        DeviceBuffer phaseOffsets;
-        DeviceBuffer inputSamples;
+        gpu::DeviceMemory delaysAtBegin;
+        gpu::DeviceMemory delaysAfterEnd;
+        gpu::DeviceMemory phaseOffsets;
+        gpu::DeviceMemory inputSamples;
 
         DeviceBuffers(size_t n_beams, size_t n_stations, size_t n_polarizations,
-                         size_t n_samples, size_t bytes_per_complex_sample,
-                         gpu::Stream &queue,
-                         size_t inputSamplesMinSize = 0,
-                         cl_mem_flags deviceBufferFlags = CL_MEM_READ_ONLY)
+                      size_t n_samples, size_t bytes_per_complex_sample,
+                      gpu::Context &context, size_t inputSamplesMinSize = 0)
         :
-          delaysAtBegin(queue, deviceBufferFlags, n_beams * n_stations * n_polarizations * sizeof(float)),
-          delaysAfterEnd(queue, deviceBufferFlags, n_beams * n_stations * n_polarizations * sizeof(float)),
-          phaseOffsets(queue, deviceBufferFlags, n_stations * n_polarizations * sizeof(float)),
-          inputSamples(queue, CL_MEM_READ_WRITE, std::max(inputSamplesMinSize, n_stations * n_samples * n_polarizations * bytes_per_complex_sample))
+          delaysAtBegin (context, n_beams * n_stations * n_polarizations * sizeof(float)),
+          delaysAfterEnd(context, n_beams * n_stations * n_polarizations * sizeof(float)),
+          phaseOffsets  (context,           n_stations * n_polarizations * sizeof(float)),
+          inputSamples  (context, std::max(inputSamplesMinSize,
+                                n_samples * n_stations * n_polarizations * bytes_per_complex_sample))
         {
         }
       };
@@ -160,26 +168,34 @@ namespace LOFAR
       // Which block this InputData represents
       struct BlockID blockID;
 
-      MultiArrayHostBuffer<float, 3> delaysAtBegin; //!< Whole sample delays at the start of the workitem      
-      MultiArrayHostBuffer<float, 3> delaysAfterEnd;//!< Whole sample delays at the end of the workitem      
-      MultiArrayHostBuffer<float, 2> phaseOffsets;  //!< Remainder of delays
+      //!< Whole sample delays at the start of the workitem      
+      MultiDimArrayHostBuffer<float, 3> delaysAtBegin;
+
+      //!< Whole sample delays at the end of the workitem      
+      MultiDimArrayHostBuffer<float, 3> delaysAfterEnd;
+
+      //!< Remainder of delays
+      MultiDimArrayHostBuffer<float, 2> phaseOffsets;
 
       // inputdata with flagged data set to zero
-      MultiArrayHostBuffer<char, 4> inputSamples;
+      MultiDimArrayHostBuffer<char, 4> inputSamples;
 
       // The input flags
-      MultiDimArray<SparseSet<unsigned>,1> inputFlags;
+      MultiDimArray<SparseSet<unsigned>, 1> inputFlags;
 
       // Create the inputData object we need shared host/device memory on the supplied devicequeue
       WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
                          size_t n_samples, size_t bytes_per_complex_sample,
-                         DeviceBuffers &deviceBuffers,
-                         cl_mem_flags hostBufferFlags = CL_MEM_WRITE_ONLY)
+                         gpu::Context &context, unsigned int hostBufferFlags = 0)
         :
-        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations], hostBufferFlags, deviceBuffers.delaysAtBegin),
-        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations], hostBufferFlags, deviceBuffers.delaysAfterEnd),
-        phaseOffsets(boost::extents[n_stations][n_polarizations], hostBufferFlags, deviceBuffers.phaseOffsets),
-        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample], hostBufferFlags, deviceBuffers.inputSamples), // TODO: The size of the buffer is NOT validated
+        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        phaseOffsets(boost::extents[n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample],
+                       context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
         inputFlags(boost::extents[n_stations])
       {
       }
@@ -249,7 +265,7 @@ namespace LOFAR
       // in the InputData class
       WorkQueueInputData::DeviceBuffers devInput;
 
-      DeviceBuffer devFilteredData;
+      gpu::DeviceMemory devFilteredData;
 
     public:
       // A pool of input data, to allow items to be filled and
@@ -261,11 +277,13 @@ namespace LOFAR
       Pool<CorrelatedDataHostBuffer> outputPool;
 
     private:
+      // Constant input buffers for the kernels
+      gpu::DeviceMemory devFIRweights;
+      gpu::DeviceMemory devBandPassCorrectionWeights;
+
       // Compiled kernels
-      DeviceBuffer devFIRweights;
       FIR_FilterKernel firFilterKernel;
       Filter_FFT_Kernel fftKernel;
-      MultiArraySharedBuffer<float, 1> bandPassCorrectionWeights;
       DelayAndBandPassKernel delayAndBandPassKernel;
 #if defined USE_NEW_CORRELATOR
       CorrelateTriangleKernel correlateTriangleKernel;
