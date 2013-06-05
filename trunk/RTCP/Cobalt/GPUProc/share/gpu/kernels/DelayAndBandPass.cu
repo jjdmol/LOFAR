@@ -65,8 +65,8 @@ typedef  complexchar (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_P
 #else
 typedef  complexfloat (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 #endif
-typedef  const float (* DelaysType)[NR_BEAMS][NR_STATIONS][COMPLEX]; // 2 Polarizations; in seconds
-typedef  const float (* PhaseOffsetsType)[NR_STATIONS][COMPLEX]; // 2 Polarizations; in radians
+typedef  const float (* DelaysType)[NR_BEAMS][NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in seconds
+typedef  const float (* PhaseOffsetsType)[NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in radians
 typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 
 /**
@@ -169,10 +169,10 @@ extern "C" {
                                   16.0f * deltaPhi.y * frequency); // Magic constant: 16 is the time step we take in the samples
 #endif
 
-  complexfloat vX = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiBegin.x));  // This cast might be costly
-  complexfloat vY = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiBegin.y));
-  complexfloat dvX = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiDelta.x));
-  complexfloat dvY = LOFAR::Cobalt::gpu::exp(complexfloat(myPhiDelta.y));
+  complexfloat vX = LOFAR::Cobalt::gpu::cosisin(myPhiBegin.x);
+  complexfloat vY = LOFAR::Cobalt::gpu::cosisin(myPhiBegin.y);
+  complexfloat dvX = LOFAR::Cobalt::gpu::cosisin(myPhiDelta.x);
+  complexfloat dvY = LOFAR::Cobalt::gpu::cosisin(myPhiDelta.y);
 #endif
 
 #if defined BANDPASS_CORRECTION
