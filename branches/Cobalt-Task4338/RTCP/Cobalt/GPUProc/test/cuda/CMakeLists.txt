@@ -15,6 +15,7 @@ lofar_add_test(tcreateProgram tcreateProgram.cc)
 lofar_add_test(tKernel tKernel.cc)
 lofar_add_test(tDelayAndBandPassKernel tDelayAndBandPassKernel.cc)
 lofar_add_test(tStreamReadBuffer tStreamReadBuffer.cc)
+lofar_add_test(tMultiDimArrayHostBuffer tMultiDimArrayHostBuffer.cc)
 
 lofar_add_test(tFIR_Filter tFIR_Filter.cc)
 lofar_add_test(tFFT tFFT.cc)

@@ -39,7 +39,7 @@ namespace LOFAR
     public:
       template <typename ExtentList>
       MultiDimArrayHostBuffer(const ExtentList &extents, gpu::Context &context,
-                              unsigned int flags)
+                              unsigned int flags = 0)
       :
         HostMemory(context, size(), flags),
         MultiDimArray<T, DIM>(extents, gpu::HostMemory::get<T>(), false)
