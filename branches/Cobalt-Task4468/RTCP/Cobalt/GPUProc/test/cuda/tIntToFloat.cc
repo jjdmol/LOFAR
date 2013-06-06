@@ -58,7 +58,7 @@ float * runTest(float bandPassFactor,
   Stream cuStream(ctx);
   std::stringstream tostrstream("");
 
-  string kernelPath = "DelayAndBandPass.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
+  string kernelPath = "IntToFloat.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
  
   // Get an instantiation of the default parameters
   definitions_type definitions = defaultDefinitions();
@@ -77,6 +77,8 @@ float * runTest(float bandPassFactor,
   unsigned NR_SAMPLES_PER_SUBBAND = 1024;
   definitions["NR_BITS_PER_SAMPLE"] = "8";
   unsigned NR_BITS_PER_SAMPLE = 8;
+
+
   definitions["NR_POLARIZATIONS"] = "2";
   unsigned NR_POLARIZATIONS = 2;
   definitions["NR_BEAMS"] = "8";
@@ -93,50 +95,24 @@ float * runTest(float bandPassFactor,
     definitions["DELAY_COMPENSATION"] = "1";
   string ptx = createPTX(devices, kernelPath, flags, definitions);
   gpu::Module module(createModule(ctx, kernelPath, ptx));
-  Function  hKernel(module, "applyDelaysAndCorrectBandPass");  // c function this no argument overloading
+  Function  hKernel(module, "intToFloat");  // c function this no argument overloading
 
   // *************************************************************
   // Create the data arrays  
-  size_t sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX * sizeof(float);
-  DeviceMemory DevFilteredMemory(ctx, sizeFilteredData);
-  HostMemory rawFilteredData = getInitializedArray(ctx, sizeFilteredData, 1.0f);
-  cuStream.writeBuffer(DevFilteredMemory, rawFilteredData);
+  size_t sizeSampledData = NR_STATIONS * NR_SAMPLES_PER_SUBBAND * NR_POLARIZATIONS * complex * sizeof(short);
+  DeviceMemory DevSampledMemory(ctx, sizeFilteredData);
+  HostMemory rawSampledData = getInitializedArray(ctx, sizeFilteredData, 1.0f);
+  cuStream.writeBuffer(DevSampledMemory, rawSampledData);
 
-  size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
-  DeviceMemory DevCorrectedMemory(ctx, sizeCorrectedData);
-  HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 42.0f); 
-  cuStream.writeBuffer(DevCorrectedMemory, rawCorrectedData);
-
-  size_t sizeDelaysAtBeginData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float);  
-  DeviceMemory DevDelaysAtBeginMemory(ctx, sizeDelaysAtBeginData);
-  HostMemory rawDelaysAtBeginData = getInitializedArray(ctx, sizeDelaysAtBeginData, delayBegin);
-  cuStream.writeBuffer(DevDelaysAtBeginMemory, rawDelaysAtBeginData);
-    
-  size_t sizeDelaysAfterEndData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float); 
-  DeviceMemory DevDelaysAfterEndMemory(ctx, sizeDelaysAfterEndData);
-  HostMemory rawDelaysAfterEndData = getInitializedArray(ctx, sizeDelaysAfterEndData, delayEnd);
-  cuStream.writeBuffer(DevDelaysAfterEndMemory, rawDelaysAfterEndData);
-    
-  size_t sizePhaseOffsetData = NR_STATIONS * 2*sizeof(float); 
-  DeviceMemory DevPhaseOffsetMemory(ctx, sizePhaseOffsetData);
-  HostMemory rawPhaseOffsetData = getInitializedArray(ctx, sizePhaseOffsetData, PhaseOffset);
-  cuStream.writeBuffer(DevPhaseOffsetMemory, rawPhaseOffsetData);
-
-  size_t sizebandPassFactorsData = NR_CHANNELS * sizeof(float);
-  DeviceMemory DevbandPassFactorsMemory(ctx, sizebandPassFactorsData);
-  HostMemory rawbandPassFactorsData = getInitializedArray(ctx, sizebandPassFactorsData, bandPassFactor);
-  cuStream.writeBuffer(DevbandPassFactorsMemory, rawbandPassFactorsData);
+  size_t sizeConvertedData = NR_STATIONS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
+  DeviceMemory DevConvertedMemory(ctx, sizeCorrectedData);
+  HostMemory rawConvertedData = getInitializedArray(ctx, sizeConvertedData, 42.0f); 
+  cuStream.writeBuffer(DevConvertedMemory, rawConvertedData);
 
   // ****************************************************************************
   // Run the kernel on the created data
-  hKernel.setArg(0, DevCorrectedMemory);
-  hKernel.setArg(1, DevFilteredMemory);
-  hKernel.setArg(2, frequency);
-  hKernel.setArg(3, 0U);
-  hKernel.setArg(4, DevDelaysAtBeginMemory);
-  hKernel.setArg(5, DevDelaysAfterEndMemory);
-  hKernel.setArg(6, DevPhaseOffsetMemory);
-  hKernel.setArg(7, DevbandPassFactorsMemory);
+  hKernel.setArg(0, DevSampledMemory);
+  hKernel.setArg(1, DevConvertedMemory);
 
   // Calculate the number of threads in total and per blovk
   int nrChannelsPerSubband = NR_CHANNELS;
@@ -305,7 +281,7 @@ TEST(AllAtOnce)
 
 int main()
 {
-  INIT_LOGGER("tDelayAndBandPass");
+  INIT_LOGGER("tIntToFloat");
 
   return UnitTest::RunAllTests() > 0;
 }

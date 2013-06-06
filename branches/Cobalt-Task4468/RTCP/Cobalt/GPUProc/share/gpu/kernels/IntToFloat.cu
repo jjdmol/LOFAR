@@ -30,24 +30,29 @@ typedef  SampleType (*SampledDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_P
 typedef  float2 (*ConvertedDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_SUBBAND];
 
 extern "C" {
-__kernel void intToFloat( void *restrict convertedDataPtr,
-                          const void *restrict sampledDataPtr)
+ __global__ void intToFloat( void * convertedDataPtr,
+                          const void * sampledDataPtr)
 {
   ConvertedDataType convertedData = (ConvertedDataType) convertedDataPtr;
   SampledDataType sampledData = (SampledDataType) sampledDataPtr;
 
   uint station = blockIdx.y * blockDim.y + threadIdx.y;
 
-  for (uint time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += get_local_size(0)) {
+  for (uint time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x) {
     // If we have 8bit input -128 should be clamped to -127
 #if NR_BITS_PER_SAMPLE == 16
-    (*convertedData)[station][0][time] = make_float2((*sampledData)[station][time][0]);
-    (*convertedData)[station][1][time] = make_float2((*sampledData)[station][time][1]);
+    (*convertedData)[station][0][time] = make_float2((*sampledData)[station][time][0].x,
+                                                     (*sampledData)[station][time][0].y);
+    (*convertedData)[station][1][time] = make_float2((*sampledData)[station][time][1].x, 
+                                                     (*sampledData)[station][time][1].y);
 #elif NR_BITS_PER_SAMPLE == 8
-    (*convertedData)[station][0][time] = make_float2((*sampledData)[station][time][0]);
-    (*convertedData)[station][1][time] = make_float2((*sampledData)[station][time][1]);
-#else
+    (*convertedData)[station][0][time] = make_float2((*sampledData)[station][time][0].x,
+                                                     (*sampledData)[station][time][0].y);
+    (*convertedData)[station][1][time] = make_float2((*sampledData)[station][time][1].x,
+                                                     (*sampledData)[station][time][1].y);
+#endif
     
   }
 }
 }
+
