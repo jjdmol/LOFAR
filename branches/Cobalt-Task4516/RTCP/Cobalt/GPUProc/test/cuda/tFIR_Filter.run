@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Parsets to use
+PARSETS="
+tFIR_Filter.parset.77_Stations
+tFIR_Filter.parset.AARTFAAC
+tFIR_Filter.parset.small-test
+"
+
+# Check for GPU
+if ! lspci | grep -E "VGA|3D" | grep -E "ATI|NVIDIA"
+then
+  echo "No ATI/NVIDIA graphics cards detected on host `hostname`" \
+       "-- aborting test." >&2
+  exit 3
+fi
+
+STATUS=0
+for PARSET in $PARSETS
+do
+  echo "Running ./tFIR_Filter $PARSET" >&2
+  ./tFIR_Filter $PARSET >&1
+  if [ $? != 0 ]
+  then
+    STATUS=1
+    echo "FAILED: ./tFIR_Filter $PARSET" >&2
+	exit $STATUS #exit for now.
+  fi
+done
+
+exit $STATUS
