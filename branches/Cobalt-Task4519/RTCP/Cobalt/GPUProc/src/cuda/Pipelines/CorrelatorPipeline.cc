@@ -67,26 +67,40 @@ namespace LOFAR
       unsigned nrWorkQueues = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
       workQueues.resize(nrWorkQueues);
 
+      // Compile all required kernels to ptx
+      LOG_INFO("Compiling device kernels");
+      double startTime = omp_get_wtime();
+      vector<string> kernels;
+      map<string, string> ptx;
+      kernels.push_back("FIR_Filter.cu");
+      kernels.push_back("DelayAndBandPass.cu");
+#if defined USE_NEW_CORRELATOR
+      kernels.push_back("NewCorrelator.cu");
+#else
+      kernels.push_back("Correlator.cu");
+#endif
+      for (vector<string>::const_iterator i = kernels.begin(); i != kernels.end(); ++i) {
+        ptx[*i] = createPTX(*i);
+      }
+
+      double stopTime = omp_get_wtime();
+      LOG_INFO("Compiling device kernels done");
+      LOG_DEBUG_STR("Compile time = " << stopTime - startTime);
+
       // TODO: now that context, program and workqueue creation is together, optimize out the build dupl. Do note that Module(+Function) creation is context-specific. Maybe move some program stuff to CorrelatorPipelinePrograms to call; that also allows to remove gpu_wrapper's Module()
       CorrelatorPipelinePrograms programs;
       for (size_t i = 0; i < nrWorkQueues; ++i) {
         gpu::Context context(devices[i % devices.size()]);
-
-        LOG_INFO("Compiling device kernels");
-        double startTime = omp_get_wtime();
         //#pragma omp parallel sections
         {
-          programs.firFilterProgram = createProgram(context, "FIR_Filter.cu");
-          programs.delayAndBandPassProgram = createProgram(context, "DelayAndBandPass.cu");
+          programs.firFilterProgram = createProgram(context, "FIR_Filter.cu", ptx["FIR_Filter.cu"]);
+          programs.delayAndBandPassProgram = createProgram(context, "DelayAndBandPass.cu", ptx["DelayAndBandPass.cu"]);
 #if defined USE_NEW_CORRELATOR
-          programs.correlatorProgram = createProgram(context, "NewCorrelator.cu");
+          programs.correlatorProgram = createProgram(context, "NewCorrelator.cu", ptx["NewCorrelator.cu"]);
 #else
-          programs.correlatorProgram = createProgram(context, "Correlator.cu");
+          programs.correlatorProgram = createProgram(context, "Correlator.cu", ptx["Correlator.cu"]);
 #endif
         }
-        double stopTime = omp_get_wtime();
-        LOG_INFO("Compiling device kernels done");
-        LOG_DEBUG_STR("Compile time = " << stopTime - startTime);
 
         workQueues[i] = new CorrelatorWorkQueue(ps, context, programs, filterBank);
       }
