@@ -32,7 +32,12 @@
 #include <vector>
 #include <string>
 #include <omp.h>
+
+#ifdef HAVE_MPI
 #include <mpi.h>
+#include <InputProc/Transpose/MPISendStation.h>
+#endif
+
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
@@ -47,7 +52,6 @@
 #include <InputProc/Station/PacketFactory.h>
 #include <InputProc/Station/PacketStream.h>
 #include <InputProc/Delays/Delays.h>
-#include <InputProc/Transpose/MPISendStation.h>
 
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
@@ -69,9 +73,10 @@ void usage(char **argv)
   cerr << "  -p: enable profiling" << endl;
 }
 
-// Rank in MPI set of hosts
+// Rank in MPI set of hosts, or 0 if no MPI is used
 int rank = 0;
 
+#ifdef HAVE_MPI
 // Number of MPI hosts
 int nrHosts = 1;
 
@@ -231,6 +236,7 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
     }
   }
 }
+#endif
 
 enum SELECTPIPELINE { correlator, beam, UHEP,unittest};
 
@@ -273,6 +279,8 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+#ifdef HAVE_MPI
+
   // Initialise and query MPI
   int mpi_thread_support;
   if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
@@ -290,6 +298,10 @@ int main(int argc, char **argv)
 #endif
 
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
+#else
+  INIT_LOGGER("rtcp@00");
+  LOG_WARN_STR("Running without MPI!");
+#endif
 
   SELECTPIPELINE option = correlator;
   int opt;
@@ -324,6 +336,14 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR("nr subbands = " << ps.nrSubbands());
   LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
 
+  // Only ONE host should start the Storage processes
+  SmartPtr<StorageProcesses> storageProcesses;
+
+  if (rank == 0) {
+    storageProcesses = new StorageProcesses(ps, "");
+  }
+
+#ifdef HAVE_MPI
   // Distribute the subbands over the receivers
   size_t nrReceivers = nrHosts - ps.nrStations();
   size_t firstReceiver = ps.nrStations();
@@ -335,13 +355,6 @@ int main(int argc, char **argv)
 
   // This is currently the only supported case
   ASSERT(nrHosts >= (int)ps.nrStations() + 1);
-
-  // Only ONE host should start the Storage processes
-  SmartPtr<StorageProcesses> storageProcesses;
-
-  if (rank == 0) {
-    storageProcesses = new StorageProcesses(ps, "");
-  }
 
   // Decide course to take based on rank.
   if (rank < (int)ps.nrStations()) {
@@ -400,6 +413,7 @@ int main(int argc, char **argv)
   } else {
     LOG_WARN_STR("Superfluous MPI rank");
   }
+#endif
 
   /*
    * COMPLETING stage
@@ -417,7 +431,9 @@ int main(int argc, char **argv)
 
   LOG_INFO_STR("Done");
 
+#ifdef HAVE_MPI
   MPI_Finalize();
+#endif
 
   return 0;
 }

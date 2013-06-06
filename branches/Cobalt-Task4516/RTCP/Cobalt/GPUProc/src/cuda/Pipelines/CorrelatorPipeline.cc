@@ -36,7 +36,10 @@
 #include <CoInterface/Stream.h>
 
 #include <InputProc/SampleType.h>
+
+#ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIReceiveStations.h>
+#endif
 
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/WorkQueues/WorkQueue.h>
@@ -241,6 +244,7 @@ namespace LOFAR
         stationRanks[stat] = stat;
       }
 
+#ifdef HAVE_MPI
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 
       // Set up the MPI environment.
@@ -324,6 +328,7 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
       }
+#endif
 
       // Signal end of input
       for (size_t i = 0; i < workQueues.size(); ++i) {
