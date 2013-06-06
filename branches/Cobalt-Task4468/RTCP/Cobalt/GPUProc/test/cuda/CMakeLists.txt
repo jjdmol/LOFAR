@@ -14,6 +14,7 @@ lofar_add_test(tCudaRuntimeCompiler tCudaRuntimeCompiler.cc)
 lofar_add_test(tcreateProgram tcreateProgram.cc)
 lofar_add_test(tKernel tKernel.cc)
 lofar_add_test(tDelayAndBandPassKernel tDelayAndBandPassKernel.cc)
+lofar_add_test(tIntToFloat tIntToFloat.cc)
 lofar_add_test(tStreamReadBuffer tStreamReadBuffer.cc)
 lofar_add_test(tMultiDimArrayHostBuffer tMultiDimArrayHostBuffer.cc)
 
@@ -28,6 +29,7 @@ set_tests_properties(
   tDelayAndBandPass
   tDelayAndBandPassKernel
   tCorrelator
+  tIntToFloat
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
 )
 

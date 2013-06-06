@@ -1,0 +1,53 @@
+//# IntToFloat.cl
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id$
+
+#if NR_BITS_PER_SAMPLE == 16
+typedef short2 SampleType;
+#elif NR_BITS_PER_SAMPLE == 8
+typedef char2 SampleType;
+#else
+#error unsupport NR_BITS_PER_SAMPLE
+#endif
+
+typedef  SampleType (*SampledDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
+typedef  float2 (*ConvertedDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_SUBBAND];
+
+extern "C" {
+__kernel void intToFloat( void *restrict convertedDataPtr,
+                          const void *restrict sampledDataPtr)
+{
+  ConvertedDataType convertedData = (ConvertedDataType) convertedDataPtr;
+  SampledDataType sampledData = (SampledDataType) sampledDataPtr;
+
+  uint station = blockIdx.y * blockDim.y + threadIdx.y;
+
+  for (uint time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += get_local_size(0)) {
+    // If we have 8bit input -128 should be clamped to -127
+#if NR_BITS_PER_SAMPLE == 16
+    (*convertedData)[station][0][time] = make_float2((*sampledData)[station][time][0]);
+    (*convertedData)[station][1][time] = make_float2((*sampledData)[station][time][1]);
+#elif NR_BITS_PER_SAMPLE == 8
+    (*convertedData)[station][0][time] = make_float2((*sampledData)[station][time][0]);
+    (*convertedData)[station][1][time] = make_float2((*sampledData)[station][time][1]);
+#else
+    
+  }
+}
+}
