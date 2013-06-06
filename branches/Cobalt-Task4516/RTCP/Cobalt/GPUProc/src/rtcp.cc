@@ -76,13 +76,13 @@ void usage(char **argv)
 // Rank in MPI set of hosts, or 0 if no MPI is used
 int rank = 0;
 
-#ifdef HAVE_MPI
-// Number of MPI hosts
+// Number of MPI hosts, or 1 if no MPI is used
 int nrHosts = 1;
 
 // Which MPI rank receives which subbands.
 map<int, vector<size_t> > subbandDistribution; // rank -> [subbands]
 
+#ifdef HAVE_MPI
 // An MPI send process, sending data for one station.
 template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 {
@@ -256,6 +256,34 @@ SELECTPIPELINE to_select_pipeline(char *argument)
   exit(1);
 }
 
+void runPipeline(SELECTPIPELINE pipeline, const Parset &ps, const vector<size_t> subbands)
+{
+  LOG_INFO_STR("Processing subbands " << subbands);
+
+  // use a switch to select between modes
+  switch (pipeline)
+  {
+  case correlator:
+    LOG_INFO_STR("Correlator pipeline selected");
+    CorrelatorPipeline(ps, subbands).doWork();
+    break;
+
+  case beam:
+    LOG_INFO_STR("BeamFormer pipeline selected");
+    //BeamFormerPipeline(ps).doWork();
+    break;
+
+  case UHEP:
+    LOG_INFO_STR("UHEP pipeline selected");
+    //UHEP_Pipeline(ps).doWork();
+    break;
+
+  default:
+    LOG_WARN_STR("No pipeline selected, do nothing");
+    break;
+  }
+}
+
 int main(int argc, char **argv)
 {
   // Make sure all time is dealt with and reported in UTC
@@ -343,16 +371,22 @@ int main(int argc, char **argv)
     storageProcesses = new StorageProcesses(ps, "");
   }
 
-#ifdef HAVE_MPI
   // Distribute the subbands over the receivers
+#ifdef HAVE_MPI
   size_t nrReceivers = nrHosts - ps.nrStations();
   size_t firstReceiver = ps.nrStations();
+#else
+  size_t nrReceivers = 1;
+  size_t firstReceiver = 0;
+#endif
+
   for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
     int receiverRank = firstReceiver + subband % nrReceivers;
 
     subbandDistribution[receiverRank].push_back(subband);
   }
 
+#ifdef HAVE_MPI
   // This is currently the only supported case
   ASSERT(nrHosts >= (int)ps.nrStations() + 1);
 
@@ -382,37 +416,13 @@ int main(int argc, char **argv)
     /*
      * Receive and process station data
      */
-    LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
 
-    // TODO: Honour subbandDistribution by forwarding it to the pipeline
-      
-    // Spawn the output processes (only do this once globally)
-
-    // use a switch to select between modes
-    switch (option)
-    {
-    case correlator:
-      LOG_INFO_STR("Correlator pipeline selected");
-      CorrelatorPipeline(ps, subbandDistribution[rank]).doWork();
-      break;
-
-    case beam:
-      LOG_INFO_STR("BeamFormer pipeline selected");
-      //BeamFormerPipeline(ps).doWork();
-      break;
-
-    case UHEP:
-      LOG_INFO_STR("UHEP pipeline selected");
-      //UHEP_Pipeline(ps).doWork();
-      break;
-
-    default:
-      LOG_WARN_STR("No pipeline selected, do nothing");
-      break;
-    }
+    runPipeline(option, ps, subbandDistribution[rank]);
   } else {
     LOG_WARN_STR("Superfluous MPI rank");
   }
+#else
+  runPipeline(option, ps, subbandDistribution[rank]);
 #endif
 
   /*
