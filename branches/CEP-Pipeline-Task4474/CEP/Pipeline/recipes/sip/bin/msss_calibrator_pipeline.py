@@ -10,9 +10,8 @@ import os
 import sys
 
 from lofarpipe.support.control import control
+from lofarpipe.support.data_map import DataMap, validate_data_maps
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.data_map import DataMap
-from lofarpipe.support.data_map import validate_data_maps#, tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
@@ -178,6 +177,7 @@ class msss_calibrator_pipeline(control):
 
         self.logger.debug("Processing: %s" %
             ', '.join(str(f) for f in self.input_data['correlated']))
+
         # *********************************************************************
         # 2. Create database needed for performing work: 
         #    Vds, descibing data on the nodes
@@ -243,7 +243,8 @@ class msss_calibrator_pipeline(control):
                     py_parset.getStringVector('PreProcessing.demix_if_needed'),
                 parset=ndppp_parset,
                 parmdb_mapfile=parmdb_mapfile,
-                sourcedb_mapfile=sourcedb_mapfile)['mapfile']
+                sourcedb_mapfile=sourcedb_mapfile
+            )['mapfile']
 
         # *********************************************************************
         # 4. Run BBS with a model of the calibrator
@@ -253,9 +254,10 @@ class msss_calibrator_pipeline(control):
         # Create an empty parmdb for BBS
         with duration(self, "setupparmdb"):
             parmdb_mapfile = self.run_task(
-                "setupparmdb", input_correlated_mapfile,
+                "setupparmdb", dppp_mapfile,
                 mapfile=os.path.join(mapfile_dir, 'bbs.parmdb.mapfile'),
-                suffix='.bbs.parmdb')['mapfile']
+                suffix='.bbs.parmdb'
+            )['mapfile']
 
         # Create a sourcedb based on sourcedb's input argument "skymodel"
         with duration(self, "setupsourcedb"):
@@ -308,16 +310,30 @@ class msss_calibrator_pipeline(control):
 
         # *********************************************************************
         # 7. Create feedback file for further processing by the LOFAR framework
-        # (MAC)
-        # Create a parset-file containing the metadata for MAC/SAS
+        #    a. get metadata of the measurement sets
+        #    b. get metadata of the instrument models
+        #    c. join the two files and write the final feedback file
+        correlated_metadata = os.path.join(parset_dir, "correlated.metadata")
+        instrument_metadata = os.path.join(parset_dir, "instrument.metadata")
         with duration(self, "get_metadata"):
-            self.run_task(
-                "get_metadata", output_instrument_mapfile,
-                parset_file=self.parset_feedback_file,
+            self.run_task("get_metadata", output_correlated_mapfile,
+                parset_file=correlated_metadata,
+                parset_prefix=(
+                    self.parset.getString('prefix') +
+                    self.parset.fullModuleName('DataProducts')),
+                product_type="Correlated")
+
+        with duration(self, "get_metadata"):
+            self.run_task("get_metadata", output_instrument_mapfile,
+                parset_file=instrument_metadata,
                 parset_prefix=(
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
                 product_type="InstrumentModel")
+
+        parset = parameterset(correlated_metadata)
+        parset.adoptFile(instrument_metadata)
+        parset.writeFile(self.parset_feedback_file)
 
         return 0
 
