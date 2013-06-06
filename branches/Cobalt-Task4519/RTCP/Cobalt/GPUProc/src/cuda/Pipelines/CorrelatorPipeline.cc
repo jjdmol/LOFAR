@@ -96,15 +96,13 @@ namespace LOFAR
       for (size_t i = 0; i < nrWorkQueues; ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        {
-          programs.firFilterProgram = createProgram(context, "FIR_Filter.cu", ptx["FIR_Filter.cu"]);
-          programs.delayAndBandPassProgram = createProgram(context, "DelayAndBandPass.cu", ptx["DelayAndBandPass.cu"]);
+        programs.firFilterProgram = createProgram(context, "FIR_Filter.cu", ptx["FIR_Filter.cu"]);
+        programs.delayAndBandPassProgram = createProgram(context, "DelayAndBandPass.cu", ptx["DelayAndBandPass.cu"]);
 #if defined USE_NEW_CORRELATOR
-          programs.correlatorProgram = createProgram(context, "NewCorrelator.cu", ptx["NewCorrelator.cu"]);
+        programs.correlatorProgram = createProgram(context, "NewCorrelator.cu", ptx["NewCorrelator.cu"]);
 #else
-          programs.correlatorProgram = createProgram(context, "Correlator.cu", ptx["Correlator.cu"]);
+        programs.correlatorProgram = createProgram(context, "Correlator.cu", ptx["Correlator.cu"]);
 #endif
-        }
 
         workQueues[i] = new CorrelatorWorkQueue(ps, context, programs, filterBank);
       }
