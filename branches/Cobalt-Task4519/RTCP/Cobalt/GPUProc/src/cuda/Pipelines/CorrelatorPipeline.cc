@@ -23,6 +23,9 @@
 #include "CorrelatorPipeline.h"
 
 #include <iomanip>
+#include <map>
+#include <vector>
+#include <string>
 
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
@@ -79,6 +82,7 @@ namespace LOFAR
 #else
       kernels.push_back("Correlator.cu");
 #endif
+
       for (vector<string>::const_iterator i = kernels.begin(); i != kernels.end(); ++i) {
         ptx[*i] = createPTX(*i);
       }
@@ -87,11 +91,11 @@ namespace LOFAR
       LOG_INFO("Compiling device kernels done");
       LOG_DEBUG_STR("Compile time = " << stopTime - startTime);
 
-      // TODO: now that context, program and workqueue creation is together, optimize out the build dupl. Do note that Module(+Function) creation is context-specific. Maybe move some program stuff to CorrelatorPipelinePrograms to call; that also allows to remove gpu_wrapper's Module()
+      // Create the WorkQueues
       CorrelatorPipelinePrograms programs;
       for (size_t i = 0; i < nrWorkQueues; ++i) {
         gpu::Context context(devices[i % devices.size()]);
-        //#pragma omp parallel sections
+
         {
           programs.firFilterProgram = createProgram(context, "FIR_Filter.cu", ptx["FIR_Filter.cu"]);
           programs.delayAndBandPassProgram = createProgram(context, "DelayAndBandPass.cu", ptx["DelayAndBandPass.cu"]);
