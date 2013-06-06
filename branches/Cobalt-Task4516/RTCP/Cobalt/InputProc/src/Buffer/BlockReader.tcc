@@ -19,8 +19,6 @@
  * $Id$
  */
 
-#include <mpi.h>
-
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {
