@@ -88,7 +88,7 @@ HostMemory runTest(gpu::Context ctx,
 
   //copy the input received as argument to the input array
   float *rawDataPtr = rawCorrectedData.get<float>();
-  for (unsigned idx = 0; idx < sizeCorrectedData; ++idx)
+  for (unsigned idx = 0; idx < sizeCorrectedData / sizeof(float); ++idx)
     rawDataPtr[idx] = inputData[idx];
   cuStream.writeBuffer(devCorrectedMemory, rawCorrectedData);
 
