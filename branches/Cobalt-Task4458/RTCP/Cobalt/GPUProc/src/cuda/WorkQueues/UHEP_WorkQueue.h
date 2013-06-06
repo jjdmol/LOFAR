@@ -27,7 +27,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/Buffers.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/Pipelines/UHEP_Pipeline.h>
 #include <GPUProc/Kernels/UHEP_TriggerKernel.h>
 #include "WorkQueue.h"

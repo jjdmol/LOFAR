@@ -1,4 +1,4 @@
-//# Buffers.h
+//# MultiDimArrayHostBuffer.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,90 +18,86 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_BUFFERS_H
-#define LOFAR_GPUPROC_CUDA_BUFFERS_H
+#ifndef LOFAR_GPUPROC_OPENCL_MULTI_DIM_ARRAY_HOST_BUFFER_H
+#define LOFAR_GPUPROC_OPENCL_MULTI_DIM_ARRAY_HOST_BUFFER_H
 
 #include <CoInterface/Allocator.h>
 #include <CoInterface/MultiDimArray.h>
 
-#include "gpu_wrapper.h"
+#include "gpu_incl.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    // TODO: Decide later whether to adapt all WorkQueue users, e.g. to sys/mman.h PROT_*.
-    enum cl_mem_flags {CL_MEM_READ_ONLY = 0x1, CL_MEM_WRITE_ONLY, CL_MEM_READ_WRITE};
 
     // A buffer on the GPU (device), to which CPU (host) buffers can be attached.
     class DeviceBuffer
     {
     public:
-      DeviceBuffer( gpu::Stream &queue, cl_mem_flags deviceMemFlags, size_t size )
+      DeviceBuffer( cl::CommandQueue &queue, cl_mem_flags flags, size_t size )
       :
+        size(size),
         queue(queue),
-        buffer(queue.getContext(), size),
-        hostMapFlags() // i.e. ignore deviceMemFlags arg in CUDA
+        flags(flags),
+        buffer(queue.getInfo<CL_QUEUE_CONTEXT>(), flags | CL_MEM_ALLOC_HOST_PTR, size)
       {
       }
 
-//#if 0 // unfort, in quite heavy use...
-      operator gpu::DeviceMemory & ()
+      const size_t size;
+      cl::CommandQueue &queue;
+      const cl_mem_flags flags;
+      cl::Buffer buffer;
+
+      // Stores transfer information
+      cl::Event event;
+
+      operator cl::Buffer & ()
       {
         return buffer;
       }
-//#endif
 
       // Copies data to the GPU
-      void hostToDevice(const gpu::HostMemory& hostBuffer, bool synchronous = false)
+      void hostToDevice(void *ptr, size_t size, bool synchronous = false)
       {
-        queue.writeBuffer(buffer, hostBuffer, synchronous);
+        ASSERT(size <= this->size);
+
+        queue.enqueueWriteBuffer(buffer, synchronous ? CL_TRUE : CL_FALSE, 0, size, ptr, 0, &event);
       }
 
       // Copies data from the GPU
-      void deviceToHost(gpu::HostMemory& hostBuffer, bool synchronous = false)
+      void deviceToHost(void *ptr, size_t size, bool synchronous = false)
       {
-        queue.readBuffer(hostBuffer, buffer, synchronous);
+        ASSERT(size <= this->size);
+
+        queue.enqueueReadBuffer(buffer, synchronous ? CL_TRUE : CL_FALSE, 0, size, ptr, 0, &event);
       }
 
       // Allocates a buffer for transfer with the GPU
-      // In CUDA, we cannot map a device buffer into host memory.
-      // NVIDIA's OpenCL enqueueMapBuffer() copies a device memory region
-      // to a new region of host memory.
-      // Implement this "manually".
-      gpu::HostMemory allocateHostBuffer( size_t size, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE )
+      void *allocateHostBuffer( size_t size, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE )
       {
-        ASSERT(size <= buffer.size()); // TODO: remove size arg from function: rely on buffer.size()
-        gpu::HostMemory hostMem(queue.getContext(), /*buffer.size()*/size);
-        deviceToHost(hostMem, true);
-        hostMapFlags = hostBufferFlags;
-        return hostMem;
+        ASSERT(size <= this->size);
+
+        return queue.enqueueMapBuffer(buffer, CL_TRUE, map_flags(hostBufferFlags), 0, size);
       }
 
       // Deallocates a buffer for transfer with the GPU
-      // In CUDA, we cannot map a device buffer into host memory.
-      // NVIDIA's OpenCL enqueueUnmapBuffer() copies the host memory region
-      // back to device memory if the mapping was READ_WRITE.
-      // If READ_ONLY, the host memory region is simply discarded.
-      // Implement this "manually".
-      void deallocateHostBuffer( gpu::HostMemory &hostMemory )
+      void deallocateHostBuffer( void *ptr )
       {
-        if (hostMapFlags & CL_MEM_WRITE_ONLY)
-        {
-          // Copy back to ensure consistency of device memory.
-          // Must be synchronous to ensure copying is done before deallocation occurs.
-          hostToDevice(hostMemory, true);
-        }
-        // HostMemory will be deallocated when last hostMemory obj copy goes away.
+        queue.enqueueUnmapMemObject(buffer, ptr);
       }
 
     private:
-      gpu::Stream &queue;
-      gpu::DeviceMemory buffer;
-      cl_mem_flags hostMapFlags; // TODO: Support >1 mapping (actually, don't and rework interface; RAII (wrt deallocateHostBuffer(), though in ~HostBuffer() below))
-
-      // Can't copy, like with OpenCL cl::Buffer
+      // Can't copy cl::Buffer
       DeviceBuffer(const DeviceBuffer &other);
+
+      // Convert the cl_mem_flags to cl_map_flags
+      static cl_map_flags map_flags(cl_mem_flags flags) {
+        return flags & CL_MEM_READ_WRITE ? CL_MAP_READ | CL_MAP_WRITE
+             : flags & CL_MEM_READ_ONLY  ? CL_MAP_READ
+             : flags & CL_MEM_WRITE_ONLY ? CL_MAP_WRITE
+             : 0;
+      }
     };
 
     // A buffer on the CPU (host), attached to a buffer on the GPU (device)
@@ -111,36 +107,37 @@ namespace LOFAR
       HostBuffer( DeviceBuffer &deviceBuffer, size_t size, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE )
       :
         deviceBuffer(deviceBuffer),
-        hostMemory(deviceBuffer.allocateHostBuffer(size, hostBufferFlags))
+        ptr(deviceBuffer.allocateHostBuffer(size, hostBufferFlags)),
+        size(size)
       {
       }
 
       ~HostBuffer()
       {
-        deviceBuffer.deallocateHostBuffer(hostMemory);
+        deviceBuffer.deallocateHostBuffer(ptr);
       }
 
       void hostToDevice(bool synchronous = false)
       {
-        deviceBuffer.hostToDevice(hostMemory, synchronous);
+        deviceBuffer.hostToDevice(ptr, size, synchronous);
       }
 
       void deviceToHost(bool synchronous = false)
       {
-        deviceBuffer.deviceToHost(hostMemory, synchronous);
+        deviceBuffer.deviceToHost(ptr, size, synchronous);
       }
-
-#if 0
-      operator DeviceBuffer& () {
-        return deviceBuffer;
-      }
-#endif
 
       DeviceBuffer &deviceBuffer;
-    public:
-      gpu::HostMemory hostMemory; // TODO: make private & fix WorkQueue users
-    private:
 
+      operator cl::Buffer& () {
+        return deviceBuffer;
+      }
+
+    protected:
+      void * const ptr;
+      const size_t size;
+
+    private:
       // Copying is expensive (requires allocation),
       // so forbid it to prevent accidental copying.
       HostBuffer(const HostBuffer &other);
@@ -155,7 +152,7 @@ namespace LOFAR
       MultiArrayHostBuffer(const ExtentList &extents, cl_mem_flags hostBufferFlags, DeviceBuffer &deviceBuffer)
       :
         HostBuffer(deviceBuffer, this->nrElements(extents) * sizeof(T), hostBufferFlags),
-        MultiDimArray<T,DIM>(extents, hostMemory.get<T>(), true)
+        MultiDimArray<T,DIM>(extents, static_cast<T*>(ptr), true)
       {
       }
 
@@ -171,10 +168,8 @@ namespace LOFAR
     {
     public:
       template <typename ExtentList>
-      MultiArraySharedBuffer(const ExtentList &extents, gpu::Stream &queue,
-                             cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE,
-                             cl_mem_flags deviceBufferFlags = CL_MEM_READ_WRITE) // unused arg w/ CUDA
-      :
+      MultiArraySharedBuffer(const ExtentList &extents, cl::CommandQueue &queue, cl_mem_flags hostBufferFlags = CL_MEM_READ_WRITE, cl_mem_flags deviceBufferFlags = CL_MEM_READ_WRITE)
+        :
         DeviceBuffer(queue, deviceBufferFlags, this->nrElements(extents) * sizeof(T)),
         MultiArrayHostBuffer<T, DIM>(extents, hostBufferFlags, *this)
       {
@@ -183,9 +178,7 @@ namespace LOFAR
       // Select the desired interface
       using HostBuffer::hostToDevice;
       using HostBuffer::deviceToHost;
-#if 0
       using DeviceBuffer::operator cl::Buffer&;
-#endif
     };
 
   } // namespace Cobalt

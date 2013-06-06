@@ -776,6 +776,7 @@ complex<_Tp> polar(const _Tp& __rho, const _Tp& __phi) {
 __device__ complex<float> sqrt(const complex<float>&);
 
 __device__ complex<float> exp(const complex<float>&);
+__device__ complex<float> cosisin(const float&);
 __device__ complex<float>  log(const complex<float>&);
 __device__ complex<float> log10(const complex<float>&);
 
@@ -796,6 +797,7 @@ __device__ complex<float> tanh(const complex<float>&);
 __device__ complex<double> sqrt(const complex<double>&);
 
 __device__ complex<double> exp(const complex<double>&);
+__device__ complex<double> cosisin(const double&);
 __device__ complex<double> log(const complex<double>&);
 __device__ complex<double> log10(const complex<double>&);
 
@@ -967,6 +969,19 @@ __device__ complex<float>  exp(const complex<float>& z)
 
 __device__ complex<double> exp(const complex<double>& z)
 { return expT(z); }
+
+//----------------------------------------------------------------------
+// cosisin
+template <class _Tp>
+__device__ 
+static complex<_Tp> cosisinT(const _Tp& angle) {
+  return complex<_Tp>(::cos(angle), ::sin(angle));
+}
+__device__ complex<float>  cosisin(const float& angle)
+{ return cosisinT(angle); }
+
+__device__ complex<double> cosisin(const double& angle)
+{ return cosisinT(angle); }
 
 #if 0
 //----------------------------------------------------------------------

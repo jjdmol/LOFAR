@@ -1,5 +1,5 @@
-//# tDelayCompensation.cc
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# BlockID.cc
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -20,15 +20,18 @@
 
 #include <lofar_config.h>
 
-#include <UnitTest++.h>
+#include "BlockID.h"
 
-TEST(FailSpectacularly)
+namespace LOFAR
 {
-  CHECK(false);
-}
+  namespace Cobalt
+  {
+    std::ostream &operator<<(std::ostream &str, const struct BlockID &id) {
+      str << "block " << id.block << " subband " << id.globalSubbandIdx << " (local index " << id.localSubbandIdx << ")";
 
-int main()
-{
-  return UnitTest::RunAllTests();
+      return str;
+    }
+
+  }
 }
 

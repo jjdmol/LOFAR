@@ -1,6 +1,5 @@
-//# Buffers.h
-//#
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# BlockID.h
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -19,23 +18,29 @@
 //#
 //# $Id$
 
-// \file
-// Support for our GPU processing buffer types.
+#ifndef LOFAR_GPUPROC_BLOCKID_H
+#define LOFAR_GPUPROC_BLOCKID_H
 
-#ifndef LOFAR_GPUPROC_BUFFERS_H
-#define LOFAR_GPUPROC_BUFFERS_H
+#include <iostream>
 
-#if defined (USE_CUDA) && defined (USE_OPENCL)
-# error "Either CUDA or OpenCL must be enabled, not both"
-#endif
+namespace LOFAR
+{
+  namespace Cobalt
+  {
+    struct BlockID {
+      // Block number: 0 .. inf
+      size_t block;
 
-#if defined (USE_CUDA)
-# include "cuda/Buffers.h"
-#elif defined (USE_OPENCL)
-# include "opencl/Buffers.h"
-#else
-# error "Either CUDA or OpenCL must be enabled, not neither"
-#endif
+      // Subband index in the observation: [0, ps.nrSubbands())
+      size_t globalSubbandIdx;
+
+      // Subband index for this pipeline/workqueue: [0, subbandIndices.size())
+      size_t localSubbandIdx;
+    };
+
+    std::ostream &operator<<(std::ostream &str, const struct BlockID &id);
+  } // namespace Cobalt
+} // namespace LOFAR
 
 #endif
 
