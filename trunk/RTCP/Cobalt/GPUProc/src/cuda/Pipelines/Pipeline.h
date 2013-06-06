@@ -44,8 +44,11 @@ namespace LOFAR
     public:
       Pipeline(const Parset &ps);
 
+      std::string createPTX(const std::string &srcFilename);
+
       gpu::Module createProgram(const gpu::Context &context,
-                                const std::string &srcFilename);
+                                const std::string &srcFilename,
+                                const std::string &ptx);
 
     protected:
       const Parset             &ps;
