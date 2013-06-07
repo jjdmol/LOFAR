@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tIntToFloatKernel
+./runctest.sh ./tIntToFloatKernel
