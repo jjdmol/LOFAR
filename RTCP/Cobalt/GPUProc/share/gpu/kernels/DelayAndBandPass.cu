@@ -45,6 +45,7 @@
 #include <cuda.h>
 
 #include "complex.cuh"
+#include "IntToFloat.cuh"
 
 #if NR_CHANNELS == 1
 #undef BANDPASS_CORRECTION  // TODO: Should this be an assert: this result in unexpected behaviour
@@ -187,13 +188,22 @@ extern "C" {
 #if NR_CHANNELS == 1
   for (unsigned time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x) 
   {
-    complexfloat sampleX = (*inputData)[station][time][0];
-    complexfloat sampleY = (*inputData)[station][time][1];
-#else
+    complexfloat sampleX = complexfloat(
+                                convertIntToFloat((*inputData)[station][time][0].real()),
+                                convertIntToFloat((*inputData)[station][time][0].imag()));          
+                                   
+    complexfloat sampleY = complexfloat(
+                                convertIntToFloat((*inputData)[station][time][1].real()),
+                                convertIntToFloat((*inputData)[station][time][1].imag()));           
+ #else
   for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16) 
   {
-    complexfloat sampleX = (*inputData)[station][0][time + major][channel + minor];    
-    complexfloat sampleY = (*inputData)[station][1][time + major][channel + minor];   
+    complexfloat sampleX = complexfloat(
+                        convertIntToFloat((*inputData)[station][0][time + major][channel + minor].real()),
+                        convertIntToFloat((*inputData)[station][0][time + major][channel + minor].imag()));
+    complexfloat sampleY = complexfloat(
+                        convertIntToFloat((*inputData)[station][1][time + major][channel + minor].real()),
+                        convertIntToFloat((*inputData)[station][1][time + major][channel + minor].imag()));                        
 #endif
 
 #if defined DELAY_COMPENSATION    
