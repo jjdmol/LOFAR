@@ -36,7 +36,7 @@ inline __device__ float convertIntToFloat(short x)
 	return x;
 }
 #elif NR_BITS_PER_SAMPLE == 8
-inline __device__ float convertIntToFloat(char x)
+inline __device__ float convertIntToFloat(signed char x)
 {
     // Edge case. -128 should be returned as -127
 	return x==-128 ? -127 : x;
