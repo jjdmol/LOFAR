@@ -51,8 +51,7 @@ extern "C" {
 {
   ConvertedDataType convertedData = (ConvertedDataType) convertedDataPtr;
   SampledDataType sampledData = (SampledDataType) sampledDataPtr;
-  
-  // Use the y dim for selecting the station. blockDim.y is normaly 1
+  // Use the y dim for selecting the station. blockDim.y is normally 1
   uint station = blockIdx.y * blockDim.y + threadIdx.y;
   
   // Step data with whole blocks allows for coalesced reads and writes
@@ -69,4 +68,5 @@ extern "C" {
   }
 }
 }
+
 
