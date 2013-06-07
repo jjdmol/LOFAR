@@ -24,6 +24,8 @@
 #include <string>
 #include <iostream>
 
+#include <boost/lexical_cast.hpp>
+
 #include <Common/Exception.h>
 #include <Common/LofarLogger.h>
 
@@ -34,11 +36,17 @@
 #include "TestUtil.h"
 
 using namespace std;
+using namespace boost;
 using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;
 using LOFAR::Exception;
 
-#define NR_BASELINES     (NR_STATIONS * (NR_STATIONS + 1) / 2)
+unsigned NR_STATIONS = 4;
+unsigned NR_CHANNELS = 16;
+unsigned NR_SAMPLES_PER_CHANNEL = 64;
+unsigned NR_POLARIZATIONS = 2;
+unsigned COMPLEX = 2;
+unsigned NR_BASELINES = (NR_STATIONS * (NR_STATIONS + 1) / 2);
 
 // 
 HostMemory runTest(gpu::Context ctx,
@@ -46,7 +54,7 @@ HostMemory runTest(gpu::Context ctx,
                    float * inputData,
                    string function)
 {
-  string kernelPath = "Correlator.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
+  string kernelFile = "Correlator.cu";
  
   cout << "\n==== runTest: function = " << function << " ====\n" << endl;
 
@@ -58,20 +66,15 @@ HostMemory runTest(gpu::Context ctx,
   // Compile to ptx
   // Set op string string pairs to be provided to the compiler as defines
   definitions["NVIDIA_CUDA"] = "";
-  definitions["NR_STATIONS"] = "2";
-  unsigned NR_STATIONS = 2;
-  definitions["NR_CHANNELS"] = "16";
-  unsigned NR_CHANNELS = 16;
-  definitions["NR_SAMPLES_PER_CHANNEL"] = "64";
-  unsigned NR_SAMPLES_PER_CHANNEL = 64;
-  definitions["NR_POLARIZATIONS"] = "2";
-  unsigned NR_POLARIZATIONS = 2;
-  definitions["COMPLEX"] = "2";
-  unsigned COMPLEX = 2;
+  definitions["NR_STATIONS"] = lexical_cast<string>(NR_STATIONS);
+  definitions["NR_CHANNELS"] = lexical_cast<string>(NR_CHANNELS);
+  definitions["NR_SAMPLES_PER_CHANNEL"] = lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
+  definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
+  definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
 
   vector<Device> devices(1, ctx.getDevice());
-  string ptx = createPTX(devices, kernelPath, flags, definitions);
-  gpu::Module module(createModule(ctx, kernelPath, ptx));
+  string ptx = createPTX(devices, kernelFile, flags, definitions);
+  gpu::Module module(createModule(ctx, kernelFile, ptx));
   Function  hKernel(module, function);  // c function this no argument overloading
 
   // *************************************************************
@@ -129,16 +132,8 @@ int main()
   gpu::Context ctx(device);
   Stream cuStream(ctx);
 
-  // Define type paramters
-  unsigned NR_STATIONS = 2;
-  unsigned NR_CHANNELS = 16;
-  unsigned NR_SAMPLES_PER_CHANNEL = 64;
-  unsigned NR_POLARIZATIONS = 2;
-  unsigned COMPLEX = 2;
-
   // Define dependend paramters
-  unsigned lengthInputData = NR_STATIONS * NR_CHANNELS * 
-    NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS *COMPLEX;
+  unsigned lengthInputData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS *COMPLEX;
   unsigned lengthOutputData = NR_BASELINES * NR_CHANNELS * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX;
 
   // Create data members
@@ -149,8 +144,10 @@ int main()
   const char * kernel_functions[] = {
     "correlate", "correlate_2x2", "correlate_3x3", "correlate_4x4"
   };
+  unsigned nr_kernel_functions =
+    sizeof(kernel_functions) / sizeof(kernel_functions[0]);
 
-  for (unsigned func_idx = 0; func_idx < 4; func_idx++) {
+  for (unsigned func_idx = 0; func_idx < nr_kernel_functions; func_idx++) {
     const char* function = kernel_functions[func_idx];
     
     // ***********************************************************
@@ -175,7 +172,8 @@ int main()
             cerr << idx_channels << " : ";
             for (unsigned idx = 0; idx < 8; ++idx)
               {
-                unsigned idx_in_output_data = idx_baseline * NR_CHANNELS * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX +
+                unsigned idx_in_output_data = 
+                  idx_baseline * NR_CHANNELS * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX +
                   idx_channels * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX +
                   idx;
                 cerr << outputData[idx_in_output_data] << ", " ;
@@ -216,7 +214,9 @@ int main()
         cerr << "idx_station: " << idx_station << endl;
         for (unsigned idx_channel = 0; idx_channel < 16; ++ idx_channel)
           {
-            for (unsigned idx_datapoint = 0; idx_datapoint< NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX ; ++ idx_datapoint)
+            for (unsigned idx_datapoint = 0; 
+                 idx_datapoint< NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX ; 
+                 ++ idx_datapoint)
               {
                 // In the input array step trough the channel
                 unsigned idx_inputdata = 
