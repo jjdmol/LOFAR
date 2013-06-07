@@ -1,4 +1,4 @@
-//# IntToFloat.cuh: Helper function for converting int to float
+//# IntToFloat.cuh: Helper function for converting integers to float
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -23,12 +23,12 @@
 #define LOFAR_GPUPROC_CUDA_INTTOFLOAT_CUH
 
 // \file cuda/IntToFloat.cuh
-// Function and operators for CUDA-device functions
+// Device function to convert integer types to float
 // This file contains a helper function for converting integer types to floats
 // The actual function used depends on the define NR_BITS_PER_SAMPLE
 // If this is 8 the input char get convert with instances of -128 clamped
 // to -127.
-// If NR_BITS_PER_SAMPLE == 16 a simple conversion is performed
+// If NR_BITS_PER_SAMPLE == 16 a simple conversion to float is performed
 
 #if NR_BITS_PER_SAMPLE == 16
 inline __device__ float convertIntToFloat(short x)
@@ -38,6 +38,7 @@ inline __device__ float convertIntToFloat(short x)
 #elif NR_BITS_PER_SAMPLE == 8
 inline __device__ float convertIntToFloat(char x)
 {
+    // Edge case. -128 should be returned as -127
 	return x==-128 ? -127 : x;
 }
 #else

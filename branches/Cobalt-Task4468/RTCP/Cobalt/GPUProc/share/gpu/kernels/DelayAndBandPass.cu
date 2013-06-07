@@ -45,28 +45,12 @@
 #include <cuda.h>
 
 #include "complex.cuh"
+#include "IntToFloat.cuh"
 
 #if NR_CHANNELS == 1
 #undef BANDPASS_CORRECTION  // TODO: Should this be an assert: this result in unexpected behaviour
 #endif
 
-//*********************************************************************************************************************
-#if NR_BITS_PER_SAMPLE == 16
-typedef short2 SampleType;
-__device__ float convertIntToFloat(short x)
-{
-    return x;
-}
-#elif NR_BITS_PER_SAMPLE == 8
-__device__ float convertIntToFloat(char x)
-{
-    return x==-128 ? -127 : x;
-}
-typedef char2 SampleType;
-#else
-#error unsupport NR_BITS_PER_SAMPLE
-#endif
-//*********************************************************************************************************************
 typedef LOFAR::Cobalt::gpu::complex<float> complexfloat;
 typedef LOFAR::Cobalt::gpu::complex<short> complexshort;
 typedef LOFAR::Cobalt::gpu::complex<char> complexchar;
