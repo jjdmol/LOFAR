@@ -43,12 +43,19 @@ namespace LOFAR
     }
 
 
-    gpu::Module Pipeline::createProgram(const gpu::Context &context,
-                                        const string &srcFilename)
+    std::string Pipeline::createPTX(const string &srcFilename)
     {
       flags_type flags(defaultFlags());
       definitions_type definitions(defaultDefinitions(ps));
-      string ptx(createPTX(devices, srcFilename, flags, definitions));
+
+      return LOFAR::Cobalt::createPTX(devices, srcFilename, flags, definitions);
+    }
+
+
+    gpu::Module Pipeline::createProgram(const gpu::Context &context,
+                                        const string &srcFilename,
+                                        const string &ptx)
+    {
       return createModule(context, srcFilename, ptx);
     }
 

@@ -103,19 +103,19 @@ namespace LOFAR
     // A CorrelatedData object tied to a HostBuffer and WorkQueue. Such links
     // After the visibilities have been written to storage, we need remember
     // the queue to recycle the buffer.
-    class CorrelatedDataHostBuffer: public CorrelatedData,
-                                    public MultiDimArrayHostBuffer<fcomplex, 4>
+    class CorrelatedDataHostBuffer: public MultiDimArrayHostBuffer<fcomplex, 4>,
+                                    public CorrelatedData
     {
     public:
       CorrelatedDataHostBuffer(unsigned nrStations, unsigned nrChannels,
                                unsigned maxNrValidSamples, gpu::Context &context,
                                CorrelatorWorkQueue &workQueue)
       :
-        CorrelatedData(nrStations, nrChannels, maxNrValidSamples, this->origin(),
-                       this->num_elements(), heapAllocator, 1),
         MultiDimArrayHostBuffer<fcomplex, 4>(boost::extents[nrStations * (nrStations + 1) / 2]
                                                            [nrChannels][NR_POLARIZATIONS]
                                                            [NR_POLARIZATIONS], context, 0),
+        CorrelatedData(nrStations, nrChannels, maxNrValidSamples, this->origin(),
+                       this->num_elements(), heapAllocator, 1),
         workQueue(workQueue)
       {
       }
