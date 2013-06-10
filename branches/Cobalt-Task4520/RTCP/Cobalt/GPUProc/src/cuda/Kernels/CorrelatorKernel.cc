@@ -35,6 +35,8 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    using gpu::GPUException;
+
 #if !defined USE_NEW_CORRELATOR
     CorrelatorKernel::CorrelatorKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
       :
@@ -181,6 +183,24 @@ namespace LOFAR
     }
 
 #endif
+
+    size_t CorrelatorKernel::bufferSize(const Parset& ps, BufferType bufferType)
+    {
+      switch(bufferType) {
+      case(INPUT_DATA):
+        return 
+          ps.nrHistorySamples() * ps.nrStations() * 
+          NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
+      case(OUTPUT_DATA):
+        return std::max
+          (ps.nrStations() * NR_POLARIZATIONS * 
+           ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+           ps.nrBaselines() * ps.nrChannelsPerSubband() * 
+           NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
+      default: 
+        THROW(GPUException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
 
   }
 }

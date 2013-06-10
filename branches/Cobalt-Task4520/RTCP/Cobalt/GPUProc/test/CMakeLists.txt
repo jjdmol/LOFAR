@@ -6,8 +6,6 @@ include(LofarCTest)
 # source files and headers in subdirectories include UnitTest.h
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_definitions("-DLOFARROOT=${CMAKE_CURRENT_SOURCE_DIR}/..")
-
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
 
@@ -24,6 +22,8 @@ lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp)
 #lofar_add_test(tGPUPerformance DEPENDS rtcp) # performance measurement and comparison are broken
+
+lofar_add_test(tCorrelatorKernel tCorrelatorKernel)
 
 if(USE_CUDA)
   add_subdirectory(cuda)

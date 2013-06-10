@@ -38,6 +38,15 @@ namespace LOFAR
     public:
       CorrelatorKernel(const Parset &ps, gpu::Stream &queue,
                        gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
+
     };
 
 #else
