@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tCorrelatorWorkQueue
+./runctest.sh tCorrelatorWorkQueueProcessSb
