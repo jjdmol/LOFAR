@@ -41,6 +41,7 @@ set_tests_properties(
   tCorrelator
   tIntToFloat
   tIntToFloatKernel
+  tCorrelatorWorkQueueProcessSb
   #tFFT_leakage
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
 )
