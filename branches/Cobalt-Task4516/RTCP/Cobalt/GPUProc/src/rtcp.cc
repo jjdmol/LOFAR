@@ -36,6 +36,8 @@
 #ifdef HAVE_MPI
 #include <mpi.h>
 #include <InputProc/Transpose/MPISendStation.h>
+#else
+#include <GPUProc/DirectInput.h>
 #endif
 
 #include <boost/format.hpp>
@@ -82,7 +84,6 @@ int nrHosts = 1;
 // Which MPI rank receives which subbands.
 map<int, vector<size_t> > subbandDistribution; // rank -> [subbands]
 
-#ifdef HAVE_MPI
 // An MPI send process, sending data for one station.
 template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 {
@@ -176,10 +177,14 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 
       BlockReader<SampleT> reader(s, beamlets, ps.nrHistorySamples(), 0.25);
 
+#ifdef HAVE_MPI
       /*
        * Set up the MPI send engine.
        */
       MPISendStation sender(s, rank, subbandDistribution);
+#else
+
+#endif
 
       /*
        * Set up delay compensation.
@@ -220,8 +225,40 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 
         //LOG_INFO_STR("Block read");
 
+#ifdef HAVE_MPI
         // Send the block to the receivers
         sender.sendBlock<SampleT>(*block, metaDatas);
+#else
+
+        for (size_t subband = 0; subband < block->beamlets.size(); ++subband) {
+          const struct Block<SampleT>::Beamlet &beamlet = block->beamlets[subband];
+
+          /* create new block */
+          SmartPtr<struct InputBlock> pblock = new InputBlock;
+
+          pblock->samples.resize((ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * sizeof(SampleT));
+
+          /* copy metadata */
+          pblock->metaData = metaDatas[subband];
+
+          /* copy data */
+          const size_t nrBytesRange0 = (beamlet.ranges[0].to - beamlet.ranges[0].from) * sizeof(SampleT);
+
+          memcpy(&pblock->samples[0], beamlet.ranges[0].from, nrBytesRange0);
+
+          if (beamlet.nrRanges > 1) {
+            const size_t nrBytesRange1 = (beamlet.ranges[1].to - beamlet.ranges[1].from) * sizeof(SampleT);
+
+            memcpy(&pblock->samples[nrBytesRange0], beamlet.ranges[1].from, nrBytesRange1);
+          }
+
+          /* obtain flags (after reading the data!) */
+          pblock->metaData.flags = beamlet.flagsAtBegin | block->flags(subband);
+
+          /* send to pipeline */
+          stationDataQueues[stationIdx][subband]->append(pblock);
+        }
+#endif
 
         //LOG_INFO_STR("Block sent");
 
@@ -236,7 +273,24 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
     }
   }
 }
-#endif
+
+void sender(const Parset &ps, size_t stationIdx)
+{
+  switch (ps.nrBitsPerSample()) {
+    default:
+    case 16: 
+      sender< SampleType<i16complex> >(ps, stationIdx);
+      break;
+
+    case 8: 
+      sender< SampleType<i8complex> >(ps, stationIdx);
+      break;
+
+    case 4: 
+      sender< SampleType<i4complex> >(ps, stationIdx);
+      break;
+  }
+}
 
 enum SELECTPIPELINE { correlator, beam, UHEP,unittest};
 
@@ -395,34 +449,44 @@ int main(int argc, char **argv)
     ASSERTSTR(subbandDistribution.find(rank) == subbandDistribution.end(), "An MPI rank can't both send station data and receive it.");
 
     /*
-     * Send station data
+     * Send station data for station #rank
      */
-    switch (ps.nrBitsPerSample()) {
-    default:
-    case 16: 
-      sender< SampleType<i16complex> >(ps, rank);
-      break;
-
-    case 8: 
-      sender< SampleType<i8complex> >(ps, rank);
-      break;
-
-    case 4: 
-      sender< SampleType<i4complex> >(ps, rank);
-      break;
-    }
-
+    sender(ps, rank);
   } else if (subbandDistribution.find(rank) != subbandDistribution.end()) {
     /*
      * Receive and process station data
      */
-
     runPipeline(option, ps, subbandDistribution[rank]);
   } else {
     LOG_WARN_STR("Superfluous MPI rank");
   }
 #else
-  runPipeline(option, ps, subbandDistribution[rank]);
+  // No MPI -- run the same stuff, but multithreaded
+
+  // Create queues to forward station data
+  stationDataQueues.resize(boost::extents[ps.nrStations()][ps.nrSubbands()]);
+
+  for (size_t stat = 0; stat < ps.nrStations(); ++stat)
+    for (size_t sb = 0; sb < ps.nrSubbands(); ++sb)
+      stationDataQueues[stat][sb] = new Queue< SmartPtr<struct InputBlock> >;
+
+  #pragma omp parallel sections
+  {
+    #pragma omp section
+    {
+      // Read and forward station data
+      #pragma omp parallel for num_threads(ps.nrStations())
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+        sender(ps, stat);
+      }
+    }
+
+    #pragma omp section
+    {
+      // Process station data
+      runPipeline(option, ps, subbandDistribution[rank]);
+    }
+  }
 #endif
 
   /*

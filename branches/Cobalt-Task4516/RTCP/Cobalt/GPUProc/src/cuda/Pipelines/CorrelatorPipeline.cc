@@ -39,6 +39,8 @@
 
 #ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIReceiveStations.h>
+#else
+#include <GPUProc/DirectInput.h>
 #endif
 
 #include <GPUProc/OpenMP_Lock.h>
@@ -244,6 +246,8 @@ namespace LOFAR
         stationRanks[stat] = stat;
       }
 
+      size_t workQueueIterator = 0;
+
 #ifdef HAVE_MPI
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 
@@ -257,8 +261,6 @@ namespace LOFAR
       for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
         blocks[stat].beamlets.resize(subbandIndices.size());
       }
-
-      size_t workQueueIterator = 0;
 
       for (size_t block = 0; block < nrBlocks; block++) {
         // Receive the samples of all subbands from the stations for this
@@ -302,31 +304,54 @@ namespace LOFAR
           CorrelatorWorkQueue &queue = *inputDatas[inputIdx].queue;
           SmartPtr<WorkQueueInputData> data = inputDatas[inputIdx].data;
 
+          const unsigned SAP = ps.settings.subbands[data->blockID.globalSubbandIdx].SAP;
+
           // Translate the metadata as provided by receiver
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
             SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
 
-            // extract and apply the flags
             // TODO: Not in this thread! Add a preprocess thread maybe?
-            data->inputFlags[stat] = metaData.flags;
-
-            data->flagInputSamples(stat, metaData);
-
-            // extract and assign the delays for the station beams
-            for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++)
-            {
-              unsigned sap = ps.settings.subbands[data->blockID.globalSubbandIdx].SAP;
-
-              data->delaysAtBegin[sap][stat][pol] = metaData.stationBeam.delayAtBegin;
-              data->delaysAfterEnd[sap][stat][pol] = metaData.stationBeam.delayAfterEnd;
-              data->phaseOffsets[stat][pol] = 0.0;
-            }
+            data->applyMetaData(stat, SAP, metaData);
           }
 
           queue.inputPool.filled.append(data);
         }
 
         LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
+      }
+#else
+      // No MPI -- read data from the stationDataQueues
+      for (size_t block = 0; block < nrBlocks; block++) {
+        LOG_INFO_STR("[block " << block << "] Reading input samples");
+
+        for (size_t i = 0; i < subbandIndices.size(); ++i) {
+          unsigned subband = subbandIndices[i];
+
+          // Fetch an input object to store this inputIdx. For now, blindly
+          // round-robin over the work queues.
+          CorrelatorWorkQueue &queue = *workQueues[workQueueIterator++ % workQueues.size()];
+
+          // Fetch an input object to fill from the selected queue.
+          SmartPtr<WorkQueueInputData> data = queue.inputPool.free.remove();
+
+          data->blockID.block = block;
+          data->blockID.globalSubbandIdx = subband;
+          data->blockID.localSubbandIdx = i;
+
+          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+            SmartPtr<struct InputBlock> pblock = stationDataQueues[stat][subband]->remove();
+
+            SubbandMetaData &metaData = pblock->metaData;
+            const unsigned SAP = ps.settings.subbands[subband].SAP;
+
+            // TODO: Not in this thread! Add a preprocess thread maybe?
+            data->applyMetaData(stat, SAP, metaData);
+          }
+
+          queue.inputPool.filled.append(data);
+
+          LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
+        }
       }
 #endif
 
