@@ -1,4 +1,4 @@
-//# tFFT.cc: test the FFT kernel
+//# tFFT_leakage.cc
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -76,9 +76,16 @@ bool cmp_fcomplex(const fcomplex &a, const fcomplex &b, const float epsilon = EP
 
 
 int main() {
-  INIT_LOGGER("tFFT");
+  INIT_LOGGER("tFFT_leakage");
   Parset ps("tFFT_leakage.in_.parset");
-  gpu::Platform pf;
+
+  try {
+    gpu::Platform pf;
+    cout << "Detected " << pf.size() << " CUDA devices" << endl;
+  } catch (gpu::CUDAException& e) {
+    cerr << e.what() << endl;
+    return 3;
+  }
   gpu::Device device(0);
   gpu::Context ctx(device);
 

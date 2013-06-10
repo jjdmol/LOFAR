@@ -36,7 +36,13 @@ int main() {
   
   
   // Set up gpu environment
-  gpu::Platform pf;
+  try {
+    gpu::Platform pf;
+    cout << "Detected " << pf.size() << " CUDA devices" << endl;
+  } catch (gpu::CUDAException& e) {
+    cerr << e.what() << endl;
+    return 3;
+  }
   gpu::Device device(0);
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
