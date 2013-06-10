@@ -82,13 +82,13 @@ namespace LOFAR
                              devInput.phaseOffsets,
                              devBandPassCorrectionWeights),
 #if defined USE_NEW_CORRELATOR
-      correlateTriangleKernel(ps, queue, programs.correlatorProgram,
+      correlateTriangleKernel(ps, programs.correlatorProgram,
                               devFilteredData, devInput.inputSamples),
-      correlateRectangleKernel(ps, queue, programs.correlatorProgram, 
-                              devFilteredData, devInput.inputSamples)
+      correlateRectangleKernel(ps, programs.correlatorProgram, 
+                               devFilteredData, devInput.inputSamples)
 #else
-      correlatorKernel(ps, queue, programs.correlatorProgram, 
-                              devFilteredData, devInput.inputSamples)
+      correlatorKernel(ps, programs.correlatorProgram, 
+                       devFilteredData, devInput.inputSamples)
 #endif
     {
       // put enough objects in the inputPool to operate

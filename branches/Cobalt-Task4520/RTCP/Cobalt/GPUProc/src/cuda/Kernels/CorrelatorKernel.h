@@ -36,8 +36,10 @@ namespace LOFAR
     class CorrelatorKernel : public Kernel
     {
     public:
-      CorrelatorKernel(const Parset &ps, gpu::Stream &queue,
-                       gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
+      CorrelatorKernel(const Parset &ps, 
+                       gpu::Module &program, 
+                       gpu::DeviceMemory &devVisibilities, 
+                       gpu::DeviceMemory &devCorrectedData);
 
       enum BufferType
       {
@@ -45,6 +47,7 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
+      // Return required buffer size for \a bufferType
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
     };
@@ -54,23 +57,29 @@ namespace LOFAR
     class CorrelatorKernel : public Kernel
     {
     public:
-      CorrelatorKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
-                       gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
+      CorrelatorKernel(const Parset &ps, 
+                       gpu::Module &program,
+                       gpu::DeviceMemory &devVisibilities,
+                       gpu::DeviceMemory &devCorrectedData);
 
     };
 
     class CorrelateRectangleKernel : public Kernel
     {
     public:
-      CorrelateRectangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
-                               gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
+      CorrelateRectangleKernel(const Parset &ps,
+                               gpu::Module &program,
+                               gpu::DeviceMemory &devVisibilities,
+                               gpu::DeviceMemory &devCorrectedData);
     };
 
     class CorrelateTriangleKernel : public Kernel
     {
     public:
-      CorrelateTriangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
-                              gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData);
+      CorrelateTriangleKernel(const Parset &ps, 
+                              gpu::Module &program,
+                              gpu::DeviceMemory &devVisibilities,
+                              gpu::DeviceMemory &devCorrectedData);
     };
 
 #endif

@@ -28,6 +28,7 @@
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 #include <CoInterface/Align.h>
+#include <CoInterface/Exceptions.h>
 
 #include <GPUProc/global_defines.h>
 
@@ -35,10 +36,12 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    using gpu::GPUException;
 
 #if !defined USE_NEW_CORRELATOR
-    CorrelatorKernel::CorrelatorKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
+    CorrelatorKernel::CorrelatorKernel(const Parset &ps, 
+                                       gpu::Module &program,
+                                       gpu::DeviceMemory &devVisibilities,
+                                       gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_4X4
       Kernel(ps, program, "correlate_4x4")
@@ -54,17 +57,14 @@ namespace LOFAR
       setArg(1, devCorrectedData);
 
       size_t maxNrThreads, preferredMultiple;
-      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
 
       //std::vector<cl_context_properties> properties;
-      //queue.getInfo<CL_QUEUE_CONTEXT>().getInfo(CL_CONTEXT_PROPERTIES, &properties);
       //if (gpu::Platform((cl_platform_id) properties[1]).getInfo<CL_PLATFORM_NAME>() == "AMD Accelerated Parallel Processing") {
       gpu::Platform pf; // Redecl not so great. Generalize for OpenCL later, then remove prev commented lines
       if (pf.getName() == "AMD Accelerated Parallel Processing") {
         preferredMultiple = 256;
       } else {
-        //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
         preferredMultiple = 64; // FOR NVIDIA CUDA, there is no call to get this. Could check what the NV OCL pf says, but set to 64 for now. Generalize later.
       }
 
@@ -97,7 +97,10 @@ namespace LOFAR
 #else
 
 
-    CorrelatorKernel::CorrelatorKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
+    CorrelatorKernel::CorrelatorKernel(const Parset &ps, 
+                                       gpu::Module &program,
+                                       gpu::DeviceMemory &devVisibilities,
+                                       gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_2X2
       Kernel(ps, program, "correlate")
@@ -127,7 +130,11 @@ namespace LOFAR
       nrBytesWritten = (size_t) (32 * 32) * nrRectangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
 
-    CorrelateRectangleKernel::CorrelateRectangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
+    CorrelateRectangleKernel::
+    CorrelateRectangleKernel(const Parset &ps,
+                             gpu::Module &program,
+                             gpu::DeviceMemory &devVisibilities,
+                             gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_2X2
       Kernel(ps, program, "correlateRectangleKernel")
@@ -152,7 +159,11 @@ namespace LOFAR
     }
 
 
-    CorrelateTriangleKernel::CorrelateTriangleKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devVisibilities, gpu::DeviceMemory &devCorrectedData)
+    CorrelateTriangleKernel::
+    CorrelateTriangleKernel(const Parset &ps,
+                            gpu::Module &program,
+                            gpu::DeviceMemory &devVisibilities,
+                            gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_2X2
       Kernel(ps, program, "correlateTriangleKernel")
@@ -167,7 +178,6 @@ namespace LOFAR
       unsigned nrMiniBlocksPerSide = 16;
       unsigned nrMiniBlocks = nrMiniBlocksPerSide * (nrMiniBlocksPerSide + 1) / 2;
       size_t preferredMultiple;
-      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &preferredMultiple);
       preferredMultiple = 64; // FOR NVIDIA CUDA, there is no call to get this. Could check what the NV OCL pf says, but set to 64 for now. Generalize later.
       unsigned nrThreads = align(nrMiniBlocks, preferredMultiple);
 
@@ -198,7 +208,7 @@ namespace LOFAR
            ps.nrBaselines() * ps.nrChannelsPerSubband() * 
            NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
       default: 
-        THROW(GPUException, "Invalid bufferType (" << bufferType << ")");
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
     }
 
