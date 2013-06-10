@@ -12,6 +12,6 @@ OLAP.CNProc_IncoherentStokes.which	 = I # IQUV
 OLAP.delayCompensation			 = F
 Observation.nrPolarisations		 = 2
 Observation.subbandList			 = [300..301]
-Observation.beamList			 = [1*0]
+Observation.beamList			 = [2*0]
 Observation.channelsPerSubband		 = 1
 Observation.sampleClock			 = 200
