@@ -25,6 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 
+using namespace std;
 using namespace LOFAR::Cobalt;
 
 static bool test1(gpu::Context &ctx, gpu::Stream &queue, size_t dim1)
@@ -46,7 +47,7 @@ static bool test1(gpu::Context &ctx, gpu::Stream &queue, size_t dim1)
   queue.readBuffer(b1out, d1, true);
 
   // check
-  return std::memcmp(b1.get<void>(), b1out.get<void>(), dim1 * sizeof(float)) == 0;
+  return memcmp(b1.get<void>(), b1out.get<void>(), dim1 * sizeof(float)) == 0;
 }
 
 static bool test2(gpu::Context &ctx, gpu::Stream &queue, size_t dim1, size_t dim2)
@@ -69,7 +70,7 @@ static bool test2(gpu::Context &ctx, gpu::Stream &queue, size_t dim1, size_t dim
   queue.readBuffer(b2out, d2, true);
 
   // check
-  return std::memcmp(b2.get<void>(), b2out.get<void>(), dim1 * dim2 * sizeof(float)) == 0;
+  return memcmp(b2.get<void>(), b2out.get<void>(), dim1 * dim2 * sizeof(float)) == 0;
 }
 
 static bool test3(gpu::Context &ctx, gpu::Stream &queue, size_t dim1, size_t dim2, size_t dim3)
@@ -93,18 +94,19 @@ static bool test3(gpu::Context &ctx, gpu::Stream &queue, size_t dim1, size_t dim
   queue.readBuffer(b3out, d3, true);
 
   // check
-  return std::memcmp(b3.get<void>(), b3out.get<void>(), dim1 * dim2 * dim3 * sizeof(float)) == 0;
+  return memcmp(b3.get<void>(), b3out.get<void>(), dim1 * dim2 * dim3 * sizeof(float)) == 0;
 }
 
 int main() {
   INIT_LOGGER("tMultiDimArrayHostBuffer");
 
   // Set up gpu environment
-  gpu::Platform pf;
-  if (pf.size() == 0)
-  {
-    LOG_WARN("test skipped: no devices found");
-    return 3; // test skipped
+  try {
+    gpu::Platform pf;
+    cout << "Detected " << pf.size() << " CUDA devices" << endl;
+  } catch (gpu::CUDAException& e) {
+    cerr << e.what() << endl;
+    return 3;
   }
   gpu::Device device(0);
   gpu::Context ctx(device);
