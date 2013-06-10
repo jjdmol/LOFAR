@@ -6,7 +6,7 @@ PANEL,-1 -1 128 81 N "_3DFace" 1
 "main()
 {
   observation = $observation;
-  delay(10);
+  delay(5);
   reload();
 }
   
