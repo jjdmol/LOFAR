@@ -41,7 +41,6 @@
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/WorkQueues/WorkQueue.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
-#include <GPUProc/gpu_utils.h>
 
 #ifdef USE_B7015
 # include <GPUProc/global_defines.h>
@@ -97,12 +96,12 @@ namespace LOFAR
       for (size_t i = 0; i < nrWorkQueues; ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        programs.firFilterProgram = createModule(context, "FIR_Filter.cu", ptx["FIR_Filter.cu"]);
-        programs.delayAndBandPassProgram = createModule(context, "DelayAndBandPass.cu", ptx["DelayAndBandPass.cu"]);
+        programs.firFilterProgram = createProgram(context, "FIR_Filter.cu", ptx["FIR_Filter.cu"]);
+        programs.delayAndBandPassProgram = createProgram(context, "DelayAndBandPass.cu", ptx["DelayAndBandPass.cu"]);
 #if defined USE_NEW_CORRELATOR
-        programs.correlatorProgram = createModule(context, "NewCorrelator.cu", ptx["NewCorrelator.cu"]);
+        programs.correlatorProgram = createProgram(context, "NewCorrelator.cu", ptx["NewCorrelator.cu"]);
 #else
-        programs.correlatorProgram = createModule(context, "Correlator.cu", ptx["Correlator.cu"]);
+        programs.correlatorProgram = createProgram(context, "Correlator.cu", ptx["Correlator.cu"]);
 #endif
 
         workQueues[i] = new CorrelatorWorkQueue(ps, context, programs, filterBank);
