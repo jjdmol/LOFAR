@@ -23,25 +23,38 @@
 #include <GPUProc/Kernels/CorrelatorKernel.h>
 #include <CoInterface/Parset.h>
 #include <Common/lofar_iostream.h>
+#include <UnitTest++.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
-int main(int argc, char* argv[])
+struct TestFixture
 {
-  INIT_LOGGER(argv[0]);
-  if (argc < 2) {
-    cerr << "Usage: " << argv[0] << " <parset-file>" << endl;
-    return 1;
-  }
+  TestFixture() : ps("tCorrelatorKernel.in_parset") {}
+  ~TestFixture() {}
+  Parset ps;
+};
 
-  Parset ps(argv[1]);
-  cout << "Input buffer size: " 
-       << CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA)
-       << endl;
-  cout << "Output buffer size: " 
-       << CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA)
-       << endl;
-  CorrelatorKernel::bufferSize(ps, CorrelatorKernel::BufferType(2));
-  return 0;
+TEST_FIXTURE(TestFixture, InputData)
+{
+  CHECK_EQUAL(size_t(960),
+              CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA));
+}
+
+TEST_FIXTURE(TestFixture, OutputData)
+{
+  CHECK_EQUAL(size_t(786432),
+              CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA));
+}
+
+TEST_FIXTURE(TestFixture, MustThrow)
+{
+  CHECK_THROW(CorrelatorKernel::bufferSize(ps, CorrelatorKernel::BufferType(2)),
+              GPUProcException);
+}
+
+int main()
+{
+  INIT_LOGGER("tCorrelatorKernel");
+  return UnitTest::RunAllTests() > 0;
 }
