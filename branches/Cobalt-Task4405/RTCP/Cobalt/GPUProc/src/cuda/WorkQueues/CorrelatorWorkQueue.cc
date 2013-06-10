@@ -454,7 +454,7 @@ namespace LOFAR
 
     void CorrelatorWorkQueue::postprocessSubband(CorrelatedDataHostBuffer &output)
     {
-      // The flags are alrady copied to the correct location
+      // The flags are already copied to the correct location
       // now the flagged amount should be applied to the visibilities
       switch (output.itsNrBytesPerNrValidSamples) {
         case 4:
