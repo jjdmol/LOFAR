@@ -48,7 +48,9 @@
 #include "IntToFloat.cuh"
 
 #if NR_CHANNELS == 1
-#undef BANDPASS_CORRECTION  // TODO: Should this be an assert: this result in unexpected behaviour
+   // #chnl==1 && BANDPASS_CORRECTION is rejected on the CPU early, (TODO)
+   // but once here, don't do difficult and adjust cleanly here.
+#  undef BANDPASS_CORRECTION
 #endif
 
 typedef LOFAR::Cobalt::gpu::complex<float> complexfloat;
@@ -105,10 +107,6 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
  *                                 ::BandPassFactorsType, a 1D array [channel] of
  *                                 float, containing bandpass correction factors
  */
-
-#if NR_CHANNELS == 1
-#error Support for 1 channel per subband has not yet been implemented due to missing int to float conversion routines.
-#endif
 
 extern "C" {
  __global__ void applyDelaysAndCorrectBandPass( complexfloat * correctedDataPtr,
@@ -186,24 +184,23 @@ extern "C" {
 #endif
 
 #if NR_CHANNELS == 1
-  for (unsigned time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x) 
+  for (unsigned time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x)
   {
     complexfloat sampleX = complexfloat(
                                 convertIntToFloat((*inputData)[station][time][0].real()),
-                                convertIntToFloat((*inputData)[station][time][0].imag()));          
-                                   
+                                convertIntToFloat((*inputData)[station][time][0].imag()));
     complexfloat sampleY = complexfloat(
                                 convertIntToFloat((*inputData)[station][time][1].real()),
-                                convertIntToFloat((*inputData)[station][time][1].imag()));           
- #else
-  for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16) 
+                                convertIntToFloat((*inputData)[station][time][1].imag()));
+#else
+  for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16)
   {
     complexfloat sampleX = complexfloat(
-                        convertIntToFloat((*inputData)[station][0][time + major][channel + minor].real()),
-                        convertIntToFloat((*inputData)[station][0][time + major][channel + minor].imag()));
+                        (*inputData)[station][0][time + major][channel + minor].real(),
+                        (*inputData)[station][0][time + major][channel + minor].imag());
     complexfloat sampleY = complexfloat(
-                        convertIntToFloat((*inputData)[station][1][time + major][channel + minor].real()),
-                        convertIntToFloat((*inputData)[station][1][time + major][channel + minor].imag()));                        
+                        (*inputData)[station][1][time + major][channel + minor].real(),
+                        (*inputData)[station][1][time + major][channel + minor].imag());
 #endif
 
 #if defined DELAY_COMPENSATION    

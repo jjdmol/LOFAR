@@ -837,7 +837,7 @@ namespace LOFAR
         }
 
         _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
-                               hostMem.get<void *>(),
+                               hostMem.get<void>(),
                                hostMem.size());
         if (synchronous || force_synchronous) {
           synchronize();
@@ -854,7 +854,7 @@ namespace LOFAR
         // needed here.
         size_t size = std::min(devMem.size(), hostMem.size());
 
-        _impl->memcpyDtoHAsync(hostMem.get<void *>(), 
+        _impl->memcpyDtoHAsync(hostMem.get<void>(),
                                (CUdeviceptr)devMem.get(),
                                size);
         if (synchronous || force_synchronous) {

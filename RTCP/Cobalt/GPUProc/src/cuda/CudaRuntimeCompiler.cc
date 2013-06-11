@@ -61,7 +61,7 @@ namespace LOFAR
     using boost::format;
 
     //flags.insert("device-debug");
-    flags.insert("use_fast_math");
+    flags.insert("use_fast_math"); // TODO: If this simplifies trig funcs, verify effect on the BPDelayKernel. Ideally, a Kernel specifies when to enable build flags.
 
     // gpu-architecture and -Ipath are set by createPTX()
 
