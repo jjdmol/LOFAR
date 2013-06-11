@@ -35,8 +35,12 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-#if !defined USE_NEW_CORRELATOR
-    CorrelatorKernel::CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
+
+    CorrelatorKernel::CorrelatorKernel(const Parset &ps,
+                                       cl::CommandQueue &queue,
+                                       cl::Program &program,
+                                       cl::Buffer &devVisibilities,
+                                       cl::Buffer &devCorrectedData)
       :
 # if defined USE_4X4
       Kernel(ps, program, "correlate_4x4")
@@ -88,8 +92,27 @@ namespace LOFAR
       nrBytesWritten = (size_t) ps.nrBaselines() * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
 
-#else
+    size_t CorrelatorKernel::bufferSize(const Parset& ps, BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA:
+        return 
+          (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) *
+          ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
+      case OUTPUT_DATA:
+        return std::max(
+          // size FIR filter kernel
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+          // size correlator kernel
+          ps.nrBaselines() * ps.nrChannelsPerSubband() * 
+          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
+      default: 
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
 
+#if defined USE_NEW_CORRELATOR
 
     CorrelatorKernel::CorrelatorKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
       :
@@ -146,6 +169,28 @@ namespace LOFAR
     }
 
 
+    size_t CorrelatorRectangleKernel::bufferSize(const Parset& ps, 
+                                                 BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA:
+        return 
+          (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) *
+          ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
+      case OUTPUT_DATA:
+        return std::max(
+          // size FIR filter kernel
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+          // size correlator kernel
+          ps.nrBaselines() * ps.nrChannelsPerSubband() * 
+          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
+      default: 
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
+
     CorrelateTriangleKernel::CorrelateTriangleKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program, cl::Buffer &devVisibilities, cl::Buffer &devCorrectedData)
       :
 # if defined USE_2X2
@@ -173,6 +218,27 @@ namespace LOFAR
       nrOperations = (size_t) (32 * 32 / 2) * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * 32;
       nrBytesRead = (size_t) 32 * nrTriangles * nrUsableChannels * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
       nrBytesWritten = (size_t) (32 * 32 / 2) * nrTriangles * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+    }
+
+    size_t CorrelatorTriangleKernel::bufferSize(const Parset& ps,
+                                                BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA:
+        return 
+          (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) *
+          ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
+      case OUTPUT_DATA:
+        return std::max(
+          // size FIR filter kernel
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+          // size correlator kernel
+          ps.nrBaselines() * ps.nrChannelsPerSubband() * 
+          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
+      default: 
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
     }
 
 #endif
