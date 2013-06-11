@@ -71,7 +71,7 @@ namespace LOFAR
       devFIRweights(context, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
       devBandPassCorrectionWeights(context, ps.nrChannelsPerSubband() * sizeof(float)),
 
-      firFilterKernel(ps, queue, programs.firFilterProgram,
+      firFilterKernel(ps, programs.firFilterProgram,
                       devFilteredData, devInput.inputSamples, devFIRweights),
       fftKernel(ps, context, devFilteredData),
       delayAndBandPassKernel(ps, programs.delayAndBandPassProgram,

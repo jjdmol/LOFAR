@@ -14,6 +14,7 @@ lofar_add_executable(DummyStorage DummyStorage.cc)
 lofar_add_test(tStorageProcesses tStorageProcesses.cc DEPENDS DummyStorage)
 
 if(UNITTEST++_FOUND)
+  lofar_add_test(tCorrelatorKernel tCorrelatorKernel)
   lofar_add_test(tCorrelatorWorkQueue tCorrelatorWorkQueue.cc)
 endif()
 
@@ -22,8 +23,6 @@ lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp)
 #lofar_add_test(tGPUPerformance DEPENDS rtcp) # performance measurement and comparison are broken
-
-lofar_add_test(tCorrelatorKernel tCorrelatorKernel)
 
 if(USE_CUDA)
   add_subdirectory(cuda)

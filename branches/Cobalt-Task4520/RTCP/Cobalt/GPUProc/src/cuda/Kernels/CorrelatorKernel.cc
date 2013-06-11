@@ -196,17 +196,19 @@ namespace LOFAR
 
     size_t CorrelatorKernel::bufferSize(const Parset& ps, BufferType bufferType)
     {
-      switch(bufferType) {
-      case(INPUT_DATA):
+      switch (bufferType) {
+      case INPUT_DATA:
         return 
-          ps.nrHistorySamples() * ps.nrStations() * 
-          NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
-      case(OUTPUT_DATA):
-        return std::max
-          (ps.nrStations() * NR_POLARIZATIONS * 
-           ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-           ps.nrBaselines() * ps.nrChannelsPerSubband() * 
-           NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
+          (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) *
+          ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
+      case OUTPUT_DATA:
+        return std::max(
+          // size FIR filter kernel
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+          // size correlator kernel
+          ps.nrBaselines() * ps.nrChannelsPerSubband() * 
+          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
       default: 
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

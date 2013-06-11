@@ -33,9 +33,22 @@ namespace LOFAR
     class FIR_FilterKernel : public Kernel
     {
     public:
-      FIR_FilterKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
-                       gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devInputSamples,
+      FIR_FilterKernel(const Parset &ps,
+                       gpu::Module &program,
+                       gpu::DeviceMemory &devFilteredData,
+                       gpu::DeviceMemory &devInputSamples,
                        gpu::DeviceMemory &devFIRweights);
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        FILTER_WEIGHTS
+      };
+
+      // Return required buffer size for \a bufferType
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
+
     };
   }
 }

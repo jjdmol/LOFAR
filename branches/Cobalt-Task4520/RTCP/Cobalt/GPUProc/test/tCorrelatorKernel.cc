@@ -37,7 +37,7 @@ struct TestFixture
 
 TEST_FIXTURE(TestFixture, InputData)
 {
-  CHECK_EQUAL(size_t(960),
+  CHECK_EQUAL(size_t(197568),
               CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA));
 }
 
