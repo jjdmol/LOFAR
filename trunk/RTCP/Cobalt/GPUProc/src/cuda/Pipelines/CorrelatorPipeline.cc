@@ -431,7 +431,7 @@ namespace LOFAR
         if (ps.getHostName(CORRELATED_DATA, globalSubbandIdx) == "") {
           // an empty host name means 'write to disk directly', to
           // make debugging easier for now
-          outputStream = new FileStream(ps.getFileName(CORRELATED_DATA, globalSubbandIdx), 0666);
+          outputStream = new FileStream(ps.getFileName(CORRELATED_DATA, globalSubbandIdx), 0666); // TODO: mem leak, idem for the other new CLASS and createStream() stmts below (4 in total)
         } else {
           // connect to the Storage_main process for this output
           const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);

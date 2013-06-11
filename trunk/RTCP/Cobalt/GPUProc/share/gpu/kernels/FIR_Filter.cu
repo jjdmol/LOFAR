@@ -80,7 +80,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
   FilteredDataType filteredData = (FilteredDataType) filteredDataPtr;
   WeightsType weightsData = (WeightsType) weightsPtr;
 
-  unsigned cpr = blockIdx.x*blockDim.x+threadIdx.x; //deze is nog incorrect dus nog uitzoeken
+  unsigned cpr = blockIdx.x*blockDim.x+threadIdx.x;
 #if 0
   // Straight index calc for NR_CHANNELS == 1
   uint pol_ri = cpr & 3;
@@ -93,7 +93,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
   unsigned pol = (cpr >> 1) / NR_CHANNELS;
   unsigned pol_ri = (pol << 1) | ri;
 #endif
-  unsigned station = blockIdx.y; //*blockDim.y+threadIdx.y; //deze is nog incorrect dus nog uitzoeken
+  unsigned station = blockIdx.y;
 
   //const float16 weights = (*weightsData)[channel];
   const float weights_s0 = (*weightsData)[channel][0];
