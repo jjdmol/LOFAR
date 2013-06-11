@@ -80,7 +80,6 @@ class imager_prepare(LOFARnodeTCP):
                     time_slices_per_image, copied_ms_map, subbands_per_group,
                     processed_ms_dir, parset, ndppp_executable)
 
-            return 1;
             # If no timeslices were created, bail out with exit status 1
             if len(time_slices_path_list) == 0:
                 self.logger.error("No timeslices were created.")
@@ -119,7 +118,7 @@ class imager_prepare(LOFARnodeTCP):
             self.outputs["time_slices"] = \
                 time_slices_path_list
 
-
+            return 1;
         return 0
 
     def _copy_input_files(self, processed_ms_dir, input_map):
