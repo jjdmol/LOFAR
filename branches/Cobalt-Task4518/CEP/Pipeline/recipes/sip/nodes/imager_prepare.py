@@ -116,7 +116,7 @@ class imager_prepare(LOFARnodeTCP):
             #******************************************************************
             # return
             self.outputs["time_slices"] = \
-                time_slice_filtered_path_list
+                time_slices_path_list
 
 
         return 0
