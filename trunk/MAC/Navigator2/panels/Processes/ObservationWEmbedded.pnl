@@ -37,17 +37,8 @@ void reload() {
   navFunct_clearGlobalLists();
  
   addWriters();
-  
-  // set the observation selectable items
-  prepareProcesses();
-  
+    
   resize();
-
-  // set panel to ready
-  g_objectReady=true;
-  
-  // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"ObservationWEmbedded.pnl\",\"Update\");
 }
 
 void addAdders() {
