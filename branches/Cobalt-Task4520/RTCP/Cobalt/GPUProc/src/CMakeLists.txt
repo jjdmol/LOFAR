@@ -100,5 +100,5 @@ if(USE_OPENCL)
   add_subdirectory(opencl)
 
   lofar_add_library(gpuproc_opencl ${_gpuproc_sources})
-  lofar_add_bin_program(rtcp_opencl rtcp.cc)
+  #lofar_add_bin_program(rtcp_opencl rtcp.cc)
 endif()

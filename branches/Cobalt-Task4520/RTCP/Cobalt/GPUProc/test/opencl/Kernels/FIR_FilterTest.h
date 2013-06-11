@@ -22,17 +22,14 @@
 #define GPUPROC_FIR_FILTERTEST_H
 
 #include "CL/cl.hpp"
-#include "Interface/Parset.h"
-#include "Buffers.h"
 #include "UnitTest.h"
-#include "global_defines.h"
 #include <complex>
-#include "FilterBank.h"
-#include "Kernels/FIR_FilterKernel.h"
+#include <GPUProc/FilterBank.h>
+#include <GPUProc/Kernels/FIR_FilterKernel.h>
 
 namespace LOFAR
 {
-    namespace RTCP
+    namespace Cobalt
     {
         struct FIR_FilterTest : public UnitTest
         {
@@ -191,13 +188,13 @@ namespace LOFAR
                         for (sample = 0; sample < ps.nrSamplesPerChannel(); sample++) {
                             for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
                                 // Expected sum must also be scaled by 2 and 3, because weights are real only.
-                                if (!equalsRelError(filteredData[station][pol][sample][ch][0], 2 * expectedSums[ch])) {
+                                if (!fpEquals(filteredData[station][pol][sample][ch][0], 2 * expectedSums[ch])) {
                                     if (++nrErrors < 100) { // limit spam
                                         std::cerr << "3a.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
                                             "][0] = " << filteredData[station][pol][sample][ch][0] << " 2*weight = " << 2*expectedSums[ch] << std::endl;
                                     }
                                 }
-                                if (!equalsRelError(filteredData[station][pol][sample][ch][1], 3 * expectedSums[ch])) {
+                                if (!fpEquals(filteredData[station][pol][sample][ch][1], 3 * expectedSums[ch])) {
                                     if (++nrErrors < 100) {
                                         std::cerr << "3b.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
                                             "][1] = " << filteredData[station][pol][sample][ch][1] << " 3*weight = " << 3*expectedSums[ch] << std::endl;

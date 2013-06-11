@@ -54,7 +54,7 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
 // Use our own terminate handler
-Exception::TerminateHandler t(gpu::terminate);
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char **argv)
 {
@@ -80,8 +80,10 @@ int main(int argc, char **argv)
   (FFT_Test)(ps);
   //(AMD_FFT_Test)(ps);
   (CorrelatorTest)(ps);
+#if defined USE_NEW_CORRELATOR
   (CorrelateRectangleTest)(ps);
   (CorrelateTriangleTest)(ps);
+#endif
 
   // Beamforming unittest
   (IncoherentStokesTest)(ps);
