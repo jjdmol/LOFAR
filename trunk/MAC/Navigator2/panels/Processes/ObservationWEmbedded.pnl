@@ -180,7 +180,7 @@ LANG:1 8 dataRate
 2 34
 "PRIMITIVE_TEXT7"
 ""
-1 502 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 400 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 34 0 0 0 0 0
 E E E
@@ -190,8 +190,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 502 34 600 47
-0 2 2 "0s" 0 0 0 192 0 0  502 34 1
+E E 0 1 1 2 1 E U  0 E 400 34 498 47
+0 2 2 "0s" 0 0 0 192 0 0  400 34 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -199,7 +199,7 @@ LANG:1 15 dataProductType
 2 35
 "PRIMITIVE_TEXT23"
 ""
-1 702 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 530 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 35 0 0 0 0 0
 E E E
@@ -209,8 +209,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 702 34 751 47
-0 2 2 "0s" 0 0 0 192 0 0  702 34 1
+E E 0 1 1 2 1 E U  0 E 530 34 579 47
+0 2 2 "0s" 0 0 0 192 0 0  530 34 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
