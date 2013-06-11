@@ -20,6 +20,8 @@
 
 #include <lofar_config.h>
 
+#include <complex>
+
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
@@ -83,7 +85,7 @@ int main() {
           " #bytes/complexSampl=" << ps.nrBytesPerComplexSample() <<
           " Total bytes=" << in.inputSamples.size() << endl;
 
-  // Initialize synthetic input to all 1
+  // Initialize synthetic input to all (1, 1).
   for (size_t st = 0; st < ps.nrStations(); st++)
     // skip ps.nrHistorySamples(), because no FIR
     for (size_t i = ps.nrHistorySamples(); i < ps.nrHistorySamples() + ps.nrSamplesPerSubband(); i++)
@@ -115,18 +117,32 @@ int main() {
   cwq.processSubband(in, out);
   cout << "processSubband() done" << endl;
 
-  cout << "Output (not verified): " << endl;
+  cout << "Output: " << endl;
   unsigned nbaselines = ps.nrStations() * (ps.nrStations() + 1) / 2; // nbaselines includes auto-correlation pairs here
   cout << "nbl(w/ autocorr)=" << nbaselines << " #chnl/sb=" << ps.nrChannelsPerSubband() <<
           " #pol=" << NR_POLARIZATIONS << " (all combos, hence x2) Total bytes=" << out.size() << endl;
+  bool unexpValueFound = false;
   for (size_t b = 0; b < nbaselines; b++)
     for (size_t c = 0; c < ps.nrChannelsPerSubband(); c++)
       // combinations of polarizations; what the heck, call it pol0 and pol1, but 2, in total 4.
       for (size_t pol0 = 0; pol0 < NR_POLARIZATIONS; pol0++)
         for (size_t pol1 = 0; pol1 < NR_POLARIZATIONS; pol1++)
+        {
+          complex<float> v = out[b][c][pol0][pol1];
+          if (v.real() != static_cast<float>(2 * ps.nrSamplesPerSubband()) || v.imag() != 0.0f)
+          {
+            unexpValueFound = true;
+            cout << '*'; // indicate error in output
+          }
           cout << out[b][c][pol0][pol1] << " ";
+        }
   cout << endl;
 
+  if (unexpValueFound)
+  {
+    cerr << "Error: Found unexpected output value(s)" << endl;
+    return 1;
+  }
 
   // postprocessSubband() is about flagging and that has already been tested
   // in the other CorrelatorWorkQueue test.

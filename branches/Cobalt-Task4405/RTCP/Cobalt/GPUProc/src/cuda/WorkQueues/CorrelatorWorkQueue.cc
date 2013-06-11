@@ -47,6 +47,9 @@ namespace LOFAR
      *             -> correlatorKernel
      *          -> devFilteredData = visibilities
      * [output] <-
+     *
+     * For #channels/subband == 1, skip the FIR and FFT kernels,
+     * and provide the input in devFilteredData.
      */
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset &parset,
       gpu::Context &context, CorrelatorPipelinePrograms &programs,
@@ -55,17 +58,22 @@ namespace LOFAR
       WorkQueue( parset, context ),
       prevBlock(-1),
       prevSAP(-1),
-      // TODO: have the Kernel classes be able to provide input and output buffer sizes to use below
+
       devInput(ps.nrBeams(), ps.nrStations(), NR_POLARIZATIONS,
                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
                ps.nrBytesPerComplexSample(), context,
 
                // reserve enough space in inputSamples for the output of the delayAndBandPassKernel.
-               ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)),
-      // reserve enough space for the output of the firFilterKernel,
+               // TODO: if ps.nrChannelsPerSubband() == 1, we only need this space, not the one above.
+               ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)
+              ),
       devFilteredData(context, std::max(
-                        ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-                        // and the correlatorKernel.
+                        ps.nrChannelsPerSubband() == 1 ?
+                          // reserve enough space for the input of the delayAndBandPass kernel,
+                          ps.nrSamplesPerSubband() * ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample() // from WorkQueueInputData::DeviceBuffers(...)
+                        : // or, reserve enough space for the output of the FIR filter kernel,
+                          ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+                        // and the correlator kernel.
                         ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>)
                       )),
       devFIRweights(context, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
@@ -230,8 +238,9 @@ namespace LOFAR
         {
           unsigned begin_idx;
           unsigned end_idx;
-          if (numberOfChannels == 1)  // if number of channels == 1
-          { //do nothing, just take the ranges as supplied
+          if (numberOfChannels == 1)
+          {
+            // do nothing, just take the ranges as supplied
             begin_idx = it->begin; 
             end_idx = std::min(parset.nrSamplesPerChannel(), it->end );
           }
@@ -381,7 +390,12 @@ namespace LOFAR
 #if defined USE_B7015
         OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
 #endif
-        queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
+        // If #ch/sb==1, copy the input to the device buffer where the DelayAndBandPass kernel reads from.
+        if (ps.nrChannelsPerSubband() == 1) {
+          queue.writeBuffer(devFilteredData, input.inputSamples, true);
+        } else { // #ch/sb > 1
+          queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
+        }
 //        counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
 
         timers["GPU - input"]->stop();
@@ -389,21 +403,19 @@ namespace LOFAR
 
       timers["GPU - compute"]->start();
 
-      // Moved from doWork() The delay data should be available before the kernels start.
-      // Queue processed ordered. This could main that the transfer is not nicely overlapped
+      if (ps.delayCompensation())
+      {
+        unsigned SAP = ps.subbandToSAPmapping()[subband];
 
-      unsigned SAP = ps.subbandToSAPmapping()[subband];
+        // Only upload delays if they changed w.r.t. the previous subband.
+        if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
+          queue.writeBuffer(devInput.delaysAtBegin,  input.delaysAtBegin,  false);
+          queue.writeBuffer(devInput.delaysAfterEnd, input.delaysAfterEnd, false);
+          queue.writeBuffer(devInput.phaseOffsets,   input.phaseOffsets,   false);
 
-      // Only upload delays if they changed w.r.t. the previous subband
-      if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
-        queue.writeBuffer(devInput.delaysAtBegin,  input.delaysAtBegin,  false);
-        queue.writeBuffer(devInput.delaysAfterEnd, input.delaysAfterEnd, false);
-        queue.writeBuffer(devInput.phaseOffsets,   input.phaseOffsets, false);
-
-        prevSAP = SAP;
-        prevBlock = block;
-
-        queue.synchronize();
+          prevSAP = SAP;
+          prevBlock = block;
+        }
       }
 
       if (ps.nrChannelsPerSubband() > 1) {
@@ -411,7 +423,10 @@ namespace LOFAR
         fftKernel.enqueue(queue/*, *counters["compute - FFT"]*/);
       }
 
+      // Even if we skip delay compensation and bandpass correction (rare),
+      // run that kernel, as it also reorders the data for the correlator kernel.
       delayAndBandPassKernel.enqueue(queue/*, *counters["compute - delay/bp"]*/, subband);
+
 #if defined USE_NEW_CORRELATOR
       correlateTriangleKernel.enqueue(queue/*, *counters["compute - cor.triangle"]*/);
       correlateRectangleKernel.enqueue(queue/*, *counters["compute - cor.rectangle"]*/);
