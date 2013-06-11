@@ -30,21 +30,22 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
-#include <GPUProc/Kernels/FFT_Kernel.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 
 #include "Interface/Parset.h"
-#include <GPUProc/cuda/Buffers.h>
 #include <GPUProc/FilterBank.h>
-#include <GPUProc/cuda/WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 #include <GPUProc/cuda/Pipelines/Pipeline.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
-#include <GPUProc/cuda/gpu_utils.h>
+#include <GPUProc/gpu_utils.h>
+#include <GPUProc/gpu_wrapper.h>
 
 using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
+using namespace LOFAR::Cobalt::gpu;
 
 size_t nrErrors = 0;
 
@@ -108,13 +109,12 @@ int main() {
     NR_POLARIZATIONS,
     ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
     ps.nrBytesPerComplexSample(),
-    stream,
+    ctx,
     // reserve enough space in inputSamples for the output of
     // the delayAndBandPassKernel.
     ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
 
-  DeviceBuffer devFilteredData(stream,
-    CL_MEM_READ_WRITE,
+  DeviceMemory devFilteredData(ctx,
     // reserve enough space for the output of the
     // firFilterKernel,
     std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
@@ -122,16 +122,16 @@ int main() {
     ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>)));
 
   // Create the FIR Filter weights
-  DeviceBuffer devFIRweights(stream, CL_MEM_READ_ONLY,
+  DeviceMemory devFIRweights(ctx,
                              ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float));
   FilterBank filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER);
   size_t fbBytes = filterBank.getWeights().num_elements() * sizeof(float);
-  HostBuffer fbBuffer(devFIRweights, fbBytes); 
+  HostMemory fbBuffer(ctx, fbBytes); 
   // Copy to the hostbuffer
-  std::memcpy(fbBuffer.hostMemory.get<void>(), filterBank.getWeights().origin(), fbBytes);
+  std::memcpy(fbBuffer.get<void>(), filterBank.getWeights().origin(), fbBytes);
 
 
-  HostBuffer outFiltered(devFilteredData, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
+  HostMemory outFiltered(ctx, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>));
  
   std::vector<gpu::Device> devices(1,device);
   flags_type flags(defaultFlags());
@@ -155,9 +155,8 @@ int main() {
   amplitudes << "freq_begin," << "freq_end," << "freq_steps," << "fftSize" << endl;
   amplitudes << freq_begin << ","<< freq_end << "," << freq_steps << "," << fftSize << endl;
   size_t numberInputSamples = (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) ;
-  MultiArrayHostBuffer<i16complex,2 > inputDataRaw(
-    boost::extents[(ps.nrHistorySamples() + ps.nrSamplesPerSubband())][2],
-    CL_MEM_READ_WRITE, devInput.inputSamples);
+  MultiDimArrayHostBuffer<i16complex,2 > inputDataRaw(
+    boost::extents[(ps.nrHistorySamples() + ps.nrSamplesPerSubband())][2], ctx);
 
   // Initialize the input data with a sinus
   for( double freq = freq_begin; freq <= freq_end; freq += 1.0/freq_steps) //dus niet 128 hz  // eenheid in fft window widths
@@ -178,40 +177,34 @@ int main() {
     }
 
 
-    fbBuffer.hostToDevice(true);
-    inputDataRaw.hostToDevice(true);
-    stream.synchronize();   
+    stream.writeBuffer(devFIRweights, fbBuffer, true);
+    stream.writeBuffer(devInput.inputSamples, inputDataRaw, true);
     firFilterKernel.enqueue(stream);
     
     // As a test return the intermediate results
     //outFiltered.deviceToHost(true);
     //stream.synchronize(); 
 
-
-
-    stream.synchronize();   
     fftFwdKernel.enqueue(stream);
-    stream.synchronize();   
-    outFiltered.deviceToHost(true);
-    //stream.readBuffer(inout, d_inout, true);
+    stream.synchronize();
+    stream.readBuffer(outFiltered, devFilteredData, true);
 
 
     // verify output -- we can't verify per-element because the leakage will
     // differ in pattern. So we collect the total signal leak outside our peak.
     double leak_gpu = 0.0;
-    double leak_fftw = 0.0;
     // Check for our frequency response
     for (int i = 0; i < fftSize; i++) 
     {
-      amplitudes << amp(outFiltered.hostMemory.get<fcomplex>()[i]) << ",";
+      amplitudes << amp(outFiltered.get<fcomplex>()[i]) << ",";
       if (i == (int)floor(freq) || i == (int)ceil(freq)) 
       {
-        cerr << "GPU  signal peak @ freq " << i << ": " << amp(outFiltered.hostMemory.get<fcomplex>()[i]) << endl;
+        cerr << "GPU  signal peak @ freq " << i << ": " << amp(outFiltered.get<fcomplex>()[i]) << endl;
       } 
       else
       {
 
-        leak_gpu += amp(outFiltered.hostMemory.get<fcomplex>()[i]);
+        leak_gpu += amp(outFiltered.get<fcomplex>()[i]);
 
       }
     }

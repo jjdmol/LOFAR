@@ -22,7 +22,8 @@ lofar_add_test(tMultiDimArrayHostBuffer tMultiDimArrayHostBuffer.cc)
 lofar_add_test(tFIR_Filter tFIR_Filter.cc)
 lofar_add_test(tFFT tFFT.cc)
 lofar_add_test(tCorrelator tCorrelator.cc)
-#lofar_add_test(tFFT_leakage tFFT_leakage.cc
+lofar_add_test(tFFT_leakage tFFT_leakage.cc)
+
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
 set_tests_properties(
@@ -30,10 +31,10 @@ set_tests_properties(
   tDelayAndBandPass
   tDelayAndBandPassKernel
   tCorrelator
+  tFFT_leakage
   tIntToFloat
   tIntToFloatKernel
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
-  #tFFT_leakage
 )
 
 # To compile .cu files, invoke CUDA's nvcc, but respect the host C/C++ compiler (variants) selection.
