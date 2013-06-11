@@ -151,7 +151,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 0.7777777777777778 0 1 0 0 1 E 0 3 1260 17
+E E 0 1 1 2 1 E U  1 E 0 3 999 17
 2 1
 "dropped"
 ""
