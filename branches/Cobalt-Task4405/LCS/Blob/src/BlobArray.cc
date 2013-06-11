@@ -51,7 +51,7 @@ uint64 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
   }    
   bs << fortranOrder << nalign << ndim;
   bs.put (shape, ndim);
-  uint64 n = 1;
+  uint64 n = (ndim==0 ? 0 : 1);
   for (int i=0; i<ndim; i++) {
     n *= shape[i];
   }

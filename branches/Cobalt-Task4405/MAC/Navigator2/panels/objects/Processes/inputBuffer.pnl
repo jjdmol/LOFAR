@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1300 66 N "_3DFace" 2
+PANEL,-1 -1 1010 66 N "_3DFace" 2
 "$barColor"
 "$inputBuffer"
 "main()
@@ -186,7 +186,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 0 3 1260 17
+E E 0 1 1 2 1 E U  1 E 0 3 999 17
 2 0
 "stationName"
 ""
