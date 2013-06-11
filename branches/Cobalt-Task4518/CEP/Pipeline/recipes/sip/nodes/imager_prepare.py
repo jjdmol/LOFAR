@@ -118,7 +118,6 @@ class imager_prepare(LOFARnodeTCP):
             self.outputs["time_slices"] = \
                 time_slices_path_list
 
-            return 1;
         return 0
 
     def _copy_input_files(self, processed_ms_dir, input_map):
