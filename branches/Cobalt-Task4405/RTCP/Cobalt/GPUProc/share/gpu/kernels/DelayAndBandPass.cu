@@ -48,7 +48,9 @@
 #include "IntToFloat.cuh"
 
 #if NR_CHANNELS == 1
-#undef BANDPASS_CORRECTION  // TODO: Should this be an assert: this result in unexpected behaviour
+   // #chnl==1 && BANDPASS_CORRECTION is rejected on the CPU early, (TODO)
+   // but once here, don't do difficult and adjust cleanly here.
+#  undef BANDPASS_CORRECTION
 #endif
 
 typedef LOFAR::Cobalt::gpu::complex<float> complexfloat;
