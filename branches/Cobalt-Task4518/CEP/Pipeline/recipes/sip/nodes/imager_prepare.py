@@ -90,8 +90,8 @@ class imager_prepare(LOFARnodeTCP):
                     "Produced time slices: {0}".format(time_slices_path_list))
             #***********************************************************
             # 3. run rfi_concole: flag datapoints which are corrupted
-            self._run_rficonsole(rficonsole_executable, time_slice_dir,
-                                 time_slices_path_list)
+            #self._run_rficonsole(rficonsole_executable, time_slice_dir,
+            #                     time_slices_path_list)
 
             #******************************************************************
             # 4. Add imaging columns to each timeslice
@@ -104,13 +104,13 @@ class imager_prepare(LOFARnodeTCP):
 
             #*****************************************************************
             # 5. Filter bad stations
-            time_slice_filtered_path_list = self._filter_bad_stations(
-                time_slices_path_list, asciistat_executable,
-                statplot_executable, msselect_executable)
+            #time_slice_filtered_path_list = self._filter_bad_stations(
+            #    time_slices_path_list, asciistat_executable,
+            #    statplot_executable, msselect_executable)
 
             #******************************************************************
             # 6. Perform the (virtual) concatenation of the timeslices
-            self._concat_timeslices(time_slice_filtered_path_list,
+            self._concat_timeslices(time_slices_path_list,
                                     output_measurement_set)
 
             #******************************************************************
