@@ -78,6 +78,11 @@ int main() {
   WorkQueueInputData in(ps.nrBeams(), ps.nrStations(), NR_POLARIZATIONS,
                         ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
                         ps.nrBytesPerComplexSample(), ctx);
+  cout << "#st=" << ps.nrStations() << " #sampl/sb=" << ps.nrSamplesPerSubband() <<
+          " (skipping #histSampl=" << ps.nrHistorySamples() << ") #pol=" << NR_POLARIZATIONS <<
+          " #bytes/complexSampl=" << ps.nrBytesPerComplexSample() <<
+          " Total bytes=" << in.inputSamples.size() << endl;
+
   // Initialize synthetic input to all 1
   for (size_t st = 0; st < ps.nrStations(); st++)
     // skip ps.nrHistorySamples(), because no FIR
@@ -86,6 +91,11 @@ int main() {
         // parset specifies 8 bit samples, so this is simply 1 byte real, 1 byte imag
         for (size_t b = 0; b < ps.nrBytesPerComplexSample(); b++)
           in.inputSamples[st][i][pol][b] = 1;
+
+  // Initialize subbands partitioning administration (struct BlockID). We only do the 1st block of whatever.
+  in.blockID.block = 0;            // Block number: 0 .. inf
+  in.blockID.globalSubbandIdx = 0; // Subband index in the observation: [0, ps.nrSubbands())
+  in.blockID.localSubbandIdx = 0;  // Subband index for this pipeline/workqueue: [0, subbandIndices.size())
 
   // Initialize delays. We skip delay compensation, but init anyway,
   // so we won't copy uninitialized data to the device.
@@ -99,12 +109,16 @@ int main() {
   CorrelatedDataHostBuffer out(ps.nrStations(), ps.nrChannelsPerSubband(),
                                ps.integrationSteps(), ctx, cwq);
 
+  // Don't bother initializing out.blockID; processSubband() doesn't need it.
+
   cout << "processSubband()" << endl;
   cwq.processSubband(in, out);
   cout << "processSubband() done" << endl;
 
-  cout << "output: " << endl;
-  unsigned nbaselines = ps.nrStations() * (ps.nrStations() + 1) / 2;
+  cout << "Output (not verified): " << endl;
+  unsigned nbaselines = ps.nrStations() * (ps.nrStations() + 1) / 2; // nbaselines includes auto-correlation pairs here
+  cout << "nbl(w/ autocorr)=" << nbaselines << " #chnl/sb=" << ps.nrChannelsPerSubband() <<
+          " #pol=" << NR_POLARIZATIONS << " (all combos, hence x2) Total bytes=" << out.size() << endl;
   for (size_t b = 0; b < nbaselines; b++)
     for (size_t c = 0; c < ps.nrChannelsPerSubband(); c++)
       // combinations of polarizations; what the heck, call it pol0 and pol1, but 2, in total 4.
