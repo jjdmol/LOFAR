@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding: iso-8859-15
 import os,sys,time,pg
-from database import *
+from optparse import OptionParser
 
 
 #
@@ -225,20 +225,72 @@ if __name__ == '__main__':
 	are copied also. Idem with campaigns, users and units.
     """
 
-    # check syntax of invocation
-    # Expected syntax: copyTree treeID fromDB toDB
-    if (len(sys.argv) != 4):
-        print "Syntax: %s treeID fromDB toDB" % sys.argv[0]
-        sys.exit(1)
-    treeID     = int(sys.argv[1])
-    fromDBname = sys.argv[2]
-    toDBname   = sys.argv[3]
+    parser = OptionParser("Usage: %prog [options]" )
+    parser.add_option("-D", "--sourcedatabase",
+                      dest="fromDBname",
+                      type="string",
+                      default="",
+                      help="Name of source OTDB database to use")
+
+    parser.add_option("-S", "--sourcehost",
+                      dest="fromDBhost",
+                      type="string",
+                      default="localhost",
+                      help="Hostname of source OTDB database")
+
     
+    parser.add_option("-d", "--destdatabase",
+                      dest="toDBname",
+                      type="string",
+                      default="",
+                      help="Name of destination OTDB database to use")
+
+    parser.add_option("-s", "--desthost",
+                      dest="toDBhost",
+                      type="string",
+                      default="localhost",
+                      help="Hostname of destination OTDB database")
+
+    parser.add_option("-t", "--treeid",
+                      dest="treeID",
+                      type="int",
+                      default=0,
+                      help="SASID (treeID) of default template to copy")
+
+    # parse arguments
+
+    (options, args) = parser.parse_args()
+
+    if not options.fromDBname:
+        print "Provide the name of source OTDB database to use!"
+        print
+        parser.print_help()
+        sys.exit(1)
+
+    if not options.toDBname:
+        print "Provide the name of destination OTDB database to use!"
+        print
+        parser.print_help()
+        sys.exit(1)
+
+    if not options.treeID:
+        print "Provide SASID (treeID) of default template to copy!"
+        print
+        parser.print_help()
+        sys.exit(1)
+
+    # Fill variables used in remainder of code
+    fromDBhost=options.fromDBhost
+    fromDBname=options.fromDBname
+    toDBhost=options.toDBhost
+    toDBname=options.toDBname
+    treeID=options.treeID
+
     # calling stored procedures only works from the pg module for some reason.
-    fromDB = pg.connect(user="postgres", host="localhost", dbname=fromDBname)
-    print "Connected to database", fromDBname
-    toDB   = pg.connect(user="postgres", host="localhost", dbname=toDBname)
-    print "Connected to database", toDBname
+    fromDB = pg.connect(user="postgres", host=fromDBhost, dbname=fromDBname)
+    print "Connected to source database", fromDBname, "on host ",fromDBhost 
+    toDB   = pg.connect(user="postgres", host=toDBhost, dbname=toDBname)
+    print "Connected to destination database", toDBname, "on host ",toDBhost
 
     # Check for tree-existance in both databases.
     fromDBtree = fromDB.query("select * from OTDBtree t INNER JOIN campaign c ON c.ID = t.campaign where treeID=%d" % treeID).dictresult()
