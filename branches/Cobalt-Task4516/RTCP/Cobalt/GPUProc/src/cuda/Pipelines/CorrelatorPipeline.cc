@@ -340,7 +340,11 @@ namespace LOFAR
 
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
             SmartPtr<struct InputBlock> pblock = stationDataQueues[stat][subband]->remove();
+           
+            // Copy data
+            memcpy(&data->inputSamples[stat][0][0][0], &pblock->samples[0], pblock->samples.size() * sizeof(pblock->samples[0]));
 
+            // Copy meta data
             SubbandMetaData &metaData = pblock->metaData;
             const unsigned SAP = ps.settings.subbands[subband].SAP;
 
