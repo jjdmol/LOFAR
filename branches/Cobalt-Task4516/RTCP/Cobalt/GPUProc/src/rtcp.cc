@@ -184,8 +184,6 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
        * Set up the MPI send engine.
        */
       MPISendStation sender(s, rank, subbandDistribution);
-#else
-
 #endif
 
       /*
@@ -231,7 +229,7 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
         // Send the block to the receivers
         sender.sendBlock<SampleT>(*block, metaDatas);
 #else
-
+        // Send the block to the stationDataQueues global object
         for (size_t subband = 0; subband < block->beamlets.size(); ++subband) {
           const struct Block<SampleT>::Beamlet &beamlet = block->beamlets[subband];
 
@@ -364,7 +362,6 @@ int main(int argc, char **argv)
   }
 
 #ifdef HAVE_MPI
-
   // Initialise and query MPI
   int mpi_thread_support;
   if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
@@ -374,6 +371,7 @@ int main(int argc, char **argv)
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
+#endif
 
 #ifdef HAVE_LOG4CPLUS
   INIT_LOGGER(str(format("rtcp@%02d") % rank));
@@ -381,9 +379,9 @@ int main(int argc, char **argv)
   INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
 #endif
 
+#ifdef HAVE_MPI
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
 #else
-  INIT_LOGGER("rtcp");
   LOG_WARN_STR("Running without MPI!");
 #endif
 
