@@ -26,7 +26,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    MultiDimArray< SmartPtr< Queue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
+    MultiDimArray< SmartPtr< BestEffortQueue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
   } // namespace Cobalt
 } // namespace LOFAR
 

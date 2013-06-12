@@ -468,9 +468,11 @@ int main(int argc, char **argv)
   // Create queues to forward station data
   stationDataQueues.resize(boost::extents[ps.nrStations()][ps.nrSubbands()]);
 
-  for (size_t stat = 0; stat < ps.nrStations(); ++stat)
-    for (size_t sb = 0; sb < ps.nrSubbands(); ++sb)
-      stationDataQueues[stat][sb] = new Queue< SmartPtr<struct InputBlock> >;
+  for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+    for (size_t sb = 0; sb < ps.nrSubbands(); ++sb) {
+      stationDataQueues[stat][sb] = new BestEffortQueue< SmartPtr<struct InputBlock> >(1, ps.realTime());
+    }
+  }
 
   #pragma omp parallel sections
   {

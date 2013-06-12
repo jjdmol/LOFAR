@@ -22,10 +22,10 @@
 #ifndef LOFAR_GPUPROC_DIRECTINPUT_H
 #define LOFAR_GPUPROC_DIRECTINPUT_H
 
-#include <Common/Thread/Queue.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/SubbandMetaData.h>
+#include <GPUProc/BestEffortQueue.h>
 
 #include <vector>
 
@@ -38,7 +38,7 @@ namespace LOFAR
       SubbandMetaData metaData;
     };
 
-    extern MultiDimArray< SmartPtr< Queue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
+    extern MultiDimArray< SmartPtr< BestEffortQueue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
   } // namespace Cobalt
 } // namespace LOFAR
 
