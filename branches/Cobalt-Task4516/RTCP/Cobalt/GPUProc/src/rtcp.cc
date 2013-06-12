@@ -119,6 +119,8 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
   for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
     const string desc = inputStreamDescs[board];
 
+    LOG_DEBUG_STR("Input stream for board " << board << ": " << desc);
+
     if (desc == "factory:") {
       PacketFactory factory(settings);
       inputStreams[board] = new PacketStream(factory, from, to, board);
