@@ -47,6 +47,19 @@ namespace LOFAR
       void enqueue(gpu::Stream &queue,
                    /* PerformanceCounter &counter,*/
                    unsigned subband);
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        DELAYS,
+        PHASE_OFFSETS,
+        BAND_PASS_CORRECTION_WEIGHTS
+      };
+
+      // Return required buffer size for \a bufferType
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
+
     };
   }
 }

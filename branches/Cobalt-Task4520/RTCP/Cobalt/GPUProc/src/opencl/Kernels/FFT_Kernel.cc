@@ -75,13 +75,9 @@ namespace LOFAR
       switch (bufferType) {
       case INPUT_DATA: 
       case OUTPUT_DATA:
-        return std::max(
-          // size FIR filter kernel
+        return
           ps.nrStations() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-          // size correlator kernel
-          ps.nrBaselines() * ps.nrChannelsPerSubband() * 
-          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
