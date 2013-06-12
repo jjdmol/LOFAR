@@ -101,8 +101,6 @@ function parse_logs
 
   # run correlator -- without profiling
   $RUNDIR/runrtcp.sh $PARSET > performance_normal.txt 2>&1 &&
-  # run correlator -- with profiling
-  $RUNDIR/runrtcp.sh -p $PARSET > performance_profiled.txt 2>&1 &&
 
   # compare output
   if [ "x" != "x$REFDIR" ]
@@ -117,6 +115,9 @@ function parse_logs
       ${srcdir}/cmpfloat.py `pwd`/$f $REFDIR/$f || exit 1
     done
   fi &&
+
+  # run correlator -- with profiling
+  $RUNDIR/runrtcp.sh -p $PARSET > performance_profiled.txt 2>&1 &&
 
   # check logs
   parse_logs performance_normal.txt performance_profiled.txt &&
