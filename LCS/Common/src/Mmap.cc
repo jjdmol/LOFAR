@@ -35,7 +35,7 @@ namespace LOFAR
              off_t offset) :
     _len(length)
   {
-    if (flags & MAP_ANONYMOUS) {
+    if (flags & MAP_ANON) {
       fd = -1; // portability
     }
     _ptr = ::mmap(addr, length, prot, flags, fd, offset);
