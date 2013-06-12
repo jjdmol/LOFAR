@@ -35,7 +35,10 @@ set(parmdb_PROGRAMS
   parmdbm
   parmdbremote
   parmexportcal
-  makesourcedb)
+  makesourcedb
+  mergesourcedb
+  showsourcedb
+)
 
 lofar_add_library(parmdb ${parmdb_LIB_SRCS})
 
