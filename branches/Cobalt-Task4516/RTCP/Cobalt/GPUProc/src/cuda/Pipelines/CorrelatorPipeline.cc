@@ -237,9 +237,6 @@ namespace LOFAR
 
     template<typename SampleT> void CorrelatorPipeline::receiveInput( size_t nrBlocks )
     {
-      // The length of a block in samples
-      size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
-
       // SEND: For now, the n stations are sent by the first n ranks.
       vector<int> stationRanks(ps.nrStations());
       for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
@@ -251,6 +248,9 @@ namespace LOFAR
 #ifdef HAVE_MPI
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 
+      // The length of a block in samples
+      size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
+
       // Set up the MPI environment.
       MPIReceiveStations receiver(stationRanks, subbandIndices, blockSize);
 
@@ -261,10 +261,17 @@ namespace LOFAR
       for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
         blocks[stat].beamlets.resize(subbandIndices.size());
       }
+#else
+      // Create a holder for the meta data, which is processed later than the
+      // data.
+      MultiDimArray<SubbandMetaData, 2> metaDatas(boost::extents[ps.nrStations()][subbandIndices.size()]);
+#endif
 
       for (size_t block = 0; block < nrBlocks; block++) {
         // Receive the samples of all subbands from the stations for this
         // block.
+
+        LOG_INFO_STR("[block " << block << "] Reading input samples");
 
         // The set of InputData objects we're using for this block.
         vector<struct inputData_t> inputDatas(subbandIndices.size());
@@ -285,9 +292,20 @@ namespace LOFAR
           id.localSubbandIdx  = inputIdx;
           data->blockID = id;
 
-          // Incorporate it in the receiver's input set.
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+#ifdef HAVE_MPI
+            // Incorporate it in the receiver's input set.
             blocks[stat].beamlets[inputIdx].samples = reinterpret_cast<SampleT*>(&data->inputSamples[stat][0][0][0]);
+#else
+            // Read all data directly
+            SmartPtr<struct InputBlock> pblock = stationDataQueues[stat][id.globalSubbandIdx]->remove();
+           
+            // Copy data
+            memcpy(&data->inputSamples[stat][0][0][0], &pblock->samples[0], pblock->samples.size() * sizeof(pblock->samples[0]));
+
+            // Copy meta data
+            metaDatas[stat][inputIdx] = pblock->metaData;
+#endif
           }
 
           // Record the block (transfers ownership)
@@ -295,9 +313,10 @@ namespace LOFAR
           inputDatas[inputIdx].queue = &queue;
         }
 
+#ifdef HAVE_MPI
         // Receive all subbands from all stations
-        LOG_INFO_STR("[block " << block << "] Reading input samples");
         receiver.receiveBlock<SampleT>(blocks);
+#endif
 
         // Process and forward the received input to the processing threads
         for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
@@ -308,7 +327,11 @@ namespace LOFAR
 
           // Translate the metadata as provided by receiver
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+#ifdef HAVE_MPI
             SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
+#else
+            SubbandMetaData &metaData = metaDatas[stat][inputIdx];
+#endif
 
             // TODO: Not in this thread! Add a preprocess thread maybe?
             data->applyMetaData(stat, SAP, metaData);
@@ -319,45 +342,6 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
       }
-#else
-      // No MPI -- read data from the stationDataQueues
-      for (size_t block = 0; block < nrBlocks; block++) {
-        LOG_INFO_STR("[block " << block << "] Reading input samples");
-
-        for (size_t i = 0; i < subbandIndices.size(); ++i) {
-          unsigned subband = subbandIndices[i];
-
-          // Fetch an input object to store this inputIdx. For now, blindly
-          // round-robin over the work queues.
-          CorrelatorWorkQueue &queue = *workQueues[workQueueIterator++ % workQueues.size()];
-
-          // Fetch an input object to fill from the selected queue.
-          SmartPtr<WorkQueueInputData> data = queue.inputPool.free.remove();
-
-          data->blockID.block = block;
-          data->blockID.globalSubbandIdx = subband;
-          data->blockID.localSubbandIdx = i;
-
-          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-            SmartPtr<struct InputBlock> pblock = stationDataQueues[stat][subband]->remove();
-           
-            // Copy data
-            memcpy(&data->inputSamples[stat][0][0][0], &pblock->samples[0], pblock->samples.size() * sizeof(pblock->samples[0]));
-
-            // Copy meta data
-            SubbandMetaData &metaData = pblock->metaData;
-            const unsigned SAP = ps.settings.subbands[subband].SAP;
-
-            // TODO: Not in this thread! Add a preprocess thread maybe?
-            data->applyMetaData(stat, SAP, metaData);
-          }
-
-          queue.inputPool.filled.append(data);
-
-          LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
-        }
-      }
-#endif
 
       // Signal end of input
       for (size_t i = 0; i < workQueues.size(); ++i) {
