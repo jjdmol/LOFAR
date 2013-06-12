@@ -23,6 +23,7 @@
 #include <vector>
 
 #include <Common/LofarLogger.h>
+#include <GPUProc/global_defines.h>
 
 #include "FFT_Kernel.h"
 
@@ -67,6 +68,23 @@ namespace LOFAR
                           (size_t) nrFFTs * 5 * fftSize * log2(fftSize),
                           (size_t) nrFFTs * fftSize * sizeof(std::complex<float>),
                           (size_t) nrFFTs * fftSize * sizeof(std::complex<float>));
+    }
+
+    size_t FFT_Kernel::bufferSize(const Parset& ps, BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA: 
+      case OUTPUT_DATA:
+        return std::max(
+          // size FIR filter kernel
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
+          // size correlator kernel
+          ps.nrBaselines() * ps.nrChannelsPerSubband() * 
+          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
     }
 
   }
