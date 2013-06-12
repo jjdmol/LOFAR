@@ -43,7 +43,7 @@ TEST_FIXTURE(TestFixture, InputData)
 
 TEST_FIXTURE(TestFixture, OutputData)
 {
-  CHECK_EQUAL(size_t(786432),
+  CHECK_EQUAL(size_t(512),
               CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA));
 }
 

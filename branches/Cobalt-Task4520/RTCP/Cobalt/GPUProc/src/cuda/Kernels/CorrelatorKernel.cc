@@ -202,13 +202,9 @@ namespace LOFAR
           (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) *
           ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
       case OUTPUT_DATA:
-        return std::max(
-          // size FIR filter kernel
-          ps.nrStations() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-          // size correlator kernel
+        return 
           ps.nrBaselines() * ps.nrChannelsPerSubband() * 
-          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
+          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
       default: 
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
