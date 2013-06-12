@@ -1131,7 +1131,7 @@ int main (int argc, char* argv[])
     string in = inputs.getString("in");
     string out = inputs.getString("out");
     ASSERTSTR (!out.empty(), "no output sourcedb name given");
-    string outType = inputs.getString("outtype");
+    string outType = toLower(inputs.getString("outtype"));
     string format = inputs.getString("format");
     string prefix = inputs.getString("patchprefix");
     string suffix = inputs.getString("patchsuffix");
