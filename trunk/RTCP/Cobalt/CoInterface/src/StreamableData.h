@@ -80,8 +80,8 @@ namespace LOFAR
       {
       }
 
-      void read(Stream *, bool withSequenceNumber, unsigned align = 0);
-      void write(Stream *, bool withSequenceNumber, unsigned align = 0);
+      void read(Stream *, bool withSequenceNumber, unsigned align = 1);
+      void write(Stream *, bool withSequenceNumber, unsigned align = 1);
 
       bool shouldByteSwap() const
       {
@@ -117,8 +117,8 @@ namespace LOFAR
 
     protected:
       // a subclass should override these to marshall its data
-      virtual void readData(Stream *) = 0;
-      virtual void writeData(Stream *) = 0;
+      virtual void readData(Stream *, unsigned) = 0;
+      virtual void writeData(Stream *, unsigned) = 0;
 
     private:
       uint32_t rawSequenceNumber; /// possibly needs byte swapping
@@ -139,8 +139,8 @@ namespace LOFAR
       MultiDimArray<SparseSet<unsigned>,FLAGS_DIM>   flags;
 
     protected:
-      virtual void readData(Stream *);
-      virtual void writeData(Stream *);
+      virtual void readData(Stream *, unsigned);
+      virtual void writeData(Stream *, unsigned);
 
     private:
       //bool	 itsHaveWarnedLittleEndian;
@@ -160,7 +160,7 @@ namespace LOFAR
         rawSequenceNumber = seqNo;
       }
 
-      readData(str);
+      readData(str, alignment);
     }
 
 
@@ -183,7 +183,7 @@ namespace LOFAR
         str->write(&header[0], header.size());
       }
 
-      writeData(str);
+      writeData(str, alignment);
     }
 
 
@@ -199,15 +199,19 @@ namespace LOFAR
 
 
     template <typename T, unsigned DIM, unsigned FLAGS_DIM>
-    inline void SampleData<T,DIM,FLAGS_DIM>::readData(Stream *str)
+    inline void SampleData<T,DIM,FLAGS_DIM>::readData(Stream *str, unsigned alignment)
     {
+      (void)alignment;
+
       str->read(samples.origin(), samples.num_elements() * sizeof(T));
     }
 
 
     template <typename T, unsigned DIM, unsigned FLAGS_DIM>
-    inline void SampleData<T,DIM,FLAGS_DIM>::writeData(Stream *str)
+    inline void SampleData<T,DIM,FLAGS_DIM>::writeData(Stream *str, unsigned alignment)
     {
+      (void)alignment;
+
       str->write(samples.origin(), samples.num_elements() * sizeof(T));
     }
 
