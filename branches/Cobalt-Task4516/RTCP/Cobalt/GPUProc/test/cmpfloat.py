@@ -21,6 +21,7 @@ def cmpfloat(filename_a, filename_b, precision = PRECISION):
   fB = file(B)
 
   sizeof_float = calcsize("f")
+  offset = 0
 
   while 1:
     bA = fA.read(sizeof_float)
@@ -39,7 +40,9 @@ def cmpfloat(filename_a, filename_b, precision = PRECISION):
     xA, = unpack("f", bA)
     xB, = unpack("f", bB)
 
-    assert fabs(xA - xB) < PRECISION, "File %s and %s differ in content." % (A, B)
+    assert fabs(xA - xB) < PRECISION, "File %s and %s differ in content at byte offset %s: value is %.5f versus %.5f." % (A, B, offset, xA, xB)
+
+    offset += sizeof_float
 
 if __name__ == "__main__":
   import sys

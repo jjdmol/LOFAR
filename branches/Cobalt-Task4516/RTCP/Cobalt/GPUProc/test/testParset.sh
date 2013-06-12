@@ -8,6 +8,8 @@
 REFDIR=
 GPUEFFICIENCY=0
 
+echo "Invoked as" "$0" "$@"
+
 # Parse options
 while getopts "r:g:" opt
 do
@@ -32,12 +34,12 @@ do
   esac
 done
 
+shift $((OPTIND-1))
+
 PARSET=$1
 
 # Include some useful shell functions
 . $srcdir/testFuncs.sh
-
-BINDIR=`pwd`/../src
 
 # Some host info
 echo "Running as `whoami`"
@@ -57,7 +59,7 @@ fi
 echo "Testing $PARSET"
 
 RUNDIR=`pwd`
-OUTDIR=`basename "${PARSET%.parset}.in_output"`
+OUTDIR=`basename "${PARSET%.parset}.output"`
 
 function parse_logs
 {
@@ -98,9 +100,9 @@ function parse_logs
   export LOFARROOT=$srcdir/.. &&
 
   # run correlator -- without profiling
-  mpirun -H localhost -np 4 $BINDIR/rtcp $PARSET > performance_normal.txt 2>&1 &&
+  $RUNDIR/runrtcp.sh $PARSET > performance_normal.txt 2>&1 &&
   # run correlator -- with profiling
-  mpirun -H localhost -np 4 $BINDIR/rtcp -p $PARSET > performance_profiled.txt 2>&1 &&
+  $RUNDIR/runrtcp.sh -p $PARSET > performance_profiled.txt 2>&1 &&
 
   # compare output
   if [ "x" != "x$REFDIR" ]
@@ -112,16 +114,14 @@ function parse_logs
 
     for f in *.MS
     do
-      ${srcdir}/cmpfloat.py $f $REFDIR/$f || exit 1
+      ${srcdir}/cmpfloat.py `pwd`/$f $REFDIR/$f || exit 1
     done
   fi &&
 
   # check logs
-  parse_logs performance_normal.txt performance_profiled.txt
+  parse_logs performance_normal.txt performance_profiled.txt &&
+
+  # toss output if everything is ok
+  (cd $RUNDIR && rm -rf $OUTDIR)
 ) || exit 1
-
-cd $RUNDIR
-
-# toss output
-rm -rf $OUTDIR
 
