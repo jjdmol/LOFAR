@@ -381,7 +381,7 @@ int main(int argc, char **argv)
 
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
 #else
-  INIT_LOGGER("rtcp@00");
+  INIT_LOGGER("rtcp");
   LOG_WARN_STR("Running without MPI!");
 #endif
 
