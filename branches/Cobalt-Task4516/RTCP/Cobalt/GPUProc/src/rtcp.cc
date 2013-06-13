@@ -242,15 +242,7 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
           pblock->metaData = metaDatas[subband];
 
           /* copy data */
-          const size_t nrBytesRange0 = (beamlet.ranges[0].to - beamlet.ranges[0].from) * sizeof(SampleT);
-
-          memcpy(&pblock->samples[0], beamlet.ranges[0].from, nrBytesRange0);
-
-          if (beamlet.nrRanges > 1) {
-            const size_t nrBytesRange1 = (beamlet.ranges[1].to - beamlet.ranges[1].from) * sizeof(SampleT);
-
-            memcpy(&pblock->samples[nrBytesRange0], beamlet.ranges[1].from, nrBytesRange1);
-          }
+          beamlet.copy(reinterpret_cast<SampleT*>(&pblock->samples[0]));
 
           /* obtain flags (after reading the data!) */
           pblock->metaData.flags = beamlet.flagsAtBegin | block->flags(subband);
