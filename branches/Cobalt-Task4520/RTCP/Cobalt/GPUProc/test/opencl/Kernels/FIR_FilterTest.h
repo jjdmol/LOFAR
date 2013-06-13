@@ -24,6 +24,8 @@
 #include "CL/cl.hpp"
 #include "UnitTest.h"
 #include <complex>
+#include <iostream>
+#include <iomanip>
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 
@@ -67,7 +69,7 @@ namespace LOFAR
 
                 // Expected output: St0, pol0, ch0, sampl0: 6. The rest all 0.
                 if (filteredData.origin()[0] != 6.0f) {
-                    std::cerr << "FIR_FilterTest 1: Expected at idx 0: 6; got: " << filteredData.origin()[0] << std::endl;
+                    std::cerr << "FIR_FilterTest 1: Expected at idx 0: 6; got: " << std::setprecision(9+1) << filteredData.origin()[0] << std::endl;
                     testOk = false;
                 }
                 const unsigned nrExpectedZeros = filteredData.num_elements() - 1;
@@ -109,21 +111,21 @@ namespace LOFAR
 
                 // Expected output: sequences of (filterbank scaled by station nr, NR_TAPS zeros)
                 unsigned nrErrors = 0;
-				for (station = 0; station < ps.nrStations(); station++) {
-				    for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-				        unsigned s;
+                for (station = 0; station < ps.nrStations(); station++) {
+                    for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+                        unsigned s;
                         for (sample = 0; sample < ps.nrSamplesPerChannel() / (2 * ps.nrPPFTaps()); sample += s) {
                             for (s = 0; s < ps.nrPPFTaps(); s++) {
                                 for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
                                     if (filteredData[station][pol][sample + s][ch][0] != station * firWeights[ch][s]) {
                                         if (++nrErrors < 100) { // limit spam
                                             std::cerr << "2a.filtered["<<station<<"]["<<pol<<"]["<<sample+s<<"]["<<ch<<
-                                                "][0] (sample="<<sample<<" s="<<s<<") = " << filteredData[station][pol][sample + s][ch][0] << std::endl;
+                                                "][0] (sample="<<sample<<" s="<<s<<") = " << std::setprecision(9+1) << filteredData[station][pol][sample + s][ch][0] << std::endl;
                                         }
                                     }
                                     if (filteredData[station][pol][sample + s][ch][1] != 0.0f) {
                                         if (++nrErrors < 100) {
-                                            std::cerr << "2a imag non-zero: " << filteredData[station][pol][sample + s][ch][1] << std::endl;
+                                            std::cerr << "2a imag non-zero: " << std::setprecision(9+1) << filteredData[station][pol][sample + s][ch][1] << std::endl;
                                         }
                                     }
                                 }
@@ -134,7 +136,7 @@ namespace LOFAR
                                     if (filteredData[station][pol][sample + s][ch][0] != 0.0f || filteredData[station][pol][sample + s][ch][1] != 0.0f) {
                                         if (++nrErrors < 100) {
                                             std::cerr << "2b.filtered["<<station<<"]["<<pol<<"]["<<sample+s<<"]["<<ch<<
-                                                "][0] (sample="<<sample<<" s="<<s<<") = " << filteredData[station][pol][sample + s][ch][0] <<
+                                                "][0] (sample="<<sample<<" s="<<s<<") = " << std::setprecision(9+1) << filteredData[station][pol][sample + s][ch][0] <<
                                                 ", "<<filteredData[station][pol][sample + s][ch][1] << std::endl;
                                         }
                                     }
@@ -183,21 +185,22 @@ namespace LOFAR
                 filteredData.deviceToHost(CL_TRUE);
 
                 nrErrors = 0;
+                const float eps = 2.0f * std::numeric_limits<float>::epsilon();
                 for (station = 0; station < ps.nrStations(); station++) {
                     for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
                         for (sample = 0; sample < ps.nrSamplesPerChannel(); sample++) {
                             for (ch = 0; ch < ps.nrChannelsPerSubband(); ch++) {
                                 // Expected sum must also be scaled by 2 and 3, because weights are real only.
-                                if (!fpEquals(filteredData[station][pol][sample][ch][0], 2 * expectedSums[ch])) {
+                                if (!fpEquals(filteredData[station][pol][sample][ch][0], (float)(2 * expectedSums[ch]), eps)) {
                                     if (++nrErrors < 100) { // limit spam
                                         std::cerr << "3a.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
-                                            "][0] = " << filteredData[station][pol][sample][ch][0] << " 2*weight = " << 2*expectedSums[ch] << std::endl;
+                                            "][0] = " << std::setprecision(9+1) << filteredData[station][pol][sample][ch][0] << " 2*weight = " << 2*expectedSums[ch] << std::endl;
                                     }
                                 }
-                                if (!fpEquals(filteredData[station][pol][sample][ch][1], 3 * expectedSums[ch])) {
+                                if (!fpEquals(filteredData[station][pol][sample][ch][1], (float)(3 * expectedSums[ch]), eps)) {
                                     if (++nrErrors < 100) {
                                         std::cerr << "3b.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
-                                            "][1] = " << filteredData[station][pol][sample][ch][1] << " 3*weight = " << 3*expectedSums[ch] << std::endl;
+                                            "][1] = " << std::setprecision(9+1) << filteredData[station][pol][sample][ch][1] << " 3*weight = " << 3*expectedSums[ch] << std::endl;
                                     }
                                 }
                             }
@@ -218,4 +221,6 @@ namespace LOFAR
         };
     }
 }
+
 #endif
+

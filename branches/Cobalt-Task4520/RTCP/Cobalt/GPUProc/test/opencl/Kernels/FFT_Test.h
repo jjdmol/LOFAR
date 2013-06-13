@@ -26,6 +26,8 @@
 #include <cmath>
 #include <cassert>
 #include <fftw3.h>
+#include <iostream>
+#include <iomanip>
 
 #include <UnitTest.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
@@ -57,6 +59,7 @@ namespace LOFAR
 
         // Test 1: Impulse at origin
         {
+          std::cout << "FFT_Test 1" << std::endl;
           nrErrors = 0;
 
           inout[0] = 1.0f;
@@ -102,8 +105,10 @@ namespace LOFAR
 
         // Test 2: Shifted impulse
         {
+          std::cout << "FFT_Test 2" << std::endl;
           nrErrors = 0;
-          const double epsilon = 1.0e-4; // bigger epsilon than default for test 2
+          const float eps = 1.0e-4f;
+          std::cout << "using epsilon = " << std::setprecision(9+1) << eps << std::endl;
           memset(inout.origin(), 0, inout.num_elements() * sizeof(std::complex<float>));
 
           inout[1] = 1.0f;
@@ -117,7 +122,7 @@ namespace LOFAR
           for (unsigned i = 0; i < fftSize; i++) {
             std::complex<float> ref = std::complex<float>((float) std::cos(2.0 * M_PI * i / fftSize),
                                                           (float)-std::sin(2.0 * M_PI * i / fftSize));
-            if (!cfpEquals(inout[i], ref, epsilon)) {
+            if (!fpEquals(inout[i], ref, eps)) {
               if (++nrErrors < 100) {
                 std::cerr << "fwd: " << inout[i] << " at idx " << i << " should have been " << inout[i] << std::endl;
               }
@@ -129,16 +134,16 @@ namespace LOFAR
           inout.deviceToHost(CL_TRUE);
 
           // See if we got only our scaled, shifted impuls back.
-          if (!cfpEquals(inout[0], 0.0f, epsilon)) {
+          if (!fpEquals(inout[0], 0.0f, eps)) {
             nrErrors += 1;
             std::cerr << "bwd: " << inout[0] << " at idx 0 should have been (0.0, 0.0)" << std::endl;
           }
-          if (!cfpEquals(inout[1], (float)fftSize, epsilon)) {
+          if (!fpEquals(inout[1], (float)fftSize, eps)) {
             nrErrors += 1;
             std::cerr << "bwd: " << inout[1] << " at idx 1 should have been " << (std::complex<float>)fftSize << std::endl;
           }
           for (unsigned i = 2; i < fftSize; i++) {
-            if (!cfpEquals(inout[i], 0.0f, epsilon)) {
+            if (!fpEquals(inout[i], 0.0f, eps)) {
               if (++nrErrors < 100) {
                 std::cerr << "bwd: " << i << ':' << inout[i] << std::endl;
               }
@@ -156,9 +161,11 @@ namespace LOFAR
 
         // Test 3: Pseudo-random input ([0.0f, 2*pi]) on parset specified sizes. Compare output against FFTW double precision.
         {
+          std::cout << "FFT_Test 3" << std::endl;
           nrErrors = 0;
 
-          const double epsilon = 1.0e-3; // much bigger epsilon for test 3
+          const float eps = 1.0e-3f;
+          std::cout << "using epsilon = " << std::setprecision(9+1) << eps << std::endl;
 
           struct timeval tv = {0, 0};
           gettimeofday(&tv, NULL);
@@ -200,7 +207,7 @@ namespace LOFAR
               std::complex<float> fref;
               fref.real() = (float)refInout3[i * fftSize + j][0];
               fref.imag() = (float)refInout3[i * fftSize + j][1];
-              if (!cfpEquals(inout3[i][j], fref, epsilon)) {
+              if (!fpEquals(inout3[i][j], fref, eps)) {
                 if (++nrErrors < 100) {
                   std::cerr << "fwd: " << inout3[i][j] << " at transform " << i << " pos " << j
                             << " should have been " << fref << std::endl;
@@ -230,7 +237,7 @@ namespace LOFAR
               std::complex<float> fref;
               fref.real() = (float)refInout3[i * fftSize + j][0];
               fref.imag() = (float)refInout3[i * fftSize + j][1];
-              if (!cfpEquals(inout3[i][j], fref, epsilon)) {
+              if (!fpEquals(inout3[i][j], fref, eps)) {
                 if (++nrErrors < 100) {
                   std::cerr << "bwd: " << inout3[i][j] << " at transform " << i << " pos " << j
                             << " should have been " << fref << std::endl;
