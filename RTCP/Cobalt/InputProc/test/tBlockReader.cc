@@ -77,14 +77,14 @@ TEST(Basic) {
             case 1:
               CHECK(ib.ranges[0].from < ib.ranges[0].to);
 
-              CHECK_EQUAL((ptrdiff_t)blockSize, ib.ranges[0].to - ib.ranges[0].from);
+              CHECK_EQUAL(blockSize, ib.ranges[0].size());
               break;
 
             case 2:
               CHECK(ib.ranges[0].from < ib.ranges[0].to);
               CHECK(ib.ranges[1].from < ib.ranges[1].to);
 
-              CHECK_EQUAL((ptrdiff_t)blockSize, (ib.ranges[0].to - ib.ranges[0].from) + (ib.ranges[1].to - ib.ranges[1].from));
+              CHECK_EQUAL(blockSize, ib.ranges[0].size() + ib.ranges[1].size());
               break;
 
             default:

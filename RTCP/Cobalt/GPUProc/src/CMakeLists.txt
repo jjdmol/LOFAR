@@ -11,6 +11,7 @@ set(_gpuproc_sources
   #Package__Version.cc
   BandPass.cc
   BlockID.cc
+  DirectInput.cc
   FilterBank.cc
   global_defines.cc
   Storage/SSH.cc

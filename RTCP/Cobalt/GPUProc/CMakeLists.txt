@@ -46,7 +46,7 @@ lofar_find_package(OpenMP REQUIRED)
 lofar_find_package(LibSSH2 REQUIRED)
 lofar_find_package(OpenSSL REQUIRED)
 lofar_find_package(Boost REQUIRED)
-lofar_find_package(MPI REQUIRED)
+lofar_find_package(MPI)
 lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)  # 'double threads' for FFT unit test refs
 lofar_find_package(UnitTest++)
 
