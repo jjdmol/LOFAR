@@ -32,7 +32,14 @@
 #include <vector>
 #include <string>
 #include <omp.h>
+
+#ifdef HAVE_MPI
 #include <mpi.h>
+#include <InputProc/Transpose/MPISendStation.h>
+#else
+#include <GPUProc/DirectInput.h>
+#endif
+
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
@@ -47,7 +54,6 @@
 #include <InputProc/Station/PacketFactory.h>
 #include <InputProc/Station/PacketStream.h>
 #include <InputProc/Delays/Delays.h>
-#include <InputProc/Transpose/MPISendStation.h>
 
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
@@ -69,10 +75,10 @@ void usage(char **argv)
   cerr << "  -p: enable profiling" << endl;
 }
 
-// Rank in MPI set of hosts
+// Rank in MPI set of hosts, or 0 if no MPI is used
 int rank = 0;
 
-// Number of MPI hosts
+// Number of MPI hosts, or 1 if no MPI is used
 int nrHosts = 1;
 
 // Which MPI rank receives which subbands.
@@ -112,6 +118,8 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 
   for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
     const string desc = inputStreamDescs[board];
+
+    LOG_DEBUG_STR("Input stream for board " << board << ": " << desc);
 
     if (desc == "factory:") {
       PacketFactory factory(settings);
@@ -171,10 +179,12 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 
       BlockReader<SampleT> reader(s, beamlets, ps.nrHistorySamples(), 0.25);
 
+#ifdef HAVE_MPI
       /*
        * Set up the MPI send engine.
        */
       MPISendStation sender(s, rank, subbandDistribution);
+#endif
 
       /*
        * Set up delay compensation.
@@ -215,8 +225,32 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 
         //LOG_INFO_STR("Block read");
 
+#ifdef HAVE_MPI
         // Send the block to the receivers
         sender.sendBlock<SampleT>(*block, metaDatas);
+#else
+        // Send the block to the stationDataQueues global object
+        for (size_t subband = 0; subband < block->beamlets.size(); ++subband) {
+          const struct Block<SampleT>::Beamlet &beamlet = block->beamlets[subband];
+
+          /* create new block */
+          SmartPtr<struct InputBlock> pblock = new InputBlock;
+
+          pblock->samples.resize((ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * sizeof(SampleT));
+
+          /* copy metadata */
+          pblock->metaData = metaDatas[subband];
+
+          /* copy data */
+          beamlet.copy(reinterpret_cast<SampleT*>(&pblock->samples[0]));
+
+          /* obtain flags (after reading the data!) */
+          pblock->metaData.flags = beamlet.flagsAtBegin | block->flags(subband);
+
+          /* send to pipeline */
+          stationDataQueues[stationIdx][subband]->append(pblock);
+        }
+#endif
 
         //LOG_INFO_STR("Block sent");
 
@@ -229,6 +263,24 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
        */
       station.stop();
     }
+  }
+}
+
+void sender(const Parset &ps, size_t stationIdx)
+{
+  switch (ps.nrBitsPerSample()) {
+    default:
+    case 16: 
+      sender< SampleType<i16complex> >(ps, stationIdx);
+      break;
+
+    case 8: 
+      sender< SampleType<i8complex> >(ps, stationIdx);
+      break;
+
+    case 4: 
+      sender< SampleType<i4complex> >(ps, stationIdx);
+      break;
   }
 }
 
@@ -248,6 +300,34 @@ SELECTPIPELINE to_select_pipeline(char *argument)
 
   cout << "incorrect third argument supplied." << endl;
   exit(1);
+}
+
+void runPipeline(SELECTPIPELINE pipeline, const Parset &ps, const vector<size_t> subbands)
+{
+  LOG_INFO_STR("Processing subbands " << subbands);
+
+  // use a switch to select between modes
+  switch (pipeline)
+  {
+  case correlator:
+    LOG_INFO_STR("Correlator pipeline selected");
+    CorrelatorPipeline(ps, subbands).doWork();
+    break;
+
+  case beam:
+    LOG_INFO_STR("BeamFormer pipeline selected");
+    //BeamFormerPipeline(ps).doWork();
+    break;
+
+  case UHEP:
+    LOG_INFO_STR("UHEP pipeline selected");
+    //UHEP_Pipeline(ps).doWork();
+    break;
+
+  default:
+    LOG_WARN_STR("No pipeline selected, do nothing");
+    break;
+  }
 }
 
 int main(int argc, char **argv)
@@ -273,6 +353,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+#ifdef HAVE_MPI
   // Initialise and query MPI
   int mpi_thread_support;
   if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
@@ -282,6 +363,7 @@ int main(int argc, char **argv)
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
+#endif
 
 #ifdef HAVE_LOG4CPLUS
   INIT_LOGGER(str(format("rtcp@%02d") % rank));
@@ -289,7 +371,11 @@ int main(int argc, char **argv)
   INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
 #endif
 
+#ifdef HAVE_MPI
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
+#else
+  LOG_WARN_STR("Running without MPI!");
+#endif
 
   SELECTPIPELINE option = correlator;
   int opt;
@@ -324,18 +410,6 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR("nr subbands = " << ps.nrSubbands());
   LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
 
-  // Distribute the subbands over the receivers
-  size_t nrReceivers = nrHosts - ps.nrStations();
-  size_t firstReceiver = ps.nrStations();
-  for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-    int receiverRank = firstReceiver + subband % nrReceivers;
-
-    subbandDistribution[receiverRank].push_back(subband);
-  }
-
-  // This is currently the only supported case
-  ASSERT(nrHosts >= (int)ps.nrStations() + 1);
-
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 
@@ -343,63 +417,71 @@ int main(int argc, char **argv)
     storageProcesses = new StorageProcesses(ps, "");
   }
 
+  // Distribute the subbands over the receivers
+#ifdef HAVE_MPI
+  size_t nrReceivers = nrHosts - ps.nrStations();
+  size_t firstReceiver = ps.nrStations();
+#else
+  size_t nrReceivers = 1;
+  size_t firstReceiver = 0;
+#endif
+
+  for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+    int receiverRank = firstReceiver + subband % nrReceivers;
+
+    subbandDistribution[receiverRank].push_back(subband);
+  }
+
+#ifdef HAVE_MPI
+  // This is currently the only supported case
+  ASSERT(nrHosts >= (int)ps.nrStations() + 1);
+
   // Decide course to take based on rank.
   if (rank < (int)ps.nrStations()) {
     ASSERTSTR(subbandDistribution.find(rank) == subbandDistribution.end(), "An MPI rank can't both send station data and receive it.");
 
     /*
-     * Send station data
+     * Send station data for station #rank
      */
-    switch (ps.nrBitsPerSample()) {
-    default:
-    case 16: 
-      sender< SampleType<i16complex> >(ps, rank);
-      break;
-
-    case 8: 
-      sender< SampleType<i8complex> >(ps, rank);
-      break;
-
-    case 4: 
-      sender< SampleType<i4complex> >(ps, rank);
-      break;
-    }
-
+    sender(ps, rank);
   } else if (subbandDistribution.find(rank) != subbandDistribution.end()) {
     /*
      * Receive and process station data
      */
-    LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
-
-    // TODO: Honour subbandDistribution by forwarding it to the pipeline
-      
-    // Spawn the output processes (only do this once globally)
-
-    // use a switch to select between modes
-    switch (option)
-    {
-    case correlator:
-      LOG_INFO_STR("Correlator pipeline selected");
-      CorrelatorPipeline(ps, subbandDistribution[rank]).doWork();
-      break;
-
-    case beam:
-      LOG_INFO_STR("BeamFormer pipeline selected");
-      //BeamFormerPipeline(ps).doWork();
-      break;
-
-    case UHEP:
-      LOG_INFO_STR("UHEP pipeline selected");
-      //UHEP_Pipeline(ps).doWork();
-      break;
-
-    default:
-      LOG_WARN_STR("No pipeline selected, do nothing");
-      break;
-    }
+    runPipeline(option, ps, subbandDistribution[rank]);
   } else {
     LOG_WARN_STR("Superfluous MPI rank");
   }
+#else
+  // No MPI -- run the same stuff, but multithreaded
+
+  // Create queues to forward station data
+  stationDataQueues.resize(boost::extents[ps.nrStations()][ps.nrSubbands()]);
+
+  for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+    for (size_t sb = 0; sb < ps.nrSubbands(); ++sb) {
+      stationDataQueues[stat][sb] = new BestEffortQueue< SmartPtr<struct InputBlock> >(1, ps.realTime());
+    }
+  }
+
+  #pragma omp parallel sections
+  {
+    #pragma omp section
+    {
+      // Read and forward station data
+      #pragma omp parallel for num_threads(ps.nrStations())
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+        sender(ps, stat);
+      }
+    }
+
+    #pragma omp section
+    {
+      // Process station data
+      runPipeline(option, ps, subbandDistribution[rank]);
+    }
+  }
+#endif
 
   /*
    * COMPLETING stage
@@ -417,7 +499,9 @@ int main(int argc, char **argv)
 
   LOG_INFO_STR("Done");
 
+#ifdef HAVE_MPI
   MPI_Finalize();
+#endif
 
   return 0;
 }
