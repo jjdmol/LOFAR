@@ -1,4 +1,4 @@
-Creating new file ...
+Creating new file in blob format ...
 ../src/makesourcedb: Version GvD 2013-May-16
 Wrote 0 patches (out of 0) and 5 sources (out of 5) into tSourceDBBlob_tmp.src
 
@@ -133,6 +133,13 @@ Shapelet I:     []
 Shapelet Q:     []
 Shapelet U:     []
 Shapelet V:     []
+Patch info: [patch=sun cat=2 ra=1e-09 dec=1e-09 flux=10,patch=cygAA cat=2 ra=-0.401426 dec=-0.785398 flux=2.5,patch=cygnus cat=2 ra=0.401426 dec=0.785398 flux=2,patch=cygnusA cat=2 ra=-2.35227 dec=0.802599 flux=2,patch=lena cat=2 ra=2.35227 dec=-0.802599 flux=2]
+Patch names: [sun,cygAA,cygnus,cygnusA,lena]
+Patch names: [cygAA,cygnus,cygnusA]
+Patch names: []
+Patch names: [sun,cygAA,cygnus,cygnusA,lena]
+Patch names: []
+Patch names: [cygnus,cygnusA,lena]
 
 Appending to file ...
 ../src/makesourcedb: Version GvD 2013-May-16
@@ -401,3 +408,153 @@ Shapelet I:     []
 Shapelet Q:     []
 Shapelet U:     []
 Shapelet V:     []
+Patch info: [patch=sun cat=2 ra=1e-09 dec=1e-09 flux=10,patch=cygAA cat=2 ra=-0.401426 dec=-0.785398 flux=2.5,patch=cygnus cat=2 ra=0.401426 dec=0.785398 flux=2,patch=cygnusA cat=2 ra=-2.35227 dec=0.802599 flux=2,patch=lena cat=2 ra=2.35227 dec=-0.802599 flux=2]
+Patch names: [sun,cygAA,cygnus,cygnusA,lena]
+Patch names: [cygAA,cygnus,cygnusA]
+Patch names: []
+Patch names: [sun,cygAA,cygnus,cygnusA,lena]
+Patch names: []
+Patch names: [cygnus,cygnusA,lena]
+
+Creating new file in casa format ...
+../src/makesourcedb: Version GvD 2013-May-16
+Wrote 0 patches (out of 0) and 5 sources (out of 5) into tSourceDBBlob_tmp.src
+
+Source name:    sun
+Patch name:     sun
+Source type:    0
+Reftype:        sun
+RA:             1e-09
+DEC:            1e-09
+I:              10
+Q:              0
+U:              0
+V:              0
+Major axis:     0
+Minor axis:     0
+Orientation:    0
+Spectral index: 0  []
+SpInx RefFreq:  0
+Use RM:         0
+PolAngle:       0
+PolFrac:        0
+RM:             0
+Shapelet I:     []
+Shapelet Q:     []
+Shapelet U:     []
+Shapelet V:     []
+
+Source name:    cygnus
+Patch name:     cygnus
+Source type:    0
+Reftype:        J2000
+RA:             0.401426
+DEC:            0.785398
+I:              2
+Q:              0
+U:              0
+V:              0
+Major axis:     0
+Minor axis:     0
+Orientation:    0
+Spectral index: 1  [2]
+SpInx RefFreq:  2.5e+09
+Use RM:         0
+PolAngle:       0
+PolFrac:        0
+RM:             0
+Shapelet I:     []
+Shapelet Q:     []
+Shapelet U:     []
+Shapelet V:     []
+
+Source name:    cygAA
+Patch name:     cygAA
+Source type:    3
+Reftype:        B1950
+RA:             -0.401426
+DEC:            -0.785398
+I:              2.5
+Q:              0
+U:              0
+V:              0
+Major axis:     0
+Minor axis:     0
+Orientation:    0
+Spectral index: 0  []
+SpInx RefFreq:  0
+Use RM:         0
+PolAngle:       0
+PolFrac:        0
+RM:             0
+Shapelet I:     Axis Lengths: [2, 2]  (NB: Matrix in Row/Column order)
+[5.84997, 0.434056
+ -1.33315, 2.16204]
+
+Shapelet Q:     Axis Lengths: [2, 2]  (NB: Matrix in Row/Column order)
+[5.84997, 0.434056
+ -1.33315, 2.16204]
+
+Shapelet U:     Axis Lengths: [2, 2]  (NB: Matrix in Row/Column order)
+[5.84997, 0.434056
+ -1.33315, 2.16204]
+
+Shapelet V:     Axis Lengths: [2, 2]  (NB: Matrix in Row/Column order)
+[5.84997, 0.434056
+ -1.33315, 2.16204]
+
+
+Source name:    cygnusA
+Patch name:     cygnusA
+Source type:    0
+Reftype:        J2000
+RA:             -2.35227
+DEC:            0.802599
+I:              2
+Q:              0.1
+U:              0.2
+V:              1.5
+Major axis:     0
+Minor axis:     0
+Orientation:    0
+Spectral index: 3  [2,3,4]
+SpInx RefFreq:  1e+06
+Use RM:         0
+PolAngle:       0
+PolFrac:        0
+RM:             0
+Shapelet I:     []
+Shapelet Q:     []
+Shapelet U:     []
+Shapelet V:     []
+
+Source name:    lena
+Patch name:     lena
+Source type:    1
+Reftype:        J2000
+RA:             2.35227
+DEC:            -0.802599
+I:              2
+Q:              0
+U:              0
+V:              0.1
+Major axis:     0.13
+Minor axis:     0.25
+Orientation:    1.1
+Spectral index: 0  []
+SpInx RefFreq:  0
+Use RM:         1
+PolAngle:       0.3
+PolFrac:        0.5
+RM:             1.5
+Shapelet I:     []
+Shapelet Q:     []
+Shapelet U:     []
+Shapelet V:     []
+Patch info: [patch=sun cat=2 ra=1e-09 dec=1e-09 flux=10,patch=cygnus cat=2 ra=0.401426 dec=0.785398 flux=2,patch=cygAA cat=2 ra=-0.401426 dec=-0.785398 flux=2.5,patch=cygnusA cat=2 ra=-2.35227 dec=0.802599 flux=2,patch=lena cat=2 ra=2.35227 dec=-0.802599 flux=2]
+Patch names: [sun,cygAA,cygnus,cygnusA,lena]
+Patch names: [cygAA,cygnus,cygnusA]
+Patch names: []
+Patch names: [sun,cygAA,cygnus,cygnusA,lena]
+Patch names: []
+Patch names: [cygnus,cygnusA,lena]

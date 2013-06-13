@@ -126,8 +126,15 @@ int main()
 {
   INIT_LOGGER("tCorrelator");
 
+  try {
+    gpu::Platform pf;
+    cout << "Detected " << pf.size() << " CUDA devices" << endl;
+  } catch (gpu::CUDAException& e) {
+    cerr << e.what() << endl;
+    return 3;
+  }
+
   // Create a default context
-  gpu::Platform pf;
   gpu::Device device(0);
   gpu::Context ctx(device);
   Stream cuStream(ctx);

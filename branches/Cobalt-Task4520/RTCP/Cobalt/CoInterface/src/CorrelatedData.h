@@ -40,8 +40,8 @@ namespace LOFAR
     class CorrelatedData : public StreamableData, public IntegratableData
     {
     public:
-      CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator & = heapAllocator, unsigned alignment = 512);
-      CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, std::complex<float> *visibilities, size_t nrVisibilities, Allocator & = heapAllocator, unsigned alignment = 512);
+      CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator & = heapAllocator, unsigned alignment = 1);
+      CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, std::complex<float> *visibilities, size_t nrVisibilities, Allocator & = heapAllocator, unsigned alignment = 1);
 
       virtual IntegratableData &operator += (const IntegratableData &);
 
@@ -62,8 +62,8 @@ namespace LOFAR
       // has to be stored, which fits either in 1, 2, or 4 bytes.
       const unsigned itsNrBytesPerNrValidSamples;     // 1, 2, or 4
     protected:
-      virtual void                readData(Stream *);
-      virtual void                writeData(Stream *);
+      virtual void                readData(Stream *, unsigned);
+      virtual void                writeData(Stream *, unsigned);
 
     private:
       void init(unsigned nrChannels, Allocator &allocator);
@@ -165,35 +165,39 @@ namespace LOFAR
     }
 
 
-    inline void CorrelatedData::readData(Stream *str)
+    inline void CorrelatedData::readData(Stream *str, unsigned alignment)
     {
-      str->read(visibilities.origin(), align(visibilities.num_elements() * sizeof(fcomplex), itsAlignment));
+      ASSERT(alignment <= itsAlignment);
+
+      str->read(visibilities.origin(), align(visibilities.num_elements() * sizeof(fcomplex), alignment));
 
       switch (itsNrBytesPerNrValidSamples) {
-      case 4: str->read(itsNrValidSamples4.origin(), align(itsNrValidSamples4.num_elements() * sizeof(uint32_t), itsAlignment));
+      case 4: str->read(itsNrValidSamples4.origin(), align(itsNrValidSamples4.num_elements() * sizeof(uint32_t), alignment));
         break;
 
-      case 2: str->read(itsNrValidSamples2.origin(), align(itsNrValidSamples2.num_elements() * sizeof(uint16_t), itsAlignment));
+      case 2: str->read(itsNrValidSamples2.origin(), align(itsNrValidSamples2.num_elements() * sizeof(uint16_t), alignment));
         break;
 
-      case 1: str->read(itsNrValidSamples1.origin(), align(itsNrValidSamples1.num_elements() * sizeof(uint8_t), itsAlignment));
+      case 1: str->read(itsNrValidSamples1.origin(), align(itsNrValidSamples1.num_elements() * sizeof(uint8_t), alignment));
         break;
       }
     }
 
 
-    inline void CorrelatedData::writeData(Stream *str)
+    inline void CorrelatedData::writeData(Stream *str, unsigned alignment)
     {
-      str->write(visibilities.origin(), align(visibilities.num_elements() * sizeof *visibilities.origin(), itsAlignment));
+      ASSERT(alignment <= itsAlignment);
+
+      str->write(visibilities.origin(), align(visibilities.num_elements() * sizeof *visibilities.origin(), alignment));
 
       switch (itsNrBytesPerNrValidSamples) {
-      case 4: str->write(itsNrValidSamples4.origin(), align(itsNrValidSamples4.num_elements() * sizeof(uint32_t), itsAlignment));
+      case 4: str->write(itsNrValidSamples4.origin(), align(itsNrValidSamples4.num_elements() * sizeof(uint32_t), alignment));
         break;
 
-      case 2: str->write(itsNrValidSamples2.origin(), align(itsNrValidSamples2.num_elements() * sizeof(uint16_t), itsAlignment));
+      case 2: str->write(itsNrValidSamples2.origin(), align(itsNrValidSamples2.num_elements() * sizeof(uint16_t), alignment));
         break;
 
-      case 1: str->write(itsNrValidSamples1.origin(), align(itsNrValidSamples1.num_elements() * sizeof(uint8_t), itsAlignment));
+      case 1: str->write(itsNrValidSamples1.origin(), align(itsNrValidSamples1.num_elements() * sizeof(uint8_t), alignment));
         break;
       }
     }

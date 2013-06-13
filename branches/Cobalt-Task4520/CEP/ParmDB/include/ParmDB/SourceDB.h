@@ -107,11 +107,15 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Missing parameters will default to 0.
     // <br>Optionally it is checked if the source already exists.
+    // <group>
     virtual void addSource (const SourceInfo& sourceInfo,
                             const string& patchName,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check) = 0;
+    virtual void addSource (const SourceData& source,
+                            bool check) = 0;
+    // </group>
 
     // Add a source which forms a patch in itself (with the same name).
     // <br>Optionally it is checked if the patch or source already exists.
@@ -138,6 +142,9 @@ namespace BBS {
 
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName) = 0;
+
+    // Get all data of the sources belonging to the given patch.
+    virtual vector<SourceData> getPatchSourceData (const string& patchName) = 0;
 
     // Get the source type of the given source.
     virtual SourceInfo getSource (const string& sourceName) = 0;
@@ -208,11 +215,11 @@ namespace BBS {
       { itsRep->checkDuplicates(); }
 
     // Find non-unique patch names.
-    vector<string> findDuplicatePatches()
+    vector<string> findDuplicatePatches() const
       { return itsRep->findDuplicatePatches(); }
 
     // Find non-unique source names.
-    vector<string> findDuplicateSources()
+    vector<string> findDuplicateSources() const
       { return itsRep->findDuplicateSources(); }
 
     // Test if the patch already exists.
@@ -241,6 +248,7 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Not all parameters need to be present. The ParmDB classes will
     // use a default of 0 for missing ones.
+    // <group>
     void addSource (const SourceInfo& sourceInfo,
                     const string& patchName,
                     const ParmMap& defaultParameters,
@@ -248,6 +256,9 @@ namespace BBS {
                     bool check = true)
       { itsRep->addSource (sourceInfo, patchName,
                            defaultParameters, ra, dec, check); }
+    void addSource (const SourceData& source, bool check = true)
+      { itsRep->addSource (source, check); }
+    // </group>
 
     // Add a source which forms a patch in itself (with the same name).
     void addSource (const SourceInfo& sourceInfo,
@@ -281,6 +292,10 @@ namespace BBS {
     // Get the info of the sources belonging to the given patch.
     vector<SourceInfo> getPatchSources (const string& patchName) const
       { return itsRep->getPatchSources (patchName); }
+
+    // Get all data of the sources belonging to the given patch.
+    vector<SourceData> getPatchSourceData (const string& patchName) const
+      { return itsRep->getPatchSourceData (patchName); }
 
     // Get the source info of the given source.
     SourceInfo getSource (const string& sourceName) const

@@ -65,7 +65,13 @@ bool cmp_fcomplex(const fcomplex &a, const fcomplex &b, const float epsilon = EP
 int main() {
   INIT_LOGGER("tFFT");
 
-  gpu::Platform pf;
+  try {
+    gpu::Platform pf;
+    cout << "Detected " << pf.size() << " CUDA devices" << endl;
+  } catch (gpu::CUDAException& e) {
+    cerr << e.what() << endl;
+    return 3;
+  }
   gpu::Device device(0);
   gpu::Context ctx(device);
 

@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1300 66 N "_3DFace" 2
+PANEL,-1 -1 1028 66 N "_3DFace" 2
 "$adder"
 "$barColor"
 "main()
@@ -24,7 +24,6 @@ PANEL,-1 -1 1300 66 N "_3DFace" 2
 	                                adderDP + \".locusNode\",
 	                                adderDP + \".directory\", 
 	                                adderDP + \".observationName\",
-   	                             adderDP + \".dataProduct\",
 	                                adderDP + \".writer\", 
                                  adderDP + \".status.state:_online.._invalid\") == -1) {
       LOG_ERROR(\"adderDetail.pnl:updateTrigger|Couldn't connect to: \"+adderDP+\" \"+getLastError());
@@ -38,7 +37,6 @@ PANEL,-1 -1 1300 66 N "_3DFace" 2
     setValue(\"locusNode\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"directory\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"observationName\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"dataProduct\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"writer\", \"backCol\", \"Lofar_dpdoesnotexist\");
   }    
     
@@ -58,9 +56,8 @@ updateAdder(string dp1, bool dropping,
              string dp5, int locusNode,
              string dp6, string directory,
              string dp7, string observationName,
-             string dp8, string dataProduct,
-             string dp9, int writer,
-             string dp16, bool invalid)
+             string dp8, int writer,
+             string dp9, bool invalid)
 {
 
   LOG_DEBUG(\"adderDetail.pnl:updateAdder|entered\"); 
@@ -76,7 +73,6 @@ updateAdder(string dp1, bool dropping,
     setValue(\"fileName\", \"text\", fileName);
     setValue(\"locusNode\", \"text\", locusNode);
     setValue(\"directory\", \"text\", directory);
-    setValue(\"dataProduct\", \"text\", dataProduct);
     setValue(\"writer\", \"text\", writer);
   } else {
     setValue(\"dropping\",\"backCol\",\"Lofar_invalid\");
@@ -85,7 +81,6 @@ updateAdder(string dp1, bool dropping,
     setValue(\"fileName\", \"text\", \"\");
     setValue(\"locusNode\", \"text\", \"\");
     setValue(\"directory\", \"text\", \"\");
-    setValue(\"dataProduct\", \"text\", \"\");
     setValue(\"writer\", \"text\", \"\");
   }
 }
@@ -156,11 +151,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 0 3 1260 17
+E E 0 1 1 2 1 E U  1 E 0 3 999 17
 2 1
 "dropped"
 ""
-1 80 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 85 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 1 0 0 0 0 0
 E E E
@@ -170,8 +165,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 80 4 122 17
-0 2 2 "0s" 0 0 0 192 0 0  80 4 1
+E E 0 1 1 2 1 E U  0 E 85 4 127 17
+0 2 2 "0s" 0 0 0 192 0 0  85 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
@@ -179,7 +174,7 @@ LANG:1 7 0000000
 2 2
 "locusNode"
 ""
-1 149 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 142 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 2 0 0 0 0 0
 E E E
@@ -189,8 +184,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 149 4 191 17
-0 2 2 "0s" 0 0 0 192 0 0  149 4 1
+E E 0 1 1 2 1 E U  0 E 142 4 184 17
+0 2 2 "0s" 0 0 0 192 0 0  142 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
@@ -198,7 +193,7 @@ LANG:1 7 0000000
 2 3
 "writer"
 ""
-1 190 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 209 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 3 0 0 0 0 0
 E E E
@@ -208,27 +203,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 190 4 226 17
-0 2 2 "0s" 0 0 0 192 0 0  190 4 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0 1
-LANG:1 6 000000
-2 4
-"dataProduct"
-""
-1 240 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-4 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 240 4 276 17
-0 2 2 "0s" 0 0 0 192 0 0  240 4 1
+E E 0 1 1 2 1 E U  0 E 209 4 245 17
+0 2 2 "0s" 0 0 0 192 0 0  209 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
@@ -236,7 +212,7 @@ LANG:1 6 000000
 2 5
 "dataProductType"
 ""
-1 470 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 264 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -246,8 +222,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 470 4 506 17
-0 2 2 "0s" 0 0 0 192 0 0  470 4 1
+E E 0 1 1 2 1 E U  0 E 264 4 300 17
+0 2 2 "0s" 0 0 0 192 0 0  264 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
@@ -255,7 +231,7 @@ LANG:1 6 000000
 2 6
 "directory"
 ""
-1 550 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 379 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -265,8 +241,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 550 4 586 17
-0 2 2 "0s" 0 0 0 192 0 0  550 4 1
+E E 0 1 1 2 1 E U  0 E 379 4 415 17
+0 2 2 "0s" 0 0 0 192 0 0  379 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
@@ -274,7 +250,7 @@ LANG:1 6 000000
 2 7
 "fileName"
 ""
-1 750 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 469 4 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -284,8 +260,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 750 4 786 17
-0 2 2 "0s" 0 0 0 192 0 0  750 4 1
+E E 0 1 1 2 1 E U  0 E 469 4 505 17
+0 2 2 "0s" 0 0 0 192 0 0  469 4 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
@@ -305,7 +281,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -60 -25 1 E 90 30 100 40
+E E 0 1 1 2 1 E 1 0 1 -48 -25 1 E 90 30 100 40
 0
 LAYER, 1 
 1

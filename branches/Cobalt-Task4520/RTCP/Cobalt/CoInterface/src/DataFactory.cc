@@ -38,7 +38,7 @@ namespace LOFAR
     StreamableData *newStreamableData(const Parset &parset, OutputType outputType, int streamNr, Allocator &allocator)
     {
       switch (outputType) {
-      case CORRELATED_DATA: return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), allocator);
+      case CORRELATED_DATA: return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), allocator, 512); // 512 alignment is needed for writing to MS
 
       case BEAM_FORMED_DATA: {
         const Transpose2 &beamFormLogic = parset.transposeLogic();
