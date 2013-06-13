@@ -198,9 +198,9 @@ namespace LOFAR
     {
       switch (bufferType) {
       case INPUT_DATA:
-        return 
-          (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) *
-          ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
+        return
+          ps.nrSamplesPerSubband() * ps.nrStations() * 
+          NR_POLARIZATIONS * sizeof(std::complex<float>);
       case OUTPUT_DATA:
         return 
           ps.nrBaselines() * ps.nrChannelsPerSubband() * 

@@ -44,7 +44,7 @@ TEST_FIXTURE(TestFixture, InputData)
 
 TEST_FIXTURE(TestFixture, OutputData)
 {
-  CHECK_EQUAL(size_t(197568),
+  CHECK_EQUAL(size_t(786432),
               DelayAndBandPassKernel::bufferSize(
                 ps, DelayAndBandPassKernel::OUTPUT_DATA));
 }

@@ -68,13 +68,18 @@ namespace LOFAR
     {
       switch (bufferType) {
       case INPUT_DATA: 
-        return 
-          ps.nrStations() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+        if (ps.nrChannelsPerSubband() == 1)
+          return 
+            ps.nrStations() * NR_POLARIZATIONS * 
+            ps.nrSamplesPerSubband() * ps.nrBytesPerComplexSample();
+        else
+          return 
+            ps.nrStations() * NR_POLARIZATIONS * 
+            ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
       case OUTPUT_DATA:
         return
-          (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * 
-          ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
       case DELAYS:
         return 
           ps.nrBeams() * ps.nrStations() * NR_POLARIZATIONS * sizeof(float);

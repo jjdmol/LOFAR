@@ -58,32 +58,17 @@ int main() {
   gpu::Module module(createModule(ctx, srcFilename, ptx));
   cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 
-  WorkQueueInputData::DeviceBuffers devInput(ps.nrBeams(),
-                ps.nrStations(),
-                NR_POLARIZATIONS,
-                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
-                ps.nrBytesPerComplexSample(),
-                ctx);
+  gpu::DeviceMemory 
+    inputData(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA)),
+    filteredData(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::OUTPUT_DATA)),
+    delaysAtBegin(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS)),
+    delaysAfterEnd(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS)),
+    phaseOffsets(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS)),
+    bandPassCorrectionWeights(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS));
 
-  // Calculate bandpass weights and transfer to the device.
-  gpu::HostMemory bpWeights(ctx, ps.nrChannelsPerSubband() * sizeof(float));
-  BandPass::computeCorrectionFactors(bpWeights.get<float>(),
-                                     ps.nrChannelsPerSubband());
-  gpu::DeviceMemory devBandPassCorrectionWeights(ctx, ps.nrChannelsPerSubband() * sizeof(float));
-  stream.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
-
-  // reserve enough space for the output of the firFilterKernel, and the correlatorKernel.
-  size_t devFilteredDataSize = std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-                      ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
-  gpu::DeviceMemory devFilteredData(ctx, devFilteredDataSize);
-
-  DelayAndBandPassKernel kernel(ps, module, 
-                             devInput.inputSamples,
-                             devFilteredData,
-                             devInput.delaysAtBegin,
-                             devInput.delaysAfterEnd,
-                             devInput.phaseOffsets,
-                             devBandPassCorrectionWeights);
+  DelayAndBandPassKernel kernel(ps, module, inputData, filteredData, 
+                                delaysAtBegin, delaysAfterEnd, phaseOffsets, 
+                                bandPassCorrectionWeights);
 
   unsigned subband = 0;
   kernel.enqueue(stream, subband);

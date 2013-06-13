@@ -152,15 +152,21 @@ namespace LOFAR
         gpu::DeviceMemory phaseOffsets;
         gpu::DeviceMemory inputSamples;
 
-        DeviceBuffers(size_t n_beams, size_t n_stations, size_t n_polarizations,
-                      size_t n_samples, size_t bytes_per_complex_sample,
-                      gpu::Context &context, size_t inputSamplesMinSize = 0)
-        :
-          delaysAtBegin (context, n_beams * n_stations * n_polarizations * sizeof(float)),
-          delaysAfterEnd(context, n_beams * n_stations * n_polarizations * sizeof(float)),
-          phaseOffsets  (context,           n_stations * n_polarizations * sizeof(float)),
-          inputSamples  (context, std::max(inputSamplesMinSize,
-                                n_samples * n_stations * n_polarizations * bytes_per_complex_sample))
+        DeviceBuffers(size_t inputSamplesSize, size_t delaysSize, 
+                      size_t phaseOffsetsSize, gpu::Context &context) :
+          delaysAtBegin(context, delaysSize),
+          delaysAfterEnd(context, delaysSize),
+          phaseOffsets(context, phaseOffsetsSize),
+          inputSamples(context, inputSamplesSize)
+        // DeviceBuffers(size_t n_beams, size_t n_stations, size_t n_polarizations,
+        //               size_t n_samples, size_t bytes_per_complex_sample,
+        //               gpu::Context &context, size_t inputSamplesMinSize = 0)
+        // :
+        //   delaysAtBegin (context, n_beams * n_stations * n_polarizations * sizeof(float)),
+        //   delaysAfterEnd(context, n_beams * n_stations * n_polarizations * sizeof(float)),
+        //   phaseOffsets  (context,           n_stations * n_polarizations * sizeof(float)),
+        //   inputSamples  (context, std::max(inputSamplesMinSize,
+        //                         n_samples * n_stations * n_polarizations * bytes_per_complex_sample))
         {
         }
       };
