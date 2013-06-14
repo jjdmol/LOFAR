@@ -110,7 +110,7 @@ class imager_prepare(LOFARnodeTCP):
 				
             #*****************************************************************
             # Add measurmenttables 
-            self.add_beam_tables(time_slices_path_list)
+            #self.add_beam_tables(time_slices_path_list)
 
             #******************************************************************
             # 6. Perform the (virtual) concatenation of the timeslices
