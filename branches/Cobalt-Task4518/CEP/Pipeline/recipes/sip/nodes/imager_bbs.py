@@ -68,12 +68,12 @@ class imager_bbs(LOFARnodeTCP):
         
         #*****************************************************************
         # Add measurmenttables 
-        self.add_beam_tables(ms_list_path)
+        self.add_beam_tables(ms_map)
 
 
-    def add_beam_tables(self, time_slices_path_list):
+    def add_beam_tables(self, ms_map):
         beamtable_proc_group = SubProcessGroup(self.logger)
-        for ms_path in time_slices_path_list:
+        for ms_path in ms_map:
             cmd_string = "makebeamtables ms={0} overwrite=true".format(ms_path.file)
             beamtable_proc_group.run(cmd_string)
 
