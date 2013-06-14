@@ -65,7 +65,20 @@ class imager_bbs(LOFARnodeTCP):
             self.logger.error("Failed to execute bbs: {0}".format(str(
                                                                     exception)))
             return 1
+        
+        #*****************************************************************
+        # Add measurmenttables 
+        self.add_beam_tables(ms_list_path)
 
+
+    def add_beam_tables(self, time_slices_path_list):
+        beamtable_proc_group = SubProcessGroup(self.logger)
+        for ms_path in time_slices_path_list:
+            cmd_string = "makebeamtables ms={0} overwrite=true".format(ms_path.file)
+            beamtable_proc_group.run(cmd_string)
+
+        if beamtable_proc_group.wait_for_finish() != None:
+            raise Exception("an makebeamtables run failed!")
         return 0
 
 
