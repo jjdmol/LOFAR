@@ -25,6 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 
 using namespace std;
@@ -61,7 +62,7 @@ int main() {
 
   map<string, string> ptx;
   flags_type flags(defaultFlags());
-  definitions_type definitions(defaultDefinitions(ps));
+  Kernel::definitions_type definitions(Kernel::compileDefinitions(ps));
   ptx[kfilenameFIR] = createPTX(devices, kfilenameFIR, flags, definitions);
   ptx[kfilenameDBP] = createPTX(devices, kfilenameDBP, flags, definitions);
   ptx[kfilenameCor] = createPTX(devices, kfilenameCor, flags, definitions);

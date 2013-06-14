@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <GPUProc/global_defines.h>
 
@@ -59,7 +60,7 @@ int main(int argc, char *argv[]) {
   // Collect inputs from the parste and assign them to CudaRuntimeCompiler
   // input_types.
   flags_type flags = defaultFlags();
-  definitions_type definitions = defaultDefinitions(ps);
+  Kernel::definitions_type definitions(Kernel::compileDefinitions(ps));
 
   string ptx = createPTX(devices, srcFilename, flags, definitions);
   gpu::Module module(createModule(ctx, srcFilename, ptx));

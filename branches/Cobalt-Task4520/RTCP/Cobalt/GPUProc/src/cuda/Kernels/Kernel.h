@@ -40,6 +40,12 @@ namespace LOFAR
 
       void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
 
+      // Map used for storing compile defintions as key/value pairs.
+      typedef std::map<std::string, std::string> definitions_type;
+
+      // Return required compile definitions given the Parset \a ps.
+      static definitions_type compileDefinitions(const Parset& ps);
+
     protected:
       gpu::Event event;
       const Parset &ps;

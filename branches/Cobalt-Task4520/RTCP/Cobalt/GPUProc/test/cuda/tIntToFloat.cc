@@ -32,6 +32,7 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <UnitTest++.h>
 
@@ -65,7 +66,7 @@ float * runTest(unsigned NR_BITS_PER_SAMPLE = 16,
   // ****************************************
   // Compile to ptx  
   // Get an instantiation of the default parameters
-  definitions_type definitions = defaultDefinitions();
+  definitions_type definitions = Kernel::definitions_type();
   flags_type flags = defaultFlags();
 
   // Set op string string pairs to be provided to the compiler as defines

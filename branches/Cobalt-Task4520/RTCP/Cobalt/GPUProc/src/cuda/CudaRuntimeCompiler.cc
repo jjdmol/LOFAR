@@ -68,54 +68,14 @@ namespace LOFAR
     return flags;    
   };
 
-  // Return empty set of definitions for the nvcc compilation of a cuda kernel
-  definitions_type defaultDefinitions()
-  {
-    definitions_type defs;
+  // // Return empty set of definitions for the nvcc compilation of a cuda kernel
+  // definitions_type defaultDefinitions()
+  // {
+  //   definitions_type defs;
 
-    return defs;
-  }
+  //   return defs;
+  // }
 
-  // Return the set of default definitions for the nvcc compilation of a cuda kernel in Cobalt
-  definitions_type defaultDefinitions(const Parset &ps)
-  {
-    definitions_type defs;
-
-    using boost::format;
-
-    defs["NVIDIA_CUDA"] = ""; // left-over from OpenCL for Correlator.cl/.cu 
-
-    // TODO: support device specific defs somehow (createPTX() knows about targets, but may be kernel and target specific)
-    //if (devices[0].getInfo<CL_DEVICE_NAME>() == "GeForce GTX 680")
-    //  defs["USE_FLOAT4_IN_CORRELATOR"] = "";
-
-    // TODO: kernel-specific defs should be specified in the XXXKernel class
-    defs["COMPLEX"] = "2";
-
-    defs["NR_BITS_PER_SAMPLE"] = str(format("%u") % ps.nrBitsPerSample());
-    defs["SUBBAND_BANDWIDTH"]  = str(format("%.7ff") % ps.subbandBandwidth()); // returns double, so rounding issue?
-    defs["NR_SUBBANDS"]        = str(format("%u") % ps.nrSubbands()); // size_t, but %zu not supp
-    defs["NR_CHANNELS"]        = str(format("%u") % ps.nrChannelsPerSubband());
-    defs["NR_STATIONS"]        = str(format("%u") % ps.nrStations());
-    defs["NR_SAMPLES_PER_CHANNEL"] = str(format("%u") % ps.nrSamplesPerChannel());
-    defs["NR_SAMPLES_PER_SUBBAND"] = str(format("%u") % ps.nrSamplesPerSubband());
-    defs["NR_BEAMS"]           = str(format("%u") % ps.nrBeams());
-    defs["NR_TABS"]            = str(format("%u") % ps.nrTABs(0)); // TODO: 0 should be dep on #beams
-    defs["NR_COHERENT_STOKES"] = str(format("%u") % ps.nrCoherentStokes()); // size_t
-    defs["NR_INCOHERENT_STOKES"] = str(format("%u") % ps.nrIncoherentStokes()); // size_t
-    defs["COHERENT_STOKES_TIME_INTEGRATION_FACTOR"]   = str(format("%u") % ps.coherentStokesTimeIntegrationFactor());
-    defs["INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR"] = str(format("%u") % ps.incoherentStokesTimeIntegrationFactor());
-    defs["NR_POLARIZATIONS"]   = str(format("%u") % NR_POLARIZATIONS);
-    defs["NR_TAPS"]            = str(format("%u") % NR_TAPS);
-    defs["NR_STATION_FILTER_TAPS"] = str(format("%u") % NR_STATION_FILTER_TAPS);
-    if (ps.delayCompensation())
-      defs["DELAY_COMPENSATION"] = "";
-    if (ps.correctBandPass())
-      defs["BANDPASS_CORRECTION"] = "";
-    defs["DEDISPERSION_FFT_SIZE"] = str(format("%u") % ps.dedispersionFFTsize()); // size_t
-
-    return defs;  
-  }
   
   // Performs a 'system' call of nvcc. Return the stdout of the command
   // on error no stdout is created and an exception is thrown
@@ -162,7 +122,9 @@ namespace LOFAR
   // Create a nvcc command line string based on the input path, a set of flags and a map
   // of definitions. Use this command to call nvcc and compile the file at input path to a ptx file
   // which content is returned as a string
-  std::string compileToPtx(const std::string& pathToCuFile, const flags_type& flags, const definitions_type& definitions)
+  std::string compileToPtx(const std::string& pathToCuFile,
+                           const flags_type& flags,
+                           const definitions_type& definitions)
   {
     const string cudaCompiler = "nvcc"; 
     stringstream cmd("");
@@ -187,13 +149,6 @@ namespace LOFAR
     LOG_INFO_STR("Runtime compilation of kernel, command: " << cmd.str());
 
     return runNVCC(cmd.str());
-  };
-
-  // overloaded function. Use the path and default flags and definitions to call nvcc
-  std::string compileToPtx(const std::string& pathToCuFile)
-  {
-    // compile with the default flags and definitions
-    return compileToPtx(pathToCuFile, defaultFlags(), defaultDefinitions());
   };
 
   }

@@ -52,7 +52,7 @@ int main() {
 
   // Get default parameters for the compiler
   flags_type flags = defaultFlags();
-  definitions_type definitions = defaultDefinitions(ps);
+  Kernel::definitions_type definitions(Kernel::compileDefinitions(ps));
 
   string ptx = createPTX(devices, srcFilename, flags, definitions);
   gpu::Module module(createModule(ctx, srcFilename, ptx));
