@@ -23,7 +23,7 @@
 
 #include <lofar_config.h>
 #include <Common/OpenMP.h>
-// #include <omp.h>
+
 #include <casa/Containers/ValueHolder.h>
 #include <casa/Containers/Record.h>
 #include <casa/Utilities/CountedPtr.h>
@@ -46,47 +46,71 @@ namespace LOFAR
 namespace ExpIon
 {
     
-ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const ValueHolder &init_vh = ValueHolder(), const ValueHolder &flags_vh = ValueHolder()) 
+ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const ValueHolder &init_vh, 
+                const ValueHolder &flags_vh, const ValueHolder &constant_parm_vh ) 
 {
+    // Arrays are passed as ValueHolder
+    // They are Array is extracted by the asArray<Type> methods
+    // They pointer to the actual data is obtained by the Array.data() method.
+    
+    // Get the phases 
     Array<Float> phases = phases_vh.asArrayFloat();
     Float *phases_data = phases.data();
-    Array<Bool> flags;
-    Bool noflags = flags_vh.isNull();
+
+    // Get the flags
+    Array<Bool> flags(flags_vh.asArrayBool());
+    Bool noflags = (flags.ndim() == 0);
+    Bool *flags_data;
     if (!noflags)
     {
-      flags = flags_vh.asArrayBool();
+        flags_data = flags.data();
     }
-    Bool *flags_data = flags.data();
-    Array<Float> A = A_vh.asArrayFloat();
-    Float *A_data = A.data();
-    IPosition s = phases.shape();
-    IPosition s1 = A.shape();
     
+    IPosition s = phases.shape();
     int N_station = s[0];
     int N_freq = s[1];
+    
+    // Get the matrix with basis functions
+    Array<Float> A = A_vh.asArrayFloat();
+    Float *A_data = A.data();
+    
+    IPosition s1 = A.shape();
+    
     int N_coeff = s1[0];
     int N_parm = N_station * N_coeff;
     Float sol[N_parm];
     
-    int N_thread = OpenMP::maxThreads();
-    LSQFit lnl[N_thread];
-    lnl[0] = LSQFit(N_parm);
-    lnl[0].setMaxIter(10000);
-    uInt nr = 0;
-    
-    if (!init_vh.isNull())
-    {
-        Array<Float> init = init_vh.asArrayFloat();
-        for(int i = 0; i < N_parm; i++) sol[i] = init.data()[i];
-    }
-    else    
+    Array<Float> init(init_vh.asArrayFloat());
+    if (init.ndim() == 0)
     {
         for(int i = 0; i < N_parm; i++) sol[i] = 0.0;
     }
-    int iter = 0;
-    while (!lnl[0].isReady()) 
+    else    
     {
-        for(int i = 1; i<N_thread; i++) {
+        for(int i = 0; i < N_parm; i++) sol[i] = init.data()[i];
+    }
+    
+    // Get the flags indicating which parameters are constant_parm
+    // i.e. are not a free parameter in the minimization problem
+    Array<Bool> constant_parm(constant_parm_vh.asArrayBool());
+    Bool no_constant_parm = (constant_parm.ndim() == 0);
+    Bool *constant_parm_data;
+    if (!no_constant_parm)
+    {
+        constant_parm_data = constant_parm.data();
+    }
+    
+    Float cEq[N_parm];
+    for(int i=0; i<N_parm; ++i) cEq[i] = 0.0;
+    
+    int N_thread = OpenMP::maxThreads();
+    LSQFit lnl[N_thread];
+    
+    uInt nr = 0;
+    
+    for (int iter = 0; iter<1000; iter++)
+    {
+        for(int i = 0; i<N_thread; i++) {
             lnl[i] = LSQFit(N_parm);
         }
         #pragma omp parallel
@@ -112,13 +136,10 @@ ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const Val
                             Float phase_ij_obs = phases_data_k_i - phases_data_k[j];
                             Float phase_ij_model = 0.0;
                             
-                            int idx_i = i*N_coeff;
-                            int idx_j = j*N_coeff;
-                            
                             for (int l = 0; l<N_coeff; l++) 
                             {
                                 Float coeff = A_data_k[l];
-                                phase_ij_model += (sol[idx_i + l] - sol[idx_j + l]) * coeff ;
+                                phase_ij_model += (sol[i + l*N_station] - sol[j + l*N_station]) * coeff ;
                             }
                             Float sin_dphase, cos_dphase;
                             sincosf(phase_ij_obs - phase_ij_model, &sin_dphase, &cos_dphase);
@@ -137,8 +158,8 @@ ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const Val
                                 derivatives_re[N_coeff + l] = -a;
                                 derivatives_im[l] = b;
                                 derivatives_im[N_coeff + l] = -b;
-                                idx[l] = idx_i+l;
-                                idx[N_coeff + l] = idx_j+l;
+                                idx[l] = i+l*N_station;
+                                idx[N_coeff + l] = j+l*N_station;
                             }
                             lnl[threadNum].makeNorm(uInt(2*N_coeff), (uInt*) idx, (Float*) derivatives_re, Float(1.0), residual_re);
                             lnl[threadNum].makeNorm(uInt(2*N_coeff), (uInt*) idx, (Float*) derivatives_im, Float(1.0), residual_im);
@@ -146,18 +167,30 @@ ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const Val
                     }
                 }
             }
-//             #pragma omp sections
-//             {
-//                 { lnl[0].merge(lnl[1]); }
-//                 #pragma omp section
-//                 { lnl[2].merge(lnl[3]); }
-//             }
         }
-//         lnl[0].merge(lnl[2]);
         
         for(int i = 1; i<N_thread; i++)
         {
             lnl[0].merge(lnl[i]);
+        }
+        
+
+        Float eq[2];
+        eq[0] = 1.0;
+        eq[1] = -1.0;
+        uInt idx[2];
+
+        if ((!no_constant_parm) )
+        {
+            for (int i = 0; i<N_parm; i++) 
+            {
+                if (constant_parm_data[i])
+                {
+                    cEq[i] = 1.0;
+                    lnl[0].addConstraint( (Float*) cEq, 0.0);
+                    cEq[i] = 0.0;
+                }
+            }
         }
         
         if (!lnl[0].solveLoop(nr, sol, True)) 
@@ -165,25 +198,22 @@ ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const Val
             cout << "Error in loop: " << nr << endl;
             break;
         }
-        iter++;
+        if (lnl[0].isReady())
+        {
+            break;
+        }
     }
-    cout << iter << endl;
     
-    Array<Float> solutions(IPosition(2, N_coeff, N_station ), sol);
+    Array<Float> solutions(IPosition(2, N_station, N_coeff), sol);
     ValueHolder result(solutions);
     return result;
 };
-
-ValueHolder fit2(const ValueHolder &phases_vh, const ValueHolder &A_vh) 
-{
-    return fit(phases_vh, A_vh);
-}    
 
 
 } // namespace ExpIon
 } // namespace LOFAR
 
-BOOST_PYTHON_MODULE(fitting)
+BOOST_PYTHON_MODULE(_baselinefitting)
 {
     casa::pyrap::register_convert_excp();
     casa::pyrap::register_convert_basicdata();
@@ -191,5 +221,4 @@ BOOST_PYTHON_MODULE(fitting)
     casa::pyrap::register_convert_casa_record();
     
     def("fit", LOFAR::ExpIon::fit);
-    def("fit", LOFAR::ExpIon::fit2);
 }
