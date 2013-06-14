@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "gpu_utils.h"
+#include <GPUProc/gpu_utils.h>
 
 #include <cstdlib>
 #include <sys/types.h>
@@ -50,6 +50,22 @@ namespace LOFAR
   {
     using namespace std;
     using boost::format;
+
+    flags_type defaultFlags()
+    {
+      flags_type flags;
+
+      using boost::format;
+
+      //flags.insert("device-debug");
+
+      // TODO: If this simplifies trig funcs, verify effect on the
+      // BPDelayKernel. Ideally, a Kernel specifies when to enable build flags.
+      flags.insert("use_fast_math");
+
+      return flags;    
+    };
+
 
     namespace {
 

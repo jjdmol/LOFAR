@@ -47,25 +47,6 @@ namespace LOFAR
   namespace Cobalt
   {
 
-  // flags
-  typedef std::set<std::string> flags_type;
-
-  // Return the set of default flags for the nvcc compilation of a cuda kernel in Cobalt
-  flags_type defaultFlags()
-  {
-    flags_type flags;
-
-    using boost::format;
-
-    //flags.insert("device-debug");
-    flags.insert("use_fast_math"); // TODO: If this simplifies trig funcs, verify effect on the BPDelayKernel. Ideally, a Kernel specifies when to enable build flags.
-
-    // gpu-architecture and -Ipath are set by createPTX()
-
-    return flags;    
-  };
-
-
   // Performs a 'system' call of nvcc. Return the stdout of the command
   // on error no stdout is created and an exception is thrown
   std::string runNVCC(const std::string &cmd)

@@ -29,7 +29,7 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
-#include <GPUProc/gpu_utils.h>
+#include <GPUProc/opencl/gpu_utils.h>
 
 #include <UnitTest.h>
 #include "Kernels/IncoherentStokesTest.h"

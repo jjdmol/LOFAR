@@ -31,6 +31,7 @@
 
 #include <CoInterface/Parset.h>
 #include <GPUProc/Kernels/CompileDefinitions.h>
+#include <GPUProc/gpu_utils.h>
 #include "gpu_incl.h"
 
 // Collection of functions needed for runtime compilation of a kernel supplied 
@@ -40,8 +41,8 @@ namespace LOFAR
   namespace Cobalt
   {
 
-  // flags
-  typedef std::set<std::string> flags_type;
+  // // flags
+  // typedef std::set<std::string> flags_type;
 
   // Return the set of default flags for the nvcc compilation of a cuda kernel in Cobalt
   flags_type defaultFlags();
