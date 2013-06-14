@@ -107,6 +107,10 @@ class imager_prepare(LOFARnodeTCP):
             time_slice_filtered_path_list = self._filter_bad_stations(
                 time_slices_path_list, asciistat_executable,
                 statplot_executable, msselect_executable)
+				
+            #*****************************************************************
+            # Add measurmenttables 
+            add_beam_tables(time_slices_path_list)
 
             #******************************************************************
             # 6. Perform the (virtual) concatenation of the timeslices
@@ -120,6 +124,15 @@ class imager_prepare(LOFARnodeTCP):
 
         return 0
 
+    def add_beam_tables(time_slices_path_list)
+        beamtable_proc_group = SubProcessGroup(self.logger)
+        for ms_path in time_slices_path_list:
+            cmd_string = "makebeamtables ms={0} overwrite=true".format(ms_path)
+            beamtable_proc_group.run(cmd_string)
+
+        if beamtable_proc_group.wait_for_finish() != None:
+            raise Exception("an makebeamtables run failed!")
+        
     def _copy_input_files(self, processed_ms_dir, input_map):
         """
         Collect all the measurement sets in a single directory:
