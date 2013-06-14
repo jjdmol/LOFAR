@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Parsets to use
+PARSETS="
+tFIR_Filter.parset.77_Stations
+tFIR_Filter.parset.AARTFAAC
+tFIR_Filter.parset.small-test
+"
+
+STATUS=0
+for PARSET in $PARSETS
+do
+  echo "Running ./tFIR_Filter $PARSET" >&2
+  ./tFIR_Filter $PARSET >&1
+  if [ $? != 0 ]
+  then
+    STATUS=1
+    echo "FAILED: ./tFIR_Filter $PARSET" >&2
+	exit $STATUS #exit for now.
+  fi
+done
+
+exit $STATUS
