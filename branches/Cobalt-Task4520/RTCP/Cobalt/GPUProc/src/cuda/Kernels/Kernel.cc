@@ -24,7 +24,7 @@
 #include <boost/format.hpp>
 
 #include <GPUProc/global_defines.h>
-#include "Kernel.h"
+#include <GPUProc/Kernels/Kernel.h>
 
 using namespace std;
 
