@@ -68,7 +68,7 @@ class imager_bbs(LOFARnodeTCP):
         
         #*****************************************************************
         # Add measurmenttables 
-        self.add_beam_tables(ms_map)
+        # self.add_beam_tables(ms_map)
 
 
     def add_beam_tables(self, ms_map):
