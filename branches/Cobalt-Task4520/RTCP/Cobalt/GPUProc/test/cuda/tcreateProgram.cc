@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
   // Collect inputs from the parste and assign them to CudaRuntimeCompiler
   // input_types.
   flags_type flags = defaultFlags();
-  Kernel::definitions_type definitions(Kernel::compileDefinitions(ps));
+  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
 
   string ptx = createPTX(devices, srcFilename, flags, definitions);
   gpu::Module module(createModule(ctx, srcFilename, ptx));

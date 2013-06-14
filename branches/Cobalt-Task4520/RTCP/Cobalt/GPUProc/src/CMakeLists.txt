@@ -13,6 +13,7 @@ set(_gpuproc_sources
   BlockID.cc
   FilterBank.cc
   global_defines.cc
+  Kernels/CompileDefinitions.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc

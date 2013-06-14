@@ -31,7 +31,7 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/Kernels/CompileDefinitions.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 
 #include "TestUtil.h"
@@ -60,7 +60,7 @@ HostMemory runTest(gpu::Context ctx,
   cout << "\n==== runTest: function = " << function << " ====\n" << endl;
 
   // Get an instantiation of the default parameters
-  definitions_type definitions = Kernel::definitions_type();
+  CompileDefinitions definitions = CompileDefinitions();
   flags_type flags = defaultFlags();
 
   // ****************************************

@@ -21,7 +21,6 @@
 #include <lofar_config.h>
 
 #include <string>
-#include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <Common/LofarLogger.h>
 
@@ -36,7 +35,7 @@ int main()
   string kernelPath = "tCudaRuntimeCompiler.in_.cu";
   
   // Get an instantiation of the default parameters
-  definitions_type definitions = Kernel::definitions_type();
+  CompileDefinitions definitions;
 
   // override the default with a magic number
   definitions["NVIDIA_CUDA"] = "123456";

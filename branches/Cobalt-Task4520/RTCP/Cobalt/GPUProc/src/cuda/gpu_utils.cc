@@ -39,6 +39,7 @@
 #include <Stream/FileStream.h>
 
 #include <GPUProc/global_defines.h>
+#include <GPUProc/Kernels/CompileDefinitions.h>
 #include "CudaRuntimeCompiler.h"
 
 #define BUILD_MAX_LOG_SIZE	4095
@@ -195,8 +196,10 @@ namespace LOFAR
     }
 
 
-    std::string createPTX(const vector<gpu::Device> &devices, const std::string &srcFilename, 
-      flags_type &flags, const definitions_type &definitions )
+    std::string createPTX(const vector<gpu::Device> &devices, 
+                          const std::string &srcFilename, 
+                          flags_type &flags, 
+                          const CompileDefinitions &definitions )
     {
       // The CUDA code is assumed to be written for the architecture of the
       // oldest device.

@@ -25,7 +25,6 @@
 #include <vector>
 
 #include <CoInterface/Parset.h>
-
 #include "gpu_wrapper.h"
 #include "CudaRuntimeCompiler.h"
 
@@ -33,6 +32,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    class CompileDefinitions;
     /*
      * If no devices are given, the program is compiled for the latest
      * architecture.
@@ -40,15 +40,15 @@ namespace LOFAR
      * srcFilename cannot be an absolute path.
      */
     std::string createPTX( const std::vector<gpu::Device> &devices,
-                               const std::string &srcFilename, 
-                               flags_type &flags,
-                               const definitions_type &definitions );
+                           const std::string &srcFilename, 
+                           flags_type &flags,
+                           const CompileDefinitions &definitions );
     /*
      * Create a Module from a PTX (string).
      */
     gpu::Module createModule( const gpu::Context &context,
-                               const std::string &srcFilename, 
-                               const std::string &ptx );
+                              const std::string &srcFilename, 
+                              const std::string &ptx );
   }
 }
 

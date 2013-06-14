@@ -1,4 +1,4 @@
-//# Kernel.h
+//# CompileDefinitions.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,42 +18,34 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_KERNEL_H
-#define LOFAR_GPUPROC_CUDA_KERNEL_H
+#include <lofar_config.h>
 
-#include <string>
-#include <iosfwd>
-#include <cuda.h>
-
-#include <CoInterface/Parset.h>
-
-#include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/Kernels/CompileDefinitions.h>
-//#include <GPUProc/PerformanceCounter.h>
+#include "CompileDefinitions.h"
+#include <ostream>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class Kernel : public gpu::Function
+    using namespace std;
+
+    string& CompileDefinitions::operator[](const string& key)
     {
-    public:
-      Kernel(const Parset &ps, gpu::Module& module, const std::string &name);
+      return defs[key];
+    }
 
-      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
+    ostream& operator<<(ostream& os, const CompileDefinitions& cd)
+    {
+      map<string, string>::const_iterator it;
+      for (it = cd.defs.begin(); it != cd.defs.end(); ++it) {
+        os << " -D" << it->first;
+        if (!it->second.empty()) {
+          os << "=" << it->second;
+        }
+      }
+      return os;
+    }
 
-      // Return required compile definitions given the Parset \a ps.
-      static CompileDefinitions compileDefinitions(const Parset& ps);
-
-    protected:
-      gpu::Event event;
-      const Parset &ps;
-      gpu::Grid globalWorkSize;
-      gpu::Block localWorkSize;
-      size_t nrOperations, nrBytesRead, nrBytesWritten;
-    };
   }
 }
-
-#endif
 

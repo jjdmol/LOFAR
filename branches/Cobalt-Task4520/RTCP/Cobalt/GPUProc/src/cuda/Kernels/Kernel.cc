@@ -20,10 +20,13 @@
 
 #include <lofar_config.h>
 
+#include <ostream>
 #include <boost/format.hpp>
 
 #include <GPUProc/global_defines.h>
 #include "Kernel.h"
+
+using namespace std;
 
 namespace LOFAR
 {
@@ -56,9 +59,9 @@ namespace LOFAR
 //      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
 
-    Kernel::definitions_type Kernel::compileDefinitions(const Parset& ps)
+    CompileDefinitions Kernel::compileDefinitions(const Parset& ps)
     {
-      definitions_type defs;
+      CompileDefinitions defs;
 
       using boost::format;
 

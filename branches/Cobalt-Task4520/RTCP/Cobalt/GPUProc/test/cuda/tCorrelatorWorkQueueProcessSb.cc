@@ -62,7 +62,7 @@ int main() {
 
   map<string, string> ptx;
   flags_type flags(defaultFlags());
-  Kernel::definitions_type definitions(Kernel::compileDefinitions(ps));
+  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
   ptx[kfilenameFIR] = createPTX(devices, kfilenameFIR, flags, definitions);
   ptx[kfilenameDBP] = createPTX(devices, kfilenameDBP, flags, definitions);
   ptx[kfilenameCor] = createPTX(devices, kfilenameCor, flags, definitions);

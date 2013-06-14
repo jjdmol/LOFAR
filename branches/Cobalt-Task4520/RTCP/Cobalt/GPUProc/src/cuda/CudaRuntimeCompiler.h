@@ -30,6 +30,7 @@
 #include <set>
 
 #include <CoInterface/Parset.h>
+#include <GPUProc/Kernels/CompileDefinitions.h>
 #include "gpu_incl.h"
 
 // Collection of functions needed for runtime compilation of a kernel supplied 
@@ -41,9 +42,6 @@ namespace LOFAR
 
   // flags
   typedef std::set<std::string> flags_type;
-
-  // defines
-  typedef std::map<std::string, std::string> definitions_type;
 
   // Return the set of default flags for the nvcc compilation of a cuda kernel in Cobalt
   flags_type defaultFlags();
@@ -62,7 +60,7 @@ namespace LOFAR
   std::string 
   compileToPtx(const std::string& pathToCuFile, 
                const flags_type& flags = defaultFlags(),
-               const definitions_type& definitions = definitions_type());
+               const CompileDefinitions& definitions = CompileDefinitions());
   
   // overloaded function. Use the path and default flags and definitions to call nvcc
   }

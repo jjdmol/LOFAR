@@ -50,9 +50,6 @@ namespace LOFAR
   // flags
   typedef std::set<std::string> flags_type;
 
-  // defines
-  typedef std::map<std::string, std::string> definitions_type;
-
   // Return the set of default flags for the nvcc compilation of a cuda kernel in Cobalt
   flags_type defaultFlags()
   {
@@ -68,15 +65,7 @@ namespace LOFAR
     return flags;    
   };
 
-  // // Return empty set of definitions for the nvcc compilation of a cuda kernel
-  // definitions_type defaultDefinitions()
-  // {
-  //   definitions_type defs;
 
-  //   return defs;
-  // }
-
-  
   // Performs a 'system' call of nvcc. Return the stdout of the command
   // on error no stdout is created and an exception is thrown
   std::string runNVCC(const std::string &cmd)
@@ -124,25 +113,18 @@ namespace LOFAR
   // which content is returned as a string
   std::string compileToPtx(const std::string& pathToCuFile,
                            const flags_type& flags,
-                           const definitions_type& definitions)
+                           const CompileDefinitions& definitions)
   {
     const string cudaCompiler = "nvcc"; 
     stringstream cmd("");
     cmd << cudaCompiler ;
     cmd << " " << pathToCuFile ;
     cmd << " --ptx";    
+    cmd << definitions;
 
     // add the set of flags
     for (flags_type::const_iterator it=flags.begin(); it!=flags.end(); ++it)
       cmd << " --" << *it;  // flags should be prepended with a space and a minus
-
-    // add the map of defines
-    for (definitions_type::const_iterator it=definitions.begin(); it!=definitions.end(); ++it)
-    {
-      cmd << " -D" << it->first;
-      if (!it->second.empty())
-        cmd << "=" << it->second; // e.g. -DTEST=20
-    }
 
     // output to stdout
     cmd << " -o -";
