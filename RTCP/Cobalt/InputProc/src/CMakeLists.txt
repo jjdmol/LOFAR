@@ -31,7 +31,6 @@ endif(MPI_FOUND)
 lofar_add_library(inputproc ${_inputproc_sources})
 
 lofar_add_bin_program(filterRSP Station/filterRSP.cc)
-lofar_add_bin_program(resizeRSP Station/resizeRSP.cc)
 lofar_add_bin_program(printRSP Station/printRSP.cc)
 lofar_add_bin_program(generate Station/generate.cc)
 lofar_add_bin_program(capture Station/capture.cc)
