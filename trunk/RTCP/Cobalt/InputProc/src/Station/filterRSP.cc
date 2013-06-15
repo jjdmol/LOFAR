@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
+#include <unistd.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <Common/LofarLogger.h>
@@ -40,19 +41,65 @@ time_t parseTime(const char *str)
   return to_time_t(boost::posix_time::time_from_string(str));
 }
 
+void usage()
+{
+  puts("Usage: filterRSP [options] < input.udp > output.udp");
+  puts("");
+  puts("-f from       Discard packets before `from' (format: '2012-01-01 11:12:00')");
+  puts("-t to         Discard packets at or after `to' (format: '2012-01-01 11:12:00')");
+  puts("-s nrbeamlets Reduce or expand the number of beamlets per packet");
+  puts("-b bitmode    Discard packets with bitmode other than `bitmode' (16, 8, or 4)");
+  puts("-c clock      Discard packets with a clock other than `clock' (200 or 160)");
+  puts("");
+  puts("Note: invalid packets are always discarded.");
+}
+
 int main(int argc, char **argv)
 {
   INIT_LOGGER("filterRSP");
 
-  if (argc < 3) {
-    puts("Usage: filterRSP '2012-01-01 11:12:00' '2012-01-01 11:13:00' < input.udp > output.udp");
-    puts("");
-    puts("Writes all packets between the given timestamps: [from,to).");
-    exit(1);
+  int opt;
+
+  time_t from = 0;
+  time_t to = 0;
+  int nrbeamlets = 0;
+  int bitmode = 0;
+  int clock = 0;
+
+  // parse all command-line options
+  while ((opt = getopt(argc, argv, "f:t:s:b:c:")) != -1) {
+    switch (opt) {
+    case 'f':
+      from = parseTime(optarg);
+      break;
+
+    case 't':
+      to = parseTime(optarg);
+      break;
+
+    case 's':
+      nrbeamlets = atoi(optarg);
+      break;
+
+    case 'b':
+      bitmode = atoi(optarg);
+      break;
+
+    case 'c':
+      clock = atoi(optarg);
+      break;
+
+    default: /* '?' */
+      usage();
+      exit(1);
+    }
   }
 
-  time_t from = parseTime(argv[1]);
-  time_t to = parseTime(argv[2]);
+  // we expect no further arguments
+  if (optind != argc) {
+    usage();
+    exit(1);
+  }
 
   SmartPtr<Stream> inputStream = createStream("file:/dev/stdin", true);
   PacketReader reader("", *inputStream);
@@ -61,9 +108,32 @@ int main(int argc, char **argv)
   try {
     for(;; ) {
       if( reader.readPacket(packet) ) {
-        if (packet.header.timestamp < from || packet.header.timestamp >= to)
+        // **** Apply FROM filter ****
+        if (from > 0 && packet.header.timestamp < from)
           continue;
 
+        // **** Apply TO filter ****
+        if (to > 0 && packet.header.timestamp >= to)
+          continue;
+
+        // **** Apply BITMODE filter ****
+        if (bitmode > 0 && packet.bitMode() != bitmode)
+          continue;
+
+        // **** Apply CLOCK filter ****
+        if (clock > 0 && packet.clockMHz() != clock)
+          continue;
+
+        // **** Apply NRBEAMLETS filter ****
+        if (nrbeamlets > 0) {
+          // the new number of beamlets has to be valid
+          ASSERT(nrbeamlets <= 62 * (16 / packet.bitMode()));
+
+          // convert
+          packet.header.nrBeamlets = nrbeamlets;
+        }
+
+        // Write packet
         fwrite(&packet, packet.packetSize(), 1, stdout);
       }
     }
