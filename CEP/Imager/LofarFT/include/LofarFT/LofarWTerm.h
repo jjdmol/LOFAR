@@ -43,7 +43,7 @@ namespace LOFAR {
       : m_scale (0.0)
     {
       if (nPlanes > 1) {
-        m_scale = maxW / ((nPlanes - 1) * (nPlanes - 1));
+        m_scale = maxW / (nPlanes - 1);
       }
     }
 
@@ -53,17 +53,17 @@ namespace LOFAR {
         return 0.0;
       }
 
-      return (i_plane * i_plane - i_plane + 0.5) * m_scale;
+      return ( i_plane + 0.5) * m_scale;
     }
 
     double upper(uint i_plane) const
     {
-      return (i_plane * i_plane + i_plane + 0.5) * m_scale;
+      return ( i_plane + 0.5) * m_scale;
     }
 
     double center(uint i_plane) const
     {
-      return i_plane * i_plane * m_scale;
+      return  i_plane * m_scale;
     }
 
     uint plane(double w) const
@@ -72,9 +72,49 @@ namespace LOFAR {
         return 0;
       }
       w = abs(w);
-      uint estimate = floor(sqrt(w / m_scale));
+      uint estimate = floor(w / m_scale);
       return w > upper(estimate) ? estimate + 1 : estimate;
+
     }
+
+
+
+    /* WScale(double maxW, uint nPlanes) */
+    /*   : m_scale (0.0) */
+    /* { */
+    /*   if (nPlanes > 1) { */
+    /*     m_scale = maxW / ((nPlanes - 1) * (nPlanes - 1)); */
+    /*   } */
+    /* } */
+
+    /* double lower(uint i_plane) const */
+    /* { */
+    /*   if (i_plane == 0) { */
+    /*     return 0.0; */
+    /*   } */
+
+    /*   return (i_plane * i_plane - i_plane + 0.5) * m_scale; */
+    /* } */
+
+    /* double upper(uint i_plane) const */
+    /* { */
+    /*   return (i_plane * i_plane + i_plane + 0.5) * m_scale; */
+    /* } */
+
+    /* double center(uint i_plane) const */
+    /* { */
+    /*   return i_plane * i_plane * m_scale; */
+    /* } */
+
+    /* uint plane(double w) const */
+    /* { */
+    /*   if (m_scale == 0.0) { */
+    /*     return 0; */
+    /*   } */
+    /*   w = abs(w); */
+    /*   uint estimate = floor(sqrt(w / m_scale)); */
+    /*   return w > upper(estimate) ? estimate + 1 : estimate; */
+    /* } */
 
 
   private:
@@ -155,6 +195,10 @@ namespace LOFAR {
                   int nx, int ny,
                   const casa::Vector<casa::Double>& resolution,
                   double w) const;
+
+    casa::Complex evaluate_pixel(int x, int y, int nx, int ny,
+				 const casa::Vector<casa::Double>& resolution,
+				 double w) const;
   };
 
 } // end namespace
