@@ -25,7 +25,7 @@ if(USE_CUDA)
     cuda/gpu_wrapper.cc
     cuda/gpu_utils.cc
     cuda/CudaRuntimeCompiler.cc
-    cuda/KernelCompiler.cc
+    #cuda/KernelCompiler.cc
     cuda/PerformanceCounter.cc
     cuda/Kernels/Kernel.cc
     cuda/Kernels/BeamFormerKernel.cc
