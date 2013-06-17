@@ -6,6 +6,12 @@ include(LofarCTest)
 # source files and headers in subdirectories include UnitTest.h
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/runrtcp.sh.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/runrtcp.sh"  # internal, no need to install
+)
+
+
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
 

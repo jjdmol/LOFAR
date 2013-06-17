@@ -206,6 +206,9 @@ namespace LOFAR
       {
       }
 
+      // process the given meta data 
+      void applyMetaData(unsigned station, unsigned SAP, const SubbandMetaData &metaData);
+
       // set all flagged inputSamples to zero.
       void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
     };
