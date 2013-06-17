@@ -1078,6 +1078,7 @@ void LofarCubeSkyEquation::initializePutSlice(const VisBuffer& vb,
     }
     iftm_p[model]->initializeToSky(*(imPutSlice_p[model]),weightSlice_p[model],
 				   vb);
+    //    ftm_p[model]->initGridThreads(iftm_p[model]->itsGriddedData);
     dirDep= dirDep || (ftm_p[model]->name() == "MosaicFT");
   }
   assertSkyJones(vb, -1);
@@ -1369,8 +1370,8 @@ VisBuffer& LofarCubeSkyEquation::getSlice(VisBuffer& result,
 void
 LofarCubeSkyEquation::finalizeGetSlice(){
   //// place-holders.... there is nothing to do after degridding
-  //      for (Int model=0; model < sm_->numberOfModels(); ++model)
-  //        ftm_p[model]->finalizeToVis();
+  for (Int model=0; model < sm_->numberOfModels(); ++model)
+    ftm_p[model]->finalizeToVis();
 }
 
 
