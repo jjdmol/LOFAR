@@ -59,42 +59,43 @@ namespace LOFAR
 //      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
 
-    CompileDefinitions Kernel::compileDefinitions(const Parset& ps)
+    const CompileDefinitions& Kernel::compileDefinitions(const Parset& ps)
     {
-      CompileDefinitions defs;
+      static CompileDefinitions defs;
 
       using boost::format;
 
-      defs["NVIDIA_CUDA"] = ""; // left-over from OpenCL for Correlator.cl/.cu 
+      if (defs.empty()) {
+        defs["NVIDIA_CUDA"] = ""; // left-over from OpenCL for Correlator.cl/.cu 
+        // TODO: support device specific defs somehow (createPTX() knows about targets, but may be kernel and target specific)
+        //if (devices[0].getInfo<CL_DEVICE_NAME>() == "GeForce GTX 680")
+        //  defs["USE_FLOAT4_IN_CORRELATOR"] = "";
 
-      // TODO: support device specific defs somehow (createPTX() knows about targets, but may be kernel and target specific)
-      //if (devices[0].getInfo<CL_DEVICE_NAME>() == "GeForce GTX 680")
-      //  defs["USE_FLOAT4_IN_CORRELATOR"] = "";
+        // TODO: kernel-specific defs should be specified in the XXXKernel class
+        defs["COMPLEX"] = "2";
 
-      // TODO: kernel-specific defs should be specified in the XXXKernel class
-      defs["COMPLEX"] = "2";
-
-      defs["NR_BITS_PER_SAMPLE"] = str(format("%u") % ps.nrBitsPerSample());
-      defs["SUBBAND_BANDWIDTH"]  = str(format("%.7ff") % ps.subbandBandwidth()); // returns double, so rounding issue?
-      defs["NR_SUBBANDS"]        = str(format("%u") % ps.nrSubbands()); // size_t, but %zu not supp
-      defs["NR_CHANNELS"]        = str(format("%u") % ps.nrChannelsPerSubband());
-      defs["NR_STATIONS"]        = str(format("%u") % ps.nrStations());
-      defs["NR_SAMPLES_PER_CHANNEL"] = str(format("%u") % ps.nrSamplesPerChannel());
-      defs["NR_SAMPLES_PER_SUBBAND"] = str(format("%u") % ps.nrSamplesPerSubband());
-      defs["NR_BEAMS"]           = str(format("%u") % ps.nrBeams());
-      defs["NR_TABS"]            = str(format("%u") % ps.nrTABs(0)); // TODO: 0 should be dep on #beams
-      defs["NR_COHERENT_STOKES"] = str(format("%u") % ps.nrCoherentStokes()); // size_t
-      defs["NR_INCOHERENT_STOKES"] = str(format("%u") % ps.nrIncoherentStokes()); // size_t
-      defs["COHERENT_STOKES_TIME_INTEGRATION_FACTOR"]   = str(format("%u") % ps.coherentStokesTimeIntegrationFactor());
-      defs["INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR"] = str(format("%u") % ps.incoherentStokesTimeIntegrationFactor());
-      defs["NR_POLARIZATIONS"]   = str(format("%u") % NR_POLARIZATIONS);
-      defs["NR_TAPS"]            = str(format("%u") % NR_TAPS);
-      defs["NR_STATION_FILTER_TAPS"] = str(format("%u") % NR_STATION_FILTER_TAPS);
-      if (ps.delayCompensation())
-        defs["DELAY_COMPENSATION"] = "";
-      if (ps.correctBandPass())
-        defs["BANDPASS_CORRECTION"] = "";
-      defs["DEDISPERSION_FFT_SIZE"] = str(format("%u") % ps.dedispersionFFTsize()); // size_t
+        defs["NR_BITS_PER_SAMPLE"] = str(format("%u") % ps.nrBitsPerSample());
+        defs["SUBBAND_BANDWIDTH"]  = str(format("%.7ff") % ps.subbandBandwidth()); // returns double, so rounding issue?
+        defs["NR_SUBBANDS"]        = str(format("%u") % ps.nrSubbands()); // size_t, but %zu not supp
+        defs["NR_CHANNELS"]        = str(format("%u") % ps.nrChannelsPerSubband());
+        defs["NR_STATIONS"]        = str(format("%u") % ps.nrStations());
+        defs["NR_SAMPLES_PER_CHANNEL"] = str(format("%u") % ps.nrSamplesPerChannel());
+        defs["NR_SAMPLES_PER_SUBBAND"] = str(format("%u") % ps.nrSamplesPerSubband());
+        defs["NR_BEAMS"]           = str(format("%u") % ps.nrBeams());
+        defs["NR_TABS"]            = str(format("%u") % ps.nrTABs(0)); // TODO: 0 should be dep on #beams
+        defs["NR_COHERENT_STOKES"] = str(format("%u") % ps.nrCoherentStokes()); // size_t
+        defs["NR_INCOHERENT_STOKES"] = str(format("%u") % ps.nrIncoherentStokes()); // size_t
+        defs["COHERENT_STOKES_TIME_INTEGRATION_FACTOR"]   = str(format("%u") % ps.coherentStokesTimeIntegrationFactor());
+        defs["INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR"] = str(format("%u") % ps.incoherentStokesTimeIntegrationFactor());
+        defs["NR_POLARIZATIONS"]   = str(format("%u") % NR_POLARIZATIONS);
+        defs["NR_TAPS"]            = str(format("%u") % NR_TAPS);
+        defs["NR_STATION_FILTER_TAPS"] = str(format("%u") % NR_STATION_FILTER_TAPS);
+        if (ps.delayCompensation())
+          defs["DELAY_COMPENSATION"] = "";
+        if (ps.correctBandPass())
+          defs["BANDPASS_CORRECTION"] = "";
+        defs["DEDISPERSION_FFT_SIZE"] = str(format("%u") % ps.dedispersionFFTsize()); // size_t
+      }
 
       return defs;  
     }

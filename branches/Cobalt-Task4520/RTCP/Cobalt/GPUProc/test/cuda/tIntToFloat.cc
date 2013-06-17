@@ -32,6 +32,7 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/KernelCompiler.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <UnitTest++.h>
 
@@ -66,7 +67,7 @@ float * runTest(unsigned NR_BITS_PER_SAMPLE = 16,
   // Compile to ptx  
   // Get an instantiation of the default parameters
   CompileDefinitions definitions;
-  flags_type flags = defaultFlags();
+  CompileFlags flags = defaultCompileFlags();
 
   // Set op string string pairs to be provided to the compiler as defines
   definitions["NR_STATIONS"] = "2";

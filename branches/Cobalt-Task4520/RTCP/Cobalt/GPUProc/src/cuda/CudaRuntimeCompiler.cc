@@ -93,7 +93,7 @@ namespace LOFAR
   // of definitions. Use this command to call nvcc and compile the file at input path to a ptx file
   // which content is returned as a string
   std::string compileToPtx(const std::string& pathToCuFile,
-                           const flags_type& flags,
+                           const CompileFlags& flags,
                            const CompileDefinitions& definitions)
   {
     const string cudaCompiler = "nvcc"; 
@@ -102,10 +102,7 @@ namespace LOFAR
     cmd << " " << pathToCuFile ;
     cmd << " --ptx";    
     cmd << definitions;
-
-    // add the set of flags
-    for (flags_type::const_iterator it=flags.begin(); it!=flags.end(); ++it)
-      cmd << " --" << *it;  // flags should be prepended with a space and a minus
+    cmd << flags;
 
     // output to stdout
     cmd << " -o -";

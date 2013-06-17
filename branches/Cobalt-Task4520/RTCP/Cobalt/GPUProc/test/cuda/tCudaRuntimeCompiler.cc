@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include <string>
+#include <GPUProc/KernelCompiler.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <Common/LofarLogger.h>
 
@@ -40,10 +41,10 @@ int main()
   // override the default with a magic number
   definitions["NVIDIA_CUDA"] = "123456";
 
-  string ptx1 = compileToPtx(kernelPath, defaultFlags(), definitions);
+  string ptx1 = compileToPtx(kernelPath, defaultCompileFlags(), definitions);
   definitions["NVIDIA_CUDA"] = "654321";
 
-  string ptx2 = compileToPtx(kernelPath, defaultFlags(), definitions);
+  string ptx2 = compileToPtx(kernelPath, defaultCompileFlags(), definitions);
 
   // tests if the magic numbers are inserted into the ptx files
   if ((std::string::npos != ptx1.find("123456")) ||

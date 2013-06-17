@@ -30,7 +30,7 @@
 #include <set>
 
 #include <CoInterface/Parset.h>
-#include <GPUProc/Kernels/CompileDefinitions.h>
+#include <GPUProc/KernelCompiler.h>
 #include <GPUProc/gpu_utils.h>
 #include "gpu_incl.h"
 
@@ -41,29 +41,18 @@ namespace LOFAR
   namespace Cobalt
   {
 
-  // // flags
-  // typedef std::set<std::string> flags_type;
-
-  // Return the set of default flags for the nvcc compilation of a cuda kernel in Cobalt
-  flags_type defaultFlags();
-  
-  // // Return the set of default definitions for the nvcc compilation of a cuda kernel in Cobalt
-  // // DEFINITION=0 results in a definition and cannot for used for undef. Do not insert parameters in this case
-  // definitions_type defaultDefinitions();
-  
   // Performs a 'system' call of nvcc. Return the stdout of the command
   // on error no stdout is created and an exception is thrown
   std::string runNVCC(const std::string &cmd);
   
-  // Create a nvcc command line string based on the input path, a set of flags and a map
-  // of definitions. Use this command to call nvcc and compile the file at input path to a ptx file
-  // which content is returned as a string
+  // Create a nvcc command line string based on the input path, a set of flags
+  // and a map of definitions. Use this command to call nvcc and compile the
+  // file at input path to a ptx file which content is returned as a string
   std::string 
   compileToPtx(const std::string& pathToCuFile, 
-               const flags_type& flags = defaultFlags(),
+               const CompileFlags& flags = CompileFlags(),
                const CompileDefinitions& definitions = CompileDefinitions());
   
-  // overloaded function. Use the path and default flags and definitions to call nvcc
   }
 }
 

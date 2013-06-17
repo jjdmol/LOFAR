@@ -28,7 +28,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/Kernels/CompileDefinitions.h>
+#include <GPUProc/KernelCompiler.h>
 //#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
@@ -43,7 +43,7 @@ namespace LOFAR
       void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
 
       // Return required compile definitions given the Parset \a ps.
-      static CompileDefinitions compileDefinitions(const Parset& ps);
+      static const CompileDefinitions& compileDefinitions(const Parset& ps);
 
     protected:
       gpu::Event event;

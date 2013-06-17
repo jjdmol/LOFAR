@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <CoInterface/Parset.h>
+#include <GPUProc/KernelCompiler.h>
 #include "gpu_wrapper.h"
 // #include "CudaRuntimeCompiler.h"
 
@@ -32,14 +33,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    // flags
-    typedef std::set<std::string> flags_type;
-
-    // Return default flags to be used for kernel compilation. The
-    // implementation of this method is CUDA/OpenCL specific.
-    flags_type defaultFlags();
-
-    class CompileDefinitions;
     /*
      * If no devices are given, the program is compiled for the latest
      * architecture.
@@ -48,7 +41,7 @@ namespace LOFAR
      */
     std::string createPTX( const std::vector<gpu::Device> &devices,
                            const std::string &srcFilename, 
-                           flags_type &flags,
+                           CompileFlags &flags,
                            const CompileDefinitions &definitions );
     /*
      * Create a Module from a PTX (string).

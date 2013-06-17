@@ -32,6 +32,7 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/KernelCompiler.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <UnitTest++.h>
 
@@ -68,7 +69,7 @@ float * runTest(float bandPassFactor,
  
   // Get an instantiation of the default parameters
   CompileDefinitions definitions;
-  flags_type flags = defaultFlags();
+  CompileFlags flags = defaultCompileFlags();
 
   // ****************************************
   // Compile to ptx

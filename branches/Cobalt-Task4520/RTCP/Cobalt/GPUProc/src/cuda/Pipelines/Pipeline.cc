@@ -46,7 +46,7 @@ namespace LOFAR
 
     std::string Pipeline::createPTX(const string &srcFilename)
     {
-      flags_type flags(defaultFlags());
+      CompileFlags flags(defaultCompileFlags());
       CompileDefinitions definitions(Kernel::compileDefinitions(ps));
 
       return LOFAR::Cobalt::createPTX(devices, srcFilename, flags, definitions);
