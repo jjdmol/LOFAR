@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tCorrelator
+./runctest.sh tBeamFormer
