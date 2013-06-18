@@ -1,0 +1,503 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 1012 743 N "_3DFace" 0
+"main()
+{
+   // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  baseDP         = g_currentDatapoint;
+  dpGet(baseDP+\".observationName\",observationNr);
+  observationName=\"Observation\"+observationNr;
+  TopLabel.text(observationName+\" InputBuffers\");
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"ObservationIBEmbedded.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"ObservationIBEmbedded.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+ 
+  addInputBuffers();
+  resize();
+}
+
+void addInputBuffers() {
+
+  // get all the InputBuffers used by this observation
+  inputBuffers = navFunct_getInputBuffersForObservation(observationName);  
+
+}
+
+void resize() {
+  InputBufferModule.size(1010,14*dynlen(inputBuffers));
+}" 0
+ E E E E 1 -1 -1 0  200 170
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+string observationNr;
+string observationName;
+dyn_string inputBuffers;
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+29 0
+"InputBufferModule"
+""
+1 200 215.5405405405406 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0  0 80 1009 679
+15 Canvas.Canvas.1
+0
+"main(bool enter)
+{
+  this.ModuleName = \"InputBufferModule\"; 
+   
+  RootPanelOnModule(\"Processes/ObservationInputBuffers.pnl\",\"\",\"InputBufferModule\",\"\"); 
+
+}" 0
+2 1
+"TopLabel"
+""
+1 398 2 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 398 2 600 22
+0 2 2 "0s" 0 0 0 192 0 0  398 2 1
+1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
+LANG:1 24 Observation InputBuffers
+2 2
+"PRIMITIVE_TEXT2"
+""
+1 12 56 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 12 56 53 69
+0 2 2 "0s" 0 0 0 192 0 0  12 56 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 Station
+2 3
+"PRIMITIVE_TEXT3"
+""
+1 80 56 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 80 56 102 69
+0 2 2 "0s" 0 0 0 192 0 0  80 56 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 late
+2 4
+"PRIMITIVE_TEXT5"
+""
+1 130 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 130 54 171 67
+0 2 2 "0s" 0 0 0 192 0 0  130 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 6 IOTime
+2 5
+"PRIMITIVE_TEXT7"
+""
+1 190 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 190 54 238 67
+0 2 2 "0s" 0 0 0 192 0 0  190 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 6
+"PRIMITIVE_TEXT9"
+""
+1 250 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 250 54 284 67
+0 2 2 "0s" 0 0 0 192 0 0  250 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 7
+"PRIMITIVE_TEXT11"
+""
+1 310 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 310 54 358 67
+0 2 2 "0s" 0 0 0 192 0 0  310 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 8
+"PRIMITIVE_TEXT13"
+""
+1 248 34 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 248 34 296 47
+0 2 2 "0s" 0 0 0 192 0 0  248 34 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream0
+2 9
+"PRIMITIVE_TEXT14"
+""
+1 390 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 390 54 438 67
+0 2 2 "0s" 0 0 0 192 0 0  390 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 10
+"PRIMITIVE_TEXT16"
+""
+1 460 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 460 54 494 67
+0 2 2 "0s" 0 0 0 192 0 0  460 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 11
+"PRIMITIVE_TEXT18"
+""
+1 510 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 510 54 558 67
+0 2 2 "0s" 0 0 0 192 0 0  510 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 12
+"PRIMITIVE_TEXT20"
+""
+1 462 36 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 462 36 510 49
+0 2 2 "0s" 0 0 0 192 0 0  462 36 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream1
+2 13
+"PRIMITIVE_TEXT23"
+""
+1 590 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 590 54 638 67
+0 2 2 "0s" 0 0 0 192 0 0  590 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 14
+"PRIMITIVE_TEXT25"
+""
+1 650 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 650 52 684 65
+0 2 2 "0s" 0 0 0 192 0 0  650 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 15
+"PRIMITIVE_TEXT27"
+""
+1 710 52 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 710 52 758 65
+0 2 2 "0s" 0 0 0 192 0 0  710 52 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 16
+"PRIMITIVE_TEXT29"
+""
+1 648 36 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 648 36 696 49
+0 2 2 "0s" 0 0 0 192 0 0  648 36 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream2
+2 17
+"PRIMITIVE_TEXT39"
+""
+1 790 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 790 54 838 67
+0 2 2 "0s" 0 0 0 192 0 0  790 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 blocksIn
+2 18
+"PRIMITIVE_TEXT41"
+""
+1 850 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 850 54 884 67
+0 2 2 "0s" 0 0 0 192 0 0  850 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 4 %Bad
+2 19
+"PRIMITIVE_TEXT42"
+""
+1 910 54 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 910 54 958 67
+0 2 2 "0s" 0 0 0 192 0 0  910 54 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 8 rejected
+2 20
+"PRIMITIVE_TEXT45"
+""
+1 848 36 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 848 36 896 49
+0 2 2 "0s" 0 0 0 192 0 0  848 36 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 7 stream3
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
