@@ -53,12 +53,7 @@ namespace LOFAR
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void doWork();
 
-      // for each block, read all subbands from all stations, and divide the work over the workQueues
-      template<typename SampleT> void receiveInput( size_t nrBlocks );
-
     private:
-      const std::vector<size_t> subbandIndices; // [localSubbandIdx]
-
       struct Output {
         // synchronisation to write blocks in-order
         SlidingPointer<size_t> sync;
@@ -70,8 +65,6 @@ namespace LOFAR
       std::vector<struct Output> subbandPool; // [localSubbandIdx]
 
       FilterBank filterBank;
-
-      std::vector< SmartPtr<CorrelatorWorkQueue> > workQueues;
 
       // process subbands on the GPU
       void processSubbands(CorrelatorWorkQueue &workQueue);

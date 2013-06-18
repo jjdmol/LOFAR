@@ -42,14 +42,20 @@ namespace LOFAR
     class Pipeline
     {
     public:
-      Pipeline(const Parset &ps);
+      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices);
 
       std::string createPTX(const std::string &srcFilename);
+
+      // for each block, read all subbands from all stations, and divide the work over the workQueues
+      template<typename SampleT> void receiveInput( size_t nrBlocks );
 
     protected:
       const Parset             &ps;
       const gpu::Platform      platform;
       std::vector<gpu::Device> devices;
+
+      const std::vector<size_t> subbandIndices; // [localSubbandIdx]
+      std::vector< SmartPtr<WorkQueue> > workQueues;
 
 #if defined USE_B7015
       OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];

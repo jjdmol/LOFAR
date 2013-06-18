@@ -27,6 +27,14 @@
 
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/WorkQueues/WorkQueue.h>
+#include <InputProc/SampleType.h>
+
+#ifdef HAVE_MPI
+#include <InputProc/Transpose/MPIReceiveStations.h>
+#else
+#include <GPUProc/DirectInput.h>
+#endif
 
 namespace LOFAR
 {
@@ -34,11 +42,12 @@ namespace LOFAR
   {
 
 
-    Pipeline::Pipeline(const Parset &ps)
+    Pipeline::Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
       :
       ps(ps),
       platform(),
       devices(platform.devices()),
+      subbandIndices(subbandIndices),
       performance(devices.size())
     {
     }
@@ -51,6 +60,137 @@ namespace LOFAR
 
       return LOFAR::Cobalt::createPTX(devices, srcFilename, flags, definitions);
     }
+
+
+    // Record type needed by receiveInput. Before c++0x, a local type
+    // can't be a template argument, so we'll have to define this type
+    // globally.
+    struct inputData_t {
+      // An InputData object suited for storing one subband from all
+      // stations.
+      SmartPtr<WorkQueueInputData> data;
+
+      // The WorkQueue associated with the data
+      WorkQueue *queue;
+    };
+
+    template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
+    {
+      // SEND: For now, the n stations are sent by the first n ranks.
+      vector<int> stationRanks(ps.nrStations());
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+        stationRanks[stat] = stat;
+      }
+
+      size_t workQueueIterator = 0;
+
+#ifdef HAVE_MPI
+      // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
+
+      // The length of a block in samples
+      size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
+
+      // Set up the MPI environment.
+      MPIReceiveStations receiver(stationRanks, subbandIndices, blockSize);
+
+      // Create a block object to hold all information for receiving one
+      // block.
+      vector<struct MPIReceiveStations::Block<SampleT> > blocks(ps.nrStations());
+
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+        blocks[stat].beamlets.resize(subbandIndices.size());
+      }
+#else
+      // Create a holder for the meta data, which is processed later than the
+      // data.
+      MultiDimArray<SubbandMetaData, 2> metaDatas(boost::extents[ps.nrStations()][subbandIndices.size()]);
+#endif
+
+      for (size_t block = 0; block < nrBlocks; block++) {
+        // Receive the samples of all subbands from the stations for this
+        // block.
+
+        LOG_INFO_STR("[block " << block << "] Reading input samples");
+
+        // The set of InputData objects we're using for this block.
+        vector<struct inputData_t> inputDatas(subbandIndices.size());
+
+        for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
+          // Fetch an input object to store this inputIdx. For now, blindly
+          // round-robin over the work queues.
+          WorkQueue &queue = *workQueues[workQueueIterator++ % workQueues.size()];
+
+          // Fetch an input object to fill from the selected queue.
+          // NOTE: We'll put it in a SmartPtr right away!
+          SmartPtr<WorkQueueInputData> data = queue.inputPool.free.remove();
+
+          // Annotate the block
+          struct BlockID id;
+          id.block            = block;
+          id.globalSubbandIdx = subbandIndices[inputIdx];
+          id.localSubbandIdx  = inputIdx;
+          data->blockID = id;
+
+          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+#ifdef HAVE_MPI
+            // Incorporate it in the receiver's input set.
+            blocks[stat].beamlets[inputIdx].samples = reinterpret_cast<SampleT*>(&data->inputSamples[stat][0][0][0]);
+#else
+            // Read all data directly
+            SmartPtr<struct InputBlock> pblock = stationDataQueues[stat][id.globalSubbandIdx]->remove();
+           
+            // Copy data
+            memcpy(&data->inputSamples[stat][0][0][0], &pblock->samples[0], pblock->samples.size() * sizeof(pblock->samples[0]));
+
+            // Copy meta data
+            metaDatas[stat][inputIdx] = pblock->metaData;
+#endif
+          }
+
+          // Record the block (transfers ownership)
+          inputDatas[inputIdx].data = data;
+          inputDatas[inputIdx].queue = &queue;
+        }
+
+#ifdef HAVE_MPI
+        // Receive all subbands from all stations
+        receiver.receiveBlock<SampleT>(blocks);
+#endif
+
+        // Process and forward the received input to the processing threads
+        for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
+          WorkQueue &queue = *inputDatas[inputIdx].queue;
+          SmartPtr<WorkQueueInputData> data = inputDatas[inputIdx].data;
+
+          const unsigned SAP = ps.settings.subbands[data->blockID.globalSubbandIdx].SAP;
+
+          // Translate the metadata as provided by receiver
+          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+#ifdef HAVE_MPI
+            SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
+#else
+            SubbandMetaData &metaData = metaDatas[stat][inputIdx];
+#endif
+
+            // TODO: Not in this thread! Add a preprocess thread maybe?
+            data->applyMetaData(stat, SAP, metaData);
+          }
+
+          queue.inputPool.filled.append(data);
+        }
+
+        LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
+      }
+
+      // Signal end of input
+      for (size_t i = 0; i < workQueues.size(); ++i) {
+        workQueues[i]->inputPool.filled.append(NULL);
+      }
+    }
+
+    template void Pipeline::receiveInput< SampleType<i16complex> >( size_t nrBlocks );
+    template void Pipeline::receiveInput< SampleType<i8complex> >( size_t nrBlocks );
+    template void Pipeline::receiveInput< SampleType<i4complex> >( size_t nrBlocks );
 
 
     Pipeline::Performance::Performance(size_t nrGPUs):
