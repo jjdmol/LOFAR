@@ -43,6 +43,7 @@
 #include <GPUProc/Kernels/CorrelatorKernel.h>
 
 #include "WorkQueue.h"
+#include "Pool.h"
 
 namespace LOFAR
 {
@@ -88,17 +89,6 @@ namespace LOFAR
      *   obtain parallellism (i.e. read/process/write in separate threads).
      */
     class CorrelatorWorkQueue;
-
-    // The pool operates using a 'free' and a 'filled' queue to cycle through buffers. Producers
-    // move elements free->filled, and consumers move elements filled->free.
-    template <typename T>
-    struct Pool
-    {
-      typedef T element_type;
-
-      Queue< SmartPtr<element_type> > free;
-      Queue< SmartPtr<element_type> > filled;
-    };
 
     // A CorrelatedData object tied to a HostBuffer and WorkQueue. Such links
     // After the visibilities have been written to storage, we need remember
