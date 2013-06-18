@@ -193,23 +193,7 @@ namespace LOFAR
       }
     }
 
-    // Get the log2 of the supplied number
-    unsigned CorrelatorWorkQueue::flagFunctions::log2(unsigned n)
-    {
-      // Assure that the nrChannels is more then zero: never ending loop 
-      ASSERT(powerOfTwo(n));
-
-      unsigned log;
-      for (log = 0; 1U << log != n; log ++)
-        {;} // do nothing, the creation of the log is a side effect of the for loop
-
-      //Alternative solution snipped:
-      //int targetlevel = 0;
-      //while (index >>= 1) ++targetlevel; 
-      return log;
-    }
-
-    void CorrelatorWorkQueue::flagFunctions::propagateFlagsToOutput(
+    void CorrelatorWorkQueue::Flagger::propagateFlagsToOutput(
       Parset const &parset,
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
       CorrelatedData &output)
@@ -241,60 +225,6 @@ namespace LOFAR
       }
     }
 
-    void CorrelatorWorkQueue::flagFunctions::convertFlagsToChannelFlags(Parset const &parset,
-      MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-      MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChannel)
-    {
-      unsigned numberOfChannels = parset.nrChannelsPerSubband();
-      unsigned log2NrChannels = log2(numberOfChannels);
-      //Convert the flags per sample to flags per channel
-      for (unsigned station = 0; station < parset.nrStations(); station ++) 
-      {
-        // get the flag ranges
-        const SparseSet<unsigned>::Ranges &ranges = inputFlags[station].getRanges();
-        for (SparseSet<unsigned>::const_iterator it = ranges.begin();
-          it != ranges.end(); it ++) 
-        {
-          unsigned begin_idx;
-          unsigned end_idx;
-          if (numberOfChannels == 1)
-          {
-            // do nothing, just take the ranges as supplied
-            begin_idx = it->begin; 
-            end_idx = std::min(parset.nrSamplesPerChannel(), it->end );
-          }
-          else
-          {
-            // Never flag before the start of the time range               
-            // use bitshift to divide to the number of channels. 
-            //
-            // NR_TAPS is the width of the filter: they are
-            // absorbed by the FIR and thus should be excluded
-            // from the original flag set.
-            //
-            // At the same time, every sample is affected by
-            // the NR_TAPS-1 samples before it. So, any flagged
-            // sample in the input flags NR_TAPS samples in
-            // the channel.
-            begin_idx = std::max(0, 
-              (signed) (it->begin >> log2NrChannels) - NR_TAPS + 1);
-
-            // The min is needed, because flagging the last input
-            // samples would cause NR_TAPS subsequent samples to
-            // be flagged, which aren't necessarily part of this block.
-            end_idx = std::min(parset.nrSamplesPerChannel() + 1, 
-              ((it->end - 1) >> log2NrChannels) + 1);
-          }
-
-          // Now copy the transformed ranges to the channelflags
-          for (unsigned ch = 0; ch < numberOfChannels; ch++) {
-            flagsPerChannel[ch][station].include(begin_idx, end_idx);
-          }
-        }
-      }
-    }
-
-
     namespace {
       unsigned baseline(unsigned stat1, unsigned stat2)
       {
@@ -303,7 +233,7 @@ namespace LOFAR
       }
     }
 
-    template<typename T> void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples(
+    template<typename T> void CorrelatorWorkQueue::Flagger::calculateAndSetNumberOfFlaggedSamples(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output)
@@ -344,20 +274,20 @@ namespace LOFAR
     }
 
     // Instantiate required templates
-    template void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint32_t>(
+    template void CorrelatorWorkQueue::Flagger::calculateAndSetNumberOfFlaggedSamples<uint32_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint16_t>(
+    template void CorrelatorWorkQueue::Flagger::calculateAndSetNumberOfFlaggedSamples<uint16_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint8_t>(
+    template void CorrelatorWorkQueue::Flagger::calculateAndSetNumberOfFlaggedSamples<uint8_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
 
-    void CorrelatorWorkQueue::flagFunctions::applyWeightingToAllPolarizations(unsigned baseline, 
+    void CorrelatorWorkQueue::Flagger::applyWeightingToAllPolarizations(unsigned baseline, 
       unsigned channel, float weight, CorrelatedData &output)
     { // TODO: inline???
       for(unsigned idx_polarization_1 = 0; idx_polarization_1 < NR_POLARIZATIONS; ++idx_polarization_1)
@@ -365,7 +295,7 @@ namespace LOFAR
           output.visibilities[baseline][channel][idx_polarization_1][idx_polarization_2] *= weight;
     }
 
-    template<typename T> void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
+    template<typename T> void CorrelatorWorkQueue::Flagger::applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
       CorrelatedData &output)
     {
       for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl)
@@ -388,11 +318,11 @@ namespace LOFAR
     }
 
     // Instantiate required templates
-    template void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint32_t>(Parset const &parset,
+    template void CorrelatorWorkQueue::Flagger::applyFractionOfFlaggedSamplesOnVisibilities<uint32_t>(Parset const &parset,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(Parset const &parset,
+    template void CorrelatorWorkQueue::Flagger::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(Parset const &parset,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint8_t>(Parset const &parset,
+    template void CorrelatorWorkQueue::Flagger::applyFractionOfFlaggedSamplesOnVisibilities<uint8_t>(Parset const &parset,
       CorrelatedData &output);
 
 
@@ -459,7 +389,7 @@ namespace LOFAR
       // background.
 
       // Propagate the flags.
-      flagFunctions::propagateFlagsToOutput(ps, input.inputFlags, output);
+      Flagger::propagateFlagsToOutput(ps, input.inputFlags, output);
 
       // Wait for the GPU to finish.
       timers["GPU - wait"]->start();
@@ -492,15 +422,15 @@ namespace LOFAR
       // now the flagged amount should be applied to the visibilities
       switch (output.itsNrBytesPerNrValidSamples) {
         case 4:
-          flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint32_t>(ps, output);  
+          Flagger::applyFractionOfFlaggedSamplesOnVisibilities<uint32_t>(ps, output);  
           break;
 
         case 2:
-          flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(ps, output);  
+          Flagger::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(ps, output);  
           break;
 
         case 1:
-          flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint8_t>(ps, output);  
+          Flagger::applyFractionOfFlaggedSamplesOnVisibilities<uint8_t>(ps, output);  
           break;
       }
     }

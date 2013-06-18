@@ -43,11 +43,22 @@ namespace LOFAR
       std::map<std::string, SmartPtr<PerformanceCounter> > counters;
       std::map<std::string, SmartPtr<NSTimer> > timers;
 
+      class Flagger
+      {
+      public:
+        // 1.1 Convert the flags per station to channel flags, change time scale if nchannel > 1
+        static void convertFlagsToChannelFlags(Parset const &parset,
+          MultiDimArray<SparseSet<unsigned>, 1> const &inputFlags,
+          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
+
+        // 1.3 Get the LOG2 of the input. Used to speed up devisions by 2
+        static unsigned log2(unsigned n);
+      };
+
     protected:
       const Parset &ps;
 
       gpu::Stream queue;
-
 
       void addCounter(const std::string &name);
       void addTimer(const std::string &name);

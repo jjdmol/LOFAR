@@ -49,6 +49,75 @@ namespace LOFAR
       timers[name] = new NSTimer(name, false, false);
     }
 
+
+    // Get the log2 of the supplied number
+    unsigned WorkQueue::Flagger::log2(unsigned n)
+    {
+      // Assure that the nrChannels is more then zero: never ending loop 
+      ASSERT(powerOfTwo(n));
+
+      unsigned log;
+      for (log = 0; 1U << log != n; log ++)
+        {;} // do nothing, the creation of the log is a side effect of the for loop
+
+      //Alternative solution snipped:
+      //int targetlevel = 0;
+      //while (index >>= 1) ++targetlevel; 
+      return log;
+    }
+
+    void WorkQueue::Flagger::convertFlagsToChannelFlags(Parset const &parset,
+      MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
+      MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChannel)
+    {
+      unsigned numberOfChannels = parset.nrChannelsPerSubband();
+      unsigned log2NrChannels = log2(numberOfChannels);
+      //Convert the flags per sample to flags per channel
+      for (unsigned station = 0; station < parset.nrStations(); station ++) 
+      {
+        // get the flag ranges
+        const SparseSet<unsigned>::Ranges &ranges = inputFlags[station].getRanges();
+        for (SparseSet<unsigned>::const_iterator it = ranges.begin();
+          it != ranges.end(); it ++) 
+        {
+          unsigned begin_idx;
+          unsigned end_idx;
+          if (numberOfChannels == 1)
+          {
+            // do nothing, just take the ranges as supplied
+            begin_idx = it->begin; 
+            end_idx = std::min(parset.nrSamplesPerChannel(), it->end );
+          }
+          else
+          {
+            // Never flag before the start of the time range               
+            // use bitshift to divide to the number of channels. 
+            //
+            // NR_TAPS is the width of the filter: they are
+            // absorbed by the FIR and thus should be excluded
+            // from the original flag set.
+            //
+            // At the same time, every sample is affected by
+            // the NR_TAPS-1 samples before it. So, any flagged
+            // sample in the input flags NR_TAPS samples in
+            // the channel.
+            begin_idx = std::max(0, 
+              (signed) (it->begin >> log2NrChannels) - NR_TAPS + 1);
+
+            // The min is needed, because flagging the last input
+            // samples would cause NR_TAPS subsequent samples to
+            // be flagged, which aren't necessarily part of this block.
+            end_idx = std::min(parset.nrSamplesPerChannel() + 1, 
+              ((it->end - 1) >> log2NrChannels) + 1);
+          }
+
+          // Now copy the transformed ranges to the channelflags
+          for (unsigned ch = 0; ch < numberOfChannels; ch++) {
+            flagsPerChannel[ch][station].include(begin_idx, end_idx);
+          }
+        }
+      }
+    }
   }
 }
 

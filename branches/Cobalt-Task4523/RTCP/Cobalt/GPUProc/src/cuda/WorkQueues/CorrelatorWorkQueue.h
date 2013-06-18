@@ -221,7 +221,7 @@ namespace LOFAR
       // After the data is copied from the the shared buffer 
       // \c applyFractionOfFlaggedSamplesOnVisibilities can be used to weight
       // the visibilities 
-      class flagFunctions
+      class Flagger: public WorkQueue::Flagger
       {
       public:
         // 1. Convert input flags to channel flags, calculate the amount flagged samples and save this in output
@@ -233,19 +233,11 @@ namespace LOFAR
         template<typename T> static void applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
           CorrelatedData &output);
 
-        // 1.1 Convert the flags per station to channel flags, change time scale if nchannel > 1
-        static void convertFlagsToChannelFlags(Parset const &parset,
-          MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-          MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
-
         // 1.2 Calculate the number of flagged samples and set this on the output dataproduct
         // This function is aware of the used filter width a corrects for this.
         template<typename T> static void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
           MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
           CorrelatedData &output);
-
-        // 1.3 Get the LOG2 of the input. Used to speed up devisions by 2
-        static unsigned log2(unsigned n);
 
         // 2.1 Apply the supplied weight to the complex values in the channel and baseline
         static void applyWeightingToAllPolarizations(unsigned baseline, 
