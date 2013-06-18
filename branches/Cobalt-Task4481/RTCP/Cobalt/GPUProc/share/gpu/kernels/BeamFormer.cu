@@ -18,22 +18,28 @@
 //#
 //# $Id$
 
+// Some defines used to determine the correct way the process the data
+// TODO: Should these be determined outside of the cu file? This is currently black magix
 #define MAX(A,B) ((A)>(B) ? (A) : (B))
 #define NR_PASSES MAX((NR_STATIONS + 6) / 16, 1) // gives best results on GTX 680
 #define NR_STATIONS_PER_PASS ((NR_STATIONS + NR_PASSES - 1) / NR_PASSES)
 
 #if NR_STATIONS_PER_PASS > 32
-#error "need more passes to beam form this number of stations"
+#error "need more passes to beam for this number of stations"
 #endif
 
-typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS];
-typedef  float4 (*BandPassCorrectedType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
-typedef  float2 (*WeightsType)[NR_STATIONS][NR_CHANNELS][NR_TABS];
+// Documentation parts:
+// The blockDim.y loops the tabs
+// The blockDim.x loops the polarisations
 
+// Typedefs used to map input data on arrays
+typedef  float2 (*WeightsType)[NR_STATIONS][NR_CHANNELS][NR_TABS];
+typedef  float4 (*BandPassCorrectedType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
+typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS];
 
 extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
-                               const void *samplesPtr,
-                               const void *weightsPtr)
+                                       const void *samplesPtr,
+                                       const void *weightsPtr)
 {
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
   BandPassCorrectedType samples = (BandPassCorrectedType) samplesPtr;
@@ -41,16 +47,22 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 
   unsigned pol = threadIdx.x;
   unsigned tab = threadIdx.y;
-  unsigned channel =  blockDim.z * blockIdx.z + threadIdx.z;
+  unsigned channel =  blockDim.z * blockIdx.z + threadIdx.z;  // The paralellization in the channel is controllable with extra blocks
 
   float2 sample;
-  __shared__ union {
+  // This union is in shared memory because it is used by all threads in the block
+  __shared__ union { // Union: Maps two variables to the same adress space
     float2 samples[NR_STATIONS_PER_PASS][16][NR_POLARIZATIONS];
     float4 samples4[NR_STATIONS_PER_PASS][16];
   } _local;
 
+
+
 #pragma unroll
-  for (unsigned first_station = 0; first_station < NR_STATIONS; first_station += NR_STATIONS_PER_PASS) {
+  for (unsigned first_station = 0;  // We loop over the stations: this allows us to get all the weights for a station
+       first_station < NR_STATIONS;
+       first_station += NR_STATIONS_PER_PASS) 
+  { // this for loop spand the whole file
 #if NR_STATIONS_PER_PASS >= 1
     float2 weight_00;
 
@@ -277,7 +289,10 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 
     for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16) 
     {
-      for (unsigned i = threadIdx.x + NR_POLARIZATIONS * threadIdx.y; i < NR_STATIONS_PER_PASS * 16; i += NR_TABS * NR_POLARIZATIONS) {
+      for (unsigned i = threadIdx.x + NR_POLARIZATIONS * threadIdx.y;
+           i < NR_STATIONS_PER_PASS * 16;
+           i += NR_TABS * NR_POLARIZATIONS) 
+      {
         unsigned t = i % 16;
         unsigned s = i / 16;
 
@@ -288,11 +303,18 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 
        __syncthreads();
 
-      for (unsigned t = 0; t < (NR_SAMPLES_PER_CHANNEL % 16 == 0 ? 16 : min(16U, NR_SAMPLES_PER_CHANNEL - time)); t++) {
-        float2 sum = first_station == 0 ? make_float2(0,0) : (*complexVoltages)[channel][time + t][tab][pol];
+      for (unsigned t = 0; 
+           t < (NR_SAMPLES_PER_CHANNEL % 16 == 0 ? 
+           16 : min(16U, NR_SAMPLES_PER_CHANNEL - time)); t++) 
+      {
+        // why is the first station zero?
+        float2 sum = first_station == 0 ? 
+                    make_float2(0,0) :
+                    (*complexVoltages)[channel][time + t][tab][pol];
+
 
 #if NR_STATIONS_PER_PASS >= 1
-        if (first_station + 1 < NR_STATIONS) {
+        if (first_station + 1 <= NR_STATIONS) {
           sample = _local.samples[ 0][t][pol];
           sum.x += weight_00.x * sample.x;
           sum.y += weight_00.x * sample.y;
@@ -302,7 +324,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 2
-        if (first_station + 2 < NR_STATIONS) {
+        if (first_station + 2 <+ NR_STATIONS) {
           sample = _local.samples[ 1][t][pol];
           sum.x += weight_01.x * sample.x;
           sum.y += weight_01.x * sample.y;
@@ -312,7 +334,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 3
-        if (first_station + 3 < NR_STATIONS) {
+        if (first_station + 3 <= NR_STATIONS) {
           sample = _local.samples[ 2][t][pol];
           sum.x += weight_02.x * sample.x;
           sum.y += weight_02.x * sample.y;
@@ -322,7 +344,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 4
-        if (first_station + 4 < NR_STATIONS) {
+        if (first_station + 4 <= NR_STATIONS) {
           sample = _local.samples[ 3][t][pol];
           sum.x += weight_03.x * sample.x;
           sum.y += weight_03.x * sample.y;
@@ -332,7 +354,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 5
-        if (first_station + 5 < NR_STATIONS) {
+        if (first_station + 5 <= NR_STATIONS) {
           sample = _local.samples[ 4][t][pol];
           sum.x += weight_04.x * sample.x;
           sum.y += weight_04.x * sample.y;
@@ -342,7 +364,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 6
-        if (first_station + 6 < NR_STATIONS) {
+        if (first_station + 6 <= NR_STATIONS) {
           sample = _local.samples[ 5][t][pol];
           sum.x += weight_05.x * sample.x;
           sum.y += weight_05.x * sample.y;
@@ -352,7 +374,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 7
-        if (first_station + 7 < NR_STATIONS) {
+        if (first_station + 7 <= NR_STATIONS) {
           sample = _local.samples[ 6][t][pol];
           sum.x += weight_06.x * sample.x;
           sum.y += weight_06.x * sample.y;
@@ -362,7 +384,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 8
-        if (first_station + 8 < NR_STATIONS) {
+        if (first_station + 8 <= NR_STATIONS) {
           sample = _local.samples[ 7][t][pol];
           sum.x += weight_07.x * sample.x;
           sum.y += weight_07.x * sample.y;
@@ -372,7 +394,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 9
-        if (first_station + 9 < NR_STATIONS) {
+        if (first_station + 9 <= NR_STATIONS) {
           sample = _local.samples[ 8][t][pol];
           sum.x += weight_08.x * sample.x;
           sum.y += weight_08.x * sample.y;
@@ -382,7 +404,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 10
-        if (first_station + 10 < NR_STATIONS) {
+        if (first_station + 10 <= NR_STATIONS) {
           sample = _local.samples[ 9][t][pol];
           sum.x += weight_09.x * sample.x;
           sum.y += weight_09.x * sample.y;
@@ -392,7 +414,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 11
-        if (first_station + 11 < NR_STATIONS) {
+        if (first_station + 11 <= NR_STATIONS) {
           sample = _local.samples[10][t][pol];
           sum.x += weight_10.x * sample.x;
           sum.y += weight_10.x * sample.y;
@@ -402,7 +424,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 12
-        if (first_station + 12 < NR_STATIONS) {
+        if (first_station + 12 <= NR_STATIONS) {
           sample = _local.samples[11][t][pol];
           sum.x += weight_11.x * sample.x;
           sum.y += weight_11.x * sample.y;
@@ -412,7 +434,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 13
-        if (first_station + 13 < NR_STATIONS) {
+        if (first_station + 13 <= NR_STATIONS) {
           sample = _local.samples[12][t][pol];
           sum.x += weight_12.x * sample.x;
           sum.y += weight_12.x * sample.y;
@@ -422,7 +444,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 14
-        if (first_station + 14 < NR_STATIONS) {
+        if (first_station + 14 <= NR_STATIONS) {
           sample = _local.samples[13][t][pol];
           sum.x += weight_13.x * sample.x;
           sum.y += weight_13.x * sample.y;
@@ -432,7 +454,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 15
-        if (first_station + 15 < NR_STATIONS) {
+        if (first_station + 15 <= NR_STATIONS) {
           sample = _local.samples[14][t][pol];
           sum.x += weight_14.x * sample.x;
           sum.y += weight_14.x * sample.y;
@@ -442,7 +464,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 16
-        if (first_station + 15 < NR_STATIONS) {
+        if (first_station + 16 <= NR_STATIONS) {
           sample = _local.samples[15][t][pol];
           sum.x += weight_15.x * sample.x;
           sum.y += weight_15.x * sample.y;
@@ -452,7 +474,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 17
-        if (first_station + 16 < NR_STATIONS) {
+        if (first_station + 17 <= NR_STATIONS) {
           sample = _local.samples[16][t][pol];
           sum.x += weight_16.x * sample.x;
           sum.y += weight_16.x * sample.y;
@@ -462,7 +484,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 18
-        if (first_station + 17 < NR_STATIONS) {
+        if (first_station + 18 <= NR_STATIONS) {
           sample = _local.samples[17][t][pol];
           sum.x += weight_17.x * sample.x;
           sum.y += weight_17.x * sample.y;
@@ -472,7 +494,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 19
-        if (first_station + 18 < NR_STATIONS) {
+        if (first_station + 19 <= NR_STATIONS) {
           sample = _local.samples[18][t][pol];
           sum.x += weight_18.x * sample.x;
           sum.y += weight_18.x * sample.y;
@@ -482,7 +504,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 20
-        if (first_station + 19 < NR_STATIONS) {
+        if (first_station + 20 <= NR_STATIONS) {
           sample = _local.samples[19][t][pol];
           sum.x += weight_19.x * sample.x;
           sum.y += weight_19.x * sample.y;
@@ -492,7 +514,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 21
-        if (first_station + 20 < NR_STATIONS) {
+        if (first_station + 21 <= NR_STATIONS) {
           sample = _local.samples[20][t][pol];
           sum.x += weight_20.x * sample.x;
           sum.y += weight_20.x * sample.y;
@@ -502,7 +524,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 22
-        if (first_station + 21 < NR_STATIONS) {
+        if (first_station + 22 <= NR_STATIONS) {
           sample = _local.samples[21][t][pol];
           sum.x += weight_21.x * sample.x;
           sum.y += weight_21.x * sample.y;
@@ -512,7 +534,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 23
-        if (first_station + 22 < NR_STATIONS) {
+        if (first_station + 23 <= NR_STATIONS) {
           sample = _local.samples[22][t][pol];
           sum.x += weight_22.x * sample.x;
           sum.y += weight_22.x * sample.y;
@@ -522,7 +544,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 24
-        if (first_station + 23 < NR_STATIONS) {
+        if (first_station + 24 <= NR_STATIONS) {
           sample = _local.samples[23][t][pol];
           sum.x += weight_23.x * sample.x;
           sum.y += weight_23.x * sample.y;
@@ -532,7 +554,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 25
-        if (first_station + 25 < NR_STATIONS) {
+        if (first_station + 25 <= NR_STATIONS) {
           sample = _local.samples[24][t][pol];
           sum.x += weight_24.x * sample.x;
           sum.y += weight_24.x * sample.y;
@@ -542,7 +564,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 26
-        if (first_station + 25 < NR_STATIONS) {
+        if (first_station + 26 <= NR_STATIONS) {
           sample = _local.samples[25][t][pol];
           sum.x += weight_25.x * sample.x;
           sum.y += weight_25.x * sample.y;
@@ -552,7 +574,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 27
-        if (first_station + 26 < NR_STATIONS) {
+        if (first_station + 27 <= NR_STATIONS) {
           sample = _local.samples[26][t][pol];
           sum.x += weight_26.x * sample.x;
           sum.y += weight_26.x * sample.y;
@@ -562,7 +584,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 28
-        if (first_station + 27 < NR_STATIONS) {
+        if (first_station + 28 <= NR_STATIONS) {
           sample = _local.samples[27][t][pol];
           sum.x += weight_27.x * sample.x;
           sum.y += weight_27.x * sample.y;
@@ -572,7 +594,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 29
-        if (first_station + 28 < NR_STATIONS) {
+        if (first_station + 29 <= NR_STATIONS) {
           sample = _local.samples[28][t][pol];
           sum.x += weight_28.x * sample.x;
           sum.y += weight_28.x * sample.y;
@@ -582,7 +604,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 30
-        if (first_station + 29 < NR_STATIONS) {
+        if (first_station + 30 <= NR_STATIONS) {
           sample = _local.samples[29][t][pol];
           sum.x += weight_29.x * sample.x;
           sum.y += weight_29.x * sample.y;
@@ -592,7 +614,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 31
-        if (first_station + 30 < NR_STATIONS) {
+        if (first_station + 31 <= NR_STATIONS) {
           sample = _local.samples[30][t][pol];
           sum.x += weight_30.x * sample.x;
           sum.y += weight_30.x * sample.y;
@@ -602,7 +624,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #endif
 
 #if NR_STATIONS_PER_PASS >= 32
-        if (first_station + 31 < NR_STATIONS) {
+        if (first_station + 32 <= NR_STATIONS) {
           sample = _local.samples[31][t][pol];
           sum.x += weight_31.x * sample.x;
           sum.y += weight_31.x * sample.y;
