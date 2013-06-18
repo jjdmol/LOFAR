@@ -124,11 +124,10 @@ namespace LOFAR
 
       // check whether the mode matches the one given
       if (packet.clockMHz() != settings.station.clockMHz
-          || packet.bitMode() != settings.station.bitMode
-          || packet.header.nrBeamlets != settings.nrBeamletsPerBoard) {
+          || packet.bitMode() != settings.station.bitMode) {
 
         if (!hadModeError) {
-          LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit, " << (int)packet.header.nrBeamlets << " beamlets), but expected mode (" << settings.station.clockMHz << " MHz, " << settings.station.bitMode << " bit, " << settings.nrBeamletsPerBoard << " beamlets)");
+          LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit), but expected mode (" << settings.station.clockMHz << " MHz, " << settings.station.bitMode << " bit)");
           hadModeError = true;
         }
 
