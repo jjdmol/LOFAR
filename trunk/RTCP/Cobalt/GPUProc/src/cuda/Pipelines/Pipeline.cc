@@ -26,6 +26,7 @@
 #include <Common/lofar_iomanip.h>
 
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/Kernels/Kernel.h>
 
 namespace LOFAR
 {
@@ -45,18 +46,10 @@ namespace LOFAR
 
     std::string Pipeline::createPTX(const string &srcFilename)
     {
-      flags_type flags(defaultFlags());
-      definitions_type definitions(defaultDefinitions(ps));
+      CompileFlags flags(defaultCompileFlags());
+      CompileDefinitions definitions(Kernel::compileDefinitions(ps));
 
       return LOFAR::Cobalt::createPTX(devices, srcFilename, flags, definitions);
-    }
-
-
-    gpu::Module Pipeline::createProgram(const gpu::Context &context,
-                                        const string &srcFilename,
-                                        const string &ptx)
-    {
-      return createModule(context, srcFilename, ptx);
     }
 
 

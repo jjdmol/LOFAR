@@ -135,7 +135,7 @@ int main() {
  
   std::vector<gpu::Device> devices(1,device);
   flags_type flags(defaultFlags());
-  definitions_type definitions(defaultDefinitions(ps));
+  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
   string ptx(createPTX(devices, "FIR_Filter.cu", flags, definitions));
   gpu::Module program =  createModule(ctx, "FIR_Filter.cu", ptx);
 

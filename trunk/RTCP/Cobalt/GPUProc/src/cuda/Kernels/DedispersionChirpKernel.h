@@ -23,7 +23,7 @@
 
 #include <CoInterface/Parset.h>
 
-#include "Kernel.h"
+#include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/gpu_wrapper.h>
 //#include <GPUProc/PerformanceCounter.h>
 
