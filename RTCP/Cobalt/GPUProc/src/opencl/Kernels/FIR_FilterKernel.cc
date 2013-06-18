@@ -51,6 +51,25 @@ namespace LOFAR
       nrBytesWritten = nrSamples * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
     }
 
+    size_t FIR_FilterKernel::bufferSize(const Parset& ps, BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA: 
+        return
+          (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * 
+          ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
+      case OUTPUT_DATA:
+        return
+          ps.nrSamplesPerSubband() * ps.nrStations() * 
+          NR_POLARIZATIONS * sizeof(std::complex<float>);
+      case FILTER_WEIGHTS:
+        return 
+          ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
   }
 }
 

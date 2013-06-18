@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/MultiDimArrayHostBuffer.h>
-#include <GPUProc/gpu_utils.h>
+#include <GPUProc/opencl/gpu_utils.h>
 #include <GPUProc/PerformanceCounter.h>
 
 using namespace LOFAR;

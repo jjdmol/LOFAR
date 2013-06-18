@@ -1,6 +1,5 @@
 //# Kernel.h
-//#
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -19,23 +18,42 @@
 //#
 //# $Id$
 
-// \file
-// Include the right GPU API include with our options.
+#ifndef LOFAR_GPUPROC_CUDA_KERNEL_H
+#define LOFAR_GPUPROC_CUDA_KERNEL_H
 
-#ifndef LOFAR_GPUPROC_KERNEL_H
-#define LOFAR_GPUPROC_KERNEL_H
+#include <string>
+#include <iosfwd>
+#include <cuda.h>
 
-#if defined (USE_CUDA) && defined (USE_OPENCL)
-# error "Either CUDA or OpenCL must be enabled, not both"
-#endif
+#include <CoInterface/Parset.h>
 
-#if defined (USE_CUDA)
-# include <GPUProc/cuda/Kernels/Kernel.h>
-#elif defined (USE_OPENCL)
-# include <GPUProc/opencl/Kernels/Kernel.h>
-#else
-# error "Either CUDA or OpenCL must be enabled, not neither"
-#endif
+#include <GPUProc/gpu_wrapper.h>
+#include <GPUProc/KernelCompiler.h>
+//#include <GPUProc/PerformanceCounter.h>
+
+namespace LOFAR
+{
+  namespace Cobalt
+  {
+    class Kernel : public gpu::Function
+    {
+    public:
+      Kernel(const Parset &ps, gpu::Module& module, const std::string &name);
+
+      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
+
+      // Return required compile definitions given the Parset \a ps.
+      static const CompileDefinitions& compileDefinitions(const Parset& ps);
+
+    protected:
+      gpu::Event event;
+      const Parset &ps;
+      gpu::Grid globalWorkSize;
+      gpu::Block localWorkSize;
+      size_t nrOperations, nrBytesRead, nrBytesWritten;
+    };
+  }
+}
 
 #endif
 

@@ -33,9 +33,24 @@ namespace LOFAR
     class FIR_FilterKernel : public Kernel
     {
     public:
-      FIR_FilterKernel(const Parset &ps, cl::CommandQueue &queue, cl::Program &program,
-                       cl::Buffer &devFilteredData, cl::Buffer &devInputSamples,
+      FIR_FilterKernel(const Parset &ps,
+                       cl::CommandQueue &queue,
+                       cl::Program &program,
+                       cl::Buffer &devFilteredData,
+                       cl::Buffer &devInputSamples,
                        cl::Buffer &devFIRweights);
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        FILTER_WEIGHTS
+      };
+
+      // Return required buffer size for \a bufferType
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
+
+
     };
   }
 }

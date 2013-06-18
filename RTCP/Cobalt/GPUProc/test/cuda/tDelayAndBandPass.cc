@@ -32,6 +32,7 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/KernelCompiler.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <UnitTest++.h>
 
@@ -67,8 +68,8 @@ float * runTest(float bandPassFactor,
   string kernelPath = "DelayAndBandPass.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
  
   // Get an instantiation of the default parameters
-  definitions_type definitions = defaultDefinitions();
-  flags_type flags = defaultFlags();
+  CompileDefinitions definitions;
+  CompileFlags flags = defaultCompileFlags();
 
   // ****************************************
   // Compile to ptx

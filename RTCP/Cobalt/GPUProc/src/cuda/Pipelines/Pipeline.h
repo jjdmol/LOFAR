@@ -46,10 +46,6 @@ namespace LOFAR
 
       std::string createPTX(const std::string &srcFilename);
 
-      gpu::Module createProgram(const gpu::Context &context,
-                                const std::string &srcFilename,
-                                const std::string &ptx);
-
     protected:
       const Parset             &ps;
       const gpu::Platform      platform;

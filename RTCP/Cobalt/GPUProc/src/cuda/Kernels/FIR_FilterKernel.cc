@@ -30,7 +30,11 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program, gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devInputSamples, gpu::DeviceMemory &devFIRweights)
+    FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, 
+                                       gpu::Module &program,
+                                       gpu::DeviceMemory &devFilteredData,
+                                       gpu::DeviceMemory &devInputSamples,
+                                       gpu::DeviceMemory &devFIRweights)
       :
       Kernel(ps, program, "FIR_filter")
     {
@@ -39,7 +43,6 @@ namespace LOFAR
       setArg(2, devFIRweights);
 
       size_t maxNrThreads;
-      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       unsigned totalNrThreads = ps.nrChannelsPerSubband() * NR_POLARIZATIONS * 2;
       unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
@@ -52,6 +55,24 @@ namespace LOFAR
       nrBytesWritten = nrSamples * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
     }
 
+    size_t FIR_FilterKernel::bufferSize(const Parset& ps, BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA: 
+        return
+          (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * 
+          ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
+      case OUTPUT_DATA:
+        return
+          ps.nrSamplesPerSubband() * ps.nrStations() * 
+          NR_POLARIZATIONS * sizeof(std::complex<float>);
+      case FILTER_WEIGHTS:
+        return 
+          ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
   }
 }
-

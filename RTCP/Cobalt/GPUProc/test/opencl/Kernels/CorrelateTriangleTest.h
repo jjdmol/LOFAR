@@ -21,6 +21,8 @@
 #ifndef GPUPROC_CORRELATETRIANGLETEST_H
 #define GPUPROC_CORRELATETRIANGLETEST_H
 
+#if defined USE_NEW_CORRELATOR
+
 #include <UnitTest.h>
 #include <GPUProc/Kernels/CorrelatorKernel.h>
 
@@ -59,6 +61,8 @@ namespace LOFAR
     };
   }
 }
+
+#endif
 
 #endif
 

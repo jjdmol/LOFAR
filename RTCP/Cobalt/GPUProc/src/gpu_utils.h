@@ -1,5 +1,4 @@
 //# gpu_utils.h
-//#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,23 +18,39 @@
 //#
 //# $Id$
 
-// \file
-// Support functions for GPU device selection, context, program management.
+#ifndef LOFAR_GPUPROC_CUDA_GPU_UTILS_H
+#define LOFAR_GPUPROC_CUDA_GPU_UTILS_H
 
-#ifndef LOFAR_GPU_UTILS_H
-#define LOFAR_GPU_UTILS_H
+#include <string>
+#include <vector>
 
-#if defined (USE_CUDA) && defined (USE_OPENCL)
-# error "Either CUDA or OpenCL must be enabled, not both"
-#endif
+#include <CoInterface/Parset.h>
+#include <GPUProc/KernelCompiler.h>
+#include "gpu_wrapper.h"
+// #include "CudaRuntimeCompiler.h"
 
-#if defined (USE_CUDA)
-# include "cuda/gpu_utils.h"
-#elif defined (USE_OPENCL)
-# include "opencl/gpu_utils.h"
-#else
-# error "Either CUDA or OpenCL must be enabled, not neither"
-#endif
+namespace LOFAR
+{
+  namespace Cobalt
+  {
+    /*
+     * If no devices are given, the program is compiled for the latest
+     * architecture.
+     *
+     * srcFilename cannot be an absolute path.
+     */
+    std::string createPTX( const std::vector<gpu::Device> &devices,
+                           const std::string &srcFilename, 
+                           CompileFlags &flags,
+                           const CompileDefinitions &definitions );
+    /*
+     * Create a Module from a PTX (string).
+     */
+    gpu::Module createModule( const gpu::Context &context,
+                              const std::string &srcFilename, 
+                              const std::string &ptx );
+  }
+}
 
 #endif
 

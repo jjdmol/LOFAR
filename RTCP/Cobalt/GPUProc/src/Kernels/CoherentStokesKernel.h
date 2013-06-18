@@ -1,5 +1,6 @@
-//# Kernel.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# CoherentStokesKernel.h
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,37 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_KERNEL_H
-#define LOFAR_GPUPROC_CUDA_KERNEL_H
+// \file
+// Include the right GPU API include with our options.
 
-#include <string>
-#include <cuda.h>
+#ifndef LOFAR_GPUPROC_COHERENT_STOKES_KERNEL_H
+#define LOFAR_GPUPROC_COHERENT_STOKES_KERNEL_H
 
-#include <CoInterface/Parset.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-#include <GPUProc/gpu_wrapper.h>
-//#include <GPUProc/PerformanceCounter.h>
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    class Kernel : public gpu::Function
-    {
-    public:
-      Kernel(const Parset &ps, gpu::Module& module, const std::string &name);
-
-      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
-
-    protected:
-      gpu::Event event;
-      const Parset &ps;
-      gpu::Grid globalWorkSize;
-      gpu::Block localWorkSize;
-      size_t nrOperations, nrBytesRead, nrBytesWritten;
-    };
-  }
-}
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Kernels/CoherentStokesKernel.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Kernels/CoherentStokesKernel.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 
