@@ -54,8 +54,8 @@ namespace LOFAR
   {
     CountedPtr<VisibilityResamplerBase> visResampler;
     Bool useDoublePrecGrid = False;
-    Double RefFreq = 0.0;
-    if (sm_p) RefFreq = Double((*sm_p).getReferenceFrequency());
+    Double RefFreq((*sm_p).getReferenceFrequency());
+
 
     if (itsParameters.asBool("splitbeam")) {
       cout << itsParameters<<endl;
@@ -74,14 +74,21 @@ namespace LOFAR
                                       itsParameters.asBool("UseLIG"),
                                       itsParameters.asBool("UseEJones"),
                                       itsParameters.asInt("StepApplyElement"),
+                                      itsParameters.asInt("ApplyBeamCode"),
                                       itsParameters.asDouble("PBCut"),
                                       itsParameters.asBool("PredictFT"),
                                       itsParameters.asString("PsfImage"),
                                       itsParameters.asBool("UseMasksDegrid"),
                                       itsParameters.asBool("doPSF"),
+				      itsParameters.asDouble("UVmin"),
+				      itsParameters.asDouble("UVmax"),
+                                      itsParameters.asBool("MakeDirtyCorr"),
                                       itsParameters);//,
                                       //itsParameters.asDouble("FillFactor"));
     
+      itsMachine->initGridThreads(itsGridsParallel,itsGridsParallel2);
+
+
       ft_p  = itsMachine;
     } else {
     itsMachineOld = new LofarFTMachineOld(cache_p/2, tile_p,
@@ -108,7 +115,8 @@ namespace LOFAR
                        TableIterator::NoSort);
     uInt nrowPerTime = iter.table().nrow();
     double interval  = ROScalarColumn<double>(iter.table(),"INTERVAL")(0);
-    Int ntime = itsParameters.asDouble("timewindow") / interval;
+    //Int ntime = itsParameters.asDouble("timewindow") / interval;
+    Int ntime = itsParameters.asDouble("TWElement")*3600. / interval;
     Int nrowBlock = nrowPerTime * max(1,ntime);
     // Set row blocking in VisIter.
     rvi_p->setRowBlocking (nrowBlock);

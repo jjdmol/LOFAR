@@ -5,7 +5,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 
-lofar_add_library(inputproc
+set(_inputproc_sources
   Package__Version.cc
   RSPBoards.cc
   Buffer/BufferSettings.cc
@@ -18,10 +18,17 @@ lofar_add_library(inputproc
   Station/PacketFactory.cc
   Station/PacketReader.cc
   Station/PacketsToBuffer.cc
-  Transpose/MPISendStation.cc
-  Transpose/MPIReceiveStations.cc
-  Transpose/MPIUtil.cc
+)
+
+if(MPI_FOUND)
+  list(APPEND _inputproc_sources
+    Transpose/MPISendStation.cc
+    Transpose/MPIReceiveStations.cc
+    Transpose/MPIUtil.cc
   )
+endif(MPI_FOUND)
+
+lofar_add_library(inputproc ${_inputproc_sources})
 
 lofar_add_bin_program(filterRSP Station/filterRSP.cc)
 lofar_add_bin_program(printRSP Station/printRSP.cc)

@@ -1,4 +1,5 @@
-//# Kernel.h
+//# DirectInput.cc: Functionality to handle station input being fed directly to
+//#                 Pipeline objects, without needing MPI.
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,37 +19,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_KERNEL_H
-#define LOFAR_GPUPROC_CUDA_KERNEL_H
-
-#include <string>
-#include <cuda.h>
-
-#include <CoInterface/Parset.h>
-
-#include <GPUProc/gpu_wrapper.h>
-//#include <GPUProc/PerformanceCounter.h>
+#include <lofar_config.h>
+#include "DirectInput.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class Kernel : public gpu::Function
-    {
-    public:
-      Kernel(const Parset &ps, gpu::Module& module, const std::string &name);
-
-      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
-
-    protected:
-      gpu::Event event;
-      const Parset &ps;
-      gpu::Grid globalWorkSize;
-      gpu::Block localWorkSize;
-      size_t nrOperations, nrBytesRead, nrBytesWritten;
-    };
-  }
-}
-
-#endif
+    MultiDimArray< SmartPtr< BestEffortQueue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
+  } // namespace Cobalt
+} // namespace LOFAR
 

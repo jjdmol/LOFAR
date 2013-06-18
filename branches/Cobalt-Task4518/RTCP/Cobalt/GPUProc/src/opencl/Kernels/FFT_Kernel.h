@@ -36,8 +36,17 @@ namespace LOFAR
     public:
       FFT_Kernel(cl::Context &context, unsigned fftSize,
                  unsigned nrFFTs, bool forward, cl::Buffer &buffer);
+
       void enqueue(cl::CommandQueue &queue, PerformanceCounter &counter);
 
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
+      // Return required buffer size for \a bufferType
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
     private:
       unsigned nrFFTs, fftSize;

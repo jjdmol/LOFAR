@@ -26,7 +26,6 @@
 
 #include <cuda.h>
 
-/* #include "complex.h"   // TODO: rename to gpu_complex.h */
 #include "gpu_math.cuh"
 
 #define NR_BASELINES     (NR_STATIONS * (NR_STATIONS + 1) / 2)
@@ -57,8 +56,6 @@ typedef float4 fcomplex2;
 typedef fcomplex2 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 typedef fcomplex (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
 
-//#pragma OPENCL EXTENSION cl_intel_printf : enable
-
 extern "C" {
 
 /*!
@@ -83,9 +80,10 @@ extern "C" {
  * ----------------------- | ----------------------- | -----------
  * NR_STATIONS             | >= 1                    | number of antenna fields
  * NR_SAMPLES_PER_CHANNEL  | multiple of BLOCK_SIZE  | number of input samples per channel
- * NR_CHANNELS             | > 1 (TODO: supp 1 ch)   | number of frequency channels per subband
+ * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
  * Note that for > 1 channels, NR_CHANNELS-1 channels are actually processed,
  * because the second PPF has "corrupted" channel 0. (An inverse PPF can disambiguate.) \n
+ * Note that if NR_CHANNELS is low (esp. 1), these kernels perform poorly.
  * Note that this kernel assumes (but does not use) NR_POLARIZATIONS == 2.
  *
  * Execution configuration:
@@ -113,7 +111,11 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
   uint baseline = blockIdx.x * blockDim.x + threadIdx.x;
 
   /* uint channel = get_global_id(1) + 1; */
-  uint channel = blockIdx.y * blockDim.y + threadIdx.y + 1;
+#if NR_CHANNELS == 1
+  uint channel = blockIdx.y;
+#else
+  uint channel = blockIdx.y + 1;
+#endif
 
   /* uint stat_0 = convert_uint_rtz(sqrt(convert_float(8 * baseline + 1)) - 0.99999f) / 2; */
   uint stat_0 = __float2uint_rz(sqrtf(float(8 * baseline + 1)) - 0.99999f) / 2;
@@ -209,7 +211,11 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
   /* uint block = get_global_id(0); */
   uint block =  blockIdx.x * blockDim.x + threadIdx.x;
   /* uint channel = get_global_id(1) + 1; */
-  uint channel = blockIdx.y * blockDim.y + threadIdx.y + 1;
+#if NR_CHANNELS == 1
+  uint channel = blockIdx.y;
+#else
+  uint channel = blockIdx.y + 1;
+#endif
 
   /* uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2; */
   uint x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
@@ -352,7 +358,11 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   /* uint block = get_global_id(0); */
   uint block = blockIdx.x * blockDim.x + threadIdx.x;
   /* uint channel = get_global_id(1) + 1; */
-  uint channel = blockIdx.y * blockDim.y + threadIdx.y + 1;
+#if NR_CHANNELS == 1
+  uint channel = blockIdx.y;
+#else
+  uint channel = blockIdx.y + 1;
+#endif
 
   /* uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2; */
   uint x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
@@ -591,7 +601,11 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   /* uint block = get_global_id(0); */
   uint block = blockIdx.x * blockDim.x + threadIdx.x;
   /* uint channel = get_global_id(1) + 1; */
-  uint channel = blockIdx.y * blockDim.y + threadIdx.y + 1;
+#if NR_CHANNELS == 1
+  uint channel = blockIdx.y;
+#else
+  uint channel = blockIdx.y + 1;
+#endif
 
   /* uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2; */
   uint x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;

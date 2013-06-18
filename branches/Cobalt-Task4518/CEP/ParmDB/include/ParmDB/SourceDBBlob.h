@@ -36,7 +36,8 @@
 #include <Blob/BlobIBufStream.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
-
+#include <Common/lofar_vector.h>
+#include <Common/lofar_map.h>
 
 namespace LOFAR {
 namespace BBS {
@@ -90,12 +91,16 @@ namespace BBS {
     // will be preceeded by the source name and a colon.
     // The map should contain the parameters belonging to the source type.
     // Missing parameters will default to 0.
-    // <br>Optionally it is checked if the patch already exists.
+    // <br>Optionally it is checked if the source already exists.
+    // <group>
     virtual void addSource (const SourceInfo& sourceInfo,
                             const string& patchName,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check);
+    virtual void addSource (const SourceData& source,
+                            bool check);
+    // </group>
 
     // Add a source which forms a patch in itself (with the same name).
     // <br>Optionally it is checked if the patch or source already exists.
@@ -122,6 +127,9 @@ namespace BBS {
 
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName);
+
+    // Get all data of the sources belonging to the given patch.
+    virtual vector<SourceData> getPatchSourceData (const string& patchName);
 
     // Get the source info of the given source.
     virtual SourceInfo getSource (const string& sourceName);
@@ -150,6 +158,12 @@ namespace BBS {
     // Skip the patch info in the file.
     void skipPatch();
 
+    // Read a patch entry.
+    PatchInfo readPatch();
+
+    // Read all patches and sources filling the maps.
+    void readAll();
+
     //# Data members
     std::fstream                      itsFile;
     boost::shared_ptr<BlobIBufStream> itsBufIn;
@@ -158,6 +172,8 @@ namespace BBS {
     boost::shared_ptr<BlobOStream>    itsBlobOut;
     bool  itsCanWrite;
     int64 itsEndPos;
+    map<string, PatchInfo>            itsPatches;
+    map<string, vector<SourceData> >  itsSources;   //# sources per patch
   };
 
   // @}

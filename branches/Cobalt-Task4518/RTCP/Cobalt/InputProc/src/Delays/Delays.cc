@@ -154,6 +154,9 @@ namespace LOFAR
     bool Delays::test()
     {
       try {
+        ScopedLock lock(casacoreMutex);
+        ScopedDelayCancellation dc;
+
         // set up a converter
         MDirection::Types dirType;
 

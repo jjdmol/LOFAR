@@ -1,4 +1,4 @@
-//# gpu_utils.h
+//# tCorrelatorPipeline.cc: test correlator pipeline class
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,39 +18,30 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_GPU_UTILS_H
-#define LOFAR_GPUPROC_CUDA_GPU_UTILS_H
+#include <lofar_config.h>
 
-#include <string>
-#include <vector>
-
+#include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
+#include <GPUProc/Pipelines/CorrelatorPipeline.h>
 
-#include "gpu_wrapper.h"
-#include "CudaRuntimeCompiler.h"
+using namespace std;
+using namespace LOFAR::Cobalt;
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    /*
-     * If no devices are given, the program is compiled for the latest
-     * architecture.
-     *
-     * srcFilename cannot be an absolute path.
-     */
-    std::string createPTX( const std::vector<gpu::Device> &devices,
-                               const std::string &srcFilename, 
-                               flags_type &flags,
-                               const definitions_type &definitions );
-    /*
-     * Create a Module from a PTX (string).
-     */
-    gpu::Module createModule( const gpu::Context &context,
-                               const std::string &srcFilename, 
-                               const std::string &ptx );
+int main() {
+  INIT_LOGGER("tCorrelatorPipeline");
+
+  try {
+    gpu::Platform pf;
+    cout << "Detected " << pf.size() << " CUDA devices" << endl;
+  } catch (gpu::CUDAException& e) {
+    cerr << e.what() << endl;
+    return 3;
   }
-}
 
-#endif
+  gpu::Device device(0);
+  vector<gpu::Device> devices(1, device);
+  gpu::Context ctx(device);
+
+  return 0;
+}
 
