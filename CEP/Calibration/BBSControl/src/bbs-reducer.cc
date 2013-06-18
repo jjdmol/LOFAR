@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
   parser.addOptionWithArgument("ParmDB", "-P", "--parmdb", "Path to an"
     " alternative parameter database. By default MS/instrument will be used.");
   parser.addOptionWithArgument("LogPath", "-l", "--log-path", "Path where"
-    " solver statictic logs are stored. By default MS/ is used.");
+    " solver statistic logs are stored. By default MS/ is used.");
 
 #ifdef HAVE_PQXX
   parser.addOption("Distributed", "-D", "--distributed", "Run in distributed"
@@ -233,7 +233,7 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList &args)
   casa::Path logPath(options.getString("LogPath", args[1]));
   CommandHandlerReducer handler(group, ms, parmDB, sourceDB, logPath);
 
-  // Fake intialization.
+  // Fake initialization.
   InitializeCommand initCmd(strategy);
   CommandResult initResult = initCmd.accept(handler);
   if(!initResult)
