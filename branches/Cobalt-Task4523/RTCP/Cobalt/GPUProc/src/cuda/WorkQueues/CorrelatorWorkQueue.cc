@@ -194,20 +194,19 @@ namespace LOFAR
     }
 
     // Get the log2 of the supplied number
-    unsigned CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(unsigned nrChannels)
+    unsigned CorrelatorWorkQueue::flagFunctions::log2(unsigned n)
     {
       // Assure that the nrChannels is more then zero: never ending loop 
-      ASSERT(powerOfTwo(nrChannels));
+      ASSERT(powerOfTwo(n));
 
-      unsigned logNrChannels;
-      for (logNrChannels = 0; 1U << logNrChannels != nrChannels;
-        logNrChannels ++)
-      {;} // do nothing, the creation of the log is a side effect of the for loop
+      unsigned log;
+      for (log = 0; 1U << log != n; log ++)
+        {;} // do nothing, the creation of the log is a side effect of the for loop
 
       //Alternative solution snipped:
       //int targetlevel = 0;
       //while (index >>= 1) ++targetlevel; 
-      return logNrChannels;
+      return log;
     }
 
     void CorrelatorWorkQueue::flagFunctions::propagateFlagsToOutput(
@@ -247,7 +246,7 @@ namespace LOFAR
       MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChannel)
     {
       unsigned numberOfChannels = parset.nrChannelsPerSubband();
-      unsigned log2NrChannels = get2LogOfNrChannels(numberOfChannels);
+      unsigned log2NrChannels = log2(numberOfChannels);
       //Convert the flags per sample to flags per channel
       for (unsigned station = 0; station < parset.nrStations(); station ++) 
       {

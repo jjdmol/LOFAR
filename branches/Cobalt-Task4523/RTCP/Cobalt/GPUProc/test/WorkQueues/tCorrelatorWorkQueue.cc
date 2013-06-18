@@ -134,11 +134,11 @@ TEST(propagateFlagsToOutput)
  
 }
 
-TEST(getLogOfNrChannels)
+TEST(log2)
 {
-  CHECK_EQUAL(6u, CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(64));
-  CHECK_EQUAL(7u, CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(128));
-  CHECK_EQUAL(0u, CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(1));
+  CHECK_EQUAL(6u, CorrelatorWorkQueue::flagFunctions::log2(64));
+  CHECK_EQUAL(7u, CorrelatorWorkQueue::flagFunctions::log2(128));
+  CHECK_EQUAL(0u, CorrelatorWorkQueue::flagFunctions::log2(1));
 
   //cant take 2log of zero: raise exception
   //CHECK_THROW(get2LogOfNrChannels(0), LOFAR::AssertError);

@@ -245,7 +245,7 @@ namespace LOFAR
           CorrelatedData &output);
 
         // 1.3 Get the LOG2 of the input. Used to speed up devisions by 2
-        static unsigned get2LogOfNrChannels(unsigned nrChannels);
+        static unsigned log2(unsigned n);
 
         // 2.1 Apply the supplied weight to the complex values in the channel and baseline
         static void applyWeightingToAllPolarizations(unsigned baseline, 
