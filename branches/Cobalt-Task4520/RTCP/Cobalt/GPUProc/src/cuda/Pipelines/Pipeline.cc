@@ -53,14 +53,6 @@ namespace LOFAR
     }
 
 
-    gpu::Module Pipeline::createProgram(const gpu::Context &context,
-                                        const string &srcFilename,
-                                        const string &ptx)
-    {
-      return createModule(context, srcFilename, ptx);
-    }
-
-
     Pipeline::Performance::Performance(size_t nrGPUs):
       nrGPUs(nrGPUs)
     {
