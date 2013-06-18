@@ -30,7 +30,6 @@
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/SparseSet.h>
-#include <CoInterface/SubbandMetaData.h>
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
@@ -120,89 +119,6 @@ namespace LOFAR
       CorrelatedDataHostBuffer(const CorrelatedDataHostBuffer &);
     };
 
-    // 
-    //   Collect all inputData for the correlatorWorkQueue item:
-    //    \arg inputsamples
-    //    \arg delays
-    //    \arg phaseOffSets
-    //    \arg flags
-    // It also contains a read function parsing all this data from an input stream.   
-    class WorkQueueInputData
-    {
-    public:
-
-      // The set of GPU buffers to link our host buffers to.
-      // Device buffers may be reused between different pairs of kernels,
-      // since device memory size is a concern. Use inputSamplesMinSize
-      // to specify a minimum derived from other uses apart from input.
-      struct DeviceBuffers
-      {
-        gpu::DeviceMemory delaysAtBegin;
-        gpu::DeviceMemory delaysAfterEnd;
-        gpu::DeviceMemory phaseOffsets;
-        gpu::DeviceMemory inputSamples;
-
-        DeviceBuffers(size_t inputSamplesSize, size_t delaysSize, 
-                      size_t phaseOffsetsSize, gpu::Context &context) :
-          delaysAtBegin(context, delaysSize),
-          delaysAfterEnd(context, delaysSize),
-          phaseOffsets(context, phaseOffsetsSize),
-          inputSamples(context, inputSamplesSize)
-        // DeviceBuffers(size_t n_beams, size_t n_stations, size_t n_polarizations,
-        //               size_t n_samples, size_t bytes_per_complex_sample,
-        //               gpu::Context &context, size_t inputSamplesMinSize = 0)
-        // :
-        //   delaysAtBegin (context, n_beams * n_stations * n_polarizations * sizeof(float)),
-        //   delaysAfterEnd(context, n_beams * n_stations * n_polarizations * sizeof(float)),
-        //   phaseOffsets  (context,           n_stations * n_polarizations * sizeof(float)),
-        //   inputSamples  (context, std::max(inputSamplesMinSize,
-        //                         n_samples * n_stations * n_polarizations * bytes_per_complex_sample))
-        {
-        }
-      };
-
-      // Which block this InputData represents
-      struct BlockID blockID;
-
-      //!< Whole sample delays at the start of the workitem      
-      MultiDimArrayHostBuffer<float, 3> delaysAtBegin;
-
-      //!< Whole sample delays at the end of the workitem      
-      MultiDimArrayHostBuffer<float, 3> delaysAfterEnd;
-
-      //!< Remainder of delays
-      MultiDimArrayHostBuffer<float, 2> phaseOffsets;
-
-      // inputdata with flagged data set to zero
-      MultiDimArrayHostBuffer<char, 4> inputSamples;
-
-      // The input flags
-      MultiDimArray<SparseSet<unsigned>, 1> inputFlags;
-
-      // Create the inputData object we need shared host/device memory on the supplied devicequeue
-      WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
-                         size_t n_samples, size_t bytes_per_complex_sample,
-                         gpu::Context &context, unsigned int hostBufferFlags = 0)
-        :
-        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations],
-                       context, hostBufferFlags),
-        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations],
-                       context, hostBufferFlags),
-        phaseOffsets(boost::extents[n_stations][n_polarizations],
-                       context, hostBufferFlags),
-        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample],
-                       context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
-        inputFlags(boost::extents[n_stations])
-      {
-      }
-
-      // process the given meta data 
-      void applyMetaData(unsigned station, unsigned SAP, const SubbandMetaData &metaData);
-
-      // set all flagged inputSamples to zero.
-      void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
-    };
-
     class CorrelatorWorkQueue : public WorkQueue
     {
     public:
@@ -259,10 +175,6 @@ namespace LOFAR
       gpu::DeviceMemory devFilteredData;
 
     public:
-      // A pool of input data, to allow items to be filled and
-      // computed on in parallel.
-      Pool<WorkQueueInputData> inputPool;
-
       // A pool of output data, to allow items to be filled
       // and written in parallel.
       Pool<CorrelatedDataHostBuffer> outputPool;
@@ -282,8 +194,6 @@ namespace LOFAR
 #else
       CorrelatorKernel correlatorKernel;
 #endif
-
-      friend class WorkQueueInputData;
     };
 
   }

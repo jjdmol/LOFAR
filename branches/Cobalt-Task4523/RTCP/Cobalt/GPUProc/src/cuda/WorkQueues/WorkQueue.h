@@ -27,15 +27,93 @@
 #include <Common/Timer.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/SubbandMetaData.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/gpu_wrapper.h>
+#include <GPUProc/BlockID.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
+
+#include "Pool.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class WorkQueue
+    // 
+    //   Collect all inputData for the correlatorWorkQueue item:
+    //    \arg inputsamples
+    //    \arg delays
+    //    \arg phaseOffSets
+    //    \arg flags
+    // It also contains a read function parsing all this data from an input stream.   
+    class WorkQueueInputData
     {
+    public:
+
+      // The set of GPU buffers to link our host buffers to.
+      // Device buffers may be reused between different pairs of kernels,
+      // since device memory size is a concern. Use inputSamplesMinSize
+      // to specify a minimum derived from other uses apart from input.
+      struct DeviceBuffers
+      {
+        gpu::DeviceMemory delaysAtBegin;
+        gpu::DeviceMemory delaysAfterEnd;
+        gpu::DeviceMemory phaseOffsets;
+        gpu::DeviceMemory inputSamples;
+
+        DeviceBuffers(size_t inputSamplesSize, size_t delaysSize, 
+                      size_t phaseOffsetsSize, gpu::Context &context) :
+          delaysAtBegin(context, delaysSize),
+          delaysAfterEnd(context, delaysSize),
+          phaseOffsets(context, phaseOffsetsSize),
+          inputSamples(context, inputSamplesSize)
+        {
+        }
+      };
+
+      // Which block this InputData represents
+      struct BlockID blockID;
+
+      //!< Whole sample delays at the start of the workitem      
+      MultiDimArrayHostBuffer<float, 3> delaysAtBegin;
+
+      //!< Whole sample delays at the end of the workitem      
+      MultiDimArrayHostBuffer<float, 3> delaysAfterEnd;
+
+      //!< Remainder of delays
+      MultiDimArrayHostBuffer<float, 2> phaseOffsets;
+
+      // inputdata with flagged data set to zero
+      MultiDimArrayHostBuffer<char, 4> inputSamples;
+
+      // The input flags
+      MultiDimArray<SparseSet<unsigned>, 1> inputFlags;
+
+      // Create the inputData object we need shared host/device memory on the supplied devicequeue
+      WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
+                         size_t n_samples, size_t bytes_per_complex_sample,
+                         gpu::Context &context, unsigned int hostBufferFlags = 0)
+        :
+        delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        phaseOffsets(boost::extents[n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample],
+                       context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
+        inputFlags(boost::extents[n_stations])
+      {
+      }
+
+      // process the given meta data 
+      void applyMetaData(unsigned station, unsigned SAP, const SubbandMetaData &metaData);
+
+      // set all flagged inputSamples to zero.
+      void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
+    };
+
+    class WorkQueue {
     public:
       WorkQueue(const Parset &ps, gpu::Context &context);
 
@@ -54,6 +132,10 @@ namespace LOFAR
         // 1.3 Get the LOG2 of the input. Used to speed up devisions by 2
         static unsigned log2(unsigned n);
       };
+
+      // A pool of input data, to allow items to be filled and
+      // computed on in parallel.
+      Pool<WorkQueueInputData> inputPool;
 
     protected:
       const Parset &ps;

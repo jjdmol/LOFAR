@@ -35,6 +35,24 @@ namespace LOFAR
       ps(ps),
       queue(gpu::Stream(context))
     {
+      // put enough objects in the inputPool to operate
+      // TODO: Tweak the number of inputPool objects per WorkQueue,
+      // probably something like max(3, nrSubbands/nrWorkQueues * 2), because
+      // there both need to be enough items to receive all subbands at
+      // once, and enough items to process the same amount in the
+      // mean time.
+      //
+      // At least 3 items are needed for a smooth Pool operation.
+      size_t nrInputDatas = std::max(3UL, ps.nrSubbands());
+      for (size_t i = 0; i < nrInputDatas; ++i) {
+        inputPool.free.append(new WorkQueueInputData(
+                ps.nrBeams(),
+                ps.nrStations(),
+                NR_POLARIZATIONS,
+                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
+                ps.nrBytesPerComplexSample(),
+                context));
+      }
     }
 
 
