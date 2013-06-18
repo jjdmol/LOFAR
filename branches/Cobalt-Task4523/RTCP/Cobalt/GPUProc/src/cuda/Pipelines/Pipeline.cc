@@ -76,6 +76,9 @@ namespace LOFAR
 
     template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
     {
+      // Need WorkQueues to send work to
+      ASSERT(workQueues.size() > 0);
+
       // SEND: For now, the n stations are sent by the first n ranks.
       vector<int> stationRanks(ps.nrStations());
       for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
