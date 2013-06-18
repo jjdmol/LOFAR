@@ -25,6 +25,7 @@
 
 #include <ctime>
 #include <cstring>
+#include <cstdlib>
 #include <string>
 #include <iostream>
 
@@ -79,6 +80,9 @@ void report( const string &filename )
 
 int main()
 {
+  // Force printing times in UTC
+  setenv("TZ", "UTC", 1);
+
   INIT_LOGGER("printRSP");
 
   report("/dev/stdin");
