@@ -1,0 +1,3 @@
+mac.ns.THPVSSBRIDGE1.server.type=TCP
+mac.ns.THPVSSBRIDGE1.server.host=localhost
+mac.ns.THPVSSBRIDGE1.server.port=26999
