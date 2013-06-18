@@ -47,7 +47,7 @@ namespace LOFAR
       std::string createPTX(const std::string &srcFilename);
 
       // for each block, read all subbands from all stations, and divide the work over the workQueues
-      template<typename SampleT> void receiveInput( size_t nrBlocks );
+      void receiveInput( size_t nrBlocks );
 
     protected:
       const Parset             &ps;
@@ -76,6 +76,11 @@ namespace LOFAR
 
         Performance(size_t nrGPUs = 1);
       } performance;
+
+    private:
+      // Templated version of receiveInput(), to specialise in receiving
+      // a certain type of input sample.
+      template<typename SampleT> void receiveInput( size_t nrBlocks );
     };
   }
 }

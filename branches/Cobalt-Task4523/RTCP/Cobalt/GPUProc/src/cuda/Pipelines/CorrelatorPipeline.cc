@@ -132,18 +132,7 @@ namespace LOFAR
          */
 #       pragma omp section
         {
-          switch (ps.nrBitsPerSample()) {
-          default:
-          case 16:
-            receiveInput< SampleType<i16complex> >(nrBlocks);
-            break;
-          case 8:
-            receiveInput< SampleType<i8complex> >(nrBlocks);
-            break;
-          case 4:
-            receiveInput< SampleType<i4complex> >(nrBlocks);
-            break;
-          }
+          receiveInput(nrBlocks);
         }
 
 

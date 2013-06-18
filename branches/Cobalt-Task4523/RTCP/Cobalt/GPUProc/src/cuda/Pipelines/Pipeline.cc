@@ -192,6 +192,22 @@ namespace LOFAR
     template void Pipeline::receiveInput< SampleType<i8complex> >( size_t nrBlocks );
     template void Pipeline::receiveInput< SampleType<i4complex> >( size_t nrBlocks );
 
+    void Pipeline::receiveInput( size_t nrBlocks )
+    {
+      switch (ps.nrBitsPerSample()) {
+      default:
+      case 16:
+        receiveInput< SampleType<i16complex> >(nrBlocks);
+        break;
+      case 8:
+        receiveInput< SampleType<i8complex> >(nrBlocks);
+        break;
+      case 4:
+        receiveInput< SampleType<i4complex> >(nrBlocks);
+        break;
+      }
+    }
+
 
     Pipeline::Performance::Performance(size_t nrGPUs):
       nrGPUs(nrGPUs)
