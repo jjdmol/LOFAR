@@ -311,7 +311,7 @@ void runPipeline(SELECTPIPELINE pipeline, const Parset &ps, const vector<size_t>
   {
   case correlator:
     LOG_INFO_STR("Correlator pipeline selected");
-    CorrelatorPipeline(ps, subbands).doWork();
+    CorrelatorPipeline(ps, subbands).processObservation();
     break;
 
   case beam:

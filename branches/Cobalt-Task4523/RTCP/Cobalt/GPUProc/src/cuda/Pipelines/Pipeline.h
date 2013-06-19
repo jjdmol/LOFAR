@@ -23,16 +23,20 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <Common/LofarTypes.h>
 #include <Common/Thread/Queue.h>
+#include <Common/Thread/Mutex.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/SlidingPointer.h>
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/BestEffortQueue.h>
 #include <GPUProc/WorkQueues/WorkQueue.h>
 
 namespace LOFAR
@@ -45,6 +49,9 @@ namespace LOFAR
       Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices);
 
       std::string createPTX(const std::string &srcFilename);
+
+      // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
+      void processObservation();
 
       // for each block, read all subbands from all stations, and divide the work over the workQueues
       void receiveInput( size_t nrBlocks );
@@ -81,6 +88,28 @@ namespace LOFAR
       // Templated version of receiveInput(), to specialise in receiving
       // a certain type of input sample.
       template<typename SampleT> void receiveInput( size_t nrBlocks );
+
+      struct Output {
+        // synchronisation to write blocks in-order
+        SlidingPointer<size_t> sync;
+
+        // output data queue
+        SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
+      };
+
+      std::map<struct BlockID, WorkQueue*> owner;
+      Mutex ownerMutex;
+
+      std::vector<struct Output> subbandPool; // [localSubbandIdx]
+
+      // process subbands on the GPU
+      void processSubbands(WorkQueue &workQueue);
+
+      // postprocess subbands on the CPU
+      void postprocessSubbands(WorkQueue &workQueue);
+
+      // send subbands to Storage
+      void writeSubband(unsigned globalSubbandIdx, struct Output &output);
     };
   }
 }
