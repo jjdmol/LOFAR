@@ -19,11 +19,14 @@
 //# $Id$
 
 // Some defines used to determine the correct way the process the data
-// TODO: Should these be determined outside of the cu file? This is currently black magix
-#define MAX(A,B) ((A)>(B) ? (A) : (B))
-#define NR_PASSES MAX((NR_STATIONS + 6) / 16, 1) // gives best results on GTX 680
-#define NR_STATIONS_PER_PASS ((NR_STATIONS + NR_PASSES - 1) / NR_PASSES)
 
+#define MAX(A,B) ((A)>(B) ? (A) : (B))
+
+#define NR_PASSES MAX((NR_STATIONS + 6) / 16, 1) // gives best results on GTX 680
+
+#ifndef NR_STATIONS_PER_PASS
+  #define NR_STATIONS_PER_PASS ((NR_STATIONS + NR_PASSES - 1) / NR_PASSES)
+#endif
 #if NR_STATIONS_PER_PASS > 32
 #error "need more passes to beam for this number of stations"
 #endif
@@ -37,6 +40,29 @@ typedef  float2 (*WeightsType)[NR_STATIONS][NR_CHANNELS][NR_TABS];
 typedef  float4 (*BandPassCorrectedType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS];
 
+/*!
+ * Performs beamforming to x beam based.
+ * The beamformer performs a complex weighted multiply add of the each sample of the
+ * provided input data.
+ *
+ * \param[out] complexVoltagesPtr      4D output array of beams. For each channel a number of Tied Array Beams time serires is created for two polarizations
+ * \param[in]  correctedDataPtr        3D input array of samples. A time series for each station and channel pair. Each sample contains the 2 polarizations X, Y, each of complex float type.
+ * \param[in]  weightsPtr              3d input array of complex valued weights to be applied to the correctData samples. THere is a weight for each station, channel and Tied Array Beam triplet.
+ * Pre-processor input symbols (some are tied to the execution configuration)
+ * Symbol                  | Valid Values            | Description
+ * ----------------------- | ----------------------- | -----------
+ * NR_STATIONS             | >= 1                    | number of antenna fields
+ * NR_SAMPLES_PER_CHANNEL  | >= 1                    | number of input samples per channel
+ * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
+ * NR_TABS                 | >= 1                    | number of Tied Array Beams to create
+ * ----------------------- | ------------------------| 
+ * NR_STATIONS_PER_PASS    | 1 >= && <= 32           | Set to overide default: Parallelization parameter, controls the number stations to beamform in a single pass over the input data. 
+ *
+ * Note that this kernel assumes  NR_POLARIZATIONS == 2 and COMPLEX == 2
+ *
+ * Execution configuration:
+ * - LocalWorkSize = (NR_POLARIZATIONS, NR_TABS, NR_CHANNELS) Note that for full utilization NR_TABS * NR_CHANNELS % 16 = 0
+ */
 extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
                                        const void *samplesPtr,
                                        const void *weightsPtr)
@@ -59,15 +85,17 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 
 
 #pragma unroll
-  for (unsigned first_station = 0;  // We loop over the stations: this allows us to get all the weights for a station
+  for (unsigned first_station = 0;  // Step over data with NR_STATIONS_PER_PASS stride
        first_station < NR_STATIONS;
        first_station += NR_STATIONS_PER_PASS) 
   { // this for loop spand the whole file
 #if NR_STATIONS_PER_PASS >= 1
-    float2 weight_00;
+    float2 weight_00;                     // assign the weights to register variables
 
-    if (first_station + 0 < NR_STATIONS)
-      weight_00 = (*weights)[first_station + 0][channel][tab];
+    if (first_station + 0 < NR_STATIONS)  // Number of station might be larger then 32: We 
+                                          // the do multiple passes to span all stations
+
+      weight_00 = (*weights)[first_station + 0][channel][tab]; // Get data from global mem
 #endif
 
 #if NR_STATIONS_PER_PASS >= 2
@@ -287,11 +315,15 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
       weight_31 = (*weights)[first_station + 31][channel][tab];
 #endif
 
-    for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16) 
+    // Loop over all the samples in time
+    // TODO: This is a candidate to be added as an extra paralellization dim.
+    // problem: we already have the x,y and z filled with parallel parameters. Make the polarization implicit?
+    for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16)  // Perform the addition for 16 timesteps
     {
+      // Optimized memory transver: Threads load paralel memory
       for (unsigned i = threadIdx.x + NR_POLARIZATIONS * threadIdx.y;
-           i < NR_STATIONS_PER_PASS * 16;
-           i += NR_TABS * NR_POLARIZATIONS) 
+                    i < NR_STATIONS_PER_PASS * 16;
+                    i += NR_TABS * NR_POLARIZATIONS) 
       {
         unsigned t = i % 16;
         unsigned s = i / 16;
@@ -303,18 +335,18 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 
        __syncthreads();
 
+
       for (unsigned t = 0; 
-           t < (NR_SAMPLES_PER_CHANNEL % 16 == 0 ? 
-           16 : min(16U, NR_SAMPLES_PER_CHANNEL - time)); t++) 
+                    t < (NR_SAMPLES_PER_CHANNEL % 16 == 0 ? 16 : min(16U, NR_SAMPLES_PER_CHANNEL - time));
+                    t++) 
       {
-        // why is the first station zero?
-        float2 sum = first_station == 0 ? 
+        float2 sum = first_station == 0 ? // The first run the sum should be zero, otherwise we need to take the sum of the previous run
                     make_float2(0,0) :
                     (*complexVoltages)[channel][time + t][tab][pol];
 
-
+        // Calculate the weighted complex sum of the samples
 #if NR_STATIONS_PER_PASS >= 1
-        if (first_station + 1 <= NR_STATIONS) {
+        if (first_station + 1 <= NR_STATIONS) {  // Remember that the number of stations might not be a multiple of 32. Skip if station does not exist
           sample = _local.samples[ 0][t][pol];
           sum.x += weight_00.x * sample.x;
           sum.y += weight_00.x * sample.y;
@@ -332,6 +364,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
           sum.y += weight_01.y * sample.x;
         }
 #endif
+
 
 #if NR_STATIONS_PER_PASS >= 3
         if (first_station + 3 <= NR_STATIONS) {
@@ -632,7 +665,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
           sum.y += weight_31.y * sample.x;
         }
 #endif
-
+        // Write data to global mem
         (*complexVoltages)[channel][time + t][tab][pol] = sum;
       }
 
