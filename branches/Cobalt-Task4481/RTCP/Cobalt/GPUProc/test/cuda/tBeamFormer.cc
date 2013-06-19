@@ -102,9 +102,9 @@ HostMemory runTest(gpu::Context ctx,
   cout << "\n==== runTest: function = " << function << " ====\n" << endl;
 
   // Get an instantiation of the default parameters
-  definitions_type definitions = defaultDefinitions();
-  flags_type flags = defaultFlags();
-
+  CompileFlags flags = CompileFlags();
+  CompileDefinitions definitions = CompileDefinitions();
+  
   // ****************************************
   // Compile to ptx
   // Set op string string pairs to be provided to the compiler as defines

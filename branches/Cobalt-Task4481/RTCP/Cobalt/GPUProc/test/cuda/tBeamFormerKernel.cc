@@ -26,7 +26,10 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
+#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include "TestUtil.h"
+
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace boost;
@@ -52,22 +55,29 @@ int main() {
   string srcFilename("BeamFormer.cu");
 
   // Get default parameters for the compiler
-  flags_type flags = defaultFlags();
-  definitions_type definitions = defaultDefinitions(ps);
-
-  string ptx = createPTX(devices, srcFilename, flags, definitions);
-  gpu::Module module(createModule(ctx, srcFilename, ptx));
-  cout << "Succesfully compiled '" << srcFilename << "'" << endl;
-
-  // Calculate bandpass weights and transfer to the device.
-  // *************************************************************
-  // Create the data arrays
+  CompileFlags flags = CompileFlags();
+  
   unsigned NR_STATIONS = ps.nrStations();  
   unsigned NR_CHANNELS = ps.nrChannelsPerSubband();
   unsigned NR_SAMPLES_PER_CHANNEL = ps.nrSamplesPerChannel();
   unsigned NR_TABS =  ps.nrTABs(0);
   unsigned NR_POLARIZATIONS = 2;
   unsigned COMPLEX = 2;
+  CompileDefinitions definitions = CompileDefinitions();
+  definitions["NVIDIA_CUDA"] = "";
+  definitions["NR_STATIONS"] = lexical_cast<string>(NR_STATIONS);
+  definitions["NR_CHANNELS"] = lexical_cast<string>(NR_CHANNELS);
+  definitions["NR_SAMPLES_PER_CHANNEL"] = lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
+  definitions["NR_TABS"] = lexical_cast<string>(NR_TABS);
+  definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
+  definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
+  string ptx = createPTX(devices, srcFilename, flags, definitions);
+  gpu::Module module(createModule(ctx, srcFilename, ptx));
+  cout << "Succesfully compiled '" << srcFilename << "'" << endl;
+
+  // Calculate bandpass weights and transfer to the device.
+  // *************************************************************
+
 
   size_t lengthWeightsData = NR_STATIONS * NR_CHANNELS * NR_TABS * COMPLEX ;
   size_t lengthBandPassCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX;
