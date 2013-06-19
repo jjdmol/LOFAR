@@ -19,21 +19,16 @@
 //# $Id$
 
 // Some defines used to determine the correct way the process the data
-
 #define MAX(A,B) ((A)>(B) ? (A) : (B))
 
 #define NR_PASSES MAX((NR_STATIONS + 6) / 16, 1) // gives best results on GTX 680
 
-#ifndef NR_STATIONS_PER_PASS
+#ifndef NR_STATIONS_PER_PASS  // Allow overriding for testing optimalizations 
   #define NR_STATIONS_PER_PASS ((NR_STATIONS + NR_PASSES - 1) / NR_PASSES)
 #endif
 #if NR_STATIONS_PER_PASS > 32
 #error "need more passes to beam for this number of stations"
 #endif
-
-// Documentation parts:
-// The blockDim.y loops the tabs
-// The blockDim.x loops the polarisations
 
 // Typedefs used to map input data on arrays
 typedef  float2 (*WeightsType)[NR_STATIONS][NR_CHANNELS][NR_TABS];
@@ -82,8 +77,6 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     float4 samples4[NR_STATIONS_PER_PASS][16];
   } _local;
 
-
-
 #pragma unroll
   for (unsigned first_station = 0;  // Step over data with NR_STATIONS_PER_PASS stride
        first_station < NR_STATIONS;
@@ -91,13 +84,11 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
   { // this for loop spand the whole file
 #if NR_STATIONS_PER_PASS >= 1
     float2 weight_00;                     // assign the weights to register variables
-
     if (first_station + 0 < NR_STATIONS)  // Number of station might be larger then 32: We 
                                           // the do multiple passes to span all stations
-
       weight_00 = (*weights)[first_station + 0][channel][tab]; // Get data from global mem
 #endif
-
+    // Loop onrolling allows usage of registers for weights
 #if NR_STATIONS_PER_PASS >= 2
     float2 weight_01;
 

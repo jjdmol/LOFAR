@@ -1,4 +1,4 @@
-//# tDelayAndBandPassKernel.cc: test Kernels/DelayAndBandPassKernel class
+//# tBeamFormerKernel.cc: test Kernels/BeamFormerKernel class
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#

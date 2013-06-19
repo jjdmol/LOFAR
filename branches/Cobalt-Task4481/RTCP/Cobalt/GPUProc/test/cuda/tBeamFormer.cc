@@ -1,4 +1,4 @@
-//# tDelayAndBandpass.cc: test delay and bandpass CUDA kernel
+//# tBeamFormer.cc: test BeamFormer CUDA kernel
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
