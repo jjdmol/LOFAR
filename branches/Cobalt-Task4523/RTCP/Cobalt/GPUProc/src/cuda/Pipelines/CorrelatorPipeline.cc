@@ -112,7 +112,7 @@ namespace LOFAR
       for (size_t i = 0; i < subbandPool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.
         // TODO: make this dynamic based on memory or time
-        subbandPool[i].bequeue = new BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> >(3, ps.realTime());
+        subbandPool[i].bequeue = new BestEffortQueue< SmartPtr<StreamableData> >(3, ps.realTime());
       }
 
       double startTime = ps.startTime();
@@ -149,7 +149,7 @@ namespace LOFAR
             unsigned gpuNr = i % devices.size();
             set_affinity(gpuNr);
 #endif
-            CorrelatorWorkQueue &queue = static_cast<CorrelatorWorkQueue&>(*workQueues[i]);
+            WorkQueue &queue = *workQueues[i];
 
             // run the queue
             queue.timers["CPU - total"]->start();
@@ -170,7 +170,7 @@ namespace LOFAR
         {
 #         pragma omp parallel for num_threads(workQueues.size())
           for (size_t i = 0; i < workQueues.size(); ++i) {
-            CorrelatorWorkQueue &queue = static_cast<CorrelatorWorkQueue&>(*workQueues[i]);
+            WorkQueue &queue = *workQueues[i];
 
             // run the queue
             postprocessSubbands(queue);
@@ -205,7 +205,7 @@ namespace LOFAR
     }
 
 
-    void CorrelatorPipeline::processSubbands(CorrelatorWorkQueue &workQueue)
+    void CorrelatorPipeline::processSubbands(WorkQueue &workQueue)
     {
       SmartPtr<WorkQueueInputData> input;
 
@@ -216,7 +216,7 @@ namespace LOFAR
         LOG_INFO_STR("[" << id << "] Processing start");
 
         // Also fetch an output object to store results
-        SmartPtr<CorrelatedDataHostBuffer> output = workQueue.outputPool.free.remove();
+        SmartPtr<StreamableData> output = workQueue.outputPool.free.remove();
         ASSERT(output != NULL); // Only we signal end-of-data, so we should never receive it
 
         output->blockID = id;
@@ -239,9 +239,9 @@ namespace LOFAR
     }
 
 
-    void CorrelatorPipeline::postprocessSubbands(CorrelatorWorkQueue &workQueue)
+    void CorrelatorPipeline::postprocessSubbands(WorkQueue &workQueue)
     {
-      SmartPtr<CorrelatedDataHostBuffer> output;
+      SmartPtr<StreamableData> output;
 
       size_t nrBlocksForwarded = 0;
       size_t nrBlocksDropped = 0;
@@ -261,6 +261,14 @@ namespace LOFAR
         struct Output &pool = subbandPool[id.localSubbandIdx];
 
         pool.sync.waitFor(id.block);
+
+        // Register ownership
+        {
+          ScopedLock sl(ownerMutex);
+
+          ASSERT(owner.find(id) == owner.end());
+          owner[id] = &workQueue;
+        }
 
         // We do the ordering, so we set the sequence numbers
         output->setSequenceNumber(id.block);
@@ -313,7 +321,7 @@ namespace LOFAR
         outputStream = new NullStream;
       }
 
-      SmartPtr<CorrelatedDataHostBuffer> outputData;
+      SmartPtr<StreamableData> outputData;
 
       // Process pool elements until end-of-output
       while ((outputData = output.bequeue->remove()) != NULL) {
@@ -321,7 +329,14 @@ namespace LOFAR
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
         // Cache workQueue reference, because `output' will be destroyed.
-        CorrelatorWorkQueue &workQueue = outputData->workQueue;
+        WorkQueue *workQueue;
+        {
+          ScopedLock sl(ownerMutex);
+
+          ASSERT(owner.find(id) != owner.end());
+          workQueue = owner[id];
+          owner.erase(id);
+        }
 
         LOG_INFO_STR("[" << id << "] Writing start");
 
@@ -335,7 +350,7 @@ namespace LOFAR
         }
 
         // Hand the object back to the workQueue it originally came from
-        workQueue.outputPool.free.append(outputData);
+        workQueue->outputPool.free.append(outputData);
 
         ASSERT(!outputData);
 

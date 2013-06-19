@@ -29,6 +29,7 @@
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/SparseSet.h>
 #include <CoInterface/Allocator.h>
+#include <CoInterface/BlockID.h>
 #include <Stream/Stream.h>
 
 namespace LOFAR
@@ -64,11 +65,10 @@ namespace LOFAR
     {
     public:
       static const uint32_t magic = 0xda7a;
-#ifdef HAVE_BGP
-      static const size_t alignment = 32;
-#else
       static const size_t alignment = 512;
-#endif
+
+      // Freely modified by GPUProc (only)
+      struct BlockID blockID;
 
       // the CPU which fills the datastructure sets the peerMagicNumber,
       // because other CPUs will overwrite it with a read(s,true) call from

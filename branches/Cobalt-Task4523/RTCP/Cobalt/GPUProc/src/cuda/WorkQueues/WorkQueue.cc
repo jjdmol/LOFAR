@@ -56,6 +56,21 @@ namespace LOFAR
     }
 
 
+    WorkQueue::~WorkQueue()
+    {
+    }
+
+
+    void WorkQueue::processSubband(WorkQueueInputData &, StreamableData &)
+    {
+    }
+
+
+    void WorkQueue::postprocessSubband(StreamableData &)
+    {
+    }
+
+
     void WorkQueue::addCounter(const std::string &name)
     {
       counters[name] = new PerformanceCounter(name, profiling);

@@ -33,7 +33,6 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
-#include <GPUProc/BlockID.h>
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
@@ -156,10 +155,10 @@ namespace LOFAR
                           FilterBank &filterBank);
 
       // Correlate the data found in the input data buffer
-      void processSubband(WorkQueueInputData &input, CorrelatedDataHostBuffer &output);
+      virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
 
       // Do post processing on the CPU
-      void postprocessSubband(CorrelatedDataHostBuffer &output);
+      virtual void postprocessSubband(StreamableData &output);
       
     private:
       // The previously processed SAP/block, or -1 if nothing has been
@@ -173,11 +172,6 @@ namespace LOFAR
       WorkQueueInputData::DeviceBuffers devInput;
 
       gpu::DeviceMemory devFilteredData;
-
-    public:
-      // A pool of output data, to allow items to be filled
-      // and written in parallel.
-      Pool<CorrelatedDataHostBuffer> outputPool;
 
     private:
       // Constant input buffers for the kernels

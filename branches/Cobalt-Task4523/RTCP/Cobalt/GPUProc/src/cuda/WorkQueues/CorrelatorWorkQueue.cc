@@ -307,8 +307,10 @@ namespace LOFAR
       CorrelatedData &output);
 
 
-    void CorrelatorWorkQueue::processSubband(WorkQueueInputData &input, CorrelatedDataHostBuffer &output)
+    void CorrelatorWorkQueue::processSubband(WorkQueueInputData &input, StreamableData &_output)
     {
+      CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
+
       timers["GPU - total"]->start();
 
       size_t block = input.blockID.block;
@@ -397,8 +399,10 @@ namespace LOFAR
     }
 
 
-    void CorrelatorWorkQueue::postprocessSubband(CorrelatedDataHostBuffer &output)
+    void CorrelatorWorkQueue::postprocessSubband(StreamableData &_output)
     {
+      CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
+
       // The flags are already copied to the correct location
       // now the flagged amount should be applied to the visibilities
       switch (output.itsNrBytesPerNrValidSamples) {

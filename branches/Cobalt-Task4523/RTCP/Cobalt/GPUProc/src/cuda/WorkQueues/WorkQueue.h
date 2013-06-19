@@ -28,9 +28,9 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/SubbandMetaData.h>
+#include <CoInterface/StreamableData.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/BlockID.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 
 #include "Pool.h"
@@ -116,6 +116,7 @@ namespace LOFAR
     class WorkQueue {
     public:
       WorkQueue(const Parset &ps, gpu::Context &context);
+      virtual ~WorkQueue();
 
       // TODO: clean up access by Pipeline class and move under protected
       std::map<std::string, SmartPtr<PerformanceCounter> > counters;
@@ -136,6 +137,16 @@ namespace LOFAR
       // A pool of input data, to allow items to be filled and
       // computed on in parallel.
       Pool<WorkQueueInputData> inputPool;
+
+      // A pool of output data, to allow items to be filled
+      // and written in parallel.
+      Pool<StreamableData> outputPool;
+
+      // Correlate the data found in the input data buffer
+      virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
+
+      // Do post processing on the CPU
+      virtual void postprocessSubband(StreamableData &output);
 
     protected:
       const Parset &ps;
