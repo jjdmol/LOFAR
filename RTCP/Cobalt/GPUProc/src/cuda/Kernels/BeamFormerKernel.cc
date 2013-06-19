@@ -34,14 +34,14 @@ namespace LOFAR
   {
     BeamFormerKernel::BeamFormerKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devComplexVoltages, gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devBeamFormerWeights)
       :
-      Kernel(ps, program, "complexVoltages")
+      Kernel(ps, program, "beamFormer")
     {
       setArg(0, devComplexVoltages);
       setArg(1, devCorrectedData);
       setArg(2, devBeamFormerWeights);
-
+      // TODO: Hoe moet ik deze ook maar weer instellen?? Want 
       globalWorkSize = gpu::Grid(NR_POLARIZATIONS, ps.nrTABs(0), ps.nrChannelsPerSubband());
-      localWorkSize = gpu::Block(NR_POLARIZATIONS, ps.nrTABs(0), 1);
+      localWorkSize = gpu::Block(NR_POLARIZATIONS, ps.nrTABs(0), ps.nrChannelsPerSubband());
 
       // FIXME: nrTABs
       //queue.enqueueNDRangeKernel(*this, cl::NullRange, gpu::dim3(16, ps.nrTABs(0), ps.nrChannelsPerSubband()), gpu::dim3(16, ps.nrTABs(0), 1), 0, &event);
