@@ -23,7 +23,7 @@
 
 #include <CoInterface/Parset.h>
 
-#include "Kernel.h"
+#include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/gpu_wrapper.h>
 //#include <GPUProc/PerformanceCounter.h>
 
@@ -35,9 +35,31 @@ namespace LOFAR
     class DelayAndBandPassKernel : public Kernel
     {
     public:
-      DelayAndBandPassKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devDelaysAtBegin, gpu::DeviceMemory &devDelaysAfterEnd, gpu::DeviceMemory &devPhaseOffsets, gpu::DeviceMemory &devBandPassCorrectionWeights);
+      DelayAndBandPassKernel(const Parset &ps,
+                             gpu::Module &program,
+                             gpu::DeviceMemory &devCorrectedData,
+                             gpu::DeviceMemory &devFilteredData,
+                             gpu::DeviceMemory &devDelaysAtBegin,
+                             gpu::DeviceMemory &devDelaysAfterEnd,
+                             gpu::DeviceMemory &devPhaseOffsets,
+                             gpu::DeviceMemory &devBandPassCorrectionWeights);
 
-      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, unsigned subband);
+      void enqueue(gpu::Stream &queue,
+                   /* PerformanceCounter &counter,*/
+                   unsigned subband);
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        DELAYS,
+        PHASE_OFFSETS,
+        BAND_PASS_CORRECTION_WEIGHTS
+      };
+
+      // Return required buffer size for \a bufferType
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
+
     };
   }
 }

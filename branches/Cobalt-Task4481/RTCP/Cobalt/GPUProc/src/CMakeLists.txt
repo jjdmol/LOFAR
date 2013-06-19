@@ -14,6 +14,7 @@ set(_gpuproc_sources
   DirectInput.cc
   FilterBank.cc
   global_defines.cc
+  KernelCompiler.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
@@ -24,6 +25,7 @@ if(USE_CUDA)
     cuda/gpu_wrapper.cc
     cuda/gpu_utils.cc
     cuda/CudaRuntimeCompiler.cc
+    #cuda/KernelCompiler.cc
     cuda/PerformanceCounter.cc
     cuda/Kernels/Kernel.cc
     cuda/Kernels/BeamFormerKernel.cc
@@ -101,5 +103,5 @@ if(USE_OPENCL)
   add_subdirectory(opencl)
 
   lofar_add_library(gpuproc_opencl ${_gpuproc_sources})
-  lofar_add_bin_program(rtcp_opencl rtcp.cc)
+  #lofar_add_bin_program(rtcp_opencl rtcp.cc)
 endif()

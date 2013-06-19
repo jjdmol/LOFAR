@@ -31,6 +31,7 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/KernelCompiler.h>
 #include <GPUProc/cuda/CudaRuntimeCompiler.h>
 
 #include "TestUtil.h"
@@ -59,8 +60,8 @@ HostMemory runTest(gpu::Context ctx,
   cout << "\n==== runTest: function = " << function << " ====\n" << endl;
 
   // Get an instantiation of the default parameters
-  definitions_type definitions = defaultDefinitions();
-  flags_type flags = defaultFlags();
+  CompileDefinitions definitions = CompileDefinitions();
+  CompileFlags flags = defaultCompileFlags();
 
   // ****************************************
   // Compile to ptx

@@ -25,6 +25,7 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
+#include <GPUProc/KernelCompiler.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 
@@ -52,8 +53,8 @@ int main() {
   string srcFilename("IntToFloat.cu");
 
   // Get default parameters for the compiler
-  flags_type flags = defaultFlags();
-  definitions_type definitions = defaultDefinitions(ps);
+  CompileFlags flags = defaultCompileFlags();
+  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
 
   string ptx = createPTX(devices, srcFilename, flags, definitions);
   gpu::Module module(createModule(ctx, srcFilename, ptx));

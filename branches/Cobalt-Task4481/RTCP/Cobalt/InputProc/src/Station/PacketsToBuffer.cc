@@ -83,14 +83,12 @@ namespace LOFAR
           unsigned clockMHz = packet.clockMHz();
           unsigned nrBeamlets = packet.header.nrBeamlets;
 
-          LOG_INFO_STR( logPrefix << "Mode switch detected to " << clockMHz << " MHz, " << bitMode << " bit, " << nrBeamlets << " beamlets");
+          LOG_INFO_STR(logPrefix << "Mode switch detected to " << clockMHz << " MHz, " << bitMode << " bit");
 
           // update settings
           settings.station.bitMode = bitMode;
           settings.station.clockMHz = clockMHz;
           settings.dataKey = settings.station.hash();
-
-          settings.nrBeamletsPerBoard = nrBeamlets;
 
           // Process packet again
           packetValid = true;

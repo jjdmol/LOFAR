@@ -62,9 +62,9 @@ int main(int argc, char **argv)
 
   time_t from = 0;
   time_t to = 0;
-  int nrbeamlets = 0;
-  int bitmode = 0;
-  int clock = 0;
+  unsigned nrbeamlets = 0;
+  unsigned bitmode = 0;
+  unsigned clock = 0;
 
   // parse all command-line options
   while ((opt = getopt(argc, argv, "f:t:s:b:c:")) != -1) {

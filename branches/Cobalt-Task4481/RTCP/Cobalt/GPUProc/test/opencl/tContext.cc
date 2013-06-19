@@ -23,7 +23,7 @@
 #include <vector>
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/gpu_utils.h>
+#include <GPUProc/opencl/gpu_utils.h>
 
 using namespace LOFAR;
 using namespace Cobalt;

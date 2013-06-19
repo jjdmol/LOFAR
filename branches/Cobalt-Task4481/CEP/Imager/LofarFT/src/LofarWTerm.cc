@@ -71,4 +71,27 @@ namespace LOFAR
     }
   }
 
+  Complex LofarWTerm::evaluate_pixel(int x, int y, int nx, int ny,
+				     const Vector<Double>& resolution,
+				     double w) const
+  {
+    // if (w == 0) {
+    //   return Complex(1.0);
+    // } else {
+
+      double radius[2] = {0.5 * (nx), 0.5 * (ny)};
+      double twoPiW = 2.0 * C::pi * w;
+
+      double m = resolution[1] * (y - radius[1]);
+      double m2 = m * m;
+      
+      double l = resolution[0] * (x - radius[0]);
+      double lm2 = l * l + m2;
+      
+      double phase = twoPiW * (sqrt(1.0 - lm2) - 1.0);
+	  
+      return Complex(cos(phase), sin(phase));
+      //}
+  }
+
 } // namespace LOFAR

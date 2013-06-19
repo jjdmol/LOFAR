@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "gpu_utils.h"
+#include <GPUProc/gpu_utils.h>
 
 #include <cstdlib>
 #include <sys/types.h>
@@ -195,14 +195,16 @@ namespace LOFAR
     }
 
 
-    std::string createPTX(const vector<gpu::Device> &devices, const std::string &srcFilename, 
-      flags_type &flags, const definitions_type &definitions )
+    std::string createPTX(const vector<gpu::Device> &devices, 
+                          const std::string &srcFilename, 
+                          CompileFlags &flags, 
+                          const CompileDefinitions &definitions )
     {
       // The CUDA code is assumed to be written for the architecture of the
       // oldest device.
 #if CUDA_VERSION >= 5000
       CUjit_target commonTarget = computeTarget(devices);
-      flags.insert(str(format("gpu-architecture %s") % get_virtarch(commonTarget)));
+      flags.add(str(format("--gpu-architecture %s") % get_virtarch(commonTarget)));
 #endif
 
 #if 0
@@ -211,18 +213,18 @@ namespace LOFAR
       set<CUjit_target> allTargets;
 
       for (vector<gpu::Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
-        allTargets.insert(computeTarget(*i));
+        allTargets.add(computeTarget(*i));
       }
 
       for (set<CUjit_target>::const_iterator i = allTargets.begin(); i != allTargets.end(); ++i) {
-        flags.insert(str(format("gpu-code %s") % get_gpuarch(*i)));
+        flags.add(str(format("--gpu-code %s") % get_gpuarch(*i)));
       }
 #endif
 
       // Add $LOFARROOT/include to include path, if $LOFARROOT is set.
       const char* lofarroot = getenv("LOFARROOT");
       if (lofarroot) {
-        flags.insert(str(format("include-path %s/include") % lofarroot));
+        flags.add(str(format("--include-path %s/include") % lofarroot));
       }
 
       // Prefix the CUDA kernel filename with $LOFARROOT/share/gpu/kernels
