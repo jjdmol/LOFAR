@@ -26,10 +26,12 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
+#include "TestUtil.h"
 
 using namespace std;
+using namespace boost;
+using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;
-
 int main() {
   INIT_LOGGER("tBeamFormerKernel");
 
@@ -44,7 +46,7 @@ int main() {
   gpu::Device device(0);
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
-  gpu::Stream stream(ctx);
+  gpu::Stream cuStream(ctx);
 
   Parset ps("tBeamFormerKernel.in_parset");
   string srcFilename("BeamFormer.cu");
@@ -70,6 +72,36 @@ int main() {
   size_t lengthWeightsData = NR_STATIONS * NR_CHANNELS * NR_TABS * COMPLEX ;
   size_t lengthBandPassCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX;
   size_t lengthComplexVoltagesData = NR_CHANNELS* NR_SAMPLES_PER_CHANNEL * NR_TABS * NR_POLARIZATIONS * COMPLEX;
+
+    // Define the input and output arrays
+  // ************************************************************* 
+  float * complexVoltagesData = new float[lengthComplexVoltagesData];
+  float * bandPassCorrectedData = new float[lengthBandPassCorrectedData];
+  float * weightsData= new float[lengthWeightsData];
+
+  // ***********************************************************
+  // Baseline test: If all weight data is zero the output should be zero
+  // The output array is initialized with 42s
+  cout << "test 1" << endl;
+  for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
+  {
+    complexVoltagesData[idx * 2] = 42.0f;
+    complexVoltagesData[idx * 2 + 1] = 42.0f;
+  }
+
+  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
+  {
+    bandPassCorrectedData[idx * 2] = 1.0f;
+    bandPassCorrectedData[idx * 2+ 1] = 1.0f;
+  }
+
+  for (unsigned idx = 0; idx < lengthWeightsData/2; ++idx)
+  {
+    weightsData[idx * 2] = 0.0f;
+    weightsData[idx * 2 + 1] = 0.0f;
+  }
+
+
 
   size_t sizeWeightsData = lengthWeightsData* sizeof(float);
   DeviceMemory devWeightsMemory(ctx, sizeWeightsData);
@@ -101,14 +133,13 @@ int main() {
                       ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
   gpu::DeviceMemory devFilteredData(ctx, devFilteredDataSize);
 
-  DelayAndBandPassKernel kernel(ps, module, 
-                                devComplexVoltages,
-                                devCorrectedData,
-                                devBeamFormerWeights);
+  BeamFormerKernel kernel(ps, module, 
+                          devComplexVoltagesMemory,
+                          devBandPassCorrectedMemory,
+                          devWeightsMemory);
 
-  unsigned subband = 0;
-  kernel.enqueue(stream, subband);
-  stream.synchronize();
+  kernel.enqueue(cuStream);
+  cuStream.synchronize();
 
   return 0;
 }
