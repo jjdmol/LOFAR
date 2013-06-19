@@ -83,6 +83,47 @@ namespace LOFAR
     }
 
 
+    void WorkQueueInputData::applyMetaData(unsigned station, unsigned SAP,
+                                           const SubbandMetaData &metaData)
+    {
+      // extract and apply the flags
+      inputFlags[station] = metaData.flags;
+
+      flagInputSamples(station, metaData);
+
+      // extract and assign the delays for the station beams
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++)
+      {
+        delaysAtBegin[SAP][station][pol] = metaData.stationBeam.delayAtBegin;
+        delaysAfterEnd[SAP][station][pol] = metaData.stationBeam.delayAfterEnd;
+        phaseOffsets[station][pol] = 0.0;
+      }
+    }
+
+
+    // flag the input samples.
+    void WorkQueueInputData::flagInputSamples(unsigned station,
+                                              const SubbandMetaData& metaData)
+    {
+
+      // Get the size of a sample in bytes.
+      size_t sizeof_sample = sizeof *inputSamples.origin();
+
+      // Calculate the number elements to skip when striding over the second
+      // dimension of inputSamples.
+      size_t stride = inputSamples[station][0].num_elements();
+
+      // Zero the bytes in the input data for the flagged ranges.
+      for(SparseSet<unsigned>::const_iterator it = metaData.flags.getRanges().begin();
+        it != metaData.flags.getRanges().end(); ++it)
+      {
+        void *offset = inputSamples[station][it->begin].origin();
+        size_t size = stride * (it->end - it->begin) * sizeof_sample;
+        memset(offset, 0, size);
+      }
+    }
+
+
     // Get the log2 of the supplied number
     unsigned WorkQueue::Flagger::log2(unsigned n)
     {
