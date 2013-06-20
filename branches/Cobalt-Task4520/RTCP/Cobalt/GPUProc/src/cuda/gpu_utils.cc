@@ -368,8 +368,7 @@ namespace LOFAR
       options[CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES] = 
         reinterpret_cast<void*>(errorLogSize);
 
-      float jitWallTime = 0.0f; // output val (init it anyway), in milliseconds
-      options[CU_JIT_WALL_TIME];// = &jitWallTime;
+      float &jitWallTime = reinterpret_cast<float&>(options[CU_JIT_WALL_TIME]);
 
 #if 0
       size_t optLvl = 4; // 0-4, default 4
@@ -399,7 +398,7 @@ namespace LOFAR
         infoLog[infoLogSize - 1] = '\0';
         cout << "Build info for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " us):" << endl << &infoLog[0] << endl;
+             << " ms):" << endl << &infoLog[0] << endl;
 
         return module;
       } catch (gpu::CUDAException& exc) {
@@ -409,7 +408,7 @@ namespace LOFAR
         errorLog[errorLogSize - 1] = '\0';
         cerr << "Build errors for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " us):" << endl << &errorLog[0] << endl;
+             << " ms):" << endl << &errorLog[0] << endl;
         throw;
       }
     }
