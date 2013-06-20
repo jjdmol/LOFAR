@@ -3,7 +3,7 @@ ALTER TABLE OTDBtree
 	ADD COLUMN modificationDate	timestamp(0) DEFAULT now();
 
 -- Change treeInfo structure by adding 5 fields
-DROP TYPE treeInfo CASCADE;
+DROP TYPE IF EXISTS treeInfo CASCADE;
 CREATE TYPE treeInfo AS (
 	treeID				INT4,			-- OTDBtree.treeID%TYPE,
 	momID				INT4,

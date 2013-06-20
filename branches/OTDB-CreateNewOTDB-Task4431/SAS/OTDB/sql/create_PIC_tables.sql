@@ -38,15 +38,15 @@
 -- Needs the tables:
 --		param_type, unit, OTDBtree
 
-DROP TABLE PIChierarchy CASCADE;
-DROP TABLE PICkvt 		CASCADE;
-DROP TABLE PICparamref  CASCADE;
-DROP SEQUENCE PICparamrefID;
-DROP SEQUENCE PIChierarchID;
-DROP INDEX PIChierarchy_treeid_nodeid_indx;
-DROP INDEX pic_kvt_id;
-DROP INDEX pic_kvt_id_time_indx;
-DROP INDEX pic_kvt_time;
+DROP TABLE IF EXISTS PIChierarchy CASCADE;
+DROP TABLE IF EXISTS PICkvt 		CASCADE;
+DROP TABLE IF EXISTS PICparamref  CASCADE;
+DROP SEQUENCE IF EXISTS PICparamrefID;
+DROP SEQUENCE IF EXISTS PIChierarchID;
+DROP INDEX IF EXISTS PIChierarchy_treeid_nodeid_indx;
+DROP INDEX IF EXISTS pic_kvt_id;
+DROP INDEX IF EXISTS pic_kvt_id_time_indx;
+DROP INDEX IF EXISTS pic_kvt_time;
 
 --
 -- The PIC reference table is the representation of the master PIC 

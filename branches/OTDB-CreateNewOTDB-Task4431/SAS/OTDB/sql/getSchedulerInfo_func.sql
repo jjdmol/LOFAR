@@ -20,7 +20,7 @@
 --  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 --
 
-DROP TYPE schedulerInfo CASCADE;
+DROP TYPE IF EXISTS schedulerInfo CASCADE;
 
 CREATE TYPE schedulerInfo AS (
 	contactEmail           VARCHAR(40),

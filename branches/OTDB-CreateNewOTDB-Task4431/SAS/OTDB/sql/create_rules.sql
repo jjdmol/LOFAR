@@ -26,8 +26,8 @@
 -- Creates a rule for updating the modificationDate of the OTDBtree table.
 --
 
-DROP RULE ruleUpdateVIC on vichierarchy;
-DROP RULE ruleUpdateTemplate on victemplate;
+DROP RULE IF EXISTS ruleUpdateVIC on vichierarchy;
+DROP RULE IF EXISTS ruleUpdateTemplate on victemplate;
 
 CREATE RULE ruleUpdateVIC AS ON UPDATE
 	TO vichierarchy WHERE NEW.value <> OLD.value

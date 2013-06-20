@@ -38,29 +38,29 @@
 -- Needs the tables:
 --		OTDBtree, classification, param_type, unit, treestate 
 
-DROP TABLE VICnodedef 	CASCADE;
-DROP TABLE VICparamdef  CASCADE;
-DROP TABLE VICtemplate	CASCADE;
-DROP TABLE VIChierarchy CASCADE;
-DROP TABLE VICkvt 	CASCADE;
+DROP TABLE IF EXISTS VICnodedef 	CASCADE;
+DROP TABLE IF EXISTS VICparamdef  CASCADE;
+DROP TABLE IF EXISTS VICtemplate	CASCADE;
+DROP TABLE IF EXISTS VIChierarchy CASCADE;
+DROP TABLE IF EXISTS VICkvt 	CASCADE;
 
-DROP SEQUENCE VICnodedefID;
-DROP SEQUENCE VICparamdefID;
-DROP SEQUENCE VICtemplateID;
-DROP SEQUENCE VIChierarchID;
+DROP SEQUENCE IF EXISTS VICnodedefID;
+DROP SEQUENCE IF EXISTS VICparamdefID;
+DROP SEQUENCE IF EXISTS VICtemplateID;
+DROP SEQUENCE IF EXISTS VIChierarchID;
 
-DROP INDEX Vnodedef_node_indx;
+DROP INDEX IF EXISTS Vnodedef_node_indx;
 
-DROP INDEX VTempl_nodeid_indx;
-DROP INDEX VTempl_parent_index_leaf_indx;
-DROP INDEX VTempl_parentid_indx;
-DROP INDEX VTempl_parentid_leaf_name;
-DROP INDEX VTempl_parentid_name_index_indx;
-DROP INDEX VTempl_treeid_nodeid_indx;
-DROP INDEX VTempl_treeid_parentid_indx;
+DROP INDEX IF EXISTS VTempl_nodeid_indx;
+DROP INDEX IF EXISTS VTempl_parent_index_leaf_indx;
+DROP INDEX IF EXISTS VTempl_parentid_indx;
+DROP INDEX IF EXISTS VTempl_parentid_leaf_name;
+DROP INDEX IF EXISTS VTempl_parentid_name_index_indx;
+DROP INDEX IF EXISTS VTempl_treeid_nodeid_indx;
+DROP INDEX IF EXISTS VTempl_treeid_parentid_indx;
 
-DROP INDEX VIChierarchy_parentid_indx;
-DROP INDEX VIChierarchy_treeid_nodeid_indx;
+DROP INDEX IF EXISTS VIChierarchy_parentid_indx;
+DROP INDEX IF EXISTS VIChierarchy_treeid_nodeid_indx;
 
 --
 -- The VIC node Definition table contains the definitions from
