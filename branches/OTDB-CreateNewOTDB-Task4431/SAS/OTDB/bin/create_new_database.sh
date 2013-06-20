@@ -251,7 +251,7 @@ if [ $load_PICtree -eq 1 ]; then
     # Activate PIC tree
 
     pic_treeid=`psql -q -t -h $DBHOST -U $DBUSER -d $DBNAME -c "select treeid from gettreelist('10','0',0,'','','');"| awk '{print $1}'`
-    if [ $pic_treeid == "" ]; then
+    if [ "$pic_treeid" == "" ]; then
       echo "Could not find PIC tree in database $DBNAME"
       exit
     fi
