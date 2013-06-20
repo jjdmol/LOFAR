@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
   {
     cout << "Usage: " << progName << " [OPTION]... MS PARSET" << endl
 #ifdef HAVE_PQXX
-      << "   Or: " << progName << " [OPTION]... -D FILESYSTEM MS" << endl
+      << "   Or: " << progName << " [OPTION]... -D FILESYSTEM MS PARSET" << endl
 #endif
       << endl
       << "Calibrate a single MS using the reduction strategy described by"
