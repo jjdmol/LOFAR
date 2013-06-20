@@ -21,8 +21,6 @@
 #include <lofar_config.h>
 
 #include <string>
-//#include <GPUProc/KernelCompiler.h>
-//#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <GPUProc/gpu_utils.h>
 #include <Common/LofarLogger.h>
 

@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id$: tCudaRuntimeCompiler.in_.cu 24869 2013-05-11 01:16:17Z amesfoort $
 
 extern "C" {
   __global__ void FIR_filter(void *filteredDataPtr)

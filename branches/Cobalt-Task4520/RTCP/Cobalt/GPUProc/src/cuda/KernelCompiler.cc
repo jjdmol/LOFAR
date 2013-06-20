@@ -25,7 +25,6 @@
 #include <boost/format.hpp>
 #include <cuda.h>
 #include <ostream>
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 
 namespace LOFAR
 {

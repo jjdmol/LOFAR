@@ -41,7 +41,6 @@ namespace LOFAR
       gpu::Function(
         createModule(context, 
                      srcFilename,
-//          KernelCompiler(*this).compile(srcFilename)),
                      createPTX(srcFilename, 
                                defaultCompileFlags(), 
                                compileDefinitions(ps))),

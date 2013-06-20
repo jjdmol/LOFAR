@@ -27,7 +27,6 @@
 #include <vector>
 
 #include <CoInterface/Parset.h>
-// #include <GPUProc/KernelCompiler.h>
 #include "gpu_wrapper.h"
 
 namespace LOFAR

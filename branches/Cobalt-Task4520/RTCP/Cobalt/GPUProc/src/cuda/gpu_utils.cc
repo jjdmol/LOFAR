@@ -39,7 +39,6 @@
 #include <Stream/FileStream.h>
 
 #include <GPUProc/global_defines.h>
-// #include "CudaRuntimeCompiler.h"
 
 #define BUILD_MAX_LOG_SIZE	4095
 
