@@ -31,12 +31,19 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    DelayAndBandPassKernel::DelayAndBandPassKernel(const Parset &ps, gpu::Module &program,
-                                                   gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devFilteredData,
-                                                   gpu::DeviceMemory &devDelaysAtBegin, gpu::DeviceMemory &devDelaysAfterEnd,
-                                                   gpu::DeviceMemory &devPhaseOffsets, gpu::DeviceMemory &devBandPassCorrectionWeights)
+    DelayAndBandPassKernel::
+    DelayAndBandPassKernel(const Parset &ps, 
+                           // const gpu::Module &program,
+                           gpu::Context &context,
+                           gpu::DeviceMemory &devCorrectedData,
+                           gpu::DeviceMemory &devFilteredData,
+                           gpu::DeviceMemory &devDelaysAtBegin,
+                           gpu::DeviceMemory &devDelaysAfterEnd,
+                           gpu::DeviceMemory &devPhaseOffsets,
+                           gpu::DeviceMemory &devBandPassCorrectionWeights)
       :
-      Kernel(ps, program, "applyDelaysAndCorrectBandPass")
+      // Kernel(ps, program, "applyDelaysAndCorrectBandPass")
+      Kernel(ps, context, "DelayAndBandPass.cu", "applyDelaysAndCorrectBandPass")
     {
       ASSERT(ps.nrChannelsPerSubband() % 16 == 0 || ps.nrChannelsPerSubband() == 1);
       ASSERT(ps.nrSamplesPerChannel() % 16 == 0);

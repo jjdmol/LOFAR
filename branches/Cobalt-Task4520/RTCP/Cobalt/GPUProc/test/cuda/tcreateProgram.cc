@@ -28,8 +28,6 @@
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/KernelCompiler.h>
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <GPUProc/global_defines.h>
 
 using namespace std;
@@ -63,7 +61,7 @@ int main(int argc, char *argv[]) {
   CompileFlags flags = defaultCompileFlags();
   CompileDefinitions definitions(Kernel::compileDefinitions(ps));
 
-  string ptx = createPTX(devices, srcFilename, flags, definitions);
+  string ptx = createPTX(srcFilename, flags, definitions, devices);
   gpu::Module module(createModule(ctx, srcFilename, ptx));
   cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 

@@ -25,7 +25,6 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
-#include <GPUProc/KernelCompiler.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 
@@ -56,7 +55,7 @@ int main() {
   CompileFlags flags = defaultCompileFlags();
   CompileDefinitions definitions(Kernel::compileDefinitions(ps));
 
-  string ptx = createPTX(devices, srcFilename, flags, definitions);
+  string ptx = createPTX(srcFilename, flags, definitions, devices);
   gpu::Module module(createModule(ctx, srcFilename, ptx));
   cout << "Succesfully compiled '" << srcFilename << "'" << endl;
   size_t COMPLEX = 2;

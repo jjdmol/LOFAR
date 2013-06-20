@@ -14,7 +14,6 @@ set(_gpuproc_sources
   DirectInput.cc
   FilterBank.cc
   global_defines.cc
-  KernelCompiler.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
@@ -24,8 +23,8 @@ if(USE_CUDA)
   list(APPEND _gpuproc_sources 
     cuda/gpu_wrapper.cc
     cuda/gpu_utils.cc
-    cuda/CudaRuntimeCompiler.cc
-    #cuda/KernelCompiler.cc
+#    cuda/CudaRuntimeCompiler.cc
+#    cuda/KernelCompiler.cc
     cuda/PerformanceCounter.cc
     cuda/Kernels/Kernel.cc
     cuda/Kernels/BeamFormerKernel.cc

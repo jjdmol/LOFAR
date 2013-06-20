@@ -25,6 +25,7 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/gpu_utils.h>    // for createModule()
 
 using namespace std;
 
@@ -32,7 +33,26 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    Kernel::Kernel(const Parset &ps, gpu::Module& module, const string &name)
+    Kernel::Kernel(const Parset &ps, 
+                   const gpu::Context &context,
+                   const string& srcFilename,
+                   const string& functionName)
+      : 
+      gpu::Function(
+        createModule(context, 
+                     srcFilename,
+//          KernelCompiler(*this).compile(srcFilename)),
+                     createPTX(srcFilename, 
+                               defaultCompileFlags(), 
+                               compileDefinitions(ps))),
+        functionName),
+      event(context),
+      ps(ps)
+    {
+    }
+
+    // TODO: Remove
+    Kernel::Kernel(const Parset &ps, const gpu::Module& module, const string &name)
       :
       gpu::Function(module, name),
       event(module.getContext()),
@@ -59,6 +79,7 @@ namespace LOFAR
 //      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
 
+    // TODO: Remove
     const CompileDefinitions& Kernel::compileDefinitions(const Parset& ps)
     {
       static CompileDefinitions defs;
@@ -97,7 +118,7 @@ namespace LOFAR
         defs["DEDISPERSION_FFT_SIZE"] = str(format("%u") % ps.dedispersionFFTsize()); // size_t
       }
 
-      return defs;  
+      return defs;
     }
 
   }

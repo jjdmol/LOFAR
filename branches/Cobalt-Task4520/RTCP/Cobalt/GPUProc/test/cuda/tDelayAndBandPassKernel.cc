@@ -25,7 +25,6 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
-#include <GPUProc/KernelCompiler.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 
@@ -55,9 +54,9 @@ int main() {
   CompileFlags flags = defaultCompileFlags();
   CompileDefinitions definitions(Kernel::compileDefinitions(ps));
 
-  string ptx = createPTX(devices, srcFilename, flags, definitions);
-  gpu::Module module(createModule(ctx, srcFilename, ptx));
-  cout << "Succesfully compiled '" << srcFilename << "'" << endl;
+  // string ptx = createPTX(srcFilename, flags, definitions, devices);
+  // gpu::Module module(createModule(ctx, srcFilename, ptx));
+  // cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 
   gpu::DeviceMemory 
     inputData(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA)),
@@ -67,9 +66,14 @@ int main() {
     phaseOffsets(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS)),
     bandPassCorrectionWeights(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS));
 
-  DelayAndBandPassKernel kernel(ps, module, inputData, filteredData, 
+  DelayAndBandPassKernel kernel(ps, ctx, inputData, filteredData, 
                                 delaysAtBegin, delaysAfterEnd, phaseOffsets, 
                                 bandPassCorrectionWeights);
+
+  // DelayAndBandPassKernel kernel(ps, createModule(ctx, srcFilename, ptx),
+  //                               inputData, filteredData, 
+  //                               delaysAtBegin, delaysAfterEnd, phaseOffsets, 
+  //                               bandPassCorrectionWeights);
 
   unsigned subband = 0;
   kernel.enqueue(stream, subband);

@@ -30,6 +30,10 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    //# Forward declarations
+    class Kernel;
+
+#if 0    
     // Class representing the preprocessor definitions that will be passed to
     // the GPU Kernel compiler. The main purpose of this class is to provide a
     // clean way to print the preprocessor definitions into an output stream.
@@ -71,10 +75,59 @@ namespace LOFAR
       // Store compile flags in a set of string.
       std::set<std::string> flags;
     };
+#endif
 
-    // Return a set of default compile flags. The implementation of this method
-    // will be CUDA/OpenCL-specific.
-    const CompileFlags& defaultCompileFlags();
+    struct CompileDefinitions : std::map<std::string, std::string>
+    {
+    };
+
+    struct CompileFlags : std::set<std::string>
+    {
+    };
+
+    // Print compile definitions to \a os, so that they can be passed to the
+    // CUDA/OpenCL compiler.
+    std::ostream& operator<<(std::ostream& os, const CompileDefinitions& defs);
+    
+    // Print compile flags to \a os, so that they can be passed to the
+    // CUDA/OpenCL compiler.
+    std::ostream& operator<<(std::ostream& os, const CompileFlags& flags);
+
+
+    // // Struct representing PTX code. 
+    // struct PTX
+    // {
+    //   std::string ptxcode;
+    //   std::string filename;
+    // };
+
+    // Class representing the GPU kernel compiler. The compiler can generate PTX
+    // code, based on a CUDA/OpenCL source file.
+    class KernelCompiler
+    {
+    public:
+      // Construct a compiler object that will be used to compile \a kernel.
+      explicit KernelCompiler(const Kernel &kernel);
+
+      // // Set compile options. Override already set options.
+      // void setOptions(const CompileOptions &options);
+
+      // Compile \a sourceFile and return the PTX code as string.
+      std::string compile(std::string sourceFile,
+                          CompileDefinitions definitions,
+                          CompileFlags flags) const;
+
+      // Return a map of default compile definitions.
+      static const CompileDefinitions& defaultDefinitions();
+
+      // Return a set of default compile flags.
+      static const CompileFlags& defaultFlags();
+
+      // Need to retrieve available devices, using gpu::Platform::devices()
+    private:
+      CompileDefinitions itsDefinitions;
+      CompileFlags itsFlags;
+    };
 
   }
 }

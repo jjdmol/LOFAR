@@ -30,7 +30,7 @@
 #include <set>
 
 #include <CoInterface/Parset.h>
-#include <GPUProc/KernelCompiler.h>
+// #include <GPUProc/KernelCompiler.h>
 #include <GPUProc/gpu_utils.h>
 #include "gpu_incl.h"
 
