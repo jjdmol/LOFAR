@@ -604,6 +604,7 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
 
 
 def SwapClockTECAxes(ionmodel):
+    print "swap axes will reshape your Clock and TEC solutions. The order of Clock is now times  x stations x polarizations and of TEC: times x stations x sources x polarizations"
     TEC =ionmodel.TEC;
     TECshape=TEC.shape
     Clock =ionmodel.Clock;
@@ -611,12 +612,12 @@ def SwapClockTECAxes(ionmodel):
     nT=ionmodel.times.shape[0]
     nst=ionmodel.stations[:].shape[0]
     nsources=ionmodel.N_sources
-    newshape=(2,nT,nsources,nst)
+    newshape=(nT,nsources,nst,2)
     if TECshape==newshape:
         print "nothing to be done for TEC"
     else:
         TEC=TEC[:]
-        indices=range(4) #pol ,nT,st,nsources
+        indices=range(4) #nT,st,nsources,pol
         tmaxis=TECshape.index(nT)
         indices[tmaxis]=1
         staxis=TECshape.index(nst)
@@ -653,7 +654,7 @@ def SwapClockTECAxes(ionmodel):
             srcaxis-=1
             indices[srcaxis]=2
         add_to_h5_func(ionmodel.hdf5,TEC,name='TEC')
-    newshape=(2,nT,nst)
+    newshape=(nT,nst,2)
     if Clockshape==newshape:
         print "nothing to be done for Clock"
     else:
@@ -686,7 +687,7 @@ def writeClocktoParmdb(ionmodel,average=False):
     if not hasattr(ionmodel,'Clock'):
         print "No Clock solutions found, maybe you forgot to run the fit?"
         return
-    Clock=ionmodel.Clock[:]
+    Clock=ionmodel.Clock[:] # times x stations x pol
     parms = {}
     parm = {}
     parm[ 'freqs' ] = np.array( [ .5e9 ] )
@@ -700,7 +701,7 @@ def writeClocktoParmdb(ionmodel,average=False):
         if average:
             Clock_parm = parm.copy()
             parmname = ':'.join(['Clock', st])
-            value=0.5*ionmodel.Clock[0, :, ist]+0.5*ionmodel.Clock[1, :, ist]
+            value=0.5*ionmodel.Clock[:, ist,0]+0.5*ionmodel.Clock[:, ist]
             value*=1.e-9
             Clock_parm[ 'values' ] = value
             parms[ parmname ] = Clock_parm
@@ -708,7 +709,7 @@ def writeClocktoParmdb(ionmodel,average=False):
             for  n_pol,ipol in enumerate(pol):
                 Clock_parm = parm.copy()
                 parmname = ':'.join(['Clock', str(ipol), st])
-                Clock_parm[ 'values' ] = 1.e-9*ionmodel.Clock[n_pol, :, ist]
+                Clock_parm[ 'values' ] = 1.e-9*ionmodel.Clock[:, ist,n_pol]
                 parms[ parmname ] = Clock_parm
     #return parms        
     parmdbmain.store_parms( ionmodel.globaldb + '/ionosphere', parms, create_new = True)
