@@ -137,9 +137,10 @@ int main(int argc, char *argv[])
 
     casa::AipsIO aio(meta_filename);
     uint32 itsVersion = aio.getstart("LofarStMan");
-    (void)itsVersion;
     aio >> itsAnt1 >> itsAnt2;
     aio.close();
+
+    printf("# MS version %d\n", itsVersion);
 
     std::vector<std::string> stationNames = parset.allStationNames();
 
