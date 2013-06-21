@@ -97,14 +97,21 @@ namespace LOFAR
         SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
       };
 
-      std::map<struct BlockID, WorkQueue*> owner;
-      Mutex ownerMutex;
+      class WorkQueueOwnerMap {
+      public:
 
-      // set the owner of a specific block
-      void pushOwner(const struct BlockID &id, WorkQueue &workQueue);
+        // set the owner of a specific block
+        void push(const struct BlockID &id, WorkQueue &workQueue);
 
-      // get and remove the owner of a specific block
-      WorkQueue& popOwner(const struct BlockID &id);
+        // get and remove the owner of a specific block
+        WorkQueue& pop(const struct BlockID &id);
+
+      private:
+        std::map<struct BlockID, WorkQueue*> ownerMap;
+        Mutex mutex;
+      };
+
+      WorkQueueOwnerMap workQueueOwnerMap;
 
       std::vector<struct Output> subbandPool; // [localSubbandIdx]
 

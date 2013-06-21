@@ -350,26 +350,26 @@ namespace LOFAR
     }
 
 
-    void Pipeline::pushOwner(const struct BlockID &id, WorkQueue &workQueue)
+    void Pipeline::WorkQueueOwnerMap::push(const struct BlockID &id, WorkQueue &workQueue)
     {
-      ScopedLock sl(ownerMutex);
+      ScopedLock sl(mutex);
 
-      ASSERT(owner.find(id) == owner.end());
-      owner[id] = &workQueue;
+      ASSERT(ownerMap.find(id) == ownerMap.end());
+      ownerMap[id] = &workQueue;
     }
 
 
-    WorkQueue& Pipeline::popOwner(const struct BlockID &id)
+    WorkQueue& Pipeline::WorkQueueOwnerMap::pop(const struct BlockID &id)
     {
       WorkQueue *workQueue;
 
-      ScopedLock sl(ownerMutex);
+      ScopedLock sl(mutex);
 
-      ASSERT(owner.find(id) != owner.end());
-      workQueue = owner[id];
+      ASSERT(ownerMap.find(id) != ownerMap.end());
+      workQueue = ownerMap[id];
       ASSERT(workQueue != NULL);
 
-      owner.erase(id);
+      ownerMap.erase(id);
 
       return *workQueue;
     }
@@ -399,7 +399,7 @@ namespace LOFAR
         pool.sync.waitFor(id.block);
 
         // Register ownership
-        pushOwner(id, workQueue);
+        workQueueOwnerMap.push(id, workQueue);
 
         // We do the ordering, so we set the sequence numbers
         output->setSequenceNumber(id.block);
@@ -460,7 +460,7 @@ namespace LOFAR
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
         // Cache workQueue reference, because `output' will be destroyed.
-        WorkQueue &workQueue = popOwner(id);
+        WorkQueue &workQueue = workQueueOwnerMap.pop(id);
 
         LOG_INFO_STR("[" << id << "] Writing start");
 
