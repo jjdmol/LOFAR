@@ -42,7 +42,6 @@ namespace LOFAR
         createModule(context, 
                      srcFilename,
                      createPTX(srcFilename, 
-                               defaultCompileFlags(), 
                                compileDefinitions(ps))),
         functionName),
       event(context),

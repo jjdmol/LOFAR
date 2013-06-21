@@ -117,7 +117,7 @@ HostMemory runTest(gpu::Context ctx,
   
 
   vector<Device> devices(1, ctx.getDevice());
-  string ptx = createPTX(kernelFile, flags, definitions, devices);
+  string ptx = createPTX(kernelFile, definitions, flags, devices);
   gpu::Module module(createModule(ctx, kernelFile, ptx));
   Function hKernel(module, function);   // c function this no argument overloading
 

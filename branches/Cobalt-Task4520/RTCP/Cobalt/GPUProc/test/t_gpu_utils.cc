@@ -1,4 +1,4 @@
-//# tSSH.cc
+//# t_gpu_utils.cc : Unit tests for gpu_utils
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -65,32 +65,32 @@ TEST_FIXTURE(Fixture, CreatePtx)
   createPTX(srcFile);
 }
 
-TEST_FIXTURE(Fixture, CreatePtxExtraFlag)
-{
-  CompileFlags flags;
-  flags.insert("--source-in-ptx");
-  createPTX(srcFile, flags);
-}
-
-TEST_FIXTURE(Fixture, CreatePtxWrongExtraFlag)
-{
-  CompileFlags flags;
-  flags.insert("--yaddayadda");
-  CHECK_THROW(createPTX(srcFile, flags), GPUProcException);
-}
-
 TEST_FIXTURE(Fixture, CreatePtxExtraDef)
 {
   CompileDefinitions defs;
   defs["FOO"] = "42";
-  createPTX(srcFile, defaultCompileFlags(), defs);
+  createPTX(srcFile, defs);
 }
 
 TEST_FIXTURE(Fixture, CreatePtxWrongExtraDef)
 {
   CompileDefinitions defs;
   defs["FOO"] = "24";
-  CHECK_THROW(createPTX(srcFile, defaultCompileFlags(), defs), 
+  CHECK_THROW(createPTX(srcFile, defs), GPUProcException);
+}
+
+TEST_FIXTURE(Fixture, CreatePtxExtraFlag)
+{
+  CompileFlags flags;
+  flags.insert("--source-in-ptx");
+  createPTX(srcFile, defaultCompileDefinitions(), flags);
+}
+
+TEST_FIXTURE(Fixture, CreatePtxWrongExtraFlag)
+{
+  CompileFlags flags;
+  flags.insert("--yaddayadda");
+  CHECK_THROW(createPTX(srcFile, defaultCompileDefinitions(), flags), 
               GPUProcException);
 }
 
@@ -110,8 +110,8 @@ TEST_FIXTURE(Fixture, CreateModuleHighestArch)
   CHECK_THROW(createModule(gpu::Context(device),
                            srcFile, 
                            createPTX(srcFile, 
-                                     defaultCompileFlags(), 
                                      defaultCompileDefinitions(), 
+                                     defaultCompileFlags(), 
                                      vector<gpu::Device>())),
               gpu::GPUException);
 }

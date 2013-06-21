@@ -72,8 +72,8 @@ namespace LOFAR
     //       passed by value intentionally, because they will be modified by
     //       this method.
     std::string createPTX(std::string srcFilename, 
-                          CompileFlags flags = defaultCompileFlags(),
                           CompileDefinitions definitions = defaultCompileDefinitions(),
+                          CompileFlags flags = defaultCompileFlags(),
                           const std::vector<gpu::Device> &devices = gpu::Platform().devices()
       );
 

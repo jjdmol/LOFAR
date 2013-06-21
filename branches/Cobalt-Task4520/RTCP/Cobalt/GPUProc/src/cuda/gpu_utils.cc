@@ -289,8 +289,8 @@ namespace LOFAR
     }
 
     string createPTX(string srcFilename, 
-                     CompileFlags flags, 
                      CompileDefinitions definitions,
+                     CompileFlags flags, 
                      const vector<gpu::Device> &devices)
     {
       // The CUDA code is assumed to be written for the architecture of the

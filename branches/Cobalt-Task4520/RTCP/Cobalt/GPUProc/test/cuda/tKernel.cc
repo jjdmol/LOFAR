@@ -55,7 +55,7 @@ int main() {
   CompileFlags flags = defaultCompileFlags();
   CompileDefinitions definitions(Kernel::compileDefinitions(ps));
 
-  string ptx = createPTX(srcFilename, flags, definitions, devices);
+  string ptx = createPTX(srcFilename, definitions, flags, devices);
   gpu::Module module(createModule(ctx, srcFilename, ptx));
   cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 

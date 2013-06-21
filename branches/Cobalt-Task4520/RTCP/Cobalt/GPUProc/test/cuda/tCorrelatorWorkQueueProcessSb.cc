@@ -62,9 +62,9 @@ int main() {
   map<string, string> ptx;
   CompileFlags flags(defaultCompileFlags());
   CompileDefinitions definitions(Kernel::compileDefinitions(ps));
-  ptx[kfilenameFIR] = createPTX(kfilenameFIR, flags, definitions, devices);
-  ptx[kfilenameDBP] = createPTX(kfilenameDBP, flags, definitions, devices);
-  ptx[kfilenameCor] = createPTX(kfilenameCor, flags, definitions, devices);
+  ptx[kfilenameFIR] = createPTX(kfilenameFIR, definitions, flags, devices);
+  ptx[kfilenameDBP] = createPTX(kfilenameDBP, definitions, flags, devices);
+  ptx[kfilenameCor] = createPTX(kfilenameCor, definitions, flags, devices);
   
   CorrelatorPipelinePrograms progs;
   progs.firFilterProgram = createModule(ctx, kfilenameFIR, ptx[kfilenameFIR]);

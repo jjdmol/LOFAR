@@ -79,7 +79,7 @@ float * runTest(unsigned NR_BITS_PER_SAMPLE = 16,
   unsigned NR_POLARIZATIONS = 2;
   definitions["COMPLEX"] = "2";
   unsigned COMPLEX = 2;
-  string ptx = createPTX(kernelPath, flags, definitions, devices);
+  string ptx = createPTX(kernelPath, definitions, flags, devices);
   gpu::Module module(createModule(ctx, kernelPath, ptx));
   Function  hKernel(module, "intToFloat");  // c function this no argument overloading
 
