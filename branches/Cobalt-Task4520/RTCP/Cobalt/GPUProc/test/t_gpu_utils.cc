@@ -119,7 +119,13 @@ TEST_FIXTURE(Fixture, CreateModuleHighestArch)
 int main()
 {
   INIT_LOGGER("t_gpu_utils");
-  return UnitTest::RunAllTests() > 0;
+  try {
+    gpu::Platform pf;
+    return UnitTest::RunAllTests() > 0;
+  } catch (gpu::GPUException& e) {
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
+    return 0;
+  }
 }
 
 #else
