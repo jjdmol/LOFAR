@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tBeamFormer
+./runctest.sh tTranspose

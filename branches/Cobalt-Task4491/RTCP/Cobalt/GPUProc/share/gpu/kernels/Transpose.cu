@@ -18,7 +18,7 @@
 //#
 //# $Id$
 
-#if 0
+#ifdef CHANNEL_PARALLEL 
 typedef float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 typedef float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS];
 
@@ -45,8 +45,9 @@ typedef float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TA
  * Execution configuration:
  * - LocalWorkSize = (NR_POLARIZATIONS, NR_TABS, NR_CHANNELS) Note that for full utilization NR_TABS * NR_CHANNELS % 16 = 0
  */
-extern "C" __global__  void transposeComplexVoltages( void *restrict transposedDataPtr,
-                                        const void *restrict complexVoltagesPtr)
+extern "C" __global__  void transpose( 
+                    void * transposedDataPtr,
+                    const void * complexVoltagesPtr)
 {
   TransposedDataType transposedData = (TransposedDataType) transposedDataPtr;
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
@@ -76,11 +77,13 @@ extern "C" __global__  void transposeComplexVoltages( void *restrict transposedD
 
     if (doW) {
       float4 sample = tmp[tabOffsetW][chOffsetW];
-      (*transposedData)[tabW][0][time][channelW] = sample.xy;
-      (*transposedData)[tabW][1][time][channelW] = sample.zw;
+      (*transposedData)[tabW][0][time][channelW] = make_float2(sample.x, sample.y);
+
+      (*transposedData)[tabW][1][time][channelW] = make_float2(sample.z, sample.w);
     }
 
     __syncthreads();
+
   }
 }
 
@@ -89,8 +92,8 @@ extern "C" __global__  void transposeComplexVoltages( void *restrict transposedD
 typedef  float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 typedef  float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS];
 
-extern "C" __global__  void transposeComplexVoltages( void *restrict transposedDataPtr,
-                                        const void *restrict complexVoltagesPtr)
+extern "C" __global__  void transpose( void * transposedDataPtr,
+                                        const void * complexVoltagesPtr)
 {
   TransposedDataType transposedData = (TransposedDataType) transposedDataPtr;
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
@@ -100,9 +103,9 @@ extern "C" __global__  void transposeComplexVoltages( void *restrict transposedD
   unsigned tabBase = 16 * blockDim.y * blockIdx.y + threadIdx.y;
   unsigned timeBase = 16 * blockDim.z * blockIdx.z + threadIdx.z;
 
-  unsigned tabOffsetR = threadIdx.x & 15;
+  unsigned tabOffsetR = threadIdx.x & 15;   // use and to get module 16
   unsigned tabR = tabBase + tabOffsetR;
-  unsigned timeOffsetR = threadIdx.x >> 4;
+  unsigned timeOffsetR = threadIdx.x >> 4;  // use bitshift to get devision
   unsigned timeR = timeBase + timeOffsetR;
   bool doR = NR_TABS % 16 == 0 || tabR < NR_TABS;
 
@@ -112,13 +115,16 @@ extern "C" __global__  void transposeComplexVoltages( void *restrict transposedD
   unsigned timeW = timeBase + timeOffsetW;
   bool doW = NR_TABS % 16 == 0 || tabW < NR_TABS;
 
-  for (int channel = 0; channel < NR_CHANNELS; channel++) {
+  for (int channel = 0; channel < NR_CHANNELS; channel++) 
+  {
     if (doR)
       tmp[tabOffsetR][timeOffsetR] = (*complexVoltages)[timeR][channel][tabR];
 
     __syncthreads();
 
-    if (doW) {
+    if (doW) 
+    
+    {
       float4 sample = tmp[tabOffsetW][timeOffsetW];
       (*transposedData)[tabW][0][channel][timeW] = sample.xy;
       (*transposedData)[tabW][1][channel][timeW] = sample.zw;
@@ -129,4 +135,3 @@ extern "C" __global__  void transposeComplexVoltages( void *restrict transposedD
 }
 
 #endif
-

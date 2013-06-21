@@ -42,62 +42,80 @@ using namespace LOFAR::Cobalt;
 using LOFAR::Exception;
 
 // The tests succeeds for different values of stations, channels, samples and tabs.
-unsigned NR_STATIONS = 4;  
-unsigned NR_CHANNELS = 4;
-unsigned NR_SAMPLES_PER_CHANNEL = 4;
-unsigned NR_TABS = 4;
+
+unsigned NR_CHANNELS = 2;
+unsigned NR_SAMPLES_PER_CHANNEL = 2;
+unsigned NR_TABS = 2;
 unsigned NR_POLARIZATIONS = 2;
 unsigned COMPLEX = 2;
 
 
 // Create the data arrays
-size_t lengthWeightsData = NR_STATIONS * NR_CHANNELS * NR_TABS * COMPLEX ;
-size_t lengthBandPassCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX;
+size_t lengthTransposedData =  NR_CHANNELS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_TABS * COMPLEX ;
 size_t lengthComplexVoltagesData = NR_CHANNELS* NR_SAMPLES_PER_CHANNEL * NR_TABS * NR_POLARIZATIONS * COMPLEX;
 
 
 
-void exit_with_print(float *outputOnHostPtr)
+void exit_with_print(float *complexVoltagesData, float *outputOnHostPtr)
 {
   // Plot the output of the kernel in a readable manner
-  unsigned size_channel = NR_SAMPLES_PER_CHANNEL * NR_TABS * NR_POLARIZATIONS * COMPLEX;
-  unsigned size_sample = NR_TABS * NR_POLARIZATIONS * COMPLEX;
-  unsigned size_tab = NR_POLARIZATIONS * COMPLEX;
+  // complex voltages
   for (unsigned idx_channel = 0; idx_channel < NR_CHANNELS; ++ idx_channel)
   {
-    cout << "idx_channel: " << idx_channel << endl;
-    for (unsigned idx_samples = 0; idx_samples < NR_SAMPLES_PER_CHANNEL; ++ idx_samples)
-    
+    cout << endl << "idx_channel: " << idx_channel << endl;
+    for(unsigned idx_samples = 0; idx_samples < NR_SAMPLES_PER_CHANNEL; ++idx_samples)
     {
-      cout << "idx_samples " << idx_samples << ": ";
-      for (unsigned idx_tab = 0; idx_tab < NR_TABS; ++ idx_tab)
+      cout << "samples  " << idx_samples << ": ";
+      for(unsigned idx_tabs = 0; idx_tabs < NR_TABS; ++ idx_tabs)
       {
-        unsigned index_data_base = size_channel * idx_channel + 
-                                   size_sample * idx_samples +
-                                   size_tab * idx_tab ;
+        unsigned sample_base_idx = idx_channel * NR_SAMPLES_PER_CHANNEL * NR_TABS * 4 +
+                              idx_samples * NR_TABS * 4 + 
+                              idx_tabs * 4;
 
-        cout << "(" << outputOnHostPtr[index_data_base] << ", " 
-             << outputOnHostPtr[index_data_base +1] << ")-" 
-             << "(" << outputOnHostPtr[index_data_base + 2] 
-             << ", " << outputOnHostPtr[index_data_base +3] << ")  ";
+        cout << "<" << idx_tabs <<">" 
+             << "(" << complexVoltagesData[sample_base_idx] << ", "
+             << complexVoltagesData[sample_base_idx + 1] << ")-("
+             << complexVoltagesData[sample_base_idx + 2] << ", " 
+             << complexVoltagesData[sample_base_idx + 3] <<") ";
       }
       cout << endl;
     }
-    cout << endl;
   }
-  
+  cout << endl << endl;
+  for(unsigned idx_tabs = 0; idx_tabs < NR_TABS; ++ idx_tabs)
+  {
+    cout << endl << "idx_tabs: " << idx_tabs << endl;
+    for(unsigned idx_samples = 0; idx_samples < NR_SAMPLES_PER_CHANNEL; ++idx_samples)
+    {
+      cout << "samples  " << idx_samples << ": ";
+      
+      for (unsigned idx_channel = 0; idx_channel < NR_CHANNELS; ++ idx_channel)
+      {
+        unsigned sample_base_idx = idx_tabs * NR_SAMPLES_PER_CHANNEL * NR_TABS * 4 +
+                              idx_samples * NR_TABS * 4 + 
+                              idx_channel * 4;
+
+        cout << "<" << idx_channel <<">" 
+             << "(" << outputOnHostPtr[sample_base_idx] << ", "
+             << outputOnHostPtr[sample_base_idx + 1] << ")-("
+             << outputOnHostPtr[sample_base_idx + 2] << ", " 
+             << outputOnHostPtr[sample_base_idx + 3] <<") ";
+      }
+      cout << endl;
+    }
+  }
+
   exit(-1);
 }
 
 
 HostMemory runTest(gpu::Context ctx,
                    Stream cuStream,
-                   float * weightsData,
-                   float * bandPassCorrectedData,
+                   float * transposedData,
                    float * complexVoltagesData,
                    string function)
 {
-  string kernelFile = "BeamFormer.cu";
+  string kernelFile = "Transpose.cu";
 
   cout << "\n==== runTest: function = " << function << " ====\n" << endl;
 
@@ -109,13 +127,12 @@ HostMemory runTest(gpu::Context ctx,
   // Compile to ptx
   // Set op string string pairs to be provided to the compiler as defines
   definitions["NVIDIA_CUDA"] = "";
-  definitions["NR_STATIONS"] = lexical_cast<string>(NR_STATIONS);
   definitions["NR_CHANNELS"] = lexical_cast<string>(NR_CHANNELS);
   definitions["NR_SAMPLES_PER_CHANNEL"] = lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
   definitions["NR_TABS"] = lexical_cast<string>(NR_TABS);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
-  
+  definitions["CHANNEL_PARALLEL"] = lexical_cast<string>("false"); 
 
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(devices, kernelFile, flags, definitions);
@@ -124,51 +141,47 @@ HostMemory runTest(gpu::Context ctx,
 
   // *************************************************************
   // Create the data arrays
-  size_t sizeWeightsData = lengthWeightsData* sizeof(float);
-  DeviceMemory devWeightsMemory(ctx, sizeWeightsData);
-  HostMemory rawWeightsData = getInitializedArray(ctx, sizeWeightsData, 1.0f);
-  float *rawWeightsPtr = rawWeightsData.get<float>();
-  for (unsigned idx = 0; idx < lengthWeightsData; ++idx)
-    rawWeightsPtr[idx] = weightsData[idx];
-  cuStream.writeBuffer(devWeightsMemory, rawWeightsData);
+  size_t sizeTransposedData = lengthTransposedData* sizeof(float);
+  DeviceMemory devTransposedMemory(ctx, sizeTransposedData);
+  HostMemory rawTransposedData = getInitializedArray(ctx, sizeTransposedData, 1.0f);
+  float *rawTransposedPtr = rawTransposedData.get<float>();
+  for (unsigned idx = 0; idx < lengthTransposedData; ++idx)
+    rawTransposedPtr[idx] = transposedData[idx];
+  cuStream.writeBuffer(devTransposedMemory, rawTransposedData);
 
-  size_t sizeBandPassCorrectedData= lengthBandPassCorrectedData * sizeof(float);
-  DeviceMemory devBandPassCorrectedMemory(ctx, sizeBandPassCorrectedData);
-  HostMemory rawBandPassCorrectedData = getInitializedArray(ctx, sizeBandPassCorrectedData, 2.0f);
-  float *rawBandPassCorrectedPtr = rawBandPassCorrectedData.get<float>();
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData; ++idx)
-    rawBandPassCorrectedPtr[idx] = bandPassCorrectedData[idx];
-  cuStream.writeBuffer(devBandPassCorrectedMemory, rawBandPassCorrectedData);
-
-  size_t sizeComplexVoltagesData = lengthComplexVoltagesData * sizeof(float);
+  size_t sizeComplexVoltagesData= lengthComplexVoltagesData * sizeof(float);
   DeviceMemory devComplexVoltagesMemory(ctx, sizeComplexVoltagesData);
-  HostMemory rawComplexVoltagesData = getInitializedArray(ctx, sizeComplexVoltagesData, 3.0f);
+  HostMemory rawComplexVoltagesData = getInitializedArray(ctx, sizeComplexVoltagesData, 2.0f);
   float *rawComplexVoltagesPtr = rawComplexVoltagesData.get<float>();
   for (unsigned idx = 0; idx < lengthComplexVoltagesData; ++idx)
     rawComplexVoltagesPtr[idx] = complexVoltagesData[idx];
-  // Write output content.
   cuStream.writeBuffer(devComplexVoltagesMemory, rawComplexVoltagesData);
+
 
   // ****************************************************************************
   // Run the kernel on the created data
-  hKernel.setArg(0, devComplexVoltagesMemory);
-  hKernel.setArg(1, devBandPassCorrectedMemory);
-  hKernel.setArg(2, devWeightsMemory);
+  hKernel.setArg(0, devTransposedMemory);
+  hKernel.setArg(1, devComplexVoltagesMemory);
 
   // Calculate the number of threads in total and per block
-  Grid globalWorkSize(1, 1, 1);
-  Block localWorkSize(NR_POLARIZATIONS, NR_TABS, NR_CHANNELS);
-
+  // This depend on the parallization chosen: Of time then 
+  //Grid globalWorkSize(NR_SAMPLES_PER_CHANNEL / 16, 1, 1);
+  //Block localWorkSize(16, NR_TABS, NR_CHANNELS);
+   //globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, ps.nrSamplesPerChannel() / 16);
+   //localWorkSize = cl::NDRange(256, 1, 1);
+  Grid globalWorkSize(1, 10, 2);
+  //Grid globalWorkSize(1, 1, 2);
+  Block localWorkSize(256, 1, 1); // increasing x dim does not change anything
   // Run the kernel
   cuStream.synchronize(); // assure memory is copied
   cuStream.launchKernel(hKernel, globalWorkSize, localWorkSize);
   cuStream.synchronize(); // assure that the kernel is finished
 
   // Copy output vector from GPU buffer to host memory.
-  cuStream.readBuffer(rawComplexVoltagesData, devComplexVoltagesMemory);
+  cuStream.readBuffer(rawTransposedData, devTransposedMemory);
   cuStream.synchronize(); //assure copy from device is done
 
-  return rawComplexVoltagesData; 
+  return rawTransposedData; 
 }
 
 Exception::TerminateHandler t(Exception::terminate);
@@ -177,7 +190,7 @@ Exception::TerminateHandler t(Exception::terminate);
 int main()
 {
   INIT_LOGGER("tBeamFormer");
-  const char* function = "beamFormer";
+  const char* function = "transpose";
   try 
   {
     gpu::Platform pf;
@@ -197,8 +210,7 @@ int main()
   // Define the input and output arrays
   // ************************************************************* 
   float * complexVoltagesData = new float[lengthComplexVoltagesData];
-  float * bandPassCorrectedData = new float[lengthBandPassCorrectedData];
-  float * weightsData= new float[lengthWeightsData];
+  float * transposedData= new float[lengthTransposedData];
   float * outputOnHostPtr;
 
   // ***********************************************************
@@ -207,32 +219,26 @@ int main()
   cout << "test 1" << endl;
   for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
   {
-    complexVoltagesData[idx * 2] = 42.0f;
-    complexVoltagesData[idx * 2 + 1] = 42.0f;
+    complexVoltagesData[idx * 2] = idx * 2;
+    complexVoltagesData[idx * 2 + 1] = idx * 2+ 1;
   }
 
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
+  for (unsigned idx = 0; idx < lengthTransposedData/2; ++idx)
   {
-    bandPassCorrectedData[idx * 2] = 1.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 1.0f;
+    transposedData[idx * 2] = 0.0f;
+    transposedData[idx * 2 + 1] = 0.0f;
   }
 
-  for (unsigned idx = 0; idx < lengthWeightsData/2; ++idx)
-  {
-    weightsData[idx * 2] = 0.0f;
-    weightsData[idx * 2 + 1] = 0.0f;
-  }
-
-  HostMemory outputOnHost = runTest(ctx, cuStream, weightsData,
-    bandPassCorrectedData,complexVoltagesData, function);
+  HostMemory outputOnHost = runTest(ctx, cuStream, transposedData,
+    complexVoltagesData, function);
 
   // Validate the returned data array
   outputOnHostPtr = outputOnHost.get<float>();
-  for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
+  for (size_t idx = 0; idx < lengthTransposedData; ++idx)
     if (outputOnHostPtr[idx] != 0.0f)
     {
-      cerr << "The data returned by the kernel should be all zero: All weights are zero";
-      exit_with_print(outputOnHostPtr);
+      cerr << "The data returned by the kernel should be all zero: All Transposed are zero";
+      exit_with_print(complexVoltagesData, outputOnHostPtr);
     }
     
   // ***********************************************************
@@ -241,114 +247,30 @@ int main()
   cout << "test 2" << endl;
   for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
   {
-    complexVoltagesData[idx * 2] = 42.0f;
-    complexVoltagesData[idx * 2 + 1] = 42.0f;
+    complexVoltagesData[idx * 2] = 1.0f;
+    complexVoltagesData[idx * 2 + 1] = 1.0f;
   }
 
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
+  for (unsigned idx = 0; idx < lengthTransposedData/2; ++idx)
   {
-    bandPassCorrectedData[idx * 2] = 0.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 0.0f;  }
-
-  for (unsigned idx = 0; idx < lengthWeightsData/2; ++idx)
-  {
-    weightsData[idx * 2] = 1.0f;
-    weightsData[idx * 2 + 1] = 1.0f;
+    transposedData[idx * 2] = 42.0f;
+    transposedData[idx * 2 + 1] = 42.0f;
   }
 
-  HostMemory outputOnHost2 = runTest(ctx, cuStream, weightsData,
-    bandPassCorrectedData,complexVoltagesData, function);
+  HostMemory outputOnHost2 = runTest(ctx, cuStream, transposedData,
+    complexVoltagesData, function);
 
   // Validate the returned data array
   outputOnHostPtr = outputOnHost2.get<float>();
-  for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
+  for (size_t idx = 0; idx < lengthTransposedData; ++idx)
     if (outputOnHostPtr[idx] != 0.0f)
     {
       cerr << "The data returned by the kernel should be all zero: All inputs are zero";
-      exit_with_print(outputOnHostPtr);
+      exit_with_print(complexVoltagesData, outputOnHostPtr);
     }
     
-
-  // ***********************************************************
-  // Test 3: all inputs 1 (including imag)
-  // with only the real weight set to 1.
-  // all outputs should be 4
-  cout << "test 3" << endl;
-  for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
-  {
-    complexVoltagesData[idx * 2] = 42.0f;
-    complexVoltagesData[idx * 2 + 1] = 42.0f;
-  }
-
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
-  {
-    bandPassCorrectedData[idx * 2] = 1.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 1.0f;  }
-
-  for (unsigned idx = 0; idx < lengthWeightsData/2; ++idx)
-  {
-    weightsData[idx * 2] = 1.0f;
-    weightsData[idx * 2 + 1] = 0.0f;
-  }
-
-  HostMemory outputOnHost3 = runTest(ctx, cuStream, weightsData,
-    bandPassCorrectedData,complexVoltagesData, function);
-
-  // Validate the returned data array
-  outputOnHostPtr = outputOnHost3.get<float>();
-  for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
-    if (outputOnHostPtr[idx] != NR_STATIONS * 1.0f)
-    {
-      cerr << "all the data returned by the kernel should be (" << NR_STATIONS << ", " << NR_STATIONS << ")" ;
-      exit_with_print(outputOnHostPtr);
-    }
-    
-  // ***********************************************************
-  // Test 4: all inputs 1 (including imag)
-  // with only the real weight set to 1 and imag also 1
-  // all outputs should be (0,8) 
-  // (1 , i) * (1, i) == 1 * 1 + i * i + 1 * i + 1 * i= 1 -1 +2i = 2i
-  // times 4 stations is (0.8)
-  cout << "test 4" << endl;
-  for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
-  {
-    complexVoltagesData[idx * 2] = 42.0f;
-    complexVoltagesData[idx * 2 + 1] = 42.0f;
-  }
-
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
-  {
-    bandPassCorrectedData[idx * 2] = 1.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 1.0f;  }
-
-  for (unsigned idx = 0; idx < lengthWeightsData/2; ++idx)
-  {
-    weightsData[idx * 2] = 1.0f;
-    weightsData[idx * 2 + 1] = 1.0f;
-  }
-
-  HostMemory outputOnHost4 = runTest(ctx, cuStream, weightsData,
-    bandPassCorrectedData,complexVoltagesData, function);
-
-  // Validate the returned data array
-  outputOnHostPtr = outputOnHost4.get<float>();
-  for (size_t idx = 0; idx < lengthComplexVoltagesData/2; ++idx)
-  {
-    if (outputOnHostPtr[idx  * 2] != 0.0f)
-    {
-      cerr << "The REAL data returned by the kernel should be all zero: both input and weights are (1, i)";
-      exit_with_print(outputOnHostPtr);
-    }
-    if (outputOnHostPtr[idx * 2 + 1] != NR_STATIONS * 2 * 1.0f)
-    {
-      cerr << "The imag data should be all " << NR_STATIONS * 2 * 1.0f;
-      exit_with_print(outputOnHostPtr);
-    } 
-  }
-
   delete [] complexVoltagesData;
-  delete [] bandPassCorrectedData;
-  delete [] weightsData;
+  delete [] transposedData;
 
   return 0;
 }
