@@ -46,46 +46,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    /*
-     * The CorrelatorWorkQueue does the following transformation:
-     *   WorkQueueInputData -> CorrelatedDataHostBuffer
-     *
-     * The WorkQueueInputData represents one block of one subband
-     * of input data, and the CorrelatedDataHostBuffer the complex
-     * visibilities of such a block.
-     *
-     * For both input and output, a fixed set of objects is created,
-     * tied to the GPU specific for the WorkQueue, for increased
-     * performance. The objects are recycled by using Pool objects.
-     *
-     * The data flows as follows:
-     *
-     *   // Fetch the next input object to fill
-     *   SmartPtr<WorkQueueInputData> input = queue.inputPool.free.remove();
-     *
-     *   // Provide input
-     *   receiveInput(input);
-     *
-     *   // Annotate input
-     *   input->blockID.block = block;
-     *   input->blockID.globalSubbandIdx = subband;
-     *   input->blockID.localSubbandIdx  = subbandIdx;
-     *
-     *   // Fetch the next output object to fill
-     *   SmartPtr<CorrelatedDataHostBuffer> output = queue.outputPool.free.remove();
-     *
-     *   // Process block
-     *   queue.doSubband(input, output);
-     *
-     *   // Give back input and output objects to queue
-     *   queue.inputPool.free.append(input);
-     *   queue.outputPool.free.append(output);
-     *
-     *   The queue.inputPool.filled and queue.outputPool.filled can be used to
-     *   temporarily store filled input and output objects. Such is needed to
-     *   obtain parallellism (i.e. read/process/write in separate threads).
-     */
-    class CorrelatorWorkQueue;
 
     // A CorrelatedData object tied to a HostBuffer and WorkQueue. Such links
     // After the visibilities have been written to storage, we need remember
@@ -109,6 +69,16 @@ namespace LOFAR
     class CorrelatorWorkQueue : public WorkQueue
     {
     public:
+      CorrelatorWorkQueue(const Parset &parset, gpu::Context &context,
+                          CorrelatorPipelinePrograms &programs,
+                          FilterBank &filterBank);
+
+      // Correlate the data found in the input data buffer
+      virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
+
+      // Do post processing on the CPU
+      virtual void postprocessSubband(StreamableData &output);
+
       // Collection of functions to tranfer the input flags to the output.
       // \c propagateFlagsToOutput can be called parallel to the kernels.
       // After the data is copied from the the shared buffer 
@@ -136,17 +106,6 @@ namespace LOFAR
         static void applyWeightingToAllPolarizations(unsigned baseline, 
           unsigned channel, float weight, CorrelatedData &output);
       };
-
-    public:
-      CorrelatorWorkQueue(const Parset &parset, gpu::Context &context,
-                          CorrelatorPipelinePrograms &programs,
-                          FilterBank &filterBank);
-
-      // Correlate the data found in the input data buffer
-      virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
-
-      // Do post processing on the CPU
-      virtual void postprocessSubband(StreamableData &output);
       
     private:
       // The previously processed SAP/block, or -1 if nothing has been
