@@ -1121,7 +1121,7 @@ namespace LOFAR
 
     unsigned Parset::getLofarStManVersion() const
     {
-      return getUint32("OLAP.LofarStManVersion", 2);
+      return getUint32("OLAP.LofarStManVersion", 3);
     }
 
     vector<unsigned> Parset::phaseOnePsets() const
