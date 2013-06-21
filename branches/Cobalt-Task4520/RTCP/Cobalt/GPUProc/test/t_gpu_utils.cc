@@ -20,6 +20,9 @@
 //# $Id$
 
 #include <lofar_config.h>
+
+#ifdef USE_CUDA
+
 #include <Common/LofarLogger.h>
 #include <GPUProc/gpu_utils.h>
 #include <UnitTest++.h>
@@ -118,3 +121,16 @@ int main()
   INIT_LOGGER("t_gpu_utils");
   return UnitTest::RunAllTests() > 0;
 }
+
+#else
+
+#include <iostream>
+
+int main()
+{
+  std::cout << "The GPU wrapper classes are not yet available for OpenCL.\n"
+            << "Test skipped." << std::endl;
+  return 0;
+}
+
+#endif
