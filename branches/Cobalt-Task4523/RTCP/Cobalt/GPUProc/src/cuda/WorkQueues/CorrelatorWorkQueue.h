@@ -104,13 +104,6 @@ namespace LOFAR
                        this->num_elements(), heapAllocator, 1)
       {
       }
-
-      // Annotation required, as we'll lose track of the exact order
-      struct BlockID blockID;
-
-    private:
-      CorrelatedDataHostBuffer();
-      CorrelatedDataHostBuffer(const CorrelatedDataHostBuffer &);
     };
 
     class CorrelatorWorkQueue : public WorkQueue
