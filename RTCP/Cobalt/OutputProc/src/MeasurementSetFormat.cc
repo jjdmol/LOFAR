@@ -548,15 +548,14 @@ namespace LOFAR
 
       for (uInt i = 0; i < nStations; ++i) {
         for (uInt j = 0; j <= i; ++j) {
-
-          if (itsPS.getLofarStManVersion() == 1) {
-            ant1[inx] = j;
-            ant2[inx] = i;
-            ++inx;
-          } else {
+          if (itsPS.getLofarStManVersion() == 2) {
             // switch order of stations to fix write of complex conjugate data in V1
             ant1[inx] = i;
             ant2[inx] = j;
+            ++inx;
+          } else {
+            ant1[inx] = j;
+            ant2[inx] = i;
             ++inx;
           }
         }
