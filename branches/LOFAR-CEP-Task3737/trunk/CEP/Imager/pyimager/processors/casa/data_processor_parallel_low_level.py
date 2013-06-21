@@ -22,7 +22,28 @@ class DataProcessorParallelLowLevel:
         if not isinstance(datadescriptor, dict) and os.path.isfile(datadescriptor) :
             f = open(datadescriptor)
             datadescriptor = json.load(f)
+
+        if len(options['profile']) == 0:
+            self._start_ipcluster()
+        else:
+            self._profile = options['profile']
+            self.measurements = datadescriptor.values()
             
+        self._rc = IPython.parallel.Client(profile=self._profile)
+        for dview in self._rc :
+            print dview
+            engineid = dview['engineid']
+            print engineid
+            sys.stdout.flush()
+            dview['msname'] = str(self.measurements[engineid])
+            print dview['msname']
+        self._dview = self._rc[:]
+        self._dview['options'] = options
+        self._dview.execute('from lofar.pyimager.processors.casa.data_processor_low_level import DataProcessorLowLevel')
+        self._dview.execute('localdataprocessor = DataProcessorLowLevel(msname, options)', block = True)
+        self._remoteprocessor = IPython.parallel.Reference('localdataprocessor')
+        
+    def _start_ipcluster(self) :
         self._profile = "%s-%s-%i-%i" % (os.path.basename(sys.argv[0]), socket.gethostname(), os.getpid(), get_dataprocessor_id())
         fnull = open(os.devnull, "w")
         # start ipcontroller
@@ -39,6 +60,7 @@ class DataProcessorParallelLowLevel:
               break
             time.sleep(1)
         print 'ok'
+        self._started_ipcontroller = True
         # start ipengines
         self.hostnames = datadescriptor.keys()
         self._pid = {}
@@ -49,12 +71,15 @@ class DataProcessorParallelLowLevel:
             measurements = datadescriptor[hostname]
             if isinstance(measurements, basestring):
                 measurements = [measurements]
-            shell = subprocess.Popen(["ssh", hostname, "/bin/bash"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=fnull)
-            shell.stdin.write("export PYTHONPATH=" + os.environ['PYTHONPATH'] + "\n")
-            shell.stdin.write("export LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'] +"\n")
-            shell.stdin.write("export PATH=" + os.environ['PATH'] +"\n")
-            shell.stdin.write("export LOFARROOT=" + os.environ['LOFARROOT'] +"\n")
-            shell.stdin.write("export LOFARDATAROOT=" + os.environ['LOFARDATAROOT'] +"\n")
+            if hostname != "localhost" :
+                shell = subprocess.Popen( ["ssh", hostname, "/bin/sh"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=fnull)
+            else:
+                shell = subprocess.Popen( ["/bin/sh"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=fnull)
+            shell.stdin.write("PYTHONPATH=%s; export PYTHONPATH\n" % os.environ['PYTHONPATH'])
+            shell.stdin.write("LD_LIBRARY_PATH=%s; export LD_LIBRARY_PATH\n" % os.environ['LD_LIBRARY_PATH'])
+            shell.stdin.write("PATH=%s; export PATH\n" % os.environ['PATH'])
+            shell.stdin.write("LOFARROOT=%s; export LOFARROOT\n" % os.environ['LOFARROOT'])
+            shell.stdin.write("LOFARDATAROOT=%s; export LOFARDATAROOT\n" % os.environ['LOFARDATAROOT'])
             for measurement in measurements:
                 shell.stdin.write("ipengine --profile=" + self._profile + \
                                         ' --work-dir=' + os.getcwd() + \
@@ -74,20 +99,7 @@ class DataProcessorParallelLowLevel:
         while len(self._rc.ids) < len(self.measurements) :
             time.sleep(1)
         print 'ok'
-        self._rc = IPython.parallel.Client(profile=self._profile)
-        for dview in self._rc :
-            print dview
-            engineid = dview['engineid']
-            print engineid
-            sys.stdout.flush()
-            dview['msname'] = str(self.measurements[engineid])
-            print dview['msname']
-        self._dview = self._rc[:]
-        self._dview['options'] = options
-        self._dview.execute('from lofar.pyimager.processors.casa.data_processor_low_level import DataProcessorLowLevel')
-        self._dview.execute('localdataprocessor = DataProcessorLowLevel(msname, options)', block = True)
-        self._remoteprocessor = IPython.parallel.Reference('localdataprocessor')
-        self._connected = True
+        
 
     def clear(self):
         pass
@@ -105,7 +117,7 @@ class DataProcessorParallelLowLevel:
         return capabilities
 
     def phase_reference(self):
-        results = self._rc[:].apply(lambda processor : processor.phase_reference(), self._remoteprocessor).get(timeout=self._timeout)
+        results = self._rc[:].apply_sync(lambda processor : processor.phase_reference(), self._remoteprocessor)
         phase_reference = results[0]
         for result in results[1:] :
             assert((phase_reference == result).all())
@@ -204,9 +216,12 @@ class DataProcessorParallelLowLevel:
         return response
 
     def close(self):
-        if self._connected :
-            self._rc.shutdown(hub=True)
-            self._connected = False
+        try:
+            if self._started_ipcontroller :
+                self._rc.shutdown(hub=True)
+                self._started_ipcontroller = False
+        except AttributeError:
+            pass
 
     def __del__(self) :
         self.close()

@@ -46,6 +46,8 @@ def main():
         default = 0.0, metavar = "NOISE", help = "")
     subparser.add_argument("--robustness", dest = "robustness", type = float,
         default = 0.0, metavar = "ROBUSTNESS", help = "")
+    subparser.add_argument("--profile", dest = "profile", 
+        default = "", metavar = "PROFILE", help = "ipcluster profile name")
 #    subparser.add_argument("-g", choices = ["awz", "aw", "w"],
 #        help = "gridder to use")
 #    subparser.add_argument("-G", dest = "gridder_options", action = "append",

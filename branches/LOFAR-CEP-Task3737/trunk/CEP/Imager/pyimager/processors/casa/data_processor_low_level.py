@@ -6,8 +6,6 @@ import lofar.pyimager.algorithms.constants as constants
 import pyrap.tables
 import visimagingweight
 
-from pylab import *
-
 class DataProcessorLowLevel:
     def __init__(self, measurement, options):
         print measurement
@@ -31,7 +29,7 @@ class DataProcessorLowLevel:
         parms["UseLIG"] = False             # linear interpolation
         parms["UseEJones"] = True
         parms["ApplyElement"] = True
-        parms["PBCut"] = 1e-2
+        parms["PBCut"] = 5e-2
         parms["StepApplyElement"] = 1000       # if 0 don't apply element beam
 #        parms["TWElement"] = 0.02
         parms["PredictFT"] = False

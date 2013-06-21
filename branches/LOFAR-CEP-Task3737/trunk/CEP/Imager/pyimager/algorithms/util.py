@@ -2,7 +2,7 @@ import numpy
 import constants
 
 import pyrap.images
-import matplotlib.pyplot
+#import matplotlib.pyplot
 import datetime
 
 def now():

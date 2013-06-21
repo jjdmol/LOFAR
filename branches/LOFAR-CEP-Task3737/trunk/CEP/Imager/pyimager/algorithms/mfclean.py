@@ -6,7 +6,6 @@ Hogbohm instead of Clark clean in the minor cycle.
 
 import numpy
 import pyrap.images
-import matplotlib.pyplot
 
 import lofar.casaimwrap
 import lofar.pyimager.processors as processors
@@ -215,6 +214,7 @@ def mfclean(options):
     processor_options["rmode"] = options.rmode
     processor_options["noise"] = options.noise
     processor_options["robustness"] = options.robustness
+    processor_options["profile"] = options.profile
     processor = processors.create_data_processor(options.processor,
         options.ms, processor_options)
 
@@ -419,7 +419,7 @@ def mfclean(options):
             delta[i].fill(0.0)
 
             for (cr, cr_slice) in enumerate(cr_slices):
-                for ch in range(len(residual)):
+                for ch in range(len(residual[i])):
                     # TODO: The value of max_weight is only updated during
                     # cycle 0. Is this correct?
                     #
