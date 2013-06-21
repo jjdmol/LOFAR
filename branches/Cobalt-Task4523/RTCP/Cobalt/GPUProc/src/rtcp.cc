@@ -316,7 +316,7 @@ void runPipeline(SELECTPIPELINE pipeline, const Parset &ps, const vector<size_t>
 
   case beam:
     LOG_INFO_STR("BeamFormer pipeline selected");
-    //BeamFormerPipeline(ps).doWork();
+    BeamFormerPipeline(ps, subbands).processObservation();
     break;
 
   case UHEP:

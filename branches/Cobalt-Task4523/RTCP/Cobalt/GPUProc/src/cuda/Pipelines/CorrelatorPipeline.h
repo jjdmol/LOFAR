@@ -21,6 +21,10 @@
 #ifndef LOFAR_GPUPROC_CUDA_CORRELATOR_PIPELINE_H
 #define LOFAR_GPUPROC_CUDA_CORRELATOR_PIPELINE_H
 
+#include <vector>
+
+#include <CoInterface/Parset.h>
+
 #include "Pipeline.h"
 #include <GPUProc/FilterBank.h>
 

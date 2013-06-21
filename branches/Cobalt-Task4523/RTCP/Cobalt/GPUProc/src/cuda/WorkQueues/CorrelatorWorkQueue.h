@@ -41,7 +41,6 @@
 #include <GPUProc/Kernels/CorrelatorKernel.h>
 
 #include "WorkQueue.h"
-#include "Pool.h"
 
 namespace LOFAR
 {
@@ -173,7 +172,6 @@ namespace LOFAR
 
       gpu::DeviceMemory devFilteredData;
 
-    private:
       // Constant input buffers for the kernels
       gpu::DeviceMemory devFIRweights;
       gpu::DeviceMemory devBandPassCorrectionWeights;

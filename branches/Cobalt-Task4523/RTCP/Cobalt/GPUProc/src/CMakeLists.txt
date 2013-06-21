@@ -47,11 +47,11 @@ if(USE_CUDA)
     #cuda/Kernels/UHEP_TransposeKernel.cc
     #cuda/Kernels/UHEP_TriggerKernel.cc
     cuda/Pipelines/Pipeline.cc
-#    cuda/Pipelines/BeamFormerPipeline.cc
+    cuda/Pipelines/BeamFormerPipeline.cc
     cuda/Pipelines/CorrelatorPipeline.cc
 #    cuda/Pipelines/UHEP_Pipeline.cc
     cuda/WorkQueues/WorkQueue.cc
-#    cuda/WorkQueues/BeamFormerWorkQueue.cc
+    cuda/WorkQueues/BeamFormerWorkQueue.cc
     cuda/WorkQueues/CorrelatorWorkQueue.cc
 #    cuda/WorkQueues/UHEP_WorkQueue.cc
   )

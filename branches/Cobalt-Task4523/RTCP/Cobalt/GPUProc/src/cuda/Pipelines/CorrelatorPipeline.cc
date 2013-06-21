@@ -22,26 +22,18 @@
 
 #include "CorrelatorPipeline.h"
 
-#include <iomanip>
 #include <map>
 #include <vector>
 #include <string>
 
 #include <Common/LofarLogger.h>
-#include <CoInterface/CorrelatedData.h>
 
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include "CorrelatorPipelinePrograms.h"
 
-#ifdef USE_B7015
-# include <GPUProc/global_defines.h>
-#endif
-
 #define NR_WORKQUEUES_PER_DEVICE  2
-
-using namespace std;
 
 namespace LOFAR
 {
@@ -54,7 +46,6 @@ namespace LOFAR
       filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER)
     {
       filterBank.negateWeights();
-
 
       // If profiling, use one workqueue: with >1 workqueues decreased
       // computation / I/O overlap can affect optimization gains.

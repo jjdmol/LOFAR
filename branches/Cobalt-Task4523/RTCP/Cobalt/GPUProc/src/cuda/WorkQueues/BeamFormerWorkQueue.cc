@@ -27,24 +27,50 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/OpenMP_Lock.h>
+#include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
 
-    BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pl, unsigned gpuNumber)
+    BeamFormerWorkQueue::BeamFormerWorkQueue(const Parset &parset,
+      gpu::Context &context, FilterBank &filterBank)
     :
-      WorkQueue( pl.context, pl.devices[gpuNumber], gpuNumber, pl.ps), // TODO: This constructor does not exist on the WorkQueue. Debug to get it compiling
+      WorkQueue( parset, context ),
+      prevBlock(-1),
+      prevSAP(-1),
 
-      pipeline(pl),
-      inputSamples(boost::extents[ps.nrStations()][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
+      // NOTE: Make sure the history samples are dealt with properly until the
+      // FIR, which the beam former does in a later stage!
+      //
+      // NOTE: Sizes are probably completely wrong.
+      devInput(ps.nrChannelsPerSubband() == 1
+               ? DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA)
+               : FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::INPUT_DATA),
+               DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS),
+               DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
+               context),
+
+      devFilteredData(context, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA)),
+      devFIRweights(context, FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::FILTER_WEIGHTS)),
+      devBandPassCorrectionWeights(context, 
+                                   DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS))
+#if 0
+      firFilterKernel(ps, programs.firFilterProgram,
+                      devFilteredData, devInput.inputSamples, devFIRweights),
+      fftKernel(ps, context, devFilteredData),
+      delayAndBandPassKernel(ps, programs.delayAndBandPassProgram,
+                             devInput.inputSamples,
+                             devFilteredData,
+                             devInput.delaysAtBegin,
+                             devInput.delaysAfterEnd,
+                             devInput.phaseOffsets,
+                             devBandPassCorrectionWeights)
+#endif
+#if 0
       devFilteredData(queue, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
       bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
-      delaysAtBegin(boost::extents[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
-      delaysAfterEnd(boost::extents[ps.nrBeams()][ps.nrStations()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
-      phaseOffsets(boost::extents[ps.nrBeams()][NR_POLARIZATIONS], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
       devCorrectedData(queue, CL_MEM_READ_WRITE, ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>)),
       beamFormerWeights(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
       devComplexVoltages(queue, CL_MEM_READ_WRITE, ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>)),
@@ -53,54 +79,59 @@ namespace LOFAR
       DMs(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY),
 
       intToFloatKernel(ps, queue, pipeline.intToFloatProgram, devFilteredData, inputSamples),
-      fftKernel(ps, pipeline.context, devFilteredData),
-      delayAndBandPassKernel(ps, pipeline.delayAndBandPassProgram, devCorrectedData, devFilteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights),
       beamFormerKernel(ps, pipeline.beamFormerProgram, devComplexVoltages, devCorrectedData, beamFormerWeights),
       transposeKernel(ps, pipeline.transposeProgram, transposedComplexVoltages, devComplexVoltages),
       dedispersionForwardFFTkernel(ps, pipeline.context, transposedComplexVoltages),
       dedispersionBackwardFFTkernel(ps, pipeline.context, transposedComplexVoltages),
       dedispersionChirpKernel(ps, pipeline.dedispersionChirpProgram, queue, transposedComplexVoltages, DMs)
-
+#endif
     {
-      if (ps.correctBandPass()) {
-        BandPass::computeCorrectionFactors(bandPassCorrectionWeights.origin(), ps.nrChannelsPerSubband());
-        bandPassCorrectionWeights.hostToDevice(true);
+      // put enough objects in the outputPool to operate
+      for (size_t i = 0; i < 3; ++i) {
+#if 0
+        outputPool.free.append(new CorrelatedDataHostBuffer(
+                ps.nrStations(),
+                ps.nrChannelsPerSubband(),
+                ps.integrationSteps(),
+                context,
+                *this));
+#endif
+      }
+
+      // Copy the FIR filter and bandpass weights to the device.
+      // Note that these constant weights are now (unnecessarily) stored on the
+      // device for every workqueue. A single copy per device could be used, but
+      // first verify that the device platform still allows workqueue overlap.
+      size_t firWeightsSize = filterBank.getWeights().num_elements() * sizeof(float);
+      gpu::HostMemory firWeights(context, firWeightsSize);
+      std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(), firWeightsSize);
+      queue.writeBuffer(devFIRweights, firWeights, true);
+
+      if (ps.correctBandPass())
+      {
+        gpu::HostMemory bpWeights(context, ps.nrChannelsPerSubband() * sizeof(float));
+        BandPass::computeCorrectionFactors(bpWeights.get<float>(),
+                                           ps.nrChannelsPerSubband());
+        queue.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
       }
     }
 
 
-    void BeamFormerWorkQueue::doWork()
+    void BeamFormerWorkQueue::processSubband(WorkQueueInputData &input, StreamableData &_output)
     {
+      (void)input;
+      (void)_output;
+
+#if 0
       //queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, firWeightsSize, firFilterWeights);
       bandPassCorrectionWeights.hostToDevice(true);
       DMs.hostToDevice(true);
-
-      double startTime = ps.startTime(), currentTime, stopTime = ps.stopTime(), blockTime = ps.CNintegrationTime();
-
-#pragma omp barrier
-
-      double executionStartTime = omp_get_wtime();
-
-      for (unsigned block = 0; (currentTime = startTime + block * blockTime) < stopTime; block++) {
-#pragma omp single nowait
-        LOG_INFO_STR("block = " << block << ", time = " << to_simple_string(from_ustime_t(currentTime)));
-
-        memset(delaysAtBegin.origin(), 0, delaysAtBegin.bytesize());
-        memset(delaysAfterEnd.origin(), 0, delaysAfterEnd.bytesize());
-        memset(phaseOffsets.origin(), 0, phaseOffsets.bytesize());
-
-        // FIXME!!!
-        if (ps.nrStations() >= 3)
-          delaysAtBegin[0][2][0] = 1e-6, delaysAfterEnd[0][2][0] = 1.1e-6;
 
         delaysAtBegin.hostToDevice(false);
         delaysAfterEnd.hostToDevice(false);
         phaseOffsets.hostToDevice(false);
         beamFormerWeights.hostToDevice(false);
 
-#pragma omp for schedule(dynamic), nowait
-        for (unsigned subband = 0; subband < ps.nrSubbands(); subband++) {
-#if 1
           {
 #if defined USE_B7015
             OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
@@ -108,9 +139,7 @@ namespace LOFAR
             inputSamples.hostToDevice(true);
 //            pipeline.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
           }
-#endif
 
-          //#pragma omp critical (GPU)
           {
             if (ps.nrChannelsPerSubband() > 1) {
               intToFloatKernel.enqueue(queue/*, pipeline.intToFloatCounter*/);
@@ -131,12 +160,12 @@ namespace LOFAR
           //dedispersedData.deviceToHost(true);
         }
       }
+#endif
+    }
 
-#pragma omp barrier
-
-#pragma omp master
-      if (!profiling)
-        LOG_INFO_STR("run time = " << omp_get_wtime() - executionStartTime);
+    void BeamFormerWorkQueue::postprocessSubband(StreamableData &_output)
+    {
+      (void)_output;
     }
   }
 }
