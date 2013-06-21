@@ -259,7 +259,7 @@ namespace LOFAR
           }
         }
         if (pclose(stream) || ptx.empty()) {
-          THROW(Exception, "Runtime compilation failed!\n\t" << cmd);
+          THROW(GPUProcException, "Runtime compilation failed!\n\t" << cmd);
         }
         return ptx;
       }
