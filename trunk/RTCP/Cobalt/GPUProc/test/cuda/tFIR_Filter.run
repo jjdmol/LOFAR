@@ -1,5 +1,8 @@
 #!/bin/sh
 
+. $srcdir/../testFuncs.sh
+haveGPU || exit 3
+
 # Parsets to use
 PARSETS="
 tFIR_Filter.parset.77_Stations

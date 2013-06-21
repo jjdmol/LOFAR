@@ -194,7 +194,7 @@ int main(int, char **) {
     Platform pf;
     return UnitTest::RunAllTests() > 0;
   } catch (GPUException& e) {
-    cerr << "No GPU devices found. Skipping tests." << endl;
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
     return 0;
   }
 }
