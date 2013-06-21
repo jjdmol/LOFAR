@@ -15,7 +15,6 @@ if(UNITTEST++_FOUND)
 endif(UNITTEST++_FOUND)
 
 # CUDA CPU side unit tests
-lofar_add_test(tCudaRuntimeCompiler tCudaRuntimeCompiler.cc)
 lofar_add_test(tcreateProgram tcreateProgram.cc)
 lofar_add_test(tKernel tKernel.cc)
 lofar_add_test(tStreamReadBuffer tStreamReadBuffer.cc)
