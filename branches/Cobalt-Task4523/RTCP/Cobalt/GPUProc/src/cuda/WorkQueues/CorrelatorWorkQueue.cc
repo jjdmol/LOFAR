@@ -125,8 +125,7 @@ namespace LOFAR
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),
                 ps.integrationSteps(),
-                context,
-                *this));
+                context));
       }
 
       // create all the counters

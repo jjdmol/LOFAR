@@ -110,7 +110,7 @@ int main() {
     in.phaseOffsets.get<float>()[i] = 0.0f;
 
   CorrelatedDataHostBuffer out(ps.nrStations(), ps.nrChannelsPerSubband(),
-                               ps.integrationSteps(), ctx, cwq);
+                               ps.integrationSteps(), ctx);
 
   // Don't bother initializing out.blockID; processSubband() doesn't need it.
 

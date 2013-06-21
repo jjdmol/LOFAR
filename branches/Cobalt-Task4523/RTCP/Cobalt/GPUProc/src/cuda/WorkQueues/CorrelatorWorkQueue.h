@@ -95,22 +95,18 @@ namespace LOFAR
     {
     public:
       CorrelatedDataHostBuffer(unsigned nrStations, unsigned nrChannels,
-                               unsigned maxNrValidSamples, gpu::Context &context,
-                               CorrelatorWorkQueue &workQueue)
+                               unsigned maxNrValidSamples, gpu::Context &context)
       :
         MultiDimArrayHostBuffer<fcomplex, 4>(boost::extents[nrStations * (nrStations + 1) / 2]
                                                            [nrChannels][NR_POLARIZATIONS]
                                                            [NR_POLARIZATIONS], context, 0),
         CorrelatedData(nrStations, nrChannels, maxNrValidSamples, this->origin(),
-                       this->num_elements(), heapAllocator, 1),
-        workQueue(workQueue)
+                       this->num_elements(), heapAllocator, 1)
       {
       }
 
       // Annotation required, as we'll lose track of the exact order
       struct BlockID blockID;
-
-      CorrelatorWorkQueue &workQueue;
 
     private:
       CorrelatedDataHostBuffer();
