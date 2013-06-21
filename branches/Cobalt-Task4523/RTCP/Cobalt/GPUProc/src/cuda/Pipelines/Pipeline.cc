@@ -350,6 +350,31 @@ namespace LOFAR
     }
 
 
+    void Pipeline::pushOwner(const struct BlockID &id, WorkQueue &workQueue)
+    {
+      ScopedLock sl(ownerMutex);
+
+      ASSERT(owner.find(id) == owner.end());
+      owner[id] = &workQueue;
+    }
+
+
+    WorkQueue& Pipeline::popOwner(const struct BlockID &id)
+    {
+      WorkQueue *workQueue;
+
+      ScopedLock sl(ownerMutex);
+
+      ASSERT(owner.find(id) != owner.end());
+      workQueue = owner[id];
+      ASSERT(workQueue != NULL);
+
+      owner.erase(id);
+
+      return *workQueue;
+    }
+
+
     void Pipeline::postprocessSubbands(WorkQueue &workQueue)
     {
       SmartPtr<StreamableData> output;
@@ -374,12 +399,7 @@ namespace LOFAR
         pool.sync.waitFor(id.block);
 
         // Register ownership
-        {
-          ScopedLock sl(ownerMutex);
-
-          ASSERT(owner.find(id) == owner.end());
-          owner[id] = &workQueue;
-        }
+        pushOwner(id, workQueue);
 
         // We do the ordering, so we set the sequence numbers
         output->setSequenceNumber(id.block);
@@ -440,14 +460,7 @@ namespace LOFAR
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
         // Cache workQueue reference, because `output' will be destroyed.
-        WorkQueue *workQueue;
-        {
-          ScopedLock sl(ownerMutex);
-
-          ASSERT(owner.find(id) != owner.end());
-          workQueue = owner[id];
-          owner.erase(id);
-        }
+        WorkQueue &workQueue = popOwner(id);
 
         LOG_INFO_STR("[" << id << "] Writing start");
 
@@ -461,7 +474,7 @@ namespace LOFAR
         }
 
         // Hand the object back to the workQueue it originally came from
-        workQueue->outputPool.free.append(outputData);
+        workQueue.outputPool.free.append(outputData);
 
         ASSERT(!outputData);
 

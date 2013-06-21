@@ -100,6 +100,12 @@ namespace LOFAR
       std::map<struct BlockID, WorkQueue*> owner;
       Mutex ownerMutex;
 
+      // set the owner of a specific block
+      void pushOwner(const struct BlockID &id, WorkQueue &workQueue);
+
+      // get and remove the owner of a specific block
+      WorkQueue& popOwner(const struct BlockID &id);
+
       std::vector<struct Output> subbandPool; // [localSubbandIdx]
 
       // process subbands on the GPU
