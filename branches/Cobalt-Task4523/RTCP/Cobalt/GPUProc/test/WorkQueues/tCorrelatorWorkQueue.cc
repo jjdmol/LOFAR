@@ -33,7 +33,7 @@
 
 using namespace LOFAR::Cobalt;
 
-TEST(propagateFlagsToOutput)
+TEST(propagateFlags)
 {
   // Create a parset with the needed parameters
   Parset parset;
@@ -68,10 +68,10 @@ TEST(propagateFlagsToOutput)
 
   // *********************************************************************************************
   //propageFlags: exercise the functionality
-  CorrelatorWorkQueue::Flagger::propagateFlagsToOutput(parset, inputFlags, output);
+  CorrelatorWorkQueue::Flagger::propagateFlags(parset, inputFlags, output);
 
   // now perform weighting of the data based on the number of valid samples
-  CorrelatorWorkQueue::Flagger::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(parset, output);  
+  CorrelatorWorkQueue::Flagger::applyWeights<uint16_t>(parset, output);  
   // *********************************************************************************************
 
   // Now validate the functionality:
@@ -135,7 +135,7 @@ TEST(propagateFlagsToOutput)
 }
 
 
-TEST(calculateAndSetNumberOfFlaggedSamples4Channels)
+TEST(calcWeights4Channels)
 {
   // Create a parset with the needed parameters
   Parset parset;
@@ -160,7 +160,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples4Channels)
   flagsPerChanel[1][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorWorkQueue::Flagger::calculateAndSetNumberOfFlaggedSamples<uint16_t>(parset, flagsPerChanel, output);
+  CorrelatorWorkQueue::Flagger::calcWeights<uint16_t>(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
 
@@ -174,7 +174,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples4Channels)
   CHECK_EQUAL(0u, output.getNrValidSamples(2,0)); // all flagged in station 2
 }
 
-TEST(calculateAndSetNumberOfFlaggedSamples1Channels)
+TEST(calcWeights1Channels)
 {
   // on channel so the zero channel should be filled with the flags!!
   // Create a parset with the needed parameters
@@ -199,7 +199,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples1Channels)
   flagsPerChanel[0][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorWorkQueue::Flagger::calculateAndSetNumberOfFlaggedSamples<uint16_t>(parset, flagsPerChanel, output);
+  CorrelatorWorkQueue::Flagger::calcWeights<uint16_t>(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
   // channel is 1 so no time resolution loss!!
@@ -208,7 +208,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples1Channels)
   CHECK_EQUAL(247u, output.getNrValidSamples(2,0)); // 9 flagged in station 2  
 }
 
-TEST(applyFractionOfFlaggedSamplesOnVisibilities)
+TEST(applyWeights)
 {
   // Create a parset with the needed parameters
   Parset parset;
@@ -236,7 +236,7 @@ TEST(applyFractionOfFlaggedSamplesOnVisibilities)
   output.setNrValidSamples(0,1,n_valid_samples); //baseline 0, channel 1
   output.setNrValidSamples(1,1,256); //baseline 1, channel 1
   output.setNrValidSamples(2,1,0); //baseline 0, channel 1
-  CorrelatorWorkQueue::Flagger::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(parset, output);
+  CorrelatorWorkQueue::Flagger::applyWeights<uint16_t>(parset, output);
 
   // 4 channels: therefore the chanel zero should be zero
   CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[0][0][0][0]);
@@ -256,7 +256,7 @@ TEST(applyFractionOfFlaggedSamplesOnVisibilities)
   CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[2][1][1][1]);
 }
 
-TEST(applyWeightingToAllPolarizations)
+TEST(applyWeight)
 {
     // on channel so the zero channel should be filled with the flags!!
   // Create a parset with the needed parameters
@@ -281,7 +281,7 @@ TEST(applyWeightingToAllPolarizations)
            output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
         
   //  multiply all polarization in sb 0 channel 0 with 0,5
-  CorrelatorWorkQueue::Flagger::applyWeightingToAllPolarizations(0,0,0.5,output);
+  CorrelatorWorkQueue::Flagger::applyWeight(0,0,0.5,output);
 
   //sb 0 should be (0.5, 0)
   CHECK_EQUAL(std::complex<float>(0.5,0),  

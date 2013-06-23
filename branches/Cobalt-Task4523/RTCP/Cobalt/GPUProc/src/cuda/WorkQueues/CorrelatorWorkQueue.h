@@ -82,29 +82,28 @@ namespace LOFAR
       // Collection of functions to tranfer the input flags to the output.
       // \c propagateFlagsToOutput can be called parallel to the kernels.
       // After the data is copied from the the shared buffer 
-      // \c applyFractionOfFlaggedSamplesOnVisibilities can be used to weight
+      // \c applyWeights can be used to weight
       // the visibilities 
       class Flagger: public WorkQueue::Flagger
       {
       public:
         // 1. Convert input flags to channel flags, calculate the amount flagged samples and save this in output
-        static void propagateFlagsToOutput(Parset const & parset,
+        static void propagateFlags(Parset const & parset,
           MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
           CorrelatedData &output);
 
         // 2. Calculate the weight based on the number of flags and apply this weighting to all output values
-        template<typename T> static void applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
+        template<typename T> static void applyWeights(Parset const &parset,
           CorrelatedData &output);
 
         // 1.2 Calculate the number of flagged samples and set this on the output dataproduct
         // This function is aware of the used filter width a corrects for this.
-        template<typename T> static void calculateAndSetNumberOfFlaggedSamples(Parset const &parset,
+        template<typename T> static void calcWeights(Parset const &parset,
           MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
           CorrelatedData &output);
 
         // 2.1 Apply the supplied weight to the complex values in the channel and baseline
-        static void applyWeightingToAllPolarizations(unsigned baseline, 
-          unsigned channel, float weight, CorrelatedData &output);
+        static void applyWeight(unsigned baseline, unsigned channel, float weight, CorrelatedData &output);
       };
       
     private:
