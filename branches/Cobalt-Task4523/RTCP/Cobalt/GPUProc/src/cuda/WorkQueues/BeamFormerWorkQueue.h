@@ -25,6 +25,7 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/StreamableData.h>
 
 #include <GPUProc/gpu_wrapper.h>
 
@@ -49,6 +50,28 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    /*
+     * Our output data type
+     */
+    class BeamFormedData: public MultiDimArrayHostBuffer<fcomplex, 3>, public StreamableData
+    {
+    public:
+      BeamFormedData(unsigned nrStokes, unsigned nrChannels, size_t nrSamples, gpu::Context &context)
+      :
+        MultiDimArrayHostBuffer<fcomplex, 3>(boost::extents[nrStokes][nrChannels][nrSamples], context, 0)
+      {
+      }
+
+    protected:
+      virtual void readData(Stream *str, unsigned) {
+        str->read(origin(), size());
+      }
+
+      virtual void writeData(Stream *str, unsigned) {
+        str->write(origin(), size());
+      }
+    };
+
     class BeamFormerWorkQueue : public WorkQueue
     {
     public:

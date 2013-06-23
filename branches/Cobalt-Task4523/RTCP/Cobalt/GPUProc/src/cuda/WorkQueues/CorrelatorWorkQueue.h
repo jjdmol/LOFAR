@@ -47,9 +47,8 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    // A CorrelatedData object tied to a HostBuffer and WorkQueue. Such links
-    // After the visibilities have been written to storage, we need remember
-    // the queue to recycle the buffer.
+    // A CorrelatedData object tied to a HostBuffer. Represents an output
+    // data item that can be efficiently filled from the GPU.
     class CorrelatedDataHostBuffer: public MultiDimArrayHostBuffer<fcomplex, 4>,
                                     public CorrelatedData
     {
@@ -80,10 +79,9 @@ namespace LOFAR
       virtual void postprocessSubband(StreamableData &output);
 
       // Collection of functions to tranfer the input flags to the output.
-      // \c propagateFlagsToOutput can be called parallel to the kernels.
+      // \c propagateFlags can be called parallel to the kernels.
       // After the data is copied from the the shared buffer 
-      // \c applyWeights can be used to weight
-      // the visibilities 
+      // \c applyWeights can be used to weight the visibilities 
       class Flagger: public WorkQueue::Flagger
       {
       public:
@@ -93,8 +91,7 @@ namespace LOFAR
           CorrelatedData &output);
 
         // 2. Calculate the weight based on the number of flags and apply this weighting to all output values
-        template<typename T> static void applyWeights(Parset const &parset,
-          CorrelatedData &output);
+        template<typename T> static void applyWeights(Parset const &parset, CorrelatedData &output);
 
         // 1.2 Calculate the number of flagged samples and set this on the output dataproduct
         // This function is aware of the used filter width a corrects for this.

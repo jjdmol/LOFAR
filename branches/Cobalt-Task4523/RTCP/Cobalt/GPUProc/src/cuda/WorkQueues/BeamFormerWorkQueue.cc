@@ -88,14 +88,11 @@ namespace LOFAR
     {
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
-#if 0
-        outputPool.free.append(new CorrelatedDataHostBuffer(
-                ps.nrStations(),
+        outputPool.free.append(new BeamFormedData(
+                4,
                 ps.nrChannelsPerSubband(),
                 ps.integrationSteps(),
-                context,
-                *this));
-#endif
+                context));
       }
 
       // Copy the FIR filter and bandpass weights to the device.
