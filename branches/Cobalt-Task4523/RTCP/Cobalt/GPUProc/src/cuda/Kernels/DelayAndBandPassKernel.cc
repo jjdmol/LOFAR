@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/global_defines.h>
+#include <GPUProc/BandPass.h>
 
 namespace LOFAR
 {
@@ -60,7 +61,7 @@ namespace LOFAR
       // Initialise bandpass correction weights
       if (ps.correctBandPass())
       {
-        gpu::HostMemory bpWeights(context, devBandPassCorrectionWeights.size());
+        gpu::HostMemory bpWeights(queue.getContext(), bufferSize(ps, BAND_PASS_CORRECTION_WEIGHTS));
         BandPass::computeCorrectionFactors(bpWeights.get<float>(), ps.nrChannelsPerSubband());
         queue.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
       }
