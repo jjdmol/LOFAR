@@ -75,7 +75,7 @@ namespace LOFAR
     class BeamFormerWorkQueue : public WorkQueue
     {
     public:
-      BeamFormerWorkQueue(const Parset &parset, gpu::Context &context, FilterBank &filterBank);
+      BeamFormerWorkQueue(const Parset &parset, gpu::Context &context);
 
       // Beam form the data found in the input data buffer
       virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
@@ -97,10 +97,6 @@ namespace LOFAR
       gpu::DeviceMemory devFilteredData;
 
     private:
-      // Constant input buffers for the kernels
-      gpu::DeviceMemory devFIRweights;
-      gpu::DeviceMemory devBandPassCorrectionWeights;
-
 #if 0
       // Compiled kernels
       FIR_FilterKernel firFilterKernel;

@@ -24,6 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/FilterBank.h>
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
@@ -37,7 +38,7 @@ namespace LOFAR
                        gpu::Module &program,
                        gpu::DeviceMemory &devFilteredData,
                        gpu::DeviceMemory &devInputSamples,
-                       gpu::DeviceMemory &devFIRweights);
+                       gpu::Stream &stream);
 
       enum BufferType
       {
@@ -49,6 +50,8 @@ namespace LOFAR
       // Return required buffer size for \a bufferType
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
+    private:
+      gpu::DeviceMemory devFIRweights;
     };
   }
 }

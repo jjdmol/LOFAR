@@ -26,7 +26,6 @@
 #include <CoInterface/Parset.h>
 
 #include "Pipeline.h"
-#include <GPUProc/FilterBank.h>
 
 namespace LOFAR
 {
@@ -46,9 +45,6 @@ namespace LOFAR
       // subbandIndices is the list of subbands that are processed by this
       // pipeline, out of the range [0, ps.nrSubbands()).
       CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices);
-
-    private:
-      FilterBank filterBank;
     };
   }
 }

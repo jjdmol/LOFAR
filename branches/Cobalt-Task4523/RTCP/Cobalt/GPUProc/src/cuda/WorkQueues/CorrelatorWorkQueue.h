@@ -69,8 +69,7 @@ namespace LOFAR
     {
     public:
       CorrelatorWorkQueue(const Parset &parset, gpu::Context &context,
-                          CorrelatorPipelinePrograms &programs,
-                          FilterBank &filterBank);
+                          CorrelatorPipelinePrograms &programs);
 
       // Correlate the data found in the input data buffer
       virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
@@ -115,9 +114,6 @@ namespace LOFAR
       WorkQueueInputData::DeviceBuffers devInput;
 
       gpu::DeviceMemory devFilteredData;
-
-      // Constant input buffers for the kernels
-      gpu::DeviceMemory devFIRweights;
 
       // Compiled kernels
       FIR_FilterKernel firFilterKernel;

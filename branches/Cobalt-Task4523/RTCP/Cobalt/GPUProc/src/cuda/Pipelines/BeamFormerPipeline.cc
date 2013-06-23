@@ -40,10 +40,8 @@ namespace LOFAR
   {
     BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
       :
-      Pipeline(ps, subbandIndices),
-      filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER)
+      Pipeline(ps, subbandIndices)
     {
-      filterBank.negateWeights();
 
       // If profiling, use one workqueue: with >1 workqueues decreased
       // computation / I/O overlap can affect optimization gains.
@@ -53,7 +51,7 @@ namespace LOFAR
       for (size_t i = 0; i < nrWorkQueues; ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        workQueues[i] = new BeamFormerWorkQueue(ps, context, filterBank);
+        workQueues[i] = new BeamFormerWorkQueue(ps, context);
       }
     }
   }

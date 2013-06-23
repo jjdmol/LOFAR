@@ -72,11 +72,7 @@ int main() {
   progs.delayAndBandPassProgram = createModule(ctx, kfilenameDBP, ptx[kfilenameDBP]);
   progs.correlatorProgram = createModule(ctx, kfilenameCor, ptx[kfilenameCor]);
 
-  // Initialize FIR filterbank with all weights 0.0f. Won't be used, as FIR won't run.
-  vector<float> w0(ps.nrPPFTaps() * ps.nrChannelsPerSubband(), 0.0f);
-  FilterBank fb(false, ps.nrPPFTaps(), ps.nrChannelsPerSubband(), &w0[0]);
-
-  CorrelatorWorkQueue cwq(ps, ctx, progs, fb);
+  CorrelatorWorkQueue cwq(ps, ctx, progs);
 
   WorkQueueInputData in(ps.nrBeams(), ps.nrStations(), NR_POLARIZATIONS,
                         ps.nrHistorySamples() + ps.nrSamplesPerSubband(),

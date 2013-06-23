@@ -26,7 +26,6 @@
 #include <CoInterface/Parset.h>
 
 #include "Pipeline.h"
-#include <GPUProc/FilterBank.h>
 
 namespace LOFAR
 {
@@ -36,9 +35,6 @@ namespace LOFAR
     {
     public:
       BeamFormerPipeline(const Parset &, const std::vector<size_t> &subbandIndices);
-
-    private:
-      FilterBank filterBank;
     };
   }
 }

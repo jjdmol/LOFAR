@@ -35,7 +35,7 @@ namespace LOFAR
   {
 
     BeamFormerWorkQueue::BeamFormerWorkQueue(const Parset &parset,
-      gpu::Context &context, FilterBank &filterBank)
+      gpu::Context &context)
     :
       WorkQueue( parset, context ),
       prevBlock(-1),
@@ -52,8 +52,7 @@ namespace LOFAR
                DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
 
-      devFilteredData(context, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA)),
-      devFIRweights(context, FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::FILTER_WEIGHTS)),
+      devFilteredData(context, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA))
 #if 0
       firFilterKernel(ps, programs.firFilterProgram,
                       devFilteredData, devInput.inputSamples, devFIRweights),
@@ -92,15 +91,6 @@ namespace LOFAR
                 ps.integrationSteps(),
                 context));
       }
-
-      // Copy the FIR filter and bandpass weights to the device.
-      // Note that these constant weights are now (unnecessarily) stored on the
-      // device for every workqueue. A single copy per device could be used, but
-      // first verify that the device platform still allows workqueue overlap.
-      size_t firWeightsSize = filterBank.getWeights().num_elements() * sizeof(float);
-      gpu::HostMemory firWeights(context, firWeightsSize);
-      std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(), firWeightsSize);
-      queue.writeBuffer(devFIRweights, firWeights, true);
     }
 
 

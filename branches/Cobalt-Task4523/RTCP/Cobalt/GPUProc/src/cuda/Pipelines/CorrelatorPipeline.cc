@@ -42,11 +42,8 @@ namespace LOFAR
 
     CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
       :
-      Pipeline(ps, subbandIndices),
-      filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER)
+      Pipeline(ps, subbandIndices)
     {
-      filterBank.negateWeights();
-
       // If profiling, use one workqueue: with >1 workqueues decreased
       // computation / I/O overlap can affect optimization gains.
       unsigned nrWorkQueues = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
@@ -86,7 +83,7 @@ namespace LOFAR
         programs.correlatorProgram = createModule(context, "Correlator.cu", ptx["Correlator.cu"]);
 #endif
 
-        workQueues[i] = new CorrelatorWorkQueue(ps, context, programs, filterBank);
+        workQueues[i] = new CorrelatorWorkQueue(ps, context, programs);
       }
 
     }
