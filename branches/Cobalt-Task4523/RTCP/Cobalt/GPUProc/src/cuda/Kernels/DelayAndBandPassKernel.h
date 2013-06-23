@@ -42,7 +42,7 @@ namespace LOFAR
                              gpu::DeviceMemory &devDelaysAtBegin,
                              gpu::DeviceMemory &devDelaysAfterEnd,
                              gpu::DeviceMemory &devPhaseOffsets,
-                             gpu::DeviceMemory &devBandPassCorrectionWeights);
+                             gpu::Stream &queue);
 
       void enqueue(gpu::Stream &queue,
                    /* PerformanceCounter &counter,*/
@@ -60,6 +60,8 @@ namespace LOFAR
       // Return required buffer size for \a bufferType
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
+    private:
+      gpu::DeviceMemory devBandPassCorrectionWeights;
     };
   }
 }

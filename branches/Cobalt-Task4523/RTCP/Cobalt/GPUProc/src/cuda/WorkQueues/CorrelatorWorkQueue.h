@@ -118,7 +118,6 @@ namespace LOFAR
 
       // Constant input buffers for the kernels
       gpu::DeviceMemory devFIRweights;
-      gpu::DeviceMemory devBandPassCorrectionWeights;
 
       // Compiled kernels
       FIR_FilterKernel firFilterKernel;

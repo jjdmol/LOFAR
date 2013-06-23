@@ -54,8 +54,6 @@ namespace LOFAR
 
       devFilteredData(context, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA)),
       devFIRweights(context, FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::FILTER_WEIGHTS)),
-      devBandPassCorrectionWeights(context, 
-                                   DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS))
 #if 0
       firFilterKernel(ps, programs.firFilterProgram,
                       devFilteredData, devInput.inputSamples, devFIRweights),
@@ -103,14 +101,6 @@ namespace LOFAR
       gpu::HostMemory firWeights(context, firWeightsSize);
       std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(), firWeightsSize);
       queue.writeBuffer(devFIRweights, firWeights, true);
-
-      if (ps.correctBandPass())
-      {
-        gpu::HostMemory bpWeights(context, ps.nrChannelsPerSubband() * sizeof(float));
-        BandPass::computeCorrectionFactors(bpWeights.get<float>(),
-                                           ps.nrChannelsPerSubband());
-        queue.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
-      }
     }
 
 

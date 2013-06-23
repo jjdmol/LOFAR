@@ -34,9 +34,11 @@ namespace LOFAR
     DelayAndBandPassKernel::DelayAndBandPassKernel(const Parset &ps, gpu::Module &program,
                                                    gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devFilteredData,
                                                    gpu::DeviceMemory &devDelaysAtBegin, gpu::DeviceMemory &devDelaysAfterEnd,
-                                                   gpu::DeviceMemory &devPhaseOffsets, gpu::DeviceMemory &devBandPassCorrectionWeights)
+                                                   gpu::DeviceMemory &devPhaseOffsets,
+                                                   gpu::Stream &queue)
       :
-      Kernel(ps, program, "applyDelaysAndCorrectBandPass")
+      Kernel(ps, program, "applyDelaysAndCorrectBandPass"),
+      devBandPassCorrectionWeights(queue.getContext(), bufferSize(ps, BAND_PASS_CORRECTION_WEIGHTS))
     {
       ASSERT(ps.nrChannelsPerSubband() % 16 == 0 || ps.nrChannelsPerSubband() == 1);
       ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
@@ -54,7 +56,16 @@ namespace LOFAR
       size_t nrSamples = ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
       nrOperations = nrSamples * 12;
       nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
+
+      // Initialise bandpass correction weights
+      if (ps.correctBandPass())
+      {
+        gpu::HostMemory bpWeights(context, devBandPassCorrectionWeights.size());
+        BandPass::computeCorrectionFactors(bpWeights.get<float>(), ps.nrChannelsPerSubband());
+        queue.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
+      }
     }
+
 
     void DelayAndBandPassKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, unsigned subband)
     {

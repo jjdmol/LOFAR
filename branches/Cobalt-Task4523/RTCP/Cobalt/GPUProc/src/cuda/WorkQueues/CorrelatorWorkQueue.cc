@@ -95,10 +95,6 @@ namespace LOFAR
       devFIRweights(context, FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::FILTER_WEIGHTS)),
       // devFIRweights(context, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
 
-      devBandPassCorrectionWeights(context, 
-                                   DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
-      // devBandPassCorrectionWeights(context, ps.nrChannelsPerSubband() * sizeof(float)),
-
       firFilterKernel(ps, programs.firFilterProgram,
                       devFilteredData, devInput.inputSamples, devFIRweights),
       fftKernel(ps, context, devFilteredData),
@@ -108,7 +104,7 @@ namespace LOFAR
                              devInput.delaysAtBegin,
                              devInput.delaysAfterEnd,
                              devInput.phaseOffsets,
-                             devBandPassCorrectionWeights),
+                             queue),
 #if defined USE_NEW_CORRELATOR
       correlateTriangleKernel(ps, programs.correlatorProgram,
                               devFilteredData, devInput.inputSamples),
@@ -163,14 +159,6 @@ namespace LOFAR
       gpu::HostMemory firWeights(context, firWeightsSize);
       std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(), firWeightsSize);
       queue.writeBuffer(devFIRweights, firWeights, true);
-
-      if (ps.correctBandPass())
-      {
-        gpu::HostMemory bpWeights(context, ps.nrChannelsPerSubband() * sizeof(float));
-        BandPass::computeCorrectionFactors(bpWeights.get<float>(),
-                                           ps.nrChannelsPerSubband());
-        queue.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
-      }
     }
 
     void CorrelatorWorkQueue::Flagger::propagateFlags(
