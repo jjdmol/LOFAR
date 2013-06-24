@@ -1,4 +1,4 @@
-//# tCorrelatorPipeline.cc: test correlator pipeline class
+//# tCorrelatorPipelineProcessObs.cc: test processObservation() using corr.
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -28,7 +28,7 @@ using namespace std;
 using namespace LOFAR::Cobalt;
 
 int main() {
-  INIT_LOGGER("tCorrelatorPipeline");
+  INIT_LOGGER("tCorrelatorPipelineProcessObs");
 
   try {
     gpu::Platform pf;
