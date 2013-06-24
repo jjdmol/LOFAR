@@ -50,7 +50,9 @@ namespace LOFAR
     }
 
     // TODO: Remove
-    Kernel::Kernel(const Parset &ps, const gpu::Module& module, const string &name)
+    Kernel::Kernel(const Parset &ps, 
+                   const gpu::Module& module, 
+                   const string &name)
       :
       gpu::Function(module, name),
       event(module.getContext()),

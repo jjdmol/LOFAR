@@ -33,7 +33,6 @@ namespace LOFAR
   {
     DelayAndBandPassKernel::
     DelayAndBandPassKernel(const Parset &ps, 
-                           // const gpu::Module &program,
                            gpu::Context &context,
                            gpu::DeviceMemory &devCorrectedData,
                            gpu::DeviceMemory &devFilteredData,
@@ -42,7 +41,6 @@ namespace LOFAR
                            gpu::DeviceMemory &devPhaseOffsets,
                            gpu::DeviceMemory &devBandPassCorrectionWeights)
       :
-      // Kernel(ps, program, "applyDelaysAndCorrectBandPass")
       Kernel(ps, context, "DelayAndBandPass.cu", "applyDelaysAndCorrectBandPass")
     {
       ASSERT(ps.nrChannelsPerSubband() % 16 == 0 || ps.nrChannelsPerSubband() == 1);

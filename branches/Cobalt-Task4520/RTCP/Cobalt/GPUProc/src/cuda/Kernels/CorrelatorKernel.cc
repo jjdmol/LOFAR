@@ -39,19 +39,43 @@ namespace LOFAR
 
 #if !defined USE_NEW_CORRELATOR
     CorrelatorKernel::CorrelatorKernel(const Parset &ps, 
-                                       gpu::Module &program,
+                                       gpu::Context &context,
                                        gpu::DeviceMemory &devVisibilities,
                                        gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_4X4
-      Kernel(ps, program, "correlate_4x4")
+      Kernel(ps, context, "Correlator.cu", "correlate_4x4")
 # elif defined USE_3X3
-      Kernel(ps, program, "correlate_3x3")
+      Kernel(ps, context, "Correlator.cu", "correlate_3x3")
 # elif defined USE_2X2
-      Kernel(ps, program, "correlate_2x2")
+      Kernel(ps, context, "Correlator.cu", "correlate_2x2")
 # else
-      Kernel(ps, program, "correlate")
+      Kernel(ps, context, "Correlator.cu", "correlate")
 # endif
+    {
+      init(devVisibilities, devCorrectedData);
+    }
+
+    CorrelatorKernel::CorrelatorKernel(const Parset &ps, 
+                                       gpu::Module &module,
+                                       gpu::DeviceMemory &devVisibilities,
+                                       gpu::DeviceMemory &devCorrectedData)
+      :
+# if defined USE_4X4
+      Kernel(ps, module, "correlate_4x4")
+# elif defined USE_3X3
+      Kernel(ps, module, "correlate_3x3")
+# elif defined USE_2X2
+      Kernel(ps, module, "correlate_2x2")
+# else
+      Kernel(ps, module, "correlate")
+# endif
+    {
+      init(devVisibilities, devCorrectedData);
+    }
+
+    void CorrelatorKernel::init(gpu::DeviceMemory &devVisibilities,
+                                gpu::DeviceMemory &devCorrectedData)
     {
       setArg(0, devVisibilities);
       setArg(1, devCorrectedData);
@@ -98,12 +122,12 @@ namespace LOFAR
 
 
     CorrelatorKernel::CorrelatorKernel(const Parset &ps, 
-                                       gpu::Module &program,
+                                       gpu::Context &context,
                                        gpu::DeviceMemory &devVisibilities,
                                        gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_2X2
-      Kernel(ps, program, "correlate")
+      Kernel(ps, context, "NewCorrelator.cu", "correlate")
 # else
 #  error not implemented
 # endif
@@ -132,12 +156,12 @@ namespace LOFAR
 
     CorrelateRectangleKernel::
     CorrelateRectangleKernel(const Parset &ps,
-                             gpu::Module &program,
+                             gpu::Context &context,
                              gpu::DeviceMemory &devVisibilities,
                              gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_2X2
-      Kernel(ps, program, "correlateRectangleKernel")
+      Kernel(ps, context, "NewCorrelator.cu", "correlateRectangleKernel")
 # else
 #  error not implemented
 # endif
@@ -161,12 +185,12 @@ namespace LOFAR
 
     CorrelateTriangleKernel::
     CorrelateTriangleKernel(const Parset &ps,
-                            gpu::Module &program,
+                            gpu::Context &context,
                             gpu::DeviceMemory &devVisibilities,
                             gpu::DeviceMemory &devCorrectedData)
       :
 # if defined USE_2X2
-      Kernel(ps, program, "correlateTriangleKernel")
+      Kernel(ps, context, "NewCorrelator.cu", "correlateTriangleKernel")
 # else
 #  error not implemented
 # endif

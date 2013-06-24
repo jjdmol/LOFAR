@@ -51,23 +51,18 @@ namespace LOFAR
       Kernel(const Parset &ps, const gpu::Context &context,
              const std::string &srcFilename, const std::string &functionName);
 
-      // TODO: Remove
-      Kernel(const Parset &ps, const gpu::Module& module, const std::string &name);
-
       void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
 
-      // Return the required compile definitions to compile this kernel. This
-      // information will be gathered from the parameter set.
-      /*virtual*/ CompileDefinitions compileDefinitions() const;
-
-      // TODO: Remove
+      // TODO: Make this a (virtual?) kernel-specific function.
       // Return required compile definitions given the Parset \a ps.
       static const CompileDefinitions& compileDefinitions(const Parset& ps);
 
     protected:
+      // TODO: Remove once we decide we will only create a Kernel from source.
+      Kernel(const Parset &ps, const gpu::Module& module, const std::string &name);
+
       gpu::Event event;
       const Parset &ps;
-      // gpu::Stream stream;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;

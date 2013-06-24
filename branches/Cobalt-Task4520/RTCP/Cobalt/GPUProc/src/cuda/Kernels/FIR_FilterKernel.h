@@ -34,7 +34,13 @@ namespace LOFAR
     {
     public:
       FIR_FilterKernel(const Parset &ps,
-                       gpu::Module &program,
+                       gpu::Context &context,
+                       gpu::DeviceMemory &devFilteredData,
+                       gpu::DeviceMemory &devInputSamples,
+                       gpu::DeviceMemory &devFIRweights);
+
+      FIR_FilterKernel(const Parset &ps,
+                       gpu::Module &module,
                        gpu::DeviceMemory &devFilteredData,
                        gpu::DeviceMemory &devInputSamples,
                        gpu::DeviceMemory &devFIRweights);
@@ -48,6 +54,11 @@ namespace LOFAR
 
       // Return required buffer size for \a bufferType
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
+
+    private:
+      void init(gpu::DeviceMemory &devFilteredData,
+                gpu::DeviceMemory &devInputSamples,
+                gpu::DeviceMemory &devFIRweights);
 
     };
   }

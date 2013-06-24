@@ -32,9 +32,13 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    BeamFormerTransposeKernel::BeamFormerTransposeKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devTransposedData, gpu::DeviceMemory &devComplexVoltages)
+    BeamFormerTransposeKernel::
+    BeamFormerTransposeKernel(const Parset &ps, 
+                              gpu::Context &context,
+                              gpu::DeviceMemory &devTransposedData,
+                              gpu::DeviceMemory &devComplexVoltages)
       :
-      Kernel(ps, program, "transposeComplexVoltages")
+      Kernel(ps, context, "BeamFormer/Transpose.cu", "transposeComplexVoltages")
     {
       ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
       setArg(0, devTransposedData);

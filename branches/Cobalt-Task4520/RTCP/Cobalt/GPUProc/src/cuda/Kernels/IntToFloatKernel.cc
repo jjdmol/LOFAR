@@ -31,11 +31,11 @@ namespace LOFAR
   namespace Cobalt
   {
     IntToFloatKernel::IntToFloatKernel(const Parset &ps,
-        gpu::Module &program,
-        gpu::DeviceMemory &devConvertedData,
-        gpu::DeviceMemory &devInputSamples)
+                                       gpu::Context &context,
+                                       gpu::DeviceMemory &devConvertedData,
+                                       gpu::DeviceMemory &devInputSamples)
       :
-      Kernel(ps, program, "intToFloat")
+      Kernel(ps, context, "IntToFloat.cu", "intToFloat")
     {
       setArg(0, devConvertedData);
       setArg(1, devInputSamples);
@@ -57,13 +57,12 @@ namespace LOFAR
       switch (bufferType) {
       case INPUT_DATA:
         return
-          // TODO: Make sure this is also correct for 4 bits/sample.
           ps.nrStations() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() * ps.nrBitsPerSample() / 8;
+          ps.nrSamplesPerSubband() * ps.nrBytesPerComplexSample();
       case OUTPUT_DATA:
         return 
           ps.nrStations() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() * sizeof(float);
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
