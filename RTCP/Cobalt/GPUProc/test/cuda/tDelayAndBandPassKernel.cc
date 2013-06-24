@@ -64,12 +64,11 @@ int main() {
     filteredData(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::OUTPUT_DATA)),
     delaysAtBegin(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS)),
     delaysAfterEnd(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS)),
-    phaseOffsets(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS)),
-    bandPassCorrectionWeights(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS));
+    phaseOffsets(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS));
 
   DelayAndBandPassKernel kernel(ps, module, inputData, filteredData, 
                                 delaysAtBegin, delaysAfterEnd, phaseOffsets, 
-                                bandPassCorrectionWeights);
+                                stream);
 
   unsigned subband = 0;
   kernel.enqueue(stream, subband);

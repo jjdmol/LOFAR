@@ -33,7 +33,7 @@
 
 using namespace LOFAR::Cobalt;
 
-TEST(propagateFlagsToOutput)
+TEST(propagateFlags)
 {
   // Create a parset with the needed parameters
   Parset parset;
@@ -68,10 +68,10 @@ TEST(propagateFlagsToOutput)
 
   // *********************************************************************************************
   //propageFlags: exercise the functionality
-  CorrelatorWorkQueue::flagFunctions::propagateFlagsToOutput(parset, inputFlags, output);
+  CorrelatorWorkQueue::Flagger::propagateFlags(parset, inputFlags, output);
 
   // now perform weighting of the data based on the number of valid samples
-  CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(parset, output);  
+  CorrelatorWorkQueue::Flagger::applyWeights<uint16_t>(parset, output);  
   // *********************************************************************************************
 
   // Now validate the functionality:
@@ -134,62 +134,8 @@ TEST(propagateFlagsToOutput)
  
 }
 
-TEST(getLogOfNrChannels)
-{
-  CHECK_EQUAL(6u, CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(64));
-  CHECK_EQUAL(7u, CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(128));
-  CHECK_EQUAL(0u, CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(1));
 
-  //cant take 2log of zero: raise exception
-  //CHECK_THROW(get2LogOfNrChannels(0), LOFAR::AssertError);
-}
-
-TEST(convertFlagsToChannelFlags)
-{
-  // Create a parset with the needed parameters
-  Parset parset;
-  parset.add("Observation.channelsPerSubband","4"); //not to large a number of subbands, else the integration steps gets big
-  parset.add("OLAP.IONProc.integrationSteps", "1");  
-  parset.add("OLAP.CNProc.integrationSteps", "256");   //samples per channel 
-  
-  parset.add("OLAP.storageStationNames", "[RS106HBA, RS105HBA]"); // Number of names here sets the number of stations.
-  parset.updateSettings();
-  
-  // Input flags: an array of sparseset
-  MultiDimArray<LOFAR::SparseSet<unsigned>, 1> inputFlags(boost::extents[parset.nrStations()]);
-
-  //// Insert some flag ranges
-  //std::cout << "inputFlags.size(): " << inputFlags.size() << std::endl;
-  //std::cout << "parset.nrStations(): " << parset.nrStations() << std::endl;
-  inputFlags[0].include(62, 63);    // A. should result in channelflag (0,16) due to the filter width
-  inputFlags[0].include(128, 129);  // B. Outside of the begin range result: (128 / 4) - 16 + 1 = 17 end 33
-  inputFlags[0].include(255, 522);  // C. Flag all large ranges (48, 131)
-  inputFlags[0].include(1000, 1050); // D. Outside of range should not be a problem but capped at max (235,257)
-
-  inputFlags[1].include(100, 600); // E. Second station (10, 150)
-  // The converted channel flags
-  MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChanel(
-          boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
-
-  // ****** perform the translation
-  CorrelatorWorkQueue::flagFunctions::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
-  // ******
-
-  //validate the corner cases
-  CHECK(0 == flagsPerChanel[0][0].getRanges()[0].begin && 
-        16 == flagsPerChanel[0][0].getRanges()[0].end);  //A.
-  CHECK(17 == flagsPerChanel[0][0].getRanges()[1].begin &&
-        33 == flagsPerChanel[0][0].getRanges()[1].end);  //B.
-  CHECK(48 == flagsPerChanel[0][0].getRanges()[2].begin &&
-        131 == flagsPerChanel[0][0].getRanges()[2].end);  //C.
-  CHECK(235 == flagsPerChanel[0][0].getRanges()[3].begin &&
-        257 == flagsPerChanel[0][0].getRanges()[3].end);  //D.
-
-  CHECK(10 == flagsPerChanel[0][1].getRanges()[0].begin &&
-        150 == flagsPerChanel[0][1].getRanges()[0].end);  //E.
-}
-
-TEST(calculateAndSetNumberOfFlaggedSamples4Channels)
+TEST(calcWeights4Channels)
 {
   // Create a parset with the needed parameters
   Parset parset;
@@ -214,7 +160,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples4Channels)
   flagsPerChanel[1][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint16_t>(parset, flagsPerChanel, output);
+  CorrelatorWorkQueue::Flagger::calcWeights<uint16_t>(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
 
@@ -228,7 +174,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples4Channels)
   CHECK_EQUAL(0u, output.getNrValidSamples(2,0)); // all flagged in station 2
 }
 
-TEST(calculateAndSetNumberOfFlaggedSamples1Channels)
+TEST(calcWeights1Channels)
 {
   // on channel so the zero channel should be filled with the flags!!
   // Create a parset with the needed parameters
@@ -253,7 +199,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples1Channels)
   flagsPerChanel[0][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint16_t>(parset, flagsPerChanel, output);
+  CorrelatorWorkQueue::Flagger::calcWeights<uint16_t>(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
   // channel is 1 so no time resolution loss!!
@@ -262,7 +208,7 @@ TEST(calculateAndSetNumberOfFlaggedSamples1Channels)
   CHECK_EQUAL(247u, output.getNrValidSamples(2,0)); // 9 flagged in station 2  
 }
 
-TEST(applyFractionOfFlaggedSamplesOnVisibilities)
+TEST(applyWeights)
 {
   // Create a parset with the needed parameters
   Parset parset;
@@ -290,7 +236,7 @@ TEST(applyFractionOfFlaggedSamplesOnVisibilities)
   output.setNrValidSamples(0,1,n_valid_samples); //baseline 0, channel 1
   output.setNrValidSamples(1,1,256); //baseline 1, channel 1
   output.setNrValidSamples(2,1,0); //baseline 0, channel 1
-  CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(parset, output);
+  CorrelatorWorkQueue::Flagger::applyWeights<uint16_t>(parset, output);
 
   // 4 channels: therefore the chanel zero should be zero
   CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[0][0][0][0]);
@@ -310,7 +256,7 @@ TEST(applyFractionOfFlaggedSamplesOnVisibilities)
   CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[2][1][1][1]);
 }
 
-TEST(applyWeightingToAllPolarizations)
+TEST(applyWeight)
 {
     // on channel so the zero channel should be filled with the flags!!
   // Create a parset with the needed parameters
@@ -335,7 +281,7 @@ TEST(applyWeightingToAllPolarizations)
            output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
         
   //  multiply all polarization in sb 0 channel 0 with 0,5
-  CorrelatorWorkQueue::flagFunctions::applyWeightingToAllPolarizations(0,0,0.5,output);
+  CorrelatorWorkQueue::Flagger::applyWeight(0,0,0.5,output);
 
   //sb 0 should be (0.5, 0)
   CHECK_EQUAL(std::complex<float>(0.5,0),  
@@ -349,6 +295,6 @@ TEST(applyWeightingToAllPolarizations)
 int main()
 {
   INIT_LOGGER("tCorrelatorWorkQueue");
-  return UnitTest::RunAllTests();
+  return UnitTest::RunAllTests() > 0;
 }
 

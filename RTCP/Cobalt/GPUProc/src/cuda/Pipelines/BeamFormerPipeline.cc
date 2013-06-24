@@ -20,53 +20,39 @@
 
 #include <lofar_config.h>
 
+#include <map>
+#include <vector>
+#include <string>
+
 #include "BeamFormerPipeline.h"
 
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/WorkQueues/BeamFormerWorkQueue.h>
+#include <GPUProc/gpu_wrapper.h>
+#include <GPUProc/gpu_utils.h>
+
+#define NR_WORKQUEUES_PER_DEVICE  2
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    BeamFormerPipeline::BeamFormerPipeline(const Parset &ps)
+    BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
       :
-      Pipeline(ps),
-      intToFloatCounter("int-to-float", profiling),
-      fftCounter("FFT", profiling),
-      delayAndBandPassCounter("delay/bp", profiling),
-      beamFormerCounter("beamformer", profiling),
-      transposeCounter("transpose", profiling),
-      dedispersionForwardFFTcounter("ddisp.fw.FFT", profiling),
-      dedispersionChirpCounter("chirp", profiling),
-      dedispersionBackwardFFTcounter("ddisp.bw.FFT", profiling),
-      samplesCounter("samples", profiling)
+      Pipeline(ps, subbandIndices)
     {
-      double startTime = omp_get_wtime();
 
-#pragma omp parallel sections
-      {
-#pragma omp section
-        intToFloatProgram = createProgram("BeamFormer/IntToFloat.cl");
-#pragma omp section
-        delayAndBandPassProgram = createProgram("DelayAndBandPass.cl");
-#pragma omp section
-        beamFormerProgram = createProgram("BeamFormer/BeamFormer.cl");
-#pragma omp section
-        transposeProgram = createProgram("BeamFormer/Transpose.cl");
-#pragma omp section
-        dedispersionChirpProgram = createProgram("BeamFormer/Dedispersion.cl");
+      // If profiling, use one workqueue: with >1 workqueues decreased
+      // computation / I/O overlap can affect optimization gains.
+      unsigned nrWorkQueues = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
+      workQueues.resize(nrWorkQueues);
+
+      for (size_t i = 0; i < nrWorkQueues; ++i) {
+        gpu::Context context(devices[i % devices.size()]);
+
+        workQueues[i] = new BeamFormerWorkQueue(ps, context);
       }
-
-      LOG_DEBUG_STR("compile time = " << omp_get_wtime() - startTime);
-    }
-
-    void BeamFormerPipeline::doWork()
-    {
-#pragma omp parallel num_threads((profiling ? 1 : 2) * nrGPUs)
-      BeamFormerWorkQueue(*this, omp_get_thread_num() % nrGPUs).doWork();
     }
   }
 }

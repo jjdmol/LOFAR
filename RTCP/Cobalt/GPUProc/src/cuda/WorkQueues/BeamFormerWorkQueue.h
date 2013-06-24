@@ -25,12 +25,17 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/StreamableData.h>
+
+#include <GPUProc/gpu_wrapper.h>
 
 #include <GPUProc/MultiDimArrayHostBuffer.h>
+#include <GPUProc/FilterBank.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
 
 #include <GPUProc/Kernels/IntToFloatKernel.h>
+#include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/Filter_FFT_Kernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
@@ -45,15 +50,60 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    /*
+     * Our output data type
+     */
+    class BeamFormedData: public MultiDimArrayHostBuffer<fcomplex, 3>, public StreamableData
+    {
+    public:
+      BeamFormedData(unsigned nrStokes, unsigned nrChannels, size_t nrSamples, gpu::Context &context)
+      :
+        MultiDimArrayHostBuffer<fcomplex, 3>(boost::extents[nrStokes][nrChannels][nrSamples], context, 0)
+      {
+      }
+
+    protected:
+      virtual void readData(Stream *str, unsigned) {
+        str->read(origin(), size());
+      }
+
+      virtual void writeData(Stream *str, unsigned) {
+        str->write(origin(), size());
+      }
+    };
+
     class BeamFormerWorkQueue : public WorkQueue
     {
     public:
-      BeamFormerWorkQueue(BeamFormerPipeline &, unsigned queueNumber);
+      BeamFormerWorkQueue(const Parset &parset, gpu::Context &context);
 
-      void doWork();
+      // Beam form the data found in the input data buffer
+      virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
 
-      BeamFormerPipeline  &pipeline;
+      // Do post processing on the CPU
+      virtual void postprocessSubband(StreamableData &output);
 
+    private:
+      // The previously processed SAP/block, or -1 if nothing has been
+      // processed yet. Used in order to determine if new delays have
+      // to be uploaded.
+      ssize_t prevBlock;
+      signed int prevSAP;
+
+      // Raw buffers, these are mapped with boost multiarrays 
+      // in the InputData class
+      WorkQueueInputData::DeviceBuffers devInput;
+
+      gpu::DeviceMemory devFilteredData;
+
+    private:
+#if 0
+      // Compiled kernels
+      FIR_FilterKernel firFilterKernel;
+      Filter_FFT_Kernel fftKernel;
+      DelayAndBandPassKernel delayAndBandPassKernel;
+#endif
+#if 0
       MultiArraySharedBuffer<char, 4>                inputSamples;
       DeviceBuffer devFilteredData;
       MultiArraySharedBuffer<float, 1>               bandPassCorrectionWeights;
@@ -65,7 +115,6 @@ namespace LOFAR
       MultiArraySharedBuffer<std::complex<float>, 4> transposedComplexVoltages;
       MultiArraySharedBuffer<float, 1>               DMs;
 
-    private:
       IntToFloatKernel intToFloatKernel;
       Filter_FFT_Kernel fftKernel;
       DelayAndBandPassKernel delayAndBandPassKernel;
@@ -74,6 +123,7 @@ namespace LOFAR
       DedispersionForwardFFTkernel dedispersionForwardFFTkernel;
       DedispersionBackwardFFTkernel dedispersionBackwardFFTkernel;
       DedispersionChirpKernel dedispersionChirpKernel;
+#endif
     };
 
   }

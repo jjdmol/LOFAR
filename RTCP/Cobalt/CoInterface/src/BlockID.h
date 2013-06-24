@@ -1,4 +1,4 @@
-//# BlockID.cc
+//# BlockID.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,20 +18,31 @@
 //#
 //# $Id$
 
-#include <lofar_config.h>
+#ifndef LOFAR_GPUPROC_BLOCKID_H
+#define LOFAR_GPUPROC_BLOCKID_H
 
-#include "BlockID.h"
+#include <iostream>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    std::ostream &operator<<(std::ostream &str, const struct BlockID &id) {
-      str << "block " << id.block << " subband " << id.globalSubbandIdx << " (local index " << id.localSubbandIdx << ")";
+    struct BlockID {
+      // Block number: 0 .. inf
+      size_t block;
 
-      return str;
-    }
+      // Subband index in the observation: [0, ps.nrSubbands())
+      size_t globalSubbandIdx;
 
-  }
-}
+      // Subband index for this pipeline/workqueue: [0, subbandIndices.size())
+      size_t localSubbandIdx;
+
+      bool operator<(const struct BlockID &other) const;
+    };
+
+    std::ostream &operator<<(std::ostream &str, const struct BlockID &id);
+  } // namespace Cobalt
+} // namespace LOFAR
+
+#endif
 

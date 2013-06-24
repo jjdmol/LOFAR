@@ -96,33 +96,55 @@ extern "C" {
  * - Global size: (>= NR_BASELINES and a multiple of work group size, number of actually processed channels)
  */
 
-/* __kernel void correlate(__global void *visibilitiesPtr, */
-/*                         __global const void *correctedDataPtr */
-/*                         ) */
 __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr) 
 {
   VisibilitiesType visibilities = (VisibilitiesType) visibilitiesPtr;
   CorrectedDataType correctedData = (CorrectedDataType) correctedDataPtr;
 
-  /* __local float samples[4][BLOCK_SIZE][NR_STATIONS | 1]; // avoid power-of-2 */
   __shared__ float samples[4][BLOCK_SIZE][NR_STATIONS | 1]; // avoid power-of-2
 
-  /* uint baseline = get_global_id(0); */
   uint baseline = blockIdx.x * blockDim.x + threadIdx.x;
 
-  /* uint channel = get_global_id(1) + 1; */
 #if NR_CHANNELS == 1
   uint channel = blockIdx.y;
 #else
   uint channel = blockIdx.y + 1;
 #endif
 
-  /* uint stat_0 = convert_uint_rtz(sqrt(convert_float(8 * baseline + 1)) - 0.99999f) / 2; */
+  /*
+   * if 
+   *   b = baseline
+   *   x = stat1
+   *   y = stat2
+   *   x <= y
+   * then
+   *   b_xy = y * (y + 1) / 2 + x
+   * let
+   *   u := b_0y
+   * then
+   *     u            = y * (y + 1) / 2
+   *     8u           = 4y^2 + 4y
+   *     8u + 1       = 4y^2 + 4y + 1 = (2y + 1)^2
+   *     sqrt(8u + 1) = 2y + 1
+   *                y = (sqrt(8u + 1) - 1) / 2
+   *
+   * Let us define
+   *   y'(b) = (sqrt(8b + 1) - 1) / 2
+   * which increases monotonically and is a continuation of y(b).
+   *
+   * Because y simply increases by 1 when b increases enough, we
+   * can just take the floor function to obtain the discrete y(b):
+   *   y(b) = floor(y'(b))
+   *        = floor(sqrt(8b + 1) - 1) / 2)
+   */
+
   uint stat_0 = __float2uint_rz(sqrtf(float(8 * baseline + 1)) - 0.99999f) / 2;
 
+  /*
+   * And, of course
+   *  x = b - y * (y + 1)/2
+   */
   uint stat_A = baseline - stat_0 * (stat_0 + 1) / 2;
-
-  /* float4 visR = (float4) 0, visI = (float4) 0; */
 
   // visR and visI will contain the real and imaginary parts, respectively, of
   // the four visibilities (i.e., the four correlation products between the two
@@ -135,7 +157,6 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
 
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += BLOCK_SIZE) {
     // load data into local memory
-    /* for (uint i = get_local_id(0); i < BLOCK_SIZE * NR_STATIONS; i += get_local_size(0)) { */
     for (uint i = threadIdx.x; i < BLOCK_SIZE * NR_STATIONS; i += blockDim.x)
       {
         uint time = i % BLOCK_SIZE;
@@ -149,7 +170,6 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
         samples[3][time][stat] = sample.w;
       }
 
-    /* barrier(CLK_LOCAL_MEM_FENCE); */
     __syncthreads();
 
     // compute correlations
@@ -165,11 +185,6 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
         sample_A.z = samples[2][time][stat_A]; // sampleA_Y_r
         sample_A.w = samples[3][time][stat_A]; // sampleA_Y_i
 
-        /* visR += sample_1.xxzz * sample_A.xzxz; */
-        /* visI += sample_1.yyww * sample_A.xzxz; */
-        /* visR += sample_1.yyww * sample_A.ywyw; */
-        /* visI -= sample_1.xxzz * sample_A.ywyw; */
-
         // Interleave calculation of the two parts of the real and imaginary
         // visibilities to improve performance.
         visR += SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_A,x,z,x,z); 
@@ -179,13 +194,11 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
       }
     }
 
-    /* barrier(CLK_LOCAL_MEM_FENCE); */
     __syncthreads();
   }
 
   // write visibilities
   if (baseline < NR_BASELINES) {
-    /* (*visibilities)[baseline][channel] = (fcomplex4) { visR.x, visI.x, visR.y, visI.y, visR.z, visI.z, visR.w, visI.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(visR.x, visI.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(visR.y, visI.y);
     (*visibilities)[baseline][channel][1][0] = make_float2(visR.z, visI.z);

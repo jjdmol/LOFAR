@@ -311,12 +311,12 @@ void runPipeline(SELECTPIPELINE pipeline, const Parset &ps, const vector<size_t>
   {
   case correlator:
     LOG_INFO_STR("Correlator pipeline selected");
-    CorrelatorPipeline(ps, subbands).doWork();
+    CorrelatorPipeline(ps, subbands).processObservation();
     break;
 
   case beam:
     LOG_INFO_STR("BeamFormer pipeline selected");
-    //BeamFormerPipeline(ps).doWork();
+    BeamFormerPipeline(ps, subbands).processObservation();
     break;
 
   case UHEP:

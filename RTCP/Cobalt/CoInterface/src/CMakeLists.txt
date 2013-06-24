@@ -11,6 +11,7 @@ lofar_add_library(cointerface
   Package__Version.cc
   Allocator.cc
   BeamCoordinates.cc
+  BlockID.cc
   DataFactory.cc
   FinalMetaData.cc
   Stream.cc
