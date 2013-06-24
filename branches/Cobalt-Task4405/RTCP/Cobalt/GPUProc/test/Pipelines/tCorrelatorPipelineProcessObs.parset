@@ -1,0 +1,13 @@
+OLAP.CNProc.integrationSteps		 = 1024
+OLAP.correctBandPass			 = T
+Observation.nrBitsPerSample              = 8
+OLAP.CNProc.nrPPFTaps			 = 16
+OLAP.storageStationNames		 = [CS002D00,CS002D01,CS002D02,CS002D03]
+Observation.nrBeams                      = 1
+Observation.Beam[0].nrTiedArrayBeams 	 = 2
+OLAP.delayCompensation			 = T
+Observation.nrPolarisations		 = 2
+Observation.subbandList			 = [300..307]
+Observation.beamList			 = [8*0]
+Observation.channelsPerSubband		 = 64
+Observation.sampleClock			 = 200

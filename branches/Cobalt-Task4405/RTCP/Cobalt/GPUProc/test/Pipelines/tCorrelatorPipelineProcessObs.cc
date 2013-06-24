@@ -42,6 +42,8 @@ int main() {
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
 
+  Parset ps("tCorrelatorPipelineProcessObs.parset");
+
   return 0;
 }
 
