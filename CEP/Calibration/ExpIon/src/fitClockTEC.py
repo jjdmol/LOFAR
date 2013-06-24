@@ -619,12 +619,12 @@ def SwapClockTECAxes(ionmodel):
         TEC=TEC[:]
         indices=range(4) #nT,st,nsources,pol
         tmaxis=TECshape.index(nT)
-        indices[tmaxis]=1
+        indices[tmaxis]=0
         staxis=TECshape.index(nst)
-        indices[staxis]=3
+        indices[staxis]=1
         if len(TECshape)==3 or (nsources!=2):
             polaxis=TECshape.index(2)
-            indices[polaxis]=0
+            indices[polaxis]=3
             if len(TECshape)>3:
                nsaxis=TECshape.index(nsources) 
             else:
@@ -634,18 +634,18 @@ def SwapClockTECAxes(ionmodel):
             indices[nsaxis]=2
         else:
             print "ambigous shape of TEC, try swapping by hand"
-        while polaxis>0:
-            TEC=TEC.swapaxes(polaxis,polaxis-1)
-            indices[polaxis]=indices[polaxis-1]
-            polaxis-=1
-            indices[polaxis]=0
-        tmaxis=indices.index(1)
-        
-        while tmaxis>1:
+        while tmaxis>0:
             TEC=TEC.swapaxes(tmaxis,tmaxis-1)
             indices[tmaxis]=indices[tmaxis-1]
             tmaxis-=1
-            indices[tmaxis]=1
+            indices[tmaxis]=0
+        staxis=indices.index(1)
+        
+        while staxis>1:
+            TEC=TEC.swapaxes(staxis,staxis-1)
+            indices[staxis]=indices[staxis-1]
+            staxis-=1
+            indices[staxis]=1
         srcaxis=indices.index(2)
         
         while srcaxis>2:
@@ -659,25 +659,25 @@ def SwapClockTECAxes(ionmodel):
         print "nothing to be done for Clock"
     else:
         Clock=Clock[:]
-        indices=range(3) #pol ,nT,st
+        indices=range(3) #nT,st,pol
         tmaxis=Clockshape.index(nT)
-        indices[tmaxis]=1
+        indices[tmaxis]=0
         staxis=Clockshape.index(nst)
-        indices[staxis]=2
+        indices[staxis]=1
         polaxis=Clockshape.index(2)
-        indices[polaxis]=0
-        while polaxis>0:
-            Clock=Clock.swapaxes(polaxis,polaxis-1)
-            indices[polaxis]=indices[polaxis-1]
-            polaxis-=1
-            indices[polaxis]=0
-        tmaxis=indices.index(1)
-        
-        while tmaxis>1:
+        indices[polaxis]=2
+        while tmaxis>0:
             Clock=Clock.swapaxes(tmaxis,tmaxis-1)
             indices[tmaxis]=indices[tmaxis-1]
             tmaxis-=1
-            indices[tmaxis]=1
+            indices[tmaxis]=0
+        staxis=indices.index(1)
+        
+        while staxis>1:
+            Clock=Clock.swapaxes(staxis,staxis-1)
+            indices[staxis]=indices[staxis-1]
+            staxis-=1
+            indices[staxis]=1
        
         add_to_h5_func(ionmodel.hdf5,Clock,name='Clock')
       
