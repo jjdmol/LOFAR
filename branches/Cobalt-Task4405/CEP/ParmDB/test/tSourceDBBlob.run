@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# First make a new SourceDB.
+echo "Creating new file in blob format ..."
+rm -rf tSourceDBBlob_tmp.src
+../src/makesourcedb in=tSourceDBBlob.in format='<' out=tSourceDBBlob_tmp.src outtype=blob append=false
+./tSourceDBBlob
+
+# Append to the SourceDB.
+echo
+echo "Appending to file ..."
+../src/makesourcedb in=tSourceDBBlob.in format='<' out=tSourceDBBlob_tmp.src outtype=blob append=true
+./tSourceDBBlob
+
+# First make a new SourceDB.
+echo
+echo "Creating new file in casa format ..."
+rm -rf tSourceDBBlob_tmp.src
+../src/makesourcedb in=tSourceDBBlob.in format='<' out=tSourceDBBlob_tmp.src append=false
+./tSourceDBBlob
+
