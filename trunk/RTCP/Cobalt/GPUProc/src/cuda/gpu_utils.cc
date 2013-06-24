@@ -39,7 +39,6 @@
 #include <Stream/FileStream.h>
 
 #include <GPUProc/global_defines.h>
-#include "CudaRuntimeCompiler.h"
 
 #define BUILD_MAX_LOG_SIZE	4095
 
@@ -105,7 +104,7 @@ namespace LOFAR
       }
 
       // Return the highest compute target supported by all the given devices
-      CUjit_target computeTarget(const std::vector<gpu::Device> &devices)
+      CUjit_target computeTarget(const vector<gpu::Device> &devices)
       {
 #if CUDA_VERSION >= 5000
         CUjit_target minTarget = CU_TARGET_COMPUTE_35;
@@ -113,7 +112,8 @@ namespace LOFAR
         CUjit_target minTarget = CU_TARGET_COMPUTE_30;
 #endif
 
-        for (std::vector<gpu::Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
+        for (vector<gpu::Device>::const_iterator i = devices.begin(); 
+             i != devices.end(); ++i) {
           CUjit_target target = computeTarget(*i);
 
           if (target < minTarget)
@@ -144,7 +144,8 @@ namespace LOFAR
           return "compute_13";
 
         case CU_TARGET_COMPUTE_20:
-        case CU_TARGET_COMPUTE_21: // 21 not allowed for nvcc --gpu-architecture option value
+        case CU_TARGET_COMPUTE_21:
+          // 21 not allowed for nvcc --gpu-architecture option value
           return "compute_20";
 
         case CU_TARGET_COMPUTE_30:
@@ -192,82 +193,181 @@ namespace LOFAR
 #endif
         }
       }
+
+      string lofarRoot()
+      {
+        static const char* env;
+        static bool init(false);
+        if (!init) {
+          env = getenv("LOFARROOT");
+        }
+        return string(env ? env : "");
+      }
+
+      string prefixPath()
+      {
+        if (lofarRoot().empty()) return ".";
+        else return lofarRoot() + "/share/gpu/kernels";
+      }
+
+      string includePath()
+      {
+        if (lofarRoot().empty()) return "include";
+        else return lofarRoot() + "/include";
+      }
+
+      ostream& operator<<(ostream& os, const CompileDefinitions& defs)
+      {
+        CompileDefinitions::const_iterator it;
+        for (it = defs.begin(); it != defs.end(); ++it) {
+          os << " -D" << it->first;
+          if (!it->second.empty()) {
+            os << "=" << it->second;
+          }
+        }
+        return os;
+      }
+
+      ostream& operator<<(ostream& os, const CompileFlags& flags)
+      {
+        CompileFlags::const_iterator it;
+        for (it = flags.begin(); it != flags.end(); ++it) {
+          os << " " << *it;
+        }
+        return os;
+      }
+
+      string doCreatePTX(const string& source, 
+                         const CompileFlags& flags,
+                         const CompileDefinitions& defs)
+      {
+        ostringstream oss;
+        oss << "nvcc " << source << flags << defs;
+        string cmd(oss.str());
+        LOG_DEBUG_STR("Starting runtime compilation:\n\t" << cmd);
+
+        string ptx;
+        char buffer [1024];       
+        FILE * stream = popen(cmd.c_str(), "r");
+
+        if (!stream) {
+          throw SystemCallException("popen", errno, THROW_ARGS);
+        }
+        while (!feof(stream)) {  // NOTE: We do not get stderr
+          if (fgets(buffer, sizeof buffer, stream) != NULL) {
+            ptx += buffer;
+          }
+        }
+        if (pclose(stream) || ptx.empty()) {
+          THROW(GPUProcException, "Runtime compilation failed!\n\t" << cmd);
+        }
+        return ptx;
+      }
+
+    } // namespace {anonymous}
+
+
+    const CompileDefinitions& defaultCompileDefinitions()
+    {
+      static CompileDefinitions defs;
+      if (defs.empty()) {
+        // initialize default definitions
+      }
+      return defs;
     }
 
+    const CompileFlags& defaultCompileFlags()
+    {
+      static CompileFlags flags;
+      if (flags.empty()) {
+        flags.insert("-o -");
+        flags.insert("-ptx");
+        flags.insert("-use_fast_math");
+        flags.insert(str(format("-I%s") % includePath()));
+      }
+      return flags;
+    }
 
-    std::string createPTX(const vector<gpu::Device> &devices, 
-                          const std::string &srcFilename, 
-                          CompileFlags &flags, 
-                          const CompileDefinitions &definitions )
+    string createPTX(string srcFilename, 
+                     CompileDefinitions definitions,
+                     CompileFlags flags, 
+                     const vector<gpu::Device> &devices)
     {
       // The CUDA code is assumed to be written for the architecture of the
       // oldest device.
-#if CUDA_VERSION >= 5000
-      CUjit_target commonTarget = computeTarget(devices);
-      flags.add(str(format("--gpu-architecture %s") % get_virtarch(commonTarget)));
-#endif
+      flags.insert(str(format("--gpu-architecture %s") % 
+                       get_virtarch(computeTarget(devices))));
+
+      // Add default definitions and flags
+      definitions.insert(defaultCompileDefinitions().begin(), 
+                         defaultCompileDefinitions().end());
+      flags.insert(defaultCompileFlags().begin(),
+                   defaultCompileFlags().end());
 
 #if 0
       // We'll compile a specific version for each device that has a different
       // architecture.
       set<CUjit_target> allTargets;
 
-      for (vector<gpu::Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
+      for (vector<gpu::Device>::const_iterator i = devices.begin(); 
+           i != devices.end(); ++i) {
         allTargets.add(computeTarget(*i));
       }
 
-      for (set<CUjit_target>::const_iterator i = allTargets.begin(); i != allTargets.end(); ++i) {
+      for (set<CUjit_target>::const_iterator i = allTargets.begin();
+           i != allTargets.end(); ++i) {
         flags.add(str(format("--gpu-code %s") % get_gpuarch(*i)));
       }
 #endif
 
-      // Add $LOFARROOT/include to include path, if $LOFARROOT is set.
-      const char* lofarroot = getenv("LOFARROOT");
-      if (lofarroot) {
-        flags.add(str(format("--include-path %s/include") % lofarroot));
+      // Prefix the CUDA kernel filename if it's a relative path.
+      if (!srcFilename.empty() && srcFilename[0] != '/') {
+        srcFilename = prefixPath() + "/" + srcFilename;
       }
 
-      // Prefix the CUDA kernel filename with $LOFARROOT/share/gpu/kernels
-      // if $LOFARROOT is set
-      std::string srcFileDir = 
-        (lofarroot ? str(format("%s/share/gpu/kernels/") % lofarroot) : "");
-
-      return compileToPtx(srcFileDir + srcFilename, flags, definitions);
+      return doCreatePTX(srcFilename, flags, definitions);
     }
 
 
-    gpu::Module createModule(const gpu::Context &context, const std::string &srcFilename, const std::string &ptx)
+    gpu::Module createModule(const gpu::Context &context, 
+                             const string &srcFilename,
+                             const string &ptx)
     {
       /*
        * JIT compilation options.
-       * Note: need to pass a void* with option vals. Preferably, do not alloc dyn (mem leaks on exc).
-       * Instead, use local vars for small variables and vector<char> xxx; passing &xxx[0] for output c-strings.
+       * Note: need to pass a void* with option vals. Preferably, do not alloc
+       * dyn (mem leaks on exc).
+       * Instead, use local vars for small variables and vector<char> xxx;
+       * passing &xxx[0] for output c-strings.
        */
       gpu::Module::optionmap_t options;
 
 #if 0
-      unsigned int maxRegs = 63; // TODO: write this up
+      size_t maxRegs = 63; // TODO: write this up
       options.push_back(CU_JIT_MAX_REGISTERS);
       optionValues.push_back(&maxRegs);
 
-      unsigned int thrPerBlk = 256; // input and output val
+      size_t thrPerBlk = 256; // input and output val
       options.push_back(CU_JIT_THREADS_PER_BLOCK);
       optionValues.push_back(&thrPerBlk); // can be read back
 #endif
 
-      unsigned infoLogSize  = BUILD_MAX_LOG_SIZE + 1; // input and output var for JIT compiler
-      unsigned errorLogSize = BUILD_MAX_LOG_SIZE + 1; // idem (hence not the a single var or const)
+      // input and output var for JIT compiler
+      size_t infoLogSize  = BUILD_MAX_LOG_SIZE + 1;
+      // idem (hence not the a single var or const)
+      size_t errorLogSize = BUILD_MAX_LOG_SIZE + 1;
 
       vector<char> infoLog(infoLogSize);
       options[CU_JIT_INFO_LOG_BUFFER] = &infoLog[0];
-      options[CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES] = &infoLogSize;
+      options[CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES] = 
+        reinterpret_cast<void*>(infoLogSize);
 
       vector<char> errorLog(errorLogSize);
       options[CU_JIT_ERROR_LOG_BUFFER] = &errorLog[0];
-      options[CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES] = &errorLogSize;
+      options[CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES] = 
+        reinterpret_cast<void*>(errorLogSize);
 
-      float jitWallTime = 0.0f; // output val (init it anyway), in milliseconds
-      options[CU_JIT_WALL_TIME] = &jitWallTime;
+      float &jitWallTime = reinterpret_cast<float&>(options[CU_JIT_WALL_TIME]);
 
 #if 0
       size_t optLvl = 4; // 0-4, default 4
@@ -287,15 +387,17 @@ namespace LOFAR
 #endif
       try {
         gpu::Module module(context, ptx.c_str(), options);
-        // TODO: check what the ptx compiler prints. Don't print bogus. See if infoLogSize indeed is set to 0 if all cool.
+        // TODO: check what the ptx compiler prints. Don't print bogus. See if
+        // infoLogSize indeed is set to 0 if all cool.
         // TODO: maybe retry if buffer len exhausted, esp for errors
-        if (infoLogSize > infoLog.size()) { // zero-term log and guard against bogus JIT opt val output
+        if (infoLogSize > infoLog.size()) {
+          // zero-term log and guard against bogus JIT opt val output
           infoLogSize = infoLog.size();
         }
         infoLog[infoLogSize - 1] = '\0';
         cout << "Build info for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " us):" << endl << &infoLog[0] << endl;
+             << " ms):" << endl << &infoLog[0] << endl;
 
         return module;
       } catch (gpu::CUDAException& exc) {
@@ -305,7 +407,7 @@ namespace LOFAR
         errorLog[errorLogSize - 1] = '\0';
         cerr << "Build errors for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " us):" << endl << &errorLog[0] << endl;
+             << " ms):" << endl << &errorLog[0] << endl;
         throw;
       }
     }

@@ -63,8 +63,7 @@ namespace LOFAR
     {
       CompileFlags flags(defaultCompileFlags());
       CompileDefinitions definitions(Kernel::compileDefinitions(ps));
-
-      return LOFAR::Cobalt::createPTX(devices, srcFilename, flags, definitions);
+      return LOFAR::Cobalt::createPTX(srcFilename, definitions, flags, devices);
     }
 
 

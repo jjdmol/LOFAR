@@ -25,7 +25,6 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
-#include <GPUProc/KernelCompiler.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 
@@ -50,15 +49,6 @@ int main() {
   gpu::Stream stream(ctx);
 
   Parset ps("tIntToFloatKernel.in_parset");
-  string srcFilename("IntToFloat.cu");
-
-  // Get default parameters for the compiler
-  CompileFlags flags = defaultCompileFlags();
-  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
-
-  string ptx = createPTX(devices, srcFilename, flags, definitions);
-  gpu::Module module(createModule(ctx, srcFilename, ptx));
-  cout << "Succesfully compiled '" << srcFilename << "'" << endl;
   size_t COMPLEX = 2;
   size_t nSampledData = ps.nrStations() * ps.nrSamplesPerSubband() * NR_POLARIZATIONS * COMPLEX;
   size_t sizeSampledData = nSampledData * sizeof(char);
@@ -76,8 +66,7 @@ int main() {
   gpu::HostMemory convertedData(ctx,  nSampledData * sizeof(float));
   //stream.writeBuffer(devConvertedData, sampledData, true);
 
-   IntToFloatKernel kernel(ps, stream, module,
-             devConvertedData, devSampledData); 
+  IntToFloatKernel kernel(ps, ctx, devConvertedData, devSampledData); 
 
   kernel.enqueue(stream);
   stream.synchronize();

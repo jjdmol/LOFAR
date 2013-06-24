@@ -36,7 +36,7 @@ namespace LOFAR
     {
     public:
       DelayAndBandPassKernel(const Parset &ps,
-                             gpu::Module &program,
+                             gpu::Context &context,
                              gpu::DeviceMemory &devCorrectedData,
                              gpu::DeviceMemory &devFilteredData,
                              gpu::DeviceMemory &devDelaysAtBegin,

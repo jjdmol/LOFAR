@@ -21,6 +21,10 @@ lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp)
 #lofar_add_test(tGPUPerformance DEPENDS rtcp) # performance measurement and comparison are broken
 
+if(UNITTEST++_FOUND)
+  lofar_add_test(t_gpu_utils t_gpu_utils)
+endif()
+
 add_subdirectory(Kernels)
 add_subdirectory(Pipelines)
 add_subdirectory(Storage)

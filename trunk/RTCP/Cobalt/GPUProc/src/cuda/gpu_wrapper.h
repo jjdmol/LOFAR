@@ -298,7 +298,7 @@ namespace LOFAR
         // an unsigned int as value, the unsigned int's value itself is cast to void*!
         // \note For details, please refer to the documentation of \c
         // cuModuleLoadDataEx in the CUDA Driver API.
-        Module(const Context &context, const void *image, const optionmap_t &options);
+        Module(const Context &context, const void *image, optionmap_t &options);
 
         // Return the Context in which this Module was created.
         Context getContext() const;

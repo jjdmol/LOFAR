@@ -546,7 +546,7 @@ namespace LOFAR
           checkCuCall(cuModuleLoadData(&_module, image));
         }
 
-        Impl(const Context &context, const void *image, const Module::optionmap_t options):
+        Impl(const Context &context, const void *image, Module::optionmap_t &options):
           _context(context)
         {
           // Convert our option map to two arrays for CUDA
@@ -562,6 +562,11 @@ namespace LOFAR
 
           checkCuCall(cuModuleLoadDataEx(&_module, image, options.size(),
                                          &keys[0], &values[0]));
+
+          for (size_t i = 0; i < keys.size(); ++i) {
+            options[keys[i]] = values[i];
+          }
+
         }
 
         ~Impl()
@@ -601,7 +606,7 @@ namespace LOFAR
       {
       }
 
-      Module::Module(const Context &context, const void *image, const optionmap_t &options):
+      Module::Module(const Context &context, const void *image, optionmap_t &options):
         _impl(new Impl(context, image, options))
       {
       }

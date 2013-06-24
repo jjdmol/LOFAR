@@ -32,8 +32,6 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/KernelCompiler.h>
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <UnitTest++.h>
 
 #include "TestUtil.h"
@@ -98,7 +96,7 @@ float * runTest(float bandPassFactor,
   definitions["BANDPASS_CORRECTION"] = "1";
   if (delayCompensation)
     definitions["DELAY_COMPENSATION"] = "1";
-  string ptx = createPTX(devices, kernelPath, flags, definitions);
+  string ptx = createPTX(kernelPath, definitions, flags, devices);
   gpu::Module module(createModule(ctx, kernelPath, ptx));
   Function  hKernel(module, "applyDelaysAndCorrectBandPass");  // c function this no argument overloading
 
