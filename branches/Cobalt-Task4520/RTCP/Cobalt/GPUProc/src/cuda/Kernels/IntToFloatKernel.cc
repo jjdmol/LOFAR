@@ -31,7 +31,6 @@ namespace LOFAR
   namespace Cobalt
   {
     IntToFloatKernel::IntToFloatKernel(const Parset &ps,
-        gpu::Stream &queue,
         gpu::Module &program,
         gpu::DeviceMemory &devConvertedData,
         gpu::DeviceMemory &devInputSamples)
@@ -42,7 +41,6 @@ namespace LOFAR
       setArg(1, devInputSamples);
 
       size_t maxNrThreads;
-      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       globalWorkSize = gpu::Grid(maxNrThreads, ps.nrStations());
       localWorkSize = gpu::Block(maxNrThreads, 1);

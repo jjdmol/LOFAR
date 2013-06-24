@@ -75,8 +75,7 @@ int main() {
   gpu::HostMemory convertedData(ctx,  nSampledData * sizeof(float));
   //stream.writeBuffer(devConvertedData, sampledData, true);
 
-   IntToFloatKernel kernel(ps, stream, module,
-             devConvertedData, devSampledData); 
+   IntToFloatKernel kernel(ps, module, devConvertedData, devSampledData); 
 
   kernel.enqueue(stream);
   stream.synchronize();

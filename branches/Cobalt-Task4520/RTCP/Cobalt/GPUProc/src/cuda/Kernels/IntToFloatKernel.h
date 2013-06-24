@@ -34,7 +34,6 @@ namespace LOFAR
     {
     public:
       IntToFloatKernel(const Parset &ps, 
-                       gpu::Stream &queue, 
                        gpu::Module &program,
                        gpu::DeviceMemory &devFilteredData, 
                        gpu::DeviceMemory &devInputSamples);
