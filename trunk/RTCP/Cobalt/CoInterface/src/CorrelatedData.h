@@ -240,19 +240,9 @@ namespace LOFAR
         fcomplex       *dst = visibilities.origin();
         const fcomplex *src = other.visibilities.origin();
         unsigned count = visibilities.num_elements();
-#ifdef HAVE_BGP
-        unsigned fastcopyfloats = (count * 2) & ~0xF;
-        unsigned remainder = count % 8;
 
-        for (unsigned i = 0; i < remainder; i++)
-          dst[i] += src[i];
-
-        if (fastcopyfloats > 0)
-          _add_2_single_precision_vectors( reinterpret_cast<float*>(dst + remainder), reinterpret_cast<float*>(dst + remainder), reinterpret_cast<const float*>(src + remainder), fastcopyfloats );
-#else
         for (unsigned i = 0; i < count; i++)
           dst[i] += src[i];
-#endif
       }
 
       // add nr. valid samples

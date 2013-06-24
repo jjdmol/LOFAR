@@ -54,8 +54,7 @@ namespace LOFAR
      * and provide the input in devFilteredData.
      */
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset &parset,
-      gpu::Context &context, CorrelatorPipelinePrograms &programs,
-      FilterBank &filterBank)
+      gpu::Context &context, CorrelatorPipelinePrograms &programs)
     :
       WorkQueue( parset, context ),
       prevBlock(-1),
@@ -92,15 +91,8 @@ namespace LOFAR
       //                   ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>)
       //                 )),
 
-      devFIRweights(context, FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::FILTER_WEIGHTS)),
-      // devFIRweights(context, ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float)),
-
-      devBandPassCorrectionWeights(context, 
-                                   DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
-      // devBandPassCorrectionWeights(context, ps.nrChannelsPerSubband() * sizeof(float)),
-
       firFilterKernel(ps, programs.firFilterProgram,
-                      devFilteredData, devInput.inputSamples, devFIRweights),
+                      devFilteredData, devInput.inputSamples, queue),
       fftKernel(ps, context, devFilteredData),
       delayAndBandPassKernel(ps, programs.delayAndBandPassProgram,
                              devInput.inputSamples,
@@ -108,7 +100,7 @@ namespace LOFAR
                              devInput.delaysAtBegin,
                              devInput.delaysAfterEnd,
                              devInput.phaseOffsets,
-                             devBandPassCorrectionWeights),
+                             queue),
 #if defined USE_NEW_CORRELATOR
       correlateTriangleKernel(ps, programs.correlatorProgram,
                               devFilteredData, devInput.inputSamples),
@@ -119,33 +111,13 @@ namespace LOFAR
                        devFilteredData, devInput.inputSamples)
 #endif
     {
-      // put enough objects in the inputPool to operate
-      // TODO: Tweak the number of inputPool objects per WorkQueue,
-      // probably something like max(3, nrSubbands/nrWorkQueues * 2), because
-      // there both need to be enough items to receive all subbands at
-      // once, and enough items to process the same amount in the
-      // mean time.
-      //
-      // At least 3 items are needed for a smooth Pool operation.
-      size_t nrInputDatas = std::max(3UL, ps.nrSubbands());
-      for (size_t i = 0; i < nrInputDatas; ++i) {
-        inputPool.free.append(new WorkQueueInputData(
-                ps.nrBeams(),
-                ps.nrStations(),
-                NR_POLARIZATIONS,
-                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
-                ps.nrBytesPerComplexSample(),
-                context));
-      }
-
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),
                 ps.integrationSteps(),
-                context,
-                *this));
+                context));
       }
 
       // create all the counters
@@ -174,52 +146,16 @@ namespace LOFAR
       addTimer("GPU - output");
       addTimer("GPU - compute");
       addTimer("GPU - wait");
-
-      // Copy the FIR filter and bandpass weights to the device.
-      // Note that these constant weights are now (unnecessarily) stored on the
-      // device for every workqueue. A single copy per device could be used, but
-      // first verify that the device platform still allows workqueue overlap.
-      size_t firWeightsSize = filterBank.getWeights().num_elements() * sizeof(float);
-      gpu::HostMemory firWeights(context, firWeightsSize);
-      std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(), firWeightsSize);
-      queue.writeBuffer(devFIRweights, firWeights, true);
-
-      if (ps.correctBandPass())
-      {
-        gpu::HostMemory bpWeights(context, ps.nrChannelsPerSubband() * sizeof(float));
-        BandPass::computeCorrectionFactors(bpWeights.get<float>(),
-                                           ps.nrChannelsPerSubband());
-        queue.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
-      }
     }
 
-    // Get the log2 of the supplied number
-    unsigned CorrelatorWorkQueue::flagFunctions::get2LogOfNrChannels(unsigned nrChannels)
-    {
-      // Assure that the nrChannels is more then zero: never ending loop 
-      ASSERT(powerOfTwo(nrChannels));
-
-      unsigned logNrChannels;
-      for (logNrChannels = 0; 1U << logNrChannels != nrChannels;
-        logNrChannels ++)
-      {;} // do nothing, the creation of the log is a side effect of the for loop
-
-      //Alternative solution snipped:
-      //int targetlevel = 0;
-      //while (index >>= 1) ++targetlevel; 
-      return logNrChannels;
-    }
-
-    void CorrelatorWorkQueue::flagFunctions::propagateFlagsToOutput(
+    void CorrelatorWorkQueue::Flagger::propagateFlags(
       Parset const &parset,
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
       CorrelatedData &output)
     {   
-      unsigned numberOfChannels = parset.nrChannelsPerSubband();
-
       // Object for storing transformed flags
       MultiDimArray<SparseSet<unsigned>, 2> flagsPerChannel(
-        boost::extents[numberOfChannels][parset.nrStations()]);
+        boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
 
       // First transform the flags to channel flags: taking in account 
       // reduced resolution in time and the size of the filter
@@ -229,72 +165,18 @@ namespace LOFAR
       // output object.
       switch (output.itsNrBytesPerNrValidSamples) {
         case 4:
-          calculateAndSetNumberOfFlaggedSamples<uint32_t>(parset, flagsPerChannel, output);
+          calcWeights<uint32_t>(parset, flagsPerChannel, output);
           break;
 
         case 2:
-          calculateAndSetNumberOfFlaggedSamples<uint16_t>(parset, flagsPerChannel, output);
+          calcWeights<uint16_t>(parset, flagsPerChannel, output);
           break;
 
         case 1:
-          calculateAndSetNumberOfFlaggedSamples<uint8_t>(parset, flagsPerChannel, output);
+          calcWeights<uint8_t>(parset, flagsPerChannel, output);
           break;
       }
     }
-
-    void CorrelatorWorkQueue::flagFunctions::convertFlagsToChannelFlags(Parset const &parset,
-      MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-      MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChannel)
-    {
-      unsigned numberOfChannels = parset.nrChannelsPerSubband();
-      unsigned log2NrChannels = get2LogOfNrChannels(numberOfChannels);
-      //Convert the flags per sample to flags per channel
-      for (unsigned station = 0; station < parset.nrStations(); station ++) 
-      {
-        // get the flag ranges
-        const SparseSet<unsigned>::Ranges &ranges = inputFlags[station].getRanges();
-        for (SparseSet<unsigned>::const_iterator it = ranges.begin();
-          it != ranges.end(); it ++) 
-        {
-          unsigned begin_idx;
-          unsigned end_idx;
-          if (numberOfChannels == 1)
-          {
-            // do nothing, just take the ranges as supplied
-            begin_idx = it->begin; 
-            end_idx = std::min(parset.nrSamplesPerChannel(), it->end );
-          }
-          else
-          {
-            // Never flag before the start of the time range               
-            // use bitshift to divide to the number of channels. 
-            //
-            // NR_TAPS is the width of the filter: they are
-            // absorbed by the FIR and thus should be excluded
-            // from the original flag set.
-            //
-            // At the same time, every sample is affected by
-            // the NR_TAPS-1 samples before it. So, any flagged
-            // sample in the input flags NR_TAPS samples in
-            // the channel.
-            begin_idx = std::max(0, 
-              (signed) (it->begin >> log2NrChannels) - NR_TAPS + 1);
-
-            // The min is needed, because flagging the last input
-            // samples would cause NR_TAPS subsequent samples to
-            // be flagged, which aren't necessarily part of this block.
-            end_idx = std::min(parset.nrSamplesPerChannel() + 1, 
-              ((it->end - 1) >> log2NrChannels) + 1);
-          }
-
-          // Now copy the transformed ranges to the channelflags
-          for (unsigned ch = 0; ch < numberOfChannels; ch++) {
-            flagsPerChannel[ch][station].include(begin_idx, end_idx);
-          }
-        }
-      }
-    }
-
 
     namespace {
       unsigned baseline(unsigned stat1, unsigned stat2)
@@ -304,21 +186,22 @@ namespace LOFAR
       }
     }
 
-    template<typename T> void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples(
+    template<typename T> void CorrelatorWorkQueue::Flagger::calcWeights(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output)
     {
+      unsigned nrSamplesPerIntegration = parset.nrSamplesPerChannel();
+
       // loop the stations
       for (unsigned stat2 = 0; stat2 < parset.nrStations(); stat2 ++) {
         for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) {
           unsigned bl = baseline(stat1, stat2);
 
-          unsigned nrSamplesPerIntegration = parset.nrSamplesPerChannel();
           // If there is a single channel then the index 0 contains real data
           if (parset.nrChannelsPerSubband() == 1) 
           {                                            
-            //The number of invalid (flagged) samples is the union of the flagged samples in the two stations
+            // The number of invalid (flagged) samples is the union of the flagged samples in the two stations
             unsigned nrValidSamples = nrSamplesPerIntegration -
               (flagsPerChannel[0][stat1] | flagsPerChannel[0][stat2]).count();
 
@@ -345,28 +228,28 @@ namespace LOFAR
     }
 
     // Instantiate required templates
-    template void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint32_t>(
+    template void CorrelatorWorkQueue::Flagger::calcWeights<uint32_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint16_t>(
+    template void CorrelatorWorkQueue::Flagger::calcWeights<uint16_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::flagFunctions::calculateAndSetNumberOfFlaggedSamples<uint8_t>(
+    template void CorrelatorWorkQueue::Flagger::calcWeights<uint8_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
 
-    void CorrelatorWorkQueue::flagFunctions::applyWeightingToAllPolarizations(unsigned baseline, 
+    void CorrelatorWorkQueue::Flagger::applyWeight(unsigned baseline, 
       unsigned channel, float weight, CorrelatedData &output)
-    { // TODO: inline???
-      for(unsigned idx_polarization_1 = 0; idx_polarization_1 < NR_POLARIZATIONS; ++idx_polarization_1)
-        for(unsigned idx_polarization_2 = 0; idx_polarization_2 < NR_POLARIZATIONS; ++idx_polarization_2)
-          output.visibilities[baseline][channel][idx_polarization_1][idx_polarization_2] *= weight;
+    {
+      for(unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; ++pol1)
+        for(unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; ++pol2)
+          output.visibilities[baseline][channel][pol1][pol2] *= weight;
     }
 
-    template<typename T> void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities(Parset const &parset,
+    template<typename T> void CorrelatorWorkQueue::Flagger::applyWeights(Parset const &parset,
       CorrelatedData &output)
     {
       for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl)
@@ -383,22 +266,24 @@ namespace LOFAR
           // TODO: make a lookup table for the expensive division; measure first
           float weight = nrValidSamples ? 1e-6f / nrValidSamples : 0;  
 
-          applyWeightingToAllPolarizations(bl, ch, weight, output);
+          applyWeight(bl, ch, weight, output);
         }
       }
     }
 
     // Instantiate required templates
-    template void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint32_t>(Parset const &parset,
+    template void CorrelatorWorkQueue::Flagger::applyWeights<uint32_t>(Parset const &parset,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(Parset const &parset,
+    template void CorrelatorWorkQueue::Flagger::applyWeights<uint16_t>(Parset const &parset,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint8_t>(Parset const &parset,
+    template void CorrelatorWorkQueue::Flagger::applyWeights<uint8_t>(Parset const &parset,
       CorrelatedData &output);
 
 
-    void CorrelatorWorkQueue::processSubband(WorkQueueInputData &input, CorrelatedDataHostBuffer &output)
+    void CorrelatorWorkQueue::processSubband(WorkQueueInputData &input, StreamableData &_output)
     {
+      CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
+
       timers["GPU - total"]->start();
 
       size_t block = input.blockID.block;
@@ -460,7 +345,7 @@ namespace LOFAR
       // background.
 
       // Propagate the flags.
-      flagFunctions::propagateFlagsToOutput(ps, input.inputFlags, output);
+      Flagger::propagateFlags(ps, input.inputFlags, output);
 
       // Wait for the GPU to finish.
       timers["GPU - wait"]->start();
@@ -487,63 +372,24 @@ namespace LOFAR
     }
 
 
-    void CorrelatorWorkQueue::postprocessSubband(CorrelatedDataHostBuffer &output)
+    void CorrelatorWorkQueue::postprocessSubband(StreamableData &_output)
     {
+      CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
+
       // The flags are already copied to the correct location
       // now the flagged amount should be applied to the visibilities
       switch (output.itsNrBytesPerNrValidSamples) {
         case 4:
-          flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint32_t>(ps, output);  
+          Flagger::applyWeights<uint32_t>(ps, output);  
           break;
 
         case 2:
-          flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint16_t>(ps, output);  
+          Flagger::applyWeights<uint16_t>(ps, output);  
           break;
 
         case 1:
-          flagFunctions::applyFractionOfFlaggedSamplesOnVisibilities<uint8_t>(ps, output);  
+          Flagger::applyWeights<uint8_t>(ps, output);  
           break;
-      }
-    }
-
-
-    void WorkQueueInputData::applyMetaData(unsigned station, unsigned SAP,
-                                           const SubbandMetaData &metaData)
-    {
-      // extract and apply the flags
-      inputFlags[station] = metaData.flags;
-
-      flagInputSamples(station, metaData);
-
-      // extract and assign the delays for the station beams
-      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++)
-      {
-        delaysAtBegin[SAP][station][pol] = metaData.stationBeam.delayAtBegin;
-        delaysAfterEnd[SAP][station][pol] = metaData.stationBeam.delayAfterEnd;
-        phaseOffsets[station][pol] = 0.0;
-      }
-    }
-
-
-    // flag the input samples.
-    void WorkQueueInputData::flagInputSamples(unsigned station,
-                                              const SubbandMetaData& metaData)
-    {
-
-      // Get the size of a sample in bytes.
-      size_t sizeof_sample = sizeof *inputSamples.origin();
-
-      // Calculate the number elements to skip when striding over the second
-      // dimension of inputSamples.
-      size_t stride = inputSamples[station][0].num_elements();
-
-      // Zero the bytes in the input data for the flagged ranges.
-      for(SparseSet<unsigned>::const_iterator it = metaData.flags.getRanges().begin();
-        it != metaData.flags.getRanges().end(); ++it)
-      {
-        void *offset = inputSamples[station][it->begin].origin();
-        size_t size = stride * (it->end - it->begin) * sizeof_sample;
-        memset(offset, 0, size);
       }
     }
 

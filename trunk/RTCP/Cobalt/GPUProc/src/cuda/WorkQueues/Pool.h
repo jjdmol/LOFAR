@@ -1,4 +1,4 @@
-//# FIR_FilterKernel.h
+//# Pool.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,43 +18,28 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_FIR_FILTER_KERNEL_H
-#define LOFAR_GPUPROC_CUDA_FIR_FILTER_KERNEL_H
+#ifndef LOFAR_GPUPROC_CUDA_POOL_H
+#define LOFAR_GPUPROC_CUDA_POOL_H
 
-#include <CoInterface/Parset.h>
-
-#include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/FilterBank.h>
-#include <GPUProc/gpu_wrapper.h>
+#include <Common/Thread/Queue.h>
+#include <CoInterface/SmartPtr.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class FIR_FilterKernel : public Kernel
+    // The pool operates using a free and a filled queue to cycle through buffers. Producers
+    // move elements free->filled, and consumers move elements filled->free. By
+    // wrapping the elements in a SmartPtr, memory leaks are prevented.
+    template <typename T>
+    struct Pool
     {
-    public:
-      FIR_FilterKernel(const Parset &ps,
-                       gpu::Module &program,
-                       gpu::DeviceMemory &devFilteredData,
-                       gpu::DeviceMemory &devInputSamples,
-                       gpu::Stream &stream);
+      typedef T element_type;
 
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA,
-        FILTER_WEIGHTS
-      };
-
-      // Return required buffer size for \a bufferType
-      static size_t bufferSize(const Parset& ps, BufferType bufferType);
-
-    private:
-      gpu::DeviceMemory devFIRweights;
+      Queue< SmartPtr<element_type> > free;
+      Queue< SmartPtr<element_type> > filled;
     };
   }
 }
 
 #endif
-

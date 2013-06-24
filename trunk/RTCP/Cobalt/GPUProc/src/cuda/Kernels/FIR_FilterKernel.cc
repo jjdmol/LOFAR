@@ -34,9 +34,10 @@ namespace LOFAR
                                        gpu::Module &program,
                                        gpu::DeviceMemory &devFilteredData,
                                        gpu::DeviceMemory &devInputSamples,
-                                       gpu::DeviceMemory &devFIRweights)
+                                       gpu::Stream &stream)
       :
-      Kernel(ps, program, "FIR_filter")
+      Kernel(ps, program, "FIR_filter"),
+      devFIRweights(stream.getContext(), bufferSize(ps, FILTER_WEIGHTS))
     {
       setArg(0, devFilteredData);
       setArg(1, devInputSamples);
@@ -53,6 +54,16 @@ namespace LOFAR
       nrOperations = nrSamples * ps.nrSamplesPerChannel() * NR_TAPS * 2 * 2;
       nrBytesRead = nrSamples * (NR_TAPS - 1 + ps.nrSamplesPerChannel()) * ps.nrBytesPerComplexSample();
       nrBytesWritten = nrSamples * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
+
+      // Note that these constant weights are now (unnecessarily) stored on the
+      // device for every workqueue. A single copy per device could be used, but
+      // first verify that the device platform still allows workqueue overlap.
+      FilterBank filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER);
+      filterBank.negateWeights();
+
+      gpu::HostMemory firWeights(stream.getContext(), devFIRweights.size());
+      std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(), firWeights.size());
+      stream.writeBuffer(devFIRweights, firWeights, true);
     }
 
     size_t FIR_FilterKernel::bufferSize(const Parset& ps, BufferType bufferType)
