@@ -52,6 +52,25 @@ namespace LOFAR
       nrBytesRead = nrSamples * 2 * ps.nrBitsPerSample() / 8;
       nrBytesWritten = nrSamples * sizeof(std::complex<float>);
     }
+
+    size_t
+    IntToFloatKernel::bufferSize(const Parset& ps, BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA:
+        return
+          // TODO: Make sure this is also correct for 4 bits/sample.
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * ps.nrBitsPerSample() / 8;
+      case OUTPUT_DATA:
+        return 
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
   }
 }
 

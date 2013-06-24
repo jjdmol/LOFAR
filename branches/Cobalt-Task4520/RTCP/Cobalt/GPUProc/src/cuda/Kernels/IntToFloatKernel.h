@@ -33,8 +33,21 @@ namespace LOFAR
     class IntToFloatKernel : public Kernel
     {
     public:
-      IntToFloatKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
-                       gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devInputSamples);
+      IntToFloatKernel(const Parset &ps, 
+                       gpu::Stream &queue, 
+                       gpu::Module &program,
+                       gpu::DeviceMemory &devFilteredData, 
+                       gpu::DeviceMemory &devInputSamples);
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
+      // Return required buffer size for \a bufferType
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
+
     };
   }
 
