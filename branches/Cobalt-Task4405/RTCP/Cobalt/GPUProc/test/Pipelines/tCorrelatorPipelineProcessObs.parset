@@ -11,3 +11,5 @@ Observation.subbandList			 = [300..307]
 Observation.beamList			 = [8*0]
 Observation.channelsPerSubband		 = 64
 Observation.sampleClock			 = 200
+Observation.startTime                    = 2013-01-01 00:00:00  # ->
+Observation.stopTime                     = 2013-01-01 00:00:00  # i.e. no data
