@@ -37,7 +37,12 @@ namespace LOFAR
     {
     public:
       CorrelatorKernel(const Parset &ps, 
-                       gpu::Module &program, 
+                       gpu::Context &context,
+                       gpu::DeviceMemory &devVisibilities, 
+                       gpu::DeviceMemory &devCorrectedData);
+
+      CorrelatorKernel(const Parset &ps, 
+                       gpu::Module &module,
                        gpu::DeviceMemory &devVisibilities, 
                        gpu::DeviceMemory &devCorrectedData);
 
@@ -50,6 +55,10 @@ namespace LOFAR
       // Return required buffer size for \a bufferType
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
+    private:
+      void init(gpu::DeviceMemory &devVisibilities, 
+                gpu::DeviceMemory &devCorrectedData);
+
     };
 
 #else
@@ -58,7 +67,7 @@ namespace LOFAR
     {
     public:
       CorrelatorKernel(const Parset &ps, 
-                       gpu::Module &program,
+                       gpu::Context &context,
                        gpu::DeviceMemory &devVisibilities,
                        gpu::DeviceMemory &devCorrectedData);
 
@@ -68,7 +77,7 @@ namespace LOFAR
     {
     public:
       CorrelateRectangleKernel(const Parset &ps,
-                               gpu::Module &program,
+                               gpu::Context &context,
                                gpu::DeviceMemory &devVisibilities,
                                gpu::DeviceMemory &devCorrectedData);
     };
@@ -77,7 +86,7 @@ namespace LOFAR
     {
     public:
       CorrelateTriangleKernel(const Parset &ps, 
-                              gpu::Module &program,
+                              gpu::Context &context,
                               gpu::DeviceMemory &devVisibilities,
                               gpu::DeviceMemory &devCorrectedData);
     };

@@ -30,10 +30,13 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    IncoherentStokesKernel::IncoherentStokesKernel(const Parset &ps, gpu::Stream &queue,
-                                                   gpu::Module &program, gpu::DeviceMemory &devIncoherentStokes, gpu::DeviceMemory &devInputSamples)
+    IncoherentStokesKernel::
+    IncoherentStokesKernel(const Parset &ps,
+                           gpu::Context &context,
+                           gpu::DeviceMemory &devIncoherentStokes,
+                           gpu::DeviceMemory &devInputSamples)
       :
-      Kernel(ps, program, "incoherentStokes")
+      Kernel(ps, context, "BeamFormer/IncoherentStokes.cu", "incoherentStokes")
     {
       setArg(0, devIncoherentStokes);
       setArg(1, devInputSamples);

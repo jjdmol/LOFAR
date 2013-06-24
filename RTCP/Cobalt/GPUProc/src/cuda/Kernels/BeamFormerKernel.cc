@@ -21,20 +21,19 @@
 #include <lofar_config.h>
 
 #include "BeamFormerKernel.h"
-
-#include <algorithm>
-
-#include <Common/lofar_complex.h>
-
 #include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    BeamFormerKernel::BeamFormerKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devComplexVoltages, gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devBeamFormerWeights)
+    BeamFormerKernel::BeamFormerKernel(const Parset &ps, 
+                                       gpu::Context &context,
+                                       gpu::DeviceMemory &devComplexVoltages,
+                                       gpu::DeviceMemory &devCorrectedData,
+                                       gpu::DeviceMemory &devBeamFormerWeights)
       :
-      Kernel(ps, program, "beamFormer")
+      Kernel(ps, context, "BeamFormer.cu", "beamFormer")
     {
       setArg(0, devComplexVoltages);
       setArg(1, devCorrectedData);

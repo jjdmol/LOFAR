@@ -31,17 +31,35 @@ namespace LOFAR
   namespace Cobalt
   {
     FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, 
-                                       gpu::Module &program,
+                                       gpu::Context &context,
                                        gpu::DeviceMemory &devFilteredData,
                                        gpu::DeviceMemory &devInputSamples,
                                        gpu::Stream &stream)
       :
-      Kernel(ps, program, "FIR_filter"),
-      devFIRweights(stream.getContext(), bufferSize(ps, FILTER_WEIGHTS))
+      Kernel(ps, context, "FIR_Filter.cu", "FIR_filter"),
+      devFIRweights(context, bufferSize(ps, FILTER_WEIGHTS))
+    {
+      init(devFilteredData, devInputSamples, stream);
+    }
+
+    FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, 
+                                       gpu::Module &module,
+                                       gpu::DeviceMemory &devFilteredData,
+                                       gpu::DeviceMemory &devInputSamples,
+                                       gpu::Stream &stream)
+      :
+      Kernel(ps, module, "FIR_filter"),
+      devFIRweights(module.getContext(), bufferSize(ps, FILTER_WEIGHTS))
+    {
+      init(devFilteredData, devInputSamples, stream);
+    }
+
+    void FIR_FilterKernel::init(gpu::DeviceMemory &devFilteredData,
+                                gpu::DeviceMemory &devInputSamples,
+                                gpu::Stream &stream)
     {
       setArg(0, devFilteredData);
       setArg(1, devInputSamples);
-      setArg(2, devFIRweights);
 
       size_t maxNrThreads;
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);

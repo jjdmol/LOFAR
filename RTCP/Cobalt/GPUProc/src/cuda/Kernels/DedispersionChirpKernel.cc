@@ -31,9 +31,13 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    DedispersionChirpKernel::DedispersionChirpKernel(const Parset &ps, gpu::Module &program, gpu::Stream &queue, gpu::DeviceMemory &buffer, gpu::DeviceMemory &DMs)
+    DedispersionChirpKernel::
+    DedispersionChirpKernel(const Parset &ps,
+                            gpu::Context &context,
+                            gpu::DeviceMemory &buffer,
+                            gpu::DeviceMemory &DMs)
       :
-      Kernel(ps, program, "applyChirp")
+      Kernel(ps, context, "BeamFormer/Dedispersion.cu", "applyChirp")
     {
       setArg(0, buffer);
       setArg(1, DMs);

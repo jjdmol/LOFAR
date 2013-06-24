@@ -31,18 +31,16 @@ namespace LOFAR
   namespace Cobalt
   {
     IntToFloatKernel::IntToFloatKernel(const Parset &ps,
-        gpu::Stream &queue,
-        gpu::Module &program,
-        gpu::DeviceMemory &devConvertedData,
-        gpu::DeviceMemory &devInputSamples)
+                                       gpu::Context &context,
+                                       gpu::DeviceMemory &devConvertedData,
+                                       gpu::DeviceMemory &devInputSamples)
       :
-      Kernel(ps, program, "intToFloat")
+      Kernel(ps, context, "IntToFloat.cu", "intToFloat")
     {
       setArg(0, devConvertedData);
       setArg(1, devInputSamples);
 
       size_t maxNrThreads;
-      //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       globalWorkSize = gpu::Grid(maxNrThreads, ps.nrStations());
       localWorkSize = gpu::Block(maxNrThreads, 1);
@@ -52,6 +50,24 @@ namespace LOFAR
       nrBytesRead = nrSamples * 2 * ps.nrBitsPerSample() / 8;
       nrBytesWritten = nrSamples * sizeof(std::complex<float>);
     }
+
+    size_t
+    IntToFloatKernel::bufferSize(const Parset& ps, BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA:
+        return
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * ps.nrBytesPerComplexSample();
+      case OUTPUT_DATA:
+        return 
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
   }
 }
 

@@ -32,9 +32,13 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    CoherentStokesKernel::CoherentStokesKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devStokesData, gpu::DeviceMemory &devComplexVoltages)
+    CoherentStokesKernel::
+    CoherentStokesKernel(const Parset &ps,
+                         gpu::Context &context,
+                         gpu::DeviceMemory &devStokesData,
+                         gpu::DeviceMemory &devComplexVoltages)
       :
-      Kernel(ps, program, "coherentStokes")
+      Kernel(ps, context, "BeamFormer/CoherentStokes.cu", "coherentStokes")
     {
       ASSERT(ps.nrChannelsPerSubband() >= 16 && ps.nrChannelsPerSubband() % 16 == 0);
       ASSERT(ps.nrCoherentStokes() == 1 || ps.nrCoherentStokes() == 4);

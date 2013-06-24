@@ -26,7 +26,6 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include "TestUtil.h"
 
 #include <boost/lexical_cast.hpp>
@@ -52,7 +51,6 @@ int main() {
   gpu::Stream cuStream(ctx);
 
   Parset ps("tBeamFormerKernel.in_parset");
-  string srcFilename("BeamFormer.cu");
 
   // Get default parameters for the compiler
   CompileFlags flags = CompileFlags();
@@ -63,22 +61,9 @@ int main() {
   unsigned NR_TABS =  ps.nrTABs(0);
   unsigned NR_POLARIZATIONS = 2;
   unsigned COMPLEX = 2;
-  CompileDefinitions definitions = CompileDefinitions();
-  definitions["NVIDIA_CUDA"] = "";
-  definitions["NR_STATIONS"] = lexical_cast<string>(NR_STATIONS);
-  definitions["NR_CHANNELS"] = lexical_cast<string>(NR_CHANNELS);
-  definitions["NR_SAMPLES_PER_CHANNEL"] = lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
-  definitions["NR_TABS"] = lexical_cast<string>(NR_TABS);
-  definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
-  definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
-  string ptx = createPTX(devices, srcFilename, flags, definitions);
-  gpu::Module module(createModule(ctx, srcFilename, ptx));
-  cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 
   // Calculate bandpass weights and transfer to the device.
   // *************************************************************
-
-
   size_t lengthWeightsData = NR_STATIONS * NR_CHANNELS * NR_TABS * COMPLEX ;
   size_t lengthBandPassCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX;
   size_t lengthComplexVoltagesData = NR_CHANNELS* NR_SAMPLES_PER_CHANNEL * NR_TABS * NR_POLARIZATIONS * COMPLEX;
@@ -111,8 +96,6 @@ int main() {
     weightsData[idx * 2 + 1] = 0.0f;
   }
 
-
-
   size_t sizeWeightsData = lengthWeightsData* sizeof(float);
   DeviceMemory devWeightsMemory(ctx, sizeWeightsData);
   HostMemory rawWeightsData = getInitializedArray(ctx, sizeWeightsData, 1.0f);
@@ -143,7 +126,7 @@ int main() {
                       ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
   gpu::DeviceMemory devFilteredData(ctx, devFilteredDataSize);
 
-  BeamFormerKernel kernel(ps, module, 
+  BeamFormerKernel kernel(ps, ctx, 
                           devComplexVoltagesMemory,
                           devBandPassCorrectedMemory,
                           devWeightsMemory);
