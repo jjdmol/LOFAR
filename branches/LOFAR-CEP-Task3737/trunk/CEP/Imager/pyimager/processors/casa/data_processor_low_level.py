@@ -1,3 +1,4 @@
+from ..data_processor_low_level_base import DataProcessorLowLevelBase
 import itertools
 import os.path as path
 import numpy
@@ -6,7 +7,7 @@ import lofar.pyimager.algorithms.constants as constants
 import pyrap.tables
 import visimagingweight
 
-class DataProcessorLowLevel:
+class DataProcessorLowLevel(DataProcessorLowLevelBase):
     def __init__(self, measurement, options):
         print measurement
         self._measurement = measurement
@@ -17,6 +18,10 @@ class DataProcessorLowLevel:
 #        assert(options["weight_algorithm"] == WeightAlgorithm.NATURAL)
         self._data_column = "CORRECTED_DATA"
 
+        self._coordinates = None
+        self._shape = None
+        self._response_available = False
+        
         # Defaults from awimager.
         parms = {}
         parms["wmax"] = options["w_max"]
@@ -122,15 +127,13 @@ class DataProcessorLowLevel:
         self.imw.set_density(density, coordinates)
 
     def response(self, coordinates, shape):
-        # TODO: This is a hack! LofarFTMachine computes the average response
-        # while gridding. It cannot compute it on its own for arbitrary
-        # coordinates and shape. For the moment, the CASA DataProcessor class
-        # ensures this function is always called with the same coordinates and
-        # shape as were used in the last call to get().
+        self._update_image_configuration(coordinates, shape)
+        assert(self._response_available)
         return lofar.casaimwrap.average_response(self._context)
 
     def point_spread_function(self, coordinates, shape, as_grid):
         assert(not as_grid)
+        self._update_image_configuration(coordinates, shape)
 
         args = {}
         args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
@@ -152,6 +155,7 @@ class DataProcessorLowLevel:
     def grid(self, coordinates, shape, as_grid):
         assert(not as_grid)
 
+        self._update_image_configuration(coordinates, shape)
         print  "****************************************************************"
         print coordinates
         print shape
@@ -171,10 +175,12 @@ class DataProcessorLowLevel:
         lofar.casaimwrap.begin_grid(self._context, shape, coordinates.dict(), \
             False, args)
         result = lofar.casaimwrap.end_grid(self._context, False)
+        self._response_available = True
         return (result["image"], result["weight"])
 
     def degrid(self, coordinates, model, as_grid):
         assert(not as_grid)
+        self._update_image_configuration(coordinates, model.shape)
 
         args = {}
         args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
@@ -189,10 +195,12 @@ class DataProcessorLowLevel:
         result = lofar.casaimwrap.begin_degrid(self._context, \
             coordinates.dict(), model, args)
         lofar.casaimwrap.end_degrid(self._context)
+        self._response_available = True
 #        self._ms.putcol(self._data_column, result["data"])
 
     def residual(self, coordinates, model, as_grid):
         assert(not as_grid)
+        self._update_image_configuration(coordinates, model.shape)
 
         # Degrid model.
         args = {}
@@ -227,5 +235,12 @@ class DataProcessorLowLevel:
         lofar.casaimwrap.begin_grid(self._context, model.shape, \
             coordinates.dict(), False, args)
         result = lofar.casaimwrap.end_grid(self._context, False)
+        self._response_available = True
 
         return (result["image"], result["weight"])
+        
+    def _update_image_configuration(self, coordinates, shape):
+        if self._coordinates != coordinates or self._shape != shape:
+            self._coordinates = coordinates
+            self._shape = shape
+            self._response_available = False

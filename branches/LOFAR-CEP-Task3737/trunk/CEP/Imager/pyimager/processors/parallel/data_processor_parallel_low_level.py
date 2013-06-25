@@ -9,6 +9,7 @@ import IPython.parallel
 import itertools
 import json
 from ...processors import ImageWeight, Normalization
+from ..data_processor_low_level_base import DataProcessorLowLevelBase
 
 dataprocessor_id = 0
 def get_dataprocessor_id() :
@@ -16,12 +17,13 @@ def get_dataprocessor_id() :
   dataprocessor_id += 1
   return dataprocessor_id-1
 
-class DataProcessorParallelLowLevel:
-    def __init__(self, datadescriptor, options):
+class DataProcessorParallelLowLevel(DataProcessorLowLevelBase):
+    
+    def __init__(self, name, datadescriptor, options):
       
-        if not isinstance(datadescriptor, dict) and os.path.isfile(datadescriptor) :
-            f = open(datadescriptor)
-            datadescriptor = json.load(f)
+        #if not isinstance(datadescriptor, dict) and os.path.isfile(datadescriptor) :
+            #f = open(datadescriptor)
+            #datadescriptor = json.load(f)
 
         if len(options['profile']) == 0:
             self._start_ipcluster()
@@ -39,9 +41,10 @@ class DataProcessorParallelLowLevel:
             print dview['msname']
         self._dview = self._rc[:]
         self._dview['options'] = options
-        self._dview.execute('from lofar.pyimager.processors.casa.data_processor_low_level import DataProcessorLowLevel')
-        self._dview.execute('localdataprocessor = DataProcessorLowLevel(msname, options)', block = True)
+        self._dview.execute('from lofar.pyimager.processors.' + name ' import create_data_processor_low_level')
+        self._dview.execute('localdataprocessor = create_data_processor_low_level(msname, options)', block = True)
         self._remoteprocessor = IPython.parallel.Reference('localdataprocessor')
+        self._connected = True
         
     def _start_ipcluster(self) :
         self._profile = "%s-%s-%i-%i" % (os.path.basename(sys.argv[0]), socket.gethostname(), os.getpid(), get_dataprocessor_id())
@@ -60,7 +63,6 @@ class DataProcessorParallelLowLevel:
               break
             time.sleep(1)
         print 'ok'
-        self._started_ipcontroller = True
         # start ipengines
         self.hostnames = datadescriptor.keys()
         self._pid = {}
@@ -180,7 +182,7 @@ class DataProcessorParallelLowLevel:
         return (image, weight)
 
     def degrid(self, coordinates, model, as_grid):
-        raise RuntimeError("degrid not implemented")
+        raise NotImplementedError("degrid not implemented")
 
     def residual(self, coordinates, model, as_grid):
         results = self._rc[:].apply_sync(lambda processor, *args :
@@ -216,12 +218,9 @@ class DataProcessorParallelLowLevel:
         return response
 
     def close(self):
-        try:
-            if self._started_ipcontroller :
-                self._rc.shutdown(hub=True)
-                self._started_ipcontroller = False
-        except AttributeError:
-            pass
+        if self._connected :
+            self._rc.shutdown(hub=True)
+            self._connected = False
 
     def __del__(self) :
         self.close()

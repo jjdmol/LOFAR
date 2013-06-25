@@ -51,7 +51,7 @@ public:
         const Vector<Double> &time,
         const Vector<Double> &timeCentroid,
         const Vector<Bool> &flagRow,
-        const Matrix<Float> &weight,
+        const Matrix<Float> &imagingWeight,
         const Cube<Bool> &flag,
         const Cube<Complex> &data,
         Bool newMS = false);
@@ -232,7 +232,6 @@ private:
     Vector<Double>                      itsTimeCentroid;
     Vector<Double>                      itsTime;
     Cube<Bool>                          itsFlag;
-    Matrix<Float>                       itsWeight;
     Cube<Complex>                       itsData;
     Bool                                itsNewMS;
     Int                                 itsSpectralWindow;

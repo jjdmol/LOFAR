@@ -1,14 +1,14 @@
-from data_processor import DataProcessor
+from ..data_processor_default import DataProcessorDefault
 from data_processor_parallel_low_level import DataProcessorParallelLowLevel
 
-class DataProcessorParallel(DataProcessor):
+class DataProcessorParallel(DataProcessorDefault):
 
-    def __init__(self, measurement, options):
-        DataProcessor.__init__(self, measurement, options)
+    def __init__(self, name, measurement, options):
+        self._create_processor(name, measurement, options)
         self._cached_channels = None
 
-    def _create_processor(self, measurement, options):
-        self._processor = DataProcessorParallelLowLevel(measurement, options)
+    def _create_processor(self, name, measurement, options):
+        self._processor = DataProcessorParallelLowLevel(name, measurement, options)
 
     def channels(self):
         if self._cached_channels is None:

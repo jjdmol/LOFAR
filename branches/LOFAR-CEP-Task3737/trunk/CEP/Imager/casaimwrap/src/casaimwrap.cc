@@ -388,7 +388,7 @@ Record begin_degrid(CASAContext &context, const Record &coordinates,
         chunk.asArrayBool("FLAG"),
         true);
 
-    context.ft->initializeToVis(context.image, *context.buffer);
+    context.ft->initializeToVis(context.image, *context.buffer, False);
     context.ft->get(*context.buffer);
 
     Record result;

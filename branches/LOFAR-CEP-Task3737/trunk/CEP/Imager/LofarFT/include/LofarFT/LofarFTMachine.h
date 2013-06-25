@@ -211,6 +211,9 @@ public:
   // as a template. The image is loaded and Fourier transformed.
   void initializeToVis(ImageInterface<Complex>& image,
 		       const VisBuffer& vb);
+  
+  void initializeToVis(ImageInterface<Complex>& image,
+                       const VisBuffer& vb, Bool normalize);
 
   // Finalize transform to Visibility plane: flushes the image
   // cache and shows statistics if it is being used.

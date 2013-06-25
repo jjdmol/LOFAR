@@ -574,6 +574,15 @@ const Matrix<Float>& LofarFTMachine::getAveragePB() const
 void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
                                      const VisBuffer& vb)
 {
+  initializeToVis(iimage, vb, True);
+}
+
+
+// Initialize for a transform from the Sky domain. This means that
+// we grid-correct, and FFT the image
+void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
+                                     const VisBuffer& vb, Bool normalize)
+{
   image=&iimage;
 
   ok();
@@ -729,7 +738,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	    if(sphe(pos)<its_PBCut){prod=0.;}
 	    else{
 	      if(!itsPredictFT){
-		prod*=1./sqrt(data(istart+ii,istart+jj));
+                if (normalize) prod*=1./sqrt(data(istart+ii,istart+jj));   // here it happens, vdtol
 		prod/=sphe(istart+ii,istart+jj);
 		if(its_UseWSplit){prod/=sphe(istart+ii,istart+jj);}//*datai(pos2);
 		if(its_Apply_Element){prod/=sphe(istart+ii,istart+jj);}//spheroidCutElement(pos2);}
