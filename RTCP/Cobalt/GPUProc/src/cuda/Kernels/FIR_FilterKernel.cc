@@ -60,6 +60,7 @@ namespace LOFAR
     {
       setArg(0, devFilteredData);
       setArg(1, devInputSamples);
+      setArg(2, devFIRweights);
 
       size_t maxNrThreads;
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
