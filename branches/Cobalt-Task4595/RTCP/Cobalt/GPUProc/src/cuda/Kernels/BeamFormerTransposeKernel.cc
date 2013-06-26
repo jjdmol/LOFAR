@@ -54,6 +54,19 @@ namespace LOFAR
       nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
     }
 
+
+    size_t
+    BeamFormerTransposeKernel::bufferSize(const Parset& ps, 
+                                          BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA: 
+      case OUTPUT_DATA:
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
   }
 }
 

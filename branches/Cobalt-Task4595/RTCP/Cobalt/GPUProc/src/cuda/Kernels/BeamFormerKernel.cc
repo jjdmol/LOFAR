@@ -56,6 +56,17 @@ namespace LOFAR
       nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
     }
 
+    size_t 
+    BeamFormerKernel::bufferSize(const Parset& ps, BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA: 
+      case OUTPUT_DATA:
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
   }
 }
 
