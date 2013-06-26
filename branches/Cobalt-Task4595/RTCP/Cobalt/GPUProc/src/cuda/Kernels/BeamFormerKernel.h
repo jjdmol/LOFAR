@@ -42,7 +42,8 @@ namespace LOFAR
       enum BufferType
       {
         INPUT_DATA,
-        OUTPUT_DATA
+        OUTPUT_DATA,
+        BEAM_FORMER_WEIGHTS
       };
 
       // Return required buffer size for \a bufferType

@@ -39,20 +39,25 @@ namespace LOFAR
       setArg(1, devCorrectedData);
       setArg(2, devBeamFormerWeights);
       // TODO: Hoe moet ik deze ook maar weer instellen?? Want 
-      globalWorkSize = gpu::Grid(NR_POLARIZATIONS, ps.nrTABs(0), ps.nrChannelsPerSubband());
-      localWorkSize = gpu::Block(NR_POLARIZATIONS, ps.nrTABs(0), ps.nrChannelsPerSubband());
+      globalWorkSize = gpu::Grid(NR_POLARIZATIONS, 
+                                 ps.nrTABs(0), 
+                                 ps.nrChannelsPerSubband());
+      localWorkSize = gpu::Block(NR_POLARIZATIONS, 
+                                 ps.nrTABs(0), 
+                                 ps.nrChannelsPerSubband());
 
-      // FIXME: nrTABs
-      //queue.enqueueNDRangeKernel(*this, cl::NullRange, gpu::dim3(16, ps.nrTABs(0), ps.nrChannelsPerSubband()), gpu::dim3(16, ps.nrTABs(0), 1), 0, &event);
-      //queue.launchKernel(*this, gpu::dim3(16, ps.nrTABs(0), ps.nrChannelsPerSubband()), gpu::dim3(16, ps.nrTABs(0), 0); // TODO: extend/use Kernel::enqueue(). This will also correct the CUDA vs OpenCL interpret of gridSize (when fixed/enabled).
+      size_t nrWeightsBytes = bufferSize(ps, BEAM_FORMER_WEIGHTS);
+      size_t nrSampleBytesPerPass = bufferSize(ps, INPUT_DATA);
+      size_t nrComplexVoltagesBytesPerPass = bufferSize(ps, OUTPUT_DATA);
 
-      size_t count = ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
-      size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(0) * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      size_t nrSampleBytesPerPass = count * ps.nrStations() * sizeof(std::complex<float>);
-      size_t nrComplexVoltagesBytesPerPass = count * ps.nrTABs(0) * sizeof(std::complex<float>);
+      size_t count = 
+        ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
       unsigned nrPasses = std::max((ps.nrStations() + 6) / 16, 1U);
+
       nrOperations = count * ps.nrStations() * ps.nrTABs(0) * 8;
-      nrBytesRead = nrWeightsBytes + nrSampleBytesPerPass + (nrPasses - 1) * nrComplexVoltagesBytesPerPass;
+      nrBytesRead = 
+        nrWeightsBytes + nrSampleBytesPerPass + (nrPasses - 1) * 
+        nrComplexVoltagesBytesPerPass;
       nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
     }
 
@@ -61,7 +66,17 @@ namespace LOFAR
     {
       switch (bufferType) {
       case INPUT_DATA: 
+        return
+          ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * 
+          NR_POLARIZATIONS * ps.nrStations() * sizeof(std::complex<float>);
       case OUTPUT_DATA:
+        return
+          ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * 
+          NR_POLARIZATIONS * ps.maxNrTABs() * sizeof(std::complex<float>);
+      case BEAM_FORMER_WEIGHTS:
+        return 
+          ps.nrStations() * ps.maxNrTABs() * ps.nrChannelsPerSubband() * 
+          sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
