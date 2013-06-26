@@ -510,10 +510,8 @@ namespace LOFAR
       bool                        delayCompensation() const;
       unsigned                    nrCalcDelays() const;
       bool                        correctClocks() const;
-      double                      clockCorrectionTime(const std::string &station) const;
       bool                        correctBandPass() const;
       std::string                 stationName(int index) const;
-      int                         stationIndex(const std::string &name) const;
       std::vector<std::string>    allStationNames() const;
 
       bool                        outputCorrelatedData() const;
@@ -563,13 +561,7 @@ namespace LOFAR
       double                      dispersionMeasure(unsigned beam = 0,unsigned pencil = 0) const;
       std::vector<std::string>    TABStationList(unsigned beam = 0,unsigned pencil = 0, bool raw = false) const;
 
-      std::vector<unsigned>       subbandList() const;
       size_t                      nrSubbands() const;
-
-      std::vector<unsigned>       subbandToSAPmapping() const;
-      std::vector<double>         subbandToFrequencyMapping() const;
-      std::vector<unsigned>       subbandToRSPboardMapping(const std::string &stationName) const;
-      std::vector<unsigned>       subbandToRSPslotMapping(const std::string &stationName) const;
 
       double channel0Frequency( size_t subband ) const;
 

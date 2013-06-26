@@ -163,21 +163,15 @@ namespace LOFAR
       case CORRELATED_DATA:
         itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
 
-        {
-          const vector<unsigned> subbands = itsParset.subbandList();
-          const vector<unsigned> SAPs = itsParset.subbandToSAPmapping();
-          const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
-
-          LOG_INFO_STR(itsLogPrefix << "Characteristics: "
-                                    << "SAP " << SAPs[itsStreamNr]
-                                    << ", subband " << subbands[itsStreamNr]
-                                    << ", centralfreq " << setprecision(8) << frequencies[itsStreamNr] / 1e6 << " MHz"
-                                    << ", duration " << setprecision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
-                                    << ", integration " << setprecision(8) << itsParset.IONintegrationTime() << " s"
-                                    << ", channels " << itsParset.nrChannelsPerSubband()
-                                    << ", channelwidth " << setprecision(8) << itsParset.channelWidth() / 1e3 << " kHz"
-                       );
-        }
+        LOG_INFO_STR(itsLogPrefix << "Characteristics: "
+                                  << "SAP " << itsParset.settings.subbands[itsStreamNr].SAP
+                                  << ", subband " << itsParset.settings.subbands[itsStreamNr].stationIdx
+                                  << ", centralfreq " << setprecision(8) << itsParset.settings.subbands[itsStreamNr].centralFrequency / 1e6 << " MHz"
+                                  << ", duration " << setprecision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
+                                  << ", integration " << setprecision(8) << itsParset.IONintegrationTime() << " s"
+                                  << ", channels " << itsParset.nrChannelsPerSubband()
+                                  << ", channelwidth " << setprecision(8) << itsParset.channelWidth() / 1e3 << " kHz"
+                     );
         break;
       case BEAM_FORMED_DATA:
         itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
