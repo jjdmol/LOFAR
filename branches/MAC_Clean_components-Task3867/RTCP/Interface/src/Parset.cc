@@ -1052,7 +1052,7 @@ unsigned Parset::nrSamplesToCNProc() const
 
 unsigned Parset::inputBufferSize() const
 {
-  return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer", 1.0) * subbandBandwidth());
+  return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer", 2.5) * subbandBandwidth());
 }
 
 unsigned Parset::maxNetworkDelay() const
