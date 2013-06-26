@@ -28,6 +28,7 @@
 #include <UnitTest++.h>
 #include <fstream>
 #include <cstdio>
+#include <cstdlib>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -119,6 +120,9 @@ TEST_FIXTURE(Fixture, CreateModuleHighestArch)
 int main()
 {
   INIT_LOGGER("t_gpu_utils");
+
+  unsetenv("LOFARROOT");
+
   try {
     gpu::Platform pf;
     return UnitTest::RunAllTests() > 0;
