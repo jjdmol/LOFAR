@@ -43,17 +43,16 @@ using LOFAR::Exception;
 
 // The tests succeeds for different values of stations, channels, samples and tabs.
 
-unsigned NR_CHANNELS = 2;
-unsigned NR_SAMPLES_PER_CHANNEL = 2;
+unsigned NR_CHANNELS = 4;
+unsigned NR_SAMPLES_PER_CHANNEL = 4;
 unsigned NR_TABS = 2;
 unsigned NR_POLARIZATIONS = 2;
 unsigned COMPLEX = 2;
+bool CHANNEL_PARALLEL = false;
 
-
-// Create the data arrays
+// Create the data arrays length
 size_t lengthTransposedData =  NR_CHANNELS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_TABS * COMPLEX ;
 size_t lengthComplexVoltagesData = NR_CHANNELS* NR_SAMPLES_PER_CHANNEL * NR_TABS * NR_POLARIZATIONS * COMPLEX;
-
 
 
 void exit_with_print(float *complexVoltagesData, float *outputOnHostPtr)
@@ -82,26 +81,58 @@ void exit_with_print(float *complexVoltagesData, float *outputOnHostPtr)
     }
   }
   cout << endl << endl;
-  for(unsigned idx_tabs = 0; idx_tabs < NR_TABS; ++ idx_tabs)
+  // The the kernel functions output different arrays:
+  // This if statement selects the correct print method
+  if (CHANNEL_PARALLEL == false) 
   {
-    cout << endl << "idx_tabs: " << idx_tabs << endl;
-    for(unsigned idx_samples = 0; idx_samples < NR_SAMPLES_PER_CHANNEL; ++idx_samples)
+    cout << "not CHANNEL_PARALLEL" << endl;
+    for(unsigned idx_tabs = 0; idx_tabs < NR_TABS; ++ idx_tabs)
     {
-      cout << "samples  " << idx_samples << ": ";
-      
-      for (unsigned idx_channel = 0; idx_channel < NR_CHANNELS; ++ idx_channel)
+      cout << endl << "idx_tabs: " << idx_tabs << endl;
+      for(unsigned idx_pol = 0; idx_pol < NR_POLARIZATIONS; ++idx_pol)
       {
-        unsigned sample_base_idx = idx_tabs * NR_SAMPLES_PER_CHANNEL * NR_TABS * 4 +
-                              idx_samples * NR_TABS * 4 + 
-                              idx_channel * 4;
+        cout << "pol  " << idx_pol << ": ";
+      
+        for (unsigned idx_channel = 0; idx_channel < NR_CHANNELS; ++ idx_channel)
+        {
+          unsigned sample_base_idx = idx_tabs *  NR_POLARIZATIONS *  NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX +
+                                idx_pol * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX + 
+                                idx_channel * NR_SAMPLES_PER_CHANNEL * COMPLEX;
+            cout << "<" << idx_channel << ">";
+            for(unsigned idx_samples = 0; idx_samples < NR_SAMPLES_PER_CHANNEL; ++idx_samples)
+            {
+               cout << "(" << outputOnHostPtr[sample_base_idx + idx_samples * COMPLEX ] << ", "
+                    << outputOnHostPtr[sample_base_idx + idx_samples * COMPLEX + 1] << ")" ;
 
-        cout << "<" << idx_channel <<">" 
-             << "(" << outputOnHostPtr[sample_base_idx] << ", "
-             << outputOnHostPtr[sample_base_idx + 1] << ")-("
-             << outputOnHostPtr[sample_base_idx + 2] << ", " 
-             << outputOnHostPtr[sample_base_idx + 3] <<") ";
+            }
+        }
+        cout << endl;
       }
-      cout << endl;
+    }
+  }
+  else
+  {
+    cout << "CHANNEL_PARALLEL" << endl;
+    for(unsigned idx_tabs = 0; idx_tabs < NR_TABS; ++ idx_tabs)
+    {
+      cout << endl << "idx_tabs: " << idx_tabs << endl;
+      for(unsigned idx_pol = 0; idx_pol < NR_POLARIZATIONS; ++idx_pol)
+      {
+        cout << "pol " << idx_pol << ": ";
+        for(unsigned idx_samples = 0; idx_samples < NR_SAMPLES_PER_CHANNEL; ++idx_samples)             
+        {
+          unsigned sample_base_idx = idx_tabs *  NR_POLARIZATIONS *  NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX +
+                                idx_pol * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX + 
+                                idx_samples * NR_CHANNELS * COMPLEX;
+            cout << "<" << idx_samples << ">";
+            for (unsigned idx_channel = 0; idx_channel < NR_CHANNELS; ++ idx_channel)
+            {
+               cout << "(" << outputOnHostPtr[sample_base_idx + idx_channel * COMPLEX ] << ", "
+                    << outputOnHostPtr[sample_base_idx + idx_channel * COMPLEX + 1] << ")" ;
+            }
+        }
+        cout << endl;
+      }
     }
   }
 
@@ -132,7 +163,10 @@ HostMemory runTest(gpu::Context ctx,
   definitions["NR_TABS"] = lexical_cast<string>(NR_TABS);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
-  definitions["CHANNEL_PARALLEL"] = lexical_cast<string>("false"); 
+
+  //Switch between the two function versions
+  if (CHANNEL_PARALLEL)
+    definitions["CHANNEL_PARALLEL"] = lexical_cast<string>(""); 
 
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(devices, kernelFile, flags, definitions);
@@ -169,7 +203,7 @@ HostMemory runTest(gpu::Context ctx,
   //Block localWorkSize(16, NR_TABS, NR_CHANNELS);
    //globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, ps.nrSamplesPerChannel() / 16);
    //localWorkSize = cl::NDRange(256, 1, 1);
-  Grid globalWorkSize(1, 10, 2);
+  Grid globalWorkSize(1, (NR_TABS + 15) / 16, 1);
   //Grid globalWorkSize(1, 1, 2);
   Block localWorkSize(256, 1, 1); // increasing x dim does not change anything
   // Run the kernel
@@ -219,14 +253,14 @@ int main()
   cout << "test 1" << endl;
   for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
   {
-    complexVoltagesData[idx * 2] = idx * 2;
-    complexVoltagesData[idx * 2 + 1] = idx * 2+ 1;
+    complexVoltagesData[idx * 2] = 0 ;
+    complexVoltagesData[idx * 2 + 1] = 0;
   }
 
   for (unsigned idx = 0; idx < lengthTransposedData/2; ++idx)
   {
-    transposedData[idx * 2] = 0.0f;
-    transposedData[idx * 2 + 1] = 0.0f;
+    transposedData[idx * 2] = 42.0f;
+    transposedData[idx * 2 + 1] = 42.0f;
   }
 
   HostMemory outputOnHost = runTest(ctx, cuStream, transposedData,
@@ -242,13 +276,12 @@ int main()
     }
     
   // ***********************************************************
-  // Baseline test 2: If all input data is zero the output should be zero while the wheights are non zero
-  // The output array is initialized with 42s
+  // Baseline test 2: perform the stanspose
   cout << "test 2" << endl;
   for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
   {
-    complexVoltagesData[idx * 2] = 1.0f;
-    complexVoltagesData[idx * 2 + 1] = 1.0f;
+    complexVoltagesData[idx * 2] = idx *2 * 1.0f;
+    complexVoltagesData[idx * 2 + 1] = (idx * 2 + 1) * 1.0f;
   }
 
   for (unsigned idx = 0; idx < lengthTransposedData/2; ++idx)
@@ -261,14 +294,20 @@ int main()
     complexVoltagesData, function);
 
   // Validate the returned data array
+  // Walk the data arrays and create linear data arrays with the correct content 
   outputOnHostPtr = outputOnHost2.get<float>();
-  for (size_t idx = 0; idx < lengthTransposedData; ++idx)
-    if (outputOnHostPtr[idx] != 0.0f)
-    {
-      cerr << "The data returned by the kernel should be all zero: All inputs are zero";
-      exit_with_print(complexVoltagesData, outputOnHostPtr);
-    }
-    
+  exit_with_print(complexVoltagesData, outputOnHostPtr);
+  //bool continue = true;
+  //unsigned idx_in_data = 0;
+  //for (size_t idx = 0; idx < NR_TABS * NR_POLARIZATIONS; ++idx)
+  //{
+  //  unsigned start_idx = idx * 2;
+
+  //  for (size_t idy = 0; idy < lengthTransposedData / ; ++idy)
+  //  {
+  //    float idx_expected = 
+  //  }
+  //} 
   delete [] complexVoltagesData;
   delete [] transposedData;
 

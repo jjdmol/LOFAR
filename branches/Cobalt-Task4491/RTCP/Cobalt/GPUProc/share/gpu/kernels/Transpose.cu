@@ -18,11 +18,12 @@
 //#
 //# $Id$
 
-#ifdef CHANNEL_PARALLEL 
-typedef float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
-typedef float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS];
-
 /*!
+ *
+ * COPY PASTA OF BEAMFORMER DOCUMENTATION 
+ *
+ *
+ *
  * Performs beamforming to x beam based.
  * The beamformer performs a complex weighted multiply add of the each sample of the
  * provided input data.
@@ -45,6 +46,11 @@ typedef float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TA
  * Execution configuration:
  * - LocalWorkSize = (NR_POLARIZATIONS, NR_TABS, NR_CHANNELS) Note that for full utilization NR_TABS * NR_CHANNELS % 16 = 0
  */
+
+#ifdef CHANNEL_PARALLEL 
+typedef float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS];
+typedef float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
+
 extern "C" __global__  void transpose( 
                     void * transposedDataPtr,
                     const void * complexVoltagesPtr)
@@ -52,10 +58,10 @@ extern "C" __global__  void transpose(
   TransposedDataType transposedData = (TransposedDataType) transposedDataPtr;
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
 
-  __shared__ float4 tmp[16][17]; // add one to get coaliesced reads?
+  __shared__ float2 tmp[16][17][2]; // add one to get coaliesced reads?
 
-  unsigned tabBase = 16 * blockDim.y * blockIdx.y + threadIdx.y;
-  unsigned chBase = 16 * blockDim.z * blockIdx.z + threadIdx.z;
+  unsigned tabBase = 16 * blockIdx.y; // No use of the block size!!!
+  unsigned chBase = 16 * blockIdx.z;
 
   unsigned tabOffsetR = threadIdx.x & 15;
   unsigned tabR = tabBase + tabOffsetR;
@@ -69,28 +75,30 @@ extern "C" __global__  void transpose(
   unsigned channelW = chBase + chOffsetW;
   bool doW = NR_TABS % 16 == 0 || tabW < NR_TABS;
 
-  for (int time = 0; time < NR_SAMPLES_PER_CHANNEL; time++) {
-    if (doR)
-      tmp[tabOffsetR][chOffsetR] = (*complexVoltages)[channelR][time][tabR];
-
+  for (int time = 0; time < NR_SAMPLES_PER_CHANNEL; time++) 
+  {
+    if (doR)  // only do a read and write if we are within our bounds
+    {    
+      tmp[tabOffsetR][chOffsetR][0] = (*complexVoltages)[channelR][time][tabR][0];
+      tmp[tabOffsetR][chOffsetR][1] = (*complexVoltages)[channelR][time][tabR][1];
+    }
     __syncthreads();
-
-    if (doW) {
-      float4 sample = tmp[tabOffsetW][chOffsetW];
-      (*transposedData)[tabW][0][time][channelW] = make_float2(sample.x, sample.y);
-
-      (*transposedData)[tabW][1][time][channelW] = make_float2(sample.z, sample.w);
+    if (doW) 
+    {
+      float2 sample = tmp[tabOffsetW][chOffsetW][0];
+      float2 sample2 = tmp[tabOffsetW][chOffsetW][1];
+      (*transposedData)[tabW][0][time][channelW] = sample;
+      (*transposedData)[tabW][1][time][channelW] = sample2;
     }
 
     __syncthreads();
-
   }
 }
 
 #else
 
+typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS]; 
 typedef  float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
-typedef  float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS];
 
 extern "C" __global__  void transpose( void * transposedDataPtr,
                                         const void * complexVoltagesPtr)
@@ -98,7 +106,7 @@ extern "C" __global__  void transpose( void * transposedDataPtr,
   TransposedDataType transposedData = (TransposedDataType) transposedDataPtr;
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
 
-  __shared__ float4 tmp[16][17];
+  __shared__ float2 tmp[16][17][2];
 
   unsigned tabBase = 16 * blockDim.y * blockIdx.y + threadIdx.y;
   unsigned timeBase = 16 * blockDim.z * blockIdx.z + threadIdx.z;
@@ -118,16 +126,17 @@ extern "C" __global__  void transpose( void * transposedDataPtr,
   for (int channel = 0; channel < NR_CHANNELS; channel++) 
   {
     if (doR)
-      tmp[tabOffsetR][timeOffsetR] = (*complexVoltages)[timeR][channel][tabR];
+    {
+      tmp[tabOffsetR][timeOffsetR][0] = (*complexVoltages)[channel][timeR][tabR][0];
+      tmp[tabOffsetR][timeOffsetR][1] = (*complexVoltages)[channel][timeR][tabR][1];
+    }
 
     __syncthreads();
-
-    if (doW) 
-    
-    {
-      float4 sample = tmp[tabOffsetW][timeOffsetW];
-      (*transposedData)[tabW][0][channel][timeW] = sample.xy;
-      (*transposedData)[tabW][1][channel][timeW] = sample.zw;
+    if (doW) {
+      float2 sample = tmp[tabOffsetW][timeOffsetW][0];
+      float2 sample2 = tmp[tabOffsetW][timeOffsetW][1];
+      (*transposedData)[tabW][0][channel][timeW] = sample;
+      (*transposedData)[tabW][1][channel][timeW] = sample2;
     }
 
     __syncthreads();
