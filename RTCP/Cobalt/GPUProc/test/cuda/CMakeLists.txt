@@ -18,8 +18,6 @@ endif(UNITTEST++_FOUND)
 lofar_add_test(tKernel tKernel.cc)
 lofar_add_test(tStreamReadBuffer tStreamReadBuffer.cc)
 lofar_add_test(tMultiDimArrayHostBuffer tMultiDimArrayHostBuffer.cc)
-lofar_add_test(tCorrelatorWorkQueueProcessSb tCorrelatorWorkQueueProcessSb.cc)
-lofar_add_test(tCorrelatorPipeline tCorrelatorPipeline)
 
 # Kernel unit tests
 lofar_add_test(tIntToFloat tIntToFloat.cc)
@@ -42,7 +40,6 @@ set_tests_properties(
   tCorrelator
   tIntToFloat
   tIntToFloatKernel
-  tCorrelatorWorkQueueProcessSb
   tBeamFormer
   tBeamFormerKernel
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
