@@ -45,13 +45,31 @@ namespace LOFAR
       setArg(1, devComplexVoltages);
 
       //globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
-      globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, ps.nrSamplesPerChannel() / 16);
+      globalWorkSize = gpu::Grid(256,
+                                 (ps.nrTABs(0) + 15) / 16, 
+                                 ps.nrSamplesPerChannel() / 16);
       localWorkSize = gpu::Block(256, 1, 1);
 
       nrOperations = 0;
-      nrBytesRead = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>),
-      //nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>);
-      nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
+      nrBytesRead = nrBytesWritten =
+        (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * 
+        ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
+    }
+
+
+    size_t
+    BeamFormerTransposeKernel::bufferSize(const Parset& ps, 
+                                          BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA: 
+      case OUTPUT_DATA:
+        return
+          ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * 
+          NR_POLARIZATIONS * ps.maxNrTABs() * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
     }
 
   }

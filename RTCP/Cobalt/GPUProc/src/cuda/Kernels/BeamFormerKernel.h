@@ -38,8 +38,17 @@ namespace LOFAR
                        gpu::DeviceMemory &devComplexVoltages,
                        gpu::DeviceMemory &devCorrectedData,
                        gpu::DeviceMemory &devBeamFormerWeights);
-    };
 
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        BEAM_FORMER_WEIGHTS
+      };
+
+      // Return required buffer size for \a bufferType
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
+    };
 
   }
 }

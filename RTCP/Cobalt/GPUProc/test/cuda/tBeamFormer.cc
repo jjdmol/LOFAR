@@ -89,7 +89,7 @@ void exit_with_print(float *outputOnHostPtr)
 }
 
 
-HostMemory runTest(gpu::Context ctx,
+HostMemory runTest(Context ctx,
                    Stream cuStream,
                    float * weightsData,
                    float * bandPassCorrectedData,
@@ -118,7 +118,7 @@ HostMemory runTest(gpu::Context ctx,
 
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(kernelFile, definitions, flags, devices);
-  gpu::Module module(createModule(ctx, kernelFile, ptx));
+  Module module(createModule(ctx, kernelFile, ptx));
   Function hKernel(module, function);   // c function this no argument overloading
 
   // *************************************************************
@@ -179,18 +179,18 @@ int main()
   const char* function = "beamFormer";
   try 
   {
-    gpu::Platform pf;
+    Platform pf;
     cout << "Detected " << pf.size() << " CUDA devices" << endl;
   } 
-  catch (gpu::CUDAException& e) 
+  catch (CUDAException& e) 
   {
     cerr << e.what() << endl;
     return 3;
   }
 
   // Create a default context
-  gpu::Device device(0);
-  gpu::Context ctx(device);
+  Device device(0);
+  Context ctx(device);
   Stream cuStream(ctx);
 
   // Define the input and output arrays
