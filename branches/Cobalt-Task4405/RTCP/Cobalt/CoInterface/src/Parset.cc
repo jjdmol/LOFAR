@@ -279,7 +279,7 @@ namespace LOFAR
        */
 
       settings.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
-      if (settings.correlator.enabled || true) { // for now, always fill in correlator values, since they're still used outside the correlator to determine the block size, etc (TODO: move generic ones outside)
+      if (settings.correlator.enabled || true) { // for now, always fill in correlator values, since they're still used outside the correlator to determine the block size, etc (TODO: move generic ones outside, but see TODO below)
         settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
         settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
         settings.correlator.nrSamplesPerChannel = getUint32("OLAP.CNProc.integrationSteps", 3052);
@@ -317,10 +317,12 @@ namespace LOFAR
           }
         }
 
-        // Files to output
-        settings.correlator.files.resize(nrSubbands);
-        for (size_t i = 0; i < nrSubbands; ++i) {
-          settings.correlator.files[i].location = getFileLocation("Correlated", i);
+        if (settings.correlator.enabled) { // TODO: redundant check, but as long as '|| true' is there (just above), this is needed as some test parsets (e.g. tKernel.parset.in) has no locations and filenames (and enabled) keys. See tCorrelatorPipelineProcessObs.parset what is needed or refactor this function.
+          // Files to output
+          settings.correlator.files.resize(nrSubbands);
+          for (size_t i = 0; i < nrSubbands; ++i) {
+            settings.correlator.files[i].location = getFileLocation("Correlated", i);
+          }
         }
       }
 
