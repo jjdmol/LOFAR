@@ -54,7 +54,7 @@ namespace LOFAR
       itsMSname(msName),
       itsParset(parset)
     {
-      if (itsParset.getLofarStManVersion() > 1) {
+      if (LofarStManVersion > 1) {
         string seqfilename = str(format("%s/table.f0seqnr") % msName);
 
         try {

@@ -47,6 +47,8 @@
  *  3            normal          1,2               1,2,4
  */
 
+static const unsigned LofarStManVersion = 3;
+
 //# Forward Declarations
 namespace casa
 {
