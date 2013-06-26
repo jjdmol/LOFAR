@@ -26,6 +26,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <cstdlib>
 
 #if defined __linux__
 #include <linux/limits.h>
@@ -69,6 +70,7 @@
 #include <MSLofar/BeamTables.h>
 #include <LofarStMan/LofarStMan.h>
 #include <CoInterface/Exceptions.h>
+#include <Common/LofarLocators.h>
 #include <OutputProc/Package__Version.h>
 
 
@@ -183,12 +185,22 @@ namespace LOFAR
         fillHistory();
 
         try {
+          // Use ConfigLocator to locate antenna configuration files.
+          ConfigLocator configLocator;
+          // By default, ConfigLocator doesn't add ${LOFARROOT} to its search
+          // path, so we have to do it here :(
+          const char* lofarroot = getenv("LOFARROOT");
+          if (lofarroot) {
+            configLocator.addPathAtFront(lofarroot);
+          }
+          LOG_DEBUG_STR("Config locator search path: " << 
+                        configLocator.getPath());
           // Fill the tables containing the beam info.
           BeamTables::fill(*itsMS,
                            itsPS.antennaSet(),
-                           itsPS.AntennaSetsConf(),
-                           itsPS.AntennaFieldsDir(),
-                           itsPS.HBADeltasDir());
+                           configLocator.locate("AntennaSets.conf"),
+                           configLocator.locate("StaticMetaData"),
+                           configLocator.locate("StaticMetaData"));
         } catch (LOFAR::AssertError &ex) {
           LOG_WARN_STR("Ignoring exception from BeamTables::fill(): " << ex.what());
         }
