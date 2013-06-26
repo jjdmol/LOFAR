@@ -279,7 +279,7 @@ namespace LOFAR
        */
 
       settings.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
-      if (settings.correlator.enabled || true) { // for now, always fill in correlator values, since they're still used outside the correlator to determine the block size, etc
+      if (settings.correlator.enabled || true) { // for now, always fill in correlator values, since they're still used outside the correlator to determine the block size, etc (TODO: move generic ones outside, but see TODO below)
         settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
         settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
         settings.correlator.nrSamplesPerChannel = getUint32("OLAP.CNProc.integrationSteps", 3052);
@@ -317,7 +317,7 @@ namespace LOFAR
           }
         }
 
-        if (settings.correlator.enabled) {
+        if (settings.correlator.enabled) { // TODO: redundant check, but as long as '|| true' is there (just above), this is needed as some test parsets (e.g. tKernel.parset.in) has no locations and filenames (and enabled) keys. See tCorrelatorPipelineProcessObs.parset what is needed or refactor this function.
           // Files to output
           settings.correlator.files.resize(nrSubbands);
           for (size_t i = 0; i < nrSubbands; ++i) {
@@ -555,7 +555,7 @@ namespace LOFAR
     std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
     {
       if (outputType == CORRELATED_DATA)
-        return settings.correlator.files[streamNr].location.host;
+        return settings.correlator.files[streamNr].location.host; // TODO: add to check() to reject parset or obsconfig early to avoid segfault here if streamNr >= settings.correlator.files.size()
 
       return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[0];
     }

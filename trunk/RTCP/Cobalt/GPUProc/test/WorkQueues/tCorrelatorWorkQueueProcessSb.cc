@@ -45,7 +45,7 @@ int main() {
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
 
-  Parset ps("tCorrelatorWorkQueueProcessSb.parset.in");
+  Parset ps("tCorrelatorWorkQueueProcessSb.parset");
 
   // Create very simple kernel programs, with predictable output. Skip as much as possible.
   // Nr of channels/sb from the parset is 1, so the PPF will not even run.
