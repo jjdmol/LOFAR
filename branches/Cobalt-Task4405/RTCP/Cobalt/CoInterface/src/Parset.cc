@@ -198,7 +198,7 @@ namespace LOFAR
         settings.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
       }
 
-      settings.nrPolarisations = getUint32("Observation.nrPolarisations", 2);
+      settings.nrPolarisations = 2;
 
       settings.corrections.bandPass   = getBool("OLAP.correctBandPass", true);
       settings.corrections.clock      = getBool("OLAP.correctClocks", true);
@@ -207,12 +207,11 @@ namespace LOFAR
       settings.delayCompensation.enabled              = getBool("OLAP.delayCompensation", true);
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
 
-      settings.nrPPFTaps = getUint32("OLAP.CNProc.nrPPFTaps", 16);
+      settings.nrPPFTaps = 16;
 
       // Station information
       settings.antennaSet     = getString("Observation.antennaSet", "LBA");
       settings.bandFilter     = getString("Observation.bandFilter", "LBA_30_70");
-      settings.nrSlotsInFrame = getUint32("Observation.nrSlotsInFrame", maxBeamletsPerRSP(settings.nrBitsPerSample));
 
       vector<string> stationNames = getStringVector("OLAP.storageStationNames", emptyVectorString, true);
       size_t nrStations = stationNames.size();
@@ -1117,19 +1116,9 @@ namespace LOFAR
       return settings.corrections.bandPass;
     }
 
-    unsigned Parset::getLofarStManVersion() const
-    {
-      return getUint32("OLAP.LofarStManVersion", 3);
-    }
-
-    vector<unsigned> Parset::phaseOnePsets() const
-    {
-      return getUint32Vector("OLAP.CNProc.phaseOnePsets",true);
-    }
-
     double Parset::channel0Frequency(size_t subband) const
     {
-      double sbFreq = subbandToFrequencyMapping()[subband];
+      const double sbFreq = settings.subbands[subband].centralFrequency;
 
       if (nrChannelsPerSubband() == 1)
         return sbFreq;
@@ -1138,16 +1127,6 @@ namespace LOFAR
       // downwards, so subtracting half a subband results in the
       // center of channel 0 (instead of the bottom).
       return sbFreq - 0.5 * subbandBandwidth();
-    }
-
-    unsigned Parset::nrSlotsInFrame() const
-    {
-      return settings.nrSlotsInFrame;
-    }
-
-    string Parset::partitionName() const
-    {
-      return getString("OLAP.CNProc.partition");
     }
 
     bool Parset::realTime() const
@@ -1168,6 +1147,9 @@ namespace LOFAR
     unsigned Parset::maxNrTABs() const
     {
       std::vector<unsigned> beams = nrTABs();
+
+      if (beams.empty())
+        return 0;
 
       return *std::max_element(beams.begin(), beams.end());
     }

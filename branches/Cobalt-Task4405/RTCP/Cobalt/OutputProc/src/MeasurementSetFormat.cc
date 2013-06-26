@@ -548,7 +548,7 @@ namespace LOFAR
 
       for (uInt i = 0; i < nStations; ++i) {
         for (uInt j = 0; j <= i; ++j) {
-          if (itsPS.getLofarStManVersion() == 2) {
+          if (LofarStManVersion == 2) {
             // switch order of stations to fix write of complex conjugate data in V1
             ant1[inx] = i;
             ant2[inx] = j;
@@ -564,7 +564,7 @@ namespace LOFAR
       string filename = MSname + "/table.f0meta";
 
       AipsIO aio(filename, ByteIO::New);
-      aio.putstart("LofarStMan", itsPS.getLofarStManVersion());
+      aio.putstart("LofarStMan", LofarStManVersion);
       aio << ant1 << ant2
           << itsStartTime
           << itsPS.IONintegrationTime()
@@ -573,7 +573,7 @@ namespace LOFAR
           << static_cast<double>(itsPS.CNintegrationSteps() * itsPS.IONintegrationSteps())
           << itsAlignment
           << isBigEndian;
-      if (itsPS.getLofarStManVersion() > 1) {
+      if (LofarStManVersion > 1) {
         uInt itsNrBytesPerNrValidSamples =
           itsPS.integrationSteps() < 256 ? 1 : itsPS.integrationSteps() < 65536 ? 2 : 4;
         aio << itsNrBytesPerNrValidSamples;

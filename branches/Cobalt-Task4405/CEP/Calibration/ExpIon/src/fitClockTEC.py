@@ -619,12 +619,12 @@ def SwapClockTECAxes(ionmodel):
         TEC=TEC[:]
         indices=range(4) #nT,st,nsources,pol
         tmaxis=TECshape.index(nT)
-        indices[tmaxis]=1
+        indices[tmaxis]=0
         staxis=TECshape.index(nst)
-        indices[staxis]=3
+        indices[staxis]=1
         if len(TECshape)==3 or (nsources!=2):
             polaxis=TECshape.index(2)
-            indices[polaxis]=0
+            indices[polaxis]=3
             if len(TECshape)>3:
                nsaxis=TECshape.index(nsources) 
             else:
@@ -634,18 +634,18 @@ def SwapClockTECAxes(ionmodel):
             indices[nsaxis]=2
         else:
             print "ambigous shape of TEC, try swapping by hand"
-        while polaxis>0:
-            TEC=TEC.swapaxes(polaxis,polaxis-1)
-            indices[polaxis]=indices[polaxis-1]
-            polaxis-=1
-            indices[polaxis]=0
-        tmaxis=indices.index(1)
-        
-        while tmaxis>1:
+        while tmaxis>0:
             TEC=TEC.swapaxes(tmaxis,tmaxis-1)
             indices[tmaxis]=indices[tmaxis-1]
             tmaxis-=1
-            indices[tmaxis]=1
+            indices[tmaxis]=0
+        staxis=indices.index(1)
+        
+        while staxis>1:
+            TEC=TEC.swapaxes(staxis,staxis-1)
+            indices[staxis]=indices[staxis-1]
+            staxis-=1
+            indices[staxis]=1
         srcaxis=indices.index(2)
         
         while srcaxis>2:
@@ -659,30 +659,30 @@ def SwapClockTECAxes(ionmodel):
         print "nothing to be done for Clock"
     else:
         Clock=Clock[:]
-        indices=range(3) #pol ,nT,st
+        indices=range(3) #nT,st,pol
         tmaxis=Clockshape.index(nT)
-        indices[tmaxis]=1
+        indices[tmaxis]=0
         staxis=Clockshape.index(nst)
-        indices[staxis]=2
+        indices[staxis]=1
         polaxis=Clockshape.index(2)
-        indices[polaxis]=0
-        while polaxis>0:
-            Clock=Clock.swapaxes(polaxis,polaxis-1)
-            indices[polaxis]=indices[polaxis-1]
-            polaxis-=1
-            indices[polaxis]=0
-        tmaxis=indices.index(1)
-        
-        while tmaxis>1:
+        indices[polaxis]=2
+        while tmaxis>0:
             Clock=Clock.swapaxes(tmaxis,tmaxis-1)
             indices[tmaxis]=indices[tmaxis-1]
             tmaxis-=1
-            indices[tmaxis]=1
+            indices[tmaxis]=0
+        staxis=indices.index(1)
+        
+        while staxis>1:
+            Clock=Clock.swapaxes(staxis,staxis-1)
+            indices[staxis]=indices[staxis-1]
+            staxis-=1
+            indices[staxis]=1
        
         add_to_h5_func(ionmodel.hdf5,Clock,name='Clock')
       
     
-def writeClocktoParmdb(ionmodel,average=False):
+def writeClocktoParmdb(ionmodel,average=False,create_new = True):
     '''if average the average of both polarizations is used, snice BBS can handle only on value at the moment'''
     if not hasattr(ionmodel,'Clock'):
         print "No Clock solutions found, maybe you forgot to run the fit?"
@@ -712,7 +712,92 @@ def writeClocktoParmdb(ionmodel,average=False):
                 Clock_parm[ 'values' ] = 1.e-9*ionmodel.Clock[:, ist,n_pol]
                 parms[ parmname ] = Clock_parm
     #return parms        
-    parmdbmain.store_parms( ionmodel.globaldb + '/ionosphere', parms, create_new = True)
+    parmdbmain.store_parms( ionmodel.globaldb + '/ionosphere', parms, create_new = create_new)
+
+def writePhaseScreentoParmdb(ionmodel,create_new = True):
+    N_sources=ionmodel.N_sources
+    if not hasattr(ionmodel,'globaldb'):
+        ionmodel.globaldb='./'
+    for n_source in range(N_sources):
+       if ionmodel.DirectionalGainEnable:
+          source = ionmodel.sources[n_source]
+          identifier = ':'.join([str(pol), station, source])
+       else:
+          identifier = ':'.join([str(pol), station])
+
+       # TEC
+       TEC_parm = parm.copy()
+       parmname = ':'.join(['TEC', identifier])
+       TEC_parm[ 'values' ] = ionmodel.TEC[:,n_station,n_source,n_pol]
+       parms[ parmname ] = TEC_parm
+
+       #TECfit
+       TECfit_parm = parm.copy()
+       parmname = ':'.join(['TECfit', identifier])
+       TECfit_parm[ 'values' ] = ionmodel.TECfit[:,n_station,n_source,n_pol]
+       parms[ parmname ] = TECfit_parm
+
+       #TECfit_white
+       TECfit_white_parm = parm.copy()
+       parmname = ':'.join(['TECfit_white', identifier])
+       TECfit_white_parm[ 'values' ] = ionmodel.TECfit_white[:,n_station,n_source,n_pol]
+       parms[ parmname ] = TECfit_white_parm
+
+    # Piercepoints
+      
+    for n_station in range(len(ionmodel.stations)):
+     station = ionmodel.stations[n_station]
+     for n_source in range(N_sources):
+        if ionmodel.DirectionalGainEnable:
+           source = ionmodel.sources[n_source]
+           identifier = ':'.join([station, source])
+        else:
+           identifier = station
+        PiercepointX_parm = parm.copy()
+        parmname = ':'.join(['Piercepoint', 'X', identifier])
+        print n_source, n_station
+        x = ionmodel.piercepoints[:]['positions_xyz'][:,n_source, n_station,0]
+        PiercepointX_parm['values'] = x
+        parms[ parmname ] = PiercepointX_parm
+
+        PiercepointY_parm = parm.copy()
+        parmname = ':'.join(['Piercepoint', 'Y', identifier])
+        y = ionmodel.piercepoints[:]['positions_xyz'][:,n_source, n_station,1]
+        PiercepointY_parm['values'] = array(y)
+        parms[ parmname ] = PiercepointY_parm
+
+        PiercepointZ_parm = parm.copy()
+        parmname = ':'.join(['Piercepoint', 'Z', identifier])
+        z = ionmodel.piercepoints[:]['positions_xyz'][:,n_source, n_station,2]
+        PiercepointZ_parm['values'] = z
+        parms[ parmname ] = PiercepointZ_parm
+
+        Piercepoint_zenithangle_parm = parm.copy()
+        parmname = ':'.join(['Piercepoint', 'zenithangle', identifier])
+        za = ionmodel.piercepoints[:]['zenith_angles'][:,n_source, n_station]
+        Piercepoint_zenithangle_parm['values'] = za
+        parms[ parmname ] = Piercepoint_zenithangle_parm
+
+     time_start = ionmodel.times[0] - ionmodel.timewidths[0]/2
+     time_end = ionmodel.times[-1] + ionmodel.timewidths[-1]/2
+
+
+     parm[ 'times' ] = numpy.array([(time_start + time_end) / 2])
+     parm[ 'timewidths' ] = numpy.array([time_end - time_start])
+
+     height_parm = parm.copy()
+     height_parm[ 'values' ] = numpy.array( ionmodel.piercepoints.attrs.height )
+     parms[ 'height' ] = height_parm
+
+     beta_parm = parm.copy()
+     beta_parm[ 'values' ] = numpy.array( ionmodel.TECfit_white.attrs.beta )
+     parms[ 'beta' ] = beta_parm
+
+     r_0_parm = parm.copy()
+     r_0_parm[ 'values' ] = numpy.array(  ionmodel.TECfit_white.attrs.r_0 )
+     parms[ 'r_0' ] = r_0_parm
+
+     parmdbmain.store_parms( ionmodel.globaldb + '/ionosphere', parms, create_new = create_new)
 
 
 def writePhaseScreenInfo(ionmodel,filename="clocktec.xmmlss.send"):

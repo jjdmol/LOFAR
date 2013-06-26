@@ -48,27 +48,26 @@ int main() {
   gpu::Device device(0);
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
-  gpu::Stream cuStream(ctx);
+  gpu::Stream stream(ctx);
 
   Parset ps("tBeamFormerKernel.in_parset");
 
   // Get default parameters for the compiler
   CompileFlags flags = CompileFlags();
   
-  unsigned NR_STATIONS = ps.nrStations();  
-  unsigned NR_CHANNELS = ps.nrChannelsPerSubband();
-  unsigned NR_SAMPLES_PER_CHANNEL = ps.nrSamplesPerChannel();
-  unsigned NR_TABS =  ps.nrTABs(0);
-  unsigned NR_POLARIZATIONS = 2;
-  unsigned COMPLEX = 2;
-
   // Calculate bandpass weights and transfer to the device.
   // *************************************************************
-  size_t lengthWeightsData = NR_STATIONS * NR_CHANNELS * NR_TABS * COMPLEX ;
-  size_t lengthBandPassCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX;
-  size_t lengthComplexVoltagesData = NR_CHANNELS* NR_SAMPLES_PER_CHANNEL * NR_TABS * NR_POLARIZATIONS * COMPLEX;
+  size_t lengthWeightsData = 
+    BeamFormerKernel::bufferSize(ps, BeamFormerKernel::BEAM_FORMER_WEIGHTS) / 
+    sizeof(float);
+  size_t lengthBandPassCorrectedData =
+    BeamFormerKernel::bufferSize(ps, BeamFormerKernel::INPUT_DATA) /
+    sizeof(float);
+  size_t lengthComplexVoltagesData = 
+    BeamFormerKernel::bufferSize(ps, BeamFormerKernel::OUTPUT_DATA) / 
+    sizeof(float);
 
-    // Define the input and output arrays
+  // Define the input and output arrays
   // ************************************************************* 
   float * complexVoltagesData = new float[lengthComplexVoltagesData];
   float * bandPassCorrectedData = new float[lengthBandPassCorrectedData];
@@ -96,43 +95,42 @@ int main() {
     weightsData[idx * 2 + 1] = 0.0f;
   }
 
-  size_t sizeWeightsData = lengthWeightsData* sizeof(float);
+  size_t sizeWeightsData = lengthWeightsData * sizeof(float);
   DeviceMemory devWeightsMemory(ctx, sizeWeightsData);
   HostMemory rawWeightsData = getInitializedArray(ctx, sizeWeightsData, 1.0f);
   float *rawWeightsPtr = rawWeightsData.get<float>();
   for (unsigned idx = 0; idx < lengthWeightsData; ++idx)
     rawWeightsPtr[idx] = weightsData[idx];
-  cuStream.writeBuffer(devWeightsMemory, rawWeightsData);
+  stream.writeBuffer(devWeightsMemory, rawWeightsData);
 
-  size_t sizeBandPassCorrectedData= lengthBandPassCorrectedData * sizeof(float);
+  size_t sizeBandPassCorrectedData = 
+    lengthBandPassCorrectedData * sizeof(float);
   DeviceMemory devBandPassCorrectedMemory(ctx, sizeBandPassCorrectedData);
-  HostMemory rawBandPassCorrectedData = getInitializedArray(ctx, sizeBandPassCorrectedData, 2.0f);
+  HostMemory rawBandPassCorrectedData = 
+    getInitializedArray(ctx, sizeBandPassCorrectedData, 2.0f);
   float *rawBandPassCorrectedPtr = rawBandPassCorrectedData.get<float>();
   for (unsigned idx = 0; idx < lengthBandPassCorrectedData; ++idx)
     rawBandPassCorrectedPtr[idx] = bandPassCorrectedData[idx];
-  cuStream.writeBuffer(devBandPassCorrectedMemory, rawBandPassCorrectedData);
+  stream.writeBuffer(devBandPassCorrectedMemory, rawBandPassCorrectedData);
 
   size_t sizeComplexVoltagesData = lengthComplexVoltagesData * sizeof(float);
   DeviceMemory devComplexVoltagesMemory(ctx, sizeComplexVoltagesData);
-  HostMemory rawComplexVoltagesData = getInitializedArray(ctx, sizeComplexVoltagesData, 3.0f);
+  HostMemory rawComplexVoltagesData = 
+    getInitializedArray(ctx, sizeComplexVoltagesData, 3.0f);
   float *rawComplexVoltagesPtr = rawComplexVoltagesData.get<float>();
   for (unsigned idx = 0; idx < lengthComplexVoltagesData; ++idx)
     rawComplexVoltagesPtr[idx] = complexVoltagesData[idx];
-  // Write output content.
-  cuStream.writeBuffer(devComplexVoltagesMemory, rawComplexVoltagesData);
 
-  // reserve enough space for the output of the firFilterKernel, and the correlatorKernel.
-  size_t devFilteredDataSize = std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-                      ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
-  gpu::DeviceMemory devFilteredData(ctx, devFilteredDataSize);
+  // Write output content.
+  stream.writeBuffer(devComplexVoltagesMemory, rawComplexVoltagesData);
 
   BeamFormerKernel kernel(ps, ctx, 
                           devComplexVoltagesMemory,
                           devBandPassCorrectedMemory,
                           devWeightsMemory);
 
-  kernel.enqueue(cuStream);
-  cuStream.synchronize();
+  kernel.enqueue(stream);
+  stream.synchronize();
 
   return 0;
 }

@@ -31,13 +31,14 @@ import re
 import atexit
 
 # import 3rd party modules
-from IPython.parallel import client
+#from IPython.parallel import client
 import numpy
 from pylab import *
 import scipy.optimize
 
 # import user modules
 #from files import *
+import client
 from acalc import *
 import sphere
 from error import *
@@ -177,7 +178,7 @@ class IonosphericModel:
       N_stations = len(self.stations)
       N_times = len(self.times)
       N_sources = len(self.sources)
-      N_pol = len(self.polarizations)
+      N_pol = min(len(self.polarizations),2)
       G = kron(eye( N_sources ), ( eye( N_stations ) - ones((N_stations, N_stations)) / N_stations))
 
       if 'TECfit' in self.hdf5.root: self.hdf5.root.TECfit.remove()
@@ -188,17 +189,20 @@ class IonosphericModel:
       
       self.offsets = zeros((len(self.n_list),N_pol))
       p = ProgressBar(len(self.n_list), "Fitting phase screen: ")
+      za=self.piercepoints.cols.zenith_angles[:]
       for i in range(len(self.n_list)) :
          p.update( i )
          U = self.U_list[i]
          S = self.S_list[i]
          for pol in range(N_pol) :
-            TEC = self.TEC[ self.n_list[i], :, :,pol].reshape( (N_sources * N_stations, 1) )
+            #print self.TEC[ self.n_list[i], :, :,pol].shape
+            TEC = multiply(self.TEC[ self.n_list[i], :, :,pol].swapaxes(0,1),
+                           cos(za[i,:,:])).reshape( (N_sources * N_stations, 1) )
             TECfit = dot(U, dot(inv(dot(U.T, dot(G, U))), dot(U.T, dot(G, TEC))))
             TECfit_white = dot(U, dot(diag(1/S), dot(U.T, TECfit)))
             self.offsets[i,pol] = TECfit[0] - dot(self.C_list[i][0,:], TECfit_white)
-            self.TECfit[ i, :, : ,pol] = reshape( TECfit,  (N_sources,N_stations) )
-            self.TECfit_white[ i, :, :,pol ] = reshape( TECfit_white,(N_sources,N_stations)  )
+            self.TECfit[ i, :, : ,pol] = reshape( TECfit,  (N_sources,N_stations) ).swapaxes(0,1)
+            self.TECfit_white[ i, :, :,pol ] = reshape( TECfit_white,(N_sources,N_stations)  ).swapaxes(0,1)
       p.finished()      
 
       self.TECfit_white.attrs.r_0 = self.r_0
@@ -235,7 +239,7 @@ class IonosphericModel:
          else :
             w = 1.1*abs(Xp_table).max()
          for pol in range(N_pol) :
-            v = self.TECfit_white[ pol, i, :, : ].reshape((N_piercepoints,1))
+            v = self.TECfit_white[ i, :, : ,pol].reshape((N_piercepoints,1))
             maptask = client.MapTask(calculate_frame, (Xp_table, v, self.beta, self.r_0, npixels, w) )
             taskids.append(tc.run(maptask))
       p.finished()
@@ -358,7 +362,7 @@ def calculate_frame(Xp_table, v, beta, r_0, npixels, w):
       x = -w + 2*x_idx*w/( npixels-1 )  
       for y_idx in range(0, npixels):
          y = -w + 2*y_idx*w/(npixels-1)
-         D2 = numpy.sum((Xp_table - numpy.array([ x, y ]))**2,1)
+         D2 = numpy.sum((6378452*(Xp_table - numpy.array([ x, y ])))**2,1)
          C = (D2 / ( r_0**2 ) )**( beta / 2. ) / -2.
          phi[y_idx, x_idx] = numpy.dot(C, v)
    return phi, w
