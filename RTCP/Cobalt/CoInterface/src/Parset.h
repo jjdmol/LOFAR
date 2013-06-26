@@ -95,10 +95,7 @@ namespace LOFAR
       // key: Observation.nrBitsPerSample
       unsigned nrBitsPerSample;
 
-      // The number of polarisations. Values other than 2 are
-      // not supported.
-      //
-      // key: Observation.nrPolarisations
+      // The number of polarisations. Set to 2.
       unsigned nrPolarisations;
 
       // The number of cross polarisations.
@@ -137,9 +134,7 @@ namespace LOFAR
       
       struct DelayCompensation delayCompensation;
 
-      // Number of PPF taps. Expected to be 16.
-      //
-      // key: OLAP.CNProc.nrPPFTaps;
+      // Number of PPF taps. Set to 16.
       unsigned nrPPFTaps;
 
       /*
@@ -155,9 +150,6 @@ namespace LOFAR
       //
       // key: Observation.bandFilter
       std::string bandFilter;
-
-      // The number of subbands in each RSP packet (depricated)
-      unsigned nrSlotsInFrame;
 
       struct Station {
         // The name of the station (CS001LBA, etc)
@@ -523,8 +515,6 @@ namespace LOFAR
       std::string                 stationName(int index) const;
       int                         stationIndex(const std::string &name) const;
       std::vector<std::string>    allStationNames() const;
-      unsigned                    getLofarStManVersion() const;
-      std::vector<unsigned>       phaseOnePsets() const;
 
       bool                        outputCorrelatedData() const;
       bool                        outputBeamFormedData() const;
@@ -583,8 +573,6 @@ namespace LOFAR
 
       double channel0Frequency( size_t subband ) const;
 
-      unsigned                    nrSlotsInFrame() const;
-      std::string                 partitionName() const;
       bool                        realTime() const;
 
       std::vector<double>         getBeamDirection(unsigned beam) const;
