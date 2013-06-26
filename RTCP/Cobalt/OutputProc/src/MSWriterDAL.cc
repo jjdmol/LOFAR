@@ -390,7 +390,7 @@ namespace LOFAR
       coordinates.create();
       coordinates.groupType().value = "Coordinates";
 
-      coordinates.refLocationValue().value = parset.getRefPhaseCentre();
+      coordinates.refLocationValue().value = parset.settings.delayCompensation.referencePhaseCenter;
       coordinates.refLocationUnit().value = vector<string>(3,"m");
       coordinates.refLocationFrame().value = "ITRF";
 

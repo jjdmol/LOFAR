@@ -489,8 +489,6 @@ namespace LOFAR
       size_t                      nrBytesPerComplexSample() const;
       std::vector<double>         positions() const;
       std::string                 positionType() const;
-      std::vector<double>         getRefPhaseCentre() const;
-      std::vector<double>         getPhaseCentreOf(const std::string &name) const;
       unsigned                    dedispersionFFTsize() const;
       unsigned                    CNintegrationSteps() const;
       unsigned                    IONintegrationSteps() const;

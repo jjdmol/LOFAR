@@ -217,7 +217,6 @@ SUITE(delayCompensation) {
       refPhaseCenter[2] = 3.0;
 
       CHECK_ARRAY_CLOSE(refPhaseCenter, ps.settings.delayCompensation.referencePhaseCenter, 3, 0.001);
-      CHECK_ARRAY_CLOSE(refPhaseCenter, ps.getRefPhaseCentre(), 3, 0.001);
   }
 }
 

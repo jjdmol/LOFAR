@@ -659,12 +659,6 @@ namespace LOFAR
 
       return list;
     }
-
-
-    std::vector<double> Parset::getRefPhaseCentre() const
-    {
-      return settings.delayCompensation.referencePhaseCenter;
-    }
     /*
        std::vector<double> Parset::getPhaseCorrection(const string &name, char pol) const
        {
