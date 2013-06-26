@@ -311,7 +311,7 @@ namespace LOFAR
 
       if (ps.delayCompensation())
       {
-        unsigned SAP = ps.subbandToSAPmapping()[subband];
+        unsigned SAP = ps.settings.subbands[subband].SAP;
 
         // Only upload delays if they changed w.r.t. the previous subband.
         if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
