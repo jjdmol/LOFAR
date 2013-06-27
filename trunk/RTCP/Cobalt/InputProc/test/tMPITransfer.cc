@@ -35,10 +35,10 @@
 #include <Common/Thread/Mutex.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Stream.h>
-#include <CoInterface/RSPTimeStamp.h>
 #include <Stream/Stream.h>
 #include <Stream/SocketStream.h>
 
+#include <InputProc/RSPTimeStamp.h>
 #include <InputProc/OMPThread.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/StationID.h>

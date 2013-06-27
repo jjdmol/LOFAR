@@ -28,7 +28,7 @@
 
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Condition.h>
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
 
 
 namespace LOFAR

@@ -25,10 +25,10 @@
 #include <mpi.h>
 
 #include <Common/LofarTypes.h>
-#include <CoInterface/RSPTimeStamp.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/SubbandMetaData.h>
 
+#include <InputProc/RSPTimeStamp.h>
 #include <InputProc/Buffer/Block.h>
 #include <InputProc/Buffer/BufferSettings.h>
 #include "MPIProtocol.h"

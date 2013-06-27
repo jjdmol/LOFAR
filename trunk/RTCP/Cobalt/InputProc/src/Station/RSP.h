@@ -25,7 +25,7 @@
 #include <complex>
 
 #include <Common/LofarTypes.h>
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
 
 namespace LOFAR
 {

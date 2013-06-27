@@ -25,10 +25,10 @@
 #include <string>
 #include <vector>
 
-#include <CoInterface/RSPTimeStamp.h>
 #include <CoInterface/SmartPtr.h>
 
 #include <InputProc/WallClockTime.h>
+#include <InputProc/RSPTimeStamp.h>
 
 #include <InputProc/Buffer/BufferSettings.h>
 #include <InputProc/Buffer/SampleBuffer.h>
