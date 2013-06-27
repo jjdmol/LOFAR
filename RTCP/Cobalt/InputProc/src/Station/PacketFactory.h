@@ -23,7 +23,7 @@
 #define LOFAR_INPUT_PROC_PACKETFACTORY_H
 
 #include <InputProc/Buffer/BufferSettings.h>
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
 
 #include "RSP.h"
 

@@ -20,12 +20,12 @@
 
 #include <lofar_config.h>
 
-#include <CoInterface/RSPTimeStamp.h>
 
 #include <stdint.h>
 
 #include <Common/LofarLogger.h>
 
+#include <InputProc/RSPTimeStamp.h>
 
 #define SAMPLERATE 195312.5
 // start the test at INT32_MAX * SAMPLERATE

@@ -38,8 +38,8 @@
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SubbandMetaData.h>
-#include <CoInterface/RSPTimeStamp.h>
 #include <CoInterface/SmartPtr.h>
+#include <InputProc/RSPTimeStamp.h>
 
 #ifdef HAVE_CASACORE
 #include <measures/Measures/MeasConvert.h>

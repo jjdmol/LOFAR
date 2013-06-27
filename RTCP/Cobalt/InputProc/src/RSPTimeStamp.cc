@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <CoInterface/RSPTimeStamp.h>
+#include "RSPTimeStamp.h"
 
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>

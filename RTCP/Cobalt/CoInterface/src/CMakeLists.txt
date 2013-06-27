@@ -15,8 +15,7 @@ lofar_add_library(cointerface
   DataFactory.cc
   FinalMetaData.cc
   Stream.cc
-  Parset.cc
-  RSPTimeStamp.cc)
+  Parset.cc)
 
 lofar_add_bin_program(versioncointerface versioncointerface.cc)
 

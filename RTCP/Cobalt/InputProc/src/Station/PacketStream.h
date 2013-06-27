@@ -24,7 +24,7 @@
 
 #include <Stream/Stream.h>
 #include <Common/Thread/Cancellation.h>
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
 #include "PacketFactory.h"
 #include "RSP.h"
 
