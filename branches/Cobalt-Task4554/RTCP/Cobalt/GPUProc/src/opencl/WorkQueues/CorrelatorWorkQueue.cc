@@ -412,7 +412,7 @@ namespace LOFAR
       // Moved from doWork() The delay data should be available before the kernels start.
       // Queue processed ordered. This could main that the transfer is not nicely overlapped
 
-      unsigned SAP = ps.subbandToSAPmapping()[subband];
+      unsigned SAP = ps.settings.subbands[subband].SAP;
 
       // Only upload delays if they changed w.r.t. the previous subband
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {

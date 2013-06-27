@@ -25,10 +25,10 @@
 #include <vector>
 
 #include <Stream/Stream.h>
-#include <CoInterface/RSPTimeStamp.h>
 #include <CoInterface/SmartPtr.h>
 
 #include <InputProc/RSPBoards.h>
+#include <InputProc/RSPTimeStamp.h>
 #include <InputProc/Buffer/BufferSettings.h>
 
 #include "PacketFactory.h"

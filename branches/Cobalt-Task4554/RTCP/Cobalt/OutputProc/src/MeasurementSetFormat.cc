@@ -172,8 +172,7 @@ namespace LOFAR
         }
 
         // Get subarray id (formerly known as beam).
-        const vector<unsigned> subbandToSAPmapping = itsPS.subbandToSAPmapping();
-        int subarray = subbandToSAPmapping[subband];
+        int subarray = itsPS.settings.subbands[subband].SAP;
 
         fillAntenna(antMPos);
         fillFeed();
@@ -404,7 +403,10 @@ namespace LOFAR
       timeRange[1] = itsStartTime + itsNrTimes * itsTimeStep;
 
       // Get minimum and maximum frequency.
-      vector<double> freqs = itsPS.subbandToFrequencyMapping();
+      vector<double> freqs(itsPS.nrSubbands());
+      for(size_t sb = 0; sb < itsPS.nrSubbands(); ++sb)
+         freqs[sb] = itsPS.settings.subbands[sb].centralFrequency;
+
       ASSERT( freqs.size() > 0 );
 
       double minFreq = *std::min_element( freqs.begin(), freqs.end() );
@@ -480,7 +482,7 @@ namespace LOFAR
 
     void MeasurementSetFormat::fillSpecWindow(unsigned subband)
     {
-      const double refFreq = itsPS.subbandToFrequencyMapping()[subband];
+      const double refFreq = itsPS.settings.subbands[subband].centralFrequency;
       const size_t nchan = itsPS.nrChannelsPerSubband();
       const double chanWidth = itsPS.channelWidth();
       const double totalBW = nchan * chanWidth;

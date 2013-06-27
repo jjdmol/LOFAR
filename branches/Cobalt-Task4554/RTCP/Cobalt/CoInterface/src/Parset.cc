@@ -279,7 +279,7 @@ namespace LOFAR
        */
 
       settings.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
-      if (settings.correlator.enabled || true) { // for now, always fill in correlator values, since they're still used outside the correlator to determine the block size, etc
+      if (settings.correlator.enabled || true) { // for now, always fill in correlator values, since they're still used outside the correlator to determine the block size, etc (TODO: move generic ones outside, but see TODO below)
         settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
         settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
         settings.correlator.nrSamplesPerChannel = getUint32("OLAP.CNProc.integrationSteps", 3052);
@@ -317,7 +317,7 @@ namespace LOFAR
           }
         }
 
-        if (settings.correlator.enabled) {
+        if (settings.correlator.enabled) { // TODO: redundant check, but as long as '|| true' is there (just above), this is needed as some test parsets (e.g. tKernel.parset.in) has no locations and filenames (and enabled) keys. See tCorrelatorPipelineProcessObs.parset what is needed or refactor this function.
           // Files to output
           settings.correlator.files.resize(nrSubbands);
           for (size_t i = 0; i < nrSubbands; ++i) {
@@ -555,7 +555,7 @@ namespace LOFAR
     std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
     {
       if (outputType == CORRELATED_DATA)
-        return settings.correlator.files[streamNr].location.host;
+        return settings.correlator.files[streamNr].location.host; // TODO: add to check() to reject parset or obsconfig early to avoid segfault here if streamNr >= settings.correlator.files.size()
 
       return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[0];
     }
@@ -613,28 +613,6 @@ namespace LOFAR
     }
 
 
-    std::vector<double> Parset::subbandToFrequencyMapping() const
-    {
-      vector<double> freqs(nrSubbands());
-
-      for (unsigned subband = 0; subband < freqs.size(); ++subband)
-        freqs[subband] = settings.subbands[subband].centralFrequency;
-
-      return freqs;
-    }
-
-
-    std::vector<unsigned> Parset::subbandToSAPmapping() const
-    {
-      vector<unsigned> saps(nrSubbands());
-
-      for (unsigned subband = 0; subband < saps.size(); ++subband)
-        saps[subband] = settings.subbands[subband].SAP;
-
-      return saps;
-    }
-
-
     std::vector<double> Parset::centroidPos(const std::string &stations) const
     {
       std::vector<double> Centroid, posList, pos;
@@ -680,18 +658,6 @@ namespace LOFAR
       }
 
       return list;
-    }
-
-
-    std::vector<double> Parset::getRefPhaseCentre() const
-    {
-      return settings.delayCompensation.referencePhaseCenter;
-    }
-
-
-    std::vector<double> Parset::getPhaseCentreOf(const string &name) const
-    {
-      return settings.stations[stationIndex(name)].phaseCenter;
     }
     /*
        std::vector<double> Parset::getPhaseCorrection(const string &name, char pol) const
@@ -790,20 +756,7 @@ namespace LOFAR
 
     std::string Parset::getAnaBeamDirectionType() const
     {
-      return settings.anaBeam.direction.type;
-    }
-
-
-    vector<unsigned> Parset::subbandToRSPboardMapping(const string &stationName) const
-    {
-      return settings.stations[stationIndex(stationName)].rspBoardMap;
-    }
-
-
-    vector<unsigned> Parset::subbandToRSPslotMapping(const string &stationName) const
-    {
-      return settings.stations[stationIndex(stationName)].rspSlotMap;
-    }
+      return settings.anaBeam.direction.type;   }
 
     double Parset::getTime(const std::string &name, const std::string &defaultValue) const
     {
@@ -856,16 +809,6 @@ namespace LOFAR
     string Parset::stationName(int index) const
     {
       return settings.stations[index].name;
-    }
-
-    int Parset::stationIndex(const std::string &name) const
-    {
-      std::vector<std::string> names = allStationNames();
-      for (unsigned i = 0; i < names.size(); i++)
-        if (names[i] == name)
-          return i;
-
-      return -1;
     }
 
     std::vector<std::string> Parset::allStationNames() const
@@ -1073,16 +1016,6 @@ namespace LOFAR
       return settings.correlator.nrChannels;
     }
 
-    vector<unsigned> Parset::subbandList() const
-    {
-      vector<unsigned> nrs(nrSubbands());
-
-      for (unsigned subband = 0; subband < nrs.size(); ++subband)
-        nrs[subband] = settings.subbands[subband].stationIdx;
-
-      return nrs;
-    }
-
     size_t Parset::nrSubbands() const
     {
       return settings.subbands.size();
@@ -1106,11 +1039,6 @@ namespace LOFAR
     string Parset::positionType() const
     {
       return "ITRF";
-    }
-
-    double Parset::clockCorrectionTime(const std::string &station) const
-    {
-      return settings.stations[stationIndex(station)].clockCorrection;
     }
 
     bool Parset::correctBandPass() const

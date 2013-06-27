@@ -53,9 +53,6 @@ namespace LOFAR
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void processObservation();
 
-      // for each block, read all subbands from all stations, and divide the work over the workQueues
-      void receiveInput( size_t nrBlocks );
-
     protected:
       const Parset             &ps;
       const gpu::Platform      platform;
@@ -85,6 +82,9 @@ namespace LOFAR
       } performance;
 
     private:
+      // for each block, read all subbands from all stations, and divide the work over the workQueues
+      void receiveInput( size_t nrBlocks );
+
       // Templated version of receiveInput(), to specialise in receiving
       // a certain type of input sample.
       template<typename SampleT> void receiveInput( size_t nrBlocks );

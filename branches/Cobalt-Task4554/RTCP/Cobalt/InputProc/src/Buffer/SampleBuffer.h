@@ -27,7 +27,7 @@
 
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Allocator.h>
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
 #include "BufferSettings.h"
 #include "SharedMemory.h"
 #include "Ranges.h"

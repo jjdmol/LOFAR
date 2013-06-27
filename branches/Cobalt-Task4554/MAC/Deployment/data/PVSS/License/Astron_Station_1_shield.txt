@@ -1,5 +1,5 @@
 [license]
-code        = "dongleHost 30490646749"
+code        = "dongleHost 10268827303"
 version     = 31100002
 sn          = "471_3031_2_Astron_Gen_II_2_311"
 expire      = 0000.00.00;00:00:00,000 
@@ -25,5 +25,5 @@ pararemote  = 0
 ctrlext     = 1
 update      = 0
 licenseMax  = 100
-licenseLeft = 92
+licenseLeft = 90
 

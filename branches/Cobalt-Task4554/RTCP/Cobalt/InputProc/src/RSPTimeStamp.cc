@@ -1,4 +1,4 @@
-//# TransposedData.h
+//# RSPTimeStamp.cc: Small class to hold the timestamps from RSP
 //# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,38 +18,36 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_CNPROC_TRANSPOSED_DATA_H
-#define LOFAR_CNPROC_TRANSPOSED_DATA_H
+#include <lofar_config.h>
 
-#include <CoInterface/Config.h>
-#include <CoInterface/Allocator.h>
-#include <CoInterface/StreamableData.h>
+#include "RSPTimeStamp.h"
 
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_iomanip.h>
+
+#include <time.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
 
-    template <typename SAMPLE_TYPE>
-    class TransposedData : public SampleData<SAMPLE_TYPE,3,1>
+    ostream &operator << (ostream &os, const TimeStamp &ts)
     {
-    public:
-      typedef SampleData<SAMPLE_TYPE,3,1> SuperType;
+      double time_d = ts.getSeconds();
+      time_t seconds = static_cast<time_t>(floor(time_d));
+      unsigned ms = static_cast<unsigned>(floor((time_d - seconds) * 1000 + 0.5));
 
-      TransposedData(const unsigned nrStations, const unsigned nrSamplesToCNProc, Allocator &allocator = heapAllocator);
-    };
+      char   buf[26];
+      struct tm tm;
 
+      gmtime_r(&seconds, &tm);
+      size_t len = strftime(buf, sizeof buf, "%F %T", &tm);
+      buf[len] = '\0';
 
-    template <typename SAMPLE_TYPE>
-    inline TransposedData<SAMPLE_TYPE>::TransposedData(const unsigned nrStations, const unsigned nrSamplesToCNProc, Allocator &allocator)
-      :
-      SuperType(boost::extents[nrStations][nrSamplesToCNProc][NR_POLARIZATIONS], boost::extents[0], allocator)
-    {
+      return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "] = " << buf << "." << setfill('0') << setw(3) << ms << " UTC";
     }
 
   } // namespace Cobalt
 } // namespace LOFAR
-
-#endif
 

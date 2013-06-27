@@ -24,7 +24,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/LofarConstants.h>
 #include <Common/LofarLogger.h>
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
 
 namespace LOFAR {
 namespace Cobalt {

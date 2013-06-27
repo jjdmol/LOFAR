@@ -81,10 +81,6 @@ namespace LOFAR
           baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
 #endif
 
-      const vector<unsigned> subbands = itsParset.subbandList();
-      const vector<unsigned> SAPs = itsParset.subbandToSAPmapping();
-      const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
-
       itsConfiguration.add("fileFormat",           "AIPS++/CASA");
       itsConfiguration.add("filename",             LOFAR::basename(msName));
       itsConfiguration.add("size",                 "0");
@@ -94,12 +90,12 @@ namespace LOFAR
       itsConfiguration.add("startTime",            parset.getString("Observation.startTime"));
       itsConfiguration.add("duration",             "0");
       itsConfiguration.add("integrationInterval",  str(format("%f") % parset.IONintegrationTime()));
-      itsConfiguration.add("centralFrequency",     str(format("%f") % (frequencies[subbandIndex])));
-      itsConfiguration.add("channelWidth",         str(format("%f") % (parset.channelWidth())));
+      itsConfiguration.add("centralFrequency",     str(format("%f") % parset.settings.subbands[subbandIndex].centralFrequency));
+      itsConfiguration.add("channelWidth",         str(format("%f") % parset.channelWidth()));
       itsConfiguration.add("channelsPerSubband",   str(format("%u") % parset.nrChannelsPerSubband()));
-      itsConfiguration.add("stationSubband",       str(format("%u") % subbands[subbandIndex]));
+      itsConfiguration.add("stationSubband",       str(format("%u") % parset.settings.subbands[subbandIndex].stationIdx));
       itsConfiguration.add("subband",              str(format("%u") % subbandIndex));
-      itsConfiguration.add("SAP",                  str(format("%u") % SAPs[subbandIndex]));
+      itsConfiguration.add("SAP",                  str(format("%u") % parset.settings.subbands[subbandIndex].SAP));
     }
 
 

@@ -32,7 +32,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/DataConvert.h>
 #include <Stream/FileStream.h>
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;

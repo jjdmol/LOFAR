@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_INTERFACE_RSPTIMESTAMP_H
-#define LOFAR_INTERFACE_RSPTIMESTAMP_H
+#ifndef LOFAR_COBALT_INPUTPROC_RSPTIMESTAMP_H
+#define LOFAR_COBALT_INPUTPROC_RSPTIMESTAMP_H
 
 #include <Common/lofar_iosfwd.h>
 #include <Common/LofarTypes.h>

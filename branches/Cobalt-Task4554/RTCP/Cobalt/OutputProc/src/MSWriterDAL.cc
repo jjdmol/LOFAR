@@ -123,12 +123,6 @@ namespace LOFAR
       unsigned nrBlocks = parset.nrBeamFormedBlocks();
       unsigned nrSubbands = itsInfo.subbands.size();
       const vector<unsigned> &subbandIndices = itsInfo.subbands;
-      const vector<unsigned> allSubbands = parset.subbandList();
-
-      vector<unsigned> subbands(nrSubbands, 0); // actual subbands written in this file
-
-      for (unsigned sb = 0; sb < nrSubbands; sb++)
-        subbands[sb] = allSubbands[subbandIndices[sb]];
 
       vector<string> stokesVars;
       vector<string> stokesVars_LTA;
@@ -208,7 +202,9 @@ namespace LOFAR
       // contain frequencies from both the top and the bottom half-channel.
       double frequencyOffsetPPF = parset.nrChannelsPerSubband() > 1 ? 0.5 * channelBandwidth : 0.0;
 
-      const vector<double> subbandCenterFrequencies = parset.subbandToFrequencyMapping();
+      vector<double> subbandCenterFrequencies(parset.nrSubbands());
+      for(size_t sb = 0; sb < parset.nrSubbands(); ++sb)
+        subbandCenterFrequencies[sb] = parset.settings.subbands[sb].centralFrequency;
 
       double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
       double max_centerfrequency = *max_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
@@ -394,7 +390,7 @@ namespace LOFAR
       coordinates.create();
       coordinates.groupType().value = "Coordinates";
 
-      coordinates.refLocationValue().value = parset.getRefPhaseCentre();
+      coordinates.refLocationValue().value = parset.settings.delayCompensation.referencePhaseCenter;
       coordinates.refLocationUnit().value = vector<string>(3,"m");
       coordinates.refLocationFrame().value = "ITRF";
 
@@ -541,10 +537,10 @@ namespace LOFAR
 
       ostringstream stationSubbandsStr;
       stationSubbandsStr << "[";
-      for (size_t i = 0; i < subbands.size(); ++i) {
+      for (size_t i = 0; i < nrSubbands; ++i) {
         if( i > 0 )
           stationSubbandsStr << ", ";
-        stationSubbandsStr << str(format("%u") % subbands[i]);
+        stationSubbandsStr << str(format("%u") % parset.settings.subbands[subbandIndices[i]].stationIdx);
       }
       stationSubbandsStr << "]";
 
