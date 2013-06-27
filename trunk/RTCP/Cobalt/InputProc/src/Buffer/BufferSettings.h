@@ -69,7 +69,7 @@ namespace LOFAR
 
       // if attach=true, read settings from shared memory, using the given stationID
       // if attach=false, set sane default values
-      BufferSettings(const struct StationID &station, bool attach);
+      BufferSettings(const struct StationID &station, bool attach, time_t timeout = 60);
 
       // Shortcut to set nrSamples to represent `seconds' of buffer.
       void setBufferSize(double seconds);

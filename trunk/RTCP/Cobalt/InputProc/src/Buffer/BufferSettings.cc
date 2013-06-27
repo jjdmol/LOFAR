@@ -37,14 +37,14 @@ namespace LOFAR
     {
     }
 
-    BufferSettings::BufferSettings(const struct StationID &station, bool attach)
+    BufferSettings::BufferSettings(const struct StationID &station, bool attach, time_t timeout)
       :
       version(currentVersion),
       station(station)
     {
       if (attach) {
         do {
-          SharedStruct<struct BufferSettings> shm(station.hash(), false);
+          SharedStruct<struct BufferSettings> shm(station.hash(), false, timeout);
 
           *this = shm.get();
         } while (!valid());
