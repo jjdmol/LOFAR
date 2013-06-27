@@ -22,6 +22,7 @@
 
 
 #include <stdint.h>
+#include <UnitTest++.h>
 
 #include <Common/LofarLogger.h>
 
@@ -36,16 +37,33 @@
 using namespace LOFAR;
 using LOFAR::Cobalt::TimeStamp;
 
-int main()
-{
+TEST(One) {
   unsigned clock = static_cast<unsigned>(1024 * SAMPLERATE);
 
   for (int64 timecounter = TESTSTART; timecounter >= TESTEND; timecounter--) {
     TimeStamp one(timecounter, clock);
     TimeStamp other(one.getSeqId(), one.getBlockId(), clock);
-    ASSERTSTR(one == other, one << " == " << other << " counter was " << timecounter);
-  }
 
-  return 0;
+    CHECK_EQUAL(one, other);
+  }
+}
+
+TEST(Two) {
+  unsigned clock = 200 * 1000 * 1000;
+
+  TimeStamp ts(0, 0, clock);
+
+  for (int64 i = 0; i < clock * 3; i += 100, ts += 100) {
+    CHECK_EQUAL(i, (int64)ts);
+    CHECK_EQUAL(1024 * i / clock,        ts.getSeqId());
+    CHECK_EQUAL(1024 * i % clock / 1024, ts.getBlockId());
+  }
+}
+
+int main()
+{
+  INIT_LOGGER("tRSPTimeStamp");
+
+  return UnitTest::RunAllTests() > 0;
 }
 
