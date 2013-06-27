@@ -2,7 +2,7 @@
 code          = "RS210C 01623942535"
 version       = 31100002
 comment       = "Remote Station RS210"
-sn            = "471_3031_2_Astron_Gen_II_1_38"
+sn            = "471_3031_2_Astron_Gen_II_2_311"
 expire        = 0000.00.00;00:00:00,000
 redundancy    = 0
 ui            = 2
