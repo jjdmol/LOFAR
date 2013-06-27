@@ -75,7 +75,7 @@ namespace LOFAR
 
       // Statistics covering the packets read so far
       size_t nrReceived; // nr. of packets received
-      size_t nrBadSize; // nr. of packets with wrong size (only if supportPartialReads == true)
+      size_t nrBadSize; // nr. of packets with wrong size (only if supportPartialReads == false)
       size_t nrBadTime; // nr. of packets with an illegal time stamp
       size_t nrBadData; // nr. of packets with payload errors
       size_t nrBadMode; // nr. of packets with an incorrect clock/bitmode
