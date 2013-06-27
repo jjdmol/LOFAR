@@ -38,6 +38,7 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main()
 {
+  INIT_LOGGER("tMeasurementSetFormat");
   const string suffixes[] = { "-j2000", "-sun" };
 
   for( unsigned i = 0; i < sizeof suffixes / sizeof suffixes[0]; i++ ) {
@@ -47,7 +48,7 @@ int main()
 
       LOG_DEBUG_STR("Testing " << parsetName);
 
-      Parset parset(parsetName.c_str());
+      Parset parset(parsetName);
       MeasurementSetFormat msf(parset);
       msf.addSubband(msName, 0, false);
       // Also create the data file, otherwise it is not a true table.
@@ -56,7 +57,7 @@ int main()
       RegularFileIO file(String(msName + "/table.f0data"),
                          ByteIO::New);
     } catch (LOFAR::Exception &err) {
-      std::cerr << "LOFAR Exception detected: " << err << std::endl;
+      LOG_FATAL_STR("LOFAR Exception detected: " << err);
       return 1;
     }
   }

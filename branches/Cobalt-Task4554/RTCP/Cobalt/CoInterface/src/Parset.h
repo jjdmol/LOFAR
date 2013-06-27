@@ -588,10 +588,6 @@ namespace LOFAR
 
       std::string                 PVSS_TempObsName() const;
 
-      std::string                 AntennaSetsConf() const;
-      std::string                 AntennaFieldsDir() const;
-      std::string                 HBADeltasDir() const;
-
       const Transpose2            &transposeLogic() const;
 
     private:
