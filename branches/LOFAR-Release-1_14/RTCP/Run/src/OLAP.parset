@@ -140,6 +140,9 @@ PIC.Core.RS205HBA.clockCorrectionTime = 0
 PIC.Core.RS208LBA.clockCorrectionTime = 0
 PIC.Core.RS208HBA.clockCorrectionTime = 0
 
+PIC.Core.RS210LBA.clockCorrectionTime = 0
+PIC.Core.RS210HBA.clockCorrectionTime = 0
+
 PIC.Core.RS305LBA.clockCorrectionTime = 0
 PIC.Core.RS305HBA.clockCorrectionTime = 0
 
@@ -347,6 +350,9 @@ PIC.Core.RS205HBA.phaseCenter = [3831479.670, 463487.529, 5060989.903]
 
 PIC.Core.RS208LBA.phaseCenter = [3847810.051, 466929.706, 5048357.222]
 PIC.Core.RS208HBA.phaseCenter = [3847753.310, 466962.809, 5048397.244]
+
+PIC.Core.RS210LBA.phaseCenter = [3877847.44687, 467456.926958, 5025437.607]
+PIC.Core.RS210HBA.phaseCenter = [3877827.56186, 467536.604956, 5025445.584]
 
 PIC.Core.RS305LBA.phaseCenter = [3828720.768, 454781.428, 5063851.101]
 PIC.Core.RS305HBA.phaseCenter = [3828732.721, 454692.421, 5063850.334]
