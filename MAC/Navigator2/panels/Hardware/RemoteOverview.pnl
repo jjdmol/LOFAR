@@ -320,6 +320,18 @@ LANG:1 15 Remote Stations
 0
 1 290 15 "" 7
 0
+1 291 16 "" 6
+0
+1 292 16 "" 1
+0
+1 293 16 "" 2
+0
+1 294 16 "" 3
+0
+1 295 16 "" 4
+0
+1 296 16 "" 5
+0
 0
 LAYER, 1 
 1
@@ -405,6 +417,10 @@ LANG:1 6 Layer8
 1
 "$station""RS310"
 3 15 "PANEL_REF15" -1
-"objects/Hardware\\CoreStatusView.pnl" 320 240 T 103 1 0 1 -1 -2
+"objects\\Hardware\\CoreStatusView.pnl" 320 240 T 103 1 0 1 -1 -2
 0
+3 16 "PANEL_REF16" -1
+"objects\\Hardware\\LBA_HBAStatusView.pnl" 640 550 T 103 1 0 1 80 100
+1
+"$station""RS210"
 0

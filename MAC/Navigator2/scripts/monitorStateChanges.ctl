@@ -234,7 +234,7 @@ void objectStateTriggered(string dp1, string trigger,
 
   if (trigger == "") return;
 
-  if (bDebug) DebugN("monitorStateChanges.ctl:objectStateTriggered|entered with trigger:", trigger);
+  if (bDebug) DebugTN("monitorStateChanges.ctl:objectStateTriggered|entered with trigger:", trigger);
 
   string datapoint = "";
   string element   = "";
@@ -293,7 +293,7 @@ void objectStateTriggered(string dp1, string trigger,
 ///////////////////////////////////////////////////////////////////////////
 void setStates(string datapoint,string element,int state,string message,bool force,bool stationTrigger) {
 
-  if (bDebug) DebugN("monitorStateChanges.ctl:setStates|entered with datapoint: "+ datapoint+" element: "+ element+ " state: "+state+" message: "+message);
+  if (bDebug) DebugN("monitorStateChanges.ctl:setStates|entered with datapoint: "+ datapoint+" element: "+ element+ " state: "+state+" message: "+message+" stationTrigger: "+stationTrigger);
 
   string dp;
   
@@ -302,12 +302,12 @@ void setStates(string datapoint,string element,int state,string message,bool for
   // and start updating the childStates for the remaining nodes. If the element is childState,
   // only the childState updates needs 2b done, unless stationTrigger = true, then childstate should be
   // handled the same way as state.
-  if (element == "status.state" | stationTrigger) {
+  if (element == "status.state" || stationTrigger) {
     // set the state value of this dp
     
     int aVal;
     dpGet(datapoint+"."+element,aVal);
-    if (state > -1 && state != aVal) {
+    if (state > -1) {
       if (force) {
         dpSet(datapoint+"."+element,state);
       } else {
@@ -367,16 +367,11 @@ void setStates(string datapoint,string element,int state,string message,bool for
           rcuYDP = dp;        
 
       
+
           while ( setChildState(rcuXDP,state)) {
             if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+rcuXDP);
             dp = navFunct_getPathLessOne(rcuXDP);
             rcuXDP=dp;
-          }
-
-          while ( setChildState(rcuYDP,state)) {
-            if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+rcuYDP);
-            dp = navFunct_getPathLessOne(rcuYDP);
-            rcuYDP=dp;
           }
   //      }  
       }

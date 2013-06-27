@@ -1739,12 +1739,12 @@ void navFunct_fillStationLists() {
 //                               "CS401",
 //                               "CS501");
   remoteStations = makeDynString("RS106",
-                                 "RS205","RS208",
+                                 "RS205","RS208","RS210",
                                  "RS305","RS306","RS307","RS310",
                                  "RS406","RS407","RS409",
                                  "RS503","RS508","RS509");
 //  remoteStations = makeDynString("RS104","RS106","RS107",
-//                                 "RS205","RS206","RS207","RS208",
+//                                 "RS205","RS206","RS207","RS208","RS210",
 //                                 "RS306","RS307","RS308","RS309","RS310","RS311",
 //                                 "RS404","RS406","RS407","RS408","RS409","RS410","RS411","RS412","RS413",
 //                                 "RS503","RS506","RS507","RS508","RS509");

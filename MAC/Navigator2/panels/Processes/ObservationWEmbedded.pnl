@@ -38,19 +38,15 @@ void reload() {
  
   addWriters();
     
-  resize();
 }
 
-void addAdders() {
+void addWriters() {
 
   // get all the InputBuffers used by this observation
   writers = navFunct_getWritersForObservation(observationName);  
 
 }
-
-void resize() {
-  WriterModule.size(1010,14*dynlen(writers));
-}" 0
+" 0
  E E E E 1 -1 -1 0  200 170
 ""0  1
 E "#uses \"navPanel.ctl\"

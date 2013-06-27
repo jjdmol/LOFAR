@@ -126,7 +126,7 @@ void dblClick() {
   bDoubleClicked = true;   
   
   string  extra = \"\";
-  if (hbaNr < 10) extra=\"0\";
+  if (elementNr < 10) extra=\"0\";
 
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"HBATileElement.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
@@ -142,7 +142,7 @@ void dblClick() {
 // routine for right mouse click
 void rClick() {
   string  extra = \"\";
-  if (hbaNr < 10) extra=\"0\";
+  if (elementNr < 10) extra=\"0\";
   navPanel_setEvent(\"element\"+extra+elementNr,\"EventRightClick\");
 }" 0
  2

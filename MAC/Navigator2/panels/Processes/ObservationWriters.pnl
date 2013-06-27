@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1010 600 N "_3DFace" 0
+PANEL,-1 -1 975 7500 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
