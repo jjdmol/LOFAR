@@ -56,6 +56,19 @@ namespace LOFAR
       bool sync;
       SyncLock *syncLock;
 
+      // number of beamlets per RSP board (61, 122, 244 depending on bitmode)
+      //
+      // NOTE: this is actually the beamlet index increase between RSP boards.
+      // Regardless of how many beamlets a packet actually carries, the second
+      // RSP board starts sending from beamlet 61 (in 16-bit mode), leaving
+      // a gap. For example, if each board sends 2 beamlets, then the beamlet
+      // indices in the parset that can be used are:
+      //
+      // 0, 1, 61, 62, 122, 123, 183, 184.
+      //
+      // So it's best to leave nrBeamletsPerBoard at 61/122/244 depending
+      // on the bitmode, regardless of the number of beamlets contained
+      // in each packet. This maximum value is hard-coded at the stations.
       unsigned nrBeamletsPerBoard;
 
       size_t nrSamples;
