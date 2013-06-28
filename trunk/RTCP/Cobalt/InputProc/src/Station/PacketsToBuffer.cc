@@ -81,7 +81,6 @@ namespace LOFAR
           // Mode switch detected
           unsigned bitMode = packet.bitMode();
           unsigned clockMHz = packet.clockMHz();
-          unsigned nrBeamlets = packet.header.nrBeamlets;
 
           LOG_INFO_STR(logPrefix << "Mode switch detected to " << clockMHz << " MHz, " << bitMode << " bit");
 
