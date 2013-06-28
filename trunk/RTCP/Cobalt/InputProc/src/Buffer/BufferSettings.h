@@ -56,20 +56,21 @@ namespace LOFAR
       bool sync;
       SyncLock *syncLock;
 
-      // number of beamlets per RSP board (61, 122, 244 depending on bitmode)
-      //
-      // NOTE: this is actually the beamlet index increase between RSP boards.
-      // Regardless of how many beamlets a packet actually carries, the second
-      // RSP board starts sending from beamlet 61 (in 16-bit mode), leaving
-      // a gap. For example, if each board sends 2 beamlets, then the beamlet
-      // indices in the parset that can be used are:
-      //
-      // 0, 1, 61, 62, 122, 123, 183, 184.
-      //
-      // So it's best to leave nrBeamletsPerBoard at 61/122/244 depending
-      // on the bitmode, regardless of the number of beamlets contained
-      // in each packet. This maximum value is hard-coded at the stations.
-      unsigned nrBeamletsPerBoard;
+      unsigned nrBeamletsPerBoard() const {
+        // the number of beamlets scales with the bitmode:
+        // 16-bit:  61
+        //  8-bit: 122
+        //  4-bit: 244
+        switch (station.bitMode) {
+          default:
+          case 16:
+            return nrBeamletsPerBoard_16bit;
+          case 8:
+            return nrBeamletsPerBoard_16bit << 1;
+          case 4:
+            return nrBeamletsPerBoard_16bit << 2;
+        }
+      }
 
       size_t nrSamples;
 
@@ -89,20 +90,35 @@ namespace LOFAR
 
       size_t boardIndex(unsigned beamlet) const
       {
-        return beamlet / nrBeamletsPerBoard;
+        return beamlet / nrBeamletsPerBoard();
       }
 
       bool operator==(const struct BufferSettings &other) const
       {
         return station == other.station
                && sync == other.sync
-               && nrBeamletsPerBoard == other.nrBeamletsPerBoard
                && nrSamples == other.nrSamples
                && nrBoards == other.nrBoards
                && nrAvailableRanges == other.nrAvailableRanges
                && dataKey == other.dataKey;
       }
     private:
+
+      // number of beamlets per RSP board in 16-bit mode.
+      //
+      // NOTE: this is actually the beamlet index increase between RSP boards.
+      // Regardless of how many beamlets a packet actually carries, the second
+      // RSP board starts sending from beamlet 61, leaving
+      // a gap. For example, if each board sends 2 beamlets, then the beamlet
+      // indices in the parset that can be used are:
+      //
+      // 0, 1, 61, 62, 122, 123, 183, 184.
+      //
+      // So it's best to leave nrBeamletsPerBoard_16bit at 61,
+      // regardless of the number of beamlets contained in each packet.
+      //
+      // This value is hard-coded at the stations.
+      static const unsigned nrBeamletsPerBoard_16bit = 61;
 
       // Derive sane values from the station field.
       void deriveDefaultSettings();

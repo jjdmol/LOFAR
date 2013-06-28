@@ -44,7 +44,7 @@ struct StationID stationID("RS106", "LBA", 200, 16);
 struct BufferSettings settings(stationID, false);
 
 TEST(Basic) {
-  for (size_t nrBeamlets = 1; nrBeamlets < settings.nrBoards * settings.nrBeamletsPerBoard; nrBeamlets <<= 1) {
+  for (size_t nrBeamlets = 1; nrBeamlets < settings.nrBoards * settings.nrBeamletsPerBoard(); nrBeamlets <<= 1) {
     for (size_t blockSize = 1; blockSize < settings.nrSamples; blockSize <<= 1) {
       // Create a buffer
       SampleBuffer< SampleType<i16complex> > buffer(settings, true);
@@ -161,12 +161,10 @@ int main()
   // Test various modes
   LOG_INFO("Test 16-bit complex");
   settings.station.bitMode = 16;
-  settings.nrBeamletsPerBoard = 61;
   test<i16complex>(settings, "tBlockReader.in_16bit");
 
   LOG_INFO("Test 8-bit complex");
   settings.station.bitMode = 8;
-  settings.nrBeamletsPerBoard = 122;
   test<i8complex>(settings, "tBlockReader.in_8bit");
 
   return UnitTest::RunAllTests();

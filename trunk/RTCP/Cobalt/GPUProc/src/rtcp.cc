@@ -172,7 +172,7 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
         unsigned board = ps.settings.stations[stationIdx].rspBoardMap[i];
         unsigned slot  = ps.settings.stations[stationIdx].rspSlotMap[i];
 
-        unsigned beamlet = board * s.nrBeamletsPerBoard + slot;
+        unsigned beamlet = board * s.nrBeamletsPerBoard() + slot;
 
         beamlets[i] = beamlet;
       }

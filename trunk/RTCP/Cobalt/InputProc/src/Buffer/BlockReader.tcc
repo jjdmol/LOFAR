@@ -36,7 +36,7 @@ namespace LOFAR {
       maxDelay(static_cast<int64>(maxDelay * settings.station.clockMHz * 1000000 / 1024), settings.station.clockMHz * 1000000)
     {
       // Check whether the selected beamlets exist
-      size_t nrBeamlets = settings.nrBoards * settings.nrBeamletsPerBoard;
+      size_t nrBeamlets = settings.nrBoards * settings.nrBeamletsPerBoard();
 
       for (size_t i = 0; i < beamlets.size(); ++i)
         ASSERTSTR( beamlets[i] < nrBeamlets, beamlets[i] << " < " << nrBeamlets );

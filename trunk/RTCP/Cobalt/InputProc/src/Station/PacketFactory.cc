@@ -63,7 +63,7 @@ namespace LOFAR
         break;
       }
 
-      packet.header.nrBeamlets = settings.nrBeamletsPerBoard;
+      packet.header.nrBeamlets = settings.nrBeamletsPerBoard();
       packet.header.nrBlocks = 16;
 
       packet.header.timestamp = timestamp.getSeqId();
