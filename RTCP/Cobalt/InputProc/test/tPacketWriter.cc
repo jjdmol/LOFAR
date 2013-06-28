@@ -120,12 +120,10 @@ int main()
   // Test various modes
   LOG_INFO("Test 16-bit complex");
   settings.station.bitMode = 16;
-  settings.nrBeamletsPerBoard = 61;
   test<i16complex>(settings, "tPacketWriter.in_16bit");
 
   LOG_INFO("Test 8-bit complex");
   settings.station.bitMode = 8;
-  settings.nrBeamletsPerBoard = 122;
   test<i8complex>(settings, "tPacketWriter.in_8bit");
 
   return 0;

@@ -61,21 +61,6 @@ namespace LOFAR
       sync = false;
       syncLock = 0;
 
-      switch (station.bitMode) {
-      default:
-      case 16:
-        nrBeamletsPerBoard = 61;
-        break;
-
-      case 8:
-        nrBeamletsPerBoard = 122;
-        break;
-
-      case 4:
-        nrBeamletsPerBoard = 244;
-        break;
-      }
-
       // 1 second buffer
       setBufferSize(1.0);
 
@@ -101,7 +86,7 @@ namespace LOFAR
 
     std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s )
     {
-      str << s.station << " beamlets: " << (s.nrBoards * s.nrBeamletsPerBoard) << " buffer: " << (1.0 * s.nrSamples / s.station.clockMHz / 1000000 * 1024) << "s";
+      str << s.station << " beamlets: " << (s.nrBoards * s.nrBeamletsPerBoard()) << " buffer: " << (1.0 * s.nrSamples / s.station.clockMHz / 1000000 * 1024) << "s";
 
       if (s.sync) {
         str << " [r/w sync]";

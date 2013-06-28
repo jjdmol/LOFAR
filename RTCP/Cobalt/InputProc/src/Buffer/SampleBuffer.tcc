@@ -18,7 +18,7 @@ namespace LOFAR
     {
       return sizeof settings
              + settings.nrBoards * (Ranges::size(settings.nrAvailableRanges) + 8)
-             + settings.nrBoards * settings.nrBeamletsPerBoard * (settings.nrSamples * sizeof(T) + 128);
+             + settings.nrBoards * settings.nrBeamletsPerBoard() * (settings.nrSamples * sizeof(T) + 128);
     }
 
 
@@ -32,7 +32,7 @@ namespace LOFAR
       sync(settings->sync),
       syncLock(settings->syncLock),
 
-      nrBeamletsPerBoard(settings->nrBeamletsPerBoard),
+      nrBeamletsPerBoard(settings->nrBeamletsPerBoard()),
       nrSamples(settings->nrSamples),
       nrBoards(settings->nrBoards),
       nrAvailableRanges(settings->nrAvailableRanges),
