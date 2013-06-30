@@ -124,7 +124,7 @@ namespace LOFAR
     template<typename T>
     SharedStruct<T>::SharedStruct( key_t key, bool create, time_t timeout )
       :
-      data(key, sizeof(T), create ? SharedMemoryArena::CREATE : SharedMemoryArena::READWRITE, timeout)
+      data(key, sizeof(T), create ? SharedMemoryArena::CREATE : SharedMemoryArena::READ, timeout)
     {
     }
 
