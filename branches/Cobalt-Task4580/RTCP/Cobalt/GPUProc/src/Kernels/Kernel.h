@@ -28,7 +28,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/gpu_utils.h>
+#include <GPUProc/gpu_utils.h>    // for CompileDefinitions
 //#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
@@ -38,6 +38,11 @@ namespace LOFAR
     class Kernel
     {
     public:
+      Kernel(const gpu::Context &context,
+             const gpu::Function &function,
+             gpu::DeviceMemory &input,
+             gpu::DeviceMemory &output);
+
       // Construct a kernel. The parset \a ps contains numerous parameters that
       // will be used to compile the kernel source to PTX code. Compiling to
       // PTX-code is relatively expensive and should therefore be done only
@@ -63,6 +68,8 @@ namespace LOFAR
 
       gpu::Function itsFunction;
       gpu::Event itsEvent;
+      gpu::DeviceMemory itsInput;
+      gpu::DeviceMemory itsOutput;
       const Parset ps;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;

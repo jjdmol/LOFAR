@@ -33,6 +33,18 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    Kernel::Kernel(const gpu::Context &context,
+                   const gpu::Function &function,
+                   gpu::DeviceMemory &input,
+                   gpu::DeviceMemory &output)
+      :
+      itsFunction(function),
+      itsEvent(context),
+      itsInput(input),
+      itsOutput(output)
+    {
+    }
+
     Kernel::Kernel(const Parset &ps, 
                    const gpu::Context &context,
                    const string& srcFilename,
@@ -45,6 +57,8 @@ namespace LOFAR
                                compileDefinitions(ps))),
         functionName),
       itsEvent(context),
+      itsInput(context, 1),   // Dummy. REMOVE!!
+      itsOutput(context, 1),  // Dummy. REMOVE!!
       ps(ps)
     {
     }
@@ -56,6 +70,8 @@ namespace LOFAR
       :
       itsFunction(module, name),
       itsEvent(module.getContext()),
+      itsInput(module.getContext(), 1),   // Dummy. REMOVE!!
+      itsOutput(module.getContext(), 1),  // Dummy. REMOVE!!
       ps(ps)
     {
     }
