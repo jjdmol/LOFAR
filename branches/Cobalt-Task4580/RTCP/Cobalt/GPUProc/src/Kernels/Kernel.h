@@ -35,7 +35,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class Kernel : public gpu::Function
+    class Kernel
     {
     public:
       // Construct a kernel. The parset \a ps contains numerous parameters that
@@ -61,7 +61,8 @@ namespace LOFAR
       // TODO: Remove once we decide we will only create a Kernel from source.
       Kernel(const Parset &ps, const gpu::Module& module, const std::string &name);
 
-      gpu::Event event;
+      gpu::Function itsFunction;
+      gpu::Event itsEvent;
       const Parset &ps;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;

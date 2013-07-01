@@ -41,8 +41,8 @@ namespace LOFAR
       Kernel(ps, context, "BeamFormer/Transpose.cu", "transposeComplexVoltages")
     {
       ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
-      setArg(0, devTransposedData);
-      setArg(1, devComplexVoltages);
+      itsFunction.setArg(0, devTransposedData);
+      itsFunction.setArg(1, devComplexVoltages);
 
       //globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
       globalWorkSize = gpu::Grid(256,

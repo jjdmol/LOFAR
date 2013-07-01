@@ -38,13 +38,13 @@ namespace LOFAR
                    const string& srcFilename,
                    const string& functionName)
       : 
-      gpu::Function(
+      itsFunction(
         createModule(context, 
                      srcFilename,
                      createPTX(srcFilename, 
                                compileDefinitions(ps))),
         functionName),
-      event(context),
+      itsEvent(context),
       ps(ps)
     {
     }
@@ -54,8 +54,8 @@ namespace LOFAR
                    const gpu::Module& module, 
                    const string &name)
       :
-      gpu::Function(module, name),
-      event(module.getContext()),
+      itsFunction(module, name),
+      itsEvent(module.getContext()),
       ps(ps)
     {
     }
@@ -75,7 +75,7 @@ namespace LOFAR
                      globalWorkSize.y / block.y,
                      globalWorkSize.z / block.z);
       //queue.enqueueNDRangeKernel(*this, gpu::nullDim, globalWorkSize, localWorkSize, 0, &event);
-      queue.launchKernel(*this, grid, block);
+      queue.launchKernel(itsFunction, grid, block);
 //      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
 

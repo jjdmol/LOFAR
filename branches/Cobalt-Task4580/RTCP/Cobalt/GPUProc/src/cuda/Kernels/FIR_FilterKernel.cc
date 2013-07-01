@@ -58,12 +58,13 @@ namespace LOFAR
                                 gpu::DeviceMemory &devInputSamples,
                                 gpu::Stream &stream)
     {
-      setArg(0, devFilteredData);
-      setArg(1, devInputSamples);
-      setArg(2, devFIRweights);
+      itsFunction.setArg(0, devFilteredData);
+      itsFunction.setArg(1, devInputSamples);
+      itsFunction.setArg(2, devFIRweights);
 
       size_t maxNrThreads;
-      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+      maxNrThreads = 
+        itsFunction.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       unsigned totalNrThreads = ps.nrChannelsPerSubband() * NR_POLARIZATIONS * 2;
       unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
       globalWorkSize = gpu::Grid(totalNrThreads, ps.nrStations());

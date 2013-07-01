@@ -37,11 +37,12 @@ namespace LOFAR
       :
       Kernel(ps, context, "IntToFloat.cu", "intToFloat")
     {
-      setArg(0, devConvertedData);
-      setArg(1, devInputSamples);
+      itsFunction.setArg(0, devConvertedData);
+      itsFunction.setArg(1, devInputSamples);
 
       size_t maxNrThreads;
-      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+      maxNrThreads = 
+        itsFunction.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       globalWorkSize = gpu::Grid(maxNrThreads, ps.nrStations());
       localWorkSize = gpu::Block(maxNrThreads, 1);
 

@@ -35,9 +35,9 @@ namespace LOFAR
       :
       Kernel(ps, context, "BeamFormer.cu", "beamFormer")
     {
-      setArg(0, devComplexVoltages);
-      setArg(1, devCorrectedData);
-      setArg(2, devBeamFormerWeights);
+      itsFunction.setArg(0, devComplexVoltages);
+      itsFunction.setArg(1, devCorrectedData);
+      itsFunction.setArg(2, devBeamFormerWeights);
       // TODO: Hoe moet ik deze ook maar weer instellen?? Want 
       globalWorkSize = gpu::Grid(NR_POLARIZATIONS, 
                                  ps.nrTABs(0), 

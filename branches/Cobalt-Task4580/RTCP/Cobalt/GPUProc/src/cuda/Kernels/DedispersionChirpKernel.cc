@@ -39,12 +39,13 @@ namespace LOFAR
       :
       Kernel(ps, context, "BeamFormer/Dedispersion.cu", "applyChirp")
     {
-      setArg(0, buffer);
-      setArg(1, DMs);
+      itsFunction.setArg(0, buffer);
+      itsFunction.setArg(1, DMs);
 
       size_t maxNrThreads;
       //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
-      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+      maxNrThreads = 
+        itsFunction.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       unsigned fftSize = ps.dedispersionFFTsize();
 
       globalWorkSize = gpu::Grid(fftSize, ps.nrSamplesPerChannel() / fftSize, ps.nrChannelsPerSubband());
@@ -69,7 +70,7 @@ namespace LOFAR
 
     void DedispersionChirpKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, double subbandFrequency)
     {
-      setArg(2, (float) subbandFrequency);
+      itsFunction.setArg(2, (float) subbandFrequency);
       Kernel::enqueue(queue/*, counter*/);
     }
   }

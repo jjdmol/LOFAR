@@ -38,13 +38,14 @@ namespace LOFAR
       :
       Kernel(ps, context, "BeamFormer/IncoherentStokes.cu", "incoherentStokes")
     {
-      setArg(0, devIncoherentStokes);
-      setArg(1, devInputSamples);
+      itsFunction.setArg(0, devIncoherentStokes);
+      itsFunction.setArg(1, devInputSamples);
 
       unsigned nrTimes = ps.nrSamplesPerChannel() / ps.incoherentStokesTimeIntegrationFactor();
       size_t maxNrThreads;
       //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
-      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+      maxNrThreads = 
+        itsFunction.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       unsigned nrPasses = (nrTimes + maxNrThreads - 1) / maxNrThreads;
       unsigned nrTimesPerPass = (nrTimes + nrPasses - 1) / nrPasses;
       globalWorkSize = gpu::Grid(nrTimesPerPass * nrPasses, ps.nrChannelsPerSubband());

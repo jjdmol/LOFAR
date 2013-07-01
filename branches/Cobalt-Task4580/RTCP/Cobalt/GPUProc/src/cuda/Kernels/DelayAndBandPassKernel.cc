@@ -48,12 +48,12 @@ namespace LOFAR
       ASSERT(ps.nrChannelsPerSubband() % 16 == 0 || ps.nrChannelsPerSubband() == 1);
       ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
 
-      setArg(0, devCorrectedData);
-      setArg(1, devFilteredData);
-      setArg(4, devDelaysAtBegin);
-      setArg(5, devDelaysAfterEnd);
-      setArg(6, devPhaseOffsets);
-      setArg(7, devBandPassCorrectionWeights);
+      itsFunction.setArg(0, devCorrectedData);
+      itsFunction.setArg(1, devFilteredData);
+      itsFunction.setArg(4, devDelaysAtBegin);
+      itsFunction.setArg(5, devDelaysAfterEnd);
+      itsFunction.setArg(6, devPhaseOffsets);
+      itsFunction.setArg(7, devBandPassCorrectionWeights);
 
       globalWorkSize = gpu::Grid(256, ps.nrChannelsPerSubband() == 1 ? 1 : ps.nrChannelsPerSubband() / 16, ps.nrStations());
       localWorkSize = gpu::Block(256, 1, 1);
@@ -74,8 +74,8 @@ namespace LOFAR
 
     void DelayAndBandPassKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, unsigned subband)
     {
-      setArg(2, static_cast<float>(ps.settings.subbands[subband].centralFrequency));
-      setArg(3, ps.settings.subbands[subband].SAP);
+      itsFunction.setArg(2, static_cast<float>(ps.settings.subbands[subband].centralFrequency));
+      itsFunction.setArg(3, ps.settings.subbands[subband].SAP);
       Kernel::enqueue(queue/*, counter*/);
     }
 

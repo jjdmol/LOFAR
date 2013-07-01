@@ -77,11 +77,12 @@ namespace LOFAR
     void CorrelatorKernel::init(gpu::DeviceMemory &devVisibilities,
                                 gpu::DeviceMemory &devCorrectedData)
     {
-      setArg(0, devVisibilities);
-      setArg(1, devCorrectedData);
+      itsFunction.setArg(0, devVisibilities);
+      itsFunction.setArg(1, devCorrectedData);
 
       size_t maxNrThreads, preferredMultiple;
-      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+      maxNrThreads = 
+        itsFunction.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
 
       //std::vector<cl_context_properties> properties;
       //if (gpu::Platform((cl_platform_id) properties[1]).getInfo<CL_PLATFORM_NAME>() == "AMD Accelerated Parallel Processing") {

@@ -42,8 +42,8 @@ namespace LOFAR
     {
       ASSERT(ps.nrChannelsPerSubband() >= 16 && ps.nrChannelsPerSubband() % 16 == 0);
       ASSERT(ps.nrCoherentStokes() == 1 || ps.nrCoherentStokes() == 4);
-      setArg(0, devStokesData);
-      setArg(1, devComplexVoltages);
+      itsFunction.setArg(0, devStokesData);
+      itsFunction.setArg(1, devComplexVoltages);
 
       globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
       localWorkSize = gpu::Block(256, 1, 1);
