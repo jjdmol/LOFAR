@@ -63,7 +63,7 @@ namespace LOFAR
 
       gpu::Function itsFunction;
       gpu::Event itsEvent;
-      const Parset &ps;
+      const Parset ps;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
