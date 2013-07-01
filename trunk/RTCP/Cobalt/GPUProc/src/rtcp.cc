@@ -44,6 +44,7 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/OutputTypes.h>
 
 #include <InputProc/OMPThread.h>
 #include <InputProc/SampleType.h>
@@ -311,12 +312,12 @@ void runPipeline(SELECTPIPELINE pipeline, const Parset &ps, const vector<size_t>
   {
   case correlator:
     LOG_INFO_STR("Correlator pipeline selected");
-    CorrelatorPipeline(ps, subbands).processObservation();
+    CorrelatorPipeline(ps, subbands).processObservation(CORRELATED_DATA);
     break;
 
   case beam:
     LOG_INFO_STR("BeamFormer pipeline selected");
-    BeamFormerPipeline(ps, subbands).processObservation();
+    BeamFormerPipeline(ps, subbands).processObservation(BEAM_FORMED_DATA);
     break;
 
   case UHEP:
