@@ -217,7 +217,7 @@ namespace LOFAR
     }
 
 
-    void Pipeline::processObservation()
+    void Pipeline::processObservation(OutputType outputType)
     {
       for (size_t i = 0; i < subbandPool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.
@@ -299,8 +299,10 @@ namespace LOFAR
         {
 #         pragma omp parallel for num_threads(subbandPool.size())
           for (size_t i = 0; i < subbandPool.size(); ++i) {
+            SmartPtr<Stream> outputStream = connectToOutput(subbandIndices[i], outputType);
+
             // write subband to Storage
-            writeSubband(subbandIndices[i], subbandPool[i]);
+            writeSubband(subbandIndices[i], subbandPool[i], outputStream);
           }
         }
       }
@@ -429,28 +431,8 @@ namespace LOFAR
     }
 
 
-    void Pipeline::writeSubband( unsigned globalSubbandIdx, struct Output &output )
+    void Pipeline::writeSubband( unsigned globalSubbandIdx, struct Output &output, SmartPtr<Stream> outputStream )
     {
-      SmartPtr<Stream> outputStream;
-
-      // Connect to output stream
-      try {
-        if (ps.getHostName(CORRELATED_DATA, globalSubbandIdx) == "") {
-          // an empty host name means 'write to disk directly', to
-          // make debugging easier for now
-          outputStream = new FileStream(ps.getFileName(CORRELATED_DATA, globalSubbandIdx), 0666); // TODO: mem leak, idem for the other new CLASS and createStream() stmts below (4 in total)
-        } else {
-          // connect to the Storage_main process for this output
-          const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
-
-          outputStream = createStream(desc, false, 0);
-        }
-      } catch(Exception &ex) {
-        LOG_ERROR_STR("Dropping rest of subband " << globalSubbandIdx << ": " << ex);
-
-        outputStream = new NullStream;
-      }
-
       SmartPtr<StreamableData> outputData;
 
       // Process pool elements until end-of-output
@@ -466,7 +448,7 @@ namespace LOFAR
         // Write block to disk 
         try {
           outputData->write(outputStream.get(), true);
-        } catch(Exception &ex) {
+        } catch (Exception &ex) {
           LOG_ERROR_STR("Dropping rest of subband " << id.globalSubbandIdx << ": " << ex);
 
           outputStream = new NullStream;
@@ -479,6 +461,30 @@ namespace LOFAR
 
         LOG_INFO_STR("[" << id << "] Done");
       }
+    }
+
+
+    SmartPtr<Stream> Pipeline::connectToOutput(unsigned globalSubbandIdx, OutputType outputType) const
+    {
+      SmartPtr<Stream> outputStream;
+
+      try {
+        if (ps.getHostName(outputType, globalSubbandIdx) == "") {
+          // an empty host name means 'write to disk directly', to
+          // make debugging easier for now
+          outputStream = new FileStream(ps.getFileName(outputType, globalSubbandIdx), 0666);
+        } else {
+          // connect to the output process for this output
+          const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, outputType, globalSubbandIdx);
+          outputStream = createStream(desc, false, 0);
+        }
+      } catch (Exception &ex) {
+        LOG_ERROR_STR("Failed to connect to output proc; dropping rest of subband " << globalSubbandIdx << ": " << ex);
+
+        outputStream = new NullStream;
+      }
+
+      return outputStream;
     }
 
 
