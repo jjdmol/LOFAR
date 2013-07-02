@@ -18,7 +18,7 @@ Flow:		Data dimensions:			Max size:				Buffer:
    |
    V
 IntToFloat + FIR + Transpose {I/O: history samples buffer, taps}
-   |            [station][pol][samples]                 [48][2][195315.2] = 150 MB              B
+   |            [station][pol][samples]                 [48][2][195312.5] = 150 MB              B
    V
  FFT-N {inplace}
    |            [station][pol][samples][channel]       [48][2][12207][16] = 150 MB              B
@@ -27,23 +27,26 @@ Transpose (**)
    |            [station][pol][channel][samples]       [48][2][16][12207] = 150 MB		A
    V
 FFT-64k/N {inplace}
-   |            [station][pol][samples][channel]                          = 150 MB              A
+   |            [station][pol][channel][samples][subch]                   = 150 MB              A
    V
-Delay/BandPass {I/O: weights}
-   |            [station][channel][samples][pol]                          = 150 MB              B
+Transpose (**)
+   |            [station][pol][samples][channel][subch]                   = 150 MB              B
+   V
+Delay/BandPass + Transpose {I/O: weights}
+   |            [station][channel][samples][pol]                          = 150 MB              A
    V
 (Flagger (narrow-band) {inplace})
-   |            [???]                                                     = 150 MB              B
+   |            [???]                                                     = 150 MB              A
    V
    X
 
 Complex Voltages/Coherent Stokes:
 -----------------------------------
-   X            [station][channel][samples][pol]        [48][256][768][2] = 150 MB		B
+   X            [station][channel][samples][pol]        [48][256][768][2] = 150 MB		A
    |
    V
 BeamFormer {I/O: weights}
-   |            [channel][samples][tab][pol]                              = 3.1 MB/TAB		A
+   |            [channel][samples][tab][pol]                              = 3.1 MB/TAB		B
    V
 Transpose
    |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		CS: C, CV: D
@@ -61,17 +64,17 @@ Coherent Stokes (*: no transpose)
 
 Incoherent Stokes:
 -----------------------------------
-   X            [station][channel][samples][pol]        [48][256][768][2] = 150 MB <- - +	B
+   X            [station][channel][samples][pol]        [48][256][768][2] = 150 MB <- - +	A
    |
    V                                                                                    |
 Transpose + Copy
-   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB      |	A
+   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB      |	B
    V
 Coherent Dedispersion {inplace, I/O: DMs}                                               |
-   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB		A
+   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB		B
    V                                                                                    |
   iFFT-64k/N {inplace}
-   |            [station][pol][samples]                 [48][2][195312.5] = 150 MB      |	A
+   |            [station][pol][samples]                 [48][2][195312.5] = 150 MB      |	B
    V
 Incoherent Stokes (*: no transpose) - - - - - - - - - - - - - - - - - - - - - - - - - - +
    |            [tab][stokes][samples][channel]                           = 0.8 MB/TAB/Stokes	D
