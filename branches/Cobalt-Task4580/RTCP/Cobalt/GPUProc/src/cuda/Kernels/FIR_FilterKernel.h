@@ -34,6 +34,11 @@ namespace LOFAR
     class FIR_FilterKernel : public Kernel
     {
     public:
+      FIR_FilterKernel(const gpu::Context &context,
+                       const gpu::Function &function,
+                       gpu::DeviceMemory &input,
+                       gpu::DeviceMemory &output);
+
       FIR_FilterKernel(const Parset &ps,
                        gpu::Context &context,
                        gpu::DeviceMemory &devFilteredData,
