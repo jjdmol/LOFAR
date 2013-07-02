@@ -1,0 +1,67 @@
+#
+# $Id$
+#
+
+# -- CNProc_CoherentStokes --
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   CNProc_CoherentStokes     4.0.0  development 'node constraint'  "Coherent Stokes settings for BG/P"
+
+# name   	        dir.    type    unit    prun.   vm      value    constr. descr.
+#--------------------------------------------------------------------------------------------------------
+par  which                   I    ptext  -      10    0      "I|IQUV|XXYY;I"                           - "Which Stokes values to compute"
+par  channelsPerSubband      I    int    -      10    0      ">>Observation.channelsPerSubband"        - "Number of channels for Stokes data"
+par  timeIntegrationFactor   I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
+par  subbandsPerFile         I	  int    -	10    0      512                                       - "the number of subbands each Stokes file will hold"
+
+# -- CNProc_IncoherentStokes --
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   CNProc_IncoherentStokes   4.0.0  development 'node constraint'  "Incoherent Stokes settings for BG/P"
+
+# name   	        dir.    type    unit    prun.   vm      value    constr. descr.
+#--------------------------------------------------------------------------------------------------------
+par  which                   I    ptext  -      10    0      "I|IQUV;I"                                - "Which Stokes values to compute"
+par  channelsPerSubband      I    int    -      10    0      ">>Observation.channelsPerSubband"        - "Number of channels for Stokes data"
+par  timeIntegrationFactor   I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
+par  subbandsPerFile         I    int    -      10    0      512                                       - "the number of subbands each Stokes file will hold"
+
+
+# -- Correlator --
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Correlator 4.0.0  development 'node constraint'  "Settings for Correlation (visibilities) calculations"
+
+#    name         	dir.	type	unit	prun.	vm	value	constr.	descr.
+#--------------------------------------------------------------------------------------------------------
+par integrationTime	I       dbl		-		10		0	1		- 		"Integration time"
+
+
+# -- PencilInfo --
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  PencilInfo    4.0.0  development 'node constraint'  "Settings for pencil beamformer"
+
+par  flysEye                 I    bool   -      10    0      false                                     - "Fly's Eye mode: every station is transformed into its own beam"
+
+
+# -- OLAP--
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  OLAP         4.0.1  development 'node constraint'  "OLAP"
+
+#    name          	        dir. type  unit prun.   vm      value   	constr.  	descr.
+#--------------------------------------------------------------------------------------------------------
+par realTime		        I    bool    -	10	0	true		-		"whether data is processed at real-time"
+par delayCompensation	        I    bool    -  10  	0	true		-		"perform delay compensation between stations"
+par correctBandPass	        I    bool    -  10  	0	true		-		'apply the bandpass filter'
+par coherentDedisperseChannels  I    bool    -  10      0       false           -               "coherent dedispersion applied (true/false)"
+
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses  CNProc_CoherentStokes 4.0.0  development '1'  "Coherent Stokes"
+uses  CNProc_IncoherentStokes 4.0.0  development '1'  "Inoherent Stokes"
+uses  Correlator   4.0.0  development '1'  "Correlator specification"
+uses  PencilInfo   4.0.0  development '1'  "Settings for pencil beamformer"

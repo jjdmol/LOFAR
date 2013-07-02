@@ -1,0 +1,18 @@
+#  -- Virtual Instrument--
+#
+# Component description of a Virtual Instrument
+#
+# $Id$
+#
+# -- Observation--
+#      name              vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  VirtualInstrument        4.0.0  development 'node constraint'  "VirtualInstrument"
+
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#-------------------------------------------------------------------------------------------------------
+par stationList              I    vtext   -      10    0     '[]'                    -   'list of all used stations, eg. [CS001,CS016]'
+par partitionList            I    vtext   -      10    0     '["R00"]'               -   'list of the used BG/P partitions'
+par stationSet		     I	  text    -      10    0      ""	             -   'Predefined stationset, e.g. Custom or Dutch'
+par minimalNrStations        I    int     -      10    0      1                      -   'the minimum number of stations needed'

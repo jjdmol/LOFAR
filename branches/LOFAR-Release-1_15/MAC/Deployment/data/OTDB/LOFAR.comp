@@ -1,0 +1,11 @@
+# -- LOFAR--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  LOFAR        4.0.3  development 'node constraint'  "LOFAR Main"
+uses  Version      4.0.0  development 1                  "Component tree version number"
+uses  ObsSW	   4.0.3  development 1                  "Observation Software"
+uses  Clock160     4.0.0  development 1                  "160MHz System Clock"
+uses  Clock200     4.0.0  development 1                  "200MHz System Clock"

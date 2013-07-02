@@ -1,0 +1,12 @@
+# -- Calibration--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Calibration  4.0.0  development 'node constraint'  "Calibration pipeline"
+
+#    name                          dir. type   unit   prun. vm   value                constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  SkyModel                      I    text   -      100   0    ''                   -        "sky model for calibrator pipeline/user supplied model for calibration pipeline"
+par  exportCalibrationParameters   I    bool   -      100   0    'false'              -        "export the instrument model parameters using parmexportcal"

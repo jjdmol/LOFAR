@@ -1,0 +1,68 @@
+common  	:AntennaCommon
+element00       :HBAElement
+element01       :HBAElement
+element02       :HBAElement
+element03       :HBAElement
+element04       :HBAElement
+element05       :HBAElement
+element06       :HBAElement
+element07       :HBAElement
+element08       :HBAElement
+element09       :HBAElement
+element10       :HBAElement
+element11       :HBAElement
+element12       :HBAElement
+element13       :HBAElement
+element14       :HBAElement
+element15       :HBAElement
+
+# Modify the default value for the leaf-field
+!ElementName	TypeName	_original.._value
+!_mp_HBAAntenna.element00.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element00.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element00.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element01.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element01.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element01.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element02.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element02.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element02.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element03.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element03.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element03.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element04.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element04.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element04.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element05.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element05.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element05.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element06.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element06.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element06.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element07.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element07.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element07.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element08.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element08.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element08.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element09.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element09.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element09.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element10.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element10.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element10.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element11.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element11.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element11.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element12.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element12.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element12.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element13.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element13.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element13.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element14.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element14.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element14.comm.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element15.X.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element15.Y.status.leaf	HBAAntenna	1
+!_mp_HBAAntenna.element15.comm.status.leaf	HBAAntenna	1
