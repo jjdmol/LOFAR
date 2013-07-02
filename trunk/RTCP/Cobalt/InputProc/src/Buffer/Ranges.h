@@ -55,6 +55,9 @@ namespace LOFAR
       Ranges( void *data, size_t numBytes, value_type minHistory, bool create );
       ~Ranges();
 
+      // Remove everything
+      void clear();
+
       // Remove [0,to)
       void excludeBefore( value_type to );
 

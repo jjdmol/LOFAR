@@ -71,6 +71,15 @@ namespace LOFAR
           i->~Range();
     }
 
+    void Ranges::clear()
+    {
+      for (struct Range *i = begin; i != end; ++i) {
+        // erase; delete 'to' first!
+        i->to = 0;
+        i->from = 0;
+      }
+    }
+
     void Ranges::excludeBefore( value_type to )
     {
       for (struct Range *i = begin; i != end; ++i) {

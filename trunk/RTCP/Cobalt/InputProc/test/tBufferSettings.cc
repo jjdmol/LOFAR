@@ -34,33 +34,6 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 
-SUITE(nrBeamletsPerBoard)
-{
-  TEST(16bit)
-  {
-    struct StationID stationID("RS106", "LBA", 200, 16);
-    struct BufferSettings settings(stationID, false);
-
-    CHECK_EQUAL(61U, settings.nrBeamletsPerBoard());
-  }
-
-  TEST(8bit)
-  {
-    struct StationID stationID("RS106", "LBA", 200, 8);
-    struct BufferSettings settings(stationID, false);
-
-    CHECK_EQUAL(122U, settings.nrBeamletsPerBoard());
-  }
-
-  TEST(4bit)
-  {
-    struct StationID stationID("RS106", "LBA", 200, 4);
-    struct BufferSettings settings(stationID, false);
-
-    CHECK_EQUAL(244U, settings.nrBeamletsPerBoard());
-  }
-}
-
 int main()
 {
   INIT_LOGGER("tBufferSettings");
