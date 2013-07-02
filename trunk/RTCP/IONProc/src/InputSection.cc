@@ -99,7 +99,7 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputThread
 
   typename InputThread<SAMPLE_TYPE>::ThreadArgs args;
 
-  args.nrTimesPerPacket    = parset.getInt32("OLAP.nrTimesInFrame");
+  args.nrTimesPerPacket    = parset.getInt32("OLAP.nrTimesInFrame", 16);
   args.nrSlotsPerPacket    = parset.nrSlotsInFrame();
   args.isRealTime	   = parset.realTime();
   args.startTime	   = TimeStamp(static_cast<int64>(parset.startTime() * parset.subbandBandwidth()), parset.clockSpeed());
