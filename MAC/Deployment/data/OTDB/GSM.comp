@@ -36,10 +36,10 @@ node  GSM         4.0.0  development  'node constraint'  "GSM"
 #--------------------------------------------------------------------------------------------------------
 #   name                    dir. type   unit   prun. vm   value     	constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  monetdb_hostname       I    text   -      10    100    "lbd002"       -     ''
-par  monetdb_port           I    int    -      10    100    51000          -     ''
-par  monetdb_name           I    text   -      10    100    "gsm"          -     ''
-par  monetdb_user           I    text   -      10    100    "gsm"          -     ''
-par  monetdb_password       I    text   -      10    100    "msss"         -     ''
+par  monetdb_hostname       I    text   -      10    100    "lbd002"       -     'name of the host where the database is located'
+par  monetdb_port           I    int    -      10    100    51000          -     'port number to use for connection to database'
+par  monetdb_name           I    text   -      10    100    "gsm"          -     'the name of the database'
+par  monetdb_user           I    text   -      10    100    "gsm"          -     'user name used for connecting to database'
+par  monetdb_password       I    text   -      10    100    "msss"         -     'password used for connecting to database'
 par  assoc_theta            I    text   -      10    100    ""             -     ''
 

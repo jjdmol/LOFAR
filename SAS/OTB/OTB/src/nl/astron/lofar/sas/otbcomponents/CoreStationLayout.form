@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.1" encoding="UTF-8" ?>
 
 <Form version="1.3" maxVersion="1.5" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
   <Properties>
@@ -13,6 +13,7 @@
   <AuxValues>
     <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_generateFQN" type="java.lang.Boolean" value="true"/>
     <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
@@ -76,26 +77,6 @@
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
           <AbsoluteConstraints x="80" y="90" width="110" height="110"/>
-        </Constraint>
-      </Constraints>
-    </Component>
-    <Component class="nl.astron.lofar.sas.otbcomponents.RoundButton" name="LBALongBaselineRight">
-      <AuxValues>
-        <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="LBALongBaselineRight.addActionListener(new java.awt.event.ActionListener() {&#xa;  public void actionPerformed(java.awt.event.ActionEvent evt) {&#xa;    ActionEvent event = new ActionEvent(this,-1,&quot;LBALongBaselineRight&quot;);&#xa;    fireActionListenerActionPerformed(event);&#xa;  }&#xa;});"/>
-      </AuxValues>
-      <Constraints>
-        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-          <AbsoluteConstraints x="230" y="200" width="10" height="10"/>
-        </Constraint>
-      </Constraints>
-    </Component>
-    <Component class="nl.astron.lofar.sas.otbcomponents.RoundButton" name="LBALongBaselineLeft">
-      <AuxValues>
-        <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="LBALongBaselineLeft.addActionListener(new java.awt.event.ActionListener() {&#xa;  public void actionPerformed(java.awt.event.ActionEvent evt) {&#xa;    ActionEvent event = new ActionEvent(this,-1,&quot;LBALongBaselineLeft&quot;);&#xa;    fireActionListenerActionPerformed(event);&#xa;  }&#xa;});"/>
-      </AuxValues>
-      <Constraints>
-        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-          <AbsoluteConstraints x="30" y="200" width="10" height="10"/>
         </Constraint>
       </Constraints>
     </Component>
