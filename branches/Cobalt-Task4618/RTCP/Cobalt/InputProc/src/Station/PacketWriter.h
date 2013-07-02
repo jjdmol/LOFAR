@@ -34,6 +34,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    EXCEPTION_CLASS(BadModeException, LOFAR::Exception);
 
     /*
      * Writes RSP packets to a SampleBuffer
@@ -42,10 +43,15 @@ namespace LOFAR
     class PacketWriter
     {
     public:
-      PacketWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, unsigned boardNr );
-      ~PacketWriter();
+      PacketWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, const struct BoardMode &mode, unsigned boardNr );
+
+      // Signal end of (all) writing
+      void noMoreWriting();
 
       // Write a packet to the SampleBuffer
+      //
+      // Throws BadModeException, if the packet was valid but did not correspond
+      // to what the RSP board in `buffer' was configured for.
       void writePacket( const struct RSP &packet );
 
       void logStatistics();
@@ -55,6 +61,11 @@ namespace LOFAR
 
       SampleBuffer<T> &buffer;
       typename SampleBuffer<T>::Board &board;
+
+      // All packets must correspond to this mode, which we assume won't change
+      // because each Board only sustains one writer (this object).
+      const struct BoardMode mode;
+
       const struct BufferSettings &settings;
       const size_t firstBeamlet;
 

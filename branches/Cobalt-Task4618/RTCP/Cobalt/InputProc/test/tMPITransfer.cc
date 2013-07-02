@@ -91,8 +91,9 @@ int nrReceivers;
 
 void sender()
 {
-  struct StationID stationID(str(format("CS%03d") % rank), "LBA", clockMHz, 16);
+  struct StationID stationID(str(format("CS%03d") % rank), "LBA");
   struct BufferSettings settings(stationID, false);
+  struct BoardMode mode(16, clockMHz);
 
   // sync readers and writers to prevent data loss
   // if the reader is delayed w.r.t. the generator
@@ -127,7 +128,7 @@ void sender()
   removeSampleBuffers(settings);
 
   MultiPacketsToBuffer station( settings, inputStreams );
-  PacketFactory factory( settings );
+  PacketFactory factory( settings, mode );
   Generator generator( settings, outputStreams, factory, from - nrHistorySamples, to );
 
   #pragma omp parallel sections
@@ -147,7 +148,7 @@ void sender()
 
       LOG_INFO_STR("Detected " << s);
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
-      BlockReader<SampleT> reader(s, values(beamletDistribution), nrHistorySamples, 0.1);
+      BlockReader<SampleT> reader(s, mode, values(beamletDistribution), nrHistorySamples, 0.1);
       MPISendStation sender(s, rank, beamletDistribution);
 
       LOG_INFO_STR("Sending to receivers");
