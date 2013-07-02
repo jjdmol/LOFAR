@@ -1,0 +1,96 @@
+------------------------
+Beamformer Pipeline
+------------------------
+
+For max size, we assume:
+ - 48 stations
+ - 1 subband
+ - 1 second blocks (195312.5 samples)
+
+Note:
+  MB = 1e6 bytes
+  (*) = requires change from current implementation
+  (**) = is a new kernel (wrt what we already ported)
+
+Flow:		Data dimensions:			Max size:				Buffer:
+=====================================================================================================================
+(input)		[station][samples][pol]			[48][195312.5][2] = 75 MB		A
+   |
+   V
+IntToFloat + Transpose (*: transpose)
+   |            [station][pol][samples]			[48][2][195312.5] = 150 MB		B
+   V
+FFT-256 {inplace}
+   |            [station][pol][samples][channel]	[48][2][763][256] = 150 MB		A
+   V
+Delay/BandPass {I/O: weights} (*: different transpose)
+   |            [station][pol][channel][samples]        [48][2][256][768] = 150 MB		B
+   V
+(Flagger {inplace})
+   |            [station][pol][channel][samples]        [48][2][256][768] = 150 MB		B
+   V
+FFT-16 {inplace}
+   |            [station][pol][channel][samples][subchannel]              = 150 MB		B
+   V
+Transpose (**)
+   |            [station][pol][channel][samples]        [48][2][256][768] = 150 MB		A
+   V
+   X
+
+Complex Voltages/Coherent Stokes:
+-----------------------------------
+   X            [station][pol][channel][samples]        [48][2][256][768] = 150 MB		A
+   |
+   V
+BeamFormer {I/O: weights}
+   |            [channel][samples][tab][pol]                              = 3.1 MB/TAB		B
+   V
+Transpose
+   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		CS+1ch: C, CS+Nch: C, CV+1ch: D, CV+Nch: C
+   V
+Coherent Dedispersion {inplace, I/O: DMs}
+   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		CS+1ch: C, CS+Nch: C, CV+1ch: D, CV+Nch: C
+   V
+  iFFT-4096 {inplace}
+   |            [tab][pol][samples]                                       = 3.1 MB/TAB		CS+1ch: C, CS+Nch: C, CV+1ch: D, CV+Nch: C
+   V
+  FIR {I/O: history samples buffer, taps} (*: no transpose)
+   |            [tab][pol][samples]                                       = 3.1 MB/TAB		CS+1ch: -, CS+Nch: B, CV+1ch: -, CV+Nch: D
+   V
+  FFT {inplace}
+   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		CS+1ch: -, CS+Nch: B, CV+1ch: -, CV+Nch: D
+Coherent Stokes (*: no transpose)
+   |            [tab][stokes][samples][channel]                           = 0.8 MB/TAB/Stokes	CS+1ch: D, CS+Nch: D, CV+1ch: -, CV+Nch: -
+   V
+(output)
+
+Incoherent Stokes:
+-----------------------------------
+   X            [station][pol][channel][samples]        [48][2][256][768] = 150 MB <- - +	A
+   |
+   V                                                                                    |
+Transpose + Copy
+   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB      |	B
+   V
+Coherent Dedispersion {inplace, I/O: DMs}                                               |
+   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB		B
+   V                                                                                    |
+  iFFT-4096 {inplace}
+   |            [station][pol][samples]                 [48][2][195312.5] = 150 MB      |	B
+   V
+  FIR {I/O: history samples buffer, taps} (*: no transpose)                             |
+   |            [station][pol][samples]                 [48][2][195312.5] = 150 MB		1ch: -, Nch: C
+   V                                                                                    |
+  FFT {inplace}											1ch: -, Nch: C
+   |            [station][pol][samples][channel]                          = 150 MB      |
+Incoherent Stokes (*: no transpose) - - - - - - - - - - - - - - - - - - - - - - - - - - +
+   |            [tab][stokes][samples][channel]                           = 0.8 MB/TAB/Stokes	D
+   V
+(output)
+
+A = 150 MB
+B = max(150 MB, 3.1 MB * #coherent TABs/pass)
+C = max(150 MB, 3.1 MB * #coherent TABs/pass)
+D = 0.8 MB/TAB/Stokes (size of output)
+
+Because each pass is ~6 beams, and certainly less than 150/3.1=~48, we need 450 MB of intermediate buffers. If the WQ has 1791 MB, we can form (1791 MB - 450 MB) / 0.8 MB/TAB/Stokes = 1676 * TABs * Stokes.
