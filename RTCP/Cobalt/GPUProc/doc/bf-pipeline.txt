@@ -17,79 +17,69 @@ Flow:		Data dimensions:			Max size:				Buffer:
 (input)		[station][samples][pol]			[48][195312.5][2] = 75 MB		A
    |
    V
-IntToFloat + Transpose (*: transpose)
-   |            [station][pol][samples]			[48][2][195312.5] = 150 MB		B
+IntToFloat + FIR + Transpose {I/O: history samples buffer, taps}
+   |            [station][pol][samples]                 [48][2][195315.2] = 150 MB              B
    V
-FFT-256 {inplace}
-   |            [station][pol][samples][channel]	[48][2][763][256] = 150 MB		A
-   V
-Delay/BandPass {I/O: weights} (*: different transpose)
-   |            [station][pol][channel][samples]        [48][2][256][768] = 150 MB		B
-   V
-(Flagger {inplace})
-   |            [station][pol][channel][samples]        [48][2][256][768] = 150 MB		B
-   V
-FFT-16 {inplace}
-   |            [station][pol][channel][samples][subchannel]              = 150 MB		B
+ FFT-N {inplace}
+   |            [station][pol][samples][channel]       [48][2][12207][16] = 150 MB              B
    V
 Transpose (**)
-   |            [station][pol][channel][samples]        [48][2][256][768] = 150 MB		A
+   |            [station][pol][channel][samples]       [48][2][16][12207] = 150 MB		A
+   V
+FFT-64k/N {inplace}
+   |            [station][pol][samples][channel]                          = 150 MB              A
+   V
+Delay/BandPass {I/O: weights}
+   |            [station][channel][samples][pol]                          = 150 MB              B
+   V
+(Flagger (narrow-band) {inplace})
+   |            [???]                                                     = 150 MB              B
    V
    X
 
 Complex Voltages/Coherent Stokes:
 -----------------------------------
-   X            [station][pol][channel][samples]        [48][2][256][768] = 150 MB		A
+   X            [station][channel][samples][pol]        [48][256][768][2] = 150 MB		B
    |
    V
 BeamFormer {I/O: weights}
-   |            [channel][samples][tab][pol]                              = 3.1 MB/TAB		B
+   |            [channel][samples][tab][pol]                              = 3.1 MB/TAB		A
    V
 Transpose
-   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		CS+1ch: C, CS+Nch: C, CV+1ch: D, CV+Nch: C
+   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		CS: C, CV: D
    V
 Coherent Dedispersion {inplace, I/O: DMs}
-   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		CS+1ch: C, CS+Nch: C, CV+1ch: D, CV+Nch: C
+   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		CS: C, CV: D
    V
-  iFFT-4096 {inplace}
-   |            [tab][pol][samples]                                       = 3.1 MB/TAB		CS+1ch: C, CS+Nch: C, CV+1ch: D, CV+Nch: C
+  iFFT-64k/N {inplace}
+   |            [tab][pol][samples]                                       = 3.1 MB/TAB		CS: C, CV: D
    V
-  FIR {I/O: history samples buffer, taps} (*: no transpose)
-   |            [tab][pol][samples]                                       = 3.1 MB/TAB		CS+1ch: -, CS+Nch: B, CV+1ch: -, CV+Nch: D
-   V
-  FFT {inplace}
-   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		CS+1ch: -, CS+Nch: B, CV+1ch: -, CV+Nch: D
 Coherent Stokes (*: no transpose)
-   |            [tab][stokes][samples][channel]                           = 0.8 MB/TAB/Stokes	CS+1ch: D, CS+Nch: D, CV+1ch: -, CV+Nch: -
+   |            [tab][stokes][samples][channel]                           = 0.8 MB/TAB/Stokes	CS: D, CV: -
    V
 (output)
 
 Incoherent Stokes:
 -----------------------------------
-   X            [station][pol][channel][samples]        [48][2][256][768] = 150 MB <- - +	A
+   X            [station][channel][samples][pol]        [48][256][768][2] = 150 MB <- - +	B
    |
    V                                                                                    |
 Transpose + Copy
-   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB      |	B
+   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB      |	A
    V
 Coherent Dedispersion {inplace, I/O: DMs}                                               |
-   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB		B
+   |            [station][pol][samples][channel]        [48][2][768][256] = 150 MB		A
    V                                                                                    |
-  iFFT-4096 {inplace}
-   |            [station][pol][samples]                 [48][2][195312.5] = 150 MB      |	B
+  iFFT-64k/N {inplace}
+   |            [station][pol][samples]                 [48][2][195312.5] = 150 MB      |	A
    V
-  FIR {I/O: history samples buffer, taps} (*: no transpose)                             |
-   |            [station][pol][samples]                 [48][2][195312.5] = 150 MB		1ch: -, Nch: C
-   V                                                                                    |
-  FFT {inplace}											1ch: -, Nch: C
-   |            [station][pol][samples][channel]                          = 150 MB      |
 Incoherent Stokes (*: no transpose) - - - - - - - - - - - - - - - - - - - - - - - - - - +
    |            [tab][stokes][samples][channel]                           = 0.8 MB/TAB/Stokes	D
    V
 (output)
 
-A = 150 MB
-B = max(150 MB, 3.1 MB * #coherent TABs/pass)
+A = max(150 MB, 3.1 MB * #coherent TABs/pass)
+B = 150 MB
 C = max(150 MB, 3.1 MB * #coherent TABs/pass)
 D = 0.8 MB/TAB/Stokes (size of output)
 
