@@ -318,7 +318,7 @@ int main( int argc, char **argv )
   MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
 
   // Set up
-  struct StationID stationID(str(format("CS%03d") % rank), "LBA", 200, 16);
+  struct StationID stationID(str(format("CS%03d") % rank), "LBA");
   struct BufferSettings settings(stationID, false);
 
   size_t blockSize = 1024;
@@ -340,7 +340,7 @@ int main( int argc, char **argv )
   }
 
   // Run tests
-  int result = UnitTest::RunAllTests();
+  int result = UnitTest::RunAllTests() > 0;
 
   // Tear down
   receiver = 0;

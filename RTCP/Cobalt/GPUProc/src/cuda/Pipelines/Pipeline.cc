@@ -92,11 +92,11 @@ namespace LOFAR
 
       size_t workQueueIterator = 0;
 
-#ifdef HAVE_MPI
-      // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
-
       // The length of a block in samples
       size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
+
+#ifdef HAVE_MPI
+      // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 
       // Set up the MPI environment.
       MPIReceiveStations receiver(stationRanks, subbandIndices, blockSize);
@@ -165,6 +165,8 @@ namespace LOFAR
         receiver.receiveBlock<SampleT>(blocks);
 #endif
 
+        size_t nrFlaggedSamples = 0;
+
         // Process and forward the received input to the processing threads
         for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
           WorkQueue &queue = *inputDatas[inputIdx].queue;
@@ -182,10 +184,14 @@ namespace LOFAR
 
             // TODO: Not in this thread! Add a preprocess thread maybe?
             data->applyMetaData(stat, SAP, metaData);
+
+            nrFlaggedSamples += metaData.flags.count();
           }
 
           queue.inputPool.filled.append(data);
         }
+
+        LOG_INFO_STR("[block " << block << "] Flags: " << (100 * nrFlaggedSamples / inputDatas.size() / blockSize) << "%");
 
         LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
       }

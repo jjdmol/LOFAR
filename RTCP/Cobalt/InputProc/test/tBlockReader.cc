@@ -40,14 +40,15 @@ using namespace Cobalt;
 using namespace std;
 
 // A BufferSettings object to be used for all tests
-struct StationID stationID("RS106", "LBA", 200, 16);
+struct StationID stationID("RS106", "LBA");
 struct BufferSettings settings(stationID, false);
+struct BoardMode mode(16, 200);
 
 TEST(Basic) {
-  for (size_t nrBeamlets = 1; nrBeamlets < settings.nrBoards * settings.nrBeamletsPerBoard(); nrBeamlets <<= 1) {
+  for (size_t nrBeamlets = 1; nrBeamlets < settings.nrBoards * mode.nrBeamletsPerBoard(); nrBeamlets <<= 1) {
     for (size_t blockSize = 1; blockSize < settings.nrSamples; blockSize <<= 1) {
       // Create a buffer
-      SampleBuffer< SampleType<i16complex> > buffer(settings, true);
+      SampleBuffer< SampleType<i16complex> > buffer(settings, SharedMemoryArena::CREATE);
 
       // Read the beamlets
       std::vector<size_t> beamlets(nrBeamlets);
@@ -55,11 +56,11 @@ TEST(Basic) {
         beamlets[b] = nrBeamlets - b;
       }
 
-      BlockReader< SampleType<i16complex> > reader(settings, beamlets);
+      BlockReader< SampleType<i16complex> > reader(settings, mode, beamlets);
 
       // Read a few blocks -- from the distant past to prevent unnecessary
       // waiting.
-      const TimeStamp from(0, 0, settings.station.clockMHz * 1000000);
+      const TimeStamp from(0, 0, mode.clockHz());
       const TimeStamp to(from + 10 * blockSize);
       for (TimeStamp current = from; current + blockSize < to; current += blockSize) {
         SmartPtr<struct BlockReader< SampleType<i16complex> >::LockedBlock> block(reader.block(current, current + blockSize, std::vector<ssize_t>(nrBeamlets, 0)));
@@ -101,12 +102,12 @@ TEST(Basic) {
 }
 
 template<typename T>
-void test( struct BufferSettings &settings, const std::string &filename )
+void test( struct BufferSettings &settings, struct BoardMode &mode, const std::string &filename )
 {
   // Create the buffer to keep it around after transfer.process(), or there
   // will be no subscribers and transfer will delete the buffer automatically,
   // at which point we can't attach anymore.
-  SampleBuffer< SampleType<T> > buffer(settings, true);
+  SampleBuffer< SampleType<T> > buffer(settings, SharedMemoryArena::CREATE);
 
   // Read packets from file
   FileStream fs(filename);
@@ -118,19 +119,19 @@ void test( struct BufferSettings &settings, const std::string &filename )
   transfer.process();
 
   // Determine the timestamps of the packets we've just written
-  BufferSettings::range_type now = (uint64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
+  BufferSettings::range_type now = (uint64)TimeStamp(time(0) + 1, 0, mode.clockHz());
   BufferSettings::flags_type available = buffer.boards[0].available.sparseSet(0, now);
 
   ASSERT(available.getRanges().size() > 0);
 
-  const TimeStamp from(available.getRanges()[0].begin, settings.station.clockMHz * 1000000);
+  const TimeStamp from(available.getRanges()[0].begin, mode.clockHz());
 
   // Read some of the beamlets
   std::vector<size_t> beamlets(2);
   for (size_t b = 0; b < beamlets.size(); ++b)
     beamlets[b] = b;
 
-  BlockReader< SampleType<T> > reader(settings, beamlets);
+  BlockReader< SampleType<T> > reader(settings, mode, beamlets);
 
   // Read the block, plus 16 unavailable samples
   SmartPtr<struct BlockReader< SampleType<T> >::LockedBlock> block(reader.block(from, from + available.count() + 16, std::vector<ssize_t>(beamlets.size(),0)));
@@ -159,14 +160,18 @@ int main()
   settings.setBufferSize(0.1);
 
   // Test various modes
-  LOG_INFO("Test 16-bit complex");
-  settings.station.bitMode = 16;
-  test<i16complex>(settings, "tBlockReader.in_16bit");
+  {
+    LOG_INFO("Test 16-bit complex");
+    struct BoardMode mode(16, 200);
+    test<i16complex>(settings, mode, "tBlockReader.in_16bit");
+  }
 
-  LOG_INFO("Test 8-bit complex");
-  settings.station.bitMode = 8;
-  test<i8complex>(settings, "tBlockReader.in_8bit");
+  {
+    LOG_INFO("Test 8-bit complex");
+    struct BoardMode mode(8, 200);
+    test<i8complex>(settings, mode, "tBlockReader.in_8bit");
+  }
 
-  return UnitTest::RunAllTests();
+  return UnitTest::RunAllTests() > 0;
 }
 
