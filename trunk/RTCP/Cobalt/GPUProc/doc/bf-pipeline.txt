@@ -20,17 +20,8 @@ Flow:		Data dimensions:			Max size:				Buffer:
 IntToFloat + FIR + Transpose {I/O: history samples buffer, taps}
    |            [station][pol][samples]                 [48][2][195312.5] = 150 MB              B
    V
- FFT-N {inplace}
-   |            [station][pol][samples][channel]       [48][2][12207][16] = 150 MB              B
-   V
-Transpose (**)
-   |            [station][pol][channel][samples]       [48][2][16][12207] = 150 MB		A
-   V
-FFT-64k/N {inplace}
-   |            [station][pol][channel][samples][subch]                   = 150 MB              A
-   V
-Transpose (**)
-   |            [station][pol][samples][channel][subch]                   = 150 MB              B
+FFT-64k {inplace} 1)
+   |            [station][pol][samples][channel]                          = 150 MB              B
    V
 Delay/BandPass + Transpose {I/O: weights}
    |            [station][channel][samples][pol]                          = 150 MB              A
@@ -55,7 +46,7 @@ Coherent Dedispersion {inplace, I/O: DMs}
    |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		CS: C, CV: D
    V
   iFFT-64k/N {inplace}
-   |            [tab][pol][samples]                                       = 3.1 MB/TAB		CS: C, CV: D
+   |            [tab][pol][samples][channel]                              = 3.1 MB/TAB		CS: C, CV: D
    V
 Coherent Stokes (*: no transpose)
    |            [tab][stokes][samples][channel]                           = 0.8 MB/TAB/Stokes	CS: D, CV: -
@@ -87,3 +78,19 @@ C = max(150 MB, 3.1 MB * #coherent TABs/pass)
 D = 0.8 MB/TAB/Stokes (size of output)
 
 Because each pass is ~6 beams, and certainly less than 150/3.1=~48, we need 450 MB of intermediate buffers. If the WQ has 1791 MB, we can form (1791 MB - 450 MB) / 0.8 MB/TAB/Stokes = 1676 * TABs * Stokes.
+
+
+1) NOTE: The big FFT in the beginning is distilled from:
+
+ FFT-N {inplace}
+   |            [station][pol][samples][channel]       [48][2][12207][16] = 150 MB              B
+   V
+Transpose (**)
+   |            [station][pol][channel][samples]       [48][2][16][12207] = 150 MB		A
+   V
+FFT-64k/N {inplace}
+   |            [station][pol][channel][samples][subch]                   = 150 MB              A
+   V
+Transpose (**)
+   |            [station][pol][samples][channel][subch]                   = 150 MB              B
+   V
