@@ -302,7 +302,7 @@ class SkyImage(DataProduct):
     @staticmethod
     def _get_direction_coord(direction):
         data = {
-            'nrDirectionLinearAxis' : len(direction.get_axes()),
+            'nrOfDirectionLinearAxes' : len(direction.get_axes()),
             'PC0_0' : direction._coord['pc'][0][0],
             'PC0_1' : direction._coord['pc'][0][1],
             'PC1_0' : direction._coord['pc'][1][0],
