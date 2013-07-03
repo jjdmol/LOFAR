@@ -43,6 +43,7 @@
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
+#include <Common/Thread/Semaphore.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 
@@ -86,6 +87,70 @@ int nrHosts = 1;
 // Which MPI rank receives which subbands.
 map<int, vector<size_t> > subbandDistribution; // rank -> [subbands]
 
+void receiveStation(const Parset &ps, const struct StationID &stationID, Semaphore &stopSignal)
+{
+  // settings for the circular buffer
+  struct BufferSettings settings(stationID, false);
+  settings.setBufferSize(2.0);
+
+  // Remove lingering buffers
+  removeSampleBuffers(settings);
+
+  // fetch input streams
+  vector<string> inputStreamDescs = ps.getStringVector(str(format("PIC.Core.Station.%s%s.RSP.ports") % stationID.stationName % stationID.antennaField), true);
+  vector< SmartPtr<Stream> > inputStreams(inputStreamDescs.size());
+
+  for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
+    const string desc = inputStreamDescs[board];
+
+    LOG_DEBUG_STR("Input stream for board " << board << ": " << desc);
+
+    if (desc == "factory:") {
+      const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
+      const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
+
+      const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
+      PacketFactory factory(settings, mode);
+
+      inputStreams[board] = new PacketStream(factory, from, to, board);
+    } else {
+      inputStreams[board] = createStream(desc, true);
+    }
+  }
+
+  ASSERTSTR(inputStreams.size() > 0, "No input streams for station " << stationID);
+  settings.nrBoards = inputStreams.size();
+
+  // Force buffer reader/writer syncing if observation is non-real time
+  SyncLock syncLock(settings);
+  if (!ps.realTime()) {
+    settings.sync = true;
+    settings.syncLock = &syncLock;
+  }
+
+  // Set up the circular buffer
+  MultiPacketsToBuffer station(settings, inputStreams);
+
+  #pragma omp parallel sections
+  {
+    // Start a circular buffer
+    #pragma omp section
+    {
+      LOG_INFO_STR("Starting circular buffer");
+      station.process();
+    }
+
+    // Wait for parent to stop us (for cases that do not
+    // trigger EOF in the inputStreams, such as reading from
+    // UDP).
+    #pragma omp section
+    {
+      stopSignal.down();
+      station.stop();
+    }
+  }
+}
+
 // An MPI send process, sending data for one station.
 template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 {
@@ -103,48 +168,10 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
   const string stationName = fullFieldName.substr(0,5); // CS001
   const string fieldName   = fullFieldName.substr(5);   // HBA0
 
-  struct StationID stationID(stationName, fieldName);
-
-  /*
-   * For now, we run the circular buffer
-   */
-  struct BufferSettings settings(stationID, false);
-  settings.setBufferSize(2.0);
-
+  const struct StationID stationID(stationName, fieldName);
   const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
 
-  // Remove lingering buffers
-  removeSampleBuffers(settings);
-
-  // fetch input streams
-  vector<string> inputStreamDescs = ps.getStringVector(str(format("PIC.Core.Station.%s.RSP.ports") % fullFieldName), true);
-  vector< SmartPtr<Stream> > inputStreams(inputStreamDescs.size());
-
-  for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
-    const string desc = inputStreamDescs[board];
-
-    LOG_DEBUG_STR("Input stream for board " << board << ": " << desc);
-
-    if (desc == "factory:") {
-      PacketFactory factory(settings, mode);
-      inputStreams[board] = new PacketStream(factory, from, to, board);
-    } else {
-      inputStreams[board] = createStream(desc, true);
-    }
-  }
-
-  ASSERTSTR(inputStreams.size() > 0, "No input streams for station " << fullFieldName);
-  settings.nrBoards = inputStreams.size();
-
-  // Force buffer reader/writer syncing if observation is non-real time
-  SyncLock syncLock(settings);
-  if (!ps.realTime()) {
-    settings.sync = true;
-    settings.syncLock = &syncLock;
-  }
-
-  // Set up the circular buffer
-  MultiPacketsToBuffer station(settings, inputStreams);
+  Semaphore stopSignal;
 
   /*
    * Stream the data.
@@ -154,8 +181,7 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
     // Start a circular buffer
     #pragma omp section
     { 
-      LOG_INFO_STR("Starting circular buffer");
-      station.process();
+      receiveStation(ps, stationID, stopSignal);
     }
 
     // Send data to receivers
@@ -269,7 +295,7 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
       /*
        * The end.
        */
-      station.stop();
+      stopSignal.up();
     }
   }
 }
