@@ -30,13 +30,39 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    // IncoherentStokesKernel::
+    // IncoherentStokesKernel(const Parset &ps,
+    //                        gpu::Context &context,
+    //                        gpu::DeviceMemory &devIncoherentStokes,
+    //                        gpu::DeviceMemory &devInputSamples)
+    //   :
+    //   Kernel(ps, context, "BeamFormer/IncoherentStokes.cu", "incoherentStokes")
+    // {
+    //   itsFunction.setArg(0, devIncoherentStokes);
+    //   itsFunction.setArg(1, devInputSamples);
+
+    //   unsigned nrTimes = ps.nrSamplesPerChannel() / ps.incoherentStokesTimeIntegrationFactor();
+    //   size_t maxNrThreads;
+    //   //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+    //   maxNrThreads = 
+    //     itsFunction.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+    //   unsigned nrPasses = (nrTimes + maxNrThreads - 1) / maxNrThreads;
+    //   unsigned nrTimesPerPass = (nrTimes + nrPasses - 1) / nrPasses;
+    //   globalWorkSize = gpu::Grid(nrTimesPerPass * nrPasses, ps.nrChannelsPerSubband());
+    //   localWorkSize = gpu::Block(nrTimesPerPass, 1);
+
+    //   nrOperations = ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrStations() * (ps.nrIncoherentStokes() == 1 ? 8 : 20 + 2.0 / ps.incoherentStokesTimeIntegrationFactor());
+    //   nrBytesRead = (size_t) ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>);
+    //   nrBytesWritten = (size_t) ps.nrIncoherentStokes() * nrTimes * ps.nrChannelsPerSubband() * sizeof(float);
+    // }
+
     IncoherentStokesKernel::
     IncoherentStokesKernel(const Parset &ps,
-                           gpu::Context &context,
+                           gpu::Module &module,
                            gpu::DeviceMemory &devIncoherentStokes,
                            gpu::DeviceMemory &devInputSamples)
       :
-      Kernel(ps, context, "BeamFormer/IncoherentStokes.cu", "incoherentStokes")
+      Kernel(ps, module, "incoherentStokes")
     {
       itsFunction.setArg(0, devIncoherentStokes);
       itsFunction.setArg(1, devInputSamples);

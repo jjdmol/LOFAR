@@ -33,8 +33,14 @@ namespace LOFAR
     class BeamFormerKernel : public Kernel
     {
     public:
+      // BeamFormerKernel(const Parset &ps, 
+      //                  gpu::Context &context,
+      //                  gpu::DeviceMemory &devComplexVoltages,
+      //                  gpu::DeviceMemory &devCorrectedData,
+      //                  gpu::DeviceMemory &devBeamFormerWeights);
+
       BeamFormerKernel(const Parset &ps, 
-                       gpu::Context &context,
+                       const gpu::Module &module,
                        gpu::DeviceMemory &devComplexVoltages,
                        gpu::DeviceMemory &devCorrectedData,
                        gpu::DeviceMemory &devBeamFormerWeights);

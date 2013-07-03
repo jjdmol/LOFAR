@@ -27,13 +27,47 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    // BeamFormerKernel::BeamFormerKernel(const Parset &ps, 
+    //                                    gpu::Context &context,
+    //                                    gpu::DeviceMemory &devComplexVoltages,
+    //                                    gpu::DeviceMemory &devCorrectedData,
+    //                                    gpu::DeviceMemory &devBeamFormerWeights)
+    //   :
+    //   Kernel(ps, context, "BeamFormer.cu", "beamFormer")
+    // {
+    //   itsFunction.setArg(0, devComplexVoltages);
+    //   itsFunction.setArg(1, devCorrectedData);
+    //   itsFunction.setArg(2, devBeamFormerWeights);
+    //   // TODO: Hoe moet ik deze ook maar weer instellen?? Want 
+    //   globalWorkSize = gpu::Grid(NR_POLARIZATIONS, 
+    //                              ps.nrTABs(0), 
+    //                              ps.nrChannelsPerSubband());
+    //   localWorkSize = gpu::Block(NR_POLARIZATIONS, 
+    //                              ps.nrTABs(0), 
+    //                              ps.nrChannelsPerSubband());
+
+    //   size_t nrWeightsBytes = bufferSize(ps, BEAM_FORMER_WEIGHTS);
+    //   size_t nrSampleBytesPerPass = bufferSize(ps, INPUT_DATA);
+    //   size_t nrComplexVoltagesBytesPerPass = bufferSize(ps, OUTPUT_DATA);
+
+    //   size_t count = 
+    //     ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS;
+    //   unsigned nrPasses = std::max((ps.nrStations() + 6) / 16, 1U);
+
+    //   nrOperations = count * ps.nrStations() * ps.nrTABs(0) * 8;
+    //   nrBytesRead = 
+    //     nrWeightsBytes + nrSampleBytesPerPass + (nrPasses - 1) * 
+    //     nrComplexVoltagesBytesPerPass;
+    //   nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
+    // }
+
     BeamFormerKernel::BeamFormerKernel(const Parset &ps, 
-                                       gpu::Context &context,
+                                       const gpu::Module &module,
                                        gpu::DeviceMemory &devComplexVoltages,
                                        gpu::DeviceMemory &devCorrectedData,
                                        gpu::DeviceMemory &devBeamFormerWeights)
       :
-      Kernel(ps, context, "BeamFormer.cu", "beamFormer")
+      Kernel(ps, module, "beamFormer")
     {
       itsFunction.setArg(0, devComplexVoltages);
       itsFunction.setArg(1, devCorrectedData);

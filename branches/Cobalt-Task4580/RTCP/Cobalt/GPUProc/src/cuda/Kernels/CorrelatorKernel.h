@@ -36,13 +36,13 @@ namespace LOFAR
     class CorrelatorKernel : public Kernel
     {
     public:
-      CorrelatorKernel(const Parset &ps, 
-                       gpu::Context &context,
-                       gpu::DeviceMemory &devVisibilities, 
-                       gpu::DeviceMemory &devCorrectedData);
+      // CorrelatorKernel(const Parset &ps, 
+      //                  gpu::Context &context,
+      //                  gpu::DeviceMemory &devVisibilities, 
+      //                  gpu::DeviceMemory &devCorrectedData);
 
       CorrelatorKernel(const Parset &ps, 
-                       gpu::Module &module,
+                       const gpu::Module &module,
                        gpu::DeviceMemory &devVisibilities, 
                        gpu::DeviceMemory &devCorrectedData);
 

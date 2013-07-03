@@ -35,8 +35,17 @@ namespace LOFAR
     class DelayAndBandPassKernel : public Kernel
     {
     public:
+      // DelayAndBandPassKernel(const Parset &ps,
+      //                        gpu::Context &context,
+      //                        gpu::DeviceMemory &devCorrectedData,
+      //                        gpu::DeviceMemory &devFilteredData,
+      //                        gpu::DeviceMemory &devDelaysAtBegin,
+      //                        gpu::DeviceMemory &devDelaysAfterEnd,
+      //                        gpu::DeviceMemory &devPhaseOffsets,
+      //                        gpu::Stream &queue);
+
       DelayAndBandPassKernel(const Parset &ps,
-                             gpu::Context &context,
+                             const gpu::Module &module,
                              gpu::DeviceMemory &devCorrectedData,
                              gpu::DeviceMemory &devFilteredData,
                              gpu::DeviceMemory &devDelaysAtBegin,

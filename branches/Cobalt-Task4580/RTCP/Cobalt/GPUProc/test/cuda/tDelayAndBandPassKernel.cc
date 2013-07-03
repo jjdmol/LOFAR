@@ -61,8 +61,17 @@ int main() {
     delaysAfterEnd(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS)),
     phaseOffsets(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS));
 
-  DelayAndBandPassKernel kernel(ps, ctx, inputData, filteredData, 
-                                delaysAtBegin, delaysAfterEnd, phaseOffsets, 
+  DelayAndBandPassKernel kernel(ps,
+                                createModule(ctx, 
+                                             "DelayAndBandPass.cu",
+                                             createPTX("DelayAndBandPass.cu", 
+                                                       Kernel::compileDefinitions(ps))),
+                                // ctx,
+                                inputData,
+                                filteredData, 
+                                delaysAtBegin,
+                                delaysAfterEnd,
+                                phaseOffsets, 
                                 stream);
 
   unsigned subband = 0;

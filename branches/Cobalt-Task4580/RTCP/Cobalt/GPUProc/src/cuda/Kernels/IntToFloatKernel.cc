@@ -30,12 +30,34 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    // IntToFloatKernel::IntToFloatKernel(const Parset &ps,
+    //                                    gpu::Context &context,
+    //                                    gpu::DeviceMemory &devConvertedData,
+    //                                    gpu::DeviceMemory &devInputSamples)
+    //   :
+    //   Kernel(ps, context, "IntToFloat.cu", "intToFloat")
+    // {
+    //   itsFunction.setArg(0, devConvertedData);
+    //   itsFunction.setArg(1, devInputSamples);
+
+    //   size_t maxNrThreads;
+    //   maxNrThreads = 
+    //     itsFunction.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+    //   globalWorkSize = gpu::Grid(maxNrThreads, ps.nrStations());
+    //   localWorkSize = gpu::Block(maxNrThreads, 1);
+
+    //   size_t nrSamples = ps.nrStations() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS;
+    //   nrOperations = nrSamples * 2;
+    //   nrBytesRead = nrSamples * 2 * ps.nrBitsPerSample() / 8;
+    //   nrBytesWritten = nrSamples * sizeof(std::complex<float>);
+    // }
+
     IntToFloatKernel::IntToFloatKernel(const Parset &ps,
-                                       gpu::Context &context,
+                                       const gpu::Module &module,
                                        gpu::DeviceMemory &devConvertedData,
                                        gpu::DeviceMemory &devInputSamples)
       :
-      Kernel(ps, context, "IntToFloat.cu", "intToFloat")
+      Kernel(ps, module, "intToFloat")
     {
       itsFunction.setArg(0, devConvertedData);
       itsFunction.setArg(1, devInputSamples);

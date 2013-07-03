@@ -34,8 +34,13 @@ namespace LOFAR
     class CoherentStokesKernel : public Kernel
     {
     public:
+      // CoherentStokesKernel(const Parset &ps,
+      //                      gpu::Context &context,
+      //                      gpu::DeviceMemory &devStokesData,
+      //                      gpu::DeviceMemory &devComplexVoltages);
+
       CoherentStokesKernel(const Parset &ps,
-                           gpu::Context &context,
+                           gpu::Module &module,
                            gpu::DeviceMemory &devStokesData,
                            gpu::DeviceMemory &devComplexVoltages);
 

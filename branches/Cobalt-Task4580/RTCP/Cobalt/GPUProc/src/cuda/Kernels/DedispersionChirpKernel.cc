@@ -31,13 +31,50 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    // DedispersionChirpKernel::
+    // DedispersionChirpKernel(const Parset &ps,
+    //                         gpu::Context &context,
+    //                         gpu::DeviceMemory &buffer,
+    //                         gpu::DeviceMemory &DMs)
+    //   :
+    //   Kernel(ps, context, "BeamFormer/Dedispersion.cu", "applyChirp")
+    // {
+    //   itsFunction.setArg(0, buffer);
+    //   itsFunction.setArg(1, DMs);
+
+    //   size_t maxNrThreads;
+    //   //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
+    //   maxNrThreads = 
+    //     itsFunction.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+    //   unsigned fftSize = ps.dedispersionFFTsize();
+
+    //   globalWorkSize = gpu::Grid(fftSize, ps.nrSamplesPerChannel() / fftSize, ps.nrChannelsPerSubband());
+    //   //std::cout << "globalWorkSize = NDRange(" << fftSize << ", " << ps.nrSamplesPerChannel() / fftSize << ", " << ps.nrChannelsPerSubband() << ')' << std::endl;
+
+    //   if (fftSize <= maxNrThreads) {
+    //     localWorkSize = gpu::Block(fftSize, 1, maxNrThreads / fftSize);
+    //     //std::cout << "localWorkSize = NDRange(" << fftSize << ", 1, " << maxNrThreads / fftSize << ')' << std::endl;
+    //   } else {
+    //     unsigned divisor;
+
+    //     for (divisor = 1; fftSize / divisor > maxNrThreads || fftSize % divisor != 0; divisor++)
+    //       ;
+
+    //     localWorkSize = gpu::Block(fftSize / divisor, 1, 1);
+    //     //std::cout << "localWorkSize = NDRange(" << fftSize / divisor << ", 1, 1))" << std::endl;
+    //   }
+
+    //   nrOperations = (size_t) NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * (9 * ps.nrTABs(0) + 17),
+    //   nrBytesRead = nrBytesWritten = sizeof(std::complex<float>) * ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel();
+    // }
+
     DedispersionChirpKernel::
     DedispersionChirpKernel(const Parset &ps,
-                            gpu::Context &context,
+                            gpu::Module &module,
                             gpu::DeviceMemory &buffer,
                             gpu::DeviceMemory &DMs)
       :
-      Kernel(ps, context, "BeamFormer/Dedispersion.cu", "applyChirp")
+      Kernel(ps, module, "applyChirp")
     {
       itsFunction.setArg(0, buffer);
       itsFunction.setArg(1, DMs);

@@ -30,20 +30,20 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, 
-                                       gpu::Context &context,
-                                       gpu::DeviceMemory &devFilteredData,
-                                       gpu::DeviceMemory &devInputSamples,
-                                       gpu::Stream &stream)
-      :
-      Kernel(ps, context, "FIR_Filter.cu", "FIR_filter"),
-      devFIRweights(context, bufferSize(ps, FILTER_WEIGHTS))
-    {
-      init(devFilteredData, devInputSamples, stream);
-    }
+    // FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, 
+    //                                    gpu::Context &context,
+    //                                    gpu::DeviceMemory &devFilteredData,
+    //                                    gpu::DeviceMemory &devInputSamples,
+    //                                    gpu::Stream &stream)
+    //   :
+    //   Kernel(ps, context, "FIR_Filter.cu", "FIR_filter"),
+    //   devFIRweights(context, bufferSize(ps, FILTER_WEIGHTS))
+    // {
+    //   init(devFilteredData, devInputSamples, stream);
+    // }
 
     FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, 
-                                       gpu::Module &module,
+                                       const gpu::Module &module,
                                        gpu::DeviceMemory &devFilteredData,
                                        gpu::DeviceMemory &devInputSamples,
                                        gpu::Stream &stream)

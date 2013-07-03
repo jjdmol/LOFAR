@@ -32,13 +32,38 @@ namespace LOFAR
   namespace Cobalt
   {
 
+    // BeamFormerTransposeKernel::
+    // BeamFormerTransposeKernel(const Parset &ps, 
+    //                           gpu::Context &context,
+    //                           gpu::DeviceMemory &devTransposedData,
+    //                           gpu::DeviceMemory &devComplexVoltages)
+    //   :
+    //   Kernel(ps, context, "BeamFormer/Transpose.cu", "transposeComplexVoltages")
+    // {
+    //   ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
+    //   itsFunction.setArg(0, devTransposedData);
+    //   itsFunction.setArg(1, devComplexVoltages);
+
+    //   //globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
+    //   globalWorkSize = gpu::Grid(256,
+    //                              (ps.nrTABs(0) + 15) / 16, 
+    //                              ps.nrSamplesPerChannel() / 16);
+    //   localWorkSize = gpu::Block(256, 1, 1);
+
+    //   nrOperations = 0;
+    //   nrBytesRead = nrBytesWritten =
+    //     (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * 
+    //     ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
+    // }
+
+
     BeamFormerTransposeKernel::
     BeamFormerTransposeKernel(const Parset &ps, 
-                              gpu::Context &context,
+                              gpu::Module &module,
                               gpu::DeviceMemory &devTransposedData,
                               gpu::DeviceMemory &devComplexVoltages)
       :
-      Kernel(ps, context, "BeamFormer/Transpose.cu", "transposeComplexVoltages")
+      Kernel(ps, module, "transposeComplexVoltages")
     {
       ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
       itsFunction.setArg(0, devTransposedData);

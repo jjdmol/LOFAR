@@ -53,8 +53,9 @@ namespace LOFAR
       // of the (CUDA/OpenCL) source file; \a functioName is the name of the
       // function in the module that will be loaded when the Module object is
       // constructed.
-      Kernel(const Parset &ps, const gpu::Context &context,
-             const std::string &srcFilename, const std::string &functionName);
+
+      // Kernel(const Parset &ps, const gpu::Context &context,
+      //        const std::string &srcFilename, const std::string &functionName);
 
       void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
 
@@ -68,8 +69,8 @@ namespace LOFAR
 
       gpu::Function itsFunction;
       gpu::Event itsEvent;
-      gpu::DeviceMemory itsInput;
-      gpu::DeviceMemory itsOutput;
+      // gpu::DeviceMemory itsInput;
+      // gpu::DeviceMemory itsOutput;
       const Parset ps;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;

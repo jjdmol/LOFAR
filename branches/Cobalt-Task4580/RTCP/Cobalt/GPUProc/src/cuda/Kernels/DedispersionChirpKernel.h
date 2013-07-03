@@ -35,8 +35,13 @@ namespace LOFAR
     class DedispersionChirpKernel : public Kernel
     {
     public:
+      // DedispersionChirpKernel(const Parset &ps,
+      //                         gpu::Context &context,
+      //                         gpu::DeviceMemory &buffer,
+      //                         gpu::DeviceMemory &DMs);
+
       DedispersionChirpKernel(const Parset &ps,
-                              gpu::Context &context,
+                              gpu::Module &module,
                               gpu::DeviceMemory &buffer,
                               gpu::DeviceMemory &DMs);
 

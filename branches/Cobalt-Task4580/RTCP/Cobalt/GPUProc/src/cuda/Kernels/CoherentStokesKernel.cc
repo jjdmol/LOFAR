@@ -32,13 +32,34 @@ namespace LOFAR
   namespace Cobalt
   {
 
+    // CoherentStokesKernel::
+    // CoherentStokesKernel(const Parset &ps,
+    //                      gpu::Context &context,
+    //                      gpu::DeviceMemory &devStokesData,
+    //                      gpu::DeviceMemory &devComplexVoltages)
+    //   :
+    //   Kernel(ps, context, "BeamFormer/CoherentStokes.cu", "coherentStokes")
+    // {
+    //   ASSERT(ps.nrChannelsPerSubband() >= 16 && ps.nrChannelsPerSubband() % 16 == 0);
+    //   ASSERT(ps.nrCoherentStokes() == 1 || ps.nrCoherentStokes() == 4);
+    //   itsFunction.setArg(0, devStokesData);
+    //   itsFunction.setArg(1, devComplexVoltages);
+
+    //   globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
+    //   localWorkSize = gpu::Block(256, 1, 1);
+
+    //   nrOperations = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * (ps.nrCoherentStokes() == 1 ? 8 : 20 + 2.0 / ps.coherentStokesTimeIntegrationFactor());
+    //   nrBytesRead = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);
+    //   nrBytesWritten = (size_t) ps.nrTABs(0) * ps.nrCoherentStokes() * ps.nrSamplesPerChannel() / ps.coherentStokesTimeIntegrationFactor() * ps.nrChannelsPerSubband() * sizeof(float);
+    // }
+
     CoherentStokesKernel::
     CoherentStokesKernel(const Parset &ps,
-                         gpu::Context &context,
+                         gpu::Module &module,
                          gpu::DeviceMemory &devStokesData,
                          gpu::DeviceMemory &devComplexVoltages)
       :
-      Kernel(ps, context, "BeamFormer/CoherentStokes.cu", "coherentStokes")
+      Kernel(ps, module, "coherentStokes")
     {
       ASSERT(ps.nrChannelsPerSubband() >= 16 && ps.nrChannelsPerSubband() % 16 == 0);
       ASSERT(ps.nrCoherentStokes() == 1 || ps.nrCoherentStokes() == 4);

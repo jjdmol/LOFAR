@@ -39,29 +39,29 @@ namespace LOFAR
                    gpu::DeviceMemory &output)
       :
       itsFunction(function),
-      itsEvent(context),
-      itsInput(input),
-      itsOutput(output)
+      itsEvent(context)
+      // itsInput(input),
+      // itsOutput(output)
     {
     }
 
-    Kernel::Kernel(const Parset &ps, 
-                   const gpu::Context &context,
-                   const string& srcFilename,
-                   const string& functionName)
-      : 
-      itsFunction(
-        createModule(context, 
-                     srcFilename,
-                     createPTX(srcFilename, 
-                               compileDefinitions(ps))),
-        functionName),
-      itsEvent(context),
-      itsInput(context, 1),   // Dummy. REMOVE!!
-      itsOutput(context, 1),  // Dummy. REMOVE!!
-      ps(ps)
-    {
-    }
+    // Kernel::Kernel(const Parset &ps, 
+    //                const gpu::Context &context,
+    //                const string& srcFilename,
+    //                const string& functionName)
+    //   : 
+    //   itsFunction(
+    //     createModule(context, 
+    //                  srcFilename,
+    //                  createPTX(srcFilename, 
+    //                            compileDefinitions(ps))),
+    //     functionName),
+    //   itsEvent(context),
+    //   itsInput(context, 1),   // Dummy. REMOVE!!
+    //   itsOutput(context, 1),  // Dummy. REMOVE!!
+    //   ps(ps)
+    // {
+    // }
 
     // TODO: Remove
     Kernel::Kernel(const Parset &ps, 
@@ -70,8 +70,8 @@ namespace LOFAR
       :
       itsFunction(module, name),
       itsEvent(module.getContext()),
-      itsInput(module.getContext(), 1),   // Dummy. REMOVE!!
-      itsOutput(module.getContext(), 1),  // Dummy. REMOVE!!
+      // itsInput(module.getContext(), 1),   // Dummy. REMOVE!!
+      // itsOutput(module.getContext(), 1),  // Dummy. REMOVE!!
       ps(ps)
     {
     }

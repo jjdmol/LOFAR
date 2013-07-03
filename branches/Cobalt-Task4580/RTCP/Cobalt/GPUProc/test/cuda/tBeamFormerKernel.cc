@@ -124,7 +124,12 @@ int main() {
   // Write output content.
   stream.writeBuffer(devComplexVoltagesMemory, rawComplexVoltagesData);
 
-  BeamFormerKernel kernel(ps, ctx, 
+  BeamFormerKernel kernel(ps,
+                          createModule(ctx, 
+                                       "BeamFormer.cu",
+                                       createPTX("BeamFormer.cu",
+                                                 Kernel::compileDefinitions(ps))),
+                          // ctx, 
                           devComplexVoltagesMemory,
                           devBandPassCorrectedMemory,
                           devWeightsMemory);
