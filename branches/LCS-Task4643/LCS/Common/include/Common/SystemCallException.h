@@ -33,6 +33,7 @@ namespace LOFAR {
 
 // Use THROW_SYSCALL(...) below instead of 'throw SystemCallException(...)'
 // to enforce sampling errno right after the syscall before it can be clobbered.
+// (If an errno was already avail (e.g. pthread functions return it), throw ... is fine.)
 #define THROW_SYSCALL(msg) \
   do { \
     int err = errno; \

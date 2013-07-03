@@ -36,21 +36,21 @@ namespace LOFAR {
 FileStream::FileStream(const std::string &name)
 {
   if ((fd = open(name.c_str(), O_RDONLY)) < 0)
-    throw SystemCallException(std::string("open ") + name, errno, THROW_ARGS);
+    THROW_SYSCALL(std::string("open ") + name);
 }
 
 
 FileStream::FileStream(const std::string &name, int mode)
 {
   if ((fd = open(name.c_str(), O_RDWR | O_CREAT | O_TRUNC, mode)) < 0)
-    throw SystemCallException(std::string("open ") + name, errno, THROW_ARGS);
+    THROW_SYSCALL(std::string("open ") + name);
 }
 
 
 FileStream::FileStream(const std::string &name, int flags, int mode)
 {
   if ((fd = open(name.c_str(), flags, mode)) < 0) 
-    throw SystemCallException(std::string("open ") + name, errno, THROW_ARGS);
+    THROW_SYSCALL(std::string("open ") + name);
 }
 
 FileStream::~FileStream()
@@ -65,7 +65,7 @@ void FileStream::skip(size_t bytes)
   errno = 0;
 
   if (lseek(fd, bytes, SEEK_CUR) == (off_t)-1 && errno)
-    throw SystemCallException("lseek", errno, THROW_ARGS);
+    THROW_SYSCALL("lseek");
 }
 
 size_t FileStream::size()
@@ -73,7 +73,7 @@ size_t FileStream::size()
   struct stat st;
 
   if (::fstat(fd, &st) != 0)
-    throw SystemCallException("fstat", errno, THROW_ARGS);
+    THROW_SYSCALL("fstat");
 
   return (size_t)st.st_size;
 }

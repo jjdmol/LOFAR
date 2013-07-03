@@ -106,7 +106,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
         snprintf(portStr, sizeof portStr, "%hu", port);
 
         if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0)
-          throw SystemCallException("getaddrinfo", retval, THROW_ARGS);
+          throw SystemCallException("getaddrinfo", retval, THROW_ARGS); // TODO: getaddrinfo does not return errno; needs gai_strerror() to stringify
 
         // make sure result will be freed
         struct D {
@@ -121,7 +121,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
         // result is a linked list of resolved addresses, we only use the first
 
         if ((fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol)) < 0)
-          throw SystemCallException("socket", errno, THROW_ARGS);
+          THROW_SYSCALL("socket");
 
         if (mode == Client) {
           while (connect(fd, result->ai_addr, result->ai_addrlen) < 0)
@@ -133,18 +133,18 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
                 // interrupted by a signal handler -- abort to allow this thread to
                 // be forced to continue after receiving a SIGINT, as with any other
                 // system call in this constructor 
-                throw SystemCallException("sleep", errno, THROW_ARGS);
+                THROW_SYSCALL("sleep");
               }
             } else
-              throw SystemCallException("connect", errno, THROW_ARGS);
+              THROW_SYSCALL("connect");
         } else {
           int on = 1;
 
           if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
-            throw SystemCallException("setsockopt(SO_REUSEADDR)", errno, THROW_ARGS);
+            THROW_SYSCALL("setsockopt(SO_REUSEADDR)");
 
           if (bind(fd, result->ai_addr, result->ai_addrlen) < 0)
-            throw SystemCallException("bind", errno, THROW_ARGS);
+            THROW_SYSCALL("bind");
 
           if (protocol == TCP) {
             listen_sk = fd;
@@ -152,7 +152,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
             int listenBacklog = 15;
             if (listen(listen_sk, listenBacklog) < 0)
-              throw SystemCallException("listen", errno, THROW_ARGS);
+              THROW_SYSCALL("listen");
 
             if (doAccept)
               accept(deadline);
@@ -192,7 +192,7 @@ SocketStream::~SocketStream()
     // backtrace if available, and the proper representation
     // of exceptions in general.
     try {
-      throw SystemCallException("close listen_sk", errno, THROW_ARGS);
+      THROW_SYSCALL("close listen_sk");
     } catch (Exception &ex) {
       LOG_ERROR_STR("Exception in destructor: " << ex);
     }
@@ -217,7 +217,7 @@ void SocketStream::reaccept(time_t deadline)
   ASSERT( mode == Server );
 
   if (fd >= 0 && close(fd) < 0)
-    throw SystemCallException("close", errno, THROW_ARGS);
+    THROW_SYSCALL("close");
 
   accept(deadline);
 }
@@ -263,14 +263,14 @@ void SocketStream::accept(time_t deadline)
     timeval.tv_usec = 0;
 
     switch (select(listen_sk + 1, &fds, 0, 0, &timeval)) {
-      case -1 : throw SystemCallException("select", errno, THROW_ARGS);
+      case -1 : THROW_SYSCALL("select");
 
       case  0 : THROW(TimeOutException, "server socket");
     }
   }
 
   if ((fd = ::accept(listen_sk, 0, 0)) < 0)
-    throw SystemCallException("accept", errno, THROW_ARGS);
+    THROW_SYSCALL("accept");
 }
 
 
@@ -287,13 +287,13 @@ void SocketStream::syncNFS()
   DIR *dir = opendir(".");
 
   if (!dir)
-    throw SystemCallException("opendir", errno, THROW_ARGS);
+    THROW_SYSCALL("opendir");
 
   if (!readdir(dir))
-    throw SystemCallException("readdir", errno, THROW_ARGS);
+    THROW_SYSCALL("readdir");
 
   if (closedir(dir) != 0)
-    throw SystemCallException("closedir", errno, THROW_ARGS);
+    THROW_SYSCALL("closedir");
 }
 
 
@@ -319,7 +319,7 @@ std::string SocketStream::readkey(const std::string &nfskey, time_t deadline)
       // interrupted by a signal handler -- abort to allow this thread to
       // be forced to continue after receiving a SIGINT, as with any other
       // system call
-      throw SystemCallException("sleep", errno, THROW_ARGS);
+      THROW_SYSCALL("sleep");
     }
   }
 }
@@ -332,7 +332,7 @@ void SocketStream::writekey(const std::string &nfskey, uint16 port)
 
   // Symlinks can be atomically created over NFS
   if (symlink(portStr, nfskey.c_str()) < 0)
-    throw SystemCallException("symlink", errno, THROW_ARGS);
+    THROW_SYSCALL("symlink");
 }
 
 void SocketStream::deletekey(const std::string &nfskey)
@@ -340,7 +340,7 @@ void SocketStream::deletekey(const std::string &nfskey)
   syncNFS();
 
   if (unlink(nfskey.c_str()) < 0)
-    throw SystemCallException("unlink", errno, THROW_ARGS);
+    THROW_SYSCALL("unlink");
 }
 
 } // namespace LOFAR

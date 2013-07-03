@@ -45,7 +45,7 @@ FileDescriptorBasedStream::~FileDescriptorBasedStream()
     // backtrace if available, and the proper representation
     // of exceptions in general.
     try {
-      throw SystemCallException("close", errno, THROW_ARGS);
+      THROW_SYSCALL("close");
     } catch (Exception &ex) {
       LOG_ERROR_STR("Exception in destructor: " << ex);
     }
@@ -58,7 +58,7 @@ size_t FileDescriptorBasedStream::tryRead(void *ptr, size_t size)
   ssize_t bytes = ::read(fd, ptr, size);
   
   if (bytes < 0)
-    throw SystemCallException("read", errno, THROW_ARGS);
+    THROW_SYSCALL("read");
 
   if (bytes == 0) 
     throw EndOfStreamException("read", THROW_ARGS);
@@ -72,7 +72,7 @@ size_t FileDescriptorBasedStream::tryWrite(const void *ptr, size_t size)
   ssize_t bytes = ::write(fd, ptr, size);
 
   if (bytes < 0)
-    throw SystemCallException("write", errno, THROW_ARGS);
+    THROW_SYSCALL("write");
 
   return bytes;
 }
@@ -81,7 +81,7 @@ size_t FileDescriptorBasedStream::tryWrite(const void *ptr, size_t size)
 void FileDescriptorBasedStream::sync()
 {
   if (fsync(fd) < 0)
-    throw SystemCallException("fsync", errno, THROW_ARGS);
+    THROW_SYSCALL("fsync");
 }
 
 } // namespace LOFAR

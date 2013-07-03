@@ -122,7 +122,7 @@ namespace LOFAR
       char cwd[1024];
 
       if (getcwd(cwd, sizeof cwd) == 0)
-        throw SystemCallException("getcwd", errno, THROW_ARGS);
+        THROW_SYSCALL("getcwd");
 
       std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u")
                                     % cwd
