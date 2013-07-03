@@ -31,6 +31,14 @@
 
 namespace LOFAR {
 
+// Use THROW_SYSCALL(...) below instead of 'throw SystemCallException(...)'
+// to enforce sampling errno right after the syscall before it can be clobbered.
+#define THROW_SYSCALL(msg) \
+  do { \
+    int err = errno; \
+    throw LOFAR::SystemCallException(msg, err, THROW_ARGS); \
+  } while (0)
+
 class SystemCallException : public Exception
 {
   public:
@@ -40,31 +48,21 @@ class SystemCallException : public Exception
 						  int line = 0,
 						  const std::string &func = "",
 						  Backtrace *bt = 0) throw();
-			
+
     virtual		      ~SystemCallException() throw();
     virtual const std::string &type() const;
+
+    const std::string&        syscall() const;
     
     const int		      error;
 
   private:
     static std::string	      errorMessage(int error);
-};
 
-#define SYSTEMCALLEXCEPTION_CLASS(excp,super)			\
-  class excp : public super					\
-  {								\
-  public:							\
-    excp(const std::string& syscall, int error = errno,         \
-         const std::string& file="",                    	\
-         int line=0, const std::string& function="",		\
-         Backtrace* bt=0) :					\
-      super(syscall, error, file, line, function, bt) {}        \
-      virtual const std::string& type() const {			\
-        static const std::string itsType(#excp);		\
-        return itsType;						\
-      }								\
-  }
+    const std::string         syscallName;
+};
 
 } // namespace LOFAR
 
 #endif
+

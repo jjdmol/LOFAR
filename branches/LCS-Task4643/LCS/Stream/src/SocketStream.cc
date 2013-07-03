@@ -144,14 +144,15 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
             throw SystemCallException("setsockopt(SO_REUSEADDR)", errno, THROW_ARGS);
 
           if (bind(fd, result->ai_addr, result->ai_addrlen) < 0)
-            throw BindException("bind", errno, THROW_ARGS);
+            throw SystemCallException("bind", errno, THROW_ARGS);
 
           if (protocol == TCP) {
             listen_sk = fd;
             fd	= -1;
 
-            if (listen(listen_sk, 5) < 0)
-              throw BindException("listen", errno, THROW_ARGS);
+            int listenBacklog = 15;
+            if (listen(listen_sk, listenBacklog) < 0)
+              throw SystemCallException("listen", errno, THROW_ARGS);
 
             if (doAccept)
               accept(deadline);
@@ -168,12 +169,13 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
         throw;
       }
-    } catch (BindException &) {
-      if (mode == Server && autoPort) {
-        continue;
-      } else {
-        throw;
+    } catch (SystemCallException &exc) {
+      if ( (exc.syscall() == "bind" || exc.syscall() == "listen") &&
+           mode == Server && autoPort ) {
+        continue; // try listening on / binding to another server port
       }
+
+      throw;
     }
   }
 }
