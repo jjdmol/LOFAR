@@ -56,13 +56,14 @@ int main( int argc, char **argv )
     LOG_INFO_STR("Connected.");
   }
 
-  struct StationID stationID(stationName, "LBA", 200, 16);
+  struct StationID stationID(stationName, "LBA");
   struct BufferSettings settings(stationID, false);
+  struct BoardMode mode(16, 200);
 
-  const TimeStamp from(time(0), 0, stationID.clockMHz * 1000000);
+  const TimeStamp from(time(0), 0, mode.clockHz());
   const TimeStamp to(0);
 
-  PacketFactory factory(settings);
+  PacketFactory factory(settings, mode);
   Generator g(settings, outputStreams, factory, from, to);
 
   // Generate packets

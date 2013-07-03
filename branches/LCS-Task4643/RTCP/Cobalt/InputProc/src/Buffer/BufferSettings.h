@@ -47,6 +47,8 @@ namespace LOFAR
       }
 
     public:
+      static const unsigned MAX_NR_RSP_BOARDS = 4;
+
       typedef uint64 range_type;
       typedef SparseSet<range_type> flags_type;
 
@@ -55,22 +57,6 @@ namespace LOFAR
       // true: sync reader and writer, useful in real-time mode
       bool sync;
       SyncLock *syncLock;
-
-      unsigned nrBeamletsPerBoard() const {
-        // the number of beamlets scales with the bitmode:
-        // 16-bit:  61
-        //  8-bit: 122
-        //  4-bit: 244
-        switch (station.bitMode) {
-          default:
-          case 16:
-            return nrBeamletsPerBoard_16bit;
-          case 8:
-            return nrBeamletsPerBoard_16bit << 1;
-          case 4:
-            return nrBeamletsPerBoard_16bit << 2;
-        }
-      }
 
       size_t nrSamples;
 
@@ -88,11 +74,6 @@ namespace LOFAR
       // Shortcut to set nrSamples to represent `seconds' of buffer.
       void setBufferSize(double seconds);
 
-      size_t boardIndex(unsigned beamlet) const
-      {
-        return beamlet / nrBeamletsPerBoard();
-      }
-
       bool operator==(const struct BufferSettings &other) const
       {
         return station == other.station
@@ -103,22 +84,6 @@ namespace LOFAR
                && dataKey == other.dataKey;
       }
     private:
-
-      // number of beamlets per RSP board in 16-bit mode.
-      //
-      // NOTE: this is actually the beamlet index increase between RSP boards.
-      // Regardless of how many beamlets a packet actually carries, the second
-      // RSP board starts sending from beamlet 61, leaving
-      // a gap. For example, if each board sends 2 beamlets, then the beamlet
-      // indices in the parset that can be used are:
-      //
-      // 0, 1, 61, 62, 122, 123, 183, 184.
-      //
-      // So it's best to leave nrBeamletsPerBoard_16bit at 61,
-      // regardless of the number of beamlets contained in each packet.
-      //
-      // This value is hard-coded at the stations.
-      static const unsigned nrBeamletsPerBoard_16bit = 61;
 
       // Derive sane values from the station field.
       void deriveDefaultSettings();

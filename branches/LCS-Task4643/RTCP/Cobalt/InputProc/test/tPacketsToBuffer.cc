@@ -35,13 +35,15 @@ using namespace LOFAR;
 using namespace Cobalt;
 using namespace std;
 
+unsigned clockMHz = 200;
+
 template<typename T>
 void test( struct BufferSettings &settings, const std::string &filename )
 {
   // Create the buffer to keep it around after transfer.process(), or there
   // will be no subscribers and transfer will delete the buffer automatically,
   // at which point we can't attach anymore.
-  SampleBuffer< SampleType<T> > buffer(settings, true);
+  SampleBuffer< SampleType<T> > buffer(settings, SharedMemoryArena::CREATE);
 
   // Read packets from file
   FileStream fs(filename);
@@ -52,9 +54,13 @@ void test( struct BufferSettings &settings, const std::string &filename )
   // Do transfer
   transfer.process();
 
+  // Check if the board ended up in the right mode
+  const struct BoardMode mode(SampleType<T>::bitMode(), clockMHz);
+  ASSERT(mode == *buffer.boards[0].mode);
+
   // There should be 32 samples in the buffer (16 per packet, 2 packets per
   // file).
-  BufferSettings::range_type now = TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
+  BufferSettings::range_type now = TimeStamp(time(0) + 1, 0, mode.clockHz());
   BufferSettings::flags_type available = buffer.boards[0].available.sparseSet(0, now);
   ASSERT(available.count() == 32);
 }
@@ -68,7 +74,7 @@ int main()
   alarm(10);
 
   // Fill a BufferSettings object
-  struct StationID stationID("RS106", "LBA", 200, 16);
+  struct StationID stationID("RS106", "LBA");
   struct BufferSettings settings(stationID, false);
 
   // Use a fixed key, so the test suite knows what to clean
@@ -81,11 +87,9 @@ int main()
 
   // Test various modes
   LOG_INFO("Test 16-bit complex");
-  settings.station.bitMode = 16;
   test<i16complex>(settings, "tPacketsToBuffer.in_16bit");
 
   LOG_INFO("Test 8-bit complex");
-  settings.station.bitMode = 8;
   test<i8complex>(settings, "tPacketsToBuffer.in_8bit");
 
   return 0;

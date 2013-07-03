@@ -467,7 +467,7 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
         myrms1=rms(ph[:,SBselect],0)
         freqselect=myrms1<flagcut*np.average(myrms1)
         cutlevel=flagcut*np.average(rms(ph[:,SBselect][:,freqselect],0))
-        myrms1=rms(ph,0)
+        myrms1=rms(ph[:,SBselect],0)
         SBselect=np.logical_and(SBselect,myrms1<cutlevel)
         print "flagging",np.sum(np.logical_not(SBselect)),"channels"
     freqs=freqs[SBselect]
@@ -490,6 +490,8 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
     if allBaselines:
         #stationIndices=[list(ionmodel.stations[:]).index(st) for st in stations]
         stationIndices=np.array([idxst in stations for idxst in ionmodel.stations[:]])
+        CSstations=np.array(['CS' in idxst for idxst in ionmodel.stations[:] if idxst in stations])
+        print 'selected CS',CSstations
         for pol in range(2):
             if combine_pol:
                 phdata=ph[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]+ph[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]
@@ -524,21 +526,36 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                 #halfwraps=np.remainder(np.round(np.absolute(wraps[stationIndices]*2)),2)==1
                 #print "found halfwraps for",np.array(stations)[halfwraps]
 
-                #offsets=-1*np.average(tecarray[:,stationIndices,pol]-tecarray[:,[0],pol],axis=0)*2.*np.pi/steps[0]
-                #remainingwraps=wraps-np.round(wraps)
+                offsets=-1*np.average(tecarray[timerange[0]:timerange[1],stationIndices,pol]-tecarray[timerange[0]:timerange[1],[0],pol],axis=0)*2.*np.pi/steps[0]
+                print "average TEC",np.average(tecarray[timerange[0]:timerange[1],stationIndices,pol]-tecarray[timerange[0]:timerange[1],[0],pol],axis=0)
+                print "step",steps[0]
+                print offsets
+                remainingwraps=np.zeros(np.sum(stationIndices),dtype=np.float)
+                remainingwraps[CSstations]=np.round(offsets[CSstations]/(2*np.pi))-np.round(wraps[stationIndices][CSstations])
+                print wraps
+                print remainingwraps
+                wraps[stationIndices]+=remainingwraps
                 #phdata[:,:,:]+=remainingwraps[stationIndices]
                 #offsetarray[:,stationIndices,pol]+=remainingwraps[stationIndices]
-                #phdata[:,:,:]+=offsets
-                #offsetarray[:,stationIndices,pol]+=offsets
+
+                phdata[:,:,:]+=offsets
+                offsetarray[:,stationIndices,pol]+=offsets
                 #clockarray[:,stationIndices,pol]+=(np.remainder(offsets+np.pi,2*np.pi)-np.pi)*steps[1]/(2*np.pi)
                 #!!!!!!!!!!!!!!!!TESTESTESTSETTE!!!
                 #phdata[:,:,np.arange(1,46,2)]+=0.01*np.arange(1,46,2)
                 initSol=np.zeros((len(stations),2),dtype=np.float)
-                initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*np.round(wraps[stationIndices])
-                initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*np.round(wraps[stationIndices])
+                if combine_pol:
+                    initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*2*np.round(wraps[stationIndices])
+                    initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*2*np.round(wraps[stationIndices])
+                else:
+                    initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*np.round(wraps[stationIndices])
+                    initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*np.round(wraps[stationIndices])
                 #initSol[:,1]=np.average(clockarray[:,stationIndices,pol]-clockarray[:,[0],pol],axis=0)+steps[1]*np.round(wraps[stationIndices])
+                print "prev solutions", clockarray[timerange[0],stationIndices,pol]
                 print "init Clock with", initSol[:,1]
-
+                print "prev solutions TEC", tecarray[timerange[0],stationIndices,pol]
+                print "init TEC with", initSol[:,0]
+                print offsets
                 kwargs={'ph':phdata,
                         'amp':ampdata,
                         'freqs':freqs,

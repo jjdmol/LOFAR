@@ -23,6 +23,7 @@
 
 #include <ostream>
 
+#include <Common/LofarConstants.h>
 #include <Common/lofar_complex.h>
 
 namespace LOFAR
@@ -42,12 +43,15 @@ namespace LOFAR
       bool operator != (const struct SampleType &other) const {
         return !(*this == other);
       }
+
+      static unsigned bitMode() {
+        return 8 * sizeof(T) / 2;
+      }
     };
 
     template struct SampleType<i16complex>;
     template struct SampleType<i8complex>;
     template struct SampleType<i4complex>;
-
 
     template<typename T>
     std::ostream &operator <<(std::ostream &str, const struct SampleType<T> &sample)

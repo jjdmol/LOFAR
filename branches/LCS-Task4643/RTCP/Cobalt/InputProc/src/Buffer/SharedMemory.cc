@@ -24,6 +24,7 @@
 
 #include <ctime>
 #include <fstream>
+#include <iomanip>
 
 #include <Common/Exception.h>
 #include <Common/SystemCallException.h>
@@ -96,6 +97,8 @@ namespace LOFAR
       // get/create shmid handle
       for(;;) {
         try {
+          LOG_DEBUG_STR("SHM: " << modeStr(mode) << " 0x" << hex << key << " (" << dec << size << " bytes): TRYING");
+
           // Try to open the buffer
           if (open(open_flags, attach_flags, timeout > 0))
             break;
@@ -125,6 +128,8 @@ namespace LOFAR
         if (usleep(999999) < 0)
           THROW_SYSCALL("usleep");
       }
+
+      LOG_DEBUG_STR("SHM: " << modeStr(mode) << " 0x" << hex << key << " (" << dec << size << " bytes): SUCCESS");
     }
 
 
@@ -188,6 +193,10 @@ namespace LOFAR
 
     void SharedMemoryArena::remove( key_t key, bool quiet )
     {
+      ScopedLock sl(shmMutex);
+
+      LOG_DEBUG_STR("SHM: DELETE 0x" << hex << key << " (remove)");
+
       int shmid = shmget( key, 0, 0 );
 
       if (shmid < 0)
@@ -209,18 +218,38 @@ namespace LOFAR
 
     SharedMemoryArena::~SharedMemoryArena()
     {
+      ScopedLock sl(shmMutex);
+
       try {
         // detach
         if (shmdt(itsBegin) < 0)
           THROW_SYSCALL("shmdt");
 
         // destroy
-        if (!preexisting && (mode == CREATE || mode == CREATE_EXCL))
+        if (!preexisting && (mode == CREATE || mode == CREATE_EXCL)) {
+          LOG_DEBUG_STR("SHM: DELETE 0x" << hex << key << " (destructor)");
+
           if (shmctl(shmid, IPC_RMID, NULL) < 0)
             THROW_SYSCALL("shmctl");
+        }
 
       } catch (Exception &ex) {
         LOG_ERROR_STR("Exception in destructor: " << ex);
+      }
+    }
+
+    string SharedMemoryArena::modeStr( Mode mode ) const {
+      switch(mode) {
+        case CREATE_EXCL:
+          return "CREATE_EXCL";
+        case CREATE:
+          return "CREATE";
+        case READ:
+          return "READ";
+        case READWRITE:
+          return "READWRITE";
+        default:
+          return "INVALID";
       }
     }
 
