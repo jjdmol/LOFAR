@@ -2,6 +2,43 @@
 Beamformer Pipeline
 ------------------------
 
+Design decisions:
+-------------------
+
+* The PPF is first in the pipeline, allowing:
+	- The correlator's PPF kernel to be reused, which already performs the additional
+          IntToFloat conversion and transpose of the output.
+        - Immediately feed (and thus get rid of) the history samples required by the PPF.
+          If we would put the PPF at the end of the pipeline, we would need a more complex
+          mechanism to carry over the last samples to the next block as history samples.
+* After the PPF, we immediately switch to a high frequency-resolution:
+	- Allowing us to perform all steps at one resolution, removing the need
+          for additional FFTs:
+		- The flagger requires at least 256 channels
+		- Band-pass correction functions better on more channels
+		- Coherent dedispersion functions better on more channels
+		- Having at least 4k channels allows parallellism on ~8k threads for
+		  most kernels (by parallellising on channel and polarisation). This comes
+                  close to the recommended 10k threads in-flight for optimal performance.
+	- The Delay Compensation is expected to work good enough on a low time resolution,
+          due to the compensation improvements caused by the high frequency resolution.
+* We do not do a proper PPF for the frequency resolution we use in the pipeline. We expect
+  a 16-channel PPF to be 'good enough'. Later investigations could provide a more elaborate
+  PPF (more channels) plus a 'good enough' iPPF at the end of the pipeline.
+* Coherent Dedispersion is still 'under construction', because it requires a comprehensive
+  solution to do well. For example, for extreme DMs at low frequencies, we probably want
+  to dedisperse on the CPU, not on the GPU, due to memory requirements.
+
+To investigate:
+
+* Coherent Dedispersion (see above)
+* iPPF options (see above)
+* FFT scaling (FFT + FFT-1 means scaling the amplitude), does it require compensation?
+  If so, we can do so in the Delay Compensation kernel.
+
+Pipeline
+-------------------
+
 For max size, we assume:
  - 48 stations
  - 1 subband
