@@ -342,3 +342,4 @@ def doRepair(globaldbpath,
 
 
         freq_idx += N_freqs
+    myion.hdf5.close()
