@@ -249,9 +249,8 @@ namespace LOFAR
         string ptx;
         char buffer [1024];       
         FILE * stream = popen(cmd.c_str(), "r");
-
         if (!stream) {
-          throw SystemCallException("popen", errno, THROW_ARGS);
+          THROW_SYSCALL("popen");
         }
         while (!feof(stream)) {  // NOTE: We do not get stderr
           if (fgets(buffer, sizeof buffer, stream) != NULL) {

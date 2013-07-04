@@ -199,6 +199,8 @@ namespace LOFAR
 //
 // Throw an exception of type \c excp; use \c strm for the message,
 // and \c THROW_ARGS for the other constructor arguments.
+// Do not use this to 'throw SystemCallException(...)' (unless an errno was
+// already avail (e.g pthread functions return it)). Use THROW_SYSCALL() instead.
 //
 #if !defined(THROW)
 # include <sstream>

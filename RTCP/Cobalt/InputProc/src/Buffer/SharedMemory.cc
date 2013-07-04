@@ -126,7 +126,7 @@ namespace LOFAR
           throw TimeOutException("shared memory", THROW_ARGS);
 
         if (usleep(999999) < 0)
-          throw SystemCallException("sleep", errno, THROW_ARGS);
+          THROW_SYSCALL("usleep");
       }
 
       LOG_DEBUG_STR("SHM: " << modeStr(mode) << " 0x" << hex << key << " (" << dec << size << " bytes): SUCCESS");
@@ -142,14 +142,13 @@ namespace LOFAR
       preexisting = (shmget(key, 0, 0) >= 0 || errno != ENOENT);
 
       shmid = shmget( key, itsSize, open_flags );
-
       if (shmid == -1) {
         // No timeout means we're not keeping silent about ENOENT/ENOEXIST
         if (!timeout)
-          throw SystemCallException("shmget", errno, THROW_ARGS);
+          THROW_SYSCALL("shmget");
 
         if (errno != ENOENT && errno != EEXIST)
-          throw SystemCallException("shmget", errno, THROW_ARGS);
+          THROW_SYSCALL("shmget");
       } else {
         // attach to segment
         itsBegin = shmat( shmid, NULL, attach_flags );
@@ -157,15 +156,13 @@ namespace LOFAR
         if (itsBegin != (void*)-1)
           return true; // success!
 
-        int saved_errno = errno;
-
         if (!preexisting) {
           // we created the buffer, so erase it before continuing
           if (shmctl(shmid, IPC_RMID, NULL) < 0)
-            throw SystemCallException("shmctl", errno, THROW_ARGS);
+            THROW_SYSCALL("shmctl");
         }
 
-        throw SystemCallException("shmat", saved_errno, THROW_ARGS);
+        THROW_SYSCALL("shmat");
       }
 
       return false;
@@ -213,7 +210,7 @@ namespace LOFAR
       // so getting EINVAL is a possibility.
       if (shmctl(shmid, IPC_RMID, NULL) < 0 && errno != EINVAL)
         // failed to remove SHM
-        throw SystemCallException("shmctl", errno, THROW_ARGS);
+        THROW_SYSCALL("shmctl");
 
       // key existed, SHM removed
     }
@@ -226,14 +223,14 @@ namespace LOFAR
       try {
         // detach
         if (shmdt(itsBegin) < 0)
-          throw SystemCallException("shmdt", errno, THROW_ARGS);
+          THROW_SYSCALL("shmdt");
 
         // destroy
         if (!preexisting && (mode == CREATE || mode == CREATE_EXCL)) {
           LOG_DEBUG_STR("SHM: DELETE 0x" << hex << key << " (destructor)");
 
           if (shmctl(shmid, IPC_RMID, NULL) < 0)
-            throw SystemCallException("shmctl", errno, THROW_ARGS);
+            THROW_SYSCALL("shmctl");
         }
 
       } catch (Exception &ex) {

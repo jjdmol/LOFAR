@@ -96,7 +96,7 @@ namespace LOFAR
     {
       ssize_t bytes = ::pwrite(fd, ptr, size, offset);
       if (bytes < 0)
-        throw SystemCallException("pwrite", errno, THROW_ARGS);
+        THROW_SYSCALL("pwrite");
       return bytes;
     }
 
