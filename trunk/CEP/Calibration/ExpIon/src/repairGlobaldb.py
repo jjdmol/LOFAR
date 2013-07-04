@@ -95,6 +95,9 @@ def add_to_h5_func(h5file,data,name='test',dtype=None):
 def doRepair(globaldbpath,
              GainEnable = False, DirectionalGainEnable = False,
              PhasorsEnable = False, RotationEnable = False, CommonRotationEnable = False,ScalarPhaseEnable = False, CommonScalarPhaseEnable = False,polarizations=[0,1],tablename='instrument-0'):
+    if not os.path.isdir(globaldbpath):
+        print "error:",globaldbpath,"does not exist"
+        return
     if os.path.isfile(globaldbpath+'/ionmodel.hdf5'):
         myion=iono.IonosphericModel([globaldbpath])
     else:
