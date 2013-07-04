@@ -64,12 +64,12 @@ namespace LOFAR
 
         // lseek can return -1 as a valid file position, so check errno as well
         if (curlen == (off_t)-1 && errno)
-          throw SystemCallException("lseek", errno, THROW_ARGS);
+          THROW_SYSCALL("lseek");
 
         writeRemainder();
 
         if (ftruncate(fd, curlen + origremainder) < 0)
-          throw SystemCallException("ftruncate", errno, THROW_ARGS);
+          THROW_SYSCALL("ftruncate");
       } catch (Exception &ex) {
         LOG_ERROR_STR("Exception in destructor: " << ex);
       }
@@ -211,7 +211,7 @@ namespace LOFAR
 
       // lseek can return -1 as a valid file position, so check errno as well
       if (curlen == (off_t)-1 && errno)
-        throw SystemCallException("lseek", errno, THROW_ARGS);
+        THROW_SYSCALL("lseek");
 
       return curlen + remainder;
     }
