@@ -38,7 +38,7 @@ namespace LOFAR {
        * MPI_THREAD_SINGLE, while it supports MPI_THREAD_SERIALIZED in practice.
        */
       static int provided_mpi_thread_support;
-      static const int minimal_thread_level = MPI_THREAD_MULITPLE;
+      static const int minimal_thread_level = MPI_THREAD_MULTIPLE;
 
       static bool initialised = false;
 
