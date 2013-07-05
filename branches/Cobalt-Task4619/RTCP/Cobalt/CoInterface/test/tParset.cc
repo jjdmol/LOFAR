@@ -406,29 +406,13 @@ SUITE(anaBeam) {
 }
 
 SUITE(subbands) {
-  TEST(beamList_mandatory) {
-    Parset ps;
-
-    // add subbandList
-    ps.add("Observation.subbandList", "[0]");
-
-    // without beamList, this should throw
-    CHECK_THROW(ps.updateSettings(), CoInterfaceException);
-
-    // add beamList
-    ps.add("Observation.beamList", "[0]");
-
-    // should be OK now
-    ps.updateSettings();
-  }
-
   TEST(nr) {
     for (size_t nrSubbands = 0; nrSubbands < 244; ++nrSubbands) {
       Parset ps;
 
       // add subbands
-      ps.add("Observation.subbandList", str(format("[%u*42]") % nrSubbands));
-      ps.add("Observation.beamList",    str(format("[%u*0]") % nrSubbands));
+      ps.add("Observation.nrBeams", "1");
+      ps.add("Observation.Beam[0].subbandList", str(format("[%u*42]") % nrSubbands));
       ps.updateSettings();
 
       // verify settings
@@ -440,8 +424,8 @@ SUITE(subbands) {
     Parset ps;
 
     // set
-    ps.add("Observation.subbandList", "[42]");
-    ps.add("Observation.beamList",    "[0]");
+    ps.add("Observation.nrBeams", "1");
+    ps.add("Observation.Beam[0].subbandList", "[42]");
     ps.updateSettings();
 
     // verify settings
@@ -453,8 +437,8 @@ SUITE(subbands) {
     Parset ps;
 
     // set -- note: for now, omitting actual SAP specifications is allowed
-    ps.add("Observation.subbandList", "[1]");
-    ps.add("Observation.beamList",    "[1]");
+    ps.add("Observation.nrBeams", "2");
+    ps.add("Observation.Beam[1].subbandList", "[1]");
     ps.updateSettings();
 
     // verify settings
@@ -481,8 +465,8 @@ SUITE(subbands) {
         // set
         ps.add("Observation.sampleClock", str(format("%u") % clock));
         ps.add("Observation.bandFilter",  bandFilters[nyquistZone]);
-        ps.add("Observation.subbandList", "[0..511]");
-        ps.add("Observation.beamList",    "[512*0]");
+        ps.add("Observation.nrBeams",     "1");
+        ps.add("Observation.Beam[0].subbandList", "[0..511]");
         ps.updateSettings();
 
         // verify settings
@@ -573,8 +557,8 @@ SUITE(correlator) {
       
       // set
       ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.add("Observation.subbandList", "[0]");
-      ps.add("Observation.beamList",    "[0]");
+      ps.add("Observation.nrBeams",             "1");
+      ps.add("Observation.Beam[0].subbandList", "[0]");
       ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
 
       // forget filenames == throw
@@ -592,8 +576,8 @@ SUITE(correlator) {
       
       // set
       ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.add("Observation.subbandList", "[0]");
-      ps.add("Observation.beamList",    "[0]");
+      ps.add("Observation.nrBeams",             "1");
+      ps.add("Observation.Beam[0].subbandList", "[0]");
       ps.add("Observation.DataProducts.Output_Correlated.filenames", "[SB000.MS]");
 
       // forget locations == throw
@@ -622,8 +606,8 @@ SUITE(correlator) {
 
         // set
         ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-        ps.add("Observation.subbandList", str(format("[%u*42]") % nrSubbands));
-        ps.add("Observation.beamList",    str(format("[%u*0]") % nrSubbands));
+        ps.add("Observation.nrBeams", "1");
+        ps.add("Observation.Beam[0].subbandList", str(format("[%u*42]") % nrSubbands));
         ps.add("Observation.DataProducts.Output_Correlated.filenames", str(format("[%u*SBxxx.MS]") % nrSubbands));
         ps.add("Observation.DataProducts.Output_Correlated.locations", str(format("[%u*localhost:.]") % nrSubbands));
         ps.updateSettings();
@@ -638,8 +622,8 @@ SUITE(correlator) {
 
       // set
       ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.add("Observation.subbandList", "[0]");
-      ps.add("Observation.beamList",    "[0]");
+      ps.add("Observation.nrBeams", "1");
+      ps.add("Observation.Beam[0].subbandList", "[0]");
       ps.add("Observation.DataProducts.Output_Correlated.filenames", "[SB000.MS]");
       ps.add("Observation.DataProducts.Output_Correlated.locations", "[host:/dir]");
       ps.updateSettings();

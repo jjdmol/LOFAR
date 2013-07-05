@@ -42,6 +42,9 @@
 #include <CoInterface/PrintVector.h>
 #include <CoInterface/SetOperations.h>
 
+using namespace std;
+using boost::format;
+
 
 namespace LOFAR
 {
@@ -221,29 +224,45 @@ namespace LOFAR
         struct ObservationSettings::Station &station = settings.stations[i];
 
         station.name            = stationNames[i];
-        station.clockCorrection = getDouble(str(boost::format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
-        station.phaseCenter     = getDoubleVector(str(boost::format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
+        station.clockCorrection = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
+        station.phaseCenter     = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
 
-        string key = std::string(str(boost::format("Observation.Dataslots.%s.RSPBoardList") % station.name));
+        string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
         if (!isDefined(key)) key = "Observation.rspBoardList";
         station.rspBoardMap = getUint32Vector(key, emptyVectorUnsigned, true);
 
-        key = std::string(str(boost::format("Observation.Dataslots.%s.DataslotList") % station.name));
+        key = std::string(str(format("Observation.Dataslots.%s.DataslotList") % station.name));
         if (!isDefined(key)) key = "Observation.rspSlotList";
         station.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
       }
 
       // Pointing information
       size_t nrSAPs = getUint32("Observation.nrBeams", 1);
+      unsigned subbandOffset = 512 * (settings.nyquistZone() - 1);
       
       settings.SAPs.resize(nrSAPs);
-      for (unsigned i = 0; i < nrSAPs; ++i) {
-        struct ObservationSettings::SAP &sap = settings.SAPs[i];
+      settings.subbands.clear();
+      for (unsigned sapNr = 0; sapNr < nrSAPs; ++sapNr) {
+        struct ObservationSettings::SAP &sap = settings.SAPs[sapNr];
 
-        sap.direction.type   = getString(str(boost::format("Observation.Beam[%u].directionType") % i), "J2000");
-        sap.direction.angle1 = getDouble(str(boost::format("Observation.Beam[%u].angle1") % i), 0.0);
-        sap.direction.angle2 = getDouble(str(boost::format("Observation.Beam[%u].angle2") % i), 0.0);
-        sap.target           = getString(str(boost::format("Observation.Beam[%u].target") % i), "");
+        sap.direction.type   = getString(str(format("Observation.Beam[%u].directionType") % sapNr), "J2000");
+        sap.direction.angle1 = getDouble(str(format("Observation.Beam[%u].angle1") % sapNr), 0.0);
+        sap.direction.angle2 = getDouble(str(format("Observation.Beam[%u].angle2") % sapNr), 0.0);
+        sap.target           = getString(str(format("Observation.Beam[%u].target") % sapNr), "");
+
+        // Process the subbands of this SAP
+        vector<unsigned> subbandList = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
+
+        for (unsigned sb = 0; sb < subbandList.size(); ++sb) {
+          struct ObservationSettings::Subband subband;
+
+          subband.idx              = settings.subbands.size();
+          subband.stationIdx       = subbandList[sb];
+          subband.SAP              = sapNr;
+          subband.centralFrequency = settings.subbandWidth() * (subband.stationIdx + subbandOffset);
+
+          settings.subbands.push_back(subband);
+        }
       }
 
       settings.anaBeam.enabled = settings.antennaSet.substr(0,3) == "HBA";
@@ -251,26 +270,6 @@ namespace LOFAR
         settings.anaBeam.direction.type   = getString("Observation.AnaBeam[0].directionType", "J2000");
         settings.anaBeam.direction.angle1 = getDouble("Observation.AnaBeam[0].angle1", 0.0);
         settings.anaBeam.direction.angle2 = getDouble("Observation.AnaBeam[0].angle2", 0.0);
-      }
-
-      // Spectral resolution information
-      vector<unsigned> subbandList = getUint32Vector("Observation.subbandList", emptyVectorUnsigned, true);
-      vector<unsigned> sapList     = getUint32Vector("Observation.beamList",    emptyVectorUnsigned, true);
-      size_t nrSubbands = subbandList.size();
-
-      if (sapList.size() != nrSubbands) {
-        THROW(CoInterfaceException, "len(Observation.beamList) != len(Observation.subbandList)");
-      }
-
-      settings.subbands.resize(nrSubbands);
-      unsigned subbandOffset = 512 * (settings.nyquistZone() - 1);
-      for (unsigned i = 0; i < nrSubbands; ++i) {
-        struct ObservationSettings::Subband &subband = settings.subbands[i];
-
-        subband.idx              = i;
-        subband.stationIdx       = subbandList[i];
-        subband.SAP              = sapList[i];
-        subband.centralFrequency = settings.subbandWidth() * (subband.stationIdx + subbandOffset);
       }
 
       /* ===============================
@@ -319,8 +318,8 @@ namespace LOFAR
 
         if (settings.correlator.enabled) { // TODO: redundant check, but as long as '|| true' is there (just above), this is needed as some test parsets (e.g. tKernel.parset.in) has no locations and filenames (and enabled) keys. See tCorrelatorPipelineProcessObs.parset what is needed or refactor this function.
           // Files to output
-          settings.correlator.files.resize(nrSubbands);
-          for (size_t i = 0; i < nrSubbands; ++i) {
+          settings.correlator.files.resize(settings.subbands.size());
+          for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
             settings.correlator.files[i].location = getFileLocation("Correlated", i);
           }
         }
@@ -338,13 +337,13 @@ namespace LOFAR
         for (unsigned i = 0; i < nrSAPs; ++i) {
           struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
 
-          size_t nrTABs = getUint32(str(boost::format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
+          size_t nrTABs = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
 
           sap.TABs.resize(nrTABs);
           for (unsigned j = 0; j < nrTABs; ++j) {
             struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
 
-            const string prefix = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+            const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
 
             tab.directionDelta.type    = getString(prefix + ".directionType", "J2000");
             tab.directionDelta.angle1  = getDouble(prefix + ".angle1", 0.0);
@@ -662,7 +661,7 @@ namespace LOFAR
     /*
        std::vector<double> Parset::getPhaseCorrection(const string &name, char pol) const
        {
-       return getDoubleVector(str(boost::format("PIC.Core.%s.%s.phaseCorrection.%c") % name % antennaSet() % pol));
+       return getDoubleVector(str(format("PIC.Core.%s.%s.phaseCorrection.%c") % name % antennaSet() % pol));
        }
      */
 
@@ -703,7 +702,7 @@ namespace LOFAR
       // can't use settings until 'raw' is supported, which is needed to
       // distinguish between fly's eye mode with one station, and coherent
       // addition with one station
-      string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].stationList") % beam % pencil);
+      string key = str(format("Observation.Beam[%u].TiedArrayBeam[%u].stationList") % beam % pencil);
       std::vector<string> stations;
 
       if (isDefined(key))
