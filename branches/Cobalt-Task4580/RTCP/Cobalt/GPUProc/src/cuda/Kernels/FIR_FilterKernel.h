@@ -24,6 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/gpu_wrapper.h>
 
@@ -34,6 +35,19 @@ namespace LOFAR
     class FIR_FilterKernel : public Kernel
     {
     public:
+      // Generic parameter structure that contains all the information to
+      // construct a FIR_FilterKernel object.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Kernel::Parameters& kernelParams, 
+                   const gpu::DeviceMemory & firWeights) :
+          Kernel::Parameters(kernelParams), firWeights(firWeights)
+        {}
+        gpu::DeviceMemory firWeights;
+      };
+
+      FIR_FilterKernel(const Parameters& ps);
+
       // FIR_FilterKernel(const Parset &ps,
       //                  gpu::Context &context,
       //                  gpu::DeviceMemory &devFilteredData,
@@ -64,6 +78,21 @@ namespace LOFAR
       gpu::DeviceMemory devFIRweights;
 
     };
+
+    // Template specialization of the KernelFactory::create() method.
+    template<> inline
+    FIR_FilterKernel* KernelFactory<FIR_FilterKernel>::
+    create(const gpu::Context &context,
+           const gpu::DeviceMemory &input,
+           const gpu::DeviceMemory &output) const
+    {
+      gpu::DeviceMemory coeff(context, size_t(1));
+      gpu::Function func;
+      FIR_FilterKernel::Parameters
+        params(Kernel::Parameters(context, func, input, output), coeff);
+      return new FIR_FilterKernel(params);
+    }
+
   }
 }
 

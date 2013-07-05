@@ -38,10 +38,21 @@ namespace LOFAR
     class Kernel
     {
     public:
-      Kernel(const gpu::Context &context,
-             const gpu::Function &function,
-             gpu::DeviceMemory &input,
-             gpu::DeviceMemory &output);
+      // Generic parameters, needed to construct a Kernel base class object.
+      struct Parameters
+      {
+        Parameters(const gpu::Context &ctx,
+                   const gpu::Function &func,
+                   const gpu::DeviceMemory &in,
+                   const gpu::DeviceMemory &out);
+        gpu::Context context;
+        gpu::Function function;
+        gpu::DeviceMemory input;
+        gpu::DeviceMemory output;
+      };
+
+      // Construct a kernel from a "generic" set of parameters.
+      Kernel(const Parameters& params);
 
       // Construct a kernel. The parset \a ps contains numerous parameters that
       // will be used to compile the kernel source to PTX code. Compiling to
@@ -69,8 +80,8 @@ namespace LOFAR
 
       gpu::Function itsFunction;
       gpu::Event itsEvent;
-      // gpu::DeviceMemory itsInput;
-      // gpu::DeviceMemory itsOutput;
+      gpu::DeviceMemory itsInput;
+      gpu::DeviceMemory itsOutput;
       const Parset ps;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;

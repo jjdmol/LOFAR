@@ -1,4 +1,5 @@
 //# KernelCompiler.cc
+//#
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,270 +22,164 @@
 #include <lofar_config.h>
 
 #include <GPUProc/KernelCompiler.h>
-#include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/global_defines.h>
+#include "cuda_utils.h"
+#include <Common/LofarLogger.h>
+
 #include <boost/format.hpp>
-#include <cuda.h>
+
+#include <cstdlib>
 #include <ostream>
+#include <sstream>
+
+using namespace std;
+using boost::format;
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    using namespace std;
-    using boost::format;
-
-    // Anonymous namespace; equivalent of C static
     namespace
     {
-      // Return the highest compute target supported by the given device
-      CUjit_target computeTarget(const gpu::Device &device)
+      string lofarRoot()
       {
-        unsigned major = device.getComputeCapabilityMajor();
-        unsigned minor = device.getComputeCapabilityMinor();
-
-        switch (major) {
-        case 0:
-          return CU_TARGET_COMPUTE_10;
-
-        case 1:
-          switch (minor) {
-          case 0:
-            return CU_TARGET_COMPUTE_10;
-          case 1:
-            return CU_TARGET_COMPUTE_11;
-          case 2:
-            return CU_TARGET_COMPUTE_12;
-          case 3:
-            return CU_TARGET_COMPUTE_13;
-          default:
-            return CU_TARGET_COMPUTE_13;
-          }
-
-        case 2:
-          switch (minor) {
-          case 0:
-            return CU_TARGET_COMPUTE_20;
-          case 1:
-            return CU_TARGET_COMPUTE_21;
-          default:
-            return CU_TARGET_COMPUTE_21;
-          }
-
-#if CUDA_VERSION >= 5000
-        case 3:
-          if (minor < 5) {
-            return CU_TARGET_COMPUTE_30;
-          } else {
-            return CU_TARGET_COMPUTE_35;
-          }
-
-        default:
-          return CU_TARGET_COMPUTE_35;
-#else
-        default:
-          return CU_TARGET_COMPUTE_30;
-#endif
-
+        static const char* env;
+        static bool init(false);
+        if (!init) {
+          env = getenv("LOFARROOT");
         }
+        return string(env ? env : "");
       }
 
-      // Return the lowest compute target supported by all the given devices
-      CUjit_target computeTarget(const std::vector<gpu::Device> &devices)
+      string prefixPath()
       {
-#if CUDA_VERSION >= 5000
-        CUjit_target minTarget = CU_TARGET_COMPUTE_35;
-#else
-        CUjit_target minTarget = CU_TARGET_COMPUTE_30;
-#endif
-
-        for (vector<gpu::Device>::const_iterator i = devices.begin(); 
-             i != devices.end(); ++i) {
-          CUjit_target target = computeTarget(*i);
-
-          if (target < minTarget)
-            minTarget = target;
-        }
-
-        return minTarget;
+        if (lofarRoot().empty()) return ".";
+        else return lofarRoot() + "/share/gpu/kernels";
       }
 
-      // Translate a compute target to a virtual architecture (= the version
-      // the .cu file is written in).
-      string get_virtarch(CUjit_target target)
+      string includePath()
       {
-        switch (target) {
-        default:
-          return "compute_unknown";
+        if (lofarRoot().empty()) return "include";
+        else return lofarRoot() + "/include";
+      }
 
-        case CU_TARGET_COMPUTE_10:
-          return "compute_10";
-
-        case CU_TARGET_COMPUTE_11:
-          return "compute_11";
-
-        case CU_TARGET_COMPUTE_12:
-          return "compute_12";
-
-        case CU_TARGET_COMPUTE_13:
-          return "compute_13";
-
-        case CU_TARGET_COMPUTE_20:
-        case CU_TARGET_COMPUTE_21: // 21 not allowed for nvcc --gpu-architecture option value
-          return "compute_20";
-
-        case CU_TARGET_COMPUTE_30:
-          return "compute_30";
-
-#if CUDA_VERSION >= 5000
-        case CU_TARGET_COMPUTE_35:
-          return "compute_35";
-#endif
+      ostream& operator<<(ostream& os, const KernelCompiler::Definitions& defs)
+      {
+        KernelCompiler::Definitions::const_iterator it;
+        for (it = defs.begin(); it != defs.end(); ++it) {
+          os << " -D" << it->first;
+          if (!it->second.empty()) {
+            os << "=" << it->second;
+          }
         }
+        return os;
+      }
+
+      ostream& operator<<(ostream& os, const KernelCompiler::Flags& flags)
+      {
+        KernelCompiler::Flags::const_iterator it;
+        for (it = flags.begin(); it != flags.end(); ++it) {
+          os << " " << *it;
+        }
+        return os;
       }
 
     } // namespace {anonymous}
 
-#if 0
-    bool CompileDefinitions::empty() const
-    {
-      return defs.empty();
-    }
 
-    string& CompileDefinitions::operator[](const string& key)
+    const KernelCompiler::Definitions& defaultDefinitions()
     {
-      return defs[key];
-    }
-#endif
-
-    const CompileDefinitions& KernelCompiler::defaultDefinitions()
-    {
-      static CompileDefinitions defs;
+      static KernelCompiler::Definitions defs;
       if (defs.empty()) {
-        // insert definitions
+        defs["NR_POLARIZATIONS"] = NR_POLARIZATIONS;
+        defs["NR_STATION_FILTER_TAPS"] = NR_STATION_FILTER_TAPS;
+        defs["NR_TAPS"] = NR_TAPS;
       }
       return defs;
     }
-    
-    const CompileFlags& KernelCompiler::defaultFlags()
+
+    const KernelCompiler::Flags& defaultFlags()
     {
-      static CompileFlags flags;
+      static KernelCompiler::Flags flags;
       if (flags.empty()) {
         flags.insert("-o -");
         flags.insert("-ptx");
         flags.insert("-use_fast_math");
-#if CUDA_VERSION >= 5000
-        // Set GPU architecture to least capable device available.
-        flags.insert(str(format("-arch %s") % 
-          get_virtarch(computeTarget(gpu::Platform().devices()))));
-#endif
-        // Add $LOFARROOT/include to include path, if $LOFARROOT is set.
-        const char* lofarroot = getenv("LOFARROOT");
-        if (lofarroot) {
-          flags.insert(str(format("-I%s/include") % lofarroot));
-        }
+        flags.insert(str(format("-I%s") % includePath()));
+        // Assume that code is written for the least capable device.
+        flags.insert(
+          str(format("--gpu-architecture %s") % 
+              cuda::get_virtarch(
+                cuda::computeTarget(KernelCompiler::defaultDevices()))));
       }
       return flags;
     }
 
-    ostream& operator<<(ostream& os, const CompileDefinitions& defs)
+    const KernelCompiler::Devices& defaultDevices()
     {
-      CompileDefinitions::const_iterator it;
-      for (it = defs.begin(); it != defs.end(); ++it) {
-        os << " -D" << it->first;
-        if (!it->second.empty()) {
-          os << "=" << it->second;
+      static KernelCompiler::Devices devices;
+      if (devices.empty()) {
+        devices = gpu::Platform().devices();
+      }
+      return devices;
+    }
+
+
+    KernelCompiler::KernelCompiler(const Definitions& definitions,
+                                   const Flags& flags,
+                                   const Devices& devices)
+      :
+      itsDevices(devices),
+      itsDefinitions(definitions),
+      itsFlags(flags)
+    {
+      // Add default definitions and flags to the user-supplied ones.
+      itsDefinitions.insert(defaultDefinitions().begin(), 
+                            defaultDefinitions().end());
+      itsFlags.insert(defaultFlags().begin(),
+                      defaultFlags().end());
+    }
+
+ 
+    string KernelCompiler::createPTX(string srcFilename) const
+    {
+      // Prefix the CUDA kernel filename if it's a relative path.
+      if (!srcFilename.empty() && srcFilename[0] != '/') {
+        srcFilename = prefixPath() + "/" + srcFilename;
+      }
+      // Perform the actual compilation.
+      return doCreatePTX(srcFilename, itsFlags, itsDefinitions);
+    }
+
+
+    string KernelCompiler::doCreatePTX(const std::string& source,
+                                       const Flags& flags,
+                                       const Definitions& defs) const
+    {
+      ostringstream oss;
+      oss << "nvcc " << source << flags << defs;
+      string cmd(oss.str());
+      LOG_DEBUG_STR("Starting runtime compilation:\n\t" << cmd);
+
+      string ptx;
+      char buffer [1024];       
+      FILE * stream = popen(cmd.c_str(), "r");
+
+      if (!stream) {
+        throw SystemCallException("popen", errno, THROW_ARGS);
+      }
+      while (!feof(stream)) {  // NOTE: We do not get stderr
+        if (fgets(buffer, sizeof buffer, stream) != NULL) {
+          ptx += buffer;
         }
       }
-      return os;
-    }
-
-    ostream& operator<<(ostream& os, const CompileFlags& flags)
-    {
-      CompileFlags::const_iterator it;
-      for (it = flags.begin(); it != flags.end(); ++it) {
-        os << " " << *it;
+      if (pclose(stream) || ptx.empty()) {
+        THROW(GPUProcException, "Runtime compilation failed!\n\t" << cmd);
       }
-      return os;
+      return ptx;
+
     }
 
-#if 0
-    void CompileFlags::add(const string& flag)
-    {
-      // Make sure an existing flag is erased before we insert, otherwise the
-      // insert may fail.
-      flags.erase(flag);
-      flags.insert(flag);
-    }
+  } // namespace Cobalt
 
-    bool CompileFlags::empty() const
-    {
-      return flags.empty();
-    }
-#endif
-
-    // //---------------------------------------------------------------------//
-
-    // ostream& operator<<(ostream& os, const CompileOptions& opts)
-    // {
-    //   CompileOptions::const_iterator it;
-    //   for (it = opts.begin(); it != opts.end(); ++it) {
-    //     os << it->first;
-    //     if (!it->second.empty()) {
-    //       os << "=" << it->second;
-    //     }
-    //   }
-    //   return os;
-    // }
-
-
-    // PTX store. The key is the complete command line that was passed to the
-    // compiler to create PTX code; the PTX code is stored as value.
-    typedef map<string, string> PTXStore;
-
-    // The PTX store is implemented as a Meyers singleton. Use a lock to make
-    // access thread-safe.
-    PTXStore& thePTXStore()
-    {
-      static PTXStore ptxStore;
-      return ptxStore;
-    }
-
-    KernelCompiler::KernelCompiler(const Kernel &kernel) 
-//      :
-//      itsDefinitions(defaultDefinitions()),
-//      itsFlags(defaultFlags())
-    {
-      cout << "########" << __PRETTY_FUNCTION__ << "########" << endl;
-    }
-
-    // void KernelCompiler::setOptions(const CompileOptions &options)
-    // {
-    //   options.insert(itsCompileOptions.begin(), itsCompileOptions.end());
-    //   options.swap(itsCompileOptions);
-    // }
-
-    string KernelCompiler::compile(string sourceFile,
-                                   CompileDefinitions defs,
-                                   CompileFlags flags) const
-    {
-      // Prefix the CUDA kernel filename with $LOFARROOT/share/gpu/kernels
-      // if $LOFARROOT is set and if filename is a relative path.
-      if (sourceFile[0] != '/') {
-        const char* lofarroot = getenv("LOFARROOT");
-        string sourceDir = 
-          (lofarroot ? str(format("%s/share/gpu/kernels/") % lofarroot) : "");
-        sourceFile = sourceDir + sourceFile;
-      }
-      // Combine the default definitions and flags with the ones passed in.
-      defs.insert(defaultDefinitions().begin(), defaultDefinitions().end());
-      flags.insert(defaultFlags().begin(), defaultFlags().end());
-      
-      string ptx;
-      ostringstream cmd;
-      cmd << "nvcc " << flags << defs << " " << sourceFile;
-      LOG_DEBUG_STR("Compiling kernel: " << cmd.str());
-      return runNVCC(cmd.str());
-    }
-
-  }
-}
+} // namespace LOFAR

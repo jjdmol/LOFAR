@@ -30,6 +30,13 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    FIR_FilterKernel::FIR_FilterKernel(const Parameters& params)
+      :
+      Kernel(params),
+      devFIRweights(params.firWeights)
+    {
+    }
+
     // FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, 
     //                                    gpu::Context &context,
     //                                    gpu::DeviceMemory &devFilteredData,
