@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include <cstdlib>  // for rand()
+#include <cmath>
 #include <string>
 #include <iostream>
 
