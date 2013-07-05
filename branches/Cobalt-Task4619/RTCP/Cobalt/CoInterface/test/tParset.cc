@@ -473,6 +473,14 @@ SUITE(subbands) {
         for (unsigned sb = 0; sb < 512; ++sb) {
           CHECK_CLOSE(ps.settings.subbandWidth() * (512 * (nyquistZone - 1) + sb), ps.settings.subbands[sb].centralFrequency, 0.001);
         }
+
+        // override
+        ps.add("Observation.Beam[0].frequencyList", "[1..512]");
+
+        // verify settings
+        for (unsigned sb = 0; sb < 512; ++sb) {
+          CHECK_CLOSE(sb + 1.0, ps.settings.subbands[sb].centralFrequency, 0.001);
+        }
       }
     }
   }

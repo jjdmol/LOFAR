@@ -252,6 +252,7 @@ namespace LOFAR
 
         // Process the subbands of this SAP
         vector<unsigned> subbandList = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
+        vector<double> frequencyList = getDoubleVector(str(format("Observation.Beam[%u].frequencyList") % sapNr), emptyVectorDouble, true);
 
         for (unsigned sb = 0; sb < subbandList.size(); ++sb) {
           struct ObservationSettings::Subband subband;
@@ -259,7 +260,9 @@ namespace LOFAR
           subband.idx              = settings.subbands.size();
           subband.stationIdx       = subbandList[sb];
           subband.SAP              = sapNr;
-          subband.centralFrequency = settings.subbandWidth() * (subband.stationIdx + subbandOffset);
+          subband.centralFrequency = frequencyList.empty()
+                                     ? settings.subbandWidth() * (subband.stationIdx + subbandOffset)
+                                     : frequencyList[sb];
 
           settings.subbands.push_back(subband);
         }
