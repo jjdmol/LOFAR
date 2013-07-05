@@ -23,8 +23,10 @@
 
 #include <GPUProc/KernelCompiler.h>
 #include <GPUProc/global_defines.h>
-#include "cuda_utils.h"
+#include <CoInterface/Exceptions.h>
+#include <Common/SystemCallException.h>
 #include <Common/LofarLogger.h>
+#include "cuda_utils.h"
 
 #include <boost/format.hpp>
 
@@ -87,7 +89,7 @@ namespace LOFAR
     } // namespace {anonymous}
 
 
-    const KernelCompiler::Definitions& defaultDefinitions()
+    const KernelCompiler::Definitions& KernelCompiler::defaultDefinitions()
     {
       static KernelCompiler::Definitions defs;
       if (defs.empty()) {
@@ -98,7 +100,7 @@ namespace LOFAR
       return defs;
     }
 
-    const KernelCompiler::Flags& defaultFlags()
+    const KernelCompiler::Flags& KernelCompiler::defaultFlags()
     {
       static KernelCompiler::Flags flags;
       if (flags.empty()) {
@@ -110,12 +112,12 @@ namespace LOFAR
         flags.insert(
           str(format("--gpu-architecture %s") % 
               cuda::get_virtarch(
-                cuda::computeTarget(KernelCompiler::defaultDevices()))));
+                cuda::computeTarget(defaultDevices()))));
       }
       return flags;
     }
 
-    const KernelCompiler::Devices& defaultDevices()
+    const KernelCompiler::Devices& KernelCompiler::defaultDevices()
     {
       static KernelCompiler::Devices devices;
       if (devices.empty()) {
@@ -162,11 +164,11 @@ namespace LOFAR
       LOG_DEBUG_STR("Starting runtime compilation:\n\t" << cmd);
 
       string ptx;
-      char buffer [1024];       
+      char buffer [1024];
       FILE * stream = popen(cmd.c_str(), "r");
 
       if (!stream) {
-        throw SystemCallException("popen", errno, THROW_ARGS);
+        THROW_SYSCALL("popen");
       }
       while (!feof(stream)) {  // NOTE: We do not get stderr
         if (fgets(buffer, sizeof buffer, stream) != NULL) {

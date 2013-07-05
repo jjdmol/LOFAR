@@ -79,6 +79,7 @@ namespace LOFAR
 
     };
 
+#if 0
     // Template specialization of the KernelFactory::create() method.
     template<> inline
     FIR_FilterKernel* KernelFactory<FIR_FilterKernel>::
@@ -92,6 +93,7 @@ namespace LOFAR
         params(Kernel::Parameters(context, func, input, output), coeff);
       return new FIR_FilterKernel(params);
     }
+#endif
 
   }
 }
