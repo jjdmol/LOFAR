@@ -72,7 +72,7 @@ int main( int, char **argv )
 
   const TimeStamp from(time(0), 0, mode.clockHz());
   const TimeStamp to = from + NUMPACKETS * 16; /* 16 timeslots/packet */
-  PacketFactory factory(settings, mode);
+  PacketFactory factory(mode);
   Generator g(settings, outputStreams, factory, from, to);
 
   bool error = false;

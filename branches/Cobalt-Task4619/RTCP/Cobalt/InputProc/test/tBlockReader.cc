@@ -46,7 +46,7 @@ struct BoardMode mode(16, 200);
 
 TEST(Basic) {
   for (size_t nrBeamlets = 1; nrBeamlets < settings.nrBoards * mode.nrBeamletsPerBoard(); nrBeamlets <<= 1) {
-    for (size_t blockSize = 1; blockSize < settings.nrSamples; blockSize <<= 1) {
+    for (size_t blockSize = 1; blockSize < settings.nrSamples(16); blockSize <<= 1) {
       // Create a buffer
       SampleBuffer< SampleType<i16complex> > buffer(settings, SharedMemoryArena::CREATE);
 

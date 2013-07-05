@@ -331,7 +331,7 @@ int main( int argc, char **argv )
   beamletDistribution[1].push_back(2);
 
   sender = new MPISendStation(settings, 0, beamletDistribution);
-  receiver = new MPIReceiveStations(std::vector<int>(1,0), beamletDistribution[1], blockSize);
+  receiver = new MPIReceiveStations(1, beamletDistribution[1], blockSize);
 
   // Fill input
   for (size_t i = 0; i < data_in.size(); ++i) {

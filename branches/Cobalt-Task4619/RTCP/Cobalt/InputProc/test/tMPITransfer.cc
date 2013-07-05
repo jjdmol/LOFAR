@@ -128,7 +128,7 @@ void sender()
   removeSampleBuffers(settings);
 
   MultiPacketsToBuffer station( settings, inputStreams );
-  PacketFactory factory( settings, mode );
+  PacketFactory factory( mode );
   Generator generator( settings, outputStreams, factory, from - nrHistorySamples, to );
 
   #pragma omp parallel sections
@@ -171,15 +171,10 @@ void receiver()
   const std::vector<size_t> &beamlets = beamletDistribution[rank];
   const size_t nrBeamlets = beamlets.size();
 
-  std::vector<int> stationRanks(nrStations);
-
-  for (size_t i = 0; i < stationRanks.size(); i++)
-    stationRanks[i] = i;
-
   LOG_INFO_STR("Receiver node " << rank << " starts, handling " << beamlets.size() << " subbands from " << nrStations << " stations." );
   LOG_INFO_STR("Connecting to senders to receive " << from << " to " << to);
 
-  MPIReceiveStations receiver(stationRanks, beamlets, blockSize + nrHistorySamples);
+  MPIReceiveStations receiver(nrStations, beamlets, blockSize + nrHistorySamples);
 
   // create space for the samples
   MultiDimArray<SampleT, 3> samples(boost::extents[nrStations][nrBeamlets][blockSize + nrHistorySamples]);

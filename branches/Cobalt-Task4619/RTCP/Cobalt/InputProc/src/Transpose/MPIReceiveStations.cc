@@ -35,10 +35,10 @@ using namespace LOFAR::Cobalt::MPIProtocol;
 namespace LOFAR {
   namespace Cobalt {
 
-    MPIReceiveStations::MPIReceiveStations( const std::vector<int> &stationRanks, const std::vector<size_t> &beamlets, size_t blockSize )
+    MPIReceiveStations::MPIReceiveStations( size_t nrStations, const std::vector<size_t> &beamlets, size_t blockSize )
     :
       logPrefix(str(boost::format("[beamlets %u..%u (%u)] [MPIReceiveStations] ") % beamlets[0] % beamlets[beamlets.size()-1] % beamlets.size())),
-      stationRanks(stationRanks),
+      nrStations(nrStations),
       beamlets(beamlets),
       blockSize(blockSize)
     {
@@ -51,7 +51,7 @@ namespace LOFAR {
       tag.bits.type    = CONTROL;
       tag.bits.station = station;
 
-      return Guarded_MPI_Irecv(&header, sizeof header, stationRanks[station], tag.value);
+      return Guarded_MPI_Irecv(&header, sizeof header, MPI_ANY_SOURCE, tag.value);
     }
 
 
@@ -64,7 +64,7 @@ namespace LOFAR {
       tag.bits.beamlet = beamlet;
       tag.bits.transfer = transfer;
 
-      return Guarded_MPI_Irecv(from, nrSamples * sizeof(T), stationRanks[station], tag.value);
+      return Guarded_MPI_Irecv(from, nrSamples * sizeof(T), MPI_ANY_SOURCE, tag.value);
     }
 
 
@@ -75,14 +75,14 @@ namespace LOFAR {
       tag.bits.station = station;
       tag.bits.beamlet = beamlet;
 
-      return Guarded_MPI_Irecv(&metaData, sizeof metaData, stationRanks[station], tag.value);
+      return Guarded_MPI_Irecv(&metaData, sizeof metaData, MPI_ANY_SOURCE, tag.value);
     }
 
 
     template<typename T>
     void MPIReceiveStations::receiveBlock( std::vector< struct MPIReceiveStations::Block<T> > &blocks )
     {
-      ASSERT(blocks.size() == stationRanks.size());
+      ASSERT(blocks.size() == nrStations);
 
       // All requests except the headers
       std::vector<MPI_Request> requests;
@@ -92,20 +92,20 @@ namespace LOFAR {
        */
 
       // Post receives for all headers
-      std::vector<MPI_Request> header_requests(stationRanks.size(), MPI_REQUEST_NULL);
-      std::vector<struct Header> headers(stationRanks.size());
+      std::vector<MPI_Request> header_requests(nrStations, MPI_REQUEST_NULL);
+      std::vector<struct Header> headers(nrStations);
 
-      for (size_t stat = 0; stat < stationRanks.size(); ++stat) {
-        //LOG_DEBUG_STR(logPrefix << "Posting receive for header from rank " << stationRanks[stat]);
+      for (size_t stat = 0; stat < nrStations; ++stat) {
+        //LOG_DEBUG_STR(logPrefix << "Posting receive for header from station " << stat);
 
         // receive the header
         header_requests[stat] = receiveHeader(stat, headers[stat]);
       }
 
       // Process stations in the order in which we receive the headers
-      Matrix<struct MetaData> metaData(stationRanks.size(), beamlets.size()); // [station][beamlet]
+      Matrix<struct MetaData> metaData(nrStations, beamlets.size()); // [station][beamlet]
 
-      for (size_t i = 0; i < stationRanks.size(); ++i) {
+      for (size_t i = 0; i < nrStations; ++i) {
         /*
          * WAIT FOR ANY HEADER
          */
@@ -121,8 +121,7 @@ namespace LOFAR {
 
         const struct Header &header = headers[stat];
 
-        //int rank = stationRanks[stat];
-        //LOG_DEBUG_STR(logPrefix << "Received header from rank " << rank);
+        //LOG_DEBUG_STR(logPrefix << "Received header from station " << stat);
 
         ASSERTSTR(header.nrBeamlets == beamlets.size(), "Got " << header.nrBeamlets << " beamlets, but expected " << beamlets.size());
 
@@ -138,7 +137,7 @@ namespace LOFAR {
            * RECEIVE BEAMLET (ASYNC)
            */
 
-          //LOG_DEBUG_STR(logPrefix << "Receiving beamlet " << beamlet << " from rank " << rank << " using " << (wrapOffset > 0 ? 2 : 1) << " transfers");
+          //LOG_DEBUG_STR(logPrefix << "Receiving beamlet " << beamlet << " from station " << stat << " using " << (wrapOffset > 0 ? 2 : 1) << " transfers");
 
           // First sample transfer
           requests.push_back(receiveData<T>(stat, beamlet, 0, &blocks[stat].beamlets[beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize));
@@ -166,7 +165,7 @@ namespace LOFAR {
        * PROCESS DATA
        */
 
-      for (size_t stat = 0; stat < stationRanks.size(); ++stat) {
+      for (size_t stat = 0; stat < nrStations; ++stat) {
         // Convert the flags array
         for (size_t beamletIdx = 0; beamletIdx < beamlets.size(); ++beamletIdx) {
           blocks[stat].beamlets[beamletIdx].metaData = metaData[stat][beamletIdx];

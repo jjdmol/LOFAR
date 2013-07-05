@@ -84,12 +84,6 @@ namespace LOFAR
       // Need WorkQueues to send work to
       ASSERT(workQueues.size() > 0);
 
-      // SEND: For now, the n stations are sent by the first n ranks.
-      vector<int> stationRanks(ps.nrStations());
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-        stationRanks[stat] = stat;
-      }
-
       size_t workQueueIterator = 0;
 
       // The length of a block in samples
@@ -99,7 +93,7 @@ namespace LOFAR
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 
       // Set up the MPI environment.
-      MPIReceiveStations receiver(stationRanks, subbandIndices, blockSize);
+      MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
 
       // Create a block object to hold all information for receiving one
       // block.

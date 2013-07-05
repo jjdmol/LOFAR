@@ -54,8 +54,6 @@
 #include <InputProc/Buffer/BlockReader.h>
 #include <InputProc/Buffer/SampleBuffer.h>
 #include <InputProc/Station/PacketsToBuffer.h>
-#include <InputProc/Station/PacketFactory.h>
-#include <InputProc/Station/PacketStream.h>
 #include <InputProc/Delays/Delays.h>
 
 #include "global_defines.h"
@@ -64,6 +62,7 @@
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
+#include "StationNodeAllocation.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -97,28 +96,9 @@ void receiveStation(const Parset &ps, const struct StationID &stationID, Semapho
   removeSampleBuffers(settings);
 
   // fetch input streams
-  vector<string> inputStreamDescs = ps.getStringVector(str(format("PIC.Core.Station.%s%s.RSP.ports") % stationID.stationName % stationID.antennaField), true);
-  vector< SmartPtr<Stream> > inputStreams(inputStreamDescs.size());
+  StationNodeAllocation allocation(stationID, ps);
+  vector< SmartPtr<Stream> > inputStreams(allocation.inputStreams());
 
-  for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
-    const string desc = inputStreamDescs[board];
-
-    LOG_DEBUG_STR("Input stream for board " << board << ": " << desc);
-
-    if (desc == "factory:") {
-      const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
-      const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
-
-      const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
-      PacketFactory factory(settings, mode);
-
-      inputStreams[board] = new PacketStream(factory, from, to, board);
-    } else {
-      inputStreams[board] = createStream(desc, true);
-    }
-  }
-
-  ASSERTSTR(inputStreams.size() > 0, "No input streams for station " << stationID);
   settings.nrBoards = inputStreams.size();
 
   // Force buffer reader/writer syncing if observation is non-real time
@@ -154,9 +134,6 @@ void receiveStation(const Parset &ps, const struct StationID &stationID, Semapho
 // An MPI send process, sending data for one station.
 template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 {
-  const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
-  const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
-
   /*
    * Construct our stationID.
    */
@@ -169,7 +146,15 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
   const string fieldName   = fullFieldName.substr(5);   // HBA0
 
   const struct StationID stationID(stationName, fieldName);
-  const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
+
+  StationNodeAllocation allocation(stationID, ps);
+
+  if (!allocation.receivedHere()) {
+    // Station is not sending from this node
+    return;
+  }
+
+  LOG_INFO_STR("Processing data from station " << stationID);
 
   Semaphore stopSignal;
 
@@ -188,10 +173,10 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
     #pragma omp section
     {
       // Fetch buffer settings from SHM.
-      struct BufferSettings s(stationID, true);
+      const struct BufferSettings settings(stationID, true);
+      const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
 
-      LOG_INFO_STR("Detected " << s);
-      LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
+      LOG_INFO_STR("Detected " << settings);
 
       /*
        * Set up circular buffer data reader.
@@ -207,13 +192,19 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
         beamlets[i] = beamlet;
       }
 
-      BlockReader<SampleT> reader(s, mode, beamlets, ps.nrHistorySamples(), 0.25);
+      BlockReader<SampleT> reader(settings, mode, beamlets, ps.nrHistorySamples(), 0.25);
+
+      const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
+      const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
+
+      LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
+
 
 #ifdef HAVE_MPI
       /*
        * Set up the MPI send engine.
        */
-      MPISendStation sender(s, rank, subbandDistribution);
+      MPISendStation sender(settings, stationIdx, subbandDistribution);
 #endif
 
       /*
@@ -389,9 +380,9 @@ int main(int argc, char **argv)
 
 #ifdef HAVE_MPI
   // Initialise and query MPI
-  int mpi_thread_support;
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
-    cerr << "MPI_Init failed" << endl;
+  int provided_mpi_thread_support;
+  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
+    cerr << "MPI_Init_thread failed" << endl;
     exit(1);
   }
 
@@ -451,44 +442,14 @@ int main(int argc, char **argv)
     storageProcesses = new StorageProcesses(ps, "");
   }
 
-  // Distribute the subbands over the receivers
-#ifdef HAVE_MPI
-  size_t nrReceivers = nrHosts - ps.nrStations();
-  size_t firstReceiver = ps.nrStations();
-#else
-  size_t nrReceivers = 1;
-  size_t firstReceiver = 0;
-#endif
-
+  // Distribute the subbands over the MPI ranks
   for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-    int receiverRank = firstReceiver + subband % nrReceivers;
+    int receiverRank = subband % nrHosts;
 
     subbandDistribution[receiverRank].push_back(subband);
   }
 
-#ifdef HAVE_MPI
-  // This is currently the only supported case
-  ASSERT(nrHosts >= (int)ps.nrStations() + 1);
-
-  // Decide course to take based on rank.
-  if (rank < (int)ps.nrStations()) {
-    ASSERTSTR(subbandDistribution.find(rank) == subbandDistribution.end(), "An MPI rank can't both send station data and receive it.");
-
-    /*
-     * Send station data for station #rank
-     */
-    sender(ps, rank);
-  } else if (subbandDistribution.find(rank) != subbandDistribution.end()) {
-    /*
-     * Receive and process station data
-     */
-    runPipeline(option, ps, subbandDistribution[rank]);
-  } else {
-    LOG_WARN_STR("Superfluous MPI rank");
-  }
-#else
-  // No MPI -- run the same stuff, but multithreaded
-
+#ifndef HAVE_MPI
   // Create queues to forward station data
   stationDataQueues.resize(boost::extents[ps.nrStations()][ps.nrSubbands()]);
 
@@ -497,6 +458,7 @@ int main(int argc, char **argv)
       stationDataQueues[stat][sb] = new BestEffortQueue< SmartPtr<struct InputBlock> >(1, ps.realTime());
     }
   }
+#endif
 
   #pragma omp parallel sections
   {
@@ -512,10 +474,11 @@ int main(int argc, char **argv)
     #pragma omp section
     {
       // Process station data
-      runPipeline(option, ps, subbandDistribution[rank]);
+      if (!subbandDistribution[rank].empty()) {
+        runPipeline(option, ps, subbandDistribution[rank]);
+      }
     }
   }
-#endif
 
   /*
    * COMPLETING stage

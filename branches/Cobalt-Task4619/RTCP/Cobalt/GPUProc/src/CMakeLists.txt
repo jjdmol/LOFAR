@@ -12,6 +12,7 @@ set(_gpuproc_sources
   BandPass.cc
   DirectInput.cc
   FilterBank.cc
+  StationNodeAllocation.cc
   global_defines.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc

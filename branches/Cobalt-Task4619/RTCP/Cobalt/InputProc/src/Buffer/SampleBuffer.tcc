@@ -21,7 +21,7 @@ namespace LOFAR
              // flags (aligned to 8)
              + settings.nrBoards * (Ranges::size(settings.nrAvailableRanges) + 8)
              // beamlets (aligned to 128)
-             + settings.nrBoards * (BoardMode::nrBeamletsPerBoard(T::bitMode()) * settings.nrSamples * sizeof(T) + 128)
+             + settings.nrBoards * (BoardMode::nrBeamletsPerBoard(T::bitMode()) * settings.nrSamples(T::bitMode()) * sizeof(T) + 128)
              // mode (aligned to 1)
              + settings.nrBoards * sizeof(struct BoardMode);
     }
@@ -38,7 +38,7 @@ namespace LOFAR
       sync(settings->sync),
       syncLock(settings->syncLock),
 
-      nrSamples(settings->nrSamples),
+      nrSamples(settings->nrSamples(T::bitMode())),
       nrBoards(settings->nrBoards),
       nrAvailableRanges(settings->nrAvailableRanges),
 
@@ -154,7 +154,7 @@ namespace LOFAR
     template<typename T>
     void SampleBuffer<T>::Board::startWrite( const TimeStamp &begin, const TimeStamp &end )
     {
-      ASSERT((uint64)end > buffer.settings->nrSamples);
+      ASSERT((uint64)end > buffer.nrSamples);
 
       if (buffer.sync) {
         // Signal write intent, to let reader know we don't have data older than
@@ -162,11 +162,11 @@ namespace LOFAR
         (*buffer.syncLock)[boardNr].writePtr.advanceTo(begin);
 
         // Wait for reader to finish what we're about to overwrite
-        (*buffer.syncLock)[boardNr].readPtr.waitFor(end - buffer.settings->nrSamples);
+        (*buffer.syncLock)[boardNr].readPtr.waitFor(end - buffer.nrSamples);
       }
 
       // Mark overwritten range (and everything before it to prevent a mix) as invalid
-      available.excludeBefore(end - buffer.settings->nrSamples);
+      available.excludeBefore(end - buffer.nrSamples);
     }
 
 

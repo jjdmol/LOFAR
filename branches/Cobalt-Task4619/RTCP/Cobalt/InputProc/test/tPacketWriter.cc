@@ -87,7 +87,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
         // Obtain the buffer's sample
         // Note: we're the 0th board, so beamlet indices are also absolute
         uint64 timestamp = packet.timeStamp() + sample;
-        SampleType<T> buf = buffer.beamlets[beamlet][timestamp % settings.nrSamples];
+        SampleType<T> buf = buffer.beamlets[beamlet][timestamp % settings.nrSamples(SampleType<T>::bitMode())];
 
         // Compare them
         ASSERT( x.real() == buf.x.real() );

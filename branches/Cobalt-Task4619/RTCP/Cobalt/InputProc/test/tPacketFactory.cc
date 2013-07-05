@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 
-#include <InputProc/Buffer/BufferSettings.h>
 #include <InputProc/Station/PacketFactory.h>
 #include <time.h>
 
@@ -31,10 +30,8 @@ using namespace Cobalt;
 
 void test()
 {
-  struct StationID stationID("RS106", "LBA");
   struct BoardMode mode(16, 200);
-  struct BufferSettings settings(stationID, false);
-  PacketFactory factory(settings, mode);
+  PacketFactory factory(mode);
 
   // Just generate packets.
   time_t now = time(0);

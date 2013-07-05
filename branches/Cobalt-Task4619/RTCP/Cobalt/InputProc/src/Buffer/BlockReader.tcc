@@ -69,7 +69,6 @@ namespace LOFAR {
       const BufferSettings::range_type from = this->from + beam_offset;
       const BufferSettings::range_type to   = this->to   + beam_offset;
       BufferSettings::flags_type bufferFlags = reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
-      LOG_DEBUG_STR("Available samples: " << reader.buffer.boards[boardIdx].available);
 
       if (reader.mode != *(reader.buffer.boards[boardIdx].mode)) {
         LOG_WARN_STR("Board in wrong mode -- flagging all data between " << from << " and " << to);
@@ -142,12 +141,14 @@ namespace LOFAR {
       size_t from_offset = reader.buffer.offset(this->from + offset);
       size_t to_offset   = reader.buffer.offset(this->to   + offset);
 
+      const size_t bufferSize = reader.buffer.nrSamples;
+
       if (to_offset == 0)
         // we need the other end, actually
-        to_offset = reader.buffer.nrSamples;
+        to_offset = bufferSize;
 
       // Determine whether we need to wrap around the end of the buffer
-      size_t wrap_offset = from_offset < to_offset ? 0 : reader.buffer.nrSamples - from_offset;
+      size_t wrap_offset = from_offset < to_offset ? 0 : bufferSize - from_offset;
 
       const T* origin = &reader.buffer.beamlets[b.stationBeamlet][0];
 
@@ -156,7 +157,7 @@ namespace LOFAR {
         b.nrRanges = 2;
 
         b.ranges[0].from = origin + from_offset;
-        b.ranges[0].to   = origin + reader.buffer.nrSamples;
+        b.ranges[0].to   = origin + bufferSize;
 
         b.ranges[1].from = origin;
         b.ranges[1].to   = origin + to_offset;
