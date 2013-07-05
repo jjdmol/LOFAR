@@ -53,7 +53,7 @@ int main() {
   Parset ps("tBeamFormerKernel.in_parset");
 
   // Get default parameters for the compiler
-  CompileFlags flags = CompileFlags();
+  KernelCompiler::Flags flags;
   
   // Calculate bandpass weights and transfer to the device.
   // *************************************************************
@@ -124,15 +124,18 @@ int main() {
   // Write output content.
   stream.writeBuffer(devComplexVoltagesMemory, rawComplexVoltagesData);
 
-  BeamFormerKernel kernel(ps,
-                          createModule(ctx, 
-                                       "BeamFormer.cu",
-                                       createPTX("BeamFormer.cu",
-                                                 Kernel::compileDefinitions(ps))),
-                          // ctx, 
-                          devComplexVoltagesMemory,
-                          devBandPassCorrectedMemory,
-                          devWeightsMemory);
+  BeamFormerKernel kernel(
+    ps,
+    createModule(ctx, 
+                 "BeamFormer.cu",
+                 // createPTX("BeamFormer.cu",
+                 //           Kernel::compileDefinitions(ps))),
+                 KernelCompiler(
+                   Kernel::compileDefinitions(ps)).createPTX("BeamFormer.cu")),
+                 // ctx, 
+                 devComplexVoltagesMemory,
+                 devBandPassCorrectedMemory,
+                 devWeightsMemory);
 
   kernel.enqueue(stream);
   stream.synchronize();

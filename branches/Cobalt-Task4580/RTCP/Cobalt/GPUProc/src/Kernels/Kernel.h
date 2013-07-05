@@ -28,8 +28,8 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/gpu_utils.h>    // for CompileDefinitions
 //#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/KernelCompiler.h>     // TODO: remove
 
 namespace LOFAR
 {
@@ -72,7 +72,8 @@ namespace LOFAR
 
       // TODO: Make this a (virtual?) kernel-specific function.
       // Return required compile definitions given the Parset \a ps.
-      static const CompileDefinitions& compileDefinitions(const Parset& ps);
+      static const KernelCompiler::Definitions& 
+      compileDefinitions(const Parset& ps);
 
     protected:
       // TODO: Remove once we decide we will only create a Kernel from source.

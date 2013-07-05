@@ -32,6 +32,8 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/KernelCompiler.h>
+
 #include <UnitTest++.h>
 
 #include "TestUtil.h"
@@ -64,8 +66,7 @@ float * runTest(unsigned NR_BITS_PER_SAMPLE = 16,
   // ****************************************
   // Compile to ptx  
   // Get an instantiation of the default parameters
-  CompileDefinitions definitions;
-  CompileFlags flags = defaultCompileFlags();
+  KernelCompiler::Definitions definitions;
 
   // Set op string string pairs to be provided to the compiler as defines
   definitions["NR_STATIONS"] = "2";
@@ -79,7 +80,10 @@ float * runTest(unsigned NR_BITS_PER_SAMPLE = 16,
   unsigned NR_POLARIZATIONS = 2;
   definitions["COMPLEX"] = "2";
   unsigned COMPLEX = 2;
-  string ptx = createPTX(kernelPath, definitions, flags, devices);
+
+  KernelCompiler compiler(definitions);
+  string ptx = compiler.createPTX(kernelPath);
+  // string ptx = createPTX(kernelPath, definitions, flags, devices);
   gpu::Module module(createModule(ctx, kernelPath, ptx));
   Function  hKernel(module, "intToFloat");  // c function this no argument overloading
 

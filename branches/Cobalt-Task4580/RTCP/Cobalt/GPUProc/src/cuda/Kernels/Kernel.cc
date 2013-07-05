@@ -104,9 +104,10 @@ namespace LOFAR
     }
 
     // TODO: Remove
-    const CompileDefinitions& Kernel::compileDefinitions(const Parset& ps)
+    const KernelCompiler::Definitions&
+    Kernel::compileDefinitions(const Parset& ps)
     {
-      static CompileDefinitions defs;
+      static KernelCompiler::Definitions defs;
 
       using boost::format;
 

@@ -51,8 +51,7 @@ int main() {
   string srcFilename("DelayAndBandPass.cu");
 
   // Get default parameters for the compiler
-  CompileFlags flags = defaultCompileFlags();
-  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
+  KernelCompiler::Definitions definitions(Kernel::compileDefinitions(ps));
 
   gpu::DeviceMemory 
     inputData(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA)),
@@ -61,18 +60,20 @@ int main() {
     delaysAfterEnd(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS)),
     phaseOffsets(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS));
 
-  DelayAndBandPassKernel kernel(ps,
-                                createModule(ctx, 
-                                             "DelayAndBandPass.cu",
-                                             createPTX("DelayAndBandPass.cu", 
-                                                       Kernel::compileDefinitions(ps))),
-                                // ctx,
-                                inputData,
-                                filteredData, 
-                                delaysAtBegin,
-                                delaysAfterEnd,
-                                phaseOffsets, 
-                                stream);
+  DelayAndBandPassKernel kernel(
+    ps,
+    createModule(ctx, 
+                 "DelayAndBandPass.cu",
+                 // createPTX("DelayAndBandPass.cu", 
+                 //           Kernel::compileDefinitions(ps))),
+                 KernelCompiler(definitions).createPTX("DelayAndBandPass.cu")),
+    // ctx,
+    inputData,
+    filteredData, 
+    delaysAtBegin,
+    delaysAfterEnd,
+    phaseOffsets, 
+    stream);
 
   unsigned subband = 0;
   kernel.enqueue(stream, subband);

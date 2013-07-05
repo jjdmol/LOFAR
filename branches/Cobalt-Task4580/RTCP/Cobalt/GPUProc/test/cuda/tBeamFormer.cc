@@ -31,6 +31,7 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/KernelCompiler.h>
 
 #include "TestUtil.h"
 
@@ -101,8 +102,8 @@ HostMemory runTest(Context ctx,
   cout << "\n==== runTest: function = " << function << " ====\n" << endl;
 
   // Get an instantiation of the default parameters
-  CompileFlags flags = CompileFlags();
-  CompileDefinitions definitions = CompileDefinitions();
+  KernelCompiler::Flags flags;
+  KernelCompiler::Definitions definitions;
   
   // ****************************************
   // Compile to ptx
@@ -117,7 +118,9 @@ HostMemory runTest(Context ctx,
   
 
   vector<Device> devices(1, ctx.getDevice());
-  string ptx = createPTX(kernelFile, definitions, flags, devices);
+  KernelCompiler compiler(definitions, flags, devices);
+  string ptx = compiler.createPTX(kernelFile);
+  // string ptx = createPTX(kernelFile, definitions, flags, devices);
   Module module(createModule(ctx, kernelFile, ptx));
   Function hKernel(module, function);   // c function this no argument overloading
 

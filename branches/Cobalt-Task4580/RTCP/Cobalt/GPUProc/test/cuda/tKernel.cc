@@ -52,10 +52,10 @@ int main() {
   Parset ps("tKernel.parset.in");
 
   // Get default parameters for the compiler
-  CompileFlags flags = defaultCompileFlags();
-  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
+  KernelCompiler::Definitions definitions(Kernel::compileDefinitions(ps));
 
-  string ptx = createPTX(srcFilename, definitions, flags, devices);
+  KernelCompiler compiler(definitions);
+  string ptx = compiler.createPTX(srcFilename);
   gpu::Module module(createModule(ctx, srcFilename, ptx));
   cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 

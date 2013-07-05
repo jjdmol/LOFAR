@@ -32,6 +32,8 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/KernelCompiler.h>
+
 #include <UnitTest++.h>
 
 #include "TestUtil.h"
@@ -66,8 +68,8 @@ float * runTest(float bandPassFactor,
   string kernelPath = "DelayAndBandPass.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
  
   // Get an instantiation of the default parameters
-  CompileDefinitions definitions;
-  CompileFlags flags = defaultCompileFlags();
+  KernelCompiler::Definitions definitions;
+  KernelCompiler::Flags flags = KernelCompiler::defaultFlags();
 
   // ****************************************
   // Compile to ptx
@@ -96,7 +98,10 @@ float * runTest(float bandPassFactor,
   definitions["BANDPASS_CORRECTION"] = "1";
   if (delayCompensation)
     definitions["DELAY_COMPENSATION"] = "1";
-  string ptx = createPTX(kernelPath, definitions, flags, devices);
+
+  KernelCompiler compiler(definitions, flags, devices);
+  string ptx = compiler.createPTX(kernelPath);
+  // string ptx = createPTX(kernelPath, definitions, flags, devices);
   gpu::Module module(createModule(ctx, kernelPath, ptx));
   Function  hKernel(module, "applyDelaysAndCorrectBandPass");  // c function this no argument overloading
 
