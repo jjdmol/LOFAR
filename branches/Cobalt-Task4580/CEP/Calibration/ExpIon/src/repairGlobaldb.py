@@ -14,6 +14,8 @@ def get_source_list( pdb, source_pattern_list ):
       source_list.extend([n.split(':')[-1] for n in parmname_list])
       parmname_list = pdb.getNames( 'RotationAngle:*:' + pattern )
       source_list.extend([n.split(':')[-1] for n in parmname_list])
+      parmname_list = pdb.getNames( 'ScalarPhase:*:' + pattern )
+      source_list.extend([n.split(':')[-1] for n in parmname_list])
    print set(source_list)
    return sorted(set(source_list))
 
@@ -81,18 +83,21 @@ def repair_sources(myion,globaldb,instrumentdb):
             RA = np.array(skydb.getDefValues( 'Ra:' + source + '.*' ).values()).mean()
             dec = np.array(skydb.getDefValues( 'Dec:' + source + '.*' ).values()).mean()
         myion.source_positions.append([RA, dec])
-        
 
-def add_to_h5_func(h5file,data,name='test',dtype=tables.Float32Atom()):
+def add_to_h5_func(h5file,data,name='test',dtype=None):
+    atom = tables.Atom.from_dtype(data.dtype)
     if name in h5file.root:
         h5file.removeNode('/'+name)
-    myarray=h5file.createCArray(h5file.root,name,dtype,shape=data.shape)
+    myarray=h5file.createCArray(h5file.root,name,atom,shape=data.shape)
     myarray[:]=data
     myarray.flush()
-
+        
 def doRepair(globaldbpath,
              GainEnable = False, DirectionalGainEnable = False,
-             PhasorsEnable = False, RotationEnable = False, CommonRotationEnable = False,polarizations=[0,1],tablename='instrument-0'):
+             PhasorsEnable = False, RotationEnable = False, CommonRotationEnable = False,ScalarPhaseEnable = False, CommonScalarPhaseEnable = False,polarizations=[0,1],tablename='instrument-0'):
+    if not os.path.isdir(globaldbpath):
+        print "error:",globaldbpath,"does not exist"
+        return
     if os.path.isfile(globaldbpath+'/ionmodel.hdf5'):
         myion=iono.IonosphericModel([globaldbpath])
     else:
@@ -104,6 +109,8 @@ def doRepair(globaldbpath,
     myion.PhasorsEnable =PhasorsEnable 
     myion.RotationEnable =RotationEnable 
     myion.CommonRotationEnable =CommonRotationEnable 
+    myion.ScalarPhaseEnable =ScalarPhaseEnable 
+    myion.CommonScalarPhaseEnable =CommonScalarPhaseEnable 
     myion.polarizations = polarizations
     myion.N_pol = len(polarizations)
     myion.instrument_db_list=[globaldbpath+'/%s-%i'%(tablename,idx) for idx in range(500) if os.path.isdir(globaldbpath+'/%s-%i'%(tablename,idx))]
@@ -121,7 +128,8 @@ def doRepair(globaldbpath,
 
 
     if not hasattr(myion,'sources'):
-        if DirectionalGainEnable or myion.RotationEnable:
+        if DirectionalGainEnable or myion.RotationEnable or ScalarPhaseEnable:
+            print "getting source names from instrumentdb"
             repair_sources(myion,globaldbpath,instrumentdb)
         
         else:
@@ -148,11 +156,18 @@ def doRepair(globaldbpath,
     else:
         if myion.DirectionalGainEnable :
             parmname0 = ':'.join(['DirectionalGain', str(myion.polarizations[0]), str(myion.polarizations[0]), infix[1], myion.stations[0], myion.sources[0]])
+        else:
+            if myion.ScalarPhaseEnable :
+                parmname0 = ':'.join(['ScalarPhase', myion.stations[0], myion.sources[0]])
+            else:
+                if myion.CommonScalarPhaseEnable:
+                    parmname0 = ':'.join(['CommonScalarPhase', myion.stations[0]])
+                
     myion.freqs = []
     myion.freqwidths = []
     newdblist=[]
     for instrumentdb_name in myion.instrument_db_list:
-        #print "opening",instrumentdb_name,parmname0
+        print "opening",instrumentdb_name,parmname0
         try:
             instrumentdb = lofar.parmdb.parmdb( instrumentdb_name )
             v0 = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]
@@ -176,14 +191,14 @@ def doRepair(globaldbpath,
       
     myion.freqs = myion.freqs[sorted_freq_idx]
     myion.freqwidths = myion.freqwidths[sorted_freq_idx]
-    add_to_h5_func(myion.hdf5,np.array(myion.freqs),name='freqs',dtype=tables.Float32Atom())
-    add_to_h5_func(myion.hdf5,np.array(myion.freqwidths),name='freqwidths',dtype=tables.Float32Atom())
+    add_to_h5_func(myion.hdf5,np.array(myion.freqs),name='freqs',dtype=tables.Float64Atom())
+    add_to_h5_func(myion.hdf5,np.array(myion.freqwidths),name='freqwidths',dtype=tables.Float64Atom())
     myion.N_freqs = len(myion.freqs)
     
     myion.times = v0['times']
     myion.timewidths = v0['timewidths']
-    add_to_h5_func(myion.hdf5,myion.times,name='times',dtype=tables.Float32Atom())
-    add_to_h5_func(myion.hdf5,myion.timewidths,name='timewidths',dtype=tables.Float32Atom())
+    add_to_h5_func(myion.hdf5,myion.times,name='times',dtype=tables.Float64Atom())
+    add_to_h5_func(myion.hdf5,myion.timewidths,name='timewidths',dtype=tables.Float64Atom())
 
     myion.N_times = len( myion.times )
     add_to_h5_func(myion.hdf5,  np.array(myion.polarizations),name='polarizations',dtype=tables.Float32Atom())
@@ -193,19 +208,27 @@ def doRepair(globaldbpath,
         if hasattr(myion,'phases'):
             myion.hdf5.removeNode('/phases')
         chunkshape = (1024 , 32, 1, 1, 1)
-        ph=myion.hdf5.createCArray(myion.hdf5.root, 'phases', tables.Float32Atom(), shape=(myion.N_times, myion.N_freqs, myion.N_stations, myion.N_sources, myion.N_pol), chunkshape = chunkshape)
+        ph=myion.hdf5.createCArray(myion.hdf5.root, 'phases', tables.Float64Atom(), shape=(myion.N_times, myion.N_freqs, myion.N_stations, myion.N_sources, myion.N_pol), chunkshape = chunkshape)
             
         if hasattr(myion,'amplitudes'):
             myion.hdf5.removeNode('/amplitudes')
         chunkshape = (1024 , 32, 1, 1, 1)
-        amp = myion.hdf5.createCArray(myion.hdf5.root, 'amplitudes', tables.Float32Atom(), shape=(myion.N_times, myion.N_freqs, myion.N_stations, myion.N_sources, myion.N_pol), chunkshape = chunkshape) 
+        amp = myion.hdf5.createCArray(myion.hdf5.root, 'amplitudes', tables.Float64Atom(), shape=(myion.N_times, myion.N_freqs, myion.N_stations, myion.N_sources, myion.N_pol), chunkshape = chunkshape) 
         if not hasattr(myion,'flags'):   
             myion.flags = myion.hdf5.createCArray(myion.hdf5.root, 'flags', tables.Float32Atom(), shape=(myion.N_times, myion.N_freqs))
+
+    else:
+      if ScalarPhaseEnable or CommonScalarPhaseEnable:
+        if hasattr(myion,'scalarphases'):
+            myion.hdf5.removeNode('/scalarphases')
+        chunkshape = (1024 , 32, 1, 1)
+        scalarph=myion.hdf5.createCArray(myion.hdf5.root, 'scalarphases', tables.Float64Atom(), shape=(myion.N_times, myion.N_freqs, myion.N_stations, myion.N_sources), chunkshape = chunkshape)
+            
 
     if RotationEnable or CommonRotationEnable:
         if not hasattr(myion,'rotation'):
             chunkshape = (1024 , 32, 1, 1)
-            rotation = myion.hdf5.createCArray(myion.hdf5.root, 'rotation', tables.Float32Atom(), shape=ph.shape[:4], chunkshape = chunkshape)
+            rotation = myion.hdf5.createCArray(myion.hdf5.root, 'rotation', tables.Float64Atom(), shape=ph.shape[:4], chunkshape = chunkshape)
         else:
             rotation =  myion.rotation
 
@@ -218,8 +241,8 @@ def doRepair(globaldbpath,
         freqs = v0['freqs']
         N_freqs = len(freqs)
         sorted_freq_selection = inverse_sorted_freq_idx[freq_idx:freq_idx+N_freqs]
-        for pol_idx,pol in enumerate(myion.polarizations[:]):
-            for station_idx,station in enumerate(list(myion.stations[:])):
+        for station_idx,station in enumerate(list(myion.stations[:])):
+            for pol_idx,pol in enumerate(myion.polarizations[:]):
                 
                 if GainEnable:
                     parmname0 = ':'.join(['Gain', str(pol), str(pol), infix[0], station])
@@ -250,16 +273,25 @@ def doRepair(globaldbpath,
                     for source_idx,source in enumerate(myion.sources):
                         parmname0 = ':'.join(['DirectionalGain', str(pol), str(pol), infix[0], station, source])
                         parmname1 = ':'.join(['DirectionalGain', str(pol), str(pol), infix[1], station, source])
+                        hasAmpl=False
+                        hasPhase=False
+                        if parmname0 in instrumentdb.getNames():
+                            hasAmpl=True
+                        if parmname1 in instrumentdb.getNames():
+                            hasPhase=True
+                            
                         if myion.PhasorsEnable:
                             
-                            gain_phase = instrumentdb.getValuesGrid( parmname1 )[ parmname1 ]['values']
-                            if gain_phase.shape != ph[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, source_idx, pol_idx].shape:
-                                print "wrong shape",gain_phase.shape,parmname1
-                                continue;
+                            if hasPhase:
+                                gain_phase = instrumentdb.getValuesGrid( parmname1 )[ parmname1 ]['values']
+                                if gain_phase.shape != ph[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, source_idx, pol_idx].shape:
+                                    print "wrong shape",gain_phase.shape,parmname1
+                                    continue;
                         
-                            ph[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, source_idx, pol_idx] = gain_phase
-                            gain_amplitude = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]['values']
-                            amp[:,sorted_freq_selection[0]:sorted_freq_selection[-1]+1 , station_idx, source_idx, pol_idx] = gain_ampitude
+                                ph[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, source_idx, pol_idx] = gain_phase
+                            if hasAmpl:
+                                gain_amplitude = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]['values']
+                                amp[:,sorted_freq_selection[0]:sorted_freq_selection[-1]+1 , station_idx, source_idx, pol_idx] = gain_ampitude
                         else:
                             gain_real = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]['values']
                             gain_imag = instrumentdb.getValuesGrid( parmname1 )[ parmname1 ]['values']
@@ -273,6 +305,24 @@ def doRepair(globaldbpath,
 
                             amp[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, source_idx, pol_idx] = np.absolute(cdata)
                      
+            if CommonScalarPhaseEnable:
+                parmname1 = ':'.join(['CommonScalarPhase', station])
+                gain_phase = instrumentdb.getValuesGrid( parmname1 )[ parmname1 ]['values']
+                if gain_phase.shape != scalarph[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, 0].shape:
+                    print "wrong shape",gain_phase.shape,parmname1
+                    continue;
+
+                scalarph[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, 0] = gain_phase
+            if myion.ScalarPhaseEnable:
+                for source_idx,source in enumerate(myion.sources):
+                    parmname1 = ':'.join(['ScalarPhase', station,source])
+                    gain_phase = instrumentdb.getValuesGrid( parmname1 )[ parmname1 ]['values']
+                    if gain_phase.shape != scalarph[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, source_idx].shape:
+                        print "wrong shape",gain_phase.shape,parmname1
+                        continue;
+
+                    scalarph[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, source_idx] = gain_phase
+
         if myion.CommonRotationEnable:
             for station_idx,station in enumerate(myion.stations):
                 parmname = ':'.join(['CommonRotationAngle', station])
@@ -292,3 +342,4 @@ def doRepair(globaldbpath,
 
 
         freq_idx += N_freqs
+    myion.hdf5.close()

@@ -40,11 +40,18 @@ using namespace LOFAR;
 using namespace Cobalt;
 using namespace std;
 
+unsigned clockMHz = 200;
+
 template<typename T>
 void test( struct BufferSettings &settings, const std::string &filename )
 {
-  SampleBuffer< SampleType<T> > buffer(settings, true);
-  PacketWriter< SampleType<T> > writer("", buffer, 0);
+  struct BoardMode mode(SampleType<T>::bitMode(), clockMHz);
+
+  SampleBuffer< SampleType<T> > buffer(settings, SharedMemoryArena::CREATE);
+  PacketWriter< SampleType<T> > writer("", buffer, mode, 0);
+
+  // Check if the board is now in the specified mode
+  ASSERT(mode == *buffer.boards[0].mode);
 
   // Read packets from file
   FileStream fs(filename);
@@ -92,7 +99,7 @@ void test( struct BufferSettings &settings, const std::string &filename )
   }
 
   // There should be only nrValidSamples samples in the buffer, nothing more
-  BufferSettings::range_type now = (uint64)TimeStamp(time(0) + 1, 0, settings.station.clockMHz * 1000000);
+  BufferSettings::range_type now = (uint64)TimeStamp(time(0) + 1, 0, mode.clockHz());
   BufferSettings::flags_type  available = buffer.boards[0].available.sparseSet(0, now);
   ASSERT((size_t)available.count() == nrValidSamples);
 }
@@ -106,7 +113,7 @@ int main()
   alarm(10);
 
   // Fill a BufferSettings object
-  struct StationID stationID("RS106", "LBA", 200, 16);
+  struct StationID stationID("RS106", "LBA");
   struct BufferSettings settings(stationID, false);
 
   // Use a fixed key, so the test suite knows what to clean
@@ -119,13 +126,9 @@ int main()
 
   // Test various modes
   LOG_INFO("Test 16-bit complex");
-  settings.station.bitMode = 16;
-  settings.nrBeamletsPerBoard = 61;
   test<i16complex>(settings, "tPacketWriter.in_16bit");
 
   LOG_INFO("Test 8-bit complex");
-  settings.station.bitMode = 8;
-  settings.nrBeamletsPerBoard = 122;
   test<i8complex>(settings, "tPacketWriter.in_8bit");
 
   return 0;

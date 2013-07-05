@@ -26,6 +26,7 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string>
 
 #include <Common/Exception.h>
 #include <CoInterface/Allocator.h>
@@ -92,6 +93,8 @@ namespace LOFAR
       //   false: region does not exist (and open_flags do not contain CREATE).
       //   throws SystemCallException: a system call failed.
       bool open( int open_flags, int attach_flags, bool timeout);
+
+      std::string modeStr( Mode mode ) const;
     };
 
     /*
@@ -124,7 +127,7 @@ namespace LOFAR
     template<typename T>
     SharedStruct<T>::SharedStruct( key_t key, bool create, time_t timeout )
       :
-      data(key, sizeof(T), create ? SharedMemoryArena::CREATE : SharedMemoryArena::READWRITE, timeout)
+      data(key, sizeof(T), create ? SharedMemoryArena::CREATE : SharedMemoryArena::READ, timeout)
     {
     }
 

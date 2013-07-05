@@ -1,4 +1,4 @@
-//# StationID.h
+//# tBufferSettings.cc: stand-alone test program for BufferSettings class
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,36 +18,26 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_INPUT_PROC_STATIONID_H
-#define LOFAR_INPUT_PROC_STATIONID_H
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
 #include <string>
-#include <ostream>
+#include <iostream>
 
-#include <Common/LofarTypes.h>
+#include <UnitTest++.h>
 
-namespace LOFAR
+#include <Common/LofarLogger.h>
+
+#include <InputProc/Buffer/BufferSettings.h>
+
+using namespace LOFAR;
+using namespace LOFAR::Cobalt;
+using namespace std;
+
+int main()
 {
-  namespace Cobalt
-  {
+  INIT_LOGGER("tBufferSettings");
 
-    struct StationID {
-      char stationName[64];
-      char antennaField[64];
-
-      StationID( const std::string &stationName = "", const std::string &antennaField = "" );
-
-      bool operator==(const struct StationID &other) const;
-      bool operator!=(const struct StationID &other) const;
-
-      uint32 hash() const;
-    };
-
-    std::ostream& operator<<( std::ostream &str, const struct StationID &s );
-
-  }
+  return UnitTest::RunAllTests() > 0;
 }
-
-
-#endif
 

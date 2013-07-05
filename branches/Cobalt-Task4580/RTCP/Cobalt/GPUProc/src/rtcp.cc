@@ -44,12 +44,14 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/OutputTypes.h>
 
 #include <InputProc/OMPThread.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/StationID.h>
 #include <InputProc/Buffer/BufferSettings.h>
 #include <InputProc/Buffer/BlockReader.h>
+#include <InputProc/Buffer/SampleBuffer.h>
 #include <InputProc/Station/PacketsToBuffer.h>
 #include <InputProc/Station/PacketFactory.h>
 #include <InputProc/Station/PacketStream.h>
@@ -101,13 +103,15 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
   const string stationName = fullFieldName.substr(0,5); // CS001
   const string fieldName   = fullFieldName.substr(5);   // HBA0
 
-  struct StationID stationID(stationName, fieldName, ps.settings.clockMHz, ps.settings.nrBitsPerSample);
+  struct StationID stationID(stationName, fieldName);
 
   /*
    * For now, we run the circular buffer
    */
   struct BufferSettings settings(stationID, false);
   settings.setBufferSize(2.0);
+
+  const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
 
   // Remove lingering buffers
   removeSampleBuffers(settings);
@@ -122,7 +126,7 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
     LOG_DEBUG_STR("Input stream for board " << board << ": " << desc);
 
     if (desc == "factory:") {
-      PacketFactory factory(settings);
+      PacketFactory factory(settings, mode);
       inputStreams[board] = new PacketStream(factory, from, to, board);
     } else {
       inputStreams[board] = createStream(desc, true);
@@ -172,12 +176,12 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
         unsigned board = ps.settings.stations[stationIdx].rspBoardMap[i];
         unsigned slot  = ps.settings.stations[stationIdx].rspSlotMap[i];
 
-        unsigned beamlet = board * s.nrBeamletsPerBoard + slot;
+        unsigned beamlet = board * mode.nrBeamletsPerBoard() + slot;
 
         beamlets[i] = beamlet;
       }
 
-      BlockReader<SampleT> reader(s, beamlets, ps.nrHistorySamples(), 0.25);
+      BlockReader<SampleT> reader(s, mode, beamlets, ps.nrHistorySamples(), 0.25);
 
 #ifdef HAVE_MPI
       /*
@@ -243,6 +247,10 @@ template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
 
           /* copy data */
           beamlet.copy(reinterpret_cast<SampleT*>(&pblock->samples[0]));
+
+          if (subband == 0) {
+            LOG_DEBUG_STR("Flags at begin: " << beamlet.flagsAtBegin);
+          }
 
           /* obtain flags (after reading the data!) */
           pblock->metaData.flags = beamlet.flagsAtBegin | block->flags(subband);
@@ -311,12 +319,12 @@ void runPipeline(SELECTPIPELINE pipeline, const Parset &ps, const vector<size_t>
   {
   case correlator:
     LOG_INFO_STR("Correlator pipeline selected");
-    CorrelatorPipeline(ps, subbands).processObservation();
+    CorrelatorPipeline(ps, subbands).processObservation(CORRELATED_DATA);
     break;
 
   case beam:
     LOG_INFO_STR("BeamFormer pipeline selected");
-    BeamFormerPipeline(ps, subbands).processObservation();
+    BeamFormerPipeline(ps, subbands).processObservation(BEAM_FORMED_DATA);
     break;
 
   case UHEP:

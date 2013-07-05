@@ -47,6 +47,8 @@ namespace LOFAR
       }
 
     public:
+      static const unsigned MAX_NR_RSP_BOARDS = 4;
+
       typedef uint64 range_type;
       typedef SparseSet<range_type> flags_type;
 
@@ -55,8 +57,6 @@ namespace LOFAR
       // true: sync reader and writer, useful in real-time mode
       bool sync;
       SyncLock *syncLock;
-
-      unsigned nrBeamletsPerBoard;
 
       size_t nrSamples;
 
@@ -74,16 +74,10 @@ namespace LOFAR
       // Shortcut to set nrSamples to represent `seconds' of buffer.
       void setBufferSize(double seconds);
 
-      size_t boardIndex(unsigned beamlet) const
-      {
-        return beamlet / nrBeamletsPerBoard;
-      }
-
       bool operator==(const struct BufferSettings &other) const
       {
         return station == other.station
                && sync == other.sync
-               && nrBeamletsPerBoard == other.nrBeamletsPerBoard
                && nrSamples == other.nrSamples
                && nrBoards == other.nrBoards
                && nrAvailableRanges == other.nrAvailableRanges

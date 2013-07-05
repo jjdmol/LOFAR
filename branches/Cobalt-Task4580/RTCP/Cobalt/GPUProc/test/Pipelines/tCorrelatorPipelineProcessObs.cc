@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
   // no data, so no need to run a sender:
   // receiver(s) from processObservation() will fwd a end of data NULL pool item immediately.
   // idem for storage proc: we'll get a failed to connect to storage log msg, but don't care.
-  CorrelatorPipeline(ps, subbands).processObservation();
+  CorrelatorPipeline(ps, subbands).processObservation(CORRELATED_DATA);
 
 #ifdef HAVE_MPI
   MPI_Finalize();

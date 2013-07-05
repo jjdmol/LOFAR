@@ -26,20 +26,22 @@ namespace LOFAR {
   namespace Cobalt {
 
     template<typename T>
-    BlockReader<T>::BlockReader( const BufferSettings &settings, const std::vector<size_t> beamlets, size_t nrHistorySamples, double maxDelay )
+    BlockReader<T>::BlockReader( const BufferSettings &settings, const struct BoardMode &mode, const std::vector<size_t> beamlets, size_t nrHistorySamples, double maxDelay )
     :
       settings(settings),
-      buffer(settings, false),
+      mode(mode),
+      buffer(settings, SharedMemoryArena::READ),
 
       beamlets(beamlets),
       nrHistorySamples(nrHistorySamples),
-      maxDelay(static_cast<int64>(maxDelay * settings.station.clockMHz * 1000000 / 1024), settings.station.clockMHz * 1000000)
+      maxDelay(mode.secondsToSamples(maxDelay), mode.clockHz())
     {
-      // Check whether the selected beamlets exist
-      size_t nrBeamlets = settings.nrBoards * settings.nrBeamletsPerBoard;
+      // Check whether the selected beamlets exist, to prevent out-of-bounds access
+      const size_t nrBeamlets = buffer.beamlets.shape()[0];
 
-      for (size_t i = 0; i < beamlets.size(); ++i)
+      for (size_t i = 0; i < beamlets.size(); ++i) {
         ASSERTSTR( beamlets[i] < nrBeamlets, beamlets[i] << " < " << nrBeamlets );
+      }
     }
 
 
@@ -59,7 +61,7 @@ namespace LOFAR {
       const struct Block<T>::Beamlet &ib = this->beamlets[beamletIdx];
 
       // Determine corresponding RSP board
-      size_t boardIdx = reader.settings.boardIndex(ib.stationBeamlet);
+      size_t boardIdx = reader.mode.boardIndex(ib.stationBeamlet);
 
       ssize_t beam_offset = ib.offset;
 
@@ -67,6 +69,23 @@ namespace LOFAR {
       const BufferSettings::range_type from = this->from + beam_offset;
       const BufferSettings::range_type to   = this->to   + beam_offset;
       BufferSettings::flags_type bufferFlags = reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
+      LOG_DEBUG_STR("Available samples: " << reader.buffer.boards[boardIdx].available);
+
+      if (reader.mode != *(reader.buffer.boards[boardIdx].mode)) {
+        LOG_WARN_STR("Board in wrong mode -- flagging all data between " << from << " and " << to);
+
+        // Board is in wrong mode! We can't use this data, so flag everything.
+
+        // NOTE: Since a board clears all data every time it switches modes, we know that
+        // the data is valid if the mode is, regardless of the number of switches in the past.
+        //
+        // Race conditions are avoided, because the writer respects this order:
+        //
+        // 1. clear flags
+        // 2. update mode
+        // 3. write packets under new mode
+        bufferFlags.include(from, to);
+      }
 
       // Convert from global to local indices and types
       SubbandMetaData::flags_type blockFlags;

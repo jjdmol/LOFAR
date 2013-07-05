@@ -45,9 +45,7 @@ namespace LOFAR
       nrBadSize(0),
       nrBadTime(0),
       nrBadData(0),
-      nrBadMode(0),
-      hadSizeError(false),
-      hadModeError(false)
+      hadSizeError(false)
     {
       // Partial reads are not supported on UDP streams, because each read()
       // will consume a full packet.
@@ -117,42 +115,17 @@ namespace LOFAR
     }
 
 
-    bool PacketReader::readPacket( struct RSP &packet, const struct BufferSettings &settings )
-    {
-      if (!readPacket(packet))
-        return false;
-
-      // check whether the mode matches the one given
-      if (packet.clockMHz() != settings.station.clockMHz
-          || packet.bitMode() != settings.station.bitMode) {
-
-        if (!hadModeError) {
-          LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit), but expected mode (" << settings.station.clockMHz << " MHz, " << settings.station.bitMode << " bit)");
-          hadModeError = true;
-        }
-
-        ++nrBadMode;
-
-        THROW(BadModeException, "Packet has unexpected clock or bitmode settings");
-      }
-
-      return true;
-    }
-
-
     void PacketReader::logStatistics()
     {
-      LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadMode << " clock/bitmode errors, " << nrBadOther << " otherwise bad packets" );
+      LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadOther << " otherwise bad packets" );
 
       nrReceived = 0;
       nrBadTime = 0;
       nrBadSize = 0;
       nrBadData = 0;
-      nrBadMode = 0;
       nrBadOther = 0;
 
       hadSizeError = false;
-      hadModeError = false;
     }
 
 

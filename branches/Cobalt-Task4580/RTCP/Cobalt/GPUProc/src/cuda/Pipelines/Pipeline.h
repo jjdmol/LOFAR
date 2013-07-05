@@ -51,7 +51,7 @@ namespace LOFAR
       std::string createPTX(const std::string &srcFilename);
 
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
-      void processObservation();
+      void processObservation(OutputType outputType);
 
     protected:
       const Parset             &ps;
@@ -122,7 +122,12 @@ namespace LOFAR
       void postprocessSubbands(WorkQueue &workQueue);
 
       // send subbands to Storage
-      void writeSubband(unsigned globalSubbandIdx, struct Output &output);
+      void writeSubband(unsigned globalSubbandIdx, struct Output &output,
+                        SmartPtr<Stream> outputStream);
+
+      // create Stream to Storage
+      SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx,
+                                       OutputType outputType) const;
     };
   }
 }

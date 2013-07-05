@@ -35,8 +35,6 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         'product_type': ingredient.StringField(
             '--product-type',
             help="Data product type",
-#            optional=True,
-#            default=None
         ),
         'parset_file': ingredient.StringField(
             '--parset-file',
@@ -49,6 +47,9 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         )
     }
 
+    outputs = {
+    }
+    
     # List of valid data product types.
     valid_product_types = ["Correlated", "InstrumentModel", "SkyImage"]
 
@@ -121,11 +122,12 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             parset.adoptCollection(
                 metadata.to_parset(job.results), '%s[%d].' % (prefix, idx)
             )
-        dir_path = os.path.dirname(self.inputs['parset_file'])
-        #assure existence of containing directory
-        create_directory(dir_path)
-
-        parset.writeFile(self.inputs['parset_file'])
+        try:
+            create_directory(os.path.dirname(self.inputs['parset_file']))
+            parset.writeFile(self.inputs['parset_file'])
+        except RuntimeError, err:
+            self.logger.error("Failed to write meta-data: %s" % str(err))
+            return 1
 
         return 0
 

@@ -33,5 +33,7 @@ python_install(
   repairGlobaldb.py
   MMionosphere.py
   fitClockTEC.py
+  PosTools.py
+  read_sagecal.py
   DESTINATION lofar/expion)
 

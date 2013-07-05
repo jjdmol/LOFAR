@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include "BufferSettings.h"
+#include "BoardMode.h"
 
 #include <Common/LofarLogger.h>
 #include "SharedMemory.h"
@@ -61,26 +62,11 @@ namespace LOFAR
       sync = false;
       syncLock = 0;
 
-      switch (station.bitMode) {
-      default:
-      case 16:
-        nrBeamletsPerBoard = 61;
-        break;
-
-      case 8:
-        nrBeamletsPerBoard = 122;
-        break;
-
-      case 4:
-        nrBeamletsPerBoard = 244;
-        break;
-      }
+      nrBoards = MAX_NR_RSP_BOARDS;
+      nrAvailableRanges = 64;
 
       // 1 second buffer
       setBufferSize(1.0);
-
-      nrBoards = 4;
-      nrAvailableRanges = 64;
 
       dataKey = station.hash();
     }
@@ -95,13 +81,16 @@ namespace LOFAR
       // writes of packets. (TODO: That's not implemented,
       // because the timestamps of the packets are not
       // necessarily a multiple of 16).
-      nrSamples = static_cast<size_t>(seconds * (station.clockMHz * 1000000) / 1024) & ~0xFLL;
+      //
+      // We use 200 MHz clock as a reference.
+      const BoardMode mode(16, 200);
+      nrSamples = mode.secondsToSamples(seconds) & ~0xFLL;
     }
 
 
     std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s )
     {
-      str << s.station << " beamlets: " << (s.nrBoards * s.nrBeamletsPerBoard) << " buffer: " << (1.0 * s.nrSamples / s.station.clockMHz / 1000000 * 1024) << "s";
+      str << s.station << " boards: " << s.nrBoards << " buffer: " << s.nrSamples << " samples";
 
       if (s.sync) {
         str << " [r/w sync]";
