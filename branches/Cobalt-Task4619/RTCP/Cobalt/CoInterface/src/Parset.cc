@@ -176,6 +176,71 @@ namespace LOFAR
     }
 
 
+    vector<string> ObservationSettings::antennaFields(const vector<string> &stations, const string &antennaSet) {
+      vector<string> result;
+
+      for (vector<string>::const_iterator i = stations.begin(); i != stations.end(); ++i) {
+        const string &station = *i;
+
+        bool coreStation = station.substr(0,2) == "CS";
+
+        if (station.length() != 5) {
+          // Backward compatibility: the key
+          // Observation.VirtualInstrument.stationList can contain full
+          // antennafield names such as CS001LBA.
+          LOG_WARN_STR("Warning: old (preparsed) station name: " << station);
+          result.push_back(station);
+          continue;
+        }
+
+        if (antennaSet == "LBA" /* used for debugging */
+         || antennaSet == "LBA_INNER"
+         || antennaSet == "LBA_OUTER"
+         || antennaSet == "LBA_X"
+         || antennaSet == "LBA_Y"
+         || antennaSet == "LBA_SPARSE_EVEN"
+         || antennaSet == "LBA_SPARSE_ODD") {
+
+          result.push_back(str(format("%sLBA") % station));
+
+        } else if (
+            antennaSet == "HBA" /* used for debugging */
+         || antennaSet == "HBA_JOINED"
+         || antennaSet == "HBA_JOINED_INNER") {
+
+          result.push_back(str(format("%sHBA") % station));
+
+        } else if (
+            antennaSet == "HBA_ZERO"
+         || antennaSet == "HBA_ZERO_INNER") {
+
+          result.push_back(str(format("%s%s") % station % (coreStation ? "HBA0" : "HBA")));
+
+        } else if (
+            antennaSet == "HBA_ONE"
+         || antennaSet == "HBA_ONE_INNER") {
+
+          result.push_back(str(format("%s%s") % station % (coreStation ? "HBA1" : "HBA")));
+
+        } else if (
+            antennaSet == "HBA_DUAL"
+         || antennaSet == "HBA_DUAL_INNER") {
+
+          if (coreStation) {
+            result.push_back(str(format("%sHBA0") % station));
+            result.push_back(str(format("%sHBA1") % station));
+          } else {
+            result.push_back(str(format("%sHBA") % station));
+          }
+        } else {
+          THROW(CoInterfaceException, "Unknown antennaSet: " << antennaSet);
+        }
+      }
+
+      return result;
+    }
+
+
     struct ObservationSettings Parset::observationSettings() const
     {
       struct ObservationSettings settings;
@@ -216,7 +281,10 @@ namespace LOFAR
       settings.antennaSet     = getString("Observation.antennaSet", "LBA");
       settings.bandFilter     = getString("Observation.bandFilter", "LBA_30_70");
 
-      vector<string> stationNames = getStringVector("OLAP.storageStationNames", emptyVectorString, true);
+      vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
+
+      vector<string> stationNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
+
       size_t nrStations = stationNames.size();
 
       settings.stations.resize(nrStations);
