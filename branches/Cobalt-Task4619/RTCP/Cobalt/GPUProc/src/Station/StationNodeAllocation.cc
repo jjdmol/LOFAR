@@ -7,7 +7,6 @@
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
-#include <Common/SystemUtil.h>
 #include <CoInterface/Stream.h>
 
 #include <InputProc/RSPTimeStamp.h>
@@ -23,10 +22,11 @@ namespace LOFAR
   namespace Cobalt
   {
 
-StationNodeAllocation::StationNodeAllocation( const StationID &stationID, const Parset &parset )
+StationNodeAllocation::StationNodeAllocation( const StationID &stationID, const Parset &parset, const std::string &myHostname )
 :
   stationID(stationID),
-  parset(parset)
+  parset(parset),
+  myHostname(myHostname)
 {
 }
 
@@ -73,9 +73,7 @@ bool StationNodeAllocation::receivedHere() const
     return false;
   } else {
     // If the value is not '*', it must match our (short) host name
-    const string hostName = myHostname(false);
-
-    return stationNode == hostName;
+    return stationNode == myHostname;
   }
 }
 

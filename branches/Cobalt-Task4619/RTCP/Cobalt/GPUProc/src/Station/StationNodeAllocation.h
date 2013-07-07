@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 
+#include <Common/SystemUtil.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <Stream/Stream.h>
@@ -38,7 +39,7 @@ namespace LOFAR
     class StationNodeAllocation
     {
     public:
-      StationNodeAllocation( const StationID &stationID, const Parset &parset );
+      StationNodeAllocation( const StationID &stationID, const Parset &parset, const std::string &myHostname = LOFAR::myHostname(false) );
 
       // Returns whether data for this station is received on this node
       bool receivedHere() const;
@@ -49,6 +50,7 @@ namespace LOFAR
     private:
       const StationID stationID;
       const Parset &parset;
+      const std::string myHostname;
     };
   } // namespace Cobalt
 } // namespace LOFAR
