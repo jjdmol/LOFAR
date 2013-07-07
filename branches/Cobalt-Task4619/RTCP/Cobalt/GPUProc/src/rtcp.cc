@@ -28,7 +28,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <iostream>
-#include <map>
 #include <vector>
 #include <string>
 #include <omp.h>
@@ -63,55 +62,31 @@ using boost::format;
 
 void usage(char **argv)
 {
-  cerr << "usage: " << argv[0] << " parset" << " [-t correlator|beam|UHEP] [-p]" << endl;
+  cerr << "usage: " << argv[0] << " parset" << " [-p]" << endl;
   cerr << endl;
-  cerr << "  -t: select pipeline type" << endl;
   cerr << "  -p: enable profiling" << endl;
 }
 
-enum SELECTPIPELINE { correlator, beam, UHEP,unittest};
-
-// Converts the input argument from string to a valid 'function' name
-SELECTPIPELINE to_select_pipeline(char *argument)
+void runPipeline(const Parset &ps, const vector<size_t> subbands)
 {
-  if (!strcmp(argument,"correlator"))
-    return correlator;
+  bool correlatorEnabled = ps.settings.correlator.enabled;
+  bool beamFormerEnabled = ps.settings.beamFormer.enabled;
 
-  if (!strcmp(argument,"beam"))
-    return beam;
+  if (correlatorEnabled && beamFormerEnabled) {
+    LOG_ERROR_STR("Commensal observations (correlator+beamformer) not supported yet.");
+    exit(1);
+  }
 
-  if (!strcmp(argument,"UHEP"))
-    return UHEP;
-
-  cout << "incorrect third argument supplied." << endl;
-  exit(1);
-}
-
-void runPipeline(SELECTPIPELINE pipeline, const Parset &ps, const vector<size_t> subbands)
-{
   LOG_INFO_STR("Processing subbands " << subbands);
 
-  // use a switch to select between modes
-  switch (pipeline)
-  {
-  case correlator:
+  if (correlatorEnabled) {
     LOG_INFO_STR("Correlator pipeline selected");
     CorrelatorPipeline(ps, subbands).processObservation(CORRELATED_DATA);
-    break;
-
-  case beam:
+  } else if (beamFormerEnabled) {
     LOG_INFO_STR("BeamFormer pipeline selected");
     BeamFormerPipeline(ps, subbands).processObservation(BEAM_FORMED_DATA);
-    break;
-
-  case UHEP:
-    LOG_INFO_STR("UHEP pipeline selected");
-    //UHEP_Pipeline(ps).doWork();
-    break;
-
-  default:
-    LOG_WARN_STR("No pipeline selected, do nothing");
-    break;
+  } else {
+    LOG_FATAL_STR("No pipeline selected, do nothing");
   }
 }
 
@@ -166,16 +141,10 @@ int main(int argc, char **argv)
   LOG_WARN_STR("Running without MPI!");
 #endif
 
-  SELECTPIPELINE option = correlator;
-  int opt;
-
   // parse all command-line options
-  while ((opt = getopt(argc, argv, "t:p")) != -1) {
+  int opt;
+  while ((opt = getopt(argc, argv, "p")) != -1) {
     switch (opt) {
-    case 't':
-      option = to_select_pipeline(optarg);
-      break;
-
     case 'p':
       profiling = true;
       break;
@@ -232,7 +201,7 @@ int main(int argc, char **argv)
     {
       // Process station data
       if (!subbandDistribution[rank].empty()) {
-        runPipeline(option, ps, subbandDistribution[rank]);
+        runPipeline(ps, subbandDistribution[rank]);
       }
     }
   }
