@@ -47,8 +47,7 @@ bool StationNodeAllocation::receivedHere() const
    * index (modulo the number of MPI ranks), creating a
    * round-robin distribution.
    */
-  const string stationName = str(format("%s%s") % stationID.stationName % stationID.antennaField);
-  const string stationNode = parset.getString(str(format("PIC.Core.Station.%s.RSP.host") % stationName), "*");
+  const string stationNode = parset.getString(str(format("PIC.Core.Station.%s.RSP.host") % stationID.name()), "*");
 
   if (stationNode == "*") {
     // Let MPI rank (if any) determine whether we receive this station
@@ -62,7 +61,7 @@ bool StationNodeAllocation::receivedHere() const
 
     // Determine station index
     for (size_t i = 0; i < parset.settings.stations.size(); ++i) {
-      if (parset.settings.stations[i].name == stationName) {
+      if (parset.settings.stations[i].name == stationID.name()) {
         // We distribute the stations over the MPI nodes
         // in a round-robin fashion.
         return static_cast<int>(i) % size == rank;
@@ -79,7 +78,7 @@ bool StationNodeAllocation::receivedHere() const
 
 std::vector< SmartPtr<Stream> > StationNodeAllocation::inputStreams() const
 {
-  vector<string> inputStreamDescs = parset.getStringVector(str(format("PIC.Core.Station.%s%s.RSP.ports") % stationID.stationName % stationID.antennaField), true);
+  vector<string> inputStreamDescs = parset.getStringVector(str(format("PIC.Core.Station.%s.RSP.ports") % stationID.name()), true);
   vector< SmartPtr<Stream> > inputStreams(inputStreamDescs.size());
 
   for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
