@@ -35,26 +35,17 @@
 
 #ifdef HAVE_MPI
 #include <mpi.h>
-#include <InputProc/Transpose/MPISendStation.h>
-#else
-#include <GPUProc/DirectInput.h>
 #endif
 
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
-#include <Common/Thread/Semaphore.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 
 #include <InputProc/OMPThread.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/StationID.h>
-#include <InputProc/Buffer/BufferSettings.h>
-#include <InputProc/Buffer/BlockReader.h>
-#include <InputProc/Buffer/SampleBuffer.h>
-#include <InputProc/Station/PacketsToBuffer.h>
-#include <InputProc/Delays/Delays.h>
 
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
@@ -63,6 +54,7 @@
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 #include "StationNodeAllocation.h"
+#include "StationInput.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -75,238 +67,6 @@ void usage(char **argv)
   cerr << endl;
   cerr << "  -t: select pipeline type" << endl;
   cerr << "  -p: enable profiling" << endl;
-}
-
-// Rank in MPI set of hosts, or 0 if no MPI is used
-int rank = 0;
-
-// Number of MPI hosts, or 1 if no MPI is used
-int nrHosts = 1;
-
-// Which MPI rank receives which subbands.
-map<int, vector<size_t> > subbandDistribution; // rank -> [subbands]
-
-void receiveStation(const Parset &ps, const struct StationID &stationID, Semaphore &stopSignal)
-{
-  // settings for the circular buffer
-  struct BufferSettings settings(stationID, false);
-  settings.setBufferSize(2.0);
-
-  // Remove lingering buffers
-  removeSampleBuffers(settings);
-
-  // fetch input streams
-  StationNodeAllocation allocation(stationID, ps);
-  vector< SmartPtr<Stream> > inputStreams(allocation.inputStreams());
-
-  settings.nrBoards = inputStreams.size();
-
-  // Force buffer reader/writer syncing if observation is non-real time
-  SyncLock syncLock(settings);
-  if (!ps.realTime()) {
-    settings.sync = true;
-    settings.syncLock = &syncLock;
-  }
-
-  // Set up the circular buffer
-  MultiPacketsToBuffer station(settings, inputStreams);
-
-  #pragma omp parallel sections
-  {
-    // Start a circular buffer
-    #pragma omp section
-    {
-      LOG_INFO_STR("Starting circular buffer");
-      station.process();
-    }
-
-    // Wait for parent to stop us (for cases that do not
-    // trigger EOF in the inputStreams, such as reading from
-    // UDP).
-    #pragma omp section
-    {
-      stopSignal.down();
-      station.stop();
-    }
-  }
-}
-
-// An MPI send process, sending data for one station.
-template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
-{
-  /*
-   * Construct our stationID.
-   */
-
-  // fetch station name (e.g. CS001HBA0)
-  const string fullFieldName = ps.settings.stations[stationIdx].name;
-
-  // split into station name and antenna field name
-  const string stationName = fullFieldName.substr(0,5); // CS001
-  const string fieldName   = fullFieldName.substr(5);   // HBA0
-
-  const struct StationID stationID(stationName, fieldName);
-
-  StationNodeAllocation allocation(stationID, ps);
-
-  if (!allocation.receivedHere()) {
-    // Station is not sending from this node
-    return;
-  }
-
-  LOG_INFO_STR("Processing data from station " << stationID);
-
-  Semaphore stopSignal;
-
-  /*
-   * Stream the data.
-   */
-  #pragma omp parallel sections
-  {
-    // Start a circular buffer
-    #pragma omp section
-    { 
-      receiveStation(ps, stationID, stopSignal);
-    }
-
-    // Send data to receivers
-    #pragma omp section
-    {
-      // Fetch buffer settings from SHM.
-      const struct BufferSettings settings(stationID, true);
-      const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
-
-      LOG_INFO_STR("Detected " << settings);
-
-      /*
-       * Set up circular buffer data reader.
-       */
-      vector<size_t> beamlets(ps.nrSubbands());
-      for( size_t i = 0; i < beamlets.size(); ++i) {
-        // Determine the beamlet number of subband i for THIS station
-        unsigned board = ps.settings.stations[stationIdx].rspBoardMap[i];
-        unsigned slot  = ps.settings.stations[stationIdx].rspSlotMap[i];
-
-        unsigned beamlet = board * mode.nrBeamletsPerBoard() + slot;
-
-        beamlets[i] = beamlet;
-      }
-
-      BlockReader<SampleT> reader(settings, mode, beamlets, ps.nrHistorySamples(), 0.25);
-
-      const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
-      const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
-
-      LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
-
-
-#ifdef HAVE_MPI
-      /*
-       * Set up the MPI send engine.
-       */
-      MPISendStation sender(settings, stationIdx, subbandDistribution);
-#endif
-
-      /*
-       * Set up delay compensation.
-       */
-      Delays delays(ps, stationIdx, from, ps.nrSamplesPerSubband());
-      delays.start();
-
-      // We keep track of the delays at the beginning and end of each block.
-      // After each block, we'll swap the afterEnd delays into atBegin.
-      Delays::AllDelays delaySet1(ps), delaySet2(ps);
-      Delays::AllDelays *delaysAtBegin  = &delaySet1;
-      Delays::AllDelays *delaysAfterEnd = &delaySet2;
-
-      // Get delays at begin of first block
-      delays.getNextDelays(*delaysAtBegin);
-
-      /*
-       * Transfer all blocks.
-       */
-      LOG_INFO_STR("Sending to receivers");
-
-      vector<SubbandMetaData> metaDatas(ps.nrSubbands());
-      vector<ssize_t> read_offsets(ps.nrSubbands());
-
-      for (TimeStamp current = from; current + ps.nrSamplesPerSubband() < to; current += ps.nrSamplesPerSubband()) {
-        // Fetch end delays (start delays are set by the previous block, or
-        // before the loop).
-        delays.getNextDelays(*delaysAfterEnd);
-
-        // Compute the next set of metaData and read_offsets from the new
-        // delays pair.
-        delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, metaDatas, read_offsets);
-
-        //LOG_DEBUG_STR("Delays obtained");
-
-        // Read the next block from the circular buffer.
-        SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + ps.nrSamplesPerSubband(), read_offsets));
-
-        //LOG_INFO_STR("Block read");
-
-#ifdef HAVE_MPI
-        // Send the block to the receivers
-        sender.sendBlock<SampleT>(*block, metaDatas);
-#else
-        // Send the block to the stationDataQueues global object
-        for (size_t subband = 0; subband < block->beamlets.size(); ++subband) {
-          const struct Block<SampleT>::Beamlet &beamlet = block->beamlets[subband];
-
-          /* create new block */
-          SmartPtr<struct InputBlock> pblock = new InputBlock;
-
-          pblock->samples.resize((ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * sizeof(SampleT));
-
-          /* copy metadata */
-          pblock->metaData = metaDatas[subband];
-
-          /* copy data */
-          beamlet.copy(reinterpret_cast<SampleT*>(&pblock->samples[0]));
-
-          if (subband == 0) {
-            LOG_DEBUG_STR("Flags at begin: " << beamlet.flagsAtBegin);
-          }
-
-          /* obtain flags (after reading the data!) */
-          pblock->metaData.flags = beamlet.flagsAtBegin | block->flags(subband);
-
-          /* send to pipeline */
-          stationDataQueues[stationIdx][subband]->append(pblock);
-        }
-#endif
-
-        //LOG_INFO_STR("Block sent");
-
-        // Swap delay sets to accomplish delaysAtBegin = delaysAfterEnd
-        swap(delaysAtBegin, delaysAfterEnd);
-      }
-
-      /*
-       * The end.
-       */
-      stopSignal.up();
-    }
-  }
-}
-
-void sender(const Parset &ps, size_t stationIdx)
-{
-  switch (ps.nrBitsPerSample()) {
-    default:
-    case 16: 
-      sender< SampleType<i16complex> >(ps, stationIdx);
-      break;
-
-    case 8: 
-      sender< SampleType<i8complex> >(ps, stationIdx);
-      break;
-
-    case 4: 
-      sender< SampleType<i4complex> >(ps, stationIdx);
-      break;
-  }
 }
 
 enum SELECTPIPELINE { correlator, beam, UHEP,unittest};
@@ -369,14 +129,18 @@ int main(int argc, char **argv)
   // Allow OpenMP thread registration
   OMPThread::init();
 
-  using namespace LOFAR::Cobalt;
-
   // Set parts of the environment
   if (setenv("DISPLAY", ":0", 1) < 0)
   {
     perror("error setting DISPLAY");
     exit(1);
   }
+
+  // Rank in MPI set of hosts, or 0 if no MPI is used
+  int rank = 0;
+
+  // Number of MPI hosts, or 1 if no MPI is used
+  int nrHosts = 1;
 
 #ifdef HAVE_MPI
   // Initialise and query MPI
@@ -443,22 +207,15 @@ int main(int argc, char **argv)
   }
 
   // Distribute the subbands over the MPI ranks
+  SubbandDistribution subbandDistribution; // rank -> [subbands]
+
   for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
     int receiverRank = subband % nrHosts;
 
     subbandDistribution[receiverRank].push_back(subband);
   }
 
-#ifndef HAVE_MPI
-  // Create queues to forward station data
-  stationDataQueues.resize(boost::extents[ps.nrStations()][ps.nrSubbands()]);
-
-  for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-    for (size_t sb = 0; sb < ps.nrSubbands(); ++sb) {
-      stationDataQueues[stat][sb] = new BestEffortQueue< SmartPtr<struct InputBlock> >(1, ps.realTime());
-    }
-  }
-#endif
+  sendInputInit(ps);
 
   #pragma omp parallel sections
   {
@@ -467,7 +224,7 @@ int main(int argc, char **argv)
       // Read and forward station data
       #pragma omp parallel for num_threads(ps.nrStations())
       for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-        sender(ps, stat);
+        sendInputToPipeline(ps, stat, subbandDistribution);
       }
     }
 

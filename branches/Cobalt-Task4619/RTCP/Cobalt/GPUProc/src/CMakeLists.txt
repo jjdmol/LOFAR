@@ -14,6 +14,7 @@ set(_gpuproc_sources
   FilterBank.cc
   StationNodeAllocation.cc
   global_defines.cc
+  StationInput.cc
   Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
