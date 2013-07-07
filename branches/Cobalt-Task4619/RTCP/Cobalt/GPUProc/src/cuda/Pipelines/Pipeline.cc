@@ -38,7 +38,7 @@
 #ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIReceiveStations.h>
 #else
-#include <GPUProc/DirectInput.h>
+#include <GPUProc/Station/DirectInput.h>
 #endif
 
 namespace LOFAR

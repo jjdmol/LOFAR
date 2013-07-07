@@ -48,12 +48,11 @@
 
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
+#include <GPUProc/Station/StationInput.h>
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
-#include "StationNodeAllocation.h"
-#include "StationInput.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
