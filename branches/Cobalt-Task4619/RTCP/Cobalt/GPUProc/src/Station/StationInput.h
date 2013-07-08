@@ -26,28 +26,44 @@
 #include <vector>
 
 #include <Common/Thread/Semaphore.h>
+#include <Common/Singleton.h>
+#include <InputProc/Buffer/BlockReader.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/SubbandMetaData.h>
+#include <GPUProc/BestEffortQueue.h>
 
 namespace LOFAR {
   namespace Cobalt {
 
 #ifndef HAVE_MPI
-    struct InputBlock {
-      std::vector<char> samples;
-      SubbandMetaData metaData;
-    };
+    class DirectInput {
+    public:
+      // The first call should provide the parset to allow
+      // the instance to be constructed.
+      static DirectInput &instance(const Parset *ps = NULL);
 
-    extern MultiDimArray< SmartPtr< BestEffortQueue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
+      template<typename T> void sendBlock(unsigned stationIdx, const struct BlockReader<T>::LockedBlock &block, const vector<SubbandMetaData> &metaDatas);
+
+    private:
+      DirectInput(const Parset &ps);
+
+      const Parset ps;
+
+    public:
+      struct InputBlock {
+        std::vector<char> samples;
+        SubbandMetaData metaData;
+      };
+
+      MultiDimArray< SmartPtr< BestEffortQueue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
+    };
 #endif
 
-    // Which MPI rank receives which subbands.
-    typedef map<int, vector<size_t> > SubbandDistribution; // rank -> [subbands]
+    // Which MPI rank receives which subbands?
+    typedef std::map<int, std::vector<size_t> > SubbandDistribution;
 
     void receiveStation(const Parset &ps, const struct StationID &stationID, Semaphore &stopSignal);
 
-    void sendInputInit(const Parset &ps);
-
-    template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution);
     void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution);
   }
 }

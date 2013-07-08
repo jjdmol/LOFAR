@@ -183,7 +183,10 @@ int main(int argc, char **argv)
     subbandDistribution[receiverRank].push_back(subband);
   }
 
-  sendInputInit(ps);
+#ifndef HAVE_MPI
+  // Create the DirectInput instance
+  DirectInput::instance(&ps);
+#endif
 
   #pragma omp parallel sections
   {

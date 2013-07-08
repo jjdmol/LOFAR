@@ -60,10 +60,6 @@ using namespace std;
 namespace LOFAR {
   namespace Cobalt {
 
-#ifndef HAVE_MPI
-    MultiDimArray< SmartPtr< BestEffortQueue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
-#endif
-
 void receiveStation(const Parset &ps, const struct StationID &stationID, Semaphore &stopSignal)
 {
   // settings for the circular buffer
@@ -182,6 +178,8 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
        * Set up the MPI send engine.
        */
       MPISendStation sender(settings, stationIdx, subbandDistribution);
+#else
+      (void)subbandDistribution;
 #endif
 
       /*
@@ -227,31 +225,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
         // Send the block to the receivers
         sender.sendBlock<SampleT>(*block, metaDatas);
 #else
-        // Send the block to the stationDataQueues global object
-        for (size_t subband = 0; subband < block->beamlets.size(); ++subband) {
-          const struct Block<SampleT>::Beamlet &beamlet = block->beamlets[subband];
-
-          /* create new block */
-          SmartPtr<struct InputBlock> pblock = new InputBlock;
-
-          pblock->samples.resize((ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * sizeof(SampleT));
-
-          /* copy metadata */
-          pblock->metaData = metaDatas[subband];
-
-          /* copy data */
-          beamlet.copy(reinterpret_cast<SampleT*>(&pblock->samples[0]));
-
-          if (subband == 0) {
-            LOG_DEBUG_STR("Flags at begin: " << beamlet.flagsAtBegin);
-          }
-
-          /* obtain flags (after reading the data!) */
-          pblock->metaData.flags = beamlet.flagsAtBegin | block->flags(subband);
-
-          /* send to pipeline */
-          stationDataQueues[stationIdx][subband]->append(pblock);
-        }
+        DirectInput::instance().sendBlock<SampleT>(stationIdx, *block, metaDatas);
 #endif
 
         //LOG_INFO_STR("Block sent");
@@ -286,20 +260,67 @@ void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistr
   }
 }
 
-void sendInputInit(const Parset &ps) {
-#ifdef HAVE_MPI
-  (void)ps;
-#else
+#ifndef HAVE_MPI
+DirectInput &DirectInput::instance(const Parset *ps) {
+  static DirectInput *theInstance = NULL;
+
+  if (!theInstance) {
+    ASSERT(ps != NULL);
+    theInstance = new DirectInput(*ps);
+  }
+
+  return *theInstance;
+}
+
+DirectInput::DirectInput(const Parset &ps)
+:
+  ps(ps),
+  stationDataQueues(boost::extents[ps.nrStations()][ps.nrSubbands()])
+{
   // Create queues to forward station data
-  stationDataQueues.resize(boost::extents[ps.nrStations()][ps.nrSubbands()]);
 
   for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
     for (size_t sb = 0; sb < ps.nrSubbands(); ++sb) {
       stationDataQueues[stat][sb] = new BestEffortQueue< SmartPtr<struct InputBlock> >(1, ps.realTime());
     }
   }
-#endif
 }
+
+template<typename T>
+void DirectInput::sendBlock(unsigned stationIdx, const struct BlockReader<T>::LockedBlock &block, const vector<SubbandMetaData> &metaDatas)
+{
+  // Send the block to the stationDataQueues global object
+  for (size_t subband = 0; subband < block.beamlets.size(); ++subband) {
+    const struct Block<T>::Beamlet &beamlet = block.beamlets[subband];
+
+    /* create new block */
+    SmartPtr<struct InputBlock> pblock = new InputBlock;
+
+    pblock->samples.resize((ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * sizeof(T));
+
+    /* copy metadata */
+    pblock->metaData = metaDatas[subband];
+
+    /* copy data */
+    beamlet.copy(reinterpret_cast<T*>(&pblock->samples[0]));
+
+    if (subband == 0) {
+      LOG_DEBUG_STR("Flags at begin: " << beamlet.flagsAtBegin);
+    }
+
+    /* obtain flags (after reading the data!) */
+    pblock->metaData.flags = beamlet.flagsAtBegin | block.flags(subband);
+
+    /* send to pipeline */
+    stationDataQueues[stationIdx][subband]->append(pblock);
+  }
+}
+
+// Instantiate the required templates
+template void DirectInput::sendBlock< SampleType<i16complex> >(unsigned stationIdx, const struct BlockReader< SampleType<i16complex> >::LockedBlock &block, const vector<SubbandMetaData> &metaDatas);
+template void DirectInput::sendBlock< SampleType<i8complex> >(unsigned stationIdx, const struct BlockReader< SampleType<i8complex> >::LockedBlock &block, const vector<SubbandMetaData> &metaDatas);
+template void DirectInput::sendBlock< SampleType<i4complex> >(unsigned stationIdx, const struct BlockReader< SampleType<i4complex> >::LockedBlock &block, const vector<SubbandMetaData> &metaDatas);
+#endif
 
   }
 }

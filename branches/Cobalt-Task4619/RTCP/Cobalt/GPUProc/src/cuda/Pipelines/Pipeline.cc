@@ -139,7 +139,7 @@ namespace LOFAR
             blocks[stat].beamlets[inputIdx].samples = reinterpret_cast<SampleT*>(&data->inputSamples[stat][0][0][0]);
 #else
             // Read all data directly
-            SmartPtr<struct InputBlock> pblock = stationDataQueues[stat][id.globalSubbandIdx]->remove();
+            SmartPtr<struct DirectInput::InputBlock> pblock = DirectInput::instance().stationDataQueues[stat][id.globalSubbandIdx]->remove();
            
             // Copy data
             memcpy(&data->inputSamples[stat][0][0][0], &pblock->samples[0], pblock->samples.size() * sizeof(pblock->samples[0]));
