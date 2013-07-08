@@ -31,6 +31,15 @@
 namespace LOFAR {
   namespace Cobalt {
 
+#ifndef HAVE_MPI
+    struct InputBlock {
+      std::vector<char> samples;
+      SubbandMetaData metaData;
+    };
+
+    extern MultiDimArray< SmartPtr< BestEffortQueue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
+#endif
+
     // Which MPI rank receives which subbands.
     typedef map<int, vector<size_t> > SubbandDistribution; // rank -> [subbands]
 

@@ -37,8 +37,6 @@
 #ifdef HAVE_MPI
 #include <mpi.h>
 #include <InputProc/Transpose/MPISendStation.h>
-#else
-#include "DirectInput.h"
 #endif
 
 #include <Common/LofarLogger.h>
@@ -61,6 +59,10 @@ using namespace std;
 
 namespace LOFAR {
   namespace Cobalt {
+
+#ifndef HAVE_MPI
+    MultiDimArray< SmartPtr< BestEffortQueue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
+#endif
 
 void receiveStation(const Parset &ps, const struct StationID &stationID, Semaphore &stopSignal)
 {
