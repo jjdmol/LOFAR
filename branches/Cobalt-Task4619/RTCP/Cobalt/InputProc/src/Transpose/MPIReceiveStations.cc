@@ -80,7 +80,7 @@ namespace LOFAR {
 
 
     template<typename T>
-    void MPIReceiveStations::receiveBlock( std::vector< struct MPIReceiveStations::Block<T> > &blocks )
+    void MPIReceiveStations::receiveBlock( std::vector< struct ReceiveStations::Block<T> > &blocks )
     {
       ASSERT(blocks.size() == nrStations);
 
@@ -176,7 +176,7 @@ namespace LOFAR {
     // Create all necessary instantiations
 #define INSTANTIATE(T) \
     template MPI_Request MPIReceiveStations::receiveData<T>( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples ); \
-    template void MPIReceiveStations::receiveBlock<T>( std::vector< struct MPIReceiveStations::Block<T> > &blocks );
+    template void MPIReceiveStations::receiveBlock<T>( std::vector< struct ReceiveStations::Block<T> > &blocks );
 
     INSTANTIATE(SampleType<i4complex>);
     INSTANTIATE(SampleType<i8complex>);

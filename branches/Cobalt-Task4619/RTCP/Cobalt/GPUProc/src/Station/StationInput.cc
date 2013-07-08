@@ -291,7 +291,7 @@ void DirectInput::sendBlock(unsigned stationIdx, const struct BlockReader<T>::Lo
 {
   // Send the block to the stationDataQueues global object
   for (size_t subband = 0; subband < block.beamlets.size(); ++subband) {
-    const struct Block<T>::Beamlet &beamlet = block.beamlets[subband];
+    const struct Cobalt::Block<T>::Beamlet &beamlet = block.beamlets[subband];
 
     /* create new block */
     SmartPtr<struct InputBlock> pblock = new InputBlock;
@@ -320,6 +320,28 @@ void DirectInput::sendBlock(unsigned stationIdx, const struct BlockReader<T>::Lo
 template void DirectInput::sendBlock< SampleType<i16complex> >(unsigned stationIdx, const struct BlockReader< SampleType<i16complex> >::LockedBlock &block, const vector<SubbandMetaData> &metaDatas);
 template void DirectInput::sendBlock< SampleType<i8complex> >(unsigned stationIdx, const struct BlockReader< SampleType<i8complex> >::LockedBlock &block, const vector<SubbandMetaData> &metaDatas);
 template void DirectInput::sendBlock< SampleType<i4complex> >(unsigned stationIdx, const struct BlockReader< SampleType<i4complex> >::LockedBlock &block, const vector<SubbandMetaData> &metaDatas);
+
+template<typename T>
+void DirectInput::receiveBlock(std::vector<struct ReceiveStations::Block<T> > &blocks)
+{
+  for (size_t subbandIdx = 0; subbandIdx < ps.nrSubbands(); ++subbandIdx) {
+    for (size_t stationIdx = 0; stationIdx < ps.nrStations(); ++stationIdx) {
+      // Read all data directly
+      SmartPtr<struct DirectInput::InputBlock> pblock = stationDataQueues[stationIdx][subbandIdx]->remove();
+
+      // Copy data
+      memcpy(blocks[stationIdx].beamlets[subbandIdx].samples, &pblock->samples[0], pblock->samples.size() * sizeof(pblock->samples[0]));
+
+      // Copy meta data
+      blocks[stationIdx].beamlets[subbandIdx].metaData = pblock->metaData;
+    }
+  }
+}
+
+// Instantiate the required templates
+template void DirectInput::receiveBlock< SampleType<i16complex> >(std::vector<struct ReceiveStations::Block< SampleType<i16complex> > > &blocks);
+template void DirectInput::receiveBlock< SampleType<i8complex> >(std::vector<struct ReceiveStations::Block< SampleType<i8complex> > > &blocks);
+template void DirectInput::receiveBlock< SampleType<i4complex> >(std::vector<struct ReceiveStations::Block< SampleType<i4complex> > > &blocks);
 #endif
 
   }

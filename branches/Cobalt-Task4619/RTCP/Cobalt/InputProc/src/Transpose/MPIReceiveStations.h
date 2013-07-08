@@ -28,6 +28,7 @@
 #include <CoInterface/MultiDimArray.h>
 
 #include "MPIProtocol.h"
+#include "ReceiveStations.h"
 
 #include <vector>
 
@@ -39,7 +40,7 @@ namespace LOFAR
      * A Receiver class for data sent by MPISendStation. This class receives
      * blocks of beamlets from all specified stations.
      */
-    class MPIReceiveStations
+    class MPIReceiveStations: public ReceiveStations
     {
     public:
       // Set up a receiver for the given stations and beamlets, receiving
@@ -55,17 +56,6 @@ namespace LOFAR
       // blockSize:
       //   The number of samples in each block. Includes nrHistorySamples.
       MPIReceiveStations( size_t nrStations, const std::vector<size_t> &beamlets, size_t blockSize );
-
-      template<typename T>
-      struct Beamlet {
-        T *samples;
-        SubbandMetaData metaData;
-      };
-
-      template<typename T>
-      struct Block {
-        std::vector< struct Beamlet<T> > beamlets; // [beamlet]
-      };
 
       // Receive the next block. The `block' parameter is a structure allocated
       // by the caller, and needs to have dimensions

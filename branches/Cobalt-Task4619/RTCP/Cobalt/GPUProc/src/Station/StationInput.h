@@ -28,6 +28,7 @@
 #include <Common/Thread/Semaphore.h>
 #include <Common/Singleton.h>
 #include <InputProc/Buffer/BlockReader.h>
+#include <InputProc/Transpose/ReceiveStations.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SubbandMetaData.h>
 #include <GPUProc/BestEffortQueue.h>
@@ -36,7 +37,7 @@ namespace LOFAR {
   namespace Cobalt {
 
 #ifndef HAVE_MPI
-    class DirectInput {
+    class DirectInput: public ReceiveStations {
     public:
       // The first call should provide the parset to allow
       // the instance to be constructed.
@@ -44,12 +45,13 @@ namespace LOFAR {
 
       template<typename T> void sendBlock(unsigned stationIdx, const struct BlockReader<T>::LockedBlock &block, const vector<SubbandMetaData> &metaDatas);
 
+      template<typename T> void receiveBlock(std::vector<struct ReceiveStations::Block<T> > &block);
+
     private:
       DirectInput(const Parset &ps);
 
       const Parset ps;
 
-    public:
       struct InputBlock {
         std::vector<char> samples;
         SubbandMetaData metaData;
