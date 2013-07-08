@@ -264,31 +264,102 @@ TEST(bandFilter) {
   }
 }
 
+SUITE(antennaFields) {
+  TEST(LBA) {
+    vector<string> stations, expectedFields;
+    stations.push_back("CS001");
+    expectedFields.push_back("CS001LBA");
+    stations.push_back("CS002");
+    expectedFields.push_back("CS002LBA");
+    stations.push_back("RS210");
+    expectedFields.push_back("RS210LBA");
+    stations.push_back("DE603");
+    expectedFields.push_back("DE603LBA");
+
+    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "LBA_INNER");
+
+    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+  }
+
+  TEST(HBA0) {
+    vector<string> stations, expectedFields;
+    stations.push_back("CS001");
+    expectedFields.push_back("CS001HBA0");
+    stations.push_back("CS002");
+    expectedFields.push_back("CS002HBA0");
+    stations.push_back("RS210");
+    expectedFields.push_back("RS210HBA");
+    stations.push_back("DE603");
+    expectedFields.push_back("DE603HBA");
+
+    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ZERO");
+
+    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+  }
+
+  TEST(HBA1) {
+    vector<string> stations, expectedFields;
+    stations.push_back("CS001");
+    expectedFields.push_back("CS001HBA1");
+    stations.push_back("CS002");
+    expectedFields.push_back("CS002HBA1");
+    stations.push_back("RS210");
+    expectedFields.push_back("RS210HBA");
+    stations.push_back("DE603");
+    expectedFields.push_back("DE603HBA");
+
+    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ONE");
+
+    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+  }
+
+  TEST(HBA_DUAL) {
+    vector<string> stations, expectedFields;
+    stations.push_back("CS001");
+    expectedFields.push_back("CS001HBA0");
+    expectedFields.push_back("CS001HBA1");
+    stations.push_back("CS002");
+    expectedFields.push_back("CS002HBA0");
+    expectedFields.push_back("CS002HBA1");
+    stations.push_back("RS210");
+    expectedFields.push_back("RS210HBA");
+    stations.push_back("DE603");
+    expectedFields.push_back("DE603HBA");
+
+    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_DUAL");
+
+    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+  }
+
+  TEST(HBA_JOINED) {
+    vector<string> stations, expectedFields;
+    stations.push_back("CS001");
+    expectedFields.push_back("CS001HBA");
+    stations.push_back("CS002");
+    expectedFields.push_back("CS002HBA");
+    stations.push_back("RS210");
+    expectedFields.push_back("RS210HBA");
+    stations.push_back("DE603");
+    expectedFields.push_back("DE603HBA");
+
+    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_JOINED");
+
+    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+  }
+}
+
 SUITE(stations) {
-  TEST(nr) {
-    for (size_t nrStations = 0; nrStations <= 80; ++nrStations) {
-      // set
-      MAKEPS("OLAP.storageStationNames", str(format("[%u*foo]") % nrStations));
-
-      // verify settings
-      CHECK_EQUAL(nrStations, ps.settings.stations.size());
-    }
-  }
-
-  TEST(name) {
-    // set
-    MAKEPS("OLAP.storageStationNames", "[CS001LBA, CS002LBA]");
-
-    // verify settings
-    CHECK_EQUAL("CS001LBA", ps.settings.stations[0].name);
-    CHECK_EQUAL("CS002LBA", ps.settings.stations[1].name);
-  }
-
   TEST(phaseCenter) {
     Parset ps;
 
     // set
-    ps.add("OLAP.storageStationNames", "[CS001LBA]");
+    ps.add("Observation.VirtualInstrument.stationList", "[CS001]");
+    ps.add("Observation.antennaSet", "LBA_INNER");
     ps.add("PIC.Core.CS001LBA.phaseCenter", "[1.0, 2.0, 3.0]");
     ps.updateSettings();
 
@@ -303,7 +374,8 @@ SUITE(stations) {
     Parset ps;
 
     // add a station and default board/slot lists
-    ps.add("OLAP.storageStationNames", "[CS001LBA]");
+    ps.add("Observation.VirtualInstrument.stationList", "[CS001]");
+    ps.add("Observation.antennaSet", "LBA_INNER");
     ps.add("Observation.rspBoardList", "[1]");
     ps.add("Observation.rspSlotList",  "[2]");
     ps.updateSettings();
@@ -320,7 +392,8 @@ SUITE(stations) {
     Parset ps;
 
     // add a station and station-specific board/slot lists
-    ps.add("OLAP.storageStationNames", "[CS001LBA]");
+    ps.add("Observation.VirtualInstrument.stationList", "[CS001]");
+    ps.add("Observation.antennaSet", "LBA_INNER");
     ps.add("Observation.Dataslots.CS001LBA.RSPBoardList", "[1]");
     ps.add("Observation.Dataslots.CS001LBA.DataslotList", "[2]");
     ps.updateSettings();
@@ -406,29 +479,13 @@ SUITE(anaBeam) {
 }
 
 SUITE(subbands) {
-  TEST(beamList_mandatory) {
-    Parset ps;
-
-    // add subbandList
-    ps.add("Observation.subbandList", "[0]");
-
-    // without beamList, this should throw
-    CHECK_THROW(ps.updateSettings(), CoInterfaceException);
-
-    // add beamList
-    ps.add("Observation.beamList", "[0]");
-
-    // should be OK now
-    ps.updateSettings();
-  }
-
   TEST(nr) {
     for (size_t nrSubbands = 0; nrSubbands < 244; ++nrSubbands) {
       Parset ps;
 
       // add subbands
-      ps.add("Observation.subbandList", str(format("[%u*42]") % nrSubbands));
-      ps.add("Observation.beamList",    str(format("[%u*0]") % nrSubbands));
+      ps.add("Observation.nrBeams", "1");
+      ps.add("Observation.Beam[0].subbandList", str(format("[%u*42]") % nrSubbands));
       ps.updateSettings();
 
       // verify settings
@@ -440,8 +497,8 @@ SUITE(subbands) {
     Parset ps;
 
     // set
-    ps.add("Observation.subbandList", "[42]");
-    ps.add("Observation.beamList",    "[0]");
+    ps.add("Observation.nrBeams", "1");
+    ps.add("Observation.Beam[0].subbandList", "[42]");
     ps.updateSettings();
 
     // verify settings
@@ -453,8 +510,8 @@ SUITE(subbands) {
     Parset ps;
 
     // set -- note: for now, omitting actual SAP specifications is allowed
-    ps.add("Observation.subbandList", "[1]");
-    ps.add("Observation.beamList",    "[1]");
+    ps.add("Observation.nrBeams", "2");
+    ps.add("Observation.Beam[1].subbandList", "[1]");
     ps.updateSettings();
 
     // verify settings
@@ -481,13 +538,22 @@ SUITE(subbands) {
         // set
         ps.add("Observation.sampleClock", str(format("%u") % clock));
         ps.add("Observation.bandFilter",  bandFilters[nyquistZone]);
-        ps.add("Observation.subbandList", "[0..511]");
-        ps.add("Observation.beamList",    "[512*0]");
+        ps.add("Observation.nrBeams",     "1");
+        ps.add("Observation.Beam[0].subbandList", "[0..511]");
         ps.updateSettings();
 
         // verify settings
         for (unsigned sb = 0; sb < 512; ++sb) {
           CHECK_CLOSE(ps.settings.subbandWidth() * (512 * (nyquistZone - 1) + sb), ps.settings.subbands[sb].centralFrequency, 0.001);
+        }
+
+        // override
+        ps.add("Observation.Beam[0].frequencyList", "[1..512]");
+        ps.updateSettings();
+
+        // verify settings
+        for (unsigned sb = 0; sb < 512; ++sb) {
+          CHECK_CLOSE(sb + 1.0, ps.settings.subbands[sb].centralFrequency, 0.001);
         }
       }
     }
@@ -573,8 +639,8 @@ SUITE(correlator) {
       
       // set
       ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.add("Observation.subbandList", "[0]");
-      ps.add("Observation.beamList",    "[0]");
+      ps.add("Observation.nrBeams",             "1");
+      ps.add("Observation.Beam[0].subbandList", "[0]");
       ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
 
       // forget filenames == throw
@@ -592,8 +658,8 @@ SUITE(correlator) {
       
       // set
       ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.add("Observation.subbandList", "[0]");
-      ps.add("Observation.beamList",    "[0]");
+      ps.add("Observation.nrBeams",             "1");
+      ps.add("Observation.Beam[0].subbandList", "[0]");
       ps.add("Observation.DataProducts.Output_Correlated.filenames", "[SB000.MS]");
 
       // forget locations == throw
@@ -622,8 +688,8 @@ SUITE(correlator) {
 
         // set
         ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-        ps.add("Observation.subbandList", str(format("[%u*42]") % nrSubbands));
-        ps.add("Observation.beamList",    str(format("[%u*0]") % nrSubbands));
+        ps.add("Observation.nrBeams", "1");
+        ps.add("Observation.Beam[0].subbandList", str(format("[%u*42]") % nrSubbands));
         ps.add("Observation.DataProducts.Output_Correlated.filenames", str(format("[%u*SBxxx.MS]") % nrSubbands));
         ps.add("Observation.DataProducts.Output_Correlated.locations", str(format("[%u*localhost:.]") % nrSubbands));
         ps.updateSettings();
@@ -638,8 +704,8 @@ SUITE(correlator) {
 
       // set
       ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.add("Observation.subbandList", "[0]");
-      ps.add("Observation.beamList",    "[0]");
+      ps.add("Observation.nrBeams", "1");
+      ps.add("Observation.Beam[0].subbandList", "[0]");
       ps.add("Observation.DataProducts.Output_Correlated.filenames", "[SB000.MS]");
       ps.add("Observation.DataProducts.Output_Correlated.locations", "[host:/dir]");
       ps.updateSettings();

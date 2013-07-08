@@ -37,6 +37,10 @@ namespace LOFAR
 
       StationID( const std::string &stationName = "", const std::string &antennaField = "" );
 
+      // The full ('storage') name of the station, f.e.
+      // CS001HBA0.
+      std::string name() const;
+
       bool operator==(const struct StationID &other) const;
       bool operator!=(const struct StationID &other) const;
 

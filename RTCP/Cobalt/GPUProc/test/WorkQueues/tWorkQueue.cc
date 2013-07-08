@@ -51,7 +51,8 @@ TEST(convertFlagsToChannelFlags)
   parset.add("OLAP.IONProc.integrationSteps", "1");  
   parset.add("OLAP.CNProc.integrationSteps", "256");   //samples per channel 
   
-  parset.add("OLAP.storageStationNames", "[RS106HBA, RS105HBA]"); // Number of names here sets the number of stations.
+  parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
+  parset.add("Observation.antennaSet", "HBA_ZERO");
   parset.updateSettings();
   
   // Input flags: an array of sparseset

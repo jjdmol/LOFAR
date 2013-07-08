@@ -82,10 +82,12 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   const size_t from_offset = buffer.offset(begin);
   size_t to_offset = buffer.offset(end);
 
-  if (to_offset == 0)
-    to_offset = settings.nrSamples;
+  const size_t bufferSize = settings.nrSamples(T::bitMode());
 
-  const size_t wrap = from_offset < to_offset ? 0 : settings.nrSamples - from_offset;
+  if (to_offset == 0)
+    to_offset = bufferSize;
+
+  const size_t wrap = from_offset < to_offset ? 0 : bufferSize - from_offset;
 
   /*
    * Make sure the buffer and available ranges are always consistent.

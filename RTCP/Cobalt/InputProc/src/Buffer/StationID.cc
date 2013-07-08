@@ -24,7 +24,10 @@
 
 #include <cstring>
 #include <cstdio>
+#include <boost/format.hpp>
 #include <Common/LofarLogger.h>
+
+using boost::format;
 
 #ifndef HAVE_STRNLEN
 static size_t strnlen( const char *s, size_t maxlen )
@@ -51,6 +54,11 @@ namespace LOFAR
 
       snprintf(this->stationName, sizeof this->stationName, "%s", stationName.c_str());
       snprintf(this->antennaField, sizeof this->antennaField, "%s", antennaField.c_str());
+    }
+
+    std::string StationID::name() const
+    {
+      return str(format("%s%s") % stationName % antennaField);
     }
 
     bool StationID::operator==(const struct StationID &other) const

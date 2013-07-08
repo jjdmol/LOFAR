@@ -41,7 +41,8 @@ TEST(propagateFlags)
   parset.add("OLAP.IONProc.integrationSteps", "1");  
   parset.add("OLAP.CNProc.integrationSteps", "1024");   //samples per channel 
   
-  parset.add("OLAP.storageStationNames", "[RS102HBA, RS103HBA, RS104HBA, RS105HBA]"); // Number of names here sets the number of stations.
+  parset.add("Observation.VirtualInstrument.stationList", "[RS102, RS103, RS104, RS105]"); // Number of names here sets the number of stations.
+  parset.add("Observation.antennaSet", "HBA_ZERO");
   parset.updateSettings();
   unsigned number_of_baselines = (parset.nrStations() * 1.0 * (parset.nrStations() + 1)) / 2;
 
@@ -143,7 +144,8 @@ TEST(calcWeights4Channels)
   parset.add("OLAP.IONProc.integrationSteps", "1");  // both are needed?
   parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
   
-  parset.add("OLAP.storageStationNames", "[RS106HBA, RS107HBA]"); // Number of names here sets the number of stations.
+  parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
+  parset.add("Observation.antennaSet", "HBA_ZERO");
   parset.updateSettings();
 
   // Input flags: an array of sparseset
@@ -183,7 +185,8 @@ TEST(calcWeights1Channels)
   parset.add("OLAP.IONProc.integrationSteps", "1");  // both are needed?
   parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
   
-  parset.add("OLAP.storageStationNames", "[RS106HBA, RS107HBA]"); // Number of names here sets the number of stations.
+  parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
+  parset.add("Observation.antennaSet", "HBA_ZERO");
   parset.updateSettings();
   // Input flags: an array of sparseset
   MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChanel(
@@ -216,7 +219,8 @@ TEST(applyWeights)
   parset.add("OLAP.IONProc.integrationSteps", "1");  // both are needed?
   parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
   
-  parset.add("OLAP.storageStationNames", "[RS106HBA, RS107HBA]"); // Number of names here sets the number of stations.
+  parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
+  parset.add("Observation.antennaSet", "HBA_ZERO");
   parset.updateSettings();
   // Create correlated data object
   CorrelatedData output(parset.nrStations(), 
@@ -265,7 +269,8 @@ TEST(applyWeight)
   parset.add("OLAP.IONProc.integrationSteps", "1");  // both are needed?
   parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
   
-  parset.add("OLAP.storageStationNames", "[RS106HBA, RS107HBA]"); // Number of names here sets the number of stations.
+  parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
+  parset.add("Observation.antennaSet", "HBA_ZERO");
   parset.updateSettings();
    // Output object
   CorrelatedData output(parset.nrStations(), 

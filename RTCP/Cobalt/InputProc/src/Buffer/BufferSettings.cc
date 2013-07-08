@@ -84,13 +84,14 @@ namespace LOFAR
       //
       // We use 200 MHz clock as a reference.
       const BoardMode mode(16, 200);
-      nrSamples = mode.secondsToSamples(seconds) & ~0xFLL;
+      nrSamples_16bit = mode.secondsToSamples(seconds) & ~0xFLL;
     }
 
 
     std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s )
     {
-      str << s.station << " boards: " << s.nrBoards << " buffer: " << s.nrSamples << " samples";
+      const BoardMode mode(16, 200);
+      str << s.station << " boards: " << s.nrBoards << " buffer: " << (1.0 * s.nrSamples_16bit * 1024/mode.clockHz()) << " sec";
 
       if (s.sync) {
         str << " [r/w sync]";
