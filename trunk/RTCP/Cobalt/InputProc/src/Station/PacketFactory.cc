@@ -30,9 +30,8 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    PacketFactory::PacketFactory( const BufferSettings &settings, const struct BoardMode &mode )
+    PacketFactory::PacketFactory( const struct BoardMode &mode )
       :
-      settings(settings),
       mode(mode)
     {
     }

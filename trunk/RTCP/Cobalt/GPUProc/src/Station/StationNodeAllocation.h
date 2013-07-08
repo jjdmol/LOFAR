@@ -1,5 +1,5 @@
-//# DirectInput.cc: Functionality to handle station input being fed directly to
-//#                 Pipeline objects, without needing MPI.
+//# StationNodeAllocation.h: Manages which stations are received on which
+//#                          node.
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -19,14 +19,41 @@
 //#
 //# $Id$
 
-#include <lofar_config.h>
-#include "DirectInput.h"
+#ifndef LOFAR_GPUPROC_STATION_NODE_ALLOCATION_H
+#define LOFAR_GPUPROC_STATION_NODE_ALLOCATION_H
+
+#include <string>
+#include <vector>
+
+#include <Common/SystemUtil.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
+#include <Stream/Stream.h>
+#include <InputProc/Buffer/StationID.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    MultiDimArray< SmartPtr< BestEffortQueue< SmartPtr<struct InputBlock> > >, 2> stationDataQueues; // [stationIdx][globalSubbandIdx]
+
+    class StationNodeAllocation
+    {
+    public:
+      StationNodeAllocation( const StationID &stationID, const Parset &parset, const std::string &myHostname = LOFAR::myHostname(false) );
+
+      // Returns whether data for this station is received on this node
+      bool receivedHere() const;
+
+      // Constructs and returns the input streams for this station
+      std::vector< SmartPtr<Stream> > inputStreams() const;
+
+    private:
+      const StationID stationID;
+      const Parset &parset;
+      const std::string myHostname;
+    };
   } // namespace Cobalt
 } // namespace LOFAR
+
+#endif
 

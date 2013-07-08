@@ -63,7 +63,7 @@ int main( int argc, char **argv )
   const TimeStamp from(time(0), 0, mode.clockHz());
   const TimeStamp to(0);
 
-  PacketFactory factory(settings, mode);
+  PacketFactory factory(mode);
   Generator g(settings, outputStreams, factory, from, to);
 
   // Generate packets

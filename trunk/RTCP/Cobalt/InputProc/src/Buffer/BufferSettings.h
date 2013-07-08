@@ -58,7 +58,7 @@ namespace LOFAR
       bool sync;
       SyncLock *syncLock;
 
-      size_t nrSamples;
+      size_t nrSamples_16bit;
 
       unsigned nrBoards;
       size_t nrAvailableRanges;
@@ -78,11 +78,20 @@ namespace LOFAR
       {
         return station == other.station
                && sync == other.sync
-               && nrSamples == other.nrSamples
+               && nrSamples_16bit == other.nrSamples_16bit
                && nrBoards == other.nrBoards
                && nrAvailableRanges == other.nrAvailableRanges
                && dataKey == other.dataKey;
       }
+
+      size_t nrSamples(unsigned bitMode) const {
+        (void)bitMode;
+
+        // The number of samples is invariant to the bitmode, because
+        // smaller bitmodes introduce more beamlets.
+        return nrSamples_16bit;
+      }
+
     private:
 
       // Derive sane values from the station field.

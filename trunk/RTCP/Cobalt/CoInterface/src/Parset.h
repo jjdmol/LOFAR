@@ -441,6 +441,9 @@ namespace LOFAR
       // Returns the Nyquist zone number based on bandFilter.
       unsigned nyquistZone() const;
 
+      // Constructs the station names "CS001HBA0" etc from a set of stations
+      // ("CS001","CS002") and the antenna set.
+      static std::vector<std::string> antennaFields(const std::vector<std::string> &stations, const std::string &antennaSet);
     };
 
 
