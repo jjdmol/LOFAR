@@ -22,6 +22,7 @@
 #define LOFAR_INPUT_PROC_RANGES_H
 
 #include <ostream>
+#include <iterator>
 
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
@@ -71,11 +72,8 @@ namespace LOFAR
       // Returns [first, last) as a SparseSet
       BufferSettings::flags_type sparseSet( value_type first, value_type last ) const;
 
-      // The size of a single [from,to) pair.
-      static size_t elementSize()
-      {
-        return sizeof(struct Range);
-      }
+      // Dump the raw contents to LOG_DEBUG
+      void dump() const;
 
     private:
       struct Range {
@@ -109,7 +107,7 @@ namespace LOFAR
       // the referenced value valid.
       class const_iterator: public std::iterator<std::forward_iterator_tag, const struct Range> {
       public:
-        const_iterator(pointer at, pointer const end): ptr(at), end(end) { if (at != end) cache = *at; }
+        const_iterator(pointer at, pointer const end): ptr(at), end(end) { moveToValid(); }
         const_iterator(const const_iterator &other): ptr(other.ptr), end(other.end) {}
 
         Ranges::value_type from() const { return cache.from; }
@@ -119,23 +117,25 @@ namespace LOFAR
         bool operator!=(const const_iterator &other) { return ptr != other.ptr; }
 
         const_iterator &operator++() {
-          // find the next valid entry before `end'
-          while (++ptr != end) {
-            cache = *ptr;
-
-            // skip invalid entries
-            if (from() >= to())
-              continue;
-
-            break;
-          }
-
+          ++ptr;
+          moveToValid();
           return *this;
         }
 
       private:
         // the item being referenced
         pointer ptr;
+
+        // move the pointer until it hits a valid value
+        void moveToValid() {
+          if (ptr == end)
+            return;
+
+          // find the next valid entry before `end'
+          do {
+            cache = *ptr;
+          } while(from() >= to() && ++ptr != end);
+        }
 
         // a non-volatile cache of *ptr
         struct {
@@ -159,6 +159,30 @@ namespace LOFAR
       const_iterator end() const {
         return const_iterator(_end, _end);
       }
+
+      // Return a pointer to the next entry, wrapping around
+      // from _end to _begin.
+      Range *next_rr( Range *x ) const {
+        return x + 1 == _end ? _begin : x + 1;
+      }
+
+      // Return a pointer to the previous entry, wrapping around
+      // from _begin to _end.
+      Range *prev_rr( Range *x ) const {
+        return x == _begin ? _end - 1 : x - 1;
+      }
+
+      // Remove a given entry, and create a continuous array
+      // by shifting all entries from i to head.
+      //
+      // 'head' is updated as well.
+      void remove( Range *i );
+
+      // Insert an empty range at spot i, to contain data up to
+      // 'to'. Returns whether the insertion was succesful.
+      //
+      // 'head' is updated as well.
+      bool insert_empty( Range *i, value_type to );
 
     public:
       // The size of this object for a given number of [from,to) pairs.

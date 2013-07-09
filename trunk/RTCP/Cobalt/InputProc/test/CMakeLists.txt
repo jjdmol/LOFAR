@@ -2,10 +2,10 @@
 
 include(LofarCTest)
 
-lofar_add_test(tRanges tRanges.cc)
 lofar_add_test(tSharedMemory tSharedMemory.cc)
 lofar_add_test(tSampleBuffer tSampleBuffer.cc)
 if(UNITTEST++_FOUND)
+  lofar_add_test(tRanges tRanges.cc)
   lofar_add_test(tSampleBufferSync tSampleBufferSync.cc)
 
   lofar_add_test(tDelays tDelays.cc)
