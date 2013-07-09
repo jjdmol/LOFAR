@@ -94,13 +94,71 @@ namespace LOFAR
       bool create;
       size_t len;
       Range *ranges;
-      Range *begin;
-      Range *end;
+      Range *_begin;
+      Range *_end;
       Range *head;
 
       // minimal history to maintain (samples newer than this
       // will be maintained in favour of newly added ranges)
       value_type minHistory;
+
+      // An iterator that skips invalid Range entries. We keep this private
+      // to avoid external access to our volatile members.
+      //
+      // The iterator caches the range it points to, allowing it to keep
+      // the referenced value valid.
+      class const_iterator: public std::iterator<std::forward_iterator_tag, const struct Range> {
+      public:
+        const_iterator(pointer at, pointer const end): ptr(at), end(end) { if (at != end) cache = *at; }
+        const_iterator(const const_iterator &other): ptr(other.ptr), end(other.end) {}
+
+        Ranges::value_type from() const { return cache.from; }
+        Ranges::value_type to()   const { return cache.to;   }
+
+        bool operator==(const const_iterator &other) { return ptr == other.ptr; }
+        bool operator!=(const const_iterator &other) { return ptr != other.ptr; }
+
+        const_iterator &operator++() {
+          // find the next valid entry before `end'
+          while (++ptr != end) {
+            cache = *ptr;
+
+            // skip invalid entries
+            if (from() >= to())
+              continue;
+
+            break;
+          }
+
+          return *this;
+        }
+
+      private:
+        // the item being referenced
+        pointer ptr;
+
+        // a non-volatile cache of *ptr
+        struct {
+          Ranges::value_type from, to;
+
+          void operator=(const Range &r) {
+            // read in same order as fields are written
+            from = r.from;
+            to = r.to;
+          }
+        } cache;
+
+        // a cache of the end, to prevent skipping over it
+        pointer const end;
+      };
+
+      const_iterator begin() const {
+        return const_iterator(_begin, _end);
+      }
+
+      const_iterator end() const {
+        return const_iterator(_end, _end);
+      }
 
     public:
       // The size of this object for a given number of [from,to) pairs.

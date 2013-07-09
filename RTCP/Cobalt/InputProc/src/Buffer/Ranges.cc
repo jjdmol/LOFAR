@@ -32,9 +32,8 @@ namespace LOFAR
 
     std::ostream& operator<<( std::ostream &str, const Ranges &r )
     {
-      for (struct Ranges::Range *i = r.begin; i != r.end; ++i)
-        if (i->to != 0)
-          str << "[" << i->from << ", " << i->to << ") ";
+      for (struct Ranges::const_iterator i = r.begin(); i != r.end(); ++i)
+        str << "[" << i.from() << ", " << i.to() << ") ";
 
       return str;
     }
@@ -44,9 +43,9 @@ namespace LOFAR
       create(false),
       len(0),
       ranges(0),
-      begin(0),
-      end(begin),
-      head(begin),
+      _begin(0),
+      _end(_begin),
+      head(_begin),
       minHistory(0)
     {
     }
@@ -56,9 +55,9 @@ namespace LOFAR
       create(create),
       len(numBytes / sizeof *ranges),
       ranges(create ? new(data)Range[len] : static_cast<Range*>(data)),
-      begin(&ranges[0]),
-      end(&ranges[len]),
-      head(begin),
+      _begin(&ranges[0]),
+      _end(&ranges[len]),
+      head(_begin),
       minHistory(minHistory)
     {
       ASSERT( len > 0 );
@@ -67,13 +66,13 @@ namespace LOFAR
     Ranges::~Ranges()
     {
       if (create)
-        for (struct Range *i = begin; i != end; ++i)
+        for (struct Range *i = _begin; i != _end; ++i)
           i->~Range();
     }
 
     void Ranges::clear()
     {
-      for (struct Range *i = begin; i != end; ++i) {
+      for (struct Range *i = _begin; i != _end; ++i) {
         // erase; delete 'to' first!
         i->to = 0;
         i->from = 0;
@@ -82,7 +81,7 @@ namespace LOFAR
 
     void Ranges::excludeBefore( value_type to )
     {
-      for (struct Range *i = begin; i != end; ++i) {
+      for (struct Range *i = _begin; i != _end; ++i) {
         if (i->to <= to) {
           // erase; delete 'to' first!
           i->to = 0;
@@ -116,7 +115,7 @@ namespace LOFAR
       }
 
       // new range is needed
-      struct Range * const next = head + 1 == end ? begin : head + 1;
+      struct Range * const next = head + 1 == _end ? _begin : head + 1;
 
       if (next->to == 0 || next->to < to - minHistory) {
         // range at 'next' is either unused or old enough to toss away
@@ -133,23 +132,9 @@ namespace LOFAR
 
     bool Ranges::anythingBetween( value_type first, value_type last ) const
     {
-      for(struct Range *i = begin; i != end; ++i) {
-        // read in same order as writes occur
-        value_type from = i->from;
-        value_type to = i->to;
-
-        if (to == 0) {
-          // unused
-          continue;
-        }
-
-        if (from >= to) {
-          // read/write conflict
-          continue;
-        }
-
-        from = std::max( from, first );
-        to = std::min( to, last );
+      for(const_iterator i = begin(); i != end(); ++i) {
+        value_type from = std::max( i.from(), first );
+        value_type to = std::min( i.to(), last );
 
         if (from < to)
           return true;
@@ -165,23 +150,9 @@ namespace LOFAR
       if (first >= last)
         return result;
 
-      for(struct Range *i = begin; i != end; ++i) {
-        // read in same order as writes occur
-        value_type from = i->from;
-        value_type to = i->to;
-
-        if (to == 0) {
-          // unused
-          continue;
-        }
-
-        if (from >= to) {
-          // read/write conflict
-          continue;
-        }
-
-        from = std::max( from, first );
-        to = std::min( to, last );
+      for(const_iterator i = begin(); i != end(); ++i) {
+        value_type from = std::max( i.from(), first );
+        value_type to = std::min( i.to(), last );
 
         if (from < to)
           result.include(from, to);
