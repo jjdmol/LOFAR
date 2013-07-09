@@ -21,78 +21,221 @@
 #include <lofar_config.h>
 
 #include <vector>
+#include <sstream>
 
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 
 #include <InputProc/Buffer/Ranges.h>
+#include <UnitTest++.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
 using namespace std;
 
-int main( int, char **argv )
-{
-  INIT_LOGGER( argv[0] );
+const size_t nrRanges = 5;
+size_t clockHz = 200 * 1000 * 1000;
+size_t history = clockHz / 1024;
+vector<char> buf(Ranges::size(nrRanges));
+Ranges r(&buf[0], buf.size(), history, true);
 
-  size_t clock = 200 * 1000 * 1000;
-  bool result;
+string toStr() {
+  ostringstream os;
+  os << r;
+  return os.str();
+}
 
-  {
-    LOG_INFO("Basic tests");
+struct Fixture {
+  Fixture() {
+    r.clear();
+  }
+};
 
-    vector<char> buf(10 * Ranges::elementSize());
-    Ranges r(&buf[0], buf.size(), clock / 1024, true);
+SUITE(Basic) {
+  TEST_FIXTURE(Fixture, Clear) {
+    r.include(10, 20);
+    r.include(25, 30);
 
-    result = r.include(10, 20);
-    ASSERT(result);
+    r.clear();
 
-    /* r == [10,20) */
+    CHECK_EQUAL("", toStr());
+  }
+}
 
-    ASSERT(r.anythingBetween(10, 20));
-    ASSERT(r.anythingBetween(0, 30));
-    ASSERT(r.anythingBetween(0, 15));
-    ASSERT(r.anythingBetween(15, 30));
-    ASSERT(!r.anythingBetween(0, 10));
-    ASSERT(!r.anythingBetween(20, 30));
+SUITE(InOrder) {
+  TEST_FIXTURE(Fixture, OneRange) {
+    bool result = r.include(10, 20);
+    CHECK(result);
 
-    result = r.include(30, 40);
-    ASSERT(result);
+    CHECK_EQUAL("[10, 20)", toStr());
+  }
 
-    /* r == [10,20) + [30,40) */
+  TEST_FIXTURE(Fixture, TwoRanges) {
+    r.include(10, 20);
+    r.include(30, 40);
 
-    BufferSettings::flags_type s(r.sparseSet(0,100));
-    ASSERT(!s.test(9));
-    ASSERT(s.test(10));
-    ASSERT(s.test(11));
-    ASSERT(s.test(19));
-    ASSERT(!s.test(20));
-    ASSERT(!s.test(29));
-    ASSERT(s.test(30));
-    ASSERT(s.test(31));
-    ASSERT(s.test(39));
-    ASSERT(!s.test(40));
+    CHECK_EQUAL("[10, 20) [30, 40)", toStr());
+  }
 
-    BufferSettings::flags_type s2(r.sparseSet(15,35));
-    ASSERT(!s2.test(14));
-    ASSERT(s2.test(15));
-    ASSERT(s2.test(19));
-    ASSERT(!s2.test(20));
-    ASSERT(!s2.test(29));
-    ASSERT(s2.test(30));
-    ASSERT(s2.test(31));
-    ASSERT(!s2.test(35));
+  TEST_FIXTURE(Fixture, TooManyRanges) {
+    bool result;
+
+    result = r.include( 10,  20);
+    CHECK(result);
+    result = r.include( 30,  40);
+    CHECK(result);
+    result = r.include( 50,  60);
+    CHECK(result);
+    result = r.include( 70,  80);
+    CHECK(result);
+    result = r.include( 90, 100);
+    CHECK(result);
+    result = r.include(110, 120);
+    CHECK(!result);
+
+    // we can insert once the buffer's content
+    // is ancient history
+    result = r.include(20 + history, 30 + history);
+    CHECK(result);
+  }
+
+  TEST_FIXTURE(Fixture, Append) {
+    r.include(10, 20);
+    r.include(30, 40);
+    r.include(40, 50);
+
+    CHECK_EQUAL("[10, 20) [30, 50)", toStr());
+  }
+
+  TEST_FIXTURE(Fixture, ExcludeBefore) {
+    r.include(10, 20);
+    r.include(30, 50);
+    r.include(60, 70);
 
     r.excludeBefore(35);
 
-    /* r == [35,40) */
+    CHECK_EQUAL("[35, 50) [60, 70)", toStr());
 
-    ASSERT(!r.anythingBetween(0,35));
-    ASSERT(r.anythingBetween(35,40));
-    ASSERT(!r.anythingBetween(40,100));
+    r.excludeBefore(70);
+
+    CHECK_EQUAL("", toStr());
+  }
+}
+
+SUITE(OutOfOrder) {
+  TEST_FIXTURE(Fixture, PrependStart) {
+    r.include(10, 20);
+    r.include(30, 40);
+
+    r.include(5, 10);
+
+    CHECK_EQUAL("[5, 20) [30, 40)", toStr());
   }
 
+  TEST_FIXTURE(Fixture, PrependMiddle) {
+    r.include(10, 20);
+    r.include(30, 40);
 
-  return 0;
+    r.include(25, 30);
+
+    CHECK_EQUAL("[10, 20) [25, 40)", toStr());
+  }
+
+  TEST_FIXTURE(Fixture, AppendMiddle) {
+    r.include(10, 20);
+    r.include(30, 40);
+
+    r.include(20, 25);
+
+    CHECK_EQUAL("[10, 25) [30, 40)", toStr());
+  }
+
+  TEST_FIXTURE(Fixture, Insert) {
+    r.include(10, 20);
+    r.include(30, 40);
+    r.include(50, 60);
+
+    r.include(25, 28);
+
+    CHECK_EQUAL("[10, 20) [25, 28) [30, 40) [50, 60)", toStr());
+  }
+
+  TEST_FIXTURE(Fixture, InsertOldDataWhenFull) {
+    r.include(10, 20);
+    r.include(30, 40);
+    r.include(50, 60);
+    r.include(70, 80);
+    r.include(90, 100);
+
+    // full, can't insert data
+    bool result = r.include(25, 28);
+    CHECK(!result);
+  }
+
+  TEST_FIXTURE(Fixture, InsertNewDataWhenFull) {
+    r.include(10, 20);
+    r.include(30, 40);
+    r.include(50 + history, 60 + history);
+    r.include(70 + history, 80 + history);
+    r.include(90 + history, 100 + history);
+
+    // full, but can insert data sufficiently new
+    bool result = r.include(25 + history, 28 + history);
+    CHECK(result);
+  }
+
+  TEST_FIXTURE(Fixture, FillHole) {
+    r.include(10, 20);
+    r.include(30, 40);
+
+    r.include(20, 30);
+
+    CHECK_EQUAL("[10, 40)", toStr());
+  }
+}
+
+SUITE(Subsets) {
+  TEST_FIXTURE(Fixture, AnythingBetween) {
+    r.include(10, 20);
+    r.include(30, 40);
+
+    // check exact boundaries
+    CHECK(!r.anythingBetween( 0, 10));
+    CHECK( r.anythingBetween(10, 20));
+    CHECK(!r.anythingBetween(20, 30));
+    CHECK( r.anythingBetween(30, 40));
+    CHECK(!r.anythingBetween(40, 50));
+
+    // check subsets
+    CHECK(!r.anythingBetween( 2,  5));
+    CHECK( r.anythingBetween(12, 15));
+    CHECK(!r.anythingBetween(22, 25));
+    CHECK( r.anythingBetween(32, 35));
+    CHECK(!r.anythingBetween(42, 45));
+  }
+
+  TEST_FIXTURE(Fixture, SparseSet) {
+    r.include(10, 20);
+    r.include(30, 40);
+    
+    BufferSettings::flags_type s = r.sparseSet(0, 100);
+
+    CHECK_EQUAL(20U, s.count());
+    CHECK(!s.test( 9));
+    CHECK( s.test(10));
+    CHECK( s.test(19));
+    CHECK(!s.test(20));
+    CHECK(!s.test(29));
+    CHECK( s.test(30));
+    CHECK( s.test(39));
+    CHECK(!s.test(40));
+  }
+}
+
+int main()
+{
+  INIT_LOGGER( "tRanges" );
+
+  return UnitTest::RunAllTests() > 0;
 }
 

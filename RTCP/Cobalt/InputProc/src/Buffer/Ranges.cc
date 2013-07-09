@@ -23,6 +23,7 @@
 #include "Ranges.h"
 
 #include <algorithm>
+#include <sstream>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -32,10 +33,26 @@ namespace LOFAR
 
     std::ostream& operator<<( std::ostream &str, const Ranges &r )
     {
-      for (struct Ranges::const_iterator i = r.begin(); i != r.end(); ++i)
-        str << "[" << i.from() << ", " << i.to() << ") ";
+      for (struct Ranges::const_iterator i = r.begin(); i != r.end(); ++i) {
+       if (i != r.begin())
+         str << " ";
+
+       str << "[" << i.from() << ", " << i.to() << ")";
+      }
 
       return str;
+    }
+
+    void Ranges::dump() const {
+      stringstream s;
+      for (struct Range *i = _begin; i != _end; ++i) {
+        if (head == i) {
+          s << "HEAD -> ";
+        }
+        s << "[" << i->from << ", " << i->to << ") ";
+      }
+
+      LOG_DEBUG_STR(s.str());
     }
 
     Ranges::Ranges()
@@ -77,6 +94,8 @@ namespace LOFAR
         i->to = 0;
         i->from = 0;
       }
+
+      head = _begin;
     }
 
     void Ranges::excludeBefore( value_type to )
@@ -96,12 +115,69 @@ namespace LOFAR
       }
     }
 
+    void Ranges::remove( Range *i )
+    {
+      if (i != head) {
+        // shift entries until `head'
+        do {
+          Range *prev = i;
+          i = next_rr(i);
+
+          // copy 'from' first to invalidate 'prev' entry
+          prev->from = i->from;
+
+          // copy 'to' to complete (and validate) 'prev' entry
+          prev->to = i->to;
+        } while (i != head);
+      }
+
+      // i == head: clear head and move head back one spot
+      i->to = 0;
+      i->from = 0;
+      head = prev_rr(i);
+    }
+
+    bool Ranges::insert_empty( Range *i, value_type to )
+    {
+      if (i->to == 0) {
+        // spot already free
+        return true;
+      }
+
+      Range *tail = next_rr(head);
+
+      if (tail->to != 0 && (to < minHistory || tail->to >= to - minHistory)) {
+        // no room
+        return false;
+      }
+
+      // shift entries from 'head' down to 'i'
+      for(Range *b = head, *next = tail; next != i; next = b, b = prev_rr(b)) {
+        // copy 'to' first to invalidate 'b' entry
+        next->to = b->to;
+
+        // copy 'from' to complete (and validate) 'b' entry
+        next->from = b->from;
+      }
+
+      // shift head as well
+      head = tail;
+
+      // clean our spot
+      i->to = 0;
+      i->from = 0;
+      return true;
+    }
+
     bool Ranges::include( value_type from, value_type to )
     {
       ASSERTSTR( from < to, from << " < " << to );
-      ASSERTSTR( from >= head->to, from << " >= " << head->to );
 
       if (head->to == 0) {
+        /*
+         * Ranges are empty, fill *head
+         */
+
         // *head is unused, set 'from' first!
         head->from = from;
         head->to = to;
@@ -109,24 +185,99 @@ namespace LOFAR
       }
 
       if (head->to == from) {
+        /*
+         * In-order arrival, next packet arrived
+         */
+
         // *head can be extended
         head->to = to;
         return true;
       }
 
-      // new range is needed
-      struct Range * const next = head + 1 == _end ? _begin : head + 1;
+      if (head->to < from) {
+        /*
+         * In-order arrival, but packet loss
+         */
 
-      if (next->to == 0 || next->to < to - minHistory) {
-        // range at 'next' is either unused or old enough to toss away
-        next->from = from;
-        next->to = to;
+        // new range is needed
+        struct Range * const next = next_rr(head);
 
-        head = next;
-        return true;
+        if (next->to == 0 || (to > minHistory && next->to < to - minHistory)) {
+          // range at 'next' is either unused or old enough to toss away
+          next->from = from;
+          next->to = to;
+
+          head = next;
+          return true;
+        }
+
+        // no room -- discard
+        return false;
       }
 
-      // no room -- discard
+      ASSERT(head->to > from);
+
+      /*
+       * Out-of-order arrival
+       */
+
+      // scan all ranges to see where we fit in
+      for (struct Range *i = _begin; i != _end; ++i) {
+        if (i->to == 0)
+          continue;
+
+        // we shouldn't fall into an already existing range,
+        // or we'd be a duplicate packet
+        ASSERT(to <= i->from || from >= i->to);
+
+        if (i->to == from) {
+          // *i can be extended
+          i->to = to;
+
+          struct Range *next = next_rr(i);
+
+          if (i->to == next->from) {
+            // merge *i and *next
+            i->to = next->to;
+            remove(next);
+          }
+
+          return true;
+        } else if (i->from == to) {
+          // *i can be extended
+          i->from = from;
+
+          struct Range *prev = prev_rr(i);
+
+          if (prev->to == i->from) {
+            // merge *prev and *i
+            prev->to = i->to;
+            remove(i);
+          }
+
+          return true;
+        }
+      }
+
+      // Out-of-order, but we need a new range!
+      for (struct Range *i = _begin; i != _end; ++i) {
+        struct Range *prev = prev_rr(i);
+
+        if (prev->to < from && to < i->from) {
+          // we fit in right here.
+
+          if (!insert_empty(i, to))
+            // couldn't free a spot
+            return false;
+
+          // insert at the new spot
+          i->to = to;
+          i->from = from;
+          return true;
+        }
+      }
+
+      // No room
       return false;
     }
 
