@@ -239,6 +239,9 @@ class IonosphericModel:
       TEC_out=[]
       stations=self.station_positions[:][self.stat_select[:]]
       for i in range(len(self.n_list)) :
+         if i%10==0:
+            sys.stdout.write(str(itm)+'...')
+            sys.stdout.flush()                
          time=self.times[i]
          piercepoints=PosTools.getPiercePoints(time,radec.reshape((1,-1)),stations,height=h)
          pp=piercepoints.positions_xyz
