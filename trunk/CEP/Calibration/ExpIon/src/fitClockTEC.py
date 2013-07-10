@@ -314,6 +314,42 @@ def getResidualPhaseWraps2(avgResiduals,freqs):
     wraps=fitting.fit(data,basef,wraps,flags).flatten()
     return wraps,steps
 
+
+def getTECBaselineFit(ph,amp,freqs,SBselect,polIdx,stIdx,useOffset=False,stations=[],initSol=[],chi2cut=300.,timeIdx=0):
+    global tecarray
+    global offsetarray
+    global residualarray
+    amp[np.isnan(ph)]=1
+    ph[np.isnan(ph)]=0.
+    ph=np.unwrap(ph,axis=0) 
+    #first unwrap data and get initial guess
+    nT=ph.shape[0]
+    nF=freqs.shape[0]
+    nSt=ph.shape[2]
+    nparms=1+(useOffset>0)
+    sol = np.zeros((nSt,nparms),dtype=np.float)
+    A=np.zeros((nF,nparms),dtype=np.float)
+    A[:,0] = -8.44797245e9/freqs
+    if useOffset:
+        A[:,1] = np.ones((nF,))
+    for itm in range(nT):
+        
+        if itm%100==0 and itm>0:
+            sys.stdout.write(str(itm)+'... '+str(sol[-1,0]-sol[0,0])+' '+str(sol[-1,-1]-sol[0,-1])+' ')
+            sys.stdout.flush()
+        flags=(amp[itm,:]==1);
+        nrFlags=np.sum(flags,axis=0)
+        sol=fitting.fit(ph[itm],A,sol.T,flags).T
+        tecarray[itm+timeIdx,stIdx,polIdx]=sol[:,0]
+        if useOffset:
+            offsetarray[itm+timeIdx,stIdx,polIdx]=sol[:,1]
+        residual = ph[itm] - np.dot(A, sol.T)
+        residual = residual - residual[:, 0][:,np.newaxis]
+        residual = np.remainder(residual+np.pi, 2*np.pi) - np.pi       
+        residual[flags]=0
+        residualarray[np.ix_([itm+timeIdx],SBselect,stIdx,[polIdx])]=residual.reshape((1,nF,nSt,1))
+
+        
 def getClockTECBaselineFit(ph,amp,freqs,SBselect,polIdx,stIdx,useOffset=False,stations=[],initSol=[],chi2cut=300.,fixedClockforCS=False,timeIdx=0):
     global tecarray
     global clockarray
