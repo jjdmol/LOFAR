@@ -112,9 +112,11 @@ namespace LOFAR {
       uint nchan() const
         { return itsNChan; }
         uint origNChan() const
-      { return itsOrigNChan; }
+        { return itsOrigNChan; }
       uint nchanAvg() const
         { return itsChanAvg; }
+      uint nantenna() const
+        { return itsAntNames.size(); }
       uint nbaselines() const
         { return itsAnt1.size(); }
       uint ntime() const

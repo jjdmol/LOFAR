@@ -61,8 +61,6 @@ private:
     const_iterator begin() const;
     const_iterator end() const;
 
-    void computePosition();
-
     string                              itsName;
     Position                            itsPosition;
     vector<ModelComponent::ConstPtr>    itsComponents;
@@ -79,9 +77,7 @@ template <typename T>
 Patch::Patch(const string &name, T first, T last)
     :   itsName(name),
         itsComponents(first, last)
-{
-    computePosition();
-}
+{}
 
 inline const string &Patch::name() const
 {
@@ -103,6 +99,15 @@ inline ModelComponent::ConstPtr Patch::component(size_t i) const
     return itsComponents[i];
 }
 
+inline Patch::const_iterator Patch::begin() const
+{
+    return itsComponents.begin();
+}
+
+inline Patch::const_iterator Patch::end() const
+{
+    return itsComponents.end();
+}
 
 } //# namespace DPPP
 } //# namespace LOFAR

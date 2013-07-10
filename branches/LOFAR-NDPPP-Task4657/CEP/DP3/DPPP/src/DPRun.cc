@@ -36,6 +36,7 @@
 #include <DPPP/UVWFlagger.h>
 #include <DPPP/PhaseShift.h>
 #include <DPPP/Demixer.h>
+#include <DPPP/DemixerNew.h>
 #include <DPPP/StationAdder.h>
 #include <DPPP/ScaleData.h>
 #include <DPPP/Filter.h>
@@ -258,6 +259,8 @@ namespace LOFAR {
           step = DPStep::ShPtr(new PhaseShift (reader, parset, prefix));
         } else if (type == "demixer"  ||  type == "demix") {
           step = DPStep::ShPtr(new Demixer (reader, parset, prefix));
+        } else if (type == "smartdemixer"  ||  type == "smartdemix") {
+          step = DPStep::ShPtr(new DemixerNew (reader, parset, prefix));
         } else if (type == "stationadder"  ||  type == "stationadd") {
           step = DPStep::ShPtr(new StationAdder (reader, parset, prefix));
         } else if (type == "scaledata") {
