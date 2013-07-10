@@ -58,10 +58,11 @@ void showRec (const Record& rec)
   cout << ">end<" << endl;
 }
 
-void showValues (ParmFacade& acc, const string& pattern, int nf, int nt)
+void showValues (ParmFacade& acc, const string& pattern, int nf, int nt,
+                 bool includeDefaults)
 {
   // Now get the values of all parameters.
-  vector<string> names = acc.getNames(pattern);
+  vector<string> names = acc.getNames(pattern, includeDefaults);
   cout << ">start<" << endl;
   cout << "Names: " << names << endl;
   vector<double> rng = acc.getRange("*");
@@ -72,7 +73,7 @@ void showValues (ParmFacade& acc, const string& pattern, int nf, int nt)
   map<string,vector<double> > values = acc.getValuesMap (pattern,
                                                          rng[0], rng[1], fs,
                                                          rng[2], rng[3], ts,
-                                                         true);
+                                                         true, includeDefaults);
   cout << ">start<" << endl;
   for (map<string,vector<double> >::const_iterator iter=values.begin();
        iter != values.end();
@@ -173,7 +174,10 @@ int main (int argc, const char* argv[])
     // Open the facade.
     ParmFacade acc(argv[starg]);
     // Get values.
-    showValues (acc, pattern, nf, nt);
+    cout << endl << "includedefaults=false..." << endl;
+    showValues (acc, pattern, nf, nt, false);
+    cout << endl << "includedefaults=true..." << endl;
+    showValues (acc, pattern, nf, nt, true);
     // Get default values.
     cout << ">start<" << endl;
     cout << "get default values ..." << endl;

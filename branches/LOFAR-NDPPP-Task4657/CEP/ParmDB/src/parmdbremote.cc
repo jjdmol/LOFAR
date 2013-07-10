@@ -71,8 +71,9 @@ void getValues (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos,
 {
   string pattern;
   double sfreq, efreq, stime, etime, freqStep, timeStep;
+  bool includeDefaults;
   bis >> pattern >> sfreq >> efreq >> freqStep
-      >> stime >> etime >> timeStep;
+      >> stime >> etime >> timeStep >> includeDefaults;
   if (sfreq < range[0]) sfreq = range[0];
   if (efreq > range[1]) efreq = range[1];
   if (stime < range[2]) stime = range[2];
@@ -82,7 +83,7 @@ void getValues (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos,
   if (sfreq <= efreq  &&  stime <= etime) {
     try {
       rec = pdb.getValues (pattern, sfreq, efreq, freqStep,
-                           stime, etime, timeStep, true);
+                           stime, etime, timeStep, true, includeDefaults);
     } catch (std::exception& x) {
       msg = x.what();
     }
@@ -95,13 +96,14 @@ void getValuesVec (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
 {
   string pattern;
   vector<double> freqv1, freqv2, timev1, timev2;
-  bool asStartEnd;
-  bis >> pattern >> freqv1 >> freqv2 >> timev1 >> timev2 >> asStartEnd;
+  bool asStartEnd, includeDefaults;
+  bis >> pattern >> freqv1 >> freqv2 >> timev1 >> timev2
+      >> asStartEnd >> includeDefaults;
   casa::Record rec;
   string msg;
   try {
     rec = pdb.getValues (pattern, freqv1, freqv2,
-                         timev1, timev2, asStartEnd);
+                         timev1, timev2, asStartEnd, includeDefaults);
   } catch (std::exception& x) {
     msg = x.what();
   }
@@ -287,7 +289,7 @@ int main (int argc, char* argv[])
       BlobString bufout;
       MWBlobOut bbo(bufout, 1, 0);
       bbo.blobStream() << fname;
-      bbo.blobStream() << parmdb.getNames("*");
+      bbo.blobStream() << parmdb.getNames("*", false);
       putRecord (bbo.blobStream(), parmdb.getDefValues("*"));
       bbo.finish();
       conn->write (bufout);
