@@ -65,7 +65,7 @@ void updateBPTemps(string ident, dyn_dyn_anytype tab)
       dynAppend(warntemp,temp);
     }
   }
-  string tooltip= \"station BPtemps <br>\";
+  string tooltip= station + \" BPtemps <br>\";
   
   // find out the offending temperatures set the highest found color and order them in the tooltip list
   if (dynlen(alarm) > 0) {
