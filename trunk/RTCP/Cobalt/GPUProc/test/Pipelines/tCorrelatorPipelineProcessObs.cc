@@ -30,6 +30,7 @@
 #include <CoInterface/Parset.h>
 #include <InputProc/OMPThread.h>
 #include <GPUProc/Pipelines/CorrelatorPipeline.h>
+#include <GPUProc/Station/StationInput.h>
 
 using namespace std;
 using namespace LOFAR;
@@ -81,6 +82,10 @@ int main(int argc, char *argv[]) {
   // have to start input procs etc. The disadvantage is that some code of
   // processObservation() remains untested...
   Parset ps("tCorrelatorPipelineProcessObs.parset");
+
+#ifndef HAVE_MPI
+  DirectInput::instance(&ps);
+#endif
 
   // "distribute" subbands over 1 node
   vector<size_t> subbands;
