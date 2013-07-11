@@ -41,6 +41,7 @@ using boost::format;
   ps.updateSettings();
 
 // macros for testing true/false keys
+#define TESTKEYS(new, old) for ( string k = "x", keystr = new; k != "xxx"; k += "x", keystr = old)
 #define TESTBOOL for( unsigned val = 0; val < 2; ++val )
 #define valstr ((val) ? "true" : "false")
 
@@ -81,11 +82,13 @@ template<typename T> string toStr( const vector<T> &v )
  */
 
 TEST(realTime) {
-  TESTBOOL {
-    MAKEPS("OLAP.realTime", valstr);
+  TESTKEYS("Cobalt.realTime", "OLAP.realTime") {
+    TESTBOOL {
+      MAKEPS(keystr, valstr);
 
-    CHECK_EQUAL(val, ps.settings.realTime);
-    CHECK_EQUAL(val, ps.realTime());
+      CHECK_EQUAL(val, ps.settings.realTime);
+      CHECK_EQUAL(val, ps.realTime());
+    }
   }
 }
 
@@ -172,28 +175,34 @@ TEST(nrPolarisations) {
 
 SUITE(corrections) {
   TEST(bandPass) {
-    TESTBOOL {
-      MAKEPS("OLAP.correctBandPass", valstr);
+    TESTKEYS("Cobalt.correctBandPass", "OLAP.correctBandPass") {
+      TESTBOOL {
+        MAKEPS(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.corrections.bandPass);
-      CHECK_EQUAL(val, ps.correctBandPass());
+        CHECK_EQUAL(val, ps.settings.corrections.bandPass);
+        CHECK_EQUAL(val, ps.correctBandPass());
+      }
     }
   }
 
   TEST(clock) {
-    TESTBOOL {
-      MAKEPS("OLAP.correctClocks", valstr);
+    TESTKEYS("Cobalt.correctClocks", "OLAP.correctClocks") {
+      TESTBOOL {
+        MAKEPS(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.corrections.clock);
-      CHECK_EQUAL(val, ps.correctClocks());
+        CHECK_EQUAL(val, ps.settings.corrections.clock);
+        CHECK_EQUAL(val, ps.correctClocks());
+      }
     }
   }
 
   TEST(dedisperse) {
-    TESTBOOL {
-      MAKEPS("OLAP.coherentDedisperseChannels", valstr);
+    TESTKEYS("Cobalt.Beamformer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels") {
+      TESTBOOL {
+        MAKEPS(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.corrections.dedisperse);
+        CHECK_EQUAL(val, ps.settings.corrections.dedisperse);
+      }
     }
   }
 }

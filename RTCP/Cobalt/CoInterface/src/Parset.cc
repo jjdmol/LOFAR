@@ -240,6 +240,18 @@ namespace LOFAR
       return result;
     }
 
+    std::string Parset::renamedKey(const std::string &newname, const std::string &oldname) const {
+      if (isDefined(newname))
+        return newname;
+
+      if (isDefined(oldname)) {
+        LOG_WARN_STR("Parset: key " << oldname << " is deprecated. Please use " << newname << " instead.");
+        return oldname;
+      }
+
+      return newname;
+    }
+
 
     struct ObservationSettings Parset::observationSettings() const
     {
@@ -253,24 +265,19 @@ namespace LOFAR
       vector<double>   emptyVectorDouble;
 
       // Generic information
-      settings.realTime = getBool("OLAP.realTime", false);
+      settings.realTime = getBool(renamedKey("Cobalt.realTime", "OLAP.realTime"), false);
       settings.observationID = getUint32("Observation.ObsID", 0);
       settings.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
       settings.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
       settings.clockMHz = getUint32("Observation.sampleClock", 200);
 
-      if (isDefined("Observation.nrBitsPerSample")) {
-        settings.nrBitsPerSample = getUint32("Observation.nrBitsPerSample", 16);
-      } else {
-        LOG_WARN("Using deprecated OLAP.nrBitsPerSample. Please replace by Observation.nrBitsPerSample");
-        settings.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
-      }
+      settings.nrBitsPerSample = getUint32(renamedKey("Observation.nrBitsPerSample","OLAP.nrBitsPerSample"), 16);
 
       settings.nrPolarisations = 2;
 
-      settings.corrections.bandPass   = getBool("OLAP.correctBandPass", true);
-      settings.corrections.clock      = getBool("OLAP.correctClocks", true);
-      settings.corrections.dedisperse = getBool("OLAP.coherentDedisperseChannels", true);
+      settings.corrections.bandPass   = getBool(renamedKey("Cobalt.correctBandPass", "OLAP.correctBandPass"), true);
+      settings.corrections.clock      = getBool(renamedKey("Cobalt.correctClocks", "OLAP.correctClocks"), true);
+      settings.corrections.dedisperse = getBool(renamedKey("Cobalt.Beamformer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels"), true);
 
       settings.delayCompensation.enabled              = getBool("OLAP.delayCompensation", true);
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
@@ -490,7 +497,7 @@ namespace LOFAR
           }
         }
 
-        settings.beamFormer.dedispersionFFTsize = getUint32("OLAP.CNProc.dedispersionFFTsize", settings.correlator.nrSamplesPerChannel);
+        settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.Beamformer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);
       }
 
       return settings;
