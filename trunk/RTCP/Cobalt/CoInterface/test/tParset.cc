@@ -584,15 +584,17 @@ SUITE(correlator) {
 
   TEST(nrChannels) {
     // for now, nrChannels is also defined if the correlator is disabled
-    TESTBOOL {
-      Parset ps;
+    TESTKEYS("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband") {
+      TESTBOOL {
+        Parset ps;
 
-      ps.add("Observation.DataProducts.Output_Correlated.enabled", valstr);
-      ps.add("Observation.channelsPerSubband", "256");
-      ps.updateSettings();
+        ps.add("Observation.DataProducts.Output_Correlated.enabled", valstr);
+        ps.add(keystr, "256");
+        ps.updateSettings();
 
-      CHECK_EQUAL(256U, ps.settings.correlator.nrChannels);
-      CHECK_EQUAL(256U, ps.nrChannelsPerSubband());
+        CHECK_EQUAL(256U, ps.settings.correlator.nrChannels);
+        CHECK_EQUAL(256U, ps.nrChannelsPerSubband());
+      }
     }
   }
 
@@ -614,30 +616,34 @@ SUITE(correlator) {
   }
 
   TEST(nrSamplesPerChannel) {
-    Parset ps;
-    
-    // set
-    ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-    ps.add("OLAP.CNProc.integrationSteps", "42");
-    ps.updateSettings();
+    TESTKEYS("Cobalt.Correlator.nrSamplesPerChannelPerBlock", "OLAP.CNProc.integrationSteps") {
+      Parset ps;
+      
+      // set
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.add(keystr, "42");
+      ps.updateSettings();
 
-    // verify settings
-    CHECK_EQUAL(42U, ps.settings.correlator.nrSamplesPerChannel);
-    CHECK_EQUAL(42U, ps.CNintegrationSteps());
-    CHECK_EQUAL(42U, ps.nrSamplesPerChannel());
+      // verify settings
+      CHECK_EQUAL(42U, ps.settings.correlator.nrSamplesPerChannel);
+      CHECK_EQUAL(42U, ps.CNintegrationSteps());
+      CHECK_EQUAL(42U, ps.nrSamplesPerChannel());
+    }
   }
 
   TEST(nrBlocksPerIntegration) {
-    Parset ps;
-    
-    // set
-    ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-    ps.add("OLAP.IONProc.integrationSteps", "42");
-    ps.updateSettings();
+    TESTKEYS("Cobalt.Correlator.nrBlocksPerIntegration", "OLAP.IONProc.integrationSteps") {
+      Parset ps;
+      
+      // set
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.add(keystr, "42");
+      ps.updateSettings();
 
-    // verify settings
-    CHECK_EQUAL(42U, ps.settings.correlator.nrBlocksPerIntegration);
-    CHECK_EQUAL(42U, ps.IONintegrationSteps());
+      // verify settings
+      CHECK_EQUAL(42U, ps.settings.correlator.nrBlocksPerIntegration);
+      CHECK_EQUAL(42U, ps.IONintegrationSteps());
+    }
   }
 
   /* TODO: test super-station beam former */
