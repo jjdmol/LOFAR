@@ -156,7 +156,7 @@ namespace LOFAR
             SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
 
             // TODO: Not in this thread! Add a preprocess thread maybe?
-            data->applyMetaData(stat, SAP, metaData);
+            data->applyMetaData(ps, stat, SAP, metaData);
 
             nrFlaggedSamples += metaData.flags.count();
           }

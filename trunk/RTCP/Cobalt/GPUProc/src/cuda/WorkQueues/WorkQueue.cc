@@ -83,7 +83,8 @@ namespace LOFAR
     }
 
 
-    void WorkQueueInputData::applyMetaData(unsigned station, unsigned SAP,
+    void WorkQueueInputData::applyMetaData(const Parset &ps,
+                                           unsigned station, unsigned SAP,
                                            const SubbandMetaData &metaData)
     {
       // extract and apply the flags
@@ -92,12 +93,16 @@ namespace LOFAR
       flagInputSamples(station, metaData);
 
       // extract and assign the delays for the station beams
-      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol++)
-      {
-        delaysAtBegin[SAP][station][pol] = metaData.stationBeam.delayAtBegin;
-        delaysAfterEnd[SAP][station][pol] = metaData.stationBeam.delayAfterEnd;
-        phaseOffsets[station][pol] = 0.0;
-      }
+
+      // X polarisation
+      delaysAtBegin[SAP][station][0]  = ps.settings.stations[station].delayCorrection.x + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][0] = ps.settings.stations[station].delayCorrection.x + metaData.stationBeam.delayAfterEnd;
+      phaseOffsets[station][0]        = ps.settings.stations[station].phaseCorrection.x;
+
+      // Y polarisation
+      delaysAtBegin[SAP][station][1]  = ps.settings.stations[station].delayCorrection.y + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delayCorrection.y + metaData.stationBeam.delayAfterEnd;
+      phaseOffsets[station][1]        = ps.settings.stations[station].phaseCorrection.y;
     }
 
 
