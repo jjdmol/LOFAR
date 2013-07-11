@@ -319,10 +319,15 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     changed=true;
     // check if the alarm was a suspicious_came or an alarm_came
     // if this is true then we need to send an email to the observers
-    if (state == SUSPICIOUS_CAME ) {
-      sendMail("SUSPICIOUS_CAME",aDP,aTime,message);
-    } else if (state == BROKEN_CAME) {
-      sendMail("BROKEN_CAME",aDP,aTime,message);        
+    // the station tests generate 100's of alarms all the time, 
+    // the system should know this but the mailnotification becomes spam with these amounts
+    // so we will skip these for now.
+    if (strpos(message,"stationtest:") < 0) {
+      if (state == SUSPICIOUS_CAME ) {
+        sendMail("SUSPICIOUS_CAME",aDP,aTime,message);
+      } else if (state == BROKEN_CAME) {
+        sendMail("BROKEN_CAME",aDP,aTime,message);        
+      }
     }
   }
   // store all alarms if changed
