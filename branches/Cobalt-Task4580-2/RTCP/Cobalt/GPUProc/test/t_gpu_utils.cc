@@ -23,12 +23,13 @@
 
 #ifdef USE_CUDA
 
-#include <Common/LofarLogger.h>
-#include <GPUProc/gpu_utils.h>
-#include <UnitTest++.h>
+#include <cstdio>    // for remove()
+#include <cstdlib>   // for unsetenv()
 #include <fstream>
-#include <cstdio>
-#include <cstdlib>
+#include <UnitTest++.h>
+#include <Common/LofarLogger.h>
+#include <CoInterface/Exceptions.h>
+#include <GPUProc/gpu_utils.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
