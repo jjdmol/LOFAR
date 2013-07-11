@@ -209,11 +209,13 @@ SUITE(corrections) {
 
 SUITE(delayCompensation) {
   TEST(enabled) {
-    TESTBOOL {
-      MAKEPS("OLAP.delayCompensation", valstr);
+    TESTKEYS("Cobalt.delayCompensation", "OLAP.delayCompensation") {
+      TESTBOOL {
+        MAKEPS(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.delayCompensation.enabled);
-      CHECK_EQUAL(val, ps.delayCompensation());
+        CHECK_EQUAL(val, ps.settings.delayCompensation.enabled);
+        CHECK_EQUAL(val, ps.delayCompensation());
+      }
     }
   }
 
