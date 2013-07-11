@@ -287,10 +287,13 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603LBA");
 
-    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "LBA_INNER");
+    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "LBA_INNER");
 
     CHECK_EQUAL(expectedFields.size(), antennaFields.size());
-    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    }
   }
 
   TEST(HBA0) {
@@ -304,10 +307,13 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ZERO");
+    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ZERO");
 
     CHECK_EQUAL(expectedFields.size(), antennaFields.size());
-    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    }
   }
 
   TEST(HBA1) {
@@ -321,10 +327,13 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ONE");
+    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ONE");
 
     CHECK_EQUAL(expectedFields.size(), antennaFields.size());
-    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    }
   }
 
   TEST(HBA_DUAL) {
@@ -340,10 +349,13 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_DUAL");
+    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_DUAL");
 
     CHECK_EQUAL(expectedFields.size(), antennaFields.size());
-    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    }
   }
 
   TEST(HBA_JOINED) {
@@ -357,10 +369,13 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_JOINED");
+    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_JOINED");
 
     CHECK_EQUAL(expectedFields.size(), antennaFields.size());
-    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    }
   }
 }
 

@@ -176,8 +176,8 @@ namespace LOFAR
     }
 
 
-    vector<string> ObservationSettings::antennaFields(const vector<string> &stations, const string &antennaSet) {
-      vector<string> result;
+    vector<struct ObservationSettings::AntennaFieldName> ObservationSettings::antennaFields(const vector<string> &stations, const string &antennaSet) {
+      vector<struct AntennaFieldName> result;
 
       for (vector<string>::const_iterator i = stations.begin(); i != stations.end(); ++i) {
         const string &station = *i;
@@ -189,7 +189,7 @@ namespace LOFAR
           // Observation.VirtualInstrument.stationList can contain full
           // antennafield names such as CS001LBA.
           LOG_WARN_STR("Warning: old (preparsed) station name: " << station);
-          result.push_back(station);
+          result.push_back(AntennaFieldName(station.substr(0,5), station.substr(5)));
           continue;
         }
 
@@ -201,36 +201,36 @@ namespace LOFAR
          || antennaSet == "LBA_SPARSE_EVEN"
          || antennaSet == "LBA_SPARSE_ODD") {
 
-          result.push_back(str(format("%sLBA") % station));
+          result.push_back(AntennaFieldName(station, "LBA"));
 
         } else if (
             antennaSet == "HBA" /* used for debugging */
          || antennaSet == "HBA_JOINED"
          || antennaSet == "HBA_JOINED_INNER") {
 
-          result.push_back(str(format("%sHBA") % station));
+          result.push_back(AntennaFieldName(station, "HBA"));
 
         } else if (
             antennaSet == "HBA_ZERO"
          || antennaSet == "HBA_ZERO_INNER") {
 
-          result.push_back(str(format("%s%s") % station % (coreStation ? "HBA0" : "HBA")));
+          result.push_back(AntennaFieldName(station, coreStation ? "HBA0" : "HBA"));
 
         } else if (
             antennaSet == "HBA_ONE"
          || antennaSet == "HBA_ONE_INNER") {
 
-          result.push_back(str(format("%s%s") % station % (coreStation ? "HBA1" : "HBA")));
+          result.push_back(AntennaFieldName(station, coreStation ? "HBA1" : "HBA"));
 
         } else if (
             antennaSet == "HBA_DUAL"
          || antennaSet == "HBA_DUAL_INNER") {
 
           if (coreStation) {
-            result.push_back(str(format("%sHBA0") % station));
-            result.push_back(str(format("%sHBA1") % station));
+            result.push_back(AntennaFieldName(station, "HBA0"));
+            result.push_back(AntennaFieldName(station, "HBA1"));
           } else {
-            result.push_back(str(format("%sHBA") % station));
+            result.push_back(AntennaFieldName(station, "HBA"));
           }
         } else {
           THROW(CoInterfaceException, "Unknown antennaSet: " << antennaSet);
@@ -290,17 +290,21 @@ namespace LOFAR
 
       vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
 
-      vector<string> stationNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
+      vector<ObservationSettings::AntennaFieldName> fieldNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
 
-      size_t nrStations = stationNames.size();
+      size_t nrStations = fieldNames.size();
 
       settings.stations.resize(nrStations);
       for (unsigned i = 0; i < nrStations; ++i) {
         struct ObservationSettings::Station &station = settings.stations[i];
 
-        station.name            = stationNames[i];
-        station.clockCorrection = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
-        station.phaseCenter     = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
+        station.name              = fieldNames[i].fullName();
+        station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
+        station.phaseCenter       = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
+        station.phaseCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.phaseCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delayCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delayCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
 
         string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
         if (!isDefined(key)) key = "Observation.rspBoardList";
