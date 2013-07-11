@@ -52,6 +52,7 @@ namespace LOFAR
       // Parameters that must be passed to the constructor of this Kernel class.
       struct Parameters
       {
+        Parameters(const Parset& ps);
         size_t nrStations;
         size_t nrChannelsPerSubband;
         size_t nrSamplesPerChannel;
