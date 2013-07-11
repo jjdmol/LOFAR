@@ -538,8 +538,12 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                 ampdata=amp[timerange[0]:timerange[1],:,:,0,pol*(polshape-1)][:,SBselect][:,:,stationIndices]
             if hasattr(ionmodel,'TEC') and initFromPrevious:
                 initSol=np.zeros((len(stations),2),dtype=np.float)
-                initSol[:,0]=ionmodel.TEC[:][timerange[0],stationIndices,pol]
+                if len(ionmodel.TEC.shape)>3:
+                    initSol[:,0]=ionmodel.TEC[:][timerange[0],stationIndices,0,pol]
+                else:
+                    initSol[:,0]=ionmodel.TEC[:][timerange[0],stationIndices,pol]
                 initSol[:,1]=ionmodel.Clock[:][timerange[0],stationIndices,pol]
+                phdata+=ionmodel.clock_tec_offsets[:][timerange[0],stationIndices,pol]
             else:
                 initSol=False
 

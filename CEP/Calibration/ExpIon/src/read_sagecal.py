@@ -199,7 +199,7 @@ def addToH5File(h5file,clusters,freqs,store_intermediate=False):
                 cdata=clusters[clusteridx]['cdata']
             pharray[:,:,:,idx,:]=np.angle(cdata)
             amparray[:,:,:,idx,:]=np.absolute(cdata)
-            srcarray[idx,:]=np.array([cluster['Ra'],clusters[clusteridx]['Dec']])
+            srcarray[idx,:]=np.array([clusters[clusteridx]['Ra'],clusters[clusteridx]['Dec']])
             clusters[clusteridx]['cdata']=[]
             if store_intermediate:
                 call("rm tmp_store_cdata_%d.npy"%(clusteridx),shell=True)

@@ -142,7 +142,49 @@ class IonosphericModel:
          piercepoints_row.append()
       self.piercepoints.flush()
       p.finished()
+
+
+   def calculate_Sage_piercepoints(self, sage_group=0,time_steps = [], station_select=[],height = 200.e3):
+      if ( len( time_steps ) == 0 ):
+         n_list = range( self.times.shape[0] )
+      else:
+         n_list = time_steps
+      self.sage_n_list = n_list
+      if 'sage%d_n_list'%sage_group in self.hdf5.root: self.hdf5.removeNode('\sage%d_n_list'%sage_group)
+      self.hdf5.createArray(self.hdf5.root, 'sage%d_n_list'%sage_group, self.sage_n_list)
+      if ( len( station_select ) == 0 ):
+         stat_select = range( self.stations[:].shape[0] )
+      else:
+         stat_select = station_select
+      self.sage_stat_select = stat_select
+      if 'sage%d_stat_select'%sage_group in self.hdf5.root: self.hdf5.removeNode('\sage%d_stat_select'%sage_group)
+      self.hdf5.createArray(self.hdf5.root,'sage%d_stat_select'%sage_group, self.sage_stat_select)
+
+
+      self.sage_height = height
+
+      N_stations=len(stat_select)
+      if 'sage%d_piercepoints'%sage_group in self.hdf5.root: self.hdf5.removeNode('\sage%d_piercepoints'%sage_group)
+      description = {'positions':tables.Float64Col((self.N_sources, N_stations,2)), \
+                     'positions_xyz':tables.Float64Col((self.N_sources, N_stations,3)), \
+                     'zenith_angles':tables.Float64Col((self.N_sources, N_stations))}
+      self.sage_piercepoints = self.hdf5.createTable(self.hdf5.root,'sage%d_piercepoints'%sage_group, description)
+      self.sage_piercepoints.attrs.height = self.sage_height
+      piercepoints_row = self.sage_piercepoints.row
+      source_positions=self.hdf5.getNode('sage_radec%d'%sage_group)[:]
+      p = ProgressBar(len(n_list), "Calculating piercepoints: ")
+      for (n, counter) in zip(n_list, range(len(n_list))):
+         p.update(counter)
          
+         piercepoints=PosTools.getPiercePoints(self.times[n],source_positions,self.station_positions[:][self.stat_select[:]],height=self.sage_height)
+         #piercepoints =  PiercePoints( self.times[ n ], self.pointing, self.array_center, self.source_positions, self.station_positions[:][self.stat_select[:]], height = self.height )
+         piercepoints_row['positions'] = piercepoints.positions
+         piercepoints_row['positions_xyz'] = piercepoints.positions_xyz
+         piercepoints_row['zenith_angles'] = piercepoints.zenith_angles
+         piercepoints_row.append()
+      self.sage_piercepoints.flush()
+      p.finished()
+        
    def calculate_basevectors(self, order = 15, beta = 5. / 3., r_0 = 1.):
       self.order = order
       self.beta = beta
@@ -226,8 +268,8 @@ class IonosphericModel:
       if 'offsets' in self.hdf5.root: self.hdf5.root.offsets.remove()
       self.hdf5.createArray(self.hdf5.root, 'offsets', self.offsets)
 
-   def get_TEC_pp(self,radec,pol=0):
-      TEC_out=[]
+   def get_TEC_pp(self,radec,pol=0,new_stat_select=None):
+      TEC_out=[]      
       N_stations = len(self.stat_select[:])
       N_sources = len(self.sources)
       N_piercepoints = N_stations * N_sources
@@ -237,10 +279,12 @@ class IonosphericModel:
       pp_out=[]
       am_out=[]
       TEC_out=[]
-      stations=self.station_positions[:][self.stat_select[:]]
+      stations=self.station_positions[:]
+      if not (new_stat_select is None):
+         stations=stations[new_stat_select]
       for i in range(len(self.n_list)) :
          if i%10==0:
-            sys.stdout.write(str(itm)+'...')
+            sys.stdout.write(str(i)+'...')
             sys.stdout.flush()                
          time=self.times[i]
          piercepoints=PosTools.getPiercePoints(time,radec.reshape((1,-1)),stations,height=h)
@@ -252,7 +296,7 @@ class IonosphericModel:
          #v=self.TECfit_white[ i, :, : ,pol][self.stat_select[:]].reshape((N_piercepoints,1))
          v=self.TECfit_white[ i, :, : ,pol][self.stat_select[:]].reshape((N_piercepoints,1))
          tecs=[]
-         for ist in range(self.stat_select.shape[0]):
+         for ist in range(stations.shape[0]):
             tecs.append(get_interpolated_TEC_white(Xp_table,v,beta,r_0,pp[0,ist]))
          TEC_out.append(tecs)
       return np.array(pp_out),np.array(am_out),np.array(TEC_out)
