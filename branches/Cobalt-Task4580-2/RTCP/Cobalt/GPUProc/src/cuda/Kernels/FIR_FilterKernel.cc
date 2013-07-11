@@ -30,11 +30,22 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    string FIR_FilterKernel::theirSourceFile = "FIR_Filter.cu";
+    string FIR_FilterKernel::theirFunction = "FIR_filter";
+
+    FIR_FilterKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters(ps),
+      nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
+      nrHistorySamples(ps.nrHistorySamples()),
+      nrPPFTaps(ps.nrPPFTaps())
+    {
+    }
+
     FIR_FilterKernel::FIR_FilterKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, "FIR_filter")),
+      Kernel(stream, gpu::Function(module, theirFunction)),
       devFIRweights(buffers.filterWeights)
     {
       init(stream, buffers, params);
@@ -46,11 +57,12 @@ namespace LOFAR
                                        gpu::DeviceMemory &devInputSamples,
                                        gpu::Stream &stream)
       :
-      Kernel(ps, context, "FIR_Filter.cu", "FIR_filter"),
+      Kernel(ps, context, theirSourceFile, theirFunction),
       devFIRweights(context, bufferSize(ps, FILTER_WEIGHTS))
     {
-      // Parameters initialiseren o.b.v. Parset ...
-      init(devFilteredData, devInputSamples, stream);
+      init(stream, 
+           Buffers(devInputSamples, devFilteredData, devFIRweights),
+           Parameters(ps));
     }
 
     FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, 
@@ -59,11 +71,12 @@ namespace LOFAR
                                        gpu::DeviceMemory &devInputSamples,
                                        gpu::Stream &stream)
       :
-      Kernel(ps, module, "FIR_filter"),
+      Kernel(ps, module, theirFunction),
       devFIRweights(module.getContext(), bufferSize(ps, FILTER_WEIGHTS))
     {
-      // Parameters initialiseren o.b.v. Parset ...
-      init(devFilteredData, devInputSamples, stream);
+      init(stream, 
+           Buffers(devInputSamples, devFilteredData, devFIRweights),
+           Parameters(ps));
     }
 
     void FIR_FilterKernel::init(const gpu::Stream &stream,
@@ -112,37 +125,6 @@ namespace LOFAR
     }
 
 
-    void FIR_FilterKernel::init(gpu::DeviceMemory &devFilteredData,
-                                gpu::DeviceMemory &devInputSamples,
-                                gpu::Stream &stream)
-    {
-      setArg(0, devFilteredData);
-      setArg(1, devInputSamples);
-      setArg(2, devFIRweights);
-
-      size_t maxNrThreads;
-      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
-      unsigned totalNrThreads = ps.nrChannelsPerSubband() * NR_POLARIZATIONS * 2;
-      unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
-      globalWorkSize = gpu::Grid(totalNrThreads, ps.nrStations());
-      localWorkSize = gpu::Block(totalNrThreads / nrPasses, 1);
-
-      size_t nrSamples = (size_t) ps.nrStations() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS;
-      nrOperations = nrSamples * ps.nrSamplesPerChannel() * NR_TAPS * 2 * 2;
-      nrBytesRead = nrSamples * (NR_TAPS - 1 + ps.nrSamplesPerChannel()) * ps.nrBytesPerComplexSample();
-      nrBytesWritten = nrSamples * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
-
-      // Note that these constant weights are now (unnecessarily) stored on the
-      // device for every workqueue. A single copy per device could be used, but
-      // first verify that the device platform still allows workqueue overlap.
-      FilterBank filterBank(true, NR_TAPS, ps.nrChannelsPerSubband(), KAISER);
-      filterBank.negateWeights();
-
-      gpu::HostMemory firWeights(stream.getContext(), devFIRweights.size());
-      std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(), firWeights.size());
-      stream.writeBuffer(devFIRweights, firWeights, true);
-    }
-
     size_t FIR_FilterKernel::bufferSize(const Parset& ps, BufferType bufferType)
     {
       switch (bufferType) {
@@ -162,13 +144,26 @@ namespace LOFAR
       }
     }
 
+    //--------  Template specializations for KernelFactory  --------//
 
     template<>
     KernelFactory<FIR_FilterKernel>::KernelFactory(const Parset& ps) :
-      itsParset(ps)
+      itsParameters(ps)
     {
-      // Compile FIR_FilterKernel source to PTX
-      // itsPTX = ...
+      // TODO: Set compile definitions & flags
+      itsPTX = createPTX(FIR_FilterKernel::theirSourceFile);
+    }
+
+    template<>
+    FIR_FilterKernel*
+    KernelFactory<FIR_FilterKernel>::create(const gpu::Stream& stream,
+                                            const Buffers& buffers) const
+    {
+      return new FIR_FilterKernel(
+        stream, createModule(stream.getContext(), 
+                             FIR_FilterKernel::theirSourceFile,
+                             itsPTX), 
+        buffers, itsParameters);
     }
 
     template<> size_t 
@@ -177,16 +172,17 @@ namespace LOFAR
       switch (bufferType) {
       case FIR_FilterKernel::INPUT_DATA: 
         return
-          (itsParset.nrHistorySamples() + itsParset.nrSamplesPerSubband()) * 
-          itsParset.nrStations() * NR_POLARIZATIONS * 
-          itsParset.nrBytesPerComplexSample();
+          (itsParameters.nrHistorySamples + itsParameters.nrSamplesPerSubband) *
+          itsParameters.nrStations * itsParameters.nrPolarizations * 
+          itsParameters.nrBytesPerComplexSample;
       case FIR_FilterKernel::OUTPUT_DATA:
         return
-          itsParset.nrSamplesPerSubband() * itsParset.nrStations() * 
-          NR_POLARIZATIONS * sizeof(std::complex<float>);
+          itsParameters.nrSamplesPerSubband * itsParameters.nrStations * 
+          itsParameters.nrPolarizations * sizeof(std::complex<float>);
       case FIR_FilterKernel::FILTER_WEIGHTS:
         return 
-          itsParset.nrChannelsPerSubband() * NR_TAPS * sizeof(float);
+          itsParameters.nrChannelsPerSubband * itsParameters.nrPPFTaps *
+          sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

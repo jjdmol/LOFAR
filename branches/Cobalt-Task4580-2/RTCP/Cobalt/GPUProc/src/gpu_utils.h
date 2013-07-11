@@ -41,7 +41,7 @@ namespace LOFAR
     {
     };
 
-    // Return default compile definitions
+    // Return default compile definitions.
     CompileDefinitions defaultCompileDefinitions();
 
     // Set for storing compile flags that will be passed to the GPU kernel
@@ -76,8 +76,8 @@ namespace LOFAR
     //       this method.
     std::string 
     createPTX(std::string srcFilename, 
-              CompileDefinitions definitions = defaultCompileDefinitions(),
-              CompileFlags flags = defaultCompileFlags(),
+              CompileDefinitions definitions = CompileDefinitions(),
+              CompileFlags flags = CompileFlags(),
               const GPUDevices &devices = gpu::Platform().devices());
 
     // Create a Module from a PTX (string).

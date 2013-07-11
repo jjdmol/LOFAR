@@ -21,6 +21,7 @@
 #ifndef LOFAR_GPUPROC_CUDA_FIR_FILTER_KERNEL_H
 #define LOFAR_GPUPROC_CUDA_FIR_FILTER_KERNEL_H
 
+#include <string>
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
@@ -35,10 +36,14 @@ namespace LOFAR
     class FIR_FilterKernel : public Kernel
     {
     public:
+      static std::string theirSourceFile;
+      static std::string theirFunction;
+
       // Parameters that must be passed to the constructor of the
       // FIR_FilterKernel class.
       struct Parameters : Kernel::Parameters
       {
+        Parameters(const Parset& ps);
         size_t nrBytesPerComplexSample;
         size_t nrHistorySamples;
         size_t nrPPFTaps;
@@ -88,12 +93,7 @@ namespace LOFAR
                 const Buffers &buffers,
                 const Parameters& params);
 
-      void init(gpu::DeviceMemory &devFilteredData,
-                gpu::DeviceMemory &devInputSamples,
-                gpu::Stream &stream);
-
       gpu::DeviceMemory devFIRweights;
-
     };
 
     // Specialization of the KernelFactory constructor for FIR_FilterKernel.
@@ -102,8 +102,7 @@ namespace LOFAR
 
     template<> FIR_FilterKernel*
     KernelFactory<FIR_FilterKernel>::create(const gpu::Stream& stream,
-                                            const Buffers& buffers,
-                                            const Parameters& param) const;
+                                            const Buffers& buffers) const;
 
     template<> size_t
     KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const;

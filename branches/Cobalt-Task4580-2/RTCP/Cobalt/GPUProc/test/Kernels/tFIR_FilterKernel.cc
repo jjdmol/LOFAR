@@ -28,32 +28,39 @@
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
-struct TestFixture
+struct Fixture
 {
-  TestFixture() : ps("tFIR_FilterKernel.in_parset") {}
-  ~TestFixture() {}
+  Fixture() {
+    ps.add("Observation.channelsPerSubband", "16");
+    ps.add("OLAP.CNProc.integrationSteps", "3072");
+    ps.add("Observation.VirtualInstrument.stationList", "[RS106]");
+    ps.add("Observation.nrBitsPerSample", "8");
+    ps.updateSettings();
+  }
+  ~Fixture() {
+  }
   Parset ps;
 };
 
-TEST_FIXTURE(TestFixture, InputData)
+TEST_FIXTURE(Fixture, InputData)
 {
   CHECK_EQUAL(size_t(197568),
               FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::INPUT_DATA));
 }
 
-TEST_FIXTURE(TestFixture, OutputData)
+TEST_FIXTURE(Fixture, OutputData)
 {
   CHECK_EQUAL(size_t(786432),
               FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::OUTPUT_DATA));
 }
 
-TEST_FIXTURE(TestFixture, FilterWeights)
+TEST_FIXTURE(Fixture, FilterWeights)
 {
   CHECK_EQUAL(size_t(1024),
               FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::FILTER_WEIGHTS));
 }
 
-TEST_FIXTURE(TestFixture, MustThrow)
+TEST_FIXTURE(Fixture, MustThrow)
 {
   CHECK_THROW(FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::BufferType(3)),
               GPUProcException);
