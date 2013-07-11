@@ -168,6 +168,25 @@ namespace LOFAR
         // key: PIC.Core.CS001LBA.phaseCenter
         std::vector<double> phaseCenter;
 
+        // The phase correction for this station, in radians.
+        //
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phaseCorrection.X
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phaseCorrection.Y
+        struct {
+          double x;
+          double y;
+        } phaseCorrection;
+
+        // The delay correction for this station, in seconds
+        //
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delayCorrection.X
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delayCorrection.Y
+        struct {
+          double x;
+          double y;
+        } delayCorrection;
+
+
         // The RSP board to which each subband is mapped
         //
         // key: Observation.Dataslots.CS001LBA.RSPBoardList
@@ -441,9 +460,20 @@ namespace LOFAR
       // Returns the Nyquist zone number based on bandFilter.
       unsigned nyquistZone() const;
 
-      // Constructs the station names "CS001HBA0" etc from a set of stations
+      struct AntennaFieldName {
+        std::string station;
+        std::string antennaField;
+
+        AntennaFieldName(const std::string &station, const std::string &antennaField): station(station), antennaField(antennaField) {}
+
+        std::string fullName() const {
+          return station + antennaField;
+        }
+      };
+
+      // Constructs the antenna fields ("CS001",HBA0") etc from a set of stations
       // ("CS001","CS002") and the antenna set.
-      static std::vector<std::string> antennaFields(const std::vector<std::string> &stations, const std::string &antennaSet);
+      static std::vector<struct AntennaFieldName> antennaFields(const std::vector<std::string> &stations, const std::string &antennaSet);
     };
 
 
