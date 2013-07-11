@@ -433,7 +433,7 @@ namespace LOFAR
         // \param synchronous Indicates whether the transfer must be done
         //        synchronously or asynchronously.
         void writeBuffer(DeviceMemory &devMem, const HostMemory &hostMem,
-                         bool synchronous = false);
+                         bool synchronous = false) const;
 
         // Transfer data from device memory \a devMem to host memory \a hostMem.
         // \param hostMem Host memory that will be copied to.
@@ -441,14 +441,14 @@ namespace LOFAR
         // \param synchronous Indicates whether the transfer must be done
         //        synchronously or asynchronously.
         void readBuffer(HostMemory &hostMem, const DeviceMemory &devMem,
-                        bool synchronous = false);
+                        bool synchronous = false) const;
 
         // Launch a CUDA function.
         // \param function object containing the function to launch
         // \param grid Grid size (in terms of blocks (not threads (OpenCL)))
         // \param block Block (thread group) size
         void launchKernel(const Function &function,
-                          const Grid &grid, const Block &block);
+                          const Grid &grid, const Block &block) const;
 
         // Check if all operations on this stream have completed.
         // \return true if all completed, or false otherwise.
