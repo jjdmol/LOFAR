@@ -60,6 +60,14 @@ namespace LOFAR
     {
     }
 
+    Kernel::Kernel(const gpu::Stream& stream, 
+                   const gpu::Function& function)
+      : 
+      gpu::Function(function),
+      event(stream.getContext())
+    {
+    }
+
     void Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
     {
       // Unlike OpenCL, no need to check for 0-sized work. CUDA can handle it.

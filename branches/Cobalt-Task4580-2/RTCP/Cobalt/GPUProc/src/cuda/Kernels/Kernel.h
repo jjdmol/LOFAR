@@ -38,6 +38,27 @@ namespace LOFAR
     class Kernel : public gpu::Function
     {
     public:
+      // Buffers that must be passed to the constructor of this Kernel class.
+      struct Buffers
+      {
+        Buffers(const gpu::DeviceMemory& in, 
+                const gpu::DeviceMemory& out) :
+          input(in), output(out)
+        {}
+        gpu::DeviceMemory input;
+        gpu::DeviceMemory output;
+      };
+
+      // Parameters that must be passed to the constructor of this Kernel class.
+      struct Parameters
+      {
+        size_t nrStations;
+        size_t nrChannelsPerSubband;
+        size_t nrSamplesPerChannel;
+        size_t nrSamplesPerSubband;
+        size_t nrPolarizations;
+      };
+
       // Construct a kernel. The parset \a ps contains numerous parameters that
       // will be used to compile the kernel source to PTX code. Compiling to
       // PTX-code is relatively expensive and should therefore be done only
@@ -58,11 +79,15 @@ namespace LOFAR
       static const CompileDefinitions& compileDefinitions(const Parset& ps);
 
     protected:
+      // Construct a kernel.
+      Kernel(const gpu::Stream& stream, const gpu::Function& function);
+
       // TODO: Remove once we decide we will only create a Kernel from source.
       Kernel(const Parset &ps, const gpu::Module& module, const std::string &name);
 
       gpu::Event event;
-      const Parset &ps;
+      // gpu::Stream itsStream;
+      Parset ps;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;

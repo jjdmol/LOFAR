@@ -30,6 +30,16 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    FIR_FilterKernel::FIR_FilterKernel(const gpu::Stream& stream,
+                                       const gpu::Module& module,
+                                       const Buffers& buffers,
+                                       const Parameters& params) :
+      Kernel(stream, gpu::Function(module, "FIR_filter")),
+      devFIRweights(buffers.filterWeights)
+    {
+      init(stream, buffers, params);
+    }
+
     FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, 
                                        gpu::Context &context,
                                        gpu::DeviceMemory &devFilteredData,
@@ -39,6 +49,7 @@ namespace LOFAR
       Kernel(ps, context, "FIR_Filter.cu", "FIR_filter"),
       devFIRweights(context, bufferSize(ps, FILTER_WEIGHTS))
     {
+      // Parameters initialiseren o.b.v. Parset ...
       init(devFilteredData, devInputSamples, stream);
     }
 
@@ -51,8 +62,55 @@ namespace LOFAR
       Kernel(ps, module, "FIR_filter"),
       devFIRweights(module.getContext(), bufferSize(ps, FILTER_WEIGHTS))
     {
+      // Parameters initialiseren o.b.v. Parset ...
       init(devFilteredData, devInputSamples, stream);
     }
+
+    void FIR_FilterKernel::init(const gpu::Stream &stream,
+                                const Buffers &buffers,
+                                const Parameters& params)
+    {
+      setArg(0, buffers.output);
+      setArg(1, buffers.input);
+      setArg(2, devFIRweights);
+
+      size_t maxNrThreads = 
+        getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+
+      unsigned totalNrThreads = 
+        params.nrChannelsPerSubband * params.nrPolarizations * 2;
+      unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
+
+      globalWorkSize = gpu::Grid(totalNrThreads, params.nrStations);
+      localWorkSize = gpu::Block(totalNrThreads / nrPasses, 1);
+
+      size_t nrSamples = 
+        params.nrStations * params.nrChannelsPerSubband * 
+        params.nrPolarizations;
+
+      nrOperations = 
+        nrSamples * params.nrSamplesPerChannel * params.nrPPFTaps * 2 * 2;
+
+      nrBytesRead = 
+        nrSamples * (params.nrPPFTaps - 1 + params.nrSamplesPerChannel) * 
+        params.nrBytesPerComplexSample;
+
+      nrBytesWritten = 
+        nrSamples * params.nrSamplesPerChannel * sizeof(std::complex<float>);
+
+      // Note that these constant weights are now (unnecessarily) stored on the
+      // device for every workqueue. A single copy per device could be used, but
+      // first verify that the device platform still allows workqueue overlap.
+      FilterBank filterBank(true, params.nrPPFTaps, 
+                            params.nrChannelsPerSubband, KAISER);
+      filterBank.negateWeights();
+
+      gpu::HostMemory firWeights(stream.getContext(), devFIRweights.size());
+      std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(),
+                  firWeights.size());
+      stream.writeBuffer(devFIRweights, firWeights, true);
+    }
+
 
     void FIR_FilterKernel::init(gpu::DeviceMemory &devFilteredData,
                                 gpu::DeviceMemory &devInputSamples,
@@ -99,6 +157,36 @@ namespace LOFAR
       case FILTER_WEIGHTS:
         return 
           ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
+
+    template<>
+    KernelFactory<FIR_FilterKernel>::KernelFactory(const Parset& ps) :
+      itsParset(ps)
+    {
+      // Compile FIR_FilterKernel source to PTX
+      // itsPTX = ...
+    }
+
+    template<> size_t 
+    KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case FIR_FilterKernel::INPUT_DATA: 
+        return
+          (itsParset.nrHistorySamples() + itsParset.nrSamplesPerSubband()) * 
+          itsParset.nrStations() * NR_POLARIZATIONS * 
+          itsParset.nrBytesPerComplexSample();
+      case FIR_FilterKernel::OUTPUT_DATA:
+        return
+          itsParset.nrSamplesPerSubband() * itsParset.nrStations() * 
+          NR_POLARIZATIONS * sizeof(std::complex<float>);
+      case FIR_FilterKernel::FILTER_WEIGHTS:
+        return 
+          itsParset.nrChannelsPerSubband() * NR_TAPS * sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

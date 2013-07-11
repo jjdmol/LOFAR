@@ -24,6 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/gpu_wrapper.h>
 
@@ -34,6 +35,39 @@ namespace LOFAR
     class FIR_FilterKernel : public Kernel
     {
     public:
+      // Parameters that must be passed to the constructor of the
+      // FIR_FilterKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        size_t nrBytesPerComplexSample;
+        size_t nrHistorySamples;
+        size_t nrPPFTaps;
+      };
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        FILTER_WEIGHTS
+      };
+
+      // Buffers that must be passed to the constructor of the FIR_FilterKernel
+      // class.
+      struct Buffers : Kernel::Buffers
+      {
+        Buffers(const gpu::DeviceMemory& in, 
+                const gpu::DeviceMemory& out,
+                const gpu::DeviceMemory& fw) :
+          Kernel::Buffers(in, out), filterWeights(fw)
+        {}
+        gpu::DeviceMemory filterWeights;
+      };
+
+      FIR_FilterKernel(const gpu::Stream& stream,
+                       const gpu::Module& module,
+                       const Buffers& buffers,
+                       const Parameters& param);
+
       FIR_FilterKernel(const Parset &ps,
                        gpu::Context &context,
                        gpu::DeviceMemory &devFilteredData,
@@ -46,17 +80,14 @@ namespace LOFAR
                        gpu::DeviceMemory &devInputSamples,
                        gpu::Stream &stream);
 
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA,
-        FILTER_WEIGHTS
-      };
-
       // Return required buffer size for \a bufferType
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
     private:
+      void init(const gpu::Stream &stream,
+                const Buffers &buffers,
+                const Parameters& params);
+
       void init(gpu::DeviceMemory &devFilteredData,
                 gpu::DeviceMemory &devInputSamples,
                 gpu::Stream &stream);
@@ -64,6 +95,19 @@ namespace LOFAR
       gpu::DeviceMemory devFIRweights;
 
     };
+
+    // Specialization of the KernelFactory constructor for FIR_FilterKernel.
+    template<> 
+    KernelFactory<FIR_FilterKernel>::KernelFactory(const Parset& ps);
+
+    template<> FIR_FilterKernel*
+    KernelFactory<FIR_FilterKernel>::create(const gpu::Stream& stream,
+                                            const Buffers& buffers,
+                                            const Parameters& param) const;
+
+    template<> size_t
+    KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const;
+
   }
 }
 
