@@ -84,7 +84,7 @@ namespace LOFAR {
       /**
        * Setup an appropriate UDP/IP header
        */
-      void setup_udpip_header(uint32 l_srcip, uint32 l_dstip);
+      void setup_udpip_header(uint32 l_srcip, uint32 l_dstip, uint16 l_dstport);
 
       /**
        * Compute the 16-bit 1-complements checksum for the IP header.
