@@ -44,8 +44,7 @@ namespace LOFAR
 
       // Create a new Kernel object of type \c T.
       T* create(const gpu::Stream& stream,
-                const Buffers& buffers,
-                const Parameters& param) const;
+                const Buffers& buffers) const;
 
       // // Create a new Kernel object of type \c T, using kernel-specific
       // // parameters to instantiate this new object.
@@ -58,10 +57,10 @@ namespace LOFAR
     private:
       // PTX code, generated for kernels of type \c T, using information in the
       // Parset that was passed to the constructor.
-      std::string itsPtx;
+      std::string itsPTX;
 
-      // Private copy of the parset
-      Parset itsParset;
+      // Parameters needed to create a Kernel object of type \c T.
+      Parameters itsParameters;
     };
 
   } // namespace Cobalt
