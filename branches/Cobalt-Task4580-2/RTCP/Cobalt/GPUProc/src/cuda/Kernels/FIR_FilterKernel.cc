@@ -21,10 +21,15 @@
 #include <lofar_config.h>
 
 #include "FIR_FilterKernel.h"
-
-#include <Common/lofar_complex.h>
-
 #include <GPUProc/global_defines.h>
+
+#include <boost/lexical_cast.hpp>
+#include <complex>
+
+#include <Common/StreamUtil.h>
+
+using namespace std;
+using boost::lexical_cast;
 
 namespace LOFAR
 {
@@ -35,6 +40,7 @@ namespace LOFAR
 
     FIR_FilterKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
+      nrBitsPerSample(ps.nrBitsPerSample()),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrHistorySamples(ps.nrHistorySamples()),
       nrPPFTaps(ps.nrPPFTaps())
@@ -150,8 +156,9 @@ namespace LOFAR
     KernelFactory<FIR_FilterKernel>::KernelFactory(const Parset& ps) :
       itsParameters(ps)
     {
-      // TODO: Set compile definitions & flags
-      itsPTX = createPTX(FIR_FilterKernel::theirSourceFile);
+      itsPTX = createPTX(FIR_FilterKernel::theirSourceFile,
+                         compileDefinitions(),
+                         compileFlags());
     }
 
     template<>
@@ -186,6 +193,25 @@ namespace LOFAR
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
+    }
+
+    template<> CompileDefinitions
+    KernelFactory<FIR_FilterKernel>::compileDefinitions() const
+    {
+      CompileDefinitions defs =
+        KernelFactoryBase::compileDefinitions(itsParameters);
+      defs["NR_BITS_PER_SAMPLE"] =
+        lexical_cast<string>(itsParameters.nrBitsPerSample);
+      defs["NR_TAPS"] =
+        lexical_cast<string>(itsParameters.nrPPFTaps);
+      return defs;
+    }
+
+    template<> CompileFlags
+    KernelFactory<FIR_FilterKernel>::compileFlags() const
+    {
+      CompileFlags flags;
+      return flags;
     }
 
   }

@@ -24,22 +24,40 @@
 
 #include <string>
 #include <CoInterface/Parset.h>
+#include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/gpu_wrapper.h>
+#include <GPUProc/gpu_utils.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
+    // Abstract base class of the templated KernelFactory class.
+    class KernelFactoryBase
+    {
+    public:
+      // Pure virtual destructor, because this is an abstract base class.
+      virtual ~KernelFactoryBase() = 0;
+
+    protected:
+      // Return compile definitions to use when creating PTX code for any
+      // Kernel.
+      CompileDefinitions
+      compileDefinitions(const Kernel::Parameters& param) const;
+    };
+
     // Declaration of a generic factory class. For each concrete Kernel class
     // (e.g. FIR_FilterKernel), a specialization must exist of the constructor
     // and of the bufferSize() method.
-    template<typename T> class KernelFactory
+    template<typename T> class KernelFactory : public KernelFactoryBase
     {
     public:
-      typedef typename T::Parameters Parameters;
+      // typedef typename T::Parameters Parameters;
       typedef typename T::BufferType BufferType;
       typedef typename T::Buffers Buffers;
 
+      // Construct a factory for creating Kernel objects of type \c T, using the
+      // settings in the Parset \a ps.
       KernelFactory(const Parset& ps);
 
       // Create a new Kernel object of type \c T.
@@ -55,12 +73,20 @@ namespace LOFAR
       size_t bufferSize(BufferType bufferType) const;
 
     private:
+      // Return compile definitions to use when creating PTX code for kernels of
+      // type \c T, using the parameters stored in \c itsParameters.
+      CompileDefinitions compileDefinitions() const;
+
+      // Return compile flags to use when creating PTX code for kernels of type
+      // \c T.
+      CompileFlags compileFlags() const;
+
+      // Additional parameters needed to create a Kernel object of type \c T.
+      typename T::Parameters itsParameters;
+
       // PTX code, generated for kernels of type \c T, using information in the
       // Parset that was passed to the constructor.
       std::string itsPTX;
-
-      // Parameters needed to create a Kernel object of type \c T.
-      Parameters itsParameters;
     };
 
   } // namespace Cobalt

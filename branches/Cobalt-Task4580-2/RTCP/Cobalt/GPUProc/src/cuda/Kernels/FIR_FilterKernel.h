@@ -44,6 +44,7 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
+        size_t nrBitsPerSample;
         size_t nrBytesPerComplexSample;
         size_t nrHistorySamples;
         size_t nrPPFTaps;
@@ -106,6 +107,12 @@ namespace LOFAR
 
     template<> size_t
     KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const;
+
+    template<> CompileDefinitions
+    KernelFactory<FIR_FilterKernel>::compileDefinitions() const;
+
+    template<> CompileFlags
+    KernelFactory<FIR_FilterKernel>::compileFlags() const;
 
   }
 }
