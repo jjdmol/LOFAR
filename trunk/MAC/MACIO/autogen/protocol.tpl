@@ -32,6 +32,8 @@
 [+ IF (== (suffix) "cc") +]
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StreamUtil.h>
+#include <MACIO/Marshalling.tcc>
 #include "[+ (base-name) +].ph"
 
 using namespace LOFAR::MACIO;

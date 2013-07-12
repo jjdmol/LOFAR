@@ -39,6 +39,8 @@ prelude = << PRELUDE_END
 //	SEND_MSG_POOL	 (int seqnr, uint nrMsgs, strVector key, strVector value, dblVector time);
 //	SEND_MSG_POOL_ACK(int seqnr, uint result);
 
+using LOFAR::operator<<;
+
 PRELUDE_END;
 
 // An "event" has a "signal" and a "dir" (direction)
@@ -120,21 +122,15 @@ event = {
 	};
 	param = {
 		name = "keys";
-		type = "MACIO::StringVector";
-		userdefined;
-		printable;
+		type = "vector<string>";
 	};
 	param = {
 		name = "values";
-		type = "MACIO::StringVector";
-		userdefined;
-		printable;
+		type = "vector<string>";
 	};
 	param = {
 		name = "times";
-		type = "MACIO::DoubleVector";
-		userdefined;
-		printable;
+		type = "vector<double>";
 	};
 };
 

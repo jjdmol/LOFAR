@@ -34,8 +34,7 @@
 #include <cmath>
 
 namespace LOFAR {
-  namespace RTC
-{
+
 class NsTimestamp
 {
 public:
@@ -218,9 +217,8 @@ inline size_t NsTimestamp::unpack(const char *__buffer)
 
 /*@}*/
 
-std::ostream& operator<< (std::ostream& os, const LOFAR::RTC::NsTimestamp& ts);
+std::ostream& operator<< (std::ostream& os, const LOFAR::NsTimestamp& ts);
 
-  }; // namespace RTC
 }; // namespace LOFAR
 
 #endif /* NSTIMESTAMP_H_ */
