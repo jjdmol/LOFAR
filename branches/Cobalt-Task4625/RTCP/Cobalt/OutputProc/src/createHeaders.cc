@@ -70,6 +70,8 @@ int main(int argc, char *argv[])
 
   CasaLogSink::attach();
 
+  ParameterSet feedbackLTA;
+
   try {
     Parset parset(argv[1]);
     if (argc > 2) isBigEndian = boost::lexical_cast<bool>(argv[2]);
@@ -89,8 +91,11 @@ int main(int argc, char *argv[])
           // create measurement set
           ot.createMS();
 
-          // output LTA feedback
+          // wrap up
           ot.cleanUp();
+
+          // obtain LTA feedback
+          feedbackLTA.adoptCollection(ot.feedbackLTA());
         } catch (Exception &ex) {
           LOG_WARN_STR(logPrefix << "Could not create header: " << ex);
         } catch (exception &ex) {
@@ -102,7 +107,6 @@ int main(int argc, char *argv[])
     // taken from IONProc/src/Job.cc
     // Augment the LTA feedback logging
     {
-      ParameterSet feedbackLTA;
       feedbackLTA.add("Observation.DataProducts.nrOfOutput_Beamformed_", str(boost::format("%u") % parset.nrStreams(BEAM_FORMED_DATA)));
       feedbackLTA.add("Observation.DataProducts.nrOfOutput_Correlated_", str(boost::format("%u") % parset.nrStreams(CORRELATED_DATA)));
 

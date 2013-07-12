@@ -39,6 +39,7 @@
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
+#include <Stream/FileStream.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 
@@ -214,12 +215,40 @@ int main(int argc, char **argv)
   if (storageProcesses) {
     time_t completing_start = time(0);
 
+    LOG_INFO("Retrieving and forwarding final meta data");
+
     // retrieve and forward final meta data
     // TODO: Increase timeouts when FinalMetaDataGatherer starts working again
     storageProcesses->forwardFinalMetaData(completing_start + 2);
 
+    LOG_INFO("Stopping Storage processes");
+
     // graceful exit
     storageProcesses->stop(completing_start + 10);
+
+    LOG_INFO("Writing LTA feedback to disk");
+
+    // obtain LTA feedback
+    Parset feedbackLTA;
+    feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
+
+    // augment LTA feedback with global information
+    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Beamformed_", str(format("%u") % ps.nrStreams(BEAM_FORMED_DATA)));
+    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_", str(format("%u") % ps.nrStreams(CORRELATED_DATA)));
+
+    // write LTA feedback to disk
+    const char *LOFARROOT = getenv("LOFARROOT");
+    if (LOFARROOT != NULL) {
+      try {
+        string feedbackFilename = str(format("%s/var/share/Observation_%s.feedback") % LOFARROOT % ps.observationID());
+        FileStream feedbackStream(feedbackFilename, 0666);
+        feedbackLTA.write(&feedbackStream);
+      } catch (LOFAR::SystemCallException &ex) {
+        LOG_ERROR_STR("Could not write feedback file: " << ex);
+      }
+    } else {
+      LOG_WARN_STR("Could not write feedback file: $LOFARROOT not set.");
+    }
   }
 
   LOG_INFO_STR("Done");

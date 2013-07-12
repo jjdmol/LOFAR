@@ -67,7 +67,11 @@ namespace LOFAR
 
       void start();
       void stop( struct timespec deadline );
-      bool isDone();
+      bool isDone() const;
+
+      // Returns feedback for the LTA -- only access this once the
+      // StorageProcess has finished!
+      ParameterSet feedbackLTA() const;
 
     private:
       void                               controlThread();
@@ -80,6 +84,8 @@ namespace LOFAR
 
       FinalMetaData                      &itsFinalMetaData;
       Trigger                            &itsFinalMetaDataAvailable;
+
+      ParameterSet                       itsFeedbackLTA;
 
       SmartPtr<Thread> itsThread;
     };

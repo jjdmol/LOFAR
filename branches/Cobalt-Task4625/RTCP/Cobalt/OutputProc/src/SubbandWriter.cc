@@ -53,6 +53,11 @@ namespace LOFAR
       itsOutputThread->augment(finalMetaData);
     }
 
+    ParameterSet SubbandWriter::feedbackLTA() const
+    {
+      return itsOutputThread->feedbackLTA();
+    }
+
 
   } // namespace Cobalt
 } // namespace LOFAR
