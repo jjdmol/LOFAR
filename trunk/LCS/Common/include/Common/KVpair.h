@@ -42,6 +42,7 @@ class KVpair : public pair<string, string>
 {
 public:
 	KVpair(const string& aKey, const string& aValue, bool genTimestamp = false);
+	KVpair(const string& aKey, const char*   aValue, bool genTimestamp = false);
 	KVpair(const string& aKey, bool			 aValue, bool genTimestamp = false);
 	KVpair(const string& aKey, int			 aValue, bool genTimestamp = false);
 	KVpair(const string& aKey, double		 aValue, bool genTimestamp = false);
@@ -57,6 +58,9 @@ public:
 };
 
 // @} addgroup
+
+std::ostream& operator<< (std::ostream& os, const LOFAR::KVpair& kv);
+
 } // namespace LOFAR
 
 #endif

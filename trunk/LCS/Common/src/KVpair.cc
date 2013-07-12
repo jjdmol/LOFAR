@@ -25,6 +25,7 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
+#include<Common/NsTimestamp.h>
 #include<Common/StringUtil.h>
 #include<Common/KVpair.h>
 #include<time.h>
@@ -33,10 +34,16 @@ namespace LOFAR {
 
 #define	OPTIONAL_TIMESTAMP		\
 	if (genTimestamp) { \
-		first.append(formatString("{%d}", time(0))); \
+		first.append(formatString("{%.9f}", (double)NsTimestamp::now())); \
 	}
 
 KVpair::KVpair(const string& aKey, const string&  aValue, bool genTimestamp) :
+	pair<string, string> (aKey, aValue)
+{
+	OPTIONAL_TIMESTAMP
+}
+
+KVpair::KVpair(const string& aKey, const char*  aValue, bool genTimestamp) :
 	pair<string, string> (aKey, aValue)
 {
 	OPTIONAL_TIMESTAMP
@@ -105,5 +112,8 @@ KVpair& KVpair::operator=(const KVpair& that)
 	return (*this);
 }
 
-
-} // namespace LOFAR
+std::ostream& operator<< (std::ostream& os, const LOFAR::KVpair& kv)
+{
+	return os << kv.first << "=" << kv.second;
+}
+ } // namespace LOFAR
