@@ -26,6 +26,7 @@
 #include <cstdio>    // for remove()
 #include <cstdlib>   // for unsetenv()
 #include <fstream>
+#include <stdexcept>
 #include <UnitTest++.h>
 #include <Common/LofarLogger.h>
 #include <CoInterface/Exceptions.h>
