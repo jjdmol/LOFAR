@@ -1,0 +1,228 @@
+//# DemixWorker.h: Demixer helper class processing a time chunk
+//# Copyright (C) 2011
+//# ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id: Demixer.h 23223 2012-12-07 14:09:42Z schoenmakers $
+//#
+//# @author Ger van Diepen
+
+#ifndef DPPP_DEMIXWORKER_H
+#define DPPP_DEMIXWORKER_H
+
+// @file
+// @brief DPPP step class to average in time and/or freq
+
+#include <DPPP/DemixInfo.h>
+#include <DPPP/Baseline.h>
+#include <DPPP/DPInput.h>
+#include <DPPP/DPBuffer.h>
+#include <DPPP/Patch.h>
+#include <DPPP/PhaseShift.h>
+#include <DPPP/Filter.h>
+#include <ParmDB/ParmDB.h>
+
+#include <casa/Arrays/Cube.h>
+#include <casa/Quanta/Quantum.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MeasFrame.h>
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MCPosition.h>
+
+namespace LOFAR {
+
+  namespace DPPP {
+    // @ingroup NDPPP
+
+    // DemixWorker::process processes a single time window (say, 2 minutes).
+    // It predicts the A-team and target sources to determine which sources
+    // have to be taken into account and which antennae have to be solved for.
+    // Multiple DemixWorker::process can be executed in parallel by the parent
+    // class DemixerNew.
+    //
+    // Each DemixWorker object references a DemixInfo object containing the
+    // general info and parameters.
+
+    class DemixWorker
+    {
+    public:
+      // Construct the object.
+      // Parameters are obtained from the parset using the given prefix.
+      DemixWorker (DPInput*,
+                   const ParameterSet& parset,
+                   const string& prefix,
+                   const DemixInfo& info,
+                   const DPInfo& dpinfo);
+
+      // Process the data in the input buffers and store the result in the
+      // output buffers.
+      void process (const DPBuffer* bufin, uint nbufin,
+                    DPBuffer* bufout);
+
+      // Export the solutions to a ParmDB.
+      void dumpSolutions (BBS::ParmDB&);
+
+      // Get the number of converged solutions.
+      uint nConverged() const
+        { return itsNConverged; }
+      // Get the number of times no demix was needed.
+      uint nNoDemix() const
+        { return itsNNoDemix; }
+      uint nIncludeTarget() const
+        { return itsNIncludeTarget; }
+      uint nIgnoreTarget() const
+        { return itsNIgnoreTarget; }
+      uint nDeprojectTarget() const
+        { return itsNDeprojectTarget; }
+
+      // Get the timings of the various processing steps.
+      // <group>
+      double getTotalTime() const
+        { return itsTimer.getElapsed(); }
+      double getPredictTime() const
+        { return itsTimerPredict.getElapsed(); }
+      double getPhaseShiftTime() const
+        { return itsTimerPhaseShift.getElapsed(); }
+      double getDemixTime() const
+        { return itsTimerDemix.getElapsed(); }
+      double getSolveTime() const
+        { return itsTimerSolve.getElapsed(); }
+      // </group>
+
+    private:
+      // Average the baseline UVWs in bufin and split them into UVW per station.
+      // It returns the number of time averages.
+      uint avgSplitUVW (const DPBuffer* bufin, uint nbufin,
+                        uint ntimeAvg);
+
+      // Predict the target StokesI amplitude.
+      // It applies the beam at each target patch.
+      void predictTarget (const vector<Patch::ConstPtr>& patchList,
+                          uint ntime);
+
+      // Predict the StokesI amplitude of the Ateam patches and determine
+      // which antennae and sources to use when demixing.
+      // It applies the beam at each patch center.
+      void predictAteam (const vector<Patch::ConstPtr>& patchList,
+                         uint ntime);
+
+      // Apply the beam for the given sky direction.
+      void applyBeam (const Position& dir);
+
+      // Calculate the StokesI amplitude from the predicted visibilities.
+      // (0.5 * (XX+YY))
+      void calcStokesI (casa::Matrix<float>& ampl);
+
+      // Simply average the data if no demixing needs to bedone.
+      void average (const DPBuffer* bufin, uint nbufin,
+                    DPBuffer* bufout);
+
+      // Add the decorrelation factor contribution for each time slot.
+      void addFactors (const DPBuffer& newBuf,
+                       casa::Array<casa::DComplex>& factorBuf);
+
+      // Calculate the decorrelation factors by averaging them.
+      // Apply the P matrix to deproject the sources without a model.
+      void makeFactors (const casa::Array<casa::DComplex>& bufIn,
+                        casa::Array<casa::DComplex>& bufOut,
+                        const casa::Cube<float>& weightSums,
+                        uint nChanOut,
+                        uint nChanAvg);
+
+      // Deproject the sources without a model.
+      void deproject (casa::Array<casa::DComplex>& factors,
+                      vector<MultiResultStep*> avgResults,
+                      uint resultIndex);
+
+      // Do the demixing.
+      void handleDemix (DPBuffer* bufout);
+
+      // Solve gains and subtract sources.
+      void demix (DPBuffer* bufout);
+
+      // Merge the data of the selected baselines from the subtract buffer
+      // into the full buffer.
+      void mergeSubtractResult();
+
+      //# Data members.
+      const DemixInfo&                      itsInfo;
+      const DPInfo&                         itsDPInfo;
+      vector<PhaseShift*>                   itsPhaseShifts;
+      //# Phase shift and average steps for demix.
+      vector<DPStep::ShPtr>                 itsFirstSteps;
+      //# Result of phase shifting and averaging the directions of interest
+      //# at the demix resolution.
+      vector<MultiResultStep*>              itsAvgResults;
+      DPStep::ShPtr                         itsAvgStepSubtr;
+      Filter                                itsFilter;
+      Filter*                               itsFilterSubtr;
+      //# Result of averaging the target at the subtract resolution.
+      MultiResultStep*                      itsAvgResultFull;
+      MultiResultStep*                      itsAvgResultSubtr;
+
+      //# Accumulator used for computing the demixing weights at the demix
+      //# resolution. The shape of this buffer is #correlations x #channels
+      //# x #baselines x #directions x #directions (fastest axis first).
+      casa::Array<casa::DComplex>           itsFactorBuf;
+      //# Buffer of demixing weights at the demix resolution. Each Array is a
+      //# cube of shape #correlations x #channels x #baselines of matrices of
+      //# shape #directions x #directions.
+      vector<casa::Array<casa::DComplex> >  itsFactors;
+
+      //# Accumulator used for computing the demixing weights. The shape of this
+      //# buffer is #correlations x #channels x #baselines x #directions
+      //# x #directions (fastest axis first).
+      casa::Array<casa::DComplex>           itsFactorBufSubtr;
+      //# Buffer of demixing weights at the subtract resolution. Each Array is a
+      //# cube of shape #correlations x #channels x #baselines of matrices of
+      //# shape #directions x #directions.
+      vector<casa::Array<casa::DComplex> >  itsFactorsSubtr;
+
+      //# Indicies telling which Ateam sources to use.
+      vector<uint>                          itsIndices;
+      casa::Matrix<double>                  itsAvgUVW;      //# temp buffer
+      //# UVW per station per demix time slot
+      casa::Cube<double>                    itsStationUVW;  //# UVW per station
+      casa::Cube<dcomplex>                  itsPredictVis;  //# temp buffer
+      //# #nfreq x #bl x #time StokesI amplitude per A-source.
+      vector<casa::Cube<float> >            itsAteamAmpl;
+      //# #nfreq x #bl x #time StokesI amplitude of target.
+      casa::Cube<float>                     itsTargetAmpl;
+      //# Per A-source the nr of antennae matching the minimum amplitude.
+      casa::Matrix<uint> >                  itsAntennaeMatch;
+      vector<double>                        itsUnknowns;
+      vector<double>                        itsPrevSolution;
+      uint                                  itsNTimeOut;
+      uint                                  itsNTimeOutSubtr;
+      uint                                  itsTimeIndex;
+      uint                                  itsNConverged;
+
+      //# Timers.
+      NSTimer                               itsTimer;
+      NSTimer                               itsTimerPredict;
+      NSTimer                               itsTimerPhaseShift;
+      NSTimer                               itsTimerDemix;
+      NSTimer                               itsTimerSolve;
+    };
+
+  } //# end namespace
+} //# end namespace
+
+#endif

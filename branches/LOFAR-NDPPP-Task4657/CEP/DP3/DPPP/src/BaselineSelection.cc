@@ -42,8 +42,9 @@ namespace LOFAR {
     BaselineSelection::BaselineSelection (const ParameterSet& parset,
                                           const string& prefix,
                                           bool minmax,
-					  const string& defaultCorrType)
-      : itsStrBL    (parset.getString (prefix + "baseline", "")),
+					  const string& defaultCorrType,
+                                          const string& defaultBaseline)
+      : itsStrBL    (parset.getString (prefix + "baseline", defaultBaseline)),
         itsCorrType (parset.getString (prefix + "corrtype", defaultCorrType)),
         itsRangeBL  (parset.getDoubleVector (prefix + "blrange",
                                              vector<double>()))
@@ -94,6 +95,16 @@ namespace LOFAR {
         handleLength (selectBL, info);
       }
       return selectBL;
+    }
+
+    Block<bool> BaselineSelection::applyVec (const DPInfo& info)
+    {
+      Matrix<bool> sel = apply(info);
+      Block<bool> bl(info.nbaselines());
+      for (uint i=0; i<info.nbaselines(); ++i) {
+        bl[i] = sel(info.getAnt1[i], info.getAnt2[i]);
+      }
+      return bl;
     }
 
     void BaselineSelection::handleBL (Matrix<bool>& selectBL,
