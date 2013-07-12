@@ -34,7 +34,6 @@
 #include <CoInterface/Exceptions.h>
 
 #include <GPUProc/global_defines.h>
-#include <Common/StreamUtil.h>
 
 namespace LOFAR
 {
@@ -281,8 +280,6 @@ namespace LOFAR
                      CompileFlags flags, 
                      const vector<gpu::Device> &devices)
     {
-      LOG_INFO_STR("definitions: " << definitions);
-      LOG_INFO_STR("flags: " << flags);
       // The CUDA code is assumed to be written for the architecture of the
       // oldest device.
       flags.insert(str(format("--gpu-architecture %s") % 

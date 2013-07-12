@@ -44,29 +44,25 @@ struct Fixture
 
 TEST_FIXTURE(Fixture, InputData)
 {
-  KernelFactory<FIR_FilterKernel> factory(ps);
   CHECK_EQUAL(size_t(197568),
-              factory.bufferSize(FIR_FilterKernel::INPUT_DATA));
+              FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::INPUT_DATA));
 }
 
 TEST_FIXTURE(Fixture, OutputData)
 {
-  KernelFactory<FIR_FilterKernel> factory(ps);
   CHECK_EQUAL(size_t(786432),
-              factory.bufferSize(FIR_FilterKernel::OUTPUT_DATA));
+              FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::OUTPUT_DATA));
 }
 
 TEST_FIXTURE(Fixture, FilterWeights)
 {
-  KernelFactory<FIR_FilterKernel> factory(ps);
   CHECK_EQUAL(size_t(1024),
-              factory.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS));
+              FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::FILTER_WEIGHTS));
 }
 
 TEST_FIXTURE(Fixture, MustThrow)
 {
-  KernelFactory<FIR_FilterKernel> factory(ps);
-  CHECK_THROW(factory.bufferSize(FIR_FilterKernel::BufferType(3)),
+  CHECK_THROW(FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::BufferType(3)),
               GPUProcException);
 }
 

@@ -61,7 +61,6 @@ typedef const float (*WeightsType)[NR_CHANNELS][16];
  * NR_BITS_PER_SAMPLE      | 8 or 16                     | number of bits of signed integral value type of sampledDataPtr (TODO: support 4)
  * NR_CHANNELS             | multiple of 16 and > 0      | number of frequency channels per subband
  * NR_POLARIZATIONS        | power of 2                  | number of polarizations
- * COMPLEX                 | 2                           | size of complex in number of floats/doubles
  *
  * Execution configuration: (TODO: enforce using __attribute__ reqd_work_group_size)
  * - Work dim == 2  (can be 1 iff NR_STATIONS == 1)
