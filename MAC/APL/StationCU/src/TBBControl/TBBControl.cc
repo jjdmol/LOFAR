@@ -27,6 +27,7 @@
 #include <Common/LofarLocators.h>
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
+#include <Common/NsTimestamp.h>
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/StationConfig.h>
@@ -37,14 +38,13 @@
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <APL/RTCCommon/Timestamp.h>
 #include <APL/CR_Protocol/CR_Protocol.ph>
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 #include <time.h>
-#include <APL/RTCCommon/Timestamp.h>
-#include <APL/RTCCommon/NsTimestamp.h>
 #include <StationCU/Package__Version.h>
 
 //# local includes

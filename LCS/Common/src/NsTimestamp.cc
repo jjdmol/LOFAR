@@ -23,17 +23,12 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
-#include <APL/RTCCommon/NsTimestamp.h>
+#include <Common/NsTimestamp.h>
 
 #include <math.h>
 #include <time.h>
 
-//using namespace LOFAR;
-//using namespace RTC;
-//using namespace std;
-
 namespace LOFAR {
-  namespace RTC {
 
 void NsTimestamp::setNow(double delay)
 {
@@ -51,10 +46,9 @@ void NsTimestamp::setNow(double delay)
 	}
 }
 
-  } // namepsace RTC
 } // namespace LOFAR
 
-std::ostream& LOFAR::RTC::operator<< (std::ostream& os, const NsTimestamp& ts)
+std::ostream& LOFAR::operator<< (std::ostream& os, const NsTimestamp& ts)
 {
   char timestring[256];
   char zonestring[16];

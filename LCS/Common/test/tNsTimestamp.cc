@@ -29,10 +29,9 @@
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
 #include <Common/hexdump.h>
-#include <APL/RTCCommon/NsTimestamp.h>
+#include <Common/NsTimestamp.h>
 
 using namespace LOFAR;
-using namespace RTC;
 
 int main (int, char*	argv[])
 {
@@ -60,11 +59,11 @@ int main (int, char*	argv[])
 	cout << "\n--- Setters and getters ---" << endl;
 	NsTimestamp		TS6;
 	TS6.setNow();
-	cout << TS6 << endl;
+	cout << ">>>" << TS6 << "<<<" << endl;
 	TS6.setNow(100.01);
-	cout << TS6 << endl;
+	cout << ">>>" << TS6 << "<<<" << endl;
 	TS6.setNow(-100.01);
-	cout << TS6 << endl;
+	cout << ">>>" << TS6 << "<<<" << endl;
 
 	struct timeval tv2;
 	TS4.get(&tv2);
