@@ -242,7 +242,7 @@ int main(int argc, char **argv)
 
       try {
         feedbackLTA.writeFile(feedbackFilename, false);
-      } catch (LOFAR::SystemCallException &ex) {
+      } catch (APSException &ex) {
         LOG_ERROR_STR("Could not write feedback file " << feedbackFilename << ": " << ex);
       }
     } else {
