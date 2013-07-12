@@ -23,6 +23,7 @@ if(USE_CUDA)
   list(APPEND _gpuproc_sources 
     cuda/gpu_wrapper.cc
     cuda/gpu_utils.cc
+    cuda/KernelFactory.cc
     cuda/PerformanceCounter.cc
     cuda/Kernels/Kernel.cc
     cuda/Kernels/BeamFormerKernel.cc

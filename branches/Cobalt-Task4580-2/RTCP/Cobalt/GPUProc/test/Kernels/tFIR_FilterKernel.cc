@@ -20,54 +20,84 @@
 //# $Id$
 
 #include <lofar_config.h>
+
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <CoInterface/Parset.h>
-#include <Common/lofar_iostream.h>
+#include <Common/lofar_complex.h>
+
 #include <UnitTest++.h>
+#include <memory>
 
-using namespace LOFAR;
 using namespace LOFAR::Cobalt;
+using namespace LOFAR;
+using namespace std;
 
-struct Fixture
+TEST(FIR_FilterKernel)
 {
-  Fixture() {
-    ps.add("Observation.channelsPerSubband", "16");
-    ps.add("OLAP.CNProc.integrationSteps", "3072");
-    ps.add("Observation.VirtualInstrument.stationList", "[RS106]");
-    ps.add("Observation.nrBitsPerSample", "8");
-    ps.updateSettings();
-  }
-  ~Fixture() {
-  }
   Parset ps;
-};
+  ps.add("Observation.nrBitsPerSample", "8");
+  ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
+  ps.add("OLAP.CNProc.integrationSteps", "128");
+  ps.add("Observation.channelsPerSubband", "64");
+  ps.updateSettings();
 
-TEST_FIXTURE(Fixture, InputData)
-{
-  CHECK_EQUAL(size_t(197568),
-              FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::INPUT_DATA));
-}
+  KernelFactory<FIR_FilterKernel> factory(ps);
 
-TEST_FIXTURE(Fixture, OutputData)
-{
-  CHECK_EQUAL(size_t(786432),
-              FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::OUTPUT_DATA));
-}
+  gpu::Device device(gpu::Platform().devices()[0]);
+  gpu::Context context(device);
+  gpu::Stream stream(context);
 
-TEST_FIXTURE(Fixture, FilterWeights)
-{
-  CHECK_EQUAL(size_t(1024),
-              FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::FILTER_WEIGHTS));
-}
+  gpu::DeviceMemory
+    dInput(context, factory.bufferSize(FIR_FilterKernel::INPUT_DATA)),
+    dOutput(context, factory.bufferSize(FIR_FilterKernel::OUTPUT_DATA)),
+    dCoeff(context,  factory.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS));
 
-TEST_FIXTURE(Fixture, MustThrow)
-{
-  CHECK_THROW(FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::BufferType(3)),
-              GPUProcException);
+  gpu::HostMemory
+    hInput(context, dInput.size()),
+    hOutput(context, dOutput.size()),
+    hCoeff(context, dCoeff.size());
+
+  cout << "dInput.size() = " << dInput.size() << endl;
+  cout << "dOutput.size() = " << dOutput.size() << endl;
+  cout << "dCoeff.size() = " << dCoeff.size() << endl;
+
+  // hInput.get<i8complex>()[2176] = i8complex(1,0);
+
+  i8complex* ibuf = hInput.get<i8complex>();
+  for(size_t i = 1922; i < 1923; ++i) {
+    ibuf[i] = i8complex(1,0);
+  }
+
+  stream.writeBuffer(dInput, hInput);
+
+  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff);
+  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
+  kernel->enqueue();
+
+  stream.readBuffer(hOutput, dOutput);
+  stream.readBuffer(hCoeff, dCoeff);
+
+  float* buf = hOutput.get<float>();
+  for(size_t i = 0; i < hOutput.size() / sizeof(float); ++i) {
+    cout << "out[" << i << "] = " << buf[i] << endl;
+  }
+
+  buf = hCoeff.get<float>();
+  for(size_t i = 0; i < hCoeff.size() / sizeof(float); ++i) {
+    cout << "coeff[" << i << "] = " << buf[i] << endl;
+  }
+
 }
 
 int main()
 {
   INIT_LOGGER("tFIR_FilterKernel");
-  return UnitTest::RunAllTests() > 0;
+  try {
+    gpu::Platform pf;
+    return UnitTest::RunAllTests() > 0;
+  } catch (gpu::GPUException& e) {
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
+    return 3;
+  }
+
 }

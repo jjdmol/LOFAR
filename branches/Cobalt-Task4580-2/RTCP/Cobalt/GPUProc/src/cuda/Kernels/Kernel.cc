@@ -54,6 +54,7 @@ namespace LOFAR
                                compileDefinitions(ps))),
         functionName),
       event(context),
+      itsStream(context),
       ps(ps)
     {
     }
@@ -65,6 +66,7 @@ namespace LOFAR
       :
       gpu::Function(module, name),
       event(module.getContext()),
+      itsStream(module.getContext()),
       ps(ps)
     {
     }
@@ -73,11 +75,13 @@ namespace LOFAR
                    const gpu::Function& function)
       : 
       gpu::Function(function),
-      event(stream.getContext())
+      event(stream.getContext()),
+      itsStream(stream)
     {
     }
 
-    void Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
+    void Kernel::enqueue(const gpu::Stream &queue
+                         /*, PerformanceCounter &counter*/) const
     {
       // Unlike OpenCL, no need to check for 0-sized work. CUDA can handle it.
       //if (globalWorkSize.x == 0)
@@ -94,6 +98,11 @@ namespace LOFAR
       //queue.enqueueNDRangeKernel(*this, gpu::nullDim, globalWorkSize, localWorkSize, 0, &event);
       queue.launchKernel(*this, grid, block);
 //      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
+    }
+
+    void Kernel::enqueue() const
+    {
+      enqueue(itsStream);
     }
 
     // TODO: Remove
