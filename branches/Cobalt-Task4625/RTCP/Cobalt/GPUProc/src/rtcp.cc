@@ -39,7 +39,6 @@
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
-#include <Stream/FileStream.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 
@@ -239,12 +238,12 @@ int main(int argc, char **argv)
     // write LTA feedback to disk
     const char *LOFARROOT = getenv("LOFARROOT");
     if (LOFARROOT != NULL) {
+      string feedbackFilename = str(format("%s/var/run/Observation_%s.feedback") % LOFARROOT % ps.observationID());
+
       try {
-        string feedbackFilename = str(format("%s/var/run/Observation_%s.feedback") % LOFARROOT % ps.observationID());
-        FileStream feedbackStream(feedbackFilename, 0666);
-        feedbackLTA.write(&feedbackStream);
+        feedbackLTA.writeFile(feedbackFilename, false);
       } catch (LOFAR::SystemCallException &ex) {
-        LOG_ERROR_STR("Could not write feedback file: " << ex);
+        LOG_ERROR_STR("Could not write feedback file " << feedbackFilename << ": " << ex);
       }
     } else {
       LOG_WARN_STR("Could not write feedback file: $LOFARROOT not set.");
