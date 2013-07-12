@@ -240,7 +240,7 @@ int main(int argc, char **argv)
     const char *LOFARROOT = getenv("LOFARROOT");
     if (LOFARROOT != NULL) {
       try {
-        string feedbackFilename = str(format("%s/var/share/Observation_%s.feedback") % LOFARROOT % ps.observationID());
+        string feedbackFilename = str(format("%s/var/run/Observation_%s.feedback") % LOFARROOT % ps.observationID());
         FileStream feedbackStream(feedbackFilename, 0666);
         feedbackLTA.write(&feedbackStream);
       } catch (LOFAR::SystemCallException &ex) {
