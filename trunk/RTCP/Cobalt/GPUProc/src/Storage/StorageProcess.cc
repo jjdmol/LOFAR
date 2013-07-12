@@ -79,14 +79,25 @@ namespace LOFAR
         return;
       }
 
-      if (!itsThread->wait(deadline))
+      if (!itsThread->wait(deadline)) {
         itsThread->cancel();
+        itsThread->wait();
+      }
     }
 
 
-    bool StorageProcess::isDone()
+    bool StorageProcess::isDone() const
     {
       return itsThread->isDone();
+    }
+
+
+    ParameterSet StorageProcess::feedbackLTA() const
+    {
+      // Prevent read/write conflicts
+      ASSERT(isDone());
+
+      return itsFeedbackLTA;
     }
 
 
@@ -160,6 +171,12 @@ namespace LOFAR
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sending final meta data");
       itsFinalMetaData.write(stream);
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent final meta data");
+
+      // Wait for LTA feedback
+      LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] reading LTA feedback");
+      Parset feedbackLTA(&stream);
+      itsFeedbackLTA.adoptCollection(feedbackLTA);
+      LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] read LTA feedback");
 
       // Wait for Storage to finish properly
       sshconn.wait();
