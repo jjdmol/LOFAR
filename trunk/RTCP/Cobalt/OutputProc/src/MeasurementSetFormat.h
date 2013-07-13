@@ -78,7 +78,7 @@ namespace LOFAR
       const Parset &itsPS;
 
       const std::vector<std::string> stationNames;
-      const std::vector<double> antPos;
+      const MultiDimArray<double,2>  antPos;
 
       const unsigned itsNrAnt;
       uint32 itsNrTimes;

@@ -134,7 +134,12 @@ namespace LOFAR
           // find the next valid entry before `end'
           do {
             cache = *ptr;
-          } while(from() >= to() && ++ptr != end);
+          } while(!cacheValid() && ++ptr != end);
+        }
+
+        // whether `cache' is a valid entry
+        bool cacheValid() const {
+          return from() < to();
         }
 
         // a non-volatile cache of *ptr

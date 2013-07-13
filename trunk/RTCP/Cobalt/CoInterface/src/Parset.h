@@ -39,6 +39,7 @@
 #include <CoInterface/BeamCoordinates.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/MultiDimArray.h>
 
 
 namespace LOFAR
@@ -390,11 +391,15 @@ namespace LOFAR
           // key: Observation.Beam[sap].TiedArrayBeam[tab].dispersionMeasure
           double dispersionMeasure;
 
-          // The list of station indices to use for beam forming.
-          //
-          // key: Observation.Beam[sap].TiedArrayBeam[tab].stationList
-          // (note: the key contains station names, not indices)
-          std::vector<size_t> stations;
+          struct File {
+            size_t stokesNr;
+            size_t streamNr;
+            struct FileLocation location;
+          };
+
+          // The list of files to write, one file
+          // per part/stokes.
+          std::vector<struct File> files; 
         };
 
         struct SAP {
@@ -408,6 +413,8 @@ namespace LOFAR
         //
         // size: len(Observation.nrBeams)
         std::vector<struct SAP> SAPs;
+
+        size_t maxNrTABsPerSAP() const;
 
         struct StokesSettings {
           // The type of stokes to output
@@ -520,7 +527,7 @@ namespace LOFAR
       double                      sampleDuration() const;
       unsigned                    nrBitsPerSample() const;
       size_t                      nrBytesPerComplexSample() const;
-      std::vector<double>         positions() const;
+      MultiDimArray<double,2>     positions() const;
       std::string                 positionType() const;
       unsigned                    dedispersionFFTsize() const;
       unsigned                    CNintegrationSteps() const;

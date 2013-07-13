@@ -412,55 +412,13 @@ namespace LOFAR
        * ===============================
        */
 
+      // SAP/TAB-crossing counter for the files we generate
+      size_t bfStreamNr = 0;
+
       settings.beamFormer.enabled = getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
       if (settings.beamFormer.enabled || true) { // for now, the values below are also used even if no beam forming is performed
-        settings.beamFormer.SAPs.resize(nrSAPs);
 
-        for (unsigned i = 0; i < nrSAPs; ++i) {
-          struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
-
-          size_t nrTABs = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
-
-          sap.TABs.resize(nrTABs);
-          for (unsigned j = 0; j < nrTABs; ++j) {
-            struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
-
-            const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
-
-            tab.directionDelta.type    = getString(prefix + ".directionType", "J2000");
-            tab.directionDelta.angle1  = getDouble(prefix + ".angle1", 0.0);
-            tab.directionDelta.angle2  = getDouble(prefix + ".angle2", 0.0);
-
-            tab.coherent          = getBool(prefix + ".coherent", true);
-            tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
-
-            const vector<string> stations = getStringVector(prefix + ".stationList", emptyVectorString, true);
-
-            if (stations.empty()) {
-              // default: add all stations
-              tab.stations.reserve(settings.stations.size());
-              for (unsigned t = 0; t < settings.stations.size(); ++t) {
-                tab.stations.push_back(t);
-              }
-            } else {
-              // if stations are given, look them up and record the indices
-              tab.stations.reserve(stations.size());
-              for (unsigned s = 0; s < stations.size(); ++s) {
-                const string &name = stations[s];
-
-                // lookup name in the stations list
-                for (unsigned t = 0; t < settings.stations.size(); ++t) {
-                  if (name == settings.stations[t].name) {
-                    // found
-                    tab.stations.push_back(t);
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-
+        // Parse global settings
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
           // iterating twice.
@@ -498,6 +456,47 @@ namespace LOFAR
           if (set->nrSubbandsPerFile == 0) {
             // apply default
             set->nrSubbandsPerFile = settings.subbands.size();
+          }
+
+          ASSERTSTR(set->nrSubbandsPerFile >= settings.subbands.size(), "Multiple parts/file are not yet supported!");
+        }
+
+        // Parse all TABs
+        settings.beamFormer.SAPs.resize(nrSAPs);
+
+        for (unsigned i = 0; i < nrSAPs; ++i) {
+          struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
+
+          size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
+          size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
+          double ringWidth = getDouble(str(format("Observation.Beam[%u].ringWidth") % i), 0.0);
+
+          ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
+
+          sap.TABs.resize(nrTABs);
+          for (unsigned j = 0; j < nrTABs; ++j) {
+            struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
+
+            const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+
+            tab.directionDelta.type    = getString(prefix + ".directionType", "J2000");
+            tab.directionDelta.angle1  = getDouble(prefix + ".angle1", 0.0);
+            tab.directionDelta.angle2  = getDouble(prefix + ".angle2", 0.0);
+
+            tab.coherent          = getBool(prefix + ".coherent", true);
+            tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
+
+            struct ObservationSettings::BeamFormer::StokesSettings &set =
+               tab.coherent ? settings.beamFormer.coherentSettings
+                            : settings.beamFormer.incoherentSettings;
+
+            // Generate file list
+            tab.files.resize(set.nrStokes);
+            for (size_t s = 0; s < set.nrStokes; ++s) {
+              tab.files[s].stokesNr = s;
+              tab.files[s].streamNr = bfStreamNr++;
+              tab.files[s].location = getFileLocation("Beamformed", tab.files[s].streamNr);
+            }
           }
         }
 
@@ -552,6 +551,18 @@ namespace LOFAR
 
       return location;
     }
+
+
+    size_t ObservationSettings::BeamFormer::maxNrTABsPerSAP() const
+    {
+      size_t max = 0;
+
+      for (size_t sapNr = 0; sapNr < SAPs.size(); ++sapNr)
+        max = std::max(max, SAPs[sapNr].TABs.size());
+
+      return max;
+    }
+
 
     void Parset::updateSettings()
     {
@@ -721,21 +732,26 @@ namespace LOFAR
     }
 
 
-    vector<double> Parset::positions() const
+    MultiDimArray<double,2> Parset::positions() const
     {
-      vector<double> pos, list;
-
       const vector<ObservationSettings::Correlator::Station> &stations = settings.correlator.stations;
+
+      MultiDimArray<double,2> list(boost::extents[stations.size()][3]);
 
       for (size_t i = 0; i < stations.size(); i++) {
         const string &name = stations[i].name;
+        vector<double> pos;
 
         if (name.find("+") != string::npos)
           pos = centroidPos(name); // super station
         else
-          pos = getDoubleVector("PIC.Core." + name + ".position");
+          pos = getDoubleVector("PIC.Core." + name + ".position", true);
 
-        list.insert(list.end(), pos.begin(), pos.end());
+        ASSERT(pos.size() == 3);
+
+        list[i][0] = pos[0];
+        list[i][1] = pos[1];
+        list[i][2] = pos[2];
       }
 
       return list;
