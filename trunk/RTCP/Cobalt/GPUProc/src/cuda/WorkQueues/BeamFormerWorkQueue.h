@@ -35,14 +35,16 @@
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
 
 #include <GPUProc/Kernels/IntToFloatKernel.h>
+#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
+/*
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/Filter_FFT_Kernel.h>
-#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
 #include <GPUProc/Kernels/DedispersionForwardFFTkernel.h>
 #include <GPUProc/Kernels/DedispersionBackwardFFTkernel.h>
 #include <GPUProc/Kernels/DedispersionChirpKernel.h>
+*/
 
 #include "WorkQueue.h"
 
@@ -97,6 +99,7 @@ namespace LOFAR
       gpu::DeviceMemory devFilteredData;
 
     private:
+      IntToFloatKernel intToFloatKernel;
 #if 0
       // Compiled kernels
       FIR_FilterKernel firFilterKernel;

@@ -45,14 +45,13 @@ namespace LOFAR
       // FIR, which the beam former does in a later stage!
       //
       // NOTE: Sizes are probably completely wrong.
-      devInput(ps.nrChannelsPerSubband() == 1
-               ? DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA)
-               : FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::INPUT_DATA),
+      devInput(IntToFloatKernel::bufferSize(ps, IntToFloatKernel::INPUT_DATA),
                DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS),
                DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
 
-      devFilteredData(context, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA))
+      devFilteredData(context, IntToFloatKernel::bufferSize(ps, IntToFloatKernel::OUTPUT_DATA)),
+      intToFloatKernel(ps, context, devFilteredData, devInput.inputSamples)
 #if 0
       firFilterKernel(ps, programs.firFilterProgram,
                       devFilteredData, devInput.inputSamples, devFIRweights),
@@ -91,23 +90,64 @@ namespace LOFAR
                 ps.integrationSteps(),
                 context));
       }
+
+      // CPU timers are set by CorrelatorPipeline
+      addTimer("CPU - read input");
+      addTimer("CPU - process");
+      addTimer("CPU - postprocess");
+      addTimer("CPU - total");
+
+      // GPU timers are set by us
+      addTimer("GPU - total");
+      addTimer("GPU - input");
+      addTimer("GPU - output");
+      addTimer("GPU - compute");
+      addTimer("GPU - wait");
     }
 
 
     void BeamFormerWorkQueue::processSubband(WorkQueueInputData &input, StreamableData &_output)
     {
-      (void)input;
       (void)_output;
 
+      size_t block = input.blockID.block;
+      unsigned subband = input.blockID.globalSubbandIdx;
+
+      {
+#if defined USE_B7015
+        OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
+#endif
+        queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
+//      counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
+      }
+
+      if (ps.delayCompensation())
+      {
+        unsigned SAP = ps.settings.subbands[subband].SAP;
+
+        // Only upload delays if they changed w.r.t. the previous subband.
+        if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
+          queue.writeBuffer(devInput.delaysAtBegin,  input.delaysAtBegin,  false);
+          queue.writeBuffer(devInput.delaysAfterEnd, input.delaysAfterEnd, false);
+          queue.writeBuffer(devInput.phaseOffsets,   input.phaseOffsets,   false);
+          // beamFormerWeights.hostToDevice(false);
+
+          prevSAP = SAP;
+          prevBlock = block;
+        }
+      }
+
+      intToFloatKernel.enqueue(queue);
+      // fftKernel.enqueue();
+      // delayAndBandpassKernel.enqueue()
+      // beamFormerKernel.enqueue()
+      // transposeKernel.enqueue()
+      // inverseFFTKernel.enqueue()
+      // PPFKernel.enqueue()
+
 #if 0
-      //queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, firWeightsSize, firFilterWeights);
-      bandPassCorrectionWeights.hostToDevice(true);
       DMs.hostToDevice(true);
 
-        delaysAtBegin.hostToDevice(false);
-        delaysAfterEnd.hostToDevice(false);
-        phaseOffsets.hostToDevice(false);
-        beamFormerWeights.hostToDevice(false);
 
           {
 #if defined USE_B7015
