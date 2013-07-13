@@ -103,11 +103,11 @@ namespace LOFAR
       itsAlignment(alignment)
     {
       if (itsPS.nrTabStations() > 0) {
-        ASSERTSTR(antPos.size() == 3 * itsPS.nrTabStations(),
-                  antPos.size() << " == " << 3 * itsPS.nrTabStations());
+        ASSERTSTR(antPos.size() == itsPS.nrTabStations(),
+                  antPos.size() << " == " << itsPS.nrTabStations());
       } else {
-        ASSERTSTR(antPos.size() == 3 * itsPS.nrStations(),
-                  antPos.size() << " == " << 3 * itsPS.nrStations());
+        ASSERTSTR(antPos.size() == itsPS.nrStations(),
+                  antPos.size() << " == " << itsPS.nrStations());
       }
 
       itsStartTime = toMJDs(itsPS.startTime());
@@ -162,9 +162,9 @@ namespace LOFAR
 
         try {
           for (unsigned i = 0; i < itsNrAnt; i++) {
-            antMPos[i] = MPosition(MVPosition(antPos[3 * i],
-                                              antPos[3 * i + 1],
-                                              antPos[3 * i + 2]),
+            antMPos[i] = MPosition(MVPosition(antPos[i][0],
+                                              antPos[i][1],
+                                              antPos[i][2]),
                                    MPosition::ITRF);
           }
         } catch (AipsError &ex) {
@@ -201,7 +201,7 @@ namespace LOFAR
                            configLocator.locate("StaticMetaData"),
                            configLocator.locate("StaticMetaData"));
         } catch (LOFAR::AssertError &ex) {
-          LOG_WARN_STR("Ignoring exception from BeamTables::fill(): " << ex.what());
+          LOG_ERROR_STR("Failed to add beam tables: " << ex);
         }
       } catch (AipsError &ex) {
         THROW(StorageException, "AIPS/CASA error: " << ex.getMesg());

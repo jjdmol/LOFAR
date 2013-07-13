@@ -856,26 +856,12 @@ SUITE(integration) {
     // check SAP 0
     CHECK_EQUAL(2U,         ps.settings.beamFormer.SAPs[0].TABs.size());
     CHECK_EQUAL(true,       ps.settings.beamFormer.SAPs[0].TABs[0].coherent);
-    CHECK_EQUAL(nrStations, ps.settings.beamFormer.SAPs[0].TABs[0].stations.size());
     CHECK_EQUAL(false,      ps.settings.beamFormer.SAPs[0].TABs[1].coherent);
-    CHECK_EQUAL(nrStations, ps.settings.beamFormer.SAPs[0].TABs[1].stations.size());
 
     // check SAP 1
     CHECK_EQUAL(2U,         ps.settings.beamFormer.SAPs[1].TABs.size());
     CHECK_EQUAL(true,       ps.settings.beamFormer.SAPs[1].TABs[0].coherent);
-    CHECK_EQUAL(nrStations, ps.settings.beamFormer.SAPs[1].TABs[0].stations.size());
     CHECK_EQUAL(false,      ps.settings.beamFormer.SAPs[1].TABs[1].coherent);
-    CHECK_EQUAL(nrStations, ps.settings.beamFormer.SAPs[1].TABs[1].stations.size());
-
-    // check all station lists of TABs in one go
-    for (unsigned sap = 0; sap < nrSAPs; ++sap) {
-      for (unsigned tab = 0; tab < ps.settings.beamFormer.SAPs[sap].TABs.size(); ++tab) {
-        for (unsigned st = 0; st < nrStations; ++st) {
-          //CHECK_EQUAL(ps.settings.stations[st].name, ps.settings.beamFormer.SAPs[sap].TABs[tab].stations[st].name); // <-- why not this?
-          CHECK_EQUAL(st, ps.settings.beamFormer.SAPs[sap].TABs[tab].stations[st]);
-        }
-      }
-    }
 
     // check coherent settings
     CHECK_EQUAL(STOKES_I,   ps.settings.beamFormer.coherentSettings.type);

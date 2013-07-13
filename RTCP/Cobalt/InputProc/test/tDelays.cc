@@ -78,6 +78,8 @@ TEST(TiedArrayBeam) {
   Parset ps;
 
   ps.add( "Observation.DataProducts.Output_Beamformed.enabled", "true" );
+  ps.add( "Observation.DataProducts.Output_Beamformed.filenames", "[beam0.raw]" );
+  ps.add( "Observation.DataProducts.Output_Beamformed.locations", "[localhost:.]" );
 
   ps.add( "Observation.referencePhaseCenter", "[0, 0, 0]" ); // center of earth
   ps.add( "PIC.Core.CS001LBA.phaseCenter", "[0, 0, 299792458]" ); // 1 lightsecond away from earth center
@@ -123,6 +125,8 @@ TEST(AllDelayIO) {
   Parset ps;
 
   ps.add( "Observation.DataProducts.Output_Beamformed.enabled", "true" );
+  ps.add( "Observation.DataProducts.Output_Beamformed.filenames", "[beam0.raw]" );
+  ps.add( "Observation.DataProducts.Output_Beamformed.locations", "[localhost:.]" );
   ps.add( "Observation.nrBeams", "2" );
   ps.add( "Observation.Beam[0].directionType", "J2000" );
   ps.add( "Observation.Beam[0].angle1", "1" );

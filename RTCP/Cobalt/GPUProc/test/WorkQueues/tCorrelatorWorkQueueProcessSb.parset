@@ -5,7 +5,6 @@ OLAP.CNProc.nrPPFTaps			 = 16
 Observation.VirtualInstrument.stationList = [CS002]
 Observation.antennaSet = HBA_DUAL
 Observation.nrBeams                      = 1
-Observation.Beam[0].nrTiedArrayBeams 	 = 2
 Observation.Beam[0].subbandList	 = [300..301]
 OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1
 OLAP.CNProc_IncoherentStokes.timeIntegrationFactor = 1
