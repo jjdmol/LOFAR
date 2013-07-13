@@ -30,12 +30,15 @@
 #include <Common/lofar_map.h>
 #include <Common/hexdump.h>
 #include <Common/NsTimestamp.h>
+#include <cassert>
+#include <cstdlib>
 
 using namespace LOFAR;
 
 int main (int, char*	argv[])
 {
 	INIT_LOGGER(argv[0]);
+	assert(setenv("TZ", "UTC", true) == 0);
 
 	cout << "\n--- Testing constructors ---" << endl;
 	NsTimestamp		TS1;
