@@ -486,7 +486,7 @@ namespace LOFAR
       const size_t nchan = itsPS.nrChannelsPerSubband();
       const double chanWidth = itsPS.channelWidth();
       const double totalBW = nchan * chanWidth;
-      const double channel0freq = itsPS.channel0Frequency(subband);
+      const double channel0freq = itsPS.channel0Frequency(subband, nchan);
 
       casa::Vector<double> chanWidths(nchan, chanWidth);
       casa::Vector<double> chanFreqs(nchan);

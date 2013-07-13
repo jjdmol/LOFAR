@@ -431,11 +431,13 @@ namespace LOFAR
             case 0:
               prefix = "OLAP.CNProc_CoherentStokes";
               set = &settings.beamFormer.coherentSettings;
+              set->coherent = true;
               break;
 
             case 1:
               prefix = "OLAP.CNProc_IncoherentStokes";
               set = &settings.beamFormer.incoherentSettings;
+              set->coherent = false;
               break;
 
             default:
@@ -493,9 +495,17 @@ namespace LOFAR
             // Generate file list
             tab.files.resize(set.nrStokes);
             for (size_t s = 0; s < set.nrStokes; ++s) {
-              tab.files[s].stokesNr = s;
-              tab.files[s].streamNr = bfStreamNr++;
-              tab.files[s].location = getFileLocation("Beamformed", tab.files[s].streamNr);
+              struct ObservationSettings::BeamFormer::File file;
+
+              file.sapNr    = i;
+              file.tabNr    = j;
+              file.coherent = tab.coherent;
+              file.stokesNr = s;
+              file.streamNr = bfStreamNr++;
+              file.location = getFileLocation("Beamformed", tab.files[s].streamNr);
+
+              tab.files[s] = file;
+              settings.beamFormer.files.push_back(file);
             }
           }
         }
@@ -516,6 +526,10 @@ namespace LOFAR
 
     size_t ObservationSettings::nrSamplesPerSubband() const {
       return correlator.nrChannels * correlator.nrSamplesPerChannel;
+    }
+
+    double ObservationSettings::blockDuration() const {
+      return nrSamplesPerSubband() / subbandWidth();
     }
 
     double ObservationSettings::Correlator::integrationTime() const {
@@ -550,6 +564,17 @@ namespace LOFAR
       location.directory = host_dir[1];
 
       return location;
+    }
+
+    size_t ObservationSettings::nrSubbands(size_t SAP) const
+    {
+      size_t count = 0;
+
+      for (size_t sb = 0; sb < subbands.size(); ++sb)
+        if (subbands[sb].SAP == SAP)
+          ++count;
+
+      return count;
     }
 
 
@@ -602,21 +627,6 @@ namespace LOFAR
 
       if (outputThisType(BEAM_FORMED_DATA) || outputThisType(TRIGGER_DATA)) {
         // second transpose is performed
-      }
-
-      // check whether the beam forming parameters are valid
-      const Transpose2 &logic = transposeLogic();
-
-      for (unsigned i = 0; i < logic.nrStreams(); i++) {
-        const StreamInfo &info = logic.streamInfo[i];
-
-        if ( info.timeIntFactor == 0 )
-          THROW(CoInterfaceException, "Temporal integration factor needs to be > 0 (it is set to 0 for " << (info.coherent ? "coherent" : "incoherent") << " beams).");
-
-        if ( info.coherent
-             && info.stokesType == STOKES_XXYY
-             && info.timeIntFactor != 1 )
-          THROW(CoInterfaceException, "Cannot perform temporal integration if calculating Coherent Stokes XXYY. Integration factor needs to be 1, but is set to " << info.timeIntFactor);
       }
     }
 
@@ -686,9 +696,9 @@ namespace LOFAR
         return 0;
 
       switch (outputType) {
-      case CORRELATED_DATA:   return nrSubbands();
+      case CORRELATED_DATA:   return settings.correlator.files.size();
       case BEAM_FORMED_DATA:        // FALL THROUGH
-      case TRIGGER_DATA:      return transposeLogic().nrStreams();
+      case TRIGGER_DATA:      return settings.beamFormer.files.size();
       default:                 THROW(CoInterfaceException, "Unknown output type");
       }
     }
@@ -868,14 +878,6 @@ namespace LOFAR
     std::string Parset::name() const
     {
       return itsName;
-    }
-
-    const Transpose2 &Parset::transposeLogic() const
-    {
-      if (!itsTransposeLogic)
-        itsTransposeLogic = new Transpose2(*this);
-
-      return *itsTransposeLogic;
     }
 
     unsigned Parset::observationID() const
@@ -1143,11 +1145,11 @@ namespace LOFAR
       return settings.corrections.bandPass;
     }
 
-    double Parset::channel0Frequency(size_t subband) const
+    double Parset::channel0Frequency(size_t subband, size_t nrChannels) const
     {
       const double sbFreq = settings.subbands[subband].centralFrequency;
 
-      if (nrChannelsPerSubband() == 1)
+      if (nrChannels == 1)
         return sbFreq;
 
       // if the 2nd PPF is used, the subband is shifted half a channel
@@ -1208,165 +1210,6 @@ namespace LOFAR
     string Parset::PVSS_TempObsName() const
     {
       return getString("_DPname","");
-    }
-
-    void StreamInfo::log() const
-    {
-      LOG_DEBUG_STR( "Stream " << stream << " is sap " << sap << " beam " << beam << " stokes " << stokes << " part " << part << " consisting of subbands " << subbands );
-    }
-
-    Transpose2::Transpose2( const Parset &parset )
-      :
-
-      streamInfo( generateStreamInfo(parset) )
-    {
-    }
-
-    unsigned Transpose2::nrStreams() const
-    {
-      return streamInfo.size();
-    }
-
-    // compose and decompose a stream number
-    unsigned Transpose2::stream( unsigned sap, unsigned beam, unsigned stokes, unsigned part, unsigned startAt ) const
-    {
-      for (unsigned i = startAt; i < streamInfo.size(); i++) {
-        const struct StreamInfo &info = streamInfo[i];
-
-        if (sap == info.sap && beam == info.beam && stokes == info.stokes && part == info.part)
-          return i;
-      }
-
-      // shouldn't reach this point
-      ASSERTSTR(false, "Requested non-existing sap " << sap << " beam " << beam << " stokes " << stokes << " part " << part);
-
-      return 0;
-    }
-
-    void Transpose2::decompose( unsigned stream, unsigned &sap, unsigned &beam, unsigned &stokes, unsigned &part ) const
-    {
-      const struct StreamInfo &info = streamInfo[stream];
-
-      sap = info.sap;
-      beam = info.beam;
-      stokes = info.stokes;
-      part = info.part;
-    }
-
-    std::vector<unsigned> Transpose2::subbands( unsigned stream ) const
-    {
-      ASSERT(stream < streamInfo.size());
-
-      return streamInfo[stream].subbands;
-    }
-
-    unsigned Transpose2::nrSubbands( unsigned stream ) const
-    {
-      return stream >= streamInfo.size() ? 0 : subbands(stream).size();
-    }
-
-    static bool streamInfoSubbandsComp( const struct StreamInfo &a, const struct StreamInfo &b )
-    {
-      return a.subbands.size() < b.subbands.size();
-    }
-
-    unsigned Transpose2::maxNrSubbands() const
-    {
-      return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSubbandsComp )->subbands.size();
-    }
-
-    static bool streamInfoChannelsComp( const struct StreamInfo &a, const struct StreamInfo &b )
-    {
-      return a.nrChannels < b.nrChannels;
-    }
-
-    unsigned Transpose2::maxNrChannels() const
-    {
-      return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoChannelsComp )->nrChannels;
-    }
-
-    static bool streamInfoSamplesComp( const struct StreamInfo &a, const struct StreamInfo &b )
-    {
-      return a.nrSamples < b.nrSamples;
-    }
-
-    unsigned Transpose2::maxNrSamples() const
-    {
-      return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSamplesComp )->nrSamples;
-    }
-
-    size_t Transpose2::subbandSize( unsigned stream ) const
-    {
-      const StreamInfo &info = streamInfo[stream];
-
-      return (size_t)info.nrChannels * (info.nrSamples | 2) * sizeof(float);
-    }
-
-
-    std::vector<struct StreamInfo> Transpose2::generateStreamInfo( const Parset &parset ) const
-    {
-      // get all info from parset, since we will be called while constructing our members
-
-      // ParameterSets are SLOW, so settings any info we need repeatedly
-
-      std::vector<struct StreamInfo> infoset;
-      const unsigned nrSAPs = parset.settings.SAPs.size();
-      const unsigned nrSubbands = parset.settings.subbands.size();
-
-      const unsigned nrSamples = parset.CNintegrationSteps();
-
-      struct StreamInfo info;
-      info.stream = 0;
-
-      for (unsigned sap = 0; sap < nrSAPs; sap++) {
-        const unsigned nrBeams = parset.nrTABs(sap);
-
-        info.sap = sap;
-
-        std::vector<unsigned> sapSubbands;
-
-        for (unsigned sb = 0; sb < nrSubbands; sb++)
-          if (parset.settings.subbands[sb].SAP == sap)
-            sapSubbands.push_back(sb);
-
-        for (unsigned beam = 0; beam < nrBeams; beam++) {
-          info.beam = beam;
-
-          const bool coherent = parset.settings.beamFormer.SAPs[sap].TABs[beam].coherent;
-          const ObservationSettings::BeamFormer::StokesSettings &set =
-              coherent ? parset.settings.beamFormer.coherentSettings
-                       : parset.settings.beamFormer.incoherentSettings;
-          const unsigned nrStokes = set.nrStokes;
-
-          info.coherent = coherent;
-          info.nrChannels = set.nrChannels;
-          info.timeIntFactor = set.timeIntegrationFactor;
-          info.nrStokes = set.nrStokes;
-          info.stokesType = set.type;
-          info.nrSamples = nrSamples / info.timeIntFactor;
-
-          const unsigned nrSubbandsPerFile = set.nrSubbandsPerFile;
-
-          for (unsigned stokes = 0; stokes < nrStokes; stokes++) {
-            info.stokes = stokes;
-            info.part = 0;
-
-            // split into parts of at most nrSubbandsPerFile
-            for (unsigned sb = 0; sb < sapSubbands.size(); sb += nrSubbandsPerFile ) {
-              for (unsigned i = 0; sb + i < sapSubbands.size() && i < nrSubbandsPerFile; i++)
-                info.subbands.push_back(sapSubbands[sb + i]);
-
-              infoset.push_back(info);
-
-              info.subbands.clear();
-              info.part++;
-              info.stream++;
-            }
-          }
-        }
-      }
-
-      return infoset;
     }
   } // namespace Cobalt
 } // namespace LOFAR

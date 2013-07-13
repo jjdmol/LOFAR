@@ -32,7 +32,7 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    StreamableData *newStreamableData(const Parset &, OutputType, int streamNr = -1, Allocator & = heapAllocator);
+    StreamableData *newStreamableData(const Parset &, OutputType, unsigned streamNr, Allocator & = heapAllocator);
 
   } // namespace Cobalt
 } // namespace LOFAR
