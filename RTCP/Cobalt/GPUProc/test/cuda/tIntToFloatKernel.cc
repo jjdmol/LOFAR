@@ -50,7 +50,7 @@ int main() {
 
   Parset ps("tIntToFloatKernel.in_parset");
   size_t COMPLEX = 2;
-  size_t nSampledData = ps.nrStations() * ps.nrSamplesPerSubband() * NR_POLARIZATIONS * COMPLEX;
+  size_t nSampledData = IntToFloatKernel::bufferSize(ps, IntToFloatKernel::INPUT_DATA) / sizeof(char);
   size_t sizeSampledData = nSampledData * sizeof(char);
 
   // Create some initialized host data
@@ -58,12 +58,12 @@ int main() {
   char *samples = sampledData.get<char>();
   for (unsigned idx =0; idx < nSampledData; ++idx)
     samples[idx] = -128;  // set all to -128
-  gpu::DeviceMemory devSampledData(ctx, nSampledData * sizeof(float));
+  gpu::DeviceMemory devSampledData(ctx, IntToFloatKernel::bufferSize(ps, IntToFloatKernel::INPUT_DATA));
   stream.writeBuffer(devSampledData, sampledData, true);
   
   // Device mem for output
-  gpu::DeviceMemory devConvertedData(ctx, nSampledData * sizeof(float));
-  gpu::HostMemory convertedData(ctx,  nSampledData * sizeof(float));
+  gpu::DeviceMemory devConvertedData(ctx, IntToFloatKernel::bufferSize(ps, IntToFloatKernel::OUTPUT_DATA));
+  gpu::HostMemory convertedData(ctx,  IntToFloatKernel::bufferSize(ps, IntToFloatKernel::OUTPUT_DATA));
   //stream.writeBuffer(devConvertedData, sampledData, true);
 
   IntToFloatKernel kernel(ps, ctx, devConvertedData, devSampledData); 

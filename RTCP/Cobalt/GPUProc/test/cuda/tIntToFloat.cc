@@ -70,7 +70,11 @@ float * runTest(unsigned NR_BITS_PER_SAMPLE = 16,
   // Set op string string pairs to be provided to the compiler as defines
   definitions["NR_STATIONS"] = "2";
   unsigned NR_STATIONS = 2;
-  definitions["NR_SAMPLES_PER_SUBBAND"] = "1024";
+
+  // 1024 samples per subband
+  definitions["NR_CHANNELS"] = "64";
+  definitions["NR_SAMPLES_PER_CHANNEL"] = "16";
+  definitions["NR_TAPS"] = "1"; // no history samples
   unsigned NR_SAMPLES_PER_SUBBAND = 1024;
   
   tostrstream << NR_BITS_PER_SAMPLE;
