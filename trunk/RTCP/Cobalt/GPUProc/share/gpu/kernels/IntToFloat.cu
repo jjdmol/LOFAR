@@ -28,8 +28,13 @@ typedef char2 SampleType;
 #error unsupport NR_BITS_PER_SAMPLE
 #endif
 
-typedef  SampleType (*SampledDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
-typedef  float2 (*ConvertedDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_SUBBAND];
+/*
+ * Include history samples
+ */
+#define NR_SAMPLES ((NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL) * NR_CHANNELS)
+
+typedef  SampleType (*SampledDataType)[NR_STATIONS][NR_SAMPLES][NR_POLARIZATIONS];
+typedef  float2 (*ConvertedDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES];
 
 /**
  * This kernel performs a conversion of the integer valued input to floats.
@@ -55,7 +60,7 @@ extern "C" {
   uint station = blockIdx.y * blockDim.y + threadIdx.y;
   
   // Step data with whole blocks allows for coalesced reads and writes
-  for (uint time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x) {
+  for (uint time = threadIdx.x; time < NR_SAMPLES; time += blockDim.x) {
     // pol 1
     (*convertedData)[station][0][time] = make_float2(
 			convertIntToFloat((*sampledData)[station][time][0].x),
