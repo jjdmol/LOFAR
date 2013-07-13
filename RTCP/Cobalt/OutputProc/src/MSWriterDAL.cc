@@ -97,12 +97,7 @@ namespace LOFAR
       :
       MSWriterFile(forceextension(string(filename),".raw")),
       itsParset(parset),
-      itsTransposeLogic(parset.transposeLogic()),
-      itsInfo(itsTransposeLogic.streamInfo[fileno]),
-      itsNrChannels(itsInfo.nrChannels * itsInfo.subbands.size()),
-      itsNrSamples(itsInfo.nrSamples),
-      itsNextSeqNr(0),
-      itsBlockSize(itsNrSamples * itsNrChannels)
+      itsNextSeqNr(0)
     {
       itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
 
@@ -116,19 +111,37 @@ namespace LOFAR
       H5Eset_auto_stack(H5E_DEFAULT, my_hdf5_error_handler, NULL);
 #endif
 
-      unsigned sapNr, beamNr, stokesNr, partNr;
+      const struct ObservationSettings::BeamFormer::File &f = parset.settings.beamFormer.files[fileno];
 
-      itsTransposeLogic.decompose( fileno, sapNr, beamNr, stokesNr, partNr );
+      const unsigned sapNr = f.sapNr;
+      const unsigned beamNr = f.tabNr;
+      const unsigned stokesNr = f.stokesNr;
+
+      const struct ObservationSettings::BeamFormer::StokesSettings &stokesSet =
+        f.coherent ? parset.settings.beamFormer.coherentSettings
+                   : parset.settings.beamFormer.incoherentSettings;
+
+      itsNrChannels = stokesSet.nrChannels * parset.nrSubbands(); // <-- FIXME in case of multiple parts/file
+      itsNrSamples = parset.settings.nrSamplesPerSubband() / stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
+      itsBlockSize = itsNrSamples * itsNrChannels;
 
       unsigned nrBlocks = parset.nrBeamFormedBlocks();
-      unsigned nrSubbands = itsInfo.subbands.size();
-      const vector<unsigned> &subbandIndices = itsInfo.subbands;
+
+      // all subbands in this file
+      vector<unsigned> subbandIndices;
+      
+      // for now, all subbands are in one file
+      subbandIndices.resize(parset.nrSubbands());
+      for (size_t sb = 0; sb < parset.nrSubbands(); ++sb)
+        subbandIndices[sb] = sb;
+
+      unsigned nrSubbands = subbandIndices.size();
 
       vector<string> stokesVars;
       vector<string> stokesVars_LTA;
 
 
-      switch (itsInfo.stokesType) {
+      switch (stokesSet.type) {
       case STOKES_I:
         stokesVars.push_back("I");
         stokesVars_LTA = stokesVars;
@@ -182,11 +195,11 @@ namespace LOFAR
 
       file.observationID().value = str(format("%u") % parset.observationID());
 
-      file.observationStartUTC().value = toUTC(parset.startTime());
-      file.observationStartMJD().value = toMJD(parset.startTime());
+      file.observationStartUTC().value = toUTC(parset.settings.startTime);
+      file.observationStartMJD().value = toMJD(parset.settings.startTime);
 
       // The stop time can be a bit further than the one actually specified, because we process in blocks.
-      double stopTime = parset.startTime() + nrBlocks * parset.CNintegrationTime();
+      double stopTime = parset.settings.startTime + nrBlocks * parset.settings.blockDuration();
 
       file.observationEndUTC().value = toUTC(stopTime);
       file.observationEndMJD().value = toMJD(stopTime);
@@ -195,12 +208,12 @@ namespace LOFAR
       file.observationStationsList().value = parset.allStationNames(); // TODO: SS beamformer?
 
       double subbandBandwidth = parset.subbandBandwidth();
-      double channelBandwidth = parset.channelWidth();
+      double channelBandwidth = subbandBandwidth / stokesSet.nrChannels;
 
       // if PPF is used, the frequencies are shifted down by half a channel
       // We'll annotate channel 0 to be below channel 1, but in reality it will
       // contain frequencies from both the top and the bottom half-channel.
-      double frequencyOffsetPPF = parset.nrChannelsPerSubband() > 1 ? 0.5 * channelBandwidth : 0.0;
+      double frequencyOffsetPPF = stokesSet.nrChannels > 1 ? 0.5 * channelBandwidth : 0.0; // TODO: cover both CS and IS!
 
       vector<double> subbandCenterFrequencies(parset.nrSubbands());
       for(size_t sb = 0; sb < parset.nrSubbands(); ++sb)
@@ -215,18 +228,18 @@ namespace LOFAR
       file.observationFrequencyCenter().value = (sum_centerfrequencies / subbandCenterFrequencies.size() - frequencyOffsetPPF) / 1e6;
       file.observationFrequencyUnit().value = "MHz";
 
-      file.observationNofBitsPerSample().value = parset.nrBitsPerSample();
-      file.clockFrequency().value = parset.clockSpeed() / 1e6;
+      file.observationNofBitsPerSample().value = parset.settings.nrBitsPerSample;
+      file.clockFrequency().value = parset.settings.clockMHz;
       file.clockFrequencyUnit().value = "MHz";
 
-      file.antennaSet().value = parset.antennaSet();
-      file.filterSelection().value = parset.getString("Observation.bandFilter", "");
+      file.antennaSet().value = parset.settings.antennaSet;
+      file.filterSelection().value = parset.settings.bandFilter;
 
-      unsigned nrSAPs = parset.nrBeams();
+      size_t nrSAPs = parset.settings.SAPs.size();
       vector<string> targets(nrSAPs);
 
-      for (unsigned sap = 0; sap < nrSAPs; sap++)
-        targets[sap] = parset.beamTarget(sap);
+      for (size_t sap = 0; sap < nrSAPs; sap++)
+        targets[sap] = parset.settings.SAPs[sap].target;
 
       file.targets().value = targets;
 
@@ -243,17 +256,17 @@ namespace LOFAR
       file.BFFormat().value = "TAB";
       file.BFVersion().value = str(format("Cobalt/OutputProc %s r%s using DAL %s and HDF5 %s") % OutputProcVersion::getVersion() % OutputProcVersion::getRevision() % dal::version().to_string() % dal::version_hdf5().to_string());
 
-      file.totalIntegrationTime().value = nrBlocks * parset.CNintegrationTime();
+      file.totalIntegrationTime().value = nrBlocks * parset.settings.blockDuration();
       file.totalIntegrationTimeUnit().value = "s";
 
       //file.subArrayPointingDiameter().value = 0.0;
       //file.subArrayPointingDiameterUnit().value = "arcmin";
-      file.bandwidth().value = parset.nrSubbands() * subbandBandwidth / 1e6;
+      file.bandwidth().value = parset.settings.subbands.size() * subbandBandwidth / 1e6;
       file.bandwidthUnit().value = "MHz";
       //file.beamDiameter()            .value = 0.0;
       //file.beamDiameterUnit()          .value = "arcmin";
 
-      file.observationNofSubArrayPointings().value = parset.nrBeams();
+      file.observationNofSubArrayPointings().value = parset.settings.SAPs.size();
       file.nofSubArrayPointings().value = 1;
 
       // SysLog group -- empty for now
@@ -264,15 +277,15 @@ namespace LOFAR
       sap.create();
       sap.groupType().value = "SubArrayPointing";
 
-      sap.expTimeStartUTC().value = toUTC(parset.startTime());
-      sap.expTimeStartMJD().value = toMJD(parset.startTime());
+      sap.expTimeStartUTC().value = toUTC(parset.settings.startTime);
+      sap.expTimeStartMJD().value = toMJD(parset.settings.startTime);
 
       sap.expTimeEndUTC().value = toUTC(stopTime);
       sap.expTimeEndMJD().value = toMJD(stopTime);
 
       // TODO: fix the system to use the parset.beamDuration(sapNr), but OLAP
       // does not work that way yet (beamDuration is currently unsupported).
-      sap.totalIntegrationTime().value = nrBlocks * parset.CNintegrationTime();
+      sap.totalIntegrationTime().value = nrBlocks * parset.settings.blockDuration();
       sap.totalIntegrationTimeUnit().value = "s";
 
       // TODO: non-J2000 pointings
@@ -285,7 +298,7 @@ namespace LOFAR
       sap.pointDEC().value = beamDir[1] * 180.0 / M_PI;
       sap.pointDECUnit().value = "deg";
 
-      sap.observationNofBeams().value = parset.nrTABs(sapNr);
+      sap.observationNofBeams().value = parset.settings.beamFormer.SAPs[sapNr].TABs.size();
       sap.nofBeams().value = 1;
 
       BF_ProcessingHistory sapHistory = sap.processHistory();
@@ -304,14 +317,13 @@ namespace LOFAR
       beam.create();
       beam.groupType().value = "Beam";
 
-      vector<string> beamStationList = parset.TABStationList(sapNr, beamNr);
-      beam.nofStations().value = beamStationList.size();
-      beam.stationsList().value = beamStationList;
+      beam.nofStations().value = parset.settings.stations.size();
+      beam.stationsList().value = parset.allStationNames();
 
       const vector<string> beamtargets(1, targets[sapNr]);
 
       beam.targets().value = beamtargets;
-      beam.tracking().value = parset.getBeamDirectionType(sapNr);
+      beam.tracking().value = parset.settings.SAPs[sapNr].direction.type;
 
       BeamCoordinates pbeamDirs = parset.TABs(sapNr);
       BeamCoord3D pbeamDir = pbeamDirs[beamNr];
@@ -328,20 +340,19 @@ namespace LOFAR
       beam.subbandWidth().value = subbandBandwidth;
       beam.subbandWidthUnit().value = "Hz";
 
-
       beam.beamDiameterRA().value = 0;
       beam.beamDiameterRAUnit().value = "arcmin";
       beam.beamDiameterDEC().value = 0;
       beam.beamDiameterDECUnit().value = "arcmin";
 
       beam.nofSamples().value = itsNrSamples * nrBlocks;
-      beam.samplingRate().value = parset.subbandBandwidth() / parset.nrChannelsPerSubband() / itsInfo.timeIntFactor;
+      beam.samplingRate().value = parset.subbandBandwidth() / stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
       beam.samplingRateUnit().value = "Hz";
-      beam.samplingTime().value = parset.sampleDuration() * parset.nrChannelsPerSubband() * itsInfo.timeIntFactor;
+      beam.samplingTime().value = parset.sampleDuration() * stokesSet.nrChannels * stokesSet.timeIntegrationFactor;
       beam.samplingTimeUnit().value = "s";
 
-      beam.channelsPerSubband().value = itsInfo.nrChannels;
-      beam.channelWidth().value = channelBandwidth * (parset.nrChannelsPerSubband() / itsInfo.nrChannels);
+      beam.channelsPerSubband().value = stokesSet.nrChannels;
+      beam.channelWidth().value = channelBandwidth;
       beam.channelWidthUnit().value = "Hz";
 
       vector<double> beamCenterFrequencies(nrSubbands, 0.0);
@@ -354,7 +365,7 @@ namespace LOFAR
       beam.beamFrequencyCenter().value = (beamCenterFrequencySum / nrSubbands - frequencyOffsetPPF) / 1e6;
       beam.beamFrequencyCenterUnit().value = "MHz";
 
-      double DM = parset.dispersionMeasure(sapNr, beamNr);
+      double DM = parset.settings.corrections.dedisperse ? parset.settings.beamFormer.SAPs[sapNr].TABs[beamNr].dispersionMeasure : 0.0;
 
       beam.foldedData().value = false;
       beam.foldPeriod().value = 0.0;
@@ -366,18 +377,18 @@ namespace LOFAR
 
       beam.barycentered().value = false;
 
-      beam.observationNofStokes().value = itsInfo.nrStokes;
+      beam.observationNofStokes().value = stokesSet.nrStokes;
       beam.nofStokes().value = 1;
 
       vector<string> stokesComponents(1, stokesVars[stokesNr]);
 
       beam.stokesComponents().value = stokesComponents;
-      beam.complexVoltage().value = itsInfo.stokesType == STOKES_XXYY;
-      beam.signalSum().value = itsInfo.coherent ? "COHERENT" : "INCOHERENT";
+      beam.complexVoltage().value = stokesSet.type == STOKES_XXYY;
+      beam.signalSum().value = stokesSet.coherent ? "COHERENT" : "INCOHERENT";
 
       beam.stokesComponents().value = stokesComponents;
-      beam.complexVoltage().value = itsInfo.stokesType == STOKES_XXYY;
-      beam.signalSum().value = itsInfo.coherent ? "COHERENT" : "INCOHERENT";
+      beam.complexVoltage().value = stokesSet.type == STOKES_XXYY;
+      beam.signalSum().value = stokesSet.coherent ? "COHERENT" : "INCOHERENT";
 
       BF_ProcessingHistory beamHistory = beam.processHistory();
       beamHistory.create();
@@ -391,10 +402,10 @@ namespace LOFAR
       coordinates.groupType().value = "Coordinates";
 
       coordinates.refLocationValue().value = parset.settings.delayCompensation.referencePhaseCenter;
-      coordinates.refLocationUnit().value = vector<string>(3,"m");
+      coordinates.refLocationUnit().value = vector<string>(3, "m");
       coordinates.refLocationFrame().value = "ITRF";
 
-      coordinates.refTimeValue().value = toMJD(parset.startTime());
+      coordinates.refTimeValue().value = toMJD(parset.settings.startTime);
       coordinates.refTimeUnit().value = "d";
       coordinates.refTimeFrame().value = "MJD";
 
@@ -426,7 +437,7 @@ namespace LOFAR
 
       timeCoordinate.get()->referenceValue().value = 0;
       timeCoordinate.get()->referencePixel().value = 0;
-      timeCoordinate.get()->increment().value = parset.sampleDuration() * parset.nrChannelsPerSubband() * itsInfo.timeIntFactor;
+      timeCoordinate.get()->increment().value = parset.sampleDuration() * stokesSet.nrChannels * stokesSet.timeIntegrationFactor;
       timeCoordinate.get()->pc().value = unitvector;
 
       timeCoordinate.get()->axisValuesPixel().value = vector<unsigned>(1, 0); // not used
@@ -455,12 +466,12 @@ namespace LOFAR
       vector<double> spectralWorld;
 
       for(unsigned sb = 0; sb < nrSubbands; sb++) {
-        const double subbandBeginFreq = parset.channel0Frequency( subbandIndices[sb] );
+        const double subbandBeginFreq = parset.channel0Frequency( subbandIndices[sb], stokesSet.nrChannels );
 
         // NOTE: channel 0 will be wrongly annotated if nrChannels > 1, because it is a combination of the
         // highest and the lowest frequencies (half a channel each).
 
-        for(unsigned ch = 0; ch < itsInfo.nrChannels; ch++) {
+        for(unsigned ch = 0; ch < stokesSet.nrChannels; ch++) {
           spectralPixels.push_back(spectralPixels.size());
           spectralWorld.push_back(subbandBeginFreq + ch * channelBandwidth);
         }
@@ -484,29 +495,18 @@ namespace LOFAR
       stokesDS.dataType().value = "float";
 
       stokesDS.stokesComponent().value = stokesVars[stokesNr];
-      stokesDS.nofChannels().value = vector<unsigned>(nrSubbands, itsInfo.nrChannels);
+      stokesDS.nofChannels().value = vector<unsigned>(nrSubbands, stokesSet.nrChannels);
       stokesDS.nofSubbands().value = nrSubbands;
       stokesDS.nofSamples().value = dims[0];
 
       // construct feedback for LTA -- Implements Output_Beamformed_.comp
 
-      string type = "";
-
-      // FIXME: specifiedNrStations == 1 only implies Fly's Eye when Parset.py generates the stationList
-      size_t specifiedNrStations = parset.TABStationList(sapNr, beamNr, true).size();
-
-      if (itsInfo.coherent)
-        if (specifiedNrStations != 1)
-          type = "CoherentStokesBeam";
-        else
-          type = "FlysEyeBeam";
-      else
-        type = "IncoherentStokesBeam";
+      const string type = stokesSet.coherent ? "CoherentStokesBeam" : "IncoherentStokesBeam";
 
       itsConfiguration.add("fileFormat",                "HDF5");
       itsConfiguration.add("filename",                  LOFAR::basename(h5filename));
       itsConfiguration.add("size",                      "0");
-      itsConfiguration.add("location",                  parset.getHostName(BEAM_FORMED_DATA, fileno) + ":" + LOFAR::dirname(h5filename));
+      itsConfiguration.add("location",                  f.location.host + ":" + LOFAR::dirname(h5filename));
       itsConfiguration.add("percentageWritten",         "0");
 
       itsConfiguration.add("nrOfCoherentStokesBeams",   "0");
@@ -518,9 +518,9 @@ namespace LOFAR
 
       string prefix = str(format("%s[0].") % type);
 
-      itsConfiguration.add(prefix + "SAP",               str(format("%u") % itsInfo.sap));
-      itsConfiguration.add(prefix + "TAB",               str(format("%u") % itsInfo.beam));
-      itsConfiguration.add(prefix + "samplingTime",      str(format("%f") % (parset.sampleDuration() * parset.nrChannelsPerSubband() * itsInfo.timeIntFactor)));
+      itsConfiguration.add(prefix + "SAP",               str(format("%u") % sapNr));
+      itsConfiguration.add(prefix + "TAB",               str(format("%u") % beamNr));
+      itsConfiguration.add(prefix + "samplingTime",      str(format("%f") % (parset.sampleDuration() * stokesSet.nrChannels * stokesSet.timeIntegrationFactor)));
       itsConfiguration.add(prefix + "dispersionMeasure", str(format("%f") % DM));
       itsConfiguration.add(prefix + "nrSubbands",        str(format("%u") % nrSubbands));
 
@@ -547,7 +547,7 @@ namespace LOFAR
       itsConfiguration.add(prefix + "stationSubbands",  stationSubbandsStr.str());
 
       itsConfiguration.add(prefix + "channelWidth",      str(format("%f") % channelBandwidth));
-      itsConfiguration.add(prefix + "channelsPerSubband",str(format("%u") % itsInfo.nrChannels));
+      itsConfiguration.add(prefix + "channelsPerSubband",str(format("%u") % stokesSet.nrChannels));
       itsConfiguration.add(prefix + "stokes",            str(format("[%s]") % stokesVars_LTA[stokesNr]));
 
       if (type == "CoherentStokesBeam") {
@@ -560,15 +560,6 @@ namespace LOFAR
         itsConfiguration.add(prefix + "Offset.coordType",   "RA-DEC");
         itsConfiguration.add(prefix + "Offset.angle1",      str(format("%f") % pbeamDir[0]));
         itsConfiguration.add(prefix + "Offset.angle2",      str(format("%f") % pbeamDir[1]));
-      }
-
-      if (type == "FlysEyeBeam") {
-        string olapname = beamStationList[0];
-        string stationName = olapname.substr(0,5);
-        string antennaFieldName = olapname.size() > 5 ? olapname.substr(5) : "";
-
-        itsConfiguration.add(prefix + "stationName",      stationName);
-        itsConfiguration.add(prefix + "antennaFieldName", antennaFieldName);
       }
     }
 
