@@ -54,7 +54,7 @@ namespace LOFAR
      * and provide the input in devFilteredData.
      */
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset &parset,
-      gpu::Context &context, CorrelatorPipelinePrograms &programs)
+      gpu::Context &context, CorrelatorPipelinePrograms &programs, CorrelatorFactories &factories)
     :
       WorkQueue( parset, context ),
       prevBlock(-1),
@@ -62,39 +62,23 @@ namespace LOFAR
       devInput(ps.nrChannelsPerSubband() == 1
                ? std::max(DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA),
                           CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA))
-               : std::max(FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::INPUT_DATA),
+               : std::max(factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA),
                           CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA)),
                DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS),
                DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
-      // devInput(ps.nrBeams(), ps.nrStations(), NR_POLARIZATIONS,
-      //          ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
-      //          ps.nrBytesPerComplexSample(), context,
-
-      //          // reserve enough space in inputSamples for the output of the delayAndBandPassKernel.
-      //          // TODO: if ps.nrChannelsPerSubband() == 1, we only need this space, not the one above.
-      //          ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)
-      //         ),
-
       devFilteredData(context, 
                       ps.nrChannelsPerSubband() == 1
                       ? CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA)
                       : std::max(DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA),
                                  CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA))),
-      // devFilteredData(context, std::max(
-      //                   ps.nrChannelsPerSubband() == 1 ?
-      //                     // reserve enough space for the input of the delayAndBandPass kernel,
-      //                     ps.nrSamplesPerSubband() * ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample() // from WorkQueueInputData::DeviceBuffers(...)
-      //                   : // or, reserve enough space for the output of the FIR filter kernel,
-      //                     ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-      //                   // and the correlator kernel.
-      //                   ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>)
-      //                 )),
 
-      firFilterKernel(ps, programs.firFilterProgram,
-                      devFilteredData, devInput.inputSamples, queue),
+      // FIR filter
+      devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
+      firFilterBuffers(devInput.inputSamples, devFilteredData, devFilterWeights),
+      firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
+
       fftKernel(ps, context, devFilteredData),
-      // delayAndBandPassKernel(ps, programs.delayAndBandPassProgram,
       delayAndBandPassKernel(ps, context,
                              devInput.inputSamples,
                              devFilteredData,
@@ -325,7 +309,7 @@ namespace LOFAR
       }
 
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel.enqueue(queue/*, *counters["compute - FIR"]*/);
+        firFilterKernel->enqueue(queue/*, *counters["compute - FIR"]*/);
         fftKernel.enqueue(queue/*, *counters["compute - FFT"]*/);
       }
 

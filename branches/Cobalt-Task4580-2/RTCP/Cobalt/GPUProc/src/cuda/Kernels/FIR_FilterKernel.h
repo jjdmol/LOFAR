@@ -74,18 +74,6 @@ namespace LOFAR
                        const Buffers& buffers,
                        const Parameters& param);
 
-      FIR_FilterKernel(const Parset &ps,
-                       gpu::Context &context,
-                       gpu::DeviceMemory &devFilteredData,
-                       gpu::DeviceMemory &devInputSamples,
-                       gpu::Stream &stream);
-
-      FIR_FilterKernel(const Parset &ps,
-                       gpu::Module &module,
-                       gpu::DeviceMemory &devFilteredData,
-                       gpu::DeviceMemory &devInputSamples,
-                       gpu::Stream &stream);
-
       // Return required buffer size for \a bufferType
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
@@ -98,7 +86,7 @@ namespace LOFAR
     };
 
     // Specialization of the KernelFactory constructor for FIR_FilterKernel.
-    template<> 
+    template<>
     KernelFactory<FIR_FilterKernel>::KernelFactory(const Parset& ps);
 
     template<> FIR_FilterKernel*

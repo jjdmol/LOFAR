@@ -55,34 +55,6 @@ namespace LOFAR
       init(stream, buffers, params);
     }
 
-    FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, 
-                                       gpu::Context &context,
-                                       gpu::DeviceMemory &devFilteredData,
-                                       gpu::DeviceMemory &devInputSamples,
-                                       gpu::Stream &stream)
-      :
-      Kernel(ps, context, theirSourceFile, theirFunction),
-      devFIRweights(context, bufferSize(ps, FILTER_WEIGHTS))
-    {
-      init(stream, 
-           Buffers(devInputSamples, devFilteredData, devFIRweights),
-           Parameters(ps));
-    }
-
-    FIR_FilterKernel::FIR_FilterKernel(const Parset &ps, 
-                                       gpu::Module &module,
-                                       gpu::DeviceMemory &devFilteredData,
-                                       gpu::DeviceMemory &devInputSamples,
-                                       gpu::Stream &stream)
-      :
-      Kernel(ps, module, theirFunction),
-      devFIRweights(module.getContext(), bufferSize(ps, FILTER_WEIGHTS))
-    {
-      init(stream, 
-           Buffers(devInputSamples, devFilteredData, devFIRweights),
-           Parameters(ps));
-    }
-
     void FIR_FilterKernel::init(const gpu::Stream &stream,
                                 const Buffers &buffers,
                                 const Parameters& params)

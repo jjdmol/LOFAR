@@ -49,12 +49,13 @@ namespace LOFAR
       unsigned nrWorkQueues = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
       workQueues.resize(nrWorkQueues);
 
+      CorrelatorFactories factories(ps);
+
       // Compile all required kernels to ptx
       LOG_INFO("Compiling device kernels");
       double startTime = omp_get_wtime();
       vector<string> kernels;
       map<string, string> ptx;
-      kernels.push_back("FIR_Filter.cu");
       kernels.push_back("DelayAndBandPass.cu");
 #if defined USE_NEW_CORRELATOR
       kernels.push_back("NewCorrelator.cu");
@@ -75,7 +76,6 @@ namespace LOFAR
       for (size_t i = 0; i < nrWorkQueues; ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        programs.firFilterProgram = createModule(context, "FIR_Filter.cu", ptx["FIR_Filter.cu"]);
         programs.delayAndBandPassProgram = createModule(context, "DelayAndBandPass.cu", ptx["DelayAndBandPass.cu"]);
 #if defined USE_NEW_CORRELATOR
         programs.correlatorProgram = createModule(context, "NewCorrelator.cu", ptx["NewCorrelator.cu"]);
@@ -83,7 +83,7 @@ namespace LOFAR
         programs.correlatorProgram = createModule(context, "Correlator.cu", ptx["Correlator.cu"]);
 #endif
 
-        workQueues[i] = new CorrelatorWorkQueue(ps, context, programs);
+        workQueues[i] = new CorrelatorWorkQueue(ps, context, programs, factories);
       }
 
     }

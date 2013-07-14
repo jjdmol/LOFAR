@@ -23,6 +23,7 @@
 
 // @file
 #include <complex>
+#include <memory>
 
 #include <Common/Thread/Queue.h>
 #include <Stream/Stream.h>
@@ -65,11 +66,18 @@ namespace LOFAR
       }
     };
 
+    struct CorrelatorFactories
+    {
+      CorrelatorFactories(const Parset &ps): firFilter(ps) {}
+
+      KernelFactory<FIR_FilterKernel> firFilter;
+    };
+
     class CorrelatorWorkQueue : public WorkQueue
     {
     public:
       CorrelatorWorkQueue(const Parset &parset, gpu::Context &context,
-                          CorrelatorPipelinePrograms &programs);
+                          CorrelatorPipelinePrograms &programs, CorrelatorFactories &factories);
 
       // Correlate the data found in the input data buffer
       virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
@@ -115,8 +123,15 @@ namespace LOFAR
 
       gpu::DeviceMemory devFilteredData;
 
-      // Compiled kernels
-      FIR_FilterKernel firFilterKernel;
+      /*
+       * Kernels
+       */
+
+      // FIR filter
+      gpu::DeviceMemory devFilterWeights;
+      FIR_FilterKernel::Buffers firFilterBuffers;
+      std::auto_ptr<FIR_FilterKernel> firFilterKernel;
+
       Filter_FFT_Kernel fftKernel;
       DelayAndBandPassKernel delayAndBandPassKernel;
 #if defined USE_NEW_CORRELATOR
