@@ -73,16 +73,6 @@ namespace LOFAR
                        const gpu::Module& module,
                        const Buffers& buffers,
                        const Parameters& param);
-
-      // Return required buffer size for \a bufferType
-      static size_t bufferSize(const Parset& ps, BufferType bufferType);
-
-    private:
-      void init(const gpu::Stream &stream,
-                const Buffers &buffers,
-                const Parameters& params);
-
-      gpu::DeviceMemory devFIRweights;
     };
 
     // Specialization of the KernelFactory constructor for FIR_FilterKernel.

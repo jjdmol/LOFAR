@@ -49,19 +49,11 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction)),
-      devFIRweights(buffers.filterWeights)
-    {
-      init(stream, buffers, params);
-    }
-
-    void FIR_FilterKernel::init(const gpu::Stream &stream,
-                                const Buffers &buffers,
-                                const Parameters& params)
+      Kernel(stream, gpu::Function(module, theirFunction))
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-      setArg(2, devFIRweights);
+      setArg(2, buffers.filterWeights);
 
       size_t maxNrThreads = 
         getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
@@ -94,30 +86,10 @@ namespace LOFAR
                             params.nrChannelsPerSubband, KAISER);
       filterBank.negateWeights();
 
-      gpu::HostMemory firWeights(stream.getContext(), devFIRweights.size());
+      gpu::HostMemory firWeights(stream.getContext(), buffers.filterWeights.size());
       std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(),
                   firWeights.size());
-      stream.writeBuffer(devFIRweights, firWeights, true);
-    }
-
-
-    size_t FIR_FilterKernel::bufferSize(const Parset& ps, BufferType bufferType)
-    {
-      switch (bufferType) {
-      case INPUT_DATA: 
-        return
-          (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * 
-          ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample();
-      case OUTPUT_DATA:
-        return
-          ps.nrSamplesPerSubband() * ps.nrStations() * 
-          NR_POLARIZATIONS * sizeof(std::complex<float>);
-      case FILTER_WEIGHTS:
-        return 
-          ps.nrChannelsPerSubband() * NR_TAPS * sizeof(float);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
+      stream.writeBuffer(buffers.filterWeights, firWeights, true);
     }
 
     //--------  Template specializations for KernelFactory  --------//
