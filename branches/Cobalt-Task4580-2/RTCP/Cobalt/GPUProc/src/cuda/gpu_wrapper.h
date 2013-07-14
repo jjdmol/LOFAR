@@ -432,7 +432,7 @@ namespace LOFAR
         // \param hostMem Host memory that will be copied from.
         // \param synchronous Indicates whether the transfer must be done
         //        synchronously or asynchronously.
-        void writeBuffer(DeviceMemory &devMem, const HostMemory &hostMem,
+        void writeBuffer(const DeviceMemory &devMem, const HostMemory &hostMem,
                          bool synchronous = false) const;
 
         // Transfer data from device memory \a devMem to host memory \a hostMem.
@@ -440,7 +440,7 @@ namespace LOFAR
         // \param devMem Device memory that will be copied from.
         // \param synchronous Indicates whether the transfer must be done
         //        synchronously or asynchronously.
-        void readBuffer(HostMemory &hostMem, const DeviceMemory &devMem,
+        void readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
                         bool synchronous = false) const;
 
         // Launch a CUDA function.

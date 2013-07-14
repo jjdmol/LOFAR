@@ -830,7 +830,7 @@ namespace LOFAR
       {
       }
 
-      void Stream::writeBuffer(DeviceMemory &devMem, 
+      void Stream::writeBuffer(const DeviceMemory &devMem, 
                                const HostMemory &hostMem,
                                bool synchronous) const
       {
@@ -849,7 +849,7 @@ namespace LOFAR
         }
       }
 
-      void Stream::readBuffer(HostMemory &hostMem, 
+      void Stream::readBuffer(const HostMemory &hostMem, 
                               const DeviceMemory &devMem,
                               bool synchronous) const
       {
