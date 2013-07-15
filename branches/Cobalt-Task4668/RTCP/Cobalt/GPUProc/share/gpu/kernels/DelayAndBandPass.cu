@@ -127,8 +127,6 @@ extern "C" {
 #if NR_CHANNELS > 1
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
 
-  complexfloat tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
-
   unsigned major = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
   unsigned minor = (blockIdx.x * blockDim.x + threadIdx.x) % 16;
   unsigned channel = (blockIdx.y * blockDim.y + threadIdx.y) * 16;
@@ -221,6 +219,8 @@ extern "C" {
     (*outputData)[station][0][time][0] = sampleX;
     (*outputData)[station][0][time][1] = sampleY;
 #else // correlation with >1 channel
+    __shared__ complexfloat tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
+
     tmp[major][minor][0] = sampleX;
     tmp[major][minor][1] = sampleY;
     __syncthreads();
