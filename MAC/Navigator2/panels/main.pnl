@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 915 745 N "_3DFace" 0
+PANEL,-1 -1 1073 745 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -1042,7 +1042,7 @@ LANG:1 7 dropped
 2 74
 "PRIMITIVE_TEXT30"
 ""
-1 626 576 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 530 580 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 44 0 0 0 0 0
 E E E
@@ -1052,8 +1052,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 626 576 695 589
-0 2 2 "0s" 0 0 0 192 0 0  626 576 1
+E E 0 1 1 2 1 E U  0 E 530 580 599 593
+0 2 2 "0s" 0 0 0 192 0 0  530 580 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -1080,7 +1080,7 @@ LANG:1 9 startTime
 2 76
 "PRIMITIVE_TEXT32"
 ""
-1 822 600 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 720 600 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 46 0 0 0 0 0
 E E E
@@ -1090,8 +1090,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 822 600 875 613
-0 2 2 "0s" 0 0 0 192 0 0  822 600 1
+E E 0 1 1 2 1 E U  0 E 720 600 773 613
+0 2 2 "0s" 0 0 0 192 0 0  720 600 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -1099,7 +1099,7 @@ LANG:1 8 stopTime
 2 77
 "PRIMITIVE_TEXT33"
 ""
-1 622 600 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 550 600 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 47 0 0 0 0 0
 E E E
@@ -1109,8 +1109,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 622 600 672 613
-0 2 2 "0s" 0 0 0 192 0 0  622 600 1
+E E 0 1 1 2 1 E U  0 E 550 600 600 613
+0 2 2 "0s" 0 0 0 192 0 0  550 600 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -1118,7 +1118,7 @@ LANG:1 8 progress
 2 78
 "PRIMITIVE_TEXT34"
 ""
-1 927 600 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 660 600 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 48 0 0 0 0 0
 E E E
@@ -1128,12 +1128,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 927 600 991 613
-0 2 2 "0s" 0 0 0 192 0 0  927 600 1
+E E 0 1 1 2 1 E U  0 E 660 600 707 613
+0 2 2 "0s" 0 0 0 192 0 0  660 600 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
-LANG:1 10 exceeding?
+LANG:1 7 exceed?
 2 79
 "PRIMITIVE_TEXT35"
 ""
@@ -1172,6 +1172,44 @@ E E 0 1 1 2 1 E U  0 E 725 10 739 23
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 2 BP
+2 115
+"PRIMITIVE_TEXT37"
+""
+1 2 602 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+52 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 2 602 83 615
+0 2 2 "0s" 0 0 0 192 0 0  2 602 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 13 ObservationNr
+2 116
+"PRIMITIVE_TEXT38"
+""
+1 852 600 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+53 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 852 600 943 613
+0 2 2 "0s" 0 0 0 192 0 0  852 600 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 14 processSubtype
 0
 LAYER, 1 
 1
