@@ -39,6 +39,7 @@
  *   - @c NR_SAMPLES_PER_CHANNEL: a multiple of 16
  * - @c NR_POLARIZATIONS: 2
  * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
+ * - @c DO_TRANSPOSE: output transposed data. Needed for correlating >1 channel.
  */
 
 #include <cuda_runtime.h>
@@ -73,7 +74,7 @@ typedef  const float (* PhaseOffsetsType)[NR_STATIONS][NR_POLARIZATIONS]; // 2 P
 typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 
 /**
- * This kernel perfroms three operations on the input data:
+ * This kernel performs (up to) three operations on the input data:
  * - Apply a fine delay by doing a per channel phase correction.
  * - Apply a bandpass correction to compensate for the errors introduced by the
  *   polyphase filter that produced the subbands. This error is deterministic,
@@ -126,7 +127,7 @@ extern "C" {
 #if NR_CHANNELS > 1
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
 
-  complexfloat tmp[16][17][2]; // one too wide to allow coalesced reads
+  complexfloat tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
 
   unsigned major = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
   unsigned minor = (blockIdx.x * blockDim.x + threadIdx.x) % 16;
@@ -146,7 +147,7 @@ extern "C" {
 
   // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
   // Because we `undo' the delay, we need to rotate BACK.
-  float pi2 = -2 * 3.1415926535f;
+  float pi2 = -2.0f * 3.1415926535f;
   float2 phiBegin = make_float2(pi2 * delayAtBegin.x, pi2 * delayAtBegin.y) ;
   float2 phiEnd = make_float2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y) ;
 
@@ -164,8 +165,9 @@ extern "C" {
   float2 myPhiBegin = make_float2(
                           (phiBegin.x + float(major) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],
                           (phiBegin.y + float(major) * deltaPhi.y) * frequency + (*phaseOffsets)[station][1]);
+  // Magic constant 16 is the time step we take in the samples
   float2 myPhiDelta = make_float2(16.0f * deltaPhi.x * frequency,
-                                  16.0f * deltaPhi.y * frequency); // Magic constant: 16 is the time step we take in the samples
+                                  16.0f * deltaPhi.y * frequency);
 #endif
 
   complexfloat vX = LOFAR::Cobalt::gpu::cosisin(myPhiBegin.x);
@@ -206,24 +208,25 @@ extern "C" {
 #if defined DELAY_COMPENSATION    
     sampleX = sampleX * vX;
     sampleY = sampleY * vY;
-    vX = vX * dvX;    // The calculation are with exponentional complex for: multiplication for correct phase shift
+    // The calculations are with exponentional complex for: multiplication for correct phase shift
+    vX = vX * dvX;
     vY = vY * dvY;
 #elif defined BANDPASS_CORRECTION
     sampleX *= weight;
     sampleY *= weight;
 #endif
 
-#if NR_CHANNELS == 1
+    // For beamforming or correlation with 1 channel, there is no need to transpose
+#if not defined DO_TRANSPOSE || NR_CHANNELS == 1
     (*outputData)[station][0][time][0] = sampleX;
     (*outputData)[station][0][time][1] = sampleY;
-#else
+#else // correlation with >1 channel
     tmp[major][minor][0] = sampleX;
     tmp[major][minor][1] = sampleY;
-    __syncthreads(); // Wait till all threads are here: we do a transform of the data
+    __syncthreads();
     (*outputData)[station][channel + major][time + minor][0] = tmp[minor][major][0];   
     (*outputData)[station][channel + major][time + minor][1] = tmp[minor][major][1];
     __syncthreads();
-
 #endif
   }
 }
