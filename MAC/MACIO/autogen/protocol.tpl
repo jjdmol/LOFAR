@@ -1,4 +1,5 @@
 [+ AutoGen5 template ph cc +]
+[+ # manual at: http://www.gnu.org/software/autogen/manual/html_node/Function-Index.html#Function-Index +]
 //
 [+ (dne "//  ") +][+ (out-push-add "/dev/null") +]
 [+ DEFINE prefix_cap +][+ IF (exist? "prefix") +][+ (get "prefix") +][+ ENDIF +][+ ENDDEF +]
@@ -10,6 +11,7 @@
 [+ DEFINE event_class_name +][+ prefix_cap +][+ cap_signal +]Event[+ ENDDEF +]
 [+ DEFINE event_class_decl +][+ event_class_name +] : public MACIO::GCFEvent[+ ENDDEF +]
 [+ DEFINE protocol_name +][+ (string-upcase (base-name)) +][+ ENDDEF +]
+[+ DEFINE project +][+ IF (exist? "project") +][+ (get "project") +][+ ELSE +]LOFAR[+ ENDIF +][+ ENDDEF +]
 [+ DEFINE event_class_member_type +][+ IF (*== (get "type") "]") +][+ (substring (get "type") 0 (string-index (get "type") #\[)) +][+ ELSE +][+ (get "type") +][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE event_class_member +][+ event_class_member_type +][+ IF (*== (get "type") "[]") +]*[+ ENDIF +] [+ (get "name") +][+ IF (and (*== (get "type") "]") (not (*== (get "type") "[]"))) +][+ (substring (get "type") (string-index (get "type") #\[) (string-length (get "type"))) +][+ ENDIF +][+ ENDDEF +]
 
@@ -17,7 +19,7 @@
 //
 //  [+ (base-name) +].[+ (suffix) +]: [+ description +]
 //
-//  Copyright (C) 2003-2009
+//  Copyright (C) 2003-2012
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -37,9 +39,14 @@
 #include "[+ (base-name) +].ph"
 
 using namespace LOFAR::MACIO;
+[+ IF (exist? "project") +]using namespace LOFAR;[+ ENDIF +]
 using namespace std;
 
-const char* LOFAR::[+ (base-name) +]::[+ protocol_name +]_signalnames[] = 
+[+ FOR Cfunction "" +][+ (get "result")+] [+ project +]::[+ (base-name) +]::[+ (get "name") +] {
+[+ (get "code") +]
+}[+ ENDFOR +]
+
+const char* [+ project +]::[+ (base-name) +]::[+ protocol_name +]_signalnames[] = 
 {
   "[+ protocol_name +]: invalid signal",[+ FOR event "," +]
   "[+ signal_name +]"[+ ENDFOR +]
@@ -50,9 +57,9 @@ const char* [+ protocol_name +]_errornames[] =
 	"[+ (get "msg") +]"[+ ENDFOR error +]
 };
 
-const struct protocolStrings		LOFAR::[+ (base-name) +]::[+ protocol-name +]_STRINGS = {
+const struct protocolStrings		[+ project +]::[+ (base-name) +]::[+ protocol-name +]_STRINGS = {
 	[+ (count "event") +]+1, [+ (count "error") +], 
-	LOFAR::[+ (base-name) +]::[+ protocol_name +]_signalnames,
+	[+ project +]::[+ (base-name) +]::[+ protocol_name +]_signalnames,
 	[+ protocol_name +]_errornames
 };
 [+ ELSE +]
@@ -67,12 +74,15 @@ const struct protocolStrings		LOFAR::[+ (base-name) +]::[+ protocol-name +]_STRI
 #include <string>
 #include <cstring>
 
-namespace LOFAR
+namespace [+ project +]
 {
 	namespace [+ (base-name) +]
 	{
 
 [+ (get "prelude") +]
+
+[+ FOR Cfunction "" +][+ (get "result")+] [+ (get "name") +];
+[+ ENDFOR +]
 
 //
 // Define protocol ID
@@ -161,9 +171,8 @@ void [+ event_class_name +]::pack()
   [+ ENDFOR +]
   uint32 __requiredSize = [+ IF (not (exist? "noheader")) +]sizePackedGCFEvent[+ ELSE +]0[+ ENDIF +][+ FOR param "" +]
     [+ IF (exist? "userdefined") +]+ [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]getSize()
-    [+ ELIF (not (*== (get "type") "]")) +]+ [+ IF (== (get "type") "string") +][+ (get "name") +].length() + sizeof(uint16)[+ ELSE +]sizeof([+ (get "name") +])[+ ENDIF+]
     [+ ELIF (*== (get "type") "[]") +]+ sizeof([+ (get "name") +]NOE) + ([+ (get "name") +]NOE * sizeof([+ event_class_member_type +]))
-    [+ ELSE +]+ sizeof([+ (get "name") +])[+ ENDIF +][+ ENDFOR +];
+    [+ ELSE +]+ MSH_size([+ (get "name") +])[+ ENDIF +][+ ENDFOR +];
 
   resizeBuf(__requiredSize);
   uint32 __offset = 0;
@@ -173,31 +182,22 @@ void [+ event_class_name +]::pack()
   [+ FOR param "" +]
   [+ IF (exist? "userdefined") +]
   __offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]pack(_buffer + __offset);
-  [+ ELIF (not (*== (get "type") "]")) +]
-    [+ IF (== (get "type") "string") +]
-  __offset += packString(_buffer + __offset, [+ (get "name") +]);
-    [+ ELSE +]
-  memcpy(_buffer + __offset, &[+ (get "name") +], sizeof([+ (get "type") +]));
-  __offset += sizeof([+ (get "type") +]);
-    [+ ENDIF +]
   [+ ELIF (*== (get "type") "[]") +]
   __offset += packMember(__offset, [+ (get "name") +], [+ (get "name") +]NOE, sizeof([+ event_class_member_type +]));
   [+ ELSE +]
-  memcpy(_buffer + __offset, [+ (get "name") +], sizeof([+ (get "name") +]));
-  __offset += sizeof([+ (get "name") +]);
+  MSH_pack(_buffer, __offset, [+ (get "name") +]);
   [+ ENDIF +][+ ENDFOR +]
 	[+ IF (= (count "param") 0) +]
   // no params in this event to pack
-  (void)__offset;
 	[+ ENDIF +]
 }
 
 void [+ event_class_name +]::unpack()
 {
-  if (length == 0)
-    return;
-
-  	[+ IF (> (count "param") 0) +]
+	if (!length) {
+		return;
+	}
+	[+ IF (> (count "param") 0) +]
   	uint32 __offset = sizePackedGCFEvent;
     [+ ELSE +]
     // no params in this event to unpack
@@ -208,21 +208,13 @@ void [+ event_class_name +]::unpack()
     [+ (get "name") +] = new [+ (substring (get "type") 0 (string-index (get "type") #\*)) +]();
       [+ ENDIF +]
     __offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]unpack(_buffer + __offset);
-    [+ ELIF (not (*== (get "type") "]")) +]
-      [+ IF (== (get "type") "string") +]
-    __offset += GCFEvent::unpackString([+ (get "name") +], _buffer + __offset);
-      [+ ELSE +]
-    memcpy(&[+ (get "name") +], _buffer + __offset, sizeof([+ (get "type") +]));
-    __offset += sizeof([+ (get "type") +]);
-      [+ ENDIF +]
     [+ ELIF (*== (get "type") "[]") +]
     [+ (get "name") +] = ([+ event_class_member_type +]*) unpackMember(_buffer, __offset, [+ (get "name") +]NOE,  sizeof([+ event_class_member_type +]));
     [+ ELSE +]
-    memcpy([+ (get "name") +], (_buffer + __offset), sizeof([+ (get "name") +]));
-    __offset += sizeof([+ (get "name") +]);
+    MSH_unpack(_buffer, __offset, [+ (get "name") +]);
     [+ ENDIF +][+ ENDFOR +]
-    _buffer = 0;
-    length = 0;
+	_buffer  = 0;
+	__offset = 0;
 }
 
 [+ event_class_name +]* [+ event_class_name +]::clone()
@@ -236,6 +228,7 @@ void [+ event_class_name +]::unpack()
 
 ostream& [+ event_class_name +]::print(ostream& os) const
 {
+using LOFAR::operator<<;
   // Note: 'userdefined' classes are only printed if they are 'printable'
   //       base classes are printed except when they are 'nonprintable'
   MACIO::GCFEvent::print(os);
@@ -252,9 +245,9 @@ ostream& [+ event_class_name +]::print(ostream& os) const
 
 [+ IF (= (suffix) "ph") +]
 	} // namespace [+ (base-name) +]
-} // namespace LOFAR
+} // namespace [+ project +]
 
-using namespace LOFAR::[+ (base-name) +];
+using namespace [+ project +]::[+ (base-name) +];
 
 #endif
 [+ ENDIF +]
