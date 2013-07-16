@@ -4,8 +4,34 @@ LANG:1 0
 LANG:6 0 
 PANEL,-1 -1 500 408 N "_3DFace" 0
 "main()
+
 {
-  DebugN(\"ManID: \" + myManId());
+
+  dyn_dyn_string dd_string; 
+
+ 
+
+  dyn_string d_string1=makeDynString(\"c\",\"a\",\"b\"); 
+
+  dyn_string d_string2=makeDynString(\"1\",\"3\",\"2\"); 
+
+  dyn_string d_string3=makeDynString(\"wel\",\"dit\",\"klopt\"); 
+
+ 
+
+  dd_string[1]=d_string1; 
+
+  dd_string[2]=d_string2; 
+
+  dd_string[3]=d_string3; 
+
+  dynSort(d_string1);
+  DebugN(d_string1); 
+
+  dynDynSort(dd_string, 1); // asc 
+
+  DebugN(dd_string);
+
 }" 0
  E E E E 1 -1 -1 0  50 40
 ""0  1
@@ -17,54 +43,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 0 
-7 0
-"ELLIPSE1"
-""
-1 50 40 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- "main()
-{
-  rClick();
-}" 0
- E
-0 0 0 0 0 0
-E E E
-0
-2
-LANG:1 0 
-LANG:6 0 
-
-1
-"dashclr"N "_Transparent"
-E "main()
-{
-  string strText;
-  
-  getValue( \"TEXT\", \"text\", strText );
-  DebugN( strText );
-}" 0
- 0 1 1 2 1 E U  1 E 50 40 10 10
-2 2
-"TEXT"
-""
-1 90 30 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-2 0 0 0 0 0
-E E E
-0
-2
-LANG:1 0 
-LANG:6 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 90 30 150 50
-1 2 2 "0s" 0 0 0 64 0 0  90 30 1
-2
-LANG:1 33 MS Shell Dlg,-1,21,5,50,0,0,0,0,0
-LANG:6 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 2
-LANG:1 0 
-LANG:6 0 
 0
 LAYER, 1 
 1
