@@ -27,8 +27,6 @@ prefix		= "KVT"; // for the signal names
 id 			= "(LOFAR::MACIO::F_GCF_PROTOCOL + 1)";
 
 // specify extra include files
-include = '<MACIO/StringVector.h>';
-include = '<MACIO/DoubleVector.h>';
 
 prelude = << PRELUDE_END
 
@@ -36,7 +34,7 @@ prelude = << PRELUDE_END
 //	REGISTER_ACK	 (uint obsID, string	name);
 //	SEND_MSG		 (int seqnr, string key, string value, double	secsEpoch1970);
 //	SEND_MSG_ACK	 (int seqnr, uint result);
-//	SEND_MSG_POOL	 (int seqnr, uint nrMsgs, strVector key, strVector value, dblVector time);
+//	SEND_MSG_POOL	 (int seqnr, uint nrMsgs, vector<string> key, vector<string> value, vector<double> time);
 //	SEND_MSG_POOL_ACK(int seqnr, uint result);
 
 using LOFAR::operator<<;
