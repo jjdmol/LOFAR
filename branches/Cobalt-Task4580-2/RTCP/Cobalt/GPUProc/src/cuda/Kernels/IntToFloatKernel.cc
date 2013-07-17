@@ -22,50 +22,76 @@
 
 #include "IntToFloatKernel.h"
 
+#include <boost/lexical_cast.hpp>
+
 #include <Common/lofar_complex.h>
 
 #include <GPUProc/global_defines.h>
+
+using boost::lexical_cast;
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    IntToFloatKernel::IntToFloatKernel(const Parset &ps,
-                                       gpu::Context &context,
-                                       gpu::DeviceMemory &devConvertedData,
-                                       gpu::DeviceMemory &devInputSamples)
-      :
-      Kernel(ps, context, "IntToFloat.cu", "intToFloat")
+    string IntToFloatKernel::theirSourceFile = "IntToFloat.cu";
+    string IntToFloatKernel::theirFunction = "intToFloat";
+
+    IntToFloatKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters(ps),
+      nrBitsPerSample(ps.settings.nrBitsPerSample),
+      nrBytesPerComplexSample(ps.nrBytesPerComplexSample())
     {
-      setArg(0, devConvertedData);
-      setArg(1, devInputSamples);
+    }
+
+    IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,
+                                       const gpu::Module& module,
+                                       const Buffers& buffers,
+                                       const Parameters& params) :
+      Kernel(stream, gpu::Function(module, theirFunction))
+    {
+      setArg(0, buffers.output);
+      setArg(1, buffers.input);
 
       size_t maxNrThreads;
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
-      globalWorkSize = gpu::Grid(maxNrThreads, ps.nrStations());
+      globalWorkSize = gpu::Grid(maxNrThreads, params.nrStations);
       localWorkSize = gpu::Block(maxNrThreads, 1);
 
-      size_t nrSamples = ps.nrStations() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS;
+      size_t nrSamples = params.nrStations * params.nrChannelsPerSubband * NR_POLARIZATIONS;
       nrOperations = nrSamples * 2;
-      nrBytesRead = nrSamples * 2 * ps.nrBitsPerSample() / 8;
+      nrBytesRead = nrSamples * 2 * params.nrBitsPerSample / 8;
       nrBytesWritten = nrSamples * sizeof(std::complex<float>);
     }
 
-    size_t
-    IntToFloatKernel::bufferSize(const Parset& ps, BufferType bufferType)
+    //--------  Template specializations for KernelFactory  --------//
+
+    template<> size_t 
+    KernelFactory<IntToFloatKernel>::bufferSize(BufferType bufferType) const
     {
       switch (bufferType) {
-      case INPUT_DATA:
+      case IntToFloatKernel::INPUT_DATA:
         return
-          ps.nrStations() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() * ps.nrBytesPerComplexSample();
-      case OUTPUT_DATA:
+          itsParameters.nrStations * NR_POLARIZATIONS * 
+          itsParameters.nrSamplesPerSubband * itsParameters.nrBytesPerComplexSample;
+      case IntToFloatKernel::OUTPUT_DATA:
         return 
-          ps.nrStations() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+          itsParameters.nrStations * NR_POLARIZATIONS * 
+          itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
+    }
+
+    template<> CompileDefinitions
+    KernelFactory<IntToFloatKernel>::compileDefinitions() const
+    {
+      CompileDefinitions defs =
+        KernelFactoryBase::compileDefinitions(itsParameters);
+      defs["NR_BITS_PER_SAMPLE"] =
+        lexical_cast<string>(itsParameters.nrBitsPerSample);
+
+      return defs;
     }
 
   }
