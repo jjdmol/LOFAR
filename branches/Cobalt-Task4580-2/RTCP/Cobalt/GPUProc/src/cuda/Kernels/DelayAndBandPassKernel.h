@@ -91,15 +91,8 @@ namespace LOFAR
                    float centralFrequency, size_t SAP);
     };
 
-    // Specialization of the KernelFactory constructor for
+    // Specialization of the KernelFactory for
     // DelayAndBandPassKernel
-    template<>
-    KernelFactory<DelayAndBandPassKernel>::KernelFactory(const Parset& ps);
-
-    template<> DelayAndBandPassKernel*
-    KernelFactory<DelayAndBandPassKernel>::create(const gpu::Stream& stream,
-                                            const Buffers& buffers) const;
-
     template<> size_t
     KernelFactory<DelayAndBandPassKernel>::bufferSize(BufferType bufferType) const;
 

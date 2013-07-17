@@ -97,27 +97,6 @@ namespace LOFAR
 
     //--------  Template specializations for KernelFactory  --------//
 
-    template<>
-    KernelFactory<CorrelatorKernel>::KernelFactory(const Parset& ps) :
-      itsParameters(ps)
-    {
-      itsPTX = createPTX(CorrelatorKernel::theirSourceFile,
-                         compileDefinitions(),
-                         compileFlags());
-    }
-
-    template<>
-    CorrelatorKernel*
-    KernelFactory<CorrelatorKernel>::create(const gpu::Stream& stream,
-                                            const Buffers& buffers) const
-    {
-      return new CorrelatorKernel(
-        stream, createModule(stream.getContext(), 
-                             CorrelatorKernel::theirSourceFile,
-                             itsPTX), 
-        buffers, itsParameters);
-    }
-
     template<> size_t 
     KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const
     {

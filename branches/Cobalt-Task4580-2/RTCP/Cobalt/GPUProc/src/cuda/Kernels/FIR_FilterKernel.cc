@@ -94,27 +94,6 @@ namespace LOFAR
 
     //--------  Template specializations for KernelFactory  --------//
 
-    template<>
-    KernelFactory<FIR_FilterKernel>::KernelFactory(const Parset& ps) :
-      itsParameters(ps)
-    {
-      itsPTX = createPTX(FIR_FilterKernel::theirSourceFile,
-                         compileDefinitions(),
-                         compileFlags());
-    }
-
-    template<>
-    FIR_FilterKernel*
-    KernelFactory<FIR_FilterKernel>::create(const gpu::Stream& stream,
-                                            const Buffers& buffers) const
-    {
-      return new FIR_FilterKernel(
-        stream, createModule(stream.getContext(), 
-                             FIR_FilterKernel::theirSourceFile,
-                             itsPTX), 
-        buffers, itsParameters);
-    }
-
     template<> size_t 
     KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const
     {

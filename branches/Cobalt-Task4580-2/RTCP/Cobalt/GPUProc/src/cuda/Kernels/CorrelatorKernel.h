@@ -50,15 +50,8 @@ namespace LOFAR
                              const Parameters &param);
     };
 
-    // Specialization of the KernelFactory constructor for
+    // Specialization of the KernelFactory for
     // CorrelatorKernel
-    template<>
-    KernelFactory<CorrelatorKernel>::KernelFactory(const Parset& ps);
-
-    template<> CorrelatorKernel*
-    KernelFactory<CorrelatorKernel>::create(const gpu::Stream& stream,
-                                            const Buffers& buffers) const;
-
     template<> size_t
     KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const;
   }

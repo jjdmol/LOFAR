@@ -62,11 +62,24 @@ namespace LOFAR
 
       // Construct a factory for creating Kernel objects of type \c T, using the
       // settings in the Parset \a ps.
-      KernelFactory(const Parset& ps);
+      KernelFactory(const Parset& ps) :
+        itsParameters(ps)
+      {
+        itsPTX = createPTX(T::theirSourceFile,
+                           compileDefinitions(),
+                           compileFlags());
+      }
 
       // Create a new Kernel object of type \c T.
       T* create(const gpu::Stream& stream,
-                const Buffers& buffers) const;
+                const typename T::Buffers& buffers) const
+      {
+        return new T(
+          stream, createModule(stream.getContext(), 
+                               T::theirSourceFile,
+                               itsPTX), 
+          buffers, itsParameters);
+      }
 
       // // Create a new Kernel object of type \c T, using kernel-specific
       // // parameters to instantiate this new object.

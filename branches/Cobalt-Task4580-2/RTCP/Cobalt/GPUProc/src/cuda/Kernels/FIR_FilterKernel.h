@@ -75,14 +75,8 @@ namespace LOFAR
                        const Parameters& param);
     };
 
-    // Specialization of the KernelFactory constructor for FIR_FilterKernel.
-    template<>
-    KernelFactory<FIR_FilterKernel>::KernelFactory(const Parset& ps);
-
-    template<> FIR_FilterKernel*
-    KernelFactory<FIR_FilterKernel>::create(const gpu::Stream& stream,
-                                            const Buffers& buffers) const;
-
+    // Specialization of the KernelFactory for
+    // FIR_FilterKernel
     template<> size_t
     KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const;
 

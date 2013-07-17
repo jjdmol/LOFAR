@@ -95,27 +95,6 @@ namespace LOFAR
 
     //--------  Template specializations for KernelFactory  --------//
 
-    template<>
-    KernelFactory<DelayAndBandPassKernel>::KernelFactory(const Parset& ps) :
-      itsParameters(ps)
-    {
-      itsPTX = createPTX(DelayAndBandPassKernel::theirSourceFile,
-                         compileDefinitions(),
-                         compileFlags());
-    }
-
-    template<>
-    DelayAndBandPassKernel*
-    KernelFactory<DelayAndBandPassKernel>::create(const gpu::Stream& stream,
-                                            const Buffers& buffers) const
-    {
-      return new DelayAndBandPassKernel(
-        stream, createModule(stream.getContext(), 
-                             DelayAndBandPassKernel::theirSourceFile,
-                             itsPTX), 
-        buffers, itsParameters);
-    }
-
     template<> size_t 
     KernelFactory<DelayAndBandPassKernel>::bufferSize(BufferType bufferType) const
     {
