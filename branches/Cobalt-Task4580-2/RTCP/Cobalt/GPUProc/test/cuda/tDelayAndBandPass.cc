@@ -84,8 +84,8 @@ float * runTest(float bandPassFactor,
   unsigned NR_BITS_PER_SAMPLE = 8;
   definitions["NR_POLARIZATIONS"] = "2";
   unsigned NR_POLARIZATIONS = 2;
-  definitions["NR_BEAMS"] = "8";
-  unsigned NR_BEAMS = 8;
+  definitions["NR_SAPS"] = "8";
+  unsigned NR_SAPS = 8;
   definitions["USE_CUDA"] = "1";
   definitions["COMPLEX"] = "2";
   unsigned COMPLEX = 2;
@@ -112,12 +112,12 @@ float * runTest(float bandPassFactor,
   HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 42.0f); 
   cuStream.writeBuffer(DevCorrectedMemory, rawCorrectedData);
 
-  size_t sizeDelaysAtBeginData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float);  
+  size_t sizeDelaysAtBeginData = NR_STATIONS * NR_SAPS * 2 * sizeof(float);  
   DeviceMemory DevDelaysAtBeginMemory(ctx, sizeDelaysAtBeginData);
   HostMemory rawDelaysAtBeginData = getInitializedArray(ctx, sizeDelaysAtBeginData, delayBegin);
   cuStream.writeBuffer(DevDelaysAtBeginMemory, rawDelaysAtBeginData);
     
-  size_t sizeDelaysAfterEndData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float); 
+  size_t sizeDelaysAfterEndData = NR_STATIONS * NR_SAPS * 2 * sizeof(float); 
   DeviceMemory DevDelaysAfterEndMemory(ctx, sizeDelaysAfterEndData);
   HostMemory rawDelaysAfterEndData = getInitializedArray(ctx, sizeDelaysAfterEndData, delayEnd);
   cuStream.writeBuffer(DevDelaysAfterEndMemory, rawDelaysAfterEndData);

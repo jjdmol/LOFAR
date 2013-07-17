@@ -29,7 +29,6 @@ namespace LOFAR
   {
     struct CorrelatorPipelinePrograms
     {
-      gpu::Module delayAndBandPassProgram;
       gpu::Module correlatorProgram;
     };
   }

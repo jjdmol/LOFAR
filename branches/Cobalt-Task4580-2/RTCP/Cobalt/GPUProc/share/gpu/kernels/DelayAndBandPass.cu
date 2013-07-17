@@ -68,7 +68,7 @@ typedef  complexchar (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_P
 #else
 typedef  complexfloat (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 #endif
-typedef  const float (* DelaysType)[NR_BEAMS][NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in seconds
+typedef  const float (* DelaysType)[NR_SAPS][NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in seconds
 typedef  const float (* PhaseOffsetsType)[NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in radians
 typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 

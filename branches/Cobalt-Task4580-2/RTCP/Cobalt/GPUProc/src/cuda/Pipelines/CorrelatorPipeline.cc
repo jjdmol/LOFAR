@@ -56,7 +56,6 @@ namespace LOFAR
       double startTime = omp_get_wtime();
       vector<string> kernels;
       map<string, string> ptx;
-      kernels.push_back("DelayAndBandPass.cu");
 #if defined USE_NEW_CORRELATOR
       kernels.push_back("NewCorrelator.cu");
 #else
@@ -76,7 +75,6 @@ namespace LOFAR
       for (size_t i = 0; i < nrWorkQueues; ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        programs.delayAndBandPassProgram = createModule(context, "DelayAndBandPass.cu", ptx["DelayAndBandPass.cu"]);
 #if defined USE_NEW_CORRELATOR
         programs.correlatorProgram = createModule(context, "NewCorrelator.cu", ptx["NewCorrelator.cu"]);
 #else

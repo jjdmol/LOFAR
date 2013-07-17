@@ -68,9 +68,10 @@ namespace LOFAR
 
     struct CorrelatorFactories
     {
-      CorrelatorFactories(const Parset &ps): firFilter(ps) {}
+      CorrelatorFactories(const Parset &ps): firFilter(ps), delayAndBandPass(ps) {}
 
       KernelFactory<FIR_FilterKernel> firFilter;
+      KernelFactory<DelayAndBandPassKernel> delayAndBandPass;
     };
 
     class CorrelatorWorkQueue : public WorkQueue
@@ -132,8 +133,14 @@ namespace LOFAR
       FIR_FilterKernel::Buffers firFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
 
+      // FFT
       Filter_FFT_Kernel fftKernel;
-      DelayAndBandPassKernel delayAndBandPassKernel;
+
+      // Delay and Bandpass
+      gpu::DeviceMemory devBandPassCorrectionWeights;
+      DelayAndBandPassKernel::Buffers delayAndBandPassBuffers;
+      std::auto_ptr<DelayAndBandPassKernel> delayAndBandPassKernel;
+
 #if defined USE_NEW_CORRELATOR
       CorrelateTriangleKernel correlateTriangleKernel;
       CorrelateRectangleKernel correlateRectangleKernel;

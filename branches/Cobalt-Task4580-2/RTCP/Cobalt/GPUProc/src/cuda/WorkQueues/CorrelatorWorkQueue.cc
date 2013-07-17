@@ -60,17 +60,17 @@ namespace LOFAR
       prevBlock(-1),
       prevSAP(-1),
       devInput(ps.nrChannelsPerSubband() == 1
-               ? std::max(DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA),
+               ? std::max(factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
                           CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA))
                : std::max(factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA),
                           CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA)),
-               DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS),
-               DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
+               factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::DELAYS),
+               factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
       devFilteredData(context, 
                       ps.nrChannelsPerSubband() == 1
                       ? CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA)
-                      : std::max(DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA),
+                      : std::max(factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
                                  CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA))),
 
       // FIR filter
@@ -78,14 +78,18 @@ namespace LOFAR
       firFilterBuffers(devInput.inputSamples, devFilteredData, devFilterWeights),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
+      // FFT
       fftKernel(ps, context, devFilteredData),
-      delayAndBandPassKernel(ps, context,
-                             devInput.inputSamples,
-                             devFilteredData,
-                             devInput.delaysAtBegin,
-                             devInput.delaysAfterEnd,
-                             devInput.phaseOffsets,
-                             queue),
+
+      // Delay and Bandpass
+      devBandPassCorrectionWeights(context, factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
+      delayAndBandPassBuffers(devInput.inputSamples,
+                              devFilteredData,
+                              devInput.delaysAtBegin, devInput.delaysAfterEnd,
+                              devInput.phaseOffsets,
+                              devBandPassCorrectionWeights),
+      delayAndBandPassKernel(factories.delayAndBandPass.create(queue, delayAndBandPassBuffers)),
+
 #if defined USE_NEW_CORRELATOR
       correlateTriangleKernel(ps, programs.correlatorProgram,
                               devFilteredData, devInput.inputSamples),
@@ -315,7 +319,9 @@ namespace LOFAR
 
       // Even if we skip delay compensation and bandpass correction (rare),
       // run that kernel, as it also reorders the data for the correlator kernel.
-      delayAndBandPassKernel.enqueue(queue/*, *counters["compute - delay/bp"]*/, subband);
+      delayAndBandPassKernel->enqueue(queue/*, *counters["compute - delay/bp"]*/,
+        ps.settings.subbands[subband].centralFrequency,
+        ps.settings.subbands[subband].SAP);
 
 #if defined USE_NEW_CORRELATOR
       correlateTriangleKernel.enqueue(queue/*, *counters["compute - cor.triangle"]*/);
