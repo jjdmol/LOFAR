@@ -201,6 +201,7 @@ void [+ event_class_name +]::unpack()
   	uint32 __offset = sizePackedGCFEvent;
     [+ ELSE +]
     // no params in this event to unpack
+  	uint32 __offset = 0;
     [+ ENDIF +]
     [+ FOR param "" +]
     [+ IF (exist? "userdefined") +]
