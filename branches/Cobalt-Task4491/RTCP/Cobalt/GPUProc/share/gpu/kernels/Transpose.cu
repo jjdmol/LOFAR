@@ -19,35 +19,42 @@
 //# $Id$
 
 /*!
+ * Performs data transposition from the output of the beamformer kernel to
+ * a data order suitable for an inverse FFT.
+ * Parallelization is performed over the TABs and number of samples (time).
  *
- * COPY PASTA OF BEAMFORMER DOCUMENTATION 
+ * We have 4 dimensions, but CUDA thread blocks can be up to three.
+ * Mangle the TAB and sample dimension in to dim 0 (x).
  *
+ * The kernel needs to determine for each thread whether to read and separately
+ * whether to write back a sample, because the number of TABs may not divide
+ * the 16x16 thread arrangement (even though we have a 1D thread block).
  *
+ * \param[out] TransposedDataType      4D output array of samples. For each TAB and pol, a spectrum per time step of complex floats.
+ * \param[in]  ComplexVoltagesType     3D input array of samples (last dim (pol) is implicit). For each channel, the TABs per time step of two complex floats.
  *
- * Performs beamforming to x beam based.
- * The beamformer performs a complex weighted multiply add of the each sample of the
- * provided input data.
- *
- * \param[out] transposedDataPtr      4D output array of beams. For each channel a number of Tied Array Beams time serires is created for two polarizations
- * \param[in]  complexVoltagesPtr        3D input array of samples. A time series for each station and channel pair. Each sample contains the 2 polarizations X, Y, each of complex float type.
- * \param[in]  weightsPtr              3d input array of complex valued weights to be applied to the correctData samples. THere is a weight for each station, channel and Tied Array Beam triplet.
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values            | Description
  * ----------------------- | ----------------------- | -----------
- * NR_STATIONS             | >= 1                    | number of antenna fields
- * NR_SAMPLES_PER_CHANNEL  | >= 1                    | number of input samples per channel
+ * NR_SAMPLES_PER_CHANNEL  | multiple of 16 and > 0  | number of input samples per channel
  * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
  * NR_TABS                 | >= 1                    | number of Tied Array Beams to create
  * ----------------------- | ------------------------| 
- * NR_STATIONS_PER_PASS    | 1 >= && <= 32           | Set to overide default: Parallelization parameter, controls the number stations to beamform in a single pass over the input data. 
  *
- * Note that this kernel assumes  NR_POLARIZATIONS == 2 and COMPLEX == 2
+ * Note that this kernel assumes  NR_POLARIZATIONS == 2
  *
  * Execution configuration:
- * - LocalWorkSize = (NR_POLARIZATIONS, NR_TABS, NR_CHANNELS) Note that for full utilization NR_TABS * NR_CHANNELS % 16 = 0
+ * - LocalWorkSize = 1 dimensional; (256, 1, 1) is in use. Multiples of (32, 1, 1) may work too.
+ * - GlobalWorkSize = 3 dimensional:
+ *   + inner dim (x): always 1 block
+ *   + middle dim (y): 16 TABs can be processed in a block. Number of blocks required, rounded-up.
+ *   + outer dim (z): 16 samples per channel can be processed in a block. Number of blocks required (fits exactly).
  */
 
-#ifdef CHANNEL_PARALLEL 
+#ifndef POST_BEAMFORMER_KERNEL_TRANSPOSE 
+// This transpose also swaps the NR_SAMPLES_PER_CHANNEL and NR_CHANNELS dims.
+// The parallelization works on TABs and channels. It is currently unused.
+
 typedef float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 
 // last dim within float4 is NR_POLARIZATIONS
@@ -98,7 +105,8 @@ __global__ void transpose(void *transposedDataPtr,
   }
 }
 
-#else // parallelize over time instead of channels
+#else // POST_BEAMFORMER_KERNEL_TRANSPOSE 
+// The parallelization works on TABs and number of samples (time).
 
 typedef float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 

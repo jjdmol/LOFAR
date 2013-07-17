@@ -34,7 +34,7 @@ namespace LOFAR
 
     BeamFormerTransposeKernel::BeamFormerTransposeKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devTransposedData, gpu::DeviceMemory &devComplexVoltages)
       :
-      Kernel(ps, program, "transposeComplexVoltages")
+      Kernel(ps, program, "transpose")
     {
       ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
       setArg(0, devTransposedData);

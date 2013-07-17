@@ -43,9 +43,9 @@ using LOFAR::Exception;
 
 // The tests succeeds for different values of stations, channels, samples and tabs.
 
-unsigned NR_CHANNELS = 4;
-unsigned NR_SAMPLES_PER_CHANNEL = 16;
-unsigned NR_TABS = 2;
+unsigned NR_CHANNELS = 16;
+unsigned NR_SAMPLES_PER_CHANNEL = 32;
+unsigned NR_TABS = 17;
 unsigned NR_POLARIZATIONS = 2;
 unsigned COMPLEX = 2;
 bool CHANNEL_PARALLEL = false;
@@ -166,8 +166,8 @@ HostMemory runTest(gpu::Context ctx,
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
 
   //Switch between the two function versions
-  if (CHANNEL_PARALLEL)
-    definitions["CHANNEL_PARALLEL"] = lexical_cast<string>(""); 
+  if (!CHANNEL_PARALLEL)
+    definitions["POST_BEAMFORMER_KERNEL_TRANSPOSE"] = lexical_cast<string>("");
 
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(devices, kernelFile, flags, definitions);
@@ -297,7 +297,8 @@ int main()
   // Validate the returned data array
   // Walk the data arrays and create linear data arrays with the correct content 
   outputOnHostPtr = outputOnHost2.get<float>();
-  exit_with_print(complexVoltagesData, outputOnHostPtr);
+
+//  exit_with_print(complexVoltagesData, outputOnHostPtr);
   //bool continue = true;
   //unsigned idx_in_data = 0;
   //for (size_t idx = 0; idx < NR_TABS * NR_POLARIZATIONS; ++idx)

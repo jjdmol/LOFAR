@@ -81,6 +81,7 @@ namespace LOFAR
         defs["NR_STATIONS"]        = str(format("%u") % ps.nrStations());
         defs["NR_SAMPLES_PER_CHANNEL"] = str(format("%u") % ps.nrSamplesPerChannel());
         defs["NR_SAMPLES_PER_SUBBAND"] = str(format("%u") % ps.nrSamplesPerSubband());
+        defs["POST_BEAMFORMER_KERNEL_TRANSPOSE"] = ""; // for bf transpose kernel only
         defs["NR_BEAMS"]           = str(format("%u") % ps.nrBeams());
         defs["NR_TABS"]            = str(format("%u") % ps.nrTABs(0)); // TODO: 0 should be dep on #beams
         defs["NR_COHERENT_STOKES"] = str(format("%u") % ps.nrCoherentStokes()); // size_t
