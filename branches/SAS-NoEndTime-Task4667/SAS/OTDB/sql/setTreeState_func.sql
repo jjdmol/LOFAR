@@ -23,7 +23,7 @@
 --
 
 --
--- setTreeState (authToken, treeID, treeState)
+-- setTreeState (authToken, treeID, treeState, allow_update)
 --
 -- Checks if the treeState is legal before assigning it.
 --
@@ -129,7 +129,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2, BOOLEAN)
 			SET    starttime = now()
 			WHERE  treeid    = $2;
 		  END IF;
-		  IF $4 = FALSE AND ($3 = TSfinished OR $3 = TSaborted) THEN
+		  IF $4 = TRUE AND ($3 = TSfinished OR $3 = TSaborted) THEN
 		    UPDATE OTDBtree
 			SET	   stoptime = now()
 			WHERE  treeid   = $2;

@@ -218,7 +218,7 @@ public:
 	// When errors occur these can be retrieved with the errorMsg function.
 	bool	setTreeState(treeIDType		aTreeID,
 						 treeState		aState,
-						 bool			dont_touch_endtime = false);
+						 bool			allow_endtime_update = true);
 
 	// Update the description of a tree.
 	bool	setDescription(treeIDType	aTreeID,

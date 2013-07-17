@@ -1246,7 +1246,7 @@ bool	TreeMaintenance::setClassification(treeIDType	aTreeID,
 // When errors occur these can be retrieved with the errorMsg function.
 bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
 									  treeState			aState,
-									  bool				dont_touch_endtime)
+									  bool				allow_endtime_update)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -1255,7 +1255,8 @@ bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
 	}
 
 	LOG_TRACE_FLOW_STR("TM:setTreeState(" << aTreeID << ","
-										  << aState << ")");
+										  << aState << ","
+										  << (allow_endtime_update ? "true" : "false") << ")");
 
 	work 	xAction(*(itsConn->getConn()), "setTreeState");
 	try {
@@ -1265,7 +1266,7 @@ bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
 							itsConn->getAuthToken(),
 							aTreeID,
 							aState,
-							dont_touch_endtime ? "true" : "false"));
+							allow_endtime_update ? "true" : "false"));
 							
 		// Analyse result.
 		bool		succes;
