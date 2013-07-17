@@ -44,6 +44,10 @@ namespace LOFAR
       // Kernel.
       CompileDefinitions
       compileDefinitions(const Kernel::Parameters& param) const;
+
+      // Return compile flags to use when creating PTX code for any Kernel.
+      CompileFlags
+      compileFlags(const Kernel::Parameters& param) const;
     };
 
     // Declaration of a generic factory class. For each concrete Kernel class
@@ -75,11 +79,15 @@ namespace LOFAR
     private:
       // Return compile definitions to use when creating PTX code for kernels of
       // type \c T, using the parameters stored in \c itsParameters.
-      CompileDefinitions compileDefinitions() const;
+      CompileDefinitions compileDefinitions() const {
+        return KernelFactoryBase::compileDefinitions(itsParameters);
+      }
 
       // Return compile flags to use when creating PTX code for kernels of type
       // \c T.
-      CompileFlags compileFlags() const;
+      CompileFlags compileFlags() const {
+        return KernelFactoryBase::compileFlags(itsParameters);
+      }
 
       // Additional parameters needed to create a Kernel object of type \c T.
       typename T::Parameters itsParameters;

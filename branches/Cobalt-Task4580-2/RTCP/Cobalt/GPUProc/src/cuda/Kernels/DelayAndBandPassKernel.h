@@ -105,9 +105,6 @@ namespace LOFAR
 
     template<> CompileDefinitions
     KernelFactory<DelayAndBandPassKernel>::compileDefinitions() const;
-
-    template<> CompileFlags
-    KernelFactory<DelayAndBandPassKernel>::compileFlags() const;
   }
 }
 

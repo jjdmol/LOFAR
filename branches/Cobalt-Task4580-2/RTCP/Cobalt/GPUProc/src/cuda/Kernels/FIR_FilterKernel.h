@@ -88,10 +88,6 @@ namespace LOFAR
 
     template<> CompileDefinitions
     KernelFactory<FIR_FilterKernel>::compileDefinitions() const;
-
-    template<> CompileFlags
-    KernelFactory<FIR_FilterKernel>::compileFlags() const;
-
   }
 }
 

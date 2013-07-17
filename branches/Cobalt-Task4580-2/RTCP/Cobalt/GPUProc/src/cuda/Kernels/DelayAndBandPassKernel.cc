@@ -169,13 +169,5 @@ namespace LOFAR
 
       return defs;
     }
-
-    template<> CompileFlags
-    KernelFactory<DelayAndBandPassKernel>::compileFlags() const
-    {
-      CompileFlags flags;
-      return flags;
-    }
-
   }
 }

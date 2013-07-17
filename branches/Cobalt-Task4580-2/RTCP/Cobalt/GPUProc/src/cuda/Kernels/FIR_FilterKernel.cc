@@ -148,13 +148,5 @@ namespace LOFAR
         lexical_cast<string>(itsParameters.nrPPFTaps);
       return defs;
     }
-
-    template<> CompileFlags
-    KernelFactory<FIR_FilterKernel>::compileFlags() const
-    {
-      CompileFlags flags;
-      return flags;
-    }
-
   }
 }

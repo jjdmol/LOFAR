@@ -52,5 +52,12 @@ namespace LOFAR
       return defs;
     }
 
+    CompileFlags
+    KernelFactoryBase::compileFlags(const Kernel::Parameters& /*param*/) const
+    {
+      CompileFlags flags;
+      return flags;
+    }
+
   }
 }

@@ -61,12 +61,6 @@ namespace LOFAR
 
     template<> size_t
     KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const;
-
-    template<> CompileDefinitions
-    KernelFactory<CorrelatorKernel>::compileDefinitions() const;
-
-    template<> CompileFlags
-    KernelFactory<CorrelatorKernel>::compileFlags() const;
   }
 }
 

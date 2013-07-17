@@ -136,22 +136,6 @@ namespace LOFAR
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
     }
-
-    template<> CompileDefinitions
-    KernelFactory<CorrelatorKernel>::compileDefinitions() const
-    {
-      CompileDefinitions defs =
-        KernelFactoryBase::compileDefinitions(itsParameters);
-      return defs;
-    }
-
-    template<> CompileFlags
-    KernelFactory<CorrelatorKernel>::compileFlags() const
-    {
-      CompileFlags flags;
-      return flags;
-    }
-
   }
 }
 
