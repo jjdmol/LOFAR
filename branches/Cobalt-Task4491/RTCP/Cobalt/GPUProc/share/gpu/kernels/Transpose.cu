@@ -1,4 +1,4 @@
-//# Transepose.cu
+//# Transpose.cu
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -48,19 +48,22 @@
  */
 
 #ifdef CHANNEL_PARALLEL 
-typedef float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS];
 typedef float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 
-extern "C" __global__  void transpose( 
-                    void * transposedDataPtr,
-                    const void * complexVoltagesPtr)
+// last dim within float4 is NR_POLARIZATIONS
+typedef float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS]; // [NR_POLARIZATIONS];
+
+extern "C"
+__global__ void transpose(void *transposedDataPtr,
+                          const void *complexVoltagesPtr)
 {
   TransposedDataType transposedData = (TransposedDataType) transposedDataPtr;
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
 
-  __shared__ float2 tmp[16][17][2]; // add one to get coaliesced reads?
+  // last dim within float4 is NR_POLARIZATIONS
+  __shared__ float4 tmp[16][17]; // padding to avoid bank conflicts
 
-  unsigned tabBase = 16 * blockIdx.y; // No use of the block size!!!
+  unsigned tabBase = 16 * blockIdx.y; // No use of the block size
   unsigned chBase = 16 * blockIdx.z;
 
   unsigned tabOffsetR = threadIdx.x & 15;
@@ -79,41 +82,45 @@ extern "C" __global__  void transpose(
   {
     if (doR)  // only do a read and write if we are within our bounds
     {    
-      tmp[tabOffsetR][chOffsetR][0] = (*complexVoltages)[channelR][time][tabR][0];
-      tmp[tabOffsetR][chOffsetR][1] = (*complexVoltages)[channelR][time][tabR][1];
+      tmp[tabOffsetR][chOffsetR] = (*complexVoltages)[channelR][time][tabR];
     }
+
     __syncthreads();
+
     if (doW) 
     {
-      float2 sample = tmp[tabOffsetW][chOffsetW][0];
-      float2 sample2 = tmp[tabOffsetW][chOffsetW][1];
-      (*transposedData)[tabW][0][time][channelW] = sample;
-      (*transposedData)[tabW][1][time][channelW] = sample2;
+      float4 sample = tmp[tabOffsetW][chOffsetW];
+      (*transposedData)[tabW][0][time][channelW] = make_float2(sample.x, sample.y);
+      (*transposedData)[tabW][1][time][channelW] = make_float2(sample.z, sample.w);
     }
 
     __syncthreads();
   }
 }
 
-#else
+#else // parallelize over time instead of channels
 
-typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS]; 
-typedef  float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
+typedef float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 
-extern "C" __global__  void transpose( void * transposedDataPtr,
-                                        const void * complexVoltagesPtr)
+// last dim within float4 is NR_POLARIZATIONS
+typedef float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS]; // [NR_POLARIZATIONS];
+
+extern "C"
+__global__ void transpose(void *transposedDataPtr,
+                          const void *complexVoltagesPtr)
 {
   TransposedDataType transposedData = (TransposedDataType) transposedDataPtr;
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
 
-  __shared__ float2 tmp[16][17][2];
+  // last dim within float4 is NR_POLARIZATIONS
+  __shared__ float4 tmp[16][17]; // padding to avoid bank conflicts
 
   unsigned tabBase = 16 * blockDim.y * blockIdx.y + threadIdx.y;
   unsigned timeBase = 16 * blockDim.z * blockIdx.z + threadIdx.z;
 
-  unsigned tabOffsetR = threadIdx.x & 15;   // use and to get module 16
+  unsigned tabOffsetR = threadIdx.x & 15;
   unsigned tabR = tabBase + tabOffsetR;
-  unsigned timeOffsetR = threadIdx.x >> 4;  // use bitshift to get devision
+  unsigned timeOffsetR = threadIdx.x >> 4;
   unsigned timeR = timeBase + timeOffsetR;
   bool doR = NR_TABS % 16 == 0 || tabR < NR_TABS;
 
@@ -127,16 +134,15 @@ extern "C" __global__  void transpose( void * transposedDataPtr,
   {
     if (doR)
     {
-      tmp[tabOffsetR][timeOffsetR][0] = (*complexVoltages)[channel][timeR][tabR][0];
-      tmp[tabOffsetR][timeOffsetR][1] = (*complexVoltages)[channel][timeR][tabR][1];
+      tmp[tabOffsetR][timeOffsetR] = (*complexVoltages)[channel][timeR][tabR];
     }
 
     __syncthreads();
+
     if (doW) {
-      float2 sample = tmp[tabOffsetW][timeOffsetW][0];
-      float2 sample2 = tmp[tabOffsetW][timeOffsetW][1];
-      (*transposedData)[tabW][0][channel][timeW] = sample;
-      (*transposedData)[tabW][1][channel][timeW] = sample2;
+      float4 sample = tmp[tabOffsetW][timeOffsetW];
+      (*transposedData)[tabW][0][channel][timeW] = make_float2(sample.x, sample.y);
+      (*transposedData)[tabW][1][channel][timeW] = make_float2(sample.z, sample.w);
     }
 
     __syncthreads();
@@ -144,3 +150,4 @@ extern "C" __global__  void transpose( void * transposedDataPtr,
 }
 
 #endif
+

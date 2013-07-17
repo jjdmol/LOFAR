@@ -1,4 +1,4 @@
-//# tBeamFormer.cc: test BeamFormer CUDA kernel
+//# tTranspose.cc: test Transpose CUDA kernel
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -44,7 +44,7 @@ using LOFAR::Exception;
 // The tests succeeds for different values of stations, channels, samples and tabs.
 
 unsigned NR_CHANNELS = 4;
-unsigned NR_SAMPLES_PER_CHANNEL = 4;
+unsigned NR_SAMPLES_PER_CHANNEL = 16;
 unsigned NR_TABS = 2;
 unsigned NR_POLARIZATIONS = 2;
 unsigned COMPLEX = 2;
@@ -105,6 +105,7 @@ void exit_with_print(float *complexVoltagesData, float *outputOnHostPtr)
                     << outputOnHostPtr[sample_base_idx + idx_samples * COMPLEX + 1] << ")" ;
 
             }
+            cout << endl;
         }
         cout << endl;
       }
@@ -136,7 +137,7 @@ void exit_with_print(float *complexVoltagesData, float *outputOnHostPtr)
     }
   }
 
-  exit(-1);
+  exit(1);
 }
 
 
@@ -203,7 +204,7 @@ HostMemory runTest(gpu::Context ctx,
   //Block localWorkSize(16, NR_TABS, NR_CHANNELS);
    //globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, ps.nrSamplesPerChannel() / 16);
    //localWorkSize = cl::NDRange(256, 1, 1);
-  Grid globalWorkSize(1, (NR_TABS + 15) / 16, 1);
+  Grid globalWorkSize(1, (NR_TABS + 15) / 16, NR_SAMPLES_PER_CHANNEL / 16);
   //Grid globalWorkSize(1, 1, 2);
   Block localWorkSize(256, 1, 1); // increasing x dim does not change anything
   // Run the kernel
@@ -223,7 +224,7 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main()
 {
-  INIT_LOGGER("tBeamFormer");
+  INIT_LOGGER("tTranspose");
   const char* function = "transpose";
   try 
   {
