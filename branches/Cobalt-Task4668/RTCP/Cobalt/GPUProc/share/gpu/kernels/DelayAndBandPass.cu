@@ -146,8 +146,8 @@ extern "C" {
   // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
   // Because we `undo' the delay, we need to rotate BACK.
   float pi2 = -2.0f * 3.1415926535f;
-  float2 phiBegin = make_float2(pi2 * delayAtBegin.x, pi2 * delayAtBegin.y) ;
-  float2 phiEnd = make_float2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y) ;
+  float2 phiBegin = make_float2(pi2 * delayAtBegin.x, pi2 * delayAtBegin.y);
+  float2 phiEnd   = make_float2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y);
 
   float2 deltaPhi = make_float2((phiEnd.x - phiBegin.x) / NR_SAMPLES_PER_CHANNEL,
                                 (phiEnd.y - phiBegin.y) / NR_SAMPLES_PER_CHANNEL);   
