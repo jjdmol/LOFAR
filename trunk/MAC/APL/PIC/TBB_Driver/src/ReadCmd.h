@@ -27,7 +27,7 @@
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
-#include <APL/RTCCommon/NsTimestamp.h>
+#include <Common/NsTimestamp.h>
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "TP_Protocol.ph"
@@ -72,9 +72,9 @@ private:
 	uint32 itsLastSavedNrOfSamples;
 	uint32 itsLastSavedSampleFreq;
 	
-	RTC::NsTimestamp itsTimestamp;
-	RTC::NsTimestamp itsTimeBefore;
-	RTC::NsTimestamp itsTimeAfter;
+	NsTimestamp itsTimestamp;
+	NsTimestamp itsTimeBefore;
+	NsTimestamp itsTimeAfter;
 };
 
 	} // end TBB namespace
