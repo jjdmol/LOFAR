@@ -31,7 +31,6 @@
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include "CorrelatorPipelinePrograms.h"
 
 #define NR_WORKQUEUES_PER_DEVICE  2
 
@@ -51,37 +50,11 @@ namespace LOFAR
 
       CorrelatorFactories factories(ps);
 
-      // Compile all required kernels to ptx
-      LOG_INFO("Compiling device kernels");
-      double startTime = omp_get_wtime();
-      vector<string> kernels;
-      map<string, string> ptx;
-#if defined USE_NEW_CORRELATOR
-      kernels.push_back("NewCorrelator.cu");
-#else
-      kernels.push_back("Correlator.cu");
-#endif
-
-      for (vector<string>::const_iterator i = kernels.begin(); i != kernels.end(); ++i) {
-        ptx[*i] = createPTX(*i);
-      }
-
-      double stopTime = omp_get_wtime();
-      LOG_INFO("Compiling device kernels done");
-      LOG_DEBUG_STR("Compile time = " << stopTime - startTime);
-
       // Create the WorkQueues
-      CorrelatorPipelinePrograms programs;
       for (size_t i = 0; i < nrWorkQueues; ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-#if defined USE_NEW_CORRELATOR
-        programs.correlatorProgram = createModule(context, "NewCorrelator.cu", ptx["NewCorrelator.cu"]);
-#else
-        programs.correlatorProgram = createModule(context, "Correlator.cu", ptx["Correlator.cu"]);
-#endif
-
-        workQueues[i] = new CorrelatorWorkQueue(ps, context, programs, factories);
+        workQueues[i] = new CorrelatorWorkQueue(ps, context, factories);
       }
 
     }

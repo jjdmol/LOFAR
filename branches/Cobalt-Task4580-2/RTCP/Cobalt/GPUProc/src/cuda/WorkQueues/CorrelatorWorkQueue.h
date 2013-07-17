@@ -35,7 +35,6 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/FilterBank.h>
-#include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/Filter_FFT_Kernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
@@ -68,17 +67,18 @@ namespace LOFAR
 
     struct CorrelatorFactories
     {
-      CorrelatorFactories(const Parset &ps): firFilter(ps), delayAndBandPass(ps) {}
+      CorrelatorFactories(const Parset &ps): firFilter(ps), delayAndBandPass(ps), correlator(ps) {}
 
       KernelFactory<FIR_FilterKernel> firFilter;
       KernelFactory<DelayAndBandPassKernel> delayAndBandPass;
+      KernelFactory<CorrelatorKernel> correlator;
     };
 
     class CorrelatorWorkQueue : public WorkQueue
     {
     public:
       CorrelatorWorkQueue(const Parset &parset, gpu::Context &context,
-                          CorrelatorPipelinePrograms &programs, CorrelatorFactories &factories);
+                          CorrelatorFactories &factories);
 
       // Correlate the data found in the input data buffer
       virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
@@ -141,12 +141,9 @@ namespace LOFAR
       DelayAndBandPassKernel::Buffers delayAndBandPassBuffers;
       std::auto_ptr<DelayAndBandPassKernel> delayAndBandPassKernel;
 
-#if defined USE_NEW_CORRELATOR
-      CorrelateTriangleKernel correlateTriangleKernel;
-      CorrelateRectangleKernel correlateRectangleKernel;
-#else
-      CorrelatorKernel correlatorKernel;
-#endif
+      // Correlator
+      CorrelatorKernel::Buffers correlatorBuffers;
+      std::auto_ptr<CorrelatorKernel> correlatorKernel;
     };
 
   }

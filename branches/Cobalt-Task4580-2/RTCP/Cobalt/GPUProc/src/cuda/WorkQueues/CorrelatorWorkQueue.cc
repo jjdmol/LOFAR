@@ -29,7 +29,6 @@
 
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/BandPass.h>
-#include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
 
 namespace LOFAR
 {
@@ -39,39 +38,34 @@ namespace LOFAR
      *
      *              > 1 channel/subband                  1 channel/subband
      *            ----------------------               ---------------------
-     * [input]  -> devInput.inputSamples            -> devInput.inputSamples
+     * [input]  -> devInput.inputSamples            -> devFilteredData
      *             -> firFilterKernel
      *          -> devFilteredData
      *             -> fftKernel
      *          -> devFilteredData
      *             -> delayAndBandPassKernel           -> delayAndBandPassKernel
-     *          -> devInput.inputSamples            -> devFilteredData
+     *          -> devInput.inputSamples            -> devInput.inputSamples
      *             -> correlatorKernel                 -> correlatorKernel
-     *          -> devFilteredData                  -> devInput.inputSamples
+     *          -> devFilteredData                  -> devFilteredData
      * [output] <- = visibilities                   <- = visibilities
      *
      * For #channels/subband == 1, skip the FIR and FFT kernels,
      * and provide the input in devFilteredData.
      */
     CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset &parset,
-      gpu::Context &context, CorrelatorPipelinePrograms &programs, CorrelatorFactories &factories)
+      gpu::Context &context, CorrelatorFactories &factories)
     :
       WorkQueue( parset, context ),
       prevBlock(-1),
       prevSAP(-1),
-      devInput(ps.nrChannelsPerSubband() == 1
-               ? std::max(factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
-                          CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA))
-               : std::max(factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA),
-                          CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA)),
+      devInput(std::max(ps.nrChannelsPerSubband() == 1 ? 0UL : factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA),
+                        factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)),
                factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::DELAYS),
                factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
-      devFilteredData(context, 
-                      ps.nrChannelsPerSubband() == 1
-                      ? CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA)
-                      : std::max(factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
-                                 CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA))),
+      devFilteredData(context,
+                      std::max(factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
+                               factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))),
 
       // FIR filter
       devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
@@ -83,22 +77,18 @@ namespace LOFAR
 
       // Delay and Bandpass
       devBandPassCorrectionWeights(context, factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
-      delayAndBandPassBuffers(devInput.inputSamples,
-                              devFilteredData,
+      delayAndBandPassBuffers(devFilteredData,
+                              devInput.inputSamples,
                               devInput.delaysAtBegin, devInput.delaysAfterEnd,
                               devInput.phaseOffsets,
                               devBandPassCorrectionWeights),
       delayAndBandPassKernel(factories.delayAndBandPass.create(queue, delayAndBandPassBuffers)),
 
-#if defined USE_NEW_CORRELATOR
-      correlateTriangleKernel(ps, programs.correlatorProgram,
-                              devFilteredData, devInput.inputSamples),
-      correlateRectangleKernel(ps, programs.correlatorProgram, 
-                               devFilteredData, devInput.inputSamples)
-#else
-      correlatorKernel(ps, programs.correlatorProgram, 
-                       devFilteredData, devInput.inputSamples)
-#endif
+      // Correlator
+      //correlatorBuffers(devInput.inputSamples, devFilteredData),
+      correlatorBuffers(devInput.inputSamples,
+                        devFilteredData),
+      correlatorKernel(factories.correlator.create(queue, correlatorBuffers))
     {
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
@@ -110,16 +100,10 @@ namespace LOFAR
       }
 
       // create all the counters
-#if defined USE_NEW_CORRELATOR
-      addCounter("compute - cor.triangle");
-      addCounter("compute - cor.rectangle");
-#else
-      addCounter("compute - correlator");
-#endif
-
       addCounter("compute - FIR");
-      addCounter("compute - delay/bp");
       addCounter("compute - FFT");
+      addCounter("compute - delay/bp");
+      addCounter("compute - correlator");
       addCounter("input - samples");
       addCounter("output - visibilities");
 
@@ -323,12 +307,7 @@ namespace LOFAR
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-#if defined USE_NEW_CORRELATOR
-      correlateTriangleKernel.enqueue(queue/*, *counters["compute - cor.triangle"]*/);
-      correlateRectangleKernel.enqueue(queue/*, *counters["compute - cor.rectangle"]*/);
-#else
-      correlatorKernel.enqueue(queue/*, *counters["compute - correlator"]*/);
-#endif
+      correlatorKernel->enqueue(queue/*, *counters["compute - correlator"]*/);
 
       //queue.flush(); // CUDA doesn't have/need flush() (OpenCL)
 
