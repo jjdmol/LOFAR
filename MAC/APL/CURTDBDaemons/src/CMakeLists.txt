@@ -12,6 +12,6 @@ lofar_add_library(curtdbdaemons Package__Version.cc)
 lofar_add_bin_program(versioncurtdbdaemons versioncurtdbdaemons.cc)
 
 add_subdirectory(LogProcessor)
-add_subdirectory(KeyValueLogger)
+#add_subdirectory(PVSSGateway)
 add_subdirectory(SASGateway)
 add_subdirectory(SoftwareMonitor)
