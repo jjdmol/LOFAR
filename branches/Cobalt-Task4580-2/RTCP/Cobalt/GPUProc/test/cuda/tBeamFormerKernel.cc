@@ -34,6 +34,7 @@ using namespace std;
 using namespace boost;
 using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;
+
 int main() {
   INIT_LOGGER("tBeamFormerKernel");
 
@@ -52,19 +53,18 @@ int main() {
 
   Parset ps("tBeamFormerKernel.in_parset");
 
-  // Get default parameters for the compiler
-  CompileFlags flags = CompileFlags();
-  
+  KernelFactory<BeamFormerKernel> factory(ps);
+
   // Calculate bandpass weights and transfer to the device.
   // *************************************************************
   size_t lengthWeightsData = 
-    BeamFormerKernel::bufferSize(ps, BeamFormerKernel::BEAM_FORMER_WEIGHTS) / 
+    factory.bufferSize(BeamFormerKernel::BEAM_FORMER_WEIGHTS) / 
     sizeof(float);
   size_t lengthBandPassCorrectedData =
-    BeamFormerKernel::bufferSize(ps, BeamFormerKernel::INPUT_DATA) /
+    factory.bufferSize(BeamFormerKernel::INPUT_DATA) /
     sizeof(float);
   size_t lengthComplexVoltagesData = 
-    BeamFormerKernel::bufferSize(ps, BeamFormerKernel::OUTPUT_DATA) / 
+    factory.bufferSize(BeamFormerKernel::OUTPUT_DATA) / 
     sizeof(float);
 
   // Define the input and output arrays
@@ -124,12 +124,11 @@ int main() {
   // Write output content.
   stream.writeBuffer(devComplexVoltagesMemory, rawComplexVoltagesData);
 
-  BeamFormerKernel kernel(ps, ctx, 
-                          devComplexVoltagesMemory,
-                          devBandPassCorrectedMemory,
-                          devWeightsMemory);
+  BeamFormerKernel::Buffers buffers(devBandPassCorrectedMemory, devComplexVoltagesMemory, devWeightsMemory);
 
-  kernel.enqueue(stream);
+  auto_ptr<BeamFormerKernel> kernel(factory.create(ctx, buffers));
+
+  kernel->enqueue(stream);
   stream.synchronize();
 
   return 0;
