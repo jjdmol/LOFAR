@@ -29,7 +29,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/StringUtil.h>
 #include <time.h>
-#include <APL/RTCCommon/NsTimestamp.h>
+#include <Common/NsTimestamp.h>
 
 #include "TP_Protocol.ph"
 
@@ -112,7 +112,7 @@ struct TriggerInfo {
 	
 	int32  boardnr;
 	int32  rcu;
-	RTC::NsTimestamp ns_timestamp;
+	NsTimestamp ns_timestamp;
 };
 
 // forward declaration
@@ -420,7 +420,7 @@ inline  void TbbSettings::setTriggerInfo(int32 boardnr, uint8 *info) {
 				uint32 sec  = itsTriggerInfo->time;
 				uint32 nsec = (uint32)((double)itsTriggerInfo->sample_nr * itsSampleTime);
 				
-				RTC::NsTimestamp ns_timestamp(sec, nsec);
+				NsTimestamp ns_timestamp(sec, nsec);
 				itsTriggerInfo->ns_timestamp = ns_timestamp;
             
 				itsNewTriggerInfo = true;
