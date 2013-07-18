@@ -344,4 +344,33 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 		iterdv++;
 	}
 	ASSERTSTR (offset1 == offset2 && dv1 == dv2, "Failure in vector<double>");
+
+	// KVpair
+	KVpair intVar("integerVar", 3125);
+	KVpair strVar("stringVar", "3125");
+	KVpair dblVar("doubleVar", 3125.0);
+
+	cout << "intVar size=" << MSH_size(intVar) << endl;
+	cout << "strVar size=" << MSH_size(strVar) << endl;
+	cout << "dblVar size=" << MSH_size(dblVar) << endl;
+
+	bzero(buf, 4096);
+	offset = 0;
+	MSH_pack(buf, offset, intVar);
+	MSH_pack(buf, offset, strVar);
+	MSH_pack(buf, offset, dblVar);
+	cout << "packed:" << endl;
+	hexdump(buf, offset);
+
+	offset = 0;
+	KVpair	intVar2;
+	MSH_unpack(buf, offset, intVar2);
+	KVpair	strVar2;
+	MSH_unpack(buf, offset, strVar2);
+	KVpair	dblVar2;
+	MSH_unpack(buf, offset, dblVar2);
+
+	ASSERTSTR(intVar == intVar2, "integer KVpair different after pack and unpack!");
+	ASSERTSTR(strVar == strVar2, "string KVpair different after pack and unpack!");
+	ASSERTSTR(dblVar == dblVar2, "double KVpair different after pack and unpack!");
 }
