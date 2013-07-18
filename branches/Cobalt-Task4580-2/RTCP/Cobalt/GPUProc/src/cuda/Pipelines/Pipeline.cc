@@ -59,14 +59,6 @@ namespace LOFAR
     }
 
 
-    std::string Pipeline::createPTX(const string &srcFilename)
-    {
-      CompileFlags flags(defaultCompileFlags());
-      CompileDefinitions definitions(Kernel::compileDefinitions(ps));
-      return LOFAR::Cobalt::createPTX(srcFilename, definitions, flags, devices);
-    }
-
-
     // Record type needed by receiveInput. Before c++0x, a local type
     // can't be a template argument, so we'll have to define this type
     // globally.
