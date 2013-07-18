@@ -61,7 +61,7 @@ namespace LOFAR
         BAND_PASS_CORRECTION_WEIGHTS
       };
 
-      // Buffers that must be passed to the constructor of the FIR_FilterKernel
+      // Buffers that must be passed to the constructor of the DelayAndBandPassKernel
       // class.
       struct Buffers : Kernel::Buffers
       {
