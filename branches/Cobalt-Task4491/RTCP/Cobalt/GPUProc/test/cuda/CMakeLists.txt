@@ -30,7 +30,6 @@ lofar_add_test(tCorrelator tCorrelator.cc)
 lofar_add_test(tBeamFormer tBeamFormer.cc)
 lofar_add_test(tBeamFormerKernel tBeamFormerKernel.cc)
 lofar_add_test(tTranspose tTranspose.cc)
-lofar_add_test(tBeamFormerTransposeKernel tBeamFormerTransposeKernel.cc)
 
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
@@ -45,7 +44,6 @@ set_tests_properties(
   tBeamFormer
   tBeamFormerKernel
   tTranspose
-  tBeamFormerTransposeKernel
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
 )
 
