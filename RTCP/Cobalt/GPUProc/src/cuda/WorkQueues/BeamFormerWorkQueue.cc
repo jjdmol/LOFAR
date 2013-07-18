@@ -48,6 +48,7 @@ namespace LOFAR
       devInput(1,//IntToFloatKernel::bufferSize(ps, IntToFloatKernel::INPUT_DATA),
                1,//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS),
                1,//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
+               context),
       devFilteredData(context, 1)//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA))
 #if 0
       firFilterKernel(ps, programs.firFilterProgram,
@@ -134,7 +135,7 @@ namespace LOFAR
         }
       }
 
-      intToFloatKernel.enqueue(queue);
+      // intToFloatKernel.enqueue(queue);
       // fftKernel.enqueue();
       // delayAndBandpassKernel.enqueue()
       // beamFormerKernel.enqueue()
