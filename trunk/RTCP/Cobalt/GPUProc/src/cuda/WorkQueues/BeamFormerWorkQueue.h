@@ -99,7 +99,7 @@ namespace LOFAR
       gpu::DeviceMemory devFilteredData;
 
     private:
-      IntToFloatKernel intToFloatKernel;
+      //IntToFloatKernel intToFloatKernel;
 #if 0
       // Compiled kernels
       FIR_FilterKernel firFilterKernel;
