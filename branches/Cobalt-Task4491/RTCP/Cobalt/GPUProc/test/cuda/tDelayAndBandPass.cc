@@ -32,8 +32,6 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/KernelCompiler.h>
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <UnitTest++.h>
 
 #include "TestUtil.h"
@@ -86,8 +84,8 @@ float * runTest(float bandPassFactor,
   unsigned NR_BITS_PER_SAMPLE = 8;
   definitions["NR_POLARIZATIONS"] = "2";
   unsigned NR_POLARIZATIONS = 2;
-  definitions["NR_BEAMS"] = "8";
-  unsigned NR_BEAMS = 8;
+  definitions["NR_SAPS"] = "8";
+  unsigned NR_SAPS = 8;
   definitions["USE_CUDA"] = "1";
   definitions["COMPLEX"] = "2";
   unsigned COMPLEX = 2;
@@ -98,7 +96,7 @@ float * runTest(float bandPassFactor,
   definitions["BANDPASS_CORRECTION"] = "1";
   if (delayCompensation)
     definitions["DELAY_COMPENSATION"] = "1";
-  string ptx = createPTX(devices, kernelPath, flags, definitions);
+  string ptx = createPTX(kernelPath, definitions, flags, devices);
   gpu::Module module(createModule(ctx, kernelPath, ptx));
   Function  hKernel(module, "applyDelaysAndCorrectBandPass");  // c function this no argument overloading
 
@@ -114,12 +112,12 @@ float * runTest(float bandPassFactor,
   HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 42.0f); 
   cuStream.writeBuffer(DevCorrectedMemory, rawCorrectedData);
 
-  size_t sizeDelaysAtBeginData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float);  
+  size_t sizeDelaysAtBeginData = NR_STATIONS * NR_SAPS * 2 * sizeof(float);  
   DeviceMemory DevDelaysAtBeginMemory(ctx, sizeDelaysAtBeginData);
   HostMemory rawDelaysAtBeginData = getInitializedArray(ctx, sizeDelaysAtBeginData, delayBegin);
   cuStream.writeBuffer(DevDelaysAtBeginMemory, rawDelaysAtBeginData);
     
-  size_t sizeDelaysAfterEndData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float); 
+  size_t sizeDelaysAfterEndData = NR_STATIONS * NR_SAPS * 2 * sizeof(float); 
   DeviceMemory DevDelaysAfterEndMemory(ctx, sizeDelaysAfterEndData);
   HostMemory rawDelaysAfterEndData = getInitializedArray(ctx, sizeDelaysAfterEndData, delayEnd);
   cuStream.writeBuffer(DevDelaysAfterEndMemory, rawDelaysAfterEndData);

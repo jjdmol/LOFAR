@@ -79,7 +79,7 @@ function parse_logs
   echo "Total processing time: $WALLTIME s"
   echo "GPU usage            : $GPUUSAGE %"
 
-  if [ "$GPUUSAGE" -lt $GPUEFFICIENCY ]
+  if [ "$GPUUSAGE" -lt "$GPUEFFICIENCY" ]
   then
     echo "ERROR: GPU usage < $GPUEFFICIENCY% -- considering test a failure." >&2
     return 1

@@ -220,16 +220,16 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 				double sampletime = 1. / (itsLastSavedSampleFreq * 1E6); // in sec
 				 
 				// calculate time of last sample in memory
-				RTC::NsTimestamp 
+				NsTimestamp 
 				lastSampleTime(itsLastSavedSecond + ((itsLastSavedSampleNr + itsLastSavedNrOfSamples) * sampletime));
 				
 				// calculate time of first sample in memory
-				RTC::NsTimestamp 
+				NsTimestamp 
 				firstSampleTime((double)lastSampleTime - (TS->getChPageSize(getChannelNr()) * itsLastSavedNrOfSamples * sampletime));
 				
 				// calculate start and stop time
-				RTC::NsTimestamp startTimestamp = itsTimestamp - itsTimeBefore;
-				RTC::NsTimestamp stopTimestamp = itsTimestamp + itsTimeAfter;
+				NsTimestamp startTimestamp = itsTimestamp - itsTimeBefore;
+				NsTimestamp stopTimestamp = itsTimestamp + itsTimeAfter;
 				
 				#if 1
 			//LOG_DEBUG_STR(formatString("Timestamp      =  %lu seconds  %lu nseconds", itsTimestamp.sec(), itsTimestamp.nsec()));

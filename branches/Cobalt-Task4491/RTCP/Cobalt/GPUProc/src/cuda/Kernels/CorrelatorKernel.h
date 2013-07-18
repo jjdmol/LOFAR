@@ -24,6 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
 
@@ -31,15 +32,11 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-#if !defined USE_NEW_CORRELATOR
-
     class CorrelatorKernel : public Kernel
     {
     public:
-      CorrelatorKernel(const Parset &ps, 
-                       gpu::Module &program, 
-                       gpu::DeviceMemory &devVisibilities, 
-                       gpu::DeviceMemory &devCorrectedData);
+      static std::string theirSourceFile;
+      static std::string theirFunction;
 
       enum BufferType
       {
@@ -47,43 +44,16 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
-      // Return required buffer size for \a bufferType
-      static size_t bufferSize(const Parset& ps, BufferType bufferType);
-
+      CorrelatorKernel(const gpu::Stream &stream,
+                             const gpu::Module &module,
+                             const Buffers &buffers,
+                             const Parameters &param);
     };
 
-#else
-
-    class CorrelatorKernel : public Kernel
-    {
-    public:
-      CorrelatorKernel(const Parset &ps, 
-                       gpu::Module &program,
-                       gpu::DeviceMemory &devVisibilities,
-                       gpu::DeviceMemory &devCorrectedData);
-
-    };
-
-    class CorrelateRectangleKernel : public Kernel
-    {
-    public:
-      CorrelateRectangleKernel(const Parset &ps,
-                               gpu::Module &program,
-                               gpu::DeviceMemory &devVisibilities,
-                               gpu::DeviceMemory &devCorrectedData);
-    };
-
-    class CorrelateTriangleKernel : public Kernel
-    {
-    public:
-      CorrelateTriangleKernel(const Parset &ps, 
-                              gpu::Module &program,
-                              gpu::DeviceMemory &devVisibilities,
-                              gpu::DeviceMemory &devCorrectedData);
-    };
-
-#endif
-
+    // Specialization of the KernelFactory for
+    // CorrelatorKernel
+    template<> size_t
+    KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const;
   }
 }
 

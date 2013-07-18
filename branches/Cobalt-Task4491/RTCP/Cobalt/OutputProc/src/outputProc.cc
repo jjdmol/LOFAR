@@ -151,6 +151,9 @@ int main(int argc, char *argv[])
         }
       }
 
+      /*
+       * FINAL META DATA
+       */
       // Add final meta data (broken tile information, etc)
       // that is obtained after the end of an observation.
       LOG_INFO_STR(obsLogPrefix << "Waiting for final meta data");
@@ -164,6 +167,21 @@ int main(int argc, char *argv[])
         } catch (Exception &ex) {
           LOG_WARN_STR(obsLogPrefix << "Could not add final meta data: " << ex);
         }
+
+      /*
+       * LTA FEEDBACK
+       */
+      LOG_INFO_STR(obsLogPrefix << "Retrieving LTA feedback");
+      Parset feedbackLTA;
+      for (size_t i = 0; i < subbandWriters.size(); ++i)
+        try {
+          feedbackLTA.adoptCollection(subbandWriters[i]->feedbackLTA());
+        } catch (Exception &ex) {
+          LOG_WARN_STR(obsLogPrefix << "Could not obtain feedback for LTA: " << ex);
+        }
+
+      LOG_INFO_STR(obsLogPrefix << "Forwarding LTA feedback");
+      feedbackLTA.write(&controlStream);
     }
   } catch (Exception &ex) {
     LOG_FATAL_STR(obsLogPrefix << "Caught Exception: " << ex);

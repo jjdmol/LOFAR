@@ -35,6 +35,20 @@
 #include <casa/Utilities/DataType.h>
 #include <casa/Arrays/IPosition.h>
 
+/*
+ * LofarStMan supports multiple versions of the MS, with the following
+ * differences in the data on disk:
+ *
+ * MS version    visibilities    antenna order     support for
+ *                               (baseline = 1,2)  bytes/weight
+ * -------------------------------------------------------------
+ *  1            conjugated      1,2               2
+ *  2            conjugated      2,1               1,2,4
+ *  3            normal          1,2               1,2,4
+ */
+
+static const unsigned LofarStManVersion = 3;
+
 //# Forward Declarations
 namespace casa
 {
@@ -64,7 +78,7 @@ namespace LOFAR
       const Parset &itsPS;
 
       const std::vector<std::string> stationNames;
-      const std::vector<double> antPos;
+      const MultiDimArray<double,2>  antPos;
 
       const unsigned itsNrAnt;
       uint32 itsNrTimes;

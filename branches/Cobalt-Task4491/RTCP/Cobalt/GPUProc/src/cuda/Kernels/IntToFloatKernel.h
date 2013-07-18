@@ -24,6 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
@@ -33,9 +34,37 @@ namespace LOFAR
     class IntToFloatKernel : public Kernel
     {
     public:
-      IntToFloatKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
-                       gpu::DeviceMemory &devFilteredData, gpu::DeviceMemory &devInputSamples);
+      static std::string theirSourceFile;
+      static std::string theirFunction;
+
+      // Parameters that must be passed to the constructor of the
+      // IntToFloatKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps);
+        size_t nrBitsPerSample;
+        size_t nrBytesPerComplexSample;
+      };
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
+      IntToFloatKernel(const gpu::Stream &stream,
+                             const gpu::Module &module,
+                             const Buffers &buffers,
+                             const Parameters &param);
     };
+
+    // Specialization of the KernelFactory for
+    // IntToFloatKernel
+    template<> size_t
+    KernelFactory<IntToFloatKernel>::bufferSize(BufferType bufferType) const;
+
+    template<> CompileDefinitions
+    KernelFactory<IntToFloatKernel>::compileDefinitions() const;
   }
 
 }

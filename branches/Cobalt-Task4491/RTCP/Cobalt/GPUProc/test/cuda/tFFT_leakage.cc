@@ -38,7 +38,6 @@
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 #include <GPUProc/cuda/Pipelines/Pipeline.h>
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/gpu_wrapper.h>
 

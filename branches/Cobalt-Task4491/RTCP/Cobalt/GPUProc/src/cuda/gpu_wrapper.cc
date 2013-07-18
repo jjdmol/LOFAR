@@ -546,7 +546,7 @@ namespace LOFAR
           checkCuCall(cuModuleLoadData(&_module, image));
         }
 
-        Impl(const Context &context, const void *image, const Module::optionmap_t options):
+        Impl(const Context &context, const void *image, Module::optionmap_t &options):
           _context(context)
         {
           // Convert our option map to two arrays for CUDA
@@ -562,6 +562,11 @@ namespace LOFAR
 
           checkCuCall(cuModuleLoadDataEx(&_module, image, options.size(),
                                          &keys[0], &values[0]));
+
+          for (size_t i = 0; i < keys.size(); ++i) {
+            options[keys[i]] = values[i];
+          }
+
         }
 
         ~Impl()
@@ -601,7 +606,7 @@ namespace LOFAR
       {
       }
 
-      Module::Module(const Context &context, const void *image, const optionmap_t &options):
+      Module::Module(const Context &context, const void *image, optionmap_t &options):
         _impl(new Impl(context, image, options))
       {
       }
@@ -825,9 +830,9 @@ namespace LOFAR
       {
       }
 
-      void Stream::writeBuffer(DeviceMemory &devMem, 
+      void Stream::writeBuffer(const DeviceMemory &devMem, 
                                const HostMemory &hostMem,
-                               bool synchronous)
+                               bool synchronous) const
       {
         // tmp check: avoid async writeBuffer request that will fail later.
         // TODO: This interface may still change at which point a cleaner solution can be used.
@@ -844,9 +849,9 @@ namespace LOFAR
         }
       }
 
-      void Stream::readBuffer(HostMemory &hostMem, 
+      void Stream::readBuffer(const HostMemory &hostMem, 
                               const DeviceMemory &devMem,
-                              bool synchronous)
+                              bool synchronous) const
       {
         // Host buffer can be smaller, because the device
         // buffers can be used for multiple purposes in
@@ -863,7 +868,7 @@ namespace LOFAR
       }
 
       void Stream::launchKernel(const Function &function,
-                                const Grid &grid, const Block &block)
+                                const Grid &grid, const Block &block) const
       {
         LOG_DEBUG_STR("Launching " << function._name);
 

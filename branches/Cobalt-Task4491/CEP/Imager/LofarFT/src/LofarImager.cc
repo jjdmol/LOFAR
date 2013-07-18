@@ -54,7 +54,8 @@ namespace LOFAR
   {
     CountedPtr<VisibilityResamplerBase> visResampler;
     Bool useDoublePrecGrid = False;
-    Double RefFreq((*sm_p).getReferenceFrequency());
+    Double RefFreq = 0.0;
+    if (sm_p) RefFreq = Double((*sm_p).getReferenceFrequency());
 
 
     if (itsParameters.asBool("splitbeam")) {

@@ -27,8 +27,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/DataConvert.h>
 #include <Stream/FileStream.h>
-#include <CoInterface/RSPTimeStamp.h>
 
+#include <InputProc/RSPTimeStamp.h>
 #include <InputProc/Station/RSP.h>
 
 

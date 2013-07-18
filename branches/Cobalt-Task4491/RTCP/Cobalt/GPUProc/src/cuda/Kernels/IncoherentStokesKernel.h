@@ -34,8 +34,10 @@ namespace LOFAR
     class IncoherentStokesKernel : public Kernel
     {
     public:
-      IncoherentStokesKernel(const Parset &ps, gpu::Stream &queue, gpu::Module &program,
-                             gpu::DeviceMemory &devIncoherentStokes, gpu::DeviceMemory &devInputSamples);
+      IncoherentStokesKernel(const Parset &ps,
+                             gpu::Context &context,
+                             gpu::DeviceMemory &devIncoherentStokes,
+                             gpu::DeviceMemory &devInputSamples);
     };
 
   }

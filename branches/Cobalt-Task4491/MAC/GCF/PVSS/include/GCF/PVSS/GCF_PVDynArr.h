@@ -76,6 +76,9 @@ class GCFPVDynArr : public GCFPValue
     /** @see GCFPValue::operator==() */
     virtual bool operator==(const GCFPValue& that) const;
     virtual bool operator!=(const GCFPValue& that) const { return (!(*this == that)); }
+
+	// add value to the dynarray
+	void push_back(GCFPValue*	newElem) { _values.push_back(newElem); }
  
   private:
     /// @see GCFPValue::unpack()

@@ -25,7 +25,6 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
-#include <GPUProc/KernelCompiler.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 #include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
 
@@ -50,17 +49,10 @@ int main() {
   gpu::Stream stream(ctx);
 
   Parset ps("tIntToFloatKernel.in_parset");
-  string srcFilename("IntToFloat.cu");
+  KernelFactory<IntToFloatKernel> factory(ps);
 
-  // Get default parameters for the compiler
-  CompileFlags flags = defaultCompileFlags();
-  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
-
-  string ptx = createPTX(devices, srcFilename, flags, definitions);
-  gpu::Module module(createModule(ctx, srcFilename, ptx));
-  cout << "Succesfully compiled '" << srcFilename << "'" << endl;
   size_t COMPLEX = 2;
-  size_t nSampledData = ps.nrStations() * ps.nrSamplesPerSubband() * NR_POLARIZATIONS * COMPLEX;
+  size_t nSampledData = factory.bufferSize(IntToFloatKernel::INPUT_DATA) / sizeof(char);
   size_t sizeSampledData = nSampledData * sizeof(char);
 
   // Create some initialized host data
@@ -68,18 +60,18 @@ int main() {
   char *samples = sampledData.get<char>();
   for (unsigned idx =0; idx < nSampledData; ++idx)
     samples[idx] = -128;  // set all to -128
-  gpu::DeviceMemory devSampledData(ctx, nSampledData * sizeof(float));
+  gpu::DeviceMemory devSampledData(ctx, factory.bufferSize(IntToFloatKernel::INPUT_DATA));
   stream.writeBuffer(devSampledData, sampledData, true);
   
   // Device mem for output
-  gpu::DeviceMemory devConvertedData(ctx, nSampledData * sizeof(float));
-  gpu::HostMemory convertedData(ctx,  nSampledData * sizeof(float));
+  gpu::DeviceMemory devConvertedData(ctx, factory.bufferSize(IntToFloatKernel::OUTPUT_DATA));
+  gpu::HostMemory convertedData(ctx,  factory.bufferSize(IntToFloatKernel::OUTPUT_DATA));
   //stream.writeBuffer(devConvertedData, sampledData, true);
 
-   IntToFloatKernel kernel(ps, stream, module,
-             devConvertedData, devSampledData); 
+  IntToFloatKernel::Buffers buffers(devSampledData, devConvertedData);
+  auto_ptr<IntToFloatKernel> kernel(factory.create(ctx, buffers));
 
-  kernel.enqueue(stream);
+  kernel->enqueue(stream);
   stream.synchronize();
   stream.readBuffer(convertedData, devConvertedData, true);
   stream.synchronize();

@@ -45,6 +45,8 @@ namespace LOFAR
 
       void augment(const FinalMetaData &finalMetaData);
 
+      ParameterSet feedbackLTA() const;
+
     private:
       static const unsigned maxReceiveQueueSize = 3;
 

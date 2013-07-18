@@ -80,12 +80,11 @@ public:
 	int getStatus() { return (itsStatus); }
 
 private:
-	// static receiveEvent(aSocket)
+	// receiveEvent(aSocket)
 	GCFEvent*	receiveEvent(Socket*	aSocket);
 
-	// static sendEvent(Socket*, Event*)
-	void sendEvent(Socket*		aSocket,
-						  GCFEvent*		anEvent);
+	// sendEvent(Event*)
+	void sendEvent(Socket*	aSocket, GCFEvent*	anEvent);
 
 	// _internal routines: see source code for description
 	string	_makeServiceName(const string&	aServiceMask, int32		aNumber);
@@ -112,6 +111,13 @@ private:
 	int32			itsStatus;
 	bool			itsSyncComm;
 	bool			itsIsServer;
+
+	// receiveEvent variables
+	int32			itsBtsToRead;
+	int32			itsTotalBtsRead;
+	int32			itsReadState;
+	GCFEvent*		itsEventHdr;
+	char*			itsEventBuf;
 };
 
 

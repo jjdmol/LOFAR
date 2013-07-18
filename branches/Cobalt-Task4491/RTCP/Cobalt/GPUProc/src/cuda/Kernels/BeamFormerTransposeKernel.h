@@ -24,6 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
@@ -33,11 +34,37 @@ namespace LOFAR
     class BeamFormerTransposeKernel : public Kernel
     {
     public:
-      BeamFormerTransposeKernel(const Parset &ps, gpu::Module &program,
-                                gpu::DeviceMemory &devTransposedData,
-                                gpu::DeviceMemory &devComplexVoltages);
+      static std::string theirSourceFile;
+      static std::string theirFunction;
 
+      // Parameters that must be passed to the constructor of the
+      // BeamFormerKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps);
+        size_t nrTABs;
+      };
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
+      BeamFormerTransposeKernel(const gpu::Stream &stream,
+                             const gpu::Module &module,
+                             const Buffers &buffers,
+                             const Parameters &param);
     };
+
+    // Specialization of the KernelFactory for
+    // BeamFormerTransposeKernel
+    template<> size_t
+    KernelFactory<BeamFormerTransposeKernel>::bufferSize(BufferType bufferType) const;
+
+    template<> CompileDefinitions
+    KernelFactory<BeamFormerTransposeKernel>::compileDefinitions() const;
+
   }
 }
 

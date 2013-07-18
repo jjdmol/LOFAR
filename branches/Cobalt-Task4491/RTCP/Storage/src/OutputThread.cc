@@ -68,13 +68,11 @@ static void makeDir(const string &dirname, const string &logPrefix)
     LOG_DEBUG_STR(logPrefix << "Creating directory " << dirname);
 
     if (mkdir(dirname.c_str(), 0777) != 0 && errno != EEXIST) {
-      unsigned savedErrno = errno; // first argument below clears errno
-      throw SystemCallException(string("mkdir ") + dirname, savedErrno, THROW_ARGS);
+      THROW_SYSCALL(string("mkdir ") + dirname);
     }
   } else {
     // something else went wrong
-    unsigned savedErrno = errno; // first argument below clears errno
-    throw SystemCallException(string("stat ") + dirname, savedErrno, THROW_ARGS);
+    THROW_SYSCALL(string("stat ") + dirname);
   }
 }
 

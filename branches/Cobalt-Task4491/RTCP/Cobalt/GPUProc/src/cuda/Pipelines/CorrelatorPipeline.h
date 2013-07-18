@@ -21,15 +21,11 @@
 #ifndef LOFAR_GPUPROC_CUDA_CORRELATOR_PIPELINE_H
 #define LOFAR_GPUPROC_CUDA_CORRELATOR_PIPELINE_H
 
-#include <CoInterface/Parset.h>
-#include <CoInterface/SlidingPointer.h>
+#include <vector>
 
-#include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/BestEffortQueue.h>
+#include <CoInterface/Parset.h>
+
 #include "Pipeline.h"
-#include <GPUProc/FilterBank.h>
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
-#include "CorrelatorPipelinePrograms.h"
 
 namespace LOFAR
 {
@@ -49,38 +45,6 @@ namespace LOFAR
       // subbandIndices is the list of subbands that are processed by this
       // pipeline, out of the range [0, ps.nrSubbands()).
       CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices);
-
-      // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
-      void doWork();
-
-      // for each block, read all subbands from all stations, and divide the work over the workQueues
-      template<typename SampleT> void receiveInput( size_t nrBlocks );
-
-    private:
-      const std::vector<size_t> subbandIndices; // [localSubbandIdx]
-
-      struct Output {
-        // synchronisation to write blocks in-order
-        SlidingPointer<size_t> sync;
-
-        // output data queue
-        SmartPtr< BestEffortQueue< SmartPtr<CorrelatedDataHostBuffer> > > bequeue;
-      };
-
-      std::vector<struct Output> subbandPool; // [localSubbandIdx]
-
-      FilterBank filterBank;
-
-      std::vector< SmartPtr<CorrelatorWorkQueue> > workQueues;
-
-      // process subbands on the GPU
-      void processSubbands(CorrelatorWorkQueue &workQueue);
-
-      // postprocess subbands on the CPU
-      void postprocessSubbands(CorrelatorWorkQueue &workQueue);
-
-      // send subbands to Storage
-      void writeSubband(unsigned globalSubbandIdx, struct Output &output);
     };
   }
 }

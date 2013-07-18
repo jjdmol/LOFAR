@@ -21,11 +21,11 @@
 #ifndef LOFAR_GPUPROC_CUDA_BEAMFORMERPIPELINE_H
 #define LOFAR_GPUPROC_CUDA_BEAMFORMERPIPELINE_H
 
+#include <vector>
+
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/gpu_wrapper.h>
 #include "Pipeline.h"
-#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {
@@ -34,14 +34,7 @@ namespace LOFAR
     class BeamFormerPipeline : public Pipeline
     {
     public:
-      BeamFormerPipeline(const Parset &);
-
-      void doWork();
-
-      gpu::Module intToFloatProgram, delayAndBandPassProgram, beamFormerProgram, transposeProgram, dedispersionChirpProgram;
-
-      PerformanceCounter intToFloatCounter, fftCounter, delayAndBandPassCounter, beamFormerCounter, transposeCounter, dedispersionForwardFFTcounter, dedispersionChirpCounter, dedispersionBackwardFFTcounter;
-      PerformanceCounter samplesCounter;
+      BeamFormerPipeline(const Parset &, const std::vector<size_t> &subbandIndices);
     };
   }
 }

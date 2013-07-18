@@ -24,6 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
@@ -34,10 +35,38 @@ namespace LOFAR
     class CoherentStokesKernel : public Kernel
     {
     public:
-      CoherentStokesKernel(const Parset &ps, gpu::Module &program,
-                           gpu::DeviceMemory &devStokesData, gpu::DeviceMemory &devComplexVoltages);
+      static std::string theirSourceFile;
+      static std::string theirFunction;
 
+      // Parameters that must be passed to the constructor of the
+      // CoherentStokesKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps);
+        size_t nrTABs;
+        size_t nrStokes;
+        size_t timeIntegrationFactor;
+      };
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
+      CoherentStokesKernel(const gpu::Stream &stream,
+                             const gpu::Module &module,
+                             const Buffers &buffers,
+                             const Parameters &param);
     };
+
+    // Specialization of the KernelFactory for
+    // CoherentStokesKernel
+    template<> size_t
+    KernelFactory<CoherentStokesKernel>::bufferSize(BufferType bufferType) const;
+
+    template<> CompileDefinitions
+    KernelFactory<CoherentStokesKernel>::compileDefinitions() const;
   }
 }
 

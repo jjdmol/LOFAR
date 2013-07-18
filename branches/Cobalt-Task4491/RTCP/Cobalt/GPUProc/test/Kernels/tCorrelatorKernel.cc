@@ -30,26 +30,27 @@ using namespace LOFAR::Cobalt;
 
 struct TestFixture
 {
-  TestFixture() : ps("tCorrelatorKernel.in_parset") {}
+  TestFixture() : ps("tCorrelatorKernel.in_parset"), factory(ps) {}
   ~TestFixture() {}
   Parset ps;
+  KernelFactory<CorrelatorKernel> factory;
 };
 
 TEST_FIXTURE(TestFixture, InputData)
 {
   CHECK_EQUAL(size_t(786432),
-              CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA));
+              factory.bufferSize(CorrelatorKernel::INPUT_DATA));
 }
 
 TEST_FIXTURE(TestFixture, OutputData)
 {
   CHECK_EQUAL(size_t(512),
-              CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA));
+              factory.bufferSize(CorrelatorKernel::OUTPUT_DATA));
 }
 
 TEST_FIXTURE(TestFixture, MustThrow)
 {
-  CHECK_THROW(CorrelatorKernel::bufferSize(ps, CorrelatorKernel::BufferType(2)),
+  CHECK_THROW(factory.bufferSize(CorrelatorKernel::BufferType(2)),
               GPUProcException);
 }
 

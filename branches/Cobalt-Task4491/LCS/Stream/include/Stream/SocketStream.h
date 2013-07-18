@@ -37,7 +37,6 @@ class SocketStream : public FileDescriptorBasedStream
 {
   public:
     EXCEPTION_CLASS(TimeOutException, LOFAR::Exception);
-    SYSTEMCALLEXCEPTION_CLASS(BindException, LOFAR::SystemCallException);
 
     enum Protocol {
       TCP, UDP

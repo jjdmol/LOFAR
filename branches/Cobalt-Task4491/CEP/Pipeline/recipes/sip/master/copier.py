@@ -177,7 +177,7 @@ class copier(MasterNodeInterface):
         # Same length? If not, then fail
         if len(self.source_map) != len(self.target_map):
             self.logger.error("Number of entries in the source and target map"
-                "Is not the same: \n target \n {0}\n source \n {1}".format(
+                " is not the same: \n target \n {0}\n source \n {1}".format(
                             self.target_map, self.source_map))
             return False
 
@@ -187,8 +187,8 @@ class copier(MasterNodeInterface):
                 target_name = os.path.basename(target.file)
                 source_name = os.path.basename(source.file)
                 if not (target_name == source_name):
-                    self.logger.error("One of the suplied source target pairs"
-                        "contains a different 'filename': {0} != {1}\n"
+                    self.logger.error("One of the supplied source target pairs"
+                        " contains a different 'filename': {0} != {1}\n"
                         " aborting".format(target_name, source_name))
                     return False
 

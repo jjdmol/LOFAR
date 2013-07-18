@@ -26,20 +26,22 @@ namespace LOFAR {
   namespace Cobalt {
 
     template<typename T>
-    BlockReader<T>::BlockReader( const BufferSettings &settings, const std::vector<size_t> beamlets, size_t nrHistorySamples, double maxDelay )
+    BlockReader<T>::BlockReader( const BufferSettings &settings, const struct BoardMode &mode, const std::vector<size_t> beamlets, size_t nrHistorySamples, double maxDelay )
     :
       settings(settings),
-      buffer(settings, false),
+      mode(mode),
+      buffer(settings, SharedMemoryArena::READ),
 
       beamlets(beamlets),
       nrHistorySamples(nrHistorySamples),
-      maxDelay(static_cast<int64>(maxDelay * settings.station.clockMHz * 1000000 / 1024), settings.station.clockMHz * 1000000)
+      maxDelay(mode.secondsToSamples(maxDelay), mode.clockHz())
     {
-      // Check whether the selected beamlets exist
-      size_t nrBeamlets = settings.nrBoards * settings.nrBeamletsPerBoard;
+      // Check whether the selected beamlets exist, to prevent out-of-bounds access
+      const size_t nrBeamlets = buffer.beamlets.shape()[0];
 
-      for (size_t i = 0; i < beamlets.size(); ++i)
+      for (size_t i = 0; i < beamlets.size(); ++i) {
         ASSERTSTR( beamlets[i] < nrBeamlets, beamlets[i] << " < " << nrBeamlets );
+      }
     }
 
 
@@ -59,7 +61,7 @@ namespace LOFAR {
       const struct Block<T>::Beamlet &ib = this->beamlets[beamletIdx];
 
       // Determine corresponding RSP board
-      size_t boardIdx = reader.settings.boardIndex(ib.stationBeamlet);
+      size_t boardIdx = reader.mode.boardIndex(ib.stationBeamlet);
 
       ssize_t beam_offset = ib.offset;
 
@@ -67,6 +69,22 @@ namespace LOFAR {
       const BufferSettings::range_type from = this->from + beam_offset;
       const BufferSettings::range_type to   = this->to   + beam_offset;
       BufferSettings::flags_type bufferFlags = reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
+
+      if (reader.mode != *(reader.buffer.boards[boardIdx].mode)) {
+        LOG_WARN_STR("Board in wrong mode -- flagging all data between " << from << " and " << to);
+
+        // Board is in wrong mode! We can't use this data, so flag everything.
+
+        // NOTE: Since a board clears all data every time it switches modes, we know that
+        // the data is valid if the mode is, regardless of the number of switches in the past.
+        //
+        // Race conditions are avoided, because the writer respects this order:
+        //
+        // 1. clear flags
+        // 2. update mode
+        // 3. write packets under new mode
+        bufferFlags.include(from, to);
+      }
 
       // Convert from global to local indices and types
       SubbandMetaData::flags_type blockFlags;
@@ -123,12 +141,14 @@ namespace LOFAR {
       size_t from_offset = reader.buffer.offset(this->from + offset);
       size_t to_offset   = reader.buffer.offset(this->to   + offset);
 
+      const size_t bufferSize = reader.buffer.nrSamples;
+
       if (to_offset == 0)
         // we need the other end, actually
-        to_offset = reader.buffer.nrSamples;
+        to_offset = bufferSize;
 
       // Determine whether we need to wrap around the end of the buffer
-      size_t wrap_offset = from_offset < to_offset ? 0 : reader.buffer.nrSamples - from_offset;
+      size_t wrap_offset = from_offset < to_offset ? 0 : bufferSize - from_offset;
 
       const T* origin = &reader.buffer.beamlets[b.stationBeamlet][0];
 
@@ -137,7 +157,7 @@ namespace LOFAR {
         b.nrRanges = 2;
 
         b.ranges[0].from = origin + from_offset;
-        b.ranges[0].to   = origin + reader.buffer.nrSamples;
+        b.ranges[0].to   = origin + bufferSize;
 
         b.ranges[1].from = origin;
         b.ranges[1].to   = origin + to_offset;

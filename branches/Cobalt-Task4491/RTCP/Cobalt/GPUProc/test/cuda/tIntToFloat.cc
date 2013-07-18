@@ -32,8 +32,6 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/KernelCompiler.h>
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <UnitTest++.h>
 
 #include "TestUtil.h"
@@ -72,7 +70,11 @@ float * runTest(unsigned NR_BITS_PER_SAMPLE = 16,
   // Set op string string pairs to be provided to the compiler as defines
   definitions["NR_STATIONS"] = "2";
   unsigned NR_STATIONS = 2;
-  definitions["NR_SAMPLES_PER_SUBBAND"] = "1024";
+
+  // 1024 samples per subband
+  definitions["NR_CHANNELS"] = "64";
+  definitions["NR_SAMPLES_PER_CHANNEL"] = "16";
+  definitions["NR_TAPS"] = "1"; // no history samples
   unsigned NR_SAMPLES_PER_SUBBAND = 1024;
   
   tostrstream << NR_BITS_PER_SAMPLE;
@@ -81,7 +83,7 @@ float * runTest(unsigned NR_BITS_PER_SAMPLE = 16,
   unsigned NR_POLARIZATIONS = 2;
   definitions["COMPLEX"] = "2";
   unsigned COMPLEX = 2;
-  string ptx = createPTX(devices, kernelPath, flags, definitions);
+  string ptx = createPTX(kernelPath, definitions, flags, devices);
   gpu::Module module(createModule(ctx, kernelPath, ptx));
   Function  hKernel(module, "intToFloat");  // c function this no argument overloading
 

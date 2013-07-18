@@ -14,7 +14,6 @@ include(LofarPackageVersion)
 
 lofar_add_library(rtccommon
   Package__Version.cc
-  NsTimestamp.cc
   Timestamp.cc
   Subject.cc
   daemonize.c

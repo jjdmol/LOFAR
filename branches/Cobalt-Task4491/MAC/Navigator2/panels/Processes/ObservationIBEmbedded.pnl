@@ -37,7 +37,6 @@ void reload() {
   navFunct_clearGlobalLists();
  
   addInputBuffers();
-  resize();
 }
 
 void addInputBuffers() {
@@ -46,10 +45,7 @@ void addInputBuffers() {
   inputBuffers = navFunct_getInputBuffersForObservation(observationName);  
 
 }
-
-void resize() {
-  InputBufferModule.size(1010,14*dynlen(inputBuffers));
-}" 0
+" 0
  E E E E 1 -1 -1 0  200 170
 ""0  1
 E "#uses \"navPanel.ctl\"

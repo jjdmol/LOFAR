@@ -54,6 +54,12 @@ namespace LOFAR
       stop(0);
     }
 
+
+    ParameterSet StorageProcesses::feedbackLTA() const
+    {
+      return itsFeedbackLTA;
+    }
+
     void StorageProcesses::start()
     {
       vector<string> hostnames = itsParset.getStringVector("OLAP.Storage.hosts");
@@ -78,7 +84,13 @@ namespace LOFAR
 
       // Stop all processes
       for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank++) {
+        // stop storage process
         itsStorageProcesses[rank]->stop(deadline_ts);
+
+        // obtain feedback for LTA
+        itsFeedbackLTA.adoptCollection(itsStorageProcesses[rank]->feedbackLTA());
+
+        // free the StorageProcess object
         itsStorageProcesses[rank] = 0;
       }
 
@@ -109,7 +121,7 @@ namespace LOFAR
       char cwd[1024];
 
       if (getcwd(cwd, sizeof cwd) == 0)
-        throw SystemCallException("getcwd", errno, THROW_ARGS);
+        THROW_SYSCALL("getcwd");
 
       std::string commandLine = str(boost::format("cd %s && %s %d 2>&1")
                                     % cwd

@@ -53,6 +53,24 @@ class GCFEvent(object):
     return GCFEvent.sizePackedGCFEvent
 
 #
+# Some handy routines
+#
+def typename(x):
+  'Returns the name of the type of x'
+  try:
+    return x.__name__
+  except:
+    return str(type(x)).split(' ')[1].split("'")[1] 
+
+def isBasicType(x):
+  'Returns true of x is a basic type'
+  try:
+    if x.__name__:
+      return True
+  except:
+    return False
+
+#
 # Packing and unpacking strings
 #
 def packString(value, fixedlen=0):
@@ -89,6 +107,17 @@ def unpackArray(buffer, itemlen, count):
     format = "=%ds" % vLen
     value = struct.unpack(format, buffer[0:vLen])[0]
     return value
+
+def packVariable(value):
+    "Pack the variable according to its type"
+    packtype = {
+      int
+def packVector(value):
+    "Pack a vector of 'something' in a MAC-like way"
+    items = len(value)
+    buffer = struct.pack("=H", items)
+	for _elem in value:
+        buffer += value[_elem].pack()
 
 def recvEvent(tcpsocket):
     "Wait for a message to receive on the given socket"

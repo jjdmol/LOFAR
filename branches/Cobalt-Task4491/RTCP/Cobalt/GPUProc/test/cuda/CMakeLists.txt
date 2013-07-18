@@ -15,13 +15,9 @@ if(UNITTEST++_FOUND)
 endif(UNITTEST++_FOUND)
 
 # CUDA CPU side unit tests
-lofar_add_test(tCudaRuntimeCompiler tCudaRuntimeCompiler.cc)
-lofar_add_test(tcreateProgram tcreateProgram.cc)
 lofar_add_test(tKernel tKernel.cc)
 lofar_add_test(tStreamReadBuffer tStreamReadBuffer.cc)
 lofar_add_test(tMultiDimArrayHostBuffer tMultiDimArrayHostBuffer.cc)
-lofar_add_test(tCorrelatorWorkQueueProcessSb tCorrelatorWorkQueueProcessSb.cc)
-lofar_add_test(tCorrelatorPipeline tCorrelatorPipeline)
 
 # GPU kernel unit tests
 lofar_add_test(tIntToFloat tIntToFloat.cc)
@@ -46,7 +42,6 @@ set_tests_properties(
   tCorrelator
   tIntToFloat
   tIntToFloatKernel
-  tCorrelatorWorkQueueProcessSb
   tBeamFormer
   tBeamFormerKernel
   tTranspose

@@ -98,6 +98,11 @@ void test_protocol()
 
     // Give 10 seconds to wrap up
     sp.stop(time(0) + 10);
+
+    // Obtain LTA feedback
+    ParameterSet feedbackLTA(sp.feedbackLTA());
+
+    ASSERT(feedbackLTA.getString("foo","") == "bar");
   }
 }
 

@@ -27,8 +27,10 @@
 
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Allocator.h>
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
+#include <InputProc/SampleType.h>
 #include "BufferSettings.h"
+#include "BoardMode.h"
 #include "SharedMemory.h"
 #include "Ranges.h"
 
@@ -63,16 +65,12 @@ namespace LOFAR
       // Read/write pointers to keep readers and writers in sync
       // if buffer.sync == true. The pointers assume that data will both be read
       // and written in-order.
-
-      // Create (create=true) or attach to (create=false) a sample buffer
-      // in shared memory. If sync=true, readers and writers are kept in sync,
-      // which is useful in the non-real-time mode, but only supports one
-      // reader as well as in-order data arrival.
-      SampleBuffer( const struct BufferSettings &settings, bool create );
+      SampleBuffer( const struct BufferSettings &settings, SharedMemoryArena::Mode shmMode );
 
     private:
       const std::string logPrefix;
       SharedMemoryArena data;
+
       SparseSetAllocator allocator;
 
       struct BufferSettings *initSettings( const struct BufferSettings &localSettings, bool create );
@@ -80,13 +78,13 @@ namespace LOFAR
       static size_t dataSize( const struct BufferSettings &settings );
 
     public:
+      const bool create;
       struct BufferSettings *settings;
 
       // Keep readers/writers in sync
       const bool sync;
       SyncLock * const syncLock;
 
-      const size_t nrBeamletsPerBoard;
       const size_t nrSamples;
       const size_t nrBoards;
       const size_t nrAvailableRanges; // width of each available range
@@ -99,8 +97,14 @@ namespace LOFAR
       public:
         Board( SampleBuffer<T> &buffer, size_t boardNr = 0 );
 
+        // The mode this board is operating in.
+        volatile struct BoardMode *mode;
+
         Ranges available;
         size_t boardNr; // Caller can modify this
+
+        // Change the mode of this board
+        void changeMode( const struct BoardMode &mode );
 
         // Signal that there will be no reads before the given epoch
         void noReadBefore( const TimeStamp &epoch );
@@ -136,6 +140,9 @@ namespace LOFAR
     // Removes the sample buffers that correspond to settings.dataKey,
     // as well as any sample buffer that refers to the same station.
     void removeSampleBuffers( const BufferSettings &settings );
+
+    // Generic type for SampleType-agnostic functionality.
+    typedef SampleBuffer< SampleType<i16complex> > GenericSampleBuffer;
   }
 }
 
