@@ -21,13 +21,13 @@
 /*!
  * Performs data transposition from the output of the beamformer kernel to
  * a data order suitable for an inverse FFT.
- * Parallelization is performed over the TABs and number of samples (time).
+ * Parallelisation is performed over the TABs and number of samples (time).
  *
  * We have 4 dimensions, but CUDA thread blocks can be up to three.
  * Mangle the TAB and sample dimension in to dim 0 (x).
  *
  * The kernel needs to determine for each thread whether to read and separately
- * whether to write back a sample, because the number of TABs may not divide
+ * whether to write back a sample, because the number of TABs may not divide by
  * the 16x16 thread arrangement (even though we have a 1D thread block).
  *
  * \param[out] TransposedDataType      4D output array of samples. For each TAB and pol, a spectrum per time step of complex floats.
@@ -47,66 +47,9 @@
  * - LocalWorkSize = 1 dimensional; (256, 1, 1) is in use. Multiples of (32, 1, 1) may work too.
  * - GlobalWorkSize = 3 dimensional:
  *   + inner dim (x): always 1 block
- *   + middle dim (y): 16 TABs can be processed in a block. Number of blocks required, rounded-up.
- *   + outer dim (z): 16 samples per channel can be processed in a block. Number of blocks required (fits exactly).
+ *   + middle dim (y): 16 TABs can be processed in a block. Number of blocks required, rounded-up. eg for 17 tabs we need 2 blocks
+ *   + outer dim (z): 16 samples per channel can be processed in a block. Number of blocks required (fits exactly). 32 channels is 2 blocks
  */
-
-#ifndef POST_BEAMFORMER_KERNEL_TRANSPOSE 
-// This transpose also swaps the NR_SAMPLES_PER_CHANNEL and NR_CHANNELS dims.
-// The parallelization works on TABs and channels. It is currently unused.
-
-typedef float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
-
-// last dim within float4 is NR_POLARIZATIONS
-typedef float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS]; // [NR_POLARIZATIONS];
-
-extern "C"
-__global__ void transpose(void *transposedDataPtr,
-                          const void *complexVoltagesPtr)
-{
-  TransposedDataType transposedData = (TransposedDataType) transposedDataPtr;
-  ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
-
-  // last dim within float4 is NR_POLARIZATIONS
-  __shared__ float4 tmp[16][17]; // padding to avoid bank conflicts
-
-  unsigned tabBase = 16 * blockIdx.y; // No use of the block size
-  unsigned chBase = 16 * blockIdx.z;
-
-  unsigned tabOffsetR = threadIdx.x & 15;
-  unsigned tabR = tabBase + tabOffsetR;
-  unsigned chOffsetR = threadIdx.x >> 4;
-  unsigned channelR = chBase + chOffsetR;
-  bool doR = NR_TABS % 16 == 0 || tabR < NR_TABS;
-
-  unsigned tabOffsetW = threadIdx.x >> 4;
-  unsigned tabW = tabBase + tabOffsetW;
-  unsigned chOffsetW = threadIdx.x & 15;
-  unsigned channelW = chBase + chOffsetW;
-  bool doW = NR_TABS % 16 == 0 || tabW < NR_TABS;
-
-  for (int time = 0; time < NR_SAMPLES_PER_CHANNEL; time++) 
-  {
-    if (doR)  // only do a read and write if we are within our bounds
-    {    
-      tmp[tabOffsetR][chOffsetR] = (*complexVoltages)[channelR][time][tabR];
-    }
-
-    __syncthreads();
-
-    if (doW) 
-    {
-      float4 sample = tmp[tabOffsetW][chOffsetW];
-      (*transposedData)[tabW][0][time][channelW] = make_float2(sample.x, sample.y);
-      (*transposedData)[tabW][1][time][channelW] = make_float2(sample.z, sample.w);
-    }
-
-    __syncthreads();
-  }
-}
-
-#else // POST_BEAMFORMER_KERNEL_TRANSPOSE 
-// The parallelization works on TABs and number of samples (time).
 
 typedef float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 
@@ -156,6 +99,3 @@ __global__ void transpose(void *transposedDataPtr,
     __syncthreads();
   }
 }
-
-#endif
-

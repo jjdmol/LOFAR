@@ -43,12 +43,11 @@ using LOFAR::Exception;
 
 // The tests succeeds for different values of stations, channels, samples and tabs.
 
-unsigned NR_CHANNELS = 16;
-unsigned NR_SAMPLES_PER_CHANNEL = 32;
-unsigned NR_TABS = 17;
+unsigned NR_CHANNELS = 6;
+unsigned NR_SAMPLES_PER_CHANNEL = 16;
+unsigned NR_TABS = 4;
 unsigned NR_POLARIZATIONS = 2;
 unsigned COMPLEX = 2;
-bool CHANNEL_PARALLEL = false;
 
 // Create the data arrays length
 size_t lengthTransposedData =  NR_CHANNELS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_TABS * COMPLEX ;
@@ -83,59 +82,30 @@ void exit_with_print(float *complexVoltagesData, float *outputOnHostPtr)
   cout << endl << endl;
   // The the kernel functions output different arrays:
   // This if statement selects the correct print method
-  if (CHANNEL_PARALLEL == false) 
-  {
-    cout << "not CHANNEL_PARALLEL" << endl;
-    for(unsigned idx_tabs = 0; idx_tabs < NR_TABS; ++ idx_tabs)
-    {
-      cout << endl << "idx_tabs: " << idx_tabs << endl;
-      for(unsigned idx_pol = 0; idx_pol < NR_POLARIZATIONS; ++idx_pol)
-      {
-        cout << "pol  " << idx_pol << ": ";
-      
-        for (unsigned idx_channel = 0; idx_channel < NR_CHANNELS; ++ idx_channel)
-        {
-          unsigned sample_base_idx = idx_tabs *  NR_POLARIZATIONS *  NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX +
-                                idx_pol * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX + 
-                                idx_channel * NR_SAMPLES_PER_CHANNEL * COMPLEX;
-            cout << "<" << idx_channel << ">";
-            for(unsigned idx_samples = 0; idx_samples < NR_SAMPLES_PER_CHANNEL; ++idx_samples)
-            {
-               cout << "(" << outputOnHostPtr[sample_base_idx + idx_samples * COMPLEX ] << ", "
-                    << outputOnHostPtr[sample_base_idx + idx_samples * COMPLEX + 1] << ")" ;
 
-            }
-            cout << endl;
-        }
-        cout << endl;
-      }
-    }
-  }
-  else
-  {
-    cout << "CHANNEL_PARALLEL" << endl;
-    for(unsigned idx_tabs = 0; idx_tabs < NR_TABS; ++ idx_tabs)
-    {
-      cout << endl << "idx_tabs: " << idx_tabs << endl;
-      for(unsigned idx_pol = 0; idx_pol < NR_POLARIZATIONS; ++idx_pol)
-      {
-        cout << "pol " << idx_pol << ": ";
-        for(unsigned idx_samples = 0; idx_samples < NR_SAMPLES_PER_CHANNEL; ++idx_samples)             
-        {
-          unsigned sample_base_idx = idx_tabs *  NR_POLARIZATIONS *  NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX +
-                                idx_pol * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX + 
-                                idx_samples * NR_CHANNELS * COMPLEX;
-            cout << "<" << idx_samples << ">";
-            for (unsigned idx_channel = 0; idx_channel < NR_CHANNELS; ++ idx_channel)
-            {
-               cout << "(" << outputOnHostPtr[sample_base_idx + idx_channel * COMPLEX ] << ", "
-                    << outputOnHostPtr[sample_base_idx + idx_channel * COMPLEX + 1] << ")" ;
-            }
-        }
-        cout << endl;
-      }
-    }
-  }
+	for(unsigned idx_tabs = 0; idx_tabs < NR_TABS; ++ idx_tabs)
+	{
+	  cout << endl << "idx_tabs: " << idx_tabs << endl;
+	  for(unsigned idx_pol = 0; idx_pol < NR_POLARIZATIONS; ++idx_pol)
+	  {
+		cout << "pol  " << idx_pol << ": ";
+	  
+		for (unsigned idx_channel = 0; idx_channel < NR_CHANNELS; ++ idx_channel)
+		{
+		  unsigned sample_base_idx = idx_tabs *  NR_POLARIZATIONS *  NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX +
+								idx_pol * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX + 
+								idx_channel * NR_SAMPLES_PER_CHANNEL * COMPLEX;
+			cout << "<" << idx_channel << ">";
+			for(unsigned idx_samples = 0; idx_samples < NR_SAMPLES_PER_CHANNEL; ++idx_samples)
+			{
+			   cout << "(" << outputOnHostPtr[sample_base_idx + idx_samples * COMPLEX ] << ", "
+					<< outputOnHostPtr[sample_base_idx + idx_samples * COMPLEX + 1] << ")" ;
+			}
+			cout << endl;
+		}
+		cout << endl;
+	  }
+	}
 
   exit(1);
 }
@@ -164,10 +134,6 @@ HostMemory runTest(gpu::Context ctx,
   definitions["NR_TABS"] = lexical_cast<string>(NR_TABS);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
-
-  //Switch between the two function versions
-  if (!CHANNEL_PARALLEL)
-    definitions["POST_BEAMFORMER_KERNEL_TRANSPOSE"] = lexical_cast<string>("");
 
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(devices, kernelFile, flags, definitions);
@@ -198,14 +164,9 @@ HostMemory runTest(gpu::Context ctx,
   hKernel.setArg(0, devTransposedMemory);
   hKernel.setArg(1, devComplexVoltagesMemory);
 
-  // Calculate the number of threads in total and per block
-  // This depend on the parallization chosen: Of time then 
-  //Grid globalWorkSize(NR_SAMPLES_PER_CHANNEL / 16, 1, 1);
-  //Block localWorkSize(16, NR_TABS, NR_CHANNELS);
-   //globalWorkSize = cl::NDRange(256, (ps.nrTABs(0) + 15) / 16, ps.nrSamplesPerChannel() / 16);
-   //localWorkSize = cl::NDRange(256, 1, 1);
+  // Calculate the number of threads in total and per block  
   Grid globalWorkSize(1, (NR_TABS + 15) / 16, NR_SAMPLES_PER_CHANNEL / 16);
-  //Grid globalWorkSize(1, 1, 2);
+
   Block localWorkSize(256, 1, 1); // increasing x dim does not change anything
   // Run the kernel
   cuStream.synchronize(); // assure memory is copied
@@ -275,9 +236,13 @@ int main()
       cerr << "The data returned by the kernel should be all zero: All Transposed are zero";
       exit_with_print(complexVoltagesData, outputOnHostPtr);
     }
-    
+
+
+		
   // ***********************************************************
-  // Baseline test 2: perform the stanspose
+  // Test 2: perform the transpose and validate each entry in the matrix
+  // Write in the linear input array the idx.
+  // loop the 4 dimensions of the output matrix and 'calculate' the correct output value
   cout << "test 2" << endl;
   for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
   {
@@ -295,21 +260,52 @@ int main()
     complexVoltagesData, function);
 
   // Validate the returned data array
-  // Walk the data arrays and create linear data arrays with the correct content 
   outputOnHostPtr = outputOnHost2.get<float>();
+  // Walk the data linear and calculate the correct value (depending on defines) 
+  // The correct output values are calculated using knowledge of the stepsize the
+  // goal array should make in the source array. And the base/step size in the different dimensions   
+  for(unsigned idx_tabs = 0; idx_tabs < NR_TABS; ++ idx_tabs)
+	{
+    unsigned tabbase = idx_tabs * NR_POLARIZATIONS * COMPLEX;  
+	  for(unsigned idx_pol = 0; idx_pol < NR_POLARIZATIONS; ++idx_pol)
+	  {
+    unsigned polbase = idx_pol * COMPLEX;
+      for (unsigned idx_channel = 0; idx_channel < NR_CHANNELS; ++ idx_channel)
+      {
+        unsigned sample_base_idx = idx_tabs *  NR_POLARIZATIONS *  NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX +
+                  idx_pol * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * COMPLEX + 
+                  idx_channel * NR_SAMPLES_PER_CHANNEL * COMPLEX;
+        unsigned channel_base = idx_channel *NR_POLARIZATIONS * NR_TABS * NR_SAMPLES_PER_CHANNEL * COMPLEX;
+        unsigned sample_step = NR_TABS * NR_POLARIZATIONS * COMPLEX;
+        for(unsigned idx_samples = 0; idx_samples < NR_SAMPLES_PER_CHANNEL; ++idx_samples)
+        {
+          // get the values
+          float real_value = outputOnHostPtr[sample_base_idx + idx_samples * COMPLEX ];
+          float compl_value = outputOnHostPtr[sample_base_idx + idx_samples * COMPLEX + 1];
+          //calculate the correct expected value from the base values and print them
+          float real_value_calculated = channel_base + polbase + tabbase + (sample_step * idx_samples);
+          float complex_value_calculated = channel_base + polbase + tabbase + (sample_step * idx_samples) + 1;
 
-//  exit_with_print(complexVoltagesData, outputOnHostPtr);
-  //bool continue = true;
-  //unsigned idx_in_data = 0;
-  //for (size_t idx = 0; idx < NR_TABS * NR_POLARIZATIONS; ++idx)
-  //{
-  //  unsigned start_idx = idx * 2;
+          if (real_value != real_value_calculated || compl_value != complex_value_calculated)
+          {
+            cout << "***************************************************************" << endl;
+            cout << "GPU returned incorrect value:" << endl;
+            // value returned from the gpu
+            cout << "(" << real_value<< ", " << compl_value << ")" ;
+            // calculated values from cpu
+            cout << "expected:"
+                 << "(" << real_value_calculated << ", " << complex_value_calculated<< ")" ;
+                 
+            cout << "Incorrect value at at idx: " << sample_base_idx + idx_samples * COMPLEX  << endl;
+            cout << "***************************************************************" << endl;     
+            exit_with_print(complexVoltagesData, outputOnHostPtr);
+            
+          }
+        }
+      }
+	  }
+	}
 
-  //  for (size_t idy = 0; idy < lengthTransposedData / ; ++idy)
-  //  {
-  //    float idx_expected = 
-  //  }
-  //} 
   delete [] complexVoltagesData;
   delete [] transposedData;
 
