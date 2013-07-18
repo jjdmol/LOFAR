@@ -91,7 +91,8 @@ namespace LOFAR
         KernelFactoryBase::compileDefinitions(itsParameters);
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
-
+      defs["NR_TABS"] =
+        lexical_cast<string>(itsParameters.nrTABs);
       return defs;
     }
 
