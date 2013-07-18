@@ -69,28 +69,28 @@ int main (int, char*	argv[])
 	cout << "KV7: " << KV7 << endl;
 
 	cout << "\n--- Testing constructors with timestamp ---" << endl;
-	KVpair	KVT0("stringValue", string("aap noot mies"), true);
+	KVpair	KVT0("stringValue", string("aap noot mies"), true, true);
 	cout << ">>>KVT0: " << KVT0 << "<<<" << endl;
 
-	KVpair	KVT1("charPtrValue", "wim zus jet", true);
+	KVpair	KVT1("charPtrValue", "wim zus jet", true, true);
 	cout << ">>>KVT1: " << KVT1 << "<<<" << endl;
 
-	KVpair	KVT2("booleanValue", true, true);
+	KVpair	KVT2("booleanValue", true, true, true);
 	cout << ">>>KVT2: " << KVT2 << "<<<" << endl;
 
-	KVpair	KVT3("IntegerValue", 125000, true);
+	KVpair	KVT3("IntegerValue", 125000, true, true);
 	cout << ">>>KVT3: " << KVT3 << "<<<" << endl;
 
-	KVpair	KVT4("DoubleValue", d, true);
+	KVpair	KVT4("DoubleValue", d, true, true);
 	cout << ">>>KVT4: " << KVT4 << "<<<" << endl;
 
-	KVpair	KVT5("FloatValue", f, true);
+	KVpair	KVT5("FloatValue", f, true, true);
 	cout << ">>>KVT5: " << KVT5 << "<<<" << endl;
 
-	KVpair	KVT6("TimeTValue", t, true);
+	KVpair	KVT6("TimeTValue", t, true, true);
 	cout << ">>>KVT6: " << KVT6 << "<<<" << endl;
 
-	KVpair	KVT7("IntVectorValue", vi, true);
+	KVpair	KVT7("IntVectorValue", vi, true, true);
 	cout << ">>>KVT7: " << KVT7 << "<<<" << endl;
 
 	cout << "\n--- Testing copy and assignment operators ---" << endl;
