@@ -27,14 +27,15 @@ prefix		= "KVT"; // for the signal names
 id 			= "(LOFAR::MACIO::F_GCF_PROTOCOL + 1)";
 
 // specify extra include files
+include = '<Common/KVpair.h>';
 
 prelude = << PRELUDE_END
 
 //	REGISTER 	  	 (uint obsID, string	name);
 //	REGISTER_ACK	 (uint obsID, string	name);
-//	SEND_MSG		 (int seqnr, string key, string value, double	secsEpoch1970);
+//	SEND_MSG		 (int seqnr, KVpair		kvp;
 //	SEND_MSG_ACK	 (int seqnr, uint result);
-//	SEND_MSG_POOL	 (int seqnr, uint nrMsgs, vector<string> key, vector<string> value, vector<double> time);
+//	SEND_MSG_POOL	 (int seqnr, vector<KVpair> kvps);
 //	SEND_MSG_POOL_ACK(int seqnr, uint result);
 
 using LOFAR::operator<<;
@@ -81,16 +82,8 @@ event = {
 		type = "int32";
 	};
 	param = {
-		name = "key";
-		type = "string";
-	};
-	param = {
-		name = "value";
-		type = "string";
-	};
-	param = {
-		name = "timestamp";
-		type = "double";
+		name = "kvp";
+		type = "KVpair";
 	};
 };
 
@@ -115,20 +108,8 @@ event = {
 		type = "int32";
 	};
 	param = {
-		name = "nrElements";
-		type = "uint32";
-	};
-	param = {
-		name = "keys";
-		type = "vector<string>";
-	};
-	param = {
-		name = "values";
-		type = "vector<string>";
-	};
-	param = {
-		name = "times";
-		type = "vector<double>";
+		name = "kvps";
+		type = "vector<KVpair>";
 	};
 };
 

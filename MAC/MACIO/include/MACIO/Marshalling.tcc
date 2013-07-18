@@ -30,6 +30,7 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/KVpair.h>
 #include <boost/dynamic_bitset.hpp>
 #include <sstream>
 
@@ -79,6 +80,28 @@ template<> inline void MSH_unpack<string>(const char *bufPtr, size_t &offset, st
 	offset += sizeof(nrChars);
 	tVar= string(bufPtr+offset);
 	offset += nrChars + 1;
+}
+
+// Specialistion for KVpair
+template<> inline size_t MSH_size<KVpair>(const KVpair &tVar)
+{
+	return (sizeof(tVar.valueType) + sizeof(tVar.timestamp) + MSH_size(tVar.first) + MSH_size(tVar.second));
+}
+
+template <> inline void MSH_pack<KVpair>(char *bufPtr, size_t &offset, const KVpair &tVar)
+{
+	MSH_pack(bufPtr, offset, tVar.valueType);
+	MSH_pack(bufPtr, offset, tVar.timestamp);
+	MSH_pack(bufPtr, offset, tVar.first);
+	MSH_pack(bufPtr, offset, tVar.second);
+}
+
+template<> inline void MSH_unpack<KVpair>(const char *bufPtr, size_t &offset, KVpair &tVar)
+{
+	MSH_unpack(bufPtr, offset, tVar.valueType);
+	MSH_unpack(bufPtr, offset, tVar.timestamp);
+	MSH_unpack(bufPtr, offset, tVar.first);
+	MSH_unpack(bufPtr, offset, tVar.second);
 }
 
 // Specialistion for boost::dynamic_bitset

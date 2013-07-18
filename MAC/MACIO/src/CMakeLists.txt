@@ -20,7 +20,7 @@ lofar_add_library(macio
   GCF_Event.cc
   EventPort.cc
   KVT_Protocol.cc
-  KVTLogger.cc
+  RTmetadata.cc
   ProtocolDefs.cc
   SB_Protocol.cc)
 
