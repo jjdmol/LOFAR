@@ -1115,7 +1115,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    setTreeState
  * Signature: (ISZ)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setTreeState__ISZ(JNIEnv *env, jobject jTreeMaintenance, jintaTreeID, jshort aState, jboolean allow_endtime_update);
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_setTreeState__ISZ(JNIEnv *env, jobject jTreeMaintenance, jint aTreeID, jshort aState, jboolean allow_endtime_update) {
   jboolean succes(0);
   try {
     succes=((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setTreeState (aTreeID, aState,allow_endtime_update);
