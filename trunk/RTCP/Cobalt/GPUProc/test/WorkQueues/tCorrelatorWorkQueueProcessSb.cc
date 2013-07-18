@@ -51,27 +51,10 @@ int main() {
   // Nr of channels/sb from the parset is 1, so the PPF will not even run.
   // Parset also has turned of delay compensation and bandpass correction
   // (but that kernel will run to convert int to float and to transform the data order).
-  const string kfilenameFIR("FIR_Filter.cu");
-  const string kfilenameDBP("DelayAndBandPass.cu");
-  const string kfilenameCor("Correlator.cu");
-  vector<string> kernels;
-  kernels.push_back(kfilenameFIR);
-  kernels.push_back(kfilenameDBP);
-  kernels.push_back(kfilenameCor);
 
-  map<string, string> ptx;
-  CompileFlags flags(defaultCompileFlags());
-  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
-  ptx[kfilenameFIR] = createPTX(kfilenameFIR, definitions, flags, devices);
-  ptx[kfilenameDBP] = createPTX(kfilenameDBP, definitions, flags, devices);
-  ptx[kfilenameCor] = createPTX(kfilenameCor, definitions, flags, devices);
-  
-  CorrelatorPipelinePrograms progs;
-  progs.firFilterProgram = createModule(ctx, kfilenameFIR, ptx[kfilenameFIR]);
-  progs.delayAndBandPassProgram = createModule(ctx, kfilenameDBP, ptx[kfilenameDBP]);
-  progs.correlatorProgram = createModule(ctx, kfilenameCor, ptx[kfilenameCor]);
+  CorrelatorFactories factories(ps);
 
-  CorrelatorWorkQueue cwq(ps, ctx, progs);
+  CorrelatorWorkQueue cwq(ps, ctx, factories);
 
   WorkQueueInputData in(ps.nrBeams(), ps.nrStations(), NR_POLARIZATIONS,
                         ps.nrHistorySamples() + ps.nrSamplesPerSubband(),

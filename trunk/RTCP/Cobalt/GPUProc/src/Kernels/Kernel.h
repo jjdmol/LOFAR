@@ -1,5 +1,6 @@
 //# Kernel.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,57 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_KERNEL_H
-#define LOFAR_GPUPROC_CUDA_KERNEL_H
+// \file
+// Include the right GPU API include with our options.
 
-#include <string>
-#include <iosfwd>
-#include <cuda.h>
+#ifndef LOFAR_GPUPROC_KERNEL_H
+#define LOFAR_GPUPROC_KERNEL_H
 
-#include <CoInterface/Parset.h>
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
 
-#include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/gpu_utils.h>
-//#include <GPUProc/PerformanceCounter.h>
-
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    class Kernel : public gpu::Function
-    {
-    public:
-      // Construct a kernel. The parset \a ps contains numerous parameters that
-      // will be used to compile the kernel source to PTX code. Compiling to
-      // PTX-code is relatively expensive and should therefore be done only
-      // once. The easiest way to achieve this is to make a so-called
-      // PTX-store. The actual compiler will put the PTX-code in the store,
-      // where it will be cached for subsequent use. The \a context is needed to
-      // create a Module form the PTX-code. The \a srcFilename contains the name
-      // of the (CUDA/OpenCL) source file; \a functioName is the name of the
-      // function in the module that will be loaded when the Module object is
-      // constructed.
-      Kernel(const Parset &ps, const gpu::Context &context,
-             const std::string &srcFilename, const std::string &functionName);
-
-      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
-
-      // TODO: Make this a (virtual?) kernel-specific function.
-      // Return required compile definitions given the Parset \a ps.
-      static const CompileDefinitions& compileDefinitions(const Parset& ps);
-
-    protected:
-      // TODO: Remove once we decide we will only create a Kernel from source.
-      Kernel(const Parset &ps, const gpu::Module& module, const std::string &name);
-
-      gpu::Event event;
-      const Parset &ps;
-      gpu::Grid globalWorkSize;
-      gpu::Block localWorkSize;
-      size_t nrOperations, nrBytesRead, nrBytesWritten;
-    };
-  }
-}
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Kernels/Kernel.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Kernels/Kernel.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

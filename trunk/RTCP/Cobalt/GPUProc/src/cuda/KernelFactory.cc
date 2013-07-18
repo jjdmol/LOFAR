@@ -1,4 +1,5 @@
-//# CorrelatorPipeline.cc
+//# KernelFactory.cc
+//#
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,44 +21,43 @@
 
 #include <lofar_config.h>
 
-#include "CorrelatorPipeline.h"
+#include "KernelFactory.h"
 
-#include <map>
-#include <vector>
 #include <string>
+#include <boost/lexical_cast.hpp>
 
-#include <Common/LofarLogger.h>
-
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
-#include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/gpu_utils.h>
-
-#define NR_WORKQUEUES_PER_DEVICE  2
+using namespace std;
+using boost::lexical_cast;
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-
-    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
-      :
-      Pipeline(ps, subbandIndices)
+    KernelFactoryBase::~KernelFactoryBase()
     {
-      // If profiling, use one workqueue: with >1 workqueues decreased
-      // computation / I/O overlap can affect optimization gains.
-      unsigned nrWorkQueues = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
-      workQueues.resize(nrWorkQueues);
-
-      CorrelatorFactories factories(ps);
-
-      // Create the WorkQueues
-      for (size_t i = 0; i < nrWorkQueues; ++i) {
-        gpu::Context context(devices[i % devices.size()]);
-
-        workQueues[i] = new CorrelatorWorkQueue(ps, context, factories);
-      }
-
     }
+
+    CompileDefinitions
+    KernelFactoryBase::compileDefinitions(const Kernel::Parameters& param) const
+    {
+      CompileDefinitions defs;
+      defs["COMPLEX"] = "2";
+      defs["NR_CHANNELS"] = lexical_cast<string>(param.nrChannelsPerSubband);
+      defs["NR_POLARIZATIONS"] = lexical_cast<string>(param.nrPolarizations);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(param.nrSamplesPerChannel);
+      defs["NR_SAMPLES_PER_SUBBAND"] = 
+        lexical_cast<string>(param.nrSamplesPerSubband);
+      defs["NR_STATIONS"] = lexical_cast<string>(param.nrStations);
+      return defs;
+    }
+
+    CompileFlags
+    KernelFactoryBase::compileFlags(const Kernel::Parameters& /*param*/) const
+    {
+      CompileFlags flags;
+      return flags;
+    }
+
   }
 }
-
