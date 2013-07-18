@@ -34,7 +34,8 @@ namespace LOFAR
     {
     public:
       BeamFormerTransposeKernel(const Parset &ps, gpu::Module &program,
-                                gpu::DeviceMemory &devTransposedData, gpu::DeviceMemory &devComplexVoltages);
+                                gpu::DeviceMemory &devTransposedData,
+                                gpu::DeviceMemory &devComplexVoltages);
 
     };
   }

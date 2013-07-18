@@ -36,18 +36,21 @@ namespace LOFAR
       :
       Kernel(ps, program, "transpose")
     {
+      // See kernel documentation for the dimensions limitations: 
       ASSERT(ps.nrSamplesPerChannel() % 16 == 0);
       setArg(0, devTransposedData);
       setArg(1, devComplexVoltages);
-
-      //globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
+      
       globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, ps.nrSamplesPerChannel() / 16);
       localWorkSize = gpu::Block(256, 1, 1);
 
-      nrOperations = 0;
-      nrBytesRead = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>),
-      //nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>);
-      nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * sizeof(std::complex<float>);
+      nrOperations = 0;  // We only do a transpose: no actual calculations are performed
+      nrBytesRead = (size_t) ps.nrChannelsPerSubband() *
+                    ps.nrSamplesPerChannel() * ps.nrTABs(0) * 
+                    NR_POLARIZATIONS * sizeof(std::complex<float>),
+      nrBytesWritten = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS *
+                       ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() *
+                       sizeof(std::complex<float>);
     }
 
   }
