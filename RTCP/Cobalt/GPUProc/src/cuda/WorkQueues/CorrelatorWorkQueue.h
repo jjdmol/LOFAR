@@ -23,6 +23,7 @@
 
 // @file
 #include <complex>
+#include <memory>
 
 #include <Common/Thread/Queue.h>
 #include <Stream/Stream.h>
@@ -34,7 +35,6 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/FilterBank.h>
-#include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/Filter_FFT_Kernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
@@ -65,11 +65,20 @@ namespace LOFAR
       }
     };
 
+    struct CorrelatorFactories
+    {
+      CorrelatorFactories(const Parset &ps): firFilter(ps), delayAndBandPass(ps), correlator(ps) {}
+
+      KernelFactory<FIR_FilterKernel> firFilter;
+      KernelFactory<DelayAndBandPassKernel> delayAndBandPass;
+      KernelFactory<CorrelatorKernel> correlator;
+    };
+
     class CorrelatorWorkQueue : public WorkQueue
     {
     public:
       CorrelatorWorkQueue(const Parset &parset, gpu::Context &context,
-                          CorrelatorPipelinePrograms &programs);
+                          CorrelatorFactories &factories);
 
       // Correlate the data found in the input data buffer
       virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
@@ -115,16 +124,26 @@ namespace LOFAR
 
       gpu::DeviceMemory devFilteredData;
 
-      // Compiled kernels
-      FIR_FilterKernel firFilterKernel;
+      /*
+       * Kernels
+       */
+
+      // FIR filter
+      gpu::DeviceMemory devFilterWeights;
+      FIR_FilterKernel::Buffers firFilterBuffers;
+      std::auto_ptr<FIR_FilterKernel> firFilterKernel;
+
+      // FFT
       Filter_FFT_Kernel fftKernel;
-      DelayAndBandPassKernel delayAndBandPassKernel;
-#if defined USE_NEW_CORRELATOR
-      CorrelateTriangleKernel correlateTriangleKernel;
-      CorrelateRectangleKernel correlateRectangleKernel;
-#else
-      CorrelatorKernel correlatorKernel;
-#endif
+
+      // Delay and Bandpass
+      gpu::DeviceMemory devBandPassCorrectionWeights;
+      DelayAndBandPassKernel::Buffers delayAndBandPassBuffers;
+      std::auto_ptr<DelayAndBandPassKernel> delayAndBandPassKernel;
+
+      // Correlator
+      CorrelatorKernel::Buffers correlatorBuffers;
+      std::auto_ptr<CorrelatorKernel> correlatorKernel;
     };
 
   }

@@ -48,8 +48,6 @@ namespace LOFAR
     public:
       Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices);
 
-      std::string createPTX(const std::string &srcFilename);
-
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void processObservation(OutputType outputType);
 

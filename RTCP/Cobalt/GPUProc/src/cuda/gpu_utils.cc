@@ -1,4 +1,5 @@
 //# gpu_utils.cc
+//#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -22,25 +23,17 @@
 
 #include <GPUProc/gpu_utils.h>
 
-#include <cstdlib>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/fcntl.h>
-#include <unistd.h>
-#include <cstring>
-#include <cerrno>
+#include <cstdlib>    // for getenv()
+#include <cstdio>     // for popen(), pclose(), fgets()
 #include <iostream>
 #include <sstream>
-#include <set>
 #include <boost/format.hpp>
 
-#include <Common/SystemUtil.h>
 #include <Common/SystemCallException.h>
-#include <Stream/FileStream.h>
+#include <Common/LofarLogger.h>
+#include <CoInterface/Exceptions.h>
 
 #include <GPUProc/global_defines.h>
-
-#define BUILD_MAX_LOG_SIZE	4095
 
 namespace LOFAR
 {
@@ -266,24 +259,19 @@ namespace LOFAR
     } // namespace {anonymous}
 
 
-    const CompileDefinitions& defaultCompileDefinitions()
+    CompileDefinitions defaultCompileDefinitions()
     {
-      static CompileDefinitions defs;
-      if (defs.empty()) {
-        // initialize default definitions
-      }
+      CompileDefinitions defs;
       return defs;
     }
 
-    const CompileFlags& defaultCompileFlags()
+    CompileFlags defaultCompileFlags()
     {
-      static CompileFlags flags;
-      if (flags.empty()) {
-        flags.insert("-o -");
-        flags.insert("-ptx");
-        flags.insert("-use_fast_math");
-        flags.insert(str(format("-I%s") % includePath()));
-      }
+      CompileFlags flags;
+      flags.insert("-o -");
+      flags.insert("-ptx");
+      flags.insert("-use_fast_math");
+      flags.insert(str(format("-I%s") % includePath()));
       return flags;
     }
 
@@ -298,10 +286,12 @@ namespace LOFAR
                        get_virtarch(computeTarget(devices))));
 
       // Add default definitions and flags
-      definitions.insert(defaultCompileDefinitions().begin(), 
-                         defaultCompileDefinitions().end());
-      flags.insert(defaultCompileFlags().begin(),
-                   defaultCompileFlags().end());
+      CompileDefinitions defaultDefinitions(defaultCompileDefinitions());
+      definitions.insert(defaultDefinitions.begin(), 
+                         defaultDefinitions.end());
+      CompileFlags defaultFlags(defaultCompileFlags());
+      flags.insert(defaultFlags.begin(),
+                   defaultFlags.end());
 
 #if 0
       // We'll compile a specific version for each device that has a different
@@ -332,6 +322,7 @@ namespace LOFAR
                              const string &srcFilename,
                              const string &ptx)
     {
+      const unsigned int BUILD_MAX_LOG_SIZE = 4095;
       /*
        * JIT compilation options.
        * Note: need to pass a void* with option vals. Preferably, do not alloc
