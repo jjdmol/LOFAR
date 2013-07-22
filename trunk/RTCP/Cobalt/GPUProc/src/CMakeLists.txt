@@ -49,10 +49,10 @@ if(USE_CUDA)
     cuda/Pipelines/BeamFormerPipeline.cc
     cuda/Pipelines/CorrelatorPipeline.cc
 #    cuda/Pipelines/UHEP_Pipeline.cc
-    cuda/WorkQueues/WorkQueue.cc
-    cuda/WorkQueues/BeamFormerWorkQueue.cc
-    cuda/WorkQueues/CorrelatorWorkQueue.cc
-#    cuda/WorkQueues/UHEP_WorkQueue.cc
+    cuda/SubbandProcs/SubbandProc.cc
+    cuda/SubbandProcs/BeamFormerSubbandProc.cc
+    cuda/SubbandProcs/CorrelatorSubbandProc.cc
+#    cuda/SubbandProcs/UHEP_SubbandProc.cc
   )
   add_subdirectory(cuda)
 
@@ -93,10 +93,10 @@ if(USE_OPENCL)
     opencl/Pipelines/BeamFormerPipeline.cc
     opencl/Pipelines/CorrelatorPipeline.cc
     #opencl/Pipelines/UHEP_Pipeline.cc
-    opencl/WorkQueues/WorkQueue.cc
-    opencl/WorkQueues/BeamFormerWorkQueue.cc
-    opencl/WorkQueues/CorrelatorWorkQueue.cc
-    #opencl/WorkQueues/UHEP_WorkQueue.cc
+    opencl/SubbandProcs/SubbandProc.cc
+    opencl/SubbandProcs/BeamFormerSubbandProc.cc
+    opencl/SubbandProcs/CorrelatorSubbandProc.cc
+    #opencl/SubbandProcs/UHEP_SubbandProc.cc
   )
   add_subdirectory(opencl)
 
