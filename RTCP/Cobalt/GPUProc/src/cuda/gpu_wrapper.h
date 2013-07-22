@@ -253,6 +253,9 @@ namespace LOFAR
         // Return the size of this memory block.
         size_t size() const;
 
+        // Fetch the contents of this buffer in a new HostMemory buffer.
+        HostMemory fetch() const;
+
       private:
         // Function needs access to our device ptr location to set this as a kernel arg.
         friend class Function;
