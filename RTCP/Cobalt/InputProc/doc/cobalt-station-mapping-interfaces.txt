@@ -4,54 +4,54 @@ x.eth4 & x.eth5: 10GbE of CPU 2
 
 BG router	field				cobalt node.if
 -------------------------------------------------------------
-0		CS021HBA0			0.eth2
-0		CS021HBA1			0.eth2
-0		RS208				0.eth2
-0		CS005HBA0			0.eth4
-0		CS005HBA1			0.eth4
-0		RS310				0.eth4
-0		CS101HBA0			1.eth2
-0		CS101HBA1			1.eth2
-0		RS407				1.eth2
-0		CS032HBA0			1.eth4
-0		CS032HBA1			1.eth4
-0		RS409				1.eth4
-1		CS002HBA0			2.eth2
-1		CS002HBA1			2.eth2
-1		CS006HBA0			2.eth2
-1		CS006HBA1			2.eth4
-1		CS201HBA0			2.eth4
-1		CS201HBA1			2.eth4
-1		CS011HBA0			3.eth2
-1		CS011HBA1 + Potsdam		3.eth2
-1		CS028HBA0			3.eth2
-1		CS028HBA1 + Tautenburg		3.eth4
-1		CS302HBA0			3.eth4
-1		CS302HBA1			3.eth4
-2		CS003HBA0			4.eth2
-2		CS003HBA1			4.eth2
-2		RS305				4.eth2
-2		CS007HBA0			4.eth3
-2		CS007HBA1			4.eth3
-2		RS503				4.eth3
-2		CS030HBA0 + Nancay		4.eth4
-2		CS030HBA1			4.eth4
-2		CS301HBA0 + Onsala		4.eth4
-2		CS301HBA1			4.eth5
-2		CS501HBA0			4.eth5
-2		CS501HBA1			4.eth5
-3		CS004HBA0			6.eth2
-3		CS004HBA1			6.eth2
-3		RS106				6.eth2
-3		CS401HBA0 + Juelich		6.eth4
-3		CS401HBA1			6.eth4
-3		RS205				6.eth4
-3		CS103HBA0			7.eth2
-3		CS103HBA1			7.eth2
-3		RS307				7.eth2
-3		RS406				7.eth4
-3		RS508				7.eth4
-3		RS509				7.eth4
+0		CS021HBA0			cbt001.eth2
+0		CS021HBA1			cbt001.eth2
+0		RS208				cbt001.eth2
+0		CS005HBA0			cbt001.eth4
+0		CS005HBA1			cbt001.eth4
+0		RS310				cbt001.eth4
+0		CS101HBA0			cbt002.eth2
+0		CS101HBA1			cbt002.eth2
+0		RS407				cbt002.eth2
+0		CS032HBA0			cbt002.eth4
+0		CS032HBA1			cbt002.eth4
+0		RS409				cbt002.eth4
+1		CS002HBA0			cbt003.eth2
+1		CS002HBA1			cbt003.eth2
+1		CS006HBA0			cbt003.eth2
+1		CS006HBA1			cbt003.eth4
+1		CS201HBA0			cbt003.eth4
+1		CS201HBA1			cbt003.eth4
+1		CS011HBA0			cbt004.eth2
+1		CS011HBA1 + Potsdam		cbt004.eth2
+1		CS028HBA0			cbt004.eth2
+1		CS028HBA1 + Tautenburg		cbt004.eth4
+1		CS302HBA0			cbt004.eth4
+1		CS302HBA1			cbt004.eth4
+2		CS003HBA0			cbt005.eth2
+2		CS003HBA1			cbt005.eth2
+2		RS305				cbt005.eth2
+2		CS007HBA0			cbt005.eth3
+2		CS007HBA1			cbt005.eth3
+2		RS503				cbt005.eth3
+2		CS030HBA0 + Nancay		cbt005.eth4
+2		CS030HBA1			cbt005.eth4
+2		CS301HBA0 + Onsala		cbt005.eth4
+2		CS301HBA1			cbt005.eth5
+2		CS501HBA0			cbt005.eth5
+2		CS501HBA1			cbt005.eth5
+3		CS004HBA0			cbt006.eth2
+3		CS004HBA1			cbt006.eth2
+3		RS106				cbt006.eth2
+3		CS401HBA0 + Juelich		cbt006.eth4
+3		CS401HBA1			cbt006.eth4
+3		RS205				cbt006.eth4
+3		CS103HBA0			cbt007.eth2
+3		CS103HBA1			cbt007.eth2
+3		RS307				cbt007.eth2
+3		RS406				cbt007.eth4
+3		RS508				cbt007.eth4
+3		RS509				cbt007.eth4
 
 
 
