@@ -28,7 +28,7 @@
 
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 
@@ -45,16 +45,16 @@ namespace LOFAR
     {
       // If profiling, use one workqueue: with >1 workqueues decreased
       // computation / I/O overlap can affect optimization gains.
-      unsigned nrWorkQueues = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
-      workQueues.resize(nrWorkQueues);
+      unsigned nrSubbandProcs = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
+      workQueues.resize(nrSubbandProcs);
 
       CorrelatorFactories factories(ps);
 
-      // Create the WorkQueues
-      for (size_t i = 0; i < nrWorkQueues; ++i) {
+      // Create the SubbandProcs
+      for (size_t i = 0; i < nrSubbandProcs; ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        workQueues[i] = new CorrelatorWorkQueue(ps, context, factories);
+        workQueues[i] = new CorrelatorSubbandProc(ps, context, factories);
       }
 
     }

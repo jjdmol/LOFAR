@@ -470,7 +470,7 @@ namespace LOFAR
         CUstream get() const;
 
         // Returns the context associated with the underlying CUDA stream.
-        Context getContext() const; // TODO: consider using this in the WorkQueues (now has Stream and Context stored)
+        Context getContext() const; // TODO: consider using this in the SubbandProcs (now has Stream and Context stored)
 
         // Return whether this stream mandates synchronous behaviour
         bool isSynchronous() const;

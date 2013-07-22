@@ -32,7 +32,7 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/gpu_incl.h>
-#include <GPUProc/WorkQueues/WorkQueue.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 #include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
@@ -62,9 +62,9 @@ namespace LOFAR
         // lock on the shared data
         Mutex totalsMutex;
         // add the counter in this queue
-        void addQueue(WorkQueue &queue);
+        void addQueue(SubbandProc &queue);
         // Print a logline with results
-        void log(size_t nrWorkQueues);
+        void log(size_t nrSubbandProcs);
       } performance;
     };
   }

@@ -1,4 +1,4 @@
-//# WorkQueue.h
+//# SubbandProc.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_WORKQUEUE_H
-#define LOFAR_GPUPROC_CUDA_WORKQUEUE_H
+#ifndef LOFAR_GPUPROC_CUDA_SUBBAND_PROC_H
+#define LOFAR_GPUPROC_CUDA_SUBBAND_PROC_H
 
 #include <string>
 #include <map>
@@ -40,13 +40,13 @@ namespace LOFAR
   namespace Cobalt
   {
     // 
-    //   Collect all inputData for the correlatorWorkQueue item:
+    //   Collect all inputData for the correlatorSubbandProc item:
     //    \arg inputsamples
     //    \arg delays
     //    \arg phaseOffSets
     //    \arg flags
     // It also contains a read function parsing all this data from an input stream.   
-    class WorkQueueInputData
+    class SubbandProcInputData
     {
     public:
 
@@ -90,7 +90,7 @@ namespace LOFAR
       MultiDimArray<SparseSet<unsigned>, 1> inputFlags;
 
       // Create the inputData object we need shared host/device memory on the supplied devicequeue
-      WorkQueueInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
+      SubbandProcInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
                          size_t n_samples, size_t bytes_per_complex_sample,
                          gpu::Context &context, unsigned int hostBufferFlags = 0)
         :
@@ -114,21 +114,21 @@ namespace LOFAR
     };
 
     /*
-     * The WorkQueue does the following transformation:
-     *   WorkQueueInputData -> StreamableData
+     * The SubbandProc does the following transformation:
+     *   SubbandProcInputData -> StreamableData
      *
-     * The WorkQueueInputData represents one block of one subband
+     * The SubbandProcInputData represents one block of one subband
      * of input data, and the StreamableData (for example) the complex
      * visibilities of such a block.
      *
      * For both input and output, a fixed set of objects is created,
-     * tied to the GPU specific for the WorkQueue, for increased
+     * tied to the GPU specific for the SubbandProc, for increased
      * performance. The objects are recycled by using Pool objects.
      *
      * The data flows as follows:
      *
      *   // Fetch the next input object to fill
-     *   SmartPtr<WorkQueueInputData> input = queue.inputPool.free.remove();
+     *   SmartPtr<SubbandProcInputData> input = queue.inputPool.free.remove();
      *
      *   // Provide input
      *   receiveInput(input);
@@ -152,10 +152,10 @@ namespace LOFAR
      *   temporarily store filled input and output objects. Such is needed to
      *   obtain parallellism (i.e. read/process/write in separate threads).
      */
-    class WorkQueue {
+    class SubbandProc {
     public:
-      WorkQueue(const Parset &ps, gpu::Context &context);
-      virtual ~WorkQueue();
+      SubbandProc(const Parset &ps, gpu::Context &context);
+      virtual ~SubbandProc();
 
       // TODO: clean up access by Pipeline class and move under protected
       std::map<std::string, SmartPtr<PerformanceCounter> > counters;
@@ -175,14 +175,14 @@ namespace LOFAR
 
       // A pool of input data, to allow items to be filled and
       // computed on in parallel.
-      Pool<WorkQueueInputData> inputPool;
+      Pool<SubbandProcInputData> inputPool;
 
       // A pool of output data, to allow items to be filled
       // and written in parallel.
       Pool<StreamableData> outputPool;
 
       // Correlate the data found in the input data buffer
-      virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
+      virtual void processSubband(SubbandProcInputData &input, StreamableData &output);
 
       // Do post processing on the CPU
       virtual void postprocessSubband(StreamableData &output);

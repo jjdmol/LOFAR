@@ -37,7 +37,7 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/BestEffortQueue.h>
-#include <GPUProc/WorkQueues/WorkQueue.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 
 namespace LOFAR
 {
@@ -57,7 +57,7 @@ namespace LOFAR
       std::vector<gpu::Device> devices;
 
       const std::vector<size_t> subbandIndices; // [localSubbandIdx]
-      std::vector< SmartPtr<WorkQueue> > workQueues;
+      std::vector< SmartPtr<SubbandProc> > workQueues;
 
 #if defined USE_B7015
       OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
@@ -70,9 +70,9 @@ namespace LOFAR
         // lock on the shared data
         Mutex totalsMutex;
         // add the counter in this queue
-        void addQueue(WorkQueue &queue);
+        void addQueue(SubbandProc &queue);
         // Print a logline with results
-        void log(size_t nrWorkQueues);
+        void log(size_t nrSubbandProcs);
 
         size_t nrGPUs;
 
@@ -95,29 +95,29 @@ namespace LOFAR
         SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
       };
 
-      class WorkQueueOwnerMap {
+      class SubbandProcOwnerMap {
       public:
 
         // set the owner of a specific block
-        void push(const struct BlockID &id, WorkQueue &workQueue);
+        void push(const struct BlockID &id, SubbandProc &workQueue);
 
         // get and remove the owner of a specific block
-        WorkQueue& pop(const struct BlockID &id);
+        SubbandProc& pop(const struct BlockID &id);
 
       private:
-        std::map<struct BlockID, WorkQueue*> ownerMap;
+        std::map<struct BlockID, SubbandProc*> ownerMap;
         Mutex mutex;
       };
 
-      WorkQueueOwnerMap workQueueOwnerMap;
+      SubbandProcOwnerMap workQueueOwnerMap;
 
       std::vector<struct Output> subbandPool; // [localSubbandIdx]
 
       // process subbands on the GPU
-      void processSubbands(WorkQueue &workQueue);
+      void processSubbands(SubbandProc &workQueue);
 
       // postprocess subbands on the CPU
-      void postprocessSubbands(WorkQueue &workQueue);
+      void postprocessSubbands(SubbandProc &workQueue);
 
       // send subbands to Storage
       void writeSubband(unsigned globalSubbandIdx, struct Output &output,

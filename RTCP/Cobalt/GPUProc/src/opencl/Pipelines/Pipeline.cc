@@ -47,7 +47,7 @@ namespace LOFAR
     }
 
 
-    void Pipeline::Performance::addQueue(WorkQueue &queue)
+    void Pipeline::Performance::addQueue(SubbandProc &queue)
     {
       ScopedLock sl(totalsMutex);
 
@@ -75,7 +75,7 @@ namespace LOFAR
       }
     }
     
-    void Pipeline::Performance::log(size_t nrWorkQueues)
+    void Pipeline::Performance::log(size_t nrSubbandProcs)
     {
       // Group figures based on their prefix before " - ", so "compute - FIR"
       // belongs to group "compute".
@@ -113,9 +113,9 @@ namespace LOFAR
       double wall_seconds = total_timers["CPU - total"]->getAverage();
       double gpu_seconds = counter_groups["compute"].runtime / nrGPUs;
       double spin_seconds = total_timers["GPU - wait"]->getAverage();
-      double input_seconds = total_timers["CPU - read input"]->getElapsed() / nrWorkQueues;
-      double cpu_seconds = total_timers["CPU - process"]->getElapsed() / nrWorkQueues;
-      double postprocess_seconds = total_timers["CPU - postprocess"]->getElapsed() / nrWorkQueues;
+      double input_seconds = total_timers["CPU - read input"]->getElapsed() / nrSubbandProcs;
+      double cpu_seconds = total_timers["CPU - process"]->getElapsed() / nrSubbandProcs;
+      double postprocess_seconds = total_timers["CPU - postprocess"]->getElapsed() / nrSubbandProcs;
 
       LOG_INFO_STR("Wall seconds spent processing        : " << fixed << setw(8) << setprecision(3) << wall_seconds);
       LOG_INFO_STR("GPU  seconds spent computing, per GPU: " << fixed << setw(8) << setprecision(3) << gpu_seconds);
