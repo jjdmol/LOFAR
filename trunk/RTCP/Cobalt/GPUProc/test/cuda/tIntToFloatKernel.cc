@@ -26,7 +26,7 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;

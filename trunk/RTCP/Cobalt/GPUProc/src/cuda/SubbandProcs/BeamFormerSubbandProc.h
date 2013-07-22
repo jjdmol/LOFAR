@@ -1,4 +1,4 @@
-//# BeamFormerWorkQueue.h
+//# BeamFormerSubbandProc.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_BEAM_FORMER_WORKQUEUE_H
-#define LOFAR_GPUPROC_CUDA_BEAM_FORMER_WORKQUEUE_H
+#ifndef LOFAR_GPUPROC_CUDA_BEAM_FORMER_SUBBAND_PROC_H
+#define LOFAR_GPUPROC_CUDA_BEAM_FORMER_SUBBAND_PROC_H
 
 #include <complex>
 
@@ -46,7 +46,7 @@
 #include <GPUProc/Kernels/DedispersionChirpKernel.h>
 */
 
-#include "WorkQueue.h"
+#include "SubbandProc.h"
 
 namespace LOFAR
 {
@@ -74,13 +74,13 @@ namespace LOFAR
       }
     };
 
-    class BeamFormerWorkQueue : public WorkQueue
+    class BeamFormerSubbandProc : public SubbandProc
     {
     public:
-      BeamFormerWorkQueue(const Parset &parset, gpu::Context &context);
+      BeamFormerSubbandProc(const Parset &parset, gpu::Context &context);
 
       // Beam form the data found in the input data buffer
-      virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
+      virtual void processSubband(SubbandProcInputData &input, StreamableData &output);
 
       // Do post processing on the CPU
       virtual void postprocessSubband(StreamableData &output);
@@ -94,7 +94,7 @@ namespace LOFAR
 
       // Raw buffers, these are mapped with boost multiarrays 
       // in the InputData class
-      WorkQueueInputData::DeviceBuffers devInput;
+      SubbandProcInputData::DeviceBuffers devInput;
 
       gpu::DeviceMemory devFilteredData;
 

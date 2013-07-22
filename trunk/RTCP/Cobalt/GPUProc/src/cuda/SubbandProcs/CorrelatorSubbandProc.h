@@ -1,4 +1,4 @@
-//# CorrelatorWorkQueue.h
+//# CorrelatorSubbandProc.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_CORRELATOR_WORKQUEUE_H
-#define LOFAR_GPUPROC_CUDA_CORRELATOR_WORKQUEUE_H
+#ifndef LOFAR_GPUPROC_CUDA_CORRELATOR_SUBBAND_PROC_H
+#define LOFAR_GPUPROC_CUDA_CORRELATOR_SUBBAND_PROC_H
 
 // @file
 #include <complex>
@@ -40,7 +40,7 @@
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/CorrelatorKernel.h>
 
-#include "WorkQueue.h"
+#include "SubbandProc.h"
 
 namespace LOFAR
 {
@@ -74,14 +74,14 @@ namespace LOFAR
       KernelFactory<CorrelatorKernel> correlator;
     };
 
-    class CorrelatorWorkQueue : public WorkQueue
+    class CorrelatorSubbandProc : public SubbandProc
     {
     public:
-      CorrelatorWorkQueue(const Parset &parset, gpu::Context &context,
+      CorrelatorSubbandProc(const Parset &parset, gpu::Context &context,
                           CorrelatorFactories &factories);
 
       // Correlate the data found in the input data buffer
-      virtual void processSubband(WorkQueueInputData &input, StreamableData &output);
+      virtual void processSubband(SubbandProcInputData &input, StreamableData &output);
 
       // Do post processing on the CPU
       virtual void postprocessSubband(StreamableData &output);
@@ -90,7 +90,7 @@ namespace LOFAR
       // \c propagateFlags can be called parallel to the kernels.
       // After the data is copied from the the shared buffer 
       // \c applyWeights can be used to weight the visibilities 
-      class Flagger: public WorkQueue::Flagger
+      class Flagger: public SubbandProc::Flagger
       {
       public:
         // 1. Convert input flags to channel flags, calculate the amount flagged samples and save this in output
@@ -120,7 +120,7 @@ namespace LOFAR
 
       // Raw buffers, these are mapped with boost multiarrays 
       // in the InputData class
-      WorkQueueInputData::DeviceBuffers devInput;
+      SubbandProcInputData::DeviceBuffers devInput;
 
       gpu::DeviceMemory devFilteredData;
 

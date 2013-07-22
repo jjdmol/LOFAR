@@ -36,7 +36,7 @@
 
 #include "Interface/Parset.h"
 #include <GPUProc/FilterBank.h>
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/cuda/Pipelines/Pipeline.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/gpu_wrapper.h>
@@ -103,7 +103,7 @@ int main() {
 
 #define NR_POLARIZATIONS 2
 
-  WorkQueueInputData::DeviceBuffers devInput(ps.nrBeams(),
+  SubbandProcInputData::DeviceBuffers devInput(ps.nrBeams(),
     ps.nrStations(),
     NR_POLARIZATIONS,
     ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
