@@ -206,6 +206,7 @@ def mfclean(options):
     max_baseline = options.max_baseline if options.max_baseline > 0.0 else \
         10000.0
     processor_options = {}
+    processor_options["processor"] = options.processor
     processor_options["w_max"] = max_baseline
     processor_options["padding"] = 1.0
     processor_options["image"] = options.image
@@ -215,8 +216,7 @@ def mfclean(options):
     processor_options["noise"] = options.noise
     processor_options["robustness"] = options.robustness
     processor_options["profile"] = options.profile
-    processor = processors.create_data_processor(options.processor,
-        options.ms, processor_options)
+    processor = processors.create_data_processor(options.ms, processor_options)
 
     channel_freq = processor.channel_frequency()
     channel_width = processor.channel_width()

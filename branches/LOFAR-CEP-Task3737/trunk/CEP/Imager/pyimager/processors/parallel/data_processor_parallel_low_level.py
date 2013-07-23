@@ -19,7 +19,7 @@ def get_dataprocessor_id() :
 
 class DataProcessorParallelLowLevel(DataProcessorLowLevelBase):
     
-    def __init__(self, name, datadescriptor, options):
+    def __init__(self, datadescriptor, options):
       
         #if not isinstance(datadescriptor, dict) and os.path.isfile(datadescriptor) :
             #f = open(datadescriptor)
@@ -41,10 +41,10 @@ class DataProcessorParallelLowLevel(DataProcessorLowLevelBase):
             print dview['msname']
         self._dview = self._rc[:]
         self._dview['options'] = options
-        self._dview.execute('from lofar.pyimager.processors.' + name ' import create_data_processor_low_level')
+        self._dview.execute('from lofar.pyimager.processors import create_data_processor_low_level')
         self._dview.execute('localdataprocessor = create_data_processor_low_level(msname, options)', block = True)
         self._remoteprocessor = IPython.parallel.Reference('localdataprocessor')
-        self._connected = True
+        self._cached_channels = None
         
     def _start_ipcluster(self) :
         self._profile = "%s-%s-%i-%i" % (os.path.basename(sys.argv[0]), socket.gethostname(), os.getpid(), get_dataprocessor_id())
@@ -62,7 +62,7 @@ class DataProcessorParallelLowLevel(DataProcessorLowLevelBase):
             else:
               break
             time.sleep(1)
-        print 'ok'
+        self._started_ipcontroller = True
         # start ipengines
         self.hostnames = datadescriptor.keys()
         self._pid = {}
@@ -126,7 +126,10 @@ class DataProcessorParallelLowLevel(DataProcessorLowLevelBase):
         self.clear()    
         return phase_reference
 
-    def channels(self):
+    def _channels(self):
+        """
+        Find all unique (frequency, width) pairs
+        """
         freqs = self._rc[:].apply_sync(lambda processor :
             processor.channel_frequency(), self._remoteprocessor)
         widths = self._rc[:].apply_sync(lambda processor :
@@ -135,7 +138,18 @@ class DataProcessorParallelLowLevel(DataProcessorLowLevelBase):
             itertools.chain.from_iterable(widths))))
         self.clear()    
         return channels
+        
+    def channels(self):                                                                                                                                                
+        if self._cached_channels is None:
+            self._cached_channels = self._channels()
+        return self._cached_channels
 
+    def channel_frequency(self):
+        return [channel[0] for channel in self.channels()]
+
+    def channel_width(self):
+        return [channel[1] for channel in self.channels()]
+    
     def maximum_baseline_length(self):
         results = self._rc[:].apply_sync(lambda processor : processor.maximum_baseline_length(), self._remoteprocessor)
         maximum_baseline_length = max(results)
@@ -218,9 +232,12 @@ class DataProcessorParallelLowLevel(DataProcessorLowLevelBase):
         return response
 
     def close(self):
-        if self._connected :
-            self._rc.shutdown(hub=True)
-            self._connected = False
+        try:
+            if self._started_ipcontroller :
+                self._rc.shutdown(hub=True)
+                self._started_ipcontroller = False
+        except AttributeError:
+            pass
 
     def __del__(self) :
         self.close()

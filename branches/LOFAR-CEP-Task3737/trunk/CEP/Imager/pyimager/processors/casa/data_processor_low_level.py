@@ -128,7 +128,7 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
 
     def response(self, coordinates, shape):
         self._update_image_configuration(coordinates, shape)
-        assert(self._response_available)
+        assert self._response_available, "Response not available"
         return lofar.casaimwrap.average_response(self._context)
 
     def point_spread_function(self, coordinates, shape, as_grid):
@@ -240,7 +240,23 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         return (result["image"], result["weight"])
         
     def _update_image_configuration(self, coordinates, shape):
-        if self._coordinates != coordinates or self._shape != shape:
+        # comparing coordinate systems is tricky
+        # a straightforward coordinates1 != coordinates2 yields true if 
+        # coordinates1 and coordinates2 are different objects
+        # even if they represent the same coordinate system.
+        # Here we compare the string representation of the coordinate systems.
+        # A better solution would be to overload the __cmp__ method of
+        # the coordinatesystem class, with a proper comparison, including
+        # tolerance for the floats.
+        if str(self._coordinates) != str(coordinates) or self._shape != shape:
+            if self._coordinates != coordinates:
+                print "coordinates are different"
+            if self._shape != shape:
+                print "shape is different"
+            print self._coordinates 
+            print self._shape
+            print coordinates
+            print shape
             self._coordinates = coordinates
             self._shape = shape
             self._response_available = False

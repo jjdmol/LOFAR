@@ -143,7 +143,15 @@ class DataProcessorDefault(DataProcessorBase):
 
 
     def _update_image_configuration(self, coordinates, shape):
-        if self._coordinates != coordinates or self._shape != shape:
+        # comparing coordinate systems is tricky
+        # a straightforward coordinates1 != coordinates2 yields true if 
+        # coordinates1 and coordinates2 are different objects
+        # even if they represent the same coordinate system.
+        # Here we compare the string representation of the coordinate systems.
+        # A better solution would be to overload the __cmp__ method of
+        # the coordinatesystem class, with a proper comparison, including
+        # tolerance for the floats.
+        if str(self._coordinates) != str(coordinates) or self._shape != shape:
             self._coordinates = coordinates
             self._shape = shape
             self._cached_density = None

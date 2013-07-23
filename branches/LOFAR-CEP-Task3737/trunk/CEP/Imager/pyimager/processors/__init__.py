@@ -1,12 +1,21 @@
 # $Id$
 
 from data_processor_base import DataProcessorBase, ImageWeight, Normalization
+from data_processor_low_level_base import DataProcessorLowLevelBase
 import os
+import json
 
-def create_data_processor(name, measurement, options):
+def read_datadescription(datadescriptor):
+    f = open(datadescriptor)
+    datadescriptor = json.load(f)
+    return datadescriptor
+
+def create_data_processor(measurement, options):
     """Factory function that attempts to create a DataProcessor instance by
     name."""
 
+    name = options["processor"]
+    
     if isinstance(measurement, basestring) and os.path.isfile(measurement):
         measurement = read_datadescription(measurement)
         
@@ -39,9 +48,11 @@ def create_data_processor(name, measurement, options):
     
     return processor
 
-def create_data_processor_low_level(name, measurement, options):
+def create_data_processor_low_level(measurement, options):
     """Factory function that attempts to create a DataProcessor instance by
     name."""
+    
+    name = options["processor"]
     
     if isinstance(measurement, dict) :
         import parallel
