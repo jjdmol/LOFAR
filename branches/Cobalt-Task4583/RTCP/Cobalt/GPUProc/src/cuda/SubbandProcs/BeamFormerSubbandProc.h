@@ -74,10 +74,19 @@ namespace LOFAR
       }
     };
 
+    struct BeamFormerFactories
+    {
+      BeamFormerFactories(const Parset &ps): intToFloat(ps) {}
+
+      KernelFactory<IntToFloatKernel> intToFloat;
+      //KernelFactory<FIR_FilterKernel> firFilter;
+      //KernelFactory<DelayAndBandPassKernel> delayAndBandPass;
+    };
+
     class BeamFormerSubbandProc : public SubbandProc
     {
     public:
-      BeamFormerSubbandProc(const Parset &parset, gpu::Context &context);
+      BeamFormerSubbandProc(const Parset &parset, gpu::Context &context, BeamFormerFactories &factories);
 
       // Beam form the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input, StreamableData &output);
@@ -96,10 +105,16 @@ namespace LOFAR
       // in the InputData class
       SubbandProcInputData::DeviceBuffers devInput;
 
-      gpu::DeviceMemory devFilteredData;
+      gpu::DeviceMemory devB;
 
     private:
-      //IntToFloatKernel intToFloatKernel;
+      /*
+       * Kernels
+       */
+
+      // int -> float
+      IntToFloatKernel::Buffers intToFloatBuffers;
+      std::auto_ptr<IntToFloatKernel> intToFloatKernel;
 #if 0
       // Compiled kernels
       FIR_FilterKernel firFilterKernel;

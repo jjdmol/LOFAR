@@ -35,7 +35,7 @@ namespace LOFAR
   {
 
     BeamFormerSubbandProc::BeamFormerSubbandProc(const Parset &parset,
-      gpu::Context &context)
+      gpu::Context &context, BeamFormerFactories &factories)
     :
       SubbandProc( parset, context ),
       prevBlock(-1),
@@ -45,11 +45,15 @@ namespace LOFAR
       // FIR, which the beam former does in a later stage!
       //
       // NOTE: Sizes are probably completely wrong.
-      devInput(1,//IntToFloatKernel::bufferSize(ps, IntToFloatKernel::INPUT_DATA),
+      devInput(factories.intToFloat.bufferSize(IntToFloatKernel::INPUT_DATA),
                1,//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS),
                1,//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
-      devFilteredData(context, 1)//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA))
+      devB(context, 1),
+      intToFloatBuffers(devInput.inputSamples, devB),
+      intToFloatKernel(factories.intToFloat.create(queue, intToFloatBuffers))
+
+//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA))
 #if 0
       firFilterKernel(ps, programs.firFilterProgram,
                       devFilteredData, devInput.inputSamples, devFIRweights),
@@ -135,7 +139,7 @@ namespace LOFAR
         }
       }
 
-      // intToFloatKernel.enqueue(queue);
+      intToFloatKernel->enqueue(queue);
       // fftKernel.enqueue();
       // delayAndBandpassKernel.enqueue()
       // beamFormerKernel.enqueue()
