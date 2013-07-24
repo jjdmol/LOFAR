@@ -146,6 +146,8 @@ namespace LOFAR
         defs["BANDPASS_CORRECTION"] = "1";
       }
 
+      defs["DO_TRANSPOSE"] = string();
+
       return defs;
     }
   }
