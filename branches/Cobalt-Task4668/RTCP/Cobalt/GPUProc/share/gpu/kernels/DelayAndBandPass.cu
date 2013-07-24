@@ -40,6 +40,7 @@
  * - @c NR_POLARIZATIONS: 2
  * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
  * - @c DO_TRANSPOSE: output transposed data. Needed for correlating >1 channel.
+ *                    Also needed for bandpass correction when beamforming (TODO).
  */
 
 #include <cuda_runtime.h>
@@ -59,13 +60,13 @@ typedef LOFAR::Cobalt::gpu::complex<short> complexshort;
 typedef LOFAR::Cobalt::gpu::complex<char> complexchar;
 typedef  complexfloat (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
 #if NR_CHANNELS == 1
-#if NR_BITS_PER_SAMPLE == 16
+#  if NR_BITS_PER_SAMPLE == 16
 typedef  complexshort (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
-#elif NR_BITS_PER_SAMPLE == 8
+#  elif NR_BITS_PER_SAMPLE == 8
 typedef  complexchar (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
-#else
-#error unsupport NR_BITS_PER_SAMPLE
-#endif
+#  else
+#    error unsupported NR_BITS_PER_SAMPLE
+#  endif
 #else
 typedef  complexfloat (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 #endif
