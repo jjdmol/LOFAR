@@ -36,7 +36,8 @@ namespace LOFAR
 
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
-      nrTABs(ps.nrTABs(0))
+      nrTABs(ps.nrTABs(0)),
+      weightCorrection(1.0f)  // Currently set to 1.0. Should be red from ps or calculated
     {
     }
 
@@ -97,6 +98,8 @@ namespace LOFAR
       }
     }
 
+    
+    
     template<> CompileDefinitions
     KernelFactory<BeamFormerKernel>::compileDefinitions() const
     {
@@ -104,10 +107,11 @@ namespace LOFAR
         KernelFactoryBase::compileDefinitions(itsParameters);
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
+      defs["WEIGHT_CORRECTION"] =
+        lexical_cast<string>(itsParameters.weightCorrection);
 
       return defs;
     }
-
   }
 }
 

@@ -115,7 +115,7 @@ HostMemory runTest(Context ctx,
   definitions["NR_TABS"] = lexical_cast<string>(NR_TABS);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
-  definitions["GLOBAL_WEIGHT_CORRECTION"] = lexical_cast<string>(weight_correction);
+  definitions["WEIGHT_CORRECTION"] = lexical_cast<string>(weight_correction);
   
 
   vector<Device> devices(1, ctx.getDevice());
