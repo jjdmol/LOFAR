@@ -25,7 +25,6 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/gpu_utils.h>    // for createModule()
 
 using namespace std;
 
