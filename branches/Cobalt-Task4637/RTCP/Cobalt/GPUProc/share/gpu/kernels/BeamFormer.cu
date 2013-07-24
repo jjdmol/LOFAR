@@ -17,6 +17,7 @@
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
+#include "gpu_math.cuh"
 
 // Some defines used to determine the correct way the process the data
 #define MAX(A,B) ((A)>(B) ? (A) : (B))
@@ -29,6 +30,15 @@
 #if NR_STATIONS_PER_PASS > 32
 #error "need more passes to beam for this number of stations"
 #endif
+
+// Defines applying additional weighting. Currently used for correcting constant multiplications
+// introduced by FFT and iFFT operations: 
+#ifndef GLOBAL_WEIGHT_CORRECTION
+  #define TIMES_WEIGHT_CORRECTION //empty define: nop
+#else 
+  #define TIMES_THE_WEIGHT_CORRECTION * GLOBAL_WEIGHT_CORRECTION
+#endif
+  
 
 // Typedefs used to map input data on arrays
 typedef  float2 (*WeightsType)[NR_STATIONS][NR_CHANNELS][NR_TABS];
@@ -77,6 +87,8 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     float4 samples4[NR_STATIONS_PER_PASS][16];
   } _local;
 
+ 
+
 #pragma unroll
   for (unsigned first_station = 0;  // Step over data with NR_STATIONS_PER_PASS stride
        first_station < NR_STATIONS;
@@ -86,224 +98,224 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     float2 weight_00;                     // assign the weights to register variables
     if (first_station + 0 < NR_STATIONS)  // Number of station might be larger then 32: We 
                                           // the do multiple passes to span all stations
-      weight_00 = (*weights)[first_station + 0][channel][tab]; // Get data from global mem
+      weight_00 = (*weights)[first_station + 0][channel][tab] TIMES_THE_WEIGHT_CORRECTION; // Get data from global mem
 #endif
     // Loop onrolling allows usage of registers for weights
 #if NR_STATIONS_PER_PASS >= 2
     float2 weight_01;
 
     if (first_station + 1 < NR_STATIONS)
-      weight_01 = (*weights)[first_station + 1][channel][tab];
+      weight_01 = (*weights)[first_station + 1][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 3
     float2 weight_02;
 
     if (first_station + 2 < NR_STATIONS)
-      weight_02 = (*weights)[first_station + 2][channel][tab];
+      weight_02 = (*weights)[first_station + 2][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 4
     float2 weight_03;
 
     if (first_station + 3 < NR_STATIONS)
-      weight_03 = (*weights)[first_station + 3][channel][tab];
+      weight_03 = (*weights)[first_station + 3][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 5
     float2 weight_04;
 
     if (first_station + 4 < NR_STATIONS)
-      weight_04 = (*weights)[first_station + 4][channel][tab];
+      weight_04 = (*weights)[first_station + 4][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 6
     float2 weight_05;
 
     if (first_station + 5 < NR_STATIONS)
-      weight_05 = (*weights)[first_station + 5][channel][tab];
+      weight_05 = (*weights)[first_station + 5][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 7
     float2 weight_06;
 
     if (first_station + 6 < NR_STATIONS)
-      weight_06 = (*weights)[first_station + 6][channel][tab];
+      weight_06 = (*weights)[first_station + 6][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 8
     float2 weight_07;
 
     if (first_station + 7 < NR_STATIONS)
-      weight_07 = (*weights)[first_station + 7][channel][tab];
+      weight_07 = (*weights)[first_station + 7][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 9
     float2 weight_08;
 
     if (first_station + 8 < NR_STATIONS)
-      weight_08 = (*weights)[first_station + 8][channel][tab];
+      weight_08 = (*weights)[first_station + 8][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 10
     float2 weight_09;
 
     if (first_station + 9 < NR_STATIONS)
-      weight_09 = (*weights)[first_station + 9][channel][tab];
+      weight_09 = (*weights)[first_station + 9][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 11
     float2 weight_10;
 
     if (first_station + 10 < NR_STATIONS)
-      weight_10 = (*weights)[first_station + 10][channel][tab];
+      weight_10 = (*weights)[first_station + 10][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 12
     float2 weight_11;
 
     if (first_station + 11 < NR_STATIONS)
-      weight_11 = (*weights)[first_station + 11][channel][tab];
+      weight_11 = (*weights)[first_station + 11][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 13
     float2 weight_12;
 
     if (first_station + 12 < NR_STATIONS)
-      weight_12 = (*weights)[first_station + 12][channel][tab];
+      weight_12 = (*weights)[first_station + 12][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 14
     float2 weight_13;
 
     if (first_station + 13 < NR_STATIONS)
-      weight_13 = (*weights)[first_station + 13][channel][tab];
+      weight_13 = (*weights)[first_station + 13][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 15
     float2 weight_14;
 
     if (first_station + 14 < NR_STATIONS)
-      weight_14 = (*weights)[first_station + 14][channel][tab];
+      weight_14 = (*weights)[first_station + 14][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 16
     float2 weight_15;
 
     if (first_station + 15 < NR_STATIONS)
-      weight_15 = (*weights)[first_station + 15][channel][tab];
+      weight_15 = (*weights)[first_station + 15][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 17
     float2 weight_16;
 
     if (first_station + 16 < NR_STATIONS)
-      weight_16 = (*weights)[first_station + 16][channel][tab];
+      weight_16 = (*weights)[first_station + 16][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 18
     float2 weight_17;
 
     if (first_station + 17 < NR_STATIONS)
-      weight_17 = (*weights)[first_station + 17][channel][tab];
+      weight_17 = (*weights)[first_station + 17][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 19
     float2 weight_18;
 
     if (first_station + 18 < NR_STATIONS)
-      weight_18 = (*weights)[first_station + 18][channel][tab];
+      weight_18 = (*weights)[first_station + 18][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 20
     float2 weight_19;
 
     if (first_station + 19 < NR_STATIONS)
-      weight_19 = (*weights)[first_station + 19][channel][tab];
+      weight_19 = (*weights)[first_station + 19][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 21
     float2 weight_20;
 
     if (first_station + 20 < NR_STATIONS)
-      weight_20 = (*weights)[first_station + 20][channel][tab];
+      weight_20 = (*weights)[first_station + 20][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 22
     float2 weight_21;
 
     if (first_station + 21 < NR_STATIONS)
-      weight_21 = (*weights)[first_station + 21][channel][tab];
+      weight_21 = (*weights)[first_station + 21][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 23
     float2 weight_22;
 
     if (first_station + 22 < NR_STATIONS)
-      weight_22 = (*weights)[first_station + 22][channel][tab];
+      weight_22 = (*weights)[first_station + 22][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 24
     float2 weight_23;
 
     if (first_station + 23 < NR_STATIONS)
-      weight_23 = (*weights)[first_station + 23][channel][tab];
+      weight_23 = (*weights)[first_station + 23][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 25
     float2 weight_24;
 
     if (first_station + 24 < NR_STATIONS)
-      weight_24 = (*weights)[first_station + 24][channel][tab];
+      weight_24 = (*weights)[first_station + 24][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 26
     float2 weight_25;
 
     if (first_station + 25 < NR_STATIONS)
-      weight_25 = (*weights)[first_station + 25][channel][tab];
+      weight_25 = (*weights)[first_station + 25][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 27
     float2 weight_26;
 
     if (first_station + 26 < NR_STATIONS)
-      weight_26 = (*weights)[first_station + 26][channel][tab];
+      weight_26 = (*weights)[first_station + 26][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 28
     float2 weight_27;
 
     if (first_station + 27 < NR_STATIONS)
-      weight_27 = (*weights)[first_station + 27][channel][tab];
+      weight_27 = (*weights)[first_station + 27][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 29
     float2 weight_28;
 
     if (first_station + 28 < NR_STATIONS)
-      weight_28 = (*weights)[first_station + 28][channel][tab];
+      weight_28 = (*weights)[first_station + 28][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 30
     float2 weight_29;
 
     if (first_station + 29 < NR_STATIONS)
-      weight_29 = (*weights)[first_station + 29][channel][tab];
+      weight_29 = (*weights)[first_station + 29][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 31
     float2 weight_30;
 
     if (first_station + 30 < NR_STATIONS)
-      weight_30 = (*weights)[first_station + 30][channel][tab];
+      weight_30 = (*weights)[first_station + 30][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
 #if NR_STATIONS_PER_PASS >= 32
     float2 weight_31;
 
     if (first_station + 31 < NR_STATIONS)
-      weight_31 = (*weights)[first_station + 31][channel][tab];
+      weight_31 = (*weights)[first_station + 31][channel][tab] TIMES_THE_WEIGHT_CORRECTION;
 #endif
 
     // Loop over all the samples in time
