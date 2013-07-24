@@ -59,6 +59,12 @@ class DataProcessorDefault(DataProcessorBase):
         self._update_image_configuration(coordinates, shape)
         return self._response()
 
+    def _response(self):
+        if self._cached_response is None:
+            self._cached_response = self._processor.response(self._coordinates, \
+                self._shape)
+        return self._cached_response
+        
     def grid(self, coordinates, shape, normalization = Normalization.FLAT_NOISE):
 
         self._update_image_configuration(coordinates, shape)
@@ -90,7 +96,7 @@ class DataProcessorDefault(DataProcessorBase):
         self._update_image_configuration(coordinates, model.shape)
 
         model = self.normalize(coordinates, model, normalization_model, \
-            Normalization.FLAT_NOISE)
+            Normalization.FLAT_GAIN)
 
         # Compute the residual image.
         residual, weight = self._processor.residual(self._coordinates, model, \
@@ -202,8 +208,3 @@ class DataProcessorDefault(DataProcessorBase):
                 self._shape)
         return self._cached_density
 
-    def _response(self):
-        if self._cached_response is None:
-            self._cached_response = self._processor.response(self._coordinates, \
-                self._shape)
-        return self._cached_response

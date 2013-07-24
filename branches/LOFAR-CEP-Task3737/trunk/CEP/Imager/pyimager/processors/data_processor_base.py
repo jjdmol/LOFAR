@@ -66,39 +66,3 @@ class DataProcessorBase:
         """
         """
 
-    def normalize(self, coordinates, image, normalization_in, \
-        normalization_out):
-        """
-        """
-
-        # Identity.
-        if normalization_in == normalization_out:
-            return numpy.copy(image)
-
-        # NONE -> FLAT_NOISE or FLAT_NOISE -> FLAT_GAIN.
-        if (normalization_in == Normalization.NONE \
-            and normalization_out == Normalization.FLAT_NOISE) \
-            or (normalization_in == Normalization.FLAT_NOISE \
-            and normalization_out == Normalization.FLAT_GAIN):
-
-            return image / numpy.sqrt(self._response())
-
-        # NONE -> FLAT_GAIN.
-        if (normalization_in == Normalization.NONE \
-            and normalization_out == Normalization.FLAT_GAIN):
-
-            return image / self._response()
-
-        # FLAT_NOISE -> NONE or FLAT_GAIN -> FLAT_NOISE.
-        if (normalization_in == Normalization.FLAT_NOISE \
-            and normalization_out == Normalization.NONE) \
-            or (normalization_in == Normalization.FLAT_GAIN \
-            and normalization_out == Normalization.FLAT_NOISE):
-
-            return image * numpy.sqrt(self._response())
-
-        # FLAT_GAIN -> NONE.
-        assert(normalization_in == Normalization.FLAT_GAIN \
-            and normalization_out == Normalization.NONE)
-        return image * self._response()
-

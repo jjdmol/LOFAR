@@ -56,11 +56,11 @@ def create_data_processor_low_level(measurement, options):
     
     if isinstance(measurement, dict) :
         import parallel
-        return parallel.create_data_processor_low_level(name, measurement, options)
+        return parallel.create_data_processor_low_level(measurement, options)
 
     if isinstance(measurement, list) :
         import serial
-        return serial.create_data_processor_low_level(name, measurement, options)
+        return serial.create_data_processor_low_level(measurement, options)
     
     try:
         # The call to __import__ fails when not passing the global variables.
