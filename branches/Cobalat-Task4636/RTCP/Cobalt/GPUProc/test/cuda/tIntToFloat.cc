@@ -47,7 +47,7 @@ CompileDefinitions compileDefs;
 gpu::Stream *stream;
 
 // default compile definitions
-const unsigned NR_STATIONS = 1;//2;
+const unsigned NR_STATIONS = 2;
 const unsigned NR_CHANNELS = 2;//64;
 const unsigned NR_SAMPLES_PER_CHANNEL = 16;
 const unsigned NR_SAMPLES_PER_SUBBAND = NR_SAMPLES_PER_CHANNEL * NR_CHANNELS;
@@ -162,13 +162,14 @@ void checkTransposedArray(const float *p, size_t len)
     // Don't bother with template specialization just for this.
     if (sizeof(T) == 1) // 8 bit mode
     {
+      const unsigned scale = 256;
       if (expectedVal == numeric_limits<T>::min())
       {
-        CHECK_CLOSE((float)(256 * (expectedVal+1)), v.real(), 0.00000001);
+        CHECK_CLOSE((float)(scale * (expectedVal+1)), v.real(), 0.00000001);
       } else {
-        CHECK_CLOSE((float)(256 * expectedVal), v.real(), 0.00000001);
+        CHECK_CLOSE((float)(scale * expectedVal), v.real(), 0.00000001);
       }
-      CHECK_CLOSE((float)(256 * (expectedVal+1)), v.imag(), 0.00000001);
+      CHECK_CLOSE((float)(scale * (expectedVal+1)), v.imag(), 0.00000001);
     } else { // 16 bit mode
       CHECK_CLOSE((float)expectedVal,     v.real(), 0.00000001);
       CHECK_CLOSE((float)(expectedVal+1), v.imag(), 0.00000001);
