@@ -48,7 +48,7 @@ gpu::Stream *stream;
 
 // default compile definitions
 const unsigned NR_STATIONS = 2;
-const unsigned NR_CHANNELS = 2;//64;
+const unsigned NR_CHANNELS = 64;
 const unsigned NR_SAMPLES_PER_CHANNEL = 16;
 const unsigned NR_SAMPLES_PER_SUBBAND = NR_SAMPLES_PER_CHANNEL * NR_CHANNELS;
 const unsigned NR_BITS_PER_SAMPLE = 8;
