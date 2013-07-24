@@ -46,7 +46,7 @@
 #include <cuda_runtime.h>
 #include <cuda.h>
 
-#include "complex.cuh"
+#include "complex.cuh" // TODO: get rid of this: causes warning that is probably not a bug, but does point to a lot of unneeded inits in our __shared__ decl
 #include "IntToFloat.cuh"
 
 #if NR_CHANNELS == 1
@@ -122,9 +122,11 @@ extern "C" {
 {
   OutputDataType outputData = (OutputDataType) correctedDataPtr;
   InputDataType inputData = (InputDataType) filteredDataPtr;
+#if defined DELAY_COMPENSATION
   DelaysType delaysAtBegin = (DelaysType) delaysAtBeginPtr;
   DelaysType delaysAfterEnd = (DelaysType) delaysAfterEndPtr;
   PhaseOffsetsType phaseOffsets = (PhaseOffsetsType) phaseOffsetsPtr;
+#endif
 #if NR_CHANNELS > 1
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
 
@@ -140,7 +142,7 @@ extern "C" {
 #else
   float frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS);
 #endif
-  float2 delayAtBegin = make_float2((*delaysAtBegin)[beam][station][0], (*delaysAtBegin)[beam][station][1]);
+  float2 delayAtBegin  = make_float2((*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]);
   float2 delayAfterEnd = make_float2((*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]);
 
 
