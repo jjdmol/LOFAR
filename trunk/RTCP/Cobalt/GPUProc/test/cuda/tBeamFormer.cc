@@ -94,7 +94,8 @@ HostMemory runTest(Context ctx,
                    float * weightsData,
                    float * bandPassCorrectedData,
                    float * complexVoltagesData,
-                   string function)
+                   string function,
+                   float weight_correction = 1.0f)
 {
   string kernelFile = "BeamFormer.cu";
 
@@ -114,6 +115,7 @@ HostMemory runTest(Context ctx,
   definitions["NR_TABS"] = lexical_cast<string>(NR_TABS);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
+  definitions["WEIGHT_CORRECTION"] = lexical_cast<string>(weight_correction);
   
 
   vector<Device> devices(1, ctx.getDevice());
@@ -344,6 +346,41 @@ int main()
       exit_with_print(outputOnHostPtr);
     } 
   }
+    // ***********************************************************
+  // Test 5: all inputs 1 (including imag)
+  // with only the real weight set to 1.
+  // The global weight correction is set to 2.01 so
+  // all outputs should be 4 * 2.01 = 8.01
+  cout << "test 5" << endl;
+  for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
+  {
+    complexVoltagesData[idx * 2] = 42.0f;
+    complexVoltagesData[idx * 2 + 1] = 42.0f;
+  }
+
+  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
+  {
+    bandPassCorrectedData[idx * 2] = 1.0f;
+    bandPassCorrectedData[idx * 2+ 1] = 1.0f;  }
+
+  for (unsigned idx = 0; idx < lengthWeightsData/2; ++idx)
+  {
+    weightsData[idx * 2] = 1.0f;
+    weightsData[idx * 2 + 1] = 0.0f;
+  }
+
+  HostMemory outputOnHost5 = runTest(ctx, cuStream, weightsData,
+    bandPassCorrectedData,complexVoltagesData, function, 2.01f);
+
+  // Validate the returned data array
+  outputOnHostPtr = outputOnHost5.get<float>();
+  for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
+    if (outputOnHostPtr[idx] != NR_STATIONS * 1.0f * 2.01f)
+    {
+      cerr << "all the data returned by the kernel should be (" << NR_STATIONS << ", " << NR_STATIONS << ")" ;
+      exit_with_print(outputOnHostPtr);
+    }
+    
 
   delete [] complexVoltagesData;
   delete [] bandPassCorrectedData;
