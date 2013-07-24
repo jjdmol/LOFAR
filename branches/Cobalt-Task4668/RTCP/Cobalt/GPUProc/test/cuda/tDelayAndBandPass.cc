@@ -96,6 +96,7 @@ float * runTest(float bandPassFactor,
   definitions["BANDPASS_CORRECTION"] = "1";
   if (delayCompensation)
     definitions["DELAY_COMPENSATION"] = "1";
+  definitions["DO_TRANSPOSE"] = ""; // for correlating (and >1 channel)
   string ptx = createPTX(kernelPath, definitions, flags, devices);
   gpu::Module module(createModule(ctx, kernelPath, ptx));
   Function  hKernel(module, "applyDelaysAndCorrectBandPass");  // c function this no argument overloading
