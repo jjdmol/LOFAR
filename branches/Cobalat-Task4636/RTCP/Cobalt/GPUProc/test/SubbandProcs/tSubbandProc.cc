@@ -1,4 +1,4 @@
-//# tCorrelatorWorkQueue.cc
+//# tSubbandProc.cc
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <GPUProc/WorkQueues/WorkQueue.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 
 #include <UnitTest++.h>
 #include <iostream>
@@ -35,9 +35,9 @@ using namespace LOFAR::Cobalt;
 
 TEST(log2)
 {
-  CHECK_EQUAL(6u, WorkQueue::Flagger::log2(64));
-  CHECK_EQUAL(7u, WorkQueue::Flagger::log2(128));
-  CHECK_EQUAL(0u, WorkQueue::Flagger::log2(1));
+  CHECK_EQUAL(6u, SubbandProc::Flagger::log2(64));
+  CHECK_EQUAL(7u, SubbandProc::Flagger::log2(128));
+  CHECK_EQUAL(0u, SubbandProc::Flagger::log2(1));
 
   //cant take 2log of zero: raise exception
   //CHECK_THROW(get2LogOfNrChannels(0), LOFAR::AssertError);
@@ -72,7 +72,7 @@ TEST(convertFlagsToChannelFlags)
           boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
 
   // ****** perform the translation
-  WorkQueue::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
+  SubbandProc::Flagger::convertFlagsToChannelFlags(parset, inputFlags, flagsPerChanel);
   // ******
 
   //validate the corner cases
@@ -92,7 +92,7 @@ TEST(convertFlagsToChannelFlags)
 
 int main()
 {
-  INIT_LOGGER("tWorkQueue");
+  INIT_LOGGER("tSubbandProc");
   return UnitTest::RunAllTests() > 0;
 }
 

@@ -26,7 +26,7 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -48,25 +48,24 @@ int main() {
   gpu::Stream stream(ctx);
 
   Parset ps("tDelayAndBandPassKernel.in_parset");
-  string srcFilename("DelayAndBandPass.cu");
-
-  // Get default parameters for the compiler
-  CompileFlags flags = defaultCompileFlags();
-  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
+  KernelFactory<DelayAndBandPassKernel> factory(ps);
 
   gpu::DeviceMemory 
-    inputData(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA)),
-    filteredData(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::OUTPUT_DATA)),
-    delaysAtBegin(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS)),
-    delaysAfterEnd(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS)),
-    phaseOffsets(ctx, DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS));
+    inputData(ctx, factory.bufferSize(DelayAndBandPassKernel::INPUT_DATA)),
+    filteredData(ctx, factory.bufferSize(DelayAndBandPassKernel::OUTPUT_DATA)),
+    delaysAtBegin(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
+    delaysAfterEnd(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
+    phaseOffsets(ctx, factory.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS)),
+    bandPassCorrectionWeights(ctx, factory.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS));
 
-  DelayAndBandPassKernel kernel(ps, ctx, inputData, filteredData, 
-                                delaysAtBegin, delaysAfterEnd, phaseOffsets, 
-                                stream);
+  DelayAndBandPassKernel::Buffers buffers(inputData, filteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights);
 
-  unsigned subband = 0;
-  kernel.enqueue(stream, subband);
+  auto_ptr<DelayAndBandPassKernel> kernel(factory.create(stream, buffers));
+
+  size_t subbandIdx = 0;
+  float centralFrequency = ps.settings.subbands[subbandIdx].centralFrequency;
+  size_t SAP = ps.settings.subbands[subbandIdx].SAP;
+  kernel->enqueue(stream, centralFrequency, SAP);
   stream.synchronize();
 
   return 0;

@@ -53,7 +53,7 @@ int main() {
 
   // Get default parameters for the compiler
   CompileFlags flags = defaultCompileFlags();
-  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
+  CompileDefinitions definitions = defaultCompileDefinitions();
 
   string ptx = createPTX(srcFilename, definitions, flags, devices);
   gpu::Module module(createModule(ctx, srcFilename, ptx));

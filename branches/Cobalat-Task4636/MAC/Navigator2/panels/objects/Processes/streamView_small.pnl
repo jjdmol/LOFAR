@@ -57,7 +57,7 @@ void streamCB(dyn_string dps, dyn_float values)
   
   int count=0;
   string color = \"Lofar_operational\";
-  
+  dyn_string toollist;
   for (int i = 1; i<= dynlen(values); i++) {
     float val = values[i];
     string dp = dps[i];
@@ -67,12 +67,17 @@ void streamCB(dyn_string dps, dyn_float values)
       int nr  = substr(dp,strpos(dp,\"PSIONode\")+8,2);
       string IONodeDP = navFunct_IONode2DPName(nr);
       dpGet(IONodeDP+\".usedStation\",station);
-      toolTipText+=station+\"</t> :\"+val+\"<br>\";
+      string aS=station+\"</t> :\"+val+\"<br>\";
+      dynAppend(toollist,aS);
       count++;
       if (val > 10.0) {
         color = \"Lofar_broken\";
       }
     }
+  }
+  dynSort(toollist);
+  for (int i=1; i<= dynlen(toollist);i++) {
+    toolTipText += toollist[i];
   }
   if (count > dynlen(values)/10) {
     color = \"Lofar_broken\";

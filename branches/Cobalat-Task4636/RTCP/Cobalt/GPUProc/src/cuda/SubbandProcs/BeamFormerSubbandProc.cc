@@ -1,4 +1,4 @@
-//# BeamFormerWorkQueue.cc
+//# BeamFormerSubbandProc.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "BeamFormerWorkQueue.h"
+#include "BeamFormerSubbandProc.h"
 
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
@@ -34,10 +34,10 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    BeamFormerWorkQueue::BeamFormerWorkQueue(const Parset &parset,
+    BeamFormerSubbandProc::BeamFormerSubbandProc(const Parset &parset,
       gpu::Context &context)
     :
-      WorkQueue( parset, context ),
+      SubbandProc( parset, context ),
       prevBlock(-1),
       prevSAP(-1),
 
@@ -45,13 +45,11 @@ namespace LOFAR
       // FIR, which the beam former does in a later stage!
       //
       // NOTE: Sizes are probably completely wrong.
-      devInput(IntToFloatKernel::bufferSize(ps, IntToFloatKernel::INPUT_DATA),
-               DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS),
-               DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
+      devInput(1,//IntToFloatKernel::bufferSize(ps, IntToFloatKernel::INPUT_DATA),
+               1,//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS),
+               1,//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
-
-      devFilteredData(context, IntToFloatKernel::bufferSize(ps, IntToFloatKernel::OUTPUT_DATA)),
-      intToFloatKernel(ps, context, devFilteredData, devInput.inputSamples)
+      devFilteredData(context, 1)//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA))
 #if 0
       firFilterKernel(ps, programs.firFilterProgram,
                       devFilteredData, devInput.inputSamples, devFIRweights),
@@ -106,7 +104,7 @@ namespace LOFAR
     }
 
 
-    void BeamFormerWorkQueue::processSubband(WorkQueueInputData &input, StreamableData &_output)
+    void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input, StreamableData &_output)
     {
       (void)_output;
 
@@ -137,7 +135,7 @@ namespace LOFAR
         }
       }
 
-      intToFloatKernel.enqueue(queue);
+      // intToFloatKernel.enqueue(queue);
       // fftKernel.enqueue();
       // delayAndBandpassKernel.enqueue()
       // beamFormerKernel.enqueue()
@@ -180,7 +178,7 @@ namespace LOFAR
 #endif
     }
 
-    void BeamFormerWorkQueue::postprocessSubband(StreamableData &_output)
+    void BeamFormerSubbandProc::postprocessSubband(StreamableData &_output)
     {
       (void)_output;
     }

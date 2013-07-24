@@ -85,7 +85,7 @@ void exit_with_print(float *outputOnHostPtr)
     cout << endl;
   }
   
-  exit(-1);
+  exit(1);
 }
 
 

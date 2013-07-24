@@ -1,4 +1,4 @@
-//# CorrelatorWorkQueue.cc
+//# CorrelatorSubbandProc.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "CorrelatorWorkQueue.h"
+#include "CorrelatorSubbandProc.h"
 
 #include <cstring>
 #include <algorithm>
@@ -29,7 +29,6 @@
 
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/BandPass.h>
-#include <GPUProc/Pipelines/CorrelatorPipelinePrograms.h>
 
 namespace LOFAR
 {
@@ -39,78 +38,57 @@ namespace LOFAR
      *
      *              > 1 channel/subband                  1 channel/subband
      *            ----------------------               ---------------------
-     * [input]  -> devInput.inputSamples            -> devInput.inputSamples
+     * [input]  -> devInput.inputSamples            -> devFilteredData
      *             -> firFilterKernel
      *          -> devFilteredData
      *             -> fftKernel
      *          -> devFilteredData
      *             -> delayAndBandPassKernel           -> delayAndBandPassKernel
-     *          -> devInput.inputSamples            -> devFilteredData
+     *          -> devInput.inputSamples            -> devInput.inputSamples
      *             -> correlatorKernel                 -> correlatorKernel
-     *          -> devFilteredData                  -> devInput.inputSamples
+     *          -> devFilteredData                  -> devFilteredData
      * [output] <- = visibilities                   <- = visibilities
      *
      * For #channels/subband == 1, skip the FIR and FFT kernels,
      * and provide the input in devFilteredData.
      */
-    CorrelatorWorkQueue::CorrelatorWorkQueue(const Parset &parset,
-      gpu::Context &context, CorrelatorPipelinePrograms &programs)
+    CorrelatorSubbandProc::CorrelatorSubbandProc(const Parset &parset,
+      gpu::Context &context, CorrelatorFactories &factories)
     :
-      WorkQueue( parset, context ),
+      SubbandProc( parset, context ),
       prevBlock(-1),
       prevSAP(-1),
-      devInput(ps.nrChannelsPerSubband() == 1
-               ? std::max(DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA),
-                          CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA))
-               : std::max(FIR_FilterKernel::bufferSize(ps, FIR_FilterKernel::INPUT_DATA),
-                          CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA)),
-               DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS),
-               DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
+      devInput(std::max(ps.nrChannelsPerSubband() == 1 ? 0UL : factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA),
+                        factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)),
+               factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::DELAYS),
+               factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
-      // devInput(ps.nrBeams(), ps.nrStations(), NR_POLARIZATIONS,
-      //          ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
-      //          ps.nrBytesPerComplexSample(), context,
+      devFilteredData(context,
+                      std::max(factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
+                               factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))),
 
-      //          // reserve enough space in inputSamples for the output of the delayAndBandPassKernel.
-      //          // TODO: if ps.nrChannelsPerSubband() == 1, we only need this space, not the one above.
-      //          ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>)
-      //         ),
+      // FIR filter
+      devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
+      firFilterBuffers(devInput.inputSamples, devFilteredData, devFilterWeights),
+      firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
-      devFilteredData(context, 
-                      ps.nrChannelsPerSubband() == 1
-                      ? CorrelatorKernel::bufferSize(ps, CorrelatorKernel::INPUT_DATA)
-                      : std::max(DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA),
-                                 CorrelatorKernel::bufferSize(ps, CorrelatorKernel::OUTPUT_DATA))),
-      // devFilteredData(context, std::max(
-      //                   ps.nrChannelsPerSubband() == 1 ?
-      //                     // reserve enough space for the input of the delayAndBandPass kernel,
-      //                     ps.nrSamplesPerSubband() * ps.nrStations() * NR_POLARIZATIONS * ps.nrBytesPerComplexSample() // from WorkQueueInputData::DeviceBuffers(...)
-      //                   : // or, reserve enough space for the output of the FIR filter kernel,
-      //                     ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-      //                   // and the correlator kernel.
-      //                   ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>)
-      //                 )),
-
-      firFilterKernel(ps, programs.firFilterProgram,
-                      devFilteredData, devInput.inputSamples, queue),
+      // FFT
       fftKernel(ps, context, devFilteredData),
-      // delayAndBandPassKernel(ps, programs.delayAndBandPassProgram,
-      delayAndBandPassKernel(ps, context,
-                             devInput.inputSamples,
-                             devFilteredData,
-                             devInput.delaysAtBegin,
-                             devInput.delaysAfterEnd,
-                             devInput.phaseOffsets,
-                             queue),
-#if defined USE_NEW_CORRELATOR
-      correlateTriangleKernel(ps, programs.correlatorProgram,
-                              devFilteredData, devInput.inputSamples),
-      correlateRectangleKernel(ps, programs.correlatorProgram, 
-                               devFilteredData, devInput.inputSamples)
-#else
-      correlatorKernel(ps, programs.correlatorProgram, 
-                       devFilteredData, devInput.inputSamples)
-#endif
+
+      // Delay and Bandpass
+      devBandPassCorrectionWeights(context, factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
+      delayAndBandPassBuffers(devFilteredData,
+                              devInput.inputSamples,
+                              devInput.delaysAtBegin, devInput.delaysAfterEnd,
+                              devInput.phaseOffsets,
+                              devBandPassCorrectionWeights),
+      delayAndBandPassKernel(factories.delayAndBandPass.create(queue, delayAndBandPassBuffers)),
+
+      // Correlator
+      //correlatorBuffers(devInput.inputSamples, devFilteredData),
+      correlatorBuffers(devInput.inputSamples,
+                        devFilteredData),
+      correlatorKernel(factories.correlator.create(queue, correlatorBuffers))
     {
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
@@ -122,16 +100,10 @@ namespace LOFAR
       }
 
       // create all the counters
-#if defined USE_NEW_CORRELATOR
-      addCounter("compute - cor.triangle");
-      addCounter("compute - cor.rectangle");
-#else
-      addCounter("compute - correlator");
-#endif
-
       addCounter("compute - FIR");
-      addCounter("compute - delay/bp");
       addCounter("compute - FFT");
+      addCounter("compute - delay/bp");
+      addCounter("compute - correlator");
       addCounter("input - samples");
       addCounter("output - visibilities");
 
@@ -149,7 +121,7 @@ namespace LOFAR
       addTimer("GPU - wait");
     }
 
-    void CorrelatorWorkQueue::Flagger::propagateFlags(
+    void CorrelatorSubbandProc::Flagger::propagateFlags(
       Parset const &parset,
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
       CorrelatedData &output)
@@ -187,7 +159,7 @@ namespace LOFAR
       }
     }
 
-    template<typename T> void CorrelatorWorkQueue::Flagger::calcWeights(
+    template<typename T> void CorrelatorSubbandProc::Flagger::calcWeights(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output)
@@ -229,20 +201,20 @@ namespace LOFAR
     }
 
     // Instantiate required templates
-    template void CorrelatorWorkQueue::Flagger::calcWeights<uint32_t>(
+    template void CorrelatorSubbandProc::Flagger::calcWeights<uint32_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::Flagger::calcWeights<uint16_t>(
+    template void CorrelatorSubbandProc::Flagger::calcWeights<uint16_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::Flagger::calcWeights<uint8_t>(
+    template void CorrelatorSubbandProc::Flagger::calcWeights<uint8_t>(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output);
 
-    void CorrelatorWorkQueue::Flagger::applyWeight(unsigned baseline, 
+    void CorrelatorSubbandProc::Flagger::applyWeight(unsigned baseline, 
       unsigned channel, float weight, CorrelatedData &output)
     {
       for(unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; ++pol1)
@@ -250,7 +222,7 @@ namespace LOFAR
           output.visibilities[baseline][channel][pol1][pol2] *= weight;
     }
 
-    template<typename T> void CorrelatorWorkQueue::Flagger::applyWeights(Parset const &parset,
+    template<typename T> void CorrelatorSubbandProc::Flagger::applyWeights(Parset const &parset,
       CorrelatedData &output)
     {
       for (unsigned bl = 0; bl < output.itsNrBaselines; ++bl)
@@ -273,15 +245,15 @@ namespace LOFAR
     }
 
     // Instantiate required templates
-    template void CorrelatorWorkQueue::Flagger::applyWeights<uint32_t>(Parset const &parset,
+    template void CorrelatorSubbandProc::Flagger::applyWeights<uint32_t>(Parset const &parset,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::Flagger::applyWeights<uint16_t>(Parset const &parset,
+    template void CorrelatorSubbandProc::Flagger::applyWeights<uint16_t>(Parset const &parset,
       CorrelatedData &output);
-    template void CorrelatorWorkQueue::Flagger::applyWeights<uint8_t>(Parset const &parset,
+    template void CorrelatorSubbandProc::Flagger::applyWeights<uint8_t>(Parset const &parset,
       CorrelatedData &output);
 
 
-    void CorrelatorWorkQueue::processSubband(WorkQueueInputData &input, StreamableData &_output)
+    void CorrelatorSubbandProc::processSubband(SubbandProcInputData &input, StreamableData &_output)
     {
       CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
 
@@ -325,20 +297,17 @@ namespace LOFAR
       }
 
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel.enqueue(queue/*, *counters["compute - FIR"]*/);
+        firFilterKernel->enqueue(queue/*, *counters["compute - FIR"]*/);
         fftKernel.enqueue(queue/*, *counters["compute - FFT"]*/);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare),
       // run that kernel, as it also reorders the data for the correlator kernel.
-      delayAndBandPassKernel.enqueue(queue/*, *counters["compute - delay/bp"]*/, subband);
+      delayAndBandPassKernel->enqueue(queue/*, *counters["compute - delay/bp"]*/,
+        ps.settings.subbands[subband].centralFrequency,
+        ps.settings.subbands[subband].SAP);
 
-#if defined USE_NEW_CORRELATOR
-      correlateTriangleKernel.enqueue(queue/*, *counters["compute - cor.triangle"]*/);
-      correlateRectangleKernel.enqueue(queue/*, *counters["compute - cor.rectangle"]*/);
-#else
-      correlatorKernel.enqueue(queue/*, *counters["compute - correlator"]*/);
-#endif
+      correlatorKernel->enqueue(queue/*, *counters["compute - correlator"]*/);
 
       //queue.flush(); // CUDA doesn't have/need flush() (OpenCL)
 
@@ -373,7 +342,7 @@ namespace LOFAR
     }
 
 
-    void CorrelatorWorkQueue::postprocessSubband(StreamableData &_output)
+    void CorrelatorSubbandProc::postprocessSubband(StreamableData &_output)
     {
       CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
 

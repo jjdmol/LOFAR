@@ -1,4 +1,4 @@
-//# tCorrelatorWorkQueue.cc
+//# tCorrelatorSubbandProc.cc
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 
 #include <UnitTest++.h>
 #include <iostream>
@@ -69,10 +69,10 @@ TEST(propagateFlags)
 
   // *********************************************************************************************
   //propageFlags: exercise the functionality
-  CorrelatorWorkQueue::Flagger::propagateFlags(parset, inputFlags, output);
+  CorrelatorSubbandProc::Flagger::propagateFlags(parset, inputFlags, output);
 
   // now perform weighting of the data based on the number of valid samples
-  CorrelatorWorkQueue::Flagger::applyWeights<uint16_t>(parset, output);  
+  CorrelatorSubbandProc::Flagger::applyWeights<uint16_t>(parset, output);  
   // *********************************************************************************************
 
   // Now validate the functionality:
@@ -162,7 +162,7 @@ TEST(calcWeights4Channels)
   flagsPerChanel[1][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorWorkQueue::Flagger::calcWeights<uint16_t>(parset, flagsPerChanel, output);
+  CorrelatorSubbandProc::Flagger::calcWeights<uint16_t>(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
 
@@ -202,7 +202,7 @@ TEST(calcWeights1Channels)
   flagsPerChanel[0][1].include(111,120);//E. second station flags
   
   //propageFlags
-  CorrelatorWorkQueue::Flagger::calcWeights<uint16_t>(parset, flagsPerChanel, output);
+  CorrelatorSubbandProc::Flagger::calcWeights<uint16_t>(parset, flagsPerChanel, output);
   
   // Now check that the flags are correctly set in the ouput object
   // channel is 1 so no time resolution loss!!
@@ -240,7 +240,7 @@ TEST(applyWeights)
   output.setNrValidSamples(0,1,n_valid_samples); //baseline 0, channel 1
   output.setNrValidSamples(1,1,256); //baseline 1, channel 1
   output.setNrValidSamples(2,1,0); //baseline 0, channel 1
-  CorrelatorWorkQueue::Flagger::applyWeights<uint16_t>(parset, output);
+  CorrelatorSubbandProc::Flagger::applyWeights<uint16_t>(parset, output);
 
   // 4 channels: therefore the chanel zero should be zero
   CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[0][0][0][0]);
@@ -286,7 +286,7 @@ TEST(applyWeight)
            output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2] = std::complex<float>(1,0);
         
   //  multiply all polarization in sb 0 channel 0 with 0,5
-  CorrelatorWorkQueue::Flagger::applyWeight(0,0,0.5,output);
+  CorrelatorSubbandProc::Flagger::applyWeight(0,0,0.5,output);
 
   //sb 0 should be (0.5, 0)
   CHECK_EQUAL(std::complex<float>(0.5,0),  
@@ -299,7 +299,7 @@ TEST(applyWeight)
 
 int main()
 {
-  INIT_LOGGER("tCorrelatorWorkQueue");
+  INIT_LOGGER("tCorrelatorSubbandProc");
   return UnitTest::RunAllTests() > 0;
 }
 

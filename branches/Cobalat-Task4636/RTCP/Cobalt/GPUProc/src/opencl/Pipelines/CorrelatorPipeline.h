@@ -27,7 +27,7 @@
 #include <GPUProc/gpu_incl.h>
 #include <GPUProc/BestEffortQueue.h>
 #include <GPUProc/FilterBank.h>
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include "Pipeline.h"
 #include "CorrelatorPipelinePrograms.h"
 
@@ -35,11 +35,11 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    // Correlator pipeline, connect input, correlator WorkQueues and output in parallel (OpenMP).
+    // Correlator pipeline, connect input, correlator SubbandProcs and output in parallel (OpenMP).
     // Connect all parts of the pipeline together: set up connections with the input stream
-    // each in a seperate thread. Start two WorkQueues for each GPU in the system.
+    // each in a seperate thread. Start two SubbandProcs for each GPU in the system.
     // These process independently, but can overlap each others compute with host/device I/O.
-    // The WorkQueues are then filled with data from the input stream and started.
+    // The SubbandProcs are then filled with data from the input stream and started.
     // After all data is collected the output is written, again in parallel.
     // This class contains most CPU side parallelism.
     // It also contains two 'data' members that are shared between queues.
@@ -52,13 +52,13 @@ namespace LOFAR
       void        doWork();
 
       // for each block, read all subbands from all stations, and divide the work over the workQueues
-      template<typename SampleT> void receiveInput( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
+      template<typename SampleT> void receiveInput( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorSubbandProc> > &workQueues );
 
       // process subbands on the GPU
-      void        processSubbands(CorrelatorWorkQueue &workQueue);
+      void        processSubbands(CorrelatorSubbandProc &workQueue);
 
       // postprocess subbands on the CPU
-      void        postprocessSubbands(CorrelatorWorkQueue &workQueue);
+      void        postprocessSubbands(CorrelatorSubbandProc &workQueue);
 
       // send subbands to Storage
       void        writeSubband(unsigned subband);
