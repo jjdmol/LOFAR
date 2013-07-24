@@ -1,4 +1,4 @@
-//# WorkQueue.h
+//# SubbandProc.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -34,10 +34,10 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class WorkQueue
+    class SubbandProc
     {
     public:
-      WorkQueue(cl::Context &context, cl::Device &device, unsigned gpuNumber, const Parset &ps);
+      SubbandProc(cl::Context &context, cl::Device &device, unsigned gpuNumber, const Parset &ps);
 
       const unsigned gpu;
       cl::Device &device;

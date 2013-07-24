@@ -35,7 +35,7 @@ endif()
 add_subdirectory(Kernels)
 add_subdirectory(Pipelines)
 add_subdirectory(Storage)
-add_subdirectory(WorkQueues)
+add_subdirectory(SubbandProcs)
 
 if(USE_CUDA)
   add_subdirectory(cuda)

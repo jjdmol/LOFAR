@@ -1,4 +1,4 @@
-//# WorkQueue.h
+//# CorrelatorSubbandProc.h
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -22,17 +22,17 @@
 // \file
 // Include the right GPU API include with our options.
 
-#ifndef LOFAR_GPUPROC_WORK_QUEUE_H
-#define LOFAR_GPUPROC_WORK_QUEUE_H
+#ifndef LOFAR_GPUPROC_CORRELATOR_SUBBAND_PROC_H
+#define LOFAR_GPUPROC_CORRELATOR_SUBBAND_PROC_H
 
 #if defined (USE_CUDA) && defined (USE_OPENCL)
 # error "Either CUDA or OpenCL must be enabled, not both"
 #endif
 
 #if defined (USE_CUDA)
-# include <GPUProc/cuda/WorkQueues/WorkQueue.h>
+# include <GPUProc/cuda/SubbandProcs/CorrelatorSubbandProc.h>
 #elif defined (USE_OPENCL)
-# include <GPUProc/opencl/WorkQueues/WorkQueue.h>
+# include <GPUProc/opencl/SubbandProcs/CorrelatorSubbandProc.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

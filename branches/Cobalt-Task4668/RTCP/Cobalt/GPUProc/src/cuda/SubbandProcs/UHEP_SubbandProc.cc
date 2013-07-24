@@ -1,4 +1,4 @@
-//# UHEP_WorkQueue.cc
+//# UHEP_SubbandProc.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "UHEP_WorkQueue.h"
+#include "UHEP_SubbandProc.h"
 
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
@@ -36,15 +36,15 @@
 #include <GPUProc/Kernels/UHEP_TriggerKernel.h>
 #include <GPUProc/Kernels/UHEP_BeamFormerKernel.h>
 
-#include "WorkQueue.h"
+#include "SubbandProc.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    UHEP_WorkQueue::UHEP_WorkQueue(UHEP_Pipeline &pipeline, unsigned gpuNumber)
+    UHEP_SubbandProc::UHEP_SubbandProc(UHEP_Pipeline &pipeline, unsigned gpuNumber)
       :
-      WorkQueue( pipeline.context, pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
+      SubbandProc( pipeline.context, pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
       pipeline(pipeline),
       hostInputSamples(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY),
       hostBeamFormerWeights(boost::extents[ps.nrStations()][ps.nrSubbands()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY),
@@ -76,7 +76,7 @@ namespace LOFAR
     }
 
 
-    void UHEP_WorkQueue::doWork(const float * /*delaysAtBegin*/, const float * /*delaysAfterEnd*/, const float * /*phaseOffsets*/)
+    void UHEP_SubbandProc::doWork(const float * /*delaysAtBegin*/, const float * /*delaysAfterEnd*/, const float * /*phaseOffsets*/)
     {
       UHEP_BeamFormerKernel beamFormer(ps, pipeline.beamFormerProgram, devComplexVoltages, devInputSamples, devBeamFormerWeights);
       UHEP_TransposeKernel transpose(ps, pipeline.transposeProgram, devFFTedData, devComplexVoltages, devReverseSubbandMapping);

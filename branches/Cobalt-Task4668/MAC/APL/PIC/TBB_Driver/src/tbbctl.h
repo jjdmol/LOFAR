@@ -26,7 +26,7 @@
 #define TBBCTL_H_
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
-#include <APL/RTCCommon/NsTimestamp.h>
+#include <Common/NsTimestamp.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -526,9 +526,9 @@ public:
 	*/
 private:
 	uint32 itsStage;
-	RTC::NsTimestamp itsTime;
-    RTC::NsTimestamp itsTimeBefore;
-	RTC::NsTimestamp itsTimeAfter;
+	NsTimestamp itsTime;
+    NsTimestamp itsTimeBefore;
+	NsTimestamp itsTimeAfter;
 	/*
 	uint32 itsSecondsTime;
 	uint32 itsSampleNr;
@@ -554,9 +554,9 @@ private:
 	int itsStage;
 	int itsRcu;
 	uint32 itsPages;
-	RTC::NsTimestamp itsTime;
-    RTC::NsTimestamp itsTimeBefore;
-	RTC::NsTimestamp itsTimeAfter;
+	NsTimestamp itsTime;
+    NsTimestamp itsTimeBefore;
+	NsTimestamp itsTimeAfter;
 	/*
 	uint32 itsSecondsTime;
 	uint32 itsSampleNr;

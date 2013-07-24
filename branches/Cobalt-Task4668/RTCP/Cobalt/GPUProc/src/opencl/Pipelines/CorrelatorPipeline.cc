@@ -36,8 +36,8 @@
 #include <InputProc/Transpose/MPIReceiveStations.h>
 
 #include <GPUProc/OpenMP_Lock.h>
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
-#include <GPUProc/WorkQueues/WorkQueue.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 
 using namespace std;
 
@@ -70,11 +70,11 @@ namespace LOFAR
 
     void CorrelatorPipeline::doWork()
     {
-      size_t nrWorkQueues = (profiling ? 1 : 2) * nrGPUs;
-      vector< SmartPtr<CorrelatorWorkQueue> > workQueues(nrWorkQueues);
+      size_t nrSubbandProcs = (profiling ? 1 : 2) * nrGPUs;
+      vector< SmartPtr<CorrelatorSubbandProc> > workQueues(nrSubbandProcs);
 
       for (size_t i = 0; i < workQueues.size(); ++i) {
-        workQueues[i] = new CorrelatorWorkQueue(ps,               // Configuration
+        workQueues[i] = new CorrelatorSubbandProc(ps,               // Configuration
                                       context,          // Opencl context
                                       devices[i % nrGPUs], // The GPU this workQueue is connected to
                                       i % nrGPUs, // The GPU index
@@ -129,7 +129,7 @@ namespace LOFAR
         {
 #         pragma omp parallel for num_threads(workQueues.size())
           for (size_t i = 0; i < workQueues.size(); ++i) {
-            CorrelatorWorkQueue &queue = *workQueues[i];
+            CorrelatorSubbandProc &queue = *workQueues[i];
 
             // run the queue
             queue.timers["CPU - total"]->start();
@@ -150,7 +150,7 @@ namespace LOFAR
         {
 #         pragma omp parallel for num_threads(workQueues.size())
           for (size_t i = 0; i < workQueues.size(); ++i) {
-            CorrelatorWorkQueue &queue = *workQueues[i];
+            CorrelatorSubbandProc &queue = *workQueues[i];
 
             // run the queue
             postprocessSubbands(queue);
@@ -191,13 +191,13 @@ namespace LOFAR
     struct inputData_t {
       // An InputData object suited for storing one subband from all
       // stations.
-      SmartPtr<WorkQueueInputData> data;
+      SmartPtr<SubbandProcInputData> data;
 
-      // The WorkQueue associated with the data
-      CorrelatorWorkQueue *queue;
+      // The SubbandProc associated with the data
+      CorrelatorSubbandProc *queue;
     };
 
-    template<typename SampleT> void CorrelatorPipeline::receiveInput( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues )
+    template<typename SampleT> void CorrelatorPipeline::receiveInput( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorSubbandProc> > &workQueues )
     {
       // The length of a block in samples
       size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
@@ -237,11 +237,11 @@ namespace LOFAR
         for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
           // Fetch an input object to store this subband. For now, blindly
           // round-robin over the work queues.
-          CorrelatorWorkQueue &queue = *workQueues[workQueueIterator++ % workQueues.size()];
+          CorrelatorSubbandProc &queue = *workQueues[workQueueIterator++ % workQueues.size()];
 
           // Fetch an input object to fill from the selected queue.
           // NOTE: We'll put it in a SmartPtr right away!
-          SmartPtr<WorkQueueInputData> data = queue.inputPool.free.remove();
+          SmartPtr<SubbandProcInputData> data = queue.inputPool.free.remove();
 
           // Annotate the block
           data->block   = block;
@@ -263,8 +263,8 @@ namespace LOFAR
 
         // Process and forward the received input to the processing threads
         for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-          CorrelatorWorkQueue &queue = *inputDatas[subband].queue;
-          SmartPtr<WorkQueueInputData> data = inputDatas[subband].data;
+          CorrelatorSubbandProc &queue = *inputDatas[subband].queue;
+          SmartPtr<SubbandProcInputData> data = inputDatas[subband].data;
 
           // Translate the metadata as provided by receiver
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
@@ -299,14 +299,14 @@ namespace LOFAR
       }
     }
 
-    template void CorrelatorPipeline::receiveInput< SampleType<i16complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
-    template void CorrelatorPipeline::receiveInput< SampleType<i8complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
-    template void CorrelatorPipeline::receiveInput< SampleType<i4complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorWorkQueue> > &workQueues );
+    template void CorrelatorPipeline::receiveInput< SampleType<i16complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorSubbandProc> > &workQueues );
+    template void CorrelatorPipeline::receiveInput< SampleType<i8complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorSubbandProc> > &workQueues );
+    template void CorrelatorPipeline::receiveInput< SampleType<i4complex> >( size_t nrBlocks, const std::vector< SmartPtr<CorrelatorSubbandProc> > &workQueues );
 
 
-    void CorrelatorPipeline::processSubbands(CorrelatorWorkQueue &workQueue)
+    void CorrelatorPipeline::processSubbands(CorrelatorSubbandProc &workQueue)
     {
-      SmartPtr<WorkQueueInputData> input;
+      SmartPtr<SubbandProcInputData> input;
 
       // Keep fetching input objects until end-of-input
       while ((input = workQueue.inputPool.filled.remove()) != NULL) {
@@ -344,7 +344,7 @@ namespace LOFAR
     }
 
 
-    void CorrelatorPipeline::postprocessSubbands(CorrelatorWorkQueue &workQueue)
+    void CorrelatorPipeline::postprocessSubbands(CorrelatorSubbandProc &workQueue)
     {
       SmartPtr<CorrelatedDataHostBuffer> output;
 
@@ -428,7 +428,7 @@ namespace LOFAR
         size_t block = output->block;
         unsigned subband = output->subband;
 
-        CorrelatorWorkQueue &queue = output->queue; // cache queue object, because `output' will be destroyed
+        CorrelatorSubbandProc &queue = output->queue; // cache queue object, because `output' will be destroyed
 
         if (subband == 0 || subband == ps.nrSubbands() - 1) {
           LOG_INFO_STR("[block " << block << ", subband " << subband << "] Writing start");

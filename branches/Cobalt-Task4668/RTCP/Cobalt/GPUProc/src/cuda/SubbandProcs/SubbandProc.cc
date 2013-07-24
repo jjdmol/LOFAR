@@ -1,4 +1,4 @@
-//# WorkQueue.cc
+//# SubbandProc.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "WorkQueue.h"
+#include "SubbandProc.h"
 
 #include <Common/LofarLogger.h>
 
@@ -30,14 +30,14 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    WorkQueue::WorkQueue(const Parset &ps, gpu::Context &context)
+    SubbandProc::SubbandProc(const Parset &ps, gpu::Context &context)
     :
       ps(ps),
       queue(gpu::Stream(context))
     {
       // put enough objects in the inputPool to operate
-      // TODO: Tweak the number of inputPool objects per WorkQueue,
-      // probably something like max(3, nrSubbands/nrWorkQueues * 2), because
+      // TODO: Tweak the number of inputPool objects per SubbandProc,
+      // probably something like max(3, nrSubbands/nrSubbandProcs * 2), because
       // there both need to be enough items to receive all subbands at
       // once, and enough items to process the same amount in the
       // mean time.
@@ -45,7 +45,7 @@ namespace LOFAR
       // At least 3 items are needed for a smooth Pool operation.
       size_t nrInputDatas = std::max(3UL, ps.nrSubbands());
       for (size_t i = 0; i < nrInputDatas; ++i) {
-        inputPool.free.append(new WorkQueueInputData(
+        inputPool.free.append(new SubbandProcInputData(
                 ps.nrBeams(),
                 ps.nrStations(),
                 NR_POLARIZATIONS,
@@ -56,34 +56,34 @@ namespace LOFAR
     }
 
 
-    WorkQueue::~WorkQueue()
+    SubbandProc::~SubbandProc()
     {
     }
 
 
-    void WorkQueue::processSubband(WorkQueueInputData &, StreamableData &)
+    void SubbandProc::processSubband(SubbandProcInputData &, StreamableData &)
     {
     }
 
 
-    void WorkQueue::postprocessSubband(StreamableData &)
+    void SubbandProc::postprocessSubband(StreamableData &)
     {
     }
 
 
-    void WorkQueue::addCounter(const std::string &name)
+    void SubbandProc::addCounter(const std::string &name)
     {
       counters[name] = new PerformanceCounter(name, profiling);
     }
 
 
-    void WorkQueue::addTimer(const std::string &name)
+    void SubbandProc::addTimer(const std::string &name)
     {
       timers[name] = new NSTimer(name, false, false);
     }
 
 
-    void WorkQueueInputData::applyMetaData(const Parset &ps,
+    void SubbandProcInputData::applyMetaData(const Parset &ps,
                                            unsigned station, unsigned SAP,
                                            const SubbandMetaData &metaData)
     {
@@ -107,7 +107,7 @@ namespace LOFAR
 
 
     // flag the input samples.
-    void WorkQueueInputData::flagInputSamples(unsigned station,
+    void SubbandProcInputData::flagInputSamples(unsigned station,
                                               const SubbandMetaData& metaData)
     {
 
@@ -130,7 +130,7 @@ namespace LOFAR
 
 
     // Get the log2 of the supplied number
-    unsigned WorkQueue::Flagger::log2(unsigned n)
+    unsigned SubbandProc::Flagger::log2(unsigned n)
     {
       // Assure that the nrChannels is more then zero: never ending loop 
       ASSERT(powerOfTwo(n));
@@ -145,7 +145,7 @@ namespace LOFAR
       return log;
     }
 
-    void WorkQueue::Flagger::convertFlagsToChannelFlags(Parset const &parset,
+    void SubbandProc::Flagger::convertFlagsToChannelFlags(Parset const &parset,
       MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
       MultiDimArray<SparseSet<unsigned>, 2>& flagsPerChannel)
     {

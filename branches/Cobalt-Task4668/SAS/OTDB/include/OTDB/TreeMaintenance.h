@@ -217,7 +217,8 @@ public:
 	// constraints/validations for the current type must be fulfilled.
 	// When errors occur these can be retrieved with the errorMsg function.
 	bool	setTreeState(treeIDType		aTreeID,
-						 treeState		aState);
+						 treeState		aState,
+						 bool			allow_endtime_update = true);
 
 	// Update the description of a tree.
 	bool	setDescription(treeIDType	aTreeID,

@@ -1,5 +1,6 @@
-//# CorrelatorPipelinePrograms.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# KernelFactory.h: Factory for Kernel objects.
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,24 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_CORRELATOR_PIPELINE_PROGRAMS_H
-#define LOFAR_GPUPROC_CUDA_CORRELATOR_PIPELINE_PROGRAMS_H
+// \file
+// Factory for Kernel objects.
 
-#include <GPUProc/gpu_wrapper.h>
+#ifndef LOFAR_GPUPROC_KERNELFACTORY_H
+#define LOFAR_GPUPROC_KERNELFACTORY_H
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
-    struct CorrelatorPipelinePrograms
-    {
-      gpu::Module firFilterProgram;
-      //gpu::Module fftProgram; // fft kernel apparently does not need a program...
-      gpu::Module delayAndBandPassProgram;
-      gpu::Module correlatorProgram;
-    };
-  }
-}
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
+
+#if defined (USE_CUDA)
+# include "cuda/KernelFactory.h"
+#elif defined (USE_OPENCL)
+# include "opencl/KernelFactory.h"
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
 

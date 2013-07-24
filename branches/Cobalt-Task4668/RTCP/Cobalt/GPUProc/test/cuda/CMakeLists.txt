@@ -7,10 +7,10 @@ cuda_include_directories(${PACKAGE_SOURCE_DIR}/share/gpu/kernels)
 
 
 if(UNITTEST++_FOUND)
-  # CUDA CPU side unit tests
+  # CUDA CPU side UnitTest++ tests
   lofar_add_test(tGPUWrapper tGPUWrapper.cc)
 
-  # Kernel unit tests
+  # GPU kernel UnitTest++ tests
   lofar_add_test(tDelayAndBandPass tDelayAndBandPass.cc)
 endif(UNITTEST++_FOUND)
 
@@ -19,7 +19,7 @@ lofar_add_test(tKernel tKernel.cc)
 lofar_add_test(tStreamReadBuffer tStreamReadBuffer.cc)
 lofar_add_test(tMultiDimArrayHostBuffer tMultiDimArrayHostBuffer.cc)
 
-# Kernel unit tests
+# GPU kernel unit tests
 lofar_add_test(tIntToFloat tIntToFloat.cc)
 lofar_add_test(tIntToFloatKernel tIntToFloatKernel.cc)
 lofar_add_test(tFIR_Filter tFIR_Filter.cc)
@@ -29,6 +29,7 @@ lofar_add_test(tDelayAndBandPassKernel tDelayAndBandPassKernel.cc)
 lofar_add_test(tCorrelator tCorrelator.cc)
 lofar_add_test(tBeamFormer tBeamFormer.cc)
 lofar_add_test(tBeamFormerKernel tBeamFormerKernel.cc)
+lofar_add_test(tTranspose tTranspose.cc)
 
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
@@ -42,6 +43,7 @@ set_tests_properties(
   tIntToFloatKernel
   tBeamFormer
   tBeamFormerKernel
+  tTranspose
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
 )
 

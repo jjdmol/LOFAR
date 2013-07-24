@@ -31,11 +31,11 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    // Correlator pipeline, connect input, correlator WorkQueues and output in parallel (OpenMP).
+    // Correlator pipeline, connect input, correlator SubbandProcs and output in parallel (OpenMP).
     // Connect all parts of the pipeline together: set up connections with the input stream
-    // each in a seperate thread. Start two WorkQueues for each GPU in the system.
+    // each in a seperate thread. Start two SubbandProcs for each GPU in the system.
     // These process independently, but can overlap each others compute with host/device I/O.
-    // The WorkQueues are then filled with data from the input stream and started.
+    // The SubbandProcs are then filled with data from the input stream and started.
     // After all data is collected the output is written, again in parallel.
     // This class contains most CPU side parallelism.
     // It also contains two 'data' members that are shared between queues.

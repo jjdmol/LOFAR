@@ -500,6 +500,11 @@ namespace LOFAR
           return _size;
         }
 
+        Context getContext() const
+        {
+          return _context;
+        }
+
       //private: // Functions needs its address to set kernel args
         CUdeviceptr _ptr;
       private:
@@ -520,6 +525,20 @@ namespace LOFAR
       size_t DeviceMemory::size() const
       {
         return _impl->size();
+      }
+
+      HostMemory DeviceMemory::fetch() const
+      {
+        // Create a host buffer of the right size
+        // in the right context.
+        HostMemory host(_impl->getContext(), size());
+
+        // Read the contents of our buffer synchronously,
+        // using a dedicated stream.
+        Stream s(_impl->getContext());
+        s.readBuffer(host, *this, true);
+
+        return host;
       }
 
 
@@ -830,9 +849,9 @@ namespace LOFAR
       {
       }
 
-      void Stream::writeBuffer(DeviceMemory &devMem, 
+      void Stream::writeBuffer(const DeviceMemory &devMem, 
                                const HostMemory &hostMem,
-                               bool synchronous)
+                               bool synchronous) const
       {
         // tmp check: avoid async writeBuffer request that will fail later.
         // TODO: This interface may still change at which point a cleaner solution can be used.
@@ -849,9 +868,9 @@ namespace LOFAR
         }
       }
 
-      void Stream::readBuffer(HostMemory &hostMem, 
+      void Stream::readBuffer(const HostMemory &hostMem, 
                               const DeviceMemory &devMem,
-                              bool synchronous)
+                              bool synchronous) const
       {
         // Host buffer can be smaller, because the device
         // buffers can be used for multiple purposes in
@@ -868,7 +887,7 @@ namespace LOFAR
       }
 
       void Stream::launchKernel(const Function &function,
-                                const Grid &grid, const Block &block)
+                                const Grid &grid, const Block &block) const
       {
         LOG_DEBUG_STR("Launching " << function._name);
 

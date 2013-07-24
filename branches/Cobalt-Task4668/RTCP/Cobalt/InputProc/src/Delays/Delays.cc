@@ -28,9 +28,11 @@
 #include <Common/Thread/Cancellation.h>
 #include <CoInterface/Exceptions.h>
 
+#ifdef HAVE_CASACORE
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCDirection.h>
 #include <casa/Exceptions/Error.h>
+#endif
 
 
 namespace LOFAR

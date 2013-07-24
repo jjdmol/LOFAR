@@ -2318,12 +2318,12 @@ dyn_string navFunct_getInputBuffersForObservation(string obsName) {
   dyn_string inputBuffers;
   dyn_dyn_anytype tab;
   string query="SELECT '_online.._value' FROM 'LOFAR_*_InputBuffer*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
-  //DebugN("query: "+query);
   dpQuery(query,tab);
-  //DebugN("Result:"+result);
   for(int z=2;z<=dynlen(tab);z++) {
-    dynAppend(inputBuffers,dpSubStr(tab[z][1],DPSUB_SYS_DP));
+    string dp = dpSubStr(tab[z][1],DPSUB_SYS_DP);
+    dynAppend(inputBuffers,dp);
   }
+  dynSort(inputBuffers);
   return inputBuffers;
 }
 
@@ -2348,8 +2348,11 @@ dyn_string navFunct_getAddersForObservation(string obsName) {
   dpQuery(query,tab);
   //DebugN("Result:"+result);
   for(int z=2;z<=dynlen(tab);z++) {
-    dynAppend(adders,dpSubStr(tab[z][1],DPSUB_SYS_DP));
+    string dp=dpSubStr(tab[z][1],DPSUB_SYS_DP);
+    // avoid doubles
+    dynAppend(adders,dp);
   }
+  dynSort(adders);
   return adders;
 }
 
@@ -2374,6 +2377,7 @@ dyn_int navFunct_getLocusNodesForObservation(string obsName) {
     dpGet(adders[z]+".locusNode",ln);
     dynAppend(locusnodes,ln);
   }
+  dynsort(locusnodes);
   return locusnodes;
 }
 
