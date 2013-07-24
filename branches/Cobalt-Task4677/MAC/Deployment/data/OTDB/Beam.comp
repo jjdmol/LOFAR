@@ -31,6 +31,7 @@ par  angle2              I      dbl   -              10    0    0               
 par  directionType	 I	ptext -              10    0	 'J2000|ITRF|B1950|HADEC|AZELGEO|TOPO|ICRS|APP|GALACTIC|ECLIPTIC|COMET|MERCURY|VENUS|MARS|JUPITER|SATURN|URANUS|NEPTUNE|PLUTO|SUN|MOON;J2000' -     'Coord.system used for the sources'
 par  dispersionMeasure	 I	dbl   -              10    0    0                    -       'Dedisperse channels with this DM (0 for no dedispersion)'
 par  coherent	         I	bool  -              10    0    true                 -       'coherent = true, incoherent = false'
+par  absoluteDirection I	bool  -              10    0    false                 -       'true: angle1/angle2 are absolute, false: angle1/angle2 need to be added to station beam'
 
 
 

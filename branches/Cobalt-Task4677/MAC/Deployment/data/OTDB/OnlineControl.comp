@@ -17,4 +17,5 @@ par  inspectionHost	    I    text   -     100	0	'lhn001'				-	"Machine the inspe
 
 uses  CorrAppl      4.0.0  development 1                  "CN Application"
 uses  OLAP          4.0.3  development 1                  "OLAP specific information"
+uses  Cobalt        4.0.3  development 1                  "Cobalt specific information"
 
