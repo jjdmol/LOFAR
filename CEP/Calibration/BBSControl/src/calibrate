@@ -77,13 +77,13 @@ usage()
 
 error()
 {
-    echo "\033[1;31m"`date` "[FAIL] error: ${1}\033[m"
+    echo -e "\033[1;31m"`date` "[FAIL] error: ${1}\033[m"
     exit 1
 }
 
 event()
 {
-    echo "\033[1;32m`date` ${1}\033[m"
+    echo -e "\033[1;32m`date` ${1}\033[m"
 }
 
 kill_all()
@@ -577,7 +577,7 @@ done
 if test ${status} -ne 0; then
     error "GlobalControl/SolverControl process(es) terminated unexpectedly"
 else
-    echo "\033[1;32m`date` [OK] done!\033[m"
+    echo -e "\033[1;32m`date` [OK] done!\033[m"
 fi
 
 exit ${status}
