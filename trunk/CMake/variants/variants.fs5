@@ -5,11 +5,12 @@
 ##
 ## $Id$
 
-option(USE_LOG4CPLUS "Use Log4Cplus" OFF)
+option(USE_LOG4CPLUS "Use Log4Cplus" ON)
 option(USE_OPENMP    "Use OpenMP"    ON)
 option(USE_MPI       "Use MPI"       ON)
 
 set(ENV{CUDA_LIB_PATH} $ENV{CUDA_ROOT}/lib)
+set(LOG4CPLUS_ROOT_DIR /home/mol/root)
 set(CASACORE_ROOT_DIR /home/mol/root)
 set(LIBSSH2_ROOT_DIR /home/mol/root)
 set(DAL_ROOT_DIR /home/mol/root)
