@@ -14,7 +14,7 @@ set(LOG4CPLUS_ROOT_DIR /home/mol/root)
 set(CASACORE_ROOT_DIR /home/mol/root)
 set(LIBSSH2_ROOT_DIR /home/mol/root)
 set(DAL_ROOT_DIR /home/mol/root)
-set(UNITTEST++_ROOT_DIR /cm/shared/apps/UnitTest++)
+set(UNITTEST++_ROOT_DIR /home/mol/root/UnitTest++)
 
 # The file /usr/lib64/boost/BoostConfig.cmake in the package boost-devel-1.41
 # that ships with CentOS 6.3 seems to be broken. Setting Boost_NO_BOOST_CMAKE
