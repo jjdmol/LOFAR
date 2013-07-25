@@ -34,12 +34,14 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
+#include <vector>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::Cobalt::gpu;
 
 using boost::lexical_cast;
+using namespace std;
 
 int test()
 {
