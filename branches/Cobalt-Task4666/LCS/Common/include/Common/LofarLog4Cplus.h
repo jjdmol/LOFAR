@@ -39,6 +39,8 @@
 
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
+#include <log4cplus/loggingmacros.h>
+#include <log4cplus/ndc.h>
 
 //# This might be undefined if used by an external package like ASKAP.
 #ifndef AUTO_FUNCTION_NAME
