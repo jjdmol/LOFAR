@@ -233,6 +233,7 @@ namespace LOFAR
                          const CompileFlags& flags,
                          const CompileDefinitions& defs)
       {
+        // TODO: first try 'nvcc', then this path.
         ostringstream oss;
         oss << CUDA_TOOLKIT_ROOT_DIR << "/bin/nvcc " << source << flags << defs;
         string cmd(oss.str());
@@ -244,7 +245,7 @@ namespace LOFAR
         if (!stream) {
           THROW_SYSCALL("popen");
         }
-        while (!feof(stream)) {  // NOTE: We do not get stderr
+        while (!feof(stream)) {  // NOTE: We do not get stderr (TODO)
           if (fgets(buffer, sizeof buffer, stream) != NULL) {
             ptx += buffer;
           }
