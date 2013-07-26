@@ -34,6 +34,8 @@
 #include <GPUProc/gpu_utils.h>
 #include <UnitTest++.h>
 
+#include <sched.h>
+
 #include "TestUtil.h"
 
 using namespace std;
@@ -69,10 +71,50 @@ TEST(BandPass)
   CHECK(true);
 }
 
+
+
 int main()
 {
   INIT_LOGGER("tProcessorAffinity");
   cout << "We are here." << endl;
-  return UnitTest::RunAllTests() > 0;
+  
+  cpu_set_t mask;
+  //                                    pid, size of cpu set, mask to place data in    
+  bool sched_return = sched_getaffinity(0, sizeof(cpu_set_t), &mask);
+  cout << "Number of cpu's in the mask: " << CPU_COUNT(&mask) << endl;
+  unsigned numCPU = sysconf( _SC_NPROCESSORS_ONLN );
+  cout << "Number of cpu's: " << numCPU << endl;
+  cout << "cpu mask: "<< endl;
+  for (unsigned idx_cpu =0; idx_cpu <numCPU ; ++ idx_cpu)
+  {
+    cout << CPU_ISSET(idx_cpu, &mask) << ",";
+  }
+  cout << endl;
+  CPU_ZERO(&mask) ;
+    for (unsigned idx_cpu =0; idx_cpu < (unsigned)2; ++ idx_cpu)
+  {
+    CPU_SET(idx_cpu, &mask);
+  }
+    cout << "cpu mask: "<< endl;
+   for (unsigned idx_cpu =0; idx_cpu < numCPU; ++ idx_cpu)
+   {
+     cout << CPU_ISSET(idx_cpu, &mask) << ",";
+   }
+   sched_return = sched_setaffinity(0, sizeof(cpu_set_t), &mask);
+   cout << "result of set affinity command (should be zer0): " << sched_return << endl;
+   
+  cout << "Current process is running on processor id: " << sched_getcpu() << endl;
+  cout << "resetting the cpu mask" << endl;
+  CPU_ZERO(&mask) ;
+  for (unsigned idx_cpu =14; idx_cpu < (unsigned)16; ++ idx_cpu)
+  {
+    CPU_SET(idx_cpu, &mask);
+  }
+     sched_return = sched_setaffinity(0, sizeof(cpu_set_t), &mask);
+   cout << "result of set affinity command (should be zer0): " << sched_return << endl;
+   cout << "Current process is running on processor id: " << sched_getcpu() << endl;
+  
+  return 0;
+  //return UnitTest::RunAllTests() > 0;
 }
 
