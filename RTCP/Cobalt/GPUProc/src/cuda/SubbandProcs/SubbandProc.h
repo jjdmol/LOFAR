@@ -182,10 +182,10 @@ namespace LOFAR
       Pool<StreamableData> outputPool;
 
       // Correlate the data found in the input data buffer
-      virtual void processSubband(SubbandProcInputData &input, StreamableData &output);
+      virtual void processSubband(SubbandProcInputData &input, StreamableData &output) = 0;
 
       // Do post processing on the CPU
-      virtual void postprocessSubband(StreamableData &output);
+      virtual void postprocessSubband(StreamableData &output) = 0;
 
     protected:
       const Parset &ps;
