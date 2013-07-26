@@ -69,9 +69,18 @@ int main() {
     // skip ps.nrHistorySamples(), because no FIR
     for (size_t i = ps.nrHistorySamples(); i < ps.nrHistorySamples() + ps.nrSamplesPerSubband(); i++)
       for (size_t pol = 0; pol < NR_POLARIZATIONS; pol++)
-        // parset specifies 8 bit samples, so this is simply 1 byte real, 1 byte imag
-        for (size_t b = 0; b < ps.nrBytesPerComplexSample(); b++)
-          in.inputSamples[st][i][pol][b] = 1;
+      {
+        if (ps.nrBytesPerComplexSample() == 4) { // 16 bit mode
+          *(int16_t *)&in.inputSamples[st][i][pol][0] = 1; // real
+          *(int16_t *)&in.inputSamples[st][i][pol][2] = 1; // imag starts at byte idx 2
+        } else if (ps.nrBytesPerComplexSample() == 2) { // 8 bit mod
+          in.inputSamples[st][i][pol][0] = 1; // real
+          in.inputSamples[st][i][pol][1] = 1; // imag
+        } else {
+          cerr << "Error: number of bits per sample must be 4, 8, or 16" << endl;
+          exit(1);
+        }
+      }
 
   // Initialize subbands partitioning administration (struct BlockID). We only do the 1st block of whatever.
   in.blockID.block = 0;            // Block number: 0 .. inf
@@ -98,8 +107,18 @@ int main() {
 
   cout << "Output: " << endl;
   unsigned nbaselines = ps.nrStations() * (ps.nrStations() + 1) / 2; // nbaselines includes auto-correlation pairs here
-  cout << "nbl(w/ autocorr)=" << nbaselines << " #chnl/sb=" << ps.nrChannelsPerSubband() <<
-          " #pol=" << NR_POLARIZATIONS << " (all combos, hence x2) Total bytes=" << out.size() << endl;
+  cout << "nbl(w/ autocorr)=" << nbaselines << " #bytes/complexSample=" << ps.nrBytesPerComplexSample() <<
+          " #chnl/sb=" << ps.nrChannelsPerSubband() << " #pol=" << NR_POLARIZATIONS <<
+          " (all combos, hence x2) Total bytes=" << out.size() << endl;
+
+  // Output verification
+  // The int2float conversion scales its output to the same amplitude as in 16 bit mode.
+  // For 8 bit mode, that is a factor 256.
+  // Since we inserted all (1, 1) vals, for 8 bit mode this means that the correlator
+  // outputs 256*256. It then sums over nrSamplesPerSb values.
+  unsigned scale = 1*1;
+  if (ps.nrBitsPerSample() == 8)
+    scale = 256*256;
   bool unexpValueFound = false;
   for (size_t b = 0; b < nbaselines; b++)
     for (size_t c = 0; c < ps.nrChannelsPerSubband(); c++)
@@ -108,7 +127,8 @@ int main() {
         for (size_t pol1 = 0; pol1 < NR_POLARIZATIONS; pol1++)
         {
           complex<float> v = out[b][c][pol0][pol1];
-          if (v.real() != static_cast<float>(2 * ps.nrSamplesPerSubband()) || v.imag() != 0.0f)
+          if (v.real() != static_cast<float>(scale * 2*ps.nrSamplesPerSubband()) ||
+              v.imag() != 0.0f)
           {
             unexpValueFound = true;
             cout << '*'; // indicate error in output
