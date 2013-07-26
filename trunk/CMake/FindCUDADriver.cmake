@@ -29,7 +29,7 @@
 
 if(NOT CUDADRIVER_FOUND)
   find_library(CUDADRIVER_LIBRARY cuda
-    HINTS ${CUDADRIVER_ROOT_DIR} $ENV{CUDA_ROOT} PATH_SUFFIXES lib64 lib)
+    HINTS ${CUDADRIVER_ROOT_DIR} $ENV{CUDA_ROOT} /usr/lib/nvidia-current PATH_SUFFIXES lib64 lib)
   mark_as_advanced(CUDADRIVER_LIBRARY)
 
   include(FindPackageHandleStandardArgs)
