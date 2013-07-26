@@ -7,6 +7,8 @@ if(USE_CUDA AND NOT USE_OPENCL)
 
   set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc)
   lofar_find_package(CUDA 4.1 REQUIRED)
+  lofar_find_package(CUDADriver REQUIRED)
+
   add_definitions(-DUSE_CUDA)
   if(LOFAR_BUILD_VARIANT MATCHES "^DEBUG$")
     list(APPEND CUDA_NVCC_FLAGS -g -G)
@@ -29,6 +31,9 @@ if(USE_CUDA AND NOT USE_OPENCL)
     message(STATUS "CUDA_npp_LIBRARY = ${CUDA_npp_LIBRARY}")
     message(STATUS "CUDA_nvcuvenc_LIBRARY = ${CUDA_nvcuvenc_LIBRARY}")
     message(STATUS "CUDA_nvcuvid_LIBRARY = ${CUDA_nvcuvid_LIBRARY}")
+
+    message(STATUS "CUDADRIVER_FOUND = ${CUDADRIVER_FOUND}")
+    message(STATUS "CUDADRIVER_LIBRARIES = ${CUDADRIVER_LIBRARIES}")
   endif()
 
 elseif(USE_OPENCL AND NOT USE_CUDA)
