@@ -191,12 +191,9 @@ namespace LOFAR
 
       string lofarRoot()
       {
-        static const char* env;
-        static bool init(false);
-        if (!init) {
-          env = getenv("LOFARROOT");
-        }
-        return string(env ? env : "");
+        // Prefer copy over racy static var or mutex.
+        const char* env = getenv("LOFARROOT");
+        return env ? string(env) : string();
       }
 
       string prefixPath()
