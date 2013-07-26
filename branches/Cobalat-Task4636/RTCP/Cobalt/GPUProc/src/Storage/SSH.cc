@@ -29,7 +29,16 @@
 #include <unistd.h>
 #include <vector>
 #include <sys/select.h>
+
+#ifdef HAVE_OPENSSL
 #include <openssl/crypto.h>
+#endif
+
+#ifdef HAVE_GCRYPT
+#include <pthread.h>
+#include <gcrypt.h>
+GCRY_THREAD_OPTION_PTHREAD_IMPL;
+#endif
 
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
@@ -701,6 +710,7 @@ namespace LOFAR
 
 
 
+#ifdef HAVE_OPENSSL
     std::vector< SmartPtr<Mutex> > openssl_mutexes;
 
     static void lock_callback(int mode, int type, const char *file, int line)
@@ -718,10 +728,11 @@ namespace LOFAR
     {
       return static_cast<unsigned long>(pthread_self());
     }
-
+#endif
 
     bool SSH_Init()
     {
+#ifdef HAVE_OPENSSL
       // initialise openssl
       openssl_mutexes.resize(CRYPTO_num_locks());
       for (size_t i = 0; i < openssl_mutexes.size(); ++i)
@@ -729,6 +740,12 @@ namespace LOFAR
 
       CRYPTO_set_id_callback(&thread_id_callback);
       CRYPTO_set_locking_callback(&lock_callback);
+#endif
+
+#ifdef HAVE_GCRYPT
+      // initialise gcrypt
+      gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
+#endif
 
 #if LIBSSH2_VERSION_NUM >= 0x010205
       // initialise libssh2
@@ -748,11 +765,13 @@ namespace LOFAR
       libssh2_exit();
 #endif
 
+#ifdef HAVE_OPENSSL
       // exit openssl
       CRYPTO_set_locking_callback(NULL);
       CRYPTO_set_id_callback(NULL);
 
       openssl_mutexes.clear();
+#endif
     }
 
 

@@ -35,6 +35,8 @@
 
 #include <GPUProc/global_defines.h>
 
+#include "cuda_config.h"
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -235,7 +237,7 @@ namespace LOFAR
                          const CompileDefinitions& defs)
       {
         ostringstream oss;
-        oss << "nvcc " << source << flags << defs;
+        oss << CUDA_TOOLKIT_ROOT_DIR << "/bin/nvcc " << source << flags << defs;
         string cmd(oss.str());
         LOG_DEBUG_STR("Starting runtime compilation:\n\t" << cmd);
 

@@ -7,12 +7,14 @@ if(USE_CUDA AND NOT USE_OPENCL)
 
   set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc)
   lofar_find_package(CUDA 4.1 REQUIRED)
+  lofar_find_package(CUDADriver REQUIRED)
+
   add_definitions(-DUSE_CUDA)
   if(LOFAR_BUILD_VARIANT MATCHES "^DEBUG$")
     list(APPEND CUDA_NVCC_FLAGS -g -G)
   endif()
 
-  if(0)  # for dev to see what is available how; disabled to reduce spam
+  if(1)  # for dev to see what is available how; disabled to reduce spam
     message(STATUS "CUDA_FOUND = ${CUDA_FOUND}")
     message(STATUS "CUDA_VERSION_MAJOR = ${CUDA_VERSION_MAJOR}")
     message(STATUS "CUDA_VERSION_MINOR = ${CUDA_VERSION_MINOR}")
@@ -29,6 +31,9 @@ if(USE_CUDA AND NOT USE_OPENCL)
     message(STATUS "CUDA_npp_LIBRARY = ${CUDA_npp_LIBRARY}")
     message(STATUS "CUDA_nvcuvenc_LIBRARY = ${CUDA_nvcuvenc_LIBRARY}")
     message(STATUS "CUDA_nvcuvid_LIBRARY = ${CUDA_nvcuvid_LIBRARY}")
+
+    message(STATUS "CUDADRIVER_FOUND = ${CUDADRIVER_FOUND}")
+    message(STATUS "CUDADRIVER_LIBRARIES = ${CUDADRIVER_LIBRARIES}")
   endif()
 
 elseif(USE_OPENCL AND NOT USE_CUDA)
@@ -43,12 +48,22 @@ endif()
 lofar_package(GPUProc 1.0 DEPENDS ${_gpuproc_deps})
 
 lofar_find_package(OpenMP REQUIRED)
-lofar_find_package(LibSSH2 REQUIRED)
-lofar_find_package(OpenSSL REQUIRED)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(MPI)
 lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)  # 'double threads' for FFT unit test refs
 lofar_find_package(UnitTest++)
+
+# LibSSH2 can be linked against either OpenSSL or GCrypt. We need to
+# find the right one, and initialise it for multi-threaded execution.
+lofar_find_package(LibSSH2 REQUIRED)
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/links_gcrypt.sh ${LIBSSH2_LIBRARY}
+  RESULT_VARIABLE LIBSSH2_LINKS_GCRYPT)
+
+if (LIBSSH2_LINKS_GCRYPT MATCHES 0)
+  lofar_find_package(GCrypt REQUIRED)
+else()
+  lofar_find_package(OpenSSL REQUIRED)
+endif()
 
 # InputProc/Delays.h drags in a dependency on casa; hence we need to add the
 # following line. This should be fixed someday.

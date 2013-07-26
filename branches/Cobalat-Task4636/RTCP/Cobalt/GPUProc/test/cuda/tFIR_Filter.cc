@@ -21,20 +21,24 @@
 #include <lofar_config.h>
 
 #include "tFIR_Filter.h"
-#include "TestUtil.h"
 
-#include <iostream>
 #include <cstdlib> 
+#include <string>
+#include <vector>
+#include <iostream>
 #include <sstream>
 #include <fstream>
-#include <string>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
+
 #include <Common/LofarLogger.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 
+#include "TestUtil.h"
+
+using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::Cobalt::gpu;
