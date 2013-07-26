@@ -63,7 +63,7 @@ namespace LOFAR
       if (pf.getName() == "AMD Accelerated Parallel Processing") {
         preferredMultiple = 256;
       } else {
-        preferredMultiple = 64; // FOR NVIDIA CUDA, there is no call to get this. Could check what the NV OCL pf says, but set to 64 for now. Generalize later.
+        preferredMultiple = 64; // FOR NVIDIA CUDA, there is no call to get this. Could check what the NV OCL pf says, but set to 64 for now. Generalize later (TODO).
       }
 
       unsigned nrBaselines = params.nrStations * (params.nrStations + 1) / 2;
