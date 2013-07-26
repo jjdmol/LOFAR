@@ -64,7 +64,7 @@ __global__ void intToFloat(void *convertedDataPtr,
   ConvertedDataType convertedData = (ConvertedDataType)convertedDataPtr;
   SampledDataType   sampledData   = (SampledDataType)  sampledDataPtr;
 
-  uint station = blockIdx.y * blockDim.y + threadIdx.y;
+  uint station = blockIdx.y;
 
   for (uint time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x)
   {
