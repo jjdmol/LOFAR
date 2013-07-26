@@ -51,7 +51,6 @@ int main() {
   Parset ps("tIntToFloatKernel.in_parset");
   KernelFactory<IntToFloatKernel> factory(ps);
 
-  size_t COMPLEX = 2;
   size_t nSampledData = factory.bufferSize(IntToFloatKernel::INPUT_DATA) / sizeof(char);
   size_t sizeSampledData = nSampledData * sizeof(char);
 
