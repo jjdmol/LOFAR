@@ -113,10 +113,10 @@ int main()
   // prevent stalls
   alarm(60);
 
+  SSH_Init();
+
   if (!discover_ssh_keys(pubkey, sizeof pubkey, privkey, sizeof privkey))
     return 3;
-
-  SSH_Init();
 
   test_simple();
   test_protocol();
