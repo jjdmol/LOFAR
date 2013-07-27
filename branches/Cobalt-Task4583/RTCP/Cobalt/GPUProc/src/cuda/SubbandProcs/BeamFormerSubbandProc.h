@@ -132,7 +132,7 @@ namespace LOFAR
         params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
 
         // time integration has not taken place yet, so calculate the nrSamples manually
-        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannels;
+        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 
         return params;
       }
