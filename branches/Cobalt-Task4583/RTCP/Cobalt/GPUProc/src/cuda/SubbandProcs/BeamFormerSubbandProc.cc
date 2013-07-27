@@ -83,7 +83,7 @@ namespace LOFAR
       transposeKernel(factories.transpose.create(queue, transposeBuffers)),
 
       // inverse FFT: B -> B
-      inverseFFT(context, BEAM_FORMER_NR_CHANNELS, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devB),
+      inverseFFT(context, BEAM_FORMER_NR_CHANNELS, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devB),
 
       // FIR filter: B -> A
       // TODO: provide history samples separately
@@ -93,7 +93,7 @@ namespace LOFAR
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // final FFT: A -> A
-      finalFFT(context, ps.settings.beamFormer.coherentSettings.nrChannels, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA),
+      finalFFT(context, ps.settings.beamFormer.coherentSettings.nrChannels, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA),
 
       // result buffer
       devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devA : devB)
@@ -101,7 +101,7 @@ namespace LOFAR
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
         outputPool.free.append(new BeamFormedData(
-                ps.settings.beamFormer.coherentSettings.nrStokes,
+                ps.settings.beamFormer.maxNrTABsPerSAP() * ps.settings.beamFormer.coherentSettings.nrStokes,
                 ps.settings.beamFormer.coherentSettings.nrChannels,
                 ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband()),
                 context));
@@ -174,6 +174,8 @@ namespace LOFAR
         firFilterKernel->enqueue();
         finalFFT.enqueue(queue);
       }
+
+      // TODO: Propagate flags
 
       queue.synchronize();
 
