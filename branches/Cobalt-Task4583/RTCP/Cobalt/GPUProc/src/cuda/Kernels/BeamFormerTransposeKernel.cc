@@ -38,6 +38,12 @@ namespace LOFAR
     string BeamFormerTransposeKernel::theirSourceFile = "BeamFormer/Transpose.cu";
     string BeamFormerTransposeKernel::theirFunction = "transposeComplexVoltages";
 
+    BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters(ps),
+      nrTABs(ps.nrTABs(0))
+    {
+    }
+
     BeamFormerTransposeKernel::
     BeamFormerTransposeKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
