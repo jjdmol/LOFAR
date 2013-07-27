@@ -146,6 +146,8 @@ namespace LOFAR
           queue.writeBuffer(devInput.delaysAtBegin,  input.delaysAtBegin,  false);
           queue.writeBuffer(devInput.delaysAfterEnd, input.delaysAfterEnd, false);
           queue.writeBuffer(devInput.phaseOffsets,   input.phaseOffsets,   false);
+
+          // TODO: propagate beam-former weights to here
           //queue.writeBuffer(devBeamFormerWeights,    ,   false);
 
           prevSAP = SAP;
