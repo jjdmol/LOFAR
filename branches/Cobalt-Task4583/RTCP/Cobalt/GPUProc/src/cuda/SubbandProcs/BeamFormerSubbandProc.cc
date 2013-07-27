@@ -93,7 +93,7 @@ namespace LOFAR
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // final FFT: A -> A
-      finalFFT(context, 16, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 16, true, devA)
+      finalFFT(context, ps.settings.beamFormer.coherentSettings.nrChannels, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA)
     {
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
@@ -143,7 +143,7 @@ namespace LOFAR
           queue.writeBuffer(devInput.delaysAtBegin,  input.delaysAtBegin,  false);
           queue.writeBuffer(devInput.delaysAfterEnd, input.delaysAfterEnd, false);
           queue.writeBuffer(devInput.phaseOffsets,   input.phaseOffsets,   false);
-          // beamFormerWeights.hostToDevice(false);
+          //queue.writeBuffer(devBeamFormerWeights,    ,   false);
 
           prevSAP = SAP;
           prevBlock = block;
@@ -166,8 +166,11 @@ namespace LOFAR
       transposeKernel->enqueue();
 
       inverseFFT.enqueue(queue);
-      firFilterKernel->enqueue();
-      finalFFT.enqueue(queue);
+
+      if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
+        firFilterKernel->enqueue();
+        finalFFT.enqueue(queue);
+      }
 
       queue.synchronize();
 
