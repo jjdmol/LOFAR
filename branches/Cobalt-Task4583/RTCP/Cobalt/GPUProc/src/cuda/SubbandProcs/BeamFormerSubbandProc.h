@@ -75,8 +75,8 @@ namespace LOFAR
         intToFloat(ps),
         delayCompensation(delayCompensationParams(ps)),
         correctBandPass(correctBandPassParams(ps)),
-        beamFormer(ps),
-        transpose(ps),
+        beamFormer(beamFormerParams(ps)),
+        transpose(transposeParams(ps)),
         firFilter(firFilterParams(ps))
       {
       }
@@ -91,6 +91,7 @@ namespace LOFAR
       DelayAndBandPassKernel::Parameters delayCompensationParams(const Parset &ps) const {
         DelayAndBandPassKernel::Parameters params(ps);
         params.nrChannelsPerSubband = 64;
+        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / 64;
         params.correctBandPass = false;
 
         // TODO: Don't transpose data
@@ -101,9 +102,26 @@ namespace LOFAR
       DelayAndBandPassKernel::Parameters correctBandPassParams(const Parset &ps) const {
         DelayAndBandPassKernel::Parameters params(ps);
         params.nrChannelsPerSubband = 2048;
+        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / 2048;
         params.delayCompensation = false;
 
         // TODO: Don't transpose data
+
+        return params;
+      }
+
+      BeamFormerKernel::Parameters beamFormerParams(const Parset &ps) const {
+        BeamFormerKernel::Parameters params(ps);
+        params.nrChannelsPerSubband = 2048;
+        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / 2048;
+
+        return params;
+      }
+
+      BeamFormerTransposeKernel::Parameters transposeParams(const Parset &ps) const {
+        BeamFormerTransposeKernel::Parameters params(ps);
+        params.nrChannelsPerSubband = 2048;
+        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / 2048;
 
         return params;
       }
@@ -112,6 +130,8 @@ namespace LOFAR
         FIR_FilterKernel::Parameters params(ps);
 
         // TODO: Set BF params, not correlator ones
+        params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
+        params.nrSamplesPerChannel = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
 
         return params;
       }

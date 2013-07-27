@@ -74,6 +74,7 @@ namespace LOFAR
       correctBandPassKernel(factories.correctBandPass.create(queue, correctBandPassBuffers)),
 
       // beamForm: B -> A
+      // TODO: support >1 SAP
       devBeamFormerWeights(context, factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_WEIGHTS)),
       beamFormerBuffers(devB, devA, devBeamFormerWeights),
       beamFormerKernel(factories.beamFormer.create(queue, beamFormerBuffers)),

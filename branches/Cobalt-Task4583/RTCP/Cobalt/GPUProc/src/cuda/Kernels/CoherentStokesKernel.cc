@@ -36,10 +36,12 @@ namespace LOFAR
 
     CoherentStokesKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
-      nrTABs(ps.nrTABs(0)),
+      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
       nrStokes(ps.settings.beamFormer.coherentSettings.nrStokes),
       timeIntegrationFactor(ps.settings.beamFormer.coherentSettings.timeIntegrationFactor)
     {
+      nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
+      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
     }
 
 
