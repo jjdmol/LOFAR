@@ -129,7 +129,6 @@ namespace LOFAR
       FIR_FilterKernel::Parameters firFilterParams(const Parset &ps) const {
         FIR_FilterKernel::Parameters params(ps);
 
-        // TODO: Set BF params, not correlator ones
         params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
         params.nrSamplesPerChannel = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
 
