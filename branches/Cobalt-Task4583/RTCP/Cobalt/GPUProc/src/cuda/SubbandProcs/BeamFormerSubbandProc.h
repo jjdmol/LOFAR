@@ -130,7 +130,9 @@ namespace LOFAR
         FIR_FilterKernel::Parameters params(ps);
 
         params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
-        params.nrSamplesPerChannel = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+
+        // time integration has not taken place yet, so calculate the nrSamples manually
+        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannels;
 
         return params;
       }
