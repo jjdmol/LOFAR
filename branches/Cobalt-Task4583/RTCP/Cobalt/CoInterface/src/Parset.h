@@ -454,6 +454,8 @@ namespace LOFAR
           // key: *.timeIntegrationFactor
           size_t timeIntegrationFactor;
 
+          size_t nrSamples(size_t inputBlockSize) const;
+
           // The number of subbands to store in each file.
           // The last file can have fewer subbands.
           //
