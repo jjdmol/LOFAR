@@ -93,14 +93,17 @@ namespace LOFAR
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // final FFT: A -> A
-      finalFFT(context, ps.settings.beamFormer.coherentSettings.nrChannels, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA)
+      finalFFT(context, ps.settings.beamFormer.coherentSettings.nrChannels, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA),
+
+      // result buffer
+      devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devA : devB)
     {
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
         outputPool.free.append(new BeamFormedData(
-                4,
-                ps.nrChannelsPerSubband(),
-                ps.integrationSteps(),
+                ps.settings.beamFormer.coherentSettings.nrStokes,
+                ps.settings.beamFormer.coherentSettings.nrChannels,
+                ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband()),
                 context));
       }
 
@@ -121,7 +124,7 @@ namespace LOFAR
 
     void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input, StreamableData &_output)
     {
-      (void)_output;
+      BeamFormedData &output = static_cast<BeamFormedData&>(_output);
 
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
@@ -174,7 +177,7 @@ namespace LOFAR
 
       queue.synchronize();
 
-      // queue.readBuffer()
+      queue.readBuffer(output, devResult, true);
     }
 
     void BeamFormerSubbandProc::postprocessSubband(StreamableData &_output)

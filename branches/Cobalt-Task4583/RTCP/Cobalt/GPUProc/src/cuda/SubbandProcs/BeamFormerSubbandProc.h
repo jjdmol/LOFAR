@@ -187,6 +187,9 @@ namespace LOFAR
       FIR_FilterKernel::Buffers firFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
       FFT_Kernel finalFFT;
+
+      // end result
+      gpu::DeviceMemory &devResult;
     };
 
   }
