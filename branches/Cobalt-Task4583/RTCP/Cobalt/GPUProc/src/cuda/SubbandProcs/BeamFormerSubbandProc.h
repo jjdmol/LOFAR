@@ -163,7 +163,7 @@ namespace LOFAR
       std::auto_ptr<DelayAndBandPassKernel> delayCompensationKernel;
 
       // second FFT
-      static const size_t BEAM_FORMER_NR_CHANNELS = 64;
+      static const size_t BEAM_FORMER_NR_CHANNELS = 2048;
       FFT_Kernel secondFFT;
 
       // bandpass correction
