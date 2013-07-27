@@ -43,14 +43,15 @@ namespace LOFAR
 
       // NOTE: Make sure the history samples are dealt with properly until the
       // FIR, which the beam former does in a later stage!
-      //
-      // NOTE: Sizes are probably completely wrong.
-      devInput(factories.intToFloat.bufferSize(IntToFloatKernel::INPUT_DATA),
-               1,//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS),
-               1,//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
+      devInput(std::max(
+                 factories.intToFloat.bufferSize(IntToFloatKernel::INPUT_DATA),
+                 factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)
+               ),
+               factories.delayCompensation.bufferSize(DelayAndBandPassKernel::DELAYS),
+               factories.delayCompensation.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
       devA(devInput.inputSamples),
-      devB(context, 1),
+      devB(context, devA.size()),
       devNull(context, 1),
 
       // intToFloat: input -> B
@@ -58,14 +59,14 @@ namespace LOFAR
       intToFloatKernel(factories.intToFloat.create(queue, intToFloatBuffers)),
 
       // FFT: B -> B
-      firstFFT(context, 64, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 64, true, devB),
+      firstFFT(context, DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / DELAY_COMPENSATION_NR_CHANNELS, true, devB),
 
       // delayComp: B -> A
       delayCompensationBuffers(devB, devA, devInput.delaysAtBegin, devInput.delaysAfterEnd, devInput.phaseOffsets, devNull),
       delayCompensationKernel(factories.delayCompensation.create(queue, delayCompensationBuffers)),
 
       // FFT: A -> A
-      secondFFT(context, 2048 / 64, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 2048 / 64, true, devA),
+      secondFFT(context, BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, true, devA),
 
       // bandPass: A -> B
       devBandPassCorrectionWeights(context, factories.correctBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
@@ -82,15 +83,17 @@ namespace LOFAR
       transposeKernel(factories.transpose.create(queue, transposeBuffers)),
 
       // inverse FFT: B -> B
-      inverseFFT(context, 2048, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 2048, false, devB),
+      inverseFFT(context, BEAM_FORMER_NR_CHANNELS, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devB),
 
       // FIR filter: B -> A
+      // TODO: provide history samples separately
+      // TODO: do a FIR for each individual TAB!!
       devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
       firFilterBuffers(devB, devA, devFilterWeights),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // final FFT: A -> A
-      finalFFT(context, 16, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 16, true, devA)
+      finalFFT(context, 16, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 16, true, devA)
     {
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
