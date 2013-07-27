@@ -35,16 +35,11 @@
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
 
 #include <GPUProc/Kernels/IntToFloatKernel.h>
+#include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-/*
-#include <GPUProc/Kernels/FIR_FilterKernel.h>
-#include <GPUProc/Kernels/Filter_FFT_Kernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
-#include <GPUProc/Kernels/DedispersionForwardFFTkernel.h>
-#include <GPUProc/Kernels/DedispersionBackwardFFTkernel.h>
-#include <GPUProc/Kernels/DedispersionChirpKernel.h>
-*/
+#include <GPUProc/Kernels/FIR_FilterKernel.h>
 
 #include "SubbandProc.h"
 
@@ -76,11 +71,50 @@ namespace LOFAR
 
     struct BeamFormerFactories
     {
-      BeamFormerFactories(const Parset &ps): intToFloat(ps) {}
+      BeamFormerFactories(const Parset &ps) :
+        intToFloat(ps),
+        delayCompensation(delayCompensationParams(ps)),
+        correctBandPass(correctBandPassParams(ps)),
+        beamFormer(ps),
+        transpose(ps),
+        firFilter(firFilterParams(ps))
+      {
+      }
 
       KernelFactory<IntToFloatKernel> intToFloat;
-      //KernelFactory<FIR_FilterKernel> firFilter;
-      //KernelFactory<DelayAndBandPassKernel> delayAndBandPass;
+      KernelFactory<DelayAndBandPassKernel> delayCompensation;
+      KernelFactory<DelayAndBandPassKernel> correctBandPass;
+      KernelFactory<BeamFormerKernel> beamFormer;
+      KernelFactory<BeamFormerTransposeKernel> transpose;
+      KernelFactory<FIR_FilterKernel> firFilter;
+
+      DelayAndBandPassKernel::Parameters delayCompensationParams(const Parset &ps) const {
+        DelayAndBandPassKernel::Parameters params(ps);
+        params.nrChannelsPerSubband = 64;
+        params.correctBandPass = false;
+
+        // TODO: Don't transpose data
+
+        return params;
+      }
+
+      DelayAndBandPassKernel::Parameters correctBandPassParams(const Parset &ps) const {
+        DelayAndBandPassKernel::Parameters params(ps);
+        params.nrChannelsPerSubband = 2048;
+        params.delayCompensation = false;
+
+        // TODO: Don't transpose data
+
+        return params;
+      }
+
+      FIR_FilterKernel::Parameters firFilterParams(const Parset &ps) const {
+        FIR_FilterKernel::Parameters params(ps);
+
+        // TODO: Set BF params, not correlator ones
+
+        return params;
+      }
     };
 
     class BeamFormerSubbandProc : public SubbandProc
@@ -105,9 +139,13 @@ namespace LOFAR
       // in the InputData class
       SubbandProcInputData::DeviceBuffers devInput;
 
+      gpu::DeviceMemory devA;
       gpu::DeviceMemory devB;
 
     private:
+      // NULL placeholder for unused DeviceMemory parameters
+      gpu::DeviceMemory devNull;
+
       /*
        * Kernels
        */
@@ -115,33 +153,38 @@ namespace LOFAR
       // int -> float
       IntToFloatKernel::Buffers intToFloatBuffers;
       std::auto_ptr<IntToFloatKernel> intToFloatKernel;
-#if 0
-      // Compiled kernels
-      FIR_FilterKernel firFilterKernel;
-      Filter_FFT_Kernel fftKernel;
-      DelayAndBandPassKernel delayAndBandPassKernel;
-#endif
-#if 0
-      MultiArraySharedBuffer<char, 4>                inputSamples;
-      DeviceBuffer devFilteredData;
-      MultiArraySharedBuffer<float, 1>               bandPassCorrectionWeights;
-      MultiArraySharedBuffer<float, 3>               delaysAtBegin, delaysAfterEnd;
-      MultiArraySharedBuffer<float, 2>               phaseOffsets;
-      DeviceBuffer devCorrectedData;
-      MultiArraySharedBuffer<std::complex<float>, 3> beamFormerWeights;
-      DeviceBuffer devComplexVoltages;
-      MultiArraySharedBuffer<std::complex<float>, 4> transposedComplexVoltages;
-      MultiArraySharedBuffer<float, 1>               DMs;
 
-      IntToFloatKernel intToFloatKernel;
-      Filter_FFT_Kernel fftKernel;
-      DelayAndBandPassKernel delayAndBandPassKernel;
-      BeamFormerKernel beamFormerKernel;
-      BeamFormerTransposeKernel transposeKernel;
-      DedispersionForwardFFTkernel dedispersionForwardFFTkernel;
-      DedispersionBackwardFFTkernel dedispersionBackwardFFTkernel;
-      DedispersionChirpKernel dedispersionChirpKernel;
-#endif
+      // first FFT
+      FFT_Kernel firstFFT;
+
+      // delay compensation
+      DelayAndBandPassKernel::Buffers delayCompensationBuffers;
+      std::auto_ptr<DelayAndBandPassKernel> delayCompensationKernel;
+
+      // second FFT
+      FFT_Kernel secondFFT;
+
+      // bandpass correction
+      gpu::DeviceMemory devBandPassCorrectionWeights;
+      DelayAndBandPassKernel::Buffers correctBandPassBuffers;
+      std::auto_ptr<DelayAndBandPassKernel> correctBandPassKernel;
+
+      // beam former
+      gpu::DeviceMemory devBeamFormerWeights;
+      BeamFormerKernel::Buffers beamFormerBuffers;
+      std::auto_ptr<BeamFormerKernel> beamFormerKernel;
+
+      BeamFormerTransposeKernel::Buffers transposeBuffers;
+      std::auto_ptr<BeamFormerTransposeKernel> transposeKernel;
+
+      // inverse FFT
+      FFT_Kernel inverseFFT;
+
+      // PPF
+      gpu::DeviceMemory devFilterWeights;
+      FIR_FilterKernel::Buffers firFilterBuffers;
+      std::auto_ptr<FIR_FilterKernel> firFilterKernel;
+      FFT_Kernel finalFFT;
     };
 
   }

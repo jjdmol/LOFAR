@@ -49,40 +49,48 @@ namespace LOFAR
                1,//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::DELAYS),
                1,//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
+      devA(devInput.inputSamples),
       devB(context, 1),
+      devNull(context, 1),
+
+      // intToFloat: input -> B
       intToFloatBuffers(devInput.inputSamples, devB),
-      intToFloatKernel(factories.intToFloat.create(queue, intToFloatBuffers))
+      intToFloatKernel(factories.intToFloat.create(queue, intToFloatBuffers)),
 
-//DelayAndBandPassKernel::bufferSize(ps, DelayAndBandPassKernel::INPUT_DATA))
-#if 0
-      firFilterKernel(ps, programs.firFilterProgram,
-                      devFilteredData, devInput.inputSamples, devFIRweights),
-      fftKernel(ps, context, devFilteredData),
-      delayAndBandPassKernel(ps, programs.delayAndBandPassProgram,
-                             devInput.inputSamples,
-                             devFilteredData,
-                             devInput.delaysAtBegin,
-                             devInput.delaysAfterEnd,
-                             devInput.phaseOffsets,
-                             devBandPassCorrectionWeights)
-#endif
-#if 0
-      devFilteredData(queue, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
-      bandPassCorrectionWeights(boost::extents[ps.nrChannelsPerSubband()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
-      devCorrectedData(queue, CL_MEM_READ_WRITE, ps.nrStations() * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * NR_POLARIZATIONS * sizeof(std::complex<float>)),
-      beamFormerWeights(boost::extents[ps.nrStations()][ps.nrChannelsPerSubband()][ps.nrTABs(0)], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
-      devComplexVoltages(queue, CL_MEM_READ_WRITE, ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>)),
-      //transposedComplexVoltages(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrSamplesPerChannel()][ps.nrChannelsPerSubband()], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE)
-      transposedComplexVoltages(boost::extents[ps.nrTABs(0)][NR_POLARIZATIONS][ps.nrChannelsPerSubband()][ps.nrSamplesPerChannel()], queue, CL_MEM_READ_ONLY, CL_MEM_READ_WRITE),
-      DMs(boost::extents[ps.nrTABs(0)], queue, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY),
+      // FFT: B -> B
+      firstFFT(context, 64, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 64, true, devB),
 
-      intToFloatKernel(ps, queue, pipeline.intToFloatProgram, devFilteredData, inputSamples),
-      beamFormerKernel(ps, pipeline.beamFormerProgram, devComplexVoltages, devCorrectedData, beamFormerWeights),
-      transposeKernel(ps, pipeline.transposeProgram, transposedComplexVoltages, devComplexVoltages),
-      dedispersionForwardFFTkernel(ps, pipeline.context, transposedComplexVoltages),
-      dedispersionBackwardFFTkernel(ps, pipeline.context, transposedComplexVoltages),
-      dedispersionChirpKernel(ps, pipeline.dedispersionChirpProgram, queue, transposedComplexVoltages, DMs)
-#endif
+      // delayComp: B -> A
+      delayCompensationBuffers(devB, devA, devInput.delaysAtBegin, devInput.delaysAfterEnd, devInput.phaseOffsets, devNull),
+      delayCompensationKernel(factories.delayCompensation.create(queue, delayCompensationBuffers)),
+
+      // FFT: A -> A
+      secondFFT(context, 2048 / 64, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 2048 / 64, true, devA),
+
+      // bandPass: A -> B
+      devBandPassCorrectionWeights(context, factories.correctBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
+      correctBandPassBuffers(devA, devB, devNull, devNull, devNull, devBandPassCorrectionWeights),
+      correctBandPassKernel(factories.correctBandPass.create(queue, correctBandPassBuffers)),
+
+      // beamForm: B -> A
+      devBeamFormerWeights(context, factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_WEIGHTS)),
+      beamFormerBuffers(devB, devA, devBeamFormerWeights),
+      beamFormerKernel(factories.beamFormer.create(queue, beamFormerBuffers)),
+
+      // transpose after beamforming: A -> B
+      transposeBuffers(devA, devB),
+      transposeKernel(factories.transpose.create(queue, transposeBuffers)),
+
+      // inverse FFT: B -> B
+      inverseFFT(context, 2048, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 2048, false, devB),
+
+      // FIR filter: B -> A
+      devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
+      firFilterBuffers(devB, devA, devFilterWeights),
+      firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
+
+      // final FFT: A -> A
+      finalFFT(context, 16, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 16, true, devA)
     {
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
@@ -139,47 +147,28 @@ namespace LOFAR
         }
       }
 
-      intToFloatKernel->enqueue(queue);
-      // fftKernel.enqueue();
-      // delayAndBandpassKernel.enqueue()
-      // beamFormerKernel.enqueue()
-      // transposeKernel.enqueue()
-      // inverseFFTKernel.enqueue()
-      // PPFKernel.enqueue()
+      intToFloatKernel->enqueue();
 
-#if 0
-      DMs.hostToDevice(true);
+      firstFFT.enqueue(queue);
+      delayCompensationKernel->enqueue(queue,
+        ps.settings.subbands[subband].centralFrequency,
+        ps.settings.subbands[subband].SAP);
 
+      secondFFT.enqueue(queue);
+      correctBandPassKernel->enqueue(queue,
+        ps.settings.subbands[subband].centralFrequency,
+        ps.settings.subbands[subband].SAP);
 
-          {
-#if defined USE_B7015
-            OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
-#endif
-            inputSamples.hostToDevice(true);
-//            pipeline.samplesCounter.doOperation(inputSamples.event, 0, 0, inputSamples.bytesize());
-          }
+      beamFormerKernel->enqueue();
+      transposeKernel->enqueue();
 
-          {
-            if (ps.nrChannelsPerSubband() > 1) {
-              intToFloatKernel.enqueue(queue/*, pipeline.intToFloatCounter*/);
-              fftKernel.enqueue(queue/*, pipeline.fftCounter*/);
-            }
+      inverseFFT.enqueue(queue);
+      firFilterKernel->enqueue();
+      finalFFT.enqueue(queue);
 
-            delayAndBandPassKernel.enqueue(queue/*, pipeline.delayAndBandPassCounter*/, subband);
-            beamFormerKernel.enqueue(queue/*, pipeline.beamFormerCounter*/);
-            transposeKernel.enqueue(queue/*, pipeline.transposeCounter*/);
-            dedispersionForwardFFTkernel.enqueue(queue/*, pipeline.dedispersionForwardFFTcounter*/);
-            dedispersionChirpKernel.enqueue(queue/*, pipeline.dedispersionChirpCounter*/, ps.subbandToFrequencyMapping()[subband]);
-            dedispersionBackwardFFTkernel.enqueue(queue/*, pipeline.dedispersionBackwardFFTcounter*/);
+      queue.synchronize();
 
-            queue.synchronize();
-          }
-
-          //queue.enqueueReadBuffer(devComplexVoltages, CL_TRUE, 0, hostComplexVoltages.bytesize(), hostComplexVoltages.origin());
-          //dedispersedData.deviceToHost(true);
-        }
-      }
-#endif
+      // queue.readBuffer()
     }
 
     void BeamFormerSubbandProc::postprocessSubband(StreamableData &_output)
