@@ -31,6 +31,7 @@ lofar_add_test(tBeamFormer tBeamFormer.cc)
 lofar_add_test(tBeamFormerKernel tBeamFormerKernel.cc)
 lofar_add_test(tTranspose tTranspose.cc)
 lofar_add_test(tProcessorAffinity tProcessorAffinity.cc)
+target_link_libraries(tProcessorAffinity ${LIBHWLOC_LIBRARY})
 
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.

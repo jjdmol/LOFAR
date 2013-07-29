@@ -138,6 +138,8 @@ namespace LOFAR
         // Return information on a specific \a attribute.
         // \param attribute CUDA device attribute
         int getAttribute(CUdevice_attribute attribute) const;
+        
+        CUdevice* getDevice(); 
 
       private:
         // Context needs access to our \c _device to create a context.

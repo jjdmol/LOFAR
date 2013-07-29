@@ -328,7 +328,11 @@ namespace LOFAR
         return value;
       }
 
-
+      CUdevice* Device::getDevice()  
+      {
+        return &_device;
+      }
+      
       class Context::Impl : boost::noncopyable
       {
       public:
