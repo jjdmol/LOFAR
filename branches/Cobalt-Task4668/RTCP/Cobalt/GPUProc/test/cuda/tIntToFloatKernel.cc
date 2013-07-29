@@ -51,7 +51,6 @@ int main() {
   Parset ps("tIntToFloatKernel.in_parset");
   KernelFactory<IntToFloatKernel> factory(ps);
 
-  size_t COMPLEX = 2;
   size_t nSampledData = factory.bufferSize(IntToFloatKernel::INPUT_DATA) / sizeof(char);
   size_t sizeSampledData = nSampledData * sizeof(char);
 
@@ -78,10 +77,10 @@ int main() {
   float *samplesFloat = convertedData.get<float>();
   
   // Validate the output:
-  // The inputs were all -128 with bits  per sample 8. 
-  // Therefore they should all be converted to -127
+  // The inputs were all -128 with bits per sample 8. 
+  // Therefore they should all be converted to -127 (but scaled to 16 bit amplitute values).
   for (size_t idx =0; idx < nSampledData; ++idx)
-    if(samplesFloat[idx] != -127)
+    if(samplesFloat[idx] != -127 * 256)
     {
         cerr << "Found an uncorrect sample in the output array at idx: " << idx << endl
              << "Value found: " << samplesFloat[idx] << endl

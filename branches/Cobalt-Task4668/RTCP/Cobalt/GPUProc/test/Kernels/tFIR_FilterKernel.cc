@@ -77,6 +77,7 @@ TEST(FIR_FilterKernel)
   stream.readBuffer(hOutput, dOutput);
   stream.readBuffer(hCoeff, dCoeff);
 
+  /*  Comment out printing of this information: it disrupts the logfile and add no information.
   float* buf = hOutput.get<float>();
   for(size_t i = 0; i < hOutput.size() / sizeof(float); ++i) {
     cout << "out[" << i << "] = " << buf[i] << endl;
@@ -86,7 +87,7 @@ TEST(FIR_FilterKernel)
   for(size_t i = 0; i < hCoeff.size() / sizeof(float); ++i) {
     cout << "coeff[" << i << "] = " << buf[i] << endl;
   }
-
+  */
 }
 
 int main()

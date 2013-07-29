@@ -35,6 +35,8 @@
 
 #include <GPUProc/global_defines.h>
 
+#include "cuda_config.h"
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -189,12 +191,9 @@ namespace LOFAR
 
       string lofarRoot()
       {
-        static const char* env;
-        static bool init(false);
-        if (!init) {
-          env = getenv("LOFARROOT");
-        }
-        return string(env ? env : "");
+        // Prefer copy over racy static var or mutex.
+        const char* env = getenv("LOFARROOT");
+        return env ? string(env) : string();
       }
 
       string prefixPath()
@@ -234,8 +233,9 @@ namespace LOFAR
                          const CompileFlags& flags,
                          const CompileDefinitions& defs)
       {
+        // TODO: first try 'nvcc', then this path.
         ostringstream oss;
-        oss << "nvcc " << source << flags << defs;
+        oss << CUDA_TOOLKIT_ROOT_DIR << "/bin/nvcc " << source << flags << defs;
         string cmd(oss.str());
         LOG_DEBUG_STR("Starting runtime compilation:\n\t" << cmd);
 
@@ -245,7 +245,7 @@ namespace LOFAR
         if (!stream) {
           THROW_SYSCALL("popen");
         }
-        while (!feof(stream)) {  // NOTE: We do not get stderr
+        while (!feof(stream)) {  // NOTE: We do not get stderr (TODO)
           if (fgets(buffer, sizeof buffer, stream) != NULL) {
             ptx += buffer;
           }
@@ -268,9 +268,9 @@ namespace LOFAR
     CompileFlags defaultCompileFlags()
     {
       CompileFlags flags;
-      flags.insert("-o -");
+      flags.insert("-o -"); // buggy on CUDA 5.0 and 5.5RC (TODO)
       flags.insert("-ptx");
-      flags.insert("-use_fast_math");
+      flags.insert("-use_fast_math"); // TODO: disable for some kernels?
       flags.insert(str(format("-I%s") % includePath()));
       return flags;
     }

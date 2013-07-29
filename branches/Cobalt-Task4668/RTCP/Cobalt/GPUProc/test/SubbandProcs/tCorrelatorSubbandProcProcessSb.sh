@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tCorrelatorSubbandProcessSb
+./runctest.sh tCorrelatorSubbandProcProcessSb

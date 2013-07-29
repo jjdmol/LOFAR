@@ -117,6 +117,9 @@
 /* Define if FFTW3 is installed */
 #cmakedefine HAVE_FFTW3
 
+/* Define if libgcrypt is installed */
+#cmakedefine HAVE_GCRYPT 1
+
 /* Define if HDF5 is installed */
 #cmakedefine HAVE_HDF5
 
@@ -140,6 +143,9 @@
 
 /* Define if MPICH is installed */
 #cmakedefine HAVE_MPICH 1
+
+/* Define if libopenssl + libcrypto is installed */
+#cmakedefine HAVE_OPENSSL 1
 
 /* Define if libpqxx is installed */
 #cmakedefine HAVE_PQXX

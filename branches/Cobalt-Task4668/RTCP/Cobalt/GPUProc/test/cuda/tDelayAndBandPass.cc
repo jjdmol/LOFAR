@@ -141,6 +141,7 @@ float * runTest(float bandPassFactor,
   hKernel.setArg(6, DevPhaseOffsetMemory);
   hKernel.setArg(7, DevbandPassFactorsMemory);
 
+  // Calculate the number of threads in total and per block
   Grid globalWorkSize(1, NR_CHANNELS == 1? 1: NR_CHANNELS/16, NR_STATIONS);  
   Block localWorkSize(256, 1,1); 
 

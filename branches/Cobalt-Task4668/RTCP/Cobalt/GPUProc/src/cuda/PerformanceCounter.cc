@@ -140,6 +140,8 @@ namespace LOFAR
 
     void PerformanceCounter::doOperation(gpu::Event &event, size_t nrOperations, size_t nrBytesRead, size_t nrBytesWritten)
     {
+      (void)event;
+
       if (!profiling)
         return;
 
