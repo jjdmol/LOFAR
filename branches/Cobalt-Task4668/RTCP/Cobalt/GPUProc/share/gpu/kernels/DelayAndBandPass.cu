@@ -26,7 +26,8 @@
  * that case, the input data for this kernel is already in floating point format
  * (@c NR_CHANNELS > 1). However, if this kernel is the first in row, then the
  * input data is still in integer format (@c NR_CHANNELS == 1), and this kernel
- * needs to do the integer-to-float conversion.
+ * needs to do the integer-to-float conversion. If we do BANDPASS_CORRECTION
+ * (implies NR_CHANNELS > 1), then we also transpose the pol dim to stride-1.
  *
  * @attention The following pre-processor variables must be supplied when
  * compiling this program. Please take the pre-conditions for these variables
@@ -39,8 +40,6 @@
  *   - @c NR_SAMPLES_PER_CHANNEL: a multiple of 16
  * - @c NR_POLARIZATIONS: 2
  * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
- * - @c DO_TRANSPOSE: output transposed data. Needed for correlating >1 channel.
- *                    Also needed for bandpass correction when beamforming.
  */
 
 #include "complex.cuh" // TODO: get rid of this: causes warning that is probably not a bug, but does point to a lot of unneeded inits in our __shared__ decl
@@ -52,10 +51,23 @@
 #  undef BANDPASS_CORRECTION
 #endif
 
+// We need to transpose the pol dim to stride-1 iff we have BANDPASS_CORRECTION,
+// both for our correlation and (for the 2 instantiations of this kernel) for our
+// beamforming pipelines. (BANDPASS_CORRECTION implies >1 channel per subband.)
+#if defined BANDPASS_CORRECTION
+#  define DO_TRANSPOSE
+#endif
+
 typedef LOFAR::Cobalt::gpu::complex<float> complexfloat;
 typedef LOFAR::Cobalt::gpu::complex<short> complexshort;
 typedef LOFAR::Cobalt::gpu::complex<char> complexchar;
+
+#if defined DO_TRANSPOSE
 typedef  complexfloat (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
+#else
+typedef  complexfloat (* OutputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
+#endif
+
 #if NR_CHANNELS == 1
 #  if NR_BITS_PER_SAMPLE == 16
 typedef  complexshort (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
@@ -214,11 +226,7 @@ extern "C" {
     sampleY *= weight;
 #endif
 
-    // For beamforming or correlation with 1 channel, there is no need to transpose
-#if not defined DO_TRANSPOSE || NR_CHANNELS == 1
-    (*outputData)[station][0][time][0] = sampleX;
-    (*outputData)[station][0][time][1] = sampleY;
-#else // correlation with >1 channel
+#if defined DO_TRANSPOSE
     __shared__ complexfloat tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
 
     tmp[major][minor][0] = sampleX;
@@ -227,6 +235,9 @@ extern "C" {
     (*outputData)[station][channel + major][time + minor][0] = tmp[minor][major][0];   
     (*outputData)[station][channel + major][time + minor][1] = tmp[minor][major][1];
     __syncthreads();
+#else
+    (*outputData)[station][0][time][0] = sampleX;
+    (*outputData)[station][0][time][1] = sampleY;
 #endif
   }
 }
