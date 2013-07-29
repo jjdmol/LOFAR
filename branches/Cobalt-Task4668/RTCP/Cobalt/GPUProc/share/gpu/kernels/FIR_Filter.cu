@@ -18,10 +18,7 @@
 //#
 //# $Id$
 
-#include "cuda_runtime.h"
-#include <cuda.h>
 #include "IntToFloat.cuh"
-
 
 #if NR_BITS_PER_SAMPLE == 16
 typedef signed short SampleType;
@@ -31,10 +28,20 @@ typedef signed char SampleType;
 #error unsupported NR_BITS_PER_SAMPLE
 #endif
 
-typedef SampleType (*SampledDataType)[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
-typedef float (*FilteredDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][COMPLEX];
+// Define NR_STABS as the outer dims, as either NR_STATIONS (correlator) or NR_TABS (beamformer).
+#if defined NR_STATIONS
+# define NR_STABS  NR_STATIONS
+#elif defined NR_TABS
+# define NR_STABS  NR_TABS
+#else
+# error Neither NR_STATIONS (correlator) nor NR_TABS (beamformer) was defined
+#endif
+#if defined NR_STATIONS && defined NR_TABS
+# error NR_STATIONS and NR_TABS were defined. Need exactly one of those.
+#endif
+typedef SampleType (*SampledDataType)[NR_STABS][NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
+typedef float (*FilteredDataType)[NR_STABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][COMPLEX];
 typedef const float (*WeightsType)[NR_CHANNELS][16];
-
 
 
 /*!
@@ -55,7 +62,8 @@ typedef const float (*WeightsType)[NR_CHANNELS][16];
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values                | Description
  * ----------------------- | --------------------------- | -----------
- * NR_STATIONS             | >= 1                        | number of antenna fields
+ * NR_STATIONS             | >= 1                        | number of antenna fields (iff correlator)
+ * NR_TABS                 | >= 1                        | number of tight array beams (tabs) (iff beamformer)
  * NR_TAPS                 | 1--16                       | number of FIR filtering coefficients
  * NR_SAMPLES_PER_CHANNEL  | multiple of NR_TAPS and > 0 | number of input samples per channel
  * NR_BITS_PER_SAMPLE      | 8 or 16                     | number of bits of signed integral value type of sampledDataPtr (TODO: support 4)
@@ -64,11 +72,11 @@ typedef const float (*WeightsType)[NR_CHANNELS][16];
  * COMPLEX                 | 2                           | size of complex in number of floats/doubles
  *
  * Execution configuration: (TODO: enforce using __attribute__ reqd_work_group_size)
- * - Work dim == 2  (can be 1 iff NR_STATIONS == 1)
+ * - Work dim == 2  (can be 1 iff NR_STATIONS (or NR_TABS) == 1)
  *     + Inner dim: the channel, pol, real/imag the thread processes
  *     + Outer dim: the station the thread processes
  * - Work group size: must divide global size, no other kernel restrictions
- * - Global size: (NR_CHANNELS * NR_POLARIZATIONS * 2, NR_STATIONS)
+ * - Global size: (NR_CHANNELS * NR_POLARIZATIONS * 2, NR_STATIONS (or NR_TABS))
  *
  * TODO: convert complex dim to fcomplex (=float2 in math.cl) in device code and to complex<float> in host code.
  */

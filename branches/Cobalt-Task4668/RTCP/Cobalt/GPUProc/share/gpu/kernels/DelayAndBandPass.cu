@@ -40,11 +40,8 @@
  * - @c NR_POLARIZATIONS: 2
  * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
  * - @c DO_TRANSPOSE: output transposed data. Needed for correlating >1 channel.
- *                    Also needed for bandpass correction when beamforming (TODO).
+ *                    Also needed for bandpass correction when beamforming.
  */
-
-#include <cuda_runtime.h>
-#include <cuda.h>
 
 #include "complex.cuh" // TODO: get rid of this: causes warning that is probably not a bug, but does point to a lot of unneeded inits in our __shared__ decl
 #include "IntToFloat.cuh"
