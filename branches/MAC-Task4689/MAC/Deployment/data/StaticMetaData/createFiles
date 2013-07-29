@@ -50,7 +50,7 @@ def findIPNumber(stationName):
         else:
             return outwords[0]
     else:
-        command = "host "+stationName+"C"
+        command = "host "+stationName+"C."
         output = Popen(command,shell=True, stdout=PIPE).stdout
         stdout = output.readlines()
         outline = stdout[0].strip()
@@ -178,7 +178,7 @@ def findRSPIP(nodeName, dataDir):
     pattern=re.compile("^"+nodeName+"_([0-9]*)[ \t]*([0-9\.]*)", re.IGNORECASE | re.MULTILINE)
     RspIp = pattern.findall(open(dataDir+"/RSP+IP.dat").read())
     if not RspIp:
-        raise "\nFatal error: "+nodeName+" is not defined in file 'RSP+IP'"
+        raise Exception("\nFatal error: "+nodeName+" is not defined in file 'RSP+IP'")
     return RspIp
 
 
@@ -263,6 +263,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
         for rspNr in range(len(ip_mac_alias)):  
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", ip_mac_alias[rspNr][2] +"   # "+ip_mac_alias[rspNr][3])
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip_mac_alias[rspNr][1])
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", 0x10FA + rspNr)
     else:
         nrNodes = len(rspDestNode) # Number of occurences in file
         # Core stations have two occurences (these have a splitter), and so
@@ -274,11 +275,13 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
                 for rspNr in range(4):
                     RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
                     RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
+                    RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(0x10FA + rspNr))
             if str(1) in rspDestNode.keys():
                 (ip, mac) = findIPandMAC(rspDestNode[str(1)],dataDir)
                 for rspNr in range(4):
                     RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(1)])
                     RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(0x10FA + 6 + rspNr))
 
 
     # Find IP address for RSP board ethernet. All NL stations have RSP address
@@ -292,10 +295,10 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
             RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   "3")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   "4")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_10@",   "1")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_11@",   "2")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_12@",   "3")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_13@",   "4")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_10@",   "7")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_11@",   "8")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_12@",   "9")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_13@",   "10")
         else:
             RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   "1")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
@@ -383,10 +386,10 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
             RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   "3")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   "4")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_10@",   "1")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_11@",   "2")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_12@",   "3")
-            RSPconfig = RSPconfig.replace("@IP_EXTEN_13@",   "4")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_10@",   "7")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_11@",   "8")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_12@",   "9")
+            RSPconfig = RSPconfig.replace("@IP_EXTEN_13@",   "10")
         else:
             RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   "1")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
