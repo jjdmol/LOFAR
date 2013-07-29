@@ -54,6 +54,7 @@
 // We need to transpose the pol dim to stride-1 iff we have BANDPASS_CORRECTION,
 // both for our correlation and (for the 2 instantiations of this kernel) for our
 // beamforming pipelines. (BANDPASS_CORRECTION implies >1 channel per subband.)
+// Note: this cannot detect the need for a transpose outside the pipeline designs.
 #if defined BANDPASS_CORRECTION
 #  define DO_TRANSPOSE
 #endif
