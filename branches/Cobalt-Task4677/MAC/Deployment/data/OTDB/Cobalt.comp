@@ -64,7 +64,5 @@ par correctClocks 	        I    bool    -  10  	0	true		-		'correct for known st
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  CNProc_CoherentStokes 4.0.0  development '1'  "Coherent Stokes"
-uses  CNProc_IncoherentStokes 4.0.0  development '1'  "Inoherent Stokes"
 uses  BeamFormer   4.0.0  development '1'  "BeamFormer specification"
 uses  Correlator   4.0.0  development '1'  "Correlator specification"
