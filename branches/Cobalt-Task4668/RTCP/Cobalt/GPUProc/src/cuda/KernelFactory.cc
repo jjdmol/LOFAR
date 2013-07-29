@@ -41,7 +41,8 @@ namespace LOFAR
     KernelFactoryBase::compileDefinitions(const Kernel::Parameters& param) const
     {
       CompileDefinitions defs;
-      defs["COMPLEX"] = "2";
+      // TODO: These defines are (nearly) always needed for the correlator kernels. Investigate defaults for all bf kernels. E.g. NR_STATIONS "becomes" NR_TABS after the beamformer kernel.
+      defs["COMPLEX"] = "2"; // TODO: get rid of this: replace with proper complex type names
       defs["NR_CHANNELS"] = lexical_cast<string>(param.nrChannelsPerSubband);
       defs["NR_POLARIZATIONS"] = lexical_cast<string>(param.nrPolarizations);
       defs["NR_SAMPLES_PER_CHANNEL"] = 
