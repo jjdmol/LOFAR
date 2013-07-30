@@ -19,15 +19,16 @@
 //# $Id$
 
 /** @file
- * This file contains an Cuda implementation of the GPU kernel for the delay
- * and bandpass correction.
+ * This file contains a CUDA implementation of the GPU kernel for the delay
+ * and bandpass correction. It can also transpose the data (pol to dim 0).
  *
  * Usually, this kernel will be run after the polyphase filter kernel FIR.cl. In
  * that case, the input data for this kernel is already in floating point format
  * (@c NR_CHANNELS > 1). However, if this kernel is the first in row, then the
  * input data is still in integer format (@c NR_CHANNELS == 1), and this kernel
  * needs to do the integer-to-float conversion. If we do BANDPASS_CORRECTION
- * (implies NR_CHANNELS > 1), then we also transpose the pol dim to stride-1.
+ * (implies NR_CHANNELS > 1), then we typically also want to transpose the pol
+ * dim to the stride 1 dim (@c DO_TRANSPOSE).
  *
  * @attention The following pre-processor variables must be supplied when
  * compiling this program. Please take the pre-conditions for these variables
@@ -40,6 +41,10 @@
  *   - @c NR_SAMPLES_PER_CHANNEL: a multiple of 16
  * - @c NR_POLARIZATIONS: 2
  * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
+ *
+ * - @c DELAY_COMPENSATION: do delay compensation
+ * - @c BANDPASS_CORRECTION: correct the bandpass
+ * - @c DO_TRANSPOSE: transpose the data. The pol dim moves to the stride 1 dim.
  */
 
 #include "complex.cuh" // TODO: get rid of this: causes warning that is probably not a bug, but does point to a lot of unneeded inits in our __shared__ decl
@@ -49,14 +54,6 @@
    // #chnl==1 && BANDPASS_CORRECTION is rejected on the CPU early, (TODO)
    // but once here, don't do difficult and adjust cleanly here.
 #  undef BANDPASS_CORRECTION
-#endif
-
-// We need to transpose the pol dim to stride-1 iff we have BANDPASS_CORRECTION,
-// both for our correlation and (for the 2 instantiations of this kernel) for our
-// beamforming pipelines. (BANDPASS_CORRECTION implies >1 channel per subband.)
-// Note: this cannot detect the need for a transpose outside the pipeline designs.
-#if defined BANDPASS_CORRECTION
-#  define DO_TRANSPOSE
 #endif
 
 typedef LOFAR::Cobalt::gpu::complex<float> complexfloat;
