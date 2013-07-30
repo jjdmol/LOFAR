@@ -12,7 +12,6 @@ node  Correlator 4.0.0  development 'node constraint'  "Settings for Correlation
 #--------------------------------------------------------------------------------------------------------
 par nrChannelsPerSubband I  int   -   10    0 1   64    "Number of frequency channels to output for each subband"
 par integrationTime	I       dbl		-		10		0	1		- 		"Integration time"
-par blockSize     	I       int		-		10		0	1		- 		"Cobalt block size, per subband, in samples"
 par nrBlocksPerIntegration	    I       int		-		10		0	1		1 		"Number of blocks in each integration period"
 
 # -- CoherentStokes --
@@ -57,8 +56,9 @@ node  Cobalt         4.0.1  development 'node constraint'  "Cobalt"
 
 #    name          	        dir. type  unit prun.   vm      value   	constr.  	descr.
 #--------------------------------------------------------------------------------------------------------
-par realTime		        I    bool    -	10	0	true		-		"whether data is processed at real-time"
-par delayCompensation	        I    bool    -  10  	0	true		-		"perform delay compensation between stations"
+par blockSize     	        I    int		-		10		0	1		- 		"Cobalt block size, per subband, in samples"
+par realTime		            I    bool    -	10	0	true		-		"whether data is processed at real-time"
+par delayCompensation	      I    bool    -  10  	0	true		-		"perform delay compensation between stations"
 par correctBandPass	        I    bool    -  10  	0	true		-		'apply the bandpass filter'
 par correctClocks 	        I    bool    -  10  	0	true		-		'correct for known station clock offsets'
 
