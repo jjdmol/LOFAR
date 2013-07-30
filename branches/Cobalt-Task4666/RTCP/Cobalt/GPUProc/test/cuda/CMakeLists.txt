@@ -38,7 +38,6 @@ target_link_libraries(tProcessorAffinity ${LIBHWLOC_LIBRARY})
 set_tests_properties(
   tFIR_Filter
   #tFFT_leakage
-  tDelayAndBandPass
   tDelayAndBandPassKernel
   tCorrelator
   tIntToFloat
@@ -48,6 +47,13 @@ set_tests_properties(
   tTranspose
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
 )
+
+if(UNITTEST++_FOUND)
+  set_tests_properties(
+    tDelayAndBandPass
+    PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
+  )
+endif(UNITTEST++_FOUND)
 
 # To compile .cu files, invoke CUDA's nvcc, but respect the host C/C++ compiler (variants) selection.
 set(COMPILER_BINDIR_OPT --compiler-bindir ${CMAKE_CXX_COMPILER})

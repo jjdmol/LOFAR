@@ -63,11 +63,11 @@ namespace LOFAR
       // Construct a factory for creating Kernel objects of type \c T, using the
       // settings in the Parset \a ps.
       KernelFactory(const Parset& ps) :
-        itsParameters(ps)
+        itsParameters(ps),
+        itsPTX(createPTX(T::theirSourceFile,
+                         compileDefinitions(),
+                         compileFlags()))
       {
-        itsPTX = createPTX(T::theirSourceFile,
-                           compileDefinitions(),
-                           compileFlags());
       }
 
       // Create a new Kernel object of type \c T.

@@ -61,16 +61,6 @@ namespace LOFAR
     }
 
 
-    void SubbandProc::processSubband(SubbandProcInputData &, StreamableData &)
-    {
-    }
-
-
-    void SubbandProc::postprocessSubband(StreamableData &)
-    {
-    }
-
-
     void SubbandProc::addCounter(const std::string &name)
     {
       counters[name] = new PerformanceCounter(name, profiling);

@@ -21,13 +21,18 @@ class EC:
     EC_CTRL_TEMP        = 3
     EC_VERSION          = 5
     EC_SET_HEATER       = 17
+    EC_SET_48           = 20
     EC_RESET_48         = 22
+    EC_SET_LCU          = 25    
     EC_RESET_LCU        = 27
+    EC_RESET_TRIP       = 28
+    SET_OBSERVING       = 120
 
     PWR_OFF      = 0
     PWR_ON       = 1
-    P48		     = 48
-    LCU          = 230
+    P_48         = 0
+    P_LCU        = 1
+    P_ALL        = 2
 
     printToScreen = False
     host = None
@@ -100,7 +105,7 @@ class EC:
     def disconnectHost(self):
         self.setInfo("closing %s" %(self.host))
         self.sck.close()
-        #time.sleep(0.1)
+        time.sleep(0.5)
         return
         
     #---------------------------------------
@@ -141,19 +146,34 @@ class EC:
         else:
             PL = []
         return (cmdId, status, PL) 
-    
     #---------------------------------------
-    def resetPower(self):
-        self.sendCmd(self.EC_RESET_48, 0, 0)
-        (cmdId, status, PL) = self.recvAck()
-        self.setInfo('PowerReset 48V')
-    
+    def setPower(self, pwr=P_ALL, state=PWR_ON):
+        if ((pwr == self.P_48) or (pwr == self.P_ALL)):
+            self.sendCmd(self.EC_SET_48, 0, state)
+            (cmdId, status, PL) = self.recvAck()
+            self.setInfo('Power Set 48V to %d' %(state))
+        if ((pwr == self.P_LCU) or (pwr == self.P_ALL)):
+            self.sendCmd(self.EC_SET_LCU, 0, state)
+            (cmdId, status, PL) = self.recvAck()
+            self.setInfo('Power Set LCU to %d' %(state))
+        return(self.info)
     #---------------------------------------
-    def resetLCU(self):
-        self.sendCmd(self.EC_RESET_LCU, 0, 0)
+    def resetPower(self, pwr=P_ALL):
+        if ((pwr == self.P_48) or (pwr == self.P_ALL)):
+            self.sendCmd(self.EC_RESET_48, 0, 0)
+            (cmdId, status, PL) = self.recvAck()
+            self.setInfo('PowerReset 48V')
+        if ((pwr == self.P_LCU) or (pwr == self.P_ALL)):
+            self.sendCmd(self.EC_RESET_LCU, 0, 0)
+            (cmdId, status, PL) = self.recvAck()
+            self.setInfo('PowerReset LCU')
+        return(self.info)
+    #---------------------------------------
+    def resetTrip(self):
+        self.sendCmd(self.EC_RESET_TRIP, -1, 0)
         (cmdId, status, PL) = self.recvAck()
-        self.setInfo('PowerReset LCU')
-        
+        self.setInfo('Reset Trip System')
+        return(self.info)
     #---------------------------------------
     def setHeater(self, mode=0):
         self.sendCmd(self.EC_SET_HEATER, -1, mode)
@@ -200,11 +220,11 @@ class EC:
         if len(PL1) == 0 or len(PL2) == 0: return     
         # fill lines with data    
         lines = []
-        lines.append('temperature cab3 = %5.2f' %(PL2[2]/100.))
-        lines.append('humidity cab3    = %5.2f' %(PL2[3]/100.))
+        lines.append('temperature      = %5.2f' %(PL2[2]/100.))
+        lines.append('humidity         = %5.2f' %(PL2[3]/100.))
         lines.append('heater state     = %s' %(onoff[PL2[(3*7)+6]]))
         lines.append('power 48V state  = %s' %(onoff[(PL2[28] & 1)]))
-        lines.append('power LCU state  = %s' %(onoff[(PL2[28] >> 1)]))
+        lines.append('power LCU state  = %s' %(onoff[(PL2[28] >> 1) & 1]))
         lines.append('lightning state  = %s' %(badok[(PL2[29] & 1)]))
 
         # print lines to screen or file, see printInfo
@@ -225,4 +245,11 @@ class EC:
         (cmdId, status, PL) = self.recvAck()
         
         self.addInfo('Power: 48V = %s, LCU = %s' %(state[(PL[28] & 1)], state[(PL[28] >> 1)]))
-
+    
+    #---------------------------------------
+    ## set observing active(1) or not active(0)
+    def setObserving(self, state=0):
+        self.sendCmd(self.SET_OBSERVING, -1, state)
+        (cmdId, status, PL) = self.recvAck()
+        self.setInfo('SetObserving to %d' %(state))
+        return(self.info)    

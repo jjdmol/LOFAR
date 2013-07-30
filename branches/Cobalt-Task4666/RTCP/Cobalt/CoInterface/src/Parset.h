@@ -87,6 +87,11 @@ namespace LOFAR
       double subbandWidth() const;
 
       // The number of samples in one block of one subband.
+      //
+      // key: Cobalt.blockSize
+      size_t blockSize;
+
+      // Alias for blockSize
       size_t nrSamplesPerSubband() const;
 
       // The number of seconds represented by each block.
