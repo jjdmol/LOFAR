@@ -34,10 +34,7 @@ if __name__ == '__main__':
         time.sleep(1.0)
         ec.printInfo(True)
         ec.getPowerStatus()
-        ec.resetPower(ec.P_48)
-        print "waiting 10 seconds"
-        time.sleep(10.0)
-        ec.getPowerStatus()
+        ec.resetTrip()
         print "waiting 10 seconds"
         time.sleep(10.0)
         ec.getPowerStatus()
