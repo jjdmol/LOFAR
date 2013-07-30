@@ -12,7 +12,7 @@ node  Correlator 4.0.0  development 'node constraint'  "Settings for Correlation
 #--------------------------------------------------------------------------------------------------------
 par nrChannelsPerSubband I  int   -   10    0 1   64    "Number of frequency channels to output for each subband"
 par integrationTime	I       dbl		-		10		0	1		- 		"Integration time"
-par nrSamplesPerChannelPerBlock	I       int		-		10		0	1		- 		"Cobalt block size, per channel, in samples"
+par blockSize     	I       int		-		10		0	1		- 		"Cobalt block size, per subband, in samples"
 par nrBlocksPerIntegration	    I       int		-		10		0	1		1 		"Number of blocks in each integration period"
 
 # -- CoherentStokes --
