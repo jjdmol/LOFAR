@@ -47,7 +47,7 @@
  * - @c DO_TRANSPOSE: transpose the data. The pol dim moves to the stride 1 dim.
  */
 
-#include "complex.cuh" // TODO: get rid of this: causes warning that is probably not a bug, but does point to a lot of unneeded inits in our __shared__ decl
+#include "complex.cuh"
 #include "IntToFloat.cuh"
 
 #if NR_CHANNELS == 1
@@ -56,9 +56,9 @@
 #  undef BANDPASS_CORRECTION
 #endif
 
-typedef LOFAR::Cobalt::gpu::complex<float> complexfloat;
-typedef LOFAR::Cobalt::gpu::complex<short> complexshort;
-typedef LOFAR::Cobalt::gpu::complex<char> complexchar;
+typedef complex<float> complexfloat;
+typedef complex<short> complexshort;
+typedef complex<char>  complexchar;
 
 #if defined DO_TRANSPOSE
 typedef  complexfloat (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
@@ -178,10 +178,10 @@ extern "C" {
                                   16.0f * deltaPhi.y * frequency);
 #endif
 
-  complexfloat vX = LOFAR::Cobalt::gpu::cosisin(myPhiBegin.x);
-  complexfloat vY = LOFAR::Cobalt::gpu::cosisin(myPhiBegin.y);
-  complexfloat dvX = LOFAR::Cobalt::gpu::cosisin(myPhiDelta.x);
-  complexfloat dvY = LOFAR::Cobalt::gpu::cosisin(myPhiDelta.y);
+  complexfloat vX = cosisin(myPhiBegin.x);
+  complexfloat vY = cosisin(myPhiBegin.y);
+  complexfloat dvX = cosisin(myPhiDelta.x);
+  complexfloat dvY = cosisin(myPhiDelta.y);
 #endif
 
 #if defined BANDPASS_CORRECTION

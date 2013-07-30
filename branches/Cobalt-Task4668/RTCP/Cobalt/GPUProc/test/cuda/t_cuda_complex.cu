@@ -1,4 +1,4 @@
-//# t_cuda_complex.cu
+//# t_cuda_complex.cu: tests our complex type for CUDA device code
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,11 +20,10 @@
 
 #include <lofar_config.h>
 
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
+
+// Note: watch what namespace you're referring to in this file! Outside device code, keep it explicit.
 #include <complex>
 
 #include "complex.cuh"
@@ -36,27 +35,26 @@ __global__ void addKernel( void *in_ptr, const void *out_ptr)
     int i = threadIdx.x;
     // Cast to complex
 
-    LOFAR::Cobalt::gpu::complex<float>*in = (LOFAR::Cobalt::gpu::complex<float>*) in_ptr;
-    LOFAR::Cobalt::gpu::complex<float>*out = (LOFAR::Cobalt::gpu::complex<float>*) out_ptr;
+    complex<float>*in = (complex<float>*) in_ptr;
+    complex<float>*out = (complex<float>*) out_ptr;
 
     //do some computations, We are not testing the correctness of the implementation here.
     out[i] = in[i] + in[i];
     out[i] -= in[i];
     out[i] = out[i];
-    out[i] *= 10.0;
+    out[i] *= 10.0f;
 }
 
-using namespace std;
 int main()
 {
     const int arraySize = 5;
     // insert some values
-    const complex<float> complex_in[5] = { complex<float>(1.0,1.0),
-                                           complex<float>(1,-1),
-                                           complex<float>(-1,1),
-                                           complex<float>(-1,-1),
-                                           complex<float>(4,-4)};
-    complex<float> complex_out[5] = { 0 };
+    const std::complex<float> complex_in[5] = { std::complex<float>(1.0,1.0),
+                                                std::complex<float>(1,-1),
+                                                std::complex<float>(-1,1),
+                                                std::complex<float>(-1,-1),
+                                                std::complex<float>(4,-4) };
+    std::complex<float> complex_out[5] = { 0 };
 
     // Add vectors in parallel.
     cudaError_t cudaStatus = addWithCuda(complex_out, complex_in,arraySize);
@@ -68,11 +66,11 @@ int main()
         return 1;
     }
 
-    const complex<float> complex_target[5] = {complex<float>(10,10),
-        complex<float>(10, -10),
-        complex<float>(-10,10),
-        complex<float>(-10,-10),
-        complex<float>(40,-40)};
+    const std::complex<float> complex_target[5] = { std::complex<float>(10,10),
+                                                    std::complex<float>(10, -10),
+                                                    std::complex<float>(-10,10),
+                                                    std::complex<float>(-10,-10),
+                                                    std::complex<float>(40,-40) };
       
 
     // validate that the output of the kernel is correct!
@@ -87,16 +85,16 @@ int main()
       }
     else //print the output data and return -1
     {
-      cout << "The complex values returned from the device were incorrect:" << endl;
-      cout << "complex numbers, expected - received: {";
-      for (int idx =0; idx < 5 ;++idx)
+      std::cout << "The complex values returned from the device were incorrect:" << std::endl;
+      std::cout << "complex numbers, expected - received: {";
+      for (int idx =0; idx < 5; ++idx)
       {
-        cout << complex_target[idx] << " - " << complex_out[idx] ;
+        std::cout << complex_target[idx] << " - " << complex_out[idx] ;
         if (complex_target[idx]  != complex_out[idx])
-          cout << "<<<";
-        cout << endl;
+          std::cout << "<<<";
+        std::cout << std::endl;
       }
-      cout << " }" << endl;
+      std::cout << " }" << std::endl;
       return -1;
     }
 }
@@ -118,7 +116,7 @@ cudaError_t addWithCuda(std::complex<float>* output_complex,
         goto Error;
     }
 
-    // allocate the complex buffers
+    // allocate the std::complex buffers
     cudaStatus = cudaMalloc((void**)&dev_in, size * sizeof(std::complex<float>));
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
