@@ -354,6 +354,12 @@ namespace LOFAR
         settings.anaBeam.direction.angle2 = getDouble("Observation.AnaBeam[0].angle2", 0.0);
       }
 
+      if (isDefined("Cobalt.Correlator.blockSize")) {
+        settings.blockSize = getUint32("Cobalt.blockSize", 1.0 * settings.subbandWidth());
+      } else {
+        settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3052) * getUint32("Observation.channelsPerSubband", 64);
+      }
+
       /* ===============================
        * Correlator pipeline information
        * ===============================
@@ -363,7 +369,7 @@ namespace LOFAR
       if (settings.correlator.enabled || true) { // for now, always fill in correlator values, since they're still used outside the correlator to determine the block size, etc (TODO: move generic ones outside, but see TODO below)
         settings.correlator.nrChannels = getUint32(renamedKey("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband"), 64);
         settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
-        settings.correlator.nrSamplesPerChannel = getUint32(renamedKey("Cobalt.Correlator.nrSamplesPerChannelPerBlock", "OLAP.CNProc.integrationSteps"), 3052);
+        settings.correlator.nrSamplesPerChannel = settings.blockSize / settings.correlator.nrChannels;
         settings.correlator.nrBlocksPerIntegration = getUint32(renamedKey("Cobalt.Correlator.nrBlocksPerIntegration", "OLAP.IONProc.integrationSteps"), 1);
         settings.correlator.nrBlocksPerObservation = static_cast<size_t>(floor((settings.stopTime - settings.startTime) / settings.correlator.integrationTime()));
 
@@ -525,7 +531,7 @@ namespace LOFAR
     }
 
     size_t ObservationSettings::nrSamplesPerSubband() const {
-      return correlator.nrChannels * correlator.nrSamplesPerChannel;
+      return blockSize;
     }
 
     double ObservationSettings::blockDuration() const {
