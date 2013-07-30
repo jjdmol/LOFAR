@@ -177,7 +177,7 @@ int main()
   printf("system cpuset is %s\n", a_string);
   
   //HWLOC_OBJ_PCI_DEVICE  HWLOC_OBJ_OSDEV_NETWORK 
-  // Connect to pci device on index 1 (network card)
+  // Connect to pci device on index 0 (network card)
   obj = hwloc_get_obj_by_type(topology, HWLOC_OBJ_PCI_DEVICE, 0 );
   hwloc_obj_type_snprintf(a_string, 400, obj, 1);       // get the type
   cout << "Type:" << a_string << endl;
@@ -190,6 +190,9 @@ int main()
   //obj = hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_PCI_DEVICE, NULL );
   cout << "device found: " /*<< hwloc_obj_get_info_by_name(obj , "type") */<< endl;
   cout << endl;
+  
+  // De juiste volgorde is het uitvinden op welke cpu de netwerk kaart is aangesloten
+  // Ve
   return 0;
   //return UnitTest::RunAllTests() > 0;
     
