@@ -142,20 +142,20 @@ extern "C" {
                                                 const float * bandPassFactorsPtr)
 {
   OutputDataType outputData = (OutputDataType) correctedDataPtr;
-  InputDataType inputData = (InputDataType) filteredDataPtr;
+  InputDataType inputData   = (InputDataType)  filteredDataPtr;
 #if defined DELAY_COMPENSATION
-  DelaysType delaysAtBegin = (DelaysType) delaysAtBeginPtr;
+  DelaysType delaysAtBegin  = (DelaysType) delaysAtBeginPtr;
   DelaysType delaysAfterEnd = (DelaysType) delaysAfterEndPtr;
   PhaseOffsetsType phaseOffsets = (PhaseOffsetsType) phaseOffsetsPtr;
 #endif
 #if NR_CHANNELS > 1 || defined DO_TRANSPOSE
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
 
-  unsigned major = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
-  unsigned minor = (blockIdx.x * blockDim.x + threadIdx.x) % 16;
+  unsigned major   = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
+  unsigned minor   = (blockIdx.x * blockDim.x + threadIdx.x) % 16;
   unsigned channel = (blockIdx.y * blockDim.y + threadIdx.y) * 16;
 #endif
-  unsigned station = blockIdx.z * blockDim.z + threadIdx.z;
+  unsigned station =  blockIdx.z * blockDim.z + threadIdx.z;
 
 #if defined DELAY_COMPENSATION
 #if NR_CHANNELS == 1
@@ -170,7 +170,7 @@ extern "C" {
   // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
   // Because we `undo' the delay, we need to rotate BACK.
   float pi2 = -2.0f * 3.1415926535f;
-  float2 phiBegin = make_float2(pi2 * delayAtBegin.x, pi2 * delayAtBegin.y);
+  float2 phiBegin = make_float2(pi2 * delayAtBegin.x,  pi2 * delayAtBegin.y);
   float2 phiEnd   = make_float2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y);
 
   float2 deltaPhi = make_float2((phiEnd.x - phiBegin.x) / NR_SAMPLES_PER_CHANNEL,
@@ -193,8 +193,8 @@ extern "C" {
 #endif
 
   fcomplex vX, vY, dvX, dvY; // store (cos(), sin())
-  sincosf(myPhiBegin.x, & vX.y, & vX.x);
-  sincosf(myPhiBegin.y, & vY.y, & vY.x);
+  sincosf(myPhiBegin.x, &vX.y,  &vX.x);
+  sincosf(myPhiBegin.y, &vY.y,  &vY.x);
   sincosf(myPhiDelta.x, &dvX.y, &dvX.x);
   sincosf(myPhiDelta.y, &dvY.y, &dvY.x);
 #endif
