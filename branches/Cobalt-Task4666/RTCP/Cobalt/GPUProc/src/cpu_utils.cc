@@ -3,6 +3,7 @@
 #include <sched.h>
 #include <CoInterface/Parset.h>
 
+#include <Common/SystemCallException.h>
 
 namespace LOFAR
 {
@@ -10,10 +11,8 @@ namespace LOFAR
   {
     // Set the correct processer affinity based on the parset entry
     // settings.nodes[rank].cpu
-    void setProcessorAffinity(const LOFAR::Cobalt::Parset &ps, int rank)
+    void setProcessorAffinity(unsigned cpuId)
     {
-      int cpuId = ps.settings.nodes[rank].cpu;
-
       // Get the number of cpu's (32)
       unsigned numCPU = sysconf(_SC_NPROCESSORS_ONLN );
 
@@ -21,9 +20,13 @@ namespace LOFAR
       // sched_getaffinity(pid, size of cpu set, mask to place data in) //pid 0 = current thread
       cpu_set_t mask;  
       bool sched_return = sched_getaffinity(0, sizeof(cpu_set_t), &mask);
+      int localerrno = errno;
+      if (sched_return != 0)
+        throw SystemCallException("sched_getaffinity", localerrno, THROW_ARGS);
 
-      //// zero the mask 
-      CPU_ZERO(&mask) ; 
+
+      // zero the mask 
+      CPU_ZERO(&mask); 
 
       // Set the mask, beginning with cpuId and set the corresponding cpus
       // use a step of two, this is cobalt specific. The Cobalt procs 
@@ -33,9 +36,9 @@ namespace LOFAR
 
       // now assign the mask and set the affinity
       sched_return = sched_setaffinity(0, sizeof(cpu_set_t), &mask);
-
+      localerrno = errno;
       if (sched_return != 0)
-        LOG_FATAL_STR("Failed setting processor affinity."); 
+        throw SystemCallException("sched_setaffinity", localerrno, THROW_ARGS);
     }
   }
 }

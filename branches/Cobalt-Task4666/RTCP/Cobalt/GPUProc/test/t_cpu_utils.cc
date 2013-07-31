@@ -47,82 +47,35 @@ int main(int argc, char **argv)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   
   //exercise the set processorAffinity functionality
-  setProcessorAffinity(ps, rank);
+  int cpuId = ps.settings.nodes[rank].cpu;
+  setProcessorAffinity(cpuId);
   unsigned numCPU = sysconf( _SC_NPROCESSORS_ONLN );
 
+
+  // Validate the correct setting of the affinity
   // Get the cpu of the current thread
   cpu_set_t mask;  
-  bool sched_return = sched_getaffinity(0, sizeof(cpu_set_t), &mask);
+  sched_getaffinity(0, sizeof(cpu_set_t), &mask);
 
-  if(rank == 0) // the parset sets this rank to cpu 0
-  {  
-    // Test if it is set correctly!
-    for (unsigned idx_cpu =0; idx_cpu < numCPU; idx_cpu += 2)
+  // Test if affinity is set correctly!
+  // The cpu with rank 0 should be all even cpus the rank should have odd cpu's
+  for (unsigned idx_cpu = rank; idx_cpu < numCPU; idx_cpu += 2) 
+  {
+    if (1 != CPU_ISSET(idx_cpu, &mask))
     {
-      if (1 != CPU_ISSET(idx_cpu, &mask))
-      {
-        LOG_FATAL_STR("Found a cpu that is NOT set while is should be set!");
-        exit(1);
-      }
-      if (0 != CPU_ISSET(idx_cpu + 1, &mask))
-      {
-        LOG_FATAL_STR("Found a cpu that is set while is should be NOT set!");
-        exit(1);
-      }
+      LOG_FATAL_STR("Found a cpu that is NOT set while is should be set!");
+      LOG_FATAL_STR(rank);
+      exit(1);
+    }
+    if (0 != CPU_ISSET(idx_cpu + 1, &mask))
+    {
+      LOG_FATAL_STR("Found a cpu that is set while is should be NOT set!");
+      LOG_FATAL_STR(rank);
+      exit(1);
     }
   }
-  else
-  { // cpu is set to 1 for this rank
-    for (unsigned idx_cpu =0; idx_cpu < numCPU; idx_cpu += 2)
-    {
-      if (0 != CPU_ISSET(idx_cpu, &mask))
-      {
-        LOG_FATAL_STR("Found a cpu that is NOT set while is should be set!");
-        exit(1);
-      }
-      if (1 != CPU_ISSET(idx_cpu + 1, &mask))
-      {
-        LOG_FATAL_STR("Found a cpu that is set while is should be NOT set!");
-        exit(1);
-      }
-    }
-  }
-  //size_t nSampledData = factory.bufferSize(IntToFloatKernel::INPUT_DATA) / sizeof(char);
-  //size_t sizeSampledData = nSampledData * sizeof(char);
 
-  //// Create some initialized host data
-  //gpu::HostMemory sampledData(ctx, sizeSampledData);
-  //char *samples = sampledData.get<char>();
-  //for (unsigned idx =0; idx < nSampledData; ++idx)
-  //  samples[idx] = -128;  // set all to -128
-  //gpu::DeviceMemory devSampledData(ctx, factory.bufferSize(IntToFloatKernel::INPUT_DATA));
-  //stream.writeBuffer(devSampledData, sampledData, true);
-  //
-  //// Device mem for output
-  //gpu::DeviceMemory devConvertedData(ctx, factory.bufferSize(IntToFloatKernel::OUTPUT_DATA));
-  //gpu::HostMemory convertedData(ctx,  factory.bufferSize(IntToFloatKernel::OUTPUT_DATA));
-  ////stream.writeBuffer(devConvertedData, sampledData, true);
-
-  //IntToFloatKernel::Buffers buffers(devSampledData, devConvertedData);
-  //auto_ptr<IntToFloatKernel> kernel(factory.create(ctx, buffers));
-
-  //kernel->enqueue(stream);
-  //stream.synchronize();
-  //stream.readBuffer(convertedData, devConvertedData, true);
-  //stream.synchronize();
-  //float *samplesFloat = convertedData.get<float>();
-  //
-  //// Validate the output:
-  //// The inputs were all -128 with bits per sample 8. 
-  //// Therefore they should all be converted to -127 (but scaled to 16 bit amplitute values).
-  //for (size_t idx =0; idx < nSampledData; ++idx)
-  //  if(samplesFloat[idx] != -127 * 256)
-  //  {
-  //      cerr << "Found an uncorrect sample in the output array at idx: " << idx << endl
-  //           << "Value found: " << samplesFloat[idx] << endl
-  //           << "Test failed "  << endl;
-  //      return -1;
-  //  }
+  MPI_Finalize();
       
   return 0;
 }

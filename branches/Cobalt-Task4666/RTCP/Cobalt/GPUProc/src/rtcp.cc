@@ -172,7 +172,8 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
 
   // set the processor affinity before any threads are created
-  setProcessorAffinity(ps, rank);
+  int cpuId = ps.settings.nodes[rank].cpu;
+  setProcessorAffinity(cpuId);
 
   // From here threads are produced
   // Only ONE host should start the Storage processes

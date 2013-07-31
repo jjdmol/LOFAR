@@ -28,9 +28,9 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    // Set the correct processer affinity based on the parset entry
-    // settings.nodes[rank].cpu
-    void setProcessorAffinity(const LOFAR::Cobalt::Parset &ps, int rank);
+    // Set the correct processer affinity for a COBALT system
+    // This will result in less then optimal performance on NON COBALT SYSTEMS!
+    void setProcessorAffinity(unsigned procId);
   }
 }
 #endif
