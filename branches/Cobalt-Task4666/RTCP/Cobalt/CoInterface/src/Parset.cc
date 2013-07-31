@@ -328,7 +328,7 @@ namespace LOFAR
         node.cpu      = getUint32(prefix + "cpu",  0);
         node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
 
-        vector<string> stationNames = getStringVector(prefix + "stations", allStationNames());
+        vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString);
 
         node.stations.resize(stationNames.size());
 
