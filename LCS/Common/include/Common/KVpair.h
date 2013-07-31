@@ -31,6 +31,7 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
+#include <Common/LofarTypes.h>
 
 
 namespace LOFAR {
