@@ -54,7 +54,7 @@
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 
-#include "cpu_utils.h"
+#include <GPUProc/cpu_utils.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;

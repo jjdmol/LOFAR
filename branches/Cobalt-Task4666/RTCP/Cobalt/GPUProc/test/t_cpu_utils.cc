@@ -22,36 +22,22 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-//#include <GPUProc/gpu_wrapper.h>
-//#include <GPUProc/gpu_utils.h>
-//#include <GPUProc/BandPass.h>
-//#include <GPUProc/Kernels/IntToFloatKernel.h>
-//#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
-//
-//using namespace std;
-//using namespace LOFAR::Cobalt;
+#include <GPUProc/cpu_utils.h>
+
+#include <mpi.h>
+
+using namespace std;
+using namespace LOFAR::Cobalt;
 
 int main() {
   INIT_LOGGER("tcpu_utils.cc");
 
+  Parset ps("tcpu_utils.in_parset");
+  
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  //
-  //
-  //// Set up gpu environment
-  //try {
-  //  gpu::Platform pf;
-  //  cout << "Detected " << pf.size() << " CUDA devices" << endl;
-  //} catch (gpu::CUDAException& e) {
-  //  cerr << e.what() << endl;
-  //  return 3;
-  //}
-  //gpu::Device device(0);
-  //vector<gpu::Device> devices(1, device);
-  //gpu::Context ctx(device);
-  //gpu::Stream stream(ctx);
-
-  //Parset ps("tIntToFloatKernel.in_parset");
-  //KernelFactory<IntToFloatKernel> factory(ps);
+  //setProcessorAffinity(ps, rank);
 
   //size_t nSampledData = factory.bufferSize(IntToFloatKernel::INPUT_DATA) / sizeof(char);
   //size_t sizeSampledData = nSampledData * sizeof(char);
