@@ -239,7 +239,9 @@ extern "C" {
     sampleY.y *= weight;
 #endif
 
-#if defined DO_TRANSPOSE
+// Support all variants of NR_CHANNELS and DO_TRANSPOSE for testing etc.
+// Transpose: data order is [station][channel][time][pol]
+#if NR_CHANNELS > 1 && defined DO_TRANSPOSE
     __shared__ fcomplex tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
 
     tmp[major][minor][0] = sampleX;
@@ -248,9 +250,17 @@ extern "C" {
     (*outputData)[station][channel + major][time + minor][0] = tmp[minor][major][0];
     (*outputData)[station][channel + major][time + minor][1] = tmp[minor][major][1];
     __syncthreads();
-#else
+#elif NR_CHANNELS == 1 && defined DO_TRANSPOSE
     (*outputData)[station][0][time][0] = sampleX;
     (*outputData)[station][0][time][1] = sampleY;
+
+// No transpose: data order is [station][pol][channel][time]
+#elif NR_CHANNELS > 1
+    (*outputData)[station][0][channel + major][time + minor] = sampleX;
+    (*outputData)[station][1][channel + major][time + minor] = sampleY;
+#else
+    (*outputData)[station][0][0][time] = sampleX;
+    (*outputData)[station][1][0][time] = sampleY;
 #endif
   }
 }
