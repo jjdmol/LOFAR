@@ -47,7 +47,6 @@
  * - @c DO_TRANSPOSE: transpose the data. The pol dim moves to the stride 1 dim.
  */
 
-#include "complex.cuh"
 #include "IntToFloat.cuh"
 
 #if NR_CHANNELS == 1
@@ -56,30 +55,45 @@
 #  undef BANDPASS_CORRECTION
 #endif
 
-typedef complex<float> complexfloat;
-typedef complex<short> complexshort;
-typedef complex<char>  complexchar;
+// to distinguish complex float from other uses of float2
+typedef float2 fcomplex;
+//typedef float4 fcomplex2;
+
+typedef char2  char_complex;
+typedef short2 short_complex;
 
 #if defined DO_TRANSPOSE
-typedef  complexfloat (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
+typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
 #else
-typedef  complexfloat (* OutputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
+typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 #endif
 
 #if NR_CHANNELS == 1
 #  if NR_BITS_PER_SAMPLE == 16
-typedef  complexshort (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
+typedef  short_complex rawSampleType;
+typedef  short_complex (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
 #  elif NR_BITS_PER_SAMPLE == 8
-typedef  complexchar (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
+typedef  char_complex  rawSampleType;
+typedef  char_complex  (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
 #  else
 #    error unsupported NR_BITS_PER_SAMPLE
 #  endif
 #else
-typedef  complexfloat (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
+typedef  fcomplex (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 #endif
 typedef  const float (* DelaysType)[NR_SAPS][NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in seconds
 typedef  const float (* PhaseOffsetsType)[NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in radians
 typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
+
+
+// Keep it simple. We had complex<T> defined, but we need operator overloads,
+// so we cannot make it a POD type. Then we get redundant member inits in the
+// constructor, causing races when declaring variables in shared memory.
+__device__ fcomplex cmul(fcomplex lhs, fcomplex rhs)
+{
+  return make_float2(lhs.x * rhs.x - lhs.y * rhs.y,
+                     lhs.x * rhs.y + lhs.y * rhs.x);
+}
 
 /**
  * This kernel performs (up to) three operations on the input data:
@@ -118,8 +132,8 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
  */
 
 extern "C" {
- __global__ void applyDelaysAndCorrectBandPass( complexfloat * correctedDataPtr,
-                                                const complexfloat * filteredDataPtr,
+ __global__ void applyDelaysAndCorrectBandPass( fcomplex * correctedDataPtr,
+                                                const fcomplex * filteredDataPtr,
                                                 float subbandFrequency,
                                                 unsigned beam,
                                                 const float * delaysAtBeginPtr,
@@ -134,7 +148,7 @@ extern "C" {
   DelaysType delaysAfterEnd = (DelaysType) delaysAfterEndPtr;
   PhaseOffsetsType phaseOffsets = (PhaseOffsetsType) phaseOffsetsPtr;
 #endif
-#if NR_CHANNELS > 1
+#if NR_CHANNELS > 1 || defined DO_TRANSPOSE
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
 
   unsigned major = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
@@ -178,60 +192,60 @@ extern "C" {
                                   16.0f * deltaPhi.y * frequency);
 #endif
 
-  complexfloat vX, vY, dvX, dvY; // store (cos(), sin())
-  sincosf(myPhiBegin.x, & vX.m_z.y, & vX.m_z.x);
-  sincosf(myPhiBegin.y, & vY.m_z.y, & vY.m_z.x);
-  sincosf(myPhiDelta.x, &dvX.m_z.y, &dvX.m_z.x);
-  sincosf(myPhiDelta.y, &dvY.m_z.y, &dvY.m_z.x);
+  fcomplex vX, vY, dvX, dvY; // store (cos(), sin())
+  sincosf(myPhiBegin.x, & vX.y, & vX.x);
+  sincosf(myPhiBegin.y, & vY.y, & vY.x);
+  sincosf(myPhiDelta.x, &dvX.y, &dvX.x);
+  sincosf(myPhiDelta.y, &dvY.y, &dvY.x);
 #endif
 
 #if defined BANDPASS_CORRECTION
-  complexfloat weight((*bandPassFactors)[channel + minor]);
+  float weight((*bandPassFactors)[channel + minor]);
 #endif
 
 #if defined DELAY_COMPENSATION && defined BANDPASS_CORRECTION
-  vX *= weight;
-  vY *= weight;
+  vX.x *= weight;
+  vX.y *= weight;
+  vY.x *= weight;
+  vY.y *= weight;
 #endif
 
 #if NR_CHANNELS == 1
   for (unsigned time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x)
   {
-    complexfloat sampleX = complexfloat(
-                                convertIntToFloat((*inputData)[station][time][0].real()),
-                                convertIntToFloat((*inputData)[station][time][0].imag()));
-    complexfloat sampleY = complexfloat(
-                                convertIntToFloat((*inputData)[station][time][1].real()),
-                                convertIntToFloat((*inputData)[station][time][1].imag()));
+    rawSampleType sampleXraw = (*inputData)[station][time][0];
+    fcomplex sampleX = make_float2(convertIntToFloat(sampleXraw.x),
+                                   convertIntToFloat(sampleXraw.y));
+    rawSampleType sampleYraw = (*inputData)[station][time][1];
+    fcomplex sampleY = make_float2(convertIntToFloat(sampleYraw.x),
+                                   convertIntToFloat(sampleYraw.y));
 #else
   for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16)
   {
-    complexfloat sampleX = complexfloat(
-                        (*inputData)[station][0][time + major][channel + minor].real(),
-                        (*inputData)[station][0][time + major][channel + minor].imag());
-    complexfloat sampleY = complexfloat(
-                        (*inputData)[station][1][time + major][channel + minor].real(),
-                        (*inputData)[station][1][time + major][channel + minor].imag());
+    fcomplex sampleX = (*inputData)[station][0][time + major][channel + minor];
+    fcomplex sampleY = (*inputData)[station][1][time + major][channel + minor];
 #endif
 
 #if defined DELAY_COMPENSATION    
-    sampleX = sampleX * vX;
-    sampleY = sampleY * vY;
+    sampleX = cmul(sampleX, vX);
+    sampleY = cmul(sampleY, vY);
     // The calculations are with exponentional complex for: multiplication for correct phase shift
-    vX = vX * dvX;
-    vY = vY * dvY;
+    vX = cmul(vX, dvX);
+    vY = cmul(vY, dvY);
 #elif defined BANDPASS_CORRECTION
-    sampleX *= weight;
-    sampleY *= weight;
+    sampleX.x *= weight;
+    sampleX.y *= weight;
+    sampleY.x *= weight;
+    sampleY.y *= weight;
 #endif
 
 #if defined DO_TRANSPOSE
-    __shared__ complexfloat tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
+    __shared__ fcomplex tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
 
     tmp[major][minor][0] = sampleX;
     tmp[major][minor][1] = sampleY;
     __syncthreads();
-    (*outputData)[station][channel + major][time + minor][0] = tmp[minor][major][0];   
+    (*outputData)[station][channel + major][time + minor][0] = tmp[minor][major][0];
     (*outputData)[station][channel + major][time + minor][1] = tmp[minor][major][1];
     __syncthreads();
 #else
