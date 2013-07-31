@@ -10,6 +10,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 set(_gpuproc_sources
   #Package__Version.cc
   BandPass.cc
+  cpu_utils.cc
   FilterBank.cc
   global_defines.cc
   Station/StationNodeAllocation.cc

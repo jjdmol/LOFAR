@@ -322,7 +322,6 @@ namespace LOFAR
         return value;
       }
 
-
       class Context::Impl : boost::noncopyable
       {
       public:
