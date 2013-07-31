@@ -25,20 +25,68 @@
 #include <GPUProc/cpu_utils.h>
 
 #include <mpi.h>
+#include <iostream>
+#include <sched.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
 
-int main() {
+int main(int argc, char **argv)
+{
   INIT_LOGGER("t_cpu_utils.cc");
 
   Parset ps("t_cpu_utils.in_parset");
   
+    // Initialise and query MPI
+  int provided_mpi_thread_support;
+  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
+    cerr << "MPI_Init_thread failed" << endl;
+    exit(1);
+  }
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  
+  //exercise the set processorAffinity functionality
+  setProcessorAffinity(ps, rank);
+  unsigned numCPU = sysconf( _SC_NPROCESSORS_ONLN );
 
-  //setProcessorAffinity(ps, rank);
+  // Get the cpu of the current thread
+  cpu_set_t mask;  
+  bool sched_return = sched_getaffinity(0, sizeof(cpu_set_t), &mask);
 
+  if(rank == 0) // the parset sets this rank to cpu 0
+  {  
+    // Test if it is set correctly!
+    for (unsigned idx_cpu =0; idx_cpu < numCPU; idx_cpu += 2)
+    {
+      if (1 != CPU_ISSET(idx_cpu, &mask))
+      {
+        LOG_FATAL_STR("Found a cpu that is NOT set while is should be set!");
+        exit(1);
+      }
+      if (0 != CPU_ISSET(idx_cpu + 1, &mask))
+      {
+        LOG_FATAL_STR("Found a cpu that is set while is should be NOT set!");
+        exit(1);
+      }
+    }
+  }
+  else
+  { // cpu is set to 1 for this rank
+    for (unsigned idx_cpu =0; idx_cpu < numCPU; idx_cpu += 2)
+    {
+      if (0 != CPU_ISSET(idx_cpu, &mask))
+      {
+        LOG_FATAL_STR("Found a cpu that is NOT set while is should be set!");
+        exit(1);
+      }
+      if (1 != CPU_ISSET(idx_cpu + 1, &mask))
+      {
+        LOG_FATAL_STR("Found a cpu that is set while is should be NOT set!");
+        exit(1);
+      }
+    }
+  }
   //size_t nSampledData = factory.bufferSize(IntToFloatKernel::INPUT_DATA) / sizeof(char);
   //size_t sizeSampledData = nSampledData * sizeof(char);
 

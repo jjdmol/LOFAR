@@ -204,3 +204,10 @@ PIC.Core.Station.RS106HBA.RSP.ports = [file:/var/scratch/mol/test_sets/3sec/rs10
 _DPname = LOFAR_ObsSW_TempObs0024
 _parsetPrefix = CorrAppl.CorrProc.
 _processName = CorrProc
+Cobalt.Hardware.Node[0].hostName=cmb006
+Cobalt.Hardware.Node[0].cpu=0
+Cobalt.Hardware.Node[0].GPUS=[0, 1]
+Cobalt.Hardware.Node[1].hostName=cmb006
+Cobalt.Hardware.Node[1].cpu=1
+Cobalt.Hardware.Node[1].GPUS=[2, 3]
+
