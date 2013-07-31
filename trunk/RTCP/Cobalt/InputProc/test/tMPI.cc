@@ -34,7 +34,7 @@ using namespace std;
 int rank;
 int nrHosts;
 
-const size_t BUFSIZE = 32 * 1024 * 1024;
+const size_t BUFSIZE = 128 * 1024 * 1024;
 
 const size_t nrRuns = 10;
 
