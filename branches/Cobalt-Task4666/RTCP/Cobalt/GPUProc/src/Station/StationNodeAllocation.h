@@ -25,7 +25,6 @@
 #include <string>
 #include <vector>
 
-#include <Common/SystemUtil.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <Stream/Stream.h>
@@ -39,7 +38,7 @@ namespace LOFAR
     class StationNodeAllocation
     {
     public:
-      StationNodeAllocation( const StationID &stationID, const Parset &parset, const std::string &myHostname = LOFAR::myHostname(false) );
+      StationNodeAllocation( const StationID &stationID, const Parset &parset );
 
       // Returns whether data for this station is received on this node
       bool receivedHere() const;
@@ -50,7 +49,9 @@ namespace LOFAR
     private:
       const StationID stationID;
       const Parset &parset;
-      const std::string myHostname;
+
+      // Returns the rank of the MPI node that should receive this station
+      int receiverRank() const;
     };
   } // namespace Cobalt
 } // namespace LOFAR
