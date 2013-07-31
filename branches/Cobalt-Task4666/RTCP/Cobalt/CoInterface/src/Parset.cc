@@ -315,6 +315,28 @@ namespace LOFAR
         station.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
       }
 
+      // Resource information
+      size_t nrNodes = getUint32("Cobalt.Hardware.nrNodes",1);
+      settings.nodes.resize(nrNodes);
+      for (size_t i = 0; i < nrNodes; ++i) {
+        struct ObservationSettings::Node &node = settings.nodes[i];
+
+        string prefix = str(format("Cobalt.Hardware.Node[%u].") % i);
+
+        node.rank     = i;
+        node.hostName = getString(prefix + "host", "localhost");
+        node.cpu      = getUint32(prefix + "cpu",  0);
+        node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
+
+        vector<string> stationNames = getStringVector(prefix + "stations", allStationNames());
+
+        node.stations.resize(stationNames.size());
+
+        for (size_t j = 0; j < stationNames.size(); ++j) {
+          node.stations[j] = stationIndex(stationNames[j]);
+        }
+      }
+
       // Pointing information
       size_t nrSAPs = getUint32("Observation.nrBeams", 1);
       unsigned subbandOffset = 512 * (settings.nyquistZone() - 1);
@@ -914,6 +936,16 @@ namespace LOFAR
     string Parset::stationName(int index) const
     {
       return settings.stations[index].name;
+    }
+
+    size_t Parset::stationIndex(const std::string &name) const
+    {
+      for (size_t station = 0; station < settings.stations.size(); ++station) {
+        if (settings.stations[station].name == name)
+          return station;
+      }
+
+      THROW(CoInterfaceException, "invalid station name: " << name);
     }
 
     std::vector<std::string> Parset::allStationNames() const
