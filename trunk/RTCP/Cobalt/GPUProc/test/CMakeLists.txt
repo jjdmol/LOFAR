@@ -31,6 +31,14 @@ set_tests_properties(
   PROPERTIES RUN_SERIAL ON
 )
 
+if(MPI_FOUND)
+  lofar_add_test(t_cpu_utils t_cpu_utils.cc)
+  set_tests_properties(
+    t_cpu_utils
+    PROPERTIES RUN_SERIAL ON
+  )
+endif()
+
 if(UNITTEST++_FOUND)
   lofar_add_test(t_gpu_utils t_gpu_utils)
 endif()

@@ -213,6 +213,32 @@ namespace LOFAR
       std::vector<struct Station> stations;
 
       /*
+       * Resources information:
+       *   - what hardware we use (cpus/gpus)
+       *   - which nodes receive which stations
+       */ 
+
+      struct Node {
+        // MPI rank of this node, is the
+        // same as the index in the `nodes' vector.
+        int rank;
+
+        // Host name
+        std::string hostName;
+
+        // CPU number to bind to
+        size_t cpu;
+
+        // CUDA GPU numbers to bind to
+        std::vector<unsigned> gpus;
+
+        // Station indices to forward data for
+        std::vector<size_t> stations;
+      };
+
+      std::vector<struct Node> nodes;
+
+      /*
        * Pointing information
        */
       struct Direction {
@@ -571,6 +597,7 @@ namespace LOFAR
       bool                        correctClocks() const;
       bool                        correctBandPass() const;
       std::string                 stationName(int index) const;
+      size_t                      stationIndex(const std::string &name) const;
       std::vector<std::string>    allStationNames() const;
 
       bool                        outputCorrelatedData() const;
