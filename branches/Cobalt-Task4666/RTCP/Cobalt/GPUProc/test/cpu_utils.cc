@@ -22,71 +22,73 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/gpu_utils.h>
-#include <GPUProc/BandPass.h>
-#include <GPUProc/Kernels/IntToFloatKernel.h>
-#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
-
-using namespace std;
-using namespace LOFAR::Cobalt;
+//#include <GPUProc/gpu_wrapper.h>
+//#include <GPUProc/gpu_utils.h>
+//#include <GPUProc/BandPass.h>
+//#include <GPUProc/Kernels/IntToFloatKernel.h>
+//#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
+//
+//using namespace std;
+//using namespace LOFAR::Cobalt;
 
 int main() {
-  INIT_LOGGER("tIntToFloatKernel");
-  
-  
-  // Set up gpu environment
-  try {
-    gpu::Platform pf;
-    cout << "Detected " << pf.size() << " CUDA devices" << endl;
-  } catch (gpu::CUDAException& e) {
-    cerr << e.what() << endl;
-    return 3;
-  }
-  gpu::Device device(0);
-  vector<gpu::Device> devices(1, device);
-  gpu::Context ctx(device);
-  gpu::Stream stream(ctx);
+  INIT_LOGGER("tcpu_utils.cc");
 
-  Parset ps("tIntToFloatKernel.in_parset");
-  KernelFactory<IntToFloatKernel> factory(ps);
 
-  size_t nSampledData = factory.bufferSize(IntToFloatKernel::INPUT_DATA) / sizeof(char);
-  size_t sizeSampledData = nSampledData * sizeof(char);
+  //
+  //
+  //// Set up gpu environment
+  //try {
+  //  gpu::Platform pf;
+  //  cout << "Detected " << pf.size() << " CUDA devices" << endl;
+  //} catch (gpu::CUDAException& e) {
+  //  cerr << e.what() << endl;
+  //  return 3;
+  //}
+  //gpu::Device device(0);
+  //vector<gpu::Device> devices(1, device);
+  //gpu::Context ctx(device);
+  //gpu::Stream stream(ctx);
 
-  // Create some initialized host data
-  gpu::HostMemory sampledData(ctx, sizeSampledData);
-  char *samples = sampledData.get<char>();
-  for (unsigned idx =0; idx < nSampledData; ++idx)
-    samples[idx] = -128;  // set all to -128
-  gpu::DeviceMemory devSampledData(ctx, factory.bufferSize(IntToFloatKernel::INPUT_DATA));
-  stream.writeBuffer(devSampledData, sampledData, true);
-  
-  // Device mem for output
-  gpu::DeviceMemory devConvertedData(ctx, factory.bufferSize(IntToFloatKernel::OUTPUT_DATA));
-  gpu::HostMemory convertedData(ctx,  factory.bufferSize(IntToFloatKernel::OUTPUT_DATA));
-  //stream.writeBuffer(devConvertedData, sampledData, true);
+  //Parset ps("tIntToFloatKernel.in_parset");
+  //KernelFactory<IntToFloatKernel> factory(ps);
 
-  IntToFloatKernel::Buffers buffers(devSampledData, devConvertedData);
-  auto_ptr<IntToFloatKernel> kernel(factory.create(ctx, buffers));
+  //size_t nSampledData = factory.bufferSize(IntToFloatKernel::INPUT_DATA) / sizeof(char);
+  //size_t sizeSampledData = nSampledData * sizeof(char);
 
-  kernel->enqueue(stream);
-  stream.synchronize();
-  stream.readBuffer(convertedData, devConvertedData, true);
-  stream.synchronize();
-  float *samplesFloat = convertedData.get<float>();
-  
-  // Validate the output:
-  // The inputs were all -128 with bits per sample 8. 
-  // Therefore they should all be converted to -127 (but scaled to 16 bit amplitute values).
-  for (size_t idx =0; idx < nSampledData; ++idx)
-    if(samplesFloat[idx] != -127 * 256)
-    {
-        cerr << "Found an uncorrect sample in the output array at idx: " << idx << endl
-             << "Value found: " << samplesFloat[idx] << endl
-             << "Test failed "  << endl;
-        return -1;
-    }
+  //// Create some initialized host data
+  //gpu::HostMemory sampledData(ctx, sizeSampledData);
+  //char *samples = sampledData.get<char>();
+  //for (unsigned idx =0; idx < nSampledData; ++idx)
+  //  samples[idx] = -128;  // set all to -128
+  //gpu::DeviceMemory devSampledData(ctx, factory.bufferSize(IntToFloatKernel::INPUT_DATA));
+  //stream.writeBuffer(devSampledData, sampledData, true);
+  //
+  //// Device mem for output
+  //gpu::DeviceMemory devConvertedData(ctx, factory.bufferSize(IntToFloatKernel::OUTPUT_DATA));
+  //gpu::HostMemory convertedData(ctx,  factory.bufferSize(IntToFloatKernel::OUTPUT_DATA));
+  ////stream.writeBuffer(devConvertedData, sampledData, true);
+
+  //IntToFloatKernel::Buffers buffers(devSampledData, devConvertedData);
+  //auto_ptr<IntToFloatKernel> kernel(factory.create(ctx, buffers));
+
+  //kernel->enqueue(stream);
+  //stream.synchronize();
+  //stream.readBuffer(convertedData, devConvertedData, true);
+  //stream.synchronize();
+  //float *samplesFloat = convertedData.get<float>();
+  //
+  //// Validate the output:
+  //// The inputs were all -128 with bits per sample 8. 
+  //// Therefore they should all be converted to -127 (but scaled to 16 bit amplitute values).
+  //for (size_t idx =0; idx < nSampledData; ++idx)
+  //  if(samplesFloat[idx] != -127 * 256)
+  //  {
+  //      cerr << "Found an uncorrect sample in the output array at idx: " << idx << endl
+  //           << "Value found: " << samplesFloat[idx] << endl
+  //           << "Test failed "  << endl;
+  //      return -1;
+  //  }
       
   return 0;
 }

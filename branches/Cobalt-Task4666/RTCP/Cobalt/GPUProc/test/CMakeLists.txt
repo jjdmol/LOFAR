@@ -23,6 +23,8 @@ lofar_add_test(tSSH tSSH.cc)
 lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp)
+
+lofar_add_test(tCpu_utils cpu_utils.cc)
 #lofar_add_test(tGPUPerformance DEPENDS rtcp) # performance measurement and comparison are broken
 set_tests_properties(
   tCorrelate_1sec_1st_5sb_noflagging
