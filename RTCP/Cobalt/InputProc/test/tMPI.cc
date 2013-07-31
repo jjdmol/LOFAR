@@ -53,12 +53,18 @@ void test()
     timer.start();
 
     // post our sends
-    for (int n = 0; n < nrHosts; ++n)
+    for (int n = 0; n < nrHosts; ++n) {
+      if (n == rank) continue;
+
       requests.push_back(Guarded_MPI_Isend(&send_buffers[n][0], BUFSIZE, n, 1000 * rank + 200 + n));
+    }
 
     // post our receives
-    for (int n = 0; n < nrHosts; ++n)
+    for (int n = 0; n < nrHosts; ++n) {
+      if (n == rank) continue;
+
       requests.push_back(Guarded_MPI_Irecv(&receive_buffers[n][0], BUFSIZE, n, 1000 * n + 200 + rank));
+    }
 
     // wait for all to finish
     waitAll(requests);
