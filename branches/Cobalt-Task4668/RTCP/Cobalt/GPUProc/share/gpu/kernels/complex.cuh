@@ -24,10 +24,10 @@
 // Simple 'complex type' template for CUDA device code.
 // See remarks below for the (intentional) limitations.
 template <typename T>
-class complex {
+struct complex {
+  // preferably private, but we need its address for sincos()
   float2 m_z; // aligned (m_z.x, m_z.y)
 
-public:
   typedef T value_type;
 
   __device__ complex() {
@@ -168,15 +168,6 @@ __device__ complex<T> operator*(const complex<T>& lhs, const complex<T>& rhs) {
                     lhs.real() * rhs.imag() + lhs.imag() * rhs.real());
 }
 
-
-// Don't bother supporting comparison operators: we don't need them.
-// We only need T as float, where exact comparison makes little sense.
-
-
-template <typename T>
-__device__ complex<T> cosisin(const T& angle) {
-  return complex<T>(cos(angle), sin(angle));
-}
 
 #endif
 

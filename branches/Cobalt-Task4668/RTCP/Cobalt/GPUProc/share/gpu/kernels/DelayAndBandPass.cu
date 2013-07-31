@@ -178,10 +178,11 @@ extern "C" {
                                   16.0f * deltaPhi.y * frequency);
 #endif
 
-  complexfloat vX = cosisin(myPhiBegin.x);
-  complexfloat vY = cosisin(myPhiBegin.y);
-  complexfloat dvX = cosisin(myPhiDelta.x);
-  complexfloat dvY = cosisin(myPhiDelta.y);
+  complexfloat vX, vY, dvX, dvY; // store (cos(), sin())
+  sincosf(myPhiBegin.x, & vX.m_z.y, & vX.m_z.x);
+  sincosf(myPhiBegin.y, & vY.m_z.y, & vY.m_z.x);
+  sincosf(myPhiDelta.x, &dvX.m_z.y, &dvX.m_z.x);
+  sincosf(myPhiDelta.y, &dvY.m_z.y, &dvY.m_z.x);
 #endif
 
 #if defined BANDPASS_CORRECTION
