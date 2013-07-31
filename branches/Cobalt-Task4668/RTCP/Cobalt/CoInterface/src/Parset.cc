@@ -315,6 +315,28 @@ namespace LOFAR
         station.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
       }
 
+      // Resource information
+      size_t nrNodes = getUint32("Cobalt.Hardware.nrNodes",1);
+      settings.nodes.resize(nrNodes);
+      for (size_t i = 0; i < nrNodes; ++i) {
+        struct ObservationSettings::Node &node = settings.nodes[i];
+
+        string prefix = str(format("Cobalt.Hardware.Node[%u].") % i);
+
+        node.rank     = i;
+        node.hostName = getString(prefix + "host", "localhost");
+        node.cpu      = getUint32(prefix + "cpu",  0);
+        node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
+
+        vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString);
+
+        node.stations.resize(stationNames.size());
+
+        for (size_t j = 0; j < stationNames.size(); ++j) {
+          node.stations[j] = stationIndex(stationNames[j]);
+        }
+      }
+
       // Pointing information
       size_t nrSAPs = getUint32("Observation.nrBeams", 1);
       unsigned subbandOffset = 512 * (settings.nyquistZone() - 1);
@@ -354,6 +376,12 @@ namespace LOFAR
         settings.anaBeam.direction.angle2 = getDouble("Observation.AnaBeam[0].angle2", 0.0);
       }
 
+      if (isDefined("Cobalt.Correlator.blockSize")) {
+        settings.blockSize = getUint32("Cobalt.blockSize", 1.0 * settings.subbandWidth());
+      } else {
+        settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3052) * getUint32("Observation.channelsPerSubband", 64);
+      }
+
       /* ===============================
        * Correlator pipeline information
        * ===============================
@@ -363,7 +391,7 @@ namespace LOFAR
       if (settings.correlator.enabled || true) { // for now, always fill in correlator values, since they're still used outside the correlator to determine the block size, etc (TODO: move generic ones outside, but see TODO below)
         settings.correlator.nrChannels = getUint32(renamedKey("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband"), 64);
         settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
-        settings.correlator.nrSamplesPerChannel = getUint32(renamedKey("Cobalt.Correlator.nrSamplesPerChannelPerBlock", "OLAP.CNProc.integrationSteps"), 3052);
+        settings.correlator.nrSamplesPerChannel = settings.blockSize / settings.correlator.nrChannels;
         settings.correlator.nrBlocksPerIntegration = getUint32(renamedKey("Cobalt.Correlator.nrBlocksPerIntegration", "OLAP.IONProc.integrationSteps"), 1);
         settings.correlator.nrBlocksPerObservation = static_cast<size_t>(floor((settings.stopTime - settings.startTime) / settings.correlator.integrationTime()));
 
@@ -525,7 +553,7 @@ namespace LOFAR
     }
 
     size_t ObservationSettings::nrSamplesPerSubband() const {
-      return correlator.nrChannels * correlator.nrSamplesPerChannel;
+      return blockSize;
     }
 
     double ObservationSettings::blockDuration() const {
@@ -908,6 +936,16 @@ namespace LOFAR
     string Parset::stationName(int index) const
     {
       return settings.stations[index].name;
+    }
+
+    size_t Parset::stationIndex(const std::string &name) const
+    {
+      for (size_t station = 0; station < settings.stations.size(); ++station) {
+        if (settings.stations[station].name == name)
+          return station;
+      }
+
+      THROW(CoInterfaceException, "invalid station name: " << name);
     }
 
     std::vector<std::string> Parset::allStationNames() const

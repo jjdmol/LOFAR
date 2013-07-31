@@ -54,6 +54,8 @@
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 
+#include <GPUProc/cpu_utils.h>
+
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
@@ -88,6 +90,7 @@ void runPipeline(const Parset &ps, const vector<size_t> subbands)
     LOG_FATAL_STR("No pipeline selected, do nothing");
   }
 }
+
 
 int main(int argc, char **argv)
 {
@@ -136,6 +139,7 @@ int main(int argc, char **argv)
 
 #ifdef HAVE_MPI
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
+
 #else
   LOG_WARN_STR("Running without MPI!");
 #endif
@@ -167,6 +171,11 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR("nr subbands = " << ps.nrSubbands());
   LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
 
+  // set the processor affinity before any threads are created
+  int cpuId = ps.settings.nodes[rank].cpu;
+  setProcessorAffinity(cpuId);
+
+  // From here threads are produced
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 

@@ -1,19 +1,19 @@
 #!/usr/bin/python
 
-## "isReset48V.py"
-## RESET 48V powersupply on IS (international station)
+## "isOff48V.py"
+## Turn off 48V powersupply on IS (international station)
 ## can only be used on IS (international) LCU
 ##
-## usage: ./isReset48V.py
+## usage: ./isOff48V.py
 ##
 ## Author: Pieter Donker (ASTRON)
-## Last change: november 2011 
+## Last change: May 2013 
 
 from isEcLib import *
 import sys
 import time
 
-VERSION = '1.1.0' # version of this script    
+VERSION = '0.0.1' # version of this script    
 
 # used variables
 version = 0   # EC version
@@ -34,10 +34,7 @@ if __name__ == '__main__':
         time.sleep(1.0)
         ec.printInfo(True)
         ec.getPowerStatus()
-        ec.resetPower(ec.P_48)
-        print "waiting 10 seconds"
-        time.sleep(10.0)
-        ec.getPowerStatus()
+        ec.setPower(ec.P_LCU, ec.PWR_OFF)
         print "waiting 10 seconds"
         time.sleep(10.0)
         ec.getPowerStatus()
