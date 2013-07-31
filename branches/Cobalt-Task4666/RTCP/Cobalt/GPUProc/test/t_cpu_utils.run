@@ -1,0 +1,3 @@
+#!/bin/sh
+
+mpirun -H cbm001,cbm002 t_cpu_utils

@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tCpu_utils
+./runctest.sh t_cpu_utils

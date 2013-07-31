@@ -24,12 +24,13 @@ lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp)
 
-lofar_add_test(tCpu_utils t_cpu_utils.cc)
+lofar_add_test(t_cpu_utils t_cpu_utils.cc)
 #lofar_add_test(tGPUPerformance DEPENDS rtcp) # performance measurement and comparison are broken
 set_tests_properties(
   tCorrelate_1sec_1st_5sb_noflagging
   tCorrelate_3sec_1st_5sb
   tCorrelate_3sec_2st_5sb
+  t_cpu_utils
   PROPERTIES RUN_SERIAL ON
 )
 

@@ -30,9 +30,9 @@ using namespace std;
 using namespace LOFAR::Cobalt;
 
 int main() {
-  INIT_LOGGER("tcpu_utils.cc");
+  INIT_LOGGER("t_cpu_utils.cc");
 
-  Parset ps("tcpu_utils.in_parset");
+  Parset ps("t_cpu_utils.in_parset");
   
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
