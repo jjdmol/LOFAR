@@ -23,9 +23,14 @@
 
 #ifndef LOFAR_GPUPROC_CPU_INCL_H
 #define LOFAR_GPUPROC_CPU_INCL_H
-
-// Set the correct processer affinity based on the parset entry
-// settings.nodes[rank].cpu
-void setProcessorAffinity(const Parset &ps, int rank);
-
+#include <CoInterface/Parset.h>
+namespace LOFAR
+{
+  namespace Cobalt
+  {
+    // Set the correct processer affinity based on the parset entry
+    // settings.nodes[rank].cpu
+    void setProcessorAffinity(const LOFAR::Cobalt::Parset &ps, int rank);
+  }
+}
 #endif

@@ -264,6 +264,9 @@
     <ClInclude Include="..\..\GPUProc\src\SubbandProcs\SubbandProc.h">
       <Filter>src\SubbandProcs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cpu_utils.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionBackwardFFTkernel.cc">
@@ -388,6 +391,9 @@
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\src\Storage\StorageProcess.cc">
       <Filter>src\Storage</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cpu_utils.cc">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

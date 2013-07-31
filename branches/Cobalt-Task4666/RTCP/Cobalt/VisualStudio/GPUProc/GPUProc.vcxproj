@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\GPUProc\src\BandPass.h" />
     <ClInclude Include="..\..\GPUProc\src\BestEffortQueue.h" />
+    <ClInclude Include="..\..\GPUProc\src\cpu_utils.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\gpu_incl.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\gpu_wrapper.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\KernelFactory.h" />
@@ -91,6 +92,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\BandPass.cc" />
+    <ClCompile Include="..\..\GPUProc\src\cpu_utils.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\gpu_utils.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\gpu_wrapper.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\KernelFactory.cc" />

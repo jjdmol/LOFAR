@@ -54,8 +54,6 @@
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 
-#include <sched.h>
-#include <boost/lexical_cast.hpp>
 #include "cpu_utils.h"
 
 using namespace LOFAR;
