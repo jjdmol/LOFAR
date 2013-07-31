@@ -46,15 +46,14 @@ namespace LOFAR
     class Pipeline
     {
     public:
-      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices);
+      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices);
 
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void processObservation(OutputType outputType);
 
     protected:
       const Parset             &ps;
-      const gpu::Platform      platform;
-      std::vector<gpu::Device> devices;
+      const std::vector<gpu::Device> devices;
 
       const std::vector<size_t> subbandIndices; // [localSubbandIdx]
       std::vector< SmartPtr<SubbandProc> > workQueues;

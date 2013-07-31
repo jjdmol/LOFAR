@@ -47,11 +47,10 @@ namespace LOFAR
   {
 
 
-    Pipeline::Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
+    Pipeline::Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
       :
       ps(ps),
-      platform(),
-      devices(platform.devices()),
+      devices(devices),
       subbandIndices(subbandIndices),
       performance(devices.size()),
       subbandPool(subbandIndices.size())
