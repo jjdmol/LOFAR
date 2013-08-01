@@ -4,7 +4,7 @@
 #* ready for consumption by cobalt
 #*
 inputfile = 'cobalt-station-mapping-interfaces.txt'
-outputfile = 'cobalt_config.parset'
+outputfile = 'station_map.parset'
 
 f = open(inputfile, 'r')
 cobalt_nodes = {}  # Will contain the parsed node information
@@ -26,11 +26,20 @@ for idx, line in enumerate(f):
     
   # -----------------------------------------------------------------------
   # convert to a proper parset fragment
-  # split the node/core information 
-  cid_pair = entries[4].split(":")
-
-  # cid =    
-  cid = int(cid_pair[0][1:]) * 2 + int(cid_pair[1]) - 3
+  # split the cobalt node information
+  cid_pair = entries[3].split(".")
+  # cobalt nodenode id - 1 times 2
+  cid = (int(cid_pair[0][3:]) - 1)* 2 
+  
+  cid_eth = int(cid_pair[1][3:])
+ 
+  # parse the ethernet name
+  if (cid_eth is 4 or cid_eth is 5):
+    cid_cpu = 1
+  else:
+    cid_cpu = 0
+  cid += cid_cpu
+   #else do not increase for cpu number
   
   # sanitiz  the station name
   if entries[1].startswith("RS"):
@@ -50,8 +59,8 @@ for idx, line in enumerate(f):
             'gpus': [],
             'stations': []}
     node['cid'] = cid
-    node['host'] = entries[3].split('.')[0]
-    node['cpu'] = int(cid_pair[1]) - 1
+    node['host'] = "cbm" + entries[3].split('.')[0][3:]  # remove cbt and prepend cbm
+    node['cpu'] = cid_cpu
     if (node['cpu'] is 0):
       node['gpus'] = [0,1]
     else:
