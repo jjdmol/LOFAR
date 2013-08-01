@@ -11,7 +11,7 @@ set(_kernel_sources
   Transpose.cu
 )
 
-install(FILES _kernel_sources DESTINATION share/gpu/kernels)
+install(FILES ${_kernel_sources} DESTINATION share/gpu/kernels)
 
 
 # Verify whether all .cu .cuh files in this dir are in the install list.
