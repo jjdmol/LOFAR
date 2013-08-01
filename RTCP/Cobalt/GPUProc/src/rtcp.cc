@@ -132,7 +132,7 @@ int main(int argc, char **argv)
 #endif
 
 #ifdef HAVE_LOG4CPLUS
-  INIT_LOGGER(str(format("rtcp@%02d") % rank));
+  INIT_LOGGER("rtcp");
 #else
   INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
 #endif
