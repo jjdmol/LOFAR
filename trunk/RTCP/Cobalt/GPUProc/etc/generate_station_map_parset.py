@@ -34,7 +34,7 @@ for idx, line in enumerate(f):
   cid_eth = int(cid_pair[1][3:])
  
   # parse the ethernet name
-  if (cid_eth is 4 or cid_eth is 5):
+  if ((cid_eth is 4) or (cid_eth is 5)):
     cid_cpu = 1
   else:
     cid_cpu = 0
@@ -45,6 +45,8 @@ for idx, line in enumerate(f):
   if entries[1].startswith("RS"):
       entries[1] = entries[1] + "HBA"
       
+  # assure the node is present    
+  node = {}
   # If we already saw the cid
   if (cid in cobalt_nodes):
     node = cobalt_nodes[cid] 
@@ -67,6 +69,9 @@ for idx, line in enumerate(f):
       node['gpus'] = [2,3]
     node['stations'].append(entries[1])
     
+    # add the newly create node
+    cobalt_nodes[cid] = node
+    
   # The configuration file only mentions HBA/HBA0/HBA1, but
   # we want all antenna sets to be mentioned in the parset.
   if (entries[1].endswith("HBA")): # RSxxxHBA
@@ -78,8 +83,7 @@ for idx, line in enumerate(f):
     node['stations'].append(stationname + "LBA")
     node['stations'].append(stationname + "HBA")
   
-    # add the newly create node
-    cobalt_nodes[cid] = node
+  
 
 # -----------------------------------------------------------------
 # print to parset format
