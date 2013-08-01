@@ -43,7 +43,7 @@ bool StationNodeAllocation::receivedHere() const
 
   if (stationRank == -1) {
     // allocate stations not mentioned in Cobalt.Hardware round-robin
-    stationRank = parset.stationIndex(stationID.name()) % nrHosts;
+    stationRank = parset.settings.stationIndex(stationID.name()) % nrHosts;
 
     if (stationRank == rank)
       LOG_WARN_STR("Receiving station " << stationID << " due to round-robin allocation across nodes.");
@@ -63,7 +63,10 @@ int StationNodeAllocation::receiverRank() const
    * by the specified MPI rank.
    */
 
-  size_t stationIdx = parset.stationIndex(stationID.name());
+  ssize_t stationIdx = parset.settings.stationIndex(stationID.name());
+
+  if (stationIdx < 0)
+    return -1;
 
   for (unsigned rank = 0; rank < parset.settings.nodes.size(); ++rank) {
     const vector<size_t> &stations = parset.settings.nodes[rank].stations;
