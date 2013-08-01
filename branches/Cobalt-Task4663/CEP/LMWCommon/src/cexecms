@@ -1,0 +1,214 @@
+#!/bin/sh
+
+# todo
+#   maybe allow -i ID1=... -i ID2=...
+# so different ids can be used in the glob pattern.
+
+showhelp() 
+{
+  echo ''
+  echo ' cexecms runs a command or script on cluster nodes for files matching the'
+  echo ' given file name glob pattern. Placeholders in the command or script are'
+  echo ' replaced by the actual file name parts.'
+  echo ''
+  echo ' usage:'
+  echo '    cexecms [-c cluster] [-d] [-s script] [-w workdir] command nameglob [arg1 arg2 ...]'
+  echo ''
+  echo '      -c cluster    Cluster name as defined for cexec.'
+  echo '                    default is lce:    if run on an lfe node'
+  echo '                               test:   if run on lce072'
+  echo '                               locus:  otherwise'
+  echo '      -d            Do a dryrun.'
+  echo '                    (do not execute, but only print the command/script)'
+  echo '      -i ids        List of ids to replace <ID> in the nameglob argument.'
+  echo '                    A comma and/or blank can be used as separator.'
+  echo '                    Ids can be given with parset range style (e.g. 33678..33683)'
+  echo '                    In this way the command can be executed for multiple observations.'
+  echo '      -s script     Script or parset file to be used by the command.'
+  echo '                    It must be accessible on all nodes in the cluster.'
+  echo '                    Placeholders (like <FN>) in the file are replaced.'
+  echo '                    It will be used as the first argument in the command.'
+  echo '      -w workdir    Working directory in remote process. Default is login directory.'
+  echo '      command       Command to be executed remotely.'
+  echo '                    Quotes are needed if it contains spaces, etc.'
+  echo '                    Placeholders (like <FN>) in the command are replaced.'
+  echo '      nameglob      File name glob pattern to find matching files'
+  echo '                    # can be used as a shorthand for [0-9].'
+  echo '                    E.g., one can use SB### meaning any subband.'
+  echo '                    The pattern can contain the placeholder <ID> as explained'
+  echo '                    above in the -i option.'
+  echo '      arg1 arg2 ..  Optional extra arguments to be given to the command.'
+  echo ''
+  echo ' Using cexec, the script cexecms-part is executed on the given cluster'
+  echo ' nodes. It looks for files matching the given file name glob pattern.'
+  echo ' The glob pattern can be bash-style, thus *, ?, [], and {} are possible.'
+  echo ' The given command will be executed for each matching file name.'
+  echo ' The actual file name can be made part of the command or script'
+  echo ' using one or more of the following placeholders:'
+  echo '     <FILENAME> or <FN>    for the full file name'
+  echo '     <BASENAME> or <BN>    for the basename part'
+  echo '     <DIRNAME>  or <DN>    for the directory part'
+  echo ' The first two can be followed by a . (e.g. <FN.>) meaning that the'
+  echo ' basename is used till the first dot (thus the extension is removed.)'
+  echo ' Similarly, <.BN> gives the extension (thus after the first dot).'
+  echo ' For standard LOFAR file names the following placeholders can also be used:'
+  echo '     <OBSID>   for the obsid part of <BN.> (till first _)'
+  echo '     <SAP>     for the subarray pointing part of <BN.> (till next _)'
+  echo '     <SB>      for the subband part of <BN.> (till next _)'
+  echo '     <TYPE>    for the dataset type part of <BN.> (after last _)'
+  echo ''
+  echo ' If -s is given, the command is executed like:'
+  echo '     command script arg1 arg2 ..'
+  echo ' Otherwise, if no substitutions have been done the command is executed like:'
+  echo '     command <FN> arg1 arg2 ...'
+  echo ' Otherwise like'
+  echo '     command arg1 arg2...'
+  echo ''
+  echo ' For example:'
+  echo '     cexecms "ls -d" "/data/scratch/pipeline/L2011_22663/*"'
+  echo ' is a trivial example and could also be done with cexec. Note that'
+  echo '     cexecms "ls -d <FN>" "/data/scratch/pipeline/L2011_22663/*"'
+  echo ' is doing the same.'
+  echo ' The following example is more elaborate and creates a _sel.MS table'
+  echo ' in another directory for each MS of subband 000 till 099.'
+  echo '     cexecms "taql '"'"'select from <FN> where ANTENNA1 in [0,1,2]'
+  echo '                   giving /data/scratch/diepen/<BN.>_sel.MS'"'"'"'
+  echo '             "/data/scratch/pipeline/L2011_22663/*SB0##*"'
+  echo ' Note that quotes have to be used abundantly.'
+  echo ' Also note that (t)csh requires a ! to be escaped with a backslash.'
+  echo ''
+  echo ' Sometimes a command can be dangerous or take a long time to run.'
+  echo ' In such a case it makes sense to first do a dry-run execution with the -d option.'
+  echo ''
+  echo ' Note that the current environment (paths, etc.) is copied. You should'
+  echo ' have done "use LofIm" if you need LofIm in the (remote) command.'
+  echo ''
+}
+
+# Find the path used to start the script.
+pgmpath=`dirname $0`
+pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+
+if test $# -lt 2; then
+    showhelp
+    exit 1
+fi
+cluster=
+script=
+ids=
+dryrun=
+workdir=
+# Handle possible options.
+while [ $# != 0 ]
+do
+  if test "$1" = "-c"; then
+    shift
+    cluster="$1"
+    shift
+  elif test "$1" = "-s"; then
+    shift
+    script="$1"
+    shift
+  elif test "$1" = "-i"; then
+    shift
+    ids="$1"
+    shift
+  elif test "$1" = "-w"; then
+    shift
+    workdir="$1"
+    shift
+  elif test "$1" = "-d"; then
+    shift
+    dryrun="-d"
+  else
+    case "$1" in
+    -*)
+      echo "$1 is an unknown cexecms option"
+      exit 1
+      ;;
+    *)
+      # A command has been found, so stop parsing options.
+      break
+      ;;
+    esac
+  fi
+done
+if test $# -lt 2; then
+    showhelp
+    exit 1
+fi
+
+# Replace possible commas in ids by blanks.
+ids=`echo "$ids" | sed 's/,/ /g'`
+# Get coomand and glob pattern.
+command="$1"
+shift
+nameglob="$1"
+shift
+
+# If no cluster given, use default.
+if test "$cluster" = ""; then
+  cluster="locus:"
+  case "$HOSTNAME" in
+    lce072) cluster="test:";;
+    lfe*) cluster="lce:";;
+  esac
+fi
+
+# The ids can be given in parset format (e.g. 001..4), so expand them.
+ids=`$pgmpath/expandparameter "$ids"`
+
+# Find all PATH and ROOT variables and store in a file with the pid in its name.
+envfile=$HOME/${USER}-$$.env
+grex='[^=]*(PATH|ROOT|APS_LOCAL)'
+printenv | egrep "^$grex=" | sed -e "s/^\([^=]*\)=\(.*\)/\1='\2'; export \1/;" > $envfile
+
+# Execute on all compute nodes.
+# cexec does not keep quotes around the command, so substitute all shell
+# characters like space and brackets.
+commandnew=`echo "$command" | sed \
+    -e 's% %:SPACE:%g' \
+    -e 's%<%:LT:%g' \
+    -e 's%>%:GT:%g' \
+    -e 's%(%:LPAR:%g' \
+    -e 's%)%:RPAR:%g' \
+    -e 's%{%:LBRACE:%g' \
+    -e 's%}%:RBRACE:%g' \
+    -e 's%\\[%:LBRACKET:%g' \
+    -e 's%]%:RBRACKET:%g' \
+    -e 's%|%:VBAR:%g' \
+    -e 's%&%:AMPERSAND:%g' \
+    -e 's%\\*%:ASTERIX:%g' \
+    -e 's%!%:NOT:%g' \
+    -e 's%#%:HASH:%g' \
+    -e 's%~%:TILDE:%g' \
+    -e 's%,%:COMMA:%g' \
+    -e 's%\\?%:QMARK:%g' \
+    -e 's%;%:SEMICOLON:%g' \
+    -e 's%"%:DQUOTE:%g' \
+    -e "s%'%:SQUOTE:%g" \
+    -e 's%\\$%:DOLLAR:%g'`
+# Furthermore it expands the nameglob, so change that as well.
+nameglobnew=`echo "$nameglob" | sed \
+    -e 's%\*%:ASTERISK:%g' \
+    -e 's%\?%:QUESTIONMARK:%g' \
+    -e 's%\[%:LBRACKET:%g' \
+    -e 's%\]%:RBRACKET:%g' \
+    -e 's%{%:LBRACE:%g' \
+    -e 's%}%:RBRACE:%g'`
+
+# Add -s is script is used.
+# Same for -w.
+test "$script"  = ""  ||   script="-s $script"
+test "$workdir" = ""  ||  workdir="-w $workdir"
+# Do a single run if no ids given, otherwise iterate over all ids.
+if test "$ids" = ""; then
+  cexec $cluster $pgmpath/cexecms-part $dryrun -e "$envfile" "$script" "$workdir" "'$commandnew'" "$nameglobnew" "$@"
+else
+  for id in $ids
+  do
+    nm=`echo "$nameglobnew" | sed -e "s%<ID>%$id%g"`
+    cexec $cluster $pgmpath/cexecms-part $dryrun -e "$envfile" "$script" "$workdir" "'$commandnew'" "$nm" "$@"
+  done
+fi
+rm -f "$envfile"
