@@ -104,3 +104,5 @@ if(USE_OPENCL)
   lofar_add_library(gpuproc_opencl ${_gpuproc_sources})
   #lofar_add_bin_program(rtcp_opencl rtcp.cc)
 endif()
+
+lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
