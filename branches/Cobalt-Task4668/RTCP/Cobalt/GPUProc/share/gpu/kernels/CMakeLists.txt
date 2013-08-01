@@ -3,8 +3,11 @@
 install(FILES 
   gpu_math.cuh
   IntToFloat.cuh
-  IntToFloat.cu
-  FIR_Filter.cu
-  DelayAndBandPass.cu
+  BeamFormer.cu
   Correlator.cu
+  DelayAndBandPass.cu
+  FIR_Filter.cu
+  IntToFloat.cu
+  Transpose.cu
   DESTINATION share/gpu/kernels)
+
